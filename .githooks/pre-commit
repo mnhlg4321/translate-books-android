@@ -20,3 +20,36 @@ if git diff --cached --quiet --exit-code; then
   exit 1
 fi
 
+snapshot_path="WORKSPACE_SNAPSHOT.md"
+snapshot_staged="$(git diff --cached --name-only -- "$snapshot_path")"
+
+if [ -n "$snapshot_staged" ]; then
+  exit 0
+fi
+
+if [ ! -f "$snapshot_path" ]; then
+  echo "WORKSPACE_SNAPSHOT.md is required and must be staged." >&2
+  exit 1
+fi
+
+snapshot_commit="$(git log -1 --format=%H -- "$snapshot_path")"
+snapshot_epoch="$(git log -1 --format=%ct -- "$snapshot_path")"
+
+if [ -z "$snapshot_commit" ] || [ -z "$snapshot_epoch" ]; then
+  echo "Commit WORKSPACE_SNAPSHOT.md before continuing." >&2
+  exit 1
+fi
+
+commits_since_snapshot="$(git rev-list --count "$snapshot_commit"..HEAD)"
+author_ident="$(git var GIT_AUTHOR_IDENT)"
+ident_without_timezone="${author_ident% *}"
+current_epoch="${ident_without_timezone##* }"
+age_seconds=$((current_epoch - snapshot_epoch))
+next_commit_count=$((commits_since_snapshot + 1))
+
+if [ "$age_seconds" -ge 1800 ] || [ "$next_commit_count" -ge 10 ]; then
+  echo "WORKSPACE_SNAPSHOT.md is stale (30 minutes or 10 commits threshold)." >&2
+  echo "Update and stage the snapshot before committing." >&2
+  exit 1
+fi
+
