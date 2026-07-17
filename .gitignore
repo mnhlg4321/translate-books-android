@@ -4,3 +4,6 @@ app/build/
 local.properties
 *.apk
 *.aab
+/backup/
+/artifacts/releases/
+/.archive-staging/
