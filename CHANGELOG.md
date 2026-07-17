@@ -2,6 +2,15 @@
 
 All notable changes to Translate Books are recorded in this file. The repository was normalized to Git on 2026-07-17 without feature changes or rollback. The v4.7 source baseline is commit `da8c6d9a9001296c3f3c17817ea3d6372fd59ae3` on branch `main`.
 
+## [4.8] - 2026-07-17
+
+- Persist and activate glossary imports immediately, including legacy import flow.
+- Persist and activate pronoun imports atomically and retain the active profile across cold-start.
+- Keep Back navigation inside Library and Settings, with deterministic return paths.
+- Verify four-tab scrolling without gesture refresh and preserve translation core/dashboard/SAF/session isolation/recovery.
+- Add focused glossary, pronoun, Back, persistence, gesture, and real API prompt tests.
+- Bump version to `4.8` / versionCode `47`.
+
 ## [4.7] - 2026-07-17
 
 - Remove gesture pull-to-refresh and its touch interception from the application shell; refresh is button-only.

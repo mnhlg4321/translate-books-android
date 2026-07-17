@@ -433,23 +433,20 @@ public class MainActivity extends Activity {
     }
 
     @Override public void onBackPressed() {
-        if ("Glossaries".equals(currentTab) && editingGlossary != null) {
-            saveEditingGlossary();
-            editingGlossary = null;
-            invalidatePage("Glossaries");
-            switchTab("Glossaries");
-            return;
+        AppBackNavigationPolicy.Action action = AppBackNavigationPolicy.resolve(
+                currentTab, editingGlossary != null, editingPronoun != null, settingsCategory);
+        if (action == AppBackNavigationPolicy.Action.SAVE_AND_CLOSE_GLOSSARY) {
+            saveEditingGlossary(); editingGlossary = null; invalidatePage("Glossaries"); switchTab("Glossaries"); return;
         }
-        if ("Pronouns".equals(currentTab) && editingPronoun != null) {
-            editingPronoun = null;
-            invalidatePage("Pronouns");
-            switchTab("Pronouns");
-            return;
+        if (action == AppBackNavigationPolicy.Action.CLOSE_PRONOUN) {
+            editingPronoun = null; invalidatePage("Pronouns"); switchTab("Pronouns"); return;
         }
-        if ("Glossaries".equals(currentTab) || "Pronouns".equals(currentTab) || "Sample".equals(currentTab)) {
-            switchTab("Files");
-            return;
+        if (action == AppBackNavigationPolicy.Action.OPEN_LIBRARY_HOME) { switchTab("Files"); return; }
+        if (action == AppBackNavigationPolicy.Action.OPEN_SETTINGS_GENERAL) {
+            silentPersistCurrentUi(); settingsCategory = "General"; settingsSectionExpanded = true;
+            invalidatePage("Settings"); switchTab("Settings"); return;
         }
+        if (action == AppBackNavigationPolicy.Action.OPEN_TRANSLATE) { switchTab("Translate"); return; }
         super.onBackPressed();
     }
 
@@ -785,7 +782,7 @@ public class MainActivity extends Activity {
     void replacePronoun(PronounStore.Profile profile){if(profile==null)return;pendingPronounReplaceId=profile.id;choosePronoun();}
 
     void selectPronoun(PronounStore.Profile profile){
-        if(!ensureConfigMutable()||profile==null)return;PronounStore.setSelectedId(this,profile.id);applyActivePronoun(profile);toast("Active pronoun: "+profile.name);refreshPronounsPage();
+        if(!ensureConfigMutable()||profile==null)return;if(!PronounStore.saveAndSelect(this,profile)){toast("Could not save pronoun");return;}applyActivePronoun(profile);toast("Active pronoun: "+profile.name);refreshPronounsPage();
     }
 
     void refreshPronounsPage(){invalidatePage("Pronouns");switchTab("Pronouns");}
@@ -978,8 +975,8 @@ public class MainActivity extends Activity {
             try {
                 String pronounText = FileUtil.readText(this, pronounUri);
                 PronounStore.Profile profile;
-                if(pendingPronounReplaceId!=null&&!pendingPronounReplaceId.isEmpty()&&(profile=PronounStore.find(this,pendingPronounReplaceId))!=null){profile.uri=pronounUri.toString();profile.text=pronounText;if(profile.name==null||profile.name.startsWith("New pronoun"))profile.name=pronounName;PronounStore.upsert(this,profile);}else profile=PronounStore.importProfile(this,pronounName,pronounUri.toString(),pronounText);
-                pendingPronounReplaceId="";PronounStore.setSelectedId(this,profile.id);applyActivePronoun(profile);
+                if(pendingPronounReplaceId!=null&&!pendingPronounReplaceId.isEmpty()&&(profile=PronounStore.find(this,pendingPronounReplaceId))!=null){profile.uri=pronounUri.toString();profile.text=pronounText;if(profile.name==null||profile.name.startsWith("New pronoun"))profile.name=pronounName;if(!PronounStore.saveAndSelect(this,profile))throw new IllegalStateException("Could not persist pronoun profile");}else profile=PronounStore.importAndSelectProfile(this,pronounName,pronounUri.toString(),pronounText);
+                if(profile==null)throw new IllegalStateException("Could not persist pronoun profile");pendingPronounReplaceId="";editingPronoun=null;applyActivePronoun(profile);
                 String validation = PromptContextBuilder.validateText(activeGlossaryPromptText(), pronounText);
                 toast("Đã nạp pronoun: " + pronounName);
                 appendLog("Đã nạp pronoun: " + pronounName + " • " + oneLine(validation));
@@ -995,14 +992,14 @@ public class MainActivity extends Activity {
             setLabel(glossaryFileLabel, "Glossary: " + lastGlossaryName);
             try {
                 lastGlossaryText = FileUtil.readText(this, glossaryUri);
-                AppSettings selected = collectSettings();
-                selected.selectedGlossaryId = "";
-                selected.selectedGlossaryName = lastGlossaryName;
-                selected.glossaryText = lastGlossaryText;
-                GlossaryStore.setSelectedId(this, "");
-                SettingsStore.save(this, selected);
-                String validation = PromptContextBuilder.validateText(lastGlossaryText, currentPronounText());
+                List<GlossaryStore.Term> terms = GlossaryStore.parseTerms(lastGlossaryName, lastGlossaryText);
+                if (terms.isEmpty()) throw new IllegalArgumentException("No valid glossary terms found");
+                GlossaryStore.Glossary imported = GlossaryStore.create(this, lastGlossaryName);
+                GlossaryStore.mergeTerms(imported, terms);
+                GlossaryStore.upsert(this, imported);
+                String validation = PromptContextBuilder.validateText(GlossaryStore.toPromptText(imported), currentPronounText());
                 if (glossaryPreview != null) glossaryPreview.setText(preview(lastGlossaryText, 3000) + "\n\n[VALIDATION]\n" + validation);
+                selectGlossary(imported);
                 toast("Đã nạp glossary: " + lastGlossaryName);
                 appendLog("Đã nạp glossary: " + lastGlossaryName + " • " + oneLine(validation));
                 showResult("Glossary loaded", lastGlossaryName + "\n" + validation);
@@ -1655,15 +1652,15 @@ public class MainActivity extends Activity {
                 totalFiles = 1;
                 totalTerms = terms.size();
             }
+            if (totalTerms == 0) throw new IllegalArgumentException("No valid glossary terms found");
             saveEditingGlossary();
-            updateGlossaryPreview();
             String imported = namesSummary(importedNames);
             String validation = PromptContextBuilder.validateText(GlossaryStore.toPromptText(editingGlossary), currentPronounText());
+            GlossaryStore.Glossary importedGlossary = editingGlossary;
+            selectGlossary(importedGlossary);
             toast("Đã import " + totalTerms + " terms từ: " + imported);
             appendLog("Glossary import: " + totalFiles + " file(s), " + totalTerms + " term(s): " + imported + " • " + oneLine(validation));
             showResult("Glossary import validated", totalTerms + " term(s) từ " + imported + "\n" + validation);
-            invalidatePage("Glossaries");
-            switchTab("Glossaries");
         } catch (Exception e) {
             toast("Lỗi import glossary");
             appendLog("Lỗi import glossary: " + e.getMessage());

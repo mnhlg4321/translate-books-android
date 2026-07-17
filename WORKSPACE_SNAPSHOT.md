@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-17 19:27:07 +07:00`
-- Current version: `4.7` (`versionCode 46`)
-- Current branch: `main` after the v4.7 repository cleanup merge
-- Current commit: implementation baseline `27a4345`; the snapshot and no-ff merge commits follow this baseline
+- Snapshot updated: `2026-07-17 20:29:53 +07:00`
+- Current version: `4.8` (`versionCode 47`, development)
+- Current branch: `fix/v4.8-import-navigation`
+- Current commit: `0fb2f1d5b3d082e5cd4019e27083cef62c37ff0f` (post-tag evidence commit; tag `v4.8` points to `21fc148`)
 - Current build: v4.7 debug release archive preserved in `artifacts/releases/v4.7/tag-v4.7` and `backup/v4.7/tag-v4.7`
 
 ## Completed tasks
@@ -30,11 +30,26 @@
 - Created pre-cleanup ZIP backup `backup/pre-git/project_source_v4.7_pre-git_20260717-192534.zip` with SHA-256 `2544FF1363F78D7B1A9960C3C234898D35676664716161E2D3BD6F544D16A94C`.
 - Hardened `.gitignore`, removed tracked IDE cache/device state, and sanitized the sample API key to `REPLACE_ME`.
 - Confirmed no tracked build/cache/local.properties files, no credential-pattern matches, no remote, and preserved immutable tag `v4.7`.
+- Audited version history: v4.7/code46 is the last product release; feature/v4.8 through feature/v4.12 were infrastructure-only branches with no app-code changes.
+- Started the focused v4.8/code47 import-navigation cycle on `fix/v4.8-import-navigation`.
+- Normalized both glossary import paths so imported terms are stored as a library profile, activated immediately, reflected in Settings/prompt state, and returned to the glossary list.
+- Added focused glossary parsing/merge/prompt unit coverage; `GlossaryImportV48Test` passes (2 tests).
+- Made pronoun profile persistence and active selection a single synchronous transaction, and return to the profile list immediately after import/replacement.
+- Added deterministic Back navigation: editors return to lists, Library subsections return to Files, Library root returns to Translate, and Settings walks through General before Translate.
+- Confirmed by static audit that the four primary pages use ordinary `ScrollView` containers and have no swipe-refresh/touch gesture interceptor.
+- Added instrumentation for glossary reload, pronoun cold-store reload, Library/Settings Back, and four-tab vertical gestures with preference snapshot/restore.
+- Installed the current v4.8 debug APK on OnePlus CPH2691 / Android 15 through the connected instrumentation run.
+- Preserved the development APK, SHA-256, QA report, release documents, and test reports under `artifacts/releases/v4.8/dev-e4b9dfd-20260717-201229/` and a non-overwriting backup mirror.
+- Created local annotated tag `v4.8` and immutable release archive/backup, including source ZIP and required evidence.
+- Added an opt-in two-request real API harness that asserts both glossary and pronoun locks are present in each provider prompt without logging credentials.
+- Ran the opt-in harness directly against the retained OnePlus app data: exactly 2 real API requests completed, and both prompts contained the expected glossary and pronoun locks.
+- Added `QA_REPORT_v4_8.md`, v4.8 release notes, and the v4.8 changelog entry; checklist steps 1-9 now have evidence.
+- Created annotated local tag `v4.8` after the PreTag gate passed.
 
 ## Pending tasks
 
-- No application feature group is currently assigned.
-- Select the next application version/functional group before creating another feature branch.
+- Push branch/tag and merge to `main` after the owner restores/accesses the approved private repository URL.
+- Do not start batch or refinement work in this cycle.
 
 ## Known bugs
 
@@ -52,11 +67,17 @@
 - Immutable archive regression: passed checksum, ZIP integrity, artifact/backup parity, and no-overwrite checks.
 - v4.8+ workflow gate regression: passed; negative cases were rejected as designed.
 - Repository hygiene regression: passed tracked-file, secret-pattern, and ignore-rule checks.
-- Android regression has not been rerun because the current group changes repository workflow only.
+- Glossary import unit regression: 2 passed, 0 failed; device reload instrumentation passed.
+- Pronoun/glossary focused JVM regression: 4 passed, 0 failed; cold-store instrumentation passed.
+- Back/Settings navigation policy regression: 7 passed, 0 failed; device Back/gesture instrumentation passed.
+- Full v4.8 JVM regression: 99 passed, 0 failed, 0 skipped.
+- Full Android instrumentation on OnePlus CPH2691 / Android 15: 11 passed, 0 failed, 0 skipped, including all 4 new import/navigation/scroll cases.
+- With the opt-in API harness included, normal instrumentation reports 11 passed, 0 failed, 1 intentionally skipped.
+- Explicit real API run: PASS; 2 requests completed and both provider prompts were verified to contain glossary and pronoun locks.
 
 ## Next step
 
-Repository baseline is ready at `main`; no remote or push is configured. For the first v4.8+ development session, read `BUILD_STATE.md`, read this snapshot, confirm clean `main`/HEAD, create the version checklist and a new `feature/vX.Y` branch, then follow all 14 steps without skipping.
+Local v4.8 release gates are complete at tag `v4.8`. Next step is remote access repair, then push branch/tag and merge to `main`; do not create another feature batch in this cycle.
 
 ## Resume rule
 
