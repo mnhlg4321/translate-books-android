@@ -4,6 +4,23 @@ app/build/
 local.properties
 *.apk
 *.aab
+
+# Local credentials and signing material
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.jks
+*.keystore
+credentials*.json
+
+# IDE caches and machine-specific state
+.idea/caches/
+.idea/shelf/
+.idea/workspace.xml
+.idea/deploymentTargetSelector.xml
+.idea/deviceManager.xml
 /backup/
 /artifacts/releases/
 /.archive-staging/
