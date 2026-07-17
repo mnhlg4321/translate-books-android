@@ -1,0 +1,14 @@
+#!/bin/sh
+
+message_file="$1"
+IFS= read -r first_line < "$message_file"
+
+case "$first_line" in
+  feat:\ ?*|fix:\ ?*|perf:\ ?*|refactor:\ ?*|test:\ ?*|build:\ ?*|docs:\ ?*|chore:\ ?*) exit 0 ;;
+  feat\(?*\):\ ?*|fix\(?*\):\ ?*|perf\(?*\):\ ?*|refactor\(?*\):\ ?*|test\(?*\):\ ?*|build\(?*\):\ ?*|docs\(?*\):\ ?*|chore\(?*\):\ ?*) exit 0 ;;
+  Merge\ feature/v[0-9]*.[0-9]*) exit 0 ;;
+esac
+
+echo "Commit message must be clear and use: <type>(<scope>): <summary>" >&2
+echo "Allowed types: feat, fix, perf, refactor, test, build, docs, chore" >&2
+exit 1

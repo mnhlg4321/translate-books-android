@@ -1,5 +1,9 @@
 # TBL Android TXT v2.6.7 — ReadEra-style safe UI
 
+## Development workflow
+
+Mọi thay đổi sau v4.7 phải đi qua branch `feature/vX.Y`, được chia thành các commit nhỏ theo từng nhóm sửa độc lập, chạy regression, tạo APK và annotated tag trước khi merge `--no-ff` về `main`. Xem [GIT_WORKFLOW.md](GIT_WORKFLOW.md) để biết quy trình bắt buộc và quy tắc commit.
+
 This version fixes Android 15 edge-to-edge overlap by applying system-bar insets to the root layout.
 The old portrait horizontal tab strip has been replaced with a compact top app bar plus a left navigation drawer inspired by reader apps such as ReadEra.
 

@@ -1,0 +1,5 @@
+<type>(<scope>): <clear summary>
+
+# Types: feat, fix, perf, refactor, test, build, docs, chore
+# Keep one independent change group per commit.
+# Do not create empty commits.
