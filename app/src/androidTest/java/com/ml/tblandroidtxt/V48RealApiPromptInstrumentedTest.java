@@ -45,10 +45,10 @@ public class V48RealApiPromptInstrumentedTest {
         AtomicInteger requests = new AtomicInteger();
         TranslationEngine.ProviderClient verifiedRealClient = (s, prompt, outputLimit, requestId, observer) -> {
             String payload = safe(prompt.system) + "\n" + safe(prompt.user);
-            assertTrue(payload.contains("# GLOSSARY - LOCK TERMS"));
+            assertTrue(payload.contains("# GLOSSARY LOCKS"));
             assertTrue(payload.contains("Magic"));
             assertTrue(payload.contains("Phép thuật"));
-            assertTrue(payload.contains("# CHARACTER / PRONOUN RULES"));
+            assertTrue(payload.contains("# PRONOUN LOCKS"));
             assertTrue(payload.contains("Alice"));
             assertTrue(payload.contains("Bob"));
             assertTrue(payload.contains("chị/em"));

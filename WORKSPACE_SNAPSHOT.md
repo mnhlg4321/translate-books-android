@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-17 20:16:28 +07:00`
+- Snapshot updated: `2026-07-17 20:22:06 +07:00`
 - Current version: `4.8` (`versionCode 47`, development)
 - Current branch: `fix/v4.8-import-navigation`
-- Current commit: `e4b9dfde53fdefa9f7a3934dfd6ec604c0e5d565` (passing offline/device regression baseline before the API harness group)
+- Current commit: `69b22eace4a8f570d3447f23484f6ffe862d4fc1` (API harness baseline before the prompt-contract assertion correction)
 - Current build: v4.7 debug release archive preserved in `artifacts/releases/v4.7/tag-v4.7` and `backup/v4.7/tag-v4.7`
 
 ## Completed tasks
@@ -41,12 +41,12 @@
 - Installed the current v4.8 debug APK on OnePlus CPH2691 / Android 15 through the connected instrumentation run.
 - Preserved the development APK, SHA-256, QA report, release documents, and test reports under `artifacts/releases/v4.8/dev-e4b9dfd-20260717-201229/` and a non-overwriting backup mirror.
 - Added an opt-in two-request real API harness that asserts both glossary and pronoun locks are present in each provider prompt without logging credentials.
+- Ran the opt-in harness directly against the retained OnePlus app data: exactly 2 real API requests completed, and both prompts contained the expected glossary and pronoun locks.
 
 ## Pending tasks
 
-- Configure an API key in the installed debug app, then rerun the opt-in two-request real API prompt verification.
 - Retry pushing all separate commits after GitHub connectivity/authentication is restored.
-- Add focused unit/instrumentation coverage, device QA, and a real 2–3 chunk API prompt verification.
+- Prepare v4.8 release notes/state, pass the tag gate, create immutable release backup/artifacts, then merge according to workflow.
 - Do not start batch or refinement work in this cycle.
 
 ## Known bugs
@@ -71,11 +71,11 @@
 - Full v4.8 JVM regression: 99 passed, 0 failed, 0 skipped.
 - Full Android instrumentation on OnePlus CPH2691 / Android 15: 11 passed, 0 failed, 0 skipped, including all 4 new import/navigation/scroll cases.
 - With the opt-in API harness included, normal instrumentation reports 11 passed, 0 failed, 1 intentionally skipped.
-- Explicit real API run: blocked before any request because no API key is configured on the installed app; no cost incurred.
+- Explicit real API run: PASS; 2 requests completed and both provider prompts were verified to contain glossary and pronoun locks.
 
 ## Next step
 
-After an API key is configured on OnePlus, rerun only `V48RealApiPromptInstrumentedTest` with `realApi=true`. Do not tag or declare v4.8 complete until both real requests pass. Push remains pending because GitHub authentication/network did not return; `origin` is the approved `manhluongyd/translate-books-android` destination.
+Commit the corrected API QA harness, retry branch push, then prepare and execute the v4.8 tag/backup/artifact gates. Push remains pending because earlier GitHub attempts did not return; `origin` is the approved `manhluongyd/translate-books-android` destination.
 
 ## Resume rule
 
