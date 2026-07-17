@@ -37,9 +37,10 @@ public class Hotfix441Test {
         assertTrue(estimate.totalTokensHigh>0);
     }
 
-    @Test public void releaseMetadataIs48Code47() {
-        assertEquals("4.8",AppBuildInfo.VERSION_NAME);
-        assertEquals(47,AppBuildInfo.VERSION_CODE);
+    @Test public void p0DevelopmentMetadataIsExposed() {
+        assertEquals("4.13-p0-dev",AppBuildInfo.VERSION_NAME);
+        assertEquals(48,AppBuildInfo.VERSION_CODE);
+        assertTrue(AppBuildInfo.exportVersionLine().contains(AppBuildInfo.COMMIT_SHA));
     }
 
     @Test public void promptOnlyChangeReusesConstructionButReestimates() {

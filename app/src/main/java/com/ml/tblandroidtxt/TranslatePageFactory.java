@@ -108,6 +108,10 @@ class TranslatePageFactory {
         uploadCard.addView(a.estimatePanel, a.marginLP(-1, -2, 0, 10, 0, 0));
         root.addView(uploadCard, a.marginLP(-1, -2, 0, 8, 0, 14));
 
+        // Core readiness must remain visible on Translate; do not hide it behind Settings.
+        root.addView(translationSupportCard(), a.marginLP(-1, -2, 0, 0, 0, 10));
+        root.addView(outputCard(), a.marginLP(-1, -2, 0, 0, 0, 10));
+
         LinearLayout actionGrid = a.card(18, a.CARD, a.BORDER);
         actionGrid.setPadding(a.dp(12), a.dp(12), a.dp(12), a.dp(12));
         actionGrid.setOrientation(LinearLayout.VERTICAL);
@@ -163,6 +167,8 @@ class TranslatePageFactory {
         a.resultCard.addView(a.secondaryButton("Open output", v -> a.toast("Output đã được lưu vào file anh chọn")), new LinearLayout.LayoutParams(a.dp(140), a.dp(42)));
         a.resultCard.setVisibility(View.GONE);
         root.addView(a.resultCard, a.marginLP(-1, -2, 0, 8, 0, 16));
+
+        root.addView(activityLogCard(), a.marginLP(-1, -2, 0, 0, 0, 16));
 
         a.updateMetaLine();
         a.updateInputEstimate();

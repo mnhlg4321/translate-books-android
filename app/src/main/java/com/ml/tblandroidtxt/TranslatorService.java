@@ -690,15 +690,36 @@ public class TranslatorService extends Service {
         FileUtil.writeTextVerified(this,actual,assembled);
     }
 
-    private static Uri deferredOutput(Uri tree,String name){if(tree==null)throw new IllegalArgumentException("Output folder is missing");return Uri.parse("tbl-pending-output:"+Uri.encode(tree.toString())+"?name="+Uri.encode(name==null?"translation.txt":name));}
+    private static Uri deferredOutput(Uri tree,String name){
+        if(tree==null)throw new IllegalArgumentException("Output folder is missing");
+        // Keep the tree URI as a single query parameter.  The former implementation
+        // encoded it into the scheme-specific part and decoded it twice on retrieval,
+        // corrupting document ids such as primary%3ADownload%2FP0Output.
+        return new Uri.Builder().scheme("tbl-pending-output").authority("output")
+                .appendQueryParameter("tree",tree.toString())
+                .appendQueryParameter("name",name==null?"translation.txt":name).build();
+    }
 
-    private Uri materializeOutput(long jobId,Uri output) throws Exception {if(jobId>0){TranslationRepository.Job job=repo.getJob(jobId);if(job!=null&&job.outputUri!=null&&!job.outputUri.isEmpty()){Uri stored=Uri.parse(job.outputUri);if(!"tbl-pending-output".equals(stored.getScheme()))return stored;output=stored;}}if(output==null)throw new IllegalArgumentException("Output destination is missing");if(!"tbl-pending-output".equals(output.getScheme()))return output;String encoded=output.getSchemeSpecificPart();int q=encoded.indexOf("?name=");if(q<0)throw new IllegalArgumentException("Deferred output destination is invalid");Uri tree=Uri.parse(Uri.decode(encoded.substring(0,q)));String name=Uri.decode(encoded.substring(q+6));Uri actual=FileUtil.createOutputInTree(this,tree,name);if(jobId>0)repo.updateJobOutputUri(jobId,actual.toString());return actual;}
+    private Uri materializeOutput(long jobId,Uri output) throws Exception {
+        if(jobId>0){TranslationRepository.Job job=repo.getJob(jobId);if(job!=null&&job.outputUri!=null&&!job.outputUri.isEmpty()){Uri stored=Uri.parse(job.outputUri);if(!"tbl-pending-output".equals(stored.getScheme()))return stored;output=stored;}}
+        if(output==null)throw new IllegalArgumentException("Output destination is missing");
+        if(!"tbl-pending-output".equals(output.getScheme()))return output;
+        String treeValue=output.getQueryParameter("tree");
+        String name=output.getQueryParameter("name");
+        if(treeValue==null||treeValue.trim().isEmpty())throw new IllegalArgumentException("Deferred output destination is invalid");
+        Uri tree=Uri.parse(treeValue);
+        Uri actual=FileUtil.createOutputInTree(this,tree,name==null?"translation.txt":name);
+        LogStore.append(this,"OUTPUT_MATERIALIZED tree="+tree+", file="+actual);
+        if(jobId>0)repo.updateJobOutputUri(jobId,actual.toString());
+        return actual;
+    }
 
     private void validateOutputAccess(int inputCount, Uri fixedOutput, Uri outputTree) {
         String error;
         if (inputCount > 1 || fixedOutput == null) error = FileUtil.validateTreeWritable(this, outputTree, "Output folder");
         else error = FileUtil.validateWritable(this, fixedOutput, "Single output TXT");
         if (error != null) throw new IllegalStateException(error);
+        LogStore.append(this,"OUTPUT_PREFLIGHT_OK uri="+(outputTree!=null?outputTree:fixedOutput)+", inputCount="+inputCount);
     }
 
     private void setState(TranslationJobState.State next, String phase) {
