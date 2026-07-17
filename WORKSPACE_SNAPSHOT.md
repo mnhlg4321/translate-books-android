@@ -3,7 +3,7 @@
 - Snapshot updated: `2026-07-17 20:22:06 +07:00`
 - Current version: `4.8` (`versionCode 47`, development)
 - Current branch: `fix/v4.8-import-navigation`
-- Current commit: `f1c1dc1` (API QA pass before release-document commit)
+- Current commit: `21fc148c561dac395e85d19cd48fef6c378da3ab` (tagged v4.8 release commit; checklist tag evidence follows)
 - Current build: v4.7 debug release archive preserved in `artifacts/releases/v4.7/tag-v4.7` and `backup/v4.7/tag-v4.7`
 
 ## Completed tasks
@@ -43,11 +43,12 @@
 - Added an opt-in two-request real API harness that asserts both glossary and pronoun locks are present in each provider prompt without logging credentials.
 - Ran the opt-in harness directly against the retained OnePlus app data: exactly 2 real API requests completed, and both prompts contained the expected glossary and pronoun locks.
 - Added `QA_REPORT_v4_8.md`, v4.8 release notes, and the v4.8 changelog entry; checklist steps 1-9 now have evidence.
+- Created annotated local tag `v4.8` after the PreTag gate passed.
 
 ## Pending tasks
 
 - Retry pushing all separate commits after GitHub connectivity/authentication is restored.
-- Run the PreTag gate, create annotated tag `v4.8`, archive immutable artifacts/backups, then update final state and merge according to workflow.
+- Run PreBackup, archive immutable artifacts/backups, update BUILD_STATE and snapshot, then merge according to workflow.
 - Do not start batch or refinement work in this cycle.
 
 ## Known bugs
