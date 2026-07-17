@@ -22,3 +22,15 @@ Commit a snapshot update only when the file content changed. Never create an emp
 
 Before ending work, verify that the snapshot describes the latest completed group and the exact next action.
 
+## Artifact and backup policy
+
+After every successful build and after every release tag, run `scripts/archive-release.ps1` with a unique event id. A build event uses `build-YYYYMMDD-HHMMSS`; a tag event uses `tag-vX.Y.Z`.
+
+The immutable payload must exist in both `artifacts/releases/vX.Y.Z/<event>` and `backup/vX.Y.Z/<event>`. Never overwrite or reuse an existing event directory.
+
+Every payload must contain the APK, SHA-256 manifest, QA report, CHANGELOG, BUILD_STATE, RELEASE_NOTES, Perfetto evidence, Macrobenchmark evidence, screenshots, video, and `project_source_vX.Y.Z.zip` generated from the exact Git ref being archived.
+
+Do not treat `build/` or `app/build/` as durable storage. Copy the APK and all important evidence out immediately after a successful build and before any `gradlew clean`.
+
+Do not fabricate missing benchmark evidence. A historical limitation may use an explicit status report, but a new release must retain the real Macrobenchmark output required by its release criteria.
+

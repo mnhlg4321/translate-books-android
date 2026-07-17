@@ -117,6 +117,43 @@ git log --oneline --decorate --graph -20
 
 Tag nằm trên commit release của branch và commit đó phải là ancestor của `main` sau merge.
 
+## 5.1. Immutable artifact và backup
+
+Sau mỗi build thành công và sau mỗi release tag, chạy `scripts/archive-release.ps1` với event id duy nhất:
+
+```powershell
+# Ví dụ build thành công
+.\scripts\archive-release.ps1 -Version 4.8.0 -EventId build-20260717-210000 -GitRef HEAD ...
+
+# Ví dụ tag release
+.\scripts\archive-release.ps1 -Version 4.8.0 -EventId tag-v4.8.0 -GitRef v4.8.0 ...
+```
+
+Mỗi lần chạy phải tạo hai bản giống nhau và bất biến:
+
+```text
+artifacts/releases/vX.Y.Z/<event>/
+backup/vX.Y.Z/<event>/
+```
+
+Script phải dừng nếu một trong hai thư mục đích đã tồn tại. Không xóa, ghi đè hoặc tái sử dụng backup cũ.
+
+Mỗi payload bắt buộc có:
+
+- APK;
+- `SHA256SUMS.txt`;
+- QA report;
+- `CHANGELOG.md`;
+- `BUILD_STATE.md`;
+- `RELEASE_NOTES.md`;
+- Perfetto trace/report;
+- Macrobenchmark output/report;
+- screenshots;
+- video;
+- `project_source_vX.Y.Z.zip` tạo bằng `git archive` từ đúng Git ref/tag.
+
+`build/` và `app/build/` chỉ là đầu vào tạm thời. Phải archive APK và bằng chứng quan trọng ngay sau build thành công, trước bất kỳ lần `gradlew clean` tiếp theo.
+
 ## 6. Điều kiện hoàn tất
 
 Một phiên bản chỉ hoàn tất khi:
