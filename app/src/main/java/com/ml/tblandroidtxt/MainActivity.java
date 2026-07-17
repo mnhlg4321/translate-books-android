@@ -99,7 +99,7 @@ public class MainActivity extends Activity {
     TextView translateGlossaryChip, translatePronounChip, translateInstructionChip;
     LinearLayout resultCard;
     ProgressBar progress;
-    Button startButton, pauseButton, resumeButton, cancelButton, retryButton, pricingRetryButton;
+    Button startButton, pauseButton, resumeButton, cancelButton, retryButton, pricingRetryButton, outputFolderButton;
     boolean translationActive = false;
     int estimateSeq = 0;
     volatile CostEstimator.Estimate lastEstimate;
@@ -1253,6 +1253,13 @@ public class MainActivity extends Activity {
         boolean failed=false;if(!active){JobStore store=new JobStore(this);try{failed=store.hasFailedChunks();}finally{store.close();}}
         String blocker=!active&&plan!=null&&plan.ready()?startReadinessError():"Preparing TXT chunk plan";
         setButtonEnabled(startButton, !active&&plan!=null&&plan.ready()&&blocker==null);
+        if (!active && outputTreeUri != null) {
+            String outputError = FileUtil.validateTreeWritable(this, outputTreeUri, "Output folder");
+            if (outputError != null) {
+                setLabel(outputFolderLabel, "Output folder permission lost");
+                if (outputFolderButton != null) outputFolderButton.setText("Choose output folder again");
+            } else if (outputFolderButton != null) outputFolderButton.setText("Chọn thư mục");
+        }
         if(!active&&statusBanner!=null){
             if(blocker!=null){statusBanner.setVisibility(View.VISIBLE);statusBanner.setText("Not ready: "+blocker);}
             else statusBanner.setVisibility(View.GONE);

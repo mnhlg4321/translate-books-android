@@ -184,7 +184,8 @@ class TranslatePageFactory {
         LinearLayout buttons = a.rowContainer();
         buttons.addView(a.secondaryButton("Chọn file output", v -> a.chooseOutput()), new LinearLayout.LayoutParams(0, a.dp(44), 1));
         buttons.addView(a.space(8, 1));
-        buttons.addView(a.secondaryButton("Chọn thư mục", v -> a.chooseOutputFolder()), new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        a.outputFolderButton = a.secondaryButton("Chọn thư mục", v -> a.chooseOutputFolder());
+        buttons.addView(a.outputFolderButton, new LinearLayout.LayoutParams(0, a.dp(44), 1));
         card.addView(buttons);
         card.addView(a.outputFileLabel, a.marginLP(-1, -2, 0, 8, 0, 0));
         card.addView(a.outputFolderLabel, a.marginLP(-1, -2, 0, 4, 0, 0));
