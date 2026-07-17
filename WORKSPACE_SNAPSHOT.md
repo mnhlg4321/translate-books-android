@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
 - Snapshot updated: `2026-07-17 20:29:53 +07:00`
-- Current version: `4.8` (`versionCode 47`, development)
-- Current branch: `fix/v4.8-import-navigation`
-- Current commit: `0fb2f1d5b3d082e5cd4019e27083cef62c37ff0f` (post-tag evidence commit; tag `v4.8` points to `21fc148`)
-- Current build: v4.7 debug release archive preserved in `artifacts/releases/v4.7/tag-v4.7` and `backup/v4.7/tag-v4.7`
+- Current version: `4.8` (`versionCode 47`, locally released)
+- Current branch: `main`
+- Current commit: `f5d5326` (no-ff merge of `fix/v4.8-import-navigation`; tag `v4.8` points to `21fc148`)
+- Current build: v4.8 release archive preserved in `artifacts/releases/v4.8/tag-v4.8` and `backup/v4.8/tag-v4.8`
 
 ## Completed tasks
 
@@ -77,7 +77,7 @@
 
 ## Next step
 
-Local v4.8 release gates are complete at tag `v4.8`. Next step is remote access repair, then push branch/tag and merge to `main`; do not create another feature batch in this cycle.
+Local v4.8 release gates and no-ff merge are complete. Next step is remote access repair, then push `main` and tag `v4.8`; do not create another feature batch in this cycle.
 
 ## Resume rule
 

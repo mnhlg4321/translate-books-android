@@ -10,7 +10,7 @@
 - compileSdk: `35`
 - targetSdk: `35`
 - commit hash: `21fc148c561dac395e85d19cd48fef6c378da3ab` (annotated tag `v4.8`)
-- branch: `fix/v4.8-import-navigation`
+- branch: `main` (release merged locally; tag `v4.8` remains immutable)
 
 ## Existing artifacts
 
