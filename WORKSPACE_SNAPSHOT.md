@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-17 20:05:29 +07:00`
+- Snapshot updated: `2026-07-17 20:10:46 +07:00`
 - Current version: `4.8` (`versionCode 47`, development)
 - Current branch: `fix/v4.8-import-navigation`
-- Current commit: `f33054a` (completed pronoun group before the current navigation group)
+- Current commit: `8eedc4c` (completed navigation group before the current instrumentation group)
 - Current build: v4.7 debug release archive preserved in `artifacts/releases/v4.7/tag-v4.7` and `backup/v4.7/tag-v4.7`
 
 ## Completed tasks
@@ -37,10 +37,12 @@
 - Made pronoun profile persistence and active selection a single synchronous transaction, and return to the profile list immediately after import/replacement.
 - Added deterministic Back navigation: editors return to lists, Library subsections return to Files, Library root returns to Translate, and Settings walks through General before Translate.
 - Confirmed by static audit that the four primary pages use ordinary `ScrollView` containers and have no swipe-refresh/touch gesture interceptor.
+- Added instrumentation for glossary reload, pronoun cold-store reload, Library/Settings Back, and four-tab vertical gestures with preference snapshot/restore.
+- Installed the current v4.8 debug APK on OnePlus CPH2691 / Android 15 through the connected instrumentation run.
 
 ## Pending tasks
 
-- Run instrumentation/device validation for Library/Settings Back and four-tab scrolling without gesture refresh.
+- Build and preserve the v4.8 development APK, then complete device QA and the small real API prompt verification.
 - Add focused unit/instrumentation coverage, device QA, and a real 2–3 chunk API prompt verification.
 - Do not start batch or refinement work in this cycle.
 
@@ -60,13 +62,15 @@
 - Immutable archive regression: passed checksum, ZIP integrity, artifact/backup parity, and no-overwrite checks.
 - v4.8+ workflow gate regression: passed; negative cases were rejected as designed.
 - Repository hygiene regression: passed tracked-file, secret-pattern, and ignore-rule checks.
-- Glossary import unit regression: 2 passed, 0 failed; Android instrumentation remains pending.
-- Pronoun/glossary focused JVM regression: 4 passed, 0 failed; cold-start instrumentation remains pending.
-- Back/Settings navigation policy regression: 7 passed, 0 failed; device gesture validation remains pending.
+- Glossary import unit regression: 2 passed, 0 failed; device reload instrumentation passed.
+- Pronoun/glossary focused JVM regression: 4 passed, 0 failed; cold-store instrumentation passed.
+- Back/Settings navigation policy regression: 7 passed, 0 failed; device Back/gesture instrumentation passed.
+- Full v4.8 JVM regression: 99 passed, 0 failed, 0 skipped.
+- Full Android instrumentation on OnePlus CPH2691 / Android 15: 11 passed, 0 failed, 0 skipped, including all 4 new import/navigation/scroll cases.
 
 ## Next step
 
-Commit the completed Back/navigation group, then add and run Android instrumentation for persistence, Back, and four-tab scroll. Push remains pending because GitHub authentication/network did not return; `origin` is restored to the approved `manhluongyd/translate-books-android` destination.
+Commit the passing instrumentation group, build and preserve the APK, then run the authorized real 2-3 chunk API verification. Push remains pending because GitHub authentication/network did not return; `origin` is restored to the approved `manhluongyd/translate-books-android` destination.
 
 ## Resume rule
 
