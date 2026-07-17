@@ -5,7 +5,7 @@ public final class AppBuildInfo {
     public static final int VERSION_CODE = 48;
     public static final String VERSION_NAME = "4.13-p0-dev";
     public static final String RELEASE_LABEL = "P0 translation-core hotfix in progress";
-    public static final String COMMIT_SHA = "4d5ca54 (P0 worktree)";
+    public static final String COMMIT_SHA = "52fb24c (P0 translation-core hotfix)";
     public static final String BUILD_TIME = "2026-07-17 +07:00";
     public static final String APP_TITLE = "Translate Books";
 
