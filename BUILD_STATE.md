@@ -2,17 +2,22 @@
 
 ## Release identity
 
-- versionName: `4.7`
-- versionCode: `46`
-- build date: `2026-07-17 07:18:13 +07:00` (current release APK timestamp)
+- versionName: `4.8` (development; last released tag remains `v4.7`)
+- versionCode: `47`
+- build date: `2026-07-17 20:12:29 +07:00`
 - Gradle: `9.3.0` wrapper; Android Gradle Plugin `8.7.3`
 - Android Studio: `2026.1.1` (`AI-261.23567.138.2611.15646644`)
 - compileSdk: `35`
 - targetSdk: `35`
-- commit hash: `da8c6d9a9001296c3f3c17817ea3d6372fd59ae3` (v4.7 source baseline)
-- branch: `main`
+- commit hash: `e4b9dfde53fdefa9f7a3934dfd6ec604c0e5d565` (application/test baseline before the opt-in API harness)
+- branch: `fix/v4.8-import-navigation`
 
 ## Existing artifacts
+
+- v4.8 development APK: `artifacts/releases/v4.8/dev-e4b9dfd-20260717-201229/TranslateBooks-v4.8-debug.apk`
+  - Size: `1,626,871` bytes
+  - SHA-256: `ABED4892CEFA9F3363F85ED8CF57F4D06C388447EE8F37617683FBB6DF891FB3`
+  - Mirrored without overwrite at `backup/v4.8/dev-e4b9dfd-20260717-201229/`.
 
 - Release candidate APK: `artifacts/v47/TranslateBooks-v4.7-debug.apk`
   - Size: `1,625,315` bytes
@@ -24,7 +29,15 @@
 
 ## Regression status
 
-`PASS WITH KNOWN LIMITATIONS`, based on the final v4.7 QA evidence:
+`IN PROGRESS / API VERIFICATION BLOCKED` for v4.8:
+
+- Build: successful (`assembleDebug`).
+- JVM unit tests: 99 passed, 0 failed, 0 skipped.
+- Android instrumentation: 11 required offline/device cases passed, 0 failed on OnePlus CPH2691 / Android 15.
+- Opt-in real API harness: safely skipped in normal regression and blocked when explicitly enabled because the installed app has no configured API key.
+- Glossary/pronoun persistence, cold-store reload, Back navigation, and four-tab gestures: passed.
+
+The last released v4.7 evidence remains `PASS WITH KNOWN LIMITATIONS`:
 
 - Build: successful (`clean testDebugUnitTest lintDebug assembleDebug connectedDebugAndroidTest`; 73 tasks).
 - JVM unit tests: 93 passed, 0 failed, 0 skipped.
@@ -32,7 +45,7 @@
 - Lint: 0 errors, 50 warnings.
 - Core translation and recovery regression coverage: passed within the scope recorded in `QA_REPORT_v4_7.md`.
 
-The regression suite was not rerun during Git normalization. This file records the existing verified build state and does not claim a new build.
+No v4.8 tag or release completion is claimed until the two-request real API verification passes.
 
 ## Known issues
 
@@ -40,4 +53,5 @@ The regression suite was not rerun during Git normalization. This file records t
 - Performance evidence uses Perfetto/frame/PSS measurements rather than a dedicated Macrobenchmark module.
 - The 80-swipe gesture campaign was not repeated after the final Back/pronoun cache-invalidation patch; the patch did not alter the four primary scroll containers.
 - Lint reports 50 warnings and no errors.
-
+- GitHub push attempts to the approved `manhluongyd/translate-books-android` origin currently time out without a response.
+- Real API verification requires an API key to be configured again on the installed debug app.

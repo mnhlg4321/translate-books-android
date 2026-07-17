@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-17 20:10:46 +07:00`
+- Snapshot updated: `2026-07-17 20:16:28 +07:00`
 - Current version: `4.8` (`versionCode 47`, development)
 - Current branch: `fix/v4.8-import-navigation`
-- Current commit: `8eedc4c` (completed navigation group before the current instrumentation group)
+- Current commit: `e4b9dfde53fdefa9f7a3934dfd6ec604c0e5d565` (passing offline/device regression baseline before the API harness group)
 - Current build: v4.7 debug release archive preserved in `artifacts/releases/v4.7/tag-v4.7` and `backup/v4.7/tag-v4.7`
 
 ## Completed tasks
@@ -39,10 +39,13 @@
 - Confirmed by static audit that the four primary pages use ordinary `ScrollView` containers and have no swipe-refresh/touch gesture interceptor.
 - Added instrumentation for glossary reload, pronoun cold-store reload, Library/Settings Back, and four-tab vertical gestures with preference snapshot/restore.
 - Installed the current v4.8 debug APK on OnePlus CPH2691 / Android 15 through the connected instrumentation run.
+- Preserved the development APK, SHA-256, QA report, release documents, and test reports under `artifacts/releases/v4.8/dev-e4b9dfd-20260717-201229/` and a non-overwriting backup mirror.
+- Added an opt-in two-request real API harness that asserts both glossary and pronoun locks are present in each provider prompt without logging credentials.
 
 ## Pending tasks
 
-- Build and preserve the v4.8 development APK, then complete device QA and the small real API prompt verification.
+- Configure an API key in the installed debug app, then rerun the opt-in two-request real API prompt verification.
+- Retry pushing all separate commits after GitHub connectivity/authentication is restored.
 - Add focused unit/instrumentation coverage, device QA, and a real 2–3 chunk API prompt verification.
 - Do not start batch or refinement work in this cycle.
 
@@ -67,10 +70,12 @@
 - Back/Settings navigation policy regression: 7 passed, 0 failed; device Back/gesture instrumentation passed.
 - Full v4.8 JVM regression: 99 passed, 0 failed, 0 skipped.
 - Full Android instrumentation on OnePlus CPH2691 / Android 15: 11 passed, 0 failed, 0 skipped, including all 4 new import/navigation/scroll cases.
+- With the opt-in API harness included, normal instrumentation reports 11 passed, 0 failed, 1 intentionally skipped.
+- Explicit real API run: blocked before any request because no API key is configured on the installed app; no cost incurred.
 
 ## Next step
 
-Commit the passing instrumentation group, build and preserve the APK, then run the authorized real 2-3 chunk API verification. Push remains pending because GitHub authentication/network did not return; `origin` is restored to the approved `manhluongyd/translate-books-android` destination.
+After an API key is configured on OnePlus, rerun only `V48RealApiPromptInstrumentedTest` with `realApi=true`. Do not tag or declare v4.8 complete until both real requests pass. Push remains pending because GitHub authentication/network did not return; `origin` is the approved `manhluongyd/translate-books-android` destination.
 
 ## Resume rule
 
