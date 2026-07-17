@@ -130,3 +130,15 @@ Một phiên bản chỉ hoàn tất khi:
 - branch được merge `--no-ff` vào `main`;
 - working tree cuối cùng sạch.
 
+## 7. Workspace Snapshot
+
+Đọc `WORKSPACE_SNAPSHOT.md` khi bắt đầu hoặc tiếp tục công việc. Cập nhật file ngay khi xảy ra điều kiện đầu tiên:
+
+- khoảng 30 phút làm việc;
+- khoảng 10 commit kể từ snapshot gần nhất;
+- hoàn thành một nhóm chức năng độc lập;
+- trạng thái regression, build, tag, merge, blocker hoặc known bug thay đổi;
+- chuẩn bị dừng hoặc bàn giao phiên làm việc.
+
+Snapshot phải ghi đủ version, branch, commit baseline, build, completed tasks, pending tasks, known bugs, regression status và next step. Snapshot là một thay đổi tài liệu thực; chỉ commit khi nội dung đã thay đổi và không bao giờ tạo commit rỗng.
+
