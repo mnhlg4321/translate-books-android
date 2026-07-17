@@ -37,9 +37,9 @@ public class Hotfix441Test {
         assertTrue(estimate.totalTokensHigh>0);
     }
 
-    @Test public void releaseMetadataIs46Code45() {
-        assertEquals("4.7",AppBuildInfo.VERSION_NAME);
-        assertEquals(46,AppBuildInfo.VERSION_CODE);
+    @Test public void releaseMetadataIs48Code47() {
+        assertEquals("4.8",AppBuildInfo.VERSION_NAME);
+        assertEquals(47,AppBuildInfo.VERSION_CODE);
     }
 
     @Test public void promptOnlyChangeReusesConstructionButReestimates() {

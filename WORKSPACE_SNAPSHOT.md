@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-17 19:27:07 +07:00`
-- Current version: `4.7` (`versionCode 46`)
-- Current branch: `main` after the v4.7 repository cleanup merge
-- Current commit: implementation baseline `27a4345`; the snapshot and no-ff merge commits follow this baseline
+- Snapshot updated: `2026-07-17 19:54:12 +07:00`
+- Current version: `4.8` (`versionCode 47`, development)
+- Current branch: `fix/v4.8-import-navigation`
+- Current commit: baseline `e2f3b916bd504cff40ba44e94b4c0b274724cd8b`; the v4.8 baseline commit follows it
 - Current build: v4.7 debug release archive preserved in `artifacts/releases/v4.7/tag-v4.7` and `backup/v4.7/tag-v4.7`
 
 ## Completed tasks
@@ -30,11 +30,16 @@
 - Created pre-cleanup ZIP backup `backup/pre-git/project_source_v4.7_pre-git_20260717-192534.zip` with SHA-256 `2544FF1363F78D7B1A9960C3C234898D35676664716161E2D3BD6F544D16A94C`.
 - Hardened `.gitignore`, removed tracked IDE cache/device state, and sanitized the sample API key to `REPLACE_ME`.
 - Confirmed no tracked build/cache/local.properties files, no credential-pattern matches, no remote, and preserved immutable tag `v4.7`.
+- Audited version history: v4.7/code46 is the last product release; feature/v4.8 through feature/v4.12 were infrastructure-only branches with no app-code changes.
+- Started the focused v4.8/code47 import-navigation cycle on `fix/v4.8-import-navigation`.
 
 ## Pending tasks
 
-- No application feature group is currently assigned.
-- Select the next application version/functional group before creating another feature branch.
+- Fix glossary import persistence, activation, immediate UI refresh, and Back behavior.
+- Fix pronoun import persistence, activation, immediate profile display, and cold-start retention.
+- Validate Library/Settings Back navigation and four-tab scrolling without gesture refresh.
+- Add focused unit/instrumentation coverage, device QA, and a real 2–3 chunk API prompt verification.
+- Do not start batch or refinement work in this cycle.
 
 ## Known bugs
 
@@ -56,7 +61,7 @@
 
 ## Next step
 
-Repository baseline is ready at `main`; no remote or push is configured. For the first v4.8+ development session, read `BUILD_STATE.md`, read this snapshot, confirm clean `main`/HEAD, create the version checklist and a new `feature/vX.Y` branch, then follow all 14 steps without skipping.
+Inspect the existing glossary/pronoun import and navigation code, then implement the glossary group first without changing translation core, dashboard, SAF, session isolation, or recovery.
 
 ## Resume rule
 
