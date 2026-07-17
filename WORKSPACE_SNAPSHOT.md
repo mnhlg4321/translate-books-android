@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-17 20:03:31 +07:00`
+- Snapshot updated: `2026-07-17 20:05:29 +07:00`
 - Current version: `4.8` (`versionCode 47`, development)
 - Current branch: `fix/v4.8-import-navigation`
-- Current commit: `7b0ec2e` (completed glossary group before the current pronoun group)
+- Current commit: `f33054a` (completed pronoun group before the current navigation group)
 - Current build: v4.7 debug release archive preserved in `artifacts/releases/v4.7/tag-v4.7` and `backup/v4.7/tag-v4.7`
 
 ## Completed tasks
@@ -35,10 +35,12 @@
 - Normalized both glossary import paths so imported terms are stored as a library profile, activated immediately, reflected in Settings/prompt state, and returned to the glossary list.
 - Added focused glossary parsing/merge/prompt unit coverage; `GlossaryImportV48Test` passes (2 tests).
 - Made pronoun profile persistence and active selection a single synchronous transaction, and return to the profile list immediately after import/replacement.
+- Added deterministic Back navigation: editors return to lists, Library subsections return to Files, Library root returns to Translate, and Settings walks through General before Translate.
+- Confirmed by static audit that the four primary pages use ordinary `ScrollView` containers and have no swipe-refresh/touch gesture interceptor.
 
 ## Pending tasks
 
-- Validate Library/Settings Back navigation and four-tab scrolling without gesture refresh.
+- Run instrumentation/device validation for Library/Settings Back and four-tab scrolling without gesture refresh.
 - Add focused unit/instrumentation coverage, device QA, and a real 2–3 chunk API prompt verification.
 - Do not start batch or refinement work in this cycle.
 
@@ -60,10 +62,11 @@
 - Repository hygiene regression: passed tracked-file, secret-pattern, and ignore-rule checks.
 - Glossary import unit regression: 2 passed, 0 failed; Android instrumentation remains pending.
 - Pronoun/glossary focused JVM regression: 4 passed, 0 failed; cold-start instrumentation remains pending.
+- Back/Settings navigation policy regression: 7 passed, 0 failed; device gesture validation remains pending.
 
 ## Next step
 
-Commit the completed pronoun group, then validate and fix Back navigation and scrolling. Push remains pending because GitHub authentication/network did not return; `origin` is restored to the approved `manhluongyd/translate-books-android` destination.
+Commit the completed Back/navigation group, then add and run Android instrumentation for persistence, Back, and four-tab scroll. Push remains pending because GitHub authentication/network did not return; `origin` is restored to the approved `manhluongyd/translate-books-android` destination.
 
 ## Resume rule
 

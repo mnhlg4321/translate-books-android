@@ -433,23 +433,20 @@ public class MainActivity extends Activity {
     }
 
     @Override public void onBackPressed() {
-        if ("Glossaries".equals(currentTab) && editingGlossary != null) {
-            saveEditingGlossary();
-            editingGlossary = null;
-            invalidatePage("Glossaries");
-            switchTab("Glossaries");
-            return;
+        AppBackNavigationPolicy.Action action = AppBackNavigationPolicy.resolve(
+                currentTab, editingGlossary != null, editingPronoun != null, settingsCategory);
+        if (action == AppBackNavigationPolicy.Action.SAVE_AND_CLOSE_GLOSSARY) {
+            saveEditingGlossary(); editingGlossary = null; invalidatePage("Glossaries"); switchTab("Glossaries"); return;
         }
-        if ("Pronouns".equals(currentTab) && editingPronoun != null) {
-            editingPronoun = null;
-            invalidatePage("Pronouns");
-            switchTab("Pronouns");
-            return;
+        if (action == AppBackNavigationPolicy.Action.CLOSE_PRONOUN) {
+            editingPronoun = null; invalidatePage("Pronouns"); switchTab("Pronouns"); return;
         }
-        if ("Glossaries".equals(currentTab) || "Pronouns".equals(currentTab) || "Sample".equals(currentTab)) {
-            switchTab("Files");
-            return;
+        if (action == AppBackNavigationPolicy.Action.OPEN_LIBRARY_HOME) { switchTab("Files"); return; }
+        if (action == AppBackNavigationPolicy.Action.OPEN_SETTINGS_GENERAL) {
+            silentPersistCurrentUi(); settingsCategory = "General"; settingsSectionExpanded = true;
+            invalidatePage("Settings"); switchTab("Settings"); return;
         }
+        if (action == AppBackNavigationPolicy.Action.OPEN_TRANSLATE) { switchTab("Translate"); return; }
         super.onBackPressed();
     }
 
