@@ -785,7 +785,7 @@ public class MainActivity extends Activity {
     void replacePronoun(PronounStore.Profile profile){if(profile==null)return;pendingPronounReplaceId=profile.id;choosePronoun();}
 
     void selectPronoun(PronounStore.Profile profile){
-        if(!ensureConfigMutable()||profile==null)return;PronounStore.setSelectedId(this,profile.id);applyActivePronoun(profile);toast("Active pronoun: "+profile.name);refreshPronounsPage();
+        if(!ensureConfigMutable()||profile==null)return;if(!PronounStore.saveAndSelect(this,profile)){toast("Could not save pronoun");return;}applyActivePronoun(profile);toast("Active pronoun: "+profile.name);refreshPronounsPage();
     }
 
     void refreshPronounsPage(){invalidatePage("Pronouns");switchTab("Pronouns");}
@@ -978,8 +978,8 @@ public class MainActivity extends Activity {
             try {
                 String pronounText = FileUtil.readText(this, pronounUri);
                 PronounStore.Profile profile;
-                if(pendingPronounReplaceId!=null&&!pendingPronounReplaceId.isEmpty()&&(profile=PronounStore.find(this,pendingPronounReplaceId))!=null){profile.uri=pronounUri.toString();profile.text=pronounText;if(profile.name==null||profile.name.startsWith("New pronoun"))profile.name=pronounName;PronounStore.upsert(this,profile);}else profile=PronounStore.importProfile(this,pronounName,pronounUri.toString(),pronounText);
-                pendingPronounReplaceId="";PronounStore.setSelectedId(this,profile.id);applyActivePronoun(profile);
+                if(pendingPronounReplaceId!=null&&!pendingPronounReplaceId.isEmpty()&&(profile=PronounStore.find(this,pendingPronounReplaceId))!=null){profile.uri=pronounUri.toString();profile.text=pronounText;if(profile.name==null||profile.name.startsWith("New pronoun"))profile.name=pronounName;if(!PronounStore.saveAndSelect(this,profile))throw new IllegalStateException("Could not persist pronoun profile");}else profile=PronounStore.importAndSelectProfile(this,pronounName,pronounUri.toString(),pronounText);
+                if(profile==null)throw new IllegalStateException("Could not persist pronoun profile");pendingPronounReplaceId="";editingPronoun=null;applyActivePronoun(profile);
                 String validation = PromptContextBuilder.validateText(activeGlossaryPromptText(), pronounText);
                 toast("Đã nạp pronoun: " + pronounName);
                 appendLog("Đã nạp pronoun: " + pronounName + " • " + oneLine(validation));

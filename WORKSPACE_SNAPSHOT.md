@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-17 20:00:30 +07:00`
+- Snapshot updated: `2026-07-17 20:03:31 +07:00`
 - Current version: `4.8` (`versionCode 47`, development)
 - Current branch: `fix/v4.8-import-navigation`
-- Current commit: `2c6017dc77736125863b28de4d84332543bbbdc5` (v4.8 development baseline before the current glossary group)
+- Current commit: `7b0ec2e` (completed glossary group before the current pronoun group)
 - Current build: v4.7 debug release archive preserved in `artifacts/releases/v4.7/tag-v4.7` and `backup/v4.7/tag-v4.7`
 
 ## Completed tasks
@@ -34,10 +34,10 @@
 - Started the focused v4.8/code47 import-navigation cycle on `fix/v4.8-import-navigation`.
 - Normalized both glossary import paths so imported terms are stored as a library profile, activated immediately, reflected in Settings/prompt state, and returned to the glossary list.
 - Added focused glossary parsing/merge/prompt unit coverage; `GlossaryImportV48Test` passes (2 tests).
+- Made pronoun profile persistence and active selection a single synchronous transaction, and return to the profile list immediately after import/replacement.
 
 ## Pending tasks
 
-- Fix pronoun import persistence, activation, immediate profile display, and cold-start retention.
 - Validate Library/Settings Back navigation and four-tab scrolling without gesture refresh.
 - Add focused unit/instrumentation coverage, device QA, and a real 2–3 chunk API prompt verification.
 - Do not start batch or refinement work in this cycle.
@@ -59,10 +59,11 @@
 - v4.8+ workflow gate regression: passed; negative cases were rejected as designed.
 - Repository hygiene regression: passed tracked-file, secret-pattern, and ignore-rule checks.
 - Glossary import unit regression: 2 passed, 0 failed; Android instrumentation remains pending.
+- Pronoun/glossary focused JVM regression: 4 passed, 0 failed; cold-start instrumentation remains pending.
 
 ## Next step
 
-Commit and push the completed glossary group, then implement pronoun persistence without changing translation core, dashboard, SAF, session isolation, or recovery.
+Commit the completed pronoun group, then validate and fix Back navigation and scrolling. Push remains pending because GitHub authentication/network did not return; `origin` is restored to the approved `manhluongyd/translate-books-android` destination.
 
 ## Resume rule
 
