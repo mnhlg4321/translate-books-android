@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-17 20:22:06 +07:00`
+- Snapshot updated: `2026-07-17 20:29:53 +07:00`
 - Current version: `4.8` (`versionCode 47`, development)
 - Current branch: `fix/v4.8-import-navigation`
-- Current commit: `21fc148c561dac395e85d19cd48fef6c378da3ab` (tagged v4.8 release commit; checklist tag evidence follows)
+- Current commit: `0fb2f1d5b3d082e5cd4019e27083cef62c37ff0f` (post-tag evidence commit; tag `v4.8` points to `21fc148`)
 - Current build: v4.7 debug release archive preserved in `artifacts/releases/v4.7/tag-v4.7` and `backup/v4.7/tag-v4.7`
 
 ## Completed tasks
@@ -40,6 +40,7 @@
 - Added instrumentation for glossary reload, pronoun cold-store reload, Library/Settings Back, and four-tab vertical gestures with preference snapshot/restore.
 - Installed the current v4.8 debug APK on OnePlus CPH2691 / Android 15 through the connected instrumentation run.
 - Preserved the development APK, SHA-256, QA report, release documents, and test reports under `artifacts/releases/v4.8/dev-e4b9dfd-20260717-201229/` and a non-overwriting backup mirror.
+- Created local annotated tag `v4.8` and immutable release archive/backup, including source ZIP and required evidence.
 - Added an opt-in two-request real API harness that asserts both glossary and pronoun locks are present in each provider prompt without logging credentials.
 - Ran the opt-in harness directly against the retained OnePlus app data: exactly 2 real API requests completed, and both prompts contained the expected glossary and pronoun locks.
 - Added `QA_REPORT_v4_8.md`, v4.8 release notes, and the v4.8 changelog entry; checklist steps 1-9 now have evidence.
@@ -47,8 +48,7 @@
 
 ## Pending tasks
 
-- Retry pushing all separate commits after GitHub connectivity/authentication is restored.
-- Run PreBackup, archive immutable artifacts/backups, update BUILD_STATE and snapshot, then merge according to workflow.
+- Push branch/tag and merge to `main` after the owner restores/accesses the approved private repository URL.
 - Do not start batch or refinement work in this cycle.
 
 ## Known bugs
@@ -77,7 +77,7 @@
 
 ## Next step
 
-Commit the corrected API QA harness, retry branch push, then prepare and execute the v4.8 tag/backup/artifact gates. Push remains pending because earlier GitHub attempts did not return; `origin` is the approved `manhluongyd/translate-books-android` destination.
+Local v4.8 release gates are complete at tag `v4.8`. Next step is remote access repair, then push branch/tag and merge to `main`; do not create another feature batch in this cycle.
 
 ## Resume rule
 

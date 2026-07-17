@@ -2,14 +2,14 @@
 
 ## Release identity
 
-- versionName: `4.8` (development; last released tag remains `v4.7`)
+- versionName: `4.8` (released locally; previous release was `v4.7`)
 - versionCode: `47`
-- build date: `2026-07-17 20:12:29 +07:00`
+- build date: `2026-07-17 20:22:06 +07:00`
 - Gradle: `9.3.0` wrapper; Android Gradle Plugin `8.7.3`
 - Android Studio: `2026.1.1` (`AI-261.23567.138.2611.15646644`)
 - compileSdk: `35`
 - targetSdk: `35`
-- commit hash: `e4b9dfde53fdefa9f7a3934dfd6ec604c0e5d565` (application/test baseline before the opt-in API harness)
+- commit hash: `21fc148c561dac395e85d19cd48fef6c378da3ab` (annotated tag `v4.8`)
 - branch: `fix/v4.8-import-navigation`
 
 ## Existing artifacts
@@ -18,6 +18,11 @@
   - Size: `1,626,871` bytes
   - SHA-256: `ABED4892CEFA9F3363F85ED8CF57F4D06C388447EE8F37617683FBB6DF891FB3`
   - Mirrored without overwrite at `backup/v4.8/dev-e4b9dfd-20260717-201229/`.
+
+- v4.8 release archive: `artifacts/releases/v4.8/tag-v4.8/TranslateBooks-v4.8-debug.apk`
+  - SHA-256: `ABED4892CEFA9F3363F85ED8CF57F4D06C388447EE8F37617683FBB6DF891FB3`
+  - Source snapshot: `artifacts/releases/v4.8/tag-v4.8/project_source_v4.8.zip`
+  - Immutable mirror: `backup/v4.8/tag-v4.8/`.
 
 - Release candidate APK: `artifacts/v47/TranslateBooks-v4.7-debug.apk`
   - Size: `1,625,315` bytes
@@ -29,12 +34,12 @@
 
 ## Regression status
 
-`IN PROGRESS / API VERIFICATION BLOCKED` for v4.8:
+`PASS WITH KNOWN LIMITATIONS` for v4.8:
 
 - Build: successful (`assembleDebug`).
 - JVM unit tests: 99 passed, 0 failed, 0 skipped.
 - Android instrumentation: 11 required offline/device cases passed, 0 failed on OnePlus CPH2691 / Android 15.
-- Opt-in real API harness: safely skipped in normal regression and blocked when explicitly enabled because the installed app has no configured API key.
+- Opt-in real API harness: 2 real requests passed with both lock types asserted in each provider prompt.
 - Glossary/pronoun persistence, cold-store reload, Back navigation, and four-tab gestures: passed.
 
 The last released v4.7 evidence remains `PASS WITH KNOWN LIMITATIONS`:
@@ -45,7 +50,7 @@ The last released v4.7 evidence remains `PASS WITH KNOWN LIMITATIONS`:
 - Lint: 0 errors, 50 warnings.
 - Core translation and recovery regression coverage: passed within the scope recorded in `QA_REPORT_v4_7.md`.
 
-No v4.8 tag or release completion is claimed until the two-request real API verification passes.
+The v4.8 tag and immutable artifact/backup archives are complete locally. GitHub publication remains blocked by the remote repository response.
 
 ## Known issues
 
@@ -54,4 +59,4 @@ No v4.8 tag or release completion is claimed until the two-request real API veri
 - The 80-swipe gesture campaign was not repeated after the final Back/pronoun cache-invalidation patch; the patch did not alter the four primary scroll containers.
 - Lint reports 50 warnings and no errors.
 - GitHub push attempts to the approved `manhluongyd/translate-books-android` origin currently time out without a response.
-- Real API verification requires an API key to be configured again on the installed debug app.
+- Android 15 shell screenrecord was denied; the archive records a fresh screenshot/Perfetto trace and clearly labels the retained visual video reference.

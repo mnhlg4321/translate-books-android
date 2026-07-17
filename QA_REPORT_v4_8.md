@@ -26,4 +26,5 @@
 
 - Warm tab-switch P50 remains approximately 20 ms versus the 16 ms target.
 - Performance evidence is Perfetto/frame/PSS based; no dedicated Macrobenchmark module exists.
+- Android 15 shell `screenrecord` was denied by the device, so the archived video is retained as a clearly named v4.7 visual reference; the current v4.8 screenshot and Perfetto trace are fresh.
 - GitHub push is currently blocked by `Repository not found` for the configured private-repository URL.
