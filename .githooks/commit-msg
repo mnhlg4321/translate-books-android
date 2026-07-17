@@ -1,0 +1,17 @@
+#!/bin/sh
+
+message_file="$1"
+first_line="$(sed -n '1p' "$message_file")"
+
+if printf '%s\n' "$first_line" | grep -Eq '^(feat|fix|perf|refactor|test|build|docs|chore)(\([a-z0-9._/-]+\))?: .+'; then
+  exit 0
+fi
+
+if printf '%s\n' "$first_line" | grep -Eq '^Merge feature/v[0-9]+\.[0-9]+$'; then
+  exit 0
+fi
+
+echo "Commit message must be clear and use: <type>(<scope>): <summary>" >&2
+echo "Allowed types: feat, fix, perf, refactor, test, build, docs, chore" >&2
+exit 1
+
