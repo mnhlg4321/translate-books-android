@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-17 19:07:02 +07:00`
+- Snapshot updated: `2026-07-17 19:12:49 +07:00`
 - Current version: `4.7` (`versionCode 46`)
-- Current branch: `main` after the immutable archive workflow merge
-- Current commit: implementation baseline `3d925a1`; the snapshot and no-ff merge commits follow this baseline
+- Current branch: `main` after the mandatory v4.8+ workflow merge
+- Current commit: implementation baseline `015fb6b`; the snapshot and no-ff merge commits follow this baseline
 - Current build: v4.7 debug release archive preserved in `artifacts/releases/v4.7/tag-v4.7` and `backup/v4.7/tag-v4.7`
 
 ## Completed tasks
@@ -22,6 +22,11 @@
 - Created `project_source_v4.7.zip` from tag `v4.7` at commit `d63005793cf464064d08ed9625d36fb0b9b8c9d8`.
 - Verified all 16 archived files, opened the 299-entry source ZIP, matched artifact/backup checksum manifests, and confirmed overwrite protection.
 - Recorded the honest v4.7 Macrobenchmark status as `NOT RUN`; Perfetto/frame/PSS evidence remains available.
+- Defined the fixed 14-step Development Workflow required for every v4.8+ session.
+- Added a reusable release checklist that requires concrete Evidence for every completed step.
+- Added executable `PreTag`, `PreBackup`, and `Complete` gates; v4.8+ tag/archive operations require a matching checklist version.
+- Added a guarded annotated-tag wrapper and integrated the PreBackup gate into the immutable archiver.
+- Regression-tested successful gates plus rejection of incomplete checklists, failed Regression, and version mismatch.
 
 ## Pending tasks
 
@@ -42,11 +47,12 @@
 - Android instrumentation: 7 passed, 0 failed, 0 skipped on OnePlus CPH2691 / Android 15.
 - Workspace Snapshot enforcement: implemented; fresh-snapshot guard regression passed.
 - Immutable archive regression: passed checksum, ZIP integrity, artifact/backup parity, and no-overwrite checks.
+- v4.8+ workflow gate regression: passed; negative cases were rejected as designed.
 - Android regression has not been rerun because the current group changes repository workflow only.
 
 ## Next step
 
-Read the next requested functional scope, confirm `main` is clean, select its `feature/vX.Y` branch, and update this snapshot when that group completes or a freshness threshold is reached.
+For the first v4.8+ development session, read `BUILD_STATE.md`, read this snapshot, confirm clean `main`/HEAD, create the version checklist and a new `feature/vX.Y` branch, then follow all 14 steps without skipping.
 
 ## Resume rule
 

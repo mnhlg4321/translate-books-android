@@ -2,7 +2,11 @@
 
 ## Required startup
 
-Read `WORKSPACE_SNAPSHOT.md` and `GIT_WORKFLOW.md` before modifying this project. Verify the current branch, commit, status, version, and build artifact against the snapshot.
+For v4.8 and later, follow `DEVELOPMENT_WORKFLOW.md` in its exact 14-step order. Start every session by reading `BUILD_STATE.md`, then `WORKSPACE_SNAPSHOT.md`, then verify the current commit/status, and only then create a new feature branch.
+
+Read `GIT_WORKFLOW.md` before modifying this project. Verify the current branch, commit, status, version, and build artifact against the snapshot.
+
+Create the version checklist from `release_checklists/TEMPLATE.md`. Do not mark a step complete without concrete Evidence. If any step fails, stop dependent work, record the failure, and do not claim the session or release is complete.
 
 ## Snapshot policy
 

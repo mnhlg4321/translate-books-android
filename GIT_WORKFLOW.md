@@ -1,5 +1,7 @@
 # Git Workflow
 
+Từ v4.8 trở đi, `DEVELOPMENT_WORKFLOW.md` và checklist 14 bước là gate bắt buộc. Nếu bất kỳ gate nào fail thì không được tag, backup, xuất artifact hoặc tuyên bố hoàn tất.
+
 Quy trình này áp dụng cho mọi thay đổi của dự án kể từ sau tag `v4.7`.
 
 ## Luồng bắt buộc

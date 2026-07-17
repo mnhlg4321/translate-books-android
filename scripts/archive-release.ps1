@@ -36,7 +36,9 @@ param(
     [string[]]$ScreenshotPaths,
 
     [Parameter(Mandatory = $true)]
-    [string[]]$VideoPaths
+    [string[]]$VideoPaths,
+
+    [string]$ChecklistPath
 )
 
 $ErrorActionPreference = 'Stop'
@@ -71,6 +73,15 @@ if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($repositoryRoot)) {
     throw 'Run this script inside the project Git repository.'
 }
 $repositoryRoot = (Resolve-Path -LiteralPath $repositoryRoot).Path
+
+if ([version]$Version -ge [version]'4.8') {
+    if ([string]::IsNullOrWhiteSpace($ChecklistPath)) {
+        throw 'ChecklistPath is required for v4.8 and later.'
+    }
+
+    $workflowVerifier = Join-Path $repositoryRoot 'scripts\verify-release-workflow.ps1'
+    & $workflowVerifier -ChecklistPath $ChecklistPath -Gate PreBackup -ExpectedVersion $Version
+}
 
 $resolvedCommit = (& git rev-parse "$GitRef^{}").Trim()
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($resolvedCommit)) {
