@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-17 20:29:53 +07:00`
-- Current version: `4.8` (`versionCode 47`, locally released)
+- Snapshot updated: `2026-07-17` (GitHub synchronization verification)
+- Current version: `4.8` (`versionCode 47`, released and synchronized)
 - Current branch: `main`
-- Current commit: `f5d5326` (no-ff merge of `fix/v4.8-import-navigation`; tag `v4.8` points to `21fc148`)
+- Current commit: `c1e807b` (pre-synchronization-documentation baseline; annotated tag `v4.8` remains at `21fc148`)
 - Current build: v4.8 release archive preserved in `artifacts/releases/v4.8/tag-v4.8` and `backup/v4.8/tag-v4.8`
 
 ## Completed tasks
@@ -45,10 +45,13 @@
 - Ran the opt-in harness directly against the retained OnePlus app data: exactly 2 real API requests completed, and both prompts contained the expected glossary and pronoun locks.
 - Added `QA_REPORT_v4_8.md`, v4.8 release notes, and the v4.8 changelog entry; checklist steps 1-9 now have evidence.
 - Created annotated local tag `v4.8` after the PreTag gate passed.
+- Verified remote ancestry with no divergence (`0` remote-only / `12` local-only commits), then pushed `main` and annotated tag `v4.8` without force.
+- Verified GitHub refs: `main` at `c1e807b3bad1b64f079d0a802c3b0a2e7621c0c2`; tag object `e5e6bb8aec6c713edf87354b8b76d21e004ea726`; tag target `21fc148c561dac395e85d19cd48fef6c378da3ab`.
+- Clean-cloned tag `v4.8`, confirmed versionName `4.8`, versionCode `47`, all release/snapshot documents, and no sensitive path or credential-pattern matches across 31 reachable commits.
 
 ## Pending tasks
 
-- Push branch/tag and merge to `main` after the owner restores/accesses the approved private repository URL.
+- No pending Git synchronization task for v4.8.
 - Do not start batch or refinement work in this cycle.
 
 ## Known bugs
@@ -57,6 +60,7 @@
 - Android Lint has 50 warnings and 0 errors in the recorded v4.7 build.
 - The full 80-swipe gesture campaign was not repeated after the final Back/pronoun cache-invalidation patch.
 - Performance evidence uses Perfetto/frame/PSS measurements rather than a dedicated Macrobenchmark module.
+- APK and source ZIP archives are deliberately ignored by Git, so they are not present in a clean clone; durable copies remain in the local `artifacts/releases/v4.8/` and `backup/v4.8/` stores.
 
 ## Regression status
 
@@ -77,7 +81,7 @@
 
 ## Next step
 
-Local v4.8 release gates and no-ff merge are complete. Next step is remote access repair, then push `main` and tag `v4.8`; do not create another feature batch in this cycle.
+GitHub synchronization for v4.8 is complete. Preserve the immutable `v4.8` tag and do not begin another feature batch in this cycle.
 
 ## Resume rule
 

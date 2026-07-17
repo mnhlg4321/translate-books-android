@@ -10,7 +10,7 @@
 - compileSdk: `35`
 - targetSdk: `35`
 - commit hash: `21fc148c561dac395e85d19cd48fef6c378da3ab` (annotated tag `v4.8`)
-- branch: `main` (release merged locally; tag `v4.8` remains immutable)
+- branch: `main` (synchronized to `https://github.com/manhluongvd/translate-books-android.git`; tag `v4.8` remains immutable)
 
 ## Existing artifacts
 
@@ -50,7 +50,7 @@ The last released v4.7 evidence remains `PASS WITH KNOWN LIMITATIONS`:
 - Lint: 0 errors, 50 warnings.
 - Core translation and recovery regression coverage: passed within the scope recorded in `QA_REPORT_v4_7.md`.
 
-The v4.8 tag and immutable artifact/backup archives are complete locally. GitHub publication remains blocked by the remote repository response.
+The v4.8 tag and `main` branch are published to the private GitHub repository. Remote verification resolves `main` to `c1e807b3bad1b64f079d0a802c3b0a2e7621c0c2`, annotated tag object `e5e6bb8aec6c713edf87354b8b76d21e004ea726`, and tag target `21fc148c561dac395e85d19cd48fef6c378da3ab`.
 
 ## Known issues
 
@@ -58,5 +58,5 @@ The v4.8 tag and immutable artifact/backup archives are complete locally. GitHub
 - Performance evidence uses Perfetto/frame/PSS measurements rather than a dedicated Macrobenchmark module.
 - The 80-swipe gesture campaign was not repeated after the final Back/pronoun cache-invalidation patch; the patch did not alter the four primary scroll containers.
 - Lint reports 50 warnings and no errors.
-- GitHub push attempts to the approved `manhluongyd/translate-books-android` origin currently time out without a response.
+- v4.8 APK/source ZIP archives remain intentionally outside the tracked Git tree under ignored `artifacts/releases/` and `backup/`; a clean clone contains the release documents but not these binary archives.
 - Android 15 shell screenrecord was denied; the archive records a fresh screenshot/Perfetto trace and clearly labels the retained visual video reference.
