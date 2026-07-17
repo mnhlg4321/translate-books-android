@@ -150,7 +150,7 @@ try {
         Where-Object { $_.Name -ne 'SHA256SUMS.txt' } |
         Sort-Object FullName |
         ForEach-Object {
-            $relativePath = [IO.Path]::GetRelativePath($artifactStaging, $_.FullName).Replace('\', '/')
+            $relativePath = $_.FullName.Substring($artifactStaging.Length).TrimStart([char[]]'\/').Replace('\', '/')
             $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash
             "$hash  $relativePath"
         }
