@@ -995,14 +995,14 @@ public class MainActivity extends Activity {
             setLabel(glossaryFileLabel, "Glossary: " + lastGlossaryName);
             try {
                 lastGlossaryText = FileUtil.readText(this, glossaryUri);
-                AppSettings selected = collectSettings();
-                selected.selectedGlossaryId = "";
-                selected.selectedGlossaryName = lastGlossaryName;
-                selected.glossaryText = lastGlossaryText;
-                GlossaryStore.setSelectedId(this, "");
-                SettingsStore.save(this, selected);
-                String validation = PromptContextBuilder.validateText(lastGlossaryText, currentPronounText());
+                List<GlossaryStore.Term> terms = GlossaryStore.parseTerms(lastGlossaryName, lastGlossaryText);
+                if (terms.isEmpty()) throw new IllegalArgumentException("No valid glossary terms found");
+                GlossaryStore.Glossary imported = GlossaryStore.create(this, lastGlossaryName);
+                GlossaryStore.mergeTerms(imported, terms);
+                GlossaryStore.upsert(this, imported);
+                String validation = PromptContextBuilder.validateText(GlossaryStore.toPromptText(imported), currentPronounText());
                 if (glossaryPreview != null) glossaryPreview.setText(preview(lastGlossaryText, 3000) + "\n\n[VALIDATION]\n" + validation);
+                selectGlossary(imported);
                 toast("Đã nạp glossary: " + lastGlossaryName);
                 appendLog("Đã nạp glossary: " + lastGlossaryName + " • " + oneLine(validation));
                 showResult("Glossary loaded", lastGlossaryName + "\n" + validation);
@@ -1655,15 +1655,15 @@ public class MainActivity extends Activity {
                 totalFiles = 1;
                 totalTerms = terms.size();
             }
+            if (totalTerms == 0) throw new IllegalArgumentException("No valid glossary terms found");
             saveEditingGlossary();
-            updateGlossaryPreview();
             String imported = namesSummary(importedNames);
             String validation = PromptContextBuilder.validateText(GlossaryStore.toPromptText(editingGlossary), currentPronounText());
+            GlossaryStore.Glossary importedGlossary = editingGlossary;
+            selectGlossary(importedGlossary);
             toast("Đã import " + totalTerms + " terms từ: " + imported);
             appendLog("Glossary import: " + totalFiles + " file(s), " + totalTerms + " term(s): " + imported + " • " + oneLine(validation));
             showResult("Glossary import validated", totalTerms + " term(s) từ " + imported + "\n" + validation);
-            invalidatePage("Glossaries");
-            switchTab("Glossaries");
         } catch (Exception e) {
             toast("Lỗi import glossary");
             appendLog("Lỗi import glossary: " + e.getMessage());

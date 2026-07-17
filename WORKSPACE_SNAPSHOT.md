@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-17 19:54:12 +07:00`
+- Snapshot updated: `2026-07-17 20:00:30 +07:00`
 - Current version: `4.8` (`versionCode 47`, development)
 - Current branch: `fix/v4.8-import-navigation`
-- Current commit: baseline `e2f3b916bd504cff40ba44e94b4c0b274724cd8b`; the v4.8 baseline commit follows it
+- Current commit: `2c6017dc77736125863b28de4d84332543bbbdc5` (v4.8 development baseline before the current glossary group)
 - Current build: v4.7 debug release archive preserved in `artifacts/releases/v4.7/tag-v4.7` and `backup/v4.7/tag-v4.7`
 
 ## Completed tasks
@@ -32,10 +32,11 @@
 - Confirmed no tracked build/cache/local.properties files, no credential-pattern matches, no remote, and preserved immutable tag `v4.7`.
 - Audited version history: v4.7/code46 is the last product release; feature/v4.8 through feature/v4.12 were infrastructure-only branches with no app-code changes.
 - Started the focused v4.8/code47 import-navigation cycle on `fix/v4.8-import-navigation`.
+- Normalized both glossary import paths so imported terms are stored as a library profile, activated immediately, reflected in Settings/prompt state, and returned to the glossary list.
+- Added focused glossary parsing/merge/prompt unit coverage; `GlossaryImportV48Test` passes (2 tests).
 
 ## Pending tasks
 
-- Fix glossary import persistence, activation, immediate UI refresh, and Back behavior.
 - Fix pronoun import persistence, activation, immediate profile display, and cold-start retention.
 - Validate Library/Settings Back navigation and four-tab scrolling without gesture refresh.
 - Add focused unit/instrumentation coverage, device QA, and a real 2–3 chunk API prompt verification.
@@ -57,11 +58,11 @@
 - Immutable archive regression: passed checksum, ZIP integrity, artifact/backup parity, and no-overwrite checks.
 - v4.8+ workflow gate regression: passed; negative cases were rejected as designed.
 - Repository hygiene regression: passed tracked-file, secret-pattern, and ignore-rule checks.
-- Android regression has not been rerun because the current group changes repository workflow only.
+- Glossary import unit regression: 2 passed, 0 failed; Android instrumentation remains pending.
 
 ## Next step
 
-Inspect the existing glossary/pronoun import and navigation code, then implement the glossary group first without changing translation core, dashboard, SAF, session isolation, or recovery.
+Commit and push the completed glossary group, then implement pronoun persistence without changing translation core, dashboard, SAF, session isolation, or recovery.
 
 ## Resume rule
 
