@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-17 19:00:03 +07:00`
+- Snapshot updated: `2026-07-17 19:07:02 +07:00`
 - Current version: `4.7` (`versionCode 46`)
-- Current branch: `main` after the Workspace Snapshot bootstrap merge
-- Current commit: implementation baseline `ebe3e07e79503bc56cdf2dfc0eea7279bd5ff6c2`; the snapshot and no-ff merge commits follow this baseline
-- Current build: existing v4.7 debug APK; SHA-256 `BBA8152197FCE0310236899BA313B7C285E91FA1299D703EEF4BB23FA316EE4F`
+- Current branch: `main` after the immutable archive workflow merge
+- Current commit: implementation baseline `3d925a1`; the snapshot and no-ff merge commits follow this baseline
+- Current build: v4.7 debug release archive preserved in `artifacts/releases/v4.7/tag-v4.7` and `backup/v4.7/tag-v4.7`
 
 ## Completed tasks
 
@@ -17,6 +17,11 @@
 - Enforced snapshot freshness before commits: update is required after approximately 30 minutes or before the 10th commit unless the snapshot is already staged.
 - Regression-tested that a fresh snapshot is accepted by the commit guard.
 - Integrated the completed Workspace Snapshot bootstrap into `main` with a no-ff merge; no application release was created.
+- Added an immutable release archiver that requires APK, checksums, QA, release documents, Perfetto, Macrobenchmark evidence/status, screenshots, video, and an exact-ref source ZIP.
+- Archived tag `v4.7` in both durable locations without using `build/` as storage.
+- Created `project_source_v4.7.zip` from tag `v4.7` at commit `d63005793cf464064d08ed9625d36fb0b9b8c9d8`.
+- Verified all 16 archived files, opened the 299-entry source ZIP, matched artifact/backup checksum manifests, and confirmed overwrite protection.
+- Recorded the honest v4.7 Macrobenchmark status as `NOT RUN`; Perfetto/frame/PSS evidence remains available.
 
 ## Pending tasks
 
@@ -36,6 +41,7 @@
 - JVM unit tests: 93 passed, 0 failed, 0 skipped.
 - Android instrumentation: 7 passed, 0 failed, 0 skipped on OnePlus CPH2691 / Android 15.
 - Workspace Snapshot enforcement: implemented; fresh-snapshot guard regression passed.
+- Immutable archive regression: passed checksum, ZIP integrity, artifact/backup parity, and no-overwrite checks.
 - Android regression has not been rerun because the current group changes repository workflow only.
 
 ## Next step
