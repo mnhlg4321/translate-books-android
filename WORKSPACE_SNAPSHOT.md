@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-17` (GitHub synchronization verification)
-- Current version: `4.8` (`versionCode 47`, released and synchronized)
-- Current branch: `main`
-- Current commit: `c1e807b` (pre-synchronization-documentation baseline; annotated tag `v4.8` remains at `21fc148`)
-- Current build: v4.8 release archive preserved in `artifacts/releases/v4.8/tag-v4.8` and `backup/v4.8/tag-v4.8`
+- Snapshot updated: `2026-07-17` (P0 output URI hotfix verified on OnePlus 13R; commit pending)
+- Current version: `4.13` (`versionCode 48`, untagged development hotfix)
+- Current branch: `feature/v4.13`
+- Current commit: `4d5ca54` (implementation baseline before this snapshot update; actual branch has uncommitted P0 work)
+- Current build: `app/build/outputs/apk/debug/TranslateBooks-v4.13-p0-dev-debug.apk`, SHA-256 `EBFD1B656F02D526E963A4156215B4CE21CAC05F0E4E4C0774A5F8370748BABE`; installed and device-verified on OnePlus 13R. It is not a release archive.
 
 ## Completed tasks
 
@@ -51,11 +51,13 @@
 
 ## Pending tasks
 
-- No pending Git synchronization task for v4.8.
-- Do not start batch or refinement work in this cycle.
+- P0 only: add a controlled device proof for the output-permission-revoked UX (the device shell does not expose a non-destructive SAF URI-grant revocation command).
+- Commit this verified hotfix, rerun any appropriate connected instrumentation suite, then prepare release/archive evidence only if release criteria are explicitly requested.
 
 ## Known bugs
 
+- P0 root causes fixed: the picker stripped `FLAG_GRANT_PERSISTABLE_URI_PERMISSION`; external small config files were used at runtime; stale prepared-plan callbacks could keep Start disabled; and the output tree URI was decoded twice between service preparation and materialization, corrupting the persisted-grant identity.
+- Controlled output-permission-loss UX still needs a device-side revoke test; the preflight and UI implementation prevent dispatch when `validateTreeWritable` fails.
 - Warm tab-switch P50 is `20 ms`, above the `16 ms` target.
 - Android Lint has 50 warnings and 0 errors in the recorded v4.7 build.
 - The full 80-swipe gesture campaign was not repeated after the final Back/pronoun cache-invalidation patch.
@@ -78,10 +80,11 @@
 - Full Android instrumentation on OnePlus CPH2691 / Android 15: 11 passed, 0 failed, 0 skipped, including all 4 new import/navigation/scroll cases.
 - With the opt-in API harness included, normal instrumentation reports 11 passed, 0 failed, 1 intentionally skipped.
 - Explicit real API run: PASS; 2 requests completed and both provider prompts were verified to contain glossary and pronoun locks.
+- v4.13 P0 device regression: PASS for fresh SAF output selection (persisted read/write plus write/delete probe), YAML/glossary/pronoun valid state, real Start/preflight/service/request/response/partial output/completed sequence, and cold restart followed by a second real output. JVM unit tests: 99 passed. Connected instrumentation on OnePlus 13R: 12 passed, 0 failed, 1 intentionally skipped real-API test.
 
 ## Next step
 
-GitHub synchronization for v4.8 is complete. Preserve the immutable `v4.8` tag and do not begin another feature batch in this cycle.
+Commit the proven P0 hotfix on `feature/v4.13`; retain the device evidence and do not tag/archive it as a release until all release criteria, including controlled permission-loss UX proof, are satisfied.
 
 ## Resume rule
 

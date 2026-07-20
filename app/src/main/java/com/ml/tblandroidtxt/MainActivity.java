@@ -99,7 +99,7 @@ public class MainActivity extends Activity {
     TextView translateGlossaryChip, translatePronounChip, translateInstructionChip;
     LinearLayout resultCard;
     ProgressBar progress;
-    Button startButton, pauseButton, resumeButton, cancelButton, retryButton, pricingRetryButton;
+    Button startButton, pauseButton, resumeButton, cancelButton, retryButton, pricingRetryButton, outputFolderButton;
     boolean translationActive = false;
     int estimateSeq = 0;
     volatile CostEstimator.Estimate lastEstimate;
@@ -131,7 +131,7 @@ public class MainActivity extends Activity {
     };
     final ModelCatalog.Listener catalogListener = catalogState -> runOnUiThread(() -> {
         updateMetaLine();
-        PreparedBatch plan=preparedBatch==null?PreparationCoordinator.get(this).current():preparedBatch;
+        PreparedBatch plan=currentPreparedBatch();
         if(plan!=null&&plan.ready()&&!PreparationCoordinator.constructionKey(collectSettings()).equals(plan.constructionKey))updateInputEstimate();else updatePricingOnly();
         updateModelDiagnostics();
     });
@@ -515,6 +515,8 @@ public class MainActivity extends Activity {
             s.outputTreeUri = outputTreeUri.toString();
             s.outputTreeName = FileUtil.treeName(outputTreeUri);
         }
+        if (outputUri == null) { s.outputUri = ""; s.outputName = ""; }
+        if (outputTreeUri == null) { s.outputTreeUri = ""; s.outputTreeName = ""; }
         if (pronounUri != null) {
             s.pronounUri = pronounUri.toString();
             s.pronounName = FileUtil.displayName(this, pronounUri);
@@ -791,6 +793,7 @@ public class MainActivity extends Activity {
 
     void clearPronoun() {
         if (!ensureConfigMutable()) return;
+        TranslationConfigRepository.get(this).clear(TranslationConfigRepository.Type.PRONOUN);
         PronounStore.setSelectedId(this,"");applyActivePronoun(null);
         appendLog("Đã bỏ Pronoun đang dùng");
         toast("Đã bỏ Pronoun");
@@ -799,6 +802,7 @@ public class MainActivity extends Activity {
 
     void clearInstruction() {
         if (!ensureConfigMutable()) return;
+        TranslationConfigRepository.get(this).clear(TranslationConfigRepository.Type.INSTRUCTION_YAML);
         yamlUri = null;
         lastInstructionName = "—";
         AppSettings s = SettingsStore.load(this);
@@ -814,6 +818,7 @@ public class MainActivity extends Activity {
 
     void clearGlossarySelection() {
         if (!ensureConfigMutable()) return;
+        TranslationConfigRepository.get(this).clear(TranslationConfigRepository.Type.GLOSSARY);
         GlossaryStore.setSelectedId(this, "");
         glossaryUri = null;
         lastGlossaryName = "—";
@@ -841,7 +846,7 @@ public class MainActivity extends Activity {
         Uri uri = data.getData();
         if (uri == null && data.getClipData() == null) return;
         int flags = data.getFlags();
-        int takeFlags = flags & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        int takeFlags = flags & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
 
         if (requestCode == REQ_INPUT) {
             inputUris.clear();
@@ -872,48 +877,56 @@ public class MainActivity extends Activity {
             toast("Đã chọn " + inputUris.size() + " file TXT"); appendLog("Đã chọn input: " + label); updateInputEstimate();
         } else if (requestCode == REQ_OUTPUT) {
             outputUri = uri;
+            outputTreeUri = null;
             FileUtil.takePersistable(this, uri, takeFlags, true, true);
             setLabel(outputFileLabel, "Single output TXT: " + FileUtil.displayName(this, uri) + " (" + FileUtil.accessBadge(this, uri, true) + ")");
             saveRuntimeUris();
             toast("Đã chọn output"); appendLog("Đã chọn output: " + FileUtil.displayName(this, uri));
         } else if (requestCode == REQ_OUTPUT_TREE) {
             outputTreeUri = uri;
-            FileUtil.takePersistable(this, uri, takeFlags, true, true);
-            setLabel(outputFolderLabel, "Output folder: " + FileUtil.treeName(uri) + " (" + FileUtil.accessBadge(this, uri, true) + ")");
+            outputUri = null;
+            boolean persisted=FileUtil.takePersistable(this, uri, takeFlags, true, true);
+            String writable=FileUtil.validateTreeWritable(this,uri,"Output folder");
+            if(writable!=null){outputTreeUri=null;setLabel(outputFolderLabel,"Output folder permission lost — Choose output folder again");appendLog("OUTPUT_IMPORT_FAILED uri="+uri+", persistedRead="+FileUtil.hasPersistedRead(this,uri)+", persistedWrite="+FileUtil.hasPersistedWrite(this,uri)+", probe="+writable);saveRuntimeUris();updateActionButtons();return;}
+            setLabel(outputFolderLabel, "Output folder: " + FileUtil.treeName(uri) + " (Writable)");
             saveRuntimeUris();
-            toast("Đã chọn output folder"); appendLog("Đã chọn output folder: " + FileUtil.treeName(uri));
+            toast("Đã chọn output folder"); appendLog("OUTPUT_IMPORT_OK uri="+uri+", persistedResult="+persisted+", persistedRead="+FileUtil.hasPersistedRead(this,uri)+", persistedWrite="+FileUtil.hasPersistedWrite(this,uri)+", probe=write/delete OK");updateActionButtons();
         } else if (requestCode == REQ_YAML) {
             if (!ensureConfigMutable()) return;
-            yamlUri = uri;
-            FileUtil.takePersistable(this, uri, takeFlags, true, false);
-            lastInstructionName = FileUtil.displayName(this, uri);
-            setLabel(yamlFileLabel, "Instructions: " + lastInstructionName);
             try {
-                String instructionText = FileUtil.readText(this, yamlUri);
-                CustomInstructions ci = YamlInstructionParser.parse(lastInstructionName, instructionText);
+                boolean persisted=FileUtil.takePersistable(this, uri, takeFlags, true, false);
+                TranslationConfigRepository repository=TranslationConfigRepository.get(this);
+                TranslationConfigRepository.Entry imported=repository.importFromUri(TranslationConfigRepository.Type.INSTRUCTION_YAML,uri);
+                String instructionText=repository.read(TranslationConfigRepository.Type.INSTRUCTION_YAML);
+                CustomInstructions ci = YamlInstructionParser.parse(imported.name, instructionText);
                 AppSettings s = collectSettings();
-                s.instructionUri = yamlUri.toString();
-                s.instructionName = lastInstructionName;
-                if (ci.hasTranslation()) s.translationInstructions = ci.translation;
-                if (ci.hasRefinement()) s.refinementInstructions = ci.refinement;
+                yamlUri = null;
+                lastInstructionName = imported.name;
+                s.instructionUri = "";
+                s.instructionName = imported.name;
+                s.translationInstructions = ci.translation == null ? "" : ci.translation;
+                s.refinementInstructions = ci.refinement == null ? "" : ci.refinement;
                 SettingsStore.save(this, s);
+                setLabel(yamlFileLabel, "Instructions: " + imported.name + " • internal copy valid");
+                appendLog("Instruction import succeeded: uri="+uri+", persistedRead="+persisted+", internal="+imported.path+", "+imported.parseDetail);
                 toast("Đã nạp instruction: " + lastInstructionName);
                 appendLog("Đã nạp instruction: " + lastInstructionName + " (translation=" + ci.hasTranslation() + ", refinement=" + ci.hasRefinement() + ")");
             } catch (Exception e) {
                 toast("Không đọc được instruction");
                 appendLog("Không đọc được instruction: " + e.getMessage());
             }
-            updateMetaLine(); updateInputEstimate();
+            refreshTranslationConfigViews(); updateMetaLine(); updateInputEstimate();
         } else if (requestCode == REQ_ENV) {
             envUri = uri;
             FileUtil.takePersistable(this, uri, takeFlags, true, false);
             String envName = FileUtil.displayName(this, uri);
             setLabel(envFileLabel, ".env: " + envName);
             try {
-                String envText = FileUtil.readText(this, envUri);
+                TranslationConfigRepository repo=TranslationConfigRepository.get(this);
+                TranslationConfigRepository.Entry entry=repo.importFromUri(TranslationConfigRepository.Type.ENVIRONMENT,uri);
+                String envText = repo.read(TranslationConfigRepository.Type.ENVIRONMENT);
                 AppSettings imported = AppSettings.fromEnv(EnvParser.parse(envText), collectSettings());
-                imported.envUri = envUri.toString();
-                imported.envName = envName;
+                envUri=null; imported.envUri = ""; imported.envName = entry.name;
                 // Giữ instruction/glossary đã chọn nếu .env không ghi đè.
                 AppSettings old = SettingsStore.load(this);
                 if (imported.instructionUri == null || imported.instructionUri.isEmpty()) { imported.instructionUri = old.instructionUri; imported.instructionName = old.instructionName; }
@@ -973,9 +986,12 @@ public class MainActivity extends Activity {
             String pronounName = FileUtil.displayName(this, uri);
             setLabel(pronounFileLabel, "Pronoun: " + pronounName);
             try {
-                String pronounText = FileUtil.readText(this, pronounUri);
+                TranslationConfigRepository repo=TranslationConfigRepository.get(this);
+                TranslationConfigRepository.Entry entry=repo.importFromUri(TranslationConfigRepository.Type.PRONOUN,uri);
+                String pronounText = repo.read(TranslationConfigRepository.Type.PRONOUN);
+                pronounUri=null;
                 PronounStore.Profile profile;
-                if(pendingPronounReplaceId!=null&&!pendingPronounReplaceId.isEmpty()&&(profile=PronounStore.find(this,pendingPronounReplaceId))!=null){profile.uri=pronounUri.toString();profile.text=pronounText;if(profile.name==null||profile.name.startsWith("New pronoun"))profile.name=pronounName;if(!PronounStore.saveAndSelect(this,profile))throw new IllegalStateException("Could not persist pronoun profile");}else profile=PronounStore.importAndSelectProfile(this,pronounName,pronounUri.toString(),pronounText);
+                if(pendingPronounReplaceId!=null&&!pendingPronounReplaceId.isEmpty()&&(profile=PronounStore.find(this,pendingPronounReplaceId))!=null){profile.uri="";profile.text=pronounText;if(profile.name==null||profile.name.startsWith("New pronoun"))profile.name=entry.name;if(!PronounStore.saveAndSelect(this,profile))throw new IllegalStateException("Could not persist pronoun profile");}else profile=PronounStore.importAndSelectProfile(this,entry.name,"",pronounText);
                 if(profile==null)throw new IllegalStateException("Could not persist pronoun profile");pendingPronounReplaceId="";editingPronoun=null;applyActivePronoun(profile);
                 String validation = PromptContextBuilder.validateText(activeGlossaryPromptText(), pronounText);
                 toast("Đã nạp pronoun: " + pronounName);
@@ -991,7 +1007,10 @@ public class MainActivity extends Activity {
             lastGlossaryName = FileUtil.displayName(this, uri);
             setLabel(glossaryFileLabel, "Glossary: " + lastGlossaryName);
             try {
-                lastGlossaryText = FileUtil.readText(this, glossaryUri);
+                TranslationConfigRepository repo=TranslationConfigRepository.get(this);
+                TranslationConfigRepository.Entry entry=repo.importFromUri(TranslationConfigRepository.Type.GLOSSARY,uri);
+                lastGlossaryText = repo.read(TranslationConfigRepository.Type.GLOSSARY);
+                glossaryUri=null; lastGlossaryName=entry.name;
                 List<GlossaryStore.Term> terms = GlossaryStore.parseTerms(lastGlossaryName, lastGlossaryText);
                 if (terms.isEmpty()) throw new IllegalArgumentException("No valid glossary terms found");
                 GlossaryStore.Glossary imported = GlossaryStore.create(this, lastGlossaryName);
@@ -1013,7 +1032,8 @@ public class MainActivity extends Activity {
     }
 
     void startTranslation() {
-        PreparedBatch readyPlan=preparedBatch==null?PreparationCoordinator.get(this).current():preparedBatch;
+        appendLog("START_CLICK received");
+        PreparedBatch readyPlan=currentPreparedBatch();
         if(readyPlan==null||!readyPlan.ready()){
             toast("Please wait for chunk preparation to finish");
             appendLog("Start blocked: prepared chunk plan is not ready");
@@ -1021,12 +1041,12 @@ public class MainActivity extends Activity {
         }
         if (inputUris.isEmpty()) { toast("Chưa chọn TXT input"); return; }
         AppSettings s = collectSettings();
-        String validation = AppValidator.validateForTranslation(s);
+        String validation = startReadinessError();
         if (validation != null) { toast(validation); appendLog("Validation: " + validation); return; }
         String construction=PreparationCoordinator.constructionKey(s);
         if(!construction.equals(readyPlan.constructionKey)){appendLog("Start blocked: chunk settings changed after preparation");updateInputEstimate();toast("Chunk settings changed; rebuilding the chunk plan");return;}
         final int generation=preflightGeneration.incrementAndGet();setButtonEnabled(startButton,false);
-        preflightExecutor.submit(()->{String instruction=validateInstructionForStart(s);String access=instruction==null?validateSelectedFileAccess(inputUris.size()>1):null;PromptContextBuilder.ParseReport locks=instruction==null&&access==null?PromptContextBuilder.validate(s.glossaryText,s.pronounText):null;runOnUiThread(()->{if(generation!=preflightGeneration.get()||isFinishing()||isDestroyed())return;if(instruction!=null){updateActionButtons();showResult("Instruction YAML issue",instruction);return;}if(access!=null){updateActionButtons();showResult("Blocking pre-flight error",access);return;}validatedPlanId=readyPlan.id;validatedPlanAt=System.currentTimeMillis();showPreparedPreflight(s,locks);});});
+        preflightExecutor.submit(()->{String readiness=startReadinessError();PromptContextBuilder.ParseReport locks=readiness==null?PromptContextBuilder.validate(s.glossaryText,s.pronounText):null;runOnUiThread(()->{if(generation!=preflightGeneration.get()||isFinishing()||isDestroyed())return;if(readiness!=null){appendLog("START_BLOCKED resource="+readiness);updateActionButtons();showResult("Start blocked",readiness);return;}validatedPlanId=readyPlan.id;validatedPlanAt=System.currentTimeMillis();appendLog("START_PREFLIGHT_OK preparedPlan="+readyPlan.id);showPreparedPreflight(s,locks);});});
     }
 
     private void showPreparedPreflight(AppSettings s,PromptContextBuilder.ParseReport locks){CostEstimator.Estimate e=estimateCurrentBatch(s);boolean warning=e==null||!e.pricingAvailable||(locks!=null&&(!locks.conflicts.isEmpty()||!locks.malformedGlossaryRows.isEmpty()||!locks.malformedPronounRows.isEmpty()))||(e!=null&&s.stopOnCostLimit&&s.costLimitUsd>0&&e.noCacheCostHigh>s.costLimitUsd);StringBuilder message=new StringBuilder(TranslationDashboardFormatter.prepared(e,preparedBatch.exactChunkCount()));if(warning)message.append("\n\nSome optional pricing or configuration checks have warnings. Translation can still start when blocking checks pass.");new AlertDialog.Builder(this).setTitle("Ready to translate").setMessage(message.toString()).setPositiveButton("Start",(d,w)->startTranslationNow()).setNegativeButton("Cancel",(d,w)->updateActionButtons()).setOnCancelListener(d->updateActionButtons()).show();}
@@ -1054,7 +1074,7 @@ public class MainActivity extends Activity {
     }
 
     void startTranslationNow() {
-        PreparedBatch readyPlan=preparedBatch==null?PreparationCoordinator.get(this).current():preparedBatch;
+        PreparedBatch readyPlan=currentPreparedBatch();
         if(readyPlan==null||!readyPlan.ready()){
             toast("Exact chunk plan is not ready");appendLog("Start blocked: missing/stale prepared plan");return;
         }
@@ -1067,16 +1087,10 @@ public class MainActivity extends Activity {
         boolean batch = inputUris.size() > 1;
         if (batch && outputTreeUri == null) { toast("Batch nhiều file cần chọn output folder ở tab Files"); return; }
         if (!batch && outputUri == null && outputTreeUri == null) { toast("Chưa chọn output TXT hoặc output folder"); return; }
-        boolean recentlyValidated=readyPlan.id.equals(validatedPlanId)&&System.currentTimeMillis()-validatedPlanAt<30_000;
-        if(!recentlyValidated){String fileAccessProblem = validateSelectedFileAccess(batch);if (fileAccessProblem != null) {toast("Cần chọn lại file/folder");appendLog("File access validation failed: " + fileAccessProblem);showResult("File permission issue", fileAccessProblem);return;}}
+        String finalReadiness=startReadinessError();
+        if(finalReadiness!=null){appendLog("START_DISPATCH_BLOCKED resource="+finalReadiness);showResult("Start blocked",finalReadiness);updateActionButtons();return;}
         saveRuntimeUris();
         AppSettings s = collectSettings();
-        String instructionValidation = recentlyValidated?null:validateInstructionForStart(s);
-        if (instructionValidation != null) {
-            toast("Instruction YAML không hợp lệ");
-            appendLog("Start bị chặn: " + instructionValidation);
-            return;
-        }
         SettingsStore.save(this, s);
         Intent i = new Intent(this, TranslatorService.class);
         i.setAction(TranslatorService.ACTION_START);
@@ -1235,9 +1249,21 @@ public class MainActivity extends Activity {
 
     void updateActionButtons() {
         boolean active = TranslatorService.isActive() || translationActive;
-        PreparedBatch plan=preparedBatch==null?PreparationCoordinator.get(this).current():preparedBatch;
+        PreparedBatch plan=currentPreparedBatch();
         boolean failed=false;if(!active){JobStore store=new JobStore(this);try{failed=store.hasFailedChunks();}finally{store.close();}}
-        setButtonEnabled(startButton, !active&&plan!=null&&plan.ready());
+        String blocker=!active&&plan!=null&&plan.ready()?startReadinessError():"Preparing TXT chunk plan";
+        setButtonEnabled(startButton, !active&&plan!=null&&plan.ready()&&blocker==null);
+        if (!active && outputTreeUri != null) {
+            String outputError = FileUtil.validateTreeWritable(this, outputTreeUri, "Output folder");
+            if (outputError != null) {
+                setLabel(outputFolderLabel, "Output folder permission lost");
+                if (outputFolderButton != null) outputFolderButton.setText("Choose output folder again");
+            } else if (outputFolderButton != null) outputFolderButton.setText("Chọn thư mục");
+        }
+        if(!active&&statusBanner!=null){
+            if(blocker!=null){statusBanner.setVisibility(View.VISIBLE);statusBanner.setText("Not ready: "+blocker);}
+            else statusBanner.setVisibility(View.GONE);
+        }
         setButtonEnabled(retryButton, !active&&failed);
         setButtonEnabled(pauseButton, active);
         setButtonEnabled(resumeButton, active);
@@ -1248,6 +1274,25 @@ public class MainActivity extends Activity {
         if(retryButton!=null)retryButton.setVisibility(!active&&failed?View.VISIBLE:View.GONE);
         if(trackingCard!=null)trackingCard.setVisibility(active||RuntimeStateStore.toIntent(this)!=null?View.VISIBLE:View.GONE);
         refreshTopStatusChip();
+    }
+
+    /** Returns the exact blocking resource, never a generic YAML error. */
+    String startReadinessError() {
+        if(inputUris.isEmpty()) return "TXT input: choose TXT again";
+        AppSettings settings=collectSettings();
+        String provider=AppValidator.validateForTranslation(settings);
+        if(provider!=null) return "Provider/model: "+provider;
+        String instruction=validateInstructionForStart(settings);
+        if(instruction!=null) return instruction;
+        for(Uri input:inputUris){String error=FileUtil.validateReadable(this,input,"TXT input");if(error!=null)return error;}
+        boolean batch=inputUris.size()>1;
+        String output=outputTreeUri!=null?FileUtil.validateTreeWritable(this,outputTreeUri,"Output folder")
+                : (batch?FileUtil.validateTreeWritable(this,null,"Output folder"):FileUtil.validateWritable(this,outputUri,"Output TXT"));
+        if(output!=null)return output;
+        PromptContextBuilder.ParseReport locks=PromptContextBuilder.validate(settings.glossaryText,settings.pronounText);
+        if(!locks.malformedGlossaryRows.isEmpty())return "Glossary: malformed entries="+locks.malformedGlossaryRows.size();
+        if(!locks.malformedPronounRows.isEmpty())return "Pronoun: malformed rules="+locks.malformedPronounRows.size();
+        return null;
     }
 
     void setButtonEnabled(Button b, boolean enabled) {
@@ -1363,8 +1408,11 @@ public class MainActivity extends Activity {
         if (s.instructionName != null && !s.instructionName.isEmpty()) lastInstructionName = s.instructionName;
         if (s.selectedGlossaryName != null && !s.selectedGlossaryName.isEmpty()) lastGlossaryName = s.selectedGlossaryName;
         if (s.glossaryText != null && !s.glossaryText.isEmpty()) lastGlossaryText = s.glossaryText;
-        if (yamlFileLabel != null) yamlFileLabel.setText("Instructions: " + (lastInstructionName == null || "—".equals(lastInstructionName) ? "chưa chọn" : lastInstructionName));
-        if (envFileLabel != null) envFileLabel.setText(".env: " + (s.envName == null || s.envName.isEmpty() ? "chưa chọn" : s.envName));
+        TranslationConfigRepository configRepository=TranslationConfigRepository.get(this);
+        TranslationConfigRepository.Entry instructionEntry=configRepository.entry(TranslationConfigRepository.Type.INSTRUCTION_YAML);
+        TranslationConfigRepository.Entry environmentEntry=configRepository.entry(TranslationConfigRepository.Type.ENVIRONMENT);
+        if (yamlFileLabel != null) yamlFileLabel.setText("Instructions: " + (instructionEntry.valid() ? instructionEntry.name + " • internal copy valid" : "chưa chọn"));
+        if (envFileLabel != null) envFileLabel.setText(".env: " + (environmentEntry.valid() ? environmentEntry.name + " • internal copy valid" : "chưa chọn"));
         if (pronounFileLabel != null) pronounFileLabel.setText("Pronoun: " + (s.pronounName == null || s.pronounName.isEmpty() ? "chưa chọn" : s.pronounName));
         if (outputFileLabel != null) outputFileLabel.setText(outputUri == null ? "Single output TXT: chưa chọn" : "Single output TXT: " + FileUtil.displayName(this, outputUri) + " (" + FileUtil.accessBadge(this, outputUri, true) + ")");
         if (outputFolderLabel != null) outputFolderLabel.setText(outputTreeUri == null ? "Output folder: chưa chọn" : "Output folder: " + FileUtil.treeName(outputTreeUri) + " (" + FileUtil.accessBadge(this, outputTreeUri, true) + ")");
@@ -1782,19 +1830,16 @@ public class MainActivity extends Activity {
         boolean hasTranslation = s.translationInstructions != null && !s.translationInstructions.trim().isEmpty();
         boolean hasRefinement = s.refinementInstructions != null && !s.refinementInstructions.trim().isEmpty();
         String instructionError = "";
-        if (!active && s.instructionUri != null && !s.instructionUri.trim().isEmpty()) {
-            Uri uri = Uri.parse(s.instructionUri);
-            instructionError = FileUtil.validateReadable(this, uri, "Instruction YAML");
-            if (instructionError == null) {
-                try {
-                    CustomInstructions parsed = YamlInstructionParser.parse(
-                            FileUtil.displayName(this, uri), FileUtil.readText(this, uri));
-                    hasTranslation = parsed.hasTranslation();
-                    hasRefinement = parsed.hasRefinement();
-                } catch (Exception e) {
-                    instructionError = "Không đọc được file";
-                }
-            }
+        if (!active && s.instructionName != null && !s.instructionName.trim().isEmpty()) {
+            TranslationConfigRepository repository=TranslationConfigRepository.get(this);
+            TranslationConfigRepository.Entry internal=repository.entry(TranslationConfigRepository.Type.INSTRUCTION_YAML);
+            if (!internal.valid()) instructionError="Instruction YAML internal copy is unavailable; import it again.";
+            else try {
+                CustomInstructions parsed=YamlInstructionParser.parse(internal.name,repository.read(TranslationConfigRepository.Type.INSTRUCTION_YAML));
+                hasTranslation=parsed.hasTranslation(); hasRefinement=parsed.hasRefinement();
+            } catch(Exception e) { instructionError="Instruction YAML internal copy failed: "+e.getMessage(); }
+        } else if (!active && s.instructionUri != null && !s.instructionUri.trim().isEmpty()) {
+            instructionError="Instruction YAML still references an external URI; import it again.";
         }
 
         TranslationConfigState.Item glossary = TranslationConfigState.glossary(
@@ -1835,25 +1880,20 @@ public class MainActivity extends Activity {
         boolean hasTranslation = s.translationInstructions != null && !s.translationInstructions.trim().isEmpty();
         boolean hasRefinement = s.refinementInstructions != null && !s.refinementInstructions.trim().isEmpty();
         String uriText = s.instructionUri == null ? "" : s.instructionUri.trim();
+        TranslationConfigRepository repository=TranslationConfigRepository.get(this);
+        TranslationConfigRepository.Entry internal=repository.entry(TranslationConfigRepository.Type.INSTRUCTION_YAML);
+        if (s.instructionName != null && !s.instructionName.trim().isEmpty()) {
+            if (!internal.valid()) return "Instruction YAML internal copy is unavailable; import the YAML again.";
+            try {
+                CustomInstructions parsed=YamlInstructionParser.parse(internal.name,repository.read(TranslationConfigRepository.Type.INSTRUCTION_YAML));
+                if(!parsed.hasTranslation()&&!parsed.hasRefinement()) return "Instruction YAML internal copy has no translation or refinement block";
+                return null;
+            } catch(Exception e) { return "Instruction YAML internal copy failed validation: "+e.getMessage(); }
+        }
         if (uriText.isEmpty()) {
-            if ((s.instructionName != null && !s.instructionName.trim().isEmpty()) && !hasTranslation && !hasRefinement) {
-                return "Instruction đã chọn nhưng không có translation/refinement";
-            }
             return null; // Optional and not selected, or embedded profile instructions.
         }
-        Uri uri = Uri.parse(uriText);
-        String access = FileUtil.validateReadable(this, uri, "Instruction YAML");
-        if (access != null) return access;
-        try {
-            CustomInstructions parsed = YamlInstructionParser.parse(
-                    FileUtil.displayName(this, uri), FileUtil.readText(this, uri));
-            if (!parsed.hasTranslation() && !parsed.hasRefinement()) {
-                return "Instruction YAML không có khóa translation hoặc refinement hợp lệ";
-            }
-        } catch (Exception e) {
-            return "Không đọc được Instruction YAML: " + AppValidator.readableError(e);
-        }
-        return null;
+        return "Instruction YAML still references an external URI; import it again to create an internal copy.";
     }
 
 
@@ -1872,8 +1912,7 @@ public class MainActivity extends Activity {
 
 
     CostEstimator.Estimate estimateCurrentBatch(AppSettings s) {
-        PreparedBatch batch=preparedBatch;
-        if(batch==null)batch=PreparationCoordinator.get(this).current();
+        PreparedBatch batch=currentPreparedBatch();
         if(batch==null||!batch.ready())return null;
         CostEstimator.applyPricing(batch.estimate,s);
         return batch.estimate;
@@ -2021,9 +2060,20 @@ public class MainActivity extends Activity {
         }).start();
     }
 
+    PreparedBatch currentPreparedBatch() {
+        PreparedBatch current = PreparationCoordinator.get(this).current();
+        return current != null ? current : preparedBatch;
+    }
+
     void renderPreparedBatch(PreparedBatch batch) {
         if(estimateText==null||estimatePanel==null||batch==null)return;
-        preparedBatch=batch;
+        // A cancelled preparation can still post a callback after a newer preparation.
+        // Always render the coordinator's current batch; otherwise a stale PREPARING
+        // instance can overwrite READY and keep Start incorrectly disabled.
+        PreparedBatch current = PreparationCoordinator.get(this).current();
+        if (current != null && batch != current) return;
+        preparedBatch=current != null ? current : batch;
+        batch=preparedBatch;
         if(batch.status==PreparedBatch.Status.PREPARING){
             estimateText.setText("Preparing chunks: "+batch.progress+"%");
         }else if(batch.status==PreparedBatch.Status.ERROR){
