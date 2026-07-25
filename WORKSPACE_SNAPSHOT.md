@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (`v4.14` code55 candidate retained but rejected after OEM launcher delayed Macrobenchmark)
-- Current version: `4.14` (`versionCode 55`, untagged release candidate rejected for final release)
+- Snapshot updated: `2026-07-25` (`v4.14` code56 retained but rejected; corrected five-iteration Macrobenchmark diagnostic passed)
+- Current version: `4.14` (`versionCode 56`, untagged release candidate rejected for final release)
 - Current branch: `feature/v4.14`
-- Current commit: `b53d209` (exact code55 APK source baseline immediately before the OEM-launcher benchmark-fix/state commit)
-- Current build: `artifacts/builds/v4.14/build-20260725-102329/TranslateBooks-v4.14-code55.apk`, SHA-256 `648EB95D23D348FA987FAC8B26F245144FC7AA37424E26801F1537B9ACAE7F14`; all five payload files match the immutable mirror under `backup/builds/v4.14/build-20260725-102329/`. It passed build/unit/lint/connected instrumentation and captured two real Macrobenchmark traces, but is rejected because the five-iteration benchmark did not complete.
+- Current commit: `59b20f1` (exact code56 APK source baseline immediately before the benchmark-runner keep-alive/state commit)
+- Current build: `artifacts/builds/v4.14/build-20260725-103832/TranslateBooks-v4.14-code56.apk`, SHA-256 `C6C0E8B263D22781E62235AC17A9FBFAF4EAD4812E363C5664E824014DF1E39F`; all five payload files match the immutable mirror under `backup/builds/v4.14/build-20260725-103832/`. Build/unit/lint/connected instrumentation passed, but code56 is rejected because its archived source predates the successful benchmark-runner keep-alive fix.
 
 ## Completed tasks
 
@@ -80,12 +80,17 @@
 - Built and archived exact `4.14`/code55 from commit `b53d209` under event `build-20260725-102329`; all artifact/backup payload hashes match.
 - Signed Macrobenchmark installed successfully and captured two real startup Perfetto traces before the run was stopped after the OnePlus launcher delayed each setup Home action for nearly 10 minutes.
 - Removed the redundant Home setup action; `StartupMode.COLD` already force-stops the target before each measured launch.
+- Built and archived exact `4.14`/code56 from commit `59b20f1` under event `build-20260725-103832`; all artifact/backup payload hashes match.
+- Diagnosed OnePlus Hans freezing the background Macrobenchmark runner even while it held a partial wake lock; standard device-idle whitelisting did not bypass the OEM freezer and was fully reverted.
+- Added a benchmark-only foreground host activity, retained a bounded wake lock, and returned the host to the foreground immediately after each measured launch.
+- Suppressed the first-run notification request only in the non-product `benchmark` build type so StartupTiming measures `MainActivity`, not the Android permission controller.
+- Corrected diagnostic Macrobenchmark passed 5/5 physical-device cold starts with 0 failures/skips and produced AndroidX JSON plus five Perfetto traces. Time to initial display was 293.57 ms minimum, 332.01 ms median, and 441.19 ms maximum.
 
 ## Pending tasks
 
 - Merge and push the completed v4.14 branch through the required release workflow before expecting GitHub's default-branch landing page to render the new README.
-- Add and run real AndroidX Macrobenchmark evidence, then create the exact `4.14` build and complete release-only device QA.
-- Commit the OEM-launcher Macrobenchmark fix, then build/reinstall a new immutable `4.14` candidate with the next versionCode.
+- Commit the benchmark-runner keep-alive fix and code56 rejection state, then build/reinstall exact `4.14`/code57 from that clean source.
+- Rerun the final AndroidX Macrobenchmark against code57 and complete release-only device QA.
 - P0 only: add a controlled device proof for the output-permission-revoked UX (the device shell does not expose a non-destructive SAF URI-grant revocation command).
 - Release-only tag/archive evidence and the pre-existing controlled output-permission-loss device proof remain pending.
 
@@ -93,6 +98,7 @@
 
 - Rejected code54 candidate: Android removed the target package during cleanup after rejecting the unsigned Macrobenchmark APK. No benchmark measurement was produced.
 - Rejected code55 candidate: the signed test captured two traces, but the OEM launcher stability wait made the five-iteration run impractical; the redundant Home step is removed for the next candidate.
+- Rejected code56 candidate: its archived source removed the Home step but OnePlus Hans still froze the background test runner after trace capture. The corrected working-tree diagnostic passed all five iterations, so the implementation must be committed and rebuilt as code57 before it can become release evidence.
 - P0 root causes fixed: the picker stripped `FLAG_GRANT_PERSISTABLE_URI_PERMISSION`; external small config files were used at runtime; stale prepared-plan callbacks could keep Start disabled; and the output tree URI was decoded twice between service preparation and materialization, corrupting the persisted-grant identity.
 - Controlled output-permission-loss UX still needs a device-side revoke test; the preflight and UI implementation prevent dispatch when `validateTreeWritable` fails.
 - Warm tab-switch P50 is `20 ms`, above the `16 ms` target.
@@ -134,10 +140,12 @@
 - Macrobenchmark build regression: PASS. `compileBenchmarkJavaWithJavac`, `:app:assembleBenchmark`, and `:macrobenchmark:assembleBenchmark` completed successfully; the approved-logo guard also ran for the target variant.
 - v4.14/code54 regression: PARTIAL PASS. Approved-logo guard, 106 JVM tests, lint (54 warnings/0 errors), artifact parity, and connected instrumentation (12 passed/1 opt-in skipped) passed; Macrobenchmark failed before measurement with `INSTALL_PARSE_FAILED_NO_CERTIFICATES`.
 - v4.14/code55 regression: PARTIAL PASS. Approved-logo guard, 106 JVM tests, lint (54 warnings/0 errors), artifact parity, connected instrumentation (12 passed/1 opt-in skipped), signed benchmark installation, and two real traces passed; the five-iteration Macrobenchmark was stopped after the OEM launcher added nearly 10 minutes per setup.
+- v4.14/code56 regression: PARTIAL PASS. Approved-logo guard, 106 JVM tests, lint (54 warnings/0 errors), artifact parity, and connected instrumentation (12 passed/1 opt-in skipped) passed. The archived source remained vulnerable to the OnePlus background freezer, so code56 is rejected.
+- Corrected working-tree Macrobenchmark diagnostic: PASS. OnePlus CPH2691 / Android 15 completed 5/5 cold starts of `com.ml.tblandroidtxt.MainActivity`, 0 failed/skipped; median time to initial display was 332.01 ms and all five real Perfetto traces plus AndroidX JSON were retained in ignored durable artifact/backup diagnostic stores.
 
 ## Next step
 
-Commit the OEM-launcher benchmark fix and code55 failed-QA state. Then create a new immutable exact `4.14` candidate with the next versionCode and rerun all dependent release QA. Keep v4.14 untagged until every gate passes.
+Commit the benchmark-runner keep-alive fix and code56 failed-QA state. Then create a new immutable exact `4.14`/code57 candidate and rerun all dependent release QA. Keep v4.14 untagged until every gate passes.
 
 ## Resume rule
 

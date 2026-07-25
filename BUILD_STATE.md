@@ -3,17 +3,17 @@
 ## Current release candidate build
 
 - versionName: `4.14`
-- versionCode: `55`
-- event: `build-20260725-102329`
+- versionCode: `56`
+- event: `build-20260725-103832`
 - branch: `feature/v4.14`
-- source commit: `b53d2095694c81e368e8908d283091d622e2e580`
-- APK: `artifacts/builds/v4.14/build-20260725-102329/TranslateBooks-v4.14-code55.apk`
-- immutable local mirror: `backup/builds/v4.14/build-20260725-102329/`
-- APK SHA-256: `648EB95D23D348FA987FAC8B26F245144FC7AA37424E26801F1537B9ACAE7F14`
-- source ZIP SHA-256: `66327B48BB497323FC8E4AB24AD3CE8CC96596DB0A7AF7AF6B5F612BA5AE77A4`
-- regression: approved-logo guard and 106 JVM tests passed; Android Lint completed with 54 warnings and 0 errors; connected instrumentation passed 12 tests with 1 opt-in real-API test skipped. Signed Macrobenchmark captured two real startup traces, but the run was stopped after the OEM launcher held each `pressHome` setup for nearly 10 minutes.
-- device state: exact `4.14`/code55 installed and instrumented on OnePlus CPH2691 / Android 15; Macrobenchmark target/test packages were installed successfully. The accepted candidate must be rebuilt/reinstalled after removing the unnecessary OEM launcher wait.
-- release state: untagged release candidate; rejected for final release because the five-iteration Macrobenchmark did not complete.
+- source commit: `59b20f1c6d26309ccb415bbfe5c7c4e2998a7548`
+- APK: `artifacts/builds/v4.14/build-20260725-103832/TranslateBooks-v4.14-code56.apk`
+- immutable local mirror: `backup/builds/v4.14/build-20260725-103832/`
+- APK SHA-256: `C6C0E8B263D22781E62235AC17A9FBFAF4EAD4812E363C5664E824014DF1E39F`
+- source ZIP SHA-256: `AA3AE415CF91E05312FBFF5A212331358FD81C3256149C58F6847BDACDEEBEB1`
+- regression: approved-logo guard and 106 JVM tests passed; Android Lint completed with 54 warnings and 0 errors; connected instrumentation passed 12 tests with 1 opt-in real-API test skipped. The archived code56 source still allowed OnePlus Hans to freeze the background benchmark runner. A working-tree diagnostic then completed all five correct `MainActivity` cold starts with real JSON/Perfetto evidence after adding a foreground benchmark host and suppressing only the benchmark variant's first-run notification dialog.
+- device state: OnePlus CPH2691 / Android 15 completed the corrected five-iteration diagnostic. Time to initial display was 293.57/332.01/441.19 ms min/median/max with 0 skipped and 0 failed tests.
+- release state: untagged release candidate; code56 is retained but rejected because the successful Macrobenchmark fix is newer than its archived source commit. A new immutable exact candidate is required.
 
 ## Release identity
 

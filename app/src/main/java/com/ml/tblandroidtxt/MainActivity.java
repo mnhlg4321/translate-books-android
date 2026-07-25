@@ -1424,6 +1424,7 @@ public class MainActivity extends Activity {
     }
 
     void requestNotificationPermission() {
+        if ("benchmark".equals(BuildConfig.BUILD_TYPE)) return;
         if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTI);
         }

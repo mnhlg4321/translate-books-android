@@ -2,7 +2,7 @@
 
 ## Status
 
-`PASS WITH KNOWN LIMITATIONS` for the `v4.14-dev.4` permanent-logo development scope.
+`IN PROGRESS` for the v4.14 product release. The earlier `v4.14-dev.4` permanent-logo development scope remains passed, but no exact release candidate has passed every final gate yet.
 
 This report does not declare a v4.14 product release. No release tag was created.
 
@@ -59,3 +59,13 @@ Results:
 - The full connected Android instrumentation suite was not rerun; focused JVM coverage, lint compilation, and controlled on-device logo/state QA passed.
 - Lint retains 54 warnings and no errors.
 - Release-only Perfetto, Macrobenchmark, screenshot, video, tag, and immutable release payload requirements remain pending and are not satisfied by this development build.
+
+## Exact release-candidate diagnostic
+
+- Exact `4.14`/code56 was archived under `build-20260725-103832` from source commit `59b20f1`; APK SHA-256 is `C6C0E8B263D22781E62235AC17A9FBFAF4EAD4812E363C5664E824014DF1E39F`.
+- Its build, 106 JVM tests, logo guard, lint (54 warnings/0 errors), and connected instrumentation (12 passed plus 1 opt-in skip) passed.
+- Code56 is rejected because OnePlus Hans froze the background Macrobenchmark runner and its archived source does not include the final keep-alive correction.
+- The corrected working tree completed 5/5 physical-device cold starts of `com.ml.tblandroidtxt.MainActivity` with 0 failures/skips.
+- Time to initial display: 293.57 ms minimum, 332.01 ms median, 441.19 ms maximum.
+- Real AndroidX JSON and five Perfetto traces are retained in both ignored durable stores under `diagnostic-working-tree-20260725-1107`.
+- These diagnostic metrics validate the fixture correction but are not final release evidence; the same test must pass against a clean, archived code57 source.
