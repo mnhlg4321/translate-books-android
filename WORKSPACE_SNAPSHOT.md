@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (`v4.14-dev.3` build, dual archive, installation, and device QA complete)
+- Snapshot updated: `2026-07-25` (`v4.14-dev.4` approved-logo integration group started)
 - Current version: `4.14-dev.3` (`versionCode 52`, untagged development build)
 - Current branch: `feature/v4.14`
 - Current commit: `ea5967c` (latest QA/state baseline immediately before this final checklist/snapshot commit; the exact APK source baseline remains `e7a04d7`)
@@ -66,11 +66,15 @@
 
 ## Pending tasks
 
+- Promote approved `artwork/logo-concepts/translate-books-logo-v2-cool-bright.png` to the permanent Android launcher/round icon and replace the in-app `文` brand badge.
+- Add a build-time hash and manifest-reference guard so every future build must contain the approved logo.
+- Run the mandatory archive-first build/install and device launcher/header QA for `v4.14-dev.4`.
 - P0 only: add a controlled device proof for the output-permission-revoked UX (the device shell does not expose a non-destructive SAF URI-grant revocation command).
 - Release-only tag/archive evidence and the pre-existing controlled output-permission-loss device proof remain pending.
 
 ## Known bugs
 
+- The current Android manifest has no explicit launcher/round icon and the in-app top badge still uses the placeholder `文`, so the approved logo is not yet guaranteed in builds.
 - P0 root causes fixed: the picker stripped `FLAG_GRANT_PERSISTABLE_URI_PERMISSION`; external small config files were used at runtime; stale prepared-plan callbacks could keep Start disabled; and the output tree URI was decoded twice between service preparation and materialization, corrupting the persisted-grant identity.
 - Controlled output-permission-loss UX still needs a device-side revoke test; the preflight and UI implementation prevent dispatch when `validateTreeWritable` fails.
 - Warm tab-switch P50 is `20 ms`, above the `16 ms` target.
@@ -107,7 +111,7 @@
 
 ## Next step
 
-Keep v4.14 untagged until release-only Perfetto, real Macrobenchmark output, controlled output-permission-loss proof, and the remaining checklist gates are satisfied. The next development build in this series will be numbered automatically after `4.14-dev.3`.
+Integrate and lock the approved bright cool logo, then build/archive/install `v4.14-dev.4` and verify both launcher and in-app rendering. Keep v4.14 untagged until release-only evidence and the remaining checklist gates are satisfied.
 
 ## Resume rule
 
