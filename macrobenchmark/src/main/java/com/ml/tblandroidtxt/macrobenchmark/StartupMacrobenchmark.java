@@ -34,10 +34,7 @@ public final class StartupMacrobenchmark {
                 CompilationMode.DEFAULT,
                 StartupMode.COLD,
                 5,
-                scope -> {
-                    scope.pressHome(1_000L);
-                    return Unit.INSTANCE;
-                },
+                scope -> Unit.INSTANCE,
                 scope -> {
                     Intent intent = new Intent(Intent.ACTION_MAIN)
                             .setClassName(TARGET_PACKAGE, TARGET_ACTIVITY)

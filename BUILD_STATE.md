@@ -3,17 +3,17 @@
 ## Current release candidate build
 
 - versionName: `4.14`
-- versionCode: `54`
-- event: `build-20260725-101846`
+- versionCode: `55`
+- event: `build-20260725-102329`
 - branch: `feature/v4.14`
-- source commit: `05690365a6863e8f58a5534900853ab5e0a8e975`
-- APK: `artifacts/builds/v4.14/build-20260725-101846/TranslateBooks-v4.14-code54.apk`
-- immutable local mirror: `backup/builds/v4.14/build-20260725-101846/`
-- APK SHA-256: `CB93A0161B636686D25E8D99FA67C964289990B15E3CE0081D6270334AC2F5C3`
-- source ZIP SHA-256: `A96E61DF650519F9B5F3ACB7B1D62C2F8F066AD520D4EAB6D3BF86B25FA8A756`
-- regression: approved-logo guard and 106 JVM tests passed; Android Lint completed with 54 warnings and 0 errors; connected instrumentation passed 12 tests with 1 opt-in real-API test skipped. Macrobenchmark QA failed before measurement because its test APK was unsigned.
-- device state: exact `4.14`/code54 installed for instrumentation on OnePlus CPH2691 / Android 15; the failed Macrobenchmark runner removed the target package during cleanup, so the accepted candidate must be rebuilt/reinstalled after the signing fix.
-- release state: untagged release candidate; rejected for final release because Macrobenchmark evidence did not run.
+- source commit: `b53d2095694c81e368e8908d283091d622e2e580`
+- APK: `artifacts/builds/v4.14/build-20260725-102329/TranslateBooks-v4.14-code55.apk`
+- immutable local mirror: `backup/builds/v4.14/build-20260725-102329/`
+- APK SHA-256: `648EB95D23D348FA987FAC8B26F245144FC7AA37424E26801F1537B9ACAE7F14`
+- source ZIP SHA-256: `66327B48BB497323FC8E4AB24AD3CE8CC96596DB0A7AF7AF6B5F612BA5AE77A4`
+- regression: approved-logo guard and 106 JVM tests passed; Android Lint completed with 54 warnings and 0 errors; connected instrumentation passed 12 tests with 1 opt-in real-API test skipped. Signed Macrobenchmark captured two real startup traces, but the run was stopped after the OEM launcher held each `pressHome` setup for nearly 10 minutes.
+- device state: exact `4.14`/code55 installed and instrumented on OnePlus CPH2691 / Android 15; Macrobenchmark target/test packages were installed successfully. The accepted candidate must be rebuilt/reinstalled after removing the unnecessary OEM launcher wait.
+- release state: untagged release candidate; rejected for final release because the five-iteration Macrobenchmark did not complete.
 
 ## Release identity
 
