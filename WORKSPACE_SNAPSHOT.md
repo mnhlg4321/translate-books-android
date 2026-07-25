@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (`v4.14-dev.3` runtime preview/rule-usage group started)
+- Snapshot updated: `2026-07-25` (`v4.14-dev.3` runtime preview/rule-usage implementation and focused regression complete)
 - Current version: `4.14-dev.2` (`versionCode 51`, untagged development build)
 - Current branch: `feature/v4.14`
-- Current commit: `750326a` (latest QA/state baseline immediately before this final checklist/snapshot commit)
+- Current commit: `bc71628` (implementation baseline immediately before this checklist/snapshot commit)
 - Current build: `artifacts/builds/v4.14-dev.2/build-20260725-090328/TranslateBooks-v4.14-dev.2-code51.apk`, SHA-256 `BF034D2601F44A5739C53D8B9868A142FCF2FDC724006E0C029B631B83963C91`; identical mirror under `backup/builds/`. Installed and verified on device; it is an untagged development build, not a release archive.
 
 ## Completed tasks
@@ -58,18 +58,18 @@
 - Passed the full 103-test JVM suite and Android Lint with 54 warnings and 0 errors.
 - Installed `4.14-dev.2`/code51 on the connected OnePlus 13R.
 - Verified on device that editor import adopts the exact CSV filename, activates the one-term glossary, and preserves the name/selection after a cold restart; restored the user's prior active glossary and removed all QA data.
+- Restored the Translate dashboard's scrollable last accepted translation preview with a separate completed-chunk identity.
+- Added current chunk plus exact Glossary/Pronoun rule-use metrics sourced from the actual translation/refinement `PromptPlan`, including zero-versus-unknown presentation and persisted runtime restoration.
+- Added focused prompt-count, runtime-state, dashboard-label, and Android fixture coverage; the focused JVM group passed.
 
 ## Pending tasks
 
-- Restore the Translate dashboard's last accepted translation preview with its completed-chunk identity.
-- Show the current chunk plus exact Glossary and Pronoun rule counts from the prompt actually sent for that chunk; do not infer counts by parsing logs or rematching a different text scope.
-- Add persisted runtime-state and formatter/UI regression coverage, then run the mandatory archive-first build/install workflow for `v4.14-dev.3`.
+- Run the mandatory full regression, archive-first build/install workflow, artifact/backup verification, and device UI QA for `v4.14-dev.3`.
 - P0 only: add a controlled device proof for the output-permission-revoked UX (the device shell does not expose a non-destructive SAF URI-grant revocation command).
 - Release-only tag/archive evidence and the pre-existing controlled output-permission-loss device proof remain pending.
 
 ## Known bugs
 
-- The current Translate dashboard omits the historical last-translation preview and only records per-chunk Glossary/Pronoun usage in technical logs; the existing log count is also recomputed from `mainContent`, which can diverge from rules injected using contextual text.
 - P0 root causes fixed: the picker stripped `FLAG_GRANT_PERSISTABLE_URI_PERMISSION`; external small config files were used at runtime; stale prepared-plan callbacks could keep Start disabled; and the output tree URI was decoded twice between service preparation and materialization, corrupting the persisted-grant identity.
 - Controlled output-permission-loss UX still needs a device-side revoke test; the preflight and UI implementation prevent dispatch when `validateTreeWritable` fails.
 - Warm tab-switch P50 is `20 ms`, above the `16 ms` target.
@@ -100,10 +100,11 @@
 - Glossary filename-parity focused regression: 6 passed, 0 failed, 0 skipped.
 - v4.14-dev.2 full regression/build/archive/install: PASS. 103 JVM tests passed; lint completed with 54 warnings and 0 errors; APK metadata is 4.14-dev.2/code51; artifact/backup parity and all manifest hashes passed.
 - Glossary filename-parity device QA: PASS. Exact imported filename, one-term activation, and cold-restart persistence verified; prior user state restored after cleanup.
+- Runtime preview/rule-usage focused regression: PASS. Prompt counts are taken from the exact injected plan; snapshot round-trip distinguishes unknown from zero; compact dashboard and preview labels passed.
 
 ## Next step
 
-Implement structured runtime preview/rule-usage state from the actual `PromptPlan`, restore the compact Translate UI, add focused tests, and only then build/archive/install `v4.14-dev.3`. Keep v4.14 untagged until release-only evidence and the remaining checklist gates are satisfied.
+Run the archive-first `v4.14-dev.3` build/install from the clean implementation baseline, verify both durable copies and device UI state, then update QA/build/snapshot evidence. Keep v4.14 untagged until release-only evidence and the remaining checklist gates are satisfied.
 
 ## Resume rule
 
