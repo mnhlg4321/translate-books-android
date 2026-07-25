@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (`v4.14-dev.4` approved-logo implementation and focused regression complete)
+- Snapshot updated: `2026-07-25` (`v4.14` root README refreshed after approved-logo implementation)
 - Current version: `4.14-dev.3` (`versionCode 52`, untagged development build)
 - Current branch: `feature/v4.14`
-- Current commit: `017c7d6` (approved-logo implementation baseline immediately before this checklist/snapshot commit)
+- Current commit: `f8649b5` (README implementation baseline immediately before this snapshot commit)
 - Current build: `artifacts/builds/v4.14-dev.3/build-20260725-093258/TranslateBooks-v4.14-dev.3-code52.apk`, SHA-256 `3C732596E3552A092C5B0BE656BC690619B8A36C613DE3CED6B10EEE4B3462DF`; all five payload files match the immutable mirror under `backup/builds/`. Installed and verified on device; it is an untagged development build, not a release archive.
 
 ## Completed tasks
@@ -65,10 +65,12 @@
 - Installed and visually verified the current chunk, exact rule counts, exact-prompt association, and accepted-chunk preview on OnePlus CPH2691 / Android 15 without a provider call; restored the original runtime state byte-for-byte.
 - Promoted the approved bright cool logo to a permanent Android resource, launcher/round icon, and in-app top badge; retained both design concepts under `artwork/logo-concepts/`.
 - Added a `preBuild` guard that requires the approved logo SHA-256 and all manifest/header references; the guard and 106 JVM tests passed.
+- Replaced the obsolete v2.6.x root README diary with a current project landing page covering product capabilities, configuration formats, mandatory archive-first builds, verification, privacy, repository structure, and development workflow.
 
 ## Pending tasks
 
 - Run the mandatory archive-first build/install and device launcher/header QA for `v4.14-dev.4`.
+- Merge and push the completed v4.14 branch through the required release workflow before expecting GitHub's default-branch landing page to render the new README.
 - P0 only: add a controlled device proof for the output-permission-revoked UX (the device shell does not expose a non-destructive SAF URI-grant revocation command).
 - Release-only tag/archive evidence and the pre-existing controlled output-permission-loss device proof remain pending.
 
@@ -108,6 +110,7 @@
 - v4.14-dev.3 full regression/build/archive/install: PASS. 106 JVM tests passed; lint completed with 54 warnings and 0 errors; APK metadata is 4.14-dev.3/code52; artifact/backup parity and all manifest hashes passed.
 - Runtime preview/rule-usage device QA: PASS. Exact fixture values and accepted preview rendered without navigation overlap; original user runtime state was restored byte-for-byte after QA.
 - Approved-logo focused regression: PASS. `verifyApprovedLogo` ran through `preBuild`, exact resource/source hashes matched, manifest/header references passed, and 106 JVM tests passed.
+- README static verification: PASS. `git diff --check` passed, all six relative documentation links resolve, the obsolete v2.6.7 heading and direct Android Studio APK instructions are absent, and only `README.md` was included in commit `f8649b5`.
 
 ## Next step
 
