@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (Glossary filename-parity build, archive, installation, and device QA complete)
+- Snapshot updated: `2026-07-25` (`v4.14-dev.3` runtime preview/rule-usage group started)
 - Current version: `4.14-dev.2` (`versionCode 51`, untagged development build)
 - Current branch: `feature/v4.14`
 - Current commit: `750326a` (latest QA/state baseline immediately before this final checklist/snapshot commit)
@@ -61,11 +61,15 @@
 
 ## Pending tasks
 
+- Restore the Translate dashboard's last accepted translation preview with its completed-chunk identity.
+- Show the current chunk plus exact Glossary and Pronoun rule counts from the prompt actually sent for that chunk; do not infer counts by parsing logs or rematching a different text scope.
+- Add persisted runtime-state and formatter/UI regression coverage, then run the mandatory archive-first build/install workflow for `v4.14-dev.3`.
 - P0 only: add a controlled device proof for the output-permission-revoked UX (the device shell does not expose a non-destructive SAF URI-grant revocation command).
 - Release-only tag/archive evidence and the pre-existing controlled output-permission-loss device proof remain pending.
 
 ## Known bugs
 
+- The current Translate dashboard omits the historical last-translation preview and only records per-chunk Glossary/Pronoun usage in technical logs; the existing log count is also recomputed from `mainContent`, which can diverge from rules injected using contextual text.
 - P0 root causes fixed: the picker stripped `FLAG_GRANT_PERSISTABLE_URI_PERMISSION`; external small config files were used at runtime; stale prepared-plan callbacks could keep Start disabled; and the output tree URI was decoded twice between service preparation and materialization, corrupting the persisted-grant identity.
 - Controlled output-permission-loss UX still needs a device-side revoke test; the preflight and UI implementation prevent dispatch when `validateTreeWritable` fails.
 - Warm tab-switch P50 is `20 ms`, above the `16 ms` target.
@@ -99,7 +103,7 @@
 
 ## Next step
 
-Keep v4.14 untagged until release-only Perfetto, real Macrobenchmark output, screenshots/video, controlled output-permission-loss device proof, and the remaining checklist gates are satisfied.
+Implement structured runtime preview/rule-usage state from the actual `PromptPlan`, restore the compact Translate UI, add focused tests, and only then build/archive/install `v4.14-dev.3`. Keep v4.14 untagged until release-only evidence and the remaining checklist gates are satisfied.
 
 ## Resume rule
 
