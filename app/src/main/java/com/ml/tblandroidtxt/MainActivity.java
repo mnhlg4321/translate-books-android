@@ -1671,44 +1671,51 @@ public class MainActivity extends Activity {
 
     void importTermsIntoEditingGlossary(Intent data) {
         if (editingGlossary == null) editingGlossary = GlossaryStore.create(this, "New glossary");
-        int totalFiles = 0;
         int totalTerms = 0;
+        ArrayList<Uri> selectedUris = new ArrayList<>();
+        ArrayList<String> successfulNames = new ArrayList<>();
         ArrayList<String> importedNames = new ArrayList<>();
+        ArrayList<String> failedNames = new ArrayList<>();
+        GlossaryStore.Glossary staged = new GlossaryStore.Glossary();
         try {
             ClipData clip = data.getClipData();
             if (clip != null) {
                 for (int i = 0; i < clip.getItemCount(); i++) {
                     Uri u = clip.getItemAt(i).getUri();
-                    if (u == null) continue;
-                    FileUtil.takePersistable(this, u, Intent.FLAG_GRANT_READ_URI_PERMISSION, true, false);
-                    String fileName = FileUtil.displayName(this, u);
-                    String text = FileUtil.readText(this, u);
-                    List<GlossaryStore.Term> terms = GlossaryStore.parseTerms(fileName, text);
-                    GlossaryStore.mergeTerms(editingGlossary, terms);
-                    importedNames.add(fileName + " (" + terms.size() + ")");
-                    totalFiles++;
-                    totalTerms += terms.size();
+                    if (u != null) selectedUris.add(u);
                 }
             } else if (data.getData() != null) {
-                Uri u = data.getData();
-                FileUtil.takePersistable(this, u, Intent.FLAG_GRANT_READ_URI_PERMISSION, true, false);
+                selectedUris.add(data.getData());
+            }
+            for (Uri u : selectedUris) {
                 String fileName = FileUtil.displayName(this, u);
-                String text = FileUtil.readText(this, u);
-                List<GlossaryStore.Term> terms = GlossaryStore.parseTerms(fileName, text);
-                GlossaryStore.mergeTerms(editingGlossary, terms);
-                importedNames.add(fileName + " (" + terms.size() + ")");
-                totalFiles = 1;
-                totalTerms = terms.size();
+                try {
+                    FileUtil.takePersistable(this, u, Intent.FLAG_GRANT_READ_URI_PERMISSION, true, false);
+                    String text = FileUtil.readText(this, u);
+                    List<GlossaryStore.Term> terms = GlossaryStore.parseTerms(fileName, text);
+                    if (terms.isEmpty()) throw new IllegalArgumentException("No valid glossary terms");
+                    GlossaryStore.mergeTerms(staged, terms);
+                    successfulNames.add(fileName);
+                    importedNames.add(fileName + " (" + terms.size() + ")");
+                    totalTerms += terms.size();
+                } catch (Exception fileError) {
+                    failedNames.add(fileName + ": " + fileError.getMessage());
+                }
             }
             if (totalTerms == 0) throw new IllegalArgumentException("No valid glossary terms found");
+            GlossaryStore.mergeTerms(editingGlossary, staged.terms);
+            String suggestedName = GlossaryStore.suggestedImportName(editingGlossary.name, successfulNames);
+            editingGlossary.name = suggestedName;
+            if (glossaryNameField != null) glossaryNameField.setText(suggestedName);
             saveEditingGlossary();
             String imported = namesSummary(importedNames);
             String validation = PromptContextBuilder.validateText(GlossaryStore.toPromptText(editingGlossary), currentPronounText());
             GlossaryStore.Glossary importedGlossary = editingGlossary;
             selectGlossary(importedGlossary);
             toast("Đã import " + totalTerms + " terms từ: " + imported);
-            appendLog("Glossary import: " + totalFiles + " file(s), " + totalTerms + " term(s): " + imported + " • " + oneLine(validation));
-            showResult("Glossary import validated", totalTerms + " term(s) từ " + imported + "\n" + validation);
+            String skipped = failedNames.isEmpty() ? "" : "\nBỏ qua " + failedNames.size() + " file: " + namesSummary(failedNames);
+            appendLog("Glossary import: " + successfulNames.size() + " file(s), " + totalTerms + " term(s): " + imported + (failedNames.isEmpty() ? "" : " • skipped=" + failedNames.size()) + " • " + oneLine(validation));
+            showResult("Glossary import validated", totalTerms + " term(s) từ " + imported + skipped + "\n" + validation);
         } catch (Exception e) {
             toast("Lỗi import glossary");
             appendLog("Lỗi import glossary: " + e.getMessage());

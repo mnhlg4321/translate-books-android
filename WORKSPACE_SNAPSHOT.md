@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (v4.14 numbered-build workflow, first dual archive, and QA committed)
+- Snapshot updated: `2026-07-25` (Glossary filename-parity implementation complete; full regression/build/device QA pending)
 - Current version: `4.14-dev.1` (`versionCode 50`, untagged development build)
 - Current branch: `feature/v4.14`
-- Current commit: `f0c4ee843b084bdc3a64bb3cb0dc0314d8e9c65b` (implementation and QA baseline immediately before this snapshot/checklist update)
+- Current commit: `ce7f0801dd082934f4f606dea1835aaafb0f05ed` (baseline immediately before the uncommitted Glossary filename-parity implementation)
 - Current build: `artifacts/builds/v4.14-dev.1/build-20260725-084757/TranslateBooks-v4.14-dev.1-code50.apk`, SHA-256 `39DE793F31377BAF0AA1AE5464A4A039099CA1C76B4E0127FA89CFE9CAE9B30B`; identical mirror under `backup/builds/`. It is an untagged development build, not a release archive.
 
 ## Completed tasks
@@ -51,11 +51,14 @@
 - Added mandatory `scripts/build-and-save.ps1`; direct debug APK assembly is blocked unless invoked through the archive-first workflow.
 - Added automatic build numbering based on prior archives, the source default, and the connected device versionCode; the first accepted build is `4.14-dev.1`/code50.
 - Created and verified immutable matching payloads for event `build-20260725-084757` in both `artifacts/builds/` and `backup/builds/`, including APK, per-build README, BUILD_INFO, SHA-256 manifest, and exact source ZIP.
+- Added list-level `Import glossary` parity with Pronoun, exact single-file filename adoption, deterministic multi-file naming, custom-name preservation, and staged parsing before mutating the glossary.
+- Added four naming-policy tests; focused `GlossaryImportV48Test` passes 6 tests with 0 failures/skips.
 
 ## Pending tasks
 
 - P0 only: add a controlled device proof for the output-permission-revoked UX (the device shell does not expose a non-destructive SAF URI-grant revocation command).
-- No required work remains for the numbered development-build archival scope. Release-only tag/archive evidence and the pre-existing controlled output-permission-loss device proof remain pending.
+- Commit the Glossary filename-parity implementation, run full regression, build/archive/install v4.14-dev.2/code51, and verify the picker behavior on device.
+- Release-only tag/archive evidence and the pre-existing controlled output-permission-loss device proof remain pending.
 
 ## Known bugs
 
@@ -67,6 +70,7 @@
 - Performance evidence uses Perfetto/frame/PSS measurements rather than a dedicated Macrobenchmark module.
 - APK and source ZIP archives are deliberately ignored by Git, so they are not present in a clean clone; durable copies remain in the local `artifacts/releases/v4.8/` and `backup/v4.8/` stores.
 - Android Lint reports 54 warnings and 0 errors for the accepted v4.14 development build.
+- Glossary filename parity has only passed focused JVM tests so far; full regression and device picker verification remain pending.
 
 ## Regression status
 
@@ -86,10 +90,11 @@
 - Explicit real API run: PASS; 2 requests completed and both provider prompts were verified to contain glossary and pronoun locks.
 - v4.13 P0 device regression: PASS for fresh SAF output selection (persisted read/write plus write/delete probe), YAML/glossary/pronoun valid state, real Start/preflight/service/request/response/partial output/completed sequence, and cold restart followed by a second real output. JVM unit tests: 99 passed. Connected instrumentation on OnePlus 13R: 12 passed, 0 failed, 1 intentionally skipped real-API test.
 - v4.14 archive workflow: PASS. PowerShell parser and `git diff --check` passed; direct `assembleDebug` was blocked; 99 JVM tests passed; lint completed with 54 warnings and 0 errors; APK metadata is 4.14-dev.1/code50; artifact/backup parity, checksum manifest, per-build README/JSON, and 323-entry source ZIP passed.
+- Glossary filename-parity focused regression: 6 passed, 0 failed, 0 skipped. Full suite/build/device QA pending.
 
 ## Next step
 
-On the next development build, run `scripts/build-and-save.ps1` (or add `-Install`); it must allocate `4.14-dev.2` with a versionCode above 50 and archive it before any installation. Do not tag v4.14 until all release criteria are satisfied.
+Commit the Glossary filename-parity group, then run `scripts/build-and-save.ps1 -Install`; it must allocate and archive `4.14-dev.2`/code51 before installation. Verify exact imported filename, custom-name preservation, multi-file naming, active selection, and cold restart. Do not tag v4.14 until all release criteria are satisfied.
 
 ## Resume rule
 
