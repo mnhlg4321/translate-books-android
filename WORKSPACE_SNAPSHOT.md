@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (`v4.14` code57 exact pre-tag regression and device QA passed)
-- Current version: `4.14` (`versionCode 57`, exact untagged release candidate accepted for pre-tag workflow)
+- Snapshot updated: `2026-07-25` (`v4.14` annotated tag created after the PreTag gate passed; immutable tag archive pending)
+- Current version: `4.14` (`versionCode 57`, annotated local tag `v4.14` at `8a3b281`)
 - Current branch: `feature/v4.14`
-- Current commit: `82d5e4a` (exact code57 implementation baseline immediately before the final QA/snapshot evidence commit)
+- Current commit: `8a3b281` (tagged release-document baseline immediately before this tag-state snapshot commit)
 - Current build: `artifacts/builds/v4.14/build-20260725-111133/TranslateBooks-v4.14-code57.apk`, SHA-256 `D478AC135ED3C736F7FC850FAA06CA4F6F5CB6D0634BB09B15BD59C9B2DAE5D1`; all five payload files match the immutable mirror under `backup/builds/v4.14/build-20260725-111133/`. Pre-tag build, regression, physical-device Macrobenchmark, output-permission-loss QA, screenshots, and video evidence passed.
 
 ## Completed tasks
@@ -91,13 +91,12 @@
 - Accepted code57 Macrobenchmark rerun passed 5/5 physical-device cold starts at 307.78/322.81/337.52 ms min/median/max and retained five real Perfetto traces plus AndroidX JSON in both durable stores.
 - Passed controlled output-permission-loss QA with a valid prepared local TXT, exact missing-write-grant blocker, `Choose output folder again`, and Start disabled; no provider request occurred and QA-created app state was removed.
 - Retained final Translate/Library screenshots and a 24-frame MJPEG AVI from timed actual device captures; all visual files match their backup copies.
+- Passed the PreTag workflow gate and created annotated local tag `v4.14` at release-document commit `8a3b281`; immutable tag archive and remote push remain pending.
 
 ## Pending tasks
 
-- Merge and push the completed v4.14 branch through the required release workflow before expecting GitHub's default-branch landing page to render the new README.
-- Commit final code57 QA/release documents and mark checklist step 09 with its evidence commit.
-- Pass the PreTag gate, create annotated `v4.14`, then create and verify the immutable tag archive/backup.
-- Complete checklist steps 10-14, merge `feature/v4.14` to `main` with `--no-ff`, push `main` and tag, and verify remote refs.
+- Create and verify the immutable `tag-v4.14` archive/backup with the exact APK, source, QA, benchmark, screenshots, and video evidence.
+- Complete checklist steps 11-14, merge `feature/v4.14` to `main` with `--no-ff`, push `main` and annotated tag, and verify remote refs.
 
 ## Known bugs
 
@@ -152,7 +151,7 @@
 
 ## Next step
 
-Commit the final code57 QA/release documents, record that commit in checklist step 09, and run the PreTag gate. Keep `v4.14` untagged until that gate passes.
+Commit the tag-state snapshot/checklist evidence, pass the PreBackup gate, then create and verify the immutable `tag-v4.14` archive in both durable stores before any merge or push.
 
 ## Resume rule
 
