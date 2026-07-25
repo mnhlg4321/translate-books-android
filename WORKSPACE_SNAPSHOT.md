@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (Glossary filename-parity implementation complete; full regression/build/device QA pending)
-- Current version: `4.14-dev.1` (`versionCode 50`, untagged development build)
+- Snapshot updated: `2026-07-25` (Glossary filename-parity build, archive, installation, and device QA complete)
+- Current version: `4.14-dev.2` (`versionCode 51`, untagged development build)
 - Current branch: `feature/v4.14`
-- Current commit: `ce7f0801dd082934f4f606dea1835aaafb0f05ed` (baseline immediately before the uncommitted Glossary filename-parity implementation)
-- Current build: `artifacts/builds/v4.14-dev.1/build-20260725-084757/TranslateBooks-v4.14-dev.1-code50.apk`, SHA-256 `39DE793F31377BAF0AA1AE5464A4A039099CA1C76B4E0127FA89CFE9CAE9B30B`; identical mirror under `backup/builds/`. It is an untagged development build, not a release archive.
+- Current commit: `b9e17cc328e594f317e99a1aae406bd9cef0171f` (implementation baseline immediately before this QA/snapshot documentation commit)
+- Current build: `artifacts/builds/v4.14-dev.2/build-20260725-090328/TranslateBooks-v4.14-dev.2-code51.apk`, SHA-256 `BF034D2601F44A5739C53D8B9868A142FCF2FDC724006E0C029B631B83963C91`; identical mirror under `backup/builds/`. Installed and verified on device; it is an untagged development build, not a release archive.
 
 ## Completed tasks
 
@@ -53,11 +53,15 @@
 - Created and verified immutable matching payloads for event `build-20260725-084757` in both `artifacts/builds/` and `backup/builds/`, including APK, per-build README, BUILD_INFO, SHA-256 manifest, and exact source ZIP.
 - Added list-level `Import glossary` parity with Pronoun, exact single-file filename adoption, deterministic multi-file naming, custom-name preservation, and staged parsing before mutating the glossary.
 - Added four naming-policy tests; focused `GlossaryImportV48Test` passes 6 tests with 0 failures/skips.
+- Committed the Glossary filename-parity implementation as `b9e17cc328e594f317e99a1aae406bd9cef0171f`.
+- Built and archived `4.14-dev.2`/code51 under immutable event `build-20260725-090328`; both durable copies and every manifest hash match.
+- Passed the full 103-test JVM suite and Android Lint with 54 warnings and 0 errors.
+- Installed `4.14-dev.2`/code51 on the connected OnePlus 13R.
+- Verified on device that editor import adopts the exact CSV filename, activates the one-term glossary, and preserves the name/selection after a cold restart; restored the user's prior active glossary and removed all QA data.
 
 ## Pending tasks
 
 - P0 only: add a controlled device proof for the output-permission-revoked UX (the device shell does not expose a non-destructive SAF URI-grant revocation command).
-- Commit the Glossary filename-parity implementation, run full regression, build/archive/install v4.14-dev.2/code51, and verify the picker behavior on device.
 - Release-only tag/archive evidence and the pre-existing controlled output-permission-loss device proof remain pending.
 
 ## Known bugs
@@ -70,7 +74,6 @@
 - Performance evidence uses Perfetto/frame/PSS measurements rather than a dedicated Macrobenchmark module.
 - APK and source ZIP archives are deliberately ignored by Git, so they are not present in a clean clone; durable copies remain in the local `artifacts/releases/v4.8/` and `backup/v4.8/` stores.
 - Android Lint reports 54 warnings and 0 errors for the accepted v4.14 development build.
-- Glossary filename parity has only passed focused JVM tests so far; full regression and device picker verification remain pending.
 
 ## Regression status
 
@@ -90,11 +93,13 @@
 - Explicit real API run: PASS; 2 requests completed and both provider prompts were verified to contain glossary and pronoun locks.
 - v4.13 P0 device regression: PASS for fresh SAF output selection (persisted read/write plus write/delete probe), YAML/glossary/pronoun valid state, real Start/preflight/service/request/response/partial output/completed sequence, and cold restart followed by a second real output. JVM unit tests: 99 passed. Connected instrumentation on OnePlus 13R: 12 passed, 0 failed, 1 intentionally skipped real-API test.
 - v4.14 archive workflow: PASS. PowerShell parser and `git diff --check` passed; direct `assembleDebug` was blocked; 99 JVM tests passed; lint completed with 54 warnings and 0 errors; APK metadata is 4.14-dev.1/code50; artifact/backup parity, checksum manifest, per-build README/JSON, and 323-entry source ZIP passed.
-- Glossary filename-parity focused regression: 6 passed, 0 failed, 0 skipped. Full suite/build/device QA pending.
+- Glossary filename-parity focused regression: 6 passed, 0 failed, 0 skipped.
+- v4.14-dev.2 full regression/build/archive/install: PASS. 103 JVM tests passed; lint completed with 54 warnings and 0 errors; APK metadata is 4.14-dev.2/code51; artifact/backup parity and all manifest hashes passed.
+- Glossary filename-parity device QA: PASS. Exact imported filename, one-term activation, and cold-restart persistence verified; prior user state restored after cleanup.
 
 ## Next step
 
-Commit the Glossary filename-parity group, then run `scripts/build-and-save.ps1 -Install`; it must allocate and archive `4.14-dev.2`/code51 before installation. Verify exact imported filename, custom-name preservation, multi-file naming, active selection, and cold restart. Do not tag v4.14 until all release criteria are satisfied.
+Commit the final QA/state documentation. Keep v4.14 untagged until release-only Perfetto, real Macrobenchmark output, screenshots/video, controlled output-permission-loss device proof, and the remaining checklist gates are satisfied.
 
 ## Resume rule
 
