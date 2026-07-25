@@ -3,7 +3,7 @@
 - Snapshot updated: `2026-07-25` (`v4.14-dev.4` permanent-logo build, archive, install, and device QA complete)
 - Current version: `4.14-dev.4` (`versionCode 53`, untagged development build)
 - Current branch: `feature/v4.14`
-- Current commit: `f8649b5` (branch baseline immediately before the permanent-logo QA/state commit; the exact APK source commit is `ca51d7e`)
+- Current commit: `e570ca9` (permanent-logo QA/state baseline immediately before this handoff snapshot commit; the exact APK source commit is `ca51d7e`)
 - Current build: `artifacts/builds/v4.14-dev.4/build-20260725-095315/TranslateBooks-v4.14-dev.4-code53.apk`, SHA-256 `3CA3A64327A9F1C413505151259D540A9A4C58AD67D3D4616B6F896628AF4038`; all five payload files match the immutable mirror under `backup/builds/v4.14-dev.4/build-20260725-095315/`. Installed and verified on device; it is an untagged development build, not a release archive.
 
 ## Completed tasks
@@ -117,7 +117,7 @@
 
 ## Next step
 
-Commit the permanent-logo QA/state evidence, then update the handoff snapshot to the resulting commit. Keep v4.14 untagged until release-only evidence and the remaining checklist gates are satisfied.
+The permanent-logo development build is complete. Keep v4.14 untagged until the controlled output-permission proof, release-only evidence, and remaining release checklist gates are satisfied.
 
 ## Resume rule
 
