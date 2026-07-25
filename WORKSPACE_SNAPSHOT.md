@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (99 tests/lint/build passed; README archive writer fixed, clean retry pending)
-- Current version: `4.13` (`versionCode 48`, untagged development hotfix)
+- Snapshot updated: `2026-07-25` (first mandatory numbered development build and dual archive verified)
+- Current version: `4.14-dev.1` (`versionCode 50`, untagged development build)
 - Current branch: `feature/v4.14`
-- Current commit: `60af8ae6aa4b2f53d019f416a991d44b207af547` (implementation baseline before this snapshot update; actual branch has uncommitted v4.14 workflow work)
-- Current build: `app/build/outputs/apk/debug/TranslateBooks-v4.13-p0-dev-debug.apk`, current local SHA-256 `0887FDD67E8F0D9E8B8CCC4EEE4A73EA023E1BFE720428B18EEF490BD3C49C8A`; the historical device-verified build recorded a different SHA-256, so this local APK must not be treated as that evidence or as a release archive.
+- Current commit: `702283870ace921d33d4c69fbab32446b5ab97d4` (implementation baseline before this snapshot update; actual branch has uncommitted QA/state documentation)
+- Current build: `artifacts/builds/v4.14-dev.1/build-20260725-084757/TranslateBooks-v4.14-dev.1-code50.apk`, SHA-256 `39DE793F31377BAF0AA1AE5464A4A039099CA1C76B4E0127FA89CFE9CAE9B30B`; identical mirror under `backup/builds/`. It is an untagged development build, not a release archive.
 
 ## Completed tasks
 
@@ -48,11 +48,14 @@
 - Verified remote ancestry with no divergence (`0` remote-only / `12` local-only commits), then pushed `main` and annotated tag `v4.8` without force.
 - Verified GitHub refs: `main` at `c1e807b3bad1b64f079d0a802c3b0a2e7621c0c2`; tag object `e5e6bb8aec6c713edf87354b8b76d21e004ea726`; tag target `21fc148c561dac395e85d19cd48fef6c378da3ab`.
 - Clean-cloned tag `v4.8`, confirmed versionName `4.8`, versionCode `47`, all release/snapshot documents, and no sensitive path or credential-pattern matches across 31 reachable commits.
+- Added mandatory `scripts/build-and-save.ps1`; direct debug APK assembly is blocked unless invoked through the archive-first workflow.
+- Added automatic build numbering based on prior archives, the source default, and the connected device versionCode; the first accepted build is `4.14-dev.1`/code50.
+- Created and verified immutable matching payloads for event `build-20260725-084757` in both `artifacts/builds/` and `backup/builds/`, including APK, per-build README, BUILD_INFO, SHA-256 manifest, and exact source ZIP.
 
 ## Pending tasks
 
 - P0 only: add a controlled device proof for the output-permission-revoked UX (the device shell does not expose a non-destructive SAF URI-grant revocation command).
-- Commit the v4.14 numbered-build workflow, run its full unit/lint/build path, verify the first dual archive and per-build README/checksums/source ZIP, then optionally install only from the archived APK.
+- Commit the v4.14 QA/state documentation. Future builds must use `scripts/build-and-save.ps1`; use `-Install` only when a newly archived build should then be installed.
 
 ## Known bugs
 
@@ -63,7 +66,7 @@
 - The full 80-swipe gesture campaign was not repeated after the final Back/pronoun cache-invalidation patch.
 - Performance evidence uses Perfetto/frame/PSS measurements rather than a dedicated Macrobenchmark module.
 - APK and source ZIP archives are deliberately ignored by Git, so they are not present in a clean clone; durable copies remain in the local `artifacts/releases/v4.8/` and `backup/v4.8/` stores.
-- The new v4.14 build/archive workflow has passed syntax, direct-build-block, 99 unit tests, lint, and APK assembly, but has not yet completed its first dual archive. The latest run stopped before archive/install because the README writer rejected blank lines; the fix is implemented and pending a clean retry.
+- Android Lint reports 54 warnings and 0 errors for the accepted v4.14 development build.
 
 ## Regression status
 
@@ -82,11 +85,11 @@
 - With the opt-in API harness included, normal instrumentation reports 11 passed, 0 failed, 1 intentionally skipped.
 - Explicit real API run: PASS; 2 requests completed and both provider prompts were verified to contain glossary and pronoun locks.
 - v4.13 P0 device regression: PASS for fresh SAF output selection (persisted read/write plus write/delete probe), YAML/glossary/pronoun valid state, real Start/preflight/service/request/response/partial output/completed sequence, and cold restart followed by a second real output. JVM unit tests: 99 passed. Connected instrumentation on OnePlus 13R: 12 passed, 0 failed, 1 intentionally skipped real-API test.
-- v4.14 workflow checks so far: PowerShell parser PASS; `git diff --check` PASS; direct `assembleDebug` correctly blocked. Latest full attempt: 99 tests passed, lint passed, APK assembled, archive/install correctly did not complete after the README writer rejected blank lines. The writer fix and a full clean retry are pending.
+- v4.14 archive workflow: PASS. PowerShell parser and `git diff --check` passed; direct `assembleDebug` was blocked; 99 JVM tests passed; lint completed with 54 warnings and 0 errors; APK metadata is 4.14-dev.1/code50; artifact/backup parity, checksum manifest, per-build README/JSON, and 323-entry source ZIP passed.
 
 ## Next step
 
-Commit the README writer fix on `feature/v4.14`, then rerun `scripts/build-and-save.ps1` from clean output to create and verify the first accepted `4.14-dev.1` artifact/backup pair. Do not tag it as a release until all release criteria are satisfied.
+Commit the v4.14 QA/state documentation. On the next development build, run `scripts/build-and-save.ps1` (or add `-Install`); it must allocate `4.14-dev.2` with a versionCode above 50 and archive it before any installation. Do not tag v4.14 until all release criteria are satisfied.
 
 ## Resume rule
 

@@ -1,5 +1,20 @@
 # Build State
 
+## Current development build
+
+- versionName: `4.14-dev.1`
+- versionCode: `50`
+- event: `build-20260725-084757`
+- branch: `feature/v4.14`
+- source commit: `702283870ace921d33d4c69fbab32446b5ab97d4`
+- APK: `artifacts/builds/v4.14-dev.1/build-20260725-084757/TranslateBooks-v4.14-dev.1-code50.apk`
+- immutable local mirror: `backup/builds/v4.14-dev.1/build-20260725-084757/`
+- APK SHA-256: `39DE793F31377BAF0AA1AE5464A4A039099CA1C76B4E0127FA89CFE9CAE9B30B`
+- source ZIP SHA-256: `2F0EED5B43A52F69F5633455525B499097AC7F0930354CE2CA71853DC7021F82`
+- regression: 99 JVM tests passed; Android Lint completed with 54 warnings and 0 errors; artifact/backup parity and all manifest hashes passed.
+- device state: not installed by this build; the connected device remains on `4.9` / versionCode `49`.
+- release state: untagged development build; this is not a release archive.
+
 ## Release identity
 
 - versionName: `4.8` (released locally; previous release was `v4.7`)
