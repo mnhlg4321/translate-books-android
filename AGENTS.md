@@ -28,11 +28,11 @@ Before ending work, verify that the snapshot describes the latest completed grou
 
 ## Artifact and backup policy
 
-After every successful build and after every release tag, run `scripts/archive-release.ps1` with a unique event id. A build event uses `build-YYYYMMDD-HHMMSS`; a tag event uses `tag-vX.Y.Z`.
+Every development APK build must use `scripts/build-and-save.ps1`. Direct `assembleDebug` and Android Studio **Build APK(s)** are forbidden because they do not guarantee durable retention.
 
-The immutable payload must exist in both `artifacts/releases/vX.Y.Z/<event>` and `backup/vX.Y.Z/<event>`. Never overwrite or reuse an existing event directory.
+The script must assign a unique numbered `versionName`, select an increasing Android `versionCode`, and preserve the APK before any optional installation. Every successful development build must create the same immutable payload in both `artifacts/builds/v<version>/<event>` and `backup/builds/v<version>/<event>`. Each payload must contain the APK, a per-build README, `BUILD_INFO.json`, SHA-256 manifest, and an exact tracked-source ZIP. Never overwrite or reuse an existing version/event directory.
 
-Every payload must contain the APK, SHA-256 manifest, QA report, CHANGELOG, BUILD_STATE, RELEASE_NOTES, Perfetto evidence, Macrobenchmark evidence, screenshots, video, and `project_source_vX.Y.Z.zip` generated from the exact Git ref being archived.
+For release candidates and release tags, additionally run `scripts/archive-release.ps1` with a unique event id. A release build event uses `build-YYYYMMDD-HHMMSS`; a tag event uses `tag-vX.Y.Z`. The release payload must exist in both `artifacts/releases/vX.Y.Z/<event>` and `backup/vX.Y.Z/<event>` and contain the APK, SHA-256 manifest, QA report, CHANGELOG, BUILD_STATE, RELEASE_NOTES, Perfetto evidence, Macrobenchmark evidence, screenshots, video, and `project_source_vX.Y.Z.zip` generated from the exact Git ref being archived.
 
 Do not treat `build/` or `app/build/` as durable storage. Copy the APK and all important evidence out immediately after a successful build and before any `gradlew clean`.
 

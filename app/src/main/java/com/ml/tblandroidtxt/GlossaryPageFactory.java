@@ -66,11 +66,12 @@ class GlossaryPageFactory {
         TextView desc = a.text("Quản lý nhiều glossary giống TBL PC: mỗi glossary có nút Use/Edit/Del riêng, dễ bấm trên màn hình dọc.", 13, a.MUTED, false);
         desc.setSingleLine(false);
         panel.addView(desc, a.marginLP(-1, -2, 0, 0, 0, 10));
-        LinearLayout topActions = a.rowContainer();
-        topActions.addView(a.primaryButton("+ New glossary", v -> { if (!a.ensureConfigMutable()) return; a.editingGlossary = GlossaryStore.create(a, "New glossary"); a.invalidatePage("Glossaries"); a.switchTab("Glossaries"); }), new LinearLayout.LayoutParams(0, a.dp(48), 1));
-        topActions.addView(a.space(8, 1));
-        topActions.addView(a.secondaryButton("Health check", v -> a.showGlossaryPronounHealth()), new LinearLayout.LayoutParams(0, a.dp(48), 1));
-        panel.addView(topActions);
+        LinearLayout importActions = a.rowContainer();
+        importActions.addView(a.primaryButton("+ Import glossary", v -> a.chooseGlossary()), new LinearLayout.LayoutParams(0, a.dp(48), 1));
+        importActions.addView(a.space(8, 1));
+        importActions.addView(a.secondaryButton("+ New blank", v -> { if (!a.ensureConfigMutable()) return; a.editingGlossary = GlossaryStore.create(a, "New glossary"); a.invalidatePage("Glossaries"); a.switchTab("Glossaries"); }), new LinearLayout.LayoutParams(0, a.dp(48), 1));
+        panel.addView(importActions);
+        panel.addView(a.secondaryButton("Health check", v -> a.showGlossaryPronounHealth()), a.marginLP(-1, a.dp(44), 0, 8, 0, 0));
 
         GlossaryStore.Glossary activeGlossary = GlossaryStore.selected(a);
         TextView active = a.text(activeGlossary == null ? "Active glossary: —" : "Active glossary: " + activeGlossary.name + " • " + activeGlossary.count() + " terms", 13, activeGlossary == null ? a.MUTED : a.GREEN, true);
@@ -79,7 +80,7 @@ class GlossaryPageFactory {
 
         List<GlossaryStore.Glossary> list = GlossaryStore.loadAll(a);
         if (list.isEmpty()) {
-            TextView empty = a.text("Chưa có glossary. Bấm New glossary để tạo, sau đó Import file CSV/TXT/JSON trong màn hình Edit.", 14, a.MUTED, false);
+            TextView empty = a.text("Chưa có glossary. Bấm Import glossary để tạo profile mang đúng tên file, hoặc New blank để nhập thủ công / ghép nhiều file.", 14, a.MUTED, false);
             empty.setGravity(Gravity.CENTER);
             empty.setSingleLine(false);
             panel.addView(empty, new LinearLayout.LayoutParams(-1, a.dp(110)));

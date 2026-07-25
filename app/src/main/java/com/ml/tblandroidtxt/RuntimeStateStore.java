@@ -15,14 +15,18 @@ public class RuntimeStateStore {
                             int totalChunks, int completed, int failed, int fallbacks,
                             int totalTokens, double totalCost, int estimatedTotalTokens, double estimatedTotalCost,
                             boolean providerUsageComplete, long elapsedMs, long remainingMs, String preview,
-                            int currentChunk, long activeJobId) {
+                            int currentChunk, int glossaryLocks, int pronounLocks, int lockChunk, String lockPhase,
+                            int previewChunk, long activeJobId) {
         RuntimeStateSnapshot s = new RuntimeStateSnapshot();
         s.jobState=nz(jobState);s.status = nz(status); s.progress = progress; s.log = nz(log); s.phase = nz(phase); s.fileName = nz(fileName);
         s.totalChunks = totalChunks; s.completed = completed; s.failed = failed; s.fallbacks = fallbacks;
         s.totalTokens = totalTokens; s.totalCost = totalCost; s.estimatedTotalTokens = estimatedTotalTokens;
         s.estimatedTotalCost = estimatedTotalCost; s.providerUsageComplete = providerUsageComplete;
         s.elapsedMs = elapsedMs; s.remainingMs = remainingMs;
-        s.preview = nz(preview); s.currentChunk = currentChunk; s.activeJobId = activeJobId;
+        s.preview = nz(preview); s.currentChunk = currentChunk;
+        s.glossaryLocks = glossaryLocks; s.pronounLocks = pronounLocks;
+        s.lockChunk = lockChunk; s.lockPhase = nz(lockPhase); s.previewChunk = previewChunk;
+        s.activeJobId = activeJobId;
         save(c, s);
     }
 
@@ -49,6 +53,11 @@ public class RuntimeStateStore {
                 .putLong(TranslatorService.EXTRA_REMAINING_MS, s.remainingMs)
                 .putString(TranslatorService.EXTRA_PREVIEW, nz(s.preview))
                 .putInt(TranslatorService.EXTRA_CURRENT_CHUNK, s.currentChunk)
+                .putInt(TranslatorService.EXTRA_GLOSSARY_LOCKS, s.glossaryLocks)
+                .putInt(TranslatorService.EXTRA_PRONOUN_LOCKS, s.pronounLocks)
+                .putInt(TranslatorService.EXTRA_LOCK_CHUNK, s.lockChunk)
+                .putString(TranslatorService.EXTRA_LOCK_PHASE, nz(s.lockPhase))
+                .putInt(TranslatorService.EXTRA_PREVIEW_CHUNK, s.previewChunk)
                 .putLong(TranslatorService.EXTRA_ACTIVE_JOB_ID, s.activeJobId)
                 .putLong("updatedAt", System.currentTimeMillis())
                 .apply();
@@ -78,6 +87,11 @@ public class RuntimeStateStore {
         i.putExtra(TranslatorService.EXTRA_REMAINING_MS, p.getLong(TranslatorService.EXTRA_REMAINING_MS, 0L));
         i.putExtra(TranslatorService.EXTRA_PREVIEW, p.getString(TranslatorService.EXTRA_PREVIEW, ""));
         i.putExtra(TranslatorService.EXTRA_CURRENT_CHUNK, p.getInt(TranslatorService.EXTRA_CURRENT_CHUNK, 0));
+        i.putExtra(TranslatorService.EXTRA_GLOSSARY_LOCKS, p.getInt(TranslatorService.EXTRA_GLOSSARY_LOCKS, -1));
+        i.putExtra(TranslatorService.EXTRA_PRONOUN_LOCKS, p.getInt(TranslatorService.EXTRA_PRONOUN_LOCKS, -1));
+        i.putExtra(TranslatorService.EXTRA_LOCK_CHUNK, p.getInt(TranslatorService.EXTRA_LOCK_CHUNK, 0));
+        i.putExtra(TranslatorService.EXTRA_LOCK_PHASE, p.getString(TranslatorService.EXTRA_LOCK_PHASE, ""));
+        i.putExtra(TranslatorService.EXTRA_PREVIEW_CHUNK, p.getInt(TranslatorService.EXTRA_PREVIEW_CHUNK, 0));
         i.putExtra(TranslatorService.EXTRA_ACTIVE_JOB_ID, p.getLong(TranslatorService.EXTRA_ACTIVE_JOB_ID, -1L));
         return i;
     }
@@ -96,6 +110,11 @@ public class RuntimeStateStore {
         sb.append("fallbacks=").append(i.getIntExtra(TranslatorService.EXTRA_FALLBACKS, 0)).append('\n');
         sb.append("tokens=").append(i.getIntExtra(TranslatorService.EXTRA_TOTAL_TOKENS, 0)).append('\n');
         sb.append("currentChunk=").append(i.getIntExtra(TranslatorService.EXTRA_CURRENT_CHUNK, 0)).append('\n');
+        sb.append("glossaryLocks=").append(i.getIntExtra(TranslatorService.EXTRA_GLOSSARY_LOCKS, -1)).append('\n');
+        sb.append("pronounLocks=").append(i.getIntExtra(TranslatorService.EXTRA_PRONOUN_LOCKS, -1)).append('\n');
+        sb.append("lockChunk=").append(i.getIntExtra(TranslatorService.EXTRA_LOCK_CHUNK, 0)).append('\n');
+        sb.append("lockPhase=").append(i.getStringExtra(TranslatorService.EXTRA_LOCK_PHASE)).append('\n');
+        sb.append("previewChunk=").append(i.getIntExtra(TranslatorService.EXTRA_PREVIEW_CHUNK, 0)).append('\n');
         sb.append("activeJobId=").append(i.getLongExtra(TranslatorService.EXTRA_ACTIVE_JOB_ID, -1L)).append('\n');
         sb.append("cost=").append(i.getDoubleExtra(TranslatorService.EXTRA_TOTAL_COST, 0d)).append('\n');
         sb.append("lastLog=").append(i.getStringExtra(TranslatorService.EXTRA_LOG)).append('\n');

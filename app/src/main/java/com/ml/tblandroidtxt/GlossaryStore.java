@@ -140,6 +140,18 @@ public class GlossaryStore {
         }
     }
 
+    public static String suggestedImportName(String currentName, List<String> successfulFileNames) {
+        String current = safe(currentName).trim();
+        if (!current.isEmpty() && !"New glossary".equalsIgnoreCase(current)) return current;
+        if (successfulFileNames == null || successfulFileNames.isEmpty()) {
+            return current.isEmpty() ? "New glossary" : current;
+        }
+        String first = safe(successfulFileNames.get(0)).trim();
+        if (first.isEmpty()) first = "Imported glossary";
+        int additional = successfulFileNames.size() - 1;
+        return additional <= 0 ? first : first + " +" + additional + " files";
+    }
+
     private static List<Term> dedupe(List<Term> src) {
         ArrayList<Term> out = new ArrayList<>();
         HashSet<String> seen = new HashSet<>();

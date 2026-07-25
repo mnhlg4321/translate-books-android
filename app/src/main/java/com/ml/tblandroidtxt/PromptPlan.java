@@ -14,14 +14,17 @@ public final class PromptPlan {
     public final String outputContract;
     public final int rawTokens, systemTokens, instructionTokens, glossaryTokens;
     public final int pronounTokens, historyTokens, contextTokens, totalInputTokens;
+    public final int glossaryLockCount, pronounLockCount;
 
     private PromptPlan(String phase, String source, String systemBase, String instruction,
                        String glossary, String pronoun, String history, String surroundingContext,
-                       String outputContract, PromptPair prompt) {
+                       String outputContract, PromptPair prompt, int glossaryLockCount, int pronounLockCount) {
         this.phase = phase; this.source = safe(source); this.systemBase = safe(systemBase);
         this.instruction = safe(instruction); this.glossary = safe(glossary); this.pronoun = safe(pronoun);
         this.history = safe(history); this.surroundingContext = safe(surroundingContext);
         this.outputContract = safe(outputContract); this.prompt = prompt;
+        this.glossaryLockCount = Math.max(0, glossaryLockCount);
+        this.pronounLockCount = Math.max(0, pronounLockCount);
         rawTokens = tokens(this.source); systemTokens = tokens(this.systemBase) + tokens(this.outputContract);
         instructionTokens = tokens(this.instruction); glossaryTokens = tokens(this.glossary);
         pronounTokens = tokens(this.pronoun); historyTokens = tokens(this.history);
@@ -54,7 +57,7 @@ public final class PromptPlan {
         user.append("# SOURCE\n<INPUT>\n").append(chunk.mainContent).append("\n</INPUT>\n\n<TRANSLATION>\n");
         PromptPair pair = new PromptPair(system.toString().trim(), user.toString().trim());
         return new PromptPlan("translate", chunk.mainContent, base, instruction, locks.glossary,
-                locks.pronouns, history, surrounding, contract, pair);
+                locks.pronouns, history, surrounding, contract, pair, locks.glossaryCount, locks.pronounCount);
     }
 
     public static PromptPlan forTranslation(Chunk chunk, String previous, AppSettings s) {
@@ -62,7 +65,8 @@ public final class PromptPlan {
             PromptPair legacy = PromptBuilder.translationPrompt(chunk, previous, s);
             PromptContextBuilder.ContextBlock locks = PromptContextBuilder.build(s.glossaryText, s.pronounText, chunk.mainContent, s);
             return new PromptPlan("translate", chunk.mainContent, legacy.system, s.translationInstructions,
-                    locks.glossary, locks.pronouns, safe(previous), safe(chunk.contextBefore) + safe(chunk.contextAfter), "", legacy);
+                    locks.glossary, locks.pronouns, safe(previous), safe(chunk.contextBefore) + safe(chunk.contextAfter), "",
+                    legacy, locks.glossaryCount, locks.pronounCount);
         }
         return translation(chunk, previous, s);
     }
@@ -80,7 +84,8 @@ public final class PromptPlan {
         system.append("\n\n# OUTPUT CONTRACT\n").append(contract);
         String user = "# SOURCE\n<INPUT>\n" + safe(source) + "\n</INPUT>\n\n# DRAFT\n" + safe(draft) + "\n\n<TRANSLATION>\n";
         PromptPair pair = new PromptPair(system.toString().trim(), user.trim());
-        return new PromptPlan("refine", source, base, instruction, locks.glossary, locks.pronouns, draft, "", contract, pair);
+        return new PromptPlan("refine", source, base, instruction, locks.glossary, locks.pronouns, draft, "", contract,
+                pair, locks.glossaryCount, locks.pronounCount);
     }
 
     public static PromptPlan forRefinement(String source, String draft, AppSettings s) {
@@ -88,7 +93,7 @@ public final class PromptPlan {
             PromptPair legacy = PromptBuilder.refinementPrompt(source, draft, s);
             PromptContextBuilder.ContextBlock locks = PromptContextBuilder.build(s.glossaryText, s.pronounText, source, s);
             return new PromptPlan("refine", source, legacy.system, s.refinementInstructions,
-                    locks.glossary, locks.pronouns, draft, "", "", legacy);
+                    locks.glossary, locks.pronouns, draft, "", "", legacy, locks.glossaryCount, locks.pronounCount);
         }
         return refinement(source, draft, s);
     }

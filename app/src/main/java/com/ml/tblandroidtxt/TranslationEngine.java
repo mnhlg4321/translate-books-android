@@ -23,7 +23,10 @@ public class TranslationEngine {
     }
     public interface CancelChecker { boolean isCancelled(); }
     public interface UsageSink { void onUsage(OpenAICompatibleClient.ChatResult result, AppSettings settings); }
-    public interface EventSink { void onEvent(String message); }
+    public interface EventSink {
+        void onEvent(String message);
+        default void onLockUsage(String phase, int oneBasedChunk, int glossaryCount, int pronounCount) {}
+    }
     public interface ProviderClient { OpenAICompatibleClient.ChatResult chat(AppSettings settings,PromptPair prompt,int outputLimit,String logicalRequestId,OpenAICompatibleClient.NetworkObserver observer) throws Exception; }
 
     public static class PreparedInput {
@@ -152,10 +155,10 @@ public class TranslationEngine {
             final int attemptNo=attempt;
             try {
                 if (attempt == 1 && eventSink != null) {
-                    PromptContextBuilder.MatchReport locks = PromptContextBuilder.match(s.glossaryText, s.pronounText, chunk.mainContent, s);
-                    eventSink.onEvent("Chunk " + (chunk.index + 1) + " locks: glossary=" + locks.block.glossaryCount
-                            + ", pronoun=" + locks.block.pronounCount
-                            + (locks.warnings.isEmpty() ? "" : ", warnings=" + locks.warnings.size()));
+                    eventSink.onLockUsage("Translating", chunk.index + 1,
+                            plan.glossaryLockCount, plan.pronounLockCount);
+                    eventSink.onEvent("Chunk " + (chunk.index + 1) + " locks: glossary=" + plan.glossaryLockCount
+                            + ", pronoun=" + plan.pronounLockCount);
                 }
                 PromptPair prompt = plan.prompt;
                 String requestHash = HashUtil.sha256(prompt.system + "\n" + prompt.user + "\n" + attemptSettings.provider + "\n" + attemptSettings.model);
@@ -237,6 +240,12 @@ public class TranslationEngine {
             final boolean[] responseHeaders={false};
             final int attemptNo=attempt;
             try {
+                if (attempt == 1 && eventSink != null) {
+                    eventSink.onLockUsage("Refining", chunkIndex + 1,
+                            plan.glossaryLockCount, plan.pronounLockCount);
+                    eventSink.onEvent("Refine chunk " + (chunkIndex + 1) + " locks: glossary="
+                            + plan.glossaryLockCount + ", pronoun=" + plan.pronounLockCount);
+                }
                 PromptPair prompt = plan.prompt;
                 Chunk durableChunk=new Chunk(chunkIndex,"",source,"");durableChunk.stableId=HashUtil.sha256(source);
                 String requestHash=HashUtil.sha256(prompt.system+"\n"+prompt.user+"\n"+s.provider+"\n"+s.model);

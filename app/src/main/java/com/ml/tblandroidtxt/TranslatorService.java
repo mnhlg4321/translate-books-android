@@ -50,6 +50,11 @@ public class TranslatorService extends Service {
     public static final String EXTRA_REMAINING_MS = "remainingMs";
     public static final String EXTRA_PREVIEW = "preview";
     public static final String EXTRA_CURRENT_CHUNK = "currentChunk";
+    public static final String EXTRA_GLOSSARY_LOCKS = "glossaryLocks";
+    public static final String EXTRA_PRONOUN_LOCKS = "pronounLocks";
+    public static final String EXTRA_LOCK_CHUNK = "lockChunk";
+    public static final String EXTRA_LOCK_PHASE = "lockPhase";
+    public static final String EXTRA_PREVIEW_CHUNK = "previewChunk";
     public static final String EXTRA_ACTIVE_JOB_ID = "activeJobId";
     public static final String EXTRA_STATE = "jobState";
 
@@ -75,9 +80,16 @@ public class TranslatorService extends Service {
     private int metricUsageResponses = 0;
     private boolean metricAllUsageReported = true;
     private String metricPreview = "";
+    private int metricPreviewChunk = 0;
     private String metricFile = "";
     private String metricPhase = "Preparing";
     private int metricCurrentChunk = 0;
+    private int metricGlossaryLocks = -1;
+    private int metricPronounLocks = -1;
+    private int metricLockChunk = 0;
+    private String metricLockPhase = "";
+    private int metricLastProgress = -1;
+    private String metricLastLog = "";
     private volatile long activeJobId = -1L;
     private volatile boolean benchmarkRun = false;
     private volatile TranslationJobState.State jobState = TranslationJobState.State.IDLE;
@@ -353,9 +365,16 @@ public class TranslatorService extends Service {
         metricUsageResponses = 0;
         metricAllUsageReported = true;
         metricPreview = "";
+        metricPreviewChunk = 0;
         metricFile = fileName == null ? "" : fileName;
         metricPhase = "Preparing";
         metricCurrentChunk = 0;
+        metricGlossaryLocks = -1;
+        metricPronounLocks = -1;
+        metricLockChunk = 0;
+        metricLockPhase = "";
+        metricLastProgress = -1;
+        metricLastLog = "";
     }
 
     private void setExpectedMetrics(CostEstimator.Estimate estimate) {
@@ -378,6 +397,7 @@ public class TranslatorService extends Service {
             metricCompleted = chunks.size();
             metricPhase = "Already completed";
             metricPreview = tail(oldOut, 1200);
+            metricPreviewChunk = chunks.size();
             broadcast("done", percent(fileNo, fileTotal), "File này đã dịch xong với cùng nội dung + settings. App đã xuất lại output từ checkpoint, không gọi API/dịch lại: " + fileName);
             updateNotification("Đã có bản dịch, không dịch lại " + fileName, chunks.size(), chunks.size());
             return;
@@ -579,6 +599,7 @@ public class TranslatorService extends Service {
                 metricCompleted++;
                 metricFailed = Math.max(0, metricFailed - 1);
                 metricPreview = tail(translated, 1200);
+                metricPreviewChunk = r.index + 1;
                 if (s.savePartialOutput) updatePartialOutput(jobId, outputUri, s);
                 broadcast("running", percent(metricCompleted, Math.max(1, metricTotal)), "Retry chunk " + (r.index + 1) + " hoàn tất");
             } catch (Exception e) {
@@ -605,6 +626,8 @@ public class TranslatorService extends Service {
             if(existing!=null&&"DELIVERY_UNKNOWN".equalsIgnoreCase(existing.status)){repo.touchJob(jobId,"NEEDS_REVIEW");throw new TranslationEngine.DeliveryUnknownException("Chunk "+(i+1)+" delivery is unknown; automatic resend is blocked",null);}
             if (existing != null && isCompletedStatus(existing.status) && existing.translated != null && !existing.translated.isEmpty()) {
                 previous = tail(existing.translated, 1500);
+                metricPreview = tail(existing.translated, 1200);
+                metricPreviewChunk = i + 1;
                 if (metricCompleted < i + 1) metricCompleted = i + 1;
                 updatePartialOutput(jobId, outputUri, s);
                 broadcast("running", percent(metricCompleted, total), "Đã bỏ qua chunk đã dịch " + (i + 1) + "/" + total);
@@ -630,6 +653,7 @@ public class TranslatorService extends Service {
                 commitAccepted(jobId, chunk, translated, previous);
                 metricCompleted = Math.max(metricCompleted, i + 1);
                 metricPreview = tail(translated, 1200);
+                metricPreviewChunk = i + 1;
                 previous = tail(translated, 1500);
                 if (s.savePartialOutput) updatePartialOutput(jobId, outputUri, s);
                 broadcast("running", global, "Chunk " + (i + 1) + " hoàn tất");
@@ -662,14 +686,30 @@ public class TranslatorService extends Service {
         return engine.translateWithRetry(activeJobId, chunk, previous, s,
                 () -> cancelled,
                 this::addUsage,
-                message -> LogStore.append(this, message));
+                runtimeEventSink());
     }
 
     private String refineWithRetry(String source, String draft, AppSettings s) throws Exception {
         return engine.refineWithRetry(activeJobId, Math.max(0, metricCurrentChunk - 1), source, draft, s,
                 () -> cancelled,
                 this::addUsage,
-                message -> LogStore.append(this, message));
+                runtimeEventSink());
+    }
+
+    private TranslationEngine.EventSink runtimeEventSink() {
+        return new TranslationEngine.EventSink() {
+            @Override public void onEvent(String message) {
+                LogStore.append(TranslatorService.this, message);
+            }
+
+            @Override public void onLockUsage(String phase, int oneBasedChunk, int glossaryCount, int pronounCount) {
+                metricGlossaryLocks = Math.max(0, glossaryCount);
+                metricPronounLocks = Math.max(0, pronounCount);
+                metricLockChunk = Math.max(0, oneBasedChunk);
+                metricLockPhase = phase == null ? "" : phase;
+                broadcast("running", metricLastProgress, null);
+            }
+        };
     }
 
     private void addUsage(OpenAICompatibleClient.ChatResult r, AppSettings s) {
@@ -811,13 +851,16 @@ public class TranslatorService extends Service {
     }
 
     private void broadcast(String status, int progress, String log) {
+        metricLastProgress = progress;
+        if (log != null && !log.trim().isEmpty()) metricLastLog = log;
         long elapsed = elapsedMs();
         long remaining = remainingMs();
-        RuntimeStateStore.save(this, jobState.name(), status, progress, log, metricPhase, metricFile,
+        RuntimeStateStore.save(this, jobState.name(), status, progress, metricLastLog, metricPhase, metricFile,
                 metricTotal, metricCompleted, metricFailed, metricFallbacks,
                 metricTokens, metricCost, metricEstimatedTokens, metricEstimatedCost,
                 metricUsageResponses > 0 && metricAllUsageReported, elapsed, remaining, metricPreview,
-                metricCurrentChunk, activeJobId);
+                metricCurrentChunk, metricGlossaryLocks, metricPronounLocks, metricLockChunk, metricLockPhase,
+                metricPreviewChunk, activeJobId);
         if (log != null && !log.trim().isEmpty()) LogStore.append(this, log);
 
         Intent i = new Intent(ACTION_PROGRESS);
@@ -840,6 +883,11 @@ public class TranslatorService extends Service {
         i.putExtra(EXTRA_REMAINING_MS, remaining);
         i.putExtra(EXTRA_PREVIEW, metricPreview);
         i.putExtra(EXTRA_CURRENT_CHUNK, metricCurrentChunk);
+        i.putExtra(EXTRA_GLOSSARY_LOCKS, metricGlossaryLocks);
+        i.putExtra(EXTRA_PRONOUN_LOCKS, metricPronounLocks);
+        i.putExtra(EXTRA_LOCK_CHUNK, metricLockChunk);
+        i.putExtra(EXTRA_LOCK_PHASE, metricLockPhase);
+        i.putExtra(EXTRA_PREVIEW_CHUNK, metricPreviewChunk);
         i.putExtra(EXTRA_ACTIVE_JOB_ID, activeJobId);
         i.putExtra(EXTRA_STATE, jobState.name());
         sendBroadcast(i);

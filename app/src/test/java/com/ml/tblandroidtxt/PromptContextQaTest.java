@@ -41,4 +41,26 @@ public class PromptContextQaTest {
         PromptPlan p=PromptPlan.translation(new Chunk(0,"1234567890-before-tail","main","after-head-1234567890"),"",s);
         assertTrue(p.surroundingContext.contains("Before:")); assertTrue(p.surroundingContext.contains("After:"));
     }
+
+    @Test public void promptPlanReportsCountsFromTheExactInjectedLocks() {
+        AppSettings s=settings();
+        s.glossaryText="Alice => An [character]\nWorld => Thế giới [global]\nUnused => Bỏ [term]";
+        s.pronounText="Alice -> Bob: chị / em\nGLOBAL: Preserve established speaker relation";
+        Chunk chunk=new Chunk(0,"Bob appeared earlier.","Alice entered the World.","");
+
+        PromptPlan p=PromptPlan.translation(chunk,"",s);
+        PromptContextBuilder.ContextBlock exact=PromptContextBuilder.buildWithRuleContext(
+                s.glossaryText,s.pronounText,chunk.mainContent,chunk.contextBefore+"\n"+chunk.mainContent,s);
+
+        assertEquals(exact.glossaryCount,p.glossaryLockCount);
+        assertEquals(exact.pronounCount,p.pronounLockCount);
+        assertTrue(p.prompt.system.contains(p.glossary.trim()));
+        assertTrue(p.prompt.system.contains(p.pronoun.trim()));
+    }
+
+    @Test public void emptyPromptLocksReportZeroInsteadOfUnknown() {
+        PromptPlan p=PromptPlan.translation(new Chunk(0,"","No matching rules.",""),"",settings());
+        assertEquals(0,p.glossaryLockCount);
+        assertEquals(0,p.pronounLockCount);
+    }
 }

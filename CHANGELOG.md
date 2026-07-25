@@ -2,6 +2,30 @@
 
 All notable changes to Translate Books are recorded in this file. The repository was normalized to Git on 2026-07-17 without feature changes or rollback. The v4.7 source baseline is commit `da8c6d9a9001296c3f3c17817ea3d6372fd59ae3` on branch `main`.
 
+## [4.14] - 2026-07-25
+
+- Preserve every successful APK as a numbered, checksummed artifact with an exact source ZIP and a second immutable local backup before optional installation.
+- Make glossary imports adopt the source filename automatically, matching the established Pronoun profile workflow.
+- Restore the latest accepted translation preview plus exact per-chunk Glossary and Pronoun rule-use counts.
+- Install the approved bright cool logo permanently as launcher, round launcher, and in-app header identity, guarded by its exact SHA-256 during every build.
+- Add an exact release build mode and a physical-device AndroidX Macrobenchmark path for retained release performance evidence.
+- Keep the physical-device benchmark runner active on OnePlus firmware without measuring the first-run notification dialog; retain five real startup traces.
+- Verify missing output-folder permission with a prepared local TXT, an exact recovery message, and Start disabled before dispatch.
+
+## [4.14-dev.4] - 2026-07-25
+
+- Make the approved bright cool logo the permanent launcher, round launcher, and in-app header identity.
+- Store the approved design in the project and require its exact SHA-256 in every Android `preBuild`.
+- Stop builds when the logo file, manifest references, or in-app header reference is missing or changed.
+- Verify the packaged resource, installed launcher icon, in-app header, archive parity, and preserved user state on the connected Android device.
+
+## [4.14-dev.3] - 2026-07-25
+
+- Restore the bounded, scrollable preview of the latest accepted translation chunk on the Translate dashboard.
+- Show current chunk and exact Glossary/Pronoun rule counts from the actual translation or refinement `PromptPlan`.
+- Persist preview identity and rule-usage state across normal UI recreation while distinguishing unknown counts from a valid zero.
+- Add prompt-count, runtime-state, dashboard-label, and controlled Android UI evidence.
+
 ## [4.8] - 2026-07-17
 
 - Persist and activate glossary imports immediately, including legacy import flow.

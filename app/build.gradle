@@ -2,9 +2,24 @@ plugins {
     id 'com.android.application'
 }
 
+def isVersionedBuild = providers.gradleProperty('versionedBuild').orElse('false').get().toBoolean()
+def resolvedVersionCode = providers.gradleProperty('buildVersionCode').orElse('48').get().toInteger()
+def resolvedVersionName = providers.gradleProperty('buildVersionName').orElse('4.13-p0-dev').get()
+def resolvedBuildEventId = providers.gradleProperty('buildEventId').orElse('unarchived-development').get()
+def resolvedBuildGitCommit = providers.gradleProperty('buildGitCommit').orElse('52fb24c (P0 translation-core hotfix)').get()
+def resolvedBuildTimestamp = providers.gradleProperty('buildTimestamp').orElse('2026-07-17 +07:00').get()
+
+def quoteBuildConfigString = { String value ->
+    '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
+}
+
 android {
     namespace 'com.ml.tblandroidtxt'
     compileSdk 35
+
+    buildFeatures {
+        buildConfig true
+    }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -15,9 +30,21 @@ android {
         applicationId 'com.ml.tblandroidtxt'
         minSdk 26
         targetSdk 35
-        versionCode 48
-        versionName '4.13-p0-dev'
+        versionCode resolvedVersionCode
+        versionName resolvedVersionName
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        buildConfigField 'String', 'BUILD_EVENT_ID', quoteBuildConfigString(resolvedBuildEventId)
+        buildConfigField 'String', 'BUILD_GIT_COMMIT', quoteBuildConfigString(resolvedBuildGitCommit)
+        buildConfigField 'String', 'BUILD_TIMESTAMP', quoteBuildConfigString(resolvedBuildTimestamp)
+    }
+
+    buildTypes {
+        benchmark {
+            initWith release
+            signingConfig signingConfigs.debug
+            matchingFallbacks = ['release']
+            debuggable false
+        }
     }
 
     applicationVariants.all { variant ->
@@ -27,12 +54,57 @@ android {
     }
 }
 
+gradle.taskGraph.whenReady { graph ->
+    def assemblesDebugApk = graph.allTasks.any { it.path == ':app:assembleDebug' }
+    if (assemblesDebugApk && !isVersionedBuild) {
+        throw new GradleException(
+            'Unarchived debug builds are disabled. Run .\\scripts\\build-and-save.ps1 so the APK, README, checksum, and source snapshot are retained before optional installation.'
+        )
+    }
+}
 
 dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    benchmarkImplementation 'androidx.profileinstaller:profileinstaller:1.4.1'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.json:json:20250517'
     androidTestImplementation 'androidx.test:core:1.6.1'
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
     androidTestImplementation 'androidx.test:runner:1.6.2'
+}
+
+def approvedLogoSha256 = '104D17792425810F4E7419BFEA268505DECA6148D04C7AC852D646245CD61797'
+def approvedLogoFile = file('src/main/res/drawable-nodpi/translate_books_logo.png')
+def approvedManifestFile = file('src/main/AndroidManifest.xml')
+def approvedHeaderFile = file('src/main/java/com/ml/tblandroidtxt/MainActivity.java')
+
+def verifyApprovedLogo = tasks.register('verifyApprovedLogo') {
+    group = 'verification'
+    description = 'Requires every app build to use the approved Translate Books logo.'
+    inputs.files(approvedLogoFile, approvedManifestFile, approvedHeaderFile)
+    doLast {
+        if (!approvedLogoFile.isFile()) {
+            throw new GradleException("Approved logo is missing: ${approvedLogoFile}")
+        }
+        def digest = java.security.MessageDigest.getInstance('SHA-256').digest(approvedLogoFile.bytes)
+        def actualSha256 = digest.collect { String.format('%02X', it & 0xff) }.join()
+        if (actualSha256 != approvedLogoSha256) {
+            throw new GradleException(
+                "Approved logo hash mismatch. Expected ${approvedLogoSha256}, found ${actualSha256}."
+            )
+        }
+        def manifestText = approvedManifestFile.getText('UTF-8')
+        if (!manifestText.contains('android:icon="@drawable/translate_books_logo"')
+                || !manifestText.contains('android:roundIcon="@drawable/translate_books_logo"')) {
+            throw new GradleException('AndroidManifest.xml must use the approved logo for icon and roundIcon.')
+        }
+        def headerText = approvedHeaderFile.getText('UTF-8')
+        if (!headerText.contains('setImageResource(R.drawable.translate_books_logo)')) {
+            throw new GradleException('The in-app top brand badge must use the approved logo.')
+        }
+    }
+}
+
+tasks.named('preBuild').configure {
+    dependsOn verifyApprovedLogo
 }

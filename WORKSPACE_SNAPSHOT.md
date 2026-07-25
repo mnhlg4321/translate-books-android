@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-17` (P0 output URI hotfix verified on OnePlus 13R; commit pending)
-- Current version: `4.13` (`versionCode 48`, untagged development hotfix)
-- Current branch: `feature/v4.13`
-- Current commit: `4d5ca54` (implementation baseline before this snapshot update; actual branch has uncommitted P0 work)
-- Current build: `app/build/outputs/apk/debug/TranslateBooks-v4.13-p0-dev-debug.apk`, SHA-256 `EBFD1B656F02D526E963A4156215B4CE21CAC05F0E4E4C0774A5F8370748BABE`; installed and device-verified on OnePlus 13R. It is not a release archive.
+- Snapshot updated: `2026-07-25` (`v4.14` local release complete; immutable tag archive and backup verified)
+- Current version: `4.14` (`versionCode 57`, annotated tag `v4.14` at `8a3b281`)
+- Current branch: `feature/v4.14`
+- Current commit: `5624039` (tag-state documentation baseline immediately before this final release-state snapshot commit)
+- Current build: `artifacts/releases/v4.14/tag-v4.14/TranslateBooks-v4.14-code57.apk`, SHA-256 `D478AC135ED3C736F7FC850FAA06CA4F6F5CB6D0634BB09B15BD59C9B2DAE5D1`; the 20-file immutable payload matches `backup/v4.14/tag-v4.14/`, all 19 manifest entries verify, and the tag source ZIP SHA-256 is `5F2DBA2C1D4F806A838961144807228C22C1846070296FACD6915A3DC2B43E5B`.
 
 ## Completed tasks
 
@@ -48,21 +48,73 @@
 - Verified remote ancestry with no divergence (`0` remote-only / `12` local-only commits), then pushed `main` and annotated tag `v4.8` without force.
 - Verified GitHub refs: `main` at `c1e807b3bad1b64f079d0a802c3b0a2e7621c0c2`; tag object `e5e6bb8aec6c713edf87354b8b76d21e004ea726`; tag target `21fc148c561dac395e85d19cd48fef6c378da3ab`.
 - Clean-cloned tag `v4.8`, confirmed versionName `4.8`, versionCode `47`, all release/snapshot documents, and no sensitive path or credential-pattern matches across 31 reachable commits.
+- Added mandatory `scripts/build-and-save.ps1`; direct debug APK assembly is blocked unless invoked through the archive-first workflow.
+- Added automatic build numbering based on prior archives, the source default, and the connected device versionCode; the first accepted build is `4.14-dev.1`/code50.
+- Created and verified immutable matching payloads for event `build-20260725-084757` in both `artifacts/builds/` and `backup/builds/`, including APK, per-build README, BUILD_INFO, SHA-256 manifest, and exact source ZIP.
+- Added list-level `Import glossary` parity with Pronoun, exact single-file filename adoption, deterministic multi-file naming, custom-name preservation, and staged parsing before mutating the glossary.
+- Added four naming-policy tests; focused `GlossaryImportV48Test` passes 6 tests with 0 failures/skips.
+- Committed the Glossary filename-parity implementation as `b9e17cc328e594f317e99a1aae406bd9cef0171f`.
+- Built and archived `4.14-dev.2`/code51 under immutable event `build-20260725-090328`; both durable copies and every manifest hash match.
+- Passed the full 103-test JVM suite and Android Lint with 54 warnings and 0 errors.
+- Installed `4.14-dev.2`/code51 on the connected OnePlus 13R.
+- Verified on device that editor import adopts the exact CSV filename, activates the one-term glossary, and preserves the name/selection after a cold restart; restored the user's prior active glossary and removed all QA data.
+- Restored the Translate dashboard's scrollable last accepted translation preview with a separate completed-chunk identity.
+- Added current chunk plus exact Glossary/Pronoun rule-use metrics sourced from the actual translation/refinement `PromptPlan`, including zero-versus-unknown presentation and persisted runtime restoration.
+- Added focused prompt-count, runtime-state, dashboard-label, and Android fixture coverage; the focused JVM group passed.
+- Built and archived `4.14-dev.3`/code52 under event `build-20260725-093258`; 106 JVM tests passed, lint reported 54 warnings/0 errors, and every artifact/backup payload hash matched.
+- Installed and visually verified the current chunk, exact rule counts, exact-prompt association, and accepted-chunk preview on OnePlus CPH2691 / Android 15 without a provider call; restored the original runtime state byte-for-byte.
+- Promoted the approved bright cool logo to a permanent Android resource, launcher/round icon, and in-app top badge; retained both design concepts under `artwork/logo-concepts/`.
+- Added a `preBuild` guard that requires the approved logo SHA-256 and all manifest/header references; the guard and 106 JVM tests passed.
+- Replaced the obsolete v2.6.x root README diary with a current project landing page covering product capabilities, configuration formats, mandatory archive-first builds, verification, privacy, repository structure, and development workflow.
+- Built and archived `4.14-dev.4`/code53 from exact source commit `ca51d7e` under immutable event `build-20260725-095315`; all artifact/backup payload hashes match.
+- Installed `4.14-dev.4` and verified the approved launcher icon and in-app header logo on OnePlus CPH2691 / Android 15; the user runtime-state hash remained byte-for-byte unchanged.
+- Added exact-release build mode so `v4.14` can produce `versionName 4.14` with the next unused versionCode while retaining the mandatory archive-first workflow.
+- Exact-release builds now require the matching clean feature branch and reject conflicting series arguments, mismatched branches, existing tags, or duplicate archived release versions.
+- Added a dedicated AndroidX Macrobenchmark 1.4.1 test module targeting a non-debuggable, profileable benchmark app variant with ProfileInstaller 1.4.1.
+- Added a five-iteration physical-device cold-start benchmark that produces real StartupTiming metrics, AndroidX Benchmark JSON, and Perfetto traces.
+- Prepared the v4.14 changelog/release notes and corrected the README release-candidate identity without inventing final hashes or unrun QA results.
+- With explicit user approval, deleted the invalid lightweight `v4.14` tag from GitHub and local; verified that neither ref remains before resuming the release build.
+- Built and archived exact `4.14`/code54 from commit `0569036` under event `build-20260725-101846`; all artifact/backup payload hashes match.
+- Connected Android instrumentation passed 12 tests with 1 opt-in real-API test skipped on OnePlus CPH2691 / Android 15.
+- Identified the Macrobenchmark install failure as an unsigned benchmark test APK and added the missing debug signing configuration.
+- Built and archived exact `4.14`/code55 from commit `b53d209` under event `build-20260725-102329`; all artifact/backup payload hashes match.
+- Signed Macrobenchmark installed successfully and captured two real startup Perfetto traces before the run was stopped after the OnePlus launcher delayed each setup Home action for nearly 10 minutes.
+- Removed the redundant Home setup action; `StartupMode.COLD` already force-stops the target before each measured launch.
+- Built and archived exact `4.14`/code56 from commit `59b20f1` under event `build-20260725-103832`; all artifact/backup payload hashes match.
+- Diagnosed OnePlus Hans freezing the background Macrobenchmark runner even while it held a partial wake lock; standard device-idle whitelisting did not bypass the OEM freezer and was fully reverted.
+- Added a benchmark-only foreground host activity, retained a bounded wake lock, and returned the host to the foreground immediately after each measured launch.
+- Suppressed the first-run notification request only in the non-product `benchmark` build type so StartupTiming measures `MainActivity`, not the Android permission controller.
+- Corrected diagnostic Macrobenchmark passed 5/5 physical-device cold starts with 0 failures/skips and produced AndroidX JSON plus five Perfetto traces. Time to initial display was 293.57 ms minimum, 332.01 ms median, and 441.19 ms maximum.
+- Committed the OEM-safe benchmark host and benchmark-only notification-dialog suppression as `82d5e4a`.
+- Built, archived, verified, and installed exact `4.14`/code57 from `82d5e4a` under event `build-20260725-111133`; all five build payloads match the backup.
+- Passed 106 JVM tests, logo guard, lint (0 errors/54 warnings), and connected instrumentation (11 passed/1 opt-in paid case skipped).
+- Accepted code57 Macrobenchmark rerun passed 5/5 physical-device cold starts at 307.78/322.81/337.52 ms min/median/max and retained five real Perfetto traces plus AndroidX JSON in both durable stores.
+- Passed controlled output-permission-loss QA with a valid prepared local TXT, exact missing-write-grant blocker, `Choose output folder again`, and Start disabled; no provider request occurred and QA-created app state was removed.
+- Retained final Translate/Library screenshots and a 24-frame MJPEG AVI from timed actual device captures; all visual files match their backup copies.
+- Passed the PreTag workflow gate and created annotated local tag `v4.14` at release-document commit `8a3b281`; remote push remains pending.
+- Passed the PreBackup gate and created immutable event `tag-v4.14` from the annotated tag.
+- Verified both 20-file release payloads by relative path, length, and SHA-256; all 19 manifest entries pass.
+- Regenerated `project_source_v4.14.zip` directly from tag `v4.14` and confirmed exact SHA-256 equality with the retained source ZIP.
 
 ## Pending tasks
 
-- P0 only: add a controlled device proof for the output-permission-revoked UX (the device shell does not expose a non-destructive SAF URI-grant revocation command).
-- Commit this verified hotfix, rerun any appropriate connected instrumentation suite, then prepare release/archive evidence only if release criteria are explicitly requested.
+- Commit the final release-state documents and pass the 14-step Complete gate.
+- Merge `feature/v4.14` to `main` with `--no-ff`, push `main` and annotated tag, and verify remote refs.
 
 ## Known bugs
 
+- Rejected code54 candidate: Android removed the target package during cleanup after rejecting the unsigned Macrobenchmark APK. No benchmark measurement was produced.
+- Rejected code55 candidate: the signed test captured two traces, but the OEM launcher stability wait made the five-iteration run impractical; the redundant Home step is removed for the next candidate.
+- Rejected code56 candidate: its archived source removed the Home step but OnePlus Hans still froze the background test runner after trace capture. The correction was committed and rebuilt as accepted code57 release evidence.
+- First code57 Macrobenchmark evidence set: completed but rejected because one OEM-affected first iteration measured 109,774 ms; retained for audit. The accepted rerun has all five iterations between 307.78 and 337.52 ms.
 - P0 root causes fixed: the picker stripped `FLAG_GRANT_PERSISTABLE_URI_PERMISSION`; external small config files were used at runtime; stale prepared-plan callbacks could keep Start disabled; and the output tree URI was decoded twice between service preparation and materialization, corrupting the persisted-grant identity.
-- Controlled output-permission-loss UX still needs a device-side revoke test; the preflight and UI implementation prevent dispatch when `validateTreeWritable` fails.
+- Controlled output-permission-loss UX passed on the physical device with a prepared local TXT, an invalid persisted output grant, the exact recovery message, and Start disabled before dispatch.
 - Warm tab-switch P50 is `20 ms`, above the `16 ms` target.
 - Android Lint has 50 warnings and 0 errors in the recorded v4.7 build.
 - The full 80-swipe gesture campaign was not repeated after the final Back/pronoun cache-invalidation patch.
 - Performance evidence uses Perfetto/frame/PSS measurements rather than a dedicated Macrobenchmark module.
 - APK and source ZIP archives are deliberately ignored by Git, so they are not present in a clean clone; durable copies remain in the local `artifacts/releases/v4.8/` and `backup/v4.8/` stores.
+- Android Lint reports 54 warnings and 0 errors for the accepted v4.14 development build.
 
 ## Regression status
 
@@ -81,10 +133,28 @@
 - With the opt-in API harness included, normal instrumentation reports 11 passed, 0 failed, 1 intentionally skipped.
 - Explicit real API run: PASS; 2 requests completed and both provider prompts were verified to contain glossary and pronoun locks.
 - v4.13 P0 device regression: PASS for fresh SAF output selection (persisted read/write plus write/delete probe), YAML/glossary/pronoun valid state, real Start/preflight/service/request/response/partial output/completed sequence, and cold restart followed by a second real output. JVM unit tests: 99 passed. Connected instrumentation on OnePlus 13R: 12 passed, 0 failed, 1 intentionally skipped real-API test.
+- v4.14 archive workflow: PASS. PowerShell parser and `git diff --check` passed; direct `assembleDebug` was blocked; 99 JVM tests passed; lint completed with 54 warnings and 0 errors; APK metadata is 4.14-dev.1/code50; artifact/backup parity, checksum manifest, per-build README/JSON, and 323-entry source ZIP passed.
+- Glossary filename-parity focused regression: 6 passed, 0 failed, 0 skipped.
+- v4.14-dev.2 full regression/build/archive/install: PASS. 103 JVM tests passed; lint completed with 54 warnings and 0 errors; APK metadata is 4.14-dev.2/code51; artifact/backup parity and all manifest hashes passed.
+- Glossary filename-parity device QA: PASS. Exact imported filename, one-term activation, and cold-restart persistence verified; prior user state restored after cleanup.
+- Runtime preview/rule-usage focused regression: PASS. Prompt counts are taken from the exact injected plan; snapshot round-trip distinguishes unknown from zero; compact dashboard and preview labels passed.
+- v4.14-dev.3 full regression/build/archive/install: PASS. 106 JVM tests passed; lint completed with 54 warnings and 0 errors; APK metadata is 4.14-dev.3/code52; artifact/backup parity and all manifest hashes passed.
+- Runtime preview/rule-usage device QA: PASS. Exact fixture values and accepted preview rendered without navigation overlap; original user runtime state was restored byte-for-byte after QA.
+- Approved-logo focused regression: PASS. `verifyApprovedLogo` ran through `preBuild`, exact resource/source hashes matched, manifest/header references passed, and 106 JVM tests passed.
+- README static verification: PASS. `git diff --check` passed, all six relative documentation links resolve, the obsolete v2.6.7 heading and direct Android Studio APK instructions are absent, and only `README.md` was included in commit `f8649b5`.
+- v4.14-dev.4 full regression/build/archive/install: PASS. Approved-logo guard and 106 JVM tests passed; lint completed with 54 warnings and 0 errors; APK metadata is v4.14-dev.4/code53; all artifact/backup hashes match.
+- Permanent-logo device QA: PASS. The installed launcher and in-app header display the approved logo, packaged resource and manifest references match, and the original user runtime state was preserved byte-for-byte.
+- Exact-release tooling regression: PASS. PowerShell parser returned 0 errors; mutual exclusion, branch matching, and clean-tree guards each rejected the controlled invalid invocation with the expected reason.
+- Macrobenchmark build regression: PASS. `compileBenchmarkJavaWithJavac`, `:app:assembleBenchmark`, and `:macrobenchmark:assembleBenchmark` completed successfully; the approved-logo guard also ran for the target variant.
+- v4.14/code54 regression: PARTIAL PASS. Approved-logo guard, 106 JVM tests, lint (54 warnings/0 errors), artifact parity, and connected instrumentation (12 passed/1 opt-in skipped) passed; Macrobenchmark failed before measurement with `INSTALL_PARSE_FAILED_NO_CERTIFICATES`.
+- v4.14/code55 regression: PARTIAL PASS. Approved-logo guard, 106 JVM tests, lint (54 warnings/0 errors), artifact parity, connected instrumentation (12 passed/1 opt-in skipped), signed benchmark installation, and two real traces passed; the five-iteration Macrobenchmark was stopped after the OEM launcher added nearly 10 minutes per setup.
+- v4.14/code56 regression: PARTIAL PASS. Approved-logo guard, 106 JVM tests, lint (54 warnings/0 errors), artifact parity, and connected instrumentation (12 passed/1 opt-in skipped) passed. The archived source remained vulnerable to the OnePlus background freezer, so code56 is rejected.
+- Corrected working-tree Macrobenchmark diagnostic: PASS. OnePlus CPH2691 / Android 15 completed 5/5 cold starts of `com.ml.tblandroidtxt.MainActivity`, 0 failed/skipped; median time to initial display was 332.01 ms and all five real Perfetto traces plus AndroidX JSON were retained in ignored durable artifact/backup diagnostic stores.
+- v4.14/code57 final pre-tag regression: PASS. Approved-logo guard, 106 JVM tests, lint (0 errors/54 warnings), five-file build parity, connected instrumentation (11 passed/1 opt-in skip), controlled output-permission-loss QA, final visuals, and the accepted 5/5 Macrobenchmark rerun all passed.
 
 ## Next step
 
-Commit the proven P0 hotfix on `feature/v4.13`; retain the device evidence and do not tag/archive it as a release until all release criteria, including controlled permission-loss UX proof, are satisfied.
+Commit the final release-state documents, pass the Complete gate, then merge to `main`, push `main` and `v4.14`, and verify the remote branch/tag targets.
 
 ## Resume rule
 

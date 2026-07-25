@@ -33,6 +33,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -94,7 +95,8 @@ public class MainActivity extends Activity {
     TextView topTitle, topSubtitle, topStatusChip;
     ScrollView logScroll;
     TextView estimateText, modelPriceLabel, modelDiagnosticsText;
-    TextView trackingTitle, trackingFile, metricChunks, metricCompleted, metricFailed, metricFallbacks, metricElapsed, metricRemaining, metricCost, metricTokens, previewText;
+    TextView trackingTitle, trackingFile, metricChunks, metricCompleted, metricFailed, metricFallbacks, metricElapsed, metricRemaining, metricCost, metricTokens;
+    TextView metricCurrentChunk, metricGlossaryLocks, metricPronounLocks, lockUsageMeta, previewMeta, previewText;
     LinearLayout trackingCard, estimatePanel, outputFolderFilesList, actionControlRow;
     TextView translateGlossaryChip, translatePronounChip, translateInstructionChip;
     LinearLayout resultCard;
@@ -338,9 +340,10 @@ public class MainActivity extends Activity {
         bar.setGravity(Gravity.CENTER_VERTICAL);
         bar.setPadding(0, 0, 0, dp(8));
 
-        TextView badge = text("文", 18, TEXT, true);
-        badge.setGravity(Gravity.CENTER);
-        tint(badge, Color.rgb(6, 32, 36), CYAN, 1, 12);
+        ImageView badge = new ImageView(this);
+        badge.setImageResource(R.drawable.translate_books_logo);
+        badge.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        badge.setContentDescription("Translate Books logo");
         bar.addView(badge, new LinearLayout.LayoutParams(dp(44), dp(42)));
         bar.addView(space(10, 1));
 
@@ -1421,6 +1424,7 @@ public class MainActivity extends Activity {
     }
 
     void requestNotificationPermission() {
+        if ("benchmark".equals(BuildConfig.BUILD_TYPE)) return;
         if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTI);
         }
@@ -1671,44 +1675,51 @@ public class MainActivity extends Activity {
 
     void importTermsIntoEditingGlossary(Intent data) {
         if (editingGlossary == null) editingGlossary = GlossaryStore.create(this, "New glossary");
-        int totalFiles = 0;
         int totalTerms = 0;
+        ArrayList<Uri> selectedUris = new ArrayList<>();
+        ArrayList<String> successfulNames = new ArrayList<>();
         ArrayList<String> importedNames = new ArrayList<>();
+        ArrayList<String> failedNames = new ArrayList<>();
+        GlossaryStore.Glossary staged = new GlossaryStore.Glossary();
         try {
             ClipData clip = data.getClipData();
             if (clip != null) {
                 for (int i = 0; i < clip.getItemCount(); i++) {
                     Uri u = clip.getItemAt(i).getUri();
-                    if (u == null) continue;
-                    FileUtil.takePersistable(this, u, Intent.FLAG_GRANT_READ_URI_PERMISSION, true, false);
-                    String fileName = FileUtil.displayName(this, u);
-                    String text = FileUtil.readText(this, u);
-                    List<GlossaryStore.Term> terms = GlossaryStore.parseTerms(fileName, text);
-                    GlossaryStore.mergeTerms(editingGlossary, terms);
-                    importedNames.add(fileName + " (" + terms.size() + ")");
-                    totalFiles++;
-                    totalTerms += terms.size();
+                    if (u != null) selectedUris.add(u);
                 }
             } else if (data.getData() != null) {
-                Uri u = data.getData();
-                FileUtil.takePersistable(this, u, Intent.FLAG_GRANT_READ_URI_PERMISSION, true, false);
+                selectedUris.add(data.getData());
+            }
+            for (Uri u : selectedUris) {
                 String fileName = FileUtil.displayName(this, u);
-                String text = FileUtil.readText(this, u);
-                List<GlossaryStore.Term> terms = GlossaryStore.parseTerms(fileName, text);
-                GlossaryStore.mergeTerms(editingGlossary, terms);
-                importedNames.add(fileName + " (" + terms.size() + ")");
-                totalFiles = 1;
-                totalTerms = terms.size();
+                try {
+                    FileUtil.takePersistable(this, u, Intent.FLAG_GRANT_READ_URI_PERMISSION, true, false);
+                    String text = FileUtil.readText(this, u);
+                    List<GlossaryStore.Term> terms = GlossaryStore.parseTerms(fileName, text);
+                    if (terms.isEmpty()) throw new IllegalArgumentException("No valid glossary terms");
+                    GlossaryStore.mergeTerms(staged, terms);
+                    successfulNames.add(fileName);
+                    importedNames.add(fileName + " (" + terms.size() + ")");
+                    totalTerms += terms.size();
+                } catch (Exception fileError) {
+                    failedNames.add(fileName + ": " + fileError.getMessage());
+                }
             }
             if (totalTerms == 0) throw new IllegalArgumentException("No valid glossary terms found");
+            GlossaryStore.mergeTerms(editingGlossary, staged.terms);
+            String suggestedName = GlossaryStore.suggestedImportName(editingGlossary.name, successfulNames);
+            editingGlossary.name = suggestedName;
+            if (glossaryNameField != null) glossaryNameField.setText(suggestedName);
             saveEditingGlossary();
             String imported = namesSummary(importedNames);
             String validation = PromptContextBuilder.validateText(GlossaryStore.toPromptText(editingGlossary), currentPronounText());
             GlossaryStore.Glossary importedGlossary = editingGlossary;
             selectGlossary(importedGlossary);
             toast("Đã import " + totalTerms + " terms từ: " + imported);
-            appendLog("Glossary import: " + totalFiles + " file(s), " + totalTerms + " term(s): " + imported + " • " + oneLine(validation));
-            showResult("Glossary import validated", totalTerms + " term(s) từ " + imported + "\n" + validation);
+            String skipped = failedNames.isEmpty() ? "" : "\nBỏ qua " + failedNames.size() + " file: " + namesSummary(failedNames);
+            appendLog("Glossary import: " + successfulNames.size() + " file(s), " + totalTerms + " term(s): " + imported + (failedNames.isEmpty() ? "" : " • skipped=" + failedNames.size()) + " • " + oneLine(validation));
+            showResult("Glossary import validated", totalTerms + " term(s) từ " + imported + skipped + "\n" + validation);
         } catch (Exception e) {
             toast("Lỗi import glossary");
             appendLog("Lỗi import glossary: " + e.getMessage());
@@ -2243,6 +2254,13 @@ public class MainActivity extends Activity {
         boolean providerUsageComplete = intent.getBooleanExtra(TranslatorService.EXTRA_PROVIDER_USAGE_COMPLETE, false);
         long elapsed = intent.getLongExtra(TranslatorService.EXTRA_ELAPSED_MS, 0L);
         long remain = intent.getLongExtra(TranslatorService.EXTRA_REMAINING_MS, 0L);
+        int currentChunk = intent.getIntExtra(TranslatorService.EXTRA_CURRENT_CHUNK, 0);
+        int glossaryLocks = intent.getIntExtra(TranslatorService.EXTRA_GLOSSARY_LOCKS, -1);
+        int pronounLocks = intent.getIntExtra(TranslatorService.EXTRA_PRONOUN_LOCKS, -1);
+        int lockChunk = intent.getIntExtra(TranslatorService.EXTRA_LOCK_CHUNK, 0);
+        String lockPhase = intent.getStringExtra(TranslatorService.EXTRA_LOCK_PHASE);
+        String preview = intent.getStringExtra(TranslatorService.EXTRA_PREVIEW);
+        int previewChunk = intent.getIntExtra(TranslatorService.EXTRA_PREVIEW_CHUNK, 0);
         timedRuntimeState = state;
         timedElapsedMs = Math.max(0L, elapsed);
         timedRemainingMs = remain;
@@ -2257,6 +2275,13 @@ public class MainActivity extends Activity {
         if (metricRemaining != null) metricRemaining.setText(TranslationDashboardFormatter.remaining(remain));
         if (metricCost != null) metricCost.setText(TranslationDashboardFormatter.cost(state, cost, estimatedCost, providerUsageComplete));
         if (metricTokens != null) metricTokens.setText(TranslationDashboardFormatter.tokens(state, tokens, estimatedTokens, providerUsageComplete));
+        if (metricCurrentChunk != null) metricCurrentChunk.setText(TranslationDashboardFormatter.currentChunk(currentChunk, total));
+        if (metricGlossaryLocks != null) metricGlossaryLocks.setText(TranslationDashboardFormatter.lockCount(glossaryLocks));
+        if (metricPronounLocks != null) metricPronounLocks.setText(TranslationDashboardFormatter.lockCount(pronounLocks));
+        if (lockUsageMeta != null) lockUsageMeta.setText(TranslationDashboardFormatter.lockMeta(lockPhase, lockChunk, total));
+        if (previewMeta != null) previewMeta.setText(TranslationDashboardFormatter.previewMeta(previewChunk, total, preview));
+        if (previewText != null) previewText.setText(preview == null || preview.trim().isEmpty()
+                ? "The latest accepted translation will appear here." : preview);
         updateRuntimeTimer();
     }
 

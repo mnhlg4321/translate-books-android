@@ -9,6 +9,8 @@ public class RuntimeStateSnapshotTest {
         RuntimeStateSnapshot before = new RuntimeStateSnapshot();
         before.jobState="PAUSED";before.status = "paused"; before.phase = "Refining"; before.fileName = "book.txt";
         before.progress = 43; before.currentChunk = 7; before.totalChunks = 16;
+        before.glossaryLocks = 12; before.pronounLocks = 3;
+        before.lockChunk = 7; before.lockPhase = "Refining"; before.previewChunk = 6;
         before.completed = 6; before.failed = 1; before.fallbacks = 2;
         before.log = "Paused by user"; before.preview = "Bản dịch gần nhất";
         before.totalTokens = 12345; before.totalCost = 0.4321;
@@ -20,6 +22,9 @@ public class RuntimeStateSnapshotTest {
         assertEquals(before.jobState,after.jobState);assertEquals(before.status, after.status); assertEquals(before.phase, after.phase);
         assertEquals(before.fileName, after.fileName); assertEquals(before.progress, after.progress);
         assertEquals(before.currentChunk, after.currentChunk); assertEquals(before.totalChunks, after.totalChunks);
+        assertEquals(before.glossaryLocks, after.glossaryLocks); assertEquals(before.pronounLocks, after.pronounLocks);
+        assertEquals(before.lockChunk, after.lockChunk); assertEquals(before.lockPhase, after.lockPhase);
+        assertEquals(before.previewChunk, after.previewChunk);
         assertEquals(before.completed, after.completed); assertEquals(before.failed, after.failed);
         assertEquals(before.fallbacks, after.fallbacks); assertEquals(before.log, after.log);
         assertEquals(before.preview, after.preview); assertEquals(before.totalTokens, after.totalTokens);

@@ -21,6 +21,9 @@ credentials*.json
 .idea/workspace.xml
 .idea/deploymentTargetSelector.xml
 .idea/deviceManager.xml
+.idea/vcs.xml
 /backup/
 /artifacts/releases/
+/artifacts/builds/
+/artifacts/device-extracts/
 /.archive-staging/
