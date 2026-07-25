@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (`v4.14-dev.4` permanent-logo build, archive, install, and device QA complete)
+- Snapshot updated: `2026-07-25` (`v4.14` exact-release build mode implemented and guard regression complete)
 - Current version: `4.14-dev.4` (`versionCode 53`, untagged development build)
 - Current branch: `feature/v4.14`
-- Current commit: `e570ca9` (permanent-logo QA/state baseline immediately before this handoff snapshot commit; the exact APK source commit is `ca51d7e`)
+- Current commit: `c7244cd` (permanent-logo handoff baseline immediately before the exact-release tooling commit; the exact dev.4 APK source commit is `ca51d7e`)
 - Current build: `artifacts/builds/v4.14-dev.4/build-20260725-095315/TranslateBooks-v4.14-dev.4-code53.apk`, SHA-256 `3CA3A64327A9F1C413505151259D540A9A4C58AD67D3D4616B6F896628AF4038`; all five payload files match the immutable mirror under `backup/builds/v4.14-dev.4/build-20260725-095315/`. Installed and verified on device; it is an untagged development build, not a release archive.
 
 ## Completed tasks
@@ -68,10 +68,13 @@
 - Replaced the obsolete v2.6.x root README diary with a current project landing page covering product capabilities, configuration formats, mandatory archive-first builds, verification, privacy, repository structure, and development workflow.
 - Built and archived `4.14-dev.4`/code53 from exact source commit `ca51d7e` under immutable event `build-20260725-095315`; all artifact/backup payload hashes match.
 - Installed `4.14-dev.4` and verified the approved launcher icon and in-app header logo on OnePlus CPH2691 / Android 15; the user runtime-state hash remained byte-for-byte unchanged.
+- Added exact-release build mode so `v4.14` can produce `versionName 4.14` with the next unused versionCode while retaining the mandatory archive-first workflow.
+- Exact-release builds now require the matching clean feature branch and reject conflicting series arguments, mismatched branches, existing tags, or duplicate archived release versions.
 
 ## Pending tasks
 
 - Merge and push the completed v4.14 branch through the required release workflow before expecting GitHub's default-branch landing page to render the new README.
+- Add and run real AndroidX Macrobenchmark evidence, then create the exact `4.14` build and complete release-only device QA.
 - P0 only: add a controlled device proof for the output-permission-revoked UX (the device shell does not expose a non-destructive SAF URI-grant revocation command).
 - Release-only tag/archive evidence and the pre-existing controlled output-permission-loss device proof remain pending.
 
@@ -114,10 +117,11 @@
 - README static verification: PASS. `git diff --check` passed, all six relative documentation links resolve, the obsolete v2.6.7 heading and direct Android Studio APK instructions are absent, and only `README.md` was included in commit `f8649b5`.
 - v4.14-dev.4 full regression/build/archive/install: PASS. Approved-logo guard and 106 JVM tests passed; lint completed with 54 warnings and 0 errors; APK metadata is v4.14-dev.4/code53; all artifact/backup hashes match.
 - Permanent-logo device QA: PASS. The installed launcher and in-app header display the approved logo, packaged resource and manifest references match, and the original user runtime state was preserved byte-for-byte.
+- Exact-release tooling regression: PASS. PowerShell parser returned 0 errors; mutual exclusion, branch matching, and clean-tree guards each rejected the controlled invalid invocation with the expected reason.
 
 ## Next step
 
-The permanent-logo development build is complete. Keep v4.14 untagged until the controlled output-permission proof, release-only evidence, and remaining release checklist gates are satisfied.
+Commit the exact-release tooling, then add the real Macrobenchmark module/evidence path before preparing the final `4.14` metadata and build. Keep v4.14 untagged until all release-only evidence and gates pass.
 
 ## Resume rule
 

@@ -3,6 +3,9 @@ param(
     [ValidatePattern('^\d+\.\d+(?:\.\d+)?(?:-[A-Za-z0-9-]+)?$')]
     [string]$Series = '4.14-dev',
 
+    [ValidatePattern('^\d+\.\d+(?:\.\d+)?$')]
+    [string]$ExactReleaseVersion,
+
     [ValidateNotNullOrEmpty()]
     [string]$Notes = 'Versioned development build.',
 
@@ -96,6 +99,29 @@ if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($branch)) {
 if ($branch -eq 'main') {
     throw 'Versioned builds are forbidden on main. Switch to a feature/vX.Y branch first.'
 }
+if (-not [string]::IsNullOrWhiteSpace($ExactReleaseVersion)) {
+    if ($PSBoundParameters.ContainsKey('Series')) {
+        throw 'Use either -Series for numbered development builds or -ExactReleaseVersion for a release build, not both.'
+    }
+
+    $expectedReleaseBranch = "feature/v$ExactReleaseVersion"
+    if ($branch -ne $expectedReleaseBranch) {
+        throw "Exact release v$ExactReleaseVersion must be built from $expectedReleaseBranch; current branch is $branch."
+    }
+
+    $releaseChanges = @(& git status --porcelain)
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Cannot verify the release working tree.'
+    }
+    if ($releaseChanges.Count -gt 0) {
+        throw 'Exact release builds require a clean working tree with all source and release metadata committed.'
+    }
+
+    & git rev-parse --verify --quiet "refs/tags/v$ExactReleaseVersion" | Out-Null
+    if ($LASTEXITCODE -eq 0) {
+        throw "Release tag v$ExactReleaseVersion already exists; refusing to create another build for an immutable release."
+    }
+}
 
 $untrackedFiles = @(& git status --porcelain --untracked-files=all | Where-Object { $_ -match '^\?\?' })
 if ($untrackedFiles.Count -gt 0) {
@@ -119,13 +145,28 @@ if ($archivedBuilds.Count -gt 0) {
     $highestArchivedCode = [int](($archivedBuilds | Measure-Object -Property versionCode -Maximum).Maximum)
 }
 
-$escapedSeries = [regex]::Escape($Series)
-$highestSequence = 0
-foreach ($build in $archivedBuilds) {
-    $match = [regex]::Match([string]$build.versionName, "^$escapedSeries\.(\d+)$")
-    if ($match.Success) {
-        $highestSequence = [Math]::Max($highestSequence, [int]$match.Groups[1].Value)
+$versionPolicy = 'numbered-series'
+if (-not [string]::IsNullOrWhiteSpace($ExactReleaseVersion)) {
+    $duplicateReleaseBuilds = @($archivedBuilds | Where-Object {
+        [string]$_.versionName -eq $ExactReleaseVersion
+    })
+    if ($duplicateReleaseBuilds.Count -gt 0) {
+        throw "An archived exact release build already exists for v$ExactReleaseVersion; refusing to create a second one."
     }
+    $versionName = $ExactReleaseVersion
+    $versionPolicy = 'exact-release'
+}
+else {
+    $escapedSeries = [regex]::Escape($Series)
+    $highestSequence = 0
+    foreach ($build in $archivedBuilds) {
+        $match = [regex]::Match([string]$build.versionName, "^$escapedSeries\.(\d+)$")
+        if ($match.Success) {
+            $highestSequence = [Math]::Max($highestSequence, [int]$match.Groups[1].Value)
+        }
+    }
+    $nextSequence = $highestSequence + 1
+    $versionName = "$Series.$nextSequence"
 }
 
 $androidSdk = Get-AndroidSdkPath $repositoryRoot
@@ -136,8 +177,6 @@ $nextVersionCode = ([Math]::Max(
     [Math]::Max($defaultVersionCode, $highestArchivedCode),
     $installedVersionCode
 )) + 1
-$nextSequence = $highestSequence + 1
-$versionName = "$Series.$nextSequence"
 $eventId = 'build-' + (Get-Date -Format 'yyyyMMdd-HHmmss')
 $timestamp = [DateTimeOffset]::Now.ToString('yyyy-MM-dd HH:mm:ss zzz')
 $commit = (& git rev-parse HEAD).Trim()
@@ -219,6 +258,7 @@ try {
         schemaVersion = 1
         versionName = $versionName
         versionCode = $nextVersionCode
+        versionPolicy = $versionPolicy
         eventId = $eventId
         created = $timestamp
         branch = $branch
@@ -242,6 +282,7 @@ try {
         '',
         "- Version name: ``$versionName``",
         "- Version code: ``$nextVersionCode``",
+        "- Version policy: ``$versionPolicy``",
         "- Build event: ``$eventId``",
         "- Built: ``$timestamp``",
         "- Branch: ``$branch``",

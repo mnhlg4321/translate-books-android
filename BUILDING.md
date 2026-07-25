@@ -57,6 +57,24 @@ Archiving always finishes before installation begins. If installation fails, the
 
 Use a new series when starting the next development line. Never rename or overwrite an existing build directory.
 
+## Exact release build
+
+After the release metadata is committed and the release checklist is ready for final regression, build the exact public version from its matching clean feature branch:
+
+```powershell
+.\scripts\build-and-save.ps1 -ExactReleaseVersion 4.14 -Notes "Translate Books 4.14 release build." -Install
+```
+
+Exact release mode:
+
+- produces `versionName 4.14` rather than `4.14.1`;
+- assigns the next unused Android `versionCode`;
+- requires the matching `feature/v4.14` branch and a clean working tree;
+- rejects an existing `v4.14` tag or an already archived exact `4.14` build;
+- still runs tests, lint, logo verification, archive/backup creation, and optional installation in the normal archive-first order.
+
+Do not combine `-ExactReleaseVersion` with `-Series`.
+
 ## Release archives
 
 Development build archives do not replace the release workflow. Release candidates and tagged releases must still satisfy the 14-step checklist and use `scripts/archive-release.ps1` with the complete QA and evidence payload.
