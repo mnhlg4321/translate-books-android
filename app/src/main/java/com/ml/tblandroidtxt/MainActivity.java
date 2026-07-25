@@ -33,6 +33,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -339,9 +340,10 @@ public class MainActivity extends Activity {
         bar.setGravity(Gravity.CENTER_VERTICAL);
         bar.setPadding(0, 0, 0, dp(8));
 
-        TextView badge = text("文", 18, TEXT, true);
-        badge.setGravity(Gravity.CENTER);
-        tint(badge, Color.rgb(6, 32, 36), CYAN, 1, 12);
+        ImageView badge = new ImageView(this);
+        badge.setImageResource(R.drawable.translate_books_logo);
+        badge.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        badge.setContentDescription("Translate Books logo");
         bar.addView(badge, new LinearLayout.LayoutParams(dp(44), dp(42)));
         bar.addView(space(10, 1));
 

@@ -62,3 +62,39 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
     androidTestImplementation 'androidx.test:runner:1.6.2'
 }
+
+def approvedLogoSha256 = '104D17792425810F4E7419BFEA268505DECA6148D04C7AC852D646245CD61797'
+def approvedLogoFile = file('src/main/res/drawable-nodpi/translate_books_logo.png')
+def approvedManifestFile = file('src/main/AndroidManifest.xml')
+def approvedHeaderFile = file('src/main/java/com/ml/tblandroidtxt/MainActivity.java')
+
+def verifyApprovedLogo = tasks.register('verifyApprovedLogo') {
+    group = 'verification'
+    description = 'Requires every app build to use the approved Translate Books logo.'
+    inputs.files(approvedLogoFile, approvedManifestFile, approvedHeaderFile)
+    doLast {
+        if (!approvedLogoFile.isFile()) {
+            throw new GradleException("Approved logo is missing: ${approvedLogoFile}")
+        }
+        def digest = java.security.MessageDigest.getInstance('SHA-256').digest(approvedLogoFile.bytes)
+        def actualSha256 = digest.collect { String.format('%02X', it & 0xff) }.join()
+        if (actualSha256 != approvedLogoSha256) {
+            throw new GradleException(
+                "Approved logo hash mismatch. Expected ${approvedLogoSha256}, found ${actualSha256}."
+            )
+        }
+        def manifestText = approvedManifestFile.getText('UTF-8')
+        if (!manifestText.contains('android:icon="@drawable/translate_books_logo"')
+                || !manifestText.contains('android:roundIcon="@drawable/translate_books_logo"')) {
+            throw new GradleException('AndroidManifest.xml must use the approved logo for icon and roundIcon.')
+        }
+        def headerText = approvedHeaderFile.getText('UTF-8')
+        if (!headerText.contains('setImageResource(R.drawable.translate_books_logo)')) {
+            throw new GradleException('The in-app top brand badge must use the approved logo.')
+        }
+    }
+}
+
+tasks.named('preBuild').configure {
+    dependsOn verifyApprovedLogo
+}
