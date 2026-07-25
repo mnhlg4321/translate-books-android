@@ -15,7 +15,7 @@ Set-StrictMode -Version Latest
 function Write-Utf8File {
     param(
         [Parameter(Mandatory = $true)][string]$Path,
-        [Parameter(Mandatory = $true)][string[]]$Lines
+        [Parameter(Mandatory = $true)][AllowEmptyString()][string[]]$Lines
     )
 
     [IO.File]::WriteAllLines($Path, $Lines, [Text.UTF8Encoding]::new($false))

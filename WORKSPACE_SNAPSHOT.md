@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (versioned build reached regression; one obsolete hard-coded version test fixed, retry pending)
+- Snapshot updated: `2026-07-25` (99 tests/lint/build passed; README archive writer fixed, clean retry pending)
 - Current version: `4.13` (`versionCode 48`, untagged development hotfix)
 - Current branch: `feature/v4.14`
 - Current commit: `60af8ae6aa4b2f53d019f416a991d44b207af547` (implementation baseline before this snapshot update; actual branch has uncommitted v4.14 workflow work)
@@ -63,7 +63,7 @@
 - The full 80-swipe gesture campaign was not repeated after the final Back/pronoun cache-invalidation patch.
 - Performance evidence uses Perfetto/frame/PSS measurements rather than a dedicated Macrobenchmark module.
 - APK and source ZIP archives are deliberately ignored by Git, so they are not present in a clean clone; durable copies remain in the local `artifacts/releases/v4.8/` and `backup/v4.8/` stores.
-- The new v4.14 build/archive workflow has passed syntax and direct-build-block checks but has not yet completed its first full versioned build. The latest run selected `4.14-dev.1`/code50 and stopped after 98/99 tests passed because one test hard-coded v4.13/code48; the test fix is implemented and pending retry.
+- The new v4.14 build/archive workflow has passed syntax, direct-build-block, 99 unit tests, lint, and APK assembly, but has not yet completed its first dual archive. The latest run stopped before archive/install because the README writer rejected blank lines; the fix is implemented and pending a clean retry.
 
 ## Regression status
 
@@ -82,11 +82,11 @@
 - With the opt-in API harness included, normal instrumentation reports 11 passed, 0 failed, 1 intentionally skipped.
 - Explicit real API run: PASS; 2 requests completed and both provider prompts were verified to contain glossary and pronoun locks.
 - v4.13 P0 device regression: PASS for fresh SAF output selection (persisted read/write plus write/delete probe), YAML/glossary/pronoun valid state, real Start/preflight/service/request/response/partial output/completed sequence, and cold restart followed by a second real output. JVM unit tests: 99 passed. Connected instrumentation on OnePlus 13R: 12 passed, 0 failed, 1 intentionally skipped real-API test.
-- v4.14 workflow checks so far: PowerShell parser PASS; `git diff --check` PASS; direct `assembleDebug` correctly blocked. Latest full attempt: 98 tests passed, 1 failed (`Hotfix441Test` hard-coded old version), and no archive was created. The test now validates generated BuildConfig metadata; full retry is pending.
+- v4.14 workflow checks so far: PowerShell parser PASS; `git diff --check` PASS; direct `assembleDebug` correctly blocked. Latest full attempt: 99 tests passed, lint passed, APK assembled, archive/install correctly did not complete after the README writer rejected blank lines. The writer fix and a full clean retry are pending.
 
 ## Next step
 
-Commit the generated-metadata test fix on `feature/v4.14`, then rerun `scripts/build-and-save.ps1` to create and verify the first `4.14-dev.1` artifact/backup pair. Do not tag it as a release until all release criteria are satisfied.
+Commit the README writer fix on `feature/v4.14`, then rerun `scripts/build-and-save.ps1` from clean output to create and verify the first accepted `4.14-dev.1` artifact/backup pair. Do not tag it as a release until all release criteria are satisfied.
 
 ## Resume rule
 
