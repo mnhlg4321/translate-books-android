@@ -37,10 +37,12 @@ public class Hotfix441Test {
         assertTrue(estimate.totalTokensHigh>0);
     }
 
-    @Test public void p0DevelopmentMetadataIsExposed() {
-        assertEquals("4.13-p0-dev",AppBuildInfo.VERSION_NAME);
-        assertEquals(48,AppBuildInfo.VERSION_CODE);
+    @Test public void generatedBuildMetadataIsExposed() {
+        assertEquals(BuildConfig.VERSION_NAME,AppBuildInfo.VERSION_NAME);
+        assertEquals(BuildConfig.VERSION_CODE,AppBuildInfo.VERSION_CODE);
+        assertEquals(BuildConfig.BUILD_EVENT_ID,AppBuildInfo.BUILD_EVENT_ID);
         assertTrue(AppBuildInfo.exportVersionLine().contains(AppBuildInfo.COMMIT_SHA));
+        assertTrue(AppBuildInfo.exportVersionLine().contains(AppBuildInfo.BUILD_EVENT_ID));
     }
 
     @Test public void promptOnlyChangeReusesConstructionButReestimates() {
