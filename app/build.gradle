@@ -2,9 +2,24 @@ plugins {
     id 'com.android.application'
 }
 
+def isVersionedBuild = providers.gradleProperty('versionedBuild').orElse('false').get().toBoolean()
+def resolvedVersionCode = providers.gradleProperty('buildVersionCode').orElse('48').get().toInteger()
+def resolvedVersionName = providers.gradleProperty('buildVersionName').orElse('4.13-p0-dev').get()
+def resolvedBuildEventId = providers.gradleProperty('buildEventId').orElse('unarchived-development').get()
+def resolvedBuildGitCommit = providers.gradleProperty('buildGitCommit').orElse('52fb24c (P0 translation-core hotfix)').get()
+def resolvedBuildTimestamp = providers.gradleProperty('buildTimestamp').orElse('2026-07-17 +07:00').get()
+
+def quoteBuildConfigString = { String value ->
+    '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
+}
+
 android {
     namespace 'com.ml.tblandroidtxt'
     compileSdk 35
+
+    buildFeatures {
+        buildConfig true
+    }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -15,9 +30,12 @@ android {
         applicationId 'com.ml.tblandroidtxt'
         minSdk 26
         targetSdk 35
-        versionCode 48
-        versionName '4.13-p0-dev'
+        versionCode resolvedVersionCode
+        versionName resolvedVersionName
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        buildConfigField 'String', 'BUILD_EVENT_ID', quoteBuildConfigString(resolvedBuildEventId)
+        buildConfigField 'String', 'BUILD_GIT_COMMIT', quoteBuildConfigString(resolvedBuildGitCommit)
+        buildConfigField 'String', 'BUILD_TIMESTAMP', quoteBuildConfigString(resolvedBuildTimestamp)
     }
 
     applicationVariants.all { variant ->
@@ -27,6 +45,14 @@ android {
     }
 }
 
+gradle.taskGraph.whenReady { graph ->
+    def assemblesDebugApk = graph.allTasks.any { it.path == ':app:assembleDebug' }
+    if (assemblesDebugApk && !isVersionedBuild) {
+        throw new GradleException(
+            'Unarchived debug builds are disabled. Run .\\scripts\\build-and-save.ps1 so the APK, README, checksum, and source snapshot are retained before optional installation.'
+        )
+    }
+}
 
 dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'

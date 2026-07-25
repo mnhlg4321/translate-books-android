@@ -1,4 +1,26 @@
-# TBL Android TXT v2.6.7 — ReadEra-style safe UI
+# Translate Books
+
+## Mandatory numbered builds
+
+All new APK builds must use:
+
+```powershell
+.\scripts\build-and-save.ps1
+```
+
+To archive first and then install on a connected phone:
+
+```powershell
+.\scripts\build-and-save.ps1 -Install
+```
+
+Each successful build receives a unique version name and increasing Android `versionCode`. The APK, a new build README, SHA-256 checksums, metadata, and an exact source snapshot are stored in both `artifacts/builds/` and `backup/builds/` before installation is allowed.
+
+Direct `assembleDebug` and Android Studio **Build APK(s)** are blocked to prevent unarchived builds. See [BUILDING.md](BUILDING.md) for the complete workflow.
+
+## Historical project notes
+
+### TBL Android TXT v2.6.7 — ReadEra-style safe UI
 
 ## Development workflow
 

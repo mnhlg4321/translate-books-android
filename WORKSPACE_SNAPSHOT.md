@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-17` (P0 output URI hotfix verified on OnePlus 13R; commit pending)
+- Snapshot updated: `2026-07-25` (mandatory numbered-build archive workflow implemented; full regression/build pending)
 - Current version: `4.13` (`versionCode 48`, untagged development hotfix)
-- Current branch: `feature/v4.13`
-- Current commit: `4d5ca54` (implementation baseline before this snapshot update; actual branch has uncommitted P0 work)
-- Current build: `app/build/outputs/apk/debug/TranslateBooks-v4.13-p0-dev-debug.apk`, SHA-256 `EBFD1B656F02D526E963A4156215B4CE21CAC05F0E4E4C0774A5F8370748BABE`; installed and device-verified on OnePlus 13R. It is not a release archive.
+- Current branch: `feature/v4.14`
+- Current commit: `60af8ae6aa4b2f53d019f416a991d44b207af547` (implementation baseline before this snapshot update; actual branch has uncommitted v4.14 workflow work)
+- Current build: `app/build/outputs/apk/debug/TranslateBooks-v4.13-p0-dev-debug.apk`, current local SHA-256 `0887FDD67E8F0D9E8B8CCC4EEE4A73EA023E1BFE720428B18EEF490BD3C49C8A`; the historical device-verified build recorded a different SHA-256, so this local APK must not be treated as that evidence or as a release archive.
 
 ## Completed tasks
 
@@ -52,7 +52,7 @@
 ## Pending tasks
 
 - P0 only: add a controlled device proof for the output-permission-revoked UX (the device shell does not expose a non-destructive SAF URI-grant revocation command).
-- Commit this verified hotfix, rerun any appropriate connected instrumentation suite, then prepare release/archive evidence only if release criteria are explicitly requested.
+- Commit the v4.14 numbered-build workflow, run its full unit/lint/build path, verify the first dual archive and per-build README/checksums/source ZIP, then optionally install only from the archived APK.
 
 ## Known bugs
 
@@ -63,6 +63,7 @@
 - The full 80-swipe gesture campaign was not repeated after the final Back/pronoun cache-invalidation patch.
 - Performance evidence uses Perfetto/frame/PSS measurements rather than a dedicated Macrobenchmark module.
 - APK and source ZIP archives are deliberately ignored by Git, so they are not present in a clean clone; durable copies remain in the local `artifacts/releases/v4.8/` and `backup/v4.8/` stores.
+- The new v4.14 build/archive workflow has passed syntax and direct-build-block checks but has not yet completed its first full versioned build.
 
 ## Regression status
 
@@ -81,10 +82,11 @@
 - With the opt-in API harness included, normal instrumentation reports 11 passed, 0 failed, 1 intentionally skipped.
 - Explicit real API run: PASS; 2 requests completed and both provider prompts were verified to contain glossary and pronoun locks.
 - v4.13 P0 device regression: PASS for fresh SAF output selection (persisted read/write plus write/delete probe), YAML/glossary/pronoun valid state, real Start/preflight/service/request/response/partial output/completed sequence, and cold restart followed by a second real output. JVM unit tests: 99 passed. Connected instrumentation on OnePlus 13R: 12 passed, 0 failed, 1 intentionally skipped real-API test.
+- v4.14 workflow checks so far: PowerShell parser PASS; `git diff --check` PASS; direct `assembleDebug` correctly blocked with instructions to use `scripts/build-and-save.ps1`. Full versioned build remains pending.
 
 ## Next step
 
-Commit the proven P0 hotfix on `feature/v4.13`; retain the device evidence and do not tag/archive it as a release until all release criteria, including controlled permission-loss UX proof, are satisfied.
+Commit the numbered-build workflow on `feature/v4.14`, then run `scripts/build-and-save.ps1` to create and verify the first `4.14-dev.1` artifact/backup pair. Do not tag it as a release until all release criteria are satisfied.
 
 ## Resume rule
 

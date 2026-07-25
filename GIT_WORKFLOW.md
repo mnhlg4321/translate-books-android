@@ -67,8 +67,10 @@ Chỉ stage file thuộc cùng một nhóm sửa. Không dùng commit rỗng, kh
 Sau các commit triển khai, chạy tối thiểu:
 
 ```powershell
-.\gradlew.bat clean testDebugUnitTest lintDebug assembleDebug
+.\scripts\build-and-save.ps1
 ```
+
+Script này chạy `clean`, unit test, lint và `assembleDebug`, sau đó lưu APK cùng README, metadata, checksum và source snapshot vào cả artifact lẫn backup. Không chạy `assembleDebug` trực tiếp.
 
 Khi có thiết bị Android phù hợp, chạy thêm:
 
@@ -85,10 +87,10 @@ Không tiếp tục phát hành khi regression fail, trừ khi lỗi được gh
 Tạo APK sau khi regression đạt yêu cầu:
 
 ```powershell
-.\gradlew.bat assembleDebug
+.\scripts\build-and-save.ps1
 ```
 
-Xác nhận version, tên APK, kích thước và SHA-256. Cập nhật riêng các file sau nếu thông tin thay đổi:
+Nếu cần cài lên thiết bị, chỉ dùng `.\scripts\build-and-save.ps1 -Install`; script luôn archive trước rồi mới cài. Xác nhận version, tên APK, kích thước, SHA-256, README và hai đường dẫn artifact/backup. Cập nhật riêng các file sau nếu thông tin thay đổi:
 
 - `BUILD_STATE.md`
 - `RELEASE_NOTES.md`

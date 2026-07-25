@@ -18,7 +18,7 @@ Quy trình này bắt buộc cho mọi phiên phát triển từ v4.8 trở đi.
 4. **Tạo branch feature mới** — từ `main`, đúng mẫu `feature/vX.Y`; không tái sử dụng branch đã merge.
 5. **Phát triển** — chia từng nhóm sửa độc lập thành commit nhỏ, message rõ ràng.
 6. **Regression** — chạy suite phù hợp; ghi pass/fail/skip và command chính xác.
-7. **Build** — build thành công; APK phải được chuyển khỏi `build/` ngay lập tức.
+7. **Build** — chạy `.\scripts\build-and-save.ps1`; mỗi build phải có version riêng, README/checksum/source ZIP và bản sao bất biến trong cả `artifacts/builds/` lẫn `backup/builds/` trước khi được cài lên thiết bị. Cấm build APK trực tiếp.
 8. **QA** — hoàn tất QA report, device/manual checks, performance evidence và known limitations.
 9. **Commit** — commit đầy đủ code, regression và QA theo từng nhóm; working tree phải sạch.
 10. **Tag** — chỉ tạo annotated tag sau khi gate PreTag xác nhận bước 1–9.
@@ -41,4 +41,16 @@ Quy trình này bắt buộc cho mọi phiên phát triển từ v4.8 trở đi.
 ```
 
 Mọi gate phải trả về exit code 0. Exit code khác 0 có nghĩa phiên bản chưa hoàn tất.
+
+## Lệnh build bắt buộc
+
+```powershell
+# Build, đánh số và lưu hai bản; không cài
+.\scripts\build-and-save.ps1
+
+# Build, lưu hai bản trước rồi mới cài vào thiết bị
+.\scripts\build-and-save.ps1 -Install
+```
+
+Không chạy `assembleDebug` trực tiếp và không dùng Android Studio **Build APK(s)**. Xem `BUILDING.md` để biết cấu trúc artifact và quy tắc đánh số.
 
