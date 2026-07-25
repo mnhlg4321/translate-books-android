@@ -2,6 +2,13 @@
 
 All notable changes to Translate Books are recorded in this file. The repository was normalized to Git on 2026-07-17 without feature changes or rollback. The v4.7 source baseline is commit `da8c6d9a9001296c3f3c17817ea3d6372fd59ae3` on branch `main`.
 
+## [4.14-dev.4] - 2026-07-25
+
+- Make the approved bright cool logo the permanent launcher, round launcher, and in-app header identity.
+- Store the approved design in the project and require its exact SHA-256 in every Android `preBuild`.
+- Stop builds when the logo file, manifest references, or in-app header reference is missing or changed.
+- Verify the packaged resource, installed launcher icon, in-app header, archive parity, and preserved user state on the connected Android device.
+
 ## [4.14-dev.3] - 2026-07-25
 
 - Restore the bounded, scrollable preview of the latest accepted translation chunk on the Translate dashboard.

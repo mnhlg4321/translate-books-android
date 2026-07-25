@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (`v4.14` root README refreshed after approved-logo implementation)
-- Current version: `4.14-dev.3` (`versionCode 52`, untagged development build)
+- Snapshot updated: `2026-07-25` (`v4.14-dev.4` permanent-logo build, archive, install, and device QA complete)
+- Current version: `4.14-dev.4` (`versionCode 53`, untagged development build)
 - Current branch: `feature/v4.14`
-- Current commit: `f8649b5` (README implementation baseline immediately before this snapshot commit)
-- Current build: `artifacts/builds/v4.14-dev.3/build-20260725-093258/TranslateBooks-v4.14-dev.3-code52.apk`, SHA-256 `3C732596E3552A092C5B0BE656BC690619B8A36C613DE3CED6B10EEE4B3462DF`; all five payload files match the immutable mirror under `backup/builds/`. Installed and verified on device; it is an untagged development build, not a release archive.
+- Current commit: `f8649b5` (branch baseline immediately before the permanent-logo QA/state commit; the exact APK source commit is `ca51d7e`)
+- Current build: `artifacts/builds/v4.14-dev.4/build-20260725-095315/TranslateBooks-v4.14-dev.4-code53.apk`, SHA-256 `3CA3A64327A9F1C413505151259D540A9A4C58AD67D3D4616B6F896628AF4038`; all five payload files match the immutable mirror under `backup/builds/v4.14-dev.4/build-20260725-095315/`. Installed and verified on device; it is an untagged development build, not a release archive.
 
 ## Completed tasks
 
@@ -66,10 +66,11 @@
 - Promoted the approved bright cool logo to a permanent Android resource, launcher/round icon, and in-app top badge; retained both design concepts under `artwork/logo-concepts/`.
 - Added a `preBuild` guard that requires the approved logo SHA-256 and all manifest/header references; the guard and 106 JVM tests passed.
 - Replaced the obsolete v2.6.x root README diary with a current project landing page covering product capabilities, configuration formats, mandatory archive-first builds, verification, privacy, repository structure, and development workflow.
+- Built and archived `4.14-dev.4`/code53 from exact source commit `ca51d7e` under immutable event `build-20260725-095315`; all artifact/backup payload hashes match.
+- Installed `4.14-dev.4` and verified the approved launcher icon and in-app header logo on OnePlus CPH2691 / Android 15; the user runtime-state hash remained byte-for-byte unchanged.
 
 ## Pending tasks
 
-- Run the mandatory archive-first build/install and device launcher/header QA for `v4.14-dev.4`.
 - Merge and push the completed v4.14 branch through the required release workflow before expecting GitHub's default-branch landing page to render the new README.
 - P0 only: add a controlled device proof for the output-permission-revoked UX (the device shell does not expose a non-destructive SAF URI-grant revocation command).
 - Release-only tag/archive evidence and the pre-existing controlled output-permission-loss device proof remain pending.
@@ -111,10 +112,12 @@
 - Runtime preview/rule-usage device QA: PASS. Exact fixture values and accepted preview rendered without navigation overlap; original user runtime state was restored byte-for-byte after QA.
 - Approved-logo focused regression: PASS. `verifyApprovedLogo` ran through `preBuild`, exact resource/source hashes matched, manifest/header references passed, and 106 JVM tests passed.
 - README static verification: PASS. `git diff --check` passed, all six relative documentation links resolve, the obsolete v2.6.7 heading and direct Android Studio APK instructions are absent, and only `README.md` was included in commit `f8649b5`.
+- v4.14-dev.4 full regression/build/archive/install: PASS. Approved-logo guard and 106 JVM tests passed; lint completed with 54 warnings and 0 errors; APK metadata is v4.14-dev.4/code53; all artifact/backup hashes match.
+- Permanent-logo device QA: PASS. The installed launcher and in-app header display the approved logo, packaged resource and manifest references match, and the original user runtime state was preserved byte-for-byte.
 
 ## Next step
 
-Build/archive/install `v4.14-dev.4` from the clean logo baseline, then verify the installed launcher icon, in-app header logo, package metadata, and preserved user state. Keep v4.14 untagged until release-only evidence and the remaining checklist gates are satisfied.
+Commit the permanent-logo QA/state evidence, then update the handoff snapshot to the resulting commit. Keep v4.14 untagged until release-only evidence and the remaining checklist gates are satisfied.
 
 ## Resume rule
 
