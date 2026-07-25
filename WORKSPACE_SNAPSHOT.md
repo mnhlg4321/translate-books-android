@@ -3,7 +3,7 @@
 - Snapshot updated: `2026-07-25` (Glossary filename-parity build, archive, installation, and device QA complete)
 - Current version: `4.14-dev.2` (`versionCode 51`, untagged development build)
 - Current branch: `feature/v4.14`
-- Current commit: `b9e17cc328e594f317e99a1aae406bd9cef0171f` (implementation baseline immediately before this QA/snapshot documentation commit)
+- Current commit: `750326a` (latest QA/state baseline immediately before this final checklist/snapshot commit)
 - Current build: `artifacts/builds/v4.14-dev.2/build-20260725-090328/TranslateBooks-v4.14-dev.2-code51.apk`, SHA-256 `BF034D2601F44A5739C53D8B9868A142FCF2FDC724006E0C029B631B83963C91`; identical mirror under `backup/builds/`. Installed and verified on device; it is an untagged development build, not a release archive.
 
 ## Completed tasks
@@ -99,7 +99,7 @@
 
 ## Next step
 
-Commit the final QA/state documentation. Keep v4.14 untagged until release-only Perfetto, real Macrobenchmark output, screenshots/video, controlled output-permission-loss device proof, and the remaining checklist gates are satisfied.
+Keep v4.14 untagged until release-only Perfetto, real Macrobenchmark output, screenshots/video, controlled output-permission-loss device proof, and the remaining checklist gates are satisfied.
 
 ## Resume rule
 
