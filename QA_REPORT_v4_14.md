@@ -2,9 +2,9 @@
 
 ## Status
 
-`PASS` for the exact pre-tag release candidate `4.14` / versionCode `57`.
+`PASS` for release `4.14` / versionCode `57`.
 
-No release tag is claimed by this report. Tagging, immutable tag archive, and merge to `main` remain separate workflow steps.
+Annotated tag `v4.14` was created at release-document commit `8a3b281619fc7dc48da6b1e36fd19071a90a8223` only after the PreTag gate passed. The immutable tag archive was then created and verified in both durable stores.
 
 ## Build under test
 
@@ -37,6 +37,18 @@ The mandatory build workflow archived and verified both durable copies before in
 - Manifest verification: all entries in `SHA256SUMS.txt` matched.
 - APK metadata: package `com.ml.tblandroidtxt`, versionName `4.14`, versionCode `57`.
 - Source archive ref: exact commit `82d5e4a677bc147c083fdcc348401606fd1e9412`.
+
+## Immutable tag archive
+
+- Artifact: `artifacts/releases/v4.14/tag-v4.14/`.
+- Backup: `backup/v4.14/tag-v4.14/`.
+- Tag object: `246de3416b247379a3e3e749a1a6d3f727a9a685`.
+- Tag target: `8a3b281619fc7dc48da6b1e36fd19071a90a8223`.
+- Files: `20` in each durable copy; all match by relative path, length, and SHA-256.
+- `SHA256SUMS.txt`: all `19` listed payload entries verified.
+- Release source ZIP SHA-256: `5F2DBA2C1D4F806A838961144807228C22C1846070296FACD6915A3DC2B43E5B`.
+- A fresh `git archive` of `v4.14` produced the same source ZIP SHA-256.
+- The archive includes the APK, QA report, CHANGELOG, BUILD_STATE, RELEASE_NOTES, five Perfetto traces, Macrobenchmark JSON/log, three screenshots, UI hierarchy XML, device-navigation AVI, source ZIP, manifest, and checksums.
 
 ## Physical-device Macrobenchmark
 

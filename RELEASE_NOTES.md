@@ -1,8 +1,8 @@
 # Translate Books 4.14 Release Notes
 
-Planned release date: 2026-07-25
+Release date: 2026-07-25
 
-Git tag: `v4.14` (created only after all release gates pass)
+Git tag: `v4.14`
 
 ## Summary
 
@@ -29,6 +29,8 @@ Version 4.14 makes builds durable and easier to identify while restoring useful 
 - Final screenshots, screenshot-sequence AVI, APK/source hashes, and artifact/backup parity passed.
 
 Final counts, hashes, artifact locations, benchmark measurements, and known limitations are recorded in `QA_REPORT_v4_14.md` and `BUILD_STATE.md`.
+
+The immutable tag archive was verified in both `artifacts/releases/v4.14/tag-v4.14/` and `backup/v4.14/tag-v4.14/`. All 20 files match, all 19 manifest entries pass SHA-256 verification, and `project_source_v4.14.zip` exactly matches a fresh archive of tag `v4.14`.
 
 ## Distribution
 
