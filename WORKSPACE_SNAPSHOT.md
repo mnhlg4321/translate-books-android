@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (first mandatory numbered development build and dual archive verified)
+- Snapshot updated: `2026-07-25` (v4.14 numbered-build workflow, first dual archive, and QA committed)
 - Current version: `4.14-dev.1` (`versionCode 50`, untagged development build)
 - Current branch: `feature/v4.14`
-- Current commit: `702283870ace921d33d4c69fbab32446b5ab97d4` (implementation baseline before this snapshot update; actual branch has uncommitted QA/state documentation)
+- Current commit: `f0c4ee843b084bdc3a64bb3cb0dc0314d8e9c65b` (implementation and QA baseline immediately before this snapshot/checklist update)
 - Current build: `artifacts/builds/v4.14-dev.1/build-20260725-084757/TranslateBooks-v4.14-dev.1-code50.apk`, SHA-256 `39DE793F31377BAF0AA1AE5464A4A039099CA1C76B4E0127FA89CFE9CAE9B30B`; identical mirror under `backup/builds/`. It is an untagged development build, not a release archive.
 
 ## Completed tasks
@@ -55,7 +55,7 @@
 ## Pending tasks
 
 - P0 only: add a controlled device proof for the output-permission-revoked UX (the device shell does not expose a non-destructive SAF URI-grant revocation command).
-- Commit the v4.14 QA/state documentation. Future builds must use `scripts/build-and-save.ps1`; use `-Install` only when a newly archived build should then be installed.
+- No required work remains for the numbered development-build archival scope. Release-only tag/archive evidence and the pre-existing controlled output-permission-loss device proof remain pending.
 
 ## Known bugs
 
@@ -89,7 +89,7 @@
 
 ## Next step
 
-Commit the v4.14 QA/state documentation. On the next development build, run `scripts/build-and-save.ps1` (or add `-Install`); it must allocate `4.14-dev.2` with a versionCode above 50 and archive it before any installation. Do not tag v4.14 until all release criteria are satisfied.
+On the next development build, run `scripts/build-and-save.ps1` (or add `-Install`); it must allocate `4.14-dev.2` with a versionCode above 50 and archive it before any installation. Do not tag v4.14 until all release criteria are satisfied.
 
 ## Resume rule
 
