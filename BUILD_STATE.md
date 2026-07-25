@@ -1,19 +1,19 @@
 # Build State
 
-## Current development build
+## Current release candidate build
 
-- versionName: `4.14-dev.4`
-- versionCode: `53`
-- event: `build-20260725-095315`
+- versionName: `4.14`
+- versionCode: `54`
+- event: `build-20260725-101846`
 - branch: `feature/v4.14`
-- source commit: `ca51d7e27066083c79ac03db5ea07ceb8d0af8a8`
-- APK: `artifacts/builds/v4.14-dev.4/build-20260725-095315/TranslateBooks-v4.14-dev.4-code53.apk`
-- immutable local mirror: `backup/builds/v4.14-dev.4/build-20260725-095315/`
-- APK SHA-256: `3CA3A64327A9F1C413505151259D540A9A4C58AD67D3D4616B6F896628AF4038`
-- source ZIP SHA-256: `90993F81E07C826ADC7BD6E64D93AC6347977EA999C6A1D675EF43924C2CB77E`
-- regression: approved-logo guard and 106 JVM tests passed; Android Lint completed with 54 warnings and 0 errors; artifact/backup parity, packaged-logo hash, and manifest icon references passed.
-- device state: installed and verified on OnePlus CPH2691 / Android 15 as `4.14-dev.4` / versionCode `53`; approved launcher and in-app header logos passed visual/UI checks, and user runtime state remained byte-for-byte unchanged without a provider request.
-- release state: untagged development build; this is not a release archive.
+- source commit: `05690365a6863e8f58a5534900853ab5e0a8e975`
+- APK: `artifacts/builds/v4.14/build-20260725-101846/TranslateBooks-v4.14-code54.apk`
+- immutable local mirror: `backup/builds/v4.14/build-20260725-101846/`
+- APK SHA-256: `CB93A0161B636686D25E8D99FA67C964289990B15E3CE0081D6270334AC2F5C3`
+- source ZIP SHA-256: `A96E61DF650519F9B5F3ACB7B1D62C2F8F066AD520D4EAB6D3BF86B25FA8A756`
+- regression: approved-logo guard and 106 JVM tests passed; Android Lint completed with 54 warnings and 0 errors; connected instrumentation passed 12 tests with 1 opt-in real-API test skipped. Macrobenchmark QA failed before measurement because its test APK was unsigned.
+- device state: exact `4.14`/code54 installed for instrumentation on OnePlus CPH2691 / Android 15; the failed Macrobenchmark runner removed the target package during cleanup, so the accepted candidate must be rebuilt/reinstalled after the signing fix.
+- release state: untagged release candidate; rejected for final release because Macrobenchmark evidence did not run.
 
 ## Release identity
 

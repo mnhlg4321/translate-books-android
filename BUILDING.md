@@ -70,7 +70,8 @@ Exact release mode:
 - produces `versionName 4.14` rather than `4.14.1`;
 - assigns the next unused Android `versionCode`;
 - requires the matching `feature/v4.14` branch and a clean working tree;
-- rejects an existing `v4.14` tag or an already archived exact `4.14` build;
+- rejects an existing `v4.14` tag;
+- permits a new pre-tag `4.14` candidate after failed QA, while retaining every prior candidate under a unique event with an increasing versionCode;
 - still runs tests, lint, logo verification, archive/backup creation, and optional installation in the normal archive-first order.
 
 Do not combine `-ExactReleaseVersion` with `-Series`.

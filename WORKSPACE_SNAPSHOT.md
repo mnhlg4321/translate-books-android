@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (`v4.14` invalid tag conflict resolved with explicit approval)
-- Current version: `4.14-dev.4` (`versionCode 53`, untagged development build)
+- Snapshot updated: `2026-07-25` (`v4.14` code54 candidate retained but rejected after Macrobenchmark install failure)
+- Current version: `4.14` (`versionCode 54`, untagged release candidate rejected for final release)
 - Current branch: `feature/v4.14`
-- Current commit: `f145919` (recorded tag-conflict baseline immediately before this resolution snapshot commit; the exact dev.4 APK source commit is `ca51d7e`)
-- Current build: `artifacts/builds/v4.14-dev.4/build-20260725-095315/TranslateBooks-v4.14-dev.4-code53.apk`, SHA-256 `3CA3A64327A9F1C413505151259D540A9A4C58AD67D3D4616B6F896628AF4038`; all five payload files match the immutable mirror under `backup/builds/v4.14-dev.4/build-20260725-095315/`. Installed and verified on device; it is an untagged development build, not a release archive.
+- Current commit: `0569036` (exact code54 APK source baseline immediately before the Macrobenchmark signing-fix/state commit)
+- Current build: `artifacts/builds/v4.14/build-20260725-101846/TranslateBooks-v4.14-code54.apk`, SHA-256 `CB93A0161B636686D25E8D99FA67C964289990B15E3CE0081D6270334AC2F5C3`; all five payload files match the immutable mirror under `backup/builds/v4.14/build-20260725-101846/`. It passed build/unit/lint/connected instrumentation but is rejected for final release because Macrobenchmark produced no measurement.
 
 ## Completed tasks
 
@@ -74,16 +74,21 @@
 - Added a five-iteration physical-device cold-start benchmark that produces real StartupTiming metrics, AndroidX Benchmark JSON, and Perfetto traces.
 - Prepared the v4.14 changelog/release notes and corrected the README release-candidate identity without inventing final hashes or unrun QA results.
 - With explicit user approval, deleted the invalid lightweight `v4.14` tag from GitHub and local; verified that neither ref remains before resuming the release build.
+- Built and archived exact `4.14`/code54 from commit `0569036` under event `build-20260725-101846`; all artifact/backup payload hashes match.
+- Connected Android instrumentation passed 12 tests with 1 opt-in real-API test skipped on OnePlus CPH2691 / Android 15.
+- Identified the Macrobenchmark install failure as an unsigned benchmark test APK and added the missing debug signing configuration.
 
 ## Pending tasks
 
 - Merge and push the completed v4.14 branch through the required release workflow before expecting GitHub's default-branch landing page to render the new README.
 - Add and run real AndroidX Macrobenchmark evidence, then create the exact `4.14` build and complete release-only device QA.
+- Commit the Macrobenchmark signing fix and exact-build retry policy, then build/reinstall a new immutable `4.14` candidate with the next versionCode.
 - P0 only: add a controlled device proof for the output-permission-revoked UX (the device shell does not expose a non-destructive SAF URI-grant revocation command).
 - Release-only tag/archive evidence and the pre-existing controlled output-permission-loss device proof remain pending.
 
 ## Known bugs
 
+- Rejected code54 candidate: Android removed the target package during cleanup after rejecting the unsigned Macrobenchmark APK. No benchmark measurement was produced; the signing fix is prepared but not yet validated on device.
 - P0 root causes fixed: the picker stripped `FLAG_GRANT_PERSISTABLE_URI_PERMISSION`; external small config files were used at runtime; stale prepared-plan callbacks could keep Start disabled; and the output tree URI was decoded twice between service preparation and materialization, corrupting the persisted-grant identity.
 - Controlled output-permission-loss UX still needs a device-side revoke test; the preflight and UI implementation prevent dispatch when `validateTreeWritable` fails.
 - Warm tab-switch P50 is `20 ms`, above the `16 ms` target.
@@ -123,10 +128,11 @@
 - Permanent-logo device QA: PASS. The installed launcher and in-app header display the approved logo, packaged resource and manifest references match, and the original user runtime state was preserved byte-for-byte.
 - Exact-release tooling regression: PASS. PowerShell parser returned 0 errors; mutual exclusion, branch matching, and clean-tree guards each rejected the controlled invalid invocation with the expected reason.
 - Macrobenchmark build regression: PASS. `compileBenchmarkJavaWithJavac`, `:app:assembleBenchmark`, and `:macrobenchmark:assembleBenchmark` completed successfully; the approved-logo guard also ran for the target variant.
+- v4.14/code54 regression: PARTIAL PASS. Approved-logo guard, 106 JVM tests, lint (54 warnings/0 errors), artifact parity, and connected instrumentation (12 passed/1 opt-in skipped) passed; Macrobenchmark failed before measurement with `INSTALL_PARSE_FAILED_NO_CERTIFICATES`.
 
 ## Next step
 
-Commit the resolved tag state, then create and install the exact archive-first `4.14` build before running physical-device Macrobenchmark and release QA. Keep v4.14 untagged until all release-only evidence and gates pass.
+Commit the Macrobenchmark signing fix, updated exact-candidate policy, and failed-QA state. Then create a new immutable exact `4.14` candidate with the next versionCode and rerun all dependent release QA. Keep v4.14 untagged until every gate passes.
 
 ## Resume rule
 

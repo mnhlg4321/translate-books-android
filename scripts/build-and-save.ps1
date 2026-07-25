@@ -147,12 +147,6 @@ if ($archivedBuilds.Count -gt 0) {
 
 $versionPolicy = 'numbered-series'
 if (-not [string]::IsNullOrWhiteSpace($ExactReleaseVersion)) {
-    $duplicateReleaseBuilds = @($archivedBuilds | Where-Object {
-        [string]$_.versionName -eq $ExactReleaseVersion
-    })
-    if ($duplicateReleaseBuilds.Count -gt 0) {
-        throw "An archived exact release build already exists for v$ExactReleaseVersion; refusing to create a second one."
-    }
     $versionName = $ExactReleaseVersion
     $versionPolicy = 'exact-release'
 }
