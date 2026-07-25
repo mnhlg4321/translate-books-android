@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (`v4.14` code56 retained but rejected; corrected five-iteration Macrobenchmark diagnostic passed)
-- Current version: `4.14` (`versionCode 56`, untagged release candidate rejected for final release)
+- Snapshot updated: `2026-07-25` (`v4.14` code57 exact pre-tag regression and device QA passed)
+- Current version: `4.14` (`versionCode 57`, exact untagged release candidate accepted for pre-tag workflow)
 - Current branch: `feature/v4.14`
-- Current commit: `59b20f1` (exact code56 APK source baseline immediately before the benchmark-runner keep-alive/state commit)
-- Current build: `artifacts/builds/v4.14/build-20260725-103832/TranslateBooks-v4.14-code56.apk`, SHA-256 `C6C0E8B263D22781E62235AC17A9FBFAF4EAD4812E363C5664E824014DF1E39F`; all five payload files match the immutable mirror under `backup/builds/v4.14/build-20260725-103832/`. Build/unit/lint/connected instrumentation passed, but code56 is rejected because its archived source predates the successful benchmark-runner keep-alive fix.
+- Current commit: `82d5e4a` (exact code57 implementation baseline immediately before the final QA/snapshot evidence commit)
+- Current build: `artifacts/builds/v4.14/build-20260725-111133/TranslateBooks-v4.14-code57.apk`, SHA-256 `D478AC135ED3C736F7FC850FAA06CA4F6F5CB6D0634BB09B15BD59C9B2DAE5D1`; all five payload files match the immutable mirror under `backup/builds/v4.14/build-20260725-111133/`. Pre-tag build, regression, physical-device Macrobenchmark, output-permission-loss QA, screenshots, and video evidence passed.
 
 ## Completed tasks
 
@@ -85,22 +85,28 @@
 - Added a benchmark-only foreground host activity, retained a bounded wake lock, and returned the host to the foreground immediately after each measured launch.
 - Suppressed the first-run notification request only in the non-product `benchmark` build type so StartupTiming measures `MainActivity`, not the Android permission controller.
 - Corrected diagnostic Macrobenchmark passed 5/5 physical-device cold starts with 0 failures/skips and produced AndroidX JSON plus five Perfetto traces. Time to initial display was 293.57 ms minimum, 332.01 ms median, and 441.19 ms maximum.
+- Committed the OEM-safe benchmark host and benchmark-only notification-dialog suppression as `82d5e4a`.
+- Built, archived, verified, and installed exact `4.14`/code57 from `82d5e4a` under event `build-20260725-111133`; all five build payloads match the backup.
+- Passed 106 JVM tests, logo guard, lint (0 errors/54 warnings), and connected instrumentation (11 passed/1 opt-in paid case skipped).
+- Accepted code57 Macrobenchmark rerun passed 5/5 physical-device cold starts at 307.78/322.81/337.52 ms min/median/max and retained five real Perfetto traces plus AndroidX JSON in both durable stores.
+- Passed controlled output-permission-loss QA with a valid prepared local TXT, exact missing-write-grant blocker, `Choose output folder again`, and Start disabled; no provider request occurred and QA-created app state was removed.
+- Retained final Translate/Library screenshots and a 24-frame MJPEG AVI from timed actual device captures; all visual files match their backup copies.
 
 ## Pending tasks
 
 - Merge and push the completed v4.14 branch through the required release workflow before expecting GitHub's default-branch landing page to render the new README.
-- Commit the benchmark-runner keep-alive fix and code56 rejection state, then build/reinstall exact `4.14`/code57 from that clean source.
-- Rerun the final AndroidX Macrobenchmark against code57 and complete release-only device QA.
-- P0 only: add a controlled device proof for the output-permission-revoked UX (the device shell does not expose a non-destructive SAF URI-grant revocation command).
-- Release-only tag/archive evidence and the pre-existing controlled output-permission-loss device proof remain pending.
+- Commit final code57 QA/release documents and mark checklist step 09 with its evidence commit.
+- Pass the PreTag gate, create annotated `v4.14`, then create and verify the immutable tag archive/backup.
+- Complete checklist steps 10-14, merge `feature/v4.14` to `main` with `--no-ff`, push `main` and tag, and verify remote refs.
 
 ## Known bugs
 
 - Rejected code54 candidate: Android removed the target package during cleanup after rejecting the unsigned Macrobenchmark APK. No benchmark measurement was produced.
 - Rejected code55 candidate: the signed test captured two traces, but the OEM launcher stability wait made the five-iteration run impractical; the redundant Home step is removed for the next candidate.
-- Rejected code56 candidate: its archived source removed the Home step but OnePlus Hans still froze the background test runner after trace capture. The corrected working-tree diagnostic passed all five iterations, so the implementation must be committed and rebuilt as code57 before it can become release evidence.
+- Rejected code56 candidate: its archived source removed the Home step but OnePlus Hans still froze the background test runner after trace capture. The correction was committed and rebuilt as accepted code57 release evidence.
+- First code57 Macrobenchmark evidence set: completed but rejected because one OEM-affected first iteration measured 109,774 ms; retained for audit. The accepted rerun has all five iterations between 307.78 and 337.52 ms.
 - P0 root causes fixed: the picker stripped `FLAG_GRANT_PERSISTABLE_URI_PERMISSION`; external small config files were used at runtime; stale prepared-plan callbacks could keep Start disabled; and the output tree URI was decoded twice between service preparation and materialization, corrupting the persisted-grant identity.
-- Controlled output-permission-loss UX still needs a device-side revoke test; the preflight and UI implementation prevent dispatch when `validateTreeWritable` fails.
+- Controlled output-permission-loss UX passed on the physical device with a prepared local TXT, an invalid persisted output grant, the exact recovery message, and Start disabled before dispatch.
 - Warm tab-switch P50 is `20 ms`, above the `16 ms` target.
 - Android Lint has 50 warnings and 0 errors in the recorded v4.7 build.
 - The full 80-swipe gesture campaign was not repeated after the final Back/pronoun cache-invalidation patch.
@@ -142,10 +148,11 @@
 - v4.14/code55 regression: PARTIAL PASS. Approved-logo guard, 106 JVM tests, lint (54 warnings/0 errors), artifact parity, connected instrumentation (12 passed/1 opt-in skipped), signed benchmark installation, and two real traces passed; the five-iteration Macrobenchmark was stopped after the OEM launcher added nearly 10 minutes per setup.
 - v4.14/code56 regression: PARTIAL PASS. Approved-logo guard, 106 JVM tests, lint (54 warnings/0 errors), artifact parity, and connected instrumentation (12 passed/1 opt-in skipped) passed. The archived source remained vulnerable to the OnePlus background freezer, so code56 is rejected.
 - Corrected working-tree Macrobenchmark diagnostic: PASS. OnePlus CPH2691 / Android 15 completed 5/5 cold starts of `com.ml.tblandroidtxt.MainActivity`, 0 failed/skipped; median time to initial display was 332.01 ms and all five real Perfetto traces plus AndroidX JSON were retained in ignored durable artifact/backup diagnostic stores.
+- v4.14/code57 final pre-tag regression: PASS. Approved-logo guard, 106 JVM tests, lint (0 errors/54 warnings), five-file build parity, connected instrumentation (11 passed/1 opt-in skip), controlled output-permission-loss QA, final visuals, and the accepted 5/5 Macrobenchmark rerun all passed.
 
 ## Next step
 
-Commit the benchmark-runner keep-alive fix and code56 failed-QA state. Then create a new immutable exact `4.14`/code57 candidate and rerun all dependent release QA. Keep v4.14 untagged until every gate passes.
+Commit the final code57 QA/release documents, record that commit in checklist step 09, and run the PreTag gate. Keep `v4.14` untagged until that gate passes.
 
 ## Resume rule
 

@@ -19,16 +19,16 @@ Version 4.14 makes builds durable and easier to identify while restoring useful 
 - Use the approved bright cool logo for launcher, round launcher, and in-app header, with an exact-hash build guard.
 - Add a dedicated non-debuggable AndroidX Macrobenchmark target for retained startup metrics and Perfetto traces.
 
-## Verification required before tag
+## Pre-tag verification
 
-- Exact archive-first `4.14` APK build and installation.
-- Full JVM regression and Android Lint.
-- Connected Android instrumentation on the physical Android 15 device.
-- Controlled output-permission-loss proof with no provider request.
-- Physical-device AndroidX Macrobenchmark JSON and Perfetto traces.
-- Final screenshots, video, APK/source hashes, and artifact/backup parity.
+- Exact archive-first `4.14`/code57 APK build and installation passed.
+- 106 JVM tests passed; Android Lint completed with 0 errors and 54 warnings.
+- Connected Android instrumentation completed with 11 passed and 1 opt-in paid case skipped.
+- Controlled output-permission-loss proof passed with a prepared local TXT, the exact blocker, and Start disabled.
+- Physical-device AndroidX Macrobenchmark passed five cold-start iterations with a 322.81 ms median and retained five Perfetto traces.
+- Final screenshots, screenshot-sequence AVI, APK/source hashes, and artifact/backup parity passed.
 
-Final counts, hashes, artifact locations, benchmark measurements, and known limitations are recorded in `QA_REPORT_v4_14.md` and `BUILD_STATE.md` only after they are produced.
+Final counts, hashes, artifact locations, benchmark measurements, and known limitations are recorded in `QA_REPORT_v4_14.md` and `BUILD_STATE.md`.
 
 ## Distribution
 

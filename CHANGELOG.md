@@ -9,6 +9,8 @@ All notable changes to Translate Books are recorded in this file. The repository
 - Restore the latest accepted translation preview plus exact per-chunk Glossary and Pronoun rule-use counts.
 - Install the approved bright cool logo permanently as launcher, round launcher, and in-app header identity, guarded by its exact SHA-256 during every build.
 - Add an exact release build mode and a physical-device AndroidX Macrobenchmark path for retained release performance evidence.
+- Keep the physical-device benchmark runner active on OnePlus firmware without measuring the first-run notification dialog; retain five real startup traces.
+- Verify missing output-folder permission with a prepared local TXT, an exact recovery message, and Start disabled before dispatch.
 
 ## [4.14-dev.4] - 2026-07-25
 

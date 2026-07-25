@@ -3,17 +3,17 @@
 ## Current release candidate build
 
 - versionName: `4.14`
-- versionCode: `56`
-- event: `build-20260725-103832`
+- versionCode: `57`
+- event: `build-20260725-111133`
 - branch: `feature/v4.14`
-- source commit: `59b20f1c6d26309ccb415bbfe5c7c4e2998a7548`
-- APK: `artifacts/builds/v4.14/build-20260725-103832/TranslateBooks-v4.14-code56.apk`
-- immutable local mirror: `backup/builds/v4.14/build-20260725-103832/`
-- APK SHA-256: `C6C0E8B263D22781E62235AC17A9FBFAF4EAD4812E363C5664E824014DF1E39F`
-- source ZIP SHA-256: `AA3AE415CF91E05312FBFF5A212331358FD81C3256149C58F6847BDACDEEBEB1`
-- regression: approved-logo guard and 106 JVM tests passed; Android Lint completed with 54 warnings and 0 errors; connected instrumentation passed 12 tests with 1 opt-in real-API test skipped. The archived code56 source still allowed OnePlus Hans to freeze the background benchmark runner. A working-tree diagnostic then completed all five correct `MainActivity` cold starts with real JSON/Perfetto evidence after adding a foreground benchmark host and suppressing only the benchmark variant's first-run notification dialog.
-- device state: OnePlus CPH2691 / Android 15 completed the corrected five-iteration diagnostic. Time to initial display was 293.57/332.01/441.19 ms min/median/max with 0 skipped and 0 failed tests.
-- release state: untagged release candidate; code56 is retained but rejected because the successful Macrobenchmark fix is newer than its archived source commit. A new immutable exact candidate is required.
+- source commit: `82d5e4a677bc147c083fdcc348401606fd1e9412`
+- APK: `artifacts/builds/v4.14/build-20260725-111133/TranslateBooks-v4.14-code57.apk`
+- immutable local mirror: `backup/builds/v4.14/build-20260725-111133/`
+- APK SHA-256: `D478AC135ED3C736F7FC850FAA06CA4F6F5CB6D0634BB09B15BD59C9B2DAE5D1`
+- source ZIP SHA-256: `8EBB557679EA526592D8A9B5D5D0594B46CA7BD298C793454AC0CD4382D9FAA7`
+- regression: approved-logo guard and 106 JVM tests passed; Android Lint completed with 54 warnings and 0 errors; connected instrumentation passed 11 cases with 1 opt-in paid real-API case skipped. The accepted five-iteration Macrobenchmark rerun passed with 307.78/322.81/337.52 ms min/median/max and retained real JSON plus five Perfetto traces.
+- device state: exact `4.14`/code57 is installed clean on OnePlus CPH2691 / Android 15. Controlled missing-output-grant QA showed the exact blocker and disabled Start with a valid prepared input; all QA-created state was removed afterward.
+- release state: exact untagged release candidate accepted for pre-tag workflow. Tag, immutable tag archive, and merge to `main` remain pending.
 
 ## Release identity
 
