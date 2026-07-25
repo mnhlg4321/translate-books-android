@@ -2,6 +2,13 @@
 
 All notable changes to Translate Books are recorded in this file. The repository was normalized to Git on 2026-07-17 without feature changes or rollback. The v4.7 source baseline is commit `da8c6d9a9001296c3f3c17817ea3d6372fd59ae3` on branch `main`.
 
+## [4.14-dev.3] - 2026-07-25
+
+- Restore the bounded, scrollable preview of the latest accepted translation chunk on the Translate dashboard.
+- Show current chunk and exact Glossary/Pronoun rule counts from the actual translation or refinement `PromptPlan`.
+- Persist preview identity and rule-usage state across normal UI recreation while distinguishing unknown counts from a valid zero.
+- Add prompt-count, runtime-state, dashboard-label, and controlled Android UI evidence.
+
 ## [4.8] - 2026-07-17
 
 - Persist and activate glossary imports immediately, including legacy import flow.

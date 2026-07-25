@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (`v4.14-dev.3` runtime preview/rule-usage implementation and focused regression complete)
-- Current version: `4.14-dev.2` (`versionCode 51`, untagged development build)
+- Snapshot updated: `2026-07-25` (`v4.14-dev.3` build, dual archive, installation, and device QA complete)
+- Current version: `4.14-dev.3` (`versionCode 52`, untagged development build)
 - Current branch: `feature/v4.14`
-- Current commit: `bc71628` (implementation baseline immediately before this checklist/snapshot commit)
-- Current build: `artifacts/builds/v4.14-dev.2/build-20260725-090328/TranslateBooks-v4.14-dev.2-code51.apk`, SHA-256 `BF034D2601F44A5739C53D8B9868A142FCF2FDC724006E0C029B631B83963C91`; identical mirror under `backup/builds/`. Installed and verified on device; it is an untagged development build, not a release archive.
+- Current commit: `e7a04d7` (exact build/source baseline immediately before this QA/state commit)
+- Current build: `artifacts/builds/v4.14-dev.3/build-20260725-093258/TranslateBooks-v4.14-dev.3-code52.apk`, SHA-256 `3C732596E3552A092C5B0BE656BC690619B8A36C613DE3CED6B10EEE4B3462DF`; all five payload files match the immutable mirror under `backup/builds/`. Installed and verified on device; it is an untagged development build, not a release archive.
 
 ## Completed tasks
 
@@ -61,10 +61,11 @@
 - Restored the Translate dashboard's scrollable last accepted translation preview with a separate completed-chunk identity.
 - Added current chunk plus exact Glossary/Pronoun rule-use metrics sourced from the actual translation/refinement `PromptPlan`, including zero-versus-unknown presentation and persisted runtime restoration.
 - Added focused prompt-count, runtime-state, dashboard-label, and Android fixture coverage; the focused JVM group passed.
+- Built and archived `4.14-dev.3`/code52 under event `build-20260725-093258`; 106 JVM tests passed, lint reported 54 warnings/0 errors, and every artifact/backup payload hash matched.
+- Installed and visually verified the current chunk, exact rule counts, exact-prompt association, and accepted-chunk preview on OnePlus CPH2691 / Android 15 without a provider call; restored the original runtime state byte-for-byte.
 
 ## Pending tasks
 
-- Run the mandatory full regression, archive-first build/install workflow, artifact/backup verification, and device UI QA for `v4.14-dev.3`.
 - P0 only: add a controlled device proof for the output-permission-revoked UX (the device shell does not expose a non-destructive SAF URI-grant revocation command).
 - Release-only tag/archive evidence and the pre-existing controlled output-permission-loss device proof remain pending.
 
@@ -101,10 +102,12 @@
 - v4.14-dev.2 full regression/build/archive/install: PASS. 103 JVM tests passed; lint completed with 54 warnings and 0 errors; APK metadata is 4.14-dev.2/code51; artifact/backup parity and all manifest hashes passed.
 - Glossary filename-parity device QA: PASS. Exact imported filename, one-term activation, and cold-restart persistence verified; prior user state restored after cleanup.
 - Runtime preview/rule-usage focused regression: PASS. Prompt counts are taken from the exact injected plan; snapshot round-trip distinguishes unknown from zero; compact dashboard and preview labels passed.
+- v4.14-dev.3 full regression/build/archive/install: PASS. 106 JVM tests passed; lint completed with 54 warnings and 0 errors; APK metadata is 4.14-dev.3/code52; artifact/backup parity and all manifest hashes passed.
+- Runtime preview/rule-usage device QA: PASS. Exact fixture values and accepted preview rendered without navigation overlap; original user runtime state was restored byte-for-byte after QA.
 
 ## Next step
 
-Run the archive-first `v4.14-dev.3` build/install from the clean implementation baseline, verify both durable copies and device UI state, then update QA/build/snapshot evidence. Keep v4.14 untagged until release-only evidence and the remaining checklist gates are satisfied.
+Commit the final dev.3 QA/state evidence and keep v4.14 untagged until release-only Perfetto, real Macrobenchmark output, controlled output-permission-loss proof, and the remaining checklist gates are satisfied.
 
 ## Resume rule
 

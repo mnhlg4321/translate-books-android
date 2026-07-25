@@ -2,17 +2,17 @@
 
 ## Current development build
 
-- versionName: `4.14-dev.2`
-- versionCode: `51`
-- event: `build-20260725-090328`
+- versionName: `4.14-dev.3`
+- versionCode: `52`
+- event: `build-20260725-093258`
 - branch: `feature/v4.14`
-- source commit: `b9e17cc328e594f317e99a1aae406bd9cef0171f`
-- APK: `artifacts/builds/v4.14-dev.2/build-20260725-090328/TranslateBooks-v4.14-dev.2-code51.apk`
-- immutable local mirror: `backup/builds/v4.14-dev.2/build-20260725-090328/`
-- APK SHA-256: `BF034D2601F44A5739C53D8B9868A142FCF2FDC724006E0C029B631B83963C91`
-- source ZIP SHA-256: `D3CB891EEF77A31E03E8329D33A9AA14B5D8D2602C4B3D040C8811BDE673A628`
-- regression: 103 JVM tests passed; Android Lint completed with 54 warnings and 0 errors; artifact/backup parity and all manifest hashes passed.
-- device state: installed and verified on the connected OnePlus 13R as `4.14-dev.2` / versionCode `51`; Glossary filename adoption and cold-restart persistence passed.
+- source commit: `e7a04d78749f0a474132c14f8d792a431d1a63e2`
+- APK: `artifacts/builds/v4.14-dev.3/build-20260725-093258/TranslateBooks-v4.14-dev.3-code52.apk`
+- immutable local mirror: `backup/builds/v4.14-dev.3/build-20260725-093258/`
+- APK SHA-256: `3C732596E3552A092C5B0BE656BC690619B8A36C613DE3CED6B10EEE4B3462DF`
+- source ZIP SHA-256: `260CC6FCF0ABFAD02923FEB5C04201DEBF6818523F44E756282D804BDC444A9C`
+- regression: 106 JVM tests passed; Android Lint completed with 54 warnings and 0 errors; artifact/backup parity and all manifest hashes passed.
+- device state: installed and verified on OnePlus CPH2691 / Android 15 as `4.14-dev.3` / versionCode `52`; runtime preview, chunk/rule values, fixed-navigation layout, and byte-for-byte user-state restoration passed without a provider request.
 - release state: untagged development build; this is not a release archive.
 
 ## Release identity
