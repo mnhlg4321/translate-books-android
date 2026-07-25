@@ -1,39 +1,35 @@
-# Translate Books 4.8 Release Notes
+# Translate Books 4.14 Release Notes
 
-Release date: 2026-07-17  
-Git tag: `v4.8`
+Planned release date: 2026-07-25
+
+Git tag: `v4.14` (created only after all release gates pass)
 
 ## Summary
 
-Version 4.8 focuses on reliable glossary/pronoun import and navigation while preserving the existing translation pipeline, dashboard, SAF, session isolation, and recovery behavior.
+Version 4.14 makes builds durable and easier to identify while restoring useful translation visibility. Every accepted build is numbered and archived before installation, glossary imports can inherit their filenames, the Translate dashboard again shows the latest accepted output and exact rule usage, and the approved bright cool logo becomes the permanent app identity.
 
 ## Highlights
 
-- Imported glossary terms are stored as a library profile, activated immediately, and reflected in Settings and prompt state.
-- Imported pronoun profiles are saved and activated atomically, shown immediately, and retained across cold-start.
-- Back navigation now walks through Library and Settings predictably without closing the Activity unexpectedly.
-- Four-tab scrolling remains ordinary vertical scrolling with no gesture-triggered refresh.
-- Added focused JVM/device coverage plus a 2-request real API prompt verification.
+- Archive every successful APK with README, build metadata, SHA-256 manifest, and exact source ZIP in both `artifacts/builds/` and `backup/builds/`.
+- Assign increasing development version names and Android version codes without relying on temporary Gradle output.
+- Use an exact release mode for public `versionName 4.14`.
+- Adopt the exact imported filename for a single glossary file while retaining deterministic naming for multiple imports and preserving explicit custom names.
+- Restore the bounded latest-translation preview and current chunk information.
+- Show exact Glossary and Pronoun rule counts from the same `PromptPlan` used by translation/refinement requests.
+- Use the approved bright cool logo for launcher, round launcher, and in-app header, with an exact-hash build guard.
+- Add a dedicated non-debuggable AndroidX Macrobenchmark target for retained startup metrics and Perfetto traces.
 
-## Verification
+## Verification required before tag
 
-- Final Android build completed successfully.
-- 99 JVM unit tests passed.
-- 11 required Android instrumentation tests passed on OnePlus CPH2691 running Android 15.
-- 2 real provider requests passed with glossary and pronoun locks asserted in both prompts.
-- Android Lint completed with 0 errors and 50 warnings.
-- Device checks covered primary-tab gestures, Jobs layout, glossary import, pronoun import/activation, Back navigation, and dashboard states.
+- Exact archive-first `4.14` APK build and installation.
+- Full JVM regression and Android Lint.
+- Connected Android instrumentation on the physical Android 15 device.
+- Controlled output-permission-loss proof with no provider request.
+- Physical-device AndroidX Macrobenchmark JSON and Perfetto traces.
+- Final screenshots, video, APK/source hashes, and artifact/backup parity.
 
-## Artifact
+Final counts, hashes, artifact locations, benchmark measurements, and known limitations are recorded in `QA_REPORT_v4_14.md` and `BUILD_STATE.md` only after they are produced.
 
-- File: `artifacts/releases/v4.8/tag-v4.8/TranslateBooks-v4.8-debug.apk`
-- SHA-256: `ABED4892CEFA9F3363F85ED8CF57F4D06C388447EE8F37617683FBB6DF891FB3`
-- Note: APK files are intentionally ignored by Git and must be distributed separately from the source repository.
+## Distribution
 
-## Known limitations
-
-- Warm tab-switch P50 is 20 ms, above the 16 ms target. Other recorded performance targets passed.
-- Performance validation used Perfetto/frame/PSS evidence, not a dedicated Macrobenchmark module.
-- The final navigation-only patch was not followed by a repeat of the complete 80-swipe campaign; relevant automated and targeted device checks passed.
-
-See `BUILD_STATE.md` and `QA_REPORT_v4_8.md` for the complete recorded state and evidence.
+The project currently produces a locally signed APK release and immutable local archive. APK binaries are intentionally ignored by Git and must be distributed separately from the source repository.

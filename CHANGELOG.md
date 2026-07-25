@@ -2,6 +2,14 @@
 
 All notable changes to Translate Books are recorded in this file. The repository was normalized to Git on 2026-07-17 without feature changes or rollback. The v4.7 source baseline is commit `da8c6d9a9001296c3f3c17817ea3d6372fd59ae3` on branch `main`.
 
+## [4.14] - 2026-07-25
+
+- Preserve every successful APK as a numbered, checksummed artifact with an exact source ZIP and a second immutable local backup before optional installation.
+- Make glossary imports adopt the source filename automatically, matching the established Pronoun profile workflow.
+- Restore the latest accepted translation preview plus exact per-chunk Glossary and Pronoun rule-use counts.
+- Install the approved bright cool logo permanently as launcher, round launcher, and in-app header identity, guarded by its exact SHA-256 during every build.
+- Add an exact release build mode and a physical-device AndroidX Macrobenchmark path for retained release performance evidence.
+
 ## [4.14-dev.4] - 2026-07-25
 
 - Make the approved bright cool logo the permanent launcher, round launcher, and in-app header identity.

@@ -9,7 +9,7 @@ The project targets Android 8.0 and later (`minSdk 26`) and currently builds aga
 | Track | Version | Status |
 |---|---|---|
 | Released baseline | `v4.8` / code 47 | Tagged and regression-tested |
-| Active development | `v4.14-dev.3` / code 52 | Untagged development build |
+| Release candidate | `v4.14-dev.4` / code 53 | Final `v4.14` evidence in progress |
 
 See [BUILD_STATE.md](BUILD_STATE.md) for the exact current build, checksums, regression results and known limitations. See [WORKSPACE_SNAPSHOT.md](WORKSPACE_SNAPSHOT.md) for active work and the next development step.
 

@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (`v4.14` AndroidX Macrobenchmark module compiled and packaged)
+- Snapshot updated: `2026-07-25` (`v4.14` final release metadata prepared before exact build)
 - Current version: `4.14-dev.4` (`versionCode 53`, untagged development build)
 - Current branch: `feature/v4.14`
-- Current commit: `42bfb97` (exact-release tooling baseline immediately before the Macrobenchmark module commit; the exact dev.4 APK source commit is `ca51d7e`)
+- Current commit: `421412c` (Macrobenchmark module baseline immediately before the release-metadata commit; the exact dev.4 APK source commit is `ca51d7e`)
 - Current build: `artifacts/builds/v4.14-dev.4/build-20260725-095315/TranslateBooks-v4.14-dev.4-code53.apk`, SHA-256 `3CA3A64327A9F1C413505151259D540A9A4C58AD67D3D4616B6F896628AF4038`; all five payload files match the immutable mirror under `backup/builds/v4.14-dev.4/build-20260725-095315/`. Installed and verified on device; it is an untagged development build, not a release archive.
 
 ## Completed tasks
@@ -72,6 +72,7 @@
 - Exact-release builds now require the matching clean feature branch and reject conflicting series arguments, mismatched branches, existing tags, or duplicate archived release versions.
 - Added a dedicated AndroidX Macrobenchmark 1.4.1 test module targeting a non-debuggable, profileable benchmark app variant with ProfileInstaller 1.4.1.
 - Added a five-iteration physical-device cold-start benchmark that produces real StartupTiming metrics, AndroidX Benchmark JSON, and Perfetto traces.
+- Prepared the v4.14 changelog/release notes and corrected the README release-candidate identity without inventing final hashes or unrun QA results.
 
 ## Pending tasks
 
@@ -124,7 +125,7 @@
 
 ## Next step
 
-Commit the Macrobenchmark module, prepare and commit final `4.14` metadata, then create the exact archive-first build before running physical-device Macrobenchmark and release QA. Keep v4.14 untagged until all release-only evidence and gates pass.
+Commit the prepared v4.14 metadata, then create and install the exact archive-first `4.14` build before running physical-device Macrobenchmark and release QA. Keep v4.14 untagged until all release-only evidence and gates pass.
 
 ## Resume rule
 
