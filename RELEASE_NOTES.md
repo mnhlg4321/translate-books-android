@@ -34,4 +34,4 @@ The immutable tag archive was verified in both `artifacts/releases/v4.14/tag-v4.
 
 ## Distribution
 
-The project currently produces a locally signed APK release and immutable local archive. APK binaries are intentionally ignored by Git and must be distributed separately from the source repository.
+The source history and annotated `v4.14` tag are published to the private GitHub repository. The locally signed APK and immutable release archive remain outside Git by design and must be distributed separately from the source repository.

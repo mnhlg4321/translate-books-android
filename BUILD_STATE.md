@@ -13,7 +13,7 @@
 - source ZIP SHA-256: `8EBB557679EA526592D8A9B5D5D0594B46CA7BD298C793454AC0CD4382D9FAA7`
 - regression: approved-logo guard and 106 JVM tests passed; Android Lint completed with 54 warnings and 0 errors; connected instrumentation passed 11 cases with 1 opt-in paid real-API case skipped. The accepted five-iteration Macrobenchmark rerun passed with 307.78/322.81/337.52 ms min/median/max and retained real JSON plus five Perfetto traces.
 - device state: exact `4.14`/code57 is installed clean on OnePlus CPH2691 / Android 15. Controlled missing-output-grant QA showed the exact blocker and disabled Start with a valid prepared input; all QA-created state was removed afterward.
-- release state: exact release build accepted, annotated tag `v4.14` created at `8a3b281`, and immutable `tag-v4.14` artifact/backup verified. Merge to `main` and remote push remain pending.
+- release state: released. Exact build accepted, annotated tag `v4.14` created at `8a3b281`, immutable `tag-v4.14` artifact/backup verified, feature history merged to `main`, and remote branch/tag refs verified.
 
 ## Release identity
 
@@ -26,7 +26,7 @@
 - targetSdk: `35`
 - implementation source commit: `82d5e4a677bc147c083fdcc348401606fd1e9412`
 - release-document commit: `8a3b281619fc7dc48da6b1e36fd19071a90a8223` (annotated tag `v4.14`)
-- branch: `feature/v4.14` (local release complete; merge and remote synchronization pending)
+- branch: `main` (published to `https://github.com/manhluongvd/translate-books-android.git`; annotated tag `v4.14` remains immutable)
 
 ## Existing artifacts
 
@@ -81,7 +81,7 @@ The last released v4.7 evidence remains `PASS WITH KNOWN LIMITATIONS`:
 - Lint: 0 errors, 50 warnings.
 - Core translation and recovery regression coverage: passed within the scope recorded in `QA_REPORT_v4_7.md`.
 
-The v4.8 tag and `main` branch are published to the private GitHub repository. Remote verification resolves `main` to `c1e807b3bad1b64f079d0a802c3b0a2e7621c0c2`, annotated tag object `e5e6bb8aec6c713edf87354b8b76d21e004ea726`, and tag target `21fc148c561dac395e85d19cd48fef6c378da3ab`.
+The v4.14 release was published to the private GitHub repository. Initial remote verification resolved release merge `main` to `41cc6e98b0f737d5c6f4527a21404e8264ef1608`, annotated tag object `246de3416b247379a3e3e749a1a6d3f727a9a685`, and immutable tag target `8a3b281619fc7dc48da6b1e36fd19071a90a8223`. The final release-state documentation is merged afterward without moving the tag.
 
 ## Known issues
 
