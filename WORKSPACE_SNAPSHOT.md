@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (`v4.14` local release complete; immutable tag archive and backup verified)
+- Snapshot updated: `2026-07-25` (`v4.14` released and published; immutable tag archive and backup verified)
 - Current version: `4.14` (`versionCode 57`, annotated tag `v4.14` at `8a3b281`)
-- Current branch: `feature/v4.14`
-- Current commit: `5624039` (tag-state documentation baseline immediately before this final release-state snapshot commit)
+- Current branch: `main` (final handoff state after merging this release-state record)
+- Current commit: `41cc6e9` (published v4.14 release-merge baseline immediately before the final release-state documentation commit)
 - Current build: `artifacts/releases/v4.14/tag-v4.14/TranslateBooks-v4.14-code57.apk`, SHA-256 `D478AC135ED3C736F7FC850FAA06CA4F6F5CB6D0634BB09B15BD59C9B2DAE5D1`; the 20-file immutable payload matches `backup/v4.14/tag-v4.14/`, all 19 manifest entries verify, and the tag source ZIP SHA-256 is `5F2DBA2C1D4F806A838961144807228C22C1846070296FACD6915A3DC2B43E5B`.
 
 ## Completed tasks
@@ -91,15 +91,16 @@
 - Accepted code57 Macrobenchmark rerun passed 5/5 physical-device cold starts at 307.78/322.81/337.52 ms min/median/max and retained five real Perfetto traces plus AndroidX JSON in both durable stores.
 - Passed controlled output-permission-loss QA with a valid prepared local TXT, exact missing-write-grant blocker, `Choose output folder again`, and Start disabled; no provider request occurred and QA-created app state was removed.
 - Retained final Translate/Library screenshots and a 24-frame MJPEG AVI from timed actual device captures; all visual files match their backup copies.
-- Passed the PreTag workflow gate and created annotated local tag `v4.14` at release-document commit `8a3b281`; remote push remains pending.
+- Passed the PreTag workflow gate and created annotated tag `v4.14` at release-document commit `8a3b281`.
 - Passed the PreBackup gate and created immutable event `tag-v4.14` from the annotated tag.
 - Verified both 20-file release payloads by relative path, length, and SHA-256; all 19 manifest entries pass.
 - Regenerated `project_source_v4.14.zip` directly from tag `v4.14` and confirmed exact SHA-256 equality with the retained source ZIP.
+- Merged `feature/v4.14` into `main` with `--no-ff`, pushed `main` and annotated `v4.14`, and verified remote release merge `41cc6e9`, tag object `246de34`, and tag target `8a3b281`.
 
 ## Pending tasks
 
-- Commit the final release-state documents and pass the 14-step Complete gate.
-- Merge `feature/v4.14` to `main` with `--no-ff`, push `main` and annotated tag, and verify remote refs.
+- No v4.14 release task remains.
+- v4.15 development has not started.
 
 ## Known bugs
 
@@ -154,7 +155,7 @@
 
 ## Next step
 
-Commit the final release-state documents, pass the Complete gate, then merge to `main`, push `main` and `v4.14`, and verify the remote branch/tag targets.
+When a new development cycle is requested, start from clean synchronized `main`, create `feature/v4.15`, and use the mandatory workflow. The expected first archived development build is `4.15-dev.1` with the next unused versionCode (currently expected code58).
 
 ## Resume rule
 

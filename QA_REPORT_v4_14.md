@@ -6,6 +6,8 @@
 
 Annotated tag `v4.14` was created at release-document commit `8a3b281619fc7dc48da6b1e36fd19071a90a8223` only after the PreTag gate passed. The immutable tag archive was then created and verified in both durable stores.
 
+Remote verification published annotated tag object `246de3416b247379a3e3e749a1a6d3f727a9a685`, immutable tag target `8a3b281619fc7dc48da6b1e36fd19071a90a8223`, and a `main` release merge containing the tag history.
+
 ## Build under test
 
 - Version name: `4.14`
