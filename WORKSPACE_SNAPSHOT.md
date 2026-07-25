@@ -3,7 +3,7 @@
 - Snapshot updated: `2026-07-25` (`v4.14-dev.3` build, dual archive, installation, and device QA complete)
 - Current version: `4.14-dev.3` (`versionCode 52`, untagged development build)
 - Current branch: `feature/v4.14`
-- Current commit: `e7a04d7` (exact build/source baseline immediately before this QA/state commit)
+- Current commit: `ea5967c` (latest QA/state baseline immediately before this final checklist/snapshot commit; the exact APK source baseline remains `e7a04d7`)
 - Current build: `artifacts/builds/v4.14-dev.3/build-20260725-093258/TranslateBooks-v4.14-dev.3-code52.apk`, SHA-256 `3C732596E3552A092C5B0BE656BC690619B8A36C613DE3CED6B10EEE4B3462DF`; all five payload files match the immutable mirror under `backup/builds/`. Installed and verified on device; it is an untagged development build, not a release archive.
 
 ## Completed tasks
@@ -107,7 +107,7 @@
 
 ## Next step
 
-Commit the final dev.3 QA/state evidence and keep v4.14 untagged until release-only Perfetto, real Macrobenchmark output, controlled output-permission-loss proof, and the remaining checklist gates are satisfied.
+Keep v4.14 untagged until release-only Perfetto, real Macrobenchmark output, controlled output-permission-loss proof, and the remaining checklist gates are satisfied. The next development build in this series will be numbered automatically after `4.14-dev.3`.
 
 ## Resume rule
 
