@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (`v4.14` exact-release build blocked by an existing invalid remote tag)
+- Snapshot updated: `2026-07-25` (`v4.14` invalid tag conflict resolved with explicit approval)
 - Current version: `4.14-dev.4` (`versionCode 53`, untagged development build)
 - Current branch: `feature/v4.14`
-- Current commit: `e809022` (prepared release-metadata baseline immediately before this blocker snapshot commit; the exact dev.4 APK source commit is `ca51d7e`)
+- Current commit: `f145919` (recorded tag-conflict baseline immediately before this resolution snapshot commit; the exact dev.4 APK source commit is `ca51d7e`)
 - Current build: `artifacts/builds/v4.14-dev.4/build-20260725-095315/TranslateBooks-v4.14-dev.4-code53.apk`, SHA-256 `3CA3A64327A9F1C413505151259D540A9A4C58AD67D3D4616B6F896628AF4038`; all five payload files match the immutable mirror under `backup/builds/v4.14-dev.4/build-20260725-095315/`. Installed and verified on device; it is an untagged development build, not a release archive.
 
 ## Completed tasks
@@ -73,18 +73,17 @@
 - Added a dedicated AndroidX Macrobenchmark 1.4.1 test module targeting a non-debuggable, profileable benchmark app variant with ProfileInstaller 1.4.1.
 - Added a five-iteration physical-device cold-start benchmark that produces real StartupTiming metrics, AndroidX Benchmark JSON, and Perfetto traces.
 - Prepared the v4.14 changelog/release notes and corrected the README release-candidate identity without inventing final hashes or unrun QA results.
+- With explicit user approval, deleted the invalid lightweight `v4.14` tag from GitHub and local; verified that neither ref remains before resuming the release build.
 
 ## Pending tasks
 
 - Merge and push the completed v4.14 branch through the required release workflow before expecting GitHub's default-branch landing page to render the new README.
 - Add and run real AndroidX Macrobenchmark evidence, then create the exact `4.14` build and complete release-only device QA.
-- Resolve the existing lightweight local/remote `v4.14` tag at commit `60af8ae6` before an exact `4.14` build or annotated release tag can be created.
 - P0 only: add a controlled device proof for the output-permission-revoked UX (the device shell does not expose a non-destructive SAF URI-grant revocation command).
 - Release-only tag/archive evidence and the pre-existing controlled output-permission-loss device proof remain pending.
 
 ## Known bugs
 
-- Release tag conflict: local and GitHub `v4.14` are a lightweight tag on the v4.13 baseline merge commit `60af8ae6`, with no matching v4.14 release artifact. The release workflow refuses to overwrite it.
 - P0 root causes fixed: the picker stripped `FLAG_GRANT_PERSISTABLE_URI_PERMISSION`; external small config files were used at runtime; stale prepared-plan callbacks could keep Start disabled; and the output tree URI was decoded twice between service preparation and materialization, corrupting the persisted-grant identity.
 - Controlled output-permission-loss UX still needs a device-side revoke test; the preflight and UI implementation prevent dispatch when `validateTreeWritable` fails.
 - Warm tab-switch P50 is `20 ms`, above the `16 ms` target.
@@ -127,7 +126,7 @@
 
 ## Next step
 
-Obtain an explicit decision to remove and replace the invalid local/remote `v4.14` tag or choose a new release version. No exact release build, tag, archive, or merge may continue until this conflict is resolved.
+Commit the resolved tag state, then create and install the exact archive-first `4.14` build before running physical-device Macrobenchmark and release QA. Keep v4.14 untagged until all release-only evidence and gates pass.
 
 ## Resume rule
 
