@@ -151,10 +151,11 @@ if ((Test-Path -LiteralPath $artifactDestination) -or (Test-Path -LiteralPath $b
     throw "Build event already exists; refusing to overwrite: $eventId"
 }
 
-$snapshotRef = (& git stash create "versioned-build-$eventId").Trim()
+$snapshotOutput = & git stash create "versioned-build-$eventId"
 if ($LASTEXITCODE -ne 0) {
     throw 'Cannot capture the current tracked source state.'
 }
+$snapshotRef = if ($null -eq $snapshotOutput) { '' } else { ([string]$snapshotOutput).Trim() }
 if ([string]::IsNullOrWhiteSpace($snapshotRef)) {
     $snapshotRef = $commit
 }
