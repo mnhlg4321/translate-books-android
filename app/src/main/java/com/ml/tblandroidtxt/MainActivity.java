@@ -94,7 +94,8 @@ public class MainActivity extends Activity {
     TextView topTitle, topSubtitle, topStatusChip;
     ScrollView logScroll;
     TextView estimateText, modelPriceLabel, modelDiagnosticsText;
-    TextView trackingTitle, trackingFile, metricChunks, metricCompleted, metricFailed, metricFallbacks, metricElapsed, metricRemaining, metricCost, metricTokens, previewText;
+    TextView trackingTitle, trackingFile, metricChunks, metricCompleted, metricFailed, metricFallbacks, metricElapsed, metricRemaining, metricCost, metricTokens;
+    TextView metricCurrentChunk, metricGlossaryLocks, metricPronounLocks, lockUsageMeta, previewMeta, previewText;
     LinearLayout trackingCard, estimatePanel, outputFolderFilesList, actionControlRow;
     TextView translateGlossaryChip, translatePronounChip, translateInstructionChip;
     LinearLayout resultCard;
@@ -2250,6 +2251,13 @@ public class MainActivity extends Activity {
         boolean providerUsageComplete = intent.getBooleanExtra(TranslatorService.EXTRA_PROVIDER_USAGE_COMPLETE, false);
         long elapsed = intent.getLongExtra(TranslatorService.EXTRA_ELAPSED_MS, 0L);
         long remain = intent.getLongExtra(TranslatorService.EXTRA_REMAINING_MS, 0L);
+        int currentChunk = intent.getIntExtra(TranslatorService.EXTRA_CURRENT_CHUNK, 0);
+        int glossaryLocks = intent.getIntExtra(TranslatorService.EXTRA_GLOSSARY_LOCKS, -1);
+        int pronounLocks = intent.getIntExtra(TranslatorService.EXTRA_PRONOUN_LOCKS, -1);
+        int lockChunk = intent.getIntExtra(TranslatorService.EXTRA_LOCK_CHUNK, 0);
+        String lockPhase = intent.getStringExtra(TranslatorService.EXTRA_LOCK_PHASE);
+        String preview = intent.getStringExtra(TranslatorService.EXTRA_PREVIEW);
+        int previewChunk = intent.getIntExtra(TranslatorService.EXTRA_PREVIEW_CHUNK, 0);
         timedRuntimeState = state;
         timedElapsedMs = Math.max(0L, elapsed);
         timedRemainingMs = remain;
@@ -2264,6 +2272,13 @@ public class MainActivity extends Activity {
         if (metricRemaining != null) metricRemaining.setText(TranslationDashboardFormatter.remaining(remain));
         if (metricCost != null) metricCost.setText(TranslationDashboardFormatter.cost(state, cost, estimatedCost, providerUsageComplete));
         if (metricTokens != null) metricTokens.setText(TranslationDashboardFormatter.tokens(state, tokens, estimatedTokens, providerUsageComplete));
+        if (metricCurrentChunk != null) metricCurrentChunk.setText(TranslationDashboardFormatter.currentChunk(currentChunk, total));
+        if (metricGlossaryLocks != null) metricGlossaryLocks.setText(TranslationDashboardFormatter.lockCount(glossaryLocks));
+        if (metricPronounLocks != null) metricPronounLocks.setText(TranslationDashboardFormatter.lockCount(pronounLocks));
+        if (lockUsageMeta != null) lockUsageMeta.setText(TranslationDashboardFormatter.lockMeta(lockPhase, lockChunk, total));
+        if (previewMeta != null) previewMeta.setText(TranslationDashboardFormatter.previewMeta(previewChunk, total, preview));
+        if (previewText != null) previewText.setText(preview == null || preview.trim().isEmpty()
+                ? "The latest accepted translation will appear here." : preview);
         updateRuntimeTimer();
     }
 

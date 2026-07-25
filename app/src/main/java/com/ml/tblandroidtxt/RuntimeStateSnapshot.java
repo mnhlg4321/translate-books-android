@@ -5,8 +5,9 @@ import java.util.Map;
 
 /** Immutable, Android-free runtime snapshot schema shared by service, store and tests. */
 public final class RuntimeStateSnapshot {
-    public String jobState = "IDLE", status = "", log = "", phase = "", fileName = "", preview = "";
+    public String jobState = "IDLE", status = "", log = "", phase = "", fileName = "", preview = "", lockPhase = "";
     public int progress = -1, totalChunks, completed, failed, fallbacks, totalTokens, estimatedTotalTokens, currentChunk;
+    public int glossaryLocks = -1, pronounLocks = -1, lockChunk, previewChunk;
     public double totalCost, estimatedTotalCost;
     public boolean providerUsageComplete;
     public long elapsedMs, remainingMs, activeJobId = -1L;
@@ -18,6 +19,8 @@ public final class RuntimeStateSnapshot {
         m.put("completed", completed); m.put("failed", failed); m.put("fallbacks", fallbacks);
         m.put("totalTokens", totalTokens); m.put("estimatedTotalTokens", estimatedTotalTokens); m.put("currentChunk", currentChunk); m.put("totalCost", totalCost);
         m.put("estimatedTotalCost", estimatedTotalCost); m.put("providerUsageComplete", providerUsageComplete);
+        m.put("glossaryLocks", glossaryLocks); m.put("pronounLocks", pronounLocks);
+        m.put("lockChunk", lockChunk); m.put("lockPhase", lockPhase); m.put("previewChunk", previewChunk);
         m.put("elapsedMs", elapsedMs); m.put("remainingMs", remainingMs); m.put("activeJobId", activeJobId);
         return m;
     }
@@ -34,6 +37,11 @@ public final class RuntimeStateSnapshot {
         s.currentChunk = integer(m.get("currentChunk"), 0); s.totalCost = decimal(m.get("totalCost"), 0);
         s.estimatedTotalCost = decimal(m.get("estimatedTotalCost"), 0);
         s.providerUsageComplete = bool(m.get("providerUsageComplete"));
+        s.glossaryLocks = integer(m.get("glossaryLocks"), -1);
+        s.pronounLocks = integer(m.get("pronounLocks"), -1);
+        s.lockChunk = integer(m.get("lockChunk"), 0);
+        s.lockPhase = string(m.get("lockPhase"));
+        s.previewChunk = integer(m.get("previewChunk"), 0);
         s.elapsedMs = longValue(m.get("elapsedMs"), 0); s.remainingMs = longValue(m.get("remainingMs"), 0);
         s.activeJobId = longValue(m.get("activeJobId"), -1);
         return s;

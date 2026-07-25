@@ -100,6 +100,8 @@ public class V46DashboardInstrumentedTest {
         snapshot.totalTokens = 140; snapshot.totalCost = 0.01; snapshot.providerUsageComplete = true;
         snapshot.estimatedTotalTokens = 600; snapshot.estimatedTotalCost = 0.05;
         snapshot.elapsedMs = 65000; snapshot.remainingMs = 120000; snapshot.currentChunk = 2; snapshot.activeJobId = job;
+        snapshot.glossaryLocks = 4; snapshot.pronounLocks = 2; snapshot.lockChunk = 2; snapshot.lockPhase = "Translating";
+        snapshot.preview = translated; snapshot.previewChunk = 1;
         RuntimeStateStore.save(context, snapshot);
         assertTrue(context.getSharedPreferences("runtime_state", Context.MODE_PRIVATE).edit().putBoolean("v46Fixture", true).commit());
         assertEquals("RUNNING", RuntimeStateStore.toIntent(context).getStringExtra(TranslatorService.EXTRA_STATE));
@@ -133,6 +135,8 @@ public class V46DashboardInstrumentedTest {
         snapshot.totalTokens = 420; snapshot.totalCost = 0.03; snapshot.providerUsageComplete = true;
         snapshot.estimatedTotalTokens = 600; snapshot.estimatedTotalCost = 0.05;
         snapshot.elapsedMs = 195000; snapshot.remainingMs = 0; snapshot.currentChunk = 3; snapshot.activeJobId = job;
+        snapshot.glossaryLocks = 3; snapshot.pronounLocks = 1; snapshot.lockChunk = 3; snapshot.lockPhase = "Translating";
+        snapshot.preview = previous; snapshot.previewChunk = 3;
         RuntimeStateStore.save(context, snapshot);
         assertTrue(context.getSharedPreferences("runtime_state", Context.MODE_PRIVATE).edit().putBoolean("v46Fixture", true).commit());
         assertEquals("COMPLETED", RuntimeStateStore.toIntent(context).getStringExtra(TranslatorService.EXTRA_STATE));

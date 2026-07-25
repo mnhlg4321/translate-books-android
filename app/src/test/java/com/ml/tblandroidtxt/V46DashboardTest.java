@@ -32,4 +32,18 @@ public class V46DashboardTest {
         assertEquals("≈ 80.0k estimated tokens", TranslationDashboardFormatter.tokens("COMPLETED", 80000, 120000, false));
         assertEquals("≈ $0.120 estimated cost", TranslationDashboardFormatter.cost("COMPLETED", 0.12, 0.15, false));
     }
+
+    @Test public void chunkRuleAndPreviewLabelsDistinguishUnknownFromZero() {
+        assertEquals("—", TranslationDashboardFormatter.currentChunk(0, 11));
+        assertEquals("2/11", TranslationDashboardFormatter.currentChunk(2, 11));
+        assertEquals("—", TranslationDashboardFormatter.lockCount(-1));
+        assertEquals("0 rules", TranslationDashboardFormatter.lockCount(0));
+        assertEquals("1 rule", TranslationDashboardFormatter.lockCount(1));
+        assertEquals("Translating • chunk 2/11 • exact prompt usage",
+                TranslationDashboardFormatter.lockMeta("Translating", 2, 11));
+        assertEquals("Waiting for the first accepted chunk.",
+                TranslationDashboardFormatter.previewMeta(0, 11, ""));
+        assertEquals("Accepted chunk 1/11",
+                TranslationDashboardFormatter.previewMeta(1, 11, "Translated paragraph"));
+    }
 }

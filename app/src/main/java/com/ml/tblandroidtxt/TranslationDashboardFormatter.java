@@ -18,6 +18,28 @@ public final class TranslationDashboardFormatter {
         return Math.max(0, completed) + "/" + Math.max(0, total) + " chunks";
     }
 
+    public static String currentChunk(int current, int total) {
+        if (current <= 0 || total <= 0) return "—";
+        return Math.min(current, total) + "/" + total;
+    }
+
+    public static String lockCount(int count) {
+        if (count < 0) return "—";
+        return count + (count == 1 ? " rule" : " rules");
+    }
+
+    public static String lockMeta(String phase, int lockChunk, int total) {
+        if (lockChunk <= 0) return "Rule usage appears when a chunk request is prepared.";
+        String label = phase == null || phase.trim().isEmpty() ? "Current prompt" : phase.trim();
+        return label + " • chunk " + lockChunk + (total > 0 ? "/" + total : "") + " • exact prompt usage";
+    }
+
+    public static String previewMeta(int previewChunk, int total, String preview) {
+        if (preview == null || preview.trim().isEmpty()) return "Waiting for the first accepted chunk.";
+        if (previewChunk <= 0) return "Last accepted translation";
+        return "Accepted chunk " + previewChunk + (total > 0 ? "/" + total : "");
+    }
+
     public static String remaining(long remainingMs) {
         return remainingMs < 0 ? "Calculating…" : "About " + CostEstimator.duration(remainingMs) + " remaining";
     }

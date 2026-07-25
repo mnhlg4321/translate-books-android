@@ -338,6 +338,38 @@ class TranslatePageFactory {
         money.addView(a.space(8, 1));
         money.addView(wideStat("COST", a.metricCost, Color.rgb(255, 238, 176)), new LinearLayout.LayoutParams(0, -2, 1));
         a.trackingCard.addView(money, a.marginLP(-1, -2, 0, 6, 0, 0));
+
+        LinearLayout rules = a.rowContainer();
+        a.metricCurrentChunk = a.text("—", 15, a.CYAN, true);
+        a.metricGlossaryLocks = a.text("—", 14, a.CYAN, true);
+        a.metricPronounLocks = a.text("—", 14, a.CYAN, true);
+        rules.addView(statBox("CURRENT CHUNK", a.metricCurrentChunk), new LinearLayout.LayoutParams(0, -2, 1));
+        rules.addView(a.space(6, 1));
+        rules.addView(statBox("GLOSSARY", a.metricGlossaryLocks), new LinearLayout.LayoutParams(0, -2, 1));
+        rules.addView(a.space(6, 1));
+        rules.addView(statBox("PRONOUN", a.metricPronounLocks), new LinearLayout.LayoutParams(0, -2, 1));
+        a.trackingCard.addView(rules, a.marginLP(-1, -2, 0, 8, 0, 0));
+        a.lockUsageMeta = a.text("Rule usage appears when a chunk request is prepared.", 11, a.MUTED, false);
+        a.trackingCard.addView(a.lockUsageMeta, a.marginLP(-1, -2, 0, 0, 0, 12));
+
+        LinearLayout previewCard = a.card(14, a.FIELD, a.BORDER);
+        previewCard.setOrientation(LinearLayout.VERTICAL);
+        previewCard.setPadding(a.dp(12), a.dp(12), a.dp(8), a.dp(10));
+        previewCard.addView(a.text("LAST TRANSLATION PREVIEW", 11, a.CYAN, true));
+        a.previewMeta = a.text("Waiting for the first accepted chunk.", 11, a.MUTED, false);
+        previewCard.addView(a.previewMeta, a.marginLP(-1, -2, 0, 2, 0, 8));
+        a.previewText = a.text("The latest accepted translation will appear here.", 13, a.TEXT, false);
+        a.previewText.setSingleLine(false);
+        a.previewText.setTextIsSelectable(true);
+        a.previewText.setPadding(0, 0, a.dp(8), 0);
+        ScrollView previewScroll = new ScrollView(a);
+        previewScroll.setFillViewport(false);
+        previewScroll.setVerticalScrollBarEnabled(true);
+        previewScroll.setScrollbarFadingEnabled(false);
+        previewScroll.setNestedScrollingEnabled(false);
+        previewScroll.addView(a.previewText, new ScrollView.LayoutParams(-1, -2));
+        previewCard.addView(previewScroll, new LinearLayout.LayoutParams(-1, a.dp(150)));
+        a.trackingCard.addView(previewCard);
         return a.trackingCard;
     }
 
