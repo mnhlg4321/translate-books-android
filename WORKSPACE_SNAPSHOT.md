@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (`v4.14` exact-release build mode implemented and guard regression complete)
+- Snapshot updated: `2026-07-25` (`v4.14` AndroidX Macrobenchmark module compiled and packaged)
 - Current version: `4.14-dev.4` (`versionCode 53`, untagged development build)
 - Current branch: `feature/v4.14`
-- Current commit: `c7244cd` (permanent-logo handoff baseline immediately before the exact-release tooling commit; the exact dev.4 APK source commit is `ca51d7e`)
+- Current commit: `42bfb97` (exact-release tooling baseline immediately before the Macrobenchmark module commit; the exact dev.4 APK source commit is `ca51d7e`)
 - Current build: `artifacts/builds/v4.14-dev.4/build-20260725-095315/TranslateBooks-v4.14-dev.4-code53.apk`, SHA-256 `3CA3A64327A9F1C413505151259D540A9A4C58AD67D3D4616B6F896628AF4038`; all five payload files match the immutable mirror under `backup/builds/v4.14-dev.4/build-20260725-095315/`. Installed and verified on device; it is an untagged development build, not a release archive.
 
 ## Completed tasks
@@ -70,6 +70,8 @@
 - Installed `4.14-dev.4` and verified the approved launcher icon and in-app header logo on OnePlus CPH2691 / Android 15; the user runtime-state hash remained byte-for-byte unchanged.
 - Added exact-release build mode so `v4.14` can produce `versionName 4.14` with the next unused versionCode while retaining the mandatory archive-first workflow.
 - Exact-release builds now require the matching clean feature branch and reject conflicting series arguments, mismatched branches, existing tags, or duplicate archived release versions.
+- Added a dedicated AndroidX Macrobenchmark 1.4.1 test module targeting a non-debuggable, profileable benchmark app variant with ProfileInstaller 1.4.1.
+- Added a five-iteration physical-device cold-start benchmark that produces real StartupTiming metrics, AndroidX Benchmark JSON, and Perfetto traces.
 
 ## Pending tasks
 
@@ -118,10 +120,11 @@
 - v4.14-dev.4 full regression/build/archive/install: PASS. Approved-logo guard and 106 JVM tests passed; lint completed with 54 warnings and 0 errors; APK metadata is v4.14-dev.4/code53; all artifact/backup hashes match.
 - Permanent-logo device QA: PASS. The installed launcher and in-app header display the approved logo, packaged resource and manifest references match, and the original user runtime state was preserved byte-for-byte.
 - Exact-release tooling regression: PASS. PowerShell parser returned 0 errors; mutual exclusion, branch matching, and clean-tree guards each rejected the controlled invalid invocation with the expected reason.
+- Macrobenchmark build regression: PASS. `compileBenchmarkJavaWithJavac`, `:app:assembleBenchmark`, and `:macrobenchmark:assembleBenchmark` completed successfully; the approved-logo guard also ran for the target variant.
 
 ## Next step
 
-Commit the exact-release tooling, then add the real Macrobenchmark module/evidence path before preparing the final `4.14` metadata and build. Keep v4.14 untagged until all release-only evidence and gates pass.
+Commit the Macrobenchmark module, prepare and commit final `4.14` metadata, then create the exact archive-first build before running physical-device Macrobenchmark and release QA. Keep v4.14 untagged until all release-only evidence and gates pass.
 
 ## Resume rule
 

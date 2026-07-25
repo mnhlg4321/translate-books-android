@@ -75,6 +75,19 @@ Exact release mode:
 
 Do not combine `-ExactReleaseVersion` with `-Series`.
 
+## Release Macrobenchmark
+
+The project includes a dedicated `:macrobenchmark` test module. It measures five cold starts of the non-debuggable `benchmark` app variant and produces AndroidX Benchmark JSON plus Perfetto traces:
+
+```powershell
+.\gradlew.bat :macrobenchmark:connectedBenchmarkAndroidTest `
+  -PversionedBuild=true `
+  -PbuildVersionName=4.14 `
+  -PbuildVersionCode=54
+```
+
+Run this on a physical Android 14 or newer device against the exact release source. Copy the generated JSON and trace files out of `macrobenchmark/build/` immediately; Gradle build directories are temporary and do not satisfy release evidence retention.
+
 ## Release archives
 
 Development build archives do not replace the release workflow. Release candidates and tagged releases must still satisfy the 14-step checklist and use `scripts/archive-release.ps1` with the complete QA and evidence payload.

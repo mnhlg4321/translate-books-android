@@ -38,6 +38,15 @@ android {
         buildConfigField 'String', 'BUILD_TIMESTAMP', quoteBuildConfigString(resolvedBuildTimestamp)
     }
 
+    buildTypes {
+        benchmark {
+            initWith release
+            signingConfig signingConfigs.debug
+            matchingFallbacks = ['release']
+            debuggable false
+        }
+    }
+
     applicationVariants.all { variant ->
         variant.outputs.all {
             outputFileName = "TranslateBooks-v${variant.versionName}-${variant.buildType.name}.apk"
@@ -56,6 +65,7 @@ gradle.taskGraph.whenReady { graph ->
 
 dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    benchmarkImplementation 'androidx.profileinstaller:profileinstaller:1.4.1'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.json:json:20250517'
     androidTestImplementation 'androidx.test:core:1.6.1'
