@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-29` (`v4.15` Settings P0, scroll preservation, and multi-profile import groups complete)
+- Snapshot updated: `2026-07-29` (`v4.15` implementation and full automated regression complete; release QA pending)
 - Current version: `4.15` development cycle; accepted development build is `4.15-dev.3`/code61. The released baseline remains `4.14`/code57.
 - Current branch: `feature/v4.15`; the pre-existing `.idea/gradle.xml` change is preserved and excluded from product commits.
-- Current commit: `cda8eff` (multi-profile import implementation baseline immediately before this handoff snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current commit: `fa7168f` (implementation/documentation baseline immediately before the full-regression evidence commit; actual `HEAD` must be confirmed when resuming)
 - Current build: `artifacts/builds/v4.15-dev.3/build-20260729-065132/TranslateBooks-v4.15-dev.3-code61.apk`, SHA-256 `5D412996ECACE6553E5A30AC70A4D6D0EAB82E5C87D2DB619E0BFBD32A5A1EF7`; installed successfully and mirrored under `backup/builds/v4.15-dev.3/build-20260729-065132/`. The released baseline remains immutable v4.14/code57.
 
 ## Completed tasks
@@ -112,10 +112,12 @@
 - Added four pure planner tests and `V415MultiProfileImportInstrumentedTest`, which verifies picker flags, URI de-duplication, two independent Glossaries, two independent Pronouns, activation, and exact restoration of user preferences/runtime log.
 - Created and installed archive-first `4.15-dev.3`/code61 from multi-import commit `cda8eff` under event `build-20260729-065132`; APK SHA-256 is `5D412996...A1EF7`.
 - Passed focused multi-profile import instrumentation 2/2 on OnePlus CPH2691 / Android 15.
+- Passed the full v4.15 automated regression: approved-logo guard, 110/110 JVM tests, lint with 0 errors/53 warnings, and connected instrumentation with 15 passed plus 1 explicitly opt-in paid case skipped and 0 failures/errors.
+- Added `QA_REPORT_v4_15.md` with exact build identity, archive hashes, suite counts, focused v4.15 evidence, and remaining release work.
 
 ## Pending tasks
 
-- Run the complete v4.15 regression suite and prepare final release-candidate QA.
+- Perform final release-candidate QA and prepare the exact v4.15 release build.
 
 ## Known bugs
 
@@ -178,10 +180,11 @@
 - v4.15-dev.2 archive verification: PASS. Both durable stores contain the same five files; every mirror hash matches, all four manifest entries verify, 106 JVM tests pass, lint reports 0 errors/54 warnings, and the APK/source ZIP hashes are `828B4535...DCE7`/`96838283...9C40`.
 - v4.15 multi-profile import regression: PASS. Four focused planner tests pass, and `V415MultiProfileImportInstrumentedTest` passes 2/2 with exact `4.15-dev.3`/code61 identity on OnePlus CPH2691 / Android 15.
 - v4.15-dev.3 archive verification: PASS. Both durable stores contain the same five files; every mirror hash matches, all four manifest entries verify, 110 JVM tests pass, lint reports 0 errors/53 warnings, and the APK/source ZIP hashes are `5D412996...A1EF7`/`9C7D7978...8EF`.
+- v4.15 full automated regression: PASS. Logo guard and 110 JVM tests passed; lint reports 0 errors/53 warnings; full connected instrumentation on OnePlus CPH2691 / Android 15 records 16 total, 15 passed, 1 opt-in paid case skipped, and 0 failures/errors.
 
 ## Next step
 
-Run full v4.15 connected regression, then perform final release-candidate QA and release preparation. Keep `.idea/gradle.xml` outside all product commits.
+Perform final release-candidate QA, including visual/manual checks and required performance evidence, then prepare the exact v4.15 release build. Keep `.idea/gradle.xml` outside all product commits.
 
 ## Resume rule
 
