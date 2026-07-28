@@ -91,6 +91,7 @@ public class V415SettingsPersistenceInstrumentedTest {
             });
         } finally {
             restore(preferences, original);
+            assertEquals(original, new HashMap<>(preferences.getAll()));
         }
     }
 

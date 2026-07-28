@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-29` (`v4.15` Settings P0 implementation and focused compile/JVM regression complete; device regression pending)
+- Snapshot updated: `2026-07-29` (`v4.15` Settings P0 implementation, archive-first build, and strengthened focused device regression complete)
 - Current version: `4.15` development cycle; no v4.15 APK has been built yet. The released baseline remains `4.14`/code57.
 - Current branch: `feature/v4.15`; the pre-existing `.idea/gradle.xml` change is preserved and excluded from product commits.
-- Current commit: `9199733` (implementation baseline immediately before the upcoming Settings P0/snapshot commits; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/releases/v4.14/tag-v4.14/TranslateBooks-v4.14-code57.apk`, SHA-256 `D478AC135ED3C736F7FC850FAA06CA4F6F5CB6D0634BB09B15BD59C9B2DAE5D1`; the 20-file immutable payload matches `backup/v4.14/tag-v4.14/`, all 19 manifest entries verify, and the tag source ZIP SHA-256 is `5F2DBA2C1D4F806A838961144807228C22C1846070296FACD6915A3DC2B43E5B`.
+- Current commit: `e1b7a17` (Settings P0 implementation baseline immediately before the regression-evidence snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/builds/v4.15-dev.1/build-20260729-062725/TranslateBooks-v4.15-dev.1-code59.apk`, SHA-256 `18C36F6AF8342236E26E5214B04728173A900A2A03ECA722745183FA44BCC665`; installed successfully and mirrored under `backup/builds/v4.15-dev.1/build-20260729-062725/`. The released baseline remains immutable v4.14/code57.
 
 ## Completed tasks
 
@@ -101,12 +101,13 @@
 - Hydrated phone Settings sections immediately after lazy construction and stopped section expand/collapse state changes from writing the entire Settings model.
 - Added an `onStop` persistence boundary for real user edits while retaining the hydration guard.
 - Added `V415SettingsPersistenceInstrumentedTest`, which covers cold launch, lazy Provider/Prompt/Performance expansion, exact custom-value hydration, refresh, and storage preservation.
+- Created and installed archive-first `4.15-dev.1`/code59 from Settings P0 commit `e1b7a17` under event `build-20260729-062725`; APK SHA-256 is `18C36F6A...BCC665`.
+- Passed the focused Settings P0 instrumentation 1/1 on OnePlus CPH2691 / Android 15.
 
 ## Pending tasks
 
-- Run the new Settings P0 instrumentation case on the physical device and verify that its preference snapshot/restore leaves user data unchanged.
-- Commit the independent Settings P0 implementation and regression group without `.idea/gradle.xml`.
-- Run the mandatory archive-first v4.15 development build, then proceed to the glossary/pronoun scroll and multi-profile import groups.
+- Commit the regression/build evidence without `.idea/gradle.xml`.
+- Proceed to the glossary/pronoun scroll and multi-profile import groups.
 
 ## Known bugs
 
@@ -122,7 +123,8 @@
 - Performance evidence uses Perfetto/frame/PSS measurements rather than a dedicated Macrobenchmark module.
 - APK and source ZIP archives are deliberately ignored by Git, so they are not present in a clean clone; durable copies remain in the local `artifacts/releases/v4.8/` and `backup/v4.8/` stores.
 - Android Lint reports 54 warnings and 0 errors for the accepted v4.14 development build.
-- v4.15 Settings P0 root cause was lazy phone-section construction followed by persistence of default-valued controls before hydration. The working-tree correction has passed compile/JVM checks but remains pending physical-device instrumentation.
+- v4.15 Settings P0 root cause was lazy phone-section construction followed by persistence of default-valued controls before hydration. The correction passed compile/JVM checks and the strengthened physical-device instrumentation, including exact preference snapshot equality after QA restoration.
+- An accidental but valid immutable `4.14-dev.5`/code58 build is retained under event `build-20260729-062629` because the first build invocation omitted the explicit v4.15 series. It was superseded, not overwritten, by `4.15-dev.1`/code59.
 
 ## Regression status
 
@@ -159,11 +161,13 @@
 - v4.14/code56 regression: PARTIAL PASS. Approved-logo guard, 106 JVM tests, lint (54 warnings/0 errors), artifact parity, and connected instrumentation (12 passed/1 opt-in skipped) passed. The archived source remained vulnerable to the OnePlus background freezer, so code56 is rejected.
 - Corrected working-tree Macrobenchmark diagnostic: PASS. OnePlus CPH2691 / Android 15 completed 5/5 cold starts of `com.ml.tblandroidtxt.MainActivity`, 0 failed/skipped; median time to initial display was 332.01 ms and all five real Perfetto traces plus AndroidX JSON were retained in ignored durable artifact/backup diagnostic stores.
 - v4.14/code57 final pre-tag regression: PASS. Approved-logo guard, 106 JVM tests, lint (0 errors/54 warnings), five-file build parity, connected instrumentation (11 passed/1 opt-in skip), controlled output-permission-loss QA, final visuals, and the accepted 5/5 Macrobenchmark rerun all passed.
-- v4.15 Settings P0 focused compile/JVM regression: PASS. `:app:compileDebugAndroidTestJavaWithJavac testDebugUnitTest` completed with the approved-logo guard; 106 JVM tests passed with 0 failures/errors/skips. The new device test compiled successfully but has not yet run on hardware.
+- v4.15 Settings P0 focused compile/JVM regression: PASS. `:app:compileDebugAndroidTestJavaWithJavac testDebugUnitTest` completed with the approved-logo guard; 106 JVM tests passed with 0 failures/errors/skips.
+- v4.15 Settings P0 strengthened device regression: PASS. `V415SettingsPersistenceInstrumentedTest` passed 1/1 on OnePlus CPH2691 / Android 15 with the exact `4.15-dev.1`/code59 build identity and exact preference snapshot equality after restore.
+- v4.15-dev.1 archive verification: PASS. Both durable stores contain the same five files; all mirror SHA-256 values match, all four manifest entries verify, lint reports 0 errors/54 warnings, and the APK/source ZIP hashes are `18C36F6A...BCC665`/`D047836E...356`.
 
 ## Next step
 
-Run `V415SettingsPersistenceInstrumentedTest` on the connected OnePlus device, confirm preference restoration, commit the Settings P0 group, then create the mandatory archive-first `4.15-dev.1`/code58 build.
+Commit the Settings P0 regression/build evidence without `.idea/gradle.xml`, then proceed to the scroll-preservation group.
 
 ## Resume rule
 
