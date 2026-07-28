@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-29` (`v4.15` Settings P0 implementation, archive-first build, and strengthened focused device regression complete)
-- Current version: `4.15` development cycle; accepted development build is `4.15-dev.1`/code59. The released baseline remains `4.14`/code57.
+- Snapshot updated: `2026-07-29` (`v4.15` Settings P0 and Glossary/Pronoun scroll-preservation groups complete)
+- Current version: `4.15` development cycle; accepted development build is `4.15-dev.2`/code60. The released baseline remains `4.14`/code57.
 - Current branch: `feature/v4.15`; the pre-existing `.idea/gradle.xml` change is preserved and excluded from product commits.
-- Current commit: `ae4f046` (Settings P0 regression-evidence baseline immediately before this final handoff snapshot commit; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.15-dev.1/build-20260729-062725/TranslateBooks-v4.15-dev.1-code59.apk`, SHA-256 `18C36F6AF8342236E26E5214B04728173A900A2A03ECA722745183FA44BCC665`; installed successfully and mirrored under `backup/builds/v4.15-dev.1/build-20260729-062725/`. The released baseline remains immutable v4.14/code57.
+- Current commit: `9e6730d` (Glossary/Pronoun scroll-preservation implementation baseline immediately before this handoff snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/builds/v4.15-dev.2/build-20260729-063857/TranslateBooks-v4.15-dev.2-code60.apk`, SHA-256 `828B453515BD3C278A0E6033B3AF3D104CECCF7C2BAE72178300F28A6822DCE7`; installed successfully and mirrored under `backup/builds/v4.15-dev.2/build-20260729-063857/`. The released baseline remains immutable v4.14/code57.
 
 ## Completed tasks
 
@@ -103,10 +103,14 @@
 - Added `V415SettingsPersistenceInstrumentedTest`, which covers cold launch, lazy Provider/Prompt/Performance expansion, exact custom-value hydration, refresh, and storage preservation.
 - Created and installed archive-first `4.15-dev.1`/code59 from Settings P0 commit `e1b7a17` under event `build-20260729-062725`; APK SHA-256 is `18C36F6A...BCC665`.
 - Passed the focused Settings P0 instrumentation 1/1 on OnePlus CPH2691 / Android 15.
+- Preserved the current vertical position when a user selects a different Glossary or Pronoun from its list, while retaining top-of-page behavior for editor transitions.
+- Added `V415LibraryScrollInstrumentedTest`, which builds long fixture libraries, scrolls both lists, selects a different profile, verifies exact `scrollY` and selected IDs, and restores Glossary, Pronoun, and Settings preferences exactly.
+- Created and installed archive-first `4.15-dev.2`/code60 from scroll implementation commit `9e6730d` under event `build-20260729-063857`; APK SHA-256 is `828B4535...DCE7`.
+- Passed the focused scroll instrumentation 1/1 on OnePlus CPH2691 / Android 15.
 
 ## Pending tasks
 
-- Proceed to the glossary/pronoun scroll and multi-profile import groups.
+- Proceed to the multi-profile file-import group for Glossaries and Pronouns.
 
 ## Known bugs
 
@@ -124,6 +128,7 @@
 - Android Lint reports 54 warnings and 0 errors for the accepted v4.14 development build.
 - v4.15 Settings P0 root cause was lazy phone-section construction followed by persistence of default-valued controls before hydration. The correction passed compile/JVM checks and the strengthened physical-device instrumentation, including exact preference snapshot equality after QA restoration.
 - An accidental but valid immutable `4.14-dev.5`/code58 build is retained under event `build-20260729-062629` because the first build invocation omitted the explicit v4.15 series. It was superseded, not overwritten, by `4.15-dev.1`/code59.
+- v4.15 library scroll root cause was same-tab cache invalidation rebuilding the `ScrollView` at position zero after selection. The correction restores the bounded prior position only for list-level Use actions; editor navigation behavior is unchanged.
 
 ## Regression status
 
@@ -163,10 +168,12 @@
 - v4.15 Settings P0 focused compile/JVM regression: PASS. `:app:compileDebugAndroidTestJavaWithJavac testDebugUnitTest` completed with the approved-logo guard; 106 JVM tests passed with 0 failures/errors/skips.
 - v4.15 Settings P0 strengthened device regression: PASS. `V415SettingsPersistenceInstrumentedTest` passed 1/1 on OnePlus CPH2691 / Android 15 with the exact `4.15-dev.1`/code59 build identity and exact preference snapshot equality after restore.
 - v4.15-dev.1 archive verification: PASS. Both durable stores contain the same five files; all mirror SHA-256 values match, all four manifest entries verify, lint reports 0 errors/54 warnings, and the APK/source ZIP hashes are `18C36F6A...BCC665`/`D047836E...356`.
+- v4.15 Glossary/Pronoun scroll regression: PASS. `V415LibraryScrollInstrumentedTest` passed 1/1 on OnePlus CPH2691 / Android 15 with exact `4.15-dev.2`/code60 identity; exact scroll positions and selected IDs passed for both lists, and all preference snapshots matched after restoration.
+- v4.15-dev.2 archive verification: PASS. Both durable stores contain the same five files; every mirror hash matches, all four manifest entries verify, 106 JVM tests pass, lint reports 0 errors/54 warnings, and the APK/source ZIP hashes are `828B4535...DCE7`/`96838283...9C40`.
 
 ## Next step
 
-Proceed to the glossary/pronoun scroll-preservation group; keep `.idea/gradle.xml` outside all product commits.
+Proceed to multi-profile file import for Glossaries and Pronouns; each selected file must create its own profile. Keep `.idea/gradle.xml` outside all product commits.
 
 ## Resume rule
 
