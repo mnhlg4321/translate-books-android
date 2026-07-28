@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (`v4.14` released and published; immutable tag archive and backup verified)
-- Current version: `4.14` (`versionCode 57`, annotated tag `v4.14` at `8a3b281`)
-- Current branch: `main` (final handoff state after merging this release-state record)
-- Current commit: `41cc6e9` (published v4.14 release-merge baseline immediately before the final release-state documentation commit)
+- Snapshot updated: `2026-07-29` (`v4.15` Settings P0 implementation and focused compile/JVM regression complete; device regression pending)
+- Current version: `4.15` development cycle; no v4.15 APK has been built yet. The released baseline remains `4.14`/code57.
+- Current branch: `feature/v4.15`; the pre-existing `.idea/gradle.xml` change is preserved and excluded from product commits.
+- Current commit: `9199733` (implementation baseline immediately before the upcoming Settings P0/snapshot commits; actual `HEAD` must be confirmed when resuming)
 - Current build: `artifacts/releases/v4.14/tag-v4.14/TranslateBooks-v4.14-code57.apk`, SHA-256 `D478AC135ED3C736F7FC850FAA06CA4F6F5CB6D0634BB09B15BD59C9B2DAE5D1`; the 20-file immutable payload matches `backup/v4.14/tag-v4.14/`, all 19 manifest entries verify, and the tag source ZIP SHA-256 is `5F2DBA2C1D4F806A838961144807228C22C1846070296FACD6915A3DC2B43E5B`.
 
 ## Completed tasks
@@ -96,11 +96,17 @@
 - Verified both 20-file release payloads by relative path, length, and SHA-256; all 19 manifest entries pass.
 - Regenerated `project_source_v4.14.zip` directly from tag `v4.14` and confirmed exact SHA-256 equality with the retained source ZIP.
 - Merged `feature/v4.14` into `main` with `--no-ff`, pushed `main` and annotated `v4.14`, and verified remote release merge `41cc6e9`, tag object `246de34`, and tag target `8a3b281`.
+- Started the v4.15 cycle from clean `main` at `9199733`, created `feature/v4.15`, and restored the user's unrelated `.idea/gradle.xml` change after branch creation.
+- Added a Settings hydration guard so programmatic `setText`/`setChecked` calls cannot schedule delayed persistence while stored values are being loaded.
+- Hydrated phone Settings sections immediately after lazy construction and stopped section expand/collapse state changes from writing the entire Settings model.
+- Added an `onStop` persistence boundary for real user edits while retaining the hydration guard.
+- Added `V415SettingsPersistenceInstrumentedTest`, which covers cold launch, lazy Provider/Prompt/Performance expansion, exact custom-value hydration, refresh, and storage preservation.
 
 ## Pending tasks
 
-- No v4.14 release task remains.
-- v4.15 development has not started.
+- Run the new Settings P0 instrumentation case on the physical device and verify that its preference snapshot/restore leaves user data unchanged.
+- Commit the independent Settings P0 implementation and regression group without `.idea/gradle.xml`.
+- Run the mandatory archive-first v4.15 development build, then proceed to the glossary/pronoun scroll and multi-profile import groups.
 
 ## Known bugs
 
@@ -116,6 +122,7 @@
 - Performance evidence uses Perfetto/frame/PSS measurements rather than a dedicated Macrobenchmark module.
 - APK and source ZIP archives are deliberately ignored by Git, so they are not present in a clean clone; durable copies remain in the local `artifacts/releases/v4.8/` and `backup/v4.8/` stores.
 - Android Lint reports 54 warnings and 0 errors for the accepted v4.14 development build.
+- v4.15 Settings P0 root cause was lazy phone-section construction followed by persistence of default-valued controls before hydration. The working-tree correction has passed compile/JVM checks but remains pending physical-device instrumentation.
 
 ## Regression status
 
@@ -152,10 +159,11 @@
 - v4.14/code56 regression: PARTIAL PASS. Approved-logo guard, 106 JVM tests, lint (54 warnings/0 errors), artifact parity, and connected instrumentation (12 passed/1 opt-in skipped) passed. The archived source remained vulnerable to the OnePlus background freezer, so code56 is rejected.
 - Corrected working-tree Macrobenchmark diagnostic: PASS. OnePlus CPH2691 / Android 15 completed 5/5 cold starts of `com.ml.tblandroidtxt.MainActivity`, 0 failed/skipped; median time to initial display was 332.01 ms and all five real Perfetto traces plus AndroidX JSON were retained in ignored durable artifact/backup diagnostic stores.
 - v4.14/code57 final pre-tag regression: PASS. Approved-logo guard, 106 JVM tests, lint (0 errors/54 warnings), five-file build parity, connected instrumentation (11 passed/1 opt-in skip), controlled output-permission-loss QA, final visuals, and the accepted 5/5 Macrobenchmark rerun all passed.
+- v4.15 Settings P0 focused compile/JVM regression: PASS. `:app:compileDebugAndroidTestJavaWithJavac testDebugUnitTest` completed with the approved-logo guard; 106 JVM tests passed with 0 failures/errors/skips. The new device test compiled successfully but has not yet run on hardware.
 
 ## Next step
 
-When a new development cycle is requested, start from clean synchronized `main`, create `feature/v4.15`, and use the mandatory workflow. The expected first archived development build is `4.15-dev.1` with the next unused versionCode (currently expected code58).
+Run `V415SettingsPersistenceInstrumentedTest` on the connected OnePlus device, confirm preference restoration, commit the Settings P0 group, then create the mandatory archive-first `4.15-dev.1`/code58 build.
 
 ## Resume rule
 

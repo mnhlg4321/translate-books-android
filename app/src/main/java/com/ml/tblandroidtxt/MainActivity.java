@@ -146,6 +146,7 @@ public class MainActivity extends Activity {
     String currentTab = "Translate";
     String settingsCategory = "General";
     boolean settingsSectionExpanded = true;
+    boolean hydratingSettings = false;
     String pendingExportKind = "";
     long pendingExportJobId = -1L;
     boolean pendingExportJobJson = false;
@@ -237,6 +238,7 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onStop() {
+        silentPersistCurrentUi();
         super.onStop();
         appInForeground = false;
         runtimeTimerHandler.removeCallbacks(runtimeTimerTick);
@@ -299,7 +301,6 @@ public class MainActivity extends Activity {
 
     void recordSettingsSectionState(String category, boolean expanded) {
         if (category == null || category.trim().isEmpty()) return;
-        silentPersistCurrentUi();
         settingsCategory = category;
         settingsSectionExpanded = expanded;
     }
@@ -474,6 +475,7 @@ public class MainActivity extends Activity {
 
 
     void silentPersistCurrentUi() {
+        if (hydratingSettings) return;
         try {
             if (providerField != null || sourceField != null || refineBox != null) {
                 SettingsStore.save(this, collectSettings());
@@ -487,6 +489,7 @@ public class MainActivity extends Activity {
         field.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (hydratingSettings) return;
                 if (field.getTag() instanceof Runnable) field.removeCallbacks((Runnable)field.getTag());
                 Runnable update = () -> {
                     silentPersistCurrentUi();
@@ -503,6 +506,7 @@ public class MainActivity extends Activity {
     void bindEstimateCheck(CheckBox box) {
         if (box == null) return;
         box.setOnCheckedChangeListener((button, checked) -> {
+            if (hydratingSettings) return;
             silentPersistCurrentUi();
             updateInputEstimate();
         });
@@ -1376,51 +1380,57 @@ public class MainActivity extends Activity {
     void loadSettingsToUi() { fillSettings(SettingsStore.load(this)); }
 
     void fillSettings(AppSettings s) {
-        if (providerField != null) providerField.setText(s.provider);
-        if (baseUrlField != null) baseUrlField.setText(s.baseUrl);
-        if (apiKeyField != null) apiKeyField.setText(s.apiKey);
-        if (modelField != null) modelField.setText(s.model);
-        if (sourceField != null) sourceField.setText(s.sourceLanguage);
-        if (targetField != null) targetField.setText(s.targetLanguage);
-        if (outputPatternField != null) outputPatternField.setText(s.outputFilenamePattern);
-        if (chunkModeField != null) chunkModeField.setText(s.chunkMode);
-        if (optimizationPresetField != null) optimizationPresetField.setText(s.optimizationPreset);
-        if (maxTokensField != null) maxTokensField.setText(String.valueOf(s.maxTokensPerChunk));
-        if (maxCharsField != null) maxCharsField.setText(String.valueOf(s.maxCharsPerChunk));
-        if (softRatioField != null) softRatioField.setText(String.valueOf(s.softLimitRatio));
-        if (contextField != null) contextField.setText(String.valueOf(s.contextChars));
-        if (timeoutField != null) timeoutField.setText(String.valueOf(s.timeoutSeconds));
-        if (attemptsField != null) attemptsField.setText(String.valueOf(s.maxAttempts));
-        if(initialRetryDelayField!=null)initialRetryDelayField.setText(String.valueOf(s.initialRetryDelayMs));if(maxRetryDelayField!=null)maxRetryDelayField.setText(String.valueOf(s.maxRetryDelayMs));
-        if (tempField != null) tempField.setText(String.valueOf(s.temperature));
-        if (maxOutputField != null) maxOutputField.setText(String.valueOf(s.maxOutputTokens));
-        if (costLimitField != null) costLimitField.setText(s.costLimitUsd <= 0 ? "0" : String.valueOf(s.costLimitUsd));
-        if(costWarningField!=null)costWarningField.setText(String.valueOf(s.costWarningUsd));if(maxRetryCostField!=null)maxRetryCostField.setText(String.valueOf(s.maxRetryCostUsd));if(maxPaidRetriesField!=null)maxPaidRetriesField.setText(String.valueOf(s.maxPaidRetries));
-        if (glossaryLimitField != null) glossaryLimitField.setText(String.valueOf(s.glossaryInjectLimit));
-        if (pronounLimitField != null) pronounLimitField.setText(String.valueOf(s.pronounInjectLimit));
-        if (refineBox != null) refineBox.setChecked(s.refineAfter);
-        if (bilingualBox != null) bilingualBox.setChecked(s.bilingualOutput);
-        if (partialBox != null) partialBox.setChecked(s.savePartialOutput);
-        if (costLimitBox != null) costLimitBox.setChecked(s.stopOnCostLimit);
-        if(overlapBox!=null)overlapBox.setChecked(s.contextOverlapEnabled);if(retryEmptyBox!=null)retryEmptyBox.setChecked(s.retryOnEmpty);if(retryTruncationBox!=null)retryTruncationBox.setChecked(s.retryOnTruncation);if(retryValidationBox!=null)retryValidationBox.setChecked(s.retryOnValidationFailure);if(stopUnknownPricingBox!=null)stopUnknownPricingBox.setChecked(s.stopWhenPricingUnknown);
-        if (s.instructionUri != null && !s.instructionUri.isEmpty()) yamlUri = Uri.parse(s.instructionUri);
-        if (s.envUri != null && !s.envUri.isEmpty()) envUri = Uri.parse(s.envUri);
-        if (s.outputUri != null && !s.outputUri.isEmpty()) outputUri = Uri.parse(s.outputUri);
-        if (s.outputTreeUri != null && !s.outputTreeUri.isEmpty()) outputTreeUri = Uri.parse(s.outputTreeUri);
-        if (s.pronounUri != null && !s.pronounUri.isEmpty()) pronounUri = Uri.parse(s.pronounUri);
-        if (s.instructionName != null && !s.instructionName.isEmpty()) lastInstructionName = s.instructionName;
-        if (s.selectedGlossaryName != null && !s.selectedGlossaryName.isEmpty()) lastGlossaryName = s.selectedGlossaryName;
-        if (s.glossaryText != null && !s.glossaryText.isEmpty()) lastGlossaryText = s.glossaryText;
-        TranslationConfigRepository configRepository=TranslationConfigRepository.get(this);
-        TranslationConfigRepository.Entry instructionEntry=configRepository.entry(TranslationConfigRepository.Type.INSTRUCTION_YAML);
-        TranslationConfigRepository.Entry environmentEntry=configRepository.entry(TranslationConfigRepository.Type.ENVIRONMENT);
-        if (yamlFileLabel != null) yamlFileLabel.setText("Instructions: " + (instructionEntry.valid() ? instructionEntry.name + " • internal copy valid" : "chưa chọn"));
-        if (envFileLabel != null) envFileLabel.setText(".env: " + (environmentEntry.valid() ? environmentEntry.name + " • internal copy valid" : "chưa chọn"));
-        if (pronounFileLabel != null) pronounFileLabel.setText("Pronoun: " + (s.pronounName == null || s.pronounName.isEmpty() ? "chưa chọn" : s.pronounName));
-        if (outputFileLabel != null) outputFileLabel.setText(outputUri == null ? "Single output TXT: chưa chọn" : "Single output TXT: " + FileUtil.displayName(this, outputUri) + " (" + FileUtil.accessBadge(this, outputUri, true) + ")");
-        if (outputFolderLabel != null) outputFolderLabel.setText(outputTreeUri == null ? "Output folder: chưa chọn" : "Output folder: " + FileUtil.treeName(outputTreeUri) + " (" + FileUtil.accessBadge(this, outputTreeUri, true) + ")");
-        if (activeGlossaryLabel != null) activeGlossaryLabel.setText(activeGlossaryText());
-        updateMetaLine();
+        boolean wasHydrating = hydratingSettings;
+        hydratingSettings = true;
+        try {
+            if (providerField != null) providerField.setText(s.provider);
+            if (baseUrlField != null) baseUrlField.setText(s.baseUrl);
+            if (apiKeyField != null) apiKeyField.setText(s.apiKey);
+            if (modelField != null) modelField.setText(s.model);
+            if (sourceField != null) sourceField.setText(s.sourceLanguage);
+            if (targetField != null) targetField.setText(s.targetLanguage);
+            if (outputPatternField != null) outputPatternField.setText(s.outputFilenamePattern);
+            if (chunkModeField != null) chunkModeField.setText(s.chunkMode);
+            if (optimizationPresetField != null) optimizationPresetField.setText(s.optimizationPreset);
+            if (maxTokensField != null) maxTokensField.setText(String.valueOf(s.maxTokensPerChunk));
+            if (maxCharsField != null) maxCharsField.setText(String.valueOf(s.maxCharsPerChunk));
+            if (softRatioField != null) softRatioField.setText(String.valueOf(s.softLimitRatio));
+            if (contextField != null) contextField.setText(String.valueOf(s.contextChars));
+            if (timeoutField != null) timeoutField.setText(String.valueOf(s.timeoutSeconds));
+            if (attemptsField != null) attemptsField.setText(String.valueOf(s.maxAttempts));
+            if(initialRetryDelayField!=null)initialRetryDelayField.setText(String.valueOf(s.initialRetryDelayMs));if(maxRetryDelayField!=null)maxRetryDelayField.setText(String.valueOf(s.maxRetryDelayMs));
+            if (tempField != null) tempField.setText(String.valueOf(s.temperature));
+            if (maxOutputField != null) maxOutputField.setText(String.valueOf(s.maxOutputTokens));
+            if (costLimitField != null) costLimitField.setText(s.costLimitUsd <= 0 ? "0" : String.valueOf(s.costLimitUsd));
+            if(costWarningField!=null)costWarningField.setText(String.valueOf(s.costWarningUsd));if(maxRetryCostField!=null)maxRetryCostField.setText(String.valueOf(s.maxRetryCostUsd));if(maxPaidRetriesField!=null)maxPaidRetriesField.setText(String.valueOf(s.maxPaidRetries));
+            if (glossaryLimitField != null) glossaryLimitField.setText(String.valueOf(s.glossaryInjectLimit));
+            if (pronounLimitField != null) pronounLimitField.setText(String.valueOf(s.pronounInjectLimit));
+            if (refineBox != null) refineBox.setChecked(s.refineAfter);
+            if (bilingualBox != null) bilingualBox.setChecked(s.bilingualOutput);
+            if (partialBox != null) partialBox.setChecked(s.savePartialOutput);
+            if (costLimitBox != null) costLimitBox.setChecked(s.stopOnCostLimit);
+            if(overlapBox!=null)overlapBox.setChecked(s.contextOverlapEnabled);if(retryEmptyBox!=null)retryEmptyBox.setChecked(s.retryOnEmpty);if(retryTruncationBox!=null)retryTruncationBox.setChecked(s.retryOnTruncation);if(retryValidationBox!=null)retryValidationBox.setChecked(s.retryOnValidationFailure);if(stopUnknownPricingBox!=null)stopUnknownPricingBox.setChecked(s.stopWhenPricingUnknown);
+            if (s.instructionUri != null && !s.instructionUri.isEmpty()) yamlUri = Uri.parse(s.instructionUri);
+            if (s.envUri != null && !s.envUri.isEmpty()) envUri = Uri.parse(s.envUri);
+            if (s.outputUri != null && !s.outputUri.isEmpty()) outputUri = Uri.parse(s.outputUri);
+            if (s.outputTreeUri != null && !s.outputTreeUri.isEmpty()) outputTreeUri = Uri.parse(s.outputTreeUri);
+            if (s.pronounUri != null && !s.pronounUri.isEmpty()) pronounUri = Uri.parse(s.pronounUri);
+            if (s.instructionName != null && !s.instructionName.isEmpty()) lastInstructionName = s.instructionName;
+            if (s.selectedGlossaryName != null && !s.selectedGlossaryName.isEmpty()) lastGlossaryName = s.selectedGlossaryName;
+            if (s.glossaryText != null && !s.glossaryText.isEmpty()) lastGlossaryText = s.glossaryText;
+            TranslationConfigRepository configRepository=TranslationConfigRepository.get(this);
+            TranslationConfigRepository.Entry instructionEntry=configRepository.entry(TranslationConfigRepository.Type.INSTRUCTION_YAML);
+            TranslationConfigRepository.Entry environmentEntry=configRepository.entry(TranslationConfigRepository.Type.ENVIRONMENT);
+            if (yamlFileLabel != null) yamlFileLabel.setText("Instructions: " + (instructionEntry.valid() ? instructionEntry.name + " • internal copy valid" : "chưa chọn"));
+            if (envFileLabel != null) envFileLabel.setText(".env: " + (environmentEntry.valid() ? environmentEntry.name + " • internal copy valid" : "chưa chọn"));
+            if (pronounFileLabel != null) pronounFileLabel.setText("Pronoun: " + (s.pronounName == null || s.pronounName.isEmpty() ? "chưa chọn" : s.pronounName));
+            if (outputFileLabel != null) outputFileLabel.setText(outputUri == null ? "Single output TXT: chưa chọn" : "Single output TXT: " + FileUtil.displayName(this, outputUri) + " (" + FileUtil.accessBadge(this, outputUri, true) + ")");
+            if (outputFolderLabel != null) outputFolderLabel.setText(outputTreeUri == null ? "Output folder: chưa chọn" : "Output folder: " + FileUtil.treeName(outputTreeUri) + " (" + FileUtil.accessBadge(this, outputTreeUri, true) + ")");
+            if (activeGlossaryLabel != null) activeGlossaryLabel.setText(activeGlossaryText());
+            updateMetaLine();
+        } finally {
+            hydratingSettings = wasHydrating;
+        }
     }
 
     void requestNotificationPermission() {
