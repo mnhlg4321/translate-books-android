@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-29` (`v4.15` Settings P0 and Glossary/Pronoun scroll-preservation groups complete)
-- Current version: `4.15` development cycle; accepted development build is `4.15-dev.2`/code60. The released baseline remains `4.14`/code57.
+- Snapshot updated: `2026-07-29` (`v4.15` Settings P0, scroll preservation, and multi-profile import groups complete)
+- Current version: `4.15` development cycle; accepted development build is `4.15-dev.3`/code61. The released baseline remains `4.14`/code57.
 - Current branch: `feature/v4.15`; the pre-existing `.idea/gradle.xml` change is preserved and excluded from product commits.
-- Current commit: `9e6730d` (Glossary/Pronoun scroll-preservation implementation baseline immediately before this handoff snapshot commit; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.15-dev.2/build-20260729-063857/TranslateBooks-v4.15-dev.2-code60.apk`, SHA-256 `828B453515BD3C278A0E6033B3AF3D104CECCF7C2BAE72178300F28A6822DCE7`; installed successfully and mirrored under `backup/builds/v4.15-dev.2/build-20260729-063857/`. The released baseline remains immutable v4.14/code57.
+- Current commit: `cda8eff` (multi-profile import implementation baseline immediately before this handoff snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/builds/v4.15-dev.3/build-20260729-065132/TranslateBooks-v4.15-dev.3-code61.apk`, SHA-256 `5D412996ECACE6553E5A30AC70A4D6D0EAB82E5C87D2DB619E0BFBD32A5A1EF7`; installed successfully and mirrored under `backup/builds/v4.15-dev.3/build-20260729-065132/`. The released baseline remains immutable v4.14/code57.
 
 ## Completed tasks
 
@@ -107,10 +107,15 @@
 - Added `V415LibraryScrollInstrumentedTest`, which builds long fixture libraries, scrolls both lists, selects a different profile, verifies exact `scrollY` and selected IDs, and restores Glossary, Pronoun, and Settings preferences exactly.
 - Created and installed archive-first `4.15-dev.2`/code60 from scroll implementation commit `9e6730d` under event `build-20260729-063857`; APK SHA-256 is `828B4535...DCE7`.
 - Passed the focused scroll instrumentation 1/1 on OnePlus CPH2691 / Android 15.
+- Enabled multi-select on list-level Glossary and Pronoun pickers; every valid file is parsed and persisted as an independent profile, invalid siblings are reported without discarding valid imports, and the first valid profile becomes active.
+- Kept Pronoun replacement single-select and cleared stale replacement intent after cancellation/failure. Renamed the Glossary editor action to `Merge files` so its intentional merge behavior is distinct from list import.
+- Added four pure planner tests and `V415MultiProfileImportInstrumentedTest`, which verifies picker flags, URI de-duplication, two independent Glossaries, two independent Pronouns, activation, and exact restoration of user preferences/runtime log.
+- Created and installed archive-first `4.15-dev.3`/code61 from multi-import commit `cda8eff` under event `build-20260729-065132`; APK SHA-256 is `5D412996...A1EF7`.
+- Passed focused multi-profile import instrumentation 2/2 on OnePlus CPH2691 / Android 15.
 
 ## Pending tasks
 
-- Proceed to the multi-profile file-import group for Glossaries and Pronouns.
+- Run the complete v4.15 regression suite and prepare final release-candidate QA.
 
 ## Known bugs
 
@@ -129,6 +134,7 @@
 - v4.15 Settings P0 root cause was lazy phone-section construction followed by persistence of default-valued controls before hydration. The correction passed compile/JVM checks and the strengthened physical-device instrumentation, including exact preference snapshot equality after QA restoration.
 - An accidental but valid immutable `4.14-dev.5`/code58 build is retained under event `build-20260729-062629` because the first build invocation omitted the explicit v4.15 series. It was superseded, not overwritten, by `4.15-dev.1`/code59.
 - v4.15 library scroll root cause was same-tab cache invalidation rebuilding the `ScrollView` at position zero after selection. The correction restores the bounded prior position only for list-level Use actions; editor navigation behavior is unchanged.
+- v4.15 multi-file import root cause was that list-level Glossary/Pronoun pickers did not set `EXTRA_ALLOW_MULTIPLE`, and their result handlers assumed one URI. The corrected handlers enumerate unique selected URIs and persist one profile per valid file.
 
 ## Regression status
 
@@ -170,10 +176,12 @@
 - v4.15-dev.1 archive verification: PASS. Both durable stores contain the same five files; all mirror SHA-256 values match, all four manifest entries verify, lint reports 0 errors/54 warnings, and the APK/source ZIP hashes are `18C36F6A...BCC665`/`D047836E...356`.
 - v4.15 Glossary/Pronoun scroll regression: PASS. `V415LibraryScrollInstrumentedTest` passed 1/1 on OnePlus CPH2691 / Android 15 with exact `4.15-dev.2`/code60 identity; exact scroll positions and selected IDs passed for both lists, and all preference snapshots matched after restoration.
 - v4.15-dev.2 archive verification: PASS. Both durable stores contain the same five files; every mirror hash matches, all four manifest entries verify, 106 JVM tests pass, lint reports 0 errors/54 warnings, and the APK/source ZIP hashes are `828B4535...DCE7`/`96838283...9C40`.
+- v4.15 multi-profile import regression: PASS. Four focused planner tests pass, and `V415MultiProfileImportInstrumentedTest` passes 2/2 with exact `4.15-dev.3`/code61 identity on OnePlus CPH2691 / Android 15.
+- v4.15-dev.3 archive verification: PASS. Both durable stores contain the same five files; every mirror hash matches, all four manifest entries verify, 110 JVM tests pass, lint reports 0 errors/53 warnings, and the APK/source ZIP hashes are `5D412996...A1EF7`/`9C7D7978...8EF`.
 
 ## Next step
 
-Proceed to multi-profile file import for Glossaries and Pronouns; each selected file must create its own profile. Keep `.idea/gradle.xml` outside all product commits.
+Run full v4.15 connected regression, then perform final release-candidate QA and release preparation. Keep `.idea/gradle.xml` outside all product commits.
 
 ## Resume rule
 
