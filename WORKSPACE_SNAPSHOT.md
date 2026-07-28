@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
 - Snapshot updated: `2026-07-29` (`v4.15` Settings P0 implementation, archive-first build, and strengthened focused device regression complete)
-- Current version: `4.15` development cycle; no v4.15 APK has been built yet. The released baseline remains `4.14`/code57.
+- Current version: `4.15` development cycle; accepted development build is `4.15-dev.1`/code59. The released baseline remains `4.14`/code57.
 - Current branch: `feature/v4.15`; the pre-existing `.idea/gradle.xml` change is preserved and excluded from product commits.
-- Current commit: `e1b7a17` (Settings P0 implementation baseline immediately before the regression-evidence snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current commit: `ae4f046` (Settings P0 regression-evidence baseline immediately before this final handoff snapshot commit; actual `HEAD` must be confirmed when resuming)
 - Current build: `artifacts/builds/v4.15-dev.1/build-20260729-062725/TranslateBooks-v4.15-dev.1-code59.apk`, SHA-256 `18C36F6AF8342236E26E5214B04728173A900A2A03ECA722745183FA44BCC665`; installed successfully and mirrored under `backup/builds/v4.15-dev.1/build-20260729-062725/`. The released baseline remains immutable v4.14/code57.
 
 ## Completed tasks
@@ -106,7 +106,6 @@
 
 ## Pending tasks
 
-- Commit the regression/build evidence without `.idea/gradle.xml`.
 - Proceed to the glossary/pronoun scroll and multi-profile import groups.
 
 ## Known bugs
@@ -167,7 +166,7 @@
 
 ## Next step
 
-Commit the Settings P0 regression/build evidence without `.idea/gradle.xml`, then proceed to the scroll-preservation group.
+Proceed to the glossary/pronoun scroll-preservation group; keep `.idea/gradle.xml` outside all product commits.
 
 ## Resume rule
 
