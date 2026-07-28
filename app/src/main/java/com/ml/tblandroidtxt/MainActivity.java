@@ -436,6 +436,33 @@ public class MainActivity extends Activity {
         if (removed != null && removed.getParent() == contentFrame) contentFrame.removeView(removed);
     }
 
+    void refreshPagePreservingScroll(String name) {
+        ScrollView previousScroll = findScrollView(pageCache.get(name));
+        int previousY = previousScroll == null ? 0 : previousScroll.getScrollY();
+        invalidatePage(name);
+        switchTab(name);
+        if (previousY <= 0) return;
+        ScrollView replacementScroll = findScrollView(pageCache.get(name));
+        if (replacementScroll == null) return;
+        replacementScroll.post(() -> {
+            if (!name.equals(currentTab) || findScrollView(pageCache.get(name)) != replacementScroll) return;
+            View child = replacementScroll.getChildCount() == 0 ? null : replacementScroll.getChildAt(0);
+            int maxY = child == null ? 0 : Math.max(0, child.getHeight() - replacementScroll.getHeight());
+            replacementScroll.scrollTo(0, Math.min(previousY, maxY));
+        });
+    }
+
+    ScrollView findScrollView(View view) {
+        if (view instanceof ScrollView) return (ScrollView) view;
+        if (!(view instanceof ViewGroup)) return null;
+        ViewGroup group = (ViewGroup) view;
+        for (int i = 0; i < group.getChildCount(); i++) {
+            ScrollView found = findScrollView(group.getChildAt(i));
+            if (found != null) return found;
+        }
+        return null;
+    }
+
     @Override public void onBackPressed() {
         AppBackNavigationPolicy.Action action = AppBackNavigationPolicy.resolve(
                 currentTab, editingGlossary != null, editingPronoun != null, settingsCategory);
@@ -791,7 +818,9 @@ public class MainActivity extends Activity {
     void replacePronoun(PronounStore.Profile profile){if(profile==null)return;pendingPronounReplaceId=profile.id;choosePronoun();}
 
     void selectPronoun(PronounStore.Profile profile){
-        if(!ensureConfigMutable()||profile==null)return;if(!PronounStore.saveAndSelect(this,profile)){toast("Could not save pronoun");return;}applyActivePronoun(profile);toast("Active pronoun: "+profile.name);refreshPronounsPage();
+        boolean preserveScroll=editingPronoun==null&&"Pronouns".equals(currentTab);
+        if(!ensureConfigMutable()||profile==null)return;if(!PronounStore.saveAndSelect(this,profile)){toast("Could not save pronoun");return;}applyActivePronoun(profile);toast("Active pronoun: "+profile.name);
+        if(preserveScroll)refreshPagePreservingScroll("Pronouns");else refreshPronounsPage();
     }
 
     void refreshPronounsPage(){invalidatePage("Pronouns");switchTab("Pronouns");}
@@ -1739,6 +1768,7 @@ public class MainActivity extends Activity {
     void selectGlossary(GlossaryStore.Glossary g) {
         if (!ensureConfigMutable()) return;
         if (g == null) return;
+        boolean preserveScroll = editingGlossary == null && "Glossaries".equals(currentTab);
         GlossaryStore.setSelectedId(this, g.id);
         AppSettings s = collectSettings();
         s.selectedGlossaryId = g.id;
@@ -1750,7 +1780,8 @@ public class MainActivity extends Activity {
         if (activeGlossaryLabel != null) activeGlossaryLabel.setText(activeGlossaryText());
         toast("Đã chọn glossary: " + g.name);
         editingGlossary = null;
-        switchTab("Glossaries");
+        if (preserveScroll) refreshPagePreservingScroll("Glossaries");
+        else switchTab("Glossaries");
     }
 
     void saveEditingGlossary() {
