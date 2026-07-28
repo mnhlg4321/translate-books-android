@@ -799,26 +799,156 @@ public class MainActivity extends Activity {
 
     void chooseGlossary() {
         if (!ensureConfigMutable()) return;
-        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        i.addCategory(Intent.CATEGORY_OPENABLE);
-        i.setType("*/*");
-        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-        startActivityForResult(i, REQ_GLOSSARY);
+        startActivityForResult(configImportIntent(true), REQ_GLOSSARY);
     }
 
     void choosePronoun() {
         if (!ensureConfigMutable()) return;
+        startActivityForResult(configImportIntent(pendingPronounReplaceId == null
+                || pendingPronounReplaceId.isEmpty()), REQ_PRONOUN);
+    }
+
+    Intent configImportIntent(boolean allowMultiple) {
         Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         i.addCategory(Intent.CATEGORY_OPENABLE);
         i.setType("*/*");
+        i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, allowMultiple);
         i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-        startActivityForResult(i, REQ_PRONOUN);
+        return i;
     }
 
     void replacePronoun(PronounStore.Profile profile){if(profile==null)return;pendingPronounReplaceId=profile.id;choosePronoun();}
 
+    ArrayList<Uri> selectedDocumentUris(Intent data) {
+        java.util.LinkedHashSet<Uri> unique = new java.util.LinkedHashSet<>();
+        if (data == null) return new ArrayList<>();
+        ClipData clip = data.getClipData();
+        if (clip != null) {
+            for (int i = 0; i < clip.getItemCount(); i++) {
+                Uri selected = clip.getItemAt(i).getUri();
+                if (selected != null) unique.add(selected);
+            }
+        }
+        if (data.getData() != null) unique.add(data.getData());
+        return new ArrayList<>(unique);
+    }
+
+    static final class SelectedTextBatch {
+        final ArrayList<LibraryImportPlanner.Source> sources = new ArrayList<>();
+        final ArrayList<String> failed = new ArrayList<>();
+    }
+
+    SelectedTextBatch readSelectedTextFiles(Intent data, int takeFlags) {
+        SelectedTextBatch batch = new SelectedTextBatch();
+        for (Uri selected : selectedDocumentUris(data)) {
+            String name = FileUtil.displayName(this, selected);
+            try {
+                FileUtil.takePersistable(this, selected, takeFlags, true, false);
+                batch.sources.add(new LibraryImportPlanner.Source(name, FileUtil.readText(this, selected)));
+            } catch (Exception error) {
+                batch.failed.add(name + ": " + error.getMessage());
+            }
+        }
+        return batch;
+    }
+
+    void importGlossaryProfiles(Intent data, int takeFlags) {
+        SelectedTextBatch files = readSelectedTextFiles(data, takeFlags);
+        LibraryImportPlanner.Result<GlossaryStore.Glossary> planned =
+                LibraryImportPlanner.glossaries(files.sources);
+        files.failed.addAll(planned.failed);
+        if (planned.imported.isEmpty()) {
+            toast("Không có glossary hợp lệ");
+            appendLog("Glossary multi-import failed: " + namesSummary(files.failed));
+            showResult("Glossary import failed", namesSummary(files.failed));
+            return;
+        }
+        ArrayList<GlossaryStore.Glossary> all = new ArrayList<>(planned.imported);
+        all.addAll(GlossaryStore.loadAll(this));
+        GlossaryStore.saveAll(this, all);
+        GlossaryStore.Glossary active = planned.imported.get(0);
+        lastGlossaryName = active.name;
+        lastGlossaryText = GlossaryStore.toPromptText(active);
+        glossaryUri = null;
+        setLabel(glossaryFileLabel, "Glossary: " + active.name);
+        editingGlossary = null;
+        selectGlossary(active, false);
+        String skipped = files.failed.isEmpty() ? "" : "\nBỏ qua "
+                + files.failed.size() + " file: " + namesSummary(files.failed);
+        toast("Đã tạo " + planned.imported.size() + " glossary");
+        appendLog("Glossary multi-import: created=" + planned.imported.size()
+                + ", skipped=" + files.failed.size());
+        showResult("Glossaries imported",
+                planned.imported.size() + " profile(s), mỗi file là một glossary." + skipped);
+    }
+
+    void importPronounProfiles(Intent data, int takeFlags) {
+        SelectedTextBatch files = readSelectedTextFiles(data, takeFlags);
+        LibraryImportPlanner.Result<PronounStore.Profile> planned =
+                LibraryImportPlanner.pronouns(files.sources);
+        files.failed.addAll(planned.failed);
+        if (planned.imported.isEmpty()) {
+            toast("Không có pronoun hợp lệ");
+            appendLog("Pronoun multi-import failed: " + namesSummary(files.failed));
+            showResult("Pronoun import failed", namesSummary(files.failed));
+            return;
+        }
+        ArrayList<PronounStore.Profile> all = new ArrayList<>(planned.imported);
+        all.addAll(PronounStore.loadAll(this));
+        PronounStore.saveAll(this, all);
+        PronounStore.Profile active = planned.imported.get(0);
+        pronounUri = null;
+        setLabel(pronounFileLabel, "Pronoun: " + active.name);
+        editingPronoun = null;
+        pendingPronounReplaceId = "";
+        selectPronoun(active, false);
+        String skipped = files.failed.isEmpty() ? "" : "\nBỏ qua "
+                + files.failed.size() + " file: " + namesSummary(files.failed);
+        toast("Đã tạo " + planned.imported.size() + " pronoun profile");
+        appendLog("Pronoun multi-import: created=" + planned.imported.size()
+                + ", skipped=" + files.failed.size());
+        showResult("Pronouns imported",
+                planned.imported.size() + " profile(s), mỗi file là một pronoun." + skipped);
+    }
+
+    void replacePronounFromUri(Uri uri, int takeFlags) {
+        try {
+            if (uri == null) throw new IllegalArgumentException("Picker returned an empty file");
+            FileUtil.takePersistable(this, uri, takeFlags, true, false);
+            String name = FileUtil.displayName(this, uri);
+            String text = FileUtil.readText(this, uri);
+            LibraryImportPlanner.Result<PronounStore.Profile> validation =
+                    LibraryImportPlanner.pronouns(java.util.Collections.singletonList(
+                            new LibraryImportPlanner.Source(name, text)));
+            if (validation.imported.isEmpty()) throw new IllegalArgumentException(
+                    validation.failed.isEmpty() ? "No valid pronoun rules" : validation.failed.get(0));
+            PronounStore.Profile profile = PronounStore.find(this, pendingPronounReplaceId);
+            if (profile == null) throw new IllegalStateException("Pronoun profile no longer exists");
+            profile.uri = "";
+            profile.text = text;
+            if (profile.name == null || profile.name.startsWith("New pronoun")) profile.name = name;
+            if (!PronounStore.saveAndSelect(this, profile)) {
+                throw new IllegalStateException("Could not persist pronoun profile");
+            }
+            editingPronoun = null;
+            applyActivePronoun(profile);
+            toast("Đã thay file pronoun: " + name);
+            appendLog("Pronoun replaced: " + name);
+            refreshPronounsPage();
+        } catch (Exception error) {
+            toast("Không đọc được pronoun");
+            appendLog("Không đọc được pronoun: " + error.getMessage());
+        } finally {
+            pendingPronounReplaceId = "";
+        }
+    }
+
     void selectPronoun(PronounStore.Profile profile){
-        boolean preserveScroll=editingPronoun==null&&"Pronouns".equals(currentTab);
+        selectPronoun(profile, true);
+    }
+
+    void selectPronoun(PronounStore.Profile profile, boolean preserveListScroll){
+        boolean preserveScroll=preserveListScroll&&editingPronoun==null&&"Pronouns".equals(currentTab);
         if(!ensureConfigMutable()||profile==null)return;if(!PronounStore.saveAndSelect(this,profile)){toast("Could not save pronoun");return;}applyActivePronoun(profile);toast("Active pronoun: "+profile.name);
         if(preserveScroll)refreshPagePreservingScroll("Pronouns");else refreshPronounsPage();
     }
@@ -878,9 +1008,15 @@ public class MainActivity extends Activity {
 
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode != RESULT_OK || data == null) return;
+        if (resultCode != RESULT_OK || data == null) {
+            if (requestCode == REQ_PRONOUN) pendingPronounReplaceId = "";
+            return;
+        }
         Uri uri = data.getData();
-        if (uri == null && data.getClipData() == null) return;
+        if (uri == null && data.getClipData() == null) {
+            if (requestCode == REQ_PRONOUN) pendingPronounReplaceId = "";
+            return;
+        }
         int flags = data.getFlags();
         int takeFlags = flags & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
 
@@ -1016,50 +1152,18 @@ public class MainActivity extends Activity {
                 appendLog("Import profile: " + FileUtil.displayName(this, uri));
             } catch (Exception e) { toast("Lỗi import profile"); appendLog("Lỗi import profile: " + e.getMessage()); }
         } else if (requestCode == REQ_PRONOUN) {
-            if (!ensureConfigMutable()) return;
-            pronounUri = uri;
-            FileUtil.takePersistable(this, uri, takeFlags, true, false);
-            String pronounName = FileUtil.displayName(this, uri);
-            setLabel(pronounFileLabel, "Pronoun: " + pronounName);
-            try {
-                TranslationConfigRepository repo=TranslationConfigRepository.get(this);
-                TranslationConfigRepository.Entry entry=repo.importFromUri(TranslationConfigRepository.Type.PRONOUN,uri);
-                String pronounText = repo.read(TranslationConfigRepository.Type.PRONOUN);
-                pronounUri=null;
-                PronounStore.Profile profile;
-                if(pendingPronounReplaceId!=null&&!pendingPronounReplaceId.isEmpty()&&(profile=PronounStore.find(this,pendingPronounReplaceId))!=null){profile.uri="";profile.text=pronounText;if(profile.name==null||profile.name.startsWith("New pronoun"))profile.name=entry.name;if(!PronounStore.saveAndSelect(this,profile))throw new IllegalStateException("Could not persist pronoun profile");}else profile=PronounStore.importAndSelectProfile(this,entry.name,"",pronounText);
-                if(profile==null)throw new IllegalStateException("Could not persist pronoun profile");pendingPronounReplaceId="";editingPronoun=null;applyActivePronoun(profile);
-                String validation = PromptContextBuilder.validateText(activeGlossaryPromptText(), pronounText);
-                toast("Đã nạp pronoun: " + pronounName);
-                appendLog("Đã nạp pronoun: " + pronounName + " • " + oneLine(validation));
-                showResult("Pronoun loaded", pronounName + "\n" + validation);
-                updateMetaLine(); updateInputEstimate();
-                refreshPronounsPage();
-            } catch (Exception e) { appendLog("Không đọc được pronoun: " + e.getMessage()); }
+            if (!ensureConfigMutable()) {
+                pendingPronounReplaceId = "";
+                return;
+            }
+            if (pendingPronounReplaceId != null && !pendingPronounReplaceId.isEmpty()) {
+                replacePronounFromUri(uri, takeFlags);
+            } else {
+                importPronounProfiles(data, takeFlags);
+            }
         } else if (requestCode == REQ_GLOSSARY) {
             if (!ensureConfigMutable()) return;
-            glossaryUri = uri;
-            FileUtil.takePersistable(this, uri, takeFlags, true, false);
-            lastGlossaryName = FileUtil.displayName(this, uri);
-            setLabel(glossaryFileLabel, "Glossary: " + lastGlossaryName);
-            try {
-                TranslationConfigRepository repo=TranslationConfigRepository.get(this);
-                TranslationConfigRepository.Entry entry=repo.importFromUri(TranslationConfigRepository.Type.GLOSSARY,uri);
-                lastGlossaryText = repo.read(TranslationConfigRepository.Type.GLOSSARY);
-                glossaryUri=null; lastGlossaryName=entry.name;
-                List<GlossaryStore.Term> terms = GlossaryStore.parseTerms(lastGlossaryName, lastGlossaryText);
-                if (terms.isEmpty()) throw new IllegalArgumentException("No valid glossary terms found");
-                GlossaryStore.Glossary imported = GlossaryStore.create(this, lastGlossaryName);
-                GlossaryStore.mergeTerms(imported, terms);
-                GlossaryStore.upsert(this, imported);
-                String validation = PromptContextBuilder.validateText(GlossaryStore.toPromptText(imported), currentPronounText());
-                if (glossaryPreview != null) glossaryPreview.setText(preview(lastGlossaryText, 3000) + "\n\n[VALIDATION]\n" + validation);
-                selectGlossary(imported);
-                toast("Đã nạp glossary: " + lastGlossaryName);
-                appendLog("Đã nạp glossary: " + lastGlossaryName + " • " + oneLine(validation));
-                showResult("Glossary loaded", lastGlossaryName + "\n" + validation);
-                updateMetaLine(); updateInputEstimate();
-            } catch (Exception e) { appendLog("Không đọc được glossary: " + e.getMessage()); }
+            importGlossaryProfiles(data, takeFlags);
         } else if (requestCode == REQ_GLOSSARY_MULTI_IMPORT) {
             if (!ensureConfigMutable()) return;
             importTermsIntoEditingGlossary(data);
@@ -1766,9 +1870,13 @@ public class MainActivity extends Activity {
     }
 
     void selectGlossary(GlossaryStore.Glossary g) {
+        selectGlossary(g, true);
+    }
+
+    void selectGlossary(GlossaryStore.Glossary g, boolean preserveListScroll) {
         if (!ensureConfigMutable()) return;
         if (g == null) return;
-        boolean preserveScroll = editingGlossary == null && "Glossaries".equals(currentTab);
+        boolean preserveScroll = preserveListScroll && editingGlossary == null && "Glossaries".equals(currentTab);
         GlossaryStore.setSelectedId(this, g.id);
         AppSettings s = collectSettings();
         s.selectedGlossaryId = g.id;
