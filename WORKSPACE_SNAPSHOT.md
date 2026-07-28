@@ -3,7 +3,7 @@
 - Snapshot updated: `2026-07-29` (`v4.15` implementation and full automated regression complete; release QA pending)
 - Current version: `4.15` development cycle; accepted development build is `4.15-dev.3`/code61. The released baseline remains `4.14`/code57.
 - Current branch: `feature/v4.15`; the pre-existing `.idea/gradle.xml` change is preserved and excluded from product commits.
-- Current commit: `fa7168f` (implementation/documentation baseline immediately before the full-regression evidence commit; actual `HEAD` must be confirmed when resuming)
+- Current commit: `095397c` (full-regression evidence baseline immediately before this sequencing snapshot commit; actual `HEAD` must be confirmed when resuming)
 - Current build: `artifacts/builds/v4.15-dev.3/build-20260729-065132/TranslateBooks-v4.15-dev.3-code61.apk`, SHA-256 `5D412996ECACE6553E5A30AC70A4D6D0EAB82E5C87D2DB619E0BFBD32A5A1EF7`; installed successfully and mirrored under `backup/builds/v4.15-dev.3/build-20260729-065132/`. The released baseline remains immutable v4.14/code57.
 
 ## Completed tasks
@@ -117,7 +117,7 @@
 
 ## Pending tasks
 
-- Perform final release-candidate QA and prepare the exact v4.15 release build.
+- Create the exact v4.15 release build through the mandatory archive-first workflow, then perform final release QA on that exact APK.
 
 ## Known bugs
 
@@ -184,7 +184,7 @@
 
 ## Next step
 
-Perform final release-candidate QA, including visual/manual checks and required performance evidence, then prepare the exact v4.15 release build. Keep `.idea/gradle.xml` outside all product commits.
+Create and install the exact v4.15 release build, then run final visual/manual QA and required performance evidence against that exact APK. Keep `.idea/gradle.xml` outside all product commits.
 
 ## Resume rule
 
