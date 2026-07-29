@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-29` (`v4.15` exact release candidate passed QA and annotated tag v4.15 was created; immutable tag archive pending)
-- Current version: exact release candidate `4.15`/code62 passed release QA and is tagged `v4.15`. The released baseline remains `4.14`/code57 until archive and release completion.
+- Snapshot updated: `2026-07-29` (`v4.15` exact release candidate passed QA; PreBackup blocked because the local tag contains stale v4.14 release documents)
+- Current version: exact release candidate `4.15`/code62 passed release QA. Local tag `v4.15` exists but is rejected for archive and is not published. The released baseline remains `4.14`/code57.
 - Current branch: `feature/v4.15`; the pre-existing `.idea/gradle.xml` change is preserved and excluded from product commits.
-- Current commit: `d6d844d` (annotated-tag target and workflow-state baseline immediately before this tag-state snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current commit: `6999c77` (tag-state documentation baseline immediately before this blocker snapshot commit; actual `HEAD` must be confirmed when resuming)
 - Current build: `artifacts/builds/v4.15/build-20260729-070042/TranslateBooks-v4.15-code62.apk`, SHA-256 `7FDF60C934E75F4ACF47D77E14E248FBAC21F2EF5DDAD5E086AE586729163969`; exact code62 is installed after QA and mirrored under `backup/builds/v4.15/build-20260729-070042/`. The released baseline remains immutable v4.14/code57.
 
 ## Completed tasks
@@ -122,10 +122,11 @@
 - Mirrored the 21-file event `qa-code62-20260729-072300` under both durable QA stores with matching relative paths, lengths, and SHA-256 hashes.
 - Reinstalled the exact archived APK after benchmark cleanup and reconfirmed versionName `4.15`, versionCode `62`, minSdk `26`, targetSdk `35`, and `.MainActivity`.
 - Passed the PreTag gate and created annotated tag `v4.15`; tag object `7e99cc69eb948a41659021c1114468e775e13b34` targets approved commit `d6d844d97f51ce8637048e1fbbd0f7a9940cee47`.
+- Stopped before PreBackup/archive after proving that local tag `v4.15` still contains v4.14 release notes and no v4.15 changelog section; confirmed the tag is absent from `origin` and both `tag-v4.15` archive destinations are absent.
 
 ## Pending tasks
 
-- Pass the PreBackup gate, produce and verify the immutable `tag-v4.15` archive, then finish the remaining release workflow.
+- With explicit approval, delete only the unpublished local `v4.15` tag, prepare and commit correct v4.15 release notes/changelog, rerun PreTag, recreate the annotated tag, and then resume PreBackup/archive.
 
 ## Known bugs
 
@@ -146,6 +147,7 @@
 - v4.15 library scroll root cause was same-tab cache invalidation rebuilding the `ScrollView` at position zero after selection. The correction restores the bounded prior position only for list-level Use actions; editor navigation behavior is unchanged.
 - v4.15 multi-file import root cause was that list-level Glossary/Pronoun pickers did not set `EXTRA_ALLOW_MULTIPLE`, and their result handlers assumed one URI. The corrected handlers enumerate unique selected URIs and persist one profile per valid file.
 - OnePlus Android 15 denies shell `screenrecord`; exact-code62 visual evidence therefore uses an explicitly documented MJPEG sequence of actual-device screenshots, not continuous MediaProjection capture.
+- Local tag `v4.15` is rejected for backup because it contains stale v4.14 release metadata. It is absent from `origin`, and no immutable tag archive exists.
 
 ## Regression status
 
@@ -193,10 +195,11 @@
 - v4.15/code62 exact build verification: PASS. Archive-first build repeated 110 JVM tests and lint, both five-file durable payloads match, all four manifest entries verify, installation succeeded, and device metadata matches `4.15`/code62.
 - v4.15/code62 exact release QA: PASS. Connected instrumentation records 16 total/15 passed/1 opt-in paid skip/0 failures or errors; Macrobenchmark passed 5/5 cold starts at 313.89/330.23/335.04 ms min/median/max with five real traces; the 21-file visual, UI, instrumentation, and performance evidence event matches its backup mirror exactly.
 - v4.15 PreTag/tag verification: PASS. The PreTag gate accepted completed checklist steps 1-9; `v4.15` is an annotated tag object targeting `d6d844d`.
+- v4.15 PreBackup input validation: BLOCKED. The local tag contains v4.14 release notes and no v4.15 changelog section; no archive was created and the tag is not published.
 
 ## Next step
 
-Run the v4.15 PreBackup gate, then archive tag `v4.15` as immutable event `tag-v4.15`. Keep `.idea/gradle.xml` outside all product commits.
+Obtain explicit approval to repair the unpublished local `v4.15` tag, then prepare and commit the missing v4.15 release documents before rerunning PreTag. Keep `.idea/gradle.xml` outside all product commits.
 
 ## Resume rule
 
