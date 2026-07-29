@@ -2,7 +2,7 @@
 
 ## Status
 
-`RELEASE QA AND IMMUTABLE TAG ARCHIVE PASS; BUILD_STATE UPDATE PENDING` for release candidate `4.15` /
+`RELEASE QA, ARCHIVE, AND FINAL EXPORT PASS; COMPLETE GATE PENDING` for release candidate `4.15` /
 versionCode `62`.
 
 All three v4.15 correction groups are implemented and covered: Settings persistence,
@@ -141,5 +141,4 @@ Instrumentation coverage by class:
 - OnePlus Android 15 denies shell `screenrecord`; the retained AVI limitation is
   documented above and does not replace functional instrumentation.
 - Corrected annotated tag `v4.15` contains v4.15 release notes and changelog.
-- BUILD_STATE update, final workflow snapshot/export verification, merge to
-  `main`, and remote publication remain pending.
+- Complete workflow gate, merge to `main`, and remote publication remain pending.

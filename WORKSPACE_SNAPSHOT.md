@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-29` (`v4.15` BUILD_STATE, corrected annotated tag, QA, and immutable archive are complete; final export verification pending)
-- Current version: `4.15`/code62 is the accepted local release with corrected annotated tag `v4.15` and verified immutable archive. Final export/Complete gate, merge, and publication remain pending.
+- Snapshot updated: `2026-07-29` (`v4.15` BUILD_STATE, corrected annotated tag, QA, immutable archive, and final export verification are complete; Complete gate pending)
+- Current version: `4.15`/code62 is the accepted local release with corrected annotated tag `v4.15`, verified immutable archive, and verified final export. Complete gate, merge, and publication remain pending.
 - Current branch: `feature/v4.15`; the pre-existing `.idea/gradle.xml` change is preserved and excluded from product commits.
-- Current commit: `12c2668` (v4.15 BUILD_STATE baseline immediately before this final workflow snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current commit: `1410ee1` (final workflow snapshot baseline immediately before this export-state commit; actual `HEAD` must be confirmed when resuming)
 - Current build: `artifacts/releases/v4.15/tag-v4.15/TranslateBooks-v4.15-code62.apk`, SHA-256 `7FDF60C934E75F4ACF47D77E14E248FBAC21F2EF5DDAD5E086AE586729163969`; exact code62 is installed after QA and the 22-file tag payload is mirrored under `backup/v4.15/tag-v4.15/`. The released baseline remains immutable v4.14/code57 until release-state completion.
 
 ## Completed tasks
@@ -131,10 +131,12 @@
 - Verified both 22-file payloads match by relative path, length, and SHA-256; all 21 manifest entries pass.
 - Verified archived APK SHA-256 `7FDF60C9...3969` and 357-entry source ZIP SHA-256 `0F14121D...F433`; a fresh `git archive` of `v4.15` matches the retained ZIP exactly.
 - Updated `BUILD_STATE.md` to make v4.15/code62 the current accepted local release and record the exact build, corrected tag, installed-device state, regression, archive hashes, mirror parity, and known limitations.
+- Passed final export verification on a clean tracked tree: tag ancestry/metadata, 22-file parity, all 21 manifest entries, APK hash, fresh 357-entry tag ZIP equality, current release documents, and installed v4.15/code62 identity all passed.
+- Removed the temporary fresh-tag verification ZIP and restored the user's `.idea/gradle.xml` change.
 
 ## Pending tasks
 
-- Run final artifact/export verification, mark checklist step 14, and pass the Complete gate; merge/publication remain separate follow-up actions.
+- Pass the Complete gate; merge/publication remain separate follow-up actions.
 
 ## Known bugs
 
@@ -206,10 +208,11 @@
 - v4.15 tag repair: PASS. Corrected release metadata is committed and the fresh annotated tag targets it.
 - v4.15 immutable tag archive: PASS. Both 22-file stores match, all 21 manifest entries pass, and the retained source ZIP exactly matches a fresh archive of corrected tag `v4.15`.
 - v4.15 BUILD_STATE verification: PASS. Current release identity, code62 APK, corrected tag, QA counts, performance metrics, archive hashes, device state, and known limitations are recorded.
+- v4.15 final export verification: PASS. Corrected tag, artifact/backup parity, manifest, APK, source ZIP, release documents, and installed device identity all passed.
 
 ## Next step
 
-Run final v4.15 artifact/export verification, complete checklist step 14, and pass the Complete gate. Keep `.idea/gradle.xml` outside all product commits.
+Commit final export evidence, then run the v4.15 Complete gate on a clean tracked tree. Keep `.idea/gradle.xml` outside all product commits.
 
 ## Resume rule
 
