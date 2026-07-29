@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-29` (`v4.15` exact release candidate built, archived, verified, and installed; release QA pending)
-- Current version: exact release candidate `4.15`/code62 is under QA. The released baseline remains `4.14`/code57.
+- Snapshot updated: `2026-07-29` (`v4.15` exact release candidate passed connected, visual, and performance QA; tag pending)
+- Current version: exact release candidate `4.15`/code62 passed release QA. The released baseline remains `4.14`/code57 until tagging and release completion.
 - Current branch: `feature/v4.15`; the pre-existing `.idea/gradle.xml` change is preserved and excluded from product commits.
-- Current commit: `5253f00` (exact-build source baseline immediately before this build-evidence snapshot commit; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.15/build-20260729-070042/TranslateBooks-v4.15-code62.apk`, SHA-256 `7FDF60C934E75F4ACF47D77E14E248FBAC21F2EF5DDAD5E086AE586729163969`; installed successfully and mirrored under `backup/builds/v4.15/build-20260729-070042/`. The released baseline remains immutable v4.14/code57.
+- Current commit: `8c4d82a` (exact-build evidence baseline immediately before this QA snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/builds/v4.15/build-20260729-070042/TranslateBooks-v4.15-code62.apk`, SHA-256 `7FDF60C934E75F4ACF47D77E14E248FBAC21F2EF5DDAD5E086AE586729163969`; exact code62 is installed after QA and mirrored under `backup/builds/v4.15/build-20260729-070042/`. The released baseline remains immutable v4.14/code57.
 
 ## Completed tasks
 
@@ -116,10 +116,15 @@
 - Added `QA_REPORT_v4_15.md` with exact build identity, archive hashes, suite counts, focused v4.15 evidence, and remaining release work.
 - Built exact `4.15`/code62 from commit `5253f00` with the mandatory archive-first workflow under event `build-20260729-070042`; repeated 110 passing JVM tests and lint with 0 errors/53 warnings.
 - Verified all five exact-build files match their backup mirrors, all four manifest hashes pass, installed the APK, and confirmed device package metadata reports versionName `4.15`/versionCode `62`.
+- Passed full connected instrumentation against exact `4.15`/code62: 16 total, 15 passed, 1 explicitly opt-in paid real-API case skipped, and 0 failures/errors.
+- Passed exact-code62 physical-device Macrobenchmark with 5/5 cold starts at 313.89/330.23/335.04 ms minimum/median/maximum and retained AndroidX JSON plus five real Perfetto traces.
+- Retained five exact-device screenshots, five UI hierarchy dumps, and a clearly documented 25-frame MJPEG AVI covering Settings, Provider/Prompt/Performance, Glossaries, and Pronouns.
+- Mirrored the 21-file event `qa-code62-20260729-072300` under both durable QA stores with matching relative paths, lengths, and SHA-256 hashes.
+- Reinstalled the exact archived APK after benchmark cleanup and reconfirmed versionName `4.15`, versionCode `62`, minSdk `26`, targetSdk `35`, and `.MainActivity`.
 
 ## Pending tasks
 
-- Run full connected instrumentation and final visual/manual/performance QA against exact `4.15`/code62.
+- Commit the final QA evidence documents, pass the PreTag gate, create the annotated `v4.15` tag, produce and verify the immutable tag archive, then finish the remaining release workflow.
 
 ## Known bugs
 
@@ -139,6 +144,7 @@
 - An accidental but valid immutable `4.14-dev.5`/code58 build is retained under event `build-20260729-062629` because the first build invocation omitted the explicit v4.15 series. It was superseded, not overwritten, by `4.15-dev.1`/code59.
 - v4.15 library scroll root cause was same-tab cache invalidation rebuilding the `ScrollView` at position zero after selection. The correction restores the bounded prior position only for list-level Use actions; editor navigation behavior is unchanged.
 - v4.15 multi-file import root cause was that list-level Glossary/Pronoun pickers did not set `EXTRA_ALLOW_MULTIPLE`, and their result handlers assumed one URI. The corrected handlers enumerate unique selected URIs and persist one profile per valid file.
+- OnePlus Android 15 denies shell `screenrecord`; exact-code62 visual evidence therefore uses an explicitly documented MJPEG sequence of actual-device screenshots, not continuous MediaProjection capture.
 
 ## Regression status
 
@@ -184,10 +190,11 @@
 - v4.15-dev.3 archive verification: PASS. Both durable stores contain the same five files; every mirror hash matches, all four manifest entries verify, 110 JVM tests pass, lint reports 0 errors/53 warnings, and the APK/source ZIP hashes are `5D412996...A1EF7`/`9C7D7978...8EF`.
 - v4.15 full automated regression: PASS. Logo guard and 110 JVM tests passed; lint reports 0 errors/53 warnings; full connected instrumentation on OnePlus CPH2691 / Android 15 records 16 total, 15 passed, 1 opt-in paid case skipped, and 0 failures/errors.
 - v4.15/code62 exact build verification: PASS. Archive-first build repeated 110 JVM tests and lint, both five-file durable payloads match, all four manifest entries verify, installation succeeded, and device metadata matches `4.15`/code62.
+- v4.15/code62 exact release QA: PASS. Connected instrumentation records 16 total/15 passed/1 opt-in paid skip/0 failures or errors; Macrobenchmark passed 5/5 cold starts at 313.89/330.23/335.04 ms min/median/max with five real traces; the 21-file visual, UI, instrumentation, and performance evidence event matches its backup mirror exactly.
 
 ## Next step
 
-Run full connected instrumentation plus final visual/manual and required performance QA against exact `4.15`/code62. Keep `.idea/gradle.xml` outside all product commits.
+Commit the v4.15 exact-QA report/checklist/snapshot update, then run the PreTag gate. Keep `.idea/gradle.xml` outside all product commits.
 
 ## Resume rule
 
