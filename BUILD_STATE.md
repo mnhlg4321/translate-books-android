@@ -13,7 +13,7 @@
 - source ZIP SHA-256: `0F14121D69314C36CF6F92E80084881D32AA8E6BA35ACB165203D52161B2F433`
 - regression: approved-logo guard and 110 JVM tests passed; Android Lint completed with 53 warnings and 0 errors; exact-code62 connected instrumentation passed 15 cases with 1 explicitly opt-in paid real-API case skipped. Physical-device Macrobenchmark passed 5/5 cold starts at 313.89/330.23/335.04 ms minimum/median/maximum and retained real JSON plus five Perfetto traces.
 - device state: exact `4.15`/code62 is installed on OnePlus CPH2691 / Android 15 after QA and benchmark cleanup. Device metadata reports minSdk 26, targetSdk 35, and launcher activity `.MainActivity`.
-- release state: local release workflow complete. Corrected annotated tag `v4.15` targets release-metadata commit `292b24e`; immutable 22-file `tag-v4.15` artifact/backup payloads, all 21 manifest entries, final export parity, tag-source ZIP, installed APK identity, and release documents are verified; the v4.15 Complete gate passed. Merge to `main` and remote publication remain pending.
+- release state: released and published. Corrected annotated tag `v4.15` targets release-metadata commit `292b24e`; immutable 22-file `tag-v4.15` artifact/backup payloads, all 21 manifest entries, final export parity, tag-source ZIP, installed APK identity, and release documents are verified; the v4.15 Complete gate passed. Feature history was merged to `main` without squashing at `81b8344`, and GitHub refs for `main`, the annotated tag object, and its peeled target were verified.
 
 ## Release identity
 
@@ -26,7 +26,7 @@
 - targetSdk: `35`
 - implementation source commit: `5253f003b0f7898b1755e98783ec91b01790e1d4`
 - release-document commit: `292b24e2ac7dec7b9635b8d0e72f76745ddf432c` (corrected annotated tag `v4.15`, tag object `cb474d2dd22763f67e24b4c0f57a27b7ae4689e7`)
-- branch: `feature/v4.15` (local release archive complete; merge/publication pending)
+- branch: `main` (published to `https://github.com/manhluongvd/translate-books-android.git`; corrected annotated tag `v4.15` remains immutable)
 
 ## Existing artifacts
 
@@ -91,7 +91,14 @@ The last released v4.7 evidence remains `PASS WITH KNOWN LIMITATIONS`:
 - Lint: 0 errors, 50 warnings.
 - Core translation and recovery regression coverage: passed within the scope recorded in `QA_REPORT_v4_7.md`.
 
-The v4.14 release was published to the private GitHub repository. Initial remote verification resolved release merge `main` to `41cc6e98b0f737d5c6f4527a21404e8264ef1608`, annotated tag object `246de3416b247379a3e3e749a1a6d3f727a9a685`, and immutable tag target `8a3b281619fc7dc48da6b1e36fd19071a90a8223`. The final release-state documentation is merged afterward without moving the tag.
+The v4.15 release was published to the private GitHub repository. Initial remote
+verification resolved release merge `main` to
+`81b8344ba38be7b3851086aca250a0cce2869e37`, annotated tag object
+`cb474d2dd22763f67e24b4c0f57a27b7ae4689e7`, and immutable tag target
+`292b24e2ac7dec7b9635b8d0e72f76745ddf432c`. Final release-state
+documentation follows on `main` without moving the tag.
+
+The previous v4.14 release remains published and immutable.
 
 ## Known issues
 

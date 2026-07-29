@@ -62,7 +62,7 @@ limitations are recorded in `QA_REPORT_v4_15.md`.
 
 ## Distribution
 
-The exact APK and release evidence remain outside Git by design. After the
-annotated tag passes the guarded workflow, the immutable `tag-v4.15` payload must
-be created and verified in both `artifacts/releases/v4.15/` and
-`backup/v4.15/` before publication.
+The source history and corrected annotated `v4.15` tag are published to the
+private GitHub repository. The exact APK and immutable release evidence remain
+outside Git by design in matching `artifacts/releases/v4.15/tag-v4.15/` and
+`backup/v4.15/tag-v4.15/` payloads and must be distributed separately.
