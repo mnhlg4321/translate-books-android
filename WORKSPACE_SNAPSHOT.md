@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-29` (`v4.15` implementation and full automated regression complete; release QA pending)
-- Current version: `4.15` development cycle; accepted development build is `4.15-dev.3`/code61. The released baseline remains `4.14`/code57.
+- Snapshot updated: `2026-07-29` (`v4.15` exact release candidate built, archived, verified, and installed; release QA pending)
+- Current version: exact release candidate `4.15`/code62 is under QA. The released baseline remains `4.14`/code57.
 - Current branch: `feature/v4.15`; the pre-existing `.idea/gradle.xml` change is preserved and excluded from product commits.
-- Current commit: `095397c` (full-regression evidence baseline immediately before this sequencing snapshot commit; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.15-dev.3/build-20260729-065132/TranslateBooks-v4.15-dev.3-code61.apk`, SHA-256 `5D412996ECACE6553E5A30AC70A4D6D0EAB82E5C87D2DB619E0BFBD32A5A1EF7`; installed successfully and mirrored under `backup/builds/v4.15-dev.3/build-20260729-065132/`. The released baseline remains immutable v4.14/code57.
+- Current commit: `5253f00` (exact-build source baseline immediately before this build-evidence snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/builds/v4.15/build-20260729-070042/TranslateBooks-v4.15-code62.apk`, SHA-256 `7FDF60C934E75F4ACF47D77E14E248FBAC21F2EF5DDAD5E086AE586729163969`; installed successfully and mirrored under `backup/builds/v4.15/build-20260729-070042/`. The released baseline remains immutable v4.14/code57.
 
 ## Completed tasks
 
@@ -114,10 +114,12 @@
 - Passed focused multi-profile import instrumentation 2/2 on OnePlus CPH2691 / Android 15.
 - Passed the full v4.15 automated regression: approved-logo guard, 110/110 JVM tests, lint with 0 errors/53 warnings, and connected instrumentation with 15 passed plus 1 explicitly opt-in paid case skipped and 0 failures/errors.
 - Added `QA_REPORT_v4_15.md` with exact build identity, archive hashes, suite counts, focused v4.15 evidence, and remaining release work.
+- Built exact `4.15`/code62 from commit `5253f00` with the mandatory archive-first workflow under event `build-20260729-070042`; repeated 110 passing JVM tests and lint with 0 errors/53 warnings.
+- Verified all five exact-build files match their backup mirrors, all four manifest hashes pass, installed the APK, and confirmed device package metadata reports versionName `4.15`/versionCode `62`.
 
 ## Pending tasks
 
-- Create the exact v4.15 release build through the mandatory archive-first workflow, then perform final release QA on that exact APK.
+- Run full connected instrumentation and final visual/manual/performance QA against exact `4.15`/code62.
 
 ## Known bugs
 
@@ -181,10 +183,11 @@
 - v4.15 multi-profile import regression: PASS. Four focused planner tests pass, and `V415MultiProfileImportInstrumentedTest` passes 2/2 with exact `4.15-dev.3`/code61 identity on OnePlus CPH2691 / Android 15.
 - v4.15-dev.3 archive verification: PASS. Both durable stores contain the same five files; every mirror hash matches, all four manifest entries verify, 110 JVM tests pass, lint reports 0 errors/53 warnings, and the APK/source ZIP hashes are `5D412996...A1EF7`/`9C7D7978...8EF`.
 - v4.15 full automated regression: PASS. Logo guard and 110 JVM tests passed; lint reports 0 errors/53 warnings; full connected instrumentation on OnePlus CPH2691 / Android 15 records 16 total, 15 passed, 1 opt-in paid case skipped, and 0 failures/errors.
+- v4.15/code62 exact build verification: PASS. Archive-first build repeated 110 JVM tests and lint, both five-file durable payloads match, all four manifest entries verify, installation succeeded, and device metadata matches `4.15`/code62.
 
 ## Next step
 
-Create and install the exact v4.15 release build, then run final visual/manual QA and required performance evidence against that exact APK. Keep `.idea/gradle.xml` outside all product commits.
+Run full connected instrumentation plus final visual/manual and required performance QA against exact `4.15`/code62. Keep `.idea/gradle.xml` outside all product commits.
 
 ## Resume rule
 
