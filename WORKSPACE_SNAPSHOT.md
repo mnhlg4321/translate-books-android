@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-29` (`v4.15` exact release candidate passed connected, visual, and performance QA; tag pending)
-- Current version: exact release candidate `4.15`/code62 passed release QA. The released baseline remains `4.14`/code57 until tagging and release completion.
+- Snapshot updated: `2026-07-29` (`v4.15` exact release candidate passed QA and annotated tag v4.15 was created; immutable tag archive pending)
+- Current version: exact release candidate `4.15`/code62 passed release QA and is tagged `v4.15`. The released baseline remains `4.14`/code57 until archive and release completion.
 - Current branch: `feature/v4.15`; the pre-existing `.idea/gradle.xml` change is preserved and excluded from product commits.
-- Current commit: `91dd9ee` (exact-QA evidence baseline immediately before this workflow-state snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current commit: `d6d844d` (annotated-tag target and workflow-state baseline immediately before this tag-state snapshot commit; actual `HEAD` must be confirmed when resuming)
 - Current build: `artifacts/builds/v4.15/build-20260729-070042/TranslateBooks-v4.15-code62.apk`, SHA-256 `7FDF60C934E75F4ACF47D77E14E248FBAC21F2EF5DDAD5E086AE586729163969`; exact code62 is installed after QA and mirrored under `backup/builds/v4.15/build-20260729-070042/`. The released baseline remains immutable v4.14/code57.
 
 ## Completed tasks
@@ -121,10 +121,11 @@
 - Retained five exact-device screenshots, five UI hierarchy dumps, and a clearly documented 25-frame MJPEG AVI covering Settings, Provider/Prompt/Performance, Glossaries, and Pronouns.
 - Mirrored the 21-file event `qa-code62-20260729-072300` under both durable QA stores with matching relative paths, lengths, and SHA-256 hashes.
 - Reinstalled the exact archived APK after benchmark cleanup and reconfirmed versionName `4.15`, versionCode `62`, minSdk `26`, targetSdk `35`, and `.MainActivity`.
+- Passed the PreTag gate and created annotated tag `v4.15`; tag object `7e99cc69eb948a41659021c1114468e775e13b34` targets approved commit `d6d844d97f51ce8637048e1fbbd0f7a9940cee47`.
 
 ## Pending tasks
 
-- Pass the PreTag gate, create the annotated `v4.15` tag, produce and verify the immutable tag archive, then finish the remaining release workflow.
+- Pass the PreBackup gate, produce and verify the immutable `tag-v4.15` archive, then finish the remaining release workflow.
 
 ## Known bugs
 
@@ -191,10 +192,11 @@
 - v4.15 full automated regression: PASS. Logo guard and 110 JVM tests passed; lint reports 0 errors/53 warnings; full connected instrumentation on OnePlus CPH2691 / Android 15 records 16 total, 15 passed, 1 opt-in paid case skipped, and 0 failures/errors.
 - v4.15/code62 exact build verification: PASS. Archive-first build repeated 110 JVM tests and lint, both five-file durable payloads match, all four manifest entries verify, installation succeeded, and device metadata matches `4.15`/code62.
 - v4.15/code62 exact release QA: PASS. Connected instrumentation records 16 total/15 passed/1 opt-in paid skip/0 failures or errors; Macrobenchmark passed 5/5 cold starts at 313.89/330.23/335.04 ms min/median/max with five real traces; the 21-file visual, UI, instrumentation, and performance evidence event matches its backup mirror exactly.
+- v4.15 PreTag/tag verification: PASS. The PreTag gate accepted completed checklist steps 1-9; `v4.15` is an annotated tag object targeting `d6d844d`.
 
 ## Next step
 
-Run the v4.15 PreTag gate. Keep `.idea/gradle.xml` outside all product commits.
+Run the v4.15 PreBackup gate, then archive tag `v4.15` as immutable event `tag-v4.15`. Keep `.idea/gradle.xml` outside all product commits.
 
 ## Resume rule
 

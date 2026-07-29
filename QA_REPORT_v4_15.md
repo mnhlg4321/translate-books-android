@@ -2,14 +2,15 @@
 
 ## Status
 
-`RELEASE QA PASS; TAG PENDING` for release candidate `4.15` /
+`RELEASE QA PASS; TAG CREATED; ARCHIVE PENDING` for release candidate `4.15` /
 versionCode `62`.
 
 All three v4.15 correction groups are implemented and covered: Settings persistence,
 Glossary/Pronoun scroll preservation, and independent multi-profile file import.
 The exact APK is built, archived, checksum-verified, installed, and accepted by
 full connected instrumentation, physical-device visual QA, and Macrobenchmark.
-The release tag and immutable tag archive remain pending.
+Annotated tag `v4.15` was created at the approved release-document commit.
+The immutable tag archive and remaining release workflow remain pending.
 
 ## Build under test
 
@@ -119,5 +120,5 @@ Instrumentation coverage by class:
 - The paid real-API instrumentation case remains intentionally opt-in and was skipped.
 - OnePlus Android 15 denies shell `screenrecord`; the retained AVI limitation is
   documented above and does not replace functional instrumentation.
-- PreTag gate, release tag, immutable tag archive, final artifact verification,
-  merge to `main`, and remote publication remain pending.
+- Immutable tag archive, final artifact verification, merge to `main`, and remote
+  publication remain pending.
