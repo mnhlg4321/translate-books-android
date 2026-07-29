@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-29` (`v4.15` exact release candidate passed QA; rejected local tag removed with approval and corrected release metadata prepared)
-- Current version: exact release candidate `4.15`/code62 passed release QA. The rejected unpublished local tag was removed; corrected annotated tag creation is pending. The released baseline remains `4.14`/code57.
+- Snapshot updated: `2026-07-29` (`v4.15` exact release candidate passed QA; corrected annotated tag created and verified; immutable archive pending)
+- Current version: exact release candidate `4.15`/code62 passed release QA and corrected annotated tag `v4.15` is ready for backup. The released baseline remains `4.14`/code57 until archive and release completion.
 - Current branch: `feature/v4.15`; the pre-existing `.idea/gradle.xml` change is preserved and excluded from product commits.
-- Current commit: `a55c8ac` (archive-blocker documentation baseline immediately before this metadata-repair snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current commit: `292b24e` (corrected release-metadata commit and annotated-tag target immediately before this tag-state snapshot commit; actual `HEAD` must be confirmed when resuming)
 - Current build: `artifacts/builds/v4.15/build-20260729-070042/TranslateBooks-v4.15-code62.apk`, SHA-256 `7FDF60C934E75F4ACF47D77E14E248FBAC21F2EF5DDAD5E086AE586729163969`; exact code62 is installed after QA and mirrored under `backup/builds/v4.15/build-20260729-070042/`. The released baseline remains immutable v4.14/code57.
 
 ## Completed tasks
@@ -125,10 +125,12 @@
 - Stopped before PreBackup/archive after proving that local tag `v4.15` still contains v4.14 release notes and no v4.15 changelog section; confirmed the tag is absent from `origin` and both `tag-v4.15` archive destinations are absent.
 - With explicit approval, deleted only rejected unpublished tag object `7e99cc69eb948a41659021c1114468e775e13b34`; no remote ref or archive payload was removed.
 - Prepared correct v4.15 release notes and a v4.15 changelog entry covering all three fixes plus exact build/QA evidence.
+- Committed corrected release metadata as `292b24e`, reran PreTag successfully, and created fresh annotated tag object `cb474d2dd22763f67e24b4c0f57a27b7ae4689e7` targeting that commit.
+- Verified directly from tag `v4.15` that release notes identify 4.15 and the changelog begins with a 4.15 section.
 
 ## Pending tasks
 
-- Commit the corrected v4.15 release metadata, rerun PreTag, recreate the annotated tag, and then resume PreBackup/archive.
+- Run PreBackup and create/verify the immutable `tag-v4.15` archive.
 
 ## Known bugs
 
@@ -197,11 +199,11 @@
 - v4.15/code62 exact build verification: PASS. Archive-first build repeated 110 JVM tests and lint, both five-file durable payloads match, all four manifest entries verify, installation succeeded, and device metadata matches `4.15`/code62.
 - v4.15/code62 exact release QA: PASS. Connected instrumentation records 16 total/15 passed/1 opt-in paid skip/0 failures or errors; Macrobenchmark passed 5/5 cold starts at 313.89/330.23/335.04 ms min/median/max with five real traces; the 21-file visual, UI, instrumentation, and performance evidence event matches its backup mirror exactly.
 - v4.15 PreTag/tag verification: PASS. The PreTag gate accepted completed checklist steps 1-9; `v4.15` is an annotated tag object targeting `d6d844d`.
-- v4.15 PreBackup input validation: REPAIR IN PROGRESS. The stale local-only tag was removed with approval and correct v4.15 release metadata is prepared; no archive was created.
+- v4.15 tag repair: PASS. Corrected release metadata is committed and the fresh annotated tag targets it; no archive has been created yet.
 
 ## Next step
 
-Commit the corrected v4.15 release documents, rerun PreTag, and create a fresh annotated `v4.15` tag. Keep `.idea/gradle.xml` outside all product commits.
+Run the v4.15 PreBackup gate, then archive corrected tag `v4.15` as immutable event `tag-v4.15`. Keep `.idea/gradle.xml` outside all product commits.
 
 ## Resume rule
 

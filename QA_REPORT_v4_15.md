@@ -2,7 +2,7 @@
 
 ## Status
 
-`RELEASE QA PASS; CORRECTED TAG PENDING` for release candidate `4.15` /
+`RELEASE QA PASS; CORRECTED TAG CREATED; ARCHIVE PENDING` for release candidate `4.15` /
 versionCode `62`.
 
 All three v4.15 correction groups are implemented and covered: Settings persistence,
@@ -11,9 +11,9 @@ The exact APK is built, archived, checksum-verified, installed, and accepted by
 full connected instrumentation, physical-device visual QA, and Macrobenchmark.
 The first local annotated tag was rejected before archive because it contained
 stale v4.14 release metadata. With explicit approval, only that unpublished local
-tag was deleted. Correct v4.15 release notes and changelog are now prepared for a
-new metadata commit, guarded PreTag rerun, and fresh annotated tag. No
-`tag-v4.15` archive directory has been created.
+tag was deleted. Correct v4.15 release notes and changelog were committed, the
+PreTag gate passed again, and a fresh annotated tag now targets the corrected
+metadata commit. No `tag-v4.15` archive directory has been created yet.
 
 ## Build under test
 
@@ -123,6 +123,6 @@ Instrumentation coverage by class:
 - The paid real-API instrumentation case remains intentionally opt-in and was skipped.
 - OnePlus Android 15 denies shell `screenrecord`; the retained AVI limitation is
   documented above and does not replace functional instrumentation.
-- The rejected local-only tag was deleted before any publication or archive.
+- Corrected annotated tag `v4.15` contains v4.15 release notes and changelog.
 - Immutable tag archive, final artifact verification, merge to `main`, and remote
-  publication remain pending after the corrected tag is created.
+  publication remain pending.
