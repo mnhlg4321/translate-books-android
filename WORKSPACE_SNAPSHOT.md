@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-29` (`v4.15` exact release candidate passed QA; corrected annotated tag created and verified; immutable archive pending)
-- Current version: exact release candidate `4.15`/code62 passed release QA and corrected annotated tag `v4.15` is ready for backup. The released baseline remains `4.14`/code57 until archive and release completion.
+- Snapshot updated: `2026-07-29` (`v4.15` exact release candidate passed QA; corrected annotated tag and immutable archive verified; BUILD_STATE update pending)
+- Current version: exact release candidate `4.15`/code62 passed release QA, is tagged by corrected annotated tag `v4.15`, and has a verified immutable tag archive. The released baseline remains `4.14`/code57 until the remaining release-state workflow completes.
 - Current branch: `feature/v4.15`; the pre-existing `.idea/gradle.xml` change is preserved and excluded from product commits.
-- Current commit: `292b24e` (corrected release-metadata commit and annotated-tag target immediately before this tag-state snapshot commit; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.15/build-20260729-070042/TranslateBooks-v4.15-code62.apk`, SHA-256 `7FDF60C934E75F4ACF47D77E14E248FBAC21F2EF5DDAD5E086AE586729163969`; exact code62 is installed after QA and mirrored under `backup/builds/v4.15/build-20260729-070042/`. The released baseline remains immutable v4.14/code57.
+- Current commit: `bd7e6c3` (corrected-tag documentation baseline immediately before this backup-state snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/releases/v4.15/tag-v4.15/TranslateBooks-v4.15-code62.apk`, SHA-256 `7FDF60C934E75F4ACF47D77E14E248FBAC21F2EF5DDAD5E086AE586729163969`; exact code62 is installed after QA and the 22-file tag payload is mirrored under `backup/v4.15/tag-v4.15/`. The released baseline remains immutable v4.14/code57 until release-state completion.
 
 ## Completed tasks
 
@@ -127,10 +127,13 @@
 - Prepared correct v4.15 release notes and a v4.15 changelog entry covering all three fixes plus exact build/QA evidence.
 - Committed corrected release metadata as `292b24e`, reran PreTag successfully, and created fresh annotated tag object `cb474d2dd22763f67e24b4c0f57a27b7ae4689e7` targeting that commit.
 - Verified directly from tag `v4.15` that release notes identify 4.15 and the changelog begins with a 4.15 section.
+- Passed PreBackup and created immutable `tag-v4.15` artifact/backup payloads from corrected tag target `292b24e`.
+- Verified both 22-file payloads match by relative path, length, and SHA-256; all 21 manifest entries pass.
+- Verified archived APK SHA-256 `7FDF60C9...3969` and 357-entry source ZIP SHA-256 `0F14121D...F433`; a fresh `git archive` of `v4.15` matches the retained ZIP exactly.
 
 ## Pending tasks
 
-- Run PreBackup and create/verify the immutable `tag-v4.15` archive.
+- Update `BUILD_STATE.md` for the v4.15 release, then continue final snapshot/export verification.
 
 ## Known bugs
 
@@ -199,11 +202,12 @@
 - v4.15/code62 exact build verification: PASS. Archive-first build repeated 110 JVM tests and lint, both five-file durable payloads match, all four manifest entries verify, installation succeeded, and device metadata matches `4.15`/code62.
 - v4.15/code62 exact release QA: PASS. Connected instrumentation records 16 total/15 passed/1 opt-in paid skip/0 failures or errors; Macrobenchmark passed 5/5 cold starts at 313.89/330.23/335.04 ms min/median/max with five real traces; the 21-file visual, UI, instrumentation, and performance evidence event matches its backup mirror exactly.
 - v4.15 PreTag/tag verification: PASS. The PreTag gate accepted completed checklist steps 1-9; `v4.15` is an annotated tag object targeting `d6d844d`.
-- v4.15 tag repair: PASS. Corrected release metadata is committed and the fresh annotated tag targets it; no archive has been created yet.
+- v4.15 tag repair: PASS. Corrected release metadata is committed and the fresh annotated tag targets it.
+- v4.15 immutable tag archive: PASS. Both 22-file stores match, all 21 manifest entries pass, and the retained source ZIP exactly matches a fresh archive of corrected tag `v4.15`.
 
 ## Next step
 
-Run the v4.15 PreBackup gate, then archive corrected tag `v4.15` as immutable event `tag-v4.15`. Keep `.idea/gradle.xml` outside all product commits.
+Update `BUILD_STATE.md` with the exact v4.15 build, corrected tag, archive, regression, device, and known-limitation state. Keep `.idea/gradle.xml` outside all product commits.
 
 ## Resume rule
 

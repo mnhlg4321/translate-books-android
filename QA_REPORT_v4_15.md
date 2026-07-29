@@ -2,7 +2,7 @@
 
 ## Status
 
-`RELEASE QA PASS; CORRECTED TAG CREATED; ARCHIVE PENDING` for release candidate `4.15` /
+`RELEASE QA AND IMMUTABLE TAG ARCHIVE PASS; BUILD_STATE UPDATE PENDING` for release candidate `4.15` /
 versionCode `62`.
 
 All three v4.15 correction groups are implemented and covered: Settings persistence,
@@ -13,7 +13,8 @@ The first local annotated tag was rejected before archive because it contained
 stale v4.14 release metadata. With explicit approval, only that unpublished local
 tag was deleted. Correct v4.15 release notes and changelog were committed, the
 PreTag gate passed again, and a fresh annotated tag now targets the corrected
-metadata commit. No `tag-v4.15` archive directory has been created yet.
+metadata commit. PreBackup passed and immutable event `tag-v4.15` was created
+and verified in both durable stores.
 
 ## Build under test
 
@@ -117,6 +118,22 @@ Instrumentation coverage by class:
 - All five real Perfetto traces, AndroidX benchmark JSON, text summary, and result
   XML are retained in both durable QA stores.
 
+## Immutable tag archive
+
+- Corrected annotated tag object:
+  `cb474d2dd22763f67e24b4c0f57a27b7ae4689e7`.
+- Tag target: `292b24e2ac7dec7b9635b8d0e72f76745ddf432c`.
+- Artifact: `artifacts/releases/v4.15/tag-v4.15/`.
+- Backup: `backup/v4.15/tag-v4.15/`.
+- Both stores contain 22 matching files with 0 relative-path, length, or SHA-256
+  differences.
+- All 21 `SHA256SUMS.txt` payload entries pass.
+- Archived APK SHA-256:
+  `7FDF60C934E75F4ACF47D77E14E248FBAC21F2EF5DDAD5E086AE586729163969`.
+- `project_source_v4.15.zip` SHA-256:
+  `0F14121D69314C36CF6F92E80084881D32AA8E6BA35ACB165203D52161B2F433`.
+- The 357-entry source ZIP exactly matches a fresh `git archive` of tag `v4.15`.
+
 ## Known limitations and remaining release work
 
 - Android Lint retains 53 warnings and no errors.
@@ -124,5 +141,5 @@ Instrumentation coverage by class:
 - OnePlus Android 15 denies shell `screenrecord`; the retained AVI limitation is
   documented above and does not replace functional instrumentation.
 - Corrected annotated tag `v4.15` contains v4.15 release notes and changelog.
-- Immutable tag archive, final artifact verification, merge to `main`, and remote
-  publication remain pending.
+- BUILD_STATE update, final workflow snapshot/export verification, merge to
+  `main`, and remote publication remain pending.
