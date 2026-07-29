@@ -3,7 +3,7 @@
 - Snapshot updated: `2026-07-29` (`v4.15` exact release candidate passed connected, visual, and performance QA; tag pending)
 - Current version: exact release candidate `4.15`/code62 passed release QA. The released baseline remains `4.14`/code57 until tagging and release completion.
 - Current branch: `feature/v4.15`; the pre-existing `.idea/gradle.xml` change is preserved and excluded from product commits.
-- Current commit: `8c4d82a` (exact-build evidence baseline immediately before this QA snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current commit: `91dd9ee` (exact-QA evidence baseline immediately before this workflow-state snapshot commit; actual `HEAD` must be confirmed when resuming)
 - Current build: `artifacts/builds/v4.15/build-20260729-070042/TranslateBooks-v4.15-code62.apk`, SHA-256 `7FDF60C934E75F4ACF47D77E14E248FBAC21F2EF5DDAD5E086AE586729163969`; exact code62 is installed after QA and mirrored under `backup/builds/v4.15/build-20260729-070042/`. The released baseline remains immutable v4.14/code57.
 
 ## Completed tasks
@@ -124,7 +124,7 @@
 
 ## Pending tasks
 
-- Commit the final QA evidence documents, pass the PreTag gate, create the annotated `v4.15` tag, produce and verify the immutable tag archive, then finish the remaining release workflow.
+- Pass the PreTag gate, create the annotated `v4.15` tag, produce and verify the immutable tag archive, then finish the remaining release workflow.
 
 ## Known bugs
 
@@ -194,7 +194,7 @@
 
 ## Next step
 
-Commit the v4.15 exact-QA report/checklist/snapshot update, then run the PreTag gate. Keep `.idea/gradle.xml` outside all product commits.
+Run the v4.15 PreTag gate. Keep `.idea/gradle.xml` outside all product commits.
 
 ## Resume rule
 
