@@ -13,7 +13,7 @@
 - source ZIP SHA-256: `0F14121D69314C36CF6F92E80084881D32AA8E6BA35ACB165203D52161B2F433`
 - regression: approved-logo guard and 110 JVM tests passed; Android Lint completed with 53 warnings and 0 errors; exact-code62 connected instrumentation passed 15 cases with 1 explicitly opt-in paid real-API case skipped. Physical-device Macrobenchmark passed 5/5 cold starts at 313.89/330.23/335.04 ms minimum/median/maximum and retained real JSON plus five Perfetto traces.
 - device state: exact `4.15`/code62 is installed on OnePlus CPH2691 / Android 15 after QA and benchmark cleanup. Device metadata reports minSdk 26, targetSdk 35, and launcher activity `.MainActivity`.
-- release state: corrected annotated tag `v4.15` targets release-metadata commit `292b24e`; immutable 22-file `tag-v4.15` artifact/backup payloads, all 21 manifest entries, final export parity, tag-source ZIP, installed APK identity, and release documents are verified. Complete gate, merge to `main`, and remote publication remain pending.
+- release state: local release workflow complete. Corrected annotated tag `v4.15` targets release-metadata commit `292b24e`; immutable 22-file `tag-v4.15` artifact/backup payloads, all 21 manifest entries, final export parity, tag-source ZIP, installed APK identity, and release documents are verified; the v4.15 Complete gate passed. Merge to `main` and remote publication remain pending.
 
 ## Release identity
 

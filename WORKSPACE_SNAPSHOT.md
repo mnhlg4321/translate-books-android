@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-29` (`v4.15` all 14 workflow steps are complete; Complete gate retry pending after required status correction)
-- Current version: `4.15`/code62 is the accepted local release with corrected annotated tag `v4.15`, verified immutable archive, and verified final export. The checklist status is now `COMPLETE`; gate retry, merge, and publication remain pending.
+- Snapshot updated: `2026-07-29` (`v4.15` all 14 workflow steps and the Complete gate passed; merge/publication pending)
+- Current version: `4.15`/code62 is the accepted local release with corrected annotated tag `v4.15`, verified immutable archive, verified final export, and a passing Complete gate. Merge and publication remain pending.
 - Current branch: `feature/v4.15`; the pre-existing `.idea/gradle.xml` change is preserved and excluded from product commits.
-- Current commit: `0444a19` (final-export evidence baseline immediately before this Complete-status correction commit; actual `HEAD` must be confirmed when resuming)
+- Current commit: `358e61b` (Complete-status correction and passing-gate baseline immediately before this final handoff commit; actual `HEAD` must be confirmed when resuming)
 - Current build: `artifacts/releases/v4.15/tag-v4.15/TranslateBooks-v4.15-code62.apk`, SHA-256 `7FDF60C934E75F4ACF47D77E14E248FBAC21F2EF5DDAD5E086AE586729163969`; exact code62 is installed after QA and the 22-file tag payload is mirrored under `backup/v4.15/tag-v4.15/`. The released baseline remains immutable v4.14/code57 until release-state completion.
 
 ## Completed tasks
@@ -134,10 +134,11 @@
 - Passed final export verification on a clean tracked tree: tag ancestry/metadata, 22-file parity, all 21 manifest entries, APK hash, fresh 357-entry tag ZIP equality, current release documents, and installed v4.15/code62 identity all passed.
 - Removed the temporary fresh-tag verification ZIP and restored the user's `.idea/gradle.xml` change.
 - Recorded the first Complete-gate rejection: all 14 steps were checked, but the gate requires literal workflow status `COMPLETE`; corrected that transitional status for the retry.
+- Passed `verify-release-workflow.ps1 -Gate Complete -ExpectedVersion 4.15` after the required status correction; all 14 checklist steps are complete.
 
 ## Pending tasks
 
-- Rerun and pass the Complete gate; merge/publication remain separate follow-up actions.
+- Merge `feature/v4.15` to `main` without squashing and publish the branch/tag when explicitly authorized.
 
 ## Known bugs
 
@@ -213,7 +214,7 @@
 
 ## Next step
 
-Rerun the v4.15 Complete gate after the required checklist-status correction. Keep `.idea/gradle.xml` outside all product commits.
+When explicitly authorized, merge `feature/v4.15` to `main` without squashing and publish `main` plus annotated tag `v4.15`. Keep `.idea/gradle.xml` outside all product commits.
 
 ## Resume rule
 
