@@ -63,7 +63,7 @@ class GlossaryPageFactory {
 
     View glossaryListPage() {
         LinearLayout panel = a.sectionCard("📖", "Glossaries");
-        TextView desc = a.text("Quản lý nhiều glossary giống TBL PC: mỗi glossary có nút Use/Edit/Del riêng, dễ bấm trên màn hình dọc.", 13, a.MUTED, false);
+        TextView desc = a.text("Quản lý nhiều glossary giống TBL PC: có thể chọn nhiều file cùng lúc, mỗi file tạo một glossary riêng.", 13, a.MUTED, false);
         desc.setSingleLine(false);
         panel.addView(desc, a.marginLP(-1, -2, 0, 0, 0, 10));
         LinearLayout importActions = a.rowContainer();
@@ -184,7 +184,7 @@ class GlossaryPageFactory {
 
         LinearLayout tools = new LinearLayout(a);
         tools.setOrientation(LinearLayout.VERTICAL);
-        tools.addView(a.primaryButton("Import files", v -> a.chooseGlossaryMulti()), new LinearLayout.LayoutParams(-1, a.dp(44)));
+        tools.addView(a.primaryButton("Merge files", v -> a.chooseGlossaryMulti()), new LinearLayout.LayoutParams(-1, a.dp(44)));
         LinearLayout toolsBottom = a.rowContainer();
         toolsBottom.addView(a.secondaryButton("Save", v -> { a.saveEditingGlossary(); a.toast("Đã lưu glossary: " + a.editingGlossary.name); a.switchTab("Glossaries"); }), new LinearLayout.LayoutParams(0, a.dp(44), 1));
         toolsBottom.addView(a.space(8, 1));

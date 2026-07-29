@@ -21,7 +21,7 @@ class PronounPageFactory {
 
     View listPage(){
         LinearLayout panel=a.sectionCard("↔","Pronoun profiles");
-        TextView desc=a.text("Quản lý nhiều bộ quan hệ xưng hô. Chỉ profile Active được đưa vào prompt của job mới.",13,a.MUTED,false);desc.setSingleLine(false);panel.addView(desc,a.marginLP(-1,-2,0,0,0,10));
+        TextView desc=a.text("Có thể chọn nhiều file cùng lúc; mỗi file tạo một pronoun profile riêng. Chỉ profile Active được đưa vào prompt.",13,a.MUTED,false);desc.setSingleLine(false);panel.addView(desc,a.marginLP(-1,-2,0,0,0,10));
         LinearLayout actions=a.rowContainer();actions.addView(a.primaryButton("+ Import pronoun",v->{a.pendingPronounReplaceId="";a.choosePronoun();}),new LinearLayout.LayoutParams(0,a.dp(48),1));actions.addView(a.space(8,1));actions.addView(a.secondaryButton("Health check",v->a.showGlossaryPronounHealth()),new LinearLayout.LayoutParams(0,a.dp(48),1));panel.addView(actions);
         PronounStore.Profile active=PronounStore.selected(a);TextView activeLabel=a.text(active==null?"Active pronoun: —":"Active pronoun: "+active.name+" • "+active.count()+" rules",13,active==null?a.MUTED:a.GREEN,true);activeLabel.setSingleLine(false);panel.addView(activeLabel,a.marginLP(-1,-2,0,10,0,12));
         List<PronounStore.Profile> profiles=PronounStore.loadAll(a);if(profiles.isEmpty()){TextView empty=a.text("Chưa có pronoun profile. Bấm Import pronoun để thêm CSV/TXT/JSON, sau đó chọn Use.",14,a.MUTED,false);empty.setGravity(Gravity.CENTER);empty.setSingleLine(false);panel.addView(empty,new LinearLayout.LayoutParams(-1,a.dp(110)));}

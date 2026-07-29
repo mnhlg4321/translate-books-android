@@ -1,37 +1,68 @@
-# Translate Books 4.14 Release Notes
+# Translate Books 4.15 Release Notes
 
-Release date: 2026-07-25
+Release date: 2026-07-29
 
-Git tag: `v4.14`
+Git tag: `v4.15`
 
 ## Summary
 
-Version 4.14 makes builds durable and easier to identify while restoring useful translation visibility. Every accepted build is numbered and archived before installation, glossary imports can inherit their filenames, the Translate dashboard again shows the latest accepted output and exact rule usage, and the approved bright cool logo becomes the permanent app identity.
+Version 4.15 fixes three workflow problems reported on the phone UI: selecting a
+Glossary or Pronoun no longer sends the list back to the top, list imports can
+select several files and create one independent profile per file, and saved
+Provider, Prompt, and Performance settings are protected from being overwritten
+during lazy screen construction, refresh, reset navigation, or app reopening.
 
 ## Highlights
 
-- Archive every successful APK with README, build metadata, SHA-256 manifest, and exact source ZIP in both `artifacts/builds/` and `backup/builds/`.
-- Assign increasing development version names and Android version codes without relying on temporary Gradle output.
-- Use an exact release mode for public `versionName 4.14`.
-- Adopt the exact imported filename for a single glossary file while retaining deterministic naming for multiple imports and preserving explicit custom names.
-- Restore the bounded latest-translation preview and current chunk information.
-- Show exact Glossary and Pronoun rule counts from the same `PromptPlan` used by translation/refinement requests.
-- Use the approved bright cool logo for launcher, round launcher, and in-app header, with an exact-hash build guard.
-- Add a dedicated non-debuggable AndroidX Macrobenchmark target for retained startup metrics and Perfetto traces.
+- Preserve the exact Glossary and Pronoun list scroll position when `Use` changes
+  the active profile.
+- Keep editor navigation's intentional top-of-page behavior separate from
+  list-level selection.
+- Enable Android multi-select for list-level Glossary and Pronoun imports.
+- De-duplicate returned URIs while preserving selection order.
+- Persist every valid selected file as a separate profile with its own ID and
+  source filename; activate the first valid imported profile.
+- Report invalid siblings independently without discarding valid imports.
+- Keep Pronoun replacement single-select and label intentional Glossary editor
+  combination as `Merge files`.
+- Hydrate lazy Settings sections from persisted values before any control can
+  write defaults.
+- Save Settings safely through normal lifecycle transitions without clearing
+  Provider, Prompt, or Performance values.
 
 ## Pre-tag verification
 
-- Exact archive-first `4.14`/code57 APK build and installation passed.
-- 106 JVM tests passed; Android Lint completed with 0 errors and 54 warnings.
-- Connected Android instrumentation completed with 11 passed and 1 opt-in paid case skipped.
-- Controlled output-permission-loss proof passed with a prepared local TXT, the exact blocker, and Start disabled.
-- Physical-device AndroidX Macrobenchmark passed five cold-start iterations with a 322.81 ms median and retained five Perfetto traces.
-- Final screenshots, screenshot-sequence AVI, APK/source hashes, and artifact/backup parity passed.
+- Exact archive-first APK: `4.15`/code62, SHA-256
+  `7FDF60C934E75F4ACF47D77E14E248FBAC21F2EF5DDAD5E086AE586729163969`.
+- Exact source ZIP SHA-256:
+  `FEFEDF516FD85B3166C6BB36249C22C94909D4428844EAC5E8E811F06015F5EE`.
+- Approved-logo guard and all 110 JVM tests passed.
+- Android Lint completed with 0 errors and 53 warnings.
+- Exact-code62 connected instrumentation completed with 15 passed, 1 explicitly
+  opt-in paid real-API case skipped, and 0 failures/errors.
+- Physical-device AndroidX Macrobenchmark passed all five cold starts at
+  313.89/330.23/335.04 ms minimum/median/maximum and retained five real Perfetto
+  traces.
+- Five device screenshots, matching UI hierarchy dumps, and a documented
+  25-frame MJPEG device sequence were retained in matching QA artifact/backup
+  stores.
 
-Final counts, hashes, artifact locations, benchmark measurements, and known limitations are recorded in `QA_REPORT_v4_14.md` and `BUILD_STATE.md`.
+Final counts, hashes, artifact locations, benchmark measurements, and known
+limitations are recorded in `QA_REPORT_v4_15.md`.
 
-The immutable tag archive was verified in both `artifacts/releases/v4.14/tag-v4.14/` and `backup/v4.14/tag-v4.14/`. All 20 files match, all 19 manifest entries pass SHA-256 verification, and `project_source_v4.14.zip` exactly matches a fresh archive of tag `v4.14`.
+## Known limitations
+
+- Android Lint retains 53 warnings and no errors.
+- The paid real-API instrumentation case remains explicitly opt-in and was not
+  run during release QA; no provider request or billing occurred.
+- OnePlus Android 15 denies shell `screenrecord`. The retained AVI is explicitly
+  a timed sequence of actual-device screenshots, not continuous MediaProjection
+  capture.
+- AndroidX reports `run-from-apk` compilation mode for the startup benchmark.
 
 ## Distribution
 
-The source history and annotated `v4.14` tag are published to the private GitHub repository. The locally signed APK and immutable release archive remain outside Git by design and must be distributed separately from the source repository.
+The exact APK and release evidence remain outside Git by design. After the
+annotated tag passes the guarded workflow, the immutable `tag-v4.15` payload must
+be created and verified in both `artifacts/releases/v4.15/` and
+`backup/v4.15/` before publication.

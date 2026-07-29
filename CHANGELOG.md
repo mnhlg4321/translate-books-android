@@ -2,6 +2,26 @@
 
 All notable changes to Translate Books are recorded in this file. The repository was normalized to Git on 2026-07-17 without feature changes or rollback. The v4.7 source baseline is commit `da8c6d9a9001296c3f3c17817ea3d6372fd59ae3` on branch `main`.
 
+## [4.15] - 2026-07-29
+
+- Preserve the exact Glossary and Pronoun list position when activating another
+  profile while retaining intentional top navigation for editors.
+- Allow list-level Glossary and Pronoun imports to select multiple files and
+  create one independent profile per valid file.
+- De-duplicate selected URIs, activate the first valid import, and report invalid
+  siblings without discarding successful imports.
+- Keep Pronoun replacement single-select and distinguish intentional Glossary
+  editor combination with the `Merge files` label.
+- Protect persisted Provider, Prompt, and Performance settings from default-value
+  overwrites during lazy hydration, refresh/recreation, lifecycle save, and app
+  reopening.
+- Add focused planner and physical-device instrumentation coverage for Settings
+  persistence, exact scroll restoration, picker flags, URI collection, and
+  independent profile persistence.
+- Verify exact `4.15`/code62 with 110 JVM tests, lint at 0 errors/53 warnings,
+  connected instrumentation at 15 passed/1 opt-in skip, and five retained
+  physical-device cold-start traces.
+
 ## [4.14] - 2026-07-25
 
 - Preserve every successful APK as a numbered, checksummed artifact with an exact source ZIP and a second immutable local backup before optional installation.

@@ -59,7 +59,7 @@ class SettingsPageFactory {
         body.setVisibility(expanded?View.VISIBLE:View.GONE);section.addView(body,new LinearLayout.LayoutParams(-1,-2));
         header.setOnClickListener(v->{
             boolean show=body.getVisibility()!=View.VISIBLE;
-            if(show&&!contentBuilt[0]){bodyContent.addView(buildCategory(category),new LinearLayout.LayoutParams(-1,-2));contentBuilt[0]=true;}
+            if(show&&!contentBuilt[0]){bodyContent.addView(buildCategory(category),new LinearLayout.LayoutParams(-1,-2));contentBuilt[0]=true;a.fillSettings(SettingsStore.load(a));}
             body.setVisibility(show?View.VISIBLE:View.GONE);
             icon.setTextColor(show?a.BLUE:a.MUTED);arrow.setText(show?"\u25B4":"\u25BE");arrow.setContentDescription(show?"Collapse "+category:"Expand "+category);
             a.recordSettingsSectionState(category,show);

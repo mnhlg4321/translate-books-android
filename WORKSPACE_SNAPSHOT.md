@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-25` (`v4.14` released and published; immutable tag archive and backup verified)
-- Current version: `4.14` (`versionCode 57`, annotated tag `v4.14` at `8a3b281`)
-- Current branch: `main` (final handoff state after merging this release-state record)
-- Current commit: `41cc6e9` (published v4.14 release-merge baseline immediately before the final release-state documentation commit)
-- Current build: `artifacts/releases/v4.14/tag-v4.14/TranslateBooks-v4.14-code57.apk`, SHA-256 `D478AC135ED3C736F7FC850FAA06CA4F6F5CB6D0634BB09B15BD59C9B2DAE5D1`; the 20-file immutable payload matches `backup/v4.14/tag-v4.14/`, all 19 manifest entries verify, and the tag source ZIP SHA-256 is `5F2DBA2C1D4F806A838961144807228C22C1846070296FACD6915A3DC2B43E5B`.
+- Snapshot updated: `2026-07-29` (`v4.15` all 14 workflow steps and the Complete gate passed; merge/publication pending)
+- Current version: `4.15`/code62 is the accepted local release with corrected annotated tag `v4.15`, verified immutable archive, verified final export, and a passing Complete gate. Merge and publication remain pending.
+- Current branch: `feature/v4.15`; the pre-existing `.idea/gradle.xml` change is preserved and excluded from product commits.
+- Current commit: `358e61b` (Complete-status correction and passing-gate baseline immediately before this final handoff commit; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/releases/v4.15/tag-v4.15/TranslateBooks-v4.15-code62.apk`, SHA-256 `7FDF60C934E75F4ACF47D77E14E248FBAC21F2EF5DDAD5E086AE586729163969`; exact code62 is installed after QA and the 22-file tag payload is mirrored under `backup/v4.15/tag-v4.15/`. The released baseline remains immutable v4.14/code57 until release-state completion.
 
 ## Completed tasks
 
@@ -96,11 +96,49 @@
 - Verified both 20-file release payloads by relative path, length, and SHA-256; all 19 manifest entries pass.
 - Regenerated `project_source_v4.14.zip` directly from tag `v4.14` and confirmed exact SHA-256 equality with the retained source ZIP.
 - Merged `feature/v4.14` into `main` with `--no-ff`, pushed `main` and annotated `v4.14`, and verified remote release merge `41cc6e9`, tag object `246de34`, and tag target `8a3b281`.
+- Started the v4.15 cycle from clean `main` at `9199733`, created `feature/v4.15`, and restored the user's unrelated `.idea/gradle.xml` change after branch creation.
+- Added a Settings hydration guard so programmatic `setText`/`setChecked` calls cannot schedule delayed persistence while stored values are being loaded.
+- Hydrated phone Settings sections immediately after lazy construction and stopped section expand/collapse state changes from writing the entire Settings model.
+- Added an `onStop` persistence boundary for real user edits while retaining the hydration guard.
+- Added `V415SettingsPersistenceInstrumentedTest`, which covers cold launch, lazy Provider/Prompt/Performance expansion, exact custom-value hydration, refresh, and storage preservation.
+- Created and installed archive-first `4.15-dev.1`/code59 from Settings P0 commit `e1b7a17` under event `build-20260729-062725`; APK SHA-256 is `18C36F6A...BCC665`.
+- Passed the focused Settings P0 instrumentation 1/1 on OnePlus CPH2691 / Android 15.
+- Preserved the current vertical position when a user selects a different Glossary or Pronoun from its list, while retaining top-of-page behavior for editor transitions.
+- Added `V415LibraryScrollInstrumentedTest`, which builds long fixture libraries, scrolls both lists, selects a different profile, verifies exact `scrollY` and selected IDs, and restores Glossary, Pronoun, and Settings preferences exactly.
+- Created and installed archive-first `4.15-dev.2`/code60 from scroll implementation commit `9e6730d` under event `build-20260729-063857`; APK SHA-256 is `828B4535...DCE7`.
+- Passed the focused scroll instrumentation 1/1 on OnePlus CPH2691 / Android 15.
+- Enabled multi-select on list-level Glossary and Pronoun pickers; every valid file is parsed and persisted as an independent profile, invalid siblings are reported without discarding valid imports, and the first valid profile becomes active.
+- Kept Pronoun replacement single-select and cleared stale replacement intent after cancellation/failure. Renamed the Glossary editor action to `Merge files` so its intentional merge behavior is distinct from list import.
+- Added four pure planner tests and `V415MultiProfileImportInstrumentedTest`, which verifies picker flags, URI de-duplication, two independent Glossaries, two independent Pronouns, activation, and exact restoration of user preferences/runtime log.
+- Created and installed archive-first `4.15-dev.3`/code61 from multi-import commit `cda8eff` under event `build-20260729-065132`; APK SHA-256 is `5D412996...A1EF7`.
+- Passed focused multi-profile import instrumentation 2/2 on OnePlus CPH2691 / Android 15.
+- Passed the full v4.15 automated regression: approved-logo guard, 110/110 JVM tests, lint with 0 errors/53 warnings, and connected instrumentation with 15 passed plus 1 explicitly opt-in paid case skipped and 0 failures/errors.
+- Added `QA_REPORT_v4_15.md` with exact build identity, archive hashes, suite counts, focused v4.15 evidence, and remaining release work.
+- Built exact `4.15`/code62 from commit `5253f00` with the mandatory archive-first workflow under event `build-20260729-070042`; repeated 110 passing JVM tests and lint with 0 errors/53 warnings.
+- Verified all five exact-build files match their backup mirrors, all four manifest hashes pass, installed the APK, and confirmed device package metadata reports versionName `4.15`/versionCode `62`.
+- Passed full connected instrumentation against exact `4.15`/code62: 16 total, 15 passed, 1 explicitly opt-in paid real-API case skipped, and 0 failures/errors.
+- Passed exact-code62 physical-device Macrobenchmark with 5/5 cold starts at 313.89/330.23/335.04 ms minimum/median/maximum and retained AndroidX JSON plus five real Perfetto traces.
+- Retained five exact-device screenshots, five UI hierarchy dumps, and a clearly documented 25-frame MJPEG AVI covering Settings, Provider/Prompt/Performance, Glossaries, and Pronouns.
+- Mirrored the 21-file event `qa-code62-20260729-072300` under both durable QA stores with matching relative paths, lengths, and SHA-256 hashes.
+- Reinstalled the exact archived APK after benchmark cleanup and reconfirmed versionName `4.15`, versionCode `62`, minSdk `26`, targetSdk `35`, and `.MainActivity`.
+- Passed the PreTag gate and created annotated tag `v4.15`; tag object `7e99cc69eb948a41659021c1114468e775e13b34` targets approved commit `d6d844d97f51ce8637048e1fbbd0f7a9940cee47`.
+- Stopped before PreBackup/archive after proving that local tag `v4.15` still contains v4.14 release notes and no v4.15 changelog section; confirmed the tag is absent from `origin` and both `tag-v4.15` archive destinations are absent.
+- With explicit approval, deleted only rejected unpublished tag object `7e99cc69eb948a41659021c1114468e775e13b34`; no remote ref or archive payload was removed.
+- Prepared correct v4.15 release notes and a v4.15 changelog entry covering all three fixes plus exact build/QA evidence.
+- Committed corrected release metadata as `292b24e`, reran PreTag successfully, and created fresh annotated tag object `cb474d2dd22763f67e24b4c0f57a27b7ae4689e7` targeting that commit.
+- Verified directly from tag `v4.15` that release notes identify 4.15 and the changelog begins with a 4.15 section.
+- Passed PreBackup and created immutable `tag-v4.15` artifact/backup payloads from corrected tag target `292b24e`.
+- Verified both 22-file payloads match by relative path, length, and SHA-256; all 21 manifest entries pass.
+- Verified archived APK SHA-256 `7FDF60C9...3969` and 357-entry source ZIP SHA-256 `0F14121D...F433`; a fresh `git archive` of `v4.15` matches the retained ZIP exactly.
+- Updated `BUILD_STATE.md` to make v4.15/code62 the current accepted local release and record the exact build, corrected tag, installed-device state, regression, archive hashes, mirror parity, and known limitations.
+- Passed final export verification on a clean tracked tree: tag ancestry/metadata, 22-file parity, all 21 manifest entries, APK hash, fresh 357-entry tag ZIP equality, current release documents, and installed v4.15/code62 identity all passed.
+- Removed the temporary fresh-tag verification ZIP and restored the user's `.idea/gradle.xml` change.
+- Recorded the first Complete-gate rejection: all 14 steps were checked, but the gate requires literal workflow status `COMPLETE`; corrected that transitional status for the retry.
+- Passed `verify-release-workflow.ps1 -Gate Complete -ExpectedVersion 4.15` after the required status correction; all 14 checklist steps are complete.
 
 ## Pending tasks
 
-- No v4.14 release task remains.
-- v4.15 development has not started.
+- Merge `feature/v4.15` to `main` without squashing and publish the branch/tag when explicitly authorized.
 
 ## Known bugs
 
@@ -116,6 +154,12 @@
 - Performance evidence uses Perfetto/frame/PSS measurements rather than a dedicated Macrobenchmark module.
 - APK and source ZIP archives are deliberately ignored by Git, so they are not present in a clean clone; durable copies remain in the local `artifacts/releases/v4.8/` and `backup/v4.8/` stores.
 - Android Lint reports 54 warnings and 0 errors for the accepted v4.14 development build.
+- v4.15 Settings P0 root cause was lazy phone-section construction followed by persistence of default-valued controls before hydration. The correction passed compile/JVM checks and the strengthened physical-device instrumentation, including exact preference snapshot equality after QA restoration.
+- An accidental but valid immutable `4.14-dev.5`/code58 build is retained under event `build-20260729-062629` because the first build invocation omitted the explicit v4.15 series. It was superseded, not overwritten, by `4.15-dev.1`/code59.
+- v4.15 library scroll root cause was same-tab cache invalidation rebuilding the `ScrollView` at position zero after selection. The correction restores the bounded prior position only for list-level Use actions; editor navigation behavior is unchanged.
+- v4.15 multi-file import root cause was that list-level Glossary/Pronoun pickers did not set `EXTRA_ALLOW_MULTIPLE`, and their result handlers assumed one URI. The corrected handlers enumerate unique selected URIs and persist one profile per valid file.
+- OnePlus Android 15 denies shell `screenrecord`; exact-code62 visual evidence therefore uses an explicitly documented MJPEG sequence of actual-device screenshots, not continuous MediaProjection capture.
+- The first local tag was rejected for backup because it contained stale v4.14 release metadata; it was absent from `origin` and was deleted with approval before any immutable archive existed.
 
 ## Regression status
 
@@ -152,10 +196,25 @@
 - v4.14/code56 regression: PARTIAL PASS. Approved-logo guard, 106 JVM tests, lint (54 warnings/0 errors), artifact parity, and connected instrumentation (12 passed/1 opt-in skipped) passed. The archived source remained vulnerable to the OnePlus background freezer, so code56 is rejected.
 - Corrected working-tree Macrobenchmark diagnostic: PASS. OnePlus CPH2691 / Android 15 completed 5/5 cold starts of `com.ml.tblandroidtxt.MainActivity`, 0 failed/skipped; median time to initial display was 332.01 ms and all five real Perfetto traces plus AndroidX JSON were retained in ignored durable artifact/backup diagnostic stores.
 - v4.14/code57 final pre-tag regression: PASS. Approved-logo guard, 106 JVM tests, lint (0 errors/54 warnings), five-file build parity, connected instrumentation (11 passed/1 opt-in skip), controlled output-permission-loss QA, final visuals, and the accepted 5/5 Macrobenchmark rerun all passed.
+- v4.15 Settings P0 focused compile/JVM regression: PASS. `:app:compileDebugAndroidTestJavaWithJavac testDebugUnitTest` completed with the approved-logo guard; 106 JVM tests passed with 0 failures/errors/skips.
+- v4.15 Settings P0 strengthened device regression: PASS. `V415SettingsPersistenceInstrumentedTest` passed 1/1 on OnePlus CPH2691 / Android 15 with the exact `4.15-dev.1`/code59 build identity and exact preference snapshot equality after restore.
+- v4.15-dev.1 archive verification: PASS. Both durable stores contain the same five files; all mirror SHA-256 values match, all four manifest entries verify, lint reports 0 errors/54 warnings, and the APK/source ZIP hashes are `18C36F6A...BCC665`/`D047836E...356`.
+- v4.15 Glossary/Pronoun scroll regression: PASS. `V415LibraryScrollInstrumentedTest` passed 1/1 on OnePlus CPH2691 / Android 15 with exact `4.15-dev.2`/code60 identity; exact scroll positions and selected IDs passed for both lists, and all preference snapshots matched after restoration.
+- v4.15-dev.2 archive verification: PASS. Both durable stores contain the same five files; every mirror hash matches, all four manifest entries verify, 106 JVM tests pass, lint reports 0 errors/54 warnings, and the APK/source ZIP hashes are `828B4535...DCE7`/`96838283...9C40`.
+- v4.15 multi-profile import regression: PASS. Four focused planner tests pass, and `V415MultiProfileImportInstrumentedTest` passes 2/2 with exact `4.15-dev.3`/code61 identity on OnePlus CPH2691 / Android 15.
+- v4.15-dev.3 archive verification: PASS. Both durable stores contain the same five files; every mirror hash matches, all four manifest entries verify, 110 JVM tests pass, lint reports 0 errors/53 warnings, and the APK/source ZIP hashes are `5D412996...A1EF7`/`9C7D7978...8EF`.
+- v4.15 full automated regression: PASS. Logo guard and 110 JVM tests passed; lint reports 0 errors/53 warnings; full connected instrumentation on OnePlus CPH2691 / Android 15 records 16 total, 15 passed, 1 opt-in paid case skipped, and 0 failures/errors.
+- v4.15/code62 exact build verification: PASS. Archive-first build repeated 110 JVM tests and lint, both five-file durable payloads match, all four manifest entries verify, installation succeeded, and device metadata matches `4.15`/code62.
+- v4.15/code62 exact release QA: PASS. Connected instrumentation records 16 total/15 passed/1 opt-in paid skip/0 failures or errors; Macrobenchmark passed 5/5 cold starts at 313.89/330.23/335.04 ms min/median/max with five real traces; the 21-file visual, UI, instrumentation, and performance evidence event matches its backup mirror exactly.
+- v4.15 PreTag/tag verification: PASS. The PreTag gate accepted completed checklist steps 1-9; `v4.15` is an annotated tag object targeting `d6d844d`.
+- v4.15 tag repair: PASS. Corrected release metadata is committed and the fresh annotated tag targets it.
+- v4.15 immutable tag archive: PASS. Both 22-file stores match, all 21 manifest entries pass, and the retained source ZIP exactly matches a fresh archive of corrected tag `v4.15`.
+- v4.15 BUILD_STATE verification: PASS. Current release identity, code62 APK, corrected tag, QA counts, performance metrics, archive hashes, device state, and known limitations are recorded.
+- v4.15 final export verification: PASS. Corrected tag, artifact/backup parity, manifest, APK, source ZIP, release documents, and installed device identity all passed.
 
 ## Next step
 
-When a new development cycle is requested, start from clean synchronized `main`, create `feature/v4.15`, and use the mandatory workflow. The expected first archived development build is `4.15-dev.1` with the next unused versionCode (currently expected code58).
+When explicitly authorized, merge `feature/v4.15` to `main` without squashing and publish `main` plus annotated tag `v4.15`. Keep `.idea/gradle.xml` outside all product commits.
 
 ## Resume rule
 
