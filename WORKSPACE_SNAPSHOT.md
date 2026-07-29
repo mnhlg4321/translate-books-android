@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-29` (`v4.15` all 14 workflow steps and the Complete gate passed; merge/publication pending)
-- Current version: `4.15`/code62 is the accepted local release with corrected annotated tag `v4.15`, verified immutable archive, verified final export, and a passing Complete gate. Merge and publication remain pending.
-- Current branch: `feature/v4.15`; the pre-existing `.idea/gradle.xml` change is preserved and excluded from product commits.
-- Current commit: `358e61b` (Complete-status correction and passing-gate baseline immediately before this final handoff commit; actual `HEAD` must be confirmed when resuming)
+- Snapshot updated: `2026-07-29` (`v4.15` released, merged without squashing, published, and remotely verified)
+- Current version: `4.15`/code62 is released with corrected annotated tag `v4.15`, verified immutable archive, verified final export, passing Complete gate, merged history, and verified GitHub refs.
+- Current branch: `main` after this final release-state documentation is merged; the pre-existing `.idea/gradle.xml` change remains local and excluded from every product/release commit.
+- Current commit: `81b8344` (initial published v4.15 release merge baseline immediately before this final release-state documentation commit; actual `HEAD` must be confirmed when resuming)
 - Current build: `artifacts/releases/v4.15/tag-v4.15/TranslateBooks-v4.15-code62.apk`, SHA-256 `7FDF60C934E75F4ACF47D77E14E248FBAC21F2EF5DDAD5E086AE586729163969`; exact code62 is installed after QA and the 22-file tag payload is mirrored under `backup/v4.15/tag-v4.15/`. The released baseline remains immutable v4.14/code57 until release-state completion.
 
 ## Completed tasks
@@ -135,10 +135,13 @@
 - Removed the temporary fresh-tag verification ZIP and restored the user's `.idea/gradle.xml` change.
 - Recorded the first Complete-gate rejection: all 14 steps were checked, but the gate requires literal workflow status `COMPLETE`; corrected that transitional status for the retry.
 - Passed `verify-release-workflow.ps1 -Gate Complete -ExpectedVersion 4.15` after the required status correction; all 14 checklist steps are complete.
+- Merged `feature/v4.15` into `main` with `--no-ff` as release merge `81b8344`; corrected tag target `292b24e` is an ancestor of merged `main`.
+- Pushed `main` and corrected annotated tag `v4.15` to the private GitHub repository without force.
+- Verified remote `main` at `81b8344`, annotated tag object `cb474d2d...89e7`, and peeled tag target `292b24e...432c`.
 
 ## Pending tasks
 
-- Merge `feature/v4.15` to `main` without squashing and publish the branch/tag when explicitly authorized.
+- None for v4.15 after this final release-state documentation is merged and pushed. Future work must start from current clean `main` on a new version branch.
 
 ## Known bugs
 
@@ -211,10 +214,11 @@
 - v4.15 immutable tag archive: PASS. Both 22-file stores match, all 21 manifest entries pass, and the retained source ZIP exactly matches a fresh archive of corrected tag `v4.15`.
 - v4.15 BUILD_STATE verification: PASS. Current release identity, code62 APK, corrected tag, QA counts, performance metrics, archive hashes, device state, and known limitations are recorded.
 - v4.15 final export verification: PASS. Corrected tag, artifact/backup parity, manifest, APK, source ZIP, release documents, and installed device identity all passed.
+- v4.15 merge/publication verification: PASS. Initial release merge `main` and corrected annotated tag/peeled target match the verified GitHub refs.
 
 ## Next step
 
-When explicitly authorized, merge `feature/v4.15` to `main` without squashing and publish `main` plus annotated tag `v4.15`. Keep `.idea/gradle.xml` outside all product commits.
+Begin future work from current `main` on a new `feature/vX.Y` branch. Keep annotated tag `v4.15` and both immutable archives unchanged.
 
 ## Resume rule
 
