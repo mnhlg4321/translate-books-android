@@ -111,6 +111,21 @@ public final class EditorialRepository implements AutoCloseable {
         }
     }
 
+    public List<AssetSnapshot> chapterAssets(long chapterId) {
+        ArrayList<AssetSnapshot> assets=new ArrayList<>();
+        try(Cursor c=database.editorialReadableDatabase().rawQuery("SELECT role,source_uri,display_name,content FROM editorial_assets WHERE chapter_id=? ORDER BY role",new String[]{String.valueOf(chapterId)})) {
+            while(c.moveToNext())try{assets.add(new AssetSnapshot(EditorialWorkflowV5.AssetRole.valueOf(c.getString(0)),safe(c.getString(1)),safe(c.getString(2)),safe(c.getString(3))));}catch(Exception ignored){}
+        } return assets;
+    }
+
+    public void updateRunState(long runId,String state) {
+        if(runId<=0||blank(state))throw new IllegalArgumentException("Run state is required"); ContentValues v=new ContentValues();v.put("state",state);v.put("updated_at",System.currentTimeMillis());database.editorialWritableDatabase().update("editorial_runs",v,"id=?",new String[]{String.valueOf(runId)});
+    }
+
+    public void transitionChapter(long chapterId,EditorialWorkflowV5.ChapterState from,EditorialWorkflowV5.ChapterState to) {
+        if(!EditorialWorkflowV5.canTransition(from,to))throw new IllegalArgumentException("Invalid editorial state transition"); ContentValues v=new ContentValues();v.put("state",to.name());v.put("updated_at",System.currentTimeMillis());int changed=database.editorialWritableDatabase().update("editorial_chapters",v,"id=? AND state=?",new String[]{String.valueOf(chapterId),from.name()});if(changed!=1)throw new IllegalStateException("Chapter state changed before this run");
+    }
+
     public List<Project> listProjects() {
         ArrayList<Project> projects=new ArrayList<>();
         try (Cursor c=database.editorialReadableDatabase().rawQuery("SELECT id,series_name,volume_name,workflow_version,workflow_hash,output_tree_uri FROM editorial_projects ORDER BY updated_at DESC,id DESC",null)) {

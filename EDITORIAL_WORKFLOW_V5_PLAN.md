@@ -186,7 +186,7 @@ Model phải trả JSON theo schema cho evidence; text output được render/ex
 
 ### P2 — L1
 
-- Context builder/runner/checkpoint L1.
+- Hoàn tất context builder/runner/checkpoint L1: context mới chỉ nhận RAW/DRAFT/GLOSSARY/PRONOUN, tạo RAW Map trước DRAFT, lưu manifest/evidence/scene/gate/report, và chỉ đóng L1 sau validator. Chapter quá ngưỡng context bị chặn rõ ràng, không bị cắt ngầm; scene-segmentation runner là hạng mục kế tiếp.
 - Schema validator và Report detail/export.
 - Recovery/retry theo scene hoặc phase an toàn.
 

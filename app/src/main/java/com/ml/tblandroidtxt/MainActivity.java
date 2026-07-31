@@ -858,6 +858,13 @@ public class MainActivity extends Activity {
     }
     EditorialRepository.AssetSnapshot editorialAsset(EditorialWorkflowV5.AssetRole role, EditorialImportPlanner.Source source) { return new EditorialRepository.AssetSnapshot(role,source.uri,source.name,source.content); }
 
+    void confirmRunEditorialL1(long chapterId) {
+        new AlertDialog.Builder(this).setTitle("Chạy L1 audit?").setMessage("L1 chỉ audit RAW–DRAFT, không sửa bản dịch. App sẽ tạo context mới, lưu RAW map/report/gate và dùng model đang chọn.").setPositiveButton("Chạy L1",(d,w)->runEditorialL1(chapterId)).setNegativeButton("Hủy",null).show();
+    }
+    void runEditorialL1(long chapterId) {
+        toast("Đang chạy L1 audit…"); preflightExecutor.submit(()->{try(EditorialRepository repo=new EditorialRepository(this)){EditorialL1Runner.Result result=new EditorialL1Runner(repo).run(chapterId,SettingsStore.load(this));runOnUiThread(()->{invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");showResult("REPORT_L1 ready",preview(result.report,6000));});}catch(Exception error){runOnUiThread(()->showResult("L1 audit failed",AppValidator.readableError(error)));}});
+    }
+
     void replacePronoun(PronounStore.Profile profile){if(profile==null)return;pendingPronounReplaceId=profile.id;choosePronoun();}
 
     ArrayList<Uri> selectedDocumentUris(Intent data) {
