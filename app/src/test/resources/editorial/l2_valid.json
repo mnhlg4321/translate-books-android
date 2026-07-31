@@ -1,0 +1,1 @@
+{"schema":"editorial-v5-evidence-1","run":"L2","chapterId":"c12","output":"Bản Việt hoàn chỉnh.","outputComplete":true,"globalChanges":[{"id":"g1","before":"A","after":"B","reason":"raw","scope":"chapter","status":"CLOSED"}],"gates":{"coverage":"CLOSED","fidelity":"CLOSED","referenceVoice":"CLOSED","continuityStructure":"CLOSED","change":"CLOSED"}}

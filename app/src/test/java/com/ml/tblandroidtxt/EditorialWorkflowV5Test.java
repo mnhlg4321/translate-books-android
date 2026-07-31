@@ -4,6 +4,10 @@ import org.junit.Test;
 
 import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.Arrays;
+import java.util.List;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.*;
 
@@ -44,7 +48,7 @@ public class EditorialWorkflowV5Test {
     @Test public void l1EvidenceRequiresAnchorsIssueEvidenceAndClosedGates() {
         String valid = "{\"schema\":\"editorial-v5-evidence-1\",\"run\":\"L1\",\"chapterId\":\"c12\","
                 + "\"scenes\":[{\"id\":\"s1\",\"rawStart\":\"p1\",\"rawEnd\":\"p8\",\"coverage\":\"ALIGNED\",\"status\":\"CLOSED\"}],"
-                + "\"issues\":[{\"id\":\"i1\",\"severity\":\"MAJOR\",\"rawAnchor\":\"p2\",\"draftAnchor\":\"p2\",\"currentMeaning\":\"A\",\"rawEvidence\":\"B\",\"deviationImpact\":\"C\",\"l2Scope\":\"scene\"}],"
+                + "\"issues\":[{\"id\":\"i1\",\"severity\":\"MAJOR\",\"category\":\"VOICE\",\"rawAnchor\":\"p2\",\"draftAnchor\":\"p2\",\"currentMeaning\":\"A\",\"rawEvidence\":\"B\",\"deviationImpact\":\"C\",\"l2Scope\":\"scene\"}],"
                 + "\"gates\":{\"coverage\":\"CLOSED\",\"fidelity\":\"CLOSED\",\"referenceVoice\":\"CLOSED\",\"continuityStructure\":\"CLOSED\"}}";
         assertNull(EditorialEvidenceValidator.validateL1Report(valid));
         assertTrue(EditorialEvidenceValidator.validateL1Report(valid.replace("\"rawEvidence\":\"B\",", "")).contains("Issue"));
@@ -56,5 +60,42 @@ public class EditorialWorkflowV5Test {
         assertTrue(EditorialEvidenceSchema.l2OutputSchema().contains("\"run\":\"L2\""));
         assertTrue(EditorialEvidenceSchema.l3OutputSchema().contains("\"run\":\"L3\""));
         assertTrue(EditorialEvidenceSchema.l3OutputSchema().contains("crossSceneVoiceAudit"));
+    }
+
+    @Test public void l2AndL3FixturesNeedClosedGatesAndCompleteOutput() throws Exception {
+        assertNull(EditorialEvidenceValidator.validateL2Output(fixture("l2_valid.json")));
+        assertNull(EditorialEvidenceValidator.validateL3Output(fixture("l3_valid.json")));
+        assertTrue(EditorialEvidenceValidator.validateL3Output(fixture("l3_truncated.json")).contains("incomplete"));
+    }
+
+    @Test public void assetManifestBlocksAmbiguousRoleAndStaleSnapshot() {
+        List<EditorialAssetManifest.Asset> valid = Arrays.asList(
+                new EditorialAssetManifest.Asset(EditorialWorkflowV5.AssetRole.RAW, "raw"),
+                new EditorialAssetManifest.Asset(EditorialWorkflowV5.AssetRole.DRAFT, "draft"),
+                new EditorialAssetManifest.Asset(EditorialWorkflowV5.AssetRole.GLOSSARY, "glossary"),
+                new EditorialAssetManifest.Asset(EditorialWorkflowV5.AssetRole.PRONOUN, "pronoun"));
+        assertNull(EditorialAssetManifest.validateUniqueRequired(valid, EditorialWorkflowV5.requiredInputs(EditorialWorkflowV5.ContextPhase.L1_AUDIT)));
+        assertTrue(EditorialAssetManifest.validateUniqueRequired(Arrays.asList(valid.get(0), valid.get(0)), EnumSet.of(EditorialWorkflowV5.AssetRole.RAW)).contains("Ambiguous"));
+        assertTrue(EditorialAssetManifest.validateUniqueRequired(Arrays.asList(valid.get(0)), EditorialWorkflowV5.requiredInputs(EditorialWorkflowV5.ContextPhase.L1_AUDIT)).contains("Missing required"));
+        assertFalse(EditorialAssetManifest.unchanged(valid, Arrays.asList(
+                new EditorialAssetManifest.Asset(EditorialWorkflowV5.AssetRole.RAW, "changed"), valid.get(1), valid.get(2), valid.get(3))));
+    }
+
+    @Test public void canonicalRawMapPreservesEveryLongChapterAnchor() {
+        StringBuilder raw = new StringBuilder();
+        for (int i = 0; i < 300; i++) raw.append("第").append(i).append("行。\r\n");
+        raw.append("◇◇◇\r\n").append("終わり");
+        EditorialRawMap map = EditorialRawMap.create(raw.toString());
+        assertEquals(raw.toString().replace("\r\n", "\n"), map.reconstruct());
+        assertEquals("p000001", map.anchors.get(0).id);
+        assertTrue(map.anchors.stream().anyMatch(anchor -> anchor.structuralMarker));
+        assertEquals(map.normalizedRaw.length(), map.anchors.get(map.anchors.size() - 1).end);
+    }
+
+    private static String fixture(String name) throws Exception {
+        try (InputStream in = EditorialWorkflowV5Test.class.getResourceAsStream("/editorial/" + name)) {
+            if (in == null) throw new IllegalStateException("Missing fixture " + name);
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
     }
 }
