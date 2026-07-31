@@ -7,6 +7,8 @@ import androidx.test.core.app.ApplicationProvider;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Uses unique data and always cleans it up so it does not alter user projects. */
 public class EditorialRepositoryInstrumentedTest {
@@ -34,4 +36,13 @@ public class EditorialRepositoryInstrumentedTest {
             repo.close();
         }
     }
+
+    @Test public void segmentedL1CheckpointsEveryStructurallyMappedScene() throws Exception {
+        EditorialRepository repo=new EditorialRepository(ApplicationProvider.getApplicationContext());long projectId=-1;
+        try {EditorialRepository.Project project=new EditorialRepository.Project();project.seriesName="QA Segmented "+System.nanoTime();project.volumeName="V1";project.workflowHash=HashUtil.sha256("v5");projectId=repo.createProject(project);StringBuilder raw=new StringBuilder(),draft=new StringBuilder();for(int i=0;i<30;i++){raw.append(repeat('原',500));draft.append(repeat('v',500));if(i<29){raw.append("\n◇◇◇\n");draft.append("\n◇◇◇\n");}}
+            long chapterId=repo.createChapter(projectId,"LONG","Long chapter",Arrays.asList(new EditorialRepository.AssetSnapshot(EditorialWorkflowV5.AssetRole.RAW,"memory://raw","raw.txt",raw.toString()),new EditorialRepository.AssetSnapshot(EditorialWorkflowV5.AssetRole.DRAFT,"memory://draft","draft.txt",draft.toString()),new EditorialRepository.AssetSnapshot(EditorialWorkflowV5.AssetRole.GLOSSARY,"memory://g","g.txt","term"),new EditorialRepository.AssetSnapshot(EditorialWorkflowV5.AssetRole.PRONOUN,"memory://p","p.txt","voice")));
+            EditorialL1Runner runner=new EditorialL1Runner(repo,(settings,prompt,requestId)->{Matcher scene=Pattern.compile("SCENE: (scene-\\d+)").matcher(prompt.user),anchors=Pattern.compile("EXPECTED RAW ANCHORS: (p\\d+) -> (p\\d+)").matcher(prompt.user);assertTrue(scene.find());assertTrue(anchors.find());OpenAICompatibleClient.ChatResult response=new OpenAICompatibleClient.ChatResult();response.content="{\"sceneId\":\""+scene.group(1)+"\",\"rawStart\":\""+anchors.group(1)+"\",\"rawEnd\":\""+anchors.group(2)+"\",\"coverage\":\"ALIGNED\",\"status\":\"CLOSED\",\"issues\":[]}";response.totalTokens=10;return response;});EditorialL1Runner.Result result=runner.run(chapterId,new AppSettings());assertTrue(result.report.startsWith("REPORT_L1"));assertEquals(EditorialWorkflowV5.ChapterState.L1_CLOSED,repo.getChapter(chapterId).state);assertTrue(repo.evidenceCount(result.runId)>=34);
+        }finally{if(projectId>0)repo.deleteProject(projectId);repo.close();}
+    }
+    private static String repeat(char value,int count){StringBuilder out=new StringBuilder(count);for(int i=0;i<count;i++)out.append(value);return out.toString();}
 }

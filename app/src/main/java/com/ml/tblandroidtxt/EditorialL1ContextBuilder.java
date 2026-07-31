@@ -28,6 +28,15 @@ public final class EditorialL1ContextBuilder {
             return new Context(new PromptPair(system,user),manifest.toString(),rawMap.toString());
         } catch(Exception error) { throw new IllegalStateException("Could not build L1 context",error); }
     }
+    /** Creates the durable RAW-first chapter ledger used before any segmented L1 audit call. */
+    public static EditorialSceneSegmenter.Plan segmentRawForL1(List<EditorialRepository.AssetSnapshot> assets) {
+        EditorialRepository.AssetSnapshot raw=find(assets,EditorialWorkflowV5.AssetRole.RAW);
+        return EditorialSceneSegmenter.split(raw.content);
+    }
+    /** Evidence-based draft pairing for segmented L1; ambiguous pairs stay explicit and cannot be auto-audited. */
+    public static List<EditorialDraftSceneMapper.Pair> mapDraftForL1(List<EditorialRepository.AssetSnapshot> assets) {
+        return EditorialDraftSceneMapper.map(find(assets,EditorialWorkflowV5.AssetRole.RAW).content,find(assets,EditorialWorkflowV5.AssetRole.DRAFT).content);
+    }
     private static EditorialRepository.AssetSnapshot find(List<EditorialRepository.AssetSnapshot> assets,EditorialWorkflowV5.AssetRole role){for(EditorialRepository.AssetSnapshot asset:assets)if(asset.role==role)return asset;throw new IllegalArgumentException("Missing asset: "+role);}
     private EditorialL1ContextBuilder(){}
 }

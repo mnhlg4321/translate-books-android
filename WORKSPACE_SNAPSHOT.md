@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-31` (v4.16 L1 isolated runner completed; archive-first development build retained)
-- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.6`/code68 is an unreleased development build.
+- Snapshot updated: `2026-07-31` (v4.16 segmented L1 runner completed; archive-first development build retained)
+- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.7`/code69 is an unreleased development build.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `9aeab5c` (v4.16 implementation baseline immediately before this snapshot commit; it contains committed P1 import UI; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.16-dev.6/build-20260731-212946/TranslateBooks-v4.16-dev.6-code68.apk`, SHA-256 `444D0A0D44AE616D37EFF29441F53CBC5931973D1713A9C59ECD6E02CC2B8552`; matching immutable five-file payload is under `backup/builds/v4.16-dev.6/build-20260731-212946/`. The released v4.15/code62 archive remains unchanged.
+- Current commit: `9d53716` (v4.16 implementation baseline immediately before this snapshot commit; it contains committed isolated L1 runner; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/builds/v4.16-dev.7/build-20260731-215446/TranslateBooks-v4.16-dev.7-code69.apk`, SHA-256 `22DA910AC07F2AAFBAF99995D0C62F1661DA52D9A71B888998AF83BE0B57625A`; matching immutable five-file payload is under `backup/builds/v4.16-dev.7/build-20260731-215446/`. The released v4.15/code62 archive remains unchanged.
 
 ## Completed tasks
 
@@ -147,10 +147,11 @@
 - Completed P1 persistence: additive SQLite v10→v11 migration and repository records for Editorial Project, Chapter, asset snapshot, run, scene, gate and evidence. All 120 JVM tests and the physical-device repository test pass; archive-first `4.16-dev.4`/code66 passed lint with 53 warnings/0 errors and artifact/backup parity.
 - Completed P1 import UI: isolated Biên tập tab, project creation, one-picker multi-TXT selection, deterministic RAW–DRAFT mapping preview, optional shared glossary/pronoun and active-profile defaults, and confirmed immutable asset snapshots. Archive-first `4.16-dev.5`/code67 passed 123 JVM tests and lint with 53 warnings/0 errors; artifact/backup parity passed.
 - Completed P2 L1: isolated context builder and on-demand audit runner with RAW Map-before-DRAFT order, output validator, scene/gate/evidence persistence and REPORT_L1 rendering. Archive-first `4.16-dev.6`/code68 passed full JVM tests and lint; long chapters are deliberately blocked until scene segmentation is implemented.
+- Completed segmented L1 for structurally mapped long chapters: deterministic RAW segmentation, evidence-based RAW–DRAFT marker mapping, per-scene contract/call/checkpoint, aggregate validator and REPORT_L1. Build `4.16-dev.7`/code69 passed 133 JVM tests and lint with 53 warnings/0 errors; artifact parity passed. Ambiguous/misaligned mappings remain deliberately blocked.
 
 ## Pending tasks
 
-- v4.16 next: implement L1 scene segmentation for chapters beyond the safe context limit, then add report detail/export and retry UI.
+- v4.16 next: add REPORT_L1 detail/export and explicit retry/reopen UI; then design a model-assisted mapping phase for long chapters without matching structural markers.
 
 ## Known bugs
 
