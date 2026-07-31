@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-31` (v4.16 REPORT_L1 view/export and checkpoint retry completed; archive-first development build retained)
-- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.8`/code70 is an unreleased development build.
+- Snapshot updated: `2026-07-31` (v4.16 model-assisted long-chapter mapping and L2 RAW-first completed; archive-first development build retained)
+- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.10`/code72 is an unreleased development build.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `f8686f3` (v4.16 implementation baseline immediately before this snapshot commit; it contains committed segmented L1 runner; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.16-dev.8/build-20260731-220152/TranslateBooks-v4.16-dev.8-code70.apk`, SHA-256 `52B2690DD43514D7F1B267DBAEAC758E25B7EA97378524F51A6B582726BFED19`; matching immutable payload is under `backup/builds/v4.16-dev.8/build-20260731-220152/`. The released v4.15/code62 archive remains unchanged.
+- Current commit: `5e7258c` (implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/builds/v4.16-dev.10/build-20260731-222047/TranslateBooks-v4.16-dev.10-code72.apk`, SHA-256 `A709BD8756E8D3F3D22DD5307E32359130AAE88F1B187574BA4C8281D023ABE6`; matching immutable payload is under `backup/builds/v4.16-dev.10/build-20260731-222047/`. The released v4.15/code62 archive remains unchanged.
 
 ## Completed tasks
 
@@ -149,10 +149,12 @@
 - Completed P2 L1: isolated context builder and on-demand audit runner with RAW Map-before-DRAFT order, output validator, scene/gate/evidence persistence and REPORT_L1 rendering. Archive-first `4.16-dev.6`/code68 passed full JVM tests and lint; long chapters are deliberately blocked until scene segmentation is implemented.
 - Completed segmented L1 for structurally mapped long chapters: deterministic RAW segmentation, evidence-based RAW–DRAFT marker mapping, per-scene contract/call/checkpoint, aggregate validator and REPORT_L1. Build `4.16-dev.7`/code69 passed 133 JVM tests and lint with 53 warnings/0 errors; artifact parity passed. Ambiguous/misaligned mappings remain deliberately blocked.
 - Completed REPORT_L1 UX and checkpoint recovery: closed chapters can view/export TXT; failed segmented runs show failure evidence and retry only non-closed scenes on the same run. Build `4.16-dev.8`/code70 passed 133 JVM tests and lint with 53 warnings/0 errors; device execution of the new retry instrumentation remains pending.
+- Completed model-assisted mapping fallback for long L1 chapters without matching markers. The model may select only deterministic anchors; validator rejects skipped, overlapping, reordered, or incomplete DRAFT coverage and retains mapping/token evidence.
+- Completed initial L2 RAW-first runner and UI. The first isolated call sees only RAW/Glossary/Pronoun and must close `L2_RAW_LEDGER`; only then does a fresh edit context open DRAFT and validated REPORT_L1. VI_L2, Global Change Register, five gates, context manifest, hashes and per-phase usage are persisted. Build `4.16-dev.10`/code72 passed 138 JVM tests, lint 53 warnings/0 errors and artifact/backup parity; focused device instrumentation passed 4/4 on code71 before the final context-size guard.
 
 ## Pending tasks
 
-- v4.16 next: design a validated model-assisted mapping phase for long chapters without matching structural markers, then begin L2 RAW-first context/runner.
+- v4.16 next: implement segmented L2 edit/checkpointing for chapters that cannot fit the edit context, then add L2 diff and retry UI.
 
 ## Known bugs
 
@@ -176,6 +178,8 @@
 - The first local tag was rejected for backup because it contained stale v4.14 release metadata; it was absent from `origin` and was deleted with approval before any immutable archive existed.
 
 ## Regression status
+
+- v4.16 model-mapping/L2 RAW-first regression: PASS. Archive-first `4.16-dev.10`/code72 ran 138 JVM tests with 0 failures/errors; lint reported 53 warnings/0 errors; focused physical-device Editorial instrumentation passed 4/4 on code71; final code72 added only the safe-context guard and passed the complete JVM/lint build; artifact/backup file hashes match.
 
 - v4.16 planning documentation: PASS. `git diff --check` passed; no product code, APK build, or device regression has been run because implementation has not started.
 - v4.16 P0.1 regression: PASS. `EditorialWorkflowV5Test` 6/6; full archive-first build recorded 116 JVM tests, 0 failures/errors, Android Lint 53 warnings/0 errors, and verified five-file artifact/backup parity.
@@ -235,7 +239,7 @@
 
 ## Next step
 
-Begin v4.16 L1 on `feature/v4.16`: add the isolated L1 context builder, audit runner, report contract and checkpoint recovery. Keep annotated tag `v4.15` and both immutable archives unchanged.
+Implement segmented L2 editing on `feature/v4.16`, preserving the completed RAW-first barrier and adding per-scene checkpoints before L2 diff/retry UI. Keep annotated tag `v4.15` and both immutable archives unchanged.
 
 ## Resume rule
 

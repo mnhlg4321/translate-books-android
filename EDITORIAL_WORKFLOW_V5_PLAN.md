@@ -189,10 +189,13 @@ Model phải trả JSON theo schema cho evidence; text output được render/ex
 - Hoàn tất context builder/runner/checkpoint L1 và segmented L1 cho chương dài có ngắt cảnh cấu trúc tương ứng: tạo RAW Map/Chapter Ledger trước DRAFT, ghép scene bằng marker có evidence, gọi model tuần tự, checkpoint từng scene, tổng hợp REPORT_L1 sau validator. Mapping mơ hồ/lệch hoặc một scene vẫn quá context bị chặn và giữ evidence; không cắt hay ghép theo tỷ lệ.
 - Hoàn tất Report detail/export TXT trong tab Biên tập; chỉ REPORT_L1 đã qua validator mới được xem/xuất.
 - Hoàn tất recovery/retry segmented L1 theo checkpoint: tái sử dụng scene CLOSED, lưu failure scene và chỉ gọi lại scene chưa hợp lệ.
+- Hoàn tất fallback mapping bằng model khi RAW–DRAFT của chương dài không có marker tương ứng: model chỉ chọn anchor, validator bắt buộc phủ DRAFT liên tục, đúng thứ tự, không bỏ/chồng đoạn; prompt/response và token usage được lưu riêng làm evidence.
 
 ### P3 — L2
 
-- RAW-first barrier, VI_L2, diff và Global Change Register.
+- Hoàn tất lõi RAW-first hai context: request 1 chỉ nhận RAW + glossary + pronoun và phải đóng `L2_RAW_LEDGER`; request 2 mới được dựng với ledger đã khóa + RAW + DRAFT + REPORT_L1. Runner lưu manifest/hash, usage từng phase, VI_L2, Global Change Register và năm gate.
+- Hoàn tất nút Run L2 khi L1_CLOSED và màn hình xem/export VI_L2 khi L2_CLOSED.
+- Còn lại: segmented L2 edit cho chapter vượt context, diff và retry L2 theo checkpoint.
 - Gate L2 và stale/retry behavior.
 
 ### P4 — L3/release

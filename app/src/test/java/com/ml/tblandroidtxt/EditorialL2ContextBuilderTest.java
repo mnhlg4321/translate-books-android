@@ -1,0 +1,8 @@
+package com.ml.tblandroidtxt;
+import org.junit.Test;import java.util.Arrays;import static org.junit.Assert.*;
+public class EditorialL2ContextBuilderTest {
+ private static EditorialRepository.AssetSnapshot a(EditorialWorkflowV5.AssetRole r,String t){return new EditorialRepository.AssetSnapshot(r,"m://"+r,r+".txt",t);}
+ @Test public void rawMappingCannotSeeDraftOrReport(){PromptPair p=EditorialL2ContextBuilder.rawMapping(1,Arrays.asList(a(EditorialWorkflowV5.AssetRole.RAW,"RAW_SECRET"),a(EditorialWorkflowV5.AssetRole.DRAFT,"DRAFT_SECRET"),a(EditorialWorkflowV5.AssetRole.GLOSSARY,"G"),a(EditorialWorkflowV5.AssetRole.PRONOUN,"P")));assertTrue(p.user.contains("RAW_SECRET"));assertFalse(p.user.contains("DRAFT_SECRET"));assertFalse(p.user.contains("REPORT_L1"));}
+ @Test public void editContextOpensDraftAndReportAfterLedger(){PromptPair p=EditorialL2ContextBuilder.edit(1,Arrays.asList(a(EditorialWorkflowV5.AssetRole.RAW,"R"),a(EditorialWorkflowV5.AssetRole.DRAFT,"D"),a(EditorialWorkflowV5.AssetRole.GLOSSARY,"G"),a(EditorialWorkflowV5.AssetRole.PRONOUN,"P")),"LEDGER","REPORT");assertTrue(p.user.indexOf("LEDGER")<p.user.indexOf("DRAFT:"));assertTrue(p.user.contains("REPORT"));}
+ @Test public void rawLedgerRequiresEveryClosedEvidenceField(){String valid="{\"chapterId\":\"1\",\"scenes\":[{\"id\":\"s1\",\"rawStart\":\"p1\",\"rawEnd\":\"p2\",\"pov\":\"A\",\"cast\":\"A,B\",\"event\":\"E\",\"risk\":\"R\",\"status\":\"CLOSED\"}]}";assertNull(EditorialL2RawLedgerContract.validate(valid,"1"));assertTrue(EditorialL2RawLedgerContract.validate(valid.replace("\"risk\":\"R\"","\"risk\":\"\""),"1").contains("incomplete"));}
+}
