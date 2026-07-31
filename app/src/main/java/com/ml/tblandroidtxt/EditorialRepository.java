@@ -111,6 +111,20 @@ public final class EditorialRepository implements AutoCloseable {
         }
     }
 
+    public List<Project> listProjects() {
+        ArrayList<Project> projects=new ArrayList<>();
+        try (Cursor c=database.editorialReadableDatabase().rawQuery("SELECT id,series_name,volume_name,workflow_version,workflow_hash,output_tree_uri FROM editorial_projects ORDER BY updated_at DESC,id DESC",null)) {
+            while(c.moveToNext()){Project p=new Project();p.id=c.getLong(0);p.seriesName=safe(c.getString(1));p.volumeName=safe(c.getString(2));p.workflowVersion=safe(c.getString(3));p.workflowHash=safe(c.getString(4));p.outputTreeUri=safe(c.getString(5));projects.add(p);}
+        } return projects;
+    }
+
+    public List<Chapter> listChapters(long projectId) {
+        ArrayList<Chapter> chapters=new ArrayList<>();
+        try (Cursor c=database.editorialReadableDatabase().rawQuery("SELECT id,project_id,chapter_key,title,state,raw_hash FROM editorial_chapters WHERE project_id=? ORDER BY chapter_key COLLATE NOCASE",new String[]{String.valueOf(projectId)})) {
+            while(c.moveToNext()){Chapter chapter=new Chapter();chapter.id=c.getLong(0);chapter.projectId=c.getLong(1);chapter.chapterKey=safe(c.getString(2));chapter.title=safe(c.getString(3));try{chapter.state=EditorialWorkflowV5.ChapterState.valueOf(c.getString(4));}catch(Exception ignored){}chapter.rawHash=safe(c.getString(5));chapters.add(chapter);}
+        } return chapters;
+    }
+
     public void markStale(long chapterId) {
         ContentValues v = new ContentValues(); v.put("state", EditorialWorkflowV5.ChapterState.STALE.name()); v.put("updated_at", System.currentTimeMillis());
         database.editorialWritableDatabase().update("editorial_chapters", v, "id=?", new String[]{String.valueOf(chapterId)});

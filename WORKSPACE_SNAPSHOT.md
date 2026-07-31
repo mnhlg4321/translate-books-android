@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-31` (v4.16 P0 editorial contracts and fixtures completed; archive-first development build retained)
-- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.4`/code66 is an unreleased development build.
+- Snapshot updated: `2026-07-31` (v4.16 P1 import UI and batch preview completed; archive-first development build retained)
+- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.5`/code67 is an unreleased development build.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `8385656` (v4.16 implementation baseline immediately before this snapshot commit; it contains committed P0 contracts; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.16-dev.4/build-20260731-211022/TranslateBooks-v4.16-dev.4-code66.apk`, SHA-256 `CDC54EE08C5A245A601E095B13D31C49BC4FE1F579DAE8599C031FBED9DB141D`; matching immutable five-file payload is under `backup/builds/v4.16-dev.4/build-20260731-211022/`. The released v4.15/code62 archive remains unchanged.
+- Current commit: `c3ca372` (v4.16 implementation baseline immediately before this snapshot commit; it contains committed P1 persistence; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/builds/v4.16-dev.5/build-20260731-212018/TranslateBooks-v4.16-dev.5-code67.apk`, SHA-256 `DA225DBE6C97E6D3B8501E05027D120E75207A2ED70692B624161ECDFD555B1B`; matching immutable five-file payload is under `backup/builds/v4.16-dev.5/build-20260731-212018/`. The released v4.15/code62 archive remains unchanged.
 
 ## Completed tasks
 
@@ -145,10 +145,11 @@
 - Added six focused offline tests in `EditorialWorkflowV5Test`; passed 6/6. Archive-first `4.16-dev.1`/code63 build passed all 116 JVM tests and lint with 53 warnings/0 errors; artifact/backup files and hashes match.
 - Completed P0.2: L2/L3 output validators, Canonical RAW Map, asset snapshot ambiguity/staleness checks, L2/L3 JSON fixtures, and long-RAW/voice/truncation tests. Focused suite passed 9/9; archive-first `4.16-dev.3`/code65 passed 119 JVM tests and lint with 53 warnings/0 errors; immutable artifact/backup parity passed.
 - Completed P1 persistence: additive SQLite v10→v11 migration and repository records for Editorial Project, Chapter, asset snapshot, run, scene, gate and evidence. All 120 JVM tests and the physical-device repository test pass; archive-first `4.16-dev.4`/code66 passed lint with 53 warnings/0 errors and artifact/backup parity.
+- Completed P1 import UI: isolated Biên tập tab, project creation, one-picker multi-TXT selection, deterministic RAW–DRAFT mapping preview, optional shared glossary/pronoun and active-profile defaults, and confirmed immutable asset snapshots. Archive-first `4.16-dev.5`/code67 passed 123 JVM tests and lint with 53 warnings/0 errors; artifact/backup parity passed.
 
 ## Pending tasks
 
-- v4.16 next: implement Project/Chapter import UI, single/batch filename mapping preview, and snapshot creation before runners.
+- v4.16 next: implement the L1 context builder/runner and checkpointed audit output; retain the current import contracts and no-touch boundary with Dịch.
 
 ## Known bugs
 
@@ -177,6 +178,7 @@
 - v4.16 P0.1 regression: PASS. `EditorialWorkflowV5Test` 6/6; full archive-first build recorded 116 JVM tests, 0 failures/errors, Android Lint 53 warnings/0 errors, and verified five-file artifact/backup parity.
 - v4.16 P0 regression: PASS. `EditorialWorkflowV5Test` 9/9; full archive-first build recorded 119 JVM tests, 0 failures/errors, Android Lint 53 warnings/0 errors, and verified five-file artifact/backup parity.
 - v4.16 P1 regression: PASS. All 120 JVM tests recorded 0 failures/errors; physical-device `EditorialRepositoryInstrumentedTest` passed 1/1; archive-first build recorded lint 53 warnings/0 errors and verified five-file artifact/backup parity.
+- v4.16 P1 import UI regression: PASS. All 123 JVM tests recorded 0 failures/errors; `EditorialImportPlannerTest` exercises complete, missing, and ambiguous filename cases; archive-first build recorded lint 53 warnings/0 errors and verified five-file artifact/backup parity.
 
 - v4.7 recorded regression: `PASS WITH KNOWN LIMITATIONS`.
 - JVM unit tests: 93 passed, 0 failed, 0 skipped.
@@ -230,7 +232,7 @@
 
 ## Next step
 
-Begin v4.16 import UI on `feature/v4.16`: add Project/Chapter single and batch mapping preview plus asset snapshots before runners. Keep annotated tag `v4.15` and both immutable archives unchanged.
+Begin v4.16 L1 on `feature/v4.16`: add the isolated L1 context builder, audit runner, report contract and checkpoint recovery. Keep annotated tag `v4.15` and both immutable archives unchanged.
 
 ## Resume rule
 

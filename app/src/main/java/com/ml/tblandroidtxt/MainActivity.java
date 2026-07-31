@@ -72,6 +72,7 @@ public class MainActivity extends Activity {
     static final int REQ_PRONOUN = 21;
     static final int REQ_EXPORT_LOG = 22;
     static final int REQ_EXPORT_JOB_LOG = 23;
+    static final int REQ_EDITORIAL_BATCH = 24;
 
     int BG, PANEL, CARD, FIELD, BORDER, TEXT, MUTED, BLUE, CYAN;
     final int GREEN = Color.rgb(43, 207, 126); // semantic success/running
@@ -156,6 +157,7 @@ public class MainActivity extends Activity {
     GlossaryStore.Glossary editingGlossary = null;
     PronounStore.Profile editingPronoun = null;
     String pendingPronounReplaceId = "";
+    long pendingEditorialProjectId = -1L;
 
     final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) {
@@ -382,7 +384,7 @@ public class MainActivity extends Activity {
         tabBar.setOrientation(vertical?LinearLayout.VERTICAL:LinearLayout.HORIZONTAL);
         tabBar.setGravity(vertical?Gravity.TOP:Gravity.CENTER);
         tabBar.setPadding(vertical?dp(4):0,vertical?dp(8):dp(4),vertical?dp(8):0,vertical?0:dp(4));
-        String[] tabs={"Translate","Jobs","Library","Settings"};
+        String[] tabs={"Translate","Jobs","Editorial","Library","Settings"};
         for(String t:tabs){Button b=tabButton(t);tabBar.addView(b,vertical?new LinearLayout.LayoutParams(-1,dp(58)):new LinearLayout.LayoutParams(0,-1,1));}
         tint(tabBar,PANEL,BORDER,1,vertical?0:14);
         return tabBar;
@@ -404,7 +406,7 @@ public class MainActivity extends Activity {
         return b;
     }
 
-    String primaryIcon(String name){if("Translate".equals(name))return "↗";if("Jobs".equals(name))return "◷";if("Library".equals(name))return "▤";return "⚙";}
+    String primaryIcon(String name){if("Translate".equals(name))return "↗";if("Jobs".equals(name))return "◷";if("Editorial".equals(name))return "✎";if("Library".equals(name))return "▤";return "⚙";}
     boolean primaryActive(String name){if("Library".equals(name))return "Files".equals(currentTab)||"Glossaries".equals(currentTab)||"Pronouns".equals(currentTab)||"Sample".equals(currentTab);return name.equals(currentTab);}
 
     void switchTab(String name) {
@@ -484,6 +486,7 @@ public class MainActivity extends Activity {
     View buildPageForTab(String name) {
         if ("Translate".equals(name)) return buildTranslatePage();
         if ("Settings".equals(name)) return buildSettingsPage();
+        if ("Editorial".equals(name)) return buildEditorialPage();
         if ("Glossaries".equals(name)||"Pronouns".equals(name)||"Files".equals(name)||"Sample".equals(name)) return buildLibraryDestination(name);
         if ("Jobs".equals(name)) return buildJobsPage();
         return buildSamplePage();
@@ -645,6 +648,7 @@ public class MainActivity extends Activity {
     View buildJobsPage() {
         return new JobsMainPageFactory(this).build();
     }
+    View buildEditorialPage() { return new EditorialPageFactory(this).build(); }
 
     JobsPageFactory developerToolsFactory() {
         return new JobsPageFactory(
@@ -816,6 +820,43 @@ public class MainActivity extends Activity {
         i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
         return i;
     }
+
+    void createEditorialProject(String series, String volume) {
+        if (series == null || series.trim().isEmpty() || volume == null || volume.trim().isEmpty()) { toast("Nhập Series và Volume"); return; }
+        try (EditorialRepository repo = new EditorialRepository(this)) {
+            EditorialRepository.Project project = new EditorialRepository.Project(); project.seriesName=series.trim(); project.volumeName=volume.trim();
+            project.workflowHash=HashUtil.sha256(EditorialEvidenceSchema.VERSION+"|EditorialWorkflowV5"); repo.createProject(project);
+            invalidatePage("Editorial"); switchTab("Editorial"); toast("Đã tạo project biên tập");
+        } catch (Exception error) { toast("Không tạo được project: "+error.getMessage()); }
+    }
+
+    void chooseEditorialBatch(long projectId) {
+        if (projectId <= 0) return; pendingEditorialProjectId=projectId;
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT); intent.addCategory(Intent.CATEGORY_OPENABLE); intent.setType("text/plain"); intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE,true);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION); startActivityForResult(intent,REQ_EDITORIAL_BATCH);
+    }
+
+    void previewEditorialBatch(Intent data, int takeFlags) {
+        final long projectId=pendingEditorialProjectId; pendingEditorialProjectId=-1L;
+        ArrayList<EditorialImportPlanner.Source> files=new ArrayList<>(); ArrayList<String> failures=new ArrayList<>();
+        for(Uri selected:selectedDocumentUris(data)) try { FileUtil.takePersistable(this,selected,takeFlags,true,false); files.add(new EditorialImportPlanner.Source(FileUtil.displayName(this,selected),selected.toString(),FileUtil.readText(this,selected))); }
+        catch(Exception error){failures.add(FileUtil.displayName(this,selected)+": "+error.getMessage());}
+        EditorialImportPlanner.Result plan=EditorialImportPlanner.plan(files); StringBuilder text=new StringBuilder(); text.append("Sẵn sàng: ").append(plan.readyCount()).append(" chapter\n\n");
+        for(EditorialImportPlanner.ChapterPlan chapter:plan.chapters) text.append(chapter.ready()?"✓ ":"! ").append(chapter.key).append("\n  RAW: ").append(chapter.raw==null?"—":chapter.raw.name).append("\n  DRAFT: ").append(chapter.draft==null?"—":chapter.draft.name).append(chapter.problem.isEmpty()?"":"\n  Chặn: "+chapter.problem).append("\n\n");
+        text.append("Glossary: ").append(plan.glossary==null?"dùng profile đang chọn":plan.glossary.name).append("\nPronoun: ").append(plan.pronoun==null?"dùng profile đang chọn":plan.pronoun.name);
+        for(String warning:plan.warnings) text.append("\n! ").append(warning); for(String failure:failures) text.append("\n! ").append(failure);
+        new AlertDialog.Builder(this).setTitle("Preview batch import").setMessage(text.toString()).setPositiveButton(plan.readyCount()>0?"Lưu "+plan.readyCount()+" chapter":null,plan.readyCount()>0?(d,w)->persistEditorialBatch(projectId,plan):null).setNegativeButton("Hủy",null).show();
+    }
+
+    void persistEditorialBatch(long projectId, EditorialImportPlanner.Result plan) {
+        AppSettings settings=SettingsStore.load(this); EditorialImportPlanner.Source glossary=plan.glossary==null?new EditorialImportPlanner.Source(nonEmpty(settings.selectedGlossaryName,"Active glossary"),"library://glossary",settings.glossaryText):plan.glossary;
+        EditorialImportPlanner.Source pronoun=plan.pronoun==null?new EditorialImportPlanner.Source(nonEmpty(settings.selectedPronounName,"Active pronoun"),"library://pronoun",settings.pronounText):plan.pronoun;
+        int saved=0; ArrayList<String> failed=new ArrayList<>(); try(EditorialRepository repo=new EditorialRepository(this)) { for(EditorialImportPlanner.ChapterPlan chapter:plan.chapters) if(chapter.ready()) try {
+            ArrayList<EditorialRepository.AssetSnapshot> assets=new ArrayList<>(); assets.add(editorialAsset(EditorialWorkflowV5.AssetRole.RAW,chapter.raw)); assets.add(editorialAsset(EditorialWorkflowV5.AssetRole.DRAFT,chapter.draft)); assets.add(editorialAsset(EditorialWorkflowV5.AssetRole.GLOSSARY,glossary)); assets.add(editorialAsset(EditorialWorkflowV5.AssetRole.PRONOUN,pronoun)); repo.createChapter(projectId,chapter.key,chapter.key,assets); saved++;
+        } catch(Exception error){failed.add(chapter.key+": "+error.getMessage());} }
+        invalidatePage("Editorial");switchTab("Editorial");toast("Đã lưu "+saved+" chapter"+(failed.isEmpty()?"":"; lỗi "+failed.size()));if(!failed.isEmpty())showResult("Editorial import",namesSummary(failed));
+    }
+    EditorialRepository.AssetSnapshot editorialAsset(EditorialWorkflowV5.AssetRole role, EditorialImportPlanner.Source source) { return new EditorialRepository.AssetSnapshot(role,source.uri,source.name,source.content); }
 
     void replacePronoun(PronounStore.Profile profile){if(profile==null)return;pendingPronounReplaceId=profile.id;choosePronoun();}
 
@@ -1167,6 +1208,8 @@ public class MainActivity extends Activity {
         } else if (requestCode == REQ_GLOSSARY_MULTI_IMPORT) {
             if (!ensureConfigMutable()) return;
             importTermsIntoEditingGlossary(data);
+        } else if (requestCode == REQ_EDITORIAL_BATCH) {
+            previewEditorialBatch(data, takeFlags);
         }
         refreshFileSummary();
     }

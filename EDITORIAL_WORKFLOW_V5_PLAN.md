@@ -180,9 +180,9 @@ Model phải trả JSON theo schema cho evidence; text output được render/ex
 ### P1 — Project/import và persistence
 
 - Hoàn tất migration SQLite v10→v11 và repository cho Editorial Project, Chapter, asset snapshot, run, scene, gate và evidence; migration chỉ thêm bảng/index, không sửa dữ liệu Dịch hiện có.
-- Project/chapter screen, nhập đơn/batch, preview mapping, templates, snapshots, output folder.
+- Hoàn tất tab Biên tập độc lập: tạo project, chọn nhiều TXT một lần, tự ghép RAW–DRAFT theo tên file, nhận GLOSSARY/PRONOUN chung hoặc profile đang chọn, preview/gate các cặp thiếu-mơ-hồ và chỉ lưu asset snapshot sau khi xác nhận.
 - `Dùng output Dịch làm DRAFT`.
-- Tests mapping filename, ambiguity và invalidation.
+- Hoàn tất test mapping filename và ambiguity; invalidation/stale UI sẽ đi cùng runner.
 
 ### P2 — L1
 
