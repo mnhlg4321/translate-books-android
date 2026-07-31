@@ -6,11 +6,12 @@ Validate Editorial Workflow V5 end to end without regressing the existing Transl
 
 ## Current development baseline
 
-- Accepted development build: `4.16-dev.16` / code `78`.
-- Build event: `build-20260731-230817`.
-- Source commit: `5097f3ba564e659f9a88c5038799fa1756459480`.
-- APK SHA-256: `2D317C5BACB20AD7A7F4DCFC67A910613F7CDC4B35FB59E00D6607C55234B2BE`.
-- Automated baseline: 145 JVM tests, lint 0 errors/53 warnings, Editorial device suite 9/9.
+- Accepted development build: `4.16-dev.17` / code `79`.
+- Build event: `build-20260801-042014`.
+- Source commit: `d8fa109`.
+- APK SHA-256: `664A6FBF6C47B52CA842571F1B30C2B6BE948BC4A69458BA2FA44857BB8680B5`.
+- Automated baseline: 147 JVM tests, lint 0 errors/53 warnings, Editorial device suite 10/10.
+- Code79 contains the responsive two-line five-tab navigation and a persisted per-project Release folder/direct-write path. Device visual verification is pending because the connected phone is secured at the lock screen; no attempt was made to bypass it.
 
 ## Manual Release walkthrough completed on code78
 
@@ -69,6 +70,6 @@ Validate Editorial Workflow V5 end to end without regressing the existing Transl
 
 ## Current RC decisions required
 
-- Decide whether bottom-navigation label clipping is release-blocking or accepted with a scheduled UI fix.
-- Decide whether Release should remember a project output folder instead of relying on the file provider's last-used directory.
+- Verify on an unlocked physical device that the implemented two-line navigation removes clipping at 1264 px width and at large text sizes.
+- Verify the implemented per-project Release folder through real SAF selection, persisted permission, direct ZIP write, duplicate naming and permission-loss fallback.
 - Run an explicit visible Cancel/Back test on every supported picker; code78 verified abort/process-restart safety, but the OnePlus provider exposed no dedicated Cancel button in its save surface.

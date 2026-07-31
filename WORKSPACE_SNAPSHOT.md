@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-01` (v4.16 responsive navigation and per-project Release folder implemented; build/device verification pending)
-- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.16`/code78 is an unreleased development build.
+- Snapshot updated: `2026-08-01` (v4.16 code79 responsive navigation/Release-folder build and automated device regression completed; visual QA pending unlock)
+- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.17`/code79 is an unreleased development build.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `5a3273c` (implementation/QA baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.16-dev.16/build-20260731-230817/TranslateBooks-v4.16-dev.16-code78.apk`, SHA-256 `2D317C5BACB20AD7A7F4DCFC67A910613F7CDC4B35FB59E00D6607C55234B2BE`; matching immutable payload is under `backup/builds/v4.16-dev.16/build-20260731-230817/`. The released v4.15/code62 archive remains unchanged.
+- Current commit: `d8fa109` (implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/builds/v4.16-dev.17/build-20260801-042014/TranslateBooks-v4.16-dev.17-code79.apk`, SHA-256 `664A6FBF6C47B52CA842571F1B30C2B6BE948BC4A69458BA2FA44857BB8680B5`; matching immutable payload is under `backup/builds/v4.16-dev.17/build-20260801-042014/`. The released v4.15/code62 archive remains unchanged.
 
 ## Completed tasks
 
@@ -159,6 +159,7 @@
 - Completed Editorial release: revalidates the latest closed L3, FINAL_QA contract and persisted gates; exports a ZIP with final text, redacted hash/length/status evidence and checksums; records manifest/bundle hash and changes state atomically only after successful SAF write. Accepted code78 passed 145 JVM tests, lint 0 errors/53 warnings, and the complete Editorial device suite 9/9.
 - Completed the code78 manual Release walkthrough and desktop ZIP inspection; retained eight matching evidence files in artifact/backup, removed all disposable device data, and defined the full v4.16 RC matrix in `QA_SCOPE_v4_16.md`.
 - Implemented responsive two-line five-tab navigation and per-project default Release folders with persisted SAF permission, direct ZIP creation, unique `.zip` naming and an explicit fallback-picker destination/cancel warning; code79 build/device verification is pending.
+- Accepted code79 after 147/147 JVM tests, lint 0 errors/53 warnings, artifact/backup parity and 10/10 focused Editorial device tests; exact code79 APK was reinstalled after the test runner cleanup.
 
 ## Pending tasks
 
@@ -167,8 +168,8 @@
 
 ## Known bugs
 
-- Code78 bottom-navigation clipping has an implemented responsive two-line fix; physical-device verification is pending.
-- The OnePlus last-used-folder ambiguity now has an implemented per-project Release folder/direct-write path plus clearer fallback warning; physical picker and permission-loss verification is pending.
+- Code78 bottom-navigation clipping has an implemented responsive two-line fix in code79; visual verification is pending because the physical device is secured at the lock screen.
+- The OnePlus last-used-folder ambiguity has a code79 per-project Release folder/direct-write path plus clearer fallback warning; physical SAF selection/write/permission-loss verification is pending.
 
 - Rejected code54 candidate: Android removed the target package during cleanup after rejecting the unsigned Macrobenchmark APK. No benchmark measurement was produced.
 - Rejected code55 candidate: the signed test captured two traces, but the OEM launcher stability wait made the five-iteration run impractical; the redundant Home step is removed for the next candidate.
@@ -194,6 +195,7 @@
 - v4.16 segmented L3 regression: PASS on accepted code77. 145 JVM tests passed; lint reports 0 errors/53 warnings; focused device Editorial suite passed 7/7. Controlled final scene-002 failure proved retry made exactly one additional model call while reusing independent scenes, chapter voice audit and closed final scene-001. Artifact/backup parity passed.
 - v4.16 Editorial release regression: PASS on accepted code78. 145 JVM tests passed; lint reports 0 errors/53 warnings; complete physical-device Editorial suite passed 9/9 on OnePlus CPH2691 / Android 15. Tests prove sensitive source/config strings are absent from redacted evidence, checksums match, an open gate blocks release, and successful recording reaches `RELEASED`. Artifact/backup parity passed.
 - v4.16 code78 manual Release QA: PARTIAL PASS. Confirmation, picker abort/restart safety, successful save, `RELEASED` UI, actual ZIP opening, exact three-entry contract, UTF-8 output, checksum verification and redaction inspection passed. Disposable device data was removed and evidence mirrored. Full RC scope remains pending; bottom-nav clipping and picker destination/cancel UX are recorded.
+- v4.16 code79 navigation/destination regression: AUTOMATED PASS / VISUAL PENDING. 147 JVM tests and 10/10 Editorial device tests passed; lint and artifact parity passed. Visual navigation and real SAF folder walkthrough could not proceed while the phone was secured; no lock bypass was attempted.
 
 - v4.16 isolated L3 regression: PASS on code75. 144 JVM tests passed; lint reports 0 errors/53 warnings; focused device Editorial suite passed 6/6. The L3 test proves the first model prompt contains RAW and VI_L2 but no REPORT_L1, then proves report visibility only after independent evidence validates CLOSED. Artifact/backup parity passed.
 
@@ -258,7 +260,7 @@
 
 ## Next step
 
-Build/archive/install code79, verify the five-tab layout and per-project Release folder on device, then continue the P0 RC matrix in `QA_SCOPE_v4_16.md`. Keep annotated tag `v4.15` and both immutable archives unchanged.
+After the user unlocks the OnePlus device, verify the code79 five-tab layout and per-project Release-folder direct write. Then continue P0 with the existing Translate smoke/regression matrix and v4.15→v4.16 migration test. Keep annotated tag `v4.15` and both immutable archives unchanged.
 
 ## Resume rule
 
