@@ -11,7 +11,7 @@ import java.util.List;
 
 public class TranslationRepository extends SQLiteOpenHelper {
     private static final String DB = "tbl_android_txt.db";
-    private static final int VER = 10;
+    private static final int VER = 11;
 
     public TranslationRepository(Context context) { super(context, DB, null, VER); }
 
@@ -23,6 +23,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
         createMetricsTable(db);
         createBenchmarkTables(db);
         createPreparedPlanTables(db);
+        createEditorialTables(db);
     }
 
     @Override public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -67,6 +68,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
             safeExec(db, "ALTER TABLE jobs ADD COLUMN start_session_id TEXT DEFAULT ''");
             safeExec(db, "CREATE UNIQUE INDEX IF NOT EXISTS idx_jobs_start_session ON jobs(start_session_id,prepared_input_ordinal) WHERE start_session_id<>''");
         }
+        if (oldVersion < 11) createEditorialTables(db);
     }
 
     private static void safeExec(SQLiteDatabase db, String sql) { try { db.execSQL(sql); } catch (Exception ignored) {} }
@@ -82,6 +84,13 @@ public class TranslationRepository extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE IF NOT EXISTS prepared_chunks (batch_id TEXT, input_ordinal INTEGER, idx INTEGER, stable_id TEXT, start_offset INTEGER, end_offset INTEGER, context_start_offset INTEGER, context_end_offset INTEGER, context_before TEXT, source TEXT, context_after TEXT, source_hash TEXT, normalized_source_hash TEXT, parent_stable_id TEXT, PRIMARY KEY(batch_id,input_ordinal,idx))");
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_prepared_selection ON prepared_batches(selection_key,status)");
     }
+
+    private static void createEditorialTables(SQLiteDatabase db) {
+        for (String sql : EditorialMigrationSpec.from10To11()) safeExec(db, sql);
+    }
+
+    SQLiteDatabase editorialWritableDatabase() { return getWritableDatabase(); }
+    SQLiteDatabase editorialReadableDatabase() { return getReadableDatabase(); }
 
     private static void recoverInterruptedChunks(SQLiteDatabase db) {
         ContentValues unknown=new ContentValues();unknown.put("status","DELIVERY_UNKNOWN");unknown.put("error","Process died after request sending began; review before retrying to avoid duplicate billing");unknown.put("updated_at",System.currentTimeMillis());

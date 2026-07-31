@@ -7,7 +7,7 @@ import java.util.Set;
 
 /** Snapshot checks used before an editorial run starts; URIs are persisted later by the repository. */
 public final class EditorialAssetManifest {
-    public static final class Asset {
+    public static class Asset {
         public final EditorialWorkflowV5.AssetRole role;
         public final String sha256;
 
