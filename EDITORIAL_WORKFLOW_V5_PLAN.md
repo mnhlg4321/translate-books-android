@@ -195,8 +195,9 @@ Model phải trả JSON theo schema cho evidence; text output được render/ex
 
 - Hoàn tất lõi RAW-first hai context: request 1 chỉ nhận RAW + glossary + pronoun và phải đóng `L2_RAW_LEDGER`; request 2 mới được dựng với ledger đã khóa + RAW + DRAFT + REPORT_L1. Runner lưu manifest/hash, usage từng phase, VI_L2, Global Change Register và năm gate.
 - Hoàn tất nút Run L2 khi L1_CLOSED và màn hình xem/export VI_L2 khi L2_CLOSED.
-- Còn lại: segmented L2 edit cho chapter vượt context, diff và retry L2 theo checkpoint.
-- Gate L2 và stale/retry behavior.
+- Hoàn tất segmented L2 cho chapter vượt context: RAW ledger được đóng theo từng scene trước; phase edit mới được mở DRAFT/REPORT_L1 theo scene; mỗi RAW/edit scene có output, usage và checkpoint riêng; VI_L2/Global Change Register/gate cấp chương chỉ được tạo sau aggregate validator.
+- Hoàn tất diff DRAFT → VI_L2 và retry L2 theo checkpoint; mọi scene CLOSED được tái sử dụng, chỉ scene lỗi/chưa hợp lệ được gọi lại.
+- Còn lại: stale behavior khi asset snapshot thay đổi và UX chi tiết cho Global Change Register.
 
 ### P4 — L3/release
 
