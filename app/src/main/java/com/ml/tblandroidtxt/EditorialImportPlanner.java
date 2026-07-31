@@ -73,7 +73,7 @@ final class EditorialImportPlanner {
 
     private enum Role { RAW,DRAFT,GLOSSARY,PRONOUN,UNKNOWN }
     private static Role roleOf(String filename) { String n=filename.toLowerCase(Locale.ROOT); if(has(n,"glossary"))return Role.GLOSSARY; if(has(n,"pronoun"))return Role.PRONOUN; if(has(n,"draft")||has(n,"vi_l2"))return Role.DRAFT; if(has(n,"raw")||has(n,"source")||has(n,"original"))return Role.RAW; return Role.UNKNOWN; }
-    private static String chapterKey(String filename,Role role) { String base=filename.replaceFirst("(?i)\\.[^.]+$",""); base=base.replaceAll("(?i)(^|[_ .-])(raw|source|original|draft|vi_l2)(?=[_ .-]|$)","$1").replaceAll("[_ .-]{2,}","_").replaceAll("^[_ .-]+|[_ .-]+$","").trim(); return base.isEmpty()?filename:base; }
+    private static String chapterKey(String filename,Role role) { String base=filename.replaceFirst("(?i)\\.[^.]+$","");java.util.regex.Matcher chapter=java.util.regex.Pattern.compile("(?i)^(?:chapter|chap|ch)?[ _.-]*(\\d{1,6})(?=[ _.-]|$)").matcher(base);if(chapter.find())return chapter.group(1);base=base.replaceAll("(?i)(^|[_ .-])(raw|source|original|draft|vi_l2)(?=[_ .-]|$)","$1").replaceAll("(?i)\\s*\\((vietnamese|translated|translation|draft|raw)\\)\\s*$","").replaceAll("[_ .-]{2,}","_").replaceAll("^[_ .-]+|[_ .-]+$","").trim(); return base.isEmpty()?filename:base; }
     private static boolean has(String value,String token){return value.matches(".*(^|[_ .-])"+token+"([_ .-]|$).*");}
     private static String safe(String value){return value==null?"":value.trim();}
     private static String name(Source source){return source==null?"File":safe(source.name);}

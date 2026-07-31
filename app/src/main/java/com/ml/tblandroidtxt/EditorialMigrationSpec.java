@@ -26,5 +26,11 @@ public final class EditorialMigrationSpec {
             "CREATE TABLE IF NOT EXISTS editorial_project_assets (id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER NOT NULL, role TEXT NOT NULL, source_uri TEXT DEFAULT '', display_name TEXT DEFAULT '', sha256 TEXT NOT NULL, size_bytes INTEGER NOT NULL, content TEXT NOT NULL, updated_at INTEGER NOT NULL, FOREIGN KEY(project_id) REFERENCES editorial_projects(id))",
             "CREATE UNIQUE INDEX IF NOT EXISTS idx_editorial_project_asset_role ON editorial_project_assets(project_id,role)"
     );}
+    public static List<String> from12To13(){return Arrays.asList(
+            "CREATE TABLE IF NOT EXISTS editorial_project_reference_profiles (id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER NOT NULL, role TEXT NOT NULL, source_uri TEXT DEFAULT '', display_name TEXT NOT NULL, sha256 TEXT NOT NULL, size_bytes INTEGER NOT NULL, content TEXT NOT NULL, is_active INTEGER NOT NULL DEFAULT 0, updated_at INTEGER NOT NULL, FOREIGN KEY(project_id) REFERENCES editorial_projects(id))",
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_editorial_reference_profile_name ON editorial_project_reference_profiles(project_id,role,display_name)",
+            "CREATE INDEX IF NOT EXISTS idx_editorial_reference_profile_active ON editorial_project_reference_profiles(project_id,role,is_active)",
+            "INSERT OR IGNORE INTO editorial_project_reference_profiles(project_id,role,source_uri,display_name,sha256,size_bytes,content,is_active,updated_at) SELECT project_id,role,source_uri,display_name,sha256,size_bytes,content,1,updated_at FROM editorial_project_assets"
+    );}
     private EditorialMigrationSpec() {}
 }

@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-01` (independent Editorial RAW/DRAFT/Glossary/Pronoun picker implementation completed; archive-first build/device regression pending)
+- Snapshot updated: `2026-08-01` (Editorial chapter-number pairing and project reference multi-profile management implemented; archive-first build/device regression pending)
 - Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.19`/code81 is the latest unreleased development build.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
 - Current commit: `03456cd` (implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
@@ -162,10 +162,11 @@
 - Accepted code79 after 147/147 JVM tests, lint 0 errors/53 warnings, artifact/backup parity and 10/10 focused Editorial device tests; exact code79 APK was reinstalled after the test runner cleanup.
 - Added project-owned Editorial Glossary/Pronoun persistence and UI, removed the Translation Settings fallback from Editorial batch import, and added editable Series/Volume identity with collision validation. The expanded JVM suite passes; archive-first build/device migration regression is pending.
 - Replaced the ambiguous all-in-one Editorial batch picker with independent RAW, DRAFT, Glossary, and Pronoun controls. RAW/DRAFT roles are explicit and accept filenames without role tokens; Glossary/Pronoun reuse Translate's wildcard picker and content validation. Code81 archive-first build passed 149 JVM tests and lint, both immutable payloads were created, and exact code81 was installed; hands-on picker UX verification remains pending.
+- Corrected explicit RAW/DRAFT pairing to prefer the leading chapter number, so `005_RAW_...txt` pairs with a selected DRAFT named `005_RAW_... (Vietnamese).txt`. Selected RAW/DRAFT filenames are now visible on the project card. Added additive database v12→v13 project-reference profiles: multi-file Glossary/Pronoun import, per-project ACTIVE selection, profile listing/deletion, and migration of each existing project reference to an active profile. Focused planner/migration tests and Android test-source compilation pass; archive-first build and device migration/UX verification are pending.
 
 ## Pending tasks
 
-- Verify the four separate Editorial picker controls on installed code81, including non-`.txt` MIME Glossary/Pronoun files and filename-token-free RAW/DRAFT pairing.
+- Archive-first build and install the chapter-number pairing/reference-profile implementation, then verify selected filenames, batch Glossary/Pronoun import, ACTIVE switching, deletion, and migration of code81 project references on device.
 - Perform manual on-device SAF save/cancel inspection for the Release dialog, then prepare the v4.16 release-candidate QA scope.
 - Execute `QA_SCOPE_v4_16.md`; manual code78 Release save/abort and ZIP inspection are complete, but full RC QA remains open.
 - Build and install the next v4.16 development APK, then verify database v11→v12 migration and project isolation/editing on device.
@@ -267,7 +268,7 @@
 
 ## Next step
 
-On installed code81, verify all four Editorial picker controls and run focused v11→v12 migration/reference-isolation/edit-identity tests followed by the full Editorial and Translate smoke suites. Also verify the five-tab layout and real SAF Release-folder flow. Keep annotated tag `v4.15` and both immutable archives unchanged.
+Commit and archive-first build the chapter-number pairing and project reference-profile implementation. Install it over code81 to verify v12→v13 migration, selected-file display, batch import and ACTIVE switching; then run the remaining Editorial/Translate RC suites. Keep annotated tag `v4.15` and both immutable archives unchanged.
 
 ## Resume rule
 

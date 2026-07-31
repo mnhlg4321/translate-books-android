@@ -26,4 +26,13 @@ public class EditorialPersistenceSpecTest {
         assertFalse(sql.contains("drop table"));
         assertFalse(sql.contains("delete from"));
     }
+
+    @Test public void version13AddsMultiProfileReferencesAndMigratesExistingActiveFiles() {
+        String sql=String.join("\n",EditorialMigrationSpec.from12To13()).toLowerCase();
+        assertTrue(sql.contains("editorial_project_reference_profiles"));
+        assertTrue(sql.contains("is_active"));
+        assertTrue(sql.contains("insert or ignore"));
+        assertFalse(sql.contains("drop table"));
+        assertFalse(sql.contains("delete from"));
+    }
 }

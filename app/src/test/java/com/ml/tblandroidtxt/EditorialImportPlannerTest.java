@@ -11,7 +11,7 @@ public class EditorialImportPlannerTest {
                 new EditorialImportPlanner.Source("Ch 01 DRAFT.txt","draft", "d"),
                 new EditorialImportPlanner.Source("Series Glossary.txt","g", "g"),
                 new EditorialImportPlanner.Source("Series Pronoun.txt","p", "p")));
-        assertEquals(1,result.readyCount()); assertEquals("Ch 01",result.chapters.get(0).key); assertNotNull(result.glossary); assertNotNull(result.pronoun);
+        assertEquals(1,result.readyCount()); assertEquals("01",result.chapters.get(0).key); assertNotNull(result.glossary); assertNotNull(result.pronoun);
     }
     @Test public void keepsUnpairedFilesVisibleAndBlocked() {
         EditorialImportPlanner.Result result=EditorialImportPlanner.plan(Arrays.asList(new EditorialImportPlanner.Source("Ch 02 RAW.txt","raw", "r")));
@@ -26,6 +26,6 @@ public class EditorialImportPlannerTest {
                 Arrays.asList(new EditorialImportPlanner.Source("005_RAW_MERCEDES_VOL3 (Vietnamese).md","raw","r")),
                 Arrays.asList(new EditorialImportPlanner.Source("005_DRAFT_MERCEDES_VOL3 (Vietnamese).doc","draft","d")));
         assertEquals(1,result.readyCount());
-        assertEquals("005_MERCEDES_VOL3 (Vietnamese)",result.chapters.get(0).key);
+        assertEquals("005",result.chapters.get(0).key);
     }
 }

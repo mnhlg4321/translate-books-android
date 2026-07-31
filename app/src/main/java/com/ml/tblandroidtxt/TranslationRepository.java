@@ -11,7 +11,7 @@ import java.util.List;
 
 public class TranslationRepository extends SQLiteOpenHelper {
     private static final String DB = "tbl_android_txt.db";
-    private static final int VER = 12;
+    private static final int VER = 13;
 
     public TranslationRepository(Context context) { super(context, DB, null, VER); }
 
@@ -70,6 +70,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
         }
         if (oldVersion < 11) createEditorialTables(db);
         if (oldVersion < 12) createEditorialProjectAssets(db);
+        if (oldVersion < 13) createEditorialReferenceProfiles(db);
     }
 
     private static void safeExec(SQLiteDatabase db, String sql) { try { db.execSQL(sql); } catch (Exception ignored) {} }
@@ -89,8 +90,10 @@ public class TranslationRepository extends SQLiteOpenHelper {
     private static void createEditorialTables(SQLiteDatabase db) {
         for (String sql : EditorialMigrationSpec.from10To11()) safeExec(db, sql);
         createEditorialProjectAssets(db);
+        createEditorialReferenceProfiles(db);
     }
     private static void createEditorialProjectAssets(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from11To12())safeExec(db,sql);}
+    private static void createEditorialReferenceProfiles(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from12To13())safeExec(db,sql);}
 
     SQLiteDatabase editorialWritableDatabase() { return getWritableDatabase(); }
     SQLiteDatabase editorialReadableDatabase() { return getReadableDatabase(); }
