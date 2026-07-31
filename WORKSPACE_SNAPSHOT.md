@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-31` (v4.16 segmented L2 checkpoints, diff and retry completed; accepted build/device evidence retained)
-- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.12`/code74 is an unreleased development build.
+- Snapshot updated: `2026-07-31` (v4.16 isolated L3 barrier and FINAL_QA completed; accepted build/device evidence retained)
+- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.13`/code75 is an unreleased development build.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `6f1c39f` (implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.16-dev.12/build-20260731-223339/TranslateBooks-v4.16-dev.12-code74.apk`, SHA-256 `8FDB05F9AF2C951FFA47E488614B56ADE33954804EB712D37C7F0F34A3C4FA29`; matching immutable payload is under `backup/builds/v4.16-dev.12/build-20260731-223339/`. The released v4.15/code62 archive remains unchanged.
+- Current commit: `fd49ec5` (implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/builds/v4.16-dev.13/build-20260731-224116/TranslateBooks-v4.16-dev.13-code75.apk`, SHA-256 `7C6A56A838034BB003EDC674E4753F26E0AE1C498BD8208E64005A2F7B5A14E1`; matching immutable payload is under `backup/builds/v4.16-dev.13/build-20260731-224116/`. The released v4.15/code62 archive remains unchanged.
 
 ## Completed tasks
 
@@ -153,9 +153,11 @@
 - Completed initial L2 RAW-first runner and UI. The first isolated call sees only RAW/Glossary/Pronoun and must close `L2_RAW_LEDGER`; only then does a fresh edit context open DRAFT and validated REPORT_L1. VI_L2, Global Change Register, five gates, context manifest, hashes and per-phase usage are persisted. Build `4.16-dev.10`/code72 passed 138 JVM tests, lint 53 warnings/0 errors and artifact/backup parity; focused device instrumentation passed 4/4 on code71 before the final context-size guard.
 - Completed segmented L2, per-RAW/per-edit scene checkpoints, aggregate VI_L2 validation, failed-scene-only retry and line-oriented DRAFT→VI_L2 diff/export UI. Device regression exposed and fixed marker-only scene segmentation. Accepted `4.16-dev.12`/code74 passed 142 JVM tests, lint 0 errors/53 warnings, focused device Editorial tests 5/5 and artifact/backup parity.
 
+- Completed isolated L3 core: fresh RAW–VI_L2 context without REPORT_L1, persisted/validated independent ledger checkpoint, delayed report-review context, FINAL_QA/Change Set/five gates, cross-scene voice audit, final read-through and RELEASE_READY UI. Accepted `4.16-dev.13`/code75 passed 144 JVM tests, lint 0 errors/53 warnings, focused device Editorial tests 6/6 and artifact/backup parity.
+
 ## Pending tasks
 
-- Begin isolated L3 independent runner; keep REPORT_L1 hidden until the independent RAW–VI_L2 comparison checkpoint closes.
+- Implement segmented L3 independent/report-review checkpoints and retry for long chapters.
 
 ## Known bugs
 
@@ -179,6 +181,8 @@
 - The first local tag was rejected for backup because it contained stale v4.14 release metadata; it was absent from `origin` and was deleted with approval before any immutable archive existed.
 
 ## Regression status
+
+- v4.16 isolated L3 regression: PASS on code75. 144 JVM tests passed; lint reports 0 errors/53 warnings; focused device Editorial suite passed 6/6. The L3 test proves the first model prompt contains RAW and VI_L2 but no REPORT_L1, then proves report visibility only after independent evidence validates CLOSED. Artifact/backup parity passed.
 
 - v4.16 segmented L2 regression: PASS on accepted code74. 142 JVM tests passed; lint reports 0 errors/53 warnings; focused device Editorial suite passed 5/5, including a controlled scene-002 failure where retry made exactly one additional model call and reused every closed RAW/edit checkpoint. Artifact/backup parity passed.
 - v4.16 model-mapping/L2 RAW-first regression: PASS. Archive-first `4.16-dev.10`/code72 ran 138 JVM tests with 0 failures/errors; lint reported 53 warnings/0 errors; focused physical-device Editorial instrumentation passed 4/4 on code71; final code72 added only the safe-context guard and passed the complete JVM/lint build; artifact/backup file hashes match.
@@ -241,7 +245,7 @@
 
 ## Next step
 
-Begin isolated L3 independent runner, first implementing the REPORT_L1 visibility barrier and independent Scene Ledger/checkpoint contract. Keep annotated tag `v4.15` and both immutable archives unchanged.
+Implement segmented L3 independent/report-review checkpoints and failed-scene-only retry for long chapters. Keep annotated tag `v4.15` and both immutable archives unchanged.
 
 ## Resume rule
 

@@ -201,8 +201,9 @@ Model phải trả JSON theo schema cho evidence; text output được render/ex
 
 ### P4 — L3/release
 
-- Context-isolated L3, delayed REPORT_L1 unlock.
-- Change Set, voice audit, final read-through, Release Gate, evidence bundle redacted.
+- Hoàn tất lõi context-isolated L3 cho chapter trong ngưỡng an toàn: context độc lập chỉ nhận RAW, VI_L2, glossary và pronoun; app phải validate/persist Scene Ledger, RAW–VI_L2 comparison và Cross-scene Voice Audit `CLOSED` trước khi chuyển state và dựng context mới có REPORT_L1.
+- Hoàn tất FINAL_QA, Change Set, năm gate, voice audit, final read-through, trạng thái RELEASE_READY và UI chạy/xem/export.
+- Còn lại: segmented L3/checkpoint/retry cho chapter dài, Release action và evidence bundle redacted.
 
 ### P5 — regression/QA
 
