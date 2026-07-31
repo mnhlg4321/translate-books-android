@@ -2,8 +2,8 @@
 
 - Snapshot updated: `2026-07-31` (v4.16 Editorial Workflow V5 planning group completed; no product implementation or build yet)
 - Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`, verified immutable archive, verified final export, passing Complete gate, merged history, and verified GitHub refs.
-- Current branch: `feature/v4.16`; the pre-existing `.idea/gradle.xml` change was user-authorized for temporary stash as `preserve-user-idea-before-v4.16-editorial-plan` and remains excluded from product/release commits.
-- Current commit: `104fffd` (v4.16 implementation baseline immediately before the Editorial Workflow V5 planning and this snapshot commits; actual `HEAD` must be confirmed when resuming)
+- Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
+- Current commit: `35d5003` (v4.16 implementation baseline immediately before this snapshot commit; it contains the committed Editorial Workflow V5 plan and checklist; actual `HEAD` must be confirmed when resuming)
 - Current build: `artifacts/releases/v4.15/tag-v4.15/TranslateBooks-v4.15-code62.apk`, SHA-256 `7FDF60C934E75F4ACF47D77E14E248FBAC21F2EF5DDAD5E086AE586729163969`; exact code62 is installed after QA and the 22-file tag payload is mirrored under `backup/v4.15/tag-v4.15/`. The released baseline remains immutable v4.14/code57 until release-state completion.
 
 ## Completed tasks
