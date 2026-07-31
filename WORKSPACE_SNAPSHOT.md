@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
 - Snapshot updated: `2026-08-01` (Editorial project-owned Glossary/Pronoun and editable Series/Volume implementation completed; archive-first build/device regression pending)
-- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.17`/code79 is an unreleased development build.
+- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.18`/code80 is the latest unreleased development build.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
 - Current commit: `e282923` (implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.16-dev.17/build-20260801-042014/TranslateBooks-v4.16-dev.17-code79.apk`, SHA-256 `664A6FBF6C47B52CA842571F1B30C2B6BE948BC4A69458BA2FA44857BB8680B5`; matching immutable payload is under `backup/builds/v4.16-dev.17/build-20260801-042014/`. The released v4.15/code62 archive remains unchanged.
+- Current build: `artifacts/builds/v4.16-dev.18/build-20260801-060931/TranslateBooks-v4.16-dev.18-code80.apk`, SHA-256 `B49EF20484B451889678A58A7A695B298F4C991272E5A9BCAE40DB8052651BFC`; matching immutable payload is under `backup/builds/v4.16-dev.18/build-20260801-060931/`. Build/archive passed, but installation was unavailable because no device was connected. The released v4.15/code62 archive remains unchanged.
 
 ## Completed tasks
 
@@ -167,10 +167,12 @@
 - Perform manual on-device SAF save/cancel inspection for the Release dialog, then prepare the v4.16 release-candidate QA scope.
 - Execute `QA_SCOPE_v4_16.md`; manual code78 Release save/abort and ZIP inspection are complete, but full RC QA remains open.
 - Build and install the next v4.16 development APK, then verify database v11→v12 migration and project isolation/editing on device.
+- Connect the Android device, install archived code80, and run the new reference-isolation/edit-identity instrumentation plus the full Editorial/Translate smoke suites.
 
 ## Known bugs
 
 - Code78 bottom-navigation clipping has an implemented responsive two-line fix in code79; visual verification is pending because the physical device is secured at the lock screen.
+- Code80 device acceptance is blocked only by the Android device being disconnected; build, 148 JVM tests, lint and artifact parity passed.
 - The OnePlus last-used-folder ambiguity has a code79 per-project Release folder/direct-write path plus clearer fallback warning; physical SAF selection/write/permission-loss verification is pending.
 
 - Rejected code54 candidate: Android removed the target package during cleanup after rejecting the unsigned Macrobenchmark APK. No benchmark measurement was produced.
@@ -263,7 +265,7 @@
 
 ## Next step
 
-Commit the project-owned Editorial references/edit-identity group, create the mandatory archive-first v4.16 development build, and run focused device migration/isolation tests. After device unlock, also verify the five-tab layout and real SAF Release-folder flow. Keep annotated tag `v4.15` and both immutable archives unchanged.
+Connect the Android device, install the already archived code80 APK, and run focused v11→v12 migration/reference-isolation/edit-identity tests followed by the full Editorial and Translate smoke suites. After unlock, also verify the five-tab layout and real SAF Release-folder flow. Keep annotated tag `v4.15` and both immutable archives unchanged.
 
 ## Resume rule
 

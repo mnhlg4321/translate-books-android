@@ -6,7 +6,7 @@ Validate Editorial Workflow V5 end to end without regressing the existing Transl
 
 ## Current development baseline
 
-- Accepted development build: `4.16-dev.17` / code `79`.
+- Latest archived development build: `4.16-dev.18` / code `80`; automated JVM/lint passed, device acceptance pending connection.
 - Build event: `build-20260801-042014`.
 - Source commit: `d8fa109`.
 - APK SHA-256: `664A6FBF6C47B52CA842571F1B30C2B6BE948BC4A69458BA2FA44857BB8680B5`.
@@ -34,13 +34,13 @@ Validate Editorial Workflow V5 end to end without regressing the existing Transl
 2. Full JVM suite and Android Lint on the exact candidate source.
 3. Full connected instrumentation, with paid real-provider tests skipped unless explicitly authorized.
 4. Existing Translate smoke test: single TXT and multi-TXT selection, translate start/cancel/resume/retry, output write and job-log export.
-5. Editorial import: batch filename mapping, active Glossary/Pronoun fallback, duplicate/missing-role rejection and immutable asset hashes.
+5. Editorial import: batch filename mapping, project-owned Glossary/Pronoun selection/update, proof that Translation profiles are never used as fallback, duplicate/missing-role rejection and immutable chapter asset hashes.
 6. L1: inline and segmented audit, REPORT_L1 contract/export, failed-scene-only retry and no translation mutation.
 7. L2: RAW-first barrier, structural/model mapping, segmented checkpoints, aggregate VI_L2 and failed-scene-only retry.
 8. L3: context isolation before REPORT_L1, independent scene checkpoints, chapter voice audit, final scene checkpoints and failed-scene-only retry.
 9. Release: all persisted gates revalidated, open/stale/mismatched run rejected, save failure/cancel retains `RELEASE_READY`, successful write records manifest/hash and transitions once to `RELEASED`.
 10. ZIP inspection: exact three-entry contract, UTF-8 FINAL_QA, checksum verification, no source/config/prompt/issue-quote/reasoning leakage.
-11. Database upgrade from the released v4.15 schema with existing translation/config data preserved.
+11. Database upgrade from the released v4.15 schema with existing translation/config data preserved; include v11→v12 project references, cross-project isolation, Series/Volume correction and duplicate-identity rejection.
 12. Process-death/cold-start checks during L1/L2/L3 failure and while the Release picker is open.
 
 ### P1 — usability and compatibility
