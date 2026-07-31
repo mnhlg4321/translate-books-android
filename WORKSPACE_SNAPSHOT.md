@@ -3,7 +3,7 @@
 - Snapshot updated: `2026-07-31` (v4.16 Editorial RELEASE_READY → RELEASED and redacted bundle completed; accepted build/device evidence retained)
 - Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.16`/code78 is an unreleased development build.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `5097f3b` (implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current commit: `44a5a26` (implementation/documentation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
 - Current build: `artifacts/builds/v4.16-dev.16/build-20260731-230817/TranslateBooks-v4.16-dev.16-code78.apk`, SHA-256 `2D317C5BACB20AD7A7F4DCFC67A910613F7CDC4B35FB59E00D6607C55234B2BE`; matching immutable payload is under `backup/builds/v4.16-dev.16/build-20260731-230817/`. The released v4.15/code62 archive remains unchanged.
 
 ## Completed tasks
@@ -157,12 +157,17 @@
 
 - Completed segmented L3: inherits accepted L2 scene checkpoints, validates matching anchors, checkpoints independent comparison per scene, closes a separate chapter-level voice audit before REPORT_L1 unlock, checkpoints final review per scene, aggregates FINAL_QA/Change Set/gates, and retries only invalid checkpoints. Accepted code77 passed 145 JVM tests, lint 0 errors/53 warnings, focused device Editorial tests 7/7 and artifact/backup parity.
 - Completed Editorial release: revalidates the latest closed L3, FINAL_QA contract and persisted gates; exports a ZIP with final text, redacted hash/length/status evidence and checksums; records manifest/bundle hash and changes state atomically only after successful SAF write. Accepted code78 passed 145 JVM tests, lint 0 errors/53 warnings, and the complete Editorial device suite 9/9.
+- Completed the code78 manual Release walkthrough and desktop ZIP inspection; retained eight matching evidence files in artifact/backup, removed all disposable device data, and defined the full v4.16 RC matrix in `QA_SCOPE_v4_16.md`.
 
 ## Pending tasks
 
 - Perform manual on-device SAF save/cancel inspection for the Release dialog, then prepare the v4.16 release-candidate QA scope.
+- Execute `QA_SCOPE_v4_16.md`; manual code78 Release save/abort and ZIP inspection are complete, but full RC QA remains open.
 
 ## Known bugs
+
+- Code78 manual QA shows bottom-navigation labels clipped on the 1264 px-wide OnePlus portrait layout after adding the fifth Editorial tab. This is non-crashing but requires an RC fix/accept decision.
+- The OnePlus save picker restored its last-used folder (`3.RAW`) and exposed no dedicated Cancel button on the visible save surface. Abort/restart safely retained `RELEASE_READY`; explicit cancel/back behavior remains in the RC picker-compatibility matrix.
 
 - Rejected code54 candidate: Android removed the target package during cleanup after rejecting the unsigned Macrobenchmark APK. No benchmark measurement was produced.
 - Rejected code55 candidate: the signed test captured two traces, but the OEM launcher stability wait made the five-iteration run impractical; the redundant Home step is removed for the next candidate.
@@ -187,6 +192,7 @@
 
 - v4.16 segmented L3 regression: PASS on accepted code77. 145 JVM tests passed; lint reports 0 errors/53 warnings; focused device Editorial suite passed 7/7. Controlled final scene-002 failure proved retry made exactly one additional model call while reusing independent scenes, chapter voice audit and closed final scene-001. Artifact/backup parity passed.
 - v4.16 Editorial release regression: PASS on accepted code78. 145 JVM tests passed; lint reports 0 errors/53 warnings; complete physical-device Editorial suite passed 9/9 on OnePlus CPH2691 / Android 15. Tests prove sensitive source/config strings are absent from redacted evidence, checksums match, an open gate blocks release, and successful recording reaches `RELEASED`. Artifact/backup parity passed.
+- v4.16 code78 manual Release QA: PARTIAL PASS. Confirmation, picker abort/restart safety, successful save, `RELEASED` UI, actual ZIP opening, exact three-entry contract, UTF-8 output, checksum verification and redaction inspection passed. Disposable device data was removed and evidence mirrored. Full RC scope remains pending; bottom-nav clipping and picker destination/cancel UX are recorded.
 
 - v4.16 isolated L3 regression: PASS on code75. 144 JVM tests passed; lint reports 0 errors/53 warnings; focused device Editorial suite passed 6/6. The L3 test proves the first model prompt contains RAW and VI_L2 but no REPORT_L1, then proves report visibility only after independent evidence validates CLOSED. Artifact/backup parity passed.
 
@@ -251,7 +257,7 @@
 
 ## Next step
 
-Perform manual SAF save/cancel inspection of one `RELEASE_READY` chapter, inspect the resulting ZIP on device/desktop, then define and run the v4.16 release-candidate QA scope. Keep annotated tag `v4.15` and both immutable archives unchanged.
+Execute the P0 items in `QA_SCOPE_v4_16.md`, beginning with a decision/fix for bottom-nav clipping and picker destination/cancel UX, then build the exact v4.16 release candidate. Keep annotated tag `v4.15` and both immutable archives unchanged.
 
 ## Resume rule
 
