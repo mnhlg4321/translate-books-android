@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-31` (v4.16 Editorial Workflow V5 planning group completed; no product implementation or build yet)
-- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`, verified immutable archive, verified final export, passing Complete gate, merged history, and verified GitHub refs.
+- Snapshot updated: `2026-07-31` (v4.16 P0.1 editorial workflow contracts completed and archive-first development build retained)
+- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.1`/code63 is an unreleased development build.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
 - Current commit: `35d5003` (v4.16 implementation baseline immediately before this snapshot commit; it contains the committed Editorial Workflow V5 plan and checklist; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/releases/v4.15/tag-v4.15/TranslateBooks-v4.15-code62.apk`, SHA-256 `7FDF60C934E75F4ACF47D77E14E248FBAC21F2EF5DDAD5E086AE586729163969`; exact code62 is installed after QA and the 22-file tag payload is mirrored under `backup/v4.15/tag-v4.15/`. The released baseline remains immutable v4.14/code57 until release-state completion.
+- Current build: `artifacts/builds/v4.16-dev.1/build-20260731-205609/TranslateBooks-v4.16-dev.1-code63.apk`, SHA-256 `AE7932AAC88A3E8B76E1D6BB41E477D398F33807948E794778B74EECC166897E`; matching immutable five-file payload is under `backup/builds/v4.16-dev.1/build-20260731-205609/`. The released v4.15/code62 archive remains unchanged.
 
 ## Completed tasks
 
@@ -140,11 +140,13 @@
 - Verified remote `main` at `81b8344`, annotated tag object `cb474d2d...89e7`, and peeled tag target `292b24e...432c`.
 - Created `feature/v4.16` from clean `main` after preserving only the user-owned IDE change in a named stash.
 - Added `EDITORIAL_WORKFLOW_V5_PLAN.md`: reviewed V5 context/state/gate requirements, UI inheritance, single and batch import UX, filename metadata suggestions, project-level glossary/pronoun defaults, asset snapshots, data model, context allow-list, risks, and phased plan.
-- Created `release_checklists/v4.16.md`; checklist steps 1–5 have concrete planning evidence and product implementation has not started.
+- Created `release_checklists/v4.16.md`; P0.1 implementation/build evidence is recorded while UI and persistence work remain pending.
+- Added P0.1 editorial workflow contracts: strict V5 chapter state transitions, L1/L2/L3 context allow-lists, release-gate predicate, versioned L1/L2/L3 evidence schemas, and structural L1 report validation.
+- Added six focused offline tests in `EditorialWorkflowV5Test`; passed 6/6. Archive-first `4.16-dev.1`/code63 build passed all 116 JVM tests and lint with 53 warnings/0 errors; artifact/backup files and hashes match.
 
 ## Pending tasks
 
-- v4.16 P0: turn V5 evidence/output structures into machine-readable JSON schemas and fixtures; add state/context allow-list unit tests before UI or provider work.
+- v4.16 P0: extend evidence validators to L2/L3 and add fixtures for role ambiguity, missing/extra, speaker/voice, output truncation, stale asset, and long chapter anchors.
 - v4.16 P1 onward: implement Editorial Project/Chapter persistence and single/batch import preview before L1/L2/L3 runners.
 
 ## Known bugs
@@ -171,6 +173,7 @@
 ## Regression status
 
 - v4.16 planning documentation: PASS. `git diff --check` passed; no product code, APK build, or device regression has been run because implementation has not started.
+- v4.16 P0.1 regression: PASS. `EditorialWorkflowV5Test` 6/6; full archive-first build recorded 116 JVM tests, 0 failures/errors, Android Lint 53 warnings/0 errors, and verified five-file artifact/backup parity.
 
 - v4.7 recorded regression: `PASS WITH KNOWN LIMITATIONS`.
 - JVM unit tests: 93 passed, 0 failed, 0 skipped.
@@ -224,7 +227,7 @@
 
 ## Next step
 
-Begin v4.16 P0 on `feature/v4.16`: define/validate machine-readable editorial schemas and state transitions. Keep annotated tag `v4.15` and both immutable archives unchanged.
+Continue v4.16 P0 on `feature/v4.16`: complete L2/L3 validators and long-chapter/asset fixtures before starting database migration or UI. Keep annotated tag `v4.15` and both immutable archives unchanged.
 
 ## Resume rule
 

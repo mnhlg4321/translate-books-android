@@ -174,9 +174,8 @@ Model phải trả JSON theo schema cho evidence; text output được render/ex
 
 ### P0 — Đặc tả và test fixture
 
-- JSON schema cho ledger, L1 report, issue, change, gate, manifest.
-- Fixture cho role ambiguity, missing/extra, speaker/voice, output truncation và stale asset.
-- Unit test state transition/context allow-list.
+- **P0.1 completed (2026-07-31):** versioned evidence contracts for L1/L2/L3, strict L2/L3 context allow-lists, chapter state machine, release-gate predicate, L1 structural validator, and six focused offline tests.
+- Remaining P0: expand the schema validator to L2/L3 and add fixtures for role ambiguity, missing/extra, speaker/voice, output truncation, stale asset, and long chapter anchors.
 
 ### P1 — Project/import và persistence
 
