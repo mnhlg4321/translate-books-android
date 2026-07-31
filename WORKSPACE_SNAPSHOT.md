@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
 - Snapshot updated: `2026-08-01` (independent Editorial RAW/DRAFT/Glossary/Pronoun picker implementation completed; archive-first build/device regression pending)
-- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.18`/code80 is the latest unreleased development build.
+- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.19`/code81 is the latest unreleased development build.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `e282923` (implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.16-dev.18/build-20260801-060931/TranslateBooks-v4.16-dev.18-code80.apk`, SHA-256 `B49EF20484B451889678A58A7A695B298F4C991272E5A9BCAE40DB8052651BFC`; matching immutable payload is under `backup/builds/v4.16-dev.18/build-20260801-060931/`. Build/archive passed, but installation was unavailable because no device was connected. The released v4.15/code62 archive remains unchanged.
+- Current commit: `03456cd` (implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/builds/v4.16-dev.19/build-20260801-064928/TranslateBooks-v4.16-dev.19-code81.apk`, SHA-256 `D27A558932B5DADD693C2FACB21AEE1D3238A065081B02BFBD0BDAFF190A4262`; matching immutable payload is under `backup/builds/v4.16-dev.19/build-20260801-064928/`. All 149 JVM tests passed, lint reported 53 warnings/0 errors, and installation on the connected device succeeded with exact `4.16-dev.19`/code81 identity. The released v4.15/code62 archive remains unchanged.
 
 ## Completed tasks
 
@@ -161,11 +161,11 @@
 - Implemented responsive two-line five-tab navigation and per-project default Release folders with persisted SAF permission, direct ZIP creation, unique `.zip` naming and an explicit fallback-picker destination/cancel warning; code79 build/device verification is pending.
 - Accepted code79 after 147/147 JVM tests, lint 0 errors/53 warnings, artifact/backup parity and 10/10 focused Editorial device tests; exact code79 APK was reinstalled after the test runner cleanup.
 - Added project-owned Editorial Glossary/Pronoun persistence and UI, removed the Translation Settings fallback from Editorial batch import, and added editable Series/Volume identity with collision validation. The expanded JVM suite passes; archive-first build/device migration regression is pending.
-- Replaced the ambiguous all-in-one Editorial batch picker with independent RAW, DRAFT, Glossary, and Pronoun controls. RAW/DRAFT roles are explicit and accept filenames without role tokens; Glossary/Pronoun reuse Translate's wildcard picker and content validation. Focused planner tests and Android test-source compilation pass; archive-first build/device UX verification is pending.
+- Replaced the ambiguous all-in-one Editorial batch picker with independent RAW, DRAFT, Glossary, and Pronoun controls. RAW/DRAFT roles are explicit and accept filenames without role tokens; Glossary/Pronoun reuse Translate's wildcard picker and content validation. Code81 archive-first build passed 149 JVM tests and lint, both immutable payloads were created, and exact code81 was installed; hands-on picker UX verification remains pending.
 
 ## Pending tasks
 
-- Build/archive the independent Editorial picker change, then install and verify four separate picker controls on device, including non-`.txt` MIME Glossary/Pronoun files and filename-token-free RAW/DRAFT pairing.
+- Verify the four separate Editorial picker controls on installed code81, including non-`.txt` MIME Glossary/Pronoun files and filename-token-free RAW/DRAFT pairing.
 - Perform manual on-device SAF save/cancel inspection for the Release dialog, then prepare the v4.16 release-candidate QA scope.
 - Execute `QA_SCOPE_v4_16.md`; manual code78 Release save/abort and ZIP inspection are complete, but full RC QA remains open.
 - Build and install the next v4.16 development APK, then verify database v11→v12 migration and project isolation/editing on device.
@@ -267,7 +267,7 @@
 
 ## Next step
 
-Commit and archive-first build the independent Editorial picker change. Then connect the Android device, install that new APK, verify all four picker controls and run focused v11→v12 migration/reference-isolation/edit-identity tests followed by the full Editorial and Translate smoke suites. After unlock, also verify the five-tab layout and real SAF Release-folder flow. Keep annotated tag `v4.15` and both immutable archives unchanged.
+On installed code81, verify all four Editorial picker controls and run focused v11→v12 migration/reference-isolation/edit-identity tests followed by the full Editorial and Translate smoke suites. Also verify the five-tab layout and real SAF Release-folder flow. Keep annotated tag `v4.15` and both immutable archives unchanged.
 
 ## Resume rule
 
