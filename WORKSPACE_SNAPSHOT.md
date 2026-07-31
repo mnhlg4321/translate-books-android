@@ -3,7 +3,7 @@
 - Snapshot updated: `2026-07-31` (v4.16 segmented L2 checkpoints, diff and retry completed; accepted build/device evidence retained)
 - Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.12`/code74 is an unreleased development build.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `10c0382` (implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current commit: `6f1c39f` (implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
 - Current build: `artifacts/builds/v4.16-dev.12/build-20260731-223339/TranslateBooks-v4.16-dev.12-code74.apk`, SHA-256 `8FDB05F9AF2C951FFA47E488614B56ADE33954804EB712D37C7F0F34A3C4FA29`; matching immutable payload is under `backup/builds/v4.16-dev.12/build-20260731-223339/`. The released v4.15/code62 archive remains unchanged.
 
 ## Completed tasks
