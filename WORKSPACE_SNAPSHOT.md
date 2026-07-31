@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-31` (v4.16 isolated L3 barrier and FINAL_QA completed; accepted build/device evidence retained)
-- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.13`/code75 is an unreleased development build.
+- Snapshot updated: `2026-07-31` (v4.16 segmented L3 checkpoints and retry completed; accepted build/device evidence retained)
+- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.15`/code77 is an unreleased development build.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `9839623` (implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.16-dev.13/build-20260731-224116/TranslateBooks-v4.16-dev.13-code75.apk`, SHA-256 `7C6A56A838034BB003EDC674E4753F26E0AE1C498BD8208E64005A2F7B5A14E1`; matching immutable payload is under `backup/builds/v4.16-dev.13/build-20260731-224116/`. The released v4.15/code62 archive remains unchanged.
+- Current commit: `8e07b5f` (implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/builds/v4.16-dev.15/build-20260731-225521/TranslateBooks-v4.16-dev.15-code77.apk`, SHA-256 `AFE8A62D4E7202D7733F8BCF06F616AE27092CD0F325FD19A34BE9A036F500FD`; matching immutable payload is under `backup/builds/v4.16-dev.15/build-20260731-225521/`. The released v4.15/code62 archive remains unchanged.
 
 ## Completed tasks
 
@@ -155,9 +155,11 @@
 
 - Completed isolated L3 core: fresh RAW–VI_L2 context without REPORT_L1, persisted/validated independent ledger checkpoint, delayed report-review context, FINAL_QA/Change Set/five gates, cross-scene voice audit, final read-through and RELEASE_READY UI. Accepted `4.16-dev.13`/code75 passed 144 JVM tests, lint 0 errors/53 warnings, focused device Editorial tests 6/6 and artifact/backup parity.
 
+- Completed segmented L3: inherits accepted L2 scene checkpoints, validates matching anchors, checkpoints independent comparison per scene, closes a separate chapter-level voice audit before REPORT_L1 unlock, checkpoints final review per scene, aggregates FINAL_QA/Change Set/gates, and retries only invalid checkpoints. Accepted code77 passed 145 JVM tests, lint 0 errors/53 warnings, focused device Editorial tests 7/7 and artifact/backup parity.
+
 ## Pending tasks
 
-- Implement segmented L3 independent/report-review checkpoints and retry for long chapters.
+- Implement Release action and redacted evidence bundle from RELEASE_READY.
 
 ## Known bugs
 
@@ -181,6 +183,8 @@
 - The first local tag was rejected for backup because it contained stale v4.14 release metadata; it was absent from `origin` and was deleted with approval before any immutable archive existed.
 
 ## Regression status
+
+- v4.16 segmented L3 regression: PASS on accepted code77. 145 JVM tests passed; lint reports 0 errors/53 warnings; focused device Editorial suite passed 7/7. Controlled final scene-002 failure proved retry made exactly one additional model call while reusing independent scenes, chapter voice audit and closed final scene-001. Artifact/backup parity passed.
 
 - v4.16 isolated L3 regression: PASS on code75. 144 JVM tests passed; lint reports 0 errors/53 warnings; focused device Editorial suite passed 6/6. The L3 test proves the first model prompt contains RAW and VI_L2 but no REPORT_L1, then proves report visibility only after independent evidence validates CLOSED. Artifact/backup parity passed.
 
@@ -245,7 +249,7 @@
 
 ## Next step
 
-Implement segmented L3 independent/report-review checkpoints and failed-scene-only retry for long chapters. Keep annotated tag `v4.15` and both immutable archives unchanged.
+Implement the RELEASE_READY → RELEASED action and redacted evidence bundle/export, then run end-to-end Editorial regression. Keep annotated tag `v4.15` and both immutable archives unchanged.
 
 ## Resume rule
 
