@@ -49,9 +49,31 @@ final class EditorialImportPlanner {
         Collections.sort(result, Comparator.comparing(p->p.key)); return new Result(result,glossary,pronoun,warnings);
     }
 
+    /** Maps files whose roles were chosen explicitly by the user. */
+    static Result plan(List<Source> rawSources, List<Source> draftSources) {
+        Map<String,ChapterPlan> plans=new LinkedHashMap<>(); ArrayList<String>warnings=new ArrayList<>();
+        addExplicit(plans,warnings,rawSources,Role.RAW);
+        addExplicit(plans,warnings,draftSources,Role.DRAFT);
+        ArrayList<ChapterPlan> result=new ArrayList<>(plans.values());
+        for(ChapterPlan plan:result) if(plan.problem.isEmpty()&&(plan.raw==null||plan.draft==null)) plan.problem="missing "+(plan.raw==null?"RAW":"DRAFT");
+        Collections.sort(result,Comparator.comparing(p->p.key));
+        return new Result(result,null,null,warnings);
+    }
+
+    private static void addExplicit(Map<String,ChapterPlan> plans,List<String>warnings,List<Source> sources,Role role) {
+        if(sources==null)return;
+        for(Source source:sources) {
+            if(source==null){warnings.add("File: empty selection");continue;}
+            String key=chapterKey(source.name,role); ChapterPlan plan=plans.get(key);
+            if(plan==null){plan=new ChapterPlan(key);plans.put(key,plan);}
+            if(role==Role.RAW){if(plan.raw!=null)plan.problem="multiple RAW files";else plan.raw=source;}
+            else if(role==Role.DRAFT){if(plan.draft!=null)plan.problem="multiple DRAFT files";else plan.draft=source;}
+        }
+    }
+
     private enum Role { RAW,DRAFT,GLOSSARY,PRONOUN,UNKNOWN }
     private static Role roleOf(String filename) { String n=filename.toLowerCase(Locale.ROOT); if(has(n,"glossary"))return Role.GLOSSARY; if(has(n,"pronoun"))return Role.PRONOUN; if(has(n,"draft")||has(n,"vi_l2"))return Role.DRAFT; if(has(n,"raw")||has(n,"source")||has(n,"original"))return Role.RAW; return Role.UNKNOWN; }
-    private static String chapterKey(String filename,Role role) { String base=filename.replaceFirst("(?i)\\.txt$",""); base=base.replaceAll("(?i)([_ .-])(raw|source|original|draft|vi_l2)$","").trim(); return base.isEmpty()?filename:base; }
+    private static String chapterKey(String filename,Role role) { String base=filename.replaceFirst("(?i)\\.[^.]+$",""); base=base.replaceAll("(?i)(^|[_ .-])(raw|source|original|draft|vi_l2)(?=[_ .-]|$)","$1").replaceAll("[_ .-]{2,}","_").replaceAll("^[_ .-]+|[_ .-]+$","").trim(); return base.isEmpty()?filename:base; }
     private static boolean has(String value,String token){return value.matches(".*(^|[_ .-])"+token+"([_ .-]|$).*");}
     private static String safe(String value){return value==null?"":value.trim();}
     private static String name(Source source){return source==null?"File":safe(source.name);}

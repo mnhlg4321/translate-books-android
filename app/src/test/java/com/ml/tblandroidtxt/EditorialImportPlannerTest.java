@@ -21,4 +21,11 @@ public class EditorialImportPlannerTest {
         EditorialImportPlanner.Result result=EditorialImportPlanner.plan(Arrays.asList(new EditorialImportPlanner.Source("chapter.txt","x", "x")));
         assertEquals("name must include RAW or DRAFT",result.chapters.get(0).problem);
     }
+    @Test public void explicitPickersDoNotRequireRawDraftTokensOrTxtExtension() {
+        EditorialImportPlanner.Result result=EditorialImportPlanner.plan(
+                Arrays.asList(new EditorialImportPlanner.Source("005_RAW_MERCEDES_VOL3 (Vietnamese).md","raw","r")),
+                Arrays.asList(new EditorialImportPlanner.Source("005_DRAFT_MERCEDES_VOL3 (Vietnamese).doc","draft","d")));
+        assertEquals(1,result.readyCount());
+        assertEquals("005_MERCEDES_VOL3 (Vietnamese)",result.chapters.get(0).key);
+    }
 }
