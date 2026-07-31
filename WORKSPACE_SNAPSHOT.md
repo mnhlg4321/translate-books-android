@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-01` (v4.16 code79 responsive navigation/Release-folder build and automated device regression completed; visual QA pending unlock)
+- Snapshot updated: `2026-08-01` (Editorial project-owned Glossary/Pronoun and editable Series/Volume implementation completed; archive-first build/device regression pending)
 - Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.17`/code79 is an unreleased development build.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `d8fa109` (implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current commit: `e282923` (implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
 - Current build: `artifacts/builds/v4.16-dev.17/build-20260801-042014/TranslateBooks-v4.16-dev.17-code79.apk`, SHA-256 `664A6FBF6C47B52CA842571F1B30C2B6BE948BC4A69458BA2FA44857BB8680B5`; matching immutable payload is under `backup/builds/v4.16-dev.17/build-20260801-042014/`. The released v4.15/code62 archive remains unchanged.
 
 ## Completed tasks
@@ -160,11 +160,13 @@
 - Completed the code78 manual Release walkthrough and desktop ZIP inspection; retained eight matching evidence files in artifact/backup, removed all disposable device data, and defined the full v4.16 RC matrix in `QA_SCOPE_v4_16.md`.
 - Implemented responsive two-line five-tab navigation and per-project default Release folders with persisted SAF permission, direct ZIP creation, unique `.zip` naming and an explicit fallback-picker destination/cancel warning; code79 build/device verification is pending.
 - Accepted code79 after 147/147 JVM tests, lint 0 errors/53 warnings, artifact/backup parity and 10/10 focused Editorial device tests; exact code79 APK was reinstalled after the test runner cleanup.
+- Added project-owned Editorial Glossary/Pronoun persistence and UI, removed the Translation Settings fallback from Editorial batch import, and added editable Series/Volume identity with collision validation. The expanded JVM suite passes; archive-first build/device migration regression is pending.
 
 ## Pending tasks
 
 - Perform manual on-device SAF save/cancel inspection for the Release dialog, then prepare the v4.16 release-candidate QA scope.
 - Execute `QA_SCOPE_v4_16.md`; manual code78 Release save/abort and ZIP inspection are complete, but full RC QA remains open.
+- Build and install the next v4.16 development APK, then verify database v11→v12 migration and project isolation/editing on device.
 
 ## Known bugs
 
@@ -196,6 +198,7 @@
 - v4.16 Editorial release regression: PASS on accepted code78. 145 JVM tests passed; lint reports 0 errors/53 warnings; complete physical-device Editorial suite passed 9/9 on OnePlus CPH2691 / Android 15. Tests prove sensitive source/config strings are absent from redacted evidence, checksums match, an open gate blocks release, and successful recording reaches `RELEASED`. Artifact/backup parity passed.
 - v4.16 code78 manual Release QA: PARTIAL PASS. Confirmation, picker abort/restart safety, successful save, `RELEASED` UI, actual ZIP opening, exact three-entry contract, UTF-8 output, checksum verification and redaction inspection passed. Disposable device data was removed and evidence mirrored. Full RC scope remains pending; bottom-nav clipping and picker destination/cancel UX are recorded.
 - v4.16 code79 navigation/destination regression: AUTOMATED PASS / VISUAL PENDING. 147 JVM tests and 10/10 Editorial device tests passed; lint and artifact parity passed. Visual navigation and real SAF folder walkthrough could not proceed while the phone was secured; no lock bypass was attempted.
+- Editorial reference isolation/edit-identity JVM regression: PASS. `testDebugUnitTest` completed successfully after the additive v11→v12 migration and UI/data-flow changes; device migration/instrumentation remains pending.
 
 - v4.16 isolated L3 regression: PASS on code75. 144 JVM tests passed; lint reports 0 errors/53 warnings; focused device Editorial suite passed 6/6. The L3 test proves the first model prompt contains RAW and VI_L2 but no REPORT_L1, then proves report visibility only after independent evidence validates CLOSED. Artifact/backup parity passed.
 
@@ -260,7 +263,7 @@
 
 ## Next step
 
-After the user unlocks the OnePlus device, verify the code79 five-tab layout and per-project Release-folder direct write. Then continue P0 with the existing Translate smoke/regression matrix and v4.15→v4.16 migration test. Keep annotated tag `v4.15` and both immutable archives unchanged.
+Commit the project-owned Editorial references/edit-identity group, create the mandatory archive-first v4.16 development build, and run focused device migration/isolation tests. After device unlock, also verify the five-tab layout and real SAF Release-folder flow. Keep annotated tag `v4.15` and both immutable archives unchanged.
 
 ## Resume rule
 

@@ -123,6 +123,12 @@ public final class EditorialRepository implements AutoCloseable {
         }
     }
 
+    public void updateProjectIdentity(long projectId,String series,String volume){if(projectId<=0||blank(series)||blank(volume))throw new IllegalArgumentException("Series and Volume are required");ContentValues v=new ContentValues();v.put("series_name",series.trim());v.put("volume_name",volume.trim());v.put("updated_at",System.currentTimeMillis());try{if(database.editorialWritableDatabase().update("editorial_projects",v,"id=?",new String[]{String.valueOf(projectId)})!=1)throw new IllegalStateException("Editorial project not found");}catch(android.database.sqlite.SQLiteConstraintException e){throw new IllegalArgumentException("A project with the same Series and Volume already exists");}}
+
+    public void saveProjectReference(long projectId,AssetSnapshot asset){if(projectId<=0||asset==null||(asset.role!=EditorialWorkflowV5.AssetRole.GLOSSARY&&asset.role!=EditorialWorkflowV5.AssetRole.PRONOUN)||blank(asset.content))throw new IllegalArgumentException("Editorial project reference is invalid");ContentValues v=new ContentValues();v.put("project_id",projectId);v.put("role",asset.role.name());v.put("source_uri",asset.sourceUri);v.put("display_name",asset.displayName);v.put("sha256",asset.sha256);v.put("size_bytes",asset.content.length());v.put("content",asset.content);v.put("updated_at",System.currentTimeMillis());database.editorialWritableDatabase().insertWithOnConflict("editorial_project_assets",null,v,SQLiteDatabase.CONFLICT_REPLACE);}
+
+    public AssetSnapshot projectReference(long projectId,EditorialWorkflowV5.AssetRole role){if(role!=EditorialWorkflowV5.AssetRole.GLOSSARY&&role!=EditorialWorkflowV5.AssetRole.PRONOUN)return null;try(Cursor c=database.editorialReadableDatabase().rawQuery("SELECT source_uri,display_name,content FROM editorial_project_assets WHERE project_id=? AND role=?",new String[]{String.valueOf(projectId),role.name()})){return c.moveToFirst()?new AssetSnapshot(role,safe(c.getString(0)),safe(c.getString(1)),safe(c.getString(2))):null;}}
+
     public void updateProjectOutputTree(long projectId,String treeUri){if(projectId<=0||blank(treeUri))throw new IllegalArgumentException("Project and release folder are required");ContentValues v=new ContentValues();v.put("output_tree_uri",treeUri);v.put("updated_at",System.currentTimeMillis());if(database.editorialWritableDatabase().update("editorial_projects",v,"id=?",new String[]{String.valueOf(projectId)})!=1)throw new IllegalStateException("Editorial project not found");}
 
     public Run getRun(long id) {
@@ -214,6 +220,7 @@ public final class EditorialRepository implements AutoCloseable {
                 db.delete("editorial_assets", "chapter_id=?", new String[]{String.valueOf(chapterId)});
             }
             db.delete("editorial_chapters", "project_id=?", new String[]{String.valueOf(projectId)});
+            db.delete("editorial_project_assets","project_id=?",new String[]{String.valueOf(projectId)});
             db.delete("editorial_projects", "id=?", new String[]{String.valueOf(projectId)});
             db.setTransactionSuccessful();
         } finally { db.endTransaction(); }

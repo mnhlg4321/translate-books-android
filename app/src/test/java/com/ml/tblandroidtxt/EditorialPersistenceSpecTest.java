@@ -17,4 +17,13 @@ public class EditorialPersistenceSpecTest {
         assertFalse(sql.contains("drop table"));
         assertFalse(sql.contains("delete from"));
     }
+
+    @Test public void version12AddsProjectOwnedEditorialReferencesWithoutDestruction() {
+        String sql=String.join("\n",EditorialMigrationSpec.from11To12()).toLowerCase();
+        assertTrue(sql.contains("editorial_project_assets"));
+        assertTrue(sql.contains("project_id"));
+        assertTrue(sql.contains("unique index"));
+        assertFalse(sql.contains("drop table"));
+        assertFalse(sql.contains("delete from"));
+    }
 }

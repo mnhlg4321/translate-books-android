@@ -22,5 +22,9 @@ public final class EditorialMigrationSpec {
                 "CREATE INDEX IF NOT EXISTS idx_editorial_evidence_run ON editorial_evidence(run_id,evidence_type,created_at)"
         );
     }
+    public static List<String> from11To12(){return Arrays.asList(
+            "CREATE TABLE IF NOT EXISTS editorial_project_assets (id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER NOT NULL, role TEXT NOT NULL, source_uri TEXT DEFAULT '', display_name TEXT DEFAULT '', sha256 TEXT NOT NULL, size_bytes INTEGER NOT NULL, content TEXT NOT NULL, updated_at INTEGER NOT NULL, FOREIGN KEY(project_id) REFERENCES editorial_projects(id))",
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_editorial_project_asset_role ON editorial_project_assets(project_id,role)"
+    );}
     private EditorialMigrationSpec() {}
 }
