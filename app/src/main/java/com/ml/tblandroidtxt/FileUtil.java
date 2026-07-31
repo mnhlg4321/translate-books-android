@@ -220,6 +220,8 @@ public class FileUtil {
         }
     }
 
+    public static Uri createArchiveInTree(Context c,Uri treeUri,String displayName)throws Exception{if(treeUri==null)throw new FileAccessException("Editorial release folder chưa được chọn");validateTreeWritableOrThrow(c,treeUri,"Editorial release folder");String safe=uniqueArchiveNameInTree(c,treeUri,displayName);try{String docId=DocumentsContract.getTreeDocumentId(treeUri);Uri parent=DocumentsContract.buildDocumentUriUsingTree(treeUri,docId);Uri out=DocumentsContract.createDocument(c.getContentResolver(),parent,"application/zip",safe);if(out==null)throw new FileAccessException("Không tạo được release ZIP: "+safe);return out;}catch(SecurityException e){throw new FileAccessException("Android không còn quyền ghi Editorial release folder. Hãy chọn lại thư mục.",e);}}
+
     public static List<TreeEntry> listFilesInTree(Context c, Uri treeUri, int max) {
         ArrayList<TreeEntry> out = new ArrayList<>();
         if (treeUri == null) return out;
@@ -431,6 +433,9 @@ public class FileUtil {
         }
         return base + " (" + System.currentTimeMillis() + ")" + ext;
     }
+
+    public static String sanitizeArchiveName(String raw){String s=raw==null||raw.trim().isEmpty()?"editorial-release.zip":raw.trim();s=s.replace('\u0000','_').replace('/','_').replace('\\','_').replace(':','_').replace('*','_').replace('?','_').replace('"','_').replace('<','_').replace('>','_').replace('|','_').trim();while(s.contains("  "))s=s.replace("  "," ");if(s.isEmpty())s="editorial-release.zip";if(!s.toLowerCase(Locale.ROOT).endsWith(".zip"))s+=".zip";if(s.length()>180){int dot=s.toLowerCase(Locale.ROOT).lastIndexOf(".zip");s=s.substring(0,Math.min(176,dot>0?dot:s.length()))+".zip";}return s;}
+    public static String uniqueArchiveNameInTree(Context c,Uri treeUri,String wanted){String safe=sanitizeArchiveName(wanted);Set<String> existing=namesInTree(c,treeUri);if(!existing.contains(safe.toLowerCase(Locale.ROOT)))return safe;int dot=safe.toLowerCase(Locale.ROOT).lastIndexOf(".zip");String base=dot>0?safe.substring(0,dot):safe;for(int i=2;i<10000;i++){String candidate=base+"_v"+i+".zip";if(!existing.contains(candidate.toLowerCase(Locale.ROOT)))return candidate;}return base+"_"+System.currentTimeMillis()+".zip";}
 
     private static Set<String> namesInTree(Context c, Uri treeUri) {
         HashSet<String> names = new HashSet<>();

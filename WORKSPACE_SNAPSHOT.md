@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-07-31` (v4.16 Editorial RELEASE_READY → RELEASED and redacted bundle completed; accepted build/device evidence retained)
+- Snapshot updated: `2026-08-01` (v4.16 responsive navigation and per-project Release folder implemented; build/device verification pending)
 - Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.16`/code78 is an unreleased development build.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `dadb0c0` (implementation/QA baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current commit: `5a3273c` (implementation/QA baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
 - Current build: `artifacts/builds/v4.16-dev.16/build-20260731-230817/TranslateBooks-v4.16-dev.16-code78.apk`, SHA-256 `2D317C5BACB20AD7A7F4DCFC67A910613F7CDC4B35FB59E00D6607C55234B2BE`; matching immutable payload is under `backup/builds/v4.16-dev.16/build-20260731-230817/`. The released v4.15/code62 archive remains unchanged.
 
 ## Completed tasks
@@ -158,6 +158,7 @@
 - Completed segmented L3: inherits accepted L2 scene checkpoints, validates matching anchors, checkpoints independent comparison per scene, closes a separate chapter-level voice audit before REPORT_L1 unlock, checkpoints final review per scene, aggregates FINAL_QA/Change Set/gates, and retries only invalid checkpoints. Accepted code77 passed 145 JVM tests, lint 0 errors/53 warnings, focused device Editorial tests 7/7 and artifact/backup parity.
 - Completed Editorial release: revalidates the latest closed L3, FINAL_QA contract and persisted gates; exports a ZIP with final text, redacted hash/length/status evidence and checksums; records manifest/bundle hash and changes state atomically only after successful SAF write. Accepted code78 passed 145 JVM tests, lint 0 errors/53 warnings, and the complete Editorial device suite 9/9.
 - Completed the code78 manual Release walkthrough and desktop ZIP inspection; retained eight matching evidence files in artifact/backup, removed all disposable device data, and defined the full v4.16 RC matrix in `QA_SCOPE_v4_16.md`.
+- Implemented responsive two-line five-tab navigation and per-project default Release folders with persisted SAF permission, direct ZIP creation, unique `.zip` naming and an explicit fallback-picker destination/cancel warning; code79 build/device verification is pending.
 
 ## Pending tasks
 
@@ -166,8 +167,8 @@
 
 ## Known bugs
 
-- Code78 manual QA shows bottom-navigation labels clipped on the 1264 px-wide OnePlus portrait layout after adding the fifth Editorial tab. This is non-crashing but requires an RC fix/accept decision.
-- The OnePlus save picker restored its last-used folder (`3.RAW`) and exposed no dedicated Cancel button on the visible save surface. Abort/restart safely retained `RELEASE_READY`; explicit cancel/back behavior remains in the RC picker-compatibility matrix.
+- Code78 bottom-navigation clipping has an implemented responsive two-line fix; physical-device verification is pending.
+- The OnePlus last-used-folder ambiguity now has an implemented per-project Release folder/direct-write path plus clearer fallback warning; physical picker and permission-loss verification is pending.
 
 - Rejected code54 candidate: Android removed the target package during cleanup after rejecting the unsigned Macrobenchmark APK. No benchmark measurement was produced.
 - Rejected code55 candidate: the signed test captured two traces, but the OEM launcher stability wait made the five-iteration run impractical; the redundant Home step is removed for the next candidate.
@@ -257,7 +258,7 @@
 
 ## Next step
 
-Execute the P0 items in `QA_SCOPE_v4_16.md`, beginning with a decision/fix for bottom-nav clipping and picker destination/cancel UX, then build the exact v4.16 release candidate. Keep annotated tag `v4.15` and both immutable archives unchanged.
+Build/archive/install code79, verify the five-tab layout and per-project Release folder on device, then continue the P0 RC matrix in `QA_SCOPE_v4_16.md`. Keep annotated tag `v4.15` and both immutable archives unchanged.
 
 ## Resume rule
 

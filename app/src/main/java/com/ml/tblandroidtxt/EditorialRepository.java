@@ -123,6 +123,8 @@ public final class EditorialRepository implements AutoCloseable {
         }
     }
 
+    public void updateProjectOutputTree(long projectId,String treeUri){if(projectId<=0||blank(treeUri))throw new IllegalArgumentException("Project and release folder are required");ContentValues v=new ContentValues();v.put("output_tree_uri",treeUri);v.put("updated_at",System.currentTimeMillis());if(database.editorialWritableDatabase().update("editorial_projects",v,"id=?",new String[]{String.valueOf(projectId)})!=1)throw new IllegalStateException("Editorial project not found");}
+
     public Run getRun(long id) {
         try(Cursor c=database.editorialReadableDatabase().rawQuery("SELECT id,chapter_id,run_kind,state,provider,model,prompt_hash,workflow_hash,input_manifest_json FROM editorial_runs WHERE id=?",new String[]{String.valueOf(id)})){
             if(!c.moveToFirst())return null;Run r=new Run();r.id=c.getLong(0);r.chapterId=c.getLong(1);r.runKind=safe(c.getString(2));r.state=safe(c.getString(3));r.provider=safe(c.getString(4));r.model=safe(c.getString(5));r.promptHash=safe(c.getString(6));r.workflowHash=safe(c.getString(7));r.inputManifestJson=safe(c.getString(8));return r;

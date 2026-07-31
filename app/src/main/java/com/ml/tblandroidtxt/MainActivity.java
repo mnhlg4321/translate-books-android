@@ -75,6 +75,7 @@ public class MainActivity extends Activity {
     static final int REQ_EDITORIAL_BATCH = 24;
     static final int REQ_EXPORT_REPORT_L1 = 25;
     static final int REQ_EDITORIAL_RELEASE = 26;
+    static final int REQ_EDITORIAL_RELEASE_TREE = 27;
 
     int BG, PANEL, CARD, FIELD, BORDER, TEXT, MUTED, BLUE, CYAN;
     final int GREEN = Color.rgb(43, 207, 126); // semantic success/running
@@ -160,6 +161,7 @@ public class MainActivity extends Activity {
     PronounStore.Profile editingPronoun = null;
     String pendingPronounReplaceId = "";
     long pendingEditorialProjectId = -1L;
+    long pendingEditorialReleaseTreeProjectId = -1L;
     String pendingEditorialReportText = "", pendingEditorialReportName = "REPORT_L1.txt";
     long pendingEditorialReleaseChapterId=-1L, pendingEditorialReleaseRunId=-1L;
     byte[] pendingEditorialReleaseBundle=new byte[0];
@@ -398,12 +400,13 @@ public class MainActivity extends Activity {
 
     Button tabButton(String name) {
         Button b = new Button(this);
-        b.setText(primaryIcon(name) + (isWideLayout()?"\n":" ") + name);
-        b.setTextSize(12);
+        b.setText(primaryIcon(name) + "\n" + name);
+        b.setTextSize(isWideLayout()?11:10);
         b.setAllCaps(false);
-        b.setSingleLine(true);
+        b.setSingleLine(false);
+        b.setMaxLines(2);
         b.setTextColor(TEXT);
-        b.setPadding(dp(12), 0, dp(12), 0);
+        b.setPadding(dp(2), dp(2), dp(2), dp(2));
         b.setOnClickListener(v -> switchTab(name));
         b.setGravity(Gravity.CENTER);b.setMinWidth(0);b.setMinimumWidth(0);
         boolean active = primaryActive(name);
@@ -842,6 +845,8 @@ public class MainActivity extends Activity {
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION); startActivityForResult(intent,REQ_EDITORIAL_BATCH);
     }
 
+    void chooseEditorialReleaseFolder(long projectId){if(projectId<=0)return;pendingEditorialReleaseTreeProjectId=projectId;Intent intent=new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION|Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);startActivityForResult(intent,REQ_EDITORIAL_RELEASE_TREE);}
+
     void previewEditorialBatch(Intent data, int takeFlags) {
         final long projectId=pendingEditorialProjectId; pendingEditorialProjectId=-1L;
         ArrayList<EditorialImportPlanner.Source> files=new ArrayList<>(); ArrayList<String> failures=new ArrayList<>();
@@ -881,7 +886,8 @@ public class MainActivity extends Activity {
     void showEditorialL3(long chapterId,String chapterKey){try(EditorialRepository repo=new EditorialRepository(this)){String output=repo.latestEvidenceForChapter(chapterId,"FINAL_QA_TEXT");if(output.trim().isEmpty()){toast("Chưa có FINAL_QA hợp lệ");return;}new AlertDialog.Builder(this).setTitle(chapterKey+" • FINAL_QA").setMessage(output).setPositiveButton("Export TXT",(d,w)->exportEditorialL1(output,chapterKey+"_FINAL_QA.txt")).setNegativeButton("Đóng",null).show();}}
     void confirmRetryEditorialL3(long chapterId,String failure){new AlertDialog.Builder(this).setTitle("Retry L3 scene lỗi?").setMessage(preview(failure,2000)+"\n\nIndependent/final scene và voice audit đã CLOSED sẽ được dùng lại; app chỉ gọi lại checkpoint chưa hợp lệ.").setPositiveButton("Retry L3",(d,w)->retryEditorialL3(chapterId)).setNegativeButton("Hủy",null).show();}
     void retryEditorialL3(long chapterId){toast("Đang retry checkpoint L3…");preflightExecutor.submit(()->{try(EditorialRepository repo=new EditorialRepository(this)){EditorialL3Runner.Result result=new EditorialL3Runner(repo).retry(chapterId,SettingsStore.load(this));runOnUiThread(()->{invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");showResult("FINAL_QA ready",preview(result.output,6000));});}catch(Exception error){runOnUiThread(()->{invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");showResult("L3 retry failed",AppValidator.readableError(error));});}});}
-    void confirmReleaseEditorial(long chapterId,String chapterKey){new AlertDialog.Builder(this).setTitle("Release "+chapterKey+"?").setMessage("App sẽ kiểm tra lại toàn bộ gate, tạo ZIP gồm FINAL_QA và evidence đã che nội dung nhạy cảm. Chương chỉ chuyển sang RELEASED sau khi file được ghi thành công.").setPositiveButton("Chọn nơi lưu ZIP",(d,w)->prepareEditorialRelease(chapterId,chapterKey)).setNegativeButton("Hủy",null).show();}
+    void confirmReleaseEditorial(long chapterId,String chapterKey){try(EditorialRepository repo=new EditorialRepository(this)){EditorialRepository.Chapter chapter=repo.getChapter(chapterId);EditorialRepository.Project project=chapter==null?null:repo.getProject(chapter.projectId);Uri folder=project==null||project.outputTreeUri.isEmpty()?null:Uri.parse(project.outputTreeUri);String folderError=folder==null?"not selected":FileUtil.validateTreeWritable(this,folder,"Editorial release folder");AlertDialog.Builder dialog=new AlertDialog.Builder(this).setTitle("Release "+chapterKey+"?").setMessage(folderError==null?"ZIP đã che dữ liệu sẽ được lưu thẳng vào thư mục mặc định: "+FileUtil.treeName(folder)+". Chương chỉ chuyển sang RELEASED sau khi ghi thành công.":"App sẽ kiểm tra lại gate và tạo ZIP đã che dữ liệu. Android có thể mở lại thư mục dùng gần nhất; hãy kiểm tra vị trí trước khi bấm Save. Back/Hủy không đổi trạng thái chapter.").setNegativeButton("Hủy",null);if(folderError==null)dialog.setPositiveButton("Release vào thư mục",(d,w)->releaseEditorialToFolder(chapterId,chapterKey,folder)).setNeutralButton("Chọn nơi khác",(d,w)->prepareEditorialRelease(chapterId,chapterKey));else dialog.setPositiveButton("Chọn nơi lưu ZIP",(d,w)->prepareEditorialRelease(chapterId,chapterKey)).setNeutralButton("Đặt thư mục mặc định",(d,w)->{if(project!=null)chooseEditorialReleaseFolder(project.id);});dialog.show();}catch(Exception error){showResult("Không thể release",AppValidator.readableError(error));}}
+    void releaseEditorialToFolder(long chapterId,String chapterKey,Uri folder){toast("Đang tạo release bundle…");preflightExecutor.submit(()->{try(EditorialRepository repo=new EditorialRepository(this)){EditorialReleaseBundle.Result result=EditorialReleaseBundle.build(repo,chapterId,System.currentTimeMillis());long runId=repo.latestRunId(chapterId,"L3");Uri output=FileUtil.createArchiveInTree(this,folder,chapterKey+"_RELEASE.zip");FileUtil.writeBytes(this,output,result.zip);repo.recordRelease(chapterId,runId,result.manifest,result.sha256);runOnUiThread(()->{toast("Đã release vào "+FileUtil.treeName(folder));appendLog("Editorial release bundle: "+output+" sha256="+result.sha256);invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");});}catch(Exception error){runOnUiThread(()->showResult("Release chưa hoàn tất",AppValidator.readableError(error)));}});}
     void prepareEditorialRelease(long chapterId,String chapterKey){try(EditorialRepository repo=new EditorialRepository(this)){EditorialReleaseBundle.Result result=EditorialReleaseBundle.build(repo,chapterId,System.currentTimeMillis());pendingEditorialReleaseChapterId=chapterId;pendingEditorialReleaseRunId=repo.latestRunId(chapterId,"L3");pendingEditorialReleaseBundle=result.zip;pendingEditorialReleaseManifest=result.manifest;pendingEditorialReleaseHash=result.sha256;Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT);intent.addCategory(Intent.CATEGORY_OPENABLE);intent.setType("application/zip");intent.putExtra(Intent.EXTRA_TITLE,chapterKey+"_RELEASE.zip");intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);startActivityForResult(intent,REQ_EDITORIAL_RELEASE);}catch(Exception error){clearPendingEditorialRelease();showResult("Không thể release",AppValidator.readableError(error));}}
     void clearPendingEditorialRelease(){pendingEditorialReleaseChapterId=-1L;pendingEditorialReleaseRunId=-1L;pendingEditorialReleaseBundle=new byte[0];pendingEditorialReleaseManifest="";pendingEditorialReleaseHash="";}
     void exportEditorialL1(String report,String name){pendingEditorialReportText=report;pendingEditorialReportName=name;Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT);intent.addCategory(Intent.CATEGORY_OPENABLE);intent.setType("text/plain");intent.putExtra(Intent.EXTRA_TITLE,name);intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);startActivityForResult(intent,REQ_EXPORT_REPORT_L1);}
@@ -1082,6 +1088,7 @@ public class MainActivity extends Activity {
         if (resultCode != RESULT_OK || data == null) {
             if (requestCode == REQ_PRONOUN) pendingPronounReplaceId = "";
             if (requestCode == REQ_EDITORIAL_RELEASE) clearPendingEditorialRelease();
+            if (requestCode == REQ_EDITORIAL_RELEASE_TREE) pendingEditorialReleaseTreeProjectId=-1L;
             return;
         }
         Uri uri = data.getData();
@@ -1215,6 +1222,7 @@ public class MainActivity extends Activity {
         } else if (requestCode == REQ_EXPORT_REPORT_L1) {
             try { FileUtil.writeText(this,uri,pendingEditorialReportText);toast("Đã export "+pendingEditorialReportName);appendLog("Export REPORT_L1: "+pendingEditorialReportName); } catch(Exception e){toast("Lỗi export REPORT_L1");appendLog("Export REPORT_L1 failed: "+e.getMessage());} finally {pendingEditorialReportText="";pendingEditorialReportName="REPORT_L1.txt";}
         } else if(requestCode==REQ_EDITORIAL_RELEASE){try{FileUtil.writeBytes(this,uri,pendingEditorialReleaseBundle);try(EditorialRepository repo=new EditorialRepository(this)){repo.recordRelease(pendingEditorialReleaseChapterId,pendingEditorialReleaseRunId,pendingEditorialReleaseManifest,pendingEditorialReleaseHash);}toast("Đã release chapter");appendLog("Editorial release bundle: "+FileUtil.displayName(this,uri)+" sha256="+pendingEditorialReleaseHash);invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");}catch(Exception e){toast("Release chưa hoàn tất");appendLog("Editorial release failed: "+e.getMessage());showResult("Release chưa hoàn tất",AppValidator.readableError(e));}finally{clearPendingEditorialRelease();}
+        } else if(requestCode==REQ_EDITORIAL_RELEASE_TREE){long projectId=pendingEditorialReleaseTreeProjectId;pendingEditorialReleaseTreeProjectId=-1L;try{FileUtil.takePersistable(this,uri,takeFlags,true,true);String problem=FileUtil.validateTreeWritable(this,uri,"Editorial release folder");if(problem!=null)throw new IllegalStateException(problem);try(EditorialRepository repo=new EditorialRepository(this)){repo.updateProjectOutputTree(projectId,uri.toString());}toast("Đã đặt thư mục Release: "+FileUtil.treeName(uri));invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");}catch(Exception e){showResult("Không lưu được thư mục Release",AppValidator.readableError(e));}
         } else if (requestCode == REQ_IMPORT_PROFILE) {
             try {
                 FileUtil.takePersistable(this, uri, takeFlags, true, false);
