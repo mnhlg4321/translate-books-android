@@ -5,13 +5,17 @@ import java.security.MessageDigest;
 
 public class HashUtil {
     public static String sha256(String text) {
+        return sha256((text == null ? "" : text).getBytes(StandardCharsets.UTF_8));
+    }
+
+    public static String sha256(byte[] data) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] dig = md.digest((text == null ? "" : text).getBytes(StandardCharsets.UTF_8));
+            byte[] dig = md.digest(data == null ? new byte[0] : data);
             StringBuilder sb = new StringBuilder();
             for (byte b : dig) sb.append(String.format("%02x", b));
             return sb.toString();
-        } catch (Exception e) { return String.valueOf((text == null ? "" : text).hashCode()); }
+        } catch (Exception e) { return String.valueOf(java.util.Arrays.hashCode(data == null ? new byte[0] : data)); }
     }
 
     public static String settingsHash(AppSettings s) {

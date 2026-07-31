@@ -178,6 +178,18 @@ public class FileUtil {
         }
     }
 
+    public static void writeBytes(Context c, Uri uri, byte[] data) throws Exception {
+        if (uri == null) throw new FileAccessException("Output URI is empty");
+        if (data == null || data.length == 0) throw new FileAccessException("Refusing to write an empty bundle");
+        try (OutputStream os = c.getContentResolver().openOutputStream(uri, "wt")) {
+            if (os == null) throw new FileAccessException("Cannot open output URI");
+            os.write(data);
+            os.flush();
+        } catch (SecurityException se) {
+            throw new FileAccessException("Android no longer grants write access. Choose the ZIP destination again.", se);
+        }
+    }
+
     /** Stages and verifies SAF output. The database remains authoritative if provider replacement is not atomic. */
     public static void writeTextVerified(Context c, Uri uri, String text) throws Exception {
         if (text == null || text.isEmpty()) throw new FileAccessException("Refusing to replace output with an empty file");

@@ -43,6 +43,12 @@ public final class EditorialRepository implements AutoCloseable {
         public long chapterId;
         public String runKind = "";
         public String state = "";
+        public String provider = "", model = "", promptHash = "", workflowHash = "", inputManifestJson = "";
+    }
+    public static final class EvidenceSummary {
+        public String type = "", hash = "";
+        public int payloadLength;
+        public long createdAt;
     }
 
     private final TranslationRepository database;
@@ -109,6 +115,30 @@ public final class EditorialRepository implements AutoCloseable {
             if (!c.moveToFirst()) return null; Chapter chapter = new Chapter(); chapter.id=c.getLong(0); chapter.projectId=c.getLong(1); chapter.chapterKey=safe(c.getString(2)); chapter.title=safe(c.getString(3));
             try { chapter.state=EditorialWorkflowV5.ChapterState.valueOf(c.getString(4)); } catch (Exception ignored) {} chapter.rawHash=safe(c.getString(5)); return chapter;
         }
+    }
+
+    public Project getProject(long id) {
+        try (Cursor c=database.editorialReadableDatabase().rawQuery("SELECT id,series_name,volume_name,workflow_version,workflow_hash,output_tree_uri FROM editorial_projects WHERE id=?",new String[]{String.valueOf(id)})) {
+            if(!c.moveToFirst())return null; Project p=new Project();p.id=c.getLong(0);p.seriesName=safe(c.getString(1));p.volumeName=safe(c.getString(2));p.workflowVersion=safe(c.getString(3));p.workflowHash=safe(c.getString(4));p.outputTreeUri=safe(c.getString(5));return p;
+        }
+    }
+
+    public Run getRun(long id) {
+        try(Cursor c=database.editorialReadableDatabase().rawQuery("SELECT id,chapter_id,run_kind,state,provider,model,prompt_hash,workflow_hash,input_manifest_json FROM editorial_runs WHERE id=?",new String[]{String.valueOf(id)})){
+            if(!c.moveToFirst())return null;Run r=new Run();r.id=c.getLong(0);r.chapterId=c.getLong(1);r.runKind=safe(c.getString(2));r.state=safe(c.getString(3));r.provider=safe(c.getString(4));r.model=safe(c.getString(5));r.promptHash=safe(c.getString(6));r.workflowHash=safe(c.getString(7));r.inputManifestJson=safe(c.getString(8));return r;
+        }
+    }
+
+    public List<EvidenceSummary> evidenceSummaries(long runId) {
+        ArrayList<EvidenceSummary> out=new ArrayList<>();try(Cursor c=database.editorialReadableDatabase().rawQuery("SELECT evidence_type,payload_hash,LENGTH(payload),created_at FROM editorial_evidence WHERE run_id=? ORDER BY evidence_type,created_at,id",new String[]{String.valueOf(runId)})){while(c.moveToNext()){EvidenceSummary e=new EvidenceSummary();e.type=safe(c.getString(0));e.hash=safe(c.getString(1));e.payloadLength=c.getInt(2);e.createdAt=c.getLong(3);out.add(e);}}return out;
+    }
+
+    public java.util.Map<EditorialWorkflowV5.Gate,EditorialWorkflowV5.GateStatus> gateStatuses(long runId) {
+        java.util.EnumMap<EditorialWorkflowV5.Gate,EditorialWorkflowV5.GateStatus> out=new java.util.EnumMap<>(EditorialWorkflowV5.Gate.class);try(Cursor c=database.editorialReadableDatabase().rawQuery("SELECT gate_name,status FROM editorial_gates WHERE run_id=?",new String[]{String.valueOf(runId)})){while(c.moveToNext())try{out.put(EditorialWorkflowV5.Gate.valueOf(c.getString(0)),EditorialWorkflowV5.GateStatus.valueOf(c.getString(1)));}catch(Exception ignored){}}return out;
+    }
+
+    public void recordRelease(long chapterId,long runId,String manifestJson,String bundleHash) {
+        if(blank(manifestJson)||blank(bundleHash))throw new IllegalArgumentException("Release evidence is required");SQLiteDatabase db=database.editorialWritableDatabase();db.beginTransaction();try{try(Cursor c=db.rawQuery("SELECT id FROM editorial_runs WHERE chapter_id=? AND run_kind='L3' AND state='CLOSED' ORDER BY created_at DESC,id DESC LIMIT 1",new String[]{String.valueOf(chapterId)})){if(!c.moveToFirst()||c.getLong(0)!=runId)throw new IllegalStateException("Release bundle no longer matches the latest closed L3 run");}ContentValues m=new ContentValues();m.put("run_id",runId);m.put("evidence_type","RELEASE_MANIFEST_REDACTED");m.put("payload",manifestJson);m.put("payload_hash",HashUtil.sha256(manifestJson));m.put("created_at",System.currentTimeMillis());db.insertOrThrow("editorial_evidence",null,m);ContentValues h=new ContentValues();h.put("run_id",runId);h.put("evidence_type","RELEASE_BUNDLE_SHA256");h.put("payload",bundleHash);h.put("payload_hash",HashUtil.sha256(bundleHash));h.put("created_at",System.currentTimeMillis());db.insertOrThrow("editorial_evidence",null,h);ContentValues state=new ContentValues();state.put("state",EditorialWorkflowV5.ChapterState.RELEASED.name());state.put("updated_at",System.currentTimeMillis());int changed=db.update("editorial_chapters",state,"id=? AND state=?",new String[]{String.valueOf(chapterId),EditorialWorkflowV5.ChapterState.RELEASE_READY.name()});if(changed!=1)throw new IllegalStateException("Chapter is no longer RELEASE_READY");db.setTransactionSuccessful();}finally{db.endTransaction();}
     }
 
     public List<AssetSnapshot> chapterAssets(long chapterId) {
