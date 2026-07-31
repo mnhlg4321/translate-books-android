@@ -187,8 +187,8 @@ Model phải trả JSON theo schema cho evidence; text output được render/ex
 ### P2 — L1
 
 - Hoàn tất context builder/runner/checkpoint L1 và segmented L1 cho chương dài có ngắt cảnh cấu trúc tương ứng: tạo RAW Map/Chapter Ledger trước DRAFT, ghép scene bằng marker có evidence, gọi model tuần tự, checkpoint từng scene, tổng hợp REPORT_L1 sau validator. Mapping mơ hồ/lệch hoặc một scene vẫn quá context bị chặn và giữ evidence; không cắt hay ghép theo tỷ lệ.
-- Schema validator và Report detail/export.
-- Recovery/retry theo scene hoặc phase an toàn.
+- Hoàn tất Report detail/export TXT trong tab Biên tập; chỉ REPORT_L1 đã qua validator mới được xem/xuất.
+- Hoàn tất recovery/retry segmented L1 theo checkpoint: tái sử dụng scene CLOSED, lưu failure scene và chỉ gọi lại scene chưa hợp lệ.
 
 ### P3 — L2
 

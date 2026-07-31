@@ -73,6 +73,7 @@ public class MainActivity extends Activity {
     static final int REQ_EXPORT_LOG = 22;
     static final int REQ_EXPORT_JOB_LOG = 23;
     static final int REQ_EDITORIAL_BATCH = 24;
+    static final int REQ_EXPORT_REPORT_L1 = 25;
 
     int BG, PANEL, CARD, FIELD, BORDER, TEXT, MUTED, BLUE, CYAN;
     final int GREEN = Color.rgb(43, 207, 126); // semantic success/running
@@ -158,6 +159,7 @@ public class MainActivity extends Activity {
     PronounStore.Profile editingPronoun = null;
     String pendingPronounReplaceId = "";
     long pendingEditorialProjectId = -1L;
+    String pendingEditorialReportText = "", pendingEditorialReportName = "REPORT_L1.txt";
 
     final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) {
@@ -864,6 +866,10 @@ public class MainActivity extends Activity {
     void runEditorialL1(long chapterId) {
         toast("Đang chạy L1 audit…"); preflightExecutor.submit(()->{try(EditorialRepository repo=new EditorialRepository(this)){EditorialL1Runner.Result result=new EditorialL1Runner(repo).run(chapterId,SettingsStore.load(this));runOnUiThread(()->{invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");showResult("REPORT_L1 ready",preview(result.report,6000));});}catch(Exception error){runOnUiThread(()->showResult("L1 audit failed",AppValidator.readableError(error)));}});
     }
+    void showEditorialL1Report(long chapterId,String chapterKey) { try(EditorialRepository repo=new EditorialRepository(this)){String report=repo.latestEvidenceForChapter(chapterId,"REPORT_L1_TEXT");if(report.trim().isEmpty()){toast("Chưa có REPORT_L1 hợp lệ");return;}new AlertDialog.Builder(this).setTitle(chapterKey+" • REPORT_L1").setMessage(report).setPositiveButton("Export TXT",(d,w)->exportEditorialL1(report,chapterKey+"_REPORT_L1.txt")).setNegativeButton("Đóng",null).show();} }
+    void exportEditorialL1(String report,String name){pendingEditorialReportText=report;pendingEditorialReportName=name;Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT);intent.addCategory(Intent.CATEGORY_OPENABLE);intent.setType("text/plain");intent.putExtra(Intent.EXTRA_TITLE,name);intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);startActivityForResult(intent,REQ_EXPORT_REPORT_L1);}
+    void confirmRetryEditorialL1(long chapterId,String failure){new AlertDialog.Builder(this).setTitle("Retry scene L1?").setMessage((failure==null||failure.trim().isEmpty()?"Checkpoint lỗi sẽ được mở lại.":failure)+"\n\nCác scene đã CLOSED sẽ được tái sử dụng; app chỉ gọi lại scene chưa hợp lệ.").setPositiveButton("Retry",(d,w)->retryEditorialL1(chapterId)).setNegativeButton("Hủy",null).show();}
+    void retryEditorialL1(long chapterId){toast("Đang retry scene L1…");preflightExecutor.submit(()->{try(EditorialRepository repo=new EditorialRepository(this)){EditorialL1Runner.Result result=new EditorialL1Runner(repo).retryFailedScene(chapterId,SettingsStore.load(this));runOnUiThread(()->{invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");showResult("REPORT_L1 ready",preview(result.report,6000));});}catch(Exception error){runOnUiThread(()->{invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");showResult("L1 retry failed",AppValidator.readableError(error));});}});}
 
     void replacePronoun(PronounStore.Profile profile){if(profile==null)return;pendingPronounReplaceId=profile.id;choosePronoun();}
 
@@ -1188,6 +1194,8 @@ public class MainActivity extends Activity {
                 appendLog("Export job report #" + jobId + ": " + FileUtil.displayName(this, uri));
                 pendingExportJobId = -1L;
             } catch (Exception e) { toast("Lỗi export job report"); appendLog("Lỗi export job report: " + e.getMessage()); }
+        } else if (requestCode == REQ_EXPORT_REPORT_L1) {
+            try { FileUtil.writeText(this,uri,pendingEditorialReportText);toast("Đã export "+pendingEditorialReportName);appendLog("Export REPORT_L1: "+pendingEditorialReportName); } catch(Exception e){toast("Lỗi export REPORT_L1");appendLog("Export REPORT_L1 failed: "+e.getMessage());} finally {pendingEditorialReportText="";pendingEditorialReportName="REPORT_L1.txt";}
         } else if (requestCode == REQ_IMPORT_PROFILE) {
             try {
                 FileUtil.takePersistable(this, uri, takeFlags, true, false);

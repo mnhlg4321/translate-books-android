@@ -157,6 +157,18 @@ public final class EditorialRepository implements AutoCloseable {
         try (Cursor c = database.editorialReadableDatabase().rawQuery("SELECT COUNT(*) FROM editorial_evidence WHERE run_id=?", new String[]{String.valueOf(runId)})) { return c.moveToFirst() ? c.getInt(0) : 0; }
     }
 
+    public long latestRunId(long chapterId,String runKind) {
+        try(Cursor c=database.editorialReadableDatabase().rawQuery("SELECT id FROM editorial_runs WHERE chapter_id=? AND run_kind=? ORDER BY created_at DESC,id DESC LIMIT 1",new String[]{String.valueOf(chapterId),safe(runKind)})){return c.moveToFirst()?c.getLong(0):-1L;}
+    }
+
+    public String evidencePayload(long runId,String evidenceType) {
+        try(Cursor c=database.editorialReadableDatabase().rawQuery("SELECT payload FROM editorial_evidence WHERE run_id=? AND evidence_type=? ORDER BY created_at DESC,id DESC LIMIT 1",new String[]{String.valueOf(runId),safe(evidenceType)})){return c.moveToFirst()?safe(c.getString(0)):"";}
+    }
+
+    public String latestEvidenceForChapter(long chapterId,String evidenceType) {
+        try(Cursor c=database.editorialReadableDatabase().rawQuery("SELECT e.payload FROM editorial_evidence e JOIN editorial_runs r ON r.id=e.run_id WHERE r.chapter_id=? AND e.evidence_type=? ORDER BY e.created_at DESC,e.id DESC LIMIT 1",new String[]{String.valueOf(chapterId),safe(evidenceType)})){return c.moveToFirst()?safe(c.getString(0)):"";}
+    }
+
     public void deleteProject(long projectId) {
         SQLiteDatabase db = database.editorialWritableDatabase(); db.beginTransaction();
         try {
