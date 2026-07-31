@@ -204,7 +204,9 @@ Model phải trả JSON theo schema cho evidence; text output được render/ex
 - Hoàn tất lõi context-isolated L3 cho chapter trong ngưỡng an toàn: context độc lập chỉ nhận RAW, VI_L2, glossary và pronoun; app phải validate/persist Scene Ledger, RAW–VI_L2 comparison và Cross-scene Voice Audit `CLOSED` trước khi chuyển state và dựng context mới có REPORT_L1.
 - Hoàn tất FINAL_QA, Change Set, năm gate, voice audit, final read-through, trạng thái RELEASE_READY và UI chạy/xem/export.
 - Hoàn tất segmented L3 cho chapter dài: lấy VI_L2 từ checkpoint L2 cùng anchor, chạy independent RAW–VI_L2 theo scene, đóng chapter-level Cross-scene Voice Audit trước khi mở REPORT_L1, chạy FINAL_QA theo scene, aggregate validator và retry chỉ checkpoint lỗi.
-- Còn lại: Release action và evidence bundle redacted.
+- Hoàn tất Release action: chỉ chapter `RELEASE_READY` với L3 mới nhất `CLOSED` và đủ gate mới được tạo ZIP; trạng thái chỉ chuyển sang `RELEASED` sau khi SAF ghi file thành công.
+- Evidence bundle redacted gồm `FINAL_QA.txt`, `EVIDENCE_REDACTED.json` và `SHA256SUMS.txt`; metadata chỉ giữ hash/độ dài/trạng thái/model-version/prompt hash, không xuất RAW, DRAFT, glossary, pronoun, REPORT_L1, VI_L2, prompt, issue quote hay reasoning.
+- Phần triển khai workflow MVP đã hoàn tất; bước sau là QA thủ công luồng chọn nơi lưu ZIP và chuẩn bị release candidate v4.16.
 
 ### P5 — regression/QA
 
