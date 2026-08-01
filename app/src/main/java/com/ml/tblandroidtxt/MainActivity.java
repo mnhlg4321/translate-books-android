@@ -911,11 +911,7 @@ public class MainActivity extends Activity {
     }
 
     private void previewEditorialPlan(long projectId,EditorialImportPlanner.Result plan,List<String> failures){
-        StringBuilder text=new StringBuilder(); text.append("Sẵn sàng: ").append(plan.readyCount()).append(" chapter\n\n");
-        for(EditorialImportPlanner.ChapterPlan chapter:plan.chapters) text.append(chapter.ready()?"✓ ":"! ").append(chapter.key).append("\n  RAW: ").append(chapter.raw==null?"—":chapter.raw.name).append("\n  DRAFT: ").append(chapter.draft==null?"—":chapter.draft.name).append(chapter.problem.isEmpty()?"":"\n  Chặn: "+chapter.problem).append("\n\n");
-        text.append("Glossary: dùng file riêng của project\nPronoun: dùng file riêng của project");
-        for(String warning:plan.warnings) text.append("\n! ").append(warning); for(String failure:failures) text.append("\n! ").append(failure);
-        new AlertDialog.Builder(this).setTitle("Preview RAW + DRAFT").setMessage(text.toString()).setPositiveButton(plan.readyCount()>0?"Lưu "+plan.readyCount()+" chapter":null,plan.readyCount()>0?(d,w)->persistEditorialBatch(projectId,plan):null).setNegativeButton("Hủy",null).show();
+        EditorialImportPreviewDialog.show(this, projectId, plan, failures);
     }
 
     void persistEditorialBatch(long projectId, EditorialImportPlanner.Result plan) {
