@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
 - Snapshot updated: `2026-08-01` (Editorial chapter-number pairing and project reference multi-profile management implemented; archive-first build/device regression pending)
-- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.19`/code81 is the latest unreleased development build.
+- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.20`/code82 is the latest unreleased development build.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `03456cd` (implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.16-dev.19/build-20260801-064928/TranslateBooks-v4.16-dev.19-code81.apk`, SHA-256 `D27A558932B5DADD693C2FACB21AEE1D3238A065081B02BFBD0BDAFF190A4262`; matching immutable payload is under `backup/builds/v4.16-dev.19/build-20260801-064928/`. All 149 JVM tests passed, lint reported 53 warnings/0 errors, and installation on the connected device succeeded with exact `4.16-dev.19`/code81 identity. The released v4.15/code62 archive remains unchanged.
+- Current commit: `869e392` (implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/builds/v4.16-dev.20/build-20260801-070003/TranslateBooks-v4.16-dev.20-code82.apk`, SHA-256 `019622E3FBA4F6DD494F286381217CCA542BC415614E7278132B5B475DB3DDEF`; matching immutable payload is under `backup/builds/v4.16-dev.20/build-20260801-070003/`. All 150 JVM tests passed, lint reported 53 warnings/0 errors, installation succeeded, and a cold MainActivity launch completed successfully over the existing code81 app data with exact code82 identity. The released v4.15/code62 archive remains unchanged.
 
 ## Completed tasks
 
@@ -162,11 +162,11 @@
 - Accepted code79 after 147/147 JVM tests, lint 0 errors/53 warnings, artifact/backup parity and 10/10 focused Editorial device tests; exact code79 APK was reinstalled after the test runner cleanup.
 - Added project-owned Editorial Glossary/Pronoun persistence and UI, removed the Translation Settings fallback from Editorial batch import, and added editable Series/Volume identity with collision validation. The expanded JVM suite passes; archive-first build/device migration regression is pending.
 - Replaced the ambiguous all-in-one Editorial batch picker with independent RAW, DRAFT, Glossary, and Pronoun controls. RAW/DRAFT roles are explicit and accept filenames without role tokens; Glossary/Pronoun reuse Translate's wildcard picker and content validation. Code81 archive-first build passed 149 JVM tests and lint, both immutable payloads were created, and exact code81 was installed; hands-on picker UX verification remains pending.
-- Corrected explicit RAW/DRAFT pairing to prefer the leading chapter number, so `005_RAW_...txt` pairs with a selected DRAFT named `005_RAW_... (Vietnamese).txt`. Selected RAW/DRAFT filenames are now visible on the project card. Added additive database v12→v13 project-reference profiles: multi-file Glossary/Pronoun import, per-project ACTIVE selection, profile listing/deletion, and migration of each existing project reference to an active profile. Focused planner/migration tests and Android test-source compilation pass; archive-first build and device migration/UX verification are pending.
+- Corrected explicit RAW/DRAFT pairing to prefer the leading chapter number, so `005_RAW_...txt` pairs with a selected DRAFT named `005_RAW_... (Vietnamese).txt`. Selected RAW/DRAFT filenames are now visible on the project card. Added additive database v12→v13 project-reference profiles: multi-file Glossary/Pronoun import, per-project ACTIVE selection, profile listing/deletion, and migration of each existing project reference to an active profile. Code82 archive-first build passed 150 JVM tests/lint, installed over code81 and cold-launched successfully; hands-on profile/picker UX verification is pending.
 
 ## Pending tasks
 
-- Archive-first build and install the chapter-number pairing/reference-profile implementation, then verify selected filenames, batch Glossary/Pronoun import, ACTIVE switching, deletion, and migration of code81 project references on device.
+- On installed code82, verify selected filenames, chapter `005` pairing, batch Glossary/Pronoun import, ACTIVE switching, deletion, and preservation of the migrated code81 project references.
 - Perform manual on-device SAF save/cancel inspection for the Release dialog, then prepare the v4.16 release-candidate QA scope.
 - Execute `QA_SCOPE_v4_16.md`; manual code78 Release save/abort and ZIP inspection are complete, but full RC QA remains open.
 - Build and install the next v4.16 development APK, then verify database v11→v12 migration and project isolation/editing on device.
@@ -268,7 +268,7 @@
 
 ## Next step
 
-Commit and archive-first build the chapter-number pairing and project reference-profile implementation. Install it over code81 to verify v12→v13 migration, selected-file display, batch import and ACTIVE switching; then run the remaining Editorial/Translate RC suites. Keep annotated tag `v4.15` and both immutable archives unchanged.
+On installed code82, perform the hands-on chapter pairing and project reference-profile walkthrough, then run the remaining Editorial/Translate RC suites. Keep annotated tag `v4.15` and both immutable archives unchanged.
 
 ## Resume rule
 
