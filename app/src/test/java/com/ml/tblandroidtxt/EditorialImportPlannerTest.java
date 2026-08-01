@@ -28,4 +28,29 @@ public class EditorialImportPlannerTest {
         assertEquals(1,result.readyCount());
         assertEquals("005",result.chapters.get(0).key);
     }
+
+    @Test public void canonicalChapterNumberPairsDifferentZeroPadding() {
+        EditorialImportPlanner.Result result=EditorialImportPlanner.plan(
+                Arrays.asList(new EditorialImportPlanner.Source("005_RAW.txt","raw","r")),
+                Arrays.asList(new EditorialImportPlanner.Source("5_DRAFT.txt","draft","d")));
+        assertEquals(1,result.readyCount());
+        assertEquals("005",result.chapters.get(0).key);
+        assertEquals("number:5",result.chapters.get(0).normalizedKey);
+    }
+
+    @Test public void numericChaptersSortBeforeAndByNumberNotFilenameText() {
+        EditorialImportPlanner.Result result=EditorialImportPlanner.plan(
+                Arrays.asList(new EditorialImportPlanner.Source("10_RAW.txt","10raw","r10"),new EditorialImportPlanner.Source("2_RAW.txt","2raw","r2")),
+                Arrays.asList(new EditorialImportPlanner.Source("10_DRAFT.txt","10draft","d10"),new EditorialImportPlanner.Source("2_DRAFT.txt","2draft","d2")));
+        assertEquals("2",result.chapters.get(0).key);
+        assertEquals("10",result.chapters.get(1).key);
+    }
+
+    @Test public void sameSelectedFileCannotBecomeBothRoles() {
+        EditorialImportPlanner.Result result=EditorialImportPlanner.plan(
+                Arrays.asList(new EditorialImportPlanner.Source("005.txt","content://same","r")),
+                Arrays.asList(new EditorialImportPlanner.Source("005.txt","content://same","r")));
+        assertEquals(0,result.readyCount());
+        assertEquals("RAW and DRAFT use the same file",result.chapters.get(0).problem);
+    }
 }
