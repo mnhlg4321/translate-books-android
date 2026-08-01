@@ -15,6 +15,21 @@
 - device state: exact `4.15`/code62 is installed on OnePlus CPH2691 / Android 15 after QA and benchmark cleanup. Device metadata reports minSdk 26, targetSdk 35, and launcher activity `.MainActivity`.
 - release state: released and published. Corrected annotated tag `v4.15` targets release-metadata commit `292b24e`; immutable 22-file `tag-v4.15` artifact/backup payloads, all 21 manifest entries, final export parity, tag-source ZIP, installed APK identity, and release documents are verified; the v4.15 Complete gate passed. Feature history was merged to `main` without squashing at `81b8344`, and GitHub refs for `main`, the annotated tag object, and its peeled target were verified.
 
+## Current development build
+
+- versionName: `4.16-dev.21`
+- versionCode: `83`
+- event: `build-20260801-133230`
+- branch: `feature/v4.16`
+- source commit: `52645013738bf017569ce12774630cedcf138b43`
+- APK: `artifacts/builds/v4.16-dev.21/build-20260801-133230/TranslateBooks-v4.16-dev.21-code83.apk`
+- immutable local mirror: `backup/builds/v4.16-dev.21/build-20260801-133230/`
+- APK SHA-256: `F91A62EE12F6CA7CF07573664196F5CA7BDE994AB04B6523BE807964C8FA6D36`
+- source ZIP SHA-256: `358182198E74C033895971730EF1C3BA0A220BA210B9E8D29A4A935AB4A54A05`
+- regression: `scripts/build-and-save.ps1 -Series 4.16-dev` completed successfully; 153 JVM tests passed with 0 failures/errors/skips and Android Lint completed with 53 warnings/0 errors. Both five-file payloads match by relative path, length and SHA-256.
+- device state: no installation was requested for code83; the previously installed code82 remains the last device-verified build. Manual Editorial snapshot/picker QA remains pending.
+- scope: Editorial improvement steps 1-3 are implemented; step 4 mapping editing, step 5 handoff and full v4.16 RC QA remain open. This is not a completed v4.16 release.
+
 ## Release identity
 
 - versionName: `4.15`

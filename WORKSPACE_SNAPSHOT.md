@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-01` (Editorial improvement step 1 canonical mapping implemented; steps 2-3 are in the working tree; regression/build pending)
-- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.20`/code82 is the latest unreleased development build.
+- Snapshot updated: `2026-08-01` (Editorial improvement steps 1-3 implemented; development build 4.16-dev.21 archived; QA and step 4 remain open)
+- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.21`/code83 is the latest unreleased development build.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `f06f24f` (implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.16-dev.20/build-20260801-070003/TranslateBooks-v4.16-dev.20-code82.apk`, SHA-256 `019622E3FBA4F6DD494F286381217CCA542BC415614E7278132B5B475DB3DDEF`; matching immutable payload is under `backup/builds/v4.16-dev.20/build-20260801-070003/`. All 150 JVM tests passed, lint reported 53 warnings/0 errors, installation succeeded, and a cold MainActivity launch completed successfully over the existing code81 app data with exact code82 identity. The released v4.15/code62 archive remains unchanged.
+- Current commit: `5264501` (implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/builds/v4.16-dev.21/build-20260801-133230/TranslateBooks-v4.16-dev.21-code83.apk`, SHA-256 `F91A62EE12F6CA7CF07573664196F5CA7BDE994AB04B6523BE807964C8FA6D36`; matching immutable payload is under `backup/builds/v4.16-dev.21/build-20260801-133230/`. All 153 JVM tests passed, lint reported 53 warnings/0 errors, and artifact/source ZIP parity passed. Installation was not requested; code82 remains the last device-verified build. The released v4.15/code62 archive remains unchanged.
 
 ## Completed tasks
 
@@ -164,16 +164,19 @@
 - Replaced the ambiguous all-in-one Editorial batch picker with independent RAW, DRAFT, Glossary, and Pronoun controls. RAW/DRAFT roles are explicit and accept filenames without role tokens; Glossary/Pronoun reuse Translate's wildcard picker and content validation. Code81 archive-first build passed 149 JVM tests and lint, both immutable payloads were created, and exact code81 was installed; hands-on picker UX verification remains pending.
 - Corrected explicit RAW/DRAFT pairing to prefer the leading chapter number, so `005_RAW_...txt` pairs with a selected DRAFT named `005_RAW_... (Vietnamese).txt`. Selected RAW/DRAFT filenames are now visible on the project card. Added additive database v12→v13 project-reference profiles: multi-file Glossary/Pronoun import, per-project ACTIVE selection, profile listing/deletion, and migration of each existing project reference to an active profile. Code82 archive-first build passed 150 JVM tests/lint, installed over code81 and cold-launched successfully; hands-on profile/picker UX verification is pending.
 
+- Editorial improvement steps 2-3: chapter cards now show RAW, DRAFT, Glossary and Pronoun immutable snapshot metadata (name, size and hash); the import preview is a scrollable card layout with READY/BLOCKED state, four input rows, active-reference validation and warnings. The preview remains read-only.
+- Built and archived `4.16-dev.21`/code83 from commit `5264501` under event `build-20260801-133230`; both five-file payloads match, APK/source ZIP hashes are recorded in `BUILD_STATE.md`, 153 JVM tests passed and lint has 53 warnings/0 errors.
+
 ## Pending tasks
 
-- Complete and commit Editorial improvement steps 2-3: four-role chapter snapshot cards and the card-based mapping preview.
 - Implement Editorial improvement step 4: allow correcting RAW/DRAFT mapping before save without mutating persisted snapshots.
 - Define and verify step 5: release/QA handoff for the corrected mapping flow, including device walkthrough and full v4.16 RC matrix.
+- Install code83 when the device is available and perform hands-on verification of chapter pairing, four snapshot rows, preview blocked/ready states, and preservation of migrated project references.
 - On installed code82, verify selected filenames, chapter `005` pairing, batch Glossary/Pronoun import, ACTIVE switching, deletion, and preservation of the migrated code81 project references.
 - Perform manual on-device SAF save/cancel inspection for the Release dialog, then prepare the v4.16 release-candidate QA scope.
 - Execute `QA_SCOPE_v4_16.md`; manual code78 Release save/abort and ZIP inspection are complete, but full RC QA remains open.
 - Build and install the next v4.16 development APK, then verify database v11→v12 migration and project isolation/editing on device.
-- Connect the Android device, install archived code80, and run the new reference-isolation/edit-identity instrumentation plus the full Editorial/Translate smoke suites.
+- When the Android device is available, install archived code83 and run the reference-isolation/edit-identity instrumentation plus the full Editorial/Translate smoke suites.
 
 ## Known bugs
 
@@ -202,7 +205,8 @@
 
 ## Regression status
 
-- v4.16 Editorial improvement step 1 targeted regression: PASS. `:app:testDebugUnitTest --tests com.ml.tblandroidtxt.EditorialImportPlannerTest --tests com.ml.tblandroidtxt.EditorialPersistenceSpecTest` passed with Android Studio JBR; `git diff --check` passed. Full regression/build remains pending.
+- v4.16 Editorial improvement step 1 targeted regression: PASS. `:app:testDebugUnitTest --tests com.ml.tblandroidtxt.EditorialImportPlannerTest --tests com.ml.tblandroidtxt.EditorialPersistenceSpecTest` passed with Android Studio JBR; `git diff --check` passed. The result is included in the full code83 regression below.
+- v4.16 Editorial improvement steps 1-3 regression/build: PASS. `scripts/build-and-save.ps1 -Series 4.16-dev` archived code83 with 153 JVM tests passed, 0 failures/errors/skips, lint 0 errors/53 warnings, and matching five-file artifact/backup payloads. Device/manual UX QA remains pending.
 - v4.16 segmented L3 regression: PASS on accepted code77. 145 JVM tests passed; lint reports 0 errors/53 warnings; focused device Editorial suite passed 7/7. Controlled final scene-002 failure proved retry made exactly one additional model call while reusing independent scenes, chapter voice audit and closed final scene-001. Artifact/backup parity passed.
 - v4.16 Editorial release regression: PASS on accepted code78. 145 JVM tests passed; lint reports 0 errors/53 warnings; complete physical-device Editorial suite passed 9/9 on OnePlus CPH2691 / Android 15. Tests prove sensitive source/config strings are absent from redacted evidence, checksums match, an open gate blocks release, and successful recording reaches `RELEASED`. Artifact/backup parity passed.
 - v4.16 code78 manual Release QA: PARTIAL PASS. Confirmation, picker abort/restart safety, successful save, `RELEASED` UI, actual ZIP opening, exact three-entry contract, UTF-8 output, checksum verification and redaction inspection passed. Disposable device data was removed and evidence mirrored. Full RC scope remains pending; bottom-nav clipping and picker destination/cancel UX are recorded.
@@ -272,7 +276,7 @@
 
 ## Next step
 
- Commit Editorial improvement step 1, then finish steps 2-3, run the full regression and create the next archive-first v4.16 development build. Keep `.idea/gradle.xml` unchanged, annotated tag `v4.15` immutable, and QA open.
+ Install code83 when the device is available and verify chapter pairing, four input snapshots, READY/BLOCKED preview states, and migrated project-reference preservation. Then implement step 4 mapping editing and keep the v4.16 RC/QA gates open.
 
 ## Resume rule
 
