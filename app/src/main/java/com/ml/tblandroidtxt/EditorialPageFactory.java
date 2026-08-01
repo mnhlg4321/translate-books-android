@@ -67,6 +67,7 @@ final class EditorialPageFactory {
         actions.addView(a.space(8, 1));
         actions.addView(a.primaryButton(draftCount == 0 ? "DRAFT: chọn file" : "DRAFT: " + draftCount + " file", v -> a.chooseEditorialDraft(project.id)), new LinearLayout.LayoutParams(0, a.dp(46), 1));
         box.addView(actions);
+        box.addView(a.secondaryButton("Nhập gói 4 file cho từng chapter", v -> a.chooseEditorialBundle(project.id)), a.marginLP(-1, a.dp(42), 0, 6, 0, 0));
         box.addView(a.text("RAW: " + a.editorialSelectionSummary(project.id, true), 12, rawCount == 0 ? a.MUTED : a.GREEN, false));
         box.addView(a.text("DRAFT: " + a.editorialSelectionSummary(project.id, false), 12, draftCount == 0 ? a.MUTED : a.GREEN, false), a.marginLP(-1, -2, 0, 2, 0, 6));
 

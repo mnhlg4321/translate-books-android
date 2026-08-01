@@ -117,4 +117,51 @@ public class EditorialImportPlannerTest {
 
         assertEquals(1,result.readyCount());
     }
+
+    @Test public void rawDraftFlowExplicitlyMarksProjectDefaultsAsInherited() {
+        EditorialImportPlanner.Result result=EditorialImportPlanner.planWithProjectDefaults(
+                Arrays.asList(new EditorialImportPlanner.Source("005_RAW.txt","raw","r")),
+                Arrays.asList(new EditorialImportPlanner.Source("005_DRAFT.txt","draft","d")),
+                new EditorialImportPlanner.Source("Series A glossary.csv","default-g","g"),
+                new EditorialImportPlanner.Source("Series A pronoun.csv","default-p","p"));
+
+        EditorialImportPlanner.ChapterPlan chapter=result.chapters.get(0);
+        assertEquals(1,result.readyCount());
+        assertEquals(EditorialImportPlanner.ChapterPlan.ReferenceOrigin.INHERITED_PROJECT_DEFAULT,chapter.glossaryOrigin);
+        assertEquals(EditorialImportPlanner.ChapterPlan.ReferenceOrigin.INHERITED_PROJECT_DEFAULT,chapter.pronounOrigin);
+        assertEquals("Series A glossary.csv",chapter.glossary.name);
+        assertEquals("Series A pronoun.csv",chapter.pronoun.name);
+    }
+
+    @Test public void chapterOverrideReplacesOnlyMatchingChapterAndKeepsOtherDefault() {
+        EditorialImportPlanner.Result inherited=EditorialImportPlanner.planWithProjectDefaults(
+                Arrays.asList(new EditorialImportPlanner.Source("005_RAW.txt","raw-005","r5"),new EditorialImportPlanner.Source("006_RAW.txt","raw-006","r6")),
+                Arrays.asList(new EditorialImportPlanner.Source("005_DRAFT.txt","draft-005","d5"),new EditorialImportPlanner.Source("006_DRAFT.txt","draft-006","d6")),
+                new EditorialImportPlanner.Source("Series A glossary.csv","default-g","g"),
+                new EditorialImportPlanner.Source("Series A pronoun.csv","default-p","p"));
+
+        EditorialImportPlanner.Result result=EditorialImportPlanner.withChapterOverrides(inherited,
+                java.util.Collections.singletonMap("005",new EditorialImportPlanner.Source("005_FINAL_GLOSSARY.csv","override-g","g5")),
+                java.util.Collections.singletonMap("005",new EditorialImportPlanner.Source("005_FINAL_QA_PRONOUN.csv","override-p","p5")));
+
+        assertEquals(2,result.readyCount());
+        assertEquals(EditorialImportPlanner.ChapterPlan.ReferenceOrigin.CHAPTER_OVERRIDE,result.chapters.get(0).glossaryOrigin);
+        assertEquals(EditorialImportPlanner.ChapterPlan.ReferenceOrigin.CHAPTER_OVERRIDE,result.chapters.get(0).pronounOrigin);
+        assertEquals("override-g",result.chapters.get(0).glossary.uri);
+        assertEquals("override-p",result.chapters.get(0).pronoun.uri);
+        assertEquals(EditorialImportPlanner.ChapterPlan.ReferenceOrigin.INHERITED_PROJECT_DEFAULT,result.chapters.get(1).glossaryOrigin);
+        assertEquals(EditorialImportPlanner.ChapterPlan.ReferenceOrigin.INHERITED_PROJECT_DEFAULT,result.chapters.get(1).pronounOrigin);
+    }
+
+    @Test public void missingProjectDefaultBlocksRawDraftFlowUntilReferenceIsProvided() {
+        EditorialImportPlanner.Result result=EditorialImportPlanner.planWithProjectDefaults(
+                Arrays.asList(new EditorialImportPlanner.Source("005_RAW.txt","raw","r")),
+                Arrays.asList(new EditorialImportPlanner.Source("005_DRAFT.txt","draft","d")),
+                null,
+                new EditorialImportPlanner.Source("Series A pronoun.csv","default-p","p"));
+
+        assertEquals(0,result.readyCount());
+        assertEquals("missing GLOSSARY",result.chapters.get(0).problem);
+        assertEquals(EditorialImportPlanner.ChapterPlan.Status.NEEDS_REVIEW,result.chapters.get(0).status());
+    }
 }

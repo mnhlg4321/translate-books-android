@@ -78,6 +78,7 @@ public class MainActivity extends Activity {
     static final int REQ_EDITORIAL_RELEASE_TREE = 27;
     static final int REQ_EDITORIAL_REFERENCE = 28;
     static final int REQ_EDITORIAL_DRAFT = 29;
+    static final int REQ_EDITORIAL_BUNDLE = 30;
 
     int BG, PANEL, CARD, FIELD, BORDER, TEXT, MUTED, BLUE, CYAN;
     final int GREEN = Color.rgb(43, 207, 126); // semantic success/running
@@ -165,6 +166,8 @@ public class MainActivity extends Activity {
     long pendingEditorialProjectId = -1L;
     final Map<Long,ArrayList<EditorialImportPlanner.Source>> pendingEditorialRaw=new HashMap<>();
     final Map<Long,ArrayList<EditorialImportPlanner.Source>> pendingEditorialDraft=new HashMap<>();
+    final Map<Long,Map<String,EditorialImportPlanner.Source>> pendingEditorialGlossaryOverrides=new HashMap<>();
+    final Map<Long,Map<String,EditorialImportPlanner.Source>> pendingEditorialPronounOverrides=new HashMap<>();
     long pendingEditorialReleaseTreeProjectId = -1L;
     long pendingEditorialReferenceProjectId = -1L;
     EditorialWorkflowV5.AssetRole pendingEditorialReferenceRole = null;
@@ -857,6 +860,12 @@ public class MainActivity extends Activity {
 
     void chooseEditorialDraft(long projectId) { chooseEditorialChapterFiles(projectId,false); }
 
+    void chooseEditorialBundle(long projectId) {
+        if(projectId<=0)return;
+        pendingEditorialProjectId=projectId;
+        startActivityForResult(configImportIntent(true),REQ_EDITORIAL_BUNDLE);
+    }
+
     private void chooseEditorialChapterFiles(long projectId,boolean raw) {
         if(projectId<=0)return;pendingEditorialProjectId=projectId;
         Intent intent=configImportIntent(true);
@@ -869,7 +878,14 @@ public class MainActivity extends Activity {
     void previewEditorialSelection(long projectId){
         ArrayList<EditorialImportPlanner.Source> raws=pendingEditorialRaw.get(projectId),drafts=pendingEditorialDraft.get(projectId);
         if(raws==null||raws.isEmpty()||drafts==null||drafts.isEmpty()){toast("Chọn riêng cả RAW và DRAFT trước");return;}
-        previewEditorialPlan(projectId,EditorialImportPlanner.plan(raws,drafts),java.util.Collections.emptyList());
+        EditorialImportPlanner.Source glossary=null,pronoun=null;
+        try(EditorialRepository repo=new EditorialRepository(this)) {
+            glossary=editorialSource(repo.projectReference(projectId,EditorialWorkflowV5.AssetRole.GLOSSARY));
+            pronoun=editorialSource(repo.projectReference(projectId,EditorialWorkflowV5.AssetRole.PRONOUN));
+        }
+        EditorialImportPlanner.Result plan=EditorialImportPlanner.planWithProjectDefaults(raws,drafts,glossary,pronoun);
+        plan=EditorialImportPlanner.withChapterOverrides(plan,pendingEditorialGlossaryOverrides.get(projectId),pendingEditorialPronounOverrides.get(projectId));
+        previewEditorialPlan(projectId,plan,java.util.Collections.emptyList());
     }
 
     void chooseEditorialReference(long projectId, EditorialWorkflowV5.AssetRole role) {
@@ -904,10 +920,55 @@ public class MainActivity extends Activity {
         if(pendingEditorialRaw.containsKey(projectId))previewEditorialSelection(projectId);else if(!failures.isEmpty())showResult("DRAFT import",namesSummary(failures));
     }
 
+    void previewEditorialBundle(Intent data,int takeFlags){
+        final long projectId=pendingEditorialProjectId;pendingEditorialProjectId=-1L;
+        ArrayList<EditorialImportPlanner.Source> files=new ArrayList<>();ArrayList<String> failures=new ArrayList<>();
+        for(Uri selected:selectedDocumentUris(data))try{FileUtil.takePersistable(this,selected,takeFlags,true,false);files.add(new EditorialImportPlanner.Source(FileUtil.displayName(this,selected),selected.toString(),FileUtil.readText(this,selected)));}catch(Exception error){failures.add(FileUtil.displayName(this,selected)+": "+error.getMessage());}
+        previewEditorialPlan(projectId,EditorialImportPlanner.planBundle(files),failures);
+    }
+
     void importEditorialReferences(Intent data,int takeFlags,long projectId,EditorialWorkflowV5.AssetRole role){
-        ArrayList<String> failed=new ArrayList<>(),imported=new ArrayList<>();
-        for(Uri selected:selectedDocumentUris(data))try{FileUtil.takePersistable(this,selected,takeFlags,true,false);String name=FileUtil.displayName(this,selected),content=FileUtil.readText(this,selected);LibraryImportPlanner.Source source=new LibraryImportPlanner.Source(name,content);boolean valid=role==EditorialWorkflowV5.AssetRole.GLOSSARY?!LibraryImportPlanner.glossaries(java.util.Collections.singletonList(source)).imported.isEmpty():!LibraryImportPlanner.pronouns(java.util.Collections.singletonList(source)).imported.isEmpty();if(!valid)throw new IllegalArgumentException(role==EditorialWorkflowV5.AssetRole.GLOSSARY?"không có cặp thuật ngữ hợp lệ":"không có quy tắc đại từ hợp lệ");try(EditorialRepository repo=new EditorialRepository(this)){repo.saveProjectReference(projectId,new EditorialRepository.AssetSnapshot(role,selected.toString(),name,content));}imported.add(name);}catch(Exception error){failed.add(FileUtil.displayName(this,selected)+": "+error.getMessage());}
-        invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");toast("Đã import "+imported.size()+" "+(role==EditorialWorkflowV5.AssetRole.GLOSSARY?"Glossary":"Pronoun"));if(!failed.isEmpty())showResult("Một số file bị bỏ qua",namesSummary(failed));
+        ArrayList<String> failed=new ArrayList<>(),suggestions=new ArrayList<>();
+        ArrayList<EditorialRepository.AssetSnapshot> projectDefaults=new ArrayList<>();
+        for(Uri selected:selectedDocumentUris(data))try{
+            FileUtil.takePersistable(this,selected,takeFlags,true,false);
+            String name=FileUtil.displayName(this,selected),content=FileUtil.readText(this,selected);
+            LibraryImportPlanner.Source source=new LibraryImportPlanner.Source(name,content);
+            boolean valid=role==EditorialWorkflowV5.AssetRole.GLOSSARY
+                    ?!LibraryImportPlanner.glossaries(java.util.Collections.singletonList(source)).imported.isEmpty()
+                    :!LibraryImportPlanner.pronouns(java.util.Collections.singletonList(source)).imported.isEmpty();
+            if(!valid)throw new IllegalArgumentException(role==EditorialWorkflowV5.AssetRole.GLOSSARY?"không có cặp thuật ngữ hợp lệ":"không có quy tắc đại từ hợp lệ");
+            EditorialImportPlanner.Source candidate=new EditorialImportPlanner.Source(name,selected.toString(),content);
+            if(EditorialImportPlanner.hasChapterNumber(name)){
+                Map<Long,Map<String,EditorialImportPlanner.Source>> target=role==EditorialWorkflowV5.AssetRole.GLOSSARY?pendingEditorialGlossaryOverrides:pendingEditorialPronounOverrides;
+                Map<String,EditorialImportPlanner.Source> byChapter=target.get(projectId);
+                if(byChapter==null){byChapter=new HashMap<>();target.put(projectId,byChapter);}
+                String chapterKey=EditorialImportPlanner.chapterKeyOf(name);byChapter.put(chapterKey,candidate);
+                suggestions.add(name+" → Chapter "+chapterKey+" (Chapter override pending)");
+            } else {
+                projectDefaults.add(new EditorialRepository.AssetSnapshot(role,selected.toString(),name,content));
+            }
+        }catch(Exception error){failed.add(FileUtil.displayName(this,selected)+": "+error.getMessage());}
+        if(projectDefaults.isEmpty()){
+            finishEditorialReferenceImport(projectId,role,0,suggestions,failed);
+            return;
+        }
+        StringBuilder message=new StringBuilder("Các file không có chapter number sẽ trở thành project default sau khi lưu:\n");
+        for(EditorialRepository.AssetSnapshot asset:projectDefaults)message.append("• ").append(asset.displayName).append('\n');
+        new AlertDialog.Builder(this).setTitle("Lưu làm project default?").setMessage(message.toString())
+                .setPositiveButton("Lưu project default",(d,w)->{
+                    int saved=0;
+                    for(EditorialRepository.AssetSnapshot asset:projectDefaults)try(EditorialRepository repo=new EditorialRepository(this)){repo.saveProjectReference(projectId,asset);saved++;}catch(Exception error){failed.add(asset.displayName+": "+error.getMessage());}
+                    finishEditorialReferenceImport(projectId,role,saved,suggestions,failed);
+                }).setNegativeButton("Không lưu",(d,w)->finishEditorialReferenceImport(projectId,role,0,suggestions,failed)).show();
+    }
+
+    private void finishEditorialReferenceImport(long projectId,EditorialWorkflowV5.AssetRole role,int imported,List<String> suggestions,List<String> failed){
+        invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");
+        if(imported>0)toast("Đã lưu "+imported+" project default "+(role==EditorialWorkflowV5.AssetRole.GLOSSARY?"Glossary":"Pronoun"));
+        else if(!suggestions.isEmpty())toast("Đã ghi nhận chapter override đề xuất");
+        ArrayList<String> messages=new ArrayList<>();messages.addAll(suggestions);messages.addAll(failed);
+        if(!messages.isEmpty())showResult("Editorial reference mapping",namesSummary(messages));
     }
 
     private void previewEditorialPlan(long projectId,EditorialImportPlanner.Result plan,List<String> failures){
@@ -916,18 +977,15 @@ public class MainActivity extends Activity {
 
     void persistEditorialBatch(long projectId, EditorialImportPlanner.Result plan) {
         int saved=0; ArrayList<String> failed=new ArrayList<>(); try(EditorialRepository repo=new EditorialRepository(this)) {
-            if(plan.glossary!=null)repo.saveProjectReference(projectId,editorialAsset(EditorialWorkflowV5.AssetRole.GLOSSARY,plan.glossary));
-            if(plan.pronoun!=null)repo.saveProjectReference(projectId,editorialAsset(EditorialWorkflowV5.AssetRole.PRONOUN,plan.pronoun));
-            EditorialRepository.AssetSnapshot glossary=repo.projectReference(projectId,EditorialWorkflowV5.AssetRole.GLOSSARY);
-            EditorialRepository.AssetSnapshot pronoun=repo.projectReference(projectId,EditorialWorkflowV5.AssetRole.PRONOUN);
-            if(glossary==null||pronoun==null)throw new IllegalStateException("Project Biên tập cần Glossary và Pronoun riêng trước khi lưu chapter");
             for(EditorialImportPlanner.ChapterPlan chapter:plan.chapters) if(chapter.ready()) try {
-                ArrayList<EditorialRepository.AssetSnapshot> assets=new ArrayList<>(); assets.add(editorialAsset(EditorialWorkflowV5.AssetRole.RAW,chapter.raw)); assets.add(editorialAsset(EditorialWorkflowV5.AssetRole.DRAFT,chapter.draft)); assets.add(glossary); assets.add(pronoun); repo.createChapter(projectId,chapter.key,chapter.key,assets); saved++;
+                if(chapter.glossary==null||chapter.pronoun==null)throw new IllegalStateException("Glossary/Pronoun chưa có nguồn rõ ràng");
+                ArrayList<EditorialRepository.AssetSnapshot> assets=new ArrayList<>(); assets.add(editorialAsset(EditorialWorkflowV5.AssetRole.RAW,chapter.raw)); assets.add(editorialAsset(EditorialWorkflowV5.AssetRole.DRAFT,chapter.draft)); assets.add(editorialAsset(EditorialWorkflowV5.AssetRole.GLOSSARY,chapter.glossary)); assets.add(editorialAsset(EditorialWorkflowV5.AssetRole.PRONOUN,chapter.pronoun)); repo.createChapter(projectId,chapter.key,chapter.key,assets); saved++;
             } catch(Exception error){failed.add(chapter.key+": "+error.getMessage());}
         } catch(Exception error){failed.add(error.getMessage());}
-        if(saved>0){pendingEditorialRaw.remove(projectId);pendingEditorialDraft.remove(projectId);}invalidatePage("Editorial");switchTab("Editorial");toast("Đã lưu "+saved+" chapter"+(failed.isEmpty()?"":"; lỗi "+failed.size()));if(!failed.isEmpty())showResult("Editorial import",namesSummary(failed));
+        if(saved>0){pendingEditorialRaw.remove(projectId);pendingEditorialDraft.remove(projectId);pendingEditorialGlossaryOverrides.remove(projectId);pendingEditorialPronounOverrides.remove(projectId);}invalidatePage("Editorial");switchTab("Editorial");toast("Đã lưu "+saved+" chapter"+(failed.isEmpty()?"":"; lỗi "+failed.size()));if(!failed.isEmpty())showResult("Editorial import",namesSummary(failed));
     }
     EditorialRepository.AssetSnapshot editorialAsset(EditorialWorkflowV5.AssetRole role, EditorialImportPlanner.Source source) { return new EditorialRepository.AssetSnapshot(role,source.uri,source.name,source.content); }
+    EditorialImportPlanner.Source editorialSource(EditorialRepository.AssetSnapshot source) { return source==null?null:new EditorialImportPlanner.Source(source.displayName,source.sourceUri,source.content); }
 
     void confirmRunEditorialL1(long chapterId) {
         new AlertDialog.Builder(this).setTitle("Chạy L1 audit?").setMessage("L1 chỉ audit RAW–DRAFT, không sửa bản dịch. App sẽ tạo context mới, lưu RAW map/report/gate và dùng model đang chọn.").setPositiveButton("Chạy L1",(d,w)->runEditorialL1(chapterId)).setNegativeButton("Hủy",null).show();
@@ -1150,7 +1208,7 @@ public class MainActivity extends Activity {
             if (requestCode == REQ_EDITORIAL_RELEASE) clearPendingEditorialRelease();
             if (requestCode == REQ_EDITORIAL_RELEASE_TREE) pendingEditorialReleaseTreeProjectId=-1L;
             if (requestCode == REQ_EDITORIAL_REFERENCE) { pendingEditorialReferenceProjectId=-1L; pendingEditorialReferenceRole=null; }
-            if(requestCode==REQ_EDITORIAL_BATCH||requestCode==REQ_EDITORIAL_DRAFT)pendingEditorialProjectId=-1L;
+            if(requestCode==REQ_EDITORIAL_BATCH||requestCode==REQ_EDITORIAL_DRAFT||requestCode==REQ_EDITORIAL_BUNDLE)pendingEditorialProjectId=-1L;
             return;
         }
         Uri uri = data.getData();
@@ -1317,6 +1375,8 @@ public class MainActivity extends Activity {
             previewEditorialBatch(data, takeFlags);
         } else if(requestCode==REQ_EDITORIAL_DRAFT){
             previewEditorialDraft(data,takeFlags);
+        } else if(requestCode==REQ_EDITORIAL_BUNDLE){
+            previewEditorialBundle(data,takeFlags);
         }
         refreshFileSummary();
     }

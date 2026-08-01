@@ -18,18 +18,24 @@ final class EditorialImportPlanner {
 
     static final class ChapterPlan {
         enum Status { READY, NEEDS_REVIEW }
+        enum ReferenceOrigin { CHAPTER_OVERRIDE, INHERITED_PROJECT_DEFAULT }
         final String key;
         final String normalizedKey;
         final boolean bundle;
+        final boolean requireReferences;
         Source raw, draft, glossary, pronoun;
+        ReferenceOrigin glossaryOrigin, pronounOrigin;
         String problem = "";
-        ChapterPlan(String key, String normalizedKey) { this(key, normalizedKey, false); }
+        ChapterPlan(String key, String normalizedKey) { this(key, normalizedKey, false, false); }
         ChapterPlan(String key, String normalizedKey, boolean bundle) {
-            this.key=key; this.normalizedKey=normalizedKey; this.bundle=bundle;
+            this(key, normalizedKey, bundle, bundle);
+        }
+        ChapterPlan(String key, String normalizedKey, boolean bundle, boolean requireReferences) {
+            this.key=key; this.normalizedKey=normalizedKey; this.bundle=bundle; this.requireReferences=requireReferences;
         }
         boolean ready() {
             return problem.isEmpty() && raw != null && draft != null
-                    && (!bundle || (glossary != null && pronoun != null));
+                    && (!requireReferences || (glossary != null && pronoun != null));
         }
         Status status() { return ready() ? Status.READY : Status.NEEDS_REVIEW; }
     }
@@ -76,6 +82,46 @@ final class EditorialImportPlanner {
         for(ChapterPlan plan:result) if(plan.problem.isEmpty()&&(plan.raw==null||plan.draft==null)) plan.problem="missing "+(plan.raw==null?"RAW":"DRAFT");
         sortPlans(result);
         return new Result(result,null,null,warnings);
+    }
+
+    /** Plans the normal RAW/DRAFT flow while resolving references from the current project defaults. */
+    static Result planWithProjectDefaults(List<Source> rawSources, List<Source> draftSources,
+                                          Source glossaryDefault, Source pronounDefault) {
+        Result base=plan(rawSources,draftSources);
+        ArrayList<ChapterPlan> chapters=new ArrayList<>();
+        for(ChapterPlan source:base.chapters) {
+            ChapterPlan copy=copyOf(source,true);
+            if(copy.glossary==null&&glossaryDefault!=null) {
+                copy.glossary=glossaryDefault; copy.glossaryOrigin=ChapterPlan.ReferenceOrigin.INHERITED_PROJECT_DEFAULT;
+            }
+            if(copy.pronoun==null&&pronounDefault!=null) {
+                copy.pronoun=pronounDefault; copy.pronounOrigin=ChapterPlan.ReferenceOrigin.INHERITED_PROJECT_DEFAULT;
+            }
+            recomputeMissing(copy);
+            chapters.add(copy);
+        }
+        return new Result(chapters,glossaryDefault,pronounDefault,base.warnings,base.unassigned);
+    }
+
+    /** Applies explicit chapter reference candidates without changing project defaults. */
+    static Result withChapterOverrides(Result base, Map<String,Source> glossaryOverrides,
+                                       Map<String,Source> pronounOverrides) {
+        if(base==null)return null;
+        ArrayList<ChapterPlan> chapters=new ArrayList<>();
+        for(ChapterPlan source:base.chapters) {
+            ChapterPlan copy=copyOf(source,true);
+            Source glossaryOverride=findOverride(copy.normalizedKey,glossaryOverrides);
+            Source pronounOverride=findOverride(copy.normalizedKey,pronounOverrides);
+            if(glossaryOverride!=null) {
+                copy.glossary=glossaryOverride; copy.glossaryOrigin=ChapterPlan.ReferenceOrigin.CHAPTER_OVERRIDE;
+            }
+            if(pronounOverride!=null) {
+                copy.pronoun=pronounOverride; copy.pronounOrigin=ChapterPlan.ReferenceOrigin.CHAPTER_OVERRIDE;
+            }
+            recomputeMissing(copy);
+            chapters.add(copy);
+        }
+        return new Result(chapters,base.glossary,base.pronoun,base.warnings,base.unassigned);
     }
 
     /**
@@ -153,10 +199,10 @@ final class EditorialImportPlanner {
                 if(plan.draft!=null) addProblem(plan,"multiple DRAFT files"); else plan.draft=source;
                 break;
             case GLOSSARY:
-                if(plan.glossary!=null) addProblem(plan,"multiple GLOSSARY files"); else plan.glossary=source;
+                if(plan.glossary!=null) addProblem(plan,"multiple GLOSSARY files"); else { plan.glossary=source; plan.glossaryOrigin=ChapterPlan.ReferenceOrigin.CHAPTER_OVERRIDE; }
                 break;
             case PRONOUN:
-                if(plan.pronoun!=null) addProblem(plan,"multiple PRONOUN files"); else plan.pronoun=source;
+                if(plan.pronoun!=null) addProblem(plan,"multiple PRONOUN files"); else { plan.pronoun=source; plan.pronounOrigin=ChapterPlan.ReferenceOrigin.CHAPTER_OVERRIDE; }
                 break;
             default:
                 warnings.add(source.name+": role is unclear; choose a role before saving");
@@ -165,12 +211,39 @@ final class EditorialImportPlanner {
     }
 
     private static String missingBundleRoles(ChapterPlan plan) {
+        return missingRequiredRoles(plan);
+    }
+
+    private static String missingRequiredRoles(ChapterPlan plan) {
         StringBuilder missing=new StringBuilder();
         if(plan.raw==null) missing.append("RAW");
         if(plan.draft==null) appendMissing(missing,"DRAFT");
-        if(plan.glossary==null) appendMissing(missing,"GLOSSARY");
-        if(plan.pronoun==null) appendMissing(missing,"PRONOUN");
+        if(plan.requireReferences&&plan.glossary==null) appendMissing(missing,"GLOSSARY");
+        if(plan.requireReferences&&plan.pronoun==null) appendMissing(missing,"PRONOUN");
         return missing.toString();
+    }
+
+    private static ChapterPlan copyOf(ChapterPlan source,boolean requireReferences) {
+        ChapterPlan copy=new ChapterPlan(source.key,source.normalizedKey,source.bundle,requireReferences);
+        copy.raw=source.raw; copy.draft=source.draft; copy.glossary=source.glossary; copy.pronoun=source.pronoun;
+        copy.glossaryOrigin=source.glossaryOrigin; copy.pronounOrigin=source.pronounOrigin; copy.problem=source.problem;
+        return copy;
+    }
+
+    private static Source findOverride(String normalizedKey,Map<String,Source> overrides) {
+        if(overrides==null||overrides.isEmpty())return null;
+        for(Map.Entry<String,Source> entry:overrides.entrySet()) {
+            if(normalizeIdentity(entry.getKey()).equals(normalizedKey))return entry.getValue();
+        }
+        return null;
+    }
+
+    private static void recomputeMissing(ChapterPlan plan) {
+        if(plan.problem.startsWith("missing ")) plan.problem="";
+        if(plan.problem.isEmpty()) {
+            String missing=missingRequiredRoles(plan);
+            if(!missing.isEmpty())plan.problem="missing "+missing;
+        }
     }
 
     private static void appendMissing(StringBuilder missing,String role) {
@@ -223,6 +296,9 @@ final class EditorialImportPlanner {
                 .replaceAll("[_ .-]+","_").replaceAll("^[_ .-]+|[_ .-]+$","").trim();
         return base.isEmpty()?filename:base;
     }
+
+    static String chapterKeyOf(String filename) { return chapterKey(filename); }
+    static boolean hasChapterNumber(String filename) { return isNumericChapterKey(chapterKey(filename)); }
 
     private static boolean isNumericChapterKey(String key) {
         return key!=null&&key.matches("\\d{1,6}");
