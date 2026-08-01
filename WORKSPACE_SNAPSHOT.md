@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-01` (project-default/chapter-override flow implemented in `4aca556`; development build 4.16-dev.22 remains the latest archived/installable build; revision-safe editing and QA remain open)
+- Snapshot updated: `2026-08-01` (portable Editorial v4.16 handoff added in `6d82c41`; development build 4.16-dev.22 remains the latest archived/installable build; revision-safe editing and QA remain open)
 - Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.22`/code84 is the latest unreleased development build.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `4aca556` (implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current commit: `6d82c41` (documentation/implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
 - Current build: `artifacts/builds/v4.16-dev.22/build-20260801-133953/TranslateBooks-v4.16-dev.22-code84.apk`, SHA-256 `CDE2085EEEA959C38840C3E1F9197506BB54637EBEB38D717430CEA680892A51`; matching immutable payload is under `backup/builds/v4.16-dev.22/build-20260801-133953/`. All 153 JVM tests passed, lint reported 53 warnings/0 errors, and artifact/source ZIP parity passed. Streamed installation succeeded; device metadata and cold MainActivity launch were verified. The released v4.15/code62 archive remains unchanged.
 
 ## Completed tasks
@@ -169,6 +169,7 @@
 - Editorial improvement step 2: RAW/DRAFT plans explicitly bind project ACTIVE references as `Inherited project default`; four-file bundles bind Glossary/Pronoun as `Chapter override`; chapter-numbered reference imports remain pending per chapter without changing ACTIVE; chapter-less reference imports require confirmation before project-default persistence. Preview renders source/profile/file ownership before save. Commit `4aca556`.
 - Built and archived `4.16-dev.21`/code83 from commit `5264501` under event `build-20260801-133230`; both five-file payloads match, APK/source ZIP hashes are recorded in `BUILD_STATE.md`, 153 JVM tests passed and lint has 53 warnings/0 errors.
 - Built and installed `4.16-dev.22`/code84 from commit `b6936fb` under event `build-20260801-133953`; both five-file payloads match, APK SHA-256 is `CDE2085E...892A51`, source ZIP SHA-256 is `4FECD825...CF835E2`, and the device reports exact package identity with a successful cold MainActivity launch.
+- Added `EDITORIAL_HANDOFF_V4_16.md` and linked it from `README.md`; the handoff preserves the investigation, four-role/default-vs-override contract, revision-safe editing/stale-run roadmap, transfer checklist, build commands, artifact paths, and safety constraints. Commit `6d82c41`.
 
 ## Pending tasks
 
@@ -180,6 +181,7 @@
 - Execute `QA_SCOPE_v4_16.md`; manual code78 Release save/abort and ZIP inspection are complete, but full RC QA remains open.
 - Verify database migration and project isolation/editing on installed code84.
 - On installed code84, run the reference-isolation/edit-identity instrumentation plus the full Editorial/Translate smoke suites when the corresponding device QA session is authorized.
+- Build a new archive-first development APK from the current step-2 source before any device QA; code84 predates the latest source and is retained only as prior build evidence.
 
 ## Known bugs
 
@@ -206,10 +208,11 @@
 - OnePlus Android 15 denies shell `screenrecord`; exact-code62 visual evidence therefore uses an explicitly documented MJPEG sequence of actual-device screenshots, not continuous MediaProjection capture.
 - The first local tag was rejected for backup because it contained stale v4.14 release metadata; it was absent from `origin` and was deleted with approval before any immutable archive existed.
 - Project default/chapter override flow is connected to the current picker/preview/save path; revision-safe editing of already-created snapshots is still not implemented.
+- The portable handoff is tracked, but it does not replace the required source implementation, device QA, or v4.16 release gates.
 
 ## Regression status
 
-- v4.16 Editorial project-default/override regression: PASS. `$env:JAVA_HOME='C:\Program Files\Android\Android Studio\jbr'; .\gradlew.bat :app:testDebugUnitTest` passed 160/160 JVM tests with 0 failures/errors/skips; targeted planner tests passed 14/14; `git diff --check` passed. Tests cover inherited defaults, chapter overrides, missing defaults and the 005/006/007 chapter-local bundle. Commit `4aca556`.
+- v4.16 Editorial project-default/override regression: PASS. `$env:JAVA_HOME='C:\Program Files\Android\Android Studio\jbr'; .\gradlew.bat :app:testDebugUnitTest` passed 160/160 JVM tests with 0 failures/errors/skips; targeted planner tests passed 14/14; `git diff --check` passed. Tests cover inherited defaults, chapter overrides, missing defaults and the 005/006/007 chapter-local bundle. Source/test evidence is committed through `5589af0`.
 - v4.16 Editorial improvement steps 1-3 regression/build: PASS. `scripts/build-and-save.ps1 -Series 4.16-dev` archived code83 with 153 JVM tests passed, 0 failures/errors/skips, lint 0 errors/53 warnings, and matching five-file artifact/backup payloads. Device/manual UX QA remains pending.
 - v4.16-dev.22 archive/install verification: PASS. `scripts/build-and-save.ps1 -Series 4.16-dev -Install` produced matching five-file artifact/backup payloads; manifest hashes pass; OnePlus CPH2691 / Android 15 reports versionName `4.16-dev.22`, versionCode `84`, minSdk `26`, targetSdk `35`; cold MainActivity launch returned `Status: ok`.
 - v4.16 segmented L3 regression: PASS on accepted code77. 145 JVM tests passed; lint reports 0 errors/53 warnings; focused device Editorial suite passed 7/7. Controlled final scene-002 failure proved retry made exactly one additional model call while reusing independent scenes, chapter voice audit and closed final scene-001. Artifact/backup parity passed.
@@ -217,6 +220,7 @@
 - v4.16 code78 manual Release QA: PARTIAL PASS. Confirmation, picker abort/restart safety, successful save, `RELEASED` UI, actual ZIP opening, exact three-entry contract, UTF-8 output, checksum verification and redaction inspection passed. Disposable device data was removed and evidence mirrored. Full RC scope remains pending; bottom-nav clipping and picker destination/cancel UX are recorded.
 - v4.16 code79 navigation/destination regression: AUTOMATED PASS / VISUAL PENDING. 147 JVM tests and 10/10 Editorial device tests passed; lint and artifact parity passed. Visual navigation and real SAF folder walkthrough could not proceed while the phone was secured; no lock bypass was attempted.
 - Editorial reference isolation/edit-identity JVM regression: PASS. `testDebugUnitTest` completed successfully after the additive v11→v12 migration and UI/data-flow changes; device migration/instrumentation remains pending.
+- v4.16 transfer handoff documentation: PASS. `EDITORIAL_HANDOFF_V4_16.md` records the problem analysis, implemented contract, remaining revision-safe/stale-run design, exact resource map, transfer checklist, and archive-first continuation commands; `git diff --check` passed before commit `6d82c41`.
 
 - v4.16 isolated L3 regression: PASS on code75. 144 JVM tests passed; lint reports 0 errors/53 warnings; focused device Editorial suite passed 6/6. The L3 test proves the first model prompt contains RAW and VI_L2 but no REPORT_L1, then proves report visibility only after independent evidence validates CLOSED. Artifact/backup parity passed.
 
@@ -281,7 +285,7 @@
 
 ## Next step
 
- Design and implement revision-safe editing for an existing chapter snapshot, including stale-run invalidation; then verify inherited/override labels and the four-file bundle on a new archive-first development build while keeping the v4.16 RC/QA gates open.
+ Design and implement revision-safe editing for an existing chapter snapshot, including stale-run invalidation; then verify inherited/override labels and the four-file bundle on a new archive-first development build while keeping the v4.16 RC/QA gates open. Use `EDITORIAL_HANDOFF_V4_16.md` as the portable continuation guide.
 
 ## Resume rule
 

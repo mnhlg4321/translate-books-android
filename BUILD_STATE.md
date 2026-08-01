@@ -28,7 +28,7 @@
 - source ZIP SHA-256: `4FECD8253B3608547581F72141949F482EDCCE95235B0BB5D6D16DA31CF835E2`
 - regression: `scripts/build-and-save.ps1 -Series 4.16-dev -Install` completed successfully; 153 JVM tests passed with 0 failures/errors/skips and Android Lint completed with 53 warnings/0 errors. Both five-file payloads match by relative path, length and SHA-256.
 - device state: streamed installation succeeded on OnePlus CPH2691 / Android 15. Package metadata reports versionName `4.16-dev.22`, versionCode `84`, minSdk `26`, targetSdk `35`; cold `MainActivity` launch completed in 687 ms. Manual Editorial snapshot/picker QA remains pending.
-- scope: Editorial improvement steps 1-3 are implemented; step 4 mapping editing, step 5 handoff and full v4.16 RC QA remain open. This is not a completed v4.16 release.
+- scope: Editorial improvement steps 1-3 and the portable transfer handoff are recorded; revision-safe mapping editing, stale-run invalidation, manual device QA, and full v4.16 RC gates remain open. This is not a completed v4.16 release.
 
 ## Release identity
 
@@ -123,3 +123,4 @@ The previous v4.14 release remains published and immutable.
 - The opt-in paid real-API instrumentation case was intentionally skipped; release QA made no provider request and incurred no billing.
 - The first local `v4.15` tag was rejected before archive because it contained stale v4.14 release metadata. With explicit approval it was deleted while still unpublished; corrected metadata was committed and the accepted annotated tag was recreated before backup.
 - v4.15 APK/source/evidence archives remain intentionally outside tracked Git under ignored `artifacts/releases/` and `backup/`; a clean clone contains release documents but not these binary payloads.
+- The latest step-2 source is newer than installed development build `4.16-dev.22`; the next device verification must use a new archive-first build and must not reuse code84 as step-2 QA evidence.
