@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-03` (V5 executable core retired; SAFE4 foundation committed in `a77719f`; code85 rejected after source-ZIP EOL mismatch; binary Git attribute fix and new archive-first build pending)
-- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.22`/code84 is still the latest archived development APK but contains the retired V5 engine and is not SAFE4 evidence.
+- Snapshot updated: `2026-08-03` (V5 executable core retired; SAFE4 foundation committed; code85 rejected; byte-preserving fix accepted in archive-first `4.16-dev.24`/code86)
+- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.24`/code86 is the latest accepted unreleased SAFE4-foundation build. Editorial execution remains intentionally blocked.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `a77719f11574053521f4e4c8d08b04bec234d647` (implementation baseline immediately before the source-archive integrity fix/snapshot commit; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.16-dev.22/build-20260801-133953/TranslateBooks-v4.16-dev.22-code84.apk`, SHA-256 `CDE2085EEEA959C38840C3E1F9197506BB54637EBEB38D717430CEA680892A51`; matching immutable payload is under `backup/builds/v4.16-dev.22/build-20260801-133953/`. It remains immutable historical V5 evidence. The current SAFE4 foundation passed 144 JVM tests and Android-test compilation but has not yet produced a durable APK. The released v4.15/code62 archive remains unchanged.
+- Current commit: `ab8e78abeeb0fa6264ac8a7b0dea2e436cd39d90` (implementation baseline immediately before this accepted-build metadata/snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/builds/v4.16-dev.24/build-20260803-165452/TranslateBooks-v4.16-dev.24-code86.apk`, SHA-256 `6C3EEF7350B3D1C24BE9D65B0E906D2042CE281556235E783F8DBE4962F37875`; matching five-file payload is under `backup/builds/v4.16-dev.24/build-20260803-165452/`. Source ZIP SHA-256 is `9CCE4C99955E700FAA5EB6E2AF7153A51211A2130AF7A4E939F97CBB24A0D9F1`; mirror parity, both manifests, 144 JVM tests, lint 0 errors/53 warnings and exact SAFE4 hashes inside the ZIP pass. Code86 was not installed. The released v4.15/code62 archive remains unchanged.
 
 ## Completed tasks
 
@@ -175,10 +175,10 @@
 - Converted Editorial storage/UI to fail closed: new projects require the exact SAFE4 identity, new chapters are `SAFE4_BLOCKED`, legacy projects/chapters are read-only, and RAW/DRAFT/Glossary plus optional `PRONOUN_STATUS=NONE` can be prepared without enabling model execution.
 - Added `EDITORIAL_SAFE4_MIGRATION.md` as the current source of truth and marked the older V5 plan/handoff historical. SAFE4 foundation regression passed 144/144 JVM tests and Android instrumentation-source compilation; the three bundled assets match the external source byte-for-byte.
 - Built and retained `4.16-dev.23`/code85, then rejected it during post-build verification because its source ZIP normalized the three SAFE4 text files to CRLF. The APK pack guard passed, but the archived source was not byte-reproducible. Added a binary `.gitattributes` rule; code85 remains immutable audit evidence and cannot be accepted.
+- Built and accepted `4.16-dev.24`/code86 from `ab8e78a` under event `build-20260803-165452`. Artifact/backup parity and manifests pass; 144 JVM tests and lint 0 errors/53 warnings pass; source ZIP reproduces the external SAFE4 sizes/hashes exactly. Installation was not requested.
 
 ## Pending tasks
 
-- Commit the binary SAFE4 Git-attribute/source-archive fix without staging the user-owned `.idea/gradle.xml`, then run `scripts/build-and-save.ps1 -Series 4.16-dev` to create and inspect a fresh numbered development APK/source ZIP.
 - Add an additive SAFE4 lineage/schema migration while preserving all legacy V5 rows as historical read-only data.
 - Implement typed exhaustive ledgers and machine-derived gates; do not accept model-provided PASS/CLOSED as evidence.
 - Implement Pronoun `AVAILABLE/NONE/LEGACY_REJECTED`, scoped Pair Context, exact per-phase context allow-lists and checkpoint lineage.
@@ -220,6 +220,7 @@
 ## Regression status
 
 - V5-SAFE.4 retirement/foundation regression: PASS for source safety and compilation. `:app:testDebugUnitTest` passed 144/144 with 0 failures/errors/skips; the mandatory pack guard verified all three external-source hashes; `:app:compileDebugAndroidTestJavaWithJavac` succeeded; `git diff --check` passed. SAFE4 execution, release, device QA and Golden Replay are deliberately not claimed.
+- V5-SAFE.4 archive-first build verification: PASS on accepted code86. Both five-file stores and both checksum manifests match; APK/source ZIP hashes are `6C3EEF73...F37875`/`9CCE4C99...A0D9F1`; the ZIP's three SAFE4 files match external byte sizes and SHA-256 values. Installation/manual device QA remain open.
 
 - v4.16 Editorial project-default/override regression: PASS. `$env:JAVA_HOME='C:\Program Files\Android\Android Studio\jbr'; .\gradlew.bat :app:testDebugUnitTest` passed 160/160 JVM tests with 0 failures/errors/skips; targeted planner tests passed 14/14; `git diff --check` passed. Tests cover inherited defaults, chapter overrides, missing defaults and the 005/006/007 chapter-local bundle. Source/test evidence is committed through `5589af0`.
 - v4.16 Editorial improvement steps 1-3 regression/build: PASS. `scripts/build-and-save.ps1 -Series 4.16-dev` archived code83 with 153 JVM tests passed, 0 failures/errors/skips, lint 0 errors/53 warnings, and matching five-file artifact/backup payloads. Device/manual UX QA remains pending.
@@ -294,7 +295,7 @@
 
 ## Next step
 
- Commit the SAFE4 binary Git-attribute fix and create a fresh archive-first build whose source ZIP reproduces all three required hashes. After accepting that build evidence, begin the additive exact-lineage/schema layer in `EDITORIAL_SAFE4_MIGRATION.md`; do not re-enable any old V5 runner or release path.
+ Begin the additive exact-lineage/schema layer in `EDITORIAL_SAFE4_MIGRATION.md`, preserving all legacy rows as read-only and deriving future gates from typed evidence. Do not re-enable any old V5 runner or release path; keep execution closed until Golden Replay G1–G10.
 
 ## Resume rule
 
