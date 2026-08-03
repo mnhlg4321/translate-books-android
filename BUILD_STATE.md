@@ -17,18 +17,18 @@
 
 ## Current development build
 
-- versionName: `4.16-dev.26`
-- versionCode: `88`
-- event: `build-20260803-182934`
+- versionName: `4.16-dev.27`
+- versionCode: `89`
+- event: `build-20260803-184804`
 - branch: `feature/v4.16`
-- source commit: `260dc4641c6980e92a13a9acf72a0ff37ab1ef3d`
-- APK: `artifacts/builds/v4.16-dev.26/build-20260803-182934/TranslateBooks-v4.16-dev.26-code88.apk`
-- immutable local mirror: `backup/builds/v4.16-dev.26/build-20260803-182934/`
-- APK SHA-256: `56E7651EF623DC3A4787C1F6D00DBB52C195B260D1D01F528C706039B7B1DF57`
-- source ZIP SHA-256: `6D9B14707DC8EF511177EEE13F0B66F3E3EC408E2EFF8DC87E0A50132E4FCDA2`
-- regression: archive-first G2-B1 build completed successfully; `:editorial-engine:test` passed 19/19 and `:app:testDebugUnitTest` passed 148/148 with 0 failures/errors/skips; Android Lint completed with 53 warnings/0 errors; `:app:compileDebugAndroidTestJavaWithJavac` passed. Artifact and backup payloads are byte-identical and all four checksum entries pass. The exact source ZIP contains the G2-B1 design and preserves all three SAFE4 asset hashes.
-- device state: build archived and not installed. `adb` is unavailable in this environment, so connected instrumentation and device QA were not run. The previously installed code84 contains the retired V5 engine and must not be used for SAFE4 QA.
-- scope: G2-B1 persistent pack storage, additive v13→v14 migration, TOCTOU-safe headless importer, recovery and read-only registry are implemented. Certification, Golden Replay, project binding, model execution, L1–L3, release receipts and UI remain blocked; this is not a completed v4.16 release.
+- source commit: `71d9ca8d7c458aaa658b2fc90154bf44ac1615d4`
+- APK: `artifacts/builds/v4.16-dev.27/build-20260803-184804/TranslateBooks-v4.16-dev.27-code89.apk`
+- immutable local mirror: `backup/builds/v4.16-dev.27/build-20260803-184804/`
+- APK SHA-256: `A0A3BFDA91E2F3AF0D7A0B8112F629877492D3E5EBD8DA53CD30A640F9F75B15`
+- source ZIP SHA-256: `72FA35C515F06FD36BC6B8E263ABD08E9D0BA2EC12E8EA51042FC0D3E3FE852F`
+- regression: archive-first G2-B2A build completed successfully; `:editorial-engine:test` passed 19/19 and `:app:testDebugUnitTest` passed 155/155 with 0 failures/errors/skips, including 7 presenter/mapper tests; Android Lint completed with 53 warnings/0 errors; `:app:compileDebugAndroidTestJavaWithJavac` passed. Artifact and backup payloads are byte-identical and all four checksum entries pass. The exact source ZIP contains the G2-B2A design and preserves all three SAFE4 asset hashes.
+- device state: build archived and not installed. `adb` is unavailable in this environment, so connected/visual UI QA was not run. The previously installed code84 contains the retired V5 engine and must not be used for SAFE4 QA.
+- scope: G2-B1 storage/import remains intact and G2-B2A read-only pack management UI is implemented. Picker/import, certification, Golden Replay, activation, project binding, model execution, L1–L3 and release receipts remain blocked; this is not a completed v4.16 release.
 
 ## Release identity
 

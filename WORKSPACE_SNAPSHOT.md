@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-03` (Editorial Pack Platform G2-B1 implemented; review stop; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
-- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.26`/code88 is the latest archived G2-B1 build. Editorial execution remains intentionally blocked.
+- Snapshot updated: `2026-08-03` (Editorial Pack Platform G2-B2A implemented; review stop; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
+- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.27`/code89 is the latest archived G2-B2A build. Editorial execution remains intentionally blocked.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `260dc46` (G2-B1 implementation/build baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.16-dev.26/build-20260803-182934/TranslateBooks-v4.16-dev.26-code88.apk`, SHA-256 `56E7651EF623DC3A4787C1F6D00DBB52C195B260D1D01F528C706039B7B1DF57`; matching five-file payload is under `backup/builds/v4.16-dev.26/build-20260803-182934/`. Source ZIP SHA-256 is `6D9B14707DC8EF511177EEE13F0B66F3E3EC408E2EFF8DC87E0A50132E4FCDA2`; mirror parity, both manifests, 19 editorial-engine tests, 148 app JVM tests, lint 0 errors/53 warnings, instrumentation compilation and exact SAFE4 hashes inside the ZIP pass. No device is available and code88 was not installed. The released v4.15/code62 archive remains unchanged.
+- Current commit: `71d9ca8` (G2-B2A implementation/build baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/builds/v4.16-dev.27/build-20260803-184804/TranslateBooks-v4.16-dev.27-code89.apk`, SHA-256 `A0A3BFDA91E2F3AF0D7A0B8112F629877492D3E5EBD8DA53CD30A640F9F75B15`; matching five-file payload is under `backup/builds/v4.16-dev.27/build-20260803-184804/`. Source ZIP SHA-256 is `72FA35C515F06FD36BC6B8E263ABD08E9D0BA2EC12E8EA51042FC0D3E3FE852F`; mirror parity, both manifests, 19 editorial-engine tests, 155 app JVM tests, lint 0 errors/53 warnings, instrumentation compilation and exact SAFE4 hashes inside the ZIP pass. No device is available and code89 was not installed. The released v4.15/code62 archive remains unchanged.
 
 ## G2-B1 handoff
 
@@ -12,6 +12,12 @@
 - Pending: user review only. G2-B2 (UI/read-only management) is not started. Certification, Golden Replay, project binding and execution remain blocked.
 - Known limitations: connected instrumentation could not run because `adb` is unavailable; no device QA or installation is claimed. The importer tests are compiled and ready for a device run.
 - Canonical/candidate boundary: code86 SAFE4 hashes are unchanged; `DBE214...` and `3B2FCC...` remain outside the registry and cannot activate or replace SAFE4.
+
+## G2-B2A handoff
+
+- Completed: read-only Editorial Packs section, grouped deterministic list, detail dialog, exact fail-closed wording, persisted metadata/integrity display, presenter/mapper tests and no-row-mutation instrumentation source.
+- Pending: user review only. G2-B2B and all picker/import/certification/activation/binding/execution work are not started.
+- Connected/visual UI QA remains pending because `adb` is unavailable.
 
 ## Completed tasks
 

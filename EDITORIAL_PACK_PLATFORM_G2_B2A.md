@@ -34,6 +34,7 @@ No state is presented as runnable or “READY”. Sorting is locale-independent:
 - Android instrumentation source compilation: pass; page tests cover empty/list/error text, recreation, scrollable construction, prohibited action labels and unchanged pack row count.
 - Lint: pass with the existing 53 warnings and 0 errors.
 - Connected/visual UI QA: not run because `adb` is unavailable; no device pass is claimed.
+- Final archive-first build: `4.16-dev.27`/code89, event `build-20260803-184804`, APK SHA-256 `A0A3BFDA91E2F3AF0D7A0B8112F629877492D3E5EBD8DA53CD30A640F9F75B15`, source ZIP SHA-256 `72FA35C515F06FD36BC6B8E263ABD08E9D0BA2EC12E8EA51042FC0D3E3FE852F`. Artifact and backup payloads are byte-identical; the APK was archived and not installed.
 
 ## Explicit non-goals
 
