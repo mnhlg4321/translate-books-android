@@ -4,6 +4,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
@@ -12,6 +13,7 @@ import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 @RunWith(AndroidJUnit4.class)
 public class EditorialPackManagementPageInstrumentedTest {
@@ -34,6 +36,27 @@ public class EditorialPackManagementPageInstrumentedTest {
         }
         try (ActivityScenario<MainActivity> second = ActivityScenario.launch(MainActivity.class)) {
             second.onActivity(activity -> assertTrue(allText(new EditorialPackManagementPageFactory(activity).build()).contains("READ ONLY")));
+        }
+    }
+
+    @Test public void openingAndRefreshingPageDoesNotChangePackRowCount() {
+        TranslationRepository beforeRepo = new TranslationRepository(ApplicationProvider.getApplicationContext());
+        int before = countPacks(beforeRepo);
+        beforeRepo.close();
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            scenario.onActivity(activity -> {
+                new EditorialPackManagementPageFactory(activity).build();
+                new EditorialPackManagementPageFactory(activity).build();
+            });
+        }
+        TranslationRepository afterRepo = new TranslationRepository(ApplicationProvider.getApplicationContext());
+        assertEquals(before, countPacks(afterRepo));
+        afterRepo.close();
+    }
+
+    private static int countPacks(TranslationRepository repository) {
+        try (android.database.Cursor cursor = repository.editorialReadableDatabase().rawQuery("SELECT COUNT(*) FROM editorial_packs", null)) {
+            return cursor.moveToFirst() ? cursor.getInt(0) : -1;
         }
     }
 
