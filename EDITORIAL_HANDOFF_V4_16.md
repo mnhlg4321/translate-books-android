@@ -1,5 +1,7 @@
 # Editorial v4.16 handoff
 
+> **HISTORICAL — DO NOT CONTINUE THIS ENGINE.** The V5 execution core and release path described below were retired for incompatibility with V5-SAFE.4. Use `EDITORIAL_SAFE4_MIGRATION.md` as the current source of truth. Existing data and this document are retained only for audit/history.
+
 This document is the portable handoff for the unfinished Editorial mapping work. It records the problem investigation, the decisions that are already implemented, the evidence that exists, the remaining design, and the exact workflow for continuing on another machine.
 
 The document is intentionally self-contained, but the repository files named below remain the source of truth for build state, release gates, and implementation details.

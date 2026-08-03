@@ -1,5 +1,7 @@
 # Kế hoạch tính năng Biên tập 3 lượt V5
 
+> **LỊCH SỬ — THIẾT KẾ THỰC THI ĐÃ NGỪNG.** Không triển khai hoặc bật lại runner/gate/release V5 bên dưới. Trạng thái fail-closed và thứ tự triển khai hiện tại nằm trong `EDITORIAL_SAFE4_MIGRATION.md`.
+
 ## Mục tiêu
 
 Thêm một chế độ **Biên tập** JP→VI cho từng chương. Đây là workflow điều phối có bằng chứng, không phải biến thể của nút Dịch hoặc tùy chọn Làm mượt.

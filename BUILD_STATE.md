@@ -28,7 +28,8 @@
 - source ZIP SHA-256: `4FECD8253B3608547581F72141949F482EDCCE95235B0BB5D6D16DA31CF835E2`
 - regression: `scripts/build-and-save.ps1 -Series 4.16-dev -Install` completed successfully; 153 JVM tests passed with 0 failures/errors/skips and Android Lint completed with 53 warnings/0 errors. Both five-file payloads match by relative path, length and SHA-256.
 - device state: streamed installation succeeded on OnePlus CPH2691 / Android 15. Package metadata reports versionName `4.16-dev.22`, versionCode `84`, minSdk `26`, targetSdk `35`; cold `MainActivity` launch completed in 687 ms. Manual Editorial snapshot/picker QA remains pending.
-- scope: Editorial improvement steps 1-3 and the portable transfer handoff are recorded; revision-safe mapping editing, stale-run invalidation, manual device QA, and full v4.16 RC gates remain open. This is not a completed v4.16 release.
+- current source status: newer unbuilt source retires the V5 execution/release core and adds an immutable, fail-closed V5-SAFE.4 foundation. It passed 144 JVM tests, exact three-file pack verification and Android-test compilation. Code84 remains historical V5 evidence only and must not be used for SAFE4 QA.
+- scope: SAFE4 pack integrity, project binding, legacy read-only handling and blocked input preparation are implemented. Exact lineage/schema, evidence-derived gates, SAFE4 L1–L3, release receipts, Golden Replay, manual device QA and all v4.16 RC gates remain open. This is not a completed v4.16 release.
 
 ## Release identity
 
@@ -123,4 +124,5 @@ The previous v4.14 release remains published and immutable.
 - The opt-in paid real-API instrumentation case was intentionally skipped; release QA made no provider request and incurred no billing.
 - The first local `v4.15` tag was rejected before archive because it contained stale v4.14 release metadata. With explicit approval it was deleted while still unpublished; corrected metadata was committed and the accepted annotated tag was recreated before backup.
 - v4.15 APK/source/evidence archives remain intentionally outside tracked Git under ignored `artifacts/releases/` and `backup/`; a clean clone contains release documents but not these binary payloads.
-- The latest step-2 source is newer than installed development build `4.16-dev.22`; the next device verification must use a new archive-first build and must not reuse code84 as step-2 QA evidence.
+- The current SAFE4 foundation source is newer than installed development build `4.16-dev.22`; code84 contains the retired V5 engine and must not be reused as SAFE4 execution, QA, or release evidence.
+- SAFE4 execution/release is intentionally blocked until exact lineage, exhaustive ledgers, evidence-derived gates, conditional Pronoun/Pair handling, the new release contract and Golden Replay G1–G10 are complete.

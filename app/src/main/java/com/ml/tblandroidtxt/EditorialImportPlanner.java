@@ -35,7 +35,11 @@ final class EditorialImportPlanner {
         }
         boolean ready() {
             return problem.isEmpty() && raw != null && draft != null
-                    && (!requireReferences || (glossary != null && pronoun != null));
+                    && (!requireReferences || glossary != null);
+        }
+        EditorialSafe4Workflow.PronounStatus pronounStatus() {
+            return pronoun == null ? EditorialSafe4Workflow.PronounStatus.NONE
+                    : EditorialSafe4Workflow.PronounStatus.AVAILABLE;
         }
         Status status() { return ready() ? Status.READY : Status.NEEDS_REVIEW; }
     }
@@ -124,10 +128,7 @@ final class EditorialImportPlanner {
         return new Result(chapters,base.glossary,base.pronoun,base.warnings,base.unassigned);
     }
 
-    /**
-     * Plans a complete four-role chapter bundle. A bundle is READY only when all four
-     * chapter-owned inputs are present, unambiguous and supported by their role format.
-     */
+    /** Plans a SAFE4 chapter bundle: RAW, DRAFT and GLOSSARY are required; PRONOUN may be NONE. */
     static Result planBundle(List<Source> sources) {
         Map<String,ChapterPlan> plans=new LinkedHashMap<>();
         ArrayList<String>warnings=new ArrayList<>();
@@ -219,7 +220,6 @@ final class EditorialImportPlanner {
         if(plan.raw==null) missing.append("RAW");
         if(plan.draft==null) appendMissing(missing,"DRAFT");
         if(plan.requireReferences&&plan.glossary==null) appendMissing(missing,"GLOSSARY");
-        if(plan.requireReferences&&plan.pronoun==null) appendMissing(missing,"PRONOUN");
         return missing.toString();
     }
 

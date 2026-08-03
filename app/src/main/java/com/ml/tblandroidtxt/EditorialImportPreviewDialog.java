@@ -25,7 +25,7 @@ final class EditorialImportPreviewDialog {
         summary.addView(a.text("Mapping preview", 17, a.TEXT, true));
         summary.addView(a.text(plan.readyCount() + " READY • " + plan.blockedCount() + " NEEDS REVIEW", 13,
                 plan.blockedCount() == 0 ? a.GREEN : a.AMBER, true));
-        TextView note = a.text("Bốn input chỉ được snapshot khi bạn lưu chapter. Glossary/Pronoun luôn ghi rõ kế thừa project hay override theo chapter.", 12, a.MUTED, false);
+        TextView note = a.text("SAFE4 yêu cầu RAW, DRAFT và Glossary. Pronoun là tùy chọn và luôn được ghi rõ AVAILABLE hoặc NONE trước khi snapshot.", 12, a.MUTED, false);
         note.setSingleLine(false);
         summary.addView(note, a.marginLP(-1, -2, 0, 4, 0, 0));
         root.addView(summary, a.marginLP(-1, -2, 0, 0, 0, 8));
@@ -42,7 +42,7 @@ final class EditorialImportPreviewDialog {
             card.addView(sourceRow(a, "RAW", chapter.raw));
             card.addView(sourceRow(a, "DRAFT", chapter.draft));
             card.addView(referenceRow(a, "Glossary", chapter.glossary, chapter.glossaryOrigin));
-            card.addView(referenceRow(a, "Pronoun", chapter.pronoun, chapter.pronounOrigin));
+            card.addView(referenceRow(a, "Pronoun • " + chapter.pronounStatus().name(), chapter.pronoun, chapter.pronounOrigin));
             if (!chapter.problem.isEmpty()) {
                 TextView issue = a.text("Chặn: " + chapter.problem, 12, a.RED, true);
                 issue.setSingleLine(false);

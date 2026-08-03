@@ -11,7 +11,7 @@ The project targets Android 8.0 and later (`minSdk 26`) and currently builds aga
 | Released baseline | `v4.15` / code 62 | Tagged, regression-tested, and immutably archived |
 | Next development | `v4.16-dev.22` / code 84 | Editorial mapping work in progress; QA and release gates open |
 
-See [BUILD_STATE.md](BUILD_STATE.md) for the exact current build, checksums, regression results and known limitations. See [WORKSPACE_SNAPSHOT.md](WORKSPACE_SNAPSHOT.md) for active work and the next development step. For transferring the unfinished Editorial v4.16 work to another machine, start with [EDITORIAL_HANDOFF_V4_16.md](EDITORIAL_HANDOFF_V4_16.md).
+See [BUILD_STATE.md](BUILD_STATE.md) for the exact current build, checksums, regression results and known limitations. See [WORKSPACE_SNAPSHOT.md](WORKSPACE_SNAPSHOT.md) for active work and the next development step. For Editorial, start with [EDITORIAL_SAFE4_MIGRATION.md](EDITORIAL_SAFE4_MIGRATION.md); the older V5 plan/handoff are historical only.
 
 ## Highlights
 

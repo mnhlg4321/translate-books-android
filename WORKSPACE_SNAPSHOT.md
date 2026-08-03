@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-01` (portable Editorial v4.16 handoff added in `6d82c41`; development build 4.16-dev.22 remains the latest archived/installable build; revision-safe editing and QA remain open)
-- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.22`/code84 is the latest unreleased development build.
+- Snapshot updated: `2026-08-03` (V5 executable Editorial core retired; immutable V5-SAFE.4 pack and fail-closed foundation implemented; source regression/Android-test compilation pass; new archive-first build pending)
+- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.22`/code84 is still the latest archived development APK but contains the retired V5 engine and is not SAFE4 evidence.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `6d82c41` (documentation/implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.16-dev.22/build-20260801-133953/TranslateBooks-v4.16-dev.22-code84.apk`, SHA-256 `CDE2085EEEA959C38840C3E1F9197506BB54637EBEB38D717430CEA680892A51`; matching immutable payload is under `backup/builds/v4.16-dev.22/build-20260801-133953/`. All 153 JVM tests passed, lint reported 53 warnings/0 errors, and artifact/source ZIP parity passed. Streamed installation succeeded; device metadata and cold MainActivity launch were verified. The released v4.15/code62 archive remains unchanged.
+- Current commit: `c3b279e48454aabe1af51407b529153911bc60cf` (implementation baseline immediately before the SAFE4 foundation/snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/builds/v4.16-dev.22/build-20260801-133953/TranslateBooks-v4.16-dev.22-code84.apk`, SHA-256 `CDE2085EEEA959C38840C3E1F9197506BB54637EBEB38D717430CEA680892A51`; matching immutable payload is under `backup/builds/v4.16-dev.22/build-20260801-133953/`. It remains immutable historical V5 evidence. The current SAFE4 foundation passed 144 JVM tests and Android-test compilation but has not yet produced a durable APK. The released v4.15/code62 archive remains unchanged.
 
 ## Completed tasks
 
@@ -170,20 +170,25 @@
 - Built and archived `4.16-dev.21`/code83 from commit `5264501` under event `build-20260801-133230`; both five-file payloads match, APK/source ZIP hashes are recorded in `BUILD_STATE.md`, 153 JVM tests passed and lint has 53 warnings/0 errors.
 - Built and installed `4.16-dev.22`/code84 from commit `b6936fb` under event `build-20260801-133953`; both five-file payloads match, APK SHA-256 is `CDE2085E...892A51`, source ZIP SHA-256 is `4FECD825...CF835E2`, and the device reports exact package identity with a successful cold MainActivity launch.
 - Added `EDITORIAL_HANDOFF_V4_16.md` and linked it from `README.md`; the handoff preserves the investigation, four-role/default-vs-override contract, revision-safe editing/stale-run roadmap, transfer checklist, build commands, artifact paths, and safety constraints. Commit `6d82c41`.
+- Retired the incompatible V5 Editorial execution core: removed its schema/validator, three runners, context/model contracts, unsafe evidence mutation/latest lookup APIs, release bundle/folder flow, run/retry/release UI and obsolete behavior tests. No old execution entry point remains in current source.
+- Bundled the exact V5-SAFE.4 three-file source pack with immutable per-file hashes and a mandatory `preBuild` integrity guard. Added a version/pack capability gate that remains disabled until lineage, exhaustive ledgers, evidence-derived gates, conditional Pronoun/Pair handling, SAFE4 release artifacts and Golden Replay G1–G10 are evidenced.
+- Converted Editorial storage/UI to fail closed: new projects require the exact SAFE4 identity, new chapters are `SAFE4_BLOCKED`, legacy projects/chapters are read-only, and RAW/DRAFT/Glossary plus optional `PRONOUN_STATUS=NONE` can be prepared without enabling model execution.
+- Added `EDITORIAL_SAFE4_MIGRATION.md` as the current source of truth and marked the older V5 plan/handoff historical. SAFE4 foundation regression passed 144/144 JVM tests and Android instrumentation-source compilation; the three bundled assets match the external source byte-for-byte.
 
 ## Pending tasks
 
-- Implement revision-safe mapping editing for existing chapters without mutating persisted snapshots.
-- Define and verify step 5: release/QA handoff for the corrected mapping flow, including device walkthrough and full v4.16 RC matrix.
-- Perform hands-on verification on installed code84: chapter pairing, four snapshot rows, preview blocked/ready states, and preservation of migrated project references.
-- On installed code82, verify selected filenames, chapter `005` pairing, batch Glossary/Pronoun import, ACTIVE switching, deletion, and preservation of the migrated code81 project references.
-- Perform manual on-device SAF save/cancel inspection for the Release dialog, then prepare the v4.16 release-candidate QA scope.
-- Execute `QA_SCOPE_v4_16.md`; manual code78 Release save/abort and ZIP inspection are complete, but full RC QA remains open.
-- Verify database migration and project isolation/editing on installed code84.
-- On installed code84, run the reference-isolation/edit-identity instrumentation plus the full Editorial/Translate smoke suites when the corresponding device QA session is authorized.
-- Build a new archive-first development APK from the current step-2 source before any device QA; code84 predates the latest source and is retained only as prior build evidence.
+- Commit the SAFE4 retirement/foundation group without staging the user-owned `.idea/gradle.xml`, then run `scripts/build-and-save.ps1 -Series 4.16-dev` to create a new immutable development APK.
+- Add an additive SAFE4 lineage/schema migration while preserving all legacy V5 rows as historical read-only data.
+- Implement typed exhaustive ledgers and machine-derived gates; do not accept model-provided PASS/CLOSED as evidence.
+- Implement Pronoun `AVAILABLE/NONE/LEGACY_REJECTED`, scoped Pair Context, exact per-phase context allow-lists and checkpoint lineage.
+- Implement versioned L1/L2/L3 SAFE4 runners, SAFE4 receipt/release artifacts, and retained Golden Replay G1–G10 evidence before enabling execution.
+- Run device QA only on a new archive-first SAFE4 build. Keep the full v4.16 QA/tag/backup/export gates open.
 
 ## Known bugs
+
+- SAFE4 model execution and Editorial release are intentionally blocked because only pack integrity is implemented. This is a safety blocker, not a completed feature.
+- The installed/archived code84 APK still contains the retired V5 engine. It must not be used to create or certify SAFE4 output.
+- Legacy V5 database rows are preserved but do not yet have SAFE4 manifest/parent lineage; they remain read-only and cannot be promoted into a SAFE4 chain.
 
 - Code78 bottom-navigation clipping has an implemented responsive two-line fix in code79; visual verification is pending because the physical device is secured at the lock screen.
 - Code80 device acceptance is blocked only by the Android device being disconnected; build, 148 JVM tests, lint and artifact parity passed.
@@ -211,6 +216,8 @@
 - The portable handoff is tracked, but it does not replace the required source implementation, device QA, or v4.16 release gates.
 
 ## Regression status
+
+- V5-SAFE.4 retirement/foundation regression: PASS for source safety and compilation. `:app:testDebugUnitTest` passed 144/144 with 0 failures/errors/skips; the mandatory pack guard verified all three external-source hashes; `:app:compileDebugAndroidTestJavaWithJavac` succeeded; `git diff --check` passed. SAFE4 execution, release, device QA and Golden Replay are deliberately not claimed.
 
 - v4.16 Editorial project-default/override regression: PASS. `$env:JAVA_HOME='C:\Program Files\Android\Android Studio\jbr'; .\gradlew.bat :app:testDebugUnitTest` passed 160/160 JVM tests with 0 failures/errors/skips; targeted planner tests passed 14/14; `git diff --check` passed. Tests cover inherited defaults, chapter overrides, missing defaults and the 005/006/007 chapter-local bundle. Source/test evidence is committed through `5589af0`.
 - v4.16 Editorial improvement steps 1-3 regression/build: PASS. `scripts/build-and-save.ps1 -Series 4.16-dev` archived code83 with 153 JVM tests passed, 0 failures/errors/skips, lint 0 errors/53 warnings, and matching five-file artifact/backup payloads. Device/manual UX QA remains pending.
@@ -285,7 +292,7 @@
 
 ## Next step
 
- Design and implement revision-safe editing for an existing chapter snapshot, including stale-run invalidation; then verify inherited/override labels and the four-file bundle on a new archive-first development build while keeping the v4.16 RC/QA gates open. Use `EDITORIAL_HANDOFF_V4_16.md` as the portable continuation guide.
+ Commit the fail-closed SAFE4 foundation and create a new archive-first development APK. After build evidence is recorded, begin the additive exact-lineage/schema layer in the order defined by `EDITORIAL_SAFE4_MIGRATION.md`; do not re-enable any old V5 runner or release path.
 
 ## Resume rule
 

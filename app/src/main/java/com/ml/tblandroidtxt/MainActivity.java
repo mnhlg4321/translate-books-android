@@ -73,9 +73,6 @@ public class MainActivity extends Activity {
     static final int REQ_EXPORT_LOG = 22;
     static final int REQ_EXPORT_JOB_LOG = 23;
     static final int REQ_EDITORIAL_BATCH = 24;
-    static final int REQ_EXPORT_REPORT_L1 = 25;
-    static final int REQ_EDITORIAL_RELEASE = 26;
-    static final int REQ_EDITORIAL_RELEASE_TREE = 27;
     static final int REQ_EDITORIAL_REFERENCE = 28;
     static final int REQ_EDITORIAL_DRAFT = 29;
     static final int REQ_EDITORIAL_BUNDLE = 30;
@@ -168,13 +165,8 @@ public class MainActivity extends Activity {
     final Map<Long,ArrayList<EditorialImportPlanner.Source>> pendingEditorialDraft=new HashMap<>();
     final Map<Long,Map<String,EditorialImportPlanner.Source>> pendingEditorialGlossaryOverrides=new HashMap<>();
     final Map<Long,Map<String,EditorialImportPlanner.Source>> pendingEditorialPronounOverrides=new HashMap<>();
-    long pendingEditorialReleaseTreeProjectId = -1L;
     long pendingEditorialReferenceProjectId = -1L;
-    EditorialWorkflowV5.AssetRole pendingEditorialReferenceRole = null;
-    String pendingEditorialReportText = "", pendingEditorialReportName = "REPORT_L1.txt";
-    long pendingEditorialReleaseChapterId=-1L, pendingEditorialReleaseRunId=-1L;
-    byte[] pendingEditorialReleaseBundle=new byte[0];
-    String pendingEditorialReleaseManifest="", pendingEditorialReleaseHash="";
+    EditorialSafe4Workflow.AssetRole pendingEditorialReferenceRole = null;
 
     final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) {
@@ -843,7 +835,7 @@ public class MainActivity extends Activity {
         if (series == null || series.trim().isEmpty() || volume == null || volume.trim().isEmpty()) { toast("Nhập Series và Volume"); return; }
         try (EditorialRepository repo = new EditorialRepository(this)) {
             EditorialRepository.Project project = new EditorialRepository.Project(); project.seriesName=series.trim(); project.volumeName=volume.trim();
-            project.workflowHash=HashUtil.sha256(EditorialEvidenceSchema.VERSION+"|EditorialWorkflowV5"); repo.createProject(project);
+            project.workflowVersion=EditorialSafe4Pack.VERSION; project.workflowHash=EditorialSafe4Pack.PACK_HASH; repo.createProject(project);
             invalidatePage("Editorial"); switchTab("Editorial"); toast("Đã tạo project biên tập");
         } catch (Exception error) { toast("Không tạo được project: "+error.getMessage()); }
     }
@@ -880,28 +872,26 @@ public class MainActivity extends Activity {
         if(raws==null||raws.isEmpty()||drafts==null||drafts.isEmpty()){toast("Chọn riêng cả RAW và DRAFT trước");return;}
         EditorialImportPlanner.Source glossary=null,pronoun=null;
         try(EditorialRepository repo=new EditorialRepository(this)) {
-            glossary=editorialSource(repo.projectReference(projectId,EditorialWorkflowV5.AssetRole.GLOSSARY));
-            pronoun=editorialSource(repo.projectReference(projectId,EditorialWorkflowV5.AssetRole.PRONOUN));
+            glossary=editorialSource(repo.projectReference(projectId,EditorialSafe4Workflow.AssetRole.GLOSSARY));
+            pronoun=editorialSource(repo.projectReference(projectId,EditorialSafe4Workflow.AssetRole.PRONOUN));
         }
         EditorialImportPlanner.Result plan=EditorialImportPlanner.planWithProjectDefaults(raws,drafts,glossary,pronoun);
         plan=EditorialImportPlanner.withChapterOverrides(plan,pendingEditorialGlossaryOverrides.get(projectId),pendingEditorialPronounOverrides.get(projectId));
         previewEditorialPlan(projectId,plan,java.util.Collections.emptyList());
     }
 
-    void chooseEditorialReference(long projectId, EditorialWorkflowV5.AssetRole role) {
-        if(projectId<=0||(role!=EditorialWorkflowV5.AssetRole.GLOSSARY&&role!=EditorialWorkflowV5.AssetRole.PRONOUN))return;
+    void chooseEditorialReference(long projectId, EditorialSafe4Workflow.AssetRole role) {
+        if(projectId<=0||(role!=EditorialSafe4Workflow.AssetRole.GLOSSARY&&role!=EditorialSafe4Workflow.AssetRole.PRONOUN))return;
         pendingEditorialReferenceProjectId=projectId;pendingEditorialReferenceRole=role;
         startActivityForResult(configImportIntent(true),REQ_EDITORIAL_REFERENCE);
     }
 
-    void manageEditorialReferences(long projectId,EditorialWorkflowV5.AssetRole role){
+    void manageEditorialReferences(long projectId,EditorialSafe4Workflow.AssetRole role){
         List<EditorialRepository.ReferenceProfile> profiles;try(EditorialRepository repo=new EditorialRepository(this)){profiles=repo.projectReferenceProfiles(projectId,role);}
         if(profiles.isEmpty()){chooseEditorialReference(projectId,role);return;}
         String[] names=new String[profiles.size()];for(int i=0;i<profiles.size();i++)names[i]=(profiles.get(i).active?"✓ ACTIVE • ":"")+profiles.get(i).displayName;
-        new AlertDialog.Builder(this).setTitle((role==EditorialWorkflowV5.AssetRole.GLOSSARY?"Glossary":"Pronoun")+" của project").setSingleChoiceItems(names,-1,(dialog,which)->{EditorialRepository.ReferenceProfile selected=profiles.get(which);new AlertDialog.Builder(this).setTitle(selected.displayName).setItems(new String[]{selected.active?"Đang ACTIVE":"Chọn ACTIVE","Xóa profile"},(d,action)->{try(EditorialRepository repo=new EditorialRepository(this)){if(action==0&&!selected.active){repo.selectProjectReference(projectId,selected.id,role);toast("Đã chọn ACTIVE: "+selected.displayName);}else if(action==1){repo.deleteProjectReference(projectId,selected.id,role);toast("Đã xóa profile");}invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");}catch(Exception error){showResult("Không cập nhật được profile",AppValidator.readableError(error));}}).setNegativeButton("Hủy",null).show();dialog.dismiss();}).setPositiveButton("Import nhiều file",(d,w)->chooseEditorialReference(projectId,role)).setNegativeButton("Đóng",null).show();
+        new AlertDialog.Builder(this).setTitle((role==EditorialSafe4Workflow.AssetRole.GLOSSARY?"Glossary":"Pronoun")+" của project").setSingleChoiceItems(names,-1,(dialog,which)->{EditorialRepository.ReferenceProfile selected=profiles.get(which);new AlertDialog.Builder(this).setTitle(selected.displayName).setItems(new String[]{selected.active?"Đang ACTIVE":"Chọn ACTIVE","Xóa profile"},(d,action)->{try(EditorialRepository repo=new EditorialRepository(this)){if(action==0&&!selected.active){repo.selectProjectReference(projectId,selected.id,role);toast("Đã chọn ACTIVE: "+selected.displayName);}else if(action==1){repo.deleteProjectReference(projectId,selected.id,role);toast("Đã xóa profile");}invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");}catch(Exception error){showResult("Không cập nhật được profile",AppValidator.readableError(error));}}).setNegativeButton("Hủy",null).show();dialog.dismiss();}).setPositiveButton("Import nhiều file",(d,w)->chooseEditorialReference(projectId,role)).setNegativeButton("Đóng",null).show();
     }
-
-    void chooseEditorialReleaseFolder(long projectId){if(projectId<=0)return;pendingEditorialReleaseTreeProjectId=projectId;Intent intent=new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION|Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);startActivityForResult(intent,REQ_EDITORIAL_RELEASE_TREE);}
 
     void previewEditorialBatch(Intent data, int takeFlags) {
         final long projectId=pendingEditorialProjectId; pendingEditorialProjectId=-1L;
@@ -927,20 +917,20 @@ public class MainActivity extends Activity {
         previewEditorialPlan(projectId,EditorialImportPlanner.planBundle(files),failures);
     }
 
-    void importEditorialReferences(Intent data,int takeFlags,long projectId,EditorialWorkflowV5.AssetRole role){
+    void importEditorialReferences(Intent data,int takeFlags,long projectId,EditorialSafe4Workflow.AssetRole role){
         ArrayList<String> failed=new ArrayList<>(),suggestions=new ArrayList<>();
         ArrayList<EditorialRepository.AssetSnapshot> projectDefaults=new ArrayList<>();
         for(Uri selected:selectedDocumentUris(data))try{
             FileUtil.takePersistable(this,selected,takeFlags,true,false);
             String name=FileUtil.displayName(this,selected),content=FileUtil.readText(this,selected);
             LibraryImportPlanner.Source source=new LibraryImportPlanner.Source(name,content);
-            boolean valid=role==EditorialWorkflowV5.AssetRole.GLOSSARY
+            boolean valid=role==EditorialSafe4Workflow.AssetRole.GLOSSARY
                     ?!LibraryImportPlanner.glossaries(java.util.Collections.singletonList(source)).imported.isEmpty()
                     :!LibraryImportPlanner.pronouns(java.util.Collections.singletonList(source)).imported.isEmpty();
-            if(!valid)throw new IllegalArgumentException(role==EditorialWorkflowV5.AssetRole.GLOSSARY?"không có cặp thuật ngữ hợp lệ":"không có quy tắc đại từ hợp lệ");
+            if(!valid)throw new IllegalArgumentException(role==EditorialSafe4Workflow.AssetRole.GLOSSARY?"không có cặp thuật ngữ hợp lệ":"không có quy tắc đại từ hợp lệ");
             EditorialImportPlanner.Source candidate=new EditorialImportPlanner.Source(name,selected.toString(),content);
             if(EditorialImportPlanner.hasChapterNumber(name)){
-                Map<Long,Map<String,EditorialImportPlanner.Source>> target=role==EditorialWorkflowV5.AssetRole.GLOSSARY?pendingEditorialGlossaryOverrides:pendingEditorialPronounOverrides;
+                Map<Long,Map<String,EditorialImportPlanner.Source>> target=role==EditorialSafe4Workflow.AssetRole.GLOSSARY?pendingEditorialGlossaryOverrides:pendingEditorialPronounOverrides;
                 Map<String,EditorialImportPlanner.Source> byChapter=target.get(projectId);
                 if(byChapter==null){byChapter=new HashMap<>();target.put(projectId,byChapter);}
                 String chapterKey=EditorialImportPlanner.chapterKeyOf(name);byChapter.put(chapterKey,candidate);
@@ -963,9 +953,9 @@ public class MainActivity extends Activity {
                 }).setNegativeButton("Không lưu",(d,w)->finishEditorialReferenceImport(projectId,role,0,suggestions,failed)).show();
     }
 
-    private void finishEditorialReferenceImport(long projectId,EditorialWorkflowV5.AssetRole role,int imported,List<String> suggestions,List<String> failed){
+    private void finishEditorialReferenceImport(long projectId,EditorialSafe4Workflow.AssetRole role,int imported,List<String> suggestions,List<String> failed){
         invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");
-        if(imported>0)toast("Đã lưu "+imported+" project default "+(role==EditorialWorkflowV5.AssetRole.GLOSSARY?"Glossary":"Pronoun"));
+        if(imported>0)toast("Đã lưu "+imported+" project default "+(role==EditorialSafe4Workflow.AssetRole.GLOSSARY?"Glossary":"Pronoun"));
         else if(!suggestions.isEmpty())toast("Đã ghi nhận chapter override đề xuất");
         ArrayList<String> messages=new ArrayList<>();messages.addAll(suggestions);messages.addAll(failed);
         if(!messages.isEmpty())showResult("Editorial reference mapping",namesSummary(messages));
@@ -978,39 +968,14 @@ public class MainActivity extends Activity {
     void persistEditorialBatch(long projectId, EditorialImportPlanner.Result plan) {
         int saved=0; ArrayList<String> failed=new ArrayList<>(); try(EditorialRepository repo=new EditorialRepository(this)) {
             for(EditorialImportPlanner.ChapterPlan chapter:plan.chapters) if(chapter.ready()) try {
-                if(chapter.glossary==null||chapter.pronoun==null)throw new IllegalStateException("Glossary/Pronoun chưa có nguồn rõ ràng");
-                ArrayList<EditorialRepository.AssetSnapshot> assets=new ArrayList<>(); assets.add(editorialAsset(EditorialWorkflowV5.AssetRole.RAW,chapter.raw)); assets.add(editorialAsset(EditorialWorkflowV5.AssetRole.DRAFT,chapter.draft)); assets.add(editorialAsset(EditorialWorkflowV5.AssetRole.GLOSSARY,chapter.glossary)); assets.add(editorialAsset(EditorialWorkflowV5.AssetRole.PRONOUN,chapter.pronoun)); repo.createChapter(projectId,chapter.key,chapter.key,assets); saved++;
+                if(chapter.glossary==null)throw new IllegalStateException("Glossary chưa có nguồn rõ ràng");
+                ArrayList<EditorialRepository.AssetSnapshot> assets=new ArrayList<>(); assets.add(editorialAsset(EditorialSafe4Workflow.AssetRole.RAW,chapter.raw)); assets.add(editorialAsset(EditorialSafe4Workflow.AssetRole.DRAFT,chapter.draft)); assets.add(editorialAsset(EditorialSafe4Workflow.AssetRole.GLOSSARY,chapter.glossary)); if(chapter.pronoun!=null)assets.add(editorialAsset(EditorialSafe4Workflow.AssetRole.PRONOUN,chapter.pronoun)); repo.createChapter(projectId,chapter.key,chapter.key,assets); saved++;
             } catch(Exception error){failed.add(chapter.key+": "+error.getMessage());}
         } catch(Exception error){failed.add(error.getMessage());}
         if(saved>0){pendingEditorialRaw.remove(projectId);pendingEditorialDraft.remove(projectId);pendingEditorialGlossaryOverrides.remove(projectId);pendingEditorialPronounOverrides.remove(projectId);}invalidatePage("Editorial");switchTab("Editorial");toast("Đã lưu "+saved+" chapter"+(failed.isEmpty()?"":"; lỗi "+failed.size()));if(!failed.isEmpty())showResult("Editorial import",namesSummary(failed));
     }
-    EditorialRepository.AssetSnapshot editorialAsset(EditorialWorkflowV5.AssetRole role, EditorialImportPlanner.Source source) { return new EditorialRepository.AssetSnapshot(role,source.uri,source.name,source.content); }
+    EditorialRepository.AssetSnapshot editorialAsset(EditorialSafe4Workflow.AssetRole role, EditorialImportPlanner.Source source) { return new EditorialRepository.AssetSnapshot(role,source.uri,source.name,source.content); }
     EditorialImportPlanner.Source editorialSource(EditorialRepository.AssetSnapshot source) { return source==null?null:new EditorialImportPlanner.Source(source.displayName,source.sourceUri,source.content); }
-
-    void confirmRunEditorialL1(long chapterId) {
-        new AlertDialog.Builder(this).setTitle("Chạy L1 audit?").setMessage("L1 chỉ audit RAW–DRAFT, không sửa bản dịch. App sẽ tạo context mới, lưu RAW map/report/gate và dùng model đang chọn.").setPositiveButton("Chạy L1",(d,w)->runEditorialL1(chapterId)).setNegativeButton("Hủy",null).show();
-    }
-    void runEditorialL1(long chapterId) {
-        toast("Đang chạy L1 audit…"); preflightExecutor.submit(()->{try(EditorialRepository repo=new EditorialRepository(this)){EditorialL1Runner.Result result=new EditorialL1Runner(repo).run(chapterId,SettingsStore.load(this));runOnUiThread(()->{invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");showResult("REPORT_L1 ready",preview(result.report,6000));});}catch(Exception error){runOnUiThread(()->showResult("L1 audit failed",AppValidator.readableError(error)));}});
-    }
-    void showEditorialL1Report(long chapterId,String chapterKey) { try(EditorialRepository repo=new EditorialRepository(this)){String report=repo.latestEvidenceForChapter(chapterId,"REPORT_L1_TEXT");if(report.trim().isEmpty()){toast("Chưa có REPORT_L1 hợp lệ");return;}new AlertDialog.Builder(this).setTitle(chapterKey+" • REPORT_L1").setMessage(report).setPositiveButton("Export TXT",(d,w)->exportEditorialL1(report,chapterKey+"_REPORT_L1.txt")).setNegativeButton("Đóng",null).show();} }
-    void confirmRunEditorialL2(long chapterId){new AlertDialog.Builder(this).setTitle("Chạy L2 RAW-first?").setMessage("App dựng và khóa Scene Ledger chỉ từ RAW trước. Chỉ khi ledger hợp lệ, context mới mới được mở DRAFT và REPORT_L1.").setPositiveButton("Chạy L2",(d,w)->runEditorialL2(chapterId)).setNegativeButton("Hủy",null).show();}
-    void runEditorialL2(long chapterId){toast("Đang dựng RAW ledger cho L2…");preflightExecutor.submit(()->{try(EditorialRepository repo=new EditorialRepository(this)){EditorialL2Runner.Result result=new EditorialL2Runner(repo).run(chapterId,SettingsStore.load(this));runOnUiThread(()->{invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");showResult("VI_L2 ready",preview(result.output,6000));});}catch(Exception error){runOnUiThread(()->{invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");showResult("L2 failed",AppValidator.readableError(error));});}});}
-    void showEditorialL2(long chapterId,String chapterKey){try(EditorialRepository repo=new EditorialRepository(this)){String output=repo.latestEvidenceForChapter(chapterId,"VI_L2_TEXT");if(output.trim().isEmpty()){toast("Chưa có VI_L2 hợp lệ");return;}String draft="";for(EditorialRepository.AssetSnapshot x:repo.chapterAssets(chapterId))if(x.role==EditorialWorkflowV5.AssetRole.DRAFT)draft=x.content;String diff=EditorialTextDiff.render(draft,output,80);new AlertDialog.Builder(this).setTitle(chapterKey+" • DRAFT → VI_L2").setMessage(diff).setPositiveButton("Export VI_L2",(d,w)->exportEditorialL1(output,chapterKey+"_VI_L2.txt")).setNeutralButton("Xem VI_L2",(d,w)->showResult(chapterKey+" • VI_L2",preview(output,12000))).setNegativeButton("Đóng",null).show();}}
-    void confirmRetryEditorialL2(long chapterId,String failure){new AlertDialog.Builder(this).setTitle("Retry L2 scene lỗi?").setMessage(preview(failure,2000)+"\n\nCác RAW/edit scene đã CLOSED sẽ được dùng lại; app chỉ gọi lại checkpoint chưa hợp lệ.").setPositiveButton("Retry L2",(d,w)->retryEditorialL2(chapterId)).setNegativeButton("Hủy",null).show();}
-    void retryEditorialL2(long chapterId){toast("Đang retry checkpoint L2…");preflightExecutor.submit(()->{try(EditorialRepository repo=new EditorialRepository(this)){EditorialL2Runner.Result result=new EditorialL2Runner(repo).retry(chapterId,SettingsStore.load(this));runOnUiThread(()->{invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");showResult("VI_L2 ready",preview(result.output,6000));});}catch(Exception error){runOnUiThread(()->{invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");showResult("L2 retry failed",AppValidator.readableError(error));});}});}
-    void confirmRunEditorialL3(long chapterId){new AlertDialog.Builder(this).setTitle("Chạy L3 độc lập?").setMessage("Context đầu tiên chỉ nhận RAW và VI_L2; REPORT_L1 bị khóa. Chỉ sau khi ledger và đối chiếu độc lập CLOSED, app mới tạo context thứ hai để mở REPORT_L1.").setPositiveButton("Chạy L3",(d,w)->runEditorialL3(chapterId)).setNegativeButton("Hủy",null).show();}
-    void runEditorialL3(long chapterId){toast("Đang chạy L3 độc lập…");preflightExecutor.submit(()->{try(EditorialRepository repo=new EditorialRepository(this)){EditorialL3Runner.Result result=new EditorialL3Runner(repo).run(chapterId,SettingsStore.load(this));runOnUiThread(()->{invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");showResult("FINAL_QA ready",preview(result.output,6000));});}catch(Exception error){runOnUiThread(()->{invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");showResult("L3 failed",AppValidator.readableError(error));});}});}
-    void showEditorialL3(long chapterId,String chapterKey){try(EditorialRepository repo=new EditorialRepository(this)){String output=repo.latestEvidenceForChapter(chapterId,"FINAL_QA_TEXT");if(output.trim().isEmpty()){toast("Chưa có FINAL_QA hợp lệ");return;}new AlertDialog.Builder(this).setTitle(chapterKey+" • FINAL_QA").setMessage(output).setPositiveButton("Export TXT",(d,w)->exportEditorialL1(output,chapterKey+"_FINAL_QA.txt")).setNegativeButton("Đóng",null).show();}}
-    void confirmRetryEditorialL3(long chapterId,String failure){new AlertDialog.Builder(this).setTitle("Retry L3 scene lỗi?").setMessage(preview(failure,2000)+"\n\nIndependent/final scene và voice audit đã CLOSED sẽ được dùng lại; app chỉ gọi lại checkpoint chưa hợp lệ.").setPositiveButton("Retry L3",(d,w)->retryEditorialL3(chapterId)).setNegativeButton("Hủy",null).show();}
-    void retryEditorialL3(long chapterId){toast("Đang retry checkpoint L3…");preflightExecutor.submit(()->{try(EditorialRepository repo=new EditorialRepository(this)){EditorialL3Runner.Result result=new EditorialL3Runner(repo).retry(chapterId,SettingsStore.load(this));runOnUiThread(()->{invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");showResult("FINAL_QA ready",preview(result.output,6000));});}catch(Exception error){runOnUiThread(()->{invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");showResult("L3 retry failed",AppValidator.readableError(error));});}});}
-    void confirmReleaseEditorial(long chapterId,String chapterKey){try(EditorialRepository repo=new EditorialRepository(this)){EditorialRepository.Chapter chapter=repo.getChapter(chapterId);EditorialRepository.Project project=chapter==null?null:repo.getProject(chapter.projectId);Uri folder=project==null||project.outputTreeUri.isEmpty()?null:Uri.parse(project.outputTreeUri);String folderError=folder==null?"not selected":FileUtil.validateTreeWritable(this,folder,"Editorial release folder");AlertDialog.Builder dialog=new AlertDialog.Builder(this).setTitle("Release "+chapterKey+"?").setMessage(folderError==null?"ZIP đã che dữ liệu sẽ được lưu thẳng vào thư mục mặc định: "+FileUtil.treeName(folder)+". Chương chỉ chuyển sang RELEASED sau khi ghi thành công.":"App sẽ kiểm tra lại gate và tạo ZIP đã che dữ liệu. Android có thể mở lại thư mục dùng gần nhất; hãy kiểm tra vị trí trước khi bấm Save. Back/Hủy không đổi trạng thái chapter.").setNegativeButton("Hủy",null);if(folderError==null)dialog.setPositiveButton("Release vào thư mục",(d,w)->releaseEditorialToFolder(chapterId,chapterKey,folder)).setNeutralButton("Chọn nơi khác",(d,w)->prepareEditorialRelease(chapterId,chapterKey));else dialog.setPositiveButton("Chọn nơi lưu ZIP",(d,w)->prepareEditorialRelease(chapterId,chapterKey)).setNeutralButton("Đặt thư mục mặc định",(d,w)->{if(project!=null)chooseEditorialReleaseFolder(project.id);});dialog.show();}catch(Exception error){showResult("Không thể release",AppValidator.readableError(error));}}
-    void releaseEditorialToFolder(long chapterId,String chapterKey,Uri folder){toast("Đang tạo release bundle…");preflightExecutor.submit(()->{try(EditorialRepository repo=new EditorialRepository(this)){EditorialReleaseBundle.Result result=EditorialReleaseBundle.build(repo,chapterId,System.currentTimeMillis());long runId=repo.latestRunId(chapterId,"L3");Uri output=FileUtil.createArchiveInTree(this,folder,chapterKey+"_RELEASE.zip");FileUtil.writeBytes(this,output,result.zip);repo.recordRelease(chapterId,runId,result.manifest,result.sha256);runOnUiThread(()->{toast("Đã release vào "+FileUtil.treeName(folder));appendLog("Editorial release bundle: "+output+" sha256="+result.sha256);invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");});}catch(Exception error){runOnUiThread(()->showResult("Release chưa hoàn tất",AppValidator.readableError(error)));}});}
-    void prepareEditorialRelease(long chapterId,String chapterKey){try(EditorialRepository repo=new EditorialRepository(this)){EditorialReleaseBundle.Result result=EditorialReleaseBundle.build(repo,chapterId,System.currentTimeMillis());pendingEditorialReleaseChapterId=chapterId;pendingEditorialReleaseRunId=repo.latestRunId(chapterId,"L3");pendingEditorialReleaseBundle=result.zip;pendingEditorialReleaseManifest=result.manifest;pendingEditorialReleaseHash=result.sha256;Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT);intent.addCategory(Intent.CATEGORY_OPENABLE);intent.setType("application/zip");intent.putExtra(Intent.EXTRA_TITLE,chapterKey+"_RELEASE.zip");intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);startActivityForResult(intent,REQ_EDITORIAL_RELEASE);}catch(Exception error){clearPendingEditorialRelease();showResult("Không thể release",AppValidator.readableError(error));}}
-    void clearPendingEditorialRelease(){pendingEditorialReleaseChapterId=-1L;pendingEditorialReleaseRunId=-1L;pendingEditorialReleaseBundle=new byte[0];pendingEditorialReleaseManifest="";pendingEditorialReleaseHash="";}
-    void exportEditorialL1(String report,String name){pendingEditorialReportText=report;pendingEditorialReportName=name;Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT);intent.addCategory(Intent.CATEGORY_OPENABLE);intent.setType("text/plain");intent.putExtra(Intent.EXTRA_TITLE,name);intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);startActivityForResult(intent,REQ_EXPORT_REPORT_L1);}
-    void confirmRetryEditorialL1(long chapterId,String failure){new AlertDialog.Builder(this).setTitle("Retry scene L1?").setMessage((failure==null||failure.trim().isEmpty()?"Checkpoint lỗi sẽ được mở lại.":failure)+"\n\nCác scene đã CLOSED sẽ được tái sử dụng; app chỉ gọi lại scene chưa hợp lệ.").setPositiveButton("Retry",(d,w)->retryEditorialL1(chapterId)).setNegativeButton("Hủy",null).show();}
-    void retryEditorialL1(long chapterId){toast("Đang retry scene L1…");preflightExecutor.submit(()->{try(EditorialRepository repo=new EditorialRepository(this)){EditorialL1Runner.Result result=new EditorialL1Runner(repo).retryFailedScene(chapterId,SettingsStore.load(this));runOnUiThread(()->{invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");showResult("REPORT_L1 ready",preview(result.report,6000));});}catch(Exception error){runOnUiThread(()->{invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");showResult("L1 retry failed",AppValidator.readableError(error));});}});}
 
     void replacePronoun(PronounStore.Profile profile){if(profile==null)return;pendingPronounReplaceId=profile.id;choosePronoun();}
 
@@ -1205,8 +1170,6 @@ public class MainActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode != RESULT_OK || data == null) {
             if (requestCode == REQ_PRONOUN) pendingPronounReplaceId = "";
-            if (requestCode == REQ_EDITORIAL_RELEASE) clearPendingEditorialRelease();
-            if (requestCode == REQ_EDITORIAL_RELEASE_TREE) pendingEditorialReleaseTreeProjectId=-1L;
             if (requestCode == REQ_EDITORIAL_REFERENCE) { pendingEditorialReferenceProjectId=-1L; pendingEditorialReferenceRole=null; }
             if(requestCode==REQ_EDITORIAL_BATCH||requestCode==REQ_EDITORIAL_DRAFT||requestCode==REQ_EDITORIAL_BUNDLE)pendingEditorialProjectId=-1L;
             return;
@@ -1339,11 +1302,7 @@ public class MainActivity extends Activity {
                 appendLog("Export job report #" + jobId + ": " + FileUtil.displayName(this, uri));
                 pendingExportJobId = -1L;
             } catch (Exception e) { toast("Lỗi export job report"); appendLog("Lỗi export job report: " + e.getMessage()); }
-        } else if (requestCode == REQ_EXPORT_REPORT_L1) {
-            try { FileUtil.writeText(this,uri,pendingEditorialReportText);toast("Đã export "+pendingEditorialReportName);appendLog("Export REPORT_L1: "+pendingEditorialReportName); } catch(Exception e){toast("Lỗi export REPORT_L1");appendLog("Export REPORT_L1 failed: "+e.getMessage());} finally {pendingEditorialReportText="";pendingEditorialReportName="REPORT_L1.txt";}
-        } else if(requestCode==REQ_EDITORIAL_RELEASE){try{FileUtil.writeBytes(this,uri,pendingEditorialReleaseBundle);try(EditorialRepository repo=new EditorialRepository(this)){repo.recordRelease(pendingEditorialReleaseChapterId,pendingEditorialReleaseRunId,pendingEditorialReleaseManifest,pendingEditorialReleaseHash);}toast("Đã release chapter");appendLog("Editorial release bundle: "+FileUtil.displayName(this,uri)+" sha256="+pendingEditorialReleaseHash);invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");}catch(Exception e){toast("Release chưa hoàn tất");appendLog("Editorial release failed: "+e.getMessage());showResult("Release chưa hoàn tất",AppValidator.readableError(e));}finally{clearPendingEditorialRelease();}
-        } else if(requestCode==REQ_EDITORIAL_RELEASE_TREE){long projectId=pendingEditorialReleaseTreeProjectId;pendingEditorialReleaseTreeProjectId=-1L;try{FileUtil.takePersistable(this,uri,takeFlags,true,true);String problem=FileUtil.validateTreeWritable(this,uri,"Editorial release folder");if(problem!=null)throw new IllegalStateException(problem);try(EditorialRepository repo=new EditorialRepository(this)){repo.updateProjectOutputTree(projectId,uri.toString());}toast("Đã đặt thư mục Release: "+FileUtil.treeName(uri));invalidatePage("Editorial");if("Editorial".equals(currentTab))switchTab("Editorial");}catch(Exception e){showResult("Không lưu được thư mục Release",AppValidator.readableError(e));}
-        } else if(requestCode==REQ_EDITORIAL_REFERENCE){long projectId=pendingEditorialReferenceProjectId;EditorialWorkflowV5.AssetRole role=pendingEditorialReferenceRole;pendingEditorialReferenceProjectId=-1L;pendingEditorialReferenceRole=null;importEditorialReferences(data,takeFlags,projectId,role);
+        } else if(requestCode==REQ_EDITORIAL_REFERENCE){long projectId=pendingEditorialReferenceProjectId;EditorialSafe4Workflow.AssetRole role=pendingEditorialReferenceRole;pendingEditorialReferenceProjectId=-1L;pendingEditorialReferenceRole=null;importEditorialReferences(data,takeFlags,projectId,role);
         } else if (requestCode == REQ_IMPORT_PROFILE) {
             try {
                 FileUtil.takePersistable(this, uri, takeFlags, true, false);

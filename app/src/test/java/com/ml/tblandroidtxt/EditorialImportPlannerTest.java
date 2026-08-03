@@ -54,7 +54,7 @@ public class EditorialImportPlannerTest {
         assertEquals("RAW and DRAFT use the same file",result.chapters.get(0).problem);
     }
 
-    @Test public void fourRoleBundleKeeps005006007ReferencesWithTheirOwnChapter() {
+    @Test public void safe4BundleKeeps005006007ReferencesWithTheirOwnChapter() {
         EditorialImportPlanner.Result result=EditorialImportPlanner.planBundle(Arrays.asList(
                 new EditorialImportPlanner.Source("005_RAW_MERCEDES_VOL3.txt","raw-005","raw005"),
                 new EditorialImportPlanner.Source("005_RAW_MERCEDES_VOL3 (Vietnamese).txt","draft-005","draft005"),
@@ -83,7 +83,7 @@ public class EditorialImportPlannerTest {
         assertEquals("pronoun-007",result.chapters.get(2).pronoun.uri);
     }
 
-    @Test public void bundleRequiresAllFourRolesAndMarksDuplicateAsNeedsReview() {
+    @Test public void bundleRejectsDuplicateRequiredRole() {
         EditorialImportPlanner.Result result=EditorialImportPlanner.planBundle(Arrays.asList(
                 new EditorialImportPlanner.Source("005_RAW.txt","raw","r"),
                 new EditorialImportPlanner.Source("005_DRAFT.txt","draft","d"),
@@ -94,6 +94,17 @@ public class EditorialImportPlannerTest {
         assertEquals(0,result.readyCount());
         assertTrue(result.chapters.get(0).problem.contains("multiple GLOSSARY files"));
         assertEquals(EditorialImportPlanner.ChapterPlan.Status.NEEDS_REVIEW,result.chapters.get(0).status());
+    }
+
+    @Test public void safe4BundleAcceptsPronounNone() {
+        EditorialImportPlanner.Result result=EditorialImportPlanner.planBundle(Arrays.asList(
+                new EditorialImportPlanner.Source("008_RAW.txt","raw","r"),
+                new EditorialImportPlanner.Source("008_DRAFT.txt","draft","d"),
+                new EditorialImportPlanner.Source("008_FINAL_GLOSSARY.csv","g","g")));
+
+        assertEquals(1,result.readyCount());
+        assertEquals(EditorialSafe4Workflow.PronounStatus.NONE,result.chapters.get(0).pronounStatus());
+        assertNull(result.chapters.get(0).pronoun);
     }
 
     @Test public void unclearRoleOrChapterIsUnassignedAndCannotBecomeReady() {

@@ -8,23 +8,23 @@ import java.util.Set;
 /** Snapshot checks used before an editorial run starts; URIs are persisted later by the repository. */
 public final class EditorialAssetManifest {
     public static class Asset {
-        public final EditorialWorkflowV5.AssetRole role;
+        public final EditorialSafe4Workflow.AssetRole role;
         public final String sha256;
 
-        public Asset(EditorialWorkflowV5.AssetRole role, String sha256) {
+        public Asset(EditorialSafe4Workflow.AssetRole role, String sha256) {
             this.role = role;
             this.sha256 = sha256 == null ? "" : sha256;
         }
     }
 
-    public static String validateUniqueRequired(List<Asset> assets, Set<EditorialWorkflowV5.AssetRole> required) {
+    public static String validateUniqueRequired(List<Asset> assets, Set<EditorialSafe4Workflow.AssetRole> required) {
         if (assets == null) return "Missing asset manifest";
-        Set<EditorialWorkflowV5.AssetRole> seen = EnumSet.noneOf(EditorialWorkflowV5.AssetRole.class);
+        Set<EditorialSafe4Workflow.AssetRole> seen = EnumSet.noneOf(EditorialSafe4Workflow.AssetRole.class);
         for (Asset asset : assets) {
             if (asset == null || asset.role == null || asset.sha256.trim().isEmpty()) return "Asset role or checksum is missing";
             if (!seen.add(asset.role)) return "Ambiguous duplicate asset role: " + asset.role;
         }
-        for (EditorialWorkflowV5.AssetRole role : required) if (!seen.contains(role)) return "Missing required asset: " + role;
+        for (EditorialSafe4Workflow.AssetRole role : required) if (!seen.contains(role)) return "Missing required asset: " + role;
         return null;
     }
 
