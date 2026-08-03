@@ -99,6 +99,13 @@ BLOCKED_CONTRACT_REVIEW
 The code86 bytes must remain a separate historical identity. The external
 bytes must not overwrite or reuse the same `(packId, version)` identity.
 
+At final G2-A verification on `2026-08-03 17:17 +07:00`, the external Prompt
+path had changed again to `5072` bytes and SHA-256
+`3B2FCC0A8B684B851F8F6180D41DBE8C75E00CDB5BED217C3FB7A50E94437B04`. The
+previously observed/user-declared `DBE214...` identity is therefore not proof
+of the current external bytes. Both identities remain UNIDENTIFIED/BLOCKED;
+neither is imported into the official registry or treated as code86.
+
 ### 2.2 Source hardcode and coupling inventory
 
 This inventory is based on source at `HEAD`

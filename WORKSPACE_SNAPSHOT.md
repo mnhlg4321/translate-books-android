@@ -3,7 +3,7 @@
 - Snapshot updated: `2026-08-03` (Editorial Pack Platform G2-A implemented; G2-B awaits approval; V5 executable core remains retired; SAFE4 foundation/code86 remains the accepted build)
 - Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.24`/code86 is the latest accepted unreleased SAFE4-foundation build. Editorial execution remains intentionally blocked.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `9d401b2` (G2-A implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current commit: `17d2c5e` (G2-A implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
 - Current build: `artifacts/builds/v4.16-dev.24/build-20260803-165452/TranslateBooks-v4.16-dev.24-code86.apk`, SHA-256 `6C3EEF7350B3D1C24BE9D65B0E906D2042CE281556235E783F8DBE4962F37875`; matching five-file payload is under `backup/builds/v4.16-dev.24/build-20260803-165452/`. Source ZIP SHA-256 is `9CCE4C99955E700FAA5EB6E2AF7153A51211A2130AF7A4E939F97CBB24A0D9F1`; mirror parity, both manifests, 144 JVM tests, lint 0 errors/53 warnings and exact SAFE4 hashes inside the ZIP pass. Code86 was not installed. The released v4.15/code62 archive remains unchanged.
 
 ## Completed tasks
@@ -178,6 +178,7 @@
 - Built and accepted `4.16-dev.24`/code86 from `ab8e78a` under event `build-20260803-165452`. Artifact/backup parity and manifests pass; 144 JVM tests and lint 0 errors/53 warnings pass; source ZIP reproduces the external SAFE4 sizes/hashes exactly. Installation was not requested.
 - Completed Phase 1 source audit and saved `EDITORIAL_PACK_PLATFORM_PLAN.md` as the proposed contract-first, multi-pack, fail-closed architecture. G2-A now adds only the isolated JVM manifest/integrity/compatibility/read-only registry slice; no retired V5 execution component was restored.
 - Rechecked the external SAFE4 source folder during Editorial Pack research. Project Instruction and Workflow still match code86, but the external Prompt is now 5,040 bytes/SHA-256 `DBE214D842D98FD76AFD2E700747FCC2CF3D5B6038134B38EA8F220FED3BF273`, while code86/source ZIP retains 5,008 bytes/SHA-256 `0B4C02573F46A91528A63262D3E52C655A5C7E31F2ABBBFB01759D38E94F8E81`. The added L2 `PRONOUN_STATUS: LEGACY_REJECTED` line may change phase policy, so the external bytes are BLOCKED pending a distinct version, canonical manifest and contract review; no old build evidence applies to them.
+- Final G2-A recheck found the external Prompt path changed again to 5,072 bytes/SHA-256 `3B2FCC0A8B684B851F8F6180D41DBE8C75E00CDB5BED217C3FB7A50E94437B04`. The earlier `DBE214...` candidate identity is not assumed to describe these current bytes; both remain UNIDENTIFIED/BLOCKED and outside the official registry.
 
 ## Pending tasks
 
@@ -191,7 +192,7 @@
 
 ## Known bugs
 
-- The current external SAFE4 folder no longer matches the exact code86/source-ZIP Prompt bytes and has no canonical Editorial Pack manifest. It must not be classified as DATA_COMPATIBLE or certified under the old SAFE4 identity until its new version and contract policy are reviewed.
+- The current external SAFE4 folder no longer matches the exact code86/source-ZIP Prompt bytes, changed during this session, and has no canonical Editorial Pack manifest. Its observed current hash `3B2FCC...` and earlier `DBE214...` identity must not be classified as DATA_COMPATIBLE or certified under the old SAFE4 identity until separately versioned and reviewed.
 - SAFE4 model execution and Editorial release remain intentionally blocked; G2-A is not connected to the Android execution path and does not certify any pack. This is a safety blocker, not a completed feature.
 - The installed/archived code84 APK still contains the retired V5 engine. It must not be used to create or certify SAFE4 output.
 - Code85 is rejected even though its APK pack guard passed: the retained source ZIP changed SAFE4 line endings and therefore failed exact-source reproducibility. Both payload copies are intentionally retained, not overwritten.
