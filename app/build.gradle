@@ -64,6 +64,7 @@ gradle.taskGraph.whenReady { graph ->
 }
 
 dependencies {
+    implementation project(':editorial-engine')
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     benchmarkImplementation 'androidx.profileinstaller:profileinstaller:1.4.1'
     testImplementation 'junit:junit:4.13.2'

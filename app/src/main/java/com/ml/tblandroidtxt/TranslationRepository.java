@@ -11,9 +11,12 @@ import java.util.List;
 
 public class TranslationRepository extends SQLiteOpenHelper {
     private static final String DB = "tbl_android_txt.db";
-    private static final int VER = 13;
+    private static final int VER = 14;
 
-    public TranslationRepository(Context context) { super(context, DB, null, VER); }
+    public TranslationRepository(Context context) { this(context, DB); }
+
+    /** Package-private database-name seam used by isolated migration/import tests. */
+    TranslationRepository(Context context, String databaseName) { super(context, databaseName, null, VER); }
 
     @Override public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE jobs (id INTEGER PRIMARY KEY AUTOINCREMENT, input_uri TEXT, output_uri TEXT, file_name TEXT, source_language TEXT, target_language TEXT, status TEXT, created_at INTEGER, updated_at INTEGER, settings TEXT, input_hash TEXT, settings_hash TEXT, integrity_status TEXT, output_hash TEXT, config_revision INTEGER, app_version TEXT, completed_at INTEGER, prepared_batch_id TEXT DEFAULT '', prepared_input_ordinal INTEGER DEFAULT -1, start_session_id TEXT DEFAULT '')");
@@ -24,6 +27,12 @@ public class TranslationRepository extends SQLiteOpenHelper {
         createBenchmarkTables(db);
         createPreparedPlanTables(db);
         createEditorialTables(db);
+        createEditorialPackTables(db);
+    }
+
+    @Override public void onConfigure(SQLiteDatabase db) {
+        super.onConfigure(db);
+        db.setForeignKeyConstraintsEnabled(true);
     }
 
     @Override public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -71,6 +80,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
         if (oldVersion < 11) createEditorialTables(db);
         if (oldVersion < 12) createEditorialProjectAssets(db);
         if (oldVersion < 13) createEditorialReferenceProfiles(db);
+        if (oldVersion < 14) createEditorialPackTables(db);
     }
 
     private static void safeExec(SQLiteDatabase db, String sql) { try { db.execSQL(sql); } catch (Exception ignored) {} }
@@ -94,6 +104,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
     }
     private static void createEditorialProjectAssets(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from11To12())safeExec(db,sql);}
     private static void createEditorialReferenceProfiles(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from12To13())safeExec(db,sql);}
+    private static void createEditorialPackTables(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from13To14())db.execSQL(sql);}
 
     SQLiteDatabase editorialWritableDatabase() { return getWritableDatabase(); }
     SQLiteDatabase editorialReadableDatabase() { return getReadableDatabase(); }
