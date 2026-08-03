@@ -167,7 +167,9 @@ public final class EditorialPackImportService {
                 }
             }
             try (var paths = Files.list(storage.stagingRoot())) {
-                for (Path path : paths.toList()) {
+                var iterator = paths.iterator();
+                while (iterator.hasNext()) {
+                    Path path = iterator.next();
                     String importId = path.getFileName().toString();
                     if (!EditorialPackStorageLayout.isImportId(importId) || !storage.isOwnedStagingDirectory(path, importId)) continue;
                     if (!importRowExists(importId)) {
@@ -176,7 +178,9 @@ public final class EditorialPackImportService {
                 }
             }
             try (var paths = Files.list(storage.immutableRoot())) {
-                for (Path path : paths.toList()) {
+                var iterator = paths.iterator();
+                while (iterator.hasNext()) {
+                    Path path = iterator.next();
                     String hash = path.getFileName().toString();
                     if (EditorialPackStorageLayout.isCanonicalHash(hash) && storage.hasImmutableMarker(hash) && existingHash(hash) == null) retainedUnknownStorage++;
                 }
