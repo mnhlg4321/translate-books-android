@@ -10,6 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /** Immutable, parsed manifest. It contains declarations only and no executable hooks. */
@@ -27,14 +28,20 @@ public final class EditorialPackManifest {
     private final List<FileEntry> fileEntries;
     private final Set<String> requiredCapabilities;
     private final String machineContractFingerprint;
+    private final EditorialPackRegistryMetadata registryMetadata;
 
     private EditorialPackManifest(Map<String, Object> root) {
+        this(root, null);
+    }
+
+    private EditorialPackManifest(Map<String, Object> root, EditorialPackRegistryMetadata registryMetadata) {
         this.root = EditorialCanonicalJson.freezeObject(root);
         this.fileEntries = parseFileEntries(this.root.get("fileRoles"));
         this.requiredCapabilities = parseStringSet(this.root.get("requiredCapabilities"), "requiredCapabilities", true);
         this.machineContractFingerprint = EditorialCanonicalJson.sha256Hex(
                 EditorialCanonicalJson.canonicalize(machineContractObject(this.root))
                         .getBytes(StandardCharsets.UTF_8));
+        this.registryMetadata = registryMetadata;
     }
 
     public static EditorialPackManifest parse(byte[] manifestBytes) {
@@ -72,6 +79,10 @@ public final class EditorialPackManifest {
         return EditorialPronounPolicy.valueOf(status);
     }
     public String machineContractFingerprint() { return machineContractFingerprint; }
+    public Optional<EditorialPackRegistryMetadata> registryMetadata() { return Optional.ofNullable(registryMetadata); }
+    public EditorialPackManifest withRegistryMetadata(EditorialPackRegistryMetadata metadata) {
+        return new EditorialPackManifest(root, metadata);
+    }
     public String canonicalJson() { return EditorialCanonicalJson.canonicalize(root); }
     public String canonicalJsonWithoutPackHash() {
         LinkedHashMap<String, Object> without = new LinkedHashMap<>(root);
