@@ -17,18 +17,18 @@
 
 ## Current development build
 
-- versionName: `4.16-dev.24`
-- versionCode: `86`
-- event: `build-20260803-165452`
+- versionName: `4.16-dev.25`
+- versionCode: `87`
+- event: `build-20260803-182447`
 - branch: `feature/v4.16`
-- source commit: `ab8e78abeeb0fa6264ac8a7b0dea2e436cd39d90`
-- APK: `artifacts/builds/v4.16-dev.24/build-20260803-165452/TranslateBooks-v4.16-dev.24-code86.apk`
-- immutable local mirror: `backup/builds/v4.16-dev.24/build-20260803-165452/`
-- APK SHA-256: `6C3EEF7350B3D1C24BE9D65B0E906D2042CE281556235E783F8DBE4962F37875`
-- source ZIP SHA-256: `9CCE4C99955E700FAA5EB6E2AF7153A51211A2130AF7A4E939F97CBB24A0D9F1`
-- regression: `scripts/build-and-save.ps1 -Series 4.16-dev` completed successfully; 144 JVM tests passed with 0 failures/errors/skips and Android Lint completed with 53 warnings/0 errors. Both five-file payloads and all four manifest entries match. The source ZIP reproduces the exact three required SAFE4 file sizes and SHA-256 values.
-- device state: installation was not requested for code86. No ADB device was available during the rejected code85 optional-install attempt. The previously installed code84 contains the retired V5 engine and must not be used for SAFE4 QA.
-- scope: SAFE4 pack integrity, project binding, legacy read-only handling and blocked input preparation are implemented. Exact lineage/schema, evidence-derived gates, SAFE4 L1–L3, release receipts, Golden Replay, manual device QA and all v4.16 RC gates remain open. This is not a completed v4.16 release.
+- source commit: `dd25e341c9018c5e9c4a0192ef3a2b676afabd7a`
+- APK: `artifacts/builds/v4.16-dev.25/build-20260803-182447/TranslateBooks-v4.16-dev.25-code87.apk`
+- immutable local mirror: `backup/builds/v4.16-dev.25/build-20260803-182447/`
+- APK SHA-256: `E6A76B6BBDF4DF591F01BF86D7EEECC3D518CFF429645BEA934F715B9E5D0173`
+- source ZIP SHA-256: `3DD65D161724DCC32BD830EC8FE793A613E4664DFE1DD8F77AC02444B7619A9A`
+- regression: archive-first G2-B1 build completed successfully; `:editorial-engine:test` passed 19/19 and `:app:testDebugUnitTest` passed 148/148 with 0 failures/errors/skips; Android Lint completed with 53 warnings/0 errors; `:app:compileDebugAndroidTestJavaWithJavac` passed. Artifact and backup payloads are byte-identical and all four checksum entries pass. The exact source ZIP contains the G2-B1 design and preserves all three SAFE4 asset hashes.
+- device state: build archived and not installed. `adb` is unavailable in this environment, so connected instrumentation and device QA were not run. The previously installed code84 contains the retired V5 engine and must not be used for SAFE4 QA.
+- scope: G2-B1 persistent pack storage, additive v13→v14 migration, TOCTOU-safe headless importer, recovery and read-only registry are implemented. Certification, Golden Replay, project binding, model execution, L1–L3, release receipts and UI remain blocked; this is not a completed v4.16 release.
 
 ## Release identity
 

@@ -1,10 +1,17 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-03` (Editorial Pack Platform G2-A implemented; G2-B awaits approval; V5 executable core remains retired; SAFE4 foundation/code86 remains the accepted build)
-- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.24`/code86 is the latest accepted unreleased SAFE4-foundation build. Editorial execution remains intentionally blocked.
+- Snapshot updated: `2026-08-03` (Editorial Pack Platform G2-B1 implemented; review stop; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
+- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.25`/code87 is the latest archived G2-B1 build. Editorial execution remains intentionally blocked.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `17d2c5e` (G2-A implementation baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.16-dev.24/build-20260803-165452/TranslateBooks-v4.16-dev.24-code86.apk`, SHA-256 `6C3EEF7350B3D1C24BE9D65B0E906D2042CE281556235E783F8DBE4962F37875`; matching five-file payload is under `backup/builds/v4.16-dev.24/build-20260803-165452/`. Source ZIP SHA-256 is `9CCE4C99955E700FAA5EB6E2AF7153A51211A2130AF7A4E939F97CBB24A0D9F1`; mirror parity, both manifests, 144 JVM tests, lint 0 errors/53 warnings and exact SAFE4 hashes inside the ZIP pass. Code86 was not installed. The released v4.15/code62 archive remains unchanged.
+- Current commit: `dd25e34` (G2-B1 implementation/build baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/builds/v4.16-dev.25/build-20260803-182447/TranslateBooks-v4.16-dev.25-code87.apk`, SHA-256 `E6A76B6BBDF4DF591F01BF86D7EEECC3D518CFF429645BEA934F715B9E5D0173`; matching five-file payload is under `backup/builds/v4.16-dev.25/build-20260803-182447/`. Source ZIP SHA-256 is `3DD65D161724DCC32BD830EC8FE793A613E4664DFE1DD8F77AC02444B7619A9A`; mirror parity, both manifests, 19 editorial-engine tests, 148 app JVM tests, lint 0 errors/53 warnings, instrumentation compilation and exact SAFE4 hashes inside the ZIP pass. No device is available and code87 was not installed. The released v4.15/code62 archive remains unchanged.
+
+## G2-B1 handoff
+
+- Completed: additive SQLite v14 pack registry, immutable private storage, TOCTOU-safe headless import service, recovery, fail-closed read-only registry, migration/security/recovery tests, checklist and archive evidence.
+- Pending: user review only. G2-B2 (UI/read-only management) is not started. Certification, Golden Replay, project binding and execution remain blocked.
+- Known limitations: connected instrumentation could not run because `adb` is unavailable; no device QA or installation is claimed. The importer tests are compiled and ready for a device run.
+- Canonical/candidate boundary: code86 SAFE4 hashes are unchanged; `DBE214...` and `3B2FCC...` remain outside the registry and cannot activate or replace SAFE4.
 
 ## Completed tasks
 
