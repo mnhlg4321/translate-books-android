@@ -17,15 +17,15 @@
 
 ## Current development build
 
-- versionName: `4.16-dev.25`
-- versionCode: `87`
-- event: `build-20260803-182447`
+- versionName: `4.16-dev.26`
+- versionCode: `88`
+- event: `build-20260803-182934`
 - branch: `feature/v4.16`
-- source commit: `dd25e341c9018c5e9c4a0192ef3a2b676afabd7a`
-- APK: `artifacts/builds/v4.16-dev.25/build-20260803-182447/TranslateBooks-v4.16-dev.25-code87.apk`
-- immutable local mirror: `backup/builds/v4.16-dev.25/build-20260803-182447/`
-- APK SHA-256: `E6A76B6BBDF4DF591F01BF86D7EEECC3D518CFF429645BEA934F715B9E5D0173`
-- source ZIP SHA-256: `3DD65D161724DCC32BD830EC8FE793A613E4664DFE1DD8F77AC02444B7619A9A`
+- source commit: `260dc4641c6980e92a13a9acf72a0ff37ab1ef3d`
+- APK: `artifacts/builds/v4.16-dev.26/build-20260803-182934/TranslateBooks-v4.16-dev.26-code88.apk`
+- immutable local mirror: `backup/builds/v4.16-dev.26/build-20260803-182934/`
+- APK SHA-256: `56E7651EF623DC3A4787C1F6D00DBB52C195B260D1D01F528C706039B7B1DF57`
+- source ZIP SHA-256: `6D9B14707DC8EF511177EEE13F0B66F3E3EC408E2EFF8DC87E0A50132E4FCDA2`
 - regression: archive-first G2-B1 build completed successfully; `:editorial-engine:test` passed 19/19 and `:app:testDebugUnitTest` passed 148/148 with 0 failures/errors/skips; Android Lint completed with 53 warnings/0 errors; `:app:compileDebugAndroidTestJavaWithJavac` passed. Artifact and backup payloads are byte-identical and all four checksum entries pass. The exact source ZIP contains the G2-B1 design and preserves all three SAFE4 asset hashes.
 - device state: build archived and not installed. `adb` is unavailable in this environment, so connected instrumentation and device QA were not run. The previously installed code84 contains the retired V5 engine and must not be used for SAFE4 QA.
 - scope: G2-B1 persistent pack storage, additive v13→v14 migration, TOCTOU-safe headless importer, recovery and read-only registry are implemented. Certification, Golden Replay, project binding, model execution, L1–L3, release receipts and UI remain blocked; this is not a completed v4.16 release.

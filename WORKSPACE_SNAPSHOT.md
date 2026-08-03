@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
 - Snapshot updated: `2026-08-03` (Editorial Pack Platform G2-B1 implemented; review stop; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
-- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.25`/code87 is the latest archived G2-B1 build. Editorial execution remains intentionally blocked.
+- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.26`/code88 is the latest archived G2-B1 build. Editorial execution remains intentionally blocked.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `dd25e34` (G2-B1 implementation/build baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.16-dev.25/build-20260803-182447/TranslateBooks-v4.16-dev.25-code87.apk`, SHA-256 `E6A76B6BBDF4DF591F01BF86D7EEECC3D518CFF429645BEA934F715B9E5D0173`; matching five-file payload is under `backup/builds/v4.16-dev.25/build-20260803-182447/`. Source ZIP SHA-256 is `3DD65D161724DCC32BD830EC8FE793A613E4664DFE1DD8F77AC02444B7619A9A`; mirror parity, both manifests, 19 editorial-engine tests, 148 app JVM tests, lint 0 errors/53 warnings, instrumentation compilation and exact SAFE4 hashes inside the ZIP pass. No device is available and code87 was not installed. The released v4.15/code62 archive remains unchanged.
+- Current commit: `260dc46` (G2-B1 implementation/build baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/builds/v4.16-dev.26/build-20260803-182934/TranslateBooks-v4.16-dev.26-code88.apk`, SHA-256 `56E7651EF623DC3A4787C1F6D00DBB52C195B260D1D01F528C706039B7B1DF57`; matching five-file payload is under `backup/builds/v4.16-dev.26/build-20260803-182934/`. Source ZIP SHA-256 is `6D9B14707DC8EF511177EEE13F0B66F3E3EC408E2EFF8DC87E0A50132E4FCDA2`; mirror parity, both manifests, 19 editorial-engine tests, 148 app JVM tests, lint 0 errors/53 warnings, instrumentation compilation and exact SAFE4 hashes inside the ZIP pass. No device is available and code88 was not installed. The released v4.15/code62 archive remains unchanged.
 
 ## G2-B1 handoff
 

@@ -69,6 +69,7 @@ If the database transaction fails after the move, storage is retained with a non
 - Full pure-JVM regression: `:editorial-engine:test` 19/19 and `:app:testDebugUnitTest` 148/148, 0 failures/errors/skips.
 - Android instrumentation source compilation: `:app:compileDebugAndroidTestJavaWithJavac` pass. Connected execution was not possible in this environment because `adb` is unavailable; no device result is claimed.
 - `git diff --check` pass before each implementation commit.
+- Final archive-first build: `4.16-dev.26`/code88, event `build-20260803-182934`, APK SHA-256 `56E7651EF623DC3A4787C1F6D00DBB52C195B260D1D01F528C706039B7B1DF57`, source ZIP SHA-256 `6D9B14707DC8EF511177EEE13F0B66F3E3EC408E2EFF8DC87E0A50132E4FCDA2`. Artifact and backup payloads are byte-identical; the APK was archived and not installed.
 
 Android instrumentation tests cover fresh schema, v13 upgrade retention, valid import, idempotent re-import, changed-prompt identity collision, post-snapshot source mutation, traversal/duplicate/symlink/hash/length failures, filesystem collision, database failure and orphan recovery. They require a device to produce runtime evidence.
 
