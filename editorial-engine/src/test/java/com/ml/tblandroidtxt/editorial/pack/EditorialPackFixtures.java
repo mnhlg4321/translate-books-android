@@ -11,7 +11,10 @@ import java.util.Map;
 
 final class EditorialPackFixtures {
     static final String CODE86_PROMPT_SHA = "0b4c02573f46a91528a63262d3e52c655a5c7e31f2abbbfb01759d38e94f8e81";
+    /** User-declared earlier candidate identity; it is not loaded into the official registry. */
     static final String DBE214_PROMPT_SHA = "dbe214d842d98fd76afd2e700747fcc2cf3d5b6038134b38ea8f220fed3bf273";
+    /** Hash observed on the external path during the final G2-A verification. */
+    static final String CURRENT_EXTERNAL_PROMPT_SHA = "3b2fcc0a8b684b851f8f6180d41dbe8c75e00cdb5bed217c3fb7a50e94437b04";
 
     static Fixture valid() { return create("com.example.editorial.safe4", "5.0.4", "prompt\n", "DATA_COMPATIBLE"); }
 

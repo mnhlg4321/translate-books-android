@@ -36,6 +36,8 @@ public class EditorialPackManifestTest {
 
     @Test public void dbe214PromptIsNotCode86CanonicalPrompt() {
         assertNotEquals(EditorialPackFixtures.CODE86_PROMPT_SHA, EditorialPackFixtures.DBE214_PROMPT_SHA);
+        assertNotEquals(EditorialPackFixtures.CODE86_PROMPT_SHA, EditorialPackFixtures.CURRENT_EXTERNAL_PROMPT_SHA);
+        assertNotEquals(EditorialPackFixtures.DBE214_PROMPT_SHA, EditorialPackFixtures.CURRENT_EXTERNAL_PROMPT_SHA);
         EditorialPackFixtures.Fixture canonical = EditorialPackFixtures.valid();
         EditorialPackFixtures.Fixture candidate = EditorialPackFixtures.create(canonical.manifest().packId(), canonical.manifest().version(), "DBE214 candidate bytes\n", "DATA_COMPATIBLE");
         assertNotEquals(canonical.manifest().canonicalPackHash(), candidate.manifest().canonicalPackHash());
