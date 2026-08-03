@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-03` (V5 executable Editorial core retired; immutable V5-SAFE.4 pack and fail-closed foundation implemented; source regression/Android-test compilation pass; new archive-first build pending)
+- Snapshot updated: `2026-08-03` (V5 executable core retired; SAFE4 foundation committed in `a77719f`; code85 rejected after source-ZIP EOL mismatch; binary Git attribute fix and new archive-first build pending)
 - Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.22`/code84 is still the latest archived development APK but contains the retired V5 engine and is not SAFE4 evidence.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `c3b279e48454aabe1af51407b529153911bc60cf` (implementation baseline immediately before the SAFE4 foundation/snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current commit: `a77719f11574053521f4e4c8d08b04bec234d647` (implementation baseline immediately before the source-archive integrity fix/snapshot commit; actual `HEAD` must be confirmed when resuming)
 - Current build: `artifacts/builds/v4.16-dev.22/build-20260801-133953/TranslateBooks-v4.16-dev.22-code84.apk`, SHA-256 `CDE2085EEEA959C38840C3E1F9197506BB54637EBEB38D717430CEA680892A51`; matching immutable payload is under `backup/builds/v4.16-dev.22/build-20260801-133953/`. It remains immutable historical V5 evidence. The current SAFE4 foundation passed 144 JVM tests and Android-test compilation but has not yet produced a durable APK. The released v4.15/code62 archive remains unchanged.
 
 ## Completed tasks
@@ -174,10 +174,11 @@
 - Bundled the exact V5-SAFE.4 three-file source pack with immutable per-file hashes and a mandatory `preBuild` integrity guard. Added a version/pack capability gate that remains disabled until lineage, exhaustive ledgers, evidence-derived gates, conditional Pronoun/Pair handling, SAFE4 release artifacts and Golden Replay G1–G10 are evidenced.
 - Converted Editorial storage/UI to fail closed: new projects require the exact SAFE4 identity, new chapters are `SAFE4_BLOCKED`, legacy projects/chapters are read-only, and RAW/DRAFT/Glossary plus optional `PRONOUN_STATUS=NONE` can be prepared without enabling model execution.
 - Added `EDITORIAL_SAFE4_MIGRATION.md` as the current source of truth and marked the older V5 plan/handoff historical. SAFE4 foundation regression passed 144/144 JVM tests and Android instrumentation-source compilation; the three bundled assets match the external source byte-for-byte.
+- Built and retained `4.16-dev.23`/code85, then rejected it during post-build verification because its source ZIP normalized the three SAFE4 text files to CRLF. The APK pack guard passed, but the archived source was not byte-reproducible. Added a binary `.gitattributes` rule; code85 remains immutable audit evidence and cannot be accepted.
 
 ## Pending tasks
 
-- Commit the SAFE4 retirement/foundation group without staging the user-owned `.idea/gradle.xml`, then run `scripts/build-and-save.ps1 -Series 4.16-dev` to create a new immutable development APK.
+- Commit the binary SAFE4 Git-attribute/source-archive fix without staging the user-owned `.idea/gradle.xml`, then run `scripts/build-and-save.ps1 -Series 4.16-dev` to create and inspect a fresh numbered development APK/source ZIP.
 - Add an additive SAFE4 lineage/schema migration while preserving all legacy V5 rows as historical read-only data.
 - Implement typed exhaustive ledgers and machine-derived gates; do not accept model-provided PASS/CLOSED as evidence.
 - Implement Pronoun `AVAILABLE/NONE/LEGACY_REJECTED`, scoped Pair Context, exact per-phase context allow-lists and checkpoint lineage.
@@ -188,6 +189,7 @@
 
 - SAFE4 model execution and Editorial release are intentionally blocked because only pack integrity is implemented. This is a safety blocker, not a completed feature.
 - The installed/archived code84 APK still contains the retired V5 engine. It must not be used to create or certify SAFE4 output.
+- Code85 is rejected even though its APK pack guard passed: the retained source ZIP changed SAFE4 line endings and therefore failed exact-source reproducibility. Both payload copies are intentionally retained, not overwritten.
 - Legacy V5 database rows are preserved but do not yet have SAFE4 manifest/parent lineage; they remain read-only and cannot be promoted into a SAFE4 chain.
 
 - Code78 bottom-navigation clipping has an implemented responsive two-line fix in code79; visual verification is pending because the physical device is secured at the lock screen.
@@ -292,7 +294,7 @@
 
 ## Next step
 
- Commit the fail-closed SAFE4 foundation and create a new archive-first development APK. After build evidence is recorded, begin the additive exact-lineage/schema layer in the order defined by `EDITORIAL_SAFE4_MIGRATION.md`; do not re-enable any old V5 runner or release path.
+ Commit the SAFE4 binary Git-attribute fix and create a fresh archive-first build whose source ZIP reproduces all three required hashes. After accepting that build evidence, begin the additive exact-lineage/schema layer in `EDITORIAL_SAFE4_MIGRATION.md`; do not re-enable any old V5 runner or release path.
 
 ## Resume rule
 

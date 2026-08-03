@@ -18,6 +18,8 @@ The app bundles the exact three-file source pack from:
 
 `verifyEditorialSafe4Pack` runs before every app build and fails if a file is absent or one byte differs. New projects persist `V5-SAFE.4` plus the derived pack hash; a different identity is rejected.
 
+The three files are marked `binary` in `.gitattributes` so Git checkout/archive cannot normalize LF to CRLF. Both the worktree and every retained source ZIP must reproduce the external hashes above.
+
 ## Removed completely
 
 The following old implementation was unsafe to reuse under SAFE4 and has been deleted:
