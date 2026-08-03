@@ -3,6 +3,7 @@ package com.ml.tblandroidtxt;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.text.Normalizer;
@@ -61,8 +62,14 @@ public final class EditorialPackStorageLayout {
         forceText(directory.resolve(".storage-complete"), "EDITORIAL_STORAGE_COMPLETE_V1\n" + canonicalPackHash + "\n" + importId + "\n");
     }
 
-    public boolean hasSnapshotMarker(String importId) { return Files.isRegularFile(snapshotMarker(importId)); }
-    public boolean hasImmutableMarker(String canonicalPackHash) { return Files.isRegularFile(immutableMarker(canonicalPackHash)); }
+    public boolean hasSnapshotMarker(String importId) {
+        return Files.isDirectory(stagingDirectory(importId), LinkOption.NOFOLLOW_LINKS)
+                && Files.isRegularFile(snapshotMarker(importId), LinkOption.NOFOLLOW_LINKS);
+    }
+    public boolean hasImmutableMarker(String canonicalPackHash) {
+        return Files.isDirectory(immutableDirectory(canonicalPackHash), LinkOption.NOFOLLOW_LINKS)
+                && Files.isRegularFile(immutableMarker(canonicalPackHash), LinkOption.NOFOLLOW_LINKS);
+    }
 
     public static String normalizeEntryPath(String rawPath) {
         if (rawPath == null || rawPath.isBlank()) throw new IllegalArgumentException("Entry path is blank");
@@ -87,7 +94,9 @@ public final class EditorialPackStorageLayout {
     public boolean isOwnedStagingDirectory(Path candidate, String importId) {
         if (!isImportId(importId) || candidate == null) return false;
         Path normalized = candidate.toAbsolutePath().normalize();
-        return normalized.equals(stagingDirectory(importId)) && Files.isDirectory(normalized) && Files.isRegularFile(ownerMarker(importId));
+        return normalized.equals(stagingDirectory(importId))
+                && Files.isDirectory(normalized, LinkOption.NOFOLLOW_LINKS)
+                && Files.isRegularFile(ownerMarker(importId), LinkOption.NOFOLLOW_LINKS);
     }
 
     public void deleteOwnedStaging(String importId) throws IOException {

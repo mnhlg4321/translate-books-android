@@ -10,6 +10,7 @@ import com.ml.tblandroidtxt.editorial.pack.EditorialPackRegistry;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -58,7 +59,7 @@ public final class SqliteEditorialPackRegistry implements EditorialPackRegistry 
             if (!hash.equals(manifest.canonicalPackHash()) || !hash.equals(manifest.calculatedCanonicalPackHash())) return Optional.empty();
             Map<String, byte[]> dataFiles = new LinkedHashMap<>();
             for (EditorialPackManifest.FileEntry file : manifest.fileEntries()) {
-                if (!Files.isRegularFile(storage.immutableEntry(hash, file.path()))) return Optional.empty();
+                if (!Files.isRegularFile(storage.immutableEntry(hash, file.path()), LinkOption.NOFOLLOW_LINKS)) return Optional.empty();
                 dataFiles.put(file.path(), Files.readAllBytes(storage.immutableEntry(hash, file.path())));
             }
             EditorialPackIntegrityResult integrity = integrityValidator.validate(
