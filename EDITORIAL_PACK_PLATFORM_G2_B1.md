@@ -1,7 +1,7 @@
 # Editorial Pack Platform — G2-B1
 
-Status: `IMPLEMENTED / REVIEW STOP`  
-Scope: persistent pack storage, additive SQLite v14 migration and headless import service.  
+Status: `IMPLEMENTED / REVIEW STOP`
+Scope: persistent pack storage, additive SQLite v14 migration and headless import service.
 Explicitly out of scope: UI/picker, certification, Golden Replay, project binding, model execution, L1/L2/L3 and release flow.
 
 ## Implemented boundary
