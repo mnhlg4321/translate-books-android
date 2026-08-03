@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-03` (V5 executable core retired; SAFE4 foundation committed; code85 rejected; byte-preserving fix accepted in archive-first `4.16-dev.24`/code86)
+- Snapshot updated: `2026-08-03` (Editorial Pack Platform research/plan saved; implementation awaits approval; V5 executable core remains retired; SAFE4 foundation/code86 remains the accepted build)
 - Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.24`/code86 is the latest accepted unreleased SAFE4-foundation build. Editorial execution remains intentionally blocked.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
 - Current commit: `ab8e78abeeb0fa6264ac8a7b0dea2e436cd39d90` (implementation baseline immediately before this accepted-build metadata/snapshot commit; actual `HEAD` must be confirmed when resuming)
@@ -176,10 +176,14 @@
 - Added `EDITORIAL_SAFE4_MIGRATION.md` as the current source of truth and marked the older V5 plan/handoff historical. SAFE4 foundation regression passed 144/144 JVM tests and Android instrumentation-source compilation; the three bundled assets match the external source byte-for-byte.
 - Built and retained `4.16-dev.23`/code85, then rejected it during post-build verification because its source ZIP normalized the three SAFE4 text files to CRLF. The APK pack guard passed, but the archived source was not byte-reproducible. Added a binary `.gitattributes` rule; code85 remains immutable audit evidence and cannot be accepted.
 - Built and accepted `4.16-dev.24`/code86 from `ab8e78a` under event `build-20260803-165452`. Artifact/backup parity and manifests pass; 144 JVM tests and lint 0 errors/53 warnings pass; source ZIP reproduces the external SAFE4 sizes/hashes exactly. Installation was not requested.
+- Completed Phase 1 source audit and saved `EDITORIAL_PACK_PLATFORM_PLAN.md` as the proposed contract-first, multi-pack, fail-closed architecture. It now includes the SAFE4/MainActivity/DB hardcode inventory, explicit pack/adapter/engine trust boundary, full manifest sample, SQLite v13-to-next schema and ER diagram, compatibility/state/import/L1-L3 flows, exact file/test/rollback delivery groups, acceptance gates, and the isolated read-only G2-A proposal for the smallest Phase 2. No implementation was started and no retired V5 execution component was restored.
+- Rechecked the external SAFE4 source folder during Editorial Pack research. Project Instruction and Workflow still match code86, but the external Prompt is now 5,040 bytes/SHA-256 `DBE214D842D98FD76AFD2E700747FCC2CF3D5B6038134B38EA8F220FED3BF273`, while code86/source ZIP retains 5,008 bytes/SHA-256 `0B4C02573F46A91528A63262D3E52C655A5C7E31F2ABBBFB01759D38E94F8E81`. The added L2 `PRONOUN_STATUS: LEGACY_REJECTED` line may change phase policy, so the external bytes are BLOCKED pending a distinct version, canonical manifest and contract review; no old build evidence applies to them.
 
 ## Pending tasks
 
-- Add an additive SAFE4 lineage/schema migration while preserving all legacy V5 rows as historical read-only data.
+- Obtain user approval for `EDITORIAL_PACK_PLATFORM_PLAN.md` and resolve whether the external `DBE214...` Prompt intentionally changes L2 Pronoun policy. Preserve code86's `0B4C...` Prompt as a separate immutable historical identity; do not reuse the same pack version/hash.
+- If approved, implement only G2-A first: an isolated pure-JVM manifest/integrity/compatibility/read-only registry module with unit tests, no app connection, SQLite change, model call, L1/L2/L3 or APK build; stop again for review before persistent import/lineage work.
+- After the G2-A review stop, add the approved additive registry/lineage migration while preserving all legacy V5 rows as historical read-only data; do not infer or silently backfill a project binding.
 - Implement typed exhaustive ledgers and machine-derived gates; do not accept model-provided PASS/CLOSED as evidence.
 - Implement Pronoun `AVAILABLE/NONE/LEGACY_REJECTED`, scoped Pair Context, exact per-phase context allow-lists and checkpoint lineage.
 - Implement versioned L1/L2/L3 SAFE4 runners, SAFE4 receipt/release artifacts, and retained Golden Replay G1–G10 evidence before enabling execution.
@@ -187,6 +191,7 @@
 
 ## Known bugs
 
+- The current external SAFE4 folder no longer matches the exact code86/source-ZIP Prompt bytes and has no canonical Editorial Pack manifest. It must not be classified as DATA_COMPATIBLE or certified under the old SAFE4 identity until its new version and contract policy are reviewed.
 - SAFE4 model execution and Editorial release are intentionally blocked because only pack integrity is implemented. This is a safety blocker, not a completed feature.
 - The installed/archived code84 APK still contains the retired V5 engine. It must not be used to create or certify SAFE4 output.
 - Code85 is rejected even though its APK pack guard passed: the retained source ZIP changed SAFE4 line endings and therefore failed exact-source reproducibility. Both payload copies are intentionally retained, not overwritten.
@@ -219,6 +224,7 @@
 
 ## Regression status
 
+- Editorial Pack Platform Phase 1: DOCUMENTED / NO IMPLEMENTATION. `EDITORIAL_PACK_PLATFORM_PLAN.md` records the source hardcode/coupling audit, data diagram, manifest, migration shape, compatibility and certification design, exact delivery groups, acceptance criteria and smallest G2-A proposal, plus the external-Prompt mismatch. No application code, database, APK, device state or release gate changed, and no regression/build evidence is claimed for the proposed platform.
 - V5-SAFE.4 retirement/foundation regression: PASS for source safety and compilation. `:app:testDebugUnitTest` passed 144/144 with 0 failures/errors/skips; the mandatory pack guard verified all three external-source hashes; `:app:compileDebugAndroidTestJavaWithJavac` succeeded; `git diff --check` passed. SAFE4 execution, release, device QA and Golden Replay are deliberately not claimed.
 - V5-SAFE.4 archive-first build verification: PASS on accepted code86. Both five-file stores and both checksum manifests match; APK/source ZIP hashes are `6C3EEF73...F37875`/`9CCE4C99...A0D9F1`; the ZIP's three SAFE4 files match external byte sizes and SHA-256 values. Installation/manual device QA remain open.
 
@@ -295,7 +301,7 @@
 
 ## Next step
 
- Begin the additive exact-lineage/schema layer in `EDITORIAL_SAFE4_MIGRATION.md`, preserving all legacy rows as read-only and deriving future gates from typed evidence. Do not re-enable any old V5 runner or release path; keep execution closed until Golden Replay G1–G10.
+ Review and approve `EDITORIAL_PACK_PLATFORM_PLAN.md`, then resolve and version the external `DBE214...` Prompt as a distinct pack candidate. If approved, implement only the isolated G2-A pure-JVM manifest/integrity/compatibility/read-only registry slice and stop at Review Stop A; do not change SQLite/UI, connect a model, run L1/L2/L3, build an APK, re-enable an old V5 path or claim certification.
 
 ## Resume rule
 
