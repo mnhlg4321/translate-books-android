@@ -1,10 +1,18 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-04` (G2-T0B toolchain hardening PASS; review stop before G2-C0B/C0C; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
-- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.30`/code92 is the latest archive-first G2-T0B build. Editorial execution remains intentionally blocked.
+- Snapshot updated: `2026-08-04` (G2-C0B bundled trusted-profile registry PASS; review stop before G2-C0C; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
+- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.30`/code92 remains the latest accepted archive-first build. C0B adds source-bundled trust metadata only; Editorial execution remains intentionally blocked.
 - Current branch: `feature/v4.16`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned, unchanged and unstaged. The three toolchain drift files were restored to the committed baseline.
-- Current commit: `8fbc8d1ed004c1524e001b7bbd0a2b321584331b` (implementation baseline immediately before this G2-T0B state/handoff documentation commit; the final documentation commit is intentionally not self-referenced here)
-- Current build: `artifacts/builds/v4.16-dev.30/build-20260804-182006/TranslateBooks-v4.16-dev.30-code92.apk`, SHA-256 `07BC98B22019832AFD37D0307E691957FBDC47D1C0E929949535D69AFB472801`; matching five-file payload is under `backup/builds/v4.16-dev.30/build-20260804-182006/`. Source ZIP SHA-256 is `BD6BCDC832DC5C3D9AFFA3E1C597A12D090F560F6B8D6319D0D65F7FB22C1126`. Wrapper `9.3.0` with official distribution SHA-256 `0d585f69da091fc5b2beced877feab55a3064d43b8a1d46aeb07996b0915e0e0` and JBR `21.0.10` passed `:editorial-engine:test` 33/33, `:app:testDebugUnitTest` 161/161, instrumentation source compilation, lint 0 errors/53 warnings and `git diff --check`; JDK preflight is 4/4. The released v4.15/code62 archive remains unchanged.
+- Current commit: `fb2bd262dc996d20fbef051414727525410e9e1a` (G2-C0B implementation baseline immediately before this state/handoff documentation commit; the final documentation commit is intentionally not self-referenced here)
+- Current build: `artifacts/builds/v4.16-dev.30/build-20260804-182006/TranslateBooks-v4.16-dev.30-code92.apk`, SHA-256 `07BC98B22019832AFD37D0307E691957FBDC47D1C0E929949535D69AFB472801`; matching five-file payload is under `backup/builds/v4.16-dev.30/build-20260804-182006/`. Source ZIP SHA-256 is `BD6BCDC832DC5C3D9AFFA3E1C597A12D090F560F6B8D6319D0D65F7FB22C1126`. Wrapper `9.3.0` with official distribution SHA-256 `0d585f69da091fc5b2beced877feab55a3064d43b8a1d46aeb07996b0915e0e0` and JBR `21.0.10` passed `:editorial-engine:test` 50/50, `:app:testDebugUnitTest` 161/161, instrumentation source compilation, lint 0 errors/53 warnings and `git diff --check`; JDK preflight is 4/4. The released v4.15/code62 archive remains unchanged.
+
+## G2-C0B bundled trusted-profile handoff
+
+- Completed in implementation commit `fb2bd262dc996d20fbef051414727525410e9e1a`: one production profile resource, independent compile-time trust catalog, immutable read-only registry and 17/17 focused tests. Resource path is `editorial/engine-profile/v1/profile.json`; profile ID/version is `com.ml.tblandroidtxt.editorial.engine.bootstrap`/`1.0.0`.
+- Trust values: raw resource SHA-256 `1c1f7cec41d1984695475283bf6c9b6318b9fdb5473507f86be701e143f3a660`, canonical profile hash `916ae87dc0b0f429dcf9ae3ffa3fbc76efdf0ebd2c7f631aea572567819b67a3`, machine-contract fingerprint `7bcc3d249d66dbe834b764f3bf129752435e50953be47b566c17db9d79cb489b`.
+- Profile truth: only `pack.integrity.sha256.v1` implemented; nine SAFE4 capabilities remain explicit missing; contract/phase/context/gate/release/adapter fields remain empty and no executable contract is declared.
+- Regression after C0B: engine 50/50, app JVM 161/161, instrumentation source compilation PASS, lint 0 errors/53 warnings, `git diff --check` PASS. No APK was built/installed and code92 remains the latest accepted artifact.
+- Pending: review stop for C0B, then separately approve G2-C0C. Runtime/importer wiring remains absent and compatibility remains fail-closed.
 
 ## G2-B1 handoff
 
@@ -40,7 +48,7 @@
 - Completed: required Wrapper regression passed 33/33 engine tests, 161/161 app JVM tests, instrumentation source compilation, lint 0 errors/53 warnings and `git diff --check`.
 - Completed: archive-first `4.16-dev.30`/code92 event `build-20260804-182006` passed; APK SHA-256 `07BC98B22019832AFD37D0307E691957FBDC47D1C0E929949535D69AFB472801`; source ZIP SHA-256 `BD6BCDC832DC5C3D9AFFA3E1C597A12D090F560F6B8D6319D0D65F7FB22C1126`; artifact/backup five-file parity passed; code92 was not installed.
 - Completed: `BUILD_INFO.json` and README now record Gradle/URL/checksum, AGP, JDK/vendor/runtime/policy, Java source/target, SDK, Git/event and APK/source hashes. Existing metadata keys remain for backward compatibility.
-- Pending: user review stop. G2-C0B is the proposed next step and has not been implemented.
+- Pending: T0B review stop is complete; C0B is now complete at its own review stop. G2-C0C is the proposed next step and has not been implemented.
 
 ## Completed tasks
 
@@ -220,6 +228,7 @@
 
 - Resolve, in a later approved pack-review phase, whether the external `DBE214...` Prompt intentionally changes L2 Pronoun policy. Preserve code86's `0B4C...` Prompt as a separate immutable historical identity; do not reuse the same pack version/hash.
 - G2-A implementation is complete in commits `83a9428`, `616dc46`, `eb15481` and `9d401b2`; its legacy `EditorialEngineProfile` remains an evaluator-facts object and is not a second trusted-profile source of truth. G2-C0A adds only the immutable trusted-profile data contract, strict parser/canonicalizer, fingerprint/hash calculations and fail-closed validator in `:editorial-engine`. Focused C0A tests pass 14/14 and full engine/app regression remains green. No app connection, SQLite change, model call, runtime wiring, profile bundle, L1/L2/L3 or APK build was made.
+- G2-C0B implementation is complete in `fb2bd262dc996d20fbef051414727525410e9e1a`: the source-bundled bootstrap profile, independent trust anchors, immutable read-only registry and fail-closed negative matrix are in `:editorial-engine`. No app/runtime/importer call site, SQLite state or APK changed. C0B is stopped for review; G2-C0C remains pending.
 - G2-B2B-ZIP is complete for this approval scope. Await user review before any folder import, certification, activation, project binding or execution work.
 - Build-toolchain reproducibility audit is blocked: the actual worktree contains six unstaged changes instead of only `.idea/gradle.xml`; committed HEAD is AGP 8.7.3/wrapper 9.3.0, while the dirty tree is AGP 9.2.1/wrapper 9.4.1. Do not attribute cached 9.4.1 C0A results to clean HEAD.
 - Implement typed exhaustive ledgers and machine-derived gates; do not accept model-provided PASS/CLOSED as evidence.
@@ -234,7 +243,7 @@
 - SAFE4 model execution and Editorial release remain intentionally blocked; G2-A is not connected to the Android execution path and does not certify any pack. This is a safety blocker, not a completed feature.
 - The installed/archived code84 APK still contains the retired V5 engine. It must not be used to create or certify SAFE4 output.
 - Code91 device QA proved only that a synthetic ZIP can be stored immutably and remains fail-closed; the device retains one blocked QA registry row and has no trusted engine profile.
-- G2-C0A does not bundle or register a production profile; compatibility is not rewired and packs remain `STORED_BLOCKED`. The source is newer than the accepted code91 APK because no APK build was authorized for this pure-JVM slice.
+- G2-C0B does not wire the bundled registry into compatibility/importer runtime; compatibility remains fail-closed and packs remain `STORED_BLOCKED`. The source is newer than the accepted code92 APK because no APK build was authorized for this registry-only slice.
 - Toolchain reproducibility is unresolved: no wrapper checksum is declared, JDK selection is not pinned, default Java 8 is unsuitable for AGP, and the wrapper currently depends on cache/network permissions in this environment.
 - Code85 is rejected even though its APK pack guard passed: the retained source ZIP changed SAFE4 line endings and therefore failed exact-source reproducibility. Both payload copies are intentionally retained, not overwritten.
 - Legacy V5 database rows are preserved but do not yet have SAFE4 manifest/parent lineage; they remain read-only and cannot be promoted into a SAFE4 chain.
@@ -281,6 +290,7 @@
 - v4.16 transfer handoff documentation: PASS. `EDITORIAL_HANDOFF_V4_16.md` records the problem analysis, implemented contract, remaining revision-safe/stale-run design, exact resource map, transfer checklist, and archive-first continuation commands; `git diff --check` passed before commit `6d82c41`.
 - G2-C0 audit/device evidence: PASS WITH LIMITATIONS. Source audit found only `pack.integrity.sha256.v1` implemented and all nine SAFE4 execution capabilities missing. Archived code91 installed successfully; synthetic SAF ZIP import stored the exact fixture immutably, returned `UNSUPPORTED_CONTRACT_SCHEMA`/`STORED_BLOCKED`, and persisted after process restart. No profile was bundled, no database/schema was changed, and no certification or execution was performed.
 - G2-C0A trusted profile model/validation regression: PASS / REVIEW STOP. Focused C0A suite passed 14/14; full `:editorial-engine:test` passed 33/33; `:app:testDebugUnitTest` passed 161/161; Android instrumentation source compilation passed; `git diff --check` passed. Cached Gradle 9.4.1 was invoked directly because the unchanged repository wrapper is 9.3.0 while the installed Android Gradle Plugin requires 9.4.1; no APK was built. C0A validates declared capability evidence against the production catalog, which confirms only `pack.integrity.sha256.v1`; the nine SAFE4 capabilities remain missing.
+- G2-C0B bundled registry regression: PASS / REVIEW STOP. Focused suite passed 17/17; full `:editorial-engine:test` passed 50/50; `:app:testDebugUnitTest` passed 161/161; Android instrumentation source compilation passed; lint has 0 errors/53 warnings; `git diff --check` passed. All Gradle commands used Wrapper Gradle 9.3.0 with JBR 21. No APK build/install occurred; latest accepted artifact remains code92. The registry is not wired into runtime/importer, so the historical fail-closed compatibility state is unchanged.
 - G2-C0A build-toolchain reproducibility audit: FAIL / BLOCKED. The C0A tests are functionally green but environment-bound because they used direct cached Gradle 9.4.1; clean HEAD uses wrapper 9.3.0 plus AGP 8.7.3, and the actual worktree has uncommitted AGP 9.2.1/wrapper 9.4.1 drift. Default Java 8, absent wrapper checksum and cache/network permission failures prevent a clean-clone PASS.
 - G2-T0A toolchain baseline recovery: PASS / REVIEW STOP. The three toolchain files were restored narrowly to wrapper Gradle 9.3.0 and AGP 8.7.3 after their drift was preserved and hashed. With explicit Android Studio JBR 21.0.10, `gradlew.bat --version`, the combined C0A regression, lint and `git diff --check` all passed. Final worktree changes are only the three user-owned `.idea/*` files; no APK was built.
 
@@ -347,7 +357,7 @@
 
 ## Next step
 
-Review `BUILD_TOOLCHAIN_HARDENING_G2_T0B.md` and approve the exact next step. G2-T0B is stopped here; G2-C0B is proposed but not implemented. Do not start G2-C0C, profile bundling/runtime selection/folder import/certification/activation/binding/execution work without separate approval.
+Review `EDITORIAL_PACK_PLATFORM_G2_C0B.md` and approve the exact next step. G2-C0B is stopped here; G2-C0C is proposed but not implemented. Do not start runtime profile selection/importer wiring/folder import/certification/activation/binding/execution work without separate approval.
 
 ## Resume rule
 
