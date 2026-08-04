@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
 - Snapshot updated: `2026-08-04` (G2-B2B-ZIP implemented and archived; review stop; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
-- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.28`/code90 is the latest archived G2-B2B-ZIP build. Editorial execution remains intentionally blocked.
+- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.29`/code91 is the latest archived G2-B2B-ZIP build. Editorial execution remains intentionally blocked.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `3efb620` (G2-B2B-ZIP source/build baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current commit: `f62ea5b` (G2-B2B-ZIP source/build baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
 - Current build: `artifacts/builds/v4.16-dev.27/build-20260803-184804/TranslateBooks-v4.16-dev.27-code89.apk`, SHA-256 `A0A3BFDA91E2F3AF0D7A0B8112F629877492D3E5EBD8DA53CD30A640F9F75B15`; matching five-file payload is under `backup/builds/v4.16-dev.27/build-20260803-184804/`. Source ZIP SHA-256 is `72FA35C515F06FD36BC6B8E263ABD08E9D0BA2EC12E8EA51042FC0D3E3FE852F`; mirror parity, both manifests, 19 editorial-engine tests, 155 app JVM tests, lint 0 errors/53 warnings, instrumentation compilation and exact SAFE4 hashes inside the ZIP pass. No device is available and code89 was not installed. The released v4.15/code62 archive remains unchanged.
 
 ## G2-B1 handoff
@@ -22,7 +22,7 @@
 ## G2-B2B-ZIP handoff
 
 - Completed: headless `importZip(InputStream)` boundary, progress/result mapper, one-shot SAF bridge, ZIP import coordinator and Editorial-tab import action. No certification, activation, project binding, execution or folder import is present.
-- Evidence: commits `e124b5a`, `8901c8a`, `22c080b`, `fd4f807`, `3efb620`; engine 19/19; app JVM 160/160; instrumentation source compilation pass; lint 0 errors/54 warnings; archive-first `4.16-dev.28`/code90 event `build-20260804-072601` APK SHA `1BCCB072A807C54E05BBED29870A66D7FB9C03738A626C95B17E74235EB85E7B`; source ZIP SHA `635D5C559D701086B7A928EB89DB8A00A5E9A3DC0374C1B1AD3E10AAE1D77854`; artifact/backup parity pass. No device/visual QA.
+- Evidence: commits `e124b5a`, `8901c8a`, `22c080b`, `fd4f807`, `3efb620`, `f62ea5b`; engine 19/19; app JVM 161/161; instrumentation source compilation pass; lint 0 errors/54 warnings; archive-first `4.16-dev.29`/code91 event `build-20260804-073059` APK SHA `959A25630941550E3D59CB2FBE75C1E3C6D33DCA2A109553C248CDA653E4DE90`; source ZIP SHA `A55B5AEDDD945F5247FC1A6177C80654C615DF664B34485F106B92C83B948BAD`; artifact/backup parity pass. No device/visual QA.
 - Runtime profile is deliberately empty until a trusted contract registry exists; imports cannot be guessed compatible and therefore remain fail-closed/blocked in the current app. Canonical SAFE4 and external candidate boundary is unchanged.
 
 ## Completed tasks
