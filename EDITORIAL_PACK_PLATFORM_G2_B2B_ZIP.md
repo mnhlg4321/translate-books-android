@@ -79,7 +79,7 @@ orphan recovery protocol; the UI never deletes staging or storage.
 - `:app:testDebugUnitTest`: 160 tests passed, 0 failures/errors/skips.
 - `:app:compileDebugAndroidTestJavaWithJavac`: passed (connected device not
   available, so no instrumentation execution or visual QA is claimed).
-- `:app:lintDebug`: passed with 0 errors and the existing warning baseline.
+- `:app:lintDebug`: passed with 0 errors and 54 warnings (the repository's current warning baseline after this UI addition).
 - `git diff --check`: passed.
 
 Focused JVM coverage includes picker cancel, double-click serialization,
