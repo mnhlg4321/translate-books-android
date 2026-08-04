@@ -11,13 +11,14 @@ activation, project binding và execution không được triển khai.
 
 - Branch đầu/cuối: `feature/v4.16`.
 - HEAD đầu: `c31b9e29157c33b2d323f992e0be267c3607a709`.
-- Commit implementation cuối của nhóm: `fb2bd262dc996d20fbef051414727525410e9e1a` (`feat(editorial): bundle trusted engine profile registry`). Đây là implementation baseline trước documentation handoff commit, theo quy ước snapshot không tự tham chiếu commit đang chứa chính snapshot.
+- Commit implementation của nhóm: `fb2bd262dc996d20fbef051414727525410e9e1a` (`feat(editorial): bundle trusted engine profile registry`) và `6c6fdb2c3ab15e972716d005b1588cee8b51fdec` (`build(editorial): copy trusted profile into APK assets`). Đây là implementation baseline trước documentation handoff commit, theo quy ước snapshot không tự tham chiếu commit đang chứa chính snapshot.
 - Baseline đã xác minh trước khi sửa: Gradle `9.3.0`, AGP `8.7.3`, JBR/JDK `21`, Java source/target `17`, compile/target SDK `35`, SQLite v14, latest accepted APK `4.16-dev.30`/code92.
 - Ba file user-owned `.idea/compiler.xml`, `.idea/gradle.xml`, `.idea/misc.xml` không bị sửa, stage, stash, commit, xóa hoặc ghi đè.
 
 ## File thay đổi
 
 - `.gitattributes` — giữ profile JSON ở EOL LF để raw-resource anchor tái lập trên Windows.
+- `app/build.gradle` — build-only copy/verify từ engine-owned resource vào generated APK asset; không tạo JSON source thứ hai và không thêm runtime call site.
 - `editorial-engine/src/main/java/com/ml/tblandroidtxt/editorial/pack/EditorialEngineContractProfileRegistry.java` — API chỉ đọc.
 - `editorial-engine/src/main/java/com/ml/tblandroidtxt/editorial/pack/BundledEditorialEngineContractProfileRegistry.java` — loader cố định và registry immutable.
 - `editorial-engine/src/main/java/com/ml/tblandroidtxt/editorial/pack/TrustedEditorialEngineProfileCatalog.java` — compile-time allow-list/trust anchors độc lập.
@@ -50,6 +51,12 @@ JSON: nó đọc đúng resource allow-list, chạy strict parser/validator C0A,
 lại hash/fingerprint, đối chiếu các anchor độc lập và yêu cầu production
 capability evidence catalog xác nhận capability. Không có classpath scan,
 fallback hoặc chọn profile “latest”.
+
+`app/build.gradle` chỉ đồng bộ đúng JSON này vào generated asset path
+`editorial/engine-profile/v1/profile.json` và verify byte parity trước build.
+Generated APK asset đã được tạo trong regression với cùng raw SHA-256
+`1c1f7cec41d1984695475283bf6c9b6318b9fdb5473507f86be701e143f3a660`; C0B
+không gọi asset từ runtime, để dành wiring cho C0C.
 
 Registry trả về collection/object immutable, ordering deterministic theo
 identity/version/hash, và chỉ có `list`, `findByCanonicalHash` và
