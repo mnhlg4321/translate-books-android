@@ -11,7 +11,7 @@ activation, project binding và execution không được triển khai.
 
 - Branch đầu/cuối: `feature/v4.16`.
 - HEAD đầu: `c31b9e29157c33b2d323f992e0be267c3607a709`.
-- Commit implementation của nhóm: `fb2bd262dc996d20fbef051414727525410e9e1a` (`feat(editorial): bundle trusted engine profile registry`) và `6c6fdb2c3ab15e972716d005b1588cee8b51fdec` (`build(editorial): copy trusted profile into APK assets`). Đây là implementation baseline trước documentation handoff commit, theo quy ước snapshot không tự tham chiếu commit đang chứa chính snapshot.
+- Commit implementation của nhóm: `fb2bd262dc996d20fbef051414727525410e9e1a` (`feat(editorial): bundle trusted engine profile registry`), `6c6fdb2c3ab15e972716d005b1588cee8b51fdec` (`build(editorial): copy trusted profile into APK assets`) và `285819c329c922d1256eb27bc13ee5ba75ec5fd1` (`fix(editorial): pin capability evidence provenance`). Đây là implementation baseline trước documentation handoff commit, theo quy ước snapshot không tự tham chiếu commit đang chứa chính snapshot.
 - Baseline đã xác minh trước khi sửa: Gradle `9.3.0`, AGP `8.7.3`, JBR/JDK `21`, Java source/target `17`, compile/target SDK `35`, SQLite v14, latest accepted APK `4.16-dev.30`/code92.
 - Ba file user-owned `.idea/compiler.xml`, `.idea/gradle.xml`, `.idea/misc.xml` không bị sửa, stage, stash, commit, xóa hoặc ghi đè.
 
@@ -36,11 +36,12 @@ Profile resource path cố định:
 - Profile version: `1.0.0`
 - Engine version: `4.16-dev.30`
 - Contract bounds: `null`/`null`; schema, input roles, phase graph, context allow-list, evidence-schema fingerprints, gate fingerprints, release fingerprints và adapters đều rỗng. Đây là no-executable-contract profile, không phải wildcard support.
-- Full canonical profile hash: `916ae87dc0b0f429dcf9ae3ffa3fbc76efdf0ebd2c7f631aea572567819b67a3`
-- Full machine contract fingerprint: `7bcc3d249d66dbe834b764f3bf129752435e50953be47b566c17db9d79cb489b`
-- Full raw resource SHA-256: `1c1f7cec41d1984695475283bf6c9b6318b9fdb5473507f86be701e143f3a660`
+- Full canonical profile hash: `2d4e2f76dc5defcfb98cfd36cec49b0e5454cb3462db93a6b1586f7784eb91b6`
+- Full machine contract fingerprint: `6410f374ce175cbc6fc32484f5cd9635888b9297b01d882923af06ccd4ac1e4c`
+- Full raw resource SHA-256: `deb0e89a4084a88c137c71ba2aa7a7170f84d9979395ef58866c73529ce601eb`
 - `buildSourceCommit`: `8fbc8d1ed004c1524e001b7bbd0a2b321584331b`.
-- Capability evidence: `pack.integrity.sha256.v1`, source commit `8fbc8d1ed004c1524e001b7bbd0a2b321584331b`, evidence fingerprint `962da813527c71d7090b4fb397e0852a60495569b0c3685542aff165105c9220` (SHA-256 của `BUILD_INFO.json` build code92), evidence class `production-build`.
+- Capability evidence: `pack.integrity.sha256.v1`, source commit `8fbc8d1ed004c1524e001b7bbd0a2b321584331b`, evidence fingerprint `9846036d707a0df8d68d5c106938052c34a103d288ae51871b05599c10a23d1f`, evidence class `production-build`.
+- Evidence fingerprint method: SHA-256 của UTF-8 manifest `EDITORIAL_ENGINE_CAPABILITY_EVIDENCE_V1`, `capabilityId=pack.integrity.sha256.v1`, implementation Git blob `46621fa9d0d8bd2e7e332e101392b117e80ce346`, unit-test Git blob `1a4909e88470bbf9d14cb4a6701dcdb18511b1b4` và `BUILD_INFO.json` SHA-256 `962da813527c71d7090b4fb397e0852a60495569b0c3685542aff165105c9220`.
 - Production capability được công nhận duy nhất: `pack.integrity.sha256.v1`.
 - Chín capability còn thiếu và được khai báo explicit: `lineage.exact-parent.v1`, `ledger.exhaustive.safe4.v1`, `gate.derived.safe4.v1`, `context.pronoun-pair.safe4.v1`, `barrier.l1-raw-first.v1`, `diff.change-coverage.v1`, `qa.l3-two-adversarial.v1`, `release.safe4.v1`, `replay.safe4.g1-g10.v1`.
 
@@ -55,7 +56,7 @@ fallback hoặc chọn profile “latest”.
 `app/build.gradle` chỉ đồng bộ đúng JSON này vào generated asset path
 `editorial/engine-profile/v1/profile.json` và verify byte parity trước build.
 Generated APK asset đã được tạo trong regression với cùng raw SHA-256
-`1c1f7cec41d1984695475283bf6c9b6318b9fdb5473507f86be701e143f3a660`; C0B
+`deb0e89a4084a88c137c71ba2aa7a7170f84d9979395ef58866c73529ce601eb`; C0B
 không gọi asset từ runtime, để dành wiring cho C0C.
 
 Registry trả về collection/object immutable, ordering deterministic theo
