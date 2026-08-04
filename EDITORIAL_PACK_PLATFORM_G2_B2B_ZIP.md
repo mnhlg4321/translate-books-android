@@ -62,6 +62,8 @@ compatibility checking and immutable storing progress. Terminal states are:
 
 The result action only opens the refreshed read-only management detail for the
 returned canonical hash. No pack-level mutation action is exposed.
+Re-importing the same canonical hash is surfaced as `Pack đã tồn tại`; the
+registry and immutable storage are reused without creating a mutable copy.
 
 ## Security and recovery
 

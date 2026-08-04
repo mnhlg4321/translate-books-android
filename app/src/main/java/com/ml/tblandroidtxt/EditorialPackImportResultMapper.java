@@ -39,9 +39,11 @@ public final class EditorialPackImportResultMapper {
                 "Không thể nhập pack", "Importer không trả về kết quả.");
         if (result.state() == EditorialPackImportState.STORED_READY_FOR_CERTIFICATION
                 && result.compatibilityClass() == EditorialPackCompatibilityClass.DATA_COMPATIBLE) {
-            String detail = identity(result) + "\nDATA_COMPATIBLE\nPack chưa được chứng nhận và chưa thể chạy biên tập";
+            String detail = identity(result) + "\nDATA_COMPATIBLE\n"
+                    + (result.alreadyExisted() ? "Không tạo bản mutable mới; registry giữ nguyên.\n" : "")
+                    + "Pack chưa được chứng nhận và chưa thể chạy biên tập";
             return EditorialPackImportUiState.result(EditorialPackImportUiState.Phase.READY_FOR_CERTIFICATION,
-                    "Đã nhập và lưu bất biến • chờ chứng nhận", detail, result);
+                    result.alreadyExisted() ? "Pack đã tồn tại" : "Đã nhập và lưu bất biến • chờ chứng nhận", detail, result);
         }
         if (result.state() == EditorialPackImportState.STORED_BLOCKED) {
             String detail = identity(result) + "\n" + classLabel(result.compatibilityClass())

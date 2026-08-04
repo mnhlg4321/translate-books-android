@@ -101,6 +101,16 @@ public class EditorialPackImportCoordinatorTest {
         assertFalse(state.detail().contains("đã kích hoạt"));
     }
 
+    @Test public void idempotentHashUsesExistingWordingWithoutMutationClaim() {
+        EditorialPackImportResult result = new EditorialPackImportResult("i", EditorialPackImportState.STORED_READY_FOR_CERTIFICATION,
+                EditorialPackImportError.NONE, "", "pack", "1.0.0", HASH,
+                EditorialPackCompatibilityClass.DATA_COMPATIBLE, HASH, java.util.Set.of(), true);
+        EditorialPackImportUiState state = EditorialPackImportResultMapper.result(result);
+        assertEquals("Pack đã tồn tại", state.title());
+        assertTrue(state.detail().contains("registry giữ nguyên"));
+        assertTrue(state.detail().contains("chưa thể chạy biên tập"));
+    }
+
     private static EditorialPackImportCoordinator coordinator(EditorialPackImportCoordinator.ZipImporter importer,
                                                                List<EditorialPackImportUiState> states) {
         return new EditorialPackImportCoordinator(uri -> new ByteArrayInputStream(new byte[]{1}), importer,

@@ -123,7 +123,7 @@ public final class EditorialPackImportService {
                 updateImport(importId, existing.state, compatibilityReason, manifest.packId(), manifest.version(), manifest.canonicalPackHash(), false, existing.id);
                 storage.deleteOwnedStaging(importId);
                 notifyState(progress, existing.state);
-                return result(importId, existing.state, EditorialPackImportError.NONE, compatibilityReason, manifest, compatibility, existing.storageKey);
+                return result(importId, existing.state, EditorialPackImportError.NONE, compatibilityReason, manifest, compatibility, existing.storageKey, true);
             }
             ExistingHash existingHash = existingHash(manifest.canonicalPackHash());
             if (existingHash != null) {
@@ -484,9 +484,15 @@ public final class EditorialPackImportService {
 
     private EditorialPackImportResult result(String importId, EditorialPackImportState state, EditorialPackImportError error, String reason,
                                              EditorialPackManifest manifest, EditorialCompatibilityResult compatibility, String storageKey) {
+        return result(importId, state, error, reason, manifest, compatibility, storageKey, false);
+    }
+
+    private EditorialPackImportResult result(String importId, EditorialPackImportState state, EditorialPackImportError error, String reason,
+                                             EditorialPackManifest manifest, EditorialCompatibilityResult compatibility, String storageKey,
+                                             boolean alreadyExisted) {
         return new EditorialPackImportResult(importId, state, error, reason, manifest.packId(), manifest.version(), manifest.canonicalPackHash(),
                 compatibility == null ? null : compatibility.classification(), storageKey,
-                compatibility == null ? Set.of() : compatibility.missingCapabilities());
+                compatibility == null ? Set.of() : compatibility.missingCapabilities(), alreadyExisted);
     }
 
     private static String issueText(List<EditorialPackIntegrityResult.Issue> issues) {
