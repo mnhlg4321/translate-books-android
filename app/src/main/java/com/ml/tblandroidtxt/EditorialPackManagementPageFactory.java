@@ -30,6 +30,21 @@ final class EditorialPackManagementPageFactory {
         dialog.show();
     }
 
+    /** Refreshes the read-only registry and opens the exact imported hash when present. */
+    void show(String canonicalHash) {
+        EditorialPackListPresenter.Result result = loadRegistry();
+        if (canonicalHash != null && !canonicalHash.isEmpty()
+                && result.state() == EditorialPackListPresenter.State.CONTENT) {
+            for (EditorialPackUiModel model : result.packs()) {
+                if (canonicalHash.equals(model.canonicalHash())) {
+                    showDetail(model);
+                    return;
+                }
+            }
+        }
+        show();
+    }
+
     View build() {
         ScrollView scroll = a.scroll();
         scroll.setFillViewport(true);

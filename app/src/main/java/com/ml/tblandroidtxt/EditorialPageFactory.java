@@ -34,6 +34,7 @@ final class EditorialPageFactory {
         TextView packHelp = a.text("Kiểm tra các pack đã được lưu trong persistent registry. Khu vực này chỉ đọc; built-in SAFE4 và candidate bên ngoài không được seed tự động.", 12, a.MUTED, false);
         packHelp.setSingleLine(false);
         packs.addView(packHelp, a.marginLP(-1, -2, 0, 5, 0, 0));
+        packs.addView(a.secondaryButton("Import Editorial Pack ZIP", v -> a.openEditorialPackZipImport()), a.marginLP(-1, a.dp(44), 0, 6, 0, 0));
         packs.addView(a.secondaryButton("Xem các pack đã lưu", v -> new EditorialPackManagementPageFactory(a).show()), a.marginLP(-1, a.dp(44), 0, 6, 0, 0));
         packs.addView(a.text("READ ONLY • không import / certify / activate / delete / replace", 11, a.CYAN, true));
         root.addView(packs, a.marginLP(-1, -2, 0, 0, 0, 10));

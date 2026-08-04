@@ -167,6 +167,7 @@ public class MainActivity extends Activity {
     final Map<Long,Map<String,EditorialImportPlanner.Source>> pendingEditorialPronounOverrides=new HashMap<>();
     long pendingEditorialReferenceProjectId = -1L;
     EditorialSafe4Workflow.AssetRole pendingEditorialReferenceRole = null;
+    EditorialPackImportCoordinator editorialPackImportCoordinator;
 
     final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) {
@@ -260,6 +261,10 @@ public class MainActivity extends Activity {
         ModelCatalog.removeListener(catalogListener);
         preflightGeneration.incrementAndGet();
         preflightExecutor.shutdownNow();
+        if (editorialPackImportCoordinator != null) {
+            editorialPackImportCoordinator.close();
+            editorialPackImportCoordinator = null;
+        }
         super.onDestroy();
     }
 
@@ -659,6 +664,14 @@ public class MainActivity extends Activity {
         return new JobsMainPageFactory(this).build();
     }
     View buildEditorialPage() { return new EditorialPageFactory(this).build(); }
+
+    /** Thin request entry point; ZIP parsing, validation and persistence stay outside Activity. */
+    void openEditorialPackZipImport() { EditorialPackImportPageFactory.showInstructions(this); }
+
+    void attachEditorialPackImportCoordinator(EditorialPackImportCoordinator coordinator) {
+        if (editorialPackImportCoordinator != null) editorialPackImportCoordinator.close();
+        editorialPackImportCoordinator = coordinator;
+    }
 
     JobsPageFactory developerToolsFactory() {
         return new JobsPageFactory(
@@ -1168,6 +1181,19 @@ public class MainActivity extends Activity {
 
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (EditorialPackSafBridge.isRequest(requestCode)) {
+            EditorialPackImportCoordinator coordinator = editorialPackImportCoordinator;
+            if (coordinator != null) {
+                Uri selected = EditorialPackSafBridge.selectedUri(resultCode, data);
+                if (selected == null) {
+                    if (resultCode == RESULT_CANCELED) coordinator.onPickerCancelled();
+                    else coordinator.onUriSelected(null);
+                } else {
+                    coordinator.onUriSelected(selected);
+                }
+            }
+            return;
+        }
         if (resultCode != RESULT_OK || data == null) {
             if (requestCode == REQ_PRONOUN) pendingPronounReplaceId = "";
             if (requestCode == REQ_EDITORIAL_REFERENCE) { pendingEditorialReferenceProjectId=-1L; pendingEditorialReferenceRole=null; }
