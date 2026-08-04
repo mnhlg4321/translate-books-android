@@ -1,0 +1,49 @@
+{
+  "profileFormat": "com.ml.tblandroidtxt.editorial-engine-profile",
+  "profileFormatVersion": 1,
+  "engineProfileId": "com.ml.tblandroidtxt.editorial.engine.bootstrap",
+  "engineProfileVersion": "1.0.0",
+  "engineVersion": "4.16-dev.30",
+  "minimumSupportedContractVersion": null,
+  "maximumSupportedContractVersion": null,
+  "supportedSchemaVersions": [],
+  "supportedInputRoles": [],
+  "supportedPhaseGraph": {"phases": [], "edges": []},
+  "contextAllowListByPhase": {},
+  "evidenceSchemaFingerprints": [],
+  "gateDefinitionFingerprints": [],
+  "releaseArtifactFingerprints": [],
+  "implementedCapabilities": ["pack.integrity.sha256.v1"],
+  "explicitlyMissingCapabilities": [
+    "lineage.exact-parent.v1",
+    "ledger.exhaustive.safe4.v1",
+    "gate.derived.safe4.v1",
+    "context.pronoun-pair.safe4.v1",
+    "barrier.l1-raw-first.v1",
+    "diff.change-coverage.v1",
+    "qa.l3-two-adversarial.v1",
+    "release.safe4.v1",
+    "replay.safe4.g1-g10.v1"
+  ],
+  "capabilityEvidence": [
+    {
+      "capabilityId": "pack.integrity.sha256.v1",
+      "sourceCommit": "8fbc8d1ed004c1524e001b7bbd0a2b321584331b",
+      "evidenceFingerprint": "962da813527c71d7090b4fb397e0852a60495569b0c3685542aff165105c9220",
+      "evidenceClass": "production-build"
+    }
+  ],
+  "bundledAdapterIds": [],
+  "adapterDescriptors": [],
+  "machineContractFingerprint": "7bcc3d249d66dbe834b764f3bf129752435e50953be47b566c17db9d79cb489b",
+  "createdAt": "2026-08-04T00:00:00+07:00",
+  "buildSourceCommit": "8fbc8d1ed004c1524e001b7bbd0a2b321584331b",
+  "deprecationPolicy": {
+    "state": "ACTIVE",
+    "replacementProfileId": null,
+    "replacementVersion": null,
+    "automaticReplacement": false,
+    "automaticProjectRebind": false
+  },
+  "canonicalProfileHash": "916ae87dc0b0f429dcf9ae3ffa3fbc76efdf0ebd2c7f631aea572567819b67a3"
+}
