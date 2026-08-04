@@ -78,11 +78,19 @@ orphan recovery protocol; the UI never deletes staging or storage.
 ## Verification evidence
 
 - `:editorial-engine:test`: 19 tests passed.
-- `:app:testDebugUnitTest`: 160 tests passed, 0 failures/errors/skips.
+- `:app:testDebugUnitTest`: 161 tests passed, 0 failures/errors/skips.
 - `:app:compileDebugAndroidTestJavaWithJavac`: passed (connected device not
   available, so no instrumentation execution or visual QA is claimed).
 - `:app:lintDebug`: passed with 0 errors and 54 warnings (the repository's current warning baseline after this UI addition).
 - `git diff --check`: passed.
+
+The final archive-first build is `4.16-dev.29`/code91, event
+`build-20260804-073059`, from source commit `f62ea5b`. APK SHA-256 is
+`959A25630941550E3D59CB2FBE75C1E3C6D33DCA2A109553C248CDA653E4DE90` and the
+exact tracked-source ZIP SHA-256 is
+`A55B5AEDDD945F5247FC1A6177C80654C615DF664B34485F106B92C83B948BAD`.
+Artifact and backup payloads are byte-identical; the APK was archived and not
+installed because `adb` is unavailable.
 
 Focused JVM coverage includes picker cancel, double-click serialization,
 worker-thread execution, exact-hash result refresh, stream close on success and
