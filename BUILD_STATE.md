@@ -17,18 +17,18 @@
 
 ## Current development build
 
-- versionName: `4.16-dev.27`
-- versionCode: `89`
-- event: `build-20260803-184804`
+- versionName: `4.16-dev.28`
+- versionCode: `90`
+- event: `build-20260804-072601`
 - branch: `feature/v4.16`
-- source commit: `71d9ca8d7c458aaa658b2fc90154bf44ac1615d4`
-- APK: `artifacts/builds/v4.16-dev.27/build-20260803-184804/TranslateBooks-v4.16-dev.27-code89.apk`
-- immutable local mirror: `backup/builds/v4.16-dev.27/build-20260803-184804/`
-- APK SHA-256: `A0A3BFDA91E2F3AF0D7A0B8112F629877492D3E5EBD8DA53CD30A640F9F75B15`
-- source ZIP SHA-256: `72FA35C515F06FD36BC6B8E263ABD08E9D0BA2EC12E8EA51042FC0D3E3FE852F`
-- regression: archive-first G2-B2A build completed successfully; `:editorial-engine:test` passed 19/19 and `:app:testDebugUnitTest` passed 155/155 with 0 failures/errors/skips, including 7 presenter/mapper tests; Android Lint completed with 53 warnings/0 errors; `:app:compileDebugAndroidTestJavaWithJavac` passed. Artifact and backup payloads are byte-identical and all four checksum entries pass. The exact source ZIP contains the G2-B2A design and preserves all three SAFE4 asset hashes.
+- source commit: `3efb620aa42066e21a6f2cfa626c5e1695323a3f`
+- APK: `artifacts/builds/v4.16-dev.28/build-20260804-072601/TranslateBooks-v4.16-dev.28-code90.apk`
+- immutable local mirror: `backup/builds/v4.16-dev.28/build-20260804-072601/`
+- APK SHA-256: `1BCCB072A807C54E05BBED29870A66D7FB9C03738A626C95B17E74235EB85E7B`
+- source ZIP SHA-256: `635D5C559D701086B7A928EB89DB8A00A5E9A3DC0374C1B1AD3E10AAE1D77854`
+- regression: archive-first G2-B2B-ZIP build completed successfully; `:editorial-engine:test` passed 19/19 and `:app:testDebugUnitTest` passed 160/160 with 0 failures/errors/skips; Android Lint completed with 54 warnings/0 errors; `:app:compileDebugAndroidTestJavaWithJavac` passed. Artifact and backup payloads are byte-identical and all four checksum entries pass. The exact source ZIP contains all three SAFE4 asset files with their canonical hashes.
 - device state: build archived and not installed. `adb` is unavailable in this environment, so connected/visual UI QA was not run. The previously installed code84 contains the retired V5 engine and must not be used for SAFE4 QA.
-- scope: G2-B1 storage/import remains intact and G2-B2A read-only pack management UI is implemented. Picker/import, certification, Golden Replay, activation, project binding, model execution, L1–L3 and release receipts remain blocked; this is not a completed v4.16 release.
+- scope: G2-B1 storage/import, G2-B2A read-only management and G2-B2B-ZIP runtime ZIP selection are implemented. Folder import, certification, Golden Replay, activation, project binding, model execution, L1–L3 and release receipts remain blocked; this is not a completed v4.16 release.
 
 ## Release identity
 

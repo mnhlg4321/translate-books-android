@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-04` (G2-B2B-ZIP implementation in progress; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
-- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.27`/code89 is still the latest archived build. G2-B2B-ZIP source changes are not yet archived; Editorial execution remains intentionally blocked.
+- Snapshot updated: `2026-08-04` (G2-B2B-ZIP implemented and archived; review stop; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
+- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.28`/code90 is the latest archived G2-B2B-ZIP build. Editorial execution remains intentionally blocked.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `5ca6745` (G2-B2A archive/evidence baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
+- Current commit: `3efb620` (G2-B2B-ZIP source/build baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
 - Current build: `artifacts/builds/v4.16-dev.27/build-20260803-184804/TranslateBooks-v4.16-dev.27-code89.apk`, SHA-256 `A0A3BFDA91E2F3AF0D7A0B8112F629877492D3E5EBD8DA53CD30A640F9F75B15`; matching five-file payload is under `backup/builds/v4.16-dev.27/build-20260803-184804/`. Source ZIP SHA-256 is `72FA35C515F06FD36BC6B8E263ABD08E9D0BA2EC12E8EA51042FC0D3E3FE852F`; mirror parity, both manifests, 19 editorial-engine tests, 155 app JVM tests, lint 0 errors/53 warnings, instrumentation compilation and exact SAFE4 hashes inside the ZIP pass. No device is available and code89 was not installed. The released v4.15/code62 archive remains unchanged.
 
 ## G2-B1 handoff
@@ -21,8 +21,8 @@
 
 ## G2-B2B-ZIP handoff
 
-- In progress: headless `importZip(InputStream)` boundary, progress/result mapper, one-shot SAF bridge, ZIP import coordinator and Editorial-tab import action. No certification, activation, project binding, execution or folder import is present.
-- Focused evidence so far: coordinator JVM tests pass; app JVM regression is 160/160 and editorial-engine is 19/19; Android instrumentation source compilation passes; lint has 0 errors. Final source commits, archive-first APK and durable parity evidence remain pending.
+- Completed: headless `importZip(InputStream)` boundary, progress/result mapper, one-shot SAF bridge, ZIP import coordinator and Editorial-tab import action. No certification, activation, project binding, execution or folder import is present.
+- Evidence: commits `e124b5a`, `8901c8a`, `22c080b`, `fd4f807`, `3efb620`; engine 19/19; app JVM 160/160; instrumentation source compilation pass; lint 0 errors/54 warnings; archive-first `4.16-dev.28`/code90 event `build-20260804-072601` APK SHA `1BCCB072A807C54E05BBED29870A66D7FB9C03738A626C95B17E74235EB85E7B`; source ZIP SHA `635D5C559D701086B7A928EB89DB8A00A5E9A3DC0374C1B1AD3E10AAE1D77854`; artifact/backup parity pass. No device/visual QA.
 - Runtime profile is deliberately empty until a trusted contract registry exists; imports cannot be guessed compatible and therefore remain fail-closed/blocked in the current app. Canonical SAFE4 and external candidate boundary is unchanged.
 
 ## Completed tasks
@@ -203,7 +203,7 @@
 
 - Resolve, in a later approved pack-review phase, whether the external `DBE214...` Prompt intentionally changes L2 Pronoun policy. Preserve code86's `0B4C...` Prompt as a separate immutable historical identity; do not reuse the same pack version/hash.
 - G2-A implementation is complete in commits `83a9428`, `616dc46`, `eb15481` and `9d401b2`; clean-state focused tests and full app JVM regression pass. No app connection, SQLite change, model call, L1/L2/L3 or APK build was made.
-- Complete G2-B2B-ZIP commit/evidence cycle, archive an APK with `scripts/build-and-save.ps1`, verify artifact/backup/source ZIP parity, then stop for user review. Do not proceed to folder import, certification, activation, project binding or execution.
+- G2-B2B-ZIP is complete for this approval scope. Await user review before any folder import, certification, activation, project binding or execution work.
 - Implement typed exhaustive ledgers and machine-derived gates; do not accept model-provided PASS/CLOSED as evidence.
 - Implement Pronoun `AVAILABLE/NONE/LEGACY_REJECTED`, scoped Pair Context, exact per-phase context allow-lists and checkpoint lineage.
 - Implement versioned L1/L2/L3 SAFE4 runners, SAFE4 receipt/release artifacts, and retained Golden Replay G1–G10 evidence before enabling execution.
@@ -321,7 +321,7 @@
 
 ## Next step
 
- Finish G2-B2B-ZIP regression and archive-first evidence, then stop for approval before any folder import/certification/activation/binding/execution work; do not re-enable an old V5 path or claim pack certification.
+ Review G2-B2B-ZIP commits and archive evidence. Stop here before any folder import/certification/activation/binding/execution work; do not re-enable an old V5 path or claim pack certification.
 
 ## Resume rule
 
