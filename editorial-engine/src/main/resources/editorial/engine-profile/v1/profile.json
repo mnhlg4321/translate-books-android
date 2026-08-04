@@ -29,13 +29,13 @@
     {
       "capabilityId": "pack.integrity.sha256.v1",
       "sourceCommit": "8fbc8d1ed004c1524e001b7bbd0a2b321584331b",
-      "evidenceFingerprint": "962da813527c71d7090b4fb397e0852a60495569b0c3685542aff165105c9220",
+      "evidenceFingerprint": "9846036d707a0df8d68d5c106938052c34a103d288ae51871b05599c10a23d1f",
       "evidenceClass": "production-build"
     }
   ],
   "bundledAdapterIds": [],
   "adapterDescriptors": [],
-  "machineContractFingerprint": "7bcc3d249d66dbe834b764f3bf129752435e50953be47b566c17db9d79cb489b",
+  "machineContractFingerprint": "6410f374ce175cbc6fc32484f5cd9635888b9297b01d882923af06ccd4ac1e4c",
   "createdAt": "2026-08-04T00:00:00+07:00",
   "buildSourceCommit": "8fbc8d1ed004c1524e001b7bbd0a2b321584331b",
   "deprecationPolicy": {
@@ -45,5 +45,5 @@
     "automaticReplacement": false,
     "automaticProjectRebind": false
   },
-  "canonicalProfileHash": "916ae87dc0b0f429dcf9ae3ffa3fbc76efdf0ebd2c7f631aea572567819b67a3"
+  "canonicalProfileHash": "2d4e2f76dc5defcfb98cfd36cec49b0e5454cb3462db93a6b1586f7784eb91b6"
 }

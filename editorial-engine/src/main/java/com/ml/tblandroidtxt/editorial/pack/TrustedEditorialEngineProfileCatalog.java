@@ -17,11 +17,11 @@ public final class TrustedEditorialEngineProfileCatalog {
             "com.ml.tblandroidtxt.editorial.engine.bootstrap";
     public static final String PRODUCTION_PROFILE_VERSION = "1.0.0";
     public static final String EXPECTED_RESOURCE_SHA256 =
-            "1c1f7cec41d1984695475283bf6c9b6318b9fdb5473507f86be701e143f3a660";
+            "deb0e89a4084a88c137c71ba2aa7a7170f84d9979395ef58866c73529ce601eb";
     public static final String EXPECTED_CANONICAL_PROFILE_HASH =
-            "916ae87dc0b0f429dcf9ae3ffa3fbc76efdf0ebd2c7f631aea572567819b67a3";
+            "2d4e2f76dc5defcfb98cfd36cec49b0e5454cb3462db93a6b1586f7784eb91b6";
     public static final String EXPECTED_MACHINE_CONTRACT_FINGERPRINT =
-            "7bcc3d249d66dbe834b764f3bf129752435e50953be47b566c17db9d79cb489b";
+            "6410f374ce175cbc6fc32484f5cd9635888b9297b01d882923af06ccd4ac1e4c";
 
     private static final List<TrustAnchor> PRODUCTION = List.of(new TrustAnchor(
             PRODUCTION_RESOURCE_PATH,
