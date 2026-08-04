@@ -29,6 +29,7 @@
 - regression: archive-first G2-B2B-ZIP build completed successfully after idempotent same-hash wording fix; `:editorial-engine:test` passed 19/19 and `:app:testDebugUnitTest` passed 161/161 with 0 failures/errors/skips; Android Lint completed with 54 warnings/0 errors; `:app:compileDebugAndroidTestJavaWithJavac` passed. Artifact and backup payloads are byte-identical and all four checksum entries pass. The exact source ZIP contains all three SAFE4 asset files with their canonical hashes.
 - device state: build archived and not installed. `adb` is unavailable in this environment, so connected/visual UI QA was not run. The previously installed code84 contains the retired V5 engine and must not be used for SAFE4 QA.
 - scope: G2-B1 storage/import, G2-B2A read-only management and G2-B2B-ZIP runtime ZIP selection are implemented. Folder import, certification, Golden Replay, activation, project binding, model execution, L1–L3 and release receipts remain blocked; this is not a completed v4.16 release.
+- handoff: `EDITORIAL_ACCOUNT_TRANSFER_HANDOFF.md` records the verified transfer state; review stop only, with no next phase started.
 
 ## Release identity
 

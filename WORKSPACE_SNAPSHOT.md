@@ -3,27 +3,28 @@
 - Snapshot updated: `2026-08-04` (G2-B2B-ZIP implemented and archived; review stop; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
 - Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.29`/code91 is the latest archived G2-B2B-ZIP build. Editorial execution remains intentionally blocked.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `ced89c5` (G2-B2B-ZIP evidence baseline immediately before this snapshot commit; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.16-dev.27/build-20260803-184804/TranslateBooks-v4.16-dev.27-code89.apk`, SHA-256 `A0A3BFDA91E2F3AF0D7A0B8112F629877492D3E5EBD8DA53CD30A640F9F75B15`; matching five-file payload is under `backup/builds/v4.16-dev.27/build-20260803-184804/`. Source ZIP SHA-256 is `72FA35C515F06FD36BC6B8E263ABD08E9D0BA2EC12E8EA51042FC0D3E3FE852F`; mirror parity, both manifests, 19 editorial-engine tests, 155 app JVM tests, lint 0 errors/53 warnings, instrumentation compilation and exact SAFE4 hashes inside the ZIP pass. No device is available and code89 was not installed. The released v4.15/code62 archive remains unchanged.
+- Current commit: `a831e94` (verified implementation baseline immediately before this documentation-only handoff commit; actual `HEAD` must be confirmed when resuming)
+- Current build: `artifacts/builds/v4.16-dev.29/build-20260804-073059/TranslateBooks-v4.16-dev.29-code91.apk`, SHA-256 `959A25630941550E3D59CB2FBE75C1E3C6D33DCA2A109553C248CDA653E4DE90`; matching five-file payload is under `backup/builds/v4.16-dev.29/build-20260804-073059/`. Source ZIP SHA-256 is `A55B5AEDDD945F5247FC1A6177C80654C615DF664B34485F106B92C83B948BAD`; mirror parity, both manifests, 19 editorial-engine tests, 161 app JVM tests, lint 0 errors/54 warnings, instrumentation compilation and exact SAFE4 hashes inside the ZIP pass. No device is available and code91 was not installed. The released v4.15/code62 archive remains unchanged.
 
 ## G2-B1 handoff
 
 - Completed: additive SQLite v14 pack registry, immutable private storage, TOCTOU-safe headless import service, recovery, fail-closed read-only registry, migration/security/recovery tests, checklist and archive evidence.
-- Pending: user review only. G2-B2 (UI/read-only management) is not started. Certification, Golden Replay, project binding and execution remain blocked.
+- Pending: user review only. G2-B2A and G2-B2B-ZIP are complete. Certification, Golden Replay, project binding and execution remain blocked.
 - Known limitations: connected instrumentation could not run because `adb` is unavailable; no device QA or installation is claimed. The importer tests are compiled and ready for a device run.
 - Canonical/candidate boundary: code86 SAFE4 hashes are unchanged; `DBE214...` and `3B2FCC...` remain outside the registry and cannot activate or replace SAFE4.
 
 ## G2-B2A handoff
 
 - Completed: read-only Editorial Packs section, grouped deterministic list, detail dialog, exact fail-closed wording, persisted metadata/integrity display, presenter/mapper tests and no-row-mutation instrumentation source.
-- Pending: user review only. G2-B2B and all picker/import/certification/activation/binding/execution work are not started.
+- Pending: user review only. G2-B2B-ZIP is complete. Certification, activation, binding and execution remain blocked.
 - Connected/visual UI QA remains pending because `adb` is unavailable.
 
 ## G2-B2B-ZIP handoff
 
 - Completed: headless `importZip(InputStream)` boundary, progress/result mapper, one-shot SAF bridge, ZIP import coordinator and Editorial-tab import action. No certification, activation, project binding, execution or folder import is present.
-- Evidence: commits `e124b5a`, `8901c8a`, `22c080b`, `fd4f807`, `3efb620`, `f62ea5b`; engine 19/19; app JVM 161/161; instrumentation source compilation pass; lint 0 errors/54 warnings; archive-first `4.16-dev.29`/code91 event `build-20260804-073059` APK SHA `959A25630941550E3D59CB2FBE75C1E3C6D33DCA2A109553C248CDA653E4DE90`; source ZIP SHA `A55B5AEDDD945F5247FC1A6177C80654C615DF664B34485F106B92C83B948BAD`; artifact/backup parity pass. No device/visual QA.
+- Evidence: commits `e124b5a`, `8901c8a`, `22c080b`, `fd4f807`, `3efb620`, `f62ea5b`, `ced89c5`, `a831e94`; engine 19/19; app JVM 161/161; instrumentation source compilation pass; lint 0 errors/54 warnings; archive-first `4.16-dev.29`/code91 event `build-20260804-073059` APK SHA `959A25630941550E3D59CB2FBE75C1E3C6D33DCA2A109553C248CDA653E4DE90`; source ZIP SHA `A55B5AEDDD945F5247FC1A6177C80654C615DF664B34485F106B92C83B948BAD`; artifact/backup parity pass. No device/visual QA.
 - Runtime profile is deliberately empty until a trusted contract registry exists; imports cannot be guessed compatible and therefore remain fail-closed/blocked in the current app. Canonical SAFE4 and external candidate boundary is unchanged.
+- Handoff: `EDITORIAL_ACCOUNT_TRANSFER_HANDOFF.md` is the self-contained transfer document; no next step was executed.
 
 ## Completed tasks
 
