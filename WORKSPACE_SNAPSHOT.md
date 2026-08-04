@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-04` (G2-T0A toolchain baseline recovery PASS; Wrapper regression review stop before G2-T0B/G2-C0B; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
-- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.29`/code91 is the latest archived G2-B2B-ZIP build. Editorial execution remains intentionally blocked.
+- Snapshot updated: `2026-08-04` (G2-T0B toolchain hardening PASS; review stop before G2-C0B/C0C; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
+- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.30`/code92 is the latest archive-first G2-T0B build. Editorial execution remains intentionally blocked.
 - Current branch: `feature/v4.16`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned, unchanged and unstaged. The three toolchain drift files were restored to the committed baseline.
-- Current commit: `48e3e778012999cf681492bb2b06fcc861aaf928` (implementation/documentation baseline immediately before this G2-T0A handoff documentation commit; the final documentation commit is intentionally not self-referenced here)
-- Current build: `artifacts/builds/v4.16-dev.29/build-20260804-073059/TranslateBooks-v4.16-dev.29-code91.apk`, SHA-256 `959A25630941550E3D59CB2FBE75C1E3C6D33DCA2A109553C248CDA653E4DE90`; matching five-file payload is under `backup/builds/v4.16-dev.29/build-20260804-073059/`. Source ZIP SHA-256 is `A55B5AEDDD945F5247FC1A6177C80654C615DF664B34485F106B92C83B948BAD`; these code91 hashes and device evidence remain unchanged. G2-C0A source is newer than code91; no APK was built. Wrapper `9.3.0` with JBR `21.0.10` reran `:editorial-engine:test` 33/33, `:app:testDebugUnitTest` 161/161 and instrumentation source compilation; lint is 0 errors/53 warnings and `git diff --check` passes. The released v4.15/code62 archive remains unchanged.
+- Current commit: `8fbc8d1ed004c1524e001b7bbd0a2b321584331b` (implementation baseline immediately before this G2-T0B state/handoff documentation commit; the final documentation commit is intentionally not self-referenced here)
+- Current build: `artifacts/builds/v4.16-dev.30/build-20260804-182006/TranslateBooks-v4.16-dev.30-code92.apk`, SHA-256 `07BC98B22019832AFD37D0307E691957FBDC47D1C0E929949535D69AFB472801`; matching five-file payload is under `backup/builds/v4.16-dev.30/build-20260804-182006/`. Source ZIP SHA-256 is `BD6BCDC832DC5C3D9AFFA3E1C597A12D090F560F6B8D6319D0D65F7FB22C1126`. Wrapper `9.3.0` with official distribution SHA-256 `0d585f69da091fc5b2beced877feab55a3064d43b8a1d46aeb07996b0915e0e0` and JBR `21.0.10` passed `:editorial-engine:test` 33/33, `:app:testDebugUnitTest` 161/161, instrumentation source compilation, lint 0 errors/53 warnings and `git diff --check`; JDK preflight is 4/4. The released v4.15/code62 archive remains unchanged.
 
 ## G2-B1 handoff
 
@@ -32,6 +32,15 @@
 - The uncommitted AGP `9.2.1`/Gradle `9.4.1` drift was proven out-of-band and restored. Baseline is wrapper Gradle `9.3.0`, AGP `8.7.3`, Java source/target `17`, compile/target SDK `35`.
 - Wrapper verification used explicit Android Studio JBR `21.0.10` and completed successfully. No direct cached Gradle executable was used; no wrapper checksum or toolchain upgrade was added.
 - The pre-recovery diff is retained in `BUILD_TOOLCHAIN_DRIFT_G2_T0A.diff` with SHA-256 `0F6F4BE4D8B41051EEA5C9F6F4ECA15C399667F7B58801E7EF7822F53BC67F33`. No source, database, APK or SAFE4 asset changed.
+
+## G2-T0B toolchain hardening handoff
+
+- Completed: wrapper Gradle `9.3.0` is pinned with official sidecar SHA-256 `0d585f69da091fc5b2beced877feab55a3064d43b8a1d46aeb07996b0915e0e0`; AGP remains `8.7.3`; Java source/target remains `17`; compile/target SDK remains `35`.
+- Completed: JDK preflight requires build runtime major `21`, accepts explicit `-JavaHome` or `JAVA_HOME`, rejects Java 8, missing JAVA_HOME and invalid paths without exposing personal paths; test matrix is 4/4.
+- Completed: required Wrapper regression passed 33/33 engine tests, 161/161 app JVM tests, instrumentation source compilation, lint 0 errors/53 warnings and `git diff --check`.
+- Completed: archive-first `4.16-dev.30`/code92 event `build-20260804-182006` passed; APK SHA-256 `07BC98B22019832AFD37D0307E691957FBDC47D1C0E929949535D69AFB472801`; source ZIP SHA-256 `BD6BCDC832DC5C3D9AFFA3E1C597A12D090F560F6B8D6319D0D65F7FB22C1126`; artifact/backup five-file parity passed; code92 was not installed.
+- Completed: `BUILD_INFO.json` and README now record Gradle/URL/checksum, AGP, JDK/vendor/runtime/policy, Java source/target, SDK, Git/event and APK/source hashes. Existing metadata keys remain for backward compatibility.
+- Pending: user review stop. G2-C0B is the proposed next step and has not been implemented.
 
 ## Completed tasks
 
@@ -338,7 +347,7 @@
 
 ## Next step
 
-Review `BUILD_TOOLCHAIN_BASELINE_RECOVERY_G2_T0A.md` and approve the exact next step. G2-T0A is stopped here; do not start G2-T0B, G2-C0B or C0C, profile bundling/runtime selection/folder import/certification/activation/binding/execution work without separate approval.
+Review `BUILD_TOOLCHAIN_HARDENING_G2_T0B.md` and approve the exact next step. G2-T0B is stopped here; G2-C0B is proposed but not implemented. Do not start G2-C0C, profile bundling/runtime selection/folder import/certification/activation/binding/execution work without separate approval.
 
 ## Resume rule
 

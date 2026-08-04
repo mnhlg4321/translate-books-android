@@ -17,19 +17,20 @@
 
 ## Current development build
 
-- versionName: `4.16-dev.29`
-- versionCode: `91`
-- event: `build-20260804-073059`
+- versionName: `4.16-dev.30`
+- versionCode: `92`
+- event: `build-20260804-182006`
 - branch: `feature/v4.16`
-- source commit: `f62ea5b35a183071374498417b7ed4eef5637f33`
-- APK: `artifacts/builds/v4.16-dev.29/build-20260804-073059/TranslateBooks-v4.16-dev.29-code91.apk`
-- immutable local mirror: `backup/builds/v4.16-dev.29/build-20260804-073059/`
-- APK SHA-256: `959A25630941550E3D59CB2FBE75C1E3C6D33DCA2A109553C248CDA653E4DE90`
-- source ZIP SHA-256: `A55B5AEDDD945F5247FC1A6177C80654C615DF664B34485F106B92C83B948BAD`
-- regression: archive-first G2-B2B-ZIP build completed successfully after idempotent same-hash wording fix; `:editorial-engine:test` passed 19/19 and `:app:testDebugUnitTest` passed 161/161 with 0 failures/errors/skips; Android Lint completed with 54 warnings/0 errors; `:app:compileDebugAndroidTestJavaWithJavac` passed. Artifact and backup payloads are byte-identical and all four checksum entries pass. The exact source ZIP contains all three SAFE4 asset files with their canonical hashes. After this artifact, pure-JVM G2-C0A source was added in commits `0efde60`, `2f0a157`, `31b40d2` and `02af527`; focused C0A tests pass 14/14, full `:editorial-engine:test` passes 33/33, full app JVM tests pass 161/161 and instrumentation source compilation passes. No APK was built for C0A, so code91 remains the latest accepted APK and its recorded hashes are unchanged.
+- source commit: `8fbc8d1ed004c1524e001b7bbd0a2b321584331b`
+- APK: `artifacts/builds/v4.16-dev.30/build-20260804-182006/TranslateBooks-v4.16-dev.30-code92.apk`
+- immutable local mirror: `backup/builds/v4.16-dev.30/build-20260804-182006/`
+- APK SHA-256: `07BC98B22019832AFD37D0307E691957FBDC47D1C0E929949535D69AFB472801`
+- source ZIP SHA-256: `BD6BCDC832DC5C3D9AFFA3E1C597A12D090F560F6B8D6319D0D65F7FB22C1126`
+- toolchain provenance: Wrapper Gradle `9.3.0`, official distribution SHA-256 `0d585f69da091fc5b2beced877feab55a3064d43b8a1d46aeb07996b0915e0e0`, AGP `8.7.3`, JBR `21.0.10`/JetBrains, JDK major policy `21`, Java source/target `17`, compileSdk/targetSdk `35`.
+- regression: G2-T0B required Wrapper matrix passed with `:editorial-engine:test` 33/33, `:app:testDebugUnitTest` 161/161, instrumentation Java compilation PASS, lint 0 errors/53 warnings and `git diff --check` PASS. Preflight tests passed 4/4 for JDK 21, Java 8 rejection, missing JAVA_HOME and invalid path. Archive-first build completed successfully with no installation. Artifact and backup contain identical five-file payloads and all manifest hashes pass. The prior code91 device evidence remains the latest installed-device evidence; code92 was not installed.
 - device state: archived code91 APK was installed without rebuilding on OnePlus CPH2691 / Android 15 (`adb install -r` returned `Success`); package metadata reports `4.16-dev.29`/code91, minSdk 26 and targetSdk 35. Manual ZIP-import device QA passed the real SAF selection, immutable storage, fail-closed `STORED_BLOCKED` result and process-restart persistence checks. This was synthetic non-SAFE4 QA only; no certification, activation, binding, model call or execution was performed.
 - scope: G2-B1 storage/import, G2-B2A read-only management and G2-B2B-ZIP runtime ZIP selection are implemented. Folder import, certification, Golden Replay, activation, project binding, model execution, L1–L3 and release receipts remain blocked; this is not a completed v4.16 release.
-- handoff: `EDITORIAL_ACCOUNT_TRANSFER_HANDOFF.md` records the verified transfer state; G2-C0A is complete at a pure-JVM review stop. No profile is bundled, no registry/selector/runtime wiring is present, compatibility is unchanged, and packs remain `STORED_BLOCKED`. G2-C0B/C0C require separate approval.
+- handoff: `BUILD_TOOLCHAIN_HARDENING_G2_T0B.md` records the PASS/review stop, official wrapper checksum, JDK preflight matrix, Wrapper regression and archive provenance. G2-C0A remains complete at a pure-JVM review stop; no profile is bundled, no registry/selector/runtime wiring is present, compatibility is unchanged, and packs remain `STORED_BLOCKED`. G2-C0B/C0C require separate approval.
 
 ## Release identity
 
