@@ -17,6 +17,7 @@ import com.ml.tblandroidtxt.editorial.pack.EditorialPackManifest;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.AtomicMoveNotSupportedException;
@@ -35,8 +36,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.lang.reflect.Field;
 import java.nio.file.Paths;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /** Android persistence/import boundary. It snapshots streams once and never enables execution. */
 public final class EditorialPackImportService {
@@ -74,6 +78,13 @@ public final class EditorialPackImportService {
     public EditorialPackStorageLayout storageLayout() { return storage; }
 
     public EditorialPackImportResult importPack(Collection<EditorialPackImportEntry> entries) {
+        return importPack(entries, state -> { });
+    }
+
+    /** Imports already separated source entries and reports durable state transitions. */
+    public EditorialPackImportResult importPack(Collection<EditorialPackImportEntry> entries,
+                                                EditorialPackImportProgressListener listener) {
+        EditorialPackImportProgressListener progress = listener == null ? state -> { } : listener;
         String importId = UUID.randomUUID().toString();
         Path staging = storage.stagingDirectory(importId);
         boolean importRow = false;
@@ -83,16 +94,20 @@ public final class EditorialPackImportService {
             storage.writeOwnerMarker(importId);
             importRow = insertImportRow(importId, staging);
             Snapshot snapshot = snapshot(importId, entries);
+            notifyState(progress, EditorialPackImportState.SNAPSHOTTED);
             updateImport(importId, EditorialPackImportState.SNAPSHOTTED, "", snapshot.packId, snapshot.version, "", false, null);
             EditorialPackIntegrityResult integrity = integrityValidator.validate(snapshot.manifestBytes, snapshot.dataFiles);
             if (!integrity.valid()) {
                 String reason = issueText(integrity.issues());
+                notifyState(progress, EditorialPackImportState.STORED_BLOCKED);
                 return blockImport(importId, EditorialPackImportError.INTEGRITY_INVALID, reason, "", "", "", null, false);
             }
             EditorialPackManifest manifest = integrity.manifest();
+            notifyState(progress, EditorialPackImportState.INTEGRITY_VALIDATED);
             updateImport(importId, EditorialPackImportState.INTEGRITY_VALIDATED, "", manifest.packId(), manifest.version(), manifest.canonicalPackHash(), false, null);
             EditorialCompatibilityResult compatibility = compatibilityEvaluator.evaluate(manifest, engineProfile);
             String compatibilityReason = issueText(compatibility.issues());
+            notifyState(progress, EditorialPackImportState.COMPATIBILITY_EVALUATED);
             updateImport(importId, EditorialPackImportState.COMPATIBILITY_EVALUATED, compatibilityReason, manifest.packId(), manifest.version(), manifest.canonicalPackHash(), false, null);
 
             ExistingPack existing = existingPack(manifest);
@@ -107,7 +122,8 @@ public final class EditorialPackImportService {
                 }
                 updateImport(importId, existing.state, compatibilityReason, manifest.packId(), manifest.version(), manifest.canonicalPackHash(), false, existing.id);
                 storage.deleteOwnedStaging(importId);
-                return result(importId, existing.state, EditorialPackImportError.NONE, compatibilityReason, manifest, compatibility.classification(), existing.storageKey);
+                notifyState(progress, existing.state);
+                return result(importId, existing.state, EditorialPackImportError.NONE, compatibilityReason, manifest, compatibility, existing.storageKey);
             }
             ExistingHash existingHash = existingHash(manifest.canonicalPackHash());
             if (existingHash != null) {
@@ -117,23 +133,116 @@ public final class EditorialPackImportService {
 
             String storageKey = moveToImmutable(importId, manifest.canonicalPackHash());
             try {
-                return storeFinal(importId, manifest, compatibility, storageKey, compatibilityReason);
+                EditorialPackImportResult finalResult = storeFinal(importId, manifest, compatibility, storageKey, compatibilityReason);
+                notifyState(progress, finalResult.state());
+                return finalResult;
             } catch (SQLiteConstraintException e) {
+                notifyState(progress, EditorialPackImportState.STORED_BLOCKED);
                 return blockImport(importId, EditorialPackImportError.IDENTITY_COLLISION, "Registry identity collision; immutable storage was retained for recovery",
                         manifest.packId(), manifest.version(), manifest.canonicalPackHash(), compatibility.classification(), true);
             } catch (RuntimeException e) {
+                notifyState(progress, EditorialPackImportState.STORED_BLOCKED);
                 return blockImport(importId, EditorialPackImportError.DATABASE_WRITE_FAILED,
                         "Registry transaction failed; immutable storage was retained for recovery: " + safeMessage(e),
                         manifest.packId(), manifest.version(), manifest.canonicalPackHash(), compatibility.classification(), true);
             }
         } catch (ImportFailure e) {
             if (importRow) safelyBlockImport(importId, e.error, e.getMessage());
+            if (importRow) notifyState(progress, EditorialPackImportState.STORED_BLOCKED);
             return new EditorialPackImportResult(importId, importRow ? EditorialPackImportState.STORED_BLOCKED : EditorialPackImportState.STAGING,
                     e.error, e.getMessage(), "", "", "", null, "");
         } catch (IOException | RuntimeException e) {
             if (importRow) safelyBlockImport(importId, EditorialPackImportError.SNAPSHOT_WRITE_FAILED, safeMessage(e));
+            if (importRow) notifyState(progress, EditorialPackImportState.STORED_BLOCKED);
             return new EditorialPackImportResult(importId, importRow ? EditorialPackImportState.STORED_BLOCKED : EditorialPackImportState.STAGING,
                     EditorialPackImportError.SNAPSHOT_WRITE_FAILED, safeMessage(e), "", "", "", null, "");
+        }
+    }
+
+    /**
+     * Imports one selected ZIP stream.  The stream is consumed exactly once at
+     * this headless boundary; UI code never parses, previews, hashes or reopens
+     * the URI.  ZIP entries are bounded in memory before the normal private
+     * staging snapshot/validation pipeline is invoked.
+     */
+    public EditorialPackImportResult importZip(InputStream zipStream) {
+        return importZip(zipStream, state -> { });
+    }
+
+    public EditorialPackImportResult importZip(InputStream zipStream,
+                                               EditorialPackImportProgressListener listener) {
+        String importId = UUID.randomUUID().toString();
+        if (zipStream == null) {
+            return new EditorialPackImportResult(importId, EditorialPackImportState.STAGING,
+                    EditorialPackImportError.NULL_INPUT, "ZIP stream is required", "", "", "", null, "");
+        }
+        ArrayList<EditorialPackImportEntry> entries = new ArrayList<>();
+        long total = 0L;
+        try (ZipInputStream zip = new ZipInputStream(zipStream)) {
+            ZipEntry entry;
+            while ((entry = zip.getNextEntry()) != null) {
+                if (entry.isDirectory()) {
+                    return zipFailure(importId, EditorialPackImportError.INVALID_ENTRY_PATH, "ZIP directory entries are forbidden");
+                }
+                if (zipEntryIsSymbolicLink(entry)) {
+                    return zipFailure(importId, EditorialPackImportError.SYMLINK_FORBIDDEN, "Symbolic-link ZIP entries are forbidden");
+                }
+                if (entries.size() >= MAX_ENTRY_COUNT) {
+                    return zipFailure(importId, EditorialPackImportError.ENTRY_COUNT_LIMIT, "Pack must contain exactly four root entries");
+                }
+                String path = entry.getName();
+                ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+                byte[] buffer = new byte[8192];
+                int read;
+                long size = 0L;
+                while ((read = zip.read(buffer)) != -1) {
+                    if (read == 0) continue;
+                    size += read;
+                    if (size > MAX_FILE_BYTES || total + size > MAX_TOTAL_BYTES) {
+                        return zipFailure(importId, size > MAX_FILE_BYTES ? EditorialPackImportError.ENTRY_SIZE_LIMIT : EditorialPackImportError.TOTAL_SIZE_LIMIT,
+                                "Pack size limit exceeded");
+                    }
+                    bytes.write(buffer, 0, read);
+                }
+                total += size;
+                long compressed = entry.getCompressedSize();
+                if (compressed == 0L && size > 0L) {
+                    return zipFailure(importId, EditorialPackImportError.COMPRESSION_RATIO_LIMIT,
+                            "Compressed length is zero for a non-empty entry");
+                }
+                if (compressed > 0L && size / (double) compressed > MAX_COMPRESSION_RATIO) {
+                    return zipFailure(importId, EditorialPackImportError.COMPRESSION_RATIO_LIMIT,
+                            "Compression ratio exceeds limit for " + path);
+                }
+                entries.add(new EditorialPackImportEntry(path,
+                        new ByteArrayInputStream(bytes.toByteArray()), size, compressed, false));
+                zip.closeEntry();
+            }
+            if (entries.isEmpty()) return zipFailure(importId, EditorialPackImportError.ENTRY_COUNT_LIMIT, "ZIP contains no entries");
+        } catch (IOException e) {
+            return zipFailure(importId, EditorialPackImportError.TRUNCATED_STREAM, "Could not read ZIP stream: " + safeMessage(e));
+        }
+        return importPack(entries, listener);
+    }
+
+    private EditorialPackImportResult zipFailure(String importId, EditorialPackImportError error, String reason) {
+        return new EditorialPackImportResult(importId, EditorialPackImportState.STAGING, error, reason, "", "", "", null, "");
+    }
+
+    private static void notifyState(EditorialPackImportProgressListener listener, EditorialPackImportState state) {
+        try { listener.onState(state); } catch (RuntimeException ignored) { }
+    }
+
+    /** Android's ZipEntry has no public Unix-mode API; inspect it only when the runtime exposes it. */
+    private static boolean zipEntryIsSymbolicLink(ZipEntry entry) {
+        try {
+            Field field = ZipEntry.class.getDeclaredField("extraAttributes");
+            field.setAccessible(true);
+            int attributes = field.getInt(entry);
+            int unixMode = (attributes >>> 16) & 0xF000;
+            return unixMode == 0xA000;
+        } catch (Throwable ignored) {
+            return false;
         }
     }
 
@@ -304,7 +413,7 @@ public final class EditorialPackImportService {
             importUpdate.put("canonical_pack_hash", manifest.canonicalPackHash()); importUpdate.put("storage_key", storageKey); importUpdate.put("storage_moved", 1); importUpdate.put("pack_row_id", packRowId); importUpdate.put("blocked_reason", compatibilityReason); importUpdate.put("updated_at", now);
             if (db.update("editorial_pack_imports", importUpdate, "import_id=?", new String[]{importId}) != 1) throw new IllegalStateException("Import row disappeared before final commit");
             db.setTransactionSuccessful();
-            return result(importId, finalState, EditorialPackImportError.NONE, compatibilityReason, manifest, compatibility.classification(), storageKey);
+            return result(importId, finalState, EditorialPackImportError.NONE, compatibilityReason, manifest, compatibility, storageKey);
         } finally { db.endTransaction(); }
     }
 
@@ -374,8 +483,10 @@ public final class EditorialPackImportService {
     }
 
     private EditorialPackImportResult result(String importId, EditorialPackImportState state, EditorialPackImportError error, String reason,
-                                             EditorialPackManifest manifest, EditorialPackCompatibilityClass compatibility, String storageKey) {
-        return new EditorialPackImportResult(importId, state, error, reason, manifest.packId(), manifest.version(), manifest.canonicalPackHash(), compatibility, storageKey);
+                                             EditorialPackManifest manifest, EditorialCompatibilityResult compatibility, String storageKey) {
+        return new EditorialPackImportResult(importId, state, error, reason, manifest.packId(), manifest.version(), manifest.canonicalPackHash(),
+                compatibility == null ? null : compatibility.classification(), storageKey,
+                compatibility == null ? Set.of() : compatibility.missingCapabilities());
     }
 
     private static String issueText(List<EditorialPackIntegrityResult.Issue> issues) {

@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import static org.junit.Assert.*;
 
@@ -90,6 +92,34 @@ public class EditorialPackImportServiceInstrumentedTest {
         }
         SqliteEditorialPackRegistry registry = new SqliteEditorialPackRegistry(repository, service.storageLayout());
         assertTrue(registry.findByHash(first.canonicalPackHash()).isPresent());
+    }
+
+    @Test public void selectedZipStreamIsConsumedOnceAndStoredThroughHeadlessImporter() throws Exception {
+        EditorialPackAndroidFixture.Fixture fixture = EditorialPackAndroidFixture.valid("g2b2b.zip", "1.0.0", "zip-prompt\n".getBytes(StandardCharsets.UTF_8));
+        EditorialPackImportService service = service(fixture);
+        CountingInputStream source = new CountingInputStream(zip(fixture));
+        EditorialPackImportResult result = service.importZip(source);
+        assertEquals(EditorialPackImportState.STORED_READY_FOR_CERTIFICATION, result.state());
+        assertTrue(source.closed);
+        assertEquals(1, source.openCount);
+        assertEquals(fixture.manifest().canonicalPackHash(), result.canonicalPackHash());
+    }
+
+    @Test public void zipTraversalAndExtraEntriesAreRejectedBeforeRegistryAvailability() throws Exception {
+        EditorialPackAndroidFixture.Fixture fixture = EditorialPackAndroidFixture.valid("g2b2b.security", "1.0.0", "zip\n".getBytes(StandardCharsets.UTF_8));
+        EditorialPackImportService service = service(fixture);
+        EditorialPackImportResult traversal = service.importZip(new ByteArrayInputStream(zipWithNames(fixture, "../editorial-pack.json", "project.txt", "prompt.txt", "workflow.txt")));
+        assertEquals(EditorialPackImportError.INVALID_ENTRY_PATH, traversal.error());
+        EditorialPackImportResult extra = service.importZip(new ByteArrayInputStream(zipWithExtra(fixture)));
+        assertEquals(EditorialPackImportError.ENTRY_COUNT_LIMIT, extra.error());
+        assertEquals(0, countRows(repository, "editorial_packs"));
+    }
+
+    @Test public void truncatedZipDoesNotCreatePackRow() {
+        EditorialPackAndroidFixture.Fixture fixture = EditorialPackAndroidFixture.valid("g2b2b.truncated", "1.0.0", "zip\n".getBytes(StandardCharsets.UTF_8));
+        EditorialPackImportResult result = service(fixture).importZip(new ByteArrayInputStream(new byte[]{80, 75, 3}));
+        assertEquals(EditorialPackImportError.TRUNCATED_STREAM, result.error());
+        assertEquals(0, countRows(repository, "editorial_packs"));
     }
 
     @Test public void sameIdentityWithChangedPromptIsBlockedAndGetsNewHash() {
@@ -183,6 +213,35 @@ public class EditorialPackImportServiceInstrumentedTest {
         return result;
     }
 
+    private static byte[] zip(EditorialPackAndroidFixture.Fixture fixture) throws IOException {
+        return zipWithNames(fixture, "editorial-pack.json", "project.txt", "prompt.txt", "workflow.txt");
+    }
+
+    private static byte[] zipWithNames(EditorialPackAndroidFixture.Fixture fixture, String... names) throws IOException {
+        java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
+        try (ZipOutputStream output = new ZipOutputStream(bytes)) {
+            byte[][] contents = {fixture.manifestBytes(), fixture.dataFiles().get("project.txt"), fixture.dataFiles().get("prompt.txt"), fixture.dataFiles().get("workflow.txt")};
+            for (int i = 0; i < names.length; i++) {
+                output.putNextEntry(new ZipEntry(names[i]));
+                output.write(contents[Math.min(i, contents.length - 1)]);
+                output.closeEntry();
+            }
+        }
+        return bytes.toByteArray();
+    }
+
+    private static byte[] zipWithExtra(EditorialPackAndroidFixture.Fixture fixture) throws IOException {
+        java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
+        try (ZipOutputStream output = new ZipOutputStream(bytes)) {
+            for (Map.Entry<String, byte[]> entry : fixture.dataFiles().entrySet()) {
+                output.putNextEntry(new ZipEntry(entry.getKey())); output.write(entry.getValue()); output.closeEntry();
+            }
+            output.putNextEntry(new ZipEntry("extra.bin")); output.write(new byte[]{1}); output.closeEntry();
+            output.putNextEntry(new ZipEntry("editorial-pack.json")); output.write(fixture.manifestBytes()); output.closeEntry();
+        }
+        return bytes.toByteArray();
+    }
+
     private static int countDirectories(Path root) throws IOException {
         if (!Files.isDirectory(root)) return 0;
         try (java.util.stream.Stream<Path> paths = Files.list(root)) { return (int) paths.filter(Files::isDirectory).count(); }
@@ -210,6 +269,13 @@ public class EditorialPackImportServiceInstrumentedTest {
         MutatingInputStream(byte[] initial, byte[] replacement) { this.initial = initial.clone(); this.replacement = replacement.clone(); }
         @Override public int read() { if (index < initial.length) return initial[index++]; replaced = true; return -1; }
         @Override public int read(byte[] buffer, int offset, int length) { if (index >= initial.length) { replaced = true; return -1; } int count = Math.min(length, initial.length - index); System.arraycopy(initial, index, buffer, offset, count); index += count; return count; }
+    }
+
+    private static final class CountingInputStream extends ByteArrayInputStream {
+        boolean closed;
+        int openCount = 1;
+        CountingInputStream(byte[] bytes) { super(bytes); }
+        @Override public void close() throws IOException { closed = true; super.close(); }
     }
 
     private static final class FailingRepository extends TranslationRepository {
