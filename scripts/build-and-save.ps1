@@ -9,11 +9,40 @@ param(
     [ValidateNotNullOrEmpty()]
     [string]$Notes = 'Versioned development build.',
 
+    [string]$JavaHome,
+
     [switch]$Install
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+
+$preflightScript = Join-Path $PSScriptRoot 'verify-java-toolchain.ps1'
+if (-not (Test-Path -LiteralPath $preflightScript -PathType Leaf)) {
+    throw 'JDK preflight script is missing: scripts/verify-java-toolchain.ps1'
+}
+$preflightOutput = @(
+    if (-not [string]::IsNullOrWhiteSpace($JavaHome)) {
+        & $preflightScript -AsJson -JavaHome $JavaHome
+    }
+    else {
+        & $preflightScript -AsJson
+    }
+)
+if ($LASTEXITCODE -ne 0 -or $preflightOutput.Count -eq 0) {
+    throw 'JDK preflight failed before archive build.'
+}
+try {
+    $toolchain = ($preflightOutput -join "`n") | ConvertFrom-Json
+}
+catch {
+    throw 'JDK preflight returned invalid metadata.'
+}
+
+$effectiveJavaHome = if (-not [string]::IsNullOrWhiteSpace($JavaHome)) { $JavaHome } else { $env:JAVA_HOME }
+$effectiveJavaHome = (Resolve-Path -LiteralPath $effectiveJavaHome).Path
+$env:JAVA_HOME = $effectiveJavaHome
+$env:Path = "$(Join-Path $effectiveJavaHome 'bin');$env:Path"
 
 function Write-Utf8File {
     param(
@@ -86,13 +115,13 @@ function Get-ArchivedBuildInfo {
     return @($items)
 }
 
-$repositoryRoot = (& git rev-parse --show-toplevel).Trim()
+$repositoryRoot = (& git -c "safe.directory=$((Resolve-Path (Join-Path $PSScriptRoot '..')).Path)" rev-parse --show-toplevel).Trim()
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($repositoryRoot)) {
     throw 'Run this script inside the project Git repository.'
 }
 $repositoryRoot = (Resolve-Path -LiteralPath $repositoryRoot).Path
 
-$branch = (& git branch --show-current).Trim()
+$branch = (& git -c "safe.directory=$repositoryRoot" branch --show-current).Trim()
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($branch)) {
     throw 'Cannot determine the current Git branch.'
 }
@@ -109,7 +138,7 @@ if (-not [string]::IsNullOrWhiteSpace($ExactReleaseVersion)) {
         throw "Exact release v$ExactReleaseVersion must be built from $expectedReleaseBranch; current branch is $branch."
     }
 
-    $releaseChanges = @(& git status --porcelain)
+    $releaseChanges = @(& git -c "safe.directory=$repositoryRoot" status --porcelain)
     if ($LASTEXITCODE -ne 0) {
         throw 'Cannot verify the release working tree.'
     }
@@ -117,13 +146,13 @@ if (-not [string]::IsNullOrWhiteSpace($ExactReleaseVersion)) {
         throw 'Exact release builds require a clean working tree with all source and release metadata committed.'
     }
 
-    & git rev-parse --verify --quiet "refs/tags/v$ExactReleaseVersion" | Out-Null
+    & git -c "safe.directory=$repositoryRoot" rev-parse --verify --quiet "refs/tags/v$ExactReleaseVersion" | Out-Null
     if ($LASTEXITCODE -eq 0) {
         throw "Release tag v$ExactReleaseVersion already exists; refusing to create another build for an immutable release."
     }
 }
 
-$untrackedFiles = @(& git status --porcelain --untracked-files=all | Where-Object { $_ -match '^\?\?' })
+$untrackedFiles = @(& git -c "safe.directory=$repositoryRoot" status --porcelain --untracked-files=all | Where-Object { $_ -match '^\?\?' })
 if ($untrackedFiles.Count -gt 0) {
     throw "Untracked files cannot be reproduced in the source snapshot. Add or ignore them before building:`n$($untrackedFiles -join "`n")"
 }
@@ -173,7 +202,7 @@ $nextVersionCode = ([Math]::Max(
 )) + 1
 $eventId = 'build-' + (Get-Date -Format 'yyyyMMdd-HHmmss')
 $timestamp = [DateTimeOffset]::Now.ToString('yyyy-MM-dd HH:mm:ss zzz')
-$commit = (& git rev-parse HEAD).Trim()
+$commit = (& git -c "safe.directory=$repositoryRoot" rev-parse HEAD).Trim()
 if ($LASTEXITCODE -ne 0) {
     throw 'Cannot resolve HEAD.'
 }
@@ -184,7 +213,7 @@ if ((Test-Path -LiteralPath $artifactDestination) -or (Test-Path -LiteralPath $b
     throw "Build event already exists; refusing to overwrite: $eventId"
 }
 
-$snapshotOutput = & git stash create "versioned-build-$eventId"
+$snapshotOutput = & git -c "safe.directory=$repositoryRoot" stash create "versioned-build-$eventId"
 if ($LASTEXITCODE -ne 0) {
     throw 'Cannot capture the current tracked source state.'
 }
@@ -196,13 +225,6 @@ if ([string]::IsNullOrWhiteSpace($snapshotRef)) {
 $gradleWrapper = Join-Path $repositoryRoot 'gradlew.bat'
 if (-not (Test-Path -LiteralPath $gradleWrapper -PathType Leaf)) {
     throw "Gradle wrapper not found: $gradleWrapper"
-}
-
-if ([string]::IsNullOrWhiteSpace($env:JAVA_HOME)) {
-    $androidStudioJbr = 'C:\Program Files\Android\Android Studio\jbr'
-    if (Test-Path -LiteralPath (Join-Path $androidStudioJbr 'bin\java.exe') -PathType Leaf) {
-        $env:JAVA_HOME = $androidStudioJbr
-    }
 }
 
 $gradleArguments = @(
@@ -217,6 +239,74 @@ $gradleArguments = @(
     "-PbuildGitCommit=$commit",
     "-PbuildTimestamp=$timestamp"
 )
+
+$wrapperPropertiesPath = Join-Path $repositoryRoot 'gradle\wrapper\gradle-wrapper.properties'
+$wrapperProperties = Get-Content -LiteralPath $wrapperPropertiesPath -Raw
+$distributionUrlMatch = [regex]::Match($wrapperProperties, '(?m)^distributionUrl=(.+)$')
+$distributionShaMatch = [regex]::Match($wrapperProperties, '(?m)^distributionSha256Sum=([0-9a-fA-F]{64})$')
+if (-not $distributionUrlMatch.Success -or -not $distributionShaMatch.Success) {
+    throw 'Gradle wrapper provenance is incomplete: distribution URL and SHA-256 are required.'
+}
+$gradleDistributionUrl = $distributionUrlMatch.Groups[1].Value.Trim().Replace('\:', ':')
+$gradleDistributionSha256 = $distributionShaMatch.Groups[1].Value.Trim().ToLowerInvariant()
+$gradleUrlVersionMatch = [regex]::Match($gradleDistributionUrl, '/gradle-([0-9]+\.[0-9]+\.[0-9]+)-bin\.zip$')
+if (-not $gradleUrlVersionMatch.Success) {
+    throw 'Gradle wrapper distribution URL is not a pinned binary distribution URL.'
+}
+$gradleVersionFromUrl = $gradleUrlVersionMatch.Groups[1].Value
+
+$rootBuildText = Get-Content -LiteralPath (Join-Path $repositoryRoot 'build.gradle') -Raw
+$agpMatches = [regex]::Matches($rootBuildText, "com\.android\.(?:application|test)' version '([^']+)'")
+if ($agpMatches.Count -lt 2) {
+    throw 'Cannot read both Android Gradle Plugin versions from build.gradle.'
+}
+$agpVersions = @($agpMatches | ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique)
+if ($agpVersions.Count -ne 1) {
+    throw 'Android Gradle Plugin versions are not consistent across the root plugins block.'
+}
+$agpVersion = $agpVersions[0]
+
+$javaCompatibilityFiles = @('app\build.gradle', 'editorial-engine\build.gradle', 'macrobenchmark\build.gradle')
+$sourceCompatibilities = @()
+$targetCompatibilities = @()
+foreach ($relativePath in $javaCompatibilityFiles) {
+    $moduleText = Get-Content -LiteralPath (Join-Path $repositoryRoot $relativePath) -Raw
+    $sourceMatch = [regex]::Match($moduleText, 'sourceCompatibility\s*=?\s*JavaVersion\.VERSION_(\d+)')
+    $targetMatch = [regex]::Match($moduleText, 'targetCompatibility\s*=?\s*JavaVersion\.VERSION_(\d+)')
+    if (-not $sourceMatch.Success -or -not $targetMatch.Success) {
+        throw "Java source/target compatibility is missing from $relativePath."
+    }
+    $sourceCompatibilities += $sourceMatch.Groups[1].Value
+    $targetCompatibilities += $targetMatch.Groups[1].Value
+}
+$javaSourceCompatibility = @($sourceCompatibilities | Select-Object -Unique)
+$javaTargetCompatibility = @($targetCompatibilities | Select-Object -Unique)
+if ($javaSourceCompatibility.Count -ne 1 -or $javaTargetCompatibility.Count -ne 1 -or $javaSourceCompatibility[0] -ne '17' -or $javaTargetCompatibility[0] -ne '17') {
+    throw 'Java source/target compatibility must remain consistently pinned to 17.'
+}
+
+$appBuildText = Get-Content -LiteralPath (Join-Path $repositoryRoot 'app\build.gradle') -Raw
+$compileSdkMatch = [regex]::Match($appBuildText, '(?m)^\s*compileSdk\s+(\d+)')
+$targetSdkMatch = [regex]::Match($appBuildText, '(?m)^\s*targetSdk\s+(\d+)')
+if (-not $compileSdkMatch.Success -or -not $targetSdkMatch.Success) {
+    throw 'compileSdk or targetSdk is missing from app/build.gradle.'
+}
+$compileSdk = [int]$compileSdkMatch.Groups[1].Value
+$targetSdk = [int]$targetSdkMatch.Groups[1].Value
+
+$gradleVersionOutput = @(& $gradleWrapper '--version' '--no-daemon')
+if ($LASTEXITCODE -ne 0) {
+    throw 'Gradle Wrapper version verification failed before the archive build.'
+}
+$gradleVersionOutput | ForEach-Object { Write-Output $_ }
+$gradleVersionMatch = [regex]::Match(($gradleVersionOutput -join "`n"), '(?m)^Gradle\s+([0-9]+\.[0-9]+\.[0-9]+)')
+if (-not $gradleVersionMatch.Success) {
+    throw 'Gradle Wrapper did not report a parseable version.'
+}
+$gradleVersion = $gradleVersionMatch.Groups[1].Value
+if ($gradleVersion -ne $gradleVersionFromUrl) {
+    throw "Gradle Wrapper version $gradleVersion does not match distribution URL version $gradleVersionFromUrl."
+}
 
 Write-Output "Building $versionName (versionCode $nextVersionCode, event $eventId)"
 & $gradleWrapper @gradleArguments
@@ -257,8 +347,25 @@ try {
         created = $timestamp
         branch = $branch
         commit = $commit
+        gitCommit = $commit
         sourceSnapshotRef = $snapshotRef
         installedVersionCodeObserved = $installedVersionCode
+        buildEvent = $eventId
+        gradleVersion = $gradleVersion
+        gradleDistributionUrl = $gradleDistributionUrl
+        gradleDistributionSha256 = $gradleDistributionSha256
+        gradleDistributionChecksumSource = 'https://services.gradle.org/distributions/gradle-9.3.0-bin.zip.sha256'
+        agpVersion = $agpVersion
+        javaVersion = $toolchain.javaVersion
+        javaRuntimeVersion = $toolchain.javaRuntimeVersion
+        javaRuntimeName = $toolchain.javaRuntimeName
+        javaVendor = $toolchain.javaVendor
+        jdkMajor = [int]$toolchain.jdkMajor
+        jdkMajorPolicy = $toolchain.jdkMajorPolicy
+        javaSourceCompatibility = $javaSourceCompatibility[0]
+        javaTargetCompatibility = $javaTargetCompatibility[0]
+        compileSdk = $compileSdk
+        targetSdk = $targetSdk
         apk = $archivedApkName
         apkSha256 = $apkHash
         sourceArchive = $sourceZipName
@@ -281,6 +388,16 @@ try {
         "- Built: ``$timestamp``",
         "- Branch: ``$branch``",
         "- Git commit: ``$commit``",
+        "- Gradle: ``$gradleVersion``",
+        "- Gradle distribution: ``$gradleDistributionUrl``",
+        "- Gradle distribution SHA-256: ``$gradleDistributionSha256``",
+        "- Android Gradle Plugin: ``$agpVersion``",
+        "- Java/JDK version: ``$($toolchain.javaVersion)``",
+        "- Java runtime: ``$($toolchain.javaRuntimeName)``",
+        "- Java vendor: ``$($toolchain.javaVendor)``",
+        "- JDK major policy: ``$($toolchain.jdkMajorPolicy)``",
+        "- Java source/target compatibility: ``$($javaSourceCompatibility[0])``/``$($javaTargetCompatibility[0])``",
+        "- compileSdk/targetSdk: ``$compileSdk``/``$targetSdk``",
         "- APK: ``$archivedApkName``",
         "- APK SHA-256: ``$apkHash``",
         "- Source snapshot: ``$sourceZipName``",
