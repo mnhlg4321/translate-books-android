@@ -50,13 +50,13 @@ function Get-HighestInstalledVersionCode {
         return 0
     }
 
-    $devices = @(& $AdbPath devices 2>$null)
+    try { $devices = @(& $AdbPath devices 2>$null) } catch { return 0 }
     $deviceCount = @($devices | Where-Object { $_ -match '\sdevice$' }).Count
     if ($deviceCount -eq 0) {
         return 0
     }
 
-    $packageDump = @(& $AdbPath shell dumpsys package $PackageName 2>$null)
+    try { $packageDump = @(& $AdbPath shell dumpsys package $PackageName 2>$null) } catch { return 0 }
     $versionMatch = [regex]::Match(($packageDump -join "`n"), 'versionCode=(\d+)')
     if (-not $versionMatch.Success) {
         return 0
