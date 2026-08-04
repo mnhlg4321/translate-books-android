@@ -27,9 +27,9 @@
 - APK SHA-256: `959A25630941550E3D59CB2FBE75C1E3C6D33DCA2A109553C248CDA653E4DE90`
 - source ZIP SHA-256: `A55B5AEDDD945F5247FC1A6177C80654C615DF664B34485F106B92C83B948BAD`
 - regression: archive-first G2-B2B-ZIP build completed successfully after idempotent same-hash wording fix; `:editorial-engine:test` passed 19/19 and `:app:testDebugUnitTest` passed 161/161 with 0 failures/errors/skips; Android Lint completed with 54 warnings/0 errors; `:app:compileDebugAndroidTestJavaWithJavac` passed. Artifact and backup payloads are byte-identical and all four checksum entries pass. The exact source ZIP contains all three SAFE4 asset files with their canonical hashes.
-- device state: build archived and not installed. `adb` is unavailable in this environment, so connected/visual UI QA was not run. The previously installed code84 contains the retired V5 engine and must not be used for SAFE4 QA.
+- device state: archived code91 APK was installed without rebuilding on OnePlus CPH2691 / Android 15 (`adb install -r` returned `Success`); package metadata reports `4.16-dev.29`/code91, minSdk 26 and targetSdk 35. Manual ZIP-import device QA passed the real SAF selection, immutable storage, fail-closed `STORED_BLOCKED` result and process-restart persistence checks. This was synthetic non-SAFE4 QA only; no certification, activation, binding, model call or execution was performed.
 - scope: G2-B1 storage/import, G2-B2A read-only management and G2-B2B-ZIP runtime ZIP selection are implemented. Folder import, certification, Golden Replay, activation, project binding, model execution, L1–L3 and release receipts remain blocked; this is not a completed v4.16 release.
-- handoff: `EDITORIAL_ACCOUNT_TRANSFER_HANDOFF.md` records the verified transfer state; review stop only, with no next phase started.
+- handoff: `EDITORIAL_ACCOUNT_TRANSFER_HANDOFF.md` records the verified transfer state; G2-C0 planning is now at review stop with no G2-C0A implementation started.
 
 ## Release identity
 
@@ -94,6 +94,12 @@
 - Exact visual evidence: five screenshots, five UI hierarchy dumps, and a documented 25-frame actual-device MJPEG sequence.
 - Immutable tag archive: both 22-file copies and all 21 manifest entries passed; the source ZIP exactly matches a fresh `git archive` of corrected tag `v4.15`.
 
+Current development device evidence (2026-08-04):
+
+- Exact archived `4.16-dev.29`/code91 installation passed on OnePlus CPH2691 / Android 15; APK SHA-256 is `959A25630941550E3D59CB2FBE75C1E3C6D33DCA2A109553C248CDA653E4DE90`.
+- A disposable non-canonical ZIP selected through SAF was stored with its exact canonical hash, displayed as `STORED_BLOCKED`, and remained present after process restart. The concrete blocker was `UNSUPPORTED_CONTRACT_SCHEMA: No trusted contract descriptor is installed`.
+- The device row remains a blocked QA record because no manual database mutation or deletion bypass was used; the pushed ZIP was removed. This evidence does not certify SAFE4 or prove a trusted engine profile.
+
 The previous v4.8 release evidence remains `PASS WITH KNOWN LIMITATIONS`:
 
 - Build, 99 JVM tests, 11 required offline/device instrumentation cases, and two opt-in real requests passed.
@@ -124,6 +130,6 @@ The previous v4.14 release remains published and immutable.
 - The opt-in paid real-API instrumentation case was intentionally skipped; release QA made no provider request and incurred no billing.
 - The first local `v4.15` tag was rejected before archive because it contained stale v4.14 release metadata. With explicit approval it was deleted while still unpublished; corrected metadata was committed and the accepted annotated tag was recreated before backup.
 - v4.15 APK/source/evidence archives remain intentionally outside tracked Git under ignored `artifacts/releases/` and `backup/`; a clean clone contains release documents but not these binary payloads.
-- The accepted SAFE4 foundation build `4.16-dev.24`/code86 is archived but not installed or manually device-tested. The device's prior code84 contains the retired V5 engine and must not be reused as SAFE4 execution, QA, or release evidence.
+- The accepted SAFE4 foundation build `4.16-dev.24`/code86 remains archived and is not the code91 device-QA identity. SAFE4 QA must use the exact approved build and canonical assets; no candidate bytes are permitted.
 - SAFE4 execution/release is intentionally blocked until exact lineage, exhaustive ledgers, evidence-derived gates, conditional Pronoun/Pair handling, the new release contract and Golden Replay G1–G10 are complete.
 - Rejected development candidate `4.16-dev.23`/code85: Gradle and the APK used the exact SAFE4 bytes, but post-build inspection found Git source-archive EOL conversion changed the three `.txt` hashes. Both immutable payloads remain retained for audit; code85 is not an accepted reproducible build and must not be installed or used as evidence.

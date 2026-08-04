@@ -1,16 +1,16 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-04` (G2-B2B-ZIP implemented and archived; review stop; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
+- Snapshot updated: `2026-08-04` (G2-C0 plan and code91 ZIP-import device QA completed; review stop; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
 - Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.29`/code91 is the latest archived G2-B2B-ZIP build. Editorial execution remains intentionally blocked.
 - Current branch: `feature/v4.16`; the pre-existing user-owned `.idea/gradle.xml` change was temporarily stashed to create the branch, then restored unchanged and remains excluded from product/release commits.
-- Current commit: `a831e94` (verified implementation baseline immediately before this documentation-only handoff commit; actual `HEAD` must be confirmed when resuming)
-- Current build: `artifacts/builds/v4.16-dev.29/build-20260804-073059/TranslateBooks-v4.16-dev.29-code91.apk`, SHA-256 `959A25630941550E3D59CB2FBE75C1E3C6D33DCA2A109553C248CDA653E4DE90`; matching five-file payload is under `backup/builds/v4.16-dev.29/build-20260804-073059/`. Source ZIP SHA-256 is `A55B5AEDDD945F5247FC1A6177C80654C615DF664B34485F106B92C83B948BAD`; mirror parity, both manifests, 19 editorial-engine tests, 161 app JVM tests, lint 0 errors/54 warnings, instrumentation compilation and exact SAFE4 hashes inside the ZIP pass. No device is available and code91 was not installed. The released v4.15/code62 archive remains unchanged.
+- Current commit: `5db48445cfb0019a9a4568156cdd3c61869794ff` (verified current implementation/documentation baseline immediately before this documentation-only G2-C0 plan commit; no source change is included)
+- Current build: `artifacts/builds/v4.16-dev.29/build-20260804-073059/TranslateBooks-v4.16-dev.29-code91.apk`, SHA-256 `959A25630941550E3D59CB2FBE75C1E3C6D33DCA2A109553C248CDA653E4DE90`; matching five-file payload is under `backup/builds/v4.16-dev.29/build-20260804-073059/`. Source ZIP SHA-256 is `A55B5AEDDD945F5247FC1A6177C80654C615DF664B34485F106B92C83B948BAD`; mirror parity, both manifests, 19 editorial-engine tests, 161 app JVM tests, lint 0 errors/54 warnings, instrumentation compilation and exact SAFE4 hashes inside the ZIP pass. Code91 was installed from the archive without rebuilding; synthetic ZIP-import device QA passed storage, blocking and process-restart checks. The released v4.15/code62 archive remains unchanged.
 
 ## G2-B1 handoff
 
 - Completed: additive SQLite v14 pack registry, immutable private storage, TOCTOU-safe headless import service, recovery, fail-closed read-only registry, migration/security/recovery tests, checklist and archive evidence.
-- Pending: user review only. G2-B2A and G2-B2B-ZIP are complete. Certification, Golden Replay, project binding and execution remain blocked.
-- Known limitations: connected instrumentation could not run because `adb` is unavailable; no device QA or installation is claimed. The importer tests are compiled and ready for a device run.
+- Pending: user review of G2-C0 plan only. G2-B2A and G2-B2B-ZIP are complete. Certification, Golden Replay, project binding and execution remain blocked.
+- Known limitations: the code91 walkthrough used a disposable synthetic ZIP and is not full release QA or certification evidence; one blocked QA registry row remains on the device because no manual DB mutation/cleanup bypass was used. The APK has no trusted profile and compatibility remains fail-closed.
 - Canonical/candidate boundary: code86 SAFE4 hashes are unchanged; `DBE214...` and `3B2FCC...` remain outside the registry and cannot activate or replace SAFE4.
 
 ## G2-B2A handoff
@@ -22,9 +22,9 @@
 ## G2-B2B-ZIP handoff
 
 - Completed: headless `importZip(InputStream)` boundary, progress/result mapper, one-shot SAF bridge, ZIP import coordinator and Editorial-tab import action. No certification, activation, project binding, execution or folder import is present.
-- Evidence: commits `e124b5a`, `8901c8a`, `22c080b`, `fd4f807`, `3efb620`, `f62ea5b`, `ced89c5`, `a831e94`; engine 19/19; app JVM 161/161; instrumentation source compilation pass; lint 0 errors/54 warnings; archive-first `4.16-dev.29`/code91 event `build-20260804-073059` APK SHA `959A25630941550E3D59CB2FBE75C1E3C6D33DCA2A109553C248CDA653E4DE90`; source ZIP SHA `A55B5AEDDD945F5247FC1A6177C80654C615DF664B34485F106B92C83B948BAD`; artifact/backup parity pass. No device/visual QA.
+- Evidence: commits `e124b5a`, `8901c8a`, `22c080b`, `fd4f807`, `3efb620`, `f62ea5b`, `ced89c5`, `a831e94`; engine 19/19; app JVM 161/161; instrumentation source compilation pass; lint 0 errors/54 warnings; archive-first `4.16-dev.29`/code91 event `build-20260804-073059` APK SHA `959A25630941550E3D59CB2FBE75C1E3C6D33DCA2A109553C248CDA653E4DE90`; source ZIP SHA `A55B5AEDDD945F5247FC1A6177C80654C615DF664B34485F106B92C83B948BAD`; artifact/backup parity pass. Code91 device QA passed SAF ZIP selection, immutable storage, fail-closed blocking and restart persistence for a synthetic non-SAFE4 fixture; no certification/execution evidence.
 - Runtime profile is deliberately empty until a trusted contract registry exists; imports cannot be guessed compatible and therefore remain fail-closed/blocked in the current app. Canonical SAFE4 and external candidate boundary is unchanged.
-- Handoff: `EDITORIAL_ACCOUNT_TRANSFER_HANDOFF.md` is the self-contained transfer document; no next step was executed.
+- Handoff: `EDITORIAL_ACCOUNT_TRANSFER_HANDOFF.md` is the self-contained transfer document; `EDITORIAL_PACK_PLATFORM_G2_C0_PLAN.md` is the new review-stop plan; no G2-C0A implementation was executed.
 
 ## Completed tasks
 
@@ -209,12 +209,14 @@
 - Implement Pronoun `AVAILABLE/NONE/LEGACY_REJECTED`, scoped Pair Context, exact per-phase context allow-lists and checkpoint lineage.
 - Implement versioned L1/L2/L3 SAFE4 runners, SAFE4 receipt/release artifacts, and retained Golden Replay G1–G10 evidence before enabling execution.
 - Run device QA only on a new archive-first SAFE4 build. Keep the full v4.16 QA/tag/backup/export gates open.
+- Review and approve `EDITORIAL_PACK_PLATFORM_G2_C0_PLAN.md`; stop before G2-C0A.
 
 ## Known bugs
 
 - The current external SAFE4 folder no longer matches the exact code86/source-ZIP Prompt bytes, changed during this session, and has no canonical Editorial Pack manifest. Its observed current hash `3B2FCC...` and earlier `DBE214...` identity must not be classified as DATA_COMPATIBLE or certified under the old SAFE4 identity until separately versioned and reviewed.
 - SAFE4 model execution and Editorial release remain intentionally blocked; G2-A is not connected to the Android execution path and does not certify any pack. This is a safety blocker, not a completed feature.
 - The installed/archived code84 APK still contains the retired V5 engine. It must not be used to create or certify SAFE4 output.
+- Code91 device QA proved only that a synthetic ZIP can be stored immutably and remains fail-closed; the device retains one blocked QA registry row and has no trusted engine profile.
 - Code85 is rejected even though its APK pack guard passed: the retained source ZIP changed SAFE4 line endings and therefore failed exact-source reproducibility. Both payload copies are intentionally retained, not overwritten.
 - Legacy V5 database rows are preserved but do not yet have SAFE4 manifest/parent lineage; they remain read-only and cannot be promoted into a SAFE4 chain.
 
@@ -258,6 +260,7 @@
 - v4.16 code79 navigation/destination regression: AUTOMATED PASS / VISUAL PENDING. 147 JVM tests and 10/10 Editorial device tests passed; lint and artifact parity passed. Visual navigation and real SAF folder walkthrough could not proceed while the phone was secured; no lock bypass was attempted.
 - Editorial reference isolation/edit-identity JVM regression: PASS. `testDebugUnitTest` completed successfully after the additive v11→v12 migration and UI/data-flow changes; device migration/instrumentation remains pending.
 - v4.16 transfer handoff documentation: PASS. `EDITORIAL_HANDOFF_V4_16.md` records the problem analysis, implemented contract, remaining revision-safe/stale-run design, exact resource map, transfer checklist, and archive-first continuation commands; `git diff --check` passed before commit `6d82c41`.
+- G2-C0 audit/device evidence: PASS WITH LIMITATIONS. Source audit found only `pack.integrity.sha256.v1` implemented and all nine SAFE4 execution capabilities missing. Archived code91 installed successfully; synthetic SAF ZIP import stored the exact fixture immutably, returned `UNSUPPORTED_CONTRACT_SCHEMA`/`STORED_BLOCKED`, and persisted after process restart. No profile was bundled, no database/schema was changed, and no certification or execution was performed.
 
 - v4.16 isolated L3 regression: PASS on code75. 144 JVM tests passed; lint reports 0 errors/53 warnings; focused device Editorial suite passed 6/6. The L3 test proves the first model prompt contains RAW and VI_L2 but no REPORT_L1, then proves report visibility only after independent evidence validates CLOSED. Artifact/backup parity passed.
 
@@ -322,7 +325,7 @@
 
 ## Next step
 
- Review G2-B2B-ZIP commits and archive evidence. Stop here before any folder import/certification/activation/binding/execution work; do not re-enable an old V5 path or claim pack certification.
+Review `EDITORIAL_PACK_PLATFORM_G2_C0_PLAN.md` and approve the G2-C0 review stop. Do not start G2-C0A or any folder import/certification/activation/binding/execution work until explicitly approved; do not re-enable an old V5 path or claim pack certification.
 
 ## Resume rule
 
