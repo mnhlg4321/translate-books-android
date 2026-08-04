@@ -19,17 +19,21 @@ certification, activation, project binding, L1/L2/L3, Golden Replay and
 - Baseline HEAD before G2-C0A: `d5dfe19126e5cf32aa62ff77aacd83a3b2f0299b`.
 - Latest accepted APK remains `4.16-dev.29`/code91, event
   `build-20260804-073059`; no APK build is planned for this pure-JVM group.
-- The only pre-existing worktree change is user-owned `.idea/gradle.xml`; it
-  must remain unstaged.
+- At the original C0A baseline the pre-existing worktree change was user-owned
+  `.idea/gradle.xml`; the later audit also found `.idea/compiler.xml` and
+  `.idea/misc.xml`, all of which remain user-owned and unstaged.
 - SQLite remains v14. The runtime still supplies no trusted contract
   descriptor, packs remain `STORED_BLOCKED`, and
   `EditorialSafe4Pack.executionEnabled()` remains false.
 
-Audit follow-up (2026-08-04) found that the current worktree no longer matches
-that recorded baseline: `.idea/compiler.xml`, `.idea/misc.xml`, `build.gradle`,
-`gradle.properties` and `gradle/wrapper/gradle-wrapper.properties` are also
-modified and remain untouched/unstaged. HEAD still has wrapper 9.3.0 and AGP
-8.7.3; the dirty tree has wrapper 9.4.1 and AGP 9.2.1.
+Audit follow-up (2026-08-04) found that the worktree temporarily contained
+additional user-owned `.idea/compiler.xml`/`.idea/misc.xml` changes and
+out-of-band toolchain drift. G2-T0A preserved and hashed the three-file drift,
+restored `build.gradle`, `gradle.properties` and
+`gradle/wrapper/gradle-wrapper.properties` to HEAD, and left all three `.idea`
+files unchanged and unstaged. The retained recovery evidence is
+`BUILD_TOOLCHAIN_BASELINE_RECOVERY_G2_T0A.md` and
+`BUILD_TOOLCHAIN_DRIFT_G2_T0A.diff`.
 
 ## Evidence gates
 
@@ -67,9 +71,12 @@ modified and remain untouched/unstaged. HEAD still has wrapper 9.3.0 and AGP
 - Tests: `EditorialEngineContractProfileTest` covers 30 required positive and
   negative cases through 14 focused test methods, including the test-only
   namespace catalog boundary. The fixture does not claim any SAFE4 capability.
-- Regression command used the unchanged cached Gradle 9.4.1 executable because
-  the repository wrapper remains Gradle 9.3.0 while the installed Android
-  Gradle Plugin requires 9.4.1. No wrapper change and no APK build occurred.
+- The original C0A regression was environment-bound to a direct cached Gradle
+  9.4.1 invocation and is retained as historical evidence. G2-T0A restored
+  the committed wrapper/AGP baseline and re-ran the regression through
+  `.\gradlew.bat` with Android Studio JBR 21: engine 33/33, app 161/161,
+  instrumentation source compilation pass, lint 0 errors/53 warnings and
+  `git diff --check` pass. No APK build occurred.
 - Safety evidence remains unchanged: canonical SAFE4 Project Instruction
   `C57100C45F16FC5A27E56AE17ABE919BE89DA55082A66D060DB504746ED8B717`, Prompt
   `0B4C02573F46A91528A63262D3E52C655A5C7E31F2ABBBFB01759D38E94F8E81` and
@@ -80,7 +87,7 @@ modified and remain untouched/unstaged. HEAD still has wrapper 9.3.0 and AGP
   validator/result, `02af527` tests. Snapshot evidence is being finalized in
   the documentation commit.
 
-## Toolchain audit blocker
+## Toolchain audit blocker and G2-T0A recovery
 
 - [x] Audit report created: `BUILD_TOOLCHAIN_REPRODUCIBILITY_AUDIT_G2_C0A.md`.
 - [x] HEAD values verified: Gradle wrapper 9.3.0, AGP 8.7.3, compile/target
@@ -92,12 +99,16 @@ modified and remain untouched/unstaged. HEAD still has wrapper 9.3.0 and AGP
   network/permission failures.
 - [x] Direct cached Gradle 9.3.0/9.4.1 version diagnostics recorded; these are
   not clean-clone evidence.
-- [ ] Clean-clone wrapper regression accepted. Blocked until toolchain ownership
-  is resolved, JDK selection is pinned, wrapper checksum policy is decided and
-  C0A tests pass through the intended wrapper.
+- [x] Toolchain ownership resolved for this scope: only the three reviewed
+  `.idea/*` files remain user-owned; the three toolchain drift files match HEAD.
+- [x] Wrapper regression accepted for G2-T0A with explicit JBR 21 and Gradle
+  9.3.0. The wrapper distribution checksum gap remains a separate future
+  tooling decision; no checksum or upgrade was introduced here.
+- [x] Recovery evidence and pre-recovery diff hash are recorded in
+  `BUILD_TOOLCHAIN_BASELINE_RECOVERY_G2_T0A.md` and
+  `BUILD_TOOLCHAIN_DRIFT_G2_T0A.diff`.
 
 ## Review stop
 
-After all evidence above is recorded, stop for user review. Do not start
-G2-C0B or G2-C0C until the toolchain audit blocker is resolved and separately
-approved.
+After all evidence above is recorded, stop for user review. G2-T0A is complete,
+but do not start G2-T0B, G2-C0B or G2-C0C until separately approved.

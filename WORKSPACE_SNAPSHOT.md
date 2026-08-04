@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-04` (G2-C0A complete; build-toolchain reproducibility audit found uncommitted toolchain drift and environment blockers; review stop before G2-C0B; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
+- Snapshot updated: `2026-08-04` (G2-T0A toolchain baseline recovery PASS; Wrapper regression review stop before G2-T0B/G2-C0B; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
 - Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.29`/code91 is the latest archived G2-B2B-ZIP build. Editorial execution remains intentionally blocked.
-- Current branch: `feature/v4.16`; the declared baseline expected only `.idea/gradle.xml`, but the audit found additional unstaged changes in `.idea/compiler.xml`, `.idea/misc.xml`, `build.gradle`, `gradle.properties` and `gradle/wrapper/gradle-wrapper.properties`. None was modified by the audit.
-- Current commit: `d88979e30fd9b9ccecdf290c0781d23a30fe3833` (verified implementation/documentation baseline immediately before this audit report and snapshot update; the toolchain drift remains uncommitted and user ownership is unresolved)
-- Current build: `artifacts/builds/v4.16-dev.29/build-20260804-073059/TranslateBooks-v4.16-dev.29-code91.apk`, SHA-256 `959A25630941550E3D59CB2FBE75C1E3C6D33DCA2A109553C248CDA653E4DE90`; matching five-file payload is under `backup/builds/v4.16-dev.29/build-20260804-073059/`. Source ZIP SHA-256 is `A55B5AEDDD945F5247FC1A6177C80654C615DF664B34485F106B92C83B948BAD`; these code91 hashes and device evidence remain unchanged. G2-C0A source is newer than code91; no APK was built because this slice is pure JVM. Focused C0A tests pass 14/14; full `:editorial-engine:test` passes 33/33; `:app:testDebugUnitTest` passes 161/161; Android instrumentation source compilation and `git diff --check` pass. The released v4.15/code62 archive remains unchanged.
+- Current branch: `feature/v4.16`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned, unchanged and unstaged. The three toolchain drift files were restored to the committed baseline.
+- Current commit: `48e3e778012999cf681492bb2b06fcc861aaf928` (implementation/documentation baseline immediately before this G2-T0A handoff documentation commit; the final documentation commit is intentionally not self-referenced here)
+- Current build: `artifacts/builds/v4.16-dev.29/build-20260804-073059/TranslateBooks-v4.16-dev.29-code91.apk`, SHA-256 `959A25630941550E3D59CB2FBE75C1E3C6D33DCA2A109553C248CDA653E4DE90`; matching five-file payload is under `backup/builds/v4.16-dev.29/build-20260804-073059/`. Source ZIP SHA-256 is `A55B5AEDDD945F5247FC1A6177C80654C615DF664B34485F106B92C83B948BAD`; these code91 hashes and device evidence remain unchanged. G2-C0A source is newer than code91; no APK was built. Wrapper `9.3.0` with JBR `21.0.10` reran `:editorial-engine:test` 33/33, `:app:testDebugUnitTest` 161/161 and instrumentation source compilation; lint is 0 errors/53 warnings and `git diff --check` passes. The released v4.15/code62 archive remains unchanged.
 
 ## G2-B1 handoff
 
@@ -28,10 +28,10 @@
 
 ## Build toolchain audit handoff
 
-- Audit: `BUILD_TOOLCHAIN_REPRODUCIBILITY_AUDIT_G2_C0A.md` is `FAIL / BLOCKED / REVIEW STOP`.
-- HEAD uses wrapper Gradle 9.3.0 with AGP 8.7.3; the dirty working tree changes these to Gradle 9.4.1 and AGP 9.2.1. The 9.4.1 requirement applies to the dirty AGP 9.2.1 state, not committed HEAD.
-- Current default Java is 8.0.501 with no `JAVA_HOME`; successful historical code91 daemon evidence used Android Studio JBR 21. No wrapper distribution checksum is declared, and C0A regression used direct cached Gradle 9.4.1.
-- Reproducibility is not accepted. Resolve ownership/toolchain drift and rerun wrapper-based regression before any C0B work. No wrapper, AGP, source, database or APK was changed by the audit.
+- Audit: `BUILD_TOOLCHAIN_REPRODUCIBILITY_AUDIT_G2_C0A.md` remains the historical `FAIL / BLOCKED` finding; `BUILD_TOOLCHAIN_BASELINE_RECOVERY_G2_T0A.md` records the approved recovery as `PASS / REVIEW STOP`.
+- The uncommitted AGP `9.2.1`/Gradle `9.4.1` drift was proven out-of-band and restored. Baseline is wrapper Gradle `9.3.0`, AGP `8.7.3`, Java source/target `17`, compile/target SDK `35`.
+- Wrapper verification used explicit Android Studio JBR `21.0.10` and completed successfully. No direct cached Gradle executable was used; no wrapper checksum or toolchain upgrade was added.
+- The pre-recovery diff is retained in `BUILD_TOOLCHAIN_DRIFT_G2_T0A.diff` with SHA-256 `0F6F4BE4D8B41051EEA5C9F6F4ECA15C399667F7B58801E7EF7822F53BC67F33`. No source, database, APK or SAFE4 asset changed.
 
 ## Completed tasks
 
@@ -273,6 +273,7 @@
 - G2-C0 audit/device evidence: PASS WITH LIMITATIONS. Source audit found only `pack.integrity.sha256.v1` implemented and all nine SAFE4 execution capabilities missing. Archived code91 installed successfully; synthetic SAF ZIP import stored the exact fixture immutably, returned `UNSUPPORTED_CONTRACT_SCHEMA`/`STORED_BLOCKED`, and persisted after process restart. No profile was bundled, no database/schema was changed, and no certification or execution was performed.
 - G2-C0A trusted profile model/validation regression: PASS / REVIEW STOP. Focused C0A suite passed 14/14; full `:editorial-engine:test` passed 33/33; `:app:testDebugUnitTest` passed 161/161; Android instrumentation source compilation passed; `git diff --check` passed. Cached Gradle 9.4.1 was invoked directly because the unchanged repository wrapper is 9.3.0 while the installed Android Gradle Plugin requires 9.4.1; no APK was built. C0A validates declared capability evidence against the production catalog, which confirms only `pack.integrity.sha256.v1`; the nine SAFE4 capabilities remain missing.
 - G2-C0A build-toolchain reproducibility audit: FAIL / BLOCKED. The C0A tests are functionally green but environment-bound because they used direct cached Gradle 9.4.1; clean HEAD uses wrapper 9.3.0 plus AGP 8.7.3, and the actual worktree has uncommitted AGP 9.2.1/wrapper 9.4.1 drift. Default Java 8, absent wrapper checksum and cache/network permission failures prevent a clean-clone PASS.
+- G2-T0A toolchain baseline recovery: PASS / REVIEW STOP. The three toolchain files were restored narrowly to wrapper Gradle 9.3.0 and AGP 8.7.3 after their drift was preserved and hashed. With explicit Android Studio JBR 21.0.10, `gradlew.bat --version`, the combined C0A regression, lint and `git diff --check` all passed. Final worktree changes are only the three user-owned `.idea/*` files; no APK was built.
 
 - v4.16 isolated L3 regression: PASS on code75. 144 JVM tests passed; lint reports 0 errors/53 warnings; focused device Editorial suite passed 6/6. The L3 test proves the first model prompt contains RAW and VI_L2 but no REPORT_L1, then proves report visibility only after independent evidence validates CLOSED. Artifact/backup parity passed.
 
@@ -337,7 +338,7 @@
 
 ## Next step
 
-Review `BUILD_TOOLCHAIN_REPRODUCIBILITY_AUDIT_G2_C0A.md` and resolve the toolchain/worktree blocker. Do not start G2-C0B or C0C until wrapper-based C0A regression passes on the intended clean baseline; do not start profile bundling/runtime selection/folder import/certification/activation/binding/execution work.
+Review `BUILD_TOOLCHAIN_BASELINE_RECOVERY_G2_T0A.md` and approve the exact next step. G2-T0A is stopped here; do not start G2-T0B, G2-C0B or C0C, profile bundling/runtime selection/folder import/certification/activation/binding/execution work without separate approval.
 
 ## Resume rule
 
