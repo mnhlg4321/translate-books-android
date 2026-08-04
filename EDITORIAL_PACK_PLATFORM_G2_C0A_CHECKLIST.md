@@ -25,6 +25,12 @@ certification, activation, project binding, L1/L2/L3, Golden Replay and
   descriptor, packs remain `STORED_BLOCKED`, and
   `EditorialSafe4Pack.executionEnabled()` remains false.
 
+Audit follow-up (2026-08-04) found that the current worktree no longer matches
+that recorded baseline: `.idea/compiler.xml`, `.idea/misc.xml`, `build.gradle`,
+`gradle.properties` and `gradle/wrapper/gradle-wrapper.properties` are also
+modified and remain untouched/unstaged. HEAD still has wrapper 9.3.0 and AGP
+8.7.3; the dirty tree has wrapper 9.4.1 and AGP 9.2.1.
+
 ## Evidence gates
 
 - [x] Immutable model/schema added without Android or persistence dependencies.
@@ -74,7 +80,24 @@ certification, activation, project binding, L1/L2/L3, Golden Replay and
   validator/result, `02af527` tests. Snapshot evidence is being finalized in
   the documentation commit.
 
+## Toolchain audit blocker
+
+- [x] Audit report created: `BUILD_TOOLCHAIN_REPRODUCIBILITY_AUDIT_G2_C0A.md`.
+- [x] HEAD values verified: Gradle wrapper 9.3.0, AGP 8.7.3, compile/target
+  SDK 35, Java source/target 17.
+- [x] Actual dirty-tree drift recorded: wrapper 9.4.1 and AGP 9.2.1, plus
+  four other unstaged files.
+- [x] Required `.\gradlew.bat --version` attempted; it failed because the
+  current environment had Java 8/default PATH and wrapper download/cache
+  network/permission failures.
+- [x] Direct cached Gradle 9.3.0/9.4.1 version diagnostics recorded; these are
+  not clean-clone evidence.
+- [ ] Clean-clone wrapper regression accepted. Blocked until toolchain ownership
+  is resolved, JDK selection is pinned, wrapper checksum policy is decided and
+  C0A tests pass through the intended wrapper.
+
 ## Review stop
 
 After all evidence above is recorded, stop for user review. Do not start
-G2-C0B or G2-C0C without a separate approval.
+G2-C0B or G2-C0C until the toolchain audit blocker is resolved and separately
+approved.
