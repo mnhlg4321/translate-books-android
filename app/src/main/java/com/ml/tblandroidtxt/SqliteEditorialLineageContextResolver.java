@@ -18,6 +18,7 @@ import com.ml.tblandroidtxt.editorial.pack.EditorialPackCompatibilityClass;
 import com.ml.tblandroidtxt.editorial.pack.EditorialProjectRevision;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -107,7 +108,7 @@ public final class SqliteEditorialLineageContextResolver implements EditorialLin
     private List<EditorialLineageRecord> resolveExactParent(String recordIdentity) {
         if (blank(recordIdentity)) return List.of();
         Optional<EditorialLineageRecord> parent = lineages.findByRecordIdentity(recordIdentity);
-        return parent.map(List::of).orElseGet(List::of);
+        return parent.isPresent() ? Collections.singletonList(parent.get()) : Collections.emptyList();
     }
 
     private Optional<PackFacts> findPack(String packHash) {
