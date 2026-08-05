@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-05` (G2-C0C-A pure-JVM resolver PASS; G2-C0C-B BLOCKED at v14 persistence/profile-contract review stop; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
+- Snapshot updated: `2026-08-05` (G2-C0C-B1 SQLite v15 persistence implementation in progress; C0C-B2 runtime wiring remains explicitly out of scope; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
 - Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.30`/code92 remains the latest accepted archive-first build. C0B adds source-bundled trust metadata only; Editorial execution remains intentionally blocked.
 - Current branch: `feature/v4.16`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned, unchanged and unstaged. The three toolchain drift files were restored to the committed baseline.
-- Current commit: `91b9bbed92d4180dd6a038a2812818664d6a411a` (C0C-A implementation baseline immediately before this documentation/state commit; the final documentation commit is intentionally not self-referenced here)
+- Current commit: `c4c199d89b363033eb6df744b9578d744192ea0b` (G2-C0C-B1 implementation baseline immediately before this snapshot/state commit; the final documentation commit is intentionally not self-referenced here)
 - Current build: `artifacts/builds/v4.16-dev.30/build-20260804-182006/TranslateBooks-v4.16-dev.30-code92.apk`, SHA-256 `07BC98B22019832AFD37D0307E691957FBDC47D1C0E929949535D69AFB472801`; matching five-file payload is under `backup/builds/v4.16-dev.30/build-20260804-182006/`. Source ZIP SHA-256 is `BD6BCDC832DC5C3D9AFFA3E1C597A12D090F560F6B8D6319D0D65F7FB22C1126`. Wrapper `9.3.0` with official distribution SHA-256 `0d585f69da091fc5b2beced877feab55a3064d43b8a1d46aeb07996b0915e0e0` and JBR `21.0.10` passed `:editorial-engine:test` 50/50, `:app:testDebugUnitTest` 161/161, instrumentation source compilation, lint 0 errors/53 warnings and `git diff --check`; JDK preflight is 4/4. The released v4.15/code62 archive remains unchanged.
 
 ## G2-C0B bundled trusted-profile handoff
@@ -21,6 +21,13 @@
 - C0C-B blocker: live SQLite v14 stores pack hash, engine version, machine fingerprint, outcome/required class, reason and timestamp, but not trusted profile ID/version/hash, adapter-set hash, capability fingerprint or evaluation-context identity. The approved plan forbids using `blocked_reason` as a hidden channel and requires an additive immutable migration before durable profile evidence; no migration was made.
 - C0C-B semantic blocker: the bundled production profile has null contract bounds, empty schema/phase/context descriptors and therefore no approved executable contract. Creating an integrity-only `DATA_COMPATIBLE` fixture result would require inventing semantic profile values, which is forbidden.
 - Regression: Wrapper Gradle 9.3.0/JBR 21; engine 56/56, app JVM 161/161, instrumentation Java compilation PASS, lint 0 errors/53 warnings, `git diff --check` PASS; JDK preflight 4/4. No APK build/install; code92 remains the latest accepted artifact.
+
+## G2-C0C-B1 SQLite v15 persistence implementation
+
+- Scope in progress: additive SQLite v14→v15 migration plus immutable `editorial_pack_compatibility_evaluations` history table, pure semantic context fingerprint, and narrow append/read DAO. No C0C-B2 resolver/importer wiring, production DATA_COMPATIBLE result, profile change, importer/SAF change, certification, activation, binding or execution path was added.
+- Schema contract: v14 `editorial_packs`, `editorial_pack_files`, `editorial_pack_imports` and `editorial_pack_compatibility_results` remain unchanged. v15 adds only the new history table, two indexes and update/delete rejection triggers; legacy rows are not backfilled and map as `LEGACY_UNATTESTED` with absent trusted-profile/context fields.
+- Source evidence currently compiled: engine context tests 3/3; full engine 59/59; app JVM 162/162; instrumentation Java compilation PASS; lint 0 errors/53 warnings; `git diff --check` PASS. Device migration execution is not yet recorded; ADB is available for post-archive QA.
+- Current accepted artifact remains `4.16-dev.30`/code92 until the B1 archive-first build; the three protected `.idea/*` files remain untouched and unstaged. Pending: implementation commit, archive-first code93 build, migration/device evidence, final B1 handoff and review stop.
 
 ## G2-B1 handoff
 

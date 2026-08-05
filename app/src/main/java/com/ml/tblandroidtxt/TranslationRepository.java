@@ -11,7 +11,7 @@ import java.util.List;
 
 public class TranslationRepository extends SQLiteOpenHelper {
     private static final String DB = "tbl_android_txt.db";
-    private static final int VER = 14;
+    private static final int VER = 15;
 
     public TranslationRepository(Context context) { this(context, DB); }
 
@@ -28,6 +28,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
         createPreparedPlanTables(db);
         createEditorialTables(db);
         createEditorialPackTables(db);
+        createEditorialPackCompatibilityEvaluationTables(db);
     }
 
     @Override public void onConfigure(SQLiteDatabase db) {
@@ -81,6 +82,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
         if (oldVersion < 12) createEditorialProjectAssets(db);
         if (oldVersion < 13) createEditorialReferenceProfiles(db);
         if (oldVersion < 14) createEditorialPackTables(db);
+        if (oldVersion < 15) createEditorialPackCompatibilityEvaluationTables(db);
     }
 
     private static void safeExec(SQLiteDatabase db, String sql) { try { db.execSQL(sql); } catch (Exception ignored) {} }
@@ -105,6 +107,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
     private static void createEditorialProjectAssets(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from11To12())safeExec(db,sql);}
     private static void createEditorialReferenceProfiles(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from12To13())safeExec(db,sql);}
     private static void createEditorialPackTables(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from13To14())db.execSQL(sql);}
+    private static void createEditorialPackCompatibilityEvaluationTables(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from14To15())db.execSQL(sql);}
 
     SQLiteDatabase editorialWritableDatabase() { return getWritableDatabase(); }
     SQLiteDatabase editorialReadableDatabase() { return getReadableDatabase(); }

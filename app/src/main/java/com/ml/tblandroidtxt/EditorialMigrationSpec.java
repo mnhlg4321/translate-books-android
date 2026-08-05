@@ -48,5 +48,17 @@ public final class EditorialMigrationSpec {
             "CREATE TRIGGER IF NOT EXISTS trg_editorial_pack_compatibility_no_update BEFORE UPDATE ON editorial_pack_compatibility_results BEGIN SELECT RAISE(ABORT,'editorial_pack_compatibility_results are immutable'); END",
             "CREATE TRIGGER IF NOT EXISTS trg_editorial_pack_compatibility_no_delete BEFORE DELETE ON editorial_pack_compatibility_results BEGIN SELECT RAISE(ABORT,'editorial_pack_compatibility_results are immutable'); END"
     );}
+    /**
+     * v15 is a new immutable evaluation history. It deliberately does not alter
+     * or backfill the v14 compatibility-result row. SQLiteOpenHelper runs this
+     * list inside its upgrade transaction.
+     */
+    public static List<String> from14To15(){return Arrays.asList(
+            "CREATE TABLE IF NOT EXISTS editorial_pack_compatibility_evaluations (id INTEGER PRIMARY KEY AUTOINCREMENT, evaluation_id TEXT NOT NULL UNIQUE, import_id TEXT NOT NULL, pack_row_id INTEGER, compatibility_result_id INTEGER, canonical_pack_hash TEXT NOT NULL, trusted_profile_id TEXT NOT NULL, trusted_profile_version TEXT NOT NULL, canonical_profile_hash TEXT NOT NULL, engine_version_used TEXT NOT NULL, machine_contract_fingerprint TEXT NOT NULL, evaluator_contract_version TEXT NOT NULL, adapter_set_fingerprint TEXT NOT NULL, capability_fingerprint TEXT NOT NULL, context_fingerprint TEXT NOT NULL, compatibility_outcome TEXT NOT NULL CHECK(compatibility_outcome IN ('DATA_COMPATIBLE','ADAPTER_REQUIRED','ENGINE_UPGRADE_REQUIRED','INVALID','BLOCKED')), reason_code TEXT NOT NULL, blocker_details TEXT NOT NULL DEFAULT '', evaluated_at INTEGER NOT NULL, FOREIGN KEY(import_id) REFERENCES editorial_pack_imports(import_id) ON DELETE RESTRICT, FOREIGN KEY(pack_row_id) REFERENCES editorial_packs(id) ON DELETE RESTRICT, FOREIGN KEY(compatibility_result_id) REFERENCES editorial_pack_compatibility_results(id) ON DELETE RESTRICT)",
+            "CREATE INDEX IF NOT EXISTS idx_editorial_pack_compatibility_evaluations_pack ON editorial_pack_compatibility_evaluations(canonical_pack_hash,evaluated_at,id)",
+            "CREATE INDEX IF NOT EXISTS idx_editorial_pack_compatibility_evaluations_import ON editorial_pack_compatibility_evaluations(import_id,evaluated_at)",
+            "CREATE TRIGGER IF NOT EXISTS trg_editorial_pack_compatibility_evaluations_no_update BEFORE UPDATE ON editorial_pack_compatibility_evaluations BEGIN SELECT RAISE(ABORT,'editorial_pack_compatibility_evaluations are immutable'); END",
+            "CREATE TRIGGER IF NOT EXISTS trg_editorial_pack_compatibility_evaluations_no_delete BEFORE DELETE ON editorial_pack_compatibility_evaluations BEGIN SELECT RAISE(ABORT,'editorial_pack_compatibility_evaluations are immutable'); END"
+    );}
     private EditorialMigrationSpec() {}
 }
