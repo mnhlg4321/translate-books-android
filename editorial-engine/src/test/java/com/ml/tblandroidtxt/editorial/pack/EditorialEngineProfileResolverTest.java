@@ -66,6 +66,25 @@ public class EditorialEngineProfileResolverTest {
         assertEquals(EditorialPackCompatibilityClass.BLOCKED, result.outcome());
     }
 
+    @Test public void executableTestProfileRejectsUnsupportedContractWithoutFallback() {
+        EditorialEngineContractProfile source = BundledEditorialEngineContractProfileRegistry.load().list().get(0);
+        EditorialEngineContractProfile executable = validExecutableCopy(source, "profile.unsupported", "2.0.0",
+                "2026-08-05T00:00:00Z", "9".repeat(40));
+        Map<String, Object> declarations = new java.util.LinkedHashMap<>(EditorialPackFixtures.valid().manifest().declarations());
+        declarations.put("contractVersion", "contract.not-supported.v1");
+        declarations.put("canonicalPackHash", "0".repeat(64));
+        declarations.put("canonicalPackHash", EditorialPackFixtures.canonicalHashWithout(declarations));
+        EditorialPackManifest unsupported = EditorialPackManifest.parse(
+                EditorialCanonicalJson.canonicalize(declarations).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        EditorialCompatibilityEvaluationResult result = resolver(registryOf(List.of(executable))).resolve(unsupported);
+
+        assertEquals(EditorialPackCompatibilityClass.BLOCKED, result.outcome());
+        assertEquals(EditorialCompatibilityReasonCode.UNSUPPORTED_CONTRACT, result.reasonCode());
+        assertTrue(result.blocked());
+        assertFalse(result.trustedProfile().isPresent());
+    }
+
     @Test public void duplicateTrustedIdentityFailsClosed() {
         EditorialEngineContractProfile source = BundledEditorialEngineContractProfileRegistry.load().list().get(0);
         EditorialCompatibilityEvaluationResult result = resolver(registryOf(List.of(source, source)))
@@ -117,6 +136,36 @@ public class EditorialEngineProfileResolverTest {
                 source.implementedCapabilities(), source.explicitlyMissingCapabilities(), source.capabilityEvidence(),
                 source.bundledAdapterIds(), source.adapterDescriptors(), source.machineContractFingerprint(),
                 source.canonicalProfileHash(), createdAt, buildCommit, source.deprecationPolicy());
+    }
+
+    private static EditorialEngineContractProfile validExecutableCopy(EditorialEngineContractProfile source,
+                                                                        String id, String version,
+                                                                        String createdAt, String buildCommit) {
+        EditorialEngineContractProfile draft = new EditorialEngineContractProfile(
+                source.profileFormat(), source.profileFormatVersion(), id, version, source.engineVersion(),
+                "contract.test.v1", "contract.test.v1", List.of("evidence.test.v1"), List.of(),
+                new EditorialEngineContractProfile.PhaseGraph(List.of("L1"), List.of()),
+                Map.of("L1", new EditorialEngineContractProfile.ContextAllowList(List.of(), List.of())),
+                source.evidenceSchemaFingerprints(), source.gateDefinitionFingerprints(), source.releaseArtifactFingerprints(),
+                source.implementedCapabilities(), source.explicitlyMissingCapabilities(), source.capabilityEvidence(),
+                source.bundledAdapterIds(), source.adapterDescriptors(), "0".repeat(64), "0".repeat(64),
+                createdAt, buildCommit, source.deprecationPolicy());
+        String machine = EditorialEngineContractProfileCanonicalizer.machineContractFingerprint(draft);
+        EditorialEngineContractProfile withMachine = new EditorialEngineContractProfile(
+                draft.profileFormat(), draft.profileFormatVersion(), draft.engineProfileId(), draft.engineProfileVersion(), draft.engineVersion(),
+                draft.minimumSupportedContractVersion(), draft.maximumSupportedContractVersion(), draft.supportedSchemaVersions(),
+                draft.supportedInputRoles(), draft.supportedPhaseGraph(), draft.contextAllowListByPhase(),
+                draft.evidenceSchemaFingerprints(), draft.gateDefinitionFingerprints(), draft.releaseArtifactFingerprints(),
+                draft.implementedCapabilities(), draft.explicitlyMissingCapabilities(), draft.capabilityEvidence(),
+                draft.bundledAdapterIds(), draft.adapterDescriptors(), machine, "0".repeat(64), draft.createdAt(), draft.buildSourceCommit(), draft.deprecationPolicy());
+        String hash = EditorialEngineContractProfileCanonicalizer.canonicalProfileHash(withMachine);
+        return new EditorialEngineContractProfile(
+                withMachine.profileFormat(), withMachine.profileFormatVersion(), withMachine.engineProfileId(), withMachine.engineProfileVersion(), withMachine.engineVersion(),
+                withMachine.minimumSupportedContractVersion(), withMachine.maximumSupportedContractVersion(), withMachine.supportedSchemaVersions(),
+                withMachine.supportedInputRoles(), withMachine.supportedPhaseGraph(), withMachine.contextAllowListByPhase(),
+                withMachine.evidenceSchemaFingerprints(), withMachine.gateDefinitionFingerprints(), withMachine.releaseArtifactFingerprints(),
+                withMachine.implementedCapabilities(), withMachine.explicitlyMissingCapabilities(), withMachine.capabilityEvidence(),
+                withMachine.bundledAdapterIds(), withMachine.adapterDescriptors(), machine, hash, withMachine.createdAt(), withMachine.buildSourceCommit(), withMachine.deprecationPolicy());
     }
 
     private static EditorialEngineContractProfile copy(EditorialEngineContractProfile source,
