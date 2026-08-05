@@ -399,7 +399,7 @@
 
 ## Next step
 
-Review `EDITORIAL_PACK_PLATFORM_G2_C0C.md` and approve the blocker resolution separately. C0C-A is stopped with passing pure-JVM evidence; C0C-B is blocked pending an additive immutable evidence migration and reviewed executable contract semantics. Do not start importer wiring/folder import/certification/activation/binding/execution work before that review.
+`G2-C0C-B2` and `G2-C1B1-A` are PASS / REVIEW STOP. Review and, when approved, implement `G2-C1B1-B` SQLite v15 -> v16 append-only lineage persistence. Do not start G2-C1B1-C importer/runtime wiring, capability promotion, certification, activation, binding or execution before that review.
 
 ## Resume rule
 
