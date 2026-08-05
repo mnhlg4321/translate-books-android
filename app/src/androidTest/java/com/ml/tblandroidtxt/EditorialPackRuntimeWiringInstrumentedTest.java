@@ -6,13 +6,16 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.ml.tblandroidtxt.editorial.pack.BundledEditorialEngineContractProfileRegistry;
+import com.ml.tblandroidtxt.editorial.pack.EditorialCanonicalJson;
 import com.ml.tblandroidtxt.editorial.pack.EditorialCompatibilityEvaluationContext;
 import com.ml.tblandroidtxt.editorial.pack.EditorialCompatibilityEvaluator;
 import com.ml.tblandroidtxt.editorial.pack.EditorialCompatibilityProvenance;
 import com.ml.tblandroidtxt.editorial.pack.EditorialEngineContractProfile;
 import com.ml.tblandroidtxt.editorial.pack.EditorialEngineContractProfileRegistry;
+import com.ml.tblandroidtxt.editorial.pack.EditorialEngineContractProfileCanonicalizer;
 import com.ml.tblandroidtxt.editorial.pack.EditorialEngineProfileResolver;
 import com.ml.tblandroidtxt.editorial.pack.EditorialPackCompatibilityClass;
+import com.ml.tblandroidtxt.editorial.pack.EditorialPackManifest;
 
 import org.junit.After;
 import org.junit.Before;
@@ -24,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -143,9 +147,77 @@ public class EditorialPackRuntimeWiringInstrumentedTest {
         assertEquals(1, countRows("editorial_packs"));
     }
 
+    @Test public void testOnlyUnsupportedContractIsBlockedWithoutFallback() {
+        EditorialEngineContractProfile source = BundledEditorialEngineContractProfileRegistry.load().list().get(0);
+        EditorialEngineContractProfile testOnlyProfile = validExecutableProfile(source);
+        EditorialPackAndroidFixture.Fixture base = EditorialPackAndroidFixture.valid(
+                "g2c.b2.unsupported", "1.0.0", "unsupported\n".getBytes(StandardCharsets.UTF_8));
+        LinkedHashMap<String, Object> declarations = new LinkedHashMap<>(base.manifest().declarations());
+        declarations.put("contractVersion", "contract.not-supported.v1");
+        declarations.put("canonicalPackHash", "0".repeat(64));
+        declarations.put("canonicalPackHash", canonicalHashWithout(declarations));
+        byte[] manifestBytes = EditorialCanonicalJson.canonicalize(declarations).getBytes(StandardCharsets.UTF_8);
+        EditorialPackAndroidFixture.Fixture unsupported = new EditorialPackAndroidFixture.Fixture(
+                manifestBytes, base.dataFiles(), EditorialPackManifest.parse(manifestBytes));
+        EditorialEngineContractProfileRegistry testOnlyRegistry = new EditorialEngineContractProfileRegistry() {
+            @Override public List<EditorialEngineContractProfile> list() { return List.of(testOnlyProfile); }
+            @Override public Optional<EditorialEngineContractProfile> findByCanonicalHash(String hash) { return Optional.of(testOnlyProfile).filter(p -> p.canonicalProfileHash().equals(hash)); }
+            @Override public Optional<EditorialEngineContractProfile> findByIdentity(String id, String version) { return Optional.of(testOnlyProfile).filter(p -> p.engineProfileId().equals(id) && p.engineProfileVersion().equals(version)); }
+        };
+
+        EditorialPackImportResult result = new EditorialPackImportService(repository, storage,
+                new EditorialEngineProfileResolver(testOnlyRegistry)).importPack(entries(unsupported));
+
+        assertEquals(EditorialPackImportState.STORED_BLOCKED, result.state());
+        assertEquals(EditorialPackCompatibilityClass.BLOCKED, result.compatibilityClass());
+        assertTrue(result.blockedReason().startsWith("UNSUPPORTED_CONTRACT"));
+        assertEquals(1, countRows("editorial_packs"));
+        assertEquals(1, countRows("editorial_pack_compatibility_results"));
+        assertEquals(0, countRows("editorial_pack_compatibility_evaluations"));
+    }
+
     private EditorialPackImportService productionService() {
         return new EditorialPackImportService(repository, storage,
                 new EditorialEngineProfileResolver(BundledEditorialEngineContractProfileRegistry.load()));
+    }
+
+    private static EditorialEngineContractProfile validExecutableProfile(EditorialEngineContractProfile source) {
+        EditorialEngineContractProfile draft = new EditorialEngineContractProfile(
+                source.profileFormat(), source.profileFormatVersion(), "test-only.profile", "1.0.0", source.engineVersion(),
+                "contract.test.v1", "contract.test.v1", List.of("evidence.test.v1"), List.of(),
+                new EditorialEngineContractProfile.PhaseGraph(List.of("L1"), List.of()),
+                java.util.Map.of("L1", new EditorialEngineContractProfile.ContextAllowList(List.of(), List.of())),
+                source.evidenceSchemaFingerprints(), source.gateDefinitionFingerprints(), source.releaseArtifactFingerprints(),
+                source.implementedCapabilities(), source.explicitlyMissingCapabilities(), source.capabilityEvidence(),
+                source.bundledAdapterIds(), source.adapterDescriptors(), "0".repeat(64), "0".repeat(64),
+                source.createdAt(), source.buildSourceCommit(), source.deprecationPolicy());
+        String machine = EditorialEngineContractProfileCanonicalizer.machineContractFingerprint(draft);
+        EditorialEngineContractProfile withMachine = new EditorialEngineContractProfile(
+                draft.profileFormat(), draft.profileFormatVersion(), draft.engineProfileId(), draft.engineProfileVersion(), draft.engineVersion(),
+                draft.minimumSupportedContractVersion(), draft.maximumSupportedContractVersion(), draft.supportedSchemaVersions(),
+                draft.supportedInputRoles(), draft.supportedPhaseGraph(), draft.contextAllowListByPhase(),
+                draft.evidenceSchemaFingerprints(), draft.gateDefinitionFingerprints(), draft.releaseArtifactFingerprints(),
+                draft.implementedCapabilities(), draft.explicitlyMissingCapabilities(), draft.capabilityEvidence(),
+                draft.bundledAdapterIds(), draft.adapterDescriptors(), machine, "0".repeat(64), draft.createdAt(), draft.buildSourceCommit(), draft.deprecationPolicy());
+        String hash = EditorialEngineContractProfileCanonicalizer.canonicalProfileHash(withMachine);
+        return new EditorialEngineContractProfile(
+                withMachine.profileFormat(), withMachine.profileFormatVersion(), withMachine.engineProfileId(), withMachine.engineProfileVersion(), withMachine.engineVersion(),
+                withMachine.minimumSupportedContractVersion(), withMachine.maximumSupportedContractVersion(), withMachine.supportedSchemaVersions(),
+                withMachine.supportedInputRoles(), withMachine.supportedPhaseGraph(), withMachine.contextAllowListByPhase(),
+                withMachine.evidenceSchemaFingerprints(), withMachine.gateDefinitionFingerprints(), withMachine.releaseArtifactFingerprints(),
+                withMachine.implementedCapabilities(), withMachine.explicitlyMissingCapabilities(), withMachine.capabilityEvidence(),
+                withMachine.bundledAdapterIds(), withMachine.adapterDescriptors(), machine, hash, withMachine.createdAt(), withMachine.buildSourceCommit(), withMachine.deprecationPolicy());
+    }
+
+    private static String canonicalHashWithout(java.util.Map<String, Object> root) {
+        LinkedHashMap<String, Object> copy = new LinkedHashMap<>(root);
+        copy.remove("canonicalPackHash");
+        byte[] canonical = EditorialCanonicalJson.canonicalize(copy).getBytes(StandardCharsets.UTF_8);
+        byte[] domain = "EDITORIAL_PACK_CANONICAL_HASH_V1\n".getBytes(StandardCharsets.UTF_8);
+        byte[] payload = new byte[domain.length + canonical.length];
+        System.arraycopy(domain, 0, payload, 0, domain.length);
+        System.arraycopy(canonical, 0, payload, domain.length, canonical.length);
+        return EditorialCanonicalJson.sha256Hex(payload);
     }
 
     private static List<EditorialPackImportEntry> entries(EditorialPackAndroidFixture.Fixture fixture) {
