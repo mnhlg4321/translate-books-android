@@ -1,10 +1,18 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-05` (G2-C0C-B2 review stop; fail-closed compatibility wiring only; no certification, activation, binding or execution)
+- Snapshot updated: `2026-08-05` (G2-C1A executable-contract plan review stop; plan only; no capability implementation, certification, activation, binding or execution)
 - Current version: `4.15`/code62 remains the released product; latest development archive is `4.16-dev.36`/code98. SQLite is v15 for additive compatibility provenance; Editorial execution remains intentionally blocked.
-- Current branch: `feature/v4.16`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned, unchanged and unstaged. The three toolchain drift files were restored to the committed baseline.
-- Current commit: `6e148264e46279dbcf5340a6ee4b4a78a108fc07` (G2-C0C-B2 implementation baseline immediately before the final documentation/state/checklist commit; intentionally not self-referential)
+- Current branch: `feature/v4.16-g2-c1a` (review branch from verified `feature/v4.16` baseline); `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned, unchanged and unstaged. The three toolchain drift files were restored to the committed baseline.
+- Current commit: `1876439517057df0dc2cf4744de74dc0cd4d14fa` (implementation baseline immediately before the G2-C1A documentation/state/checklist commit; intentionally not self-referential)
 - Current build: `artifacts/builds/v4.16-dev.36/build-20260805-095511/TranslateBooks-v4.16-dev.36-code98.apk`, SHA-256 `9E147135DEA5D37EDFF5220D5EC8C44CE2686438DE3831BC5EC564E7BC752EC8`; matching five-file payload is under `backup/builds/v4.16-dev.36/build-20260805-095511/`. Source ZIP SHA-256 is `B8B518270092D03ECC4D479DC93AB2C55EFF027A395600582EECAA5797799F22`. Wrapper `9.3.0` with official distribution SHA-256 `0d585f69da091fc5b2beced877feab55a3064d43b8a1d46aeb07996b0915e0e0` and JBR `21.0.10` passed `:editorial-engine:test` 60/60, `:app:testDebugUnitTest` 162/162, instrumentation source compilation, lint 0 errors/53 warnings and `git diff --check`; JDK preflight is 4/4. Targeted B2 connected instrumentation passed 5/5 on OnePlus CPH2691 / Android 15 without clearing app data. Artifact/backup parity and BUILD_INFO provenance pass; the released v4.15/code62 archive remains unchanged.
+
+## G2-C1A executable-contract plan handoff
+
+- Completed: startup/read-only audit, baseline verification, canonical SAFE4 byte/hash verification, exact nine-capability inventory, machine-level executable eligibility contract, state machine, dependency graph, profile immutability/versioning policy, resolver ambiguity policy, new-pack compatibility matrix and separate G2-C1B1–B9 implementation plan in `EDITORIAL_PACK_PLATFORM_G2_C1A_EXECUTABLE_CONTRACT_PLAN.md`.
+- Baseline: source `feature/v4.16`/`1876439517057df0dc2cf4744de74dc0cd4d14fa`; review branch `feature/v4.16-g2-c1a`; SQLite v15; latest accepted build remains `4.16-dev.36`/code98. No production source, profile, database, SAFE4 byte, APK or device state changed.
+- Trust anchors remain canonical profile hash `2d4e2f76dc5defcfb98cfd36cec49b0e5454cb3462db93a6b1586f7784eb91b6` and machine fingerprint `6410f374ce175cbc6fc32484f5cd9635888b9297b01d882923af06ccd4ac1e4c`; only `pack.integrity.sha256.v1` has production evidence; `EditorialSafe4Pack.executionEnabled()` remains false.
+- Regression boundary: required Wrapper verification passed `:editorial-engine:test` 60/60 and `:app:testDebugUnitTest` 162/162 with 0 failures/errors/skips; `git diff --check` exit 0. No APK build/install, device QA, certification, Golden Replay, activation, binding, reevaluation, push, merge or tag is permitted.
+- Next step: user review of G2-C1A and explicit approval before starting exactly one capability phase, `G2-C1B1` for `lineage.exact-parent.v1`.
 
 ## G2-C0B bundled trusted-profile handoff
 
