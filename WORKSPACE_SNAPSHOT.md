@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-05` (G2-C1B1-C0 lineage creation boundary review stop; no importer wiring, migration, promotion, certification, activation, binding or execution)
+- Snapshot updated: `2026-08-05` (G2-C1B1-C1 pure-JVM lineage runtime context/service seam review stop; no caller wiring, persistence, migration, promotion, certification, activation, binding or execution)
 - Current version: `4.15`/code62 remains the released product; latest development archive is `4.16-dev.39`/code101. SQLite source version is v16 and Editorial execution remains intentionally blocked.
-- Current branch: `feature/v4.16-g2-c1b1c0`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned and unstaged. The branch was created from B1B HEAD `79ff13260d4864900082494ef6c628a943e1478f` after baseline verification.
-- Current commit: `79ff13260d4864900082494ef6c628a943e1478f` (implementation baseline immediately before this C0 documentation/checklist/snapshot state commit; intentionally not self-referential)
+- Current branch: `feature/v4.16-g2-c1b1c1`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned and unstaged. The branch was created from C0 HEAD `b66b73cf1470002e44fc19c5efcb926067fb8fa5` after baseline verification.
+- Current commit: `1c5ba96` (C1 implementation baseline immediately before this documentation/checklist/snapshot state commit; intentionally not self-referential)
 - Current build: `artifacts/builds/v4.16-dev.39/build-20260805-124714/TranslateBooks-v4.16-dev.39-code101.apk`, SHA-256 `BF5C7EB41A26242C171B04977182A0A1378BF1F8269B34E77A98D0CC13E61F30`; matching five-file payload is under `backup/builds/v4.16-dev.39/build-20260805-124714/`. Source ZIP SHA-256 is `7EE2512AA71E39E4C12BD17697C981B6B11A12F7C4B34EDF8C95C47C1C762E8C`. Final verification passed engine `74/74`, app JVM `163/163`, Android-test Java compilation, lint `0` errors/`53` warnings, `git diff --check`, and direct device instrumentation `20/20`; the released v4.15/code62 archive remains unchanged.
 
 ## G2-C1B1-A exact-parent lineage handoff
@@ -21,7 +21,15 @@
 - Handoff: `EDITORIAL_PACK_PLATFORM_G2_C1B1C0_LINEAGE_CREATION_BOUNDARY.md`; checklist: `release_checklists/v4.16-g2-c1b1c0.md`. Exact identity gaps are stable project identity, input-scope identity, production run creator and explicit parent/checkpoint selection; no placeholder, pack ID, import ID, SQLite row ID or random UUID was introduced.
 - Verification: read-only engine `74/74`, app JVM `163/163`, combined `237/237`, failures/errors/skips `0/0/0`; `git diff --check` PASS. No APK was built or installed; latest artifact remains `4.16-dev.39`/code101.
 - Status: `G2-C1B1C0_BOUNDARY_PLAN: PASS`; `LINEAGE_RUNTIME_WIRING: NOT_STARTED`; `LINEAGE_CAPABILITY_PROMOTION: NOT_STARTED`; `SAFE4_EXECUTION_READINESS: BLOCKED`. The protected profile/catalog, SQLite v16, pack/evaluation history and QA blocked boundary are unchanged.
-- Pending: separately approve exactly `G2-C1B1-C1` for the explicit lineage runtime context/service seam. Do not connect importer, create lineage rows, add migration, or begin C1 automatically.
+- Completed: C1 was separately approved and implemented as a pure-JVM preparation seam; importer/runtime caller wiring and persistence remain intentionally absent.
+
+## G2-C1B1-C1 explicit lineage runtime service seam handoff
+
+- Completed: immutable caller selection/request/assertion contract, authoritative context/resolver port, compatibility/run-state values, canonical boundary result mapping and `EditorialLineageRuntimeService.validateAndPrepare`. The service enforces `RUN_CONTEXT_CLOSED`, prepares explicit ROOT/CHILD records and delegates record checks to the existing validator without persistence.
+- Implementation: `1c5ba96` on `feature/v4.16-g2-c1b1c1`; handoff `EDITORIAL_PACK_PLATFORM_G2_C1B1C1_LINEAGE_SERVICE_SEAM.md`; checklist `release_checklists/v4.16-g2-c1b1c1.md`.
+- Verification: focused pure-JVM C1 suite `21/21`; full engine `95/95`; app JVM `163/163`; combined `258/258`; failures/errors/skips `0/0/0`; Android-test Java compilation PASS; lint `0` errors/`53` warnings; `git diff --check` PASS. No APK was built or installed; latest artifact remains code101.
+- Decision: `G2-C1B1C1_SERVICE_SEAM: PASS`; `AUTHORITATIVE_IDENTITY_SCHEMA: REQUIRED`; `LINEAGE_RUNTIME_CALLER_WIRING: NOT_STARTED`; `LINEAGE_CAPABILITY_PROMOTION: NOT_STARTED`; `SAFE4_EXECUTION_READINESS: BLOCKED`.
+- Blocker: current project/chapter/run AUTOINCREMENT IDs and mutable/run-incomplete schema are not authoritative semantic identities, and no run-to-lineage binding exists. The exact next step is `G2-C1B1-C1.5` additive identity schema review/implementation; do not start C2 caller integration automatically.
 
 ## G2-C1A executable-contract plan handoff
 
@@ -407,7 +415,7 @@
 
 ## Next step
 
-`G2-C0C-B2` and `G2-C1B1-A` are PASS / REVIEW STOP; G2-C1B1-B persistence is now PASS / REVIEW STOP. The exact next action is review and separate approval for `G2-C1B1-C` importer/runtime lineage wiring. Do not start it, capability promotion, certification, activation, binding or execution automatically.
+`G2-C0C-B2`, `G2-C1B1-A`, `G2-C1B1-B`, `G2-C1B1-C0` and `G2-C1B1-C1` are PASS / REVIEW STOP. The exact next action is review and separate approval for `G2-C1B1-C1.5` authoritative identity schema work. Do not start C2 caller wiring, persistence binding, capability promotion, certification, activation, binding or execution automatically.
 
 ## Resume rule
 
