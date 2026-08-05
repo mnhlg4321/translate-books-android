@@ -446,9 +446,21 @@
 - Regression status: PASS for JVM/lint/archive/device isolated scope. `.idea/*` is untouched, unstaged and uncommitted.
 - Next step: review this G2-C1B1-C1.5-B handoff and separately approve any future C2; do not start C2 automatically.
 
+## G2-C1B1-C2-A creator/resolver finalization snapshot (2026-08-05)
+
+- Current version: `4.16-dev.42`/code104, event `build-20260805-190244`.
+- Current branch: `feature/v4.16-g2-c1b1c2a`.
+- Current commit: `183f47455093046fe991a9abd95fb2bbed57d951` is the implementation/build baseline immediately before this snapshot update; final documentation/state is committed separately by policy.
+- Current build: `artifacts/builds/v4.16-dev.42/build-20260805-190244/TranslateBooks-v4.16-dev.42-code104.apk`; backup mirror `backup/builds/v4.16-dev.42/build-20260805-190244/`; APK SHA-256 `961D4DDF531EF3703EDFDFB3DF55BCBF26CFC8BF512076B25D63DB55AAC01A7B`; source ZIP SHA-256 `BE80D9D197AAA7493AAFC4DE9C5D554CEF8DF7C37EC8BF4A632268FFE36E9266`; five-file parity PASS.
+- Completed tasks: explicit immutable creator requests; v17 project/scope append through canonical models; closed-run closure with DAO-owned ordinal and re-read pack/evaluation/trusted facts; default bundled resolver blocks non-executable production profile; SQLite C1 context resolver, exact parent lookup and read-only retention preflight. Engine `105/105`, app `164/164`, lint `0/53`, isolated device C2-A `5/5` PASS.
+- Pending tasks: no implementation work remains in C2-A. Commit final documentation/state, verify final status, then stop at review.
+- Known bugs/limitations: production profile remains non-executable; no production closed-run has been created; no importer/startup/UI caller, lineage append, run-lineage binding, certification, activation, project binding, capability promotion or execution exists. Retention preflight is read-only; deletion UX wiring belongs to separately approved C2-B or later. `executionEnabled()` remains false. Device production database was empty, so real-data continuity is not claimed.
+- Regression status: PASS. Protected `.idea/compiler.xml`, `.idea/gradle.xml`, `.idea/misc.xml` remain untouched by this phase, unstaged and uncommitted.
+- Next step: separately review and approve G2-C1B1-C2-B for production caller wiring at RUN_CONTEXT_CLOSED; do not start it automatically.
+
 ## Next step
 
-`G2-C0C-B2`, `G2-C1B1-A`, `G2-C1B1-B`, `G2-C1B1-C0`, `G2-C1B1-C1`, `G2-C1B1-C1.5-A` and `G2-C1B1-C1.5-B` are PASS / REVIEW STOP. The exact next action is review this v17 handoff and separately approve any future C2 caller phase. Do not start C2 caller wiring, persistence binding, capability promotion, certification, activation, binding or execution automatically.
+`G2-C0C-B2`, `G2-C1B1-A`, `G2-C1B1-B`, `G2-C1B1-C0`, `G2-C1B1-C1`, `G2-C1B1-C1.5-A`, `G2-C1B1-C1.5-B` and `G2-C1B1-C2-A` are PASS / REVIEW STOP. The exact next action is review C2-A and separately approve C2-B production caller wiring at `RUN_CONTEXT_CLOSED`. Do not start it automatically.
 
 ## Resume rule
 

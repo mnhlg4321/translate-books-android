@@ -17,18 +17,18 @@
 
 ## Current development build
 
-- versionName: `4.16-dev.41`
-- versionCode: `103`
-- event: `build-20260805-183201`
-- branch: `feature/v4.16-g2-c1b1c15b`
-- source commit: `4cd50ba34b1a64749290c51c90fe3a6fc65e91ed`
-- APK: `artifacts/builds/v4.16-dev.41/build-20260805-183201/TranslateBooks-v4.16-dev.41-code103.apk`
-- immutable local mirror: `backup/builds/v4.16-dev.41/build-20260805-183201/`
-- APK SHA-256: `F9935E2CC4BE5B863A14DA194ED7073E76853A186E1877F5FAC6EE548285252B`
-- source ZIP SHA-256: `183E6B4DF79EA8F03CCA9536868EDDF92623088D55EE40CD53C4535E55C0D11B`
+- versionName: `4.16-dev.42`
+- versionCode: `104`
+- event: `build-20260805-190244`
+- branch: `feature/v4.16-g2-c1b1c2a`
+- source commit: `183f47455093046fe991a9abd95fb2bbed57d951`
+- APK: `artifacts/builds/v4.16-dev.42/build-20260805-190244/TranslateBooks-v4.16-dev.42-code104.apk`
+- immutable local mirror: `backup/builds/v4.16-dev.42/build-20260805-190244/`
+- APK SHA-256: `961D4DDF531EF3703EDFDFB3DF55BCBF26CFC8BF512076B25D63DB55AAC01A7B`
+- source ZIP SHA-256: `BE80D9D197AAA7493AAFC4DE9C5D554CEF8DF7C37EC8BF4A632268FFE36E9266`
 - toolchain provenance: Wrapper Gradle `9.3.0`, official distribution SHA-256 `0d585f69da091fc5b2beced877feab55a3064d43b8a1d46aeb07996b0915e0e0`, AGP `8.7.3`, JBR `21.0.10`/JetBrains, JDK major policy `21`, Java source/target `17`, compileSdk/targetSdk `35`.
-- regression: final Wrapper matrix passed with `:editorial-engine:test` 105/105 and `:app:testDebugUnitTest` 164/164, 0 failures/errors/skips; `:app:compileDebugAndroidTestJavaWithJavac` PASS; lint 0 errors/53 warnings; `git diff --check` PASS. Direct device instrumentation passed v17 identity 8/8, lineage persistence 11/11 and v15 compatibility migration 9/9 on OnePlus CPH2691 / Android 15, total 28/28. Artifact and backup contain identical five-file payloads and all manifest hashes pass.
-- device boundary: exact code103 was installed over code101 with `adb install -r`; no `pm clear` was used. The production `databases/` directory was empty at final inspection, so `ISOLATED_V17_IDENTITY_AND_BINDING_QA_PASS`; `REAL_DATA_CONTINUITY: NOT_CLAIMED`.
+- regression: final Wrapper matrix passed with `:editorial-engine:test` 105/105 and `:app:testDebugUnitTest` 164/164, 0 failures/errors/skips; `:app:compileDebugAndroidTestJavaWithJavac` PASS; lint 0 errors/53 warnings; `git diff --check` PASS. Direct device instrumentation passed isolated C2-A creator/resolver 5/5 on OnePlus CPH2691 / Android 15. Artifact and backup contain identical five-file payloads and all manifest hashes pass.
+- device boundary: exact code104 was installed over code103 with `adb install -r`; no `pm clear` was used. The production `databases/` directory was empty at final inspection, so `ISOLATED_C2A_CREATOR_RESOLVER_QA_PASS`; `REAL_DATA_CONTINUITY: NOT_CLAIMED`.
 - current C1 implementation baseline: `1c5ba96` on `feature/v4.16-g2-c1b1c1`; C1 adds only pure-JVM lineage request/context/result/service classes and tests, with no persistence or caller wiring. The archived code101 artifact remains unchanged.
 - G2-C0B source state: the one truthful bootstrap profile remains at `editorial/engine-profile/v1/profile.json`. Canonical profile hash is `2d4e2f76dc5defcfb98cfd36cec49b0e5454cb3462db93a6b1586f7784eb91b6`; machine-contract fingerprint is `6410f374ce175cbc6fc32484f5cd9635888b9297b01d882923af06ccd4ac1e4c`; raw resource SHA-256 is `deb0e89a4084a88c137c71ba2aa7a7170f84d9979395ef58866c73529ce601eb`. Only `pack.integrity.sha256.v1` is implemented; all nine SAFE4 capabilities remain missing and the profile has no executable contract.
 - G2-C1B1-B persistence state: SQLite source version is v16. The additive `editorial_lineage_records` and `editorial_lineage_input_entries` tables are append-only, validator-gated and have no importer/runtime call site. v15 pack/evaluation rows are preserved without lineage backfill; existing packs remain without lineage evidence until G2-C1B1-C.
@@ -198,3 +198,13 @@ The previous v4.14 release remains published and immutable.
 - Device QA: exact code103 was installed over code101 with `adb install -r`, no `pm clear`. Direct instrumentation on OnePlus CPH2691 / Android 15 passed `EditorialV17IdentityStoreInstrumentedTest` `8/8`, `EditorialLineagePersistenceInstrumentedTest` `11/11`, and `EditorialPackCompatibilityEvaluationInstrumentedTest` `9/9`; total `28/28`. The production app `databases/` directory was empty at inspection, so `ISOLATED_V17_IDENTITY_AND_BINDING_QA_PASS`; `REAL_DATA_CONTINUITY: NOT_CLAIMED`. No manual SQLite mutation and no candidate file from `D:` were used.
 - Safety boundary: profile/catalog unchanged; production profile remains non-executable; `EditorialSafe4Pack.executionEnabled()` remains `false`; no importer, production project/run caller, creator, certification, activation, project binding, capability promotion or execution was added.
 - Handoff/checklist: `EDITORIAL_PACK_PLATFORM_G2_C1B1C15B_SQLITE_V17.md`; `release_checklists/v4.16-g2-c1b1c15b.md`. Exactly one next step: review this implementation and approve any separate future C2 caller phase; do not start it automatically.
+
+## G2-C1B1-C2-A authoritative identity creator/resolver (2026-08-05)
+
+- Status: `G2-C1B1C2A_CREATOR_RESOLVER: PASS`; `AUTHORITATIVE_IDENTITY_CREATOR: IMPLEMENTED`; `AUTHORITATIVE_CONTEXT_RESOLVER: IMPLEMENTED`; `PRODUCTION_CLOSED_RUN_CREATION: BLOCKED`; `LINEAGE_RUNTIME_CALLER_WIRING: NOT_STARTED`; `LINEAGE_CAPABILITY_PROMOTION: NOT_STARTED`; `SAFE4_EXECUTION_READINESS: BLOCKED`.
+- Baseline/build: started from `5e17c8703c7656cde85e21cbc37db241d44a830d` on `feature/v4.16-g2-c1b1c15b`; implementation/build source is `183f47455093046fe991a9abd95fb2bbed57d951` on `feature/v4.16-g2-c1b1c2a`. Archive is `4.16-dev.42`/code104, event `build-20260805-190244`; APK SHA-256 `961D4DDF531EF3703EDFDFB3DF55BCBF26CFC8BF512076B25D63DB55AAC01A7B`; source ZIP SHA-256 `BE80D9D197AAA7493AAFC4DE9C5D554CEF8DF7C37EC8BF4A632268FFE36E9266`; five-file artifact/backup parity PASS.
+- Creator/resolver: explicit request-only project/scope/closure creator reuses v17 canonical models and DAO append-only vocabulary; it re-reads pack/evaluation/scope facts and lets the DAO allocate attempt ordinal. SQLite resolver reconstructs C1 context solely from exact v17/v15/lineage stored facts, with no latest-row fallback. Read-only retention preflight reports project/run authoritative provenance references; deletion UX wiring remains deferred.
+- Production boundary: bundled resolver requires an executable exact trusted profile; current profile is non-executable, so production closure is rejected without a row. Positive closure/context evidence is isolated test-only fixture data and does not alter profile/catalog/capability state.
+- Verification: Wrapper/JBR engine `105/105`, app `164/164`, failures/errors/skips `0/0/0`; Android-test compilation PASS; lint 0 errors/53 warnings; `git diff --check` PASS. Exact code104 upgrade (no `pm clear`) passed isolated creator/resolver device QA 5/5 on OnePlus CPH2691 / Android 15. Production database was empty: `REAL_DATA_CONTINUITY: NOT_CLAIMED`.
+- Safety: no importer/startup/UI/production caller, C1 runtime invocation, production lineage/binding, migration, certification, activation, project binding, execution, capability promotion, or profile/catalog change. `executionEnabled()` remains false; protected `.idea/*` remains untouched/unstaged.
+- Handoff/checklist: `EDITORIAL_PACK_PLATFORM_G2_C1B1C2A_AUTHORITATIVE_CREATOR_RESOLVER.md`; `release_checklists/v4.16-g2-c1b1c2a.md`. Exactly one next step: review C2-A and separately approve C2-B production caller wiring at `RUN_CONTEXT_CLOSED`; do not start it automatically.
