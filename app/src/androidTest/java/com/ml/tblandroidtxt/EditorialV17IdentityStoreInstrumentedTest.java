@@ -263,6 +263,34 @@ public final class EditorialV17IdentityStoreInstrumentedTest {
         assertEquals(0, scalarInt(upgraded, "SELECT COUNT(*) FROM editorial_run_lineage_bindings"));
     }
 
+    @Test public void failedV16ToV17MigrationRollsBackToReadableV16() throws Exception {
+        repository.close();
+        Path path = context.getDatabasePath(databaseName).toPath();
+        Files.createDirectories(path.getParent());
+        SQLiteDatabase old = SQLiteDatabase.openOrCreateDatabase(path.toFile(), null);
+        for (String sql : EditorialMigrationSpec.from13To14()) old.execSQL(sql);
+        for (String sql : EditorialMigrationSpec.from14To15()) old.execSQL(sql);
+        for (String sql : EditorialMigrationSpec.from15To16()) old.execSQL(sql);
+        old.execSQL("CREATE TABLE editorial_project_revisions (bad INTEGER)");
+        old.setVersion(16);
+        old.close();
+        repository = new TranslationRepository(context, databaseName);
+        try {
+            repository.editorialWritableDatabase();
+            fail("malformed v17 table must fail the v16-to-v17 migration");
+        } catch (SQLiteException expected) {
+            assertNotNull(expected.getMessage());
+        }
+        repository.close();
+        SQLiteDatabase reopened = SQLiteDatabase.openOrCreateDatabase(path.toFile(), null);
+        assertEquals(16, reopened.getVersion());
+        assertEquals(1, scalarInt(reopened,
+                "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='editorial_project_revisions'"));
+        assertEquals(0, scalarInt(reopened,
+                "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='editorial_input_scope_snapshots'"));
+        reopened.close();
+    }
+
     private void prepareIdentityContext() {
         revision = new EditorialProjectRevision("project-projection-v1", "semantic/project/001",
                 "project-definition-v1", "novel", PROFILE, MACHINE);
