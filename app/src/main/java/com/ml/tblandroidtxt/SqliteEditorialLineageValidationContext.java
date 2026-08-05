@@ -15,7 +15,10 @@ public final class SqliteEditorialLineageValidationContext implements EditorialL
     }
 
     @Override public List<EditorialLineageRecord> findByRecordIdentity(String recordIdentity) {
-        try { return dao.findByRecordIdentity(recordIdentity).stream().toList(); }
+        try {
+            java.util.Optional<EditorialLineageRecord> record = dao.findByRecordIdentity(recordIdentity);
+            return record.isPresent() ? List.of(record.get()) : List.of();
+        }
         catch (RuntimeException error) { return List.of(); }
     }
 
