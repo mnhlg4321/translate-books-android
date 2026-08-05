@@ -1,10 +1,19 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-05` (G2-C1A executable-contract plan review stop; plan only; no capability implementation, certification, activation, binding or execution)
-- Current version: `4.15`/code62 remains the released product; latest development archive is `4.16-dev.36`/code98. SQLite is v15 for additive compatibility provenance; Editorial execution remains intentionally blocked.
-- Current branch: `feature/v4.16-g2-c1a` (review branch from verified `feature/v4.16` baseline); `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned, unchanged and unstaged. The three toolchain drift files were restored to the committed baseline.
-- Current commit: `1876439517057df0dc2cf4744de74dc0cd4d14fa` (implementation baseline immediately before the G2-C1A documentation/state/checklist commit; intentionally not self-referential)
-- Current build: `artifacts/builds/v4.16-dev.36/build-20260805-095511/TranslateBooks-v4.16-dev.36-code98.apk`, SHA-256 `9E147135DEA5D37EDFF5220D5EC8C44CE2686438DE3831BC5EC564E7BC752EC8`; matching five-file payload is under `backup/builds/v4.16-dev.36/build-20260805-095511/`. Source ZIP SHA-256 is `B8B518270092D03ECC4D479DC93AB2C55EFF027A395600582EECAA5797799F22`. Wrapper `9.3.0` with official distribution SHA-256 `0d585f69da091fc5b2beced877feab55a3064d43b8a1d46aeb07996b0915e0e0` and JBR `21.0.10` passed `:editorial-engine:test` 60/60, `:app:testDebugUnitTest` 162/162, instrumentation source compilation, lint 0 errors/53 warnings and `git diff --check`; JDK preflight is 4/4. Targeted B2 connected instrumentation passed 5/5 on OnePlus CPH2691 / Android 15 without clearing app data. Artifact/backup parity and BUILD_INFO provenance pass; the released v4.15/code62 archive remains unchanged.
+- Snapshot updated: `2026-08-05` (G2-C1B1-A `lineage.exact-parent.v1` pure-JVM implementation review stop; no persistence, importer wiring, promotion, certification, activation, binding or execution)
+- Current version: `4.15`/code62 remains the released product; latest development archive is `4.16-dev.36`/code98. SQLite remains v15 and Editorial execution remains intentionally blocked.
+- Current branch: `feature/v4.16-g2-c1b1a`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned and unstaged. The implementation branch was created from C1A correction commit `9091d9167fa2f791cb822a2c6522af8bdab3021e`.
+- Current commit: `b4a9a52d37697b8f81eb7857a969103ef970daa3` (implementation baseline immediately before this documentation/checklist/snapshot state commit; intentionally not self-referential)
+- Current build: `artifacts/builds/v4.16-dev.36/build-20260805-095511/TranslateBooks-v4.16-dev.36-code98.apk`, SHA-256 `9E147135DEA5D37EDFF5220D5EC8C44CE2686438DE3831BC5EC564E7BC752EC8`; matching five-file payload is under `backup/builds/v4.16-dev.36/build-20260805-095511/`. Source ZIP SHA-256 is `B8B518270092D03ECC4D479DC93AB2C55EFF027A395600582EECAA5797799F22`. No APK build/install occurred in C1B1A. Final verification passed engine `74/74`, app JVM `162/162`, Android-test Java compilation, lint `0` errors/`53` warnings and `git diff --check`; the released v4.15/code62 archive remains unchanged.
+
+## G2-C1B1-A exact-parent lineage handoff
+
+- Completed: pure-JVM immutable lineage model, canonical JSON projections, domain-separated SHA-256 fingerprints, exact-parent validator, stable machine failure codes, fixed `lineage/root-child-v1` fixture manifest and 14 focused tests for `lineage.exact-parent.v1`.
+- Implementation: branch `feature/v4.16-g2-c1b1a`; C1A correction commit `9091d9167fa2f791cb822a2c6522af8bdab3021e`; implementation commit `b4a9a52d37697b8f81eb7857a969103ef970daa3`. Handoff document is `EDITORIAL_PACK_PLATFORM_G2_C1B1A_LINEAGE_JVM.md`; phase checklist is `release_checklists/v4.16-g2-c1b1a.md`.
+- Actual test results: `:editorial-engine:test` `74/74`, `:app:testDebugUnitTest` `162/162`, Android-test Java compilation PASS, `:app:lintDebug` PASS with `0` errors/`53` warnings, `git diff --check` PASS. No APK build/install or device QA was run.
+- Protected identity: canonical profile hash `2d4e2f76dc5defcfb98cfd36cec49b0e5454cb3462db93a6b1586f7784eb91b6`, machine fingerprint `6410f374ce175cbc6fc32484f5cd9635888b9297b01d882923af06ccd4ac1e4c`; catalog still confirms only `pack.integrity.sha256.v1`; `EditorialSafe4Pack.executionEnabled()` remains false.
+- Unchanged boundaries: no production evidence-catalog promotion, profile update/version, SQLite migration/table/DAO, importer/runtime call site, compatibility-history reevaluation, certification, Golden Replay, activation, project binding or execution.
+- Pending: review the C1B1A implementation and separately approve the proposed schema v16/persistence boundary for G2-C1B1-B. Do not begin B automatically.
 
 ## G2-C1A executable-contract plan handoff
 
