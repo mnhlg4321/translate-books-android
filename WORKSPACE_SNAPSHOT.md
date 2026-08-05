@@ -436,19 +436,19 @@
 
 ## G2-C1B1-C1.5-B finalization snapshot (2026-08-05)
 
-- Current version: `4.16-dev.40`/code102 remains the last completed archive; final code103 archive is pending because the handoff was just tracked after the test-only rollback addition.
+- Current version: `4.16-dev.41`/code103, event `build-20260805-183201`.
 - Current branch: `feature/v4.16-g2-c1b1c15b`.
-- Current commit: `c596abb` is the implementation baseline immediately before this snapshot update; the handoff and BUILD_STATE changes are ready to stage, and `.idea/*` remains protected/unstaged.
-- Current build: code102 artifact/backup parity PASS; final source adds only the v16→v17 migration failure-injection test, which passed as part of the isolated `8/8` v17 class.
+- Current commit: `4cd50ba34b1a64749290c51c90fe3a6fc65e91ed` is the implementation baseline immediately before this snapshot update; final documentation/state is being committed separately, and `.idea/*` remains protected/unstaged.
+- Current build: final APK `artifacts/builds/v4.16-dev.41/build-20260805-183201/TranslateBooks-v4.16-dev.41-code103.apk`; immutable mirror `backup/builds/v4.16-dev.41/build-20260805-183201/`; APK SHA-256 `F9935E2CC4BE5B863A14DA194ED7073E76853A186E1877F5FAC6EE548285252`; source ZIP SHA-256 `183E6B4DF79EA8F03CCA9536868EDDF92623088D55EE40CD53C4535E55C0D11B`; five-file artifact/backup parity PASS.
 - Completed tasks: v17 schema/DAO/transaction implementation; engine `105/105`, app `164/164`, Android-test compile, lint `0/53`; device v17 `8/8`, lineage `11/11`, v15 evaluation `9/9`; total device `28/28`.
-- Pending tasks: commit final handoff/state, run final archive-first code103 build/parity, install exact code103 APK without clearing data, repeat v17 device class if needed, update checklist/snapshot with final evidence, and stop at review.
+- Pending tasks: commit final documentation/state, verify final HEAD/status/diff-check, and stop at review. No implementation work remains in this approved scope.
 - Known bugs/limitations: production profile remains non-executable; no production identity creator/caller, importer wiring, capability promotion, certification, activation, binding or execution; production `databases/` was empty at inspection, so real-data continuity remains not claimed; `executionEnabled()` remains false.
-- Regression status: PASS for JVM/lint/isolated device scope; final code103 archive and final documentation commit pending. `.idea/*` is untouched, unstaged and uncommitted.
-- Next step: stage the tracked handoff/BUILD_STATE, archive code103, then final review stop; do not start C2.
+- Regression status: PASS for JVM/lint/archive/device isolated scope. `.idea/*` is untouched, unstaged and uncommitted.
+- Next step: review this G2-C1B1-C1.5-B handoff and separately approve any future C2; do not start C2 automatically.
 
 ## Next step
 
-`G2-C0C-B2`, `G2-C1B1-A`, `G2-C1B1-B`, `G2-C1B1-C0`, `G2-C1B1-C1` and `G2-C1B1-C1.5-A` are PASS / REVIEW STOP. The exact next action is review and separate approval for `G2-C1B1-C1.5-B` additive v17 schema/DAO implementation. Do not start C2 caller wiring, persistence binding, capability promotion, certification, activation, binding or execution automatically.
+`G2-C0C-B2`, `G2-C1B1-A`, `G2-C1B1-B`, `G2-C1B1-C0`, `G2-C1B1-C1`, `G2-C1B1-C1.5-A` and `G2-C1B1-C1.5-B` are PASS / REVIEW STOP. The exact next action is review this v17 handoff and separately approve any future C2 caller phase. Do not start C2 caller wiring, persistence binding, capability promotion, certification, activation, binding or execution automatically.
 
 ## Resume rule
 

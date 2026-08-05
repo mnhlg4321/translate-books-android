@@ -21,7 +21,7 @@ capability, certification, activation, project binding or execution.
 - Start branch: `feature/v4.16-g2-c1b1c15a`.
 - Start HEAD: `721c78291a25ed15d09165f7f1a49de435368b24` (`docs: close C1.5-A review stop`).
 - Implementation branch: `feature/v4.16-g2-c1b1c15b`.
-- Implementation source HEAD before final archive: `c596abb` (`test(editorial): cover v16 to v17 migration rollback`).
+- Implementation source HEAD before final archive: `4cd50ba34b1a64749290c51c90fe3a6fc65e91ed` (`docs(workflow): record sqlite v17 handoff`).
 - The archived build is from the implementation/build source HEAD. This
   handoff, BUILD_STATE and snapshot are documentation after the archived build
   and therefore are not retroactively claimed as APK source changes.
@@ -233,25 +233,25 @@ No raw content was read to infer identity. No legacy state, pack state,
   `EditorialLineagePersistenceInstrumentedTest` `11/11`.
 - Existing v15 evaluation/migration class after v17 update:
   `EditorialPackCompatibilityEvaluationInstrumentedTest` `9/9`.
-- Device total before final archive refresh: `28/28`, 0 failures/errors, direct `adb shell am instrument`
+- Device total on the final code103 archive: `28/28`, 0 failures/errors, direct `adb shell am instrument`
   runner on OnePlus CPH2691 / Android 15.
 
 ## Build and artifact parity
 
 - Archive-first command: `scripts/build-and-save.ps1 -Series 4.16-dev`.
-- Version: `4.16-dev.40`; Android version code `102`.
-- Event: `build-20260805-182049`.
-- Source/build commit in `BUILD_INFO.json`: `fd61c23912a38e2ffef9d421bd6c44cd446e63e7`.
-- APK SHA-256: `05340361931F3D8A471A28A0CF2BFB186D3D0BE6A329B50DBB4E95D6356BA576`.
-- Source ZIP SHA-256: `058959BBD8E4CC87272615443991448D7487946F8AA0713B4C66D59B6D5F7974`.
-- Artifact: `artifacts/builds/v4.16-dev.40/build-20260805-182049/`.
-- Immutable mirror: `backup/builds/v4.16-dev.40/build-20260805-182049/`.
+- Version: `4.16-dev.41`; Android version code `103`.
+- Event: `build-20260805-183201`.
+- Source/build commit in `BUILD_INFO.json`: `4cd50ba34b1a64749290c51c90fe3a6fc65e91ed`.
+- APK SHA-256: `F9935E2CC4BE5B863A14DA194ED7073E76853A186E1877F5FAC6EE548285252`.
+- Source ZIP SHA-256: `183E6B4DF79EA8F03CCA9536868EDDF92623088D55EE40CD53C4535E55C0D11B`.
+- Artifact: `artifacts/builds/v4.16-dev.41/build-20260805-183201/`.
+- Immutable mirror: `backup/builds/v4.16-dev.41/build-20260805-183201/`.
 - All five payload files (`APK`, `README.md`, `BUILD_INFO.json`,
   `SHA256SUMS.txt`, source ZIP) match by name and SHA-256.
 
 ## Device boundary and safety
 
-The exact code102 APK was installed over code101 with `adb install -r`; no
+The exact code103 APK was installed over code101 with `adb install -r`; no
 `pm clear` was used. The app's production `databases/` directory was empty at
 inspection, so the truthful result is:
 
