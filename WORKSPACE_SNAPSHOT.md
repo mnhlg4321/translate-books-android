@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-04` (G2-C0B bundled trusted-profile registry PASS; review stop before G2-C0C; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
+- Snapshot updated: `2026-08-05` (G2-C0C-A pure-JVM resolver PASS; G2-C0C-B BLOCKED at v14 persistence/profile-contract review stop; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
 - Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.30`/code92 remains the latest accepted archive-first build. C0B adds source-bundled trust metadata only; Editorial execution remains intentionally blocked.
 - Current branch: `feature/v4.16`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned, unchanged and unstaged. The three toolchain drift files were restored to the committed baseline.
-- Current commit: `285819c329c922d1256eb27bc13ee5ba75ec5fd1` (G2-C0B implementation baseline immediately before this state/handoff documentation commit; the final documentation commit is intentionally not self-referenced here)
+- Current commit: `3597e9d556e7e0edaef51267d990129cdb2cacc5` (G2-C0B implementation baseline immediately before the C0C-A implementation/snapshot commit; the final documentation commit is intentionally not self-referenced here)
 - Current build: `artifacts/builds/v4.16-dev.30/build-20260804-182006/TranslateBooks-v4.16-dev.30-code92.apk`, SHA-256 `07BC98B22019832AFD37D0307E691957FBDC47D1C0E929949535D69AFB472801`; matching five-file payload is under `backup/builds/v4.16-dev.30/build-20260804-182006/`. Source ZIP SHA-256 is `BD6BCDC832DC5C3D9AFFA3E1C597A12D090F560F6B8D6319D0D65F7FB22C1126`. Wrapper `9.3.0` with official distribution SHA-256 `0d585f69da091fc5b2beced877feab55a3064d43b8a1d46aeb07996b0915e0e0` and JBR `21.0.10` passed `:editorial-engine:test` 50/50, `:app:testDebugUnitTest` 161/161, instrumentation source compilation, lint 0 errors/53 warnings and `git diff --check`; JDK preflight is 4/4. The released v4.15/code62 archive remains unchanged.
 
 ## G2-C0B bundled trusted-profile handoff
@@ -12,7 +12,15 @@
 - Trust values: raw resource SHA-256 `deb0e89a4084a88c137c71ba2aa7a7170f84d9979395ef58866c73529ce601eb`, canonical profile hash `2d4e2f76dc5defcfb98cfd36cec49b0e5454cb3462db93a6b1586f7784eb91b6`, machine-contract fingerprint `6410f374ce175cbc6fc32484f5cd9635888b9297b01d882923af06ccd4ac1e4c`.
 - Profile truth: only `pack.integrity.sha256.v1` implemented; nine SAFE4 capabilities remain explicit missing; contract/phase/context/gate/release/adapter fields remain empty and no executable contract is declared.
 - Regression after C0B: engine 50/50, app JVM 161/161, instrumentation source compilation PASS, lint 0 errors/53 warnings, `git diff --check` PASS. No APK was built/installed and code92 remains the latest accepted artifact.
-- Pending: review stop for C0B, then separately approve G2-C0C. Runtime/importer wiring remains absent and compatibility remains fail-closed.
+- Pending: C0C-B is blocked until an additive immutable evidence schema is separately approved and the production profile receives reviewed executable contract semantics. Runtime/importer wiring remains absent and compatibility remains fail-closed.
+
+## G2-C0C runtime profile resolution handoff
+
+- C0C-A implementation: pure-JVM `EditorialEngineProfileAdapter`, deterministic `EditorialEngineProfileResolver`, immutable `EditorialCompatibilityEvaluationResult` and stable `EditorialCompatibilityReasonCode`; no Android, SQLite, importer, UI or runtime call site was changed.
+- C0C-A focused tests: 6/6 pass, 0 failures/errors/skips. Coverage includes adapter evaluator-fact mapping without profile metadata, production no-executable-contract fail-closed selection, profile hash mismatch, machine fingerprint mismatch, duplicate trusted identity and immutable/deterministic result collections.
+- C0C-B blocker: live SQLite v14 stores pack hash, engine version, machine fingerprint, outcome/required class, reason and timestamp, but not trusted profile ID/version/hash, adapter-set hash, capability fingerprint or evaluation-context identity. The approved plan forbids using `blocked_reason` as a hidden channel and requires an additive immutable migration before durable profile evidence; no migration was made.
+- C0C-B semantic blocker: the bundled production profile has null contract bounds, empty schema/phase/context descriptors and therefore no approved executable contract. Creating an integrity-only `DATA_COMPATIBLE` fixture result would require inventing semantic profile values, which is forbidden.
+- Regression: Wrapper Gradle 9.3.0/JBR 21; engine 56/56, app JVM 161/161, instrumentation Java compilation PASS, lint 0 errors/53 warnings, `git diff --check` PASS; JDK preflight 4/4. No APK build/install; code92 remains the latest accepted artifact.
 
 ## G2-B1 handoff
 
