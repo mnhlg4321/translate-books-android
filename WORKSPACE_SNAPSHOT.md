@@ -3,7 +3,7 @@
 - Snapshot updated: `2026-08-05` (G2-C0C-A pure-JVM resolver PASS; G2-C0C-B BLOCKED at v14 persistence/profile-contract review stop; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
 - Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.30`/code92 remains the latest accepted archive-first build. C0B adds source-bundled trust metadata only; Editorial execution remains intentionally blocked.
 - Current branch: `feature/v4.16`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned, unchanged and unstaged. The three toolchain drift files were restored to the committed baseline.
-- Current commit: `3597e9d556e7e0edaef51267d990129cdb2cacc5` (G2-C0B implementation baseline immediately before the C0C-A implementation/snapshot commit; the final documentation commit is intentionally not self-referenced here)
+- Current commit: `91b9bbed92d4180dd6a038a2812818664d6a411a` (C0C-A implementation baseline immediately before this documentation/state commit; the final documentation commit is intentionally not self-referenced here)
 - Current build: `artifacts/builds/v4.16-dev.30/build-20260804-182006/TranslateBooks-v4.16-dev.30-code92.apk`, SHA-256 `07BC98B22019832AFD37D0307E691957FBDC47D1C0E929949535D69AFB472801`; matching five-file payload is under `backup/builds/v4.16-dev.30/build-20260804-182006/`. Source ZIP SHA-256 is `BD6BCDC832DC5C3D9AFFA3E1C597A12D090F560F6B8D6319D0D65F7FB22C1126`. Wrapper `9.3.0` with official distribution SHA-256 `0d585f69da091fc5b2beced877feab55a3064d43b8a1d46aeb07996b0915e0e0` and JBR `21.0.10` passed `:editorial-engine:test` 50/50, `:app:testDebugUnitTest` 161/161, instrumentation source compilation, lint 0 errors/53 warnings and `git diff --check`; JDK preflight is 4/4. The released v4.15/code62 archive remains unchanged.
 
 ## G2-C0B bundled trusted-profile handoff
@@ -365,7 +365,7 @@
 
 ## Next step
 
-Review `EDITORIAL_PACK_PLATFORM_G2_C0B.md` and approve the exact next step. G2-C0B is stopped here; G2-C0C is proposed but not implemented. Do not start runtime profile selection/importer wiring/folder import/certification/activation/binding/execution work without separate approval.
+Review `EDITORIAL_PACK_PLATFORM_G2_C0C.md` and approve the blocker resolution separately. C0C-A is stopped with passing pure-JVM evidence; C0C-B is blocked pending an additive immutable evidence migration and reviewed executable contract semantics. Do not start importer wiring/folder import/certification/activation/binding/execution work before that review.
 
 ## Resume rule
 
