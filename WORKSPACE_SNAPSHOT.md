@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-05` (G2-C0C-B1 SQLite v15 persistence implementation in progress; C0C-B2 runtime wiring remains explicitly out of scope; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
-- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.30`/code92 remains the latest accepted archive-first build. C0B adds source-bundled trust metadata only; Editorial execution remains intentionally blocked.
+- Snapshot updated: `2026-08-05` (G2-C0C-B1 PASS / review stop; C0C-B2 runtime wiring remains explicitly out of scope; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
+- Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.31`/code93 is the latest accepted archive-first build. SQLite is v15 for additive compatibility provenance; Editorial execution remains intentionally blocked.
 - Current branch: `feature/v4.16`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned, unchanged and unstaged. The three toolchain drift files were restored to the committed baseline.
 - Current commit: `c4c199d89b363033eb6df744b9578d744192ea0b` (G2-C0C-B1 implementation baseline immediately before this snapshot/state commit; the final documentation commit is intentionally not self-referenced here)
-- Current build: `artifacts/builds/v4.16-dev.30/build-20260804-182006/TranslateBooks-v4.16-dev.30-code92.apk`, SHA-256 `07BC98B22019832AFD37D0307E691957FBDC47D1C0E929949535D69AFB472801`; matching five-file payload is under `backup/builds/v4.16-dev.30/build-20260804-182006/`. Source ZIP SHA-256 is `BD6BCDC832DC5C3D9AFFA3E1C597A12D090F560F6B8D6319D0D65F7FB22C1126`. Wrapper `9.3.0` with official distribution SHA-256 `0d585f69da091fc5b2beced877feab55a3064d43b8a1d46aeb07996b0915e0e0` and JBR `21.0.10` passed `:editorial-engine:test` 50/50, `:app:testDebugUnitTest` 161/161, instrumentation source compilation, lint 0 errors/53 warnings and `git diff --check`; JDK preflight is 4/4. The released v4.15/code62 archive remains unchanged.
+- Current build: `artifacts/builds/v4.16-dev.31/build-20260805-080909/TranslateBooks-v4.16-dev.31-code93.apk`, SHA-256 `6522BFF2B7DA8B5B265243B10DEA9E6E936A3C712B28B4173C10EC1DDEBADC0B`; matching five-file payload is under `backup/builds/v4.16-dev.31/build-20260805-080909/`. Source ZIP SHA-256 is `66B62FED77C4F275559FB80E02D6BC21CC8C0F2E5032B716AA608444E7E9FADE`. Wrapper `9.3.0` with official distribution SHA-256 `0d585f69da091fc5b2beced877feab55a3064d43b8a1d46aeb07996b0915e0e0` and JBR `21.0.10` passed `:editorial-engine:test` 59/59, `:app:testDebugUnitTest` 162/162, instrumentation source compilation, lint 0 errors/53 warnings and `git diff --check`; JDK preflight is 4/4. The scoped SQLite v15 device migration class passed 9/9 on OnePlus CPH2691 / Android 15. The released v4.15/code62 archive remains unchanged.
 
 ## G2-C0B bundled trusted-profile handoff
 
@@ -22,12 +22,12 @@
 - C0C-B semantic blocker: the bundled production profile has null contract bounds, empty schema/phase/context descriptors and therefore no approved executable contract. Creating an integrity-only `DATA_COMPATIBLE` fixture result would require inventing semantic profile values, which is forbidden.
 - Regression: Wrapper Gradle 9.3.0/JBR 21; engine 56/56, app JVM 161/161, instrumentation Java compilation PASS, lint 0 errors/53 warnings, `git diff --check` PASS; JDK preflight 4/4. No APK build/install; code92 remains the latest accepted artifact.
 
-## G2-C0C-B1 SQLite v15 persistence implementation
+## G2-C0C-B1 SQLite v15 persistence review stop
 
-- Scope in progress: additive SQLite v14→v15 migration plus immutable `editorial_pack_compatibility_evaluations` history table, pure semantic context fingerprint, and narrow append/read DAO. No C0C-B2 resolver/importer wiring, production DATA_COMPATIBLE result, profile change, importer/SAF change, certification, activation, binding or execution path was added.
+- Completed: additive SQLite v14→v15 migration plus immutable `editorial_pack_compatibility_evaluations` history table, pure semantic context fingerprint, and narrow append/read DAO. No C0C-B2 resolver/importer wiring, production DATA_COMPATIBLE result, profile change, importer/SAF change, certification, activation, binding or execution path was added.
 - Schema contract: v14 `editorial_packs`, `editorial_pack_files`, `editorial_pack_imports` and `editorial_pack_compatibility_results` remain unchanged. v15 adds only the new history table, two indexes and update/delete rejection triggers; legacy rows are not backfilled and map as `LEGACY_UNATTESTED` with absent trusted-profile/context fields.
-- Source evidence currently compiled: engine context tests 3/3; full engine 59/59; app JVM 162/162; instrumentation Java compilation PASS; lint 0 errors/53 warnings; `git diff --check` PASS. Device migration execution is not yet recorded; ADB is available for post-archive QA.
-- Current accepted artifact remains `4.16-dev.30`/code92 until the B1 archive-first build; the three protected `.idea/*` files remain untouched and unstaged. Pending: implementation commit, archive-first code93 build, migration/device evidence, final B1 handoff and review stop.
+- Evidence: engine context tests 3/3; full engine 59/59; app JVM 162/162; instrumentation Java compilation PASS; scoped device migration/persistence tests 9/9; lint 0 errors/53 warnings; `git diff --check` PASS; preflight 4/4. Archive-first code93 artifact/backup parity and BUILD_INFO provenance pass. The three protected `.idea/*` files remain untouched and unstaged.
+- Final boundary: C0C-B2 runtime wiring and reevaluation remain pending; next proposed step is C0C-B2 after review. No production DATA_COMPATIBLE result was created by B1.
 
 ## G2-B1 handoff
 

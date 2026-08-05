@@ -17,19 +17,19 @@
 
 ## Current development build
 
-- versionName: `4.16-dev.30`
-- versionCode: `92`
-- event: `build-20260804-182006`
+- versionName: `4.16-dev.31`
+- versionCode: `93`
+- event: `build-20260805-080909`
 - branch: `feature/v4.16`
-- source commit: `8fbc8d1ed004c1524e001b7bbd0a2b321584331b`
-- APK: `artifacts/builds/v4.16-dev.30/build-20260804-182006/TranslateBooks-v4.16-dev.30-code92.apk`
-- immutable local mirror: `backup/builds/v4.16-dev.30/build-20260804-182006/`
-- APK SHA-256: `07BC98B22019832AFD37D0307E691957FBDC47D1C0E929949535D69AFB472801`
-- source ZIP SHA-256: `BD6BCDC832DC5C3D9AFFA3E1C597A12D090F560F6B8D6319D0D65F7FB22C1126`
+- source commit: `7defbe711bd404cf51927ae2357790f55baa11cb`
+- APK: `artifacts/builds/v4.16-dev.31/build-20260805-080909/TranslateBooks-v4.16-dev.31-code93.apk`
+- immutable local mirror: `backup/builds/v4.16-dev.31/build-20260805-080909/`
+- APK SHA-256: `6522BFF2B7DA8B5B265243B10DEA9E6E936A3C712B28B4173C10EC1DDEBADC0B`
+- source ZIP SHA-256: `66B62FED77C4F275559FB80E02D6BC21CC8C0F2E5032B716AA608444E7E9FADE`
 - toolchain provenance: Wrapper Gradle `9.3.0`, official distribution SHA-256 `0d585f69da091fc5b2beced877feab55a3064d43b8a1d46aeb07996b0915e0e0`, AGP `8.7.3`, JBR `21.0.10`/JetBrains, JDK major policy `21`, Java source/target `17`, compileSdk/targetSdk `35`.
-- regression: G2-T0B required Wrapper matrix passed with `:editorial-engine:test` 33/33, `:app:testDebugUnitTest` 161/161, instrumentation Java compilation PASS, lint 0 errors/53 warnings and `git diff --check` PASS. Preflight tests passed 4/4 for JDK 21, Java 8 rejection, missing JAVA_HOME and invalid path. Archive-first build completed successfully with no installation. Artifact and backup contain identical five-file payloads and all manifest hashes pass. The prior code91 device evidence remains the latest installed-device evidence; code92 was not installed.
-- G2-C0B source state (no APK build): commits `fb2bd262dc996d20fbef051414727525410e9e1a`, `6c6fdb2c3ab15e972716d005b1588cee8b51fdec` and `285819c329c922d1256eb27bc13ee5ba75ec5fd1` bundle the one truthful bootstrap profile at `editorial/engine-profile/v1/profile.json` and copy/verify that same source into generated APK assets. Canonical profile hash is `2d4e2f76dc5defcfb98cfd36cec49b0e5454cb3462db93a6b1586f7784eb91b6`; machine-contract fingerprint is `6410f374ce175cbc6fc32484f5cd9635888b9297b01d882923af06ccd4ac1e4c`; raw resource SHA-256 is `deb0e89a4084a88c137c71ba2aa7a7170f84d9979395ef58866c73529ce601eb`. Only `pack.integrity.sha256.v1` is implemented; all nine SAFE4 capabilities remain missing.
-- G2-C0B regression: focused bundled-registry suite passed 17/17; full `:editorial-engine:test` passed 50/50, `:app:testDebugUnitTest` 161/161, instrumentation Java compilation PASS, lint 0 errors/53 warnings and `git diff --check` PASS. No runtime/importer wiring or compatibility state changed.
+- regression: G2-C0C-B1 Wrapper matrix passed with `:editorial-engine:test` 59/59, `:app:testDebugUnitTest` 162/162, instrumentation Java compilation PASS, lint 0 errors/53 warnings and `git diff --check` PASS. Preflight tests passed 4/4 for JDK 21, Java 8 rejection, missing JAVA_HOME and invalid path. The device migration class passed 9/9 on OnePlus CPH2691 / Android 15 after archive installation, without clearing app data. Artifact and backup contain identical five-file payloads and all manifest hashes pass.
+- G2-C0B source state: the one truthful bootstrap profile remains at `editorial/engine-profile/v1/profile.json`. Canonical profile hash is `2d4e2f76dc5defcfb98cfd36cec49b0e5454cb3462db93a6b1586f7784eb91b6`; machine-contract fingerprint is `6410f374ce175cbc6fc32484f5cd9635888b9297b01d882923af06ccd4ac1e4c`; raw resource SHA-256 is `deb0e89a4084a88c137c71ba2aa7a7170f84d9979395ef58866c73529ce601eb`. Only `pack.integrity.sha256.v1` is implemented; all nine SAFE4 capabilities remain missing.
+- G2-C0C-B1 persistence state: SQLite source version is v15. The additive history table stores full trusted-profile provenance for new append-only evaluations; v14 rows are not backfilled and are mapped `LEGACY_UNATTESTED`. C0C-B2 resolver/importer wiring was not implemented; no production DATA_COMPATIBLE result, certification, activation, binding or execution was created.
 - device state: archived code91 APK was installed without rebuilding on OnePlus CPH2691 / Android 15 (`adb install -r` returned `Success`); package metadata reports `4.16-dev.29`/code91, minSdk 26 and targetSdk 35. Manual ZIP-import device QA passed the real SAF selection, immutable storage, fail-closed `STORED_BLOCKED` result and process-restart persistence checks. This was synthetic non-SAFE4 QA only; no certification, activation, binding, model call or execution was performed.
 - scope: G2-B1 storage/import, G2-B2A read-only management and G2-B2B-ZIP runtime ZIP selection are implemented. Folder import, certification, Golden Replay, activation, project binding, model execution, L1–L3 and release receipts remain blocked; this is not a completed v4.16 release.
 - handoff: `BUILD_TOOLCHAIN_HARDENING_G2_T0B.md` records the T0B PASS/review stop and `EDITORIAL_PACK_PLATFORM_G2_C0B.md` records the C0B PASS/review stop, trust anchors and regression. C0B bundles the read-only profile/registry only; selector/runtime wiring remains absent, compatibility is unchanged and packs remain `STORED_BLOCKED`. G2-C0C requires separate approval.
