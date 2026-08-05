@@ -20,7 +20,7 @@ or enable execution.
 - C1A snapshot-correction commit: `3fcf039be0185b22567e75f34a970bf75ba5ea6a`
 - B1B branch: `feature/v4.16-g2-c1b1b`
 - Implementation commits: `c0539b9` (v16 schema/DAO/adapter/tests), `e65b723` (min-SDK adapter fix), `1d6fbae` (canonical immutable manifest entry ordering)
-- End implementation baseline: `1d6fbae`; documentation/state commit follows this review evidence
+- End implementation baseline: `1d6fbae`; documentation/state commit `312cf01` contains the first handoff snapshot; final archive metadata is recorded below
 - Protected worktree files: `.idea/compiler.xml`, `.idea/gradle.xml`, `.idea/misc.xml`; untouched, unstaged and uncommitted
 
 Before opening B1B, the stale C1A snapshot Next step was corrected and committed
@@ -191,19 +191,19 @@ fixtures, not claimed as a real-data device assertion. Device migration result:
 
 ## Archive-first build evidence
 
-- Version: `4.16-dev.38`, code `100`
-- Event: `build-20260805-123935`
+- Version: `4.16-dev.39`, code `101`
+- Event: `build-20260805-124714`
 - Branch/source commit in `BUILD_INFO.json`: `feature/v4.16-g2-c1b1b` /
-  `e65b7235e103280c8631cc054cc40aa679167e4c`
-- Artifact: `artifacts/builds/v4.16-dev.38/build-20260805-123935/`
-- Backup: `backup/builds/v4.16-dev.38/build-20260805-123935/`
-- APK SHA-256: `8E7677020E39A57FD0EE35DD7CBA1812228B781A8B38680A5B75B85C7FA63ED1`
-- Source ZIP SHA-256: `ABBFC90107F55655C78F8559EFD90AC36A1D86E47374E23BC83EDED40B93CFAE`
+  `312cf01a6b566bf46dc6c84a01b4e203b798500e`
+- Artifact: `artifacts/builds/v4.16-dev.39/build-20260805-124714/`
+- Backup: `backup/builds/v4.16-dev.39/build-20260805-124714/`
+- APK SHA-256: `BF5C7EB41A26242C171B04977182A0A1378BF1F8269B34E77A98D0CC13E61F30`
+- Source ZIP SHA-256: `7EE2512AA71E39E4C12BD17697C981B6B11A12F7C4B34EDF8C95C47C1C762E8C`
 - Artifact/backup parity: all five payload files match by name and SHA-256.
 - Provenance: Gradle 9.3.0, AGP 8.7.3, JBR 21.0.10, Java 17 source/target,
   compile/target SDK 35, as recorded in `BUILD_INFO.json`.
 - `executionEnabled()` remains `false`; latest accepted artifact for this phase is
-  the archived code100 development build, not a product release.
+  the archived code101 development build, not a product release.
 
 ## Scope confirmations
 

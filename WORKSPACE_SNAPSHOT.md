@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
 - Snapshot updated: `2026-08-05` (G2-C1B1-B SQLite v16 append-only lineage persistence review stop; no importer wiring, promotion, certification, activation, binding or execution)
-- Current version: `4.15`/code62 remains the released product; latest development archive is `4.16-dev.38`/code100. SQLite source version is v16 and Editorial execution remains intentionally blocked.
+- Current version: `4.15`/code62 remains the released product; latest development archive is `4.16-dev.39`/code101. SQLite source version is v16 and Editorial execution remains intentionally blocked.
 - Current branch: `feature/v4.16-g2-c1b1b`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned and unstaged. The branch was created after C1A snapshot correction commit `3fcf039be0185b22567e75f34a970bf75ba5ea6a`.
 - Current commit: `1d6fbae` (implementation baseline immediately before this documentation/checklist/snapshot state commit; intentionally not self-referential)
-- Current build: `artifacts/builds/v4.16-dev.38/build-20260805-123935/TranslateBooks-v4.16-dev.38-code100.apk`, SHA-256 `8E7677020E39A57FD0EE35DD7CBA1812228B781A8B38680A5B75B85C7FA63ED1`; matching five-file payload is under `backup/builds/v4.16-dev.38/build-20260805-123935/`. Source ZIP SHA-256 is `ABBFC90107F55655C78F8559EFD90AC36A1D86E47374E23BC83EDED40B93CFAE`. Final verification passed engine `74/74`, app JVM `163/163`, Android-test Java compilation, lint `0` errors/`53` warnings, `git diff --check`, and direct device instrumentation `20/20`; the released v4.15/code62 archive remains unchanged.
+- Current build: `artifacts/builds/v4.16-dev.39/build-20260805-124714/TranslateBooks-v4.16-dev.39-code101.apk`, SHA-256 `BF5C7EB41A26242C171B04977182A0A1378BF1F8269B34E77A98D0CC13E61F30`; matching five-file payload is under `backup/builds/v4.16-dev.39/build-20260805-124714/`. Source ZIP SHA-256 is `7EE2512AA71E39E4C12BD17697C981B6B11A12F7C4B34EDF8C95C47C1C762E8C`. Final verification passed engine `74/74`, app JVM `163/163`, Android-test Java compilation, lint `0` errors/`53` warnings, `git diff --check`, and direct device instrumentation `20/20`; the released v4.15/code62 archive remains unchanged.
 
 ## G2-C1B1-A exact-parent lineage handoff
 

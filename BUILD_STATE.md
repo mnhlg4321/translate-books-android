@@ -17,20 +17,20 @@
 
 ## Current development build
 
-- versionName: `4.16-dev.38`
-- versionCode: `100`
-- event: `build-20260805-123935`
+- versionName: `4.16-dev.39`
+- versionCode: `101`
+- event: `build-20260805-124714`
 - branch: `feature/v4.16-g2-c1b1b`
-- source commit: `e65b7235e103280c8631cc054cc40aa679167e4c`
-- APK: `artifacts/builds/v4.16-dev.38/build-20260805-123935/TranslateBooks-v4.16-dev.38-code100.apk`
-- immutable local mirror: `backup/builds/v4.16-dev.38/build-20260805-123935/`
-- APK SHA-256: `8E7677020E39A57FD0EE35DD7CBA1812228B781A8B38680A5B75B85C7FA63ED1`
-- source ZIP SHA-256: `ABBFC90107F55655C78F8559EFD90AC36A1D86E47374E23BC83EDED40B93CFAE`
+- source commit: `312cf01a6b566bf46dc6c84a01b4e203b798500e`
+- APK: `artifacts/builds/v4.16-dev.39/build-20260805-124714/TranslateBooks-v4.16-dev.39-code101.apk`
+- immutable local mirror: `backup/builds/v4.16-dev.39/build-20260805-124714/`
+- APK SHA-256: `BF5C7EB41A26242C171B04977182A0A1378BF1F8269B34E77A98D0CC13E61F30`
+- source ZIP SHA-256: `7EE2512AA71E39E4C12BD17697C981B6B11A12F7C4B34EDF8C95C47C1C762E8C`
 - toolchain provenance: Wrapper Gradle `9.3.0`, official distribution SHA-256 `0d585f69da091fc5b2beced877feab55a3064d43b8a1d46aeb07996b0915e0e0`, AGP `8.7.3`, JBR `21.0.10`/JetBrains, JDK major policy `21`, Java source/target `17`, compileSdk/targetSdk `35`.
 - regression: final Wrapper matrix passed with `:editorial-engine:test` 74/74 and `:app:testDebugUnitTest` 163/163, 0 failures/errors/skips; `:app:compileDebugAndroidTestJavaWithJavac` PASS; lint 0 errors/53 warnings; `git diff --check` PASS. Direct device instrumentation passed lineage persistence 11/11 and v15 compatibility migration 9/9 on OnePlus CPH2691 / Android 15. Artifact and backup contain identical five-file payloads and all manifest hashes pass.
 - G2-C0B source state: the one truthful bootstrap profile remains at `editorial/engine-profile/v1/profile.json`. Canonical profile hash is `2d4e2f76dc5defcfb98cfd36cec49b0e5454cb3462db93a6b1586f7784eb91b6`; machine-contract fingerprint is `6410f374ce175cbc6fc32484f5cd9635888b9297b01d882923af06ccd4ac1e4c`; raw resource SHA-256 is `deb0e89a4084a88c137c71ba2aa7a7170f84d9979395ef58866c73529ce601eb`. Only `pack.integrity.sha256.v1` is implemented; all nine SAFE4 capabilities remain missing and the profile has no executable contract.
 - G2-C1B1-B persistence state: SQLite source version is v16. The additive `editorial_lineage_records` and `editorial_lineage_input_entries` tables are append-only, validator-gated and have no importer/runtime call site. v15 pack/evaluation rows are preserved without lineage backfill; existing packs remain without lineage evidence until G2-C1B1-C.
-- device state: archived code100 was installed from `4.16-dev.38` on OnePlus CPH2691 / Android 15 without `pm clear`; isolated v16 migration/append QA passed 20/20. The device had no existing production database at final inspection, so real-data continuity is not claimed. No candidate file was read from `D:` and no manual SQLite mutation was used.
+- device state: archived code101 was installed from `4.16-dev.39` on OnePlus CPH2691 / Android 15 without `pm clear`; isolated v16 migration/append QA passed 20/20. The device had no existing production database at final inspection, so real-data continuity is not claimed. No candidate file was read from `D:` and no manual SQLite mutation was used.
 - G2-C0C-B2 state: historical v15 runtime wiring remains unchanged and its non-executable import behavior remains blocked. G2-C1B1-B only raises the database schema to v16 and adds an unused persistence boundary; no production DATA_COMPATIBLE result, ready state, certification, activation, binding or execution was created. `EditorialSafe4Pack.executionEnabled()` remains false.
 - scope: G2-B1 storage/import, G2-B2A read-only management and G2-B2B-ZIP runtime ZIP selection are implemented. Folder import, certification, Golden Replay, activation, project binding, model execution, L1–L3 and release receipts remain blocked; this is not a completed v4.16 release.
 - handoff: `BUILD_TOOLCHAIN_HARDENING_G2_T0B.md` records the T0B PASS/review stop and `EDITORIAL_PACK_PLATFORM_G2_C0B.md` records the C0B PASS/review stop, trust anchors and regression. C0B bundles the read-only profile/registry only; selector/runtime wiring remains absent, compatibility is unchanged and packs remain `STORED_BLOCKED`. G2-C0C requires separate approval.
@@ -167,7 +167,7 @@ The previous v4.14 release remains published and immutable.
 - Schema: `TranslationRepository` source version is v16. `EditorialMigrationSpec.from15To16()` adds only `editorial_lineage_records`, `editorial_lineage_input_entries`, three lookup indexes and four immutable update/delete triggers. v15 tables/rows are not altered, rebuilt, backfilled or reevaluated. Downgrade is rejected.
 - Implementation: append/read-only `EditorialLineageDao`, immutable row mapper, SQLite validation-context adapter and pure-JVM validator boundary. Parent must exist and match exactly; duplicate, reparent, orphan, mismatch, cross-context, partial transaction and mutation cases fail closed. No importer/runtime call site exists.
 - Regression: engine `74/74`, app JVM `163/163`, 0 failures/errors/skips; Android-test Java compilation PASS; lint 0 errors/53 warnings; `git diff --check` PASS. Device direct runner passed `EditorialLineagePersistenceInstrumentedTest` 11/11 and `EditorialPackCompatibilityEvaluationInstrumentedTest` 9/9 on OnePlus CPH2691 / Android 15.
-- Archive: `4.16-dev.38`/code100, event `build-20260805-123935`, APK SHA-256 `8E7677020E39A57FD0EE35DD7CBA1812228B781A8B38680A5B75B85C7FA63ED1`, source ZIP SHA-256 `ABBFC90107F55655C78F8559EFD90AC36A1D86E47374E23BC83EDED40B93CFAE`; artifact/backup five-file parity passed.
+- Archive: `4.16-dev.39`/code101, event `build-20260805-124714`, APK SHA-256 `BF5C7EB41A26242C171B04977182A0A1378BF1F8269B34E77A98D0CC13E61F30`, source ZIP SHA-256 `7EE2512AA71E39E4C12BD17697C981B6B11A12F7C4B34EDF8C95C47C1C762E8C`; artifact/backup five-file parity passed and BUILD_INFO source commit is `312cf01a6b566bf46dc6c84a01b4e203b798500e`.
 - Device boundary: isolated migration/append QA passed 20/20. No production database existed at final `run-as` inspection, so real-data continuity is not claimed. No `pm clear`, manual SQLite mutation or candidate input was used.
 - Profile/catalog/execution: only `pack.integrity.sha256.v1` remains in the production catalog; canonical profile hash `2d4e2f76dc5defcfb98cfd36cec49b0e5454cb3462db93a6b1586f7784eb91b6` and machine fingerprint `6410f374ce175cbc6fc32484f5cd9635888b9297b01d882923af06ccd4ac1e4c` are unchanged; `executionEnabled()` remains false.
 - Handoff: `EDITORIAL_PACK_PLATFORM_G2_C1B1B_LINEAGE_SQLITE_V16.md`; checklist `release_checklists/v4.16-g2-c1b1b.md`. Exact next step is `G2-C1B1-C importer/runtime lineage wiring`; do not start it without separate approval.
