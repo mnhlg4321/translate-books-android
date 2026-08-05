@@ -24,7 +24,7 @@ review; G2-C1B1-B is not started.
 | C1A checklist correction | Commit `9091d9167fa2f791cb822a2c6522af8bdab3021e`; step 09 records the real C1A documentation commit `7d085066d67f196cdcae9b1350243b1dff4a3dad` |
 | C1B1A branch start | `feature/v4.16-g2-c1b1a`, `HEAD=9091d9167fa2f791cb822a2c6522af8bdab3021e` |
 | Implementation end | Commit `b4a9a52d37697b8f81eb7857a969103ef970daa3`, `feat(editorial): add pure-jvm exact-parent lineage contract` |
-| Final handoff | Documentation/checklist/snapshot commit follows the implementation commit; the snapshot records `b4a9a52...` as the implementation baseline immediately before that state commit. |
+| Final handoff state | Commit `f097087` (`docs(editorial): record C1B1A lineage review stop`) contains the handoff/checklist/snapshot state; the snapshot records `b4a9a52...` as the implementation baseline immediately before that state commit. |
 
 The C1A correction was made before opening this branch, and only checklist
 step 09 was changed. The three user-owned files
