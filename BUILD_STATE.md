@@ -20,7 +20,7 @@
 - versionName: `4.16-dev.39`
 - versionCode: `101`
 - event: `build-20260805-124714`
-- branch: `feature/v4.16-g2-c1b1c1`
+- branch: `feature/v4.16-g2-c1b1c15a`
 - source commit: `312cf01a6b566bf46dc6c84a01b4e203b798500e`
 - APK: `artifacts/builds/v4.16-dev.39/build-20260805-124714/TranslateBooks-v4.16-dev.39-code101.apk`
 - immutable local mirror: `backup/builds/v4.16-dev.39/build-20260805-124714/`
@@ -175,3 +175,13 @@ The previous v4.14 release remains published and immutable.
 - Device boundary: isolated migration/append QA passed 20/20. No production database existed at final `run-as` inspection, so real-data continuity is not claimed. No `pm clear`, manual SQLite mutation or candidate input was used.
 - Profile/catalog/execution: only `pack.integrity.sha256.v1` remains in the production catalog; canonical profile hash `2d4e2f76dc5defcfb98cfd36cec49b0e5454cb3462db93a6b1586f7784eb91b6` and machine fingerprint `6410f374ce175cbc6fc32484f5cd9635888b9297b01d882923af06ccd4ac1e4c` are unchanged; `executionEnabled()` remains false.
 - Handoff: `EDITORIAL_PACK_PLATFORM_G2_C1B1B_LINEAGE_SQLITE_V16.md`; checklist `release_checklists/v4.16-g2-c1b1b.md`. Exact next step is `G2-C1B1-C importer/runtime lineage wiring`; do not start it without separate approval.
+
+## G2-C1B1-C1.5-A authoritative identity schema plan (2026-08-05)
+
+- Decision: `G2-C1B1C15A_SCHEMA_PLAN: PASS`; `SQLITE_V17_IMPLEMENTATION: NOT_STARTED`; `LINEAGE_RUNTIME_CALLER_WIRING: NOT_STARTED`; `LINEAGE_CAPABILITY_PROMOTION: NOT_STARTED`; `SAFE4_EXECUTION_READINESS: BLOCKED`.
+- Baseline/end: branch `feature/v4.16-g2-c1b1c15a`; implementation baseline before documentation is `63d77ac267671f88ee2c9ebc31ebc8e575ec74cd`; handoff/checklist commit is `f8d0662270436a0a39b7f2c9a48e0ef4655090c7`. The protected `.idea/*` files remain untouched and unstaged.
+- Schema decision: future v16→v17 migration is additive only and proposes immutable `editorial_project_revisions`, `editorial_input_scope_snapshots`, `editorial_input_scope_snapshot_entries`, `editorial_closed_run_contexts` and `editorial_run_lineage_bindings`. AUTOINCREMENT IDs remain local provenance only; no v17 table uses one as a semantic identity.
+- Boundary: current project/chapter/asset/reference/run rows are mutable or incomplete; v15 compatibility evaluation is authoritative compatibility evidence but not a run identity; v16 lineage is persistence evidence but has no authoritative project/scope/closed-run source. Existing rows remain `IDENTITY_UNATTESTED`; no backfill, migration, DAO, runtime caller, lineage row or importer change occurred.
+- Identity policy: separate domain-separated SHA-256 projections exclude timestamps, UI text, local paths and row IDs; project revision, scope snapshot, closed run and run-lineage binding are append-only with `ON DELETE RESTRICT` and immutable triggers. `RUN_CONTEXT_CLOSED` remains the only future lineage creation boundary.
+- Verification: required read-only Wrapper regression passed with `:editorial-engine:test` 95/95 and `:app:testDebugUnitTest` 163/163; failures/errors/skips `0/0/0`; combined 258/258. `git diff --check` passed before the final documentation commit. No APK build/install or device QA was run.
+- Handoff: `EDITORIAL_PACK_PLATFORM_G2_C1B1C15A_IDENTITY_SCHEMA_PLAN.md`; checklist `release_checklists/v4.16-g2-c1b1c15a`. Exact next step is `G2-C1B1-C1.5-B` schema/DAO implementation after the listed identity and retention decisions are approved; do not start C2 caller wiring.

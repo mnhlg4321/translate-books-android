@@ -2,8 +2,8 @@
 
 - Snapshot updated: `2026-08-05` (G2-C1B1-C1 pure-JVM lineage runtime context/service seam review stop; no caller wiring, persistence, migration, promotion, certification, activation, binding or execution)
 - Current version: `4.15`/code62 remains the released product; latest development archive is `4.16-dev.39`/code101. SQLite source version is v16 and Editorial execution remains intentionally blocked.
-- Current branch: `feature/v4.16-g2-c1b1c1`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned and unstaged. The branch was created from C0 HEAD `b66b73cf1470002e44fc19c5efcb926067fb8fa5` after baseline verification.
-- Current commit: `1c5ba96` (C1 implementation baseline immediately before this documentation/checklist/snapshot state commit; intentionally not self-referential)
+- Current branch: `feature/v4.16-g2-c1b1c15a`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned and unstaged. The branch was created from the verified C1 HEAD `63d77ac267671f88ee2c9ebc31ebc8e575ec74cd` after baseline verification.
+- Current commit: `f8d0662` (C1.5-A handoff/checklist documentation commit immediately before this snapshot correction; intentionally not self-referential)
 - Current build: `artifacts/builds/v4.16-dev.39/build-20260805-124714/TranslateBooks-v4.16-dev.39-code101.apk`, SHA-256 `BF5C7EB41A26242C171B04977182A0A1378BF1F8269B34E77A98D0CC13E61F30`; matching five-file payload is under `backup/builds/v4.16-dev.39/build-20260805-124714/`. Source ZIP SHA-256 is `7EE2512AA71E39E4C12BD17697C981B6B11A12F7C4B34EDF8C95C47C1C762E8C`. Final verification passed engine `74/74`, app JVM `163/163`, Android-test Java compilation, lint `0` errors/`53` warnings, `git diff --check`, and direct device instrumentation `20/20`; the released v4.15/code62 archive remains unchanged.
 
 ## G2-C1B1-A exact-parent lineage handoff
@@ -30,6 +30,15 @@
 - Verification: focused pure-JVM C1 suite `21/21`; full engine `95/95`; app JVM `163/163`; combined `258/258`; failures/errors/skips `0/0/0`; Android-test Java compilation PASS; lint `0` errors/`53` warnings; `git diff --check` PASS. No APK was built or installed; latest artifact remains code101.
 - Decision: `G2-C1B1C1_SERVICE_SEAM: PASS`; `AUTHORITATIVE_IDENTITY_SCHEMA: REQUIRED`; `LINEAGE_RUNTIME_CALLER_WIRING: NOT_STARTED`; `LINEAGE_CAPABILITY_PROMOTION: NOT_STARTED`; `SAFE4_EXECUTION_READINESS: BLOCKED`.
 - Blocker: current project/chapter/run AUTOINCREMENT IDs and mutable/run-incomplete schema are not authoritative semantic identities, and no run-to-lineage binding exists. The exact next step is `G2-C1B1-C1.5` additive identity schema review/implementation; do not start C2 caller integration automatically.
+
+## G2-C1B1-C1.5-A authoritative identity schema plan handoff
+
+- Completed: surveyed the v10→v16 migration chain and current project/chapter/asset/reference/run/compatibility/lineage APIs. The plan defines immutable project revision, complete input-scope snapshot, closed run context and append-only run-lineage binding tables for a future additive v17 migration.
+- Implementation: `EDITORIAL_PACK_PLATFORM_G2_C1B1C15A_IDENTITY_SCHEMA_PLAN.md`, committed in `f8d0662270436a0a39b7f2c9a48e0ef4655090c7`; checklist `release_checklists/v4.16-g2-c1b1c15a.md`. No source/database/runtime/profile/catalog code changed.
+- Decision: `G2-C1B1C15A_SCHEMA_PLAN: PASS`; `AUTHORITATIVE_IDENTITY_SCHEMA: REQUIRED`; `SQLITE_V17_IMPLEMENTATION: NOT_STARTED`; `LINEAGE_RUNTIME_CALLER_WIRING: NOT_STARTED`; `LINEAGE_CAPABILITY_PROMOTION: NOT_STARTED`; `SAFE4_EXECUTION_READINESS: BLOCKED`.
+- Verification: required read-only Wrapper regression passed with engine `95/95` and app JVM `163/163`; failures/errors/skips `0/0/0`; combined `258/258`; `git diff --check` passed. No APK was built or installed; latest artifact remains `4.16-dev.39`/code101.
+- Boundary: AUTOINCREMENT IDs, pack/import IDs and v15 compatibility evaluation IDs are not substituted for semantic project/scope/run identity. Existing rows are `IDENTITY_UNATTESTED`; no backfill is allowed. `RUN_CONTEXT_CLOSED` remains the only future lineage creation event.
+- Next action: exact next step is `G2-C1B1-C1.5-B` schema/DAO implementation review after the listed project-key, manifest, run-attempt, retention and shared-transaction decisions are approved. Do not start C2 caller integration, importer wiring, promotion, certification, activation, binding or execution.
 
 ## G2-C1A executable-contract plan handoff
 
@@ -415,7 +424,7 @@
 
 ## Next step
 
-`G2-C0C-B2`, `G2-C1B1-A`, `G2-C1B1-B`, `G2-C1B1-C0` and `G2-C1B1-C1` are PASS / REVIEW STOP. The exact next action is review and separate approval for `G2-C1B1-C1.5` authoritative identity schema work. Do not start C2 caller wiring, persistence binding, capability promotion, certification, activation, binding or execution automatically.
+`G2-C0C-B2`, `G2-C1B1-A`, `G2-C1B1-B`, `G2-C1B1-C0`, `G2-C1B1-C1` and `G2-C1B1-C1.5-A` are PASS / REVIEW STOP. The exact next action is review and separate approval for `G2-C1B1-C1.5-B` additive v17 schema/DAO implementation. Do not start C2 caller wiring, persistence binding, capability promotion, certification, activation, binding or execution automatically.
 
 ## Resume rule
 
