@@ -51,4 +51,27 @@ public class EditorialPackMigrationSpecTest {
         assertFalse(sql.contains("insert or replace"));
         assertFalse(sql.contains("create table if not exists editorial_packs"));
     }
+
+    @Test public void v16AddsOnlyAppendOnlyLineageTablesAndProtection() {
+        String sql = String.join("\n", EditorialMigrationSpec.from15To16()).toLowerCase();
+        assertTrue(sql.contains("create table if not exists editorial_lineage_records"));
+        assertTrue(sql.contains("create table if not exists editorial_lineage_input_entries"));
+        assertTrue(sql.contains("record_identity text primary key not null"));
+        assertTrue(sql.contains("record_fingerprint text not null unique"));
+        assertTrue(sql.contains("node_kind text not null check(node_kind in ('root','child'))"));
+        assertTrue(sql.contains("primary key(record_identity,role,ordinal)"));
+        assertTrue(sql.contains("foreign key(parent_record_identity) references editorial_lineage_records(record_identity) on delete restrict"));
+        assertTrue(sql.contains("trg_editorial_lineage_records_no_update"));
+        assertTrue(sql.contains("trg_editorial_lineage_records_no_delete"));
+        assertTrue(sql.contains("trg_editorial_lineage_input_entries_no_update"));
+        assertTrue(sql.contains("trg_editorial_lineage_input_entries_no_delete"));
+        assertTrue(sql.contains("idx_editorial_lineage_records_pack"));
+        assertTrue(sql.contains("idx_editorial_lineage_records_run"));
+        assertFalse(sql.contains("alter table"));
+        assertFalse(sql.contains("drop table"));
+        assertFalse(sql.contains("delete from"));
+        assertFalse(sql.contains("insert or replace"));
+        assertFalse(sql.contains("editorial_packs"));
+        assertFalse(sql.contains("editorial_pack_compatibility_evaluations"));
+    }
 }

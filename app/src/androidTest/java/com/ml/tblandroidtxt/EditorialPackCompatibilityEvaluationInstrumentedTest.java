@@ -26,7 +26,7 @@ import java.util.UUID;
 
 import static org.junit.Assert.*;
 
-/** Device-side persistence contract and migration evidence for SQLite v15. */
+/** Device-side persistence contract and migration evidence for SQLite v15/v16. */
 @RunWith(AndroidJUnit4.class)
 public class EditorialPackCompatibilityEvaluationInstrumentedTest {
     private static final String PACK_HASH = "a".repeat(64);
@@ -50,9 +50,9 @@ public class EditorialPackCompatibilityEvaluationInstrumentedTest {
         context.deleteDatabase(databaseName);
     }
 
-    @Test public void freshSchemaIsV15WithImmutableEvaluationHistory() {
+    @Test public void freshSchemaIsV16WithImmutableV15EvaluationHistory() {
         SQLiteDatabase db = repository.editorialWritableDatabase();
-        assertEquals(15, db.getVersion());
+        assertEquals(16, db.getVersion());
         assertTable(db, "editorial_pack_compatibility_evaluations");
         assertIndex(db, "idx_editorial_pack_compatibility_evaluations_pack");
         assertIndex(db, "idx_editorial_pack_compatibility_evaluations_import");
@@ -127,7 +127,7 @@ public class EditorialPackCompatibilityEvaluationInstrumentedTest {
         assertEquals(seed.compatibilityId, legacy.compatibilityResultId().orElseThrow().longValue());
     }
 
-    @Test public void migrationV14ToV15PreservesRowsAndDoesNotBackfillProvenance() throws Exception {
+    @Test public void migrationV14ToV16PreservesRowsAndDoesNotBackfillProvenance() throws Exception {
         repository.close();
         Seed expected;
         Path path = prepareOldDatabase(14);
@@ -138,7 +138,7 @@ public class EditorialPackCompatibilityEvaluationInstrumentedTest {
 
         repository = new TranslationRepository(context, databaseName);
         SQLiteDatabase db = repository.editorialReadableDatabase();
-        assertEquals(15, db.getVersion());
+        assertEquals(16, db.getVersion());
         assertEquals(1, scalarInt(db, "SELECT COUNT(*) FROM editorial_packs"));
         assertEquals(1, scalarInt(db, "SELECT COUNT(*) FROM editorial_pack_compatibility_results"));
         assertEquals(0, scalarInt(db, "SELECT COUNT(*) FROM editorial_pack_compatibility_evaluations"));
@@ -154,19 +154,19 @@ public class EditorialPackCompatibilityEvaluationInstrumentedTest {
         assertEquals(expected.compatibilityId, legacy.id());
     }
 
-    @Test public void migrationChainV13ToV14ToV15AndReopenIsIdempotent() throws Exception {
+    @Test public void migrationChainV13ToV14ToV15ToV16AndReopenIsIdempotent() throws Exception {
         repository.close();
         Path path = prepareOldDatabase(13);
         SQLiteDatabase old = SQLiteDatabase.openOrCreateDatabase(path.toFile(), null);
         old.setVersion(13);
         old.close();
         repository = new TranslationRepository(context, databaseName);
-        assertEquals(15, repository.editorialReadableDatabase().getVersion());
+        assertEquals(16, repository.editorialReadableDatabase().getVersion());
         assertTable(repository.editorialReadableDatabase(), "editorial_packs");
         assertTable(repository.editorialReadableDatabase(), "editorial_pack_compatibility_evaluations");
         repository.close();
         repository = new TranslationRepository(context, databaseName);
-        assertEquals(15, repository.editorialReadableDatabase().getVersion());
+        assertEquals(16, repository.editorialReadableDatabase().getVersion());
         assertEquals(1, scalarInt(repository.editorialReadableDatabase(), "SELECT COUNT(*) FROM sqlite_master WHERE name='editorial_pack_compatibility_evaluations'"));
     }
 
