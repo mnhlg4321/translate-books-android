@@ -190,7 +190,7 @@ public final class EditorialPackImportService {
             } catch (RuntimeException e) {
                 notifyState(progress, EditorialPackImportState.STORED_BLOCKED);
                 return blockImport(importId, EditorialPackImportError.DATABASE_WRITE_FAILED,
-                        "Registry transaction failed; immutable storage was retained for recovery: " + safeMessage(e),
+                        "COMPATIBILITY_PERSISTENCE_FAILURE: Registry transaction failed; immutable storage was retained for recovery: " + safeMessage(e),
                         manifest.packId(), manifest.version(), manifest.canonicalPackHash(), compatibility.outcome, true);
             }
         } catch (ImportFailure e) {
