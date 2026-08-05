@@ -434,6 +434,18 @@
 - Regression status: Gate A PASS; Gate B JVM/lint/compile PASS; device/build/archive evidence pending. Protected `.idea/compiler.xml`, `.idea/gradle.xml`, `.idea/misc.xml` remain user-owned, untouched by this work, unstaged and uncommitted.
 - Next step: commit Gate B, then archive-first build and isolated device v17 QA; do not start C2 or production caller wiring.
 
+## G2-C1B1-C1.5-B finalization snapshot (2026-08-05)
+
+- Current version: `4.16-dev.40`/code102 remains the last completed archive; final code103 archive is pending because the handoff was just tracked after the test-only rollback addition.
+- Current branch: `feature/v4.16-g2-c1b1c15b`.
+- Current commit: `c596abb` is the implementation baseline immediately before this snapshot update; the handoff and BUILD_STATE changes are ready to stage, and `.idea/*` remains protected/unstaged.
+- Current build: code102 artifact/backup parity PASS; final source adds only the v16→v17 migration failure-injection test, which passed as part of the isolated `8/8` v17 class.
+- Completed tasks: v17 schema/DAO/transaction implementation; engine `105/105`, app `164/164`, Android-test compile, lint `0/53`; device v17 `8/8`, lineage `11/11`, v15 evaluation `9/9`; total device `28/28`.
+- Pending tasks: commit final handoff/state, run final archive-first code103 build/parity, install exact code103 APK without clearing data, repeat v17 device class if needed, update checklist/snapshot with final evidence, and stop at review.
+- Known bugs/limitations: production profile remains non-executable; no production identity creator/caller, importer wiring, capability promotion, certification, activation, binding or execution; production `databases/` was empty at inspection, so real-data continuity remains not claimed; `executionEnabled()` remains false.
+- Regression status: PASS for JVM/lint/isolated device scope; final code103 archive and final documentation commit pending. `.idea/*` is untouched, unstaged and uncommitted.
+- Next step: stage the tracked handoff/BUILD_STATE, archive code103, then final review stop; do not start C2.
+
 ## Next step
 
 `G2-C0C-B2`, `G2-C1B1-A`, `G2-C1B1-B`, `G2-C1B1-C0`, `G2-C1B1-C1` and `G2-C1B1-C1.5-A` are PASS / REVIEW STOP. The exact next action is review and separate approval for `G2-C1B1-C1.5-B` additive v17 schema/DAO implementation. Do not start C2 caller wiring, persistence binding, capability promotion, certification, activation, binding or execution automatically.
