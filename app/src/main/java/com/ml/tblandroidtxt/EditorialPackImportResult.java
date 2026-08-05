@@ -3,7 +3,9 @@ package com.ml.tblandroidtxt;
 import com.ml.tblandroidtxt.editorial.pack.EditorialPackCompatibilityClass;
 
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 public record EditorialPackImportResult(
         String importId,
@@ -24,7 +26,8 @@ public record EditorialPackImportResult(
     }
 
     public EditorialPackImportResult {
-        missingCapabilities = Collections.unmodifiableSet(Set.copyOf(missingCapabilities == null ? Set.of() : missingCapabilities));
+        TreeSet<String> sorted = new TreeSet<>(missingCapabilities == null ? Set.of() : missingCapabilities);
+        missingCapabilities = Collections.unmodifiableSet(new LinkedHashSet<>(sorted));
     }
 
     public EditorialPackImportResult(String importId, EditorialPackImportState state, EditorialPackImportError error,

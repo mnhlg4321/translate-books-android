@@ -4,9 +4,9 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.widget.TextView;
 
-import com.ml.tblandroidtxt.editorial.pack.EditorialEngineProfile;
+import com.ml.tblandroidtxt.editorial.pack.BundledEditorialEngineContractProfileRegistry;
+import com.ml.tblandroidtxt.editorial.pack.EditorialEngineProfileResolver;
 
-import java.util.List;
 import java.util.concurrent.Executors;
 
 /** UI-only import surface. All ZIP/security/persistence decisions remain headless. */
@@ -40,12 +40,20 @@ final class EditorialPackImportPageFactory {
                 .create();
         progressDialog.show();
 
-        EditorialEngineProfile profile = runtimeProfile();
+        EditorialEngineProfileResolver loadedResolver;
+        try {
+            loadedResolver = new EditorialEngineProfileResolver(BundledEditorialEngineContractProfileRegistry.load());
+        } catch (RuntimeException error) {
+            // No fallback facts/profile are permitted. The resolver can only return
+            // an unattested fail-closed blocker for this import.
+            loadedResolver = EditorialEngineProfileResolver.failedClosed();
+        }
+        final EditorialEngineProfileResolver resolver = loadedResolver;
         EditorialPackImportCoordinator coordinator = new EditorialPackImportCoordinator(
                 uri -> activity.getContentResolver().openInputStream(uri),
                 (stream, listener) -> {
                     try (TranslationRepository database = new TranslationRepository(activity)) {
-                        EditorialPackImportService service = new EditorialPackImportService(activity, database, profile);
+                        EditorialPackImportService service = new EditorialPackImportService(activity, database, resolver);
                         return service.importZip(stream, listener);
                     }
                 },
@@ -80,8 +88,4 @@ final class EditorialPackImportPageFactory {
         });
     }
 
-    /** Current app has no trusted pack contract profile yet; empty facts force BLOCKED safely. */
-    private static EditorialEngineProfile runtimeProfile() {
-        return new EditorialEngineProfile(AppBuildInfo.VERSION_NAME, List.of(), List.of(), List.of());
-    }
 }

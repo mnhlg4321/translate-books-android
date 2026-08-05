@@ -22,6 +22,20 @@ public final class EditorialEngineProfileResolver {
                 new EditorialEngineProfileAdapter(), new EditorialCompatibilityEvaluator());
     }
 
+    /** A composition-root fallback which can only return a blocked registry result. */
+    public static EditorialEngineProfileResolver failedClosed() {
+        return new EditorialEngineProfileResolver(new EditorialEngineContractProfileRegistry() {
+            private EditorialEngineContractProfileRegistryException failure() {
+                return new EditorialEngineContractProfileRegistryException(
+                        EditorialEngineContractProfileRegistryException.Code.CATALOG_INVALID,
+                        "Trusted profile registry is unavailable");
+            }
+            @Override public List<EditorialEngineContractProfile> list() { throw failure(); }
+            @Override public java.util.Optional<EditorialEngineContractProfile> findByCanonicalHash(String hash) { throw failure(); }
+            @Override public java.util.Optional<EditorialEngineContractProfile> findByIdentity(String id, String version) { throw failure(); }
+        });
+    }
+
     EditorialEngineProfileResolver(EditorialEngineContractProfileRegistry registry,
                                    EditorialEngineContractProfileValidator validator,
                                    EditorialEngineProfileAdapter adapter,
@@ -61,11 +75,27 @@ public final class EditorialEngineProfileResolver {
                 "No active trusted profile is installed", null, null, EditorialPackCompatibilityClass.BLOCKED);
 
         List<EditorialEngineContractProfile> contractMatches = active.stream()
-                .filter(profile -> hasExecutableContract(profile)
+                .filter(profile -> isExecutableContractProfile(profile)
                         && supportsContractVersion(profile, manifest.contractVersion()))
                 .toList();
         if (contractMatches.isEmpty()) {
-            boolean anyExecutable = active.stream().anyMatch(EditorialEngineProfileResolver::hasExecutableContract);
+            boolean anyExecutable = active.stream().anyMatch(EditorialEngineProfileResolver::isExecutableContractProfile);
+            if (!anyExecutable && active.size() == 1) {
+                EditorialEngineContractProfile selected = active.get(0);
+                Set<String> missing = new HashSet<>(manifest.requiredCapabilities());
+                missing.removeAll(selected.implementedCapabilities());
+                return new EditorialCompatibilityEvaluationResult(
+                        EditorialPackCompatibilityClass.ENGINE_UPGRADE_REQUIRED,
+                        EditorialPackCompatibilityClass.ENGINE_UPGRADE_REQUIRED,
+                        EditorialCompatibilityReasonCode.PROFILE_NON_EXECUTABLE,
+                        true,
+                        List.of(new EditorialPackIntegrityResult.Issue(
+                                EditorialPackValidationCode.ENGINE_UPGRADE_REQUIRED,
+                                "trustedProfile",
+                                "Trusted profile is bundled but has no executable contract descriptor")),
+                        missing,
+                        manifest.canonicalPackHash(), selected, null);
+            }
             return blocked(manifest,
                     anyExecutable ? EditorialCompatibilityReasonCode.UNSUPPORTED_CONTRACT
                             : EditorialCompatibilityReasonCode.NO_TRUSTED_PROFILE,
@@ -92,9 +122,9 @@ public final class EditorialEngineProfileResolver {
             evaluatorProfile = adapter.adapt(selected, manifest);
             evaluated = evaluator.evaluate(manifest, evaluatorProfile);
         } catch (RuntimeException e) {
-            return blocked(manifest, EditorialCompatibilityReasonCode.INVALID_PACK,
+            return blocked(manifest, EditorialCompatibilityReasonCode.COMPATIBILITY_EVALUATION_FAILURE,
                     "Compatibility evaluation failed closed", selected, null,
-                    EditorialPackCompatibilityClass.INVALID);
+                    EditorialPackCompatibilityClass.BLOCKED);
         }
         return normalize(manifest, selected, evaluatorProfile, evaluated);
     }
@@ -162,7 +192,7 @@ public final class EditorialEngineProfileResolver {
         }
     }
 
-    private static boolean hasExecutableContract(EditorialEngineContractProfile profile) {
+    public static boolean isExecutableContractProfile(EditorialEngineContractProfile profile) {
         return profile.minimumSupportedContractVersion() != null
                 && profile.maximumSupportedContractVersion() != null
                 && !profile.supportedSchemaVersions().isEmpty()
@@ -229,6 +259,7 @@ public final class EditorialEngineProfileResolver {
             case INVALID_PACK -> EditorialPackValidationCode.INVALID_MANIFEST_FIELD;
             case ADAPTER_REQUIRED -> EditorialPackValidationCode.ADAPTER_REQUIRED;
             case ENGINE_UPGRADE_REQUIRED, MACHINE_FINGERPRINT_MISMATCH -> EditorialPackValidationCode.ENGINE_UPGRADE_REQUIRED;
+            case PROFILE_NON_EXECUTABLE, COMPATIBILITY_EVALUATION_FAILURE -> EditorialPackValidationCode.ENGINE_UPGRADE_REQUIRED;
             case MISSING_ENGINE_CAPABILITY -> EditorialPackValidationCode.MISSING_CAPABILITY;
             default -> EditorialPackValidationCode.UNSUPPORTED_CONTRACT_SCHEMA;
         };

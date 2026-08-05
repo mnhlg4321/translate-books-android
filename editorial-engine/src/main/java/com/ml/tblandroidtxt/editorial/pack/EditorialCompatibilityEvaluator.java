@@ -7,6 +7,9 @@ import java.util.Set;
 
 /** Computes effective compatibility from trusted installed facts, never from filenames/version alone. */
 public final class EditorialCompatibilityEvaluator {
+    /** Stable semantic contract version for persisted compatibility provenance. */
+    public static final String EVALUATOR_CONTRACT_VERSION = "editorial-compatibility-v1";
+
     public EditorialCompatibilityResult evaluate(EditorialPackManifest manifest, EditorialEngineProfile profile) {
         if (manifest == null || profile == null) {
             return result(EditorialPackCompatibilityClass.INVALID, EditorialPackCompatibilityClass.INVALID, true,

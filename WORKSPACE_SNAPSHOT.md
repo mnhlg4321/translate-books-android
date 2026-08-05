@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-05` (G2-C0C-B1 PASS / review stop; C0C-B2 runtime wiring remains explicitly out of scope; V5 executable core remains retired; SAFE4 foundation/code86 remains canonical)
+- Snapshot updated: `2026-08-05` (G2-C0C-B2 implementation in progress; fail-closed compatibility wiring only; no certification, activation, binding or execution)
 - Current version: `4.15`/code62 remains the released product with corrected annotated tag `v4.15`; `4.16-dev.31`/code93 is the latest accepted archive-first build. SQLite is v15 for additive compatibility provenance; Editorial execution remains intentionally blocked.
 - Current branch: `feature/v4.16`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned, unchanged and unstaged. The three toolchain drift files were restored to the committed baseline.
-- Current commit: `c4c199d89b363033eb6df744b9578d744192ea0b` (G2-C0C-B1 implementation baseline immediately before this snapshot/state commit; the final documentation commit is intentionally not self-referenced here)
+- Current commit: `922247b0ab78b924ef1c71f26e7d5f0a8d11534f` (G2-C0C-B2 implementation baseline immediately before the scoped implementation commit; intentionally not self-referential)
 - Current build: `artifacts/builds/v4.16-dev.31/build-20260805-080909/TranslateBooks-v4.16-dev.31-code93.apk`, SHA-256 `6522BFF2B7DA8B5B265243B10DEA9E6E936A3C712B28B4173C10EC1DDEBADC0B`; matching five-file payload is under `backup/builds/v4.16-dev.31/build-20260805-080909/`. Source ZIP SHA-256 is `66B62FED77C4F275559FB80E02D6BC21CC8C0F2E5032B716AA608444E7E9FADE`. Wrapper `9.3.0` with official distribution SHA-256 `0d585f69da091fc5b2beced877feab55a3064d43b8a1d46aeb07996b0915e0e0` and JBR `21.0.10` passed `:editorial-engine:test` 59/59, `:app:testDebugUnitTest` 162/162, instrumentation source compilation, lint 0 errors/53 warnings and `git diff --check`; JDK preflight is 4/4. The scoped SQLite v15 device migration class passed 9/9 on OnePlus CPH2691 / Android 15. The released v4.15/code62 archive remains unchanged.
 
 ## G2-C0B bundled trusted-profile handoff
@@ -28,6 +28,15 @@
 - Schema contract: v14 `editorial_packs`, `editorial_pack_files`, `editorial_pack_imports` and `editorial_pack_compatibility_results` remain unchanged. v15 adds only the new history table, two indexes and update/delete rejection triggers; legacy rows are not backfilled and map as `LEGACY_UNATTESTED` with absent trusted-profile/context fields.
 - Evidence: engine context tests 3/3; full engine 59/59; app JVM 162/162; instrumentation Java compilation PASS; scoped device migration/persistence tests 9/9; lint 0 errors/53 warnings; `git diff --check` PASS; preflight 4/4. Archive-first code93 artifact/backup parity and BUILD_INFO provenance pass. The three protected `.idea/*` files remain untouched and unstaged.
 - Final boundary: C0C-B2 runtime wiring and reevaluation remain pending; next proposed step is C0C-B2 after review. No production DATA_COMPATIBLE result was created by B1.
+
+## G2-C0C-B2 runtime wiring in progress
+
+- Scope: connect the bundled G2-C0B resolver to new-pack import after integrity validation, persist trusted-profile compatibility evidence through SQLite v15, and keep the current production profile fail-closed because it has no executable contract descriptor.
+- Source boundary: production composition loads `BundledEditorialEngineContractProfileRegistry` and injects `EditorialEngineProfileResolver`; the old facts constructor remains only as a test seam. No profile is read from pack content, SQLite, SAF, external filesystem or network.
+- Eligibility gate: the bundled profile still declares only `pack.integrity.sha256.v1`, so the resolver returns `PROFILE_NON_EXECUTABLE` / `ENGINE_UPGRADE_REQUIRED`, storage remains `STORED_BLOCKED`, and no production `DATA_COMPATIBLE` or ready state is permitted.
+- Persistence boundary: v14 pack/compatibility rows and the v15 trusted evidence row are written in one transaction; unresolved registry failures use the v14 blocker row without fabricated profile provenance; v15 failures roll back the transaction and retain immutable storage for recovery. Duplicate checks precede resolver evaluation.
+- Regression before archive: Wrapper/JBR21 `:editorial-engine:test` 59/59, `:app:testDebugUnitTest` 162/162, instrumentation Java compilation PASS, lint 0 errors/53 warnings and `git diff --check` PASS. New connected tests cover non-executable provenance, duplicate no-re-evaluation, v15 rollback and restart readback; code94 device QA remains pending until archive.
+- Protected files: `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned and unstaged.
 
 ## G2-B1 handoff
 

@@ -128,9 +128,16 @@ public final class SqliteEditorialPackRegistry implements EditorialPackRegistry 
     private static java.util.Set<String> missingFromReason(String reason) {
         int start = reason.lastIndexOf("[");
         int end = reason.lastIndexOf("]");
-        if (start < 0 || end <= start) return java.util.Set.of();
+        if (start < 0 || end <= start) {
+            int marker = reason.indexOf("Missing capabilities:");
+            if (marker < 0) return java.util.Set.of();
+            start = marker + "Missing capabilities:".length();
+            end = reason.length();
+        } else {
+            start++;
+        }
         java.util.LinkedHashSet<String> values = new java.util.LinkedHashSet<>();
-        for (String value : reason.substring(start + 1, end).split(",")) if (!value.trim().isEmpty()) values.add(value.trim());
+        for (String value : reason.substring(start, end).split("[,;]")) if (!value.trim().isEmpty()) values.add(value.trim());
         return values;
     }
 

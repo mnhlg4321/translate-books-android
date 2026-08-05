@@ -7,12 +7,19 @@ import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.ml.tblandroidtxt.editorial.pack.EditorialCompatibilityEvaluator;
+import com.ml.tblandroidtxt.editorial.pack.EditorialCompatibilityEvaluationContext;
+import com.ml.tblandroidtxt.editorial.pack.EditorialCompatibilityEvaluationResult;
+import com.ml.tblandroidtxt.editorial.pack.EditorialCompatibilityProvenance;
+import com.ml.tblandroidtxt.editorial.pack.EditorialCompatibilityReasonCode;
 import com.ml.tblandroidtxt.editorial.pack.EditorialCompatibilityResult;
+import com.ml.tblandroidtxt.editorial.pack.EditorialEngineContractProfile;
 import com.ml.tblandroidtxt.editorial.pack.EditorialEngineProfile;
+import com.ml.tblandroidtxt.editorial.pack.EditorialEngineProfileResolver;
 import com.ml.tblandroidtxt.editorial.pack.EditorialPackCompatibilityClass;
 import com.ml.tblandroidtxt.editorial.pack.EditorialPackIntegrityResult;
 import com.ml.tblandroidtxt.editorial.pack.EditorialPackIntegrityValidator;
 import com.ml.tblandroidtxt.editorial.pack.EditorialPackManifest;
+import com.ml.tblandroidtxt.editorial.pack.EditorialPackValidationCode;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -55,6 +62,8 @@ public final class EditorialPackImportService {
     private final EditorialPackIntegrityValidator integrityValidator;
     private final EditorialCompatibilityEvaluator compatibilityEvaluator;
     private final EditorialEngineProfile engineProfile;
+    private final EditorialEngineProfileResolver trustedResolver;
+    private final EditorialPackCompatibilityEvaluationDao evaluationDao;
 
     public EditorialPackImportService(Context context, TranslationRepository database, EditorialEngineProfile engineProfile) {
         if (context == null || database == null || engineProfile == null) throw new IllegalArgumentException("Import service dependencies are required");
@@ -63,6 +72,20 @@ public final class EditorialPackImportService {
         this.integrityValidator = new EditorialPackIntegrityValidator();
         this.compatibilityEvaluator = new EditorialCompatibilityEvaluator();
         this.engineProfile = engineProfile;
+        this.trustedResolver = null;
+        this.evaluationDao = new EditorialPackCompatibilityEvaluationDao(database);
+    }
+
+    /** Production composition-root constructor. Trusted profiles come only from the bundled registry. */
+    public EditorialPackImportService(Context context, TranslationRepository database, EditorialEngineProfileResolver trustedResolver) {
+        if (context == null || database == null || trustedResolver == null) throw new IllegalArgumentException("Import service dependencies are required");
+        this.database = database;
+        this.storage = new EditorialPackStorageLayout(context.getFilesDir().toPath());
+        this.integrityValidator = new EditorialPackIntegrityValidator();
+        this.compatibilityEvaluator = new EditorialCompatibilityEvaluator();
+        this.engineProfile = null;
+        this.trustedResolver = trustedResolver;
+        this.evaluationDao = new EditorialPackCompatibilityEvaluationDao(database);
     }
 
     /** Package-private seam for Android recovery tests; production callers use private app storage. */
@@ -73,6 +96,20 @@ public final class EditorialPackImportService {
         this.integrityValidator = new EditorialPackIntegrityValidator();
         this.compatibilityEvaluator = new EditorialCompatibilityEvaluator();
         this.engineProfile = engineProfile;
+        this.trustedResolver = null;
+        this.evaluationDao = new EditorialPackCompatibilityEvaluationDao(database);
+    }
+
+    /** Package-private production seam for Android integration tests. */
+    EditorialPackImportService(TranslationRepository database, EditorialPackStorageLayout storage, EditorialEngineProfileResolver trustedResolver) {
+        if (database == null || storage == null || trustedResolver == null) throw new IllegalArgumentException("Import service dependencies are required");
+        this.database = database;
+        this.storage = storage;
+        this.integrityValidator = new EditorialPackIntegrityValidator();
+        this.compatibilityEvaluator = new EditorialCompatibilityEvaluator();
+        this.engineProfile = null;
+        this.trustedResolver = trustedResolver;
+        this.evaluationDao = new EditorialPackCompatibilityEvaluationDao(database);
     }
 
     public EditorialPackStorageLayout storageLayout() { return storage; }
@@ -105,31 +142,38 @@ public final class EditorialPackImportService {
             EditorialPackManifest manifest = integrity.manifest();
             notifyState(progress, EditorialPackImportState.INTEGRITY_VALIDATED);
             updateImport(importId, EditorialPackImportState.INTEGRITY_VALIDATED, "", manifest.packId(), manifest.version(), manifest.canonicalPackHash(), false, null);
-            EditorialCompatibilityResult compatibility = compatibilityEvaluator.evaluate(manifest, engineProfile);
-            String compatibilityReason = issueText(compatibility.issues());
-            notifyState(progress, EditorialPackImportState.COMPATIBILITY_EVALUATED);
-            updateImport(importId, EditorialPackImportState.COMPATIBILITY_EVALUATED, compatibilityReason, manifest.packId(), manifest.version(), manifest.canonicalPackHash(), false, null);
-
+            // Duplicate identity/hash checks precede evaluation. Re-import is a read-only lookup,
+            // never a new resolver call or a new compatibility history entry.
             ExistingPack existing = existingPack(manifest);
             if (existing != null) {
                 if (!existing.canonicalPackHash.equals(manifest.canonicalPackHash())) {
                     return blockImport(importId, EditorialPackImportError.IDENTITY_COLLISION,
-                            "Same packId/version is already bound to another canonical hash", manifest.packId(), manifest.version(), manifest.canonicalPackHash(), compatibility.classification(), false);
+                            "Same packId/version is already bound to another canonical hash", manifest.packId(), manifest.version(), manifest.canonicalPackHash(), null, false);
                 }
                 if (!storage.hasImmutableMarker(existing.canonicalPackHash)) {
                     return blockImport(importId, EditorialPackImportError.EXISTING_STORAGE_MISSING,
-                            "Existing registry row has no complete immutable storage; overwrite is forbidden", manifest.packId(), manifest.version(), manifest.canonicalPackHash(), compatibility.classification(), false);
+                            "Existing registry row has no complete immutable storage; overwrite is forbidden", manifest.packId(), manifest.version(), manifest.canonicalPackHash(), null, false);
                 }
-                updateImport(importId, existing.state, compatibilityReason, manifest.packId(), manifest.version(), manifest.canonicalPackHash(), false, existing.id);
+                PersistedCompatibility persisted = latestCompatibility(manifest.canonicalPackHash());
+                CompatibilityDecision existingDecision = persisted == null
+                        ? CompatibilityDecision.blocked(EditorialCompatibilityReasonCode.BLOCKED, "Existing pack has no compatibility row")
+                        : CompatibilityDecision.persisted(persisted);
+                String existingReason = persisted == null ? "PACK_ALREADY_EXISTS" : persisted.reasonCode.name();
+                updateImport(importId, existing.state, existingReason, manifest.packId(), manifest.version(), manifest.canonicalPackHash(), false, existing.id);
                 storage.deleteOwnedStaging(importId);
                 notifyState(progress, existing.state);
-                return result(importId, existing.state, EditorialPackImportError.NONE, compatibilityReason, manifest, compatibility, existing.storageKey, true);
+                return result(importId, existing.state, EditorialPackImportError.NONE, existingReason, manifest, existingDecision, existing.storageKey, true);
             }
             ExistingHash existingHash = existingHash(manifest.canonicalPackHash());
             if (existingHash != null) {
                 return blockImport(importId, EditorialPackImportError.IDENTITY_COLLISION,
-                        "Canonical hash is already stored under a different identity", manifest.packId(), manifest.version(), manifest.canonicalPackHash(), compatibility.classification(), false);
+                        "Canonical hash is already stored under a different identity", manifest.packId(), manifest.version(), manifest.canonicalPackHash(), null, false);
             }
+
+            CompatibilityDecision compatibility = evaluate(manifest);
+            String compatibilityReason = compatibilityReason(compatibility);
+            notifyState(progress, EditorialPackImportState.COMPATIBILITY_EVALUATED);
+            updateImport(importId, EditorialPackImportState.COMPATIBILITY_EVALUATED, compatibilityReason, manifest.packId(), manifest.version(), manifest.canonicalPackHash(), false, null);
 
             String storageKey = moveToImmutable(importId, manifest.canonicalPackHash());
             try {
@@ -139,12 +183,12 @@ public final class EditorialPackImportService {
             } catch (SQLiteConstraintException e) {
                 notifyState(progress, EditorialPackImportState.STORED_BLOCKED);
                 return blockImport(importId, EditorialPackImportError.IDENTITY_COLLISION, "Registry identity collision; immutable storage was retained for recovery",
-                        manifest.packId(), manifest.version(), manifest.canonicalPackHash(), compatibility.classification(), true);
+                        manifest.packId(), manifest.version(), manifest.canonicalPackHash(), compatibility.outcome, true);
             } catch (RuntimeException e) {
                 notifyState(progress, EditorialPackImportState.STORED_BLOCKED);
                 return blockImport(importId, EditorialPackImportError.DATABASE_WRITE_FAILED,
                         "Registry transaction failed; immutable storage was retained for recovery: " + safeMessage(e),
-                        manifest.packId(), manifest.version(), manifest.canonicalPackHash(), compatibility.classification(), true);
+                        manifest.packId(), manifest.version(), manifest.canonicalPackHash(), compatibility.outcome, true);
             }
         } catch (ImportFailure e) {
             if (importRow) safelyBlockImport(importId, e.error, e.getMessage());
@@ -383,21 +427,28 @@ public final class EditorialPackImportService {
         return hash;
     }
 
-    private EditorialPackImportResult storeFinal(String importId, EditorialPackManifest manifest, EditorialCompatibilityResult compatibility,
+    private EditorialPackImportResult storeFinal(String importId, EditorialPackManifest manifest, CompatibilityDecision compatibility,
                                                  String storageKey, String compatibilityReason) {
         SQLiteDatabase db = database.editorialWritableDatabase();
         long now = System.currentTimeMillis();
-        boolean blocked = compatibility.blocked() || compatibility.classification() == EditorialPackCompatibilityClass.BLOCKED
-                || compatibility.classification() == EditorialPackCompatibilityClass.INVALID;
+        boolean blocked = compatibility.blocked || compatibility.outcome == EditorialPackCompatibilityClass.BLOCKED
+                || compatibility.outcome == EditorialPackCompatibilityClass.INVALID;
+        // The bundled production profile is intentionally non-executable in B2. This
+        // defensive gate prevents a future resolver regression from creating a ready row.
+        if (trustedResolver != null && compatibility.trustedProfile != null
+                && !EditorialEngineProfileResolver.isExecutableContractProfile(compatibility.trustedProfile)
+                && compatibility.outcome == EditorialPackCompatibilityClass.DATA_COMPATIBLE) {
+            blocked = true;
+        }
         EditorialPackImportState finalState = blocked ? EditorialPackImportState.STORED_BLOCKED : EditorialPackImportState.STORED_READY_FOR_CERTIFICATION;
         db.beginTransaction();
         try {
             ContentValues pack = new ContentValues();
             pack.put("pack_id", manifest.packId()); pack.put("version", manifest.version()); pack.put("canonical_pack_hash", manifest.canonicalPackHash());
             pack.put("contract_version", manifest.contractVersion()); pack.put("schema_version", manifest.schemaVersion()); pack.put("minimum_engine_version", manifest.minimumEngineVersion());
-            pack.put("compatibility_class", compatibility.classification().name()); pack.put("state", finalState.name()); pack.put("storage_key", storageKey);
+            pack.put("compatibility_class", compatibility.outcome.name()); pack.put("state", finalState.name()); pack.put("storage_key", storageKey);
             pack.put("manifest_canonical_json", manifest.canonicalJson()); pack.put("created_at", now); pack.put("validated_at", now);
-            pack.put("engine_version_used", engineProfile.engineVersion()); pack.put("blocked_reason", compatibilityReason);
+            pack.put("engine_version_used", engineVersionUsed(compatibility)); pack.put("blocked_reason", compatibilityReason);
             long packRowId = db.insertOrThrow("editorial_packs", null, pack);
             for (EditorialPackManifest.FileEntry file : manifest.fileEntries()) {
                 ContentValues row = new ContentValues(); row.put("pack_row_id", packRowId); row.put("declared_role", file.role().name()); row.put("normalized_relative_path", file.path());
@@ -405,16 +456,80 @@ public final class EditorialPackImportService {
                 db.insertOrThrow("editorial_pack_files", null, row);
             }
             ContentValues compatibilityRow = new ContentValues(); compatibilityRow.put("import_id", importId); compatibilityRow.put("pack_row_id", packRowId);
-            compatibilityRow.put("canonical_pack_hash", manifest.canonicalPackHash()); compatibilityRow.put("engine_version_used", engineProfile.engineVersion());
-            compatibilityRow.put("machine_contract_fingerprint", compatibility.machineContractFingerprint()); compatibilityRow.put("compatibility_class", compatibility.classification().name());
-            compatibilityRow.put("required_class", compatibility.requiredClass().name()); compatibilityRow.put("blocked_reason", compatibilityReason); compatibilityRow.put("evaluated_at", now);
-            db.insertOrThrow("editorial_pack_compatibility_results", null, compatibilityRow);
+            compatibilityRow.put("canonical_pack_hash", manifest.canonicalPackHash()); compatibilityRow.put("engine_version_used", engineVersionUsed(compatibility));
+            compatibilityRow.put("machine_contract_fingerprint", trustedMachineFingerprint(compatibility)); compatibilityRow.put("compatibility_class", compatibility.outcome.name());
+            compatibilityRow.put("required_class", compatibility.requiredClass.name()); compatibilityRow.put("blocked_reason", compatibilityReason); compatibilityRow.put("evaluated_at", now);
+            long compatibilityResultId = db.insertOrThrow("editorial_pack_compatibility_results", null, compatibilityRow);
+            appendTrustedEvidenceIfAvailable(importId, packRowId, compatibilityResultId, manifest, compatibility, compatibilityReason, now);
             ContentValues importUpdate = new ContentValues(); importUpdate.put("state", finalState.name()); importUpdate.put("pack_id", manifest.packId()); importUpdate.put("pack_version", manifest.version());
             importUpdate.put("canonical_pack_hash", manifest.canonicalPackHash()); importUpdate.put("storage_key", storageKey); importUpdate.put("storage_moved", 1); importUpdate.put("pack_row_id", packRowId); importUpdate.put("blocked_reason", compatibilityReason); importUpdate.put("updated_at", now);
             if (db.update("editorial_pack_imports", importUpdate, "import_id=?", new String[]{importId}) != 1) throw new IllegalStateException("Import row disappeared before final commit");
             db.setTransactionSuccessful();
             return result(importId, finalState, EditorialPackImportError.NONE, compatibilityReason, manifest, compatibility, storageKey);
         } finally { db.endTransaction(); }
+    }
+
+    private void appendTrustedEvidenceIfAvailable(String importId, long packRowId, long compatibilityResultId,
+                                                  EditorialPackManifest manifest, CompatibilityDecision decision,
+                                                  String blockerDetails, long evaluatedAt) {
+        EditorialEngineContractProfile profile = decision.trustedProfile;
+        if (profile == null) return;
+        EditorialCompatibilityEvaluationContext context = new EditorialCompatibilityEvaluationContext(
+                manifest.canonicalPackHash(), profile.engineProfileId(), profile.engineProfileVersion(),
+                profile.canonicalProfileHash(), profile.engineVersion(), profile.machineContractFingerprint(),
+                EditorialCompatibilityEvaluator.EVALUATOR_CONTRACT_VERSION,
+                EditorialCompatibilityProvenance.adapterSetFingerprint(profile),
+                EditorialCompatibilityProvenance.capabilityFingerprint(profile));
+        EditorialPackCompatibilityEvaluation evaluation = EditorialPackCompatibilityEvaluation.trusted(
+                importId + ":compatibility:v1", importId, packRowId, compatibilityResultId, context,
+                decision.outcome, decision.reasonCode.name(), blockerDetails, evaluatedAt);
+        // INSERT-only and inside the pack transaction: provenance failure rolls back
+        // the pack/files/v14 row together with this v15 evidence row.
+        evaluationDao.append(evaluation);
+    }
+
+    private CompatibilityDecision evaluate(EditorialPackManifest manifest) {
+        if (trustedResolver != null) {
+            try {
+                EditorialCompatibilityEvaluationResult resolved = trustedResolver.resolve(manifest);
+                if (resolved == null) return CompatibilityDecision.blocked(
+                        EditorialCompatibilityReasonCode.COMPATIBILITY_EVALUATION_FAILURE,
+                        "Compatibility resolver returned no result");
+                CompatibilityDecision decision = CompatibilityDecision.trusted(resolved);
+                if (decision.trustedProfile != null
+                        && !EditorialEngineProfileResolver.isExecutableContractProfile(decision.trustedProfile)
+                        && decision.outcome == EditorialPackCompatibilityClass.DATA_COMPATIBLE) {
+                    return decision.withGate(EditorialCompatibilityReasonCode.PROFILE_NON_EXECUTABLE,
+                            "Trusted profile is not executable; ready state is forbidden in B2");
+                }
+                return decision;
+            } catch (RuntimeException error) {
+                return CompatibilityDecision.blocked(EditorialCompatibilityReasonCode.COMPATIBILITY_EVALUATION_FAILURE,
+                        "Compatibility evaluation failed closed");
+            }
+        }
+        EditorialCompatibilityResult legacy = compatibilityEvaluator.evaluate(manifest, engineProfile);
+        return CompatibilityDecision.legacy(legacy);
+    }
+
+    private static String compatibilityReason(CompatibilityDecision decision) {
+        StringBuilder out = new StringBuilder(decision.reasonCode.name());
+        for (EditorialPackIntegrityResult.Issue issue : decision.issues) {
+            out.append("; ").append(issue.code()).append(": ").append(issue.message());
+        }
+        if (!decision.missingCapabilities.isEmpty()) {
+            out.append("; Missing capabilities: ").append(String.join(", ", decision.missingCapabilities));
+        }
+        return out.toString();
+    }
+
+    private String engineVersionUsed(CompatibilityDecision decision) {
+        if (decision.trustedProfile != null) return decision.trustedProfile.engineVersion();
+        return engineProfile == null ? AppBuildInfo.VERSION_NAME : engineProfile.engineVersion();
+    }
+
+    private static String trustedMachineFingerprint(CompatibilityDecision decision) {
+        return decision.trustedProfile == null ? "" : decision.trustedProfile.machineContractFingerprint();
     }
 
     private boolean finalizeMovedStorage(String importId, String hash) {
@@ -426,12 +541,14 @@ public final class EditorialPackImportService {
             for (EditorialPackManifest.FileEntry file : manifest.fileEntries()) data.put(file.path(), Files.readAllBytes(directory.resolve(file.path())));
             EditorialPackIntegrityResult integrity = integrityValidator.validate(manifestBytes, data);
             if (!integrity.valid() || !hash.equals(manifest.canonicalPackHash())) return false;
-            EditorialCompatibilityResult compatibility = compatibilityEvaluator.evaluate(manifest, engineProfile);
-            if (existingPack(manifest) != null) {
-                updateImport(importId, existingPack(manifest).state, issueText(compatibility.issues()), manifest.packId(), manifest.version(), hash, true, existingPack(manifest).id);
+            ExistingPack existing = existingPack(manifest);
+            if (existing != null) {
+                updateImport(importId, existing.state, "PACK_ALREADY_EXISTS", manifest.packId(), manifest.version(), hash, true, existing.id);
                 return true;
             }
-            storeFinal(importId, manifest, compatibility, hash, issueText(compatibility.issues()));
+            CompatibilityDecision compatibility = evaluate(manifest);
+            String reason = compatibilityReason(compatibility);
+            storeFinal(importId, manifest, compatibility, hash, reason);
             return true;
         } catch (Exception e) { return false; }
     }
@@ -445,6 +562,19 @@ public final class EditorialPackImportService {
     private ExistingHash existingHash(String hash) {
         try (Cursor cursor = database.editorialReadableDatabase().rawQuery("SELECT id FROM editorial_packs WHERE canonical_pack_hash=?", new String[]{hash})) {
             return cursor.moveToFirst() ? new ExistingHash(cursor.getLong(0)) : null;
+        }
+    }
+
+    private PersistedCompatibility latestCompatibility(String hash) {
+        try (Cursor cursor = database.editorialReadableDatabase().rawQuery(
+                "SELECT compatibility_class,required_class,machine_contract_fingerprint,blocked_reason FROM editorial_pack_compatibility_results WHERE canonical_pack_hash=? ORDER BY evaluated_at DESC,id DESC LIMIT 1",
+                new String[]{hash})) {
+            if (!cursor.moveToFirst()) return null;
+            EditorialPackCompatibilityClass outcome = parseCompatibilityClass(cursor.getString(0));
+            EditorialPackCompatibilityClass required = parseCompatibilityClass(cursor.getString(1));
+            String reason = safe(cursor.getString(3));
+            return new PersistedCompatibility(outcome, required, reasonCodeFrom(reason),
+                    cursor.getString(2), missingFromReason(reason));
         }
     }
 
@@ -483,16 +613,16 @@ public final class EditorialPackImportService {
     }
 
     private EditorialPackImportResult result(String importId, EditorialPackImportState state, EditorialPackImportError error, String reason,
-                                             EditorialPackManifest manifest, EditorialCompatibilityResult compatibility, String storageKey) {
+                                             EditorialPackManifest manifest, CompatibilityDecision compatibility, String storageKey) {
         return result(importId, state, error, reason, manifest, compatibility, storageKey, false);
     }
 
     private EditorialPackImportResult result(String importId, EditorialPackImportState state, EditorialPackImportError error, String reason,
-                                             EditorialPackManifest manifest, EditorialCompatibilityResult compatibility, String storageKey,
+                                             EditorialPackManifest manifest, CompatibilityDecision compatibility, String storageKey,
                                              boolean alreadyExisted) {
         return new EditorialPackImportResult(importId, state, error, reason, manifest.packId(), manifest.version(), manifest.canonicalPackHash(),
-                compatibility == null ? null : compatibility.classification(), storageKey,
-                compatibility == null ? Set.of() : compatibility.missingCapabilities(), alreadyExisted);
+                compatibility == null ? null : compatibility.outcome, storageKey,
+                compatibility == null ? Set.of() : compatibility.missingCapabilities, alreadyExisted);
     }
 
     private static String issueText(List<EditorialPackIntegrityResult.Issue> issues) {
@@ -508,6 +638,101 @@ public final class EditorialPackImportService {
 
     private static String safe(String value) { return value == null ? "" : value; }
     private static String safeMessage(Throwable error) { return error.getMessage() == null ? error.getClass().getSimpleName() : error.getMessage(); }
+
+    private static EditorialPackCompatibilityClass parseCompatibilityClass(String value) {
+        try { return EditorialPackCompatibilityClass.valueOf(value); }
+        catch (RuntimeException error) { return EditorialPackCompatibilityClass.BLOCKED; }
+    }
+
+    private static Set<String> missingFromReason(String reason) {
+        int start = reason.indexOf("Missing capabilities:");
+        if (start < 0) return Set.of();
+        String values = reason.substring(start + "Missing capabilities:".length());
+        Set<String> result = new java.util.TreeSet<>();
+        for (String value : values.split("[;,]")) if (!value.trim().isEmpty()) result.add(value.trim());
+        return Set.copyOf(result);
+    }
+
+    private static EditorialCompatibilityReasonCode reasonCodeFrom(String reason) {
+        if (reason != null) {
+            int end = reason.indexOf(':');
+            String candidate = (end < 0 ? reason : reason.substring(0, end)).trim();
+            try { return EditorialCompatibilityReasonCode.valueOf(candidate); }
+            catch (IllegalArgumentException ignored) { }
+        }
+        return EditorialCompatibilityReasonCode.BLOCKED;
+    }
+
+    private static final class CompatibilityDecision {
+        final EditorialPackCompatibilityClass outcome;
+        final EditorialPackCompatibilityClass requiredClass;
+        final boolean blocked;
+        final List<EditorialPackIntegrityResult.Issue> issues;
+        final Set<String> missingCapabilities;
+        final String machineContractFingerprint;
+        final EditorialCompatibilityReasonCode reasonCode;
+        final EditorialEngineContractProfile trustedProfile;
+
+        CompatibilityDecision(EditorialPackCompatibilityClass outcome, EditorialPackCompatibilityClass requiredClass,
+                              boolean blocked, List<EditorialPackIntegrityResult.Issue> issues,
+                              Set<String> missingCapabilities, String machineContractFingerprint,
+                              EditorialCompatibilityReasonCode reasonCode, EditorialEngineContractProfile trustedProfile) {
+            this.outcome = outcome;
+            this.requiredClass = requiredClass;
+            this.blocked = blocked;
+            this.issues = List.copyOf(issues == null ? List.of() : issues);
+            this.missingCapabilities = java.util.Collections.unmodifiableSet(new java.util.TreeSet<>(missingCapabilities == null ? Set.of() : missingCapabilities));
+            this.machineContractFingerprint = machineContractFingerprint == null ? "" : machineContractFingerprint;
+            this.reasonCode = reasonCode == null ? EditorialCompatibilityReasonCode.BLOCKED : reasonCode;
+            this.trustedProfile = trustedProfile;
+        }
+
+        static CompatibilityDecision trusted(EditorialCompatibilityEvaluationResult result) {
+            return new CompatibilityDecision(result.outcome(), result.requiredClass(), result.blocked(), result.issues(),
+                    result.missingCapabilities(), result.trustedProfile().map(EditorialEngineContractProfile::machineContractFingerprint).orElse(""),
+                    result.reasonCode(), result.trustedProfile().orElse(null));
+        }
+
+        static CompatibilityDecision legacy(EditorialCompatibilityResult result) {
+            EditorialCompatibilityReasonCode reason = result.missingCapabilities().isEmpty()
+                    ? switch (result.classification()) {
+                        case ADAPTER_REQUIRED -> EditorialCompatibilityReasonCode.ADAPTER_REQUIRED;
+                        case ENGINE_UPGRADE_REQUIRED -> EditorialCompatibilityReasonCode.ENGINE_UPGRADE_REQUIRED;
+                        case INVALID -> EditorialCompatibilityReasonCode.INVALID_PACK;
+                        case DATA_COMPATIBLE -> EditorialCompatibilityReasonCode.DATA_COMPATIBLE;
+                        default -> EditorialCompatibilityReasonCode.BLOCKED;
+                    }
+                    : EditorialCompatibilityReasonCode.MISSING_ENGINE_CAPABILITY;
+            return new CompatibilityDecision(result.classification(), result.requiredClass(), result.blocked(), result.issues(),
+                    result.missingCapabilities(), result.machineContractFingerprint(), reason, null);
+        }
+
+        static CompatibilityDecision persisted(PersistedCompatibility persisted) {
+            return new CompatibilityDecision(persisted.outcome, persisted.requiredClass,
+                    persisted.outcome != EditorialPackCompatibilityClass.DATA_COMPATIBLE,
+                    List.of(), persisted.missingCapabilities, persisted.machineContractFingerprint,
+                    persisted.reasonCode, null);
+        }
+
+        static CompatibilityDecision blocked(EditorialCompatibilityReasonCode reason, String message) {
+            return new CompatibilityDecision(EditorialPackCompatibilityClass.BLOCKED, EditorialPackCompatibilityClass.BLOCKED,
+                    true, List.of(new EditorialPackIntegrityResult.Issue(EditorialPackValidationCode.UNSUPPORTED_CONTRACT_SCHEMA,
+                    "trustedProfile", message)), Set.of(), "", reason, null);
+        }
+
+        CompatibilityDecision withGate(EditorialCompatibilityReasonCode reason, String message) {
+            return new CompatibilityDecision(EditorialPackCompatibilityClass.ENGINE_UPGRADE_REQUIRED,
+                    EditorialPackCompatibilityClass.ENGINE_UPGRADE_REQUIRED, true,
+                    List.of(new EditorialPackIntegrityResult.Issue(EditorialPackValidationCode.ENGINE_UPGRADE_REQUIRED,
+                            "trustedProfile", message)), missingCapabilities, machineContractFingerprint, reason, trustedProfile);
+        }
+    }
+
+    private record PersistedCompatibility(EditorialPackCompatibilityClass outcome,
+                                          EditorialPackCompatibilityClass requiredClass,
+                                          EditorialCompatibilityReasonCode reasonCode,
+                                          String machineContractFingerprint,
+                                          Set<String> missingCapabilities) {}
 
     public record EditorialPackRecoveryReport(int cleanedStaging, int finalizedStorage, int blockedImports, int retainedUnknownStorage) {}
     private record Snapshot(byte[] manifestBytes, Map<String, byte[]> dataFiles, String packId, String version, long totalBytes) {}

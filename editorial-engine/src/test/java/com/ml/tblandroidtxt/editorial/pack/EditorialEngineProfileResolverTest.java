@@ -11,14 +11,15 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class EditorialEngineProfileResolverTest {
-    @Test public void bundledNoExecutableContractFailsClosedWithoutGuessing() {
+    @Test public void bundledNonExecutableProfileFailsClosedWithTrustedProvenance() {
         EditorialCompatibilityEvaluationResult result = resolver(BundledEditorialEngineContractProfileRegistry.load())
                 .resolve(EditorialPackFixtures.valid().manifest());
 
-        assertEquals(EditorialPackCompatibilityClass.BLOCKED, result.outcome());
-        assertEquals(EditorialCompatibilityReasonCode.NO_TRUSTED_PROFILE, result.reasonCode());
+        assertEquals(EditorialPackCompatibilityClass.ENGINE_UPGRADE_REQUIRED, result.outcome());
+        assertEquals(EditorialCompatibilityReasonCode.PROFILE_NON_EXECUTABLE, result.reasonCode());
         assertTrue(result.blocked());
-        assertFalse(result.trustedProfile().isPresent());
+        assertTrue(result.trustedProfile().isPresent());
+        assertTrue(result.missingCapabilities().contains("context.test.v1"));
     }
 
     @Test public void adapterMapsEvaluatorFactsAndDoesNotUseProfileMetadata() {
