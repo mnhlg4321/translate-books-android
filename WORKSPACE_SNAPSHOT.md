@@ -1,19 +1,19 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-05` (G2-C1B1-A `lineage.exact-parent.v1` pure-JVM implementation review stop; no persistence, importer wiring, promotion, certification, activation, binding or execution)
-- Current version: `4.15`/code62 remains the released product; latest development archive is `4.16-dev.36`/code98. SQLite remains v15 and Editorial execution remains intentionally blocked.
-- Current branch: `feature/v4.16-g2-c1b1a`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned and unstaged. The implementation branch was created from C1A correction commit `9091d9167fa2f791cb822a2c6522af8bdab3021e`.
-- Current commit: `b4a9a52d37697b8f81eb7857a969103ef970daa3` (implementation baseline immediately before this documentation/checklist/snapshot state commit; intentionally not self-referential)
-- Current build: `artifacts/builds/v4.16-dev.36/build-20260805-095511/TranslateBooks-v4.16-dev.36-code98.apk`, SHA-256 `9E147135DEA5D37EDFF5220D5EC8C44CE2686438DE3831BC5EC564E7BC752EC8`; matching five-file payload is under `backup/builds/v4.16-dev.36/build-20260805-095511/`. Source ZIP SHA-256 is `B8B518270092D03ECC4D479DC93AB2C55EFF027A395600582EECAA5797799F22`. No APK build/install occurred in C1B1A. Final verification passed engine `74/74`, app JVM `162/162`, Android-test Java compilation, lint `0` errors/`53` warnings and `git diff --check`; the released v4.15/code62 archive remains unchanged.
+- Snapshot updated: `2026-08-05` (G2-C1B1-B SQLite v16 append-only lineage persistence review stop; no importer wiring, promotion, certification, activation, binding or execution)
+- Current version: `4.15`/code62 remains the released product; latest development archive is `4.16-dev.38`/code100. SQLite source version is v16 and Editorial execution remains intentionally blocked.
+- Current branch: `feature/v4.16-g2-c1b1b`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned and unstaged. The branch was created after C1A snapshot correction commit `3fcf039be0185b22567e75f34a970bf75ba5ea6a`.
+- Current commit: `1d6fbae` (implementation baseline immediately before this documentation/checklist/snapshot state commit; intentionally not self-referential)
+- Current build: `artifacts/builds/v4.16-dev.38/build-20260805-123935/TranslateBooks-v4.16-dev.38-code100.apk`, SHA-256 `8E7677020E39A57FD0EE35DD7CBA1812228B781A8B38680A5B75B85C7FA63ED1`; matching five-file payload is under `backup/builds/v4.16-dev.38/build-20260805-123935/`. Source ZIP SHA-256 is `ABBFC90107F55655C78F8559EFD90AC36A1D86E47374E23BC83EDED40B93CFAE`. Final verification passed engine `74/74`, app JVM `163/163`, Android-test Java compilation, lint `0` errors/`53` warnings, `git diff --check`, and direct device instrumentation `20/20`; the released v4.15/code62 archive remains unchanged.
 
 ## G2-C1B1-A exact-parent lineage handoff
 
 - Completed: pure-JVM immutable lineage model, canonical JSON projections, domain-separated SHA-256 fingerprints, exact-parent validator, stable machine failure codes, fixed `lineage/root-child-v1` fixture manifest and 14 focused tests for `lineage.exact-parent.v1`.
-- Implementation: branch `feature/v4.16-g2-c1b1a`; C1A correction commit `9091d9167fa2f791cb822a2c6522af8bdab3021e`; implementation commit `b4a9a52d37697b8f81eb7857a969103ef970daa3`. Handoff document is `EDITORIAL_PACK_PLATFORM_G2_C1B1A_LINEAGE_JVM.md`; phase checklist is `release_checklists/v4.16-g2-c1b1a.md`.
-- Actual test results: `:editorial-engine:test` `74/74`, `:app:testDebugUnitTest` `162/162`, Android-test Java compilation PASS, `:app:lintDebug` PASS with `0` errors/`53` warnings, `git diff --check` PASS. No APK build/install or device QA was run.
+- Implementation: branch `feature/v4.16-g2-c1b1b`; C1A correction commit `3fcf039be0185b22567e75f34a970bf75ba5ea6a`; B1B implementation commits `c0539b9`, `e65b723`, `1d6fbae`. Handoff document is `EDITORIAL_PACK_PLATFORM_G2_C1B1B_LINEAGE_SQLITE_V16.md`; phase checklist is `release_checklists/v4.16-g2-c1b1b.md`.
+- Actual test results: `:editorial-engine:test` `74/74`, `:app:testDebugUnitTest` `163/163`, Android-test Java compilation PASS, `:app:lintDebug` PASS with `0` errors/`53` warnings, `git diff --check` PASS. Direct device runner passed lineage `11/11` and compatibility migration `9/9`; isolated migration/append QA passed. No real production database existed on the device at final inspection, so real-data continuity is not claimed.
 - Protected identity: canonical profile hash `2d4e2f76dc5defcfb98cfd36cec49b0e5454cb3462db93a6b1586f7784eb91b6`, machine fingerprint `6410f374ce175cbc6fc32484f5cd9635888b9297b01d882923af06ccd4ac1e4c`; catalog still confirms only `pack.integrity.sha256.v1`; `EditorialSafe4Pack.executionEnabled()` remains false.
-- Unchanged boundaries: no production evidence-catalog promotion, profile update/version, SQLite migration/table/DAO, importer/runtime call site, compatibility-history reevaluation, certification, Golden Replay, activation, project binding or execution.
-- Pending: review the C1B1A implementation and separately approve the proposed schema v16/persistence boundary for G2-C1B1-B. Do not begin B automatically.
+- Unchanged boundaries: no production evidence-catalog promotion, profile update/version, importer/runtime call site, compatibility-history reevaluation, certification, Golden Replay, activation, project binding or execution. SQLite v16 lineage persistence exists only as an unused append/read boundary.
+- Pending: review/approve the completed G2-C1B1-B persistence stop. Do not begin G2-C1B1-C importer/runtime wiring without separate approval.
 
 ## G2-C1A executable-contract plan handoff
 
@@ -399,7 +399,7 @@
 
 ## Next step
 
-`G2-C0C-B2` and `G2-C1B1-A` are PASS / REVIEW STOP. Review and, when approved, implement `G2-C1B1-B` SQLite v15 -> v16 append-only lineage persistence. Do not start G2-C1B1-C importer/runtime wiring, capability promotion, certification, activation, binding or execution before that review.
+`G2-C0C-B2` and `G2-C1B1-A` are PASS / REVIEW STOP; G2-C1B1-B persistence is now PASS / REVIEW STOP. The exact next action is review and separate approval for `G2-C1B1-C` importer/runtime lineage wiring. Do not start it, capability promotion, certification, activation, binding or execution automatically.
 
 ## Resume rule
 
