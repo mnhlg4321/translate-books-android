@@ -49,29 +49,16 @@ public final class EditorialLineageDao {
 
     /** Timestamp is audit metadata only and is not part of the lineage fingerprint. */
     public synchronized EditorialLineageAppendResult append(EditorialLineageRecord record, long auditTimestamp) {
-        if (record == null) return result(EditorialLineagePersistenceCode.INVALID_LINEAGE, "", "record-required");
-        if (auditTimestamp < 0) return result(EditorialLineagePersistenceCode.INVALID_LINEAGE,
-                record.recordIdentity(), "audit-timestamp-negative");
-
-        Optional<EditorialLineageRecord> existing = findByRecordIdentity(record.recordIdentity());
-        if (existing.isPresent()) return classifyExisting(existing.get(), record);
-
-        EditorialLineageValidationContext context = new SqliteEditorialLineageValidationContext(this);
-        EditorialLineageValidationResult validation = validator.validate(record, context);
-        if (!validation.isValid()) return classifyValidation(record, context, validation);
-
+        SQLiteDatabase db = database.editorialWritableDatabase();
         try {
-            SQLiteDatabase db = database.editorialWritableDatabase();
             db.beginTransaction();
             try {
-                ContentValues row = recordValues(record, auditTimestamp);
-                long rowId = db.insertOrThrow(RECORD_TABLE, null, row);
-                for (EditorialLineageInputEntry entry : record.identity().inputManifest().entries()) {
-                    db.insertOrThrow(ENTRY_TABLE, null, entryValues(record.recordIdentity(), entry));
+                EditorialLineageAppendResult result = appendInTransaction(db, record, auditTimestamp);
+                if (result.code() == EditorialLineagePersistenceCode.APPENDED
+                        || result.code() == EditorialLineagePersistenceCode.ALREADY_EXISTS) {
+                    db.setTransactionSuccessful();
                 }
-                db.setTransactionSuccessful();
-                return EditorialLineageAppendResult.of(EditorialLineagePersistenceCode.APPENDED,
-                        record.recordIdentity(), rowId, "appended");
+                return result;
             } finally {
                 db.endTransaction();
             }
@@ -84,6 +71,33 @@ public final class EditorialLineageDao {
             return result(EditorialLineagePersistenceCode.PERSISTENCE_FAILURE,
                     record.recordIdentity(), "sqlite-append-rollback");
         }
+    }
+
+    /** Package-private operation used by the v17 shared lineage-and-binding transaction. */
+    synchronized EditorialLineageAppendResult appendInTransaction(
+            SQLiteDatabase db, EditorialLineageRecord record, long auditTimestamp) {
+        if (db == null || !db.inTransaction()) {
+            return result(EditorialLineagePersistenceCode.PERSISTENCE_FAILURE,
+                    record == null ? "" : record.recordIdentity(), "transaction-required");
+        }
+        if (record == null) return result(EditorialLineagePersistenceCode.INVALID_LINEAGE, "", "record-required");
+        if (auditTimestamp < 0) return result(EditorialLineagePersistenceCode.INVALID_LINEAGE,
+                record.recordIdentity(), "audit-timestamp-negative");
+
+        Optional<EditorialLineageRecord> existing = findByRecordIdentity(record.recordIdentity());
+        if (existing.isPresent()) return classifyExisting(existing.get(), record);
+
+        EditorialLineageValidationContext context = new SqliteEditorialLineageValidationContext(this);
+        EditorialLineageValidationResult validation = validator.validate(record, context);
+        if (!validation.isValid()) return classifyValidation(record, context, validation);
+
+        ContentValues row = recordValues(record, auditTimestamp);
+        long rowId = db.insertOrThrow(RECORD_TABLE, null, row);
+        for (EditorialLineageInputEntry entry : record.identity().inputManifest().entries()) {
+            db.insertOrThrow(ENTRY_TABLE, null, entryValues(record.recordIdentity(), entry));
+        }
+        return EditorialLineageAppendResult.of(EditorialLineagePersistenceCode.APPENDED,
+                record.recordIdentity(), rowId, "appended");
     }
 
     public Optional<EditorialLineageRecord> findByRecordIdentity(String recordIdentity) {

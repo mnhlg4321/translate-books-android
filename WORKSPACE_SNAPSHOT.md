@@ -422,6 +422,18 @@
 - v4.15 final export verification: PASS. Corrected tag, artifact/backup parity, manifest, APK, source ZIP, release documents, and installed device identity all passed.
 - v4.15 merge/publication verification: PASS. Initial release merge `main` and corrected annotated tag/peeled target match the verified GitHub refs.
 
+## G2-C1B1-C1.5-B SQLite v17 implementation snapshot (2026-08-05)
+
+- Current version: `4.16-dev.39` / Android version code `101`; no new APK has been built in this session yet.
+- Current branch: `feature/v4.16-g2-c1b1c15b`.
+- Current commit: `40ae6b8` (`feat(editorial): add v17 canonical identity models`) is the implementation baseline immediately before this snapshot commit; the v17 migration/DAO changes are staged but not yet committed.
+- Current build: archived baseline `4.16-dev.39`/code101, event `build-20260805-124714`, artifact/backup parity previously verified; this session's build is pending.
+- Completed tasks: Gate A canonical project revision, scope snapshot, closed-run and lineage-binding models/canonicalizers; focused Gate A `10/10` PASS; SQLite v16→v17 additive migration with exactly five new tables, indexes and immutability triggers; append/read-only DAOs; transaction-scoped v16 lineage append seam and atomic lineage+binding service; JVM regression `:editorial-engine:test` `105/105` and `:app:testDebugUnitTest` `164/164`; Android-test Java compilation PASS; lint `0` errors/`53` warnings; `git diff --check` PASS.
+- Pending tasks: commit Gate B, run archive-first `scripts/build-and-save.ps1 -Series 4.16-dev`, verify artifact/backup parity, install exact artifact without clearing data, run isolated v17 instrumentation/restart/immutability/rollback QA, update handoff/checklist/BUILD_STATE, and stop at review.
+- Known bugs/limitations: production profile remains non-executable; no production closed-run creator/caller, importer wiring, capability promotion, certification, activation, project binding or execution; `executionEnabled()` remains `false`; device QA for this v17 change has not run yet; real-data continuity is not claimed until an existing production DB is observed.
+- Regression status: Gate A PASS; Gate B JVM/lint/compile PASS; device/build/archive evidence pending. Protected `.idea/compiler.xml`, `.idea/gradle.xml`, `.idea/misc.xml` remain user-owned, untouched by this work, unstaged and uncommitted.
+- Next step: commit Gate B, then archive-first build and isolated device v17 QA; do not start C2 or production caller wiring.
+
 ## Next step
 
 `G2-C0C-B2`, `G2-C1B1-A`, `G2-C1B1-B`, `G2-C1B1-C0`, `G2-C1B1-C1` and `G2-C1B1-C1.5-A` are PASS / REVIEW STOP. The exact next action is review and separate approval for `G2-C1B1-C1.5-B` additive v17 schema/DAO implementation. Do not start C2 caller wiring, persistence binding, capability promotion, certification, activation, binding or execution automatically.

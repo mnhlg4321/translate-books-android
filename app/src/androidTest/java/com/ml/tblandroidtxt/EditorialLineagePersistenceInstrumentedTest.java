@@ -38,7 +38,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-/** Device-side SQLite v16 lineage migration and append-only DAO contract. */
+/** Device-side SQLite v16/v17 lineage and authoritative identity persistence contract. */
 @RunWith(AndroidJUnit4.class)
 public final class EditorialLineagePersistenceInstrumentedTest {
     private static final String PACK = "a".repeat(64);
@@ -62,9 +62,14 @@ public final class EditorialLineagePersistenceInstrumentedTest {
         context.deleteDatabase(databaseName);
     }
 
-    @Test public void freshSchemaIsV16WithLineageTablesIndexesAndTriggers() {
+    @Test public void freshSchemaIsV17WithLineageTablesIndexesAndTriggers() {
         SQLiteDatabase db = repository.editorialWritableDatabase();
-        assertEquals(16, db.getVersion());
+        assertEquals(17, db.getVersion());
+        assertTable(db, "editorial_project_revisions");
+        assertTable(db, "editorial_input_scope_snapshots");
+        assertTable(db, "editorial_input_scope_snapshot_entries");
+        assertTable(db, "editorial_closed_run_contexts");
+        assertTable(db, "editorial_run_lineage_bindings");
         assertTable(db, "editorial_lineage_records");
         assertTable(db, "editorial_lineage_input_entries");
         assertIndex(db, "idx_editorial_lineage_records_pack");
@@ -201,7 +206,7 @@ public final class EditorialLineagePersistenceInstrumentedTest {
         assertEquals(4, countRows("editorial_lineage_input_entries"));
     }
 
-    @Test public void v15ToV16PreservesRowsAndCreatesNoLineageBackfill() throws Exception {
+    @Test public void v15ToV17PreservesRowsAndCreatesNoIdentityBackfill() throws Exception {
         repository.close();
         Path path = prepareOldDatabase(15);
         SQLiteDatabase old = SQLiteDatabase.openOrCreateDatabase(path.toFile(), null);
@@ -211,7 +216,7 @@ public final class EditorialLineagePersistenceInstrumentedTest {
 
         repository = new TranslationRepository(context, databaseName);
         SQLiteDatabase db = repository.editorialReadableDatabase();
-        assertEquals(16, db.getVersion());
+        assertEquals(17, db.getVersion());
         assertEquals(1, countRows("editorial_packs"));
         assertEquals(1, countRows("editorial_pack_compatibility_results"));
         assertEquals(1, countRows("editorial_pack_compatibility_evaluations"));
@@ -222,7 +227,7 @@ public final class EditorialLineagePersistenceInstrumentedTest {
         assertEquals(1, scalarInt(db, "SELECT COUNT(*) FROM editorial_pack_compatibility_evaluations WHERE evaluation_id='legacy-evaluation'"));
     }
 
-    @Test public void failedV15ToV16MigrationRollsBackAndKeepsVersion15() throws Exception {
+    @Test public void failedV15ToV17MigrationRollsBackAndKeepsVersion15() throws Exception {
         repository.close();
         Path path = prepareOldDatabase(15);
         SQLiteDatabase old = SQLiteDatabase.openOrCreateDatabase(path.toFile(), null);
@@ -233,7 +238,7 @@ public final class EditorialLineagePersistenceInstrumentedTest {
         repository = new TranslationRepository(context, databaseName);
         try {
             repository.editorialWritableDatabase();
-            fail("malformed v16 table must fail migration");
+            fail("malformed v17 table must fail migration");
         } catch (SQLiteException expected) { }
         repository.close();
         SQLiteDatabase reopened = SQLiteDatabase.openOrCreateDatabase(path.toFile(), null);

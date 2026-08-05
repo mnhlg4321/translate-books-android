@@ -74,4 +74,30 @@ public class EditorialPackMigrationSpecTest {
         assertFalse(sql.contains("editorial_packs"));
         assertFalse(sql.contains("editorial_pack_compatibility_evaluations"));
     }
+
+    @Test public void v17AddsExactlyFiveAuthoritativeIdentityTablesAdditively() {
+        String sql = String.join("\n", EditorialMigrationSpec.from16To17()).toLowerCase();
+        assertEquals(5, sql.split("create table if not exists", -1).length - 1);
+        assertTrue(sql.contains("create table if not exists editorial_project_revisions"));
+        assertTrue(sql.contains("create table if not exists editorial_input_scope_snapshots"));
+        assertTrue(sql.contains("create table if not exists editorial_input_scope_snapshot_entries"));
+        assertTrue(sql.contains("create table if not exists editorial_closed_run_contexts"));
+        assertTrue(sql.contains("create table if not exists editorial_run_lineage_bindings"));
+        assertTrue(sql.contains("on delete restrict"));
+        assertTrue(sql.contains("trg_editorial_project_revisions_no_update"));
+        assertTrue(sql.contains("trg_editorial_input_scope_snapshots_no_delete"));
+        assertTrue(sql.contains("trg_editorial_input_scope_snapshot_entries_no_update"));
+        assertTrue(sql.contains("trg_editorial_closed_run_contexts_no_delete"));
+        assertTrue(sql.contains("trg_editorial_run_lineage_bindings_no_update"));
+        assertTrue(sql.contains("unique(closed_run_identity)"));
+        assertTrue(sql.contains("unique(lineage_record_identity)"));
+        assertFalse(sql.contains("alter table"));
+        assertFalse(sql.contains("drop table"));
+        assertFalse(sql.contains("delete from"));
+        assertFalse(sql.contains("insert or replace"));
+        assertFalse(sql.contains("insert into"));
+        assertFalse(sql.contains("editorial_projects ("));
+        assertFalse(sql.contains("editorial_chapters ("));
+        assertFalse(sql.contains("editorial_runs ("));
+    }
 }
