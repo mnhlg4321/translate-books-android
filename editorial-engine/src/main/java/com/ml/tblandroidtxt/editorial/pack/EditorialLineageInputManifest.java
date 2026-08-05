@@ -2,6 +2,7 @@ package com.ml.tblandroidtxt.editorial.pack;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -13,7 +14,14 @@ public final class EditorialLineageInputManifest {
     public EditorialLineageInputManifest(String manifestVersion,
                                          List<EditorialLineageInputEntry> entries) {
         this.manifestVersion = Objects.requireNonNull(manifestVersion, "manifestVersion");
-        this.entries = Collections.unmodifiableList(new ArrayList<>(Objects.requireNonNull(entries, "entries")));
+        ArrayList<EditorialLineageInputEntry> canonicalEntries =
+                new ArrayList<>(Objects.requireNonNull(entries, "entries"));
+        canonicalEntries.sort(Comparator.comparing(EditorialLineageInputEntry::role)
+                .thenComparingInt(EditorialLineageInputEntry::ordinal)
+                .thenComparing(EditorialLineageInputEntry::inputHash)
+                .thenComparingLong(EditorialLineageInputEntry::byteCount)
+                .thenComparingLong(EditorialLineageInputEntry::itemCount));
+        this.entries = Collections.unmodifiableList(canonicalEntries);
     }
 
     public String manifestVersion() { return manifestVersion; }
