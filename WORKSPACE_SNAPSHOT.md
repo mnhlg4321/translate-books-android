@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Snapshot updated: `2026-08-05` (G2-C1B1-B SQLite v16 append-only lineage persistence review stop; no importer wiring, promotion, certification, activation, binding or execution)
+- Snapshot updated: `2026-08-05` (G2-C1B1-C0 lineage creation boundary review stop; no importer wiring, migration, promotion, certification, activation, binding or execution)
 - Current version: `4.15`/code62 remains the released product; latest development archive is `4.16-dev.39`/code101. SQLite source version is v16 and Editorial execution remains intentionally blocked.
-- Current branch: `feature/v4.16-g2-c1b1b`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned and unstaged. The branch was created after C1A snapshot correction commit `3fcf039be0185b22567e75f34a970bf75ba5ea6a`.
-- Current commit: `1d6fbae` (implementation baseline immediately before this documentation/checklist/snapshot state commit; intentionally not self-referential)
+- Current branch: `feature/v4.16-g2-c1b1c0`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned and unstaged. The branch was created from B1B HEAD `79ff13260d4864900082494ef6c628a943e1478f` after baseline verification.
+- Current commit: `79ff13260d4864900082494ef6c628a943e1478f` (implementation baseline immediately before this C0 documentation/checklist/snapshot state commit; intentionally not self-referential)
 - Current build: `artifacts/builds/v4.16-dev.39/build-20260805-124714/TranslateBooks-v4.16-dev.39-code101.apk`, SHA-256 `BF5C7EB41A26242C171B04977182A0A1378BF1F8269B34E77A98D0CC13E61F30`; matching five-file payload is under `backup/builds/v4.16-dev.39/build-20260805-124714/`. Source ZIP SHA-256 is `7EE2512AA71E39E4C12BD17697C981B6B11A12F7C4B34EDF8C95C47C1C762E8C`. Final verification passed engine `74/74`, app JVM `163/163`, Android-test Java compilation, lint `0` errors/`53` warnings, `git diff --check`, and direct device instrumentation `20/20`; the released v4.15/code62 archive remains unchanged.
 
 ## G2-C1B1-A exact-parent lineage handoff
@@ -13,7 +13,15 @@
 - Actual test results: `:editorial-engine:test` `74/74`, `:app:testDebugUnitTest` `163/163`, Android-test Java compilation PASS, `:app:lintDebug` PASS with `0` errors/`53` warnings, `git diff --check` PASS. Direct device runner passed lineage `11/11` and compatibility migration `9/9`; isolated migration/append QA passed. No real production database existed on the device at final inspection, so real-data continuity is not claimed.
 - Protected identity: canonical profile hash `2d4e2f76dc5defcfb98cfd36cec49b0e5454cb3462db93a6b1586f7784eb91b6`, machine fingerprint `6410f374ce175cbc6fc32484f5cd9635888b9297b01d882923af06ccd4ac1e4c`; catalog still confirms only `pack.integrity.sha256.v1`; `EditorialSafe4Pack.executionEnabled()` remains false.
 - Unchanged boundaries: no production evidence-catalog promotion, profile update/version, importer/runtime call site, compatibility-history reevaluation, certification, Golden Replay, activation, project binding or execution. SQLite v16 lineage persistence exists only as an unused append/read boundary.
-- Pending: review/approve the completed G2-C1B1-B persistence stop. Do not begin G2-C1B1-C importer/runtime wiring without separate approval.
+- Completed: G2-C1B1-B persistence review stop is accepted as the v16 append/read boundary; the current C0 review explicitly keeps importer/runtime wiring separate.
+
+## G2-C1B1-C0 lineage creation boundary handoff
+
+- Completed: read-only audit of pack ZIP import, project/chapter preparation, run/evaluation creation, v15 compatibility evidence, v16 lineage storage and current repository identity sources. The authoritative lineage event is future `RUN_CONTEXT_CLOSED` with a frozen manifest and stable run identity; ZIP import and project/chapter preparation do not create lineage.
+- Handoff: `EDITORIAL_PACK_PLATFORM_G2_C1B1C0_LINEAGE_CREATION_BOUNDARY.md`; checklist: `release_checklists/v4.16-g2-c1b1c0.md`. Exact identity gaps are stable project identity, input-scope identity, production run creator and explicit parent/checkpoint selection; no placeholder, pack ID, import ID, SQLite row ID or random UUID was introduced.
+- Verification: read-only engine `74/74`, app JVM `163/163`, combined `237/237`, failures/errors/skips `0/0/0`; `git diff --check` PASS. No APK was built or installed; latest artifact remains `4.16-dev.39`/code101.
+- Status: `G2-C1B1C0_BOUNDARY_PLAN: PASS`; `LINEAGE_RUNTIME_WIRING: NOT_STARTED`; `LINEAGE_CAPABILITY_PROMOTION: NOT_STARTED`; `SAFE4_EXECUTION_READINESS: BLOCKED`. The protected profile/catalog, SQLite v16, pack/evaluation history and QA blocked boundary are unchanged.
+- Pending: separately approve exactly `G2-C1B1-C1` for the explicit lineage runtime context/service seam. Do not connect importer, create lineage rows, add migration, or begin C1 automatically.
 
 ## G2-C1A executable-contract plan handoff
 
