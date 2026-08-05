@@ -141,7 +141,6 @@ public final class EditorialPackImportService {
             }
             EditorialPackManifest manifest = integrity.manifest();
             notifyState(progress, EditorialPackImportState.INTEGRITY_VALIDATED);
-            updateImport(importId, EditorialPackImportState.INTEGRITY_VALIDATED, "", manifest.packId(), manifest.version(), manifest.canonicalPackHash(), false, null);
             // Duplicate identity/hash checks precede evaluation. Re-import is a read-only lookup,
             // never a new resolver call or a new compatibility history entry.
             ExistingPack existing = existingPack(manifest);
@@ -159,7 +158,10 @@ public final class EditorialPackImportService {
                         ? CompatibilityDecision.blocked(EditorialCompatibilityReasonCode.BLOCKED, "Existing pack has no compatibility row")
                         : CompatibilityDecision.persisted(persisted);
                 String existingReason = persisted == null ? "PACK_ALREADY_EXISTS" : persisted.reasonCode.name();
-                updateImport(importId, existing.state, existingReason, manifest.packId(), manifest.version(), manifest.canonicalPackHash(), false, existing.id);
+                // v14 keeps a unique non-empty import hash index. A duplicate import
+                // row therefore retains an empty hash and points at the immutable
+                // existing pack row instead of overwriting/claiming its hash.
+                updateImport(importId, existing.state, existingReason, manifest.packId(), manifest.version(), "", false, existing.id);
                 storage.deleteOwnedStaging(importId);
                 notifyState(progress, existing.state);
                 return result(importId, existing.state, EditorialPackImportError.NONE, existingReason, manifest, existingDecision, existing.storageKey, true);
@@ -170,6 +172,7 @@ public final class EditorialPackImportService {
                         "Canonical hash is already stored under a different identity", manifest.packId(), manifest.version(), manifest.canonicalPackHash(), null, false);
             }
 
+            updateImport(importId, EditorialPackImportState.INTEGRITY_VALIDATED, "", manifest.packId(), manifest.version(), manifest.canonicalPackHash(), false, null);
             CompatibilityDecision compatibility = evaluate(manifest);
             String compatibilityReason = compatibilityReason(compatibility);
             notifyState(progress, EditorialPackImportState.COMPATIBILITY_EVALUATED);

@@ -105,7 +105,7 @@ public class EditorialPackRuntimeWiringInstrumentedTest {
         EditorialPackImportResult second = service.importPack(entries(fixture));
 
         assertEquals(EditorialPackImportState.STORED_BLOCKED, first.state());
-        assertTrue(second.alreadyExisted());
+        assertTrue("second=" + second, second.alreadyExisted());
         assertEquals(EditorialPackImportState.STORED_BLOCKED, second.state());
         assertEquals(1, resolverCalls.get());
         assertEquals(1, countRows("editorial_packs"));
