@@ -470,9 +470,21 @@
 - Regression status: Wrapper/JBR read-only `:editorial-engine:test` `105/105`, `:app:testDebugUnitTest` `164/164`, failures/errors/skips `0/0/0`; `git diff --check` PASS. No APK, instrumentation, lint, migration, database row, or D: candidate activity.
 - Next step: review `EDITORIAL_PACK_PLATFORM_G2_C1B1C2B0_PRODUCTION_CALLER_BOUNDARY_PLAN.md`; exactly one proposed next implementation step is `G2-C1B1-C2-B1` after approval, and it must stop if the real lifecycle event is still absent.
 
+## G2-C1B1-C2-B1 lineage coordinator and recovery (2026-08-06)
+
+- Current version: `4.16-dev.45` / code107, event `build-20260806-090226`.
+- Current branch: `feature/v4.16-g2-c1b1c2b1`.
+- Current commit: `616a0184a2df2462c3adca316f59cbd70e7d88b9` is the implementation baseline immediately before the B1 source group commit; final source/documentation commits are separate. The three protected `.idea/*` files remain user-owned, unstaged and uncommitted.
+- Current build: `artifacts/builds/v4.16-dev.45/build-20260806-090226/TranslateBooks-v4.16-dev.45-code107.apk`; backup mirror is `backup/builds/v4.16-dev.45/build-20260806-090226/`; APK SHA-256 `F0A8971AA9E8A4D08CF08A63857BC37F17BD6DEFE264CE4F2813DAAF8A1211A9`; archive-first provenance and parity PASS.
+- Completed tasks: immutable closure-event/command/result/status contracts; production resolver fail-closed; Option B coordinator; exact ROOT/CHILD parent lock; injected clock; replay/recovery; shared transaction invocation; exact readback; isolated focused device B1 `7/7` PASS.
+- Pending tasks: commit final handoff/state/checklist, verify final HEAD/status and stop at review. No production caller or C2-B2 work is pending within this approved phase.
+- Known bugs/limitations: full connected suite has three unrelated failures described in BUILD_STATE; production `RUN_CONTEXT_CLOSED` remains absent; production profile only has `pack.integrity.sha256.v1`; no production closed-run/lineage/binding; `executionEnabled()` remains false; `REAL_DATA_CONTINUITY: NOT_CLAIMED`.
+- Regression status: JVM `269/269` pass, 0 failures/errors/skips; Android-test Java compilation PASS; lint 0 errors/53 warnings; diff-check PASS; focused exact APK/device B1 `7/7` PASS; global connected suite not clean due unrelated failures.
+- Next step: review `EDITORIAL_PACK_PLATFORM_G2_C1B1C2B1_LINEAGE_COORDINATOR.md`; resolve/approve the unrelated connected-suite blocker before separately considering C2-B2. Do not start C2-B2 automatically.
+
 ## Next step
 
-`G2-C0C-B2`, `G2-C1B1-A`, `G2-C1B1-B`, `G2-C1B1-C0`, `G2-C1B1-C1`, `G2-C1B1-C1.5-A`, `G2-C1B1-C1.5-B`, `G2-C1B1-C2-A` and `G2-C1B1-C2-B0` are PASS / REVIEW STOP. The exact next action is review/approve the C2-B1 coordinator plan; the real `RUN_CONTEXT_CLOSED` event must be identified first. Do not start C2-B1 automatically.
+`G2-C0C-B2`, `G2-C1B1-A`, `G2-C1B1-B`, `G2-C1B1-C0`, `G2-C1B1-C1`, `G2-C1B1-C1.5-A`, `G2-C1B1-C1.5-B`, `G2-C1B1-C2-A` and `G2-C1B1-C2-B0` remain PASS / REVIEW STOP. G2-C1B1-C2-B1 is IMPLEMENTED but BLOCKED for global PASS by unrelated connected-suite failures. The exact next action is review this B1 handoff and resolve that blocker; do not start C2-B2 automatically.
 
 ## Resume rule
 
