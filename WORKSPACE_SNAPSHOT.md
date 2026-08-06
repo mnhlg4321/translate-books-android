@@ -458,9 +458,21 @@
 - Regression status: PASS. Protected `.idea/compiler.xml`, `.idea/gradle.xml`, `.idea/misc.xml` remain untouched by this phase, unstaged and uncommitted.
 - Next step: separately review and approve G2-C1B1-C2-B for production caller wiring at RUN_CONTEXT_CLOSED; do not start it automatically.
 
+## G2-C1B1-C2-B0 production caller boundary plan (2026-08-06)
+
+- Current version: `4.16-dev.42` / code104; no APK was built in B0.
+- Current branch: `feature/v4.16-g2-c1b1c2b0`.
+- Current commit: `ddec1acebec448f7f206142cd011dfa633a91816` is the implementation baseline immediately before this B0 documentation/state commit; no production code or database implementation changed. The protected `.idea/compiler.xml`, `.idea/gradle.xml`, and `.idea/misc.xml` remain user-owned, untouched, unstaged and uncommitted.
+- Current build: accepted `4.16-dev.42`/code104, event `build-20260805-190244`; APK SHA-256 `961D4DDF531EF3703EDFDFB3DF55BCBF26CFC8BF512076B25D63DB55AAC01A7B`; source ZIP SHA-256 `BE80D9D197AAA7493AAFC4DE9C5D554CEF8DF7C37EC8BF4A632268FFE36E9266`; artifact/backup parity remains PASS.
+- Completed tasks: source audit of project/chapter/input/run/import/startup/retry/delete lifecycle; evidence that production `RUN_CONTEXT_CLOSED` is absent and no production `editorial_runs` INSERT/creator exists; boundary plan with one future caller proposal, state machine, Option-B atomicity/recovery matrix, exact ROOT/CHILD selection, retention contract, compatibility blocker, and C2-B1/B2 split.
+- Pending tasks: review/approve C2-B1 coordinator plan; identify/build a real production run lifecycle and explicit `RUN_CONTEXT_CLOSED` event before any caller wiring. No C2-B1/B2, capability promotion, certification, activation, project binding, or execution is authorized by B0.
+- Known bugs/limitations: current production profile remains non-executable and only declares `pack.integrity.sha256.v1`; `EditorialSafe4Pack.executionEnabled()` remains false; no production closed-run/lineage/binding may be created; retention preflight is read-only and delete UX wiring is deferred; real-data continuity is not claimed from this plan-only phase.
+- Regression status: Wrapper/JBR read-only `:editorial-engine:test` `105/105`, `:app:testDebugUnitTest` `164/164`, failures/errors/skips `0/0/0`; `git diff --check` PASS. No APK, instrumentation, lint, migration, database row, or D: candidate activity.
+- Next step: review `EDITORIAL_PACK_PLATFORM_G2_C1B1C2B0_PRODUCTION_CALLER_BOUNDARY_PLAN.md`; exactly one proposed next implementation step is `G2-C1B1-C2-B1` after approval, and it must stop if the real lifecycle event is still absent.
+
 ## Next step
 
-`G2-C0C-B2`, `G2-C1B1-A`, `G2-C1B1-B`, `G2-C1B1-C0`, `G2-C1B1-C1`, `G2-C1B1-C1.5-A`, `G2-C1B1-C1.5-B` and `G2-C1B1-C2-A` are PASS / REVIEW STOP. The exact next action is review C2-A and separately approve C2-B production caller wiring at `RUN_CONTEXT_CLOSED`. Do not start it automatically.
+`G2-C0C-B2`, `G2-C1B1-A`, `G2-C1B1-B`, `G2-C1B1-C0`, `G2-C1B1-C1`, `G2-C1B1-C1.5-A`, `G2-C1B1-C1.5-B`, `G2-C1B1-C2-A` and `G2-C1B1-C2-B0` are PASS / REVIEW STOP. The exact next action is review/approve the C2-B1 coordinator plan; the real `RUN_CONTEXT_CLOSED` event must be identified first. Do not start C2-B1 automatically.
 
 ## Resume rule
 
