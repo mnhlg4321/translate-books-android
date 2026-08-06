@@ -1,5 +1,17 @@
 # Workspace Snapshot
 
+## G2-C1B1-C2B2A-1 run lifecycle contract review stop
+
+- Snapshot updated: `2026-08-06` (A1 contract PASS / review stop; no implementation started).
+- Current version: released product remains `4.15`/code62; latest development archive remains `4.16-dev.48`/code110, APK SHA-256 `B7E07C945602CF65572702DDF19579961CBA0070024DB9C5FFF89585C825F2C3`; SQLite v17.
+- Current branch: `feature/v4.16-g2-c1b1c2b2a1`; protected `.idea/compiler.xml`, `.idea/gradle.xml`, and `.idea/misc.xml` remain user-owned, unstaged and uncommitted.
+- Current commit: `8d2a7c01dc1cf02eeaefff1690a92e5912a153c6` is the verified implementation baseline immediately before the A1 documentation/snapshot commit.
+- Completed: source lifecycle audit, single-owner selection, immutable closure-event contract, ROOT/CHILD and retention boundary, production-equivalent evidence contract, v17 insufficiency decision, and exact draft v18 DDL. Read-only JVM `269/269`, JDK preflight and diff-check pass.
+- Pending: user review of `EDITORIAL_PACK_PLATFORM_G2_C1B1C2B2A1_RUN_LIFECYCLE_EVENT_CONTRACT.md`. C2B2A-2 schema/DAO and C2B2A-3 lifecycle implementation are not started; D0 promotion remains blocked.
+- Known blockers: current production `RUN_CONTEXT_CLOSED` owner/event is absent; current profile is non-executable and only declares `pack.integrity.sha256.v1`; v18 is only a proposal and no migration is authorized. `executionEnabled()` remains false.
+- Regression status: A1 read-only verification PASS; no source/database change. Retained R2 connected baseline remains 82/82 with 0 failures/errors and 1 approved skip.
+- Next step: review/approve A1, then separately approve C2B2A-2. Do not implement A2/A3, caller wiring, promotion, Pronoun/Pair, certification, activation, project binding or execution automatically.
+
 ## G2-C1B1-D0 promotion audit review stop
 
 - Snapshot updated: `2026-08-06` (D0 eligibility audit blocked; dependent work stopped).

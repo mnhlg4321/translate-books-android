@@ -1,5 +1,16 @@
 # Build State
 
+## Current G2-C1B1-C2B2A-1 run lifecycle contract review stop
+
+- Review branch: `feature/v4.16-g2-c1b1c2b2a1`; verified implementation baseline before the A1 documentation commit is `8d2a7c01dc1cf02eeaefff1690a92e5912a153c6` from `feature/v4.16-g2-c1b1d0-d1-c1b2a`.
+- A1 result: `G2-C1B1C2B2A1_CONTRACT: PASS / REVIEW STOP`; future owner identified as `EditorialAuthoritativeRunLifecycleService`; legacy `editorial_runs` is not reusable; closure-event contract and ROOT/CHILD ownership are decided.
+- Storage decision: v17 is insufficient for lossless closure-event identity/payload, explicit node kind, exact parent selector and attestation/reference. `SQLITE_V18_REQUIRED: YES` under the SQLite-authoritative-store assumption, proposal only; no migration was implemented.
+- Verification: read-only Wrapper JVM regression `269/269`, 0 failures/errors/skips; JBR/JDK 21.0.10 preflight PASS; `git diff --check` PASS. No connected suite or APK build was needed because only documentation changed.
+- Production boundary unchanged: production `RUN_CONTEXT_CLOSED` event/owner remains absent, default resolver remains fail-closed, profile/catalog and execution remain unchanged, SQLite remains v17, and no database row/caller/lifecycle implementation was created.
+- Artifact: retained `4.16-dev.48`/code110, event `build-20260806-093920`, APK SHA-256 `B7E07C945602CF65572702DDF19579961CBA0070024DB9C5FFF89585C825F2C3`, source ZIP SHA-256 `E5E927A5C7A32501F11555BB3A74A633A76DE4218A58DF8F2C2E9B5551759B23`; artifact/backup payload parity remains unchanged.
+- Protected `.idea/compiler.xml`, `.idea/gradle.xml`, and `.idea/misc.xml` remain user-owned, unstaged and uncommitted.
+- Exact next step: review A1 contract; only after separate approval may C2B2A-2 schema/DAO work be considered. C2B2A-3, D0-R, D1, Pronoun/Pair, certification, activation and execution remain not started/blocked.
+
 ## Current G2-C1B1-D0 promotion eligibility review stop
 
 - Review branch: `feature/v4.16-g2-c1b1d0-d1-c1b2a`; verified implementation baseline before the D0 documentation commit is `862408a69cdc84debef6a27bad807a061a5bcc7c` from `feature/v4.16-g2-c1b1c2b1-regression`.
