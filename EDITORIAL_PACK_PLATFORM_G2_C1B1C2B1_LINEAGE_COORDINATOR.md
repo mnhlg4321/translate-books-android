@@ -2,7 +2,7 @@
 
 ## Review-stop status
 
-- `G2-C1B1C2B1_COORDINATOR: BLOCKED`
+- `G2-C1B1C2B1_COORDINATOR: PASS`
 - `OPTION_B_ORCHESTRATION: IMPLEMENTED`
 - `CLOSED_UNBOUND_RECOVERY: IMPLEMENTED`
 - `ROOT_CHILD_PARENT_STABILITY: PROVEN` for the injected immutable event fixture
@@ -13,14 +13,14 @@
 - `LINEAGE_CAPABILITY_PROMOTION: NOT_STARTED`
 - `SAFE4_EXECUTION_READINESS: BLOCKED`
 
-The implementation is complete for the approved B1 service boundary. Global PASS is blocked by three unrelated connected-suite failures observed on the exact archive build; the focused B1 class passed 7/7.
+The implementation is complete for the approved B1 service boundary. The previously unrelated connected-suite blocker was resolved in the separately scoped R0/R1 importer regression review; the B1 boundary itself was not changed. Global connected XML requalification passed 82 tests with 0 failures, 0 errors and 1 approved real-API skip; the focused B1 class passed 7/7 on the final code110 archive.
 
 ## Baseline and end
 
 - Start branch: `feature/v4.16-g2-c1b1c2b0`
 - Start HEAD: `616a0184a2df2462c3adca316f59cbd70e7d88b9`
-- End branch: `feature/v4.16-g2-c1b1c2b1`
-- Implementation/state commit: `ac55c78` (`feat(editorial): add B1 lineage coordinator`)
+- End branch: `feature/v4.16-g2-c1b1c2b1-regression`
+- Implementation/state commits: `ac55c78` (`feat(editorial): add B1 lineage coordinator`), R0 audit `93ac1f4`, R1 importer fix `8e08934`; R2 requalification documentation is the current review-stop group.
 - SQLite source: v17; no migration was added.
 - User-owned `.idea/compiler.xml`, `.idea/gradle.xml`, and `.idea/misc.xml` remained untouched, unstaged and uncommitted.
 
@@ -92,7 +92,7 @@ ROOT is explicit and has no parent. CHILD is explicit and carries one exact `par
 
 ## Verification evidence
 
-- Focused coordinator instrumentation on OnePlus CPH2691 / Android 15, exact archived code107: `7/7 PASS`, `0` failures/errors/skips. Covered production resolver zero-write fail-closed, ROOT success/replay, CHILD exact parent, missing parent/CLOSED_UNBOUND, event collision, status read-only and invalid command/root-parent contracts.
+- Focused coordinator instrumentation on OnePlus CPH2691 / Android 15, exact archived code110: `7/7 PASS`, `0` failures/errors/skips. Covered production resolver zero-write fail-closed, ROOT success/replay, CHILD exact parent, missing parent/CLOSED_UNBOUND, event collision, status read-only and invalid command/root-parent contracts.
 - `:editorial-engine:test`: `105/105`.
 - `:app:testDebugUnitTest`: `164/164`.
 - Combined JVM: `269/269`, `0` failures, `0` errors, `0` skips.
@@ -100,10 +100,10 @@ ROOT is explicit and has no parent. CHILD is explicit and carries one exact `par
 - `:app:lintDebug`: PASS, 0 errors / 53 warnings.
 - `git diff --check`: PASS.
 - Wrapper/JDK: Gradle `9.3.0`, JBR/JDK `21.0.10`, Java source/target `17`.
-- Archive-first build: `4.16-dev.45`, code107, event `build-20260806-090226`; APK SHA-256 `F0A8971AA9E8A4D08CF08A63857BC37F17BD6DEFE264CE4F2813DAAF8A1211A9`; source ZIP SHA-256 `80CF87749E64DA0907CEADEC23B130594542770D0DBC59A4AA88F339F2A5880B`. Artifact/backup parity and manifest hashes passed; `BUILD_INFO.json` records Gradle/JDK/AGP provenance and source snapshot `602529b757ec89c7f0ebc61e903b27de460fe3bd`.
-- Device install: exact archive installed with `adb install -r` over the prior device build; no `pm clear`; production database was empty, therefore `REAL_DATA_CONTINUITY: NOT_CLAIMED`.
+- Archive-first requalification build: `4.16-dev.48`, code110, event `build-20260806-093920`; APK SHA-256 `B7E07C945602CF65572702DDF19579961CBA0070024DB9C5FFF89585C825F2C3`; source ZIP SHA-256 `E5E927A5C7A32501F11555BB3A74A633A76DE4218A58DF8F2C2E9B5551759B23`. Artifact/backup parity and manifest hashes passed; `BUILD_INFO.json` records Gradle/JDK/AGP provenance and source snapshot `478cb6268a7fde0b0a487678485ee8c52868f007`.
+- Connected UTP requalification: two complete runs, XML `82` tests, `0` failures, `0` errors, `1` approved real-API skip. The final XML includes importer `13/13`, management `3/3` and B1 `7/7`. Exact archive was installed with `adb install -r`; no `pm clear`. Existing device data/cache are present, so `REAL_DATA_CONTINUITY: NOT_CLAIMED`.
 
-The global connected suite was attempted on the exact archive build but is not clean: two unrelated ZIP expectation failures and one `EditorialPackManagementPageInstrumentedTest` failure occurred; one explicitly approved real-API test was skipped. These failures were not modified by B1 and block a global PASS claim.
+The global connected suite is now clean after the approved importer-only R0/R1 fix. The management test's historical empty-body abort was not reproduced by isolated/class/group/direct or two final UTP runs; no management/UI change was made. B1 is requalified PASS, while production caller wiring remains intentionally absent.
 
 ## Rollback and review boundary
 
@@ -113,4 +113,4 @@ The implementation rollback boundary is the source/state commit `ac55c78`; there
 
 Checklist: `release_checklists/v4.16-g2-c1b1c2b1.md`.
 
-Exactly one next step: review this B1 handoff and resolve/approve the unrelated connected-suite blocker. Do not start C2-B2 or production run-lifecycle work automatically.
+Exactly one next step: review/approve this B1 handoff and R0→R1→R2 evidence. Do not start C2-B2 or production run-lifecycle work automatically.

@@ -1,5 +1,13 @@
 # Workspace Snapshot
 
+- Snapshot updated: `2026-08-06` (G2-R2 global regression and B1 requalification review stop)
+- Current version: released product remains `4.15`/code62; latest development archive is `4.16-dev.48`/code110, APK SHA-256 `B7E07C945602CF65572702DDF19579961CBA0070024DB9C5FFF89585C825F2C3`; SQLite v17.
+- Current branch: `feature/v4.16-g2-c1b1c2b1-regression`; protected `.idea/compiler.xml`, `.idea/gradle.xml`, `.idea/misc.xml` remain user-owned, unstaged and uncommitted.
+- Current commit: `8e0893438e51da2abe28dde447ae6450bb891901` is the implementation baseline immediately before this R2 review-stop documentation commit.
+- Completed: R0 root-cause audit PASS; R1 importer-only fix PASS; R2 archive-first code110 build and two complete UTP connected runs PASS. XML: `82` tests, `0` failures, `0` errors, `1` approved skip. Post-commit JVM `269/269`, Android-test compilation, lint and diff-check pass; final focused B1 `7/7` PASS.
+- Regression status: `G2-C1B1C2B1_COORDINATOR: PASS`. The B1 coordinator boundary remains isolated: no production closure event/caller, schema/profile/catalog, production lineage/binding row, capability promotion, certification, activation or execution. `executionEnabled()` remains false.
+- Pending: review/approval only. The next implementation phase is not started; `REAL_DATA_CONTINUITY: NOT_CLAIMED`.
+
 - Snapshot updated: `2026-08-06` (G2-R1 minimal importer regression fix; R1 PASS, before post-commit R2 archive/global gate)
 - Current version: released product remains `4.15`/code62; latest R1 archive is `4.16-dev.47`/code109, APK SHA-256 `A16F1D4B9D2DAFCF16E9FC038878BD4C58D8D3F46A2666BAF4C5091E4C0D0567`; SQLite v17.
 - Current branch: `feature/v4.16-g2-c1b1c2b1-regression`; protected `.idea/compiler.xml`, `.idea/gradle.xml`, `.idea/misc.xml` remain user-owned, unstaged and uncommitted.

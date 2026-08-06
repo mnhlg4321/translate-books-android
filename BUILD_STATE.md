@@ -1,5 +1,14 @@
 # Build State
 
+## Current G2-R2 regression review stop
+
+- Review branch: `feature/v4.16-g2-c1b1c2b1-regression`; R1 implementation commit `8e0893438e51da2abe28dde447ae6450bb891901`; R2 documentation/handoff is the final group on this branch.
+- R2 archive-first build: `4.16-dev.48`/code110, event `build-20260806-093920`, APK SHA-256 `B7E07C945602CF65572702DDF19579961CBA0070024DB9C5FFF89585C825F2C3`, source ZIP SHA-256 `E5E927A5C7A32501F11555BB3A74A633A76DE4218A58DF8F2C2E9B5551759B23`; artifact/backup five-file parity and manifest hashes PASS.
+- R2 regression: UTP connected suite completed twice, each XML `82` tests with `0` failures, `0` errors and `1` approved real-API skip. Import `13/13`, management `3/3`, B1 `7/7` are present and pass. Post-commit engine `105/105`, app JVM `164/164`, Android-test compilation, lint `0` errors/`53` warnings, toolchain preflight and `git diff --check` pass.
+- B1 requalification: `G2-C1B1C2B1_COORDINATOR: PASS`; implementation boundary is unchanged. Production closure event remains absent, caller owner unresolved, runtime wiring/capability promotion not started, and SAFE4 execution remains blocked.
+- Device boundary: exact code110 was installed with `adb install -r`, no `pm clear`; isolated fixtures used random databases; existing device data/cache are not claimed as real-data continuity. `REAL_DATA_CONTINUITY: NOT_CLAIMED`.
+- Exact next step: review/approve the R0→R1→R2 handoff. Do not start C2-B2, production lifecycle, retention UX, capability promotion, certification, activation, project binding or execution.
+
 ## Current G2-R1 regression review
 
 - Review branch: `feature/v4.16-g2-c1b1c2b1-regression`; implementation baseline before the R1 evidence/implementation commit is `93ac1f46f0fd637239287968fb821f091929c598`.
