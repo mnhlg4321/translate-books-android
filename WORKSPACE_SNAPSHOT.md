@@ -1,5 +1,17 @@
 # Workspace Snapshot
 
+## G2-C1B1-D0 promotion audit review stop
+
+- Snapshot updated: `2026-08-06` (D0 eligibility audit blocked; dependent work stopped).
+- Current version: released product remains `4.15`/code62; latest development archive remains `4.16-dev.48`/code110, APK SHA-256 `B7E07C945602CF65572702DDF19579961CBA0070024DB9C5FFF89585C825F2C3`; SQLite v17.
+- Current branch: `feature/v4.16-g2-c1b1d0-d1-c1b2a`; protected `.idea/compiler.xml`, `.idea/gradle.xml`, and `.idea/misc.xml` remain user-owned, unstaged and uncommitted.
+- Current commit: `862408a69cdc84debef6a27bad807a061a5bcc7c` is the verified implementation baseline immediately before the D0 documentation/snapshot commit.
+- Completed: D0 audit and permitted production-lifecycle dependency plan. Core/persistence/orchestration evidence passes; fixed fixture manifest hash is retained; production positive closure-event/context source is absent, so promotion is blocked. Read-only JVM regression is 269/269 with 0 failures/errors/skips; JDK preflight and diff-check pass.
+- Pending: review stop for `EDITORIAL_PACK_PLATFORM_G2_C1B1D0_LINEAGE_PROMOTION_AUDIT.md` and `EDITORIAL_PACK_PLATFORM_G2_C1B1C2B2A_PRODUCTION_LIFECYCLE_DEPENDENCY_PLAN.md`. D1 and C1B2-A are not started.
+- Known bugs/blockers: no production `RUN_CONTEXT_CLOSED` owner/event, no production positive context, current profile non-executable and only declares `pack.integrity.sha256.v1`; `executionEnabled()` remains false. No migration/caller/profile/catalog/runtime change was made.
+- Regression status: D0 read-only checks PASS; promotion eligibility BLOCKED; R2 connected evidence remains PASS and B1 remains PASS within its isolated boundary.
+- Next step: user review of the D0 blocker and lifecycle dependency plan; no lifecycle/schema v18/caller implementation, D1 promotion, C1B2-A, certification, activation or execution.
+
 - Snapshot updated: `2026-08-06` (G2-R2 global regression and B1 requalification review stop)
 - Current version: released product remains `4.15`/code62; latest development archive is `4.16-dev.48`/code110, APK SHA-256 `B7E07C945602CF65572702DDF19579961CBA0070024DB9C5FFF89585C825F2C3`; SQLite v17.
 - Current branch: `feature/v4.16-g2-c1b1c2b1-regression`; protected `.idea/compiler.xml`, `.idea/gradle.xml`, `.idea/misc.xml` remain user-owned, unstaged and uncommitted.

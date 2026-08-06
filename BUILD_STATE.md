@@ -1,5 +1,16 @@
 # Build State
 
+## Current G2-C1B1-D0 promotion eligibility review stop
+
+- Review branch: `feature/v4.16-g2-c1b1d0-d1-c1b2a`; verified implementation baseline before the D0 documentation commit is `862408a69cdc84debef6a27bad807a061a5bcc7c` from `feature/v4.16-g2-c1b1c2b1-regression`.
+- D0 result: `G2-C1B1D0_PROMOTION_AUDIT: BLOCKED`; lineage core, v16/v17 persistence and B1 orchestration implementation evidence pass, but `PRODUCTION_POSITIVE_CONTEXT_SOURCE: ABSENT` and `PRODUCTION_CALLER_REQUIRED_FOR_PROMOTION: YES` for this evidence package. `lineage.exact-parent.v1` is not promoted.
+- Evidence: fixed root-child-v1 manifest SHA-256 `6D5429B5F75DCE7CCBC97C62413421E43E1413E929B5D3351F93D93BDF769508`; current read-only JVM regression `269/269`, 0 failures/errors/skips; JBR/JDK 21.0.10 preflight and `git diff --check` pass. R2 retained connected evidence remains 82/82, 0 failures/errors, 1 approved skip, twice.
+- Production boundary: no `RUN_CONTEXT_CLOSED` event owner or production positive closure source exists; default resolver remains `CLOSURE_EVENT_UNAVAILABLE`; no production lineage/binding row, profile/catalog mutation, SQLite migration, or execution change was made. SQLite remains v17 and `EditorialSafe4Pack.executionEnabled()` remains false.
+- Permitted dependent output: `EDITORIAL_PACK_PLATFORM_G2_C1B1C2B2A_PRODUCTION_LIFECYCLE_DEPENDENCY_PLAN.md` records the lifecycle/event-store dependency and proposes a separately approved additive schema phase (v18 only if required); no implementation was started.
+- Artifact: retained `4.16-dev.48`/code110, event `build-20260806-093920`, APK SHA-256 `B7E07C945602CF65572702DDF19579961CBA0070024DB9C5FFF89585C825F2C3`, source ZIP SHA-256 `E5E927A5C7A32501F11555BB3A74A633A76DE4218A58DF8F2C2E9B5551759B23`; no new build was required for docs-only D0.
+- Protected `.idea/compiler.xml`, `.idea/gradle.xml`, and `.idea/misc.xml` remain user-owned, unstaged and uncommitted.
+- Exact next step: review the D0 audit and lifecycle dependency plan. D1 promotion and C1B2-A Pronoun/Pair planning are not started and must not begin until D0 is eligible.
+
 ## Current G2-R2 regression review stop
 
 - Review branch: `feature/v4.16-g2-c1b1c2b1-regression`; R1 implementation commit `8e0893438e51da2abe28dde447ae6450bb891901`; R2 documentation/handoff is the final group on this branch.
