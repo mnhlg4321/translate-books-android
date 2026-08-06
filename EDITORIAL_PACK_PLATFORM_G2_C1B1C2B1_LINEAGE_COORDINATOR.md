@@ -100,7 +100,7 @@ ROOT is explicit and has no parent. CHILD is explicit and carries one exact `par
 - `:app:lintDebug`: PASS, 0 errors / 53 warnings.
 - `git diff --check`: PASS.
 - Wrapper/JDK: Gradle `9.3.0`, JBR/JDK `21.0.10`, Java source/target `17`.
-- Archive-first build: `4.16-dev.45`, code107, event `build-20260806-090226`; APK SHA-256 `F0A8971AA9E8A4D08CF08A63857BC37F17BD6DEFE264CE4F2813DAAF8A1211A9`. Artifact/backup parity and manifest hashes passed.
+- Archive-first build: `4.16-dev.45`, code107, event `build-20260806-090226`; APK SHA-256 `F0A8971AA9E8A4D08CF08A63857BC37F17BD6DEFE264CE4F2813DAAF8A1211A9`; source ZIP SHA-256 `80CF87749E64DA0907CEADEC23B130594542770D0DBC59A4AA88F339F2A5880B`. Artifact/backup parity and manifest hashes passed; `BUILD_INFO.json` records Gradle/JDK/AGP provenance and source snapshot `602529b757ec89c7f0ebc61e903b27de460fe3bd`.
 - Device install: exact archive installed with `adb install -r` over the prior device build; no `pm clear`; production database was empty, therefore `REAL_DATA_CONTINUITY: NOT_CLAIMED`.
 
 The global connected suite was attempted on the exact archive build but is not clean: two unrelated ZIP expectation failures and one `EditorialPackManagementPageInstrumentedTest` failure occurred; one explicitly approved real-API test was skipped. These failures were not modified by B1 and block a global PASS claim.
