@@ -530,6 +530,18 @@
 - Regression status: JVM `269/269` pass, 0 failures/errors/skips; Android-test Java compilation PASS; lint 0 errors/53 warnings; diff-check PASS; focused exact APK/device B1 `7/7` PASS; global connected suite not clean due unrelated failures.
 - Next step: review `EDITORIAL_PACK_PLATFORM_G2_C1B1C2B1_LINEAGE_COORDINATOR.md`; resolve/approve the unrelated connected-suite blocker before separately considering C2-B2. Do not start C2-B2 automatically.
 
+## G2-C1B1-C2B2A-1.5 authoritative run selector and v18 schema freeze (2026-08-06)
+
+- Current version: `4.16-dev.48` / code110; no new APK was built because this was a plan/schema-freeze phase.
+- Current branch: `feature/v4.16-g2-c1b1c2b2a15`.
+- Current commit: `6dcfd6f161355332d29a4a9bbfeb7799c2267131` is the implementation baseline immediately before this documentation/state group; the three protected `.idea/*` files remain user-owned, untouched by this work, unstaged and uncommitted.
+- Current build: retained `4.16-dev.48`/code110, APK SHA-256 `B7E07C945602CF65572702DDF19579961CBA0070024DB9C5FFF89585C825F2C3`, source ZIP SHA-256 `E5E927A5C7A32501F11555BB3A74A633A76DE4218A58DF8F2C2E9B5551759B23`; artifact/backup parity remains unchanged.
+- Completed tasks: resolved the legacy-authority contradiction; froze Option A authoritative declaration before closure; froze DAO-owned ordinal, `RETRY_SAME_ATTEMPT` versus `NEW_AUTHORIZED_ATTEMPT`, ROOT/CHILD persistence and parent stability; froze exact two-table additive v18 declaration/event DDL, indexes, triggers, FKs, transaction boundaries and migration matrix.
+- Pending tasks: separately approved `C2B2A2_SCHEMA_IMPLEMENTATION` only. No migration/DAO/lifecycle/event/caller/profile/catalog/lineage-promotion/Pronoun-Pair/certification/activation/execution work may start from this review stop.
+- Known bugs/limitations: production `RUN_CONTEXT_CLOSED` event/owner remains absent; current profile declares only `pack.integrity.sha256.v1`; `EditorialSafe4Pack.executionEnabled()` remains false; legacy `editorial_runs` is not reusable or authoritative; v17 remains unchanged; real-data continuity is not claimed.
+- Regression status: read-only baseline engine `105/105`, app JVM `164/164`, aggregate JVM `269/269`, failures/errors/skips `0/0/0`; JBR/JDK 21.0.10 preflight PASS; `git diff --check` PASS. No build/device/database activity was required.
+- Next step: review `EDITORIAL_PACK_PLATFORM_G2_C1B1C2B2A15_AUTHORITATIVE_RUN_SELECTOR_SCHEMA_FREEZE.md`; only after separate approval may A2 implement the frozen v18 schema/DAO. `LINEAGE_PROMOTION` and `SAFE4_EXECUTION_READINESS` remain blocked.
+
 ## Next step
 
 `G2-C0C-B2`, `G2-C1B1-A`, `G2-C1B1-B`, `G2-C1B1-C0`, `G2-C1B1-C1`, `G2-C1B1-C1.5-A`, `G2-C1B1-C1.5-B`, `G2-C1B1-C2-A` and `G2-C1B1-C2-B0` remain PASS / REVIEW STOP. G2-C1B1-C2-B1 is IMPLEMENTED but BLOCKED for global PASS by unrelated connected-suite failures. The exact next action is review this B1 handoff and resolve that blocker; do not start C2-B2 automatically.
