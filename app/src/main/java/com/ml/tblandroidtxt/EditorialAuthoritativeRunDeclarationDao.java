@@ -129,6 +129,12 @@ public final class EditorialAuthoritativeRunDeclarationDao {
         return findByIdentity(db, identity);
     }
 
+    EditorialAuthoritativeRunDeclaration findByAttemptRequestSelectorInTransaction(
+            SQLiteDatabase db, String selector) {
+        if (selector == null || selector.isBlank()) return null;
+        return findByAttemptRequestSelector(db, selector);
+    }
+
     public Optional<EditorialAuthoritativeRunDeclaration> findByAttemptRequestSelector(String selector) {
         if (selector == null || selector.isBlank()) return Optional.empty();
         try (Cursor cursor = database.editorialReadableDatabase().rawQuery(

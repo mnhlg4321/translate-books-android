@@ -180,7 +180,7 @@ public final class EditorialV18RunDeclarationEventInstrumentedTest {
         EditorialAuthoritativeRunDeclaration declaration = declarationDao().appendNewAuthorizedAttempt(
                 declarationDraft("event-request-root", "phase-1", EditorialLineageNodeKind.ROOT, null)).value();
         EditorialRunClosureEventDraft eventDraft = eventDraft(declaration, EditorialLineageNodeKind.ROOT,
-                null, snapshot.manifestFingerprint(), 0L, ATTESTATION);
+                null);
         EditorialRunClosureEventDao events = new EditorialRunClosureEventDao(repository, () -> 200L);
         EditorialClosureEventAppendPermit permit = permit(snapshot.manifestFingerprint(), ATTESTATION);
         EditorialIdentityAppendResult<EditorialRunClosureEvent> first = events.append(eventDraft, permit);
@@ -206,19 +206,18 @@ public final class EditorialV18RunDeclarationEventInstrumentedTest {
         EditorialAuthoritativeRunDeclaration declaration = declarationDao().appendNewAuthorizedAttempt(
                 declarationDraft("event-request-collisions", "phase-1", EditorialLineageNodeKind.ROOT, null)).value();
         EditorialRunClosureEventDao events = new EditorialRunClosureEventDao(repository, () -> 1L);
-        EditorialRunClosureEventDraft root = eventDraft(declaration, EditorialLineageNodeKind.ROOT, null,
-                snapshot.manifestFingerprint(), 0L, ATTESTATION);
+        EditorialRunClosureEventDraft root = eventDraft(declaration, EditorialLineageNodeKind.ROOT, null);
         assertEquals(EditorialIdentityPersistenceCode.TRUSTED_CONTEXT_MISMATCH,
                 events.append(root, null).code());
         assertEquals(EditorialIdentityPersistenceCode.EVENT_INTENT_COLLISION,
-                events.append(eventDraft(declaration, EditorialLineageNodeKind.CHILD, PARENT,
-                        snapshot.manifestFingerprint(), 0L, ATTESTATION), permit(snapshot.manifestFingerprint(), ATTESTATION)).code());
+                events.append(eventDraft(declaration, EditorialLineageNodeKind.CHILD, PARENT),
+                        permit(snapshot.manifestFingerprint(), ATTESTATION)).code());
         assertEquals(EditorialIdentityPersistenceCode.FROZEN_MANIFEST_MISMATCH,
-                events.append(eventDraft(declaration, EditorialLineageNodeKind.ROOT, null,
-                        "9".repeat(64), 0L, ATTESTATION), permit("9".repeat(64), ATTESTATION)).code());
-        assertEquals(EditorialIdentityPersistenceCode.ORDINAL_MISMATCH,
-                events.append(eventDraft(declaration, EditorialLineageNodeKind.ROOT, null,
-                        snapshot.manifestFingerprint(), 1L, ATTESTATION), permit(snapshot.manifestFingerprint(), ATTESTATION)).code());
+                events.append(eventDraft(declaration, EditorialLineageNodeKind.ROOT, null),
+                        permit("9".repeat(64), ATTESTATION)).code());
+        assertEquals(EditorialIdentityPersistenceCode.TRUSTED_CONTEXT_MISMATCH,
+                events.append(eventDraft(declaration, EditorialLineageNodeKind.ROOT, null),
+                        permitWithEvaluation("other-evaluation", snapshot.manifestFingerprint(), ATTESTATION)).code());
         assertEquals(0, count("editorial_run_closure_events"));
     }
 
@@ -230,11 +229,9 @@ public final class EditorialV18RunDeclarationEventInstrumentedTest {
         EditorialRunClosureEventDao events = new EditorialRunClosureEventDao(repository, () -> 10L);
         EditorialClosureEventAppendPermit permit = permit(snapshot.manifestFingerprint(), ATTESTATION);
         assertEquals(EditorialIdentityPersistenceCode.APPENDED, events.append(eventDraft(child,
-                EditorialLineageNodeKind.CHILD, PARENT, snapshot.manifestFingerprint(),
-                child.runAttemptOrdinal(), ATTESTATION), permit).code());
+                EditorialLineageNodeKind.CHILD, PARENT), permit).code());
         assertEquals(EditorialIdentityPersistenceCode.EVENT_PARENT_COLLISION, events.append(eventDraft(child,
-                EditorialLineageNodeKind.CHILD, OTHER_PARENT, snapshot.manifestFingerprint(),
-                child.runAttemptOrdinal(), ATTESTATION), permit).code());
+                EditorialLineageNodeKind.CHILD, OTHER_PARENT), permit).code());
         assertEquals(1, count("editorial_run_closure_events"));
     }
 
@@ -244,7 +241,7 @@ public final class EditorialV18RunDeclarationEventInstrumentedTest {
                 declarationDraft("immutable-request", "phase-1", EditorialLineageNodeKind.ROOT, null)).value();
         EditorialRunClosureEventDao events = new EditorialRunClosureEventDao(repository, () -> 5L);
         EditorialRunClosureEvent event = events.append(eventDraft(declaration, EditorialLineageNodeKind.ROOT,
-                null, snapshot.manifestFingerprint(), 0L, ATTESTATION),
+                null),
                 permit(snapshot.manifestFingerprint(), ATTESTATION)).value();
         SQLiteDatabase db = repository.editorialWritableDatabase();
         assertRejected(() -> db.execSQL("UPDATE editorial_authoritative_run_declarations SET run_kind='changed'"));
@@ -322,18 +319,18 @@ public final class EditorialV18RunDeclarationEventInstrumentedTest {
 
     private EditorialRunClosureEventDraft eventDraft(
             EditorialAuthoritativeRunDeclaration declaration,
-            EditorialLineageNodeKind node, String parent, String manifest, long ordinal,
-            String attestationFingerprint) {
-        return new EditorialRunClosureEventDraft(declaration.declarationIdentity(),
-                revision.revisionIdentity(), snapshot.scopeSnapshotIdentity(), "test-evaluation",
-                declaration.runKind(), declaration.phaseIdentity(), manifest,
-                declaration.frozenManifestReference(), node, parent, ordinal,
-                EditorialClosureEventEligibility.ELIGIBLE, "closure-attestation-v1",
-                attestationFingerprint);
+            EditorialLineageNodeKind node, String parent) {
+        return new EditorialRunClosureEventDraft(declaration.attemptRequestSelector(), node, parent,
+                EditorialClosureEventEligibility.ELIGIBLE);
     }
 
     private EditorialClosureEventAppendPermit permit(String manifest, String fingerprint) {
-        return new EditorialClosureEventAppendPermit("test-evaluation", manifest, true,
+        return permitWithEvaluation("test-evaluation", manifest, fingerprint);
+    }
+
+    private EditorialClosureEventAppendPermit permitWithEvaluation(
+            String evaluation, String manifest, String fingerprint) {
+        return new EditorialClosureEventAppendPermit(evaluation, manifest, true,
                 "closure-attestation-v1", fingerprint);
     }
 

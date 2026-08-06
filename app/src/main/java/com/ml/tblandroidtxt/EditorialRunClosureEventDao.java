@@ -55,14 +55,12 @@ public final class EditorialRunClosureEventDao {
         if (permit == null || !permit.trustedDataCompatible
                 || draft.closureEligibility() != EditorialClosureEventEligibility.ELIGIBLE) {
             return result(EditorialIdentityPersistenceCode.TRUSTED_CONTEXT_MISMATCH,
-                    null, draft.authoritativeRunIdentity(), "trusted-data-compatible-permit-required");
+                    null, draft.attemptRequestSelector(), "trusted-data-compatible-permit-required");
         }
-        if (!draft.compatibilityEvaluationId().equals(permit.compatibilityEvaluationId)
-                || !draft.frozenManifestFingerprint().equals(permit.frozenManifestFingerprint)
-                || !draft.closureAttestationVersion().equals(permit.closureAttestationVersion)
-                || !draft.closureAttestationFingerprint().equals(permit.closureAttestationFingerprint)) {
+        if (permit.closureAttestationVersion == null
+                || permit.closureAttestationFingerprint == null) {
             return result(EditorialIdentityPersistenceCode.TRUSTED_CONTEXT_MISMATCH,
-                    null, draft.authoritativeRunIdentity(), "trusted-facts-do-not-match-event");
+                    null, draft.attemptRequestSelector(), "trusted-attestation-facts-required");
         }
         final long appendedAt;
         try {
@@ -79,21 +77,32 @@ public final class EditorialRunClosureEventDao {
             db.beginTransaction();
             try {
                 EditorialAuthoritativeRunDeclaration declaration =
-                        declarations.findByIdentityInTransaction(db, draft.authoritativeRunIdentity());
+                        declarations.findByAttemptRequestSelectorInTransaction(db,
+                                draft.attemptRequestSelector());
                 if (declaration == null) return result(EditorialIdentityPersistenceCode.FOREIGN_REFERENCE_MISSING,
-                        null, draft.authoritativeRunIdentity(), "authoritative-declaration-not-found");
+                        null, draft.attemptRequestSelector(), "authoritative-declaration-not-found");
+                if (!declaration.compatibilityEvaluationId().equals(permit.compatibilityEvaluationId)) {
+                    return result(EditorialIdentityPersistenceCode.TRUSTED_CONTEXT_MISMATCH, null,
+                            declaration.declarationIdentity(), "trusted-evaluation-does-not-match-declaration");
+                }
+                if (!declaration.frozenManifestFingerprint().equals(permit.frozenManifestFingerprint)) {
+                    return result(EditorialIdentityPersistenceCode.FROZEN_MANIFEST_MISMATCH, null,
+                            declaration.declarationIdentity(), "trusted-manifest-does-not-match-declaration");
+                }
                 EditorialIdentityPersistenceCode mismatch = crossCheck(declaration, draft);
                 if (mismatch != null) return result(mismatch, null,
-                        draft.authoritativeRunIdentity(), "declaration-event-cross-check-failed");
+                        declaration.declarationIdentity(), "declaration-event-cross-check-failed");
                 if (draft.nodeKind() == EditorialLineageNodeKind.CHILD
-                        && !EditorialIdentityDaoSupport.hasRow(db, "editorial_lineage_records",
+                    && !EditorialIdentityDaoSupport.hasRow(db, "editorial_lineage_records",
                         "record_identity", draft.parentRecordIdentity())) {
                     return result(EditorialIdentityPersistenceCode.PARENT_NOT_FOUND, null,
-                            draft.authoritativeRunIdentity(), "exact-parent-not-found");
+                            declaration.declarationIdentity(), "exact-parent-not-found");
                 }
-                EditorialRunClosureEvent event = EditorialRunClosureEvent.allocate(draft, appendedAt);
+                EditorialRunClosureEvent event = EditorialRunClosureEvent.allocate(declaration, draft,
+                        permit.closureAttestationVersion, permit.closureAttestationFingerprint,
+                        appendedAt);
                 EditorialRunClosureEvent existing = findByAuthoritativeRunIdentity(db,
-                        draft.authoritativeRunIdentity());
+                        declaration.declarationIdentity());
                 if (existing != null) {
                     db.setTransactionSuccessful();
                     return classifyExisting(existing, event);
@@ -111,15 +120,19 @@ public final class EditorialRunClosureEventDao {
                 db.endTransaction();
             }
         } catch (SQLiteConstraintException error) {
-            EditorialRunClosureEvent raced = findByAuthoritativeRunIdentity(
-                    draft.authoritativeRunIdentity()).orElse(null);
+            EditorialRunClosureEvent raced = declarations.findByAttemptRequestSelector(
+                    draft.attemptRequestSelector()).flatMap(declaration ->
+                    findByAuthoritativeRunIdentity(declaration.declarationIdentity())).orElse(null);
             if (raced != null) return classifyExisting(raced,
-                    EditorialRunClosureEvent.allocate(draft, appendedAt));
+                    EditorialRunClosureEvent.allocate(
+                            declarations.findByAttemptRequestSelector(draft.attemptRequestSelector()).orElseThrow(),
+                            draft, permit.closureAttestationVersion,
+                            permit.closureAttestationFingerprint, appendedAt));
             return result(EditorialIdentityPersistenceCode.PERSISTENCE_FAILURE,
-                    null, draft.authoritativeRunIdentity(), "closure-event-insert-rolled-back");
+                    null, draft.attemptRequestSelector(), "closure-event-insert-rolled-back");
         } catch (SQLiteException | IllegalStateException error) {
             return result(EditorialIdentityPersistenceCode.PERSISTENCE_FAILURE,
-                    null, draft.authoritativeRunIdentity(), "closure-event-transaction-rolled-back");
+                    null, draft.attemptRequestSelector(), "closure-event-transaction-rolled-back");
         }
     }
 
@@ -165,22 +178,6 @@ public final class EditorialRunClosureEventDao {
     private EditorialIdentityPersistenceCode crossCheck(
             EditorialAuthoritativeRunDeclaration declaration,
             EditorialRunClosureEventDraft event) {
-        if (!declaration.projectRevisionIdentity().equals(event.projectRevisionIdentity())
-                || !declaration.inputScopeSnapshotIdentity().equals(event.inputScopeSnapshotIdentity())
-                || !declaration.compatibilityEvaluationId().equals(event.compatibilityEvaluationId())
-                || !declaration.runKind().equals(event.runKind())
-                || !declaration.phaseIdentity().equals(event.phaseIdentity())
-                || !declaration.frozenManifestFingerprint().equals(event.frozenManifestFingerprint())
-                || !declaration.frozenManifestReference().equals(event.frozenManifestReference())
-                || declaration.runAttemptOrdinal() != event.runAttemptOrdinal()) {
-            if (!declaration.frozenManifestFingerprint().equals(event.frozenManifestFingerprint())) {
-                return EditorialIdentityPersistenceCode.FROZEN_MANIFEST_MISMATCH;
-            }
-            if (declaration.runAttemptOrdinal() != event.runAttemptOrdinal()) {
-                return EditorialIdentityPersistenceCode.ORDINAL_MISMATCH;
-            }
-            return EditorialIdentityPersistenceCode.EVENT_DECLARATION_MISMATCH;
-        }
         if (declaration.nodeKind() != event.nodeKind()) {
             return EditorialIdentityPersistenceCode.EVENT_INTENT_COLLISION;
         }
@@ -218,15 +215,15 @@ public final class EditorialRunClosureEventDao {
         if (!EditorialRunClosureEventDraft.CONTRACT_VERSION.equals(cursor.getString(2))) {
             throw new IllegalArgumentException("stored closure-event contract version mismatch");
         }
+        EditorialAuthoritativeRunDeclaration declaration = declarations.findByDeclarationIdentity(
+                cursor.getString(3)).orElseThrow(() ->
+                new IllegalArgumentException("stored closure event declaration missing"));
         EditorialRunClosureEventDraft draft = new EditorialRunClosureEventDraft(
-                cursor.getString(3), cursor.getString(4), cursor.getString(5), cursor.getString(6),
-                cursor.getString(7), cursor.getString(8), cursor.getString(9), cursor.getString(10),
-                EditorialLineageNodeKind.valueOf(cursor.getString(11)),
-                cursor.isNull(12) ? null : cursor.getString(12), cursor.getLong(13),
-                EditorialClosureEventEligibility.valueOf(cursor.getString(14)), cursor.getString(15),
-                cursor.getString(16));
+                declaration.attemptRequestSelector(), EditorialLineageNodeKind.valueOf(cursor.getString(11)),
+                cursor.isNull(12) ? null : cursor.getString(12),
+                EditorialClosureEventEligibility.valueOf(cursor.getString(14)));
         return EditorialRunClosureEvent.fromStored(cursor.getString(0), cursor.getString(1),
-                draft, cursor.getLong(17));
+                declaration, draft, cursor.getString(15), cursor.getString(16), cursor.getLong(17));
     }
 
     private EditorialRunClosureEvent findByIdentity(SQLiteDatabase db, String identity) {

@@ -542,9 +542,21 @@
 - Regression status: read-only baseline engine `105/105`, app JVM `164/164`, aggregate JVM `269/269`, failures/errors/skips `0/0/0`; JBR/JDK 21.0.10 preflight PASS; `git diff --check` PASS. No build/device/database activity was required.
 - Next step: review `EDITORIAL_PACK_PLATFORM_G2_C1B1C2B2A15_AUTHORITATIVE_RUN_SELECTOR_SCHEMA_FREEZE.md`; only after separate approval may A2 implement the frozen v18 schema/DAO. `LINEAGE_PROMOTION` and `SAFE4_EXECUTION_READINESS` remain blocked.
 
+## G2-C1B1-C2B2A-2 SQLite v18 run declaration/event store (2026-08-06, in progress)
+
+- Current version: archived `4.16-dev.49` / code111 is the pre-boundary-fix artifact; a replacement archive is required because the closure-event request boundary was tightened after that build.
+- Current branch: `feature/v4.16-g2-c1b1c2b2a2`.
+- Current commit: `6fc5f890d1b0cf94134c1b41ff40264f19387a2c` is the implementation baseline immediately before this snapshot update; the verified closure-event boundary fix is staged for its own commit. Protected `.idea/compiler.xml`, `.idea/gradle.xml`, and `.idea/misc.xml` remain user-owned, untouched, unstaged and uncommitted.
+- Current build: retained pre-fix archive `artifacts/builds/v4.16-dev.49/build-20260806-170650/` and backup mirror; APK SHA-256 `5AC9DB8FC171D6F02A22FEC69C394261EE4E82B83C3C7F5DE6CF9796B3966831`; source ZIP SHA-256 `40439B2673C8DE6B777477FCCE42C5D22773744E356304BFFDCDC38703A225FC`; parity PASS for the retained archive. Replacement archive is pending after the staged fix commit.
+- Completed tasks: pure-JVM declaration/event models and canonical domains; additive v17→v18 migration with exactly two tables, five indexes and four immutable triggers; append/read-only declaration/event DAOs; DAO-owned ordinal allocation; isolated device A2 instrumentation `11/11` PASS before and after the boundary fix; current full JVM/app regression `116/116` and `166/166`, failures/errors/skips `0/0/0`; Android-test compile, lint, wrapper/JDK preflight and `git diff --check` PASS.
+- Pending tasks: commit the staged closure-event boundary fix, rerun archive-first build and install exact replacement APK, rerun isolated device instrumentation, then write/commit A2 handoff, checklist, BUILD_STATE and final snapshot.
+- Known bugs/limitations: production lifecycle/event owner and caller remain absent; no production declaration/event rows; current profile remains non-executable and only declares `pack.integrity.sha256.v1`; no lineage promotion, lifecycle, caller wiring, certification, activation, project binding or execution; `executionEnabled()` remains false; real-data continuity is not claimed.
+- Regression status: implementation and tests PASS in current worktree; final artifact/device evidence is pending replacement archive. No D: candidate activity.
+- Next step: commit the staged A2 closure-event boundary fix, archive and rerun isolated device QA; do not start A3 or production lifecycle/caller work.
+
 ## Next step
 
-`G2-C0C-B2`, `G2-C1B1-A`, `G2-C1B1-B`, `G2-C1B1-C0`, `G2-C1B1-C1`, `G2-C1B1-C1.5-A`, `G2-C1B1-C1.5-B`, `G2-C1B1-C2-A` and `G2-C1B1-C2-B0` remain PASS / REVIEW STOP. G2-C1B1-C2-B1 is IMPLEMENTED but BLOCKED for global PASS by unrelated connected-suite failures. The exact next action is review this B1 handoff and resolve that blocker; do not start C2-B2 automatically.
+`G2-C0C-B2`, `G2-C1B1-A`, `G2-C1B1-B`, `G2-C1B1-C0`, `G2-C1B1-C1`, `G2-C1B1-C1.5-A`, `G2-C1B1-C1.5-B`, `G2-C1B1-C2-A` and `G2-C1B1-C2-B0` remain PASS / REVIEW STOP. G2-C1B1-C2-B1 is IMPLEMENTED but BLOCKED for global PASS by unrelated connected-suite failures. A2 is in progress after verified boundary tightening; its exact next action is the replacement archive/device run and final handoff. Do not start A3 or production lifecycle/caller work automatically.
 
 ## Resume rule
 

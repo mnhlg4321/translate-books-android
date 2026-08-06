@@ -10,15 +10,31 @@ public final class EditorialRunClosureEvent {
     public static final String IDENTITY_DOMAIN = "EDITORIAL_CLOSURE_EVENT_IDENTITY_V1";
     public static final String FINGERPRINT_DOMAIN = "EDITORIAL_CLOSURE_EVENT_FINGERPRINT_V1";
 
+    private final EditorialAuthoritativeRunDeclaration declaration;
     private final EditorialRunClosureEventDraft draft;
+    private final String closureAttestationVersion;
+    private final String closureAttestationFingerprint;
     private final long appendedAt;
     private final String identityProjection;
     private final String fingerprintProjection;
     private final String closureEventIdentity;
     private final String closureEventFingerprint;
 
-    private EditorialRunClosureEvent(EditorialRunClosureEventDraft draft, long appendedAt) {
+    private EditorialRunClosureEvent(
+            EditorialAuthoritativeRunDeclaration declaration,
+            EditorialRunClosureEventDraft draft,
+            String closureAttestationVersion,
+            String closureAttestationFingerprint,
+            long appendedAt) {
+        this.declaration = Objects.requireNonNull(declaration, "authoritative declaration");
         this.draft = Objects.requireNonNull(draft, "closure event draft");
+        if (!declaration.attemptRequestSelector().equals(draft.attemptRequestSelector())) {
+            throw new IllegalArgumentException("closure selector does not resolve declaration");
+        }
+        this.closureAttestationVersion = EditorialIdentityText.nonEmpty(
+                closureAttestationVersion, "closure attestation version");
+        this.closureAttestationFingerprint = EditorialIdentityText.sha256(
+                closureAttestationFingerprint, "closure attestation fingerprint");
         if (appendedAt < 0) throw new IllegalArgumentException("appended timestamp cannot be negative");
         this.appendedAt = appendedAt;
         this.identityProjection = buildIdentityProjection();
@@ -30,17 +46,26 @@ public final class EditorialRunClosureEvent {
 
     /** Called only after declaration/reference/trusted-evidence checks by the event DAO seam. */
     public static EditorialRunClosureEvent allocate(
-            EditorialRunClosureEventDraft draft, long appendedAt) {
-        return new EditorialRunClosureEvent(draft, appendedAt);
+            EditorialAuthoritativeRunDeclaration declaration,
+            EditorialRunClosureEventDraft draft,
+            String closureAttestationVersion,
+            String closureAttestationFingerprint,
+            long appendedAt) {
+        return new EditorialRunClosureEvent(declaration, draft, closureAttestationVersion,
+                closureAttestationFingerprint, appendedAt);
     }
 
     /** Reconstructs and verifies stored hashes; declared values are never trusted. */
     public static EditorialRunClosureEvent fromStored(
             String declaredIdentity,
             String declaredFingerprint,
+            EditorialAuthoritativeRunDeclaration declaration,
             EditorialRunClosureEventDraft draft,
+            String closureAttestationVersion,
+            String closureAttestationFingerprint,
             long appendedAt) {
-        EditorialRunClosureEvent result = allocate(draft, appendedAt);
+        EditorialRunClosureEvent result = allocate(declaration, draft, closureAttestationVersion,
+                closureAttestationFingerprint, appendedAt);
         if (!result.closureEventIdentity.equals(declaredIdentity)
                 || !result.closureEventFingerprint.equals(declaredFingerprint)) {
             throw new IllegalArgumentException("stored closure event identity/fingerprint mismatch");
@@ -50,20 +75,20 @@ public final class EditorialRunClosureEvent {
 
     public EditorialRunClosureEventDraft draft() { return draft; }
     public String closureEventContractVersion() { return EditorialRunClosureEventDraft.CONTRACT_VERSION; }
-    public String authoritativeRunIdentity() { return draft.authoritativeRunIdentity(); }
-    public String projectRevisionIdentity() { return draft.projectRevisionIdentity(); }
-    public String inputScopeSnapshotIdentity() { return draft.inputScopeSnapshotIdentity(); }
-    public String compatibilityEvaluationId() { return draft.compatibilityEvaluationId(); }
-    public String runKind() { return draft.runKind(); }
-    public String phaseIdentity() { return draft.phaseIdentity(); }
-    public String frozenManifestFingerprint() { return draft.frozenManifestFingerprint(); }
-    public String frozenManifestReference() { return draft.frozenManifestReference(); }
+    public String authoritativeRunIdentity() { return declaration.declarationIdentity(); }
+    public String projectRevisionIdentity() { return declaration.projectRevisionIdentity(); }
+    public String inputScopeSnapshotIdentity() { return declaration.inputScopeSnapshotIdentity(); }
+    public String compatibilityEvaluationId() { return declaration.compatibilityEvaluationId(); }
+    public String runKind() { return declaration.runKind(); }
+    public String phaseIdentity() { return declaration.phaseIdentity(); }
+    public String frozenManifestFingerprint() { return declaration.frozenManifestFingerprint(); }
+    public String frozenManifestReference() { return declaration.frozenManifestReference(); }
     public EditorialLineageNodeKind nodeKind() { return draft.nodeKind(); }
     public String parentRecordIdentity() { return draft.parentRecordIdentity(); }
-    public long runAttemptOrdinal() { return draft.runAttemptOrdinal(); }
+    public long runAttemptOrdinal() { return declaration.runAttemptOrdinal(); }
     public EditorialClosureEventEligibility closureEligibility() { return draft.closureEligibility(); }
-    public String closureAttestationVersion() { return draft.closureAttestationVersion(); }
-    public String closureAttestationFingerprint() { return draft.closureAttestationFingerprint(); }
+    public String closureAttestationVersion() { return closureAttestationVersion; }
+    public String closureAttestationFingerprint() { return closureAttestationFingerprint; }
     public long appendedAt() { return appendedAt; }
     public String identityProjection() { return identityProjection; }
     public String fingerprintProjection() { return fingerprintProjection; }
