@@ -1,5 +1,14 @@
 # Build State
 
+## Current G2-R0 regression review
+
+- Review branch: `feature/v4.16-g2-c1b1c2b1-regression`; implementation baseline before the R0 documentation commit: `0834ec8f1b5ce8557ea0adfe6a1f45005d13e591`.
+- SQLite remains v17. The exact prior archive remains `4.16-dev.45`/code107, APK SHA-256 `F0A8971AA9E8A4D08CF08A63857BC37F17BD6DEFE264CE4F2813DAAF8A1211A9`; no new APK was built in R0.
+- R0 evidence: isolated traversal `1/1` reproduces `INVALID_ENTRY_PATH` versus `TRUNCATED_STREAM`; isolated truncation `1/1` reproduces `TRUNCATED_STREAM` versus `ENTRY_COUNT_LIMIT`; import class `11` tests has only those 2 failures; management class is `3/3`; import+management is `14` tests with only those 2 failures; two full direct runners each complete `80` tests with `2` failures, `0` errors and `1` approved real-API skip.
+- Root causes: both ZIP mismatches are importer ordering/structural-classification defects. The historical management empty-body abort is classified `RUNNER_DEVICE_ENVIRONMENT` after controlled isolation and is not a production UI defect. R0 PASS; a minimal importer-only R1 fix is identified.
+- Boundaries unchanged: no B1 coordinator change, no schema/profile/catalog/importer caller or production lifecycle wiring, no production row, no capability promotion/certification/activation/execution; `executionEnabled()` remains false. Protected `.idea/*` remains user-owned and unstaged.
+- Exact next step: commit R0 evidence, then implement/test only the proven ZIP importer fix in G2-R1. Stop if the fix needs schema/profile/lifecycle/security expansion.
+
 ## Current release build
 
 - versionName: `4.15`

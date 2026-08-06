@@ -1,5 +1,13 @@
 # Workspace Snapshot
 
+- Snapshot updated: `2026-08-06` (G2-R0 connected-suite root-cause audit; R0 PASS, before importer-only R1 fix)
+- Current version: released product remains `4.15`/code62; latest development archive remains `4.16-dev.45`/code107 with APK SHA-256 `F0A8971AA9E8A4D08CF08A63857BC37F17BD6DEFE264CE4F2813DAAF8A1211A9`; SQLite source version v17.
+- Current branch: `feature/v4.16-g2-c1b1c2b1-regression`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` are user-owned, unchanged by this work, unstaged and uncommitted.
+- Current commit: `0834ec8f1b5ce8557ea0adfe6a1f45005d13e591` is the implementation baseline immediately before the R0 documentation commit.
+- Completed: R0 reproduced the two ZIP mismatches and separated the historical management empty-body report. Traversal and truncation are importer defects; management abort is `RUNNER_DEVICE_ENVIRONMENT`. Management method/class/group and two full direct runs completed without the historical abort; each full run completed all 80 tests with only the two ZIP failures and one approved real-API skip.
+- Regression status: B1 focused device evidence remains 7/7 PASS; global suite remains blocked only by the two proven ZIP classification defects until R1/R2. No code or test expectation was changed in R0.
+- Pending: commit R0 evidence; then R1 importer-only fix and focused matrix. No B1 caller wiring, schema/profile/lifecycle/capability/execution work is authorized.
+
 - Snapshot updated: `2026-08-05` (G2-C1B1-C1 pure-JVM lineage runtime context/service seam review stop; no caller wiring, persistence, migration, promotion, certification, activation, binding or execution)
 - Current version: `4.15`/code62 remains the released product; latest development archive is `4.16-dev.39`/code101. SQLite source version is v16 and Editorial execution remains intentionally blocked.
 - Current branch: `feature/v4.16-g2-c1b1c15a`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` remain user-owned and unstaged. The branch was created from the verified C1 HEAD `63d77ac267671f88ee2c9ebc31ebc8e575ec74cd` after baseline verification.
