@@ -1,5 +1,14 @@
 # Build State
 
+## Current G2-R1 regression review
+
+- Review branch: `feature/v4.16-g2-c1b1c2b1-regression`; implementation baseline before the R1 evidence/implementation commit is `93ac1f46f0fd637239287968fb821f091929c598`.
+- R1 source fix is importer-only: entry paths are rejected before entry-byte processing; bounded same-stream ZIP metadata distinguishes valid empty archives from missing local/central/end records and maps Android pre-entry path exceptions to `INVALID_ENTRY_PATH`. SQLite remains v17; no schema/profile/capability/caller/lifecycle change.
+- R1 archive-first build: `4.16-dev.47`/code109, event `build-20260806-093433`, APK SHA-256 `A16F1D4B9D2DAFCF16E9FC038878BD4C58D8D3F46A2666BAF4C5091E4C0D0567`, source ZIP SHA-256 `1C809D7FFF64E660E1C0626404772C3AEBF2384A5DC81AC7731FA46FEB4AA518`; artifact/backup five-file parity PASS.
+- R1 verification: engine `105/105`, app JVM `164/164`, 0 failures/errors/skips; Android-test compilation PASS; lint `0` errors/`53` warnings; `git diff --check` PASS; device import `13/13`, management `3/3`, B1 focused `7/7` PASS.
+- Device boundary: exact code109 installed with `adb install -r`, no `pm clear`; importer/B1 focused fixtures used isolated random databases. Existing device data means `REAL_DATA_CONTINUITY: NOT_CLAIMED`.
+- R1 status: PASS. Exact next step is a fresh post-commit R2 archive-first global connected regression and B1 requalification. If global suite is incomplete or any unapproved failure remains, stop with B1 BLOCKED.
+
 ## Current G2-R0 regression review
 
 - Review branch: `feature/v4.16-g2-c1b1c2b1-regression`; implementation baseline before the R0 documentation commit: `0834ec8f1b5ce8557ea0adfe6a1f45005d13e591`.

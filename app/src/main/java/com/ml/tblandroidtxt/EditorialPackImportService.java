@@ -22,10 +22,12 @@ import com.ml.tblandroidtxt.editorial.pack.EditorialPackManifest;
 import com.ml.tblandroidtxt.editorial.pack.EditorialPackValidationCode;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.channels.FileChannel;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
@@ -225,7 +227,8 @@ public final class EditorialPackImportService {
         }
         ArrayList<EditorialPackImportEntry> entries = new ArrayList<>();
         long total = 0L;
-        try (ZipInputStream zip = new ZipInputStream(zipStream)) {
+        ZipStructureProbe structureProbe = new ZipStructureProbe(zipStream);
+        try (ZipInputStream zip = new ZipInputStream(structureProbe)) {
             ZipEntry entry;
             while ((entry = zip.getNextEntry()) != null) {
                 if (entry.isDirectory()) {
@@ -234,10 +237,15 @@ public final class EditorialPackImportService {
                 if (zipEntryIsSymbolicLink(entry)) {
                     return zipFailure(importId, EditorialPackImportError.SYMLINK_FORBIDDEN, "Symbolic-link ZIP entries are forbidden");
                 }
+                final String path;
+                try {
+                    path = EditorialPackStorageLayout.normalizeEntryPath(entry.getName());
+                } catch (IllegalArgumentException e) {
+                    return zipFailure(importId, EditorialPackImportError.INVALID_ENTRY_PATH, e.getMessage());
+                }
                 if (entries.size() >= MAX_ENTRY_COUNT) {
                     return zipFailure(importId, EditorialPackImportError.ENTRY_COUNT_LIMIT, "Pack must contain exactly four root entries");
                 }
-                String path = entry.getName();
                 ByteArrayOutputStream bytes = new ByteArrayOutputStream();
                 byte[] buffer = new byte[8192];
                 int read;
@@ -265,11 +273,87 @@ public final class EditorialPackImportService {
                         new ByteArrayInputStream(bytes.toByteArray()), size, compressed, false));
                 zip.closeEntry();
             }
+            if (!structureProbe.hasCompleteEndOfCentralDirectory()) {
+                return zipFailure(importId, EditorialPackImportError.TRUNCATED_STREAM, "ZIP central directory/end record is incomplete");
+            }
             if (entries.isEmpty()) return zipFailure(importId, EditorialPackImportError.ENTRY_COUNT_LIMIT, "ZIP contains no entries");
         } catch (IOException e) {
+            if (structureProbe.hasInvalidLocalEntryPath()) {
+                return zipFailure(importId, EditorialPackImportError.INVALID_ENTRY_PATH, "ZIP entry path is not a root-level relative path");
+            }
             return zipFailure(importId, EditorialPackImportError.TRUNCATED_STREAM, "Could not read ZIP stream: " + safeMessage(e));
         }
         return importPack(entries, listener);
+    }
+
+    /**
+     * Keeps only bounded byte metadata while the selected ZIP stream is consumed once.
+     * Android's ZipInputStream may return null for a short malformed stream instead of
+     * throwing; the end-record check restores deterministic truncation classification.
+     */
+    private static final class ZipStructureProbe extends FilterInputStream {
+        private static final int END_OF_CENTRAL_DIRECTORY_SIGNATURE = 0x06054b50;
+        private static final int END_OF_CENTRAL_DIRECTORY_BYTES = 22;
+        private static final int MAX_END_RECORD_WINDOW = 65_557;
+        private final byte[] tail = new byte[MAX_END_RECORD_WINDOW];
+        private int tailStart;
+        private int tailSize;
+
+        ZipStructureProbe(InputStream input) { super(input); }
+
+        @Override public int read() throws IOException {
+            int value = super.read();
+            if (value >= 0) append(value);
+            return value;
+        }
+
+        @Override public int read(byte[] buffer, int offset, int length) throws IOException {
+            int count = super.read(buffer, offset, length);
+            if (count > 0) for (int i = 0; i < count; i++) append(buffer[offset + i] & 0xff);
+            return count;
+        }
+
+        boolean hasCompleteEndOfCentralDirectory() {
+            if (tailSize < END_OF_CENTRAL_DIRECTORY_BYTES) return false;
+            for (int offset = 0; offset <= tailSize - END_OF_CENTRAL_DIRECTORY_BYTES; offset++) {
+                if (readTail(offset) != 0x50 || readTail(offset + 1) != 0x4b
+                        || readTail(offset + 2) != 0x05 || readTail(offset + 3) != 0x06) continue;
+                int commentLength = readTail(offset + 20) | (readTail(offset + 21) << 8);
+                if (offset + END_OF_CENTRAL_DIRECTORY_BYTES + commentLength == tailSize) return true;
+            }
+            return false;
+        }
+
+        boolean hasInvalidLocalEntryPath() {
+            for (int offset = tailSize - 30; offset >= 0; offset--) {
+                if (readTail(offset) != 0x50 || readTail(offset + 1) != 0x4b
+                        || readTail(offset + 2) != 0x03 || readTail(offset + 3) != 0x04) continue;
+                int nameLength = readTail(offset + 26) | (readTail(offset + 27) << 8);
+                if (offset + 30 + nameLength > tailSize) continue;
+                byte[] nameBytes = new byte[nameLength];
+                for (int i = 0; i < nameLength; i++) nameBytes[i] = (byte) readTail(offset + 30 + i);
+                try {
+                    EditorialPackStorageLayout.normalizeEntryPath(new String(nameBytes, StandardCharsets.UTF_8));
+                } catch (IllegalArgumentException invalidPath) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void append(int value) {
+            if (tailSize < tail.length) {
+                tail[(tailStart + tailSize) % tail.length] = (byte) value;
+                tailSize++;
+            } else {
+                tail[tailStart] = (byte) value;
+                tailStart = (tailStart + 1) % tail.length;
+            }
+        }
+
+        private int readTail(int offset) {
+            return tail[(tailStart + offset) % tail.length] & 0xff;
+        }
     }
 
     private EditorialPackImportResult zipFailure(String importId, EditorialPackImportError error, String reason) {

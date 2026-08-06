@@ -1,5 +1,13 @@
 # Workspace Snapshot
 
+- Snapshot updated: `2026-08-06` (G2-R1 minimal importer regression fix; R1 PASS, before post-commit R2 archive/global gate)
+- Current version: released product remains `4.15`/code62; latest R1 archive is `4.16-dev.47`/code109, APK SHA-256 `A16F1D4B9D2DAFCF16E9FC038878BD4C58D8D3F46A2666BAF4C5091E4C0D0567`; SQLite v17.
+- Current branch: `feature/v4.16-g2-c1b1c2b1-regression`; protected `.idea/compiler.xml`, `.idea/gradle.xml`, `.idea/misc.xml` remain user-owned, unstaged and uncommitted.
+- Current commit: `93ac1f46f0fd637239287968fb821f091929c598` is the implementation baseline immediately before the R1 implementation/evidence commit.
+- Completed: proven ZIP traversal/truncation importer defects fixed with early path classification and bounded ZIP structure metadata; focused code109 device import `13/13`, management `3/3`, B1 `7/7`; engine `105/105`, app JVM `164/164`, Android-test compilation, lint and diff-check pass; artifact/backup parity pass.
+- Regression status: R1 PASS; global connected status is not yet requalified. No B1 coordinator, production caller, schema/profile/catalog, production row, capability, certification, activation or execution change.
+- Pending: commit R1 group, then fresh archive-first R2 build and full connected suite. `REAL_DATA_CONTINUITY: NOT_CLAIMED`; execution remains disabled.
+
 - Snapshot updated: `2026-08-06` (G2-R0 connected-suite root-cause audit; R0 PASS, before importer-only R1 fix)
 - Current version: released product remains `4.15`/code62; latest development archive remains `4.16-dev.45`/code107 with APK SHA-256 `F0A8971AA9E8A4D08CF08A63857BC37F17BD6DEFE264CE4F2813DAAF8A1211A9`; SQLite source version v17.
 - Current branch: `feature/v4.16-g2-c1b1c2b1-regression`; `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` are user-owned, unchanged by this work, unstaged and uncommitted.

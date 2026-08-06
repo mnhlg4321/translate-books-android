@@ -115,10 +115,30 @@ public class EditorialPackImportServiceInstrumentedTest {
         assertEquals(0, countRows(repository, "editorial_packs"));
     }
 
+    @Test public void zipPathVariantsAreRejectedBeforeReadingOrRegistryAvailability() throws Exception {
+        EditorialPackAndroidFixture.Fixture fixture = EditorialPackAndroidFixture.valid("g2b2b.path-variants", "1.0.0", "zip\n".getBytes(StandardCharsets.UTF_8));
+        EditorialPackImportService service = service(fixture);
+        for (String path : new String[]{"../editorial-pack.json", "..\\editorial-pack.json", "/editorial-pack.json", "C:\\editorial-pack.json"}) {
+            EditorialPackImportResult result = service.importZip(new ByteArrayInputStream(zipWithNames(fixture, path, "project.txt", "prompt.txt", "workflow.txt")));
+            assertEquals(path, EditorialPackImportError.INVALID_ENTRY_PATH, result.error());
+        }
+        assertEquals(0, countRows(repository, "editorial_packs"));
+    }
+
     @Test public void truncatedZipDoesNotCreatePackRow() {
         EditorialPackAndroidFixture.Fixture fixture = EditorialPackAndroidFixture.valid("g2b2b.truncated", "1.0.0", "zip\n".getBytes(StandardCharsets.UTF_8));
         EditorialPackImportResult result = service(fixture).importZip(new ByteArrayInputStream(new byte[]{80, 75, 3}));
         assertEquals(EditorialPackImportError.TRUNCATED_STREAM, result.error());
+        assertEquals(0, countRows(repository, "editorial_packs"));
+    }
+
+    @Test public void validEmptyZipIsEntryCountFailureButTruncatedCentralDirectoryIsTruncated() throws Exception {
+        EditorialPackAndroidFixture.Fixture fixture = EditorialPackAndroidFixture.valid("g2b2b.structure", "1.0.0", "zip\n".getBytes(StandardCharsets.UTF_8));
+        EditorialPackImportService service = service(fixture);
+        assertEquals(EditorialPackImportError.ENTRY_COUNT_LIMIT, service.importZip(new ByteArrayInputStream(emptyZip())).error());
+        byte[] valid = zip(fixture);
+        assertEquals(EditorialPackImportError.TRUNCATED_STREAM,
+                service.importZip(new ByteArrayInputStream(truncateBeforeCentralDirectory(valid))).error());
         assertEquals(0, countRows(repository, "editorial_packs"));
     }
 
@@ -240,6 +260,22 @@ public class EditorialPackImportServiceInstrumentedTest {
             output.putNextEntry(new ZipEntry("editorial-pack.json")); output.write(fixture.manifestBytes()); output.closeEntry();
         }
         return bytes.toByteArray();
+    }
+
+    private static byte[] emptyZip() throws IOException {
+        java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
+        try (ZipOutputStream ignored = new ZipOutputStream(bytes)) { }
+        return bytes.toByteArray();
+    }
+
+    private static byte[] truncateBeforeCentralDirectory(byte[] zip) {
+        for (int i = 0; i + 3 < zip.length; i++) {
+            if ((zip[i] & 0xff) == 0x50 && (zip[i + 1] & 0xff) == 0x4b
+                    && (zip[i + 2] & 0xff) == 0x01 && (zip[i + 3] & 0xff) == 0x02) {
+                return Arrays.copyOf(zip, i);
+            }
+        }
+        throw new AssertionError("fixture central directory signature not found");
     }
 
     private static int countDirectories(Path root) throws IOException {
