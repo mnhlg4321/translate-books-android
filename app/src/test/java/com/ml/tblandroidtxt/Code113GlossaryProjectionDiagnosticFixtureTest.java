@@ -12,12 +12,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-/** Characterization only: records the code113 five-column Glossary projection. */
+/** Regression proof for the D2 four-field projection of the code113 fixture. */
 public class Code113GlossaryProjectionDiagnosticFixtureTest {
     private static final String RESOURCE = "fixtures/code113/glossary-five-column.csv";
     private static final String NOTE = "Tên Mercedes đặt cho nhân vật này";
 
-    @Test public void code113GlossaryFiveColumnsLoseNoteAtStoreAdapter() throws Exception {
+    @Test public void code113GlossaryFiveColumnsPreserveRuntimeNoteAndIgnorePriority() throws Exception {
         String raw = readResource(RESOURCE);
         String[] lines = raw.trim().split("\\r?\\n");
         assertEquals(2, lines.length);
@@ -35,8 +35,8 @@ public class Code113GlossaryProjectionDiagnosticFixtureTest {
         assertEquals("クロ", entry.source);
         assertEquals("Kuro", entry.target);
         assertEquals("character", entry.category);
-        assertEquals(NOTE, entry.aliases);
-        assertEquals(0, entry.priority);
+        assertEquals(NOTE, entry.note);
+        assertEquals("", entry.aliases);
 
         List<GlossaryStore.Term> adapted = GlossaryStore.parseTerms("Mercedes.csv", raw);
         assertEquals(1, adapted.size());
@@ -44,7 +44,7 @@ public class Code113GlossaryProjectionDiagnosticFixtureTest {
         assertEquals("クロ", term.source);
         assertEquals("Kuro", term.target);
         assertEquals("character", term.category);
-        assertFalse(hasTermField("note"));
+        assertTrue(hasTermField("note"));
         assertFalse(hasTermField("aliases"));
         assertFalse(hasTermField("priority"));
 
@@ -53,9 +53,9 @@ public class Code113GlossaryProjectionDiagnosticFixtureTest {
         glossary.terms.add(term);
         String prompt = GlossaryStore.toPromptText(glossary);
         String[] promptLines = prompt.trim().split("\\r?\\n");
-        assertEquals("クロ => Kuro [character]", promptLines[2]);
+        assertEquals("クロ => Kuro [character] | " + NOTE, promptLines[2]);
         assertTrue(prompt.contains("クロ => Kuro [character]"));
-        assertFalse(prompt.contains(NOTE));
+        assertTrue(prompt.contains(NOTE));
         assertFalse(prompt.contains("high"));
 
         String duplicateRows = "source,target,category,note,priority\n"
@@ -73,16 +73,17 @@ public class Code113GlossaryProjectionDiagnosticFixtureTest {
         assertEquals(80, new AppSettings().glossaryInjectLimit);
         assertEquals(80, limited.glossaryCount);
 
-        String diagnostic = "baseline.code113.expected.error=true\n"
+        String diagnostic = "d2.glossary4.expected=true\n"
                 + "raw.row.column.count=" + row.length + "\n"
                 + "entry.source=" + entry.source + "\n"
                 + "entry.target=" + entry.target + "\n"
                 + "entry.category=" + entry.category + "\n"
-                + "entry.aliases(note)=" + entry.aliases + "\n"
-                + "entry.priority=" + entry.priority + " (fifth CSV column ignored)\n"
-                + "store.term=source,target,category only\n"
+                + "entry.note=" + entry.note + "\n"
+                + "entry.aliases=" + entry.aliases + " (aliases require explicit header)\n"
+                + "entry.priority=IGNORED (fifth CSV column ignored)\n"
+                + "store.term=source,target,category,note\n"
                 + "prompt.line=" + promptLines[2] + "\n"
-                + "store.adapter.note.aliases=LOST\n"
+                + "store.adapter.note=PRESERVED\n"
                 + "store.adapter.priority=LOST\n"
                 + "dedupe.same-source-target.count="
                 + GlossaryStore.parseTerms("duplicate.csv", duplicateRows).size() + "\n"

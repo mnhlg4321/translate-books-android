@@ -38,12 +38,14 @@ public class PromptContextBuilder {
         public int lineNumber = -1;
         public String aliases = "";
         public boolean global = false;
-        public int priority = 0;
+        public String note = "";
         public TermEntry() {}
-        public TermEntry(String s, String t, String c) {
+        public TermEntry(String s, String t, String c) { this(s, t, c, ""); }
+        public TermEntry(String s, String t, String c, String n) {
             source = safe(s).trim();
             target = safe(t).trim();
             category = safe(c).trim().isEmpty() ? "term" : safe(c).trim();
+            note = safe(n).trim();
         }
     }
 
@@ -163,7 +165,7 @@ public class PromptContextBuilder {
         StringBuilder g = new StringBuilder();
         int gc = 0;
         LinkedHashSet<String> seenTerms = new LinkedHashSet<>();
-        normalTerms.sort(Comparator.comparingInt((TermEntry t) -> termRank(chunk, t)).reversed().thenComparingInt(t -> -t.priority).thenComparingInt(t -> t.lineNumber));
+        normalTerms.sort(Comparator.comparingInt((TermEntry t) -> termRank(chunk, t)).reversed().thenComparingInt(t -> t.lineNumber));
         for (TermEntry t : normalTerms) {
             if (gc >= gLimit) break;
             if (safe(t.source).trim().isEmpty() || safe(t.target).trim().isEmpty()) continue;
@@ -254,7 +256,8 @@ public class PromptContextBuilder {
                     TermEntry t = new TermEntry();
                     t.source = first(o.optString("source"), o.optString("src"), o.optString("ja"), o.optString("term"));
                     t.target = first(o.optString("target"), o.optString("tgt"), o.optString("vi"), o.optString("translation"));
-                    t.category = first(o.optString("category"), o.optString("type"), o.optString("note"), "term");
+                    t.category = first(o.optString("category"), o.optString("type"), "term");
+                    t.note = clean(o.optString("note", ""));
                     Object aliasObj = o.opt("aliases");
                     if (aliasObj instanceof JSONArray) {
                         JSONArray aa = (JSONArray) aliasObj; StringBuilder ab = new StringBuilder();
@@ -262,7 +265,6 @@ public class PromptContextBuilder {
                         t.aliases = ab.toString();
                     } else t.aliases = o.optString("aliases", o.optString("alias", ""));
                     t.global = o.optBoolean("global", false) || isGlobalCategory(t.category);
-                    t.priority = o.optInt("priority", 0);
                     t.lineNumber = i + 1;
                     if (!t.source.trim().isEmpty() && !t.target.trim().isEmpty()) out.terms.add(t);
                     else out.malformedRows.add("json[" + i + "]: missing source/target");
@@ -273,18 +275,43 @@ public class PromptContextBuilder {
             }
         }
         String[] lines = raw.split("\\r?\\n");
+        boolean aliasesColumn = false;
+        boolean promptTextHeader = false;
+        for (String candidate : lines) {
+            String header = safe(candidate).trim();
+            if (header.isEmpty() || header.startsWith("#")) continue;
+            String headerLower = header.toLowerCase(Locale.ROOT);
+            if (headerLower.contains("source") && headerLower.contains("target")) {
+                aliasesColumn = headerLower.contains("aliases");
+                promptTextHeader = headerLower.contains("category") && !headerLower.contains("note") && !aliasesColumn;
+                break;
+            }
+        }
+        boolean csvQuoteOpen = false;
         for (int i = 0; i < lines.length; i++) {
             String l = safe(lines[i]).trim();
             if (l.isEmpty() || l.startsWith("#")) continue;
+            if (csvQuoteOpen || l.contains(",")) {
+                boolean quoteOpenAfter = csvQuoteState(l, csvQuoteOpen);
+                if (csvQuoteOpen || quoteOpenAfter) {
+                    out.malformedRows.add("line " + (i + 1) + ": multiline CSV fields are not supported");
+                    csvQuoteOpen = quoteOpenAfter;
+                    continue;
+                }
+                csvQuoteOpen = false;
+            }
             String lower = l.toLowerCase(Locale.ROOT);
             if ((lower.contains("source") && lower.contains("target")) || (lower.startsWith("term,") && lower.contains("translation"))) continue;
 
-            TermEntry t = parsePromptTermLine(l);
+            TermEntry t = parsePromptTermLine(l, promptTextHeader);
             if (t == null) {
                 String[] cols = splitLine(l);
                 if (cols.length >= 2) {
                     t = new TermEntry(clean(cols[0]), clean(cols[1]), cols.length >= 3 ? clean(cols[2]) : "term");
-                    if (cols.length >= 4) t.aliases = clean(cols[3]);
+                    if (cols.length >= 4) {
+                        if (aliasesColumn) t.aliases = clean(cols[3]);
+                        else t.note = clean(cols[3]);
+                    }
                     t.global = isGlobalCategory(t.category);
                 }
             }
@@ -298,15 +325,21 @@ public class PromptContextBuilder {
         return out;
     }
 
-    private static TermEntry parsePromptTermLine(String l) {
+    private static TermEntry parsePromptTermLine(String l, boolean promptTextHeader) {
         if (!l.contains("=>")) return null;
         String[] a = l.split("=>", 2);
         if (a.length != 2) return null;
         String src = clean(a[0]);
         String rhs = a[1].trim();
         String aliases = "";
+        String note = "";
         int aliasSep = rhs.indexOf(" | ");
-        if (aliasSep >= 0) { aliases = rhs.substring(aliasSep + 3).trim(); rhs = rhs.substring(0, aliasSep).trim(); }
+        if (aliasSep >= 0) {
+            String suffix = rhs.substring(aliasSep + 3).trim();
+            if (promptTextHeader) note = suffix;
+            else aliases = suffix;
+            rhs = rhs.substring(0, aliasSep).trim();
+        }
         String cat = "term";
         int b = rhs.lastIndexOf('[');
         int e = rhs.endsWith("]") ? rhs.length() - 1 : -1;
@@ -316,7 +349,7 @@ public class PromptContextBuilder {
             cat = clean(rhs.substring(b + 1, e));
         } else tgt = clean(rhs);
         if (src.isEmpty() || tgt.isEmpty()) return null;
-        TermEntry term = new TermEntry(src, tgt, cat);
+        TermEntry term = new TermEntry(src, tgt, cat, note);
         term.aliases = aliases; term.global = isGlobalCategory(cat);
         return term;
     }
@@ -419,6 +452,8 @@ public class PromptContextBuilder {
     private static String formatTermLine(TermEntry t) {
         String line = t.source.trim() + " => " + t.target.trim();
         if (!safe(t.category).trim().isEmpty()) line += " [" + t.category.trim() + "]";
+        String note = normalizePromptNote(t.note);
+        if (!note.isEmpty()) line += " | " + note;
         return line;
     }
 
@@ -634,7 +669,8 @@ public class PromptContextBuilder {
     private static String normalizeRuleLine(String s) { return safe(s).replaceAll("\\s+", " ").trim(); }
     private static String safe(String s) { return s == null ? "" : s; }
     private static String first(String... vals) { for (String v : vals) if (v != null && !v.trim().isEmpty()) return v.trim(); return ""; }
-    private static String clean(String s) { return safe(s).replace("\uFEFF", "").replace("\"", "").trim(); }
+    private static String clean(String s) { return safe(s).replace("\uFEFF", "").trim(); }
+    private static String normalizePromptNote(String s) { return safe(s).replace('\r', ' ').replace('\n', ' ').trim(); }
 
     private static String[] splitLine(String l) {
         if (l.contains("\t")) return cleanArr(l.split("\t", -1));
@@ -665,6 +701,16 @@ public class PromptContextBuilder {
         ArrayList<String> out = new ArrayList<>();
         for (String s : arr) out.add(clean(s));
         return out.toArray(new String[0]);
+    }
+
+    private static boolean csvQuoteState(String line, boolean quoted) {
+        for (int i = 0; i < line.length(); i++) {
+            char ch = line.charAt(i);
+            if (ch != '"') continue;
+            if (quoted && i + 1 < line.length() && line.charAt(i + 1) == '"') { i++; continue; }
+            quoted = !quoted;
+        }
+        return quoted;
     }
 
     private static void appendLimited(StringBuilder sb, String title, List<String> items, int limit) {
