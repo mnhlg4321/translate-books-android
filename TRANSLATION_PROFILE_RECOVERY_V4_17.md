@@ -1,6 +1,6 @@
 # Translation Profile Recovery v4.17
 
-Status: `ACTIVE / D1_BASELINE`
+Status: `ACTIVE / D2_GLOSSARY4`
 
 This document is the single product and execution authority for the v4.17 translation-profile recovery. It replaces every active next action from the later RSC/Relation-Speaker, Editorial activation, IPC, CP6 and live-canary tracks. Those tracks and their evidence remain historical and are not deleted or reinterpreted.
 
@@ -133,9 +133,11 @@ Exit: every active document names the same baseline, branch, scope, current phas
 
 ### D1_BASELINE — code113 characterization
 
+Result: `COMPLETE` on `2026-08-28`; canonical source `a9409ffacfcbb05374e3f07b8ae80b22f60a95b7`, no production source change.
+
 - Inventory the exact parser, stores, settings snapshots, prompt builder, preview, estimator and tests.
 - Run focused existing tests without product changes.
-- Add only missing characterization tests that demonstrate current three-column behavior and the known P3 misparse.
+- Add only missing characterization tests that demonstrate current legacy three-column behavior, the real five-column Glossary projection and the real seven-column P3 misparse.
 - Record the smallest production-file change set for D2/D3.
 
 Exit: baseline test evidence exists and no RSC/Editorial code has been activated.

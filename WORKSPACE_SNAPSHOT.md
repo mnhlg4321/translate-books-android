@@ -1,17 +1,18 @@
 # Workspace Snapshot
 
 - Updated: `2026-08-28`.
-- Status: `D0_DOCS_COMPLETE / D1_BASELINE_READY`.
-- Current version: `v4.17-translation-profile-compatibility`; no v4.17 APK exists yet.
+- Status: `D1_BASELINE_COMPLETE / D2_GLOSSARY4_READY`.
+- Current version: `v4.17-translation-profile-compatibility`; no v4.17 APK exists.
 - Current branch: `feature/v4.17-translation-profile-compatibility`.
-- Current commit baseline: `a9409ffacfcbb05374e3f07b8ae80b22f60a95b7`, the exact code113 source baseline immediately before the D0 documentation changes; confirm actual HEAD when resuming.
-- Current build: frozen later artifact is `v4.16-dev.104` / code168, SHA-256 `E235BB3640039E48DD1E1C70264A25158ED4B6E9146860A6730644790E585F35`; recovery source artifact is `v4.16-dev.51` / code113, SHA-256 `C271F9D8BE757C476300E85E2F7E99742CAF25BF26B119C6218953E93FE24376`.
-- Current phase: `D1_BASELINE`.
-- Completed tasks: protected the original dirty workspace by creating a clean isolated worktree from code113; created the one v4.17 branch, one release checklist and canonical recovery plan; normalized workflow, README and current-only state; documentation sequence/schema/link checks and `git diff --check` PASS with application-source diff count 0.
-- Pending tasks: execute `D1_BASELINE`, then `D2_GLOSSARY4`, `D3_PRONOUN7`, `D4_INTEGRATION` and `D5_RELEASE` strictly in that order.
-- Known bugs/blockers: no current external blocker. Historical RSC/Editorial/IPC blockers are frozen and cannot block v4.17. Local test/compile/build failures, if any, will be handled as `FAILED_REPAIRING` in the same phase and branch.
-- Regression status: D0 documentation checks PASS. No application regression or build yet; no application code, APK, database, provider, emulator or user data mutation.
-- Protected state: the original workspace `C:\Users\ADMIN\Documents\App Translate Books` and its user-owned dirty/untracked evidence remain untouched.
-- Exact next action: inventory code113 Glossary/Pronoun import, persistence, prompt, snapshot, preview, estimator and existing tests; then run focused baseline tests before modifying product behavior.
+- Source baseline: `a9409ffacfcbb05374e3f07b8ae80b22f60a95b7` (`v4.16-dev.51` / code113); D0 commit: `a54b82a7c6060b88a9a85f0a59567dd81028b0e2`.
+- Current commit baseline: `a54b82a7c6060b88a9a85f0a59567dd81028b0e2`, the implementation/documentation baseline immediately before this D1 state/snapshot commit; not self-referential. Confirm actual HEAD when resuming.
+- Current build: recovery code113 APK SHA-256 `C271F9D8BE757C476300E85E2F7E99742CAF25BF26B119C6218953E93FE24376`; frozen later code168 artifact remains unchanged; no build, install or replacement.
+- Current phase: `D2_GLOSSARY4`.
+- Completed tasks: reconciled D1 on exact code113; verified the real Glossary five-column projection and Pronoun seven-column projection; directly reread the canonical `MainActivity.java` and `TranslationEngine.java`; proved legacy three-column behavior; completed final `85/85` focused JVM assertions with zero failures/errors/skips.
+- Pending tasks: `D2_GLOSSARY4` → `D3_PRONOUN7` → `D4_INTEGRATION` → `D5_RELEASE` strictly in order.
+- Known bugs/blockers: Glossary note is read as aliases then lost at the store adapter; CSV priority is dropped; P3 header becomes `from → speaker: target`; P3 tail `self/call/scope/note` is lost at parser projection. These are baseline observations, not desired contracts.
+- Regression status: final focused JVM run `85 tests / 0 failures / 0 errors / 0 skipped`; initial SDK-path failure and test-only generator expectation failure were repaired in this branch; no production-source diff, APK, Android/device/API/RSC/Editorial action.
+- Protected state: original workspace `C:\Users\ADMIN\Documents\App Translate Books` and its dirty/untracked state remain untouched; old v4.16 D1 commits are read-only references only.
+- Exact next action: write focused failing/acceptance tests for Glossary4 before changing production.
 
-This is a current-only handoff. Git history preserves prior snapshots; do not append historical sections.
+This is current-only state; Git history preserves prior snapshots.
