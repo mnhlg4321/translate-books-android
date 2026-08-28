@@ -1,5 +1,7 @@
 # Editorial V5-SAFE.4 migration
 
+> **FROZEN / HISTORICAL FOR v4.17.** Do not continue migration, activation, certification, execution, or its next actions from this document. The single active authority is `TRANSLATION_PROFILE_RECOVERY_V4_17.md`; Editorial evidence is preserved without being reinterpreted.
+
 Status: `FOUNDATION_COMPLETE / EXECUTION_BLOCKED`
 
 This document replaces the executable design in `EDITORIAL_WORKFLOW_V5_PLAN.md` and the continuation plan in `EDITORIAL_HANDOFF_V4_16.md`. Those two files remain only as historical records.

@@ -19,9 +19,25 @@ main
 
 Không commit trực tiếp lên `main`. Không squash khi merge vì phải giữ lại lịch sử các commit nhỏ.
 
+Một release chỉ có một feature branch và một checklist. “Session” là một lượt tiếp tục trên branch đó, không phải một lý do tạo branch mới. Local test/build failure được sửa và commit trên cùng branch.
+
+## 0. Active v4.17 historical recovery exception
+
+`main` hiện cũ hơn baseline dịch đã được owner chọn, nên v4.17 dùng ngoại lệ phục hồi có kiểm soát:
+
+- canonical plan: `TRANSLATION_PROFILE_RECOVERY_V4_17.md`;
+- exact source baseline: `a9409ffacfcbb05374e3f07b8ae80b22f60a95b7` (`v4.16-dev.51` / code113);
+- verified baseline APK SHA-256: `C271F9D8BE757C476300E85E2F7E99742CAF25BF26B119C6218953E93FE24376`;
+- single branch: `feature/v4.17-translation-profile-compatibility`;
+- isolated worktree: `C:\Users\ADMIN\Documents\App Translate Books-translation-profile`;
+- original dirty workspace and later RSC/Editorial evidence are protected and must not be reset, moved, deleted, staged, or merged into this release by default;
+- every new APK must use Android `versionCode` greater than 168.
+
+This exception authorizes only the v4.17 scope frozen in the canonical plan. It does not establish a general practice of branching from arbitrary historical commits.
+
 ## 1. Bắt đầu phiên bản
 
-Chỉ bắt đầu khi working tree trên `main` sạch:
+Thông thường chỉ bắt đầu khi working tree trên `main` sạch:
 
 ```powershell
 git switch main
@@ -30,6 +46,8 @@ git switch -c feature/vX.Y
 ```
 
 Mỗi branch phiên bản dùng đúng mẫu `feature/vX.Y`, ví dụ `feature/v4.8`.
+
+Nếu canonical plan có historical recovery exception như v4.17, tạo một worktree sạch trực tiếp từ exact approved commit và ghi evidence vào checklist. Sau đó mọi lượt làm việc dùng lại worktree/branch đó. Không checkout/reset workspace dirty để mô phỏng một baseline sạch.
 
 ## 2. Chia commit
 
@@ -182,4 +200,3 @@ Một phiên bản chỉ hoàn tất khi:
 - chuẩn bị dừng hoặc bàn giao phiên làm việc.
 
 Snapshot phải ghi đủ version, branch, commit baseline, build, completed tasks, pending tasks, known bugs, regression status và next step. Snapshot là một thay đổi tài liệu thực; chỉ commit khi nội dung đã thay đổi và không bao giờ tạo commit rỗng.
-

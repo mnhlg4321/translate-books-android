@@ -3,7 +3,11 @@
 - Version: `vX.Y.Z`
 - Workflow status: `IN_PROGRESS`
 - Started: `TODO`
-- Owner/session: `TODO`
+- Owner/release: `TODO`
+- Canonical plan: `TODO`
+- Single release branch: `TODO`
+
+This checklist spans the complete release across all work sessions. Resume it; do not copy it for each phase, retry, test failure, or chat session.
 
 - [ ] 01 Read BUILD_STATE.md
   - Evidence: TODO
@@ -14,7 +18,7 @@
 - [ ] 03 Confirm current commit
   - Evidence: TODO
 
-- [ ] 04 Create new feature branch
+- [ ] 04 Create new feature branch once
   - Evidence: TODO
 
 - [ ] 05 Develop
@@ -51,3 +55,4 @@
 
 - None.
 
+Record local test/compile/lint/build failures as `FAILED_REPAIRING` and repair them in the same phase/branch. Use `BLOCKED_EXTERNAL` only for an unavailable required external resource/authority with no safe local alternative, or a destructive/materially out-of-scope owner decision.

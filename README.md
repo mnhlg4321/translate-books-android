@@ -9,9 +9,11 @@ The project targets Android 8.0 and later (`minSdk 26`) and currently builds aga
 | Track | Version | Status |
 |---|---|---|
 | Released baseline | `v4.15` / code 62 | Tagged, regression-tested, and immutably archived |
-| Next development | `v4.16-dev.24` / code 86 | SAFE4 foundation archived; execution blocked and QA/release gates open |
+| Frozen later development | `v4.16-dev.104` / code168 | RSC/Relation-Speaker and Editorial activation track preserved as historical; no longer the active next action |
+| Recovery source baseline | `v4.16-dev.51` / code113 | Verified chapter-translation baseline at commit `a9409ffa`; not reused as the next build number |
+| Active development | `v4.17-translation-profile-compatibility` | Ordered recovery of Glossary four-field runtime and Pronoun seven-field runtime; no RSC/Editorial expansion |
 
-See [BUILD_STATE.md](BUILD_STATE.md) for the exact current build, checksums, regression results and known limitations. See [WORKSPACE_SNAPSHOT.md](WORKSPACE_SNAPSHOT.md) for active work and the next development step. For Editorial, start with [EDITORIAL_SAFE4_MIGRATION.md](EDITORIAL_SAFE4_MIGRATION.md); the older V5 plan/handoff are historical only.
+See [TRANSLATION_PROFILE_RECOVERY_V4_17.md](TRANSLATION_PROFILE_RECOVERY_V4_17.md) for the single active scope and fixed implementation order. See [BUILD_STATE.md](BUILD_STATE.md) for exact artifact facts and [WORKSPACE_SNAPSHOT.md](WORKSPACE_SNAPSHOT.md) for the one current phase/next action. Later RSC/Relation-Speaker, Editorial activation, IPC and live-canary documents are historical only for this release.
 
 ## Highlights
 
@@ -43,6 +45,8 @@ TXT source
 
 Each job keeps an immutable settings snapshot. Changes to the active glossary, pronoun profile, instruction file, model, or chunk settings apply to new jobs rather than silently changing a running job.
 
+The v4.17 recovery targets the existing chapter-by-chapter workflow: the user selects one RAW chapter and its matching chapter Glossary and Pronoun files. Automatic `CHxxx` checking and whole-volume profile dispatch are intentionally deferred.
+
 ## Configuration files
 
 ### Instruction YAML
@@ -58,28 +62,27 @@ An optional `refinement` block can be present when the additional refinement pas
 
 ### Glossary
 
-CSV and compatible text mappings can define names, terminology, aliases, categories and character notes:
+CSV and compatible text mappings define names, terminology, categories and optional matched-row notes:
 
 ```csv
-source,target,category
-フラム,Flum,character
-魂の茨,Gai Hồn,skill
-魔王,Ma Vương,title
+source,target,category,note,priority
+フラム,Flum,character,Tên nhân vật chính,high
+魂の茨,Gai Hồn,skill,,medium
+魔王,Ma Vương,title,Danh hiệu,high
 ```
 
-Only matching, global, or otherwise mandatory entries are injected into a chunk prompt, subject to the configured glossary limit.
+The runtime consumes only `source,target,category,note`. A fifth `priority` column is tolerated but remains user-review metadata: the app does not store, rank, filter or send it to the model. Only matched rows are injected; a non-empty note is included only with its matched row. Legacy three-column and four-column files remain supported.
 
 ### Pronoun profile
 
-Relationship rules can be imported separately:
+The v4.17 Pronoun format is:
 
 ```csv
-from,to,pronoun
-Flum,Milkit,chị/em
-Milkit,Flum,em/chị
+from,speaker,target,self,call,scope,note
+私,Mercedes,Basil,ta,ngươi,CH004:p052-p153,Quan hệ áp dụng trong phạm vi này
 ```
 
-Equivalent TXT rules such as `Flum → Milkit: chị/em` are also supported. An active pronoun profile takes priority over pronoun notes embedded in glossary rows.
+The app must preserve and use all seven fields, compile the actual `speaker → target` relation and Vietnamese `self/call`, and constrain rules by `scope` without semantic speaker discovery. The legacy `from,to,pronoun` CSV and equivalent TXT rules such as `Flum → Milkit: chị/em` remain supported through a separate mapping. An active Pronoun profile takes priority over Pronoun notes embedded in glossary rows.
 
 ### Environment settings
 
@@ -148,6 +151,7 @@ Release and development evidence is recorded in versioned QA reports, [BUILD_STA
 | `scripts/` | Build, workflow, archive and verification tools |
 | `sample_configs/` | Safe example configuration files |
 | `release_checklists/` | Evidence-backed release workflow checklists |
+| `TRANSLATION_PROFILE_RECOVERY_V4_17.md` | Single active product scope, phase order and acceptance contract |
 | `BUILD_STATE.md` | Current build and released baseline |
 | `WORKSPACE_SNAPSHOT.md` | Current branch handoff and next action |
 | `CHANGELOG.md` | Version history |
@@ -158,8 +162,8 @@ Release and development evidence is recorded in versioned QA reports, [BUILD_STA
 Development follows:
 
 ```text
-main
-  → feature/vX.Y
+approved baseline (`main` normally; exact historical commit only when the canonical plan authorizes recovery)
+  → one feature/vX.Y branch for the whole release
   → small focused commits
   → regression
   → numbered retained build
@@ -168,7 +172,7 @@ main
   → merge --no-ff to main
 ```
 
-Read [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md) and [GIT_WORKFLOW.md](GIT_WORKFLOW.md) before modifying the project. Do not commit directly to `main`, overwrite release tags, or treat `app/build/` as durable artifact storage.
+Read [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md) and [GIT_WORKFLOW.md](GIT_WORKFLOW.md) before modifying the project. A later work session resumes the same release branch/checklist instead of creating a new one. Do not commit directly to `main`, overwrite release tags, or treat `app/build/` as durable artifact storage.
 
 ## Version history
 
