@@ -17,15 +17,15 @@ The current canonical branch was directly checked out at the approved code113 so
 - `app/src/main/java/com/ml/tblandroidtxt/MainActivity.java` — current code113 selection, settings snapshot, preview and dispatch path.
 - `app/src/main/java/com/ml/tblandroidtxt/TranslationEngine.java` — current code113 input/config, prompt request, validation, retry and metric path.
 
-## Flow map
+## Flow map — D1 baseline and D2 carry-forward
 
 | Stage | Current responsibility on canonical code113 |
 |---|---|
 | CSV/TXT import | `MainActivity.readSelectedTextFiles` reads selected SAF files through `FileUtil.readText`; the v4.17 workflow selects one RAW chapter and matching profile files manually. |
 | Import planning | `LibraryImportPlanner.glossaries` calls `GlossaryStore.parseTerms`; `LibraryImportPlanner.pronouns` validates text and stores the original text in a `PronounStore.Profile`. |
 | Parser | `PromptContextBuilder.validate` calls the private Glossary and Pronoun text/JSON parsers. CSV is split with quoted-comma support; legacy header heuristics run before row projection. |
-| Data model/store | `GlossaryStore.Term` has only `source`, `target`, `category`; `PronounStore.Profile` has identity/URI/name plus raw `text`. Parsed `TermEntry`/`PronounRule` are transient. |
-| Persistence | Glossaries are serialized as SharedPreferences JSON containing only the three `Term` fields. Pronoun profiles are serialized as SharedPreferences JSON containing raw text; there is no parsed-rule persistence. |
+| Data model/store | D1 baseline: `GlossaryStore.Term` had only `source`, `target`, `category`. D2 result: it has exactly `source`, `target`, `category`, `note`; `PronounStore.Profile` remains identity/URI/name plus raw `text`. Parsed `TermEntry`/`PronounRule` are transient. |
+| Persistence | D1 baseline JSON contained three Glossary `Term` fields. D2 JSON contains `source`, `target`, `category`, `note` and omits `priority`; legacy JSON without `note` loads an empty note. Pronoun profiles remain raw text; there is no parsed-rule persistence. |
 | Active profile | `MainActivity` selects a `GlossaryStore.Glossary` or `PronounStore.Profile`. Glossary selection renders prompt text; Pronoun selection copies raw profile text. |
 | Settings snapshot | `AppSettings`, `SettingsStore` and `SettingsStore.toJson/fromJson` retain `glossaryText` and `pronounText` strings, IDs and names. The snapshot is not a parsed object graph. |
 | Chunk matching | `PromptContextBuilder.match` parses the snapshot strings, ranks relevant terms/rules, dedupes rendered locks and applies default limits 80/40. |
@@ -35,7 +35,7 @@ The current canonical branch was directly checked out at the approved code113 so
 | Translation | `MainActivity.startTranslationNow` sends `SettingsStore.toJson(s)` and the prepared-batch ID to `TranslatorService`. `TranslatorService` loads/normalizes settings and delegates input preparation and provider attempts to `TranslationEngine`. |
 | Resume/retry | `TranslationRepository` persists prepared batches, job settings JSON, chunk rows and attempt state. `TranslatorService.resumeJobById` and retry paths reload `job.settingsJson`; they do not snapshot the current UI again. Delivery-unknown responses are not automatically resent. |
 
-## Glossary — actual five-column schema
+## Glossary — actual five-column schema (D1 observation before D2)
 
 The D1 fixture uses the real schema:
 
@@ -57,7 +57,7 @@ The text path in `PromptContextBuilder.parseTermsDetailed` (`PromptContextBuilde
 
 This is not the old mistaken `source,target,note` interpretation. With the five-column schema, note does not become category: category remains column 3, note is temporarily read as aliases.
 
-The JSON parser has a separate compatibility path (`PromptContextBuilder.java:242-269`) that can read a numeric `priority` into transient `TermEntry.priority` and the matcher sorts by it. That path does not make the fifth CSV column supported, and the store adapter still drops the transient value. D2 must follow the v4.17 authority and ignore priority at runtime.
+The JSON parser had a separate compatibility path (`PromptContextBuilder.java:242-269`) that could read a numeric `priority` into transient `TermEntry.priority` and the matcher sorted by it. That was a D1 baseline observation; D2 removes that runtime use and follows the v4.17 authority by ignoring priority.
 
 ### Adapter, persistence and prompt
 
@@ -87,7 +87,7 @@ The note and `high` are absent. Glossary JSON persistence (`GlossaryStore.java:1
 - Terms are ranked, then at most `AppSettings.glossaryInjectLimit` are injected. The default is 80 (`PromptContextBuilder.java:128-177`, `AppSettings.java:51`, `AppValidator.java:32`).
 - The editing UI separately shows at most 80 preview rows (`MainActivity.java:2100-2113`).
 
-### Required D1 conclusion
+### Required D1 conclusion (baseline bug, not the D2 contract)
 
 With the actual five-column schema:
 
@@ -96,6 +96,21 @@ With the actual five-column schema:
 - note in the fourth column is temporarily read as aliases;
 - note is lost when `TermEntry` is adapted to `GlossaryStore.Term`;
 - priority in the fifth column is dropped by the CSV text parser and has no store/prompt field.
+
+## D2 reconciliation — Glossary4 result
+
+The D1 observation above is intentionally preserved as the pre-change characterization of canonical code113. D2 now projects the same real five-column fixture as follows:
+
+- `PromptContextBuilder.TermEntry` has a separate `note` field; `cols[0]`, `cols[1]`, `cols[2]` and `cols[3]` map to source, target, category and note. `cols[4]` and later columns are not assigned.
+- A four-column file defaults column four to `note`. Only the explicit header `source,target,category,aliases` selects the compatibility `aliases` field. The standard `note` and `note,priority` headers never route note into aliases.
+- UTF-8 BOM is removed by the existing field cleaner; quoted commas and doubled escaped quotes survive. Multiline CSV fields are rejected with `multiline CSV fields are not supported`; no partial row is injected.
+- `GlossaryStore.Term` now has exactly `source`, `target`, `category` and `note`. The three-field constructor remains equivalent to an empty note; the four-field constructor normalizes a null note to `""`. No `priority` or aliases field exists on the runtime Term.
+- `GlossaryStore.parseTerms` preserves the four runtime fields. `toJson/fromJson` writes/reads the note key, accepts legacy JSON without it as an empty note, and never writes priority.
+- `GlossaryStore.toPromptText` renders a non-empty note once after the first ` | ` delimiter, normalizing CR/LF to spaces. `PromptContextBuilder` parses internal `Source, Target, Category` compact text by taking everything after the first delimiter as note, so a note containing `|` round-trips deterministically.
+- Matching and dedupe remain source/target/explicit-alias based. Note is not a match cue, global flag, pronoun cue or ranking input. The lowercased `source + NUL + target` key and default limit 80 remain unchanged; the Pronoun limit remains 40.
+- `PromptPlan`, prompt preview and full `CostEstimator` already consume the `PromptContextBuilder` compiler output, so a matched note is counted once and an unmatched note or priority adds no prompt tokens. The source-only prepared-batch lightweight estimate remains intentionally source-only and is not a replacement for the exact plan estimator.
+
+Current D2 implementation references: `GlossaryStore.java:24-39,114-143,206-238`; `PromptContextBuilder.java:34-48,240-324,328-350,452-458,613-627,706-716`.
 
 ## Pronoun — actual P3 schema
 
@@ -158,7 +173,7 @@ These two files differ from the old code168-track comparison and were read direc
 - `onCreate` loads `SettingsStore`, performs legacy Pronoun migration, then copies the selected profile's raw text/metadata back into settings (`MainActivity.java:203-221`).
 - Glossary import validates/merges parsed `GlossaryStore.Term` objects and selects the first imported Glossary; Pronoun import validates but stores the original raw text (`MainActivity.java:1028-1084`).
 - `collectSettings` prefers the selected Glossary's rendered prompt text and the selected Pronoun's raw profile text (`MainActivity.java:1649-1705`).
-- Glossary selection persists the selected ID and rendered three-field prompt; Pronoun selection persists raw profile text (`MainActivity.java:2067-2087`, `1123-1131`).
+- Glossary selection persists the selected ID and rendered compact prompt text with the four runtime fields; Pronoun selection persists raw profile text (`MainActivity.java:2067-2087`, `1123-1131`).
 - Profile JSON import is an `AppSettings` snapshot import and does not rebuild Glossary/Pronoun store objects (`MainActivity.java:1332-1342`).
 - Prompt preview uses the first input and the current settings (`MainActivity.java:2276-2285`).
 - Start saves settings and sends the JSON snapshot plus prepared-batch ID to `TranslatorService` (`MainActivity.java:1411-1452`).
@@ -192,7 +207,7 @@ These two files differ from the old code168-track comparison and were read direc
 
 ## Controlled diagnostic results
 
-The committed test is characterization only. Its assertions explicitly label the current projection as an error and must not be treated as the D3 contract.
+The Pronoun diagnostic remains characterization only: its assertions explicitly label the known code113 projection as an error and must not be treated as the D3 contract. The Glossary diagnostic was updated by D2 into a regression proof of the corrected four-field behavior; it is not a claim that the pre-D2 baseline was correct.
 
 ### Pronoun P3
 
@@ -214,16 +229,17 @@ default.pronoun.limit.observed=40
 ### Glossary five-column
 
 ```text
-baseline.code113.expected.error=true
+d2.glossary4.expected=true
 raw.row.column.count=5
 entry.source=クロ
 entry.target=Kuro
 entry.category=character
-entry.aliases(note)=Tên Mercedes đặt cho nhân vật này
-entry.priority=0 (fifth CSV column ignored)
-store.term=source,target,category only
-prompt.line=クロ => Kuro [character]
-store.adapter.note.aliases=LOST
+entry.note=Tên Mercedes đặt cho nhân vật này
+entry.aliases= (aliases require explicit header)
+entry.priority=IGNORED (fifth CSV column ignored)
+store.term=source,target,category,note
+prompt.line=クロ => Kuro [character] | Tên Mercedes đặt cho nhân vật này
+store.adapter.note=PRESERVED
 store.adapter.priority=LOST
 dedupe.same-source-target.count=1
 default.glossary.limit.observed=80
@@ -269,10 +285,24 @@ $taskJavaHome = 'C:\Program Files\Android\Android Studio\jbr'; $env:JAVA_HOME = 
 
 Result: `2/2 PASS`.
 
-The final combined A+B+C+D command (same JDK/SDK setup) completed with `85 tests, 0 failures, 0 errors, 0 skipped`:
+The D2 acceptance test was intentionally run before the production patch:
 
 ```powershell
-.\gradlew.bat :app:testDebugUnitTest --tests com.ml.tblandroidtxt.GlossaryImportV48Test --tests com.ml.tblandroidtxt.PronounProfileTest --tests com.ml.tblandroidtxt.PromptContextQaTest --tests com.ml.tblandroidtxt.LibraryImportPlannerTest --tests com.ml.tblandroidtxt.TranslationConfigStateTest --tests com.ml.tblandroidtxt.CostOptimizationTest --tests com.ml.tblandroidtxt.ModelFlowV42IntegrationTest --tests com.ml.tblandroidtxt.ReliabilityV43Test --tests com.ml.tblandroidtxt.ReliabilityV43IntegrationTest --tests com.ml.tblandroidtxt.ReliabilityV44Test --tests com.ml.tblandroidtxt.CoreRecovery45Test --tests com.ml.tblandroidtxt.RuntimeStateSnapshotTest --tests com.ml.tblandroidtxt.Hotfix441Test --tests com.ml.tblandroidtxt.Patch312Test --tests com.ml.tblandroidtxt.V46DashboardTest --tests com.ml.tblandroidtxt.Code113P3DiagnosticFixtureTest --tests com.ml.tblandroidtxt.Code113GlossaryProjectionDiagnosticFixtureTest --console=plain
+$taskJavaHome = 'C:\Program Files\Android\Android Studio\jbr'; $env:JAVA_HOME = $taskJavaHome; $env:Path = "$taskJavaHome\bin;$env:Path"; $env:ANDROID_HOME = 'C:\Users\ADMIN\AppData\Local\Android\Sdk'; $env:ANDROID_SDK_ROOT = $env:ANDROID_HOME; .\gradlew.bat :app:testDebugUnitTest --tests com.ml.tblandroidtxt.GlossaryFourFieldRuntimeTest --console=plain
+```
+
+Result before production change: `8 tests completed, 8 failed`; this was the expected D2 red result for the missing note field/constructor/adapter/compiler behavior. A test-only constructor invocation issue was repaired with reflection before this red result; no production file was changed for that red run.
+
+After the production patch, the focused D2 command completed with `9/9 PASS`:
+
+```powershell
+$taskJavaHome = 'C:\Program Files\Android\Android Studio\jbr'; $env:JAVA_HOME = $taskJavaHome; $env:Path = "$taskJavaHome\bin;$env:Path"; $env:ANDROID_HOME = 'C:\Users\ADMIN\AppData\Local\Android\Sdk'; $env:ANDROID_SDK_ROOT = $env:ANDROID_HOME; .\gradlew.bat :app:testDebugUnitTest --tests com.ml.tblandroidtxt.GlossaryFourFieldRuntimeTest --console=plain
+```
+
+The final combined A+B+C+D command (same JDK/SDK setup) completed with `94 tests, 0 failures, 0 errors, 0 skipped`:
+
+```powershell
+.\gradlew.bat :app:testDebugUnitTest --tests com.ml.tblandroidtxt.GlossaryImportV48Test --tests com.ml.tblandroidtxt.PronounProfileTest --tests com.ml.tblandroidtxt.PromptContextQaTest --tests com.ml.tblandroidtxt.LibraryImportPlannerTest --tests com.ml.tblandroidtxt.TranslationConfigStateTest --tests com.ml.tblandroidtxt.CostOptimizationTest --tests com.ml.tblandroidtxt.ModelFlowV42IntegrationTest --tests com.ml.tblandroidtxt.ReliabilityV43Test --tests com.ml.tblandroidtxt.ReliabilityV43IntegrationTest --tests com.ml.tblandroidtxt.ReliabilityV44Test --tests com.ml.tblandroidtxt.CoreRecovery45Test --tests com.ml.tblandroidtxt.RuntimeStateSnapshotTest --tests com.ml.tblandroidtxt.Hotfix441Test --tests com.ml.tblandroidtxt.Patch312Test --tests com.ml.tblandroidtxt.V46DashboardTest --tests com.ml.tblandroidtxt.Code113P3DiagnosticFixtureTest --tests com.ml.tblandroidtxt.Code113GlossaryProjectionDiagnosticFixtureTest --tests com.ml.tblandroidtxt.GlossaryFourFieldRuntimeTest --console=plain
 ```
 
 Not run by explicit scope: `assembleDebug`, `scripts/build-and-save.ps1`, Android instrumentation, emulator/AVD, real provider/API, RSC, Editorial and IPC tests. No Android/device/API evidence is claimed.
@@ -281,16 +311,19 @@ Not run by explicit scope: `assembleDebug`, `scripts/build-and-save.ps1`, Androi
 
 D1 canonical result: `COMPLETE`.
 
-Smallest production set identified for later work, without implementing it here:
+D2 Glossary4 result: `COMPLETE` on `2026-08-29`, implementation commit `353b641` (`feat(glossary): preserve matched runtime notes`). Runtime now retains exactly `source,target,category,note`; it accepts three/four/five-column Glossary input and ignores `priority`. The D1 Glossary diagnostic is a corrected regression proof, while the P3 diagnostic remains the known code113 error characterization. The D2 implementation changed only `GlossaryStore.java` and `PromptContextBuilder.java`; no MainActivity, TranslationEngine, Pronoun, database, RSC, Editorial or IPC production file changed.
 
-- D2 Glossary4: `PromptContextBuilder.java` and `GlossaryStore.java`; add `MainActivity.java` only if the editor UI must expose/edit note. `LibraryImportPlanner` already delegates through the adapter. No priority runtime behavior should be introduced.
-- D3 Pronoun7: `PromptContextBuilder.java` is the minimum parser/model/compiler change. Current raw `PronounStore`, `AppSettings`, `SettingsStore`, `MainActivity` and job settings JSON already preserve the original text; additional persistence changes are needed only if D3 changes the snapshot representation from raw text to parsed objects.
+Smallest production set identified for D2/D3:
 
-The canonical phase may advance to `D2_GLOSSARY4` after this characterization, but this D1 task does not implement D2. The exact next action is to write focused failing/acceptance tests for Glossary4 before changing production.
+- D2 Glossary4: implemented in `PromptContextBuilder.java` and `GlossaryStore.java`. `LibraryImportPlanner`, `MainActivity`, `PromptPreviewDialog`, `PromptPlan` and `CostEstimator` already consume the resulting compact text/compiler path; no extra production file was necessary.
+- D3 Pronoun7: `PromptContextBuilder.java` is the first expected parser/model/compiler target. `PronounStore.java` is the only additional candidate if focused persistence tests prove raw profile storage is insufficient; `AppSettings`, `SettingsStore`, `MainActivity` and job settings JSON currently preserve raw text. D3 has not started.
+
+The canonical phase is now `D3_PRONOUN7`; the exact next action is to write focused D3 Pronoun7 failing/acceptance tests before changing production. This report does not claim D3 behavior.
 
 ## Scope and diff guard
 
-- Production source diff for this reconciliation: `0` files under `app/src/main`.
-- D1 changes are limited to test fixtures, test-only Java, the canonical report, the existing v4.17 checklist, current-only plan/state/snapshot updates.
-- The canonical D1 diff itself passes `git diff --check`.
+- D1 reconciliation production source diff: `0` files under `app/src/main`.
+- D2 production source diff: exactly `2` files under `app/src/main`: `GlossaryStore.java` and `PromptContextBuilder.java`.
+- D2 test/report changes are limited to test-only Java, the existing code113 fixtures, this canonical report and the existing v4.17 state/checklist documents.
+- `git diff --check` passes after the D2 changes.
 - No workspace v4.16 file was changed, staged or reset.
