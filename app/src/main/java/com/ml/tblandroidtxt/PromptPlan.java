@@ -36,7 +36,8 @@ public final class PromptPlan {
         AppSettings settings = s == null ? new AppSettings() : s;
         String ruleContext = safe(chunk.contextBefore) + "\n" + chunk.mainContent;
         PromptContextBuilder.ContextBlock locks = PromptContextBuilder.buildWithRuleContext(
-                settings.glossaryText, settings.pronounText, chunk.mainContent, ruleContext, settings);
+                settings.glossaryText, settings.pronounText, chunk.mainContent, ruleContext,
+                chunk.paragraphStart, chunk.paragraphEnd, settings);
         String base = "You are a professional " + settings.targetLanguage + " translator and writer.\n\n"
                 + "Translate " + settings.sourceLanguage + " to " + settings.targetLanguage + ". Preserve names, meaning, tone, layout, spacing, line breaks and indentation. "
                 + "Use natural " + settings.targetLanguage + " phrasing, translate idioms appropriately, and do not add or omit information.";
@@ -63,7 +64,10 @@ public final class PromptPlan {
     public static PromptPlan forTranslation(Chunk chunk, String previous, AppSettings s) {
         if (s != null && "full".equalsIgnoreCase(s.optimizationPreset)) {
             PromptPair legacy = PromptBuilder.translationPrompt(chunk, previous, s);
-            PromptContextBuilder.ContextBlock locks = PromptContextBuilder.build(s.glossaryText, s.pronounText, chunk.mainContent, s);
+            PromptContextBuilder.ContextBlock locks = PromptContextBuilder.buildWithRuleContext(
+                    s.glossaryText, s.pronounText, chunk.mainContent,
+                    safe(chunk.contextBefore) + "\n" + chunk.mainContent,
+                    chunk.paragraphStart, chunk.paragraphEnd, s);
             return new PromptPlan("translate", chunk.mainContent, legacy.system, s.translationInstructions,
                     locks.glossary, locks.pronouns, safe(previous), safe(chunk.contextBefore) + safe(chunk.contextAfter), "",
                     legacy, locks.glossaryCount, locks.pronounCount);

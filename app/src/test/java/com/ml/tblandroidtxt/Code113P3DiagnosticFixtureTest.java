@@ -11,12 +11,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-/**
- * Characterization only: records the known code113 P3 projection bug.
- *
- * The assertions deliberately describe the current bad projection. They are
- * not the D3 behavior contract and must be replaced/extended when D3 lands.
- */
+/** Regression diagnostic for the corrected code113-compatible P3 projection. */
 public class Code113P3DiagnosticFixtureTest {
     private static final String RESOURCE = "fixtures/code113/p3-seven-column-pronoun.csv";
 
@@ -28,26 +23,28 @@ public class Code113P3DiagnosticFixtureTest {
         assertEquals(7, csvColumnCount(lines[1]));
 
         PromptContextBuilder.ParseReport parsed = PromptContextBuilder.validate("", raw);
-        assertEquals(2, parsed.explicitPronouns.size());
+        assertEquals(1, parsed.explicitPronouns.size());
 
-        PromptContextBuilder.PronounRule header = parsed.explicitPronouns.get(0);
-        PromptContextBuilder.PronounRule data = parsed.explicitPronouns.get(1);
-        assertEquals("from → speaker: target", header.text);
-        assertEquals("私 → Mercedes: Basil", data.text);
-        assertEquals("私", data.sourceName);
-        assertEquals("Mercedes", data.targetName);
-        assertEquals("Basil", data.details);
+        PromptContextBuilder.PronounRule data = parsed.explicitPronouns.get(0);
+        assertEquals("Mercedes → Basil: ta/ngươi | Fixture P3 thật của Mercedes", data.text);
+        assertEquals("私", data.from);
+        assertEquals("Mercedes", data.speaker);
+        assertEquals("Basil", data.target);
+        assertEquals("ta", data.self);
+        assertEquals("ngươi", data.call);
+        assertEquals("CH004:p052-p153", data.scope);
+        assertEquals("Fixture P3 thật của Mercedes", data.note);
 
-        // The raw seven-column tail exists, but code113 does not project it.
+        // The raw seven-column tail is projected into the D3 runtime fields.
         assertTrue(raw.contains("ta,ngươi,CH004:p052-p153,Fixture P3 thật của Mercedes"));
-        assertFalse(data.text.contains("ta"));
-        assertFalse(data.text.contains("ngươi"));
+        assertTrue(data.text.contains("ta"));
+        assertTrue(data.text.contains("ngươi"));
         assertFalse(data.text.contains("CH004:p052-p153"));
-        assertFalse(data.text.contains("Fixture P3 thật của Mercedes"));
-        assertFalse(hasPronounRuleField("self"));
-        assertFalse(hasPronounRuleField("call"));
-        assertFalse(hasPronounRuleField("scope"));
-        assertFalse(hasPronounRuleField("note"));
+        assertTrue(data.text.contains("Fixture P3 thật của Mercedes"));
+        assertTrue(hasPronounRuleField("self"));
+        assertTrue(hasPronounRuleField("call"));
+        assertTrue(hasPronounRuleField("scope"));
+        assertTrue(hasPronounRuleField("note"));
 
         String legacy = "from,to,pronoun\nAlice,Bob,chị/em\n";
         PromptContextBuilder.ParseReport legacyParsed = PromptContextBuilder.validate("", legacy);
@@ -66,15 +63,19 @@ public class Code113P3DiagnosticFixtureTest {
         assertEquals(40, new AppSettings().pronounInjectLimit);
         assertEquals(40, limited.pronounCount);
 
-        String diagnostic = "baseline.code113.expected.error=true\n"
+        String diagnostic = "baseline.code113.expected.error=false\n"
+                + "d3.pronoun7.expected=true\n"
                 + "raw.header.column.count=" + csvColumnCount(lines[0]) + "\n"
                 + "raw.data.column.count=" + csvColumnCount(lines[1]) + "\n"
-                + "header.rule=" + header.text + "\n"
+                + "header.rule=SKIPPED\n"
                 + "data.rule=" + data.text + "\n"
-                + "data.projected.from=" + data.sourceName + "\n"
-                + "data.projected.speaker=" + data.targetName + "\n"
-                + "data.projected.target=" + data.details + "\n"
-                + "tail.self.call.scope.note=LOST\n"
+                + "data.projected.from=" + data.from + "\n"
+                + "data.projected.speaker=" + data.speaker + "\n"
+                + "data.projected.target=" + data.target + "\n"
+                + "data.self=" + data.self + "\n"
+                + "data.call=" + data.call + "\n"
+                + "data.scope=" + data.scope + "\n"
+                + "data.note=" + data.note + "\n"
                 + "legacy3.rule=" + legacyParsed.explicitPronouns.get(0).text + "\n"
                 + "legacy3.match.count=" + legacyMatch.pronounCount + "\n"
                 + "default.pronoun.limit.observed=" + limited.pronounCount;

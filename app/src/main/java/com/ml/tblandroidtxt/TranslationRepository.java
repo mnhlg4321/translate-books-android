@@ -185,7 +185,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
         return b;
     }
 
-    public List<Chunk> getPreparedChunks(String batchId,int ordinal){ArrayList<Chunk> out=new ArrayList<>();String sql="SELECT idx,start_offset,end_offset,context_before,source,context_after,parent_stable_id,stable_id FROM prepared_chunks WHERE batch_id=? AND input_ordinal=? ORDER BY idx";try(Cursor c=getReadableDatabase().rawQuery(sql,new String[]{batchId,String.valueOf(ordinal)})){while(c.moveToNext()){Chunk ch=new Chunk(c.getInt(0),c.getInt(1),c.getInt(2),safe(c.getString(3)),safe(c.getString(4)),safe(c.getString(5)),safe(c.getString(6)));String stable=safe(c.getString(7));if(!stable.isEmpty())ch.stableId=stable;out.add(ch);}}return out;}
+    public List<Chunk> getPreparedChunks(String batchId,int ordinal){ArrayList<Chunk> out=new ArrayList<>();String sql="SELECT idx,start_offset,end_offset,context_before,source,context_after,parent_stable_id,stable_id FROM prepared_chunks WHERE batch_id=? AND input_ordinal=? ORDER BY idx";try(Cursor c=getReadableDatabase().rawQuery(sql,new String[]{batchId,String.valueOf(ordinal)})){while(c.moveToNext()){Chunk ch=new Chunk(c.getInt(0),c.getInt(1),c.getInt(2),safe(c.getString(3)),safe(c.getString(4)),safe(c.getString(5)),safe(c.getString(6)));String stable=safe(c.getString(7));if(!stable.isEmpty())ch.stableId=stable;out.add(ch);}}Chunker.assignParagraphRanges(out);return out;}
 
     private static void deletePreparedBatch(SQLiteDatabase db,String id){db.delete("prepared_chunks","batch_id=?",new String[]{id});db.delete("prepared_inputs","batch_id=?",new String[]{id});db.delete("prepared_batches","id=?",new String[]{id});}
 

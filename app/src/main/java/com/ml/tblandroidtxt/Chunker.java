@@ -35,7 +35,120 @@ public class Chunker {
         }
         Coverage coverage = verifyCoverage(src, out);
         if (!coverage.valid) throw new IllegalStateException(coverage.message);
+        assignParagraphRanges(out);
         return out;
+    }
+
+    /**
+     * Reconstructs the normalized full source from ordered main ranges and
+     * annotates each chunk with its inclusive 1-based paragraph range.
+     * Paragraph metadata is deliberately not part of identity, hashes or
+     * persisted chunk schema.
+     */
+    public static void assignParagraphRanges(List<Chunk> chunks) {
+        assignParagraphRangesInternal(chunks, 0, true);
+    }
+
+    private static void assignParagraphRangesInternal(List<Chunk> chunks, int paragraphBase, boolean validateOffsets) {
+        if (chunks == null || chunks.isEmpty()) return;
+        StringBuilder rebuilt = new StringBuilder();
+        boolean anyKnownOffset = false;
+        boolean allKnownOffsets = true;
+        int previousEnd = -1;
+        for (int i = 0; i < chunks.size(); i++) {
+            Chunk chunk = chunks.get(i);
+            if (chunk == null) throw new IllegalArgumentException("Cannot assign paragraph ranges to a null chunk at " + i);
+            String main = normalizeSource(chunk.mainContent);
+            rebuilt.append(main);
+            boolean known = chunk.startOffset >= 0 && chunk.endOffset >= chunk.startOffset;
+            anyKnownOffset |= known;
+            allKnownOffsets &= known;
+            if (validateOffsets && known) {
+                if (i == 0 && chunk.startOffset != 0) throw new IllegalArgumentException("Chunk ranges do not start at offset 0");
+                if (previousEnd >= 0 && chunk.startOffset != previousEnd) {
+                    throw new IllegalArgumentException("Chunk ranges are not continuous before chunk " + i);
+                }
+                if (chunk.endOffset - chunk.startOffset != main.length()) {
+                    throw new IllegalArgumentException("Chunk range/text length mismatch at chunk " + i);
+                }
+                previousEnd = chunk.endOffset;
+            }
+        }
+        if (validateOffsets && anyKnownOffset && !allKnownOffsets) {
+            throw new IllegalArgumentException("Cannot validate continuity when only some chunk offsets are known");
+        }
+        if (validateOffsets && allKnownOffsets) {
+            Chunk last = chunks.get(chunks.size() - 1);
+            if (last.endOffset != rebuilt.length()) {
+                throw new IllegalArgumentException("Chunk ranges do not cover the reconstructed source continuously");
+            }
+        }
+        ArrayList<ParagraphBlock> paragraphs = paragraphBlocks(rebuilt.toString());
+        int cursor = 0;
+        for (Chunk chunk : chunks) {
+            String main = normalizeSource(chunk.mainContent);
+            int end = cursor + main.length();
+            int first = -1, last = -1;
+            for (int i = 0; i < paragraphs.size(); i++) {
+                ParagraphBlock paragraph = paragraphs.get(i);
+                if (paragraph.end > cursor && paragraph.start < end) {
+                    if (first < 0) first = i + 1;
+                    last = i + 1;
+                }
+            }
+            if (first < 0 && end > cursor) {
+                int previousParagraph = -1;
+                int nextParagraph = -1;
+                for (int i = 0; i < paragraphs.size(); i++) {
+                    ParagraphBlock paragraph = paragraphs.get(i);
+                    if (paragraph.end <= cursor) previousParagraph = i + 1;
+                    else if (paragraph.start >= end) { nextParagraph = i + 1; break; }
+                }
+                if (previousParagraph > 0 && nextParagraph > 0) {
+                    first = previousParagraph;
+                    last = nextParagraph;
+                } else if (previousParagraph > 0) first = last = previousParagraph;
+                else if (nextParagraph > 0) first = last = nextParagraph;
+            }
+            if (first < 0) {
+                chunk.paragraphStart = -1;
+                chunk.paragraphEnd = -1;
+            } else {
+                chunk.paragraphStart = paragraphBase + first;
+                chunk.paragraphEnd = paragraphBase + last;
+            }
+            cursor = end;
+        }
+    }
+
+    private static ArrayList<ParagraphBlock> paragraphBlocks(String source) {
+        ArrayList<ParagraphBlock> result = new ArrayList<>();
+        int paragraphStart = -1;
+        int paragraphEnd = -1;
+        int lineStart = 0;
+        while (lineStart <= source.length()) {
+            int newline = source.indexOf('\n', lineStart);
+            int lineEnd = newline < 0 ? source.length() : newline;
+            String line = source.substring(lineStart, lineEnd);
+            if (!line.trim().isEmpty()) {
+                if (paragraphStart < 0) paragraphStart = lineStart;
+                paragraphEnd = lineEnd;
+            } else if (paragraphStart >= 0) {
+                result.add(new ParagraphBlock(paragraphStart, paragraphEnd));
+                paragraphStart = -1;
+                paragraphEnd = -1;
+            }
+            if (newline < 0) break;
+            lineStart = newline + 1;
+        }
+        if (paragraphStart >= 0) result.add(new ParagraphBlock(paragraphStart, paragraphEnd));
+        return result;
+    }
+
+    private static final class ParagraphBlock {
+        final int start;
+        final int end;
+        ParagraphBlock(int start, int end) { this.start = start; this.end = end; }
     }
 
     /** Splits only the translatable range; parent becomes SUPERSEDED in persistence. */
@@ -51,6 +164,7 @@ public class Chunker {
             result.add(new Chunk(parent.index + result.size(), absoluteStart, absoluteEnd,
                     child.contextBefore, child.mainContent, child.contextAfter, parent.stableId));
         }
+        assignParagraphRangesInternal(result, Math.max(0, parent.paragraphStart - 1), false);
         return result;
     }
 

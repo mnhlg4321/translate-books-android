@@ -16,7 +16,7 @@ public class PromptBuilder {
                     + "These instructions override all other guidelines.\n\n"
                     + s.translationInstructions.trim() + "\n\n";
         }
-        String contextualRules = buildContextualRules(chunk.mainContent, s);
+        String contextualRules = buildContextualRules(chunk, s);
         String system = "You are a professional " + s.targetLanguage + " translator and writer.\n\n"
                 + custom
                 + contextualRules
@@ -77,6 +77,19 @@ public class PromptBuilder {
     private static String buildContextualRules(String sourceText, AppSettings s) {
         if (s == null) return "";
         PromptContextBuilder.ContextBlock block = PromptContextBuilder.build(s.glossaryText, s.pronounText, sourceText, s);
+        String body = block.asPromptText();
+        if (body.trim().isEmpty()) return "";
+        return "# CONTEXTUAL TERM AND PRONOUN LOCKS\n\n"
+                + "Only the glossary/pronoun entries relevant to this chunk are injected below. Treat them as mandatory locks.\n\n"
+                + body;
+    }
+
+    private static String buildContextualRules(Chunk chunk, AppSettings s) {
+        if (s == null || chunk == null) return "";
+        PromptContextBuilder.ContextBlock block = PromptContextBuilder.buildWithRuleContext(
+                s.glossaryText, s.pronounText, chunk.mainContent,
+                chunk.contextBefore + "\n" + chunk.mainContent,
+                chunk.paragraphStart, chunk.paragraphEnd, s);
         String body = block.asPromptText();
         if (body.trim().isEmpty()) return "";
         return "# CONTEXTUAL TERM AND PRONOUN LOCKS\n\n"

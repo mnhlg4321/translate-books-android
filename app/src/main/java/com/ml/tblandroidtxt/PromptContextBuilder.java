@@ -55,6 +55,19 @@ public class PromptContextBuilder {
         public String sourceName = "";
         public String targetName = "";
         public String details = "";
+        public String from = "";
+        public String speaker = "";
+        public String target = "";
+        public String self = "";
+        public String call = "";
+        public String scope = "";
+        public String note = "";
+        public int scopeStart = -1;
+        public int scopeEnd = -1;
+        public boolean scopeValid = true;
+        public boolean chapterWide = true;
+        public String format = "LEGACY3";
+        public boolean p3 = false;
         public int lineNumber = -1;
     }
 
@@ -63,6 +76,7 @@ public class PromptContextBuilder {
         int score;
         boolean dialogueParticipant;
         String line;
+        String dedupeKey = "";
     }
 
     public static class ParseReport {
@@ -119,8 +133,19 @@ public class PromptContextBuilder {
         return match(glossaryText, pronounText, chunkText, chunkText, s).block;
     }
 
+    public static ContextBlock build(String glossaryText, String pronounText, String chunkText,
+                                     int paragraphStart, int paragraphEnd, AppSettings s) {
+        return match(glossaryText, pronounText, chunkText, chunkText, paragraphStart, paragraphEnd, s).block;
+    }
+
     public static ContextBlock buildWithRuleContext(String glossaryText, String pronounText, String chunkText, String ruleContext, AppSettings s) {
         return match(glossaryText, pronounText, chunkText, ruleContext, s).block;
+    }
+
+    public static ContextBlock buildWithRuleContext(String glossaryText, String pronounText, String chunkText,
+                                                    String ruleContext, int paragraphStart, int paragraphEnd,
+                                                    AppSettings s) {
+        return match(glossaryText, pronounText, chunkText, ruleContext, paragraphStart, paragraphEnd, s).block;
     }
 
     public static MatchReport match(String glossaryText, String pronounText, String chunkText, AppSettings s) {
@@ -128,6 +153,11 @@ public class PromptContextBuilder {
     }
 
     public static MatchReport match(String glossaryText, String pronounText, String chunkText, String ruleContext, AppSettings s) {
+        return match(glossaryText, pronounText, chunkText, ruleContext, -1, -1, s);
+    }
+
+    public static MatchReport match(String glossaryText, String pronounText, String chunkText, String ruleContext,
+                                    int paragraphStart, int paragraphEnd, AppSettings s) {
         MatchReport report = new MatchReport();
         String chunk = safe(chunkText);
         int gLimit = Math.max(0, s == null ? 80 : s.glossaryInjectLimit);
@@ -181,12 +211,13 @@ public class PromptContextBuilder {
         StringBuilder p = new StringBuilder();
         int pc = 0;
         LinkedHashSet<String> seenRules = new LinkedHashSet<>();
-        for (RankedPronounRule selected : rankPronounRules(chunk, safe(ruleContext), pronounRules)) {
+        for (RankedPronounRule selected : rankPronounRules(chunk, safe(ruleContext), paragraphStart, paragraphEnd, pronounRules)) {
             if (pc >= pLimit) break;
             PronounRule r = selected.rule;
             if (safe(r.text).trim().isEmpty()) continue;
             String line = selected.line;
-            if (!seenRules.add(line.toLowerCase(Locale.ROOT))) continue;
+            String dedupeKey = safe(selected.dedupeKey).isEmpty() ? line.toLowerCase(Locale.ROOT) : selected.dedupeKey;
+            if (!seenRules.add(dedupeKey.toLowerCase(Locale.ROOT))) continue;
             p.append(line).append('\n');
             report.matchedPronounLines.add(line);
             pc++;
@@ -204,6 +235,11 @@ public class PromptContextBuilder {
 
     public static String preview(String glossaryText, String pronounText, String chunkText, AppSettings s) {
         return match(glossaryText, pronounText, chunkText, s).asPreviewText();
+    }
+
+    public static String preview(String glossaryText, String pronounText, String chunkText, String ruleContext,
+                                 int paragraphStart, int paragraphEnd, AppSettings s) {
+        return match(glossaryText, pronounText, chunkText, ruleContext, paragraphStart, paragraphEnd, s).asPreviewText();
     }
 
     public static ParseReport validate(String glossaryText, String pronounText) {
@@ -356,7 +392,7 @@ public class PromptContextBuilder {
 
     private static PronounParseResult parsePronounRulesDetailed(String text) {
         PronounParseResult out = new PronounParseResult();
-        String raw = safe(text).trim();
+        String raw = safe(text).replace("\uFEFF", "").trim();
         if (raw.isEmpty()) return out;
         if (raw.startsWith("{") || raw.startsWith("[")) {
             try {
@@ -370,51 +406,200 @@ public class PromptContextBuilder {
                 for (int i = 0; i < arr.length(); i++) {
                     JSONObject o = arr.optJSONObject(i);
                     if (o == null) { out.malformedRows.add("json[" + i + "]: not an object"); continue; }
+                    if (hasP3JsonFields(o)) {
+                        PronounRule r = newP3Rule(
+                                first(o.optString("from")), first(o.optString("speaker")),
+                                first(o.optString("target")), first(o.optString("self")),
+                                first(o.optString("call")), first(o.optString("scope")),
+                                first(o.optString("note")), i + 1);
+                        if (r == null) out.malformedRows.add("json[" + i + "]: missing from/speaker/target");
+                        else {
+                            if (!r.scopeValid) out.malformedRows.add("json[" + i + "]: invalid scope " + r.scope);
+                            out.rules.add(r);
+                        }
+                        continue;
+                    }
                     String line = first(o.optString("rule"), o.optString("text"));
                     if (line.isEmpty()) {
                         String from = first(o.optString("from"), o.optString("speaker"));
                         String to = first(o.optString("to"), o.optString("listener"));
                         String pair = first(o.optString("pair"), o.optString("pronoun"), o.optString("xung_ho"));
-                        if (!from.isEmpty() || !to.isEmpty() || !pair.isEmpty()) line = from + " → " + to + ": " + pair;
+                        if (!from.isEmpty() || !to.isEmpty() || !pair.isEmpty()) line = from + " \u2192 " + to + ": " + pair;
                     }
-                    if (!line.trim().isEmpty()) {
-                        PronounRule r = new PronounRule();
-                        r.sourceName = first(o.optString("from"), o.optString("speaker"));
-                        r.targetName = first(o.optString("to"), o.optString("listener"));
-                        r.details = first(o.optString("pair"), o.optString("pronoun"), o.optString("xung_ho"));
-                        r.text = line.trim(); r.key = line.trim(); r.lineNumber = i + 1;
-                        if (r.sourceName.isEmpty()) populateStructuredRule(r);
-                        out.rules.add(r);
-                    } else out.malformedRows.add("json[" + i + "]: missing rule/from/to/pair");
+                    PronounRule r = newLegacyTextRule(line, i + 1);
+                    if (r == null) out.malformedRows.add("json[" + i + "]: missing rule/from/to/pair");
+                    else out.rules.add(r);
                 }
                 return out;
             } catch (Exception e) {
                 out.malformedRows.add("JSON parse failed: " + e.getMessage());
             }
         }
-        String[] lines = raw.split("\\r?\\n");
+        String[] lines = raw.split("\\r?\\n", -1);
+        PronounFormat headerFormat = PronounFormat.NONE;
+        int headerLine = -1;
+        boolean headerPresent = false;
+        for (int i = 0; i < lines.length; i++) {
+            String candidate = safe(lines[i]).trim();
+            if (candidate.isEmpty() || candidate.startsWith("#")) continue;
+            String[] headerColumns = splitLine(candidate);
+            headerFormat = detectPronounHeader(headerColumns);
+            headerPresent = headerFormat != PronounFormat.NONE || looksLikePronounHeader(headerColumns);
+            if (headerFormat != PronounFormat.NONE) headerLine = i;
+            else if (headerPresent) {
+                headerLine = i;
+                out.malformedRows.add("line " + (i + 1) + ": unsupported Pronoun header format");
+            }
+            break;
+        }
+        boolean csvQuoteOpen = false;
         for (int i = 0; i < lines.length; i++) {
             String l = safe(lines[i]).trim();
             if (l.isEmpty() || l.startsWith("#")) continue;
-            String lower = l.toLowerCase(Locale.ROOT);
-            if (lower.contains("from") && lower.contains("to") && (lower.contains("pronoun") || lower.contains("xưng") || lower.contains("pair"))) continue;
-            String textLine = l;
-            String[] cols = splitLine(l);
-            String sourceName = "", targetName = "", details = "";
-            if (cols.length >= 3 && !l.contains("→") && !l.contains("=>")) {
-                sourceName = clean(cols[0]); targetName = clean(cols[1]); details = clean(cols[2]);
-                textLine = sourceName + " → " + targetName + ": " + details;
+            if (csvQuoteOpen || l.contains(",")) {
+                boolean quoteOpenAfter = csvQuoteState(l, csvQuoteOpen);
+                if (csvQuoteOpen || quoteOpenAfter) {
+                    out.malformedRows.add("line " + (i + 1) + ": multiline CSV fields are not supported");
+                    csvQuoteOpen = quoteOpenAfter;
+                    continue;
+                }
+                csvQuoteOpen = false;
             }
-            if (textLine.trim().isEmpty() || looksLikeBrokenRule(textLine)) out.malformedRows.add("line " + (i + 1) + ": " + preview(l));
-            else {
-                PronounRule r = new PronounRule(); r.text = textLine.trim(); r.key = textLine.trim(); r.lineNumber = i + 1;
-                r.sourceName = sourceName; r.targetName = targetName; r.details = details;
-                if (r.sourceName.isEmpty()) populateStructuredRule(r);
-                out.rules.add(r);
+            if (i == headerLine) continue;
+            String[] cols = splitLine(l);
+            if (headerFormat == PronounFormat.P3_7) {
+                if (cols.length != 7) {
+                    out.malformedRows.add("line " + (i + 1) + ": expected 7 Pronoun columns, got " + cols.length + " (no legacy fallback)");
+                    continue;
+                }
+                addP3Row(out, cols, i + 1);
+                continue;
+            }
+            if (headerFormat == PronounFormat.LEGACY3) {
+                if (cols.length != 3) {
+                    out.malformedRows.add("line " + (i + 1) + ": expected 3 legacy Pronoun columns, got " + cols.length);
+                    continue;
+                }
+                addLegacyRow(out, cols, i + 1);
+                continue;
+            }
+            if (headerPresent) {
+                out.malformedRows.add("line " + (i + 1) + ": rows rejected because the Pronoun header is unsupported");
+                continue;
+            }
+            if (l.contains("\u2192") || l.contains("=>") || l.contains("->")) {
+                PronounRule r = newLegacyTextRule(l, i + 1);
+                if (r == null) out.malformedRows.add("line " + (i + 1) + ": " + preview(l));
+                else out.rules.add(r);
+            } else if (cols.length == 7) {
+                addP3Row(out, cols, i + 1);
+            } else if (cols.length == 3) {
+                addLegacyRow(out, cols, i + 1);
+            } else if (cols.length > 1) {
+                out.malformedRows.add("line " + (i + 1) + ": unsupported Pronoun column count " + cols.length);
+            } else {
+                PronounRule r = newLegacyTextRule(l, i + 1);
+                if (r == null) out.malformedRows.add("line " + (i + 1) + ": " + preview(l));
+                else out.rules.add(r);
             }
         }
         return out;
     }
+
+    private enum PronounFormat { NONE, LEGACY3, P3_7 }
+
+    private static PronounFormat detectPronounHeader(String[] cols) {
+        if (sameColumns(cols, "from", "to", "pronoun")) return PronounFormat.LEGACY3;
+        if (sameColumns(cols, "from", "to", "xung_ho")
+                || sameColumns(cols, "from", "to", "xưng hô")
+                || sameColumns(cols, "from", "to", "pair")) return PronounFormat.LEGACY3;
+        if (sameColumns(cols, "from", "speaker", "target", "self", "call", "scope", "note")) return PronounFormat.P3_7;
+        return PronounFormat.NONE;
+    }
+
+    private static boolean sameColumns(String[] actual, String... expected) {
+        if (actual == null || actual.length != expected.length) return false;
+        for (int i = 0; i < expected.length; i++) {
+            if (!expected[i].equals(clean(actual[i]).toLowerCase(Locale.ROOT))) return false;
+        }
+        return true;
+    }
+
+    private static boolean looksLikePronounHeader(String[] columns) {
+        if (columns == null || columns.length < 3) return false;
+        String first = clean(columns[0]).toLowerCase(Locale.ROOT);
+        String second = clean(columns[1]).toLowerCase(Locale.ROOT);
+        String third = clean(columns[2]).toLowerCase(Locale.ROOT);
+        boolean from = "from".equals(first);
+        boolean relation = "to".equals(second) || "speaker".equals(second);
+        boolean value = "pronoun".equals(third) || "target".equals(third)
+                || "pair".equals(third) || "xung_ho".equals(third)
+                || "xưng hô".equals(third);
+        return from && relation && value;
+    }
+
+    private static boolean hasP3JsonFields(JSONObject o) {
+        return o.has("speaker") || o.has("self") || o.has("call") || o.has("scope") || o.has("note")
+                || (o.has("target") && !o.has("to"));
+    }
+
+    private static void addP3Row(PronounParseResult out, String[] cols, int lineNumber) {
+        PronounRule r = newP3Rule(clean(cols[0]), clean(cols[1]), clean(cols[2]), clean(cols[3]),
+                clean(cols[4]), clean(cols[5]), clean(cols[6]), lineNumber);
+        if (r == null) out.malformedRows.add("line " + lineNumber + ": missing from/speaker/target (no legacy fallback)");
+        else {
+            if (!r.scopeValid) out.malformedRows.add("line " + lineNumber + ": invalid scope " + r.scope);
+            out.rules.add(r);
+        }
+    }
+
+    private static void addLegacyRow(PronounParseResult out, String[] cols, int lineNumber) {
+        PronounRule r = newLegacyCsvRule(clean(cols[0]), clean(cols[1]), clean(cols[2]), lineNumber);
+        if (r == null) out.malformedRows.add("line " + lineNumber + ": missing legacy from/to");
+        else out.rules.add(r);
+    }
+
+    private static PronounRule newP3Rule(String from, String speaker, String target, String self,
+                                         String call, String scope, String note, int lineNumber) {
+        from = clean(from); speaker = clean(speaker); target = clean(target);
+        if (from.isEmpty() || speaker.isEmpty() || target.isEmpty()) return null;
+        PronounRule r = new PronounRule();
+        r.p3 = true; r.format = "P3_7"; r.lineNumber = lineNumber;
+        r.from = from; r.speaker = speaker; r.target = target;
+        r.self = clean(self); r.call = clean(call); r.scope = clean(scope); r.note = clean(note);
+        r.sourceName = r.from;
+        r.targetName = r.target;
+        r.details = "";
+        r.key = semanticP3Key(r);
+        r.text = formatP3Rule(r);
+        applyScope(r);
+        return r;
+    }
+
+    private static PronounRule newLegacyCsvRule(String from, String to, String pair, int lineNumber) {
+        if (from.isEmpty() || to.isEmpty()) return null;
+        PronounRule r = new PronounRule();
+        r.lineNumber = lineNumber; r.format = "LEGACY3"; r.p3 = false;
+        r.from = from; r.speaker = from; r.target = to;
+        r.sourceName = from; r.targetName = to; r.details = pair;
+        r.text = from + " \u2192 " + to + ": " + pair;
+        r.key = r.text;
+        return r;
+    }
+
+    private static PronounRule newLegacyTextRule(String line, int lineNumber) {
+        String textLine = safe(line).trim();
+        if (textLine.isEmpty() || looksLikeBrokenRule(textLine)) return null;
+        PronounRule r = new PronounRule();
+        r.lineNumber = lineNumber; r.format = "LEGACY3"; r.p3 = false;
+        r.text = normalizeRuleLine(textLine); r.key = r.text;
+        populateStructuredRule(r);
+        if (!r.sourceName.isEmpty()) {
+            r.from = r.sourceName; r.speaker = r.sourceName; r.target = r.targetName;
+        }
+        return r;
+    }
+
 
     private static void analyzeDuplicatesAndConflicts(ParseReport report) {
         HashSet<String> seenPairs = new HashSet<>();
@@ -471,12 +656,30 @@ public class PromptContextBuilder {
         return expanded.toString();
     }
 
-    private static ArrayList<RankedPronounRule> rankPronounRules(String chunk, String ruleContext, List<PronounRule> rules) {
+    private static ArrayList<RankedPronounRule> rankPronounRules(String chunk, String ruleContext,
+                                                                 int paragraphStart, int paragraphEnd,
+                                                                 List<PronounRule> rules) {
         ArrayList<RankedPronounRule> ranked = new ArrayList<>();
         String main = safe(chunk);
         String contextOnly = removeFirst(safe(ruleContext), main);
         for (PronounRule r : rules) {
             if (safe(r.text).trim().isEmpty()) continue;
+            if (isP3Rule(r)) {
+                if (!r.scopeValid) continue;
+                if (!r.chapterWide && (paragraphStart < 1 || paragraphEnd < paragraphStart
+                        || paragraphEnd < r.scopeStart || paragraphStart > r.scopeEnd)) continue;
+                boolean mainCue = containsNormalized(main, r.from);
+                boolean contextCue = !mainCue && containsNormalized(contextOnly, r.from);
+                if (!mainCue && !contextCue) continue;
+                RankedPronounRule rr = new RankedPronounRule();
+                rr.rule = r;
+                rr.dialogueParticipant = mainCue;
+                rr.score = mainCue ? 1000 : 200;
+                rr.line = formatP3Rule(r);
+                rr.dedupeKey = semanticP3Key(r);
+                ranked.add(rr);
+                continue;
+            }
             if (safe(r.sourceName).isEmpty() && safe(r.targetName).isEmpty()) populateStructuredRule(r);
             if (isGlobalRule(r.text)) {
                 RankedPronounRule rr = new RankedPronounRule(); rr.rule = r; rr.score = 10_000;
@@ -500,11 +703,74 @@ public class PromptContextBuilder {
         ranked.sort(Comparator.comparingInt((RankedPronounRule r) -> r.score).reversed().thenComparingInt(r -> r.rule.lineNumber));
         int fullCount = 0;
         for (RankedPronounRule rr : ranked) {
+            if (isP3Rule(rr.rule)) {
+                rr.line = formatP3Rule(rr.rule);
+                continue;
+            }
             boolean full = rr.dialogueParticipant || fullCount == 0;
             if (full && fullCount < 4) fullCount++; else full = false;
             rr.line = full ? normalizeRuleLine(rr.rule.text) : compactRuleLine(rr.rule);
         }
         return ranked;
+    }
+
+    private static boolean isP3Rule(PronounRule r) {
+        return r != null && (r.p3 || "P3_7".equalsIgnoreCase(safe(r.format)));
+    }
+
+    private static String semanticP3Key(PronounRule r) {
+        return safe(r.speaker).trim().toLowerCase(Locale.ROOT) + "\u0000"
+                + safe(r.target).trim().toLowerCase(Locale.ROOT) + "\u0000"
+                + safe(r.self).trim().toLowerCase(Locale.ROOT) + "\u0000"
+                + safe(r.call).trim().toLowerCase(Locale.ROOT) + "\u0000"
+                + normalizePromptNote(r.note).toLowerCase(Locale.ROOT);
+    }
+
+    private static String formatP3Rule(PronounRule r) {
+        String speaker = safe(r.speaker).trim();
+        String target = safe(r.target).trim();
+        String self = safe(r.self).trim();
+        String call = safe(r.call).trim();
+        String pair;
+        if (self.isEmpty() && call.isEmpty()) pair = "omit pronouns";
+        else pair = (self.isEmpty() ? "(omit)" : self) + "/" + (call.isEmpty() ? "(omit)" : call);
+        String line = speaker + " \u2192 " + target + ": " + pair;
+        String note = normalizePromptNote(r.note);
+        return note.isEmpty() ? line : line + " | " + note;
+    }
+
+    private static void applyScope(PronounRule r) {
+        r.scopeStart = -1;
+        r.scopeEnd = -1;
+        r.scopeValid = true;
+        r.chapterWide = true;
+        String raw = safe(r.scope).trim();
+        r.scope = raw;
+        if (raw.isEmpty() || "*".equals(raw)) return;
+        String value = raw;
+        int colon = value.indexOf(':');
+        if (colon >= 0) {
+            String prefix = value.substring(0, colon).trim();
+            if (!prefix.matches("(?i)CH[0-9]+")) { r.scopeValid = false; return; }
+            value = value.substring(colon + 1).trim();
+        } else if (value.regionMatches(true, 0, "CH", 0, 2)) {
+            r.scopeValid = false;
+            return;
+        }
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("(?i)^p([0-9]+)(?:-p([0-9]+))?$")
+                .matcher(value);
+        if (!m.matches()) { r.scopeValid = false; return; }
+        try {
+            int start = Integer.parseInt(m.group(1));
+            int end = m.group(2) == null ? start : Integer.parseInt(m.group(2));
+            if (start < 1 || end < start) { r.scopeValid = false; return; }
+            r.scopeStart = start;
+            r.scopeEnd = end;
+            r.chapterWide = false;
+        } catch (NumberFormatException e) {
+            r.scopeValid = false;
+        }
     }
 
     private static LinkedHashSet<String> characterCues(PronounRule r) {
@@ -581,6 +847,11 @@ public class PromptContextBuilder {
             r.sourceName = text.substring(0, arrow).trim();
             r.targetName = colon > arrow ? text.substring(arrow + arrowLen, colon).trim() : text.substring(arrow + arrowLen).trim();
             r.details = colon > arrow ? text.substring(colon + 1).trim() : "";
+            if (!isP3Rule(r)) {
+                r.from = safe(r.sourceName).trim();
+                r.speaker = r.from;
+                r.target = safe(r.targetName).trim();
+            }
         }
     }
 

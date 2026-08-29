@@ -346,6 +346,7 @@ public class TranslatorService extends Service {
 
     private void runSinglePreparedJob(PreparedBatch batch,String startSessionId,PreparedBatch.Input input,Uri outputUri,AppSettings s,int fileNo,int fileTotal)throws Exception{
         List<Chunk> chunks=input.chunks;if(chunks==null||chunks.isEmpty())throw new IllegalStateException("Prepared plan has no chunks for "+input.displayName);
+        Chunker.assignParagraphRanges(chunks);
         resetMetrics(input.displayName,chunks.size());setExpectedMetrics(batch.estimate);String settingsHash=HashUtil.settingsHash(s);
         long jobId=repo.createJobFromPrepared(batch.id,startSessionId,input.ordinal,input.uri.toString(),outputUri.toString(),input.displayName,s,chunks,input.inputHash,settingsHash);activeJobId=jobId;repo.touchJob(jobId,"RUNNING");metricPhase="Translating";
         ObservabilityLog.event("prepared_plan_claimed","batch",batch.id,"job",jobId,"inputOrdinal",input.ordinal,"chunks",chunks.size());
@@ -452,6 +453,7 @@ public class TranslatorService extends Service {
                 else pending++;
             }
             if (rows.isEmpty()) throw new IllegalArgumentException("Job #" + job.id + " không có chunk checkpoint");
+            Chunker.assignParagraphRanges(chunks);
             if (completed >= rows.size()) {
                 updatePartialOutput(job.id, Uri.parse(job.outputUri), s);
                 repo.finishJob(job.id);
@@ -578,13 +580,16 @@ public class TranslatorService extends Service {
 
 
     private void retryFailedRows(long jobId, Uri outputUri, AppSettings s, List<TranslationRepository.ChunkRow> rows, String fileName,int targetChunk) throws Exception {
+        ArrayList<Chunk> annotated = new ArrayList<>();
+        for (TranslationRepository.ChunkRow row : rows) annotated.add(chunkFromRow(row));
+        Chunker.assignParagraphRanges(annotated);
         for (TranslationRepository.ChunkRow r : rows) {
             waitIfPaused();
             if (cancelled) return;
             if(targetChunk>=0){if(r.index!=targetChunk)continue;}else if(!isFailedStatus(r.status))continue;
             enforceCostLimit(s);
             String previous = previousBefore(rows, r.index);
-            Chunk chunk = chunkFromRow(r);
+            Chunk chunk = findChunk(annotated, r.index);
             metricPhase = "Retry failed only";
             metricCurrentChunk = r.index + 1;
             broadcast("running", percent(metricCompleted, Math.max(1, metricTotal)), "Retry chunk " + (r.index + 1) + "/" + metricTotal + ": " + fileName);
@@ -664,7 +669,7 @@ public class TranslatorService extends Service {
                     if(children.size()<2){repo.markChunkPermanentError(jobId,i,"Context length exceeded and source cannot be split further");throw e;}
                     repo.supersedeAndInsertSubchunks(jobId,chunk,children);
                     broadcast("running",global,"Context limit: chunk "+(i+1)+" split into "+children.size()+" ordered subchunks; instructions and locks preserved");
-                    List<TranslationRepository.ChunkRow> replacementRows=repo.getChunkRows(jobId);List<Chunk> replacementChunks=new ArrayList<>();for(TranslationRepository.ChunkRow row:replacementRows)replacementChunks.add(chunkFromRow(row));
+                    List<TranslationRepository.ChunkRow> replacementRows=repo.getChunkRows(jobId);List<Chunk> replacementChunks=new ArrayList<>();for(TranslationRepository.ChunkRow row:replacementRows)replacementChunks.add(chunkFromRow(row));Chunker.assignParagraphRanges(replacementChunks);
                     translateJob(jobId,outputUri,s,replacementChunks,fileNo,fileTotal,fileName);return;
                 }
                 repo.markChunkError(jobId, i, AppValidator.readableError(e));
@@ -835,6 +840,11 @@ public class TranslatorService extends Service {
         Chunk c=new Chunk(r.index,r.startOffset,r.endOffset,"",r.source,"",r.parentStableId);
         if(r.stableId!=null&&!r.stableId.isEmpty())c.stableId=r.stableId;
         return c;
+    }
+
+    private static Chunk findChunk(List<Chunk> chunks, int index) {
+        if (chunks != null) for (Chunk chunk : chunks) if (chunk != null && chunk.index == index) return chunk;
+        throw new IllegalArgumentException("Missing chunk " + index + " in restored chunk list");
     }
 
     private static boolean isCompletedStatus(String status) {
