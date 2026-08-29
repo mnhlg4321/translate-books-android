@@ -1,3 +1,32 @@
+# Translate Books 4.17 Development Artifact
+
+Status: `PRE-BUILD`
+
+This recovery build continues the code113 translation workflow on the historical
+recovery branch `feature/v4.17-translation-profile-compatibility`. It is a numbered
+development artifact, not a public `v4.17` release or tag.
+
+## Scope
+
+- Restore chapter-by-chapter translation from the code113 source baseline.
+- Glossary runtime uses `source,target,category,note`; a fifth `priority` column is
+  tolerated for file review and ignored at runtime.
+- Pronoun runtime uses
+  `from,speaker,target,self,call,scope,note`, while legacy three-column input remains
+  supported.
+- Matched-only compact prompt locks preserve Glossary notes and scoped Pronoun
+  rules through translation, refinement, settings snapshots, resume and retry.
+- RSC, Editorial and IPC workflows are not activated by this recovery.
+
+## Known limitations
+
+- Multiline quoted CSV fields remain unsupported by the existing line-based parser.
+- Malformed Pronoun P3 scopes fail closed.
+
+The numbered development APK, hashes and local QA evidence are pending the D5 build.
+
+---
+
 # Translate Books 4.15 Release Notes
 
 Release date: 2026-07-29

@@ -2,6 +2,23 @@
 
 All notable changes to Translate Books are recorded in this file. The repository was normalized to Git on 2026-07-17 without feature changes or rollback. The v4.7 source baseline is commit `da8c6d9a9001296c3f3c17817ea3d6372fd59ae3` on branch `main`.
 
+## [4.17-dev] - 2026-08-29 (pre-build)
+
+- Restore the code113 chapter-by-chapter translation workflow on the historical
+  recovery branch.
+- Support Glossary `source,target,category,note` at runtime and tolerate but ignore
+  `priority` in five-column files.
+- Support Pronoun `from,speaker,target,self,call,scope,note` while retaining legacy
+  three-column compatibility.
+- Preserve matched-only compact locks through translation, refinement, settings
+  snapshot, resume and retry; preview and estimator use the same selected rules.
+- Keep RSC, Editorial and IPC inactive.
+- Record the existing limitation that multiline quoted CSV fields are unsupported;
+  malformed P3 scopes fail closed.
+
+This entry is PRE-BUILD metadata. It does not claim a public release, tag, device
+QA, real provider/API request, instrumentation, benchmark or media evidence.
+
 ## [4.15] - 2026-07-29
 
 - Preserve the exact Glossary and Pronoun list position when activating another

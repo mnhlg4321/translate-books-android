@@ -11,11 +11,20 @@ param(
 
     [string]$JavaHome,
 
+    [int]$MinimumVersionCode = 0,
+
     [switch]$Install
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+
+$minimumVersionCodeWasRequested = $PSBoundParameters.ContainsKey('MinimumVersionCode')
+if ($minimumVersionCodeWasRequested -and $MinimumVersionCode -lt 1) {
+    throw 'MinimumVersionCode must be a positive Android versionCode.'
+}
+$requestedMinimumVersionCode = if ($minimumVersionCodeWasRequested) { $MinimumVersionCode } else { $null }
+$requestedMinimumVersionCodeDisplay = if ($minimumVersionCodeWasRequested) { [string]$MinimumVersionCode } else { 'not specified (legacy default)' }
 
 $preflightScript = Join-Path $PSScriptRoot 'verify-java-toolchain.ps1'
 if (-not (Test-Path -LiteralPath $preflightScript -PathType Leaf)) {
@@ -58,11 +67,19 @@ function Get-AndroidSdkPath {
 
     $localProperties = Join-Path $RepositoryRoot 'local.properties'
     if (-not (Test-Path -LiteralPath $localProperties -PathType Leaf)) {
+        $environmentSdk = if (-not [string]::IsNullOrWhiteSpace($env:ANDROID_HOME)) { $env:ANDROID_HOME } else { $env:ANDROID_SDK_ROOT }
+        if (-not [string]::IsNullOrWhiteSpace($environmentSdk)) {
+            return $environmentSdk
+        }
         return $null
     }
 
     $sdkLine = Select-String -LiteralPath $localProperties -Pattern '^sdk\.dir=' | Select-Object -First 1
     if (-not $sdkLine) {
+        $environmentSdk = if (-not [string]::IsNullOrWhiteSpace($env:ANDROID_HOME)) { $env:ANDROID_HOME } else { $env:ANDROID_SDK_ROOT }
+        if (-not [string]::IsNullOrWhiteSpace($environmentSdk)) {
+            return $environmentSdk
+        }
         return $null
     }
 
@@ -196,10 +213,14 @@ $androidSdk = Get-AndroidSdkPath $repositoryRoot
 $adb = if ($androidSdk) { Join-Path $androidSdk 'platform-tools\adb.exe' } else { $null }
 $installedVersionCode = Get-HighestInstalledVersionCode $adb 'com.ml.tblandroidtxt'
 
-$nextVersionCode = ([Math]::Max(
+$highestObservedVersionCode = [Math]::Max(
     [Math]::Max($defaultVersionCode, $highestArchivedCode),
     $installedVersionCode
-)) + 1
+)
+if ($highestObservedVersionCode -ge [int]::MaxValue) {
+    throw 'No higher Android versionCode is available.'
+}
+$nextVersionCode = [Math]::Max($highestObservedVersionCode + 1, $MinimumVersionCode)
 $eventId = 'build-' + (Get-Date -Format 'yyyyMMdd-HHmmss')
 $timestamp = [DateTimeOffset]::Now.ToString('yyyy-MM-dd HH:mm:ss zzz')
 $commit = (& git -c "safe.directory=$repositoryRoot" rev-parse HEAD).Trim()
@@ -349,7 +370,12 @@ try {
         commit = $commit
         gitCommit = $commit
         sourceSnapshotRef = $snapshotRef
+        requestedMinimumVersionCode = $requestedMinimumVersionCode
+        defaultVersionCode = $defaultVersionCode
+        highestArchivedVersionCode = $highestArchivedCode
         installedVersionCodeObserved = $installedVersionCode
+        highestObservedVersionCode = $highestObservedVersionCode
+        selectedVersionCode = $nextVersionCode
         buildEvent = $eventId
         gradleVersion = $gradleVersion
         gradleDistributionUrl = $gradleDistributionUrl
@@ -384,6 +410,11 @@ try {
         "- Version name: ``$versionName``",
         "- Version code: ``$nextVersionCode``",
         "- Version policy: ``$versionPolicy``",
+        "- Requested minimum version code: ``$requestedMinimumVersionCodeDisplay``",
+        "- Default version code: ``$defaultVersionCode``",
+        "- Highest archived version code: ``$highestArchivedCode``",
+        "- Installed version code observed: ``$installedVersionCode``",
+        "- Highest observed version code: ``$highestObservedVersionCode``",
         "- Build event: ``$eventId``",
         "- Built: ``$timestamp``",
         "- Branch: ``$branch``",
