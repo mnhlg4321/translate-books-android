@@ -1,6 +1,6 @@
 # Translation Profile Recovery v4.17
 
-Status: `ACTIVE / D5_RELEASE`
+Status: `ACTIVE / D5_RELEASE (device QA complete; public release pending)`
 
 This document is the single product and execution authority for the v4.17 translation-profile recovery. It replaces every active next action from the later RSC/Relation-Speaker, Editorial activation, IPC, CP6 and live-canary tracks. Those tracks and their evidence remain historical and are not deleted or reinterpreted.
 
@@ -177,16 +177,13 @@ Exit: integrated fixtures and relevant full local regressions pass; D5 is now ac
 
 ### D5_RELEASE — build and QA
 
-- Result: `D5_LOCAL_BUILD_QA_COMPLETE / V4.17_DEV_ARTIFACT_READY` on `2026-08-29`; the numbered local artifact is `4.17-dev.1` / code169 from `b0ab983bd4f9b017819af2bb0043bc57caad807a`, with matching immutable artifact/backup payloads and static QA recorded in `QA_REPORT_v4_17.md`.
-- Full JVM regression is `205 tests, 0 failures, 0 errors, 0 skipped`; focused integration is `11/11 PASS`; Lint is `0 errors/53 warnings`; no device, provider/API, instrumentation, benchmark, RSC, Editorial or IPC action was run.
-- Public tag, public release archive, physical-device QA and Complete gate remain pending; this is a development artifact, not `PUBLIC_RELEASE_COMPLETE`.
-- Run the full required regression suite.
-- Build only through `scripts/build-and-save.ps1`.
-- Use a unique version name and Android versionCode greater than 168.
-- Inspect the exact prompt and perform chapter translation QA with user-selected matching profiles.
-- Preserve immutable artifact/backup payloads and update release evidence.
+- Result: `D5_DEVICE_QA_COMPLETE / V4.17_DEV_ARTIFACT_DEVICE_VERIFIED` on `2026-08-29`; the numbered development artifact is `4.17-dev.1` / code169 from `b0ab983bd4f9b017819af2bb0043bc57caad807a`, with matching immutable artifact/backup payloads, static QA and device evidence recorded in `QA_REPORT_v4_17.md`.
+- Full JVM regression is `205 tests, 0 failures, 0 errors, 0 skipped`; focused integration is `11/11 PASS`; Lint is `0 errors/53 warnings`; clean-install, first-launch, CH001, CH004 and restart QA passed on OnePlus CPH2691 serial `15e84958`.
+- The old `4.16-dev.104` / code168 APK and private data were backed up outside Git before uninstall; old private data was not restored to code169. Post-install package is `com.ml.tblandroidtxt` / `4.17-dev.1` / code169 / minSdk26 / targetSdk35.
+- No provider/API request, instrumentation, emulator/AVD, benchmark, RSC, Editorial or IPC action was run. Translation was not started and no paid operation occurred.
+- Public tag, public release archive, benchmark/media evidence and Complete gate remain pending; this is a development artifact, not `PUBLIC_RELEASE_COMPLETE`.
 
-Exit: local D5 build and QA are complete; checklist steps 10-14 and the public Complete gate remain pending until their real evidence exists. A failed local test/build returns to `FAILED_REPAIRING` in the same branch and phase; it does not create another plan or release.
+Exit: D5 local build, static QA and device QA are complete; checklist steps 10-14 and the public Complete gate remain pending until their real evidence exists. A failed local test/build/device check returns to `FAILED_REPAIRING` in the same branch and phase; it does not create another plan or release.
 
 ## 8. Work-session protocol
 

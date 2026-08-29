@@ -1,6 +1,6 @@
 # Translate Books v4.17 QA Report
 
-Status: `D5_LOCAL_BUILD_QA_COMPLETE / V4.17_DEV_ARTIFACT_READY`
+Status: `D5_DEVICE_QA_COMPLETE / V4.17_DEV_ARTIFACT_DEVICE_VERIFIED`
 
 ## Authority
 
@@ -18,9 +18,9 @@ recovery implementation covers Glossary4, Pronoun7, matched-only compact prompt
 locks, scoped refinement, settings snapshot/resume/retry and hermetic Mercedes
 CH001/CH004 prompt/estimator evidence from D4.
 
-The following are intentionally not run or activated in this local phase:
+The following were intentionally not run or activated in the local-build phase:
 
-- device/manual QA, Android instrumentation, emulator/AVD or benchmark;
+- Android instrumentation, emulator/AVD or benchmark;
 - real provider/API requests;
 - RSC, Editorial or IPC workflows;
 - public release/tag archive or release-complete gate.
@@ -269,21 +269,45 @@ Compiled baseline classes also contain historical identifier strings such as
 misreported as absence of historical code. The D5 source diff contains no
 application source change and adds no activation of those tracks.
 
+## Device QA result
+
+Device QA was completed on the already archived APK without rebuilding.
+
+- Device: serial 15e84958, OnePlus CPH2691, Android 15 / SDK 35.
+- Pre-install package: 4.16-dev.104 / code168. The installed base APK was backed up
+  outside Git at C:\Users\ADMIN\Documents\App Translate Books-device-backups\v4.16-dev.104-code168\20260829-194315\installed-apks\base.apk;
+  size 3,331,375 bytes; SHA-256 E235BB3640039E48DD1E1C70264A25158ED4B6E9146860A6730644790E585F35.
+- The verified private-data archive is outside Git at
+  C:\Users\ADMIN\Documents\App Translate Books-device-backups\v4.16-dev.104-code168\20260829-194315\private-data.tar.gz;
+  size 51,735 bytes; SHA-256 5DB89532EDFE9628677442C06A49E88FBA2456476AFA8E2228F24000059D04DE.
+  Its settings/database content is not included in this report.
+- Clean uninstall returned Success and package absence was confirmed. Clean streamed
+  install of the archived APK returned Success; adb install -r was not used.
+- Post-install package: com.ml.tblandroidtxt, versionName 4.17-dev.1, versionCode 169,
+  minSdk 26, targetSdk 35.
+- First launch and restart had zero package-scoped fatal, database-downgrade,
+  security, file, or UTF-8/decode error lines. The app stayed IDLE; no job was started.
+- CH001 prompt preview chunk 4/4 (production index 3, p41-p53) selected 8/15 Glossary
+  rows and 1/1 P3 row. The exact Mercedes → @GROUP_1: omit pronouns line appeared once.
+- CH004 prompt preview chunk 4/10 (production index 3, p49-p67) selected 3/36 Glossary
+  rows and 3/6 P3 rows. The exact Mercedes → Basil: ta/ngươi line appeared once; the
+  incorrect 私 → Mercedes: Basil projection was absent.
+- Headers, priority, scope/from metadata, unmatched rows, file paths and mojibake were
+  absent from both previews. Restart reproduced the CH004 selection and semantic lock.
+- Evidence: artifacts/device-qa/v4.17-dev.1/device-20260829-194713/.
+
 ## Scope and non-actions
 
-Production-source diff after the build is `0`; the pre-build commit changed only
-the build script and release/state documentation. No Glossary, Pronoun, MainActivity,
-TranslationEngine, database, RSC, Editorial or IPC production change was made in
-D5.
+Production-source diff after the build remained 0; D5 did not change Glossary, Pronoun,
+MainActivity, TranslationEngine, database, RSC, Editorial or IPC production code. No
+source fixture or external book file was modified or deleted.
 
-`adb devices` returned only `List of devices attached`.
+No provider/API request was sent. No Android instrumentation, emulator/AVD, RSC,
+Editorial or IPC test/workflow was run. No public tag, public release archive,
+benchmark, Perfetto, Macrobenchmark, screenshot/video-release evidence or Complete
+gate is claimed.
 
-`DEVICE_QA: NOT RUN — no connected device`.
-
-No APK was installed. No Android instrumentation, emulator/AVD, real provider/API,
-RSC, Editorial or IPC test/workflow was run. No public tag, public release archive,
-benchmark, Perfetto, screenshot or video evidence is claimed.
-
-Known limitations remain: multiline quoted CSV fields are unsupported by the
-existing line-based parser; malformed P3 scopes fail closed; historical Editorial
-assets remain packaged by the baseline; physical-device/manual QA is pending.
+Known limitations remain: multiline CSV fields are unsupported by the existing
+line-based parser; malformed P3 scopes fail closed; historical Editorial assets remain
+packaged by the baseline without new activation; public release/tag/archive remains
+pending.
