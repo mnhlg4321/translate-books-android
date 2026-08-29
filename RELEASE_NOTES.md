@@ -1,6 +1,6 @@
 # Translate Books 4.17 Development Artifact
 
-Status: `PRE-BUILD`
+Status: `D5_LOCAL_BUILD_QA_COMPLETE / V4.17_DEV_ARTIFACT_READY`
 
 This recovery build continues the code113 translation workflow on the historical
 recovery branch `feature/v4.17-translation-profile-compatibility`. It is a numbered
@@ -23,7 +23,25 @@ development artifact, not a public `v4.17` release or tag.
 - Multiline quoted CSV fields remain unsupported by the existing line-based parser.
 - Malformed Pronoun P3 scopes fail closed.
 
-The numbered development APK, hashes and local QA evidence are pending the D5 build.
+## Local artifact
+
+- Version: `4.17-dev.1` / Android versionCode `169`.
+- Build event: `build-20260829-185818`.
+- Build commit: `b0ab983bd4f9b017819af2bb0043bc57caad807a`.
+- APK: `TranslateBooks-v4.17-dev.1-code169.apk`, 2,784,446 bytes, SHA-256
+  `3C3AAEF1A7D47F39A7B5A5FF8AEDF77347D255AF728B908180AA142CA2B276D1`.
+- Source ZIP: `project_source_build-20260829-185818.zip`, SHA-256
+  `AA3A75CF4CFC4C527352F037D3AABEC9BBF24517138F58DB974794CEB67EAA6F`.
+- Matching immutable payloads:
+  `artifacts/builds/v4.17-dev.1/build-20260829-185818/` and
+  `backup/builds/v4.17-dev.1/build-20260829-185818/`.
+- Local QA: 205 JVM tests passed; Lint 0 errors/53 warnings; package and SDK
+  manifest metadata verified statically.
+- Device QA: not run because no device was connected; no provider/API request was
+  sent.
+
+This is a development artifact, not a public release or tag. Public tag/archive,
+device QA, benchmark, Perfetto, screenshot and video evidence remain pending.
 
 ---
 
