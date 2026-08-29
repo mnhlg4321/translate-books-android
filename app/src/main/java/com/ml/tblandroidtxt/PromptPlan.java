@@ -92,6 +92,29 @@ public final class PromptPlan {
                 pair, locks.glossaryCount, locks.pronounCount);
     }
 
+    /** Range-aware refinement path used by runtime, preview and exact estimation. */
+    public static PromptPlan refinement(Chunk chunk, String draft, AppSettings s) {
+        if (chunk == null) return refinement("", draft, s);
+        AppSettings settings = s == null ? new AppSettings() : s;
+        PromptContextBuilder.ContextBlock locks = PromptContextBuilder.buildWithRuleContext(
+                settings.glossaryText, settings.pronounText, chunk.mainContent,
+                safe(chunk.contextBefore) + "\n" + chunk.mainContent,
+                chunk.paragraphStart, chunk.paragraphEnd, settings);
+        String base = "You are a professional literary editor for " + settings.targetLanguage + ". Compare the draft with the source; fix mistranslations, omissions, speaker, terminology, fluency and formatting without adding information.";
+        String instruction = safe(settings.refinementInstructions).trim();
+        String contract = "Return only the final edited translation between <TRANSLATION> and </TRANSLATION>.";
+        StringBuilder system = new StringBuilder(base);
+        if (!instruction.isEmpty()) system.append("\n\n# REFINEMENT INSTRUCTION\n").append(instruction);
+        if (!locks.glossary.trim().isEmpty()) system.append("\n\n# GLOSSARY LOCKS\n").append(locks.glossary.trim());
+        if (!locks.pronouns.trim().isEmpty()) system.append("\n\n# PRONOUN LOCKS\n").append(locks.pronouns.trim());
+        system.append("\n\n# OUTPUT CONTRACT\n").append(contract);
+        String source = safe(chunk.mainContent);
+        String user = "# SOURCE\n<INPUT>\n" + source + "\n</INPUT>\n\n# DRAFT\n" + safe(draft) + "\n\n<TRANSLATION>\n";
+        PromptPair pair = new PromptPair(system.toString().trim(), user.trim());
+        return new PromptPlan("refine", source, base, instruction, locks.glossary, locks.pronouns, draft, "", contract,
+                pair, locks.glossaryCount, locks.pronounCount);
+    }
+
     public static PromptPlan forRefinement(String source, String draft, AppSettings s) {
         if (s != null && "full".equalsIgnoreCase(s.optimizationPreset)) {
             PromptPair legacy = PromptBuilder.refinementPrompt(source, draft, s);
@@ -100,6 +123,23 @@ public final class PromptPlan {
                     locks.glossary, locks.pronouns, draft, "", "", legacy, locks.glossaryCount, locks.pronounCount);
         }
         return refinement(source, draft, s);
+    }
+
+    /** Selects the range-aware refinement compiler while retaining the legacy String overload. */
+    public static PromptPlan forRefinement(Chunk chunk, String draft, AppSettings s) {
+        if (chunk == null) return forRefinement("", draft, s);
+        AppSettings settings = s == null ? new AppSettings() : s;
+        if ("full".equalsIgnoreCase(settings.optimizationPreset)) {
+            PromptPair legacy = PromptBuilder.refinementPrompt(chunk, draft, settings);
+            PromptContextBuilder.ContextBlock locks = PromptContextBuilder.buildWithRuleContext(
+                    settings.glossaryText, settings.pronounText, chunk.mainContent,
+                    safe(chunk.contextBefore) + "\n" + chunk.mainContent,
+                    chunk.paragraphStart, chunk.paragraphEnd, settings);
+            return new PromptPlan("refine", chunk.mainContent, legacy.system, settings.refinementInstructions,
+                    locks.glossary, locks.pronouns, draft, "", "", legacy,
+                    locks.glossaryCount, locks.pronounCount);
+        }
+        return refinement(chunk, draft, settings);
     }
 
     public int adaptiveMaxOutputTokens(AppSettings s) {

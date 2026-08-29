@@ -1,0 +1,37 @@
+﻿source,target,category,note,priority
+ジークリンデ王女,Công chúa Sieglinde,title,Danh xưng thường dùng của Sieglinde.,high
+ダンジョン,dungeon,world_concept,Không gian mê cung do Dungeon Master sở hữu và quản lý.,high
+メルセデス,Mercedes,character,Nhân vật chính; tên ngắn.,high
+守護者,Hộ Vệ,title,Thực thể thử thách người muốn giành quyền sở hữu dungeon.,high
+攻略者,người chinh phục,title,Người hoàn thành dungeon; có hàm ý vị thế đặc biệt.,high
+準ダンジョン,dungeon thứ cấp,world_concept,Loại cấu trúc gần với dungeon nhưng không hoàn toàn tương đương dungeon chuẩn.,high
+魔物,ma vật,monster,Tên chung cho ma vật trong thế giới.,high
+イザーク,Isaac,character,Cựu vương Orcus.,high
+シーカー,Seeker,title,Dạng katakana dùng thường xuyên của nghề Seeker.,high
+ジークリンデ,Sieglinde,character,Tên thật của người từng mang thân phận Sieghart.,high
+ハンナ,Hannah,character,Cô của Mercedes; giáo viên và chỉ huy lực lượng ngầm.,high
+フェリックス,Felix,character,Tên ngắn của Felix.,high
+ベルンハルト,Bernhardt,character,Cha của Mercedes; tên ngắn.,high
+帝国,đế quốc,place,Thực thể quốc gia được gọi là đế quốc trong ngữ cảnh cụ thể.,medium
+獣人,Chimäre,race,Chủng thú nhân Chimäre.,high
+王女,công chúa,title,Tước vị con gái hoàng gia.,medium
+アウグスト,August,character,Cựu vương Orcus; ông của Sieglinde.,high
+アウグスト・アーベントロート,August Abendrot,character,"Tên đầy đủ của August, cựu vương Orcus.",high
+アーベントロート,Abendrot,place,Tên riêng của vương đô Orcus khi xuất hiện độc lập.,high
+オルクス,Orkus,place,Tên quốc gia ma cà rồng.,high
+クリストフ,Christoph,character,Tên ngắn của Christoph Fight.,high
+クリストフ・ファイト,Christoph Fight,character,Tên đầy đủ của Christoph thuộc gia tộc Fight.,high
+グリューネヴァルト家,gia tộc Grünewald,organization,Gia tộc công tước của Bernhardt.,high
+シュタルクダンジョン,Dungeon Stark,place,Dungeon thuộc Mercedes và do Zwölf quản trị.,high
+シーカーランク,hạng Seeker,system,Hệ thống cấp bậc của Seeker.,high
+バジル,Basil,character,Tên ngắn của Basil Salmon.,high
+バジル・サーモン,Basil Salmon,character,Tên đầy đủ của Basil Salmon.,high
+ファイト家,gia tộc Fight,organization,Gia tộc Fight.,high
+プラクティスダンジョン,Dungeon Practice,place,Dungeon được nêu trong nhiệm vụ bắt quái.,medium
+メルセデス・グリューネヴァルト,Mercedes Grünewald,character,Tên đầy đủ theo gia tộc cha.,high
+ランクＡ,hạng A,system,Cấp/hạng A trong hệ thống xếp hạng.,medium
+王剣,Vương Kiếm,item,Thanh kiếm chỉ người mang huyết thống hoàng gia chính thống mới sử dụng được.,high
+王家,hoàng gia,organization,Hoàng gia/nhà vua với tư cách gia tộc cai trị.,high
+王族,hoàng tộc,organization,Nhóm thành viên thuộc hoàng tộc.,high
+真の王,Vua Chân Chính,title,Danh xưng chính trị chỉ người được xem là vị vua đích thực.,high
+金の扉,Cánh cửa Vàng,system,Biến thể rút gọn của cánh cửa vàng trong lời giải thích của Twölf.,high

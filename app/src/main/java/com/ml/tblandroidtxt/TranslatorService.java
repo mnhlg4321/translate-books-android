@@ -597,7 +597,7 @@ public class TranslatorService extends Service {
                 String translated = translateWithRetry(chunk, previous, s);
                 if (cancelled) return;
                 if (s.refineAfter) {
-                    translated = refineWithRetry(chunk.mainContent, translated, s);
+                    translated = refineWithRetry(chunk, translated, s);
                     if (cancelled) return;
                 }
                 commitAccepted(jobId, chunk, translated, previous);
@@ -652,7 +652,7 @@ public class TranslatorService extends Service {
                 if (s.refineAfter) {
                     metricPhase = "Refining (2/2)";
                     broadcast("running", global, "Đang refine chunk " + (i + 1) + "/" + total);
-                    translated = refineWithRetry(chunk.mainContent, translated, s);
+                    translated = refineWithRetry(chunk, translated, s);
                     if (cancelled) return;
                 }
                 commitAccepted(jobId, chunk, translated, previous);
@@ -694,8 +694,8 @@ public class TranslatorService extends Service {
                 runtimeEventSink());
     }
 
-    private String refineWithRetry(String source, String draft, AppSettings s) throws Exception {
-        return engine.refineWithRetry(activeJobId, Math.max(0, metricCurrentChunk - 1), source, draft, s,
+    private String refineWithRetry(Chunk chunk, String draft, AppSettings s) throws Exception {
+        return engine.refineWithRetry(activeJobId, chunk, draft, s,
                 () -> cancelled,
                 this::addUsage,
                 runtimeEventSink());
