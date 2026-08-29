@@ -1,6 +1,6 @@
 # Translation Profile Recovery v4.17
 
-Status: `ACTIVE / D4_INTEGRATION`
+Status: `ACTIVE / D5_RELEASE`
 
 This document is the single product and execution authority for the v4.17 translation-profile recovery. It replaces every active next action from the later RSC/Relation-Speaker, Editorial activation, IPC, CP6 and live-canary tracks. Those tracks and their evidence remain historical and are not deleted or reinterpreted.
 
@@ -167,12 +167,13 @@ Exit: focused Pronoun tests pass, including Mercedes P3 fixtures.
 
 ### D4_INTEGRATION — real prompt and cost
 
-- Verify Glossary and Pronoun together in the same chapter prompt.
-- Verify settings snapshot, restart/resume and prompt preview.
-- Compare prompt size/token estimate with the code113 baseline and remove unnecessary metadata.
-- Run chapter-level dry translation preparation without RSC/Editorial dependencies.
+- Result: `COMPLETE` on `2026-08-29`; implementation/tests commit `11c726fd94598664979de1768cb04ed7b574dd10` (`fix(prompt): integrate scoped locks through refinement`). Hermetic Mercedes CH001/CH004 fixtures match all six required SHA-256 values; parser counts are 53/15/1 and 154/36/6 for paragraphs/Glossary/P3 rows; focused D4 is `11/11 PASS`, D2/D3/diagnostic+D4 is `39/39 PASS`, preserved D3 baseline is `111/111 PASS`, and final full JVM is `205 tests, 0 failures, 0 errors, 0 skipped`. Range-aware refinement now preserves scoped P3 through translation, refinement, estimator and retry; no APK, provider/API, device, RSC, Editorial or IPC action was performed.
 
-Exit: integrated fixtures and relevant full local regressions pass.
+- Verify Glossary4 and Pronoun7 together in the same CH001/CH004 prompt.
+- Verify settings snapshot, restart/resume, retry and prompt preview parity.
+- Verify compact semantic cost payload and chapter-level dry preparation without external workflow.
+
+Exit: integrated fixtures and relevant full local regressions pass; D5 is now active.
 
 ### D5_RELEASE — build and QA
 
