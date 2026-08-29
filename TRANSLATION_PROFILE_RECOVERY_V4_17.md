@@ -1,6 +1,6 @@
 # Translation Profile Recovery v4.17
 
-Status: `ACTIVE / D3_PRONOUN7`
+Status: `ACTIVE / D4_INTEGRATION`
 
 This document is the single product and execution authority for the v4.17 translation-profile recovery. It replaces every active next action from the later RSC/Relation-Speaker, Editorial activation, IPC, CP6 and live-canary tracks. Those tracks and their evidence remain historical and are not deleted or reinterpreted.
 
@@ -144,7 +144,7 @@ Exit: baseline test evidence exists and no RSC/Editorial code has been activated
 
 ### D2_GLOSSARY4 — four runtime fields
 
-Result: `COMPLETE` on `2026-08-29`; implementation/tests commit `353b641` (`feat(glossary): preserve matched runtime notes`). Focused D2 `GlossaryFourFieldRuntimeTest` is `9/9 PASS`; the combined A+B+C+D run is `94 tests, 0 failures, 0 errors, 0 skipped`; production diff is exactly `GlossaryStore.java` and `PromptContextBuilder.java`; no APK, device, API, RSC, Editorial or IPC action was performed.
+Result: `COMPLETE` on `2026-08-29`; implementation/tests commit `353b6410c1c359c5fca0ebccaabfdcbb2e83a037` (`feat(glossary): preserve matched runtime notes`). Focused D2 `GlossaryFourFieldRuntimeTest` is `9/9 PASS`; the combined A+B+C+D run is `94 tests, 0 failures, 0 errors, 0 skipped`; production diff is exactly `GlossaryStore.java` and `PromptContextBuilder.java`; no APK, device, API, RSC, Editorial or IPC action was performed.
 
 - Extend the glossary model/persistence/compiler with `note`.
 - Accept three-, four- and five-column inputs.
@@ -155,7 +155,7 @@ Exit: focused Glossary tests pass, including Mercedes projection fixtures.
 
 ### D3_PRONOUN7 — seven runtime fields
 
-Next active phase: D3 test-first; no D3 production behavior has been implemented.
+Result: `COMPLETE` on `2026-08-29`; implementation/tests commit `11e6f54c4d164ad1b7e163b852b264714bbecb75` (`feat(pronoun): support scoped seven-field profiles`). The canonical P3 fixture now parses `from,speaker,target,self,call,scope,note`, exact headers are skipped, scope is applied by in-memory paragraph overlap, and legacy three-column parsing remains compatible. Focused D3 is `17/17 PASS`; the P3 diagnostic is `1/1 PASS`; the final canonical JVM run is `111 tests, 0 failures, 0 errors, 0 skipped`. Production source changes are limited to `PromptContextBuilder.java`, `Chunk.java`, `Chunker.java`, `PromptPlan.java`, `PromptBuilder.java`, `PromptPreviewDialog.java`, `TranslationRepository.java` and `TranslatorService.java`; no PronounStore, database schema, MainActivity, TranslationEngine, RSC, Editorial, IPC, provider or build/version source changed. No APK/device/API action was performed.
 
 - Implement separate legacy-three and new-seven-column parsing.
 - Preserve all seven fields across import/save/reload.

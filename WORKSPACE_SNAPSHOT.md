@@ -6,7 +6,7 @@
 - Current version: `v4.17-translation-profile-compatibility`; no v4.17 APK exists.
 - Current branch: `feature/v4.17-translation-profile-compatibility`.
 - Source baseline: `a9409ffacfcbb05374e3f07b8ae80b22f60a95b7` (`v4.16-dev.51` / code113); D0 commit: `a54b82a7c6060b88a9a85f0a59567dd81028b0e2`.
-- Current commit baseline: `f5538cbc078ce20806d31ab986799b316b2649d3`, the D3 implementation/tests commit immediately before this current-only state/docs commit; this line is not self-referential.
+- Current commit baseline: `11e6f54c4d164ad1b7e163b852b264714bbecb75`, the D3 implementation/tests commit immediately before this current-only state/docs commit; this line is not self-referential.
 - Current build: recovery code113 APK SHA-256 `C271F9D8BE757C476300E85E2F7E99742CAF25BF26B119C6218953E93FE24376`; frozen later code168 artifact remains unchanged; no D3 build, install or replacement.
 - Completed: D1 reconciliation on exact code113; D2 Glossary4; D3 Pronoun7 parser/model, exact P3 mapping, scope matching, paragraph-range annotation, compact prompt, preview/estimator parity, raw settings/profile persistence and resume/retry range restoration.
 - Pending: D4 integration → D5 release, strictly in order. D4 implementation has not started.
