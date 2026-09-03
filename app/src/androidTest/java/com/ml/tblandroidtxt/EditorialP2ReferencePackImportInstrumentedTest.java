@@ -230,11 +230,19 @@ public class EditorialP2ReferencePackImportInstrumentedTest {
         PackFixture unknownCapability = withManifestMutation(base, root -> {
             list(root.get("requiredCapabilities")).add("future.required.capability.v1");
         }, true);
-        EditorialPackImportResult upgrade = new EditorialPackImportService(
-                repository,
-                new EditorialPackStorageLayout(context.getCacheDir().toPath().resolve("unknown-cap-" + UUID.randomUUID())),
-                new EditorialEngineProfileResolver(BundledEditorialEngineContractProfileRegistry.load()))
-                .importPack(entries(unknownCapability));
+        String unknownCapabilityDatabase = "editorial-p2-unknown-cap-" + UUID.randomUUID() + ".db";
+        EditorialPackImportResult upgrade;
+        TranslationRepository unknownCapabilityRepository = new TranslationRepository(context, unknownCapabilityDatabase);
+        try {
+            upgrade = new EditorialPackImportService(
+                    unknownCapabilityRepository,
+                    new EditorialPackStorageLayout(context.getCacheDir().toPath().resolve("unknown-cap-" + UUID.randomUUID())),
+                    new EditorialEngineProfileResolver(BundledEditorialEngineContractProfileRegistry.load()))
+                    .importPack(entries(unknownCapability));
+        } finally {
+            unknownCapabilityRepository.close();
+            context.deleteDatabase(unknownCapabilityDatabase);
+        }
         assertEquals(EditorialPackImportState.STORED_BLOCKED, upgrade.state());
         assertEquals(EditorialPackImportError.NONE, upgrade.error());
         assertEquals(EditorialPackCompatibilityClass.ENGINE_UPGRADE_REQUIRED, upgrade.compatibilityClass());
@@ -255,7 +263,20 @@ public class EditorialP2ReferencePackImportInstrumentedTest {
     }
 
     private EditorialPackImportResult importZip(PackFixture profileFixture, byte[] bytes) {
-        return service(profileFixture, "negative").importZip(new ByteArrayInputStream(bytes));
+        // Each single-cause negative must have an empty registry. Reusing the @Before
+        // repository would turn a valid mutated identity into IDENTITY_COLLISION with
+        // a preceding negative fixture, masking the importer behavior under test.
+        String isolatedDatabase = "editorial-p2-negative-" + UUID.randomUUID() + ".db";
+        TranslationRepository isolatedRepository = new TranslationRepository(context, isolatedDatabase);
+        try {
+            return new EditorialPackImportService(isolatedRepository,
+                    new EditorialPackStorageLayout(context.getCacheDir().toPath().resolve(
+                            "editorial-p2-negative-storage-" + UUID.randomUUID())), profile(profileFixture.manifest()))
+                    .importZip(new ByteArrayInputStream(bytes));
+        } finally {
+            isolatedRepository.close();
+            context.deleteDatabase(isolatedDatabase);
+        }
     }
 
     private static void assertError(String label, EditorialPackImportResult result, EditorialPackImportError expected) {

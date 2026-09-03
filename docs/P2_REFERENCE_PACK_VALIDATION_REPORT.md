@@ -2,7 +2,7 @@
 
 Ngày chạy: `2026-09-03` (+07:00)
 
-Trạng thái hiện tại: `P2_REFERENCE_PACK_FROZEN_HOST_VALIDATED / ANDROID_REVALIDATION_PENDING_DEVICE`.
+Trạng thái hiện tại: `P2_REFERENCE_PACK_FROZEN / RUNTIME_IMPORT_BLOCKED_BY_GAP-012 / NOT_RUNNABLE / NOT_CERTIFIED`.
 
 P2 được tách thành hai phần do `GAP-012`:
 
@@ -120,15 +120,17 @@ Compatibility outcomes đã được characterization từ P1 và giữ làm reg
 | `:editorial-engine:test --no-daemon` | PASS; `125/125`, gồm P2 manifest negatives. |
 | `:app:testDebugUnitTest --no-daemon` | PASS; `210/210`; P2 không sửa app unit production behavior. |
 | `:app:compileDebugAndroidTestJavaWithJavac --no-daemon` | PASS; gồm P2 Android characterization và P2.8 schema hygiene. |
-| `:app:assembleDebugAndroidTest --no-daemon` | PASS; test-only APK `1,104,173` bytes, SHA-256 `225DD157ED1F0EEE6DF5FC84AEB3DD0832DA6E954DC94FD07ACEB4F6195F9BF3`; không tạo release APK/version mới. |
+| `:app:assembleDebugAndroidTest --no-daemon` | PASS; test-only APK `1,104,521` bytes, SHA-256 `8596B2B9CA89354C0045E33C50271946E792D5E441A236D9B8023F7A87F49998`; không tạo release APK/version mới. |
 | Android P1 runtime trước P2 | Device `15e84958`/API 35: P1 class `7` tests = `5` pass + `2` GAP-012; full suite `100` = `91` pass + `7` schema-baseline + `2` GAP-012. |
-| Android rerun sau P2.8/P2 assets | Chưa chạy được: sau build, `adb devices -l` không còn serial nào; không ghi nhận đây là PASS. Cần reconnect đúng device để đóng Android revalidation. |
+| Android P2 targeted sau P2.8 | PASS; `EditorialP2ReferencePackImportInstrumentedTest`: `3/3`. Canonical ZIP giữ expected `STAGING/TRUNCATED_STREAM`; Java control import/readback/re-import pass; negative matrix pass fail-closed. |
+| Android P1 regression sau P2.8 | `7` tests = `5` PASS + đúng `2` GAP-012 failures: `valid413ImportIsIdempotentAndImmutableReadbackIsExact` và `synthetic414IsSideBySideAndDoesNotRebindOrActivateCurrentProject`. |
+| Android full instrumented suite sau P2.8 | `103` tests = `101` PASS + đúng `2` GAP-012 failures; real API test skipped by its explicit opt-in assumption, không gọi provider/API thật. Không còn bảy schema v17/v18 failures. |
 
-P2 Android test acceptance đã được viết để kỳ vọng đúng: canonical ZIP chỉ còn known `STAGING/TRUNCATED_STREAM`, Java control import/readback/re-import pass, negative matrix fail-closed, không partial pack row/storage. Test mới chưa được thực thi trên device do thiết bị rời ADB.
+P2 Android test acceptance đã được thực thi trên `15e84958`. Lần chạy đầu phát hiện test setup dùng chung registry DB giữa các negative fixture, gây `IDENTITY_COLLISION` ngoài nguyên nhân đang kiểm tra; setup đã được sửa trong AndroidTest để mỗi fixture dùng DB độc lập, sau đó targeted P2 đạt `3/3`. Đây là test-only correction, không phải production fix.
 
 ## P2A/P2B decision and P3 handoff
 
-P2A host/reference artifact có thể đóng băng về bytes và identity, nhưng trạng thái overall vẫn chờ Android revalidation. Không đánh dấu `P2_COMPLETE`.
+P2A đã đạt exit gate: reference bytes/identity host-validated, negative matrix pass, Android targeted P2 `3/3`, và full suite chỉ còn đúng hai failure GAP-012. Trạng thái đóng băng là `P2_REFERENCE_PACK_FROZEN / RUNTIME_IMPORT_BLOCKED_BY_GAP-012 / NOT_RUNNABLE / NOT_CERTIFIED`. Không đánh dấu `P2_COMPLETE` vì P2B vẫn chưa đạt.
 
 P2B chưa bắt đầu. Chỉ sau P3 mới kiểm tra canonical import thành công, immutable readback byte-identical, idempotent re-import, side-by-side 4.1.3/4.1.4, không auto-activate/auto-rebind và security matrix không suy giảm.
 
