@@ -116,6 +116,22 @@ public final class EditorialEngineProfileResolver {
                 EditorialPackCompatibilityClass.BLOCKED);
 
         EditorialEngineContractProfile selected = schemaMatches.get(0);
+        Set<String> missingDeclaredCapabilities = new HashSet<>(manifest.requiredCapabilities());
+        missingDeclaredCapabilities.removeAll(selected.implementedCapabilities());
+        if (!missingDeclaredCapabilities.isEmpty()) {
+            return new EditorialCompatibilityEvaluationResult(
+                    EditorialPackCompatibilityClass.ENGINE_UPGRADE_REQUIRED,
+                    EditorialPackCompatibilityClass.ENGINE_UPGRADE_REQUIRED,
+                    EditorialCompatibilityReasonCode.MISSING_ENGINE_CAPABILITY,
+                    true,
+                    List.of(new EditorialPackIntegrityResult.Issue(
+                            EditorialPackValidationCode.MISSING_CAPABILITY,
+                            "requiredCapabilities",
+                            "Required engine capabilities are missing: "
+                                    + String.join(",", new java.util.TreeSet<>(missingDeclaredCapabilities)))),
+                    missingDeclaredCapabilities,
+                    manifest.canonicalPackHash(), selected, null);
+        }
         final EditorialEngineProfile evaluatorProfile;
         final EditorialCompatibilityResult evaluated;
         try {
