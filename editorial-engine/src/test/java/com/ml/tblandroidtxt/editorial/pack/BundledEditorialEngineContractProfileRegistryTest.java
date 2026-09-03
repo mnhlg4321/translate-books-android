@@ -52,6 +52,30 @@ public class BundledEditorialEngineContractProfileRegistryTest {
     }
 
     @Test
+    public void safe4ProfileHasAllCodeOwnedEvidenceAndIndependentAnchors() throws Exception {
+        BundledEditorialEngineContractProfileRegistry registry =
+                BundledEditorialEngineContractProfileRegistry.load();
+        EditorialEngineContractProfile profile = registry.findByIdentity(
+                TrustedEditorialEngineProfileCatalog.SAFE4_PROFILE_ID,
+                TrustedEditorialEngineProfileCatalog.SAFE4_PROFILE_VERSION).orElseThrow();
+        assertEquals(TrustedEditorialEngineProfileCatalog.SAFE4_EXPECTED_CANONICAL_PROFILE_HASH,
+                profile.canonicalProfileHash());
+        assertEquals(TrustedEditorialEngineProfileCatalog.SAFE4_EXPECTED_MACHINE_CONTRACT_FINGERPRINT,
+                profile.machineContractFingerprint());
+        assertEquals(new java.util.TreeSet<>(EditorialSafe4Contract.IMPLEMENTED_CAPABILITY_IDS),
+                new java.util.TreeSet<>(profile.implementedCapabilities()));
+        assertTrue(profile.capabilityEvidence().stream().allMatch(evidence ->
+                "p3b-contract".equals(evidence.evidenceClass())
+                        && evidence.sourceCommit().equals("3156835d1cc6b723d7932709224bf626dc7a1747")));
+        try (InputStream input = getClass().getClassLoader().getResourceAsStream(
+                TrustedEditorialEngineProfileCatalog.SAFE4_RESOURCE_PATH)) {
+            assertNotNull(input);
+            assertEquals(TrustedEditorialEngineProfileCatalog.SAFE4_EXPECTED_RESOURCE_SHA256,
+                    EditorialCanonicalJson.sha256Hex(input.readAllBytes()));
+        }
+    }
+
+    @Test
     public void lookupByHashAndIdentityIsExact() {
         BundledEditorialEngineContractProfileRegistry registry =
                 BundledEditorialEngineContractProfileRegistry.load();
@@ -215,9 +239,14 @@ public class BundledEditorialEngineContractProfileRegistryTest {
     public void testFixtureNamespaceIsNotInProductionRegistry() {
         BundledEditorialEngineContractProfileRegistry registry =
                 BundledEditorialEngineContractProfileRegistry.load();
-        assertEquals(1, registry.list().size());
-        assertFalse(registry.list().get(0).engineProfileId().contains(".test"));
-        assertFalse(registry.list().get(0).implementedCapabilities().stream().anyMatch(id -> id.startsWith("test.")));
+        assertEquals(2, registry.list().size());
+        assertTrue(registry.findByIdentity(TrustedEditorialEngineProfileCatalog.PRODUCTION_PROFILE_ID,
+                TrustedEditorialEngineProfileCatalog.PRODUCTION_PROFILE_VERSION).isPresent());
+        assertTrue(registry.findByIdentity(TrustedEditorialEngineProfileCatalog.SAFE4_PROFILE_ID,
+                TrustedEditorialEngineProfileCatalog.SAFE4_PROFILE_VERSION).isPresent());
+        assertTrue(registry.list().stream().noneMatch(profile -> profile.engineProfileId().contains(".test")));
+        assertTrue(registry.list().stream().noneMatch(profile -> profile.implementedCapabilities().stream()
+                .anyMatch(id -> id.startsWith("test."))));
     }
 
     @Test

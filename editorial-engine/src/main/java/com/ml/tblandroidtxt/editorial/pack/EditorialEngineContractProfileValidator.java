@@ -65,6 +65,7 @@ public final class EditorialEngineContractProfileValidator {
         validateCapabilities(profile, issues);
         validateAdapters(profile, issues);
         validateDeprecation(profile, issues);
+        validateSafe4Shape(profile, issues);
 
         if (issues.stream().anyMatch(issue -> issue.code() == EditorialEngineContractProfileValidationResult.Code.COLLECTION_LIMIT
                 || issue.code() == EditorialEngineContractProfileValidationResult.Code.STRING_LIMIT)) {
@@ -353,6 +354,25 @@ public final class EditorialEngineContractProfileValidator {
         }
         if (!bundledIds.equals(descriptorIds)) add(issues, EditorialEngineContractProfileValidationResult.Code.INVALID_ADAPTER,
                 "adapterDescriptors", "Bundled adapter IDs and adapter descriptors must match exactly");
+    }
+
+    private static void validateSafe4Shape(EditorialEngineContractProfile profile,
+                                           List<EditorialEngineContractProfileValidationResult.Issue> issues) {
+        if (!EditorialSafe4Contract.CONTRACT_VERSION.equals(profile.minimumSupportedContractVersion())
+                || !EditorialSafe4Contract.CONTRACT_VERSION.equals(profile.maximumSupportedContractVersion())) return;
+        try {
+            EditorialEngineContractProfile expected = EditorialSafe4TrustedProfileFactory.create(
+                    profile.buildSourceCommit(), profile.createdAt());
+            String actual = EditorialEngineContractProfileCanonicalizer.canonicalJsonWithoutProfileHash(profile);
+            String canonicalExpected = EditorialEngineContractProfileCanonicalizer.canonicalJsonWithoutProfileHash(expected);
+            if (!canonicalExpected.equals(actual)) {
+                add(issues, EditorialEngineContractProfileValidationResult.Code.INVALID_DESCRIPTOR,
+                        "safe4", "SAFE4 profile shape does not match the code-owned contract descriptor");
+            }
+        } catch (RuntimeException e) {
+            add(issues, EditorialEngineContractProfileValidationResult.Code.INVALID_DESCRIPTOR,
+                    "safe4", "SAFE4 profile cannot be reconstructed from its declared evidence inputs");
+        }
     }
 
     private static void validateDeprecation(EditorialEngineContractProfile profile,

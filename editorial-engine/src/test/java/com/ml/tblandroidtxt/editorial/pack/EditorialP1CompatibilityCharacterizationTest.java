@@ -128,21 +128,21 @@ public class EditorialP1CompatibilityCharacterizationTest {
         assertEquals(EditorialPackCompatibilityClass.ENGINE_UPGRADE_REQUIRED, trusted.outcome());
         assertTrue(trusted.blocked());
         assertTrue(trusted.missingCapabilities().contains("future.required.capability.v1"));
-        assertEquals(EditorialCompatibilityReasonCode.PROFILE_NON_EXECUTABLE, trusted.reasonCode());
+        assertEquals(EditorialCompatibilityReasonCode.MISSING_ENGINE_CAPABILITY, trusted.reasonCode());
     }
 
-    @Test public void currentBundledProfileCannotCertifyTheFixture() throws IOException {
+    @Test public void trustedProfileMakesFixtureDataCompatibleButDoesNotCertifyExecution() throws IOException {
         EditorialPackManifest manifest = fixtureManifest();
         EditorialCompatibilityEvaluationResult result = new EditorialEngineProfileResolver(
                 BundledEditorialEngineContractProfileRegistry.load()).resolve(manifest);
 
-        assertEquals(EditorialPackCompatibilityClass.ENGINE_UPGRADE_REQUIRED, result.outcome());
-        assertEquals(EditorialCompatibilityReasonCode.PROFILE_NON_EXECUTABLE, result.reasonCode());
-        assertTrue(result.blocked());
+        assertEquals(EditorialPackCompatibilityClass.DATA_COMPATIBLE, result.outcome());
+        assertEquals(EditorialCompatibilityReasonCode.DATA_COMPATIBLE, result.reasonCode());
+        assertFalse(result.blocked());
         assertTrue(result.trustedProfile().isPresent());
-        assertFalse(EditorialEngineProfileResolver.isExecutableContractProfile(
+        assertTrue(EditorialEngineProfileResolver.isExecutableContractProfile(
                 result.trustedProfile().orElseThrow()));
-        assertTrue(result.missingCapabilities().contains("source.preflight.safe4-full.v1"));
+        assertTrue(result.missingCapabilities().isEmpty());
     }
 
     private static EditorialEngineProfile exactProfile(EditorialPackManifest manifest) {

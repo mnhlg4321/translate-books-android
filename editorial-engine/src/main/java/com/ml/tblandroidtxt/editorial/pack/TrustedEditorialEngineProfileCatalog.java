@@ -29,11 +29,11 @@ public final class TrustedEditorialEngineProfileCatalog {
             "com.ml.tblandroidtxt.editorial.engine.safe4.full";
     public static final String SAFE4_PROFILE_VERSION = "2.0.0";
     public static final String SAFE4_EXPECTED_RESOURCE_SHA256 =
-            "d6158320422a65878d027892d6663e54db342aebbbda479bb53699ccaa6219de";
+            "1b2db011d59f3e2ef4349aeb0daa9c54a19b7efd1e2ca6886bc29b56e4690d62";
     public static final String SAFE4_EXPECTED_CANONICAL_PROFILE_HASH =
-            "6f04c26acf40434548ac5fe0a42079af7f021c8e8fe23ecb6a33a3dccfdeca47";
+            "beec03a42e37f424a6f071ad48f35878b27e1083141699352cda4474d8cc2e21";
     public static final String SAFE4_EXPECTED_MACHINE_CONTRACT_FINGERPRINT =
-            "a761ab29d61e9197596a23a716d24f17526fdf5d19e2533bb173684f8e61c62f";
+            "a167e08d8400094ef06e219495d1e34f28081fed2473a62b88c8f9fc5fa9d2a3";
 
     private static final List<TrustAnchor> PRODUCTION = List.of(
             new TrustAnchor(

@@ -2,6 +2,8 @@ package com.ml.tblandroidtxt.editorial.pack;
 
 import org.junit.Test;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,15 +13,34 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class EditorialEngineProfileResolverTest {
-    @Test public void bundledNonExecutableProfileFailsClosedWithTrustedProvenance() {
+    @Test public void unsupportedLegacyFixtureFailsClosedWhileBootstrapRemainsNonExecutable() {
         EditorialCompatibilityEvaluationResult result = resolver(BundledEditorialEngineContractProfileRegistry.load())
                 .resolve(EditorialPackFixtures.valid().manifest());
 
-        assertEquals(EditorialPackCompatibilityClass.ENGINE_UPGRADE_REQUIRED, result.outcome());
-        assertEquals(EditorialCompatibilityReasonCode.PROFILE_NON_EXECUTABLE, result.reasonCode());
+        assertEquals(EditorialPackCompatibilityClass.BLOCKED, result.outcome());
+        assertEquals(EditorialCompatibilityReasonCode.UNSUPPORTED_CONTRACT, result.reasonCode());
         assertTrue(result.blocked());
-        assertTrue(result.trustedProfile().isPresent());
-        assertTrue(result.missingCapabilities().contains("context.test.v1"));
+        assertFalse(result.trustedProfile().isPresent());
+        EditorialEngineContractProfile bootstrap = BundledEditorialEngineContractProfileRegistry.load()
+                .findByIdentity(TrustedEditorialEngineProfileCatalog.PRODUCTION_PROFILE_ID,
+                        TrustedEditorialEngineProfileCatalog.PRODUCTION_PROFILE_VERSION).orElseThrow();
+        assertFalse(EditorialEngineProfileResolver.isExecutableContractProfile(bootstrap));
+    }
+
+    @Test public void canonicalSafe4ManifestMatchesQualifiedProfileButDoesNotOpenExecution() throws IOException {
+        EditorialPackManifest manifest;
+        try (InputStream input = getClass().getResourceAsStream("/editorial-p2/editorial-pack.json")) {
+            if (input == null) throw new IOException("P2 manifest resource is missing");
+            manifest = EditorialPackManifest.parse(input.readAllBytes());
+        }
+        EditorialCompatibilityEvaluationResult result = resolver(BundledEditorialEngineContractProfileRegistry.load())
+                .resolve(manifest);
+        assertEquals(EditorialPackCompatibilityClass.DATA_COMPATIBLE, result.outcome());
+        assertEquals(EditorialCompatibilityReasonCode.DATA_COMPATIBLE, result.reasonCode());
+        assertFalse(result.blocked());
+        assertEquals(TrustedEditorialEngineProfileCatalog.SAFE4_PROFILE_ID,
+                result.trustedProfile().orElseThrow().engineProfileId());
+        assertTrue(EditorialEngineProfileResolver.isExecutableContractProfile(result.trustedProfile().orElseThrow()));
     }
 
     @Test public void adapterMapsEvaluatorFactsAndDoesNotUseProfileMetadata() {

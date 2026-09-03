@@ -25,6 +25,7 @@ if (Test-Path -LiteralPath $outputFullPath) { throw "Refusing to overwrite exist
 if (Test-Path -LiteralPath $receiptFullPath) { throw "Refusing to overwrite existing receipt: $receiptFullPath" }
 
 $javaHomePath = if ($env:JAVA_HOME) { $env:JAVA_HOME } else { 'C:\Program Files\Android\Android Studio\jbr' }
+$env:JAVA_HOME = $javaHomePath
 $javaExe = Join-Path $javaHomePath 'bin/java.exe'
 $javacExe = Join-Path $javaHomePath 'bin/javac.exe'
 if (!(Test-Path -LiteralPath $javaExe) -or !(Test-Path -LiteralPath $javacExe)) {
