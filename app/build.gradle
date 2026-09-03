@@ -85,28 +85,31 @@ def editorialSafe4Files = [
         'WORKFLOW_BIEN_TAP_3_LUOT_V5_SAFE_4.txt': '7A434ADE77239DB33AF5A677456D0310AC11DC8391565FC4888236536FF96B5E'
 ]
 def editorialSafe4Root = file('src/main/assets/editorial/v5-safe4')
-def editorialEngineProfileSource = rootProject.file('editorial-engine/src/main/resources/editorial/engine-profile/v1/profile.json')
+def editorialEngineProfileSourceRoot = rootProject.file('editorial-engine/src/main/resources/editorial/engine-profile')
 def editorialEngineProfileAssetRoot = layout.buildDirectory.dir('generated/editorial-engine-profile-assets')
-def editorialEngineProfileAssetDir = editorialEngineProfileAssetRoot.map { it.dir('editorial/engine-profile/v1') }
+def editorialEngineProfileFiles = ['v1/profile.json', 'v2/profile.json']
 
 def syncEditorialEngineProfileAsset = tasks.register('syncEditorialEngineProfileAsset', Sync) {
     group = 'verification'
-    description = 'Copies the single engine-owned trusted profile into the APK asset set.'
-    from(editorialEngineProfileSource)
-    into(editorialEngineProfileAssetDir)
-    inputs.file(editorialEngineProfileSource)
-    outputs.dir(editorialEngineProfileAssetDir)
+    description = 'Copies engine-owned trusted profile resources into the APK asset set.'
+    from(editorialEngineProfileSourceRoot)
+    into(editorialEngineProfileAssetRoot)
+    inputs.files(editorialEngineProfileFiles.collect { new File(editorialEngineProfileSourceRoot, it) })
+    outputs.dir(editorialEngineProfileAssetRoot)
 }
 
 def verifyEditorialEngineProfileAsset = tasks.register('verifyEditorialEngineProfileAsset') {
     group = 'verification'
-    description = 'Requires the APK asset copy of the trusted engine profile to match its engine-owned source bytes.'
+    description = 'Requires every APK asset copy of a trusted profile to match its engine-owned source bytes.'
     dependsOn syncEditorialEngineProfileAsset
     doLast {
-        def bundled = editorialEngineProfileAssetDir.get().file('profile.json').asFile
-        if (!editorialEngineProfileSource.isFile() || !bundled.isFile()
-                || !java.util.Arrays.equals(editorialEngineProfileSource.bytes, bundled.bytes)) {
-            throw new GradleException('Bundled trusted engine profile bytes differ from the engine-owned source resource.')
+        editorialEngineProfileFiles.each { relativePath ->
+            def source = new File(editorialEngineProfileSourceRoot, relativePath)
+            def bundled = editorialEngineProfileAssetRoot.get().file(relativePath).asFile
+            if (!source.isFile() || !bundled.isFile()
+                    || !java.util.Arrays.equals(source.bytes, bundled.bytes)) {
+                throw new GradleException("Bundled trusted engine profile bytes differ for ${relativePath}.")
+            }
         }
     }
 }

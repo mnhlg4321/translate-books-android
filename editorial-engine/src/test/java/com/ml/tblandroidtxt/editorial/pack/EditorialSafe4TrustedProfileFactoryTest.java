@@ -10,6 +10,8 @@ public class EditorialSafe4TrustedProfileFactoryTest {
     private static final String CREATED = "2026-09-03T00:00:00+07:00";
 
     @Test public void factoryCreatesFullyEvidencedExecutableContractShape() {
+        assertEquals("a167e08d8400094ef06e219495d1e34f28081fed2473a62b88c8f9fc5fa9d2a3",
+                EditorialSafe4Contract.machineContractFingerprint());
         EditorialEngineContractProfile profile = EditorialSafe4TrustedProfileFactory.create(COMMIT, CREATED);
         EditorialEngineContractProfileValidationResult result =
                 new EditorialEngineContractProfileValidator().validate(profile);

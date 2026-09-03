@@ -23,13 +23,33 @@ public final class TrustedEditorialEngineProfileCatalog {
     public static final String EXPECTED_MACHINE_CONTRACT_FINGERPRINT =
             "6410f374ce175cbc6fc32484f5cd9635888b9297b01d882923af06ccd4ac1e4c";
 
-    private static final List<TrustAnchor> PRODUCTION = List.of(new TrustAnchor(
-            PRODUCTION_RESOURCE_PATH,
-            PRODUCTION_PROFILE_ID,
-            PRODUCTION_PROFILE_VERSION,
-            EXPECTED_RESOURCE_SHA256,
-            EXPECTED_CANONICAL_PROFILE_HASH,
-            EXPECTED_MACHINE_CONTRACT_FINGERPRINT));
+    public static final String SAFE4_RESOURCE_PATH =
+            "editorial/engine-profile/v2/profile.json";
+    public static final String SAFE4_PROFILE_ID =
+            "com.ml.tblandroidtxt.editorial.engine.safe4.full";
+    public static final String SAFE4_PROFILE_VERSION = "2.0.0";
+    public static final String SAFE4_EXPECTED_RESOURCE_SHA256 =
+            "d6158320422a65878d027892d6663e54db342aebbbda479bb53699ccaa6219de";
+    public static final String SAFE4_EXPECTED_CANONICAL_PROFILE_HASH =
+            "6f04c26acf40434548ac5fe0a42079af7f021c8e8fe23ecb6a33a3dccfdeca47";
+    public static final String SAFE4_EXPECTED_MACHINE_CONTRACT_FINGERPRINT =
+            "a761ab29d61e9197596a23a716d24f17526fdf5d19e2533bb173684f8e61c62f";
+
+    private static final List<TrustAnchor> PRODUCTION = List.of(
+            new TrustAnchor(
+                    PRODUCTION_RESOURCE_PATH,
+                    PRODUCTION_PROFILE_ID,
+                    PRODUCTION_PROFILE_VERSION,
+                    EXPECTED_RESOURCE_SHA256,
+                    EXPECTED_CANONICAL_PROFILE_HASH,
+                    EXPECTED_MACHINE_CONTRACT_FINGERPRINT),
+            new TrustAnchor(
+                    SAFE4_RESOURCE_PATH,
+                    SAFE4_PROFILE_ID,
+                    SAFE4_PROFILE_VERSION,
+                    SAFE4_EXPECTED_RESOURCE_SHA256,
+                    SAFE4_EXPECTED_CANONICAL_PROFILE_HASH,
+                    SAFE4_EXPECTED_MACHINE_CONTRACT_FINGERPRINT));
 
     private TrustedEditorialEngineProfileCatalog() {}
 

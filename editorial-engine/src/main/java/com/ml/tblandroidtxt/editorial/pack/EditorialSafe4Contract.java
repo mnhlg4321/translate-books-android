@@ -1,6 +1,9 @@
 package com.ml.tblandroidtxt.editorial.pack;
 
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -90,6 +93,86 @@ public final class EditorialSafe4Contract {
     public static String descriptorFingerprint(String namespace, String id) {
         return EditorialCanonicalJson.sha256Hex((namespace + "\n" + id)
                 .getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** Exact machine-contract projection shared with Pack Manifest v1. */
+    public static Map<String, Object> machineContractProjection() {
+        LinkedHashMap<String, Object> root = new LinkedHashMap<>();
+        root.put("contractVersion", CONTRACT_VERSION);
+        root.put("schemaVersion", RECEIPT_SCHEMA_VERSION);
+        root.put("requiredCapabilities", IMPLEMENTED_CAPABILITY_IDS);
+        root.put("inputRoles", List.of(
+                Map.of("role", RAW, "cardinality", "ONE", "required", true),
+                Map.of("role", DRAFT, "cardinality", "ONE", "required", true),
+                Map.of("role", GLOSSARY, "cardinality", "ONE", "required", true),
+                Map.of("role", PRONOUN, "cardinality", "ONE", "required", true)));
+        root.put("pronounPolicy", Map.of(
+                "allowedStatuses", List.of("AVAILABLE", "NONE", "LEGACY_REJECTED"),
+                "defaultStatus", "NONE", "availableRequiresRole", PRONOUN,
+                "noneForbidsRole", true, "legacyRejectedForbidsRole", true,
+                "fallbackLookupAllowed", false));
+        root.put("pairContextPolicy", Map.of(
+                "optional", true, "source", PAIR_CONTEXT, "qaConfirmedRequired", false,
+                "sameProjectRequired", true, "samePackHashRequired", true,
+                "scopeRequired", false, "boundaryRequired", false));
+        root.put("phaseGraph", Map.of(
+                "profile", CONTRACT_VERSION, "initialPhase", PHASES.get(0),
+                "terminalPhase", PHASES.get(PHASES.size() - 1), "phases", PHASES,
+                "edges", PHASE_EDGES));
+
+        LinkedHashMap<String, Object> contexts = new LinkedHashMap<>();
+        contexts.put("L1_SOURCE_PREFLIGHT", context(List.of(RAW, DRAFT, GLOSSARY, PRONOUN), List.of(RAW, DRAFT, GLOSSARY, PRONOUN)));
+        contexts.put("L1_RAW_DISCOVERY", context(List.of(RAW, GLOSSARY), List.of(RAW, GLOSSARY)));
+        contexts.put("L1_RECONCILE", context(List.of(RAW, DRAFT, GLOSSARY), List.of(RAW, DRAFT, GLOSSARY, PRONOUN, PAIR_CONTEXT)));
+        contexts.put("L2_RAW_DISCOVERY", context(List.of(RAW, GLOSSARY), List.of(RAW, GLOSSARY)));
+        contexts.put("L2_EDIT", context(List.of(RAW, DRAFT, GLOSSARY, "REPORT_L1"), List.of(RAW, DRAFT, GLOSSARY, "REPORT_L1", PRONOUN, PAIR_CONTEXT)));
+        contexts.put("L3_RAW_FIRST_REAUDIT", context(List.of(RAW, GLOSSARY, "VI_L2"), List.of(RAW, GLOSSARY, "VI_L2")));
+        contexts.put("L3_RECONCILE", context(List.of(RAW, DRAFT, GLOSSARY, "REPORT_L1", "VI_L2", "CHANGE_MAP_L2"),
+                List.of(RAW, DRAFT, GLOSSARY, "REPORT_L1", "VI_L2", "CHANGE_MAP_L2", PRONOUN, PAIR_CONTEXT)));
+        root.put("contextAllowList", contexts);
+
+        List<Object> evidence = new ArrayList<>();
+        evidence.add(Map.of("evidenceType", "REPORT_L1", "schemaId", "safe4.full.report-l1.v1"));
+        evidence.add(Map.of("evidenceType", "VI_L2", "schemaId", "safe4.full.vi-l2.v1"));
+        evidence.add(Map.of("evidenceType", "CHANGE_MAP_L2", "schemaId", "safe4.full.change-map-l2.v1"));
+        evidence.add(Map.of("evidenceType", "FINAL_QA", "schemaId", "safe4.full.final-qa.v1"));
+        evidence.add(Map.of("evidenceType", "QA_RECEIPT", "schemaId", RECEIPT_SCHEMA_VERSION));
+        root.put("evidenceSchemas", evidence);
+
+        List<Object> gates = new ArrayList<>();
+        for (String gate : GATE_IDS) {
+            gates.add(Map.of("gateId", gate, "calculatorId", "safe4.full.gate." + gate.toLowerCase(java.util.Locale.ROOT),
+                    "requires", List.of("QA_RECEIPT")));
+        }
+        root.put("gateDefinitions", gates);
+
+        List<Object> artifacts = new ArrayList<>();
+        for (String role : RELEASE_ARTIFACT_ROLES) {
+            String contract = switch (role) {
+                case "REPORT_L1" -> "safe4.full.report_l1.v1";
+                case "VI_L2" -> "safe4.full.vi_l2.v1";
+                case "CHANGE_MAP_L2" -> "safe4.full.change_map_l2.v1";
+                case "FINAL_QA" -> "safe4.full.final_qa.v1";
+                case "QA_RECEIPT" -> "safe4.full.qa_receipt.v1";
+                case "SHA256_MANIFEST" -> "safe4.full.sha256_manifest.v1";
+                case "PROJECT_SOURCE" -> "safe4.full.project_source.v1";
+                default -> throw new IllegalArgumentException("Unknown release role: " + role);
+            };
+            artifacts.add(Map.of("role", role, "required", true, "nameTemplate", "{chapter}." + role.toLowerCase(java.util.Locale.ROOT) + ".json",
+                    "contentContract", contract, "presentWhen", "RELEASE"));
+        }
+        root.put("releaseArtifacts", Map.of("maximumFiles", BigDecimal.valueOf(7), "artifacts", artifacts,
+                "forbiddenArtifacts", List.of("EXECUTABLE_CODE", "REMOTE_SCRIPT")));
+        return root;
+    }
+
+    public static String machineContractFingerprint() {
+        return EditorialCanonicalJson.sha256Hex(EditorialCanonicalJson.canonicalize(machineContractProjection())
+                .getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static Map<String, Object> context(List<String> required, List<String> allowed) {
+        return Map.of("required", required, "allowed", allowed);
     }
 
     public static Map<String, String> phaseRequiredRoles() {

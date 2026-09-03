@@ -30,6 +30,10 @@ public final class EditorialEngineContractProfileCanonicalizer {
     }
 
     public static String machineContractFingerprint(EditorialEngineContractProfile profile) {
+        if (profile != null && EditorialSafe4Contract.CONTRACT_VERSION.equals(profile.minimumSupportedContractVersion())
+                && EditorialSafe4Contract.CONTRACT_VERSION.equals(profile.maximumSupportedContractVersion())) {
+            return EditorialSafe4Contract.machineContractFingerprint();
+        }
         byte[] payload = (MACHINE_CONTRACT_DOMAIN
                 + EditorialCanonicalJson.canonicalize(machineContractProjection(profile)))
                 .getBytes(StandardCharsets.UTF_8);
@@ -38,6 +42,10 @@ public final class EditorialEngineContractProfileCanonicalizer {
 
     /** Returns the exact semantic projection used by machineContractFingerprint. */
     public static Map<String, Object> machineContractProjection(EditorialEngineContractProfile profile) {
+        if (profile != null && EditorialSafe4Contract.CONTRACT_VERSION.equals(profile.minimumSupportedContractVersion())
+                && EditorialSafe4Contract.CONTRACT_VERSION.equals(profile.maximumSupportedContractVersion())) {
+            return new LinkedHashMap<>(EditorialSafe4Contract.machineContractProjection());
+        }
         Map<String, Object> all = toMap(profile, false);
         all.remove("profileFormat");
         all.remove("profileFormatVersion");
