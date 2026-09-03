@@ -1,25 +1,79 @@
 # Build State
 
-- Status: `P2_COMPLETE / P3A_GAP012_COMPLETE / IMPORT_ACCEPTANCE_PASS / NOT_RUNNABLE / NOT_CERTIFIED`.
-- Active authority: `EDITORIAL_RECOVERY_V4_18.md`.
-- Current phase: P2A reference pack, P3A GAP-012 importer hardening and P2B import acceptance are complete. Trusted runtime contract/profile and Editorial execution remain outside this phase.
-- Current version/build: device is restored to baseline `4.17-dev.1` / Android versionCode `169`. P3A validation APK `4.17-dev.2`/code170 was created only with `scripts/build-and-save.ps1`, archived in artifact/backup, used for device tests, then removed from the device; no v4.18 APK or source build-metadata change was made.
-- Active branch/worktree: `feature/v4.18` / `D:\App Translate Books\App Translate Books-translation-profile`.
-- Source baseline: device-verified v4.17 HEAD `921af9256e1b1fe4ab9ac113affa98eec7a1e339`.
-- Current commit baseline: `1090661140a4f970c4bd033e6314fc28f6b5ab04`, the exact P2 Android acceptance baseline immediately before the P3A GAP-012 change/documentation commit; not self-referential.
-- P0/P1 checkpoint: `aef7da1` (`chore(editorial): checkpoint P0 P1 characterization evidence`); no production source or build metadata was included.
-- Baseline build: `TranslateBooks-v4.17-dev.1-code169.apk`, 2,784,446 bytes, SHA-256 `3C3AAEF1A7D47F39A7B5A5FF8AEDF77347D255AF728B908180AA142CA2B276D1`; event `build-20260829-185818`; artifact/backup/source ZIP parity remains preserved.
-- Editorial authority selected: `V5-SAFE.4.1.3-FULL` from `D:\Ebooks\1. Prompt cac the loai\4.BIÊN TẬP\BIEN_TAP_V5_SAFE_4_1_3_FULL_RELEASE`.
-- Authority hashes: Project `1727AE173F2CFD530EB818CAE69E0D3FADC59C35E3B5B6D478704A02091A26AD`; Prompt `D25757D1A6BDDD5962A3B178B9EF850727573AE0C34867EC8F4B8450C7CD754F`; Workflow `5DB6B4F6509313F106499113537D2880BC6D2FF663859239DAFB285557505730`.
-- P0 completed: moved v4.17 worktree repaired through Git and verified clean; owner-selected continuation branch created; external release inventoried; static release qualification rerun `306 PASS / 0 FAIL`; existing manifest/import/storage/compatibility platform audited; reuse-first Pack Manifest v1 contract, implementation map, release checklist and README prepared.
-- P1 evidence completed: test-only four-root-entry 4.1.3 fixture generated with exact authority bytes; manifest and compatibility characterization added; import/integrity/storage/future-pack AndroidTest source added; false-block JVM characterization added; engine tests `123/123`, app unit tests `210/210`, AndroidTest Java compile PASS; Android P1 class `5/7` PASS with GAP-012 recorded; full instrumented suite `91/100` PASS with seven pre-existing v17/v18 schema-test failures. No production source was changed.
-- P2A evidence completed: canonical manifest/ZIP and Java data-descriptor control ZIP generated from locked authority; two independent temp runs were byte-reproducible; host negative/manifest tests pass; canonical identity is separated from ZIP SHA; no executable payload is present. The negative fixture registry was isolated per test in AndroidTest setup after the first run exposed a test-state collision; no production source was changed.
-- P3A/P2B evidence completed: the minimal importer change calls `ZipStructureProbe.drainToEnd()` on the current stream before EOCD validation; no second read, reopen, unbounded buffer or validation removal. Focused importer `13/13`, P1 characterization `7/7`, P2 acceptance `3/3`, and full instrumented suite `103/103` pass on `15e84958`; canonical/control immutable readback is byte-identical, re-import is idempotent, synthetic 4.1.4 is side-by-side, and security negatives remain fail-closed. Reports: `docs/P3A_GAP012_IMPORTER_HARDENING_REPORT.md` and `docs/P2B_IMPORT_ACCEPTANCE_REPORT.md`.
-- P1/P3A device action: after explicit permission, immutable baseline APK code169 and separate AndroidTest APK were installed on device `15e84958`/API 35. P3A used archived validation APK `4.17-dev.2`/code170, then restored the device to code169; no v4.18 release APK or source build-metadata change was created.
-- Pending: P3B trusted runtime contract/profile is the sole next engineering handoff. Later work remains P4 binding/resume UX; P5 real L1 pilot; P6 L2/L3; P7 regression/build/device QA/release gates. Do not open execution or certification from importer success.
-- Known limitations: external 4.1.3 evidence is structural only; real chapter pilot/model benchmark/provider execution are not run. CODE169 engine profile trusts only pack integrity, old bundled V5-SAFE.4 remains historical, and Editorial execution remains disabled. GAP-012 is resolved for valid Pack Manifest v1 transport; runtime contract/profile and certification gaps remain.
-- Regression status: preserved v4.17 evidence is full JVM `205/205`, Lint `0 errors/53 warnings`, artifact parity and device QA PASS. Current v4.18 engine unit suite is `125/125` PASS; app unit suite is `210/210` PASS; focused importer is `13/13`, P1 is `7/7`, P2 is `3/3`, and full instrumented is `103/103` on `CPH2691`/API 35. Real API test remains skipped by opt-in assumption, provider/API calls `0`; external 4.1.3 `TESTS/test_full_release.ps1` is `306 PASS / 0 FAIL`. Test count remains 103 before/after P3A.
-- Protected state: original workspace `D:\App Translate Books` remains on `feature/v4.16-d1-code113-baseline` with user-owned `.idea/compiler.xml`, `.idea/gradle.xml` and `.idea/misc.xml` changes; it was not reset, staged or modified.
-- Exact next action: open only `P3B — trusted runtime contract/profile` with failing contract tests for the remaining gaps. Keep 4.1.3 `NOT_RUNNABLE / NOT_CERTIFIED`; importer/P2B success is not execution or certification evidence.
+- Status: P3B_COMPLETE / PACK_READY_FOR_CERTIFICATION / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE.
+- Active authority: EDITORIAL_RECOVERY_V4_18.md; editorial authority V5-SAFE.4.1.3-FULL.
+- Workspace: D:\App Translate Books\App Translate Books-translation-profile.
+- Branch: feature/v4.18.
+- Current commit baseline: a58090f6ece78f1aeb224c1bd249449a23c49ed5, the exact implementation/test baseline immediately before this documentation closure; not self-referential.
+- Current device build: 4.17-dev.1 / Android versionCode 169 on device 15e84958. The P3B validation build 4.17-dev.3 / code171 was archived, used only for device validation, and removed from the device.
+- Current phase: P3B trusted runtime contract/profile is complete as deterministic contract and compatibility evidence. Editorial execution, real chapter pilot and certification remain disabled.
+
+## Source and authority identity
+
+- P0/P1 checkpoint: aef7da1.
+- P2/P3A incoming checkpoint: b5589bf5f2b3b60942841950c5877e6f8281f7ff.
+- Canonical ZIP: app/src/androidTest/assets/editorial-p2/v5-safe-4.1.3-full-canonical.zip; 23,638 bytes; SHA-256 B9C65DBEB9D4C4ED46B67D5EC28FF6252CC2BDC4B63BC902904612987EC58987.
+- Java control ZIP: app/src/androidTest/assets/editorial-p2/v5-safe-4.1.3-full-java-control.zip; 23,418 bytes; SHA-256 44F99423292ADA15680220165AF50430532D847E155F93C1B15D9F173D4609A5.
+- Project authority: 9,485 bytes; SHA-256 1727AE173F2CFD530EB818CAE69E0D3FADC59C35E3B5B6D478704A02091A26AD.
+- Prompt authority: 8,852 bytes; SHA-256 D25757D1A6BDDD5962A3B178B9EF850727573AE0C34867EC8F4B8450C7CD754F.
+- Workflow authority: 34,917 bytes; SHA-256 5DB6B4F6509313F106499113537D2880BC6D2FF663859239DAFB285557505730.
+- Canonical pack hash: 497786e18e6e2309b44c6695bc8d8e0b538babfe20b1bc0b6f74c395fd05642d.
+
+## P3B profile
+
+- Profile: com.ml.tblandroidtxt.editorial.engine.safe4.full / 2.0.0.
+- Contract: safe4.full.three-pass.v1.
+- Receipt schema: safe4.full.receipt.v1.
+- Profile resource SHA-256: 1b2db011d59f3e2ef4349aeb0daa9c54a19b7efd1e2ca6886bc29b56e4690d62.
+- Canonical profile hash: beec03a42e37f424a6f071ad48f35878b27e1083141699352cda4474d8cc2e21.
+- Machine contract fingerprint: a167e08d8400094ef06e219495d1e34f28081fed2473a62b88c8f9fc5fa9d2a3.
+- Implemented capabilities: exact 11/11 required P3B IDs, each with owner, positive/negative test, fingerprint and source commit.
+- Explicitly missing capabilities: none.
+- sourceCommit in profile: 3156835d1cc6b723d7932709224bf626dc7a1747.
+- executionEnabled: false; automatic replacement and project rebind: false.
+
+## Completed evidence
+
+- P2A/P2B and P3A GAP-012 remain complete: canonical/control import, immutable byte readback, idempotent re-import, synthetic 4.1.4 side-by-side, and security negatives pass.
+- P3B source preflight P01-P09: 9/9 PASS.
+- P3B deterministic replay G1-G24: 24/24 PASS.
+- Typed stop/recovery, PRESERVE_DRAFT, bundle/visibility, source-status, receipt, ledger, diff, QA and release validators: PASS.
+- Host engine suite: 161/161 PASS.
+- App unit suite: 210/210 PASS.
+- Profile asset verification: PASS.
+- External qualification TESTS/test_full_release.ps1: 306 PASS / 0 FAIL.
+- Device focused tests on 15e84958: importer 13/13, P1 7/7, P2 3/3, P3B trusted profile 1/1, runtime wiring 5/5.
+- Full device instrumentation: 104 total, 103 PASS, 1 approved real-API skip, 0 failures. Suite increase from 103 to 104 is the new P3B trusted-profile test.
+- Provider/API calls: 0. Real API test: skipped by explicit opt-in.
+- git diff --check: PASS at closure.
+
+Validation APK archive:
+artifacts/builds/v4.17-dev.3/build-20260903-193024/TranslateBooks-v4.17-dev.3-code171.apk
+SHA-256 034F33485352AC4C019C3363B4666C880CD036AF6CB1550DDADCB5ABF0923A33.
+
+## Allowed-change guard
+
+P3B production changes are restricted to deterministic Safe4 contract,
+validator, evidence-catalog, profile-factory, resolver and registry owners in
+editorial-engine/src/main, plus app/build.gradle profile asset
+verification/bundling. Test setup changes are AndroidTest-only. No
+app/src/main, database schema, UI, provider/API wiring, project/run binding,
+authority bytes, canonical ZIP, GAP-012 importer or build metadata changed.
+The original workspace D:\App Translate Books was not modified.
+
+## Known limitations
+
+- No provider/API execution, real chapter L1/L2/L3, benchmark, certification,
+  project/run binding or persistence was performed.
+- DATA_COMPATIBLE means trusted contract compatibility only.
+- PACK_READY_FOR_CERTIFICATION does not mean CERTIFIED or RUNNABLE.
+- Bootstrap profile v1 remains loadable and non-executable.
+
+## Next step
+
+Do not open Editorial execution from this state. The next separately approved
+phase is P4 binding/resume contract work or a controlled L1 pilot, with new
+failing tests for that scope. Keep NOT_CERTIFIED and NOT_RUNNABLE until real
+certification evidence exists.
 
 This file is current-only; Git history preserves prior state.

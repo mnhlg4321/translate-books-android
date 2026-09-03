@@ -1,20 +1,51 @@
 # Workspace Snapshot
 
-- Updated: `2026-09-03` (+07:00).
-- Current phase/status: `P3B_IN_PROGRESS / NOT_RUNNABLE / NOT_CERTIFIED`; incoming P2/P3A acceptance remains `P2_COMPLETE / P3A_GAP012_COMPLETE / IMPORT_ACCEPTANCE_PASS`.
-- Current version/build: device restored to verified baseline `4.17-dev.1` / code169. P3A validation APK `4.17-dev.2`/code170 was archived and used only for the importer test run; no v4.18 release build or source build-metadata change.
-- Current branch/worktree: `feature/v4.18` / `D:\App Translate Books\App Translate Books-translation-profile`.
-- Current commit baseline: `d74cedcf32c18eb9e6961a3812bfbcde2cafac2d`, the exact implementation baseline immediately before this snapshot update; not self-referential. P3B commits through the reproducible profile generator are present; machine-contract/profile-bundling changes are pending.
-- P0/P1 checkpoint: `aef7da1` (`chore(editorial): checkpoint P0 P1 characterization evidence`).
-- Current build: `TranslateBooks-v4.17-dev.1-code169.apk`, SHA-256 `3C3AAEF1A7D47F39A7B5A5FF8AEDF77347D255AF728B908180AA142CA2B276D1`; artifact/backup parity preserved.
-- Active authority: `EDITORIAL_RECOVERY_V4_18.md`.
-- Editorial source: `V5-SAFE.4.1.3-FULL`; exact Project/Prompt/Workflow hashes are recorded in the plan and Pack v1 integration contract.
-- Completed: repaired the moved v4.17 Git worktree; verified clean CODE169 baseline; created `feature/v4.18`; reran external static qualification `306 PASS / 0 FAIL`; audited existing Pack Manifest v1/import/storage/compatibility code; completed P1 characterization and P2A frozen reference pack; isolated the P2 negative-fixture registry in test setup; fixed only `EditorialPackImportService` for GAP-012 by draining the current stream before EOCD validation; completed P2B acceptance. On `15e84958`/API 35, focused importer `13/13`, P1 `7/7`, P2 `3/3`, and full instrumentation `103/103` pass. Canonical/control readback is exact, re-import is idempotent, synthetic 4.1.4 is side-by-side, and security negatives remain fail-closed. P3B capability map, deterministic source preflight `P01–P09`, full-bundle/phase projection, explicit source status, typed stop/recovery, receipt/ledger/diff/QA/release validators, deterministic `G1–G24`, code-owned capability evidence catalog, profile factory and reproducible generator have been implemented/tested in separate commits. No provider/API call was made.
-- Design decision: reuse the existing four-root-entry Pack Manifest v1. Imported runtime payload is `editorial-pack.json` plus exact Project/Prompt/Workflow files. External APP/COMMON/TESTS content is design-time specification/evidence and is never executed by Android.
-- Pending: finish trusted profile v2 anchor/resource verification, resolver compatibility tests, full unit/app/instrumented regression, device validation with a retained code>170 APK then restore CODE169, and P3B reports/state/checklist. Then P4 binding/resume UX, P5 real L1 pilot, P6 L2/L3, P7 regression/build/device QA/release gates. Do not open execution or certification from importer or contract evidence.
-- Known bugs/limitations: 4.1.3 has no real-chapter/model/provider proof; bootstrap v1 remains historical/non-executable while P3B profile v2 is not yet bundled/anchored. GAP-012 is resolved for valid Pack Manifest v1 transport. Trusted runtime compatibility is still being verified; certification and execution remain unimplemented.
-- Regression status: v4.18 engine suite `125/125` pass; app unit suite `210/210` pass. On `15e84958`/API 35, focused importer `13/13`, P1 `7/7`, P2 `3/3`, and full instrumentation `103/103` pass; real API is skipped by explicit opt-in, provider/API calls `0`. Preserved CODE169 artifact/device evidence remains baseline; external pack static suite passed `306/306` on `2026-09-03`. Test count remains 103 before/after P3A.
-- Protected state: `D:\App Translate Books` D1 checkout and its three user-owned `.idea` changes remain untouched.
-- Exact next action: finish and verify the P3B v2 trusted profile, then run the required compatibility/regression/device evidence and record the final P3B state. Keep `NOT_RUNNABLE / NOT_CERTIFIED`; P2B/importer or contract evidence is not execution evidence.
+- Updated: 2026-09-03 (+07:00).
+- Current status: P3B_COMPLETE / PACK_READY_FOR_CERTIFICATION / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE.
+- Current version/build: device 15e84958 restored to 4.17-dev.1 / code169. Validation artifact 4.17-dev.3 / code171 was retained in artifacts/builds and backup/builds, not treated as a release.
+- Current branch/workspace: feature/v4.18 / D:\App Translate Books\App Translate Books-translation-profile.
+- Current commit baseline: a58090f6ece78f1aeb224c1bd249449a23c49ed5, the exact implementation/test baseline immediately before this snapshot update; not self-referential.
+- Active authority: V5-SAFE.4.1.3-FULL. Authority bytes and canonical/control ZIP hashes are unchanged; see BUILD_STATE.md and docs/P3B_VALIDATION_REPORT.md.
+
+## Completed tasks
+
+- P0/P1 baseline, characterization, four-entry fixture and gap matrix completed.
+- P2A canonical reference pack frozen; P2B import acceptance passed.
+- P3A GAP-012 importer hardening passed with bounded one-pass drain and EOCD validation retained.
+- P3B deterministic contract types, source preflight P01-P09, full-bundle/phase projection, explicit Pronoun status, typed stop/recovery, PRESERVE_DRAFT, receipt/ledger/diff/QA/release validators and G1-G24 replay completed.
+- Trusted profile v2 generated and bundled with exact 11 implemented capabilities and no explicitly missing capability. Machine contract, evidence fingerprints, canonical profile hash and source commit are pinned.
+- Focused importer/P1/P2/P3B/runtime-wiring device tests passed; full instrumentation passed with one approved real-API skip; device restored to code169.
+- Host engine 161/161, app unit 210/210 and external static 306/306 passed. Provider/API calls: 0.
+
+## Pending tasks
+
+- P4 binding/resume and persistence contract, P5 controlled real L1 pilot, P6 L2/L3, and P7 release regression/build gates remain separate future phases.
+- Release tag, release backup/export and real-chapter certification remain pending by design.
+
+## Known bugs and limitations
+
+- No provider/API, real chapter, model benchmark, execution or certification evidence exists.
+- Profile compatibility is deterministic and fail-closed but does not make 4.1.3 runnable.
+- Project/run binding, immutable run-input persistence and execution state transitions are not implemented in P3B.
+- Bootstrap profile v1 remains loadable and non-executable.
+
+## Regression status
+
+- Host: engine 161/161 PASS; app unit 210/210 PASS; profile asset verification PASS.
+- Device 15e84958/API 35: importer 13/13, P1 7/7, P2 3/3, P3B trusted profile 1/1 and runtime wiring 5/5 PASS.
+- Full instrumentation: 104 total, 103 PASS, 1 approved real-API skip, 0 failures. The count increased from 103 only because the P3B trusted-profile test was added.
+- External qualification: 306 PASS / 0 FAIL. Real API remains skipped by opt-in; provider/API calls 0.
+- git diff --check and production-change guard pass at closure.
+
+## Protected state
+
+The original workspace D:\App Translate Books remains untouched. Its
+user-owned changes and checkout were not reset, staged or modified.
+
+## Exact next step
+
+Open a separately approved P4 binding/resume task or controlled P5 L1 pilot
+only after reviewing P3B_VALIDATION_REPORT.md. Do not infer execution,
+certification, auto-activation or auto-rebind from DATA_COMPATIBLE.
 
 This is current-only state; Git history preserves prior snapshots.
