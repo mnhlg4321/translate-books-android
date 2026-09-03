@@ -302,6 +302,14 @@ public final class EditorialEngineContractProfileValidator {
                 add(issues, EditorialEngineContractProfileValidationResult.Code.INVALID_CAPABILITY_EVIDENCE,
                         path, "Evidence must describe a capability recognized as implemented");
             }
+            if ("p3b-contract".equals(evidence.evidenceClass())) {
+                EditorialEngineContractCapabilityEvidenceCatalog.EvidenceDescriptor descriptor =
+                        capabilityCatalog.evidenceDescriptor(evidence.capabilityId()).orElse(null);
+                if (descriptor == null || !descriptor.evidenceFingerprint().equals(evidence.evidenceFingerprint())) {
+                    add(issues, EditorialEngineContractProfileValidationResult.Code.INVALID_CAPABILITY_EVIDENCE,
+                            path, "P3B evidence fingerprint does not match the code-owned descriptor");
+                }
+            }
             if (!evidenceCapabilities.add(evidence.capabilityId())) {
                 add(issues, EditorialEngineContractProfileValidationResult.Code.DUPLICATE_VALUE,
                         path + ".capabilityId", "Duplicate capability evidence");
