@@ -16,6 +16,7 @@ import com.ml.tblandroidtxt.editorial.pack.EditorialEngineContractProfileCanonic
 import com.ml.tblandroidtxt.editorial.pack.EditorialEngineProfileResolver;
 import com.ml.tblandroidtxt.editorial.pack.EditorialPackCompatibilityClass;
 import com.ml.tblandroidtxt.editorial.pack.EditorialPackManifest;
+import com.ml.tblandroidtxt.editorial.pack.TrustedEditorialEngineProfileCatalog;
 
 import org.junit.After;
 import org.junit.Before;
@@ -59,7 +60,7 @@ public class EditorialPackRuntimeWiringInstrumentedTest {
     }
 
     @Test public void productionProfileIsNonExecutableAndPersistsTrustedProvenance() throws Exception {
-        EditorialEngineContractProfile profile = BundledEditorialEngineContractProfileRegistry.load().list().get(0);
+        EditorialEngineContractProfile profile = bootstrapOnlyRegistry().list().get(0);
         EditorialPackAndroidFixture.Fixture fixture = EditorialPackAndroidFixture.valid(
                 "g2c.b2.nonexec", "1.0.0", "runtime\n".getBytes(StandardCharsets.UTF_8));
         EditorialPackImportService service = productionService();
@@ -94,7 +95,7 @@ public class EditorialPackRuntimeWiringInstrumentedTest {
     }
 
     @Test public void duplicateImportDoesNotResolveOrAppendEvaluation() {
-        EditorialEngineContractProfileRegistry source = BundledEditorialEngineContractProfileRegistry.load();
+        EditorialEngineContractProfileRegistry source = bootstrapOnlyRegistry();
         AtomicInteger resolverCalls = new AtomicInteger();
         EditorialEngineProfileResolver resolver = new EditorialEngineProfileResolver(new EditorialEngineContractProfileRegistry() {
             @Override public List<EditorialEngineContractProfile> list() { resolverCalls.incrementAndGet(); return source.list(); }
@@ -148,7 +149,7 @@ public class EditorialPackRuntimeWiringInstrumentedTest {
     }
 
     @Test public void testOnlyUnsupportedContractIsBlockedWithoutFallback() {
-        EditorialEngineContractProfile source = BundledEditorialEngineContractProfileRegistry.load().list().get(0);
+        EditorialEngineContractProfile source = bootstrapOnlyRegistry().list().get(0);
         EditorialEngineContractProfile testOnlyProfile = validExecutableProfile(source);
         EditorialPackAndroidFixture.Fixture base = EditorialPackAndroidFixture.valid(
                 "g2c.b2.unsupported", "1.0.0", "unsupported\n".getBytes(StandardCharsets.UTF_8));
@@ -178,7 +179,28 @@ public class EditorialPackRuntimeWiringInstrumentedTest {
 
     private EditorialPackImportService productionService() {
         return new EditorialPackImportService(repository, storage,
-                new EditorialEngineProfileResolver(BundledEditorialEngineContractProfileRegistry.load()));
+                new EditorialEngineProfileResolver(bootstrapOnlyRegistry()));
+    }
+
+    /**
+     * These legacy wiring tests exercise the historical bootstrap profile's
+     * non-executable behavior. Keep that fixture independent of the qualified
+     * SAFE4 v2 profile now present in the real production catalog.
+     */
+    private static EditorialEngineContractProfileRegistry bootstrapOnlyRegistry() {
+        EditorialEngineContractProfile bootstrap = BundledEditorialEngineContractProfileRegistry.load()
+                .findByIdentity(TrustedEditorialEngineProfileCatalog.PRODUCTION_PROFILE_ID,
+                        TrustedEditorialEngineProfileCatalog.PRODUCTION_PROFILE_VERSION).orElseThrow();
+        return new EditorialEngineContractProfileRegistry() {
+            @Override public List<EditorialEngineContractProfile> list() { return List.of(bootstrap); }
+            @Override public Optional<EditorialEngineContractProfile> findByCanonicalHash(String hash) {
+                return Optional.of(bootstrap).filter(profile -> profile.canonicalProfileHash().equals(hash));
+            }
+            @Override public Optional<EditorialEngineContractProfile> findByIdentity(String id, String version) {
+                return Optional.of(bootstrap).filter(profile -> profile.engineProfileId().equals(id)
+                        && profile.engineProfileVersion().equals(version));
+            }
+        };
     }
 
     private static EditorialEngineContractProfile validExecutableProfile(EditorialEngineContractProfile source) {
