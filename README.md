@@ -11,9 +11,10 @@ The project targets Android 8.0 and later (`minSdk 26`) and currently builds aga
 | Released baseline | `v4.15` / code 62 | Tagged, regression-tested, and immutably archived |
 | Frozen later development | `v4.16-dev.104` / code168 | RSC/Relation-Speaker and Editorial activation track preserved as historical; no longer the active next action |
 | Recovery source baseline | `v4.16-dev.51` / code113 | Verified chapter-translation baseline at commit `a9409ffa`; not reused as the next build number |
-| Active development | `v4.17-translation-profile-compatibility` | Ordered recovery of Glossary four-field runtime and Pronoun seven-field runtime; no RSC/Editorial expansion |
+| Verified development baseline | `v4.17-dev.1` / code169 | Glossary4/Pronoun7 recovery and device QA complete at `921af92`; public release gates remain separate |
+| Active development | `v4.18` | Integrate `V5-SAFE.4.1.3-FULL` through the existing data-only Editorial Pack v1 platform, with future compatible pack import and no automatic project rebind |
 
-See [TRANSLATION_PROFILE_RECOVERY_V4_17.md](TRANSLATION_PROFILE_RECOVERY_V4_17.md) for the single active scope and fixed implementation order. See [BUILD_STATE.md](BUILD_STATE.md) for exact artifact facts and [WORKSPACE_SNAPSHOT.md](WORKSPACE_SNAPSHOT.md) for the one current phase/next action. Later RSC/Relation-Speaker, Editorial activation, IPC and live-canary documents are historical only for this release.
+See [EDITORIAL_RECOVERY_V4_18.md](EDITORIAL_RECOVERY_V4_18.md) for the single active scope and fixed implementation order. The pack/runtime boundary is frozen in [docs/EDITORIAL_PACK_V1_4_1_3_INTEGRATION.md](docs/EDITORIAL_PACK_V1_4_1_3_INTEGRATION.md), and file/test ownership is mapped in [docs/EDITORIAL_V4_18_IMPLEMENTATION_MAP.md](docs/EDITORIAL_V4_18_IMPLEMENTATION_MAP.md). See [BUILD_STATE.md](BUILD_STATE.md) and [WORKSPACE_SNAPSHOT.md](WORKSPACE_SNAPSHOT.md) for current facts and the exact next action. V4.17 remains the verified product baseline; later v4.16 RSC/Editorial/IPC activation documents are historical reference only.
 
 ## Highlights
 
@@ -46,6 +47,27 @@ TXT source
 Each job keeps an immutable settings snapshot. Changes to the active glossary, pronoun profile, instruction file, model, or chunk settings apply to new jobs rather than silently changing a running job.
 
 The v4.17 recovery targets the existing chapter-by-chapter workflow: the user selects one RAW chapter and its matching chapter Glossary and Pronoun files. Automatic `CHxxx` checking and whole-volume profile dispatch are intentionally deferred.
+
+## Editorial v4.18 direction
+
+V4.18 is planned to add a separate three-pass Editorial workflow based on `V5-SAFE.4.1.3-FULL`. It will not replace or reinterpret the v4.17 Translation profile workflow.
+
+The Editorial platform remains data-driven:
+
+```text
+editorial-pack.json + Project + Prompt + Workflow
+  → byte/hash and compatibility validation
+  → immutable side-by-side storage
+  → explicit project/run binding
+  → deterministic source preflight
+  → L1 REPORT_L1
+  → L2 VI_L2 + CHANGE_MAP_L2
+  → L3 FINAL_QA + QA_RECEIPT
+```
+
+The current CODE169 app already contains the manifest parser, ZIP safety boundary, immutable pack storage and compatibility evaluator, but its trusted engine profile supports only pack integrity and Editorial execution remains disabled. V4.18 first characterizes and reuses that platform, then implements only the 4.1.3 behaviors that tests prove are missing.
+
+Future Editorial versions can be imported without rebuilding the APK when they stay within the installed manifest, three-pass contract, schemas and required capabilities. A pack that requires a new parser, phase, execution protocol or other unknown required capability is retained as incompatible and reports `ENGINE_UPGRADE_REQUIRED`; it is never silently downgraded, auto-activated or applied to an existing run.
 
 ## Configuration files
 

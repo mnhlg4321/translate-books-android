@@ -21,7 +21,7 @@ Không commit trực tiếp lên `main`. Không squash khi merge vì phải gi�
 
 Một release chỉ có một feature branch và một checklist. “Session” là một lượt tiếp tục trên branch đó, không phải một lý do tạo branch mới. Local test/build failure được sửa và commit trên cùng branch.
 
-## 0. Active v4.17 historical recovery exception
+## 0. Historical recovery lineage and active v4.18 continuation
 
 `main` hiện cũ hơn baseline dịch đã được owner chọn, nên v4.17 dùng ngoại lệ phục hồi có kiểm soát:
 
@@ -29,11 +29,13 @@ Một release chỉ có một feature branch và một checklist. “Session” 
 - exact source baseline: `a9409ffacfcbb05374e3f07b8ae80b22f60a95b7` (`v4.16-dev.51` / code113);
 - verified baseline APK SHA-256: `C271F9D8BE757C476300E85E2F7E99742CAF25BF26B119C6218953E93FE24376`;
 - single branch: `feature/v4.17-translation-profile-compatibility`;
-- isolated worktree: `C:\Users\ADMIN\Documents\App Translate Books-translation-profile`;
+- relocated isolated worktree: `D:\App Translate Books\App Translate Books-translation-profile` (repaired with Git on `2026-09-03` after the workspace moved from C:);
 - original dirty workspace and later RSC/Editorial evidence are protected and must not be reset, moved, deleted, staged, or merged into this release by default;
 - every new APK must use Android `versionCode` greater than 168.
 
 This exception authorizes only the v4.17 scope frozen in the canonical plan. It does not establish a general practice of branching from arbitrary historical commits.
+
+The project owner selected the exact device-verified v4.17 HEAD `921af9256e1b1fe4ab9ac113affa98eec7a1e339` as the v4.18 Editorial source baseline. V4.18 therefore uses one continuation branch, `feature/v4.18`, in the relocated worktree above. Its canonical plan is `EDITORIAL_RECOVERY_V4_18.md`; its authority is limited to the scope and ordered phases in that plan. The original `D:\App Translate Books` D1 checkout and user-owned `.idea` changes remain protected. This continuation does not retroactively complete the separate v4.17 public tag/archive decision.
 
 ## 1. Bắt đầu phiên bản
 

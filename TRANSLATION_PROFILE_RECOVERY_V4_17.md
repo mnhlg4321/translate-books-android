@@ -1,8 +1,10 @@
 # Translation Profile Recovery v4.17
 
-Status: `ACTIVE / D5_RELEASE (device QA complete; public release pending)`
+Status: `HISTORICAL VERIFIED BASELINE / D5 DEVICE QA COMPLETE (public release decision remains separate)`
 
-This document is the single product and execution authority for the v4.17 translation-profile recovery. It replaces every active next action from the later RSC/Relation-Speaker, Editorial activation, IPC, CP6 and live-canary tracks. Those tracks and their evidence remain historical and are not deleted or reinterpreted.
+V4.17 is the verified source/build baseline for the owner-approved v4.18 Editorial continuation. Active development order and next actions now live in `EDITORIAL_RECOVERY_V4_18.md`. This status change does not claim a v4.17 public release, complete its pending tag/archive gates, or alter any v4.17 evidence.
+
+This document preserves the product and execution authority used for the completed v4.17 translation-profile development recovery. It remains authoritative for interpreting v4.17 scope and evidence, while `EDITORIAL_RECOVERY_V4_18.md` controls new development. Later RSC/Relation-Speaker, Editorial activation, IPC, CP6 and live-canary tracks remain historical and are not deleted or reinterpreted.
 
 ## 1. Locked decision
 
