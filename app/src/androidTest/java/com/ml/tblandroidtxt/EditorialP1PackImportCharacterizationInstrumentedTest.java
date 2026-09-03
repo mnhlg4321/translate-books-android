@@ -94,7 +94,12 @@ public class EditorialP1PackImportCharacterizationInstrumentedTest {
         PackFixture fixture = fixture();
         EditorialPackImportService service = service(fixture);
 
-        EditorialPackImportResult first = importAsset(service);
+        CountingInputStream source = new CountingInputStream(fixture.zipBytes());
+        EditorialPackImportResult first = service.importZip(source);
+        assertTrue("canonical ZIP must contain an EOCD record",
+                findEndOfCentralDirectory(fixture.zipBytes()) >= 0);
+        assertEquals("canonical ZIP must be drained before EOCD validation",
+                fixture.zipBytes().length, source.bytesRead());
         assertEquals("error=" + first.error() + " reason=" + first.blockedReason(),
                 EditorialPackImportState.STORED_READY_FOR_CERTIFICATION, first.state());
         assertEquals(EditorialPackImportError.NONE, first.error());
@@ -439,6 +444,14 @@ public class EditorialP1PackImportCharacterizationInstrumentedTest {
         }
     }
 
+    private static int findEndOfCentralDirectory(byte[] bytes) {
+        for (int i = 0; i + 3 < bytes.length; i++) {
+            if ((bytes[i] & 0xff) == 0x50 && (bytes[i + 1] & 0xff) == 0x4b
+                    && (bytes[i + 2] & 0xff) == 0x05 && (bytes[i + 3] & 0xff) == 0x06) return i;
+        }
+        return -1;
+    }
+
     private record ZipPayload(String name, byte[] bytes) { }
     private record PackFixture(byte[] zipBytes, byte[] manifestBytes, Map<String, byte[]> dataFiles,
                                EditorialPackManifest manifest, List<String> entryNames) {
@@ -450,5 +463,25 @@ public class EditorialP1PackImportCharacterizationInstrumentedTest {
             dataFiles = java.util.Collections.unmodifiableMap(copy);
             entryNames = List.copyOf(entryNames);
         }
+    }
+
+    private static final class CountingInputStream extends ByteArrayInputStream {
+        private int bytesRead;
+
+        CountingInputStream(byte[] bytes) { super(bytes); }
+
+        @Override public int read() {
+            int value = super.read();
+            if (value >= 0) bytesRead++;
+            return value;
+        }
+
+        @Override public int read(byte[] buffer, int offset, int length) {
+            int count = super.read(buffer, offset, length);
+            if (count > 0) bytesRead += count;
+            return count;
+        }
+
+        int bytesRead() { return bytesRead; }
     }
 }

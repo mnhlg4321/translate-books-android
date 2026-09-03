@@ -92,41 +92,59 @@ public class EditorialP2ReferencePackImportInstrumentedTest {
         }
     }
 
-    @Test public void canonicalImportRetainsKnownGapWhileJavaControlPassesAndIsIdempotent() throws Exception {
+    @Test public void canonicalAndJavaControlImportReadbackAndIdempotencyPass() throws Exception {
         PackFixture canonical = fixture(CANONICAL_ASSET);
         EditorialPackStorageLayout canonicalStorage = new EditorialPackStorageLayout(
                 context.getCacheDir().toPath().resolve("editorial-p2-canonical-" + UUID.randomUUID()));
-        EditorialPackImportResult canonicalResult = new EditorialPackImportService(
-                repository, canonicalStorage, profile(canonical.manifest()))
-                .importZip(new ByteArrayInputStream(canonical.zipBytes()));
+        EditorialPackImportService canonicalService = new EditorialPackImportService(
+                repository, canonicalStorage, profile(canonical.manifest()));
+        EditorialPackImportResult canonicalResult = canonicalService.importZip(
+                new ByteArrayInputStream(canonical.zipBytes()));
 
-        assertEquals(EditorialPackImportState.STAGING, canonicalResult.state());
-        assertEquals(EditorialPackImportError.TRUNCATED_STREAM, canonicalResult.error());
-        assertTrue(canonicalResult.blockedReason().contains("central directory/end record is incomplete"));
-        assertEquals(0, countRows("editorial_packs"));
-        assertEquals(0, countRows("editorial_pack_imports"));
-        assertEquals(0, countDirectories(canonicalStorage.stagingRoot()));
+        assertEquals(EditorialPackImportState.STORED_READY_FOR_CERTIFICATION, canonicalResult.state());
+        assertEquals(EditorialPackImportError.NONE, canonicalResult.error());
+        assertEquals(EditorialPackCompatibilityClass.DATA_COMPATIBLE, canonicalResult.compatibilityClass());
+        assertTrue(canonicalResult.readyForCertification());
+        assertImmutableReadback(canonicalStorage, canonicalResult, canonical);
+
+        EditorialPackImportResult canonicalRepeat = canonicalService.importZip(
+                new ByteArrayInputStream(canonical.zipBytes()));
+        assertEquals(EditorialPackImportState.STORED_READY_FOR_CERTIFICATION, canonicalRepeat.state());
+        assertEquals(EditorialPackImportError.NONE, canonicalRepeat.error());
+        assertTrue(canonicalRepeat.alreadyExisted());
+        assertEquals(canonicalResult.canonicalPackHash(), canonicalRepeat.canonicalPackHash());
 
         PackFixture control = fixture(CONTROL_ASSET);
-        EditorialPackStorageLayout controlStorage = new EditorialPackStorageLayout(
-                context.getCacheDir().toPath().resolve("editorial-p2-control-" + UUID.randomUUID()));
-        EditorialPackImportService controlService = new EditorialPackImportService(
-                repository, controlStorage, profile(control.manifest()));
-        EditorialPackImportResult first = controlService.importZip(new ByteArrayInputStream(control.zipBytes()));
+        String controlDatabaseName = "editorial-p2-control-" + UUID.randomUUID() + ".db";
+        TranslationRepository controlRepository = new TranslationRepository(context, controlDatabaseName);
+        try {
+            EditorialPackStorageLayout controlStorage = new EditorialPackStorageLayout(
+                    context.getCacheDir().toPath().resolve("editorial-p2-control-" + UUID.randomUUID()));
+            EditorialPackImportService controlService = new EditorialPackImportService(
+                    controlRepository, controlStorage, profile(control.manifest()));
+            EditorialPackImportResult controlResult = controlService.importZip(
+                    new ByteArrayInputStream(control.zipBytes()));
 
-        assertEquals(EditorialPackImportState.STORED_READY_FOR_CERTIFICATION, first.state());
-        assertEquals(EditorialPackImportError.NONE, first.error());
-        assertEquals(EditorialPackCompatibilityClass.DATA_COMPATIBLE, first.compatibilityClass());
-        assertTrue(first.readyForCertification());
-        for (Map.Entry<String, byte[]> entry : control.dataFiles().entrySet()) {
-            assertArrayEquals(entry.getValue(), Files.readAllBytes(
-                    controlStorage.immutableEntry(first.canonicalPackHash(), entry.getKey())));
+            assertEquals(EditorialPackImportState.STORED_READY_FOR_CERTIFICATION, controlResult.state());
+            assertEquals(EditorialPackImportError.NONE, controlResult.error());
+            assertEquals(EditorialPackCompatibilityClass.DATA_COMPATIBLE, controlResult.compatibilityClass());
+            assertTrue(controlResult.readyForCertification());
+            assertImmutableReadback(controlStorage, controlResult, control);
+        } finally {
+            controlRepository.close();
+            context.deleteDatabase(controlDatabaseName);
         }
-        assertTrue(controlStorage.hasImmutableMarker(first.canonicalPackHash()));
 
-        EditorialPackImportResult second = controlService.importZip(new ByteArrayInputStream(control.zipBytes()));
-        assertEquals(EditorialPackImportState.STORED_READY_FOR_CERTIFICATION, second.state());
-        assertTrue(second.alreadyExisted());
+        // A different valid transport with the same logical payload must resolve
+        // to the existing immutable identity, not create a duplicate or collide.
+        EditorialPackImportResult controlAfterCanonical = new EditorialPackImportService(
+                repository, canonicalStorage, profile(control.manifest()))
+                .importZip(new ByteArrayInputStream(control.zipBytes()));
+        assertEquals(EditorialPackImportState.STORED_READY_FOR_CERTIFICATION, controlAfterCanonical.state());
+        assertEquals(EditorialPackImportError.NONE, controlAfterCanonical.error());
+        assertEquals(EditorialPackCompatibilityClass.DATA_COMPATIBLE, controlAfterCanonical.compatibilityClass());
+        assertTrue(controlAfterCanonical.alreadyExisted());
+        assertEquals(canonicalResult.canonicalPackHash(), controlAfterCanonical.canonicalPackHash());
         assertEquals(1, countRows("editorial_packs"));
         assertEquals(0, countRowsWhere("editorial_packs", "state='CERTIFIED'"));
     }
@@ -367,6 +385,16 @@ public class EditorialP2ReferencePackImportInstrumentedTest {
         result.add(payload("editorial-pack.json", manifestBytes));
         for (Map.Entry<String, byte[]> entry : data.entrySet()) result.add(payload(entry.getKey(), entry.getValue()));
         return result;
+    }
+
+    private static void assertImmutableReadback(EditorialPackStorageLayout storage,
+                                                EditorialPackImportResult result,
+                                                PackFixture fixture) throws IOException {
+        for (Map.Entry<String, byte[]> entry : fixture.dataFiles().entrySet()) {
+            assertArrayEquals(entry.getValue(), Files.readAllBytes(
+                    storage.immutableEntry(result.canonicalPackHash(), entry.getKey())));
+        }
+        assertTrue(storage.hasImmutableMarker(result.canonicalPackHash()));
     }
 
     private static ZipPayload payload(String name, byte[] bytes) {

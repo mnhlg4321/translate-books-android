@@ -139,7 +139,12 @@ public class EditorialPackImportServiceInstrumentedTest {
         byte[] valid = zip(fixture);
         assertEquals(EditorialPackImportError.TRUNCATED_STREAM,
                 service.importZip(new ByteArrayInputStream(truncateBeforeCentralDirectory(valid))).error());
+        EditorialPackImportResult drainFailure = service.importZip(
+                new ThrowingInputStream(valid, valid.length - 1));
+        assertEquals(EditorialPackImportError.TRUNCATED_STREAM, drainFailure.error());
         assertEquals(0, countRows(repository, "editorial_packs"));
+        assertEquals(0, countDirectories(service.storageLayout().stagingRoot()));
+        assertEquals(0, countDirectories(service.storageLayout().immutableRoot()));
     }
 
     @Test public void sameIdentityWithChangedPromptIsBlockedAndGetsNewHash() {
@@ -312,6 +317,35 @@ public class EditorialPackImportServiceInstrumentedTest {
         int openCount = 1;
         CountingInputStream(byte[] bytes) { super(bytes); }
         @Override public void close() throws IOException { closed = true; super.close(); }
+    }
+
+    private static final class ThrowingInputStream extends InputStream {
+        private final ByteArrayInputStream delegate;
+        private final int failAt;
+        private int bytesRead;
+
+        ThrowingInputStream(byte[] bytes, int failAt) {
+            this.delegate = new ByteArrayInputStream(bytes);
+            this.failAt = failAt;
+        }
+
+        @Override public int read() throws IOException {
+            if (bytesRead >= failAt) throw new IOException("simulated drain interruption");
+            int value = delegate.read();
+            if (value >= 0) bytesRead++;
+            return value;
+        }
+
+        @Override public int read(byte[] buffer, int offset, int length) throws IOException {
+            if (length == 0) return 0;
+            if (bytesRead >= failAt) throw new IOException("simulated drain interruption");
+            int allowed = Math.min(length, failAt - bytesRead);
+            int count = delegate.read(buffer, offset, allowed);
+            if (count > 0) bytesRead += count;
+            return count;
+        }
+
+        @Override public void close() throws IOException { delegate.close(); }
     }
 
     private static final class FailingRepository extends TranslationRepository {

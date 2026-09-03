@@ -273,6 +273,12 @@ public final class EditorialPackImportService {
                         new ByteArrayInputStream(bytes.toByteArray()), size, compressed, false));
                 zip.closeEntry();
             }
+            // ZipInputStream can return null as soon as it recognizes the central
+            // directory signature. For local headers with predeclared sizes, the
+            // underlying stream may still contain the central directory and EOCD.
+            // Drain that same one-pass stream so the bounded probe can validate the
+            // transport tail without reopening or buffering the ZIP a second time.
+            structureProbe.drainToEnd();
             if (!structureProbe.hasCompleteEndOfCentralDirectory()) {
                 return zipFailure(importId, EditorialPackImportError.TRUNCATED_STREAM, "ZIP central directory/end record is incomplete");
             }
@@ -322,6 +328,15 @@ public final class EditorialPackImportService {
                 if (offset + END_OF_CENTRAL_DIRECTORY_BYTES + commentLength == tailSize) return true;
             }
             return false;
+        }
+
+        void drainToEnd() throws IOException {
+            byte[] buffer = new byte[8192];
+            while (true) {
+                int count = read(buffer, 0, buffer.length);
+                if (count < 0) return;
+                if (count == 0 && read() < 0) return;
+            }
         }
 
         boolean hasInvalidLocalEntryPath() {

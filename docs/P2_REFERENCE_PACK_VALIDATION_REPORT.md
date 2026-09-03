@@ -2,14 +2,14 @@
 
 Ngày chạy: `2026-09-03` (+07:00)
 
-Trạng thái hiện tại: `P2_REFERENCE_PACK_FROZEN / RUNTIME_IMPORT_BLOCKED_BY_GAP-012 / NOT_RUNNABLE / NOT_CERTIFIED`.
+Trạng thái hiện tại: `P2_COMPLETE / P3A_GAP012_COMPLETE / IMPORT_ACCEPTANCE_PASS / NOT_RUNNABLE / NOT_CERTIFIED`.
 
 P2 được tách thành hai phần do `GAP-012`:
 
 - `P2A — Reference pack frozen`: canonical bytes, manifest, identity, transport controls và negative matrix.
-- `P2B — Import acceptance`: chỉ mở sau P3 sửa `EditorialPackImportService`; khi đó mới xác nhận canonical import, immutable readback và side-by-side 4.1.3/4.1.4.
+- `P2B — Import acceptance`: đã đạt sau P3A sửa `EditorialPackImportService`; canonical import, immutable readback và side-by-side 4.1.3/4.1.4 đều được xác nhận.
 
-P2 chưa chứng nhận pack runnable, chưa kích hoạt Editorial execution và chưa ghi `P2_COMPLETE`.
+P2 đã ghi `P2_COMPLETE` theo exit gate P2B. Pack vẫn chưa được chứng nhận runnable, chưa kích hoạt Editorial execution và vẫn giữ `NOT_RUNNABLE / NOT_CERTIFIED`.
 
 ## Entry gate
 
@@ -18,7 +18,7 @@ P2 chưa chứng nhận pack runnable, chưa kích hoạt Editorial execution v�
 | Workspace/branch/baseline | `D:\App Translate Books\App Translate Books-translation-profile`; `feature/v4.18`; source baseline `921af9256e1b1fe4ab9ac113affa98eec7a1e339`; app baseline `4.17-dev.1`/code169. |
 | P0/P1 checkpoint | `aef7da1` — `chore(editorial): checkpoint P0 P1 characterization evidence`; checkpoint bao gồm các thay đổi P0/P1 đã ghi nhận, không có production source. |
 | Authority qualification | `D:\Ebooks\1. Prompt cac the loai\4.BIÊN TẬP\BIEN_TAP_V5_SAFE_4_1_3_FULL_RELEASE\TESTS\test_full_release.ps1`: `PASS=306 FAIL=0 OLD_WORDS=5308 NEW_WORDS=7050 EXACT_RETAINED=223/311`. |
-| Git safety | `git diff --check` pass; không có diff trong `app/src/main` hoặc `editorial-engine/src/main`; không sửa database schema/UI/build metadata; không stage production file. |
+| Git safety | `git diff --check` pass; production diff sau P3A chỉ nằm trong `EditorialPackImportService`; không sửa `editorial-engine/src/main`, database schema, UI hoặc build metadata nguồn. |
 | Schema-test hygiene | Bảy assertion current schema `17→18` đã sửa trong đúng ba AndroidTest class; seed/migration starting versions `13/14/15/16` giữ nguyên. |
 | P2 split | `GAP-012` được phân loại thuộc importer transport; P2A và P2B được ghi riêng. |
 
@@ -108,7 +108,7 @@ Compatibility outcomes đã được characterization từ P1 và giữ làm reg
 | Manifest/hash/path không hợp lệ | `INVALID`/typed integrity error; không store pack hợp lệ giả |
 | Pack hợp lệ nhưng trusted profile non-executable | Lưu fail-closed, `STORED_BLOCKED`, không certify |
 
-`GAP-012` không làm canonical pack bị đổi. Current importer vẫn là owner của failure: ZIP canonical hợp lệ bị `STAGING/TRUNCATED_STREAM` vì `ZipStructureProbe` kiểm tra EOCD trên stream trước khi central directory được drain; Java control đi qua importer.
+`GAP-012` không làm canonical pack bị đổi. Trước P3A, current importer kiểm tra EOCD trước khi central directory được drain; sau P3A, cùng stream được drain bounded trước validation nên canonical và Java control đều đi qua importer. Fix thuộc `EditorialPackImportService`, không thuộc canonical pack.
 
 ## Tests and runtime status
 
@@ -120,26 +120,26 @@ Compatibility outcomes đã được characterization từ P1 và giữ làm reg
 | `:editorial-engine:test --no-daemon` | PASS; `125/125`, gồm P2 manifest negatives. |
 | `:app:testDebugUnitTest --no-daemon` | PASS; `210/210`; P2 không sửa app unit production behavior. |
 | `:app:compileDebugAndroidTestJavaWithJavac --no-daemon` | PASS; gồm P2 Android characterization và P2.8 schema hygiene. |
-| `:app:assembleDebugAndroidTest --no-daemon` | PASS; test-only APK `1,104,521` bytes, SHA-256 `8596B2B9CA89354C0045E33C50271946E792D5E441A236D9B8023F7A87F49998`; không tạo release APK/version mới. |
-| Android P1 runtime trước P2 | Device `15e84958`/API 35: P1 class `7` tests = `5` pass + `2` GAP-012; full suite `100` = `91` pass + `7` schema-baseline + `2` GAP-012. |
-| Android P2 targeted sau P2.8 | PASS; `EditorialP2ReferencePackImportInstrumentedTest`: `3/3`. Canonical ZIP giữ expected `STAGING/TRUNCATED_STREAM`; Java control import/readback/re-import pass; negative matrix pass fail-closed. |
-| Android P1 regression sau P2.8 | `7` tests = `5` PASS + đúng `2` GAP-012 failures: `valid413ImportIsIdempotentAndImmutableReadbackIsExact` và `synthetic414IsSideBySideAndDoesNotRebindOrActivateCurrentProject`. |
-| Android full instrumented suite sau P2.8 | `103` tests = `101` PASS + đúng `2` GAP-012 failures; real API test skipped by its explicit opt-in assumption, không gọi provider/API thật. Không còn bảy schema v17/v18 failures. |
+| `scripts/build-and-save.ps1` cho device validation | PASS; patched production APK `4.17-dev.2`/code170, SHA-256 `6F89A7A2DBD2DBC5A93D5CBD7C17D44E2C2FB928774BFEA3729EF54C44A42D52`, lưu tại artifact/backup `build-20260903-183325`; source build metadata không đổi, device sau đó khôi phục code169. |
+| `:app:assembleDebugAndroidTest --no-daemon` | PASS; test-only APK `1,061,212` bytes, SHA-256 `4FF6FDFEA4D5AEC9D628A5E267281756FFF2D02F28B02854028F677340F5479F`. |
+| Focused `EditorialPackImportServiceInstrumentedTest` | `13/13 PASS`, gồm IOException trong drain, truncation, integrity, path, size/ratio, storage và recovery. |
+| P1 `EditorialP1PackImportCharacterizationInstrumentedTest` | `7/7 PASS`; canonical import/readback/idempotency và synthetic 4.1.4 side-by-side đều pass. |
+| P2 `EditorialP2ReferencePackImportInstrumentedTest` | `3/3 PASS`; canonical/control cùng logical identity, readback exact, re-import idempotent và negative matrix fail-closed. |
+| Android full instrumented suite | `103/103 PASS`; real API test skipped bởi explicit opt-in assumption, provider/API calls `0`. |
+| `:app:testDebugUnitTest --no-daemon` | PASS; `210/210`. |
+| External `TESTS/test_full_release.ps1` | PASS; `PASS=306 FAIL=0 OLD_WORDS=5308 NEW_WORDS=7050 EXACT_RETAINED=223/311`. |
 
-P2 Android test acceptance đã được thực thi trên `15e84958`. Lần chạy đầu phát hiện test setup dùng chung registry DB giữa các negative fixture, gây `IDENTITY_COLLISION` ngoài nguyên nhân đang kiểm tra; setup đã được sửa trong AndroidTest để mỗi fixture dùng DB độc lập, sau đó targeted P2 đạt `3/3`. Đây là test-only correction, không phải production fix.
+P2 Android test acceptance đã được thực thi trên `15e84958`. Lần chạy đầu phát hiện test setup dùng chung registry DB giữa các negative fixture, gây `IDENTITY_COLLISION` ngoài nguyên nhân đang kiểm tra; setup đã được sửa trong AndroidTest để mỗi fixture dùng DB độc lập, sau đó targeted P2 đạt `3/3`. Đây là test-only correction, không phải production fix. Sau P3A, cùng targeted class đạt `3/3` với canonical import acceptance mới; P1 đạt `7/7` và full suite đạt `103/103`.
 
 ## P2A/P2B decision and P3 handoff
 
-P2A đã đạt exit gate: reference bytes/identity host-validated, negative matrix pass, Android targeted P2 `3/3`, và full suite chỉ còn đúng hai failure GAP-012. Trạng thái đóng băng là `P2_REFERENCE_PACK_FROZEN / RUNTIME_IMPORT_BLOCKED_BY_GAP-012 / NOT_RUNNABLE / NOT_CERTIFIED`. Không đánh dấu `P2_COMPLETE` vì P2B vẫn chưa đạt.
+P2A đã đạt exit gate từ trước; P2B đạt sau P3A: canonical import thành công, immutable readback byte-identical, idempotent re-import, side-by-side 4.1.3/4.1.4, không auto-activate/auto-rebind và security matrix không suy giảm. Trạng thái đóng băng/acceptance là `P2_COMPLETE / P3A_GAP012_COMPLETE / IMPORT_ACCEPTANCE_PASS / NOT_RUNNABLE / NOT_CERTIFIED`.
 
-P2B chưa bắt đầu. Chỉ sau P3 mới kiểm tra canonical import thành công, immutable readback byte-identical, idempotent re-import, side-by-side 4.1.3/4.1.4, không auto-activate/auto-rebind và security matrix không suy giảm.
-
-Handoff production duy nhất sang P3:
+Handoff duy nhất sau P2B là P3B; không mở thêm production task GAP-012:
 
 ```text
-GAP-012 — sửa EditorialPackImportService để đọc/drain và
-xác nhận central directory/EOCD của ZIP hợp lệ mà vẫn giữ
-one-pass, bounded memory, limits và fail-closed behavior.
+P3B — trusted runtime contract/profile, xử lý từng gap còn lại bằng
+failing contract test; giữ execution/certification disabled.
 ```
 
-Không gộp trusted profile, UI, preflight, execution activation, database migration hoặc project/run binding vào GAP-012.
+GAP-012 đã được sửa riêng trong `EditorialPackImportService`; commit P3A không gộp trusted profile, UI, preflight, execution activation, database migration hoặc project/run binding.
