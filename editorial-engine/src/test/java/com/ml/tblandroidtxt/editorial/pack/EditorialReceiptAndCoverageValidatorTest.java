@@ -75,6 +75,18 @@ public class EditorialReceiptAndCoverageValidatorTest {
         assertFalse(new EditorialReceiptValidator().validate(wrongGate).valid());
     }
 
+    @Test public void everySafe4ReceiptArtifactTypeUsesTheReceiptSchema() {
+        EditorialReceiptValidator validator = new EditorialReceiptValidator();
+        for (String artifactType : List.of("REPORT_L1", "VI_L2", "CHANGE_MAP_L2", "FINAL_QA", "QA_RECEIPT")) {
+            EditorialReceiptValidator.ReceiptDocument document = validDocument(
+                    EditorialSafe4Contract.RECEIPT_SCHEMA_VERSION, artifactType, "bundle", "predecessor");
+            assertTrue(artifactType, validator.validate(document).valid());
+        }
+        EditorialReceiptValidator.ReceiptDocument invalidArtifact = validDocument(
+                EditorialSafe4Contract.RECEIPT_SCHEMA_VERSION, "UNTRUSTED_MODEL_REPORT", "bundle", "predecessor");
+        assertFalse(validator.validate(invalidArtifact).valid());
+    }
+
     @Test public void qaRequiresTwoIndependentPassesAndReleaseIsFailClosed() {
         EditorialQaValidator qa = new EditorialQaValidator();
         assertTrue(qa.validate("input-1", List.of(
@@ -92,7 +104,12 @@ public class EditorialReceiptAndCoverageValidatorTest {
     }
 
     private static EditorialReceiptValidator.ReceiptDocument validDocument(String schema, String bundle, String predecessor) {
-        return new EditorialReceiptValidator.ReceiptDocument(schema, "QA_RECEIPT", bundle, predecessor,
+        return validDocument(schema, "QA_RECEIPT", bundle, predecessor);
+    }
+
+    private static EditorialReceiptValidator.ReceiptDocument validDocument(String schema, String artifactType,
+                                                                            String bundle, String predecessor) {
+        return new EditorialReceiptValidator.ReceiptDocument(schema, artifactType, bundle, predecessor,
                 List.of("anchor-1"), new EditorialLedgerValidator.Request(List.of(), List.of()),
                 Set.of("evidence-1"), gates(), List.of(), List.of(), "same", "same", 0,
                 EditorialStopDecision.continueWithoutStop("L3_RECONCILE", "COVERAGE", "VALIDATED"), false);
