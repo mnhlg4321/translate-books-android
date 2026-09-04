@@ -99,6 +99,14 @@ public final class EditorialP5PilotResult {
                                String responseIdentity, byte[] reportBytes,
                                byte[] receiptBytes, Metrics metrics,
                                EditorialP5L1Output output) {
+            this(attemptIdentity, requestIdentity, responseIdentity, reportBytes,
+                    receiptBytes, metrics, output, false);
+        }
+
+        private CommittedResult(String attemptIdentity, String requestIdentity,
+                                String responseIdentity, byte[] reportBytes,
+                                byte[] receiptBytes, Metrics metrics,
+                                EditorialP5L1Output output, boolean persistedReadback) {
             this.attemptIdentity = text(attemptIdentity, "attempt identity");
             this.requestIdentity = text(requestIdentity, "request identity");
             this.responseIdentity = text(responseIdentity, "response identity");
@@ -108,7 +116,21 @@ public final class EditorialP5PilotResult {
                 throw new IllegalArgumentException("committed result requires report and receipt bytes");
             }
             this.metrics = Objects.requireNonNull(metrics, "metrics");
-            this.output = Objects.requireNonNull(output, "output");
+            if (!persistedReadback) this.output = Objects.requireNonNull(output, "output");
+            else this.output = output;
+        }
+
+        /**
+         * Rehydrates only the durable, redacted result envelope. Semantic
+         * output is intentionally absent after process restart; callers must
+         * use the persisted report/receipt and identities, never re-call a
+         * provider to reconstruct it.
+         */
+        public static CommittedResult persisted(String attemptIdentity, String requestIdentity,
+                                                String responseIdentity, byte[] reportBytes,
+                                                byte[] receiptBytes, Metrics metrics) {
+            return new CommittedResult(attemptIdentity, requestIdentity, responseIdentity,
+                    reportBytes, receiptBytes, metrics, null, true);
         }
 
         public String attemptIdentity() { return attemptIdentity; }

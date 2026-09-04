@@ -100,4 +100,31 @@ public class EditorialPackMigrationSpecTest {
         assertFalse(sql.contains("editorial_chapters ("));
         assertFalse(sql.contains("editorial_runs ("));
     }
+
+    @Test public void v20AddsOnlyDurableP5CAttemptOwner() {
+        String sql = String.join("\n", EditorialMigrationSpec.from19To20()).toLowerCase();
+        assertEquals(1, sql.split("create table if not exists", -1).length - 1);
+        assertEquals(2, countIndexes(sql));
+        assertEquals(2, sql.split("create trigger if not exists", -1).length - 1);
+        assertTrue(sql.contains("create table if not exists editorial_p5c_attempts"));
+        assertTrue(sql.contains("request_identity text not null"));
+        assertTrue(sql.contains("request_envelope_hash text not null"));
+        assertTrue(sql.contains("phase in ('l1_raw_discovery','l1_reconcile')"));
+        assertTrue(sql.contains("status in ('claimed','recovery_required','committed')"));
+        assertTrue(sql.contains("report_bytes blob"));
+        assertTrue(sql.contains("receipt_bytes blob"));
+        assertTrue(sql.contains("foreign key(binding_identity) references editorial_p4_bindings(binding_identity) on delete restrict"));
+        assertTrue(sql.contains("foreign key(run_declaration_identity) references editorial_authoritative_run_declarations(declaration_identity) on delete restrict"));
+        assertTrue(sql.contains("trg_editorial_p5c_attempts_identity_no_update"));
+        assertTrue(sql.contains("trg_editorial_p5c_attempts_no_delete"));
+        assertFalse(sql.contains("alter table"));
+        assertFalse(sql.contains("drop table"));
+        assertFalse(sql.contains("insert into"));
+        assertFalse(sql.contains("editorial_projects ("));
+    }
+
+    private static int countIndexes(String sql) {
+        return sql.split("create index if not exists", -1).length - 1
+                + sql.split("create unique index if not exists", -1).length - 1;
+    }
 }

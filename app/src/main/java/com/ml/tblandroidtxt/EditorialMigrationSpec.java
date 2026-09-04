@@ -129,5 +129,17 @@ public final class EditorialMigrationSpec {
             "CREATE TRIGGER IF NOT EXISTS trg_editorial_p4_binding_inputs_no_update BEFORE UPDATE ON editorial_p4_binding_inputs BEGIN SELECT RAISE(ABORT,'editorial_p4_binding_inputs are immutable'); END",
             "CREATE TRIGGER IF NOT EXISTS trg_editorial_p4_binding_inputs_no_delete BEFORE DELETE ON editorial_p4_binding_inputs BEGIN SELECT RAISE(ABORT,'editorial_p4_binding_inputs are immutable'); END"
     );}
+    /**
+     * v20 is an additive P5C attempt owner. It stores only durable attempt
+     * identity, redacted result artifacts, bounded metrics and recovery state;
+     * it never stores request/response or chapter content.
+     */
+    public static List<String> from19To20(){return Arrays.asList(
+            "CREATE TABLE IF NOT EXISTS editorial_p5c_attempts (attempt_identity TEXT PRIMARY KEY NOT NULL CHECK(length(attempt_identity)=64 AND attempt_identity NOT GLOB '*[^0-9a-f]*'), request_identity TEXT NOT NULL CHECK(length(request_identity)=64 AND request_identity NOT GLOB '*[^0-9a-f]*'), binding_identity TEXT NOT NULL CHECK(length(binding_identity)=64 AND binding_identity NOT GLOB '*[^0-9a-f]*'), run_declaration_identity TEXT NOT NULL CHECK(length(run_declaration_identity)=64 AND run_declaration_identity NOT GLOB '*[^0-9a-f]*'), chapter_key TEXT NOT NULL CHECK(length(trim(chapter_key))>0), phase TEXT NOT NULL CHECK(phase IN ('L1_RAW_DISCOVERY','L1_RECONCILE')), predecessor_identity TEXT NOT NULL CHECK(length(predecessor_identity)=64 AND predecessor_identity NOT GLOB '*[^0-9a-f]*'), request_envelope_hash TEXT NOT NULL CHECK(length(request_envelope_hash)=64 AND request_envelope_hash NOT GLOB '*[^0-9a-f]*'), provider TEXT NOT NULL CHECK(length(trim(provider))>0), model TEXT NOT NULL CHECK(length(trim(model))>0), status TEXT NOT NULL CHECK(status IN ('CLAIMED','RECOVERY_REQUIRED','COMMITTED')), response_identity TEXT NOT NULL DEFAULT '', report_bytes BLOB, receipt_bytes BLOB, metrics_json TEXT NOT NULL DEFAULT '', recovery_reason_code TEXT NOT NULL DEFAULT '', created_at INTEGER NOT NULL CHECK(created_at>=0), updated_at INTEGER NOT NULL CHECK(updated_at>=0), FOREIGN KEY(binding_identity) REFERENCES editorial_p4_bindings(binding_identity) ON DELETE RESTRICT, FOREIGN KEY(run_declaration_identity) REFERENCES editorial_authoritative_run_declarations(declaration_identity) ON DELETE RESTRICT)",
+            "CREATE INDEX IF NOT EXISTS idx_editorial_p5c_attempts_binding ON editorial_p5c_attempts(binding_identity,chapter_key,phase,attempt_identity)",
+            "CREATE INDEX IF NOT EXISTS idx_editorial_p5c_attempts_status ON editorial_p5c_attempts(status,updated_at,attempt_identity)",
+            "CREATE TRIGGER IF NOT EXISTS trg_editorial_p5c_attempts_identity_no_update BEFORE UPDATE OF attempt_identity,request_identity,binding_identity,run_declaration_identity,chapter_key,phase,predecessor_identity,request_envelope_hash,provider,model ON editorial_p5c_attempts BEGIN SELECT RAISE(ABORT,'editorial_p5c_attempts identity is immutable'); END",
+            "CREATE TRIGGER IF NOT EXISTS trg_editorial_p5c_attempts_no_delete BEFORE DELETE ON editorial_p5c_attempts BEGIN SELECT RAISE(ABORT,'editorial_p5c_attempts are durable recovery records'); END"
+    );}
     private EditorialMigrationSpec() {}
 }

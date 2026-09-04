@@ -30,6 +30,14 @@ public final class EditorialP5PilotExecution {
     public interface AttemptStore {
         enum Claim { ACQUIRED, ALREADY_COMMITTED, IN_FLIGHT }
 
+        /**
+         * Gives a durable store the exact request facts before claim. The
+         * default keeps existing unit-test stores source-compatible.
+         */
+        default void prepare(EditorialP5PilotRequest request,
+                             EditorialP5PilotAuthorization authorization,
+                             String requestEnvelopeHash) { }
+
         Claim claim(String attemptIdentity);
 
         void commit(EditorialP5PilotResult.CommittedResult value);
@@ -70,7 +78,8 @@ public final class EditorialP5PilotExecution {
                     List.of(), request.chapterKey(), "Issue a new bounded authorization",
                     request.phase(), false, metrics);
         }
-        if (!"L1".equals(authorization.phase())) {
+        if (!"L1".equals(authorization.phase())
+                && !authorization.phase().equals(request.phase())) {
             return stopped(requestIdentity, EditorialP5PilotResult.StopClass.PHASE_NOT_L1,
                     "P5_AUTHORIZATION_PHASE_NOT_L1", request.phase(), "PILOT_PHASE",
                     List.of(), request.chapterKey(), "Create an L1-only authorization",
@@ -175,8 +184,10 @@ public final class EditorialP5PilotExecution {
                     request.phase(), false, metrics);
         }
 
+        String requestEnvelopeHash = requestEnvelopeHash(request, projection, authorization);
         AttemptStore.Claim claim;
         try {
+            store.prepare(request, authorization, requestEnvelopeHash);
             claim = store.claim(request.attemptIdentity());
         } catch (RuntimeException error) {
             return stopped(requestIdentity, EditorialP5PilotResult.StopClass.RETRY_REQUIRED,
@@ -207,7 +218,6 @@ public final class EditorialP5PilotExecution {
                     request.phase(), true, metrics);
         }
 
-        String requestEnvelopeHash = requestEnvelopeHash(request, projection, authorization);
         EditorialP5PilotProvider.Request providerRequest = new EditorialP5PilotProvider.Request(
                 request.attemptIdentity(), EditorialP5PilotProvider.CallKind.PRIMARY_SEMANTIC,
                 authorization.provider(), authorization.model(), request.phase(), requestEnvelopeHash,
