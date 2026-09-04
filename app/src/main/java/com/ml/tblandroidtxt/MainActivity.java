@@ -853,6 +853,65 @@ public class MainActivity extends Activity {
         } catch (Exception error) { toast("Không tạo được project: "+error.getMessage()); }
     }
 
+    void createEditorialProjectWithP4Binding(String series, String volume, String packId,
+                                             String packVersion, String raw, String draft,
+                                             String glossary, String pronoun) {
+        if (series == null || series.trim().isEmpty() || volume == null || volume.trim().isEmpty()) {
+            toast("Nhập Series và Volume");
+            return;
+        }
+        if (packId == null || packId.trim().isEmpty() || packVersion == null || packVersion.trim().isEmpty()) {
+            toast("Phải chọn một Editorial Pack cụ thể");
+            return;
+        }
+        if (raw == null || raw.trim().isEmpty() || draft == null || draft.trim().isEmpty()
+                || glossary == null || glossary.trim().isEmpty()) {
+            toast("RAW, DRAFT và Glossary là bắt buộc cho setup");
+            return;
+        }
+        String selector = "p4-ui-" + UUID.randomUUID();
+        String inputPrefix = selector + "-";
+        ArrayList<EditorialP4InputSource> sources = new ArrayList<>();
+        sources.add(new EditorialP4InputSource("RAW", inputPrefix + "raw",
+                raw.getBytes(java.nio.charset.StandardCharsets.UTF_8), "UTF-8",
+                "UNVALIDATED_SETUP_INPUT", 0L));
+        sources.add(new EditorialP4InputSource("DRAFT", inputPrefix + "draft",
+                draft.getBytes(java.nio.charset.StandardCharsets.UTF_8), "UTF-8",
+                "UNVALIDATED_SETUP_INPUT", 0L));
+        sources.add(new EditorialP4InputSource("GLOSSARY", inputPrefix + "glossary",
+                glossary.getBytes(java.nio.charset.StandardCharsets.UTF_8), "UTF-8",
+                "UNVALIDATED_SETUP_INPUT", 0L));
+        String pronounStatus = pronoun == null || pronoun.trim().isEmpty() ? "NONE" : "AVAILABLE";
+        if ("AVAILABLE".equals(pronounStatus)) {
+            sources.add(new EditorialP4InputSource("PRONOUN", inputPrefix + "pronoun",
+                    pronoun.getBytes(java.nio.charset.StandardCharsets.UTF_8), "UTF-8",
+                    "UNVALIDATED_SETUP_INPUT", 0L));
+        }
+        EditorialP4SetupRequest request = new EditorialP4SetupRequest(
+                selector, series.trim(), volume.trim(), packId.trim(), packVersion.trim(),
+                "ui-project-" + series.trim() + "-" + volume.trim(), "ui-scope-" + selector,
+                sources, "NORMAL", "AVAILABLE", pronounStatus, "NONE",
+                "USER_CONFIRMED_NORMAL_UI", "EDITORIAL_SETUP", "L1_SOURCE_PREFLIGHT",
+                "manifest-attestation-v1", com.ml.tblandroidtxt.editorial.pack.EditorialLineageNodeKind.ROOT,
+                null, System.currentTimeMillis());
+        try (TranslationRepository database = new TranslationRepository(this)) {
+            EditorialPackStorageLayout storage = new EditorialPackStorageLayout(getFilesDir().toPath());
+            EditorialP4BindingResult result = new EditorialP4BindingTransactionService(database, storage)
+                    .createSetup(request);
+            if (result.code() == EditorialP4BindingResult.Code.APPENDED
+                    || result.code() == EditorialP4BindingResult.Code.ALREADY_EXISTS) {
+                invalidatePage("Editorial");
+                switchTab("Editorial");
+                toast("Đã lưu binding " + packId + " v" + packVersion
+                        + " • Chờ chứng nhận • Execution đang khóa");
+            } else {
+                showResult("Không tạo được setup P4", result.detail());
+            }
+        } catch (Exception error) {
+            showResult("Không tạo được setup P4", AppValidator.readableError(error));
+        }
+    }
+
     void updateEditorialProject(long projectId, String series, String volume) {
         if (series == null || series.trim().isEmpty() || volume == null || volume.trim().isEmpty()) { toast("Nhập Series và Volume"); return; }
         try (EditorialRepository repo = new EditorialRepository(this)) {

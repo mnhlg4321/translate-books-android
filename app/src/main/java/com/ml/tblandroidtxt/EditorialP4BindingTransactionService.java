@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteException;
 import com.ml.tblandroidtxt.editorial.pack.EditorialAuthoritativeRunDeclaration;
 import com.ml.tblandroidtxt.editorial.pack.EditorialAuthoritativeRunDeclarationDraft;
 import com.ml.tblandroidtxt.editorial.pack.EditorialCanonicalJson;
+import com.ml.tblandroidtxt.editorial.pack.EditorialPackCompatibilityClass;
 import com.ml.tblandroidtxt.editorial.pack.EditorialInputScopeSnapshot;
 import com.ml.tblandroidtxt.editorial.pack.EditorialInputScopeSnapshotEntry;
 import com.ml.tblandroidtxt.editorial.pack.EditorialLineageNodeKind;
@@ -94,12 +95,7 @@ public final class EditorialP4BindingTransactionService {
         EditorialProjectRevision revision;
         EditorialInputScopeSnapshot snapshot;
         try {
-            revision = new EditorialProjectRevision("p4-project-revision-v1",
-                    request.projectSemanticKey().isBlank()
-                            ? request.seriesName().trim() + "/" + request.volumeName().trim()
-                            : request.projectSemanticKey(),
-                    "editorial-project-definition-p4-v1", "editorial-project",
-                    HashUtil.sha256("p4-scope-policy-v1"), HashUtil.sha256("p4-workflow-policy-v1"));
+            revision = buildProjectRevision(request);
             snapshot = buildScopeSnapshot(revision, request, sourceIdentities);
         } catch (RuntimeException invalid) {
             return EditorialP4BindingResult.of(EditorialP4BindingResult.Code.INVALID_INPUT,
@@ -201,20 +197,38 @@ public final class EditorialP4BindingTransactionService {
             EditorialPackSelectionCandidate candidate = selectionPolicy.resolve(
                     binding.packId(), binding.packVersion()).orElse(null);
             if (candidate == null || !candidate.canonicalPackHash().equals(binding.canonicalPackHash())
+                    || !EditorialPackSelectionPolicy.manifestFingerprint(candidate.manifest())
+                    .equals(binding.manifestFingerprint())
+                    || !candidate.trustedProfileId().equals(binding.trustedProfileId())
+                    || !candidate.trustedProfileVersion().equals(binding.trustedProfileVersion())
                     || !candidate.canonicalProfileHash().equals(binding.canonicalProfileHash())
                     || !candidate.machineContractFingerprint().equals(binding.machineContractFingerprint())
                     || !candidate.evaluation().evaluationId().equals(binding.compatibilityEvaluationId())
                     || !candidate.evaluation().contextFingerprint().orElse("")
-                    .equals(binding.evaluationContextFingerprint())) {
+                    .equals(binding.evaluationContextFingerprint())
+                    || !candidate.manifest().contractVersion().equals(binding.contractVersion())
+                    || !candidate.manifest().schemaVersion().equals(binding.schemaVersion())
+                    || !EditorialPackSelectionPolicy.phaseGraphFingerprint(candidate.manifest())
+                    .equals(binding.phaseGraphFingerprint())
+                    || !EditorialPackSelectionPolicy.contextAllowListFingerprint(candidate.manifest())
+                    .equals(binding.contextAllowListFingerprint())
+                    || candidate.evaluation().compatibilityOutcome() != EditorialPackCompatibilityClass.DATA_COMPATIBLE) {
                 return stale(binding, "pack-profile-or-evaluation-drift");
             }
-            if (projectRevisions.findByIdentity(binding.projectRevisionIdentity()).isEmpty()
-                    || scopeSnapshots.findByIdentity(binding.inputScopeSnapshotIdentity()).isEmpty()) {
+            EditorialProjectRevision revision = projectRevisions.findByIdentity(
+                    binding.projectRevisionIdentity()).orElse(null);
+            EditorialInputScopeSnapshot snapshot = scopeSnapshots.findByIdentity(
+                    binding.inputScopeSnapshotIdentity()).orElse(null);
+            if (revision == null || snapshot == null
+                    || !snapshot.projectRevisionIdentity().equals(binding.projectRevisionIdentity())
+                    || !snapshot.manifestFingerprint().equals(binding.inputManifestFingerprint())) {
                 return stale(binding, "identity-row-missing");
             }
             EditorialAuthoritativeRunDeclaration declaration = declarations.findByDeclarationIdentity(
                     binding.runDeclarationIdentity()).orElse(null);
             if (declaration == null || declaration.runAttemptOrdinal() != binding.runAttemptOrdinal()
+                    || !declaration.projectRevisionIdentity().equals(revision.revisionIdentity())
+                    || !declaration.inputScopeSnapshotIdentity().equals(snapshot.scopeSnapshotIdentity())
                     || !declaration.compatibilityEvaluationId().equals(binding.compatibilityEvaluationId())
                     || !declaration.phaseIdentity().equals(binding.phaseIdentity())
                     || !declaration.frozenManifestFingerprint().equals(binding.inputManifestFingerprint())) {
@@ -242,7 +256,16 @@ public final class EditorialP4BindingTransactionService {
         row.put("output_tree_uri", "");
         row.put("created_at", request.createdAt());
         row.put("updated_at", request.createdAt());
-        return database.editorialWritableDatabase().insertOrThrow("editorial_projects", null, row);
+        return db.insertOrThrow("editorial_projects", null, row);
+    }
+
+    private EditorialProjectRevision buildProjectRevision(EditorialP4SetupRequest request) {
+        String semanticKey = blank(request.projectSemanticKey())
+                ? request.seriesName().trim() + "/" + request.volumeName().trim()
+                : request.projectSemanticKey();
+        return new EditorialProjectRevision("p4-project-revision-v1", semanticKey,
+                "editorial-project-definition-p4-v1", "editorial-project",
+                HashUtil.sha256("p4-scope-policy-v1"), HashUtil.sha256("p4-workflow-policy-v1"));
     }
 
     private EditorialInputScopeSnapshot buildScopeSnapshot(
@@ -319,19 +342,62 @@ public final class EditorialP4BindingTransactionService {
     private boolean sameRequest(EditorialP4Binding existing, EditorialP4SetupRequest request,
                                 EditorialPackSelectionCandidate candidate,
                                 List<EditorialP4SourceIdentity> sources) {
-        return existing.packId().equals(candidate.packId())
-                && existing.packVersion().equals(candidate.packVersion())
-                && existing.canonicalPackHash().equals(candidate.canonicalPackHash())
-                && existing.compatibilityEvaluationId().equals(candidate.evaluation().evaluationId())
-                && existing.sourceMode().equals(request.sourceMode())
-                && existing.glossaryStatus().equals(request.glossaryStatus())
-                && existing.pronounStatus().equals(request.pronounStatus())
-                && existing.pairContextStatus().equals(request.pairContextStatus())
-                && existing.explicitUserDecisionProvenance().equals(request.explicitUserDecisionProvenance())
-                && existing.runKind().equals(request.runKind())
-                && existing.phaseIdentity().equals(request.phaseIdentity())
-                && existing.inputs().equals(sources)
-                && projectMatches(existing, request);
+        try {
+            EditorialProjectRevision revision = buildProjectRevision(request);
+            EditorialInputScopeSnapshot snapshot = buildScopeSnapshot(revision, request, sources);
+            EditorialAuthoritativeRunDeclaration declaration = declarations.findByDeclarationIdentity(
+                    existing.runDeclarationIdentity()).orElse(null);
+            return existing.packId().equals(candidate.packId())
+                    && existing.packVersion().equals(candidate.packVersion())
+                    && existing.canonicalPackHash().equals(candidate.canonicalPackHash())
+                    && existing.manifestFingerprint().equals(
+                    EditorialPackSelectionPolicy.manifestFingerprint(candidate.manifest()))
+                    && existing.trustedProfileId().equals(candidate.trustedProfileId())
+                    && existing.trustedProfileVersion().equals(candidate.trustedProfileVersion())
+                    && existing.canonicalProfileHash().equals(candidate.canonicalProfileHash())
+                    && existing.machineContractFingerprint().equals(candidate.machineContractFingerprint())
+                    && existing.compatibilityEvaluationId().equals(candidate.evaluation().evaluationId())
+                    && existing.evaluationContextFingerprint().equals(
+                    candidate.evaluation().contextFingerprint().orElse(""))
+                    && existing.contractVersion().equals(candidate.manifest().contractVersion())
+                    && existing.schemaVersion().equals(candidate.manifest().schemaVersion())
+                    && existing.phaseGraphFingerprint().equals(
+                    EditorialPackSelectionPolicy.phaseGraphFingerprint(candidate.manifest()))
+                    && existing.contextAllowListFingerprint().equals(
+                    EditorialPackSelectionPolicy.contextAllowListFingerprint(candidate.manifest()))
+                    && existing.projectRevisionIdentity().equals(revision.revisionIdentity())
+                    && existing.inputScopeSnapshotIdentity().equals(snapshot.scopeSnapshotIdentity())
+                    && existing.inputManifestFingerprint().equals(snapshot.manifestFingerprint())
+                    && existing.sourceMode().equals(request.sourceMode())
+                    && existing.glossaryStatus().equals(request.glossaryStatus())
+                    && existing.pronounStatus().equals(request.pronounStatus())
+                    && existing.pairContextStatus().equals(request.pairContextStatus())
+                    && existing.explicitUserDecisionProvenance().equals(request.explicitUserDecisionProvenance())
+                    && existing.runKind().equals(request.runKind())
+                    && existing.phaseIdentity().equals(request.phaseIdentity())
+                    && existing.inputs().equals(sources)
+                    && declarationMatches(declaration, request, revision, snapshot);
+        } catch (RuntimeException invalid) {
+            return false;
+        }
+    }
+
+    private boolean declarationMatches(EditorialAuthoritativeRunDeclaration declaration,
+                                       EditorialP4SetupRequest request,
+                                       EditorialProjectRevision revision,
+                                       EditorialInputScopeSnapshot snapshot) {
+        if (declaration == null
+                || !declaration.attemptRequestSelector().equals(request.attemptRequestSelector())
+                || !declaration.projectRevisionIdentity().equals(revision.revisionIdentity())
+                || !declaration.inputScopeSnapshotIdentity().equals(snapshot.scopeSnapshotIdentity())
+                || !declaration.runKind().equals(request.runKind())
+                || !declaration.phaseIdentity().equals(request.phaseIdentity())
+                || !declaration.frozenManifestFingerprint().equals(snapshot.manifestFingerprint())
+                || !declaration.frozenManifestReference().equals(request.frozenManifestReference())
+                || declaration.nodeKind() != (request.nodeKind() == null
+                ? EditorialLineageNodeKind.ROOT : request.nodeKind())) return false;
+        if (request.parentRecordIdentity() == null) return declaration.parentRecordIdentity() == null;
+        return HashUtil.sha256(request.parentRecordIdentity()).equals(declaration.parentRecordIdentity());
     }
 
     private boolean projectMatches(EditorialP4Binding binding, EditorialP4SetupRequest request) {

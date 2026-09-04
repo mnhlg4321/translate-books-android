@@ -171,7 +171,12 @@ public final class EditorialProjectRevisionDao {
     }
 
     private EditorialProjectRevision read(Cursor cursor) {
-        return new EditorialProjectRevision(cursor.getString(1), cursor.getString(2), cursor.getString(3),
+        EditorialProjectRevision revision = new EditorialProjectRevision(cursor.getString(1), cursor.getString(2), cursor.getString(3),
                 cursor.isNull(4) ? null : cursor.getString(4), cursor.getString(5), cursor.getString(6));
+        if (!revision.revisionIdentity().equals(cursor.getString(0))
+                || !revision.projectDefinitionFingerprint().equals(cursor.getString(7))) {
+            throw new IllegalArgumentException("stored project revision canonical bytes mismatch");
+        }
+        return revision;
     }
 }

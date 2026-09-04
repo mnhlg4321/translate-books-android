@@ -97,7 +97,7 @@ public final class EditorialP4BindingInstrumentedTest {
                 canonicalCandidate, sources("A"));
         EditorialP4BindingTransactionService service = new EditorialP4BindingTransactionService(database, storage);
         EditorialP4BindingResult first = service.createSetup(firstRequest);
-        assertEquals(EditorialP4BindingResult.Code.APPENDED, first.code());
+        assertEquals("first setup: " + first.detail(), EditorialP4BindingResult.Code.APPENDED, first.code());
         assertNotEquals(null, first.binding());
         assertFalse(first.binding().executionAllowed());
         assertEquals("NOT_CERTIFIED", first.binding().certificationState());
@@ -154,7 +154,7 @@ public final class EditorialP4BindingInstrumentedTest {
                 candidate, sources("drift"));
         EditorialP4BindingTransactionService service = new EditorialP4BindingTransactionService(database, storage);
         EditorialP4BindingResult created = service.createSetup(request);
-        assertEquals(EditorialP4BindingResult.Code.APPENDED, created.code());
+        assertEquals("drift setup: " + created.detail(), EditorialP4BindingResult.Code.APPENDED, created.code());
 
         EditorialP4ResumeResult sourceDrift = service.resumeBySelector(request.attemptRequestSelector(),
                 sources("changed"));
@@ -203,7 +203,7 @@ public final class EditorialP4BindingInstrumentedTest {
         EditorialP4SetupRequest firstRequest = request("p4-selector-collision", "Collision A", "4.1.3",
                 candidate, sources("collision-a"));
         EditorialP4BindingResult first = service.createSetup(firstRequest);
-        assertEquals(EditorialP4BindingResult.Code.APPENDED, first.code());
+        assertEquals("collision setup: " + first.detail(), EditorialP4BindingResult.Code.APPENDED, first.code());
 
         EditorialP4SetupRequest collision = new EditorialP4SetupRequest(
                 firstRequest.attemptRequestSelector(), "Collision B", "4.1.3", firstRequest.packId(),
@@ -254,7 +254,7 @@ public final class EditorialP4BindingInstrumentedTest {
         return new EditorialP4SetupRequest(selector, series, volume, candidate.packId(),
                 candidate.packVersion(), "semantic/" + series, "scope/" + selector, sources,
                 "NORMAL", "AVAILABLE", "AVAILABLE", "NONE", "USER_CONFIRMED_NORMAL",
-                "EDITORIAL_SETUP", "L1_SOURCE_PREFLIGHT", "content://pack/editorial-pack.json",
+                "EDITORIAL_SETUP", "L1_SOURCE_PREFLIGHT", "manifest-attestation-v1",
                 EditorialLineageNodeKind.ROOT, null, 1000L);
     }
 

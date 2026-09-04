@@ -5,10 +5,13 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.util.EnumMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -68,14 +71,25 @@ final class EditorialPageFactory {
             glossaries = repo.projectReferenceProfiles(project.id, EditorialSafe4Workflow.AssetRole.GLOSSARY);
             pronouns = repo.projectReferenceProfiles(project.id, EditorialSafe4Workflow.AssetRole.PRONOUN);
         }
-        boolean safe4Project = EditorialSafe4Pack.VERSION.equals(project.workflowVersion)
+        boolean p4Project = project.bindingIdentity != null && !project.bindingIdentity.isEmpty();
+        boolean safe4Project = !p4Project && EditorialSafe4Pack.VERSION.equals(project.workflowVersion)
                 && EditorialSafe4Pack.PACK_HASH.equals(project.workflowHash);
-        String identity = safe4Project
+        String identity = p4Project
+                ? chapters.size() + " chapter • " + project.boundPackId + " v" + project.boundPackVersion
+                + " • hash " + shortHash(project.boundCanonicalPackHash)
+                + "\nTương thích contract • Đã lưu • Chờ chứng nhận • Execution đang khóa"
+                : safe4Project
                 ? chapters.size() + " chapter • V5-SAFE.4 • " + shortHash(project.workflowHash)
                 : chapters.size() + " chapter • LEGACY V5 • chỉ đọc lịch sử";
-        box.addView(a.text(identity, 12, safe4Project ? a.GREEN : a.AMBER, false), a.marginLP(-1, -2, 0, 4, 0, 10));
+        TextView identityView = a.text(identity, 12, p4Project ? a.AMBER : safe4Project ? a.GREEN : a.AMBER, false);
+        identityView.setSingleLine(false);
+        box.addView(identityView, a.marginLP(-1, -2, 0, 4, 0, 10));
 
-        if (safe4Project) {
+        if (p4Project) {
+            TextView locked = a.text("Binding immutable • chọn pack khác cần tạo project mới. Không auto-rebind.", 12, a.MUTED, false);
+            locked.setSingleLine(false);
+            box.addView(locked, a.marginLP(-1, -2, 0, 4, 0, 10));
+        } else if (safe4Project) {
             addSafe4Inputs(box, project, glossary, pronoun, glossaries, pronouns);
             box.addView(a.secondaryButton("Sửa project", v -> showEditProject(project)), a.marginLP(-1, a.dp(46), 0, 8, 0, 8));
         } else {
@@ -171,18 +185,69 @@ final class EditorialPageFactory {
     }
 
     private void showCreateProject() {
+        List<EditorialPackSelectionCandidate> candidates = loadSelectablePacks();
+        if (candidates.isEmpty()) {
+            new AlertDialog.Builder(a).setTitle("Chưa có pack có thể chọn")
+                    .setMessage("Chỉ pack đã lưu immutable, integrity hợp lệ và DATA_COMPATIBLE qua trusted profile mới được chọn. Hãy import pack trước; pack bị khóa vẫn chỉ xem được trong màn hình quản lý.")
+                    .setPositiveButton("Xem pack đã lưu", (d, w) -> new EditorialPackManagementPageFactory(a).show())
+                    .setNegativeButton("Đóng", null).show();
+            return;
+        }
         LinearLayout form = new LinearLayout(a);
         form.setOrientation(LinearLayout.VERTICAL);
         int p = a.dp(22);
         form.setPadding(p, 0, p, 0);
         EditText series = a.input("Series", "");
         EditText volume = a.input("Volume", "");
-        form.addView(series);
-        form.addView(volume, a.marginLP(-1, -2, 0, 8, 0, 0));
+        EditText raw = a.input("RAW bytes / nội dung ban đầu", "");
+        EditText draft = a.input("DRAFT bytes / nội dung ban đầu", "");
+        EditText glossary = a.input("GLOSSARY bytes / nội dung ban đầu", "");
+        EditText pronoun = a.input("PRONOUN tùy chọn", "");
+        form.addView(a.fieldBlock("SERIES", series));
+        form.addView(a.fieldBlock("VOLUME", volume));
+        TextView packTitle = a.text("Chọn pack cụ thể (bắt buộc)", 12, a.TEXT, true);
+        form.addView(packTitle, a.marginLP(-1, -2, 0, 4, 0, 0));
+        RadioGroup packChoices = new RadioGroup(a);
+        packChoices.setOrientation(LinearLayout.VERTICAL);
+        final EditorialPackSelectionCandidate[] selected = {candidates.get(0)};
+        for (int index = 0; index < candidates.size(); index++) {
+            EditorialPackSelectionCandidate candidate = candidates.get(index);
+            RadioButton choice = new RadioButton(a);
+            choice.setText(candidate.selectionLabel() + "\nTương thích: DATA_COMPATIBLE • Integrity: VALID"
+                    + " • Profile: " + candidate.trustedProfileVersion()
+                    + " • Chờ chứng nhận • Execution đang khóa");
+            choice.setTextColor(a.TEXT);
+            choice.setSingleLine(false);
+            choice.setTag(candidate);
+            choice.setId(View.generateViewId());
+            if (index == 0) choice.setChecked(true);
+            packChoices.addView(choice, new LinearLayout.LayoutParams(-1, a.dp(68)));
+        }
+        packChoices.setOnCheckedChangeListener((group, checkedId) -> {
+            View checked = group.findViewById(checkedId);
+            if (checked != null && checked.getTag() instanceof EditorialPackSelectionCandidate candidate) selected[0] = candidate;
+        });
+        form.addView(packChoices, a.marginLP(-1, -2, 0, 8, 0, 0));
+        form.addView(a.text("Setup chỉ lưu immutable metadata và input identity. Không mở model, không certify, không chạy.", 11, a.AMBER, false), a.marginLP(-1, -2, 0, 7, 0, 4));
+        form.addView(a.fieldBlock("RAW (bắt buộc)", raw));
+        form.addView(a.fieldBlock("DRAFT (bắt buộc)", draft));
+        form.addView(a.fieldBlock("GLOSSARY (bắt buộc)", glossary));
+        form.addView(a.fieldBlock("PRONOUN (tùy chọn; để trống = NONE)", pronoun));
         new AlertDialog.Builder(a).setTitle("Tạo project V5-SAFE.4")
-                .setMessage("Project sẽ khóa vào đúng hash của bộ 3 chỉ dẫn SAFE4. Có thể chuẩn bị snapshot, nhưng chưa thể chạy model/phát hành.")
-                .setView(form).setPositiveButton("Tạo", (d, w) -> a.createEditorialProject(series.getText().toString(), volume.getText().toString()))
+                .setView(form).setPositiveButton("Xác nhận & lưu setup", (d, w) -> a.createEditorialProjectWithP4Binding(
+                        series.getText().toString(), volume.getText().toString(), selected[0].packId(),
+                        selected[0].packVersion(), raw.getText().toString(), draft.getText().toString(),
+                        glossary.getText().toString(), pronoun.getText().toString()))
                 .setNegativeButton("Hủy", null).show();
+    }
+
+    private List<EditorialPackSelectionCandidate> loadSelectablePacks() {
+        try (TranslationRepository database = new TranslationRepository(a)) {
+            EditorialPackStorageLayout storage = new EditorialPackStorageLayout(a.getFilesDir().toPath());
+            return new EditorialPackSelectionPolicy(database, storage).listSelectable();
+        } catch (RuntimeException error) {
+            return List.of();
+        }
     }
 
     private void showEditProject(EditorialRepository.Project project) {
