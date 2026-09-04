@@ -62,9 +62,9 @@ public final class EditorialLineagePersistenceInstrumentedTest {
         context.deleteDatabase(databaseName);
     }
 
-    @Test public void freshSchemaIsV17WithLineageTablesIndexesAndTriggers() {
+    @Test public void freshSchemaIsV20WithLineageAndP5CAttemptTablesIndexesAndTriggers() {
         SQLiteDatabase db = repository.editorialWritableDatabase();
-        assertEquals(19, db.getVersion());
+        assertEquals(20, db.getVersion());
         assertTable(db, "editorial_project_revisions");
         assertTable(db, "editorial_input_scope_snapshots");
         assertTable(db, "editorial_input_scope_snapshot_entries");
@@ -216,7 +216,7 @@ public final class EditorialLineagePersistenceInstrumentedTest {
 
         repository = new TranslationRepository(context, databaseName);
         SQLiteDatabase db = repository.editorialReadableDatabase();
-        assertEquals(19, db.getVersion());
+        assertEquals(20, db.getVersion());
         assertEquals(1, countRows("editorial_packs"));
         assertEquals(1, countRows("editorial_pack_compatibility_results"));
         assertEquals(1, countRows("editorial_pack_compatibility_evaluations"));
