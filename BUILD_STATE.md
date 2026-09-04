@@ -4,8 +4,8 @@
 - Active authority: V5-SAFE.4.1.3-FULL; canonical plan `EDITORIAL_RECOVERY_V4_18.md`.
 - Workspace: D:\App Translate Books\App Translate Books-translation-profile.
 - Branch: feature/v4.18.
-- Current commit baseline: 76348b38174cdc6e25ce4ce19000b75984d44f75, the exact implementation/test baseline immediately before this documentation closure; not self-referential.
-- Current device build: 4.17-dev.1 / Android versionCode 169 on device 15e84958. P4 validation build 4.17-dev.6 / code174 was archived and used only for validation, then the target package was restored to code169.
+- Current commit baseline: 364faa42e7ed6bb08b75dda7fdc7335b8f931df7, the exact implementation/test baseline immediately before this documentation closure; not self-referential.
+- Current device build: 4.17-dev.1 / Android versionCode 169 on device 15e84958. P4 correction validation build 4.17-dev.8 / code176 was archived and used only for validation, then the target package was restored to code169.
 - Current phase: P4 project-scoped binding and resume metadata is complete. Editorial execution, provider/API calls, real chapter pilot and certification remain disabled.
 
 ## Source and authority identity
@@ -40,6 +40,7 @@
 - P4 characterization documented the legacy hard-coded project owner and the v18 tuple/source identity boundary. Additive v19 P4 tables were introduced only after that failing persistence evidence.
 - P4 selection/binding: explicit exact pack selection, immutable tuple, app-computed source identities, atomic project/revision/scope/declaration/binding transaction, idempotent retry and collision rejection.
 - P4 resume: side-by-side canonical 4.1.3/synthetic 4.1.4, exact DB close/reopen readback, activity recreation UI proof, two-invocation host process-stop proof and stale-chain fail-closed checks.
+- P4 post-closure correction: `EditorialP4BindingTransactionService` and the P4 UI now write only the contract vocabulary `NORMAL_FOUR_SOURCE`/`ALTERNATE_EXPLICIT`; the prior `NORMAL`/`ALTERNATE` mismatch was caught by a new canonical-mode assertion and fixed in commit `364faa4`.
 - P4 focused device evidence on 15e84958: importer `13/13`, P1 `7/7`, P2 `3/3`, P3B trusted profile `1/1`, runtime wiring `5/5`, P4 binding `4/4`, process-stop preparation/resume `1/1 + 1/1`, UI recreation `3/3`.
 - Full device instrumentation: `112 total`, `111 PASS`, `1 approved real-API skip`, `0` failures. P3B baseline was 104; P4 adds eight tests (two characterization, four binding/atomicity, two process-death). The activity test correction changes behavior only, not count.
 - Host engine suite: `163/163 PASS`.
@@ -50,10 +51,10 @@
 
 ## Validation artifact
 
-- Validation APK: `artifacts/builds/v4.17-dev.6/build-20260904-184343/TranslateBooks-v4.17-dev.6-code174.apk`.
-- Backup mirror: `backup/builds/v4.17-dev.6/build-20260904-184343/TranslateBooks-v4.17-dev.6-code174.apk`.
-- APK SHA-256: `97DDFD5901AD7957C3B64780C9037A1BE4B6EB3824B2B4C548B0367523163834`.
-- Build event source snapshot: `0b0b6711f84f5f53c07481fb7633426a92726b1e`; later P4 commits are test-only and documentation-only.
+- Validation APK: `artifacts/builds/v4.17-dev.8/build-20260904-191251/TranslateBooks-v4.17-dev.8-code176.apk`.
+- Backup mirror: `backup/builds/v4.17-dev.8/build-20260904-191251/TranslateBooks-v4.17-dev.8-code176.apk`.
+- APK SHA-256: `0C37EBBCCD771F1727A241FB807174E9B30309E171BBF21E6DB572B6178A5458`.
+- Build event source snapshot: `303a91a5b00a84ad751b43363ca2793bd26a54b6`; it contains the tracked P4 canonical-mode correction as the pre-commit validation snapshot.
 - This is a validation APK, not a V4.18 release build.
 
 ## Allowed-change guard
@@ -74,6 +75,7 @@ not modified.
   this is not source certification and is not an execution UI.
 - `DATA_COMPATIBLE`, selectable and `PILOT_SETUP_READY` do not mean runnable.
 - Bootstrap profile v1 remains loadable and non-executable.
+- P5 live authorization is not present; no real chapter/provider call is permitted. Dry-run/fake-provider contract work may proceed only with external execution disabled.
 
 ## Next step
 

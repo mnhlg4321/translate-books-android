@@ -188,6 +188,20 @@ Final checks:
 
 ## Handoff
 
+## Post-closure P4 correction
+
+The P5 entry review found a concrete producer/contract vocabulary mismatch:
+P4 test/UI setup used `NORMAL` while the SAFE4 contract names the mode
+`NORMAL_FOUR_SOURCE` (and `ALTERNATE_EXPLICIT` for the explicit alternate
+mode). A canonical-mode assertion reproduced the failure before the fix:
+the setup returned `INVALID_INPUT` with the old validation message. Commit
+`364faa42e7ed6bb08b75dda7fdc7335b8f931df7` changed only the P4 service/UI
+producer and direct P4 tests/docs. Device validation on APK code176 passed
+the P4 binding class `4/4`, including the canonical-mode assertion. The
+device was then restored to code169 by uninstall/reinstall because `pm clear`
+was rejected. Existing persisted legacy-mode rows are not rewritten or
+silently reinterpreted; they remain fail-closed/read-only.
+
 P4 hands off only to a separately authorized `P5 — CONTROLLED L1 PILOT`.
 P5 must separately authorize certification/pilot policy, provider execution,
 real chapter selection, cost/token limits and stop/recovery measurement. No P4

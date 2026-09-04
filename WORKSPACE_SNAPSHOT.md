@@ -2,9 +2,9 @@
 
 - Updated: 2026-09-04 (+07:00).
 - Current status: P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE.
-- Current version/build: device 15e84958 is restored to immutable 4.17-dev.1 / code169. Latest retained P4 validation artifact is 4.17-dev.6 / code174.
+- Current version/build: device 15e84958 is restored to immutable 4.17-dev.1 / code169. Latest retained P4 correction validation artifact is 4.17-dev.8 / code176.
 - Current branch/workspace: feature/v4.18 / D:\App Translate Books\App Translate Books-translation-profile.
-- Current commit baseline: 76348b38174cdc6e25ce4ce19000b75984d44f75, the exact implementation/test baseline immediately before this documentation snapshot; not self-referential.
+- Current commit baseline: 364faa42e7ed6bb08b75dda7fdc7335b8f931df7, the exact implementation/test baseline immediately before this documentation snapshot; not self-referential.
 - Active authority: V5-SAFE.4.1.3-FULL. Authority bytes, canonical ZIP SHA, Java-control ZIP SHA and profile v2 hash are unchanged.
 
 ## Completed tasks
@@ -15,6 +15,7 @@
 - P3B deterministic contract/profile and trusted compatibility evidence completed: P01-P09 `9/9`, G1-G24 `24/24`, exact 11 capability evidence, profile v2 and execution lock.
 - P4 characterization proved the legacy project owner and v18 persistence boundary. P4 added the minimal project-scoped selection/binding owner, additive v19 immutable binding tables, exact source identity, atomic persistence, restart/process-death resume, stale-chain checks and side-by-side 4.1.3/4.1.4 acceptance.
 - P4 UI remains setup-only: management is read-only, selection is explicit within new project flow, no global active/latest pack and no Run/Start/Activate path.
+- P4 post-closure source-mode correction is committed: new bindings use `NORMAL_FOUR_SOURCE`/`ALTERNATE_EXPLICIT`; the old P4 producer vocabulary was rejected by a new failing-then-passing device test.
 
 ## Validation evidence
 
@@ -23,7 +24,7 @@
 - Full device instrumentation: `112 total = 111 PASS + 1 approved real-API skip`, `0` failures. The P3B baseline was 104; P4 added eight tests.
 - Provider/API calls: `0`; real API remained skipped by explicit opt-in.
 - Canonical ZIP `B9C65DBEB9D4C4ED46B67D5EC28FF6252CC2BDC4B63BC902904612987EC58987`, Java control `44F99423292ADA15680220165AF50430532D847E155F93C1B15D9F173D4609A5`, and profile resource `1B2DB011D59F3E2EF4349AEB0DAA9C54A19B7EFD1E2CA6886BC29B56E4690D62` re-hash correctly.
-- Latest validation APK code174 SHA-256: `97DDFD5901AD7957C3B64780C9037A1BE4B6EB3824B2B4C548B0367523163834`; it was archived in both artifacts and backup and is not a release build.
+- Latest validation APK code176 SHA-256: `0C37EBBCCD771F1727A241FB807174E9B30309E171BBF21E6DB572B6178A5458`; it was archived in both artifacts and backup and is not a release build.
 - `git diff --check`: PASS; scoped production-change guard: PASS with no out-of-scope production/build-metadata path.
 
 ## Pending tasks
@@ -37,6 +38,7 @@
 - P4 creates pilot setup metadata only; `DATA_COMPATIBLE` and selectable status do not mean runnable or certified.
 - Initial setup UI collects explicit source text for binding metadata; it does not certify source bytes or open execution.
 - Bootstrap profile v1 remains loadable and non-executable.
+- P5 live authorization block is incomplete; provider/API access remains forbidden and only fake/dry-run work is allowed.
 
 ## Protected state
 
