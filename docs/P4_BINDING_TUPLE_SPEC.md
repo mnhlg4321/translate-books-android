@@ -14,7 +14,7 @@ certification receipt và không mở Editorial execution.
 | Compatibility | `compatibilityEvaluationId`, `compatibilityOutcome`, `evaluationContextFingerprint`, `evaluatedAt` trong evaluation row |
 | Contract | `contractVersion`, `schemaVersion`, `phaseGraphFingerprint`, `contextAllowListFingerprint` |
 | Project/scope/run | `projectRevisionIdentity`, `inputScopeSnapshotIdentity`, `runDeclarationIdentity`, `runAttemptOrdinal`, `runKind`, `phaseIdentity` |
-| Source decisions | `sourceMode`, `glossaryStatus`, `pronounStatus`, `pairContextStatus`, `explicitUserDecisionProvenance` |
+| Source decisions | canonical `sourceMode` (`NORMAL_FOUR_SOURCE` or `ALTERNATE_EXPLICIT`), `glossaryStatus`, `pronounStatus`, `pairContextStatus`, `explicitUserDecisionProvenance` |
 | Input identity | per source: `role`, `sourceReference`, app-computed `byteLength`, app-computed `sha256`, `encoding`, `schemaStatus`, `ordinal` |
 | Safety state | `executionAllowed=false`, `certificationState=NOT_CERTIFIED` |
 

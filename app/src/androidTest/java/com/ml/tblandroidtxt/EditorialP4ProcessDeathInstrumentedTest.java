@@ -11,6 +11,7 @@ import com.ml.tblandroidtxt.editorial.pack.EditorialEngineProfileResolver;
 import com.ml.tblandroidtxt.editorial.pack.EditorialLineageNodeKind;
 import com.ml.tblandroidtxt.editorial.pack.EditorialPackCompatibilityClass;
 import com.ml.tblandroidtxt.editorial.pack.EditorialPackManifest;
+import com.ml.tblandroidtxt.editorial.pack.EditorialSafe4Contract;
 
 import org.junit.After;
 import org.junit.Before;
@@ -115,7 +116,7 @@ public final class EditorialP4ProcessDeathInstrumentedTest {
     private EditorialP4SetupRequest request(EditorialPackSelectionCandidate candidate) {
         return new EditorialP4SetupRequest(SELECTOR, "Process death", "4.1.3",
                 candidate.packId(), candidate.packVersion(), "semantic/process-death",
-                "scope/process-death", sources(), "NORMAL", "AVAILABLE", "AVAILABLE", "NONE",
+                "scope/process-death", sources(), EditorialSafe4Contract.NORMAL_MODE, "AVAILABLE", "AVAILABLE", "NONE",
                 "USER_CONFIRMED_NORMAL", "EDITORIAL_SETUP", "L1_SOURCE_PREFLIGHT",
                 "manifest-attestation-v1", EditorialLineageNodeKind.ROOT, null, 2000L);
     }

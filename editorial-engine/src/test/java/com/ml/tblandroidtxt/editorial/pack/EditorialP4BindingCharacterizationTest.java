@@ -45,7 +45,7 @@ public final class EditorialP4BindingCharacterizationTest {
                 "com.example.profile", "2.0.0", "7".repeat(64), "8".repeat(64),
                 "evaluation-p4", "DATA_COMPATIBLE", "9".repeat(64),
                 "safe4.full.three-pass.v1", "safe4.full.receipt.v1", "a".repeat(64),
-                "b".repeat(64), "NORMAL", "AVAILABLE", "NONE", "NONE", "user-confirmed-normal",
+                "b".repeat(64), EditorialSafe4Contract.NORMAL_MODE, "AVAILABLE", "NONE", "NONE", "user-confirmed-normal",
                 "c".repeat(64), 0L, "EDITORIAL_SETUP", "L1_SOURCE_PREFLIGHT",
                 List.of(
                         new EditorialP4SourceIdentity("RAW", "content://raw", 10L, RAW,

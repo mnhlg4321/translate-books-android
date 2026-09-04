@@ -13,6 +13,7 @@ import com.ml.tblandroidtxt.editorial.pack.EditorialEngineProfileResolver;
 import com.ml.tblandroidtxt.editorial.pack.EditorialLineageNodeKind;
 import com.ml.tblandroidtxt.editorial.pack.EditorialPackCompatibilityClass;
 import com.ml.tblandroidtxt.editorial.pack.EditorialPackManifest;
+import com.ml.tblandroidtxt.editorial.pack.EditorialSafe4Contract;
 
 import org.junit.After;
 import org.junit.Before;
@@ -103,6 +104,7 @@ public final class EditorialP4BindingInstrumentedTest {
         assertEquals("NOT_CERTIFIED", first.binding().certificationState());
         assertEquals(canonical.manifest.canonicalPackHash(), first.binding().canonicalPackHash());
         assertEquals(canonicalCandidate.evaluation().evaluationId(), first.binding().compatibilityEvaluationId());
+        assertEquals(EditorialSafe4Contract.NORMAL_MODE, first.binding().sourceMode());
         assertEquals(1, count("editorial_p4_bindings"));
         assertEquals(4, count("editorial_p4_binding_inputs"));
         EditorialRepository.Project projectA = new EditorialRepository(database).getProject(first.projectId());
@@ -281,7 +283,7 @@ public final class EditorialP4BindingInstrumentedTest {
                                             List<EditorialP4InputSource> sources) {
         return new EditorialP4SetupRequest(selector, series, volume, candidate.packId(),
                 candidate.packVersion(), "semantic/" + series, "scope/" + selector, sources,
-                "NORMAL", "AVAILABLE", "AVAILABLE", "NONE", "USER_CONFIRMED_NORMAL",
+                EditorialSafe4Contract.NORMAL_MODE, "AVAILABLE", "AVAILABLE", "NONE", "USER_CONFIRMED_NORMAL",
                 "EDITORIAL_SETUP", "L1_SOURCE_PREFLIGHT", "manifest-attestation-v1",
                 EditorialLineageNodeKind.ROOT, null, 1000L);
     }

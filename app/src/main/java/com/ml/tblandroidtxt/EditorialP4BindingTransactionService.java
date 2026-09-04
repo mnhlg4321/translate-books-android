@@ -16,6 +16,7 @@ import com.ml.tblandroidtxt.editorial.pack.EditorialP4Binding;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP4SourceIdentity;
 import com.ml.tblandroidtxt.editorial.pack.EditorialProjectRevision;
 import com.ml.tblandroidtxt.editorial.pack.EditorialRequiredInputRoleContract;
+import com.ml.tblandroidtxt.editorial.pack.EditorialSafe4Contract;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -303,13 +304,14 @@ public final class EditorialP4BindingTransactionService {
 
     private void validateSourceDecisions(EditorialP4SetupRequest request,
                                          List<EditorialP4SourceIdentity> sources) {
-        if (!"NORMAL".equals(request.sourceMode()) && !"ALTERNATE".equals(request.sourceMode())) {
-            throw new IllegalArgumentException("source mode must be explicit NORMAL or ALTERNATE");
+        if (!EditorialSafe4Contract.NORMAL_MODE.equals(request.sourceMode())
+                && !EditorialSafe4Contract.ALTERNATE_MODE.equals(request.sourceMode())) {
+            throw new IllegalArgumentException("source mode must be explicit NORMAL_FOUR_SOURCE or ALTERNATE_EXPLICIT");
         }
         if (blank(request.explicitUserDecisionProvenance())) {
             throw new IllegalArgumentException("explicit user decision provenance is required");
         }
-        if (request.sourceMode().equals("ALTERNATE")
+        if (request.sourceMode().equals(EditorialSafe4Contract.ALTERNATE_MODE)
                 && !request.explicitUserDecisionProvenance().toUpperCase().contains("USER")) {
             throw new IllegalArgumentException("alternate mode requires user decision provenance");
         }

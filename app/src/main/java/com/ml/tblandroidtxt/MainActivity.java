@@ -45,6 +45,8 @@ import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.ml.tblandroidtxt.editorial.pack.EditorialSafe4Contract;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -890,7 +892,7 @@ public class MainActivity extends Activity {
         EditorialP4SetupRequest request = new EditorialP4SetupRequest(
                 selector, series.trim(), volume.trim(), packId.trim(), packVersion.trim(),
                 "ui-project-" + series.trim() + "-" + volume.trim(), "ui-scope-" + selector,
-                sources, "NORMAL", "AVAILABLE", pronounStatus, "NONE",
+                sources, EditorialSafe4Contract.NORMAL_MODE, "AVAILABLE", pronounStatus, "NONE",
                 "USER_CONFIRMED_NORMAL_UI", "EDITORIAL_SETUP", "L1_SOURCE_PREFLIGHT",
                 "manifest-attestation-v1", com.ml.tblandroidtxt.editorial.pack.EditorialLineageNodeKind.ROOT,
                 null, System.currentTimeMillis());
