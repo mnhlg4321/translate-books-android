@@ -99,6 +99,43 @@ public final class EditorialAuthoritativeRunDeclarationDao {
         }
     }
 
+    /** Package boundary for an outer atomic P4 setup transaction. */
+    EditorialIdentityAppendResult<EditorialAuthoritativeRunDeclaration>
+    appendNewAuthorizedAttemptInTransaction(SQLiteDatabase db,
+                                             EditorialAuthoritativeRunDeclarationDraft draft) {
+        if (db == null || draft == null) return result(EditorialIdentityPersistenceCode.INVALID_IMMUTABLE_RECORD,
+                null, "", "declaration-draft-required");
+        EditorialAuthoritativeRunDeclaration existing = findByAttemptRequestSelector(db,
+                draft.attemptRequestSelector());
+        if (existing != null) return classifyRequest(existing, draft);
+        EditorialIdentityPersistenceCode precondition = validatePreconditions(db, draft);
+        if (precondition != null) return result(precondition, null, "",
+                "declaration-reference-precondition-failed");
+        long ordinal = allocateNextOrdinal(db, draft.allocationScope());
+        if (ordinal < 0) return result(EditorialIdentityPersistenceCode.ATTEMPT_ALLOCATION_CONFLICT,
+                null, "", "declaration-ordinal-overflow");
+        EditorialAuthoritativeRunDeclaration declaration =
+                EditorialAuthoritativeRunDeclaration.allocate(draft, ordinal, System.currentTimeMillis());
+        try {
+            insert(db, declaration);
+            EditorialAuthoritativeRunDeclaration readback = findByIdentity(db,
+                    declaration.declarationIdentity());
+            if (readback == null || !sameStoredBytes(readback, declaration)) {
+                return result(EditorialIdentityPersistenceCode.PERSISTENCE_FAILURE, null,
+                        declaration.declarationIdentity(), "declaration-exact-readback-failed");
+            }
+            return result(EditorialIdentityPersistenceCode.APPENDED, readback,
+                    declaration.declarationIdentity(), "appended");
+        } catch (SQLiteConstraintException error) {
+            EditorialAuthoritativeRunDeclaration raced = findByAttemptRequestSelector(db,
+                    draft.attemptRequestSelector());
+            return raced == null
+                    ? result(EditorialIdentityPersistenceCode.ATTEMPT_ALLOCATION_CONFLICT,
+                    null, "", "declaration-insert-rollback")
+                    : classifyRequest(raced, draft);
+        }
+    }
+
     /** Exact retry/read operation; it never allocates or writes. */
     public EditorialIdentityAppendResult<EditorialAuthoritativeRunDeclaration>
     retrySameAttempt(String declarationIdentity) {

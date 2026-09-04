@@ -79,6 +79,52 @@ public final class EditorialProjectRevisionDao {
         }
     }
 
+    /** Package boundary for an outer atomic P4 setup transaction. */
+    EditorialIdentityAppendResult<EditorialProjectRevision> appendInTransaction(
+            SQLiteDatabase db, EditorialProjectRevision revision, Long sourceProjectRowId,
+            long createdAt) {
+        if (db == null || revision == null || createdAt < 0) {
+            return EditorialIdentityDaoSupport.result(EditorialIdentityPersistenceCode.INVALID_IMMUTABLE_RECORD,
+                    null, revision == null ? "" : revision.revisionIdentity(), "revision-or-timestamp-invalid");
+        }
+        EditorialProjectRevision existing = findByIdentity(db, revision.revisionIdentity());
+        if (existing != null) return classify(existing, revision);
+        if (sourceProjectRowId != null && !hasSourceProject(db, sourceProjectRowId)) {
+            return EditorialIdentityDaoSupport.result(EditorialIdentityPersistenceCode.FOREIGN_KEY_RESTRICTED,
+                    null, revision.revisionIdentity(), "source-project-row-missing");
+        }
+        ContentValues row = new ContentValues();
+        row.put("revision_identity", revision.revisionIdentity());
+        row.put("revision_canonical_version", revision.canonicalProjectionVersion());
+        row.put("project_semantic_key", revision.projectSemanticKey());
+        row.put("project_definition_contract_version", revision.projectDefinitionContractVersion());
+        if (revision.semanticProjectType() == null) row.putNull("semantic_project_type");
+        else row.put("semantic_project_type", revision.semanticProjectType());
+        row.put("scope_policy_fingerprint", revision.scopePolicyFingerprint());
+        row.put("workflow_policy_fingerprint", revision.workflowPolicyFingerprint());
+        row.put("project_definition_fingerprint", revision.projectDefinitionFingerprint());
+        row.put("project_definition_canonical", revision.canonicalProjection());
+        if (sourceProjectRowId == null) row.putNull("source_project_row_id");
+        else row.put("source_project_row_id", sourceProjectRowId);
+        row.put("created_at", createdAt);
+        try {
+            db.insertOrThrow(TABLE, null, row);
+            EditorialProjectRevision readback = findByIdentity(db, revision.revisionIdentity());
+            if (readback == null || !readback.canonicalProjection().equals(revision.canonicalProjection())) {
+                return EditorialIdentityDaoSupport.result(EditorialIdentityPersistenceCode.LINEAGE_PERSISTENCE_FAILURE,
+                        null, revision.revisionIdentity(), "revision-exact-readback-failed");
+            }
+            return EditorialIdentityDaoSupport.result(EditorialIdentityPersistenceCode.APPENDED,
+                    readback, revision.revisionIdentity(), "appended");
+        } catch (SQLiteConstraintException error) {
+            EditorialProjectRevision raced = findByIdentity(db, revision.revisionIdentity());
+            return raced == null
+                    ? EditorialIdentityDaoSupport.result(EditorialIdentityPersistenceCode.LINEAGE_PERSISTENCE_FAILURE,
+                    null, revision.revisionIdentity(), "revision-insert-rollback")
+                    : classify(raced, revision);
+        }
+    }
+
     public Optional<EditorialProjectRevision> findByIdentity(String identity) {
         if (identity == null || identity.isBlank()) return Optional.empty();
         try (Cursor cursor = database.editorialReadableDatabase().rawQuery(
@@ -116,6 +162,12 @@ public final class EditorialProjectRevisionDao {
         }
         return EditorialIdentityDaoSupport.result(EditorialIdentityPersistenceCode.DUPLICATE_IMMUTABLE_RECORD,
                 null, incoming.revisionIdentity(), "identity-content-changed");
+    }
+
+    private EditorialProjectRevision findByIdentity(SQLiteDatabase db, String identity) {
+        try (Cursor cursor = db.rawQuery(SELECT + " WHERE revision_identity=?", new String[]{identity})) {
+            return cursor.moveToFirst() ? read(cursor) : null;
+        }
     }
 
     private EditorialProjectRevision read(Cursor cursor) {

@@ -35,7 +35,7 @@ public final class EditorialP4BindingCharacterizationInstrumentedTest {
         context.deleteDatabase(databaseName);
     }
 
-    @Test public void repositoryMustAcceptExplicitImportedPackForNewProject() {
+    @Test public void legacyRepositoryDoesNotAcceptImportedPackWithoutP4Service() {
         EditorialRepository.Project project = new EditorialRepository.Project();
         project.seriesName = "P4 characterization " + UUID.randomUUID();
         project.volumeName = "Imported 4.1.3";
@@ -43,24 +43,22 @@ public final class EditorialP4BindingCharacterizationInstrumentedTest {
         project.workflowHash = "497786e18e6e2309b44c6695bc8d8e0b538babfe20b1bc0b6f74c395fd05642d";
 
         EditorialRepository repository = new EditorialRepository(database);
-        long projectId = repository.createProject(project);
-        assertTrue(projectId > 0);
-        assertEquals(project.workflowVersion, repository.getProject(projectId).workflowVersion);
-        assertEquals(project.workflowHash, repository.getProject(projectId).workflowHash);
+        try {
+            repository.createProject(project);
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("immutable V5-SAFE.4"));
+            return;
+        }
+        throw new AssertionError("legacy repository must not silently accept an imported P4 pack");
     }
 
     @Test public void v18ScopeEntryStoreMustRetainP4SourceIdentityFacts() {
         SQLiteDatabase db = database.editorialReadableDatabase();
-        assertEquals(18, db.getVersion());
+        assertEquals(19, db.getVersion());
         assertEquals(1, scalarInt(db,
-                "SELECT COUNT(*) FROM pragma_table_info('editorial_input_scope_snapshot_entries') "
-                        + "WHERE name='source_reference'"));
+                "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='editorial_p4_bindings'"));
         assertEquals(1, scalarInt(db,
-                "SELECT COUNT(*) FROM pragma_table_info('editorial_input_scope_snapshot_entries') "
-                        + "WHERE name='encoding'"));
-        assertEquals(1, scalarInt(db,
-                "SELECT COUNT(*) FROM pragma_table_info('editorial_input_scope_snapshot_entries') "
-                        + "WHERE name='schema_status'"));
+                "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='editorial_p4_binding_inputs'"));
     }
 
     private static int scalarInt(SQLiteDatabase db, String sql) {

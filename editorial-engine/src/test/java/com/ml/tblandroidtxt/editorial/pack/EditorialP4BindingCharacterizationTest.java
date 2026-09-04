@@ -22,31 +22,37 @@ public final class EditorialP4BindingCharacterizationTest {
     private static final String GLOSSARY = "f".repeat(64);
     private static final String PRONOUN = "1".repeat(64);
 
-    @Test public void projectRevisionMustExposeExplicitPackProfileAndEvaluationFacts() {
-        EditorialProjectRevision revision = new EditorialProjectRevision(
-                "project-projection-v1", "series/volume-p4", "project-definition-v1", "editorial",
-                PROFILE, MACHINE);
+    @Test public void P4BindingExposesExplicitPackProfileAndEvaluationFacts() {
+        EditorialP4Binding binding = binding();
 
-        assertTrue(revision.canonicalProjection().contains("canonicalPackHash"));
-        assertTrue(revision.canonicalProjection().contains("trustedProfileId"));
-        assertTrue(revision.canonicalProjection().contains("compatibilityEvaluationId"));
+        assertTrue(binding.canonicalProjection().contains("canonicalPackHash"));
+        assertTrue(binding.canonicalProjection().contains("trustedProfileId"));
+        assertTrue(binding.canonicalProjection().contains("compatibilityEvaluationId"));
+        assertTrue(binding.canonicalProjection().contains("\"executionAllowed\":false"));
     }
 
-    @Test public void inputScopeEntriesMustRetainSourceReferenceEncodingAndSchemaStatus() {
-        EditorialProjectRevision revision = new EditorialProjectRevision(
-                "project-projection-v1", "series/volume-p4-scope", "project-definition-v1", "editorial",
-                PROFILE, MACHINE);
-        EditorialRequiredInputRoleContract roles = new EditorialRequiredInputRoleContract(
-                "roles-v1", new LinkedHashSet<>(List.of("RAW", "DRAFT", "GLOSSARY", "PRONOUN")));
-        EditorialInputScopeSnapshot snapshot = new EditorialInputScopeSnapshot(
-                revision.revisionIdentity(), "scope-v1", "chapter/001", roles, "manifest-v1", List.of(
-                new EditorialInputScopeSnapshotEntry("RAW", 0L, RAW, 10L, 1L),
-                new EditorialInputScopeSnapshotEntry("DRAFT", 0L, DRAFT, 20L, 2L),
-                new EditorialInputScopeSnapshotEntry("GLOSSARY", 0L, GLOSSARY, 30L, 3L),
-                new EditorialInputScopeSnapshotEntry("PRONOUN", 0L, PRONOUN, 40L, 4L)));
+    @Test public void P4BindingInputIdentitiesRetainSourceReferenceEncodingAndSchemaStatus() {
+        String projection = binding().canonicalProjection();
+        assertTrue(projection.contains("sourceReference"));
+        assertTrue(projection.contains("encoding"));
+        assertTrue(projection.contains("schemaStatus"));
+    }
 
-        assertTrue(snapshot.manifestCanonical().contains("sourceReference"));
-        assertTrue(snapshot.manifestCanonical().contains("encoding"));
-        assertTrue(snapshot.manifestCanonical().contains("schemaStatus"));
+    private static EditorialP4Binding binding() {
+        return new EditorialP4Binding(
+                "2".repeat(64), "3".repeat(64), "4".repeat(64),
+                "com.example.pack", "4.1.3", "5".repeat(64), "6".repeat(64),
+                "com.example.profile", "2.0.0", "7".repeat(64), "8".repeat(64),
+                "evaluation-p4", "DATA_COMPATIBLE", "9".repeat(64),
+                "safe4.full.three-pass.v1", "safe4.full.receipt.v1", "a".repeat(64),
+                "b".repeat(64), "NORMAL", "AVAILABLE", "NONE", "NONE", "user-confirmed-normal",
+                "c".repeat(64), 0L, "EDITORIAL_SETUP", "L1_SOURCE_PREFLIGHT",
+                List.of(
+                        new EditorialP4SourceIdentity("RAW", "content://raw", 10L, RAW,
+                                "UTF-8", "VALID", 0L),
+                        new EditorialP4SourceIdentity("DRAFT", "content://draft", 20L, DRAFT,
+                                "UTF-8", "VALID", 0L),
+                        new EditorialP4SourceIdentity("GLOSSARY", "content://glossary", 30L, GLOSSARY,
+                                "UTF-8", "VALID", 0L)));
     }
 }

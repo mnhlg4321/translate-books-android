@@ -78,6 +78,49 @@ public final class EditorialInputScopeSnapshotDao {
         }
     }
 
+    /** Package boundary for an outer atomic P4 setup transaction. */
+    EditorialIdentityAppendResult<EditorialInputScopeSnapshot> appendWithEntriesInTransaction(
+            SQLiteDatabase db, EditorialInputScopeSnapshot snapshot, Long sourceChapterRowId,
+            long createdAt) {
+        if (db == null || snapshot == null || createdAt < 0) {
+            return EditorialIdentityDaoSupport.result(EditorialIdentityPersistenceCode.INVALID_IMMUTABLE_RECORD,
+                    null, snapshot == null ? "" : snapshot.scopeSnapshotIdentity(), "snapshot-or-timestamp-invalid");
+        }
+        EditorialInputScopeSnapshot existing = findByIdentity(db, snapshot.scopeSnapshotIdentity());
+        if (existing != null) return classify(existing, snapshot);
+        EditorialIdentityPersistenceCode precondition = validatePreconditions(db, snapshot, sourceChapterRowId);
+        if (precondition != null) {
+            return EditorialIdentityDaoSupport.result(precondition, null,
+                    snapshot.scopeSnapshotIdentity(), "snapshot-precondition-failed");
+        }
+        try {
+            insertSnapshot(db, snapshot, sourceChapterRowId, createdAt);
+            for (EditorialInputScopeSnapshotEntry entry : snapshot.entries()) {
+                ContentValues row = new ContentValues();
+                row.put("scope_snapshot_identity", snapshot.scopeSnapshotIdentity());
+                row.put("role", entry.role());
+                row.put("ordinal", entry.ordinal());
+                row.put("input_sha256", entry.inputSha256());
+                row.put("byte_count", entry.byteCount());
+                row.put("item_count", entry.itemCount());
+                db.insertOrThrow("editorial_input_scope_snapshot_entries", null, row);
+            }
+            EditorialInputScopeSnapshot readback = findByIdentity(db, snapshot.scopeSnapshotIdentity());
+            if (readback == null || !readback.equals(snapshot)) {
+                return EditorialIdentityDaoSupport.result(EditorialIdentityPersistenceCode.LINEAGE_PERSISTENCE_FAILURE,
+                        null, snapshot.scopeSnapshotIdentity(), "snapshot-exact-readback-failed");
+            }
+            return EditorialIdentityDaoSupport.result(EditorialIdentityPersistenceCode.APPENDED,
+                    readback, snapshot.scopeSnapshotIdentity(), "appended");
+        } catch (SQLiteConstraintException error) {
+            EditorialInputScopeSnapshot raced = findByIdentity(db, snapshot.scopeSnapshotIdentity());
+            return raced == null
+                    ? EditorialIdentityDaoSupport.result(EditorialIdentityPersistenceCode.LINEAGE_PERSISTENCE_FAILURE,
+                    null, snapshot.scopeSnapshotIdentity(), "snapshot-transaction-rollback")
+                    : classify(raced, snapshot);
+        }
+    }
+
     public Optional<EditorialInputScopeSnapshot> findByIdentity(String identity) {
         if (identity == null || identity.isBlank()) return Optional.empty();
         try (Cursor cursor = database.editorialReadableDatabase().rawQuery(
@@ -138,6 +181,13 @@ public final class EditorialInputScopeSnapshotDao {
         }
         return EditorialIdentityDaoSupport.result(EditorialIdentityPersistenceCode.DUPLICATE_IMMUTABLE_RECORD,
                 null, incoming.scopeSnapshotIdentity(), "identity-content-changed");
+    }
+
+    private EditorialInputScopeSnapshot findByIdentity(SQLiteDatabase db, String identity) {
+        try (Cursor cursor = db.rawQuery(SELECT + " WHERE scope_snapshot_identity=?",
+                new String[]{identity})) {
+            return cursor.moveToFirst() ? read(cursor) : null;
+        }
     }
 
     private EditorialInputScopeSnapshot read(Cursor cursor) {

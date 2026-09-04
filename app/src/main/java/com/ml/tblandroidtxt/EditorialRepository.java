@@ -18,6 +18,12 @@ public final class EditorialRepository implements AutoCloseable {
         public String workflowVersion = EditorialSafe4Pack.VERSION;
         public String workflowHash = EditorialSafe4Pack.PACK_HASH;
         public String outputTreeUri = "";
+        /** Read-only projection of the project-scoped P4 binding, when present. */
+        public String bindingIdentity = "";
+        public String boundPackId = "";
+        public String boundPackVersion = "";
+        public String boundCanonicalPackHash = "";
+        public String boundProfileVersion = "";
     }
     public static final class Chapter {
         public long id;
@@ -68,6 +74,7 @@ public final class EditorialRepository implements AutoCloseable {
         try {
             try (Cursor project = db.rawQuery("SELECT workflow_version,workflow_hash FROM editorial_projects WHERE id=?", new String[]{String.valueOf(projectId)})) {
                 if (!project.moveToFirst()) throw new IllegalArgumentException("Editorial project not found");
+                if (hasP4Binding(db, projectId)) throw new IllegalStateException("P4 project setup is execution-disabled");
                 if (!EditorialSafe4Pack.VERSION.equals(safe(project.getString(0)))
                         || !EditorialSafe4Pack.PACK_HASH.equals(safe(project.getString(1)))) {
                     throw new IllegalStateException("Legacy editorial projects are read-only");
@@ -96,8 +103,8 @@ public final class EditorialRepository implements AutoCloseable {
     }
 
     public Project getProject(long id) {
-        try (Cursor c=database.editorialReadableDatabase().rawQuery("SELECT id,series_name,volume_name,workflow_version,workflow_hash,output_tree_uri FROM editorial_projects WHERE id=?",new String[]{String.valueOf(id)})) {
-            if(!c.moveToFirst())return null; Project p=new Project();p.id=c.getLong(0);p.seriesName=safe(c.getString(1));p.volumeName=safe(c.getString(2));p.workflowVersion=safe(c.getString(3));p.workflowHash=safe(c.getString(4));p.outputTreeUri=safe(c.getString(5));return p;
+        try (Cursor c=database.editorialReadableDatabase().rawQuery(projectSelectSql(" WHERE p.id=?"),new String[]{String.valueOf(id)})) {
+            return c.moveToFirst() ? readProject(c) : null;
         }
     }
 
@@ -122,8 +129,8 @@ public final class EditorialRepository implements AutoCloseable {
 
     public List<Project> listProjects() {
         ArrayList<Project> projects=new ArrayList<>();
-        try (Cursor c=database.editorialReadableDatabase().rawQuery("SELECT id,series_name,volume_name,workflow_version,workflow_hash,output_tree_uri FROM editorial_projects ORDER BY updated_at DESC,id DESC",null)) {
-            while(c.moveToNext()){Project p=new Project();p.id=c.getLong(0);p.seriesName=safe(c.getString(1));p.volumeName=safe(c.getString(2));p.workflowVersion=safe(c.getString(3));p.workflowHash=safe(c.getString(4));p.outputTreeUri=safe(c.getString(5));projects.add(p);}
+        try (Cursor c=database.editorialReadableDatabase().rawQuery(projectSelectSql(" ORDER BY p.updated_at DESC,p.id DESC"),null)) {
+            while(c.moveToNext()) projects.add(readProject(c));
         } return projects;
     }
 
@@ -176,7 +183,29 @@ public final class EditorialRepository implements AutoCloseable {
         return null;
     }
     private static AssetSnapshot find(List<AssetSnapshot> assets, EditorialSafe4Workflow.AssetRole role) { for (AssetSnapshot asset : assets) if (asset.role == role) return asset; throw new IllegalArgumentException("Missing " + role); }
-    private static void requireSafe4Project(SQLiteDatabase db,long projectId){try(Cursor c=db.rawQuery("SELECT workflow_version,workflow_hash FROM editorial_projects WHERE id=?",new String[]{String.valueOf(projectId)})){if(!c.moveToFirst())throw new IllegalArgumentException("Editorial project not found");if(!EditorialSafe4Pack.VERSION.equals(safe(c.getString(0)))||!EditorialSafe4Pack.PACK_HASH.equals(safe(c.getString(1))))throw new IllegalStateException("Legacy editorial projects are read-only");}}
+    private static void requireSafe4Project(SQLiteDatabase db,long projectId){
+        try(Cursor c=db.rawQuery("SELECT workflow_version,workflow_hash FROM editorial_projects WHERE id=?",new String[]{String.valueOf(projectId)})){
+            if(!c.moveToFirst())throw new IllegalArgumentException("Editorial project not found");
+            if(hasP4Binding(db,projectId))throw new IllegalStateException("P4 project setup is execution-disabled");
+            if(!EditorialSafe4Pack.VERSION.equals(safe(c.getString(0)))||!EditorialSafe4Pack.PACK_HASH.equals(safe(c.getString(1))))throw new IllegalStateException("Legacy editorial projects are read-only");
+        }
+    }
+    private static boolean hasP4Binding(SQLiteDatabase db,long projectId){
+        try(Cursor c=db.rawQuery("SELECT 1 FROM editorial_p4_bindings WHERE project_row_id=? LIMIT 1",new String[]{String.valueOf(projectId)})){return c.moveToFirst();}
+    }
+    private String projectSelectSql(String suffix){return "SELECT p.id,p.series_name,p.volume_name,p.workflow_version,p.workflow_hash,p.output_tree_uri,"
+            + "COALESCE((SELECT b.binding_identity FROM editorial_p4_bindings b WHERE b.project_row_id=p.id ORDER BY b.run_attempt_ordinal,b.binding_identity LIMIT 1),''),"
+            + "COALESCE((SELECT b.pack_id FROM editorial_p4_bindings b WHERE b.project_row_id=p.id ORDER BY b.run_attempt_ordinal,b.binding_identity LIMIT 1),''),"
+            + "COALESCE((SELECT b.pack_version FROM editorial_p4_bindings b WHERE b.project_row_id=p.id ORDER BY b.run_attempt_ordinal,b.binding_identity LIMIT 1),''),"
+            + "COALESCE((SELECT b.canonical_pack_hash FROM editorial_p4_bindings b WHERE b.project_row_id=p.id ORDER BY b.run_attempt_ordinal,b.binding_identity LIMIT 1),''),"
+            + "COALESCE((SELECT b.trusted_profile_version FROM editorial_p4_bindings b WHERE b.project_row_id=p.id ORDER BY b.run_attempt_ordinal,b.binding_identity LIMIT 1),'')"
+            + " FROM editorial_projects p" + suffix;}
+    private static Project readProject(Cursor c){
+        Project p=new Project();p.id=c.getLong(0);p.seriesName=safe(c.getString(1));p.volumeName=safe(c.getString(2));
+        p.workflowVersion=safe(c.getString(3));p.workflowHash=safe(c.getString(4));p.outputTreeUri=safe(c.getString(5));
+        p.bindingIdentity=safe(c.getString(6));p.boundPackId=safe(c.getString(7));p.boundPackVersion=safe(c.getString(8));
+        p.boundCanonicalPackHash=safe(c.getString(9));p.boundProfileVersion=safe(c.getString(10));return p;
+    }
     private static boolean blank(String value) { return value == null || value.trim().isEmpty(); }
     private static String safe(String value) { return value == null ? "" : value; }
     @Override public void close() { database.close(); }
