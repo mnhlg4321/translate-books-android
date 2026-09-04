@@ -42,8 +42,9 @@ public final class EditorialP5PilotExecutionBoundaryTest {
     @Test public void wrongBindingAndWrongPhaseNeverReachProvider() {
         Fixture fixture = fixture();
         FakeProvider provider = new FakeProvider(response(fixture.request, true));
-        EditorialP5PilotAuthorization wrongBinding = authorization(fixture.request, "wrong-binding")
-                .withProjectBindingIdentity("wrong-binding");
+        EditorialP5PilotAuthorization wrongBinding = authorizationVariant(fixture.request,
+                "wrong-binding", "wrong-binding", 1, 10_000, 2_000, 12_000,
+                BigDecimal.ONE, 60_000L, true, 0L, Long.MAX_VALUE);
 
         EditorialP5PilotResult bindingResult = execute(fixture, wrongBinding, provider, new Store());
         assertEquals(EditorialP5PilotResult.StopClass.BINDING_MISMATCH,
@@ -159,12 +160,20 @@ public final class EditorialP5PilotExecutionBoundaryTest {
 
     @Test public void modelDeclaredPassCannotOverrideLocalDiffValidation() {
         Fixture fixture = fixture();
-        EditorialP5L1Output invalid = output(fixture.request).withWrongDeclaredChangeAndModelPass();
+        EditorialP5L1Output valid = output(fixture.request);
+        EditorialP5L1Output invalid = new EditorialP5L1Output(valid.reportSchemaVersion(),
+                valid.receiptSchemaVersion(), valid.bindingIdentity(), valid.manifestFingerprint(),
+                valid.chapterKey(), valid.phase(), valid.bundleIdentity(), valid.predecessorIdentity(),
+                valid.stableAnchors(), valid.ledger(), valid.gates(), valid.preservedInventory(),
+                List.of(new EditorialDiffValidator.DeclaredChange(1, "wrong-before", "wrong-after",
+                        "model-error")), valid.beforeText(), valid.afterText(), valid.releaseAttemptCount(),
+                valid.disposition(), valid.evidenceRefs(), true);
         FakeProvider provider = new FakeProvider(new EditorialP5PilotProvider.Response(
                 "response-invalid", bytes("invalid"), "stop", true, 30, 12, 42,
                 BigDecimal.ZERO, invalid, true));
-        EditorialP5PilotAuthorization auth = authorization(fixture.request, "auth-model-pass")
-                .withMaximumSchemaRepairCalls(0);
+        EditorialP5PilotAuthorization auth = authorizationVariant(fixture.request, "auth-model-pass",
+                fixture.request.binding().bindingIdentity(), 0, 10_000, 2_000, 12_000,
+                BigDecimal.ONE, 60_000L, true, 0L, Long.MAX_VALUE);
 
         EditorialP5PilotResult result = execute(fixture, auth, provider, new Store());
 
@@ -212,14 +221,18 @@ public final class EditorialP5PilotExecutionBoundaryTest {
         FakeProvider provider = new FakeProvider(response(fixture.request, true));
 
         EditorialP5PilotResult noConsent = execute(fixture,
-                authorization(fixture.request, "auth-no-consent").withChapterProviderConsent(false),
+                authorizationVariant(fixture.request, "auth-no-consent",
+                        fixture.request.binding().bindingIdentity(), 1, 10_000, 2_000, 12_000,
+                        BigDecimal.ONE, 60_000L, false, 0L, Long.MAX_VALUE),
                 provider, new Store());
         assertEquals(EditorialP5PilotResult.StopClass.AUTHORIZATION_REQUIRED,
                 noConsent.stopReceipt().stopClass());
         assertEquals(0, provider.calls);
 
         EditorialP5PilotResult expired = execute(fixture,
-                authorization(fixture.request, "auth-expired").withTimeWindow(0L, 500L),
+                authorizationVariant(fixture.request, "auth-expired",
+                        fixture.request.binding().bindingIdentity(), 1, 10_000, 2_000, 12_000,
+                        BigDecimal.ONE, 60_000L, true, 0L, 500L),
                 provider, new Store());
         assertEquals(EditorialP5PilotResult.StopClass.AUTHORIZATION_EXPIRED,
                 expired.stopReceipt().stopClass());
@@ -250,8 +263,9 @@ public final class EditorialP5PilotExecutionBoundaryTest {
         Store store = new Store();
 
         EditorialP5PilotResult result = execute(fixture,
-                authorization(fixture.request, "auth-budget").withBudgets(10_000, 2_000,
-                        100, BigDecimal.ONE, 60_000L), provider, store);
+                authorizationVariant(fixture.request, "auth-budget",
+                        fixture.request.binding().bindingIdentity(), 1, 10_000, 2_000, 100,
+                        BigDecimal.ONE, 60_000L, true, 0L, Long.MAX_VALUE), provider, store);
 
         assertEquals(EditorialP5PilotResult.StopClass.BUDGET_EXCEEDED,
                 result.stopReceipt().stopClass());
@@ -305,12 +319,25 @@ public final class EditorialP5PilotExecutionBoundaryTest {
 
     private static EditorialP5PilotAuthorization authorization(EditorialP5PilotRequest request,
                                                                 String id) {
-        return new EditorialP5PilotAuthorization(id, request.binding().bindingIdentity(),
+        return authorizationVariant(request, id, request.binding().bindingIdentity(), 1,
+                10_000, 2_000, 12_000, BigDecimal.ONE, 60_000L, true,
+                0L, Long.MAX_VALUE);
+    }
+
+    private static EditorialP5PilotAuthorization authorizationVariant(
+            EditorialP5PilotRequest request, String id, String bindingIdentity,
+            int maximumSchemaRepairCalls, int maximumInputTokens, int maximumOutputTokens,
+            int maximumTotalTokens, BigDecimal maximumTotalCost,
+            long maximumExecutionTimeMillis, boolean allowChapterToProvider,
+            long issuedAtMillis, long expiresAtMillis) {
+        return new EditorialP5PilotAuthorization(id, bindingIdentity,
                 request.binding().runDeclarationIdentity(), request.binding().canonicalPackHash(),
                 request.binding().canonicalProfileHash(), request.binding().compatibilityEvaluationId(),
                 request.chapterKey(), "L1", "FAKE_PROVIDER", "fake/model", "fake-endpoint-account",
-                1, 1, 0, 10_000, 2_000, 12_000, BigDecimal.ONE, 60_000L, true,
-                false, false, "HASH_ONLY", "TEST_STOP_AUTHORITY", 0L, Long.MAX_VALUE, true);
+                1, maximumSchemaRepairCalls, 0, maximumInputTokens, maximumOutputTokens,
+                maximumTotalTokens, maximumTotalCost, maximumExecutionTimeMillis,
+                allowChapterToProvider, false, false, "HASH_ONLY", "TEST_STOP_AUTHORITY",
+                issuedAtMillis, expiresAtMillis, true);
     }
 
     private static EditorialP5PilotProvider.Response response(EditorialP5PilotRequest request,
