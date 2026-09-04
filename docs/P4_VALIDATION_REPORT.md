@@ -29,7 +29,10 @@ Trạng thái chốt:
 | Workspace | `D:\App Translate Books\App Translate Books-translation-profile` |
 | Branch | `feature/v4.18` |
 | P4 starting commit | `270759e5589b2e9101c3e1a5a6b84cff12ec2fd3` |
-| P4 implementation/test head before docs closure | `76348b38174cdc6e25ce4ce19000b75984d44f75` |
+| P4 implementation/test head before original docs closure | `76348b38174cdc6e25ce4ce19000b75984d44f75` |
+| Original P4 documentation closure | `8d676c336d8011ab1534d1d5528cb52171c11bbf` |
+| Post-closure P4 producer correction | `364faa42e7ed6bb08b75dda7fdc7335b8f931df7` |
+| P4 correction documentation closure | `16073c6285c5b31b13f25929ad7a774b5044d009` |
 | App baseline/device restore | `4.17-dev.1 / code169`, device `15e84958` |
 | Incoming profile | `com.ml.tblandroidtxt.editorial.engine.safe4.full / 2.0.0` |
 | Schema decision | additive v18→v19 after failing P4 persistence characterization; no legacy backfill |
@@ -159,6 +162,14 @@ artifacts/builds/v4.17-dev.6/build-20260904-184343/TranslateBooks-v4.17-dev.6-co
 backup/builds/v4.17-dev.6/build-20260904-184343/TranslateBooks-v4.17-dev.6-code174.apk
 SHA-256: 97DDFD5901AD7957C3B64780C9037A1BE4B6EB3824B2B4C548B0367523163834
 ```
+
+The code176 artifact above is retained as historical evidence for the P4
+post-closure correction. The current cross-phase validation artifact is P5
+dry-run APK `4.17-dev.9`/code177, archived in
+`artifacts/builds/v4.17-dev.9/build-20260904-193721` and
+`backup/builds/v4.17-dev.9/build-20260904-193721`, with SHA-256
+`8B4D4714287114013A43C181C232921ABC6D6BA43CFB34F5E87D6CABF34001FA`.
+It is not a P4 result or a V4.18 release build.
 
 The device was then restored by uninstalling the test target package and
 installing the retained baseline APK, because the device rejected `pm clear`

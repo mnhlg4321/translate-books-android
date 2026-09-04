@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
 - Updated: 2026-09-04 (+07:00).
-- Current status: P5_DRY_RUN_ONLY / LIVE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Current status: P5C_DOCUMENTATION_BASELINE_CONSISTENT / P5_DRY_RUN_ONLY / LIVE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
 - Current version/build: device 15e84958 is restored to immutable 4.17-dev.1 / code169. Latest retained P5 dry-run validation artifact is 4.17-dev.9 / code177.
 - Current branch/workspace: feature/v4.18 / D:\App Translate Books\App Translate Books-translation-profile.
-- Current commit baseline: d0de39cf2ea22117303f299b522048a371372679, the exact P5 implementation/test baseline immediately before this documentation snapshot; not self-referential.
+- Current commit baseline: 44e5a659f23da1314cd6294a87d1cc44d1a58686, the exact P5 dry-run implementation/docs baseline immediately before this P5C.0 documentation snapshot; not self-referential.
 - Active authority: V5-SAFE.4.1.3-FULL. Authority bytes, canonical ZIP SHA, Java-control ZIP SHA and profile v2 hash are unchanged.
 
 ## Completed tasks
@@ -17,6 +17,7 @@
 - P4 UI remains setup-only: management is read-only, selection is explicit within new project flow, no global active/latest pack and no Run/Start/Activate path.
 - P4 post-closure source-mode correction is committed: new bindings use `NORMAL_FOUR_SOURCE`/`ALTERNATE_EXPLICIT`; the old P4 producer vocabulary was rejected by a new failing-then-passing device test.
 - P5 dry-run boundary is implemented in the engine with an injected fake provider: exact authorization/binding gate, preflight-before-provider, phase projection, typed response recovery, one schema-only repair, local receipt/diff validation, bounded usage and atomic attempt-store contract. `EditorialP5PilotExecutionBoundaryTest` is `15/15 PASS`.
+- P5C.0 documentation baseline is now consistent: current validation is code177, the full instrumentation count is `112 total = 111 PASS + 1 approved real-API skip`, and P4 lineage is recorded with full commit identities. Code176 remains historical P4 evidence only.
 
 ## Validation evidence
 
@@ -30,7 +31,7 @@
 
 ## Pending tasks
 
-- P5 controlled real L1 pilot, P6 L2/L3 and P7 release regression/build gates remain separate future phases.
+- P5C exact-binding fake E2E, controlled real L1 pilot, P6 L2/L3 and P7 release regression/build gates remain separate future phases.
 - Release tag, release backup/export and real-chapter certification remain pending by design.
 
 ## Known bugs and limitations
@@ -47,9 +48,9 @@ The original workspace D:\App Translate Books remains untouched. Its user-owned 
 
 ## Exact next step
 
-Obtain the complete P5 authorization block, choose one exact persisted P4 binding,
-and re-run fake-provider end-to-end before any separately approved live call.
-Do not open execution, certification, auto-activation or auto-rebind from this
-dry-run evidence.
+After the P5C.0 gate, create the failing exact-binding fake E2E contract and
+choose one exact persisted P4 binding. Obtain the complete P5 authorization
+block before any separately approved live call. Do not open execution,
+certification, auto-activation or auto-rebind from this dry-run evidence.
 
 This is current-only state; Git history preserves prior snapshots.

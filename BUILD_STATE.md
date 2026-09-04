@@ -1,12 +1,12 @@
 # Build State
 
-- Status: P5_DRY_RUN_ONLY / LIVE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Status: P5C_DOCUMENTATION_BASELINE_CONSISTENT / P5_DRY_RUN_ONLY / LIVE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
 - Active authority: V5-SAFE.4.1.3-FULL; canonical plan `EDITORIAL_RECOVERY_V4_18.md`.
 - Workspace: D:\App Translate Books\App Translate Books-translation-profile.
 - Branch: feature/v4.18.
-- Current commit baseline: d0de39cf2ea22117303f299b522048a371372679, the exact P5 implementation/test baseline immediately before this documentation update; not self-referential.
+- Current commit baseline: 44e5a659f23da1314cd6294a87d1cc44d1a58686, the exact P5 dry-run implementation/docs baseline immediately before this P5C.0 documentation update; not self-referential.
 - Current device build: 4.17-dev.1 / Android versionCode 169 on device 15e84958. P5 dry-run validation build 4.17-dev.9 / code177 was archived and used only for validation, then the target package was restored to code169.
-- Current phase: P5 fake-provider/dry-run boundary evidence is complete; no live authorization was supplied. Editorial execution, provider/API calls, real chapter pilot and certification remain disabled.
+- Current phase: P5C.0 documentation baseline is consistent; exact-binding fake E2E is the next task. No live authorization was supplied. Editorial execution, provider/API calls, real chapter pilot and certification remain disabled.
 
 ## Source and authority identity
 
@@ -53,11 +53,14 @@
 
 ## Validation artifact
 
-- Validation APK: `artifacts/builds/v4.17-dev.8/build-20260904-191251/TranslateBooks-v4.17-dev.8-code176.apk`.
-- Backup mirror: `backup/builds/v4.17-dev.8/build-20260904-191251/TranslateBooks-v4.17-dev.8-code176.apk`.
-- APK SHA-256: `0C37EBBCCD771F1727A241FB807174E9B30309E171BBF21E6DB572B6178A5458`.
-- Build event source snapshot: `303a91a5b00a84ad751b43363ca2793bd26a54b6`; it contains the tracked P4 canonical-mode correction as the pre-commit validation snapshot.
+- Latest validation APK: `artifacts/builds/v4.17-dev.9/build-20260904-193721/TranslateBooks-v4.17-dev.9-code177.apk`.
+- Backup mirror: `backup/builds/v4.17-dev.9/build-20260904-193721/TranslateBooks-v4.17-dev.9-code177.apk`.
+- APK SHA-256: `8B4D4714287114013A43C181C232921ABC6D6BA43CFB34F5E87D6CABF34001FA`.
+- Build event source snapshot: `d0de39cf2ea22117303f299b522048a371372679`; it contains the P5 dry-run implementation/test baseline.
 - This is a validation APK, not a V4.18 release build.
+- Historical P4 correction validation remains immutable and is recorded in
+  `docs/P4_VALIDATION_REPORT.md` as code176; it is not the current validation
+  artifact.
 
 ## Allowed-change guard
 
@@ -85,10 +88,10 @@ not modified.
 
 ## Next step
 
-Obtain the complete `P5 PILOT AUTHORIZATION` block, select one exact persisted
-P4 binding and run the fake-provider end-to-end check before requesting any
-separate live provider approval. Keep `EXECUTION_DISABLED / NOT_CERTIFIED /
-NOT_RUNNABLE`; do not open L2/L3, auto-activate, auto-rebind or certify from
-this dry-run evidence.
+After the P5C.0 documentation gate, select one exact persisted P4 binding and
+add the failing exact-binding fake E2E contract before any provider work.
+Obtain the complete `P5 PILOT AUTHORIZATION` block before any live call. Keep
+`EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE`; do not open L2/L3,
+auto-activate, auto-rebind or certify from this dry-run evidence.
 
 This file is current-only; Git history preserves prior state.
