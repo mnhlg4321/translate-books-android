@@ -31,11 +31,10 @@ public class EditorialPackManagementPageInstrumentedTest {
     }
 
     @Test public void detailRebuildAndActivityRecreationDoNotExposeMutationControls() {
-        try (ActivityScenario<MainActivity> first = ActivityScenario.launch(MainActivity.class)) {
-            first.onActivity(activity -> assertTrue(allText(new EditorialPackManagementPageFactory(activity).build()).contains("persistent imported packs")));
-        }
-        try (ActivityScenario<MainActivity> second = ActivityScenario.launch(MainActivity.class)) {
-            second.onActivity(activity -> assertTrue(allText(new EditorialPackManagementPageFactory(activity).build()).contains("READ ONLY")));
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            scenario.onActivity(activity -> assertTrue(allText(new EditorialPackManagementPageFactory(activity).build()).contains("persistent imported packs")));
+            scenario.recreate();
+            scenario.onActivity(activity -> assertTrue(allText(new EditorialPackManagementPageFactory(activity).build()).contains("READ ONLY")));
         }
     }
 
