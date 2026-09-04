@@ -242,6 +242,34 @@ public final class EditorialP4BindingInstrumentedTest {
         assertEquals(0, providerCallCount());
     }
 
+    @Test public void persistenceFailureRollsBackEveryP4BindingRow() throws Exception {
+        PackFixture canonical = fixture(CANONICAL_ASSET);
+        EditorialPackImportResult imported = importZip(canonical.zipBytes);
+        assertEquals(EditorialPackImportState.STORED_READY_FOR_CERTIFICATION, imported.state());
+        EditorialPackSelectionCandidate candidate = new EditorialPackSelectionPolicy(database, storage)
+                .resolve(canonical.manifest.packId(), canonical.manifest.version()).orElseThrow();
+
+        // Force the final append to abort after project/revision/scope/declaration
+        // rows have been attempted. The service must roll back the single SQLite
+        // transaction and expose a typed persistence failure.
+        database.editorialWritableDatabase().execSQL(
+                "CREATE TRIGGER p4_test_abort_binding BEFORE INSERT ON editorial_p4_bindings "
+                        + "BEGIN SELECT RAISE(ABORT, 'p4-test-abort'); END");
+        EditorialP4SetupRequest request = request("p4-selector-atomic-failure", "Atomic", "Failure",
+                candidate, sources("atomic-failure"));
+        EditorialP4BindingResult result = new EditorialP4BindingTransactionService(database, storage)
+                .createSetup(request);
+
+        assertEquals(EditorialP4BindingResult.Code.PERSISTENCE_FAILURE, result.code());
+        assertEquals(0, count("editorial_projects"));
+        assertEquals(0, count("editorial_project_revisions"));
+        assertEquals(0, count("editorial_input_scope_snapshots"));
+        assertEquals(0, count("editorial_authoritative_run_declarations"));
+        assertEquals(0, count("editorial_p4_bindings"));
+        assertEquals(0, count("editorial_p4_binding_inputs"));
+        assertEquals(0, providerCallCount());
+    }
+
     private EditorialPackImportResult importZip(byte[] bytes) {
         return new EditorialPackImportService(database, storage,
                 new EditorialEngineProfileResolver(BundledEditorialEngineContractProfileRegistry.load()))
