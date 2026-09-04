@@ -138,7 +138,15 @@ public final class EditorialP5CExactBindingExecution {
                 return new Result(Status.STOP, rawResult.reasonCode(), rawResult, null,
                         providerCalls.get(), false, "NOT_CERTIFIED");
             }
-            String predecessor = rawResult.committedResult().attemptIdentity();
+            // Read the durable predecessor back before constructing RECONCILE.
+            // The second phase never relies on an in-memory result as its
+            // predecessor authority.
+            EditorialP5PilotResult.CommittedResult rawPersisted = attemptStore.findCommitted(
+                    rawResult.committedResult().attemptIdentity()).orElse(null);
+            if (rawPersisted == null) {
+                return stop("RETRY_RAW_PREDECESSOR_READBACK_FAILED", providerCalls.get());
+            }
+            String predecessor = rawPersisted.attemptIdentity();
             EditorialP5PilotRequest reconcileRequest = new EditorialP5PilotRequest(binding, manifest,
                     authority, chapterKey, EditorialP5PilotRequest.Phase.L1_RECONCILE,
                     sources, predecessor, stableAnchors, populationIds, true,
@@ -147,6 +155,10 @@ public final class EditorialP5CExactBindingExecution {
                     reconcileAuthorization, countedProvider, attemptStore);
             if (!committedLike(reconcileResult)) {
                 return new Result(Status.STOP, reconcileResult.reasonCode(), rawResult,
+                        reconcileResult, providerCalls.get(), false, "NOT_CERTIFIED");
+            }
+            if (attemptStore.findCommitted(reconcileResult.committedResult().attemptIdentity()).isEmpty()) {
+                return new Result(Status.STOP, "RETRY_RECONCILE_RESULT_READBACK_FAILED", rawResult,
                         reconcileResult, providerCalls.get(), false, "NOT_CERTIFIED");
             }
             Status status = rawResult.outcome() == EditorialP5PilotResult.Outcome.ALREADY_COMMITTED

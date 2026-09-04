@@ -17,6 +17,7 @@ import com.ml.tblandroidtxt.editorial.pack.EditorialLineageNodeKind;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP4Binding;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5L1Output;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotAuthorization;
+import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotExecution;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotProvider;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotRequest;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotResult;
@@ -186,6 +187,32 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
         assertEquals(0, result.providerCalls());
         assertEquals(0, provider.calls);
         assertEquals(0, new EditorialP5CAttemptStore(database).count());
+    }
+
+    @Test public void claimedAttemptIsInFlightAfterStoreReopenAndRecoveryIsRetryable() throws Exception {
+        BindingFixture fixture = createBoundChapter();
+        EditorialP5PilotRequest rawRequest = request(fixture,
+                EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY,
+                fixture.binding.runDeclarationIdentity());
+        EditorialP5PilotAuthorization authorization = authorization(fixture.binding,
+                "auth-recovery", "L1_RAW_DISCOVERY");
+        EditorialP5CAttemptStore firstStore = new EditorialP5CAttemptStore(database);
+        firstStore.prepare(rawRequest, authorization, "a".repeat(64));
+        assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.ACQUIRED,
+                firstStore.claim(rawRequest.attemptIdentity()));
+
+        EditorialP5CAttemptStore reopenedStore = new EditorialP5CAttemptStore(database);
+        assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.IN_FLIGHT,
+                reopenedStore.claim(rawRequest.attemptIdentity()));
+        assertEquals("CLAIMED", reopenedStore.findRecord(rawRequest.attemptIdentity())
+                .orElseThrow().status());
+
+        reopenedStore.markRecoveryRequired(rawRequest.attemptIdentity(), "RETRY_TEST_RECOVERY");
+        EditorialP5CAttemptStore retryStore = new EditorialP5CAttemptStore(database);
+        retryStore.prepare(rawRequest, authorization, "a".repeat(64));
+        assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.ACQUIRED,
+                retryStore.claim(rawRequest.attemptIdentity()));
+        assertEquals(1, retryStore.count());
     }
 
     private BindingFixture createBoundChapter() throws Exception {
