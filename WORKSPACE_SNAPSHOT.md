@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
 - Updated: 2026-09-04 (+07:00).
-- Current status: P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE.
-- Current version/build: device 15e84958 is restored to immutable 4.17-dev.1 / code169. Latest retained P4 correction validation artifact is 4.17-dev.8 / code176.
+- Current status: P5_DRY_RUN_ONLY / LIVE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Current version/build: device 15e84958 is restored to immutable 4.17-dev.1 / code169. Latest retained P5 dry-run validation artifact is 4.17-dev.9 / code177.
 - Current branch/workspace: feature/v4.18 / D:\App Translate Books\App Translate Books-translation-profile.
-- Current commit baseline: 364faa42e7ed6bb08b75dda7fdc7335b8f931df7, the exact implementation/test baseline immediately before this documentation snapshot; not self-referential.
+- Current commit baseline: d0de39cf2ea22117303f299b522048a371372679, the exact P5 implementation/test baseline immediately before this documentation snapshot; not self-referential.
 - Active authority: V5-SAFE.4.1.3-FULL. Authority bytes, canonical ZIP SHA, Java-control ZIP SHA and profile v2 hash are unchanged.
 
 ## Completed tasks
@@ -16,15 +16,16 @@
 - P4 characterization proved the legacy project owner and v18 persistence boundary. P4 added the minimal project-scoped selection/binding owner, additive v19 immutable binding tables, exact source identity, atomic persistence, restart/process-death resume, stale-chain checks and side-by-side 4.1.3/4.1.4 acceptance.
 - P4 UI remains setup-only: management is read-only, selection is explicit within new project flow, no global active/latest pack and no Run/Start/Activate path.
 - P4 post-closure source-mode correction is committed: new bindings use `NORMAL_FOUR_SOURCE`/`ALTERNATE_EXPLICIT`; the old P4 producer vocabulary was rejected by a new failing-then-passing device test.
+- P5 dry-run boundary is implemented in the engine with an injected fake provider: exact authorization/binding gate, preflight-before-provider, phase projection, typed response recovery, one schema-only repair, local receipt/diff validation, bounded usage and atomic attempt-store contract. `EditorialP5PilotExecutionBoundaryTest` is `15/15 PASS`.
 
 ## Validation evidence
 
-- Host engine `163/163 PASS`; app unit `210/210 PASS`; external qualification `306 PASS / 0 FAIL`.
+- Host engine `178/178 PASS` (baseline `163`, P5 `+15`); app unit `210/210 PASS`; external qualification `306 PASS / 0 FAIL`.
 - Device focused: importer `13/13`, P1 `7/7`, P2 `3/3`, P3B trusted profile `1/1`, runtime wiring `5/5`, P4 binding `4/4`, process-death proof `1/1 + 1/1`, UI recreation `3/3`.
 - Full device instrumentation: `112 total = 111 PASS + 1 approved real-API skip`, `0` failures. The P3B baseline was 104; P4 added eight tests.
 - Provider/API calls: `0`; real API remained skipped by explicit opt-in.
 - Canonical ZIP `B9C65DBEB9D4C4ED46B67D5EC28FF6252CC2BDC4B63BC902904612987EC58987`, Java control `44F99423292ADA15680220165AF50430532D847E155F93C1B15D9F173D4609A5`, and profile resource `1B2DB011D59F3E2EF4349AEB0DAA9C54A19B7EFD1E2CA6886BC29B56E4690D62` re-hash correctly.
-- Latest validation APK code176 SHA-256: `0C37EBBCCD771F1727A241FB807174E9B30309E171BBF21E6DB572B6178A5458`; it was archived in both artifacts and backup and is not a release build.
+- Latest validation APK code177 SHA-256: `8B4D4714287114013A43C181C232921ABC6D6BA43CFB34F5E87D6CABF34001FA`; it was archived in both artifacts and backup, used for the `112/112` instrumentation run, and is not a release build. The device was restored to code169 by uninstall/reinstall because `pm clear` was rejected.
 - `git diff --check`: PASS; scoped production-change guard: PASS with no out-of-scope production/build-metadata path.
 
 ## Pending tasks
@@ -34,11 +35,11 @@
 
 ## Known bugs and limitations
 
-- No provider/API, real chapter, model execution or certification evidence exists.
+- No live provider/API, real chapter, model execution or certification evidence exists. Fake-provider execution evidence is engine-local only.
 - P4 creates pilot setup metadata only; `DATA_COMPATIBLE` and selectable status do not mean runnable or certified.
 - Initial setup UI collects explicit source text for binding metadata; it does not certify source bytes or open execution.
 - Bootstrap profile v1 remains loadable and non-executable.
-- P5 live authorization block is incomplete; provider/API access remains forbidden and only fake/dry-run work is allowed.
+- P5 live authorization block is incomplete; provider/API access remains forbidden and only fake/dry-run work is allowed. App database attempt persistence, live cancellation/process-death recovery and real L1 report/receipt commit are not evidenced.
 
 ## Protected state
 
@@ -46,6 +47,9 @@ The original workspace D:\App Translate Books remains untouched. Its user-owned 
 
 ## Exact next step
 
-Hand off only to a separately authorized P5 controlled L1 pilot. Do not open execution, certification, auto-activation or auto-rebind from P4.
+Obtain the complete P5 authorization block, choose one exact persisted P4 binding,
+and re-run fake-provider end-to-end before any separately approved live call.
+Do not open execution, certification, auto-activation or auto-rebind from this
+dry-run evidence.
 
 This is current-only state; Git history preserves prior snapshots.

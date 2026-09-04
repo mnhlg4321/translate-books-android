@@ -28,3 +28,12 @@ Profile `com.ml.tblandroidtxt.editorial.engine.safe4.full/2.0.0` công bố đú
 - Không có provider/API call, real chapter L1, L2/L3, benchmark hoặc certification trong P3B.
 - Authority bytes/ZIP identity không đổi.
 - Database schema, project/run binding, UI, provider adapter và build metadata không được mở rộng.
+
+## P5 follow-up — dry-run boundary only
+
+| ID | Yêu cầu | CODE169/P5 hiện hỗ trợ | Test/bằng chứng | Gap còn lại | Đề xuất tối thiểu | Phase xử lý |
+|---|---|---|---|---|---|---|
+| GAP-006-R | REPORT_L1/receipt phải được validate và commit nguyên tử sau execution. | Engine-local fake boundary dựng report/receipt redacted sau local validation và dùng attempt-store contract; chưa nối app DB/live result. | `EditorialP5PilotExecutionBoundaryTest` `15/15`; case atomic persistence failure không để committed result. | Chưa có bằng chứng persistence thật của app cho pilot result. | Nối validator và attempt transaction vào owner P4/P5 sau khi có authorization và failing app integration test. | P5 |
+| GAP-007-R | Mọi stop phải typed, có evidence và recovery; preserve không phải block. | Fake boundary trả typed auth/input/stale/retry/repair/content/budget/provider/validation outcomes và `PRESERVE_DRAFT`; không có live provider path. | P5 boundary matrix `15/15`; truncation, schema repair, preserve, concurrency và budget cases. | Chưa đo stop/recovery trên provider thật hoặc process death trong call thật. | Bổ sung integration test và pilot evidence theo exact authorization; không mở retry tự động ngoài budget. | P5 |
+| GAP-011-R | Model không được tự certify PASS hoặc đổi state. | Local output/ledger/diff/receipt checks độc lập với model PASS; execution remains disabled. | P5 fake case model-declared PASS với sai actual diff bị từ chối; host `178/178`. | Chưa chứng minh toàn chuỗi với response thật và app state persistence. | Giữ local validator là authority; chỉ ghi evidence sau live pilot được ủy quyền. | P5 |
+| GAP-013 | L1 provider execution phải bị giới hạn bởi authorization exact tuple, budget và egress consent. | Authorization/request/execution boundary đã có ở engine-local; chưa có auth block hợp lệ, persisted binding selector, provider adapter hoặc real call. | P5 dry-run report; provider/API calls `0`; full device `112/112` với real API skip. | Live authorization và production orchestration chưa được thực hiện. | Thu thập đầy đủ authorization block, resolve đúng binding từ DB, chạy fake E2E rồi xin live approval riêng. | P5 |
