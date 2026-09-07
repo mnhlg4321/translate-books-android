@@ -48,6 +48,8 @@ The original workspace D:\App Translate Books remains untouched. Its user-owned 
 
 ## Exact next step
 
+2026-09-07 source preparation update: user delegated setup using `D:\Ebooks\MERCEDES\VOL 4`, approved egress and caps of USD 0.10 / 5 minutes. Chapter 001 candidate hashes are recorded in `docs/P5C_REAL_SOURCE_PREPARATION.md`. Glossary/pronoun BOM conflicts with the current preflight; device has no configured provider or persisted pilot binding after restore. Resolve these and the 256-output-token boundary before concrete preflight/final live confirmation. Provider calls remain 0; no new regression PASS is claimed.
+
 The validation device is restored to code169. Obtain the complete two-phase P5
 authorization block before any separately approved live call. Do not open execution, certification,
 auto-activation or auto-rebind from fake evidence.
