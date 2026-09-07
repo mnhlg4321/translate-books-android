@@ -1,12 +1,12 @@
 # Build State
 
-- Status: P5C_DOCUMENTATION_BASELINE_CONSISTENT / P5_DRY_RUN_ONLY / LIVE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Status: P5C_FAKE_E2E_PASS / P5_DRY_RUN_ONLY / LIVE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
 - Active authority: V5-SAFE.4.1.3-FULL; canonical plan `EDITORIAL_RECOVERY_V4_18.md`.
 - Workspace: D:\App Translate Books\App Translate Books-translation-profile.
 - Branch: feature/v4.18.
-- Current commit baseline: 44e5a659f23da1314cd6294a87d1cc44d1a58686, the exact P5 dry-run implementation/docs baseline immediately before this P5C.0 documentation update; not self-referential.
-- Current device build: 4.17-dev.1 / Android versionCode 169 on device 15e84958. P5 dry-run validation build 4.17-dev.9 / code177 was archived and used only for validation, then the target package was restored to code169.
-- Current phase: P5C.0 documentation baseline is consistent; exact-binding fake E2E is the next task. No live authorization was supplied. Editorial execution, provider/API calls, real chapter pilot and certification remain disabled.
+- Current commit baseline: 61ba7602005522a8c93f2b4335fe6bea0214a367, the exact P5C implementation/test baseline immediately before this P5C evidence/state snapshot; not self-referential.
+- Last validation package: 4.17-dev.13 / Android versionCode 181, archived and installed for P5C device validation. Device `15e84958` is currently unreadable because the restarted ADB server reports `unauthorized`; code169 restoration is pending device RSA authorization.
+- Current phase: P5C exact-binding fake E2E is complete; live authorization was not supplied. Editorial execution, provider/API calls, real chapter pilot and certification remain disabled.
 
 ## Source and authority identity
 
@@ -38,25 +38,27 @@
 - P2A/P2B and P3A GAP-012 complete: canonical/control import, immutable byte readback, idempotent re-import, 4.1.4 side-by-side and security negatives pass.
 - P3B complete: P01-P09 `9/9`, G1-G24 `24/24`, typed stop/recovery, PRESERVE_DRAFT, receipt/ledger/diff/QA/release validators and trusted profile acceptance.
 - P5 dry-run boundary: `EditorialP5PilotExecutionBoundaryTest` `15/15`; bounded authorization, exact binding checks, preflight-before-provider, phase projection, typed truncation/repair/recovery, local ledger/diff/receipt validation, token budget, idempotency and atomic-store failure are covered with an injected fake provider. No real provider or chapter was used.
+- P5C app-bound fake E2E: additive SQLite v20 `editorial_p5c_attempts`, exact persisted P4 selector/binding resolution, RAW predecessor readback, RECONCILE, redacted report/receipt commit, database reopen and idempotent replay are covered by `EditorialP5CExactBindingFakeE2EInstrumentedTest`.
 - P4 characterization documented the legacy hard-coded project owner and the v18 tuple/source identity boundary. Additive v19 P4 tables were introduced only after that failing persistence evidence.
 - P4 selection/binding: explicit exact pack selection, immutable tuple, app-computed source identities, atomic project/revision/scope/declaration/binding transaction, idempotent retry and collision rejection.
 - P4 resume: side-by-side canonical 4.1.3/synthetic 4.1.4, exact DB close/reopen readback, activity recreation UI proof, two-invocation host process-stop proof and stale-chain fail-closed checks.
 - P4 post-closure correction: `EditorialP4BindingTransactionService` and the P4 UI now write only the contract vocabulary `NORMAL_FOUR_SOURCE`/`ALTERNATE_EXPLICIT`; the prior `NORMAL`/`ALTERNATE` mismatch was caught by a new canonical-mode assertion and fixed in commit `364faa4`.
 - P4 focused device evidence on 15e84958: importer `13/13`, P1 `7/7`, P2 `3/3`, P3B trusted profile `1/1`, runtime wiring `5/5`, P4 binding `4/4`, process-stop preparation/resume `1/1 + 1/1`, UI recreation `3/3`.
-- Full device instrumentation: `112 total`, `111 PASS`, `1 approved real-API skip`, `0` failures. P3B baseline was 104; P4 adds eight tests (two characterization, four binding/atomicity, two process-death). The activity test correction changes behavior only, not count.
+- Focused P5C device classes: `22/22 PASS`; this includes P1/P2/P3B/P4/P5C exact-binding fake coverage.
+- Full device instrumentation: `117/117 PASS`, `0` failures; real API remained opt-in/skipped. Five tests were added by P5C relative to the previous `112` total. The first run also exposed seven stale v19 assertions; only test expectations were corrected to current additive schema v20 in `744349e` and `61ba760`.
 - Host engine suite: `178/178 PASS` (baseline `163`; P5 added `15` tests).
-- App unit suite: `210/210 PASS`.
-- P5 validation APK: `artifacts/builds/v4.17-dev.9/build-20260904-193721/TranslateBooks-v4.17-dev.9-code177.apk`, SHA-256 `8B4D4714287114013A43C181C232921ABC6D6BA43CFB34F5E87D6CABF34001FA`; matching backup archive; device suite `112/112` with one approved real-API assumption skip and `0` failures.
+- App unit suite: `211/211 PASS` per debug/release/benchmark variant; aggregate `:app:test` `633/633 PASS`.
+- P5C validation APK: `artifacts/builds/v4.17-dev.13/build-20260904-202447/TranslateBooks-v4.17-dev.13-code181.apk`, SHA-256 `807D2E0C28BF3F486845562FFEE05B039FBA6D09AFDA566618C6C892979CD0F2`; matching backup archive.
 - External qualification `TESTS/test_full_release.ps1`: `306 PASS / 0 FAIL`.
-- Profile and canonical pack verification: PASS. Provider/API calls: `0`; real API skipped by explicit opt-in. Device restored to code169 after validation APK uninstall/reinstall because `pm clear` was rejected.
+- Profile and canonical pack/authority verification: PASS. Live provider/API calls: `0`; fake provider calls: `2` in isolated app acceptance. Device restoration is pending because the current ADB transport is unauthorized; no `pm clear` or destructive reset was performed in this continuation.
 - `git diff --check`: PASS at closure.
 
 ## Validation artifact
 
-- Latest validation APK: `artifacts/builds/v4.17-dev.9/build-20260904-193721/TranslateBooks-v4.17-dev.9-code177.apk`.
-- Backup mirror: `backup/builds/v4.17-dev.9/build-20260904-193721/TranslateBooks-v4.17-dev.9-code177.apk`.
-- APK SHA-256: `8B4D4714287114013A43C181C232921ABC6D6BA43CFB34F5E87D6CABF34001FA`.
-- Build event source snapshot: `d0de39cf2ea22117303f299b522048a371372679`; it contains the P5 dry-run implementation/test baseline.
+- Latest validation APK: `artifacts/builds/v4.17-dev.13/build-20260904-202447/TranslateBooks-v4.17-dev.13-code181.apk`.
+- Backup mirror: `backup/builds/v4.17-dev.13/build-20260904-202447/TranslateBooks-v4.17-dev.13-code181.apk`.
+- APK SHA-256: `807D2E0C28BF3F486845562FFEE05B039FBA6D09AFDA566618C6C892979CD0F2`.
+- Build event source snapshot: `61ba7602005522a8c93f2b4335fe6bea0214a367`; it contains the P5C fake E2E implementation/test baseline.
 - This is a validation APK, not a V4.18 release build.
 - Historical P4 correction validation remains immutable and is recorded in
   `docs/P4_VALIDATION_REPORT.md` as code176; it is not the current validation
@@ -66,10 +68,11 @@
 
 P4 production changes are limited to the P4 binding/selection/service/DAO
 owners, the additive v19 migration, read-only project projection/setup UI and
-the engine P4 value types. P5 production changes are limited to engine-local
-pilot contract/result/request/authorization boundary types and the injected
-fake-test seam; no app provider adapter or persistence wiring was added. Test
-changes are AndroidTest/engine-test only.
+the engine P4 value types. P5C production changes are limited to the additive
+v20 durable attempt owner, app-bound exact-binding coordinator and the existing
+engine pilot boundary; no provider adapter, credential wiring, UI activation or
+certification path was added. Test changes are AndroidTest/engine-test plus
+stale current-schema assertions only.
 There was no provider/API wiring, execution protocol, certification state,
 authority byte, canonical ZIP, trusted profile resource, build metadata or
 legacy workflow rewrite. The original workspace `D:\App Translate Books` was
@@ -84,14 +87,14 @@ not modified.
 - `DATA_COMPATIBLE`, selectable and `PILOT_SETUP_READY` do not mean runnable.
 - Bootstrap profile v1 remains loadable and non-executable.
 - P5 live authorization is not present; no real chapter/provider call is permitted. Dry-run/fake-provider contract work may proceed only with external execution disabled.
-- P5 dry-run does not prove live provider behavior, app database attempt persistence, cancellation/process-death handling during a real call, data-egress approval, or a real `REPORT_L1`/receipt commit. The supplied authorization block is still required before any provider access.
+- P5C proves app-bound fake attempt persistence and idempotent RAW→RECONCILE replay, but does not prove live provider behavior, external-call cancellation/process-death handling, data-egress approval, real token/cost/latency or a real chapter `REPORT_L1`/receipt commit. The supplied two-phase authorization block is still required before any provider access.
+- Device restore is operationally pending until `15e84958` accepts the local ADB key again; this is not a permission to run provider work.
 
 ## Next step
 
-After the P5C.0 documentation gate, select one exact persisted P4 binding and
-add the failing exact-binding fake E2E contract before any provider work.
-Obtain the complete `P5 PILOT AUTHORIZATION` block before any live call. Keep
-`EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE`; do not open L2/L3,
-auto-activate, auto-rebind or certify from this dry-run evidence.
+Restore/verify `15e84958` to immutable code169 once ADB RSA authorization is
+available, then obtain the complete two-phase `P5 PILOT AUTHORIZATION` block
+before any live call. Keep `EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE`;
+do not open L2/L3, auto-activate, auto-rebind or certify from fake evidence.
 
 This file is current-only; Git history preserves prior state.
