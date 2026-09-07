@@ -5,7 +5,7 @@
 - Workspace: D:\App Translate Books\App Translate Books-translation-profile.
 - Branch: feature/v4.18.
 - Current commit baseline: 61ba7602005522a8c93f2b4335fe6bea0214a367, the exact P5C implementation/test baseline immediately before this P5C evidence/state snapshot; not self-referential.
-- Last validation package: 4.17-dev.13 / Android versionCode 181, archived and installed for P5C device validation. Device `15e84958` is currently unreadable because the restarted ADB server reports `unauthorized`; code169 restoration is pending device RSA authorization.
+- Last validation package used: 4.17-dev.13 / Android versionCode 181, archived and installed for P5C device validation. Device `15e84958` has now been restored by uninstall/reinstall to the immutable baseline 4.17-dev.1 / code169; this restoration removed validation-package data.
 - Current phase: P5C exact-binding fake E2E is complete; live authorization was not supplied. Editorial execution, provider/API calls, real chapter pilot and certification remain disabled.
 
 ## Source and authority identity
@@ -50,7 +50,7 @@
 - App unit suite: `211/211 PASS` per debug/release/benchmark variant; aggregate `:app:test` `633/633 PASS`.
 - P5C validation APK: `artifacts/builds/v4.17-dev.13/build-20260904-202447/TranslateBooks-v4.17-dev.13-code181.apk`, SHA-256 `807D2E0C28BF3F486845562FFEE05B039FBA6D09AFDA566618C6C892979CD0F2`; matching backup archive.
 - External qualification `TESTS/test_full_release.ps1`: `306 PASS / 0 FAIL`.
-- Profile and canonical pack/authority verification: PASS. Live provider/API calls: `0`; fake provider calls: `2` in isolated app acceptance. Device restoration is pending because the current ADB transport is unauthorized; no `pm clear` or destructive reset was performed in this continuation.
+- Profile and canonical pack/authority verification: PASS. Live provider/API calls: `0`; fake provider calls: `2` in isolated app acceptance. Code169 baseline APK SHA-256 is `3C3AAEF1A7D47F39A7B5A5FF8AEDF77347D255AF728B908180AA142CA2B276D1` in both artifact and backup; device restore was verified after ADB authorization. The uninstall/reinstall procedure removed validation-package data because `pm clear` is not accepted on this device.
 - `git diff --check`: PASS at closure.
 
 ## Validation artifact
@@ -88,13 +88,13 @@ not modified.
 - Bootstrap profile v1 remains loadable and non-executable.
 - P5 live authorization is not present; no real chapter/provider call is permitted. Dry-run/fake-provider contract work may proceed only with external execution disabled.
 - P5C proves app-bound fake attempt persistence and idempotent RAW→RECONCILE replay, but does not prove live provider behavior, external-call cancellation/process-death handling, data-egress approval, real token/cost/latency or a real chapter `REPORT_L1`/receipt commit. The supplied two-phase authorization block is still required before any provider access.
-- Device restore is operationally pending until `15e84958` accepts the local ADB key again; this is not a permission to run provider work.
+- Device is restored to immutable `4.17-dev.1/code169`; this is not a permission to run provider work.
 
 ## Next step
 
-Restore/verify `15e84958` to immutable code169 once ADB RSA authorization is
-available, then obtain the complete two-phase `P5 PILOT AUTHORIZATION` block
-before any live call. Keep `EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE`;
+The device is restored to immutable code169. Obtain the complete two-phase
+`P5 PILOT AUTHORIZATION` block before any live call. Keep
+`EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE`;
 do not open L2/L3, auto-activate, auto-rebind or certify from fake evidence.
 
 This file is current-only; Git history preserves prior state.

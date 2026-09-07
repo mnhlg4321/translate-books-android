@@ -119,8 +119,10 @@ SHA-256 = 807D2E0C28BF3F486845562FFEE05B039FBA6D09AFDA566618C6C892979CD0F2
 The full device run used `15e84958` and completed `117/117` with zero
 failures after the device's notification-permission dialog was dismissed.
 That UI precondition is recorded as device setup evidence; it is not a
-production change. The device must still be verified/restored to code169 after
-ADB authorization is available again.
+production change. After validation, the package was uninstalled and the
+immutable `4.17-dev.1/code169` APK was reinstalled because `pm clear` is
+rejected on this device. Readback verified `versionCode=169` and
+`versionName=4.17-dev.1`; this restore removed validation-package data.
 
 ## Privacy and secret scan
 
