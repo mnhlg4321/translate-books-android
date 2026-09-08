@@ -1,12 +1,12 @@
 # Build State
 
-- Status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5C_LIVE_AUTHORIZED_ATTEMPT / P5C_PILOT_STOPPED_WITH_PROVIDER_ERROR / STOP_PROVIDER_TIMEOUT / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / EXTERNAL_STATE_REMAINS_UNKNOWN / RECOVERY_REQUIRED / NO_RETRY_AUTHORIZATION / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
 - Active authority: V5-SAFE.4.1.3-FULL; canonical plan `EDITORIAL_RECOVERY_V4_18.md`.
 - Workspace: D:\App Translate Books\App Translate Books-translation-profile.
 - Branch: feature/v4.18.
-- Current commit baseline: e5733cf docs(editorial): record authorized P5C provider stop, the exact starting commit for P5D documentation hygiene; not self-referential.
-- Last validation package used: 4.17-dev.16 / Android versionCode 184, archived and used on device `15e84958`; focused/full validation passed. The device was then restored to the immutable 4.17-dev.1 / code169 baseline by uninstall/reinstall, which removed validation-package data.
-- Current phase: P5C live attempt is closed as an unresolved provider stop. P5D.0 documentation baseline is consistent; P5D.1-P5D.3 must remain read-only/no-provider work until recovery evidence and lifecycle hardening are complete. Editorial execution/certification remain disabled.
+- Current commit baseline: e9f0b7907c27e88feb209dd23361b254377828dc (`test(editorial): assert redacted lifecycle timing`), the implementation baseline immediately before the current P5D evidence-documentation update; not self-referential.
+- Last validation package used: 4.17-dev.18 / Android versionCode 186, archived in artifacts and backup and used on device `15e84958`; focused/full validation passed. The device was then restored to the immutable 4.17-dev.1 / code169 baseline by uninstall/reinstall, which removed validation-package data.
+- Current phase: P5C live attempt remains an unresolved external provider stop. P5D.0 is consistent; P5D.3 lifecycle/recovery hardening and P5D.4 regression pass locally. P5D.1/P5D.2 remain `EXTERNAL_STATE_REMAINS_UNKNOWN` pending authenticated read-only Activity evidence; P5D.5-P5D.7 are not authorized. Editorial execution/certification remain disabled.
 
 ## Source and authority identity
 
@@ -56,13 +56,16 @@
 - Device setup preparation: canonical 4.1.3 was imported through the production pack picker on code183 and reported `DATA_COMPATIBLE`; the persistent setup test pinned the normalized app-import bytes and read back the exact P4 tuple for chapter `001`. Source files remain outside Git under the user-provided MERCEDES VOL 4 folder.
 - Code184 focused device regression: setup `1/1`, P5C fake E2E `5/5`, P1 `7/7`, P2 `3/3`, P3B `1/1`, P4 binding `4/4`, process-death `2/2`; full instrumentation `118/118 PASS` with the opt-in real API test skipped. Host engine `179/179 PASS`; app unit `214/214 PASS` per debug/release/benchmark variant, aggregate `642/642 PASS`.
 - Authorized live boundary: one OpenRouter RAW request, `providerCalls=1`, no automatic retry/repair, no response or usage receipt, typed `RETRY_PROVIDER_CALL_FAILED`, and durable `RECOVERY_REQUIRED`; recovery inspection `1/1` confirmed zero report/receipt bytes. Provider billing/acceptance is unknown and no new live call is authorized by this record.
+- P5D.1/P5D.2 provider audit: the bounded OpenRouter Activity page redirected to sign-in; no authenticated generation/request metadata was available. The redacted classification remains `EXTERNAL_STATE_REMAINS_UNKNOWN`, not `$0`, with retry ineligible and P5D provider calls `0`.
+- P5D.3/P5D.4: additive v21 lifecycle, authorization-receipt and reconciliation owners; typed provider-failure taxonomy; non-reclaimable `RECOVERY_REQUIRED` gate; and redacted timing/generation metadata passed focused tests. Code186 device XML reports `124` test methods, `0` failures, `0` errors and `4` approved skips; engine `180/180`; app aggregate `645/645`.
 
 ## Validation artifact
 
-- Latest validation APK: `artifacts/builds/v4.17-dev.16/build-20260908-211548/TranslateBooks-v4.17-dev.16-code184.apk`.
-- Backup mirror: `backup/builds/v4.17-dev.16/build-20260908-211548/TranslateBooks-v4.17-dev.16-code184.apk`.
-- APK SHA-256: `AA69A6EDD8A7B11D8488FC431B71097515FE6BD738710C970F6E4A8F54150797`.
-- Build event source snapshot: `67e7ee919a1a049e83faf481ca73ff08f0c14880`; this code184 artifact predates the later live attempt and remains validation-only.
+- Latest validation APK: `artifacts/builds/v4.17-dev.18/build-20260908-232855/TranslateBooks-v4.17-dev.18-code186.apk`.
+- Backup mirror: `backup/builds/v4.17-dev.18/build-20260908-232855/TranslateBooks-v4.17-dev.18-code186.apk`.
+- APK SHA-256: `A32CD2B379D13CCEE6D7FAB7E0512A1A73587175CE92C32C1CDCD3707245D10C`.
+- Build event source snapshot: `e9f0b7907c27e88feb209dd23361b254377828dc`; this code186 artifact remains validation-only.
+- Code184 remains immutable historical evidence for the pre-P5D live attempt; it is not the current validation artifact.
 - This is a validation APK, not a V4.18 release build.
 - Historical P4 correction validation remains immutable and is recorded in
   `docs/P4_VALIDATION_REPORT.md` as code176; it is not the current validation
@@ -74,14 +77,15 @@ P4 production changes are limited to the P4 binding/selection/service/DAO
 owners, the additive v19 migration, read-only project projection/setup UI and
 the engine P4 value types. P5C production changes are limited to the additive
 v20 durable attempt owner, app-bound exact-binding coordinator, the existing
-engine pilot boundary and the bounded OpenRouter adapter/request context. No
-global activation, certification path, provider framework, UI activation or
-legacy workflow rewrite was added. Test changes are AndroidTest/engine-test
-plus stale current-schema assertions only.
-No authority byte, canonical ZIP, trusted profile resource, database schema
-beyond the already-approved additive v20 attempt owner, project binding, build
-metadata or legacy workflow was changed during the live attempt. The original
-workspace `D:\App Translate Books` was not modified.
+engine pilot boundary and the bounded OpenRouter adapter/request context. P5D
+production changes are limited to the additive v21 lifecycle, authorization
+receipt, reconciliation and typed provider-failure owners. No global
+activation, certification path, provider framework, UI activation or legacy
+workflow rewrite was added. Test changes are AndroidTest/engine-test plus
+stale current-schema assertions only.
+No authority byte, canonical ZIP, trusted profile resource, build metadata or
+legacy workflow was changed. The original workspace `D:\App Translate Books`
+was not modified.
 
 ## Known limitations
 
@@ -91,16 +95,17 @@ workspace `D:\App Translate Books` was not modified.
   this is not source certification and is not an execution UI.
 - `DATA_COMPATIBLE`, selectable and `PILOT_SETUP_READY` do not mean runnable.
 - Bootstrap profile v1 remains loadable and non-executable.
-- The single authorized RAW request stopped at the provider boundary with no response. External call state and billing remain unknown; do not retry automatically. A future retry requires provider-account inspection, explicit recovery handling and a new authorization.
+- The single authorized RAW request stopped at the provider boundary with no response. External call state and billing remain unknown; do not retry automatically. P5D.3 now blocks reclaim until immutable reconciliation, evidence, external-state resolution, new authorization and duplicate-risk policy are present.
 - P5C proves app-bound fake attempt persistence and idempotent RAW→RECONCILE replay, but does not prove a live response, real token/cost usage, live cancellation/process-death behavior, or a real chapter `REPORT_L1`/receipt commit. RECONCILE and final L1 acceptance remain unproven.
-- Device was restored to immutable `4.17-dev.1/code169` after validation by uninstall/reinstall; validation-package data was removed because `pm clear` was rejected. The latest validation artifact remains code184 in artifacts/backup.
+- Device was restored to immutable `4.17-dev.1/code169` after code186 validation by uninstall/reinstall; validation-package data was removed because `pm clear` was rejected. The latest validation artifact remains code186 in artifacts/backup.
 
 ## Next step
 
-Perform the bounded read-only OpenRouter Activity audit for the 2026-09-08
-request; do not enable input/output logging and do not call the provider.
-Record `EXTERNAL_*` classification or retain `EXTERNAL_STATE_REMAINS_UNKNOWN`.
-Only after P5D.1-P5D.4 pass may a new exact-phase RAW authorization be
+Complete the bounded read-only OpenRouter Activity audit for the 2026-09-08
+request after manual authentication; do not enable input/output logging and do
+not call the provider. Record redacted `EXTERNAL_*` classification or retain
+`EXTERNAL_STATE_REMAINS_UNKNOWN`. Only after the classification and the already
+passing P5D.3/P5D.4 evidence may a new exact-phase RAW authorization be
 considered. Keep `EXECUTION_DISABLED / NOT_CERTIFIED /
 NOT_GLOBALLY_RUNNABLE`; do not reuse the consumed authorization, call
 RECONCILE automatically, auto-activate, auto-rebind or certify.
