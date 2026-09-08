@@ -219,9 +219,127 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
         reopenedStore.markRecoveryRequired(rawRequest.attemptIdentity(), "RETRY_TEST_RECOVERY");
         EditorialP5CAttemptStore retryStore = new EditorialP5CAttemptStore(database);
         retryStore.prepare(rawRequest, authorization, "a".repeat(64));
-        assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.IN_FLIGHT,
+        assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.RECOVERY_REQUIRED,
                 retryStore.claim(rawRequest.attemptIdentity()));
         assertEquals(1, retryStore.count());
+    }
+
+    @Test public void p5dPersistsRedactedLifecycleAndSingleUseAuthorizationAcrossReopen()
+            throws Exception {
+        BindingFixture fixture = createBoundChapter();
+        EditorialP5PilotRequest rawRequest = request(fixture,
+                EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY,
+                fixture.binding.runDeclarationIdentity());
+        EditorialP5PilotAuthorization authorization = authorization(fixture.binding,
+                "p5d-auth-lifecycle", "L1_RAW_DISCOVERY");
+        EditorialP5CAttemptStore store = new EditorialP5CAttemptStore(database);
+        store.prepare(rawRequest, authorization, "b".repeat(64));
+        assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.ACQUIRED,
+                store.claim(rawRequest.attemptIdentity()));
+
+        String authorizationHash = EditorialP5CAttemptStore.authorizationIdHash(
+                authorization.authorizationId());
+        EditorialP5CAttemptStore.AuthorizationReceipt receipt = store
+                .findAuthorizationReceipt(authorizationHash).orElseThrow();
+        assertEquals(authorizationHash, receipt.authorizationIdHash());
+        assertFalse(receipt.authorizationIdHash().equals(authorization.authorizationId()));
+        assertEquals("CONSUMED", receipt.consumptionResult());
+
+        store.recordNetworkLifecycle(rawRequest.attemptIdentity(),
+                EditorialP5CAttemptStore.NetworkLifecycleEvent.stage(
+                        EditorialP5CAttemptStore.LifecycleStage.CALL_CREATED));
+        store.recordNetworkLifecycle(rawRequest.attemptIdentity(),
+                new EditorialP5CAttemptStore.NetworkLifecycleEvent(
+                        EditorialP5CAttemptStore.LifecycleStage.REQUEST_BODY_SENT,
+                        321L, -1, "", 10L, "", ""));
+        store.recordNetworkLifecycle(rawRequest.attemptIdentity(),
+                new EditorialP5CAttemptStore.NetworkLifecycleEvent(
+                        EditorialP5CAttemptStore.LifecycleStage.RESPONSE_HEADERS_RECEIVED,
+                        321L, 200, "", 20L, "generation-redacted", ""));
+        store.recordNetworkLifecycle(rawRequest.attemptIdentity(),
+                new EditorialP5CAttemptStore.NetworkLifecycleEvent(
+                        EditorialP5CAttemptStore.LifecycleStage.RESPONSE_BODY_COMPLETE,
+                        321L, 200, "", 30L, "generation-redacted", "provider-response"));
+
+        EditorialP5CAttemptStore.NetworkLifecycleEvent lifecycle = store
+                .findNetworkLifecycle(rawRequest.attemptIdentity()).orElseThrow();
+        assertEquals(EditorialP5CAttemptStore.LifecycleStage.RESPONSE_BODY_COMPLETE,
+                lifecycle.stage());
+        assertEquals(321L, lifecycle.requestBodyBytes());
+        assertEquals(200, lifecycle.httpStatus());
+        assertEquals("generation-redacted", lifecycle.generationId());
+        assertEquals("provider-response", lifecycle.providerResponseId());
+        assertFalse(columnExists("editorial_p5d_network_lifecycle", "response_body"));
+
+        database.close();
+        database = new TranslationRepository(context, databaseName);
+        EditorialP5CAttemptStore reopened = new EditorialP5CAttemptStore(database);
+        assertEquals("CONSUMED", reopened.findAuthorizationReceipt(authorizationHash)
+                .orElseThrow().consumptionResult());
+        assertEquals(EditorialP5CAttemptStore.LifecycleStage.RESPONSE_BODY_COMPLETE,
+                reopened.findNetworkLifecycle(rawRequest.attemptIdentity()).orElseThrow().stage());
+    }
+
+    @Test public void p5dRecoveryNeedsImmutableDecisionNewAuthAndDuplicateRiskAcknowledgement()
+            throws Exception {
+        BindingFixture fixture = createBoundChapter();
+        EditorialP5PilotRequest rawRequest = request(fixture,
+                EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY,
+                fixture.binding.runDeclarationIdentity());
+        EditorialP5PilotAuthorization original = authorization(fixture.binding,
+                "p5d-auth-original", "L1_RAW_DISCOVERY");
+        EditorialP5CAttemptStore first = new EditorialP5CAttemptStore(database);
+        first.prepare(rawRequest, original, "c".repeat(64));
+        assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.ACQUIRED,
+                first.claim(rawRequest.attemptIdentity()));
+        first.markRecoveryRequired(rawRequest.attemptIdentity(), "RETRY_PROVIDER_READ_TIMEOUT");
+
+        EditorialP5PilotAuthorization retry = authorization(fixture.binding,
+                "p5d-auth-retry", "L1_RAW_DISCOVERY");
+        EditorialP5CAttemptStore retryStore = new EditorialP5CAttemptStore(database);
+        retryStore.prepare(rawRequest, retry, "c".repeat(64));
+        assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.RECOVERY_REQUIRED,
+                retryStore.claim(rawRequest.attemptIdentity()));
+
+        String retryHash = EditorialP5CAttemptStore.authorizationIdHash(retry.authorizationId());
+        retryStore.recordReconciliation(new EditorialP5CAttemptStore.ReconciliationDecision(
+                rawRequest.attemptIdentity(),
+                EditorialP5CAttemptStore.ExternalStateClassification.EXTERNAL_STATE_REMAINS_UNKNOWN,
+                "local/p5d-activity-unknown", "fake-account-fingerprint", "UNKNOWN",
+                "P5D_TEST", true, true, retryHash, 2000L));
+        assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.ACQUIRED,
+                retryStore.claim(rawRequest.attemptIdentity()));
+        assertEquals("CONSUMED", retryStore.findAuthorizationReceipt(retryHash)
+                .orElseThrow().consumptionResult());
+        assertEquals("CLAIMED", retryStore.findRecord(rawRequest.attemptIdentity())
+                .orElseThrow().status());
+        assertEquals(EditorialP5CAttemptStore.ExternalStateClassification.EXTERNAL_STATE_REMAINS_UNKNOWN,
+                retryStore.findReconciliation(rawRequest.attemptIdentity()).orElseThrow().classification());
+    }
+
+    @Test public void p5dRejectsUnallowlistedExceptionMetadata() throws Exception {
+        BindingFixture fixture = createBoundChapter();
+        EditorialP5PilotRequest rawRequest = request(fixture,
+                EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY,
+                fixture.binding.runDeclarationIdentity());
+        EditorialP5CAttemptStore store = new EditorialP5CAttemptStore(database);
+        EditorialP5PilotAuthorization authorization = authorization(fixture.binding,
+                "p5d-auth-exception", "L1_RAW_DISCOVERY");
+        store.prepare(rawRequest, authorization, "d".repeat(64));
+        store.claim(rawRequest.attemptIdentity());
+        store.recordNetworkLifecycle(rawRequest.attemptIdentity(),
+                EditorialP5CAttemptStore.NetworkLifecycleEvent.stage(
+                        EditorialP5CAttemptStore.LifecycleStage.CALL_CREATED));
+        try {
+            store.recordNetworkLifecycle(rawRequest.attemptIdentity(),
+                    new EditorialP5CAttemptStore.NetworkLifecycleEvent(
+                            EditorialP5CAttemptStore.LifecycleStage.CALL_FAILED, 1L, -1,
+                            "secret=provider-body", 1L, "", ""));
+            throw new AssertionError("unallowlisted exception metadata must be rejected");
+        } catch (IllegalArgumentException expected) {
+            assertEquals(EditorialP5CAttemptStore.LifecycleStage.CALL_CREATED,
+                    store.findNetworkLifecycle(rawRequest.attemptIdentity()).orElseThrow().stage());
+        }
     }
 
     private BindingFixture createBoundChapter() throws Exception {

@@ -38,7 +38,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-/** Device-side SQLite v16/v17 lineage and authoritative identity persistence contract. */
+/** Device-side SQLite lineage, identity and P5D recovery persistence contract. */
 @RunWith(AndroidJUnit4.class)
 public final class EditorialLineagePersistenceInstrumentedTest {
     private static final String PACK = "a".repeat(64);
@@ -62,9 +62,9 @@ public final class EditorialLineagePersistenceInstrumentedTest {
         context.deleteDatabase(databaseName);
     }
 
-    @Test public void freshSchemaIsV20WithLineageAndP5CAttemptTablesIndexesAndTriggers() {
+    @Test public void freshSchemaIsV21WithLineageAndP5CAttemptTablesIndexesAndTriggers() {
         SQLiteDatabase db = repository.editorialWritableDatabase();
-        assertEquals(20, db.getVersion());
+        assertEquals(21, db.getVersion());
         assertTable(db, "editorial_project_revisions");
         assertTable(db, "editorial_input_scope_snapshots");
         assertTable(db, "editorial_input_scope_snapshot_entries");
@@ -83,6 +83,9 @@ public final class EditorialLineagePersistenceInstrumentedTest {
         assertColumn(db, "editorial_lineage_records", "trusted_profile_id");
         assertColumn(db, "editorial_lineage_records", "parent_record_fingerprint");
         assertColumn(db, "editorial_lineage_input_entries", "item_count");
+        assertTable(db, "editorial_p5d_network_lifecycle");
+        assertTable(db, "editorial_p5d_authorization_receipts");
+        assertTable(db, "editorial_p5d_reconciliation");
     }
 
     @Test public void validRootAndChildAppendReadbackAndRestartExactly() {
@@ -216,7 +219,7 @@ public final class EditorialLineagePersistenceInstrumentedTest {
 
         repository = new TranslationRepository(context, databaseName);
         SQLiteDatabase db = repository.editorialReadableDatabase();
-        assertEquals(20, db.getVersion());
+        assertEquals(21, db.getVersion());
         assertEquals(1, countRows("editorial_packs"));
         assertEquals(1, countRows("editorial_pack_compatibility_results"));
         assertEquals(1, countRows("editorial_pack_compatibility_evaluations"));

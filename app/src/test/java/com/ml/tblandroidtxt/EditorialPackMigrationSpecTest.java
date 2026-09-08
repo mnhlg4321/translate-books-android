@@ -123,6 +123,29 @@ public class EditorialPackMigrationSpecTest {
         assertFalse(sql.contains("editorial_projects ("));
     }
 
+    @Test public void v21AddsOnlyRedactedP5DRecoveryOwners() {
+        String sql = String.join("\n", EditorialMigrationSpec.from20To21()).toLowerCase();
+        assertEquals(3, sql.split("create table if not exists", -1).length - 1);
+        assertEquals(3, countIndexes(sql));
+        assertEquals(4, sql.split("create trigger if not exists", -1).length - 1);
+        assertTrue(sql.contains("create table if not exists editorial_p5d_network_lifecycle"));
+        assertTrue(sql.contains("create table if not exists editorial_p5d_authorization_receipts"));
+        assertTrue(sql.contains("create table if not exists editorial_p5d_reconciliation"));
+        assertTrue(sql.contains("call_created"));
+        assertTrue(sql.contains("response_body_complete"));
+        assertTrue(sql.contains("external_state_remains_unknown"));
+        assertTrue(sql.contains("authorization_id_hash"));
+        assertTrue(sql.contains("duplicate_risk_acknowledged"));
+        assertTrue(sql.contains("on delete restrict"));
+        assertFalse(sql.contains("alter table"));
+        assertFalse(sql.contains("drop table"));
+        assertFalse(sql.contains("delete from"));
+        assertFalse(sql.contains("request_body blob"));
+        assertFalse(sql.contains("response_bytes"));
+        assertFalse(sql.contains("response_content"));
+        assertFalse(sql.contains("api_key"));
+    }
+
     private static int countIndexes(String sql) {
         return sql.split("create index if not exists", -1).length - 1
                 + sql.split("create unique index if not exists", -1).length - 1;

@@ -39,6 +39,23 @@ public final class EditorialP5PilotExecutionBoundaryTest {
         assertEquals(0, result.metrics().providerCallsBeforePreflight());
     }
 
+    @Test public void unresolvedExternalRecoveryCannotReachProviderOrReclaimAttempt() {
+        Fixture fixture = fixture();
+        FakeProvider provider = new FakeProvider(response(fixture.request, true));
+        Store store = new Store();
+        store.recoveryRequired = true;
+
+        EditorialP5PilotResult result = execute(fixture,
+                authorization(fixture.request, "auth-recovery-gate"), provider, store);
+
+        assertEquals(EditorialP5PilotResult.Outcome.STOP, result.outcome());
+        assertEquals(EditorialP5PilotResult.StopClass.RETRY_REQUIRED,
+                result.stopReceipt().stopClass());
+        assertEquals("STOP_EXTERNAL_CALL_STATE_UNRESOLVED", result.stopReceipt().reasonCode());
+        assertEquals(0, provider.calls);
+        assertEquals(0, result.metrics().primaryCalls());
+    }
+
     @Test public void wrongBindingAndWrongPhaseNeverReachProvider() {
         Fixture fixture = fixture();
         FakeProvider provider = new FakeProvider(response(fixture.request, true));
@@ -495,6 +512,7 @@ public final class EditorialP5PilotExecutionBoundaryTest {
         private final Set<String> inFlight = new java.util.HashSet<>();
 
         @Override public Claim claim(String attemptIdentity) {
+            if (recoveryRequired) return Claim.RECOVERY_REQUIRED;
             if (committed.containsKey(attemptIdentity)) return Claim.ALREADY_COMMITTED;
             if (!inFlight.add(attemptIdentity)) return Claim.IN_FLIGHT;
             return Claim.ACQUIRED;
@@ -515,5 +533,6 @@ public final class EditorialP5PilotExecutionBoundaryTest {
         }
 
         private boolean failCommit;
+        private boolean recoveryRequired;
     }
 }
