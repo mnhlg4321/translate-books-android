@@ -1,18 +1,18 @@
 # Build State
 
-- Status: P5C_LIVE_AUTHORIZED_ATTEMPT / P5C_PILOT_STOPPED_WITH_PROVIDER_ERROR / STOP_PROVIDER_TIMEOUT / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5C_LIVE_AUTHORIZED_ATTEMPT / P5C_PILOT_STOPPED_WITH_PROVIDER_ERROR / STOP_PROVIDER_TIMEOUT / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
 - Active authority: V5-SAFE.4.1.3-FULL; canonical plan `EDITORIAL_RECOVERY_V4_18.md`.
 - Workspace: D:\App Translate Books\App Translate Books-translation-profile.
 - Branch: feature/v4.18.
-- Current commit baseline: 68db245 test(editorial): size P5C pilot budget for locked authorities, the implementation/evidence baseline immediately before the recovery-inspection test and live-stop documentation; not self-referential.
+- Current commit baseline: e5733cf docs(editorial): record authorized P5C provider stop, the exact starting commit for P5D documentation hygiene; not self-referential.
 - Last validation package used: 4.17-dev.16 / Android versionCode 184, archived and used on device `15e84958`; focused/full validation passed. The device was then restored to the immutable 4.17-dev.1 / code169 baseline by uninstall/reinstall, which removed validation-package data.
-- Current phase: P5C exact-binding fake E2E and persistent real-binding setup are complete. One explicitly authorized OpenRouter RAW request was dispatched for the selected binding and stopped with `RETRY_PROVIDER_CALL_FAILED` after 179728 ms; no response arrived, RECONCILE was not called, and no report/receipt was committed. Editorial execution/certification remain disabled.
+- Current phase: P5C live attempt is closed as an unresolved provider stop. P5D.0 documentation baseline is consistent; P5D.1-P5D.3 must remain read-only/no-provider work until recovery evidence and lifecycle hardening are complete. Editorial execution/certification remain disabled.
 
 ## Source and authority identity
 
 - P0/P1 checkpoint: aef7da1.
 - P2/P3A incoming checkpoint: b5589bf5f2b3b60942841950c5877e6f8281f7ff.
-- P4 starting checkpoint: 270759e5589b2e9101c3e1a5a6b84cff12ec2fd3.
+- P4 starting checkpoint: 270759e5589b2e9101c1e3a5a6b84cff12ec2fd3.
 - Canonical ZIP: `app/src/androidTest/assets/editorial-p2/v5-safe-4.1.3-full-canonical.zip`; 23,638 bytes; SHA-256 `B9C65DBEB9D4C4ED46B67D5EC28FF6252CC2BDC4B63BC902904612987EC58987`.
 - Java control ZIP: `app/src/androidTest/assets/editorial-p2/v5-safe-4.1.3-full-java-control.zip`; 23,418 bytes; SHA-256 `44F99423292ADA15680220165AF50430532D847E155F93C1B15D9F173D4609A5`.
 - Project authority: 9,485 bytes; SHA-256 `1727AE173F2CFD530EB818CAE69E0D3FADC59C35E3B5B6D478704A02091A26AD`.
@@ -48,7 +48,7 @@
 - Full device instrumentation: `117/117 PASS`, `0` failures; real API remained opt-in/skipped. Five tests were added by P5C relative to the previous `112` total. The first run also exposed seven stale v19 assertions; only test expectations were corrected to current additive schema v20 in `744349e` and `61ba760`.
 - Host engine suite: `178/178 PASS` (baseline `163`; P5 added `15` tests).
 - App unit suite: `211/211 PASS` per debug/release/benchmark variant; aggregate `:app:test` `633/633 PASS`.
-- P5C validation APK: `artifacts/builds/v4.17-dev.13/build-20260904-202447/TranslateBooks-v4.17-dev.13-code181.apk`, SHA-256 `807D2E0C28BF3F486845562FFEE05B039FBA6D09AFDA566618C6C892979CD0F2`; matching backup archive.
+- Previous P5C validation APK: `artifacts/builds/v4.17-dev.13/build-20260904-202447/TranslateBooks-v4.17-dev.13-code181.apk`, SHA-256 `807D2E0C28BF3F486845562FFEE05B039FBA6D09AFDA566618C6C892979CD0F2`; retained as historical evidence with matching backup archive.
 - External qualification `TESTS/test_full_release.ps1`: `306 PASS / 0 FAIL`.
 - Profile and canonical pack/authority verification: PASS. Fake provider calls: `2` in isolated app acceptance. The authorized live boundary dispatched one RAW request and received no response/usage receipt; billing is unknown. Code169 baseline APK SHA-256 is `3C3AAEF1A7D47F39A7B5A5FF8AEDF77347D255AF728B908180AA142CA2B276D1` in both artifact and backup; the device is restored to that baseline. The uninstall/reinstall procedure removed validation-package data because `pm clear` is not accepted on this device.
 - `git diff --check`: PASS at closure.
@@ -59,10 +59,10 @@
 
 ## Validation artifact
 
-- Latest validation APK: `artifacts/builds/v4.17-dev.13/build-20260904-202447/TranslateBooks-v4.17-dev.13-code181.apk`.
-- Backup mirror: `backup/builds/v4.17-dev.13/build-20260904-202447/TranslateBooks-v4.17-dev.13-code181.apk`.
-- APK SHA-256: `807D2E0C28BF3F486845562FFEE05B039FBA6D09AFDA566618C6C892979CD0F2`.
-- Build event source snapshot: `61ba7602005522a8c93f2b4335fe6bea0214a367`; it contains the P5C fake E2E implementation/test baseline.
+- Latest validation APK: `artifacts/builds/v4.17-dev.16/build-20260908-211548/TranslateBooks-v4.17-dev.16-code184.apk`.
+- Backup mirror: `backup/builds/v4.17-dev.16/build-20260908-211548/TranslateBooks-v4.17-dev.16-code184.apk`.
+- APK SHA-256: `AA69A6EDD8A7B11D8488FC431B71097515FE6BD738710C970F6E4A8F54150797`.
+- Build event source snapshot: `67e7ee919a1a049e83faf481ca73ff08f0c14880`; this code184 artifact predates the later live attempt and remains validation-only.
 - This is a validation APK, not a V4.18 release build.
 - Historical P4 correction validation remains immutable and is recorded in
   `docs/P4_VALIDATION_REPORT.md` as code176; it is not the current validation
@@ -97,12 +97,12 @@ workspace `D:\App Translate Books` was not modified.
 
 ## Next step
 
-Inspect the OpenRouter account for the unknown status of the one dispatched
-request before considering any retry. If a retry is explicitly authorized,
-create a new exact-phase authorization and rerun only after the external-call
-state is resolved; never reuse the consumed authorization or automatically
-call RECONCILE. Keep `EXECUTION_DISABLED / NOT_CERTIFIED /
-NOT_GLOBALLY_RUNNABLE`; do not open L2/L3, auto-activate, auto-rebind or
-certify from fake evidence or from this provider stop.
+Perform the bounded read-only OpenRouter Activity audit for the 2026-09-08
+request; do not enable input/output logging and do not call the provider.
+Record `EXTERNAL_*` classification or retain `EXTERNAL_STATE_REMAINS_UNKNOWN`.
+Only after P5D.1-P5D.4 pass may a new exact-phase RAW authorization be
+considered. Keep `EXECUTION_DISABLED / NOT_CERTIFIED /
+NOT_GLOBALLY_RUNNABLE`; do not reuse the consumed authorization, call
+RECONCILE automatically, auto-activate, auto-rebind or certify.
 
 This file is current-only; Git history preserves prior state.

@@ -28,7 +28,7 @@ Trạng thái chốt:
 |---|---|
 | Workspace | `D:\App Translate Books\App Translate Books-translation-profile` |
 | Branch | `feature/v4.18` |
-| P4 starting commit | `270759e5589b2e9101c3e1a5a6b84cff12ec2fd3` |
+| P4 starting commit | `270759e5589b2e9101c1e3a5a6b84cff12ec2fd3` |
 | P4 implementation/test head before original docs closure | `76348b38174cdc6e25ce4ce19000b75984d44f75` |
 | Original P4 documentation closure | `8d676c336d8011ab1534d1d5528cb52171c11bbf` |
 | Post-closure P4 producer correction | `364faa42e7ed6bb08b75dda7fdc7335b8f931df7` |

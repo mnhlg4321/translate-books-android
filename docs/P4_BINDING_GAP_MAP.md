@@ -3,7 +3,7 @@
 Ngày cập nhật: `2026-09-04` (+07:00)
 
 Baseline vào P4: branch `feature/v4.18`, commit
-`270759e5589b2e9101c3e1a5a6b84cff12ec2fd3`, app `4.17-dev.1/code169`.
+`270759e5589b2e9101c1e3a5a6b84cff12ec2fd3`, app `4.17-dev.1/code169`.
 
 Quy ước: kết luận gap chỉ dựa trên test hoặc bằng chứng source cụ thể.
 Các gap dưới đây là gap CODE169 trước P4; cột kết quả ghi rõ P4 đã xử lý đến

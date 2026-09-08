@@ -1,4 +1,4 @@
-# P5C.0 — Documentation baseline consistency
+# P5C.0 — Documentation baseline consistency (historical)
 
 Ngày kiểm tra: `2026-09-04` (+07:00)
 
@@ -35,7 +35,7 @@ resolved with `git rev-parse` and recorded without replacing historical facts:
 
 | Role | Commit |
 |---|---|
-| P4 source start | `270759e5589b2e9101c3e1a5a6b84cff12ec2fd3` |
+| P4 source start | `270759e5589b2e9101c1e3a5a6b84cff12ec2fd3` |
 | P4 implementation/test head before original docs closure | `76348b38174cdc6e25ce4ce19000b75984d44f75` |
 | Original P4 docs closure | `8d676c336d8011ab1534d1d5528cb52171c11bbf` |
 | P4 producer correction | `364faa42e7ed6bb08b75dda7fdc7335b8f931df7` |
@@ -47,10 +47,11 @@ and starting docs state `44e5a659f23da1314cd6294a87d1cc44d1a58686`.
 
 ## Artifact and count correction
 
-`BUILD_STATE.md`, `WORKSPACE_SNAPSHOT.md` and the V4.18 checklist now identify
-code177 as the current/latest validation artifact. Code176 remains explicitly
-labeled historical P4 correction evidence in `docs/P4_VALIDATION_REPORT.md`;
-it is not presented as the current artifact.
+At the time of this historical report, `BUILD_STATE.md`,
+`WORKSPACE_SNAPSHOT.md` and the V4.18 checklist identified code177 as the
+current validation artifact. The current/latest artifact is now code184 and is
+recorded in the current state files; code176 and code181 remain explicitly
+labeled historical P4/P5C evidence.
 
 The device count is normalized everywhere to:
 
