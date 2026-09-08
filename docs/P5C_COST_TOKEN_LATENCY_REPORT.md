@@ -1,18 +1,32 @@
 # P5C — Cost, token and latency report
 
-Ngày ghi nhận: `2026-09-07` (+07:00)
+Ngày ghi nhận: `2026-09-08` (+07:00)
 
 ## Live pilot
 
 ```text
-Live calls: 0
-Input/output/total tokens: N/A
-Estimated/actual cost: N/A
-Provider latency: N/A
+Live provider requests dispatched: 1
+RAW primary calls: 1
+RAW schema-repair calls: 0
+RAW automatic network retries: 0
+RECONCILE calls: 0 (not run after RAW uncertainty)
+Input/output/total tokens: not reported (no provider response)
+Estimated/actual cost: actual billing unknown; do not infer zero
+Observed provider-boundary latency: 179728 ms
+Typed result: RETRY_PROVIDER_CALL_FAILED
 ```
 
-No live authorization or provider response exists, so no live metric is
-fabricated.
+The live request was authorized and dispatched, but no response or usage
+receipt was returned. The app therefore recorded a typed provider stop and
+durable recovery state without committing a report or receipt. The provider
+account must be checked before any future retry.
+
+The authorized ceiling was 100000 input tokens and 2048 output tokens per
+phase, with one primary call and one schema-only repair maximum per phase,
+zero automatic network retries, and a USD 0.10 total pilot cap. Using the
+OpenRouter public price for `openai/gpt-5.6-luna` ([model pricing page](https://openrouter.ai/openai/gpt-5.6-luna-20260709), USD 0.20/M input and USD 1.20/M output), the two-phase token ceiling is approximately USD 0.0449152;
+this is only a preflight ceiling, not a statement about the unknown billing
+for the timed-out request.
 
 ## Fake acceptance metrics
 
@@ -33,7 +47,7 @@ reported as live performance evidence.
 
 ## Budget policy retained
 
-The fake authorization uses bounded values in the test fixture and permits one
-primary semantic call plus one schema-repair call per phase, with zero
-automatic network retries. The real authorization block must provide its own
-limits before any external call.
+The live authorization used the same bounded call policy: one primary semantic
+call plus one schema-repair call per phase, with zero automatic network
+retries. No automatic retry or second semantic call was made after the
+provider stop.

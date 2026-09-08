@@ -1,6 +1,16 @@
 # P5C — Recovery and idempotency report
 
-Ngày ghi nhận: `2026-09-07` (+07:00)
+Ngày ghi nhận: `2026-09-08` (+07:00)
+
+## Authorized live boundary
+
+| Boundary | Observed behavior | Evidence |
+|---|---|---|
+| RAW provider dispatch | Exactly one request, no automatic retry | `P5C_LIVE_RESULT`, `providerCalls=1` |
+| Provider no-response/timeout | Typed `RETRY_PROVIDER_CALL_FAILED` after 179,728 ms | `P5C_LIVE_PHASE`, `primaryCalls=1`, `finishReason=NOT_CALLED` |
+| RECONCILE after RAW uncertainty | Not dispatched | Live result `reconcile=NOT_RUN` |
+| Durable recovery | `RECOVERY_REQUIRED`, no response/report/receipt bytes | `EditorialP5CLiveRecoveryInspectionInstrumentedTest` `1/1` |
+| Duplicate external call | Not attempted automatically | Runner exited after the typed stop |
 
 ## Verified in app-bound fake E2E
 
@@ -17,13 +27,12 @@ Ngày ghi nhận: `2026-09-07` (+07:00)
 
 ## Not yet verified
 
-The following are intentionally not claimed because there was no live external
-call:
+The following remain intentionally unclaimed:
 
 - process death while a real provider request is pending;
-- timeout with external call state unknown;
+- final resolution of the timeout's external call state;
 - cancellation during a real provider call;
-- provider rejection/network failure from a real adapter;
+- a provider response or provider rejection receipt from a real adapter;
 - live response truncation or one schema-only repair;
 - real token/cost/latency and egress measurement.
 
@@ -33,7 +42,8 @@ separate from live evidence.
 
 ## Safety result
 
-No duplicate semantic call was made in the fake replay. No partial final
+No duplicate semantic call was made after the live timeout. No partial final
 report/receipt was accepted, no chapter state was certified, and no project was
-rebound. All P5C results retain `executionAllowed=false` and
-`NOT_CERTIFIED`.
+rebound. The live attempt retains `executionAllowed=false` and
+`NOT_CERTIFIED`; a future retry requires explicit recovery of the external
+provider state and a new authorization.

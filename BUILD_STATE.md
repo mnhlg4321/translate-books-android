@@ -1,12 +1,12 @@
 # Build State
 
-- Status: P5C_FAKE_E2E_PASS / P5_DRY_RUN_ONLY / LIVE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Status: P5C_LIVE_AUTHORIZED_ATTEMPT / P5C_PILOT_STOPPED_WITH_PROVIDER_ERROR / STOP_PROVIDER_TIMEOUT / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
 - Active authority: V5-SAFE.4.1.3-FULL; canonical plan `EDITORIAL_RECOVERY_V4_18.md`.
 - Workspace: D:\App Translate Books\App Translate Books-translation-profile.
 - Branch: feature/v4.18.
-- Current commit baseline: 67e7ee9 feat(editorial): add bounded OpenRouter P5C provider boundary, the exact implementation/evidence baseline immediately before the opt-in live runner and its focused test wiring; not self-referential.
-- Last validation package used: 4.17-dev.16 / Android versionCode 184, archived and installed on device `15e84958`; host adapter tests and full device instrumentation passed, and this validation install has not made a provider call.
-- Current phase: P5C exact-binding fake E2E and persistent real-binding setup are complete; bounded OpenRouter request construction, app-owned identity propagation, strict response parsing and an opt-in two-phase live runner are present. Live authorization/preflight confirmation is still required. Editorial execution, provider/API calls and certification remain disabled.
+- Current commit baseline: 68db245 test(editorial): size P5C pilot budget for locked authorities, the implementation/evidence baseline immediately before the recovery-inspection test and live-stop documentation; not self-referential.
+- Last validation package used: 4.17-dev.16 / Android versionCode 184, archived and used on device `15e84958`; focused/full validation passed. The device was then restored to the immutable 4.17-dev.1 / code169 baseline by uninstall/reinstall, which removed validation-package data.
+- Current phase: P5C exact-binding fake E2E and persistent real-binding setup are complete. One explicitly authorized OpenRouter RAW request was dispatched for the selected binding and stopped with `RETRY_PROVIDER_CALL_FAILED` after 179728 ms; no response arrived, RECONCILE was not called, and no report/receipt was committed. Editorial execution/certification remain disabled.
 
 ## Source and authority identity
 
@@ -50,11 +50,12 @@
 - App unit suite: `211/211 PASS` per debug/release/benchmark variant; aggregate `:app:test` `633/633 PASS`.
 - P5C validation APK: `artifacts/builds/v4.17-dev.13/build-20260904-202447/TranslateBooks-v4.17-dev.13-code181.apk`, SHA-256 `807D2E0C28BF3F486845562FFEE05B039FBA6D09AFDA566618C6C892979CD0F2`; matching backup archive.
 - External qualification `TESTS/test_full_release.ps1`: `306 PASS / 0 FAIL`.
-- Profile and canonical pack/authority verification: PASS. Live provider/API calls: `0`; fake provider calls: `2` in isolated app acceptance. Code169 baseline APK SHA-256 is `3C3AAEF1A7D47F39A7B5A5FF8AEDF77347D255AF728B908180AA142CA2B276D1` in both artifact and backup; device restore was verified after ADB authorization. The uninstall/reinstall procedure removed validation-package data because `pm clear` is not accepted on this device.
+- Profile and canonical pack/authority verification: PASS. Fake provider calls: `2` in isolated app acceptance. The authorized live boundary dispatched one RAW request and received no response/usage receipt; billing is unknown. Code169 baseline APK SHA-256 is `3C3AAEF1A7D47F39A7B5A5FF8AEDF77347D255AF728B908180AA142CA2B276D1` in both artifact and backup; the device is restored to that baseline. The uninstall/reinstall procedure removed validation-package data because `pm clear` is not accepted on this device.
 - `git diff --check`: PASS at closure.
 
 - Device setup preparation: canonical 4.1.3 was imported through the production pack picker on code183 and reported `DATA_COMPATIBLE`; the persistent setup test pinned the normalized app-import bytes and read back the exact P4 tuple for chapter `001`. Source files remain outside Git under the user-provided MERCEDES VOL 4 folder.
 - Code184 focused device regression: setup `1/1`, P5C fake E2E `5/5`, P1 `7/7`, P2 `3/3`, P3B `1/1`, P4 binding `4/4`, process-death `2/2`; full instrumentation `118/118 PASS` with the opt-in real API test skipped. Host engine `179/179 PASS`; app unit `214/214 PASS` per debug/release/benchmark variant, aggregate `642/642 PASS`.
+- Authorized live boundary: one OpenRouter RAW request, `providerCalls=1`, no automatic retry/repair, no response or usage receipt, typed `RETRY_PROVIDER_CALL_FAILED`, and durable `RECOVERY_REQUIRED`; recovery inspection `1/1` confirmed zero report/receipt bytes. Provider billing/acceptance is unknown and no new live call is authorized by this record.
 
 ## Validation artifact
 
@@ -72,14 +73,15 @@
 P4 production changes are limited to the P4 binding/selection/service/DAO
 owners, the additive v19 migration, read-only project projection/setup UI and
 the engine P4 value types. P5C production changes are limited to the additive
-v20 durable attempt owner, app-bound exact-binding coordinator and the existing
-engine pilot boundary; no provider adapter, credential wiring, UI activation or
-certification path was added. Test changes are AndroidTest/engine-test plus
-stale current-schema assertions only.
-There was no provider/API wiring, execution protocol, certification state,
-authority byte, canonical ZIP, trusted profile resource, build metadata or
-legacy workflow rewrite. The original workspace `D:\App Translate Books` was
-not modified.
+v20 durable attempt owner, app-bound exact-binding coordinator, the existing
+engine pilot boundary and the bounded OpenRouter adapter/request context. No
+global activation, certification path, provider framework, UI activation or
+legacy workflow rewrite was added. Test changes are AndroidTest/engine-test
+plus stale current-schema assertions only.
+No authority byte, canonical ZIP, trusted profile resource, database schema
+beyond the already-approved additive v20 attempt owner, project binding, build
+metadata or legacy workflow was changed during the live attempt. The original
+workspace `D:\App Translate Books` was not modified.
 
 ## Known limitations
 
@@ -89,17 +91,18 @@ not modified.
   this is not source certification and is not an execution UI.
 - `DATA_COMPATIBLE`, selectable and `PILOT_SETUP_READY` do not mean runnable.
 - Bootstrap profile v1 remains loadable and non-executable.
-- P5 live authorization is not present; no real chapter/provider call is permitted. Dry-run/fake-provider contract work may proceed only with external execution disabled.
-- P5C proves app-bound fake attempt persistence and idempotent RAW→RECONCILE replay, but does not prove live provider behavior, external-call cancellation/process-death handling, data-egress approval, real token/cost/latency or a real chapter `REPORT_L1`/receipt commit. The supplied two-phase authorization block is still required before any provider access.
-- Device currently runs validation `4.17-dev.16/code184`; this is not a permission to run provider work. The full suite leaves settings on a test provider, so no live call is permitted until the user enters the real OpenRouter credential through app Settings. The immutable baseline remains `4.17-dev.1/code169` and will be restored after validation.
+- The single authorized RAW request stopped at the provider boundary with no response. External call state and billing remain unknown; do not retry automatically. A future retry requires provider-account inspection, explicit recovery handling and a new authorization.
+- P5C proves app-bound fake attempt persistence and idempotent RAW→RECONCILE replay, but does not prove a live response, real token/cost usage, live cancellation/process-death behavior, or a real chapter `REPORT_L1`/receipt commit. RECONCILE and final L1 acceptance remain unproven.
+- Device was restored to immutable `4.17-dev.1/code169` after validation by uninstall/reinstall; validation-package data was removed because `pm clear` was rejected. The latest validation artifact remains code184 in artifacts/backup.
 
 ## Next step
 
-Enter the real OpenRouter credential privately through app Settings (never in
-chat/Git/logs), then verify provider/endpoint and produce the final live
-preflight. Obtain the complete two-phase `P5 PILOT AUTHORIZATION` block and a
-separate explicit live-call confirmation before any OpenRouter call. Keep
-`EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE`; do not open L2/L3,
-auto-activate, auto-rebind or certify from fake evidence.
+Inspect the OpenRouter account for the unknown status of the one dispatched
+request before considering any retry. If a retry is explicitly authorized,
+create a new exact-phase authorization and rerun only after the external-call
+state is resolved; never reuse the consumed authorization or automatically
+call RECONCILE. Keep `EXECUTION_DISABLED / NOT_CERTIFIED /
+NOT_GLOBALLY_RUNNABLE`; do not open L2/L3, auto-activate, auto-rebind or
+certify from fake evidence or from this provider stop.
 
 This file is current-only; Git history preserves prior state.
