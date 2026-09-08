@@ -267,6 +267,7 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
                 lifecycle.stage());
         assertEquals(321L, lifecycle.requestBodyBytes());
         assertEquals(200, lifecycle.httpStatus());
+        assertEquals(30L, lifecycle.elapsedMillis());
         assertEquals("generation-redacted", lifecycle.generationId());
         assertEquals("provider-response", lifecycle.providerResponseId());
         assertFalse(columnExists("editorial_p5d_network_lifecycle", "response_body"));
