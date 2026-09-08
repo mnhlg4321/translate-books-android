@@ -54,6 +54,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
 
 /**
  * P5C app-bound fake E2E. It exercises the persisted P4 binding and the
@@ -166,6 +167,48 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
         assertEquals(0, afterRestart.providerCalls());
         assertEquals(0, noCallProvider.calls);
         assertEquals(2, new EditorialP5CAttemptStore(database).count());
+    }
+
+    @Test public void exactBindingRunsRawOnlyAndStopsBeforeReconcile() throws Exception {
+        BindingFixture fixture = createBoundChapter();
+        EditorialP5PilotRequest rawRequest = request(fixture,
+                EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY,
+                fixture.binding.runDeclarationIdentity());
+        FakeProvider provider = new FakeProvider(Map.of(
+                "L1_RAW_DISCOVERY", output(rawRequest)));
+
+        EditorialP5CExactBindingExecution.Result result = new EditorialP5CExactBindingExecution(
+                database, storage).executeRaw(fixture.projectId, SELECTOR, CHAPTER_KEY,
+                authorization(fixture.binding, "auth-raw-only", "L1_RAW_DISCOVERY"), provider);
+
+        assertEquals(EditorialP5CExactBindingExecution.Status.COMMITTED, result.status());
+        assertEquals("P5C_RAW_COMMITTED", result.reasonCode());
+        assertEquals(EditorialP5PilotResult.Outcome.COMMITTED, result.rawResult().outcome());
+        assertNull(result.reconcileResult());
+        assertEquals(1, result.providerCalls());
+        assertEquals(1, provider.calls);
+        assertEquals("L1_RAW_DISCOVERY", provider.requests.get(0).phase());
+        assertEquals(Set.of(EditorialSafe4Contract.RAW, EditorialSafe4Contract.GLOSSARY),
+                provider.requests.get(0).visibleSources().keySet());
+        EditorialP5CAttemptStore.AttemptRecord record = new EditorialP5CAttemptStore(database)
+                .findRecord(result.rawResult().committedResult().attemptIdentity()).orElseThrow();
+        assertEquals("COMMITTED", record.status());
+        assertArrayEquals(result.rawResult().committedResult().reportBytes(), record.reportBytes());
+        assertArrayEquals(result.rawResult().committedResult().receiptBytes(), record.receiptBytes());
+
+        database.close();
+        database = new TranslationRepository(context, databaseName);
+        FakeProvider noCallProvider = new FakeProvider(Map.of());
+        EditorialP5CExactBindingExecution.Result afterRestart = new EditorialP5CExactBindingExecution(
+                database, storage).executeRaw(fixture.projectId, SELECTOR, CHAPTER_KEY,
+                authorization(fixture.binding, "auth-raw-only-replay", "L1_RAW_DISCOVERY"), noCallProvider);
+        assertEquals(EditorialP5CExactBindingExecution.Status.ALREADY_COMMITTED,
+                afterRestart.status());
+        assertEquals("P5C_RAW_ALREADY_COMMITTED", afterRestart.reasonCode());
+        assertNull(afterRestart.reconcileResult());
+        assertEquals(0, afterRestart.providerCalls());
+        assertEquals(0, noCallProvider.calls);
+        assertEquals(1, new EditorialP5CAttemptStore(database).count());
     }
 
     @Test public void incompleteAuthorizationStopsBeforeProvider() throws Exception {

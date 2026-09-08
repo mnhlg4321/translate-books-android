@@ -172,6 +172,82 @@ public final class EditorialP5CExactBindingExecution {
         }
     }
 
+    /**
+     * Executes only the explicitly authorized RAW discovery phase.  This is
+     * intentionally a separate entry point so a caller cannot satisfy the
+     * two-phase API with an invented RECONCILE authorization.  A committed RAW
+     * result is returned only after its durable predecessor has been read back;
+     * this method never constructs or invokes a RECONCILE request.
+     */
+    public Result executeRaw(long projectId, String attemptRequestSelector, String chapterKey,
+                             EditorialP5PilotAuthorization rawAuthorization,
+                             EditorialP5PilotProvider provider) {
+        AtomicInteger providerCalls = new AtomicInteger();
+        try {
+            if (projectId <= 0 || blank(attemptRequestSelector) || blank(chapterKey)) {
+                return stop("P5C_EXACT_BINDING_INPUT_INVALID", providerCalls.get());
+            }
+            if (rawAuthorization == null) {
+                return stop("LIVE_AUTHORIZATION_INCOMPLETE", providerCalls.get());
+            }
+            if (provider == null) return stop("LIVE_PROVIDER_NOT_CONFIGURED", providerCalls.get());
+            EditorialP4Binding binding = bindings.findByAttemptRequestSelector(
+                    attemptRequestSelector).orElse(null);
+            if (binding == null || projectIdFor(binding) != projectId) {
+                return stop("P5C_EXACT_BINDING_NOT_FOUND", providerCalls.get());
+            }
+            if (!chapterExists(projectId, chapterKey)) {
+                return stop("INPUT_CHAPTER_NOT_FOUND", providerCalls.get());
+            }
+            if (!authorizationMatches(rawAuthorization, binding, chapterKey,
+                    "L1_RAW_DISCOVERY")) {
+                return stop("LIVE_AUTHORIZATION_INCOMPLETE", providerCalls.get());
+            }
+            List<EditorialP4InputSource> currentSources = currentSources(projectId, chapterKey, binding);
+            EditorialP4ResumeResult resume = new EditorialP4BindingTransactionService(database, storage)
+                    .resumeProject(projectId, attemptRequestSelector, currentSources);
+            if (resume.code() != EditorialP4ResumeResult.Code.RESTORED
+                    || resume.binding() == null
+                    || !resume.binding().bindingIdentity().equals(binding.bindingIdentity())) {
+                return stop("STOP_SOURCE_DRIFT", providerCalls.get());
+            }
+
+            EditorialPackManifest manifest = resolveManifest(binding);
+            EditorialP5PilotRequest.PackAuthority authority = resolveAuthority(binding, manifest);
+            List<EditorialP5PilotRequest.SourceBytes> sources = sourceBytes(binding, currentSources);
+            List<String> stableAnchors = List.of("chapter:" + chapterKey);
+            List<String> populationIds = List.of("population:" + chapterKey);
+            EditorialP5PilotRequest rawRequest = new EditorialP5PilotRequest(binding, manifest,
+                    authority, chapterKey, EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY,
+                    sources, binding.runDeclarationIdentity(), stableAnchors, populationIds,
+                    true, boundedOutputTokens(rawAuthorization));
+
+            EditorialP5CAttemptStore attemptStore = new EditorialP5CAttemptStore(database);
+            EditorialP5PilotProvider countedProvider = request -> {
+                providerCalls.incrementAndGet();
+                return provider.call(request);
+            };
+            EditorialP5PilotResult rawResult = engine.execute(rawRequest, rawAuthorization,
+                    countedProvider, attemptStore);
+            if (!committedLike(rawResult)) {
+                String reason = rawResult == null ? "P5C_RAW_RESULT_MISSING" : rawResult.reasonCode();
+                return new Result(Status.STOP, reason, rawResult, null,
+                        providerCalls.get(), false, "NOT_CERTIFIED");
+            }
+            if (attemptStore.findCommitted(rawResult.committedResult().attemptIdentity()).isEmpty()) {
+                return stop("RETRY_RAW_PREDECESSOR_READBACK_FAILED", providerCalls.get());
+            }
+            Status status = rawResult.outcome() == EditorialP5PilotResult.Outcome.ALREADY_COMMITTED
+                    ? Status.ALREADY_COMMITTED : Status.COMMITTED;
+            return new Result(status,
+                    status == Status.ALREADY_COMMITTED
+                            ? "P5C_RAW_ALREADY_COMMITTED" : "P5C_RAW_COMMITTED",
+                    rawResult, null, providerCalls.get(), false, "NOT_CERTIFIED");
+        } catch (IOException | RuntimeException error) {
+            return stop(errorCode(error), providerCalls.get());
+        }
+    }
+
     private EditorialPackManifest resolveManifest(EditorialP4Binding binding) {
         EditorialPackSelectionCandidate candidate = new EditorialPackSelectionPolicy(database, storage)
                 .resolve(binding.packId(), binding.packVersion()).orElseThrow(
