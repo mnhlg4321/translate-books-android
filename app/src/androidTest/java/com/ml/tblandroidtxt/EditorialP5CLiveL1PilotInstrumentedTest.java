@@ -104,7 +104,7 @@ public final class EditorialP5CLiveL1PilotInstrumentedTest {
                 binding.bindingIdentity(), binding.runDeclarationIdentity(),
                 binding.canonicalPackHash(), binding.canonicalProfileHash(),
                 binding.compatibilityEvaluationId(), CHAPTER_KEY, phase, PROVIDER, MODEL,
-                endpointAccountFingerprint, 1, 1, 0, 50000, 2048, 50000,
+                endpointAccountFingerprint, 1, 1, 0, 100000, 2048, 100000,
                 TOTAL_COST_PER_PHASE, PILOT_WINDOW_MILLIS, true, false, false,
                 "HASH_ONLY", "USER", issuedAt, expiresAt, true);
     }
