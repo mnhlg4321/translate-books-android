@@ -15,6 +15,10 @@ import org.json.JSONObject;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.io.InterruptedIOException;
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,6 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.CancellationException;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLHandshakeException;
 
 /**
  * The one P5C provider adapter for the already supported OpenRouter client.
@@ -33,12 +40,25 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
 
     private final AppSettings settings;
     private final int maximumOutputTokens;
+    private final NetworkLifecycleRecorder lifecycleRecorder;
     private final Map<String, EditorialP5L1Output> parsedOutputs = new HashMap<>();
 
     public OpenRouterEditorialP5PilotProvider(AppSettings settings, int maximumOutputTokens) {
+        this(settings, maximumOutputTokens, null);
+    }
+
+    /** Optional app-owned recorder for redacted P5D lifecycle evidence. */
+    public OpenRouterEditorialP5PilotProvider(AppSettings settings, int maximumOutputTokens,
+                                              NetworkLifecycleRecorder lifecycleRecorder) {
         if (settings == null) throw new IllegalArgumentException("OpenRouter settings are required");
         this.settings = settings.copy();
         this.maximumOutputTokens = Math.max(128, maximumOutputTokens);
+        this.lifecycleRecorder = lifecycleRecorder;
+    }
+
+    @FunctionalInterface
+    public interface NetworkLifecycleRecorder {
+        void record(String attemptIdentity, EditorialP5CAttemptStore.NetworkLifecycleEvent event);
     }
 
     public boolean configured() {
@@ -56,8 +76,15 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         if (!configured()) throw new IllegalStateException("OPENROUTER_CONFIGURATION_INCOMPLETE");
 
         PromptPair prompt = buildPrompt(request);
-        OpenAICompatibleClient.ChatResult result = OpenAICompatibleClient.chatWithUsage(
-                settings, prompt, maximumOutputTokens, request.attemptIdentity());
+        OpenRouterLifecycleObserver lifecycle = new OpenRouterLifecycleObserver(
+                request.attemptIdentity(), lifecycleRecorder);
+        OpenAICompatibleClient.ChatResult result;
+        try {
+            result = OpenAICompatibleClient.chatWithUsage(settings, prompt, maximumOutputTokens,
+                    request.attemptIdentity(), lifecycle);
+        } catch (Exception error) {
+            throw new ProviderFailure(failureReason(error, lifecycle), error);
+        }
         byte[] responseBytes = result.content.getBytes(StandardCharsets.UTF_8);
         EditorialP5L1Output output = null;
         boolean schemaValid = false;
@@ -79,6 +106,101 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
                 blank(result.finishReason) ? "stop" : result.finishReason,
                 complete, result.promptTokens, result.completionTokens, result.totalTokens,
                 cost, output, schemaValid);
+    }
+
+    private static String failureReason(Throwable error, OpenRouterLifecycleObserver lifecycle) {
+        Throwable root = error;
+        while (root.getCause() != null && root != root.getCause()) root = root.getCause();
+        if (lifecycle.cancelled || root instanceof CancellationException) {
+            return "RETRY_PROVIDER_CANCELLED";
+        }
+        if (root instanceof ApiHttpException) return "RETRY_PROVIDER_HTTP_ERROR";
+        if (root instanceof UnknownHostException) return "RETRY_PROVIDER_DNS_FAILED";
+        if (root instanceof SSLHandshakeException) return "RETRY_PROVIDER_TLS_FAILED";
+        if (root instanceof SSLException) return "RETRY_PROVIDER_TLS_FAILED";
+        if (root instanceof ConnectException) return "RETRY_PROVIDER_CONNECT_FAILED";
+        if (root instanceof SocketTimeoutException || root instanceof InterruptedIOException) {
+            if (lifecycle.bodyStarted && !lifecycle.bodySent) {
+                return "RETRY_PROVIDER_WRITE_TIMEOUT";
+            }
+            if (lifecycle.bodySent && !lifecycle.headersReceived) {
+                return "RETRY_PROVIDER_READ_TIMEOUT";
+            }
+            return "RETRY_PROVIDER_CALL_TIMEOUT";
+        }
+        if (root instanceof JSONException || lifecycle.bodyComplete) {
+            return "RETRY_PROVIDER_RESPONSE_PARSE_FAILED";
+        }
+        return "RETRY_PROVIDER_CALL_FAILED_UNKNOWN";
+    }
+
+    private static final class OpenRouterLifecycleObserver implements OpenAICompatibleClient.NetworkObserver {
+        private final String attemptIdentity;
+        private final NetworkLifecycleRecorder recorder;
+        private EditorialP5CAttemptStore.LifecycleStage lastStage;
+        private boolean bodyStarted;
+        private boolean bodySent;
+        private boolean headersReceived;
+        private boolean bodyComplete;
+        private boolean cancelled;
+        private long requestBodyBytes;
+        private int httpStatus = -1;
+        private String generationId = "";
+        private String providerResponseId = "";
+
+        private OpenRouterLifecycleObserver(String attemptIdentity,
+                                             NetworkLifecycleRecorder recorder) {
+            this.attemptIdentity = attemptIdentity;
+            this.recorder = recorder;
+        }
+
+        @Override public void onCallCreated() {
+            emit(EditorialP5CAttemptStore.LifecycleStage.CALL_CREATED, "", 0L);
+        }
+
+        @Override public void onRequestBodyStarted() {
+            bodyStarted = true;
+            emit(EditorialP5CAttemptStore.LifecycleStage.REQUEST_BODY_STARTED, "", 0L);
+        }
+
+        @Override public void onRequestBodySent(long byteCount) {
+            bodySent = true;
+            requestBodyBytes = Math.max(0L, byteCount);
+            emit(EditorialP5CAttemptStore.LifecycleStage.REQUEST_BODY_SENT, "", 0L);
+        }
+
+        @Override public void onResponseHeaders(int code, String generationId) {
+            headersReceived = true;
+            httpStatus = code;
+            this.generationId = generationId == null ? "" : generationId;
+            emit(EditorialP5CAttemptStore.LifecycleStage.RESPONSE_HEADERS_RECEIVED, "", 0L);
+        }
+
+        @Override public void onResponseBodyComplete(long byteCount, String providerResponseId) {
+            bodyComplete = true;
+            if (providerResponseId != null && !providerResponseId.isBlank()) {
+                this.providerResponseId = providerResponseId;
+            }
+            emit(EditorialP5CAttemptStore.LifecycleStage.RESPONSE_BODY_COMPLETE, "", 0L);
+        }
+
+        @Override public void onCallCancelled(long elapsedMillis) {
+            cancelled = true;
+            emit(EditorialP5CAttemptStore.LifecycleStage.CALL_CANCELLED, "", elapsedMillis);
+        }
+
+        @Override public void onCallFailed(String exceptionClass, long elapsedMillis) {
+            emit(EditorialP5CAttemptStore.LifecycleStage.CALL_FAILED, exceptionClass, elapsedMillis);
+        }
+
+        private void emit(EditorialP5CAttemptStore.LifecycleStage stage,
+                          String exceptionClass, long elapsedMillis) {
+            lastStage = stage;
+            if (recorder != null) recorder.record(attemptIdentity,
+                    new EditorialP5CAttemptStore.NetworkLifecycleEvent(stage,
+                            requestBodyBytes, httpStatus, exceptionClass, elapsedMillis,
+                            generationId, providerResponseId));
+        }
     }
 
     private static BigDecimal reportedOrEstimated(OpenAICompatibleClient.ChatResult result,

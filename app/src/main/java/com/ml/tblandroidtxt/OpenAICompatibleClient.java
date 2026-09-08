@@ -3,6 +3,12 @@ package com.ml.tblandroidtxt;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
+import java.io.InterruptedIOException;
+import java.net.ConnectException;
+import java.net.UnknownHostException;
+import java.net.SocketTimeoutException;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -17,9 +23,14 @@ import okhttp3.EventListener;
 
 public class OpenAICompatibleClient {
     public interface NetworkObserver {
+        default void onCallCreated() {}
         default void onRequestBodyStarted() {}
         default void onRequestBodySent(long byteCount) {}
         default void onResponseHeaders(int code) {}
+        default void onResponseHeaders(int code, String generationId) { onResponseHeaders(code); }
+        default void onResponseBodyComplete(long byteCount, String providerResponseId) {}
+        default void onCallCancelled(long elapsedMillis) {}
+        default void onCallFailed(String exceptionClass, long elapsedMillis) {}
     }
 
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
@@ -87,7 +98,10 @@ public class OpenAICompatibleClient {
                 .eventListener(new EventListener(){
                     @Override public void requestBodyStart(Call call){if(observer!=null)observer.onRequestBodyStarted();}
                     @Override public void requestBodyEnd(Call call,long byteCount){if(observer!=null)observer.onRequestBodySent(byteCount);}
-                    @Override public void responseHeadersEnd(Call call,Response response){if(observer!=null)observer.onResponseHeaders(response.code());}
+                    @Override public void responseHeadersEnd(Call call,Response response){
+                        if(observer!=null)observer.onResponseHeaders(response.code(),
+                                safeHeader(response.header("X-Generation-Id")));
+                    }
                 })
                 .build();
 
@@ -104,13 +118,20 @@ public class OpenAICompatibleClient {
 
         Call call = client.newCall(rb.build());
         ACTIVE_CALL.set(call);
+        if (observer != null) observer.onCallCreated();
+        long startedNanos = System.nanoTime();
         try (Response response = call.execute()) {
             ResponseBody responseBody = response.body();
             String responseText = responseBody == null ? "" : responseBody.string();
+            if (observer != null) observer.onResponseBodyComplete(
+                    responseText.getBytes(StandardCharsets.UTF_8).length, "");
             int code = response.code();
             if (!response.isSuccessful()) throw new ApiHttpException(code, parseRetryAfterMs(response.header("Retry-After")), ApiErrorParser.fromHttp(code, responseText));
 
             ChatResult r = parseChatResponse(responseText);
+            if (observer != null) observer.onResponseBodyComplete(
+                    responseText.getBytes(StandardCharsets.UTF_8).length,
+                    safeHeader(r.providerResponseId));
             if (r.promptTokens <= 0) r.promptTokens = Chunker.approxTokens(prompt.system) + Chunker.approxTokens(prompt.user);
             if (r.completionTokens <= 0) r.completionTokens = Chunker.approxTokens(r.content);
             if (r.totalTokens <= 0) r.totalTokens = r.promptTokens + r.completionTokens;
@@ -120,6 +141,16 @@ public class OpenAICompatibleClient {
                     "output", r.completionTokens, "total", r.totalTokens,
                     "providerCost", r.providerCost);
             return r;
+        } catch (Exception error) {
+            if (observer != null) {
+                long elapsed = Math.max(0L, (System.nanoTime() - startedNanos) / 1_000_000L);
+                if (call.isCanceled() || error instanceof CancellationException) {
+                    observer.onCallCancelled(elapsed);
+                } else {
+                    observer.onCallFailed(safeExceptionClass(error), elapsed);
+                }
+            }
+            throw error;
         } finally {
             ACTIVE_CALL.compareAndSet(call, null);
         }
@@ -203,5 +234,27 @@ public class OpenAICompatibleClient {
     private static long parseRetryAfterMs(String raw) {
         if (raw == null || raw.trim().isEmpty()) return 0;
         try { return Math.max(0, Long.parseLong(raw.trim()) * 1000L); } catch (Exception ignored) { return 0; }
+    }
+
+    private static String safeHeader(String value) {
+        if (value == null || value.isBlank() || value.indexOf('\n') >= 0 || value.indexOf('\r') >= 0) return "";
+        return value.length() > 256 ? value.substring(0, 256) : value;
+    }
+
+    private static String safeExceptionClass(Throwable error) {
+        if (error == null) return "RuntimeException";
+        if (error instanceof UnknownHostException) return "UnknownHostException";
+        if (error instanceof ConnectException) return "ConnectException";
+        if (error instanceof java.io.IOException && error instanceof javax.net.ssl.SSLException) {
+            return error instanceof javax.net.ssl.SSLHandshakeException
+                    ? "SSLHandshakeException" : "SSLException";
+        }
+        if (error instanceof SocketTimeoutException) return "SocketTimeoutException";
+        if (error instanceof InterruptedIOException) return "InterruptedIOException";
+        if (error instanceof ApiHttpException) return "ApiHttpException";
+        if (error instanceof org.json.JSONException) return "JSONException";
+        if (error instanceof java.io.IOException) return "IOException";
+        if (error instanceof CancellationException) return "CancellationException";
+        return "RuntimeException";
     }
 }

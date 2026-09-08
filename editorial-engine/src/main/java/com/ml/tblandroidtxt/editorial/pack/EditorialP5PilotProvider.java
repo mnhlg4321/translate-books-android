@@ -14,6 +14,29 @@ import java.util.Objects;
 public interface EditorialP5PilotProvider {
     enum CallKind { PRIMARY_SEMANTIC, SCHEMA_REPAIR }
 
+    /**
+     * Provider adapters use this typed boundary to preserve a redacted,
+     * allowlisted transport classification without exposing exception text.
+     */
+    final class ProviderFailure extends Exception {
+        private final String reasonCode;
+
+        public ProviderFailure(String reasonCode) {
+            super(reasonCode);
+            if (reasonCode == null || reasonCode.isBlank()) {
+                throw new IllegalArgumentException("provider failure reason code is required");
+            }
+            this.reasonCode = reasonCode;
+        }
+
+        public ProviderFailure(String reasonCode, Throwable cause) {
+            this(reasonCode);
+            initCause(cause);
+        }
+
+        public String reasonCode() { return reasonCode; }
+    }
+
     record Request(String attemptIdentity, CallKind callKind, String provider, String model,
                    String phase, String requestEnvelopeHash,
                    Map<String, byte[]> visibleSources,

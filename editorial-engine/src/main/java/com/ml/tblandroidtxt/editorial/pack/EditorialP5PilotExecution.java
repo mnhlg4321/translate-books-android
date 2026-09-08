@@ -28,7 +28,7 @@ public final class EditorialP5PilotExecution {
 
     /** Atomic attempt owner.  A real app implementation must back these calls by one transaction. */
     public interface AttemptStore {
-        enum Claim { ACQUIRED, ALREADY_COMMITTED, IN_FLIGHT }
+        enum Claim { ACQUIRED, ALREADY_COMMITTED, IN_FLIGHT, RECOVERY_REQUIRED, AUTHORIZATION_USED }
 
         /**
          * Gives a durable store the exact request facts before claim. The
@@ -211,6 +211,19 @@ public final class EditorialP5PilotExecution {
                     List.of(), request.chapterKey(), "Resolve the existing external call state explicitly",
                     request.phase(), true, metrics);
         }
+        if (claim == AttemptStore.Claim.RECOVERY_REQUIRED) {
+            return stopped(requestIdentity, EditorialP5PilotResult.StopClass.RETRY_REQUIRED,
+                    "STOP_EXTERNAL_CALL_STATE_UNRESOLVED", request.phase(), "EXTERNAL_CALL_RECOVERY",
+                    List.of(), request.chapterKey(),
+                    "Record provider reconciliation and an explicit duplicate-risk retry decision",
+                    request.phase(), false, metrics);
+        }
+        if (claim == AttemptStore.Claim.AUTHORIZATION_USED) {
+            return stopped(requestIdentity, EditorialP5PilotResult.StopClass.AUTHORIZATION_USED,
+                    "P5_AUTHORIZATION_ALREADY_USED", request.phase(), "PILOT_AUTHORIZATION",
+                    List.of(), request.chapterKey(), "Issue a new single-use authorization",
+                    request.phase(), false, metrics);
+        }
         if (claim != AttemptStore.Claim.ACQUIRED) {
             return stopped(requestIdentity, EditorialP5PilotResult.StopClass.RETRY_REQUIRED,
                     "RETRY_ATTEMPT_CLAIM_UNKNOWN", request.phase(), "ATOMIC_ATTEMPT",
@@ -229,10 +242,16 @@ public final class EditorialP5PilotExecution {
             metrics.primaryCalls++;
             primary = provider.call(providerRequest);
             metrics.record(primary);
-        } catch (Exception error) {
-            recover(store, request.attemptIdentity(), "RETRY_PROVIDER_CALL_FAILED");
+        } catch (EditorialP5PilotProvider.ProviderFailure error) {
+            recover(store, request.attemptIdentity(), error.reasonCode());
             return stopped(requestIdentity, EditorialP5PilotResult.StopClass.RETRY_REQUIRED,
-                    "RETRY_PROVIDER_CALL_FAILED", request.phase(), "PROVIDER_CALL",
+                    error.reasonCode(), request.phase(), "PROVIDER_CALL",
+                    List.of(), request.chapterKey(), "Inspect external call state before an explicit retry",
+                    request.phase(), true, metrics);
+        } catch (Exception error) {
+            recover(store, request.attemptIdentity(), "RETRY_PROVIDER_CALL_FAILED_UNKNOWN");
+            return stopped(requestIdentity, EditorialP5PilotResult.StopClass.RETRY_REQUIRED,
+                    "RETRY_PROVIDER_CALL_FAILED_UNKNOWN", request.phase(), "PROVIDER_CALL",
                     List.of(), request.chapterKey(), "Inspect external call state before an explicit retry",
                     request.phase(), true, metrics);
         }
@@ -280,6 +299,12 @@ public final class EditorialP5PilotExecution {
                 metrics.repairCalls++;
                 repair = provider.call(repairRequest);
                 metrics.record(repair);
+            } catch (EditorialP5PilotProvider.ProviderFailure error) {
+                recover(store, request.attemptIdentity(), error.reasonCode());
+                return stopped(requestIdentity, EditorialP5PilotResult.StopClass.RETRY_REQUIRED,
+                        error.reasonCode(), request.phase(), "REPORT_L1_SCHEMA",
+                        List.of(), request.chapterKey(), "Inspect repair call state before retrying",
+                        request.phase(), true, metrics);
             } catch (Exception error) {
                 recover(store, request.attemptIdentity(), "RETRY_SCHEMA_REPAIR_FAILED");
                 return stopped(requestIdentity, EditorialP5PilotResult.StopClass.RETRY_REQUIRED,
