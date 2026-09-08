@@ -4,9 +4,9 @@
 - Active authority: V5-SAFE.4.1.3-FULL; canonical plan `EDITORIAL_RECOVERY_V4_18.md`.
 - Workspace: D:\App Translate Books\App Translate Books-translation-profile.
 - Branch: feature/v4.18.
-- Current commit baseline: 416f47b docs(editorial): record real pilot source preparation, the exact implementation/evidence baseline immediately before the current persistent-binding setup work; not self-referential.
-- Last validation package used: 4.17-dev.14 / Android versionCode 182, archived and installed on device `15e84958` for pack import and binding preparation. This validation install has not made a provider call.
-- Current phase: P5C exact-binding fake E2E is complete; real chapter source preparation and canonical pack import are complete; persistent real-binding setup test is prepared but not yet run. Live authorization/preflight confirmation is still required. Editorial execution, provider/API calls and certification remain disabled.
+- Current commit baseline: a4ece49 test(editorial): add persistent P5C binding setup, the exact implementation/evidence baseline immediately before the bounded OpenRouter adapter/context work; not self-referential.
+- Last validation package used: 4.17-dev.15 / Android versionCode 183, archived and installed on device `15e84958` for exact binding setup. The setup test passed and logged only redacted identities/hashes; this validation install has not made a provider call.
+- Current phase: P5C exact-binding fake E2E and persistent real-binding setup are complete; bounded OpenRouter request construction, app-owned identity propagation and strict response parsing are covered by host tests. Live authorization/preflight confirmation is still required. Editorial execution, provider/API calls and certification remain disabled.
 
 ## Source and authority identity
 
@@ -53,7 +53,7 @@
 - Profile and canonical pack/authority verification: PASS. Live provider/API calls: `0`; fake provider calls: `2` in isolated app acceptance. Code169 baseline APK SHA-256 is `3C3AAEF1A7D47F39A7B5A5FF8AEDF77347D255AF728B908180AA142CA2B276D1` in both artifact and backup; device restore was verified after ADB authorization. The uninstall/reinstall procedure removed validation-package data because `pm clear` is not accepted on this device.
 - `git diff --check`: PASS at closure.
 
-- Device setup preparation: canonical 4.1.3 was imported through the production pack picker on code182 and reported `DATA_COMPATIBLE`; source files remain outside Git under the user-provided MERCEDES VOL 4 folder. A test-only instrumentation setup will pin the normalized app-import bytes without logging source text.
+- Device setup preparation: canonical 4.1.3 was imported through the production pack picker on code183 and reported `DATA_COMPATIBLE`; the persistent setup test pinned the normalized app-import bytes and read back the exact P4 tuple for chapter `001`. Source files remain outside Git under the user-provided MERCEDES VOL 4 folder.
 
 ## Validation artifact
 
@@ -90,14 +90,14 @@ not modified.
 - Bootstrap profile v1 remains loadable and non-executable.
 - P5 live authorization is not present; no real chapter/provider call is permitted. Dry-run/fake-provider contract work may proceed only with external execution disabled.
 - P5C proves app-bound fake attempt persistence and idempotent RAW→RECONCILE replay, but does not prove live provider behavior, external-call cancellation/process-death handling, data-egress approval, real token/cost/latency or a real chapter `REPORT_L1`/receipt commit. The supplied two-phase authorization block is still required before any provider access.
-- Device currently runs validation `4.17-dev.14/code182`; this is not a permission to run provider work. The immutable baseline remains `4.17-dev.1/code169` and will be restored after validation.
+- Device currently runs validation `4.17-dev.15/code183`; this is not a permission to run provider work. The immutable baseline remains `4.17-dev.1/code169` and will be restored after validation.
 
 ## Next step
 
-Run the test-only persistent binding setup for chapter `001`, then execute fake
-E2E/readback and produce the final live preflight. Obtain the complete
-two-phase `P5 PILOT AUTHORIZATION` block and a separate explicit live-call
-confirmation before any OpenRouter call. Keep
+Build/install the next validation APK for the bounded OpenRouter adapter,
+re-run focused device setup/fake E2E/readback, and produce the final live
+preflight. Obtain the complete two-phase `P5 PILOT AUTHORIZATION` block and a
+separate explicit live-call confirmation before any OpenRouter call. Keep
 `EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE`; do not open L2/L3,
 auto-activate, auto-rebind or certify from fake evidence.
 

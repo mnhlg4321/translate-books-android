@@ -222,7 +222,7 @@ public final class EditorialP5PilotExecution {
                 request.attemptIdentity(), EditorialP5PilotProvider.CallKind.PRIMARY_SEMANTIC,
                 authorization.provider(), authorization.model(), request.phase(), requestEnvelopeHash,
                 visibleSourceBytes(projection), request.authority(), L1_OUTPUT_SCHEMA,
-                request.chapterKey(), "");
+                request.chapterKey(), "", requestContext(request, projection));
 
         EditorialP5PilotProvider.Response primary;
         try {
@@ -273,7 +273,8 @@ public final class EditorialP5PilotExecution {
                     request.attemptIdentity(), EditorialP5PilotProvider.CallKind.SCHEMA_REPAIR,
                     authorization.provider(), authorization.model(), request.phase(),
                     requestEnvelopeHash + ":SCHEMA_REPAIR", Map.of(), request.authority(),
-                    L1_OUTPUT_SCHEMA, request.chapterKey(), semanticFingerprint);
+                    L1_OUTPUT_SCHEMA, request.chapterKey(), semanticFingerprint,
+                    requestContext(request, projection));
             EditorialP5PilotProvider.Response repair;
             try {
                 metrics.repairCalls++;
@@ -534,6 +535,15 @@ public final class EditorialP5PilotExecution {
             result.add(value);
         }
         return result;
+    }
+
+    private static EditorialP5PilotProvider.Request.Context requestContext(
+            EditorialP5PilotRequest request,
+            EditorialPhaseContextProjector.PhaseProjection projection) {
+        return new EditorialP5PilotProvider.Request.Context(
+                request.binding().bindingIdentity(), request.binding().runDeclarationIdentity(),
+                request.manifestFingerprint(), projection.bundleIdentity(),
+                request.predecessorIdentity(), request.stableAnchors(), request.populationIds());
     }
 
     private static boolean isTruncated(EditorialP5PilotProvider.Response response) {

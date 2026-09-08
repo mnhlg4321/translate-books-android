@@ -2,6 +2,7 @@ package com.ml.tblandroidtxt.editorial.pack;
 
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -18,7 +19,23 @@ public interface EditorialP5PilotProvider {
                    Map<String, byte[]> visibleSources,
                    EditorialP5PilotRequest.PackAuthority authority,
                    String outputSchemaId, String chapterKey,
-                   String priorSemanticFingerprint) {
+                   String priorSemanticFingerprint, Context context) {
+        /**
+         * Compatibility constructor for existing fake providers. Production
+         * providers that render the full request envelope use the context-rich
+         * constructor emitted by EditorialP5PilotExecution.
+         */
+        public Request(String attemptIdentity, CallKind callKind, String provider, String model,
+                       String phase, String requestEnvelopeHash,
+                       Map<String, byte[]> visibleSources,
+                       EditorialP5PilotRequest.PackAuthority authority,
+                       String outputSchemaId, String chapterKey,
+                       String priorSemanticFingerprint) {
+            this(attemptIdentity, callKind, provider, model, phase, requestEnvelopeHash,
+                    visibleSources, authority, outputSchemaId, chapterKey,
+                    priorSemanticFingerprint, null);
+        }
+
         public Request {
             attemptIdentity = text(attemptIdentity, "attempt identity");
             Objects.requireNonNull(callKind, "call kind");
@@ -46,6 +63,22 @@ public interface EditorialP5PilotProvider {
                 copy.put(entry.getKey(), entry.getValue() == null ? null : entry.getValue().clone());
             }
             return java.util.Collections.unmodifiableMap(copy);
+        }
+
+        /** Exact app-owned identity facts required by a real provider adapter. */
+        public record Context(String bindingIdentity, String runDeclarationIdentity,
+                              String manifestFingerprint, String bundleIdentity,
+                              String predecessorIdentity, List<String> stableAnchors,
+                              List<String> populationIds) {
+            public Context {
+                bindingIdentity = text(bindingIdentity, "binding identity");
+                runDeclarationIdentity = text(runDeclarationIdentity, "run declaration identity");
+                manifestFingerprint = text(manifestFingerprint, "manifest fingerprint");
+                bundleIdentity = text(bundleIdentity, "bundle identity");
+                predecessorIdentity = text(predecessorIdentity, "predecessor identity");
+                stableAnchors = List.copyOf(stableAnchors == null ? List.of() : stableAnchors);
+                populationIds = List.copyOf(populationIds == null ? List.of() : populationIds);
+            }
         }
     }
 

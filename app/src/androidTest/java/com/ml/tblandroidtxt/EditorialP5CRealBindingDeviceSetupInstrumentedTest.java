@@ -1,11 +1,10 @@
 package com.ml.tblandroidtxt;
 
 import android.content.Context;
-import android.os.ParcelFileDescriptor;
+import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.ml.tblandroidtxt.editorial.pack.EditorialCanonicalJson;
 import com.ml.tblandroidtxt.editorial.pack.EditorialLineageNodeKind;
@@ -51,7 +50,7 @@ public final class EditorialP5CRealBindingDeviceSetupInstrumentedTest {
                     .resolve("com.ml.tblandroidtxt.editorial.safe4.full", "4.1.3")
                     .orElseThrow(() -> new AssertionError("canonical 4.1.3 pack is not persisted"));
 
-            List<EditorialP4InputSource> sources = readSources();
+            List<EditorialP4InputSource> sources = readSources(context);
             EditorialP4SetupRequest request = new EditorialP4SetupRequest(
                     SELECTOR, "MERCEDES", "VOL 4", candidate.packId(), candidate.packVersion(),
                     "p5c/mercedes/vol4", "p5c/mercedes/vol4/001", sources,
@@ -78,35 +77,39 @@ public final class EditorialP5CRealBindingDeviceSetupInstrumentedTest {
             assertEquals(binding.canonicalPackHash(), resumed.binding().canonicalPackHash());
             assertEquals(binding.inputManifestFingerprint(), resumed.binding().inputManifestFingerprint());
             assertEquals(1, listChapterIds(database, projectId).size());
+            Log.i("P5C_REAL_BINDING", "projectId=" + projectId
+                    + " selector=" + SELECTOR
+                    + " bindingIdentity=" + binding.bindingIdentity()
+                    + " runDeclarationIdentity=" + binding.runDeclarationIdentity()
+                    + " compatibilityEvaluationId=" + binding.compatibilityEvaluationId()
+                    + " canonicalPackHash=" + binding.canonicalPackHash()
+                    + " canonicalProfileHash=" + binding.canonicalProfileHash()
+                    + " inputManifestFingerprint=" + binding.inputManifestFingerprint());
+            for (com.ml.tblandroidtxt.editorial.pack.EditorialP4SourceIdentity input : binding.inputs()) {
+                Log.i("P5C_REAL_SOURCE", "role=" + input.role()
+                        + " length=" + input.byteLength() + " sha256=" + input.sha256());
+            }
         }
     }
 
-    private static List<EditorialP4InputSource> readSources() throws Exception {
+    private static List<EditorialP4InputSource> readSources(Context context) throws Exception {
         return List.of(
-                source("RAW", "raw", "001_RAW_1_4.txt"),
-                source("DRAFT", "draft", "001_DRAFT_MERCEDES_VOL4.txt"),
-                source("GLOSSARY", "glossary", "001_CHAPTER_GLOSSARY_FINAL_MERCEDES_VOL4.csv"),
-                source("PRONOUN", "pronoun", "001_PRONOUN.csv"));
+                source(context, "RAW", "raw", "001_RAW_1_4.txt"),
+                source(context, "DRAFT", "draft", "001_DRAFT_MERCEDES_VOL4.txt"),
+                source(context, "GLOSSARY", "glossary", "001_CHAPTER_GLOSSARY_FINAL_MERCEDES_VOL4.csv"),
+                source(context, "PRONOUN", "pronoun", "001_PRONOUN.csv"));
     }
 
-    private static EditorialP4InputSource source(String role, String id, String name) throws Exception {
-        byte[] bytes = readExternal(SOURCE_ROOT + "/" + id + ".bin");
+    private static EditorialP4InputSource source(Context context, String role, String id, String name)
+            throws Exception {
+        byte[] bytes;
+        try (InputStream input = context.openFileInput("p5c-real-" + id + ".bin")) {
+            bytes = input.readAllBytes();
+        }
         bytes = stripUtf8Bom(bytes);
         if (bytes.length == 0) throw new AssertionError("empty real source: " + name);
         return new EditorialP4InputSource(role, "p5c-real://mercedes-vol4/001/" + id,
                 bytes, "UTF-8", "VALID", 0L);
-    }
-
-    private static byte[] readExternal(String path) throws IOException {
-        ParcelFileDescriptor descriptor = InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation().executeShellCommand("cat " + shellQuote(path));
-        try (InputStream input = new ParcelFileDescriptor.AutoCloseInputStream(descriptor)) {
-            return input.readAllBytes();
-        }
-    }
-
-    private static String shellQuote(String value) {
-        return "'" + value.replace("'", "'\\''") + "'";
     }
 
     private static byte[] stripUtf8Bom(byte[] bytes) {

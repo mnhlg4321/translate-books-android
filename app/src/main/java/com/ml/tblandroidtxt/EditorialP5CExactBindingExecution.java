@@ -292,8 +292,12 @@ public final class EditorialP5CExactBindingExecution {
                 && result.committedResult() != null;
     }
 
-    private static int boundedOutputTokens(EditorialP5PilotAuthorization authorization) {
-        return Math.min(256, authorization.maximumOutputTokens());
+    static int boundedOutputTokens(EditorialP5PilotAuthorization authorization) {
+        // REPORT_L1 carries identity, ledger, nine gate statuses and typed
+        // disposition metadata. 256 tokens can truncate a valid envelope;
+        // retain the authorization cap while giving the bounded pilot a safe
+        // structural ceiling.
+        return Math.min(2048, authorization.maximumOutputTokens());
     }
 
     private static Result stop(String reason, int providerCalls) {
