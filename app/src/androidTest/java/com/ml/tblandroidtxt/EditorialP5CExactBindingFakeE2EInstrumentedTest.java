@@ -95,6 +95,15 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
         assertTrue(columnExists("editorial_p5c_attempts", "recovery_reason_code"));
     }
 
+    @Test public void p5dRecoveryOwnersExistBeforeRetryIsAllowed() {
+        assertTrue(tableExists("editorial_p5d_network_lifecycle"));
+        assertTrue(tableExists("editorial_p5d_authorization_receipts"));
+        assertTrue(tableExists("editorial_p5d_reconciliation"));
+        assertTrue(columnExists("editorial_p5d_network_lifecycle", "stage"));
+        assertTrue(columnExists("editorial_p5d_authorization_receipts", "authorization_id_hash"));
+        assertTrue(columnExists("editorial_p5d_reconciliation", "classification"));
+    }
+
     @Test public void exactBindingRunsRawThenReconcileAndReloadsIdempotently() throws Exception {
         BindingFixture fixture = createBoundChapter();
         EditorialP5PilotRequest rawRequest = request(fixture,
@@ -189,7 +198,7 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
         assertEquals(0, new EditorialP5CAttemptStore(database).count());
     }
 
-    @Test public void claimedAttemptIsInFlightAfterStoreReopenAndRecoveryIsRetryable() throws Exception {
+    @Test public void recoveryRequiredCannotBeReclaimedWithoutReconciliation() throws Exception {
         BindingFixture fixture = createBoundChapter();
         EditorialP5PilotRequest rawRequest = request(fixture,
                 EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY,
@@ -210,7 +219,7 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
         reopenedStore.markRecoveryRequired(rawRequest.attemptIdentity(), "RETRY_TEST_RECOVERY");
         EditorialP5CAttemptStore retryStore = new EditorialP5CAttemptStore(database);
         retryStore.prepare(rawRequest, authorization, "a".repeat(64));
-        assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.ACQUIRED,
+        assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.IN_FLIGHT,
                 retryStore.claim(rawRequest.attemptIdentity()));
         assertEquals(1, retryStore.count());
     }
