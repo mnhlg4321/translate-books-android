@@ -63,12 +63,20 @@ binding, pack, profile or preflight failure. The validation package retains the
 VOL5 binding and local test inputs for a later retry after the user saves the
 OpenRouter key again.
 
-## Next action
+## Historical scope of this record
 
-Save the OpenRouter API key again in the validation app's Settings (the prior
-uninstall/reinstall used to restore code169 removed app-private settings), then
-rerun the same explicit RAW test. It must still use the VOL5 selector above,
-one new single-use RAW authorization, zero network retries and no RECONCILE.
+The gate result above records the earlier invocation made while the restored
+validation package had no OpenRouter key. A later invocation after the key was
+saved is recorded separately in
+`docs/P5D_VOL5_RAW_PROVIDER_RECONCILIATION.md`; that later request was
+provider-confirmed cancelled and did not produce a report or receipt.
+
+## Next action for the later recovery state
+
+Do not reuse the consumed VOL5 authorization. Any further attempt must first
+carry a new exact-phase, single-use RAW authorization with explicit
+duplicate-work and billing-risk acknowledgement. It must still use the VOL5
+selector above, zero network retries and no RECONCILE.
 
 Status remains:
 

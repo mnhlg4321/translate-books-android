@@ -104,3 +104,24 @@ may repeat work and incur new billing. The consumed P5C authorization must not
 be reused. P5D.6 must stop after a successful RAW predecessor commit and ask
 for a separate RECONCILE authorization; execution remains
 `EXECUTION_DISABLED / NOT_CERTIFIED`.
+
+## Current VOL5 follow-up (2026-09-09)
+
+This addendum records a later independent VOL5/chapter001 attempt after the
+validation package key was restored. The earlier missing-key gate remains
+historical. The exact persisted binding was re-read, one RAW request was
+dispatched under the bounded user authorization, and the durable row ended
+`RECOVERY_REQUIRED` with local reason
+`RETRY_PROVIDER_CALL_FAILED_UNKNOWN`, no response identity and zero
+`REPORT_L1`/receipt bytes.
+
+Authenticated OpenRouter Logs metadata matched generation
+`gen-1788910936-DHfTNOyDlU3f3PJOAvqb`: `cancelled`, provider HTTP `200`,
+`23,674/90` tokens, displayed cost `$0.00484`, and no I/O logging. The
+external classification is `EXTERNAL_CONFIRMED_CANCELLED`. The consumed
+authorization cannot be reused; another RAW dispatch needs a new exact-phase
+single-use authorization with duplicate-work/billing-risk acknowledgement.
+RECONCILE remains unauthorized and the P5D exit gate is still incomplete.
+
+Full redacted evidence is in
+`docs/P5D_VOL5_RAW_PROVIDER_RECONCILIATION.md`.

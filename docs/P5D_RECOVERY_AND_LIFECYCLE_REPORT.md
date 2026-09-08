@@ -119,3 +119,14 @@ been exported in redacted form.
 
 Therefore P5D.5–P5D.7 remain closed and no new provider authorization is
 issued by this report.
+
+## Later VOL5 follow-up
+
+The statements above are the `2026-09-08` lifecycle baseline. On
+`2026-09-09`, after a separate key-restored setup, one exact VOL5 RAW request
+was dispatched under a user authorization and OpenRouter later confirmed its
+generation as `cancelled`. The local attempt remains `RECOVERY_REQUIRED` with
+no response/report/receipt. That later evidence does not satisfy P5D.5 for a
+further retry, does not authorize RECONCILE and does not prove live lifecycle
+metadata persistence for that attempt; see
+`docs/P5D_VOL5_RAW_PROVIDER_RECONCILIATION.md`.
