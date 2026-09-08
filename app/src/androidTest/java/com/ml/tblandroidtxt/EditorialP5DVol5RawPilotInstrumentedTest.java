@@ -22,6 +22,7 @@ import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -56,6 +57,21 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
                     context.getFilesDir().toPath());
             EditorialPackSelectionCandidate candidate = new EditorialPackSelectionPolicy(database, storage)
                     .resolve(PACK_ID, PACK_VERSION).orElse(null);
+            if (candidate == null) {
+                byte[] packBytes;
+                try (InputStream input = InstrumentationRegistry.getInstrumentation().getContext()
+                        .getAssets().open(CANONICAL_ASSET)) {
+                    packBytes = input.readAllBytes();
+                }
+                EditorialPackImportResult imported = new EditorialPackImportService(database, storage,
+                        new EditorialEngineProfileResolver(
+                                BundledEditorialEngineContractProfileRegistry.load()))
+                        .importZip(new ByteArrayInputStream(packBytes));
+                assertEquals(EditorialPackImportState.STORED_READY_FOR_CERTIFICATION,
+                        imported.state());
+                candidate = new EditorialPackSelectionPolicy(database, storage)
+                        .resolve(PACK_ID, PACK_VERSION).orElse(null);
+            }
             Assume.assumeTrue("canonical 4.1.3 pack is not imported in validation package",
                     candidate != null);
             if (candidate == null) return;
