@@ -33,7 +33,7 @@ public final class EditorialP5CLiveL1PilotInstrumentedTest {
     private static final String SELECTOR = "p5c-real-mercedes-vol4-001";
     private static final String CHAPTER_KEY = "001";
     private static final String PROVIDER = "openrouter";
-    private static final String MODEL = "google/gemini-2.5-flash";
+    private static final String MODEL = "openai/gpt-5.6-luna";
     private static final String RAW_PHASE = "L1_RAW_DISCOVERY";
     private static final String RECONCILE_PHASE = "L1_RECONCILE";
     private static final BigDecimal TOTAL_COST_PER_PHASE = BigDecimal.valueOf(0.05);
