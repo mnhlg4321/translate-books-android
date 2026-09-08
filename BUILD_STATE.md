@@ -4,9 +4,9 @@
 - Active authority: V5-SAFE.4.1.3-FULL; canonical plan `EDITORIAL_RECOVERY_V4_18.md`.
 - Workspace: D:\App Translate Books\App Translate Books-translation-profile.
 - Branch: feature/v4.18.
-- Current commit baseline: a4ece49 test(editorial): add persistent P5C binding setup, the exact implementation/evidence baseline immediately before the bounded OpenRouter adapter/context work; not self-referential.
-- Last validation package used: 4.17-dev.15 / Android versionCode 183, archived and installed on device `15e84958` for exact binding setup. The setup test passed and logged only redacted identities/hashes; this validation install has not made a provider call.
-- Current phase: P5C exact-binding fake E2E and persistent real-binding setup are complete; bounded OpenRouter request construction, app-owned identity propagation and strict response parsing are covered by host tests. Live authorization/preflight confirmation is still required. Editorial execution, provider/API calls and certification remain disabled.
+- Current commit baseline: 67e7ee9 feat(editorial): add bounded OpenRouter P5C provider boundary, the exact implementation/evidence baseline immediately before the opt-in live runner and its focused test wiring; not self-referential.
+- Last validation package used: 4.17-dev.16 / Android versionCode 184, archived and installed on device `15e84958`; host adapter tests and full device instrumentation passed, and this validation install has not made a provider call.
+- Current phase: P5C exact-binding fake E2E and persistent real-binding setup are complete; bounded OpenRouter request construction, app-owned identity propagation, strict response parsing and an opt-in two-phase live runner are present. Live authorization/preflight confirmation is still required. Editorial execution, provider/API calls and certification remain disabled.
 
 ## Source and authority identity
 
@@ -54,6 +54,7 @@
 - `git diff --check`: PASS at closure.
 
 - Device setup preparation: canonical 4.1.3 was imported through the production pack picker on code183 and reported `DATA_COMPATIBLE`; the persistent setup test pinned the normalized app-import bytes and read back the exact P4 tuple for chapter `001`. Source files remain outside Git under the user-provided MERCEDES VOL 4 folder.
+- Code184 focused device regression: setup `1/1`, P5C fake E2E `5/5`, P1 `7/7`, P2 `3/3`, P3B `1/1`, P4 binding `4/4`, process-death `2/2`; full instrumentation `118/118 PASS` with the opt-in real API test skipped. Host engine `179/179 PASS`; app unit `214/214 PASS` per debug/release/benchmark variant, aggregate `642/642 PASS`.
 
 ## Validation artifact
 
@@ -90,12 +91,12 @@ not modified.
 - Bootstrap profile v1 remains loadable and non-executable.
 - P5 live authorization is not present; no real chapter/provider call is permitted. Dry-run/fake-provider contract work may proceed only with external execution disabled.
 - P5C proves app-bound fake attempt persistence and idempotent RAW→RECONCILE replay, but does not prove live provider behavior, external-call cancellation/process-death handling, data-egress approval, real token/cost/latency or a real chapter `REPORT_L1`/receipt commit. The supplied two-phase authorization block is still required before any provider access.
-- Device currently runs validation `4.17-dev.15/code183`; this is not a permission to run provider work. The immutable baseline remains `4.17-dev.1/code169` and will be restored after validation.
+- Device currently runs validation `4.17-dev.16/code184`; this is not a permission to run provider work. The full suite leaves settings on a test provider, so no live call is permitted until the user enters the real OpenRouter credential through app Settings. The immutable baseline remains `4.17-dev.1/code169` and will be restored after validation.
 
 ## Next step
 
-Build/install the next validation APK for the bounded OpenRouter adapter,
-re-run focused device setup/fake E2E/readback, and produce the final live
+Enter the real OpenRouter credential privately through app Settings (never in
+chat/Git/logs), then verify provider/endpoint and produce the final live
 preflight. Obtain the complete two-phase `P5 PILOT AUTHORIZATION` block and a
 separate explicit live-call confirmation before any OpenRouter call. Keep
 `EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE`; do not open L2/L3,
