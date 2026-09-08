@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
 - Updated: 2026-09-09 (+07:00).
-- Current status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / VOL5_RAW_AUTHORIZATION_RECEIVED / RECONCILE_NOT_AUTHORIZED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
-- Current version/build: validation artifact 4.17-dev.18 / code186 was archived and passed focused/full instrumentation on device `15e84958`; the device is now restored to 4.17-dev.1 / code169. The one authorized OpenRouter RAW request has provider-confirmed cancellation metadata; the app still has no usable response/report/receipt.
+- Current status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / VOL5_BINDING_READY / LIVE_AUTHORIZATION_INCOMPLETE / PROVIDER_CALLS_0 / RECONCILE_NOT_AUTHORIZED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Current version/build: validation artifact 4.17-dev.20 / code188 was archived in artifacts and backup with SHA-256 `1FB351DA1028B10C90A99E37A9F694EA878F55E4FA98B6C9298452B05858A62D` and installed on device `15e84958`. The new VOL5 binding/setup passed; the explicit RAW gate stopped before provider access because the restored package had no OpenRouter API key. The device remains on code188 so the binding can be retried; no new provider request was made.
 - Current branch/workspace: feature/v4.18 / D:\App Translate Books\App Translate Books-translation-profile.
-- Current commit baseline: bd9b609bd9e8c5627c4ec2c51bdae738b73c1bf6 (`docs(editorial): record authenticated provider reconciliation`), the implementation/documentation baseline immediately before the current VOL5 RAW-only preparation; not self-referential.
+- Current commit baseline: e34084d377ae474e39f45c04cd796fbf2581c345 (`test(editorial): prepare VOL5 raw pilot fixture`), the implementation/test baseline immediately before the current VOL5 RAW gate record; not self-referential.
 - Active authority: V5-SAFE.4.1.3-FULL. Authority bytes, canonical ZIP SHA, Java-control ZIP SHA and profile v2 hash are unchanged.
 
 ## Completed tasks
@@ -25,7 +25,8 @@
 - P5D.3/P5D.4 are complete locally: additive v21 lifecycle/auth/reconciliation owners, typed provider failures, non-reclaimable recovery gate, hashed single-use authorization receipts and redacted timing/generation metadata pass focused tests; no provider call was made.
 - P5D.1/P5D.2 are complete by bounded authenticated read-only OpenRouter metadata: the matching generation is `EXTERNAL_CONFIRMED_CANCELLED`; a new exact-phase RAW authorization is required before retry. See `docs/P5D_VALIDATION_REPORT.md` and `docs/P5D_RECOVERY_AND_LIFECYCLE_REPORT.md`.
 - A new user authorization was received for an independent VOL5/chapter001 RAW attempt: OpenRouter `openai/gpt-5.6-luna`, egress YES, one primary plus one schema repair maximum, zero network retries, USD 0.10 total cap and five-minute window; RECONCILE remains explicitly unauthorized. The source folder is outside Git.
-- A production-owned RAW-only entry point and focused fake regression are prepared but not yet committed; they return after durable RAW readback and never construct a RECONCILE request.
+- A production-owned RAW-only entry point and focused fake regression are committed in `1994b3c`; they return after durable RAW readback and never construct a RECONCILE request. The VOL5 setup/live test is committed in `e34084d`.
+- VOL5 setup instrumentation passed `1/1`: selector `p5d-raw-mercedes-vol5-001`, exact pack/profile identity and app-computed source hashes were read back. The explicit RAW invocation returned `LIVE_AUTHORIZATION_INCOMPLETE` because the OpenRouter key was absent after validation restore; providerCalls `0`, authorization not consumed, no attempt/report/receipt and no RECONCILE call. See `docs/P5D_VOL5_RAW_AUTHORIZATION_BLOCKED.md`.
 
 ## Validation evidence
 
@@ -33,12 +34,11 @@
 - Code186 full device instrumentation XML: `124` test methods, `0` failures, `0` errors, `4` approved skips. The increase from code184 `118` methods is P5D lifecycle/recovery and schema/migration coverage; real provider remains opt-in/skipped.
 - Provider/API calls: one authorized live RAW request dispatched; the app received no usable response/usage receipt, while OpenRouter metadata records one matching cancelled generation with displayed cost `$0.00366`; fake acceptance calls `2`; no automatic retry or RECONCILE call.
 - Canonical ZIP `B9C65DBEB9D4C4ED46B67D5EC28FF6252CC2BDC4B63BC902904612987EC58987`, Java control `44F99423292ADA15680220165AF50430532D847E155F93C1B15D9F173D4609A5`, and profile resource `1B2DB011D59F3E2EF4349AEB0DAA9C54A19B7EFD1E2CA6886BC29B56E4690D62` re-hash correctly.
-- Latest validation APK code186 SHA-256: `A32CD2B379D13CCEE6D7FAB7E0512A1A73587175CE92C32C1CDCD3707245D10C`; archived in both artifacts and backup and used for P5D validation. It is not a release build. Code184 remains historical pre-P5D live-attempt evidence. The device was restored by uninstall/reinstall to code169 APK SHA-256 `3C3AAEF1A7D47F39A7B5A5FF8AEDF77347D255AF728B908180AA142CA2B276D1`; validation-package data was removed.
-- `git diff --check`: PASS before the current scoped RAW-only implementation/test changes; the current diff remains limited to the existing P5C execution owner and AndroidTest sources.
+- Latest validation APK code188 SHA-256: `1FB351DA1028B10C90A99E37A9F694EA878F55E4FA98B6C9298452B05858A62D`; archived in both artifacts and backup and used for VOL5 setup/gate validation. It is not a release build. Code186 remains historical P5D evidence and code169 remains the prior production baseline. `git diff --check` is required again after this documentation update.
 
 ## Pending tasks
 
-- Controlled real L1 pilot remains incomplete after a provider-confirmed cancelled VOL4 generation. P5D.1/P5D.2 and P5D.3/P5D.4 pass. The newly authorized VOL5 RAW attempt is pending build/install, exact binding setup and preflight; P5D RAW execution must stop before RECONCILE. P5D.7, P6 L2/L3 and P7 release gates remain separate.
+- Controlled real L1 pilot remains incomplete after a provider-confirmed cancelled VOL4 generation. P5D.1/P5D.2 and P5D.3/P5D.4 pass. VOL5 exact binding/setup is ready, but its explicit RAW authorization is blocked by missing key state and has made zero provider calls; after the key is saved, RAW must still stop before RECONCILE. P5D.7, P6 L2/L3 and P7 release gates remain separate.
 - Release tag, release backup/export and real-chapter certification remain pending by design.
 
 ## Known bugs and limitations
@@ -47,7 +47,7 @@
 - P4 creates pilot setup metadata only; `DATA_COMPATIBLE` and selectable status do not mean runnable or certified.
 - Initial setup UI collects explicit source text for binding metadata; it does not certify source bytes or open execution.
 - Bootstrap profile v1 remains loadable and non-executable.
-- The consumed VOL4 authorization cannot be reused. VOL5 must use a separate persisted binding and single-use RAW authorization; no RECONCILE authorization exists. App-validated live response, final report/receipt and certification remain unproven. Device is back on code169; code186 is archived for evidence.
+- The consumed VOL4 authorization cannot be reused. VOL5 uses a separate persisted binding and single-use RAW authorization; no RECONCILE authorization exists. The OpenRouter key was removed by the earlier uninstall/reinstall, so no VOL5 authorization was consumed and no app-validated live response/report/receipt exists. Device remains on validation code188 with setup data for retry; certification remains unproven.
 
 ## Protected state
 
@@ -57,10 +57,10 @@ The original workspace D:\App Translate Books remains untouched. Its user-owned 
 
 2026-09-08 validation update: user delegated setup using `D:\Ebooks\MERCEDES\VOL 4`, approved egress and caps of USD 0.10 / 5 minutes, selected OpenRouter and explicitly confirmed the live call. The persisted binding for chapter `001` passed; RAW dispatched one request and stopped after 179728 ms without response. Recovery inspection `1/1` confirmed no report/receipt bytes, the P5D lifecycle/recovery matrix passed, and the device was restored to code169.
 
-Next action is to commit the scoped RAW-only path, build a validation APK with
-versionCode greater than 186, import the frozen pack, create the VOL5/001
-binding from the four supplied files, verify exact source hashes and preflight,
-then run exactly one authorized RAW attempt. Stop before RECONCILE and record
-the typed result; do not enable content logging or infer P6 readiness.
+Next action is for the user to save the OpenRouter API key again in the
+validation app Settings; the prior uninstall/reinstall used to restore code169
+removed app-private settings. Then rerun the explicit VOL5/001 RAW-only test
+using a new single-use authorization. Stop before RECONCILE and record the
+typed result; do not enable content logging or infer P6 readiness.
 
 This is current-only state; Git history preserves prior snapshots.
