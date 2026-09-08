@@ -1,22 +1,27 @@
 # P5D — Provider reconciliation record
 
-Audit attempted: `2026-09-08 23:05:26 +07:00`  
+Audit completed: `2026-09-08` (+07:00), after manual authentication to the
+OpenRouter read-only Logs/Activity UI.
 Audit scope: the bounded window around the authorized P5C call on `2026-09-08` (+07:00).  
 Provider/model filter: `openrouter` / `openai/gpt-5.6-luna`.
 
 ## Classification
 
 ```text
-EXTERNAL_STATE_REMAINS_UNKNOWN
-RETRY_ELIGIBLE: NO
-PROVIDER_CALLS_IN_P5D.0-P5D.3: 0
+EXTERNAL_CONFIRMED_CANCELLED
+RETRY_ELIGIBLE: YES_AFTER_NEW_EXACT_PHASE_AUTHORIZATION
+PROVIDER_CALLS_IN_P5D.0-P5D.4: 0
 ```
 
-The OpenRouter Activity page redirected to sign-in in the available browser
-session. No authenticated Activity data, generation metadata, request ID,
-token usage, cost, finish state or billing state was available for inspection.
-The audit therefore does not claim that the request was absent and does not
-infer a zero-dollar charge.
+The authenticated OpenRouter Logs row matches the single P5C RAW dispatch by
+the provider/model, application, displayed time and the app-owned request
+size. Its generation details explicitly report `Finish reason: cancelled`,
+provider HTTP `200`, streaming `true`, and no I/O logging. The provider-side
+generation therefore has a confirmed cancellation state. The external record
+also contains usage/cost metadata, while the app did not receive or persist a
+usable response body or usage receipt. This is not a successful L1 result and
+is not classified as `EXTERNAL_COMPLETED_BILLED_OUTPUT_UNAVAILABLE` because
+the provider explicitly reported cancellation.
 
 ## Redacted evidence
 
@@ -28,21 +33,32 @@ infer a zero-dollar charge.
 | Chapter key | `001` |
 | App-observed result | One RAW dispatch; no response/usage receipt; no automatic retry; no RECONCILE |
 | App-observed duration | `179728 ms` |
-| Account/key fingerprint | Not available to the unauthenticated Activity audit |
-| Generation/request ID | Not available |
+| OpenRouter displayed time | `Sep 8, 09:29 PM` (+07:00 display; minute precision) |
+| OpenRouter provider/model/app | `OpenAI` / `GPT-5.6 Luna` / `Translate Books with LLMs` |
+| OpenRouter input/output | `17,808` / `84` tokens |
+| OpenRouter cost | `$0.00366` displayed provider usage |
+| OpenRouter finish/transport | `cancelled`; streaming `true`; provider HTTP `200` |
+| OpenRouter latency | routing `258 ms`; provider `675 ms`; generation `9.8 s`; total `10.8 s` |
+| Generation ID | `gen-1788877749-P8b2hBo1TWuduENuKbQ3` |
+| Request ID | Not copied from UI; no need to expose it for this classification |
+| Account/key fingerprint | UI key label was redacted; full key/secret not recorded |
 | Input/output logging | Not enabled; no content retrieval attempted |
-| Decision authority | P5D recovery policy; external state unresolved |
-| Retry decision | Do not retry; a new authorization cannot bypass reconciliation |
+| Decision authority | P5D recovery policy; provider-confirmed cancellation |
+| Retry decision | Eligible only with a new exact-phase, single-use RAW authorization; old authorization is not reusable |
 
-## Required next evidence
+The OpenRouter row is redacted metadata only. No prompt, chapter text,
+request body, response body, API key or session secret was opened, copied or
+stored. The displayed cost is provider-side evidence for this generation and
+must not be used to claim that the app received a valid L1 response.
 
-The user must manually authenticate the already-open OpenRouter Activity page,
-then inspect only the bounded date/time window using the provider/model/account
-filters. The audit may retain only redacted metadata: generation/request ID,
-timestamps, provider/model, finish or cancellation state, token counts, cost,
-latency and permitted upstream ID. Prompt, chapter, request body, response body,
-API key and session secret must not be exported.
+## Required next decision
 
-Until that read-only audit is available, the durable app attempt remains
-`RECOVERY_REQUIRED` / external state unknown. P5D.3 hardening and P5D.4 tests
-may proceed locally, but no new provider call is permitted.
+The external state is now reconciled as a provider-confirmed cancellation.
+P5D.5 may prepare a new RAW recovery authorization, but it must include the
+new attempt identity and explicit acknowledgement that a second semantic
+attempt may repeat work and incur new billing. The old P5C authorization must
+never be reused. No RECONCILE authorization is issued by this record.
+
+Until a new authorization is separately approved, the durable app attempt
+remains `RECOVERY_REQUIRED`, execution remains disabled, and no new provider
+call is permitted.

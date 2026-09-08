@@ -1,12 +1,12 @@
 # Build State
 
-- Status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / EXTERNAL_STATE_REMAINS_UNKNOWN / RECOVERY_REQUIRED / NO_RETRY_AUTHORIZATION / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / EXTERNAL_CONFIRMED_CANCELLED / RECOVERY_REQUIRED / NEW_RAW_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
 - Active authority: V5-SAFE.4.1.3-FULL; canonical plan `EDITORIAL_RECOVERY_V4_18.md`.
 - Workspace: D:\App Translate Books\App Translate Books-translation-profile.
 - Branch: feature/v4.18.
-- Current commit baseline: e9f0b7907c27e88feb209dd23361b254377828dc (`test(editorial): assert redacted lifecycle timing`), the implementation baseline immediately before the current P5D evidence-documentation update; not self-referential.
+- Current commit baseline: e2019ee38217cf79b0ca0e995831582d0f6ae18d (`docs(editorial): record P5D recovery validation`), the implementation/documentation baseline immediately before the current authenticated reconciliation update; not self-referential.
 - Last validation package used: 4.17-dev.18 / Android versionCode 186, archived in artifacts and backup and used on device `15e84958`; focused/full validation passed. The device was then restored to the immutable 4.17-dev.1 / code169 baseline by uninstall/reinstall, which removed validation-package data.
-- Current phase: P5C live attempt remains an unresolved external provider stop. P5D.0 is consistent; P5D.3 lifecycle/recovery hardening and P5D.4 regression pass locally. P5D.1/P5D.2 remain `EXTERNAL_STATE_REMAINS_UNKNOWN` pending authenticated read-only Activity evidence; P5D.5-P5D.7 are not authorized. Editorial execution/certification remain disabled.
+- Current phase: P5C live attempt remains durably `RECOVERY_REQUIRED`, and the bounded authenticated OpenRouter audit classified the provider generation as `EXTERNAL_CONFIRMED_CANCELLED`. P5D.0-P5D.4 are complete; P5D.5 needs a new exact-phase RAW authorization, while P5D.6-P5D.7 are not authorized. Editorial execution/certification remain disabled.
 
 ## Source and authority identity
 
@@ -50,13 +50,13 @@
 - App unit suite: `211/211 PASS` per debug/release/benchmark variant; aggregate `:app:test` `633/633 PASS`.
 - Previous P5C validation APK: `artifacts/builds/v4.17-dev.13/build-20260904-202447/TranslateBooks-v4.17-dev.13-code181.apk`, SHA-256 `807D2E0C28BF3F486845562FFEE05B039FBA6D09AFDA566618C6C892979CD0F2`; retained as historical evidence with matching backup archive.
 - External qualification `TESTS/test_full_release.ps1`: `306 PASS / 0 FAIL`.
-- Profile and canonical pack/authority verification: PASS. Fake provider calls: `2` in isolated app acceptance. The authorized live boundary dispatched one RAW request and received no response/usage receipt; billing is unknown. Code169 baseline APK SHA-256 is `3C3AAEF1A7D47F39A7B5A5FF8AEDF77347D255AF728B908180AA142CA2B276D1` in both artifact and backup; the device is restored to that baseline. The uninstall/reinstall procedure removed validation-package data because `pm clear` is not accepted on this device.
+- Profile and canonical pack/authority verification: PASS. Fake provider calls: `2` in isolated app acceptance. The authorized live boundary dispatched one RAW request; the app received no usable response/usage receipt, while authenticated OpenRouter metadata records one matching generation as `cancelled` with displayed usage cost `$0.00366`. Code169 baseline APK SHA-256 is `3C3AAEF1A7D47F39A7B5A5FF8AEDF77347D255AF728B908180AA142CA2B276D1` in both artifact and backup; the device is restored to that baseline. The uninstall/reinstall procedure removed validation-package data because `pm clear` is not accepted on this device.
 - `git diff --check`: PASS at closure.
 
 - Device setup preparation: canonical 4.1.3 was imported through the production pack picker on code183 and reported `DATA_COMPATIBLE`; the persistent setup test pinned the normalized app-import bytes and read back the exact P4 tuple for chapter `001`. Source files remain outside Git under the user-provided MERCEDES VOL 4 folder.
 - Code184 focused device regression: setup `1/1`, P5C fake E2E `5/5`, P1 `7/7`, P2 `3/3`, P3B `1/1`, P4 binding `4/4`, process-death `2/2`; full instrumentation `118/118 PASS` with the opt-in real API test skipped. Host engine `179/179 PASS`; app unit `214/214 PASS` per debug/release/benchmark variant, aggregate `642/642 PASS`.
-- Authorized live boundary: one OpenRouter RAW request, `providerCalls=1`, no automatic retry/repair, no response or usage receipt, typed `RETRY_PROVIDER_CALL_FAILED`, and durable `RECOVERY_REQUIRED`; recovery inspection `1/1` confirmed zero report/receipt bytes. Provider billing/acceptance is unknown and no new live call is authorized by this record.
-- P5D.1/P5D.2 provider audit: the bounded OpenRouter Activity page redirected to sign-in; no authenticated generation/request metadata was available. The redacted classification remains `EXTERNAL_STATE_REMAINS_UNKNOWN`, not `$0`, with retry ineligible and P5D provider calls `0`.
+- Authorized live boundary: one OpenRouter RAW request, `providerCalls=1`, no automatic retry/repair, no usable app response/usage receipt, typed `RETRY_PROVIDER_CALL_FAILED`, and durable `RECOVERY_REQUIRED`; recovery inspection `1/1` confirmed zero report/receipt bytes. The authenticated provider audit found generation `gen-1788877749-P8b2hBo1TWuduENuKbQ3` with finish `cancelled`, `17,808/84` tokens and displayed cost `$0.00366`; a new retry is eligible only after new authorization and explicit duplicate/billing-risk acknowledgement.
+- P5D.1/P5D.2 provider audit: authenticated OpenRouter Logs metadata matched the old app/model/time/request-size tuple and classified the external generation as `EXTERNAL_CONFIRMED_CANCELLED`; I/O logging remained disabled and P5D provider calls remain `0`.
 - P5D.3/P5D.4: additive v21 lifecycle, authorization-receipt and reconciliation owners; typed provider-failure taxonomy; non-reclaimable `RECOVERY_REQUIRED` gate; and redacted timing/generation metadata passed focused tests. Code186 device XML reports `124` test methods, `0` failures, `0` errors and `4` approved skips; engine `180/180`; app aggregate `645/645`.
 
 ## Validation artifact
@@ -95,19 +95,18 @@ was not modified.
   this is not source certification and is not an execution UI.
 - `DATA_COMPATIBLE`, selectable and `PILOT_SETUP_READY` do not mean runnable.
 - Bootstrap profile v1 remains loadable and non-executable.
-- The single authorized RAW request stopped at the provider boundary with no response. External call state and billing remain unknown; do not retry automatically. P5D.3 now blocks reclaim until immutable reconciliation, evidence, external-state resolution, new authorization and duplicate-risk policy are present.
+- The single authorized RAW request stopped at the app boundary without a usable response. OpenRouter later exposed a matching provider generation with `Finish reason: cancelled` and displayed cost `$0.00366`; no automatic retry is allowed. P5D.3 now requires immutable reconciliation, evidence and a new exact-phase authorization before reclaim.
 - P5C proves app-bound fake attempt persistence and idempotent RAW→RECONCILE replay, but does not prove a live response, real token/cost usage, live cancellation/process-death behavior, or a real chapter `REPORT_L1`/receipt commit. RECONCILE and final L1 acceptance remain unproven.
 - Device was restored to immutable `4.17-dev.1/code169` after code186 validation by uninstall/reinstall; validation-package data was removed because `pm clear` was rejected. The latest validation artifact remains code186 in artifacts/backup.
 
 ## Next step
 
-Complete the bounded read-only OpenRouter Activity audit for the 2026-09-08
-request after manual authentication; do not enable input/output logging and do
-not call the provider. Record redacted `EXTERNAL_*` classification or retain
-`EXTERNAL_STATE_REMAINS_UNKNOWN`. Only after the classification and the already
-passing P5D.3/P5D.4 evidence may a new exact-phase RAW authorization be
-considered. Keep `EXECUTION_DISABLED / NOT_CERTIFIED /
-NOT_GLOBALLY_RUNNABLE`; do not reuse the consumed authorization, call
-RECONCILE automatically, auto-activate, auto-rebind or certify.
+Prepare (but do not execute) the new P5D.5 exact-phase, single-use RAW recovery
+authorization. It must acknowledge that the previous external generation was
+provider-confirmed cancelled and already has usage/cost metadata, so a second
+attempt may repeat work and incur billing. Do not enable input/output logging,
+reuse the consumed authorization or authorize RECONCILE yet. Keep
+`EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE`; do not
+auto-activate, auto-rebind or certify.
 
 This file is current-only; Git history preserves prior state.

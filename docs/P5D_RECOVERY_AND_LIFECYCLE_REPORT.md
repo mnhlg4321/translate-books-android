@@ -4,16 +4,18 @@ Ngày kiểm tra: `2026-09-08` (+07:00)
 
 ## Kết luận phạm vi
 
-P5D.3 và P5D.4 đã hoàn tất ở phạm vi local/app-owned. Không có provider/API
-call nào được thực hiện trong P5D.0–P5D.4. P5D.1/P5D.2 vẫn chưa thể phân loại
-external state vì Activity của OpenRouter yêu cầu đăng nhập thủ công.
+P5D.1/P5D.2 đã hoàn tất ở phạm vi read-only provider audit sau khi người dùng
+đăng nhập thủ công. P5D.3 và P5D.4 đã hoàn tất ở phạm vi local/app-owned.
+Không có provider/API call nào được thực hiện trong P5D.0–P5D.4.
 
 ```text
+P5D.1_EXTERNAL_AUDIT_COMPLETE
+P5D.2_EXTERNAL_CONFIRMED_CANCELLED
 P5D.3_LIFECYCLE_HARDENING_PASS
 P5D.4_RECOVERY_REGRESSION_PASS
-EXTERNAL_STATE_REMAINS_UNKNOWN
+RETRY_ELIGIBLE_AFTER_NEW_AUTHORIZATION
 RECOVERY_REQUIRED
-NO_RETRY_AUTHORIZATION
+NO_NEW_RETRY_AUTHORIZATION_ISSUED
 EXECUTION_DISABLED
 NOT_CERTIFIED
 NOT_GLOBALLY_RUNNABLE
@@ -50,6 +52,23 @@ NOT_GLOBALLY_RUNNABLE
 The lifecycle row has no response-body column. Authorization IDs are stored as
 SHA-256 fingerprints. Reopen/readback tests verify that a consumed receipt
 remains consumed and cannot be reclaimed by process recreation.
+
+## Read-only external reconciliation
+
+The authenticated OpenRouter Logs view contained one matching generation for
+the P5C RAW dispatch: `GPT-5.6 Luna` / `OpenAI` / `Translate Books with LLMs`
+at `Sep 8, 09:29 PM` (+07:00 display), with `17,808` input and `84` output
+tokens and displayed cost `$0.00366`. Generation details reported
+`Finish reason: cancelled`, streaming `true`, provider HTTP `200`, generation
+ID `gen-1788877749-P8b2hBo1TWuduENuKbQ3`, routing `258 ms`, provider `675 ms`,
+generation `9.8 s` and total `10.8 s`. I/O logging remained disabled.
+
+This is redacted provider metadata only. The app did not receive a usable
+response or usage receipt, so the old attempt remains `RECOVERY_REQUIRED` and
+did not produce a report or receipt. The provider-confirmed cancellation makes
+a new RAW retry eligible only after a new exact-phase authorization; the old
+authorization is consumed and cannot be reused. No RECONCILE authorization is
+issued here.
 
 ## Recovery gate
 
@@ -93,10 +112,9 @@ been exported in redacted form.
 
 ## Not yet proven
 
-- Authenticated OpenRouter Activity metadata for the old request.
-- External classification other than `EXTERNAL_STATE_REMAINS_UNKNOWN`.
 - A new RAW retry or a live RECONCILE response.
-- Provider-issued generation metadata from a successful live response.
+- Provider-issued generation metadata from a successful, app-validated live
+  response.
 - Final `REPORT_L1`/receipt commit from a real chapter.
 
 Therefore P5D.5–P5D.7 remain closed and no new provider authorization is

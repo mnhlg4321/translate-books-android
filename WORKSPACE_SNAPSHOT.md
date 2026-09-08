@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
 - Updated: 2026-09-08 (+07:00).
-- Current status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / EXTERNAL_STATE_REMAINS_UNKNOWN / RECOVERY_REQUIRED / NO_RETRY_AUTHORIZATION / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
-- Current version/build: validation artifact 4.17-dev.18 / code186 was archived and passed focused/full instrumentation on device `15e84958`; the device is now restored to 4.17-dev.1 / code169. One authorized OpenRouter RAW request remains externally unresolved; no report/receipt was committed.
+- Current status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / EXTERNAL_CONFIRMED_CANCELLED / RECOVERY_REQUIRED / NEW_RAW_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Current version/build: validation artifact 4.17-dev.18 / code186 was archived and passed focused/full instrumentation on device `15e84958`; the device is now restored to 4.17-dev.1 / code169. The one authorized OpenRouter RAW request has provider-confirmed cancellation metadata; the app still has no usable response/report/receipt.
 - Current branch/workspace: feature/v4.18 / D:\App Translate Books\App Translate Books-translation-profile.
-- Current commit baseline: e9f0b7907c27e88feb209dd23361b254377828dc (`test(editorial): assert redacted lifecycle timing`), the implementation baseline immediately before the current P5D evidence-documentation update; not self-referential.
+- Current commit baseline: e2019ee38217cf79b0ca0e995831582d0f6ae18d (`docs(editorial): record P5D recovery validation`), the implementation/documentation baseline immediately before the current authenticated reconciliation update; not self-referential.
 - Active authority: V5-SAFE.4.1.3-FULL. Authority bytes, canonical ZIP SHA, Java-control ZIP SHA and profile v2 hash are unchanged.
 
 ## Completed tasks
@@ -23,29 +23,29 @@
 - Code184 validation passed focused `23/23` and full `118/118` instrumentation; the full suite's real API test remains skipped by opt-in. The new live runner is also opt-in and requires an explicit `p5c_live=YES` invocation after final user confirmation.
 - P5D.0 documentation gate is complete: the P4 starting commit is corrected, code184 is historical and code186 is current/latest, code181/code177/code176 remain historical, and PASS/SKIP/FAIL wording is separated. No provider call is permitted in P5D.0-P5D.4.
 - P5D.3/P5D.4 are complete locally: additive v21 lifecycle/auth/reconciliation owners, typed provider failures, non-reclaimable recovery gate, hashed single-use authorization receipts and redacted timing/generation metadata pass focused tests; no provider call was made.
-- P5D.1/P5D.2 remain unresolved by design: OpenRouter Activity redirected to sign-in, so classification remains `EXTERNAL_STATE_REMAINS_UNKNOWN` and no retry authorization exists. See `docs/P5D_VALIDATION_REPORT.md` and `docs/P5D_RECOVERY_AND_LIFECYCLE_REPORT.md`.
+- P5D.1/P5D.2 are complete by bounded authenticated read-only OpenRouter metadata: the matching generation is `EXTERNAL_CONFIRMED_CANCELLED`; a new exact-phase RAW authorization is required before retry. See `docs/P5D_VALIDATION_REPORT.md` and `docs/P5D_RECOVERY_AND_LIFECYCLE_REPORT.md`.
 
 ## Validation evidence
 
 - Host engine `180/180 PASS`; app unit aggregate `645/645 PASS`; external qualification `306 PASS / 0 FAIL` is historical and was not rerun in P5D.
 - Code186 full device instrumentation XML: `124` test methods, `0` failures, `0` errors, `4` approved skips. The increase from code184 `118` methods is P5D lifecycle/recovery and schema/migration coverage; real provider remains opt-in/skipped.
-- Provider/API calls: one authorized live RAW request dispatched, no response/usage receipt; fake acceptance calls `2`; no automatic retry or RECONCILE call.
+- Provider/API calls: one authorized live RAW request dispatched; the app received no usable response/usage receipt, while OpenRouter metadata records one matching cancelled generation with displayed cost `$0.00366`; fake acceptance calls `2`; no automatic retry or RECONCILE call.
 - Canonical ZIP `B9C65DBEB9D4C4ED46B67D5EC28FF6252CC2BDC4B63BC902904612987EC58987`, Java control `44F99423292ADA15680220165AF50430532D847E155F93C1B15D9F173D4609A5`, and profile resource `1B2DB011D59F3E2EF4349AEB0DAA9C54A19B7EFD1E2CA6886BC29B56E4690D62` re-hash correctly.
 - Latest validation APK code186 SHA-256: `A32CD2B379D13CCEE6D7FAB7E0512A1A73587175CE92C32C1CDCD3707245D10C`; archived in both artifacts and backup and used for P5D validation. It is not a release build. Code184 remains historical pre-P5D live-attempt evidence. The device was restored by uninstall/reinstall to code169 APK SHA-256 `3C3AAEF1A7D47F39A7B5A5FF8AEDF77347D255AF728B908180AA142CA2B276D1`; validation-package data was removed.
 - `git diff --check`: PASS; scoped production-change guard: PASS with no out-of-scope production/build-metadata path.
 
 ## Pending tasks
 
-- Controlled real L1 pilot remains incomplete after an unresolved provider stop. P5D.1/P5D.2 require authenticated read-only Activity evidence; P5D.3/P5D.4 pass. P5D.5-P5D.7, P6 L2/L3 and P7 release gates remain separate; a retry needs external classification and new explicit authorization.
+- Controlled real L1 pilot remains incomplete after a provider-confirmed cancelled generation. P5D.1/P5D.2 and P5D.3/P5D.4 pass. P5D.5-P5D.7, P6 L2/L3 and P7 release gates remain separate; a retry needs new exact-phase authorization and duplicate/billing-risk acknowledgement.
 - Release tag, release backup/export and real-chapter certification remain pending by design.
 
 ## Known bugs and limitations
 
-- No successful live provider response, real REPORT_L1/receipt, model result or certification evidence exists. One live request was dispatched and stopped with `RETRY_PROVIDER_CALL_FAILED`; billing and external acceptance remain unknown.
+- No successful app-validated live provider response, real REPORT_L1/receipt, model result or certification evidence exists. One live request was dispatched and stopped with `RETRY_PROVIDER_CALL_FAILED`; OpenRouter later exposed matching `cancelled` metadata and displayed usage cost `$0.00366`, but the app did not receive a usable response.
 - P4 creates pilot setup metadata only; `DATA_COMPATIBLE` and selectable status do not mean runnable or certified.
 - Initial setup UI collects explicit source text for binding metadata; it does not certify source bytes or open execution.
 - Bootstrap profile v1 remains loadable and non-executable.
-- The consumed live authorization cannot be reused. External state, response usage, billing, RECONCILE and final report/receipt commit remain unproven; the P5D recovery gate prevents reclaim while state is unknown. Device is back on code169; code186 is archived for evidence.
+- The consumed live authorization cannot be reused. A new RAW attempt is eligible only after P5D.5 exact-phase authorization; RECONCILE, app-validated response and final report/receipt commit remain unproven. Device is back on code169; code186 is archived for evidence.
 
 ## Protected state
 
@@ -55,11 +55,9 @@ The original workspace D:\App Translate Books remains untouched. Its user-owned 
 
 2026-09-08 validation update: user delegated setup using `D:\Ebooks\MERCEDES\VOL 4`, approved egress and caps of USD 0.10 / 5 minutes, selected OpenRouter and explicitly confirmed the live call. The persisted binding for chapter `001` passed; RAW dispatched one request and stopped after 179728 ms without response. Recovery inspection `1/1` confirmed no report/receipt bytes, the P5D lifecycle/recovery matrix passed, and the device was restored to code169.
 
-Next action is manual authentication for the bounded read-only OpenRouter
-Activity audit of the old request, without enabling content logging or making a
-provider call. Record a redacted `EXTERNAL_*` classification or retain
-`EXTERNAL_STATE_REMAINS_UNKNOWN`. Only after that classification may a new
-exact-phase RAW authorization be considered; do not reuse authorization, call
-RECONCILE automatically or infer P6 readiness.
+Next action is to prepare a new exact-phase, single-use P5D RAW recovery
+authorization that acknowledges the provider-confirmed cancellation and the
+displayed prior usage/cost. Do not reuse the consumed authorization, enable
+content logging, call RECONCILE automatically or infer P6 readiness.
 
 This is current-only state; Git history preserves prior snapshots.
