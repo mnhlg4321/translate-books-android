@@ -184,6 +184,15 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
             emit(EditorialP5CAttemptStore.LifecycleStage.RESPONSE_BODY_COMPLETE, "", 0L);
         }
 
+        @Override public void onResponseBodyComplete(long byteCount, String providerResponseId,
+                                                      long elapsedMillis) {
+            bodyComplete = true;
+            if (providerResponseId != null && !providerResponseId.isBlank()) {
+                this.providerResponseId = providerResponseId;
+            }
+            emit(EditorialP5CAttemptStore.LifecycleStage.RESPONSE_BODY_COMPLETE, "", elapsedMillis);
+        }
+
         @Override public void onCallCancelled(long elapsedMillis) {
             cancelled = true;
             emit(EditorialP5CAttemptStore.LifecycleStage.CALL_CANCELLED, "", elapsedMillis);

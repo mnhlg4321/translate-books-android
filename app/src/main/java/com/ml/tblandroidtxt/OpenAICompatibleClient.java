@@ -29,6 +29,10 @@ public class OpenAICompatibleClient {
         default void onResponseHeaders(int code) {}
         default void onResponseHeaders(int code, String generationId) { onResponseHeaders(code); }
         default void onResponseBodyComplete(long byteCount, String providerResponseId) {}
+        default void onResponseBodyComplete(long byteCount, String providerResponseId,
+                                            long elapsedMillis) {
+            onResponseBodyComplete(byteCount, providerResponseId);
+        }
         default void onCallCancelled(long elapsedMillis) {}
         default void onCallFailed(String exceptionClass, long elapsedMillis) {}
     }
@@ -123,15 +127,16 @@ public class OpenAICompatibleClient {
         try (Response response = call.execute()) {
             ResponseBody responseBody = response.body();
             String responseText = responseBody == null ? "" : responseBody.string();
-            if (observer != null) observer.onResponseBodyComplete(
-                    responseText.getBytes(StandardCharsets.UTF_8).length, "");
+            long bodyBytes = responseText.getBytes(StandardCharsets.UTF_8).length;
+            long bodyElapsed = Math.max(0L, (System.nanoTime() - startedNanos) / 1_000_000L);
+            if (observer != null) observer.onResponseBodyComplete(bodyBytes, "", bodyElapsed);
             int code = response.code();
             if (!response.isSuccessful()) throw new ApiHttpException(code, parseRetryAfterMs(response.header("Retry-After")), ApiErrorParser.fromHttp(code, responseText));
 
             ChatResult r = parseChatResponse(responseText);
-            if (observer != null) observer.onResponseBodyComplete(
-                    responseText.getBytes(StandardCharsets.UTF_8).length,
-                    safeHeader(r.providerResponseId));
+            if (observer != null) observer.onResponseBodyComplete(bodyBytes,
+                    safeHeader(r.providerResponseId),
+                    Math.max(0L, (System.nanoTime() - startedNanos) / 1_000_000L));
             if (r.promptTokens <= 0) r.promptTokens = Chunker.approxTokens(prompt.system) + Chunker.approxTokens(prompt.user);
             if (r.completionTokens <= 0) r.completionTokens = Chunker.approxTokens(r.content);
             if (r.totalTokens <= 0) r.totalTokens = r.promptTokens + r.completionTokens;
