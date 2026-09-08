@@ -4,9 +4,9 @@
 - Active authority: V5-SAFE.4.1.3-FULL; canonical plan `EDITORIAL_RECOVERY_V4_18.md`.
 - Workspace: D:\App Translate Books\App Translate Books-translation-profile.
 - Branch: feature/v4.18.
-- Current commit baseline: 61ba7602005522a8c93f2b4335fe6bea0214a367, the exact P5C implementation/test baseline immediately before this P5C evidence/state snapshot; not self-referential.
-- Last validation package used: 4.17-dev.13 / Android versionCode 181, archived and installed for P5C device validation. Device `15e84958` has now been restored by uninstall/reinstall to the immutable baseline 4.17-dev.1 / code169; this restoration removed validation-package data.
-- Current phase: P5C exact-binding fake E2E is complete; live authorization was not supplied. Editorial execution, provider/API calls, real chapter pilot and certification remain disabled.
+- Current commit baseline: 416f47b docs(editorial): record real pilot source preparation, the exact implementation/evidence baseline immediately before the current persistent-binding setup work; not self-referential.
+- Last validation package used: 4.17-dev.14 / Android versionCode 182, archived and installed on device `15e84958` for pack import and binding preparation. This validation install has not made a provider call.
+- Current phase: P5C exact-binding fake E2E is complete; real chapter source preparation and canonical pack import are complete; persistent real-binding setup test is prepared but not yet run. Live authorization/preflight confirmation is still required. Editorial execution, provider/API calls and certification remain disabled.
 
 ## Source and authority identity
 
@@ -53,6 +53,8 @@
 - Profile and canonical pack/authority verification: PASS. Live provider/API calls: `0`; fake provider calls: `2` in isolated app acceptance. Code169 baseline APK SHA-256 is `3C3AAEF1A7D47F39A7B5A5FF8AEDF77347D255AF728B908180AA142CA2B276D1` in both artifact and backup; device restore was verified after ADB authorization. The uninstall/reinstall procedure removed validation-package data because `pm clear` is not accepted on this device.
 - `git diff --check`: PASS at closure.
 
+- Device setup preparation: canonical 4.1.3 was imported through the production pack picker on code182 and reported `DATA_COMPATIBLE`; source files remain outside Git under the user-provided MERCEDES VOL 4 folder. A test-only instrumentation setup will pin the normalized app-import bytes without logging source text.
+
 ## Validation artifact
 
 - Latest validation APK: `artifacts/builds/v4.17-dev.13/build-20260904-202447/TranslateBooks-v4.17-dev.13-code181.apk`.
@@ -88,13 +90,15 @@ not modified.
 - Bootstrap profile v1 remains loadable and non-executable.
 - P5 live authorization is not present; no real chapter/provider call is permitted. Dry-run/fake-provider contract work may proceed only with external execution disabled.
 - P5C proves app-bound fake attempt persistence and idempotent RAW→RECONCILE replay, but does not prove live provider behavior, external-call cancellation/process-death handling, data-egress approval, real token/cost/latency or a real chapter `REPORT_L1`/receipt commit. The supplied two-phase authorization block is still required before any provider access.
-- Device is restored to immutable `4.17-dev.1/code169`; this is not a permission to run provider work.
+- Device currently runs validation `4.17-dev.14/code182`; this is not a permission to run provider work. The immutable baseline remains `4.17-dev.1/code169` and will be restored after validation.
 
 ## Next step
 
-The device is restored to immutable code169. Obtain the complete two-phase
-`P5 PILOT AUTHORIZATION` block before any live call. Keep
-`EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE`;
-do not open L2/L3, auto-activate, auto-rebind or certify from fake evidence.
+Run the test-only persistent binding setup for chapter `001`, then execute fake
+E2E/readback and produce the final live preflight. Obtain the complete
+two-phase `P5 PILOT AUTHORIZATION` block and a separate explicit live-call
+confirmation before any OpenRouter call. Keep
+`EXECUTION_DISABLED / NOT_CERTIFIED / NOT_RUNNABLE`; do not open L2/L3,
+auto-activate, auto-rebind or certify from fake evidence.
 
 This file is current-only; Git history preserves prior state.
