@@ -2,13 +2,20 @@
 
 Ngày kiểm tra: `2026-09-09` (+07:00)
 
+> Đây là snapshot pre-dispatch. Authorization trong snapshot đã được người dùng
+> cấp sau đó và đã được consume đúng một lần. Evidence sau dispatch nằm trong
+> [`docs/P5D_RAW_DIAGNOSTIC_ATTEMPT_REPORT.md`](P5D_RAW_DIAGNOSTIC_ATTEMPT_REPORT.md).
+
 ## Quyết định hiện tại
 
 ```text
 P5D_DOCUMENTATION_BASELINE_CONSISTENT
 P5D_RECOVERY_FIXTURES_PASS
-P5D_RAW_DIAGNOSTIC_AUTHORIZATION_DRAFT
-NO_PROVIDER_CALL_IN_THIS_STEP
+P5D_RAW_DIAGNOSTIC_AUTHORIZATION_CONSUMED
+P5D_RAW_DIAGNOSTIC_ATTEMPT_COMPLETE
+P5D_RAW_DIAGNOSTIC_STOPPED_RETRY_OUTPUT_TRUNCATED
+P5D_PREFLIGHT_PROVIDER_CALLS_0
+P5D_LIVE_PROVIDER_CALLS_1
 VOL5_RECOVERY_REQUIRED
 EXTERNAL_CONFIRMED_CANCELLED
 RECONCILE_NOT_AUTHORIZED
@@ -17,9 +24,10 @@ NOT_CERTIFIED
 NOT_GLOBALLY_RUNNABLE
 ```
 
-Đây là preflight và bản nháp quyền gọi, không phải authorization đã cấp.
-Chưa ghi reconciliation decision mới, chưa consume authorization mới và
-chưa dispatch provider.
+Preflight đã được chuyển thành một lần gọi diagnostic đã cấp quyền và đã kết
+thúc. Authorization đã consume không được dùng lại. Attempt vẫn
+`RECOVERY_REQUIRED`; không có RAW predecessor, `REPORT_L1` hoặc receipt hợp
+lệ và không có RECONCILE.
 
 ## Baseline và artifact
 
@@ -107,7 +115,7 @@ call thứ hai; auth single-use vẫn `CONSUMED` sau DB reopen. Expiry/budget v�
 zero-provider preflight được kiểm tra ở engine boundary. Các test dùng DB cô
 lập, không ghi vào VOL5 pilot DB.
 
-## Bản nháp authorization mới — chưa cấp quyền
+## Bản nháp authorization mới — snapshot trước khi cấp quyền
 
 Authorization ID đề xuất:
 `P5D-VOL5-RAW-DIAGNOSTIC-20260909-01`
@@ -135,16 +143,29 @@ SHA-256 của ID đề xuất (chỉ là fingerprint dự kiến, chưa phải r
 | Authorized phase | `L1_RAW_DISCOVERY` only |
 | RECONCILE/L2/L3/certification/general runnable | `NO / NO / NO / NO` |
 
-This draft deliberately sets schema repair to `0` so one diagnostic primary
-result is observed without a second semantic-adjacent call. No reconciliation
-decision is written with this draft ID. Once explicitly approved, the
-existing owner must persist the immutable `EXTERNAL_CONFIRMED_CANCELLED`
-decision with this authorization hash before any dispatch.
+At the time of this snapshot, the draft deliberately set schema repair to `0`
+so one diagnostic primary result could be observed without a second
+semantic-adjacent call. The user subsequently approved the exact ID, the
+existing owner persisted the immutable `EXTERNAL_CONFIRMED_CANCELLED`
+decision with this authorization hash, and the receipt was consumed before
+dispatch. The resulting stop is recorded in
+`P5D_RAW_DIAGNOSTIC_ATTEMPT_REPORT.md`.
 
-## Next gate
+## Next gate at the time of the snapshot
 
-Await explicit approval of the exact draft above. Until then: no provider call,
-no new attempt claim, no authorization receipt consumption, no reconciliation
-write and no RECONCILE authorization. If approved, run one RAW-only diagnostic
-attempt, wait for terminal state/deadline, read back lifecycle and predecessor,
-then stop before RECONCILE.
+The snapshot's approval gate has been passed. The single RAW-only diagnostic
+attempt was run, lifecycle and recovery state were read back, and execution
+stopped before RECONCILE. Do not infer success from transport completion; the
+attempt stopped as `RETRY_OUTPUT_TRUNCATED` and requires a new explicit
+authorization for any future RAW attempt.
+
+## Post-dispatch addendum — 2026-09-09
+
+The approved authorization `P5D-VOL5-RAW-DIAGNOSTIC-20260909-01` produced one
+OpenRouter request, no schema repair and no network retry. The provider
+metadata and app readback agree on `finish=length`, `2,048` output tokens and
+reported cost `$0.0075392`. The persisted lifecycle reached
+`RESPONSE_BODY_COMPLETE`, but local schema/receipt validation failed and no
+partial output was committed. The historical cancellation actor remains
+`UNKNOWN`; no further provider call or RECONCILE is authorized by this
+record.

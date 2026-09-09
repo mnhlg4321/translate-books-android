@@ -7,18 +7,24 @@ Ngày kiểm tra: `2026-09-08` (+07:00)
 ```text
 P5D_DOCUMENTATION_BASELINE_CONSISTENT
 P5D_EXTERNAL_AUDIT_COMPLETE
-EXTERNAL_CONFIRMED_CANCELLED
 P5D_LIFECYCLE_HARDENING_PASS
 P5D_REGRESSION_PASS
-NEW_RAW_AUTHORIZATION_REQUIRED
+LOCAL_TRANSPORT_AND_LIFECYCLE_VERIFIED
+HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED
+RAW_DIAGNOSTIC_ATTEMPT_COMPLETE
+RAW_DIAGNOSTIC_STOPPED_RETRY_OUTPUT_TRUNCATED
+RAW_PREDECESSOR_NOT_COMMITTED
+RECONCILE_AUTHORIZATION_REQUIRED
 EXECUTION_DISABLED
 NOT_CERTIFIED
 NOT_GLOBALLY_RUNNABLE
 ```
 
 P5D chưa hoàn tất exit gate. P5D.1/P5D.2 đã có bằng chứng OpenRouter
-authenticated, read-only và phân loại được external cancellation. P5D.5 chưa
-được cấp authorization mới; P5D.6/P5D.7 chưa được thực hiện.
+authenticated, read-only và phân loại được external cancellation. P5D.5 và
+P5D.6 đã được thực hiện cho đúng một RAW diagnostic attempt; attempt dừng
+typed ở `RETRY_OUTPUT_TRUNCATED`, không có predecessor hợp lệ và P5D.7 chưa
+được thực hiện.
 
 Phần kiểm chứng mới nhất ngày `2026-09-09` được ghi ở cuối báo cáo. Kết luận
 mới nhất là `LOCAL_TRANSPORT_AND_LIFECYCLE_VERIFIED` và
@@ -100,17 +106,16 @@ framework, build metadata or database owner outside the approved P5D recovery
 scope was changed. No provider call was made while the external state was
 unresolved.
 
-## Next gate
+## Historical next gate before the VOL5 diagnostic follow-up
 
-The next action is a new exact-phase, single-use RAW recovery authorization
-after the user explicitly acknowledges that the cancelled external generation
-already has provider-side usage/cost metadata and a second semantic attempt
-may repeat work and incur new billing. The consumed P5C authorization must not
-be reused. P5D.6 must stop after a successful RAW predecessor commit and ask
-for a separate RECONCILE authorization; execution remains
+At this earlier checkpoint, the next action was a new exact-phase, single-use
+RAW recovery authorization after the user acknowledged the cancelled external
+generation and duplicate billing risk. That authorization was later issued
+and consumed by the diagnostic attempt recorded below. The current next action
+is no automatic retry and no RECONCILE; execution remains
 `EXECUTION_DISABLED / NOT_CERTIFIED`.
 
-## Current VOL5 follow-up (2026-09-09)
+## Historical VOL5 follow-up before the diagnostic attempt (2026-09-09)
 
 This addendum records a later independent VOL5/chapter001 attempt after the
 validation package key was restored. The earlier missing-key gate remains
@@ -131,6 +136,29 @@ RECONCILE remains unauthorized and the P5D exit gate is still incomplete.
 Full redacted evidence is in
 `docs/P5D_VOL5_RAW_PROVIDER_RECONCILIATION.md`.
 
+## Controlled RAW diagnostic attempt — 2026-09-09
+
+The exact-phase authorization was approved and consumed once for the
+persisted VOL5/chapter001 binding. The app dispatched exactly one RAW primary
+request through the lifecycle-persisting adapter; schema repair and automatic
+network retry were both `0`. OpenRouter returned HTTP `200` with a complete
+JSON transport body, but the output ended at the authorized `2,048` token cap
+with `finish_reason=length`. The app therefore returned the typed stop
+`RETRY_OUTPUT_TRUNCATED` and did not commit partial `REPORT_L1` or a receipt.
+
+App metrics were `20,327` input tokens, `2,048` output tokens, `22,375` total
+tokens, reported cost `$0.0075392` and local latency `20,590 ms`. The durable
+row remained `RECOVERY_REQUIRED`; lifecycle readback after execution recorded
+`RESPONSE_BODY_COMPLETE`, HTTP `200`, `application/json`, request bytes
+`85,068` and the redacted generation identity. Provider metadata independently
+matched the same generation, request and response identities. No provider
+call followed, no RECONCILE request was made and the consumed authorization
+cannot be reused.
+
+The full redacted evidence, source-identity preservation and gate separation
+(`SAFETY_STOP_PASS`, `TRANSPORT_PASS`, `RAW_ACCEPTANCE_PASS`) are recorded in
+[`docs/P5D_RAW_DIAGNOSTIC_ATTEMPT_REPORT.md`](P5D_RAW_DIAGNOSTIC_ATTEMPT_REPORT.md).
+
 ## Code189 local HTTP harness addendum — 2026-09-09
 
 See `docs/P5D_LOCAL_HTTP_HARNESS_REPORT.md` for the detailed baseline,
@@ -149,6 +177,10 @@ with `0` failures. Engine/app debug unit XML reported `396` tests with `0`
 failures/errors/skips. Static qualification remained `306/306 PASS`. No
 provider call was made.
 
+These are the pre-dispatch code189 harness results. The later single approved
+diagnostic call and its outcome are recorded in the dedicated attempt section
+above and in `P5D_RAW_DIAGNOSTIC_ATTEMPT_REPORT.md`.
+
 The code189 recorder path persisted and read back content type, generation ID,
 request byte count, terminal lifecycle stage and elapsed time after DB reopen
 on isolated test databases. The historical VOL5 attempt itself still has no
@@ -158,9 +190,8 @@ its durable state remains `RECOVERY_REQUIRED` with no response/report/receipt.
 The current PRONOUN transport file is `455` bytes / `63E79EEB…1A49C` because it
 contains a three-byte UTF-8 BOM. The existing app-owned BOM removal produces
 `452` bytes / `4947FF91…20686`, exactly matching the persisted binding. No
-source rewrite or rebind was needed. The local gates therefore permit
-preparation of a new diagnostic RAW authorization, but the historical
-cancellation actor remains unknown and no call is issued here.
+source rewrite or rebind was needed. The diagnostic attempt preserved this
+identity and the historical cancellation actor remains unknown.
 
 ## Controlled RAW diagnostic preflight — 2026-09-09
 
@@ -172,8 +203,9 @@ touching the VOL5 pilot database or calling a provider:
 - `EditorialP5PilotExecutionBoundaryTest`: `16/16 PASS` with JDK 17+.
 - Provider calls in this preflight: `0`.
 
-The detailed identity table and the unissued authorization draft are in
+The detailed identity table and pre-dispatch authorization snapshot are in
 [`docs/P5D_RAW_DIAGNOSTIC_PREFLIGHT.md`](P5D_RAW_DIAGNOSTIC_PREFLIGHT.md).
-The recovery gate remains closed because the prior authorization is consumed
-and the historical attempt has no reconciliation row. No placeholder retry
-decision was persisted.
+The snapshot's recovery gate was subsequently passed with the exact approved
+authorization; the single diagnostic attempt then stopped at
+`RETRY_OUTPUT_TRUNCATED`. No further retry or placeholder decision is
+permitted.
