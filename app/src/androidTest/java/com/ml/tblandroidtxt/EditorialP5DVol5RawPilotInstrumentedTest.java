@@ -123,6 +123,79 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
         }
     }
 
+    @Test public void readBackVol5AcceptanceAfterDeadlineCleanup() {
+        Context context = ApplicationProvider.getApplicationContext();
+        try (TranslationRepository database = new TranslationRepository(context)) {
+            EditorialP5CAttemptStore attemptStore = new EditorialP5CAttemptStore(database);
+            EditorialP5CAttemptStore.AttemptRecord attempt = attemptStore
+                    .findRecord(ORIGINAL_ATTEMPT_ID).orElseThrow(
+                            () -> new AssertionError("VOL5 attempt is missing after deadline cleanup"));
+            java.util.Optional<EditorialP5CAttemptStore.AuthorizationReceipt> authorization =
+                    attemptStore.findAuthorizationReceipt(ACCEPTANCE_AUTHORIZATION_HASH);
+            java.util.Optional<EditorialP5CAttemptStore.NetworkLifecycleEvent> lifecycle =
+                    attemptStore.findNetworkLifecycle(ORIGINAL_ATTEMPT_ID);
+            List<EditorialP5CAttemptStore.ReconciliationRecord> history = attemptStore
+                    .findReconciliationHistory(ORIGINAL_ATTEMPT_ID);
+            Log.i("P5D_RAW_READBACK", "status=" + attempt.status()
+                    + " reason=" + attempt.recoveryReasonCode()
+                    + " responseIdentityPresent=" + (attempt.responseIdentity() != null
+                    && !attempt.responseIdentity().isBlank())
+                    + " reportBytes=" + attempt.reportBytes().length
+                    + " receiptBytes=" + attempt.receiptBytes().length
+                    + " acceptanceAuthorizationPresent=" + authorization.isPresent()
+                    + " acceptanceConsumption=" + (authorization.isPresent()
+                    ? authorization.get().consumptionResult() : "ABSENT")
+                    + " lifecyclePresent=" + lifecycle.isPresent()
+                    + " lifecycleStage=" + (lifecycle.isPresent()
+                    ? lifecycle.get().stage() : "ABSENT")
+                    + " requestBodyBytes=" + (lifecycle.isPresent()
+                    ? lifecycle.get().requestBodyBytes() : 0)
+                    + " httpStatus=" + (lifecycle.isPresent()
+                    ? lifecycle.get().httpStatus() : -1)
+                    + " elapsedMs=" + (lifecycle.isPresent()
+                    ? lifecycle.get().elapsedMillis() : 0)
+                    + " contentType=" + (lifecycle.isPresent()
+                    ? lifecycle.get().responseContentType() : "")
+                    + " generationPresent=" + (lifecycle.isPresent()
+                    && !lifecycle.get().generationId().isBlank())
+                    + " generationId=" + (lifecycle.isPresent()
+                    ? lifecycle.get().generationId() : "")
+                    + " responseIdPresent=" + (lifecycle.isPresent()
+                    && !lifecycle.get().providerResponseId().isBlank())
+                    + " cancellationSource=" + (lifecycle.isPresent()
+                    ? lifecycle.get().cancellationSource() : "")
+                    + " recoveryHistoryCount=" + history.size());
+            assertTrue("acceptance readback must not contain a partial report",
+                    attempt.reportBytes().length == 0 || attempt.receiptBytes().length > 0);
+            assertTrue("acceptance readback must not contain a partial receipt",
+                    attempt.receiptBytes().length == 0 || attempt.reportBytes().length > 0);
+        }
+    }
+
+    @Test public void closeInterruptedVol5AcceptanceAsTypedRecovery() {
+        Context context = ApplicationProvider.getApplicationContext();
+        try (TranslationRepository database = new TranslationRepository(context)) {
+            EditorialP5CAttemptStore attemptStore = new EditorialP5CAttemptStore(database);
+            EditorialP5CAttemptStore.AttemptRecord before = attemptStore
+                    .findRecord(ORIGINAL_ATTEMPT_ID).orElseThrow(
+                            () -> new AssertionError("VOL5 attempt is missing before recovery closure"));
+            assertEquals("CLAIMED", before.status());
+            attemptStore.markRecoveryRequired(ORIGINAL_ATTEMPT_ID,
+                    "RETRY_PROVIDER_CALL_TIMEOUT");
+            EditorialP5CAttemptStore.AttemptRecord after = attemptStore
+                    .findRecord(ORIGINAL_ATTEMPT_ID).orElseThrow();
+            assertEquals("RECOVERY_REQUIRED", after.status());
+            assertEquals("RETRY_PROVIDER_CALL_TIMEOUT", after.recoveryReasonCode());
+            assertEquals(0, after.reportBytes().length);
+            assertEquals(0, after.receiptBytes().length);
+            Log.i("P5D_RAW_RECOVERY", "status=" + after.status()
+                    + " reason=" + after.recoveryReasonCode()
+                    + " reportBytes=" + after.reportBytes().length
+                    + " receiptBytes=" + after.receiptBytes().length
+                    + " providerCallsAfterCleanup=0");
+        }
+    }
+
     @Test public void preparePersistedVol5Chapter001Binding() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
         try (TranslationRepository database = new TranslationRepository(context)) {
