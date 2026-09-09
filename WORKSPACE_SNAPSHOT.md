@@ -2,7 +2,7 @@
 
 - Updated: 2026-09-09 (+07:00).
 - Current status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / TRANSPORT_AND_LIFECYCLE_LIVE_VERIFIED / RAW_OUTPUT_TRUNCATION_CONFIRMED / RAW_PREDECESSOR_REQUIRED / OUTPUT_BUDGET_ALIGNMENT_PASS / RECOVERY_HISTORY_PRESERVED / RAW_ACCEPTANCE_AUTHORIZATION_APPROVED / RAW_ACCEPTANCE_NOT_DISPATCHED / RAW_ACCEPTANCE_INCOMPLETE / P6_NOT_READY / HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED / RAW_DIAGNOSTIC_ATTEMPT_COMPLETE / RAW_DIAGNOSTIC_STOPPED_RETRY_OUTPUT_TRUNCATED / VOL5_RECOVERY_REQUIRED / EXTERNAL_CONFIRMED_CANCELLED / P5D_PREFLIGHT_PROVIDER_CALLS_0 / P5D_LIVE_PROVIDER_CALLS_1 / NEW_RAW_AUTHORIZATION_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
-- Current version/build: production validation artifact 4.17-dev.23 / code191 is archived in artifacts and backup with SHA-256 `5F3C841F590C6F7AA3E19F625D2B387E55B2D6BFD3C50A93D61F0337E6A2340C` and installed on device `15e84958`. The matching focused test APK has SHA-256 `8A58C19EEC98BB1BC1F1042A624EDD52E3DB67B05BF906A3241D64D339AF249D`. One authorized VOL5 RAW primary call returned complete transport but stopped at the historical 2,048 output-token cap; the app kept `RECOVERY_REQUIRED` with no response/report/receipt. Provider-reported cost was `$0.0075392`. PRONOUN remains 455 bytes with BOM before the existing app-owned normalization and 452 pinned bytes after it. Output alignment now uses requested/effective `4,096`; no new retry or RECONCILE is authorized.
+- Current version/build: production validation artifact 4.17-dev.23 / code191 is archived in artifacts and backup with SHA-256 `5F3C841F590C6F7AA3E19F625D2B387E55B2D6BFD3C50A93D61F0337E6A2340C` and installed on device `15e84958`. The focused test APK rebuilt from `fd12b952fdde6b38f5739a3554b3feb868fe7174` has SHA-256 `4646408DF01B2A3502BA6CF05DB6486C026AFFF74D9C0ED7C5657048AAB256C4`. One authorized VOL5 RAW primary call returned complete transport but stopped at the historical 2,048 output-token cap; the app kept `RECOVERY_REQUIRED` with no response/report/receipt. Provider-reported cost was `$0.0075392`. PRONOUN remains 455 bytes with BOM before the existing app-owned normalization and 452 pinned bytes after it. Output alignment now uses requested/effective `4,096`; the new acceptance authorization is approved but has not been consumed; no RECONCILE is authorized.
 - Current branch/workspace: feature/v4.18 / D:\App Translate Books\App Translate Books-translation-profile.
 - Current commit baseline: 18b7652ed349d8fea147e90468d0750f8b28929e, the implementation/test baseline immediately before this documentation snapshot commit; not self-referential.
 - Active authority: V5-SAFE.4.1.3-FULL. Authority bytes, canonical ZIP SHA, Java-control ZIP SHA and profile v2 hash are unchanged.
@@ -34,6 +34,7 @@
 - Output-budget alignment is now verified: authorization/coordinator/adapter/request propagate the exact `4,096` cap, and v23 append-only reconciliation history preserves the earlier cancelled decision and later truncated decision without replacing the primary row.
 - Code191 focused validation is current evidence: VOL5 v23 recovery readback `1/1`, fake E2E `14/14`, schema/migration `41/41`, importer/P1/P2 `23/23`, P3B/P4 `5/5`; host engine `181/181`, app all unit variants `657/657`, external qualification `306/306`; provider calls in alignment/preflight `0`. Full code189 instrumentation `130/130` remains historical; the delay harness was not rerun.
 - The exact user-approved RAW acceptance authorization `P5D-VOL5-RAW-ACCEPTANCE-20260909-01` is recorded by its redacted identity hash and remains unconsumed. The live test now appends the new recovery decision for the truncated generation while preserving the original immutable cancelled decision; this is test-only gate wiring and has not dispatched a provider call.
+- The focused test APK was rebuilt and installed with `adb install -r`; the production package remained code191 and the validation database was not reset or uninstalled. No provider call has occurred under the approved acceptance authorization.
 
 ## Validation evidence
 
@@ -74,9 +75,12 @@ alignment now passes locally with requested/effective `4,096`; v23 recovery
 history preserves the prior immutable decision and the later truncated
 decision. The user has now approved the exact acceptance authorization
 `P5D-VOL5-RAW-ACCEPTANCE-20260909-01`; it is represented in test-only gate
-wiring but is not consumed or dispatched yet. Rebuild/install the focused test
-APK, re-read recovery/source hashes and the local gate, then dispatch exactly
-one RAW primary with no repair, retry or RECONCILE. Keep
+wiring but is not consumed or dispatched yet. The focused test APK has now been
+rebuilt and installed from `fd12b952` (SHA-256
+`4646408DF01B2A3502BA6CF05DB6486C026AFFF74D9C0ED7C5657048AAB256C4`), and the
+no-provider recovery/history gates pass. Re-read recovery/source hashes and the
+local gate, then dispatch exactly one RAW primary with no repair, retry or
+RECONCILE. Keep
 `RAW_ACCEPTANCE_INCOMPLETE / P6_NOT_READY / EXECUTION_DISABLED / NOT_CERTIFIED /
 NOT_GLOBALLY_RUNNABLE` until local validation and durable readback succeed.
 

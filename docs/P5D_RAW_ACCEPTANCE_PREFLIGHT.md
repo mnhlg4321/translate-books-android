@@ -10,6 +10,8 @@ RAW_OUTPUT_TRUNCATION_CONFIRMED
 RAW_PREDECESSOR_REQUIRED
 OUTPUT_BUDGET_ALIGNMENT_PASS
 RECOVERY_HISTORY_PRESERVED
+RAW_ACCEPTANCE_AUTHORIZATION_APPROVED
+RAW_ACCEPTANCE_NOT_DISPATCHED
 RAW_ACCEPTANCE_INCOMPLETE
 P6_NOT_READY
 NEW_RAW_AUTHORIZATION_REQUIRED
@@ -30,11 +32,11 @@ và không được tái sử dụng.
 |---|---|
 | Workspace | `D:\App Translate Books\App Translate Books-translation-profile` |
 | Branch | `feature/v4.18` |
-| HEAD trước snapshot tài liệu | `a865b0203c8f25d1de48ea15d6406d599cc961af` |
+| HEAD trước snapshot tài liệu | `fd12b952fdde6b38f5739a3554b3feb868fe7174` |
 | Device | `15e84958` |
 | Validation package | `4.17-dev.23 / code191` |
 | APK SHA-256 | `5F3C841F590C6F7AA3E19F625D2B387E55B2D6BFD3C50A93D61F0337E6A2340C` |
-| Test APK SHA-256 | `8A58C19EEC98BB1BC1F1042A624EDD52E3DB67B05BF906A3241D64D339AF249D` |
+| Test APK SHA-256 | `4646408DF01B2A3502BA6CF05DB6486C026AFFF74D9C0ED7C5657048AAB256C4` |
 | Build event | `build-20260909-213020` |
 | Build source commit | `a865b0203c8f25d1de48ea15d6406d599cc961af` |
 | Database schema | `23` |
@@ -224,13 +226,13 @@ trong alignment này. Full instrumentation `130/130` của code189 vẫn là
 historical evidence; focused suites trên code191 là bằng chứng hiện tại cho
 phạm vi thay đổi. Live RAW acceptance chưa chạy.
 
-## Bản nháp authorization mới — CHƯA CẤP
+## Authorization RAW acceptance — ĐÃ DUYỆT, CHƯA DISPATCH
 
 ```text
-P5D RAW ACCEPTANCE AUTHORIZATION — CHỜ DUYỆT, CHƯA CẤP
+P5D RAW ACCEPTANCE AUTHORIZATION — USER APPROVED; NOT YET DISPATCHED
 
-Authorization ID (proposed): P5D-VOL5-RAW-ACCEPTANCE-20260909-01
-Authorization ID SHA-256 (proposed fingerprint):
+Authorization ID: P5D-VOL5-RAW-ACCEPTANCE-20260909-01
+Authorization ID SHA-256 (fingerprint):
   d116a03f995480c19187ea6531dbf4fc4e91690178f13841854297b62cf01693
 Binding / selector / chapter:
   2e5c80cc6815935688b68cbe0fa3e9aab6e81520a3464e5115374ad5b7182520 /
@@ -279,15 +281,16 @@ L2/L3: NO
 Certification: NO
 General runnable declaration: NO
 Single-use: YES
-Status: UNISSUED; provider calls: 0
+Status: APPROVED; unconsumed; provider calls: 0
 ```
 
-Authorization này chưa mở quyền dispatch. Khi được duyệt, runner phải đọc lại
-exact persisted binding, source hashes, recovery history và effective cap ngay
-trước call; chỉ một RAW primary request được phép. Nếu output hợp lệ thì commit
-RAW predecessor/readback rồi dừng với `RECONCILE_AUTHORIZATION_REQUIRED`. Nếu
-truncated, sai schema, identity mismatch hoặc provider error thì giữ typed
-recovery evidence và không tự gọi lần hai.
+Authorization này đã được người dùng duyệt và chỉ mở đúng một lần dispatch sau
+pre-dispatch verification. Runner phải đọc lại exact persisted binding, source
+hashes, recovery history và effective cap ngay trước call; chỉ một RAW primary
+request được phép, không schema repair và không network retry. Nếu output hợp lệ
+thì commit RAW predecessor/readback rồi dừng với
+`RECONCILE_AUTHORIZATION_REQUIRED`. Nếu truncated, sai schema, identity mismatch
+hoặc provider error thì giữ typed recovery evidence và không tự gọi lần hai.
 
 ## Không được kết luận từ preflight này
 
@@ -300,3 +303,17 @@ P5_L1_PILOT_COMPLETE            = CHƯA CÓ
 P6_READY                        = KHÔNG
 CERTIFIED / GLOBALLY_RUNNABLE   = KHÔNG
 ```
+
+## Pre-dispatch verification record
+
+- Approval received: `2026-09-09` (+07:00), exact authorization ID above.
+- Test APK rebuilt from commit `fd12b952fdde6b38f5739a3554b3feb868fe7174`;
+  SHA-256 `4646408DF01B2A3502BA6CF05DB6486C026AFFF74D9C0ED7C5657048AAB256C4`.
+- Device `15e84958` remained on production `4.17-dev.23 / code191`; test APK
+  was installed with `adb install -r`, preserving the pilot database.
+- No provider call has occurred after the approval. The no-provider gates passed:
+  v23 recovery readback `1/1` and append-only cancelled/truncated history
+  regression `1/1`.
+- Dispatch remains gated to the single opt-in instrumentation method. The run
+  must be kept foreground and awaited to terminal state; no RECONCILE request is
+  permitted under this authorization.
