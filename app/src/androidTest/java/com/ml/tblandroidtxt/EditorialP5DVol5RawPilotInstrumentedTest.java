@@ -58,6 +58,12 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
             "P5D-VOL5-RAW-DIAGNOSTIC-20260909-01";
     private static final String DIAGNOSTIC_AUTHORIZATION_HASH =
             "a28d70c9f1e9b33160daa6d1614abae98f5a921621fbea49f92279f06bcdc00d";
+    private static final String ACCEPTANCE_AUTHORIZATION_ID =
+            "P5D-VOL5-RAW-ACCEPTANCE-20260909-01";
+    private static final String ACCEPTANCE_AUTHORIZATION_HASH =
+            "d116a03f995480c19187ea6531dbf4fc4e91690178f13841854297b62cf01693";
+    private static final String TRUNCATED_GENERATION_ID =
+            "gen-1788959113-A9RinufLgb63vTqkAEwE";
     private static final int RAW_ACCEPTANCE_OUTPUT_TOKENS = 4_096;
     // Retained only to describe the already-consumed historical diagnostic;
     // it must never be reused for a new acceptance authorization.
@@ -196,7 +202,7 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
             long issuedAt = System.currentTimeMillis();
             long expiresAt = issuedAt + PILOT_WINDOW_MILLIS;
             EditorialP5PilotAuthorization raw = new EditorialP5PilotAuthorization(
-                    "p5d-raw-vol5-001-" + issuedAt,
+                    ACCEPTANCE_AUTHORIZATION_ID,
                     binding.bindingIdentity(), binding.runDeclarationIdentity(),
                     binding.canonicalPackHash(), binding.canonicalProfileHash(),
                     binding.compatibilityEvaluationId(), CHAPTER_KEY, "L1_RAW_DISCOVERY",
@@ -206,6 +212,32 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
                     PILOT_WINDOW_MILLIS, true, false, false, "HASH_ONLY",
                     "USER_AUTHORIZED_NEW_RAW_VOL5;RECONCILE_NOT_AUTHORIZED",
                     issuedAt, expiresAt, true);
+            assertEquals(ACCEPTANCE_AUTHORIZATION_HASH,
+                    EditorialP5CAttemptStore.authorizationIdHash(ACCEPTANCE_AUTHORIZATION_ID));
+
+            EditorialP5CAttemptStore attemptStore = new EditorialP5CAttemptStore(database);
+            EditorialP5CAttemptStore.ReconciliationRecord primary = attemptStore
+                    .findReconciliation(ORIGINAL_ATTEMPT_ID).orElseThrow(
+                            () -> new AssertionError("VOL5 primary cancellation decision is missing"));
+            assertEquals(EditorialP5CAttemptStore.ExternalStateClassification
+                    .EXTERNAL_CONFIRMED_CANCELLED, primary.classification());
+            EditorialP5CAttemptStore.ReconciliationDecision recoveryDecision =
+                    new EditorialP5CAttemptStore.ReconciliationDecision(
+                            ORIGINAL_ATTEMPT_ID,
+                            EditorialP5CAttemptStore.ExternalStateClassification
+                                    .EXTERNAL_COMPLETED_BILLED_OUTPUT_UNAVAILABLE,
+                            "docs/P5D_RAW_DIAGNOSTIC_ATTEMPT_REPORT.md",
+                            endpointAccountFingerprint,
+                            "TRUNCATED_OUTPUT_COST_0.0075392_" + TRUNCATED_GENERATION_ID,
+                            "P5D_USER_AUTHORIZED_RAW_ACCEPTANCE", true, true,
+                            ACCEPTANCE_AUTHORIZATION_HASH, System.currentTimeMillis());
+            // The first cancelled decision remains immutable in the primary
+            // row; this later decision is appended to v23 history.
+            attemptStore.recordRecoveryDecision(recoveryDecision);
+            assertTrue("new recovery decision must be readable before dispatch",
+                    attemptStore.findReconciliationHistory(ORIGINAL_ATTEMPT_ID).stream()
+                            .anyMatch(value -> ACCEPTANCE_AUTHORIZATION_HASH
+                                    .equals(value.newAuthorizationIdHash())));
 
             Log.i("P5D_RAW_PREFLIGHT", "selector=" + SELECTOR
                     + " projectId=" + projectId
