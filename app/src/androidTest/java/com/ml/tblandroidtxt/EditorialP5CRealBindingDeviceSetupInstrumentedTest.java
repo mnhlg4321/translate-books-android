@@ -52,6 +52,8 @@ public final class EditorialP5CRealBindingDeviceSetupInstrumentedTest {
                     .resolve("com.ml.tblandroidtxt.editorial.safe4.full", "4.1.3");
             Assume.assumeTrue("validation package has no persisted P5C pack after baseline restore",
                     candidate.isPresent());
+            Assume.assumeTrue("optional p5c-real source fixtures are absent",
+                    hasSourceFixtures(context));
 
             List<EditorialP4InputSource> sources = readSources(context);
             EditorialP4SetupRequest request = new EditorialP4SetupRequest(
@@ -101,6 +103,13 @@ public final class EditorialP5CRealBindingDeviceSetupInstrumentedTest {
                 source(context, "DRAFT", "draft", "001_DRAFT_MERCEDES_VOL4.txt"),
                 source(context, "GLOSSARY", "glossary", "001_CHAPTER_GLOSSARY_FINAL_MERCEDES_VOL4.csv"),
                 source(context, "PRONOUN", "pronoun", "001_PRONOUN.csv"));
+    }
+
+    private static boolean hasSourceFixtures(Context context) {
+        return context.getFileStreamPath("p5c-real-raw.bin").isFile()
+                && context.getFileStreamPath("p5c-real-draft.bin").isFile()
+                && context.getFileStreamPath("p5c-real-glossary.bin").isFile()
+                && context.getFileStreamPath("p5c-real-pronoun.bin").isFile();
     }
 
     private static EditorialP4InputSource source(Context context, String role, String id, String name)

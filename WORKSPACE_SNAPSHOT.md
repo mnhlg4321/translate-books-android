@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
 - Updated: 2026-09-09 (+07:00).
-- Current status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / VOL5_BINDING_READY / VOL5_RECOVERY_REQUIRED / EXTERNAL_CONFIRMED_CANCELLED / NEW_RAW_AUTHORIZATION_REQUIRED / VOL5_PROVIDER_CALLS_1 / RECONCILE_NOT_AUTHORIZED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
-- Current version/build: validation artifact 4.17-dev.20 / code188 was archived in artifacts and backup with SHA-256 `1FB351DA1028B10C90A99E37A9F694EA878F55E4FA98B6C9298452B05858A62D` and installed on device `15e84958`. VOL5 setup passed after the private source fixtures were re-staged. One exact RAW request was dispatched; the durable attempt is `RECOVERY_REQUIRED` with no response/report/receipt, and OpenRouter metadata confirms `cancelled` at displayed cost `$0.00484`. The device remains on code188 for inspection; no retry or RECONCILE request is authorized.
+- Current status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / LOCAL_TRANSPORT_AND_LIFECYCLE_VERIFIED / HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED / VOL5_SOURCE_IDENTITY_MISMATCH_BLOCKED / RAW_RETRY_NOT_READY / VOL5_RECOVERY_REQUIRED / EXTERNAL_CONFIRMED_CANCELLED / NEW_RAW_AUTHORIZATION_REQUIRED / P5D_CODE189_PROVIDER_CALLS_0 / RECONCILE_NOT_AUTHORIZED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Current version/build: validation artifact 4.17-dev.21 / code189 was archived in artifacts and backup with SHA-256 `D66C3C816E29403508BF997413998683FDCAD6AC2C74F24DA40E9AF31570860C` and installed on device `15e84958`. One historical VOL5 RAW request remains `RECOVERY_REQUIRED` with no response/report/receipt; OpenRouter metadata confirms `cancelled` at displayed cost `$0.00484`. Code189 local transport/recorder validation passed, but the current PRONOUN source is 455 bytes/hash `63E79EEB…1A49C` while the binding requires 452 bytes/hash `4947FF91…20686`; no retry or RECONCILE request is authorized.
 - Current branch/workspace: feature/v4.18 / D:\App Translate Books\App Translate Books-translation-profile.
-- Current commit baseline: 1f0fc6f47a139d31a8ed73db725dda0aaa153275 (`docs(editorial): record VOL5 raw authorization gate`), the implementation/documentation baseline immediately before this reconciliation snapshot; not self-referential.
+- Current commit baseline: 6a310f9b6c5bfbd8f0fee6179f22331524e823c6, the implementation baseline immediately before this snapshot commit; not self-referential.
 - Active authority: V5-SAFE.4.1.3-FULL. Authority bytes, canonical ZIP SHA, Java-control ZIP SHA and profile v2 hash are unchanged.
 
 ## Completed tasks
@@ -27,14 +27,15 @@
 - A new user authorization was received and consumed for one independent VOL5/chapter001 RAW attempt: OpenRouter `openai/gpt-5.6-luna`, egress YES, one primary plus one schema repair maximum, zero network retries, USD 0.10 total cap and five-minute window; OpenRouter later confirmed cancellation. RECONCILE remains explicitly unauthorized. The source folder is outside Git.
 - A production-owned RAW-only entry point and focused fake regression are committed in `1994b3c`; they return after durable RAW readback and never construct a RECONCILE request. The VOL5 setup/live test is committed in `e34084d`.
 - VOL5 setup instrumentation passed `1/1`: selector `p5d-raw-mercedes-vol5-001`, exact pack/profile identity and app-computed source hashes were read back. The earlier missing-key invocation is preserved as `LIVE_AUTHORIZATION_INCOMPLETE` with providerCalls `0`. The subsequent explicit RAW invocation dispatched one request and persisted `RECOVERY_REQUIRED`; OpenRouter generation `gen-1788910936-DHfTNOyDlU3f3PJOAvqb` is confirmed `cancelled`, with zero report/receipt bytes and no RECONCILE. See `docs/P5D_VOL5_RAW_PROVIDER_RECONCILIATION.md`.
+- P5D code189 local HTTP closure passed immediate, 11-second delayed-with-legacy-cancel and 11-second delayed-without-legacy-cancel (`1/1` each); the full fake E2E class passed `13/13`, schema/migration device classes `41/41`, and full instrumentation passed `130 tests / 0 failures`. Adapter lifecycle metadata survived DB reopen on isolated v22 databases. Detailed evidence is in `docs/P5D_LOCAL_HTTP_HARNESS_REPORT.md`.
 
 ## Validation evidence
 
-- Host engine `180/180 PASS`; app unit aggregate `645/645 PASS`; external qualification `306 PASS / 0 FAIL` is historical and was not rerun in P5D.
-- Code186 full device instrumentation XML: `124` test methods, `0` failures, `0` errors, `4` approved skips. The increase from code184 `118` methods is P5D lifecycle/recovery and schema/migration coverage; real provider remains opt-in/skipped.
+- Host engine/app debug unit XML: `396` tests, `0` failures, `0` errors, `0` skipped; external qualification `306 PASS / 0 FAIL`.
+- Code189 full device instrumentation: `130` tests, `0` failures; real provider paths remained opt-in/skipped. Code186 `124` tests remains historical evidence.
 - Provider/API calls: historical VOL4 had one authorized RAW request; current VOL5 had one authorized RAW request; both matching OpenRouter generations are `cancelled` and neither produced an app-validated response/usage receipt. VOL5 displayed cost was `$0.00484`; fake acceptance calls remain `2`; no automatic retry or RECONCILE call.
 - Canonical ZIP `B9C65DBEB9D4C4ED46B67D5EC28FF6252CC2BDC4B63BC902904612987EC58987`, Java control `44F99423292ADA15680220165AF50430532D847E155F93C1B15D9F173D4609A5`, and profile resource `1B2DB011D59F3E2EF4349AEB0DAA9C54A19B7EFD1E2CA6886BC29B56E4690D62` re-hash correctly.
-- Latest validation APK code188 SHA-256: `1FB351DA1028B10C90A99E37A9F694EA878F55E4FA98B6C9298452B05858A62D`; archived in both artifacts and backup and used for VOL5 setup/gate validation. It is not a release build. Code186 remains historical P5D evidence and code169 remains the prior production baseline. `git diff --check` is required again after this documentation update.
+- Latest validation APK code189 SHA-256: `D66C3C816E29403508BF997413998683FDCAD6AC2C74F24DA40E9AF31570860C`; test APK SHA-256 `30EADECFA740326F5A3036584DB2F8613C90633E0DAF19DCF9472C0001EF2165`. Both are validation-only artifacts; code186/code188 remain historical and code169 remains the production baseline. `git diff --check` is required again after this documentation update.
 
 ## Pending tasks
 
@@ -47,7 +48,9 @@
 - P4 creates pilot setup metadata only; `DATA_COMPATIBLE` and selectable status do not mean runnable or certified.
 - Initial setup UI collects explicit source text for binding metadata; it does not certify source bytes or open execution.
 - Bootstrap profile v1 remains loadable and non-executable.
-- The consumed VOL4 and VOL5 authorizations cannot be reused. VOL5 has a separate persisted binding and no RECONCILE authorization exists. OpenRouter I/O logging remains disabled. Device remains on validation code188 with the exact recovery row and setup data; certification remains unproven.
+- The consumed VOL4 and VOL5 authorizations cannot be reused. VOL5 has a separate persisted binding and no RECONCILE authorization exists. OpenRouter I/O logging remains disabled. Device remains on validation code189 with the exact recovery row and setup data; certification remains unproven.
+- The current VOL5 PRONOUN source does not match the immutable binding. This is a `STOP_SOURCE_DRIFT` blocker; no source normalization or silent rebind is allowed.
+- The local delayed harness initially hit a device freezer interruption at `DELAY_STARTED`; bounded cleanup and a test-only foreground keepalive resolved the harness run, but the historical provider cancellation actor remains unknown.
 
 ## Protected state
 
@@ -57,10 +60,10 @@ The original workspace D:\App Translate Books remains untouched. Its user-owned 
 
 2026-09-08 validation update: user delegated setup using `D:\Ebooks\MERCEDES\VOL 4`, approved egress and caps of USD 0.10 / 5 minutes, selected OpenRouter and explicitly confirmed the live call. The persisted binding for chapter `001` passed; RAW dispatched one request and stopped after 179728 ms without response. Recovery inspection `1/1` confirmed no report/receipt bytes, the P5D lifecycle/recovery matrix passed, and the device was restored to code169.
 
-Next action requires a new exact-phase, single-use RAW recovery authorization
-that acknowledges the provider-confirmed VOL5 cancellation and possible
-duplicate work/billing. Do not reuse the consumed authorization, do not call
-RECONCILE, and do not enable content logging. Until that new authorization is
-provided, keep the recovery gate closed and do not infer P6 readiness.
+Next action is an explicit source/binding decision for the PRONOUN mismatch.
+Only after exact source identity readback succeeds may a new exact-phase,
+single-use RAW diagnostic authorization be prepared. Do not reuse the consumed
+authorization, do not call RECONCILE, and do not enable content logging. Until
+then, keep the recovery gate closed and do not infer P6 readiness.
 
 This is current-only state; Git history preserves prior snapshots.

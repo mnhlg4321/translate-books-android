@@ -202,9 +202,10 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
     }
 
     public record NetworkLifecycleEvent(LifecycleStage stage, long requestBodyBytes,
-                                        int httpStatus, String exceptionClass,
-                                        long elapsedMillis, String generationId,
-                                        String providerResponseId) {
+                                        int httpStatus, String responseContentType,
+                                        String exceptionClass, long elapsedMillis,
+                                        String generationId, String providerResponseId,
+                                        String cancellationSource) {
         public NetworkLifecycleEvent {
             Objects.requireNonNull(stage, "lifecycle stage");
             if (requestBodyBytes < 0) throw new IllegalArgumentException("request bytes cannot be negative");
@@ -213,13 +214,23 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
             exceptionClass = bounded(exceptionClass, "exception class");
             generationId = bounded(generationId, "generation id");
             providerResponseId = bounded(providerResponseId, "provider response id");
+            responseContentType = allowedContentType(responseContentType);
+            cancellationSource = allowedCancellationSource(cancellationSource);
             if (!allowedExceptionClass(exceptionClass)) {
                 throw new IllegalArgumentException("exception class is not allowlisted");
             }
         }
 
+        public NetworkLifecycleEvent(LifecycleStage stage, long requestBodyBytes,
+                                     int httpStatus, String exceptionClass,
+                                     long elapsedMillis, String generationId,
+                                     String providerResponseId) {
+            this(stage, requestBodyBytes, httpStatus, "", exceptionClass, elapsedMillis,
+                    generationId, providerResponseId, "");
+        }
+
         public static NetworkLifecycleEvent stage(LifecycleStage stage) {
-            return new NetworkLifecycleEvent(stage, 0L, -1, "", 0L, "", "");
+            return new NetworkLifecycleEvent(stage, 0L, -1, "", "", 0L, "", "", "");
         }
     }
 
@@ -323,10 +334,12 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
         values.put("stage", event.stage().name());
         values.put("request_body_bytes", event.requestBodyBytes());
         values.put("http_status", event.httpStatus());
+        values.put("response_content_type", event.responseContentType());
         values.put("exception_class", event.exceptionClass());
         values.put("elapsed_ms", event.elapsedMillis());
         values.put("generation_id", event.generationId());
         values.put("provider_response_id", event.providerResponseId());
+        values.put("cancellation_source", event.cancellationSource());
         values.put("updated_at", System.currentTimeMillis());
         if (db.update(LIFECYCLE_TABLE, values, "attempt_identity=?",
                 new String[]{attemptIdentity}) == 0) {
@@ -336,16 +349,16 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
 
     public synchronized Optional<NetworkLifecycleEvent> findNetworkLifecycle(String attemptIdentity) {
         requireHash(attemptIdentity, "attempt identity");
-        String sql = "SELECT stage,request_body_bytes,http_status,exception_class,elapsed_ms,"
-                + "generation_id,provider_response_id FROM " + LIFECYCLE_TABLE
+        String sql = "SELECT stage,request_body_bytes,http_status,response_content_type,"
+                + "exception_class,elapsed_ms,generation_id,provider_response_id,cancellation_source FROM " + LIFECYCLE_TABLE
                 + " WHERE attempt_identity=?";
         try (Cursor cursor = database.editorialReadableDatabase().rawQuery(sql,
                 new String[]{attemptIdentity})) {
             if (!cursor.moveToFirst()) return Optional.empty();
             return Optional.of(new NetworkLifecycleEvent(
                     LifecycleStage.valueOf(cursor.getString(0)), cursor.getLong(1), cursor.getInt(2),
-                    safe(cursor.getString(3)), cursor.getLong(4), safe(cursor.getString(5)),
-                    safe(cursor.getString(6))));
+                    safe(cursor.getString(3)), safe(cursor.getString(4)), cursor.getLong(5),
+                    safe(cursor.getString(6)), safe(cursor.getString(7)), safe(cursor.getString(8))));
         }
     }
 
@@ -638,6 +651,22 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
                     "ApiHttpException", "JSONException", "IOException", "CancellationException",
                     "RuntimeException" -> true;
             default -> false;
+        };
+    }
+
+    private static String allowedContentType(String value) {
+        String normalized = bounded(value, "response content type").toLowerCase(java.util.Locale.ROOT);
+        return switch (normalized) {
+            case "", "application/json", "application/problem+json", "text/event-stream" -> normalized;
+            default -> throw new IllegalArgumentException("response content type is not allowlisted");
+        };
+    }
+
+    private static String allowedCancellationSource(String value) {
+        String normalized = bounded(value, "cancellation source");
+        return switch (normalized) {
+            case "", "LEGACY_GLOBAL_CANCEL" -> normalized;
+            default -> throw new IllegalArgumentException("cancellation source is not allowlisted");
         };
     }
 

@@ -44,7 +44,9 @@ public final class EditorialP5CLiveRecoveryInspectionInstrumentedTest {
                 assertEquals("RECOVERY_REQUIRED", status);
                 assertEquals(0, reportBytes);
                 assertEquals(0, receiptBytes);
-                assertEquals("RETRY_PROVIDER_CALL_FAILED", recovery);
+                // The current lifecycle taxonomy preserves uncertainty when the
+                // historical external actor cannot be proven from local evidence.
+                assertEquals("RETRY_PROVIDER_CALL_FAILED_UNKNOWN", recovery);
                 assertTrue(responseIdentity == null || responseIdentity.isBlank());
                 assertEquals("L1_RAW_DISCOVERY", phase);
             }

@@ -28,23 +28,40 @@ public class OpenAICompatibleClient {
         default void onRequestBodySent(long byteCount) {}
         default void onResponseHeaders(int code) {}
         default void onResponseHeaders(int code, String generationId) { onResponseHeaders(code); }
+        default void onResponseHeaders(int code, String generationId, String contentType) {
+            onResponseHeaders(code, generationId);
+        }
         default void onResponseBodyComplete(long byteCount, String providerResponseId) {}
         default void onResponseBodyComplete(long byteCount, String providerResponseId,
                                             long elapsedMillis) {
             onResponseBodyComplete(byteCount, providerResponseId);
         }
         default void onCallCancelled(long elapsedMillis) {}
+        default void onCallCancelled(long elapsedMillis, String cancellationSource) {
+            onCallCancelled(elapsedMillis);
+        }
         default void onCallFailed(String exceptionClass, long elapsedMillis) {}
     }
 
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private static final OkHttpClient BASE_CLIENT = new OkHttpClient.Builder().build();
-    private static final AtomicReference<Call> ACTIVE_CALL = new AtomicReference<>();
+    private static final AtomicReference<ActiveCall> ACTIVE_CALL = new AtomicReference<>();
+
+    private static final class ActiveCall {
+        private final Call call;
+        private final AtomicReference<String> cancellationSource;
+
+        private ActiveCall(Call call, AtomicReference<String> cancellationSource) {
+            this.call = call;
+            this.cancellationSource = cancellationSource;
+        }
+    }
 
     public static void cancelActiveRequests() {
-        Call call = ACTIVE_CALL.getAndSet(null);
-        if (call != null) {
-            try { call.cancel(); } catch (Exception ignored) {}
+        ActiveCall active = ACTIVE_CALL.getAndSet(null);
+        if (active != null) {
+            active.cancellationSource.compareAndSet("", "LEGACY_GLOBAL_CANCEL");
+            try { active.call.cancel(); } catch (Exception ignored) {}
         }
     }
 
@@ -78,6 +95,17 @@ public class OpenAICompatibleClient {
     }
 
     public static ChatResult chatWithUsage(AppSettings s, PromptPair prompt, int maxOutputTokens, String requestId, NetworkObserver observer) throws Exception {
+        return chatWithUsage(s, prompt, maxOutputTokens, requestId, observer, true);
+    }
+
+    /**
+     * P5D callers opt out of the legacy translation-service cancellation slot.
+     * A legacy global cancel must never claim or cancel a separately authorized
+     * editorial pilot call.
+     */
+    public static ChatResult chatWithUsage(AppSettings s, PromptPair prompt, int maxOutputTokens,
+                                           String requestId, NetworkObserver observer,
+                                           boolean registerForLegacyGlobalCancellation) throws Exception {
         if (s.apiKey == null || s.apiKey.trim().isEmpty()) throw new IllegalArgumentException("API key is empty");
         if (s.model == null || s.model.trim().isEmpty()) throw new IllegalArgumentException("Model is empty");
         String endpoint = AppSettings.normalizeEndpoint(s.baseUrl);
@@ -104,7 +132,8 @@ public class OpenAICompatibleClient {
                     @Override public void requestBodyEnd(Call call,long byteCount){if(observer!=null)observer.onRequestBodySent(byteCount);}
                     @Override public void responseHeadersEnd(Call call,Response response){
                         if(observer!=null)observer.onResponseHeaders(response.code(),
-                                safeHeader(response.header("X-Generation-Id")));
+                                safeHeader(response.header("X-Generation-Id")),
+                                safeContentType(response.header("Content-Type")));
                     }
                 })
                 .build();
@@ -121,7 +150,10 @@ public class OpenAICompatibleClient {
         if (requestId != null && !requestId.trim().isEmpty()) rb.addHeader("X-TBL-Request-ID", requestId.trim());
 
         Call call = client.newCall(rb.build());
-        ACTIVE_CALL.set(call);
+        AtomicReference<String> cancellationSource = new AtomicReference<>("");
+        ActiveCall active = registerForLegacyGlobalCancellation
+                ? new ActiveCall(call, cancellationSource) : null;
+        if (active != null) ACTIVE_CALL.set(active);
         if (observer != null) observer.onCallCreated();
         long startedNanos = System.nanoTime();
         try (Response response = call.execute()) {
@@ -150,14 +182,14 @@ public class OpenAICompatibleClient {
             if (observer != null) {
                 long elapsed = Math.max(0L, (System.nanoTime() - startedNanos) / 1_000_000L);
                 if (call.isCanceled() || error instanceof CancellationException) {
-                    observer.onCallCancelled(elapsed);
+                    observer.onCallCancelled(elapsed, cancellationSource.get());
                 } else {
                     observer.onCallFailed(safeExceptionClass(error), elapsed);
                 }
             }
             throw error;
         } finally {
-            ACTIVE_CALL.compareAndSet(call, null);
+            if (active != null) ACTIVE_CALL.compareAndSet(active, null);
         }
     }
 
@@ -244,6 +276,17 @@ public class OpenAICompatibleClient {
     private static String safeHeader(String value) {
         if (value == null || value.isBlank() || value.indexOf('\n') >= 0 || value.indexOf('\r') >= 0) return "";
         return value.length() > 256 ? value.substring(0, 256) : value;
+    }
+
+    private static String safeContentType(String value) {
+        if (value == null || value.isBlank() || value.indexOf('\n') >= 0 || value.indexOf('\r') >= 0) {
+            return "";
+        }
+        String normalized = value.split(";", 2)[0].trim().toLowerCase(java.util.Locale.ROOT);
+        return switch (normalized) {
+            case "application/json", "application/problem+json", "text/event-stream" -> normalized;
+            default -> "";
+        };
     }
 
     private static String safeExceptionClass(Throwable error) {

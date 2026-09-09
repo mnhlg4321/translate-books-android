@@ -158,5 +158,11 @@ public final class EditorialMigrationSpec {
             "CREATE TRIGGER IF NOT EXISTS trg_editorial_p5d_reconciliation_no_update BEFORE UPDATE ON editorial_p5d_reconciliation BEGIN SELECT RAISE(ABORT,'editorial_p5d_reconciliation is immutable'); END",
             "CREATE TRIGGER IF NOT EXISTS trg_editorial_p5d_reconciliation_no_delete BEFORE DELETE ON editorial_p5d_reconciliation BEGIN SELECT RAISE(ABORT,'editorial_p5d_reconciliation is durable recovery evidence'); END"
     );}
+
+    /** Redacted fields needed to reconcile P5D transport protocol and cancellation ownership. */
+    public static List<String> from21To22(){return Arrays.asList(
+            "ALTER TABLE editorial_p5d_network_lifecycle ADD COLUMN response_content_type TEXT NOT NULL DEFAULT '' CHECK(length(response_content_type)<=96)",
+            "ALTER TABLE editorial_p5d_network_lifecycle ADD COLUMN cancellation_source TEXT NOT NULL DEFAULT '' CHECK(length(cancellation_source)<=96)"
+    );}
     private EditorialMigrationSpec() {}
 }

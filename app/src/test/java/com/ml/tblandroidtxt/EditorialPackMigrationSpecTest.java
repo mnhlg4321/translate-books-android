@@ -142,8 +142,20 @@ public class EditorialPackMigrationSpecTest {
         assertFalse(sql.contains("delete from"));
         assertFalse(sql.contains("request_body blob"));
         assertFalse(sql.contains("response_bytes"));
-        assertFalse(sql.contains("response_content"));
+        assertFalse(sql.contains("response_content blob"));
         assertFalse(sql.contains("api_key"));
+    }
+
+    @Test public void v22AddsOnlyRedactedLifecycleFieldsRequiredForP5DReconciliation() {
+        String sql = String.join("\n", EditorialMigrationSpec.from21To22()).toLowerCase();
+        assertEquals(2, sql.split("alter table editorial_p5d_network_lifecycle", -1).length - 1);
+        assertTrue(sql.contains("add column response_content_type text not null default ''"));
+        assertTrue(sql.contains("add column cancellation_source text not null default ''"));
+        assertFalse(sql.contains("request_body blob"));
+        assertFalse(sql.contains("response_body"));
+        assertFalse(sql.contains("response_content blob"));
+        assertFalse(sql.contains("api_key"));
+        assertFalse(sql.contains("drop table"));
     }
 
     private static int countIndexes(String sql) {

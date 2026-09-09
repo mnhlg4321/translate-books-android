@@ -56,6 +56,15 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         this.lifecycleRecorder = lifecycleRecorder;
     }
 
+    /** Creates the one P5D live adapter with durable, redacted lifecycle evidence. */
+    public static OpenRouterEditorialP5PilotProvider withLifecyclePersistence(
+            AppSettings settings, int maximumOutputTokens, TranslationRepository database) {
+        EditorialP5CAttemptStore store = new EditorialP5CAttemptStore(
+                java.util.Objects.requireNonNull(database, "database"));
+        return new OpenRouterEditorialP5PilotProvider(settings, maximumOutputTokens,
+                store::recordNetworkLifecycle);
+    }
+
     @FunctionalInterface
     public interface NetworkLifecycleRecorder {
         void record(String attemptIdentity, EditorialP5CAttemptStore.NetworkLifecycleEvent event);
@@ -81,7 +90,7 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         OpenAICompatibleClient.ChatResult result;
         try {
             result = OpenAICompatibleClient.chatWithUsage(settings, prompt, maximumOutputTokens,
-                    request.attemptIdentity(), lifecycle);
+                    request.attemptIdentity(), lifecycle, false);
         } catch (Exception error) {
             throw new ProviderFailure(failureReason(error, lifecycle), error);
         }
@@ -145,8 +154,10 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         private boolean cancelled;
         private long requestBodyBytes;
         private int httpStatus = -1;
+        private String responseContentType = "";
         private String generationId = "";
         private String providerResponseId = "";
+        private String cancellationSource = "";
 
         private OpenRouterLifecycleObserver(String attemptIdentity,
                                              NetworkLifecycleRecorder recorder) {
@@ -170,9 +181,15 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         }
 
         @Override public void onResponseHeaders(int code, String generationId) {
+            onResponseHeaders(code, generationId, "");
+        }
+
+        @Override public void onResponseHeaders(int code, String generationId,
+                                                String contentType) {
             headersReceived = true;
             httpStatus = code;
             this.generationId = generationId == null ? "" : generationId;
+            this.responseContentType = contentType == null ? "" : contentType;
             emit(EditorialP5CAttemptStore.LifecycleStage.RESPONSE_HEADERS_RECEIVED, "", 0L);
         }
 
@@ -194,7 +211,12 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         }
 
         @Override public void onCallCancelled(long elapsedMillis) {
+            onCallCancelled(elapsedMillis, "");
+        }
+
+        @Override public void onCallCancelled(long elapsedMillis, String cancellationSource) {
             cancelled = true;
+            this.cancellationSource = cancellationSource == null ? "" : cancellationSource;
             emit(EditorialP5CAttemptStore.LifecycleStage.CALL_CANCELLED, "", elapsedMillis);
         }
 
@@ -207,8 +229,8 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
             lastStage = stage;
             if (recorder != null) recorder.record(attemptIdentity,
                     new EditorialP5CAttemptStore.NetworkLifecycleEvent(stage,
-                            requestBodyBytes, httpStatus, exceptionClass, elapsedMillis,
-                            generationId, providerResponseId));
+                            requestBodyBytes, httpStatus, responseContentType, exceptionClass,
+                            elapsedMillis, generationId, providerResponseId, cancellationSource));
         }
     }
 

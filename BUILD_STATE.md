@@ -1,12 +1,12 @@
 # Build State
 
-- Status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / VOL5_BINDING_READY / VOL5_RECOVERY_REQUIRED / EXTERNAL_CONFIRMED_CANCELLED / NEW_RAW_AUTHORIZATION_REQUIRED / VOL5_PROVIDER_CALLS_1 / RECONCILE_NOT_AUTHORIZED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / LOCAL_TRANSPORT_AND_LIFECYCLE_VERIFIED / HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED / VOL5_SOURCE_IDENTITY_MISMATCH_BLOCKED / RAW_RETRY_NOT_READY / VOL5_RECOVERY_REQUIRED / EXTERNAL_CONFIRMED_CANCELLED / NEW_RAW_AUTHORIZATION_REQUIRED / P5D_CODE189_PROVIDER_CALLS_0 / RECONCILE_NOT_AUTHORIZED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
 - Active authority: V5-SAFE.4.1.3-FULL; canonical plan `EDITORIAL_RECOVERY_V4_18.md`.
 - Workspace: D:\App Translate Books\App Translate Books-translation-profile.
 - Branch: feature/v4.18.
-- Current commit baseline: 1f0fc6f47a139d31a8ed73db725dda0aaa153275 (`docs(editorial): record VOL5 raw authorization gate`), the implementation/documentation baseline immediately before this reconciliation update; not self-referential.
-- Last validation package used: 4.17-dev.20 / Android versionCode 188, archived in artifacts and backup with SHA-256 `1FB351DA1028B10C90A99E37A9F694EA878F55E4FA98B6C9298452B05858A62D` and installed on device `15e84958`. The validation package currently retains the VOL5 binding and local test inputs.
-- Current phase: the prior VOL4 attempt remains durably `RECOVERY_REQUIRED` and provider-confirmed `EXTERNAL_CONFIRMED_CANCELLED`. The VOL5/chapter001 binding was re-read after the key was saved; one exact RAW request was dispatched and the durable row is `RECOVERY_REQUIRED` with no response, report or receipt. OpenRouter metadata confirms the matching generation was `cancelled` with displayed cost `$0.00484`; a new exact-phase authorization with duplicate/billing-risk acknowledgement is required. RECONCILE remains unauthorized and Editorial execution/certification remain disabled.
+- Current commit baseline: 6a310f9b6c5bfbd8f0fee6179f22331524e823c6, the implementation baseline immediately before this validation/documentation snapshot commit; not self-referential.
+- Last validation package used: 4.17-dev.21 / Android versionCode 189, archived in artifacts and backup with SHA-256 `D66C3C816E29403508BF997413998683FDCAD6AC2C74F24DA40E9AF31570860C` and installed on device `15e84958`. The validation package retains the VOL5 binding and local test inputs.
+- Current phase: code189 local HTTP transport and recorder validation is complete, but the historical cancellation actor remains unknown. The VOL5 attempt is still `RECOVERY_REQUIRED` with no response/report/receipt and no local lifecycle/reconciliation row because it predates recorder wiring. RAW retry is blocked by a persisted PRONOUN source mismatch (binding 452 bytes/hash `4947FF91…20686`; device source 455 bytes/hash `63E79EEB…1A49C`). RECONCILE remains unauthorized and Editorial execution/certification remain disabled.
 
 ## Source and authority identity
 
@@ -60,13 +60,17 @@
 - Authorized live boundary: one OpenRouter RAW request, `providerCalls=1`, no automatic retry/repair, no usable app response/usage receipt, typed `RETRY_PROVIDER_CALL_FAILED`, and durable `RECOVERY_REQUIRED`; recovery inspection `1/1` confirmed zero report/receipt bytes. The authenticated provider audit found generation `gen-1788877749-P8b2hBo1TWuduENuKbQ3` with finish `cancelled`, `17,808/84` tokens and displayed cost `$0.00366`; a new retry is eligible only after new authorization and explicit duplicate/billing-risk acknowledgement.
 - P5D.1/P5D.2 provider audit: authenticated OpenRouter Logs metadata matched the old app/model/time/request-size tuple and classified the external generation as `EXTERNAL_CONFIRMED_CANCELLED`; I/O logging remained disabled and P5D provider calls remain `0`.
 - P5D.3/P5D.4: additive v21 lifecycle, authorization-receipt and reconciliation owners; typed provider-failure taxonomy; non-reclaimable `RECOVERY_REQUIRED` gate; and redacted timing/generation metadata passed focused tests. Code186 device XML reports `124` test methods, `0` failures, `0` errors and `4` approved skips; engine `180/180`; app aggregate `645/645`.
+- P5D code189 local harness closure: `EditorialP5CExactBindingFakeE2EInstrumentedTest` `13/13 PASS`; immediate, 11-second delayed-with-legacy-cancel and 11-second delayed-without-legacy-cancel `1/1` each; schema/migration device classes `41/41`; full instrumentation `130 tests, 0 failures`; engine/app debug unit XML `396/396`; external qualification `306/306`; no provider call. Detailed evidence: `docs/P5D_LOCAL_HTTP_HARNESS_REPORT.md`.
+- P5D code189 DB readback: schema v22; historical VOL5 attempt remains `RECOVERY_REQUIRED`, prior authorization is consumed, response/report/receipt are absent, lifecycle and local reconciliation rows are absent for the historical attempt. RAW/DRAFT/GLOSSARY bytes match the binding; PRONOUN is 455 bytes/hash `63E79EEB…1A49C` while the binding requires 452 bytes/hash `4947FF91…20686`, so a new dispatch must stop as `STOP_SOURCE_DRIFT`.
 
 ## Validation artifact
 
-- Latest validation APK: `artifacts/builds/v4.17-dev.18/build-20260908-232855/TranslateBooks-v4.17-dev.18-code186.apk`.
-- Backup mirror: `backup/builds/v4.17-dev.18/build-20260908-232855/TranslateBooks-v4.17-dev.18-code186.apk`.
-- APK SHA-256: `A32CD2B379D13CCEE6D7FAB7E0512A1A73587175CE92C32C1CDCD3707245D10C`.
-- Build event source snapshot: `e9f0b7907c27e88feb209dd23361b254377828dc`; this code186 artifact remains validation-only.
+- Latest validation APK: `artifacts/builds/v4.17-dev.21/build-20260909-070956/TranslateBooks-v4.17-dev.21-code189.apk`.
+- Backup mirror: `backup/builds/v4.17-dev.21/build-20260909-070956/TranslateBooks-v4.17-dev.21-code189.apk`.
+- APK SHA-256: `D66C3C816E29403508BF997413998683FDCAD6AC2C74F24DA40E9AF31570860C`.
+- Build event source snapshot: `e809cfff7a98f6d7a6ffd756b9f0a0c06aa68c69`; this code189 artifact remains validation-only.
+- Test APK SHA-256: `30EADECFA740326F5A3036584DB2F8613C90633E0DAF19DCF9472C0001EF2165`.
+- Code186 remains immutable historical evidence for the prior lifecycle baseline; it is not the current validation artifact.
 - Code184 remains immutable historical evidence for the pre-P5D live attempt; it is not the current validation artifact.
 - This is a validation APK, not a V4.18 release build.
 - Historical P4 correction validation remains immutable and is recorded in
@@ -83,7 +87,8 @@ engine pilot boundary and the bounded OpenRouter adapter/request context. P5D
 production changes are limited to the additive v21 lifecycle, authorization
 receipt, reconciliation and typed provider-failure owners. No global
 activation, certification path, provider framework, UI activation or legacy
-workflow rewrite was added. Test changes are AndroidTest/engine-test plus
+workflow rewrite was added. P5D v22 adds only the content-type and
+cancellation-source lifecycle fields. Test changes are AndroidTest/engine-test plus
 stale current-schema assertions only.
 No authority byte, canonical ZIP, trusted profile resource, build metadata or
 legacy workflow was changed. The original workspace `D:\App Translate Books`
@@ -99,15 +104,18 @@ was not modified.
 - Bootstrap profile v1 remains loadable and non-executable.
 - The single authorized RAW request stopped at the app boundary without a usable response. OpenRouter later exposed a matching provider generation with `Finish reason: cancelled` and displayed cost `$0.00366`; no automatic retry is allowed. P5D.3 now requires immutable reconciliation, evidence and a new exact-phase authorization before reclaim.
 - P5C proves app-bound fake attempt persistence and idempotent RAW→RECONCILE replay, but does not prove a live response, real token/cost usage, live cancellation/process-death behavior, or a real chapter `REPORT_L1`/receipt commit. RECONCILE and final L1 acceptance remain unproven.
-- Device was restored to immutable `4.17-dev.1/code169` after code186 validation by uninstall/reinstall; validation-package data was removed because `pm clear` was rejected. The latest validation artifact remains code186 in artifacts/backup.
+- Device remains on code189 for inspection; no uninstall, reset or database cleanup was used in this step. The local harness uses isolated test databases and does not overwrite the VOL5 pilot DB.
+- The local harness initially exposed a device freezer interruption at `DELAY_STARTED`; the bounded cleanup and test-only foreground keepalive resolved the local test hang. This is not proof of the historical OpenRouter cancellation actor, which remains unknown.
+- The current source/binding PRONOUN mismatch is a hard blocker for a new RAW request. Do not normalize, overwrite or silently rebind it.
 
 ## Next step
 
-Save the OpenRouter API key again in the validation app Settings; the previous
-uninstall/reinstall used to restore code169 removed it. Then rerun the explicit
-VOL5/chapter001 RAW-only test using a new single-use authorization. Do not
-authorize or call RECONCILE, enable input/output logging, auto-activate,
-auto-rebind or certify. Keep `EXECUTION_DISABLED / NOT_CERTIFIED /
-NOT_GLOBALLY_RUNNABLE`.
+Resolve the exact VOL5 PRONOUN identity mismatch by an explicit binding/source
+decision before any new authorization. Then, if reconciliation persistence is
+required by policy, add the redacted classification row through the existing
+owner. Only after exact binding readback succeeds may a new single-use RAW
+diagnostic authorization be prepared. Do not authorize or call RECONCILE,
+enable input/output logging, auto-activate, auto-rebind or certify. Keep
+`EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE`.
 
 This file is current-only; Git history preserves prior state.

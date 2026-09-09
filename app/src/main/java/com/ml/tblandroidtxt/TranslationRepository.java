@@ -12,7 +12,7 @@ import java.util.List;
 
 public class TranslationRepository extends SQLiteOpenHelper {
     private static final String DB = "tbl_android_txt.db";
-    private static final int VER = 21;
+    private static final int VER = 22;
 
     public TranslationRepository(Context context) { this(context, DB); }
 
@@ -36,6 +36,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
         createEditorialP4BindingTables(db);
         createEditorialP5CTables(db);
         createEditorialP5DTables(db);
+        createEditorialP5DTransportFields(db);
     }
 
     @Override public void onConfigure(SQLiteDatabase db) {
@@ -96,6 +97,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
         if (oldVersion < 19) createEditorialP4BindingTables(db);
         if (oldVersion < 20) createEditorialP5CTables(db);
         if (oldVersion < 21) createEditorialP5DTables(db);
+        if (oldVersion < 22) createEditorialP5DTransportFields(db);
     }
 
     @Override public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -131,6 +133,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
     private static void createEditorialP4BindingTables(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from18To19())db.execSQL(sql);}
     private static void createEditorialP5CTables(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from19To20())db.execSQL(sql);}
     private static void createEditorialP5DTables(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from20To21())db.execSQL(sql);}
+    private static void createEditorialP5DTransportFields(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from21To22())safeExec(db,sql);}
 
     SQLiteDatabase editorialWritableDatabase() { return getWritableDatabase(); }
     SQLiteDatabase editorialReadableDatabase() { return getReadableDatabase(); }

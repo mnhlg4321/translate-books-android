@@ -130,3 +130,42 @@ no response/report/receipt. That later evidence does not satisfy P5D.5 for a
 further retry, does not authorize RECONCILE and does not prove live lifecycle
 metadata persistence for that attempt; see
 `docs/P5D_VOL5_RAW_PROVIDER_RECONCILIATION.md`.
+
+## Code189 local HTTP harness closure — 2026-09-09
+
+The local harness was tightened without changing the production deadline:
+listening and accepted sockets are both owned and closed, server/client waits
+are bounded and interruptible, scheduled delay work is cancelled, server
+failures are surfaced to the assertion, and cleanup reports incomplete
+termination. A test-only foreground keepalive was needed on the validation
+device because the instrumentation target could be freezer-suspended while a
+socket was intentionally quiet.
+
+Code189 evidence:
+
+- installed package: `4.17-dev.21 / code189`, APK SHA-256
+  `D66C3C816E29403508BF997413998683FDCAD6AC2C74F24DA40E9AF31570860C`;
+- local immediate response `1/1`, delayed-with-legacy-cancel `1/1`, and
+  delayed-without-legacy-cancel `1/1`;
+- `EditorialP5CExactBindingFakeE2EInstrumentedTest` `13/13 PASS`;
+- full device instrumentation `130 tests, 0 failures`, with real provider
+  paths still opt-in/skipped;
+- schema/migration-related device tests `41/41 PASS`; engine/app debug unit
+  XML `396/396 PASS`; external qualification `306/306 PASS`;
+- local adapter lifecycle row survived DB close/reopen with request byte count,
+  response content type, generation ID, terminal stage and elapsed time.
+
+The first delayed harness attempt stopped at `DELAY_STARTED`; redacted thread
+state showed the server worker waiting on its bounded latch and the client in
+the read/cancellation path. Keeping the target foreground made the two delayed
+cases complete. This is a `SUPPORTED_HYPOTHESIS` for the local harness
+interruption only. It does not identify the actor that cancelled the historical
+OpenRouter generation, which remains `UNKNOWN`.
+
+The real VOL5 attempt remains historical and was made before code189 recorder
+wiring: schema v22 is present, but its attempt has no lifecycle row and the
+local reconciliation table has no row. It remains `RECOVERY_REQUIRED` with no
+response/report/receipt. The current device PRONOUN source is 455 bytes /
+`63E79EEB…1A49C`, while the persisted binding requires 452 bytes /
+`4947FF91…20686`; this prevents a new RAW dispatch as `STOP_SOURCE_DRIFT`.
+No source was rewritten and no provider call was made in this closure.

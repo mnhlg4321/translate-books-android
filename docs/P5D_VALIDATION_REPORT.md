@@ -20,17 +20,22 @@ P5D chưa hoàn tất exit gate. P5D.1/P5D.2 đã có bằng chứng OpenRouter
 authenticated, read-only và phân loại được external cancellation. P5D.5 chưa
 được cấp authorization mới; P5D.6/P5D.7 chưa được thực hiện.
 
+Phần kiểm chứng mới nhất ngày `2026-09-09` được ghi ở cuối báo cáo. Kết luận
+mới nhất là `LOCAL_TRANSPORT_AND_LIFECYCLE_VERIFIED`, nhưng
+`HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED` và
+`VOL5_SOURCE_IDENTITY_MISMATCH_BLOCKED`; vì vậy chưa ghi `RAW_RETRY_READY` và
+không gọi provider.
+
 ## Baseline and immutable identity
 
 | Item | Value |
 |---|---|
 | Workspace | `D:\App Translate Books\App Translate Books-translation-profile` |
 | Branch | `feature/v4.18` |
-| Implementation/documentation baseline before this reconciliation update | `e2019ee38217cf79b0ca0e995831582d0f6ae18d` |
-| Device | `15e84958`, restored to `4.17-dev.1 / code169` |
-| Baseline APK SHA-256 | `3C3AAEF1A7D47F39A7B5A5FF8AEDF77347D255AF728B908180AA142CA2B276D1` |
-| Latest validation APK | `4.17-dev.18 / code186` |
-| Validation APK SHA-256 | `A32CD2B379D13CCEE6D7FAB7E0512A1A73587175CE92C32C1CDCD3707245D10C` |
+| Implementation baseline before the code189 validation snapshot | `6a310f9b6c5bfbd8f0fee6179f22331524e823c6` |
+| Device | `15e84958`, `CPH2691`, API 35 |
+| Installed validation APK | `4.17-dev.21 / code189` |
+| Validation APK SHA-256 | `D66C3C816E29403508BF997413998683FDCAD6AC2C74F24DA40E9AF31570860C` |
 | Canonical ZIP SHA-256 | `B9C65DBEB9D4C4ED46B67D5EC28FF6252CC2BDC4B63BC902904612987EC58987` |
 | Java control ZIP SHA-256 | `44F99423292ADA15680220165AF50430532D847E155F93C1B15D9F173D4609A5` |
 | Profile resource SHA-256 | `1B2DB011D59F3E2EF4349AEB0DAA9C54A19B7EFD1E2CA6886BC29B56E4690D62` |
@@ -125,3 +130,33 @@ RECONCILE remains unauthorized and the P5D exit gate is still incomplete.
 
 Full redacted evidence is in
 `docs/P5D_VOL5_RAW_PROVIDER_RECONCILIATION.md`.
+
+## Code189 local HTTP harness addendum — 2026-09-09
+
+See `docs/P5D_LOCAL_HTTP_HARNESS_REPORT.md` for the detailed baseline,
+timeline and source-identity table. The current decision is:
+
+```text
+LOCAL_TRANSPORT_AND_LIFECYCLE_VERIFIED
+HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED
+VOL5_SOURCE_IDENTITY_MISMATCH_BLOCKED
+RAW_RETRY_NOT_READY
+```
+
+The bounded local harness passed immediate, 11-second delayed-with-legacy-cancel
+and 11-second delayed-without-legacy-cancel cases (`1/1` each). The complete
+fake E2E class passed `13/13`; code189 full instrumentation passed `130` tests
+with `0` failures. Engine/app debug unit XML reported `396` tests with `0`
+failures/errors/skips. Static qualification remained `306/306 PASS`. No
+provider call was made.
+
+The code189 recorder path persisted and read back content type, generation ID,
+request byte count, terminal lifecycle stage and elapsed time after DB reopen
+on isolated test databases. The historical VOL5 attempt itself still has no
+lifecycle or local reconciliation row because it predates the recorder wiring;
+its durable state remains `RECOVERY_REQUIRED` with no response/report/receipt.
+
+The exact persisted binding still differs from the current private source only
+for PRONOUN: binding `452` bytes / `4947FF91…20686`, device source `455` bytes /
+`63E79EEB…1A49C`. This is a real `STOP_SOURCE_DRIFT` blocker. The source was
+not normalized, replaced or rebound during validation.

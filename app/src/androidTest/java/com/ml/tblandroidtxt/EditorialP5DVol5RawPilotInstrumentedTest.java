@@ -156,7 +156,8 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
             }
 
             OpenRouterEditorialP5PilotProvider provider =
-                    new OpenRouterEditorialP5PilotProvider(settings, 2_048);
+                    OpenRouterEditorialP5PilotProvider.withLifecyclePersistence(
+                            settings, 2_048, database);
             assertTrue("LIVE_AUTHORIZATION_INCOMPLETE: provider configuration is incomplete",
                     provider.configured());
             EditorialP5CExactBindingExecution.Result result =
