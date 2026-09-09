@@ -4,7 +4,7 @@
 - Current status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / TRANSPORT_AND_LIFECYCLE_LIVE_VERIFIED / RAW_OUTPUT_TRUNCATION_CONFIRMED / RAW_PREDECESSOR_REQUIRED / OUTPUT_BUDGET_ALIGNMENT_PASS / RECOVERY_HISTORY_PRESERVED / RAW_ACCEPTANCE_AUTHORIZATION_APPROVED / RAW_ACCEPTANCE_ATTEMPTED / RAW_ACCEPTANCE_STOPPED_AT_DEADLINE / RAW_ACCEPTANCE_RECOVERY_CLOSED / EXTERNAL_STATE_REMAINS_UNKNOWN / RAW_ACCEPTANCE_INCOMPLETE / P6_NOT_READY / HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED / RAW_DIAGNOSTIC_ATTEMPT_COMPLETE / RAW_DIAGNOSTIC_STOPPED_RETRY_OUTPUT_TRUNCATED / VOL5_RECOVERY_REQUIRED / EXTERNAL_CONFIRMED_CANCELLED / P5D_PREFLIGHT_PROVIDER_CALLS_0 / P5D_LIVE_PROVIDER_CALLS_1 / P5D_RAW_ACCEPTANCE_PROVIDER_CALLS_1 / NEW_RAW_AUTHORIZATION_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
 - Current version/build: production validation artifact 4.17-dev.23 / code191 is archived in artifacts and backup with SHA-256 `5F3C841F590C6F7AA3E19F625D2B387E55B2D6BFD3C50A93D61F0337E6A2340C` and installed on device `15e84958`. The final focused test APK rebuilt from `ae6d9e23d6b5b4709e9fea4c5a42a4adaaacc3a6` has SHA-256 `CE5E29CABA15D08D3C6C2A032B961171C11428E28CC41A302792CA6D904CDCC4`. One authorized VOL5 RAW diagnostic call stopped at the historical 2,048 output-token cap; the later acceptance call reached HTTP 200 headers but not a complete body within five minutes. Both remain fail-closed with no response/report/receipt. The acceptance attempt is `RECOVERY_REQUIRED / RETRY_PROVIDER_CALL_TIMEOUT`; external usage/cost is unknown. PRONOUN remains 455 bytes with BOM before the existing app-owned normalization and 452 pinned bytes after it. Output alignment uses requested/effective `4,096`; no RECONCILE is authorized.
 - Current branch/workspace: feature/v4.18 / D:\App Translate Books\App Translate Books-translation-profile.
-- Current commit baseline: ae6d9e23d6b5b4709e9fea4c5a42a4adaaacc3a6, the implementation/test baseline immediately before this documentation snapshot commit; not self-referential.
+- Current commit baseline: 4c5cbf2, the implementation/test/documentation baseline immediately before this documentation snapshot commit; not self-referential.
 - Active authority: V5-SAFE.4.1.3-FULL. Authority bytes, canonical ZIP SHA, Java-control ZIP SHA and profile v2 hash are unchanged.
 
 ## Completed tasks
@@ -83,9 +83,10 @@ terminal state by the five-minute cap. Redacted readback showed headers/HTTP
 200/generation `gen-1788967700-RgJDCWrZsNZ4VAAWmlj8`, request bytes `85,068`, no
 complete response or partial report/receipt, and a consumed authorization. The
 attempt was closed through the owner as `RECOVERY_REQUIRED /
-RETRY_PROVIDER_CALL_TIMEOUT`; external state remains unknown. Update the
-acceptance report/state and keep `RAW_ACCEPTANCE_INCOMPLETE / P6_NOT_READY /
-EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE`. Do not retry or
-open RECONCILE.
+RETRY_PROVIDER_CALL_TIMEOUT`; external state remains unknown. The acceptance
+report/state/checklist are now committed. Keep `RAW_ACCEPTANCE_INCOMPLETE /
+P6_NOT_READY / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE`.
+Do not retry or open RECONCILE; any future call requires a new recovery decision,
+end-to-end deadline/process-death hardening and explicit authorization.
 
 This is current-only state; Git history preserves prior snapshots.
