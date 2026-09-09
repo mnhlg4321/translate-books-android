@@ -161,3 +161,19 @@ contains a three-byte UTF-8 BOM. The existing app-owned BOM removal produces
 source rewrite or rebind was needed. The local gates therefore permit
 preparation of a new diagnostic RAW authorization, but the historical
 cancellation actor remains unknown and no call is issued here.
+
+## Controlled RAW diagnostic preflight — 2026-09-09
+
+The exact recovery/authorization fixtures were rerun on code189 without
+touching the VOL5 pilot database or calling a provider:
+
+- `EditorialP5CExactBindingFakeE2EInstrumentedTest`: `13/13 PASS`.
+- `EditorialP5CLiveRecoveryInspectionInstrumentedTest`: `1/1 PASS`.
+- `EditorialP5PilotExecutionBoundaryTest`: `16/16 PASS` with JDK 17+.
+- Provider calls in this preflight: `0`.
+
+The detailed identity table and the unissued authorization draft are in
+[`docs/P5D_RAW_DIAGNOSTIC_PREFLIGHT.md`](P5D_RAW_DIAGNOSTIC_PREFLIGHT.md).
+The recovery gate remains closed because the prior authorization is consumed
+and the historical attempt has no reconciliation row. No placeholder retry
+decision was persisted.

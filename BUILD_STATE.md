@@ -4,7 +4,7 @@
 - Active authority: V5-SAFE.4.1.3-FULL; canonical plan `EDITORIAL_RECOVERY_V4_18.md`.
 - Workspace: D:\App Translate Books\App Translate Books-translation-profile.
 - Branch: feature/v4.18.
-- Current commit baseline: 6645f614bd8e79ae6fa3b99ee6300723e6e1f765, the implementation/documentation baseline immediately before this correction snapshot commit; not self-referential.
+- Current commit baseline: 81c6c3e2a7cf5c6fc53c210c762ee0ab6bd9c37b, the implementation/documentation baseline immediately before this preflight documentation snapshot commit; not self-referential.
 - Last validation package used: 4.17-dev.21 / Android versionCode 189, archived in artifacts and backup with SHA-256 `D66C3C816E29403508BF997413998683FDCAD6AC2C74F24DA40E9AF31570860C` and installed on device `15e84958`. The validation package retains the VOL5 binding and local test inputs.
 - Current phase: code189 local HTTP transport and recorder validation is complete, but the historical cancellation actor remains unknown. The VOL5 attempt is still `RECOVERY_REQUIRED` with no response/report/receipt and no local lifecycle/reconciliation row because it predates recorder wiring. The 455-byte PRONOUN transport file contains a UTF-8 BOM; after the existing app-owned removal, it is exactly the pinned 452-byte/hash `4947FF91…20686`. A new RAW diagnostic authorization may be prepared; RECONCILE remains unauthorized and Editorial execution/certification remain disabled.
 
@@ -62,6 +62,7 @@
 - P5D.3/P5D.4: additive v21 lifecycle, authorization-receipt and reconciliation owners; typed provider-failure taxonomy; non-reclaimable `RECOVERY_REQUIRED` gate; and redacted timing/generation metadata passed focused tests. Code186 device XML reports `124` test methods, `0` failures, `0` errors and `4` approved skips; engine `180/180`; app aggregate `645/645`.
 - P5D code189 local harness closure: `EditorialP5CExactBindingFakeE2EInstrumentedTest` `13/13 PASS`; immediate, 11-second delayed-with-legacy-cancel and 11-second delayed-without-legacy-cancel `1/1` each; schema/migration device classes `41/41`; full instrumentation `130 tests, 0 failures`; engine/app debug unit XML `396/396`; external qualification `306/306`; no provider call. Detailed evidence: `docs/P5D_LOCAL_HTTP_HARNESS_REPORT.md`.
 - P5D code189 DB readback: schema v22; historical VOL5 attempt remains `RECOVERY_REQUIRED`, prior authorization is consumed, response/report/receipt are absent, lifecycle and local reconciliation rows are absent for the historical attempt. RAW/DRAFT/GLOSSARY bytes match the binding; PRONOUN is 455 bytes/hash `63E79EEB…1A49C` raw with BOM and 452 bytes/hash `4947FF91…20686` after the existing BOM removal, so the semantic source identity matches.
+- P5D controlled diagnostic preflight rerun: code189 `EditorialP5CExactBindingFakeE2EInstrumentedTest` `13/13 PASS`, live recovery inspection `1/1 PASS`, and engine `EditorialP5PilotExecutionBoundaryTest` `16/16 PASS`; provider calls `0`, pilot DB unchanged. See `docs/P5D_RAW_DIAGNOSTIC_PREFLIGHT.md`.
 
 ## Validation artifact
 
@@ -110,11 +111,11 @@ was not modified.
 
 ## Next step
 
-Prepare, but do not yet dispatch, one new exact-phase single-use RAW diagnostic
-authorization that records the historical cancellation and duplicate-billing
-risk. If reconciliation persistence is required by policy, add the redacted
-classification row through the existing owner first. Do not authorize or call
-RECONCILE, enable input/output logging, auto-activate, auto-rebind or certify.
-Keep `EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE`.
+Await explicit approval of the exact unissued RAW diagnostic authorization in
+`docs/P5D_RAW_DIAGNOSTIC_PREFLIGHT.md`. If approved, persist the immutable
+reconciliation through the existing owner first, then make at most one
+RAW-only diagnostic call and stop before RECONCILE. Do not reuse the consumed
+authorization, enable input/output logging, auto-activate, auto-rebind or
+certify. Keep `EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE`.
 
 This file is current-only; Git history preserves prior state.

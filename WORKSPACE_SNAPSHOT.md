@@ -4,7 +4,7 @@
 - Current status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / LOCAL_TRANSPORT_AND_LIFECYCLE_VERIFIED / HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED / RAW_DIAGNOSTIC_RETRY_READY / VOL5_RECOVERY_REQUIRED / EXTERNAL_CONFIRMED_CANCELLED / NEW_RAW_AUTHORIZATION_REQUIRED / P5D_CODE189_PROVIDER_CALLS_0 / RECONCILE_NOT_AUTHORIZED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
 - Current version/build: validation artifact 4.17-dev.21 / code189 was archived in artifacts and backup with SHA-256 `D66C3C816E29403508BF997413998683FDCAD6AC2C74F24DA40E9AF31570860C` and installed on device `15e84958`. One historical VOL5 RAW request remains `RECOVERY_REQUIRED` with no response/report/receipt; OpenRouter metadata confirms `cancelled` at displayed cost `$0.00484`. Code189 local transport/recorder validation passed. The current PRONOUN file is 455 bytes/hash `63E79EEB…1A49C` with a UTF-8 BOM; after the existing BOM removal it is 452 bytes/hash `4947FF91…20686`, exactly matching the binding. No retry or RECONCILE request is authorized.
 - Current branch/workspace: feature/v4.18 / D:\App Translate Books\App Translate Books-translation-profile.
-- Current commit baseline: 6645f614bd8e79ae6fa3b99ee6300723e6e1f765, the implementation/documentation baseline immediately before this correction snapshot commit; not self-referential.
+- Current commit baseline: 81c6c3e2a7cf5c6fc53c210c762ee0ab6bd9c37b, the implementation/documentation baseline immediately before this preflight documentation snapshot commit; not self-referential.
 - Active authority: V5-SAFE.4.1.3-FULL. Authority bytes, canonical ZIP SHA, Java-control ZIP SHA and profile v2 hash are unchanged.
 
 ## Completed tasks
@@ -28,6 +28,7 @@
 - A production-owned RAW-only entry point and focused fake regression are committed in `1994b3c`; they return after durable RAW readback and never construct a RECONCILE request. The VOL5 setup/live test is committed in `e34084d`.
 - VOL5 setup instrumentation passed `1/1`: selector `p5d-raw-mercedes-vol5-001`, exact pack/profile identity and app-computed source hashes were read back. The earlier missing-key invocation is preserved as `LIVE_AUTHORIZATION_INCOMPLETE` with providerCalls `0`. The subsequent explicit RAW invocation dispatched one request and persisted `RECOVERY_REQUIRED`; OpenRouter generation `gen-1788910936-DHfTNOyDlU3f3PJOAvqb` is confirmed `cancelled`, with zero report/receipt bytes and no RECONCILE. See `docs/P5D_VOL5_RAW_PROVIDER_RECONCILIATION.md`.
 - P5D code189 local HTTP closure passed immediate, 11-second delayed-with-legacy-cancel and 11-second delayed-without-legacy-cancel (`1/1` each); the full fake E2E class passed `13/13`, schema/migration device classes `41/41`, and full instrumentation passed `130 tests / 0 failures`. Adapter lifecycle metadata survived DB reopen on isolated v22 databases. Detailed evidence is in `docs/P5D_LOCAL_HTTP_HARNESS_REPORT.md`.
+- The controlled RAW diagnostic preflight was rerun without provider access: fake recovery/binding class `13/13 PASS`, live recovery inspection `1/1 PASS`, engine expiry/budget/authorization boundary `16/16 PASS`; provider calls `0`. Exact identities and the unissued new authorization draft are in `docs/P5D_RAW_DIAGNOSTIC_PREFLIGHT.md`.
 
 ## Validation evidence
 
@@ -60,10 +61,11 @@ The original workspace D:\App Translate Books remains untouched. Its user-owned 
 
 2026-09-08 validation update: user delegated setup using `D:\Ebooks\MERCEDES\VOL 4`, approved egress and caps of USD 0.10 / 5 minutes, selected OpenRouter and explicitly confirmed the live call. The persisted binding for chapter `001` passed; RAW dispatched one request and stopped after 179728 ms without response. Recovery inspection `1/1` confirmed no report/receipt bytes, the P5D lifecycle/recovery matrix passed, and the device was restored to code169.
 
-Next action is to prepare, but not yet dispatch, one new exact-phase,
-single-use RAW diagnostic authorization acknowledging the provider-confirmed
-cancellation and duplicate-work/billing risk. Do not reuse the consumed
-authorization, do not call RECONCILE, and do not enable content logging. Keep
-the recovery gate closed for dispatch and do not infer P6 readiness.
+Next action is to await explicit approval of the exact-phase, single-use RAW
+diagnostic authorization in `docs/P5D_RAW_DIAGNOSTIC_PREFLIGHT.md`, which
+acknowledges the provider-confirmed cancellation and duplicate-work/billing
+risk. Do not reuse the consumed authorization, do not call RECONCILE, and do
+not enable content logging. Keep the recovery gate closed for dispatch and do
+not infer P6 readiness.
 
 This is current-only state; Git history preserves prior snapshots.
