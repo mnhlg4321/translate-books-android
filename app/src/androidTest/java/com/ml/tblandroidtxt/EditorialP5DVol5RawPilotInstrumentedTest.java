@@ -2,6 +2,8 @@ package com.ml.tblandroidtxt;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import androidx.test.InstrumentationRegistry;
@@ -61,6 +63,59 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
     // it must never be reused for a new acceptance authorization.
     private static final int HISTORICAL_DIAGNOSTIC_OUTPUT_TOKENS = 2_048;
     private static final long PILOT_WINDOW_MILLIS = 5 * 60 * 1000L;
+
+    @Test public void v23UpgradePreservesVol5RecoveryIdentityAndHistory() throws Exception {
+        Context context = ApplicationProvider.getApplicationContext();
+        java.io.File databaseFile = context.getDatabasePath("tbl_android_txt.db");
+        assertTrue("VOL5 pilot database must already exist", databaseFile.isFile());
+
+        String beforeStatus;
+        String beforeReason;
+        int beforeAuthCount;
+        String beforeReconciliation;
+        SQLiteDatabase before = SQLiteDatabase.openDatabase(databaseFile.getPath(), null,
+                SQLiteDatabase.OPEN_READONLY);
+        try {
+            assertTrue("validation package must start from the persisted v22 pilot database",
+                    before.getVersion() == 22 || before.getVersion() == 23);
+            beforeStatus = scalar(before, "SELECT status FROM editorial_p5c_attempts WHERE attempt_identity=?",
+                    ORIGINAL_ATTEMPT_ID);
+            beforeReason = scalar(before,
+                    "SELECT recovery_reason_code FROM editorial_p5c_attempts WHERE attempt_identity=?",
+                    ORIGINAL_ATTEMPT_ID);
+            beforeAuthCount = count(before,
+                    "SELECT COUNT(*) FROM editorial_p5d_authorization_receipts WHERE attempt_identity=?",
+                    ORIGINAL_ATTEMPT_ID);
+            beforeReconciliation = scalar(before,
+                    "SELECT classification FROM editorial_p5d_reconciliation WHERE attempt_identity=?",
+                    ORIGINAL_ATTEMPT_ID);
+        } finally {
+            before.close();
+        }
+
+        try (TranslationRepository upgraded = new TranslationRepository(context)) {
+            SQLiteDatabase after = upgraded.editorialReadableDatabase();
+            assertEquals(23, after.getVersion());
+            assertEquals("RECOVERY_REQUIRED", scalar(after,
+                    "SELECT status FROM editorial_p5c_attempts WHERE attempt_identity=?",
+                    ORIGINAL_ATTEMPT_ID));
+            assertEquals(beforeStatus, scalar(after,
+                    "SELECT status FROM editorial_p5c_attempts WHERE attempt_identity=?",
+                    ORIGINAL_ATTEMPT_ID));
+            assertEquals(beforeReason, scalar(after,
+                    "SELECT recovery_reason_code FROM editorial_p5c_attempts WHERE attempt_identity=?",
+                    ORIGINAL_ATTEMPT_ID));
+            assertEquals(beforeAuthCount, count(after,
+                    "SELECT COUNT(*) FROM editorial_p5d_authorization_receipts WHERE attempt_identity=?",
+                    ORIGINAL_ATTEMPT_ID));
+            assertEquals(beforeReconciliation, scalar(after,
+                    "SELECT classification FROM editorial_p5d_reconciliation WHERE attempt_identity=?",
+                    ORIGINAL_ATTEMPT_ID));
+            assertEquals(0, count(after,
+                    "SELECT COUNT(*) FROM editorial_p5d_reconciliation_history WHERE attempt_identity=?",
+                    ORIGINAL_ATTEMPT_ID));
+        }
+    }
 
     @Test public void preparePersistedVol5Chapter001Binding() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
@@ -161,7 +216,7 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
                     + " canonicalProfileHash=" + binding.canonicalProfileHash()
                     + " provider=" + PROVIDER + " model=" + MODEL
                     + " endpointAccountFingerprint=" + endpointAccountFingerprint
-                    + " primaryCalls=1 schemaRepairCalls=1 networkRetries=0"
+                    + " primaryCalls=1 schemaRepairCalls=0 networkRetries=0"
                     + " maxTotalCost=0.10 maxExecutionTimeMs=" + PILOT_WINDOW_MILLIS);
             for (EditorialP4SourceIdentity input : binding.inputs()) {
                 Log.i("P5D_RAW_PREFLIGHT", "source role=" + input.role()
@@ -179,8 +234,8 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
                             .executeRaw(projectId, SELECTOR, CHAPTER_KEY, raw, provider);
             logResult(result);
             assertNotNull(result);
-            assertTrue("RAW result exceeded the authorized primary plus repair calls",
-                    result.providerCalls() <= 2);
+            assertTrue("RAW result exceeded the authorized primary call",
+                    result.providerCalls() <= 1);
             org.junit.Assert.assertNull("RECONCILE must not be called by RAW-only authorization",
                     result.reconcileResult());
             assertTrue("execution must remain disabled", !result.executionAllowed());
@@ -426,7 +481,21 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
                 + " truncated=" + metrics.truncated()
                 + " schemaValid=" + metrics.schemaValidationPassed()
                 + " receiptValid=" + metrics.receiptValidationPassed()
-                + " latencyMs=" + metrics.latencyMillis());
+                 + " latencyMs=" + metrics.latencyMillis());
+    }
+
+    private static String scalar(SQLiteDatabase db, String sql, String argument) {
+        try (Cursor cursor = db.rawQuery(sql, new String[]{argument})) {
+            assertTrue("expected persisted VOL5 row", cursor.moveToFirst());
+            return cursor.getString(0);
+        }
+    }
+
+    private static int count(SQLiteDatabase db, String sql, String argument) {
+        try (Cursor cursor = db.rawQuery(sql, new String[]{argument})) {
+            assertTrue("expected count result", cursor.moveToFirst());
+            return cursor.getInt(0);
+        }
     }
 
     private static String nullToEmpty(String value) { return value == null ? "" : value; }

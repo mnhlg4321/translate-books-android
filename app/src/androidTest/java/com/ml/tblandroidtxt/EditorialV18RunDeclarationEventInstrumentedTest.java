@@ -75,7 +75,7 @@ public final class EditorialV18RunDeclarationEventInstrumentedTest {
 
     @Test public void freshV18HasExactlyTwoNewStoresZeroRowsAndNoLegacyForeignKey() {
         SQLiteDatabase db = repository.editorialWritableDatabase();
-        assertEquals(22, db.getVersion());
+        assertEquals(23, db.getVersion());
         assertEquals(1, scalarInt(db, "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='editorial_authoritative_run_declarations'"));
         assertEquals(1, scalarInt(db, "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='editorial_run_closure_events'"));
         assertEquals(0, scalarInt(db, "SELECT COUNT(*) FROM editorial_authoritative_run_declarations"));
@@ -262,7 +262,7 @@ public final class EditorialV18RunDeclarationEventInstrumentedTest {
         old.close();
         repository = new TranslationRepository(context, databaseName);
         SQLiteDatabase upgraded = repository.editorialReadableDatabase();
-        assertEquals(22, upgraded.getVersion());
+        assertEquals(23, upgraded.getVersion());
         assertEquals(1, scalarInt(upgraded, "SELECT COUNT(*) FROM editorial_project_revisions"));
         assertEquals(1, scalarInt(upgraded, "SELECT COUNT(*) FROM editorial_input_scope_snapshots"));
         assertEquals(0, scalarInt(upgraded, "SELECT COUNT(*) FROM editorial_authoritative_run_declarations"));
@@ -277,7 +277,7 @@ public final class EditorialV18RunDeclarationEventInstrumentedTest {
         createVersionedSchema(path, 13);
         repository = new TranslationRepository(context, databaseName);
         SQLiteDatabase upgraded = repository.editorialReadableDatabase();
-        assertEquals(22, upgraded.getVersion());
+        assertEquals(23, upgraded.getVersion());
         assertEquals(1, scalarInt(upgraded, "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='editorial_authoritative_run_declarations'"));
         assertEquals(1, scalarInt(upgraded, "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='editorial_run_closure_events'"));
         assertEquals(0, count("editorial_authoritative_run_declarations"));

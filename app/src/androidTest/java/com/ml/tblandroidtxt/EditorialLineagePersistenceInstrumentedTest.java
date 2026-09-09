@@ -62,9 +62,9 @@ public final class EditorialLineagePersistenceInstrumentedTest {
         context.deleteDatabase(databaseName);
     }
 
-    @Test public void freshSchemaIsV21WithLineageAndP5CAttemptTablesIndexesAndTriggers() {
+    @Test public void freshSchemaIsV23WithLineageAndP5DAttemptTablesIndexesAndTriggers() {
         SQLiteDatabase db = repository.editorialWritableDatabase();
-        assertEquals(22, db.getVersion());
+        assertEquals(23, db.getVersion());
         assertTable(db, "editorial_project_revisions");
         assertTable(db, "editorial_input_scope_snapshots");
         assertTable(db, "editorial_input_scope_snapshot_entries");
@@ -86,6 +86,10 @@ public final class EditorialLineagePersistenceInstrumentedTest {
         assertTable(db, "editorial_p5d_network_lifecycle");
         assertTable(db, "editorial_p5d_authorization_receipts");
         assertTable(db, "editorial_p5d_reconciliation");
+        assertTable(db, "editorial_p5d_reconciliation_history");
+        assertIndex(db, "idx_editorial_p5d_reconciliation_history_attempt");
+        assertTrigger(db, "trg_editorial_p5d_reconciliation_history_no_update");
+        assertTrigger(db, "trg_editorial_p5d_reconciliation_history_no_delete");
     }
 
     @Test public void validRootAndChildAppendReadbackAndRestartExactly() {
@@ -219,7 +223,7 @@ public final class EditorialLineagePersistenceInstrumentedTest {
 
         repository = new TranslationRepository(context, databaseName);
         SQLiteDatabase db = repository.editorialReadableDatabase();
-        assertEquals(22, db.getVersion());
+        assertEquals(23, db.getVersion());
         assertEquals(1, countRows("editorial_packs"));
         assertEquals(1, countRows("editorial_pack_compatibility_results"));
         assertEquals(1, countRows("editorial_pack_compatibility_evaluations"));
