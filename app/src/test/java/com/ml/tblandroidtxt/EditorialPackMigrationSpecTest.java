@@ -158,6 +158,22 @@ public class EditorialPackMigrationSpecTest {
         assertFalse(sql.contains("drop table"));
     }
 
+    @Test public void v23AddsAppendOnlyReconciliationHistoryWithoutReplacingThePrimaryDecision() {
+        String sql = String.join("\n", EditorialMigrationSpec.from22To23()).toLowerCase();
+        assertEquals(1, sql.split("create table if not exists", -1).length - 1);
+        assertEquals(1, countIndexes(sql));
+        assertEquals(2, sql.split("create trigger if not exists", -1).length - 1);
+        assertTrue(sql.contains("editorial_p5d_reconciliation_history"));
+        assertTrue(sql.contains("decision_identity"));
+        assertTrue(sql.contains("on delete restrict"));
+        assertFalse(sql.contains("alter table"));
+        assertFalse(sql.contains("drop table"));
+        assertFalse(sql.contains("delete from"));
+        assertFalse(sql.contains("request_body"));
+        assertFalse(sql.contains("response_body"));
+        assertFalse(sql.contains("api_key"));
+    }
+
     private static int countIndexes(String sql) {
         return sql.split("create index if not exists", -1).length - 1
                 + sql.split("create unique index if not exists", -1).length - 1;

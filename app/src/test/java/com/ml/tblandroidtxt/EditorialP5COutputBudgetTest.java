@@ -2,6 +2,8 @@ package com.ml.tblandroidtxt;
 
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotAuthorization;
 
+import org.json.JSONObject;
+
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -10,8 +12,28 @@ import static org.junit.Assert.assertEquals;
 
 public final class EditorialP5COutputBudgetTest {
     @Test public void liveL1EnvelopeGetsEnoughRoomWithoutIgnoringAuthorization() {
-        assertEquals(2048, EditorialP5CExactBindingExecution.boundedOutputTokens(auth(4096)));
+        assertEquals(4096, EditorialP5CExactBindingExecution.boundedOutputTokens(auth(4096)));
         assertEquals(512, EditorialP5CExactBindingExecution.boundedOutputTokens(auth(512)));
+    }
+
+    @Test public void httpPayloadUsesTheExactAuthorizedCap() throws Exception {
+        AppSettings settings = new AppSettings();
+        PromptPair prompt = new PromptPair("system", "synthetic raw discovery");
+        JSONObject body = OpenAICompatibleClient.buildChatRequestBody(settings, prompt, 4096);
+
+        assertEquals(4096, body.getInt("max_tokens"));
+        assertEquals(8192,
+                OpenAICompatibleClient.buildChatRequestBody(settings, prompt, 8192)
+                        .getInt("max_tokens"));
+        assertEquals(512,
+                OpenAICompatibleClient.buildChatRequestBody(settings, prompt, 512)
+                        .getInt("max_tokens"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void nonPositiveHttpCapIsRejectedInsteadOfClamped() throws Exception {
+        OpenAICompatibleClient.buildChatRequestBody(new AppSettings(),
+                new PromptPair("system", "synthetic"), 0);
     }
 
     private static EditorialP5PilotAuthorization auth(int outputTokens) {

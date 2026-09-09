@@ -112,14 +112,7 @@ public class OpenAICompatibleClient {
         if (endpoint == null || endpoint.trim().isEmpty()) throw new IllegalArgumentException("Base URL is empty");
         if (endpoint.contains("/api/generate")) throw new IllegalArgumentException("Ollama /api/generate is not implemented in this Android TXT MVP. Use an OpenAI-compatible /v1/chat/completions endpoint.");
 
-        JSONObject body = new JSONObject();
-        body.put("model", s.model);
-        body.put("temperature", s.temperature);
-        body.put("max_tokens", Math.max(128, maxOutputTokens));
-        JSONArray messages = new JSONArray();
-        messages.put(new JSONObject().put("role", "system").put("content", prompt.system));
-        messages.put(new JSONObject().put("role", "user").put("content", prompt.user));
-        body.put("messages", messages);
+        JSONObject body = buildChatRequestBody(s, prompt, maxOutputTokens);
 
         int timeout = Math.max(10, s.timeoutSeconds);
         OkHttpClient client = BASE_CLIENT.newBuilder()
@@ -191,6 +184,29 @@ public class OpenAICompatibleClient {
         } finally {
             if (active != null) ACTIVE_CALL.compareAndSet(active, null);
         }
+    }
+
+    /**
+     * Builds the OpenAI-compatible envelope without silently changing the
+     * caller's authorized output cap. Pilot callers validate the cap before
+     * dispatch; this boundary rejects an unusable value instead of clamping it.
+     */
+    static JSONObject buildChatRequestBody(AppSettings s, PromptPair prompt,
+                                           int maxOutputTokens) throws Exception {
+        if (s == null) throw new IllegalArgumentException("Settings are required");
+        if (prompt == null) throw new IllegalArgumentException("Prompt is required");
+        if (maxOutputTokens <= 0) {
+            throw new IllegalArgumentException("Output token cap is invalid");
+        }
+        JSONObject body = new JSONObject();
+        body.put("model", s.model);
+        body.put("temperature", s.temperature);
+        body.put("max_tokens", maxOutputTokens);
+        JSONArray messages = new JSONArray();
+        messages.put(new JSONObject().put("role", "system").put("content", prompt.system));
+        messages.put(new JSONObject().put("role", "user").put("content", prompt.user));
+        body.put("messages", messages);
+        return body;
     }
 
     static ChatResult parseChatResponse(String responseText) throws Exception {

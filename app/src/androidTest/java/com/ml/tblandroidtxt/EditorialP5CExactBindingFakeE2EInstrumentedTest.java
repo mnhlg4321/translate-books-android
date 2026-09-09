@@ -120,6 +120,7 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
         assertTrue(tableExists("editorial_p5d_network_lifecycle"));
         assertTrue(tableExists("editorial_p5d_authorization_receipts"));
         assertTrue(tableExists("editorial_p5d_reconciliation"));
+        assertTrue(tableExists("editorial_p5d_reconciliation_history"));
         assertTrue(columnExists("editorial_p5d_network_lifecycle", "stage"));
         assertTrue(columnExists("editorial_p5d_authorization_receipts", "authorization_id_hash"));
         assertTrue(columnExists("editorial_p5d_reconciliation", "classification"));
@@ -383,7 +384,7 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
             // the production pilot deadline.
             settings.timeoutSeconds = 60;
             OpenRouterEditorialP5PilotProvider provider =
-                    OpenRouterEditorialP5PilotProvider.withLifecyclePersistence(settings, 2_048, database);
+                    OpenRouterEditorialP5PilotProvider.withLifecyclePersistence(settings, 4_096, database);
             ExecutorService executor = Executors.newSingleThreadExecutor();
             try {
                 Future<EditorialP5PilotProvider.Response> response = executor.submit(
@@ -518,6 +519,55 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
             assertEquals(EditorialP5CAttemptStore.LifecycleStage.CALL_CREATED,
                     store.findNetworkLifecycle(rawRequest.attemptIdentity()).orElseThrow().stage());
         }
+    }
+
+    @Test public void p5dPreservesCancelledAndTruncatedRecoveryDecisionsAsHistory()
+            throws Exception {
+        BindingFixture fixture = createBoundChapter();
+        EditorialP5PilotRequest rawRequest = request(fixture,
+                EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY,
+                fixture.binding.runDeclarationIdentity());
+        EditorialP5CAttemptStore store = new EditorialP5CAttemptStore(database);
+
+        EditorialP5PilotAuthorization firstAuthorization = authorization(fixture.binding,
+                "p5d-auth-history-first", "L1_RAW_DISCOVERY");
+        store.prepare(rawRequest, firstAuthorization, "e".repeat(64));
+        assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.ACQUIRED,
+                store.claim(rawRequest.attemptIdentity()));
+        store.markRecoveryRequired(rawRequest.attemptIdentity(), "RETRY_OUTPUT_TRUNCATED");
+
+        EditorialP5PilotAuthorization firstRetry = authorization(fixture.binding,
+                "p5d-auth-history-retry-one", "L1_RAW_DISCOVERY");
+        String firstRetryHash = EditorialP5CAttemptStore.authorizationIdHash(firstRetry.authorizationId());
+        store.prepare(rawRequest, firstRetry, "e".repeat(64));
+        store.recordReconciliation(new EditorialP5CAttemptStore.ReconciliationDecision(
+                rawRequest.attemptIdentity(),
+                EditorialP5CAttemptStore.ExternalStateClassification.EXTERNAL_CONFIRMED_CANCELLED,
+                "local/p5d-cancelled-generation", "fake-account-fingerprint", "CANCELLED",
+                "P5D_TEST", true, true, firstRetryHash, 2000L));
+        assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.ACQUIRED,
+                store.claim(rawRequest.attemptIdentity()));
+        store.markRecoveryRequired(rawRequest.attemptIdentity(), "RETRY_OUTPUT_TRUNCATED");
+
+        EditorialP5PilotAuthorization secondRetry = authorization(fixture.binding,
+                "p5d-auth-history-retry-two", "L1_RAW_DISCOVERY");
+        String secondRetryHash = EditorialP5CAttemptStore.authorizationIdHash(secondRetry.authorizationId());
+        store.prepare(rawRequest, secondRetry, "e".repeat(64));
+        store.recordRecoveryDecision(new EditorialP5CAttemptStore.ReconciliationDecision(
+                rawRequest.attemptIdentity(),
+                EditorialP5CAttemptStore.ExternalStateClassification.EXTERNAL_COMPLETED_BILLED_OUTPUT_UNAVAILABLE,
+                "local/p5d-truncated-generation", "fake-account-fingerprint", "BILLED_OUTPUT_UNAVAILABLE",
+                "P5D_TEST", true, true, secondRetryHash, 3000L));
+
+        assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.ACQUIRED,
+                store.claim(rawRequest.attemptIdentity()));
+        List<EditorialP5CAttemptStore.ReconciliationRecord> history =
+                store.findReconciliationHistory(rawRequest.attemptIdentity());
+        assertEquals(2, history.size());
+        assertEquals(firstRetryHash, history.get(0).newAuthorizationIdHash());
+        assertEquals(secondRetryHash, history.get(1).newAuthorizationIdHash());
+        assertEquals(firstRetryHash, store.findReconciliation(rawRequest.attemptIdentity())
+                .orElseThrow().newAuthorizationIdHash());
     }
 
     private BindingFixture createBoundChapter() throws Exception {

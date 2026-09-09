@@ -56,6 +56,10 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
             "P5D-VOL5-RAW-DIAGNOSTIC-20260909-01";
     private static final String DIAGNOSTIC_AUTHORIZATION_HASH =
             "a28d70c9f1e9b33160daa6d1614abae98f5a921621fbea49f92279f06bcdc00d";
+    private static final int RAW_ACCEPTANCE_OUTPUT_TOKENS = 4_096;
+    // Retained only to describe the already-consumed historical diagnostic;
+    // it must never be reused for a new acceptance authorization.
+    private static final int HISTORICAL_DIAGNOSTIC_OUTPUT_TOKENS = 2_048;
     private static final long PILOT_WINDOW_MILLIS = 5 * 60 * 1000L;
 
     @Test public void preparePersistedVol5Chapter001Binding() throws Exception {
@@ -142,7 +146,8 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
                     binding.canonicalPackHash(), binding.canonicalProfileHash(),
                     binding.compatibilityEvaluationId(), CHAPTER_KEY, "L1_RAW_DISCOVERY",
                     PROVIDER, MODEL, endpointAccountFingerprint,
-                    1, 1, 0, 100_000, 2_048, 100_000, BigDecimal.valueOf(0.10),
+                    1, 0, 0, 100_000, RAW_ACCEPTANCE_OUTPUT_TOKENS, 100_000,
+                    BigDecimal.valueOf(0.10),
                     PILOT_WINDOW_MILLIS, true, false, false, "HASH_ONLY",
                     "USER_AUTHORIZED_NEW_RAW_VOL5;RECONCILE_NOT_AUTHORIZED",
                     issuedAt, expiresAt, true);
@@ -165,7 +170,7 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
 
             OpenRouterEditorialP5PilotProvider provider =
                     OpenRouterEditorialP5PilotProvider.withLifecyclePersistence(
-                            settings, 2_048, database);
+                     settings, RAW_ACCEPTANCE_OUTPUT_TOKENS, database);
             assertTrue("LIVE_AUTHORIZATION_INCOMPLETE: provider configuration is incomplete",
                     provider.configured());
             EditorialP5CExactBindingExecution.Result result =
@@ -240,8 +245,9 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
                     DIAGNOSTIC_AUTHORIZATION_ID, binding.bindingIdentity(),
                     binding.runDeclarationIdentity(), binding.canonicalPackHash(),
                     binding.canonicalProfileHash(), binding.compatibilityEvaluationId(),
-                    CHAPTER_KEY, "L1_RAW_DISCOVERY", PROVIDER, MODEL,
-                    endpointAccountFingerprint, 1, 0, 0, 100_000, 2_048, 100_000,
+                     CHAPTER_KEY, "L1_RAW_DISCOVERY", PROVIDER, MODEL,
+                     endpointAccountFingerprint, 1, 0, 0, 100_000,
+                     HISTORICAL_DIAGNOSTIC_OUTPUT_TOKENS, 100_000,
                     BigDecimal.valueOf(0.10), PILOT_WINDOW_MILLIS, true, false, false,
                     "HASH_ONLY", "USER_AUTHORIZED_P5D_RAW_DIAGNOSTIC;PRIOR_CANCELLED_GENERATION;"
                             + "DUPLICATE_BILLING_RISK_ACKNOWLEDGED", issuedAt, expiresAt, true);
@@ -277,7 +283,7 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
             keepTargetForegroundForDiagnostic();
             OpenRouterEditorialP5PilotProvider provider =
                     OpenRouterEditorialP5PilotProvider.withLifecyclePersistence(
-                            settings, 2_048, database);
+                             settings, HISTORICAL_DIAGNOSTIC_OUTPUT_TOKENS, database);
             assertTrue("LIVE_AUTHORIZATION_INCOMPLETE: provider configuration is incomplete",
                     provider.configured());
             EditorialP5CExactBindingExecution.Result result =

@@ -369,11 +369,11 @@ public final class EditorialP5CExactBindingExecution {
     }
 
     static int boundedOutputTokens(EditorialP5PilotAuthorization authorization) {
-        // REPORT_L1 carries identity, ledger, nine gate statuses and typed
-        // disposition metadata. 256 tokens can truncate a valid envelope;
-        // retain the authorization cap while giving the bounded pilot a safe
-        // structural ceiling.
-        return Math.min(2048, authorization.maximumOutputTokens());
+        Objects.requireNonNull(authorization, "authorization");
+        // The authorization is the single source of truth. The HTTP client
+        // receives this exact value; invalid non-positive caps are rejected by
+        // the execution boundary before a provider can be called.
+        return authorization.maximumOutputTokens();
     }
 
     private static Result stop(String reason, int providerCalls) {

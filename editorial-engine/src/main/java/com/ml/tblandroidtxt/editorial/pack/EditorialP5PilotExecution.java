@@ -109,6 +109,16 @@ public final class EditorialP5PilotExecution {
                     List.of(), request.chapterKey(), "Use one primary call and zero automatic retries",
                     request.phase(), false, metrics);
         }
+        if (authorization.maximumInputTokens() <= 0
+                || authorization.maximumOutputTokens() <= 0
+                || authorization.maximumTotalTokens() <= 0
+                || authorization.maximumTotalCost().signum() < 0) {
+            return stopped(requestIdentity, EditorialP5PilotResult.StopClass.BUDGET_EXCEEDED,
+                    "P5_TOKEN_BUDGET_INVALID", request.phase(), "TOKEN_BUDGET",
+                    List.of(), request.chapterKey(),
+                    "Use positive input, output and total token caps with a non-negative cost cap",
+                    request.phase(), false, metrics);
+        }
 
         String envelopeIssue = validatePackEnvelope(request);
         if (envelopeIssue != null) {

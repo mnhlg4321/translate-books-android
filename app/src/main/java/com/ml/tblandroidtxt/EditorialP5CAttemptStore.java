@@ -16,7 +16,10 @@ import org.json.JSONObject;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -31,6 +34,8 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
     private static final String LIFECYCLE_TABLE = "editorial_p5d_network_lifecycle";
     private static final String AUTH_TABLE = "editorial_p5d_authorization_receipts";
     private static final String RECONCILIATION_TABLE = "editorial_p5d_reconciliation";
+    private static final String RECONCILIATION_HISTORY_TABLE =
+            "editorial_p5d_reconciliation_history";
 
     private final TranslationRepository database;
     private final Map<String, Pending> pending = new HashMap<>();
@@ -396,21 +401,140 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
         db.insertOrThrow(RECONCILIATION_TABLE, null, values);
     }
 
+    /**
+     * Appends a later recovery decision without replacing the original
+     * reconciliation. The v22 primary row remains immutable; v23 history is
+     * keyed by a canonical decision fingerprint and is also append-only.
+     */
+    public synchronized void recordRecoveryDecision(ReconciliationDecision decision) {
+        Objects.requireNonNull(decision, "recovery decision");
+        if (findRow(decision.attemptIdentity()) == null) throw new IllegalStateException(
+                "P5D reconciliation requires a durable attempt");
+        Optional<ReconciliationRecord> primary = findReconciliation(decision.attemptIdentity());
+        if (primary.isEmpty()) {
+            recordReconciliation(decision);
+            return;
+        }
+        if (sameDecision(primary.get(), decision)) return;
+
+        String decisionIdentity = reconciliationDecisionIdentity(decision);
+        Optional<ReconciliationRecord> existing = findHistoricalReconciliation(decisionIdentity);
+        if (existing.isPresent()) {
+            if (sameDecision(existing.get(), decision)) return;
+            throw new IllegalStateException("P5D reconciliation decision identity collision");
+        }
+
+        SQLiteDatabase db = database.editorialWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("decision_identity", decisionIdentity);
+        putReconciliationValues(values, decision);
+        db.insertOrThrow(RECONCILIATION_HISTORY_TABLE, null, values);
+    }
+
+    /** Stable identity for redacted recovery-decision evidence. */
+    public static String reconciliationDecisionIdentity(ReconciliationDecision decision) {
+        Objects.requireNonNull(decision, "reconciliation decision");
+        StringBuilder value = new StringBuilder();
+        appendDecisionField(value, decision.attemptIdentity());
+        appendDecisionField(value, decision.classification().name());
+        appendDecisionField(value, decision.evidenceRef());
+        appendDecisionField(value, decision.endpointAccountFingerprint());
+        appendDecisionField(value, decision.billingState());
+        appendDecisionField(value, decision.decidedBy());
+        appendDecisionField(value, decision.retryEligible() ? "1" : "0");
+        appendDecisionField(value, decision.duplicateRiskAcknowledged() ? "1" : "0");
+        appendDecisionField(value, decision.newAuthorizationIdHash());
+        appendDecisionField(value, Long.toString(decision.decidedAt()));
+        return EditorialCanonicalJson.sha256Hex(("EDITORIAL_P5D_RECONCILIATION_DECISION_V1\n"
+                + value).getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** Returns the immutable primary decision followed by later decisions. */
+    public synchronized List<ReconciliationRecord> findReconciliationHistory(
+            String attemptIdentity) {
+        requireHash(attemptIdentity, "attempt identity");
+        ArrayList<ReconciliationRecord> values = new ArrayList<>();
+        findReconciliation(attemptIdentity).ifPresent(values::add);
+        String sql = "SELECT attempt_identity,classification,evidence_ref,"
+                + "endpoint_account_fingerprint,billing_state,decided_by,retry_eligible,"
+                + "duplicate_risk_acknowledged,new_authorization_id_hash,decided_at FROM "
+                + RECONCILIATION_HISTORY_TABLE + " WHERE attempt_identity=?";
+        try (Cursor cursor = database.editorialReadableDatabase().rawQuery(sql,
+                new String[]{attemptIdentity})) {
+            while (cursor.moveToNext()) values.add(readReconciliation(cursor, 0));
+        }
+        values.sort(Comparator.comparingLong(ReconciliationRecord::decidedAt)
+                .thenComparing(ReconciliationRecord::evidenceRef)
+                .thenComparing(ReconciliationRecord::newAuthorizationIdHash));
+        return List.copyOf(values);
+    }
+
     public synchronized Optional<ReconciliationRecord> findReconciliation(String attemptIdentity) {
         requireHash(attemptIdentity, "attempt identity");
-        String sql = "SELECT classification,evidence_ref,endpoint_account_fingerprint,"
-                + "billing_state,decided_by,retry_eligible,duplicate_risk_acknowledged,"
-                + "new_authorization_id_hash,decided_at FROM " + RECONCILIATION_TABLE
+        String sql = "SELECT attempt_identity,classification,evidence_ref,"
+                + "endpoint_account_fingerprint,billing_state,decided_by,retry_eligible,"
+                + "duplicate_risk_acknowledged,new_authorization_id_hash,decided_at FROM "
+                + RECONCILIATION_TABLE
                 + " WHERE attempt_identity=?";
         try (Cursor cursor = database.editorialReadableDatabase().rawQuery(sql,
                 new String[]{attemptIdentity})) {
             if (!cursor.moveToFirst()) return Optional.empty();
-            return Optional.of(new ReconciliationRecord(attemptIdentity,
-                    ExternalStateClassification.valueOf(cursor.getString(0)),
-                    cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getString(4),
-                    cursor.getInt(5) != 0, cursor.getInt(6) != 0, cursor.getString(7),
-                    cursor.getLong(8)));
+            return Optional.of(readReconciliation(cursor, 0));
         }
+    }
+
+    private Optional<ReconciliationRecord> findHistoricalReconciliation(String decisionIdentity) {
+        String sql = "SELECT attempt_identity,classification,evidence_ref,"
+                + "endpoint_account_fingerprint,billing_state,decided_by,retry_eligible,"
+                + "duplicate_risk_acknowledged,new_authorization_id_hash,decided_at FROM "
+                + RECONCILIATION_HISTORY_TABLE + " WHERE decision_identity=?";
+        try (Cursor cursor = database.editorialReadableDatabase().rawQuery(sql,
+                new String[]{decisionIdentity})) {
+            return cursor.moveToFirst() ? Optional.of(readReconciliation(cursor, 0))
+                    : Optional.empty();
+        }
+    }
+
+    private static ReconciliationRecord readReconciliation(Cursor cursor, int offset) {
+        return new ReconciliationRecord(cursor.getString(offset),
+                ExternalStateClassification.valueOf(cursor.getString(offset + 1)),
+                cursor.getString(offset + 2), cursor.getString(offset + 3),
+                cursor.getString(offset + 4), cursor.getString(offset + 5),
+                cursor.getInt(offset + 6) != 0, cursor.getInt(offset + 7) != 0,
+                cursor.getString(offset + 8), cursor.getLong(offset + 9));
+    }
+
+    private static boolean sameDecision(ReconciliationRecord value,
+                                        ReconciliationDecision decision) {
+        return value.attemptIdentity().equals(decision.attemptIdentity())
+                && value.classification() == decision.classification()
+                && value.evidenceRef().equals(decision.evidenceRef())
+                && value.endpointAccountFingerprint().equals(decision.endpointAccountFingerprint())
+                && value.billingState().equals(decision.billingState())
+                && value.decidedBy().equals(decision.decidedBy())
+                && value.retryEligible() == decision.retryEligible()
+                && value.duplicateRiskAcknowledged() == decision.duplicateRiskAcknowledged()
+                && value.newAuthorizationIdHash().equals(decision.newAuthorizationIdHash())
+                && value.decidedAt() == decision.decidedAt();
+    }
+
+    private static void putReconciliationValues(ContentValues values,
+                                                ReconciliationDecision decision) {
+        values.put("attempt_identity", decision.attemptIdentity());
+        values.put("classification", decision.classification().name());
+        values.put("evidence_ref", decision.evidenceRef());
+        values.put("endpoint_account_fingerprint", decision.endpointAccountFingerprint());
+        values.put("billing_state", decision.billingState());
+        values.put("decided_by", decision.decidedBy());
+        values.put("retry_eligible", decision.retryEligible() ? 1 : 0);
+        values.put("duplicate_risk_acknowledged", decision.duplicateRiskAcknowledged() ? 1 : 0);
+        values.put("new_authorization_id_hash", decision.newAuthorizationIdHash());
+        values.put("decided_at", decision.decidedAt());
+    }
+
+    private static void appendDecisionField(StringBuilder value, String field) {
+        String normalized = field == null ? "" : field;
+        value.append(normalized.length()).append(':').append(normalized).append('\n');
     }
 
     public synchronized Optional<AuthorizationReceipt> findAuthorizationReceipt(
@@ -421,10 +545,16 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
 
     private Claim reclaimOnlyAfterReconciliation(String attemptIdentity, Pending facts) {
         if (facts == null) return Claim.RECOVERY_REQUIRED;
-        Optional<ReconciliationRecord> decision = findReconciliation(attemptIdentity);
         String newAuthorizationHash = authorizationIdHash(facts.authorization.authorizationId());
-        if (decision.isEmpty() || !decision.get().retryEligible()
-                || !newAuthorizationHash.equals(decision.get().newAuthorizationIdHash())) {
+        boolean retryAuthorized = false;
+        for (ReconciliationRecord decision : findReconciliationHistory(attemptIdentity)) {
+            if (decision.retryEligible()
+                    && newAuthorizationHash.equals(decision.newAuthorizationIdHash())) {
+                retryAuthorized = true;
+                break;
+            }
+        }
+        if (!retryAuthorized) {
             return Claim.RECOVERY_REQUIRED;
         }
         SQLiteDatabase db = database.editorialWritableDatabase();

@@ -52,7 +52,10 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
                                               NetworkLifecycleRecorder lifecycleRecorder) {
         if (settings == null) throw new IllegalArgumentException("OpenRouter settings are required");
         this.settings = settings.copy();
-        this.maximumOutputTokens = Math.max(128, maximumOutputTokens);
+        if (maximumOutputTokens <= 0) {
+            throw new IllegalArgumentException("Output token cap is invalid");
+        }
+        this.maximumOutputTokens = maximumOutputTokens;
         this.lifecycleRecorder = lifecycleRecorder;
     }
 

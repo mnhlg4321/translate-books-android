@@ -36,6 +36,7 @@ public final class EditorialP5CLiveL1PilotInstrumentedTest {
     private static final String MODEL = "openai/gpt-5.6-luna";
     private static final String RAW_PHASE = "L1_RAW_DISCOVERY";
     private static final String RECONCILE_PHASE = "L1_RECONCILE";
+    private static final int OUTPUT_TOKENS = 4_096;
     private static final BigDecimal TOTAL_COST_PER_PHASE = BigDecimal.valueOf(0.05);
     private static final long PILOT_WINDOW_MILLIS = 5 * 60 * 1000L;
 
@@ -83,7 +84,7 @@ public final class EditorialP5CLiveL1PilotInstrumentedTest {
 
             OpenRouterEditorialP5PilotProvider provider =
                     OpenRouterEditorialP5PilotProvider.withLifecyclePersistence(
-                            settings, 2048, database);
+                            settings, OUTPUT_TOKENS, database);
             assertTrue("LIVE_AUTHORIZATION_INCOMPLETE: provider configuration is incomplete",
                     provider.configured());
             EditorialP5CExactBindingExecution.Result result =
@@ -105,7 +106,7 @@ public final class EditorialP5CLiveL1PilotInstrumentedTest {
                 binding.bindingIdentity(), binding.runDeclarationIdentity(),
                 binding.canonicalPackHash(), binding.canonicalProfileHash(),
                 binding.compatibilityEvaluationId(), CHAPTER_KEY, phase, PROVIDER, MODEL,
-                endpointAccountFingerprint, 1, 1, 0, 100000, 2048, 100000,
+                endpointAccountFingerprint, 1, 1, 0, 100000, OUTPUT_TOKENS, 100000,
                 TOTAL_COST_PER_PHASE, PILOT_WINDOW_MILLIS, true, false, false,
                 "HASH_ONLY", "USER", issuedAt, expiresAt, true);
     }

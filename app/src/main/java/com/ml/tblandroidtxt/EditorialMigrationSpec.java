@@ -164,5 +164,17 @@ public final class EditorialMigrationSpec {
             "ALTER TABLE editorial_p5d_network_lifecycle ADD COLUMN response_content_type TEXT NOT NULL DEFAULT '' CHECK(length(response_content_type)<=96)",
             "ALTER TABLE editorial_p5d_network_lifecycle ADD COLUMN cancellation_source TEXT NOT NULL DEFAULT '' CHECK(length(cancellation_source)<=96)"
     );}
+
+    /**
+     * v23 preserves the v21/v22 primary reconciliation while allowing later
+     * recovery decisions for the same durable attempt to be appended. The
+     * table is metadata-only and deliberately has no update/delete path.
+     */
+    public static List<String> from22To23(){return Arrays.asList(
+            "CREATE TABLE IF NOT EXISTS editorial_p5d_reconciliation_history (decision_identity TEXT PRIMARY KEY NOT NULL CHECK(length(decision_identity)=64 AND decision_identity NOT GLOB '*[^0-9a-f]*'), attempt_identity TEXT NOT NULL CHECK(length(attempt_identity)=64 AND attempt_identity NOT GLOB '*[^0-9a-f]*'), classification TEXT NOT NULL CHECK(classification IN ('EXTERNAL_CONFIRMED_FAILED','EXTERNAL_CONFIRMED_CANCELLED','EXTERNAL_COMPLETED_BILLED_OUTPUT_UNAVAILABLE','EXTERNAL_COMPLETED_METADATA_AVAILABLE','EXTERNAL_NOT_FOUND_AFTER_BOUNDED_AUDIT','EXTERNAL_STATE_REMAINS_UNKNOWN')), evidence_ref TEXT NOT NULL CHECK(length(trim(evidence_ref))>0), endpoint_account_fingerprint TEXT NOT NULL CHECK(length(trim(endpoint_account_fingerprint))>0), billing_state TEXT NOT NULL CHECK(length(trim(billing_state))>0), decided_by TEXT NOT NULL CHECK(length(trim(decided_by))>0), retry_eligible INTEGER NOT NULL CHECK(retry_eligible IN (0,1)), duplicate_risk_acknowledged INTEGER NOT NULL CHECK(duplicate_risk_acknowledged IN (0,1)), new_authorization_id_hash TEXT NOT NULL DEFAULT '' CHECK(new_authorization_id_hash='' OR (length(new_authorization_id_hash)=64 AND new_authorization_id_hash NOT GLOB '*[^0-9a-f]*')), decided_at INTEGER NOT NULL CHECK(decided_at>=0), FOREIGN KEY(attempt_identity) REFERENCES editorial_p5c_attempts(attempt_identity) ON DELETE RESTRICT)",
+            "CREATE INDEX IF NOT EXISTS idx_editorial_p5d_reconciliation_history_attempt ON editorial_p5d_reconciliation_history(attempt_identity,decided_at,decision_identity)",
+            "CREATE TRIGGER IF NOT EXISTS trg_editorial_p5d_reconciliation_history_no_update BEFORE UPDATE ON editorial_p5d_reconciliation_history BEGIN SELECT RAISE(ABORT,'editorial_p5d_reconciliation_history is immutable'); END",
+            "CREATE TRIGGER IF NOT EXISTS trg_editorial_p5d_reconciliation_history_no_delete BEFORE DELETE ON editorial_p5d_reconciliation_history BEGIN SELECT RAISE(ABORT,'editorial_p5d_reconciliation_history is durable recovery evidence'); END"
+    );}
     private EditorialMigrationSpec() {}
 }

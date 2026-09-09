@@ -291,6 +291,22 @@ public final class EditorialP5PilotExecutionBoundaryTest {
         assertEquals(1, provider.calls);
     }
 
+    @Test public void invalidOutputTokenCapStopsBeforeProvider() {
+        Fixture fixture = fixture();
+        FakeProvider provider = new FakeProvider(response(fixture.request, true));
+
+        EditorialP5PilotResult result = execute(fixture,
+                authorizationVariant(fixture.request, "auth-invalid-output-cap",
+                        fixture.request.binding().bindingIdentity(), 0, 10_000, 0, 12_000,
+                        BigDecimal.ONE, 60_000L, true, 0L, Long.MAX_VALUE),
+                provider, new Store());
+
+        assertEquals(EditorialP5PilotResult.StopClass.BUDGET_EXCEEDED,
+                result.stopReceipt().stopClass());
+        assertEquals("P5_TOKEN_BUDGET_INVALID", result.stopReceipt().reasonCode());
+        assertEquals(0, provider.calls);
+    }
+
     @Test public void exactRetryAfterCommitIsIdempotentWithoutSecondProviderCall() {
         Fixture fixture = fixture();
         Store store = new Store();

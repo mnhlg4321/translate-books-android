@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
 - Updated: 2026-09-09 (+07:00).
-- Current status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / LOCAL_TRANSPORT_AND_LIFECYCLE_VERIFIED / HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED / RAW_DIAGNOSTIC_ATTEMPT_COMPLETE / RAW_DIAGNOSTIC_STOPPED_RETRY_OUTPUT_TRUNCATED / RAW_PREDECESSOR_NOT_COMMITTED / VOL5_RECOVERY_REQUIRED / EXTERNAL_CONFIRMED_CANCELLED / P5D_PREFLIGHT_PROVIDER_CALLS_0 / P5D_LIVE_PROVIDER_CALLS_1 / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Current status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / TRANSPORT_AND_LIFECYCLE_LIVE_VERIFIED / RAW_OUTPUT_TRUNCATION_CONFIRMED / RAW_PREDECESSOR_REQUIRED / OUTPUT_BUDGET_ALIGNMENT_PASS / RECOVERY_HISTORY_PRESERVED / RAW_ACCEPTANCE_INCOMPLETE / P6_NOT_READY / HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED / RAW_DIAGNOSTIC_ATTEMPT_COMPLETE / RAW_DIAGNOSTIC_STOPPED_RETRY_OUTPUT_TRUNCATED / VOL5_RECOVERY_REQUIRED / EXTERNAL_CONFIRMED_CANCELLED / P5D_PREFLIGHT_PROVIDER_CALLS_0 / P5D_LIVE_PROVIDER_CALLS_1 / NEW_RAW_AUTHORIZATION_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
 - Current version/build: production validation artifact 4.17-dev.21 / code189 remains archived in artifacts and backup with SHA-256 `D66C3C816E29403508BF997413998683FDCAD6AC2C74F24DA40E9AF31570860C` and installed on device `15e84958`. The opt-in test APK used for the diagnostic runner has SHA-256 `41CA284397DF9EB4ED12B27AF790D01C52621230DA8242A921D6925356A1D32`. One authorized VOL5 RAW primary call returned complete transport but stopped at the 2,048 output-token cap; the app kept `RECOVERY_REQUIRED` with no response/report/receipt. Provider-reported cost was `$0.0075392`. PRONOUN remains 455 bytes with BOM before the existing app-owned normalization and 452 pinned bytes after it. No further retry or RECONCILE is authorized.
 - Current branch/workspace: feature/v4.18 / D:\App Translate Books\App Translate Books-translation-profile.
-- Current commit baseline: bece3a5aba1d1793119db47f420ce1b9da8c4a0d, the test-only live-diagnostic baseline immediately before this outcome documentation snapshot commit; not self-referential.
+- Current commit baseline: 81070cec0a56d7c6351fe082acaea8dbc3261194, the implementation/documentation baseline immediately before the output-budget and recovery-history change; not self-referential.
 - Active authority: V5-SAFE.4.1.3-FULL. Authority bytes, canonical ZIP SHA, Java-control ZIP SHA and profile v2 hash are unchanged.
 
 ## Completed tasks
@@ -30,6 +30,7 @@
 - P5D code189 local HTTP closure passed immediate, 11-second delayed-with-legacy-cancel and 11-second delayed-without-legacy-cancel (`1/1` each); the full fake E2E class passed `13/13`, schema/migration device classes `41/41`, and full instrumentation passed `130 tests / 0 failures`. Adapter lifecycle metadata survived DB reopen on isolated v22 databases. Detailed evidence is in `docs/P5D_LOCAL_HTTP_HARNESS_REPORT.md`.
 - The controlled RAW diagnostic preflight was rerun without provider access: fake recovery/binding class `13/13 PASS`, live recovery inspection `1/1 PASS`, engine expiry/budget/authorization boundary `16/16 PASS`; provider calls `0`. Exact identities and the pre-dispatch snapshot are in `docs/P5D_RAW_DIAGNOSTIC_PREFLIGHT.md`.
 - The user-approved RAW diagnostic authorization was consumed once. The single OpenRouter call returned HTTP `200`/complete transport but `finish=length` at `2,048` output tokens; local validation returned `RETRY_OUTPUT_TRUNCATED`, persisted lifecycle reached `RESPONSE_BODY_COMPLETE`, and no partial report/receipt was committed. See `docs/P5D_RAW_DIAGNOSTIC_ATTEMPT_REPORT.md`.
+- Test-first output-budget evidence reproduced the silent `4,096 → 2,048` clamp. The exact-cap HTTP body test and invalid-cap fail-closed test now pass after the minimal alignment change. A focused recovery-history test proved v22's single immutable reconciliation row could not retain a later truncated decision; additive v23 append-only history is implemented and awaits device migration/readback verification. No provider call was made for this change.
 
 ## Validation evidence
 
@@ -41,7 +42,7 @@
 
 ## Pending tasks
 
-- Controlled real L1 pilot remains incomplete. The new VOL5 diagnostic attempt is `RECOVERY_REQUIRED` with `RETRY_OUTPUT_TRUNCATED`; its single-use authorization is consumed and cannot be reused. No RECONCILE authorization exists, and P5D.7, P6 L2/L3 and P7 release gates remain separate. A future RAW attempt requires a new authorization and explicit output-cap/repair decision.
+- Controlled real L1 pilot remains incomplete. The new VOL5 diagnostic attempt is `RECOVERY_REQUIRED` with `RETRY_OUTPUT_TRUNCATED`; its single-use authorization is consumed and cannot be reused. No RECONCILE authorization exists, and P5D.7, P6 L2/L3 and P7 release gates remain separate. A future RAW attempt requires a new authorization; the proposed acceptance cap is `4,096` with zero schema repair and zero automatic retry, pending explicit approval.
 - Release tag, release backup/export and real-chapter certification remain pending by design.
 
 ## Known bugs and limitations
@@ -65,8 +66,11 @@ source identities passed preflight. The approved single-use diagnostic
 authorization dispatched one RAW primary call; OpenRouter returned complete
 transport with `finish=length` at the 2,048 output-token cap. The app persisted
 the typed `RETRY_OUTPUT_TRUNCATED` recovery result and lifecycle metadata, but
-did not commit a RAW predecessor, report or receipt. Do not reuse the consumed
-authorization, do not call RECONCILE and do not enable content logging. Keep
-`EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE`.
+did not commit a RAW predecessor, report or receipt. Output-cap alignment now
+passes locally with requested/effective `4,096`; v23 recovery history preserves
+the prior immutable decision and the later truncated decision. Device
+migration/readback is the next verification step. Do not reuse the consumed
+authorization, do not call RECONCILE or enable content logging. Keep
+`RAW_ACCEPTANCE_INCOMPLETE / P6_NOT_READY / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE`.
 
 This is current-only state; Git history preserves prior snapshots.
