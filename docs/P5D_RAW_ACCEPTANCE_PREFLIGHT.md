@@ -11,7 +11,10 @@ RAW_PREDECESSOR_REQUIRED
 OUTPUT_BUDGET_ALIGNMENT_PASS
 RECOVERY_HISTORY_PRESERVED
 RAW_ACCEPTANCE_AUTHORIZATION_APPROVED
-RAW_ACCEPTANCE_NOT_DISPATCHED
+RAW_ACCEPTANCE_ATTEMPTED
+RAW_ACCEPTANCE_STOPPED_AT_DEADLINE
+RAW_ACCEPTANCE_RECOVERY_CLOSED
+EXTERNAL_STATE_REMAINS_UNKNOWN
 RAW_ACCEPTANCE_INCOMPLETE
 P6_NOT_READY
 NEW_RAW_AUTHORIZATION_REQUIRED
@@ -21,10 +24,10 @@ NOT_CERTIFIED
 NOT_GLOBALLY_RUNNABLE
 ```
 
-Đây là preflight chuẩn bị cho một lần RAW acceptance mới. Chưa có provider
-call nào trong bước alignment này; authorization ở cuối tài liệu chỉ là bản
-nháp chờ người dùng cấp quyền. Authorization diagnostic trước đó đã consumed
-và không được tái sử dụng.
+Đây là preflight và kết quả của một lần RAW acceptance có giới hạn. Bước
+alignment không gọi provider; authorization diagnostic trước đó đã consumed và
+không được tái sử dụng. Authorization acceptance bên dưới đã được người dùng
+duyệt và đã tiêu thụ đúng một lần, nhưng attempt không đạt terminal acceptance.
 
 ## Baseline và artifact đã kiểm chứng
 
@@ -36,9 +39,9 @@ và không được tái sử dụng.
 | Device | `15e84958` |
 | Validation package | `4.17-dev.23 / code191` |
 | APK SHA-256 | `5F3C841F590C6F7AA3E19F625D2B387E55B2D6BFD3C50A93D61F0337E6A2340C` |
-| Test APK SHA-256 | `4646408DF01B2A3502BA6CF05DB6486C026AFFF74D9C0ED7C5657048AAB256C4` |
+| Test APK SHA-256 | `CE5E29CABA15D08D3C6C2A032B961171C11428E28CC41A302792CA6D904CDCC4` |
 | Build event | `build-20260909-213020` |
-| Build source commit | `a865b0203c8f25d1de48ea15d6406d599cc961af` |
+| Build source commit | `ae6d9e23d6b5b4709e9fea4c5a42a4adaaacc3a6` |
 | Database schema | `23` |
 | Canonical ZIP SHA-256 | `B9C65DBEB9D4C4ED46B67D5EC28FF6252CC2BDC4B63BC902904612987EC58987` |
 | Java control ZIP SHA-256 | `44F99423292ADA15680220165AF50430532D847E155F93C1B15D9F173D4609A5` |
@@ -224,12 +227,13 @@ Bằng chứng:
 Không lặp lại delay harness toàn bộ vì transport/cancellation không thay đổi
 trong alignment này. Full instrumentation `130/130` của code189 vẫn là
 historical evidence; focused suites trên code191 là bằng chứng hiện tại cho
-phạm vi thay đổi. Live RAW acceptance chưa chạy.
+phạm vi thay đổi. Live RAW acceptance đã dispatch một lần; kết quả và recovery
+readback nằm ở `docs/P5D_RAW_ACCEPTANCE_ATTEMPT_REPORT.md`.
 
-## Authorization RAW acceptance — ĐÃ DUYỆT, CHƯA DISPATCH
+## Authorization RAW acceptance — ĐÃ DUYỆT, ĐÃ DISPATCH MỘT LẦN
 
 ```text
-P5D RAW ACCEPTANCE AUTHORIZATION — USER APPROVED; NOT YET DISPATCHED
+P5D RAW ACCEPTANCE AUTHORIZATION — USER APPROVED; CONSUMED ONCE
 
 Authorization ID: P5D-VOL5-RAW-ACCEPTANCE-20260909-01
 Authorization ID SHA-256 (fingerprint):
@@ -281,16 +285,16 @@ L2/L3: NO
 Certification: NO
 General runnable declaration: NO
 Single-use: YES
-Status: APPROVED; unconsumed; provider calls: 0
+Status: APPROVED; CONSUMED; one dispatch; no repair/retry
 ```
 
-Authorization này đã được người dùng duyệt và chỉ mở đúng một lần dispatch sau
-pre-dispatch verification. Runner phải đọc lại exact persisted binding, source
-hashes, recovery history và effective cap ngay trước call; chỉ một RAW primary
-request được phép, không schema repair và không network retry. Nếu output hợp lệ
-thì commit RAW predecessor/readback rồi dừng với
-`RECONCILE_AUTHORIZATION_REQUIRED`. Nếu truncated, sai schema, identity mismatch
-hoặc provider error thì giữ typed recovery evidence và không tự gọi lần hai.
+Authorization này đã được người dùng duyệt và đã mở đúng một lần dispatch sau
+pre-dispatch verification. Runner đã đọc lại exact persisted binding, source
+hashes, recovery history và effective cap; không schema repair và không network
+retry. Attempt nhận HTTP 200 headers và generation ID nhưng không đạt response
+body complete trong giới hạn 5 phút. Không có RAW predecessor/report/receipt;
+attempt được đóng qua owner thành `RECOVERY_REQUIRED /
+RETRY_PROVIDER_CALL_TIMEOUT`. Không được dùng authorization này lần nữa.
 
 ## Không được kết luận từ preflight này
 
@@ -304,16 +308,20 @@ P6_READY                        = KHÔNG
 CERTIFIED / GLOBALLY_RUNNABLE   = KHÔNG
 ```
 
-## Pre-dispatch verification record
+## Pre-dispatch và post-dispatch record
 
 - Approval received: `2026-09-09` (+07:00), exact authorization ID above.
 - Test APK rebuilt from commit `fd12b952fdde6b38f5739a3554b3feb868fe7174`;
   SHA-256 `4646408DF01B2A3502BA6CF05DB6486C026AFFF74D9C0ED7C5657048AAB256C4`.
 - Device `15e84958` remained on production `4.17-dev.23 / code191`; test APK
   was installed with `adb install -r`, preserving the pilot database.
-- No provider call has occurred after the approval. The no-provider gates passed:
-  v23 recovery readback `1/1` and append-only cancelled/truncated history
-  regression `1/1`.
-- Dispatch remains gated to the single opt-in instrumentation method. The run
-  must be kept foreground and awaited to terminal state; no RECONCILE request is
-  permitted under this authorization.
+- No-provider gates trước dispatch passed: v23 recovery readback `1/1` và
+  append-only cancelled/truncated history regression `1/1`.
+- Một dispatch đã xảy ra qua method opt-in. Host runner không nhận terminal
+  result trong `300,000 ms`; package được dừng sau deadline để ngăn request chạy
+  vô hạn. Readback: lifecycle `RESPONSE_HEADERS_RECEIVED`, HTTP 200,
+  `application/json`, request bytes `85,068`, generation
+  `gen-1788967700-RgJDCWrZsNZ4VAAWmlj8`, không response identity, zero report/
+  receipt. Local owner closure là `RECOVERY_REQUIRED / RETRY_PROVIDER_CALL_TIMEOUT`.
+- Provider usage/cost lần này `UNKNOWN`; không được suy luận `$0`. External
+  classification là `EXTERNAL_STATE_REMAINS_UNKNOWN`; không có RECONCILE request.

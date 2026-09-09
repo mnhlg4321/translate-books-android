@@ -1,12 +1,12 @@
 # Build State
 
-- Status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / TRANSPORT_AND_LIFECYCLE_LIVE_VERIFIED / RAW_OUTPUT_TRUNCATION_CONFIRMED / RAW_PREDECESSOR_REQUIRED / OUTPUT_BUDGET_ALIGNMENT_PASS / RECOVERY_HISTORY_PRESERVED / RAW_ACCEPTANCE_AUTHORIZATION_APPROVED / RAW_ACCEPTANCE_NOT_DISPATCHED / RAW_ACCEPTANCE_INCOMPLETE / P6_NOT_READY / HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED / RAW_DIAGNOSTIC_ATTEMPT_COMPLETE / RAW_DIAGNOSTIC_STOPPED_RETRY_OUTPUT_TRUNCATED / RAW_PREDECESSOR_NOT_COMMITTED / VOL5_RECOVERY_REQUIRED / EXTERNAL_CONFIRMED_CANCELLED / P5D_PREFLIGHT_PROVIDER_CALLS_0 / P5D_LIVE_PROVIDER_CALLS_1 / NEW_RAW_AUTHORIZATION_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / TRANSPORT_AND_LIFECYCLE_LIVE_VERIFIED / RAW_OUTPUT_TRUNCATION_CONFIRMED / RAW_PREDECESSOR_REQUIRED / OUTPUT_BUDGET_ALIGNMENT_PASS / RECOVERY_HISTORY_PRESERVED / RAW_ACCEPTANCE_AUTHORIZATION_APPROVED / RAW_ACCEPTANCE_ATTEMPTED / RAW_ACCEPTANCE_STOPPED_AT_DEADLINE / RAW_ACCEPTANCE_RECOVERY_CLOSED / EXTERNAL_STATE_REMAINS_UNKNOWN / RAW_ACCEPTANCE_INCOMPLETE / P6_NOT_READY / HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED / RAW_DIAGNOSTIC_ATTEMPT_COMPLETE / RAW_DIAGNOSTIC_STOPPED_RETRY_OUTPUT_TRUNCATED / RAW_PREDECESSOR_NOT_COMMITTED / VOL5_RECOVERY_REQUIRED / EXTERNAL_CONFIRMED_CANCELLED / P5D_PREFLIGHT_PROVIDER_CALLS_0 / P5D_LIVE_PROVIDER_CALLS_1 / P5D_RAW_ACCEPTANCE_PROVIDER_CALLS_1 / NEW_RAW_AUTHORIZATION_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
 - Active authority: V5-SAFE.4.1.3-FULL; canonical plan `EDITORIAL_RECOVERY_V4_18.md`.
 - Workspace: D:\App Translate Books\App Translate Books-translation-profile.
 - Branch: feature/v4.18.
-- Current commit baseline: fd12b952fdde6b38f5739a3554b3feb868fe7174, the implementation/test baseline immediately before this documentation snapshot commit; not self-referential.
-- Last validation package used: production APK 4.17-dev.23 / Android versionCode 191, archived in artifacts and backup with SHA-256 `5F3C841F590C6F7AA3E19F625D2B387E55B2D6BFD3C50A93D61F0337E6A2340C` and installed on device `15e84958`. The focused test APK rebuilt from `fd12b952fdde6b38f5739a3554b3feb868fe7174` has SHA-256 `4646408DF01B2A3502BA6CF05DB6486C026AFFF74D9C0ED7C5657048AAB256C4`; no production source or build metadata changed.
-- Current phase: the single authorized code189 VOL5 RAW diagnostic attempt is complete and stopped fail-closed at `RETRY_OUTPUT_TRUNCATED`. Transport/lifecycle verification passed, but the app did not commit a RAW predecessor, `REPORT_L1` or receipt. Output-budget alignment now has requested/effective cap `4,096`; v23 append-only recovery history preserves the earlier cancellation and later truncation decisions. The exact RAW acceptance authorization `P5D-VOL5-RAW-ACCEPTANCE-20260909-01` is user-approved, single-use and not yet consumed; no call has been dispatched under it. The historical cancellation actor remains unknown. The 455-byte PRONOUN transport file contains a UTF-8 BOM; after the existing app-owned removal, it is exactly the pinned 452-byte/hash `4947FF91…20686`. RECONCILE remains unauthorized and Editorial execution/certification remain disabled.
+- Current commit baseline: ae6d9e23d6b5b4709e9fea4c5a42a4adaaacc3a6, the implementation/test baseline immediately before this documentation snapshot commit; not self-referential.
+- Last validation package used: production APK 4.17-dev.23 / Android versionCode 191, archived in artifacts and backup with SHA-256 `5F3C841F590C6F7AA3E19F625D2B387E55B2D6BFD3C50A93D61F0337E6A2340C` and installed on device `15e84958`. The final focused test APK rebuilt from `ae6d9e23d6b5b4709e9fea4c5a42a4adaaacc3a6` has SHA-256 `CE5E29CABA15D08D3C6C2A032B961171C11428E28CC41A302792CA6D904CDCC4`; no production source or build metadata changed.
+- Current phase: the single authorized code189 VOL5 RAW diagnostic attempt is complete and stopped fail-closed at `RETRY_OUTPUT_TRUNCATED`. Transport/lifecycle verification passed, but the app did not commit a RAW predecessor, `REPORT_L1` or receipt. Output-budget alignment has requested/effective cap `4,096`; v23 append-only recovery history preserves the earlier cancellation and later truncation decisions. The exact RAW acceptance authorization `P5D-VOL5-RAW-ACCEPTANCE-20260909-01` was consumed for one dispatch; the instrumentation did not reach terminal state within 5 minutes. Readback found lifecycle `RESPONSE_HEADERS_RECEIVED`, HTTP 200 and generation metadata, but no complete body, response identity, report or receipt. The attempt is now `RECOVERY_REQUIRED / RETRY_PROVIDER_CALL_TIMEOUT`; external billing/completion remains unknown. The historical cancellation actor remains unknown. The 455-byte PRONOUN transport file contains a UTF-8 BOM; after the existing app-owned removal, it is exactly the pinned 452-byte/hash `4947FF91…20686`. RECONCILE remains unauthorized and Editorial execution/certification remain disabled.
 
 ## Source and authority identity
 
@@ -66,6 +66,7 @@
 - The approved authorization `P5D-VOL5-RAW-DIAGNOSTIC-20260909-01` was consumed once for the exact VOL5/chapter001 binding. One OpenRouter RAW primary call returned HTTP `200` with complete transport but ended at `2,048` output tokens (`finish=length`); app metrics were `20,327/2,048/22,375` tokens, reported cost `$0.0075392`, latency `20,590 ms`, schema/receipt invalid. Durable readback is `RECOVERY_REQUIRED` with lifecycle `RESPONSE_BODY_COMPLETE`, no response identity and zero report/receipt bytes. Full redacted evidence: `docs/P5D_RAW_DIAGNOSTIC_ATTEMPT_REPORT.md`.
 - Output-budget alignment and recovery-history hardening are complete without a provider call: the prior `4,096 → 2,048` clamp was reproduced test-first, then removed so authorization/request/HTTP use the exact cap; v23 adds append-only reconciliation history without replacing the immutable primary row. Code191 validation focused device evidence is recorded in `docs/P5D_RAW_ACCEPTANCE_PREFLIGHT.md`.
 - Code191 focused validation: VOL5 v23 recovery readback `1/1`, fake E2E `14/14`, schema/migration `41/41`, importer/P1/P2 `23/23`, P3B/P4 `5/5`; host engine `181/181`, app all unit variants `657/657`, external qualification `306/306`; provider calls for alignment/preflight `0`.
+- RAW acceptance attempt evidence: authorization `P5D-VOL5-RAW-ACCEPTANCE-20260909-01` was consumed for exactly one dispatch. The final focused test APK (`CE5E29CABA15D08D3C6C2A032B961171C11428E28CC41A302792CA6D904CDCC4`) ran on `15e84958`; the process did not reach terminal result by the five-minute cap. Redacted readback retained lifecycle `RESPONSE_HEADERS_RECEIVED`, HTTP `200`, request bytes `85,068`, generation `gen-1788967700-RgJDCWrZsNZ4VAAWmlj8`, and zero report/receipt bytes. Owner recovery closure changed `CLAIMED` to `RECOVERY_REQUIRED / RETRY_PROVIDER_CALL_TIMEOUT`; provider usage/cost and external completion remain unknown. See `docs/P5D_RAW_ACCEPTANCE_ATTEMPT_REPORT.md`.
 
 ## Validation artifact
 
@@ -73,7 +74,7 @@
 - Backup mirror: `backup/builds/v4.17-dev.23/build-20260909-213020/TranslateBooks-v4.17-dev.23-code191.apk`.
 - APK SHA-256: `5F3C841F590C6F7AA3E19F625D2B387E55B2D6BFD3C50A93D61F0337E6A2340C`.
 - Build event source snapshot: `a865b0203c8f25d1de48ea15d6406d599cc961af`; this code191 artifact remains validation-only.
-- Test APK SHA-256 for the current focused validation runner: `8A58C19EEC98BB1BC1F1042A624EDD52E3DB67B05BF906A3241D64D339AF249D`.
+- Test APK SHA-256 for the current focused validation runner: `CE5E29CABA15D08D3C6C2A032B961171C11428E28CC41A302792CA6D904CDCC4`.
 - Code186 remains immutable historical evidence for the prior lifecycle baseline; it is not the current validation artifact.
 - Code184 remains immutable historical evidence for the pre-P5D live attempt; it is not the current validation artifact.
 - This is a validation APK, not a V4.18 release build.
@@ -110,22 +111,22 @@ was not modified.
 - The historical VOL5 RAW request was provider-confirmed `cancelled` at displayed cost `$0.00484`. The subsequent diagnostic attempt returned complete HTTP `200` transport but stopped at `max_output_tokens`; the app typed `RETRY_OUTPUT_TRUNCATED` and committed no predecessor/report/receipt. No automatic retry is allowed; a new exact-phase authorization would be required for another call.
 - P5C proves app-bound fake attempt persistence and idempotent RAW→RECONCILE replay, but does not prove a live response, real token/cost usage, live cancellation/process-death behavior, or a real chapter `REPORT_L1`/receipt commit. RECONCILE and final L1 acceptance remain unproven.
 - Device remains on validation code191 for inspection; no uninstall, reset or database cleanup was used in this step. The local harness uses isolated test databases and does not overwrite the VOL5 pilot DB.
-- The selected acceptance cap is `4,096` requested/effective; `2,048` remains historical diagnostic evidence only. The exact acceptance authorization is approved but unconsumed; no provider call has been made since the truncated diagnostic.
+- The selected acceptance cap is `4,096` requested/effective; `2,048` remains historical diagnostic evidence only. The exact acceptance authorization is consumed and cannot be reused. The acceptance attempt reached response headers but not a complete response within the five-minute cap; no provider usage/cost was available locally, so external billing remains unknown.
 - The local harness initially exposed a device freezer interruption at `DELAY_STARTED`; the bounded cleanup and test-only foreground keepalive resolved the local test hang. This is not proof of the historical OpenRouter cancellation actor, which remains unknown.
 - The current PRONOUN transport file includes a UTF-8 BOM, but the app-owned semantic bytes match the immutable binding. Do not silently change the normalization rule or rebind the project.
 
 ## Next step
 
-The approved single-use diagnostic authorization is consumed and must not be
-reused. Output-budget alignment and v23 recovery-history readback are now
-verified. The exact single-use acceptance authorization
-`P5D-VOL5-RAW-ACCEPTANCE-20260909-01` is approved but not yet consumed. Re-read
-the exact persisted binding, source identities, reconciliation history and
-effective `4,096` cap, then dispatch exactly one RAW-only primary call with zero
-schema repair and zero automatic retry. Keep the foreground condition and wait
-for terminal state; do not call RECONCILE. Preserve the current
-`RECOVERY_REQUIRED` evidence until the result is validated and read back. Keep
-`RAW_ACCEPTANCE_INCOMPLETE / P6_NOT_READY / EXECUTION_DISABLED / NOT_CERTIFIED /
-NOT_GLOBALLY_RUNNABLE`.
+The approved single-use diagnostic and acceptance authorizations are consumed and
+must not be reused. Output-budget alignment and v23 recovery-history readback
+are verified, but the RAW acceptance attempt stopped at the five-minute
+deadline before a terminal response. The exact persisted attempt is now
+`RECOVERY_REQUIRED / RETRY_PROVIDER_CALL_TIMEOUT`, with lifecycle headers and
+generation metadata, no complete response/report/receipt, and
+`EXTERNAL_STATE_REMAINS_UNKNOWN`. Do not retry, do not infer `$0`, and do not
+open RECONCILE. A further call requires a new recovery decision, new explicit
+authorization and a P5D hardening change for end-to-end deadline/process-death
+handling. Keep `RAW_ACCEPTANCE_INCOMPLETE / P6_NOT_READY /
+EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE`.
 
 This file is current-only; Git history preserves prior state.
