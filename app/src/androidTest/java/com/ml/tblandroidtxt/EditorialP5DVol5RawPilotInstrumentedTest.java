@@ -48,6 +48,14 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
     private static final String CHAPTER_KEY = "001";
     private static final String PROVIDER = "openrouter";
     private static final String MODEL = "openai/gpt-5.6-luna";
+    private static final String ORIGINAL_ATTEMPT_ID =
+            "157e3517b4b98535392db95f0c93285f08a0ac6b07341a82508ffc36aea9a5f0";
+    private static final String ORIGINAL_AUTHORIZATION_HASH =
+            "f39ff4fd7503aa6746fc2f61f4ea75a06ec5989f187da240334822587eeaa212";
+    private static final String DIAGNOSTIC_AUTHORIZATION_ID =
+            "P5D-VOL5-RAW-DIAGNOSTIC-20260909-01";
+    private static final String DIAGNOSTIC_AUTHORIZATION_HASH =
+            "a28d70c9f1e9b33160daa6d1614abae98f5a921621fbea49f92279f06bcdc00d";
     private static final long PILOT_WINDOW_MILLIS = 5 * 60 * 1000L;
 
     @Test public void preparePersistedVol5Chapter001Binding() throws Exception {
@@ -177,6 +185,125 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
                 assertTrue(result.rawResult().outcome() == EditorialP5PilotResult.Outcome.COMMITTED
                         || result.rawResult().outcome() == EditorialP5PilotResult.Outcome.ALREADY_COMMITTED);
             }
+        }
+    }
+
+    @Test public void authorizedVol5RawDiagnosticRecoveryRunsOnlyWhenExplicitlyOptedIn()
+            throws Exception {
+        String optIn = InstrumentationRegistry.getArguments().getString("p5d_raw_diagnostic", "");
+        Assume.assumeTrue("VOL5 RAW diagnostic call is explicit opt-in",
+                "YES".equalsIgnoreCase(optIn));
+
+        Context context = ApplicationProvider.getApplicationContext();
+        AppSettings settings = SettingsStore.load(context);
+        assertTrue("LIVE_AUTHORIZATION_INCOMPLETE: provider must be OpenRouter",
+                PROVIDER.equalsIgnoreCase(nullToEmpty(settings.provider)));
+        assertTrue("LIVE_AUTHORIZATION_INCOMPLETE: OpenRouter endpoint required",
+                AppSettings.defaultBaseUrl(PROVIDER).equals(AppSettings.normalizeEndpoint(settings.baseUrl)));
+        assertTrue("LIVE_AUTHORIZATION_INCOMPLETE: OpenRouter API key is absent",
+                settings.apiKey != null && !settings.apiKey.trim().isEmpty());
+        settings.provider = PROVIDER;
+        settings.baseUrl = AppSettings.defaultBaseUrl(PROVIDER);
+        settings.model = MODEL;
+        settings.timeoutSeconds = 300;
+
+        try (TranslationRepository database = new TranslationRepository(context)) {
+            EditorialP4Binding binding = new EditorialP4BindingDao(database)
+                    .findByAttemptRequestSelector(SELECTOR).orElseThrow(
+                            () -> new AssertionError("VOL5 P4 binding is not persisted"));
+            long projectId = projectId(database, binding.bindingIdentity());
+            assertTrue("VOL5 persisted project id is required", projectId > 0);
+            List<EditorialP4InputSource> sources = readSources(context);
+            EditorialP4ResumeResult resumed = new EditorialP4BindingTransactionService(database,
+                    new EditorialPackStorageLayout(context.getFilesDir().toPath()))
+                    .resumeProject(projectId, SELECTOR, sources);
+            assertEquals(EditorialP4ResumeResult.Code.RESTORED, resumed.code());
+            assertEquals(binding.bindingIdentity(), resumed.binding().bindingIdentity());
+
+            EditorialP5CAttemptStore attemptStore = new EditorialP5CAttemptStore(database);
+            EditorialP5CAttemptStore.AttemptRecord oldAttempt = attemptStore
+                    .findRecord(ORIGINAL_ATTEMPT_ID).orElseThrow(
+                            () -> new AssertionError("VOL5 recovery attempt is missing"));
+            assertEquals("RECOVERY_REQUIRED", oldAttempt.status());
+            assertEquals("RETRY_PROVIDER_CALL_FAILED_UNKNOWN", oldAttempt.recoveryReasonCode());
+            assertEquals("L1_RAW_DISCOVERY", oldAttempt.phase());
+            assertEquals("CONSUMED", attemptStore.findAuthorizationReceipt(
+                    ORIGINAL_AUTHORIZATION_HASH).orElseThrow().consumptionResult());
+
+            String endpointAccountFingerprint = EditorialCanonicalJson.sha256Hex(
+                    (settings.baseUrl + "|" + EditorialCanonicalJson.sha256Hex(
+                            settings.apiKey.getBytes(StandardCharsets.UTF_8)))
+                            .getBytes(StandardCharsets.UTF_8));
+            long issuedAt = System.currentTimeMillis();
+            long expiresAt = issuedAt + PILOT_WINDOW_MILLIS;
+            EditorialP5PilotAuthorization raw = new EditorialP5PilotAuthorization(
+                    DIAGNOSTIC_AUTHORIZATION_ID, binding.bindingIdentity(),
+                    binding.runDeclarationIdentity(), binding.canonicalPackHash(),
+                    binding.canonicalProfileHash(), binding.compatibilityEvaluationId(),
+                    CHAPTER_KEY, "L1_RAW_DISCOVERY", PROVIDER, MODEL,
+                    endpointAccountFingerprint, 1, 0, 0, 100_000, 2_048, 100_000,
+                    BigDecimal.valueOf(0.10), PILOT_WINDOW_MILLIS, true, false, false,
+                    "HASH_ONLY", "USER_AUTHORIZED_P5D_RAW_DIAGNOSTIC;PRIOR_CANCELLED_GENERATION;"
+                            + "DUPLICATE_BILLING_RISK_ACKNOWLEDGED", issuedAt, expiresAt, true);
+            assertEquals(DIAGNOSTIC_AUTHORIZATION_HASH,
+                    EditorialP5CAttemptStore.authorizationIdHash(DIAGNOSTIC_AUTHORIZATION_ID));
+
+            EditorialP5CAttemptStore.ReconciliationDecision decision =
+                    new EditorialP5CAttemptStore.ReconciliationDecision(
+                            ORIGINAL_ATTEMPT_ID,
+                            EditorialP5CAttemptStore.ExternalStateClassification
+                                    .EXTERNAL_CONFIRMED_CANCELLED,
+                            "docs/P5D_VOL5_RAW_PROVIDER_RECONCILIATION.md",
+                            endpointAccountFingerprint,
+                            "CANCELLED_DISPLAYED_COST_0.00484",
+                            "P5D_USER_AUTHORIZATION_20260909", true, true,
+                            DIAGNOSTIC_AUTHORIZATION_HASH, 1788955200000L);
+            java.util.Optional<EditorialP5CAttemptStore.ReconciliationRecord> existing =
+                    attemptStore.findReconciliation(ORIGINAL_ATTEMPT_ID);
+            if (existing.isEmpty()) {
+                // The recovery decision is written through the durable owner,
+                // never by a test-side SQL state mutation.
+                attemptStore.recordReconciliation(decision);
+            }
+            EditorialP5CAttemptStore.ReconciliationRecord reconciliation = attemptStore
+                    .findReconciliation(ORIGINAL_ATTEMPT_ID).orElseThrow();
+            assertEquals(EditorialP5CAttemptStore.ExternalStateClassification
+                    .EXTERNAL_CONFIRMED_CANCELLED, reconciliation.classification());
+            assertEquals(DIAGNOSTIC_AUTHORIZATION_HASH,
+                    reconciliation.newAuthorizationIdHash());
+            assertTrue(reconciliation.retryEligible());
+            assertTrue(reconciliation.duplicateRiskAcknowledged());
+
+            keepTargetForegroundForDiagnostic();
+            OpenRouterEditorialP5PilotProvider provider =
+                    OpenRouterEditorialP5PilotProvider.withLifecyclePersistence(
+                            settings, 2_048, database);
+            assertTrue("LIVE_AUTHORIZATION_INCOMPLETE: provider configuration is incomplete",
+                    provider.configured());
+            EditorialP5CExactBindingExecution.Result result =
+                    new EditorialP5CExactBindingExecution(database,
+                            new EditorialPackStorageLayout(context.getFilesDir().toPath()))
+                            .executeRaw(projectId, SELECTOR, CHAPTER_KEY, raw, provider);
+            logResult(result);
+            assertNotNull(result);
+            assertTrue("RAW diagnostic exceeded one primary call", result.providerCalls() <= 1);
+            org.junit.Assert.assertNull("RAW-only diagnostic must not call RECONCILE",
+                    result.reconcileResult());
+            assertTrue("execution must remain disabled", !result.executionAllowed());
+            assertEquals("NOT_CERTIFIED", result.certificationState());
+            Log.i("P5D_RAW_DIAGNOSTIC", "authorizationHash=" + DIAGNOSTIC_AUTHORIZATION_HASH
+                    + " originalAttempt=" + ORIGINAL_ATTEMPT_ID
+                    + " providerCalls=" + result.providerCalls()
+                    + " status=" + result.status() + " reason=" + result.reasonCode());
+        }
+    }
+
+    private static void keepTargetForegroundForDiagnostic() throws Exception {
+        try (android.os.ParcelFileDescriptor command = InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation().executeShellCommand("am start -n com.ml.tblandroidtxt/.MainActivity")) {
+            // The test-only foreground keepalive prevents a quiet socket from
+            // being freezer-suspended on the validation device. It changes no
+            // production timeout or cancellation policy.
         }
     }
 
