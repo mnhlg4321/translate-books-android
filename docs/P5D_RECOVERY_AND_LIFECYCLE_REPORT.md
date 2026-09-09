@@ -166,6 +166,8 @@ The real VOL5 attempt remains historical and was made before code189 recorder
 wiring: schema v22 is present, but its attempt has no lifecycle row and the
 local reconciliation table has no row. It remains `RECOVERY_REQUIRED` with no
 response/report/receipt. The current device PRONOUN source is 455 bytes /
-`63E79EEB…1A49C`, while the persisted binding requires 452 bytes /
-`4947FF91…20686`; this prevents a new RAW dispatch as `STOP_SOURCE_DRIFT`.
-No source was rewritten and no provider call was made in this closure.
+`63E79EEB…1A49C` including a three-byte UTF-8 BOM; the existing app-owned BOM
+removal produces 452 bytes / `4947FF91…20686`, exactly matching the persisted
+binding. No source rewrite or rebind was needed, and no provider call was made
+in this closure. A new RAW diagnostic authorization may be prepared, but the
+historical cancellation actor remains unknown.

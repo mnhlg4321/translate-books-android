@@ -1,12 +1,12 @@
 # Build State
 
-- Status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / LOCAL_TRANSPORT_AND_LIFECYCLE_VERIFIED / HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED / VOL5_SOURCE_IDENTITY_MISMATCH_BLOCKED / RAW_RETRY_NOT_READY / VOL5_RECOVERY_REQUIRED / EXTERNAL_CONFIRMED_CANCELLED / NEW_RAW_AUTHORIZATION_REQUIRED / P5D_CODE189_PROVIDER_CALLS_0 / RECONCILE_NOT_AUTHORIZED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / LOCAL_TRANSPORT_AND_LIFECYCLE_VERIFIED / HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED / RAW_DIAGNOSTIC_RETRY_READY / VOL5_RECOVERY_REQUIRED / EXTERNAL_CONFIRMED_CANCELLED / NEW_RAW_AUTHORIZATION_REQUIRED / P5D_CODE189_PROVIDER_CALLS_0 / RECONCILE_NOT_AUTHORIZED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
 - Active authority: V5-SAFE.4.1.3-FULL; canonical plan `EDITORIAL_RECOVERY_V4_18.md`.
 - Workspace: D:\App Translate Books\App Translate Books-translation-profile.
 - Branch: feature/v4.18.
-- Current commit baseline: 6a310f9b6c5bfbd8f0fee6179f22331524e823c6, the implementation baseline immediately before this validation/documentation snapshot commit; not self-referential.
+- Current commit baseline: 6645f614bd8e79ae6fa3b99ee6300723e6e1f765, the implementation/documentation baseline immediately before this correction snapshot commit; not self-referential.
 - Last validation package used: 4.17-dev.21 / Android versionCode 189, archived in artifacts and backup with SHA-256 `D66C3C816E29403508BF997413998683FDCAD6AC2C74F24DA40E9AF31570860C` and installed on device `15e84958`. The validation package retains the VOL5 binding and local test inputs.
-- Current phase: code189 local HTTP transport and recorder validation is complete, but the historical cancellation actor remains unknown. The VOL5 attempt is still `RECOVERY_REQUIRED` with no response/report/receipt and no local lifecycle/reconciliation row because it predates recorder wiring. RAW retry is blocked by a persisted PRONOUN source mismatch (binding 452 bytes/hash `4947FF91…20686`; device source 455 bytes/hash `63E79EEB…1A49C`). RECONCILE remains unauthorized and Editorial execution/certification remain disabled.
+- Current phase: code189 local HTTP transport and recorder validation is complete, but the historical cancellation actor remains unknown. The VOL5 attempt is still `RECOVERY_REQUIRED` with no response/report/receipt and no local lifecycle/reconciliation row because it predates recorder wiring. The 455-byte PRONOUN transport file contains a UTF-8 BOM; after the existing app-owned removal, it is exactly the pinned 452-byte/hash `4947FF91…20686`. A new RAW diagnostic authorization may be prepared; RECONCILE remains unauthorized and Editorial execution/certification remain disabled.
 
 ## Source and authority identity
 
@@ -61,7 +61,7 @@
 - P5D.1/P5D.2 provider audit: authenticated OpenRouter Logs metadata matched the old app/model/time/request-size tuple and classified the external generation as `EXTERNAL_CONFIRMED_CANCELLED`; I/O logging remained disabled and P5D provider calls remain `0`.
 - P5D.3/P5D.4: additive v21 lifecycle, authorization-receipt and reconciliation owners; typed provider-failure taxonomy; non-reclaimable `RECOVERY_REQUIRED` gate; and redacted timing/generation metadata passed focused tests. Code186 device XML reports `124` test methods, `0` failures, `0` errors and `4` approved skips; engine `180/180`; app aggregate `645/645`.
 - P5D code189 local harness closure: `EditorialP5CExactBindingFakeE2EInstrumentedTest` `13/13 PASS`; immediate, 11-second delayed-with-legacy-cancel and 11-second delayed-without-legacy-cancel `1/1` each; schema/migration device classes `41/41`; full instrumentation `130 tests, 0 failures`; engine/app debug unit XML `396/396`; external qualification `306/306`; no provider call. Detailed evidence: `docs/P5D_LOCAL_HTTP_HARNESS_REPORT.md`.
-- P5D code189 DB readback: schema v22; historical VOL5 attempt remains `RECOVERY_REQUIRED`, prior authorization is consumed, response/report/receipt are absent, lifecycle and local reconciliation rows are absent for the historical attempt. RAW/DRAFT/GLOSSARY bytes match the binding; PRONOUN is 455 bytes/hash `63E79EEB…1A49C` while the binding requires 452 bytes/hash `4947FF91…20686`, so a new dispatch must stop as `STOP_SOURCE_DRIFT`.
+- P5D code189 DB readback: schema v22; historical VOL5 attempt remains `RECOVERY_REQUIRED`, prior authorization is consumed, response/report/receipt are absent, lifecycle and local reconciliation rows are absent for the historical attempt. RAW/DRAFT/GLOSSARY bytes match the binding; PRONOUN is 455 bytes/hash `63E79EEB…1A49C` raw with BOM and 452 bytes/hash `4947FF91…20686` after the existing BOM removal, so the semantic source identity matches.
 
 ## Validation artifact
 
@@ -106,16 +106,15 @@ was not modified.
 - P5C proves app-bound fake attempt persistence and idempotent RAW→RECONCILE replay, but does not prove a live response, real token/cost usage, live cancellation/process-death behavior, or a real chapter `REPORT_L1`/receipt commit. RECONCILE and final L1 acceptance remain unproven.
 - Device remains on code189 for inspection; no uninstall, reset or database cleanup was used in this step. The local harness uses isolated test databases and does not overwrite the VOL5 pilot DB.
 - The local harness initially exposed a device freezer interruption at `DELAY_STARTED`; the bounded cleanup and test-only foreground keepalive resolved the local test hang. This is not proof of the historical OpenRouter cancellation actor, which remains unknown.
-- The current source/binding PRONOUN mismatch is a hard blocker for a new RAW request. Do not normalize, overwrite or silently rebind it.
+- The current PRONOUN transport file includes a UTF-8 BOM, but the app-owned semantic bytes match the immutable binding. Do not silently change the normalization rule or rebind the project.
 
 ## Next step
 
-Resolve the exact VOL5 PRONOUN identity mismatch by an explicit binding/source
-decision before any new authorization. Then, if reconciliation persistence is
-required by policy, add the redacted classification row through the existing
-owner. Only after exact binding readback succeeds may a new single-use RAW
-diagnostic authorization be prepared. Do not authorize or call RECONCILE,
-enable input/output logging, auto-activate, auto-rebind or certify. Keep
-`EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE`.
+Prepare, but do not yet dispatch, one new exact-phase single-use RAW diagnostic
+authorization that records the historical cancellation and duplicate-billing
+risk. If reconciliation persistence is required by policy, add the redacted
+classification row through the existing owner first. Do not authorize or call
+RECONCILE, enable input/output logging, auto-activate, auto-rebind or certify.
+Keep `EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE`.
 
 This file is current-only; Git history preserves prior state.

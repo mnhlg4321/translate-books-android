@@ -21,10 +21,10 @@ authenticated, read-only và phân loại được external cancellation. P5D.5 
 được cấp authorization mới; P5D.6/P5D.7 chưa được thực hiện.
 
 Phần kiểm chứng mới nhất ngày `2026-09-09` được ghi ở cuối báo cáo. Kết luận
-mới nhất là `LOCAL_TRANSPORT_AND_LIFECYCLE_VERIFIED`, nhưng
-`HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED` và
-`VOL5_SOURCE_IDENTITY_MISMATCH_BLOCKED`; vì vậy chưa ghi `RAW_RETRY_READY` và
-không gọi provider.
+mới nhất là `LOCAL_TRANSPORT_AND_LIFECYCLE_VERIFIED` và
+`HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED`. Các local gate đủ để chuẩn bị một
+RAW diagnostic authorization, nhưng chưa có authorization mới và không gọi
+provider.
 
 ## Baseline and immutable identity
 
@@ -139,8 +139,7 @@ timeline and source-identity table. The current decision is:
 ```text
 LOCAL_TRANSPORT_AND_LIFECYCLE_VERIFIED
 HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED
-VOL5_SOURCE_IDENTITY_MISMATCH_BLOCKED
-RAW_RETRY_NOT_READY
+RAW_DIAGNOSTIC_RETRY_READY
 ```
 
 The bounded local harness passed immediate, 11-second delayed-with-legacy-cancel
@@ -156,7 +155,9 @@ on isolated test databases. The historical VOL5 attempt itself still has no
 lifecycle or local reconciliation row because it predates the recorder wiring;
 its durable state remains `RECOVERY_REQUIRED` with no response/report/receipt.
 
-The exact persisted binding still differs from the current private source only
-for PRONOUN: binding `452` bytes / `4947FF91…20686`, device source `455` bytes /
-`63E79EEB…1A49C`. This is a real `STOP_SOURCE_DRIFT` blocker. The source was
-not normalized, replaced or rebound during validation.
+The current PRONOUN transport file is `455` bytes / `63E79EEB…1A49C` because it
+contains a three-byte UTF-8 BOM. The existing app-owned BOM removal produces
+`452` bytes / `4947FF91…20686`, exactly matching the persisted binding. No
+source rewrite or rebind was needed. The local gates therefore permit
+preparation of a new diagnostic RAW authorization, but the historical
+cancellation actor remains unknown and no call is issued here.

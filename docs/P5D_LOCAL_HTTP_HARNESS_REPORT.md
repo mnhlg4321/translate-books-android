@@ -7,8 +7,7 @@ Ngày kiểm tra: `2026-09-09` (+07:00)
 ```text
 LOCAL_TRANSPORT_AND_LIFECYCLE_VERIFIED
 HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED
-VOL5_SOURCE_IDENTITY_MISMATCH_BLOCKED
-RAW_RETRY_NOT_READY
+RAW_DIAGNOSTIC_RETRY_READY
 NO_PROVIDER_CALL_IN_THIS_VALIDATION
 EXECUTION_DISABLED
 NOT_CERTIFIED
@@ -71,12 +70,13 @@ recorder is verified only on isolated code189 test attempts.
 | RAW | 23,814 / `A308210E…04504BE` | 23,814 / `A308210E…04504BE` | match |
 | DRAFT | 26,462 / `64ADECD8…7F62B5` | 26,462 / `64ADECD8…7F62B5` | match |
 | GLOSSARY | 3,249 / `4BC3E2DD…A0314` | 3,249 / `4BC3E2DD…A0314` | match |
-| PRONOUN | 452 / `4947FF91…20686` | 455 / `63E79EEB…1A49C` | **mismatch** |
+| PRONOUN | 452 / `4947FF91…20686` | 455 / `63E79EEB…1A49C` raw; 452 / `4947FF91…20686` after BOM removal | match |
 
-The current 455-byte PRONOUN file is the user-supplied VOL5 source. It was not
-rewritten to make the old binding pass. A new live call must stop as
-`STOP_SOURCE_DRIFT` until the user explicitly creates or restores an exact
-binding for the intended bytes.
+The current 455-byte PRONOUN file is the user-supplied VOL5 source and begins
+with the UTF-8 BOM `EF BB BF`. The existing app-owned `stripUtf8Bom` rule removes
+exactly those three transport bytes before computing the source identity. The
+result is 452 bytes with hash `4947FF9184995BE5F850F2323FBE0A04C67302FB8D5AFB63CF12202B44720686`,
+matching the immutable binding. No source rewrite or rebind was needed.
 
 ## Harness fix and evidence
 
@@ -128,8 +128,8 @@ current-schema expectations and the historical recovery assertion. No
 authority, pack, profile, UI activation, project binding, provider call,
 database reset, uninstall or build metadata change was used in this step.
 
-The next safe action is to resolve the PRONOUN binding/source identity mismatch
-and, separately, persist an explicit reconciliation record if that is required
-by the recovery policy. Only then may a new exact-phase RAW authorization be
-prepared. The old consumed authorization is not reusable. No RAW retry is
-issued by this report.
+The local gates now support preparation of one new exact-phase RAW diagnostic
+authorization. The historical cancellation actor remains unknown, so this is
+not evidence that the original cause was fixed. The old consumed authorization
+is not reusable; no RAW retry is issued by this report. A separate local
+reconciliation row may still be required by recovery policy before dispatch.

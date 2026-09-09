@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
 - Updated: 2026-09-09 (+07:00).
-- Current status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / LOCAL_TRANSPORT_AND_LIFECYCLE_VERIFIED / HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED / VOL5_SOURCE_IDENTITY_MISMATCH_BLOCKED / RAW_RETRY_NOT_READY / VOL5_RECOVERY_REQUIRED / EXTERNAL_CONFIRMED_CANCELLED / NEW_RAW_AUTHORIZATION_REQUIRED / P5D_CODE189_PROVIDER_CALLS_0 / RECONCILE_NOT_AUTHORIZED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
-- Current version/build: validation artifact 4.17-dev.21 / code189 was archived in artifacts and backup with SHA-256 `D66C3C816E29403508BF997413998683FDCAD6AC2C74F24DA40E9AF31570860C` and installed on device `15e84958`. One historical VOL5 RAW request remains `RECOVERY_REQUIRED` with no response/report/receipt; OpenRouter metadata confirms `cancelled` at displayed cost `$0.00484`. Code189 local transport/recorder validation passed, but the current PRONOUN source is 455 bytes/hash `63E79EEB…1A49C` while the binding requires 452 bytes/hash `4947FF91…20686`; no retry or RECONCILE request is authorized.
+- Current status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / LOCAL_TRANSPORT_AND_LIFECYCLE_VERIFIED / HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED / RAW_DIAGNOSTIC_RETRY_READY / VOL5_RECOVERY_REQUIRED / EXTERNAL_CONFIRMED_CANCELLED / NEW_RAW_AUTHORIZATION_REQUIRED / P5D_CODE189_PROVIDER_CALLS_0 / RECONCILE_NOT_AUTHORIZED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Current version/build: validation artifact 4.17-dev.21 / code189 was archived in artifacts and backup with SHA-256 `D66C3C816E29403508BF997413998683FDCAD6AC2C74F24DA40E9AF31570860C` and installed on device `15e84958`. One historical VOL5 RAW request remains `RECOVERY_REQUIRED` with no response/report/receipt; OpenRouter metadata confirms `cancelled` at displayed cost `$0.00484`. Code189 local transport/recorder validation passed. The current PRONOUN file is 455 bytes/hash `63E79EEB…1A49C` with a UTF-8 BOM; after the existing BOM removal it is 452 bytes/hash `4947FF91…20686`, exactly matching the binding. No retry or RECONCILE request is authorized.
 - Current branch/workspace: feature/v4.18 / D:\App Translate Books\App Translate Books-translation-profile.
-- Current commit baseline: 6a310f9b6c5bfbd8f0fee6179f22331524e823c6, the implementation baseline immediately before this snapshot commit; not self-referential.
+- Current commit baseline: 6645f614bd8e79ae6fa3b99ee6300723e6e1f765, the implementation/documentation baseline immediately before this correction snapshot commit; not self-referential.
 - Active authority: V5-SAFE.4.1.3-FULL. Authority bytes, canonical ZIP SHA, Java-control ZIP SHA and profile v2 hash are unchanged.
 
 ## Completed tasks
@@ -49,7 +49,7 @@
 - Initial setup UI collects explicit source text for binding metadata; it does not certify source bytes or open execution.
 - Bootstrap profile v1 remains loadable and non-executable.
 - The consumed VOL4 and VOL5 authorizations cannot be reused. VOL5 has a separate persisted binding and no RECONCILE authorization exists. OpenRouter I/O logging remains disabled. Device remains on validation code189 with the exact recovery row and setup data; certification remains unproven.
-- The current VOL5 PRONOUN source does not match the immutable binding. This is a `STOP_SOURCE_DRIFT` blocker; no source normalization or silent rebind is allowed.
+- The current VOL5 PRONOUN transport file includes a UTF-8 BOM, but semantic bytes after the existing app-owned removal match the immutable binding. No source rewrite or silent rebind is needed.
 - The local delayed harness initially hit a device freezer interruption at `DELAY_STARTED`; bounded cleanup and a test-only foreground keepalive resolved the harness run, but the historical provider cancellation actor remains unknown.
 
 ## Protected state
@@ -60,10 +60,10 @@ The original workspace D:\App Translate Books remains untouched. Its user-owned 
 
 2026-09-08 validation update: user delegated setup using `D:\Ebooks\MERCEDES\VOL 4`, approved egress and caps of USD 0.10 / 5 minutes, selected OpenRouter and explicitly confirmed the live call. The persisted binding for chapter `001` passed; RAW dispatched one request and stopped after 179728 ms without response. Recovery inspection `1/1` confirmed no report/receipt bytes, the P5D lifecycle/recovery matrix passed, and the device was restored to code169.
 
-Next action is an explicit source/binding decision for the PRONOUN mismatch.
-Only after exact source identity readback succeeds may a new exact-phase,
-single-use RAW diagnostic authorization be prepared. Do not reuse the consumed
-authorization, do not call RECONCILE, and do not enable content logging. Until
-then, keep the recovery gate closed and do not infer P6 readiness.
+Next action is to prepare, but not yet dispatch, one new exact-phase,
+single-use RAW diagnostic authorization acknowledging the provider-confirmed
+cancellation and duplicate-work/billing risk. Do not reuse the consumed
+authorization, do not call RECONCILE, and do not enable content logging. Keep
+the recovery gate closed for dispatch and do not infer P6 readiness.
 
 This is current-only state; Git history preserves prior snapshots.
