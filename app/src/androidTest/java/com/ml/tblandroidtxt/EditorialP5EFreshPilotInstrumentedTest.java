@@ -140,7 +140,7 @@ public final class EditorialP5EFreshPilotInstrumentedTest {
         try (IsolatedFixture isolated = createIsolatedFixture(current)) {
             EditorialP5PilotAuthorization authorization = authorization(
                     isolated.binding, "fake-local-fresh-raw", EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY);
-            CompactProvider provider = new CompactProvider(false, true);
+            CompactProvider provider = new CompactProvider(false);
             EditorialP5CExactBindingExecution.Result result = new EditorialP5CExactBindingExecution(
                     isolated.database, isolated.storage).executeRaw(isolated.projectId,
                     FRESH_SELECTOR, FRESH_CHAPTER_KEY, authorization, provider);
@@ -187,7 +187,7 @@ public final class EditorialP5EFreshPilotInstrumentedTest {
     @Test public void compactRawFaultStopsWithoutPartialCommitOrRepair() throws Exception {
         FreshFixture current = ensureFreshPilot();
         try (IsolatedFixture isolated = createIsolatedFixture(current)) {
-            CompactProvider provider = new CompactProvider(false);
+            CompactProvider provider = new CompactProvider(false, true);
             EditorialP5PilotAuthorization authorization = authorization(
                     isolated.binding, "fake-local-fresh-invalid", EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY);
             EditorialP5CExactBindingExecution.Result result = new EditorialP5CExactBindingExecution(
