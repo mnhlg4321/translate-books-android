@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
 - Updated: 2026-09-10 (+07:00).
-- Current status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / P5D_DEADLINE_BODY_READ_HARDENING_PASS / END_TO_END_DEADLINE_VERIFIED / STALLED_BODY_RECOVERY_VERIFIED / PROCESS_RESTART_RECOVERY_VERIFIED / NO_LATE_COMMIT / NO_AUTOMATIC_REDISPATCH / PILOT_DATA_PRESERVED / RAW_RETRY_READY_FOR_NEW_AUTHORIZATION / TRANSPORT_AND_LIFECYCLE_LIVE_VERIFIED / RAW_OUTPUT_TRUNCATION_CONFIRMED / RAW_PREDECESSOR_REQUIRED / OUTPUT_BUDGET_ALIGNMENT_PASS / RECOVERY_HISTORY_PRESERVED / RAW_ACCEPTANCE_AUTHORIZATION_APPROVED / RAW_ACCEPTANCE_ATTEMPTED / RAW_ACCEPTANCE_STOPPED_AT_DEADLINE / RAW_ACCEPTANCE_RECOVERY_CLOSED / EXTERNAL_STATE_REMAINS_UNKNOWN / RAW_ACCEPTANCE_INCOMPLETE / P6_NOT_READY / HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED / RAW_DIAGNOSTIC_ATTEMPT_COMPLETE / RAW_DIAGNOSTIC_STOPPED_RETRY_OUTPUT_TRUNCATED / VOL5_RECOVERY_REQUIRED / EXTERNAL_CONFIRMED_CANCELLED / P5D_PREFLIGHT_PROVIDER_CALLS_0 / P5D_LIVE_PROVIDER_CALLS_1 / P5D_RAW_ACCEPTANCE_PROVIDER_CALLS_1 / NEW_RAW_AUTHORIZATION_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
-- Current version/build: validation artifact 4.17-dev.28 / code196 is archived in artifacts and backup with SHA-256 `85345086FBD76FA78133EE54741CA7631EBA91EB4761401080EC10BA1D35042A` and is installed on device `15e84958` via `adb install -r`, preserving package data. Its focused test APK used for the final short-case rerun and the 300-second case has SHA-256 `292F30A50302423E695571BB28E95514504F06F174361762919C35FE6D1704DE`. The code196 focused set passed the prior 17 methods plus the new five-minute stalled-body method (`1/1`, `301.501s`); the final request-count assertion passed in the short case and the five-minute case. No provider was called. The earlier acceptance attempt remains `RECOVERY_REQUIRED / RETRY_PROVIDER_CALL_TIMEOUT` with external usage/cost unknown, no response/report/receipt and no RECONCILE authorization. PRONOUN remains 455 bytes with BOM before the existing app-owned normalization and 452 pinned bytes after it. Output alignment uses requested/effective `4,096`.
+- Current status: P5E_0_DOCUMENTATION_CLEANUP_PASS / DB_REOPEN_STALE_CLAIM_RECOVERY_VERIFIED / P5D_DEADLINE_BODY_READ_HARDENING_PASS / NO_LATE_COMMIT / NO_AUTOMATIC_REDISPATCH / CODE191_EXTERNAL_STATE_RECONCILED / COMPACT_RAW_WIRE_CONTRACT_LOCAL_PASS / STRUCTURED_OUTPUT_REQUEST_LOCAL_PASS / OUTPUT_SIZE_WITHIN_BUDGET / RAW_REPLAY_PROTECTION_PASS / PILOT_DATA_PRESERVED / P5E_LIVE_PREP_PENDING / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Current version/build: validation artifact 4.17-dev.28 / code196 remains installed on device `15e84958` via `adb install -r`, with package data preserved; APK SHA-256 `85345086FBD76FA78133EE54741CA7631EBA91EB4761401080EC10BA1D35042A`, focused test APK SHA-256 `292F30A50302423E695571BB28E95514504F06F174361762919C35FE6D1704DE`. P5E implementation is staged but not yet built; code197 is the next validation artifact. Code191 is reconciled as `EXTERNAL_CONFIRMED_CANCELLED`; metadata does not prove `$0` billing. No new provider call has been made. DB schema remains v24 and the exact VOL5 binding/source data remain intact. Output cap remains `4,096`.
 - Current branch/workspace: feature/v4.18 / D:\App Translate Books\App Translate Books-translation-profile.
-- Current commit baseline: f01f65e7dce070aed2398bacecdb70ed4e24e8f2, the implementation/test baseline immediately before this documentation snapshot commit; not self-referential. Production hardening is `d39bca7`; the test-only five-minute/request-count coverage is included in the current test history.
+- Current commit baseline: ba42d65271c0a51722b917440d3b51e1cf6a7eec, the implementation baseline immediately before this snapshot commit; not self-referential. The P5E implementation/docs are staged in this workspace and will be validated in code197.
 - Active authority: V5-SAFE.4.1.3-FULL. Authority bytes, canonical ZIP SHA, Java-control ZIP SHA and profile v2 hash are unchanged.
 
 ## Completed tasks
@@ -38,31 +38,35 @@
 - The approved RAW acceptance dispatched once. The host runner did not reach a terminal assertion by the five-minute authorization deadline; readback showed `CLAIMED` before cleanup, a consumed acceptance receipt, lifecycle `RESPONSE_HEADERS_RECEIVED`/HTTP 200 with generation `gen-1788967700-RgJDCWrZsNZ4VAAWmlj8`, request bytes `85,068`, and zero report/receipt bytes. The attempt was then closed through the existing attempt-store owner as `RECOVERY_REQUIRED / RETRY_PROVIDER_CALL_TIMEOUT`; no second provider call was made and external state remains unknown.
 - P5D deadline/body-read hardening is committed and verified: the OpenAI-compatible client has a scoped monotonic deadline, bounded one-pass response-body read with redacted progress bytes, and RAW-only call ownership; the attempt store has additive response-byte persistence and stale-claim recovery. Code196 device tests cover immediate/delayed transport, the short stalled-body case, the 300-second stalled-body case, process-restart stale-claim recovery and no redispatch.
 - Code192 device evidence showed the bounded stalled-body test reached a client `SocketInputStream` read after the server had accepted the request; the stack and timing exposed that `EditorialP5CExactBindingExecution`'s counting wrapper dropped `beginAttempt()`. Code193 then showed the deadline was enforced but the Android timeout exception was mapped to `FAILED_UNKNOWN`; the provider now maps an exception observed after its monotonic deadline to the existing typed timeout, while still giving explicit cancellation precedence. Code196 reruns pass, including the five-minute local stalled-body case with one server request and app-owned terminal recovery. The invalid-hex fixture remains corrected without weakening hash validation.
+- P5E.1 reconciled generation `gen-1788967700-RgJDCWrZsNZ4VAAWmlj8` from authenticated OpenRouter metadata as `EXTERNAL_CONFIRMED_CANCELLED`: provider OpenAI, input `23,674`, aggregate output `0`, reasoning `0`, generation duration `9,642 ms`, upstream usage `0.0047348`, no completion timestamp/body and no unambiguous billing flag. No `$0` conclusion or authorization was derived from the metadata.
+- P5E.2 measured the current full response shape at `49,665` bytes (`23,814` bytes duplicated source plus ledger/gates/identities/evidence/syntax); the four-byte heuristic is `12,417` and cannot justify a `4,096` semantic cap. The compact wire worst case is `2,785` bytes under an explicit `3,584` byte local ceiling, leaving headroom under the `4,096` token cap. Exact tokenization was unavailable; byte results are the acceptance evidence.
+- P5E.3-P5E.6 add a separate bounded `safe4.raw.discovery.wire.v1` DTO/parser, app-owned RAW before/after materialization, strict JSON Schema output, minimal reasoning, hard item/ID/ref limits, empty RAW changes and exact attempt/envelope replay binding. Final `safe4.full.report-l1.v1` and receipt schemas are unchanged.
+- P5E.7 host engine boundary tests are `192/192 PASS`; app unit tests and Android test compilation passed after the compact-contract changes. No live provider call has been made for P5E.
 
 ## Validation evidence
 
-- Host engine XML: `183/183 PASS`, `0` failures, `0` errors, `0` skipped; app unit variants: `222/222 PASS` each for debug/release/benchmark; current hardening device evidence is code196 and external qualification rerun is `306 PASS / 0 FAIL`.
+- Host engine XML: `192/192 PASS`, `0` failures, `0` errors, `0` skipped; app unit/build checks and Android test compilation passed; current installed device evidence is code196 and external qualification remains `306 PASS / 0 FAIL` from the prior hardening baseline.
 - Code189 full device instrumentation: `130` tests, `0` failures; real provider paths remained opt-in/skipped. Code186 `124` tests remains historical evidence.
-- Provider/API calls: historical VOL4 had one authorized RAW request; the earlier VOL5 request was provider-confirmed `cancelled` at displayed cost `$0.00484`; the current diagnostic authorization dispatched exactly one additional VOL5 RAW primary call, with no repair/retry/RECONCILE. The new provider-reported cost was `$0.0075392`; no app-validated response/usage receipt was committed. Fake acceptance calls remain `2`.
+- Provider/API calls: code189/code191 and their provider generations are historical evidence only. P5E.1 used authenticated read-only metadata for code191 generation `gen-1788967700-RgJDCWrZsNZ4VAAWmlj8` and recorded `EXTERNAL_CONFIRMED_CANCELLED`; no new provider call or authorization was created during local contract work. Prior known costs remain recorded separately and are not collapsed into `$0`.
 - Canonical ZIP `B9C65DBEB9D4C4ED46B67D5EC28FF6252CC2BDC4B63BC902904612987EC58987`, Java control `44F99423292ADA15680220165AF50430532D847E155F93C1B15D9F173D4609A5`, and profile resource `1B2DB011D59F3E2EF4349AEB0DAA9C54A19B7EFD1E2CA6886BC29B56E4690D62` re-hash correctly.
 - Latest validation APK code196 SHA-256: `85345086FBD76FA78133EE54741CA7631EBA91EB4761401080EC10BA1D35042A`; current focused test APK SHA-256 `292F30A50302423E695571BB28E95514504F06F174361762919C35FE6D1704DE`. All are validation-only artifacts; code191 and earlier remain historical and code169 remains the production baseline. `git diff --check` is required again after this documentation update.
 
 ## Pending tasks
 
-- Controlled real L1 pilot remains incomplete. The new VOL5 diagnostic attempt is `RECOVERY_REQUIRED` with `RETRY_OUTPUT_TRUNCATED`; its single-use authorization is consumed and cannot be reused. The exact RAW acceptance authorization was also consumed for one attempt, which stopped at the five-minute deadline before a complete response; its external state remains unknown and its local row is now `RECOVERY_REQUIRED / RETRY_PROVIDER_CALL_TIMEOUT`. No RECONCILE authorization exists, and P5D.7, P6 L2/L3 and P7 release gates remain separate. No retry is authorized without a new recovery decision and authorization.
+- P5E live RAW acceptance is still pending. The new code197 artifact must be built/installed with `adb install -r`, pilot data must be read back, then a preflight must record the reconciled code191 decision and exact compact wire limits before one new authorization and exactly one RAW acceptance. No automatic retry, schema repair, cap increase or RECONCILE authorization is permitted.
 - Release tag, release backup/export and real-chapter certification remain pending by design.
 
 ## Known bugs and limitations
 
-- No successful app-validated live provider response, real REPORT_L1/receipt, model result or certification evidence exists. The current VOL5 attempt is durably `RECOVERY_REQUIRED` with local reason `RETRY_OUTPUT_TRUNCATED`; the new OpenRouter generation completed transport at HTTP `200` but stopped at `max_output_tokens`, so the app correctly did not commit it. The historical generation remains provider-confirmed `cancelled` at `$0.00484`.
+- No successful P5E app-validated live provider response, real REPORT_L1/receipt, model result or certification evidence exists yet. The current durable VOL5 row remains the old `RECOVERY_REQUIRED / RETRY_PROVIDER_CALL_TIMEOUT` predecessor until the new P5E authorization runs; code191 is now externally classified `EXTERNAL_CONFIRMED_CANCELLED`, while billing remains unresolved and must not be recorded as `$0`.
 - P4 creates pilot setup metadata only; `DATA_COMPATIBLE` and selectable status do not mean runnable or certified.
 - Initial setup UI collects explicit source text for binding metadata; it does not certify source bytes or open execution.
 - Bootstrap profile v1 remains loadable and non-executable.
-- The consumed VOL4 and VOL5 diagnostic authorizations cannot be reused, and the VOL5 RAW acceptance authorization is now consumed. The acceptance call did not reach a local terminal result within the five-minute cap; after deadline cleanup, the exact row was closed through the owner as `RECOVERY_REQUIRED`, with lifecycle headers/generation metadata but no complete body, response identity, report or receipt. External billing/completion is unknown; do not infer `$0` and do not retry without a new decision/authorization. VOL5 has a separate persisted binding and no RECONCILE authorization exists. OpenRouter I/O logging remains disabled. The validation device is currently on code196 with the exact recovery row and setup data; certification remains unproven.
+- The consumed historical VOL4/VOL5 authorizations cannot be reused. The code191 acceptance predecessor has an append-only P5E reconciliation decision classified `EXTERNAL_CONFIRMED_CANCELLED`; its metadata has no completion timestamp/body and does not establish whether billing occurred. OpenRouter I/O logging remains disabled. A new P5E authorization is not reusable and is not created until the code197 preflight gates pass. VOL5 has a separate persisted binding and no RECONCILE authorization exists.
 - Current validation device state: code196 is installed with `adb install -r`; the VOL5 recovery row, binding and source setup remain intact, with no uninstall/reset.
 - The current VOL5 PRONOUN transport file includes a UTF-8 BOM, but semantic bytes after the existing app-owned removal match the immutable binding. No source rewrite or silent rebind is needed.
 - The local delayed harness initially hit a device freezer interruption at `DELAY_STARTED`; bounded cleanup and a test-only foreground keepalive resolved the harness run, but the historical provider cancellation actor remains unknown.
-- Code196 focused device evidence is not a live acceptance pass, but the local hardening gates pass: the existing 17 methods pass, the short stalled-body case passes in `2.069s`, the five-minute stalled-body case passes in `301.501s`, the server observes exactly one request, and the app returns typed timeout/recovery without host force-stop. The historical cancellation actor and external state of the old acceptance generation remain unknown.
+- Code196 focused device evidence is not a P5E live acceptance pass, but local deadline/body-read gates pass: the existing 17 methods, short stalled-body case (`2.069s`) and five-minute stalled-body case (`301.501s`) pass with one server request and no host force-stop. The prior `PROCESS_RESTART_RECOVERY_VERIFIED` label is superseded by `DB_REOPEN_STALE_CLAIM_RECOVERY_VERIFIED`; the current test evidence does not prove two independent app process invocations.
 
 ## Protected state
 
@@ -70,19 +74,19 @@ The original workspace D:\App Translate Books remains untouched. Its user-owned 
 
 ## Exact next step
 
-2026-09-10 update: the exact persisted VOL5/chapter001 binding and normalized
-source identities remain unchanged. Production hardening is committed in
-`d39bca7`; the test-only five-minute stalled-body case and request-count
-assertion are covered by the current test history. Code196
-device evidence is `17/17 PASS` for the focused class before the extra case,
-`1/1 PASS` for the short stalled-body case, `1/1 PASS` for the 300-second
-stalled-body case (`301.501s`), `92/92 PASS` for the isolated P1-P5C/migration
-regression, and `1/1 PASS` for VOL5 readback. The app self-terminated and
-persisted `RECOVERY_REQUIRED`; the local server observed one request and no
-host force-stop was used. Host engine is `183/183`, app unit is `222/222` per
-debug/release/benchmark variant, and external qualification is `306/306`.
-No provider was called. Keep `RAW_ACCEPTANCE_INCOMPLETE / P6_NOT_READY /
-EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE`; do not call the
-provider or open RECONCILE during this hardening gate.
+2026-09-10 update: P5E implementation is staged on the exact `ba42d652...`
+baseline. Code191 has an authenticated metadata decision of
+`EXTERNAL_CONFIRMED_CANCELLED`; code189/code191 remain historical evidence.
+The current full-shape characterization is `49,665` bytes and compact-wire
+worst case is `2,785` bytes under a `3,584` byte local ceiling. Host engine is
+`192/192`; app unit/build checks and Android test compilation pass. The exact
+VOL5 binding, normalized source identities and schema v24 data remain intact.
+Next action: commit this P5E baseline, build code197 with
+`scripts/build-and-save.ps1`, install with `adb install -r`, run focused
+data-preservation/regression checks, write the preflight, then perform one
+new authorized RAW acceptance. Stop before RECONCILE. Until the real RAW
+predecessor is committed and read back, keep
+`RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED /
+EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE`.
 
 This is current-only state; Git history preserves prior snapshots.

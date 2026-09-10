@@ -2,6 +2,7 @@ package com.ml.tblandroidtxt;
 
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotProvider;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotRequest;
+import com.ml.tblandroidtxt.editorial.pack.EditorialP5RawWireContract;
 import com.ml.tblandroidtxt.editorial.pack.EditorialSafe4Contract;
 
 import org.json.JSONObject;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public final class OpenRouterEditorialP5PilotProviderTest {
@@ -48,7 +50,7 @@ public final class OpenRouterEditorialP5PilotProviderTest {
         root.put("evidenceRefs", List.of("evidence:local"));
         root.put("modelDeclaredPass", true);
 
-        var output = OpenRouterEditorialP5PilotProvider.parseOutput(root.toString(), request);
+        var output = OpenRouterEditorialP5PilotProvider.parseCanonicalOutput(root.toString(), request);
         assertEquals("model-must-not-control-this", output.bindingIdentity());
         assertEquals("model-must-not-control-this", output.manifestFingerprint());
         assertEquals("model-must-not-control-this", output.bundleIdentity());
@@ -61,6 +63,45 @@ public final class OpenRouterEditorialP5PilotProviderTest {
             throw new AssertionError("a missing finish reason must be typed as a response failure");
         } catch (EditorialP5PilotProvider.ProviderFailure expected) {
             assertEquals("RETRY_PROVIDER_RESPONSE_PARSE_FAILED", expected.reasonCode());
+        }
+    }
+
+    @Test public void compactRawResponseHasNoSourceAndMaterializesAppOwnedFacts() throws Exception {
+        EditorialP5PilotProvider.Request request = request();
+        JSONObject root = compactRoot(request);
+        String rawJson = root.toString();
+
+        var wire = OpenRouterEditorialP5PilotProvider.parseRawOutput(rawJson, request);
+        var output = wire.materialize(request);
+        assertEquals("raw", output.beforeText());
+        assertEquals(output.beforeText(), output.afterText());
+        assertEquals("binding", output.bindingIdentity());
+        assertEquals("manifest", output.manifestFingerprint());
+        assertEquals("bundle", output.bundleIdentity());
+        assertTrue(output.declaredChanges().isEmpty());
+        assertFalse(rawJson.contains("beforeText"));
+        assertFalse(rawJson.contains("afterText"));
+        assertFalse(rawJson.contains("raw chapter"));
+    }
+
+    @Test public void compactUnknownFieldIsRejectedByLocalStrictParser() throws Exception {
+        JSONObject root = compactRoot(request()).put("sourceText", "raw");
+        try {
+            OpenRouterEditorialP5PilotProvider.parseRawOutput(root.toString(), request());
+            throw new AssertionError("unknown compact field must be rejected");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("unknown or missing"));
+        }
+    }
+
+    @Test public void compactDeclaredChangesAreRejectedBeforeMaterialization() throws Exception {
+        JSONObject root = compactRoot(request());
+        root.put("declaredChanges", List.of(new JSONObject().put("lineNumber", 1)));
+        try {
+            OpenRouterEditorialP5PilotProvider.parseRawOutput(root.toString(), request());
+            throw new AssertionError("RAW edits must be rejected");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("RAW_DECLARED_CHANGES_FORBIDDEN"));
         }
     }
 
@@ -79,6 +120,31 @@ public final class OpenRouterEditorialP5PilotProviderTest {
                 "google/gemini-2.5-flash", "L1_RAW_DISCOVERY", "e".repeat(64),
                 Map.of("RAW", "raw".getBytes()),
                 new EditorialP5PilotRequest.PackAuthority(Map.of()),
-                "safe4.full.report-l1.v1", "001", "", context);
+                EditorialP5RawWireContract.SCHEMA_VERSION, "001", "", context);
+    }
+
+    private static JSONObject compactRoot(EditorialP5PilotProvider.Request request) throws Exception {
+        Map<String, String> gates = new LinkedHashMap<>();
+        for (String gate : EditorialSafe4Contract.GATE_IDS) gates.put(gate, "PASS");
+        JSONObject finding = new JSONObject().put("itemId", "population:001")
+                .put("disposition", "PROCESSED")
+                .put("evidenceRefs", List.of("evidence:raw"))
+                .put("modelDeclaredPass", true);
+        return new JSONObject()
+                .put("wireSchemaVersion", EditorialP5RawWireContract.SCHEMA_VERSION)
+                .put("attemptIdentity", request.attemptIdentity())
+                .put("requestEnvelopeHash", request.requestEnvelopeHash())
+                .put("findings", List.of(finding))
+                .put("gateObservations", new JSONObject(gates))
+                .put("evidenceRefs", List.of("evidence:raw"))
+                .put("preservedInventory", List.of())
+                .put("declaredChanges", List.of())
+                .put("disposition", new JSONObject().put("disposition", "CONTINUE")
+                        .put("reasonCode", "LOCAL_REVIEW").put("phase", "L1")
+                        .put("blockingGate", "COVERAGE").put("evidenceRefs", List.of())
+                        .put("affectedScope", "NONE").put("recoveryAction", "NO_ACTION")
+                        .put("resumeFrom", "L1").put("stopClass", "NONE")
+                        .put("retryable", false))
+                .put("modelDeclaredPass", true);
     }
 }

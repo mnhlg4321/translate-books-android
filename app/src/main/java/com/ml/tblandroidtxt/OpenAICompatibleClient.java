@@ -133,7 +133,9 @@ public class OpenAICompatibleClient {
     public static class ChatResult {
         public String content = "";
         public int promptTokens = 0;
+        /** Provider-reported aggregate output tokens; reasoning is a subset. */
         public int completionTokens = 0;
+        public int reasoningTokens = 0;
         public int totalTokens = 0;
         public int cachedPromptTokens = 0;
         public boolean usageReported = false;
@@ -184,6 +186,19 @@ public class OpenAICompatibleClient {
                                     String requestId, NetworkObserver observer,
                                     boolean registerForLegacyGlobalCancellation,
                                     long deadlineNanos, CallControl callControl) throws Exception {
+        return chatWithUsage(s, prompt, maxOutputTokens, requestId, observer,
+                registerForLegacyGlobalCancellation, deadlineNanos, callControl,
+                null, false, "");
+    }
+
+    /** Structured-output/reasoning options used only by the P5E RAW adapter. */
+    static ChatResult chatWithUsage(AppSettings s, PromptPair prompt, int maxOutputTokens,
+                                    String requestId, NetworkObserver observer,
+                                    boolean registerForLegacyGlobalCancellation,
+                                    long deadlineNanos, CallControl callControl,
+                                    JSONObject responseFormat,
+                                    boolean requireProviderParameters,
+                                    String reasoningEffort) throws Exception {
         if (s.apiKey == null || s.apiKey.trim().isEmpty()) throw new IllegalArgumentException("API key is empty");
         if (s.model == null || s.model.trim().isEmpty()) throw new IllegalArgumentException("Model is empty");
         String endpoint = AppSettings.normalizeEndpoint(s.baseUrl);
@@ -200,7 +215,8 @@ public class OpenAICompatibleClient {
             int timeout = Math.max(10, s.timeoutSeconds);
             timeoutMillis = TimeUnit.SECONDS.toMillis(timeout);
         }
-        JSONObject body = buildChatRequestBody(s, prompt, maxOutputTokens);
+        JSONObject body = buildChatRequestBody(s, prompt, maxOutputTokens, responseFormat,
+                requireProviderParameters, reasoningEffort);
 
         OkHttpClient client = BASE_CLIENT.newBuilder()
                 .connectTimeout(timeoutMillis, TimeUnit.MILLISECONDS)
@@ -263,12 +279,25 @@ public class OpenAICompatibleClient {
                     safeHeader(r.providerResponseId),
                     Math.max(0L, (System.nanoTime() - startedNanos) / 1_000_000L));
             if (r.promptTokens <= 0) r.promptTokens = Chunker.approxTokens(prompt.system) + Chunker.approxTokens(prompt.user);
-            if (r.completionTokens <= 0) r.completionTokens = Chunker.approxTokens(r.content);
-            if (r.totalTokens <= 0) r.totalTokens = r.promptTokens + r.completionTokens;
+            if (r.completionTokens <= 0) {
+                // When the provider omits aggregate output usage, the visible
+                // completion estimate plus separately reported reasoning is
+                // the conservative aggregate output estimate.
+                r.completionTokens = Chunker.approxTokens(r.content) + r.reasoningTokens;
+            }
+            // OpenRouter's completion_tokens already includes reasoning_tokens;
+            // reasoning is retained as a separately audited subset and must
+            // not be added a second time to total usage.
+            long normalizedTotal = (long) r.promptTokens + r.completionTokens;
+            if (r.totalTokens < normalizedTotal) {
+                r.totalTokens = normalizedTotal > Integer.MAX_VALUE
+                        ? Integer.MAX_VALUE : (int) normalizedTotal;
+            }
             ObservabilityLog.event("provider_usage", "provider", s.provider, "model", s.model,
                     "source", r.usageReported ? "PROVIDER" : "ESTIMATED",
                     "input", r.promptTokens, "cached", r.cachedPromptTokens,
-                    "output", r.completionTokens, "total", r.totalTokens,
+                    "output", r.completionTokens, "reasoning", r.reasoningTokens,
+                    "total", r.totalTokens,
                     "providerCost", r.providerCost);
             return r;
         } catch (Exception error) {
@@ -344,6 +373,14 @@ public class OpenAICompatibleClient {
      */
     static JSONObject buildChatRequestBody(AppSettings s, PromptPair prompt,
                                            int maxOutputTokens) throws Exception {
+        return buildChatRequestBody(s, prompt, maxOutputTokens, null, false, "");
+    }
+
+    static JSONObject buildChatRequestBody(AppSettings s, PromptPair prompt,
+                                           int maxOutputTokens,
+                                           JSONObject responseFormat,
+                                           boolean requireProviderParameters,
+                                           String reasoningEffort) throws Exception {
         if (s == null) throw new IllegalArgumentException("Settings are required");
         if (prompt == null) throw new IllegalArgumentException("Prompt is required");
         if (maxOutputTokens <= 0) {
@@ -353,6 +390,14 @@ public class OpenAICompatibleClient {
         body.put("model", s.model);
         body.put("temperature", s.temperature);
         body.put("max_tokens", maxOutputTokens);
+        body.put("stream", false);
+        if (responseFormat != null) body.put("response_format", responseFormat);
+        if (requireProviderParameters) {
+            body.put("provider", new JSONObject().put("require_parameters", true));
+        }
+        if (reasoningEffort != null && !reasoningEffort.isBlank()) {
+            body.put("reasoning_effort", reasoningEffort);
+        }
         JSONArray messages = new JSONArray();
         messages.put(new JSONObject().put("role", "system").put("content", prompt.system));
         messages.put(new JSONObject().put("role", "user").put("content", prompt.user));
@@ -382,8 +427,23 @@ public class OpenAICompatibleClient {
             result.promptTokens = nonNegativeInt(firstValue(usage, "prompt_tokens", "input_tokens"));
             result.completionTokens = nonNegativeInt(firstValue(usage, "completion_tokens", "output_tokens"));
             result.totalTokens = nonNegativeInt(firstValue(usage, "total_tokens"));
-            if (result.totalTokens <= 0 && promptPresent && completionPresent) {
-                result.totalTokens = result.promptTokens + result.completionTokens;
+            Object reasoning = firstValue(usage, "reasoning_tokens");
+            JSONObject completionDetails = usage.optJSONObject("completion_tokens_details");
+            if (reasoning == null && completionDetails != null) {
+                reasoning = firstValue(completionDetails, "reasoning_tokens");
+            }
+            JSONObject outputDetails = usage.optJSONObject("output_tokens_details");
+            if (reasoning == null && outputDetails != null) {
+                reasoning = firstValue(outputDetails, "reasoning_tokens");
+            }
+            result.reasoningTokens = nonNegativeInt(reasoning);
+            // OpenRouter documents completion_tokens as the aggregate output
+            // count, with completion_tokens_details.reasoning_tokens as a
+            // subset. Do not double-count the subset here.
+            long normalizedTotal = (long) result.promptTokens + result.completionTokens;
+            if (result.totalTokens < normalizedTotal) {
+                result.totalTokens = normalizedTotal > Integer.MAX_VALUE
+                        ? Integer.MAX_VALUE : (int) normalizedTotal;
             }
             JSONObject details = usage.optJSONObject("prompt_tokens_details");
             if (details == null) details = usage.optJSONObject("input_tokens_details");

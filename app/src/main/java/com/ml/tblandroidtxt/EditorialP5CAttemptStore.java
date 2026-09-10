@@ -60,10 +60,18 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
                 authorization.model(), authorization);
         Pending old = pending.get(request.attemptIdentity());
         if (old != null && !old.matches(value)) {
-            throw new IllegalStateException("P5C attempt identity collision");
+            if (!old.recoveryMatches(value)) {
+                throw new IllegalStateException("P5C attempt identity collision");
+            }
+            // A same-process recovery retry may use the new compact wire
+            // envelope after an immutable reconciliation decision. The
+            // durable row remains the authority and is updated atomically at
+            // reclaim; binding/chapter/predecessor/provider/model still match.
         }
         // A new authorization is allowed to replace only the in-memory auth
-        // facts for an exact recovery retry; durable request facts remain fixed.
+        // facts for an exact recovery retry. If the wire contract evolved,
+        // reclaim updates only the request-envelope hash atomically after the
+        // append-only reconciliation decision; binding facts remain fixed.
         pending.put(request.attemptIdentity(), value);
     }
 
@@ -72,7 +80,9 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
         Row existing = findRow(attemptIdentity);
         if (existing != null) {
             Pending facts = pending.get(attemptIdentity);
-            if (facts != null && !facts.matches(existing)) {
+            if (facts != null && !facts.matches(existing)
+                    && !("RECOVERY_REQUIRED".equals(existing.status)
+                    && facts.recoveryMatches(existing))) {
                 throw new IllegalStateException("P5C attempt identity facts changed");
             }
             if ("COMMITTED".equals(existing.status)) return Claim.ALREADY_COMMITTED;
@@ -193,6 +203,7 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
         update.put("updated_at", System.currentTimeMillis());
         db.update(TABLE, update, "attempt_identity=? AND status<>'COMMITTED'",
                 new String[]{attemptIdentity});
+        pending.remove(attemptIdentity);
     }
 
     /**
@@ -593,6 +604,7 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
             ContentValues update = new ContentValues();
             update.put("status", "CLAIMED");
             update.put("recovery_reason_code", "");
+            update.put("request_envelope_hash", facts.requestEnvelopeHash);
             update.put("updated_at", System.currentTimeMillis());
             if (db.update(TABLE, update, "attempt_identity=? AND status='RECOVERY_REQUIRED'",
                     new String[]{attemptIdentity}) != 1) {
@@ -737,6 +749,7 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
             json.put("networkRetries", metrics.networkRetries());
             json.put("inputTokens", metrics.inputTokens());
             json.put("outputTokens", metrics.outputTokens());
+            json.put("reasoningTokens", metrics.reasoningTokens());
             json.put("totalTokens", metrics.totalTokens());
             json.put("estimatedCost", metrics.estimatedCost().toPlainString());
             json.put("actualReportedCost", metrics.actualReportedCost().toPlainString());
@@ -749,6 +762,7 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
             json.put("findingCount", metrics.findingCount());
             json.put("falseStopCount", metrics.falseStopCount());
             json.put("latencyMillis", metrics.latencyMillis());
+            json.put("costAccountingComplete", metrics.costAccountingComplete());
             return json.toString();
         } catch (JSONException error) {
             throw new IllegalStateException("P5C metrics encoding failed", error);
@@ -762,13 +776,14 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
                     json.getInt("providerCallsBeforePreflight"), json.getInt("primaryCalls"),
                     json.getInt("repairCalls"), json.getInt("networkRetries"),
                     json.getInt("inputTokens"), json.getInt("outputTokens"),
-                    json.getInt("totalTokens"), decimal(json, "estimatedCost"),
+                    json.optInt("reasoningTokens", 0), json.getInt("totalTokens"),
+                    decimal(json, "estimatedCost"),
                     decimal(json, "actualReportedCost"), json.getInt("requestContextSize"),
                     json.getString("finishReason"), json.getBoolean("truncated"),
                     json.getBoolean("schemaValidationPassed"),
                     json.getBoolean("receiptValidationPassed"), json.getInt("preserveDraftCount"),
                     json.getInt("findingCount"), json.getInt("falseStopCount"),
-                    json.getLong("latencyMillis"));
+                    json.getLong("latencyMillis"), json.optBoolean("costAccountingComplete", true));
         } catch (JSONException | NumberFormatException error) {
             throw new IllegalArgumentException("P5C persisted metrics are invalid", error);
         }
@@ -841,6 +856,30 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
                     && predecessorIdentity.equals(row.predecessorIdentity)
                     && requestEnvelopeHash.equals(row.requestEnvelopeHash)
                     && provider.equals(row.provider) && model.equals(row.model);
+        }
+
+        /**
+         * Recovery-only compatibility for a contract/schema evolution. The
+         * old response can never satisfy the new parser: the new envelope
+         * hash is committed before the reclaimed call and all binding facts
+         * remain exact.
+         */
+        boolean recoveryMatches(Row row) {
+            return requestIdentity.equals(row.requestIdentity)
+                    && bindingIdentity.equals(row.bindingIdentity)
+                    && runDeclarationIdentity.equals(row.runDeclarationIdentity)
+                    && chapterKey.equals(row.chapterKey) && phase.equals(row.phase)
+                    && predecessorIdentity.equals(row.predecessorIdentity)
+                    && provider.equals(row.provider) && model.equals(row.model);
+        }
+
+        boolean recoveryMatches(Pending other) {
+            return requestIdentity.equals(other.requestIdentity)
+                    && bindingIdentity.equals(other.bindingIdentity)
+                    && runDeclarationIdentity.equals(other.runDeclarationIdentity)
+                    && chapterKey.equals(other.chapterKey) && phase.equals(other.phase)
+                    && predecessorIdentity.equals(other.predecessorIdentity)
+                    && provider.equals(other.provider) && model.equals(other.model);
         }
 
         boolean matches(Pending other) {

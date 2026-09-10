@@ -107,8 +107,9 @@ public interface EditorialP5PilotProvider {
 
     record Response(String responseId, byte[] responseBytes, String finishReason,
                     boolean transportComplete, int inputTokens, int outputTokens,
-                    int totalTokens, BigDecimal reportedCost,
-                    EditorialP5L1Output output, boolean schemaValid, boolean costReported) {
+                    int reasoningTokens, int totalTokens, BigDecimal reportedCost,
+                    EditorialP5L1Output output, boolean schemaValid, boolean costReported,
+                    boolean costKnown) {
         /**
          * Existing fake providers do not distinguish an actual provider cost
          * from a test-supplied cost. Keep that source-compatible boundary,
@@ -119,14 +120,24 @@ public interface EditorialP5PilotProvider {
                         int totalTokens, BigDecimal reportedCost,
                         EditorialP5L1Output output, boolean schemaValid) {
             this(responseId, responseBytes, finishReason, transportComplete, inputTokens,
-                    outputTokens, totalTokens, reportedCost, output, schemaValid, true);
+                    outputTokens, 0, totalTokens, reportedCost, output, schemaValid, true, true);
+        }
+
+        /** Source-compatible constructor for fakes that distinguish reported cost. */
+        public Response(String responseId, byte[] responseBytes, String finishReason,
+                        boolean transportComplete, int inputTokens, int outputTokens,
+                        int totalTokens, BigDecimal reportedCost,
+                        EditorialP5L1Output output, boolean schemaValid, boolean costReported) {
+            this(responseId, responseBytes, finishReason, transportComplete, inputTokens,
+                    outputTokens, 0, totalTokens, reportedCost, output, schemaValid,
+                    costReported, true);
         }
 
         public Response {
             responseId = text(responseId, "response id");
             responseBytes = responseBytes == null ? new byte[0] : responseBytes.clone();
             finishReason = text(finishReason, "finish reason");
-            if (inputTokens < 0 || outputTokens < 0 || totalTokens < 0) {
+            if (inputTokens < 0 || outputTokens < 0 || reasoningTokens < 0 || totalTokens < 0) {
                 throw new IllegalArgumentException("response usage cannot be negative");
             }
             reportedCost = Objects.requireNonNull(reportedCost, "reported cost");

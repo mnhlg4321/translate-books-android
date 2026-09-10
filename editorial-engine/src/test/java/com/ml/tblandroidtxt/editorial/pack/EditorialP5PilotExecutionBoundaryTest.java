@@ -246,6 +246,105 @@ public final class EditorialP5PilotExecutionBoundaryTest {
         assertEquals(0, result.metrics().estimatedCost().compareTo(BigDecimal.valueOf(0.25)));
     }
 
+    @Test public void reportedAndEstimatedCostsRemainSeparateAcrossRepair() {
+        Fixture fixture = fixture();
+        EditorialP5L1Output output = output(fixture.request);
+        FakeProvider provider = new FakeProvider(
+                new EditorialP5PilotProvider.Response("response-reported", bytes("primary"), "stop",
+                        true, 80, 30, 110, BigDecimal.valueOf(0.20), output, false, true),
+                new EditorialP5PilotProvider.Response("response-estimated", bytes("repair"), "stop",
+                        true, 12, 14, 26, BigDecimal.valueOf(0.30), output, true, false));
+
+        EditorialP5PilotResult result = execute(fixture,
+                authorizationVariant(fixture.request, "auth-cost-accounting",
+                        fixture.request.binding().bindingIdentity(), 1, 2_000, 2_000, 12_000,
+                        BigDecimal.valueOf(0.60), 60_000L, true, 0L, Long.MAX_VALUE),
+                provider, new Store());
+
+        assertEquals(EditorialP5PilotResult.Outcome.COMMITTED, result.outcome());
+        assertEquals(0, result.metrics().actualReportedCost().compareTo(BigDecimal.valueOf(0.20)));
+        assertEquals(0, result.metrics().estimatedCost().compareTo(BigDecimal.valueOf(0.30)));
+        assertEquals(2, provider.calls);
+    }
+
+    @Test public void unknownProviderCostStopsWithoutTreatingItAsZero() {
+        Fixture fixture = fixture();
+        EditorialP5PilotProvider.Response response = new EditorialP5PilotProvider.Response(
+                "response-unknown-cost", bytes("response"), "stop", true,
+                80, 30, 0, 110, BigDecimal.ZERO, output(fixture.request), true, false, false);
+        FakeProvider provider = new FakeProvider(response);
+        Store store = new Store();
+
+        EditorialP5PilotResult result = execute(fixture,
+                authorizationVariant(fixture.request, "auth-unknown-cost",
+                        fixture.request.binding().bindingIdentity(), 0, 2_000, 2_000, 12_000,
+                        BigDecimal.ONE, 60_000L, true, 0L, Long.MAX_VALUE),
+                provider, store);
+
+        assertEquals(EditorialP5PilotResult.StopClass.RETRY_REQUIRED,
+                result.stopReceipt().stopClass());
+        assertEquals("RETRY_PROVIDER_COST_UNAVAILABLE", result.stopReceipt().reasonCode());
+        assertFalse(result.metrics().costAccountingComplete());
+        assertEquals(0, result.metrics().actualReportedCost().signum());
+        assertEquals(0, result.metrics().estimatedCost().signum());
+        assertEquals(0, store.committed.size());
+    }
+
+    @Test public void reasoningTokensCountAgainstOutputBudget() {
+        Fixture fixture = fixture();
+        EditorialP5PilotProvider.Response response = new EditorialP5PilotProvider.Response(
+                "response-reasoning-budget", bytes("response"), "stop", true,
+                80, 300, 250, 380, BigDecimal.ZERO, output(fixture.request), true, true, true);
+        FakeProvider provider = new FakeProvider(response);
+        Store store = new Store();
+
+        EditorialP5PilotResult result = execute(fixture,
+                authorizationVariant(fixture.request, "auth-reasoning-budget",
+                        fixture.request.binding().bindingIdentity(), 0, 2_000, 500, 2_000,
+                        BigDecimal.ONE, 60_000L, true, 0L, Long.MAX_VALUE),
+                provider, store);
+
+        assertEquals(EditorialP5PilotResult.Outcome.COMMITTED, result.outcome());
+        assertEquals(250, result.metrics().reasoningTokens());
+        assertEquals(300, result.metrics().outputTokens());
+        assertEquals(380, result.metrics().totalTokens());
+        assertEquals(1, store.committed.size());
+
+        Store rejectedStore = new Store();
+        EditorialP5PilotResult rejected = execute(fixture,
+                authorizationVariant(fixture.request, "auth-reasoning-budget-rejected",
+                        fixture.request.binding().bindingIdentity(), 0, 2_000, 500, 379,
+                        BigDecimal.ONE, 60_000L, true, 0L, Long.MAX_VALUE),
+                new FakeProvider(response), rejectedStore);
+        assertEquals(EditorialP5PilotResult.StopClass.BUDGET_EXCEEDED,
+                rejected.stopReceipt().stopClass());
+        assertEquals("P5_TOKEN_OR_COST_BUDGET_EXCEEDED", rejected.stopReceipt().reasonCode());
+        assertEquals(0, rejectedStore.committed.size());
+    }
+
+    @Test public void deadlineExpiryBeforeCommitNeverPersistsLateResult() {
+        Fixture fixture = fixture();
+        FakeProvider provider = new FakeProvider(response(fixture.request, true));
+        Store store = new Store();
+        java.util.concurrent.atomic.AtomicInteger clockReads =
+                new java.util.concurrent.atomic.AtomicInteger();
+        EditorialP5PilotResult result = new EditorialP5PilotExecution(() ->
+                clockReads.incrementAndGet() >= 6 ? 2_001L : 1_000L)
+                .execute(fixture.request,
+                        authorizationVariant(fixture.request, "auth-deadline-before-commit",
+                                fixture.request.binding().bindingIdentity(), 0, 2_000, 2_000,
+                                12_000, BigDecimal.ONE, 1_000L, true, 0L, Long.MAX_VALUE),
+                        provider, store);
+
+        assertEquals(EditorialP5PilotResult.Outcome.STOP, result.outcome());
+        assertEquals(EditorialP5PilotResult.StopClass.RETRY_REQUIRED,
+                result.stopReceipt().stopClass());
+        assertEquals("RETRY_ATTEMPT_DEADLINE_EXPIRED_BEFORE_COMMIT",
+                result.stopReceipt().reasonCode());
+        assertEquals(1, provider.calls);
+        assertEquals(0, store.committed.size());
+    }
+
     @Test public void inFlightAttemptBlocksSecondExternalCall() {
         Fixture fixture = fixture();
         Store store = new Store();
@@ -430,11 +529,17 @@ public final class EditorialP5PilotExecutionBoundaryTest {
                         request.populationIds().get(0), "PROCESSED", List.of("evidence-1"), false)));
         Map<String, String> gates = new LinkedHashMap<>();
         for (String gate : EditorialSafe4Contract.GATE_IDS) gates.put(gate, "PASS");
+        EditorialP5PilotRequest.SourceBytes rawSource =
+                request.source(EditorialSafe4Contract.RAW);
+        String rawText = request.phase().equals("L1_RAW_DISCOVERY")
+                ? rawSource == null || rawSource.bytes() == null ? ""
+                : new String(rawSource.bytes(), StandardCharsets.UTF_8)
+                : "draft";
         return new EditorialP5L1Output("safe4.full.report-l1.v1",
                 EditorialSafe4Contract.RECEIPT_SCHEMA_VERSION, request.binding().bindingIdentity(),
                 request.manifestFingerprint(), request.chapterKey(), "L1", request.bundleIdentity(),
                 request.predecessorIdentity(), request.stableAnchors(), ledger, gates,
-                List.of(), List.of(), "draft", "draft", 0,
+                List.of(), List.of(), rawText, rawText, 0,
                 EditorialStopDecision.continueWithoutStop("L1", "COVERAGE", "LOCAL_VALIDATED"),
                 Set.of("evidence-1"), true);
     }

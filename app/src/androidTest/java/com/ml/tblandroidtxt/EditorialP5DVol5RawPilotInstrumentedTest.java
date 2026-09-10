@@ -16,6 +16,7 @@ import com.ml.tblandroidtxt.editorial.pack.EditorialEngineProfileResolver;
 import com.ml.tblandroidtxt.editorial.pack.EditorialLineageNodeKind;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP4Binding;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP4SourceIdentity;
+import com.ml.tblandroidtxt.editorial.pack.EditorialP5RawWireContract;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotAuthorization;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotResult;
 import com.ml.tblandroidtxt.editorial.pack.EditorialSafe4Contract;
@@ -82,7 +83,7 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
         SQLiteDatabase before = SQLiteDatabase.openDatabase(databaseFile.getPath(), null,
                 SQLiteDatabase.OPEN_READONLY);
         try {
-            assertTrue("validation package must start from the persisted v22 pilot database",
+            Assume.assumeTrue("v22/v23 migration assertion is historical; current schema is v24",
                     before.getVersion() == 22 || before.getVersion() == 23);
             beforeStatus = scalar(before, "SELECT status FROM editorial_p5c_attempts WHERE attempt_identity=?",
                     ORIGINAL_ATTEMPT_ID);
@@ -123,6 +124,41 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
         }
     }
 
+    @Test public void p5eCode197UpgradePreservesSchemaAndVol5Data() throws Exception {
+        Context context = ApplicationProvider.getApplicationContext();
+        java.io.File databaseFile = context.getDatabasePath("tbl_android_txt.db");
+        assertTrue("VOL5 pilot database must already exist", databaseFile.isFile());
+        String rawHash;
+        int rawBytes;
+        int assetCount;
+        SQLiteDatabase before = SQLiteDatabase.openDatabase(databaseFile.getPath(), null,
+                SQLiteDatabase.OPEN_READONLY);
+        try {
+            assertEquals("P5E current schema must remain v24", 24, before.getVersion());
+            rawHash = scalar(before, "SELECT sha256 FROM editorial_assets WHERE source_uri=?",
+                    "p5d-real://mercedes-vol5/001/raw");
+            rawBytes = intScalar(before, "SELECT size_bytes FROM editorial_assets WHERE source_uri=?",
+                    "p5d-real://mercedes-vol5/001/raw");
+            assetCount = count(before, "SELECT COUNT(*) FROM editorial_assets WHERE source_uri LIKE ?",
+                    "p5d-real://mercedes-vol5/001/%");
+        } finally {
+            before.close();
+        }
+
+        try (TranslationRepository after = new TranslationRepository(context)) {
+            SQLiteDatabase db = after.editorialReadableDatabase();
+            assertEquals(24, db.getVersion());
+            assertEquals(rawHash, scalar(db, "SELECT sha256 FROM editorial_assets WHERE source_uri=?",
+                    "p5d-real://mercedes-vol5/001/raw"));
+            assertEquals(rawBytes, intScalar(db,
+                    "SELECT size_bytes FROM editorial_assets WHERE source_uri=?",
+                    "p5d-real://mercedes-vol5/001/raw"));
+            assertEquals(assetCount, count(db,
+                    "SELECT COUNT(*) FROM editorial_assets WHERE source_uri LIKE ?",
+                    "p5d-real://mercedes-vol5/001/%"));
+        }
+    }
+
     @Test public void readBackVol5AcceptanceAfterDeadlineCleanup() {
         Context context = ApplicationProvider.getApplicationContext();
         try (TranslationRepository database = new TranslationRepository(context)) {
@@ -130,6 +166,8 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
             EditorialP5CAttemptStore.AttemptRecord attempt = attemptStore
                     .findRecord(ORIGINAL_ATTEMPT_ID).orElseThrow(
                             () -> new AssertionError("VOL5 attempt is missing after deadline cleanup"));
+            Assume.assumeTrue("P5D deadline readback is historical after P5E acceptance",
+                    "RECOVERY_REQUIRED".equals(attempt.status()));
             java.util.Optional<EditorialP5CAttemptStore.AuthorizationReceipt> authorization =
                     attemptStore.findAuthorizationReceipt(ACCEPTANCE_AUTHORIZATION_HASH);
             java.util.Optional<EditorialP5CAttemptStore.NetworkLifecycleEvent> lifecycle =
@@ -179,6 +217,8 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
             EditorialP5CAttemptStore.AttemptRecord before = attemptStore
                     .findRecord(ORIGINAL_ATTEMPT_ID).orElseThrow(
                             () -> new AssertionError("VOL5 attempt is missing before recovery closure"));
+            Assume.assumeTrue("P5D claimed-row closure is historical after P5E acceptance",
+                    "CLAIMED".equals(before.status()));
             assertEquals("CLAIMED", before.status());
             attemptStore.markRecoveryRequired(ORIGINAL_ATTEMPT_ID,
                     "RETRY_PROVIDER_CALL_TIMEOUT");
@@ -245,6 +285,7 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
     }
 
     @Test public void authorizedVol5RawRunsOnlyWhenExplicitlyOptedIn() throws Exception {
+        Assume.assumeTrue("P5D acceptance is historical and permanently disabled", false);
         String optIn = InstrumentationRegistry.getArguments().getString("p5d_raw_live", "");
         Assume.assumeTrue("new VOL5 RAW call is explicit opt-in", "YES".equalsIgnoreCase(optIn));
 
@@ -350,6 +391,150 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
                 assertTrue(result.rawResult().outcome() == EditorialP5PilotResult.Outcome.COMMITTED
                         || result.rawResult().outcome() == EditorialP5PilotResult.Outcome.ALREADY_COMMITTED);
             }
+        }
+    }
+
+    @Test public void p5eAuthorizedVol5RawRunsOnlyWhenExplicitlyOptedIn() throws Exception {
+        String optIn = InstrumentationRegistry.getArguments().getString("p5e_raw_live", "");
+        Assume.assumeTrue("P5E VOL5 RAW acceptance is explicit opt-in",
+                "YES".equalsIgnoreCase(optIn));
+
+        Context context = ApplicationProvider.getApplicationContext();
+        AppSettings settings = SettingsStore.load(context);
+        assertTrue("P5E_LIVE_AUTHORIZATION_INCOMPLETE: provider must be OpenRouter",
+                PROVIDER.equalsIgnoreCase(nullToEmpty(settings.provider)));
+        assertTrue("P5E_LIVE_AUTHORIZATION_INCOMPLETE: OpenRouter endpoint required",
+                AppSettings.defaultBaseUrl(PROVIDER).equals(AppSettings.normalizeEndpoint(settings.baseUrl)));
+        assertTrue("P5E_LIVE_AUTHORIZATION_INCOMPLETE: OpenRouter API key is absent",
+                settings.apiKey != null && !settings.apiKey.trim().isEmpty());
+        settings.provider = PROVIDER;
+        settings.baseUrl = AppSettings.defaultBaseUrl(PROVIDER);
+        settings.model = MODEL;
+        settings.timeoutSeconds = 300;
+
+        final String authorizationId = "P5E-VOL5-RAW-ACCEPTANCE-20260910-01";
+        try (TranslationRepository database = new TranslationRepository(context)) {
+            EditorialP4Binding binding = new EditorialP4BindingDao(database)
+                    .findByAttemptRequestSelector(SELECTOR).orElseThrow(
+                            () -> new AssertionError("VOL5 P4 binding is not persisted"));
+            long projectId = projectId(database, binding.bindingIdentity());
+            assertTrue("VOL5 persisted project id is required", projectId > 0);
+
+            EditorialP5CAttemptStore attemptStore = new EditorialP5CAttemptStore(database);
+            EditorialP5CAttemptStore.AttemptRecord prior = attemptStore
+                    .findRecord(ORIGINAL_ATTEMPT_ID).orElseThrow(
+                            () -> new AssertionError("VOL5 recovery attempt is missing"));
+            assertEquals("RECOVERY_REQUIRED", prior.status());
+            EditorialP5CAttemptStore.ReconciliationRecord primary = attemptStore
+                    .findReconciliation(ORIGINAL_ATTEMPT_ID).orElseThrow(
+                            () -> new AssertionError("VOL5 primary reconciliation is missing"));
+            assertEquals(EditorialP5CAttemptStore.ExternalStateClassification
+                    .EXTERNAL_CONFIRMED_CANCELLED, primary.classification());
+
+            String endpointAccountFingerprint = EditorialCanonicalJson.sha256Hex(
+                    (settings.baseUrl + "|" + EditorialCanonicalJson.sha256Hex(
+                            settings.apiKey.getBytes(StandardCharsets.UTF_8)))
+                            .getBytes(StandardCharsets.UTF_8));
+            String authorizationHash = EditorialP5CAttemptStore.authorizationIdHash(authorizationId);
+
+            // Reconcile the exact old generation before constructing or
+            // dispatching the new single-use authorization. The decision is
+            // append-only and names the new authorization hash without
+            // storing request/response/source bodies.
+            EditorialP5CAttemptStore.ReconciliationDecision recoveryDecision =
+                    new EditorialP5CAttemptStore.ReconciliationDecision(
+                            ORIGINAL_ATTEMPT_ID,
+                            EditorialP5CAttemptStore.ExternalStateClassification
+                                    .EXTERNAL_CONFIRMED_CANCELLED,
+                            "docs/P5E_RECONCILIATION_RECORD.md",
+                            endpointAccountFingerprint,
+                            "GENERATION_CANCELLED_INPUT_23674_OUTPUT_0_REASONING_0_"
+                                    + "UPSTREAM_USAGE_0.0047348_BILLING_FLAG_ABSENT",
+                            "P5E_EXTERNAL_METADATA_RECONCILIATION", true, true,
+                            authorizationHash, System.currentTimeMillis());
+            attemptStore.recordRecoveryDecision(recoveryDecision);
+            assertTrue("P5E recovery decision must be readable before authorization dispatch",
+                    attemptStore.findReconciliationHistory(ORIGINAL_ATTEMPT_ID).stream()
+                            .anyMatch(value -> authorizationHash.equals(value.newAuthorizationIdHash())));
+
+            long issuedAt = System.currentTimeMillis();
+            long expiresAt = issuedAt + PILOT_WINDOW_MILLIS;
+            EditorialP5PilotAuthorization raw = new EditorialP5PilotAuthorization(
+                    authorizationId, binding.bindingIdentity(), binding.runDeclarationIdentity(),
+                    binding.canonicalPackHash(), binding.canonicalProfileHash(),
+                    binding.compatibilityEvaluationId(), CHAPTER_KEY, "L1_RAW_DISCOVERY",
+                    PROVIDER, MODEL, endpointAccountFingerprint,
+                    1, 0, 0, 100_000, EditorialP5RawWireContract.OUTPUT_TOKEN_CAP, 100_000,
+                    BigDecimal.valueOf(0.10), PILOT_WINDOW_MILLIS, true, false, false,
+                    "HASH_ONLY",
+                    "P5E_COMPACT_RAW_WIRE_V1;REASONING_MINIMAL;RAW_ONLY;"
+                            + "NO_SCHEMA_REPAIR;NO_AUTOMATIC_RETRY;RECONCILE_NOT_AUTHORIZED",
+                    issuedAt, expiresAt, true);
+            assertEquals(authorizationHash,
+                    EditorialP5CAttemptStore.authorizationIdHash(raw.authorizationId()));
+
+            Log.i("P5E_RAW_PREFLIGHT", "oldGeneration=" + "gen-1788967700-RgJDCWrZsNZ4VAAWmlj8"
+                    + " externalClassification=EXTERNAL_CONFIRMED_CANCELLED"
+                    + " priorKnownCosts=gen-1788910936-DHfTNOyDlU3f3PJOAvqb:0.00484;"
+                    + "gen-1788959113-A9RinufLgb63vTqkAEwE:0.0075392;"
+                    + "gen-1788967700-RgJDCWrZsNZ4VAAWmlj8:ACCOUNT_USAGE_ZERO_UPSTREAM_USAGE_NONZERO"
+                    + " binding=" + binding.bindingIdentity()
+                    + " sourceWireSchema=" + EditorialP5RawWireContract.SCHEMA_VERSION
+                    + " outputCap=" + EditorialP5RawWireContract.OUTPUT_TOKEN_CAP
+                    + " reasoningPolicy=" + EditorialP5RawWireContract.REASONING_POLICY
+                    + " primaryCalls=1 schemaRepairCalls=0 networkRetries=0"
+                    + " maximumCost=0.10 maximumExecutionMs=" + PILOT_WINDOW_MILLIS
+                    + " rawOnly=true reconcileAuthorization=false");
+            logBinding(binding, projectId, readSources(context));
+
+            OpenRouterEditorialP5PilotProvider provider =
+                    OpenRouterEditorialP5PilotProvider.withLifecyclePersistence(
+                            settings, EditorialP5RawWireContract.OUTPUT_TOKEN_CAP, database);
+            assertTrue("P5E_LIVE_AUTHORIZATION_INCOMPLETE: provider configuration is incomplete",
+                    provider.configured());
+            keepTargetForegroundForDiagnostic();
+            EditorialP5CExactBindingExecution.Result result =
+                    new EditorialP5CExactBindingExecution(database,
+                            new EditorialPackStorageLayout(context.getFilesDir().toPath()))
+                            .executeRaw(projectId, SELECTOR, CHAPTER_KEY, raw, provider);
+            logP5eResult(result);
+            assertNotNull(result);
+            assertTrue("P5E RAW result exceeded one primary call", result.providerCalls() <= 1);
+            org.junit.Assert.assertNull("P5E RAW-only acceptance must not call RECONCILE",
+                    result.reconcileResult());
+            assertTrue("execution must remain disabled", !result.executionAllowed());
+            assertEquals("NOT_CERTIFIED", result.certificationState());
+            assertEquals(EditorialP5CExactBindingExecution.Status.COMMITTED, result.status());
+            assertNotNull(result.rawResult());
+            assertEquals(EditorialP5PilotResult.Outcome.COMMITTED,
+                    result.rawResult().outcome());
+            assertTrue(result.rawResult().metrics().schemaValidationPassed());
+            assertTrue(result.rawResult().metrics().receiptValidationPassed());
+            assertTrue(result.rawResult().metrics().costAccountingComplete());
+            assertEquals(0, result.rawResult().committedResult().output().declaredChanges().size());
+
+            byte[] exactRaw = readSources(context).stream()
+                    .filter(value -> EditorialSafe4Contract.RAW.equals(value.role()))
+                    .findFirst().orElseThrow().bytes();
+            assertTrue("app-owned RAW beforeText must be exact pinned bytes",
+                    Arrays.equals(exactRaw, result.rawResult().committedResult().output()
+                            .beforeText().getBytes(StandardCharsets.UTF_8)));
+            assertEquals(result.rawResult().committedResult().output().beforeText(),
+                    result.rawResult().committedResult().output().afterText());
+
+            EditorialP5CAttemptStore.AttemptRecord after = attemptStore
+                    .findRecord(ORIGINAL_ATTEMPT_ID).orElseThrow();
+            assertEquals("COMMITTED", after.status());
+            assertTrue("RAW predecessor report must be readable after commit",
+                    after.reportBytes().length > 0);
+            assertTrue("RAW predecessor receipt must be readable after commit",
+                    after.receiptBytes().length > 0);
+            assertEquals("CONSUMED", attemptStore.findAuthorizationReceipt(authorizationHash)
+                    .orElseThrow().consumptionResult());
+            Log.i("P5E_RAW_ACCEPTANCE", "P5E_LIVE_RAW_ACCEPTANCE_PASS"
+                    + " RAW_PREDECESSOR_COMMITTED RAW_PREDECESSOR_READBACK_PASS"
+                    + " READY_FOR_P5F_CONTROLLED_RECONCILE RECONCILE_AUTHORIZATION_REQUIRED"
+                    + " EXECUTION_DISABLED NOT_CERTIFIED");
         }
     }
 
@@ -589,6 +774,35 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
                  + " latencyMs=" + metrics.latencyMillis());
     }
 
+    private static void logP5eResult(EditorialP5CExactBindingExecution.Result result) {
+        Log.i("P5E_RAW_RESULT", "status=" + result.status() + " reason=" + result.reasonCode()
+                + " providerCalls=" + result.providerCalls()
+                + " executionAllowed=" + result.executionAllowed()
+                + " certificationState=" + result.certificationState());
+        EditorialP5PilotResult raw = result.rawResult();
+        if (raw == null) {
+            Log.i("P5E_RAW_METRICS", "result=NOT_AVAILABLE");
+            return;
+        }
+        EditorialP5PilotResult.Metrics metrics = raw.metrics();
+        Log.i("P5E_RAW_METRICS", "outcome=" + raw.outcome() + " reason=" + raw.reasonCode()
+                + " primaryCalls=" + metrics.primaryCalls()
+                + " repairCalls=" + metrics.repairCalls()
+                + " networkRetries=" + metrics.networkRetries()
+                + " inputTokens=" + metrics.inputTokens()
+                + " outputTokens=" + metrics.outputTokens()
+                + " reasoningTokens=" + metrics.reasoningTokens()
+                + " totalTokens=" + metrics.totalTokens()
+                + " actualReportedCost=" + metrics.actualReportedCost()
+                + " estimatedCost=" + metrics.estimatedCost()
+                + " costAccountingComplete=" + metrics.costAccountingComplete()
+                + " finishReason=" + metrics.finishReason()
+                + " truncated=" + metrics.truncated()
+                + " schemaValid=" + metrics.schemaValidationPassed()
+                + " receiptValid=" + metrics.receiptValidationPassed()
+                + " latencyMs=" + metrics.latencyMillis());
+    }
+
     private static String scalar(SQLiteDatabase db, String sql, String argument) {
         try (Cursor cursor = db.rawQuery(sql, new String[]{argument})) {
             assertTrue("expected persisted VOL5 row", cursor.moveToFirst());
@@ -599,6 +813,13 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
     private static int count(SQLiteDatabase db, String sql, String argument) {
         try (Cursor cursor = db.rawQuery(sql, new String[]{argument})) {
             assertTrue("expected count result", cursor.moveToFirst());
+            return cursor.getInt(0);
+        }
+    }
+
+    private static int intScalar(SQLiteDatabase db, String sql, String argument) {
+        try (Cursor cursor = db.rawQuery(sql, new String[]{argument})) {
+            assertTrue("expected integer result", cursor.moveToFirst());
             return cursor.getInt(0);
         }
     }

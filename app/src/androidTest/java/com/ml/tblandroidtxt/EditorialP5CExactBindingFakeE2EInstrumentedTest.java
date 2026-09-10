@@ -628,6 +628,39 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
                 retryStore.findReconciliation(rawRequest.attemptIdentity()).orElseThrow().classification());
     }
 
+    @Test public void p5eWireContractEvolutionReclaimsOnlyAfterDecision() throws Exception {
+        BindingFixture fixture = createBoundChapter();
+        EditorialP5PilotRequest rawRequest = request(fixture,
+                EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY,
+                fixture.binding.runDeclarationIdentity());
+        EditorialP5CAttemptStore firstStore = new EditorialP5CAttemptStore(database);
+        firstStore.prepare(rawRequest, authorization(fixture.binding, "p5e-old-envelope",
+                "L1_RAW_DISCOVERY"), "c".repeat(64));
+        assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.ACQUIRED,
+                firstStore.claim(rawRequest.attemptIdentity()));
+        firstStore.markRecoveryRequired(rawRequest.attemptIdentity(), "RETRY_OUTPUT_TRUNCATED");
+
+        EditorialP5PilotAuthorization retry = authorization(fixture.binding,
+                "p5e-new-wire-envelope", "L1_RAW_DISCOVERY");
+        String retryHash = EditorialP5CAttemptStore.authorizationIdHash(retry.authorizationId());
+        EditorialP5CAttemptStore retryStore = new EditorialP5CAttemptStore(database);
+        retryStore.prepare(rawRequest, retry, "d".repeat(64));
+        assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.RECOVERY_REQUIRED,
+                retryStore.claim(rawRequest.attemptIdentity()));
+        retryStore.recordRecoveryDecision(new EditorialP5CAttemptStore.ReconciliationDecision(
+                rawRequest.attemptIdentity(),
+                EditorialP5CAttemptStore.ExternalStateClassification.EXTERNAL_CONFIRMED_CANCELLED,
+                "local/p5e-wire-contract-evolution", "fake-account-fingerprint",
+                "CANCELLED_BILLING_UNKNOWN", "P5E_TEST", true, true, retryHash, 2000L));
+
+        assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.ACQUIRED,
+                retryStore.claim(rawRequest.attemptIdentity()));
+        assertEquals("d".repeat(64), retryStore.findRecord(rawRequest.attemptIdentity())
+                .orElseThrow().requestEnvelopeHash());
+        assertEquals("CONSUMED", retryStore.findAuthorizationReceipt(retryHash)
+                .orElseThrow().consumptionResult());
+    }
+
     @Test public void p5dRejectsUnallowlistedExceptionMetadata() throws Exception {
         BindingFixture fixture = createBoundChapter();
         EditorialP5PilotRequest rawRequest = request(fixture,

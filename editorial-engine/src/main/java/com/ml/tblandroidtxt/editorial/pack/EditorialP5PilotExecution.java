@@ -21,6 +21,11 @@ import java.util.TreeMap;
 public final class EditorialP5PilotExecution {
     private static final String L1_OUTPUT_SCHEMA = "safe4.full.report-l1.v1";
 
+    private static String outputSchemaFor(String phase) {
+        return "L1_RAW_DISCOVERY".equals(phase)
+                ? EditorialP5RawWireContract.SCHEMA_VERSION : L1_OUTPUT_SCHEMA;
+    }
+
     @FunctionalInterface
     public interface Clock {
         long nowMillis();
@@ -266,7 +271,7 @@ public final class EditorialP5PilotExecution {
         EditorialP5PilotProvider.Request providerRequest = new EditorialP5PilotProvider.Request(
                 request.attemptIdentity(), EditorialP5PilotProvider.CallKind.PRIMARY_SEMANTIC,
                 authorization.provider(), authorization.model(), request.phase(), requestEnvelopeHash,
-                visibleSourceBytes(projection), request.authority(), L1_OUTPUT_SCHEMA,
+                visibleSourceBytes(projection), request.authority(), outputSchemaFor(request.phase()),
                 request.chapterKey(), "", requestContext(request, projection));
 
         EditorialP5PilotProvider.Response primary;
@@ -302,6 +307,14 @@ public final class EditorialP5PilotExecution {
                     List.of(), request.chapterKey(), "Retry only after explicit pilot decision",
                     request.phase(), true, metrics);
         }
+        if (!metrics.costAccountingComplete) {
+            recover(store, request.attemptIdentity(), "RETRY_PROVIDER_COST_UNAVAILABLE");
+            return stopped(requestIdentity, EditorialP5PilotResult.StopClass.RETRY_REQUIRED,
+                    "RETRY_PROVIDER_COST_UNAVAILABLE", request.phase(), "COST_ACCOUNTING",
+                    List.of(), request.chapterKey(),
+                    "Resolve reported or bounded estimated cost before retrying",
+                    request.phase(), false, metrics);
+        }
         if (overBudget(authorization, metrics)) {
             recover(store, request.attemptIdentity(), "P5_TOKEN_OR_COST_BUDGET_EXCEEDED");
             return stopped(requestIdentity, EditorialP5PilotResult.StopClass.BUDGET_EXCEEDED,
@@ -319,12 +332,12 @@ public final class EditorialP5PilotExecution {
                         List.of(), request.chapterKey(), "Perform at most one schema-only repair",
                         request.phase(), true, metrics);
             }
-            String semanticFingerprint = output.semanticFingerprint();
+            String semanticFingerprint = output == null ? "" : output.semanticFingerprint();
             EditorialP5PilotProvider.Request repairRequest = new EditorialP5PilotProvider.Request(
                     request.attemptIdentity(), EditorialP5PilotProvider.CallKind.SCHEMA_REPAIR,
                     authorization.provider(), authorization.model(), request.phase(),
-                    requestEnvelopeHash + ":SCHEMA_REPAIR", Map.of(), request.authority(),
-                    L1_OUTPUT_SCHEMA, request.chapterKey(), semanticFingerprint,
+                    repairEnvelopeHash(requestEnvelopeHash), Map.of(), request.authority(),
+                    outputSchemaFor(request.phase()), request.chapterKey(), semanticFingerprint,
                     requestContext(request, projection));
             EditorialP5PilotProvider.Response repair;
             try {
@@ -350,6 +363,14 @@ public final class EditorialP5PilotExecution {
                         "RETRY_OUTPUT_TRUNCATED", request.phase(), "OUTPUT_COMPLETENESS",
                         List.of(), request.chapterKey(), "Retry only after explicit pilot decision",
                         request.phase(), true, metrics);
+            }
+            if (!metrics.costAccountingComplete) {
+                recover(store, request.attemptIdentity(), "RETRY_PROVIDER_COST_UNAVAILABLE");
+                return stopped(requestIdentity, EditorialP5PilotResult.StopClass.RETRY_REQUIRED,
+                        "RETRY_PROVIDER_COST_UNAVAILABLE", request.phase(), "COST_ACCOUNTING",
+                        List.of(), request.chapterKey(),
+                        "Resolve reported or bounded estimated cost before retrying",
+                        request.phase(), false, metrics);
             }
             if (overBudget(authorization, metrics)) {
                 recover(store, request.attemptIdentity(), "P5_TOKEN_OR_COST_BUDGET_EXCEEDED");
@@ -400,6 +421,16 @@ public final class EditorialP5PilotExecution {
 
         byte[] reportBytes = reportBytes(request, projection, output, validation);
         byte[] receiptBytes = receiptBytes(request, projection, output, validation);
+        // The provider deadline covers the network call. This final guard is
+        // the app-owned commit deadline and prevents a late local commit after
+        // the authorized execution window has elapsed.
+        if (overBudget(authorization, metrics)) {
+            recover(store, request.attemptIdentity(), "RETRY_ATTEMPT_DEADLINE_EXPIRED_BEFORE_COMMIT");
+            return stopped(requestIdentity, EditorialP5PilotResult.StopClass.RETRY_REQUIRED,
+                    "RETRY_ATTEMPT_DEADLINE_EXPIRED_BEFORE_COMMIT", request.phase(),
+                    "ATOMIC_RESULT", List.of(), request.chapterKey(),
+                    "Recover the exact attempt before any retry", request.phase(), false, metrics);
+        }
         String responseIdentity = EditorialCanonicalJson.sha256Hex(primary.responseBytes());
         if (metrics.repairCalls > 0) {
             // The repair response is the final response identity when a repair was used.
@@ -556,7 +587,7 @@ public final class EditorialP5PilotExecution {
                                               EditorialP5PilotAuthorization authorization) {
         Map<String, Object> root = new LinkedHashMap<>();
         root.put("contractVersion", EditorialSafe4Contract.CONTRACT_VERSION);
-        root.put("outputSchema", L1_OUTPUT_SCHEMA);
+        root.put("outputSchema", outputSchemaFor(request.phase()));
         root.put("attemptIdentity", request.attemptIdentity());
         root.put("requestIdentity", request.requestIdentity());
         root.put("bindingIdentity", request.binding().bindingIdentity());
@@ -594,6 +625,11 @@ public final class EditorialP5PilotExecution {
         return result;
     }
 
+    private static String repairEnvelopeHash(String requestEnvelopeHash) {
+        return EditorialCanonicalJson.sha256Hex((requestEnvelopeHash + "\nSCHEMA_REPAIR")
+                .getBytes(StandardCharsets.UTF_8));
+    }
+
     private static EditorialP5PilotProvider.Request.Context requestContext(
             EditorialP5PilotRequest request,
             EditorialPhaseContextProjector.PhaseProjection projection) {
@@ -613,6 +649,8 @@ public final class EditorialP5PilotExecution {
     private boolean overBudget(EditorialP5PilotAuthorization authorization, MetricState metrics) {
         return metrics.totalTokens > authorization.maximumTotalTokens()
                 || metrics.inputTokens > authorization.maximumInputTokens()
+                // outputTokens is the provider's aggregate completion count;
+                // reasoningTokens is an audited subset of it.
                 || metrics.outputTokens > authorization.maximumOutputTokens()
                 || metrics.estimatedCost.add(metrics.actualReportedCost)
                         .compareTo(authorization.maximumTotalCost()) > 0
@@ -636,6 +674,29 @@ public final class EditorialP5PilotExecution {
         if (!request.predecessorIdentity().equals(output.predecessorIdentity())) issues.add("OUTPUT_PREDECESSOR_MISMATCH");
         if (!request.stableAnchors().equals(output.stableAnchors())) issues.add("OUTPUT_ANCHORS_MISMATCH");
         if (!request.populationIds().equals(output.ledger().populationIds())) issues.add("OUTPUT_POPULATION_MISMATCH");
+        if ("L1_RAW_DISCOVERY".equals(request.phase())) {
+            if (!output.declaredChanges().isEmpty()) issues.add("RAW_DECLARED_CHANGES_FORBIDDEN");
+            byte[] rawBytes = request.source(EditorialSafe4Contract.RAW) == null
+                    ? null : request.source(EditorialSafe4Contract.RAW).bytes();
+            if (rawBytes == null) {
+                issues.add("RAW_SOURCE_BYTES_MISSING");
+            } else {
+                try {
+                    String exactRaw = new String(rawBytes, StandardCharsets.UTF_8);
+                    if (!java.util.Arrays.equals(rawBytes,
+                            exactRaw.getBytes(StandardCharsets.UTF_8))) {
+                        issues.add("RAW_SOURCE_UTF8_NOT_STABLE");
+                    } else {
+                        if (!exactRaw.equals(output.beforeText())
+                                || !exactRaw.equals(output.afterText())) {
+                            issues.add("RAW_SOURCE_MATERIALIZATION_MISMATCH");
+                        }
+                    }
+                } catch (RuntimeException invalidRaw) {
+                    issues.add("RAW_SOURCE_MATERIALIZATION_INVALID");
+                }
+            }
+        }
         EditorialLedgerValidator.Result ledger = new EditorialLedgerValidator().validate(output.ledger());
         if (!ledger.valid()) issues.addAll(ledger.issues().stream().map(
                 issue -> issue.code() + ":" + issue.itemId()).toList());
@@ -755,9 +816,11 @@ public final class EditorialP5PilotExecution {
         private int networkRetries;
         private int inputTokens;
         private int outputTokens;
+        private int reasoningTokens;
         private int totalTokens;
         private BigDecimal estimatedCost = BigDecimal.ZERO;
         private BigDecimal actualReportedCost = BigDecimal.ZERO;
+        private boolean costAccountingComplete = true;
         private int requestContextSize;
         private String finishReason = "NOT_CALLED";
         private boolean truncated;
@@ -776,10 +839,12 @@ public final class EditorialP5PilotExecution {
             if (response == null) return;
             inputTokens = safeAdd(inputTokens, response.inputTokens());
             outputTokens = safeAdd(outputTokens, response.outputTokens());
+            reasoningTokens = safeAdd(reasoningTokens, response.reasoningTokens());
             totalTokens = safeAdd(totalTokens, response.totalTokens());
+            costAccountingComplete &= response.costKnown();
             if (response.costReported()) {
                 actualReportedCost = actualReportedCost.add(response.reportedCost());
-            } else {
+            } else if (response.costKnown()) {
                 estimatedCost = estimatedCost.add(response.reportedCost());
             }
             finishReason = response.finishReason();
@@ -790,9 +855,10 @@ public final class EditorialP5PilotExecution {
             long elapsed = Math.max(0L, clock.nowMillis() - startedAt);
             return new EditorialP5PilotResult.Metrics(providerCallsBeforePreflight,
                     primaryCalls, repairCalls, networkRetries, inputTokens, outputTokens,
-                    totalTokens, estimatedCost, actualReportedCost, requestContextSize,
+                    reasoningTokens, totalTokens, estimatedCost, actualReportedCost, requestContextSize,
                     finishReason, truncated, schemaValidationPassed, receiptValidationPassed,
-                    preserveDraftCount, findingCount, falseStopCount, elapsed);
+                    preserveDraftCount, findingCount, falseStopCount, elapsed,
+                    costAccountingComplete);
         }
 
         private static int safeAdd(int left, int right) {

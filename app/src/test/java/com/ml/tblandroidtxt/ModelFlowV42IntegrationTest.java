@@ -50,11 +50,13 @@ public class ModelFlowV42IntegrationTest {
     @Test public void actualUsageParserUsesProviderFieldsAndProviderCost() throws Exception {
         String response = "{\"choices\":[{\"message\":{\"content\":\"translated\"},\"finish_reason\":\"stop\"}],"
                 + "\"usage\":{\"input_tokens\":1200,\"output_tokens\":300,\"total_tokens\":1500,"
+                + "\"completion_tokens_details\":{\"reasoning_tokens\":40},"
                 + "\"input_tokens_details\":{\"cache_read_input_tokens\":400},\"cost\":\"0.0042\"}}";
         OpenAICompatibleClient.ChatResult result = OpenAICompatibleClient.parseChatResponse(response);
         assertTrue(result.usageReported);
         assertEquals(1200, result.promptTokens);
         assertEquals(300, result.completionTokens);
+        assertEquals(40, result.reasoningTokens);
         assertEquals(1500, result.totalTokens);
         assertEquals(400, result.cachedPromptTokens);
         assertTrue(result.providerCostReported);

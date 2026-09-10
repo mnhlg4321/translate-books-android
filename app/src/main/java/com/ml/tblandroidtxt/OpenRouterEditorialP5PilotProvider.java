@@ -4,6 +4,8 @@ import com.ml.tblandroidtxt.editorial.pack.EditorialCanonicalJson;
 import com.ml.tblandroidtxt.editorial.pack.EditorialDiffValidator;
 import com.ml.tblandroidtxt.editorial.pack.EditorialLedgerValidator;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5L1Output;
+import com.ml.tblandroidtxt.editorial.pack.EditorialP5RawWireContract;
+import com.ml.tblandroidtxt.editorial.pack.EditorialP5RawWireResponse;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotProvider;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotRequest;
 import com.ml.tblandroidtxt.editorial.pack.EditorialSafe4Contract;
@@ -107,8 +109,11 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         OpenAICompatibleClient.ChatResult result;
         long deadlineNanos = attemptDeadlineNanos.get();
         try {
+            boolean rawDiscovery = "L1_RAW_DISCOVERY".equals(request.phase());
             result = OpenAICompatibleClient.chatWithUsage(settings, prompt, maximumOutputTokens,
-                    request.attemptIdentity(), lifecycle, false, deadlineNanos, rawCallControl);
+                    request.attemptIdentity(), lifecycle, false, deadlineNanos, rawCallControl,
+                    rawDiscovery ? rawResponseFormat() : null,
+                    rawDiscovery, rawDiscovery ? EditorialP5RawWireContract.REASONING_POLICY : "");
         } catch (Exception error) {
             throw new ProviderFailure(failureReason(error, lifecycle, deadlineNanos), error);
         }
@@ -125,15 +130,16 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
             // returned as schema-invalid. The engine decides whether a single
             // safe repair is possible; this adapter never invents semantics.
         }
-        BigDecimal cost = reportedOrEstimated(result, request);
+        CostResolution cost = reportedOrEstimated(result, request);
         String responseId = result.providerResponseId == null || result.providerResponseId.isBlank()
                 ? "openrouter-" + EditorialCanonicalJson.sha256Hex(responseBytes)
                 : result.providerResponseId;
         boolean complete = !isTruncation(result.finishReason);
         return new Response(responseId, responseBytes,
                 result.finishReason,
-                complete, result.promptTokens, result.completionTokens, result.totalTokens,
-                cost, output, schemaValid, result.providerCostReported);
+                complete, result.promptTokens, result.completionTokens, result.reasoningTokens,
+                result.totalTokens, cost.value(), output, schemaValid,
+                result.providerCostReported, cost.known());
     }
 
     private static String failureReason(Throwable error, OpenRouterLifecycleObserver lifecycle,
@@ -286,31 +292,40 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         }
     }
 
-    private static BigDecimal reportedOrEstimated(OpenAICompatibleClient.ChatResult result,
-                                                   Request request) {
+    private record CostResolution(BigDecimal value, boolean known) { }
+
+    private static CostResolution reportedOrEstimated(OpenAICompatibleClient.ChatResult result,
+                                                       Request request) {
         if (result.providerCostReported && Double.isFinite(result.providerCost)
-                && result.providerCost >= 0) return BigDecimal.valueOf(result.providerCost);
+                && result.providerCost >= 0) {
+            return new CostResolution(BigDecimal.valueOf(result.providerCost), true);
+        }
         ModelCatalog.ModelInfo model = ModelCatalog.findModelInfo(request.provider(), request.model());
         double estimate = ModelCatalog.usageCost(model, result.promptTokens,
                 result.cachedPromptTokens, result.completionTokens);
         return Double.isFinite(estimate) && estimate >= 0
-                ? BigDecimal.valueOf(estimate) : BigDecimal.ZERO;
+                ? new CostResolution(BigDecimal.valueOf(estimate), true)
+                : new CostResolution(BigDecimal.ZERO, false);
     }
 
     private static Response invalidResponse(String reason, byte[] bytes) {
         return new Response("openrouter-schema-" + reason.toLowerCase(java.util.Locale.ROOT),
-                bytes, "schema_invalid", true, 0, 0, 0, BigDecimal.ZERO, null, false);
+                bytes, "schema_invalid", true, 0, 0, 0, 0, BigDecimal.ZERO,
+                null, false, false, false);
     }
 
     private PromptPair buildPrompt(Request request) {
+        boolean rawDiscovery = "L1_RAW_DISCOVERY".equals(request.phase());
         StringBuilder system = new StringBuilder();
         system.append("You are an untrusted SAFE4 L1 analysis assistant. The app is the authority.\n")
                 .append("Return exactly one JSON object and no Markdown or commentary.\n")
                 .append("Do not declare certification, change state, choose a pack, or invent hashes.\n")
                 .append("For L1_RAW_DISCOVERY, use only the visible RAW and GLOSSARY blocks.\n")
                 .append("For L1_RECONCILE, use only the visible blocks supplied below.\n")
-                .append("The JSON must contain the exact identity values from the envelope, all gate IDs,")
-                .append(" an exhaustive ledger, and disposition metadata.\n\n")
+                .append(rawDiscovery
+                        ? "RAW discovery is a compact wire response. Never return source text, beforeText, afterText, canonical pack/profile bytes, or app-owned identities except the two replay echoes required below. declaredChanges must be an empty array.\n"
+                        : "The JSON must contain the exact identity values from the envelope, all gate IDs, an exhaustive ledger, and disposition metadata.\n")
+                .append("\n")
                 .append("[PROJECT_INSTRUCTION]\n")
                 .append(authority(request, com.ml.tblandroidtxt.editorial.pack.EditorialPackFileRole.PROJECT_INSTRUCTION))
                 .append("\n[/PROJECT_INSTRUCTION]\n[TURN_PROMPT]\n")
@@ -341,7 +356,7 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         envelope.put("gateIds", EditorialSafe4Contract.GATE_IDS);
 
         StringBuilder user = new StringBuilder();
-        user.append("APP-OWNED REQUEST ENVELOPE (copy identity values exactly):\n")
+        user.append("APP-OWNED REQUEST ENVELOPE (identities are context; only the explicitly permitted replay echoes may be returned):\n")
                 .append(EditorialCanonicalJson.canonicalize(envelope))
                 .append("\n\nVISIBLE SOURCE BLOCKS. Do not infer or request hidden roles:\n");
         ArrayList<String> roles = new ArrayList<>(request.visibleSources().keySet());
@@ -351,16 +366,27 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
                     .append(new String(request.visibleSources().get(role), StandardCharsets.UTF_8))
                     .append("\n--- END ").append(role).append(" ---\n");
         }
-        user.append("\nReturn this object shape exactly. beforeText and afterText must be present;")
-                .append(" for discovery use equal text and an empty declaredChanges array when no edit is made.\n")
-                .append("{\"reportSchemaVersion\":\"safe4.full.report-l1.v1\",\"receiptSchemaVersion\":\"safe4.full.receipt.v1\",\n")
-                .append("\"bindingIdentity\":\"...\",\"manifestFingerprint\":\"...\",\"chapterKey\":\"...\",\"phase\":\"L1\",\n")
-                .append("\"bundleIdentity\":\"...\",\"predecessorIdentity\":\"...\",\"stableAnchors\":[...],\n")
-                .append("\"ledger\":{\"populationIds\":[...],\"entries\":[{\"itemId\":\"...\",\"disposition\":\"PROCESSED|PRESERVE_DRAFT|NOT_EVALUATED\",\"evidenceRefs\":[\"...\"],\"modelDeclaredPass\":false}]},\n")
-                .append("\"gates\":{\"ARTIFACT_IDENTITY\":\"PASS|NOT_APPLICABLE\",...},\n")
-                .append("\"preservedInventory\":[],\"declaredChanges\":[],\"beforeText\":\"\",\"afterText\":\"\",\n")
-                .append("\"releaseAttemptCount\":0,\"disposition\":{\"disposition\":\"CONTINUE|PRESERVE_DRAFT|STOP\",\"reasonCode\":\"...\",\"phase\":\"L1\",\"blockingGate\":\"...\",\"evidenceRefs\":[],\"affectedScope\":\"...\",\"recoveryAction\":\"...\",\"resumeFrom\":\"...\",\"retryable\":false},\n")
-                .append("\"evidenceRefs\":[\"...\"],\"modelDeclaredPass\":false}\n");
+        if (rawDiscovery) {
+            user.append("\nReturn only this compact wire object. The app materializes beforeText=afterText from the exact pinned RAW bytes and builds the final REPORT_L1/receipt itself.\n")
+                    .append("Hard limits: findings<=").append(EditorialP5RawWireContract.MAX_FINDINGS)
+                    .append(", evidenceRefs<=").append(EditorialP5RawWireContract.MAX_EVIDENCE_REFS)
+                    .append(", preservedInventory<=").append(EditorialP5RawWireContract.MAX_PRESERVED_ITEMS)
+                    .append(", each ID/ref<=").append(EditorialP5RawWireContract.MAX_REF_LENGTH)
+                    .append("; no chapter-sized free-form value.\n")
+                    .append("{\"wireSchemaVersion\":\"safe4.raw.discovery.wire.v1\",\"attemptIdentity\":\"<exact replay echo>\",\"requestEnvelopeHash\":\"<exact replay echo>\",\"findings\":[{\"itemId\":\"...\",\"disposition\":\"PROCESSED|PRESERVE_DRAFT|NOT_EVALUATED\",\"evidenceRefs\":[\"...\"],\"modelDeclaredPass\":false}],\n")
+                    .append("\"gateObservations\":{\"ARTIFACT_IDENTITY\":\"PASS|NOT_APPLICABLE\",...},\"evidenceRefs\":[\"...\"],\"preservedInventory\":[],\"declaredChanges\":[],\n")
+                    .append("\"disposition\":{\"disposition\":\"CONTINUE|PRESERVE_DRAFT|STOP\",\"reasonCode\":\"...\",\"phase\":\"L1\",\"blockingGate\":\"...\",\"evidenceRefs\":[],\"affectedScope\":\"...\",\"recoveryAction\":\"...\",\"resumeFrom\":\"...\",\"stopClass\":\"NONE|INPUT_REQUIRED|REPAIR_REQUIRED|RETRY_REQUIRED|CONTENT_BLOCKED\",\"retryable\":false},\"modelDeclaredPass\":false}\n");
+        } else {
+            user.append("\nReturn this object shape exactly. beforeText and afterText must be present; for discovery use equal text and an empty declaredChanges array when no edit is made.\n")
+                    .append("{\"reportSchemaVersion\":\"safe4.full.report-l1.v1\",\"receiptSchemaVersion\":\"safe4.full.receipt.v1\",\n")
+                    .append("\"bindingIdentity\":\"...\",\"manifestFingerprint\":\"...\",\"chapterKey\":\"...\",\"phase\":\"L1\",\n")
+                    .append("\"bundleIdentity\":\"...\",\"predecessorIdentity\":\"...\",\"stableAnchors\":[...],\n")
+                    .append("\"ledger\":{\"populationIds\":[...],\"entries\":[{\"itemId\":\"...\",\"disposition\":\"PROCESSED|PRESERVE_DRAFT|NOT_EVALUATED\",\"evidenceRefs\":[\"...\"],\"modelDeclaredPass\":false}]},\n")
+                    .append("\"gates\":{\"ARTIFACT_IDENTITY\":\"PASS|NOT_APPLICABLE\",...},\n")
+                    .append("\"preservedInventory\":[],\"declaredChanges\":[],\"beforeText\":\"\",\"afterText\":\"\",\n")
+                    .append("\"releaseAttemptCount\":0,\"disposition\":{\"disposition\":\"CONTINUE|PRESERVE_DRAFT|STOP\",\"reasonCode\":\"...\",\"phase\":\"L1\",\"blockingGate\":\"...\",\"evidenceRefs\":[],\"affectedScope\":\"...\",\"recoveryAction\":\"...\",\"resumeFrom\":\"...\",\"retryable\":false},\n")
+                    .append("\"evidenceRefs\":[\"...\"],\"modelDeclaredPass\":false}\n");
+        }
         return new PromptPair(system.toString(), user.toString());
     }
 
@@ -370,8 +396,28 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         return bytes == null ? "" : new String(bytes, StandardCharsets.UTF_8);
     }
 
-    /** Strict typed parser used by the production adapter and parser tests. */
+    private static JSONObject rawResponseFormat() throws JSONException {
+        JSONObject schema = new JSONObject(EditorialCanonicalJson.canonicalize(
+                EditorialP5RawWireContract.jsonSchema()));
+        return new JSONObject()
+                .put("type", "json_schema")
+                .put("json_schema", new JSONObject()
+                        .put("name", EditorialP5RawWireContract.SCHEMA_NAME)
+                        .put("strict", true)
+                        .put("schema", schema));
+    }
+
+    /** Routes RAW discovery to the compact wire parser; final output remains typed. */
     public static EditorialP5L1Output parseOutput(String raw, Request request)
+            throws JSONException {
+        if (request != null && "L1_RAW_DISCOVERY".equals(request.phase())) {
+            return parseRawOutput(raw, request).materialize(request);
+        }
+        return parseCanonicalOutput(raw, request);
+    }
+
+    /** Strict parser for the unchanged full canonical artifact shape. */
+    public static EditorialP5L1Output parseCanonicalOutput(String raw, Request request)
             throws JSONException {
         if (raw == null || raw.isBlank() || request == null || request.context() == null) {
             throw new IllegalArgumentException("typed L1 response is incomplete");
@@ -417,6 +463,187 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
                 root.getInt("releaseAttemptCount"), disposition,
                 Set.copyOf(strings(root.getJSONArray("evidenceRefs"), "evidenceRefs")),
                 root.optBoolean("modelDeclaredPass", false));
+    }
+
+    /**
+     * Parses only the bounded RAW wire DTO. It intentionally has no fields
+     * capable of carrying chapter text or final app-owned identities.
+     */
+    public static EditorialP5RawWireResponse parseRawOutput(String raw, Request request)
+            throws JSONException {
+        if (raw == null || raw.isBlank() || request == null || request.context() == null) {
+            throw new IllegalArgumentException("compact RAW response is incomplete");
+        }
+        byte[] rawBytes = raw.getBytes(StandardCharsets.UTF_8);
+        if (rawBytes.length > EditorialP5RawWireContract.MAX_WIRE_BYTES) {
+            throw new IllegalArgumentException("RAW_WIRE_BYTE_LIMIT_EXCEEDED");
+        }
+        Map<String, Object> root = EditorialCanonicalJson.parseObject(rawBytes);
+        requireKeys(root, Set.of("wireSchemaVersion", "attemptIdentity", "requestEnvelopeHash",
+                "findings", "gateObservations", "evidenceRefs", "preservedInventory",
+                "declaredChanges", "disposition", "modelDeclaredPass"), "RAW wire");
+        String schema = mapString(root, "wireSchemaVersion");
+        if (!EditorialP5RawWireContract.SCHEMA_VERSION.equals(schema)) {
+            throw new IllegalArgumentException("RAW_WIRE_SCHEMA_INVALID");
+        }
+        if (!EditorialP5RawWireContract.SCHEMA_VERSION.equals(request.outputSchemaId())) {
+            throw new IllegalArgumentException("RAW_WIRE_REQUEST_SCHEMA_MISMATCH");
+        }
+        String attemptIdentity = mapString(root, "attemptIdentity");
+        String requestEnvelopeHash = mapString(root, "requestEnvelopeHash");
+        if (!attemptIdentity.equals(request.attemptIdentity())) {
+            throw new IllegalArgumentException("RAW wire attempt identity mismatch");
+        }
+        if (!requestEnvelopeHash.equals(request.requestEnvelopeHash())) {
+            throw new IllegalArgumentException("RAW wire request envelope mismatch");
+        }
+
+        List<Object> findingValues = mapArray(root, "findings");
+        if (findingValues.size() > EditorialP5RawWireContract.MAX_FINDINGS) {
+            throw new IllegalArgumentException("RAW_WIRE_FINDINGS_LIMIT_EXCEEDED");
+        }
+        ArrayList<EditorialLedgerValidator.Entry> findings = new ArrayList<>();
+        for (Object value : findingValues) {
+            Map<String, Object> item = mapObject(value, "findings[]");
+            requireKeys(item, Set.of("itemId", "disposition", "evidenceRefs", "modelDeclaredPass"),
+                    "finding");
+            String itemId = mapString(item, "itemId");
+            if (!EditorialP5RawWireContract.token(itemId,
+                    EditorialP5RawWireContract.MAX_ID_LENGTH)) {
+                throw new IllegalArgumentException("RAW_WIRE_ITEM_ID_INVALID");
+            }
+            String findingDisposition = mapString(item, "disposition");
+            if (!Set.of("PROCESSED", "PRESERVE_DRAFT", "NOT_EVALUATED")
+                    .contains(findingDisposition)) {
+                throw new IllegalArgumentException("RAW_WIRE_FINDING_DISPOSITION_INVALID");
+            }
+            List<String> itemEvidence = mapTokens(mapArray(item, "evidenceRefs"),
+                    EditorialP5RawWireContract.MAX_ENTRY_EVIDENCE_REFS, "finding.evidenceRefs");
+            findings.add(new EditorialLedgerValidator.Entry(itemId, findingDisposition,
+                    itemEvidence, mapBoolean(item, "modelDeclaredPass")));
+        }
+
+        Map<String, Object> gateValues = mapObject(root, "gateObservations");
+        requireKeys(gateValues, Set.copyOf(EditorialSafe4Contract.GATE_IDS), "gateObservations");
+        TreeMap<String, String> gates = new TreeMap<>();
+        for (String gate : EditorialSafe4Contract.GATE_IDS) {
+            String value = mapString(gateValues, gate);
+            if (!"PASS".equals(value) && !"NOT_APPLICABLE".equals(value)) {
+                throw new IllegalArgumentException("RAW_WIRE_GATE_STATUS_INVALID:" + gate);
+            }
+            gates.put(gate, value);
+        }
+        List<String> evidenceRefs = mapTokens(mapArray(root, "evidenceRefs"),
+                EditorialP5RawWireContract.MAX_EVIDENCE_REFS, "evidenceRefs");
+        List<String> preserved = mapTokens(mapArray(root, "preservedInventory"),
+                EditorialP5RawWireContract.MAX_PRESERVED_ITEMS, "preservedInventory");
+        List<Object> changes = mapArray(root, "declaredChanges");
+        if (!changes.isEmpty()) throw new IllegalArgumentException("RAW_DECLARED_CHANGES_FORBIDDEN");
+
+        EditorialStopDecision.Decision disposition = rawDecision(
+                mapObject(root, "disposition"));
+        return new EditorialP5RawWireResponse(schema, attemptIdentity, requestEnvelopeHash,
+                findings, gates, evidenceRefs, preserved, changes.size(), disposition,
+                mapBoolean(root, "modelDeclaredPass"));
+    }
+
+    private static EditorialStopDecision.Decision rawDecision(Map<String, Object> value) {
+        requireKeys(value, Set.of("disposition", "reasonCode", "phase", "blockingGate",
+                "evidenceRefs", "affectedScope", "recoveryAction", "resumeFrom", "stopClass",
+                "retryable"), "disposition");
+        String disposition = mapString(value, "disposition");
+        String reason = mapSafeText(value, "reasonCode");
+        String phase = mapString(value, "phase");
+        if (!EditorialP5RawWireContract.FINAL_PHASE.equals(phase)) {
+            throw new IllegalArgumentException("RAW_WIRE_DISPOSITION_PHASE_INVALID");
+        }
+        String gate = mapString(value, "blockingGate");
+        if (!EditorialP5RawWireContract.gateOrNone(gate)) {
+            throw new IllegalArgumentException("RAW_WIRE_BLOCKING_GATE_INVALID");
+        }
+        List<String> evidence = mapTokens(mapArray(value, "evidenceRefs"),
+                EditorialP5RawWireContract.MAX_DISPOSITION_EVIDENCE_REFS,
+                "disposition.evidenceRefs");
+        String affected = mapSafeText(value, "affectedScope");
+        String recovery = mapSafeText(value, "recoveryAction");
+        String resume = mapSafeText(value, "resumeFrom");
+        String stopClass = mapString(value, "stopClass");
+        boolean retryable = mapBoolean(value, "retryable");
+        if ("CONTINUE".equals(disposition) || "PRESERVE_DRAFT".equals(disposition)) {
+            if (!"NONE".equals(stopClass) || retryable) {
+                throw new IllegalArgumentException("RAW_WIRE_NONSTOP_DISPOSITION_INVALID");
+            }
+            return new EditorialStopDecision.Decision(
+                    "CONTINUE".equals(disposition)
+                            ? EditorialStopDecision.Disposition.CONTINUE
+                            : EditorialStopDecision.Disposition.PRESERVE_DRAFT,
+                    null, reason, phase, gate, evidence, affected, recovery, resume);
+        }
+        if (!"STOP".equals(disposition) || "NONE".equals(stopClass)) {
+            throw new IllegalArgumentException("RAW_WIRE_DISPOSITION_INVALID");
+        }
+        EditorialStopDecision.StopClass typedStop = EditorialStopDecision.StopClass.valueOf(stopClass);
+        EditorialStopDecision.StopReceipt receipt = new EditorialStopDecision.StopReceipt(
+                typedStop, reason, phase, gate, evidence, affected, recovery, resume, retryable);
+        return new EditorialStopDecision.Decision(EditorialStopDecision.Disposition.STOP, receipt,
+                reason, phase, gate, evidence, affected, recovery, resume);
+    }
+
+    private static List<String> mapTokens(List<Object> values, int maximum, String label) {
+        if (values.size() > maximum) throw new IllegalArgumentException(label + " limit exceeded");
+        ArrayList<String> result = new ArrayList<>();
+        for (Object value : values) {
+            if (!(value instanceof String)
+                    || !EditorialP5RawWireContract.token((String) value,
+                    EditorialP5RawWireContract.MAX_REF_LENGTH)) {
+                throw new IllegalArgumentException(label + " contains invalid token");
+            }
+            result.add((String) value);
+        }
+        return List.copyOf(result);
+    }
+
+    private static String mapSafeText(Map<String, Object> object, String key) {
+        String value = mapString(object, key);
+        if (!EditorialP5RawWireContract.safeText(value)) {
+            throw new IllegalArgumentException("RAW_WIRE_DISPOSITION_TEXT_INVALID:" + key);
+        }
+        return value;
+    }
+
+    private static Map<String, Object> mapObject(Map<String, Object> object, String key) {
+        return mapObject(object.get(key), key);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> mapObject(Object value, String label) {
+        if (!(value instanceof Map)) throw new IllegalArgumentException(label + " must be object");
+        return (Map<String, Object>) value;
+    }
+
+    private static List<Object> mapArray(Map<String, Object> object, String key) {
+        Object value = object.get(key);
+        if (!(value instanceof List)) throw new IllegalArgumentException(key + " must be array");
+        @SuppressWarnings("unchecked") List<Object> result = (List<Object>) value;
+        return result;
+    }
+
+    private static String mapString(Map<String, Object> object, String key) {
+        Object value = object.get(key);
+        if (!(value instanceof String)) throw new IllegalArgumentException(key + " must be string");
+        return (String) value;
+    }
+
+    private static boolean mapBoolean(Map<String, Object> object, String key) {
+        Object value = object.get(key);
+        if (!(value instanceof Boolean)) throw new IllegalArgumentException(key + " must be boolean");
+        return (Boolean) value;
+    }
+
+    private static void requireKeys(Map<String, Object> object, Set<String> expected, String label) {
+        if (!object.keySet().equals(expected)) {
+            throw new IllegalArgumentException(label + " contains unknown or missing fields");
+        }
     }
 
     private static EditorialStopDecision.Decision decision(JSONObject value) throws JSONException {

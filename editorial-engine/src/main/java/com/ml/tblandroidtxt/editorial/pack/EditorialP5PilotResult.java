@@ -52,6 +52,7 @@ public final class EditorialP5PilotResult {
             int networkRetries,
             int inputTokens,
             int outputTokens,
+            int reasoningTokens,
             int totalTokens,
             BigDecimal estimatedCost,
             BigDecimal actualReportedCost,
@@ -63,11 +64,27 @@ public final class EditorialP5PilotResult {
             int preserveDraftCount,
             int findingCount,
             int falseStopCount,
-            long latencyMillis) {
+            long latencyMillis,
+            boolean costAccountingComplete) {
+        /** Source-compatible constructor for pre-P5E metric producers. */
+        public Metrics(int providerCallsBeforePreflight, int primaryCalls, int repairCalls,
+                       int networkRetries, int inputTokens, int outputTokens, int totalTokens,
+                       BigDecimal estimatedCost, BigDecimal actualReportedCost,
+                       int requestContextSize, String finishReason, boolean truncated,
+                       boolean schemaValidationPassed, boolean receiptValidationPassed,
+                       int preserveDraftCount, int findingCount, int falseStopCount,
+                       long latencyMillis) {
+            this(providerCallsBeforePreflight, primaryCalls, repairCalls, networkRetries,
+                    inputTokens, outputTokens, 0, totalTokens, estimatedCost,
+                    actualReportedCost, requestContextSize, finishReason, truncated,
+                    schemaValidationPassed, receiptValidationPassed, preserveDraftCount,
+                    findingCount, falseStopCount, latencyMillis, true);
+        }
+
         public Metrics {
             if (providerCallsBeforePreflight < 0 || primaryCalls < 0 || repairCalls < 0
                     || networkRetries < 0 || inputTokens < 0 || outputTokens < 0
-                    || totalTokens < 0 || requestContextSize < 0 || preserveDraftCount < 0
+                    || reasoningTokens < 0 || totalTokens < 0 || requestContextSize < 0 || preserveDraftCount < 0
                     || findingCount < 0 || falseStopCount < 0 || latencyMillis < 0) {
                 throw new IllegalArgumentException("pilot metrics cannot be negative");
             }
@@ -80,9 +97,9 @@ public final class EditorialP5PilotResult {
         }
 
         public static Metrics empty() {
-            return new Metrics(0, 0, 0, 0, 0, 0, 0, BigDecimal.ZERO,
+            return new Metrics(0, 0, 0, 0, 0, 0, 0, 0, BigDecimal.ZERO,
                     BigDecimal.ZERO, 0, "NOT_CALLED", false, false, false,
-                    0, 0, 0, 0L);
+                    0, 0, 0, 0L, true);
         }
     }
 
