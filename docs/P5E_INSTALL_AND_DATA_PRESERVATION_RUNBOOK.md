@@ -99,9 +99,10 @@ dung sách vào Git hay báo cáo công khai.
 
 ## Quy tắc fresh pilot
 
-Fresh pilot là một lineage mới, không phải recovery: tạo evaluation/run/binding/
-attempt identity mới, authorization single-use mới và giữ source hash nếu exact
-bytes không đổi. Không sửa nhãn, không tạo receipt cho attempt cũ, không biến
+Fresh pilot là một lineage mới, không phải recovery: tạo project/run/binding/
+attempt identity mới, giữ compatibility evaluation là immutable canonical-pack
+fact theo P4 (không phải pilot attempt identity), tạo authorization single-use
+mới chỉ ở vòng live và giữ source hash nếu exact bytes không đổi. Không sửa nhãn, không tạo receipt cho attempt cũ, không biến
 authorization đã consumed thành khả dụng và không trộn các row reconstructed
 với lịch sử code196. Owner đã phê duyệt local-only; G1 backup/restore, G2
 candidate upgrade/data readback, G3 fresh setup và G4 candidate-aligned fake QA

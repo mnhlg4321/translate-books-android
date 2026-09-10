@@ -128,8 +128,9 @@ Fresh-pilot QA below is candidate-aligned and complete locally.
 
 Do gate lịch sử `PILOT_DATA_PRESERVED` không đạt, P5E không tự tạo authorization
 mới và không dispatch provider. G1 backup/restore của reconstructed data, G2
-candidate/data readback, fresh evaluation/run/binding setup và candidate-aligned
-fake E2E đã đạt local-only. Điều này mở readiness của fresh lineage để xin một
+candidate/data readback, fresh project/run/binding setup và candidate-aligned
+fake E2E đã đạt local-only. Compatibility evaluation vẫn là immutable fact cấp
+canonical pack theo P4, không phải identity của attempt/receipt cũ. Điều này mở readiness của fresh lineage để xin một
 authorization RAW riêng, không phục hồi gate lịch sử và không ghi
 `P5E_LIVE_RAW_ACCEPTANCE_PASS`.
 
@@ -237,8 +238,9 @@ CANDIDATE_UPGRADE_G2_PASS
 FRESH_PILOT_LOCAL_VERIFIED
 ```
 
-Fresh pilot phải dùng evaluation/run/binding/attempt identity mới, source hash
-exact nếu bytes không đổi, authorization mới chỉ ở vòng live sau và backup
+Fresh pilot phải dùng project/run/binding/attempt identity mới, giữ
+compatibility evaluation là immutable fact cấp canonical pack, source hash exact
+nếu bytes không đổi, authorization mới chỉ ở vòng live sau và backup
 SQLite nhất quán có WAL-aware manifest/hash/restore test. Owner approval local-only
 đã được ghi nhận; G1/G2/G3/G4 đã thực hiện. Current DB chưa có attempt, receipt
 hoặc reconciliation mới; fake predecessor chỉ tồn tại trong isolated QA và không
