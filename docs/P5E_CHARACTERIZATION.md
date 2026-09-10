@@ -9,6 +9,7 @@ Phạm vi: source VOL5 đã pin trong app-owned validation data; không gửi pr
 |---|---|
 | Current validation build | `v4.17-p5e.3 / versionCode 199` |
 | Current database schema | `v24` |
+| Last-known original pilot predecessor | `code196 / schema v24`; historical and unavailable |
 | Canonical/final schemas | Giữ nguyên; final report `safe4.full.report-l1.v1`, receipt `safe4.full.receipt.v1` |
 | Existing authorization output cap | `4,096` tokens requested/effective |
 | Pinned RAW | `23,814` bytes, SHA-256 `A308210ECA80557CFA9FEC7ED55B2EE3DE5C1C4776E59B2B5EDBF0EFB04504BE` |

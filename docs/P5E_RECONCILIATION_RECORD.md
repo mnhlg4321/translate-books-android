@@ -9,12 +9,16 @@ I/O logging và không lưu prompt, response body, source text hoặc secret.
 | Hạng mục | Giá trị |
 |---|---|
 | Branch | `feature/v4.18` |
-| HEAD khi chốt baseline/documentation | `ca9cae929e27a5899f590c29e887459b0e2456ab` |
+| HEAD khi chốt baseline/documentation | `a4b4a8f9d215578d5bfae329b1b4608927d0476c` |
 | Production source commit trong APK code199 | `03b97a30885393c1cc8a3297d5dff9672dcba57e` |
+| Production source commit trong latest APK code201 | `a4b4a8f9d215578d5bfae329b1b4608927d0476c` |
 | Test-source commit của clean test APK | `914820d3c91ae8df5cc6b2769df7b2d036585f7a` |
+| Latest archived validation artifact | `v4.17-p5e.5 / versionCode 201`, `build-20260911-001819` |
+| Latest artifact production APK SHA-256 | `9822F015ED3BA3CCD2B158E775175DF8D517B3A31FAB134EB43060C951F4920C` |
+| Latest artifact source ZIP SHA-256 | `679DD72A7607A6EE3CEB26198FD32D53E6FAC28553918F369E6A23482E6358EB` |
 | Current installed validation package | `v4.17-p5e.3 / versionCode 199` |
-| Current build event | `build-20260910-211805` |
-| Production APK SHA-256 | `870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09` |
+| Last-known original pilot predecessor | `code196 / schema v24`; historical and unavailable, not current data |
+| Installed production APK SHA-256 | `870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09` |
 | Test APK SHA-256 | `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456` |
 | Package / test package | `com.ml.tblandroidtxt` / `com.ml.tblandroidtxt.test` |
 | APK certificate SHA-256 | `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
@@ -59,7 +63,7 @@ created_at:    2026-09-09T15:28:20.653Z
 
 ```text
 EXTERNAL_CONFIRMED_CANCELLED
-RETRY_ELIGIBLE: YES, only after a new exact-phase single-use authorization
+RETRY_ELIGIBLE: BLOCKED_CURRENTLY; only after data gate and a new exact-phase single-use authorization
 NEW_AUTHORIZATION_BEFORE_THIS_DECISION: NO
 RECONCILE_AUTHORIZATION: NOT_ISSUED
 ```
@@ -72,10 +76,10 @@ usage field là `0`, nhưng upstream usage là `0.0047348` và billing flag khô
 duplicate work/billing risk.
 
 Trong DB pilot trước sự cố cài đặt, quyết định P5E được append vào reconciliation
-history với evidence reference này và hash của authorization mới; primary
-reconciliation cũ không bị sửa. DB đó hiện không còn trên device, nên quyết định
-được giữ ở đây như historical evidence và không được coi là một durable row hiện
-tại để cấp quyền retry.
+history với evidence reference này; primary reconciliation cũ không bị sửa. DB
+đó hiện không còn trên device, nên quyết định được giữ ở đây như historical
+evidence và không được coi là một durable row hiện tại để cấp quyền retry. Không
+có authorization mới được cấp từ quyết định này.
 
 ## P5E.8 — Trạng thái bảo toàn dữ liệu trên device
 
@@ -95,10 +99,18 @@ không provider và không chạm pilot DB, dùng evaluation ID lịch sử
 `2e5c80…82520` và run `7d804f…072f0`; đây chỉ là bằng chứng hàm dẫn xuất
 identity, không khôi phục attempt/reconciliation row đã mất.
 
-Validation artifact code199 được cài tiếp bằng `adb install -r`; test APK sạch có
-SHA-256 `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456`.
-Đây chỉ là kiểm chứng code path trên DB dựng lại, không thay đổi kết luận bảo
-tồn dữ liệu lịch sử.
+Artifact code201 (`v4.17-p5e.5`) được build bằng `scripts/build-and-save.ps1`,
+được lưu đối xứng ở `artifacts/builds/v4.17-p5e.5/build-20260911-001819` và
+`backup/builds/v4.17-p5e.5/build-20260911-001819`, có APK SHA-256
+`9822F015ED3BA3CCD2B158E775175DF8D517B3A31FAB134EB43060C951F4920C`, source
+ZIP SHA-256 `679DD72A7607A6EE3CEB26198FD32D53E6FAC28553918F369E6A23482E6358EB`
+và production source commit `a4b4a8f9d215578d5bfae329b1b4608927d0476c`.
+Artifact này không được cài lên device. Clean test APK hash
+`501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456` thuộc
+test-source commit `914820d3c91ae8df5cc6b2769df7b2d036585f7a`, package
+`com.ml.tblandroidtxt.test`, cùng debug certificate; versionCode test APK là
+`N/A` theo manifest instrumentation. Code199 vẫn là package đang cài và mọi
+readback device/current-data claim chỉ áp dụng cho nó.
 
 Do gate `PILOT_DATA_PRESERVED` không đạt, P5E không tạo authorization mới và
 không dispatch provider. `P5E_LIVE_PREP_BLOCKED_PILOT_DATA_PRESERVATION` là
@@ -119,8 +131,8 @@ không được cộng vào provider-call duration và không được biến th
   invocation; tên evidence đúng là `DB_REOPEN_STALE_CLAIM_RECOVERY_VERIFIED`.
   Chỉ một cặp invocation/process thật mới đủ để phục hồi claim process-restart.
 - `RECONCILE` hiện ở trạng thái `RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED`.
-- Không ghi `RAW_LIVE_RETRY_READY` trước khi generation này được đối soát và
-  preflight contract mới pass.
+- Không ghi `RAW_LIVE_RETRY_READY` khi data-preservation gate còn fail; việc đối
+  soát generation và local contract pass không tự cấp quyền retry.
 - Code189/code191 và các authorization đã consumed chỉ được dẫn như lịch sử;
   không được reuse.
 

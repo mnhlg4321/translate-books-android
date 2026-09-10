@@ -1,6 +1,11 @@
-# P5D.3–P5D.4 — Recovery lifecycle hardening and regression
+# P5D.3–P5D.4 — Recovery lifecycle hardening and regression (historical)
 
 Ngày kiểm tra: `2026-09-08` (+07:00)
+
+Các kết quả trong báo cáo này là historical evidence. Sau sự cố connected
+installer được ghi nhận trong P5E, không dùng báo cáo này để kết luận
+`PILOT_DATA_PRESERVED`, process restart hoặc quyền retry hiện tại; trạng thái
+hiện tại nằm trong `docs/P5E_RECONCILIATION_RECORD.md`.
 
 ## Kết luận phạm vi
 
@@ -215,9 +220,10 @@ server with synthetic settings. It passed both a short deadline (`1/1`,
 `2.069s`) and the pilot deadline (`1/1`, `301.501s`). The server observed one
 HTTP request. In both cases the app returned
 `RETRY_PROVIDER_CALL_TIMEOUT`, persisted `RECOVERY_REQUIRED`, did not commit a
-partial result and cleaned up without host force-stop. The process-restart test
-reclassified an expired claim to the same typed recovery state and rejected a
-second claim; provider calls remained zero because the server was local.
+partial result and cleaned up without host force-stop. The DB-reopen/stale-claim
+test reclassified an expired claim to the same typed recovery state and rejected
+a second claim; the retained evidence does not prove two independent app process
+invocations. Provider calls remained zero because the server was local.
 
 Affected device regression was `92/92 PASS` across P1–P5C/importer/migration,
 VOL5 readback was `1/1 PASS`, host engine was `183/183 PASS`, and app unit tests
@@ -230,11 +236,11 @@ qualification was `306 PASS / 0 FAIL`. High-confidence secret scan and
 ```text
 END_TO_END_DEADLINE_VERIFIED
 STALLED_BODY_RECOVERY_VERIFIED
-PROCESS_RESTART_RECOVERY_VERIFIED
+DB_REOPEN_STALE_CLAIM_RECOVERY_VERIFIED
 NO_LATE_COMMIT
 NO_AUTOMATIC_REDISPATCH
-PILOT_DATA_PRESERVED
-RAW_RETRY_READY_FOR_NEW_AUTHORIZATION
+PILOT_DATA_PRESERVATION_GATE_FAILED_ORIGINAL_CODE196_DB_LOST_RECONSTRUCTED_ONLY
+P5E_LIVE_PREP_BLOCKED_PILOT_DATA_PRESERVATION
 ```
 
 This is local transport/lifecycle readiness only. The historical OpenRouter

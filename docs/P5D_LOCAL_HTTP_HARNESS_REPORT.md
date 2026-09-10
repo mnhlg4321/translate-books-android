@@ -1,8 +1,16 @@
-# P5D — Local HTTP harness and code189 validation
+# P5D — Local HTTP harness and code189 validation (historical)
 
 Ngày kiểm tra: `2026-09-09` (+07:00)
 
-## Quyết định
+## Quyết định tại thời điểm kiểm tra — đã bị P5E supersede
+
+Khối dưới đây là snapshot local ngày `2026-09-09`, chỉ giữ làm historical
+evidence. Sau sự cố installer, không được đọc các nhãn cũ này như current
+pilot-data preservation hoặc retry authority. Current P5E state là
+`DB_REOPEN_STALE_CLAIM_RECOVERY_VERIFIED`,
+`PILOT_DATA_PRESERVATION_GATE_FAILED_ORIGINAL_CODE196_DB_LOST_RECONSTRUCTED_ONLY`,
+`P5E_LIVE_PREP_BLOCKED_PILOT_DATA_PRESERVATION` và
+`RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED`.
 
 ```text
 LOCAL_TRANSPORT_AND_LIFECYCLE_VERIFIED
@@ -204,11 +212,11 @@ This closes the local hardening gates:
 ```text
 END_TO_END_DEADLINE_VERIFIED
 STALLED_BODY_RECOVERY_VERIFIED
-PROCESS_RESTART_RECOVERY_VERIFIED
+DB_REOPEN_STALE_CLAIM_RECOVERY_VERIFIED
 NO_LATE_COMMIT
 NO_AUTOMATIC_REDISPATCH
-PILOT_DATA_PRESERVED
-RAW_RETRY_READY_FOR_NEW_AUTHORIZATION
+PILOT_DATA_PRESERVATION_STATUS_AT_COLLECTION_ONLY
+NO_CURRENT_RAW_RETRY_AUTHORIZATION
 ```
 
 It does not identify the actor that cancelled the historical OpenRouter

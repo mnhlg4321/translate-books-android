@@ -1,8 +1,16 @@
-# P5D — Validation report
+# P5D — Validation report (historical sections superseded by P5E)
 
 Ngày cập nhật: `2026-09-10` (+07:00); các mục trước là evidence lịch sử.
 
-## Current decision
+## Decision recorded before the P5E preservation incident
+
+The decision block below is retained as dated historical evidence. It is not
+the current pilot gate. The current P5E decision is
+`DB_REOPEN_STALE_CLAIM_RECOVERY_VERIFIED`,
+`PILOT_DATA_PRESERVATION_GATE_FAILED_ORIGINAL_CODE196_DB_LOST_RECONSTRUCTED_ONLY`,
+`P5E_LIVE_PREP_BLOCKED_PILOT_DATA_PRESERVATION` and
+`RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED`; no RAW authorization or provider
+call is permitted from this document.
 
 ```text
 P5D_DOCUMENTATION_BASELINE_CONSISTENT
@@ -12,11 +20,11 @@ P5D_REGRESSION_PASS
 P5D_DEADLINE_BODY_READ_HARDENING_PASS
 END_TO_END_DEADLINE_VERIFIED
 STALLED_BODY_RECOVERY_VERIFIED
-PROCESS_RESTART_RECOVERY_VERIFIED
+DB_REOPEN_STALE_CLAIM_RECOVERY_VERIFIED
 NO_LATE_COMMIT
 NO_AUTOMATIC_REDISPATCH
-PILOT_DATA_PRESERVED
-RAW_RETRY_READY_FOR_NEW_AUTHORIZATION
+PILOT_DATA_PRESERVATION_STATUS_AT_COLLECTION_ONLY
+NO_CURRENT_RAW_RETRY_AUTHORIZATION
 LOCAL_TRANSPORT_AND_LIFECYCLE_VERIFIED
 HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED
 RAW_DIAGNOSTIC_ATTEMPT_COMPLETE
@@ -220,8 +228,11 @@ permitted.
 
 ## Code196 deadline/body-read/recovery hardening — 2026-09-10
 
-This is the current hardening result, separate from the historical live
-attempts. Production change `d39bca7dcd16a64d6a97006d71e17f994653c065` was
+This was the hardening result at collection time, separate from the historical
+live attempts. It is now historical because the later connected-installer
+incident removed the original code196 package data; the current P5E gate is
+therefore not a preservation pass. Production change
+`d39bca7dcd16a64d6a97006d71e17f994653c065` was
 built and installed as validation APK `4.17-dev.28 / code196` using
 `scripts/build-and-save.ps1` and `adb install -r` on device `15e84958`.
 
@@ -231,7 +242,7 @@ built and installed as validation APK `4.17-dev.28 / code196` using
 | Production APK SHA-256 | `85345086FBD76FA78133EE54741CA7631EBA91EB4761401080EC10BA1D35042A` |
 | Focused test APK SHA-256 | `292F30A50302423E695571BB28E95514504F06F174361762919C35FE6D1704DE` |
 | Device package | `com.ml.tblandroidtxt`, `versionCode=196`, `versionName=4.17-dev.28` |
-| Database | schema v24; pilot data retained; no uninstall/reset |
+| Database | schema v24; readback present at collection time; later original data unavailable |
 | Exact stalled-body executeRaw, short deadline | `1/1 PASS`, `2.069s`, typed timeout + recovery |
 | Exact stalled-body executeRaw, 300-second deadline | `1/1 PASS`, `301.501s`, typed timeout + recovery, no host force-stop |
 | Local server dispatch count | `1` request in the final cases |
@@ -248,8 +259,9 @@ The test-only local server sends headers and a body prefix, then stalls. The
 app-owned path passes the exact persisted binding through the RAW adapter and
 recorder, uses a scoped monotonic deadline, returns
 `RETRY_PROVIDER_CALL_TIMEOUT`, persists `RECOVERY_REQUIRED`, and cleans up
-boundedly. Process-restart coverage reclassifies an expired claim and refuses
-redispatch. Response-body progress is stored as byte count only; no body, key
+boundedly. DB-reopen/stale-claim coverage reclassifies an expired claim and
+refuses redispatch; the retained evidence does not prove two independent app process
+invocations. Response-body progress is stored as byte count only; no body, key
 or exception message is persisted. The delayed local HTTP cases still verify
 that the legacy global cancellation slot does not cancel RAW.
 
@@ -261,25 +273,26 @@ displayed cost `$0.00484`; the separate truncated diagnostic had displayed
 `$0.0075392`. Neither is a successful L1 result, and no `$0` inference is
 allowed for the unresolved acceptance attempt.
 
-## Next controlled action
+## Historical next-action note — superseded
 
-The local decision is:
+The historical local decision was later superseded by the P5E data-preservation
+gate. The current decision is:
 
 ```text
-RAW_RETRY_READY_FOR_NEW_AUTHORIZATION
-NEW_AUTHORIZATION_REQUIRED
+P5E_LIVE_PREP_BLOCKED_PILOT_DATA_PRESERVATION
+RAW_AUTHORIZATION_NOT_PREPARED
 RECONCILE_AUTHORIZATION_REQUIRED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
 EXECUTION_DISABLED
 NOT_CERTIFIED
 NOT_GLOBALLY_RUNNABLE
 ```
 
-A future preflight may propose exactly one new VOL5/chapter001
-`L1_RAW_DISCOVERY` call using the persisted binding, the current source hashes,
-OpenRouter `openai/gpt-5.6-luna`, the existing effective output cap `4,096`,
-one primary call, zero schema repair and zero automatic network retry. It must
-reference the unresolved acceptance generation and the previous confirmed
-cancelled cost, acknowledge duplicate/billing risk and obtain a new explicit
-user authorization. This report does not issue that authorization and does not
-call the provider. RECONCILE remains closed until a valid RAW predecessor is
-committed and read back.
+No preflight or authorization may be prepared until the original-data gate is
+restored or the owner explicitly approves a disjoint fresh-pilot design. A
+future authorization, if separately approved, must reference the reconciled
+code191 generation, current exact binding/source hashes, compact wire schema,
+one primary call, zero schema repair, zero automatic retry and explicit
+duplicate/billing risk. This report does not issue that authorization and does
+not call the provider. RECONCILE remains closed until a valid RAW predecessor
+is committed and read back.
