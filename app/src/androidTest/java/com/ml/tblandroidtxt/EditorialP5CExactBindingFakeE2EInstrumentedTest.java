@@ -409,7 +409,7 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
                 .orElseThrow().status());
         assertEquals("RETRY_PROVIDER_CALL_TIMEOUT", reopened.findRecord(rawRequest.attemptIdentity())
                 .orElseThrow().recoveryReasonCode());
-        reopened.prepare(rawRequest, authorization, "g".repeat(64));
+        reopened.prepare(rawRequest, authorization, "a".repeat(64));
         assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.RECOVERY_REQUIRED,
                 reopened.claim(rawRequest.attemptIdentity()));
     }

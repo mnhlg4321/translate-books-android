@@ -105,12 +105,12 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         OpenRouterLifecycleObserver lifecycle = new OpenRouterLifecycleObserver(
                 request.attemptIdentity(), lifecycleRecorder);
         OpenAICompatibleClient.ChatResult result;
+        long deadlineNanos = attemptDeadlineNanos.get();
         try {
-            long deadlineNanos = attemptDeadlineNanos.get();
             result = OpenAICompatibleClient.chatWithUsage(settings, prompt, maximumOutputTokens,
                     request.attemptIdentity(), lifecycle, false, deadlineNanos, rawCallControl);
         } catch (Exception error) {
-            throw new ProviderFailure(failureReason(error, lifecycle), error);
+            throw new ProviderFailure(failureReason(error, lifecycle, deadlineNanos), error);
         }
         byte[] responseBytes = result.content.getBytes(StandardCharsets.UTF_8);
         EditorialP5L1Output output = null;
@@ -135,11 +135,15 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
                 cost, output, schemaValid);
     }
 
-    private static String failureReason(Throwable error, OpenRouterLifecycleObserver lifecycle) {
+    private static String failureReason(Throwable error, OpenRouterLifecycleObserver lifecycle,
+                                        long deadlineNanos) {
         Throwable root = error;
         while (root.getCause() != null && root != root.getCause()) root = root.getCause();
         if (lifecycle.cancelled || root instanceof CancellationException) {
             return "RETRY_PROVIDER_CANCELLED";
+        }
+        if (deadlineNanos > 0 && System.nanoTime() >= deadlineNanos) {
+            return "RETRY_PROVIDER_CALL_TIMEOUT";
         }
         if (root instanceof ApiHttpException) return "RETRY_PROVIDER_HTTP_ERROR";
         if (root instanceof OpenAICompatibleClient.ResponseBodyTooLargeException) {
