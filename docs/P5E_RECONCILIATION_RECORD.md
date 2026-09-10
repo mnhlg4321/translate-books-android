@@ -87,7 +87,7 @@ không provider và không chạm pilot DB, dùng evaluation ID lịch sử
 identity, không khôi phục attempt/reconciliation row đã mất.
 
 Validation artifact code199 được cài tiếp bằng `adb install -r`; test APK sạch có
-SHA-256 `E71B0DF8ACC4B3A5EDC3AC97A4250ED99FD348FA524E605B195E0B96E5B1EE75`.
+SHA-256 `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456`.
 Đây chỉ là kiểm chứng code path trên DB dựng lại, không thay đổi kết luận bảo
 tồn dữ liệu lịch sử.
 
