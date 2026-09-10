@@ -123,6 +123,13 @@ public interface EditorialP5PilotProvider {
         @Override public byte[] responseBytes() { return responseBytes.clone(); }
     }
 
+    /**
+     * Gives a provider one monotonic attempt window shared by primary and any
+     * explicitly authorized schema-repair call. Existing fake providers keep
+     * the source-compatible no-op default.
+     */
+    default void beginAttempt(long maximumExecutionTimeMillis) { }
+
     Response call(Request request) throws Exception;
 
     private static String text(String value, String label) {

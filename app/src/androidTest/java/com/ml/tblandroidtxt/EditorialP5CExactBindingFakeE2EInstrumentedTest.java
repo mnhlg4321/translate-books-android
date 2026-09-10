@@ -122,6 +122,7 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
         assertTrue(tableExists("editorial_p5d_reconciliation"));
         assertTrue(tableExists("editorial_p5d_reconciliation_history"));
         assertTrue(columnExists("editorial_p5d_network_lifecycle", "stage"));
+        assertTrue(columnExists("editorial_p5d_network_lifecycle", "response_body_bytes"));
         assertTrue(columnExists("editorial_p5d_authorization_receipts", "authorization_id_hash"));
         assertTrue(columnExists("editorial_p5d_reconciliation", "classification"));
     }
@@ -349,12 +350,131 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
         runLocalResponse(0L, false, "p5d-local-instant");
     }
 
+    @Test public void p5dPersistsLatestResponseBodyProgressWithoutBodyContent()
+            throws Exception {
+        BindingFixture fixture = createBoundChapter();
+        EditorialP5PilotRequest rawRequest = request(fixture,
+                EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY,
+                fixture.binding.runDeclarationIdentity());
+        EditorialP5PilotAuthorization authorization = authorization(fixture.binding,
+                "p5d-response-progress", "L1_RAW_DISCOVERY");
+        EditorialP5CAttemptStore store = new EditorialP5CAttemptStore(database);
+        store.prepare(rawRequest, authorization, "f".repeat(64));
+        assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.ACQUIRED,
+                store.claim(rawRequest.attemptIdentity()));
+        store.recordNetworkLifecycle(rawRequest.attemptIdentity(),
+                new EditorialP5CAttemptStore.NetworkLifecycleEvent(
+                        EditorialP5CAttemptStore.LifecycleStage.RESPONSE_BODY_PROGRESS,
+                        321L, 123L, 200, "application/json", "", 250L,
+                        "generation-redacted", "", ""));
+
+        EditorialP5CAttemptStore.NetworkLifecycleEvent lifecycle = store
+                .findNetworkLifecycle(rawRequest.attemptIdentity()).orElseThrow();
+        assertEquals(EditorialP5CAttemptStore.LifecycleStage.RESPONSE_BODY_PROGRESS,
+                lifecycle.stage());
+        assertEquals(123L, lifecycle.responseBodyBytes());
+        assertEquals(250L, lifecycle.elapsedMillis());
+        assertFalse(lifecycle.responseContentType().contains("raw"));
+
+        database.close();
+        database = new TranslationRepository(context, databaseName);
+        EditorialP5CAttemptStore.NetworkLifecycleEvent reopened = new EditorialP5CAttemptStore(
+                database).findNetworkLifecycle(rawRequest.attemptIdentity()).orElseThrow();
+        assertEquals(123L, reopened.responseBodyBytes());
+        assertEquals(EditorialP5CAttemptStore.LifecycleStage.RESPONSE_BODY_PROGRESS,
+                reopened.stage());
+    }
+
+    @Test public void p5dProcessRestartReclassifiesExpiredClaimWithoutRedispatch()
+            throws Exception {
+        BindingFixture fixture = createBoundChapter();
+        EditorialP5PilotRequest rawRequest = request(fixture,
+                EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY,
+                fixture.binding.runDeclarationIdentity());
+        EditorialP5PilotAuthorization authorization = authorization(fixture.binding,
+                "p5d-stale-claim", "L1_RAW_DISCOVERY", 1L);
+        EditorialP5CAttemptStore store = new EditorialP5CAttemptStore(database);
+        store.prepare(rawRequest, authorization, "g".repeat(64));
+        assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.ACQUIRED,
+                store.claim(rawRequest.attemptIdentity()));
+        database.editorialWritableDatabase().execSQL(
+                "UPDATE editorial_p5c_attempts SET created_at=0,updated_at=0 WHERE attempt_identity=?",
+                new Object[]{rawRequest.attemptIdentity()});
+
+        database.close();
+        database = new TranslationRepository(context, databaseName);
+        EditorialP5CAttemptStore reopened = new EditorialP5CAttemptStore(database);
+        reopened.recoverStaleClaims(System.currentTimeMillis());
+        assertEquals("RECOVERY_REQUIRED", reopened.findRecord(rawRequest.attemptIdentity())
+                .orElseThrow().status());
+        assertEquals("RETRY_PROVIDER_CALL_TIMEOUT", reopened.findRecord(rawRequest.attemptIdentity())
+                .orElseThrow().recoveryReasonCode());
+        reopened.prepare(rawRequest, authorization, "g".repeat(64));
+        assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.RECOVERY_REQUIRED,
+                reopened.claim(rawRequest.attemptIdentity()));
+    }
+
     @Test public void p5dLocalSlowResponseSurvivesLegacyCancelAndPersistsLifecycle() throws Exception {
         runLocalResponse(11_000L, true, "p5d-local-slow");
     }
 
     @Test public void p5dLocalSlowResponseCompletesWithoutLegacyCancel() throws Exception {
         runLocalResponse(11_000L, false, "p5d-local-slow-no-cancel");
+    }
+
+    @Test public void p5dExecuteRawStalledBodyStopsAtAttemptDeadlineAndPersistsRecovery()
+            throws Exception {
+        BindingFixture fixture = createBoundChapter();
+        EditorialP5PilotAuthorization authorization = authorization(fixture.binding,
+                "p5d-stalled-body-deadline", "L1_RAW_DISCOVERY", 1_500L);
+        AppSettings settings = new AppSettings();
+        settings.provider = "openrouter";
+        settings.model = "openai/gpt-5.6-luna";
+        settings.apiKey = "local-test-key";
+
+        try (StalledBodyServer server = new StalledBodyServer()) {
+            settings.baseUrl = "http://127.0.0.1:" + server.port() + "/v1/chat/completions";
+            OpenRouterEditorialP5PilotProvider provider =
+                    OpenRouterEditorialP5PilotProvider.withLifecyclePersistence(settings, 4_096,
+                            database);
+            EditorialP5CExactBindingExecution execution =
+                    new EditorialP5CExactBindingExecution(database, storage);
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            long startedNanos = System.nanoTime();
+            Future<EditorialP5CExactBindingExecution.Result> resultFuture = executor.submit(
+                    () -> execution.executeRaw(fixture.projectId, SELECTOR, CHAPTER_KEY,
+                            authorization, provider));
+            try {
+                assertTrue("local server did not receive the RAW request",
+                        server.awaitRequest(5, TimeUnit.SECONDS));
+                EditorialP5CExactBindingExecution.Result result = resultFuture.get(
+                        5, TimeUnit.SECONDS);
+                long elapsedMillis = TimeUnit.NANOSECONDS.toMillis(
+                        System.nanoTime() - startedNanos);
+                assertEquals(EditorialP5CExactBindingExecution.Status.STOP, result.status());
+                assertEquals("RETRY_PROVIDER_CALL_TIMEOUT", result.reasonCode());
+                assertEquals(1, result.providerCalls());
+                assertTrue("app did not stop within the bounded deadline: " + elapsedMillis,
+                        elapsedMillis < 4_000L);
+                String attemptIdentity;
+                try (Cursor cursor = database.editorialReadableDatabase().rawQuery(
+                        "SELECT attempt_identity FROM editorial_p5c_attempts LIMIT 1", null)) {
+                    assertTrue(cursor.moveToFirst());
+                    attemptIdentity = cursor.getString(0);
+                }
+                assertEquals("RECOVERY_REQUIRED", new EditorialP5CAttemptStore(database)
+                        .findRecord(attemptIdentity).orElseThrow().status());
+            } catch (TimeoutException timeout) {
+                server.captureThreadStacks("execute_raw_deadline");
+                throw new AssertionError("executeRaw outlived its attempt deadline: "
+                        + server.failureSummary(), timeout);
+            } finally {
+                resultFuture.cancel(true);
+                executor.shutdownNow();
+                assertTrue("executeRaw worker cleanup incomplete",
+                        executor.awaitTermination(2, TimeUnit.SECONDS));
+            }
+        }
     }
 
     private void runLocalResponse(long delayMillis, boolean cancelLegacy, String authorizationId)
@@ -664,11 +784,17 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
 
     private static EditorialP5PilotAuthorization authorization(EditorialP4Binding binding,
                                                                  String id, String phase) {
+        return authorization(binding, id, phase, 60_000L);
+    }
+
+    private static EditorialP5PilotAuthorization authorization(EditorialP4Binding binding,
+                                                                 String id, String phase,
+                                                                 long executionMillis) {
         return new EditorialP5PilotAuthorization(id, binding.bindingIdentity(),
                 binding.runDeclarationIdentity(), binding.canonicalPackHash(),
                 binding.canonicalProfileHash(), binding.compatibilityEvaluationId(), CHAPTER_KEY,
                 phase, "FAKE_PROVIDER", "fake/model", "fake-account-fingerprint", 1, 1, 0,
-                200_000, 2_000, 200_000, BigDecimal.ONE, 60_000L, true, false, false,
+                200_000, 2_000, 200_000, BigDecimal.ONE, executionMillis, true, false, false,
                 "HASH_ONLY", "TEST_STOP_AUTHORITY", 0L, Long.MAX_VALUE, true);
     }
 
@@ -786,6 +912,121 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
         @Override public Response call(Request request) {
             calls++;
             throw new AssertionError("provider must not be called");
+        }
+    }
+
+    /** Local, content-free OpenAI-compatible transport used only for P5D cancellation tests. */
+    private static final class StalledBodyServer implements AutoCloseable {
+        private final ServerSocket server;
+        private final ExecutorService executor = Executors.newSingleThreadExecutor();
+        private final CountDownLatch requestReceived = new CountDownLatch(1);
+        private final AtomicInteger requests = new AtomicInteger();
+        private final AtomicBoolean closed = new AtomicBoolean();
+        private final AtomicReference<Socket> accepted = new AtomicReference<>();
+        private final AtomicReference<Throwable> failure = new AtomicReference<>();
+        private volatile Future<?> future;
+
+        StalledBodyServer() throws IOException {
+            server = new ServerSocket(0, 1, java.net.InetAddress.getByName("127.0.0.1"));
+            server.setSoTimeout(2_000);
+            future = executor.submit(this::serve);
+        }
+
+        int port() { return server.getLocalPort(); }
+
+        boolean awaitRequest(long timeout, TimeUnit unit) throws InterruptedException {
+            return requestReceived.await(timeout, unit) && failure.get() == null;
+        }
+
+        private void serve() {
+            Socket socket = null;
+            try {
+                socket = server.accept();
+                accepted.set(socket);
+                socket.setSoTimeout(2_000);
+                requests.incrementAndGet();
+                readRequest(socket);
+                requestReceived.countDown();
+                OutputStream output = socket.getOutputStream();
+                byte[] header = ("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n"
+                        + "Content-Length: 65536\r\nConnection: close\r\n\r\n")
+                        .getBytes(StandardCharsets.US_ASCII);
+                output.write(header);
+                output.write("{\"".getBytes(StandardCharsets.UTF_8));
+                output.flush();
+                for (int i = 0; i < 65534; i++) {
+                    Thread.sleep(100L);
+                    output.write(' ');
+                    output.flush();
+                }
+            } catch (Throwable thrown) {
+                if (!closed.get()) failure.compareAndSet(null, thrown);
+            } finally {
+                requestReceived.countDown();
+                if (socket != null) {
+                    accepted.compareAndSet(socket, null);
+                    try { socket.close(); } catch (IOException ignored) { }
+                }
+            }
+        }
+
+        private static void readRequest(Socket socket) throws IOException {
+            BufferedInputStream input = new BufferedInputStream(socket.getInputStream());
+            ByteArrayOutputStream headers = new ByteArrayOutputStream();
+            int previous = -1;
+            int current;
+            int contentLength = 0;
+            while ((current = input.read()) != -1) {
+                headers.write(current);
+                if (headers.size() > 32 * 1024) throw new IOException("request headers too large");
+                String text = headers.toString(StandardCharsets.US_ASCII);
+                if (previous == '\r' && current == '\n' && text.endsWith("\r\n\r\n")) {
+                    for (String line : text.split("\\r?\\n")) {
+                        if (line.regionMatches(true, 0, "Content-Length:", 0, 15)) {
+                            contentLength = Integer.parseInt(line.substring(15).trim());
+                        }
+                    }
+                    break;
+                }
+                previous = current;
+            }
+            while (contentLength-- > 0) {
+                if (input.read() < 0) throw new IOException("request body truncated");
+            }
+        }
+
+        String failureSummary() {
+            Throwable thrown = failure.get();
+            return thrown == null ? "none" : thrown.getClass().getSimpleName();
+        }
+
+        void captureThreadStacks(String reason) {
+            Log.i("P5D_LOCAL_HTTP", "thread_stacks=" + reason);
+            for (Map.Entry<Thread, StackTraceElement[]> entry
+                    : Thread.getAllStackTraces().entrySet()) {
+                Thread thread = entry.getKey();
+                StringBuilder line = new StringBuilder("thread=")
+                        .append(thread.getName()).append(" state=").append(thread.getState());
+                StackTraceElement[] stack = entry.getValue();
+                for (int i = 0; i < Math.min(stack.length, 6); i++) {
+                    line.append(' ').append(stack[i].getClassName()).append('#')
+                            .append(stack[i].getMethodName());
+                }
+                Log.i("P5D_LOCAL_HTTP", line.toString());
+            }
+        }
+
+        @Override public void close() throws Exception {
+            closed.set(true);
+            try { server.close(); } catch (IOException ignored) { }
+            Socket socket = accepted.getAndSet(null);
+            if (socket != null) try { socket.close(); } catch (IOException ignored) { }
+            Future<?> running = future;
+            if (running != null) running.cancel(true);
+            executor.shutdownNow();
+            if (!executor.awaitTermination(2, TimeUnit.SECONDS)) {
+                throw new AssertionError("stalled body server cleanup incomplete");
+            }
         }
     }
 

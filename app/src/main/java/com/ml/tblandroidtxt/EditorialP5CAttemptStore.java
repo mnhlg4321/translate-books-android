@@ -195,18 +195,40 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
                 new String[]{attemptIdentity});
     }
 
+    /**
+     * Reclassifies a claim whose persisted execution window has elapsed after
+     * process death. This is recovery only: it never consumes a new
+     * authorization and never dispatches a provider call.
+     */
+    @Override public synchronized void recoverStaleClaims(long nowMillis) {
+        if (nowMillis < 0) throw new IllegalArgumentException("recovery time cannot be negative");
+        SQLiteDatabase db = database.editorialWritableDatabase();
+        ContentValues update = new ContentValues();
+        update.put("status", "RECOVERY_REQUIRED");
+        update.put("recovery_reason_code", "RETRY_PROVIDER_CALL_TIMEOUT");
+        update.put("updated_at", nowMillis);
+        db.update(TABLE, update,
+                "status='CLAIMED' AND EXISTS (SELECT 1 FROM " + AUTH_TABLE
+                        + " auth WHERE auth.consumed_attempt_identity=editorial_p5c_attempts.attempt_identity"
+                        + " AND auth.consumed_at>=0 AND (? - editorial_p5c_attempts.updated_at)"
+                        + " >= auth.maximum_execution_time_ms)",
+                new String[]{String.valueOf(nowMillis)});
+    }
+
     /** Redacted transport lifecycle stages; no request/response content is accepted. */
     public enum LifecycleStage {
         CALL_CREATED,
         REQUEST_BODY_STARTED,
         REQUEST_BODY_SENT,
         RESPONSE_HEADERS_RECEIVED,
+        RESPONSE_BODY_PROGRESS,
         RESPONSE_BODY_COMPLETE,
         CALL_CANCELLED,
         CALL_FAILED
     }
 
     public record NetworkLifecycleEvent(LifecycleStage stage, long requestBodyBytes,
+                                        long responseBodyBytes,
                                         int httpStatus, String responseContentType,
                                         String exceptionClass, long elapsedMillis,
                                         String generationId, String providerResponseId,
@@ -214,6 +236,7 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
         public NetworkLifecycleEvent {
             Objects.requireNonNull(stage, "lifecycle stage");
             if (requestBodyBytes < 0) throw new IllegalArgumentException("request bytes cannot be negative");
+            if (responseBodyBytes < 0) throw new IllegalArgumentException("response bytes cannot be negative");
             if (httpStatus < -1 || httpStatus > 599) throw new IllegalArgumentException("invalid HTTP status");
             if (elapsedMillis < 0) throw new IllegalArgumentException("elapsed time cannot be negative");
             exceptionClass = bounded(exceptionClass, "exception class");
@@ -230,12 +253,13 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
                                      int httpStatus, String exceptionClass,
                                      long elapsedMillis, String generationId,
                                      String providerResponseId) {
-            this(stage, requestBodyBytes, httpStatus, "", exceptionClass, elapsedMillis,
+            this(stage, requestBodyBytes, 0L, httpStatus, "", exceptionClass, elapsedMillis,
                     generationId, providerResponseId, "");
         }
 
         public static NetworkLifecycleEvent stage(LifecycleStage stage) {
-            return new NetworkLifecycleEvent(stage, 0L, -1, "", "", 0L, "", "", "");
+            return new NetworkLifecycleEvent(stage, 0L, 0L, -1, "", "", 0L,
+                    "", "", "");
         }
     }
 
@@ -338,6 +362,7 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
         values.put("attempt_identity", attemptIdentity);
         values.put("stage", event.stage().name());
         values.put("request_body_bytes", event.requestBodyBytes());
+        values.put("response_body_bytes", event.responseBodyBytes());
         values.put("http_status", event.httpStatus());
         values.put("response_content_type", event.responseContentType());
         values.put("exception_class", event.exceptionClass());
@@ -354,16 +379,17 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
 
     public synchronized Optional<NetworkLifecycleEvent> findNetworkLifecycle(String attemptIdentity) {
         requireHash(attemptIdentity, "attempt identity");
-        String sql = "SELECT stage,request_body_bytes,http_status,response_content_type,"
+        String sql = "SELECT stage,request_body_bytes,response_body_bytes,http_status,response_content_type,"
                 + "exception_class,elapsed_ms,generation_id,provider_response_id,cancellation_source FROM " + LIFECYCLE_TABLE
                 + " WHERE attempt_identity=?";
         try (Cursor cursor = database.editorialReadableDatabase().rawQuery(sql,
                 new String[]{attemptIdentity})) {
             if (!cursor.moveToFirst()) return Optional.empty();
             return Optional.of(new NetworkLifecycleEvent(
-                    LifecycleStage.valueOf(cursor.getString(0)), cursor.getLong(1), cursor.getInt(2),
-                    safe(cursor.getString(3)), safe(cursor.getString(4)), cursor.getLong(5),
-                    safe(cursor.getString(6)), safe(cursor.getString(7)), safe(cursor.getString(8))));
+                    LifecycleStage.valueOf(cursor.getString(0)), cursor.getLong(1), cursor.getLong(2),
+                    cursor.getInt(3), safe(cursor.getString(4)), safe(cursor.getString(5)),
+                    cursor.getLong(6), safe(cursor.getString(7)), safe(cursor.getString(8)),
+                    safe(cursor.getString(9))));
         }
     }
 
@@ -779,7 +805,7 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
             case "UnknownHostException", "ConnectException", "SSLException",
                     "SSLHandshakeException", "SocketTimeoutException", "InterruptedIOException",
                     "ApiHttpException", "JSONException", "IOException", "CancellationException",
-                    "RuntimeException" -> true;
+                    "ResponseBodyTooLargeException", "RuntimeException" -> true;
             default -> false;
         };
     }

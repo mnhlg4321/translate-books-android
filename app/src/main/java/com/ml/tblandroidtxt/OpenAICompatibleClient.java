@@ -4,6 +4,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
@@ -24,13 +27,23 @@ import okhttp3.EventListener;
 public class OpenAICompatibleClient {
     public interface NetworkObserver {
         default void onCallCreated() {}
+        default void onCallCreated(long elapsedMillis) { onCallCreated(); }
         default void onRequestBodyStarted() {}
+        default void onRequestBodyStarted(long elapsedMillis) { onRequestBodyStarted(); }
         default void onRequestBodySent(long byteCount) {}
+        default void onRequestBodySent(long byteCount, long elapsedMillis) {
+            onRequestBodySent(byteCount);
+        }
         default void onResponseHeaders(int code) {}
         default void onResponseHeaders(int code, String generationId) { onResponseHeaders(code); }
         default void onResponseHeaders(int code, String generationId, String contentType) {
             onResponseHeaders(code, generationId);
         }
+        default void onResponseHeaders(int code, String generationId, String contentType,
+                                       long elapsedMillis) {
+            onResponseHeaders(code, generationId, contentType);
+        }
+        default void onResponseBodyProgress(long byteCount, long elapsedMillis) {}
         default void onResponseBodyComplete(long byteCount, String providerResponseId) {}
         default void onResponseBodyComplete(long byteCount, String providerResponseId,
                                             long elapsedMillis) {
@@ -46,6 +59,10 @@ public class OpenAICompatibleClient {
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private static final OkHttpClient BASE_CLIENT = new OkHttpClient.Builder().build();
     private static final AtomicReference<ActiveCall> ACTIVE_CALL = new AtomicReference<>();
+    private static final long MAX_RESPONSE_BODY_BYTES = 8L * 1024L * 1024L;
+    private static final long BODY_PROGRESS_BYTES = 32L * 1024L;
+    private static final long BODY_PROGRESS_INTERVAL_NANOS =
+            TimeUnit.MILLISECONDS.toNanos(250L);
 
     private static final class ActiveCall {
         private final Call call;
@@ -55,6 +72,54 @@ public class OpenAICompatibleClient {
             this.call = call;
             this.cancellationSource = cancellationSource;
         }
+    }
+
+    /**
+     * Scoped cancellation owner for a pilot call. It is intentionally not
+     * connected to the legacy translation-service cancellation slot.
+     */
+    static final class CallControl {
+        private final AtomicReference<Call> call = new AtomicReference<>();
+        private final AtomicReference<String> cancellationSource = new AtomicReference<>("");
+
+        void bind(Call value) {
+            call.set(value);
+            String source = cancellationSource.get();
+            if (!source.isEmpty()) value.cancel();
+        }
+
+        void cancel(String source) {
+            String value = source == null || source.isBlank()
+                    ? "PILOT_REQUESTED_CANCEL" : source;
+            cancellationSource.compareAndSet("", value);
+            Call current = call.get();
+            if (current != null) current.cancel();
+        }
+
+        void clear(Call value) { call.compareAndSet(value, null); }
+
+        AtomicReference<String> cancellationSource() { return cancellationSource; }
+
+        void reset() {
+            call.set(null);
+            cancellationSource.set("");
+        }
+    }
+
+    static long monotonicDeadlineNanosFromNowMillis(long durationMillis) {
+        if (durationMillis <= 0) throw new IllegalArgumentException("deadline must be positive");
+        long now = System.nanoTime();
+        long durationNanos = TimeUnit.MILLISECONDS.toNanos(durationMillis);
+        long deadline = now + durationNanos;
+        return deadline < now ? Long.MAX_VALUE : deadline;
+    }
+
+    static long remainingMillis(long deadlineNanos) {
+        if (deadlineNanos <= 0) return Long.MAX_VALUE;
+        long remainingNanos = deadlineNanos - System.nanoTime();
+        if (remainingNanos <= 0) return 0L;
+        long millis = TimeUnit.NANOSECONDS.toMillis(remainingNanos);
+        return Math.max(1L, millis);
     }
 
     public static void cancelActiveRequests() {
@@ -106,27 +171,56 @@ public class OpenAICompatibleClient {
     public static ChatResult chatWithUsage(AppSettings s, PromptPair prompt, int maxOutputTokens,
                                            String requestId, NetworkObserver observer,
                                            boolean registerForLegacyGlobalCancellation) throws Exception {
+        return chatWithUsage(s, prompt, maxOutputTokens, requestId, observer,
+                registerForLegacyGlobalCancellation, 0L, null);
+    }
+
+    /**
+     * Executes one call against an absolute monotonic deadline. A zero
+     * deadline preserves the legacy settings-based behavior; pilot callers
+     * must provide a deadline so OkHttp cannot add an unowned grace period.
+     */
+    static ChatResult chatWithUsage(AppSettings s, PromptPair prompt, int maxOutputTokens,
+                                    String requestId, NetworkObserver observer,
+                                    boolean registerForLegacyGlobalCancellation,
+                                    long deadlineNanos, CallControl callControl) throws Exception {
         if (s.apiKey == null || s.apiKey.trim().isEmpty()) throw new IllegalArgumentException("API key is empty");
         if (s.model == null || s.model.trim().isEmpty()) throw new IllegalArgumentException("Model is empty");
         String endpoint = AppSettings.normalizeEndpoint(s.baseUrl);
         if (endpoint == null || endpoint.trim().isEmpty()) throw new IllegalArgumentException("Base URL is empty");
         if (endpoint.contains("/api/generate")) throw new IllegalArgumentException("Ollama /api/generate is not implemented in this Android TXT MVP. Use an OpenAI-compatible /v1/chat/completions endpoint.");
 
+        long startedNanos = System.nanoTime();
+        boolean boundedDeadline = deadlineNanos > 0;
+        long timeoutMillis;
+        if (boundedDeadline) {
+            timeoutMillis = remainingMillis(deadlineNanos);
+            if (timeoutMillis <= 0) throw new SocketTimeoutException("P5D attempt deadline expired");
+        } else {
+            int timeout = Math.max(10, s.timeoutSeconds);
+            timeoutMillis = TimeUnit.SECONDS.toMillis(timeout);
+        }
         JSONObject body = buildChatRequestBody(s, prompt, maxOutputTokens);
 
-        int timeout = Math.max(10, s.timeoutSeconds);
         OkHttpClient client = BASE_CLIENT.newBuilder()
-                .connectTimeout(timeout, TimeUnit.SECONDS)
-                .readTimeout(timeout, TimeUnit.SECONDS)
-                .writeTimeout(timeout, TimeUnit.SECONDS)
-                .callTimeout(timeout + 30L, TimeUnit.SECONDS)
+                .connectTimeout(timeoutMillis, TimeUnit.MILLISECONDS)
+                .readTimeout(timeoutMillis, TimeUnit.MILLISECONDS)
+                .writeTimeout(timeoutMillis, TimeUnit.MILLISECONDS)
+                .callTimeout(boundedDeadline ? timeoutMillis : timeoutMillis + 30_000L,
+                        TimeUnit.MILLISECONDS)
                 .eventListener(new EventListener(){
-                    @Override public void requestBodyStart(Call call){if(observer!=null)observer.onRequestBodyStarted();}
-                    @Override public void requestBodyEnd(Call call,long byteCount){if(observer!=null)observer.onRequestBodySent(byteCount);}
+                    @Override public void requestBodyStart(Call call){
+                        if(observer!=null)observer.onRequestBodyStarted(elapsedMillis(startedNanos));
+                    }
+                    @Override public void requestBodyEnd(Call call,long byteCount){
+                        if(observer!=null)observer.onRequestBodySent(byteCount,
+                                elapsedMillis(startedNanos));
+                    }
                     @Override public void responseHeadersEnd(Call call,Response response){
                         if(observer!=null)observer.onResponseHeaders(response.code(),
                                 safeHeader(response.header("X-Generation-Id")),
-                                safeContentType(response.header("Content-Type")));
+                                safeContentType(response.header("Content-Type")),
+                                elapsedMillis(startedNanos));
                     }
                 })
                 .build();
@@ -143,18 +237,24 @@ public class OpenAICompatibleClient {
         if (requestId != null && !requestId.trim().isEmpty()) rb.addHeader("X-TBL-Request-ID", requestId.trim());
 
         Call call = client.newCall(rb.build());
-        AtomicReference<String> cancellationSource = new AtomicReference<>("");
+        AtomicReference<String> cancellationSource = callControl == null
+                ? new AtomicReference<>("") : callControl.cancellationSource();
         ActiveCall active = registerForLegacyGlobalCancellation
                 ? new ActiveCall(call, cancellationSource) : null;
         if (active != null) ACTIVE_CALL.set(active);
-        if (observer != null) observer.onCallCreated();
-        long startedNanos = System.nanoTime();
+        if (callControl != null) callControl.bind(call);
+        if (observer != null) observer.onCallCreated(elapsedMillis(startedNanos));
         try (Response response = call.execute()) {
             ResponseBody responseBody = response.body();
-            String responseText = responseBody == null ? "" : responseBody.string();
-            long bodyBytes = responseText.getBytes(StandardCharsets.UTF_8).length;
-            long bodyElapsed = Math.max(0L, (System.nanoTime() - startedNanos) / 1_000_000L);
+            ReadBody readBody = readResponseBody(responseBody, observer, startedNanos,
+                    deadlineNanos);
+            String responseText = readBody.text();
+            long bodyBytes = readBody.byteCount();
+            long bodyElapsed = elapsedMillis(startedNanos);
             if (observer != null) observer.onResponseBodyComplete(bodyBytes, "", bodyElapsed);
+            if (boundedDeadline && System.nanoTime() > deadlineNanos) {
+                throw new SocketTimeoutException("P5D attempt deadline expired before validation");
+            }
             int code = response.code();
             if (!response.isSuccessful()) throw new ApiHttpException(code, parseRetryAfterMs(response.header("Retry-After")), ApiErrorParser.fromHttp(code, responseText));
 
@@ -173,8 +273,8 @@ public class OpenAICompatibleClient {
             return r;
         } catch (Exception error) {
             if (observer != null) {
-                long elapsed = Math.max(0L, (System.nanoTime() - startedNanos) / 1_000_000L);
-                if (call.isCanceled() || error instanceof CancellationException) {
+                long elapsed = elapsedMillis(startedNanos);
+                if (!cancellationSource.get().isBlank() || error instanceof CancellationException) {
                     observer.onCallCancelled(elapsed, cancellationSource.get());
                 } else {
                     observer.onCallFailed(safeExceptionClass(error), elapsed);
@@ -183,8 +283,59 @@ public class OpenAICompatibleClient {
             throw error;
         } finally {
             if (active != null) ACTIVE_CALL.compareAndSet(active, null);
+            if (callControl != null) callControl.clear(call);
         }
     }
+
+    private record ReadBody(String text, long byteCount) { }
+
+    private static ReadBody readResponseBody(ResponseBody responseBody, NetworkObserver observer,
+                                             long startedNanos, long deadlineNanos)
+            throws IOException {
+        if (responseBody == null) return new ReadBody("", 0L);
+        long declaredLength = responseBody.contentLength();
+        if (declaredLength > MAX_RESPONSE_BODY_BYTES) {
+            throw new ResponseBodyTooLargeException();
+        }
+        ByteArrayOutputStream output = new ByteArrayOutputStream(
+                (int) Math.min(Math.max(0L, declaredLength), 64L * 1024L));
+        long count = 0L;
+        long reportedBytes = 0L;
+        long lastReportNanos = startedNanos;
+        byte[] buffer = new byte[8 * 1024];
+        try (InputStream input = responseBody.byteStream()) {
+            int read;
+            while ((read = input.read(buffer)) != -1) {
+                if (read == 0) continue;
+                if (count > MAX_RESPONSE_BODY_BYTES - read) {
+                    throw new ResponseBodyTooLargeException();
+                }
+                output.write(buffer, 0, read);
+                count += read;
+                long now = System.nanoTime();
+                if (observer != null && (reportedBytes == 0L
+                        || count - reportedBytes >= BODY_PROGRESS_BYTES
+                        || now - lastReportNanos >= BODY_PROGRESS_INTERVAL_NANOS)) {
+                    observer.onResponseBodyProgress(count, elapsedMillis(startedNanos));
+                    reportedBytes = count;
+                    lastReportNanos = now;
+                }
+                if (deadlineNanos > 0 && now > deadlineNanos) {
+                    throw new SocketTimeoutException("P5D attempt deadline expired while reading body");
+                }
+            }
+        }
+        if (deadlineNanos > 0 && System.nanoTime() > deadlineNanos) {
+            throw new SocketTimeoutException("P5D attempt deadline expired after body read");
+        }
+        return new ReadBody(new String(output.toByteArray(), StandardCharsets.UTF_8), count);
+    }
+
+    private static long elapsedMillis(long startedNanos) {
+        return Math.max(0L, (System.nanoTime() - startedNanos) / 1_000_000L);
+    }
+
+    static final class ResponseBodyTooLargeException extends IOException { }
 
     /**
      * Builds the OpenAI-compatible envelope without silently changing the
@@ -307,6 +458,7 @@ public class OpenAICompatibleClient {
 
     private static String safeExceptionClass(Throwable error) {
         if (error == null) return "RuntimeException";
+        if (error instanceof ResponseBodyTooLargeException) return "ResponseBodyTooLargeException";
         if (error instanceof UnknownHostException) return "UnknownHostException";
         if (error instanceof ConnectException) return "ConnectException";
         if (error instanceof java.io.IOException && error instanceof javax.net.ssl.SSLException) {

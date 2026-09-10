@@ -45,6 +45,9 @@ public final class EditorialP5PilotExecution {
         Optional<EditorialP5PilotResult.CommittedResult> findCommitted(String attemptIdentity);
 
         void markRecoveryRequired(String attemptIdentity, String reasonCode);
+
+        /** Reclassifies expired claims after a process restart; never dispatches. */
+        default void recoverStaleClaims(long nowMillis) { }
     }
 
     private final Clock clock;
@@ -192,6 +195,25 @@ public final class EditorialP5PilotExecution {
                     "P5_PROVIDER_OR_STORE_NOT_CONFIGURED", request.phase(), "EXECUTION_GATE",
                     List.of(), request.chapterKey(), "Configure a scoped fake/provider and atomic store",
                     request.phase(), false, metrics);
+        }
+
+        // Recheck wall-clock authorization immediately before claiming an
+        // attempt. Runtime transport uses the provider's monotonic deadline;
+        // this check protects the persisted authorization boundary.
+        if (authorization.expiredAt(clock.nowMillis())) {
+            return stopped(requestIdentity, EditorialP5PilotResult.StopClass.AUTHORIZATION_EXPIRED,
+                    "P5_AUTHORIZATION_EXPIRED", request.phase(), "PILOT_AUTHORIZATION",
+                    List.of(), request.chapterKey(), "Issue a new bounded authorization",
+                    request.phase(), false, metrics);
+        }
+        try {
+            store.recoverStaleClaims(clock.nowMillis());
+            provider.beginAttempt(authorization.maximumExecutionTimeMillis());
+        } catch (RuntimeException error) {
+            return stopped(requestIdentity, EditorialP5PilotResult.StopClass.RETRY_REQUIRED,
+                    "RETRY_ATTEMPT_DEADLINE_SETUP_FAILED", request.phase(), "ATOMIC_ATTEMPT",
+                    List.of(), request.chapterKey(), "Recover the attempt boundary before retrying",
+                    request.phase(), true, metrics);
         }
 
         String requestEnvelopeHash = requestEnvelopeHash(request, projection, authorization);

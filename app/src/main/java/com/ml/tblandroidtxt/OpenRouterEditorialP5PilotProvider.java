@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 
@@ -41,7 +43,10 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
     private final AppSettings settings;
     private final int maximumOutputTokens;
     private final NetworkLifecycleRecorder lifecycleRecorder;
-    private final Map<String, EditorialP5L1Output> parsedOutputs = new HashMap<>();
+    private final Map<String, EditorialP5L1Output> parsedOutputs = new ConcurrentHashMap<>();
+    private final OpenAICompatibleClient.CallControl rawCallControl =
+            new OpenAICompatibleClient.CallControl();
+    private final AtomicLong attemptDeadlineNanos = new AtomicLong(0L);
 
     public OpenRouterEditorialP5PilotProvider(AppSettings settings, int maximumOutputTokens) {
         this(settings, maximumOutputTokens, null);
@@ -81,7 +86,16 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
                 && settings.baseUrl != null && !settings.baseUrl.trim().isEmpty();
     }
 
-    @Override public synchronized Response call(Request request) throws Exception {
+    @Override public void beginAttempt(long maximumExecutionTimeMillis) {
+        attemptDeadlineNanos.set(OpenAICompatibleClient.monotonicDeadlineNanosFromNowMillis(
+                maximumExecutionTimeMillis));
+        rawCallControl.reset();
+    }
+
+    /** Test/owner hook for an explicit pilot cancellation, not the legacy global cancel. */
+    void cancelRawCall() { rawCallControl.cancel("PILOT_REQUESTED_CANCEL"); }
+
+    @Override public Response call(Request request) throws Exception {
         if (request == null || request.context() == null) {
             return invalidResponse("REQUEST_CONTEXT_MISSING", new byte[0]);
         }
@@ -92,8 +106,9 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
                 request.attemptIdentity(), lifecycleRecorder);
         OpenAICompatibleClient.ChatResult result;
         try {
+            long deadlineNanos = attemptDeadlineNanos.get();
             result = OpenAICompatibleClient.chatWithUsage(settings, prompt, maximumOutputTokens,
-                    request.attemptIdentity(), lifecycle, false);
+                    request.attemptIdentity(), lifecycle, false, deadlineNanos, rawCallControl);
         } catch (Exception error) {
             throw new ProviderFailure(failureReason(error, lifecycle), error);
         }
@@ -127,6 +142,9 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
             return "RETRY_PROVIDER_CANCELLED";
         }
         if (root instanceof ApiHttpException) return "RETRY_PROVIDER_HTTP_ERROR";
+        if (root instanceof OpenAICompatibleClient.ResponseBodyTooLargeException) {
+            return "RETRY_PROVIDER_RESPONSE_TOO_LARGE";
+        }
         if (root instanceof UnknownHostException) return "RETRY_PROVIDER_DNS_FAILED";
         if (root instanceof SSLHandshakeException) return "RETRY_PROVIDER_TLS_FAILED";
         if (root instanceof SSLException) return "RETRY_PROVIDER_TLS_FAILED";
@@ -161,6 +179,7 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         private String generationId = "";
         private String providerResponseId = "";
         private String cancellationSource = "";
+        private long responseBodyBytes;
 
         private OpenRouterLifecycleObserver(String attemptIdentity,
                                              NetworkLifecycleRecorder recorder) {
@@ -172,9 +191,18 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
             emit(EditorialP5CAttemptStore.LifecycleStage.CALL_CREATED, "", 0L);
         }
 
+        @Override public void onCallCreated(long elapsedMillis) {
+            emit(EditorialP5CAttemptStore.LifecycleStage.CALL_CREATED, "", elapsedMillis);
+        }
+
         @Override public void onRequestBodyStarted() {
             bodyStarted = true;
             emit(EditorialP5CAttemptStore.LifecycleStage.REQUEST_BODY_STARTED, "", 0L);
+        }
+
+        @Override public void onRequestBodyStarted(long elapsedMillis) {
+            bodyStarted = true;
+            emit(EditorialP5CAttemptStore.LifecycleStage.REQUEST_BODY_STARTED, "", elapsedMillis);
         }
 
         @Override public void onRequestBodySent(long byteCount) {
@@ -183,30 +211,45 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
             emit(EditorialP5CAttemptStore.LifecycleStage.REQUEST_BODY_SENT, "", 0L);
         }
 
+        @Override public void onRequestBodySent(long byteCount, long elapsedMillis) {
+            bodySent = true;
+            requestBodyBytes = Math.max(0L, byteCount);
+            emit(EditorialP5CAttemptStore.LifecycleStage.REQUEST_BODY_SENT, "", elapsedMillis);
+        }
+
         @Override public void onResponseHeaders(int code, String generationId) {
             onResponseHeaders(code, generationId, "");
         }
 
         @Override public void onResponseHeaders(int code, String generationId,
                                                 String contentType) {
+            onResponseHeaders(code, generationId, contentType, 0L);
+        }
+
+        @Override public void onResponseHeaders(int code, String generationId,
+                                                String contentType, long elapsedMillis) {
             headersReceived = true;
             httpStatus = code;
             this.generationId = generationId == null ? "" : generationId;
             this.responseContentType = contentType == null ? "" : contentType;
-            emit(EditorialP5CAttemptStore.LifecycleStage.RESPONSE_HEADERS_RECEIVED, "", 0L);
+            emit(EditorialP5CAttemptStore.LifecycleStage.RESPONSE_HEADERS_RECEIVED, "",
+                    elapsedMillis);
+        }
+
+        @Override public void onResponseBodyProgress(long byteCount, long elapsedMillis) {
+            responseBodyBytes = Math.max(responseBodyBytes, Math.max(0L, byteCount));
+            emit(EditorialP5CAttemptStore.LifecycleStage.RESPONSE_BODY_PROGRESS, "",
+                    elapsedMillis);
         }
 
         @Override public void onResponseBodyComplete(long byteCount, String providerResponseId) {
-            bodyComplete = true;
-            if (providerResponseId != null && !providerResponseId.isBlank()) {
-                this.providerResponseId = providerResponseId;
-            }
-            emit(EditorialP5CAttemptStore.LifecycleStage.RESPONSE_BODY_COMPLETE, "", 0L);
+            onResponseBodyComplete(byteCount, providerResponseId, 0L);
         }
 
         @Override public void onResponseBodyComplete(long byteCount, String providerResponseId,
                                                       long elapsedMillis) {
             bodyComplete = true;
+            responseBodyBytes = Math.max(responseBodyBytes, Math.max(0L, byteCount));
             if (providerResponseId != null && !providerResponseId.isBlank()) {
                 this.providerResponseId = providerResponseId;
             }
@@ -232,8 +275,9 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
             lastStage = stage;
             if (recorder != null) recorder.record(attemptIdentity,
                     new EditorialP5CAttemptStore.NetworkLifecycleEvent(stage,
-                            requestBodyBytes, httpStatus, responseContentType, exceptionClass,
-                            elapsedMillis, generationId, providerResponseId, cancellationSource));
+                            requestBodyBytes, responseBodyBytes, httpStatus, responseContentType,
+                            exceptionClass, elapsedMillis, generationId, providerResponseId,
+                            cancellationSource));
         }
     }
 

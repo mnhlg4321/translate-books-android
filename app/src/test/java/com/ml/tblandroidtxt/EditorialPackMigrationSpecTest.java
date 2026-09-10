@@ -174,6 +174,19 @@ public class EditorialPackMigrationSpecTest {
         assertFalse(sql.contains("api_key"));
     }
 
+    @Test public void v24AddsOnlyRedactedResponseBodyProgressBytes() {
+        String sql = String.join("\n", EditorialMigrationSpec.from23To24()).toLowerCase();
+        assertEquals(1, sql.split("alter table editorial_p5d_network_lifecycle", -1).length - 1);
+        assertTrue(sql.contains("add column response_body_bytes"));
+        assertTrue(sql.contains("not null default 0"));
+        assertTrue(sql.contains("check(response_body_bytes>=0)"));
+        assertFalse(sql.contains("response_content"));
+        assertFalse(sql.contains("request_body blob"));
+        assertFalse(sql.contains("api_key"));
+        assertFalse(sql.contains("drop table"));
+        assertFalse(sql.contains("delete from"));
+    }
+
     private static int countIndexes(String sql) {
         return sql.split("create index if not exists", -1).length - 1
                 + sql.split("create unique index if not exists", -1).length - 1;
