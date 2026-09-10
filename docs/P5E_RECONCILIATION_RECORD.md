@@ -9,19 +9,20 @@ I/O logging và không lưu prompt, response body, source text hoặc secret.
 | Hạng mục | Giá trị |
 |---|---|
 | Branch | `feature/v4.18` |
-| HEAD khi chốt baseline/documentation | `a4b4a8f9d215578d5bfae329b1b4608927d0476c` |
+| HEAD khi chốt implementation/artifact baseline | `4140651d860e4ee11ce7e074970761666c575594` |
 | Production source commit trong APK code199 | `03b97a30885393c1cc8a3297d5dff9672dcba57e` |
-| Production source commit trong latest APK code201 | `a4b4a8f9d215578d5bfae329b1b4608927d0476c` |
+| Production source commit trong pre-patch APK code201 | `a4b4a8f9d215578d5bfae329b1b4608927d0476c` |
+| Production source commit trong candidate APK code202 | `4140651d860e4ee11ce7e074970761666c575594` |
 | Test-source commit của clean test APK | `914820d3c91ae8df5cc6b2769df7b2d036585f7a` |
-| Latest archived validation artifact | `v4.17-p5e.5 / versionCode 201`, `build-20260911-001819` |
-| Latest artifact production APK SHA-256 | `9822F015ED3BA3CCD2B158E775175DF8D517B3A31FAB134EB43060C951F4920C` |
-| Latest artifact source ZIP SHA-256 | `679DD72A7607A6EE3CEB26198FD32D53E6FAC28553918F369E6A23482E6358EB` |
+| Candidate archived validation artifact | `v4.17-p5e.6 / versionCode 202`, `build-20260911-034554` |
+| Candidate production APK SHA-256 | `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0` |
+| Candidate source ZIP SHA-256 | `D91FE78F99DE6D04CE0DA09C54A76BF030BA40408CF74142B8FC8FF243471A5C` |
 | Current installed validation package | `v4.17-p5e.3 / versionCode 199` |
 | Last-known original pilot predecessor | `code196 / schema v24`; historical and unavailable, not current data |
 | Installed production APK SHA-256 | `870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09` |
 | Test APK SHA-256 | `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456` |
 | Package / test package | `com.ml.tblandroidtxt` / `com.ml.tblandroidtxt.test` |
-| APK certificate SHA-256 | `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
+| Candidate/installed APK certificate SHA-256 | `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
 | Device package signature token | `abebea4b` (`dumpsys package`, short token) |
 | Current database schema | `v24` |
 | Current data state | `RECONSTRUCTED_ONLY`; original code196 rows unavailable |
@@ -99,13 +100,16 @@ không provider và không chạm pilot DB, dùng evaluation ID lịch sử
 `2e5c80…82520` và run `7d804f…072f0`; đây chỉ là bằng chứng hàm dẫn xuất
 identity, không khôi phục attempt/reconciliation row đã mất.
 
-Artifact code201 (`v4.17-p5e.5`) được build bằng `scripts/build-and-save.ps1`,
-được lưu đối xứng ở `artifacts/builds/v4.17-p5e.5/build-20260911-001819` và
-`backup/builds/v4.17-p5e.5/build-20260911-001819`, có APK SHA-256
-`9822F015ED3BA3CCD2B158E775175DF8D517B3A31FAB134EB43060C951F4920C`, source
-ZIP SHA-256 `679DD72A7607A6EE3CEB26198FD32D53E6FAC28553918F369E6A23482E6358EB`
-và production source commit `a4b4a8f9d215578d5bfae329b1b4608927d0476c`.
-Artifact này không được cài lên device. Clean test APK hash
+Code201 (`v4.17-p5e.5`) là artifact pre-patch, không được dùng làm candidate
+sau khi bổ sung hash/certificate pin. Candidate code202 (`v4.17-p5e.6`) được
+build bằng `scripts/build-and-save.ps1`, lưu đối xứng ở
+`artifacts/builds/v4.17-p5e.6/build-20260911-034554` và
+`backup/builds/v4.17-p5e.6/build-20260911-034554`, có APK SHA-256
+`8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0`, source
+ZIP SHA-256 `D91FE78F99DE6D04CE0DA09C54A76BF030BA40408CF74142B8FC8FF243471A5C`
+và production source commit `4140651d860e4ee11ce7e074970761666c575594`.
+Candidate này không được cài lên device; check-only chỉ chứng minh preflight
+metadata và không phải device verification. Clean test APK hash
 `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456` thuộc
 test-source commit `914820d3c91ae8df5cc6b2769df7b2d036585f7a`, package
 `com.ml.tblandroidtxt.test`, cùng debug certificate; versionCode test APK là
@@ -146,9 +150,11 @@ VOL5 DB/fixture/attempt. Repo cũ không có uninstall/clear/fallback trong
 có thể tự cài APK stale; đây là guard gap đã biết.
 
 P5E bổ sung `scripts/install-validated.ps1` và chặn task
-`connected*AndroidTest` ở `app/build.gradle`. Check-only trên device hiện tại
-đã pass với package/version/signature đúng; APK code196 bị chặn downgrade và
-signature token sai bị chặn. Không cài lại device trong vòng này. Chi tiết và
+`connected*AndroidTest` ở `app/build.gradle`. Candidate code202 check-only trên
+device hiện tại đã pass với package/version/APK SHA-256/certificate/signature
+token đúng; wrong hash, wrong certificate và thiếu certificate pin ở build script
+bị chặn fail-closed. Các check code199 và code196 downgrade trước đó chỉ là
+negative evidence historical. Không cài lại device trong vòng này. Chi tiết và
 quy trình tách assemble/install/instrumentation ở
 `docs/P5E_INSTALL_AND_DATA_PRESERVATION_RUNBOOK.md`.
 
@@ -169,6 +175,50 @@ attempt identity mới, source hash exact nếu bytes không đổi, authorizati
 và backup SQLite nhất quán có WAL-aware manifest/hash/restore test. P5E này
 không khởi tạo fresh pilot, không cấp receipt và không làm cho authorization cũ
 khả dụng.
+
+## Fresh pilot rebaseline và readiness — proposal only
+
+Candidate code202 đã được kiểm tra local sau patch pin artifact, nhưng chưa được
+gọi là `device-verified`: APK chưa cài và chưa có fresh-pilot approval.
+
+| Baseline | Identity/evidence |
+|---|---|
+| Candidate | `v4.17-p5e.6 / code202`, source commit `4140651d860e4ee11ce7e074970761666c575594`, APK SHA-256 `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
+| Installed | `v4.17-p5e.3 / code199`, APK SHA-256 `870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09`, clean test APK SHA-256 `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456`, test-source commit `914820d3c91ae8df5cc6b2769df7b2d036585f7a`, schema `v24`, data `RECONSTRUCTED_ONLY` |
+| Historical | code196/schema v24 original pilot data lost; code189/code191 and consumed authorizations remain historical |
+
+### Block xin owner approval — chưa được phê duyệt
+
+```text
+FRESH_PILOT_OWNER_APPROVAL_REQUEST
+HISTORICAL_CODE196_PRESERVATION_FAILED_ACCEPTED
+ALLOW_NEW_PILOT_WITHOUT_HISTORICAL_RECOVERY
+TARGET_DEVICE=15e84958
+TARGET_PACKAGE=com.ml.tblandroidtxt
+CANDIDATE_APK=artifacts/builds/v4.17-p5e.6/build-20260911-034554/TranslateBooks-v4.17-p5e.6-code202.apk
+CANDIDATE_APK_SHA256=8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0
+CANDIDATE_CERTIFICATE_SHA256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+ALLOW_UPGRADE_THROUGH_GUARD_ONLY_AFTER_BACKUP_RESTORE_PASS
+KEEP_CURRENT_RECONSTRUCTED_DATA_WITHOUT_DELETE_OR_OVERWRITE
+NO_PROVIDER_NO_REPAIR_NO_RETRY_NO_RECONCILE
+```
+
+Sau approval mới được phép tạo reconstructed SQLite snapshot WAL-aware, restore
+thử cô lập, đối chiếu schema/source hashes/invariants, rồi dùng guard để upgrade
+candidate và readback dữ liệu trước đó. Chỉ sau readback mới tạo evaluation/run/
+binding mới; không copy attempt/receipt/authorization cũ. Vòng hiện tại chưa
+thực hiện bất kỳ bước nào trong chuỗi này.
+
+Các nhãn sau chỉ là nhãn đề xuất sau khi đủ gate, không phải trạng thái hiện tại:
+
+```text
+FRESH_PILOT_LOCAL_VERIFIED
+RAW_AUTHORIZATION_REQUIRED
+NO_LIVE_CALL_PERFORMED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
+```
 
 ## Authorization ledger — historical, consumed, never reuse
 
@@ -193,6 +243,7 @@ là historical evidence và không được dùng lại dù code191 đã đượ
 | Exact RAW materialization | `EditorialP5RawWireResponse.materialize` | No-source compact test, BOM byte round-trip, empty changes | App-owned before=after exact bytes; edits rejected |
 | Population không bị silent drop | `EditorialP5PilotExecution` | `rawPopulationBeyondCompactWireLimitStopsBeforeProviderCall` | >4 dừng trước provider; không tự partition/retry |
 | Binding/replay/PASS | Existing engine/parser validators | attempt/envelope/replay, wrong binding/phase, model PASS tests | Local pass; no model-owned identity/authority |
+| Candidate artifact pin | `scripts/install-validated.ps1`, `scripts/build-and-save.ps1` | code201 red parameter test; code202 check-only match; wrong hash/certificate rejection; missing build certificate pin rejection | Exact APK SHA-256 and certificate are fail-closed before install |
 
 Scope RAW discovery được giữ hẹp: một request chỉ xử lý population tối đa bốn
 item theo wire contract. Không dùng cap nhỏ để âm thầm bỏ item; population lớn

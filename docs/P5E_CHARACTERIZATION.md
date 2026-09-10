@@ -7,7 +7,8 @@ Phạm vi: source VOL5 đã pin trong app-owned validation data; không gửi pr
 
 | Hạng mục | Giá trị |
 |---|---|
-| Current validation build | `v4.17-p5e.3 / versionCode 199` |
+| Installed validation build | `v4.17-p5e.3 / versionCode 199` |
+| Candidate validation build | `v4.17-p5e.6 / versionCode 202`, source commit `4140651d860e4ee11ce7e074970761666c575594`, not installed |
 | Current database schema | `v24` |
 | Last-known original pilot predecessor | `code196 / schema v24`; historical and unavailable |
 | Canonical/final schemas | Giữ nguyên; final report `safe4.full.report-l1.v1`, receipt `safe4.full.receipt.v1` |

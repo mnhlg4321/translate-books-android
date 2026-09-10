@@ -49,10 +49,10 @@ Kiểm tra không cài đặt:
 ```powershell
 $env:ANDROID_HOME = 'C:\Users\ADMIN\AppData\Local\Android\Sdk'
 .\scripts\install-validated.ps1 `
-  -ApkPath '.\artifacts\builds\v4.17-p5e.3\build-20260910-211805\TranslateBooks-v4.17-p5e.3-code199.apk' `
+  -ApkPath '.\artifacts\builds\v4.17-p5e.6\build-20260911-034554\TranslateBooks-v4.17-p5e.6-code202.apk' `
   -Serial '15e84958' `
-  -ExpectedVersionCode 199 `
-  -ExpectedApkSha256 '870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09' `
+  -ExpectedVersionCode 202 `
+  -ExpectedApkSha256 '8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0' `
   -ExpectedApkCertificateSha256 '47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155' `
   -ExpectedDeviceSignatureToken 'abebea4b' `
   -CheckOnly
@@ -65,6 +65,11 @@ certificate digest pin explicit và chuyển hash của APK đã archive vào gu
 Gradle cũng fail-closed với mọi task
 `connected*AndroidTest`; assemble, install và instrumentation phải là ba bước
 tách biệt.
+
+Lệnh candidate code202 ở trên là `-CheckOnly`; nó đã pass preflight metadata
+nhưng không chứng minh candidate đã được cài hoặc device-verified. Sau khi owner
+phê duyệt, chỉ được bỏ `-CheckOnly` sau khi backup/restore reconstructed DB đạt;
+không được chạy lệnh này như fallback cho package thiếu hoặc version mismatch.
 
 Device-side `dumpsys` chỉ cung cấp short signature token (`abebea4b`), còn APK
 được kiểm tra bằng certificate SHA-256 đầy đủ. Khi package đã tồn tại,
