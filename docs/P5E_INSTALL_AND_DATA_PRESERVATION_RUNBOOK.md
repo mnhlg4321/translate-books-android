@@ -1,9 +1,9 @@
 # P5E — Cài đặt có kiểm soát và bảo toàn pilot data
 
 Tài liệu này chỉ áp dụng cho validation/pilot có package
-`com.ml.tblandroidtxt`. Nó không cấp quyền provider, không khởi tạo fresh pilot
-và không thay thế authorization/preflight. Không chạy `uninstall`, `pm clear`,
-reset, downgrade hoặc `--downgrade` trên device đang giữ dữ liệu pilot.
+`com.ml.tblandroidtxt`. Nó không cấp quyền provider và không thay thế
+authorization/preflight. Không chạy `uninstall`, `pm clear`, reset, downgrade
+hoặc `--downgrade` trên device đang giữ dữ liệu pilot.
 
 ## Incident đã biết
 
@@ -22,10 +22,10 @@ INSTALL_FAILED_VERSION_DOWNGRADE: Downgrade detected: Update version code 48 is 
 ```
 
 Log không chứa lệnh `uninstall`, `pm clear` hoặc reset; PowerShell history cũng
-không còn lệnh phù hợp. Vì vậy kết luận chắc chắn là connected installer đã
-đi vào đường cài lower-version và sau đó package/data biến mất trước lần
-validation kế tiếp; actor cleanup chính xác không được suy diễn từ evidence
-hiện có. `daemon-39532.out.log` chỉ chứng minh hậu quả quan sát được: các test
+không còn lệnh phù hợp. Kết luận chắc chắn chỉ là connected installer đã đi vào
+đường cài lower-version và sau đó package/data biến mất trước lần validation kế
+tiếp; actor cleanup chính xác không được suy diễn từ evidence hiện có.
+`daemon-39532.out.log` chỉ chứng minh hậu quả quan sát được: các test sau đó
 không còn đọc được VOL5 DB/fixture và attempt. Không dùng log này để tuyên bố
 khôi phục lịch sử.
 
@@ -66,10 +66,11 @@ Gradle cũng fail-closed với mọi task
 `connected*AndroidTest`; assemble, install và instrumentation phải là ba bước
 tách biệt.
 
-Lệnh candidate code202 ở trên là `-CheckOnly`; nó đã pass preflight metadata
-nhưng không chứng minh candidate đã được cài hoặc device-verified. Sau khi owner
-phê duyệt, chỉ được bỏ `-CheckOnly` sau khi backup/restore reconstructed DB đạt;
-không được chạy lệnh này như fallback cho package thiếu hoặc version mismatch.
+Lệnh candidate code202 ở trên đã pass check-only. Sau owner approval và G1
+`BACKUP_RESTORE_G1_PASS`, cùng lệnh với `-CheckOnly` bỏ đi đã được chạy đúng một
+lần; `adb install -r` trả `Success`, rồi post-install package/signature đọc lại
+code202 đạt. Không được chạy lệnh này như fallback cho package thiếu hoặc
+version mismatch.
 
 Device-side `dumpsys` chỉ cung cấp short signature token (`abebea4b`), còn APK
 được kiểm tra bằng certificate SHA-256 đầy đủ. Khi package đã tồn tại,
@@ -78,11 +79,12 @@ không ép bypass nếu signer không tương thích.
 
 ## Backup/restore policy
 
-Chỉ tìm backup ở các root đã biết: `artifacts`, `backup` của repository hiện tại
-và các evidence path đã ghi trong P5E. Lần kiểm tra hiện tại không tìm thấy
-`.db`, `.sqlite`, `.sqlite3` hoặc file recovery nào; `D:\Ebooks\New folder\metadata.db`
-là metadata không liên quan. Không có backup đáng tin cậy nên không có restore
-test và gate lịch sử vẫn là:
+Chỉ tìm backup của code196 ở các root đã biết: `artifacts`, `backup` của
+repository hiện tại và các evidence path đã ghi trong P5E. Không có trusted
+code196 DB; `D:\Ebooks\New folder\metadata.db` là metadata không liên quan.
+Sau owner approval, snapshot WAL-aware của DB reconstructed hiện hành đã được
+tạo ngoài Git và restore thử trong môi trường cô lập đạt. Snapshot này bảo vệ
+thao tác upgrade hiện tại, không phục hồi lịch sử code196. Gate lịch sử vẫn là:
 
 ```text
 PILOT_DATA_PRESERVATION_FAILED
@@ -101,5 +103,31 @@ Fresh pilot là một lineage mới, không phải recovery: tạo evaluation/ru
 attempt identity mới, authorization single-use mới và giữ source hash nếu exact
 bytes không đổi. Không sửa nhãn, không tạo receipt cho attempt cũ, không biến
 authorization đã consumed thành khả dụng và không trộn các row reconstructed
-với lịch sử code196. Vòng công việc hiện tại chỉ đề xuất đường này; chưa
-khởi tạo fresh pilot.
+với lịch sử code196. Owner đã phê duyệt local-only; G1 backup/restore và G2
+candidate upgrade/data readback đã đạt. Fresh evaluation/run/binding chưa được
+khởi tạo trong record này.
+
+## Evidence G1/G2 sau owner approval
+
+Owner approval được ghi nhận lúc `2026-09-11T06:00:59+07:00`. Snapshot private
+ngoài Git tại `D:\P5E-private\fresh-pilot-20260911-060059` có manifest SHA-256
+`1C495F95B0572458B8405B599A7D11CC80F6770316080A1772EF379A17AC7C64`, phân loại
+`RECONSTRUCTED_ONLY`. Snapshot SQLite và restore copy có schema v24,
+`integrity_check=ok`, không có foreign-key violation, và source/pack hashes
+trùng nhau; đây là `BACKUP_RESTORE_G1_PASS`, không phải recovery code196.
+
+Candidate code202 được cài đúng một lần bằng `scripts/install-validated.ps1`
+sau G1, với package/version/APK SHA-256/certificate/device token đúng. Readback
+package code202, DB hash `6D5B73B7C8B19A32E196C772C4BE72DB5F815FD14DF66CEA1F3B9808C62379A5`,
+schema/source/pack hashes và các invariant SQLite giữ nguyên; đây là
+`CANDIDATE_UPGRADE_G2_PASS`. Không có uninstall, clear, reset, downgrade,
+fallback, connected test, provider call hay authorization mới.
+
+G1/G2 chỉ bảo vệ và kiểm chứng dữ liệu reconstructed hiện hành. Claim lịch sử
+vẫn giữ nguyên:
+
+```text
+HISTORICAL_CODE196_PRESERVATION_FAILED
+PILOT_DATA_PRESERVATION_FAILED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+```

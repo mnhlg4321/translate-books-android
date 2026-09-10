@@ -7,8 +7,9 @@ Phạm vi: source VOL5 đã pin trong app-owned validation data; không gửi pr
 
 | Hạng mục | Giá trị |
 |---|---|
-| Installed validation build | `v4.17-p5e.3 / versionCode 199` |
-| Candidate validation build | `v4.17-p5e.6 / versionCode 202`, source commit `4140651d860e4ee11ce7e074970761666c575594`, not installed |
+| Pre-upgrade validation build | `v4.17-p5e.3 / versionCode 199`, reconstructed data |
+| Current installed validation build | `v4.17-p5e.6 / versionCode 202`, source commit `4140651d860e4ee11ce7e074970761666c575594`, guarded G2 readback passed |
+| Candidate APK SHA-256 | `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0` |
 | Current database schema | `v24` |
 | Last-known original pilot predecessor | `code196 / schema v24`; historical and unavailable |
 | Canonical/final schemas | Giữ nguyên; final report `safe4.full.report-l1.v1`, receipt `safe4.full.receipt.v1` |
@@ -16,7 +17,8 @@ Phạm vi: source VOL5 đã pin trong app-owned validation data; không gửi pr
 | Pinned RAW | `23,814` bytes, SHA-256 `A308210ECA80557CFA9FEC7ED55B2EE3DE5C1C4776E59B2B5EDBF0EFB04504BE` |
 
 Code189/code191/code196 là historical evidence. Build đang cài để kiểm tra
-local là code199/schema v24 với validation data `RECONSTRUCTED_ONLY`; không có
+local là candidate code202/schema v24 với validation data
+`RECONSTRUCTED_ONLY`; pre-upgrade code199 chỉ là baseline readback. Không có
 tokenizer chính thức hoặc provider call trong characterization này.
 
 ## Current full response shape trước P5E
