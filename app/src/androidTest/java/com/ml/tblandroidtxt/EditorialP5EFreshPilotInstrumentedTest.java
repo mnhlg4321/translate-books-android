@@ -11,6 +11,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.ml.tblandroidtxt.editorial.pack.BundledEditorialEngineContractProfileRegistry;
 import com.ml.tblandroidtxt.editorial.pack.EditorialCanonicalJson;
+import com.ml.tblandroidtxt.editorial.pack.EditorialCompatibilityEvaluationContext;
 import com.ml.tblandroidtxt.editorial.pack.EditorialEngineProfileResolver;
 import com.ml.tblandroidtxt.editorial.pack.EditorialLedgerValidator;
 import com.ml.tblandroidtxt.editorial.pack.EditorialLineageNodeKind;
@@ -354,6 +355,31 @@ public final class EditorialP5EFreshPilotInstrumentedTest {
                     BundledEditorialEngineContractProfileRegistry.load()))
                     .importZip(new ByteArrayInputStream(pack.zipBytes));
             assertEquals(EditorialPackImportState.STORED_READY_FOR_CERTIFICATION, imported.state());
+            // Pack compatibility evaluation is a pack-level immutable fact.
+            // Reuse the current trusted evaluation snapshot in the isolated DB
+            // so the fake fixture has the exact same binding identity as the
+            // approved fresh pilot; no current-pilot row is modified.
+            EditorialPackCompatibilityEvaluation currentEvaluation =
+                    new EditorialPackCompatibilityEvaluationDao(database)
+                            .findByEvaluationId(current.binding.compatibilityEvaluationId())
+                            .orElseThrow(() -> new AssertionError("current trusted evaluation missing"));
+            EditorialCompatibilityEvaluationContext evaluationContext =
+                    new EditorialCompatibilityEvaluationContext(
+                            currentEvaluation.canonicalPackHash(),
+                            currentEvaluation.trustedProfileId().orElseThrow(),
+                            currentEvaluation.trustedProfileVersion().orElseThrow(),
+                            currentEvaluation.canonicalProfileHash().orElseThrow(),
+                            currentEvaluation.engineVersionUsed(),
+                            currentEvaluation.machineContractFingerprint(),
+                            currentEvaluation.evaluatorContractVersion().orElseThrow(),
+                            currentEvaluation.adapterSetFingerprint().orElseThrow(),
+                            currentEvaluation.capabilityFingerprint().orElseThrow());
+            new EditorialPackCompatibilityEvaluationDao(isolatedDatabase).append(
+                    EditorialPackCompatibilityEvaluation.trusted(
+                            currentEvaluation.evaluationId(), imported.importId(), null, null,
+                            evaluationContext, currentEvaluation.compatibilityOutcome(),
+                            currentEvaluation.reasonCode(), currentEvaluation.blockerDetails(),
+                            Math.max(System.currentTimeMillis(), currentEvaluation.evaluatedAt() + 1)));
             EditorialP4BindingResult setup = new EditorialP4BindingTransactionService(
                     isolatedDatabase, isolatedStorage).createSetup(setupRequest(
                     pack.manifest.packId(), pack.manifest.version(), current.sources,
