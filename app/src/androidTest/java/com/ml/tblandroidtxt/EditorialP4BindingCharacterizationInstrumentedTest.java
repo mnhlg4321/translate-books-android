@@ -54,7 +54,7 @@ public final class EditorialP4BindingCharacterizationInstrumentedTest {
 
     @Test public void v18ScopeEntryStoreMustRetainP4SourceIdentityFacts() {
         SQLiteDatabase db = database.editorialReadableDatabase();
-        assertEquals(23, db.getVersion());
+        assertEquals(24, db.getVersion());
         assertEquals(1, scalarInt(db,
                 "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='editorial_p4_bindings'"));
         assertEquals(1, scalarInt(db,

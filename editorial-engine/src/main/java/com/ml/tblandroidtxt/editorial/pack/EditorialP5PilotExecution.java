@@ -614,7 +614,8 @@ public final class EditorialP5PilotExecution {
         return metrics.totalTokens > authorization.maximumTotalTokens()
                 || metrics.inputTokens > authorization.maximumInputTokens()
                 || metrics.outputTokens > authorization.maximumOutputTokens()
-                || metrics.actualReportedCost.compareTo(authorization.maximumTotalCost()) > 0
+                || metrics.estimatedCost.add(metrics.actualReportedCost)
+                        .compareTo(authorization.maximumTotalCost()) > 0
                 || Math.max(0L, clock.nowMillis() - metrics.startedAt)
                 > authorization.maximumExecutionTimeMillis();
     }
@@ -776,7 +777,11 @@ public final class EditorialP5PilotExecution {
             inputTokens = safeAdd(inputTokens, response.inputTokens());
             outputTokens = safeAdd(outputTokens, response.outputTokens());
             totalTokens = safeAdd(totalTokens, response.totalTokens());
-            actualReportedCost = actualReportedCost.add(response.reportedCost());
+            if (response.costReported()) {
+                actualReportedCost = actualReportedCost.add(response.reportedCost());
+            } else {
+                estimatedCost = estimatedCost.add(response.reportedCost());
+            }
             finishReason = response.finishReason();
             truncated = isTruncated(response);
         }

@@ -202,6 +202,50 @@ public final class EditorialP5PilotExecutionBoundaryTest {
         assertEquals(1, provider.calls);
     }
 
+    @Test public void outputIdentityMismatchCannotBeAcceptedOrRebound() {
+        Fixture fixture = fixture();
+        EditorialP5L1Output valid = output(fixture.request);
+        EditorialP5L1Output mismatched = new EditorialP5L1Output(valid.reportSchemaVersion(),
+                valid.receiptSchemaVersion(), "wrong-binding", valid.manifestFingerprint(),
+                valid.chapterKey(), valid.phase(), valid.bundleIdentity(),
+                valid.predecessorIdentity(), valid.stableAnchors(), valid.ledger(), valid.gates(),
+                valid.preservedInventory(), valid.declaredChanges(), valid.beforeText(),
+                valid.afterText(), valid.releaseAttemptCount(), valid.disposition(),
+                valid.evidenceRefs(), true);
+        FakeProvider provider = new FakeProvider(new EditorialP5PilotProvider.Response(
+                "response-identity-mismatch", bytes("identity-mismatch"), "stop", true,
+                30, 12, 42, BigDecimal.ZERO, mismatched, true));
+
+        EditorialP5PilotResult result = execute(fixture,
+                authorization(fixture.request, "auth-identity-mismatch"), provider, new Store());
+
+        assertEquals(EditorialP5PilotResult.Outcome.STOP, result.outcome());
+        assertEquals(EditorialP5PilotResult.StopClass.REPAIR_REQUIRED,
+                result.stopReceipt().stopClass());
+        assertEquals("REPAIR_OUTPUT_SCHEMA_INVALID", result.stopReceipt().reasonCode());
+        assertEquals(1, provider.calls);
+        assertNull(result.committedResult());
+    }
+
+    @Test public void estimatedCostIsNotReportedAsActualCost() {
+        Fixture fixture = fixture();
+        EditorialP5PilotProvider.Response response = new EditorialP5PilotProvider.Response(
+                "response-estimated-cost", bytes("response"), "stop", true,
+                80, 30, 110, BigDecimal.valueOf(0.25), output(fixture.request), true, false);
+        FakeProvider provider = new FakeProvider(response);
+
+        EditorialP5PilotResult result = execute(fixture,
+                authorizationVariant(fixture.request, "auth-estimated-cost",
+                        fixture.request.binding().bindingIdentity(), 0, 2_000, 2_000, 12_000,
+                        BigDecimal.valueOf(0.10), 60_000L, true, 0L, Long.MAX_VALUE),
+                provider, new Store());
+
+        assertEquals(EditorialP5PilotResult.StopClass.BUDGET_EXCEEDED,
+                result.stopReceipt().stopClass());
+        assertEquals(0, result.metrics().actualReportedCost().signum());
+        assertEquals(0, result.metrics().estimatedCost().compareTo(BigDecimal.valueOf(0.25)));
+    }
+
     @Test public void inFlightAttemptBlocksSecondExternalCall() {
         Fixture fixture = fixture();
         Store store = new Store();

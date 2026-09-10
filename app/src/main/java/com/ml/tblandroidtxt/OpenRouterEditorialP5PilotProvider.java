@@ -112,6 +112,7 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         } catch (Exception error) {
             throw new ProviderFailure(failureReason(error, lifecycle, deadlineNanos), error);
         }
+        requireFinishReason(result.finishReason);
         byte[] responseBytes = result.content.getBytes(StandardCharsets.UTF_8);
         EditorialP5L1Output output = null;
         boolean schemaValid = false;
@@ -128,11 +129,11 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         String responseId = result.providerResponseId == null || result.providerResponseId.isBlank()
                 ? "openrouter-" + EditorialCanonicalJson.sha256Hex(responseBytes)
                 : result.providerResponseId;
-        boolean complete = result.finishReason == null || !isTruncation(result.finishReason);
+        boolean complete = !isTruncation(result.finishReason);
         return new Response(responseId, responseBytes,
-                blank(result.finishReason) ? "stop" : result.finishReason,
+                result.finishReason,
                 complete, result.promptTokens, result.completionTokens, result.totalTokens,
-                cost, output, schemaValid);
+                cost, output, schemaValid, result.providerCostReported);
     }
 
     private static String failureReason(Throwable error, OpenRouterLifecycleObserver lifecycle,
@@ -405,11 +406,11 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         }
         JSONObject rawDisposition = root.getJSONObject("disposition");
         EditorialStopDecision.Decision disposition = decision(rawDisposition);
-        EditorialP5PilotProvider.Request.Context context = request.context();
         return new EditorialP5L1Output(
                 root.getString("reportSchemaVersion"), root.getString("receiptSchemaVersion"),
-                context.bindingIdentity(), context.manifestFingerprint(), root.getString("chapterKey"),
-                root.getString("phase"), context.bundleIdentity(), context.predecessorIdentity(),
+                root.getString("bindingIdentity"), root.getString("manifestFingerprint"),
+                root.getString("chapterKey"), root.getString("phase"),
+                root.getString("bundleIdentity"), root.getString("predecessorIdentity"),
                 stableAnchors, new EditorialLedgerValidator.Request(populationIds, entries), gates,
                 strings(root.getJSONArray("preservedInventory"), "preservedInventory"), changes,
                 root.getString("beforeText"), root.getString("afterText"),
@@ -463,4 +464,12 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
     }
 
     private static boolean blank(String value) { return value == null || value.isBlank(); }
+
+    static void requireFinishReason(String finishReason)
+            throws EditorialP5PilotProvider.ProviderFailure {
+        if (blank(finishReason)) {
+            throw new EditorialP5PilotProvider.ProviderFailure(
+                    "RETRY_PROVIDER_RESPONSE_PARSE_FAILED");
+        }
+    }
 }

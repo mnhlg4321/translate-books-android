@@ -108,7 +108,20 @@ public interface EditorialP5PilotProvider {
     record Response(String responseId, byte[] responseBytes, String finishReason,
                     boolean transportComplete, int inputTokens, int outputTokens,
                     int totalTokens, BigDecimal reportedCost,
-                    EditorialP5L1Output output, boolean schemaValid) {
+                    EditorialP5L1Output output, boolean schemaValid, boolean costReported) {
+        /**
+         * Existing fake providers do not distinguish an actual provider cost
+         * from a test-supplied cost. Keep that source-compatible boundary,
+         * while real adapters can explicitly mark an estimate.
+         */
+        public Response(String responseId, byte[] responseBytes, String finishReason,
+                        boolean transportComplete, int inputTokens, int outputTokens,
+                        int totalTokens, BigDecimal reportedCost,
+                        EditorialP5L1Output output, boolean schemaValid) {
+            this(responseId, responseBytes, finishReason, transportComplete, inputTokens,
+                    outputTokens, totalTokens, reportedCost, output, schemaValid, true);
+        }
+
         public Response {
             responseId = text(responseId, "response id");
             responseBytes = responseBytes == null ? new byte[0] : responseBytes.clone();

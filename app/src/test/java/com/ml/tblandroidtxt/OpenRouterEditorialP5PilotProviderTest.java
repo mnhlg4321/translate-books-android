@@ -15,7 +15,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public final class OpenRouterEditorialP5PilotProviderTest {
-    @Test public void parsesTypedOutputWithoutTrustingModelIdentity() throws Exception {
+    @Test public void parsedIdentityIsRetainedForLocalValidation() throws Exception {
         EditorialP5PilotProvider.Request request = request();
         JSONObject root = new JSONObject();
         root.put("reportSchemaVersion", "safe4.full.report-l1.v1");
@@ -49,10 +49,19 @@ public final class OpenRouterEditorialP5PilotProviderTest {
         root.put("modelDeclaredPass", true);
 
         var output = OpenRouterEditorialP5PilotProvider.parseOutput(root.toString(), request);
-        assertEquals("binding", output.bindingIdentity());
-        assertEquals("manifest", output.manifestFingerprint());
-        assertEquals("bundle", output.bundleIdentity());
+        assertEquals("model-must-not-control-this", output.bindingIdentity());
+        assertEquals("model-must-not-control-this", output.manifestFingerprint());
+        assertEquals("model-must-not-control-this", output.bundleIdentity());
         assertTrue(output.modelDeclaredPass());
+    }
+
+    @Test public void missingFinishReasonIsNotAcceptedAsComplete() {
+        try {
+            OpenRouterEditorialP5PilotProvider.requireFinishReason("");
+            throw new AssertionError("a missing finish reason must be typed as a response failure");
+        } catch (EditorialP5PilotProvider.ProviderFailure expected) {
+            assertEquals("RETRY_PROVIDER_RESPONSE_PARSE_FAILED", expected.reasonCode());
+        }
     }
 
     @Test(expected = RuntimeException.class)
