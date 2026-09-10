@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Updated: 2026-09-09 (+07:00).
-- Current status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / TRANSPORT_AND_LIFECYCLE_LIVE_VERIFIED / RAW_OUTPUT_TRUNCATION_CONFIRMED / RAW_PREDECESSOR_REQUIRED / OUTPUT_BUDGET_ALIGNMENT_PASS / RECOVERY_HISTORY_PRESERVED / RAW_ACCEPTANCE_AUTHORIZATION_APPROVED / RAW_ACCEPTANCE_ATTEMPTED / RAW_ACCEPTANCE_STOPPED_AT_DEADLINE / RAW_ACCEPTANCE_RECOVERY_CLOSED / EXTERNAL_STATE_REMAINS_UNKNOWN / RAW_ACCEPTANCE_INCOMPLETE / P6_NOT_READY / HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED / RAW_DIAGNOSTIC_ATTEMPT_COMPLETE / RAW_DIAGNOSTIC_STOPPED_RETRY_OUTPUT_TRUNCATED / VOL5_RECOVERY_REQUIRED / EXTERNAL_CONFIRMED_CANCELLED / P5D_PREFLIGHT_PROVIDER_CALLS_0 / P5D_LIVE_PROVIDER_CALLS_1 / P5D_RAW_ACCEPTANCE_PROVIDER_CALLS_1 / NEW_RAW_AUTHORIZATION_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
-- Current version/build: production validation artifact 4.17-dev.23 / code191 is archived in artifacts and backup with SHA-256 `5F3C841F590C6F7AA3E19F625D2B387E55B2D6BFD3C50A93D61F0337E6A2340C` and installed on device `15e84958`. The final focused test APK rebuilt from `ae6d9e23d6b5b4709e9fea4c5a42a4adaaacc3a6` has SHA-256 `CE5E29CABA15D08D3C6C2A032B961171C11428E28CC41A302792CA6D904CDCC4`. One authorized VOL5 RAW diagnostic call stopped at the historical 2,048 output-token cap; the later acceptance call reached HTTP 200 headers but not a complete body within five minutes. Both remain fail-closed with no response/report/receipt. The acceptance attempt is `RECOVERY_REQUIRED / RETRY_PROVIDER_CALL_TIMEOUT`; external usage/cost is unknown. PRONOUN remains 455 bytes with BOM before the existing app-owned normalization and 452 pinned bytes after it. Output alignment uses requested/effective `4,096`; no RECONCILE is authorized.
+- Updated: 2026-09-10 (+07:00).
+- Current status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / P5D_DEADLINE_BODY_READ_HARDENING_IN_PROGRESS / TRANSPORT_AND_LIFECYCLE_LIVE_VERIFIED / RAW_OUTPUT_TRUNCATION_CONFIRMED / RAW_PREDECESSOR_REQUIRED / OUTPUT_BUDGET_ALIGNMENT_PASS / RECOVERY_HISTORY_PRESERVED / RAW_ACCEPTANCE_AUTHORIZATION_APPROVED / RAW_ACCEPTANCE_ATTEMPTED / RAW_ACCEPTANCE_STOPPED_AT_DEADLINE / RAW_ACCEPTANCE_RECOVERY_CLOSED / EXTERNAL_STATE_REMAINS_UNKNOWN / RAW_ACCEPTANCE_INCOMPLETE / P6_NOT_READY / HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED / RAW_DIAGNOSTIC_ATTEMPT_COMPLETE / RAW_DIAGNOSTIC_STOPPED_RETRY_OUTPUT_TRUNCATED / VOL5_RECOVERY_REQUIRED / EXTERNAL_CONFIRMED_CANCELLED / P5D_PREFLIGHT_PROVIDER_CALLS_0 / P5D_LIVE_PROVIDER_CALLS_1 / P5D_RAW_ACCEPTANCE_PROVIDER_CALLS_1 / NEW_RAW_AUTHORIZATION_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Current version/build: production validation artifact 4.17-dev.23 / code191 is archived in artifacts and backup with SHA-256 `5F3C841F590C6F7AA3E19F625D2B387E55B2D6BFD3C50A93D61F0337E6A2340C` and remains installed on device `15e84958`. The deadline/body-read hardening is staged after host focused tests and AndroidTest compilation; no new validation APK or device result is claimed yet. The earlier acceptance attempt remains `RECOVERY_REQUIRED / RETRY_PROVIDER_CALL_TIMEOUT` with external usage/cost unknown, no response/report/receipt and no RECONCILE authorization. PRONOUN remains 455 bytes with BOM before the existing app-owned normalization and 452 pinned bytes after it. Output alignment uses requested/effective `4,096`.
 - Current branch/workspace: feature/v4.18 / D:\App Translate Books\App Translate Books-translation-profile.
-- Current commit baseline: 4c5cbf2, the implementation/test/documentation baseline immediately before this documentation snapshot commit; not self-referential.
+- Current commit baseline: 475f3e792c4be364d77dfa06c497d1ae9a82e32a, the implementation/test/documentation baseline immediately before this documentation snapshot commit; not self-referential.
 - Active authority: V5-SAFE.4.1.3-FULL. Authority bytes, canonical ZIP SHA, Java-control ZIP SHA and profile v2 hash are unchanged.
 
 ## Completed tasks
@@ -36,10 +36,11 @@
 - The exact user-approved RAW acceptance authorization `P5D-VOL5-RAW-ACCEPTANCE-20260909-01` was consumed once. The live test appended the recovery decision for the prior truncated generation while preserving the original immutable cancelled decision; this was test-only gate wiring before dispatch.
 - The final focused test APK was rebuilt from `ae6d9e2`, installed with `adb install -r`, and used for redacted readback. The production package remained code191 and the validation database was not reset or uninstalled.
 - The approved RAW acceptance dispatched once. The host runner did not reach a terminal assertion by the five-minute authorization deadline; readback showed `CLAIMED` before cleanup, a consumed acceptance receipt, lifecycle `RESPONSE_HEADERS_RECEIVED`/HTTP 200 with generation `gen-1788967700-RgJDCWrZsNZ4VAAWmlj8`, request bytes `85,068`, and zero report/receipt bytes. The attempt was then closed through the existing attempt-store owner as `RECOVERY_REQUIRED / RETRY_PROVIDER_CALL_TIMEOUT`; no second provider call was made and external state remains unknown.
+- P5D deadline/body-read hardening is test-first and currently uncommitted: the OpenAI-compatible client has a scoped monotonic deadline, bounded one-pass response-body read with redacted progress bytes, and RAW-only call ownership; the attempt store has additive response-byte persistence and stale-claim recovery. Host focused tests pass and the AndroidTest source compiles. Device focused execution is pending on a new validation artifact.
 
 ## Validation evidence
 
-- Host engine XML: `181` tests, `0` failures, `0` errors, `0` skipped; app all unit variants: `657` tests (`219` each), `0` failures/errors/skips; external qualification `306 PASS / 0 FAIL`.
+- Host engine XML: prior `181` tests, `0` failures, `0` errors, `0` skipped; app all unit variants: prior `657` tests (`219` each), `0` failures/errors/skips; current hardening focused host tests pass, with device execution still pending. External qualification `306 PASS / 0 FAIL` remains prior evidence and is not being relabelled as current hardening evidence.
 - Code189 full device instrumentation: `130` tests, `0` failures; real provider paths remained opt-in/skipped. Code186 `124` tests remains historical evidence.
 - Provider/API calls: historical VOL4 had one authorized RAW request; the earlier VOL5 request was provider-confirmed `cancelled` at displayed cost `$0.00484`; the current diagnostic authorization dispatched exactly one additional VOL5 RAW primary call, with no repair/retry/RECONCILE. The new provider-reported cost was `$0.0075392`; no app-validated response/usage receipt was committed. Fake acceptance calls remain `2`.
 - Canonical ZIP `B9C65DBEB9D4C4ED46B67D5EC28FF6252CC2BDC4B63BC902904612987EC58987`, Java control `44F99423292ADA15680220165AF50430532D847E155F93C1B15D9F173D4609A5`, and profile resource `1B2DB011D59F3E2EF4349AEB0DAA9C54A19B7EFD1E2CA6886BC29B56E4690D62` re-hash correctly.
@@ -59,6 +60,7 @@
 - The consumed VOL4 and VOL5 diagnostic authorizations cannot be reused, and the VOL5 RAW acceptance authorization is now consumed. The acceptance call did not reach a local terminal result within the five-minute cap; after deadline cleanup, the exact row was closed through the owner as `RECOVERY_REQUIRED`, with lifecycle headers/generation metadata but no complete body, response identity, report or receipt. External billing/completion is unknown; do not infer `$0` and do not retry without a new decision/authorization. VOL5 has a separate persisted binding and no RECONCILE authorization exists. OpenRouter I/O logging remains disabled. Device remains on validation code191 with the exact recovery row and setup data; certification remains unproven.
 - The current VOL5 PRONOUN transport file includes a UTF-8 BOM, but semantic bytes after the existing app-owned removal match the immutable binding. No source rewrite or silent rebind is needed.
 - The local delayed harness initially hit a device freezer interruption at `DELAY_STARTED`; bounded cleanup and a test-only foreground keepalive resolved the harness run, but the historical provider cancellation actor remains unknown.
+- The new bounded stalled-body/attempt-deadline and process-restart tests have not yet produced device evidence. Until the new validation artifact and focused instrumented tests pass, do not mark `END_TO_END_DEADLINE_VERIFIED`, `STALLED_BODY_RECOVERY_VERIFIED`, `PROCESS_RESTART_RECOVERY_VERIFIED`, `NO_LATE_COMMIT` or `NO_AUTOMATIC_REDISPATCH`.
 
 ## Protected state
 
@@ -66,27 +68,17 @@ The original workspace D:\App Translate Books remains untouched. Its user-owned 
 
 ## Exact next step
 
-2026-09-09 update: the exact persisted VOL5/chapter001 binding and normalized
-source identities passed preflight. The approved single-use diagnostic
-authorization dispatched one RAW primary call; OpenRouter returned complete
-transport with `finish=length` at the historical 2,048 output-token cap. The
-app persisted the typed `RETRY_OUTPUT_TRUNCATED` recovery result and lifecycle
-metadata, but did not commit a RAW predecessor, report or receipt. Output-cap
-alignment now passes locally with requested/effective `4,096`; v23 recovery
-history preserves the prior immutable decision and the later truncated
-decision. The user has now approved the exact acceptance authorization
-`P5D-VOL5-RAW-ACCEPTANCE-20260909-01`; it is represented in test-only gate
-wiring but is now consumed by one dispatch. The focused test APK was rebuilt
-and installed from the committed test-only changes, and the no-provider
-recovery/history gates passed. The instrumentation session did not reach
-terminal state by the five-minute cap. Redacted readback showed headers/HTTP
-200/generation `gen-1788967700-RgJDCWrZsNZ4VAAWmlj8`, request bytes `85,068`, no
-complete response or partial report/receipt, and a consumed authorization. The
-attempt was closed through the owner as `RECOVERY_REQUIRED /
-RETRY_PROVIDER_CALL_TIMEOUT`; external state remains unknown. The acceptance
-report/state/checklist are now committed. Keep `RAW_ACCEPTANCE_INCOMPLETE /
-P6_NOT_READY / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE`.
-Do not retry or open RECONCILE; any future call requires a new recovery decision,
-end-to-end deadline/process-death hardening and explicit authorization.
+2026-09-10 update: the exact persisted VOL5/chapter001 binding and normalized
+source identities remain unchanged. No provider call was made for this
+hardening step. Test-first host coverage now passes for a drip/stalled response
+ending at the scoped monotonic attempt deadline, and the AndroidTest source
+compiles with additive response-body progress/readback and stale-claim recovery
+coverage. The code/test change is staged but not yet built or run on device.
+Next action is to commit the tested code, build and archive the next validation
+APK with versionCode greater than 191, run the focused `executeRaw()` tests on
+an isolated test database, then run the affected regression suites. Keep
+`RAW_ACCEPTANCE_INCOMPLETE / P6_NOT_READY / EXECUTION_DISABLED /
+NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE`; do not call the provider or open
+RECONCILE during this hardening gate.
 
 This is current-only state; Git history preserves prior snapshots.
