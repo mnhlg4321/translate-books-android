@@ -394,7 +394,7 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
         EditorialP5PilotAuthorization authorization = authorization(fixture.binding,
                 "p5d-stale-claim", "L1_RAW_DISCOVERY", 1L);
         EditorialP5CAttemptStore store = new EditorialP5CAttemptStore(database);
-        store.prepare(rawRequest, authorization, "g".repeat(64));
+        store.prepare(rawRequest, authorization, "a".repeat(64));
         assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.ACQUIRED,
                 store.claim(rawRequest.attemptIdentity()));
         database.editorialWritableDatabase().execSQL(

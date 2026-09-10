@@ -128,10 +128,7 @@ public final class EditorialP5CExactBindingExecution {
                     true, boundedOutputTokens(rawAuthorization));
 
             EditorialP5CAttemptStore attemptStore = new EditorialP5CAttemptStore(database);
-            EditorialP5PilotProvider countedProvider = request -> {
-                providerCalls.incrementAndGet();
-                return provider.call(request);
-            };
+            EditorialP5PilotProvider countedProvider = countedProvider(provider, providerCalls);
             EditorialP5PilotResult rawResult = engine.execute(rawRequest, rawAuthorization,
                     countedProvider, attemptStore);
             if (!committedLike(rawResult)) {
@@ -223,10 +220,7 @@ public final class EditorialP5CExactBindingExecution {
                     true, boundedOutputTokens(rawAuthorization));
 
             EditorialP5CAttemptStore attemptStore = new EditorialP5CAttemptStore(database);
-            EditorialP5PilotProvider countedProvider = request -> {
-                providerCalls.incrementAndGet();
-                return provider.call(request);
-            };
+            EditorialP5PilotProvider countedProvider = countedProvider(provider, providerCalls);
             EditorialP5PilotResult rawResult = engine.execute(rawRequest, rawAuthorization,
                     countedProvider, attemptStore);
             if (!committedLike(rawResult)) {
@@ -246,6 +240,25 @@ public final class EditorialP5CExactBindingExecution {
         } catch (IOException | RuntimeException error) {
             return stop(errorCode(error), providerCalls.get());
         }
+    }
+
+    /**
+     * Keeps the call counter transparent to the engine. In particular, the
+     * attempt deadline must reach the real provider rather than stopping at a
+     * counting lambda.
+     */
+    private static EditorialP5PilotProvider countedProvider(
+            EditorialP5PilotProvider provider, AtomicInteger providerCalls) {
+        return new EditorialP5PilotProvider() {
+            @Override public void beginAttempt(long maximumExecutionTimeMillis) {
+                provider.beginAttempt(maximumExecutionTimeMillis);
+            }
+
+            @Override public Response call(Request request) throws Exception {
+                providerCalls.incrementAndGet();
+                return provider.call(request);
+            }
+        };
     }
 
     private EditorialPackManifest resolveManifest(EditorialP4Binding binding) {
