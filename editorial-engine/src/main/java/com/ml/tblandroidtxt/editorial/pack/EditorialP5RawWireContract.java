@@ -160,8 +160,10 @@ public final class EditorialP5RawWireContract {
         if (response.preservedInventory().size() > MAX_PRESERVED_ITEMS) {
             issues.add("RAW_WIRE_PRESERVED_LIMIT_EXCEEDED");
         }
+        Set<String> preservedItems = new HashSet<>();
         for (String item : response.preservedInventory()) {
             if (!token(item, MAX_ID_LENGTH)) issues.add("RAW_WIRE_PRESERVED_ITEM_INVALID");
+            if (!preservedItems.add(item)) issues.add("RAW_WIRE_DUPLICATE_PRESERVED_ITEM");
         }
         if (response.declaredChangesCount() != 0) issues.add("RAW_DECLARED_CHANGES_FORBIDDEN");
         EditorialStopDecision.Decision disposition = response.disposition();

@@ -194,6 +194,17 @@ public final class EditorialP5RawWireContractTest {
             assertTrue(expected.getMessage().contains("RAW_WIRE_PRESERVED_LIMIT_EXCEEDED"));
         }
 
+        try {
+            new EditorialP5RawWireResponse(EditorialP5RawWireContract.SCHEMA_VERSION,
+                    "a".repeat(64), "b".repeat(64), List.of(), gates(), List.of(),
+                    List.of("preserved:1", "preserved:1"), 0,
+                    EditorialStopDecision.continueWithoutStop(
+                            "L1", "COVERAGE", "LOCAL_REVIEW"), false);
+            throw new AssertionError("duplicate preserved IDs must be rejected");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("RAW_WIRE_DUPLICATE_PRESERVED_ITEM"));
+        }
+
         List<String> fiveEvidenceRefs = List.of(
                 "evidence:1", "evidence:2", "evidence:3", "evidence:4", "evidence:5");
         try {
