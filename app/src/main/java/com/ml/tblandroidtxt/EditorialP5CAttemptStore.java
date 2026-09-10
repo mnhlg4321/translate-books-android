@@ -65,13 +65,14 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
             }
             // A same-process recovery retry may use the new compact wire
             // envelope after an immutable reconciliation decision. The
-            // durable row remains the authority and is updated atomically at
-            // reclaim; binding/chapter/predecessor/provider/model still match.
+            // durable row remains the authority; binding/chapter/predecessor/
+            // provider/model still match and its historical envelope hash is
+            // never rewritten.
         }
         // A new authorization is allowed to replace only the in-memory auth
-        // facts for an exact recovery retry. If the wire contract evolved,
-        // reclaim updates only the request-envelope hash atomically after the
-        // append-only reconciliation decision; binding facts remain fixed.
+        // facts for an exact recovery retry. If the wire contract evolved, the
+        // append-only reconciliation decision gates the new runtime envelope;
+        // the durable attempt identity remains immutable.
         pending.put(request.attemptIdentity(), value);
     }
 
@@ -152,8 +153,13 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
         }
         Row current = findRow(value.attemptIdentity());
         Pending facts = pending.get(value.attemptIdentity());
-        if (current == null || facts == null || !facts.matches(current)
-                || !"CLAIMED".equals(current.status)) {
+        boolean exactFacts = current != null && facts != null && facts.matches(current);
+        boolean authorizedRecoveryEvolution = current != null && facts != null
+                && "CLAIMED".equals(current.status)
+                && facts.recoveryMatches(current)
+                && hasRetryDecision(value.attemptIdentity(), facts);
+        if (current == null || facts == null || !"CLAIMED".equals(current.status)
+                || (!exactFacts && !authorizedRecoveryEvolution)) {
             throw new IllegalStateException("P5C attempt is not the claimed exact attempt");
         }
         if (!value.requestIdentity().equals(current.requestIdentity)) {
@@ -583,17 +589,7 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
     private Claim reclaimOnlyAfterReconciliation(String attemptIdentity, Pending facts) {
         if (facts == null) return Claim.RECOVERY_REQUIRED;
         String newAuthorizationHash = authorizationIdHash(facts.authorization.authorizationId());
-        boolean retryAuthorized = false;
-        for (ReconciliationRecord decision : findReconciliationHistory(attemptIdentity)) {
-            if (decision.retryEligible()
-                    && newAuthorizationHash.equals(decision.newAuthorizationIdHash())) {
-                retryAuthorized = true;
-                break;
-            }
-        }
-        if (!retryAuthorized) {
-            return Claim.RECOVERY_REQUIRED;
-        }
+        if (!hasRetryDecision(attemptIdentity, facts)) return Claim.RECOVERY_REQUIRED;
         SQLiteDatabase db = database.editorialWritableDatabase();
         db.beginTransaction();
         try {
@@ -604,7 +600,6 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
             ContentValues update = new ContentValues();
             update.put("status", "CLAIMED");
             update.put("recovery_reason_code", "");
-            update.put("request_envelope_hash", facts.requestEnvelopeHash);
             update.put("updated_at", System.currentTimeMillis());
             if (db.update(TABLE, update, "attempt_identity=? AND status='RECOVERY_REQUIRED'",
                     new String[]{attemptIdentity}) != 1) {
@@ -617,6 +612,17 @@ public final class EditorialP5CAttemptStore implements EditorialP5PilotExecution
         } finally {
             db.endTransaction();
         }
+    }
+
+    private boolean hasRetryDecision(String attemptIdentity, Pending facts) {
+        String newAuthorizationHash = authorizationIdHash(facts.authorization.authorizationId());
+        for (ReconciliationRecord decision : findReconciliationHistory(attemptIdentity)) {
+            if (decision.retryEligible()
+                    && newAuthorizationHash.equals(decision.newAuthorizationIdHash())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void insertConsumedAuthorizationReceipt(SQLiteDatabase db,

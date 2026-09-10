@@ -655,10 +655,20 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
 
         assertEquals(EditorialP5PilotExecution.AttemptStore.Claim.ACQUIRED,
                 retryStore.claim(rawRequest.attemptIdentity()));
-        assertEquals("d".repeat(64), retryStore.findRecord(rawRequest.attemptIdentity())
+        // The durable attempt envelope is historical immutable identity. The
+        // new compact envelope is authorized in memory and must not rewrite it.
+        assertEquals("c".repeat(64), retryStore.findRecord(rawRequest.attemptIdentity())
                 .orElseThrow().requestEnvelopeHash());
         assertEquals("CONSUMED", retryStore.findAuthorizationReceipt(retryHash)
                 .orElseThrow().consumptionResult());
+        retryStore.commit(new EditorialP5PilotResult.CommittedResult(
+                rawRequest.attemptIdentity(), rawRequest.requestIdentity(), "p5e-compact-response",
+                new byte[]{1}, new byte[]{2}, EditorialP5PilotResult.Metrics.empty(),
+                output(rawRequest)));
+        assertEquals("COMMITTED", retryStore.findRecord(rawRequest.attemptIdentity())
+                .orElseThrow().status());
+        assertEquals("c".repeat(64), retryStore.findRecord(rawRequest.attemptIdentity())
+                .orElseThrow().requestEnvelopeHash());
     }
 
     @Test public void p5dRejectsUnallowlistedExceptionMetadata() throws Exception {
