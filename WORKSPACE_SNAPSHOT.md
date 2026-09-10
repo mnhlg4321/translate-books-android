@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
 - Updated: 2026-09-10 (+07:00).
-- Current status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / P5D_DEADLINE_BODY_READ_HARDENING_IN_PROGRESS / TRANSPORT_AND_LIFECYCLE_LIVE_VERIFIED / RAW_OUTPUT_TRUNCATION_CONFIRMED / RAW_PREDECESSOR_REQUIRED / OUTPUT_BUDGET_ALIGNMENT_PASS / RECOVERY_HISTORY_PRESERVED / RAW_ACCEPTANCE_AUTHORIZATION_APPROVED / RAW_ACCEPTANCE_ATTEMPTED / RAW_ACCEPTANCE_STOPPED_AT_DEADLINE / RAW_ACCEPTANCE_RECOVERY_CLOSED / EXTERNAL_STATE_REMAINS_UNKNOWN / RAW_ACCEPTANCE_INCOMPLETE / P6_NOT_READY / HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED / RAW_DIAGNOSTIC_ATTEMPT_COMPLETE / RAW_DIAGNOSTIC_STOPPED_RETRY_OUTPUT_TRUNCATED / VOL5_RECOVERY_REQUIRED / EXTERNAL_CONFIRMED_CANCELLED / P5D_PREFLIGHT_PROVIDER_CALLS_0 / P5D_LIVE_PROVIDER_CALLS_1 / P5D_RAW_ACCEPTANCE_PROVIDER_CALLS_1 / NEW_RAW_AUTHORIZATION_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
-- Current version/build: validation artifact 4.17-dev.25 / code193 is archived in artifacts and backup with SHA-256 `2EB15F73D4F9CE0A451A9D7B4157016BAD1D0ED64C4FAA7A0143D3A1784241A` and is installed on device `15e84958` via `adb install -r`, preserving the package data. Its focused test APK has SHA-256 `E29637D48B775886724AB884B55965716BF4538C359F60A8DE7303405F331A4D`. The code193 focused device run discovered 17 tests: 15 PASS and 2 FAIL; the remaining fixture failure used non-hex `g` on a post-reopen prepare, and the stalled-body call stopped within the deadline but was classified as `RETRY_PROVIDER_CALL_FAILED_UNKNOWN` instead of the typed timeout. Both are corrected in the next working-tree change. No provider was called. The earlier acceptance attempt remains `RECOVERY_REQUIRED / RETRY_PROVIDER_CALL_TIMEOUT` with external usage/cost unknown, no response/report/receipt and no RECONCILE authorization. PRONOUN remains 455 bytes with BOM before the existing app-owned normalization and 452 pinned bytes after it. Output alignment uses requested/effective `4,096`.
+- Current status: P5D_DOCUMENTATION_BASELINE_CONSISTENT / P5D_EXTERNAL_AUDIT_COMPLETE / P5D_LIFECYCLE_HARDENING_PASS / P5D_REGRESSION_PASS / P5D_DEADLINE_BODY_READ_HARDENING_PASS / END_TO_END_DEADLINE_VERIFIED / STALLED_BODY_RECOVERY_VERIFIED / PROCESS_RESTART_RECOVERY_VERIFIED / NO_LATE_COMMIT / NO_AUTOMATIC_REDISPATCH / PILOT_DATA_PRESERVED / RAW_RETRY_READY_FOR_NEW_AUTHORIZATION / TRANSPORT_AND_LIFECYCLE_LIVE_VERIFIED / RAW_OUTPUT_TRUNCATION_CONFIRMED / RAW_PREDECESSOR_REQUIRED / OUTPUT_BUDGET_ALIGNMENT_PASS / RECOVERY_HISTORY_PRESERVED / RAW_ACCEPTANCE_AUTHORIZATION_APPROVED / RAW_ACCEPTANCE_ATTEMPTED / RAW_ACCEPTANCE_STOPPED_AT_DEADLINE / RAW_ACCEPTANCE_RECOVERY_CLOSED / EXTERNAL_STATE_REMAINS_UNKNOWN / RAW_ACCEPTANCE_INCOMPLETE / P6_NOT_READY / HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED / RAW_DIAGNOSTIC_ATTEMPT_COMPLETE / RAW_DIAGNOSTIC_STOPPED_RETRY_OUTPUT_TRUNCATED / VOL5_RECOVERY_REQUIRED / EXTERNAL_CONFIRMED_CANCELLED / P5D_PREFLIGHT_PROVIDER_CALLS_0 / P5D_LIVE_PROVIDER_CALLS_1 / P5D_RAW_ACCEPTANCE_PROVIDER_CALLS_1 / NEW_RAW_AUTHORIZATION_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Current version/build: validation artifact 4.17-dev.28 / code196 is archived in artifacts and backup with SHA-256 `85345086FBD76FA78133EE54741CA7631EBA91EB4761401080EC10BA1D35042A` and is installed on device `15e84958` via `adb install -r`, preserving package data. Its focused test APK used for the final short-case rerun and the 300-second case has SHA-256 `292F30A50302423E695571BB28E95514504F06F174361762919C35FE6D1704DE`. The code196 focused set passed the prior 17 methods plus the new five-minute stalled-body method (`1/1`, `301.501s`); the final request-count assertion passed in the short case and the five-minute case. No provider was called. The earlier acceptance attempt remains `RECOVERY_REQUIRED / RETRY_PROVIDER_CALL_TIMEOUT` with external usage/cost unknown, no response/report/receipt and no RECONCILE authorization. PRONOUN remains 455 bytes with BOM before the existing app-owned normalization and 452 pinned bytes after it. Output alignment uses requested/effective `4,096`.
 - Current branch/workspace: feature/v4.18 / D:\App Translate Books\App Translate Books-translation-profile.
-- Current commit baseline: 546edea4d32f6ef5fa4b1db97fdc54c87223fc98, the implementation/test baseline immediately before this documentation snapshot commit; not self-referential.
+- Current commit baseline: 0340702d0f87098613e29e0ceae9bb0b44fc3e06, the implementation/test baseline immediately before this documentation snapshot commit; not self-referential. The request-count assertion was validated in the working tree and is being committed with the next test-only change.
 - Active authority: V5-SAFE.4.1.3-FULL. Authority bytes, canonical ZIP SHA, Java-control ZIP SHA and profile v2 hash are unchanged.
 
 ## Completed tasks
@@ -61,7 +61,7 @@
 - The consumed VOL4 and VOL5 diagnostic authorizations cannot be reused, and the VOL5 RAW acceptance authorization is now consumed. The acceptance call did not reach a local terminal result within the five-minute cap; after deadline cleanup, the exact row was closed through the owner as `RECOVERY_REQUIRED`, with lifecycle headers/generation metadata but no complete body, response identity, report or receipt. External billing/completion is unknown; do not infer `$0` and do not retry without a new decision/authorization. VOL5 has a separate persisted binding and no RECONCILE authorization exists. OpenRouter I/O logging remains disabled. Device remains on validation code191 with the exact recovery row and setup data; certification remains unproven.
 - The current VOL5 PRONOUN transport file includes a UTF-8 BOM, but semantic bytes after the existing app-owned removal match the immutable binding. No source rewrite or silent rebind is needed.
 - The local delayed harness initially hit a device freezer interruption at `DELAY_STARTED`; bounded cleanup and a test-only foreground keepalive resolved the harness run, but the historical provider cancellation actor remains unknown.
-- Code193 focused device evidence is not an acceptance pass: 15/17 methods passed, with the two failures limited to the fixture typo and timeout taxonomy. Do not mark `END_TO_END_DEADLINE_VERIFIED`, `STALLED_BODY_RECOVERY_VERIFIED`, `PROCESS_RESTART_RECOVERY_VERIFIED`, `NO_LATE_COMMIT` or `NO_AUTOMATIC_REDISPATCH` until code194 reruns pass.
+- Code196 focused device evidence is not a live acceptance pass, but the local hardening gates pass: the existing 17 methods pass, the five-minute stalled-body case passes in `301.501s`, the server observes exactly one request, and the app returns typed timeout/recovery without host force-stop. The historical cancellation actor and external state of the old acceptance generation remain unknown.
 
 ## Protected state
 
@@ -70,15 +70,18 @@ The original workspace D:\App Translate Books remains untouched. Its user-owned 
 ## Exact next step
 
 2026-09-10 update: the exact persisted VOL5/chapter001 binding and normalized
-source identities remain unchanged. The code193 focused device run reached
-15/17 PASS and exposed two concrete defects: an invalid test-only hash fixture
-and a timeout exception mapped to `RETRY_PROVIDER_CALL_FAILED_UNKNOWN` after
-the real attempt deadline. The fixture and taxonomy mapping are now corrected
-in the working tree; no provider was called. Next action is to commit this fix,
-build and archive code194, rerun the focused `executeRaw()` tests on an isolated
-test database, then run the affected regression suites. Keep
-`RAW_ACCEPTANCE_INCOMPLETE / P6_NOT_READY / EXECUTION_DISABLED /
-NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE`; do not call the provider or open
-RECONCILE during this hardening gate.
+source identities remain unchanged. Production hardening is committed in
+`d39bca7`; the test-only five-minute stalled-body case and request-count
+assertion are covered by `0340702` plus the pending assertion commit. Code196
+device evidence is `17/17 PASS` for the focused class before the extra case,
+`1/1 PASS` for the short stalled-body case, `1/1 PASS` for the 300-second
+stalled-body case (`301.501s`), `92/92 PASS` for the isolated P1-P5C/migration
+regression, and `1/1 PASS` for VOL5 readback. The app self-terminated and
+persisted `RECOVERY_REQUIRED`; the local server observed one request and no
+host force-stop was used. Host engine is `183/183`, app unit is `222/222` per
+debug/release/benchmark variant, and external qualification is `306/306`.
+No provider was called. Keep `RAW_ACCEPTANCE_INCOMPLETE / P6_NOT_READY /
+EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE`; do not call the
+provider or open RECONCILE during this hardening gate.
 
 This is current-only state; Git history preserves prior snapshots.

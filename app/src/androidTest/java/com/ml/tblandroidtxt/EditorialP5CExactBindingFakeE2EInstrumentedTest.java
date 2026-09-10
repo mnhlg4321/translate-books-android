@@ -465,6 +465,7 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
                 assertEquals(EditorialP5CExactBindingExecution.Status.STOP, result.status());
                 assertEquals("RETRY_PROVIDER_CALL_TIMEOUT", result.reasonCode());
                 assertEquals(1, result.providerCalls());
+                assertEquals(1, server.requestCount());
                 assertTrue("app did not stop within the bounded deadline: " + elapsedMillis,
                         elapsedMillis < maximumElapsedMillis);
                 String attemptIdentity;
@@ -948,6 +949,8 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
         boolean awaitRequest(long timeout, TimeUnit unit) throws InterruptedException {
             return requestReceived.await(timeout, unit) && failure.get() == null;
         }
+
+        int requestCount() { return requests.get(); }
 
         private void serve() {
             Socket socket = null;
