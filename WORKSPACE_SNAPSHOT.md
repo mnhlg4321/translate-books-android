@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
 - Updated: 2026-09-11 (+07:00).
-- Current status: P5E_0_DOCUMENTATION_CLEANUP_PASS / P5E_LOCAL_QA_PASS / INSTALL_GUARD_LOCAL_PASS / DB_REOPEN_STALE_CLAIM_RECOVERY_VERIFIED / P5D_DEADLINE_BODY_READ_HARDENING_PASS / NO_LATE_COMMIT / NO_AUTOMATIC_REDISPATCH / CODE191_EXTERNAL_STATE_RECONCILED / COMPACT_RAW_WIRE_CONTRACT_LOCAL_PASS / STRUCTURED_OUTPUT_REQUEST_LOCAL_PASS / OUTPUT_SIZE_WITHIN_BUDGET / RAW_REPLAY_PROTECTION_PASS / PILOT_DATA_PRESERVATION_GATE_FAILED_ORIGINAL_CODE196_DB_LOST_RECONSTRUCTED_ONLY / P5E_LIVE_PREP_BLOCKED_PILOT_DATA_PRESERVATION / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
-- Current version/build: validation artifact 4.17-p5e.5 / code201 is archived (not installed) in `artifacts/builds/v4.17-p5e.5/build-20260911-001819` and its identical backup mirror; APK SHA-256 `9822F015ED3BA3CCD2B158E775175DF8D517B3A31FAB134EB43060C951F4920C`, source ZIP SHA-256 `679DD72A7607A6EE3CEB26198FD32D53E6FAC28553918F369E6A23482E6358EB`, source commit `a4b4a8f9d215578d5bfae329b1b4608927d0476c`. Device `15e84958` remains installed at code199 with APK SHA-256 `870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09` after rehydrating the validation DB. The original code196 package data was not preserved after the connected-test installer incident. Code191 is reconciled as `EXTERNAL_CONFIRMED_CANCELLED`; metadata does not prove `$0` billing. No provider call or new authorization has been made after the incident. DB schema is v24 with reconstructed VOL5 data. Output cap remains `4,096`.
+- Current status: P5E_0_DOCUMENTATION_CLEANUP_PASS / P5E_LOCAL_QA_PASS / INSTALL_GUARD_LOCAL_PASS / P5E_CANDIDATE_HASH_CERT_PIN_LOCAL_PASS / DB_REOPEN_STALE_CLAIM_RECOVERY_VERIFIED / P5D_DEADLINE_BODY_READ_HARDENING_PASS / NO_LATE_COMMIT / NO_AUTOMATIC_REDISPATCH / CODE191_EXTERNAL_STATE_RECONCILED / COMPACT_RAW_WIRE_CONTRACT_LOCAL_PASS / STRUCTURED_OUTPUT_REQUEST_LOCAL_PASS / OUTPUT_SIZE_WITHIN_BUDGET / RAW_REPLAY_PROTECTION_PASS / PILOT_DATA_PRESERVATION_GATE_FAILED_ORIGINAL_CODE196_DB_LOST_RECONSTRUCTED_ONLY / P5E_LIVE_PREP_BLOCKED_PILOT_DATA_PRESERVATION / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Current version/build: code201 remains an archived pre-hash-pin validation artifact (not installed) in `artifacts/builds/v4.17-p5e.5/build-20260911-001819` and its identical backup mirror; APK SHA-256 `9822F015ED3BA3CCD2B158E775175DF8D517B3A31FAB134EB43060C951F4920C`, source ZIP SHA-256 `679DD72A7607A6EE3CEB26198FD32D53E6FAC28553918F369E6A23482E6358EB`, source commit `a4b4a8f9d215578d5bfae329b1b4608927d0476c`. The working-tree hash/certificate-pin patch requires a new artifact before it can be called the candidate. Device `15e84958` remains installed at code199 with APK SHA-256 `870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09` after rehydrating the validation DB. The original code196 package data was not preserved after the connected-test installer incident. Code191 is reconciled as `EXTERNAL_CONFIRMED_CANCELLED`; metadata does not prove `$0` billing. No provider call or new authorization has been made after the incident. DB schema is v24 with reconstructed VOL5 data. Output cap remains `4,096`.
 - Current branch/workspace: feature/v4.18 / D:\App Translate Books\App Translate Books-translation-profile.
-- Current commit baseline: a4b4a8f9d215578d5bfae329b1b4608927d0476c, the implementation/test/documentation baseline immediately before this snapshot commit; not self-referential. Code201 is the resulting validation artifact; the preservation gate is failed and documented.
+- Current commit baseline: 78d58fb5e91b11a6b77965b98ec10990ccdc5e8f, the implementation/test/documentation baseline immediately before this snapshot commit; not self-referential. The hash/certificate-pin patch is staged for the next implementation commit; code201 remains pre-patch and is not a candidate for that changed source.
 - Active authority: V5-SAFE.4.1.3-FULL. Authority bytes, canonical ZIP SHA, Java-control ZIP SHA and profile v2 hash are unchanged.
 
 ## Completed tasks
@@ -44,6 +44,7 @@
 - P5E.7 host engine boundary tests are `200/200 PASS`; app unit variants are `228/228` each (`684/684` aggregate), Android test compilation passed, and the clean code199 test APK passed the focused manual device matrix (`7/7`) covering raw-only/no-RECONCILE, compact recovery evolution, recovery history, exact RAW materialization, reconstructed v24/VOL5 readback and setup. No live provider call has been made for P5E.
 - P5E compact QA correction is test-first and local-only: engine `200/200 PASS`, app debug/release/benchmark `228/228` each (`684/684` aggregate), AndroidTest compilation pass. New checks cover duplicate finding/evidence/preserved IDs, orphan evidence, hard findings/preserved/disposition bounds, unsafe escaping, population overflow before provider, STOP without commit, local coverage and RAW UTF-8/BOM round-trip. The provider request still uses strict JSON Schema, `stream=false`, `require_parameters=true`, minimal reasoning and no response-healing.
 - P5E installer guard is read-only verified: code199/package/certificate/device token passes; historical code196 is rejected as downgrade; a wrong device token is rejected; `:app:connectedDebugAndroidTest` fails during Gradle configuration before any installer runs. No install/reset/clear/uninstall/downgrade was performed in this group.
+- P5E candidate-install QA found and reproduced a missing payload pin: the old guard rejected the new `ExpectedApkSha256` parameter. The minimal patch now requires exact APK SHA-256 and certificate SHA-256, passes the code201 check-only match, rejects wrong hash/certificate and rejects `build-and-save.ps1 -Install` without certificate pin. Code201 must be superseded by a new archive because source changed.
 
 ## Validation evidence
 
@@ -52,10 +53,12 @@
 - Provider/API calls: code189/code191 and their provider generations are historical evidence only. P5E.1 used authenticated read-only metadata for code191 generation `gen-1788967700-RgJDCWrZsNZ4VAAWmlj8` and recorded `EXTERNAL_CONFIRMED_CANCELLED`; no new provider call or authorization was created during local contract work. Prior known costs remain recorded separately and are not collapsed into `$0`.
 - Canonical ZIP `B9C65DBEB9D4C4ED46B67D5EC28FF6252CC2BDC4B63BC902904612987EC58987`, Java control `44F99423292ADA15680220165AF50430532D847E155F93C1B15D9F173D4609A5`, and profile resource `1B2DB011D59F3E2EF4349AEB0DAA9C54A19B7EFD1E2CA6886BC29B56E4690D62` re-hash correctly.
 - Current installed validation APK code199 SHA-256: `870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09`; source ZIP SHA-256 `824B7B59994F6E2E1573F0305081E60A7ADB10771C085B9C86EC32C14DC09A7C`. The clean focused test APK SHA-256 is `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456`; package `com.ml.tblandroidtxt.test`, same debug certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`. Code189/code191/code196 remain historical; code199 is reconstructed validation only. Code201 is the latest script-managed archive artifact and was not installed on the current device.
+- Current installed validation APK code199 SHA-256: `870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09`; source ZIP SHA-256 `824B7B59994F6E2E1573F0305081E60A7ADB10771C085B9C86EC32C14DC09A7C`. The clean focused test APK SHA-256 is `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456`; package `com.ml.tblandroidtxt.test`, same debug certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`. Code189/code191/code196 remain historical; code199 is reconstructed validation only. Code201 is the pre-patch script-managed archive artifact and was not installed on the current device; no code201 device-verification claim is made.
 
 ## Pending tasks
 
 - P5E live RAW acceptance is blocked, not merely pending: the original code196 pilot DB disappeared during a connected-test installer failure and no trusted backup was found. Code197 → code198 and code198 → code199 readback covers reconstructed data only. Guard/contract QA does not satisfy this data gate. No new authorization or provider dispatch is permitted until the original preservation gate is restored or the owner approves a separately designed fresh-pilot path.
+- The next local step is to commit the candidate hash/certificate-pin patch and create a new script-managed artifact with versionCode greater than 201; do not cite code201 for the changed source. After that, prepare an owner-approval block only; no device/data action occurs before approval.
 - Release tag, release backup/export and real-chapter certification remain pending by design.
 
 ## Known bugs and limitations
@@ -77,17 +80,20 @@ The original workspace D:\App Translate Books remains untouched. Its user-owned 
 ## Exact next step
 
 2026-09-11 update: P5E compact-wire implementation, evidence-coverage guard,
-installer guard and QA are committed through `a4b4a8f`. Code201 is archived
-without installation; its artifact/source hashes are recorded above. Code191 has an authenticated
+installer guard and QA are committed through `a4b4a8f`; the candidate hash/certificate
+pin patch is staged after that baseline. Code201 is archived without installation
+and is pre-patch; its artifact/source hashes are recorded above. Code191 has an authenticated
 metadata decision of `EXTERNAL_CONFIRMED_CANCELLED`; code189/code191 remain
 historical evidence. The current full-shape characterization is `49,665` bytes
 and compact-wire worst case is `2,785` bytes under a `3,584` byte local ceiling.
 Host engine is `200/200`; app unit variants are `228/228` each and Android test
 compilation/connected-installer fail-closed checks pass. Code199 is installed with `adb install -r`, but the original code196
 package data was lost during a connected-test installer failure and the current
-v24/VOL5 data is reconstructed only. Therefore `PILOT_DATA_PRESERVED` fails:
+v24/VOL5 data is reconstructed only. Therefore `PILOT_DATA_PRESERVED` fails;
+the current source patch also requires a new artifact before candidate claims:
 do not write the preflight, create authorization or dispatch provider. Resume
-only after trusted restoration or an explicitly approved fresh-pilot design;
+only after trusted restoration or an explicitly approved fresh-pilot design and
+the new candidate artifact is archived;
 the next authorized work is data-owner approval/initialization of a disjoint
 fresh pilot, followed by a separate RAW live authorization. Keep
 `P5E_LIVE_PREP_BLOCKED_PILOT_DATA_PRESERVATION /

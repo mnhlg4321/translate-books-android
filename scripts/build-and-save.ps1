@@ -15,6 +15,9 @@ param(
 
     [string]$DeviceSerial,
 
+    [ValidatePattern('^[0-9a-fA-F]{64}$')]
+    [string]$ExpectedApkCertificateSha256,
+
     [string]$ExpectedDeviceSignatureToken,
 
     [switch]$AllowMissingPackage,
@@ -27,6 +30,9 @@ Set-StrictMode -Version Latest
 
 if ($Install -and [string]::IsNullOrWhiteSpace($DeviceSerial)) {
     throw '-Install requires an explicit -DeviceSerial. Automatic device selection is disabled.'
+}
+if ($Install -and [string]::IsNullOrWhiteSpace($ExpectedApkCertificateSha256)) {
+    throw '-Install requires -ExpectedApkCertificateSha256 so the candidate signer is pinned before installation.'
 }
 
 $minimumVersionCodeWasRequested = $PSBoundParameters.ContainsKey('MinimumVersionCode')
@@ -489,6 +495,8 @@ if ($Install) {
         Serial = $DeviceSerial
         PackageName = 'com.ml.tblandroidtxt'
         ExpectedVersionCode = $nextVersionCode
+        ExpectedApkSha256 = $apkHash
+        ExpectedApkCertificateSha256 = $ExpectedApkCertificateSha256
     }
     if (-not [string]::IsNullOrWhiteSpace($ExpectedDeviceSignatureToken)) {
         $installArguments.ExpectedDeviceSignatureToken = $ExpectedDeviceSignatureToken

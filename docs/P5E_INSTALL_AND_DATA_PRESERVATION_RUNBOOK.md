@@ -34,11 +34,13 @@ khôi phục lịch sử.
 `scripts/install-validated.ps1` kiểm tra theo thứ tự:
 
 1. APK tồn tại, đúng package và đúng `versionCode` bằng `aapt`.
-2. APK có certificate SHA-256 bằng `apksigner`.
-3. Device serial explicit ở trạng thái `device`.
-4. Package hiện hữu không được có version cao hơn APK; package hiện hữu phải
+2. SHA-256 toàn bộ APK khớp exact digest được pin trong preflight.
+3. APK có certificate SHA-256 bằng `apksigner` và khớp exact certificate digest
+   được pin trong preflight.
+4. Device serial explicit ở trạng thái `device`.
+5. Package hiện hữu không được có version cao hơn APK; package hiện hữu phải
    khớp đúng signature token đã đọc trước đó từ `dumpsys package`.
-5. Chỉ sau khi preflight pass mới chạy `adb install -r`; sau đó đọc lại
+6. Chỉ sau khi preflight pass mới chạy `adb install -r`; sau đó đọc lại
    package/version/signature. Không có fallback, uninstall, clear hay
    `--downgrade`.
 
@@ -50,14 +52,17 @@ $env:ANDROID_HOME = 'C:\Users\ADMIN\AppData\Local\Android\Sdk'
   -ApkPath '.\artifacts\builds\v4.17-p5e.3\build-20260910-211805\TranslateBooks-v4.17-p5e.3-code199.apk' `
   -Serial '15e84958' `
   -ExpectedVersionCode 199 `
+  -ExpectedApkSha256 '870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09' `
+  -ExpectedApkCertificateSha256 '47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155' `
   -ExpectedDeviceSignatureToken 'abebea4b' `
   -CheckOnly
 ```
 
 `-AllowMissingPackage` chỉ được dùng khi owner đã xác nhận target là một
 device/package rỗng và đang tạo pilot mới; không dùng trên device hiện tại.
-`build-and-save.ps1 -Install` không còn gọi ADB trực tiếp: nó bắt buộc serial
-explicit và chuyển qua guard này. Gradle cũng fail-closed với mọi task
+`build-and-save.ps1 -Install` không còn gọi ADB trực tiếp: nó bắt buộc serial,
+certificate digest pin explicit và chuyển hash của APK đã archive vào guard này.
+Gradle cũng fail-closed với mọi task
 `connected*AndroidTest`; assemble, install và instrumentation phải là ba bước
 tách biệt.
 

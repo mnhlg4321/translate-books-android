@@ -66,7 +66,10 @@ Local failure không phải lý do dừng toàn bộ hướng phát triển. Kh�
 .\scripts\build-and-save.ps1
 
 # Build, lưu hai bản trước rồi mới cài vào thiết bị
-.\scripts\build-and-save.ps1 -Install
+.\scripts\build-and-save.ps1 -Install `
+  -DeviceSerial '<explicit-serial>' `
+  -ExpectedDeviceSignatureToken '<preflight-device-token>' `
+  -ExpectedApkCertificateSha256 '<64-hex-certificate-digest>'
 ```
 
 Không chạy `assembleDebug` trực tiếp và không dùng Android Studio **Build APK(s)**. Xem `BUILDING.md` để biết cấu trúc artifact và quy tắc đánh số.

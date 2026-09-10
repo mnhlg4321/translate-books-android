@@ -14,6 +14,14 @@ param(
     [ValidateRange(1, [int]::MaxValue)]
     [int]$ExpectedVersionCode,
 
+    [Parameter(Mandatory = $true)]
+    [ValidatePattern('^[0-9a-fA-F]{64}$')]
+    [string]$ExpectedApkSha256,
+
+    [Parameter(Mandatory = $true)]
+    [ValidatePattern('^[0-9a-fA-F]{64}$')]
+    [string]$ExpectedApkCertificateSha256,
+
     [string]$ExpectedDeviceSignatureToken,
 
     [string]$AndroidSdkPath,
@@ -154,6 +162,10 @@ function Assert-PackageState {
 }
 
 $resolvedApk = (Resolve-Path -LiteralPath $ApkPath).Path
+$actualApkSha256 = (Get-FileHash -LiteralPath $resolvedApk -Algorithm SHA256).Hash.ToLowerInvariant()
+if ($actualApkSha256 -ne $ExpectedApkSha256.ToLowerInvariant()) {
+    throw "INSTALL_GUARD_APK_HASH_MISMATCH: expected $($ExpectedApkSha256.ToLowerInvariant()), found $actualApkSha256."
+}
 $sdkPath = Resolve-AndroidSdkPath $AndroidSdkPath
 $adbPath = Join-Path $sdkPath 'platform-tools\adb.exe'
 if (-not (Test-Path -LiteralPath $adbPath -PathType Leaf)) {
@@ -188,6 +200,9 @@ if (-not $certMatch.Success) {
     throw "APK signature output did not contain a SHA-256 certificate digest: $resolvedApk"
 }
 $apkCertificateSha256 = $certMatch.Groups[1].Value.ToLowerInvariant()
+if ($apkCertificateSha256 -ne $ExpectedApkCertificateSha256.ToLowerInvariant()) {
+    throw "INSTALL_GUARD_APK_CERTIFICATE_MISMATCH: expected $($ExpectedApkCertificateSha256.ToLowerInvariant()), found $apkCertificateSha256."
+}
 
 $stateOutput = Invoke-CheckedCommand $adbPath @('-s', $Serial, 'get-state') `
     "ADB device preflight failed for $Serial."
@@ -210,6 +225,7 @@ if ($before.Present) {
 }
 
 Write-Output "Preflight PASS: package=$apkPackage versionCode=$apkVersionCode versionName=$apkVersionName"
+Write-Output "APK SHA-256: $actualApkSha256"
 Write-Output "APK certificate SHA-256: $apkCertificateSha256"
 if ($before.Present) {
     Write-Output "Device package: present versionCode=$($before.VersionCode) signatureToken=$($before.SignatureToken)"

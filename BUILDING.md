@@ -44,7 +44,11 @@ Each build also receives an increasing Android `versionCode`.
 ## Build and then install
 
 ```powershell
-.\scripts\build-and-save.ps1 -Install
+.\scripts\build-and-save.ps1 `
+  -Install `
+  -DeviceSerial '15e84958' `
+  -ExpectedDeviceSignatureToken 'abebea4b' `
+  -ExpectedApkCertificateSha256 '47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155'
 ```
 
 Archiving always finishes before installation begins. If installation fails, the APK and its records remain safely stored.
@@ -52,7 +56,7 @@ Archiving always finishes before installation begins. If installation fails, the
 ## Custom series and notes
 
 ```powershell
-.\scripts\build-and-save.ps1 -Series 4.15-dev -Notes "Output picker regression fix" -Install
+.\scripts\build-and-save.ps1 -Series 4.15-dev -Notes "Output picker regression fix"
 ```
 
 Use a new series when starting the next development line. Never rename or overwrite an existing build directory.
@@ -62,7 +66,7 @@ Use a new series when starting the next development line. Never rename or overwr
 After the release metadata is committed and the release checklist is ready for final regression, build the exact public version from its matching clean feature branch:
 
 ```powershell
-.\scripts\build-and-save.ps1 -ExactReleaseVersion 4.14 -Notes "Translate Books 4.14 release build." -Install
+.\scripts\build-and-save.ps1 -ExactReleaseVersion 4.14 -Notes "Translate Books 4.14 release build."
 ```
 
 Exact release mode:
