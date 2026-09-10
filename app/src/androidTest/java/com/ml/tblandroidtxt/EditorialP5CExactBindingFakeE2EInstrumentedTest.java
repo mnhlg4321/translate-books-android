@@ -207,6 +207,10 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
         assertEquals("P5C_RAW_COMMITTED", result.reasonCode());
         assertEquals(EditorialP5PilotResult.Outcome.COMMITTED, result.rawResult().outcome());
         assertNull(result.reconcileResult());
+        EditorialP5L1Output rawOutput = result.rawResult().committedResult().output();
+        assertEquals("raw chapter bytes", rawOutput.beforeText());
+        assertEquals(rawOutput.beforeText(), rawOutput.afterText());
+        assertEquals(0, rawOutput.declaredChanges().size());
         assertEquals(1, result.providerCalls());
         assertEquals(1, provider.calls);
         assertEquals("L1_RAW_DISCOVERY", provider.requests.get(0).phase());
@@ -859,11 +863,14 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
                         request.populationIds().get(0), "PROCESSED", List.of("fake-evidence"), false)));
         Map<String, String> gates = new LinkedHashMap<>();
         for (String gate : EditorialSafe4Contract.GATE_IDS) gates.put(gate, "PASS");
+        String rawText = request.phase().equals(EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY.name())
+                ? new String(request.source(EditorialSafe4Contract.RAW).bytes(), StandardCharsets.UTF_8)
+                : "draft";
         return new EditorialP5L1Output("safe4.full.report-l1.v1",
                 EditorialSafe4Contract.RECEIPT_SCHEMA_VERSION, request.binding().bindingIdentity(),
                 request.manifestFingerprint(), CHAPTER_KEY, "L1", request.bundleIdentity(),
                 request.predecessorIdentity(), request.stableAnchors(), ledger, gates,
-                List.of(), List.of(), "draft", "draft", 0,
+                List.of(), List.of(), rawText, rawText, 0,
                 EditorialStopDecision.continueWithoutStop("L1", "COVERAGE", "FAKE_LOCAL_VALIDATED"),
                 Set.of("fake-evidence"), true);
     }

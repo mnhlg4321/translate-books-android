@@ -10,9 +10,9 @@ I/O logging và không lưu prompt, response body, source text hoặc secret.
 |---|---|
 | Branch | `feature/v4.18` |
 | Baseline commit trước P5E | `ba42d65271c0a51722b917440d3b51e1cf6a7eec` |
-| Current validation package | `v4.17-p5e.2 / versionCode 198` |
-| Current build event | `build-20260910-210235` |
-| Production APK SHA-256 | `311D54B05C65002F569DE200B05A209C3B3FD12C750867931EF0FC8132A06C01` |
+| Current validation package | `v4.17-p5e.3 / versionCode 199` |
+| Current build event | `build-20260910-211805` |
+| Production APK SHA-256 | `870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09` |
 | Current database schema | `v24` |
 | Device | `15e84958` |
 | Canonical/final schema changes | `NONE` |
@@ -85,6 +85,11 @@ không provider và không chạm pilot DB, dùng evaluation ID lịch sử
 `f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1` đã tái tạo đúng binding
 `2e5c80…82520` và run `7d804f…072f0`; đây chỉ là bằng chứng hàm dẫn xuất
 identity, không khôi phục attempt/reconciliation row đã mất.
+
+Validation artifact code199 được cài tiếp bằng `adb install -r`; test APK sạch có
+SHA-256 `E71B0DF8ACC4B3A5EDC3AC97A4250ED99FD348FA524E605B195E0B96E5B1EE75`.
+Đây chỉ là kiểm chứng code path trên DB dựng lại, không thay đổi kết luận bảo
+tồn dữ liệu lịch sử.
 
 Do gate `PILOT_DATA_PRESERVED` không đạt, P5E không tạo authorization mới và
 không dispatch provider. `P5E_LIVE_PREP_BLOCKED_PILOT_DATA_PRESERVATION` là
