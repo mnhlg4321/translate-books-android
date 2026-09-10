@@ -9,7 +9,8 @@ I/O logging và không lưu prompt, response body, source text hoặc secret.
 | Hạng mục | Giá trị |
 |---|---|
 | Branch | `feature/v4.18` |
-| HEAD trước nhóm fresh-pilot evidence | `cd683503c79e03e4a215596855458c11200104ab` |
+| HEAD trước nhóm fresh-pilot evidence | `cd683503c79e03e4a215596855458c11200104ab` (historical group start) |
+| HEAD trước documentation closure | `424278e44c042b882d1888f45d5c4b5b944e0dca` |
 | Production implementation baseline trong candidate | `4140651d860e4ee11ce7e074970761666c575594` |
 | Production source commit trong APK code199 | `03b97a30885393c1cc8a3297d5dff9672dcba57e` |
 | Production source commit trong pre-patch APK code201 | `a4b4a8f9d215578d5bfae329b1b4608927d0476c` |
@@ -22,12 +23,13 @@ I/O logging và không lưu prompt, response body, source text hoặc secret.
 | Last-known original pilot predecessor | `code196 / schema v24`; historical and unavailable, not current data |
 | Pre-upgrade code199 production APK SHA-256 | `870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09` |
 | Current code202 production APK SHA-256 | `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0` |
-| Test APK SHA-256 | `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456` (pre-candidate clean APK; candidate-aligned test APK pending) |
+| Candidate-aligned test APK SHA-256 | `63D3093CF68700A563CA979A9D15C3652FD8AB1DE60B219BDB35AE19442F76BC`, test-source commit `424278e44c042b882d1888f45d5c4b5b944e0dca`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
+| Pre-candidate clean test APK SHA-256 | `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456`; historical attribution only |
 | Package / test package | `com.ml.tblandroidtxt` / `com.ml.tblandroidtxt.test` |
 | Candidate/installed APK certificate SHA-256 | `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
 | Device package signature token | `abebea4b` (`dumpsys package`, short token) |
 | Current database schema | `v24` |
-| Current data state | `RECONSTRUCTED_ONLY`; original code196 rows unavailable |
+| Current data state | `RECONSTRUCTED_ONLY`; fresh pilot lineage appended; original code196 rows unavailable |
 | Device | `15e84958` |
 | Canonical/final schema changes | `NONE` |
 
@@ -112,20 +114,73 @@ ZIP SHA-256 `D91FE78F99DE6D04CE0DA09C54A76BF030BA40408CF74142B8FC8FF243471A5C`
 và production source commit `4140651d860e4ee11ce7e074970761666c575594`.
 Candidate này đã được cài đúng một lần sau owner approval và G1 bằng guarded
 `adb install -r`; package/hash/certificate/signature và G2 data readback đã pass.
-Clean pre-candidate test APK hash
+Pre-candidate clean test APK hash
 `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456` thuộc
 test-source commit `914820d3c91ae8df5cc6b2769df7b2d036585f7a`, package
 `com.ml.tblandroidtxt.test`, cùng debug certificate; versionCode test APK là
-`N/A` theo manifest instrumentation. Nó không chứng minh candidate-aligned
-test source. Current production package is candidate code202; device/data
-readback claims above apply to that package, while fresh-pilot QA remains
-pending.
+`N/A` theo manifest instrumentation. Nó là historical evidence cho build
+trước candidate. Candidate-aligned test APK cuối có SHA-256
+`63D3093CF68700A563CA979A9D15C3652FD8AB1DE60B219BDB35AE19442F76BC`,
+test-source commit `424278e44c042b882d1888f45d5c4b5b944e0dca`, cùng certificate;
+manifest/install guard private được lưu ngoài Git. Current production package
+is candidate code202; device/data readback claims above apply to that package.
+Fresh-pilot QA below is candidate-aligned and complete locally.
 
-Do gate lịch sử `PILOT_DATA_PRESERVED` không đạt, P5E không tạo authorization
-mới và không dispatch provider. G1 backup/restore của reconstructed data và G2
-candidate/data readback đã đạt; fresh evaluation/run/binding và fake E2E vẫn
-chưa chạy. `P5E_LIVE_PREP_BLOCKED_PILOT_DATA_PRESERVATION` vẫn là blocker live;
-không ghi `P5E_LIVE_RAW_ACCEPTANCE_PASS`.
+Do gate lịch sử `PILOT_DATA_PRESERVED` không đạt, P5E không tự tạo authorization
+mới và không dispatch provider. G1 backup/restore của reconstructed data, G2
+candidate/data readback, fresh evaluation/run/binding setup và candidate-aligned
+fake E2E đã đạt local-only. Điều này mở readiness của fresh lineage để xin một
+authorization RAW riêng, không phục hồi gate lịch sử và không ghi
+`P5E_LIVE_RAW_ACCEPTANCE_PASS`.
+
+## Fresh-pilot G3/G4 — local verification trên candidate
+
+G3 đã dùng đường setup chính thức để tạo lineage mới, không sao chép attempt,
+receipt hoặc authorization cũ:
+
+```text
+selector:          p5e-fresh-mercedes-vol5-20260911-01
+binding:           845976b3cde02a3bf0896b64efd208f42e40821317d1b7bffec7081e63e33cdf
+run declaration:   8466b95d96f958a97eb3ffd1eac5a32734023cafa1c230e696ad4253151a41dc
+old selector:      p5d-raw-mercedes-vol5-001
+old binding:       d1f854f3d723d8326dc4e99aa7f750524b4b1c223f20ff8e101557f5c0052a14
+schema:             v24
+current p5c auth/reconcile: 0 / 0 / 0
+```
+
+Fresh source bytes retain the pinned RAW hash
+`A308210ECA80557CFA9FEC7ED55B2EE3DE5C1C4776E59B2B5EDBF0EFB04504BE`, the
+existing PRONOUN BOM/semantic rule, and the canonical pack/profile hashes.
+The fresh snapshot/readback is private at
+`D:\P5E-private\fresh-pilot-20260911-060059\fresh-pilot-snapshot`, manifest
+SHA-256 `2BEA88D4B562DFFA0CEAE401E1BFA0ED50B353CCD014AA9840F15CE1FA7F35EF`;
+it is classified `RECONSTRUCTED_ONLY_FRESH_PILOT`, not code196 recovery.
+
+G4 used candidate-aligned test APK `63D3093CF68700A563CA979A9D15C3652FD8AB1DE60B219BDB35AE19442F76BC`
+and direct `adb shell am instrument`, not `connectedDebugAndroidTest`:
+
+| Case | Result | Scope |
+|---|---|---|
+| Fresh setup/readback and old-lineage non-reuse | PASS | Current reconstructed DB; source/pack/binding invariants preserved |
+| Compact RAW success, exact materialization, empty changes, replay | PASS | Isolated DB/storage; one fake call, replay zero fake calls |
+| Fault/STOP, no partial commit, no repair | PASS | Isolated DB/storage; no report/receipt/reconcile rows |
+| Malformed/truncated/oversized/unknown/change/replay parser negatives | PASS | Isolated parser fixture; no current DB attempt |
+| Instrumentation total | `4/4`, exit `0` | `EditorialP5EFreshPilotInstrumentedTest`, final r3 |
+
+The fake predecessor is not live evidence. Current DB remains at zero P5C
+attempts, P5D authorization receipts and reconciliation rows; provider calls and
+new authorizations remain zero.
+
+Local readiness labels are now current for the fresh lineage:
+
+```text
+FRESH_PILOT_LOCAL_VERIFIED
+RAW_AUTHORIZATION_REQUIRED
+NO_LIVE_CALL_PERFORMED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
+```
 
 ## Phân biệt deadline
 
@@ -179,27 +234,28 @@ RECONSTRUCTED_ONLY
 FRESH_PILOT_OWNER_APPROVED
 BACKUP_RESTORE_G1_PASS
 CANDIDATE_UPGRADE_G2_PASS
-FRESH_PILOT_SETUP_PENDING
+FRESH_PILOT_LOCAL_VERIFIED
 ```
 
 Fresh pilot phải dùng evaluation/run/binding/attempt identity mới, source hash
 exact nếu bytes không đổi, authorization mới chỉ ở vòng live sau và backup
 SQLite nhất quán có WAL-aware manifest/hash/restore test. Owner approval local-only
-đã được ghi nhận; G1/G2 đã thực hiện. P5E hiện vẫn chưa khởi tạo fresh identity,
-chưa cấp receipt và không làm cho authorization cũ khả dụng.
+đã được ghi nhận; G1/G2/G3/G4 đã thực hiện. Current DB chưa có attempt, receipt
+hoặc reconciliation mới; fake predecessor chỉ tồn tại trong isolated QA và không
+làm cho authorization cũ khả dụng.
 
 ## Fresh pilot rebaseline và readiness — owner-approved local work
 
 Candidate code202 đã được cài một lần sau approval và G1 bằng guard exact; package,
 certificate, DB/source/pack readback đạt G2. Candidate-aligned test APK và fresh
-binding fake E2E vẫn chưa hoàn tất.
+binding fake E2E đã hoàn tất local-only trên binding mới; không có live call.
 
 | Baseline | Identity/evidence |
 |---|---|
 | Candidate | `v4.17-p5e.6 / code202`, source commit `4140651d860e4ee11ce7e074970761666c575594`, APK SHA-256 `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
 | Pre-upgrade installed | `v4.17-p5e.3 / code199`, APK SHA-256 `870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09`, schema `v24`, data `RECONSTRUCTED_ONLY` |
 | Installed after G2 | `v4.17-p5e.6 / code202`, APK SHA-256 `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`, schema `v24`, data `RECONSTRUCTED_ONLY`; current candidate device-verified |
-| Test APK attribution | Pre-candidate clean APK SHA-256 `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456`, test-source commit `914820d3c91ae8df5cc6b2769df7b2d036585f7a`; candidate-aligned test APK pending |
+| Test APK attribution | Candidate-aligned APK SHA-256 `63D3093CF68700A563CA979A9D15C3652FD8AB1DE60B219BDB35AE19442F76BC`, test-source commit `424278e44c042b882d1888f45d5c4b5b944e0dca`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`, direct instrumentation `4/4`; pre-candidate `501653...` remains historical |
 | Historical | code196/schema v24 original pilot data lost; code189/code191 and consumed authorizations remain historical |
 
 ### Owner approval đã được ghi nhận — local-only
@@ -222,11 +278,13 @@ Approval được owner gửi và quan sát lúc `2026-09-11T06:00:59+07:00`. Sn
 private ngoài Git tại `D:\P5E-private\fresh-pilot-20260911-060059` có manifest
 SHA-256 `1C495F95B0572458B8405B599A7D11CC80F6770316080A1772EF379A17AC7C64`;
 `RESTORE_ISOLATED_PASS` và G1 đã đạt. Candidate code202 sau đó được cài đúng
-một lần bằng guard, và package/DB/source/pack readback đạt G2. Bước tiếp theo duy
-nhất là tạo fresh evaluation/run/binding bằng selector mới, rồi fake QA; không
-copy attempt/receipt/authorization cũ.
+một lần bằng guard, và package/DB/source/pack readback đạt G2. Fresh setup và
+candidate-aligned fake QA tiếp theo đạt G3/G4; không copy attempt/receipt/
+authorization cũ. Snapshot fresh có manifest SHA-256
+`2BEA88D4B562DFFA0CEAE401E1BFA0ED50B353CCD014AA9840F15CE1FA7F35EF`.
 
-Các nhãn sau chỉ là nhãn đề xuất sau khi đủ gate, không phải trạng thái hiện tại:
+Sau G1/G2/G3/G4, các nhãn local-only dưới đây là trạng thái hiện tại của fresh
+lineage; chúng không phải live acceptance và không phục hồi lịch sử code196:
 
 ```text
 FRESH_PILOT_LOCAL_VERIFIED

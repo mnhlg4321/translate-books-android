@@ -103,9 +103,9 @@ Fresh pilot là một lineage mới, không phải recovery: tạo evaluation/ru
 attempt identity mới, authorization single-use mới và giữ source hash nếu exact
 bytes không đổi. Không sửa nhãn, không tạo receipt cho attempt cũ, không biến
 authorization đã consumed thành khả dụng và không trộn các row reconstructed
-với lịch sử code196. Owner đã phê duyệt local-only; G1 backup/restore và G2
-candidate upgrade/data readback đã đạt. Fresh evaluation/run/binding chưa được
-khởi tạo trong record này.
+với lịch sử code196. Owner đã phê duyệt local-only; G1 backup/restore, G2
+candidate upgrade/data readback, G3 fresh setup và G4 candidate-aligned fake QA
+đã đạt. Không có live attempt/authorization nào được tạo.
 
 ## Evidence G1/G2 sau owner approval
 
@@ -130,4 +130,48 @@ vẫn giữ nguyên:
 HISTORICAL_CODE196_PRESERVATION_FAILED
 PILOT_DATA_PRESERVATION_FAILED
 RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+```
+
+## Evidence G3/G4 — fresh lineage và candidate QA
+
+G3 tạo fresh pilot qua setup path chính thức với selector
+`p5e-fresh-mercedes-vol5-20260911-01`, binding
+`845976b3cde02a3bf0896b64efd208f42e40821317d1b7bffec7081e63e33cdf` và run
+declaration `8466b95d96f958a97eb3ffd1eac5a32734023cafa1c230e696ad4253151a41dc`.
+Selector/binding/run cũ không được tái sử dụng; current DB sau readback có
+schema v24, `2` projects, `2` chapters, `8` assets, `2` P4 bindings, `2`
+revisions, `2` scopes, `2` declarations và `0` P5C attempts / P5D authorization
+receipts / reconciliation rows. Source bytes và canonical pack/profile hashes
+được giữ nguyên, gồm quy tắc PRONOUN BOM hiện hành.
+
+Snapshot fresh được lưu ngoài Git tại
+`D:\P5E-private\fresh-pilot-20260911-060059\fresh-pilot-snapshot`, phân loại
+`RECONSTRUCTED_ONLY_FRESH_PILOT`, manifest SHA-256
+`2BEA88D4B562DFFA0CEAE401E1BFA0ED50B353CCD014AA9840F15CE1FA7F35EF`; DB hash
+là `3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391`.
+
+G4 dùng candidate-aligned AndroidTest APK SHA-256
+`63D3093CF68700A563CA979A9D15C3652FD8AB1DE60B219BDB35AE19442F76BC`,
+test-source commit `424278e44c042b882d1888f45d5c4b5b944e0dca`, certificate
+SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`.
+Lớp `EditorialP5EFreshPilotInstrumentedTest` chạy trực tiếp bằng
+`adb shell am instrument` và đạt `4/4`, exit `0`:
+
+- fresh setup/readback xác nhận binding mới và bảo toàn lineage reconstructed;
+- compact RAW success/replay, exact app-owned before/after và
+  `declaredChanges=[]` chỉ commit trong isolated DB/storage;
+- malformed/truncated/oversized/unknown/change/replay và fault STOP không tạo
+  partial commit, repair, report, receipt hoặc RECONCILE.
+
+Không dùng `connectedDebugAndroidTest`, không gọi provider/API thật, không tạo
+RAW authorization và không biến fake predecessor thành bằng chứng live. Trạng
+thái kết thúc của vòng local là:
+
+```text
+FRESH_PILOT_LOCAL_VERIFIED
+RAW_AUTHORIZATION_REQUIRED
+NO_LIVE_CALL_PERFORMED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
 ```
