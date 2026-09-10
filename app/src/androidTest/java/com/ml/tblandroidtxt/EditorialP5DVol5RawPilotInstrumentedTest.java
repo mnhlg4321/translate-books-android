@@ -124,7 +124,7 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
         }
     }
 
-    @Test public void p5eCode197UpgradePreservesSchemaAndVol5Data() throws Exception {
+    @Test public void p5eCode198ReconstructedDbSchemaAndVol5DataReadback() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
         java.io.File databaseFile = context.getDatabasePath("tbl_android_txt.db");
         assertTrue("VOL5 pilot database must already exist", databaseFile.isFile());

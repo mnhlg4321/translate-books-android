@@ -10,9 +10,9 @@ I/O logging và không lưu prompt, response body, source text hoặc secret.
 |---|---|
 | Branch | `feature/v4.18` |
 | Baseline commit trước P5E | `ba42d65271c0a51722b917440d3b51e1cf6a7eec` |
-| Current validation package | `v4.17-dev.28 / versionCode 196` |
-| Current build event | `build-20260910-190649` |
-| Production APK SHA-256 | `85345086FBD76FA78133EE54741CA7631EBA91EB4761401080EC10BA1D35042A` |
+| Current validation package | `v4.17-p5e.2 / versionCode 198` |
+| Current build event | `build-20260910-210235` |
+| Production APK SHA-256 | `311D54B05C65002F569DE200B05A209C3B3FD12C750867931EF0FC8132A06C01` |
 | Current database schema | `v24` |
 | Device | `15e84958` |
 | Canonical/final schema changes | `NONE` |
@@ -62,8 +62,33 @@ usage field là `0`, nhưng upstream usage là `0.0047348` và billing flag khô
 được cung cấp. Đây là `BILLING_STATUS_NOT_UNAMBIGUOUS`; mọi retry phải ghi nhận
 duplicate work/billing risk.
 
-Quyết định P5E được append vào reconciliation history với evidence reference
-này và hash của authorization mới. Primary reconciliation cũ không bị sửa.
+Trong DB pilot trước sự cố cài đặt, quyết định P5E được append vào reconciliation
+history với evidence reference này và hash của authorization mới; primary
+reconciliation cũ không bị sửa. DB đó hiện không còn trên device, nên quyết định
+được giữ ở đây như historical evidence và không được coi là một durable row hiện
+tại để cấp quyền retry.
+
+## P5E.8 — Trạng thái bảo toàn dữ liệu trên device
+
+Trong lần chạy `connectedDebugAndroidTest` dùng để kiểm tra validation, Gradle
+installer đã xử lý một lần cài sai version và package `com.ml.tblandroidtxt`
+biến mất khỏi device. Không có lệnh uninstall/reset/clear chủ động nào được
+phát hành, nhưng package-data code196 đã mất và không tìm thấy bản sao DB cục bộ.
+Vì vậy claim bảo toàn DB code196 là **FAIL**, không được đổi tên thành PASS.
+
+DB v24 hiện tại được rehydrate từ canonical pack và source VOL5 app-owned để
+tiếp tục kiểm tra contract; đây là `RECONSTRUCTED_ONLY`, không phải readback của
+DB code196. Cặp cài `adb install -r` code197 → code198 và test
+`p5eCode198ReconstructedDbSchemaAndVol5DataReadback` chỉ chứng minh schema/source
+ở DB đã dựng lại còn nguyên qua reopen/upgrade trong phạm vi đó. Probe cô lập,
+không provider và không chạm pilot DB, dùng evaluation ID lịch sử
+`f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1` đã tái tạo đúng binding
+`2e5c80…82520` và run `7d804f…072f0`; đây chỉ là bằng chứng hàm dẫn xuất
+identity, không khôi phục attempt/reconciliation row đã mất.
+
+Do gate `PILOT_DATA_PRESERVED` không đạt, P5E không tạo authorization mới và
+không dispatch provider. `P5E_LIVE_PREP_BLOCKED_PILOT_DATA_PRESERVATION` là
+trạng thái hiện tại; không ghi `P5E_LIVE_RAW_ACCEPTANCE_PASS`.
 
 ## Phân biệt deadline
 

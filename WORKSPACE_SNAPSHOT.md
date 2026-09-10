@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
 - Updated: 2026-09-10 (+07:00).
-- Current status: P5E_0_DOCUMENTATION_CLEANUP_PASS / DB_REOPEN_STALE_CLAIM_RECOVERY_VERIFIED / P5D_DEADLINE_BODY_READ_HARDENING_PASS / NO_LATE_COMMIT / NO_AUTOMATIC_REDISPATCH / CODE191_EXTERNAL_STATE_RECONCILED / COMPACT_RAW_WIRE_CONTRACT_LOCAL_PASS / STRUCTURED_OUTPUT_REQUEST_LOCAL_PASS / OUTPUT_SIZE_WITHIN_BUDGET / RAW_REPLAY_PROTECTION_PASS / PILOT_DATA_PRESERVED / P5E_LIVE_PREP_PENDING / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
-- Current version/build: validation artifact 4.17-dev.28 / code196 remains installed on device `15e84958` via `adb install -r`, with package data preserved; APK SHA-256 `85345086FBD76FA78133EE54741CA7631EBA91EB4761401080EC10BA1D35042A`, focused test APK SHA-256 `292F30A50302423E695571BB28E95514504F06F174361762919C35FE6D1704DE`. P5E implementation is staged but not yet built; code197 is the next validation artifact. Code191 is reconciled as `EXTERNAL_CONFIRMED_CANCELLED`; metadata does not prove `$0` billing. No new provider call has been made. DB schema remains v24 and the exact VOL5 binding/source data remain intact. Output cap remains `4,096`.
+- Current status: P5E_0_DOCUMENTATION_CLEANUP_PASS / DB_REOPEN_STALE_CLAIM_RECOVERY_VERIFIED / P5D_DEADLINE_BODY_READ_HARDENING_PASS / NO_LATE_COMMIT / NO_AUTOMATIC_REDISPATCH / CODE191_EXTERNAL_STATE_RECONCILED / COMPACT_RAW_WIRE_CONTRACT_LOCAL_PASS / STRUCTURED_OUTPUT_REQUEST_LOCAL_PASS / OUTPUT_SIZE_WITHIN_BUDGET / RAW_REPLAY_PROTECTION_PASS / PILOT_DATA_PRESERVATION_GATE_FAILED_ORIGINAL_CODE196_DB_LOST_RECONSTRUCTED_ONLY / P5E_LIVE_PREP_BLOCKED_PILOT_DATA_PRESERVATION / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Current version/build: validation artifact 4.17-p5e.2 / code198 is installed on device `15e84958` via `adb install -r` after rehydrating the validation DB; APK SHA-256 `311D54B05C65002F569DE200B05A209C3B3FD12C750867931EF0FC8132A06C01`, source ZIP SHA-256 `D4E0AA6E2075D5BB0FBB192B6C035E2A5F60914155875D8989AF9560C98C2BBC`. The original code196 package data was not preserved after the connected-test installer incident. Code191 is reconciled as `EXTERNAL_CONFIRMED_CANCELLED`; metadata does not prove `$0` billing. No provider call or new authorization has been made after the incident. DB schema is v24 with reconstructed VOL5 data. Output cap remains `4,096`.
 - Current branch/workspace: feature/v4.18 / D:\App Translate Books\App Translate Books-translation-profile.
-- Current commit baseline: ba42d65271c0a51722b917440d3b51e1cf6a7eec, the implementation baseline immediately before this snapshot commit; not self-referential. The P5E implementation/docs are staged in this workspace and will be validated in code197.
+- Current commit baseline: 4e8a4eb82d7c5dd23b4f29bdc5672159e5c31cd5, the implementation baseline immediately before the next snapshot commit; not self-referential. P5E contract implementation and immutable recovery-envelope fix are committed; the preservation gate is failed and documented.
 - Active authority: V5-SAFE.4.1.3-FULL. Authority bytes, canonical ZIP SHA, Java-control ZIP SHA and profile v2 hash are unchanged.
 
 ## Completed tasks
@@ -45,28 +45,28 @@
 
 ## Validation evidence
 
-- Host engine XML: `192/192 PASS`, `0` failures, `0` errors, `0` skipped; app unit/build checks and Android test compilation passed; current installed device evidence is code196 and external qualification remains `306 PASS / 0 FAIL` from the prior hardening baseline.
+- Host engine XML: `192/192 PASS`, `0` failures, `0` errors, `0` skipped; app unit/build checks and Android test compilation passed; current installed device evidence is code198 with reconstructed data and external qualification remains `306 PASS / 0 FAIL` from the prior hardening baseline.
 - Code189 full device instrumentation: `130` tests, `0` failures; real provider paths remained opt-in/skipped. Code186 `124` tests remains historical evidence.
 - Provider/API calls: code189/code191 and their provider generations are historical evidence only. P5E.1 used authenticated read-only metadata for code191 generation `gen-1788967700-RgJDCWrZsNZ4VAAWmlj8` and recorded `EXTERNAL_CONFIRMED_CANCELLED`; no new provider call or authorization was created during local contract work. Prior known costs remain recorded separately and are not collapsed into `$0`.
 - Canonical ZIP `B9C65DBEB9D4C4ED46B67D5EC28FF6252CC2BDC4B63BC902904612987EC58987`, Java control `44F99423292ADA15680220165AF50430532D847E155F93C1B15D9F173D4609A5`, and profile resource `1B2DB011D59F3E2EF4349AEB0DAA9C54A19B7EFD1E2CA6886BC29B56E4690D62` re-hash correctly.
-- Latest validation APK code196 SHA-256: `85345086FBD76FA78133EE54741CA7631EBA91EB4761401080EC10BA1D35042A`; current focused test APK SHA-256 `292F30A50302423E695571BB28E95514504F06F174361762919C35FE6D1704DE`. All are validation-only artifacts; code191 and earlier remain historical and code169 remains the production baseline. `git diff --check` is required again after this documentation update.
+- Latest validation APK code198 SHA-256: `311D54B05C65002F569DE200B05A209C3B3FD12C750867931EF0FC8132A06C01`; source ZIP SHA-256 `D4E0AA6E2075D5BB0FBB192B6C035E2A5F60914155875D8989AF9560C98C2BBC`. The clean focused test APK SHA-256 will be recorded after its final test-only rebuild. All are validation-only artifacts; code189/code191 remain historical and code169 remains the production baseline. `git diff --check` is required again after this documentation update.
 
 ## Pending tasks
 
-- P5E live RAW acceptance is still pending. The new code197 artifact must be built/installed with `adb install -r`, pilot data must be read back, then a preflight must record the reconciled code191 decision and exact compact wire limits before one new authorization and exactly one RAW acceptance. No automatic retry, schema repair, cap increase or RECONCILE authorization is permitted.
+- P5E live RAW acceptance is blocked, not merely pending: the original code196 pilot DB disappeared during a connected-test installer failure and no trusted backup was found. Code197 → code198 readback covers reconstructed data only. No new authorization or provider dispatch is permitted until the original preservation gate is restored or the owner approves a separately designed fresh-pilot path.
 - Release tag, release backup/export and real-chapter certification remain pending by design.
 
 ## Known bugs and limitations
 
-- No successful P5E app-validated live provider response, real REPORT_L1/receipt, model result or certification evidence exists yet. The current durable VOL5 row remains the old `RECOVERY_REQUIRED / RETRY_PROVIDER_CALL_TIMEOUT` predecessor until the new P5E authorization runs; code191 is now externally classified `EXTERNAL_CONFIRMED_CANCELLED`, while billing remains unresolved and must not be recorded as `$0`.
+- No successful P5E app-validated live provider response, real REPORT_L1/receipt, model result or certification evidence exists yet. The original VOL5 attempt/reconciliation rows are unavailable in the reconstructed DB; code191 remains external `EXTERNAL_CONFIRMED_CANCELLED` evidence only, while billing remains unresolved and must not be recorded as `$0`.
 - P4 creates pilot setup metadata only; `DATA_COMPATIBLE` and selectable status do not mean runnable or certified.
 - Initial setup UI collects explicit source text for binding metadata; it does not certify source bytes or open execution.
 - Bootstrap profile v1 remains loadable and non-executable.
-- The consumed historical VOL4/VOL5 authorizations cannot be reused. The code191 acceptance predecessor has an append-only P5E reconciliation decision classified `EXTERNAL_CONFIRMED_CANCELLED`; its metadata has no completion timestamp/body and does not establish whether billing occurred. OpenRouter I/O logging remains disabled. A new P5E authorization is not reusable and is not created until the code197 preflight gates pass. VOL5 has a separate persisted binding and no RECONCILE authorization exists.
-- Current validation device state: code196 is installed with `adb install -r`; the VOL5 recovery row, binding and source setup remain intact, with no uninstall/reset.
+- The consumed historical VOL4/VOL5 authorizations cannot be reused. Code191 metadata has the external classification `EXTERNAL_CONFIRMED_CANCELLED`; it has no completion timestamp/body and does not establish whether billing occurred. OpenRouter I/O logging remains disabled. No new P5E authorization was created after the preservation incident. The reconstructed DB has v24/source setup but not the historical VOL5 attempt row or reconciliation history.
+- Current validation device state: code198 is installed with `adb install -r` after rehydration. The code196 package data preservation claim is withdrawn; no further uninstall/reset/database cleanup is permitted.
 - The current VOL5 PRONOUN transport file includes a UTF-8 BOM, but semantic bytes after the existing app-owned removal match the immutable binding. No source rewrite or silent rebind is needed.
 - The local delayed harness initially hit a device freezer interruption at `DELAY_STARTED`; bounded cleanup and a test-only foreground keepalive resolved the harness run, but the historical provider cancellation actor remains unknown.
-- Code196 focused device evidence is not a P5E live acceptance pass, but local deadline/body-read gates pass: the existing 17 methods, short stalled-body case (`2.069s`) and five-minute stalled-body case (`301.501s`) pass with one server request and no host force-stop. The prior `PROCESS_RESTART_RECOVERY_VERIFIED` label is superseded by `DB_REOPEN_STALE_CLAIM_RECOVERY_VERIFIED`; the current test evidence does not prove two independent app process invocations.
+- Code196 focused device evidence is not a P5E live acceptance pass, but its local deadline/body-read gates remain historical evidence: the existing 17 methods, short stalled-body case (`2.069s`) and five-minute stalled-body case (`301.501s`) passed with one server request and no host force-stop. The prior `PROCESS_RESTART_RECOVERY_VERIFIED` label is superseded by `DB_REOPEN_STALE_CLAIM_RECOVERY_VERIFIED`; the current test evidence does not prove two independent app process invocations. The isolated historical-identity probe reproduced the old binding/run from the old evaluation ID, but did not restore the lost DB rows.
 
 ## Protected state
 
@@ -74,19 +74,19 @@ The original workspace D:\App Translate Books remains untouched. Its user-owned 
 
 ## Exact next step
 
-2026-09-10 update: P5E implementation is staged on the exact `ba42d652...`
-baseline. Code191 has an authenticated metadata decision of
-`EXTERNAL_CONFIRMED_CANCELLED`; code189/code191 remain historical evidence.
-The current full-shape characterization is `49,665` bytes and compact-wire
-worst case is `2,785` bytes under a `3,584` byte local ceiling. Host engine is
-`192/192`; app unit/build checks and Android test compilation pass. The exact
-VOL5 binding, normalized source identities and schema v24 data remain intact.
-Next action: commit this P5E baseline, build code197 with
-`scripts/build-and-save.ps1`, install with `adb install -r`, run focused
-data-preservation/regression checks, write the preflight, then perform one
-new authorized RAW acceptance. Stop before RECONCILE. Until the real RAW
-predecessor is committed and read back, keep
-`RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED /
+2026-09-10 update: P5E compact-wire implementation and immutable recovery
+envelope fix are committed on `4e8a4eb...`. Code191 has an authenticated
+metadata decision of `EXTERNAL_CONFIRMED_CANCELLED`; code189/code191 remain
+historical evidence. The current full-shape characterization is `49,665` bytes
+and compact-wire worst case is `2,785` bytes under a `3,584` byte local ceiling.
+Host engine is `192/192`; app unit/build checks and Android test compilation
+pass. Code198 is installed with `adb install -r`, but the original code196
+package data was lost during a connected-test installer failure and the current
+v24/VOL5 data is reconstructed only. Therefore `PILOT_DATA_PRESERVED` fails:
+do not write the preflight, create authorization or dispatch provider. Resume
+only after trusted restoration or an explicitly approved fresh-pilot design;
+keep `P5E_LIVE_PREP_BLOCKED_PILOT_DATA_PRESERVATION /
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED /
 EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE`.
 
 This is current-only state; Git history preserves prior snapshots.
