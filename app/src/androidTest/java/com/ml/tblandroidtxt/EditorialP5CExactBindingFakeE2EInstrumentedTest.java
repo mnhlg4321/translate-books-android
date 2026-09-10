@@ -424,14 +424,25 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
 
     @Test public void p5dExecuteRawStalledBodyStopsAtAttemptDeadlineAndPersistsRecovery()
             throws Exception {
+        runStalledBodyAttempt(1_500L, "p5d-stalled-body-deadline", 4_000L);
+    }
+
+    @Test public void p5dExecuteRawStalledBodyStopsAtFiveMinuteDeadlineWithoutHostForceStop()
+            throws Exception {
+        runStalledBodyAttempt(300_000L, "p5d-stalled-body-five-minute", 305_000L);
+    }
+
+    private void runStalledBodyAttempt(long deadlineMillis, String authorizationId,
+                                       long maximumElapsedMillis) throws Exception {
         BindingFixture fixture = createBoundChapter();
         EditorialP5PilotAuthorization authorization = authorization(fixture.binding,
-                "p5d-stalled-body-deadline", "L1_RAW_DISCOVERY", 1_500L);
+                authorizationId, "L1_RAW_DISCOVERY", deadlineMillis);
         AppSettings settings = new AppSettings();
         settings.provider = "openrouter";
         settings.model = "openai/gpt-5.6-luna";
         settings.apiKey = "local-test-key";
 
+        if (deadlineMillis >= 60_000L) keepTargetForegroundForTransport();
         try (StalledBodyServer server = new StalledBodyServer()) {
             settings.baseUrl = "http://127.0.0.1:" + server.port() + "/v1/chat/completions";
             OpenRouterEditorialP5PilotProvider provider =
@@ -448,14 +459,14 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
                 assertTrue("local server did not receive the RAW request",
                         server.awaitRequest(5, TimeUnit.SECONDS));
                 EditorialP5CExactBindingExecution.Result result = resultFuture.get(
-                        5, TimeUnit.SECONDS);
+                        deadlineMillis + 10_000L, TimeUnit.MILLISECONDS);
                 long elapsedMillis = TimeUnit.NANOSECONDS.toMillis(
                         System.nanoTime() - startedNanos);
                 assertEquals(EditorialP5CExactBindingExecution.Status.STOP, result.status());
                 assertEquals("RETRY_PROVIDER_CALL_TIMEOUT", result.reasonCode());
                 assertEquals(1, result.providerCalls());
                 assertTrue("app did not stop within the bounded deadline: " + elapsedMillis,
-                        elapsedMillis < 4_000L);
+                        elapsedMillis < maximumElapsedMillis);
                 String attemptIdentity;
                 try (Cursor cursor = database.editorialReadableDatabase().rawQuery(
                         "SELECT attempt_identity FROM editorial_p5c_attempts LIMIT 1", null)) {
