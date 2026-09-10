@@ -1,6 +1,6 @@
-# P5E.1 — Đối soát external generation code191
+# P5E — Đối soát generation, quyết định dữ liệu và local acceptance gate
 
-Ngày ghi nhận: `2026-09-10` (+07:00)
+Ngày ghi nhận: `2026-09-11` (+07:00)
 Phạm vi: metadata OpenRouter được đọc qua Activity/Logs đã xác thực; không mở
 I/O logging và không lưu prompt, response body, source text hoặc secret.
 
@@ -9,17 +9,26 @@ I/O logging và không lưu prompt, response body, source text hoặc secret.
 | Hạng mục | Giá trị |
 |---|---|
 | Branch | `feature/v4.18` |
-| Baseline commit trước P5E | `ba42d65271c0a51722b917440d3b51e1cf6a7eec` |
-| Current validation package | `v4.17-p5e.3 / versionCode 199` |
+| HEAD khi chốt baseline/documentation | `ca9cae929e27a5899f590c29e887459b0e2456ab` |
+| Production source commit trong APK code199 | `03b97a30885393c1cc8a3297d5dff9672dcba57e` |
+| Test-source commit của clean test APK | `914820d3c91ae8df5cc6b2769df7b2d036585f7a` |
+| Current installed validation package | `v4.17-p5e.3 / versionCode 199` |
 | Current build event | `build-20260910-211805` |
 | Production APK SHA-256 | `870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09` |
+| Test APK SHA-256 | `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456` |
+| Package / test package | `com.ml.tblandroidtxt` / `com.ml.tblandroidtxt.test` |
+| APK certificate SHA-256 | `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
+| Device package signature token | `abebea4b` (`dumpsys package`, short token) |
 | Current database schema | `v24` |
+| Current data state | `RECONSTRUCTED_ONLY`; original code196 rows unavailable |
 | Device | `15e84958` |
 | Canonical/final schema changes | `NONE` |
 
 Code `189` và code `191` là historical evidence, không phải current baseline.
-Báo cáo này đưa code `196`/schema `v24` lên current baseline trước khi đánh
-giá contract mới.
+Code `196`/schema `v24` là last-known original-data path và là historical
+predecessor; nó không còn là current installed artifact. Current installed
+code199/schema v24 chỉ là validation DB đã dựng lại, nên không được gọi là
+preserved history.
 
 ## Generation được đối soát
 
@@ -114,6 +123,68 @@ không được cộng vào provider-call duration và không được biến th
   preflight contract mới pass.
 - Code189/code191 và các authorization đã consumed chỉ được dẫn như lịch sử;
   không được reuse.
+
+## Installer investigation và guard result
+
+Evidence daemon `daemon-39212.out.log` ghi đúng lower-version attempt code48 lên
+code197 và `INSTALL_FAILED_VERSION_DOWNGRADE`; không có evidence đủ để quy cho
+một cleanup actor cụ thể. `daemon-39532.out.log` ghi các test sau đó thiếu
+VOL5 DB/fixture/attempt. Repo cũ không có uninstall/clear/fallback trong
+`scripts/build-and-save.ps1`, nhưng đường `connectedDebugAndroidTest` của AGP
+có thể tự cài APK stale; đây là guard gap đã biết.
+
+P5E bổ sung `scripts/install-validated.ps1` và chặn task
+`connected*AndroidTest` ở `app/build.gradle`. Check-only trên device hiện tại
+đã pass với package/version/signature đúng; APK code196 bị chặn downgrade và
+signature token sai bị chặn. Không cài lại device trong vòng này. Chi tiết và
+quy trình tách assemble/install/instrumentation ở
+`docs/P5E_INSTALL_AND_DATA_PRESERVATION_RUNBOOK.md`.
+
+## Data decision
+
+Chỉ các root `artifacts`/`backup` đã biết được tìm; không có DB/recovery backup
+đáng tin cậy và không có isolated restore test. `D:\Ebooks\New folder\metadata.db`
+không phải app DB. Do đó giữ nguyên:
+
+```text
+PILOT_DATA_PRESERVATION_FAILED
+RECONSTRUCTED_ONLY
+FRESH_PILOT_PROPOSAL_ONLY
+```
+
+Fresh pilot, nếu owner phê duyệt ở bước sau, phải dùng evaluation/run/binding/
+attempt identity mới, source hash exact nếu bytes không đổi, authorization mới
+và backup SQLite nhất quán có WAL-aware manifest/hash/restore test. P5E này
+không khởi tạo fresh pilot, không cấp receipt và không làm cho authorization cũ
+khả dụng.
+
+## Authorization ledger — historical, consumed, never reuse
+
+| Record | Trạng thái | Ghi chú |
+|---|---|---|
+| P5C VOL4 `p5c-real-mercedes-vol4-001` | Consumed; two ephemeral in-memory auth records, IDs không được persist | Một RAW dispatch; no RECONCILE; xem `docs/P5C_AUTHORIZATION_RECORD.md` |
+| `P5D-VOL5-RAW-DIAGNOSTIC-20260909-01` | Consumed once | One primary, zero repair/network retry; `finish=length`/2048; no report/receipt |
+| `P5D-VOL5-RAW-ACCEPTANCE-20260909-01` | Consumed once | One primary; deadline/no terminal app result; generation code191; no report/receipt |
+
+Không có authorization P5E mới sau preservation incident. Các record trên chỉ
+là historical evidence và không được dùng lại dù code191 đã được phân loại
+`EXTERNAL_CONFIRMED_CANCELLED`.
+
+## Compact contract local QA decision
+
+| Requirement | Code | Test/evidence | Kết luận |
+|---|---|---|---|
+| Full source không được lặp trong wire | `EditorialP5RawWireContract`, `EditorialP5RawWireResponse` | Full shape `49,665` bytes; duplicated source `47,628`; `currentFullShapeWithDuplicatedRawTextExceedsByteBudget` | Legacy shape không chấp nhận được |
+| Hard counts/IDs/refs/closed schema | `EditorialP5RawWireContract.validate`, strict parser | Findings/evidence/preserved/disposition limit tests; unknown-field, unsafe-token và >ceiling tests | Fail-closed; worst case `2,785 <= 3,584 < 4,096` |
+| Evidence inventory/coverage | Wire validator + local `EditorialLedgerValidator` | Duplicate/orphan evidence, missing population coverage tests | Pass local; external evidence existence vẫn phải do app-owned inventory cung cấp |
+| STOP semantics | `EditorialP5PilotExecution` | `rawStopDispositionIsTypedAndNeverCommits` | Typed stop, no predecessor/report/receipt commit |
+| Exact RAW materialization | `EditorialP5RawWireResponse.materialize` | No-source compact test, BOM byte round-trip, empty changes | App-owned before=after exact bytes; edits rejected |
+| Population không bị silent drop | `EditorialP5PilotExecution` | `rawPopulationBeyondCompactWireLimitStopsBeforeProviderCall` | >4 dừng trước provider; không tự partition/retry |
+| Binding/replay/PASS | Existing engine/parser validators | attempt/envelope/replay, wrong binding/phase, model PASS tests | Local pass; no model-owned identity/authority |
+
+Scope RAW discovery được giữ hẹp: một request chỉ xử lý population tối đa bốn
+item theo wire contract. Không dùng cap nhỏ để âm thầm bỏ item; population lớn
+dừng typed và cần binding/contract được owner đo và phê duyệt riêng.
 
 Nguồn tham chiếu capability được kiểm tra trước P5E: [GPT-5.6 Luna model page](https://openrouter.ai/openai/gpt-5.6-luna-20260709),
 [OpenRouter Structured Outputs](https://openrouter.ai/docs/guides/features/structured-outputs),

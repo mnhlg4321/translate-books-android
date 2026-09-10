@@ -121,6 +121,11 @@ public final class EditorialP5RawWireResponse {
         if (!Arrays.equals(rawBytes, rawText.getBytes(StandardCharsets.UTF_8))) {
             throw new IllegalArgumentException("RAW source bytes are not stable UTF-8");
         }
+        EditorialLedgerValidator.Result ledgerValidation = new EditorialLedgerValidator().validate(
+                new EditorialLedgerValidator.Request(request.context().populationIds(), findings));
+        if (!ledgerValidation.valid()) {
+            throw new IllegalArgumentException("RAW_WIRE_LEDGER_INVALID:" + ledgerValidation.issues());
+        }
         return new EditorialP5L1Output(
                 EditorialP5RawWireContract.FINAL_REPORT_SCHEMA,
                 EditorialSafe4Contract.RECEIPT_SCHEMA_VERSION,

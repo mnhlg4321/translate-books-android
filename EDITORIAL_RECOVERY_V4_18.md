@@ -1,6 +1,6 @@
 # Editorial Recovery v4.18
 
-Status: `ACTIVE / P0_DOCUMENTATION_COMPLETE / IMPLEMENTATION_NOT_STARTED`
+Status: `ACTIVE / P5E_LOCAL_QA_COMPLETE / ORIGINAL_PILOT_DATA_PRESERVATION_FAILED / FRESH_PILOT_REQUIRES_OWNER_APPROVAL / LIVE_PROVIDER_DISABLED`
 
 This document is the single product and execution authority for the v4.18 Editorial recovery. It supersedes active next actions from the historical v4.16 Editorial/RSC/IPC tracks without deleting or reinterpreting their evidence.
 

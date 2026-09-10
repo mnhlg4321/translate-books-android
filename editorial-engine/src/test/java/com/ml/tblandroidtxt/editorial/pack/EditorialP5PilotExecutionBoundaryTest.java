@@ -122,6 +122,59 @@ public final class EditorialP5PilotExecutionBoundaryTest {
         assertTrue(result.metrics().receiptValidationPassed());
     }
 
+    @Test public void rawPopulationBeyondCompactWireLimitStopsBeforeProviderCall() {
+        Fixture fixture = fixture();
+        EditorialP5PilotRequest expanded = new EditorialP5PilotRequest(
+                fixture.request.binding(), fixture.request.manifest(), fixture.request.authority(),
+                fixture.request.chapterKey(), EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY,
+                fixture.request.sources(), fixture.request.predecessorIdentity(),
+                fixture.request.stableAnchors(),
+                List.of("population:001", "population:002", "population:003", "population:004",
+                        "population:005"), fixture.request.evidenceContentSufficient(),
+                fixture.request.requestedOutputTokens());
+        Fixture expandedFixture = fixture.withRequest(expanded);
+        FakeProvider provider = new FakeProvider(response(expanded, true));
+        Store store = new Store();
+
+        EditorialP5PilotResult result = execute(expandedFixture,
+                authorization(expanded, "auth-population-limit"), provider, store);
+
+        assertEquals(EditorialP5PilotResult.Outcome.STOP, result.outcome());
+        assertEquals(EditorialP5PilotResult.StopClass.INPUT_REQUIRED,
+                result.stopReceipt().stopClass());
+        assertEquals("RAW_WIRE_POPULATION_LIMIT_EXCEEDED", result.stopReceipt().reasonCode());
+        assertEquals(0, provider.calls);
+        assertEquals(0, store.committed.size());
+    }
+
+    @Test public void rawStopDispositionIsTypedAndNeverCommits() {
+        Fixture fixture = fixture();
+        EditorialP5L1Output valid = output(fixture.request);
+        EditorialStopDecision.Decision stop = EditorialStopDecision.contentBlocked(
+                "CONTENT_CONFLICT_PROVEN", "L1", "SEMANTIC_FIDELITY", List.of("evidence-1"),
+                "chapter-1", "Manual review required", "L1");
+        EditorialP5L1Output stopped = new EditorialP5L1Output(valid.reportSchemaVersion(),
+                valid.receiptSchemaVersion(), valid.bindingIdentity(), valid.manifestFingerprint(),
+                valid.chapterKey(), valid.phase(), valid.bundleIdentity(), valid.predecessorIdentity(),
+                valid.stableAnchors(), valid.ledger(), valid.gates(), valid.preservedInventory(),
+                valid.declaredChanges(), valid.beforeText(), valid.afterText(), valid.releaseAttemptCount(),
+                stop, valid.evidenceRefs(), false);
+        FakeProvider provider = new FakeProvider(new EditorialP5PilotProvider.Response(
+                "response-stop", bytes("stop"), "stop", true, 80, 30, 110,
+                BigDecimal.ZERO, stopped, true));
+        Store store = new Store();
+
+        EditorialP5PilotResult result = execute(fixture,
+                authorization(fixture.request, "auth-stop"), provider, store);
+
+        assertEquals(EditorialP5PilotResult.Outcome.STOP, result.outcome());
+        assertEquals(EditorialP5PilotResult.StopClass.CONTENT_BLOCKED,
+                result.stopReceipt().stopClass());
+        assertEquals("CONTENT_CONFLICT_PROVEN", result.stopReceipt().reasonCode());
+        assertEquals(1, provider.calls);
+        assertEquals(0, store.committed.size());
+    }
+
     @Test public void insufficientSemanticEvidencePreservesWithoutProviderCall() {
         Fixture fixture = fixture();
         fixture = fixture.withRequest(fixture.request.withEvidenceContentSufficient(false));

@@ -5,6 +5,7 @@ import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotRequest;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5RawWireContract;
 import com.ml.tblandroidtxt.editorial.pack.EditorialSafe4Contract;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Test;
 
@@ -102,6 +103,52 @@ public final class OpenRouterEditorialP5PilotProviderTest {
             throw new AssertionError("RAW edits must be rejected");
         } catch (IllegalArgumentException expected) {
             assertTrue(expected.getMessage().contains("RAW_DECLARED_CHANGES_FORBIDDEN"));
+        }
+    }
+
+    @Test public void compactSizeAndUnsafeTokenLimitsFailClosed() throws Exception {
+        EditorialP5PilotProvider.Request request = request();
+        JSONObject tooManyEvidenceRefs = compactRoot(request);
+        tooManyEvidenceRefs.put("evidenceRefs", List.of(
+                "e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8", "e9"));
+        try {
+            OpenRouterEditorialP5PilotProvider.parseRawOutput(tooManyEvidenceRefs.toString(), request);
+            throw new AssertionError("evidence reference limit must be enforced");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("limit"));
+        }
+
+        JSONObject unsafeItemId = compactRoot(request);
+        JSONObject unsafeFinding = new JSONObject().put("itemId", "population:001\nsource")
+                .put("disposition", "PROCESSED")
+                .put("evidenceRefs", List.of("evidence:raw"))
+                .put("modelDeclaredPass", true);
+        unsafeItemId.put("findings", new JSONArray().put(unsafeFinding));
+        try {
+            OpenRouterEditorialP5PilotProvider.parseRawOutput(unsafeItemId.toString(), request);
+            throw new AssertionError("newline in an identifier must be rejected");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("RAW_WIRE_ITEM_ID_INVALID"));
+        }
+
+        JSONObject unsafeDispositionText = compactRoot(request);
+        unsafeDispositionText.getJSONObject("disposition")
+                .put("reasonCode", "BAD\"QUOTE");
+        try {
+            OpenRouterEditorialP5PilotProvider.parseRawOutput(unsafeDispositionText.toString(), request);
+            throw new AssertionError("JSON escaping must not widen safe text grammar");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("RAW_WIRE_DISPOSITION_TEXT_INVALID"));
+        }
+    }
+
+    @Test public void compactBodyAboveHardCeilingIsRejectedBeforeMaterialization() throws Exception {
+        try {
+            OpenRouterEditorialP5PilotProvider.parseRawOutput(
+                    "x".repeat(EditorialP5RawWireContract.MAX_WIRE_BYTES + 1), request());
+            throw new AssertionError("body above hard ceiling must be rejected");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("RAW_WIRE_BYTE_LIMIT_EXCEEDED"));
         }
     }
 

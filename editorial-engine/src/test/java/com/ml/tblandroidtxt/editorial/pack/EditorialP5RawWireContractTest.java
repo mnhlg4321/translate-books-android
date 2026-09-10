@@ -66,6 +66,16 @@ public final class EditorialP5RawWireContractTest {
                 < EditorialP5RawWireContract.OUTPUT_TOKEN_CAP);
     }
 
+    @Test public void providerSchemaIsClosedAndCarriesAllCompactHardLimits() {
+        String schema = EditorialCanonicalJson.canonicalize(EditorialP5RawWireContract.jsonSchema());
+
+        assertTrue(schema.contains("\"additionalProperties\":false"));
+        assertTrue(schema.contains("\"maxItems\":4"));
+        assertTrue(schema.contains("\"maxItems\":8"));
+        assertTrue(schema.contains("\"maxItems\":0"));
+        assertEquals("safe4_raw_discovery_v1", EditorialP5RawWireContract.SCHEMA_NAME);
+    }
+
     @Test public void compactWireContainsNoSourceAndMaterializesExactRawBytes() {
         byte[] raw = "RAW exact bytes — no model echo\n".getBytes(StandardCharsets.UTF_8);
         String attempt = "a".repeat(64);
@@ -116,6 +126,118 @@ public final class EditorialP5RawWireContractTest {
             throw new AssertionError("RAW wire edits must be forbidden");
         } catch (IllegalArgumentException expected) {
             assertTrue(expected.getMessage().contains("RAW_DECLARED_CHANGES_FORBIDDEN"));
+        }
+    }
+
+    @Test public void compactWireRejectsDuplicateFindingAndEvidenceReferences() {
+        List<EditorialLedgerValidator.Entry> findings = List.of(
+                new EditorialLedgerValidator.Entry("population:001", "PROCESSED",
+                        List.of("evidence:raw"), true),
+                new EditorialLedgerValidator.Entry("population:001", "NOT_EVALUATED",
+                        List.of("evidence:raw"), false));
+        try {
+            new EditorialP5RawWireResponse(EditorialP5RawWireContract.SCHEMA_VERSION,
+                    "a".repeat(64), "b".repeat(64), findings, gates(),
+                    List.of("evidence:raw", "evidence:raw"), List.of(), 0,
+                    EditorialStopDecision.continueWithoutStop("L1", "COVERAGE", "LOCAL_REVIEW"), false);
+            throw new AssertionError("duplicate finding/evidence references must be rejected");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("RAW_WIRE_DUPLICATE_FINDING_ID"));
+            assertTrue(expected.getMessage().contains("RAW_WIRE_DUPLICATE_EVIDENCE_REF"));
+        }
+    }
+
+    @Test public void compactWireRejectsEvidenceReferenceOutsideWireInventory() {
+        try {
+            new EditorialP5RawWireResponse(EditorialP5RawWireContract.SCHEMA_VERSION,
+                    "a".repeat(64), "b".repeat(64),
+                    List.of(new EditorialLedgerValidator.Entry("population:001", "PROCESSED",
+                            List.of("evidence:missing"), true)), gates(),
+                    List.of("evidence:raw"), List.of(), 0,
+                    EditorialStopDecision.continueWithoutStop("L1", "COVERAGE", "LOCAL_REVIEW"), false);
+            throw new AssertionError("orphan evidence reference must be rejected");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("RAW_WIRE_EVIDENCE_REF_NOT_DECLARED"));
+        }
+    }
+
+    @Test public void compactWireEnforcesFindingsPreservedAndDispositionLimits() {
+        List<EditorialLedgerValidator.Entry> findings = List.of(
+                new EditorialLedgerValidator.Entry("population:001", "NOT_EVALUATED",
+                        List.of("evidence:raw"), false),
+                new EditorialLedgerValidator.Entry("population:002", "NOT_EVALUATED",
+                        List.of("evidence:raw"), false),
+                new EditorialLedgerValidator.Entry("population:003", "NOT_EVALUATED",
+                        List.of("evidence:raw"), false),
+                new EditorialLedgerValidator.Entry("population:004", "NOT_EVALUATED",
+                        List.of("evidence:raw"), false),
+                new EditorialLedgerValidator.Entry("population:005", "NOT_EVALUATED",
+                        List.of("evidence:raw"), false));
+        try {
+            new EditorialP5RawWireResponse(EditorialP5RawWireContract.SCHEMA_VERSION,
+                    "a".repeat(64), "b".repeat(64), findings, gates(), List.of("evidence:raw"),
+                    List.of(), 0, EditorialStopDecision.continueWithoutStop(
+                            "L1", "COVERAGE", "LOCAL_REVIEW"), false);
+            throw new AssertionError("finding limit must be enforced");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("RAW_WIRE_FINDINGS_LIMIT_EXCEEDED"));
+        }
+
+        try {
+            new EditorialP5RawWireResponse(EditorialP5RawWireContract.SCHEMA_VERSION,
+                    "a".repeat(64), "b".repeat(64), List.of(), gates(), List.of(),
+                    List.of("preserved:1", "preserved:2", "preserved:3", "preserved:4", "preserved:5"),
+                    0, EditorialStopDecision.continueWithoutStop(
+                            "L1", "COVERAGE", "LOCAL_REVIEW"), false);
+            throw new AssertionError("preserved inventory limit must be enforced");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("RAW_WIRE_PRESERVED_LIMIT_EXCEEDED"));
+        }
+
+        List<String> fiveEvidenceRefs = List.of(
+                "evidence:1", "evidence:2", "evidence:3", "evidence:4", "evidence:5");
+        try {
+            new EditorialP5RawWireResponse(EditorialP5RawWireContract.SCHEMA_VERSION,
+                    "a".repeat(64), "b".repeat(64), List.of(), gates(), fiveEvidenceRefs,
+                    List.of(), 0, EditorialStopDecision.contentBlocked(
+                            "CONTENT_CONFLICT_PROVEN", "L1", EditorialSafe4Contract.GATE_IDS.get(0),
+                            fiveEvidenceRefs, "scope", "review", "L1"), false);
+            throw new AssertionError("disposition evidence limit must be enforced");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("RAW_WIRE_DISPOSITION_EVIDENCE_LIMIT_EXCEEDED"));
+        }
+    }
+
+    @Test public void rawUtf8BomRoundTripsWithoutChangingAppOwnedBytes() {
+        byte[] raw = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF, 'R', 'A', 'W', '\n'};
+        String attempt = "a".repeat(64);
+        String envelope = "b".repeat(64);
+        EditorialP5RawWireResponse wire = new EditorialP5RawWireResponse(
+                EditorialP5RawWireContract.SCHEMA_VERSION, attempt, envelope,
+                List.of(new EditorialLedgerValidator.Entry("population:001", "PROCESSED",
+                        List.of("evidence:raw"), false)), gates(), List.of("evidence:raw"),
+                List.of(), 0, EditorialStopDecision.continueWithoutStop(
+                        "L1", "COVERAGE", "LOCAL_REVIEW"), false);
+
+        EditorialP5L1Output output = wire.materialize(providerRequest(attempt, envelope, raw));
+
+        assertTrue(Arrays.equals(raw, output.beforeText().getBytes(StandardCharsets.UTF_8)));
+        assertEquals(output.beforeText(), output.afterText());
+        assertTrue(output.declaredChanges().isEmpty());
+    }
+
+    @Test public void materializationRejectsMissingPopulationCoverage() {
+        String attempt = "a".repeat(64);
+        String envelope = "b".repeat(64);
+        EditorialP5RawWireResponse wire = new EditorialP5RawWireResponse(
+                EditorialP5RawWireContract.SCHEMA_VERSION, attempt, envelope,
+                List.of(), gates(), List.of(), List.of(), 0,
+                EditorialStopDecision.continueWithoutStop("L1", "COVERAGE", "LOCAL_REVIEW"), false);
+        try {
+            wire.materialize(providerRequest(attempt, envelope, bytes("raw")));
+            throw new AssertionError("missing app-owned population coverage must stop materialization");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("LEDGER_UNACCOUNTED_ITEM"));
         }
     }
 

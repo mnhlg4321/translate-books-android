@@ -1,6 +1,6 @@
 # P5E.2 — Characterization output hiện tại
 
-Ngày: `2026-09-10` (+07:00)
+Ngày: `2026-09-11` (+07:00)
 Phạm vi: source VOL5 đã pin trong app-owned validation data; không gửi provider.
 
 ## Current baseline
@@ -12,6 +12,10 @@ Phạm vi: source VOL5 đã pin trong app-owned validation data; không gửi pr
 | Canonical/final schemas | Giữ nguyên; final report `safe4.full.report-l1.v1`, receipt `safe4.full.receipt.v1` |
 | Existing authorization output cap | `4,096` tokens requested/effective |
 | Pinned RAW | `23,814` bytes, SHA-256 `A308210ECA80557CFA9FEC7ED55B2EE3DE5C1C4776E59B2B5EDBF0EFB04504BE` |
+
+Code189/code191/code196 là historical evidence. Build đang cài để kiểm tra
+local là code199/schema v24 với validation data `RECONSTRUCTED_ONLY`; không có
+tokenizer chính thức hoặc provider call trong characterization này.
 
 ## Current full response shape trước P5E
 
@@ -77,6 +81,12 @@ bytes dưới mốc so sánh `4,096` bytes. Theo cùng heuristic 4-byte/token, p
 này khoảng `697` tokens; đây là characterization margin, không phải provider
 usage claim. Không có field nào chứa chapter-sized text và không có field nào
 có thể lặp lại toàn bộ RAW.
+
+Sau QA bổ sung, wire còn fail-closed với duplicate finding IDs, duplicate
+evidence refs, evidence refs không nằm trong root inventory, population vượt
+`MAX_FINDINGS`, preserved/disposition vượt limit và local ledger thiếu coverage.
+Việc root inventory không chứng minh evidence tồn tại bên ngoài response; đó là
+giới hạn chủ ý vì request hiện tại không mang một evidence database mới.
 
 ## Kết luận cap
 

@@ -43,6 +43,12 @@ Các field bắt buộc:
 hoặc free-form chapter payload. Không có `minItems` bắt buộc khiến model phải tạo
 ledger giả; hard maximum do schema và local parser cùng giữ.
 
+Các finding ID phải unique; root evidence inventory phải unique và bao phủ mọi
+evidence ref ở finding/disposition. Đây là coverage của wire response, không
+phải bằng chứng rằng ref có tồn tại trong external evidence store. Local ledger
+validator vẫn đối chiếu exhaustive population của app; nếu population lớn hơn
+`MAX_FINDINGS=4`, engine dừng trước provider để tránh silent drop.
+
 ## Materialization rule cho RAW
 
 1. App tạo request từ exact persisted binding và exact pinned source bytes.
@@ -70,6 +76,9 @@ automatic network retries: 0
 `MAX_WIRE_BYTES` thấp hơn cap để giữ margin cho transport/serialization. Local
 parser từ chối body vượt ceiling trước materialization. Không tăng cap lên
 `8,192+` vì output cũ đã được chứng minh bằng characterization là chapter-sized.
+`worstCaseWireBytes()` dùng các ID/ref unique ở đúng độ dài cực đại; vì vậy
+margin `2,785` là một fixture hợp lệ, không dựa vào duplicate để giảm/đổi kích
+thước.
 
 ## Request mode
 
@@ -112,3 +121,11 @@ Wire bỏ các identity app-owned không làm yếu binding:
 
 Sửa identity hardening tại `d39bca7` được giữ nguyên. Không có đường fallback
 để model trở thành owner của canonical identity.
+
+## QA boundary
+
+Provider strict JSON Schema và local parser cùng đóng unknown fields, giới hạn
+counts/lengths, reject malformed/truncated/over-ceiling body và reject non-empty
+`declaredChanges`. Engine không commit khi response STOP, thiếu coverage, sai
+binding/replay hoặc quá population bound. `modelDeclaredPass` không vượt qua
+local ledger/gate/diff/receipt validators.

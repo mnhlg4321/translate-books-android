@@ -61,6 +61,15 @@ gradle.taskGraph.whenReady { graph ->
             'Unarchived debug builds are disabled. Run .\\scripts\\build-and-save.ps1 so the APK, README, checksum, and source snapshot are retained before optional installation.'
         )
     }
+    def runsConnectedAndroidTest = graph.allTasks.any { task ->
+        def taskName = task.name.toLowerCase(Locale.ROOT)
+        taskName.startsWith('connected') && taskName.contains('androidtest')
+    }
+    if (runsConnectedAndroidTest) {
+        throw new GradleException(
+            'Connected Android test installers are disabled for pilot-bearing packages. Use scripts\\install-validated.ps1, then run a selected am instrument target.'
+        )
+    }
 }
 
 dependencies {

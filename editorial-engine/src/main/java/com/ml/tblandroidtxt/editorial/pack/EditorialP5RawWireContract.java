@@ -3,9 +3,11 @@ package com.ml.tblandroidtxt.editorial.pack;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The bounded provider wire contract for one L1 RAW discovery call.
@@ -70,30 +72,36 @@ public final class EditorialP5RawWireContract {
 
     /** Deterministic size evidence for the declared worst-case compact wire. */
     public static int worstCaseWireBytes() {
-        String id = "I".repeat(MAX_ID_LENGTH);
-        String ref = "R".repeat(MAX_REF_LENGTH);
+        String idPrefix = "I".repeat(MAX_ID_LENGTH - 1);
+        String refPrefix = "R".repeat(MAX_REF_LENGTH - 1);
         ArrayList<Object> findings = new ArrayList<>();
         for (int i = 0; i < MAX_FINDINGS; i++) {
+            String id = idPrefix + i;
+            String ref = refPrefix + i;
             findings.add(Map.of(
                     "itemId", id,
                     "disposition", "NOT_EVALUATED",
-                    "evidenceRefs", List.of(ref, ref),
+                    "evidenceRefs", List.of(ref, refPrefix + (i + MAX_FINDINGS)),
                     "modelDeclaredPass", false));
         }
         ArrayList<String> evidence = new ArrayList<>();
-        for (int i = 0; i < MAX_EVIDENCE_REFS; i++) evidence.add(ref);
+        for (int i = 0; i < MAX_EVIDENCE_REFS; i++) evidence.add(refPrefix + i);
         ArrayList<String> preserved = new ArrayList<>();
-        for (int i = 0; i < MAX_PRESERVED_ITEMS; i++) preserved.add(id);
+        for (int i = 0; i < MAX_PRESERVED_ITEMS; i++) preserved.add(idPrefix + i);
 
         LinkedHashMap<String, String> gates = new LinkedHashMap<>();
         for (String gate : EditorialSafe4Contract.GATE_IDS) gates.put(gate, "NOT_APPLICABLE");
 
+        ArrayList<String> dispositionEvidence = new ArrayList<>();
+        for (int i = 0; i < MAX_DISPOSITION_EVIDENCE_REFS; i++) {
+            dispositionEvidence.add(refPrefix + i);
+        }
         Map<String, Object> disposition = Map.of(
                 "disposition", "CONTINUE",
                 "reasonCode", "R".repeat(MAX_DISPOSITION_TEXT_LENGTH),
                 "phase", FINAL_PHASE,
                 "blockingGate", "CONTINUITY_STRUCTURE_TECHNICAL",
-                "evidenceRefs", List.of(ref, ref, ref, ref),
+                "evidenceRefs", dispositionEvidence,
                 "affectedScope", "A".repeat(MAX_DISPOSITION_TEXT_LENGTH),
                 "recoveryAction", "C".repeat(MAX_DISPOSITION_TEXT_LENGTH),
                 "resumeFrom", "S".repeat(MAX_DISPOSITION_TEXT_LENGTH),
@@ -120,26 +128,35 @@ public final class EditorialP5RawWireContract {
         if (!SCHEMA_VERSION.equals(response.wireSchemaVersion())) issues.add("RAW_WIRE_SCHEMA_INVALID");
         if (!hash(response.attemptIdentity())) issues.add("RAW_WIRE_ATTEMPT_IDENTITY_INVALID");
         if (!hash(response.requestEnvelopeHash())) issues.add("RAW_WIRE_REQUEST_HASH_INVALID");
+        if (response.evidenceRefs().size() > MAX_EVIDENCE_REFS) {
+            issues.add("RAW_WIRE_EVIDENCE_LIMIT_EXCEEDED");
+        }
+        Set<String> declaredEvidenceRefs = new HashSet<>();
+        for (String ref : response.evidenceRefs()) {
+            if (!token(ref, MAX_REF_LENGTH)) issues.add("RAW_WIRE_EVIDENCE_INVALID");
+            if (!declaredEvidenceRefs.add(ref)) issues.add("RAW_WIRE_DUPLICATE_EVIDENCE_REF");
+        }
         if (response.findings().size() > MAX_FINDINGS) issues.add("RAW_WIRE_FINDINGS_LIMIT_EXCEEDED");
+        Set<String> findingIds = new HashSet<>();
         for (EditorialLedgerValidator.Entry entry : response.findings()) {
             if (!token(entry.itemId(), MAX_ID_LENGTH)) issues.add("RAW_WIRE_ITEM_ID_INVALID");
+            if (!findingIds.add(entry.itemId())) issues.add("RAW_WIRE_DUPLICATE_FINDING_ID");
             if (!List.of("PROCESSED", "PRESERVE_DRAFT", "NOT_EVALUATED").contains(entry.disposition())) {
                 issues.add("RAW_WIRE_FINDING_DISPOSITION_INVALID");
             }
             if (entry.evidenceRefs().size() > MAX_ENTRY_EVIDENCE_REFS) {
                 issues.add("RAW_WIRE_ENTRY_EVIDENCE_LIMIT_EXCEEDED");
             }
+            Set<String> entryEvidenceRefs = new HashSet<>();
             for (String ref : entry.evidenceRefs()) {
                 if (!token(ref, MAX_REF_LENGTH)) issues.add("RAW_WIRE_ENTRY_EVIDENCE_INVALID");
+                if (!entryEvidenceRefs.add(ref)) issues.add("RAW_WIRE_DUPLICATE_EVIDENCE_REF");
+                if (!declaredEvidenceRefs.contains(ref)) {
+                    issues.add("RAW_WIRE_EVIDENCE_REF_NOT_DECLARED");
+                }
             }
         }
         if (!exactGates(response.gateObservations())) issues.add("RAW_WIRE_GATES_INVALID");
-        if (response.evidenceRefs().size() > MAX_EVIDENCE_REFS) {
-            issues.add("RAW_WIRE_EVIDENCE_LIMIT_EXCEEDED");
-        }
-        for (String ref : response.evidenceRefs()) {
-            if (!token(ref, MAX_REF_LENGTH)) issues.add("RAW_WIRE_EVIDENCE_INVALID");
-        }
         if (response.preservedInventory().size() > MAX_PRESERVED_ITEMS) {
             issues.add("RAW_WIRE_PRESERVED_LIMIT_EXCEEDED");
         }
@@ -161,8 +178,13 @@ public final class EditorialP5RawWireContract {
         if (disposition.evidenceRefs().size() > MAX_DISPOSITION_EVIDENCE_REFS) {
             issues.add("RAW_WIRE_DISPOSITION_EVIDENCE_LIMIT_EXCEEDED");
         }
+        Set<String> dispositionEvidenceRefs = new HashSet<>();
         for (String ref : disposition.evidenceRefs()) {
             if (!token(ref, MAX_REF_LENGTH)) issues.add("RAW_WIRE_DISPOSITION_EVIDENCE_INVALID");
+            if (!dispositionEvidenceRefs.add(ref)) issues.add("RAW_WIRE_DUPLICATE_EVIDENCE_REF");
+            if (!declaredEvidenceRefs.contains(ref)) {
+                issues.add("RAW_WIRE_EVIDENCE_REF_NOT_DECLARED");
+            }
         }
         if (response.wireBytes().length > MAX_WIRE_BYTES) issues.add("RAW_WIRE_BYTE_LIMIT_EXCEEDED");
         return List.copyOf(issues);

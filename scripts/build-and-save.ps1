@@ -13,11 +13,21 @@ param(
 
     [int]$MinimumVersionCode = 0,
 
+    [string]$DeviceSerial,
+
+    [string]$ExpectedDeviceSignatureToken,
+
+    [switch]$AllowMissingPackage,
+
     [switch]$Install
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+
+if ($Install -and [string]::IsNullOrWhiteSpace($DeviceSerial)) {
+    throw '-Install requires an explicit -DeviceSerial. Automatic device selection is disabled.'
+}
 
 $minimumVersionCodeWasRequested = $PSBoundParameters.ContainsKey('MinimumVersionCode')
 if ($minimumVersionCodeWasRequested -and $MinimumVersionCode -lt 1) {
@@ -89,20 +99,29 @@ function Get-AndroidSdkPath {
 function Get-HighestInstalledVersionCode {
     param(
         [string]$AdbPath,
-        [string]$PackageName
+        [string]$PackageName,
+        [string]$DeviceSerial
     )
 
     if ([string]::IsNullOrWhiteSpace($AdbPath) -or -not (Test-Path -LiteralPath $AdbPath -PathType Leaf)) {
         return 0
     }
 
-    try { $devices = @(& $AdbPath devices 2>$null) } catch { return 0 }
-    $deviceCount = @($devices | Where-Object { $_ -match '\sdevice$' }).Count
-    if ($deviceCount -eq 0) {
-        return 0
+    if (-not [string]::IsNullOrWhiteSpace($DeviceSerial)) {
+        try { $state = @(& $AdbPath -s $DeviceSerial get-state 2>$null) } catch { return 0 }
+        if (-not (($state -join "`n").Trim() -match '(?m)^device$')) {
+            return 0
+        }
+        try { $packageDump = @(& $AdbPath -s $DeviceSerial shell dumpsys package $PackageName 2>$null) } catch { return 0 }
     }
-
-    try { $packageDump = @(& $AdbPath shell dumpsys package $PackageName 2>$null) } catch { return 0 }
+    else {
+        try { $devices = @(& $AdbPath devices 2>$null) } catch { return 0 }
+        $deviceCount = @($devices | Where-Object { $_ -match '\sdevice$' }).Count
+        if ($deviceCount -eq 0) {
+            return 0
+        }
+        try { $packageDump = @(& $AdbPath shell dumpsys package $PackageName 2>$null) } catch { return 0 }
+    }
     $versionMatch = [regex]::Match(($packageDump -join "`n"), 'versionCode=(\d+)')
     if (-not $versionMatch.Success) {
         return 0
@@ -211,7 +230,7 @@ else {
 
 $androidSdk = Get-AndroidSdkPath $repositoryRoot
 $adb = if ($androidSdk) { Join-Path $androidSdk 'platform-tools\adb.exe' } else { $null }
-$installedVersionCode = Get-HighestInstalledVersionCode $adb 'com.ml.tblandroidtxt'
+$installedVersionCode = Get-HighestInstalledVersionCode $adb 'com.ml.tblandroidtxt' $DeviceSerial
 
 $highestObservedVersionCode = [Math]::Max(
     [Math]::Max($defaultVersionCode, $highestArchivedCode),
@@ -461,13 +480,24 @@ finally {
 
 $finalApk = Join-Path $artifactDestination "TranslateBooks-v$versionName-code$nextVersionCode.apk"
 if ($Install) {
-    if ([string]::IsNullOrWhiteSpace($adb) -or -not (Test-Path -LiteralPath $adb -PathType Leaf)) {
-        throw 'The build was archived, but ADB is unavailable, so installation was skipped.'
+    $validatedInstallScript = Join-Path $PSScriptRoot 'install-validated.ps1'
+    if (-not (Test-Path -LiteralPath $validatedInstallScript -PathType Leaf)) {
+        throw 'Validated installation script is missing; refusing direct APK installation.'
     }
-
-    & $adb install -r $finalApk
+    $installArguments = @{
+        ApkPath = $finalApk
+        Serial = $DeviceSerial
+        PackageName = 'com.ml.tblandroidtxt'
+        ExpectedVersionCode = $nextVersionCode
+    }
+    if (-not [string]::IsNullOrWhiteSpace($ExpectedDeviceSignatureToken)) {
+        $installArguments.ExpectedDeviceSignatureToken = $ExpectedDeviceSignatureToken
+    }
+    if ($androidSdk) { $installArguments.AndroidSdkPath = $androidSdk }
+    if ($AllowMissingPackage) { $installArguments.AllowMissingPackage = $true }
+    & $validatedInstallScript @installArguments
     if ($LASTEXITCODE -ne 0) {
-        throw "The build is safely archived, but device installation failed: $finalApk"
+        throw "The build is safely archived, but validated device installation failed: $finalApk"
     }
 }
 

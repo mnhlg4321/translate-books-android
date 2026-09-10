@@ -195,6 +195,18 @@ public final class EditorialP5PilotExecution {
                     request.phase(), false, metrics);
         }
 
+        // The compact RAW wire has an exhaustive findings bound. Do not let a
+        // provider response silently omit app-owned population items; a larger
+        // population needs an explicitly measured contract or a new binding.
+        if ("L1_RAW_DISCOVERY".equals(request.phase())
+                && request.populationIds().size() > EditorialP5RawWireContract.MAX_FINDINGS) {
+            return stopped(requestIdentity, EditorialP5PilotResult.StopClass.INPUT_REQUIRED,
+                    "RAW_WIRE_POPULATION_LIMIT_EXCEEDED", request.phase(), "RAW_WIRE_CONTRACT",
+                    List.of(), request.chapterKey(),
+                    "Partition the app-owned population or approve a separately measured wire contract",
+                    request.phase(), false, metrics);
+        }
+
         if (provider == null || store == null) {
             return stopped(requestIdentity, EditorialP5PilotResult.StopClass.EXECUTION_DISABLED,
                     "P5_PROVIDER_OR_STORE_NOT_CONFIGURED", request.phase(), "EXECUTION_GATE",
