@@ -133,3 +133,86 @@ authorization. The historical cancellation actor remains unknown, so this is
 not evidence that the original cause was fixed. The old consumed authorization
 is not reusable; no RAW retry is issued by this report. A separate local
 reconciliation row may still be required by recovery policy before dispatch.
+
+## Code196 deadline/body-read/recovery closure — 2026-09-10
+
+The production hardening was committed in `d39bca7dcd16a64d6a97006d71e17f994653c065`.
+The test-only five-minute case and direct localhost request-count assertion are
+in the current test history. No provider/API call was made in this validation.
+
+### Artifact and state provenance
+
+| Item | Value |
+|---|---|
+| Device | `15e84958` / package `com.ml.tblandroidtxt` |
+| Installed validation package | `4.17-dev.28 / code196` |
+| Production APK | `artifacts/builds/v4.17-dev.28/build-20260910-190649/TranslateBooks-v4.17-dev.28-code196.apk` |
+| Production APK SHA-256 | `85345086FBD76FA78133EE54741CA7631EBA91EB4761401080EC10BA1D35042A` |
+| Focused test APK SHA-256 | `292F30A50302423E695571BB28E95514504F06F174361762919C35FE6D1704DE` |
+| Production source commit | `d39bca7dcd16a64d6a97006d71e17f994653c065` |
+| Readback schema | v24 |
+| Package/data operation | `adb install -r`; no uninstall/reset/cleanup of pilot data |
+| Provider/API calls in this validation | `0` |
+
+Canonical ZIP, Java-control ZIP, profile and authority hashes were unchanged;
+the exact values remain recorded in `BUILD_STATE.md`. The device package was
+upgraded in place, so the VOL5 binding and recovery history were not recreated.
+
+### Deadline and transport evidence
+
+The local server sends HTTP headers and a small body prefix, then holds the
+socket open. The test runs through `EditorialP5CExactBindingExecution` →
+`OpenRouterEditorialP5PilotProvider` → `OpenAICompatibleClient` →
+`EditorialP5CAttemptStore`, using a localhost URL and synthetic settings only.
+
+| Case | Result |
+|---|---|
+| Bounded stalled-body, 1.5-second deadline | `1/1 PASS`, `2.069s`, typed `RETRY_PROVIDER_CALL_TIMEOUT`, `RECOVERY_REQUIRED` |
+| Stalled-body, pilot 300-second deadline | `1/1 PASS`, `301.501s`, typed `RETRY_PROVIDER_CALL_TIMEOUT`, `RECOVERY_REQUIRED` |
+| Server dispatch count | exactly `1` request in the final short and five-minute cases |
+| Host force-stop during five-minute case | `NO`; instrumentation reached terminal result itself |
+| Persisted response/report/receipt | no partial response, report or receipt committed |
+| Process-restart stale claim | `RECOVERY_REQUIRED / RETRY_PROVIDER_CALL_TIMEOUT`; no redispatch |
+
+The five-minute assertion requires the app result, typed reason, recovery row,
+bounded executor cleanup and server request count. It therefore distinguishes
+an app-owned deadline/recovery from the earlier acceptance run that needed host
+cleanup after the process failed to reach a terminal state. `System.nanoTime()`
+is used for the in-session transport deadline; the persisted restart path uses
+the stored authorization window and reclassifies stale claims fail-closed.
+
+The immediate and 11-second delayed client tests still pass with one request
+and complete body; the delayed legacy-cancel case confirms that the legacy
+translation cancellation slot does not own the RAW call. Response-body
+progress is stored as a byte count only; no body, request or key is persisted.
+
+### Regression and scope
+
+- Focused fake E2E class before the added long-case: `17/17 PASS`; added short
+  case: `1/1 PASS`; added 300-second case: `1/1 PASS`.
+- Isolated P1–P5C/importer/migration device regression: `92/92 PASS`.
+- VOL5 read-only recovery readback: `1/1 PASS`.
+- Host engine: `183/183 PASS`.
+- App unit: `222/222 PASS` for each debug, release and benchmark variant.
+- External static qualification: `306 PASS / 0 FAIL`.
+- High-confidence secret scan: pass; no credential, private key, request body
+  or chapter source was found in tracked files.
+- `git diff --check`: pass before documentation closure.
+
+This closes the local hardening gates:
+
+```text
+END_TO_END_DEADLINE_VERIFIED
+STALLED_BODY_RECOVERY_VERIFIED
+PROCESS_RESTART_RECOVERY_VERIFIED
+NO_LATE_COMMIT
+NO_AUTOMATIC_REDISPATCH
+PILOT_DATA_PRESERVED
+RAW_RETRY_READY_FOR_NEW_AUTHORIZATION
+```
+
+It does not identify the actor that cancelled the historical OpenRouter
+generation, does not resolve external state for the old acceptance generation,
+and does not prove a live `REPORT_L1`/receipt. A future RAW call still needs a
+new recovery decision, exact-phase authorization and a fresh preflight. No
+RECONCILE, certification or general execution is opened by this closure.

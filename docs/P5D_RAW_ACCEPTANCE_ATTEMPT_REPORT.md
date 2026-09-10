@@ -131,3 +131,29 @@ authorization mới nếu muốn chạy tiếp.
 
 Không có authority bytes, canonical pack/profile hash, database schema, UI,
 provider policy hoặc build metadata production nào bị thay đổi trong lần này.
+
+## Follow-up hardening closure — code196, 2026-09-10
+
+The failed live acceptance above remains immutable historical evidence. It is
+not relabelled as a successful timeout recovery. The production hardening commit
+`d39bca7dcd16a64d6a97006d71e17f994653c065` was validated separately on device
+`15e84958` with validation APK `4.17-dev.28 / code196`, SHA-256
+`85345086FBD76FA78133EE54741CA7631EBA91EB4761401080EC10BA1D35042A`.
+
+An isolated localhost stalled-body test through the exact `executeRaw()` path
+now self-terminated at both a short deadline (`2.069s`) and the 300-second
+pilot deadline (`301.501s`), persisted typed
+`RECOVERY_REQUIRED / RETRY_PROVIDER_CALL_TIMEOUT`, observed exactly one HTTP
+request and completed without host force-stop. Process-restart stale-claim
+recovery and no-redispatch also pass. The focused test APK used for the final
+request-count assertion was
+`292F30A50302423E695571BB28E95514504F06F174361762919C35FE6D1704DE`.
+
+This follow-up made zero provider/API calls and does not change the external
+classification of generation `gen-1788967700-RgJDCWrZsNZ4VAAWmlj8`, which
+remains `EXTERNAL_STATE_REMAINS_UNKNOWN`. The local decision is
+`RAW_RETRY_READY_FOR_NEW_AUTHORIZATION`; the consumed acceptance authorization
+is not reusable. A new recovery decision, exact-phase authorization and fresh
+preflight are required before any new RAW dispatch. RECONCILE remains
+unauthorized, and no `REPORT_L1`, receipt, certification or general runnable
+state is claimed.

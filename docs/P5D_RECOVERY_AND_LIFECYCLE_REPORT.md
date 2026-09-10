@@ -171,3 +171,76 @@ removal produces 452 bytes / `4947FF91…20686`, exactly matching the persisted
 binding. No source rewrite or rebind was needed, and no provider call was made
 in this closure. A new RAW diagnostic authorization may be prepared, but the
 historical cancellation actor remains unknown.
+
+## Deadline/body-read/recovery hardening closure — code196, 2026-09-10
+
+The previous code189 section is historical. The current production change is
+`d39bca7dcd16a64d6a97006d71e17f994653c065`; it remains inside the existing
+OpenAI-compatible client, RAW adapter, pilot execution and attempt-store owners.
+No provider call was made.
+
+The change provides:
+
+- an absolute monotonic deadline for each bounded RAW attempt;
+- remaining-time connect/read/write/call timeouts without the legacy `+30s`
+  grace period;
+- scoped RAW call cancellation that is not registered in the legacy global
+  translation cancellation slot;
+- one-pass, bounded response-body accumulation with redacted progress byte
+  persistence;
+- typed timeout classification when an Android/OkHttp timeout is observed after
+  the attempt deadline; and
+- stale-claim recovery on process restart, without automatic redispatch.
+
+The schema remains additive at v24. Its only new lifecycle field is
+`response_body_bytes INTEGER NOT NULL DEFAULT 0`; request/response content,
+credentials and exception messages remain excluded. The provider response
+boundary now preserves response-supplied identity for local validation, rejects
+a missing finish reason as `RETRY_PROVIDER_RESPONSE_PARSE_FAILED`, and tracks
+provider-reported cost separately from an estimate. A mismatched identity cannot
+be rebound to the app context, and an estimated cost is not reported as actual
+provider billing.
+
+### Device evidence
+
+Validation package `4.17-dev.28 / code196` was installed on device `15e84958`
+with `adb install -r`; no uninstall, reset or pilot-database cleanup occurred.
+The production APK SHA-256 is
+`85345086FBD76FA78133EE54741CA7631EBA91EB4761401080EC10BA1D35042A`; the
+focused test APK SHA-256 is
+`292F30A50302423E695571BB28E95514504F06F174361762919C35FE6D1704DE`.
+
+The exact `executeRaw()` stalled-body path was exercised against a localhost
+server with synthetic settings. It passed both a short deadline (`1/1`,
+`2.069s`) and the pilot deadline (`1/1`, `301.501s`). The server observed one
+HTTP request. In both cases the app returned
+`RETRY_PROVIDER_CALL_TIMEOUT`, persisted `RECOVERY_REQUIRED`, did not commit a
+partial result and cleaned up without host force-stop. The process-restart test
+reclassified an expired claim to the same typed recovery state and rejected a
+second claim; provider calls remained zero because the server was local.
+
+Affected device regression was `92/92 PASS` across P1–P5C/importer/migration,
+VOL5 readback was `1/1 PASS`, host engine was `183/183 PASS`, and app unit tests
+were `222/222 PASS` in each debug/release/benchmark variant. External static
+qualification was `306 PASS / 0 FAIL`. High-confidence secret scan and
+`git diff --check` both passed.
+
+### Gate decision
+
+```text
+END_TO_END_DEADLINE_VERIFIED
+STALLED_BODY_RECOVERY_VERIFIED
+PROCESS_RESTART_RECOVERY_VERIFIED
+NO_LATE_COMMIT
+NO_AUTOMATIC_REDISPATCH
+PILOT_DATA_PRESERVED
+RAW_RETRY_READY_FOR_NEW_AUTHORIZATION
+```
+
+This is local transport/lifecycle readiness only. The historical OpenRouter
+cancellation actor remains `UNKNOWN`; the acceptance generation
+`gen-1788967700-RgJDCWrZsNZ4VAAWmlj8` remains externally unresolved and its
+local attempt has no predecessor/report/receipt. The consumed authorizations
+remain unusable. A new RAW dispatch requires a new recovery decision, an
+exact-phase single-use authorization and a fresh preflight. RECONCILE, L2/L3,
+certification and general execution remain disabled.

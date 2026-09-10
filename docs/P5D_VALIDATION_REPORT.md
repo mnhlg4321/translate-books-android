@@ -1,6 +1,6 @@
 # P5D — Validation report
 
-Ngày kiểm tra: `2026-09-08` (+07:00)
+Ngày cập nhật: `2026-09-10` (+07:00); các mục trước là evidence lịch sử.
 
 ## Current decision
 
@@ -9,6 +9,14 @@ P5D_DOCUMENTATION_BASELINE_CONSISTENT
 P5D_EXTERNAL_AUDIT_COMPLETE
 P5D_LIFECYCLE_HARDENING_PASS
 P5D_REGRESSION_PASS
+P5D_DEADLINE_BODY_READ_HARDENING_PASS
+END_TO_END_DEADLINE_VERIFIED
+STALLED_BODY_RECOVERY_VERIFIED
+PROCESS_RESTART_RECOVERY_VERIFIED
+NO_LATE_COMMIT
+NO_AUTOMATIC_REDISPATCH
+PILOT_DATA_PRESERVED
+RAW_RETRY_READY_FOR_NEW_AUTHORIZATION
 LOCAL_TRANSPORT_AND_LIFECYCLE_VERIFIED
 HISTORICAL_CANCELLATION_CAUSE_UNRESOLVED
 RAW_DIAGNOSTIC_ATTEMPT_COMPLETE
@@ -209,3 +217,69 @@ The snapshot's recovery gate was subsequently passed with the exact approved
 authorization; the single diagnostic attempt then stopped at
 `RETRY_OUTPUT_TRUNCATED`. No further retry or placeholder decision is
 permitted.
+
+## Code196 deadline/body-read/recovery hardening — 2026-09-10
+
+This is the current hardening result, separate from the historical live
+attempts. Production change `d39bca7dcd16a64d6a97006d71e17f994653c065` was
+built and installed as validation APK `4.17-dev.28 / code196` using
+`scripts/build-and-save.ps1` and `adb install -r` on device `15e84958`.
+
+| Evidence | Result |
+|---|---|
+| Production APK | `artifacts/builds/v4.17-dev.28/build-20260910-190649/TranslateBooks-v4.17-dev.28-code196.apk` |
+| Production APK SHA-256 | `85345086FBD76FA78133EE54741CA7631EBA91EB4761401080EC10BA1D35042A` |
+| Focused test APK SHA-256 | `292F30A50302423E695571BB28E95514504F06F174361762919C35FE6D1704DE` |
+| Device package | `com.ml.tblandroidtxt`, `versionCode=196`, `versionName=4.17-dev.28` |
+| Database | schema v24; pilot data retained; no uninstall/reset |
+| Exact stalled-body executeRaw, short deadline | `1/1 PASS`, `2.069s`, typed timeout + recovery |
+| Exact stalled-body executeRaw, 300-second deadline | `1/1 PASS`, `301.501s`, typed timeout + recovery, no host force-stop |
+| Local server dispatch count | `1` request in the final cases |
+| Focused P1–P5C/importer/migration regression | `92/92 PASS` |
+| VOL5 read-only readback | `1/1 PASS` |
+| Host engine | `183/183 PASS` |
+| App unit | `222/222 PASS` per debug/release/benchmark variant |
+| External qualification | `306 PASS / 0 FAIL` |
+| High-confidence secret scan | PASS; no credential/private key/request body/chapter source in tracked files |
+| Provider/API calls in this hardening validation | `0` |
+| `git diff --check` | PASS |
+
+The test-only local server sends headers and a body prefix, then stalls. The
+app-owned path passes the exact persisted binding through the RAW adapter and
+recorder, uses a scoped monotonic deadline, returns
+`RETRY_PROVIDER_CALL_TIMEOUT`, persists `RECOVERY_REQUIRED`, and cleans up
+boundedly. Process-restart coverage reclassifies an expired claim and refuses
+redispatch. Response-body progress is stored as byte count only; no body, key
+or exception message is persisted. The delayed local HTTP cases still verify
+that the legacy global cancellation slot does not cancel RAW.
+
+The code196 run proves the local gates, not a live provider result. The
+historical cancellation actor remains `UNKNOWN`; the acceptance generation
+`gen-1788967700-RgJDCWrZsNZ4VAAWmlj8` remains externally unresolved and has no
+validated body/report/receipt. The prior confirmed-cancelled generation had
+displayed cost `$0.00484`; the separate truncated diagnostic had displayed
+`$0.0075392`. Neither is a successful L1 result, and no `$0` inference is
+allowed for the unresolved acceptance attempt.
+
+## Next controlled action
+
+The local decision is:
+
+```text
+RAW_RETRY_READY_FOR_NEW_AUTHORIZATION
+NEW_AUTHORIZATION_REQUIRED
+RECONCILE_AUTHORIZATION_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
+NOT_GLOBALLY_RUNNABLE
+```
+
+A future preflight may propose exactly one new VOL5/chapter001
+`L1_RAW_DISCOVERY` call using the persisted binding, the current source hashes,
+OpenRouter `openai/gpt-5.6-luna`, the existing effective output cap `4,096`,
+one primary call, zero schema repair and zero automatic network retry. It must
+reference the unresolved acceptance generation and the previous confirmed
+cancelled cost, acknowledge duplicate/billing risk and obtain a new explicit
+user authorization. This report does not issue that authorization and does not
+call the provider. RECONCILE remains closed until a valid RAW predecessor is
+committed and read back.
