@@ -780,17 +780,20 @@ RECONCILE. The prior QF device result remains historical zero-call evidence.
 | Current counts | attempts/auth/reconciliation/history/lifecycle/report/receipt = `0` in the prior read-only QF evidence; no LQ DB action was performed |
 | Historical QF evidence | failed method `1/1`, class `5/5`, provider calls `0`; retained as historical code206 evidence and superseded for readiness |
 
-On an isolated schema-v24 database, `PRAGMA table_info` showed that
-`editorial_p5d_reconciliation` has `attempt_identity` and does not have
-`binding_identity`. Executing the old production predicate reproduced:
+The historical QF run showed that schema v24 has `attempt_identity` and no
+`binding_identity` on `editorial_p5d_reconciliation`; executing the old
+production predicate reproduced:
 
 ```text
 android.database.sqlite.SQLiteException: no such column: binding_identity
 ```
 
-The failure was before provider construction and the isolated characterization
-recorded no provider call. This was a query defect, not current-DB corruption,
-evaluation drift or a reason to change schema.
+The failure was before provider construction and that historical run recorded
+no provider call. The new disposable-v24 AndroidTest encodes the same PRAGMA
+and legacy-predicate characterization and compiles, but it has not been
+executed because the new candidate is not yet approved for device installation.
+This was a query defect, not current-DB corruption, evaluation drift or a
+reason to change schema.
 
 ### Minimal production correction
 
@@ -875,7 +878,8 @@ device zero-call rerun and valid-authorization local-path proof are not yet
 reached. The current LQ state is:
 
 ```text
-P5E_9A_LQ_PRODUCTION_LINEAGE_QUERY_FIX_PASS
+P5E_9A_LQ_HOST_FIX_BUILD_PASS
+P5E_9A_LQ_DEVICE_HELPER_EXECUTION_REQUIRED
 P5E_9A_VALID_AUTHORIZATION_LOCAL_PATH_PASS: NOT_REACHED
 NEW_CANDIDATE_OWNER_APPROVAL_REQUIRED
 RAW_AUTHORIZATION_REQUIRED

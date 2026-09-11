@@ -314,9 +314,10 @@ consume it automatically.
 The QF device result above is historical code206 evidence. LQ found that the
 production fresh runner used `binding_identity` directly on
 `editorial_p5d_reconciliation`, although schema v24 stores only
-`attempt_identity`. The isolated RED characterization reproduced
+`attempt_identity`. The historical QF device run reproduced
 `no such column: binding_identity` without touching the current pilot DB or
-calling a provider.
+calling a provider. The new disposable-v24 regression fixture is compiled but
+not yet executed because the code207 candidate is awaiting approval.
 
 Production fix `ff6821a` centralizes the read-only lineage check. It joins
 reconciliation, reconciliation history and network lifecycle through
