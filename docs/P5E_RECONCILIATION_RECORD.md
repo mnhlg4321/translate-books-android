@@ -9,21 +9,22 @@ I/O logging và không lưu prompt, response body, source text hoặc secret.
 | Hạng mục | Giá trị |
 |---|---|
 | Branch | `feature/v4.18` |
-| HEAD hiện tại trước documentation snapshot | `f90c0372c019c0d3970efb298b64b6a4addcfd4f` (test-source alignment commit; implementation correction is `049e72b5769f8b3fdcb6f50646d1f0ead3043940`) |
+| HEAD hiện tại trước documentation snapshot | `ae1d799416b63d6bb10f7d34a0767f1fa0604662` (documentation-only commit; implementation/test sources remain `049e72b5769f8b3fdcb6f50646d1f0ead3043940` / `f90c0372c019c0d3970efb298b64b6a4addcfd4f`) |
 | HEAD trước nhóm fresh-pilot evidence | `cd683503c79e03e4a215596855458c11200104ab` (historical group start) |
 | Production implementation baseline hiện tại | `049e72b5769f8b3fdcb6f50646d1f0ead3043940` |
 | Production source commit trong APK code199 | `03b97a30885393c1cc8a3297d5dff9672dcba57e` |
 | Production source commit trong pre-patch APK code201 | `a4b4a8f9d215578d5bfae329b1b4608927d0476c` |
 | Production source commit trong candidate APK code202 | `4140651d860e4ee11ce7e074970761666c575594` |
 | Test-source commit của candidate-aligned test APK | `f90c0372c019c0d3970efb298b64b6a4addcfd4f` |
-| Candidate archived validation artifact | `v4.17-p5e.10 / versionCode 206`, `build-20260911-183523`; chưa cài trên device |
+| Candidate archived validation artifact | `v4.17-p5e.10 / versionCode 206`, `build-20260911-183523`; đã cài đúng một lần qua guarded install sau owner approval |
 | Candidate production APK SHA-256 | `F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080` |
 | Candidate source ZIP SHA-256 | `5BA76881BA87313C69B3E6221676487A88FDFD9A68D61860521131EABC03E4B8` |
-| Current installed validation package | `v4.17-p5e.6 / versionCode 202`, historical installed candidate; code204 chưa cài |
+| Current installed validation package | `v4.17-p5e.10 / versionCode 206`, candidate code206; device readback PASS; code202 là pre-install baseline |
 | Last-known original pilot predecessor | `code196 / schema v24`; historical and unavailable, not current data |
 | Pre-upgrade code199 production APK SHA-256 | `870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09` |
-| Current installed code202 production APK SHA-256 | `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0` (historical installed artifact) |
-| Candidate-aligned test APK SHA-256 | `3838028BC2CE19CBB99B004041383CD5056B6470DA4496A467DBFD75083230B2`, test-source commit `f90c0372c019c0d3970efb298b64b6a4addcfd4f`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; compiled, not installed |
+| Pre-install code202 production APK SHA-256 | `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0` (historical device baseline) |
+| Current installed code206 production APK SHA-256 | `F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080`; source commit `049e72b5769f8b3fdcb6f50646d1f0ead3043940`; certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
+| Candidate-aligned test APK SHA-256 | `3838028BC2CE19CBB99B004041383CD5056B6470DA4496A467DBFD75083230B2`, test-source commit `f90c0372c019c0d3970efb298b64b6a4addcfd4f`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; installed as `com.ml.tblandroidtxt.test`, direct boundary run `4/5` |
 | Pre-candidate clean test APK SHA-256 | `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456`; historical attribution only |
 | Package / test package | `com.ml.tblandroidtxt` / `com.ml.tblandroidtxt.test` |
 | Candidate/installed APK certificate SHA-256 | `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
@@ -520,19 +521,19 @@ and exact-device read-only checks are separate evidence classes.
 
 The intermediate code205 archive was built before the correction commit was
 clean and is retained only as build evidence; it is not an approval candidate.
-Code204 remains pre-correction evidence and was never installed. The code206
-candidate has not been installed because the earlier code202 approval does not
-cover it.
+Code204 remains pre-correction evidence and was never installed. The following
+device facts were recorded before the later code206 approval and are retained
+as the pre-install baseline.
 
-The current device was rechecked read-only as serial `15e84958`, package
+The pre-install device was read-only as serial `15e84958`, package
 `com.ml.tblandroidtxt`, v4.17-p5e.6/code202, signature token `abebea4b`, schema
-v24, process absent. Its DB SHA-256 still matches the private reconstructed
-snapshot (`3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391`);
-the private snapshot manifest remains `6D3949C37E5C6D78FACB5FB7058CB4CBAAE615F54CF07F8F8462D1E39DD75A28`.
+v24, process absent. Its DB SHA-256 matched the private reconstructed snapshot
+(`3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391`); the
+private snapshot manifest remains `6D3949C37E5C6D78FACB5FB7058CB4CBAAE615F54CF07F8F8462D1E39DD75A28`.
 No device install, instrumentation, authorization, attempt, RECONCILE or
-provider call occurred in this correction round.
+provider call occurred before the separate owner approval recorded below.
 
-### E8–E11 — Stop boundary
+### E8–E11 — Historical pre-approval stop boundary
 
 E8 requires a new owner approval pinned to code206, its full APK/certificate
 hashes, source commit, fresh selector/binding/run/evaluation and the local-only
@@ -558,3 +559,99 @@ OWNER_APPROVAL_FOR_CODE206_REQUIRED
 
 The single next step is to obtain that exact owner approval. Until then, code206
 must remain uninstalled and no RAW authorization block may be created.
+
+## P5E.9A — Current owner-approved code206 device run
+
+The owner approval `P5E_9A_CODE206_DEVICE_ZERO_CALL_OWNER_APPROVAL` was then
+recorded with the exact device, package, code206 APK/certificate/source pins,
+fresh selector/binding/run, and official evaluation
+`3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1`. Its scope excluded
+provider/API calls, authorization creation/consumption, live attempts, retry,
+repair, RECONCILE and destructive package/database operations.
+
+### E8–E10 — Snapshot, guarded install and readback
+
+The pinned private snapshot was reused because the current device DB hash still
+matched `3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391` and
+the snapshot manifest hash remained
+`6D3949C37E5C6D78FACB5FB7058CB4CBAAE615F54CF07F8F8462D1E39DD75A28`.
+The snapshot is `RECONSTRUCTED_ONLY` with data-level restore status
+`PASS_DATA_LEVEL_ONLY`; it is not code196 recovery. The exact
+`scripts/install-validated.ps1 -CheckOnly` passed package/serial/version/APK
+hash/certificate/device-token checks. The same guarded script then performed
+exactly one code202 → code206 upgrade and returned install verification PASS.
+No fallback, uninstall, clear, reset or downgrade was used.
+
+Post-install readback passed:
+
+```text
+device=15e84958
+package=com.ml.tblandroidtxt
+version=v4.17-p5e.10
+versionCode=206
+signatureToken=abebea4b
+schema=v24
+freshSelector=p5e-fresh-mercedes-vol5-20260911-01
+freshBinding=845976b3cde02a3bf0896b64efd208f42e40821317d1b7bffec7081e63e33cdf
+freshRun=8466b95d96f958a97eb3ffd1eac5a32734023cafa1c230e696ad4253151a41dc
+freshEvaluation=3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1
+dbSha256=3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391
+```
+
+The approved test APK was installed directly as
+`com.ml.tblandroidtxt.test`; its SHA-256 is
+`3838028BC2CE19CBB99B004041383CD5056B6470DA4496A467DBFD75083230B2`, source
+commit `f90c0372c019c0d3970efb298b64b6a4addcfd4f`, and certificate matches the
+production pin.
+
+### E11 — Candidate-aligned zero-call instrumentation (blocked)
+
+The class `EditorialP5EFreshRawBoundaryInstrumentedTest` was invoked directly
+with `adb shell am instrument`, not through `connected*AndroidTest`. It ran five
+tests: four passed. The fifth stopped before any provider execution because the
+test queried `binding_identity` on `editorial_p5d_reconciliation`; schema v24
+defines that table by `attempt_identity`, so the query failed with:
+
+```text
+android.database.sqlite.SQLiteException:
+no such column: binding_identity
+```
+
+The failure is in the candidate-aligned QA predicate at
+`EditorialP5EFreshRawBoundaryInstrumentedTest.java:171-172`; it is not a DB
+corruption or evaluation-provenance mismatch. The preflight log recorded
+request hash `c5920dd842ea92f21d4045c72306a04d59313ac20190c951749fa1b64457c1c2`,
+request/context bytes `88604/80317`, and
+`providerCalls=0`, `attempts=0`, `authorizations=0`, `reconciliation=0`.
+Post-test readback still showed code206, the exact fresh tuple, unchanged DB
+SHA-256 and no app/test process left running. The four passing tests covered
+strict route rendering, missing/wrong authorization rejection and read-only
+fresh baseline; the historical-runner test itself is not accepted as PASS
+because it halted on this query error.
+
+No authorization receipt, live attempt, reconciliation row, provider/API call,
+partial predecessor, report or receipt was created. The class was not retried.
+
+Current decision:
+
+```text
+P5E_9A_EVALUATION_PROVENANCE_RESOLVED
+P5E_9A_CODE206_GUARDED_INSTALL_PASS
+P5E_9A_DEVICE_ZERO_CALL_QA_BLOCKED_TEST_QUERY
+P5E_9A_FRESH_RAW_BOUNDARY_LOCAL_PASS: NOT_REACHED
+FRESH_RAW_EXACT_PREFLIGHT_READY: NOT_REACHED
+RAW_AUTHORIZATION_REQUIRED
+NO_AUTHORIZATION_CREATED
+NO_LIVE_CALL_PERFORMED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
+P6_NOT_READY
+HISTORICAL_CODE196_PRESERVATION_FAILED
+PILOT_DATA_PRESERVATION_FAILED
+```
+
+The next and only action is to present a minimal test-source correction for
+the reconciliation predicate, rebuild and separately pin/approve its test
+artifact, then rerun the zero-call boundary. No RAW authorization may be
+created before that gate passes.

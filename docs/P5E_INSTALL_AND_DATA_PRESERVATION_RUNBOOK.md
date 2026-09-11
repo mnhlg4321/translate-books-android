@@ -203,27 +203,47 @@ test-source commit `f90c0372c019c0d3970efb298b64b6a4addcfd4f`, same certificate.
 The intermediate code205 archive is retained as non-candidate build evidence;
 code204 remains pre-correction evidence.
 
-Read-only device recheck still shows serial `15e84958`, package
-`com.ml.tblandroidtxt`, installed code202, signature token `abebea4b`, schema
-v24, process absent, unchanged DB SHA-256 matching the private reconstructed
-snapshot. Current attempts, authorization receipts, reconciliation/history,
-lifecycle and report/receipt counts remain zero. The snapshot manifest remains
-outside Git at `D:\P5E-private\fresh-raw-boundary-20260911-1810\SNAPSHOT_MANIFEST.json`
-with SHA-256
+The pinned private snapshot was reused because the pre-install device DB hash
+matched exactly. `scripts/install-validated.ps1 -CheckOnly` passed the exact
+serial/package/version/APK/certificate/signature pins; the same script then
+performed exactly one code202 → code206 upgrade and returned install verification
+PASS. Readback shows serial `15e84958`, package `com.ml.tblandroidtxt`, installed
+code206 (`v4.17-p5e.10`), signature token `abebea4b`, schema v24, process absent,
+and unchanged DB SHA-256
+`3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391`.
+The fresh selector/binding/run/chapter and official evaluation
+`3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1` read back correctly; the
+snapshot manifest remains outside Git at
+`D:\P5E-private\fresh-raw-boundary-20260911-1810\SNAPSHOT_MANIFEST.json` with
+SHA-256
 `6D3949C37E5C6D78FACB5FB7058CB4CBAAE615F54CF07F8F8462D1E39DD75A28`.
+The candidate-aligned test APK was installed and the direct boundary class ran
+5 tests: 4 passed; 1 failed before provider execution because the test queried
+nonexistent `binding_identity` on `editorial_p5d_reconciliation`, which is keyed
+by `attempt_identity`. Logcat recorded `providerCalls=0`, `attempts=0`,
+`authorizations=0`, `reconciliation=0`; post-test DB hash remained unchanged.
 Host engine/app variants, lint, AndroidTest compilation and static checks pass;
-provider calls remain zero. Code206 was not installed and no device
-instrumentation was run because the prior code202 approval does not cover it.
+no authorization, attempt, reconciliation, repair, retry or provider call
+occurred.
 
 Current stop state:
 
 ```text
-P5E_9A_FRESH_RAW_BOUNDARY_LOCAL_PASS: NOT_REACHED
 P5E_9A_EVALUATION_PROVENANCE_RESOLVED
-OWNER_APPROVAL_FOR_CODE206_REQUIRED
+P5E_9A_CODE206_GUARDED_INSTALL_PASS
+P5E_9A_DEVICE_ZERO_CALL_QA_BLOCKED_TEST_QUERY
+P5E_9A_FRESH_RAW_BOUNDARY_LOCAL_PASS: NOT_REACHED
+FRESH_RAW_EXACT_PREFLIGHT_READY: NOT_REACHED
 RAW_AUTHORIZATION_REQUIRED
+NO_AUTHORIZATION_CREATED
 NO_LIVE_CALL_PERFORMED
 RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
 EXECUTION_DISABLED
 NOT_CERTIFIED
+P6_NOT_READY
+HISTORICAL_CODE196_PRESERVATION_FAILED
 ```
+
+The only next step is a separately approved minimal correction to the test
+predicate, followed by a newly pinned test APK and one controlled rerun. Do not
+create RAW authorization or call a provider while this gate is blocked.
