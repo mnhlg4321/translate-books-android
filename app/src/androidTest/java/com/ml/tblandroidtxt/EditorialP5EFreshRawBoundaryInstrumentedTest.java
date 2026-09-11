@@ -168,8 +168,10 @@ public final class EditorialP5EFreshRawBoundaryInstrumentedTest {
                     "SELECT COUNT(*) FROM editorial_p5d_authorization_receipts "
                             + "WHERE binding_identity=?", FRESH_BINDING));
             assertEquals(0L, count(db,
-                    "SELECT COUNT(*) FROM editorial_p5d_reconciliation "
-                            + "WHERE binding_identity=?", FRESH_BINDING));
+                    "SELECT COUNT(*) FROM editorial_p5d_reconciliation AS r "
+                            + "JOIN editorial_p5c_attempts AS a "
+                            + "ON a.attempt_identity = r.attempt_identity "
+                            + "WHERE a.binding_identity=?", FRESH_BINDING));
         }
     }
 
