@@ -1740,6 +1740,11 @@ source has an allowlist test for four keys, boolean-string values, and
 secret/content-like text exclusion. The synthetic cases were compiled but not
 instrumented in A3.1R, so no device route result is claimed.
 
+The A3.2 pre/post settings check, if separately approved, is a SHA-256 of the
+entire settings file only. It does not pull, serialize or log XML/content,
+paths, setting values, API-key presence or API keys. The one diagnostic-method
+invocation does not execute the synthetic cases.
+
 No provider/model/endpoint value, API key, key-presence signal, settings hash,
 source, prompt, request or response is emitted. No settings write, database
 access, provider/client construction or authorization/attempt/reconciliation

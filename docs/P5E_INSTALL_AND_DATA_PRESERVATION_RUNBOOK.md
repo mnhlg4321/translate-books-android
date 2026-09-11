@@ -597,6 +597,12 @@ reconciliation record; no approval has been granted. The next action is owner
 approval, followed by the pre-run read-only checks before any install or
 instrumentation.
 
+The permitted settings evidence is a SHA-256 of the entire settings file
+before and after the one diagnostic invocation, or an `ABSENT` marker when the
+file does not exist. It must not pull, serialize or log file content, XML,
+paths, setting values, API-key presence or API keys. The diagnostic invocation
+does not run the synthetic test cases; those remain offline preparation only.
+
 ```text
 P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED
 P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED
