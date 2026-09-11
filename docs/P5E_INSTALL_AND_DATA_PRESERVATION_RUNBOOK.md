@@ -217,14 +217,27 @@ snapshot manifest remains outside Git at
 `D:\P5E-private\fresh-raw-boundary-20260911-1810\SNAPSHOT_MANIFEST.json` with
 SHA-256
 `6D3949C37E5C6D78FACB5FB7058CB4CBAAE615F54CF07F8F8462D1E39DD75A28`.
-The candidate-aligned test APK was installed and the direct boundary class ran
-5 tests: 4 passed; 1 failed before provider execution because the test queried
-nonexistent `binding_identity` on `editorial_p5d_reconciliation`, which is keyed
-by `attempt_identity`. Logcat recorded `providerCalls=0`, `attempts=0`,
+The superseded candidate-aligned test APK was installed and the direct boundary
+class ran 5 tests: 4 passed; 1 failed before provider execution because the test
+queried nonexistent `binding_identity` on `editorial_p5d_reconciliation`, which
+is keyed by `attempt_identity`. Logcat recorded `providerCalls=0`, `attempts=0`,
 `authorizations=0`, `reconciliation=0`; post-test DB hash remained unchanged.
 Host engine/app variants, lint, AndroidTest compilation and static checks pass;
 no authorization, attempt, reconciliation, repair, retry or provider call
 occurred.
+
+The test-only correction is committed separately at
+`34a4ec2832d71a488a2531a0e69a85261e9c9b9b`; it uses the required JOIN through
+`editorial_p5d_reconciliation.attempt_identity` to
+`editorial_p5c_attempts.binding_identity`. AndroidTest compilation and the new
+test APK build passed. The new APK is outside Git at
+`D:\P5E-private\fresh-raw-boundary-20260911-qf-test-apk\app-debug-androidTest.apk`,
+SHA-256
+`68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A`, certificate
+SHA-256
+`47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; it has
+not been installed pending separate owner approval. The old test APK is
+superseded and must not be rerun.
 
 Current stop state:
 
@@ -244,6 +257,6 @@ P6_NOT_READY
 HISTORICAL_CODE196_PRESERVATION_FAILED
 ```
 
-The only next step is a separately approved minimal correction to the test
-predicate, followed by a newly pinned test APK and one controlled rerun. Do not
-create RAW authorization or call a provider while this gate is blocked.
+The only next step is separate owner approval for the exact corrected test APK,
+followed by the one-method gate and then the full class. Do not create RAW
+authorization or call a provider while this gate is blocked.

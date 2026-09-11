@@ -9,13 +9,13 @@ I/O logging và không lưu prompt, response body, source text hoặc secret.
 | Hạng mục | Giá trị |
 |---|---|
 | Branch | `feature/v4.18` |
-| HEAD hiện tại trước documentation snapshot | `ae1d799416b63d6bb10f7d34a0767f1fa0604662` (documentation-only commit; implementation/test sources remain `049e72b5769f8b3fdcb6f50646d1f0ead3043940` / `f90c0372c019c0d3970efb298b64b6a4addcfd4f`) |
+| HEAD hiện tại trước documentation snapshot | `34a4ec2832d71a488a2531a0e69a85261e9c9b9b` (test-only predicate correction; production source remains `049e72b5769f8b3fdcb6f50646d1f0ead3043940`) |
 | HEAD trước nhóm fresh-pilot evidence | `cd683503c79e03e4a215596855458c11200104ab` (historical group start) |
 | Production implementation baseline hiện tại | `049e72b5769f8b3fdcb6f50646d1f0ead3043940` |
 | Production source commit trong APK code199 | `03b97a30885393c1cc8a3297d5dff9672dcba57e` |
 | Production source commit trong pre-patch APK code201 | `a4b4a8f9d215578d5bfae329b1b4608927d0476c` |
 | Production source commit trong candidate APK code202 | `4140651d860e4ee11ce7e074970761666c575594` |
-| Test-source commit của candidate-aligned test APK | `f90c0372c019c0d3970efb298b64b6a4addcfd4f` |
+| Test-source commit của corrected candidate-aligned test APK | `34a4ec2832d71a488a2531a0e69a85261e9c9b9b` |
 | Candidate archived validation artifact | `v4.17-p5e.10 / versionCode 206`, `build-20260911-183523`; đã cài đúng một lần qua guarded install sau owner approval |
 | Candidate production APK SHA-256 | `F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080` |
 | Candidate source ZIP SHA-256 | `5BA76881BA87313C69B3E6221676487A88FDFD9A68D61860521131EABC03E4B8` |
@@ -24,7 +24,8 @@ I/O logging và không lưu prompt, response body, source text hoặc secret.
 | Pre-upgrade code199 production APK SHA-256 | `870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09` |
 | Pre-install code202 production APK SHA-256 | `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0` (historical device baseline) |
 | Current installed code206 production APK SHA-256 | `F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080`; source commit `049e72b5769f8b3fdcb6f50646d1f0ead3043940`; certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
-| Candidate-aligned test APK SHA-256 | `3838028BC2CE19CBB99B004041383CD5056B6470DA4496A467DBFD75083230B2`, test-source commit `f90c0372c019c0d3970efb298b64b6a4addcfd4f`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; installed as `com.ml.tblandroidtxt.test`, direct boundary run `4/5` |
+| Superseded candidate-aligned test APK | `3838028BC2CE19CBB99B004041383CD5056B6470DA4496A467DBFD75083230B2`, test-source commit `f90c0372c019c0d3970efb298b64b6a4addcfd4f`; direct boundary run `4/5`, query defect; not reused |
+| Corrected candidate-aligned test APK SHA-256 | `68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A`, test-source commit `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; built outside Git, not installed pending approval |
 | Pre-candidate clean test APK SHA-256 | `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456`; historical attribution only |
 | Package / test package | `com.ml.tblandroidtxt` / `com.ml.tblandroidtxt.test` |
 | Candidate/installed APK certificate SHA-256 | `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
@@ -598,11 +599,11 @@ freshEvaluation=3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1
 dbSha256=3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391
 ```
 
-The approved test APK was installed directly as
-`com.ml.tblandroidtxt.test`; its SHA-256 is
+The superseded test APK was installed directly as
+`com.ml.tblandroidtxt.test`; its SHA-256 was
 `3838028BC2CE19CBB99B004041383CD5056B6470DA4496A467DBFD75083230B2`, source
-commit `f90c0372c019c0d3970efb298b64b6a4addcfd4f`, and certificate matches the
-production pin.
+commit `f90c0372c019c0d3970efb298b64b6a4addcfd4f`, and certificate matched the
+production pin. It is not reused after the `4/5` run below.
 
 ### E11 — Candidate-aligned zero-call instrumentation (blocked)
 
@@ -651,7 +652,20 @@ HISTORICAL_CODE196_PRESERVATION_FAILED
 PILOT_DATA_PRESERVATION_FAILED
 ```
 
-The next and only action is to present a minimal test-source correction for
-the reconciliation predicate, rebuild and separately pin/approve its test
-artifact, then rerun the zero-call boundary. No RAW authorization may be
-created before that gate passes.
+The test-only correction is now committed separately at
+`34a4ec2832d71a488a2531a0e69a85261e9c9b9b`. It replaces the faulty predicate
+with the required join through `attempt_identity`; AndroidTest compilation
+passed and the new test APK was built outside Git:
+
+```text
+package=com.ml.tblandroidtxt.test
+testSourceCommit=34a4ec2832d71a488a2531a0e69a85261e9c9b9b
+testApkSha256=68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A
+certificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+path=D:\P5E-private\fresh-raw-boundary-20260911-qf-test-apk\app-debug-androidTest.apk
+```
+
+The new artifact is not installed and has not been rerun. A separate owner
+approval is required for that exact test artifact; after approval, run the
+single failed method first and the full class only if it passes. No RAW
+authorization may be created before that gate passes.
