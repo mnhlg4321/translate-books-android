@@ -227,7 +227,7 @@ public final class EditorialP5EFreshRawLineageInstrumentedTest {
         assertZero(inspectPrimary());
     }
 
-    @Test public void schemaFailureIsTypedBeforeProviderAndDoesNotMutate() {
+    @Test public void schemaFailureReturnsCheckFailedAndDoesNotMutate() {
         database.editorialWritableDatabase().execSQL(
                 "DROP TABLE editorial_p5d_reconciliation");
         EditorialP5EFreshRawLiveRunner.FreshRawLineageCheck check = inspectPrimary();
