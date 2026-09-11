@@ -9,23 +9,25 @@ I/O logging và không lưu prompt, response body, source text hoặc secret.
 | Hạng mục | Giá trị |
 |---|---|
 | Branch | `feature/v4.18` |
-| HEAD hiện tại trước documentation snapshot | `1e82439abc19322298c1e407092629017892c9c9` (documentation snapshot before QF device result; test-only predicate correction remains `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`; production source remains `049e72b5769f8b3fdcb6f50646d1f0ead3043940`) |
+| HEAD trước nhóm LQ | `ada38ccbc1034318045cc744598227a1fa8cbcee` |
+| HEAD hiện tại trước documentation snapshot | `995d3b6c9678e93905b3802cf22eee0b091b1bb3` (production LQ fix `ff6821a`; test-only coverage is in this HEAD) |
 | HEAD trước nhóm fresh-pilot evidence | `cd683503c79e03e4a215596855458c11200104ab` (historical group start) |
-| Production implementation baseline hiện tại | `049e72b5769f8b3fdcb6f50646d1f0ead3043940` |
+| Production implementation baseline hiện tại | installed code206 source `049e72b5769f8b3fdcb6f50646d1f0ead3043940`; LQ fix commit `ff6821a` |
 | Production source commit trong APK code199 | `03b97a30885393c1cc8a3297d5dff9672dcba57e` |
 | Production source commit trong pre-patch APK code201 | `a4b4a8f9d215578d5bfae329b1b4608927d0476c` |
 | Production source commit trong candidate APK code202 | `4140651d860e4ee11ce7e074970761666c575594` |
-| Test-source commit của corrected candidate-aligned test APK | `34a4ec2832d71a488a2531a0e69a85261e9c9b9b` |
-| Candidate archived validation artifact | `v4.17-p5e.10 / versionCode 206`, `build-20260911-183523`; đã cài đúng một lần qua guarded install sau owner approval |
-| Candidate production APK SHA-256 | `F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080` |
-| Candidate source ZIP SHA-256 | `5BA76881BA87313C69B3E6221676487A88FDFD9A68D61860521131EABC03E4B8` |
+| Test-source commit của corrected QF APK (historical) | `34a4ec2832d71a488a2531a0e69a85261e9c9b9b` |
+| Candidate archived validation artifact | new `v4.17-p5e.11 / versionCode 207`, `build-20260911-201725`; archived, not installed |
+| Candidate production APK SHA-256 | `2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD` |
+| Candidate source ZIP SHA-256 | `B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348` |
 | Current installed validation package | `v4.17-p5e.10 / versionCode 206`, candidate code206; device readback PASS; code202 là pre-install baseline |
 | Last-known original pilot predecessor | `code196 / schema v24`; historical and unavailable, not current data |
 | Pre-upgrade code199 production APK SHA-256 | `870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09` |
 | Pre-install code202 production APK SHA-256 | `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0` (historical device baseline) |
 | Current installed code206 production APK SHA-256 | `F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080`; source commit `049e72b5769f8b3fdcb6f50646d1f0ead3043940`; certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
 | Superseded candidate-aligned test APK | `3838028BC2CE19CBB99B004041383CD5056B6470DA4496A467DBFD75083230B2`, test-source commit `f90c0372c019c0d3970efb298b64b6a4addcfd4f`; direct boundary run `4/5`, query defect; not reused |
-| Corrected candidate-aligned test APK SHA-256 | `68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A`, test-source commit `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; built outside Git, separately approved, installed only as `com.ml.tblandroidtxt.test`, and read back with matching hash/signature |
+| Corrected QF test APK SHA-256 (historical) | `68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A`, test-source commit `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; separately approved and installed only as `com.ml.tblandroidtxt.test` |
+| New LQ candidate-aligned test APK SHA-256 | `9DE2A9F167960A2DA0D5D523A270F35459773F601D0CB84872432B9B576227B2`, source snapshot `995d3b6c9678e93905b3802cf22eee0b091b1bb3`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; outside Git, not installed |
 | Pre-candidate clean test APK SHA-256 | `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456`; historical attribution only |
 | Package / test package | `com.ml.tblandroidtxt` / `com.ml.tblandroidtxt.test` |
 | Candidate/installed APK certificate SHA-256 | `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
@@ -731,7 +733,7 @@ created. `HISTORICAL_CODE196_PRESERVATION_FAILED` and
 zero-call local RAW boundary; it is not a live RAW acceptance and does not
 authorize P5E.9B.
 
-Current QF exit state:
+Current QF exit state (historical before LQ):
 
 ```text
 TEST_ONLY_QUERY_CORRECTION_PASS
@@ -756,3 +758,137 @@ NOT_CERTIFIED
 P6_NOT_READY
 HISTORICAL_CODE196_PRESERVATION_FAILED
 ```
+
+## P5E.9A-LQ — production lineage-query hardening (current stop)
+
+This section supersedes the QF readiness claim for the purpose of the next
+candidate. It does not install an APK, open the device DB, create an
+authorization/attempt/reconciliation row, call a provider, retry, repair or
+RECONCILE. The prior QF device result remains historical zero-call evidence.
+
+### LQ baseline and RED characterization
+
+| Item | Pinned/observed fact |
+|---|---|
+| Branch | `feature/v4.18` |
+| HEAD before LQ | `ada38ccbc1034318045cc744598227a1fa8cbcee` |
+| HEAD before this documentation snapshot | `995d3b6c9678e93905b3802cf22eee0b091b1bb3` |
+| Installed production baseline | code206 / APK `F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080` / certificate `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
+| Device/package | `15e84958` / `com.ml.tblandroidtxt` / signature token `abebea4b` |
+| Current DB | schema v24 / SHA-256 `3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391` / `RECONSTRUCTED_ONLY` |
+| Fresh tuple | selector `p5e-fresh-mercedes-vol5-20260911-01`, chapter `001`, binding `845976b3cde02a3bf0896b64efd208f42e40821317d1b7bffec7081e63e33cdf`, run `8466b95d96f958a97eb3ffd1eac5a32734023cafa1c230e696ad4253151a41dc`, evaluation `3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1` |
+| Current counts | attempts/auth/reconciliation/history/lifecycle/report/receipt = `0` in the prior read-only QF evidence; no LQ DB action was performed |
+| Historical QF evidence | failed method `1/1`, class `5/5`, provider calls `0`; retained as historical code206 evidence and superseded for readiness |
+
+On an isolated schema-v24 database, `PRAGMA table_info` showed that
+`editorial_p5d_reconciliation` has `attempt_identity` and does not have
+`binding_identity`. Executing the old production predicate reproduced:
+
+```text
+android.database.sqlite.SQLiteException: no such column: binding_identity
+```
+
+The failure was before provider construction and the isolated characterization
+recorded no provider call. This was a query defect, not current-DB corruption,
+evaluation drift or a reason to change schema.
+
+### Minimal production correction
+
+Production commit `ff6821a` (`fix(p5e): harden fresh raw lineage query`) adds a
+single package-local read-only `inspectLineage` helper and routes `dispatchRaw`
+through it. The helper runs every read before aggregating status:
+
+```text
+editorial_p5c_attempts.binding_identity
+editorial_p5d_authorization_receipts.binding_identity
+editorial_p5d_reconciliation.attempt_identity
+  -> editorial_p5c_attempts.attempt_identity
+editorial_p5d_reconciliation_history.attempt_identity
+  -> editorial_p5c_attempts.attempt_identity
+editorial_p5d_network_lifecycle.attempt_identity
+  -> editorial_p5c_attempts.attempt_identity
+```
+
+Any query/schema/runtime read failure returns typed
+`P5E_FRESH_RAW_LINEAGE_CHECK_FAILED`; no SQLite exception escapes the live
+runner, no unused-lineage fallback is used, and no provider is constructed.
+`UNUSED`/`ALREADY_USED` is computed only after all five reads complete. The QF
+test now calls this same helper, so the production and QF predicates cannot
+silently drift.
+
+### Isolated regression and host qualification
+
+The new AndroidTest class uses only disposable v24 databases. It covers empty
+lineage, each of attempts/authorization/primary reconciliation/history/lifecycle,
+unrelated binding, missing table/column typed failure, the historical RED
+predicate, canonical chapter `001` versus `chapter001`, and null/wrong
+authorization with no mutation. No current pilot DB is used as a mutation
+fixture. No schema, migration, pack/profile/authority, compact wire, final
+report/receipt, cap or route change was made.
+
+```text
+productionFixCommit=ff6821a
+testCoverageCommit=995d3b6c9678e93905b3802cf22eee0b091b1bb3
+engine=200/200 PASS
+appDebug=232/232 PASS
+appRelease=232/232 PASS
+appBenchmark=232/232 PASS
+lintDebug=PASS
+androidTestCompile=PASS
+gitDiffCheck=PASS
+secretScan=no matches
+providerCalls=0
+currentDbMutation=none
+```
+
+The candidate created after the fix is archived but not installed:
+
+```text
+version=v4.17-p5e.11
+versionCode=207
+event=build-20260911-201725
+buildSourceSnapshot=995d3b6c9678e93905b3802cf22eee0b091b1bb3
+productionFixCommit=ff6821a
+apkSha256=2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD
+sourceZipSha256=B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348
+certificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+artifactBackupByteEqual=true
+artifact=D:\App Translate Books\App Translate Books-translation-profile\artifacts\builds\v4.17-p5e.11\build-20260911-201725
+backup=D:\App Translate Books\App Translate Books-translation-profile\backup\builds\v4.17-p5e.11\build-20260911-201725
+```
+
+The candidate-aligned test artifact is outside Git and not installed:
+
+```text
+testPackage=com.ml.tblandroidtxt.test
+testSourceSnapshot=995d3b6c9678e93905b3802cf22eee0b091b1bb3
+testApkSha256=9DE2A9F167960A2DA0D5D523A270F35459773F601D0CB84872432B9B576227B2
+testCertificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+testApkPath=D:\P5E-private\fresh-raw-lineage-lq-20260911-2018-test-apk\app-debug-androidTest.apk
+```
+
+### Current decision and stop boundary
+
+The installed device remains code206 and the current reconstructed DB remains
+untouched. The new candidate has not been owner-approved for installation, so
+device zero-call rerun and valid-authorization local-path proof are not yet
+reached. The current LQ state is:
+
+```text
+P5E_9A_LQ_PRODUCTION_LINEAGE_QUERY_FIX_PASS
+P5E_9A_VALID_AUTHORIZATION_LOCAL_PATH_PASS: NOT_REACHED
+NEW_CANDIDATE_OWNER_APPROVAL_REQUIRED
+RAW_AUTHORIZATION_REQUIRED
+NO_AUTHORIZATION_CREATED
+NO_LIVE_CALL_PERFORMED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
+P6_NOT_READY
+HISTORICAL_CODE196_PRESERVATION_FAILED
+PILOT_DATA_PRESERVATION_FAILED
+```
+
+The single next step is a separate owner approval block pinning the exact
+code207 production APK and new test APK, then a later guarded install/device
+zero-call rerun. It is not permission to create P5E.9B authorization.

@@ -261,7 +261,7 @@ At that historical stop point the corrected test APK still awaited separate
 owner approval. The later approval and QF device rerun are recorded below. Do
 not create RAW authorization or call a provider from this historical evidence.
 
-## P5E.9A-QF — current zero-call device result
+## Historical P5E.9A-QF — code206 zero-call device result
 
 The owner separately approved the exact corrected test artifact. Only
 `com.ml.tblandroidtxt.test` was replaced on `15e84958`; production code206 was
@@ -308,3 +308,52 @@ PILOT_DATA_PRESERVATION_FAILED
 This result closes only the local zero-call boundary. The next step is to
 prepare and separately request exact P5E.9B RAW authorization; do not create or
 consume it automatically.
+
+## P5E.9A-LQ — current production lineage-query stop
+
+The QF device result above is historical code206 evidence. LQ found that the
+production fresh runner used `binding_identity` directly on
+`editorial_p5d_reconciliation`, although schema v24 stores only
+`attempt_identity`. The isolated RED characterization reproduced
+`no such column: binding_identity` without touching the current pilot DB or
+calling a provider.
+
+Production fix `ff6821a` centralizes the read-only lineage check. It joins
+reconciliation, reconciliation history and network lifecycle through
+`attempt_identity` to `editorial_p5c_attempts.binding_identity`, reads all five
+lineage owners before calculating status, and maps any query/schema failure to
+typed `P5E_FRESH_RAW_LINEAGE_CHECK_FAILED`. No schema, migration, pack,
+profile, authority, wire schema, report/receipt schema, route or cap changed.
+
+Host qualification passed after the fix: engine `200/200`, app
+debug/release/benchmark `232/232` each, lint debug PASS and AndroidTest compile
+PASS. Provider calls and current-DB mutation were `0`.
+
+The new candidate is archived but not installed:
+
+```text
+version=v4.17-p5e.11
+versionCode=207
+event=build-20260911-201725
+apkSha256=2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD
+sourceZipSha256=B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348
+certificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+artifactBackupByteEqual=true
+```
+
+The candidate-aligned test APK is outside Git and not installed:
+
+```text
+path=D:\P5E-private\fresh-raw-lineage-lq-20260911-2018-test-apk\app-debug-androidTest.apk
+package=com.ml.tblandroidtxt.test
+sha256=9DE2A9F167960A2DA0D5D523A270F35459773F601D0CB84872432B9B576227B2
+certificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+sourceSnapshot=995d3b6c9678e93905b3802cf22eee0b091b1bb3
+```
+
+The installed device remains code206 and the reconstructed current DB remains
+unchanged. This runbook therefore stops at `NEW_CANDIDATE_OWNER_APPROVAL_REQUIRED`;
+no fresh candidate device verification or valid-authorization local-path claim
+is made. The next action is a separate owner approval pinning both artifacts,
+followed by snapshot/restore and guarded installation. It is not P5E.9B
+authorization and does not permit a provider call.
