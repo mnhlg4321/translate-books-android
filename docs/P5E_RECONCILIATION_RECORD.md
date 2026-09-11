@@ -4,23 +4,23 @@ Ngày ghi nhận: `2026-09-11` (+07:00)
 Phạm vi: metadata OpenRouter được đọc qua Activity/Logs đã xác thực; không mở
 I/O logging và không lưu prompt, response body, source text hoặc secret.
 
-## Current baseline tại đầu báo cáo
+## Baseline tại đầu nhóm LQ/QF
 
 | Hạng mục | Giá trị |
 |---|---|
 | Branch | `feature/v4.18` |
 | HEAD trước nhóm LQ | `ada38ccbc1034318045cc744598227a1fa8cbcee` |
-| HEAD hiện tại trước documentation snapshot | `995d3b6c9678e93905b3802cf22eee0b091b1bb3` (production LQ fix `ff6821a`; test-only coverage is in this HEAD) |
+| HEAD trước documentation snapshot của nhóm QF2 | `6683636e897942ff54f058bd03d22fa5f7a7da04` (production LQ fix `ff6821a`; test-only correction and prior documentation are in this history) |
 | HEAD trước nhóm fresh-pilot evidence | `cd683503c79e03e4a215596855458c11200104ab` (historical group start) |
 | Production implementation baseline hiện tại | installed code206 source `049e72b5769f8b3fdcb6f50646d1f0ead3043940`; LQ fix commit `ff6821a` |
 | Production source commit trong APK code199 | `03b97a30885393c1cc8a3297d5dff9672dcba57e` |
 | Production source commit trong pre-patch APK code201 | `a4b4a8f9d215578d5bfae329b1b4608927d0476c` |
 | Production source commit trong candidate APK code202 | `4140651d860e4ee11ce7e074970761666c575594` |
 | Test-source commit của corrected QF APK (historical) | `34a4ec2832d71a488a2531a0e69a85261e9c9b9b` |
-| Candidate archived validation artifact | new `v4.17-p5e.11 / versionCode 207`, `build-20260911-201725`; archived, not installed |
+| Candidate validation artifact | `v4.17-p5e.11 / versionCode 207`, `build-20260911-201725`; installed once under separate DV approval and read back successfully |
 | Candidate production APK SHA-256 | `2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD` |
 | Candidate source ZIP SHA-256 | `B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348` |
-| Current installed validation package | `v4.17-p5e.10 / versionCode 206`, candidate code206; device readback PASS; code202 là pre-install baseline |
+| Current installed validation package | `v4.17-p5e.11 / versionCode 207`, candidate code207; device readback PASS; code206 là pre-install baseline |
 | Last-known original pilot predecessor | `code196 / schema v24`; historical and unavailable, not current data |
 | Pre-upgrade code199 production APK SHA-256 | `870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09` |
 | Pre-install code202 production APK SHA-256 | `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0` (historical device baseline) |
@@ -28,7 +28,7 @@ I/O logging và không lưu prompt, response body, source text hoặc secret.
 | Superseded candidate-aligned test APK | `3838028BC2CE19CBB99B004041383CD5056B6470DA4496A467DBFD75083230B2`, test-source commit `f90c0372c019c0d3970efb298b64b6a4addcfd4f`; direct boundary run `4/5`, query defect; not reused |
 | Corrected QF test APK SHA-256 (historical) | `68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A`, test-source commit `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; separately approved and installed only as `com.ml.tblandroidtxt.test` |
 | Superseded LQ candidate-aligned test APK | `9DE2A9F167960A2DA0D5D523A270F35459773F601D0CB84872432B9B576227B2`, source snapshot `995d3b6c9678e93905b3802cf22eee0b091b1bb3`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; outside Git, not installed, not approved |
-| New QF2 candidate-aligned test APK | `50BC25F1C24E9588F430EE00809E9B6C8E126B5EA975782FA556254840DDA587`, test-source commit `f2695c862a9b860e08fd01f932377ec5576d6ad1`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; outside Git, not installed, not approved |
+| New QF2 candidate-aligned test APK | `50BC25F1C24E9588F430EE00809E9B6C8E126B5EA975782FA556254840DDA587`, test-source commit `f2695c862a9b860e08fd01f932377ec5576d6ad1`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; outside Git, approved for DV and installed once as the test package only |
 | Pre-candidate clean test APK SHA-256 | `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456`; historical attribution only |
 | Package / test package | `com.ml.tblandroidtxt` / `com.ml.tblandroidtxt.test` |
 | Candidate/installed APK certificate SHA-256 | `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
@@ -763,7 +763,7 @@ P6_NOT_READY
 HISTORICAL_CODE196_PRESERVATION_FAILED
 ```
 
-## P5E.9A-LQ — production lineage-query hardening (current stop)
+## P5E.9A-LQ — production lineage-query hardening (pre-DV stop, historical)
 
 This section supersedes the QF readiness claim for the purpose of the next
 candidate. It does not install an APK, open the device DB, create an
@@ -901,7 +901,7 @@ The single next step is a separate owner approval block pinning the exact
 code207 production APK and new test APK, then a later guarded install/device
 zero-call rerun. It is not permission to create P5E.9B authorization.
 
-## P5E.9A-LQ-QF2 — code207 test-artifact alignment (current host-only stop)
+## P5E.9A-LQ-QF2 — code207 test-artifact alignment (pre-DV host-only stop, historical)
 
 QF2 was limited to the AndroidTest artifact. The required starting baseline was
 branch `feature/v4.18`, HEAD
@@ -1058,3 +1058,127 @@ Do not mark this as `DEVICE_HELPER_PASS`,
 `FRESH_RAW_EXACT_PREFLIGHT_READY`. Stop here. The next action is separate owner
 approval for the exact new test artifact, followed by a future device helper
 rerun. P5E.9B authorization remains uncreated.
+
+## P5E.9A-LQ-DV — code207 device verification and zero-call boundary
+
+The owner approval `P5E_9A_LQ_DV_OWNER_APPROVAL` was used only for the stated
+local/device scope. One guarded production upgrade changed code206 to code207,
+and one exact-hash replacement installed the approved test package. No
+uninstall, clear, reset, downgrade, fallback, connected AndroidTest,
+provider/API call, authorization, attempt, reconciliation, retry, repair or
+RECONCILE occurred.
+
+```text
+device=15e84958
+productionPackage=com.ml.tblandroidtxt
+installedProductionVersion=v4.17-p5e.11
+installedProductionVersionCode=207
+installedProductionApkSha256=2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD
+installedProductionCertificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+deviceSignatureToken=abebea4b
+schemaVersion=24
+dataClassification=RECONSTRUCTED_ONLY
+productionUpgradeCount=1
+testPackageReplacementCount=1
+connectedAndroidTest=NOT_RUN
+testPackage=com.ml.tblandroidtxt.test
+testApkPath=D:\P5E-private\fresh-raw-lineage-lq-qf2-20260911-204314-test-apk\app-debug-androidTest.apk
+testApkSha256=50BC25F1C24E9588F430EE00809E9B6C8E126B5EA975782FA556254840DDA587
+testCertificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+testSourceCommit=f2695c862a9b860e08fd01f932377ec5576d6ad1
+testRunner=androidx.test.runner.AndroidJUnitRunner
+```
+
+The one approved force-stop was used for snapshot capture only. The
+WAL-aware snapshot and isolated restore remain outside Git:
+
+```text
+snapshotRoot=D:\P5E-private\p5e-9a-lq-dv-snapshot-20260911-210256
+snapshotManifestSha256=BBE47271716785B1ED89F888748428C9A0437A47FF61804942FAF202BBE49C76
+snapshotDatabaseSha256=3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391
+snapshotJournalSha256=E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
+snapshotWalPresent=false
+snapshotShmPresent=false
+snapshotRestoreRoot=D:\P5E-private\p5e-9a-lq-dv-restore-20260911-210256
+snapshotRestoreStatus=PASS_DATA_LEVEL_ONLY
+postInstallReadbackRoot=D:\P5E-private\p5e-9a-lq-dv-postinstall-20260911-210550
+postRunReadbackRoot=D:\P5E-private\p5e-9a-lq-dv-postrun-verified2-20260911-211156
+```
+
+The isolated restore and post-run SQLite checks passed `integrity_check=ok`,
+schema v24 and zero foreign-key violations. The fresh tuple and source,
+canonical pack and profile identities were unchanged. The fresh project has
+one canonical chapter `001`; two global `001` rows remain because another
+reconstructed project is retained.
+
+```text
+dbBeforeSha256=3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391
+dbAfterSha256=3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391
+databaseHashUnchanged=true
+freshSelector=p5e-fresh-mercedes-vol5-20260911-01
+freshChapterKey=001
+freshBinding=845976b3cde02a3bf0896b64efd208f42e40821317d1b7bffec7081e63e33cdf
+freshRunDeclaration=8466b95d96f958a97eb3ffd1eac5a32734023cafa1c230e696ad4253151a41dc
+freshEvaluation=3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1
+freshPackSha256=497786e18e6e2309b44c6695bc8d8e0b538babfe20b1bc0b6f74c395fd05642d
+freshProfileSha256=beec03a42e37f424a6f071ad48f35878b27e1083141699352cda4474d8cc2e21
+freshProjectChapterRows=1
+globalChapterKey001Rows=2
+attempts=0
+authorizationReceipts=0
+reconciliation=0
+reconciliationHistory=0
+lifecycle=0
+reportBytesNonEmpty=0
+receiptBytesNonEmpty=0
+partialCommit=false
+automaticRedispatch=false
+providerCalls=0
+```
+
+The direct device order and results were:
+
+```text
+schemaV24EmptyFreshLineageIsUnusedAndAllReadsComplete=1/1 PASS
+missingTableReturnsTypedCheckFailure=1/1 PASS
+canonicalChapterKeyIsAcceptedAndFriendlyAliasIsRejectedBeforeProvider=1/1 PASS
+historicalP5dRunnerRejectsFreshSelectorBeforeProvider=1/1 PASS
+EditorialP5EFreshRawBoundaryInstrumentedTest=5/5 PASS
+EditorialP5EFreshRawLineageInstrumentedTest=13/13 PASS
+allTestsNoSkip=true
+providerCalls=0
+```
+
+Lineage mutation cases used disposable databases. The current pilot DB was
+used only for read-only tuple, preflight and count assertions. The QF tests
+call the production-owned helper, whose schema-v24 reconciliation, history
+and lifecycle reads use the canonical `attempt_identity` joins and map query
+or schema failures to typed `P5E_FRESH_RAW_LINEAGE_CHECK_FAILED`. No partial
+commit or automatic redispatch occurred.
+
+### Current decision
+
+```text
+P5E_9A_LQ_TEST_VERSION_PIN_CORRECTED
+CODE207_PRODUCTION_CANDIDATE_UNCHANGED
+CODE207_DEVICE_VERIFIED
+P5E_9A_QF_ZERO_CALL_BOUNDARY_PASS
+P5E_9A_LQ_PRODUCTION_LINEAGE_QUERY_FIX_PASS
+P5E_9A_LQ_DEVICE_ZERO_CALL_PASS
+P5E_9A_LQ_DEVICE_HELPER_EXECUTION_PASS
+RAW_AUTHORIZATION_REQUIRED
+NO_AUTHORIZATION_CREATED
+NO_LIVE_CALL_PERFORMED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
+P6_NOT_READY
+HISTORICAL_CODE196_PRESERVATION_FAILED
+PILOT_DATA_PRESERVATION_FAILED
+```
+
+`P5E_9A_VALID_AUTHORIZATION_LOCAL_PATH_PASS` is not claimed because the
+approved scope forbade valid-authorization dispatch. `FRESH_RAW_EXACT_PREFLIGHT_READY`
+is not used to replace that missing evidence. The next step is to prepare an
+exact P5E.9B RAW authorization block for separate owner approval; this run did
+not create, consume or dispatch one.

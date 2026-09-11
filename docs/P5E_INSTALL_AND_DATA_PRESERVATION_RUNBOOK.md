@@ -354,7 +354,7 @@ sourceSnapshot=995d3b6c9678e93905b3802cf22eee0b091b1bb3
 status=SUPERSEDED_NOT_APPROVED_NOT_INSTALLED
 ```
 
-## P5E.9A-LQ-QF2 — code207 test-artifact alignment (current host stop)
+## P5E.9A-LQ-QF2 — code207 test-artifact alignment (pre-DV host stop, historical)
 
 QF2 corrected only the AndroidTest version expectation from `206L` to `207L`
 and renamed the schema-failure test to match its typed-check scope. The
@@ -403,3 +403,133 @@ P5E.9B authorization and does not permit a provider call.
 
 The next action is exactly that test-artifact approval; do not prepare or
 consume RAW authorization until the device helper gate has been executed.
+
+## P5E.9A-LQ-DV — guarded code207 install and zero-call device verification
+
+The separate owner approval `P5E_9A_LQ_DV_OWNER_APPROVAL` was received and
+used only for the listed local/device actions. The current production package
+was read before and after each permitted operation. The code207 candidate was
+installed exactly once through `scripts/install-validated.ps1` after
+CheckOnly, snapshot and isolated restore passed. The existing test package was
+replaced exactly once with the approved artifact. No uninstall, clear, reset,
+downgrade, fallback, connected AndroidTest or second production install was
+performed.
+
+```text
+device=15e84958
+productionPackage=com.ml.tblandroidtxt
+installedProductionVersion=v4.17-p5e.11
+installedProductionVersionCode=207
+installedProductionApkSha256=2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD
+installedProductionCertificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+deviceSignatureToken=abebea4b
+schemaVersion=24
+dataClassification=RECONSTRUCTED_ONLY
+productionUpgradeCount=1
+testPackageReplacementCount=1
+connectedAndroidTest=NOT_RUN
+```
+
+### Backup and restore evidence
+
+The one approved snapshot force-stop was used for snapshot capture only. The
+WAL-aware capture found the database and a zero-length journal, with no WAL or
+SHM sidecar. The snapshot and restore artifacts remain outside Git:
+
+```text
+snapshotRoot=D:\P5E-private\p5e-9a-lq-dv-snapshot-20260911-210256
+snapshotManifestSha256=BBE47271716785B1ED89F888748428C9A0437A47FF61804942FAF202BBE49C76
+snapshotDatabaseSha256=3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391
+snapshotJournalSha256=E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
+snapshotWalPresent=false
+snapshotShmPresent=false
+snapshotRestoreRoot=D:\P5E-private\p5e-9a-lq-dv-restore-20260911-210256
+snapshotRestoreStatus=PASS_DATA_LEVEL_ONLY
+postInstallReadbackRoot=D:\P5E-private\p5e-9a-lq-dv-postinstall-20260911-210550
+postRunReadbackRoot=D:\P5E-private\p5e-9a-lq-dv-postrun-verified2-20260911-211156
+```
+
+The isolated restore reported SQLite `integrity_check=ok`, schema v24, zero
+foreign-key violations and the exact fresh binding. Post-install and post-run
+readback preserved the DB SHA-256 and source/pack/profile identities. The
+fresh project has one canonical chapter `001`; two global `001` rows are
+expected because another reconstructed project is retained.
+
+```text
+dbBeforeSha256=3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391
+dbAfterSha256=3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391
+databaseHashUnchanged=true
+freshSelector=p5e-fresh-mercedes-vol5-20260911-01
+freshChapterKey=001
+freshBinding=845976b3cde02a3bf0896b64efd208f42e40821317d1b7bffec7081e63e33cdf
+freshRunDeclaration=8466b95d96f958a97eb3ffd1eac5a32734023cafa1c230e696ad4253151a41dc
+freshEvaluation=3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1
+freshPackSha256=497786e18e6e2309b44c6695bc8d8e0b538babfe20b1bc0b6f74c395fd05642d
+freshProfileSha256=beec03a42e37f424a6f071ad48f35878b27e1083141699352cda4474d8cc2e21
+freshProjectChapterRows=1
+globalChapterKey001Rows=2
+attempts=0
+authorizationReceipts=0
+reconciliation=0
+reconciliationHistory=0
+lifecycle=0
+reportBytesNonEmpty=0
+receiptBytesNonEmpty=0
+partialCommit=false
+automaticRedispatch=false
+providerCalls=0
+```
+
+### Direct zero-call instrumentation
+
+The installed test package was verified as the approved APK before direct
+instrumentation. The run used `adb shell am instrument` only, with the
+production package left untouched:
+
+```text
+testPackage=com.ml.tblandroidtxt.test
+testApkPath=D:\P5E-private\fresh-raw-lineage-lq-qf2-20260911-204314-test-apk\app-debug-androidTest.apk
+testApkSha256=50BC25F1C24E9588F430EE00809E9B6C8E126B5EA975782FA556254840DDA587
+testCertificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+testSourceCommit=f2695c862a9b860e08fd01f932377ec5576d6ad1
+testRunner=androidx.test.runner.AndroidJUnitRunner
+schemaFailureMethod=1/1 PASS
+chapterSemanticsMethod=1/1 PASS
+qfSingleMethod=1/1 PASS
+qfBoundaryClass=5/5 PASS
+lineageClass=13/13 PASS
+allTestsNoSkip=true
+providerCalls=0
+```
+
+The lineage class used disposable databases for mutation cases. The current
+pilot DB was used only for read-only tuple, preflight and count assertions.
+The production-owned helper now parses the schema-v24 attempt-identity joins,
+returns typed failure for isolated schema defects and does not fall back to an
+unused lineage. No authorization or attempt was created.
+
+### Current boundary
+
+```text
+P5E_9A_LQ_TEST_VERSION_PIN_CORRECTED
+CODE207_PRODUCTION_CANDIDATE_UNCHANGED
+CODE207_DEVICE_VERIFIED
+P5E_9A_QF_ZERO_CALL_BOUNDARY_PASS
+P5E_9A_LQ_PRODUCTION_LINEAGE_QUERY_FIX_PASS
+P5E_9A_LQ_DEVICE_ZERO_CALL_PASS
+P5E_9A_LQ_DEVICE_HELPER_EXECUTION_PASS
+RAW_AUTHORIZATION_REQUIRED
+NO_AUTHORIZATION_CREATED
+NO_LIVE_CALL_PERFORMED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
+P6_NOT_READY
+HISTORICAL_CODE196_PRESERVATION_FAILED
+PILOT_DATA_PRESERVATION_FAILED
+```
+
+This does not claim `P5E_9A_VALID_AUTHORIZATION_LOCAL_PATH_PASS` or a live
+RAW acceptance: the owner approval forbade valid-authorization dispatch. The
+next action is a separate exact P5E.9B authorization approval. Do not create,
+consume or dispatch it from this runbook state.
