@@ -625,3 +625,93 @@ FORBID_PRODUCTION_PACKAGE_INSTALL=true
 
 No exact preflight or live readiness is claimed until this separate approval
 is granted and the device gate is run.
+
+## P5E.9B-A2 zero-call preflight result
+
+The owner approved one single-run A2 scope. The preflight gate passed for
+device readiness, production code207 identity, the existing test package hash,
+the target test artifact hash/certificate/package, and the pinned database
+hash. The existing test package was replaced exactly once with adb install -r;
+the production package was not installed or replaced.
+
+The one direct instrumentation invocation was:
+
+~~~
+class=com.ml.tblandroidtxt.EditorialP5EFreshRawLiveInstrumentedTest
+method=freshRawExactPreflightRunsOnlyWhenExplicitlyOptedIn
+argument=p5e_fresh_raw_preflight=YES
+liveArgument=absent
+testsRun=1
+failures=1
+providerCalls=0
+~~~
+
+It stopped before production preflightOnly and before request construction.
+The typed boundary failure was:
+
+~~~
+P5E_FRESH_RAW_ROUTE_PRECONDITION_FAILED
+assertion=current settings must select the fresh RAW route
+implementationLine=EditorialP5EFreshRawLiveInstrumentedTest.java:149
+observedPredicate=EditorialP5EFreshRawRoutingPolicy.matches(SettingsStore.load(target))
+~~~
+
+No settings value, API key, source content, prompt, request body or provider
+response was logged. The failure identifies only that the current SettingsStore
+does not satisfy the pinned fresh route predicate; it does not identify which
+setting differs. No settings or route correction was attempted. The complete
+redacted preflight manifest was not produced because the failure occurred before
+preflightOnly.
+
+Post-run read-only verification passed:
+
+~~~
+productionVersionCode=207
+productionSignatureToken=abebea4b
+testApkSha256=697B2C0E58E206A2E067A5D3E71458963B3940280B245BBF48D21B2B0256085A
+dbBeforeSha256=3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391
+dbAfterSha256=3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391
+databaseHashUnchanged=true
+schemaVersion=24
+integrityCheck=ok
+foreignKeyViolations=0
+attempts=0
+authorizationReceipts=0
+reconciliation=0
+reconciliationHistory=0
+lifecycle=0
+reportBytesNonEmpty=0
+receiptBytesNonEmpty=0
+partialCommit=false
+automaticRedispatch=false
+~~~
+
+The read-only binding row still contains the exact fresh selector, binding,
+run declaration, evaluation, pack/profile hashes and RAW/DRAFT/GLOSSARY/
+PRONOUN byte/hash inventory pinned in the A2 approval. No fresh identity was
+created or rebound.
+
+Current state after the failed single run:
+
+~~~
+P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED
+P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED
+P5E_9B_A1_LIVE_HARNESS_HOST_PASS
+P5E_9B_AUTHORIZATION_TEMPLATE_PREPARED_NOT_ISSUED
+P5E_9B_TEST_APK_BUILT_AND_INSTALLED_FOR_A2_ONLY
+P5E_9A_VALID_AUTHORIZATION_LOCAL_PATH_PASS: NOT_REACHED
+FRESH_RAW_EXACT_PREFLIGHT_READY: NOT_REACHED
+RAW_AUTHORIZATION_REQUIRED
+NO_AUTHORIZATION_CREATED
+NO_LIVE_CALL_PERFORMED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
+P6_NOT_READY
+HISTORICAL_CODE196_PRESERVATION_FAILED
+PILOT_DATA_PRESERVATION_FAILED
+~~~
+
+The A2 approval is not reusable for a rerun. Stop here and obtain a new
+owner-approved remediation scope for the route-precondition blocker before any
+further device or settings action.

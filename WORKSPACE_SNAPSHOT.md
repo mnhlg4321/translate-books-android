@@ -299,3 +299,46 @@ method was run.
 Next step: owner approval for the exact A2 zero-call preflight block in
 BUILD_STATE.md; after approval, run only the preflight method and preserve
 the same zero-call/current-DB boundary.
+
+## P5E.9B-A2 result snapshot
+
+The A2 owner approval was used for one bounded device run. This is a runtime
+result only; no production source changed. The implementation baseline remains
+a0009f04139431f0bee38d049f9b32e2b6b04c41 and the documentation HEAD before
+this update was 392c1b0a2e65175a693bebc1825047999ee0c874.
+
+~~~
+Current version: v4.17-p5e.11 / code207
+Current branch: feature/v4.18
+Current commit: a0009f04139431f0bee38d049f9b32e2b6b04c41 (implementation baseline)
+Current build: code207 production unchanged; A1 harness test APK installed for A2 only
+Device: 15e84958
+Device test package: com.ml.tblandroidtxt.test / 697B2C0E58E206A2E067A5D3E71458963B3940280B245BBF48D21B2B0256085A
+Database: schema24 / 3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391 unchanged
+Production package operations: 0
+Test package replacement operations: 1
+Instrumentation invocations: 1
+Provider calls: 0
+~~~
+
+Completed: read-only baseline gates passed; the existing QF2 test package hash
+was confirmed before replacement; the final A1 test APK was installed once in
+the test package; the single preflight method was invoked with the preflight
+opt-in only; the failure was captured; and post-run database/package/lineage
+readback confirmed zero mutation and zero lineage rows.
+
+The preflight did not reach production preflightOnly because
+SettingsStore.load(target) did not satisfy
+EditorialP5EFreshRawRoutingPolicy.matches(settings). The exact mismatch field
+was not inferred or logged. No exact preflight manifest exists for this run,
+and exact-preflight-ready remains NOT_REACHED.
+
+Regression status: the device method result is 0/1 PASS with one typed
+route-precondition failure. Post-run SQLite integrity and zero-count checks
+passed. No class rerun, live method, connected test, retry, repair, settings
+mutation or RECONCILE occurred.
+
+Pending blocker: route settings are not aligned with the fresh RAW policy.
+The single next step is a new owner decision for an explicit read-only
+investigation/remediation scope; the consumed single-run A2 approval is not
+reusable.

@@ -1394,3 +1394,109 @@ P6_NOT_READY
 HISTORICAL_CODE196_PRESERVATION_FAILED
 PILOT_DATA_PRESERVATION_FAILED
 ~~~
+
+## P5E.9B-A2 zero-call preflight result
+
+The owner-approved A2 scope allowed one test-package replacement and one direct
+preflight invocation. It did not allow live dispatch, authorization,
+attempt/lifecycle creation, provider/API access, retry, repair, RECONCILE or
+production-package installation. The production package was not changed.
+
+### Bounded execution and failure
+
+The old test package was confirmed present with SHA-256
+50BC25F1C24E9588F430EE00809E9B6C8E126B5EA975782FA556254840DDA587. The new
+private artifact was then installed once into com.ml.tblandroidtxt.test:
+
+~~~
+targetTestApk=D:\P5E-private\fresh-raw-live-harness-a1-20260911-233211-test-apk\app-debug-androidTest.apk
+targetTestApkSha256=697B2C0E58E206A2E067A5D3E71458963B3940280B245BBF48D21B2B0256085A
+targetTestCertificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+targetTestPackage=com.ml.tblandroidtxt.test
+targetTestRunner=androidx.test.runner.AndroidJUnitRunner
+installOperation=adb install -r once
+productionInstallOperations=0
+~~~
+
+The exact direct invocation used the fresh preflight class and method with
+p5e_fresh_raw_preflight=YES; no live argument was supplied. It produced one
+test failure and no pass:
+
+~~~
+testsRun=1
+failures=1
+instrumentationCode=-1
+providerCalls=0
+failure=AssertionError: current settings must select the fresh RAW route
+failureLine=EditorialP5EFreshRawLiveInstrumentedTest.java:149
+evidencePath=D:\P5E-private\p5e-9b-a2-preflight-20260912-0008\instrumentation-output.txt
+evidenceSha256=42BAA89A70392DDA11868C3FF11EED18D602DFBDC878207E349EEB55A07EEB8A
+~~~
+
+This is recorded as a route-precondition failure at
+EditorialP5EFreshRawRoutingPolicy.matches(SettingsStore.load(target)). The
+failure occurred before production preflightOnly and before request/body
+construction. It does not establish which individual setting differs. No
+settings correction, API-key readback, source/prompt logging, provider call or
+second instrumentation run was performed.
+
+### Post-run preservation evidence
+
+Read-only database extraction and local SQLite verification confirmed:
+
+~~~
+productionVersionCode=207
+productionSignatureToken=abebea4b
+dbBeforeSha256=3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391
+dbAfterSha256=3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391
+databaseHashUnchanged=true
+schemaVersion=24
+integrityCheck=ok
+foreignKeyViolations=0
+attempts=0
+authorizationReceipts=0
+reconciliation=0
+reconciliationHistory=0
+lifecycle=0
+reportBytesNonEmpty=0
+receiptBytesNonEmpty=0
+partialCommit=false
+automaticRedispatch=false
+~~~
+
+The exact fresh binding/read-only rows remain:
+
+~~~
+selector=p5e-fresh-mercedes-vol5-20260911-01
+chapterKey=001
+binding=845976b3cde02a3bf0896b64efd208f42e40821317d1b7bffec7081e63e33cdf
+runDeclaration=8466b95d96f958a97eb3ffd1eac5a32734023cafa1c230e696ad4253151a41dc
+evaluation=3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1
+packSha256=497786e18e6e2309b44c6695bc8d8e0b538babfe20b1bc0b6f74c395fd05642d
+profileSha256=beec03a42e37f424a6f071ad48f35878b27e1083141699352cda4474d8cc2e21
+~~~
+
+### Current decision
+
+~~~
+P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED
+P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED
+P5E_9B_A1_LIVE_HARNESS_HOST_PASS
+P5E_9B_AUTHORIZATION_TEMPLATE_PREPARED_NOT_ISSUED
+P5E_9B_TEST_APK_BUILT_AND_INSTALLED_FOR_A2_ONLY
+P5E_9A_VALID_AUTHORIZATION_LOCAL_PATH_PASS: NOT_REACHED
+FRESH_RAW_EXACT_PREFLIGHT_READY: NOT_REACHED
+RAW_AUTHORIZATION_REQUIRED
+NO_AUTHORIZATION_CREATED
+NO_LIVE_CALL_PERFORMED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
+P6_NOT_READY
+HISTORICAL_CODE196_PRESERVATION_FAILED
+PILOT_DATA_PRESERVATION_FAILED
+~~~
+
+The single-run A2 approval is not reusable. A new owner decision is required
+before any further device or settings action. No live authorization has been
+created or consumed.
