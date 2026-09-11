@@ -647,7 +647,7 @@ providerCalls=0
 ~~~
 
 It stopped before production preflightOnly and before request construction.
-The typed boundary failure was:
+The boundary failure was classified as:
 
 ~~~
 P5E_FRESH_RAW_ROUTE_PRECONDITION_FAILED

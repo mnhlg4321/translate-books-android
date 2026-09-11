@@ -1420,7 +1420,7 @@ productionInstallOperations=0
 
 The exact direct invocation used the fresh preflight class and method with
 p5e_fresh_raw_preflight=YES; no live argument was supplied. It produced one
-test failure and no pass:
+test assertion failure and no pass:
 
 ~~~
 testsRun=1

@@ -333,7 +333,7 @@ EditorialP5EFreshRawRoutingPolicy.matches(settings). The exact mismatch field
 was not inferred or logged. No exact preflight manifest exists for this run,
 and exact-preflight-ready remains NOT_REACHED.
 
-Regression status: the device method result is 0/1 PASS with one typed
+Regression status: the device method result is 0/1 PASS with one
 route-precondition failure. Post-run SQLite integrity and zero-count checks
 passed. No class rerun, live method, connected test, retry, repair, settings
 mutation or RECONCILE occurred.
