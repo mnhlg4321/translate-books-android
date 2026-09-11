@@ -182,8 +182,10 @@ public final class EditorialP5EFreshRawBoundaryInstrumentedTest {
             settings.baseUrl = AppSettings.defaultBaseUrl(
                     EditorialP5EFreshRawRoutingPolicy.PROVIDER);
             settings.apiKey = "";
-            JSONObject body = EditorialP5EFreshRawLiveRunner.preflightOnly(
-                    FRESH_SELECTOR, FRESH_CHAPTER, settings, fixture.providerRequest);
+            JSONObject body = new EditorialP5EFreshRawLiveRunner(database,
+                    new EditorialPackStorageLayout(context.getFilesDir().toPath()))
+                    .preflightOnly(projectId(database, FRESH_BINDING), FRESH_SELECTOR,
+                            FRESH_CHAPTER, settings, fixture.providerRequest);
 
             JSONObject provider = body.getJSONObject("provider");
             assertTrue(provider.getBoolean("require_parameters"));

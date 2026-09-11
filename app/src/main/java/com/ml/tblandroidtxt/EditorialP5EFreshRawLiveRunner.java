@@ -4,12 +4,32 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.ml.tblandroidtxt.editorial.pack.EditorialP4Binding;
+import com.ml.tblandroidtxt.editorial.pack.EditorialP4SourceIdentity;
+import com.ml.tblandroidtxt.editorial.pack.EditorialCanonicalJson;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotAuthorization;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotProvider;
+import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotRequest;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5RawWireContract;
+import com.ml.tblandroidtxt.editorial.pack.EditorialPackFileRole;
+import com.ml.tblandroidtxt.editorial.pack.EditorialPackManifest;
+import com.ml.tblandroidtxt.editorial.pack.EditorialSafe4Contract;
 
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.Objects;
 
 /**
@@ -51,6 +71,28 @@ public final class EditorialP5EFreshRawLiveRunner {
         requireFreshRequest(selector, chapterKey, request);
         return OpenRouterEditorialP5PilotProvider.buildFreshRawRequestBodyForPreflight(
                 settings, request, EditorialP5RawWireContract.OUTPUT_TOKEN_CAP);
+    }
+
+    /**
+     * Read-only current-binding preflight. It reconstructs the app-owned
+     * request facts from the persisted binding and immutable pack storage,
+     * then compares the caller's prepared request before rendering JSON.
+     * This closes the gap where a fixture could otherwise supply a correct
+     * selector while carrying different source or authority bytes.
+     */
+    public JSONObject preflightOnly(long projectId, String selector, String chapterKey,
+                                    AppSettings settings,
+                                    EditorialP5PilotProvider.Request request) throws Exception {
+        if (projectId <= 0) throw preflightMismatch();
+        requireFreshRequest(selector, chapterKey, request);
+        EditorialP4Binding binding = new EditorialP4BindingDao(database)
+                .findByAttemptRequestSelector(SELECTOR).orElse(null);
+        if (binding == null || projectIdFor(binding) != projectId) throw preflightMismatch();
+        requireExactBinding(binding);
+        if (!chapterExists(projectId, CHAPTER_KEY)) throw preflightMismatch();
+        EditorialP5PilotRequest expected = loadExactRequest(projectId, binding);
+        verifyPreparedRequest(expected, request);
+        return preflightOnly(selector, chapterKey, settings, request);
     }
 
     /**
@@ -131,6 +173,186 @@ public final class EditorialP5EFreshRawLiveRunner {
                 || !"L1_RAW_DISCOVERY".equals(request.phase())) {
             throw new IllegalArgumentException("P5E_FRESH_RAW_PREFLIGHT_BINDING_MISMATCH");
         }
+    }
+
+    private static void requireExactBinding(EditorialP4Binding binding) {
+        if (!BINDING_IDENTITY.equals(binding.bindingIdentity())
+                || !RUN_DECLARATION_IDENTITY.equals(binding.runDeclarationIdentity())
+                || !CANONICAL_PACK_HASH.equals(binding.canonicalPackHash())
+                || !CANONICAL_PROFILE_HASH.equals(binding.canonicalProfileHash())
+                || !COMPATIBILITY_EVALUATION_ID.equals(binding.compatibilityEvaluationId())
+                || !EditorialSafe4Contract.NORMAL_MODE.equals(binding.sourceMode())) {
+            throw preflightMismatch();
+        }
+    }
+
+    private EditorialP5PilotRequest loadExactRequest(long projectId,
+                                                       EditorialP4Binding binding)
+            throws IOException {
+        EditorialPackSelectionCandidate candidate = new EditorialPackSelectionPolicy(database, storage)
+                .resolve(binding.packId(), binding.packVersion()).orElse(null);
+        if (candidate == null
+                || !CANONICAL_PACK_HASH.equals(candidate.canonicalPackHash())
+                || !binding.manifestFingerprint().equals(
+                EditorialPackSelectionPolicy.manifestFingerprint(candidate.manifest()))
+                || !CANONICAL_PROFILE_HASH.equals(candidate.canonicalProfileHash())
+                || !COMPATIBILITY_EVALUATION_ID.equals(candidate.evaluation().evaluationId())) {
+            throw preflightMismatch();
+        }
+        EditorialPackManifest manifest = candidate.manifest();
+        EditorialP5PilotRequest.PackAuthority authority = resolveAuthority(binding, manifest);
+
+        EditorialRepository repository = new EditorialRepository(database);
+        EditorialRepository.Chapter chapter = repository.listChapters(projectId).stream()
+                .filter(value -> CHAPTER_KEY.equals(value.chapterKey)).findFirst().orElse(null);
+        if (chapter == null) throw preflightMismatch();
+        Map<String, EditorialRepository.AssetSnapshot> assets = new HashMap<>();
+        for (EditorialRepository.AssetSnapshot asset : repository.chapterAssets(chapter.id)) {
+            assets.put(asset.role.name(), asset);
+        }
+        ArrayList<EditorialP5PilotRequest.SourceBytes> sources = new ArrayList<>();
+        for (EditorialP4SourceIdentity identity : binding.inputs()) {
+            EditorialRepository.AssetSnapshot asset = assets.get(identity.role());
+            if (asset == null || asset.content == null
+                    || !identity.sourceReference().equals(asset.sourceUri)) {
+                throw preflightMismatch();
+            }
+            byte[] bytes = asset.content.getBytes(StandardCharsets.UTF_8);
+            if (identity.byteLength() != bytes.length
+                    || !identity.sha256().equals(EditorialCanonicalJson.sha256Hex(bytes))) {
+                throw preflightMismatch();
+            }
+            sources.add(new EditorialP5PilotRequest.SourceBytes(identity.role(),
+                    identity.sourceReference(), bytes, identity.encoding(), schemaId(identity.role()),
+                    identity.schemaStatus(), identity.ordinal()));
+        }
+        return new EditorialP5PilotRequest(binding, manifest, authority, CHAPTER_KEY,
+                EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY, sources,
+                binding.runDeclarationIdentity(), List.of("chapter:" + CHAPTER_KEY),
+                List.of("population:" + CHAPTER_KEY), true,
+                EditorialP5RawWireContract.OUTPUT_TOKEN_CAP);
+    }
+
+    private EditorialP5PilotRequest.PackAuthority resolveAuthority(
+            EditorialP4Binding binding, EditorialPackManifest manifest) throws IOException {
+        if (!storage.hasImmutableMarker(binding.canonicalPackHash())) throw preflightMismatch();
+        EnumMap<EditorialPackFileRole, byte[]> values = new EnumMap<>(EditorialPackFileRole.class);
+        for (EditorialPackManifest.FileEntry file : manifest.fileEntries()) {
+            Path path = storage.immutableEntry(binding.canonicalPackHash(), file.path());
+            if (!Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) throw preflightMismatch();
+            byte[] bytes = Files.readAllBytes(path);
+            if (bytes.length != file.byteLength()
+                    || !file.sha256().equals(EditorialCanonicalJson.sha256Hex(bytes))) {
+                throw preflightMismatch();
+            }
+            values.put(file.role(), bytes);
+        }
+        return new EditorialP5PilotRequest.PackAuthority(values);
+    }
+
+    private static void verifyPreparedRequest(EditorialP5PilotRequest expected,
+                                               EditorialP5PilotProvider.Request actual) {
+        EditorialP5PilotProvider.Request.Context expectedContext =
+                new EditorialP5PilotProvider.Request.Context(
+                        expected.binding().bindingIdentity(), expected.binding().runDeclarationIdentity(),
+                        expected.manifestFingerprint(), expected.bundleIdentity(),
+                        expected.predecessorIdentity(), expected.stableAnchors(),
+                        expected.populationIds());
+        if (!expected.attemptIdentity().equals(actual.attemptIdentity())
+                || actual.callKind() != EditorialP5PilotProvider.CallKind.PRIMARY_SEMANTIC
+                || !EditorialP5EFreshRawRoutingPolicy.PROVIDER.equals(actual.provider())
+                || !EditorialP5EFreshRawRoutingPolicy.MODEL.equals(actual.model())
+                || !"L1_RAW_DISCOVERY".equals(actual.phase())
+                || !EditorialP5RawWireContract.SCHEMA_VERSION.equals(actual.outputSchemaId())
+                || !CHAPTER_KEY.equals(actual.chapterKey())
+                || !expectedContext.equals(actual.context())) {
+            throw preflightMismatch();
+        }
+        Map<String, byte[]> visible = new TreeMap<>();
+        visible.put(EditorialSafe4Contract.RAW,
+                expected.source(EditorialSafe4Contract.RAW).bytes());
+        visible.put(EditorialSafe4Contract.GLOSSARY,
+                expected.source(EditorialSafe4Contract.GLOSSARY).bytes());
+        if (!sameBytes(visible, actual.visibleSources())
+                || !sameAuthority(expected.authority(), actual.authority())
+                || !expectedEnvelopeHash(expected, visible).equals(actual.requestEnvelopeHash())) {
+            throw preflightMismatch();
+        }
+    }
+
+    private static String expectedEnvelopeHash(EditorialP5PilotRequest request,
+                                                Map<String, byte[]> visible) {
+        Map<String, Object> root = new LinkedHashMap<>();
+        root.put("contractVersion", EditorialSafe4Contract.CONTRACT_VERSION);
+        root.put("outputSchema", EditorialP5RawWireContract.SCHEMA_VERSION);
+        root.put("attemptIdentity", request.attemptIdentity());
+        root.put("requestIdentity", request.requestIdentity());
+        root.put("bindingIdentity", request.binding().bindingIdentity());
+        root.put("runDeclarationIdentity", request.binding().runDeclarationIdentity());
+        root.put("canonicalPackHash", request.binding().canonicalPackHash());
+        root.put("canonicalProfileHash", request.binding().canonicalProfileHash());
+        root.put("compatibilityEvaluationId", request.binding().compatibilityEvaluationId());
+        root.put("manifestFingerprint", request.manifestFingerprint());
+        root.put("chapterKey", request.chapterKey());
+        root.put("phase", request.phase());
+        root.put("provider", EditorialP5EFreshRawRoutingPolicy.PROVIDER);
+        root.put("model", EditorialP5EFreshRawRoutingPolicy.MODEL);
+        root.put("stableAnchors", request.stableAnchors());
+        root.put("populationIds", request.populationIds());
+        ArrayList<Object> fingerprints = new ArrayList<>();
+        for (String role : new ArrayList<>(visible.keySet())) {
+            EditorialP5PilotRequest.SourceBytes source = request.source(role);
+            if (source == null || source.bytes() == null) throw preflightMismatch();
+            Map<String, Object> value = new LinkedHashMap<>();
+            value.put("role", role);
+            value.put("sourceId", source.sourceReference());
+            value.put("byteLength", BigDecimal.valueOf(source.bytes().length));
+            value.put("sha256", source.actualSha256());
+            value.put("schemaId", source.schemaId());
+            fingerprints.add(value);
+        }
+        root.put("visibleSources", fingerprints);
+        return EditorialCanonicalJson.sha256Hex(EditorialCanonicalJson.canonicalize(root)
+                .getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static boolean sameBytes(Map<String, byte[]> expected, Map<String, byte[]> actual) {
+        if (actual == null || expected.size() != actual.size()
+                || !expected.keySet().equals(actual.keySet())) return false;
+        for (String key : expected.keySet()) {
+            if (!Arrays.equals(expected.get(key), actual.get(key))) return false;
+        }
+        return true;
+    }
+
+    private static boolean sameAuthority(EditorialP5PilotRequest.PackAuthority expected,
+                                         EditorialP5PilotRequest.PackAuthority actual) {
+        if (actual == null) return false;
+        Map<EditorialPackFileRole, byte[]> expectedEntries = expected.entries();
+        Map<EditorialPackFileRole, byte[]> actualEntries = actual.entries();
+        if (expectedEntries.size() != actualEntries.size()
+                || !expectedEntries.keySet().equals(actualEntries.keySet())) return false;
+        for (EditorialPackFileRole role : expectedEntries.keySet()) {
+            if (!Arrays.equals(expectedEntries.get(role), actualEntries.get(role))) return false;
+        }
+        return true;
+    }
+
+    private static String schemaId(String role) {
+        return EditorialSafe4Contract.GLOSSARY.equals(role) ? "safe4.full.glossary.v1"
+                : EditorialSafe4Contract.PRONOUN.equals(role) ? "safe4.full.pronoun.v1" : "text.v1";
+    }
+
+    private boolean chapterExists(long projectId, String chapterKey) {
+        try (Cursor cursor = database.editorialReadableDatabase().rawQuery(
+                "SELECT 1 FROM editorial_chapters WHERE project_id=? AND chapter_key=? LIMIT 1",
+                new String[]{String.valueOf(projectId), chapterKey})) {
+            return cursor.moveToFirst();
+        }
+    }
+
+    private static IllegalArgumentException preflightMismatch() {
+        return new IllegalArgumentException("P5E_FRESH_RAW_PREFLIGHT_BINDING_MISMATCH");
     }
 
     private long projectIdFor(EditorialP4Binding binding) {
