@@ -287,7 +287,7 @@ public final class EditorialP5EFreshRawBoundaryInstrumentedTest {
         }
     }
 
-    private static PreflightFixture loadFixture(TranslationRepository database) throws Exception {
+    static PreflightFixture loadFixture(TranslationRepository database) throws Exception {
         EditorialP4Binding binding = new EditorialP4BindingDao(database)
                 .findByAttemptRequestSelector(FRESH_SELECTOR)
                 .orElseThrow(() -> new AssertionError("fresh binding is missing"));
@@ -363,7 +363,7 @@ public final class EditorialP5EFreshRawBoundaryInstrumentedTest {
         int contextBytes = 0;
         for (byte[] bytes : visible.values()) contextBytes += bytes.length;
         for (byte[] bytes : request.authority().entries().values()) contextBytes += bytes.length;
-        return new PreflightFixture(providerRequest, contextBytes, 0);
+        return new PreflightFixture(request, providerRequest, contextBytes, 0);
     }
 
     private static String requestEnvelopeHash(EditorialP5PilotRequest request,
@@ -408,7 +408,7 @@ public final class EditorialP5EFreshRawBoundaryInstrumentedTest {
                 : EditorialSafe4Contract.PRONOUN.equals(role) ? "safe4.full.pronoun.v1" : "text.v1";
     }
 
-    private static long projectId(TranslationRepository database, String bindingIdentity) {
+    static long projectId(TranslationRepository database, String bindingIdentity) {
         try (Cursor cursor = database.editorialReadableDatabase().rawQuery(
                 "SELECT project_row_id FROM editorial_p4_bindings WHERE binding_identity=?",
                 new String[]{bindingIdentity})) {
@@ -429,7 +429,7 @@ public final class EditorialP5EFreshRawBoundaryInstrumentedTest {
                 "redacted", "app-owned", issuedAt, issuedAt + 60_000L, true);
     }
 
-    private static RowCounts rowCounts(SQLiteDatabase db) {
+    static RowCounts rowCounts(SQLiteDatabase db) {
         return new RowCounts(
                 count(db, "SELECT COUNT(*) FROM editorial_p5c_attempts"),
                 count(db, "SELECT COUNT(*) FROM editorial_p5d_authorization_receipts"),
@@ -461,9 +461,10 @@ public final class EditorialP5EFreshRawBoundaryInstrumentedTest {
         return (String) field.get(null);
     }
 
-    private record PreflightFixture(EditorialP5PilotProvider.Request providerRequest,
-                                    int contextBytes, int providerCalls) { }
+    static record PreflightFixture(EditorialP5PilotRequest request,
+                                   EditorialP5PilotProvider.Request providerRequest,
+                                   int contextBytes, int providerCalls) { }
 
-    private record RowCounts(long attempts, long authorizations, long reconciliation,
-                             long reconciliationHistory, long lifecycle, long reportOrReceipt) { }
+    static record RowCounts(long attempts, long authorizations, long reconciliation,
+                            long reconciliationHistory, long lifecycle, long reportOrReceipt) { }
 }
