@@ -1182,3 +1182,215 @@ approved scope forbade valid-authorization dispatch. `FRESH_RAW_EXACT_PREFLIGHT_
 is not used to replace that missing evidence. The next step is to prepare an
 exact P5E.9B RAW authorization block for separate owner approval; this run did
 not create, consume or dispatch one.
+
+## P5E.9B-A1 host-only fresh RAW live harness
+
+This section is the current A1 continuation and does not rewrite the historical
+code196, code191, code199, code202, code206 or QF2 evidence above. A1 was
+explicitly host-only. It performed no ADB/device operation, no APK install, no
+current-DB read or write, no provider/API call, no authorization creation or
+consumption, no attempt creation, no preflight execution on device and no
+RECONCILE.
+
+### Baseline and change boundary
+
+~~~
+branch=feature/v4.18
+implementationHeadBeforeDocumentation=a0009f04139431f0bee38d049f9b32e2b6b04c41
+productionSourceCandidate=v4.17-p5e.11/code207
+productionApkSha256=2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD
+productionCertificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+currentDeviceBaseline=15e84958/code207/schema24
+currentDbSha256=3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391
+dataClassification=RECONSTRUCTED_ONLY
+providerCalls=0
+deviceOperations=0
+~~~
+
+The test-only commit is
+a0009f04139431f0bee38d049f9b32e2b6b04c41. Its exact changed files are:
+
+~~~
+app/src/androidTest/java/com/ml/tblandroidtxt/EditorialP5EFreshRawBoundaryInstrumentedTest.java
+app/src/androidTest/java/com/ml/tblandroidtxt/EditorialP5EFreshRawLiveInstrumentedTest.java
+~~~
+
+The first file only exposes existing test fixture data to the new harness. The
+second file is the new instrumented harness. Production diff is zero: no
+app/src/main file, engine main, schema, migration, manifest, build/version
+metadata, canonical pack/profile/authority, routing policy or wire contract
+was changed.
+
+### Harness contract
+
+freshRawExactPreflightRunsOnlyWhenExplicitlyOptedIn checks
+p5e_fresh_raw_preflight=YES as its first executable operation. Without that
+argument it is an approved skip. It performs exact argument and artifact
+checks, reads the current binding/source/settings, and calls only the existing
+production preflightOnly method. It never constructs an authorization and
+never calls dispatchRaw or executeRaw.
+
+authorizedFreshRawRunsOnlyWhenExplicitlyOptedIn checks the distinct
+p5e_fresh_raw_live=YES opt-in as its first executable operation. It was not
+run in A1. Before any runtime authorization construction it requires the full
+authorization ID and hash, owner manifest hash, expected attempt/request/
+envelope/body/route/account fingerprints, exact fresh tuple, exact route and
+all budget/deadline/stop-policy facts. It recomputes the production preflight,
+requires UNUSED lineage with zero counts, then dispatches only through the
+fresh RAW runner. There are no live-field defaults, old P5D selector paths,
+retry, repair, response healing, fallback or RECONCILE paths.
+
+The harness reuses production EditorialP5EFreshRawLiveRunner.preflightOnly,
+EditorialP5EFreshRawLiveRunner.inspectLineage,
+EditorialP5EFreshRawRoutingPolicy and the existing test fixture. It does not
+duplicate lineage SQL or route policy. Its evidence manifest is redacted and
+contains hashes, lengths, identities, visibility, route facts, schema facts,
+wire bounds and before/after counts only. It excludes API keys, raw source,
+prompt, request body, full response and unredacted credentials.
+
+The egress declaration is explicit: RAW and GLOSSARY are visible; DRAFT and
+PRONOUN are hidden; pack authority is required. Pinned source inventory is:
+
+~~~
+RAW bytes=23814 sha256=a308210eca80557cfa9fec7ed55b2ee3de5c1c4776e59b2b5edbf0efb04504be
+DRAFT bytes=26462 sha256=64adecd8ceccbb13446ef14c494ca9bb1987117c428c5758e7442270ec7f62b5
+GLOSSARY bytes=3249 sha256=4bc3e2dd05542aa5ca6b7e5fcac43ed53e9af57060eb69c6fa71e9d0a2ea0314
+PRONOUN semanticBytes=452 sha256=4947ff9184995be5f850f2323fbe0a04c67302fb8d5afb63cf12202b44720686
+~~~
+
+### Test and artifact evidence
+
+AndroidTest compilation passed with
+:app:compileDebugAndroidTestJavaWithJavac --no-daemon. The test APK build
+passed with :app:assembleDebugAndroidTest --no-daemon --console=plain; no
+production APK was rebuilt and no connected test was invoked. Offline APK
+verification passed for package, target package, runner and certificate:
+
+~~~
+testApkPath=D:\P5E-private\fresh-raw-live-harness-a1-20260911-233211-test-apk\app-debug-androidTest.apk
+testPackage=com.ml.tblandroidtxt.test
+targetPackage=com.ml.tblandroidtxt
+testRunner=androidx.test.runner.AndroidJUnitRunner
+testSourceCommit=a0009f04139431f0bee38d049f9b32e2b6b04c41
+testApkSha256=697B2C0E58E206A2E067A5D3E71458963B3940280B245BBF48D21B2B0256085A
+testCertificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+testApkBytes=1323843
+testBuildTimestamp=2026-09-11T23:32:11.8261069+07:00
+installed=false
+~~~
+
+The pre-amend A1 artifact SHA
+4DA7EB0A5EB6162B6A2127648B9F26F7CFA21A352A6130B0CA426BBA5F9097FE is
+superseded. The QF2 device-QA artifact SHA
+50BC25F1C24E9588F430EE00809E9B6C8E126B5EA975782FA556254840DDA587 is
+historical and is not the live harness artifact.
+
+The frozen production APK and its backup both hash to
+2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD.
+The production source ZIP and its backup both hash to
+B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348.
+The mirrored artifact hashes are equal; no code208 or new production build was
+created.
+
+### Unissued authorization template
+
+~~~
+authorizationId=P5E-FRESH-MERCEDES-VOL5-RAW-20260911-01
+authorizationIdSha256=0aa82c5897e3df3ec8a7a1586736dbf184b316c66ec165e95e64e8e4832145eb
+phase=L1_RAW_DISCOVERY
+provider=openrouter
+model=openai/gpt-5.6-luna
+upstreamProvider=openai
+maximumPrimarySemanticCalls=1
+maximumSchemaRepairCalls=0
+maximumNetworkRetries=0
+maximumInputTokens=100000
+maximumOutputTokens=4096
+maximumTotalTokens=104096
+maximumTotalCostUsd=0.05
+maximumExecutionTimeMillis=120000
+authorizationValidityWindowMillis=900000
+allowChapterToProvider=true
+allowFullModelResponseStorage=false
+allowRequestBodyStorage=false
+evidenceRedactionPolicy=HASH_ONLY
+singleUse=true
+cancellationStopAuthority=OWNER_CONTROLLED,RAW_ONLY,NO_SCHEMA_REPAIR,NO_AUTOMATIC_RETRY,NO_RECONCILE,NO_RESPONSE_HEALING,NO_FALLBACK,PRESERVE_DURABLE_RECOVERY_STATE
+~~~
+
+Route fingerprint:
+23149071716043a2a4dc7fb7af51073b4de838ba072919bb6fd750bc9e62948c.
+Wire and context bounds are safe4.raw.discovery.wire.v1,
+worstCaseWireBytes=2785, maximumWireBytes=3584, outputTokenCap=4096
+and contextSizeBytes=80317; byte and token units are not conflated.
+
+OpenRouter capability and pricing were checked at
+2026-09-11T23:30:58+07:00 on the official model page. The observed values
+were JSON Schema structured-output support, $0.20/M input and $1.20/M
+output. The proposed authorization cap remains $0.05; no billing conclusion
+is inferred from this reference.
+
+### A2 owner approval request
+
+~~~
+P5E_9B_A2_ZERO_CALL_PREFLIGHT_OWNER_APPROVAL_REQUEST
+TARGET_DEVICE=15e84958
+TARGET_PRODUCTION_PACKAGE=com.ml.tblandroidtxt
+INSTALLED_PRODUCTION_VERSION=v4.17-p5e.11
+INSTALLED_PRODUCTION_VERSION_CODE=207
+INSTALLED_PRODUCTION_APK_SHA256=2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD
+INSTALLED_PRODUCTION_CERTIFICATE_SHA256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+INSTALLED_DEVICE_SIGNATURE_TOKEN=abebea4b
+CURRENT_DB_SHA256=3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391
+CURRENT_DB_SCHEMA=24
+FRESH_SELECTOR=p5e-fresh-mercedes-vol5-20260911-01
+FRESH_CHAPTER_KEY=001
+FRESH_BINDING=845976b3cde02a3bf0896b64efd208f42e40821317d1b7bffec7081e63e33cdf
+FRESH_RUN_DECLARATION=8466b95d96f958a97eb3ffd1eac5a32734023cafa1c230e696ad4253151a41dc
+FRESH_EVALUATION=3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1
+FRESH_PACK_SHA256=497786e18e6e2309b44c6695bc8d8e0b538babfe20b1bc0b6f74c395fd05642d
+FRESH_PROFILE_SHA256=beec03a42e37f424a6f071ad48f35878b27e1083141699352cda4474d8cc2e21
+TEST_APK_PATH=D:\P5E-private\fresh-raw-live-harness-a1-20260911-233211-test-apk\app-debug-androidTest.apk
+TEST_APK_SHA256=697B2C0E58E206A2E067A5D3E71458963B3940280B245BBF48D21B2B0256085A
+TEST_APK_CERTIFICATE_SHA256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+TEST_SOURCE_COMMIT=a0009f04139431f0bee38d049f9b32e2b6b04c41
+TEST_PACKAGE=com.ml.tblandroidtxt.test
+TEST_RUNNER=androidx.test.runner.AndroidJUnitRunner
+ALLOW_REPLACE_TEST_PACKAGE_ONLY=true
+ALLOW_DIRECT_AM_INSTRUMENT_ONLY=true
+ALLOW_PREFLIGHT_METHOD_ONLY=true
+PREFLIGHT_ARGUMENT=p5e_fresh_raw_preflight=YES
+FORBID_LIVE_ARGUMENT=p5e_fresh_raw_live=YES
+FORBID_AUTHORIZATION_CREATION_OR_CONSUMPTION=true
+FORBID_ATTEMPT=true
+FORBID_PROVIDER_API=true
+FORBID_RETRY_REPAIR_RECONCILE=true
+FORBID_CURRENT_DB_MUTATION=true
+FORBID_CONNECTED_ANDROID_TEST=true
+FORBID_PRODUCTION_PACKAGE_INSTALL=true
+~~~
+
+Requested owner scope is only test-package replacement and direct preflight
+instrumentation. It explicitly forbids the live opt-in, authorization,
+attempt, provider, retry, repair, RECONCILE and production-package operation.
+
+### A1 decision
+
+~~~
+P5E_9A_LQ_DV_COMPLETE
+P5E_9B_A1_LIVE_HARNESS_HOST_PASS
+P5E_9B_AUTHORIZATION_TEMPLATE_PREPARED_NOT_ISSUED
+P5E_9B_TEST_APK_BUILT_NOT_INSTALLED
+P5E_9B_A2_ZERO_CALL_PREFLIGHT_OWNER_APPROVAL_REQUIRED
+P5E_9A_VALID_AUTHORIZATION_LOCAL_PATH_PASS: NOT_REACHED
+FRESH_RAW_EXACT_PREFLIGHT_READY: NOT_REACHED
+RAW_AUTHORIZATION_REQUIRED
+NO_AUTHORIZATION_CREATED
+NO_LIVE_CALL_PERFORMED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
+P6_NOT_READY
+HISTORICAL_CODE196_PRESERVATION_FAILED
+PILOT_DATA_PRESERVATION_FAILED
+~~~

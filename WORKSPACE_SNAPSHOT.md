@@ -240,3 +240,62 @@ separate owner approval. It must not be created, consumed or dispatched in
 this state.
 
 This is current-only state; Git history preserves prior snapshots.
+
+## P5E.9B-A1 host-only snapshot
+
+This snapshot records the completed host-only harness group. The current
+implementation baseline immediately before this documentation update is
+a0009f04139431f0bee38d049f9b32e2b6b04c41; the documentation commit is a
+separate commit after that baseline. The branch is feature/v4.18 and the
+working tree was clean before the documentation update.
+
+~~~
+Current version: v4.17-p5e.11 / code207 frozen production candidate
+Current branch: feature/v4.18
+Current commit: a0009f04139431f0bee38d049f9b32e2b6b04c41 (implementation baseline before snapshot commit)
+Current build: A1 test APK 697B2C0E58E206A2E067A5D3E71458963B3940280B245BBF48D21B2B0256085A, not installed
+Production APK: 2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD, unchanged and not rebuilt
+Device operations in A1: 0
+Provider calls in A1: 0
+Authorization created/consumed in A1: 0/0
+~~~
+
+Completed tasks: added the test-only
+EditorialP5EFreshRawLiveInstrumentedTest with separate preflight and live
+opt-ins; reused production preflightOnly, fresh routing policy and existing
+fixture; required complete live authorization facts before runtime authorization
+construction; compiled AndroidTest; built and offline-verified the private test
+APK; revalidated the mirrored code207 APK/source-ZIP hashes; ran diff and
+secret guards; prepared the unissued authorization template and A2 approval
+block.
+
+The final A1 test artifact is
+D:\P5E-private\fresh-raw-live-harness-a1-20260911-233211-test-apk\app-debug-androidTest.apk,
+package com.ml.tblandroidtxt.test, target package com.ml.tblandroidtxt,
+runner androidx.test.runner.AndroidJUnitRunner, test-source commit
+a0009f04139431f0bee38d049f9b32e2b6b04c41, certificate SHA-256
+47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155, and
+full APK SHA-256
+697B2C0E58E206A2E067A5D3E71458963B3940280B245BBF48D21B2B0256085A.
+The earlier pre-amend artifact and QF2 device artifact remain historical and
+were not overwritten.
+
+Pending tasks: obtain owner approval for A2 only, then replace the test package
+and run the preflight method under direct instrumentation. The preflight
+method is not authorized by this snapshot, the live opt-in is forbidden, and
+no exact-preflight-ready or valid-authorization-local-path status is claimed.
+
+Known bugs and historical facts: original code196 pilot preservation remains
+failed; reconstructed data remains classified RECONSTRUCTED_ONLY; code191
+external reconciliation remains historical and reconciled; no A1 defect was
+found in production wiring. The A1 artifact is not device-verified.
+
+Regression status: AndroidTest Java compilation PASS; test APK build PASS;
+offline package/target/runner/certificate/hash verification PASS; production
+change guard PASS with zero production files; git diff --check PASS; secret
+scan PASS. No ADB, connected test, provider call, device preflight or live
+method was run.
+
+Next step: owner approval for the exact A2 zero-call preflight block in
+BUILD_STATE.md; after approval, run only the preflight method and preserve
+the same zero-call/current-DB boundary.
