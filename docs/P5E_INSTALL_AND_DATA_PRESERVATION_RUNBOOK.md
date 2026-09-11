@@ -533,7 +533,7 @@ This does not claim `P5E_9A_VALID_AUTHORIZATION_LOCAL_PATH_PASS` or a live
 RAW acceptance: the owner approval forbade valid-authorization dispatch. It is
 historical DV evidence and not the current A3 boundary.
 
-## Current active boundary — P5E.9B-A3.1R
+## Current active boundary — P5E.9B-A3.2 host-only preparation
 
 The current state is the A2 fail-closed result, not the historical
 `FRESH_RAW_EXACT_PREFLIGHT_READY` result above. A2 evidence SHA-256 is
@@ -545,8 +545,12 @@ corrective closure: it synchronizes the active authority and changes the
 test-only diagnostic evidence channel so the four redacted booleans are emitted
 through instrumentation status rather than relying on Logcat. A3.1R used no
 ADB, persisted-settings read, current DB, instrumentation, provider,
-authorization, attempt or reconciliation. A3.2 is not approved; its new
-request is below and the A2 approval is not reusable.
+authorization, attempt or reconciliation. Host-only A3.2 preparation is now
+complete: the A3R checksum manifest verified `8/8` and the redacted raw-status
+parser fixture suite verified `10/10`. A3.2 is not approved; its new request
+is below and the A2 approval is not reusable.
+The current PreTag result is `FAIL` at `Step 05`; the earlier `Step 09` result
+is historical A3.1 evidence and is not the current gate result.
 
 ```text
 testSourceCommit=89eef75a4a62e5674d02b7e48eaaff012d9a7ae0
@@ -589,7 +593,9 @@ The exact A3.2 request must pin the corrected A3R artifact. It permits one
 test-package replacement and one diagnostic method only; the live argument is
 absent, the provider budget is zero, the full class/rerun is forbidden, and the
 A2 approval is explicitly not reusable. See the active request in the
-reconciliation record; no approval has been granted.
+reconciliation record; no approval has been granted. The next action is owner
+approval, followed by the pre-run read-only checks before any install or
+instrumentation.
 
 ```text
 P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED

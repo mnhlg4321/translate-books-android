@@ -4,7 +4,7 @@ Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A
 
 This document is the single product and execution authority for the v4.18 Editorial recovery. It supersedes active next actions from the historical v4.16 Editorial/RSC/IPC tracks without deleting or reinterpreting their evidence.
 
-## Current active boundary — P5E.9B-A3.1R
+## Current active boundary — P5E.9B-A3.2 host-only preparation
 
 P0-P4 are complete as historical phase evidence. P5/P5E have not exited: no
 accepted RAW predecessor, REPORT_L1 or receipt exists, and execution,
@@ -18,6 +18,13 @@ status rather than treated as Logcat evidence. A3.1R was host-only: it used no
 ADB, device settings or current DB, provider, authorization,
 attempt/reconciliation state. The old A3 artifact remains retained as
 superseded and not installed; the A3R artifact is built but not installed.
+
+The A3.2 host-only preparation is complete: the A3R artifact manifest was
+verified `8/8`, and a redacted raw instrumentation-status parser was tested
+against ten offline fixtures with `10/10` expected outcomes. No device,
+settings or current-DB read was performed. The A3.2 approval is still required.
+The current PreTag result is `FAIL` at `Step 05`; the earlier `Step 09` result
+is retained only as historical A3.1 evidence.
 
 The exact next action is a separate owner approval of A3.2 for one
 test-package replacement and one diagnostic method. No A3.2 device action, RAW
@@ -220,8 +227,10 @@ The release is not complete merely because 4.1.3 imports. It is complete only wh
 
 ## 9. Exact next action
 
-Request separate owner approval for P5E.9B-A3.2 using the newly built,
-instrumentation-status test artifact. The approval is limited to one
-test-package replacement and one diagnostic method with the live argument
-absent; it must not authorize provider, authorization, attempt, current-DB or
-RECONCILE work. P5E.9B-A3.2 remains a device gate, not a current pass.
+The host-only preparation for P5E.9B-A3.2 is recorded in the private event
+`D:\P5E-private\fresh-raw-route-diagnostic-a3.2-prep-20260912-011838007`.
+Request separate owner approval using the newly built, instrumentation-status
+test artifact. The approval is limited to one test-package replacement and one
+diagnostic method with the live argument absent; it must not authorize
+provider, authorization, attempt, current-DB or RECONCILE work.
+P5E.9B-A3.2 remains a device gate, not a current pass.

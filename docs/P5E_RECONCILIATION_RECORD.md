@@ -4,7 +4,7 @@ Ngày ghi nhận: `2026-09-11` (+07:00)
 Phạm vi: metadata OpenRouter được đọc qua Activity/Logs đã xác thực; không mở
 I/O logging và không lưu prompt, response body, source text hoặc secret.
 
-## Current active decision — P5E.9B-A3.1R host-only corrective closure
+## Current active decision — P5E.9B-A3.2 host-only preparation, approval required
 
 The latest A2 result is fail-closed, not a readiness pass:
 `P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED` /
@@ -13,19 +13,20 @@ SHA-256 is `42BAA89A70392DDA11868C3FF11EED18D602DFBDC878207E349EEB55A07EEB8A`.
 The A2 single-run approval is consumed and is not reusable. The exact setting
 that differed was intentionally not read or logged.
 
-The current task is P5E.9B-A3.1R and is host-only. It synchronizes the active
-authority and changes the test-only diagnostic evidence channel to emit route
-booleans through instrumentation status; it may not use ADB, inspect device
-settings, mutate the current DB, create or consume
-authorization/attempt/reconciliation, call a provider, retry, repair or
+The current task is host-only preparation for P5E.9B-A3.2. A3.1R already
+synchronized the active authority and changed the test-only diagnostic evidence
+channel to emit route booleans through instrumentation status. This preparation
+may not use ADB, inspect device settings, mutate the current DB, create or
+consume authorization/attempt/reconciliation, call a provider, retry, repair or
 RECONCILE. P5E.9, A2 and the P5 exit gate remain incomplete. Any A3.2 device
 action requires a new owner approval and cannot be inferred from A2.
 
-A3.1R is now complete at the host-only boundary. The new test artifact is
-built and not installed; its four status keys are verified offline in the APK
-and its source sends them with `Instrumentation.sendStatus`. No current-device
-route value is claimed because A3.2 has not been approved or run. The previous
-A3 artifact is retained as `SUPERSEDED_NOT_INSTALLED`.
+A3.1R is complete at the host-only boundary. The new test artifact is built and
+not installed; its four status keys are verified offline in the APK and its
+source sends them with `Instrumentation.sendStatus`. The A3.2 host preparation
+also verified the A3R manifest `8/8` and the raw-status parser fixtures `10/10`.
+No current-device route value is claimed because A3.2 has not been approved or
+run. The previous A3 artifact is retained as `SUPERSEDED_NOT_INSTALLED`.
 
 Current implementation baseline is
 `a0009f04139431f0bee38d049f9b32e2b6b04c41`; documentation HEAD before this
@@ -34,6 +35,8 @@ earlier QF results remain historical evidence; code191 remains
 `EXTERNAL_CONFIRMED_CANCELLED`, without a `$0` conclusion. The current data
 remains `RECONSTRUCTED_ONLY` and the historical preservation failures remain
 unchanged.
+The current PreTag result is `FAIL` at `Step 05`; the earlier `Step 09` result
+is retained only as historical A3.1 evidence.
 
 ## Baseline tại đầu nhóm LQ/QF
 
@@ -1892,7 +1895,7 @@ evidence.
 | Provider call or authorization/attempt/reconciliation count is nonzero | `P5E_9B_A3_2_ZERO_CALL_INVARIANT_FAILED`; stop all P5E work and preserve evidence. |
 | Timeout, freezer, notification, RSA or runner failure | Record the typed device blocker; no rerun, fallback or workaround. |
 
-### Current A3.1R state and stop boundary
+### Current A3.2 pre-approval host boundary and stop boundary
 
 ~~~text
 P5E_9B_A3_1_TECHNICAL_PASS
@@ -1911,6 +1914,8 @@ HISTORICAL_CODE196_PRESERVATION_FAILED
 PILOT_DATA_PRESERVATION_FAILED
 ~~~
 
-The A3.2 block above is awaiting separate owner approval. A3.1R stops here:
-no ADB, install, instrumentation or settings/DB inspection is performed in
-this work package.
+The A3.2 block above is awaiting separate owner approval. Host preparation is
+recorded in private event
+`D:\P5E-private\fresh-raw-route-diagnostic-a3.2-prep-20260912-011838007`.
+The event contains only redacted facts and offline parser evidence. This work
+package stops before ADB, install, instrumentation or settings/DB inspection.
