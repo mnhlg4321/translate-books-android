@@ -52,6 +52,7 @@ import static org.junit.Assert.fail;
 @RunWith(AndroidJUnit4.class)
 public final class EditorialP5EFreshRawBoundaryInstrumentedTest {
     private static final String PACKAGE = "com.ml.tblandroidtxt";
+    private static final long EXPECTED_CANDIDATE_VERSION_CODE = 206L;
     private static final String FRESH_SELECTOR = "p5e-fresh-mercedes-vol5-20260911-01";
     private static final String OLD_SELECTOR = "p5d-raw-mercedes-vol5-001";
     private static final String FRESH_BINDING =
@@ -80,7 +81,7 @@ public final class EditorialP5EFreshRawBoundaryInstrumentedTest {
         PackageInfo packageInfo = context.getPackageManager().getPackageInfo(PACKAGE, 0);
         long versionCode = Build.VERSION.SDK_INT >= 28
                 ? packageInfo.getLongVersionCode() : packageInfo.versionCode;
-        assertEquals(202L, versionCode);
+        assertEquals(EXPECTED_CANDIDATE_VERSION_CODE, versionCode);
 
         java.io.File databaseFile = context.getDatabasePath("tbl_android_txt.db");
         assertTrue("current pilot DB must exist", databaseFile.isFile());
