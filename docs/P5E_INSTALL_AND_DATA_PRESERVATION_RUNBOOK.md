@@ -289,7 +289,7 @@ authorization receipts, reconciliation/history, lifecycle and report/receipt
 counts remained zero. Logcat recorded `providerCalls=0`; no provider, API,
 authorization, attempt, retry, repair or RECONCILE action occurred.
 
-Current boundary result:
+Historical local boundary result (superseded as a current-ready claim):
 
 ```text
 P5E_9A_FRESH_RAW_BOUNDARY_LOCAL_PASS
@@ -305,11 +305,11 @@ HISTORICAL_CODE196_PRESERVATION_FAILED
 PILOT_DATA_PRESERVATION_FAILED
 ```
 
-This result closes only the local zero-call boundary. The next step is to
-prepare and separately request exact P5E.9B RAW authorization; do not create or
-consume it automatically.
+This historical result does not override the later A2 fail-closed route
+precondition. It is not exact-preflight readiness and it is not permission to
+reuse the A2 approval or prepare a live authorization.
 
-## P5E.9A-LQ — current production lineage-query stop
+## P5E.9A-LQ — historical production lineage-query stop
 
 The QF device result above is historical code206 evidence. LQ found that the
 production fresh runner used `binding_identity` directly on
@@ -404,7 +404,7 @@ P5E.9B authorization and does not permit a provider call.
 The next action is exactly that test-artifact approval; do not prepare or
 consume RAW authorization until the device helper gate has been executed.
 
-## P5E.9A-LQ-DV — guarded code207 install and zero-call device verification
+## P5E.9A-LQ-DV — historical guarded code207 install and zero-call device verification
 
 The separate owner approval `P5E_9A_LQ_DV_OWNER_APPROVAL` was received and
 used only for the listed local/device actions. The current production package
@@ -508,7 +508,7 @@ The production-owned helper now parses the schema-v24 attempt-identity joins,
 returns typed failure for isolated schema defects and does not fall back to an
 unused lineage. No authorization or attempt was created.
 
-### Current boundary
+### Historical DV boundary
 
 ```text
 P5E_9A_LQ_TEST_VERSION_PIN_CORRECTED
@@ -530,6 +530,34 @@ PILOT_DATA_PRESERVATION_FAILED
 ```
 
 This does not claim `P5E_9A_VALID_AUTHORIZATION_LOCAL_PATH_PASS` or a live
-RAW acceptance: the owner approval forbade valid-authorization dispatch. The
-next action is a separate exact P5E.9B authorization approval. Do not create,
-consume or dispatch it from this runbook state.
+RAW acceptance: the owner approval forbade valid-authorization dispatch. It is
+historical DV evidence and not the current A3 boundary.
+
+## Current active boundary — P5E.9B-A3.1
+
+The current state is the A2 fail-closed result, not the historical
+`FRESH_RAW_EXACT_PREFLIGHT_READY` result above. A2 evidence SHA-256 is
+`42BAA89A70392DDA11868C3FF11EED18D602DFBDC878207E349EEB55A07EEB8A`.
+The single-run A2 approval is consumed and cannot be reused.
+
+A3.1 is host-only and must not use ADB, read persisted settings, alter
+SharedPreferences, open the current DB, create authorization/attempt/
+reconciliation, call a provider, retry, repair or RECONCILE. Its only allowed
+outputs are current-status documentation, a test-only redacted boolean route
+diagnostic, offline tests and a private AndroidTest artifact. A3.2 requires a
+new owner approval that pins that artifact and permits exactly one diagnostic
+method; it is not authorized by A2.
+
+```text
+P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED
+P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED
+P5E_9B_A3_1_HOST_ONLY_IN_PROGRESS
+P5E_WORKFLOW_GATE_RECHECK_REQUIRED
+RAW_AUTHORIZATION_REQUIRED
+NO_AUTHORIZATION_CREATED
+NO_LIVE_CALL_PERFORMED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
+P6_NOT_READY
+```

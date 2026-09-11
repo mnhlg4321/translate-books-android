@@ -4,6 +4,30 @@ Ngày ghi nhận: `2026-09-11` (+07:00)
 Phạm vi: metadata OpenRouter được đọc qua Activity/Logs đã xác thực; không mở
 I/O logging và không lưu prompt, response body, source text hoặc secret.
 
+## Current active decision — P5E.9B-A3.1 host-only
+
+The latest A2 result is fail-closed, not a readiness pass:
+`P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED` /
+`P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED`. The redacted A2 evidence
+SHA-256 is `42BAA89A70392DDA11868C3FF11EED18D602DFBDC878207E349EEB55A07EEB8A`.
+The A2 single-run approval is consumed and is not reusable. The exact setting
+that differed was intentionally not read or logged.
+
+The current task is P5E.9B-A3.1 and is host-only. It may update active status
+documentation and add a test-only diagnostic that emits only route booleans;
+it may not use ADB, inspect device settings, mutate the current DB, create or
+consume authorization/attempt/reconciliation, call a provider, retry, repair
+or RECONCILE. P5E.9, A2 and the P5 exit gate remain incomplete. Any A3.2
+device action requires a new owner approval and cannot be inferred from A2.
+
+Current implementation baseline is
+`a0009f04139431f0bee38d049f9b32e2b6b04c41`; documentation HEAD before this
+group is `6a35b2de1ebbb4dcdb6e47cde8d0a1d060781d5e`. Code189/code191 and the
+earlier QF results remain historical evidence; code191 remains
+`EXTERNAL_CONFIRMED_CANCELLED`, without a `$0` conclusion. The current data
+remains `RECONSTRUCTED_ONLY` and the historical preservation failures remain
+unchanged.
+
 ## Baseline tại đầu nhóm LQ/QF
 
 | Hạng mục | Giá trị |
