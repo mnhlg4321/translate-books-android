@@ -1,21 +1,21 @@
 # Workspace Snapshot
 
-- Updated: 2026-09-11 19:40 (+07:00).
-- Current status: P5E_0_DOCUMENTATION_CLEANUP_PASS / P5E_LOCAL_QA_PASS / INSTALL_GUARD_LOCAL_PASS / P5E_CANDIDATE_HASH_CERT_PIN_LOCAL_PASS / FRESH_PILOT_OWNER_APPROVED / BACKUP_RESTORE_LOCAL_PASS / P5E_9A_HOST_BOUNDARY_LOCAL_PASS / P5E_9A_EVALUATION_PROVENANCE_RESOLVED / P5E_9A_CODE206_GUARDED_INSTALL_PASS / P5E_9A_QF_TEST_QUERY_CORRECTION_PASS / P5E_9A_QF_OWNER_APPROVAL_REQUIRED / RAW_AUTHORIZATION_REQUIRED / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / DB_REOPEN_STALE_CLAIM_RECOVERY_VERIFIED / P5D_DEADLINE_BODY_READ_HARDENING_PASS / NO_LATE_COMMIT / NO_AUTOMATIC_REDISPATCH / CODE191_EXTERNAL_STATE_RECONCILED / COMPACT_RAW_WIRE_CONTRACT_LOCAL_PASS / STRUCTURED_OUTPUT_REQUEST_LOCAL_PASS / OUTPUT_SIZE_WITHIN_BUDGET / RAW_REPLAY_PROTECTION_PASS / HISTORICAL_CODE196_PRESERVATION_FAILED / PILOT_DATA_PRESERVATION_GATE_FAILED_ORIGINAL_CODE196_DB_LOST_RECONSTRUCTED_ONLY / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY). `P5E_9A_FRESH_RAW_BOUNDARY_LOCAL_PASS` and `FRESH_RAW_EXACT_PREFLIGHT_READY` have not been reached.
-- Current version/build: candidate `4.17-p5e.10` / code206, event `build-20260911-183523`, was built from production source commit `049e72b5769f8b3fdcb6f50646d1f0ead3043940` with APK SHA-256 `F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080`, source ZIP SHA-256 `5BA76881BA87313C69B3E6221676487A88FDFD9A68D61860521131EABC03E4B8`, and certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; artifact/backup payloads are byte-identical and production code206 is unchanged. After snapshot-hash match and `-CheckOnly` PASS, it was installed exactly once via `scripts/install-validated.ps1`. The device is now `15e84958`, package `com.ml.tblandroidtxt`, v4.17-p5e.10/code206, signature token `abebea4b`, schema v24, DB SHA-256 `3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391`. The corrected test APK is outside Git at `D:\P5E-private\fresh-raw-boundary-20260911-qf-test-apk\app-debug-androidTest.apk`, SHA-256 `68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A`, test-source commit `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`, same certificate, and is not installed pending separate approval; the prior `3838028B…` artifact is superseded.
-- Current commit baseline: production source `049e72b5769f8b3fdcb6f50646d1f0ead3043940`; candidate-aligned test source after the QF correction `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`; repository HEAD observed before this documentation snapshot is `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`. Active authority, canonical pack/profile and final schemas are unchanged. The current data remains `RECONSTRUCTED_ONLY`; code189/code191 and code203 are historical evidence, code204 is pre-correction evidence and code205 is intermediate dirty-source evidence.
-- Current phase: P5E.9A-EVAL read-only characterization confirms the fresh binding freezes `3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1`; the stale `f319…` runner pin was corrected without SQL or DB mutation. Host engine/app variants, lint, AndroidTest compilation and static guards pass. The pinned private snapshot/restore was reused after exact DB-hash match; guarded CheckOnly and one code202 → code206 install/readback passed. The QF test-only JOIN correction is committed at `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`, AndroidTest compile and corrected test APK build pass, and the old `4/5` artifact is superseded. The new test APK has not been installed and no rerun occurred because separate owner approval is required. `P5E_9A_FRESH_RAW_BOUNDARY_LOCAL_PASS` and `FRESH_RAW_EXACT_PREFLIGHT_READY` remain blocked; no authorization, attempt, reconciliation or provider/API call occurred.
+- Updated: 2026-09-11 19:52 (+07:00).
+- Current status: P5E_0_DOCUMENTATION_CLEANUP_PASS / P5E_LOCAL_QA_PASS / INSTALL_GUARD_LOCAL_PASS / P5E_CANDIDATE_HASH_CERT_PIN_LOCAL_PASS / FRESH_PILOT_OWNER_APPROVED / BACKUP_RESTORE_LOCAL_PASS / P5E_9A_HOST_BOUNDARY_LOCAL_PASS / P5E_9A_EVALUATION_PROVENANCE_RESOLVED / P5E_9A_CODE206_GUARDED_INSTALL_PASS / P5E_9A_QF_TEST_QUERY_CORRECTION_PASS / ANDROID_TEST_COMPILE_PASS / PINNED_TEST_APK_APPROVED / SINGLE_FAILED_METHOD_RERUN_1_OF_1_PASS / P5E_FRESH_RAW_BOUNDARY_CLASS_5_OF_5_PASS / P5E_9A_FRESH_RAW_BOUNDARY_LOCAL_PASS / FRESH_RAW_EXACT_PREFLIGHT_READY / RAW_AUTHORIZATION_REQUIRED / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / DB_REOPEN_STALE_CLAIM_RECOVERY_VERIFIED / P5D_DEADLINE_BODY_READ_HARDENING_PASS / NO_LATE_COMMIT / NO_AUTOMATIC_REDISPATCH / CODE191_EXTERNAL_STATE_RECONCILED / COMPACT_RAW_WIRE_CONTRACT_LOCAL_PASS / STRUCTURED_OUTPUT_REQUEST_LOCAL_PASS / OUTPUT_SIZE_WITHIN_BUDGET / RAW_REPLAY_PROTECTION_PASS / HISTORICAL_CODE196_PRESERVATION_FAILED / PILOT_DATA_PRESERVATION_GATE_FAILED_ORIGINAL_CODE196_DB_LOST_RECONSTRUCTED_ONLY / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Current version/build: candidate `4.17-p5e.10` / code206, event `build-20260911-183523`, was built from production source commit `049e72b5769f8b3fdcb6f50646d1f0ead3043940` with APK SHA-256 `F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080`, source ZIP SHA-256 `5BA76881BA87313C69B3E6221676487A88FDFD9A68D61860521131EABC03E4B8`, and certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; artifact/backup payloads are byte-identical and production code206 is unchanged. After snapshot-hash match and `-CheckOnly` PASS, it was installed exactly once via `scripts/install-validated.ps1`. The device is now `15e84958`, package `com.ml.tblandroidtxt`, v4.17-p5e.10/code206, signature token `abebea4b`, schema v24, DB SHA-256 `3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391`. The corrected test APK is outside Git at `D:\P5E-private\fresh-raw-boundary-20260911-qf-test-apk\app-debug-androidTest.apk`, package `com.ml.tblandroidtxt.test`, SHA-256 `68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A`, test-source commit `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`, same certificate; after owner approval it was installed as the test package only, and its exact hash/signature were read back. The prior `3838028B…` artifact is superseded.
+- Current commit baseline: production source `049e72b5769f8b3fdcb6f50646d1f0ead3043940`; candidate-aligned test source after the QF correction `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`; repository HEAD observed before this documentation snapshot is `1e82439abc19322298c1e407092629017892c9c9`. Active authority, canonical pack/profile and final schemas are unchanged. The current data remains `RECONSTRUCTED_ONLY`; code189/code191 and code203 are historical evidence, code204 is pre-correction evidence and code205 is intermediate dirty-source evidence.
+- Current phase: P5E.9A-EVAL read-only characterization confirms the fresh binding freezes `3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1`; the stale `f319…` runner pin was corrected without SQL or DB mutation. The QF test-only JOIN correction is committed at `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`; after separate owner approval the exact test APK was installed only into `com.ml.tblandroidtxt.test`. The required direct method passed `1/1`, the full boundary class passed `5/5` with no skip, and post-run readback preserved the exact fresh tuple, zero counts and DB hash. Logcat recorded `providerCalls=0`; no authorization, attempt, reconciliation, report/receipt, provider/API call, retry, repair or RECONCILE occurred. `P5E_9A_FRESH_RAW_BOUNDARY_LOCAL_PASS` and `FRESH_RAW_EXACT_PREFLIGHT_READY` are now reached for this zero-call local boundary only; live RAW authorization remains separately required.
 - Current branch/workspace: feature/v4.18 / D:\App Translate Books\App Translate Books-translation-profile.
 
 ## P5E.9A-EVAL current freeze evidence
 
 | Item | Current fact |
 |---|---|
-| Installed baseline | `15e84958` / `com.ml.tblandroidtxt` / `v4.17-p5e.6` / code202 / signature token `abebea4b` / schema v24 |
+| Installed baseline | `15e84958` / `com.ml.tblandroidtxt` / `v4.17-p5e.10` / code206 / signature token `abebea4b` / schema v24 |
 | Candidate archive | `v4.17-p5e.10` / code206 / source `049e72b5769f8b3fdcb6f50646d1f0ead3043940` / APK `F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080` |
 | Candidate certificate | `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
 | Superseded test APK | `3838028BC2CE19CBB99B004041383CD5056B6470DA4496A467DBFD75083230B2`, source `f90c0372c019c0d3970efb298b64b6a4addcfd4f`, kept outside Git; `4/5` boundary run exposed the query defect |
-| Corrected test APK | `68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A`, source `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`, kept outside Git; not installed pending separate approval |
+| Corrected test APK | `68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A`, source `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`, kept outside Git; installed only as `com.ml.tblandroidtxt.test` after owner approval and read back with matching hash/signature |
 | Fresh binding | selector/binding/run/chapter matched the requested values |
 | Evaluation freeze | PASS: official setup/binding and corrected runner both use `3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1`; `f319…` remains historical only |
 | Current DB mutation | none; attempts, authorization receipts, reconciliation, history, lifecycle and report/receipt counts remain zero |
@@ -78,7 +78,7 @@ approval is required before any upgrade or candidate-aligned device test.
 - Code189 full device instrumentation: `130` tests, `0` failures; real provider paths remained opt-in/skipped. Code186 `124` tests remains historical evidence.
 - Provider/API calls: code189/code191 and their provider generations are historical evidence only. P5E.1 used authenticated read-only metadata for code191 generation `gen-1788967700-RgJDCWrZsNZ4VAAWmlj8` and recorded `EXTERNAL_CONFIRMED_CANCELLED`; no new provider call or authorization was created during local contract work. Prior known costs remain recorded separately and are not collapsed into `$0`.
 - Canonical ZIP `B9C65DBEB9D4C4ED46B67D5EC28FF6252CC2BDC4B63BC902904612987EC58987`, Java control `44F99423292ADA15680220165AF50430532D847E155F93C1B15D9F173D4609A5`, and profile resource `1B2DB011D59F3E2EF4349AEB0DAA9C54A19B7EFD1E2CA6886BC29B56E4690D62` re-hash correctly.
-- Pre-upgrade installed validation APK code199 SHA-256: `870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09`; source ZIP SHA-256 `824B7B59994F6E2E1573F0305081E60A7ADB10771C085B9C86EC32C14DC09A7C`. Code202 was the pre-install device baseline with APK SHA-256 `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0`; code206 is the current installed candidate with APK SHA-256 `F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080`, source commit `049e72b5769f8b3fdcb6f50646d1f0ead3043940`, and certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`. The superseded candidate-aligned test APK was `3838028BC2CE19CBB99B004041383CD5056B6470DA4496A467DBFD75083230B2` from `f90c0372c019c0d3970efb298b64b6a4addcfd4f` and stopped at `4/5`; the corrected test APK is `68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A` from `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`, package `com.ml.tblandroidtxt.test`, same certificate, built but not installed pending approval. Code189/code191/code196 remain historical; reconstructed data is not code196 history. Code201 is the pre-patch script-managed archive artifact and was not installed on the current device; no code201 device-verification claim is made.
+- Pre-upgrade installed validation APK code199 SHA-256: `870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09`; source ZIP SHA-256 `824B7B59994F6E2E1573F0305081E60A7ADB10771C085B9C86EC32C14DC09A7C`. Code202 was the pre-install device baseline with APK SHA-256 `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0`; code206 is the current installed candidate with APK SHA-256 `F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080`, source commit `049e72b5769f8b3fdcb6f50646d1f0ead3043940`, and certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`. The superseded candidate-aligned test APK was `3838028BC2CE19CBB99B004041383CD5056B6470DA4496A467DBFD75083230B2` from `f90c0372c019c0d3970efb298b64b6a4addcfd4f` and stopped at `4/5`; the corrected test APK is `68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A` from `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`, package `com.ml.tblandroidtxt.test`, same certificate, separately approved, installed only as the test package and read back with matching hash/signature; method `1/1` and boundary class `5/5` passed. Code189/code191/code196 remain historical; reconstructed data is not code196 history. Code201 is the pre-patch script-managed archive artifact and was not installed on the current device; no code201 device-verification claim is made.
 
 ## Pending tasks
 
@@ -107,36 +107,32 @@ The original workspace D:\App Translate Books remains untouched. Its user-owned 
 
 2026-09-11 update: P5E.9A-EVAL provenance correction is committed at
 `049e72b5769f8b3fdcb6f50646d1f0ead3043940`; the candidate-aligned boundary test
-source is `f90c0372c019c0d3970efb298b64b6a4addcfd4f`. Candidate code206
+source is `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`. Candidate code206
 (`v4.17-p5e.10`) was built and archived in both artifact and backup with APK
 SHA-256 `F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080`,
 certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`
 and source ZIP SHA-256
 `5BA76881BA87313C69B3E6221676487A88FDFD9A68D61860521131EABC03E4B8`. The
-candidate-aligned test APK has SHA-256
-`3838028BC2CE19CBB99B004041383CD5056B6470DA4496A467DBFD75083230B2`, same
-certificate, and is outside Git. Host engine `200/200`, app debug/release/
-benchmark `232/232` each, lint, AndroidTest compilation and static checks pass;
-no provider call occurred. Read-only device recheck still finds the requested
-selector/binding/run/chapter, schema v24, official evaluation
+superseded candidate-aligned test APK is `3838028BC2CE19CBB99B004041383CD5056B6470DA4496A467DBFD75083230B2`,
+same certificate, and remains historical outside Git after its `4/5` run exposed
+the test-query defect. The corrected test APK is
+`68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A`, same
+certificate, outside Git; after separate owner approval it replaced only
+`com.ml.tblandroidtxt.test` on device. The required direct method passed `1/1`
+and the full `EditorialP5EFreshRawBoundaryInstrumentedTest` class passed `5/5`
+with no skip. Read-only device tests confirmed the requested selector/binding/
+run/chapter, schema v24, official evaluation
 `3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1`, zero attempt/auth/
-reconciliation/history/lifecycle/report rows, and an unchanged DB hash matching
-the private reconstructed snapshot at
+reconciliation/history/lifecycle/report/receipt rows, and unchanged DB hash
+matching the private reconstructed snapshot at
 `D:\P5E-private\fresh-raw-boundary-20260911-1810` (manifest SHA-256
-`6D3949C37E5C6D78FACB5FB7058CB4CBAAE615F54CF07F8F8462D1E39DD75A28`). Code206
-was installed exactly once after snapshot reuse and guarded CheckOnly PASS;
-post-install package/signature/schema/data readback passed. The candidate-
-aligned direct boundary class ran `5` tests: `4` passed and `1` failed before
-provider execution because it queried nonexistent `binding_identity` on
-`editorial_p5d_reconciliation`, whose schema key is `attempt_identity`. The
-QF correction is now committed at `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`;
-the corrected test APK has SHA-256
-`68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A` and is
-not installed pending separate owner approval. The single next step is that
-approval, followed by the one-method gate and then the full class; until then
-do not create authorization or claim `P5E_9A_FRESH_RAW_BOUNDARY_LOCAL_PASS`.
-Retain `HISTORICAL_CODE196_PRESERVATION_FAILED / RAW_AUTHORIZATION_REQUIRED /
-NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED /
-RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED`.
+`6D3949C37E5C6D78FACB5FB7058CB4CBAAE615F54CF07F8F8462D1E39DD75A28`). Logcat
+recorded `providerCalls=0`; production code206 was not reinstalled or changed.
+The single next step is to prepare and separately request exact P5E.9B RAW
+authorization; do not create or consume authorization or call a provider
+automatically. Retain `HISTORICAL_CODE196_PRESERVATION_FAILED /
+RAW_AUTHORIZATION_REQUIRED / NO_AUTHORIZATION_CREATED /
+NO_LIVE_CALL_PERFORMED / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED /
+EXECUTION_DISABLED / NOT_CERTIFIED`.
 
 This is current-only state; Git history preserves prior snapshots.

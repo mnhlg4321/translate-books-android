@@ -9,7 +9,7 @@ I/O logging và không lưu prompt, response body, source text hoặc secret.
 | Hạng mục | Giá trị |
 |---|---|
 | Branch | `feature/v4.18` |
-| HEAD hiện tại trước documentation snapshot | `34a4ec2832d71a488a2531a0e69a85261e9c9b9b` (test-only predicate correction; production source remains `049e72b5769f8b3fdcb6f50646d1f0ead3043940`) |
+| HEAD hiện tại trước documentation snapshot | `1e82439abc19322298c1e407092629017892c9c9` (documentation snapshot before QF device result; test-only predicate correction remains `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`; production source remains `049e72b5769f8b3fdcb6f50646d1f0ead3043940`) |
 | HEAD trước nhóm fresh-pilot evidence | `cd683503c79e03e4a215596855458c11200104ab` (historical group start) |
 | Production implementation baseline hiện tại | `049e72b5769f8b3fdcb6f50646d1f0ead3043940` |
 | Production source commit trong APK code199 | `03b97a30885393c1cc8a3297d5dff9672dcba57e` |
@@ -25,7 +25,7 @@ I/O logging và không lưu prompt, response body, source text hoặc secret.
 | Pre-install code202 production APK SHA-256 | `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0` (historical device baseline) |
 | Current installed code206 production APK SHA-256 | `F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080`; source commit `049e72b5769f8b3fdcb6f50646d1f0ead3043940`; certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
 | Superseded candidate-aligned test APK | `3838028BC2CE19CBB99B004041383CD5056B6470DA4496A467DBFD75083230B2`, test-source commit `f90c0372c019c0d3970efb298b64b6a4addcfd4f`; direct boundary run `4/5`, query defect; not reused |
-| Corrected candidate-aligned test APK SHA-256 | `68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A`, test-source commit `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; built outside Git, not installed pending approval |
+| Corrected candidate-aligned test APK SHA-256 | `68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A`, test-source commit `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; built outside Git, separately approved, installed only as `com.ml.tblandroidtxt.test`, and read back with matching hash/signature |
 | Pre-candidate clean test APK SHA-256 | `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456`; historical attribution only |
 | Package / test package | `com.ml.tblandroidtxt` / `com.ml.tblandroidtxt.test` |
 | Candidate/installed APK certificate SHA-256 | `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
@@ -561,7 +561,7 @@ OWNER_APPROVAL_FOR_CODE206_REQUIRED
 The single next step is to obtain that exact owner approval. Until then, code206
 must remain uninstalled and no RAW authorization block may be created.
 
-## P5E.9A — Current owner-approved code206 device run
+## Historical P5E.9A — owner-approved code206 device run before QF
 
 The owner approval `P5E_9A_CODE206_DEVICE_ZERO_CALL_OWNER_APPROVAL` was then
 recorded with the exact device, package, code206 APK/certificate/source pins,
@@ -633,7 +633,7 @@ because it halted on this query error.
 No authorization receipt, live attempt, reconciliation row, provider/API call,
 partial predecessor, report or receipt was created. The class was not retried.
 
-Current decision:
+Historical decision at that time:
 
 ```text
 P5E_9A_EVALUATION_PROVENANCE_RESOLVED
@@ -665,7 +665,94 @@ certificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c1
 path=D:\P5E-private\fresh-raw-boundary-20260911-qf-test-apk\app-debug-androidTest.apk
 ```
 
-The new artifact is not installed and has not been rerun. A separate owner
-approval is required for that exact test artifact; after approval, run the
-single failed method first and the full class only if it passes. No RAW
-authorization may be created before that gate passes.
+At that historical stop point the new artifact was not installed and had not
+been rerun. The later separate owner approval and QF device rerun are recorded
+in the current section below. No RAW authorization may be created from this
+historical evidence.
+
+## P5E.9A-QF — current test-query correction and zero-call device result
+
+The owner approved the exact corrected test APK in a separate
+`P5E_9A_QF_TEST_APK_OWNER_APPROVAL` block. Only
+`com.ml.tblandroidtxt.test` was replaced on device `15e84958`; the production
+package was not reinstalled or changed. The installed test package read back
+the approved APK hash and certificate:
+
+```text
+testPackage=com.ml.tblandroidtxt.test
+testApkPath=D:\P5E-private\fresh-raw-boundary-20260911-qf-test-apk\app-debug-androidTest.apk
+testApkSha256=68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A
+testSourceCommit=34a4ec2832d71a488a2531a0e69a85261e9c9b9b
+testCertificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+productionVersionCode=206
+productionApkSha256=F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080
+deviceSignatureToken=abebea4b
+schema=v24
+```
+
+The required direct instrumentation order passed without skip:
+
+```text
+historicalP5dRunnerRejectsFreshSelectorBeforeProvider: 1/1 PASS
+EditorialP5EFreshRawBoundaryInstrumentedTest: 5/5 PASS
+```
+
+The class verified the exact fresh selector, chapter, binding, run and
+official evaluation `3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1`.
+The corrected reconciliation assertion uses the schema-valid relationship
+`reconciliation.attempt_identity -> attempts.attempt_identity ->
+attempts.binding_identity`. The route/preflight and missing/wrong
+authorization tests remained local-only; no provider dispatch occurred.
+
+Post-run readback:
+
+```text
+productionVersion=v4.17-p5e.10
+productionVersionCode=206
+productionApkSha256=F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080
+productionSignatureToken=abebea4b
+dbSha256Before=3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391
+dbSha256After=3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391
+providerCalls=0
+attempts=0
+authorizationReceipts=0
+reconciliation=0
+reconciliationHistory=0
+lifecycle=0
+reportOrReceipt=0
+partialCommit=false
+automaticRedispatch=false
+```
+
+Logcat recorded the preflight marker with `providerCalls=0`; no authorization,
+attempt, reconciliation, report, receipt, retry, repair or RECONCILE was
+created. `HISTORICAL_CODE196_PRESERVATION_FAILED` and
+`PILOT_DATA_PRESERVATION_FAILED` remain unchanged. This closes only the
+zero-call local RAW boundary; it is not a live RAW acceptance and does not
+authorize P5E.9B.
+
+Current QF exit state:
+
+```text
+TEST_ONLY_QUERY_CORRECTION_PASS
+ANDROID_TEST_COMPILE_PASS
+PINNED_TEST_APK_APPROVED
+SINGLE_FAILED_METHOD_RERUN: 1/1_PASS
+P5E_FRESH_RAW_BOUNDARY_CLASS: 5/5_PASS
+PRODUCTION_CODE206_UNCHANGED
+DATABASE_HASH_UNCHANGED
+PROVIDER_CALLS: 0
+AUTHORIZATIONS: 0
+ATTEMPTS: 0
+RECONCILIATIONS: 0
+P5E_9A_FRESH_RAW_BOUNDARY_LOCAL_PASS
+FRESH_RAW_EXACT_PREFLIGHT_READY
+RAW_AUTHORIZATION_REQUIRED
+NO_AUTHORIZATION_CREATED
+NO_LIVE_CALL_PERFORMED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
+P6_NOT_READY
+HISTORICAL_CODE196_PRESERVATION_FAILED
+```

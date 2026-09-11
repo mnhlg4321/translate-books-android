@@ -179,7 +179,7 @@ EXECUTION_DISABLED
 NOT_CERTIFIED
 ```
 
-## P5E.9A-EVAL provenance correction — current result
+## Historical P5E.9A-EVAL provenance correction — pre-QF result
 
 The earlier code202/G3/G4 and code204 freeze entries above remain prior
 evidence. The stale `f319…` value was a runner expectation; the persisted fresh
@@ -239,7 +239,7 @@ SHA-256
 not been installed pending separate owner approval. The old test APK is
 superseded and must not be rerun.
 
-Current stop state:
+Historical stop state:
 
 ```text
 P5E_9A_EVALUATION_PROVENANCE_RESOLVED
@@ -257,6 +257,54 @@ P6_NOT_READY
 HISTORICAL_CODE196_PRESERVATION_FAILED
 ```
 
-The only next step is separate owner approval for the exact corrected test APK,
-followed by the one-method gate and then the full class. Do not create RAW
-authorization or call a provider while this gate is blocked.
+At that historical stop point the corrected test APK still awaited separate
+owner approval. The later approval and QF device rerun are recorded below. Do
+not create RAW authorization or call a provider from this historical evidence.
+
+## P5E.9A-QF — current zero-call device result
+
+The owner separately approved the exact corrected test artifact. Only
+`com.ml.tblandroidtxt.test` was replaced on `15e84958`; production code206 was
+not reinstalled or modified. Device readback matched the approved test APK
+SHA-256 `68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A`,
+certificate `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`,
+production code206 APK SHA-256
+`F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080`, and
+signature token `abebea4b`.
+
+The required direct instrumentation sequence passed without skip:
+
+```text
+historicalP5dRunnerRejectsFreshSelectorBeforeProvider: 1/1 PASS
+EditorialP5EFreshRawBoundaryInstrumentedTest: 5/5 PASS
+```
+
+The class read-only checks confirmed schema v24, the exact fresh selector,
+chapter, binding, run and official evaluation
+`3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1`. The corrected query
+joins reconciliation to attempts through `attempt_identity` and filters the
+fresh binding on the attempts table. Post-run DB SHA-256 remained
+`3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391`; attempts,
+authorization receipts, reconciliation/history, lifecycle and report/receipt
+counts remained zero. Logcat recorded `providerCalls=0`; no provider, API,
+authorization, attempt, retry, repair or RECONCILE action occurred.
+
+Current boundary result:
+
+```text
+P5E_9A_FRESH_RAW_BOUNDARY_LOCAL_PASS
+FRESH_RAW_EXACT_PREFLIGHT_READY
+RAW_AUTHORIZATION_REQUIRED
+NO_AUTHORIZATION_CREATED
+NO_LIVE_CALL_PERFORMED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
+P6_NOT_READY
+HISTORICAL_CODE196_PRESERVATION_FAILED
+PILOT_DATA_PRESERVATION_FAILED
+```
+
+This result closes only the local zero-call boundary. The next step is to
+prepare and separately request exact P5E.9B RAW authorization; do not create or
+consume it automatically.
