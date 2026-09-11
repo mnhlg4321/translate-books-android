@@ -1,13 +1,13 @@
 # Build State
 
-- Status: P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED / P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED / P5E_9B_A3_1_HOST_ONLY_IN_PROGRESS / P5E_9B_A3_2_DEVICE_DIAGNOSTIC_APPROVAL_REQUIRED / P5E_9B_A4_REMEDIATION_NOT_SELECTED / P5E_WORKFLOW_GATE_RECHECK_REQUIRED / RAW_AUTHORIZATION_REQUIRED / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY. Historical completed statuses remain in the evidence sections below and are not current readiness claims.
+- Status: P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED / P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED / P5E_9B_A3_1_HOST_ONLY_PASS / P5E_9B_A3_2_DEVICE_DIAGNOSTIC_APPROVAL_REQUIRED / P5E_9B_ROUTE_DIAGNOSTIC_ARTIFACT_BUILT_NOT_INSTALLED / P5E_9B_A4_REMEDIATION_NOT_SELECTED / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / RAW_AUTHORIZATION_REQUIRED / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY. Historical completed statuses remain in the evidence sections below and are not current readiness claims.
 - Active authority: V5-SAFE.4.1.3-FULL; canonical plan `EDITORIAL_RECOVERY_V4_18.md`.
 - Workspace: D:\App Translate Books\App Translate Books-translation-profile.
 - Branch: feature/v4.18.
-- Current commit baseline: implementation baseline `a0009f04139431f0bee38d049f9b32e2b6b04c41`; documentation HEAD before A3.1 is `6a35b2de1ebbb4dcdb6e47cde8d0a1d060781d5e`; the worktree was clean at freeze. Test-only correction commit `f2695c862a9b860e08fd01f932377ec5576d6ad1`, production lineage fix `ff6821a5de6f825c55e35f8570dfbf074b4e64b5` and prior test coverage `995d3b6c9678e93905b3802cf22eee0b091b1bb3` are ancestors. Candidate code204 is superseded as pre-correction evidence; code206 is historical installed evidence and code207 is the installed, frozen candidate. No production source, schema, migration, pack, profile, authority or final report/receipt schema changed in the QF2 or DV documentation group.
+- Current commit baseline: implementation baseline `a0009f04139431f0bee38d049f9b32e2b6b04c41`; documentation HEAD before A3.1 is `6a35b2de1ebbb4dcdb6e47cde8d0a1d060781d5e`; test-only diagnostic commit is `89eef75a4a62e5674d02b7e48eaaff012d9a7ae0`; this snapshot records the implementation/test baseline before its separate documentation/result commit. The worktree was clean before that documentation update. Test-only correction commit `f2695c862a9b860e08fd01f932377ec5576d6ad1`, production lineage fix `ff6821a5de6f825c55e35f8570dfbf074b4e64b5` and prior test coverage `995d3b6c9678e93905b3802cf22eee0b091b1bb3` are ancestors. Candidate code204 is superseded as pre-correction evidence; code206 is historical installed evidence and code207 is the installed, frozen candidate. No production source, schema, migration, pack, profile, authority or final report/receipt schema changed in the A3.1 group.
 - Last validation package built: production APK `4.17-p5e.11` / Android versionCode `207`, package `com.ml.tblandroidtxt`, event `build-20260911-201725`, APK SHA-256 `2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD`, source ZIP SHA-256 `B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348`, build source snapshot `995d3b6c9678e93905b3802cf22eee0b091b1bb3`, production fix commit `ff6821a5de6f825c55e35f8570dfbf074b4e64b5`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; artifact and backup payloads are byte-identical. It was installed exactly once through the approved guard and read back successfully. The current device is `v4.17-p5e.11`/code207, signature token `abebea4b`, schema v24, DB SHA-256 `3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391`, data `RECONSTRUCTED_ONLY`.
 - The old LQ test APK at `D:\P5E-private\fresh-raw-lineage-lq-20260911-2018-test-apk\app-debug-androidTest.apk` with SHA-256 `9DE2A9F167960A2DA0D5D523A270F35459773F601D0CB84872432B9B576227B2` is superseded and was not installed. The approved replacement is outside Git at `D:\P5E-private\fresh-raw-lineage-lq-qf2-20260911-204314-test-apk\app-debug-androidTest.apk`, package `com.ml.tblandroidtxt.test`, runner `androidx.test.runner.AndroidJUnitRunner`, SHA-256 `50BC25F1C24E9588F430EE00809E9B6C8E126B5EA975782FA556254840DDA587`, size `1313798` bytes, test-source commit `f2695c862a9b860e08fd01f932377ec5576d6ad1`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; it was installed once as the test package only and read back with the exact hash.
-- Current phase: A2 ended fail-closed with `P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED`; the exact persisted setting value was intentionally not read or logged. The A2 evidence is historical zero-call evidence, its single-run approval is consumed and not reusable, and no exact preflight readiness was established. P5E.9B-A3.1 is host-only: it may update documentation and add a test-only redacted route diagnostic, but it must not use ADB, read device settings, mutate DB, create authorization/attempt/reconciliation or call a provider. Code191 metadata remains `EXTERNAL_CONFIRMED_CANCELLED`, not a `$0` billing conclusion; code189/code191 and earlier QF results are historical evidence. No live RAW acceptance or valid-authorization dispatch is claimed.
+- Current phase: A2 ended fail-closed with `P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED`; the exact persisted setting value was intentionally not read or logged. A3.1 completed host-only: the active docs now distinguish the A2 stop, PreTag fail-closed result and the separate A3.2 device approval boundary; the test-only redacted diagnostic was compiled and archived privately, but not installed or run. The A2 single-run approval remains consumed and not reusable, and no exact preflight readiness was established. Code191 metadata remains `EXTERNAL_CONFIRMED_CANCELLED`, not a `$0` billing conclusion; code189/code191 and earlier QF results are historical evidence. No live RAW acceptance or valid-authorization dispatch is claimed.
 - Current data classification is `RECONSTRUCTED_ONLY` with a new fresh-pilot lineage appended; `RECONSTRUCTED_ONLY_FRESH_PILOT` is the private snapshot classification, not a recovery claim for code196.
 
 ## Current active state — P5E.9B-A3.1
@@ -15,8 +15,10 @@
 - A2 is closed as a typed route-precondition failure, not a pass: `P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED` and `P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED`. The A2 evidence SHA-256 is `42BAA89A70392DDA11868C3FF11EED18D602DFBDC878207E349EEB55A07EEB8A`.
 - The current device/data facts remain the previously read code207/schema-v24 state; A3.1 performs no device operation and does not revalidate those facts. The current data remains `RECONSTRUCTED_ONLY`; historical code196 preservation and pilot preservation failures remain unchanged.
 - The A3.1 implementation baseline is `a0009f04139431f0bee38d049f9b32e2b6b04c41`; documentation baseline before this group is `6a35b2de1ebbb4dcdb6e47cde8d0a1d060781d5e`. P5E.9, A2, and the P5 exit gate remain incomplete.
-- The next action is to make `PreTag` fail with a concrete P5/P5E blocker, then add and compile only the test-only redacted route diagnostic. A3.2 device approval is separate and cannot be inferred from A2.
-- Provider calls, authorization creation/consumption, device operations and current-DB mutation in A3.1 must remain `0`.
+- `PreTag` was run with the existing v4.18 checklist and failed closed with `Step 09 is not complete for gate PreTag`; no tag or release action was taken. No false-green condition was observed.
+- The test-only redacted route diagnostic was added in commit `89eef75a4a62e5674d02b7e48eaaff012d9a7ae0`. Its opt-in method calls the settings store once only after `p5e_fresh_raw_route_diagnostic=YES`, emits only `providerMatch`, `modelMatch`, `endpointMatch` and `routeMatch`, and has no DB/preflight/provider/auth path. Synthetic in-memory cases cover exact, component mismatches, case/whitespace/endpoint normalization, conjunction and output allowlisting; they were compiled but not instrumented in A3.1.
+- Private test artifact: `D:\P5E-private\fresh-raw-route-diagnostic-a3-20260912-002937-test-apk\app-debug-androidTest.apk`, package `com.ml.tblandroidtxt.test`, target `com.ml.tblandroidtxt`, runner `androidx.test.runner.AndroidJUnitRunner`, source commit `89eef75a4a62e5674d02b7e48eaaff012d9a7ae0`, SHA-256 `64A9976F43F04397DF0E593F21E7AE154CDED1ED6749294F3B1E5F9D2A77757A`, size `1326212` bytes, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; it is built, not installed, and does not supersede the installed A2 artifact until separately approved.
+- The next action is a new owner approval for A3.2: one test-package replacement and one diagnostic method only, with the live flag absent and provider budget `0`. Provider calls, authorization creation/consumption, device operations and current-DB mutation in A3.1 were `0`.
 
 ## Source and authority identity
 
@@ -634,7 +636,7 @@ FORBID_PRODUCTION_PACKAGE_INSTALL=true
 No exact preflight or live readiness is claimed until this separate approval
 is granted and the device gate is run.
 
-## P5E.9B-A2 zero-call preflight result
+## P5E.9B-A2 zero-call preflight result (historical runtime evidence)
 
 The owner approved one single-run A2 scope. The preflight gate passed for
 device readiness, production code207 identity, the existing test package hash,
@@ -723,3 +725,95 @@ PILOT_DATA_PRESERVATION_FAILED
 The A2 approval is not reusable for a rerun. Stop here and obtain a new
 owner-approved remediation scope for the route-precondition blocker before any
 further device or settings action.
+
+## P5E.9B-A3.1 host-only result
+
+The A3.1 group used no ADB, device settings read, database access, provider,
+authorization, attempt, reconciliation or instrumentation. The documentation
+baseline was `6a35b2de1ebbb4dcdb6e47cde8d0a1d060781d5e`; the test-only
+diagnostic commit is `89eef75a4a62e5674d02b7e48eaaff012d9a7ae0`, based on the
+implementation baseline `a0009f04139431f0bee38d049f9b32e2b6b04c41`.
+
+The existing PreTag verifier was run as:
+
+~~~
+scripts/verify-release-workflow.ps1 -ChecklistPath release_checklists/v4.18-editorial-v5-safe-4-1-3.md -Gate PreTag -ExpectedVersion 4.18
+~~~
+
+and failed closed with `Step 09 is not complete for gate PreTag`. The checklist
+now keeps current P5/P5E closure unchecked, so no false-green PreTag result was
+observed; no tag or release action was attempted.
+
+The new diagnostic is test-only. Its first executable statement is the
+explicit opt-in check `p5e_fresh_raw_route_diagnostic=YES`; only then does it
+call `SettingsStore.load` once. It emits only four booleans:
+`providerMatch`, `modelMatch`, `endpointMatch` and `routeMatch`, with
+`routeMatch` required to equal their conjunction. It does not emit persisted
+provider/model/endpoint values, API keys, source, prompt, request or response
+content; it does not call `SettingsStore.save`, open the DB, construct a
+provider/client/request or call production `preflightOnly`.
+
+The offline synthetic cases are test-only source under `app/src/androidTest`.
+They cover exact route, each component mismatch, provider/model case policy,
+endpoint trailing-slash and surrounding-whitespace normalization, conjunction
+invariance and output allowlisting. They were compiled, not run by
+instrumentation in A3.1.
+
+~~~
+P5E_9B_A3_1_HOST_ONLY_PASS
+P5E_9B_ROUTE_DIAGNOSTIC_ARTIFACT_BUILT_NOT_INSTALLED
+P5E_9B_A3_2_DEVICE_DIAGNOSTIC_APPROVAL_REQUIRED
+P5E_9B_A4_REMEDIATION_NOT_SELECTED
+RAW_AUTHORIZATION_REQUIRED
+NO_AUTHORIZATION_CREATED
+NO_LIVE_CALL_PERFORMED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
+P6_NOT_READY
+HISTORICAL_CODE196_PRESERVATION_FAILED
+PILOT_DATA_PRESERVATION_FAILED
+~~~
+
+The following A3.2 approval is a request only. It is not an authorization and
+does not permit a live flag, provider call, current-DB mutation or reuse of A2.
+
+~~~
+P5E_9B_A3_2_ROUTE_DIAGNOSTIC_OWNER_APPROVAL_REQUEST
+APPROVAL_STATUS=REQUIRED
+APPROVAL_SCOPE_SINGLE_RUN=true
+TARGET_DEVICE=15e84958
+TARGET_PRODUCTION_PACKAGE=com.ml.tblandroidtxt
+INSTALLED_PRODUCTION_VERSION=v4.17-p5e.11
+INSTALLED_PRODUCTION_VERSION_CODE=207
+INSTALLED_PRODUCTION_APK_SHA256=2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD
+INSTALLED_PRODUCTION_CERTIFICATE_SHA256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+INSTALLED_DEVICE_SIGNATURE_TOKEN=abebea4b
+CURRENT_DB_SHA256=3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391
+CURRENT_DB_SCHEMA=24
+TEST_APK_PATH=D:\P5E-private\fresh-raw-route-diagnostic-a3-20260912-002937-test-apk\app-debug-androidTest.apk
+TEST_APK_SHA256=64A9976F43F04397DF0E593F21E7AE154CDED1ED6749294F3B1E5F9D2A77757A
+TEST_APK_CERTIFICATE_SHA256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+TEST_SOURCE_COMMIT=89eef75a4a62e5674d02b7e48eaaff012d9a7ae0
+TEST_PACKAGE=com.ml.tblandroidtxt.test
+TEST_RUNNER=androidx.test.runner.AndroidJUnitRunner
+DIAGNOSTIC_CLASS=com.ml.tblandroidtxt.EditorialP5EFreshRawRouteDiagnosticInstrumentedTest
+DIAGNOSTIC_METHOD=persistedRawRouteDiagnosticRunsOnlyWhenExplicitlyOptedIn
+DIAGNOSTIC_ARGUMENT_NAME=p5e_fresh_raw_route_diagnostic
+DIAGNOSTIC_ARGUMENT_VALUE=YES
+LIVE_ARGUMENT=ABSENT
+ALLOW_REPLACE_EXISTING_TEST_PACKAGE_WITH_ADB_INSTALL_R_ONCE=true
+ALLOW_EXACT_DIAGNOSTIC_METHOD_ONLY=true
+ALLOW_SINGLE_INVOCATION=true
+ALLOW_POST_RUN_READ_ONLY_VERIFICATION=true
+PROVIDER_CALL_BUDGET=0
+PRODUCTION_PACKAGE_OPERATIONS=0
+FORBID_FULL_CLASS=true
+FORBID_RERUN=true
+FORBID_LIVE_ARGUMENT=true
+FORBID_AUTHORIZATION_ATTEMPT_RECONCILIATION=true
+FORBID_PROVIDER_API=true
+FORBID_CURRENT_DB_MUTATION=true
+FORBID_UNINSTALL_CLEAR_RESET_DOWNGRADE=true
+FORBID_CONNECTED_ANDROID_TEST=true
+~~~

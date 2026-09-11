@@ -540,13 +540,32 @@ The current state is the A2 fail-closed result, not the historical
 `42BAA89A70392DDA11868C3FF11EED18D602DFBDC878207E349EEB55A07EEB8A`.
 The single-run A2 approval is consumed and cannot be reused.
 
-A3.1 is host-only and must not use ADB, read persisted settings, alter
-SharedPreferences, open the current DB, create authorization/attempt/
-reconciliation, call a provider, retry, repair or RECONCILE. Its only allowed
-outputs are current-status documentation, a test-only redacted boolean route
-diagnostic, offline tests and a private AndroidTest artifact. A3.2 requires a
-new owner approval that pins that artifact and permits exactly one diagnostic
+A3.1 completed host-only and used no ADB, persisted-settings read, current DB,
+instrumentation, provider, authorization, attempt or reconciliation. It added
+the test-only redacted boolean route diagnostic and compiled a private
+AndroidTest artifact; it did not install or run that artifact. A3.2 requires a
+new owner approval that pins the artifact and permits exactly one diagnostic
 method; it is not authorized by A2.
+
+```text
+testSourceCommit=89eef75a4a62e5674d02b7e48eaaff012d9a7ae0
+testApkPath=D:\P5E-private\fresh-raw-route-diagnostic-a3-20260912-002937-test-apk\app-debug-androidTest.apk
+testApkSha256=64A9976F43F04397DF0E593F21E7AE154CDED1ED6749294F3B1E5F9D2A77757A
+testCertificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+testPackage=com.ml.tblandroidtxt.test
+testTargetPackage=com.ml.tblandroidtxt
+testRunner=androidx.test.runner.AndroidJUnitRunner
+testApkBytes=1326212
+testApkInstalled=false
+providerCalls=0
+deviceOperations=0
+currentDbMutation=0
+```
+
+The exact A3.2 request is below. It permits one test-package replacement and
+one diagnostic method only; the live argument is absent, the provider budget
+is zero, the full class/rerun is forbidden, and the A2 approval is explicitly
+not reusable.
 
 ```text
 P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED

@@ -1419,7 +1419,7 @@ HISTORICAL_CODE196_PRESERVATION_FAILED
 PILOT_DATA_PRESERVATION_FAILED
 ~~~
 
-## P5E.9B-A2 zero-call preflight result
+## P5E.9B-A2 zero-call preflight result (historical runtime evidence)
 
 The owner-approved A2 scope allowed one test-package replacement and one direct
 preflight invocation. It did not allow live dispatch, authorization,
@@ -1524,3 +1524,148 @@ PILOT_DATA_PRESERVATION_FAILED
 The single-run A2 approval is not reusable. A new owner decision is required
 before any further device or settings action. No live authorization has been
 created or consumed.
+
+## P5E.9B-A3.1 — current host-only status synchronization and redacted route diagnostic
+
+### Scope and baseline
+
+The A3.1 group started from branch `feature/v4.18`, documentation baseline
+HEAD `6a35b2de1ebbb4dcdb6e47cde8d0a1d060781d5e`, implementation baseline
+`a0009f04139431f0bee38d049f9b32e2b6b04c41` and a clean worktree. No ADB,
+device setting read, current-DB read/write, instrumentation, provider/API call,
+authorization, attempt or reconciliation occurred. The installed code207 and
+schema-v24 facts remain prior read-only evidence; they were not revalidated in
+this host-only group.
+
+The A2 result remains a typed fail-closed route-precondition stop. Its
+redacted evidence SHA-256 is
+`42BAA89A70392DDA11868C3FF11EED18D602DFBDC878207E349EEB55A07EEB8A`. The A2
+single-run approval is consumed and was not reused. No setting value was read
+or logged to identify the mismatch.
+
+### PreTag false-green guard
+
+The top-level v4.18 checklist keeps current P5/P5E closure unchecked because
+there is no accepted RAW predecessor, REPORT_L1 or receipt. Running
+`scripts/verify-release-workflow.ps1 -ChecklistPath release_checklists/v4.18-editorial-v5-safe-4-1-3.md -Gate PreTag -ExpectedVersion 4.18`
+failed closed with `Step 09 is not complete for gate PreTag`. No
+`P5E_WORKFLOW_GATE_FALSE_GREEN` condition was observed; no tag or release was
+attempted.
+
+### Test-only diagnostic
+
+Test-only commit:
+`89eef75a4a62e5674d02b7e48eaaff012d9a7ae0`.
+
+`EditorialP5EFreshRawRouteDiagnosticInstrumentedTest` has a separate opt-in
+method `persistedRawRouteDiagnosticRunsOnlyWhenExplicitlyOptedIn`. Its first
+executable statement checks
+`p5e_fresh_raw_route_diagnostic=YES`. Only after that check does it call
+`SettingsStore.load` once. It computes and emits only
+`providerMatch`, `modelMatch`, `endpointMatch` and `routeMatch`; the latter is
+the conjunction of the three component booleans and is checked against the
+production-owned route predicate. It emits no actual provider/model/endpoint,
+API key, source text, prompt, request body or response body. It does not call
+`SettingsStore.save`, open the DB, construct a provider/client/request or call
+`preflightOnly`.
+
+The same AndroidTest-only source contains synthetic in-memory cases for the
+exact route, each individual mismatch, provider/model case behavior, endpoint
+trailing-slash and surrounding-whitespace normalization, conjunction
+invariance and output allowlisting. They were compiled, not run through
+instrumentation in A3.1.
+
+### Build and artifact evidence
+
+`:app:compileDebugAndroidTestJavaWithJavac --no-daemon` and
+`:app:assembleDebugAndroidTest --no-daemon --console=plain` both returned
+`BUILD SUCCESSFUL`. No production APK was rebuilt. The new private test
+artifact is:
+
+~~~
+path=D:\P5E-private\fresh-raw-route-diagnostic-a3-20260912-002937-test-apk\app-debug-androidTest.apk
+package=com.ml.tblandroidtxt.test
+targetPackage=com.ml.tblandroidtxt
+runner=androidx.test.runner.AndroidJUnitRunner
+sourceCommit=89eef75a4a62e5674d02b7e48eaaff012d9a7ae0
+sha256=64A9976F43F04397DF0E593F21E7AE154CDED1ED6749294F3B1E5F9D2A77757A
+certificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+bytes=1326212
+installed=false
+~~~
+
+The frozen production artifact was not rebuilt and remains
+`2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD` in both
+artifact and backup. The production source ZIP remains
+`B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348` in both
+locations.
+
+### A3.2 approval request
+
+The following is an approval request, not an approval and not a RAW
+authorization. It must not be inferred from A2.
+
+~~~
+P5E_9B_A3_2_ROUTE_DIAGNOSTIC_OWNER_APPROVAL_REQUEST
+APPROVAL_STATUS=REQUIRED
+APPROVAL_SCOPE_SINGLE_RUN=true
+TARGET_DEVICE=15e84958
+TARGET_PRODUCTION_PACKAGE=com.ml.tblandroidtxt
+INSTALLED_PRODUCTION_VERSION=v4.17-p5e.11
+INSTALLED_PRODUCTION_VERSION_CODE=207
+INSTALLED_PRODUCTION_APK_SHA256=2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD
+INSTALLED_PRODUCTION_CERTIFICATE_SHA256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+INSTALLED_DEVICE_SIGNATURE_TOKEN=abebea4b
+CURRENT_DB_SHA256=3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391
+CURRENT_DB_SCHEMA=24
+TEST_APK_PATH=D:\P5E-private\fresh-raw-route-diagnostic-a3-20260912-002937-test-apk\app-debug-androidTest.apk
+TEST_APK_SHA256=64A9976F43F04397DF0E593F21E7AE154CDED1ED6749294F3B1E5F9D2A77757A
+TEST_APK_CERTIFICATE_SHA256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+TEST_SOURCE_COMMIT=89eef75a4a62e5674d02b7e48eaaff012d9a7ae0
+TEST_PACKAGE=com.ml.tblandroidtxt.test
+TEST_RUNNER=androidx.test.runner.AndroidJUnitRunner
+DIAGNOSTIC_CLASS=com.ml.tblandroidtxt.EditorialP5EFreshRawRouteDiagnosticInstrumentedTest
+DIAGNOSTIC_METHOD=persistedRawRouteDiagnosticRunsOnlyWhenExplicitlyOptedIn
+DIAGNOSTIC_ARGUMENT_NAME=p5e_fresh_raw_route_diagnostic
+DIAGNOSTIC_ARGUMENT_VALUE=YES
+LIVE_ARGUMENT=ABSENT
+ALLOW_REPLACE_EXISTING_TEST_PACKAGE_WITH_ADB_INSTALL_R_ONCE=true
+ALLOW_ONE_DIAGNOSTIC_METHOD=true
+ALLOW_SINGLE_INVOCATION=true
+ALLOW_POST_RUN_READ_ONLY_VERIFICATION=true
+PROVIDER_CALL_BUDGET=0
+PRODUCTION_PACKAGE_OPERATIONS=0
+FORBID_FULL_CLASS=true
+FORBID_RERUN=true
+FORBID_LIVE_ARGUMENT=true
+FORBID_AUTHORIZATION_CREATION_OR_CONSUMPTION=true
+FORBID_ATTEMPT_OR_RECONCILIATION=true
+FORBID_PROVIDER_API=true
+FORBID_CURRENT_DB_MUTATION=true
+FORBID_UNINSTALL_CLEAR_RESET_DOWNGRADE=true
+FORBID_CONNECTED_ANDROID_TEST=true
+FORBID_A2_APPROVAL_REUSE=true
+~~~
+
+### Current status after A3.1
+
+~~~
+P5E_9B_A3_1_HOST_ONLY_PASS
+P5E_9B_ROUTE_DIAGNOSTIC_ARTIFACT_BUILT_NOT_INSTALLED
+P5E_9B_A3_2_DEVICE_DIAGNOSTIC_APPROVAL_REQUIRED
+P5E_9B_A4_REMEDIATION_NOT_SELECTED
+RAW_AUTHORIZATION_REQUIRED
+NO_AUTHORIZATION_CREATED
+NO_LIVE_CALL_PERFORMED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
+P6_NOT_READY
+HISTORICAL_CODE196_PRESERVATION_FAILED
+PILOT_DATA_PRESERVATION_FAILED
+~~~
+
+`P5E_9A_VALID_AUTHORIZATION_LOCAL_PATH_PASS` and
+`FRESH_RAW_EXACT_PREFLIGHT_READY` remain unclaimed. The next and only step is
+the separate A3.2 owner decision for the redacted diagnostic. No provider,
+authorization, attempt, reconciliation or P6 action is authorized.
