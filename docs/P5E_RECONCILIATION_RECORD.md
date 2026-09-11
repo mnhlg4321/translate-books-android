@@ -27,7 +27,8 @@ I/O logging và không lưu prompt, response body, source text hoặc secret.
 | Current installed code206 production APK SHA-256 | `F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080`; source commit `049e72b5769f8b3fdcb6f50646d1f0ead3043940`; certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
 | Superseded candidate-aligned test APK | `3838028BC2CE19CBB99B004041383CD5056B6470DA4496A467DBFD75083230B2`, test-source commit `f90c0372c019c0d3970efb298b64b6a4addcfd4f`; direct boundary run `4/5`, query defect; not reused |
 | Corrected QF test APK SHA-256 (historical) | `68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A`, test-source commit `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; separately approved and installed only as `com.ml.tblandroidtxt.test` |
-| New LQ candidate-aligned test APK SHA-256 | `9DE2A9F167960A2DA0D5D523A270F35459773F601D0CB84872432B9B576227B2`, source snapshot `995d3b6c9678e93905b3802cf22eee0b091b1bb3`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; outside Git, not installed |
+| Superseded LQ candidate-aligned test APK | `9DE2A9F167960A2DA0D5D523A270F35459773F601D0CB84872432B9B576227B2`, source snapshot `995d3b6c9678e93905b3802cf22eee0b091b1bb3`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; outside Git, not installed, not approved |
+| New QF2 candidate-aligned test APK | `50BC25F1C24E9588F430EE00809E9B6C8E126B5EA975782FA556254840DDA587`, test-source commit `f2695c862a9b860e08fd01f932377ec5576d6ad1`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; outside Git, not installed, not approved |
 | Pre-candidate clean test APK SHA-256 | `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456`; historical attribution only |
 | Package / test package | `com.ml.tblandroidtxt` / `com.ml.tblandroidtxt.test` |
 | Candidate/installed APK certificate SHA-256 | `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
@@ -126,7 +127,7 @@ DB code196. Cặp cài `adb install -r` code197 → code198 và test
 ở DB đã dựng lại còn nguyên qua reopen/upgrade trong phạm vi đó. Probe cô lập,
 không provider và không chạm pilot DB, dùng evaluation ID lịch sử
 `f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1` đã tái tạo đúng binding
-`2e5c80…82520` và run `7d804f…072f0`; đây chỉ là bằng chứng hàm dẫn xuất
+`2e5c80cc6815935688b68cbe0fa3e9aab6e81520a3464e5115374ad5b7182520` và run `7d804fa125728561c32ac4fa52df44d80f84d7cf8e9207bc69594f155ae072f0`; đây chỉ là bằng chứng hàm dẫn xuất
 identity, không khôi phục attempt/reconciliation row đã mất.
 
 Code201 (`v4.17-p5e.5`) là artifact pre-patch, không được dùng làm candidate
@@ -284,7 +285,7 @@ binding fake E2E đã hoàn tất local-only trên binding mới; không có liv
 | Candidate | `v4.17-p5e.6 / code202`, source commit `4140651d860e4ee11ce7e074970761666c575594`, APK SHA-256 `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
 | Pre-upgrade installed | `v4.17-p5e.3 / code199`, APK SHA-256 `870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09`, schema `v24`, data `RECONSTRUCTED_ONLY` |
 | Installed after G2 | `v4.17-p5e.6 / code202`, APK SHA-256 `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`, schema `v24`, data `RECONSTRUCTED_ONLY`; current candidate device-verified |
-| Test APK attribution | Candidate-aligned APK SHA-256 `63D3093CF68700A563CA979A9D15C3652FD8AB1DE60B219BDB35AE19442F76BC`, test-source commit `424278e44c042b882d1888f45d5c4b5b944e0dca`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`, direct instrumentation `4/4`; pre-candidate `501653...` remains historical |
+| Test APK attribution | Candidate-aligned APK SHA-256 `63D3093CF68700A563CA979A9D15C3652FD8AB1DE60B219BDB35AE19442F76BC`, test-source commit `424278e44c042b882d1888f45d5c4b5b944e0dca`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`, direct instrumentation `4/4`; pre-candidate `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456` remains historical |
 | Historical | code196/schema v24 original pilot data lost; code189/code191 and consumed authorizations remain historical |
 
 ### Owner approval đã được ghi nhận — local-only
@@ -452,8 +453,10 @@ HISTORICAL_CODE196_PRESERVATION_FAILED
 ```
 
 This initial freeze is superseded by the P5E.9A-EVAL source correction below.
-Its observed `3ce…` row and zero-count result remain valid read-only evidence;
-the `f319…` value was a stale runner expectation, not a reason to edit the DB.
+Its observed `3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1` row and
+zero-count result remain valid read-only evidence; the
+`f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1` value was a stale
+runner expectation, not a reason to edit the DB.
 
 ## P5E.9A-EVAL — Evaluation provenance correction and zero-call boundary
 
@@ -478,11 +481,11 @@ unchanged.
 | Evaluation outcome/time | `DATA_COMPATIBLE` / `1789048497413` |
 | Import state/storage | `STORED_READY_FOR_CERTIFICATION` / valid stored-ready state (`storage_moved=1`) |
 | Import pack identity | `com.ml.tblandroidtxt.editorial.safe4.full / 4.1.3` |
-| Run declaration evaluation | same exact `3ce…:compatibility:v1` |
+| Run declaration evaluation | same exact `3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1` |
 
 The production `EditorialPackSelectionPolicy.resolve()` semantics select this
 trusted evaluation for the canonical pack, and rehydrating the binding row
-recomputes the requested binding identity. `f319…:compatibility:v1` is not the
+recomputes the requested binding identity. `f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1` is not the
 evaluation frozen into this fresh binding; no claim is made about whether that
 ID exists elsewhere in history.
 
@@ -490,12 +493,13 @@ Gate: `FRESH_BINDING_EVALUATION_PROVENANCE_CHARACTERIZED` / `NO_DB_MUTATION`.
 
 ### E2–E5 — Test-first correction and isolated fixture
 
-The new host test first failed against the old runner constant (`3ce…` expected,
-`f319…` actual) with one failure and zero provider calls. The minimal production
+The new host test first failed against the old runner constant
+(`3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1` expected,
+`f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1` actual) with one failure and zero provider calls. The minimal production
 patch in implementation commit `049e72b5769f8b3fdcb6f50646d1f0ead3043940` pins
-the official `3ce…` record; no SQL, migration, pack, profile or authority was
+the official `3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1` record; no SQL, migration, pack, profile or authority was
 changed. Candidate-boundary tests now use the same exact ID and include the
-historical-`f319…` authorization mismatch assertion; these AndroidTest paths
+historical-`f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1` authorization mismatch assertion; these AndroidTest paths
 compile but remain pending candidate-aligned device execution. The intended
 typed result is `P5E_FRESH_RAW_AUTHORIZATION_MISMATCH` before provider setup.
 
@@ -896,3 +900,161 @@ PILOT_DATA_PRESERVATION_FAILED
 The single next step is a separate owner approval block pinning the exact
 code207 production APK and new test APK, then a later guarded install/device
 zero-call rerun. It is not permission to create P5E.9B authorization.
+
+## P5E.9A-LQ-QF2 — code207 test-artifact alignment (current host-only stop)
+
+QF2 was limited to the AndroidTest artifact. The required starting baseline was
+branch `feature/v4.18`, HEAD
+`6c546b6f3fba3203fa3e127f502a76ff7e3550d6`, production fix ancestor
+`ff6821a5de6f825c55e35f8570dfbf074b4e64b5` and prior test coverage ancestor
+`995d3b6c9678e93905b3802cf22eee0b091b1bb3`. The worktree was clean. The
+production package, schema, source, pack, profile, authority and fresh
+identity were not changed.
+
+### QF2 test-only correction
+
+The characterization found the single stale AndroidTest expectation
+`EXPECTED_CANDIDATE_VERSION_CODE = 206L` while the frozen production candidate
+is code207. The minimal patch changed it to `207L` and renamed
+`schemaFailureIsTypedBeforeProviderAndDoesNotMutate` to
+`schemaFailureReturnsCheckFailedAndDoesNotMutate`. No production source,
+schema/migration, build/version metadata, canonical fixture, route, compact
+wire contract or output cap changed. No `206L` pin remains in the app source,
+test source or AndroidTest source search scope.
+
+```text
+testOnlyCommit=f2695c862a9b860e08fd01f932377ec5576d6ad1
+androidTestCompile=PASS
+connectedAndroidTest=NOT_RUN
+productionApkRebuilt=false
+deviceOperationCount=0
+adbInstrumentation=NOT_RUN
+providerCalls=0
+currentDbOpenedOrMutated=false
+authorizationCreated=0
+attemptCreated=0
+reconciliationCreated=0
+gitDiffCheck=PASS
+secretScan=no matches
+```
+
+The new test artifact was copied outside Git into a new private directory:
+
+```text
+testPackage=com.ml.tblandroidtxt.test
+targetPackage=com.ml.tblandroidtxt
+targetCandidateVersion=v4.17-p5e.11
+targetCandidateVersionCode=207
+testRunner=androidx.test.runner.AndroidJUnitRunner
+testSourceCommit=f2695c862a9b860e08fd01f932377ec5576d6ad1
+testApkPath=D:\P5E-private\fresh-raw-lineage-lq-qf2-20260911-204314-test-apk\app-debug-androidTest.apk
+testApkSha256=50BC25F1C24E9588F430EE00809E9B6C8E126B5EA975782FA556254840DDA587
+testCertificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+testApkBytes=1313798
+testApkLastWrite=2026-09-11 20:42:59 +07:00
+testArtifactCaptured=2026-09-11 20:43:14 +07:00
+testApkVersionCodeMetadata=not_present_in_androidTest_manifest
+deviceInstalled=false
+ownerApproved=false
+```
+
+The previous LQ test artifact is explicitly superseded and was not installed:
+
+```text
+supersededTestApkPath=D:\P5E-private\fresh-raw-lineage-lq-20260911-2018-test-apk\app-debug-androidTest.apk
+supersededTestApkSha256=9DE2A9F167960A2DA0D5D523A270F35459773F601D0CB84872432B9B576227B2
+supersededTestSourceCommit=995d3b6c9678e93905b3802cf22eee0b091b1bb3
+supersededStatus=SUPERSEDED_NOT_APPROVED_NOT_INSTALLED
+```
+
+### Frozen production candidate revalidation
+
+The code207 production candidate was hashed again without rebuilding. Artifact
+and backup APKs and source ZIPs remain byte-identical:
+
+```text
+productionVersion=v4.17-p5e.11
+productionVersionCode=207
+productionApkSha256=2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD
+productionSourceZipSha256=B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348
+productionCertificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+artifactApkPath=D:\App Translate Books\App Translate Books-translation-profile\artifacts\builds\v4.17-p5e.11\build-20260911-201725\TranslateBooks-v4.17-p5e.11-code207.apk
+backupApkPath=D:\App Translate Books\App Translate Books-translation-profile\backup\builds\v4.17-p5e.11\build-20260911-201725\TranslateBooks-v4.17-p5e.11-code207.apk
+artifactBackupByteEqual=true
+productionRebuild=false
+```
+
+The device remains recorded at the prior owner-approved code206 baseline with
+schema v24, signature token `abebea4b` and DB SHA-256
+`3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391`. QF2 did
+not read, install, replace, uninstall or instrument the device, so this is a
+pinned pre-existing device fact rather than new device evidence. The current
+data classification remains `RECONSTRUCTED_ONLY`; historical
+`HISTORICAL_CODE196_PRESERVATION_FAILED` and
+`PILOT_DATA_PRESERVATION_FAILED` are unchanged.
+
+### New test-artifact approval request
+
+This is an approval request, not an approval and not a RAW authorization:
+
+```text
+P5E_9A_LQ_QF2_TEST_APK_OWNER_APPROVAL_REQUEST
+TARGET_DEVICE=15e84958
+TARGET_PRODUCTION_PACKAGE=com.ml.tblandroidtxt
+INSTALLED_VERSION_CODE=206
+INSTALLED_PRODUCTION_APK_SHA256=F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080
+INSTALLED_PRODUCTION_CERTIFICATE_SHA256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+INSTALLED_DEVICE_SIGNATURE_TOKEN=abebea4b
+INSTALLED_SCHEMA_VERSION=24
+CURRENT_DB_SHA256=3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391
+CANDIDATE_VERSION=v4.17-p5e.11
+CANDIDATE_VERSION_CODE=207
+CANDIDATE_APK_SHA256=2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD
+CANDIDATE_SOURCE_ZIP_SHA256=B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348
+CANDIDATE_CERTIFICATE_SHA256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+FRESH_SELECTOR=p5e-fresh-mercedes-vol5-20260911-01
+FRESH_CHAPTER_KEY=001
+FRESH_BINDING=845976b3cde02a3bf0896b64efd208f42e40821317d1b7bffec7081e63e33cdf
+FRESH_RUN_DECLARATION=8466b95d96f958a97eb3ffd1eac5a32734023cafa1c230e696ad4253151a41dc
+FRESH_EVALUATION=3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1
+TEST_PACKAGE=com.ml.tblandroidtxt.test
+TEST_APK_PATH=D:\P5E-private\fresh-raw-lineage-lq-qf2-20260911-204314-test-apk\app-debug-androidTest.apk
+TEST_APK_SHA256=50BC25F1C24E9588F430EE00809E9B6C8E126B5EA975782FA556254840DDA587
+TEST_SOURCE_COMMIT=f2695c862a9b860e08fd01f932377ec5576d6ad1
+TEST_CERTIFICATE_SHA256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+TEST_RUNNER=androidx.test.runner.AndroidJUnitRunner
+ALLOW_TEST_PACKAGE_REPLACEMENT_ONLY=true
+ALLOW_DIRECT_AM_INSTRUMENT_ONLY=true
+ALLOW_SINGLE_METHOD_THEN_CLASS_ONLY=true
+FORBID_PROVIDER_API=true
+FORBID_AUTHORIZATION_ATTEMPT_RECONCILIATION=true
+FORBID_RETRY_REPAIR=true
+FORBID_PRODUCTION_INSTALL_UNINSTALL_CLEAR_RESET_DOWNGRADE=true
+FORBID_CONNECTED_ANDROID_TEST=true
+FORBID_CURRENT_DB_MUTATION=true
+```
+
+### QF2 exit state
+
+```text
+P5E_9A_LQ_TEST_VERSION_PIN_CORRECTED
+CODE207_PRODUCTION_CANDIDATE_UNCHANGED
+CODE207_ALIGNED_TEST_APK_BUILT
+P5E_9A_LQ_DEVICE_HELPER_EXECUTION_REQUIRED
+NEW_TEST_ARTIFACT_OWNER_APPROVAL_REQUIRED
+RAW_AUTHORIZATION_REQUIRED
+NO_AUTHORIZATION_CREATED
+NO_LIVE_CALL_PERFORMED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
+P6_NOT_READY
+HISTORICAL_CODE196_PRESERVATION_FAILED
+PILOT_DATA_PRESERVATION_FAILED
+```
+
+Do not mark this as `DEVICE_HELPER_PASS`,
+`VALID_AUTHORIZATION_LOCAL_PATH_PASS` or
+`FRESH_RAW_EXACT_PREFLIGHT_READY`. Stop here. The next action is separate owner
+approval for the exact new test artifact, followed by a future device helper
+rerun. P5E.9B authorization remains uncreated.

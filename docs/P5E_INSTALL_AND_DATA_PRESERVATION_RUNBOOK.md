@@ -182,7 +182,7 @@ NOT_CERTIFIED
 ## Historical P5E.9A-EVAL provenance correction — pre-QF result
 
 The earlier code202/G3/G4 and code204 freeze entries above remain prior
-evidence. The stale `f319…` value was a runner expectation; the persisted fresh
+evidence. The stale `f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1` value was a runner expectation; the persisted fresh
 binding was already correct with the official import-scoped evaluation
 `3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1`. The minimal correction
 is committed at `049e72b5769f8b3fdcb6f50646d1f0ead3043940`; no SQL, migration,
@@ -342,7 +342,8 @@ certificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c1
 artifactBackupByteEqual=true
 ```
 
-The candidate-aligned test APK is outside Git and not installed:
+The prior candidate-aligned test APK is superseded, not approved and not
+installed:
 
 ```text
 path=D:\P5E-private\fresh-raw-lineage-lq-20260911-2018-test-apk\app-debug-androidTest.apk
@@ -350,11 +351,55 @@ package=com.ml.tblandroidtxt.test
 sha256=9DE2A9F167960A2DA0D5D523A270F35459773F601D0CB84872432B9B576227B2
 certificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
 sourceSnapshot=995d3b6c9678e93905b3802cf22eee0b091b1bb3
+status=SUPERSEDED_NOT_APPROVED_NOT_INSTALLED
 ```
 
-The installed device remains code206 and the reconstructed current DB remains
-unchanged. This runbook therefore stops at `NEW_CANDIDATE_OWNER_APPROVAL_REQUIRED`;
-no fresh candidate device verification or valid-authorization local-path claim
-is made. The next action is a separate owner approval pinning both artifacts,
-followed by snapshot/restore and guarded installation. It is not P5E.9B
-authorization and does not permit a provider call.
+## P5E.9A-LQ-QF2 — code207 test-artifact alignment (current host stop)
+
+QF2 corrected only the AndroidTest version expectation from `206L` to `207L`
+and renamed the schema-failure test to match its typed-check scope. The
+production source, candidate APK, schema, canonical pack/profile/authority,
+binding/evaluation/run/chapter, route and output cap were not changed. The
+AndroidTest compilation passed, the test APK was built outside Git, and no
+production APK was rebuilt.
+
+```text
+testPackage=com.ml.tblandroidtxt.test
+targetPackage=com.ml.tblandroidtxt
+targetCandidateVersion=v4.17-p5e.11
+targetCandidateVersionCode=207
+testRunner=androidx.test.runner.AndroidJUnitRunner
+testSourceCommit=f2695c862a9b860e08fd01f932377ec5576d6ad1
+testApkPath=D:\P5E-private\fresh-raw-lineage-lq-qf2-20260911-204314-test-apk\app-debug-androidTest.apk
+testApkSha256=50BC25F1C24E9588F430EE00809E9B6C8E126B5EA975782FA556254840DDA587
+testCertificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+testApkBytes=1313798
+testApkLastWrite=2026-09-11 20:42:59 +07:00
+testArtifactCaptured=2026-09-11 20:43:14 +07:00
+testApkVersionCodeMetadata=not_present_in_androidTest_manifest
+status=BUILT_NOT_INSTALLED_NOT_APPROVED
+```
+
+The frozen production candidate was re-hashed without rebuilding:
+
+```text
+productionVersion=v4.17-p5e.11
+productionVersionCode=207
+productionApkSha256=2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD
+productionSourceZipSha256=B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348
+productionCertificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+artifactBackupByteEqual=true
+productionRebuild=false
+```
+
+The installed device remains the prior code206 baseline and this QF2 run did
+not issue any device or adb operation. The current DB remains classified as
+`RECONSTRUCTED_ONLY`; no DB was opened or changed. Provider calls,
+authorization creation/consumption, attempts, reconciliation, retry and repair
+are all `0` for QF2. The old test artifact is superseded. A separate owner
+approval is required for the new test APK before replacing only
+`com.ml.tblandroidtxt.test` and running direct instrumentation. This is not
+P5E.9B authorization and does not permit a provider call.
+
+The next action is exactly that test-artifact approval; do not prepare or
+consume RAW authorization until the device helper gate has been executed.

@@ -1,13 +1,13 @@
 # Build State
 
-- Status: P5E_0_DOCUMENTATION_CLEANUP_PASS / P5E_LOCAL_QA_PASS / INSTALL_GUARD_LOCAL_PASS / P5E_CANDIDATE_HASH_CERT_PIN_LOCAL_PASS / FRESH_PILOT_OWNER_APPROVED / BACKUP_RESTORE_LOCAL_PASS / P5E_9A_HOST_BOUNDARY_LOCAL_PASS / P5E_9A_EVALUATION_PROVENANCE_RESOLVED / P5E_9A_CODE206_GUARDED_INSTALL_PASS / P5E_9A_QF_ZERO_CALL_EVIDENCE_HISTORICAL / P5E_9A_LQ_HOST_FIX_BUILD_PASS / P5E_9A_LQ_DEVICE_HELPER_EXECUTION_REQUIRED / ANDROID_TEST_COMPILE_PASS / LQ_CANDIDATE_BUILD_ARCHIVED / NEW_CANDIDATE_OWNER_APPROVAL_REQUIRED / RAW_AUTHORIZATION_REQUIRED / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / DB_REOPEN_STALE_CLAIM_RECOVERY_VERIFIED / P5D_DEADLINE_BODY_READ_HARDENING_PASS / NO_LATE_COMMIT / NO_AUTOMATIC_REDISPATCH / CODE191_EXTERNAL_STATE_RECONCILED / COMPACT_RAW_WIRE_CONTRACT_LOCAL_PASS / STRUCTURED_OUTPUT_REQUEST_LOCAL_PASS / OUTPUT_SIZE_WITHIN_BUDGET / RAW_REPLAY_PROTECTION_PASS / HISTORICAL_CODE196_PRESERVATION_FAILED / PILOT_DATA_PRESERVATION_GATE_FAILED_ORIGINAL_CODE196_DB_LOST_RECONSTRUCTED_ONLY / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
+- Status: P5E_0_DOCUMENTATION_CLEANUP_PASS / P5E_LOCAL_QA_PASS / INSTALL_GUARD_LOCAL_PASS / P5E_CANDIDATE_HASH_CERT_PIN_LOCAL_PASS / FRESH_PILOT_OWNER_APPROVED / BACKUP_RESTORE_LOCAL_PASS / P5E_9A_HOST_BOUNDARY_LOCAL_PASS / P5E_9A_EVALUATION_PROVENANCE_RESOLVED / P5E_9A_CODE206_GUARDED_INSTALL_PASS / P5E_9A_QF_ZERO_CALL_EVIDENCE_HISTORICAL / P5E_9A_LQ_HOST_FIX_BUILD_PASS / ANDROID_TEST_COMPILE_PASS / P5E_9A_LQ_TEST_VERSION_PIN_CORRECTED / CODE207_PRODUCTION_CANDIDATE_UNCHANGED / CODE207_ALIGNED_TEST_APK_BUILT / P5E_9A_LQ_DEVICE_HELPER_EXECUTION_REQUIRED / NEW_TEST_ARTIFACT_OWNER_APPROVAL_REQUIRED / RAW_AUTHORIZATION_REQUIRED / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / DB_REOPEN_STALE_CLAIM_RECOVERY_VERIFIED / P5D_DEADLINE_BODY_READ_HARDENING_PASS / NO_LATE_COMMIT / NO_AUTOMATIC_REDISPATCH / CODE191_EXTERNAL_STATE_RECONCILED / COMPACT_RAW_WIRE_CONTRACT_LOCAL_PASS / STRUCTURED_OUTPUT_REQUEST_LOCAL_PASS / OUTPUT_SIZE_WITHIN_BUDGET / RAW_REPLAY_PROTECTION_PASS / HISTORICAL_CODE196_PRESERVATION_FAILED / PILOT_DATA_PRESERVATION_GATE_FAILED_ORIGINAL_CODE196_DB_LOST_RECONSTRUCTED_ONLY / PILOT_DATA_PRESERVATION_FAILED / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
 - Active authority: V5-SAFE.4.1.3-FULL; canonical plan `EDITORIAL_RECOVERY_V4_18.md`.
 - Workspace: D:\App Translate Books\App Translate Books-translation-profile.
 - Branch: feature/v4.18.
-- Current commit baseline: production fix commit `ff6821a` (`fix(p5e): harden fresh raw lineage query`); test-only coverage commit and build source snapshot are `995d3b6c9678e93905b3802cf22eee0b091b1bb3`; repository HEAD observed before this documentation snapshot is `995d3b6c9678e93905b3802cf22eee0b091b1bb3`. Candidate code204 is superseded as pre-correction evidence; code206 remains installed only under the prior owner-approved guarded-install scope. The production fix changes no schema, migration, pack, profile, authority or final report/receipt schema.
+- Current commit baseline: test-only correction commit `f2695c862a9b860e08fd01f932377ec5576d6ad1`; repository HEAD observed before this documentation snapshot is `f2695c862a9b860e08fd01f932377ec5576d6ad1`. Expected starting HEAD was `6c546b6f3fba3203fa3e127f502a76ff7e3550d6`; production lineage fix `ff6821a5de6f825c55e35f8570dfbf074b4e64b5` and prior test coverage `995d3b6c9678e93905b3802cf22eee0b091b1bb3` are ancestors. Candidate code204 is superseded as pre-correction evidence; code207 remains archived and code206 remains installed only under the prior owner-approved guarded-install scope. The test-only correction changes no production source, schema, migration, pack, profile, authority or final report/receipt schema.
 - Last validation package built: new archived production APK `4.17-p5e.11` / Android versionCode `207`, package `com.ml.tblandroidtxt`, event `build-20260911-201725`, APK SHA-256 `2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD`, source ZIP SHA-256 `B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348`, build source snapshot `995d3b6c9678e93905b3802cf22eee0b091b1bb3`, production fix commit `ff6821a`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; artifact and backup payloads are byte-identical. It has not been installed. The current device remains `v4.17-p5e.10`/code206, signature token `abebea4b`, schema v24, DB SHA-256 `3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391`, data `RECONSTRUCTED_ONLY`.
-- New candidate-aligned test APK is outside Git at `D:\P5E-private\fresh-raw-lineage-lq-20260911-2018-test-apk\app-debug-androidTest.apk`, package `com.ml.tblandroidtxt.test`, SHA-256 `9DE2A9F167960A2DA0D5D523A270F35459773F601D0CB84872432B9B576227B2`, test/build source snapshot `995d3b6c9678e93905b3802cf22eee0b091b1bb3`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; it has not been installed and has no owner approval yet.
-- Current phase: code191 metadata remains `EXTERNAL_CONFIRMED_CANCELLED`, not a `$0` billing conclusion. P5E.2-P5E.7 and the earlier QF `1/1` + `5/5` run remain historical zero-call evidence. LQ RED characterization reproduced the old `binding_identity` predicate failure on schema v24; the production-owned helper now executes all five lineage reads through the canonical attempt-identity joins and maps query/schema errors to typed `P5E_FRESH_RAW_LINEAGE_CHECK_FAILED`. Isolated AndroidTest coverage compiles, host engine/app/lint regression passes, and the new candidate is archived, but no device rerun was performed. Readiness and exact preflight claims are superseded until the new candidate/test artifacts receive separate owner approval and pass the direct device zero-call sequence. No current DB mutation, authorization, attempt, reconciliation, provider/API call, retry, repair or RECONCILE occurred; original code196 preservation remains failed and execution/certification remain disabled.
+- The old LQ test APK at `D:\P5E-private\fresh-raw-lineage-lq-20260911-2018-test-apk\app-debug-androidTest.apk` with SHA-256 `9DE2A9F167960A2DA0D5D523A270F35459773F601D0CB84872432B9B576227B2` is superseded and not approved for installation. The new test APK is outside Git at `D:\P5E-private\fresh-raw-lineage-lq-qf2-20260911-204314-test-apk\app-debug-androidTest.apk`, package `com.ml.tblandroidtxt.test`, runner `androidx.test.runner.AndroidJUnitRunner`, SHA-256 `50BC25F1C24E9588F430EE00809E9B6C8E126B5EA975782FA556254840DDA587`, size `1313798` bytes, test-source commit `f2695c862a9b860e08fd01f932377ec5576d6ad1`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; it has not been installed and has no owner approval yet.
+- Current phase: code191 metadata remains `EXTERNAL_CONFIRMED_CANCELLED`, not a `$0` billing conclusion. P5E.2-P5E.7 and the earlier QF `1/1` + `5/5` run remain historical zero-call evidence. LQ RED characterization reproduced the old `binding_identity` predicate failure on schema v24; the production-owned helper now executes all five lineage reads through the canonical attempt-identity joins and maps query/schema errors to typed `P5E_FRESH_RAW_LINEAGE_CHECK_FAILED`. QF2 corrected only the AndroidTest version expectation and test naming, compiled AndroidTest and built the new test artifact. Production code207 was not rebuilt, no device operation or adb command was performed, and no current DB mutation, authorization, attempt, reconciliation, provider/API call, retry, repair or RECONCILE occurred. Readiness and exact preflight claims remain unavailable until separate approval and direct device verification of the new test artifact.
 - Current data classification is `RECONSTRUCTED_ONLY` with a new fresh-pilot lineage appended; `RECONSTRUCTED_ONLY_FRESH_PILOT` is the private snapshot classification, not a recovery claim for code196.
 
 ## Source and authority identity
@@ -63,7 +63,7 @@
 - P5D.1/P5D.2 provider audit: authenticated OpenRouter Logs metadata matched the old app/model/time/request-size tuple and classified the external generation as `EXTERNAL_CONFIRMED_CANCELLED`; I/O logging remained disabled and P5D provider calls remain `0`.
 - P5D.3/P5D.4: additive v21 lifecycle, authorization-receipt and reconciliation owners; typed provider-failure taxonomy; non-reclaimable `RECOVERY_REQUIRED` gate; and redacted timing/generation metadata passed focused tests. Code186 device XML reports `124` test methods, `0` failures, `0` errors and `4` approved skips; engine `180/180`; app aggregate `645/645`.
 - P5D code189 local harness closure: `EditorialP5CExactBindingFakeE2EInstrumentedTest` `13/13 PASS`; immediate, 11-second delayed-with-legacy-cancel and 11-second delayed-without-legacy-cancel `1/1` each; schema/migration device classes `41/41`; full instrumentation `130 tests, 0 failures`; engine/app debug unit XML `396/396`; external qualification `306/306`; no provider call. Detailed evidence: `docs/P5D_LOCAL_HTTP_HARNESS_REPORT.md`.
-- P5D code189 DB readback: schema v22; historical VOL5 attempt remains `RECOVERY_REQUIRED`, prior authorization is consumed, response/report/receipt are absent, lifecycle and local reconciliation rows are absent for the historical attempt. RAW/DRAFT/GLOSSARY bytes match the binding; PRONOUN is 455 bytes/hash `63E79EEB…1A49C` raw with BOM and 452 bytes/hash `4947FF91…20686` after the existing BOM removal, so the semantic source identity matches.
+- P5D code189 DB readback: schema v22; historical VOL5 attempt remains `RECOVERY_REQUIRED`, prior authorization is consumed, response/report/receipt are absent, lifecycle and local reconciliation rows are absent for the historical attempt. RAW/DRAFT/GLOSSARY bytes match the binding; PRONOUN is 455 bytes/hash `63E79EEBCBFE6BEDCEA088640339EB7D05AEDA75C28FD4A4E17B282B8ED1A49C` raw with BOM and 452 bytes/hash `4947FF9184995BE5F850F2323FBE0A04C67302FB8D5AFB63CF12202B44720686` after the existing BOM removal, so the semantic source identity matches.
 - P5D controlled diagnostic preflight rerun: code189 `EditorialP5CExactBindingFakeE2EInstrumentedTest` `13/13 PASS`, live recovery inspection `1/1 PASS`, and engine `EditorialP5PilotExecutionBoundaryTest` `16/16 PASS`; provider calls `0`, pilot DB unchanged. See `docs/P5D_RAW_DIAGNOSTIC_PREFLIGHT.md`.
 - The approved authorization `P5D-VOL5-RAW-DIAGNOSTIC-20260909-01` was consumed once for the exact VOL5/chapter001 binding. One OpenRouter RAW primary call returned HTTP `200` with complete transport but ended at `2,048` output tokens (`finish=length`); app metrics were `20,327/2,048/22,375` tokens, reported cost `$0.0075392`, latency `20,590 ms`, schema/receipt invalid. Durable readback is `RECOVERY_REQUIRED` with lifecycle `RESPONSE_BODY_COMPLETE`, no response identity and zero report/receipt bytes. Full redacted evidence: `docs/P5D_RAW_DIAGNOSTIC_ATTEMPT_REPORT.md`.
 - Output-budget alignment and recovery-history hardening are complete without a provider call: the prior `4,096 → 2,048` clamp was reproduced test-first, then removed so authorization/request/HTTP use the exact cap; v23 adds append-only reconciliation history without replacing the immutable primary row. Code191 validation focused device evidence is recorded in `docs/P5D_RAW_ACCEPTANCE_PREFLIGHT.md`.
@@ -86,7 +86,7 @@
 - Build event source snapshot: `995d3b6c9678e93905b3802cf22eee0b091b1bb3`; production lineage fix `ff6821a`; code207 is an archived validation candidate, not a release build, and has not been installed. Source ZIP SHA-256: `B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348`.
 - Current installed baseline remains code206: `v4.17-p5e.10`, APK SHA-256 `F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080`, device `15e84958`, signature token `abebea4b`, schema v24 and DB SHA-256 `3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391`; it was installed once under the earlier owner-approved guarded path.
 - Historical QF candidate-aligned AndroidTest APK SHA-256: `68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A`; test-source commit `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`; it was separately approved, installed only as `com.ml.tblandroidtxt.test`, and passed `1/1` plus `5/5`; this is historical code206 zero-call evidence and is superseded for readiness by the LQ production fix.
-- New candidate-aligned AndroidTest APK: outside Git at `D:\P5E-private\fresh-raw-lineage-lq-20260911-2018-test-apk\app-debug-androidTest.apk`, SHA-256 `9DE2A9F167960A2DA0D5D523A270F35459773F601D0CB84872432B9B576227B2`, build source snapshot `995d3b6c9678e93905b3802cf22eee0b091b1bb3`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; not installed and not yet owner-approved.
+- Superseded LQ candidate-aligned AndroidTest APK: outside Git at `D:\P5E-private\fresh-raw-lineage-lq-20260911-2018-test-apk\app-debug-androidTest.apk`, SHA-256 `9DE2A9F167960A2DA0D5D523A270F35459773F601D0CB84872432B9B576227B2`, build source snapshot `995d3b6c9678e93905b3802cf22eee0b091b1bb3`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; not installed and not approved.
 - Code186 remains immutable historical evidence for the prior lifecycle baseline; it is not the current validation artifact.
 - Code184 remains immutable historical evidence for the pre-P5D live attempt; it is not the current validation artifact.
 - Code201 and code203 remain pre-patch/historical artifacts and are not valid evidence for the changed source. Code202 is the pre-install historical candidate and retains its prior package/hash/certificate/data readback; code204 remains pre-correction evidence and code205 is an intermediate dirty-source build, neither is an approval candidate. Code206 is the installed prior candidate for the evaluation-provenance correction under the explicit local-only approval. Fresh-pilot local/fake evidence and the QF device result are retained as prior evidence; no live RAW acceptance is claimed.
@@ -132,7 +132,7 @@ was not modified.
 - The local harness initially exposed a device freezer interruption at `DELAY_STARTED`; bounded cleanup and the test-only foreground keepalive resolved the local test hang. The code196 five-minute stalled-body run completed under app control without host force-stop. The former `PROCESS_RESTART_RECOVERY_VERIFIED` label is superseded by `DB_REOPEN_STALE_CLAIM_RECOVERY_VERIFIED`; the current evidence does not prove two independent app process invocations.
 - The current PRONOUN transport file includes a UTF-8 BOM, but the app-owned semantic bytes match the immutable binding. Do not silently change the normalization rule or rebind the project.
 - The original code196 pilot attempt/reconciliation rows are unavailable after the installer incident. Rehydrating source/pack data and reproducing an old deterministic identity in an isolated DB is not historical-row restoration; `PILOT_DATA_PRESERVED` therefore remains failed. No trusted code196 backup was found in the known artifact/backup roots; the private reconstructed snapshot and separate fresh-pilot snapshot are explicitly not historical recovery. Fresh selector/binding/run identities were created through the approved setup path; fresh snapshot manifest SHA-256 is `2BEA88D4B562DFFA0CEAE401E1BFA0ED50B353CCD014AA9840F15CE1FA7F35EF`, with source/pack hashes and readback invariants recorded outside Git. Fake predecessor rows remain isolated and current P5C/P5D counts are zero.
-- The prior P5E.9A freeze recorded a stale runner expectation (`f319…`) against the official fresh binding evaluation (`3ce…`). The source correction is committed at `049e72b5769f8b3fdcb6f50646d1f0ead3043940`; no SQL row was changed. The approved code206 install and post-install readback passed. QF corrected only the test-only SQL predicate through the required attempt-identity JOIN in commit `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`; AndroidTest compile and the corrected test APK build passed, with artifact SHA-256 `68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A`. After separate owner approval the test package was installed only, the failed method passed `1/1`, and the full class passed `5/5`; production code206 and the DB hash remained unchanged and provider calls stayed at `0`. This is historical QF evidence and is superseded for readiness by the current production lineage-query defect and its new candidate. Do not create RAW authorization or request provider access from this local result.
+- The prior P5E.9A freeze recorded a stale runner expectation (`f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1`) against the official fresh binding evaluation (`3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1`). The source correction is committed at `049e72b5769f8b3fdcb6f50646d1f0ead3043940`; no SQL row was changed. The approved code206 install and post-install readback passed. QF corrected only the test-only SQL predicate through the required attempt-identity JOIN in commit `34a4ec2832d71a488a2531a0e69a85261e9c9b9b`; AndroidTest compile and the corrected test APK build passed, with artifact SHA-256 `68DC191C1F30191AB17407EBDB85B940DD13C7B929CC2333A33F20ECCB415A1A`. After separate owner approval the test package was installed only, the failed method passed `1/1`, and the full class passed `5/5`; production code206 and the DB hash remained unchanged and provider calls stayed at `0`. This is historical QF evidence and is superseded for readiness by the current production lineage-query defect and its new candidate. Do not create RAW authorization or request provider access from this local result.
 
 ## P5E.9A-LQ — current production lineage-query fix stop
 
@@ -196,7 +196,7 @@ artifact=D:\App Translate Books\App Translate Books-translation-profile\artifact
 backup=D:\App Translate Books\App Translate Books-translation-profile\backup\builds\v4.17-p5e.11\build-20260911-201725
 ```
 
-The candidate-aligned test APK is also not installed:
+The superseded LQ test APK is not approved and must not be installed:
 
 ```text
 testPackage=com.ml.tblandroidtxt.test
@@ -204,19 +204,44 @@ testSourceSnapshot=995d3b6c9678e93905b3802cf22eee0b091b1bb3
 testApkSha256=9DE2A9F167960A2DA0D5D523A270F35459773F601D0CB84872432B9B576227B2
 testCertificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
 testApkPath=D:\P5E-private\fresh-raw-lineage-lq-20260911-2018-test-apk\app-debug-androidTest.apk
+status=SUPERSEDED_NOT_APPROVED_NOT_INSTALLED
+```
+
+QF2 corrected the AndroidTest version expectation from `206L` to `207L` and
+renamed the schema-failure test to match its typed-check scope. The test-only
+change was compiled and built without rebuilding production, touching the
+device, reading or writing the current DB, or calling a provider. The new
+candidate-aligned test APK is outside Git and remains uninstalled:
+
+```text
+testPackage=com.ml.tblandroidtxt.test
+targetPackage=com.ml.tblandroidtxt
+targetProductionVersion=v4.17-p5e.11
+targetProductionVersionCode=207
+testRunner=androidx.test.runner.AndroidJUnitRunner
+testSourceCommit=f2695c862a9b860e08fd01f932377ec5576d6ad1
+testApkSha256=50BC25F1C24E9588F430EE00809E9B6C8E126B5EA975782FA556254840DDA587
+testCertificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+testApkBytes=1313798
+testApkLastWrite=2026-09-11 20:42:59 +07:00
+testArtifactCaptured=2026-09-11 20:43:14 +07:00
+testApkPath=D:\P5E-private\fresh-raw-lineage-lq-qf2-20260911-204314-test-apk\app-debug-androidTest.apk
+testApkVersionCodeMetadata=not_present_in_androidTest_manifest
+status=BUILT_NOT_INSTALLED_NOT_APPROVED
 ```
 
 The installed device remains the prior owner-approved code206 artifact and
 the current DB remains `RECONSTRUCTED_ONLY` with the pinned hash and fresh
-tuple unchanged. The previous QF `1/1` and `5/5` result is retained as
-historical zero-call evidence, but the new production candidate has not passed
-device verification. Consequently the current gate is:
+tuple unchanged by this QF2 host-only work. No device operation or adb command
+was performed. The current gate is:
 
 ```text
-P5E_9A_LQ_HOST_FIX_BUILD_PASS
+P5E_9A_LQ_TEST_VERSION_PIN_CORRECTED
+CODE207_PRODUCTION_CANDIDATE_UNCHANGED
+CODE207_ALIGNED_TEST_APK_BUILT
 P5E_9A_LQ_DEVICE_HELPER_EXECUTION_REQUIRED
 P5E_9A_VALID_AUTHORIZATION_LOCAL_PATH_PASS: NOT_REACHED
-NEW_CANDIDATE_OWNER_APPROVAL_REQUIRED
+NEW_TEST_ARTIFACT_OWNER_APPROVAL_REQUIRED
 RAW_AUTHORIZATION_REQUIRED
 NO_AUTHORIZATION_CREATED
 NO_LIVE_CALL_PERFORMED
@@ -233,13 +258,59 @@ PILOT_DATA_PRESERVATION_FAILED
 Code189/code191 and their consumed authorizations remain historical and must
 not be reused. Code191 has the external P5E classification
 `EXTERNAL_CONFIRMED_CANCELLED`; it is not a `$0` billing conclusion. The QF
-test-only correction and the approved zero-call device rerun are complete:
-the single failed method passed `1/1`, the full class passed `5/5`, and the
-current DB hash remained unchanged. The next step is to prepare and separately
-request exact P5E.9B RAW authorization; do not create or consume it
-automatically and do not request provider access from this result. Keep
+test-only correction is complete, but the new artifact has not received owner
+approval and has not been installed or executed. The single next step is to
+obtain a separate approval for this exact test APK before any test-package
+installation and direct device zero-call rerun. It is not permission to
+prepare P5E.9B authorization. Keep
 `RAW_AUTHORIZATION_REQUIRED / NO_AUTHORIZATION_CREATED /
 NO_LIVE_CALL_PERFORMED / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED /
 RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED`.
+
+## P5E.9A-LQ-QF2 — code207 test-artifact alignment approval request
+
+The following block is a request template, not an approval and not a live
+authorization. It must be approved separately before device test-package
+installation:
+
+```text
+P5E_9A_LQ_QF2_TEST_ARTIFACT_OWNER_APPROVAL_REQUEST
+TARGET_DEVICE=15e84958
+TARGET_PRODUCTION_PACKAGE=com.ml.tblandroidtxt
+INSTALLED_PRODUCTION_VERSION=v4.17-p5e.10
+INSTALLED_PRODUCTION_VERSION_CODE=206
+INSTALLED_PRODUCTION_APK_SHA256=F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080
+INSTALLED_PRODUCTION_CERTIFICATE_SHA256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+INSTALLED_DEVICE_SIGNATURE_TOKEN=abebea4b
+INSTALLED_SCHEMA_VERSION=24
+CURRENT_DB_SHA256=3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391
+FROZEN_CANDIDATE_VERSION=v4.17-p5e.11
+FROZEN_CANDIDATE_VERSION_CODE=207
+FROZEN_CANDIDATE_APK_SHA256=2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD
+FROZEN_CANDIDATE_SOURCE_ZIP_SHA256=B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348
+FROZEN_CANDIDATE_CERTIFICATE_SHA256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+FRESH_SELECTOR=p5e-fresh-mercedes-vol5-20260911-01
+FRESH_CHAPTER_KEY=001
+FRESH_BINDING=845976b3cde02a3bf0896b64efd208f42e40821317d1b7bffec7081e63e33cdf
+FRESH_RUN_DECLARATION=8466b95d96f958a97eb3ffd1eac5a32734023cafa1c230e696ad4253151a41dc
+FRESH_EVALUATION=3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1
+TEST_PACKAGE=com.ml.tblandroidtxt.test
+TEST_APK_PATH=D:\P5E-private\fresh-raw-lineage-lq-qf2-20260911-204314-test-apk\app-debug-androidTest.apk
+TEST_APK_SHA256=50BC25F1C24E9588F430EE00809E9B6C8E126B5EA975782FA556254840DDA587
+TEST_SOURCE_COMMIT=f2695c862a9b860e08fd01f932377ec5576d6ad1
+TEST_CERTIFICATE_SHA256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+TEST_RUNNER=androidx.test.runner.AndroidJUnitRunner
+TARGET_PRODUCTION_APK_SHA256=2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD
+ALLOW_REPLACE_TEST_PACKAGE_ONLY=true
+ALLOW_DIRECT_AM_INSTRUMENT_ONLY=true
+ALLOW_SINGLE_METHOD_THEN_CLASS_ONLY=true
+FORBID_PROVIDER_API=true
+FORBID_AUTHORIZATION_ATTEMPT_RECONCILIATION=true
+FORBID_RETRY_REPAIR=true
+FORBID_PRODUCTION_INSTALL_UNINSTALL_CLEAR_RESET_DOWNGRADE=true
+FORBID_CONNECTED_ANDROID_TEST=true
+FORBID_CURRENT_DB_MUTATION=true
+FORBID_RAW_AUTHORIZATION_CREATION_OR_CONSUMPTION=true
+```
 
 This file is current-only; Git history preserves prior state.
