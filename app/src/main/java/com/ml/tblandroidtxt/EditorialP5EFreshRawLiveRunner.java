@@ -130,26 +130,32 @@ public final class EditorialP5EFreshRawLiveRunner {
                 || !CHAPTER_KEY.equals(authorization.chapterKey())) {
             return stop("P5E_FRESH_RAW_AUTHORIZATION_MISMATCH");
         }
-        EditorialP4Binding binding = new EditorialP4BindingDao(database)
-                .findByAttemptRequestSelector(SELECTOR).orElse(null);
+        EditorialP4Binding binding;
+        try {
+            binding = new EditorialP4BindingDao(database)
+                    .findByAttemptRequestSelector(SELECTOR).orElse(null);
+        } catch (RuntimeException error) {
+            return stop("P5E_FRESH_RAW_LINEAGE_CHECK_FAILED");
+        }
+        long persistedProjectId;
+        try {
+            persistedProjectId = binding == null ? -1L : projectIdFor(binding);
+        } catch (RuntimeException error) {
+            return stop("P5E_FRESH_RAW_LINEAGE_CHECK_FAILED");
+        }
         if (binding == null || !BINDING_IDENTITY.equals(binding.bindingIdentity())
                 || !RUN_DECLARATION_IDENTITY.equals(binding.runDeclarationIdentity())
                 || !CANONICAL_PACK_HASH.equals(binding.canonicalPackHash())
                 || !CANONICAL_PROFILE_HASH.equals(binding.canonicalProfileHash())
                 || !COMPATIBILITY_EVALUATION_ID.equals(binding.compatibilityEvaluationId())
-                || projectIdFor(binding) != projectId) {
+                || persistedProjectId != projectId) {
             return stop("P5E_FRESH_RAW_BINDING_MISMATCH");
         }
-        SQLiteDatabase db = database.editorialReadableDatabase();
-        if (count(db, "SELECT COUNT(*) FROM editorial_p5c_attempts WHERE binding_identity=?",
-                BINDING_IDENTITY) != 0L
-                || count(db, "SELECT COUNT(*) FROM editorial_p5d_authorization_receipts "
-                + "WHERE binding_identity=?", BINDING_IDENTITY) != 0L
-                || count(db, "SELECT COUNT(*) FROM editorial_p5d_reconciliation "
-                + "WHERE binding_identity=?", BINDING_IDENTITY) != 0L
-                || count(db, "SELECT COUNT(*) FROM editorial_p5d_reconciliation_history "
-                + "WHERE attempt_identity IN (SELECT attempt_identity FROM editorial_p5c_attempts "
-                + "WHERE binding_identity=?)", BINDING_IDENTITY) != 0L) {
+        FreshRawLineageCheck lineage = inspectLineage(database, BINDING_IDENTITY);
+        if (lineage.status() == FreshRawLineageCheck.Status.CHECK_FAILED) {
+            return stop("P5E_FRESH_RAW_LINEAGE_CHECK_FAILED");
+        }
+        if (lineage.status() == FreshRawLineageCheck.Status.ALREADY_USED) {
             return stop("P5E_FRESH_RAW_LINEAGE_ALREADY_USED");
         }
         try {
@@ -361,6 +367,101 @@ public final class EditorialP5EFreshRawLiveRunner {
                 new String[]{binding.bindingIdentity()})) {
             return cursor.moveToFirst() ? cursor.getLong(0) : -1L;
         }
+    }
+
+    /**
+     * Reads the complete fresh-lineage guard on the schema that owns each
+     * identity. Reconciliation, history and lifecycle rows are related to a
+     * binding through the durable attempt identity; they do not own a
+     * binding_identity column. All reads happen before the aggregate status is
+     * calculated so a schema drift in any constituent query fails closed.
+     */
+    static FreshRawLineageCheck inspectLineage(TranslationRepository database,
+                                                String bindingIdentity) {
+        try {
+            return inspectLineage(database == null ? null : database.editorialReadableDatabase(),
+                    bindingIdentity);
+        } catch (RuntimeException error) {
+            return FreshRawLineageCheck.checkFailed();
+        }
+    }
+
+    /** Package-private overload used by read-only instrumentation against a database handle. */
+    static FreshRawLineageCheck inspectLineage(SQLiteDatabase db, String bindingIdentity) {
+        if (db == null || bindingIdentity == null || bindingIdentity.isEmpty()) {
+            return FreshRawLineageCheck.checkFailed();
+        }
+        try {
+            long attempts = count(db,
+                    "SELECT COUNT(*) FROM editorial_p5c_attempts WHERE binding_identity=?",
+                    bindingIdentity);
+            long authorizationReceipts = count(db,
+                    "SELECT COUNT(*) FROM editorial_p5d_authorization_receipts "
+                            + "WHERE binding_identity=?", bindingIdentity);
+            long reconciliation = count(db,
+                    "SELECT COUNT(*) FROM editorial_p5d_reconciliation AS r "
+                            + "JOIN editorial_p5c_attempts AS a "
+                            + "ON a.attempt_identity = r.attempt_identity "
+                            + "WHERE a.binding_identity=?", bindingIdentity);
+            long reconciliationHistory = count(db,
+                    "SELECT COUNT(*) FROM editorial_p5d_reconciliation_history AS h "
+                            + "JOIN editorial_p5c_attempts AS a "
+                            + "ON a.attempt_identity = h.attempt_identity "
+                            + "WHERE a.binding_identity=?", bindingIdentity);
+            long lifecycle = count(db,
+                    "SELECT COUNT(*) FROM editorial_p5d_network_lifecycle AS l "
+                            + "JOIN editorial_p5c_attempts AS a "
+                            + "ON a.attempt_identity = l.attempt_identity "
+                            + "WHERE a.binding_identity=?", bindingIdentity);
+            if (attempts < 0L || authorizationReceipts < 0L || reconciliation < 0L
+                    || reconciliationHistory < 0L || lifecycle < 0L) {
+                return FreshRawLineageCheck.checkFailed();
+            }
+            boolean used = attempts != 0L || authorizationReceipts != 0L
+                    || reconciliation != 0L || reconciliationHistory != 0L
+                    || lifecycle != 0L;
+            return new FreshRawLineageCheck(
+                    used ? FreshRawLineageCheck.Status.ALREADY_USED
+                            : FreshRawLineageCheck.Status.UNUSED,
+                    attempts, authorizationReceipts, reconciliation,
+                    reconciliationHistory, lifecycle);
+        } catch (RuntimeException error) {
+            return FreshRawLineageCheck.checkFailed();
+        }
+    }
+
+    static final class FreshRawLineageCheck {
+        enum Status { UNUSED, ALREADY_USED, CHECK_FAILED }
+
+        private final Status status;
+        private final long attempts;
+        private final long authorizationReceipts;
+        private final long reconciliation;
+        private final long reconciliationHistory;
+        private final long lifecycle;
+
+        private FreshRawLineageCheck(Status status, long attempts,
+                                     long authorizationReceipts, long reconciliation,
+                                     long reconciliationHistory, long lifecycle) {
+            this.status = status;
+            this.attempts = attempts;
+            this.authorizationReceipts = authorizationReceipts;
+            this.reconciliation = reconciliation;
+            this.reconciliationHistory = reconciliationHistory;
+            this.lifecycle = lifecycle;
+        }
+
+        static FreshRawLineageCheck checkFailed() {
+            return new FreshRawLineageCheck(Status.CHECK_FAILED,
+                    -1L, -1L, -1L, -1L, -1L);
+        }
+
+        Status status() { return status; }
+        long attempts() { return attempts; }
+        long authorizationReceipts() { return authorizationReceipts; }
+        long reconciliation() { return reconciliation; }
+        long reconciliationHistory() { return reconciliationHistory; }
+        long lifecycle() { return lifecycle; }
     }
 
     private static long count(SQLiteDatabase db, String sql, String... args) {
