@@ -533,22 +533,26 @@ This does not claim `P5E_9A_VALID_AUTHORIZATION_LOCAL_PATH_PASS` or a live
 RAW acceptance: the owner approval forbade valid-authorization dispatch. It is
 historical DV evidence and not the current A3 boundary.
 
-## Current active boundary — P5E.9B-A3.2 host-only preparation
+## Current active boundary — P5E.9B-A3.2 device diagnostic result, post-run verification blocked
 
 The current state is the A2 fail-closed result, not the historical
 `FRESH_RAW_EXACT_PREFLIGHT_READY` result above. A2 evidence SHA-256 is
 `42BAA89A70392DDA11868C3FF11EED18D602DFBDC878207E349EEB55A07EEB8A`.
 The single-run A2 approval is consumed and cannot be reused.
 
-A3.1 has a technical host-only result. A3.1R completed the current host-only
-corrective closure: it synchronizes the active authority and changes the
-test-only diagnostic evidence channel so the four redacted booleans are emitted
-through instrumentation status rather than relying on Logcat. A3.1R used no
-ADB, persisted-settings read, current DB, instrumentation, provider,
-authorization, attempt or reconciliation. Host-only A3.2 preparation is now
-complete: the A3R checksum manifest verified `8/8` and the redacted raw-status
-parser fixture suite verified `10/10`. A3.2 is not approved; its new request
-is below and the A2 approval is not reusable.
+A3.1/A3.1R and the A3.2 host preparation are historical evidence. The owner-
+approved A3.2 run replaced the test package once and invoked exactly one
+diagnostic method. The raw result carried four redacted booleans through
+instrumentation status: provider `true`, model `false`, endpoint `true`, route
+`false`; the conjunction was valid and the test result was `OK (1 test)`.
+The A3.2 run is not a valid-authorization or exact-preflight acceptance.
+
+Pre-run read-only verification passed for production code207, the A2 test APK,
+DB schema/hash/integrity/FK, fresh tuple/source hashes and zero lineage counts.
+The A3R test package was replaced once and immediately read back with its exact
+hash. During the first post-run read-only sequence the device became unavailable
+to ADB. Settings-after, DB-after and complete lineage preservation are unknown;
+no retry, workaround or rollback was performed.
 The current PreTag result is `FAIL` at `Step 05`; the earlier `Step 09` result
 is historical A3.1 evidence and is not the current gate result.
 
@@ -581,21 +585,30 @@ testPackage=com.ml.tblandroidtxt.test
 testTargetPackage=com.ml.tblandroidtxt
 testRunner=androidx.test.runner.AndroidJUnitRunner
 testApkBytes=1326403
-testApkInstalled=false
-testApkStatus=BUILT_NOT_INSTALLED
+testApkInstalled=true
+testApkStatus=INSTALLED_TEST_ONLY_ONCE; post-run pull not validated after device loss
 diagnosticStatusKeys=4
 providerCalls=0
 deviceOperations=0
 currentDbMutation=0
 ```
 
-The exact A3.2 request must pin the corrected A3R artifact. It permits one
-test-package replacement and one diagnostic method only; the live argument is
-absent, the provider budget is zero, the full class/rerun is forbidden, and the
-A2 approval is explicitly not reusable. See the active request in the
-reconciliation record; no approval has been granted. The next action is owner
-approval, followed by the pre-run read-only checks before any install or
-instrumentation.
+The A3.2 approval was consumed for one test-package replacement and one
+diagnostic method. The raw result emitted `providerMatch=true`,
+`modelMatch=false`, `endpointMatch=true`, and `routeMatch=false`; the
+conjunction was valid and the test result was `OK (1 test)`. The result is an
+observed model mismatch only; it is not exact-preflight readiness or a valid
+authorization path. Android returned terminal instrumentation code `-1`, the
+success sentinel; the earlier host parser's requirement for terminal code `0`
+was a parser defect, and no rerun was made.
+
+Private evidence event:
+`D:\P5E-private\fresh-raw-route-diagnostic-a3.2-run-20260912-012928513`.
+The first post-run read-only sequence returned `device '15e84958' not found`
+while pulling the test package and checking process state. No retry, force-stop,
+workaround or rollback was performed. Settings-after, DB-after and complete
+lineage preservation are unknown, so A3.2 acceptance is not granted. The A2
+approval remains historical and is not reusable.
 
 The permitted settings evidence is a SHA-256 of the entire settings file
 before and after the one diagnostic invocation, or an `ABSENT` marker when the
@@ -609,9 +622,13 @@ P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED
 P5E_9B_A3_1_TECHNICAL_PASS
 P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS
 P5E_WORKFLOW_PRETAG_FAIL_CLOSED
-P5E_9B_A3_2_DEVICE_DIAGNOSTIC_APPROVAL_REQUIRED
+P5E_9B_A3_2_ROUTE_DIAGNOSTIC_OUTPUT_OBSERVED
+P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED
+P5E_9B_A3_2_POST_RUN_DEVICE_UNAVAILABLE
+P5E_9B_A3_2_PRESERVATION_NOT_PROVEN
+P5E_9B_A4_REMEDIATION_NOT_SELECTED
 P5E_9B_ROUTE_DIAGNOSTIC_A3_ARTIFACT_SUPERSEDED_NOT_INSTALLED
-P5E_9B_ROUTE_DIAGNOSTIC_A3R_ARTIFACT_BUILT_NOT_INSTALLED
+P5E_9B_ROUTE_DIAGNOSTIC_A3R_ARTIFACT_INSTALLED_TEST_ONLY
 RAW_AUTHORIZATION_REQUIRED
 NO_AUTHORIZATION_CREATED
 NO_LIVE_CALL_PERFORMED

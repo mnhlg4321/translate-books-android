@@ -1,10 +1,10 @@
 # Editorial Recovery v4.18
 
-Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_DEVICE_DIAGNOSTIC_APPROVAL_REQUIRED / P6_DISABLED`
+Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_ROUTE_DIAGNOSTIC_OUTPUT_OBSERVED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED / P5E_9B_A3_2_POST_RUN_DEVICE_UNAVAILABLE / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN / P5E_9B_A4_REMEDIATION_NOT_SELECTED / P6_DISABLED`
 
 This document is the single product and execution authority for the v4.18 Editorial recovery. It supersedes active next actions from the historical v4.16 Editorial/RSC/IPC tracks without deleting or reinterpreting their evidence.
 
-## Current active boundary — P5E.9B-A3.2 host-only preparation
+## Current active boundary — P5E.9B-A3.2 runtime result, post-run verification blocked
 
 P0-P4 are complete as historical phase evidence. P5/P5E have not exited: no
 accepted RAW predecessor, REPORT_L1 or receipt exists, and execution,
@@ -12,25 +12,31 @@ certification and P6 remain disabled. A2 ended fail-closed with
 `P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED`; its single-run approval is
 consumed and is not reusable.
 
-A3.1 has a technical host-only result. A3.1R completed the documentation and
-evidence-channel repair: the four route booleans are carried by instrumentation
-status rather than treated as Logcat evidence. A3.1R was host-only: it used no
-ADB, device settings or current DB, provider, authorization,
-attempt/reconciliation state. The old A3 artifact remains retained as
-superseded and not installed; the A3R artifact is built but not installed.
+A3.1/A3.1R and the A3.2 host preparation are retained as historical evidence.
+The owner-approved A3.2 run performed one test-package replacement and one
+diagnostic method invocation. The diagnostic emitted exactly four redacted
+instrumentation-status values: `providerMatch=true`, `modelMatch=false`,
+`endpointMatch=true`, `routeMatch=false`; the conjunction was valid and the
+test result was `OK (1 test)`. This is an observed route signal, not a valid
+authorization or exact-preflight acceptance.
 
-The A3.2 host-only preparation is complete: the A3R artifact manifest was
-verified `8/8`, and a redacted raw instrumentation-status parser was tested
-against ten offline fixtures with `10/10` expected outcomes. No device,
-settings or current-DB read was performed. The A3.2 approval is still required.
-The current PreTag result is `FAIL` at `Step 05`; the earlier `Step 09` result
-is retained only as historical A3.1 evidence.
+The pre-run read-only checks passed: production code207, the A2 test artifact,
+DB schema v24/hash, integrity/FK state, fresh tuple and zero lineage counts
+matched their pins. The test package was then replaced once with the A3R
+artifact and read back with its exact hash. The redacted evidence event is
+`D:\P5E-private\fresh-raw-route-diagnostic-a3.2-run-20260912-012928513` with
+manifest SHA-256
+`12898E7A7DFFDCBEEF4E2E0BF6794E88C90EDE4E6DAD15D0147C9710ABF137CB`.
+During the first post-run read-only sequence the device became unavailable to
+ADB, so settings-after, DB-after and complete lineage preservation could not be
+verified. No retry or workaround was performed. The current PreTag result remains `FAIL` at `Step 05`; the earlier
+`Step 09` result is historical A3.1 evidence only.
 
-The exact next action is a separate owner approval of A3.2 for one
-test-package replacement and one diagnostic method. No A3.2 device action, RAW
-authorization or provider call is currently approved. The historical
+The next action is owner review after device availability is restored; this
+result does not authorize an automatic rerun or select A4. The historical
 `HISTORICAL_CODE196_PRESERVATION_FAILED` and `PILOT_DATA_PRESERVATION_FAILED`
-conclusions remain unchanged.
+conclusions remain unchanged. P5/P5E have not exited, and execution,
+certification and P6 remain disabled.
 
 ## 1. Locked product decision
 

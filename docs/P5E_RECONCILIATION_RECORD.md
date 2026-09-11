@@ -4,7 +4,7 @@ Ngày ghi nhận: `2026-09-11` (+07:00)
 Phạm vi: metadata OpenRouter được đọc qua Activity/Logs đã xác thực; không mở
 I/O logging và không lưu prompt, response body, source text hoặc secret.
 
-## Current active decision — P5E.9B-A3.2 host-only preparation, approval required
+## Current active decision — P5E.9B-A3.2 diagnostic result, post-run verification blocked
 
 The latest A2 result is fail-closed, not a readiness pass:
 `P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED` /
@@ -13,20 +13,28 @@ SHA-256 is `42BAA89A70392DDA11868C3FF11EED18D602DFBDC878207E349EEB55A07EEB8A`.
 The A2 single-run approval is consumed and is not reusable. The exact setting
 that differed was intentionally not read or logged.
 
-The current task is host-only preparation for P5E.9B-A3.2. A3.1R already
-synchronized the active authority and changed the test-only diagnostic evidence
-channel to emit route booleans through instrumentation status. This preparation
-may not use ADB, inspect device settings, mutate the current DB, create or
-consume authorization/attempt/reconciliation, call a provider, retry, repair or
-RECONCILE. P5E.9, A2 and the P5 exit gate remain incomplete. Any A3.2 device
-action requires a new owner approval and cannot be inferred from A2.
+The owner-approved A3.2 run completed one test-package replacement and one
+diagnostic invocation. It emitted four redacted instrumentation-status values:
+`providerMatch=true`, `modelMatch=false`, `endpointMatch=true`,
+`routeMatch=false`; the conjunction was valid and the test result was
+`OK (1 test)`. The observed route signal identifies a current model mismatch,
+but it is not a valid-authorization or exact-preflight acceptance.
 
-A3.1R is complete at the host-only boundary. The new test artifact is built and
-not installed; its four status keys are verified offline in the APK and its
-source sends them with `Instrumentation.sendStatus`. The A3.2 host preparation
-also verified the A3R manifest `8/8` and the raw-status parser fixtures `10/10`.
-No current-device route value is claimed because A3.2 has not been approved or
-run. The previous A3 artifact is retained as `SUPERSEDED_NOT_INSTALLED`.
+Private run evidence is recorded at
+`D:\P5E-private\fresh-raw-route-diagnostic-a3.2-run-20260912-012928513`.
+Pre-run read-only checks passed with production code207, A2 test APK hash,
+schema-v24 DB hash/integrity/FK, fresh selector/binding/run/evaluation and zero
+lineage counts. The A3R test APK was installed once as the test package only
+and immediately read back with the exact hash. During the first post-run
+read-only sequence the device became unavailable to ADB; settings-after,
+DB-after and complete lineage preservation are therefore unknown. No retry,
+force-stop, workaround, provider call, authorization, attempt, reconciliation
+or production-package operation followed.
+
+P5E.9, A2 and the P5 exit gate remain incomplete. The A3.2 approval is consumed
+for its single run and is not reusable. The previous A3 artifact remains
+`SUPERSEDED_NOT_INSTALLED`; the A3R artifact is `INSTALLED_TEST_ONLY`, with
+post-run package state not validated because of the device-unavailable blocker.
 
 Current implementation baseline is
 `a0009f04139431f0bee38d049f9b32e2b6b04c41`; documentation HEAD before this
@@ -35,8 +43,13 @@ earlier QF results remain historical evidence; code191 remains
 `EXTERNAL_CONFIRMED_CANCELLED`, without a `$0` conclusion. The current data
 remains `RECONSTRUCTED_ONLY` and the historical preservation failures remain
 unchanged.
+The approved A3.2 run started from clean branch `feature/v4.18` at input HEAD
+`9eaeaee322d38ddf66fe515f9726726400d4fe05`; its result documentation is kept
+as a separate commit.
 The current PreTag result is `FAIL` at `Step 05`; the earlier `Step 09` result
-is retained only as historical A3.1 evidence.
+is retained only as historical A3.1 evidence. Current data remains
+`RECONSTRUCTED_ONLY`; historical code196 and pilot preservation failures remain
+unchanged. A4 remediation is not selected.
 
 ## Baseline tại đầu nhóm LQ/QF
 
@@ -1900,7 +1913,7 @@ evidence.
 | Provider call or authorization/attempt/reconciliation count is nonzero | `P5E_9B_A3_2_ZERO_CALL_INVARIANT_FAILED`; stop all P5E work and preserve evidence. |
 | Timeout, freezer, notification, RSA or runner failure | Record the typed device blocker; no rerun, fallback or workaround. |
 
-### Current A3.2 pre-approval host boundary and stop boundary
+### Historical A3.2 pre-approval host boundary and stop boundary
 
 ~~~text
 P5E_9B_A3_1_TECHNICAL_PASS
@@ -1919,8 +1932,71 @@ HISTORICAL_CODE196_PRESERVATION_FAILED
 PILOT_DATA_PRESERVATION_FAILED
 ~~~
 
-The A3.2 block above is awaiting separate owner approval. Host preparation is
-recorded in private event
-`D:\P5E-private\fresh-raw-route-diagnostic-a3.2-prep-20260912-011838007`.
-The event contains only redacted facts and offline parser evidence. This work
-package stops before ADB, install, instrumentation or settings/DB inspection.
+The block above is historical host preparation. It is recorded in private event
+`D:\P5E-private\fresh-raw-route-diagnostic-a3.2-prep-20260912-011838007` and is
+not the current device result.
+
+## P5E.9B-A3.2 device diagnostic result — post-run verification blocked
+
+The owner approval was used exactly once. The A3R test package was replaced
+once with SHA-256
+`F19051D849139CB66C4005342AF45DEE62F2A1C7C44D7F0316EC810F8F4DBD1E`, and the
+approved diagnostic method was invoked once with
+`p5e_fresh_raw_route_diagnostic=YES`. The production package was not installed
+or modified. No full class, rerun, connected test, provider/API call,
+authorization, attempt, reconciliation or settings/DB write was performed.
+
+Private evidence event:
+`D:\P5E-private\fresh-raw-route-diagnostic-a3.2-run-20260912-012928513`.
+Its 24-entry evidence manifest SHA-256 is
+`12898E7A7DFFDCBEEF4E2E0BF6794E88C90EDE4E6DAD15D0147C9710ABF137CB`.
+The pre-run read-only gate passed: production code207/APK/certificate/signature,
+A2 test APK hash, DB SHA-256
+`3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391`, schema
+v24, integrity `ok`, FK violations `0`, fresh tuple/source hashes and zero
+lineage counts all matched. The settings file was `ABSENT` at pre-run; its
+content was not read or logged.
+
+The raw instrumentation result contained exactly four route keys and one test
+result: `OK (1 test)`. The redacted values were:
+
+~~~text
+p5e.route.providerMatch=true
+p5e.route.modelMatch=false
+p5e.route.endpointMatch=true
+p5e.route.routeMatch=false
+route_conjunction=true
+~~~
+
+This is an observed current model mismatch and maps to owner A4 review; it does
+not establish the historical A2 cause. The first post-run read-only sequence
+then returned `device '15e84958' not found` while pulling the test package and
+checking process state. The device-unavailable condition caused an immediate
+stop with no retry or workaround. Settings-after, DB-after, complete lineage
+preservation, and final route-diagnosis acceptance are therefore unknown and
+not PASS. The raw result's terminal code was `-1`, the Android instrumentation
+success sentinel; the earlier host parser's requirement for terminal code `0`
+was a parser defect and no rerun was made.
+
+Current result:
+
+~~~text
+P5E_9B_A3_2_ROUTE_DIAGNOSTIC_OUTPUT_OBSERVED
+P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED
+P5E_9B_A3_2_POST_RUN_DEVICE_UNAVAILABLE
+P5E_9B_A3_2_PRESERVATION_NOT_PROVEN
+P5E_9B_A4_REMEDIATION_NOT_SELECTED
+NO_AUTHORIZATION_CREATED
+NO_LIVE_CALL_PERFORMED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
+P6_NOT_READY
+HISTORICAL_CODE196_PRESERVATION_FAILED
+PILOT_DATA_PRESERVATION_FAILED
+~~~
+
+The A3.2 approval is consumed and cannot be reused. No exact-preflight or
+valid-authorization readiness is claimed. The next action is owner review of
+the device-unavailable evidence and A4 choice; this record does not authorize
+an automatic rerun or a settings change.
