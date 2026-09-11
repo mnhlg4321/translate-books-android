@@ -1,7 +1,7 @@
 package com.ml.tblandroidtxt;
 
 import android.content.Context;
-import android.util.Log;
+import android.os.Bundle;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -10,6 +10,8 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.util.Locale;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -20,14 +22,18 @@ import static org.junit.Assert.assertTrue;
  *
  * <p>The opt-in test is deliberately separate from the A2 preflight and live
  * harness. Its only application-owned read is one settings-store load;
- * it does not open the database, create a client/request, call preflightOnly,
- * or reach a provider. The synthetic contract tests use in-memory settings
+ * it does not open the database, create a client/request, or perform a
+ * production preflight or reach a provider. The synthetic contract tests use
+ * in-memory settings
  * only and are not evidence about the current device.</p>
  */
 @RunWith(AndroidJUnit4.class)
 public final class EditorialP5EFreshRawRouteDiagnosticInstrumentedTest {
     private static final String DIAGNOSTIC_OPT_IN = "p5e_fresh_raw_route_diagnostic";
-    private static final String DIAGNOSTIC_TAG = "P5E_9B_A3_ROUTE_DIAGNOSTIC";
+    private static final String STATUS_PROVIDER_MATCH = "p5e.route.providerMatch";
+    private static final String STATUS_MODEL_MATCH = "p5e.route.modelMatch";
+    private static final String STATUS_ENDPOINT_MATCH = "p5e.route.endpointMatch";
+    private static final String STATUS_ROUTE_MATCH = "p5e.route.routeMatch";
 
     @Test
     public void persistedRawRouteDiagnosticRunsOnlyWhenExplicitlyOptedIn() {
@@ -38,7 +44,7 @@ public final class EditorialP5EFreshRawRouteDiagnosticInstrumentedTest {
         Context target = ApplicationProvider.getApplicationContext();
         AppSettings settings = SettingsStore.load(target);
         RouteMatch result = evaluate(settings);
-        Log.i(DIAGNOSTIC_TAG, result.redactedLine());
+        InstrumentationRegistry.getInstrumentation().sendStatus(0, redactedStatus(result));
     }
 
     @Test
@@ -154,20 +160,42 @@ public final class EditorialP5EFreshRawRouteDiagnosticInstrumentedTest {
     }
 
     @Test
-    public void diagnosticOutputUsesOnlyTheBooleanAllowlist() {
-        String output = evaluate(exactSettings()).redactedLine();
-        assertTrue(output.matches("\\{\\\"providerMatch\\\":(true|false),"
-                + "\\\"modelMatch\\\":(true|false),"
-                + "\\\"endpointMatch\\\":(true|false),"
-                + "\\\"routeMatch\\\":(true|false)\\}"));
+    public void diagnosticStatusBundleUsesOnlyTheBooleanAllowlist() {
+        Bundle status = redactedStatus(evaluate(exactSettings()));
+        assertEquals(4, status.keySet().size());
+        assertTrue(status.keySet().contains(STATUS_PROVIDER_MATCH));
+        assertTrue(status.keySet().contains(STATUS_MODEL_MATCH));
+        assertTrue(status.keySet().contains(STATUS_ENDPOINT_MATCH));
+        assertTrue(status.keySet().contains(STATUS_ROUTE_MATCH));
+        assertBooleanString(status, STATUS_PROVIDER_MATCH);
+        assertBooleanString(status, STATUS_MODEL_MATCH);
+        assertBooleanString(status, STATUS_ENDPOINT_MATCH);
+        assertBooleanString(status, STATUS_ROUTE_MATCH);
+
+        String output = status.toString().toLowerCase(Locale.ROOT);
         assertFalse(output.contains("openrouter"));
         assertFalse(output.contains("gpt-5.6-luna"));
         assertFalse(output.contains("https://"));
-        assertFalse(output.contains("apiKey"));
+        assertFalse(output.contains("apikey"));
         assertFalse(output.contains("secret"));
         assertFalse(output.contains("source"));
         assertFalse(output.contains("prompt"));
+        assertFalse(output.contains("request"));
         assertFalse(output.contains("response"));
+    }
+
+    static Bundle redactedStatus(RouteMatch result) {
+        Bundle status = new Bundle();
+        status.putString(STATUS_PROVIDER_MATCH, Boolean.toString(result.providerMatch));
+        status.putString(STATUS_MODEL_MATCH, Boolean.toString(result.modelMatch));
+        status.putString(STATUS_ENDPOINT_MATCH, Boolean.toString(result.endpointMatch));
+        status.putString(STATUS_ROUTE_MATCH, Boolean.toString(result.routeMatch));
+        return status;
+    }
+
+    private static void assertBooleanString(Bundle status, String key) {
+        String value = status.getString(key);
+        assertTrue(value != null && value.matches("true|false"));
     }
 
     static RouteMatch evaluate(AppSettings settings) {
@@ -218,11 +246,5 @@ public final class EditorialP5EFreshRawRouteDiagnosticInstrumentedTest {
             this.routeMatch = routeMatch;
         }
 
-        String redactedLine() {
-            return "{\"providerMatch\":" + providerMatch
-                    + ",\"modelMatch\":" + modelMatch
-                    + ",\"endpointMatch\":" + endpointMatch
-                    + ",\"routeMatch\":" + routeMatch + "}";
-        }
     }
 }
