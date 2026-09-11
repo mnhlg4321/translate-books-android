@@ -9,21 +9,21 @@ I/O logging và không lưu prompt, response body, source text hoặc secret.
 | Hạng mục | Giá trị |
 |---|---|
 | Branch | `feature/v4.18` |
-| HEAD hiện tại trước documentation snapshot | `a88673ab113c0877119d078c2fb569fd4f39c55a` (implementation baseline; documentation commit sau đó không được tự quy là source baseline) |
+| HEAD hiện tại trước documentation snapshot | `f90c0372c019c0d3970efb298b64b6a4addcfd4f` (test-source alignment commit; implementation correction is `049e72b5769f8b3fdcb6f50646d1f0ead3043940`) |
 | HEAD trước nhóm fresh-pilot evidence | `cd683503c79e03e4a215596855458c11200104ab` (historical group start) |
-| Production implementation baseline hiện tại | `a88673ab113c0877119d078c2fb569fd4f39c55a` |
+| Production implementation baseline hiện tại | `049e72b5769f8b3fdcb6f50646d1f0ead3043940` |
 | Production source commit trong APK code199 | `03b97a30885393c1cc8a3297d5dff9672dcba57e` |
 | Production source commit trong pre-patch APK code201 | `a4b4a8f9d215578d5bfae329b1b4608927d0476c` |
 | Production source commit trong candidate APK code202 | `4140651d860e4ee11ce7e074970761666c575594` |
-| Test-source commit của candidate-aligned test APK | `a88673ab113c0877119d078c2fb569fd4f39c55a` |
-| Candidate archived validation artifact | `v4.17-p5e.8 / versionCode 204`, `build-20260911-180303`; chưa cài trên device |
-| Candidate production APK SHA-256 | `6BECD0F89ABAD308617CBB864AB38B62BCBDAE00E876BE96D57E3AD3FD8F8C83` |
-| Candidate source ZIP SHA-256 | `C5DCA76D6DC0970A0F18114ADC772AC8F883D63FA825951182BBD269AED614F5` |
+| Test-source commit của candidate-aligned test APK | `f90c0372c019c0d3970efb298b64b6a4addcfd4f` |
+| Candidate archived validation artifact | `v4.17-p5e.10 / versionCode 206`, `build-20260911-183523`; chưa cài trên device |
+| Candidate production APK SHA-256 | `F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080` |
+| Candidate source ZIP SHA-256 | `5BA76881BA87313C69B3E6221676487A88FDFD9A68D61860521131EABC03E4B8` |
 | Current installed validation package | `v4.17-p5e.6 / versionCode 202`, historical installed candidate; code204 chưa cài |
 | Last-known original pilot predecessor | `code196 / schema v24`; historical and unavailable, not current data |
 | Pre-upgrade code199 production APK SHA-256 | `870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09` |
 | Current installed code202 production APK SHA-256 | `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0` (historical installed artifact) |
-| Candidate-aligned test APK SHA-256 | `41350151A4AB6AAA8C25A5B7AE0FE71D7297ECD1C3535233D23F11A5B487B144`, test-source commit `a88673ab113c0877119d078c2fb569fd4f39c55a`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; compiled, not installed |
+| Candidate-aligned test APK SHA-256 | `3838028BC2CE19CBB99B004041383CD5056B6470DA4496A467DBFD75083230B2`, test-source commit `f90c0372c019c0d3970efb298b64b6a4addcfd4f`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; compiled, not installed |
 | Pre-candidate clean test APK SHA-256 | `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456`; historical attribution only |
 | Package / test package | `com.ml.tblandroidtxt` / `com.ml.tblandroidtxt.test` |
 | Candidate/installed APK certificate SHA-256 | `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
@@ -354,7 +354,7 @@ Nguồn tham chiếu capability được kiểm tra trước P5E: [GPT-5.6 Luna 
 [OpenRouter Structured Outputs](https://openrouter.ai/docs/guides/features/structured-outputs),
 và [OpenRouter generation metadata API](https://openrouter.ai/docs/api/api-reference/generations/get-generation).
 
-## P5E.9A — Fresh RAW boundary freeze và zero-call preflight result
+## P5E.9A — Initial fresh RAW boundary freeze (superseded evidence)
 
 Nhóm này dừng ở read-only freeze. Không tạo hoặc tiêu thụ authorization, không
 tạo attempt, không gọi provider/API, không RECONCILE, không repair/retry và
@@ -447,7 +447,113 @@ P6_NOT_READY
 HISTORICAL_CODE196_PRESERVATION_FAILED
 ```
 
-The next action is one owner decision to resolve the exact evaluation identity
-through the official setup/binding path; if that changes the candidate, a new
-exact artifact approval is required. No RAW authorization block is prepared
-from this failed freeze.
+This initial freeze is superseded by the P5E.9A-EVAL source correction below.
+Its observed `3ce…` row and zero-count result remain valid read-only evidence;
+the `f319…` value was a stale runner expectation, not a reason to edit the DB.
+
+## P5E.9A-EVAL — Evaluation provenance correction and zero-call boundary
+
+This section records the current candidate correction. It does not rerun setup,
+does not modify the current DB, does not create authorization or attempt rows,
+and does not call a provider. The original code196 preservation failure remains
+unchanged.
+
+### E1 — Fresh binding/evaluation characterization (read-only)
+
+| Fact | Observed value |
+|---|---|
+| Selector | `p5e-fresh-mercedes-vol5-20260911-01` |
+| Binding identity | `845976b3cde02a3bf0896b64efd208f42e40821317d1b7bffec7081e63e33cdf` |
+| Run declaration identity | `8466b95d96f958a97eb3ffd1eac5a32734023cafa1c230e696ad4253151a41dc` |
+| Chapter | `001` |
+| Compatibility evaluation ID | `3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1` |
+| Evaluation context fingerprint | `3d323f1360bab837700295dc28201dabecaec506bbd6b55be7bd6c0484bf6abe` |
+| Canonical pack/profile hashes | `497786e18e6e2309b44c6695bc8d8e0b538babfe20b1bc0b6f74c395fd05642d` / `beec03a42e37f424a6f071ad48f35878b27e1083141699352cda4474d8cc2e21` |
+| Binding created timestamp | `20260911060059` |
+| Evaluation import ID | `3ce8617c-7e75-453c-ac9a-d3ad21eb7987` |
+| Evaluation outcome/time | `DATA_COMPATIBLE` / `1789048497413` |
+| Import state/storage | `STORED_READY_FOR_CERTIFICATION` / valid stored-ready state (`storage_moved=1`) |
+| Import pack identity | `com.ml.tblandroidtxt.editorial.safe4.full / 4.1.3` |
+| Run declaration evaluation | same exact `3ce…:compatibility:v1` |
+
+The production `EditorialPackSelectionPolicy.resolve()` semantics select this
+trusted evaluation for the canonical pack, and rehydrating the binding row
+recomputes the requested binding identity. `f319…:compatibility:v1` is not the
+evaluation frozen into this fresh binding; no claim is made about whether that
+ID exists elsewhere in history.
+
+Gate: `FRESH_BINDING_EVALUATION_PROVENANCE_CHARACTERIZED` / `NO_DB_MUTATION`.
+
+### E2–E5 — Test-first correction and isolated fixture
+
+The new host test first failed against the old runner constant (`3ce…` expected,
+`f319…` actual) with one failure and zero provider calls. The minimal production
+patch in implementation commit `049e72b5769f8b3fdcb6f50646d1f0ead3043940` pins
+the official `3ce…` record; no SQL, migration, pack, profile or authority was
+changed. Candidate-boundary tests now use the same exact ID, and a historical
+`f319…` authorization is rejected with typed
+`P5E_FRESH_RAW_AUTHORIZATION_MISMATCH` before provider setup.
+
+The isolated fake fixture now relies on the importer-created
+`importId + ":compatibility:v1"` evaluation. It asserts that this ID has the
+same import namespace and that its binding identity is distinct from the device
+binding. It no longer copies an evaluation ID from the current DB or describes
+compatibility as a pack-level immutable fact. Generic isolated contract tests
+and exact-device read-only checks are separate evidence classes.
+
+### E6–E7 — Local candidate evidence
+
+| Evidence | Result |
+|---|---|
+| Editorial engine unit suite | `200/200 PASS` |
+| App debug/release/benchmark unit variants | `232/232 PASS` each (`696/696` aggregate) |
+| AndroidTest Java compilation | `PASS` |
+| Debug lint | `PASS` |
+| `git diff --check` / secret scan / canonical-pack-profile-authority guard | `PASS` / no matches / `PASS` |
+| Provider calls, current authorization/attempt/reconciliation mutation | `0` / `0` / `0` / `0` |
+| Production candidate | `v4.17-p5e.10`, versionCode `206`, event `build-20260911-183523`, source commit `049e72b5769f8b3fdcb6f50646d1f0ead3043940` |
+| Production APK / certificate | `F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080` / `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
+| Source ZIP | `5BA76881BA87313C69B3E6221676487A88FDFD9A68D61860521131EABC03E4B8` |
+| Artifact/backup mirror | byte-identical payloads |
+| Candidate-aligned test APK | `3838028BC2CE19CBB99B004041383CD5056B6470DA4496A467DBFD75083230B2`, test-source commit `f90c0372c019c0d3970efb298b64b6a4addcfd4f`, certificate `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
+
+The intermediate code205 archive was built before the correction commit was
+clean and is retained only as build evidence; it is not an approval candidate.
+Code204 remains pre-correction evidence and was never installed. The code206
+candidate has not been installed because the earlier code202 approval does not
+cover it.
+
+The current device was rechecked read-only as serial `15e84958`, package
+`com.ml.tblandroidtxt`, v4.17-p5e.6/code202, signature token `abebea4b`, schema
+v24, process absent. Its DB SHA-256 still matches the private reconstructed
+snapshot (`3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391`);
+the private snapshot manifest remains `6D3949C37E5C6D78FACB5FB7058CB4CBAAE615F54CF07F8F8462D1E39DD75A28`.
+No device install, instrumentation, authorization, attempt, RECONCILE or
+provider call occurred in this correction round.
+
+### E8–E11 — Stop boundary
+
+E8 requires a new owner approval pinned to code206, its full APK/certificate
+hashes, source commit, fresh selector/binding/run/evaluation and the local-only
+limits. Because that approval has not been issued, no snapshot-before-install
+decision, guarded upgrade, candidate device readback or E11 direct
+instrumentation was performed. Therefore the device portion of P5E.9A remains
+pending even though evaluation provenance and host QA are resolved.
+
+```text
+P5E_9A_EVALUATION_PROVENANCE_RESOLVED
+P5E_9A_FRESH_RAW_BOUNDARY_LOCAL_PASS: NOT_REACHED
+FRESH_RAW_EXACT_PREFLIGHT_READY: NOT_REACHED
+RAW_AUTHORIZATION_REQUIRED
+NO_AUTHORIZATION_CREATED
+NO_LIVE_CALL_PERFORMED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
+P6_NOT_READY
+HISTORICAL_CODE196_PRESERVATION_FAILED
+OWNER_APPROVAL_FOR_CODE206_REQUIRED
+```
+
+The single next step is to obtain that exact owner approval. Until then, code206
+must remain uninstalled and no RAW authorization block may be created.

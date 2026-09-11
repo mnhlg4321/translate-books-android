@@ -179,39 +179,48 @@ EXECUTION_DISABLED
 NOT_CERTIFIED
 ```
 
-## P5E.9A freeze correction — current result
+## P5E.9A-EVAL provenance correction — current result
 
-The code202/G3/G4 entries above are retained as prior evidence. For the current
-exact-binding boundary, the patched candidate is code204 (`v4.17-p5e.8`), source
-commit `a88673ab113c0877119d078c2fb569fd4f39c55a`, APK SHA-256
-`6BECD0F89ABAD308617CBB864AB38B62BCBDAE00E876BE96D57E3AD3FD8F8C83`, and
+The earlier code202/G3/G4 and code204 freeze entries above remain prior
+evidence. The stale `f319…` value was a runner expectation; the persisted fresh
+binding was already correct with the official import-scoped evaluation
+`3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1`. The minimal correction
+is committed at `049e72b5769f8b3fdcb6f50646d1f0ead3043940`; no SQL, migration,
+canonical pack, profile or authority changed.
+
+The committed candidate is code206 (`v4.17-p5e.10`), source commit
+`049e72b5769f8b3fdcb6f50646d1f0ead3043940`, APK SHA-256
+`F561800EBCC436CC921F591B2CE7C9171E8E0C430F1B291C83986980C7E98080`,
 certificate SHA-256
-`47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`. It is
-archived in both artifact/backup roots but was not installed. The corresponding
-test APK is outside Git and has SHA-256
-`41350151A4AB6AAA8C25A5B7AE0FE71D7297ECD1C3535233D23F11A5B487B144`.
+`47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`, source
+ZIP SHA-256
+`5BA76881BA87313C69B3E6221676487A88FDFD9A68D61860521131EABC03E4B8`. Artifact
+and backup payloads are byte-identical. The candidate-aligned test APK is
+outside Git at
+`D:\P5E-private\fresh-raw-boundary-20260911-1836\candidate-code206-test-apk\app-debug-androidTest.apk`,
+SHA-256 `3838028BC2CE19CBB99B004041383CD5056B6470DA4496A467DBFD75083230B2`,
+test-source commit `f90c0372c019c0d3970efb298b64b6a4addcfd4f`, same certificate.
+The intermediate code205 archive is retained as non-candidate build evidence;
+code204 remains pre-correction evidence.
 
-The read-only freeze on `15e84958` confirmed package `com.ml.tblandroidtxt`,
-installed code202, signature token `abebea4b`, schema v24, the requested
-selector/binding/run/chapter, source/pack/profile hashes and zero attempts,
-authorization receipts, reconciliation, history, lifecycle and report/receipt
-rows. It found one fail-closed mismatch: observed evaluation
-`3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1` versus pinned
-`f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1`.
-
-Because the evaluation identity is wrong, stop before candidate install,
-device instrumentation and exact preflight. Do not change the row with SQL,
-silently repin the evaluation, or reuse the old owner approval for code204. A
-new private reconstructed snapshot/isolated SQLite data-level restore is at
-`D:\P5E-private\fresh-raw-boundary-20260911-1810` with manifest SHA-256
-`6D3949C37E5C6D78FACB5FB7058CB4CBAAE615F54CF07F8F8462D1E39DD75A28`; it is
-not code196 recovery and not full post-upgrade app restore evidence.
+Read-only device recheck still shows serial `15e84958`, package
+`com.ml.tblandroidtxt`, installed code202, signature token `abebea4b`, schema
+v24, process absent, unchanged DB SHA-256 matching the private reconstructed
+snapshot. Current attempts, authorization receipts, reconciliation/history,
+lifecycle and report/receipt counts remain zero. The snapshot manifest remains
+outside Git at `D:\P5E-private\fresh-raw-boundary-20260911-1810\SNAPSHOT_MANIFEST.json`
+with SHA-256
+`6D3949C37E5C6D78FACB5FB7058CB4CBAAE615F54CF07F8F8462D1E39DD75A28`.
+Host engine/app variants, lint, AndroidTest compilation and static checks pass;
+provider calls remain zero. Code206 was not installed and no device
+instrumentation was run because the prior code202 approval does not cover it.
 
 Current stop state:
 
 ```text
 P5E_9A_FRESH_RAW_BOUNDARY_LOCAL_PASS: NOT_REACHED
-P5E_9A_DEVICE_FREEZE_BLOCKED_FRESH_EVALUATION_MISMATCH
+P5E_9A_EVALUATION_PROVENANCE_RESOLVED
+OWNER_APPROVAL_FOR_CODE206_REQUIRED
 RAW_AUTHORIZATION_REQUIRED
 NO_LIVE_CALL_PERFORMED
 RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
