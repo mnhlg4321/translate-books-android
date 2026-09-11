@@ -45,7 +45,7 @@ public final class EditorialP5EFreshRawLiveRunner {
     public static final String RUN_DECLARATION_IDENTITY =
             "8466b95d96f958a97eb3ffd1eac5a32734023cafa1c230e696ad4253151a41dc";
     public static final String COMPATIBILITY_EVALUATION_ID =
-            "f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1";
+            "3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1";
     public static final String CANONICAL_PACK_HASH =
             "497786e18e6e2309b44c6695bc8d8e0b538babfe20b1bc0b6f74c395fd05642d";
     public static final String CANONICAL_PROFILE_HASH =

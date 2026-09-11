@@ -39,6 +39,27 @@ predecessor; nó không còn là current installed artifact. Current installed
 code199/schema v24 chỉ là validation DB đã dựng lại, nên không được gọi là
 preserved history.
 
+## Identity model correction — P5E.9A-EVAL
+
+Compatibility evaluation không phải là một fact bất biến ở cấp canonical pack.
+Đó là một trusted-evaluation record bất biến, gắn với một import cụ thể; cùng
+canonical pack/profile và cùng ngữ cảnh semantic không làm cho hai evaluation ID
+trở thành interchangeable. Exact evaluation ID được official setup chọn và
+được freeze trong từng P4 binding.
+
+| Tầng | Identity | Tính chất |
+|---|---|---|
+| Nội dung pack | Canonical pack hash | Có thể giống nhau khi canonical bytes/data giống nhau |
+| Ngữ cảnh đánh giá | Evaluation context fingerprint | Có thể giống giữa các evaluation nếu semantic context giống |
+| Bản ghi đánh giá | Evaluation ID | Import-scoped, append-only/bất biến; không interchangeable |
+
+Fresh binding hiện hành sử dụng evaluation chính thức
+`3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1`, do import
+`3ce8617c-7e75-453c-ac9a-d3ad21eb7987` tạo. Evaluation lịch sử
+`f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1` vẫn được giữ nguyên
+trong bằng chứng P5D tại thời điểm đó; tài liệu này không khẳng định nó không
+tồn tại ở lịch sử bên ngoài và không dùng nó làm pack fact cho fresh lineage.
+
 ## Generation được đối soát
 
 ```text
@@ -129,8 +150,10 @@ Fresh-pilot QA below is candidate-aligned and complete locally.
 Do gate lịch sử `PILOT_DATA_PRESERVED` không đạt, P5E không tự tạo authorization
 mới và không dispatch provider. G1 backup/restore của reconstructed data, G2
 candidate/data readback, fresh project/run/binding setup và candidate-aligned
-fake E2E đã đạt local-only. Compatibility evaluation vẫn là immutable fact cấp
-canonical pack theo P4, không phải identity của attempt/receipt cũ. Điều này mở readiness của fresh lineage để xin một
+fake E2E đã đạt local-only. Compatibility evaluation là trusted-evaluation
+record gắn với import cụ thể; fresh setup đã freeze evaluation
+`3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1`, không phải một pack
+fact có thể thay thế bằng evaluation ID khác. Điều này mở readiness của fresh lineage để xin một
 authorization RAW riêng, không phục hồi gate lịch sử và không ghi
 `P5E_LIVE_RAW_ACCEPTANCE_PASS`.
 
@@ -238,9 +261,9 @@ CANDIDATE_UPGRADE_G2_PASS
 FRESH_PILOT_LOCAL_VERIFIED
 ```
 
-Fresh pilot phải dùng project/run/binding/attempt identity mới, giữ
-compatibility evaluation là immutable fact cấp canonical pack, source hash exact
-nếu bytes không đổi, authorization mới chỉ ở vòng live sau và backup
+Fresh pilot phải dùng project/run/binding/attempt identity mới, giữ exact
+trusted evaluation record mà official setup đã freeze trong binding, source hash
+exact nếu bytes không đổi, authorization mới chỉ ở vòng live sau và backup
 SQLite nhất quán có WAL-aware manifest/hash/restore test. Owner approval local-only
 đã được ghi nhận; G1/G2/G3/G4 đã thực hiện. Current DB chưa có attempt, receipt
 hoặc reconciliation mới; fake predecessor chỉ tồn tại trong isolated QA và không

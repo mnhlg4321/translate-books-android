@@ -99,6 +99,22 @@ public class EditorialPackCompatibilityEvaluationInstrumentedTest {
         assertNotEquals(values.get(0).contextFingerprint(), values.get(1).contextFingerprint());
     }
 
+    @Test public void sameContextDoesNotMakeEvaluationIdsInterchangeable() {
+        Seed seed = seedV14Rows(repository.editorialWritableDatabase(), "same-context");
+        EditorialPackCompatibilityEvaluationDao dao = new EditorialPackCompatibilityEvaluationDao(repository);
+        dao.append(trusted("evaluation-a", seed.importId, null, null, 100L));
+        dao.append(trusted("evaluation-b", seed.importId, null, null, 101L));
+
+        EditorialPackCompatibilityEvaluation first = dao.findByEvaluationId("evaluation-a")
+                .orElseThrow();
+        EditorialPackCompatibilityEvaluation second = dao.findByEvaluationId("evaluation-b")
+                .orElseThrow();
+        assertEquals(first.contextFingerprint(), second.contextFingerprint());
+        assertEquals(seed.importId, first.importId());
+        assertEquals(seed.importId, second.importId());
+        assertNotEquals(first.evaluationId(), second.evaluationId());
+    }
+
     @Test public void duplicateEvaluationIdentityIsRejectedWithoutReplacingEvidence() {
         Seed seed = seedV14Rows(repository.editorialWritableDatabase(), "duplicate");
         EditorialPackCompatibilityEvaluationDao dao = new EditorialPackCompatibilityEvaluationDao(repository);

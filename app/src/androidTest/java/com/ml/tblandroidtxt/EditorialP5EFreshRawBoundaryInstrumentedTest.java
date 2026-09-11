@@ -13,6 +13,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.ml.tblandroidtxt.editorial.pack.EditorialCanonicalJson;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP4Binding;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP4SourceIdentity;
+import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotAuthorization;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotProvider;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotRequest;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5RawWireContract;
@@ -59,6 +60,8 @@ public final class EditorialP5EFreshRawBoundaryInstrumentedTest {
             "8466b95d96f958a97eb3ffd1eac5a32734023cafa1c230e696ad4253151a41dc";
     private static final String FRESH_CHAPTER = "001";
     private static final String COMPATIBILITY_EVALUATION =
+            "3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1";
+    private static final String HISTORICAL_COMPATIBILITY_EVALUATION =
             "f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1";
     private static final String PACK_HASH =
             "497786e18e6e2309b44c6695bc8d8e0b538babfe20b1bc0b6f74c395fd05642d";
@@ -256,6 +259,27 @@ public final class EditorialP5EFreshRawBoundaryInstrumentedTest {
         }
     }
 
+    @Test public void historicalEvaluationAuthorizationIsRejectedBeforeProvider() {
+        Context context = ApplicationProvider.getApplicationContext();
+        try (TranslationRepository database = new TranslationRepository(context)) {
+            RowCounts before = rowCounts(database.editorialReadableDatabase());
+            AppSettings settings = new AppSettings();
+            settings.provider = EditorialP5EFreshRawRoutingPolicy.PROVIDER;
+            settings.model = EditorialP5EFreshRawRoutingPolicy.MODEL;
+            settings.baseUrl = AppSettings.defaultBaseUrl(
+                    EditorialP5EFreshRawRoutingPolicy.PROVIDER);
+            EditorialP5CExactBindingExecution.Result result =
+                    new EditorialP5EFreshRawLiveRunner(database,
+                            new EditorialPackStorageLayout(context.getFilesDir().toPath()))
+                            .dispatchRaw(1L, FRESH_SELECTOR, FRESH_CHAPTER,
+                                    authorization(HISTORICAL_COMPATIBILITY_EVALUATION), settings);
+            assertEquals(EditorialP5CExactBindingExecution.Status.STOP, result.status());
+            assertEquals("P5E_FRESH_RAW_AUTHORIZATION_MISMATCH", result.reasonCode());
+            assertEquals(0, result.providerCalls());
+            assertEquals(before, rowCounts(database.editorialReadableDatabase()));
+        }
+    }
+
     private static PreflightFixture loadFixture(TranslationRepository database) throws Exception {
         EditorialP4Binding binding = new EditorialP4BindingDao(database)
                 .findByAttemptRequestSelector(FRESH_SELECTOR)
@@ -384,6 +408,18 @@ public final class EditorialP5EFreshRawBoundaryInstrumentedTest {
             assertTrue(cursor.moveToFirst());
             return cursor.getLong(0);
         }
+    }
+
+    private static EditorialP5PilotAuthorization authorization(String evaluationId) {
+        long issuedAt = 1_000L;
+        return new EditorialP5PilotAuthorization("p5e-evaluation-mismatch-test",
+                FRESH_BINDING, FRESH_RUN, PACK_HASH, PROFILE_HASH, evaluationId,
+                FRESH_CHAPTER, "L1_RAW_DISCOVERY",
+                EditorialP5EFreshRawRoutingPolicy.PROVIDER,
+                EditorialP5EFreshRawRoutingPolicy.MODEL, "test-account-fingerprint",
+                1, 0, 0, 40_000, EditorialP5RawWireContract.OUTPUT_TOKEN_CAP,
+                44_096, BigDecimal.ONE, 60_000L, true, false, false,
+                "redacted", "app-owned", issuedAt, issuedAt + 60_000L, true);
     }
 
     private static RowCounts rowCounts(SQLiteDatabase db) {
