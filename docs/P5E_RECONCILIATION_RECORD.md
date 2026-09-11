@@ -9,21 +9,21 @@ I/O logging và không lưu prompt, response body, source text hoặc secret.
 | Hạng mục | Giá trị |
 |---|---|
 | Branch | `feature/v4.18` |
+| HEAD hiện tại trước documentation snapshot | `a88673ab113c0877119d078c2fb569fd4f39c55a` (implementation baseline; documentation commit sau đó không được tự quy là source baseline) |
 | HEAD trước nhóm fresh-pilot evidence | `cd683503c79e03e4a215596855458c11200104ab` (historical group start) |
-| HEAD trước documentation closure | `424278e44c042b882d1888f45d5c4b5b944e0dca` |
-| Production implementation baseline trong candidate | `4140651d860e4ee11ce7e074970761666c575594` |
+| Production implementation baseline hiện tại | `a88673ab113c0877119d078c2fb569fd4f39c55a` |
 | Production source commit trong APK code199 | `03b97a30885393c1cc8a3297d5dff9672dcba57e` |
 | Production source commit trong pre-patch APK code201 | `a4b4a8f9d215578d5bfae329b1b4608927d0476c` |
 | Production source commit trong candidate APK code202 | `4140651d860e4ee11ce7e074970761666c575594` |
-| Test-source commit của clean test APK | `914820d3c91ae8df5cc6b2769df7b2d036585f7a` |
-| Candidate archived validation artifact | `v4.17-p5e.6 / versionCode 202`, `build-20260911-034554` |
-| Candidate production APK SHA-256 | `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0` |
-| Candidate source ZIP SHA-256 | `D91FE78F99DE6D04CE0DA09C54A76BF030BA40408CF74142B8FC8FF243471A5C` |
-| Current installed validation package | `v4.17-p5e.6 / versionCode 202`, installed once after G1 |
+| Test-source commit của candidate-aligned test APK | `a88673ab113c0877119d078c2fb569fd4f39c55a` |
+| Candidate archived validation artifact | `v4.17-p5e.8 / versionCode 204`, `build-20260911-180303`; chưa cài trên device |
+| Candidate production APK SHA-256 | `6BECD0F89ABAD308617CBB864AB38B62BCBDAE00E876BE96D57E3AD3FD8F8C83` |
+| Candidate source ZIP SHA-256 | `C5DCA76D6DC0970A0F18114ADC772AC8F883D63FA825951182BBD269AED614F5` |
+| Current installed validation package | `v4.17-p5e.6 / versionCode 202`, historical installed candidate; code204 chưa cài |
 | Last-known original pilot predecessor | `code196 / schema v24`; historical and unavailable, not current data |
 | Pre-upgrade code199 production APK SHA-256 | `870CB31186649CE3EF71DA5A58A47DA7877143912DB0BE5BA1D8A4AFB5D3BE09` |
-| Current code202 production APK SHA-256 | `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0` |
-| Candidate-aligned test APK SHA-256 | `63D3093CF68700A563CA979A9D15C3652FD8AB1DE60B219BDB35AE19442F76BC`, test-source commit `424278e44c042b882d1888f45d5c4b5b944e0dca`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
+| Current installed code202 production APK SHA-256 | `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0` (historical installed artifact) |
+| Candidate-aligned test APK SHA-256 | `41350151A4AB6AAA8C25A5B7AE0FE71D7297ECD1C3535233D23F11A5B487B144`, test-source commit `a88673ab113c0877119d078c2fb569fd4f39c55a`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; compiled, not installed |
 | Pre-candidate clean test APK SHA-256 | `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456`; historical attribution only |
 | Package / test package | `com.ml.tblandroidtxt` / `com.ml.tblandroidtxt.test` |
 | Candidate/installed APK certificate SHA-256 | `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
@@ -285,8 +285,9 @@ candidate-aligned fake QA tiếp theo đạt G3/G4; không copy attempt/receipt/
 authorization cũ. Snapshot fresh có manifest SHA-256
 `2BEA88D4B562DFFA0CEAE401E1BFA0ED50B353CCD014AA9840F15CE1FA7F35EF`.
 
-Sau G1/G2/G3/G4, các nhãn local-only dưới đây là trạng thái hiện tại của fresh
-lineage; chúng không phải live acceptance và không phục hồi lịch sử code196:
+Sau G1/G2/G3/G4, các nhãn local-only dưới đây là evidence của baseline trước
+P5E.9A exact-freeze; chúng không phải current P5E.9A pass, không phải live
+acceptance và không phục hồi lịch sử code196:
 
 ```text
 FRESH_PILOT_LOCAL_VERIFIED
@@ -329,3 +330,101 @@ dừng typed và cần binding/contract được owner đo và phê duyệt riê
 Nguồn tham chiếu capability được kiểm tra trước P5E: [GPT-5.6 Luna model page](https://openrouter.ai/openai/gpt-5.6-luna-20260709),
 [OpenRouter Structured Outputs](https://openrouter.ai/docs/guides/features/structured-outputs),
 và [OpenRouter generation metadata API](https://openrouter.ai/docs/api/api-reference/generations/get-generation).
+
+## P5E.9A — Fresh RAW boundary freeze và zero-call preflight result
+
+Nhóm này dừng ở read-only freeze. Không tạo hoặc tiêu thụ authorization, không
+tạo attempt, không gọi provider/API, không RECONCILE, không repair/retry và
+không chạy `connected*AndroidTest`.
+
+### Baseline hiện hành
+
+| Hạng mục | Candidate mới | Installed trên device |
+|---|---|---|
+| Source | `a88673ab113c0877119d078c2fb569fd4f39c55a` | code202 historical source `4140651d860e4ee11ce7e074970761666c575594` |
+| APK | `v4.17-p5e.8`, code204, event `build-20260911-180303` | `v4.17-p5e.6`, code202 |
+| Production APK SHA-256 | `6BECD0F89ABAD308617CBB864AB38B62BCBDAE00E876BE96D57E3AD3FD8F8C83` | `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0` |
+| Source ZIP SHA-256 | `C5DCA76D6DC0970A0F18114ADC772AC8F883D63FA825951182BBD269AED614F5` | historical code202 source ZIP |
+| Certificate | `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` | same |
+| Test APK | `41350151A4AB6AAA8C25A5B7AE0FE71D7297ECD1C3535233D23F11A5B487B144`, test source `a88673ab113c0877119d078c2fb569fd4f39c55a`; compiled outside Git, not installed | code202 test APK evidence is historical |
+
+Candidate code204 is archived symmetrically in `artifacts/builds` and `backup`
+with matching APK bytes. It was not installed: the recorded owner approval
+pins code202, and the current exact binding freeze failed before an upgrade was
+permitted. Code203 and the older test APK are historical/superseded evidence.
+
+### Read-only device freeze
+
+Device/package facts were read again on serial `15e84958`: package
+`com.ml.tblandroidtxt`, installed `v4.17-p5e.6`/code202, certificate token
+`abebea4b`, schema v24. The app process was absent; DB journal mode was
+`delete`, `tbl_android_txt.db-journal` was 0 bytes, and no `-wal`/`-shm` file
+was present. The requested selector, binding, run, chapter, source mode,
+source hashes/lengths, pack hash and profile hash matched the expected facts;
+the row counts were all zero:
+
+```text
+attempts=0
+authorization_receipts=0
+reconciliation=0
+reconciliation_history=0
+network_lifecycle=0
+report_or_receipt=0
+```
+
+The freeze nevertheless failed on one exact identity:
+
+```text
+expected compatibility_evaluation_id:
+f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1
+observed compatibility_evaluation_id:
+3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1
+typed result: P5E_9A_DEVICE_FREEZE_BLOCKED_FRESH_EVALUATION_MISMATCH
+```
+
+This is a fail-closed identity mismatch, not permission to repin or repair the
+row. No SQL was issued and no current DB row was changed. The official
+fresh-pilot setup/binding owner must resolve it before the exact preflight can
+be rerun.
+
+### Snapshot and local attribution
+
+A new private snapshot was captured with the app stopped, no WAL/SHM sidecar,
+and the zero-byte rollback journal retained. It contains the DB, source files
+and immutable pack files, but no secret or book content was added to Git or
+this report. The manifest is outside Git at
+`D:\P5E-private\fresh-raw-boundary-20260911-1810\SNAPSHOT_MANIFEST.json`,
+manifest SHA-256 `6D3949C37E5C6D78FACB5FB7058CB4CBAAE615F54CF07F8F8462D1E39DD75A28`.
+The snapshot classification is `RECONSTRUCTED_ONLY`; it is not code196
+recovery. An isolated copy opened with `integrity_check=ok`, schema 24,
+`journal_mode=delete`, matching source/pack hashes and zero lifecycle rows.
+This proves data-level SQLite restore only, not current-app restore after an
+APK upgrade.
+
+The source patch was validated locally without a provider: latest host engine
+tests are `200/200 PASS`, app debug unit tests are `231/231 PASS`, and
+AndroidTest compilation passes. The new candidate test APK was not installed,
+so no device instrumentation result is attributed to code204. Prior code202
+G3/G4 fake/device evidence remains historical and does not close this exact
+P5E.9A freeze.
+
+### Decision and stop state
+
+```text
+P5E_9A_FRESH_RAW_BOUNDARY_LOCAL_PASS: NOT_REACHED
+P5E_9A_DEVICE_FREEZE_BLOCKED_FRESH_EVALUATION_MISMATCH
+FRESH_RAW_EXACT_PREFLIGHT_READY: NOT_REACHED
+RAW_AUTHORIZATION_REQUIRED
+NO_AUTHORIZATION_CREATED
+NO_PROVIDER_CALL_PERFORMED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
+P6_NOT_READY
+HISTORICAL_CODE196_PRESERVATION_FAILED
+```
+
+The next action is one owner decision to resolve the exact evaluation identity
+through the official setup/binding path; if that changes the candidate, a new
+exact artifact approval is required. No RAW authorization block is prepared
+from this failed freeze.

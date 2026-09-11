@@ -166,10 +166,50 @@ Lớp `EditorialP5EFreshPilotInstrumentedTest` chạy trực tiếp bằng
 
 Không dùng `connectedDebugAndroidTest`, không gọi provider/API thật, không tạo
 RAW authorization và không biến fake predecessor thành bằng chứng live. Trạng
-thái kết thúc của vòng local là:
+thái kết thúc của vòng G3/G4 local trước exact-freeze là:
 
 ```text
 FRESH_PILOT_LOCAL_VERIFIED
+RAW_AUTHORIZATION_REQUIRED
+NO_LIVE_CALL_PERFORMED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
+```
+
+## P5E.9A freeze correction — current result
+
+The code202/G3/G4 entries above are retained as prior evidence. For the current
+exact-binding boundary, the patched candidate is code204 (`v4.17-p5e.8`), source
+commit `a88673ab113c0877119d078c2fb569fd4f39c55a`, APK SHA-256
+`6BECD0F89ABAD308617CBB864AB38B62BCBDAE00E876BE96D57E3AD3FD8F8C83`, and
+certificate SHA-256
+`47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`. It is
+archived in both artifact/backup roots but was not installed. The corresponding
+test APK is outside Git and has SHA-256
+`41350151A4AB6AAA8C25A5B7AE0FE71D7297ECD1C3535233D23F11A5B487B144`.
+
+The read-only freeze on `15e84958` confirmed package `com.ml.tblandroidtxt`,
+installed code202, signature token `abebea4b`, schema v24, the requested
+selector/binding/run/chapter, source/pack/profile hashes and zero attempts,
+authorization receipts, reconciliation, history, lifecycle and report/receipt
+rows. It found one fail-closed mismatch: observed evaluation
+`3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1` versus pinned
+`f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1`.
+
+Because the evaluation identity is wrong, stop before candidate install,
+device instrumentation and exact preflight. Do not change the row with SQL,
+silently repin the evaluation, or reuse the old owner approval for code204. A
+new private reconstructed snapshot/isolated SQLite data-level restore is at
+`D:\P5E-private\fresh-raw-boundary-20260911-1810` with manifest SHA-256
+`6D3949C37E5C6D78FACB5FB7058CB4CBAAE615F54CF07F8F8462D1E39DD75A28`; it is
+not code196 recovery and not full post-upgrade app restore evidence.
+
+Current stop state:
+
+```text
+P5E_9A_FRESH_RAW_BOUNDARY_LOCAL_PASS: NOT_REACHED
+P5E_9A_DEVICE_FREEZE_BLOCKED_FRESH_EVALUATION_MISMATCH
 RAW_AUTHORIZATION_REQUIRED
 NO_LIVE_CALL_PERFORMED
 RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED

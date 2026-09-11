@@ -1,11 +1,32 @@
 # Workspace Snapshot
 
-- Updated: 2026-09-11 (+07:00).
-- Current status: P5E_0_DOCUMENTATION_CLEANUP_PASS / P5E_LOCAL_QA_PASS / INSTALL_GUARD_LOCAL_PASS / P5E_CANDIDATE_HASH_CERT_PIN_LOCAL_PASS / FRESH_PILOT_OWNER_APPROVED / BACKUP_RESTORE_LOCAL_PASS / CANDIDATE_UPGRADE_DATA_READBACK_PASS / FRESH_PILOT_LOCAL_VERIFIED / P5E_9A_PREFLIGHT_PATCH_LOCAL_TESTED_REBUILD_REQUIRED / P5E_9A_DEVICE_VERIFICATION_BLOCKED_ADB_DISCONNECTED / RAW_AUTHORIZATION_REQUIRED / NO_LIVE_CALL_PERFORMED / DB_REOPEN_STALE_CLAIM_RECOVERY_VERIFIED / P5D_DEADLINE_BODY_READ_HARDENING_PASS / NO_LATE_COMMIT / NO_AUTOMATIC_REDISPATCH / CODE191_EXTERNAL_STATE_RECONCILED / COMPACT_RAW_WIRE_CONTRACT_LOCAL_PASS / STRUCTURED_OUTPUT_REQUEST_LOCAL_PASS / OUTPUT_SIZE_WITHIN_BUDGET / RAW_REPLAY_PROTECTION_PASS / HISTORICAL_CODE196_PRESERVATION_FAILED / PILOT_DATA_PRESERVATION_GATE_FAILED_ORIGINAL_CODE196_DB_LOST_RECONSTRUCTED_ONLY / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY).
-- Current version/build: installed last-known artifact 4.17-p5e.6 / code202 remains on device, but ADB currently has no attached `15e84958`; no code203 upgrade was attempted. Archive v4.17-p5e.7 / code203 exists in both artifact and backup with APK SHA-256 `1EF96E9956EE99CA2F81EDA4DDF8AAAC4F96E0E4BCB591B945ED1878589E1036`, source ZIP SHA-256 `9446F6344951B782B1BD90B4866F2505987F3CB1701D84894A5DCCF5B9C3C33B`, source commit `a02f0063990e676c25dd254770905829a3d67998`; it is superseded for device use by the uncommitted exact-binding preflight patch and must not be called the current candidate. Its certificate is `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`. The original code196 package data was not preserved after the connected-test installer incident. Code191 is reconciled as `EXTERNAL_CONFIRMED_CANCELLED`; metadata does not prove `$0` billing. No provider call or new authorization has been made after the incident. DB schema is v24 with reconstructed VOL5 data. Output cap remains `4,096`.
+- Updated: 2026-09-11 18:10 (+07:00).
+- Current status: P5E_0_DOCUMENTATION_CLEANUP_PASS / P5E_LOCAL_QA_PASS / INSTALL_GUARD_LOCAL_PASS / P5E_CANDIDATE_HASH_CERT_PIN_LOCAL_PASS / FRESH_PILOT_OWNER_APPROVED / BACKUP_RESTORE_LOCAL_PASS / P5E_9A_HOST_BOUNDARY_LOCAL_PASS / P5E_9A_DEVICE_FREEZE_BLOCKED_FRESH_EVALUATION_MISMATCH / RAW_AUTHORIZATION_REQUIRED / NO_LIVE_CALL_PERFORMED / DB_REOPEN_STALE_CLAIM_RECOVERY_VERIFIED / P5D_DEADLINE_BODY_READ_HARDENING_PASS / NO_LATE_COMMIT / NO_AUTOMATIC_REDISPATCH / CODE191_EXTERNAL_STATE_RECONCILED / COMPACT_RAW_WIRE_CONTRACT_LOCAL_PASS / STRUCTURED_OUTPUT_REQUEST_LOCAL_PASS / OUTPUT_SIZE_WITHIN_BUDGET / RAW_REPLAY_PROTECTION_PASS / HISTORICAL_CODE196_PRESERVATION_FAILED / PILOT_DATA_PRESERVATION_GATE_FAILED_ORIGINAL_CODE196_DB_LOST_RECONSTRUCTED_ONLY / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / NOT_GLOBALLY_RUNNABLE (P4_COMPLETE / BINDING_RESUME_VERIFIED / PILOT_SETUP_READY). `P5E_9A_FRESH_RAW_BOUNDARY_LOCAL_PASS` has not been reached.
+- Current version/build: candidate archive `4.17-p5e.8` / code204, event `build-20260911-180303`, was built from `a88673ab113c0877119d078c2fb569fd4f39c55a` with APK SHA-256 `6BECD0F89ABAD308617CBB864AB38B62BCBDAE00E876BE96D57E3AD3FD8F8C83`, source ZIP SHA-256 `C5DCA76D6DC0970A0F18114ADC772AC8F883D63FA825951182BBD269AED614F5`, and certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; artifact/backup hashes match. It is not installed. The device is read-only verified as `15e84958`, package `com.ml.tblandroidtxt`, v4.17-p5e.6/code202, signature token `abebea4b`, schema v24; its installed APK remains the historical code202 hash `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0`. Candidate-aligned test APK from the same source commit is outside Git at `D:\P5E-private\fresh-raw-boundary-20260911-1806\candidate-test-apk\app-debug-androidTest.apk`, SHA-256 `41350151A4AB6AAA8C25A5B7AE0FE71D7297ECD1C3535233D23F11A5B487B144`.
+- Current commit baseline: `a88673ab113c0877119d078c2fb569fd4f39c55a`, the implementation baseline immediately before this snapshot update; documentation is not self-referential. Active authority, canonical pack/profile and final schemas are unchanged. The current data remains `RECONSTRUCTED_ONLY`; code189/code191 and code203 are historical evidence.
+- Current phase: P5E.9A device freeze was performed without provider/API call, authorization/attempt creation, RECONCILE, or DB write. Selector/binding/run/chapter, schema v24, source hashes, pack/profile and all current counts (attempts/auth receipts/reconciliation/history/lifecycle/report-or-receipt) passed except the exact compatibility evaluation: observed `3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1`, expected `f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1`. New private snapshot/isolated SQLite restore is data-level PASS at `D:\P5E-private\fresh-raw-boundary-20260911-1810`, manifest SHA-256 `6D3949C37E5C6D78FACB5FB7058CB4CBAAE615F54CF07F8F8462D1E39DD75A28`; it records the mismatch and is `RECONSTRUCTED_ONLY`, not code196 recovery. Device preflight and candidate-aligned instrumentation are blocked; no SQL correction or candidate install followed.
 - Current branch/workspace: feature/v4.18 / D:\App Translate Books\App Translate Books-translation-profile.
-- Current commit baseline: a02f0063990e676c25dd254770905829a3d67998, the implementation baseline immediately before the exact-binding preflight patch; this value is not self-referential. The patch reconstructs current source/pack/identity facts from the persisted fresh binding before local request rendering; it has passed focused host tests and AndroidTest compilation but requires a new archive and device verification.
-- Active authority: V5-SAFE.4.1.3-FULL. Authority bytes, canonical ZIP SHA, Java-control ZIP SHA and profile v2 hash are unchanged.
+
+## P5E.9A current freeze evidence
+
+| Item | Current fact |
+|---|---|
+| Installed baseline | `15e84958` / `com.ml.tblandroidtxt` / `v4.17-p5e.6` / code202 / signature token `abebea4b` / schema v24 |
+| Candidate archive | `v4.17-p5e.8` / code204 / source `a88673ab113c0877119d078c2fb569fd4f39c55a` / APK `6BECD0F89ABAD308617CBB864AB38B62BCBDAE00E876BE96D57E3AD3FD8F8C83` |
+| Candidate certificate | `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155` |
+| Test APK | `41350151A4AB6AAA8C25A5B7AE0FE71D7297ECD1C3535233D23F11A5B487B144`, source `a88673ab113c0877119d078c2fb569fd4f39c55a`, kept outside Git |
+| Fresh binding | selector/binding/run/chapter matched the requested values |
+| Evaluation freeze | FAIL: observed `3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1`; pinned `f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1` |
+| Current DB mutation | none; attempts, authorization receipts, reconciliation, history, lifecycle and report/receipt counts remain zero |
+| Snapshot/restore | data-level PASS, private reconstructed snapshot; current app restore/readback not re-run |
+| Provider/auth | provider calls 0; no authorization created/consumed; no RECONCILE |
+
+The exact evaluation mismatch is a freeze blocker. It must be resolved through
+the official fresh-pilot setup/binding owner, never by SQL editing or by silently
+changing the pinned tuple. The code204 artifact is not device-verified and the
+prior owner approval names code202, so no upgrade was attempted. The previous
+G3/G4 code202 evidence is retained as historical local evidence, not promoted to
+the current P5E.9A exact-boundary pass.
 
 ## Completed tasks
 
@@ -28,8 +49,8 @@
 - A production-owned RAW-only entry point and focused fake regression are committed in `1994b3c`; they return after durable RAW readback and never construct a RECONCILE request. The VOL5 setup/live test is committed in `e34084d`.
 - VOL5 setup instrumentation passed `1/1`: selector `p5d-raw-mercedes-vol5-001`, exact pack/profile identity and app-computed source hashes were read back. The earlier missing-key invocation is preserved as `LIVE_AUTHORIZATION_INCOMPLETE` with providerCalls `0`. The subsequent explicit RAW invocation dispatched one request and persisted `RECOVERY_REQUIRED`; OpenRouter generation `gen-1788910936-DHfTNOyDlU3f3PJOAvqb` is confirmed `cancelled`, with zero report/receipt bytes and no RECONCILE. See `docs/P5D_VOL5_RAW_PROVIDER_RECONCILIATION.md`.
 - P5D code189 local HTTP closure passed immediate, 11-second delayed-with-legacy-cancel and 11-second delayed-without-legacy-cancel (`1/1` each); the full fake E2E class passed `13/13`, schema/migration device classes `41/41`, and full instrumentation passed `130 tests / 0 failures`. Adapter lifecycle metadata survived DB reopen on isolated v22 databases. Detailed evidence is in `docs/P5D_LOCAL_HTTP_HARNESS_REPORT.md`.
-- P5E.9A implementation group is staged: the historical P5D runner rejects the fresh selector with a typed guard; the fresh runner separates preflight-only from future RAW dispatch; the fresh OpenRouter route pins JSON Schema/strict/minimal reasoning, `require_parameters=true`, no fallback and an explicit upstream; host route/parser tests pass and AndroidTest compilation passes. No provider call, authorization or current-DB mutation occurred. The source group still requires an exact committed candidate artifact and device verification before the P5E.9A status can be closed.
-- The follow-up exact-binding preflight patch is now locally compiled: it reconstructs the expected fresh binding, source identities/bytes, immutable pack authority, bundle identity and request-envelope hash without calling `resumeProject` or any provider. The code203 archive predates this patch and is therefore historical for this group; code204-or-later must be built from the patched commit. Device verification is blocked only by the missing approved serial in ADB, not substituted with another target.
+- P5E.9A implementation group is locally staged: the historical P5D runner rejects the fresh selector with a typed guard; the fresh runner separates preflight-only from future RAW dispatch; the fresh OpenRouter route pins JSON Schema/strict/minimal reasoning, `require_parameters=true`, no fallback and an explicit upstream; host route/parser tests pass and AndroidTest compilation passes. No provider call, authorization or current-DB mutation occurred. The patched code204 archive exists, but P5E.9A device closure is blocked by an exact evaluation-identity mismatch found during read-only freeze.
+- The exact-binding preflight patch reconstructs the expected fresh binding, source identities/bytes, immutable pack authority, bundle identity and request-envelope hash without calling `resumeProject` or any provider. Code204 was built from the patched commit and is not installed. The current device still has historical code202; the prior owner approval pins code202, so no code204 upgrade was attempted after the mismatch.
 - The controlled RAW diagnostic preflight was rerun without provider access: fake recovery/binding class `13/13 PASS`, live recovery inspection `1/1 PASS`, engine expiry/budget/authorization boundary `16/16 PASS`; provider calls `0`. Exact identities and the pre-dispatch snapshot are in `docs/P5D_RAW_DIAGNOSTIC_PREFLIGHT.md`.
 - The user-approved RAW diagnostic authorization was consumed once. The single OpenRouter call returned HTTP `200`/complete transport but `finish=length` at `2,048` output tokens; local validation returned `RETRY_OUTPUT_TRUNCATED`, persisted lifecycle reached `RESPONSE_BODY_COMPLETE`, and no partial report/receipt was committed. See `docs/P5D_RAW_DIAGNOSTIC_ATTEMPT_REPORT.md`.
 - Test-first output-budget evidence reproduced the silent `4,096 → 2,048` clamp. The exact-cap HTTP body test and invalid-cap fail-closed test now pass after the minimal alignment change. A focused recovery-history test proved v22's single immutable reconciliation row could not retain a later truncated decision; additive v23 append-only history is implemented and awaits device migration/readback verification. No provider call was made for this change.
@@ -49,7 +70,7 @@
 - P5E candidate-install QA found and reproduced a missing payload pin: the old guard rejected the new `ExpectedApkSha256` parameter. The minimal patch now requires exact APK SHA-256 and certificate SHA-256, passes the code202 check-only match, rejects wrong hash/certificate and rejects `build-and-save.ps1 -Install` without certificate pin. Candidate code202 then passed one guarded install and G2 data readback; it is device-verified for package/artifact/data preservation, not for a live provider acceptance.
 - Candidate code202 was built through `scripts/build-and-save.ps1` with app unit/lint/archive success, versionCode `202`, source commit `4140651d860e4ee11ce7e074970761666c575594`, APK SHA-256 `8A1E0A2F5031B63B1DE83BEE0AEA639A074F8515E6BCB6430A8D5DB844768CD0`, source ZIP SHA-256 `D91FE78F99DE6D04CE0DA09C54A76BF030BA40408CF74142B8FC8FF243471A5C`, and identical artifact/backup payloads. After owner approval and `BACKUP_RESTORE_G1_PASS`, one guarded install passed; post-upgrade package/DB/source/pack readback passed.
 - Fresh-pilot owner approval was observed at `2026-09-11T06:00:59+07:00` for local-only work, exact candidate pins and no provider/authorization/retry/repair/RECONCILE. The pre-upgrade private snapshot is outside Git at `D:\P5E-private\fresh-pilot-20260911-060059`, manifest SHA-256 `1C495F95B0572458B8405B599A7D11CC80F6770316080A1772EF379A17AC7C64`; classification is `RECONSTRUCTED_ONLY`, not code196 recovery. SQLite snapshot/isolated restore passed (`user_version=24`, `integrity_check=ok`, foreign-key violations `0`, source/pack hashes equal). The candidate was installed once through `scripts/install-validated.ps1`; device readback is code202 with the same reconstructed DB/source/pack invariants.
-- Fresh-pilot G3/G4 evidence is in the separate private fresh snapshot `D:\P5E-private\fresh-pilot-20260911-060059\fresh-pilot-snapshot`, manifest SHA-256 `2BEA88D4B562DFFA0CEAE401E1BFA0ED50B353CCD014AA9840F15CE1FA7F35EF`. It records fresh selector `p5e-fresh-mercedes-vol5-20260911-01`, binding `845976b3cde02a3bf0896b64efd208f42e40821317d1b7bffec7081e63e33cdf`, run declaration `8466b95d96f958a97eb3ffd1eac5a32734023cafa1c230e696ad4253151a41dc`, schema v24, source/pack readback, `p5c_attempts=0`, `p5d_auth=0`, `p5d_reconcile=0`, and readback of both old and fresh selectors. Candidate-aligned fake success/replay, fault STOP/no partial commit and parser negatives ran only in isolated storage; provider calls remain `0`.
+- Prior fresh-pilot G3/G4 evidence is retained in the private snapshot `D:\P5E-private\fresh-pilot-20260911-060059\fresh-pilot-snapshot`, manifest SHA-256 `2BEA88D4B562DFFA0CEAE401E1BFA0ED50B353CCD014AA9840F15CE1FA7F35EF`; it is historical relative to the current exact-freeze result. The new snapshot `D:\P5E-private\fresh-raw-boundary-20260911-1810` has manifest SHA-256 `6D3949C37E5C6D78FACB5FB7058CB4CBAAE615F54CF07F8F8462D1E39DD75A28` and records the observed evaluation mismatch. It is classified `RECONSTRUCTED_ONLY`, not code196 recovery.
 
 ## Validation evidence
 
@@ -62,7 +83,7 @@
 ## Pending tasks
 
 - Historical code196 preservation remains failed: the original pilot DB disappeared during the connected-test installer incident and no trusted backup was found. Code197 → code198 and code198 → code199 readback covers reconstructed data only. This historical failure is not relabeled as recovered; the owner-approved fresh path is independent.
-- Fresh-pilot owner approval, G1 backup/restore, G2 candidate/data readback, fresh identity setup and candidate-aligned fake E2E are complete. A live RAW authorization is still a separate required decision; no provider call, authorization, repair, retry or RECONCILE has occurred.
+- P5E.9A is blocked before device candidate verification and exact zero-call preflight because the persisted fresh binding has the wrong compatibility evaluation ID. No SQL correction is allowed. A live RAW authorization is not prepared or issued; no provider call, attempt, repair, retry or RECONCILE has occurred.
 - Release tag, release backup/export and real-chapter certification remain pending by design.
 
 ## Known bugs and limitations
@@ -72,6 +93,7 @@
 - Initial setup UI collects explicit source text for binding metadata; it does not certify source bytes or open execution.
 - Bootstrap profile v1 remains loadable and non-executable.
 - The consumed historical VOL4/VOL5 authorizations cannot be reused. Code191 metadata has the external classification `EXTERNAL_CONFIRMED_CANCELLED`; it has no completion timestamp/body and does not establish whether billing occurred. OpenRouter I/O logging remains disabled. No new P5E authorization was created after the preservation incident. The reconstructed DB has v24/source setup but not the historical VOL5 attempt row or reconciliation history.
+- The current fresh selector/binding/run/chapter is present and counts are zero, but its observed compatibility evaluation `3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1` does not equal the pinned `f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1`. The freeze therefore fails closed; do not silently repin, patch SQL, install code204, or request RAW authorization until the official setup/binding owner resolves the identity.
 - Current validation device state: candidate code202 is installed once with guarded `adb install -r` after G1 passed. The code196 package data preservation claim is withdrawn; current data remains `RECONSTRUCTED_ONLY`; no further uninstall/reset/database cleanup is permitted. Use `scripts/install-validated.ps1` and an explicit serial/version/hash/certificate/token for any future approved install.
 - The current VOL5 PRONOUN transport file includes a UTF-8 BOM, but semantic bytes after the existing app-owned removal match the immutable binding. No source rewrite or silent rebind is needed.
 - The local delayed harness initially hit a device freezer interruption at `DELAY_STARTED`; bounded cleanup and a test-only foreground keepalive resolved the harness run, but the historical provider cancellation actor remains unknown.
@@ -83,35 +105,30 @@ The original workspace D:\App Translate Books remains untouched. Its user-owned 
 
 ## Exact next step
 
-2026-09-11 update: P5E compact-wire implementation, evidence-coverage guard,
-installer guard and candidate hash/certificate pin are committed through
-`4140651`. Candidate code202 passed exact preflight, was installed once after
-the owner-approved G1 snapshot/restore, and passed package/DB/source/pack
-readback. Code201 is pre-patch historical. Code191 has an authenticated
-metadata decision of `EXTERNAL_CONFIRMED_CANCELLED`; code189/code191 remain
-historical evidence. The full-shape characterization is `49,665` bytes and
-compact-wire worst case is `2,785` bytes under a `3,584` byte local ceiling.
-Host engine is `200/200`; app unit variants are `228/228` each and Android test
-compilation/connected-installer fail-closed checks pass. Fresh setup and
-candidate-aligned fake QA pass on code202: direct instrumentation is `4/4`
-using test APK SHA-256 `63D3093CF68700A563CA979A9D15C3652FD8AB1DE60B219BDB35AE19442F76BC`
-from test-source commit `424278e44c042b882d1888f45d5c4b5b944e0dca`; fake
-attempt/predecessor rows are isolated. Current v24/VOL5 data is reconstructed
-only, so original `PILOT_DATA_PRESERVED` and
-`HISTORICAL_CODE196_PRESERVATION_FAILED` remain failed even though the fresh
-snapshot/restore and candidate upgrade passed. The next action is one separate
-owner decision on an exact single-use RAW authorization for the fresh binding.
-Until then do not create/consume authorization, call the provider, retry,
-repair, open RECONCILE or enable execution. Keep
-The staged next group is `P5E.9A`; its single next action is to commit the
-exact-binding preflight patch, build an archived candidate with a versionCode
-greater than 203, reconnect the explicitly approved serial, create a new
-private WAL-aware snapshot before any upgrade, and run the exact zero-call
-device preflight. Until that evidence is complete, do not claim
-`P5E_9A_FRESH_RAW_BOUNDARY_LOCAL_PASS`. Keep
-`FRESH_PILOT_LOCAL_VERIFIED / RAW_AUTHORIZATION_REQUIRED /
+2026-09-11 update: P5E.9A exact-binding preflight code is committed at
+`a88673ab113c0877119d078c2fb569fd4f39c55a`. Candidate code204 was built and
+archived in both artifact and backup with APK SHA-256
+`6BECD0F89ABAD308617CBB864AB38B62BCBDAE00E876BE96D57E3AD3FD8F8C83`; the
+candidate-aligned test APK has SHA-256
+`41350151A4AB6AAA8C25A5B7AE0FE71D7297ECD1C3535233D23F11A5B487B144` from the
+same source commit. Host contract/route tests, the full latest host suites and
+AndroidTest compilation pass; no provider call occurred. Read-only device
+freeze found the requested selector/binding/run/chapter, schema v24, source and
+pack/profile hashes, and zero attempt/auth/reconciliation/history/lifecycle/report
+rows, but the observed evaluation
+`3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1` differs from the pinned
+`f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1`. A new private
+WAL-aware snapshot and isolated SQLite/data-level restore passed at
+`D:\P5E-private\fresh-raw-boundary-20260911-1810` (manifest SHA-256
+`6D3949C37E5C6D78FACB5FB7058CB4CBAAE615F54CF07F8F8462D1E39DD75A28`), but the
+exact-boundary gate is blocked. Code204 was not installed, no authorization or
+attempt was created, no provider/API call was performed, and no SQL correction
+was made. The single next step is an owner decision to resolve the evaluation
+identity through the official fresh-pilot setup/binding path and, if the
+candidate changes, approve the exact new artifact before any device operation.
+Do not claim `P5E_9A_FRESH_RAW_BOUNDARY_LOCAL_PASS`; retain
+`HISTORICAL_CODE196_PRESERVATION_FAILED / RAW_AUTHORIZATION_REQUIRED /
 NO_LIVE_CALL_PERFORMED / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED /
-RECONCILE_AUTHORIZATION_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED /
-NOT_GLOBALLY_RUNNABLE`.
+EXECUTION_DISABLED / NOT_CERTIFIED`.
 
 This is current-only state; Git history preserves prior snapshots.
