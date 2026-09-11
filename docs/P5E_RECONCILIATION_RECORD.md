@@ -490,9 +490,10 @@ The new host test first failed against the old runner constant (`3ce…` expecte
 `f319…` actual) with one failure and zero provider calls. The minimal production
 patch in implementation commit `049e72b5769f8b3fdcb6f50646d1f0ead3043940` pins
 the official `3ce…` record; no SQL, migration, pack, profile or authority was
-changed. Candidate-boundary tests now use the same exact ID, and a historical
-`f319…` authorization is rejected with typed
-`P5E_FRESH_RAW_AUTHORIZATION_MISMATCH` before provider setup.
+changed. Candidate-boundary tests now use the same exact ID and include the
+historical-`f319…` authorization mismatch assertion; these AndroidTest paths
+compile but remain pending candidate-aligned device execution. The intended
+typed result is `P5E_FRESH_RAW_AUTHORIZATION_MISMATCH` before provider setup.
 
 The isolated fake fixture now relies on the importer-created
 `importId + ":compatibility:v1"` evaluation. It asserts that this ID has the
