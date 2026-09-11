@@ -533,19 +533,20 @@ This does not claim `P5E_9A_VALID_AUTHORIZATION_LOCAL_PATH_PASS` or a live
 RAW acceptance: the owner approval forbade valid-authorization dispatch. It is
 historical DV evidence and not the current A3 boundary.
 
-## Current active boundary — P5E.9B-A3.1
+## Current active boundary — P5E.9B-A3.1R
 
 The current state is the A2 fail-closed result, not the historical
 `FRESH_RAW_EXACT_PREFLIGHT_READY` result above. A2 evidence SHA-256 is
 `42BAA89A70392DDA11868C3FF11EED18D602DFBDC878207E349EEB55A07EEB8A`.
 The single-run A2 approval is consumed and cannot be reused.
 
-A3.1 completed host-only and used no ADB, persisted-settings read, current DB,
-instrumentation, provider, authorization, attempt or reconciliation. It added
-the test-only redacted boolean route diagnostic and compiled a private
-AndroidTest artifact; it did not install or run that artifact. A3.2 requires a
-new owner approval that pins the artifact and permits exactly one diagnostic
-method; it is not authorized by A2.
+A3.1 has a technical host-only result. A3.1R is the current host-only corrective
+closure: it synchronizes the active authority and changes the test-only
+diagnostic evidence channel so the four redacted booleans are emitted through
+instrumentation status rather than relying on Logcat. A3.1R uses no ADB,
+persisted-settings read, current DB, instrumentation, provider, authorization,
+attempt or reconciliation. A3.2 is not approved; its request must be reissued
+only after the new artifact is built and verified.
 
 ```text
 testSourceCommit=89eef75a4a62e5674d02b7e48eaaff012d9a7ae0
@@ -557,6 +558,7 @@ testTargetPackage=com.ml.tblandroidtxt
 testRunner=androidx.test.runner.AndroidJUnitRunner
 testApkBytes=1326212
 testApkInstalled=false
+testApkStatus=SUPERSEDED_NOT_INSTALLED
 providerCalls=0
 deviceOperations=0
 currentDbMutation=0
@@ -570,8 +572,10 @@ not reusable.
 ```text
 P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED
 P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED
-P5E_9B_A3_1_HOST_ONLY_IN_PROGRESS
-P5E_WORKFLOW_GATE_RECHECK_REQUIRED
+P5E_9B_A3_1_TECHNICAL_PASS
+P5E_9B_A3_1R_DOCUMENTATION_QA_REPAIRING
+P5E_WORKFLOW_PRETAG_FAIL_CLOSED
+P5E_9B_A3_2_NOT_YET_APPROVABLE
 RAW_AUTHORIZATION_REQUIRED
 NO_AUTHORIZATION_CREATED
 NO_LIVE_CALL_PERFORMED

@@ -1,19 +1,19 @@
 # Workspace Snapshot
 
 - Updated: 2026-09-12 00:32 (+07:00).
-- Current status: P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED / P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED / P5E_9B_A3_1_HOST_ONLY_PASS / P5E_9B_A3_2_DEVICE_DIAGNOSTIC_APPROVAL_REQUIRED / P5E_9B_ROUTE_DIAGNOSTIC_ARTIFACT_BUILT_NOT_INSTALLED / P5E_9B_A4_REMEDIATION_NOT_SELECTED / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / RAW_AUTHORIZATION_REQUIRED / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY. Historical completed statuses are retained below and are not current readiness claims.
+- Current status: P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED / P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_QA_REPAIRING / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_NOT_YET_APPROVABLE / P5E_9B_A4_REMEDIATION_NOT_SELECTED / RAW_AUTHORIZATION_REQUIRED / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY. Historical completed statuses are retained below and are not current readiness claims.
 - Current version/build: frozen candidate `4.17-p5e.11` / code207, event `build-20260911-201725`, build source snapshot `995d3b6c9678e93905b3802cf22eee0b091b1bb3`, production fix commit `ff6821a5de6f825c55e35f8570dfbf074b4e64b5`, APK SHA-256 `2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD`, source ZIP SHA-256 `B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348`, and certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; artifact/backup payloads are byte-identical. The candidate was installed exactly once through the approved guard and read back successfully. The device is `15e84958`, package `com.ml.tblandroidtxt`, v4.17-p5e.11/code207, signature token `abebea4b`, schema v24, DB SHA-256 `3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391`, data `RECONSTRUCTED_ONLY`. The A2 test artifact remains historical device evidence; A3.1 added a new private diagnostic artifact that is not installed.
-- Current commit baseline: implementation baseline `a0009f04139431f0bee38d049f9b32e2b6b04c41`; documentation HEAD before A3.1 is `6a35b2de1ebbb4dcdb6e47cde8d0a1d060781d5e`; test-only diagnostic commit is `89eef75a4a62e5674d02b7e48eaaff012d9a7ae0`; this snapshot records the implementation/test baseline before its separate documentation/result commit. The worktree was clean before that documentation update. Test-only correction commit is `f2695c862a9b860e08fd01f932377ec5576d6ad1`; production fix `ff6821a5de6f825c55e35f8570dfbf074b4e64b5` and prior test coverage `995d3b6c9678e93905b3802cf22eee0b091b1bb3` are ancestors. Active authority, canonical pack/profile and final schemas are unchanged. The current data remains `RECONSTRUCTED_ONLY`; code189/code191 and code206 QF results are historical evidence, code204 is pre-correction evidence and code205 is intermediate dirty-source evidence.
-- Current phase: the official fresh binding evaluation remains `3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1`; stale historical P5D evaluation `f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1` is not interchangeable. A2 ended fail-closed because persisted settings did not satisfy the fresh route predicate; no individual setting was exposed. Its evidence SHA-256 is `42BAA89A70392DDA11868C3FF11EED18D602DFBDC878207E349EEB55A07EEB8A`, and the approval is not reusable. A3.1 completed host-only: PreTag now fails on the unchecked current pilot-closure step, the redacted diagnostic compiled, and the new private test artifact was built but not installed. No ADB, provider/API call, authorization/attempt/reconciliation or current-DB mutation occurred.
+- Current commit baseline: actual resumed HEAD before A3.1R is `33cc68cf8195abf311d86604894226613303fc26`; implementation baseline is `a0009f04139431f0bee38d049f9b32e2b6b04c41`; A3.1 diagnostic test commit is `89eef75a4a62e5674d02b7e48eaaff012d9a7ae0`; documentation baseline before A3.1 is `6a35b2de1ebbb4dcdb6e47cde8d0a1d060781d5e`. This snapshot records the implementation/test baseline before its separate documentation/result commit. Test-only correction `f2695c862a9b860e08fd01f932377ec5576d6ad1`, production fix `ff6821a5de6f825c55e35f8570dfbf074b4e64b5` and prior test coverage `995d3b6c9678e93905b3802cf22eee0b091b1bb3` are ancestors. Active authority, canonical pack/profile and final schemas are unchanged. The current data remains `RECONSTRUCTED_ONLY`; code189/code191 and code206 QF results are historical evidence, code204 is pre-correction evidence and code205 is intermediate dirty-source evidence.
+- Current phase: the official fresh binding evaluation remains `3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1`; stale historical P5D evaluation `f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1` is not interchangeable. A2 ended fail-closed because persisted settings did not satisfy the fresh route predicate; no individual setting was exposed. Its evidence SHA-256 is `42BAA89A70392DDA11868C3FF11EED18D602DFBDC878207E349EEB55A07EEB8A`, and the approval is not reusable. A3.1 technical evidence exists; A3.1R is repairing the active authority and changes the diagnostic result channel from Logcat-only to instrumentation status. The old A3 artifact is superseded/not installed and the new artifact is not yet built. No ADB, provider/API call, authorization/attempt/reconciliation or current-DB mutation occurred.
 - Current branch/workspace: feature/v4.18 / D:\App Translate Books\App Translate Books-translation-profile.
 
-## Current active state — P5E.9B-A3.1
+## Current active state — P5E.9B-A3.1R
 
 - A2 is historical fail-closed evidence, not a route or exact-preflight pass. `P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED` and `P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED` remain the active safety boundary.
-- P5E.9, A2 and the P5 exit gate remain incomplete. A3.1 completed only the host-only documentation, offline/test-only redacted diagnostic and private test-APK build; A3.2 requires separate owner approval.
+- P5E.9, A2 and the P5 exit gate remain incomplete. A3.1 has a technical host-only result, while A3.1R repairs documentation and evidence-channel semantics; A3.2 remains not yet approvable until the new artifact is built and the approval block is reissued.
 - Implementation baseline: `a0009f04139431f0bee38d049f9b32e2b6b04c41`. Test-only diagnostic commit: `89eef75a4a62e5674d02b7e48eaaff012d9a7ae0`. Documentation baseline before this group: `6a35b2de1ebbb4dcdb6e47cde8d0a1d060781d5e`.
 - A2 evidence SHA-256: `42BAA89A70392DDA11868C3FF11EED18D602DFBDC878207E349EEB55A07EEB8A`. A3.1 device operations, provider calls and current-DB reads/mutations were `0`.
-- A3.1 private artifact: `D:\P5E-private\fresh-raw-route-diagnostic-a3-20260912-002937-test-apk\app-debug-androidTest.apk`, SHA-256 `64A9976F43F04397DF0E593F21E7AE154CDED1ED6749294F3B1E5F9D2A77757A`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`, package `com.ml.tblandroidtxt.test`, target `com.ml.tblandroidtxt`, runner `androidx.test.runner.AndroidJUnitRunner`, size `1326212` bytes; not installed.
+- A3 private artifact: `D:\P5E-private\fresh-raw-route-diagnostic-a3-20260912-002937-test-apk\app-debug-androidTest.apk`, SHA-256 `64A9976F43F04397DF0E593F21E7AE154CDED1ED6749294F3B1E5F9D2A77757A`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`, package `com.ml.tblandroidtxt.test`, target `com.ml.tblandroidtxt`, runner `androidx.test.runner.AndroidJUnitRunner`, size `1326212` bytes; retained as `SUPERSEDED_NOT_INSTALLED`. A3.1R must produce a new private artifact; no device operation is allowed in this group.
 
 ## P5E.9A-EVAL historical freeze evidence
 
@@ -135,7 +135,7 @@ zero-call instrumentation be considered.
 
 The original workspace D:\App Translate Books remains untouched. Its user-owned changes and checkout were not reset, staged or modified.
 
-## P5E.9A-LQ-DV — current device verification
+## P5E.9A-LQ-DV — historical device verification
 
 The owner-approved local/device scope is complete. Code207 was installed once
 from the frozen production artifact after WAL-aware snapshot, isolated restore
@@ -353,7 +353,7 @@ The single next step is a new owner decision for an explicit read-only
 investigation/remediation scope; the consumed single-run A2 approval is not
 reusable.
 
-## P5E.9B-A3.1 current host-only result
+## P5E.9B-A3.1 historical host-only result
 
 The active A3.1 group completed without ADB, device settings access, current
 DB access, instrumentation, provider/API call, authorization, attempt or

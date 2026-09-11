@@ -4,7 +4,7 @@ Ngày ghi nhận: `2026-09-11` (+07:00)
 Phạm vi: metadata OpenRouter được đọc qua Activity/Logs đã xác thực; không mở
 I/O logging và không lưu prompt, response body, source text hoặc secret.
 
-## Current active decision — P5E.9B-A3.1 host-only
+## Current active decision — P5E.9B-A3.1R host-only corrective closure
 
 The latest A2 result is fail-closed, not a readiness pass:
 `P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED` /
@@ -13,12 +13,13 @@ SHA-256 is `42BAA89A70392DDA11868C3FF11EED18D602DFBDC878207E349EEB55A07EEB8A`.
 The A2 single-run approval is consumed and is not reusable. The exact setting
 that differed was intentionally not read or logged.
 
-The current task is P5E.9B-A3.1 and is host-only. It may update active status
-documentation and add a test-only diagnostic that emits only route booleans;
-it may not use ADB, inspect device settings, mutate the current DB, create or
-consume authorization/attempt/reconciliation, call a provider, retry, repair
-or RECONCILE. P5E.9, A2 and the P5 exit gate remain incomplete. Any A3.2
-device action requires a new owner approval and cannot be inferred from A2.
+The current task is P5E.9B-A3.1R and is host-only. It synchronizes the active
+authority and changes the test-only diagnostic evidence channel to emit route
+booleans through instrumentation status; it may not use ADB, inspect device
+settings, mutate the current DB, create or consume
+authorization/attempt/reconciliation, call a provider, retry, repair or
+RECONCILE. P5E.9, A2 and the P5 exit gate remain incomplete. Any A3.2 device
+action requires a new owner approval and cannot be inferred from A2.
 
 Current implementation baseline is
 `a0009f04139431f0bee38d049f9b32e2b6b04c41`; documentation HEAD before this
@@ -166,7 +167,7 @@ Candidate này đã được cài đúng một lần sau owner approval và G1 b
 `adb install -r`; package/hash/certificate/signature và G2 data readback đã pass.
 Pre-candidate clean test APK hash
 `501653AC313DF297BA95C26CA1B80753DED174B01BD754A9422204F98A0C1456` thuộc
-test-source commit `914820d3c91ae8df5cc6b2769df7b2d036585f7a`, package
+test-source commit `914820d66e88cb5dc0e2d2bc73ef6d189c738810`, package
 `com.ml.tblandroidtxt.test`, cùng debug certificate; versionCode test APK là
 `N/A` theo manifest instrumentation. Nó là historical evidence cho build
 trước candidate. Candidate-aligned test APK cuối có SHA-256
@@ -700,7 +701,7 @@ been rerun. The later separate owner approval and QF device rerun are recorded
 in the current section below. No RAW authorization may be created from this
 historical evidence.
 
-## P5E.9A-QF — current test-query correction and zero-call device result
+## P5E.9A-QF — historical test-query correction and zero-call device result
 
 The owner approved the exact corrected test APK in a separate
 `P5E_9A_QF_TEST_APK_OWNER_APPROVAL` block. Only
@@ -898,7 +899,7 @@ testCertificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22e
 testApkPath=D:\P5E-private\fresh-raw-lineage-lq-20260911-2018-test-apk\app-debug-androidTest.apk
 ```
 
-### Current decision and stop boundary
+### Historical decision and stop boundary
 
 The installed device remains code206 and the current reconstructed DB remains
 untouched. The new candidate has not been owner-approved for installation, so
@@ -1180,7 +1181,7 @@ and lifecycle reads use the canonical `attempt_identity` joins and map query
 or schema failures to typed `P5E_FRESH_RAW_LINEAGE_CHECK_FAILED`. No partial
 commit or automatic redispatch occurred.
 
-### Current decision
+### Historical decision
 
 ```text
 P5E_9A_LQ_TEST_VERSION_PIN_CORRECTED
@@ -1500,7 +1501,7 @@ packSha256=497786e18e6e2309b44c6695bc8d8e0b538babfe20b1bc0b6f74c395fd05642d
 profileSha256=beec03a42e37f424a6f071ad48f35878b27e1083141699352cda4474d8cc2e21
 ~~~
 
-### Current decision
+### Historical decision
 
 ~~~
 P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED
@@ -1525,7 +1526,7 @@ The single-run A2 approval is not reusable. A new owner decision is required
 before any further device or settings action. No live authorization has been
 created or consumed.
 
-## P5E.9B-A3.1 — current host-only status synchronization and redacted route diagnostic
+## P5E.9B-A3.1 — historical host-only technical result
 
 ### Scope and baseline
 
@@ -1600,13 +1601,15 @@ artifact and backup. The production source ZIP remains
 `B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348` in both
 locations.
 
-### A3.2 approval request
+### A3.2 approval request — SUPERSEDED_DRAFT
 
-The following is an approval request, not an approval and not a RAW
-authorization. It must not be inferred from A2.
+The following historical draft is `SUPERSEDED_DRAFT`: it is not an approval,
+not an authorization and not a RAW authorization. It must not be inferred from
+A2 and must not be reused; A3.1R will issue a new request with the corrected
+evidence channel and artifact.
 
 ~~~
-P5E_9B_A3_2_ROUTE_DIAGNOSTIC_OWNER_APPROVAL_REQUEST
+P5E_9B_A3_2_SUPERSEDED_DRAFT
 APPROVAL_STATUS=REQUIRED
 APPROVAL_SCOPE_SINGLE_RUN=true
 TARGET_DEVICE=15e84958
@@ -1647,7 +1650,7 @@ FORBID_CONNECTED_ANDROID_TEST=true
 FORBID_A2_APPROVAL_REUSE=true
 ~~~
 
-### Current status after A3.1
+### Historical status after A3.1
 
 ~~~
 P5E_9B_A3_1_HOST_ONLY_PASS

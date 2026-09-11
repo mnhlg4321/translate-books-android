@@ -1,8 +1,28 @@
 # Editorial Recovery v4.18
 
-Status: `ACTIVE / P5E_LOCAL_QA_COMPLETE / ORIGINAL_PILOT_DATA_PRESERVATION_FAILED / FRESH_PILOT_REQUIRES_OWNER_APPROVAL / LIVE_PROVIDER_DISABLED`
+Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_QA_REPAIRING / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P6_DISABLED`
 
 This document is the single product and execution authority for the v4.18 Editorial recovery. It supersedes active next actions from the historical v4.16 Editorial/RSC/IPC tracks without deleting or reinterpreting their evidence.
+
+## Current active boundary — P5E.9B-A3.1R
+
+P0-P4 are complete as historical phase evidence. P5/P5E have not exited: no
+accepted RAW predecessor, REPORT_L1 or receipt exists, and execution,
+certification and P6 remain disabled. A2 ended fail-closed with
+`P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED`; its single-run approval is
+consumed and is not reusable.
+
+A3.1 has a technical host-only result. Its documentation/evidence channel is
+being repaired in A3.1R so the four route booleans are carried by
+instrumentation status rather than treated as Logcat evidence. A3.1R is
+host-only: it must not use ADB, read device settings or the current DB, call a
+provider, or create authorization/attempt/reconciliation state. The old A3
+artifact remains retained but is superseded and not installed.
+
+The exact next action is to complete A3.1R, then stop for a separate owner
+approval of A3.2. No A3.2 device action, RAW authorization or provider call is
+currently approved. The historical `HISTORICAL_CODE196_PRESERVATION_FAILED`
+and `PILOT_DATA_PRESERVATION_FAILED` conclusions remain unchanged.
 
 ## 1. Locked product decision
 
@@ -199,4 +219,10 @@ The release is not complete merely because 4.1.3 imports. It is complete only wh
 
 ## 9. Exact next action
 
-Run P1 characterization on the clean `feature/v4.18` branch: build a test-only four-entry 4.1.3 pack fixture and execute the existing manifest/integrity/compatibility/import tests. Do not modify production code until the resulting gap matrix proves a change is required.
+Complete the host-only P5E.9B-A3.1R documentation/evidence repair on the clean
+`feature/v4.18` branch: synchronize the active authority/checklist/runbook,
+change the route diagnostic to emit its four redacted booleans through
+instrumentation status, build a new test-only artifact, and run PreTag expecting
+fail-closed. Then request separate owner approval for A3.2; do not use ADB,
+instrumentation, device settings, the current DB, authorization, provider or
+RECONCILE in A3.1R.
