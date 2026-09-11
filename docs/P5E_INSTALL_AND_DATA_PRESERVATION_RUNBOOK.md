@@ -540,13 +540,13 @@ The current state is the A2 fail-closed result, not the historical
 `42BAA89A70392DDA11868C3FF11EED18D602DFBDC878207E349EEB55A07EEB8A`.
 The single-run A2 approval is consumed and cannot be reused.
 
-A3.1 has a technical host-only result. A3.1R is the current host-only corrective
-closure: it synchronizes the active authority and changes the test-only
-diagnostic evidence channel so the four redacted booleans are emitted through
-instrumentation status rather than relying on Logcat. A3.1R uses no ADB,
-persisted-settings read, current DB, instrumentation, provider, authorization,
-attempt or reconciliation. A3.2 is not approved; its request must be reissued
-only after the new artifact is built and verified.
+A3.1 has a technical host-only result. A3.1R completed the current host-only
+corrective closure: it synchronizes the active authority and changes the
+test-only diagnostic evidence channel so the four redacted booleans are emitted
+through instrumentation status rather than relying on Logcat. A3.1R used no
+ADB, persisted-settings read, current DB, instrumentation, provider,
+authorization, attempt or reconciliation. A3.2 is not approved; its new
+request is below and the A2 approval is not reusable.
 
 ```text
 testSourceCommit=89eef75a4a62e5674d02b7e48eaaff012d9a7ae0
@@ -564,18 +564,42 @@ deviceOperations=0
 currentDbMutation=0
 ```
 
-The exact A3.2 request is below. It permits one test-package replacement and
-one diagnostic method only; the live argument is absent, the provider budget
-is zero, the full class/rerun is forbidden, and the A2 approval is explicitly
-not reusable.
+The corrected A3R artifact is private, built from test-only commit
+`9b59ce39b326d5e81e62861b150a618a5e80cddc`, and has the following immutable
+identity:
+
+```text
+testSourceCommit=9b59ce39b326d5e81e62861b150a618a5e80cddc
+testApkPath=D:\P5E-private\fresh-raw-route-diagnostic-a3r-20260912-005638832-test-apk\app-debug-androidTest.apk
+testApkSha256=F19051D849139CB66C4005342AF45DEE62F2A1C7C44D7F0316EC810F8F4DBD1E
+testCertificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+testPackage=com.ml.tblandroidtxt.test
+testTargetPackage=com.ml.tblandroidtxt
+testRunner=androidx.test.runner.AndroidJUnitRunner
+testApkBytes=1326403
+testApkInstalled=false
+testApkStatus=BUILT_NOT_INSTALLED
+diagnosticStatusKeys=4
+providerCalls=0
+deviceOperations=0
+currentDbMutation=0
+```
+
+The exact A3.2 request must pin the corrected A3R artifact. It permits one
+test-package replacement and one diagnostic method only; the live argument is
+absent, the provider budget is zero, the full class/rerun is forbidden, and the
+A2 approval is explicitly not reusable. See the active request in the
+reconciliation record; no approval has been granted.
 
 ```text
 P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED
 P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED
 P5E_9B_A3_1_TECHNICAL_PASS
-P5E_9B_A3_1R_DOCUMENTATION_QA_REPAIRING
+P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS
 P5E_WORKFLOW_PRETAG_FAIL_CLOSED
-P5E_9B_A3_2_NOT_YET_APPROVABLE
+P5E_9B_A3_2_DEVICE_DIAGNOSTIC_APPROVAL_REQUIRED
+P5E_9B_ROUTE_DIAGNOSTIC_A3_ARTIFACT_SUPERSEDED_NOT_INSTALLED
+P5E_9B_ROUTE_DIAGNOSTIC_A3R_ARTIFACT_BUILT_NOT_INSTALLED
 RAW_AUTHORIZATION_REQUIRED
 NO_AUTHORIZATION_CREATED
 NO_LIVE_CALL_PERFORMED

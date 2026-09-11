@@ -21,6 +21,12 @@ authorization/attempt/reconciliation, call a provider, retry, repair or
 RECONCILE. P5E.9, A2 and the P5 exit gate remain incomplete. Any A3.2 device
 action requires a new owner approval and cannot be inferred from A2.
 
+A3.1R is now complete at the host-only boundary. The new test artifact is
+built and not installed; its four status keys are verified offline in the APK
+and its source sends them with `Instrumentation.sendStatus`. No current-device
+route value is claimed because A3.2 has not been approved or run. The previous
+A3 artifact is retained as `SUPERSEDED_NOT_INSTALLED`.
+
 Current implementation baseline is
 `a0009f04139431f0bee38d049f9b32e2b6b04c41`; documentation HEAD before this
 group is `6a35b2de1ebbb4dcdb6e47cde8d0a1d060781d5e`. Code189/code191 and the
@@ -1672,3 +1678,239 @@ PILOT_DATA_PRESERVATION_FAILED
 `FRESH_RAW_EXACT_PREFLIGHT_READY` remain unclaimed. The next and only step is
 the separate A3.2 owner decision for the redacted diagnostic. No provider,
 authorization, attempt, reconciliation or P6 action is authorized.
+
+## P5E.9B-A3.1R — host-only corrective closure and A3.2 reissue
+
+This is the current host-only result. It does not rewrite the historical A1,
+A2 or A3.1 runtime evidence. A3.1R used no ADB, device command,
+instrumentation, persisted-settings read, current-DB read/write, provider/API
+call, authorization, attempt or reconciliation. The worktree began clean at
+`33cc68cf8195abf311d86604894226613303fc26`; the safe documentation commit was
+`fe265e7b579810942370ab4a1a203ca8070f001b`, and the test-only correction was
+committed separately as
+`9b59ce39b326d5e81e62861b150a618a5e80cddc`.
+
+### Authority and workflow result
+
+The active authority now states P0-P4 complete as historical phase evidence,
+P5/P5E incomplete, A2 fail-closed, P6 disabled and A3.2 not yet approved.
+The single active decision is this A3.1R closure; A1, A2 and the prior A3.1
+result are historical/completed evidence. The old A3.2 block is explicitly
+`SUPERSEDED_DRAFT` and is not an approval. The A3 artifact is retained as
+`SUPERSEDED_NOT_INSTALLED`.
+
+The v4.18 PreTag check was rerun after the checklist repair with:
+
+~~~text
+scripts/verify-release-workflow.ps1 -ChecklistPath release_checklists/v4.18-editorial-v5-safe-4-1-3.md -Gate PreTag -ExpectedVersion 4.18
+result=FAIL
+reason=Step 05 is not complete for gate PreTag
+P5E_WORKFLOW_GATE_FALSE_GREEN=not observed
+tagOrReleaseAction=0
+~~~
+
+Steps 05-14 remain unchecked for release semantics. Intermediate P5/P5E
+passes are not used as release completion. No current instruction points back
+to P1 characterization.
+
+### Diagnostic evidence-channel correction
+
+The only source change is in
+`app/src/androidTest/java/com/ml/tblandroidtxt/EditorialP5EFreshRawRouteDiagnosticInstrumentedTest.java`.
+The opt-in assertion remains the first executable statement. After an explicit
+`p5e_fresh_raw_route_diagnostic=YES`, the test loads settings once and computes
+the three component booleans plus their conjunction. It now sends a Bundle via
+`Instrumentation.sendStatus`; it does not rely on Logcat.
+
+The status Bundle has exactly these four keys and no fifth key:
+
+~~~text
+p5e.route.providerMatch=true|false
+p5e.route.modelMatch=true|false
+p5e.route.endpointMatch=true|false
+p5e.route.routeMatch=true|false
+~~~
+
+`routeMatch` is asserted to equal the conjunction of the three component
+flags and to equal the production-owned route policy result. The AndroidTest
+source has an allowlist test for four keys, boolean-string values, and
+secret/content-like text exclusion. The synthetic cases were compiled but not
+instrumented in A3.1R, so no device route result is claimed.
+
+No provider/model/endpoint value, API key, key-presence signal, settings hash,
+source, prompt, request or response is emitted. No settings write, database
+access, provider/client construction or authorization/attempt/reconciliation
+owner is present in the diagnostic source; the negative call scan passed.
+
+### Host build and artifact evidence
+
+AndroidTest-only compile and assemble both passed. No production build,
+connected test or device operation was used. The private event directory is
+`D:\P5E-private\fresh-raw-route-diagnostic-a3r-20260912-005638832-test-apk` and
+contains `BUILD_INFO.json`, `README.txt`, `SHA256SUMS.txt`,
+`compile-output.txt`, `assemble-output.txt`, `artifact-inspection.txt`,
+`production-diff-guard.txt` and `git-diff-check.txt`.
+
+~~~text
+testSourceCommit=9b59ce39b326d5e81e62861b150a618a5e80cddc
+testApkPath=D:\P5E-private\fresh-raw-route-diagnostic-a3r-20260912-005638832-test-apk\app-debug-androidTest.apk
+testApkSha256=F19051D849139CB66C4005342AF45DEE62F2A1C7C44D7F0316EC810F8F4DBD1E
+testApkBytes=1326403
+testPackage=com.ml.tblandroidtxt.test
+testTargetPackage=com.ml.tblandroidtxt
+testRunner=androidx.test.runner.AndroidJUnitRunner
+testCertificateSha256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+debuggable=true
+diagnosticClass=com.ml.tblandroidtxt.EditorialP5EFreshRawRouteDiagnosticInstrumentedTest
+diagnosticMethod=persistedRawRouteDiagnosticRunsOnlyWhenExplicitlyOptedIn
+diagnosticStatusChannel=INSTRUMENTATION_STATUS
+diagnosticStatusKeyCount=4
+installed=false
+providerCalls=0
+deviceOperations=0
+~~~
+
+Offline `aapt`/`apksigner`/`dexdump` inspection confirmed package, target,
+runner, `debuggable=true`, certificate, diagnostic class/method and the
+status-key string. The old A3 artifact remains unchanged at:
+
+~~~text
+oldA3Artifact=D:\P5E-private\fresh-raw-route-diagnostic-a3-20260912-002937-test-apk\app-debug-androidTest.apk
+oldA3ArtifactSha256=64A9976F43F04397DF0E593F21E7AE154CDED1ED6749294F3B1E5F9D2A77757A
+oldA3ArtifactStatus=SUPERSEDED_NOT_INSTALLED
+~~~
+
+The frozen production artifact was not rebuilt. The artifact and backup APK
+both have SHA-256
+`2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD`; the
+source ZIP and backup both have SHA-256
+`B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348`.
+Production diff, schema/migration diff, pack/profile/authority/wire/report/
+receipt diff and version-metadata diff are all zero. `git diff --check` and
+secret scan passed.
+
+### A3.2 owner approval request — new artifact
+
+This block is a request only. It is not an approval, authorization or evidence
+of a current route match. It supersedes the old A3.2 draft and does not reuse
+the consumed A2 approval.
+
+~~~text
+P5E_9B_A3_2_ROUTE_DIAGNOSTIC_OWNER_APPROVAL_REQUEST
+APPROVAL_STATUS=REQUIRED
+APPROVAL_SCOPE_SINGLE_RUN=true
+TARGET_DEVICE=15e84958
+TARGET_PRODUCTION_PACKAGE=com.ml.tblandroidtxt
+INSTALLED_PRODUCTION_VERSION=v4.17-p5e.11
+INSTALLED_PRODUCTION_VERSION_CODE=207
+INSTALLED_PRODUCTION_APK_SHA256=2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD
+INSTALLED_PRODUCTION_CERTIFICATE_SHA256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+INSTALLED_DEVICE_SIGNATURE_TOKEN=abebea4b
+CURRENT_DB_SHA256=3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391
+CURRENT_DB_SCHEMA=24
+CURRENT_DATA_CLASSIFICATION=RECONSTRUCTED_ONLY
+CURRENT_TEST_PACKAGE=com.ml.tblandroidtxt.test
+CURRENT_TEST_APK_SHA256_FROM_A2=697B2C0E58E206A2E067A5D3E71458963B3940280B245BBF48D21B2B0256085A
+TARGET_TEST_APK_PATH=D:\P5E-private\fresh-raw-route-diagnostic-a3r-20260912-005638832-test-apk\app-debug-androidTest.apk
+TARGET_TEST_APK_SHA256=F19051D849139CB66C4005342AF45DEE62F2A1C7C44D7F0316EC810F8F4DBD1E
+TARGET_TEST_APK_CERTIFICATE_SHA256=47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155
+TARGET_TEST_SOURCE_COMMIT=9b59ce39b326d5e81e62861b150a618a5e80cddc
+TARGET_TEST_PACKAGE=com.ml.tblandroidtxt.test
+TARGET_TEST_RUNNER=androidx.test.runner.AndroidJUnitRunner
+FRESH_SELECTOR=p5e-fresh-mercedes-vol5-20260911-01
+FRESH_CHAPTER_KEY=001
+FRESH_BINDING=845976b3cde02a3bf0896b64efd208f42e40821317d1b7bffec7081e63e33cdf
+FRESH_RUN_DECLARATION=8466b95d96f958a97eb3ffd1eac5a32734023cafa1c230e696ad4253151a41dc
+FRESH_EVALUATION=3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1
+FRESH_PACK_SHA256=497786e18e6e2309b44c6695bc8d8e0b538babfe20b1bc0b6f74c395fd05642d
+FRESH_PROFILE_SHA256=beec03a42e37f424a6f071ad48f35878b27e1083141699352cda4474d8cc2e21
+DIAGNOSTIC_CLASS=com.ml.tblandroidtxt.EditorialP5EFreshRawRouteDiagnosticInstrumentedTest
+DIAGNOSTIC_METHOD=persistedRawRouteDiagnosticRunsOnlyWhenExplicitlyOptedIn
+DIAGNOSTIC_ARGUMENT_NAME=p5e_fresh_raw_route_diagnostic
+DIAGNOSTIC_ARGUMENT_VALUE=YES
+LIVE_ARGUMENT=ABSENT
+ALLOW_PRE_RUN_READ_ONLY_VERIFICATION=true
+ALLOW_PULL_INSTALLED_TEST_APK_BEFORE_AND_AFTER=true
+ALLOW_READ_ONLY_SETTINGS_FILE_HASH_BEFORE_AND_AFTER=true
+ALLOW_REPLACE_TEST_PACKAGE_ONCE=true
+ALLOW_ONE_INSTRUMENTATION_INVOCATION=true
+ALLOW_POST_RUN_READ_ONLY_VERIFICATION=true
+DIAGNOSTIC_OUTPUT_CHANNEL=INSTRUMENTATION_STATUS
+EXPECTED_STATUS_KEY_COUNT=4
+PROVIDER_CALL_BUDGET=0
+PRODUCTION_PACKAGE_OPERATION_BUDGET=0
+SETTINGS_WRITE_BUDGET=0
+DB_WRITE_BUDGET=0
+FORBID_LOGCAT_AS_PRIMARY_EVIDENCE=true
+FORBID_FULL_CLASS=true
+FORBID_RERUN=true
+FORBID_CONNECTED_ANDROID_TEST=true
+FORBID_UNINSTALL_CLEAR_RESET_DOWNGRADE=true
+FORBID_AUTHORIZATION_ATTEMPT_RECONCILIATION=true
+FORBID_A2_APPROVAL_REUSE=true
+~~~
+
+`SettingsStore.load` loads the full settings object in the diagnostic process,
+but only the three route fields are compared and only the four boolean strings
+are exported. The API key is not serialized, hashed, logged or included in
+evidence. The diagnostic does not write settings or the database and does not
+create a provider/client/request.
+
+### A3.2 pre/post gates
+
+Before any permitted device action, the owner-approved runner must verify the
+target serial, production package/code/hash/certificate/signature, schema and
+DB hash; confirm that the currently installed test package hashes to the A2
+artifact; confirm the A3R artifact path/hash/certificate/package/runner/source
+commit; confirm the fresh selector/binding/run/evaluation/pack/profile facts;
+confirm the live argument is absent; and confirm the single-run scope and zero
+budgets. Any mismatch maps to a typed preflight block with no install or test.
+
+After the one permitted test-package replacement and one method invocation,
+read-only postconditions are: the test APK hashes to the A3R artifact; the
+production package remains untouched; settings-file hash is unchanged; DB
+hash, schema, integrity and FK status are unchanged; fresh tuple/lineage is
+unchanged; provider calls, authorization receipts, attempts, reconciliation,
+reconciliation history, lifecycle, REPORT_L1 and receipt counts remain zero;
+there is no partial commit or automatic redispatch; and the raw output contains
+exactly four status keys with `true`/`false` values. Logcat is not primary
+evidence.
+
+### A3.2 outcome matrix
+
+| Condition | Typed outcome and required action |
+|---|---|
+| Precheck identity, artifact, DB or scope mismatch | `P5E_9B_A3_2_PREFLIGHT_IDENTITY_BLOCKED`; no install or instrumentation; no self-fix. |
+| Test-package install fails | `P5E_9B_A3_2_TEST_INSTALL_FAILED`; preserve state; no retry. |
+| Instrumentation passes and all four status keys are present and valid | `P5E_9B_A3_2_ROUTE_DIAGNOSIS_COMPLETE`; record only redacted booleans. |
+| Test passes but status is missing, duplicate or invalid | `P5E_9B_A3_2_EVIDENCE_CHANNEL_FAILED`; do not infer from exit code or rerun. |
+| `routeMatch` differs from the conjunction | `P5E_9B_A3_2_DIAGNOSTIC_CONTRACT_FAILED`; stop without remediation. |
+| Any component flag is false | Record the four booleans only; owner chooses A4; do not change settings. |
+| All three component flags and `routeMatch` are true | `P5E_9B_A3_2_CURRENT_ROUTE_MATCHES`; do not claim the historical A2 cause and do not rerun A2. |
+| Settings-file hash changes | `P5E_9B_A3_2_SETTINGS_MUTATION_INVARIANT_FAILED`; stop all P5E work. |
+| DB payload/hash/count changes | `P5E_9B_A3_2_DB_MUTATION_INVARIANT_FAILED`; stop all P5E work. |
+| Provider call or authorization/attempt/reconciliation count is nonzero | `P5E_9B_A3_2_ZERO_CALL_INVARIANT_FAILED`; stop all P5E work and preserve evidence. |
+| Timeout, freezer, notification, RSA or runner failure | Record the typed device blocker; no rerun, fallback or workaround. |
+
+### Current A3.1R state and stop boundary
+
+~~~text
+P5E_9B_A3_1_TECHNICAL_PASS
+P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS
+P5E_9B_ROUTE_DIAGNOSTIC_A3_ARTIFACT_SUPERSEDED_NOT_INSTALLED
+P5E_9B_ROUTE_DIAGNOSTIC_A3R_ARTIFACT_BUILT_NOT_INSTALLED
+P5E_9B_A3_2_DEVICE_DIAGNOSTIC_APPROVAL_REQUIRED
+P5E_9B_A4_REMEDIATION_NOT_SELECTED
+NO_AUTHORIZATION_CREATED
+NO_LIVE_CALL_PERFORMED
+RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED
+EXECUTION_DISABLED
+NOT_CERTIFIED
+P6_NOT_READY
+HISTORICAL_CODE196_PRESERVATION_FAILED
+PILOT_DATA_PRESERVATION_FAILED
+~~~
+
+The A3.2 block above is awaiting separate owner approval. A3.1R stops here:
+no ADB, install, instrumentation or settings/DB inspection is performed in
+this work package.
