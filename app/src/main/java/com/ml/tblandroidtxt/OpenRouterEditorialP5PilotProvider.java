@@ -45,6 +45,7 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
     private final AppSettings settings;
     private final int maximumOutputTokens;
     private final NetworkLifecycleRecorder lifecycleRecorder;
+    private final boolean freshRawRouting;
     private final Map<String, EditorialP5L1Output> parsedOutputs = new ConcurrentHashMap<>();
     private final OpenAICompatibleClient.CallControl rawCallControl =
             new OpenAICompatibleClient.CallControl();
@@ -57,6 +58,12 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
     /** Optional app-owned recorder for redacted P5D lifecycle evidence. */
     public OpenRouterEditorialP5PilotProvider(AppSettings settings, int maximumOutputTokens,
                                               NetworkLifecycleRecorder lifecycleRecorder) {
+        this(settings, maximumOutputTokens, lifecycleRecorder, false);
+    }
+
+    private OpenRouterEditorialP5PilotProvider(AppSettings settings, int maximumOutputTokens,
+                                               NetworkLifecycleRecorder lifecycleRecorder,
+                                               boolean freshRawRouting) {
         if (settings == null) throw new IllegalArgumentException("OpenRouter settings are required");
         this.settings = settings.copy();
         if (maximumOutputTokens <= 0) {
@@ -64,6 +71,7 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         }
         this.maximumOutputTokens = maximumOutputTokens;
         this.lifecycleRecorder = lifecycleRecorder;
+        this.freshRawRouting = freshRawRouting;
     }
 
     /** Creates the one P5D live adapter with durable, redacted lifecycle evidence. */
@@ -75,17 +83,63 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
                 store::recordNetworkLifecycle);
     }
 
+    /**
+     * Creates the fresh RAW-only adapter. It is not used by the preflight
+     * runner; a future live runner must obtain a separate authorization before
+     * invoking the existing executeRaw entry point.
+     */
+    public static OpenRouterEditorialP5PilotProvider forFreshRaw(
+            AppSettings settings, int maximumOutputTokens) {
+        return new OpenRouterEditorialP5PilotProvider(settings, maximumOutputTokens,
+                null, true);
+    }
+
+    /** Fresh RAW adapter with the same redacted lifecycle recorder as P5D. */
+    public static OpenRouterEditorialP5PilotProvider withFreshRawLifecyclePersistence(
+            AppSettings settings, int maximumOutputTokens, TranslationRepository database) {
+        EditorialP5CAttemptStore store = new EditorialP5CAttemptStore(
+                java.util.Objects.requireNonNull(database, "database"));
+        return new OpenRouterEditorialP5PilotProvider(settings, maximumOutputTokens,
+                store::recordNetworkLifecycle, true);
+    }
+
+    /**
+     * Builds the exact fresh RAW request locally for a zero-call preflight.
+     * This method only renders JSON; it does not validate an API key, create
+     * an attempt, record lifecycle state or execute an HTTP call.
+     */
+    static JSONObject buildFreshRawRequestBodyForPreflight(
+            AppSettings settings, Request request, int maximumOutputTokens) throws Exception {
+        if (!EditorialP5EFreshRawRoutingPolicy.matches(settings)) {
+            throw new IllegalArgumentException("P5E_FRESH_RAW_ROUTE_SETTINGS_MISMATCH");
+        }
+        if (request == null || request.context() == null
+                || !"L1_RAW_DISCOVERY".equals(request.phase())
+                || request.callKind() != EditorialP5PilotProvider.CallKind.PRIMARY_SEMANTIC
+                || !EditorialP5EFreshRawRoutingPolicy.PROVIDER.equalsIgnoreCase(request.provider())
+                || !EditorialP5EFreshRawRoutingPolicy.MODEL.equals(request.model())) {
+            throw new IllegalArgumentException("P5E_FRESH_RAW_ROUTE_REQUEST_MISMATCH");
+        }
+        OpenRouterEditorialP5PilotProvider renderer =
+                new OpenRouterEditorialP5PilotProvider(settings, maximumOutputTokens, null, true);
+        return OpenAICompatibleClient.buildChatRequestBody(settings,
+                renderer.buildPrompt(request), maximumOutputTokens, rawResponseFormat(),
+                EditorialP5EFreshRawRoutingPolicy.providerPreferences(),
+                EditorialP5RawWireContract.REASONING_POLICY);
+    }
+
     @FunctionalInterface
     public interface NetworkLifecycleRecorder {
         void record(String attemptIdentity, EditorialP5CAttemptStore.NetworkLifecycleEvent event);
     }
 
     public boolean configured() {
-        return settings.provider != null && settings.provider.toLowerCase(java.util.Locale.ROOT)
+        boolean base = settings.provider != null && settings.provider.toLowerCase(java.util.Locale.ROOT)
                 .contains("openrouter")
                 && settings.apiKey != null && !settings.apiKey.trim().isEmpty()
                 && settings.model != null && !settings.model.trim().isEmpty()
                 && settings.baseUrl != null && !settings.baseUrl.trim().isEmpty();
+        return base && (!freshRawRouting || EditorialP5EFreshRawRoutingPolicy.matches(settings));
     }
 
     @Override public void beginAttempt(long maximumExecutionTimeMillis) {
@@ -101,6 +155,12 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         if (request == null || request.context() == null) {
             return invalidResponse("REQUEST_CONTEXT_MISSING", new byte[0]);
         }
+        if (freshRawRouting && (!"L1_RAW_DISCOVERY".equals(request.phase())
+                || request.callKind() != EditorialP5PilotProvider.CallKind.PRIMARY_SEMANTIC
+                || !EditorialP5EFreshRawRoutingPolicy.PROVIDER.equalsIgnoreCase(request.provider())
+                || !EditorialP5EFreshRawRoutingPolicy.MODEL.equals(request.model()))) {
+            throw new IllegalStateException("P5E_FRESH_RAW_ROUTE_PHASE_OR_MODEL_INVALID");
+        }
         if (!configured()) throw new IllegalStateException("OPENROUTER_CONFIGURATION_INCOMPLETE");
 
         PromptPair prompt = buildPrompt(request);
@@ -110,10 +170,17 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         long deadlineNanos = attemptDeadlineNanos.get();
         try {
             boolean rawDiscovery = "L1_RAW_DISCOVERY".equals(request.phase());
-            result = OpenAICompatibleClient.chatWithUsage(settings, prompt, maximumOutputTokens,
-                    request.attemptIdentity(), lifecycle, false, deadlineNanos, rawCallControl,
-                    rawDiscovery ? rawResponseFormat() : null,
-                    rawDiscovery, rawDiscovery ? EditorialP5RawWireContract.REASONING_POLICY : "");
+            if (freshRawRouting) {
+                result = OpenAICompatibleClient.chatWithUsage(settings, prompt, maximumOutputTokens,
+                        request.attemptIdentity(), lifecycle, false, deadlineNanos, rawCallControl,
+                        rawResponseFormat(), EditorialP5EFreshRawRoutingPolicy.providerPreferences(),
+                        EditorialP5RawWireContract.REASONING_POLICY);
+            } else {
+                result = OpenAICompatibleClient.chatWithUsage(settings, prompt, maximumOutputTokens,
+                        request.attemptIdentity(), lifecycle, false, deadlineNanos, rawCallControl,
+                        rawDiscovery ? rawResponseFormat() : null,
+                        rawDiscovery, rawDiscovery ? EditorialP5RawWireContract.REASONING_POLICY : "");
+            }
         } catch (Exception error) {
             throw new ProviderFailure(failureReason(error, lifecycle, deadlineNanos), error);
         }

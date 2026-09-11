@@ -60,6 +60,46 @@ public final class EditorialP5COutputBudgetTest {
                 body.getString("reasoning_effort"));
     }
 
+    @Test public void freshRawRoutePinsProviderAndDisablesFallbackWithoutHealing()
+            throws Exception {
+        AppSettings settings = new AppSettings();
+        settings.provider = EditorialP5EFreshRawRoutingPolicy.PROVIDER;
+        settings.model = EditorialP5EFreshRawRoutingPolicy.MODEL;
+        JSONObject format = new JSONObject().put("type", "json_schema")
+                .put("json_schema", new JSONObject()
+                        .put("name", EditorialP5RawWireContract.SCHEMA_NAME)
+                        .put("strict", true)
+                        .put("schema", new JSONObject(EditorialCanonicalJson.canonicalize(
+                                EditorialP5RawWireContract.jsonSchema()))));
+
+        JSONObject body = OpenAICompatibleClient.buildChatRequestBody(settings,
+                new PromptPair("system", "raw"), EditorialP5RawWireContract.OUTPUT_TOKEN_CAP,
+                format, EditorialP5EFreshRawRoutingPolicy.providerPreferences(),
+                EditorialP5RawWireContract.REASONING_POLICY);
+
+        JSONObject provider = body.getJSONObject("provider");
+        assertTrue(provider.getBoolean("require_parameters"));
+        assertFalse(provider.getBoolean("allow_fallbacks"));
+        assertEquals(EditorialP5EFreshRawRoutingPolicy.UPSTREAM_PROVIDER,
+                provider.getJSONArray("only").getString(0));
+        assertEquals(EditorialP5EFreshRawRoutingPolicy.DATA_COLLECTION_POLICY,
+                provider.getString("data_collection"));
+        assertFalse(body.has("plugins"));
+        assertEquals(EditorialP5EFreshRawRoutingPolicy.MODEL, body.getString("model"));
+        assertEquals(4096, body.getInt("max_tokens"));
+        assertFalse(body.getBoolean("stream"));
+    }
+
+    @Test public void legacyRouteDoesNotInheritFreshProviderRestrictions() throws Exception {
+        JSONObject body = OpenAICompatibleClient.buildChatRequestBody(new AppSettings(),
+                new PromptPair("system", "legacy"), 512, null, true, "");
+
+        assertTrue(body.getJSONObject("provider").getBoolean("require_parameters"));
+        assertFalse(body.getJSONObject("provider").has("allow_fallbacks"));
+        assertFalse(body.getJSONObject("provider").has("only"));
+        assertFalse(body.getJSONObject("provider").has("data_collection"));
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void nonPositiveHttpCapIsRejectedInsteadOfClamped() throws Exception {
         OpenAICompatibleClient.buildChatRequestBody(new AppSettings(),

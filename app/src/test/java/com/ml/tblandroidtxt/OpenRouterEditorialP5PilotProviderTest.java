@@ -157,14 +157,35 @@ public final class OpenRouterEditorialP5PilotProviderTest {
         OpenRouterEditorialP5PilotProvider.parseOutput("not-json", request());
     }
 
+    @Test public void freshAdapterRejectsReconcileBeforeTransport() throws Exception {
+        AppSettings settings = new AppSettings();
+        settings.provider = EditorialP5EFreshRawRoutingPolicy.PROVIDER;
+        settings.model = EditorialP5EFreshRawRoutingPolicy.MODEL;
+        settings.baseUrl = AppSettings.defaultBaseUrl(EditorialP5EFreshRawRoutingPolicy.PROVIDER);
+        settings.apiKey = "test-only-no-dispatch";
+        OpenRouterEditorialP5PilotProvider provider =
+                OpenRouterEditorialP5PilotProvider.forFreshRaw(settings,
+                        EditorialP5RawWireContract.OUTPUT_TOKEN_CAP);
+        try {
+            provider.call(request(EditorialP5EFreshRawRoutingPolicy.MODEL, "L1_RECONCILE"));
+            throw new AssertionError("fresh RAW adapter must not route RECONCILE");
+        } catch (IllegalStateException expected) {
+            assertEquals("P5E_FRESH_RAW_ROUTE_PHASE_OR_MODEL_INVALID", expected.getMessage());
+        }
+    }
+
     private static EditorialP5PilotProvider.Request request() {
+        return request("google/gemini-2.5-flash", "L1_RAW_DISCOVERY");
+    }
+
+    private static EditorialP5PilotProvider.Request request(String model, String phase) {
         EditorialP5PilotProvider.Request.Context context =
                 new EditorialP5PilotProvider.Request.Context(
                         "binding", "run", "manifest", "bundle", "predecessor",
                         List.of("chapter:001"), List.of("population:001"));
         return new EditorialP5PilotProvider.Request("a".repeat(64),
                 EditorialP5PilotProvider.CallKind.PRIMARY_SEMANTIC, "openrouter",
-                "google/gemini-2.5-flash", "L1_RAW_DISCOVERY", "e".repeat(64),
+                model, phase, "e".repeat(64),
                 Map.of("RAW", "raw".getBytes()),
                 new EditorialP5PilotRequest.PackAuthority(Map.of()),
                 EditorialP5RawWireContract.SCHEMA_VERSION, "001", "", context);

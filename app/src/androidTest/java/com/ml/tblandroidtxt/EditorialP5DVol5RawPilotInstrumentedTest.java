@@ -71,6 +71,17 @@ public final class EditorialP5DVol5RawPilotInstrumentedTest {
     private static final int HISTORICAL_DIAGNOSTIC_OUTPUT_TOKENS = 2_048;
     private static final long PILOT_WINDOW_MILLIS = 5 * 60 * 1000L;
 
+    /**
+     * Test-only guard: this class is historical P5D wiring and cannot accept
+     * a fresh-pilot selector. The fresh boundary has its own runner.
+     */
+    static String requireHistoricalSelector(String selector) {
+        if (!SELECTOR.equals(selector)) {
+            throw new IllegalArgumentException("P5D_HISTORICAL_RUNNER_SELECTOR_MISMATCH");
+        }
+        return selector;
+    }
+
     @Test public void v23UpgradePreservesVol5RecoveryIdentityAndHistory() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
         java.io.File databaseFile = context.getDatabasePath("tbl_android_txt.db");

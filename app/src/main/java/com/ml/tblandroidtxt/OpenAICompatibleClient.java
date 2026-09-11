@@ -199,6 +199,26 @@ public class OpenAICompatibleClient {
                                     JSONObject responseFormat,
                                     boolean requireProviderParameters,
                                     String reasoningEffort) throws Exception {
+        JSONObject providerPreferences = null;
+        if (requireProviderParameters) {
+            providerPreferences = new JSONObject().put("require_parameters", true);
+        }
+        return chatWithUsage(s, prompt, maxOutputTokens, requestId, observer,
+                registerForLegacyGlobalCancellation, deadlineNanos, callControl,
+                responseFormat, providerPreferences, reasoningEffort);
+    }
+
+    /**
+     * Explicit provider preferences used by a scoped route policy. The legacy
+     * boolean overload above remains unchanged for translation/P5D callers.
+     */
+    static ChatResult chatWithUsage(AppSettings s, PromptPair prompt, int maxOutputTokens,
+                                    String requestId, NetworkObserver observer,
+                                    boolean registerForLegacyGlobalCancellation,
+                                    long deadlineNanos, CallControl callControl,
+                                    JSONObject responseFormat,
+                                    JSONObject providerPreferences,
+                                    String reasoningEffort) throws Exception {
         if (s.apiKey == null || s.apiKey.trim().isEmpty()) throw new IllegalArgumentException("API key is empty");
         if (s.model == null || s.model.trim().isEmpty()) throw new IllegalArgumentException("Model is empty");
         String endpoint = AppSettings.normalizeEndpoint(s.baseUrl);
@@ -216,7 +236,7 @@ public class OpenAICompatibleClient {
             timeoutMillis = TimeUnit.SECONDS.toMillis(timeout);
         }
         JSONObject body = buildChatRequestBody(s, prompt, maxOutputTokens, responseFormat,
-                requireProviderParameters, reasoningEffort);
+                providerPreferences, reasoningEffort);
 
         OkHttpClient client = BASE_CLIENT.newBuilder()
                 .connectTimeout(timeoutMillis, TimeUnit.MILLISECONDS)
@@ -381,6 +401,19 @@ public class OpenAICompatibleClient {
                                            JSONObject responseFormat,
                                            boolean requireProviderParameters,
                                            String reasoningEffort) throws Exception {
+        JSONObject providerPreferences = null;
+        if (requireProviderParameters) {
+            providerPreferences = new JSONObject().put("require_parameters", true);
+        }
+        return buildChatRequestBody(s, prompt, maxOutputTokens, responseFormat,
+                providerPreferences, reasoningEffort);
+    }
+
+    static JSONObject buildChatRequestBody(AppSettings s, PromptPair prompt,
+                                           int maxOutputTokens,
+                                           JSONObject responseFormat,
+                                           JSONObject providerPreferences,
+                                           String reasoningEffort) throws Exception {
         if (s == null) throw new IllegalArgumentException("Settings are required");
         if (prompt == null) throw new IllegalArgumentException("Prompt is required");
         if (maxOutputTokens <= 0) {
@@ -392,8 +425,10 @@ public class OpenAICompatibleClient {
         body.put("max_tokens", maxOutputTokens);
         body.put("stream", false);
         if (responseFormat != null) body.put("response_format", responseFormat);
-        if (requireProviderParameters) {
-            body.put("provider", new JSONObject().put("require_parameters", true));
+        if (providerPreferences != null) {
+            // Copy through JSON text so callers cannot mutate the request
+            // route after this boundary has constructed its body.
+            body.put("provider", new JSONObject(providerPreferences.toString()));
         }
         if (reasoningEffort != null && !reasoningEffort.isBlank()) {
             body.put("reasoning_effort", reasoningEffort);
