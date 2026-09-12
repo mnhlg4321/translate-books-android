@@ -1,10 +1,10 @@
 # Editorial Recovery v4.18
 
-Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_ROUTE_DIAGNOSTIC_OUTPUT_OBSERVED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED / P5E_9B_A3_2_POST_RUN_DEVICE_UNAVAILABLE / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN / P5E_9B_A4_REMEDIATION_NOT_SELECTED / P6_DISABLED`
+Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_ROUTE_DIAGNOSTIC_OUTPUT_OBSERVED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED / P5E_9B_A3_2_POST_RUN_DEVICE_UNAVAILABLE / P5E_9B_A3_2C_DEVICE_PROCESS_ACTIVE / P5E_9B_A3_2C_DELAYED_READBACK_NOT_REACHED / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN / P5E_9B_A4_REMEDIATION_NOT_SELECTED / P6_DISABLED`
 
 This document is the single product and execution authority for the v4.18 Editorial recovery. It supersedes active next actions from the historical v4.16 Editorial/RSC/IPC tracks without deleting or reinterpreting their evidence.
 
-## Current active boundary — P5E.9B-A3.2 runtime result, post-run verification blocked
+## Current active boundary — P5E.9B-A3.2C delayed read-only closure blocked
 
 P0-P4 are complete as historical phase evidence. P5/P5E have not exited: no
 accepted RAW predecessor, REPORT_L1 or receipt exists, and execution,
@@ -29,11 +29,15 @@ manifest SHA-256
 `12898E7A7DFFDCBEEF4E2E0BF6794E88C90EDE4E6DAD15D0147C9710ABF137CB`.
 During the first post-run read-only sequence the device became unavailable to
 ADB, so settings-after, DB-after and complete lineage preservation could not be
-verified. No retry or workaround was performed. The current PreTag result remains `FAIL` at `Step 05`; the earlier
+verified. A later A3.2C one-shot availability check found the device online but
+the production process active at PID `420`; it stopped before package, settings
+or DB readback and did not force-stop the process. No retry or workaround was
+performed. The current PreTag result remains `FAIL` at `Step 05`; the earlier
 `Step 09` result is historical A3.1 evidence only.
 
-The next action is owner review after device availability is restored; this
-result does not authorize an automatic rerun or select A4. The historical
+The next action is a separately authorized read-only window after both
+production and test processes are idle; this result does not authorize an
+automatic retry, force-stop or select A4. The historical
 `HISTORICAL_CODE196_PRESERVATION_FAILED` and `PILOT_DATA_PRESERVATION_FAILED`
 conclusions remain unchanged. P5/P5E have not exited, and execution,
 certification and P6 remain disabled.
@@ -233,10 +237,14 @@ The release is not complete merely because 4.1.3 imports. It is complete only wh
 
 ## 9. Exact next action
 
-The host-only preparation for P5E.9B-A3.2 is recorded in the private event
-`D:\P5E-private\fresh-raw-route-diagnostic-a3.2-prep-20260912-011838007`.
-Request separate owner approval using the newly built, instrumentation-status
-test artifact. The approval is limited to one test-package replacement and one
-diagnostic method with the live argument absent; it must not authorize
-provider, authorization, attempt, current-DB or RECONCILE work.
-P5E.9B-A3.2 remains a device gate, not a current pass.
+P5E.9B-A3.2 route output was observed, but its immediate post-run preservation
+readback was blocked by ADB loss. The A3.2C delayed read-only closure then
+stopped before package/settings/DB readback because the production process was
+active at PID `420`; it did not force-stop the process. The private event is
+`D:\P5E-private\fresh-raw-route-diagnostic-a3.2c-20260912-070137359` with event
+manifest SHA-256
+`2EB4EDEC9376B7FAE692A5050105C8E263C7B223B3B2B7C03FC992C43BC70615`.
+The next action is a separately authorized read-only window after both
+production and test processes are idle. No automatic retry, force-stop,
+settings change, authorization, attempt, reconciliation or provider call is
+permitted. A4 is not selected and has not been executed.

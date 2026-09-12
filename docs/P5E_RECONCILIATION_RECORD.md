@@ -4,7 +4,7 @@ Ngày ghi nhận: `2026-09-11` (+07:00)
 Phạm vi: metadata OpenRouter được đọc qua Activity/Logs đã xác thực; không mở
 I/O logging và không lưu prompt, response body, source text hoặc secret.
 
-## Current active decision — P5E.9B-A3.2 diagnostic result, post-run verification blocked
+## Current active decision — P5E.9B-A3.2C delayed read-only closure blocked
 
 The latest A2 result is fail-closed, not a readiness pass:
 `P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED` /
@@ -50,6 +50,31 @@ The current PreTag result is `FAIL` at `Step 05`; the earlier `Step 09` result
 is retained only as historical A3.1 evidence. Current data remains
 `RECONSTRUCTED_ONLY`; historical code196 and pilot preservation failures remain
 unchanged. A4 remediation is not selected.
+
+P5E.9B-A3.2C then performed exactly one host baseline and one device
+availability check. The device was listed as `15e84958` in state `device`, but
+the required read-only process check found the production process active at PID
+`420` while the test process was empty. The work package therefore stopped
+before package/settings/DB delayed readback; it did not force-stop or kill the
+process. Private evidence is retained at
+`D:\P5E-private\fresh-raw-route-diagnostic-a3.2c-20260912-070137359` with
+event manifest SHA-256
+`2EB4EDEC9376B7FAE692A5050105C8E263C7B223B3B2B7C03FC992C43BC70615`.
+This is `P5E_9B_A3_2C_DEVICE_PROCESS_ACTIVE`, not a delayed-preservation PASS.
+The route-output PASS remains separate from preservation and acceptance.
+
+The A3.2 pre-run settings file was `ABSENT`. Host source characterization shows
+that `SettingsStore.load` uses `AppSettings` field defaults when preferences
+are absent: provider and endpoint align with the fresh route policy, while the
+default model `anthropic/claude-sonnet-4.6` does not match
+`openai/gpt-5.6-luna`. This is a current A3.2 explanation consistent with the
+observed booleans, not proof of the historical A2 device state. No settings
+content or secret was read or recorded.
+
+The next action requires a separately authorized read-only window after both
+processes are idle. No automatic retry, force-stop, settings change,
+authorization, attempt, reconciliation or provider call is allowed. A4 is not
+selected and A4 is not executed.
 
 ## Baseline tại đầu nhóm LQ/QF
 
@@ -1948,7 +1973,9 @@ authorization, attempt, reconciliation or settings/DB write was performed.
 
 Private evidence event:
 `D:\P5E-private\fresh-raw-route-diagnostic-a3.2-run-20260912-012928513`.
-Its 24-entry evidence manifest SHA-256 is
+ Its stored `SHA256SUMS.txt` declares 27 entries, although the original task
+ described 24; all 27 declared entries were rehashed with zero mismatches. The
+ manifest SHA-256 is
 `12898E7A7DFFDCBEEF4E2E0BF6794E88C90EDE4E6DAD15D0147C9710ABF137CB`.
 The pre-run read-only gate passed: production code207/APK/certificate/signature,
 A2 test APK hash, DB SHA-256

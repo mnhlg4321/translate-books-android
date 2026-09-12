@@ -533,7 +533,7 @@ This does not claim `P5E_9A_VALID_AUTHORIZATION_LOCAL_PATH_PASS` or a live
 RAW acceptance: the owner approval forbade valid-authorization dispatch. It is
 historical DV evidence and not the current A3 boundary.
 
-## Current active boundary — P5E.9B-A3.2 device diagnostic result, post-run verification blocked
+## Current active boundary — P5E.9B-A3.2C delayed read-only closure blocked
 
 The current state is the A2 fail-closed result, not the historical
 `FRESH_RAW_EXACT_PREFLIGHT_READY` result above. A2 evidence SHA-256 is
@@ -625,6 +625,8 @@ P5E_WORKFLOW_PRETAG_FAIL_CLOSED
 P5E_9B_A3_2_ROUTE_DIAGNOSTIC_OUTPUT_OBSERVED
 P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED
 P5E_9B_A3_2_POST_RUN_DEVICE_UNAVAILABLE
+P5E_9B_A3_2C_DEVICE_PROCESS_ACTIVE
+P5E_9B_A3_2C_DELAYED_READBACK_NOT_REACHED
 P5E_9B_A3_2_PRESERVATION_NOT_PROVEN
 P5E_9B_A4_REMEDIATION_NOT_SELECTED
 P5E_9B_ROUTE_DIAGNOSTIC_A3_ARTIFACT_SUPERSEDED_NOT_INSTALLED
@@ -637,3 +639,35 @@ EXECUTION_DISABLED
 NOT_CERTIFIED
 P6_NOT_READY
 ```
+
+## P5E.9B-A3.2C — delayed read-only preservation closure stop
+
+The host baseline passed at branch `feature/v4.18`, HEAD
+`94d2cd535bc728df47391edead23ed298093e03b`, with a clean worktree and PreTag
+`FAIL` at Step 05. The prior A3.2 evidence was rehashed without editing: its
+stored manifest declares 27 entries although the task text described 24; all
+27 matched and the manifest SHA-256 remains
+`12898E7A7DFFDCBEEF4E2E0BF6794E88C90EDE4E6DAD15D0147C9710ABF137CB`. The raw
+instrumentation and corrected redacted parse agree on one completed test,
+route booleans provider `true`, model `false`, endpoint `true`, route `false`,
+valid conjunction and final instrumentation code `-1`; this is a route-output
+result, not preservation or acceptance.
+
+The one-shot availability check found the expected device, then the required
+read-only process check found production PID `420` active and no test PID. The
+process was not force-stopped, so package/settings/database delayed readback was
+not attempted. Evidence is in
+`D:\P5E-private\fresh-raw-route-diagnostic-a3.2c-20260912-070137359` with event
+manifest SHA-256
+`2EB4EDEC9376B7FAE692A5050105C8E263C7B223B3B2B7C03FC992C43BC70615`.
+The partial old `test-after-run.apk` remains preserved and is classified as
+`INTERRUPTED_PULL_EVIDENCE_NOT_AN_INSTALLED_APK_IDENTITY`.
+
+The settings file was `ABSENT` in the A3.2 pre-run evidence. Source
+characterization records that `SettingsStore.load` falls back to `AppSettings`
+defaults: provider and endpoint match the policy, while default model
+`anthropic/claude-sonnet-4.6` mismatches the required fresh RAW model. This is
+an explanation consistent with A3.2, not historical A2 proof. The next action
+is a separately authorized read-only window after both processes are idle; no
+automatic retry or force-stop is permitted. A4 is not selected and has not been
+executed.
