@@ -1,10 +1,86 @@
 # Editorial Recovery v4.18
 
-Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_ROUTE_DIAGNOSTIC_OUTPUT_OBSERVED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED / P5E_9B_A3_2_POST_RUN_DEVICE_UNAVAILABLE / P5E_9B_A3_2C_DEVICE_PROCESS_ACTIVE / P5E_9B_A3_2C_DELAYED_READBACK_NOT_REACHED / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN / P5E_9B_A4_REMEDIATION_NOT_SELECTED / P6_DISABLED`
+Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED / RAW_AUTHORIZATION_REQUIRED / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_DISABLED`
 
 This document is the single product and execution authority for the v4.18 Editorial recovery. It supersedes active next actions from the historical v4.16 Editorial/RSC/IPC tracks without deleting or reinterpreting their evidence.
 
-## Current active boundary — P5E.9B-A3.2C delayed read-only closure blocked
+## Current active boundary — P5E A4 exact-preflight evidence-channel blocker
+
+The A4 owner-authorized device sequence used the current fresh binding and
+production code207 without touching the production package. Read-only baseline
+verified device `15e84958`, production SHA-256
+`2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD`, the
+matching certificate/signature, schema v24, DB SHA-256
+`3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391`,
+integrity `ok`, FK violations `0`, the exact fresh selector/binding/run/
+evaluation/pack/profile tuple and zero fresh lineage. No app PID or active job
+was observed, so no force-stop was needed.
+
+### Canonical A4 current pin table
+
+| Pin | Current value | Qualification |
+|---|---|---|
+| Device | `15e84958` | A4 readback |
+| Production | `com.ml.tblandroidtxt` / `v4.17-p5e.11` / code `207` | A4 readback |
+| Production APK SHA-256 | `2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD` | A4 readback; artifact and backup match |
+| Certificate SHA-256 | `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155` | A4 readback |
+| Device signature token | `abebea4b` | A4 readback |
+| Installed test APK SHA-256 | `5D248FFD33F52AC649966C4135773708C7CA747CE34C28BB763B40EC1FE81467` | A4 readback after one replacement |
+| Corrected test APK SHA-256 | `DC0E6790C1D82F3C7D3102711C929F8DC0CA2D380314E4EB77F1EEA46C41AC2B` | host-only; not installed |
+| DB / schema | `3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391` / `24` | A4 readback |
+| Data classification | `RECONSTRUCTED_ONLY` | not code196 recovery |
+| Fresh selector / chapter | `p5e-fresh-mercedes-vol5-20260911-01` / `001` | A4 readback |
+| Fresh binding / run | `845976b3cde02a3bf0896b64efd208f42e40821317d1b7bffec7081e63e33cdf` / `8466b95d96f958a97eb3ffd1eac5a32734023cafa1c230e696ad4253151a41dc` | A4 readback |
+| Evaluation | `3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1` | official fresh binding record |
+| Pack / profile | `497786e18e6e2309b44c6695bc8d8e0b538babfe20b1bc0b6f74c395fd05642d` / `beec03a42e37f424a6f071ad48f35878b27e1083141699352cda4474d8cc2e21` | A4 readback |
+
+The test package was replaced exactly once with the host-built A4 artifact
+`5D248FFD33F52AC649966C4135773708C7CA747CE34C28BB763B40EC1FE81467`.
+The model-remediation method then ran exactly once and reported a committed
+model correction, successful readback, preserved non-model settings and route
+match. The settings file was already present; only its hashes were retained:
+`C2FC2DC71F3687E09F6D3899A99F397C3B75AD05B402D176367C03A0280E8062` before
+and `4A0AA4564B62D5F9852A108B1D7991DA21AEF46DCDA4ACBC485E6E45CD3214F9`
+after. No settings content or credential was read or logged.
+
+The exact-preflight method ran exactly once. Its raw output reported one test
+`OK (1 test)`, terminal instrumentation code `-1`, provider/model/endpoint/
+route all `true`, a valid conjunction, DB preservation `true` and provider
+calls `0`. The host parser rejected the output because the versioned status
+channel omitted required `p5e.preflight.v2.reconciliationCreated`; therefore
+this is `P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED`, not an exact
+preflight acceptance. The DB after remediation and preflight remained the
+expected SHA/schema with zero attempts, authorization receipts,
+reconciliation, history, lifecycle and report/receipt bytes. No rerun is
+permitted in this one-shot window.
+
+The device evidence manifest is `SHA256SUMS.txt` with SHA-256
+`4C902DDEAEC7554C42EDB65F53ECC73403ECB45F4CE0A8D0BF74DB3312844EF0`.
+The raw instrumentation output and parser result are retained in that private
+event; the parser separates test success, output parse, route match, DB
+preservation and exact acceptance, with only exact acceptance failing.
+
+The test-only emitter correction adding that missing `false` field is committed
+at `911fb355a2148feb8c7ec4b60a843c547596bf56`. A new host-only artifact is
+available at
+`D:\P5E-private\a4-fresh-raw-model-preflight-statusfix-20260913-202218809\app-debug-androidTest.apk`
+with SHA-256
+`DC0E6790C1D82F3C7D3102711C929F8DC0CA2D380314E4EB77F1EEA46C41AC2B`, but it
+has not been installed or device-verified. The currently installed test
+package remains the prior A4 artifact; a separate owner approval is required
+before any replacement or preflight rerun.
+The corrected artifact manifest `SHA256SUMS.txt` has SHA-256
+`E333AC3A3FC21A808F69EDFC71ACD9710629C012C6DCE091C19B7F86ED282109`.
+
+The single next action is to obtain that narrowly scoped approval. It must not
+authorize a provider call, RAW authorization, attempt, reconciliation,
+production-package operation or automatic retry. P5/P5E have not exited;
+execution, certification and P6 remain disabled. Historical
+`HISTORICAL_CODE196_PRESERVATION_FAILED`, `PILOT_DATA_PRESERVATION_FAILED`,
+the A3.2 immediate-preservation gap and consumed A2/A3.2 approvals remain
+unchanged.
+
+## Historical A3.2C delayed read-only closure blocked
 
 P0-P4 are complete as historical phase evidence. P5/P5E have not exited: no
 accepted RAW predecessor, REPORT_L1 or receipt exists, and execution,
@@ -237,14 +313,23 @@ The release is not complete merely because 4.1.3 imports. It is complete only wh
 
 ## 9. Exact next action
 
-P5E.9B-A3.2 route output was observed, but its immediate post-run preservation
-readback was blocked by ADB loss. The A3.2C delayed read-only closure then
-stopped before package/settings/DB readback because the production process was
-active at PID `420`; it did not force-stop the process. The private event is
-`D:\P5E-private\fresh-raw-route-diagnostic-a3.2c-20260912-070137359` with event
-manifest SHA-256
-`2EB4EDEC9376B7FAE692A5050105C8E263C7B223B3B2B7C03FC992C43BC70615`.
-The next action is a separately authorized read-only window after both
-production and test processes are idle. No automatic retry, force-stop,
-settings change, authorization, attempt, reconciliation or provider call is
-permitted. A4 is not selected and has not been executed.
+The A4 device event is
+`D:\P5E-private\a4-model-preflight-device-20260913-200643711`. It verified the
+current production code207 and exact fresh tuple, performed one test-package
+replacement and one model remediation, and preserved the DB hash/schema,
+integrity/FK state and zero lineage. The remediation route readback passed.
+The exact-preflight method then ran once and returned `OK (1 test)`, terminal
+`-1`, route true and provider calls `0`, but the redacted status omitted
+`p5e.preflight.v2.reconciliationCreated`; the host parser rejected the output.
+This is an evidence-channel blocker, not exact-preflight readiness. No rerun is
+allowed under the consumed one-shot device window.
+
+The test-only correction is committed at
+`911fb355a2148feb8c7ec4b60a843c547596bf56`; its new host-only artifact is
+`D:\P5E-private\a4-fresh-raw-model-preflight-statusfix-20260913-202218809\app-debug-androidTest.apk`
+with SHA-256
+`DC0E6790C1D82F3C7D3102711C929F8DC0CA2D380314E4EB77F1EEA46C41AC2B` and is
+not installed. The next and only action is a separately scoped owner approval
+for that artifact before a future test-package replacement and one exact
+preflight rerun. No provider, authorization, attempt, reconciliation, repair,
+retry, production-package operation or P6 transition is permitted.

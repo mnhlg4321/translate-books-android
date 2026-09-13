@@ -533,7 +533,52 @@ This does not claim `P5E_9A_VALID_AUTHORIZATION_LOCAL_PATH_PASS` or a live
 RAW acceptance: the owner approval forbade valid-authorization dispatch. It is
 historical DV evidence and not the current A3 boundary.
 
-## Current active boundary — P5E.9B-A3.2C delayed read-only closure blocked
+## Current active boundary — P5E A4 model remediation and preflight evidence blocker
+
+The canonical A4 pin table is maintained in `EDITORIAL_RECOVERY_V4_18.md`;
+the facts below are its current-result reference, not a second authority table.
+
+The A4 device event is
+`D:\P5E-private\a4-model-preflight-device-20260913-200643711`. The read-only
+baseline verified device `15e84958`, production package code207 with the pinned
+APK/certificate/signature, schema v24, DB SHA-256
+`3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391`, SQLite
+integrity `ok`, FK violations `0`, the exact fresh tuple and zero lineage. No
+production or test PID/job was active, so no force-stop was required.
+
+The test package was replaced once with A4 artifact SHA
+`5D248FFD33F52AC649966C4135773708C7CA747CE34C28BB763B40EC1FE81467`. The
+model-remediation method ran once and reported model write/readback success,
+route match and preservation of all non-model settings. The settings file was
+`PRESENT` before and after; only its hash was retained, changing from
+`C2FC2DC71F3687E09F6D3899A99F397C3B75AD05B402D176367C03A0280E8062` to
+`4A0AA4564B62D5F9852A108B1D7991DA21AEF46DCDA4ACBC485E6E45CD3214F9`.
+
+The exact-preflight method ran once. It returned `OK (1 test)`, terminal
+instrumentation code `-1`, all route booleans true, valid conjunction, DB
+preservation true and provider calls `0`. It was not accepted because the
+versioned status output omitted required
+`p5e.preflight.v2.reconciliationCreated`; the host parser produced
+`MISSING_FIELD:reconciliationCreated`. This is an evidence-channel blocker,
+not permission to infer exact-preflight readiness or rerun the method.
+
+Post-readback still matched the DB hash/schema/integrity/FK, exact fresh tuple,
+source identities and all zero lineage/report/receipt counts. The one-shot
+window is consumed. A test-only correction was committed at
+`911fb355a2148feb8c7ec4b60a843c547596bf56` and built privately at
+`D:\P5E-private\a4-fresh-raw-model-preflight-statusfix-20260913-202218809\app-debug-androidTest.apk`
+with SHA-256
+`DC0E6790C1D82F3C7D3102711C929F8DC0CA2D380314E4EB77F1EEA46C41AC2B`; it is
+not installed. The next action is a separate owner approval for that artifact
+before any test-package replacement or preflight rerun. No provider,
+authorization, attempt, reconciliation, repair, retry or production-package
+operation occurred.
+The A4 device evidence manifest SHA-256 is
+`4C902DDEAEC7554C42EDB65F53ECC73403ECB45F4CE0A8D0BF74DB3312844EF0`; the
+new test-artifact manifest SHA-256 is
+`E333AC3A3FC21A808F69EDFC71ACD9710629C012C6DCE091C19B7F86ED282109`.
+
+## Historical A3.2C delayed read-only closure blocked
 
 The current state is the A2 fail-closed result, not the historical
 `FRESH_RAW_EXACT_PREFLIGHT_READY` result above. A2 evidence SHA-256 is

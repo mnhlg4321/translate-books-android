@@ -1,10 +1,61 @@
 # P5E — Đối soát generation, quyết định dữ liệu và local acceptance gate
 
-Ngày ghi nhận: `2026-09-11` (+07:00)
+Ngày ghi nhận: `2026-09-11` (+07:00); cập nhật A4: `2026-09-13` (+07:00)
 Phạm vi: metadata OpenRouter được đọc qua Activity/Logs đã xác thực; không mở
 I/O logging và không lưu prompt, response body, source text hoặc secret.
 
-## Current active decision — P5E.9B-A3.2C delayed read-only closure blocked
+## Current active decision — P5E A4 model remediation and preflight evidence blocker
+
+The canonical A4 pin table is maintained in `EDITORIAL_RECOVERY_V4_18.md`;
+this decision records the result against that table.
+
+The A4 owner-authorized sequence used the fresh binding without creating an
+authorization, attempt or reconciliation. Read-only baseline and post-readback
+matched device `15e84958`, production `com.ml.tblandroidtxt` code207, the pinned
+production APK/certificate/signature, schema v24, DB SHA-256
+`3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391`, SQLite
+integrity `ok`, FK violations `0`, exact selector/binding/run/evaluation/
+pack/profile and zero fresh lineage. No active app PID/job was found; no
+force-stop was needed.
+
+The test package was replaced exactly once with A4 artifact SHA
+`5D248FFD33F52AC649966C4135773708C7CA747CE34C28BB763B40EC1FE81467`. The
+model remediation ran exactly once and reported write/readback success,
+preserved non-model settings and route match. Settings was `PRESENT` before and
+after; only hashes are retained:
+`C2FC2DC71F3687E09F6D3899A99F397C3B75AD05B402D176367C03A0280E8062` before
+and `4A0AA4564B62D5F9852A108B1D7991DA21AEF46DCDA4ACBC485E6E45CD3214F9`
+after. No settings content or credential was read or recorded.
+
+The exact-preflight method ran once and returned one test `OK (1 test)`, final
+instrumentation code `-1`, provider/model/endpoint/route all true, valid
+conjunction, DB preservation true and provider calls `0`. The redacted status
+channel omitted required `p5e.preflight.v2.reconciliationCreated`; the host
+parser therefore rejected the output with
+`MISSING_FIELD:reconciliationCreated`. This current result is
+`P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED`, not exact-preflight
+acceptance. Because the device scope was one-shot, no rerun is authorized.
+
+The private A4 device evidence manifest `SHA256SUMS.txt` has SHA-256
+`4C902DDEAEC7554C42EDB65F53ECC73403ECB45F4CE0A8D0BF74DB3312844EF0`.
+The corrected host-only test artifact manifest has SHA-256
+`E333AC3A3FC21A808F69EDFC71ACD9710629C012C6DCE091C19B7F86ED282109`.
+
+Post-readback preserved the DB hash/schema/integrity/FK, fresh tuple/source
+identities and zero attempts, authorization receipts, reconciliation, history,
+lifecycle and report/receipt bytes. The test-only emitter correction is
+committed at `911fb355a2148feb8c7ec4b60a843c547596bf56`; its new host-only
+artifact is
+`D:\P5E-private\a4-fresh-raw-model-preflight-statusfix-20260913-202218809\app-debug-androidTest.apk`
+with SHA-256
+`DC0E6790C1D82F3C7D3102711C929F8DC0CA2D380314E4EB77F1EEA46C41AC2B`. It is
+not installed or device-verified. The next action is a narrowly scoped owner
+approval before a future test-package replacement/preflight rerun. A2 and A3.2
+approvals remain consumed; historical code196/pilot preservation failures and
+the A3.2 immediate-preservation gap remain unchanged. No live RAW,
+authorization or RECONCILE is allowed.
+
+## Historical A3.2C delayed read-only closure blocked
 
 The latest A2 result is fail-closed, not a readiness pass:
 `P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED` /
