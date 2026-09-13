@@ -474,6 +474,7 @@ public final class EditorialP5EFreshRawLiveInstrumentedTest {
         manifest.put("lineageCounts", lineageCounts(lineage));
         manifest.put("authorizationCreated", false);
         manifest.put("attemptCreated", false);
+        manifest.put("reconciliationCreated", false);
         manifest.put("requestBodyStored", false);
         manifest.put("fullModelResponseStored", false);
         return manifest;
