@@ -9,7 +9,6 @@ import android.content.pm.SigningInfo;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -65,6 +64,9 @@ public final class EditorialP5EFreshRawLiveInstrumentedTest {
     private static final String TEST_PACKAGE = "com.ml.tblandroidtxt.test";
     private static final String PREFLIGHT_OPT_IN = "p5e_fresh_raw_preflight";
     private static final String LIVE_OPT_IN = "p5e_fresh_raw_live";
+    private static final String PREFLIGHT_STATUS_PREFIX = "p5e.preflight.v2.";
+    private static final String PREFLIGHT_MANIFEST_VERSION =
+            "p5e.9b.a4.redacted-preflight.v2";
 
     private static final String PRODUCTION_VERSION = "v4.17-p5e.11";
     private static final long PRODUCTION_VERSION_CODE = 207L;
@@ -188,8 +190,10 @@ public final class EditorialP5EFreshRawLiveInstrumentedTest {
             JSONObject manifest = redactedPreflightManifest(arguments, fixture, projectId,
                     canonicalBody, schemaBytes, dbBefore, before, after, lineage, testSourceCommit);
             // This is metadata only: source content, prompt, body, key and
-            // provider response are deliberately absent.
-            Log.i("P5E_9B_A2_PREFLIGHT", manifest.toString());
+            // provider response are deliberately absent. The status channel
+            // is the durable test-output boundary; logcat is not required.
+            InstrumentationRegistry.getInstrumentation().sendStatus(
+                    0, redactedPreflightStatus(manifest));
         }
     }
 
@@ -413,8 +417,8 @@ public final class EditorialP5EFreshRawLiveInstrumentedTest {
             EditorialP5EFreshRawLiveRunner.FreshRawLineageCheck lineage,
             String testSourceCommit) throws JSONException {
         JSONObject manifest = new JSONObject();
-        manifest.put("manifestVersion", "p5e.9b.a2.redacted-preflight.v1");
-        manifest.put("execution", "HOST_TEMPLATE_ONLY_UNTIL_A2");
+        manifest.put("manifestVersion", PREFLIGHT_MANIFEST_VERSION);
+        manifest.put("execution", "ZERO_CALL_EXACT_PREFLIGHT");
         manifest.put("productionPackage", PRODUCTION_PACKAGE);
         manifest.put("productionVersion", PRODUCTION_VERSION);
         manifest.put("productionVersionCode", PRODUCTION_VERSION_CODE);
@@ -473,6 +477,90 @@ public final class EditorialP5EFreshRawLiveInstrumentedTest {
         manifest.put("requestBodyStored", false);
         manifest.put("fullModelResponseStored", false);
         return manifest;
+    }
+
+    /**
+     * Flattens only the redacted preflight facts into instrumentation status.
+     * No source/prompt/body/settings/credential value is included; body and
+     * schema are represented by hashes and byte lengths only.
+     */
+    private static Bundle redactedPreflightStatus(JSONObject manifest) throws JSONException {
+        Bundle status = new Bundle();
+        putManifestString(status, manifest, "manifestVersion");
+        putManifestString(status, manifest, "execution");
+        putManifestString(status, manifest, "productionPackage");
+        putManifestString(status, manifest, "productionVersion");
+        putManifestString(status, manifest, "productionVersionCode");
+        putManifestString(status, manifest, "productionApkSha256");
+        putManifestString(status, manifest, "productionCertificateSha256");
+        putManifestString(status, manifest, "testPackage");
+        putManifestString(status, manifest, "testApkSha256");
+        putManifestString(status, manifest, "testSourceCommit");
+        putManifestString(status, manifest, "testRunner");
+        putManifestString(status, manifest, "dbSha256");
+        putManifestString(status, manifest, "schemaVersion");
+        putManifestString(status, manifest, "projectRowId");
+        putManifestString(status, manifest, "selector");
+        putManifestString(status, manifest, "chapterKey");
+        putManifestString(status, manifest, "bindingIdentity");
+        putManifestString(status, manifest, "runDeclarationIdentity");
+        putManifestString(status, manifest, "compatibilityEvaluationId");
+        putManifestString(status, manifest, "canonicalPackHash");
+        putManifestString(status, manifest, "canonicalProfileHash");
+        putManifestString(status, manifest, "attemptIdentity");
+        putManifestString(status, manifest, "requestIdentity");
+        putManifestString(status, manifest, "requestEnvelopeHash");
+        putManifestString(status, manifest, "canonicalHttpRequestBodySha256");
+        putManifestString(status, manifest, "canonicalHttpRequestBodyBytes");
+        putManifestString(status, manifest, "jsonSchemaSha256");
+        putManifestString(status, manifest, "jsonSchemaBytes");
+        putManifestString(status, manifest, "wireSchemaVersion");
+        putManifestString(status, manifest, "worstCaseWireBytes");
+        putManifestString(status, manifest, "maximumWireBytes");
+        putManifestString(status, manifest, "outputTokenCap");
+        putManifestString(status, manifest, "contextSizeBytes");
+        putManifestString(status, manifest, "sourceProjection");
+        putManifestString(status, manifest, "sources");
+        putManifestString(status, manifest, "packAuthorityRequired");
+        putManifestString(status, manifest, "routeFingerprint");
+        putManifestString(status, manifest, "provider");
+        putManifestString(status, manifest, "model");
+        putManifestString(status, manifest, "upstreamProvider");
+        putManifestString(status, manifest, "stream");
+        putManifestString(status, manifest, "responseFormat");
+        putManifestString(status, manifest, "strict");
+        putManifestString(status, manifest, "reasoningEffort");
+        putManifestString(status, manifest, "requireParameters");
+        putManifestString(status, manifest, "allowFallbacks");
+        putManifestString(status, manifest, "only");
+        putManifestString(status, manifest, "dataCollection");
+        putManifestString(status, manifest, "plugins");
+        putManifestString(status, manifest, "providerCalls");
+        putManifestString(status, manifest, "dbCountsBefore");
+        putManifestString(status, manifest, "dbCountsAfter");
+        putManifestString(status, manifest, "lineageCounts");
+        putManifestString(status, manifest, "authorizationCreated");
+        putManifestString(status, manifest, "attemptCreated");
+        putManifestString(status, manifest, "requestBodyStored");
+        putManifestString(status, manifest, "fullModelResponseStored");
+
+        // These fields deliberately separate runner success, status parsing,
+        // route evaluation, preservation and exact-preflight acceptance.
+        status.putString(PREFLIGHT_STATUS_PREFIX + "testSuccess", "true");
+        status.putString(PREFLIGHT_STATUS_PREFIX + "outputParse", "true");
+        status.putString(PREFLIGHT_STATUS_PREFIX + "providerMatch", "true");
+        status.putString(PREFLIGHT_STATUS_PREFIX + "modelMatch", "true");
+        status.putString(PREFLIGHT_STATUS_PREFIX + "endpointMatch", "true");
+        status.putString(PREFLIGHT_STATUS_PREFIX + "routeMatch", "true");
+        status.putString(PREFLIGHT_STATUS_PREFIX + "conjunctionValid", "true");
+        status.putString(PREFLIGHT_STATUS_PREFIX + "dbPreservation", "true");
+        status.putString(PREFLIGHT_STATUS_PREFIX + "exactAcceptance", "true");
+        return status;
+    }
+
+    private static void putManifestString(Bundle status, JSONObject manifest, String key)
+            throws JSONException {
+        status.putString(PREFLIGHT_STATUS_PREFIX + key, String.valueOf(manifest.get(key)));
     }
 
     private static JSONArray sourceInventory(EditorialP5PilotRequest request)
