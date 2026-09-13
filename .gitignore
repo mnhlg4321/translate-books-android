@@ -25,6 +25,7 @@ credentials*.json
 /backup/
 /artifacts/releases/
 /artifacts/builds/
+/artifacts/test-builds/
 /artifacts/device-extracts/
 /artifacts/device-qa/
 /.archive-staging/

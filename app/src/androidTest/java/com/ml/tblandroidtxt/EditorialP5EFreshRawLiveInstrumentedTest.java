@@ -542,6 +542,7 @@ public final class EditorialP5EFreshRawLiveInstrumentedTest {
         putManifestString(status, manifest, "lineageCounts");
         putManifestString(status, manifest, "authorizationCreated");
         putManifestString(status, manifest, "attemptCreated");
+        putManifestString(status, manifest, "reconciliationCreated");
         putManifestString(status, manifest, "requestBodyStored");
         putManifestString(status, manifest, "fullModelResponseStored");
 

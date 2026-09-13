@@ -51,6 +51,28 @@ final class P5EInstrumentationStatusParser {
 
     private P5EInstrumentationStatusParser() { }
 
+    /**
+     * Exposes the parser contract to host-only emitter mapping tests. The
+     * returned set is immutable and is not a second source of field names.
+     */
+    static Set<String> requiredFieldsForContract() {
+        return REQUIRED;
+    }
+
+    /**
+     * Exposes the parser boolean contract to host-only emitter mapping tests.
+     */
+    static Set<String> booleanFieldsForContract() {
+        return BOOLEAN_FIELDS;
+    }
+
+    /**
+     * Exposes the parser allowlist to host-only emitter mapping tests.
+     */
+    static Set<String> allowedFieldsForContract() {
+        return ALLOWED;
+    }
+
     static ParseResult parse(String raw) {
         List<String> errors = new ArrayList<>();
         Map<String, String> values = new LinkedHashMap<>();

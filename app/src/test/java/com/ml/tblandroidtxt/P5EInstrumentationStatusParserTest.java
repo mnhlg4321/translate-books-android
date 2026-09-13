@@ -43,12 +43,45 @@ public final class P5EInstrumentationStatusParserTest {
     }
 
     @Test
+    public void rejectsMissingReconciliationCreatedEvenWhenTestAndTerminalSucceed() {
+        P5EInstrumentationStatusParser.ParseResult result =
+                P5EInstrumentationStatusParser.parse(successOutput()
+                        .replace("INSTRUMENTATION_STATUS: p5e.preflight.v2.reconciliationCreated=false\n", ""));
+        assertTrue(result.terminalSuccess);
+        assertTrue(result.testSuccess);
+        assertFalse(result.outputParseSuccess);
+        assertFalse(result.accepted);
+    }
+
+    @Test
     public void rejectsDuplicateField() {
         P5EInstrumentationStatusParser.ParseResult result =
                 P5EInstrumentationStatusParser.parse(successOutput()
                         .replace("INSTRUMENTATION_CODE: -1", "INSTRUMENTATION_STATUS: p5e.preflight.v2.routeMatch=true\nINSTRUMENTATION_CODE: -1"));
         assertFalse(result.outputParseSuccess);
         assertFalse(result.accepted);
+    }
+
+    @Test
+    public void rejectsDuplicateReconciliationCreated() {
+        P5EInstrumentationStatusParser.ParseResult result =
+                P5EInstrumentationStatusParser.parse(successOutput()
+                        .replace("INSTRUMENTATION_CODE: -1",
+                                "INSTRUMENTATION_STATUS: p5e.preflight.v2.reconciliationCreated=false\n"
+                                        + "INSTRUMENTATION_CODE: -1"));
+        assertFalse(result.outputParseSuccess);
+        assertFalse(result.accepted);
+    }
+
+    @Test
+    public void rejectsReconciliationCreatedTrueForExactAcceptance() {
+        P5EInstrumentationStatusParser.ParseResult result =
+                P5EInstrumentationStatusParser.parse(successOutput()
+                        .replace("p5e.preflight.v2.reconciliationCreated=false",
+                                "p5e.preflight.v2.reconciliationCreated=true"));
+        assertTrue(result.outputParseSuccess);
+        assertFalse(result.accepted);
+        assertTrue(result.values.get("reconciliationCreated").equals("true"));
     }
 
     @Test
