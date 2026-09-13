@@ -220,7 +220,7 @@ try {
     }
     Assert-EqualIgnoreCase -Actual $packageMatch.Groups[1].Value -Expected $TestPackage -Label 'test package'
 
-    $manifestToolOutput = @(& $aapt2 'dump' 'xmltree' $builtApk 'AndroidManifest.xml' 2>&1)
+    $manifestToolOutput = @(& $aapt2 'dump' 'xmltree' '--file' 'AndroidManifest.xml' $builtApk 2>&1)
     $manifestExitCode = $LASTEXITCODE
     if ($manifestExitCode -ne 0) {
         throw "aapt2 could not inspect AndroidManifest.xml:`n$($manifestToolOutput -join "`n")"
