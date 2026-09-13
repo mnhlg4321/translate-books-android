@@ -23,6 +23,24 @@ final class P5EInstrumentationStatusParser {
             "dbPreservation", "exactAcceptance", "providerCalls",
             "authorizationCreated", "attemptCreated", "reconciliationCreated");
 
+    private static final Set<String> ALLOWED = Set.of(
+            "manifestVersion", "execution", "productionPackage", "productionVersion",
+            "productionVersionCode", "productionApkSha256", "productionCertificateSha256",
+            "testPackage", "testApkSha256", "testSourceCommit", "testRunner", "dbSha256",
+            "schemaVersion", "projectRowId", "selector", "chapterKey", "bindingIdentity",
+            "runDeclarationIdentity", "compatibilityEvaluationId", "canonicalPackHash",
+            "canonicalProfileHash", "attemptIdentity", "requestIdentity", "requestEnvelopeHash",
+            "canonicalHttpRequestBodySha256", "canonicalHttpRequestBodyBytes", "jsonSchemaSha256",
+            "jsonSchemaBytes", "wireSchemaVersion", "worstCaseWireBytes", "maximumWireBytes",
+            "outputTokenCap", "contextSizeBytes", "sourceProjection", "sources",
+            "packAuthorityRequired", "routeFingerprint", "provider", "model", "upstreamProvider",
+            "stream", "responseFormat", "strict", "reasoningEffort", "requireParameters",
+            "allowFallbacks", "only", "dataCollection", "plugins", "providerCalls",
+            "dbCountsBefore", "dbCountsAfter", "lineageCounts", "authorizationCreated",
+            "attemptCreated", "requestBodyStored", "fullModelResponseStored", "testSuccess",
+            "outputParse", "providerMatch", "modelMatch", "endpointMatch", "routeMatch",
+            "conjunctionValid", "dbPreservation", "exactAcceptance", "reconciliationCreated");
+
     private static final Set<String> BOOLEAN_FIELDS = Set.of(
             "testSuccess", "outputParse", "providerMatch", "modelMatch",
             "endpointMatch", "routeMatch", "conjunctionValid", "dbPreservation",
@@ -53,7 +71,7 @@ final class P5EInstrumentationStatusParser {
                     String value = payload.substring(separator + 1);
                     if (!key.startsWith(PREFIX)) continue; // standard runner key
                     String field = key.substring(PREFIX.length());
-                    if (!REQUIRED.contains(field)) {
+                    if (!ALLOWED.contains(field)) {
                         errors.add("UNKNOWN_FIELD:" + field);
                     } else if (values.put(field, value) != null) {
                         errors.add("DUPLICATE_FIELD:" + field);
