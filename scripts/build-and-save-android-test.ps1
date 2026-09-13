@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidatePattern('^v\d+\.\d+(?:\.\d+)?(?:-[A-Za-z0-9-]+)?$')]
+    [ValidatePattern('^v\d+\.\d+(?:\.\d+)?(?:-[A-Za-z0-9.-]+)?$')]
     [string]$TargetProductionVersion,
 
     [Parameter(Mandatory = $true)]
