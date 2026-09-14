@@ -1,10 +1,10 @@
 # P5E — Đối soát generation, quyết định dữ liệu và local acceptance gate
 
-Ngày ghi nhận: `2026-09-11` (+07:00); cập nhật A4.1: `2026-09-14` (+07:00)
+Ngày ghi nhận: `2026-09-11` (+07:00); cập nhật A4.2 host preparation: `2026-09-14` (+07:00)
 Phạm vi: metadata OpenRouter được đọc qua Activity/Logs đã xác thực; không mở
 I/O logging và không lưu prompt, response body, source text hoặc secret.
 
-## Current active decision — P5E.9B-A4.1 host contract pass; device approval pending
+## Current active decision — P5E.9B-A4.2 host preparation pass; device approval pending
 
 The current A4.1 decision is host-only and is based on clean baseline
 `ade5c3ed7c8d948505f5b37864f4e0e9635aacb8` on branch
@@ -51,6 +51,13 @@ retry, production-package operation or P6 transition is authorized. Historical
 `HISTORICAL_CODE196_PRESERVATION_FAILED`,
 `PILOT_DATA_PRESERVATION_FAILED`, and consumed A2/A3.2 approvals remain
 unchanged.
+
+Before crossing the device boundary, host-only A4.2 preparation recorded the
+source-derived argument set and parser matrix in
+`D:\P5E-private\a4-2-exact-preflight-host-prep-20260914-184255833`. The
+evidence manifest SHA-256 is
+`CCE290D4ABC11E58623633C5E2208BFCD51C7CA9A44A8978DEB5ACBCC78D59E3`.
+This preparation did not create a device result or exact-preflight acceptance.
 
 ## Historical decision — P5E A4 model remediation and preflight evidence blocker
 

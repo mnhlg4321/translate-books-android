@@ -1,10 +1,10 @@
 # Editorial Recovery v4.18
 
-Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILT_NOT_INSTALLED / P5E_9B_A4_2_OWNER_APPROVAL_REQUIRED / RAW_AUTHORIZATION_REQUIRED / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / NO_DEVICE_OPERATION / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY`
+Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILT_NOT_INSTALLED / P5E_9B_A4_2_HOST_PREPARED_APPROVAL_REQUIRED / P5E_9B_A4_2_OWNER_APPROVAL_REQUIRED / RAW_AUTHORIZATION_REQUIRED / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / NO_DEVICE_OPERATION / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY`
 
 This document is the single product and execution authority for the v4.18 Editorial recovery. It supersedes active next actions from the historical v4.16 Editorial/RSC/IPC tracks without deleting or reinterpreting their evidence.
 
-## Current active boundary — P5E.9B-A4.1 host contract pass; device approval pending
+## Current active boundary — P5E.9B-A4.2 host preparation pass; device approval pending
 
 A4.1 is host-only. It started from clean baseline
 `ade5c3ed7c8d948505f5b37864f4e0e9635aacb8` on separate branch
@@ -16,7 +16,7 @@ authorization, attempt, reconciliation, DB or settings operation was performed.
 
 | Pin | Current value | Qualification |
 |---|---|---|
-| Device | `15e84958` | last-known A4 fact; not accessed in A4.1 |
+| Device | `15e84958` | last-known A4 fact; not accessed in A4.1 or A4.2 host preparation |
 | Production | `com.ml.tblandroidtxt` / `v4.17-p5e.11` / code `207` | frozen candidate; not rebuilt |
 | Production APK SHA-256 | `2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD` | frozen artifact/backup fact |
 | Production source ZIP SHA-256 | `B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348` | frozen artifact/backup fact |
@@ -26,7 +26,7 @@ authorization, attempt, reconciliation, DB or settings operation was performed.
 | A4.1 source/archive commit | `d51b7f3c16bdc482513b9904db07b97daed592d1` | exact tracked-source ZIP in payload |
 | A4.1 test certificate/package/target/runner | `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155` / `com.ml.tblandroidtxt.test` / `com.ml.tblandroidtxt` / `androidx.test.runner.AndroidJUnitRunner` | build-tool inspection |
 | A4.1 source ZIP SHA-256 | `382EC5D12FC786BC358316434692E49A73BD62C2F9DD9AC6BD1BC9274CE0B3FA` | artifact/backup payload |
-| DB / schema | `3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391` / `24` | last verified; not read in A4.1 |
+| DB / schema | `3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391` / `24` | last verified; not read in A4.1 or A4.2 host preparation |
 | Data classification | `RECONSTRUCTED_ONLY` | not code196 recovery |
 | Fresh selector / chapter | `p5e-fresh-mercedes-vol5-20260911-01` / `001` | frozen fresh tuple |
 | Fresh binding / run | `845976b3cde02a3bf0896b64efd208f42e40821317d1b7bffec7081e63e33cdf` / `8466b95d96f958a97eb3ffd1eac5a32734023cafa1c230e696ad4253151a41dc` | frozen fresh tuple |
@@ -55,6 +55,10 @@ The prior exact-preflight result remains historical evidence: it reported
 rejected. A4.1 fixes the host contract only; it does not convert that result
 into exact-preflight readiness or authorize a rerun.
 
+The host-only A4.2 preparation event is
+`D:\P5E-private\a4-2-exact-preflight-host-prep-20260914-184255833`; its
+evidence manifest is hash-verified and its planned command contains the exact
+preflight argument set from source. No device-current state is asserted.
 The single current next action is a separately scoped owner approval for a
 future device installation/replacement of this A4.1 artifact and one exact
 preflight invocation. That approval must continue to forbid provider calls,

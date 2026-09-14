@@ -535,7 +535,7 @@ This does not claim `P5E_9A_VALID_AUTHORIZATION_LOCAL_PATH_PASS` or a live
 RAW acceptance: the owner approval forbade valid-authorization dispatch. It is
 historical DV evidence and not the current A3 boundary.
 
-## Current active boundary — P5E.9B-A4.1 host contract; device approval pending
+## Current active boundary — P5E.9B-A4.2 host preparation; device approval pending
 
 A4.1 is host-only and does not reuse the consumed A2/A3.2 approvals. It started
 from clean baseline `ade5c3ed7c8d948505f5b37864f4e0e9635aacb8` on branch
@@ -584,6 +584,14 @@ readiness. The single next action is a new owner approval for one future
 test-package replacement and one exact-preflight invocation using the new
 artifact. P5/P5E exit, RAW authorization, execution, certification and P6
 remain closed.
+
+A4.2 host-only preparation is recorded in
+`D:\P5E-private\a4-2-exact-preflight-host-prep-20260914-184255833` with
+manifest SHA-256
+`CCE290D4ABC11E58623633C5E2208BFCD51C7CA9A44A8978DEB5ACBCC78D59E3`.
+It contains source-derived preflight arguments, offline parser acceptance rules
+and planned commands only. No device command, install or instrumentation was
+performed; owner approval remains required.
 
 ## Historical active boundary — P5E A4 model remediation and preflight evidence blocker
 
