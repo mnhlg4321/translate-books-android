@@ -1,14 +1,15 @@
 # P5E — Đối soát generation, quyết định dữ liệu và local acceptance gate
 
-Ngày ghi nhận: `2026-09-11` (+07:00); cập nhật A4.2 host preparation: `2026-09-14` (+07:00)
+Ngày ghi nhận: `2026-09-11` (+07:00); cập nhật A4.2 exact preflight result:
+`2026-09-14` (+07:00)
 Phạm vi: metadata OpenRouter được đọc qua Activity/Logs đã xác thực; không mở
 I/O logging và không lưu prompt, response body, source text hoặc secret.
 
-## Current active decision — P5E.9B-A4.2 host preparation pass; device approval pending
+## Current active decision — P5E.9B-A4.2 exact preflight pass; RAW authorization required
 
-The current A4.1 decision is host-only and is based on clean baseline
-`ade5c3ed7c8d948505f5b37864f4e0e9635aacb8` on branch
-`fix/v4.18-p5e-9b-a4-1`; current source/archive commit is
+The current decision uses execution-start HEAD
+`005317cd83f107edbf275734cb2977b9929e88ce` on branch
+`fix/v4.18-p5e-9b-a4-1`; the exact test artifact source/archive commit is
 `d51b7f3c16bdc482513b9904db07b97daed592d1`. Production code207, schema,
 pack/profile, authority and wire/final schemas were not changed or rebuilt.
 
@@ -23,7 +24,8 @@ covered. Host QA passed with JDK `21.0.10`, Android SDK `android-35`, Gradle
 `9.3.0`, targeted parser/emitter tests, AndroidTest compilation, production
 diff guard `0`, secret scan and `git diff --check`.
 
-The immutable test-only artifact is
+The immutable test-only artifact was used exactly once as the test package and
+read back exactly after install. It is
 `D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532\app-debug-androidTest.apk`,
 `1155224` bytes, SHA-256
 `57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA`,
@@ -33,8 +35,10 @@ certificate
 `androidx.test.runner.AndroidJUnitRunner`, source/archive commit
 `d51b7f3c16bdc482513b9904db07b97daed592d1`, source ZIP SHA-256
 `382EC5D12FC786BC358316434692E49A73BD62C2F9DD9AC6BD1BC9274CE0B3FA`.
-Artifact and backup payloads are byte-identical; `installed=false`,
-`deviceOperations=0`, `providerCalls=0`, and no DB/settings operation occurred.
+Artifact and backup payloads are byte-identical. The one allowed device
+mutation was test-package replacement; production-package operations,
+provider/API calls, authorization creation, attempt creation and
+reconciliation creation were all `0`.
 
 `DC0E6790C1D82F3C7D3102711C929F8DC0CA2D380314E4EB77F1EEA46C41AC2B` is
 retained outside Git as
@@ -44,20 +48,33 @@ evidence-channel failure because its status omitted
 `p5e.preflight.v2.reconciliationCreated`; A4.1 does not upgrade it to exact
 preflight acceptance.
 
-The single current next action is a new owner approval for one future
-test-package replacement and one exact-preflight invocation using the A4.1
-artifact. No provider, authorization, attempt, reconciliation, automatic
-retry, production-package operation or P6 transition is authorized. Historical
-`HISTORICAL_CODE196_PRESERVATION_FAILED`,
-`PILOT_DATA_PRESERVATION_FAILED`, and consumed A2/A3.2 approvals remain
-unchanged.
+The A4.2 single-use approval is consumed and is not reusable. Its device event
+is `D:\P5E-private\a4-2-exact-preflight-device-20260914-185308591`; the
+evidence manifest `A4-2-EVIDENCE-MANIFEST.md` has SHA-256
+`7FBBECD3E2A8868D42D34CB3F9F2F8BA8CDAC236B4C7161F6747CBB19EE2474D`, and
+the retained raw instrumentation has SHA-256
+`1FFE572DF3ADEBA6A8AB55061BD75F2F5EEBBC479F8BB0D1EA97DB3957D1577C`.
+The single exact-preflight invocation returned one `OK (1 test)`, terminal
+`-1`, parser `accepted=true`, all four route flags and conjunction `true`,
+`dbPreservation=true`, `exactAcceptance=true`, and zero provider calls and
+creation flags. WAL-aware package/settings/database/tuple/lineage readback
+matched before and after; schema24, integrity `ok`, FK `0`, and all lineage,
+report and receipt counts remained zero.
 
-Before crossing the device boundary, host-only A4.2 preparation recorded the
-source-derived argument set and parser matrix in
+The single current next action is a separately approved RAW authorization
+request derived from this exact manifest. It remains RAW-only with one primary
+call, zero repair/retry and no RECONCILE. Historical
+`HISTORICAL_CODE196_PRESERVATION_FAILED`, `PILOT_DATA_PRESERVATION_FAILED`,
+and consumed A2/A3.2 approvals remain unchanged; P5/P5E exit, execution,
+certification and P6 are not claimed.
+
+The host-only A4.2 preparation recorded the source-derived argument set and
+parser matrix in
 `D:\P5E-private\a4-2-exact-preflight-host-prep-20260914-184255833`. The
-evidence manifest SHA-256 is
+checksum-file SHA-256 is
 `CCE290D4ABC11E58623633C5E2208BFCD51C7CA9A44A8978DEB5ACBCC78D59E3`.
-This preparation did not create a device result or exact-preflight acceptance.
+Its preparation document SHA-256 is
+`C6B1CD88C212EA51DA698DF3AA89335FD0C6B7334E53B2617CD0DCFF45945BD6`.
 
 ## Historical decision — P5E A4 model remediation and preflight evidence blocker
 

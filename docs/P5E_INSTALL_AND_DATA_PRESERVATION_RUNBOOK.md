@@ -535,13 +535,15 @@ This does not claim `P5E_9A_VALID_AUTHORIZATION_LOCAL_PATH_PASS` or a live
 RAW acceptance: the owner approval forbade valid-authorization dispatch. It is
 historical DV evidence and not the current A3 boundary.
 
-## Current active boundary — P5E.9B-A4.2 host preparation; device approval pending
+## Current active boundary — P5E.9B-A4.2 exact preflight pass; RAW authorization required
 
-A4.1 is host-only and does not reuse the consumed A2/A3.2 approvals. It started
-from clean baseline `ade5c3ed7c8d948505f5b37864f4e0e9635aacb8` on branch
-`fix/v4.18-p5e-9b-a4-1`; current source/archive commit is
-`d51b7f3c16bdc482513b9904db07b97daed592d1`. No ADB, device, provider,
-authorization, attempt, reconciliation, DB or settings operation was performed.
+A4.2 did not reuse the consumed A2/A3.2 approvals. It started from execution
+HEAD `005317cd83f107edbf275734cb2977b9929e88ce` on branch
+`fix/v4.18-p5e-9b-a4-1`; the test artifact source/archive commit is
+`d51b7f3c16bdc482513b9904db07b97daed592d1`. The owner-approved boundary
+performed one test-package replacement and one exact-preflight invocation.
+Production was not operated on; no provider, authorization, attempt or
+reconciliation creation occurred.
 
 The host RED audit confirmed that the previous A4 artifact's manifest already
 contained `reconciliationCreated=false`, while the parser required it and the
@@ -552,11 +554,11 @@ required/allowed/strict-boolean sets; parser fixtures remain supplemental.
 
 Host QA passed with JDK `21.0.10`, pinned SDK `android-35`, Gradle `9.3.0`:
 targeted parser/emitter-contract tests, AndroidTest compilation, production
-diff guard `0`, secret scan and `git diff --check`. The new test-only archive
-path is `scripts/build-and-save-android-test.ps1`; it runs only
+diff guard `0`, secret scan and `git diff --check`. The test-only archive path
+is `scripts/build-and-save-android-test.ps1`; it runs only
 `:app:assembleDebugAndroidTest`, records an exact tracked-source ZIP and
-SHA-256 manifest, and mirrors the payload to artifact and backup roots. New
-artifact:
+SHA-256 manifest, and mirrors the payload to artifact and backup roots. The
+artifact below was then used once as the test package and read back exactly:
 
 ```text
 path=D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532\app-debug-androidTest.apk
@@ -568,9 +570,7 @@ targetPackage=com.ml.tblandroidtxt
 runner=androidx.test.runner.AndroidJUnitRunner
 sourceCommit=d51b7f3c16bdc482513b9904db07b97daed592d1
 sourceZipSha256=382EC5D12FC786BC358316434692E49A73BD62C2F9DD9AC6BD1BC9274CE0B3FA
-installed=false
 productionApkRebuilt=false
-deviceOperations=0
 providerCalls=0
 backupByteIdentical=true
 ```
@@ -580,18 +580,28 @@ The previous A4 artifact
 retained and classified `SUPERSEDED_NOT_INSTALLED_INVALID_STATUS_MAPPING`; it
 must not be installed. The prior exact-preflight `OK (1 test)`/terminal `-1`
 observation remains historical evidence-channel failure, not exact-preflight
-readiness. The single next action is a new owner approval for one future
-test-package replacement and one exact-preflight invocation using the new
-artifact. P5/P5E exit, RAW authorization, execution, certification and P6
-remain closed.
+readiness. A4.2 now supersedes that pending device boundary: its exact
+preflight was accepted after the corrected status emitter and complete
+post-readback. The single current next action is a separately approved RAW
+authorization request derived from the A4.2 manifest. It remains RAW-only with
+one primary call, zero repair/retry and no RECONCILE; P5/P5E exit, execution,
+certification and P6 remain closed.
 
-A4.2 host-only preparation is recorded in
+A4.2 host preparation is recorded in
 `D:\P5E-private\a4-2-exact-preflight-host-prep-20260914-184255833` with
-manifest SHA-256
+checksum-file SHA-256
 `CCE290D4ABC11E58623633C5E2208BFCD51C7CA9A44A8978DEB5ACBCC78D59E3`.
-It contains source-derived preflight arguments, offline parser acceptance rules
-and planned commands only. No device command, install or instrumentation was
-performed; owner approval remains required.
+Its preparation document SHA-256 is
+`C6B1CD88C212EA51DA698DF3AA89335FD0C6B7334E53B2617CD0DCFF45945BD6`.
+The completed device evidence is in
+`D:\P5E-private\a4-2-exact-preflight-device-20260914-185308591` with
+`A4-2-EVIDENCE-MANIFEST.md` SHA-256
+`7FBBECD3E2A8868D42D34CB3F9F2F8BA8CDAC236B4C7161F6747CBB19EE2474D`.
+It records one `OK (1 test)`, terminal `-1`, parser acceptance, all route and
+preservation booleans true, raw output SHA-256
+`1FFE572DF3ADEBA6A8AB55061BD75F2F5EEBBC479F8BB0D1EA97DB3957D1577C`, and
+WAL-aware before/after preservation. The A4.2 approval is consumed and not
+reusable.
 
 ## Historical active boundary — P5E A4 model remediation and preflight evidence blocker
 
