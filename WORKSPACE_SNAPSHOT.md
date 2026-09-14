@@ -2,8 +2,8 @@
 
 - Updated: 2026-09-14 (P5E.9B-A4.1 host contract and immutable AndroidTest archive complete, +07:00).
 - Current status: P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_EMITTER_PARSER_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILT_NOT_INSTALLED / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A4_2_OWNER_APPROVAL_REQUIRED / RAW_AUTHORIZATION_REQUIRED / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / NO_DEVICE_OPERATION / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY. Historical completed statuses are retained below and are not current readiness claims.
-- Current version/build: frozen production candidate `4.17-p5e.11` / code207, event `build-20260911-201725`, production source baseline `995d3b6c9678e93905b3802cf22eee0b091b1bb3`, production fix commit `ff6821a5de6f825c55e35f8570dfbf074b4e64b5`, APK SHA-256 `2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD`, source ZIP SHA-256 `B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348`, certificate SHA-256 `47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155`; artifact/backup payloads remain byte-identical. A4 device readback verified production code207 and test artifact `5D248FFD33F52AC649966C4135773708C7CA747CE34C28BB763B40EC1FE81467`; data remains `RECONSTRUCTED_ONLY`.
-- Current commit baseline for this snapshot: `d51b7f3c16bdc482513b9904db07b97daed592d1` is the implementation/tooling baseline immediately before this documentation snapshot commit. Test correction is `ea0d907a84a735b7ccb29237c1dd5add45defecf`, archive-policy documentation is `2e08f3d392b044339a1df4cd883b6764d6b2a9d2`, and the two build-tool corrections are `1431b51156f0b9ba2d7080f10a751dcdc7335187` and `d51b7f3c16bdc482513b9904db07b97daed592d1`. Earlier implementation/test and documentation baselines remain recorded below and are not rewritten. Active authority, canonical pack/profile and final schemas are unchanged. The current data remains `RECONSTRUCTED_ONLY`; code189/code191 and code206 QF results are historical evidence, code204 is pre-correction evidence and code205 is intermediate dirty-source evidence.
+- Current version/build: frozen production candidate `4.17-p5e.11` / code207, event `build-20260911-201725`, production source baseline `995d3b6c9678e93905b3802cf22eee0b091b1bb3`, production fix commit `ff6821a5de6f825c55e35f8570dfbf074b4e64b5`, APK SHA-256 `2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD`, source ZIP SHA-256 `B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348`, certificate SHA-256 `47f313893a5d68120b075c25825C1C66F1334AC47AFB2EF3741084E22EF3C155`; artifact/backup payloads remain byte-identical. Historical A4 device readback verified production code207 and test artifact `5D248FFD33F52AC649966C4135773708C7CA747CE34C28BB763B40EC1FE81467`; data remains `RECONSTRUCTED_ONLY`.
+- Current commit baseline for this snapshot: implementation/tooling remains `d51b7f3c16bdc482513b9904db07b97daed592d1`; the preceding documentation/evidence commit is `15188cf4fdc6d86a01ddc136cdafc2c1dbcaa53e`, and this final documentation-only reconciliation makes historical next-action labels explicit without changing implementation. Test correction is `ea0d907a84a735b7ccb29237c1dd5add45defecf`, archive-policy documentation is `2e08f3d392b044339a1df4cd883b6764d6b2a9d2`, and the two build-tool corrections are `1431b51156f0b9ba2d7080f10a751dcdc7335187` and `d51b7f3c16bdc482513b9904db07b97daed592d1`. Earlier implementation/test and documentation baselines remain recorded below and are not rewritten. Active authority, canonical pack/profile and final schemas are unchanged. The current data remains `RECONSTRUCTED_ONLY`; code189/code191 and code206 QF results are historical evidence, code204 is pre-correction evidence and code205 is intermediate dirty-source evidence.
 - Current phase: the official fresh binding evaluation remains `3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1`; stale historical P5D evaluation `f319036d-4d2d-4f47-9cb5-00a9d047dada:compatibility:v1` is not interchangeable. A2 remains fail-closed and its approval is consumed. The prior device A4 model/exact-preflight result is historical evidence; its missing status field remains an evidence-channel failure, not readiness. A4.1 corrected the actual test emitter, added parser/emitter contract regression, passed host QA under JDK21/SDK android-35 and archived a new uninstalled test APK with an exact source ZIP and byte-identical backup. No authorization, provider call, retry, repair, RECONCILE or device operation was performed in A4.1.
 - Current branch/workspace: fix/v4.18-p5e-9b-a4-1 / D:\App Translate Books\App Translate Books-translation-profile.
 
@@ -79,9 +79,10 @@ test.
 The previous QF direct result (`1/1` then `5/5`) remains historical evidence
 against code206 and its approved test artifact. It does not certify code207 or
 restore `FRESH_RAW_EXACT_PREFLIGHT_READY` after the production defect was
-found. The current next gate is a separate owner approval pinning code207 and
-the new test APK; only then may snapshot/restore, guarded install and direct
-zero-call instrumentation be considered.
+found. The historical next gate at that time was a separate owner approval
+pinning code207 and the new test APK; only then could snapshot/restore, guarded
+install and direct zero-call instrumentation be considered. That historical
+gate is superseded by the current A4.1 host-contract result above.
 
 ## Completed tasks
 
@@ -329,9 +330,10 @@ change guard PASS with zero production files; git diff --check PASS; secret
 scan PASS. No ADB, connected test, provider call, device preflight or live
 method was run.
 
-Next step: owner approval for the exact A2 zero-call preflight block in
-BUILD_STATE.md; after approval, run only the preflight method and preserve
-the same zero-call/current-DB boundary.
+Historical next step at that time: owner approval for the exact A2 zero-call
+preflight block in BUILD_STATE.md; after approval, run only the preflight method
+and preserve the same zero-call/current-DB boundary. This is superseded by the
+current A4.1 host-contract gate.
 
 ## P5E.9B-A2 result snapshot (historical runtime evidence)
 
@@ -371,10 +373,11 @@ route-precondition failure. Post-run SQLite integrity and zero-count checks
 passed. No class rerun, live method, connected test, retry, repair, settings
 mutation or RECONCILE occurred.
 
-Pending blocker: route settings are not aligned with the fresh RAW policy.
-The single next step is a new owner decision for an explicit read-only
-investigation/remediation scope; the consumed single-run A2 approval is not
-reusable.
+Historical pending blocker: route settings were not aligned with the fresh RAW
+policy. The single next step at that time was a new owner decision for an
+explicit read-only investigation/remediation scope; the consumed single-run
+A2 approval was not reusable. This is superseded by the later A4 historical
+result and current A4.1 host-contract gate.
 
 ## P5E.9B-A3.1 historical host-only result
 

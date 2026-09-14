@@ -736,8 +736,10 @@ HISTORICAL_CODE196_PRESERVATION_FAILED
 OWNER_APPROVAL_FOR_CODE206_REQUIRED
 ```
 
-The single next step is to obtain that exact owner approval. Until then, code206
-must remain uninstalled and no RAW authorization block may be created.
+The historical next step at that time was to obtain that exact owner approval.
+Until then, code206 had to remain uninstalled and no RAW authorization block
+could be created. This historical step is superseded by the current A4.1
+host-contract gate.
 
 ## Historical P5E.9A — owner-approved code206 device run before QF
 
@@ -1069,9 +1071,10 @@ HISTORICAL_CODE196_PRESERVATION_FAILED
 PILOT_DATA_PRESERVATION_FAILED
 ```
 
-The single next step is a separate owner approval block pinning the exact
-code207 production APK and new test APK, then a later guarded install/device
-zero-call rerun. It is not permission to create P5E.9B authorization.
+The historical next step at that time was a separate owner approval block
+pinning the exact code207 production APK and new test APK, then a later guarded
+install/device zero-call rerun. It was not permission to create P5E.9B
+authorization and is superseded by the current A4.1 host-contract gate.
 
 ## P5E.9A-LQ-QF2 — code207 test-artifact alignment (pre-DV host-only stop, historical)
 
@@ -1227,9 +1230,10 @@ PILOT_DATA_PRESERVATION_FAILED
 
 Do not mark this as `DEVICE_HELPER_PASS`,
 `VALID_AUTHORIZATION_LOCAL_PATH_PASS` or
-`FRESH_RAW_EXACT_PREFLIGHT_READY`. Stop here. The next action is separate owner
-approval for the exact new test artifact, followed by a future device helper
-rerun. P5E.9B authorization remains uncreated.
+`FRESH_RAW_EXACT_PREFLIGHT_READY`. Stop here. The historical next action at
+that time was separate owner approval for the exact new test artifact, followed
+by a future device helper rerun. P5E.9B authorization remained uncreated. That
+step is superseded by the current A4.1 host-contract gate.
 
 ## P5E.9A-LQ-DV — code207 device verification and zero-call boundary
 
@@ -1351,9 +1355,10 @@ PILOT_DATA_PRESERVATION_FAILED
 
 `P5E_9A_VALID_AUTHORIZATION_LOCAL_PATH_PASS` is not claimed because the
 approved scope forbade valid-authorization dispatch. `FRESH_RAW_EXACT_PREFLIGHT_READY`
-is not used to replace that missing evidence. The next step is to prepare an
-exact P5E.9B RAW authorization block for separate owner approval; this run did
-not create, consume or dispatch one.
+is not used to replace that missing evidence. The historical next step at that
+time was to prepare an exact P5E.9B RAW authorization block for separate owner
+approval; that run did not create, consume or dispatch one. The historical step
+is superseded by the current A4.1 host-contract gate.
 
 ## P5E.9B-A1 host-only fresh RAW live harness
 
@@ -2124,6 +2129,7 @@ PILOT_DATA_PRESERVATION_FAILED
 ~~~
 
 The A3.2 approval is consumed and cannot be reused. No exact-preflight or
-valid-authorization readiness is claimed. The next action is owner review of
-the device-unavailable evidence and A4 choice; this record does not authorize
-an automatic rerun or a settings change.
+valid-authorization readiness is claimed. The historical next action at that
+time was owner review of the device-unavailable evidence and A4 choice; this
+record did not authorize an automatic rerun or a settings change. That step is
+superseded by the current A4.1 host-contract gate.

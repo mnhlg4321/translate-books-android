@@ -401,8 +401,10 @@ approval is required for the new test APK before replacing only
 `com.ml.tblandroidtxt.test` and running direct instrumentation. This is not
 P5E.9B authorization and does not permit a provider call.
 
-The next action is exactly that test-artifact approval; do not prepare or
-consume RAW authorization until the device helper gate has been executed.
+The historical next action at that time was exactly that test-artifact
+approval; RAW authorization was not to be prepared or consumed until the device
+helper gate had been executed. This historical step is superseded by the
+current A4.1 host-contract gate.
 
 ## P5E.9A-LQ-DV — historical guarded code207 install and zero-call device verification
 

@@ -42,7 +42,7 @@
 - Current PreTag evidence is `FAIL` at `Step 05 is not complete for gate PreTag`; the earlier `Step 09` result is retained only as historical A3.1 evidence.
 - P5E.9B-A3.2C performed one availability check and then stopped when the production process was active (`com.ml.tblandroidtxt`, PID `420`). The process was not force-stopped. Package, settings and database delayed readback were therefore not performed. Private stop evidence is in `D:\P5E-private\fresh-raw-route-diagnostic-a3.2c-20260912-070137359` with event manifest SHA-256 `2EB4EDEC9376B7FAE692A5050105C8E263C7B223B3B2B7C03FC992C43BC70615`.
 - The A3.2 route output remains observed evidence only: provider `true`, model `false`, endpoint `true`, route `false`; it is not preservation or acceptance. `IMMEDIATE_POST_RUN_PRESERVATION_NOT_OBSERVED` remains in force, and no delayed-readback match is claimed. The current root-cause characterization is that the pre-run settings file was absent, `SettingsStore.load` therefore used `AppSettings` defaults, and the default model `anthropic/claude-sonnet-4.6` did not match the required fresh RAW model; this is consistent with A3.2 and is not historical A2 proof.
-- The next action is a separately authorized read-only window after both production and test processes are idle; no automatic retry or force-stop is authorized. A4 remediation is not selected and was not executed. No authorization was created or consumed, no provider call occurred, and P5E.9B/P5 exit/P6 remain incomplete.
+- The historical next action at that time was a separately authorized read-only window after both production and test processes were idle; no automatic retry or force-stop was authorized. A4 remediation was not selected and was not executed. No authorization was created or consumed, no provider call occurred, and P5E.9B/P5 exit/P6 remained incomplete. This historical action is superseded by the current A4.1 approval gate above.
 
 ## Source and authority identity
 
@@ -293,7 +293,8 @@ Code189/code191 and their consumed authorizations remain historical and must
 not be reused. Code191 has the external P5E classification
 `EXTERNAL_CONFIRMED_CANCELLED`; it is not a `$0` billing conclusion. The QF
 test-only correction is complete, but the new artifact has not received owner
-approval and has not been installed or executed. The single next step is to
+approval and has not been installed or executed. The historical next step at
+that time was to
 obtain a separate approval for this exact test APK before any test-package
 installation and direct device zero-call rerun. It is not permission to
 prepare P5E.9B authorization. Keep
@@ -464,9 +465,11 @@ PILOT_DATA_PRESERVATION_FAILED
 `P5E_9A_VALID_AUTHORIZATION_LOCAL_PATH_PASS` is not claimed because the
 approved zero-call scope deliberately did not dispatch a valid authorization.
 `FRESH_RAW_EXACT_PREFLIGHT_READY` is consequently not used as a substitute for
-that missing authorization-path evidence. The next single step is to prepare
-an exact P5E.9B RAW authorization block for separate owner approval; it must
-not be created, consumed or dispatched automatically.
+that missing authorization-path evidence. The historical next single step at
+that time was to prepare an exact P5E.9B RAW authorization block for separate
+owner approval; it was superseded by the later A2 fail-closed route result and
+the current A4.1 host-contract gate. It must not be created, consumed or
+dispatched automatically.
 
 ## P5E.9B-A1 host-only fresh RAW live harness
 
@@ -616,8 +619,9 @@ HISTORICAL_CODE196_PRESERVATION_FAILED
 PILOT_DATA_PRESERVATION_FAILED
 ~~~
 
-The only next step is owner approval for the A2 zero-call preflight below.
-That approval must not authorize the live opt-in.
+Historical at that time: the only next step was owner approval for the A2
+zero-call preflight below. That approval was not allowed to authorize the live
+opt-in, and this historical step is superseded by the current A4.1 gate.
 
 ~~~
 P5E_9B_A2_ZERO_CALL_PREFLIGHT_OWNER_APPROVAL_REQUEST

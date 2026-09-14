@@ -173,9 +173,9 @@ or DB readback and did not force-stop the process. No retry or workaround was
 performed. The current PreTag result remains `FAIL` at `Step 05`; the earlier
 `Step 09` result is historical A3.1 evidence only.
 
-The next action is a separately authorized read-only window after both
-production and test processes are idle; this result does not authorize an
-automatic retry, force-stop or select A4. The historical
+The historical next action at that time was a separately authorized read-only
+window after both production and test processes were idle; this result did not
+authorize an automatic retry, force-stop or select A4. The historical
 `HISTORICAL_CODE196_PRESERVATION_FAILED` and `PILOT_DATA_PRESERVATION_FAILED`
 conclusions remain unchanged. P5/P5E have not exited, and execution,
 certification and P6 remain disabled.
