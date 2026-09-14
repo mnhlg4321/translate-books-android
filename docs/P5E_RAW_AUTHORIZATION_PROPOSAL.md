@@ -1,6 +1,8 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-Proposal status: OWNER_REVIEW_REQUEST_PREPARED / HOST_PREPARATION_COMPLETE /
+> Current provenance review (2026-09-15, resumed HEAD 9beafef8): F2 transport remains qualified by the prior host evidence. F3 prior fixtures passed, but four new synthetic provenance/timing/identity cases falsely return RAW_ACCEPTED; readback producer provenance and assertion fingerprint redaction also need closure. The next action is the bounded local repair and provenance work in docs/P5E_NEXT_WORK_REQUEST.md. F1 owner input remains pending; owner input alone is not sufficient for dispatch. A4.3 NOT_ISSUED / NOT_READY_FOR_DISPATCH; P5/P5E incomplete; P6_NOT_READY. Prior next-action/completion prose below is historical where it conflicts with this review. Evidence: docs/P5E_PROVENANCE_REVIEW_20260915.md.
+
+Proposal status: OWNER_REVIEW_REQUEST_PREPARED / HOST_FIXTURES_PASS_F3_REPAIR_REQUIRED /
 OWNER_DECISION_REQUIRED / NOT_ISSUED / NOT_READY_FOR_DISPATCH
 
 This packet requests owner approval for exactly one L1_RAW_DISCOVERY run. It
@@ -311,7 +313,7 @@ scope and the separate memory-only account verification, subject to the
 fail-closed conditions above. The host preparation does not itself grant this
 permission.
 
-Owner decision: PENDING / HOST_PREPARATION_COMPLETE
+Owner decision: PENDING / HOST_FIXTURES_PASS_F3_REPAIR_REQUIRED
 endpointAccountFingerprint: PENDING_OWNER_VERIFICATION
 Runtime authorization: NOT CREATED
 Provider dispatch: NOT PERFORMED
