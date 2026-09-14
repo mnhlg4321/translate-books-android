@@ -1,10 +1,70 @@
 # Editorial Recovery v4.18
 
-Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED / RAW_AUTHORIZATION_REQUIRED / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_DISABLED`
+Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILT_NOT_INSTALLED / P5E_9B_A4_2_OWNER_APPROVAL_REQUIRED / RAW_AUTHORIZATION_REQUIRED / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / NO_DEVICE_OPERATION / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY`
 
 This document is the single product and execution authority for the v4.18 Editorial recovery. It supersedes active next actions from the historical v4.16 Editorial/RSC/IPC tracks without deleting or reinterpreting their evidence.
 
-## Current active boundary — P5E A4 exact-preflight evidence-channel blocker
+## Current active boundary — P5E.9B-A4.1 host contract pass; device approval pending
+
+A4.1 is host-only. It started from clean baseline
+`ade5c3ed7c8d948505f5b37864f4e0e9635aacb8` on separate branch
+`fix/v4.18-p5e-9b-a4-1`; current host source commit is
+`d51b7f3c16bdc482513b9904db07b97daed592d1`. No ADB, device, provider,
+authorization, attempt, reconciliation, DB or settings operation was performed.
+
+### Canonical current pin table
+
+| Pin | Current value | Qualification |
+|---|---|---|
+| Device | `15e84958` | last-known A4 fact; not accessed in A4.1 |
+| Production | `com.ml.tblandroidtxt` / `v4.17-p5e.11` / code `207` | frozen candidate; not rebuilt |
+| Production APK SHA-256 | `2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD` | frozen artifact/backup fact |
+| Production source ZIP SHA-256 | `B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348` | frozen artifact/backup fact |
+| Certificate SHA-256 | `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155` | frozen candidate fact |
+| A4.1 test artifact | `D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532\app-debug-androidTest.apk` | host-built; not installed |
+| A4.1 test APK SHA-256 / bytes | `57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA` / `1155224` | artifact and backup match |
+| A4.1 source/archive commit | `d51b7f3c16bdc482513b9904db07b97daed592d1` | exact tracked-source ZIP in payload |
+| A4.1 test certificate/package/target/runner | `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155` / `com.ml.tblandroidtxt.test` / `com.ml.tblandroidtxt` / `androidx.test.runner.AndroidJUnitRunner` | build-tool inspection |
+| A4.1 source ZIP SHA-256 | `382EC5D12FC786BC358316434692E49A73BD62C2F9DD9AC6BD1BC9274CE0B3FA` | artifact/backup payload |
+| DB / schema | `3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391` / `24` | last verified; not read in A4.1 |
+| Data classification | `RECONSTRUCTED_ONLY` | not code196 recovery |
+| Fresh selector / chapter | `p5e-fresh-mercedes-vol5-20260911-01` / `001` | frozen fresh tuple |
+| Fresh binding / run | `845976b3cde02a3bf0896b64efd208f42e40821317d1b7bffec7081e63e33cdf` / `8466b95d96f958a97eb3ffd1eac5a32734023cafa1c230e696ad4253151a41dc` | frozen fresh tuple |
+| Evaluation | `3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1` | official fresh binding record |
+| Pack / profile | `497786e18e6e2309b44c6695bc8d8e0b538babfe20b1bc0b6f74c395fd05642d` / `beec03a42e37f424a6f071ad48f35878b27e1083141699352cda4474d8cc2e21` | frozen fresh tuple |
+
+The prior A4 artifact `DC0E6790C1D82F3C7D3102711C929F8DC0CA2D380314E4EB77F1EEA46C41AC2B` is retained outside Git as
+`SUPERSEDED_NOT_INSTALLED_INVALID_STATUS_MAPPING`: its manifest carried the
+field but `redactedPreflightStatus()` did not emit it. It is not used or
+installed. The A4.1 correction adds the actual mapping immediately after
+`attemptCreated`, and the host contract test reads the real emitter source
+against the parser's required/allowed/strict-boolean sets. The contract covers
+missing, duplicate, wrong-prefix, invalid-boolean and absent-emitter mappings.
+
+Host QA passed with JDK `21.0.10`, pinned Android SDK `android-35`, Gradle
+`9.3.0`: targeted parser tests, emitter-contract tests, AndroidTest Java
+compilation, production/schema/pack/profile/wire/version diff guard, secret
+scan and `git diff --check`. The test-only archive mirrors the exact payload
+under `artifacts/test-builds/` and `backup/test-builds/`; production was not
+rebuilt, `installed=false`, `deviceOperations=0`, `providerCalls=0`, and no
+current DB or settings operation occurred.
+
+The prior exact-preflight result remains historical evidence: it reported
+`OK (1 test)` and terminal `-1`, but the old status channel lacked
+`p5e.preflight.v2.reconciliationCreated`; its acceptance was correctly
+rejected. A4.1 fixes the host contract only; it does not convert that result
+into exact-preflight readiness or authorize a rerun.
+
+The single current next action is a separately scoped owner approval for a
+future device installation/replacement of this A4.1 artifact and one exact
+preflight invocation. That approval must continue to forbid provider calls,
+authorization, attempt, reconciliation, production-package operations and
+automatic retry. P5/P5E have not exited; execution, certification and P6
+remain disabled. Historical `HISTORICAL_CODE196_PRESERVATION_FAILED`,
+`PILOT_DATA_PRESERVATION_FAILED`, the A3.2 preservation gap and consumed
+A2/A3.2 approvals remain unchanged.
+
+## Historical A4 exact-preflight evidence-channel blocker
 
 The A4 owner-authorized device sequence used the current fresh binding and
 production code207 without touching the production package. Read-only baseline
@@ -16,7 +76,7 @@ integrity `ok`, FK violations `0`, the exact fresh selector/binding/run/
 evaluation/pack/profile tuple and zero fresh lineage. No app PID or active job
 was observed, so no force-stop was needed.
 
-### Canonical A4 current pin table
+### Historical A4 pin table
 
 | Pin | Current value | Qualification |
 |---|---|---|
@@ -26,7 +86,7 @@ was observed, so no force-stop was needed.
 | Certificate SHA-256 | `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155` | A4 readback |
 | Device signature token | `abebea4b` | A4 readback |
 | Installed test APK SHA-256 | `5D248FFD33F52AC649966C4135773708C7CA747CE34C28BB763B40EC1FE81467` | A4 readback after one replacement |
-| Corrected test APK SHA-256 | `DC0E6790C1D82F3C7D3102711C929F8DC0CA2D380314E4EB77F1EEA46C41AC2B` | host-only; not installed |
+| Historical corrected test APK SHA-256 | `DC0E6790C1D82F3C7D3102711C929F8DC0CA2D380314E4EB77F1EEA46C41AC2B` | `SUPERSEDED_NOT_INSTALLED_INVALID_STATUS_MAPPING` |
 | DB / schema | `3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391` / `24` | A4 readback |
 | Data classification | `RECONSTRUCTED_ONLY` | not code196 recovery |
 | Fresh selector / chapter | `p5e-fresh-mercedes-vol5-20260911-01` / `001` | A4 readback |
@@ -65,14 +125,16 @@ at `911fb355a2148feb8c7ec4b60a843c547596bf56`. A new host-only artifact is
 available at
 `D:\P5E-private\a4-fresh-raw-model-preflight-statusfix-20260913-202218809\app-debug-androidTest.apk`
 with SHA-256
-`DC0E6790C1D82F3C7D3102711C929F8DC0CA2D380314E4EB77F1EEA46C41AC2B`, but it
-has not been installed or device-verified. The currently installed test
+`DC0E6790C1D82F3C7D3102711C929F8DC0CA2D380314E4EB77F1EEA46C41AC2B`; it is
+`SUPERSEDED_NOT_INSTALLED_INVALID_STATUS_MAPPING`, has not been installed or
+device-verified, and must not be used. The currently installed test
 package remains the prior A4 artifact; a separate owner approval is required
 before any replacement or preflight rerun.
 The corrected artifact manifest `SHA256SUMS.txt` has SHA-256
 `E333AC3A3FC21A808F69EDFC71ACD9710629C012C6DCE091C19B7F86ED282109`.
 
-The single next action is to obtain that narrowly scoped approval. It must not
+The historical next action at that time was to obtain that narrowly scoped
+approval. It must not
 authorize a provider call, RAW authorization, attempt, reconciliation,
 production-package operation or automatic retry. P5/P5E have not exited;
 execution, certification and P6 remain disabled. Historical
@@ -313,23 +375,23 @@ The release is not complete merely because 4.1.3 imports. It is complete only wh
 
 ## 9. Exact next action
 
-The A4 device event is
-`D:\P5E-private\a4-model-preflight-device-20260913-200643711`. It verified the
-current production code207 and exact fresh tuple, performed one test-package
-replacement and one model remediation, and preserved the DB hash/schema,
-integrity/FK state and zero lineage. The remediation route readback passed.
-The exact-preflight method then ran once and returned `OK (1 test)`, terminal
-`-1`, route true and provider calls `0`, but the redacted status omitted
-`p5e.preflight.v2.reconciliationCreated`; the host parser rejected the output.
-This is an evidence-channel blocker, not exact-preflight readiness. No rerun is
-allowed under the consumed one-shot device window.
-
-The test-only correction is committed at
-`911fb355a2148feb8c7ec4b60a843c547596bf56`; its new host-only artifact is
-`D:\P5E-private\a4-fresh-raw-model-preflight-statusfix-20260913-202218809\app-debug-androidTest.apk`
+The current host-only A4.1 group corrected the actual status emitter and
+verified it against the parser contract. Test/tooling commits are
+`ea0d907a84a735b7ccb29237c1dd5add45defecf`, `1431b51156f0b9ba2d7080f10a751dcdc7335187` and
+`d51b7f3c16bdc482513b9904db07b97daed592d1`; the archive-policy documentation
+commit is `2e08f3d392b044339a1df4cd883b6764d6b2a9d2`. The immutable AndroidTest
+artifact is
+`D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532\app-debug-androidTest.apk`
 with SHA-256
-`DC0E6790C1D82F3C7D3102711C929F8DC0CA2D380314E4EB77F1EEA46C41AC2B` and is
-not installed. The next and only action is a separately scoped owner approval
-for that artifact before a future test-package replacement and one exact
-preflight rerun. No provider, authorization, attempt, reconciliation, repair,
-retry, production-package operation or P6 transition is permitted.
+`57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA`; the
+identical backup is under `backup\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532`.
+It is host-built and not installed.
+
+The single next action is a new owner approval for one future test-package
+replacement and one exact-preflight invocation using this artifact. It must
+not reuse DC0E6790C1D82F3C7D3102711C929F8DC0CA2D380314E4EB77F1EEA46C41AC2B,
+which is `SUPERSEDED_NOT_INSTALLED_INVALID_STATUS_MAPPING`, and must continue
+to forbid provider, authorization, attempt, reconciliation, production-package
+operation, automatic retry and P6 transition. No exact-preflight readiness is
+claimed until that separately approved device run emits and validates the full
+status contract with preservation evidence.

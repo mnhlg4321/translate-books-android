@@ -533,7 +533,57 @@ This does not claim `P5E_9A_VALID_AUTHORIZATION_LOCAL_PATH_PASS` or a live
 RAW acceptance: the owner approval forbade valid-authorization dispatch. It is
 historical DV evidence and not the current A3 boundary.
 
-## Current active boundary — P5E A4 model remediation and preflight evidence blocker
+## Current active boundary — P5E.9B-A4.1 host contract; device approval pending
+
+A4.1 is host-only and does not reuse the consumed A2/A3.2 approvals. It started
+from clean baseline `ade5c3ed7c8d948505f5b37864f4e0e9635aacb8` on branch
+`fix/v4.18-p5e-9b-a4-1`; current source/archive commit is
+`d51b7f3c16bdc482513b9904db07b97daed592d1`. No ADB, device, provider,
+authorization, attempt, reconciliation, DB or settings operation was performed.
+
+The host RED audit confirmed that the previous A4 artifact's manifest already
+contained `reconciliationCreated=false`, while the parser required it and the
+actual `redactedPreflightStatus()` mapping omitted it. The test-only fix adds
+the mapping immediately after `attemptCreated`. The emitter-contract test reads
+the actual AndroidTest source and compares mapping coverage with parser
+required/allowed/strict-boolean sets; parser fixtures remain supplemental.
+
+Host QA passed with JDK `21.0.10`, pinned SDK `android-35`, Gradle `9.3.0`:
+targeted parser/emitter-contract tests, AndroidTest compilation, production
+diff guard `0`, secret scan and `git diff --check`. The new test-only archive
+path is `scripts/build-and-save-android-test.ps1`; it runs only
+`:app:assembleDebugAndroidTest`, records an exact tracked-source ZIP and
+SHA-256 manifest, and mirrors the payload to artifact and backup roots. New
+artifact:
+
+```text
+path=D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532\app-debug-androidTest.apk
+bytes=1155224
+sha256=57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA
+certificateSha256=47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155
+package=com.ml.tblandroidtxt.test
+targetPackage=com.ml.tblandroidtxt
+runner=androidx.test.runner.AndroidJUnitRunner
+sourceCommit=d51b7f3c16bdc482513b9904db07b97daed592d1
+sourceZipSha256=382EC5D12FC786BC358316434692E49A73BD62C2F9DD9AC6BD1BC9274CE0B3FA
+installed=false
+productionApkRebuilt=false
+deviceOperations=0
+providerCalls=0
+backupByteIdentical=true
+```
+
+The previous A4 artifact
+`DC0E6790C1D82F3C7D3102711C929F8DC0CA2D380314E4EB77F1EEA46C41AC2B` is
+retained and classified `SUPERSEDED_NOT_INSTALLED_INVALID_STATUS_MAPPING`; it
+must not be installed. The prior exact-preflight `OK (1 test)`/terminal `-1`
+observation remains historical evidence-channel failure, not exact-preflight
+readiness. The single next action is a new owner approval for one future
+test-package replacement and one exact-preflight invocation using the new
+artifact. P5/P5E exit, RAW authorization, execution, certification and P6
+remain closed.
+
+## Historical active boundary — P5E A4 model remediation and preflight evidence blocker
 
 The canonical A4 pin table is maintained in `EDITORIAL_RECOVERY_V4_18.md`;
 the facts below are its current-result reference, not a second authority table.
@@ -569,8 +619,8 @@ window is consumed. A test-only correction was committed at
 `D:\P5E-private\a4-fresh-raw-model-preflight-statusfix-20260913-202218809\app-debug-androidTest.apk`
 with SHA-256
 `DC0E6790C1D82F3C7D3102711C929F8DC0CA2D380314E4EB77F1EEA46C41AC2B`; it is
-not installed. The next action is a separate owner approval for that artifact
-before any test-package replacement or preflight rerun. No provider,
+`SUPERSEDED_NOT_INSTALLED_INVALID_STATUS_MAPPING`, not installed and must not
+be used. The current A4.1 owner-approval path is recorded above. No provider,
 authorization, attempt, reconciliation, repair, retry or production-package
 operation occurred.
 The A4 device evidence manifest SHA-256 is
@@ -712,7 +762,8 @@ The settings file was `ABSENT` in the A3.2 pre-run evidence. Source
 characterization records that `SettingsStore.load` falls back to `AppSettings`
 defaults: provider and endpoint match the policy, while default model
 `anthropic/claude-sonnet-4.6` mismatches the required fresh RAW model. This is
-an explanation consistent with A3.2, not historical A2 proof. The next action
-is a separately authorized read-only window after both processes are idle; no
+an explanation consistent with A3.2, not historical A2 proof. The historical
+next action at that time was a separately authorized read-only window after
+both processes were idle; no
 automatic retry or force-stop is permitted. A4 is not selected and has not been
 executed.

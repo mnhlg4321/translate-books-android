@@ -1,10 +1,58 @@
 # P5E — Đối soát generation, quyết định dữ liệu và local acceptance gate
 
-Ngày ghi nhận: `2026-09-11` (+07:00); cập nhật A4: `2026-09-13` (+07:00)
+Ngày ghi nhận: `2026-09-11` (+07:00); cập nhật A4.1: `2026-09-14` (+07:00)
 Phạm vi: metadata OpenRouter được đọc qua Activity/Logs đã xác thực; không mở
 I/O logging và không lưu prompt, response body, source text hoặc secret.
 
-## Current active decision — P5E A4 model remediation and preflight evidence blocker
+## Current active decision — P5E.9B-A4.1 host contract pass; device approval pending
+
+The current A4.1 decision is host-only and is based on clean baseline
+`ade5c3ed7c8d948505f5b37864f4e0e9635aacb8` on branch
+`fix/v4.18-p5e-9b-a4-1`; current source/archive commit is
+`d51b7f3c16bdc482513b9904db07b97daed592d1`. Production code207, schema,
+pack/profile, authority and wire/final schemas were not changed or rebuilt.
+
+The RED audit proved the old mapping gap: the manifest contained
+`reconciliationCreated=false`, the parser required that field, and the prior
+`redactedPreflightStatus()` did not emit it. The actual test-only emitter now
+maps it immediately after `attemptCreated`. Host contract tests read the real
+emitter source and compare its field mappings with the parser's required,
+allowed and strict-boolean contract; parser-only fixtures remain supplemental.
+Missing, duplicate, wrong-prefix, invalid-boolean and absent-emitter cases are
+covered. Host QA passed with JDK `21.0.10`, Android SDK `android-35`, Gradle
+`9.3.0`, targeted parser/emitter tests, AndroidTest compilation, production
+diff guard `0`, secret scan and `git diff --check`.
+
+The immutable test-only artifact is
+`D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532\app-debug-androidTest.apk`,
+`1155224` bytes, SHA-256
+`57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA`,
+certificate
+`47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155`, package
+`com.ml.tblandroidtxt.test`, target `com.ml.tblandroidtxt`, runner
+`androidx.test.runner.AndroidJUnitRunner`, source/archive commit
+`d51b7f3c16bdc482513b9904db07b97daed592d1`, source ZIP SHA-256
+`382EC5D12FC786BC358316434692E49A73BD62C2F9DD9AC6BD1BC9274CE0B3FA`.
+Artifact and backup payloads are byte-identical; `installed=false`,
+`deviceOperations=0`, `providerCalls=0`, and no DB/settings operation occurred.
+
+`DC0E6790C1D82F3C7D3102711C929F8DC0CA2D380314E4EB77F1EEA46C41AC2B` is
+retained outside Git as
+`SUPERSEDED_NOT_INSTALLED_INVALID_STATUS_MAPPING`; it is not used or installed.
+The prior exact-preflight `OK (1 test)`/terminal `-1` result remains historical
+evidence-channel failure because its status omitted
+`p5e.preflight.v2.reconciliationCreated`; A4.1 does not upgrade it to exact
+preflight acceptance.
+
+The single current next action is a new owner approval for one future
+test-package replacement and one exact-preflight invocation using the A4.1
+artifact. No provider, authorization, attempt, reconciliation, automatic
+retry, production-package operation or P6 transition is authorized. Historical
+`HISTORICAL_CODE196_PRESERVATION_FAILED`,
+`PILOT_DATA_PRESERVATION_FAILED`, and consumed A2/A3.2 approvals remain
+unchanged.
+
+## Historical decision — P5E A4 model remediation and preflight evidence blocker
 
 The canonical A4 pin table is maintained in `EDITORIAL_RECOVERY_V4_18.md`;
 this decision records the result against that table.
@@ -49,8 +97,9 @@ artifact is
 `D:\P5E-private\a4-fresh-raw-model-preflight-statusfix-20260913-202218809\app-debug-androidTest.apk`
 with SHA-256
 `DC0E6790C1D82F3C7D3102711C929F8DC0CA2D380314E4EB77F1EEA46C41AC2B`. It is
-not installed or device-verified. The next action is a narrowly scoped owner
-approval before a future test-package replacement/preflight rerun. A2 and A3.2
+`SUPERSEDED_NOT_INSTALLED_INVALID_STATUS_MAPPING`, not installed or
+device-verified, and must not be used. The current A4.1 owner-approval path is
+recorded above. A2 and A3.2
 approvals remain consumed; historical code196/pilot preservation failures and
 the A3.2 immediate-preservation gap remain unchanged. No live RAW,
 authorization or RECONCILE is allowed.
@@ -122,7 +171,7 @@ default model `anthropic/claude-sonnet-4.6` does not match
 observed booleans, not proof of the historical A2 device state. No settings
 content or secret was read or recorded.
 
-The next action requires a separately authorized read-only window after both
+The historical next action at that time required a separately authorized read-only window after both
 processes are idle. No automatic retry, force-stop, settings change,
 authorization, attempt, reconciliation or provider call is allowed. A4 is not
 selected and A4 is not executed.
