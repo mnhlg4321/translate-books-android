@@ -535,7 +535,7 @@ This does not claim `P5E_9A_VALID_AUTHORIZATION_LOCAL_PATH_PASS` or a live
 RAW acceptance: the owner approval forbade valid-authorization dispatch. It is
 historical DV evidence and not the current A3 boundary.
 
-## Current active boundary — P5E.9B-A4.2 exact preflight pass; RAW authorization required
+## Current active boundary — P5E.9B-A4.2 exact preflight pass; RAW proposal prepared, not issued
 
 A4.2 did not reuse the consumed A2/A3.2 approvals. It started from execution
 HEAD `005317cd83f107edbf275734cb2977b9929e88ce` on branch
@@ -582,8 +582,8 @@ must not be installed. The prior exact-preflight `OK (1 test)`/terminal `-1`
 observation remains historical evidence-channel failure, not exact-preflight
 readiness. A4.2 now supersedes that pending device boundary: its exact
 preflight was accepted after the corrected status emitter and complete
-post-readback. The single current next action is a separately approved RAW
-authorization request derived from the A4.2 manifest. It remains RAW-only with
+post-readback. The current action is owner review of the prepared A4.3 RAW
+authorization packet derived from the A4.2 evidence. It remains RAW-only with
 one primary call, zero repair/retry and no RECONCILE; P5/P5E exit, execution,
 certification and P6 remain closed.
 
@@ -602,6 +602,36 @@ preservation booleans true, raw output SHA-256
 `1FFE572DF3ADEBA6A8AB55061BD75F2F5EEBBC479F8BB0D1EA97DB3957D1577C`, and
 WAL-aware before/after preservation. The A4.2 approval is consumed and not
 reusable.
+
+## P5E.9B-A4.3 — owner-approval packet prepared, not issued
+
+The current owner-review files are:
+
+- docs/P5E_RAW_AUTHORIZATION_PROPOSAL.md
+- docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md, SHA-256
+  DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501
+- docs/P5E_RAW_AUTHORIZATION_COMMAND.txt, SHA-256
+31B075935CECA342A249961F8E871410A700478B780A827F25D21DDAEE13BE98
+
+This packet keeps the production code207 APK/certificate and the A4.2 test
+APK SHA-256 57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA.
+It permits only RAW/GLOSSARY egress to the pinned route for one primary
+L1_RAW_DISCOVERY call; DRAFT/PRONOUN remain hidden. The current harness
+authorization ID is retained and A4.2 evidence shows it unused.
+
+The endpoint account fingerprint is still pending. Before authorization
+construction, owner approval must permit the source-defined memory-only check:
+load SettingsStore settings, normalize the endpoint, hash UTF-8 endpoint +
+newline + the in-memory credential, and compare to the owner-supplied 64-hex
+fingerprint. No credential/settings content may be written to command, logs or
+evidence. A mismatch or unverifiable account stops before authorization or
+provider dispatch. No device credential read or instrumentation rerun occurred
+in this audit.
+
+Runtime timeout/DB rule: the live method owns its internal preflightOnly and
+UNUSED-lineage checks; no separate instrumentation preflight is allowed. The
+host observation window is 240000 ms. Any timeout, missing post-check or
+inconsistent state stops without retry, cleanup, restore or redispatch.
 
 ## Historical active boundary — P5E A4 model remediation and preflight evidence blocker
 

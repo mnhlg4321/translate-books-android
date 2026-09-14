@@ -1,6 +1,8 @@
 # Workspace Snapshot
 
-- Updated: 2026-09-14 (P5E.9B-A4.2 exact preflight PASS; RAW authorization required, +07:00).
+- Current proposal gate: RAW_AUTHORIZATION_PROPOSAL_PREPARED / OWNER_DECISION_REQUIRED / ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / NOT_READY_FOR_DISPATCH / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED. This is documentation state only; no runtime authorization or provider action was performed.
+
+- Updated: 2026-09-14 (A4.3 RAW owner-review packet prepared, not issued; +07:00).
 - Current status: P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_EMITTER_PARSER_CONTRACT_PASS / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / FRESH_RAW_EXACT_PREFLIGHT_READY / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / RAW_AUTHORIZATION_REQUIRED / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY. Historical completed statuses are retained below and are not current readiness claims.
 - Current version/build: frozen production candidate `4.17-p5e.11` / code207, event `build-20260911-201725`, production source baseline `995d3b6c9678e93905b3802cf22eee0b091b1bb3`, production fix commit `ff6821a5de6f825c55e35f8570dfbf074b4e64b5`, APK SHA-256 `2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD`, source ZIP SHA-256 `B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348`, certificate SHA-256 `47f313893a5d68120b075c25825C1C66F1334AC47AFB2EF3741084E22EF3C155`; artifact/backup payloads remain byte-identical. Historical A4 device readback verified production code207 and test artifact `5D248FFD33F52AC649966C4135773708C7CA747CE34C28BB763B40EC1FE81467`; data remains `RECONSTRUCTED_ONLY`.
 - Current commit baseline for this snapshot: implementation/tooling remains `d51b7f3c16bdc482513b9904db07b97daed592d1`; the A4.2 execution-start/documentation baseline before this result commit is `005317cd83f107edbf275734cb2977b9929e88ce`. This snapshot records the A4.2 device result without changing production implementation. Earlier implementation/test and documentation baselines remain recorded below and are not rewritten. Active authority, canonical pack/profile and final schemas are unchanged. The current data remains `RECONSTRUCTED_ONLY`; code189/code191 and code206 QF results are historical evidence, code204 is pre-correction evidence and code205 is intermediate dirty-source evidence.
@@ -13,7 +15,7 @@
 - The RED audit reproduced the exact gap from the prior A4 artifact: the preflight manifest contains `reconciliationCreated=false`, the host parser requires `reconciliationCreated`, and the prior `redactedPreflightStatus()` mapping omitted it. The prior artifact `DC0E6790C1D82F3C7D3102711C929F8DC0CA2D380314E4EB77F1EEA46C41AC2B` is retained outside Git as `SUPERSEDED_NOT_INSTALLED_INVALID_STATUS_MAPPING`; it is not used or installed.
 - The test-only correction adds the actual emitter mapping immediately after `attemptCreated`, exposes the parser contract to an automated host test, and verifies the source mapping against required/allowed/strict-boolean fields. Immutable artifact `D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532\app-debug-androidTest.apk` is `1155224` bytes with SHA-256 `57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA`, certificate `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155`, source/archive commit `d51b7f3c16bdc482513b9904db07b97daed592d1`, source ZIP SHA-256 `382EC5D12FC786BC358316434692E49A73BD62C2F9DD9AC6BD1BC9274CE0B3FA`, package `com.ml.tblandroidtxt.test`, target `com.ml.tblandroidtxt`, runner `androidx.test.runner.AndroidJUnitRunner`, and identical backup. It was used once as the test package under A4.2 and read back with the exact hash/certificate.
 - A4.2 host preparation is recorded in `D:\P5E-private\a4-2-exact-preflight-host-prep-20260914-184255833`; its checksum-file SHA-256 is `CCE290D4ABC11E58623633C5E2208BFCD51C7CA9A44A8978DEB5ACBCC78D59E3`, while the preparation document SHA-256 is `C6B1CD88C212EA51DA698DF3AA89335FD0C6B7334E53B2617CD0DCFF45945BD6`. The device result is in `D:\P5E-private\a4-2-exact-preflight-device-20260914-185308591` with evidence manifest SHA-256 `7FBBECD3E2A8868D42D34CB3F9F2F8BA8CDAC236B4C7161F6747CBB19EE2474D`; raw instrumentation SHA-256 is `1FFE572DF3ADEBA6A8AB55061BD75F2F5EEBBC479F8BB0D1EA97DB3957D1577C`.
-- The accepted status contained one test, terminal `-1`, all required route and preservation booleans, zero provider calls and zero authorization/attempt/reconciliation creation. WAL-aware DB/settings/identity readback matched before/after; schema24, integrity `ok`, FK `0`, and all lineage/report/receipt counts remained zero. The single next action is a separately approved RAW authorization request derived from this exact manifest; A4.2 approval is consumed and not reusable. P5/P5E exit and P6 remain incomplete.
+- The accepted status contained one test, terminal `-1`, all required route and preservation booleans, zero provider calls and zero authorization/attempt/reconciliation creation. WAL-aware DB/settings/identity readback matched before/after; schema24, integrity `ok`, FK `0`, and all lineage/report/receipt counts remained zero. The current next action is owner review of the prepared A4.3 RAW authorization packet derived from this exact manifest; A4.2 approval is consumed and not reusable. The endpoint account fingerprint remains pending the separately permitted memory-only check. P5/P5E exit and P6 remain incomplete.
 
 ## Historical active state — P5E.9B-A3.2C delayed read-only closure blocked
 
@@ -276,6 +278,37 @@ consumed or dispatched in the current state.
 
 This was current-only state at the time of the earlier snapshot; Git history
 preserves it as historical evidence.
+
+## P5E.9B-A4.3 — RAW authorization proposal snapshot
+
+The proposal was prepared from HEAD
+c1e3ec6eec62e38a1e2f4fdb0d0f151d5efdcfae on branch
+fix/v4.18-p5e-9b-a4-1. The pinned AndroidTest APK remains the A4.2 artifact
+with SHA-256
+57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA, sourced
+from commit d51b7f3c16bdc482513b9904db07b97daed592d1. The post-documentation
+HEAD is the resulting documentation commit reported at handoff; it is not
+confused with the APK source commit or inserted into the manifest's own hash.
+
+The fixed owner packet is
+docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md, SHA-256
+DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501.
+The separate command is
+docs/P5E_RAW_AUTHORIZATION_COMMAND.txt, SHA-256
+31B075935CECA342A249961F8E871410A700478B780A827F25D21DDAEE13BE98.
+The account fingerprint remains pending owner-permitted, memory-only device
+verification. No credential was read by this audit, and no fake/default or
+settings-file hash is accepted.
+
+The packet authorizes only RAW/GLOSSARY visibility to the pinned route, one
+primary call, zero repair/retry/RECONCILE and no automatic redispatch. It
+retains the code207 production APK/certificate and the A4.2 test APK; no
+reinstall is permitted when the test package identity already matches. The
+selected live method contains its own preflightOnly and UNUSED-lineage checks;
+no separate instrumentation preflight is added. Fresh issued/expires values
+are generated at owner-approved dispatch, with 240000 ms host observation.
+Until the owner approves and supplies the verified account fingerprint, the
+proposal is not ready for dispatch.
 
 ## P5E.9B-A1 host-only snapshot
 

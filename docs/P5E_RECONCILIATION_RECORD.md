@@ -1,11 +1,13 @@
 # P5E — Đối soát generation, quyết định dữ liệu và local acceptance gate
 
+Current proposal gate: RAW_AUTHORIZATION_PROPOSAL_PREPARED / OWNER_DECISION_REQUIRED / ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / NOT_READY_FOR_DISPATCH / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED.
+
 Ngày ghi nhận: `2026-09-11` (+07:00); cập nhật A4.2 exact preflight result:
 `2026-09-14` (+07:00)
 Phạm vi: metadata OpenRouter được đọc qua Activity/Logs đã xác thực; không mở
 I/O logging và không lưu prompt, response body, source text hoặc secret.
 
-## Current active decision — P5E.9B-A4.2 exact preflight pass; RAW authorization required
+## Current active decision — P5E.9B-A4.2 exact preflight pass; RAW proposal prepared, not issued
 
 The current decision uses execution-start HEAD
 `005317cd83f107edbf275734cb2977b9929e88ce` on branch
@@ -61,8 +63,8 @@ creation flags. WAL-aware package/settings/database/tuple/lineage readback
 matched before and after; schema24, integrity `ok`, FK `0`, and all lineage,
 report and receipt counts remained zero.
 
-The single current next action is a separately approved RAW authorization
-request derived from this exact manifest. It remains RAW-only with one primary
+The current action is owner review of the prepared A4.3 RAW authorization
+packet derived from this exact manifest. It remains RAW-only with one primary
 call, zero repair/retry and no RECONCILE. Historical
 `HISTORICAL_CODE196_PRESERVATION_FAILED`, `PILOT_DATA_PRESERVATION_FAILED`,
 and consumed A2/A3.2 approvals remain unchanged; P5/P5E exit, execution,
@@ -75,6 +77,36 @@ checksum-file SHA-256 is
 `CCE290D4ABC11E58623633C5E2208BFCD51C7CA9A44A8978DEB5ACBCC78D59E3`.
 Its preparation document SHA-256 is
 `C6B1CD88C212EA51DA698DF3AA89335FD0C6B7334E53B2617CD0DCFF45945BD6`.
+
+## P5E.9B-A4.3 — owner-approval packet prepared, not issued
+
+The detailed proposal is in docs/P5E_RAW_AUTHORIZATION_PROPOSAL.md. The fixed
+scope packet is docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md with SHA-256
+DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501. The
+separate live command is docs/P5E_RAW_AUTHORIZATION_COMMAND.txt with SHA-256
+31B075935CECA342A249961F8E871410A700478B780A827F25D21DDAEE13BE98.
+
+The packet keeps the exact A4.2 phase, project, attempt/request/envelope/body/
+route identities, fresh selector/chapter/binding/run/evaluation/pack/profile,
+code207 production/certificate and A4.2 test APK
+57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA pins. It requests
+RAW/GLOSSARY egress only; DRAFT/PRONOUN remain hidden. The authorization ID
+and hash are retained because A4.2 evidence shows the ID unused; no date-only
+ID rotation is permitted.
+
+The only missing mandatory runtime value is the endpoint account fingerprint.
+Owner approval must separately permit the source-defined in-memory check:
+load SettingsStore settings, normalize the endpoint, and hash UTF-8 endpoint +
+newline + in-memory credential. This audit has not read the credential. No
+settings-file hash/default/fake value may substitute, and a mismatch or
+unverifiable account stops before authorization construction/consumption and
+provider dispatch. Therefore no READY_FOR_APPROVAL state is claimed.
+
+The one-run scope is one primary semantic call, zero schema repair, zero
+network retry, zero RECONCILE and no automatic redispatch. The live method
+performs preflightOnly internally; no separate instrumentation preflight is
+permitted. Issued/expires are generated at dispatch, not copied from an old
+timestamp; host observation is 240000 ms.
 
 ## Historical decision — P5E A4 model remediation and preflight evidence blocker
 
@@ -1493,7 +1525,11 @@ B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348.
 The mirrored artifact hashes are equal; no code208 or new production build was
 created.
 
-### Unissued authorization template
+### Historical A1 unissued authorization template
+
+This A1 template is retained for historical evidence only. It is superseded by
+the current A4.3 owner-review packet and its validity value is not a current
+dispatch value:
 
 ~~~
 authorizationId=P5E-FRESH-MERCEDES-VOL5-RAW-20260911-01

@@ -1,10 +1,12 @@
 # Editorial Recovery v4.18
 
+Current proposal gate: RAW_AUTHORIZATION_PROPOSAL_PREPARED / OWNER_DECISION_REQUIRED / ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / NOT_READY_FOR_DISPATCH / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED.
+
 Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILT_NOT_INSTALLED / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / FRESH_RAW_EXACT_PREFLIGHT_READY / RAW_AUTHORIZATION_REQUIRED / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY`
 
 This document is the single product and execution authority for the v4.18 Editorial recovery. It supersedes active next actions from the historical v4.16 Editorial/RSC/IPC tracks without deleting or reinterpreting their evidence.
 
-## Current active boundary — P5E.9B-A4.2 exact preflight pass; RAW authorization required
+## Current active boundary — P5E.9B-A4.2 exact preflight pass; RAW proposal prepared, not issued
 
 A4.1 was host-only. A4.2 then used the separately approved single-use device
 boundary from execution-start HEAD
@@ -74,12 +76,45 @@ The A4.2 single-use approval is consumed and is not reusable. Its only device
 mutation was one `adb install -r` replacement of the test package; production
 package operations, provider/API calls, authorization creation, attempt
 creation and reconciliation creation were all `0`. The single current next
-action is a separately approved RAW authorization request derived from this
-manifest, still RAW-only with one primary call, zero repair/retry and no
-RECONCILE. P5/P5E have not exited; execution, certification and P6 remain
+action is owner review of the prepared A4.3 RAW authorization packet derived
+from this manifest. It remains RAW-only with one primary call, zero
+repair/retry and no RECONCILE. P5/P5E have not exited; execution,
+certification and P6 remain
 disabled. Historical `HISTORICAL_CODE196_PRESERVATION_FAILED`,
 `PILOT_DATA_PRESERVATION_FAILED`, the A3.2 preservation gap and consumed
 A2/A3.2 approvals remain unchanged.
+
+## P5E.9B-A4.3 — owner-approval packet prepared, not issued
+
+The fixed-scope owner packet is
+docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md, SHA-256
+DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501.
+The separate command is
+docs/P5E_RAW_AUTHORIZATION_COMMAND.txt, SHA-256
+31B075935CECA342A249961F8E871410A700478B780A827F25D21DDAEE13BE98.
+The narrative proposal is
+docs/P5E_RAW_AUTHORIZATION_PROPOSAL.md.
+
+The packet preserves the harness authorization ID and the exact A4.2
+identities. It requests only RAW/GLOSSARY egress to the pinned route, one
+primary semantic call, zero schema repair, zero network retry and zero
+RECONCILE. DRAFT and PRONOUN remain hidden from the model. The test package
+and production code207/certificate pins remain unchanged.
+
+endpointAccountFingerprint is not filled with a default or a settings-file
+hash. Before any runtime authorization is constructed, the owner must permit
+the source-defined in-memory operation:
+SettingsStore.load(target).copy(), normalizeEndpoint(settings.baseUrl), then
+SHA-256 of UTF-8 endpoint + newline + in-memory settings.apiKey. The credential
+must remain in memory and never enter command text, logs or evidence. A
+mismatch or unverifiable account stops before authorization creation or
+dispatch. This operation has not been performed in this audit, so the packet
+is not READY_FOR_APPROVAL or READY_FOR_DISPATCH.
+
+The command computes fresh issuedAt/expiresAt values at owner-approved
+dispatch, uses a 240000 ms host observation window, and must be run once only.
+The selected live method performs its own preflightOnly checks internally; no
+separate instrumentation preflight is permitted.
 
 ## Historical A4 exact-preflight evidence-channel blocker
 
@@ -410,8 +445,10 @@ The run produced one `OK (1 test)`, terminal `-1`, accepted complete status,
 all route/preservation conditions true and zero provider/creation flags. DB,
 settings, tuple and lineage readback matched before and after.
 
-The single next action is a separately approved RAW authorization request
-derived from the A4.2 manifest. It must continue to be single-use, RAW-only,
-one primary call, zero repair/retry and no RECONCILE. The A4.2 approval is
-consumed and not reusable. P5/P5E exit, execution, certification and P6 remain
-incomplete; no RAW predecessor/report/receipt exists.
+The current next action is owner review of the prepared A4.3 RAW authorization
+packet derived from the A4.2 manifest. It remains single-use, RAW-only, one
+primary call, zero repair/retry and no RECONCILE. The A4.2 approval is
+consumed and not reusable. The endpoint account fingerprint is still pending
+the separately permitted memory-only account check; P5/P5E exit, execution,
+certification and P6 remain incomplete, and no RAW predecessor/report/receipt
+exists.

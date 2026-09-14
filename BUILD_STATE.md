@@ -1,5 +1,7 @@
 # Build State
 
+- Current proposal gate: RAW_AUTHORIZATION_PROPOSAL_PREPARED / OWNER_DECISION_REQUIRED / ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / NOT_READY_FOR_DISPATCH / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED. The A4.2 authorization remains consumed; this task did not create or consume a runtime authorization.
+
 - Status: P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED / P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_EMITTER_PARSER_CONTRACT_PASS / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / FRESH_RAW_EXACT_PREFLIGHT_READY / RAW_AUTHORIZATION_REQUIRED / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY. Historical completed statuses remain in the evidence sections below and are not current readiness claims.
 - Active authority: V5-SAFE.4.1.3-FULL; canonical plan `EDITORIAL_RECOVERY_V4_18.md`.
 - Workspace: D:\App Translate Books\App Translate Books-translation-profile.
@@ -13,7 +15,7 @@
 - Current phase: A2 remains fail-closed and its approval is consumed. A3.1R, A3.2 and the earlier device A4 result are historical evidence; the A3.2 immediate-preservation gap remains unproven. A4.1 corrected the actual redacted status emitter, including `reconciliationCreated=false`, with parser/emitter contract tests. A4.2 then ran the approved exact preflight once: one `OK (1 test)`, terminal `-1`, parser accepted, all route flags/conjunction true, exact acceptance true, provider calls `0`, and post-run package/settings/DB/tuple/lineage preservation matched. The A4.2 test-package replacement was the only device mutation; production was not operated on. The old exact-preflight result remains evidence-channel failure, not readiness. Code191 metadata remains `EXTERNAL_CONFIRMED_CANCELLED`, not a `$0` billing conclusion; code189/code191 and earlier QF results remain historical evidence. No live RAW acceptance, authorization or predecessor is claimed.
 - Current data classification is `RECONSTRUCTED_ONLY` with a new fresh-pilot lineage appended; `RECONSTRUCTED_ONLY_FRESH_PILOT` is the private snapshot classification, not a recovery claim for code196.
 
-## Current active state — P5E.9B-A4.2 exact preflight pass; RAW authorization required
+## Current active state — P5E.9B-A4.2 exact preflight pass; RAW proposal prepared, not issued
 
 - A4.1 started from clean baseline `ade5c3ed7c8d948505f5b37864f4e0e9635aacb8` and completed on `fix/v4.18-p5e-9b-a4-1`. The current host source/archive commit is `d51b7f3c16bdc482513b9904db07b97daed592d1`; production implementation, schema, pack/profile, authority, wire contract and version metadata are unchanged.
 - The host RED audit confirmed the prior defect: the manifest contains `reconciliationCreated=false`, the parser requires it, and the previous emitter mapping omitted it. The actual AndroidTest emitter now maps that field immediately after `attemptCreated`; the contract test reads the implementation mapping and checks parser required/allowed/strict-boolean contracts, rather than relying only on raw fixtures.
@@ -22,7 +24,27 @@
 - New immutable AndroidTest-only artifact: `D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532\app-debug-androidTest.apk`, `1155224` bytes, SHA-256 `57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA`, certificate `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155`, package `com.ml.tblandroidtxt.test`, target `com.ml.tblandroidtxt`, runner `androidx.test.runner.AndroidJUnitRunner`, source/archive commit `d51b7f3c16bdc482513b9904db07b97daed592d1`, source ZIP SHA-256 `382EC5D12FC786BC358316434692E49A73BD62C2F9DD9AC6BD1BC9274CE0B3FA`, and identical backup under `backup\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532`. It was the pinned artifact in the single A4.2 test-package replacement and post-install readback matched.
 - The prior artifact `DC0E6790C1D82F3C7D3102711C929F8DC0CA2D380314E4EB77F1EEA46C41AC2B` remains outside Git and is `SUPERSEDED_NOT_INSTALLED_INVALID_STATUS_MAPPING`; it must not be used or installed. No exact-preflight readiness is claimed from either artifact.
 - A4.2 evidence event: `D:\P5E-private\a4-2-exact-preflight-device-20260914-185308591`; manifest `A4-2-EVIDENCE-MANIFEST.md` SHA-256 `7FBBECD3E2A8868D42D34CB3F9F2F8BA8CDAC236B4C7161F6747CBB19EE2474D`; raw instrumentation SHA-256 `1FFE572DF3ADEBA6A8AB55061BD75F2F5EEBBC479F8BB0D1EA97DB3957D1577C`; host parser result `accepted=true`. Pre/post DB SHA-256, schema24, integrity, FK, settings hash, fresh tuple and all lineage/report/receipt counts matched; all relevant counts remained zero.
-- The A4.2 single-use approval is consumed and not reusable. The single current next action is a separately approved RAW authorization request derived from the exact-preflight manifest. It remains RAW-only: one primary call, zero repair/retry/RECONCILE, and no automatic redispatch. Current statuses remain `RAW_AUTHORIZATION_REQUIRED`, `NO_AUTHORIZATION_CREATED`, `NO_LIVE_CALL_PERFORMED`, `PROVIDER_CALLS_ZERO`, `RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED`, `EXECUTION_DISABLED`, `NOT_CERTIFIED`, `P6_NOT_READY`; P5/P5E exit is not claimed.
+- The A4.2 single-use approval is consumed and not reusable. The current next action is owner review of the prepared A4.3 RAW authorization packet derived from the exact-preflight manifest. It remains RAW-only: one primary call, zero repair/retry/RECONCILE, and no automatic redispatch. The endpoint account fingerprint is pending the separately permitted memory-only account check. Current statuses remain `RAW_AUTHORIZATION_REQUIRED`, `NO_AUTHORIZATION_CREATED`, `NO_LIVE_CALL_PERFORMED`, `PROVIDER_CALLS_ZERO`, `RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED`, `EXECUTION_DISABLED`, `NOT_CERTIFIED`, `P6_NOT_READY`; P5/P5E exit is not claimed.
+
+The A4.3 owner-review packet is prepared but not issued:
+docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md has SHA-256
+DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501, and
+docs/P5E_RAW_AUTHORIZATION_COMMAND.txt has SHA-256
+31B075935CECA342A249961F8E871410A700478B780A827F25D21DDAEE13BE98.
+The narrative is in docs/P5E_RAW_AUTHORIZATION_PROPOSAL.md. The packet keeps
+authorization ID P5E-FRESH-MERCEDES-VOL5-RAW-20260911-01 and its
+0aa82c5897e3df3ec8a7a1586736dbf184b316c66ec165e95e64e8e4832145eb hash; the
+A4.2 zero-count evidence shows that ID is unused.
+
+The account fingerprint is intentionally unresolved. Owner approval must
+separately permit the source-defined in-memory operation using
+SettingsStore.load(target).copy(), the normalized endpoint, a newline and the
+in-memory credential as the SHA-256 input. No credential value, settings
+content or raw endpoint may enter the command, logs or evidence. A mismatch or
+unverifiable account stops before runtime authorization construction and
+provider dispatch. Fresh issued/expires values are generated only at the
+owner-approved dispatch; the host observation window is 240000 ms. No
+instrumentation preflight rerun is part of this proposal.
 
 ## Historical active state — P5E A4 model remediation and preflight evidence blocker
 
@@ -553,7 +575,9 @@ files. AndroidTest compilation passed with
 passed with :app:assembleDebugAndroidTest --no-daemon --console=plain.
 No connected test or production APK build was run.
 
-The authorization template is not an issued authorization:
+Historical A1 template only; it is not an issued authorization and is
+superseded by the current A4.3 owner-review packet. Its validity value below
+is retained as historical evidence and is not a current dispatch value:
 
 ~~~
 authorizationId=P5E-FRESH-MERCEDES-VOL5-RAW-20260911-01
