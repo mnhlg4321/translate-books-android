@@ -26,6 +26,7 @@ BEEFBB7733EED660B1F59435922D0594FBA1CBDED01B6C0B00482E786E456799.
 Canonical plan: EDITORIAL_RECOVERY_V4_18.md
 Current host-repair branch: feature/v4.18-p5e-audit-20260914
 Host-repair HEAD before this evidence group: 0f52d36e516560bb33d294303c70fa1753cb64f9
+Host-preparation commit: c2c79a19842f551fc752a53328024aab8ddb529d
 HEAD that created this proposal: c1e3ec6eec62e38a1e2f4fdb0d0f151d5efdcfae
 AndroidTest source/archive commit: d51b7f3c16bdc482513b9904db07b97daed592d1
 A4.2 execution-start HEAD: 005317cd83f107edbf275734cb2977b9929e88ce

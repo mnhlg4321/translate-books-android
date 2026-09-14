@@ -24,7 +24,8 @@ The current host-only continuation is on branch
 `feature/v4.18-p5e-audit-20260914`, starting from HEAD
 `0f52d36e516560bb33d294303c70fa1753cb64f9`. This branch is the audit/repair
 continuation, not a new release branch; the pinned AndroidTest source and
-production code207 artifact remain unchanged.
+production code207 artifact remain unchanged. The host-preparation commit is
+`c2c79a19842f551fc752a53328024aab8ddb529d`.
 
 ### Canonical current pin table
 
