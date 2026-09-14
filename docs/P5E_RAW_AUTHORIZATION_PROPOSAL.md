@@ -1,7 +1,7 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-Proposal status: OWNER_REVIEW_REQUEST_PREPARED / NOT_ISSUED /
-NOT_READY_FOR_DISPATCH
+Proposal status: OWNER_REVIEW_REQUEST_PREPARED / HOST_PREPARATION_COMPLETE /
+OWNER_DECISION_REQUIRED / NOT_ISSUED / NOT_READY_FOR_DISPATCH
 
 This packet requests owner approval for exactly one L1_RAW_DISCOVERY run. It
 does not create a runtime authorization, consume an authorization ID, read the
@@ -17,12 +17,15 @@ single command is in docs/P5E_RAW_AUTHORIZATION_COMMAND.txt.
 Pinned approval-manifest SHA-256:
 DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501.
 Pinned command SHA-256:
-31B075935CECA342A249961F8E871410A700478B780A827F25D21DDAEE13BE98.
+1D9A67693C4C4F64AF182300CDEB963A9FD9D44361EF77E91371F88C92EDA15E.
+Host supervisor SHA-256:
+BEEFBB7733EED660B1F59435922D0594FBA1CBDED01B6C0B00482E786E456799.
 
 ## Baseline and evidence
 
 Canonical plan: EDITORIAL_RECOVERY_V4_18.md
-Branch: fix/v4.18-p5e-9b-a4-1
+Current host-repair branch: feature/v4.18-p5e-audit-20260914
+Host-repair HEAD before this evidence group: 0f52d36e516560bb33d294303c70fa1753cb64f9
 HEAD that created this proposal: c1e3ec6eec62e38a1e2f4fdb0d0f151d5efdcfae
 AndroidTest source/archive commit: d51b7f3c16bdc482513b9904db07b97daed592d1
 A4.2 execution-start HEAD: 005317cd83f107edbf275734cb2977b9929e88ce
@@ -51,6 +54,15 @@ accepted, route flags/conjunction true, complete preservation true, provider
 calls 0, authorization/attempt/reconciliation creation false, lineage UNUSED,
 and zero relevant rows before and after. No RAW predecessor, REPORT_L1,
 receipt, runtime authorization or provider result exists.
+
+The bounded host-preparation evidence is
+`docs/P5E_RAW_HOST_PREPARATION_20260915.md`, SHA-256
+`C54E55446629ADC161882C51333B25BD21633277C6A4B1020D5265E93DA11E3C`.
+It records the F2 RED-to-GREEN process-argv/remote-shell proof, the source
+required-argument contract, the F3 one-launch supervisor and independent
+readback verifier fixtures, the artifact parity checks and the unresolved F1
+owner decision. It is evidence for preparation only; it does not change the
+manifest hash, authorize dispatch or establish a RAW predecessor.
 
 ## Exact identity requested
 
@@ -166,7 +178,7 @@ must not be recorded as 0.
 The proposed authorization window is 180000 ms. The command computes fresh
 values immediately before dispatch:
 
-issuedAtMillis=DateTimeOffset.Now.ToUnixTimeMilliseconds()
+issuedAtMillis=DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
 expiresAtMillis=issuedAtMillis+180000
 
 These are not copied from A4.2 or any historical document. A stale or expired
@@ -226,6 +238,20 @@ The host observation deadline is 240000 ms, long enough to observe the
 that deadline, preserve the observed durable state, treat external call state
 as unresolved, and do not retry or redispatch.
 
+The host implementation and its offline proof are in
+`scripts/p5e-raw-live-supervisor.ps1`, SHA-256
+`BEEFBB7733EED660B1F59435922D0594FBA1CBDED01B6C0B00482E786E456799`.
+The repaired command wrapper is
+`docs/P5E_RAW_AUTHORIZATION_COMMAND.txt`, SHA-256
+`1D9A67693C4C4F64AF182300CDEB963A9FD9D44361EF77E91371F88C92EDA15E`.
+Host-preparation evidence is
+`docs/P5E_RAW_HOST_PREPARATION_20260915.md`, SHA-256
+`C54E55446629ADC161882C51333B25BD21633277C6A4B1020D5265E93DA11E3C`.
+The evidence records F2 RED-to-GREEN transport through fake process argv and
+the ADB/shell model, source-derived required arguments, F3 numeric outcomes
+and independent readback acceptance. The valid fixture is the only
+`RAW_ACCEPTED` case and keeps `P6_READY=false`; no live result is claimed.
+
 ## Allowed DB effects and acceptance
 
 The exact allowed table effects are:
@@ -270,14 +296,21 @@ Before any owner-approved dispatch, verify:
   invocation.
 - All hashes are 64 hex characters; token/byte/millisecond units are not
   conflated; issued/expires are fresh and expires is greater than issued.
+- The host self-test and both transport layers pass offline; success, nonzero,
+  timeout and pre-launch failures have numeric outcomes and no redispatch.
+- The independent verifier rejects missing post-readback, non-`COMMITTED`
+  state, missing receipt, unknown cost, duplicate attempt, orphan lifecycle
+  and unrelated writes.
 - The account check succeeds in the permitted scope and the lineage remains
   UNUSED immediately before authorization construction.
 - No runtime authorization or provider call occurs until the owner approves.
 
-Owner decision requested: approve the fixed scope and the separate
-memory-only account verification, subject to the fail-closed conditions above.
+Owner decision requested: after reviewing the final hashes, approve the fixed
+scope and the separate memory-only account verification, subject to the
+fail-closed conditions above. The host preparation does not itself grant this
+permission.
 
-Owner decision: PENDING
+Owner decision: PENDING / HOST_PREPARATION_COMPLETE
 endpointAccountFingerprint: PENDING_OWNER_VERIFICATION
 Runtime authorization: NOT CREATED
 Provider dispatch: NOT PERFORMED

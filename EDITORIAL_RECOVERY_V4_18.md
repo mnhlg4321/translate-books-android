@@ -1,15 +1,15 @@
 # Editorial Recovery v4.18
 
-> Current audit (2026-09-14): P5/P5E remains incomplete; P6 is not ready. The A4.3 packet is preserved at its original hashes and must not be dispatched unchanged. Host command quoting (F2), account-fingerprint provisioning (F1), and live outcome verification (F3) are addressed by docs/P5E_NEXT_WORK_REQUEST.md. The single next action is to complete that bounded host preparation. Earlier owner-review next actions below describe the f8fe433e baseline and are superseded by this audit; historical evidence and consumed approvals remain unchanged.
+> Current host-preparation state (2026-09-15): F2/F3 host preparation is complete and F1 has a viable source path, but trusted expected-fingerprint provenance and the owner account decision remain pending. A4.3 is not issued, RAW was not run, and P6 is not ready. The original manifest hash is preserved; the repaired command/helper are separately hashed below. Earlier owner-review next actions below describe the historical baseline and are superseded by this state; historical evidence and consumed approvals remain unchanged.
 
 
-Current proposal gate: RAW_AUTHORIZATION_PROPOSAL_PREPARED / OWNER_DECISION_REQUIRED / ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / NOT_READY_FOR_DISPATCH / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED.
+Current proposal gate: RAW_AUTHORIZATION_PROPOSAL_PREPARED / HOST_PREPARATION_COMPLETE / OWNER_DECISION_REQUIRED / ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / NOT_READY_FOR_DISPATCH / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED.
 
-Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILD_HISTORICAL / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / FRESH_RAW_EXACT_PREFLIGHT_READY / RAW_AUTHORIZATION_REQUIRED / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY`
+Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILD_HISTORICAL / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / P5E_9B_A4_3_HOST_PREPARATION_PASS / FRESH_RAW_EXACT_PREFLIGHT_READY / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / RAW_AUTHORIZATION_REQUIRED / RAW_NOT_RUN / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY`
 
 This document is the single product and execution authority for the v4.18 Editorial recovery. It supersedes active next actions from the historical v4.16 Editorial/RSC/IPC tracks without deleting or reinterpreting their evidence.
 
-## Current active boundary — P5E.9B-A4.2 exact preflight pass; RAW proposal prepared, not issued
+## Current active boundary — P5E.9B-A4.3 host preparation complete; RAW proposal not issued
 
 A4.1 was host-only. A4.2 then used the separately approved single-use device
 boundary from execution-start HEAD
@@ -19,6 +19,12 @@ boundary from execution-start HEAD
 exactly once and the exact preflight method ran exactly once. Production was
 not installed or modified; no provider/API call, authorization, attempt,
 reconciliation, settings write or database write occurred.
+
+The current host-only continuation is on branch
+`feature/v4.18-p5e-audit-20260914`, starting from HEAD
+`0f52d36e516560bb33d294303c70fa1753cb64f9`. This branch is the audit/repair
+continuation, not a new release branch; the pinned AndroidTest source and
+production code207 artifact remain unchanged.
 
 ### Canonical current pin table
 
@@ -78,25 +84,32 @@ post-run package/settings/database/tuple/lineage preservation matched.
 The A4.2 single-use approval is consumed and is not reusable. Its only device
 mutation was one `adb install -r` replacement of the test package; production
 package operations, provider/API calls, authorization creation, attempt
-creation and reconciliation creation were all `0`. The single current next
-action is owner review of the prepared A4.3 RAW authorization packet derived
-from this manifest. It remains RAW-only with one primary call, zero
-repair/retry and no RECONCILE. P5/P5E have not exited; execution,
+creation and reconciliation creation were all `0`. The host repair for the
+next A4.3 decision is now recorded below. The single current next action is
+for the owner to supply trusted expected-fingerprint provenance and decide
+whether to permit the exact memory-only account check. The packet remains
+RAW-only with one primary call, zero repair/retry and no RECONCILE. P5/P5E have not exited; execution,
 certification and P6 remain
 disabled. Historical `HISTORICAL_CODE196_PRESERVATION_FAILED`,
 `PILOT_DATA_PRESERVATION_FAILED`, the A3.2 preservation gap and consumed
 A2/A3.2 approvals remain unchanged.
 
-## P5E.9B-A4.3 — owner-approval packet prepared, not issued
+## P5E.9B-A4.3 — owner-approval packet prepared, host repair complete, not issued
 
 The fixed-scope owner packet is
 docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md, SHA-256
 DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501.
 The separate command is
 docs/P5E_RAW_AUTHORIZATION_COMMAND.txt, SHA-256
-31B075935CECA342A249961F8E871410A700478B780A827F25D21DDAEE13BE98.
+1D9A67693C4C4F64AF182300CDEB963A9FD9D44361EF77E91371F88C92EDA15E.
 The narrative proposal is
 docs/P5E_RAW_AUTHORIZATION_PROPOSAL.md.
+The host supervisor is
+scripts/p5e-raw-live-supervisor.ps1, SHA-256
+BEEFBB7733EED660B1F59435922D0594FBA1CBDED01B6C0B00482E786E456799.
+The preparation evidence is
+docs/P5E_RAW_HOST_PREPARATION_20260915.md, SHA-256
+C54E55446629ADC161882C51333B25BD21633277C6A4B1020D5265E93DA11E3C.
 
 The packet preserves the harness authorization ID and the exact A4.2
 identities. It requests only RAW/GLOSSARY egress to the pinned route, one
@@ -112,12 +125,27 @@ SHA-256 of UTF-8 endpoint + newline + in-memory settings.apiKey. The credential
 must remain in memory and never enter command text, logs or evidence. A
 mismatch or unverifiable account stops before authorization creation or
 dispatch. This operation has not been performed in this audit, so the packet
-is not READY_FOR_APPROVAL or READY_FOR_DISPATCH.
+is not READY_FOR_APPROVAL or READY_FOR_DISPATCH. F2 transport and F3 outcome
+verification are now host-prepared and independently fixture-tested; F1 still
+requires one owner decision: trusted expected-fingerprint provenance plus
+permission for the exact memory-only account check. No live account operation
+has occurred.
 
-The command computes fresh issuedAt/expiresAt values at owner-approved
-dispatch, uses a 240000 ms host observation window, and must be run once only.
+The repaired command invokes the supervisor as one child process. It computes
+fresh issuedAt/expiresAt values at owner-approved dispatch, uses a 240000 ms
+host observation window, and must be run once only. The supervisor uses
+180000 ms authorization validity and 120000 ms execution deadline, captures
+only redacted streams, and never retries or redispatches. A zero process exit
+does not establish RAW acceptance; the independent post-readback verifier is
+required.
 The selected live method performs its own preflightOnly checks internally; no
-separate instrumentation preflight is permitted.
+separate instrumentation preflight is permitted. F2/F3 host evidence and the
+source-derived argument list are recorded in the preparation evidence above.
+
+The current single next action is the owner decision described in F1: supply
+trusted provenance for the expected endpoint/account fingerprint and decide
+whether to permit the exact memory-only account verification. Until that
+decision is recorded against the final hashes, A4.3 must not be dispatched.
 
 ## Historical A4 exact-preflight evidence-channel blocker
 

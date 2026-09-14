@@ -1,135 +1,41 @@
 # P5E.9B-A4.3 RAW LIVE COMMAND — NOT EXECUTED
 
-# Run only after the owner approves the fixed-scope packet and completes the
-# memory-only account verification in
-# docs\P5E_RAW_AUTHORIZATION_PROPOSAL.md. The process must contain
-# P5E_OWNER_ENDPOINT_ACCOUNT_FINGERPRINT with the owner-verified 64-hex
-# fingerprint. Do not print, echo, persist or log that variable. It is a
-# fingerprint, not the credential.
+# This file is a review packet command only. Do not run it until the owner has
+# approved the final packet, including the exact account operation and the
+# process-only expected fingerprint. The helper fails closed when that value
+# is absent or invalid. It never receives the credential itself.
+#
+# The helper is intentionally invoked as a child process; this file does not
+# import the helper into the caller scope, print the argument list, or launch a
+# second instrumentation method. The helper uses a hidden ProcessStartInfo process
+# with explicit POSIX quoting for every adb shell token, so the stop authority
+# remains one byte-exact value through the Windows/process/adb/shell layers.
+#
+# Dispatch is exactly one call. A zero adb exit code means only that the host
+# observed process completion; RAW acceptance remains NOT_PROVEN until the
+# separate -VerifyOutcome invocation has checked the exact test output and
+# allowlisted durable readback. Timeout, nonzero exit or failure before launch
+# never refreshes, retries or redispatches.
 
-# This command is deliberately separate from the owner packet. It verifies the
-# owner packet hash, creates fresh issued/expires values, and passes the hash to
-# the selected live method. It contains no credential, source text, request
-# payload or provider output. Do not add a separate instrumentation preflight,
-# model-remediation opt-in, a retry, a second invocation or a RECONCILE invocation.
-
-# The host observation setting is 240000 milliseconds. The 120000-millisecond
-# engine/provider deadline is inside that window. If the host supervisor reaches
-# the observation deadline, stop and preserve the durable state; do not kill and
-# redispatch, and do not infer whether an external request was sent.
-
+$helperPath = 'D:\App Translate Books\App Translate Books-translation-profile\scripts\p5e-raw-live-supervisor.ps1'
 $manifestPath = 'D:\App Translate Books\App Translate Books-translation-profile\docs\P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md'
-$expectedManifestSha256 = 'DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501'
-$actualManifestSha256 = (Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToLowerInvariant()
-if ($actualManifestSha256 -ne $expectedManifestSha256.ToLowerInvariant()) {
-    throw 'OWNER_APPROVAL_PACKET_HASH_MISMATCH_STOP'
-}
-
 $productionApkPath = 'D:\App Translate Books\App Translate Books-translation-profile\artifacts\builds\v4.17-p5e.11\build-20260911-201725\TranslateBooks-v4.17-p5e.11-code207.apk'
-$expectedProductionApkSha256 = '2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD'
 $testApkPath = 'D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532\app-debug-androidTest.apk'
-$expectedTestApkSha256 = '57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA'
-if ((Get-FileHash -LiteralPath $productionApkPath -Algorithm SHA256).Hash -ne
-    $expectedProductionApkSha256) {
-    throw 'PRODUCTION_CODE207_APK_HASH_MISMATCH_STOP'
-}
-if ((Get-FileHash -LiteralPath $testApkPath -Algorithm SHA256).Hash -ne
-    $expectedTestApkSha256) {
-    throw 'A4_2_TEST_APK_HASH_MISMATCH_STOP'
+
+& $helperPath -Dispatch `
+    -ManifestPath $manifestPath `
+    -ExpectedManifestSha256 'DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501' `
+    -ProductionApkPath $productionApkPath `
+    -ExpectedProductionApkSha256 '2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD' `
+    -TestApkPath $testApkPath `
+    -ExpectedTestApkSha256 '57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA' `
+    -EvidenceRoot 'D:\P5E-private'
+if ($LASTEXITCODE -ne 0) {
+    throw ('RAW_LIVE_HOST_DISPATCH_FAILED_NO_REDISPATCH_EXIT_' + [string]$LASTEXITCODE)
 }
 
-$endpointAccountFingerprint = [Environment]::GetEnvironmentVariable(
-    'P5E_OWNER_ENDPOINT_ACCOUNT_FINGERPRINT', 'Process')
-if ([string]::IsNullOrWhiteSpace($endpointAccountFingerprint) -or
-    $endpointAccountFingerprint -notmatch '^[0-9a-fA-F]{64}$') {
-    throw 'OWNER_ENDPOINT_ACCOUNT_FINGERPRINT_MISSING_OR_INVALID_STOP'
-}
-
-$issuedAtMillis = [DateTimeOffset]::Now.ToUnixTimeMilliseconds()
-$expiresAtMillis = $issuedAtMillis + 180000
-$hostObservationTimeoutMillis = 240000
-if ($expiresAtMillis -le $issuedAtMillis) {
-    throw 'AUTHORIZATION_EXPIRY_INVALID_STOP'
-}
-
-$adbArguments = @(
-    '-s', '15e84958',
-    'shell', 'am', 'instrument', '-w', '-r',
-    '-e', 'class', 'com.ml.tblandroidtxt.EditorialP5EFreshRawLiveInstrumentedTest#authorizedFreshRawRunsOnlyWhenExplicitlyOptedIn',
-    '-e', 'p5e_fresh_raw_live', 'YES',
-    '-e', 'p5e_authorization_id', 'P5E-FRESH-MERCEDES-VOL5-RAW-20260911-01',
-    '-e', 'p5e_authorization_id_hash', '0aa82c5897e3df3ec8a7a1586736dbf184b316c66ec165e95e64e8e4832145eb',
-    '-e', 'p5e_owner_approval_manifest_sha256', $actualManifestSha256,
-    '-e', 'p5e_expected_attempt_identity', '7a5e34287d90055a5f0e7d6bb5c9c459202eadcfc538b9f452d548bea298fd6e',
-    '-e', 'p5e_expected_request_identity', 'ae328c3d771112ce73e9e9d6cba0bb951f930042fc6851a31a96f15f7b70ee06',
-    '-e', 'p5e_expected_request_envelope_hash', '5c25e1850c7f70081bd21d67effa2a3a642f410f025ab91cf8044b6ed1bd87f2',
-    '-e', 'p5e_expected_canonical_request_body_sha256', 'c5920dd842ea92f21d4045c72306a04d59313ac20190c951749fa1b64457c1c2',
-    '-e', 'p5e_expected_route_fingerprint', '23149071716043a2a4dc7fb7af51073b4de838ba072919bb6fd750bc9e62948c',
-    '-e', 'p5e_expected_endpoint_account_fingerprint', $endpointAccountFingerprint,
-    '-e', 'p5e_expected_project_row_id', '2',
-    '-e', 'p5e_expected_device_signature_token', 'abebea4b',
-    '-e', 'p5e_expected_provider', 'openrouter',
-    '-e', 'p5e_expected_model', 'openai/gpt-5.6-luna',
-    '-e', 'p5e_expected_upstream_provider', 'openai',
-    '-e', 'p5e_expected_phase', 'L1_RAW_DISCOVERY',
-    '-e', 'p5e_expected_selector', 'p5e-fresh-mercedes-vol5-20260911-01',
-    '-e', 'p5e_expected_chapter_key', '001',
-    '-e', 'p5e_expected_binding', '845976b3cde02a3bf0896b64efd208f42e40821317d1b7bffec7081e63e33cdf',
-    '-e', 'p5e_expected_run', '8466b95d96f958a97eb3ffd1eac5a32734023cafa1c230e696ad4253151a41dc',
-    '-e', 'p5e_expected_evaluation', '3ce8617c-7e75-453c-ac9a-d3ad21eb7987:compatibility:v1',
-    '-e', 'p5e_expected_pack_hash', '497786e18e6e2309b44c6695bc8d8e0b538babfe20b1bc0b6f74c395fd05642d',
-    '-e', 'p5e_expected_profile_hash', 'beec03a42e37f424a6f071ad48f35878b27e1083141699352cda4474d8cc2e21',
-    '-e', 'p5e_expected_schema_version', '24',
-    '-e', 'p5e_expected_production_version_code', '207',
-    '-e', 'p5e_expected_production_apk_sha256', '2ccbb844c629132bb534b0d6aba516055c410bf96d20b14b3f80f91b962800fd',
-    '-e', 'p5e_expected_certificate_sha256', '47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155',
-    '-e', 'p5e_expected_db_sha256', '3563f44bce9e529955b6c39142243f59af8f2f0d0095303f5c7a66be07219391',
-    '-e', 'p5e_maximum_primary_semantic_calls', '1',
-    '-e', 'p5e_maximum_schema_repair_calls', '0',
-    '-e', 'p5e_maximum_network_retries', '0',
-    '-e', 'p5e_maximum_input_tokens', '100000',
-    '-e', 'p5e_maximum_output_tokens', '4096',
-    '-e', 'p5e_maximum_total_tokens', '104096',
-    '-e', 'p5e_maximum_total_cost_usd', '0.05',
-    '-e', 'p5e_maximum_execution_time_ms', '120000',
-    '-e', 'p5e_authorization_issued_at_ms', [string]$issuedAtMillis,
-    '-e', 'p5e_authorization_expires_at_ms', [string]$expiresAtMillis,
-    '-e', 'p5e_evidence_redaction_policy', 'HASH_ONLY',
-    '-e', 'p5e_cancellation_stop_authority',
-        'OWNER_CONTROLLED|RAW_ONLY|NO_SCHEMA_REPAIR|NO_AUTOMATIC_RETRY|NO_RECONCILE|NO_RESPONSE_HEALING|NO_FALLBACK|PRESERVE_DURABLE_RECOVERY_STATE',
-    'com.ml.tblandroidtxt.test/androidx.test.runner.AndroidJUnitRunner'
-)
-
-# Execute exactly once under a host supervisor using
-# $hostObservationTimeoutMillis. Never print $adbArguments or its values.
-# The supervisor stores only the instrumentation streams in a unique private
-# evidence directory. The selected source path is responsible for redaction;
-# do not add raw request/response logging here.
-$evidenceRoot = 'D:\P5E-private'
-$dispatchEvent = 'raw-live-' +
-    [DateTimeOffset]::Now.ToString('yyyyMMdd-HHmmssfff') + '-' +
-    [Guid]::NewGuid().ToString('N')
-$evidenceDirectory = Join-Path $evidenceRoot $dispatchEvent
-New-Item -ItemType Directory -Path $evidenceDirectory -ErrorAction Stop | Out-Null
-$stdoutPath = Join-Path $evidenceDirectory 'instrumentation-stdout.txt'
-$stderrPath = Join-Path $evidenceDirectory 'instrumentation-stderr.txt'
-$processParameters = @{
-    FilePath = 'adb'
-    ArgumentList = $adbArguments
-    NoNewWindow = $true
-    PassThru = $true
-    RedirectStandardOutput = $stdoutPath
-    RedirectStandardError = $stderrPath
-}
-Write-Output ('RAW_LIVE_EVIDENCE_DIR=' + $evidenceDirectory)
-$process = Start-Process @processParameters
-if (-not $process.WaitForExit($hostObservationTimeoutMillis)) {
-    Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
-    $timeoutMarker = Join-Path $evidenceDirectory 'HOST_TIMEOUT.txt'
-    Set-Content -LiteralPath $timeoutMarker -Value 'HOST_OBSERVATION_TIMEOUT_STOP_NO_REDISPATCH' -Encoding UTF8
-    throw 'RAW_LIVE_HOST_OBSERVATION_TIMEOUT_STOP_NO_REDISPATCH'
-}
-$process.WaitForExit()
-if ($process.ExitCode -ne 0) {
-    throw 'RAW_LIVE_INSTRUMENTATION_NONZERO_STOP_NO_REDISPATCH'
-}
+# After the single process has completed, substitute the printed evidence
+# directory and the independently captured, redacted post-readback path. This
+# verifier performs no device/provider action and is the only route to
+# RAW_ACCEPTED; it always reports P6_READY=FALSE.
+# & $helperPath -VerifyOutcome -EvidenceDirectory 'D:\P5E-private\raw-live-<unique>' -PostReadbackPath 'D:\P5E-private\raw-live-<unique>\post-readback.json'
