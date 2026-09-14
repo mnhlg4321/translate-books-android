@@ -1,5 +1,8 @@
 # Build State
 
+> Current audit (2026-09-14): P5/P5E remains incomplete; P6 is not ready. The A4.3 packet is preserved at its original hashes and must not be dispatched unchanged. Host command quoting (F2), account-fingerprint provisioning (F1), and live outcome verification (F3) are addressed by docs/P5E_NEXT_WORK_REQUEST.md. The single next action is to complete that bounded host preparation. Earlier owner-review next actions below describe the f8fe433e baseline and are superseded by this audit; historical evidence and consumed approvals remain unchanged.
+
+
 - Current proposal gate: RAW_AUTHORIZATION_PROPOSAL_PREPARED / OWNER_DECISION_REQUIRED / ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / NOT_READY_FOR_DISPATCH / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED. The A4.2 authorization remains consumed; this task did not create or consume a runtime authorization.
 
 - Status: P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED / P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_EMITTER_PARSER_CONTRACT_PASS / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / FRESH_RAW_EXACT_PREFLIGHT_READY / RAW_AUTHORIZATION_REQUIRED / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY. Historical completed statuses remain in the evidence sections below and are not current readiness claims.

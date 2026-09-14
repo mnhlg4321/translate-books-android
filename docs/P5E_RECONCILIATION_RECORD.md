@@ -1,5 +1,8 @@
 # P5E — Đối soát generation, quyết định dữ liệu và local acceptance gate
 
+> Current audit (2026-09-14): P5/P5E remains incomplete; P6 is not ready. The A4.3 packet is preserved at its original hashes and must not be dispatched unchanged. Host command quoting (F2), account-fingerprint provisioning (F1), and live outcome verification (F3) are addressed by docs/P5E_NEXT_WORK_REQUEST.md. The single next action is to complete that bounded host preparation. Earlier owner-review next actions below describe the f8fe433e baseline and are superseded by this audit; historical evidence and consumed approvals remain unchanged.
+
+
 Current proposal gate: RAW_AUTHORIZATION_PROPOSAL_PREPARED / OWNER_DECISION_REQUIRED / ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / NOT_READY_FOR_DISPATCH / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED.
 
 Ngày ghi nhận: `2026-09-11` (+07:00); cập nhật A4.2 exact preflight result:

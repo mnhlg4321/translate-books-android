@@ -1,5 +1,8 @@
 # Git Workflow
 
+> Current pilot exception: do not run the generic connectedDebugAndroidTest example below on the P5E pilot. The controlled install/data-preservation runbook and Gradle guard prohibit connected installer tasks. Current audit branch is feature/v4.18-p5e-audit-20260914 from f8fe433e; feature/v4.18 remains the release branch. Do not merge or rebuild merely to close a documentation audit.
+
+
 Từ v4.8 trở đi, `DEVELOPMENT_WORKFLOW.md` và checklist 14 bước là gate bắt buộc. Nếu bất kỳ gate nào fail thì không được tag, backup, xuất artifact hoặc tuyên bố hoàn tất.
 
 Quy trình này áp dụng cho mọi thay đổi của dự án kể từ sau tag `v4.7`.

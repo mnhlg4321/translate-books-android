@@ -1,5 +1,8 @@
 # Editorial Pack Manifest v1 — V5-SAFE.4.1.3-FULL integration contract
 
+> Scope note (2026-09-14): this is the frozen P0 ABI design, not a current implementation-status report. P0-P4 results and current P5E readiness are governed by EDITORIAL_RECOVERY_V4_18.md. Its generic repair/retry mappings do not override the current RAW one-shot cap of zero repairs and zero retries.
+
+
 Status: `P0 CONTRACT FROZEN / IMPLEMENTATION NOT STARTED`
 
 ## 1. Decision

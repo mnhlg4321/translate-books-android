@@ -1,5 +1,8 @@
 # Workspace Instructions
 
+> Active continuation note (2026-09-14): v4.18 uses EDITORIAL_RECOVERY_V4_18.md and release_checklists/v4.18-editorial-v5-safe-4-1-3.md. The v4.17 scope section below applies to that historical recovery only. Current audit work is on feature/v4.18-p5e-audit-20260914 from exact f8fe433e; it does not authorize provider/device work. Explicit owner session instructions take precedence over repository startup/resume defaults.
+
+
 ## Required startup
 
 For v4.8 and later, follow `DEVELOPMENT_WORKFLOW.md`. Its 14 steps describe one complete release lifecycle, not one chat/work session. Create the release branch and release checklist once. Every later session resumes them; it must not create another branch, plan, checklist, or release track unless the owner changes the release scope.

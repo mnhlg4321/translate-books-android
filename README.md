@@ -1,5 +1,8 @@
 # Translate Books
 
+> Current P5E audit (2026-09-14): A4.2 evidence is verified, but RAW dispatch and P6 remain not ready. See docs/P5E_AUDIT_20260914.md and docs/P5E_NEXT_WORK_REQUEST.md for the concrete host issues and next work request.
+
+
 Translate Books is an Android app for translating long TXT books with OpenAI-compatible language-model APIs. It is designed for resumable, glossary-aware translation rather than one-shot chat: the app prepares stable chunks, injects only relevant terminology and pronoun rules, validates responses, persists progress, and writes partial output safely.
 
 The project targets Android 8.0 and later (`minSdk 26`) and currently builds against Android SDK 35.

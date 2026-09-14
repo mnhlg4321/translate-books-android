@@ -1,5 +1,8 @@
 # Editorial v4.18 implementation and verification map
 
+> Scope note (2026-09-14): the baseline and proposed implementation map below describe P0 at code169, not current device/build readiness. Current candidate is code207; use EDITORIAL_RECOVERY_V4_18.md and WORKSPACE_SNAPSHOT.md for actual pins/phase/next action. Do not restart P1 from the historical map.
+
+
 Status: `P0 MAP COMPLETE / NO PRODUCTION CHANGE`
 
 ## 1. Baseline
