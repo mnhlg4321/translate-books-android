@@ -1,6 +1,13 @@
 # P5E — tái kiểm tra readiness và provenance, 2026-09-15
 
-**Chưa được chuyển P6; chưa dispatch A4.3.** F2 giữ bằng chứng RED→GREEN. F3 đã được sửa và kiểm chứng offline bằng producer synthetic xuyên producer→verifier: bốn mutation cũ đều bị từ chối, hai control hợp lệ được chấp nhận, failure fingerprint được redaction. F1 trusted expected fingerprint và quyền account operation vẫn chưa được owner cung cấp/cho phép; collector trên device chưa được chạy hoặc chứng minh. Đây là tiếp tục P5E, không tạo phase/release mới.
+> **Superseded for current readiness:** re-audit at baseline `8c24b7d2` proved
+> that the synthetic artifact contract below differs from the production
+> serializer, the command does not runtime-pin the helper, and no executable
+> live/recovery collector or post-dispatch emitter exists. The timing/event/path
+> and redaction results remain valid in their tested scope. Current evidence is
+> `P5E_READINESS_REAUDIT_20260915.md`.
+
+**Chưa được chuyển P6; chưa dispatch A4.3.** F2 giữ bằng chứng RED→GREEN. Phần F3 dưới đây chỉ là synthetic producer→verifier evidence và không còn được coi là F3 closure. F1 trusted expected fingerprint và quyền account operation vẫn chưa được owner cung cấp/cho phép. Đây là tiếp tục P5E, không tạo phase/release mới.
 
 ## Provenance của cuộc kiểm tra
 

@@ -1,7 +1,13 @@
 # P5E RAW host-preparation evidence — 2026-09-15
 
-Status: `HOST_PREPARATION_COMPLETE / F3_PROVENANCE_REPAIR_GREEN /
-F1_OWNER_PROVENANCE_PENDING / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`
+Status: `HISTORICAL_HOST_FIXTURE_EVIDENCE / SYNTHETIC_CONTRACT_ONLY /
+SUPERSEDED_FOR_CURRENT_READINESS / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`
+
+> Re-audit at baseline `8c24b7d2` found that the synthetic artifact shape does
+> not match the production serializer and that no executable live/recovery
+> collector exists. Keep the results below as evidence for the host fixture and
+> timing/redaction gates; do not use them to claim F3 or owner-packet readiness.
+> See `P5E_READINESS_REAUDIT_20260915.md`.
 
 This is host-only evidence for the bounded P5/P5E continuation. It is not a
 new authorization, a new A4 proposal, or permission to dispatch. No credential,

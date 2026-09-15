@@ -1,6 +1,6 @@
 # P5E — Đối soát generation, quyết định dữ liệu và local acceptance gate
 
-> Current provenance review (2026-09-15, resumed HEAD 9beafef8): F2 transport remains qualified by the prior host evidence. F3 prior fixtures passed, but four new synthetic provenance/timing/identity cases falsely return RAW_ACCEPTED; readback producer provenance and assertion fingerprint redaction also need closure. The next action is the bounded local repair and provenance work in docs/P5E_NEXT_WORK_REQUEST.md. F1 owner input remains pending; owner input alone is not sufficient for dispatch. A4.3 NOT_ISSUED / NOT_READY_FOR_DISPATCH; P5/P5E incomplete; P6_NOT_READY. Prior next-action/completion prose below is historical where it conflicts with this review. Evidence: docs/P5E_PROVENANCE_REVIEW_20260915.md.
+> Current P5E re-audit (2026-09-15, baseline `8c24b7d2`): F2 remains qualified; F3 is not closed. The synthetic artifact contract differs from production, no executable live/recovery collector or post-dispatch emitter exists, and the command does not runtime-pin the helper. The next action is local H1–H4 repair in `docs/P5E_NEXT_WORK_REQUEST.md`. Owner packet `NOT_READY`; A4.3 `NOT_ISSUED`; RAW `NOT_RUN`; P6 `NOT_READY`. All current-decision prose below is historical where it conflicts with this banner. Evidence: `docs/P5E_READINESS_REAUDIT_20260915.md`.
 
 
 Current proposal gate: RAW_AUTHORIZATION_PROPOSAL_PREPARED / OWNER_DECISION_REQUIRED / ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / NOT_READY_FOR_DISPATCH / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED.

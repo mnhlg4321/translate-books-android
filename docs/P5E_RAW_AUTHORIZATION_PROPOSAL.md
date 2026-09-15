@@ -1,16 +1,16 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Current provenance review (2026-09-15, resumed HEAD 31a262a8): F2 remains qualified and the local F3 provenance repair is GREEN in the synthetic producer→verifier boundary. The four prior false accepts are rejected, actual serialized report/receipt bytes are validated and bound to the event/source mapping, and fingerprint assertion failures are redacted. F1 trusted expected fingerprint provenance and the exact account operation remain owner-pending; the live-device collector is not proven. A4.3 NOT_ISSUED / NOT_READY_FOR_DISPATCH; P5/P5E incomplete; P6_NOT_READY. Evidence: docs/P5E_PROVENANCE_REVIEW_20260915.md and docs/P5E_PROVENANCE_REVIEW_RESULT.json.
+> Superseded for current readiness by the 2026-09-15 re-audit at baseline `8c24b7d2`. The packet is not ready for owner review: F3 is not closed, the helper is not runtime-bound by the command, the synthetic artifact contract differs from production, and no executable live/recovery collector exists. Preserve the fixed-scope content below as proposal history; update it only after `docs/P5E_NEXT_WORK_REQUEST.md` passes. A4.3 is not issued, RAW is not run, and P6 remains not ready. Evidence: `docs/P5E_READINESS_REAUDIT_20260915.md`.
 
-Proposal status: OWNER_REVIEW_REQUEST_PREPARED / HOST_FIXTURES_PASS_F3_PROVENANCE_REPAIR_GREEN /
-OWNER_DECISION_REQUIRED / NOT_ISSUED / NOT_READY_FOR_DISPATCH
+Proposal status: SUPERSEDED_PENDING_LOCAL_REPAIR / OWNER_PACKET_NOT_READY /
+F3_NOT_CLOSED / NOT_ISSUED / NOT_READY_FOR_DISPATCH
 
-This packet requests owner approval for exactly one L1_RAW_DISCOVERY run. It
-does not create a runtime authorization, consume an authorization ID, read the
-device credential, call a provider, or open RECONCILE. The mandatory account
-fingerprint is intentionally pending the owner-controlled verification
-described below, so this packet is not marked READY_FOR_APPROVAL or
-READY_FOR_DISPATCH.
+This historical packet was drafted to request owner approval for exactly one
+L1_RAW_DISCOVERY run. It is now superseded pending local H1–H4 repair and must
+not be issued. It does not create a runtime authorization, consume an
+authorization ID, read the device credential, call a provider, or open
+RECONCILE. The mandatory account fingerprint also remains pending, so this
+revision is neither READY_FOR_APPROVAL nor READY_FOR_DISPATCH.
 
 The fixed-scope file whose hash is passed to the live harness is
 docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md. Its hash is kept separate from
@@ -269,7 +269,7 @@ fingerprint belongs in chat, Git or this proposal.
 | Credential rotation since verification | `UNKNOWN` — reverify after endpoint/key rotation |
 | Approved account operation | `NOT_APPROVED` — exact device-only load/normalize/hash/compare and redaction |
 | Approved data egress | `NOT_APPROVED` — RAW/GLOSSARY only; primary 1, repair 0, retry 0, no RECONCILE |
-| Approved artifact/code/command/helper refs | `FINAL_LOCAL_QA_COMPLETE` — manifest `DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501`, command `1D9A67693C4C4F64AF182300CDEB963A9FD9D44361EF77E91371F88C92EDA15E`, helper `6FABAE1F53973942561EDA52002F052F775570A931EAB65188103E7DEE9955A2`, host report `728E1F3986A1C7E921CD9DD5B3199BD8F1B36E8699EF9050C4306D38DABF5703`, result `BCB2DE2BD98C8191EB32CBE8298089ADFB42A8DADF33231A2733B4C272B72D01` |
+| Approved artifact/code/command/helper refs | `PENDING_LOCAL_H1_H4_REPAIR` — historical pins are manifest `DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501`, command `1D9A67693C4C4F64AF182300CDEB963A9FD9D44361EF77E91371F88C92EDA15E`, helper `6FABAE1F53973942561EDA52002F052F775570A931EAB65188103E7DEE9955A2`; do not approve them as the final executable chain |
 | Validity and stop conditions | `PENDING_DECISION` — expiry, mismatch, unavailable device, unknown outcome, no redispatch |
 
 ## Runtime checks and command
@@ -348,7 +348,7 @@ must be checked.
 | Missing post-check or inconsistency | Acceptance not proven; no cleanup or redispatch. |
 | RAW accepted | Stop at RAW; evaluate the next step separately and keep P6 closed. |
 
-## Pre-dispatch QA and owner decision
+## Historical pre-dispatch checklist — superseded pending H1–H4
 
 Before any owner-approved dispatch, verify:
 
@@ -370,12 +370,12 @@ Before any owner-approved dispatch, verify:
   UNUSED immediately before authorization construction.
 - No runtime authorization or provider call occurs until the owner approves.
 
-Owner decision requested: after reviewing the final hashes, approve the fixed
-scope and the separate memory-only account verification, subject to the
-fail-closed conditions above. The host preparation does not itself grant this
-permission.
+Owner decision is not requested from this revision. Complete and QA
+`docs/P5E_NEXT_WORK_REQUEST.md`, then regenerate the final hash-bound packet and
+request the fixed scope plus memory-only account verification. The historical
+host preparation does not grant permission.
 
-Owner decision: PENDING / HOST_FIXTURES_PASS_F3_PROVENANCE_REPAIR_GREEN
+Owner decision: NOT_REQUESTED / PACKET_SUPERSEDED_PENDING_LOCAL_H1_H4_REPAIR
 endpointAccountFingerprint: PENDING_OWNER_VERIFICATION
 Runtime authorization: NOT CREATED
 Provider dispatch: NOT PERFORMED

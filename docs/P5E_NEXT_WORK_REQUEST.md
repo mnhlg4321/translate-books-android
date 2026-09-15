@@ -1,111 +1,382 @@
-# Yêu cầu làm việc + provenance — tiếp tục P5E sau host preparation
+# Yêu cầu làm việc + provenance — đóng local evidence chain trước A4.3
 
-**Baseline bàn giao để đọc:** `9beafef8e59825714e47cdfe594dc287b6c5a0ce`, branch `feature/v4.18-p5e-audit-20260914`. Khi resume lấy actual HEAD mới từ Git và snapshot; không reset về hash này. Canonical plan vẫn là `EDITORIAL_RECOVERY_V4_18.md`, checklist release vẫn `release_checklists/v4.18-editorial-v5-safe-4-1-3.md`.
+Status: `AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / LIVE_ACTIONS_NOT_AUTHORIZED / P6_NOT_READY`
 
-**Kết luận:** chưa chuyển P6, chưa dispatch A4.3. Đọc `docs/P5E_PROVENANCE_REVIEW_20260915.md` và result JSON trước khi làm. F2 đã sửa; F3 có bốn false-accept mới, thiếu readback producer được chứng minh và failure redaction cần bổ sung. Đây là sửa local trong P5E, không phải một A4.x/release/checklist mới.
+Baseline re-audit: branch `feature/v4.18-p5e-audit-20260914`, input HEAD
+`8c24b7d2a0d4ddc39ff07cfd2220ce14843258d8`. Khi resume phải lấy actual HEAD và
+status mới từ Git; không reset về hash này. Đọc trước
+`docs/P5E_READINESS_REAUDIT_20260915.md` và
+`docs/P5E_READINESS_REAUDIT_RESULT.json`.
 
-## Phạm vi và đầu ra cần hoàn thành
+## Mục tiêu
 
-Khi owner giao thực hiện request này: sửa host helper/collector/tests và tài liệu liên quan đến các lỗi đã chứng minh; chuẩn bị provenance F1. Chưa được phép credential/account check thật, ADB/device, instrumentation, provider, runtime authorization, DB readback thật, APK build/install, migration hoặc thay đổi production/route/model/budget/pack/profile/source. Phần live cuối là runbook có điều kiện, không phải authorization.
+Đóng bốn blocker local H1–H4 trước khi gửi packet cho owner:
 
-Đầu ra: patch local tối thiểu; RED→GREEN 4 mutation và failure redaction; một đường tạo readback có source mapping và fixture xuyên producer→verifier; packet/provenance không-secret đủ review; snapshot một next action. Không chờ owner để sửa phần host độc lập.
+1. command fail-closed nếu helper khác hash đã duyệt;
+2. verifier kiểm đúng REPORT_L1/receipt bytes do production serializer tạo;
+3. có executable, reviewable acquisition/collector chain cho post-live durable
+   state, kể cả recovery/unknown;
+4. selected live path tạo hoặc cho phép lấy event-bound post-dispatch evidence.
 
-## A. Baseline và giữ phần đã đạt
+Sau khi bốn blocker GREEN, freeze lại packet và chuẩn bị một owner request cụ
+thể cho F1 account provenance, read-only collection và đúng một RAW/GLOSSARY
+dispatch. Work request này không cấp quyền đọc credential/account thật, ADB,
+device, instrumentation, provider, runtime authorization, DB live, build,
+install, force-stop, uninstall, clear-data, tag, merge hoặc release.
 
-1. Vào đúng worktree con `D:\App Translate Books\App Translate Books-translation-profile`. Đọc BUILD_STATE, snapshot theo startup owner; rồi canonical plan, Git/development workflow. Không sửa checkout D1 ở thư mục cha.
-2. Ghi actual branch/HEAD/status; xác nhận ancestor 9beafef8 và đọc diff mới. Nếu có diff của người khác, phân loại và giữ nguyên; không reset/clean. Resume branch hiện tại theo scope đã bàn giao, không tạo release track mới.
-3. Kiểm manifest DD58…4501, command 1D9A…DA15E, helper BEEF…6799 và host report C54…E3C bằng full SHA trong provenance table của audit. Nếu khác, đọc diff để xác định baseline; không chạy probe pin cũ rồi bỏ guard để ép pass.
-4. Kiểm code207/test57EC99/source d51b7f3c và parity production5/test8 khi byte artifact thay đổi hoặc trước owner packet cuối. Không rebuild/cài lại để xác nhận trạng thái build-time `installed=false`.
-5. Giữ F2 đóng theo evidence; source Android phải không đổi. Không làm lại A4.2, model remediation, IPC/AVD/CP6 hay full JVM suite cho sửa prose. Checklist 05–09 release vẫn chưa được đánh dấu từ host-only PASS.
+## Đầu ra bắt buộc
 
-## B. Sửa F3 theo evidence mới
+- patch tối thiểu cho helper/command/verifier và test-only readback source nếu
+  cần;
+- source-derived artifact contract cho report và receipt, không dùng một shape
+  chung tự dựng;
+- live collection runbook executable và recovery path có typed outcomes;
+- RED→GREEN tests độc lập, gồm golden bytes từ production serializer;
+- hash/provenance table cuối cho manifest, command, helper, source, APK và
+  collector;
+- owner decision request ở trạng thái `PENDING`, không chứa secret;
+- canonical plan, build state, snapshot, checklist và các P5E banner cùng một
+  current status;
+- commit có diff thật và worktree sạch.
 
-6. Đọc `P5E_PROVENANCE_REVIEW_PROBE.ps1`; tái hiện đúng helper baseline trên dữ liệu synthetic, không chạy Dispatch hoặc đọc biến fingerprint thật. Giữ hai control đúng và ghi bốn false accept là RED, không viết 6/6 PASS.
-7. Vẽ bảng thời gian theo source: issued ≤ claim/consume < expires; attempt created≤updated; observation không được trước dữ liệu nó chứng thực. Post-readback sau expiry có thể hợp lệ; không chặn vì authorization đã hết hạn sau khi call/commit hợp lệ kết thúc.
-8. Sửa check consume upper bound theo `EditorialP5PilotAuthorization` (`now>=expires` invalid). Fixtures: issued-1, issued, expires-1, expires, expires+1. Bổ sung observedAt trước run/before updated và observation muộn hợp lệ. Không dùng giờ hiện tại của audit để loại evidence lịch sử hợp lệ.
-9. Truy nguồn manifestFingerprint đúng từ request/binding/model artifact serializer. Kiểm report và receipt cùng identity với manifest cần pin; không chỉ đúng dạng 64 hex hoặc chỉ bằng nhau. Fixture: một bên khác, cả hai giống nhau nhưng sai expected, đúng expected.
-10. Ràng buộc metadata/readback với đúng event thật và file đã mở: canonical path trong evidence directory đã chọn, source input hash, collector implementation identity, run identity/timestamps. Thay metadata.evidenceDirectory bằng chuỗi khác phải fail. Không tạo hash tự tham chiếu hoặc một hệ thống ký/chứng thực mới.
-11. Không cho fixture với đúng mọi booleans thay provenance. Khi chưa có evidence producer, verifier phải trả ACCEPTANCE_NOT_PROVEN; không đổi field UNKNOWN thành true để hợp schema.
-12. Kiểm validator không phụ thuộc vào duy nhất `OK (1 test)`/exit0: missing postcheck, RECOVERY_REQUIRED, timeout, expired consume, wrong event, mismatched manifest đều không được RAW_ACCEPTED. P6 luôn false trong RAW-only verifier.
+## A. Resume và đóng băng phạm vi
 
-## C. Làm producer/readback cụ thể, không chỉ schema nhận JSON
+1. Vào `D:\App Translate Books\App Translate Books-translation-profile`; không
+   sửa checkout D1 ở thư mục cha.
+2. Đọc theo startup: `BUILD_STATE.md`, `WORKSPACE_SNAPSHOT.md`, actual
+   branch/HEAD/status, rồi `GIT_WORKFLOW.md`; đọc canonical plan
+   `EDITORIAL_RECOVERY_V4_18.md` và checklist v4.18.
+3. Xác nhận branch là audit continuation hiện hành và input HEAD `8c24b7d2` là
+   ancestor; nếu có commit mới, review diff rồi tiếp tục từ actual HEAD.
+4. Nếu worktree có thay đổi của người khác, phân loại và giữ nguyên; không
+   reset/clean/stash/delete.
+5. Ghi baseline table: current HEAD; production source; AndroidTest source;
+   production/test APK hashes; manifest/command/helper hashes; checklist gates.
+6. Recompute manifest `DD58…4501`, command `1D9A…DA15E`, helper `6FAB…55A2`.
+   Khác hash thì dừng dùng các nhãn cũ, đọc diff và tạo baseline mới.
+7. Xác nhận Android production source, schema/migration, route/model, budget,
+   pack/profile và source identities chưa đổi từ pin; không rebuild để chứng
+   minh một fact có thể kiểm bằng Git/hash.
+8. Giữ F2 transport là PASS nếu self-test hiện hành còn pass; không viết lại
+   quoting/timeout supervisor khi không có failure mới.
+9. Đặt current state ngay từ đầu:
+   `F3_NOT_CLOSED / OWNER_PACKET_NOT_READY / A4.3_NOT_ISSUED /
+   RAW_NOT_RUN / P6_NOT_READY`.
+10. Không đánh dấu checklist 05–09; local host/test-only work chưa phải release
+    regression/build/QA.
 
-13. Tìm đường read-only có sẵn trên đúng baseline đã pin và các host tools hiện có. Kết quả phải là file/function/entry point, input, output, side effects và command plan có thể review; không ghi chung “lấy DB readback sau đó”. Không chạy trên device trong lượt host.
-14. Nếu chưa có collector, implement tối thiểu ở host đọc snapshot/metadata được cung cấp qua quy trình đã cho phép; dùng DB/report/receipt giả hoặc disposable fixture offline. Không mở DB pilot thật và không yêu cầu owner tự điền booleans.
-15. Lập bảng field→nguồn→biến đổi→gate theo mẫu ở phần provenance bên dưới; bao phủ mọi required field của p5e.raw.readback.v1. Không tự thêm field giả để đáp ứng verifier. Field không thể chứng minh phải UNKNOWN và gate tương ứng chưa đạt.
-16. Xác định rõ phạm vi dữ liệu cần thu: package APK/cert; schema/integrity/FK; exact immutable tuple; exact attempt/authorization/lifecycle; actual stored report/receipt bytes để validator tính hash/size; settings chỉ hash/change proof theo quyền. Không đưa toàn DB, source text, prompt hoặc raw response vào Git/báo cáo.
-17. WAL/consistent snapshot: lựa chọn phương thức đang được runbook cho phép, không copy riêng DB khi WAL chưa xử lý. Trước dispatch phải chuẩn bị được collector; không chờ live chạy xong mới phát hiện thiếu phương thức readback.
-18. Bằng chứng atomicity phải tách nguồn: code/transaction tests chứng minh semantics; before/after event kiểm row-pair/no partial state; bytes validators kiểm integrity. Không tự suy atomicClaim=true từ một ảnh chụp cuối đơn lẻ.
-19. Tạo fixture xuyên producer→verifier từ DB/schema và serialized artifact thực tế (synthetic content). Điều kiện GREEN: producer tạo file được verifier chấp nhận, và file có provenance input hash/collector/run đúng. Không gọi `New-P5EValidReadbackFixture` làm producer thật.
-20. Negative xuyên boundary: thiếu row, orphan lifecycle, duplicate attempt, sai event, schema drift, WAL/incomplete snapshot, missing report/receipt, modified immutable tuple, wrong source hash, UNKNOWN cost, invalid validator output. Trả lỗi typed, không retry/provider/fix DB.
-21. Nếu pin APK không có phương thức thu tối thiểu cần thiết: hoàn tất mọi phần host có thể làm, ghi đúng missing entry point và đề xuất test-only delta. Không tự build/install, không dùng harness lịch sử, reflection, shell pull settings hoặc bypass pin. Chỉ tái qualification phần chịu ảnh hưởng nếu owner cấp scope riêng; không mặc định reset toàn A4.
+## B. Tạo RED tests cho H1–H4 trước khi sửa
 
-## D. Account provenance và redaction
+11. Chạy `docs/P5E_READINESS_REAUDIT_PROBE.ps1`; lưu output vào unique temp
+    directory ngoài repo nếu cần, không ghi đè historical evidence.
+12. H1 RED: copy helper sang temp, đổi một byte không-secret; chứng minh command
+    hiện hành vẫn không có runtime helper hash gate. Test không được chạy
+    `-Dispatch`.
+13. H1 control: exact current helper hash được nhận; missing file, symlink/path
+    swap, wrong hash và changed-after-review phải bị từ chối trước environment
+    fingerprint read và trước mọi ADB process creation.
+14. H2 RED: enumerate helper parameter sets; chứng minh không có
+    `CollectReadback`/equivalent executable mode.
+15. H2 RED: gọi `VerifyOutcome` với missing `post-readback.json`; expected
+    `ACCEPTANCE_NOT_PROVEN`, provider/device actions `0`.
+16. H3 RED: tạo report và receipt bằng đúng production serializer hoặc một Java
+    golden test gọi trực tiếp `EditorialP5PilotExecution`; đưa bytes qua host
+    validator hiện hành và ghi typed mismatch.
+17. H3 control: giữ fixture synthetic cũ để chứng minh vì sao nó tự pass; label
+    rõ `HOST_SYNTHETIC_SHAPE`, không gọi nó là production artifact.
+18. H4 RED: source/contract test kiểm selected live method có `dispatchRaw` nhưng
+    không có post-dispatch status/file emitter.
+19. Test timeout/exception path: method không tới dòng sau `dispatchRaw` vẫn phải
+    có recovery acquisition plan; không dựa duy nhất vào in-method success
+    emitter.
+20. Ghi RED result với expected/actual, exact source hashes và counts
+    `deviceActions=0`, `providerCalls=0`, `credentialReads=0`.
 
-22. Đọc phép tính từ source: `SHA256(UTF8(normalizeEndpoint(baseUrl) + "\n" + apiKey))`; lowercase hex. Phân biệt expected do nguồn owner tin cậy với actual do app tính. Fingerprint không phải account ID và không chứng minh billing/ownership nếu thiếu mapping.
-23. Với fixture fake, kiểm route normalization đúng source: trim endpoint, bỏ một slash cuối, /v1→/chat/completions; không tự trim credential ngoài source. Không dùng raw endpoint/credential thật để debug.
-24. Sửa capture khi String assertion mismatch mang expected/actual fingerprint: redacted failure metadata còn đủ chẩn đoán nhưng không giữ digest bị policy cấm log. Test fake assertion/ComparisonFailure, exception wrapper, success, error và timeout. Không tuyên bố đây là credential leak đã quan sát.
-25. Làm rõ nơi được phép tồn tại fingerprint: process argument; durable receipt/readback nếu manifest/schema yêu cầu và owner scope cho phép. Logs/chat không chứa fingerprint nếu packet cấm. Không đặt hai yêu cầu mâu thuẫn “không serialize fingerprint ở đâu cả” và “readback phải có endpointAccountFingerprint”.
-26. Chuẩn bị bảng owner input dưới đây ở trạng thái NOT_PROVIDED/NOT_APPROVED. Nếu owner đã có expected đáng tin, dùng provenance xác minh nguồn tạo ra và mapping account/key; không xin API key trong chat và không đọc password manager/credential store bằng agent.
-27. Nếu owner chưa có expected: không lặp lại yêu cầu bất khả thi “cung cấp provenance” mà không có cách tạo. Đưa đúng phương án tối thiểu: source/entry point enrollment, owner attestation cho account/key mapping, phép tính device-only, đường chuyển digest process-only và scope cần cho phép. Nếu phải thay AndroidTest, đề xuất đó riêng với lý do kỹ thuật; hiện tại chưa được chạy.
-28. Không lấy actual của live assertion thất bại làm expected mới rồi gọi lại. Không chạy thử một RAW call để học account. Không tự chấp thuận provenance từ chỉ một chuỗi 64 hex; không giả người dùng đã xác nhận.
+## C. Sửa H3 từ production serializer ra ngoài
 
-## E. QA + phản biện, rồi chốt packet một lần
+21. Đọc `EditorialP5PilotExecution.reportBytes` và `receiptBytes`; lập hai field
+    lists riêng, không dùng một required/allowed list chung.
+22. REPORT_L1 bắt buộc kiểm ít nhất: schema, artifact type, binding,
+    manifest, canonical pack/profile, evaluation, chapter, phase, bundle,
+    predecessor, totals, gates, evidence refs, inventory và disposition.
+23. Receipt bắt buộc kiểm ít nhất: receipt schema, artifact type, manifest/pack/
+    profile/binding refs, phase, bundle, predecessor, totals, gates, evidence
+    refs, canon/propagation flags, disposition, inventory và release count.
+24. Dùng parser/validator production nếu module boundary cho phép. Nếu host
+    PowerShell phải parse JSON, derive field map từ golden contract test và pin
+    source commit/hash; không copy một subset tùy ý.
+25. Kiểm strict UTF-8/no BOM và canonical JSON bytes theo implementation; không
+    canonicalize lại rồi gọi bytes mới là stored bytes.
+26. Hash/length tính trên exact persisted bytes. Parsed semantic checks và byte
+    identity là hai evidence khác nhau.
+27. Ràng buộc report manifest/binding/pack/profile/evaluation/chapter/phase/
+    predecessor với request pin.
+28. Ràng buộc receipt refs với cùng request pin và bundle/predecessor với report;
+    không yêu cầu receipt có tên field của report.
+29. Kiểm report/receipt pair atomic: cả hai tồn tại trên cùng exact attempt hoặc
+    cả hai vắng khi status không COMMITTED; một bên tồn tại phải fail.
+30. Khi status `RECOVERY_REQUIRED`, không ép parse missing final artifacts; trả
+    typed non-acceptance và giữ lifecycle/cost unknown đúng dữ liệu.
+31. Golden cases: valid production report+receipt; wrong manifest; wrong binding;
+    wrong bundle; wrong predecessor; swapped report/receipt; one-byte mutation;
+    extra/missing field; BOM; invalid UTF-8; noncanonical bytes nếu production
+    contract cấm.
+32. Regression cũ: timing boundary `issued`, `expires-1`, `expires`; event/path;
+    wrong source hash; unknown cost; fingerprint redaction.
 
-29. QA vòng một: 2 control và 4 mutation cũ đúng expected sau sửa; fixture mới producer→verifier đúng; no-secret failure; no Android/source/budget drift. Chạy suite host F2/F3 hiện có một lần sau final helper patch để kiểm regression, không sửa lại F2 khi đang đạt.
-30. Phản biện vòng hai: nguồn từng bool/hash là gì; fixture có độc lập với verifier không; expired consume lọt không; report/receipt đúng manifest của ai; event có bị tráo không; capture có ghi digest assertion không; device collector có thật trên pin không; owner input có tự tạo trust vòng tròn không?
-31. Với lỗi mới có evidence, sửa local và rerun các checks bị ảnh hưởng trên cùng branch. Khi hai vòng đạt, không mở thêm vòng cùng input. Chưa đạt phải ghi FAILED_REPAIRING, không đẩy toàn bộ trách nhiệm sang owner.
-32. Freeze command/helper cuối và source mapping; update proposal/hash references nhất quán. Manifest chỉ đổi nếu scope/operation thay đổi, và phải giữ bản cũ qua Git. Thứ tự: finalize manifest→hash manifest→command/helper references→hash command/helper→human proposal/provenance. Không tự chứa hash của chính file.
-33. Current owner decision phải bind đủ manifest, command và helper hiện hành; manifest DD58 pin cũ không tự duyệt mọi helper tương lai. Không yêu cầu approval trên packet đang thay đổi hoặc claim latest commit bằng hash tự tham chiếu.
-34. Chỉ sau khi local readiness đạt, trình một yêu cầu owner cụ thể với source expected, permission account check, RAW/GLOSSARY egress, đúng route/caps, allowed DB effects và no-redispatch. Account approval đơn lẻ không tự cấp quyền gửi sách; user audit request không phải approval.
+## D. Thiết kế acquisition chain trước khi đổi AndroidTest
 
-## F. Runbook live có điều kiện — không thực hiện từ request host này
+33. Lập bảng mọi field verifier cần và nguồn thật của nó: package manager,
+    installed APK/cert, DB metadata, exact rows, stored blobs, test status,
+    event metadata và host clock.
+34. Với mỗi field ghi: source owner, query/API, transform, redaction, output file,
+    hash, timing và failure code. Field không có nguồn phải là `UNKNOWN`, không
+    được nhập tay `true`.
+35. Xác định các nguồn sẵn có trên pinned test APK. Không suy “test access” từ
+    source; kiểm class/method thực sự nằm trong source archive của APK pin.
+36. Đánh giá ba path theo thứ tự:
+    a. same live method ghi redacted post-state;
+    b. host read-only recovery collector đọc durable state sau method;
+    c. test-only source delta nếu a/b không đủ.
+37. Chọn a+b nếu có thể: in-method output cho normal completion, independent
+    persisted readback cho timeout/process death/device reconnect.
+38. Không dùng full database export làm report mặc định. Nếu consistent snapshot
+    phải được kéo để query, giữ private outside Git, giới hạn quyền, hash toàn
+    DB/WAL/SHM, chỉ xuất allowlisted derived fields vào evidence.
+39. WAL rule: app/process state phải phù hợp runbook; capture DB cùng WAL/SHM
+    hoặc dùng SQLite backup/read transaction. Copy riêng main DB khi WAL pending
+    là typed failure.
+40. Không đọc/pull settings JSON, credential, raw endpoint, full RAW/DRAFT/
+    GLOSSARY/PRONOUN, prompt, request body hay model response.
+41. Report/receipt stored blobs chỉ được export nếu policy packet cho phép; nếu
+    không, validator phải chạy trong trusted test context và xuất hash/length +
+    typed validation proof có source binding.
+42. Định nghĩa event directory trước dispatch với unique event id, immutable
+    metadata and planned filenames. Không ghép readback từ event khác.
+43. Định nghĩa before observation, claim/consume timestamps, after observation
+    và collected time. Authorization window là nửa kín
+    `issued <= consume < expires`; readback có thể muộn hơn expires.
+44. Phân biệt DB file hash thay đổi hợp lệ với data integrity. Sau RAW, không yêu
+    cầu post DB hash bằng pre hash; kiểm allowed rows, immutables, integrity/FK.
 
-35. Chỉ vào cửa sổ live sau explicit owner approval khớp packet cuối, provenance F1 đầy đủ và local QA đạt. Current read-only device pins phải được kiểm trong phạm vi owner cho phép: serial15e84958, production code207/cert, test exact, schema24, immutable tuple, unused ID và không writer cạnh tranh. Mismatch dừng; không force-stop/uninstall/clear/downgrade/install để ép PASS.
-36. Account operation đúng quyền, actual=trusted expected; fresh issued/expires ngay trước một dispatch. Chỉ RAW/GLOSSARY visible; DRAFT/PRONOUN hidden. Caps: primary1, repair0, retry0, input100000/output4096/total104096, cost0.05, execution120000ms/auth180000ms/host240000ms. Không thay cap theo số token/giá phỏng đoán.
-37. Chạy đúng selected live method một lần, không preflight instrumentation riêng hoặc model remediation. Theo dõi cùng process khi tool yield, không relaunch. Timeout/USB loss/nonzero giữ UNKNOWN nếu chưa có evidence; kill observer không chứng minh provider đã hủy. Không refresh expiry hoặc redispatch.
-38. Dùng collector đã chuẩn bị lấy evidence sau run đúng event, kiểm allowed DB effects thay equality hash toàn DB. Chỉ exact attempt+receipt claim atomic, allowlisted lifecycle/validated RAW artifacts; reconciliation/history=0; immutable source/binding/run/settings không đổi. Missing post-check→ACCEPTANCE_NOT_PROVEN, không biến delayed readback thành immediate preservation.
-39. RAW_ACCEPTED chỉ khi actual durable COMMITTED + validated bytes/metrics/provenance đúng. Unknown cost không bằng0; test OK không đủ. RAW accepted vẫn không mở P6; đánh giá RECONCILE/L1 scope/predecessor riêng. Giữ code196 RECONSTRUCTED_ONLY và A3.2 historical gaps đúng sự thật.
-40. Cập nhật state/snapshot/checklist với observed results, actual HEAD và một next action; commit có diff thật. Không tag/merge/release. P6 chỉ sau P5 exit; ba chương L1-L3 thuộc exit P6; P7 mới regression/build/QA/archive theo wrapper và versionCode tăng đúng policy.
+## E. Test-only live evidence delta nếu cần
 
-## Provenance bắt buộc của đầu ra kỹ thuật
+45. Nếu pinned APK không thể cung cấp field/source cần thiết, ghi decision record
+    giải thích vì sao host-only không đủ trước khi sửa AndroidTest.
+46. Chỉ sửa `androidTest`/test support tối thiểu. Không đổi production source,
+    schema/migration, provider adapter, pack/profile, prompt, source data,
+    route/model hoặc budgets.
+47. Thêm redacted post-dispatch emitter cho cả terminal states: COMMITTED,
+    RECOVERY_REQUIRED, rejected-before-claim và exception có durable row.
+48. Emitter phải query durable store lại sau result; không serialize duy nhất
+    object in-memory được trả từ dispatch.
+49. Output bind event id, run/attempt/request/authorization, exact package/test
+    identity, row counts, status, lifecycle, persisted metrics và artifact
+    hashes/lengths/validation result.
+50. Không phát fingerprint nếu policy process-only cấm log. Receipt có fingerprint
+    thì chỉ xuất equality proof/hash policy cho phép, không error text chứa
+    expected/actual digest.
+51. Không phát source text, prompt, request body, API key, normalized endpoint hay
+    raw provider response.
+52. Emitter không tạo authorization mới, không gọi provider lần hai, không repair,
+    retry, reconcile, cleanup hoặc mutate unrelated rows.
+53. Đảm bảo status channel/file có bounded size và exact framing; thêm parser
+    contract test để tránh lặp lỗi A4 emitter/parser.
+54. Thêm recovery collector mode host chỉ sau khi input, output và permission
+    boundary đã rõ. Nó phải có `-CollectReadback`/equivalent explicit parameter
+    set; default/self-test không chạm device.
+55. Collector nhận exact serial/event/output root và pin values; không chọn first
+    connected device, latest folder hoặc wildcard evidence.
+56. Collector chỉ chạy read-only commands được allowlist; log command class và
+    exit code, không log secret-bearing argv/output.
+57. USB unavailable, package mismatch, active writer, WAL inconsistency, missing
+    row/blob, parser error hoặc timeout đều typed stop; không force-stop hoặc
+    redispatch để lấy PASS.
+58. Nếu test source đổi, production APK giữ nguyên; AndroidTest APK phải build
+    qua project-approved test artifact flow, unique event, exact source ZIP,
+    artifact/backup parity và increasing identity theo existing policy.
+59. Không cài test APK trong local work package này. Chuẩn bị riêng proposal cho
+    one replacement + post-install readback nếu repin cần thiết.
 
-| Nhóm | Nguồn có thể kiểm chứng | Quy tắc |
+## F. Sửa H1 và freeze executable chain
+
+60. Finalize helper/collector trước khi viết expected helper hash vào command.
+61. Tính SHA-256 helper final; thêm constant/parameter expected helper hash vào
+    command review packet.
+62. Trước mọi access đến fingerprint env hoặc device, command phải: resolve exact
+    regular file; reject missing/reparse/unexpected path theo policy; compute
+    SHA-256; compare exact expected.
+63. Chỉ sau helper match mới gọi child process. Không dot-source helper, không
+    print full argv, không pass credential.
+64. Negative tests: absent helper, wrong path, altered byte, wrong expected hash,
+    path swap/reparse where testable; tất cả launch count `0`.
+65. Positive test dùng harmless fake helper/process seam; launch count `1`, argv
+    byte-exact, no device/provider.
+66. Sau helper final, hash command final. Nếu command đổi tiếp, recompute; không
+    ghi self-hash vào chính command.
+67. Manifest chỉ đổi nếu owner scope/DB effects/readback permission hoặc artifact
+    pin đổi. Nếu đổi, finalize manifest trước, rồi cập nhật command expected
+    manifest hash.
+68. Proposal/owner request phải bind full manifest, command, helper, collector,
+    production APK, test APK và source commits. Một hash trong prose không thay
+    runtime check cần thiết.
+
+## G. QA vòng 1 — kỹ thuật
+
+69. Chạy helper self-test một lần trên final source; ghi từng group count và
+    device/provider/credential actions `0`.
+70. Chạy re-audit probe; H1–H4 expected phải chuyển sang resolved assertions,
+    không sửa expected để biến failure thành PASS.
+71. Chạy golden producer→verifier dùng production serializer bytes. Synthetic
+    fixture cũ chỉ là regression phụ.
+72. Chạy toàn bộ negative matrix H1/H3/acquisition: mutated helper; missing/
+    partial rows; orphan lifecycle; duplicate attempt; wrong event/run/path;
+    WAL incomplete; wrong artifact identity; byte mutation; missing cost;
+    timeout/unknown.
+73. Chạy parser/emitter contract tests nếu AndroidTest emitter đổi. Phải bắt
+    missing field, extra field, wrong boolean type, truncated/multiple frames và
+    redaction violations.
+74. Chạy targeted Java tests cho serializer/validator source bị ảnh hưởng. Không
+    chạy full release regression nếu chỉ host docs/script; nếu AndroidTest đổi,
+    compile và chạy local unit/contract suite phù hợp trước artifact build.
+75. Chạy `git diff --check`, secret scan theo allowlist hiện có và production
+    diff guard. Any credential-like hit phải review; không in matching content.
+76. Kiểm artifact/backup parity nếu tạo AndroidTest artifact mới. Không dùng
+    build output tạm hoặc artifact không có source ZIP/hash manifest.
+
+## H. QA vòng 2 — phản biện độc lập
+
+77. Trace một valid result từ production serializer đến stored bytes, collector,
+    source hashes, verifier và final decision; không bỏ qua bước bằng boolean
+    nhập sẵn.
+78. Thay một field ở từng boundary và xác nhận fail ở boundary gần nhất.
+79. Giả định instrumentation trả `OK (1 test)` nhưng DB là
+    `RECOVERY_REQUIRED`; final phải `RAW_NOT_ACCEPTED`.
+80. Giả định host timeout sau provider reach nhưng trước output; state phải
+    `UNKNOWN/RECOVERY`, không relaunch.
+81. Giả định device mất sau COMMITTED trước readback; acceptance vẫn
+    `NOT_PROVEN`, authorization/attempt không được tái dùng.
+82. Giả định helper đổi sau owner review; command phải fail trước fingerprint/
+    ADB.
+83. Giả định report/receipt cùng match nhau nhưng sai manifest hoặc bundle;
+    verifier phải reject.
+84. Giả định actual account fingerprint khác expected; capture không chứa cả hai
+    digest và launch/provider count bằng 0.
+85. Giả định expected fingerprint được lấy từ chính actual mismatch; provenance
+    reviewer phải reject circular source.
+86. Giả định cost absent; không thay bằng `0`, không gọi RAW accepted.
+87. Giả định old code196/A3.2 evidence được đưa vào current acceptance; reject vì
+    historical/reconstructed classification.
+88. Giả định RAW accepted; vẫn trả `P6_READY=false` cho tới khi RECONCILE/L1 và
+    P5 exit được đánh giá riêng.
+89. Nếu vòng phản biện phát hiện lỗi có evidence, sửa đúng boundary rồi rerun
+    checks bị ảnh hưởng. Khi hai vòng pass trên cùng final hashes, đóng local
+    gate; không mở lại cùng câu hỏi nếu input không đổi.
+
+## I. Provenance owner cần sau local GREEN
+
+90. Tạo owner request riêng, status `PENDING`, không gọi tài liệu này là approval.
+91. Ghi authorized operator/account-project label/credential reference không
+    secret và thời điểm xác minh.
+92. Expected fingerprint source phải độc lập với live actual: trusted prior
+    record hoặc separately approved enrollment procedure có account/key mapping.
+93. Thuật toán pin đúng source:
+    `SHA256(UTF8(normalizeEndpoint(baseUrl) + "\n" + apiKey))`, lowercase hex.
+94. Owner không gửi API key/raw endpoint qua chat hoặc Git. Fingerprint transport
+    dùng process-only channel đã review.
+95. Owner decision phải cho phép riêng: memory-only settings load/hash/compare;
+    read-only package/DB/artifact collection; RAW/GLOSSARY egress; one primary
+    call; exact allowed DB effects.
+96. Giữ DRAFT/PRONOUN hidden; repair0, retry0, fallback off, RECONCILE off;
+    input100000, output4096, total104096, cost USD0.05, execution120000 ms,
+    auth180000 ms, host observation240000 ms.
+97. Nếu AndroidTest pin đổi, owner request phải ghi test artifact/source mới và
+    quyền one replacement. Approval cũ không tự áp dụng cho hash mới.
+98. Stop conditions: any pin/account/route/schema/tuple mismatch, device
+    unavailable, active competing writer, expired window, unknown previous
+    outcome, collector unavailable hoặc redaction failure.
+99. No-redispatch: timeout/nonzero/USB loss/missing postcheck không cho refresh ID
+    hoặc chạy lại. Chỉ owner có thể quyết định một recovery scope mới sau khi
+    đọc durable state.
+
+### Mẫu provenance phải điền trước owner review
+
+Không copy giá trị lịch sử vào cột `Current value` nếu chưa recompute trên final
+bytes. Không lưu API key/raw endpoint.
+
+| Nhóm | Current value ban đầu | Nguồn và phép kiểm bắt buộc |
 |---|---|---|
-| Code/artifact | Git ref + APK/source ZIP hashes + event manifest | Tách production source, test source, host source, proposal và actual HEAD |
-| Invocation | exact command/helper hashes + selected method + event metadata | Không chỉ ghi hash manifest; không dùng metadata event khác |
-| Account expected | owner-supplied trusted record/procedure + account/key mapping | Không chép digest từ actual mismatch, settings-file hash hoặc fixture |
-| Account actual | selected device-only calculation after approval | Chỉ match proof/metadata được phép; không log credential/endpoint |
-| Package | installed read-only readback + cert/APK hash | Host artifact tồn tại không tự chứng minh installed APK |
-| DB tuple/counts | consistent snapshot identity + exact query/collector | Global và lineage counts đúng ownership; không sửa query bằng cách sửa DB |
-| Report/receipt | stored bytes → real validator → hash/size/schema/identity | `validationPassed=true` phải là kết quả validator, không giá trị nhập tay |
-| Atomicity | source transaction tests + observed row consistency | Ghi rõ loại evidence; snapshot cuối không chứng minh toàn bộ lịch sử |
-| Cost/lifecycle | exact persisted metrics/metadata of attempt | Unknown giữ unknown, không fallback0; không lưu raw model response |
-| Timing/event | host event và durable timestamps/source hashes | Consume trong auth window; readback phải có chronology hợp lệ, không buộc trước expiry |
+| Git baseline | `PENDING_FINAL_HEAD` | actual branch/HEAD/status; source commits tách production, AndroidTest và host |
+| Production artifact | code207 / `2CCBB8…800FD`, phải recheck | immutable artifact + backup parity + certificate/source ZIP hashes |
+| AndroidTest artifact | `57EC99…FDEA` hoặc `PENDING_REPIN` | exact APK/source ZIP/cert/package/runner; không dùng pin cũ nếu test source đổi |
+| Production serializer | `PENDING_FINAL_SOURCE_HASH` | `EditorialP5PilotExecution` source commit/hash + golden byte generator test |
+| Approval manifest | `PENDING_FINAL_HASH` | fixed scope/DB effects/egress/readback permission; finalize trước command |
+| Helper/collector | `PENDING_FINAL_HASHES` | exact paths, implementation IDs, modes, source hashes và negative tamper test |
+| Command | `PENDING_FINAL_HASH` | pins manifest/helper/APKs; helper check xảy ra trước env/device access |
+| Event | `NOT_CREATED` | unique id/directory; command/helper/collector hashes; no cross-event file reuse |
+| Account expected | `NOT_PROVIDED` | independent owner record/enrollment + non-secret account/key mapping + verified time |
+| Account actual | `NOT_COMPUTED` | owner-permitted device-only algorithm; equality result only under redaction policy |
+| DB before/after | `NOT_OBSERVED` | consistent snapshot/read transaction; schema/integrity/FK/exact rows/immutables |
+| Report/receipt | `NOT_OBSERVED` | exact persisted bytes or trusted in-device validation; separate production shapes; hash/length/pair binding |
+| Lifecycle/cost | `NOT_OBSERVED` | exact attempt rows; unknown stays unknown; no provider-dashboard inference without evidence |
+| Timing | `NOT_ISSUED` | host event clock + durable claim/consume/update/observation; half-open auth window |
+| Authorization | `NOT_APPROVED / NOT_CREATED` | owner decision binds final hashes and scope; runtime object only after all prechecks |
+| Readiness | `LOCAL_REPAIR_REQUIRED` | local GREEN → owner-ready; owner approval → dispatch-ready; durable RAW → P5 evaluation; never skip levels |
 
-## Mẫu owner provenance — nội dung cần cung cấp, không phải authorization đã ký
+## J. Live runbook có điều kiện — chỉ dùng sau explicit owner decision
 
-Giữ template này NOT_PROVIDED cho tới khi nhận dữ liệu thật; không lưu actual fingerprint vào Git nếu policy process-only. Owner không gửi API key/credential/raw endpoint qua chat.
+100. Recompute tất cả final hashes và verify actual installed pins bằng đúng
+     read-only scope owner cho phép.
+101. Tạo unique event directory; ghi planned command/helper/collector hashes và
+     fresh issued/expires ngay trước execution.
+102. Thực hiện memory-only account comparison; mismatch dừng trước authorization
+     construction và provider.
+103. Capture before-state consistent snapshot/derived evidence; exact lineage ID
+     phải unused, zero conflicting rows.
+104. Chạy selected live method đúng một lần trong cùng supervised process; khi
+     tool yield, tiếp tục theo dõi cùng process.
+105. Không chạy preflight instrumentation riêng, model remediation, install,
+     cleanup, retry, repair hoặc RECONCILE trong event RAW.
+106. Sau terminal/timeout, chạy đúng read-only collector một lần cho cùng event.
+     Nếu device unavailable, record missing postcheck; không relaunch dispatch.
+107. Verify persisted attempt/auth claim pair, lifecycle, report/receipt/metrics,
+     immutable tuple, no reconciliation/history, no unrelated write/delete.
+108. Final decision matrix:
+     - pre-claim failure: `NOT_DISPATCHED`;
+     - uncertain reach/timeout/missing readback: `ACCEPTANCE_NOT_PROVEN`;
+     - durable recovery/invalid artifacts/cost unknown: `RAW_NOT_ACCEPTED`;
+     - exact COMMITTED + all provenance: `RAW_ACCEPTED`.
+109. Dù RAW_ACCEPTED, output `P6_READY=false`. Mở work package RECONCILE/L1 riêng
+     theo canonical P5 exit; không gọi provider tiếp tự động.
 
-| Trường | Hiện trạng / nội dung cần có |
-|---|---|
-| Decision | NOT_APPROVED |
-| Owner/authorized operator | NOT_PROVIDED — ai chịu trách nhiệm xác nhận account và phạm vi |
-| Account/project label | NOT_PROVIDED — nhãn không-secret đủ phân biệt tài khoản được phép |
-| Credential reference | NOT_PROVIDED — nhãn/version tham chiếu, không giá trị credential |
-| Expected source type | NOT_PROVIDED — trusted prior record hoặc separately approved enrollment |
-| Source reference + created/verified time | NOT_PROVIDED — đường dẫn/ref không-secret, thời điểm và cách kiểm chứng |
-| Algorithm/version | Source-defined SHA256/UTF8/normalizeEndpoint/newline, pin exact implementation |
-| Account mapping attestation | NOT_PROVIDED — căn cứ owner biết credential reference thuộc account/project được chọn |
-| Fingerprint transport | NOT_PROVIDED — owner-controlled process environment, lowercase64hex; không chat/log/Git |
-| Credential rotation since verification | UNKNOWN — nếu đổi key/endpoint phải reverify, không dùng provenance cũ |
-| Approved account operation | NOT_APPROVED — exact device-only load/normalize/hash/compare, side effects và redaction |
-| Approved data egress | NOT_APPROVED — RAW/GLOSSARY only; one primary, no retry/repair/RECONCILE |
-| Approved artifact/code/command/helper refs | PENDING_FINAL_LOCAL_QA — điền full hashes cuối, không tự copy pin đã thay đổi |
-| Validity and stop conditions | PENDING_DECISION — expiry, mismatch, unavailable device, unknown outcome và no-redispatch |
+## K. Đồng bộ và bàn giao
 
-Không yêu cầu owner mua quyền/công cụ mới nếu nguồn sẵn có đáp ứng. Không tạo owner receipt phức tạp cho công việc sửa host thông thường. Mẫu trên chỉ giải quyết trust và permission của account/live boundary đã tồn tại.
+110. Cập nhật `EDITORIAL_RECOVERY_V4_18.md`, `BUILD_STATE.md`,
+     `WORKSPACE_SNAPSHOT.md`, checklist và P5E proposal với một current status.
+111. Historical reports giữ nguyên evidence nhưng thêm supersession banner khi
+     câu current cũ có thể gây hiểu nhầm; không sửa kết quả lịch sử.
+112. Snapshot ghi current version/branch, implementation baseline trước snapshot
+     commit, build pins, completed/pending, known bugs, regression và đúng một
+     next action.
+113. Commit các nhóm độc lập: contract/tests; collector/emitter; packet/docs.
+     Không tạo commit rỗng hoặc gộp release work không liên quan.
+114. Trước handoff: `git status --short`, log, diff-check, hashes và result files
+     phải khớp; worktree sạch.
+115. Báo cáo rõ ba mức: local gate, owner-decision readiness, live/P6 readiness.
+     Không dùng “hoàn tất” chung cho cả ba.
 
-## Tiêu chí bàn giao để tránh lặp
+## Acceptance criteria của work package local
 
-Bàn giao local: producer có phương thức cụ thể, các RED mới đã GREEN, old suite không regression, provenance template không giả dữ kiện, packet cuối có hash, snapshot một action. Nếu thiếu owner input, nói chính xác thiếu trường nào và đưa phương án đã chuẩn bị; không viết lại plan giống hệt. Nếu local vẫn fail, tiếp tục sửa local, không bảo owner “approve trước rồi sẽ tính”.
+Work package chỉ GREEN khi tất cả điều sau đồng thời đúng:
+
+- helper runtime hash được command kiểm trước mọi sensitive/external action;
+- golden bytes do production serializer tạo được verifier chấp nhận, mutation
+  tương ứng bị từ chối;
+- có executable live/recovery collector với field-to-source map và typed stops;
+- selected live path hoặc recovery acquisition tạo được post-state có thể kiểm
+  mà không cần redispatch;
+- final helper/command/collector/test artifact hashes đã freeze và được bind;
+- QA kỹ thuật + phản biện pass trên cùng final hashes;
+- current docs không còn gọi synthetic-only F3 là GREEN;
+- owner provenance/permission vẫn PENDING và không bị giả lập;
+- A4.3 chưa chạy, RAW chưa được chấp nhận, P6 vẫn chưa mở.

@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "p5e.readiness-reaudit.v1",
+  "scope": "STATIC_SOURCE_AND_PACKET_ONLY_NO_DEVICE_NO_PROVIDER_NO_CREDENTIAL_ENVIRONMENT_READ",
+  "branch": "feature/v4.18-p5e-audit-20260914",
+  "head": "8c24b7d2a0d4ddc39ff07cfd2220ce14843258d8",
+  "files": {
+    "command": {
+      "path": "D:\\App Translate Books\\App Translate Books-translation-profile\\docs\\P5E_RAW_AUTHORIZATION_COMMAND.txt",
+      "sha256": "1d9a67693c4c4f64af182300cdeb963a9fd9d44361ef77e91371f88c92eda15e"
+    },
+    "helper": {
+      "path": "D:\\App Translate Books\\App Translate Books-translation-profile\\scripts\\p5e-raw-live-supervisor.ps1",
+      "sha256": "6fabae1f53973942561eda52002f052f775570a931eab65188103e7dee9955a2"
+    },
+    "liveTest": {
+      "path": "D:\\App Translate Books\\App Translate Books-translation-profile\\app\\src\\androidTest\\java\\com\\ml\\tblandroidtxt\\EditorialP5EFreshRawLiveInstrumentedTest.java",
+      "sha256": "b3f974a185f8b2590424471f3a1317ec436cfbef3d92244efae1674f935ac04a"
+    },
+    "serializer": {
+      "path": "D:\\App Translate Books\\App Translate Books-translation-profile\\editorial-engine\\src\\main\\java\\com\\ml\\tblandroidtxt\\editorial\\pack\\EditorialP5PilotExecution.java",
+      "sha256": "1222b8ac9b79dafc659dd364f50849dfba4782c181606a92da47ebd8c6164e3c"
+    }
+  },
+  "findings": [
+    {
+      "id": "H1_HELPER_RUNTIME_HASH_UNBOUND",
+      "findingConfirmed": true,
+      "commandExecutesHelper": true,
+      "commandChecksExpectedHelperSha256BeforeExecution": false
+    },
+    {
+      "id": "H2_NO_EXECUTABLE_LIVE_READBACK_COLLECTOR",
+      "findingConfirmed": true,
+      "helperParameterSets": [
+        "Dispatch",
+        "ProvenanceProbe",
+        "SelfTest",
+        "VerifyOutcome"
+      ],
+      "collectReadbackParameterSetPresent": false
+    },
+    {
+      "id": "H3_SYNTHETIC_ARTIFACT_CONTRACT_DIFFERS_FROM_PRODUCTION_SERIALIZER",
+      "findingConfirmed": true,
+      "helperUsesReducedPackHashProfileHashShape": true,
+      "productionReportUsesCanonicalAndBundleFields": true,
+      "productionReceiptUsesReferenceFields": true
+    },
+    {
+      "id": "H4_LIVE_METHOD_EMITS_NO_POST_DISPATCH_READBACK",
+      "findingConfirmed": true,
+      "dispatchCallPresent": true,
+      "postDispatchStatusEmitterPresent": false
+    }
+  ],
+  "allFourBlockersConfirmed": true,
+  "deviceActions": 0,
+  "providerCalls": 0,
+  "credentialReads": 0,
+  "readyForOwnerDecision": false,
+  "readyForDispatch": false,
+  "p6Ready": false
+}
