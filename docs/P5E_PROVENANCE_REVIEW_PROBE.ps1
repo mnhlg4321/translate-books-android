@@ -7,5 +7,7 @@ $repo = Split-Path $PSScriptRoot -Parent
 $helper = Join-Path $repo 'scripts\p5e-raw-live-supervisor.ps1'
 $arguments = @('-NoProfile', '-NonInteractive', '-File', $helper, '-ProvenanceProbe')
 if (-not [string]::IsNullOrWhiteSpace($OutputRoot)) { $arguments += @('-OutputRoot', $OutputRoot) }
-& (Join-Path $PSHOME 'pwsh.exe') @arguments
+$hostCommand = Get-Command 'pwsh.exe' -ErrorAction SilentlyContinue
+if ($null -eq $hostCommand) { $hostCommand = Get-Command 'powershell.exe' -ErrorAction Stop }
+& $hostCommand.Source @arguments
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

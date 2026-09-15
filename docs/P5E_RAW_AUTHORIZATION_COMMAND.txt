@@ -1,41 +1,120 @@
 # P5E.9B-A4.3 RAW LIVE COMMAND — NOT EXECUTED
 
-# This file is a review packet command only. Do not run it until the owner has
-# approved the final packet, including the exact account operation and the
-# process-only expected fingerprint. The helper fails closed when that value
-# is absent or invalid. It never receives the credential itself.
+# Review-only, conditional runbook.  It is not an authorization and must not
+# be run until the owner approves the final manifest/command/helper/collector
+# hashes, the exact account operation, the process-only expected fingerprint,
+# and RAW/GLOSSARY egress.  The owner supplies only a non-secret fingerprint
+# through the process environment named by the helper; no credential is passed
+# to this command or written to evidence.
 #
-# The helper is intentionally invoked as a child process; this file does not
-# import the helper into the caller scope, print the argument list, or launch a
-# second instrumentation method. The helper uses a hidden ProcessStartInfo process
-# with explicit POSIX quoting for every adb shell token, so the stop authority
-# remains one byte-exact value through the Windows/process/adb/shell layers.
-#
-# Dispatch is exactly one call. A zero adb exit code means only that the host
-# observed process completion; RAW acceptance remains NOT_PROVEN until the
-# separate -VerifyOutcome invocation has checked the exact test output and
-# allowlisted durable readback. Timeout, nonzero exit or failure before launch
-# never refreshes, retries or redispatches.
+# The sequence creates one unique event, captures the before state, dispatches
+# one selected method, captures the after/recovery state for that same event,
+# and verifies it.  Every helper launch is preceded by the command-side hash
+# gate and the helper repeats the gate before any environment/device access.
+# The collector is read-only and never provider-calls, repairs, retries,
+# reconciles, or redispatches.  A timeout/nonzero/USB loss therefore ends with
+# typed UNKNOWN/RECOVERY/ACCEPTANCE_NOT_PROVEN evidence.
 
 $helperPath = 'D:\App Translate Books\App Translate Books-translation-profile\scripts\p5e-raw-live-supervisor.ps1'
 $manifestPath = 'D:\App Translate Books\App Translate Books-translation-profile\docs\P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md'
 $productionApkPath = 'D:\App Translate Books\App Translate Books-translation-profile\artifacts\builds\v4.17-p5e.11\build-20260911-201725\TranslateBooks-v4.17-p5e.11-code207.apk'
 $testApkPath = 'D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532\app-debug-androidTest.apk'
+$evidenceRoot = 'D:\P5E-private'
+$expectedManifestSha256 = 'DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501'
+$expectedProductionApkSha256 = '2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD'
+$expectedTestApkSha256 = '57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA'
+$expectedHelperSha256 = '4d68f4bb0b0d31fa6d443439967746c1c83ccb4514ee6d7af830cf90dbe0ec76'
 
-& $helperPath -Dispatch `
-    -ManifestPath $manifestPath `
-    -ExpectedManifestSha256 'DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501' `
-    -ProductionApkPath $productionApkPath `
-    -ExpectedProductionApkSha256 '2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD' `
-    -TestApkPath $testApkPath `
-    -ExpectedTestApkSha256 '57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA' `
-    -EvidenceRoot 'D:\P5E-private'
-if ($LASTEXITCODE -ne 0) {
-    throw ('RAW_LIVE_HOST_DISPATCH_FAILED_NO_REDISPATCH_EXIT_' + [string]$LASTEXITCODE)
+function Assert-HelperHash {
+    param([Parameter(Mandatory = $true)][string]$Path,
+          [Parameter(Mandatory = $true)][string]$ExpectedSha256)
+    if ($ExpectedSha256 -notmatch '^[0-9a-fA-F]{64}$') { throw 'COMMAND_HELPER_HASH_EXPECTATION_INVALID_STOP' }
+    $literalPath = [IO.Path]::GetFullPath($Path)
+    if (-not (Test-Path -LiteralPath $literalPath -PathType Leaf)) { throw 'COMMAND_HELPER_MISSING_STOP' }
+    $item = Get-Item -LiteralPath $literalPath -Force
+    if ($item.PSIsContainer -or (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0)) {
+        throw 'COMMAND_HELPER_NOT_REGULAR_STOP'
+    }
+    $resolvedPath = [IO.Path]::GetFullPath((Resolve-Path -LiteralPath $literalPath).Path)
+    if (-not [StringComparer]::OrdinalIgnoreCase.Equals($literalPath, $resolvedPath)) { throw 'COMMAND_HELPER_PATH_SWAP_STOP' }
+    $actual = (Get-FileHash -LiteralPath $literalPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($actual -cne $ExpectedSha256.ToLowerInvariant()) { throw 'COMMAND_HELPER_HASH_MISMATCH_STOP' }
 }
 
-# After the single process has completed, substitute the printed evidence
-# directory and the independently captured, redacted post-readback path. This
-# verifier performs no device/provider action and is the only route to
-# RAW_ACCEPTED; it always reports P6_READY=FALSE.
-# & $helperPath -VerifyOutcome -EvidenceDirectory 'D:\P5E-private\raw-live-<unique>' -PostReadbackPath 'D:\P5E-private\raw-live-<unique>\post-readback.json'
+$powershellPath = (Get-Command powershell.exe -ErrorAction Stop).Source
+$eventId = 'raw-live-' + [DateTimeOffset]::UtcNow.ToString('yyyyMMdd-HHmmssfff') + '-' + [Guid]::NewGuid().ToString('N')
+$eventDirectory = Join-Path $evidenceRoot $eventId
+if (-not (Test-Path -LiteralPath $evidenceRoot -PathType Container)) {
+    New-Item -ItemType Directory -Path $evidenceRoot -ErrorAction Stop | Out-Null
+}
+New-Item -ItemType Directory -Path $eventDirectory -ErrorAction Stop | Out-Null
+
+function Invoke-CheckedHelper {
+    param([Parameter(Mandatory = $true)][string[]]$Arguments)
+    Assert-HelperHash -Path $helperPath -ExpectedSha256 $expectedHelperSha256
+    # Keep helper stdout visible without mixing it into the numeric exit value
+    # returned by this wrapper.  The helper writes durable metadata/captures to
+    # the event directory; this wrapper never prints its argv.
+    & $powershellPath -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $helperPath @Arguments | Out-Host
+    return [int]$LASTEXITCODE
+}
+
+$prepareExit = Invoke-CheckedHelper -Arguments @(
+    '-PrepareEvent',
+    '-ManifestPath', $manifestPath,
+    '-ExpectedManifestSha256', $expectedManifestSha256,
+    '-ProductionApkPath', $productionApkPath,
+    '-ExpectedProductionApkSha256', $expectedProductionApkSha256,
+    '-TestApkPath', $testApkPath,
+    '-ExpectedTestApkSha256', $expectedTestApkSha256,
+    '-ExpectedHelperSha256', $expectedHelperSha256,
+    '-EvidenceDirectory', $eventDirectory)
+if ($prepareExit -ne 0) { throw ('RAW_LIVE_PREPARE_FAILED_NO_DISPATCH_' + [string]$prepareExit) }
+
+$beforeExit = Invoke-CheckedHelper -Arguments @(
+    '-CollectReadback',
+    '-ExpectedHelperSha256', $expectedHelperSha256,
+    '-EvidenceDirectory', $eventDirectory,
+    '-CollectionPhase', 'Before',
+    '-Serial', '15e84958',
+    '-AdbPath', 'adb',
+    '-ApkSignerPath', 'apksigner')
+if ($beforeExit -ne 0) { throw ('RAW_LIVE_BEFORE_COLLECTION_FAILED_NO_DISPATCH_' + [string]$beforeExit) }
+
+# Exactly one dispatch.  Keep this exit code for classification, but always
+# perform the same-event after/recovery collection before deciding anything.
+$dispatchExit = Invoke-CheckedHelper -Arguments @(
+    '-Dispatch',
+    '-ManifestPath', $manifestPath,
+    '-ExpectedManifestSha256', $expectedManifestSha256,
+    '-ProductionApkPath', $productionApkPath,
+    '-ExpectedProductionApkSha256', $expectedProductionApkSha256,
+    '-TestApkPath', $testApkPath,
+    '-ExpectedTestApkSha256', $expectedTestApkSha256,
+    '-ExpectedHelperSha256', $expectedHelperSha256,
+    '-EvidenceDirectory', $eventDirectory)
+
+$afterExit = Invoke-CheckedHelper -Arguments @(
+    '-CollectReadback',
+    '-ExpectedHelperSha256', $expectedHelperSha256,
+    '-EvidenceDirectory', $eventDirectory,
+    '-CollectionPhase', 'After',
+    '-Serial', '15e84958',
+    '-AdbPath', 'adb',
+    '-ApkSignerPath', 'apksigner')
+
+$verifyExit = Invoke-CheckedHelper -Arguments @(
+    '-VerifyOutcome',
+    '-EvidenceDirectory', $eventDirectory,
+    '-MetadataPath', (Join-Path $eventDirectory 'HOST_RUN_METADATA.json'),
+    '-PostReadbackPath', (Join-Path $eventDirectory 'post-readback.json'))
+
+if ($dispatchExit -ne 0) { throw ('RAW_LIVE_DISPATCH_OBSERVED_NONZERO_NO_REDISPATCH_' + [string]$dispatchExit) }
+if ($afterExit -ne 0) { throw ('RAW_LIVE_AFTER_COLLECTION_NOT_PROVEN_NO_REDISPATCH_' + [string]$afterExit) }
+if ($verifyExit -ne 0) { throw ('RAW_LIVE_ACCEPTANCE_NOT_PROVEN_NO_REDISPATCH_' + [string]$verifyExit) }
+
+Write-Output ('RAW_LIVE_EVENT_DIRECTORY=' + $eventDirectory)
+Write-Output 'RAW_LIVE_DISPATCHES=1'
+Write-Output 'RAW_LIVE_REPAIRS=0'
+Write-Output 'RAW_LIVE_RETRIES=0'
+Write-Output 'RAW_LIVE_P6_READY=FALSE'
