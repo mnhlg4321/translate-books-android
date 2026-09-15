@@ -3,7 +3,7 @@
   "status": "P5E_LOCAL_EVIDENCE_CHAIN_GREEN / OWNER_PACKET_PENDING / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY",
   "scope": "HOST_OFFLINE_ONLY_NO_CREDENTIAL_NO_ADB_NO_DEVICE_NO_INSTRUMENTATION_NO_PROVIDER_NO_RUNTIME_AUTHORIZATION_NO_BUILD",
   "inputHead": "8c24b7d2a0d4ddc39ff07cfd2220ce14843258d8",
-  "probeHead": "35c52600d59cb3cd068a5c566dc9f7e43bed50a5",
+  "probeHead": "1d0dfe8854eddf99e3bc73478a3343ec8f9484c3",
   "branch": "feature/v4.18-p5e-audit-20260914",
   "ancestorCheck": "PASS",
   "files": {
@@ -142,7 +142,7 @@
     },
     "probe": {
       "path": "scripts/p5e-raw-live-supervisor.ps1 -ProvenanceProbe",
-      "outputRoot": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\p5e-wrapper-final-05d47c79a8c14a99a296f3d17b1fdc34",
+      "outputRoot": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\p5e-wrapper-final-94e2fd6f589745be948d79e4332ce793",
       "exitCode": 0,
       "resultFile": "RESULT.json"
     }

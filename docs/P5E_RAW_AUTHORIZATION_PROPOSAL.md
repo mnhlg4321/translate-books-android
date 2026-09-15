@@ -66,7 +66,7 @@ resolved assertions, self-test/probe/typed-stop evidence and zero device,
 provider and credential actions. This local result does not establish a live
 installed-package fact, RAW acceptance, P5 exit or P6 readiness. Its current
 SHA-256 is
-`48357D9CBAFBA27316FD825A7D95A926D14F4FAB5D0260B2EDDB0F4170FF5D9B`.
+`ECD61953C8E9C4E4539EC5B2B5865EDBC08D686E37F4C4743D67084887D8E725`.
 
 The current host-preparation document is
 `docs/P5E_RAW_HOST_PREPARATION_20260915.md`, SHA-256

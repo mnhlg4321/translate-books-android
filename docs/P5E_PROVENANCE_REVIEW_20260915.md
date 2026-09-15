@@ -26,7 +26,7 @@ helper/collector SHA-256 is
 The current host-preparation document SHA-256 is
 `CF8DBC069457A998BD5BDC7C84B500B9566CB598ABF0AAD0F053D766E046C711`.
 The current local result SHA-256 is
-`48357D9CBAFBA27316FD825A7D95A926D14F4FAB5D0260B2EDDB0F4170FF5D9B`.
+`ECD61953C8E9C4E4539EC5B2B5865EDBC08D686E37F4C4743D67084887D8E725`.
 
 H1 command/helper hash gates and tamper controls are PASS with negative launch
 count `0`. H2/H4 have explicit `CollectReadback` Before/After modes, same-event
