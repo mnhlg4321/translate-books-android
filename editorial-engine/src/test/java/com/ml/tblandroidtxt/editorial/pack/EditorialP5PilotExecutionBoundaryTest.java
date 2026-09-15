@@ -16,6 +16,7 @@ import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -145,6 +146,42 @@ public final class EditorialP5PilotExecutionBoundaryTest {
         assertEquals("RAW_WIRE_POPULATION_LIMIT_EXCEEDED", result.stopReceipt().reasonCode());
         assertEquals(0, provider.calls);
         assertEquals(0, store.committed.size());
+    }
+
+    @Test public void committedArtifactsAreGoldenBytesFromSeparateProductionSerializers() {
+        Fixture fixture = fixture();
+        EditorialP5PilotResult result = execute(fixture,
+                authorization(fixture.request, "auth-golden-bytes"),
+                new FakeProvider(response(fixture.request, true)), new Store());
+
+        assertEquals(EditorialP5PilotResult.Outcome.COMMITTED, result.outcome());
+        byte[] reportBytes = result.committedResult().reportBytes();
+        byte[] receiptBytes = result.committedResult().receiptBytes();
+        assertFalse(reportBytes.length >= 3 && (reportBytes[0] & 0xff) == 0xef
+                && (reportBytes[1] & 0xff) == 0xbb && (reportBytes[2] & 0xff) == 0xbf);
+        assertFalse(receiptBytes.length >= 3 && (receiptBytes[0] & 0xff) == 0xef
+                && (receiptBytes[1] & 0xff) == 0xbb && (receiptBytes[2] & 0xff) == 0xbf);
+
+        Map<String, Object> report = EditorialCanonicalJson.parseObject(reportBytes);
+        Map<String, Object> receipt = EditorialCanonicalJson.parseObject(receiptBytes);
+        assertEquals(Set.of("schemaVersion", "artifactType", "bindingIdentity",
+                        "manifestFingerprint", "canonicalPackHash", "canonicalProfileHash",
+                        "compatibilityEvaluationId", "chapterKey", "phase", "bundleIdentity",
+                        "predecessorIdentity", "stableAnchors", "populationTotal", "accountedTotal",
+                        "actualChangedSpans", "gates", "evidenceRefs", "preservedInventory",
+                        "disposition", "modelDeclaredPassRecordedOnly"), report.keySet());
+        assertEquals(Set.of("schemaVersion", "artifactType", "manifestRef", "packRef",
+                        "profileRef", "bindingRef", "phase", "bundleIdentity", "predecessorIdentity",
+                        "populationTotal", "accountedTotal", "changedSpanTotal", "gates", "evidenceRefs",
+                        "canonAllowed", "propagationAllowed", "disposition", "preservedInventory",
+                        "releaseAttemptCount"), receipt.keySet());
+        assertArrayEquals(EditorialCanonicalJson.canonicalize(report).getBytes(StandardCharsets.UTF_8), reportBytes);
+        assertArrayEquals(EditorialCanonicalJson.canonicalize(receipt).getBytes(StandardCharsets.UTF_8), receiptBytes);
+        assertEquals(report.get("manifestFingerprint"), receipt.get("manifestRef"));
+        assertEquals(report.get("canonicalPackHash"), receipt.get("packRef"));
+        assertEquals(report.get("canonicalProfileHash"), receipt.get("profileRef"));
+        assertEquals(report.get("bindingIdentity"), receipt.get("bindingRef"));
+        assertEquals(report.get("actualChangedSpans"), receipt.get("changedSpanTotal"));
     }
 
     @Test public void rawStopDispositionIsTypedAndNeverCommits() {
