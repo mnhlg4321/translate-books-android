@@ -3,7 +3,7 @@
 Status: `HISTORICAL_REAUDIT / SUPERSEDED_FOR_CURRENT_READINESS / H1_H4_RESOLVED_LOCALLY / OWNER_PACKET_PENDING / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`
 
 > Current resolution: the follow-up local work package closed H1–H4 at probe
-> HEAD `35c52600d59cb3cd068a5c566dc9f7e43bed50a5`. The command now pins the
+> final probe HEAD `1d0dfe8854eddf99e3bc73478a3343ec8f9484c3`. The command now pins the
 > helper at runtime; report/receipt validation is bound to the production
 > serializer contract; `CollectReadback` is an executable same-event
 > Before/After collector with typed recovery/unknown outcomes; and the After

@@ -3,7 +3,7 @@
 Status: `P5E_LOCAL_EVIDENCE_CHAIN_GREEN / OWNER_PACKET_PENDING /
 A4.3_NOT_ISSUED / RAW_NOT_RUN / LIVE_ACTIONS_NOT_AUTHORIZED / P6_NOT_READY`
 
-> Current local closure at input baseline `8c24b7d2` and probe HEAD `35c52600`:
+> Current local closure at input baseline `8c24b7d2` and final probe HEAD `1d0dfe88`:
 > H1–H4 are resolved for the offline host boundary. F1 account provenance and
 > all live/device actions remain pending owner decision. The historical body
 > below is retained as evidence; current hash-bound results are in

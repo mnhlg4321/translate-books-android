@@ -1,6 +1,6 @@
 # P5E — Cài đặt có kiểm soát và bảo toàn pilot data
 
-> Current P5E re-audit (2026-09-15, baseline `8c24b7d2`): F2 remains qualified; F3 is not closed. The synthetic artifact contract differs from production, no executable live/recovery collector or post-dispatch emitter exists, and the command does not runtime-pin the helper. The next action is local H1–H4 repair in `docs/P5E_NEXT_WORK_REQUEST.md`. Owner packet `NOT_READY`; A4.3 `NOT_ISSUED`; RAW `NOT_RUN`; P6 `NOT_READY`. All current-decision prose below is historical where it conflicts with this banner. Evidence: `docs/P5E_READINESS_REAUDIT_20260915.md`.
+> Current P5E local closure (2026-09-15, input baseline `8c24b7d2`, final probe HEAD `1d0dfe88`): F2 remains qualified and H1–H4 are resolved for the offline host/contract/collector boundary. F3 is `LOCAL_EVIDENCE_CHAIN_GREEN`; owner packet `PENDING`; A4.3 `NOT_ISSUED`; RAW `NOT_RUN`; live actions are not authorized; P6 `NOT_READY`. The runbook below remains conditional/historical where it conflicts with this banner. Evidence: `docs/P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json`.
 
 
 Tài liệu này chỉ áp dụng cho validation/pilot có package
