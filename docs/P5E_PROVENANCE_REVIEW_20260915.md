@@ -1,15 +1,54 @@
 # P5E — tái kiểm tra readiness và provenance, 2026-09-15
 
-> **Superseded for current readiness:** re-audit at baseline `8c24b7d2` proved
-> that the synthetic artifact contract below differs from the production
-> serializer, the command does not runtime-pin the helper, and no executable
-> live/recovery collector or post-dispatch emitter exists. The timing/event/path
-> and redaction results remain valid in their tested scope. Current evidence is
-> `P5E_READINESS_REAUDIT_20260915.md`.
+> **Historical findings superseded for current readiness:** the local repair at
+> probe HEAD `35c52600` resolves H1–H4 with an exact helper hash gate, a
+> source-derived separate report/receipt contract, an executable same-event
+> Before/After collector and a typed recovery path. The timing/event/path and
+> redaction evidence below remains valid in its tested scope. Current evidence
+> is `P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json`.
 
-**Chưa được chuyển P6; chưa dispatch A4.3.** F2 giữ bằng chứng RED→GREEN. Phần F3 dưới đây chỉ là synthetic producer→verifier evidence và không còn được coi là F3 closure. F1 trusted expected fingerprint và quyền account operation vẫn chưa được owner cung cấp/cho phép. Đây là tiếp tục P5E, không tạo phase/release mới.
+**Chưa được chuyển P6; chưa dispatch A4.3.** F2 giữ bằng chứng RED→GREEN.
+F3 local evidence chain is now GREEN; the synthetic producer remains a
+regression-only test and the live collector has not been run on a device. F1
+trusted expected fingerprint and the exact account/readback/egress permission
+remain `PENDING`. Đây là tiếp tục P5E, không tạo phase/release mới.
 
-## Provenance của cuộc kiểm tra
+## Current local resolution — H1–H4 closed, owner decision pending
+
+The current branch is `feature/v4.18-p5e-audit-20260914`; input baseline
+`8c24b7d2` is an ancestor and the offline probe ran at
+`35c52600d59cb3cd068a5c566dc9f7e43bed50a5`. The unchanged manifest is
+`DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501`.
+The final command SHA-256 is
+`30B50BFEF809225B33901AC130CC5EE83CC8AD76A3D958D987EF19C8FCA50D10`; the
+helper/collector SHA-256 is
+`4D68F4BB0B0D31FA6D443439967746C1C83CCB4514EE6D7AF830CF90DBE0EC76`.
+The current host-preparation document SHA-256 is
+`CF8DBC069457A998BD5BDC7C84B500B9566CB598ABF0AAD0F053D766E046C711`.
+The current local result SHA-256 is
+`48357D9CBAFBA27316FD825A7D95A926D14F4FAB5D0260B2EDDB0F4170FF5D9B`.
+
+H1 command/helper hash gates and tamper controls are PASS with negative launch
+count `0`. H2/H4 have explicit `CollectReadback` Before/After modes, same-event
+path binding, WAL-aware/read-only source mapping and typed
+`NO_CLAIM_OBSERVED`/`EXTERNAL_CALL_STATE_UNKNOWN`/`RECOVERY_REQUIRED`/
+`COLLECTOR_TYPED_STOP` outcomes; the collector records bounded allowlisted
+operation classes and numeric exit codes in `COLLECTOR_COMMAND_LOG.jsonl`
+without argv or captured output. H3 uses the separate contract
+`docs/P5E_PRODUCTION_ARTIFACT_CONTRACT_20260915.json` (SHA-256
+`FFE70A70E622706FABFA49D5843310ECD5A283B1CA114E32C636EA26B9FAE4BF`) pinned
+to serializer SHA-256
+`1222B8AC9B79DAFC659DD364F50849DFBA4782C181606A92DA47EBD8C6164E3C`.
+The 11 synthetic byte/shape mutation cases all reject; the production golden
+serializer test source is present but was not executed because this request
+forbids build. No device, provider or credential operation occurred.
+
+The owner template remains `PENDING / NOT_APPROVED / NOT_PROVIDED`; this local
+closure does not approve A4.3, RAW, account verification or P6. The one next
+action is owner review of the final hash-bound packet and a separate exact
+account/readback/RAW permission decision.
+
+## Historical provenance of the superseded review
 
 | Dữ kiện | Nguồn trực tiếp | Kết quả/giới hạn |
 |---|---|---|
@@ -36,7 +75,7 @@
 |---|---|
 | F2 pipe quoting | Sửa ở host; giữ bằng chứng RED→GREEN cũ. Không đưa lỗi pipe cũ trở lại thành blocker khi chưa có regression mới |
 | F3 consumer và fixtures cũ | Đã có; PASS cũ vẫn đúng trong phạm vi fixture đã chạy |
-| F3 khả năng chứng minh dữ liệu thật | Đã đóng ở phạm vi offline synthetic: producer cụ thể, source mapping, artifact-byte validator, event/path/timing/identity gates và negative xuyên boundary đều có evidence; device collector vẫn pending |
+| F3 khả năng chứng minh dữ liệu thật | Historical review closed only an offline synthetic boundary; the current local chain additionally has an executable same-event collector and typed recovery path, but no live device run or RAW acceptance |
 | F1 actual fingerprint computation | Có trong test pin; settings→normalize endpoint→SHA-256→compare, trước authorization |
 | F1 expected fingerprint provenance | Chưa có từ owner; phép tính actual không tự chứng minh đúng tài khoản được owner chọn |
 | P5/P5E exit, P6 | Chưa đạt. Không có RAW/L1 acceptance mới |
@@ -88,7 +127,7 @@ Audit trước của chính tôi cũng có phần cần cải thiện: request 5
 
 Tài liệu còn drift: runbook/reconciliation vẫn có banner audit 14/9 trong khi canonical/state ghi host complete 15/9; snapshot gọi helper là working-tree change dù helper đã commit c2c79a19. Audit này sửa điều hướng/current và baseline, không thay bằng chứng đã pin C54…E3C hoặc tự đánh dấu release 05–09.
 
-## Resolution — local F3 provenance repair
+## Historical Resolution record — prior local F3 fixture repair
 
 Local repair đã hoàn tất trên cùng branch, không đổi production source, AndroidTest source, schema, migration, pack/profile, prompt, model/route, budget, input identity hoặc artifact pin. Helper mới có collector entry point `Invoke-P5ESyntheticReadbackCollector`; nó chỉ đọc một disposable event directory gồm `collector-input.json`, `before-snapshot.json`, `after-snapshot.json`, `transaction-evidence.json`, `report.bin` và `receipt.bin`, rồi ghi `post-readback.json`. Collector này không gọi ADB, instrumentation, provider, database thật hoặc credential; vì vậy đây là bằng chứng producer→verifier offline, chưa phải bằng chứng collector live trên device.
 
@@ -122,8 +161,8 @@ all rejected mutation/producer/verifier fixtures, source mapping,
 
 ## Readiness
 
-- F2 đã đóng theo evidence RED→GREEN cũ; F3 local đã đóng trong phạm vi synthetic producer→verifier bằng result mới. Không mở P mới và không dùng fixture shape-only làm producer thật.
-- Host-only không chứng minh được collector live trên pinned APK/device. Nếu runbook live được mở, cần một đường read-only được owner cho phép và phải tái kiểm event/source mapping ở đúng event; không tự build/install hoặc dùng harness lịch sử.
+- F2 đã đóng theo evidence RED→GREEN cũ; F3 local evidence chain hiện đã đóng với helper/command hash gate, source-derived artifact contract và executable same-event collector. Không dùng fixture shape-only làm producer live.
+- Host-only chưa chứng minh một lần thu thập trên pinned APK/device. Nếu runbook live được mở, phải dùng collector hiện hành ở đúng event và owner-permitted read-only source; không tự build/install hoặc dùng harness lịch sử.
 - Với local evidence đã đạt, chỉ khi owner input/permission đúng và current device pins đạt trong cửa sổ đã được cho phép mới đánh giá one-shot RAW; tài liệu này không cấp quyền live.
 - F1 vẫn thiếu expected fingerprint có provenance trusted và mapping account/key. Actual do app tự tính không được nâng thành expected; owner không cần gửi API key qua chat.
 - RAW accepted chưa phải P5 exit. RECONCILE/phần L1 còn lại cần predecessor và scope tương ứng; P6 chỉ mở sau P5 exit. Ba chương L1–L3 là exit P6, không đặt thành prerequisite vòng tròn cho việc vào P6.
@@ -143,9 +182,9 @@ Không credential/account check thật, ADB, instrumentation, provider, runtime 
 ### Kiểm tra bản xuất
 
 - Artifact/backup được kiểm lại toàn payload: production 5/5, test 8/8, mismatch=0.
-- Manifest/command không đổi; helper hiện hành là `6FABAE1F53973942561EDA52002F052F775570A931EAB65188103E7DEE9955A2`; host report hiện hành là `728E1F3986A1C7E921CD9DD5B3199BD8F1B36E8699EF9050C4306D38DABF5703`.
+- Manifest remains `DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501`; current command is `30B50BFEF809225B33901AC130CC5EE83CC8AD76A3D958D987EF19C8FCA50D10`; helper/collector is `4D68F4BB0B0D31FA6D443439967746C1C83CCB4514EE6D7AF830CF90DBE0EC76`; production artifact contract is `FFE70A70E622706FABFA49D5843310ECD5A283B1CA114E32C636EA26B9FAE4BF`.
 - Request giữ đúng 40 bước đánh số liên tục; template owner giữ NOT_PROVIDED/NOT_APPROVED, không giả quyết định.
 - Snapshot phải ghi actual HEAD sau commit và tách implementation/source baseline khỏi snapshot commit.
 - Checklist release 05–09 vẫn có đủ 5 mục chưa hoàn tất; diff app/editorial-engine/scripts rỗng; git diff --check đạt.
 - Probe script/result được lưu trong docs để tái hiện; input synthetic của lần kiểm tra được tạo trong disposable output root ngoài repo `D:\P5E-provenance-offline-20260915-01`. Đây không phải source dữ liệu thật.
-- QA bản xuất đạt các điều kiện local trên; **F3 local GREEN, F1/account và live collector vẫn pending**, không có tuyên bố release/session phát triển hoàn tất 14 bước.
+- QA bản xuất đạt các điều kiện local trên; **F3 local evidence-chain GREEN, F1/account và live execution vẫn pending**, không có tuyên bố release/session phát triển hoàn tất 14 bước.

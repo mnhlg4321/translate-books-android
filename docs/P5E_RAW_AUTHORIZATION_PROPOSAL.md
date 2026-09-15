@@ -1,16 +1,17 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Superseded for current readiness by the 2026-09-15 re-audit at baseline `8c24b7d2`. The packet is not ready for owner review: F3 is not closed, the helper is not runtime-bound by the command, the synthetic artifact contract differs from production, and no executable live/recovery collector exists. Preserve the fixed-scope content below as proposal history; update it only after `docs/P5E_NEXT_WORK_REQUEST.md` passes. A4.3 is not issued, RAW is not run, and P6 remains not ready. Evidence: `docs/P5E_READINESS_REAUDIT_20260915.md`.
+> Current local closure at input baseline `8c24b7d2` and probe HEAD `35c52600`: H1–H4 are resolved by offline host evidence. This packet is `PENDING` owner review, not an authorization. F1 trusted expected fingerprint and live permission remain pending; A4.3 is not issued, RAW is not run, and P6 remains not ready. Evidence: `docs/P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json`.
 
-Proposal status: SUPERSEDED_PENDING_LOCAL_REPAIR / OWNER_PACKET_NOT_READY /
-F3_NOT_CLOSED / NOT_ISSUED / NOT_READY_FOR_DISPATCH
+Proposal status: PENDING_OWNER_REVIEW / F3_LOCAL_EVIDENCE_CHAIN_GREEN /
+F1_PROVENANCE_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN /
+LIVE_ACTIONS_NOT_AUTHORIZED / P6_NOT_READY
 
-This historical packet was drafted to request owner approval for exactly one
-L1_RAW_DISCOVERY run. It is now superseded pending local H1–H4 repair and must
-not be issued. It does not create a runtime authorization, consume an
+This packet requests owner review for exactly one future L1_RAW_DISCOVERY run,
+but remains `PENDING` until the owner supplies independent account provenance
+and explicitly approves the account/readback/egress operation. It does not create a runtime authorization, consume an
 authorization ID, read the device credential, call a provider, or open
 RECONCILE. The mandatory account fingerprint also remains pending, so this
-revision is neither READY_FOR_APPROVAL nor READY_FOR_DISPATCH.
+revision is not READY_FOR_DISPATCH.
 
 The fixed-scope file whose hash is passed to the live harness is
 docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md. Its hash is kept separate from
@@ -19,15 +20,57 @@ single command is in docs/P5E_RAW_AUTHORIZATION_COMMAND.txt.
 Pinned approval-manifest SHA-256:
 DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501.
 Pinned command SHA-256:
-1D9A67693C4C4F64AF182300CDEB963A9FD9D44361EF77E91371F88C92EDA15E.
+30B50BFEF809225B33901AC130CC5EE83CC8AD76A3D958D987EF19C8FCA50D10.
 Host supervisor SHA-256:
-6FABAE1F53973942561EDA52002F052F775570A931EAB65188103E7DEE9955A2.
+4D68F4BB0B0D31FA6D443439967746C1C83CCB4514EE6D7AF830CF90DBE0EC76.
+
+The approval manifest remains unchanged at
+`DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501`.
 
 The previous helper SHA-256
 BEEFBB7733EED660B1F59435922D0594FBA1CBDED01B6C0B00482E786E456799 is retained
 as the provenance-review RED input, not as an approval pin.
 
-## Baseline and evidence
+## Historical baseline and evidence
+
+## Current local closure before owner decision
+
+The final local chain binds the unchanged manifest, frozen production code207
+and AndroidTest 57EC99 pins to the review-only command and helper/collector.
+The helper hash is checked by the command and again before environment/device
+access. `CollectReadback` has explicit `Before` and `After` modes and performs
+only allowlisted read-only package/APK/certificate, WAL-aware SQLite and
+metadata/lineage queries. It emits typed `NO_CLAIM_OBSERVED`,
+`EXTERNAL_CALL_STATE_UNKNOWN`, `RECOVERY_REQUIRED` or `COLLECTOR_TYPED_STOP`
+outcomes; the same event's After collection remains the recovery path after a
+timeout, exception or reconnect and never redispatches.
+The collector also writes a bounded same-event `COLLECTOR_COMMAND_LOG.jsonl`
+containing only allowlisted operation class, numeric exit code, launch count
+and timeout state; it does not write argv or command output.
+
+Report and receipt are separate source-derived contracts. The contract file is
+`docs/P5E_PRODUCTION_ARTIFACT_CONTRACT_20260915.json`, SHA-256
+`FFE70A70E622706FABFA49D5843310ECD5A283B1CA114E32C636EA26B9FAE4BF`, pinned
+to serializer source SHA-256
+`1222B8AC9B79DAFC659DD364F50849DFBA4782C181606A92DA47EBD8C6164E3C`.
+The production serializer golden test source is present at
+`editorial-engine/src/test/java/com/ml/tblandroidtxt/editorial/pack/EditorialP5PilotExecutionBoundaryTest.java`
+(SHA-256 `8977BC825A3E1DDF73D5D049BD27737755F1B11160CD684EFC185A32460E77BE`),
+but it was not executed because this request forbids build. The offline host
+probe still rejects 11 explicit bytes/shape mutations; those cases are marked
+`HOST_SYNTHETIC_SHAPE_REGRESSION_ONLY`, not production golden evidence.
+
+The current technical result is
+`docs/P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json`. It records H1–H4
+resolved assertions, self-test/probe/typed-stop evidence and zero device,
+provider and credential actions. This local result does not establish a live
+installed-package fact, RAW acceptance, P5 exit or P6 readiness. Its current
+SHA-256 is
+`48357D9CBAFBA27316FD825A7D95A926D14F4FAB5D0260B2EDDB0F4170FF5D9B`.
+
+The current host-preparation document is
+`docs/P5E_RAW_HOST_PREPARATION_20260915.md`, SHA-256
+`CF8DBC069457A998BD5BDC7C84B500B9566CB598ABF0AAD0F053D766E046C711`.
 
 Canonical plan: EDITORIAL_RECOVERY_V4_18.md
 Current host-repair branch: feature/v4.18-p5e-audit-20260914
@@ -62,17 +105,17 @@ calls 0, authorization/attempt/reconciliation creation false, lineage UNUSED,
 and zero relevant rows before and after. No RAW predecessor, REPORT_L1,
 receipt, runtime authorization or provider result exists.
 
-The bounded host-preparation evidence is
+The earlier bounded host-preparation evidence is retained as historical input:
 `docs/P5E_RAW_HOST_PREPARATION_20260915.md`, SHA-256
 `728E1F3986A1C7E921CD9DD5B3199BD8F1B36E8699EF9050C4306D38DABF5703`.
 It records the F2 RED-to-GREEN process-argv/remote-shell proof, the source
 required-argument contract, the F3 one-launch supervisor, the repaired
 producer-to-verifier provenance result and the unresolved F1 owner decision.
-The hash above is the current frozen host-report hash for this documentation
-group. The result is evidence for preparation only; it does not change the
-manifest hash, authorize dispatch or establish a RAW predecessor.
+The hash above is not the current packet hash. The current local result is the
+hash-bound evidence for preparation only; it does not change the manifest hash,
+authorize dispatch or establish a RAW predecessor.
 
-## Current local F3 provenance evidence
+## Historical local F3 fixture evidence (superseded as current narrative)
 
 The current helper adds `Invoke-P5ESyntheticReadbackCollector`, which consumes
 only disposable `collector-input.json`, WAL-aware `before-snapshot.json` and
@@ -269,7 +312,7 @@ fingerprint belongs in chat, Git or this proposal.
 | Credential rotation since verification | `UNKNOWN` — reverify after endpoint/key rotation |
 | Approved account operation | `NOT_APPROVED` — exact device-only load/normalize/hash/compare and redaction |
 | Approved data egress | `NOT_APPROVED` — RAW/GLOSSARY only; primary 1, repair 0, retry 0, no RECONCILE |
-| Approved artifact/code/command/helper refs | `PENDING_LOCAL_H1_H4_REPAIR` — historical pins are manifest `DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501`, command `1D9A67693C4C4F64AF182300CDEB963A9FD9D44361EF77E91371F88C92EDA15E`, helper `6FABAE1F53973942561EDA52002F052F775570A931EAB65188103E7DEE9955A2`; do not approve them as the final executable chain |
+| Approved artifact/code/command/helper refs | `PENDING_OWNER_DECISION` — current manifest `DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501`, command `30B50BFEF809225B33901AC130CC5EE83CC8AD76A3D958D987EF19C8FCA50D10`, helper/collector `4D68F4BB0B0D31FA6D443439967746C1C83CCB4514EE6D7AF830CF90DBE0EC76`, contract `FFE70A70E622706FABFA49D5843310ECD5A283B1CA114E32C636EA26B9FAE4BF`; owner must approve these exact final refs or stop |
 | Validity and stop conditions | `PENDING_DECISION` — expiry, mismatch, unavailable device, unknown outcome, no redispatch |
 
 ## Runtime checks and command
@@ -299,23 +342,27 @@ as unresolved, and do not retry or redispatch.
 
 The host implementation and its offline proof are in
 `scripts/p5e-raw-live-supervisor.ps1`, SHA-256
-`6FABAE1F53973942561EDA52002F052F775570A931EAB65188103E7DEE9955A2`.
+`4D68F4BB0B0D31FA6D443439967746C1C83CCB4514EE6D7AF830CF90DBE0EC76`.
 The repaired command wrapper is
 `docs/P5E_RAW_AUTHORIZATION_COMMAND.txt`, SHA-256
-`1D9A67693C4C4F64AF182300CDEB963A9FD9D44361EF77E91371F88C92EDA15E`.
+`30B50BFEF809225B33901AC130CC5EE83CC8AD76A3D958D987EF19C8FCA50D10`.
+The separate production report/receipt contract is
+`docs/P5E_PRODUCTION_ARTIFACT_CONTRACT_20260915.json`, SHA-256
+`FFE70A70E622706FABFA49D5843310ECD5A283B1CA114E32C636EA26B9FAE4BF`;
+serializer source SHA-256 is
+`1222B8AC9B79DAFC659DD364F50849DFBA4782C181606A92DA47EBD8C6164E3C`.
 Host-preparation evidence is
 `docs/P5E_RAW_HOST_PREPARATION_20260915.md`, SHA-256
-`728E1F3986A1C7E921CD9DD5B3199BD8F1B36E8699EF9050C4306D38DABF5703`.
+`CF8DBC069457A998BD5BDC7C84B500B9566CB598ABF0AAD0F053D766E046C711`.
 The evidence records F2 RED-to-GREEN transport through fake process argv and
 the ADB/shell model, source-derived required arguments, F3 numeric outcomes,
-the synthetic producer-to-verifier source mapping and independent readback
-acceptance. The current provenance result has two accepted synthetic controls;
-all four repaired mutations and the negative producer/verifier cases are
-rejected, with `p6Ready=false`. No live result is claimed.
-The result JSON SHA-256 is
-`BCB2DE2BD98C8191EB32CBE8298089ADFB42A8DADF33231A2733B4C272B72D01`.
+the executable same-event collector path, separate artifact contract and
+independent readback acceptance. The current local result is
+`docs/P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json`; its synthetic 11-case
+artifact matrix is explicitly regression-only, `p6Ready=false`, and no live
+result is claimed.
 The probe wrapper SHA-256 is
-`EA38C04399436AC5FA9748877FEBD346CAD21D0F4C371CA29E5A28D3CA72AA53`.
+`1BDE695E13C7A84AB48A44B6074EA9441F0A363AF43FD20448B2995FCE9DAD45`.
 
 ## Allowed DB effects and acceptance
 
@@ -348,7 +395,7 @@ must be checked.
 | Missing post-check or inconsistency | Acceptance not proven; no cleanup or redispatch. |
 | RAW accepted | Stop at RAW; evaluate the next step separately and keep P6 closed. |
 
-## Historical pre-dispatch checklist — superseded pending H1–H4
+## Conditional pre-dispatch checklist — owner decision still required
 
 Before any owner-approved dispatch, verify:
 
@@ -370,12 +417,14 @@ Before any owner-approved dispatch, verify:
   UNUSED immediately before authorization construction.
 - No runtime authorization or provider call occurs until the owner approves.
 
-Owner decision is not requested from this revision. Complete and QA
-`docs/P5E_NEXT_WORK_REQUEST.md`, then regenerate the final hash-bound packet and
-request the fixed scope plus memory-only account verification. The historical
-host preparation does not grant permission.
+Owner decision request status is `PENDING`; this document is the final local
+hash-bound packet for review, not an authorization. The historical host
+preparation and this audit do not grant permission. The owner must separately
+confirm the trusted expected fingerprint source/account mapping and permit the
+exact memory-only account check, read-only collection and RAW/GLOSSARY egress.
+No dispatch occurs before that decision.
 
-Owner decision: NOT_REQUESTED / PACKET_SUPERSEDED_PENDING_LOCAL_H1_H4_REPAIR
+Owner decision: PENDING / NOT_APPROVED
 endpointAccountFingerprint: PENDING_OWNER_VERIFICATION
 Runtime authorization: NOT CREATED
 Provider dispatch: NOT PERFORMED

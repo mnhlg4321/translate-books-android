@@ -1,14 +1,14 @@
 # Build State
 
-> Current P5E re-audit (2026-09-15, baseline `8c24b7d2`): F2 remains qualified. F3 is `NOT_CLOSED`: the helper's synthetic artifact contract differs from the production serializer, there is no executable live/recovery collector, the selected live method emits no post-dispatch readback, and the command does not runtime-check the reviewed helper hash. F1 remains owner-pending. Owner packet `NOT_READY`; A4.3 `NOT_ISSUED`; RAW `NOT_RUN`; P6 `NOT_READY`. Evidence: `docs/P5E_READINESS_REAUDIT_20260915.md` and `docs/P5E_READINESS_REAUDIT_RESULT.json`.
+> Current local closure (2026-09-15, input baseline `8c24b7d2`, probe HEAD `35c52600`): F2 remains qualified and H1–H4 are resolved by offline host evidence. F3 is `LOCAL_EVIDENCE_CHAIN_GREEN` for the helper/contract/collector boundary; F1 trusted expected fingerprint and live permission remain pending. Owner packet `PENDING`; A4.3 `NOT_ISSUED`; RAW `NOT_RUN`; P6 `NOT_READY`. Evidence: `docs/P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json`. No live action is authorized.
 
 
-- Current proposal gate: LOCAL_P5E_REPAIR_REQUIRED / F2_TRANSPORT_QUALIFIED / F3_NOT_CLOSED / OWNER_PACKET_NOT_READY / ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / NOT_READY_FOR_DISPATCH / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED. The A4.2 authorization remains consumed; this task did not create or consume a runtime authorization.
+- Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_LOCAL_EVIDENCE_CHAIN_GREEN / OWNER_PACKET_PENDING / ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY. The A4.2 authorization remains consumed; this task did not create or consume a runtime authorization.
 
-- Status: P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED / P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_EMITTER_PARSER_CONTRACT_PASS / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / P5E_9B_A4_3_HOST_FIXTURES_PASS_HISTORICAL / F2_TRANSPORT_QUALIFIED / F3_NOT_CLOSED / OWNER_PACKET_NOT_READY / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / RAW_AUTHORIZATION_REQUIRED / RAW_NOT_RUN / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY. Historical completed statuses remain in the evidence sections below and are not current readiness claims.
+- Status: P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED / P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_EMITTER_PARSER_CONTRACT_PASS / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / P5E_9B_A4_3_HOST_FIXTURES_PASS_HISTORICAL / F2_TRANSPORT_QUALIFIED / F3_LOCAL_EVIDENCE_CHAIN_GREEN / OWNER_PACKET_PENDING / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / RAW_AUTHORIZATION_REQUIRED / A4_3_NOT_ISSUED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY. Historical completed statuses remain in the evidence sections below and are not current live-readiness claims.
 - Active authority: V5-SAFE.4.1.3-FULL; canonical plan `EDITORIAL_RECOVERY_V4_18.md`.
 - Workspace: D:\App Translate Books\App Translate Books-translation-profile.
-- Re-audit input HEAD: `8c24b7d2a0d4ddc39ff07cfd2220ce14843258d8`; actual post-documentation HEAD is recorded in the handoff/snapshot and must be verified on resume.
+- Re-audit input HEAD: `8c24b7d2a0d4ddc39ff07cfd2220ce14843258d8`; current local probe HEAD was `35c52600d59cb3cd068a5c566dc9f7e43bed50a5`, and the final snapshot records the implementation baseline immediately before its snapshot commit.
 - Historical implementation HEAD before the A3.2 result documentation commit: `9eaeaee322d38ddf66fe515f9726726400d4fe05`; the current implementation/test HEAD is recorded below. The result documentation commit is separate from this historical implementation baseline.
 - Branch: `feature/v4.18-p5e-audit-20260914` (host-only audit/repair continuation; release branch `feature/v4.18` is unchanged).
 - Pinned implementation/test source HEAD: `d51b7f3c16bdc482513b9904db07b97daed592d1`; host-repair start HEAD `0f52d36e516560bb33d294303c70fa1753cb64f9`; host-preparation commit `c2c79a19842f551fc752a53328024aab8ddb529d`; test correction commit `ea0d907a84a735b7ccb29237c1dd5add45defecf`; archive-policy documentation commit `2e08f3d392b044339a1df4cd883b6764d6b2a9d2`; build-tool corrections `1431b51156f0b9ba2d7080f10a751dcdc7335187` and `d51b7f3c16bdc482513b9904db07b97daed592d1`. Production source remains the frozen code207 candidate baseline and production was not rebuilt. The A4.2 result documentation is based on execution-start HEAD `005317cd83f107edbf275734cb2977b9929e88ce`; the documentation/result commit is separate.
@@ -19,7 +19,7 @@
 - Current phase: A2 remains fail-closed and its approval is consumed. A3.1R, A3.2 and the earlier device A4 result are historical evidence; the A3.2 immediate-preservation gap remains unproven. A4.1 corrected the actual redacted status emitter, including `reconciliationCreated=false`, with parser/emitter contract tests. A4.2 then ran the approved exact preflight once: one `OK (1 test)`, terminal `-1`, parser accepted, all route flags/conjunction true, exact acceptance true, provider calls `0`, and post-run package/settings/DB/tuple/lineage preservation matched. The A4.2 test-package replacement was the only device mutation; production was not operated on. The old exact-preflight result remains evidence-channel failure, not readiness. Code191 metadata remains `EXTERNAL_CONFIRMED_CANCELLED`, not a `$0` billing conclusion; code189/code191 and earlier QF results remain historical evidence. No live RAW acceptance, authorization or predecessor is claimed.
 - Current data classification is `RECONSTRUCTED_ONLY` with a new fresh-pilot lineage appended; `RECONSTRUCTED_ONLY_FRESH_PILOT` is the private snapshot classification, not a recovery claim for code196.
 
-## Current active state — P5E local H1–H4 repair required before owner review
+## Current active state — P5E local H1–H4 evidence chain closed; owner packet pending
 
 - A4.1 started from clean baseline `ade5c3ed7c8d948505f5b37864f4e0e9635aacb8` and completed on `fix/v4.18-p5e-9b-a4-1`. The current host source/archive commit is `d51b7f3c16bdc482513b9904db07b97daed592d1`; production implementation, schema, pack/profile, authority, wire contract and version metadata are unchanged.
 - The host RED audit confirmed the prior defect: the manifest contains `reconciliationCreated=false`, the parser requires it, and the previous emitter mapping omitted it. The actual AndroidTest emitter now maps that field immediately after `attemptCreated`; the contract test reads the implementation mapping and checks parser required/allowed/strict-boolean contracts, rather than relying only on raw fixtures.
@@ -28,30 +28,40 @@
 - New immutable AndroidTest-only artifact: `D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532\app-debug-androidTest.apk`, `1155224` bytes, SHA-256 `57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA`, certificate `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155`, package `com.ml.tblandroidtxt.test`, target `com.ml.tblandroidtxt`, runner `androidx.test.runner.AndroidJUnitRunner`, source/archive commit `d51b7f3c16bdc482513b9904db07b97daed592d1`, source ZIP SHA-256 `382EC5D12FC786BC358316434692E49A73BD62C2F9DD9AC6BD1BC9274CE0B3FA`, and identical backup under `backup\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532`. It was the pinned artifact in the single A4.2 test-package replacement and post-install readback matched.
 - The prior artifact `DC0E6790C1D82F3C7D3102711C929F8DC0CA2D380314E4EB77F1EEA46C41AC2B` remains outside Git and is `SUPERSEDED_NOT_INSTALLED_INVALID_STATUS_MAPPING`; it must not be used or installed. No exact-preflight readiness is claimed from either artifact.
 - A4.2 evidence event: `D:\P5E-private\a4-2-exact-preflight-device-20260914-185308591`; manifest `A4-2-EVIDENCE-MANIFEST.md` SHA-256 `7FBBECD3E2A8868D42D34CB3F9F2F8BA8CDAC236B4C7161F6747CBB19EE2474D`; raw instrumentation SHA-256 `1FFE572DF3ADEBA6A8AB55061BD75F2F5EEBBC479F8BB0D1EA97DB3957D1577C`; host parser result `accepted=true`. Pre/post DB SHA-256, schema24, integrity, FK, settings hash, fresh tuple and all lineage/report/receipt counts matched; all relevant counts remained zero.
-- The A4.2 single-use approval is consumed and not reusable. F2 transport preparation remains qualified. The synthetic F3 work is historical fixture evidence only: the production artifact contract, executable live/recovery collector, post-dispatch emitter and runtime helper-hash binding remain open. The endpoint account fingerprint is separately owner-pending. The current single next action is the local H1–H4 work package in `docs/P5E_NEXT_WORK_REQUEST.md`; do not send the owner packet yet. Current statuses remain `RAW_AUTHORIZATION_REQUIRED`, `RAW_NOT_RUN`, `NO_AUTHORIZATION_CREATED`, `NO_LIVE_CALL_PERFORMED`, `PROVIDER_CALLS_ZERO`, `RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED`, `EXECUTION_DISABLED`, `NOT_CERTIFIED`, `P6_NOT_READY`; P5/P5E exit is not claimed.
+- The A4.2 single-use approval is consumed and not reusable. F2 transport remains qualified. Local H1–H4 are now closed offline: command-side and helper-side runtime hash gates, separate source-derived report/receipt contract, executable Before/After readback collector with typed UNKNOWN/RECOVERY stops, same-event no-redispatch runbook, and 11 artifact mutation rejects. The production-serializer golden test source is present but was not executed because this request forbids build; synthetic bytes are explicitly regression-only. F1 expected fingerprint provenance and the exact owner permission remain pending. Current statuses are `F3_LOCAL_EVIDENCE_CHAIN_GREEN`, `OWNER_PACKET_PENDING`, `A4_3_NOT_ISSUED`, `RAW_NOT_RUN`, `NO_RUNTIME_AUTHORIZATION_CREATED`, `NO_LIVE_CALL_PERFORMED`, `PROVIDER_CALLS_ZERO`, `RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED`, `EXECUTION_DISABLED`, `NOT_CERTIFIED`, `P6_NOT_READY`; P5/P5E exit is not claimed. The single next action is owner review of the final hash-bound packet; no dispatch before that decision.
 
-The historical A4.3 packet is preserved but superseded pending local repair:
+## Current local P5E hash and evidence chain
+
+- Manifest remains unchanged: `DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501`.
+- Final host helper/collector: `scripts/p5e-raw-live-supervisor.ps1` SHA-256 `4D68F4BB0B0D31FA6D443439967746C1C83CCB4514EE6D7AF830CF90DBE0EC76`; implementation `p5e.raw.host-readback-collector.v1`, version `2`, with bounded `COLLECTOR_COMMAND_LOG.jsonl` operation-class/exit metadata and no argv/output.
+- Final review-only command: `docs/P5E_RAW_AUTHORIZATION_COMMAND.txt` SHA-256 `30B50BFEF809225B33901AC130CC5EE83CC8AD76A3D958D987EF19C8FCA50D10`; parser-only check PASS; it is not executed.
+- Separate production artifact contract: `docs/P5E_PRODUCTION_ARTIFACT_CONTRACT_20260915.json` SHA-256 `FFE70A70E622706FABFA49D5843310ECD5A283B1CA114E32C636EA26B9FAE4BF`; serializer source SHA-256 `1222B8AC9B79DAFC659DD364F50849DFBA4782C181606A92DA47EBD8C6164E3C` is pinned in the contract and checked by the helper.
+- Offline result: `docs/P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json` SHA-256 `48357D9CBAFBA27316FD825A7D95A926D14F4FAB5D0260B2EDDB0F4170FF5D9B`; H1/H2/H3/H4 resolved assertions, self-test/probe/collector typed-stop and mutation evidence; device/provider/credential actions `0`; `p6Ready=false`.
+- Host-preparation report: `docs/P5E_RAW_HOST_PREPARATION_20260915.md` SHA-256 `CF8DBC069457A998BD5BDC7C84B500B9566CB598ABF0AAD0F053D766E046C711`; current collector log contract is `COLLECTOR_COMMAND_LOG.jsonl`, same-event and bounded.
+- No production source, AndroidTest source/archive pin, schema/migration, route/model, budget, pack/profile or APK changed. Existing production code207 and AndroidTest 57EC99 artifact/backup parity remain facts; no build/install occurred.
+
+The historical A4.3 packet is preserved as the fixed-scope predecessor. The
+current local packet is hash-bound for owner review but remains pending:
 docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md has SHA-256
 DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501, and
 docs/P5E_RAW_AUTHORIZATION_COMMAND.txt has SHA-256
-1D9A67693C4C4F64AF182300CDEB963A9FD9D44361EF77E91371F88C92EDA15E.
+30B50BFEF809225B33901AC130CC5EE83CC8AD76A3D958D987EF19C8FCA50D10.
 The narrative is in docs/P5E_RAW_AUTHORIZATION_PROPOSAL.md. The packet keeps
 authorization ID P5E-FRESH-MERCEDES-VOL5-RAW-20260911-01 and its
 0aa82c5897e3df3ec8a7a1586736dbf184b316c66ec165e95e64e8e4832145eb hash; the
 A4.2 zero-count evidence shows that ID is unused.
 
-The repaired host supervisor is `scripts/p5e-raw-live-supervisor.ps1`, SHA-256
-`6FABAE1F53973942561EDA52002F052F775570A931EAB65188103E7DEE9955A2`. The
-wrapper and helper are host-only; their self-test and provenance probe prove
-F2 RED-to-GREEN transport, four numeric process outcomes, fingerprint
-redaction, a concrete synthetic producer, and independent readback acceptance.
-The valid synthetic producer controls are the only `RAW_ACCEPTED` cases and
-both report `P6_READY=FALSE`. Full evidence is in
-`docs/P5E_RAW_HOST_PREPARATION_20260915.md` with SHA-256
-`728E1F3986A1C7E921CD9DD5B3199BD8F1B36E8699EF9050C4306D38DABF5703`.
-The tracked provenance result is
-`docs/P5E_PROVENANCE_REVIEW_RESULT.json`, SHA-256
-`BCB2DE2BD98C8191EB32CBE8298089ADFB42A8DADF33231A2733B4C272B72D01`.
+The current host supervisor/collector is
+`scripts/p5e-raw-live-supervisor.ps1`, SHA-256
+`4D68F4BB0B0D31FA6D443439967746C1C83CCB4514EE6D7AF830CF90DBE0EC76`.
+The source-derived report/receipt contract is
+`docs/P5E_PRODUCTION_ARTIFACT_CONTRACT_20260915.json`, SHA-256
+`FFE70A70E622706FABFA49D5843310ECD5A283B1CA114E32C636EA26B9FAE4BF`.
+Self-test, readiness probe, provenance probe and a typed collector-stop test
+prove the local chain; the 11-case synthetic artifact matrix is regression
+only. Full current evidence is in
+`docs/P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json`; both the local result
+and the readiness probe keep `p6Ready=false`. No live result is claimed.
 
 The prior helper hash
 `BEEFBB7733EED660B1F59435922D0594FBA1CBDED01B6C0B00482E786E456799` remains

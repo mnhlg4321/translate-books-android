@@ -1,0 +1,168 @@
+{
+  "schemaVersion": "p5e.local-evidence-chain.v1",
+  "status": "P5E_LOCAL_EVIDENCE_CHAIN_GREEN / OWNER_PACKET_PENDING / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY",
+  "scope": "HOST_OFFLINE_ONLY_NO_CREDENTIAL_NO_ADB_NO_DEVICE_NO_INSTRUMENTATION_NO_PROVIDER_NO_RUNTIME_AUTHORIZATION_NO_BUILD",
+  "inputHead": "8c24b7d2a0d4ddc39ff07cfd2220ce14843258d8",
+  "probeHead": "35c52600d59cb3cd068a5c566dc9f7e43bed50a5",
+  "branch": "feature/v4.18-p5e-audit-20260914",
+  "ancestorCheck": "PASS",
+  "files": {
+    "manifest": {
+      "path": "docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md",
+      "sha256": "dd58bf339fcc0c0c2a25895b5ae614af31a5a281677b33a0d39f171f9da24501"
+    },
+    "command": {
+      "path": "docs/P5E_RAW_AUTHORIZATION_COMMAND.txt",
+      "sha256": "30b50bfef809225b33901ac130cc5ee83cc8ad76a3d958d987ef19c8fca50d10",
+      "parseOnly": "PASS",
+      "execution": "NOT_RUN"
+    },
+    "helper": {
+      "path": "scripts/p5e-raw-live-supervisor.ps1",
+      "sha256": "4d68f4bb0b0d31fa6d443439967746c1c83ccb4514ee6d7af830cf90dbe0ec76",
+      "runtimeHashGate": "PASS"
+    },
+    "artifactContract": {
+      "path": "docs/P5E_PRODUCTION_ARTIFACT_CONTRACT_20260915.json",
+      "sha256": "ffe70a70e622706fabfa49d5843310ecd5a283b1ca114e32c636ea26b9fae4bf",
+      "serializerSourceSha256": "1222b8ac9b79dafc659dd364f50849dfba4782c181606a92da47ebd8c6164e3c"
+    },
+    "productionSerializer": {
+      "path": "editorial-engine/src/main/java/com/ml/tblandroidtxt/editorial/pack/EditorialP5PilotExecution.java",
+      "sha256": "1222b8ac9b79dafc659dd364f50849dfba4782c181606a92da47ebd8c6164e3c"
+    },
+    "productionArtifactSourceBaseline": "995d3b6c9678e93905b3802cf22eee0b091b1bb3",
+    "androidTestSource": "d51b7f3c16bdc482513b9904db07b97daed592d1",
+    "selectedLiveMethodSha256": "b3f974a185f8b2590424471f3a1317ec436cfbef3d92244efae1674f935ac04a",
+    "goldenSerializerTest": {
+      "path": "editorial-engine/src/test/java/com/ml/tblandroidtxt/editorial/pack/EditorialP5PilotExecutionBoundaryTest.java",
+      "sha256": "8977bc825a3e1ddf73d5d049bd27737755f1b11160cd684efc185a32460e77be",
+      "sourceTestPresent": true,
+      "executed": false,
+      "executionReason": "explicit_no_build_boundary"
+    },
+    "readinessProbe": {
+      "path": "docs/P5E_READINESS_REAUDIT_PROBE.ps1",
+      "sha256": "ea6200e1cb0478c98c9d07409526bd28434da9b5111acab31ad647e2b50471d9",
+      "allFourBlockersResolved": true,
+      "readyForOwnerDecision": true,
+      "readyForDispatch": false
+    },
+    "provenanceProbeWrapper": {
+      "path": "docs/P5E_PROVENANCE_REVIEW_PROBE.ps1",
+      "sha256": "1bde695e13c7a84ab48a44b6074ea9441f0a363af43fd20448b2995fce9dad45"
+    },
+    "collector": {
+      "path": "scripts/p5e-raw-live-supervisor.ps1",
+      "implementationId": "p5e.raw.host-readback-collector.v1",
+      "implementationVersion": "2",
+      "sha256": "4d68f4bb0b0d31fa6d443439967746c1c83ccb4514ee6d7af830cf90dbe0ec76",
+      "modes": ["Before", "After"],
+      "commandLogFile": "COLLECTOR_COMMAND_LOG.jsonl",
+      "commandLogFields": ["eventId", "evidenceDirectory", "phase", "sequence", "operation", "commandClass", "launchCount", "exitCode", "timedOut", "outcome", "redactionPass", "outputCaptured"],
+      "commandLogExcludes": ["argv", "stdout", "stderr", "credential", "endpoint", "fingerprint"],
+      "typedStops": ["NO_CLAIM_OBSERVED", "EXTERNAL_CALL_STATE_UNKNOWN", "RECOVERY_REQUIRED", "COLLECTOR_TYPED_STOP"]
+    },
+    "productionApk": {
+      "versionCode": 207,
+      "sha256": "2ccbb844c629132bb534b0d6aba516055c410bf96d20b14b3f80f91b962800fd",
+      "sourceZipSha256": "b60624fc043bb3852d6b1a6e3ac409c9b66ca3c1bab9ff4a512ccbf85984e348",
+      "certificateSha256": "47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155"
+    },
+    "androidTestApk": {
+      "sha256": "57ec99a95ee2dc0f1759934c62cea39e2ec92eb77c3daf76cfeed28d41a2fdea",
+      "sourceZipSha256": "382ec5d12fc786bc358316434692e49a73bd62c2f9dd9ac6bd1bc9274ce0b3fa",
+      "certificateSha256": "47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155"
+    }
+  },
+  "sourceMapping": {
+    "version": "p5e.local-evidence-source-map.v1",
+    "producer": "Invoke-P5ESyntheticReadbackCollector (regression-only); live=Invoke-P5ELiveReadbackCollectorCore",
+    "input": "synthetic DB/schema rows and production serializer-shaped persisted bytes",
+    "before": "collector Before package/APK/cert, WAL-aware DB metadata, immutable tuple and zero-lineage counts",
+    "after": "collector After same event attempt/auth/lifecycle, persisted report/receipt bytes, metrics and allowlisted lineage",
+    "commandLog": "COLLECTOR_COMMAND_LOG.jsonl",
+    "verifier": "Test-P5EReadbackIntegrity plus Test-P5EArtifactPair",
+    "decision": "RAW acceptance requires COMMITTED readback, separate report/receipt byte validation, provenance and known cost; synthetic producer remains regression-only"
+  },
+  "evidence": {
+    "h1": {
+      "status": "GREEN",
+      "evidence": "helper self-test plus command static hash gate; missing/wrong/tampered helper controls reject before launch",
+      "negativeLaunchCount": 0
+    },
+    "h2": {
+      "status": "GREEN_OFFLINE",
+      "evidence": "explicit CollectReadback parameter set, Before/After read-only collector, bounded same-event command-class/exit-code log and typed recovery/unknown stops",
+      "typedStopFixture": "P5E_COLLECTOR_ADB_FAILED_BEFORE_LAUNCH",
+      "deviceActions": 0,
+      "providerCalls": 0,
+      "redispatch": 0,
+      "commandLogFixture": {
+        "outputRoot": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\p5e-command-log-f514e1c05f8b4284a3b9b88cd16ded3b",
+        "lineCount": 1,
+        "operation": "pm-path-production-before",
+        "commandClass": "PACKAGE_METADATA_READ_ONLY",
+        "launchCount": 0,
+        "exitCode": null,
+        "timedOut": false,
+        "outputCaptured": false,
+        "typedOutcome": "COLLECTOR_TYPED_STOP"
+      }
+    },
+    "h3": {
+      "status": "GREEN_HOST_CONTRACT",
+      "evidence": "separate report/receipt source-derived contract, exact persisted-byte validation and pair binding",
+      "goldenSerializerTestSourcePresent": true,
+      "goldenSerializerTestExecuted": false,
+      "syntheticMutationMatrix": {
+        "sourceLabel": "HOST_SYNTHETIC_SHAPE_REGRESSION_ONLY",
+        "cases": [
+          "wrong_manifest", "wrong_binding", "wrong_bundle", "wrong_predecessor",
+          "swapped_report_receipt", "one_byte_mutation", "extra_field", "missing_field",
+          "bom", "invalid_utf8", "noncanonical_bytes"
+        ],
+        "rejected": 11,
+        "accepted": 0
+      }
+    },
+    "h4": {
+      "status": "GREEN_OFFLINE_PATH",
+      "evidence": "selected live method is paired with same-event Before/After collector and bounded command log; After is independent and remains usable for timeout/process-death recovery",
+      "dispatchCount": 1,
+      "collectorInvocationInLiveRunbook": "one Before and one After; no redispatch"
+    },
+    "timingAndRedaction": {
+      "authorizationBoundaries": "issued-1 reject; issued accept; expires-1 accept; expires reject; expires+1 reject",
+      "lateObservationAccepted": true,
+      "fingerprintFailureRedaction": "PASS",
+      "deviceActions": 0,
+      "providerCalls": 0,
+      "credentialReads": 0
+    },
+    "probe": {
+      "path": "scripts/p5e-raw-live-supervisor.ps1 -ProvenanceProbe",
+      "outputRoot": "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\p5e-wrapper-final-05d47c79a8c14a99a296f3d17b1fdc34",
+      "exitCode": 0,
+      "resultFile": "RESULT.json"
+    }
+  },
+  "ownerProvenance": {
+    "status": "PENDING",
+    "decision": "NOT_APPROVED",
+    "expectedFingerprint": "NOT_PROVIDED",
+    "trustedSourceAndAccountMapping": "NOT_PROVIDED",
+    "credentialReference": "NOT_PROVIDED",
+    "approvedAccountOperation": "NOT_APPROVED",
+    "approvedDataEgress": "NOT_APPROVED",
+    "secretPolicy": "no credential, raw endpoint or fingerprint value in chat, Git, logs or command text"
+  },
+  "liveState": {
+    "a4_3": "NOT_ISSUED",
+    "raw": "NOT_RUN",
+    "rawAcceptance": "NOT_PROVEN",
+    "p5Exit": "NOT_CLAIMED",
+    "p6Ready": false,
+    "nextAction": "owner reviews this final hash-bound packet and supplies trusted non-secret account provenance plus explicit account/readback/RAW permission; do not dispatch before that decision"
+  }
+}

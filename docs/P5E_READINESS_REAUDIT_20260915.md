@@ -1,8 +1,17 @@
 # P5E readiness re-audit — 2026-09-15
 
-Status: `P5E_LOCAL_REPAIR_REQUIRED / OWNER_PACKET_NOT_READY / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`
+Status: `HISTORICAL_REAUDIT / SUPERSEDED_FOR_CURRENT_READINESS / H1_H4_RESOLVED_LOCALLY / OWNER_PACKET_PENDING / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`
 
-## Kết luận quyết định
+> Current resolution: the follow-up local work package closed H1–H4 at probe
+> HEAD `35c52600d59cb3cd068a5c566dc9f7e43bed50a5`. The command now pins the
+> helper at runtime; report/receipt validation is bound to the production
+> serializer contract; `CollectReadback` is an executable same-event
+> Before/After collector with typed recovery/unknown outcomes; and the After
+> path remains available after timeout/process death without redispatch. See
+> `docs/P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json`. This does not provide
+> F1 account provenance, authorize A4.3, accept RAW or open P6.
+
+## Kết luận quyết định tại historical re-audit baseline
 
 Chưa đủ điều kiện chuyển P6 và cũng chưa đủ điều kiện đưa packet A4.3 hiện hành
 cho owner duyệt. Có đủ evidence để mở **một work package local tiếp theo trong

@@ -1,4 +1,9 @@
 {
+  "supersession": {
+    "status": "HISTORICAL_FINDINGS_SUPERSEDED_FOR_CURRENT_READINESS",
+    "supersededBy": "docs/P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json",
+    "resolvedAtProbeHead": "35c52600d59cb3cd068a5c566dc9f7e43bed50a5"
+  },
   "schemaVersion": "p5e.readiness-reaudit.v1",
   "scope": "STATIC_SOURCE_AND_PACKET_ONLY_NO_DEVICE_NO_PROVIDER_NO_CREDENTIAL_ENVIRONMENT_READ",
   "branch": "feature/v4.18-p5e-audit-20260914",

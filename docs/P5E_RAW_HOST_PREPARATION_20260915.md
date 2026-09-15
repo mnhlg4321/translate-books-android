@@ -1,13 +1,13 @@
 # P5E RAW host-preparation evidence — 2026-09-15
 
-Status: `HISTORICAL_HOST_FIXTURE_EVIDENCE / SYNTHETIC_CONTRACT_ONLY /
-SUPERSEDED_FOR_CURRENT_READINESS / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`
+Status: `P5E_LOCAL_EVIDENCE_CHAIN_GREEN / OWNER_PACKET_PENDING /
+A4.3_NOT_ISSUED / RAW_NOT_RUN / LIVE_ACTIONS_NOT_AUTHORIZED / P6_NOT_READY`
 
-> Re-audit at baseline `8c24b7d2` found that the synthetic artifact shape does
-> not match the production serializer and that no executable live/recovery
-> collector exists. Keep the results below as evidence for the host fixture and
-> timing/redaction gates; do not use them to claim F3 or owner-packet readiness.
-> See `P5E_READINESS_REAUDIT_20260915.md`.
+> Current local closure at input baseline `8c24b7d2` and probe HEAD `35c52600`:
+> H1–H4 are resolved for the offline host boundary. F1 account provenance and
+> all live/device actions remain pending owner decision. The historical body
+> below is retained as evidence; current hash-bound results are in
+> `P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json`.
 
 This is host-only evidence for the bounded P5/P5E continuation. It is not a
 new authorization, a new A4 proposal, or permission to dispatch. No credential,
@@ -15,7 +15,63 @@ instrumentation method, device, ADB command, provider call, runtime
 authorization, database mutation, settings read, or RECONCILE operation was
 performed while producing this evidence.
 
-## Current baseline
+## Current local closure — H1–H4
+
+The final helper/collector is
+`scripts/p5e-raw-live-supervisor.ps1`, SHA-256
+`4D68F4BB0B0D31FA6D443439967746C1C83CCB4514EE6D7AF830CF90DBE0EC76`.
+The review-only command is
+`docs/P5E_RAW_AUTHORIZATION_COMMAND.txt`, SHA-256
+`30B50BFEF809225B33901AC130CC5EE83CC8AD76A3D958D987EF19C8FCA50D10`; it was
+parsed but not executed. The unchanged manifest remains
+`DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501`.
+
+H1 is closed by command-side and helper-side exact regular-file SHA checks
+before environment/fingerprint/device access. H2/H4 are closed offline by
+the explicit `CollectReadback` `Before`/`After` parameter set and same-event
+collector. The collector uses package/APK/certificate readback, a
+WAL-aware/read-only SQLite transaction, exact tuple/lineage/attempt/
+authorization/lifecycle/artifact fields and immutable source mappings. It
+returns typed `NO_CLAIM_OBSERVED`, `EXTERNAL_CALL_STATE_UNKNOWN`,
+`RECOVERY_REQUIRED` and `COLLECTOR_TYPED_STOP` outcomes. The After collection
+is the recovery path after timeout/process death/device reconnect and does not
+refresh authorization or redispatch. Each read-only command is recorded in the
+bounded, same-event `COLLECTOR_COMMAND_LOG.jsonl` with operation class,
+numeric exit code, launch count and timeout state; argv and captured output are
+not written to that log.
+
+H3 is closed at the host contract boundary by
+`docs/P5E_PRODUCTION_ARTIFACT_CONTRACT_20260915.json`, SHA-256
+`FFE70A70E622706FABFA49D5843310ECD5A283B1CA114E32C636EA26B9FAE4BF`, pinned
+to production serializer source SHA-256
+`1222B8AC9B79DAFC659DD364F50849DFBA4782C181606A92DA47EBD8C6164E3C`. Report
+and receipt have separate required/allowed field sets and pair mappings. The
+golden Java test source is present (SHA-256
+`8977BC825A3E1DDF73D5D049BD27737755F1B11160CD684EFC185A32460E77BE`) but was
+not executed because this request forbids build. The offline synthetic
+regression matrix rejects 11 cases: wrong manifest, binding, bundle,
+predecessor, swapped bytes, one-byte mutation, extra/missing field, BOM,
+invalid UTF-8 and noncanonical bytes.
+
+The concrete field-to-source chain is:
+
+| Required field group | Read-only source/entry point | Transform and gate |
+|---|---|---|
+| package/APK/certificate | `Get-P5EPackageReadback`; `pm path`; `dumpsys package`; local `apksigner` | exact installed package/version/code/APK/cert; mismatch is typed stop |
+| schema/integrity/FK/WAL | `Get-P5EConsistentDatabaseReadback`; `run-as ... sqlite3 -readonly` | one WAL-aware read transaction; main/WAL/SHM hashes and schema/integrity/FK are checked |
+| immutable tuple/source projection | `Get-P5EBindingReadback`; `Get-P5EConsistentDatabaseReadback` | exact binding, run, evaluation, pack/profile and RAW/GLOSSARY visible/DRAFT/PRONOUN hidden identities |
+| attempt/auth/lifecycle | database query functions `Get-P5EAttemptReadback`, `Get-P5EAuthorizationReadback`, `Get-P5ELifecycleReadback` | exact event/attempt pair; consume is `issued <= consume < expires`; lifecycle is tied to the attempt |
+| report/receipt | persisted `report_bytes`/`receipt_bytes` decoded from DB rows | exact bytes → UTF-8/no BOM/canonical/source-derived validators → hash/length; pair atomicity is checked separately |
+| atomicity/allowed diff | transaction source/test pins plus before/after lineage | source transaction semantics + observed zero/allowlisted rows; no unrelated writes/deletes/reconciliation/history |
+| event/provenance | `EVENT_PLAN.json`, `HOST_RUN_METADATA.json`, `COLLECTOR_COMMAND_LOG.jsonl`, `COLLECTOR_OUTCOME.json` | canonical event directory, allowlisted command class/exit metadata, collector/hash/source mapping and chronology; no cross-event reuse |
+
+Missing/unavailable sources produce typed stop or `UNKNOWN`; no field is
+entered as a caller-supplied boolean. The collector never pulls settings
+content, credentials, raw endpoint, prompt, request body, model response or a
+full database export. The current result is
+`docs/P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json`.
+
+## Historical baseline for prior host-preparation evidence
 
 | Fact | Evidence |
 |---|---|
@@ -355,13 +411,15 @@ A second equivalent review is not required after the targeted corrections; any
 new owner input would be a new decision, not a third review loop.
 
 Not done: no actual account fingerprint was computed, no credential was read,
-no device or instrumentation run occurred, no live-device collector or
-post-live readback exists, RAW was not accepted, RECONCILE was not opened,
-P5/P5E exit was not claimed, and P6 remains false. F3 is GREEN only for the
-offline synthetic producer/verifier boundary.
+no device or instrumentation run occurred, and the executable collector was
+not run against a live device. RAW was not accepted, RECONCILE was not opened,
+P5/P5E exit was not claimed, and P6 remains false. F3 is locally GREEN for the
+hash-bound host evidence chain; the synthetic producer is regression-only and
+does not prove a live installed-package readback.
 
 ## Single next action
 
-Owner supplies trusted expected-fingerprint provenance and decides whether to
-permit the exact memory-only account verification described in F1. Until that
-decision is recorded against the final hashes, do not dispatch A4.3.
+Owner reviews the final hash-bound packet and supplies trusted expected-
+fingerprint provenance plus the exact memory-only account/readback/RAW
+permission described in F1. Until that decision is recorded against the final
+hashes, do not dispatch A4.3.
