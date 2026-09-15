@@ -1,13 +1,14 @@
 # Build State
 
-> Current provenance review (2026-09-15, resumed HEAD 9beafef8): F2 transport remains qualified by the prior host evidence. F3 prior fixtures passed, but four new synthetic provenance/timing/identity cases falsely return RAW_ACCEPTED; readback producer provenance and assertion fingerprint redaction also need closure. The next action is the bounded local repair and provenance work in docs/P5E_NEXT_WORK_REQUEST.md. F1 owner input remains pending; owner input alone is not sufficient for dispatch. A4.3 NOT_ISSUED / NOT_READY_FOR_DISPATCH; P5/P5E incomplete; P6_NOT_READY. Prior next-action/completion prose below is historical where it conflicts with this review. Evidence: docs/P5E_PROVENANCE_REVIEW_20260915.md.
+> Current provenance review (2026-09-15, resumed HEAD 31a262a8): F2 remains qualified and local F3 provenance repair is GREEN in the synthetic producer→verifier boundary. Four prior false accepts are rejected, serialized report/receipt bytes are validated and event-bound, and fingerprint assertion failures are redacted. F1 trusted expected fingerprint provenance and the exact account operation remain owner-pending; live-device collector evidence does not exist. A4.3 NOT_ISSUED / NOT_READY_FOR_DISPATCH; P5/P5E incomplete; P6_NOT_READY. Evidence: docs/P5E_PROVENANCE_REVIEW_20260915.md and docs/P5E_PROVENANCE_REVIEW_RESULT.json.
 
 
-- Current proposal gate: RAW_AUTHORIZATION_PROPOSAL_PREPARED / HOST_FIXTURES_PASS_F3_REPAIR_REQUIRED / OWNER_DECISION_REQUIRED / ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / NOT_READY_FOR_DISPATCH / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED. The A4.2 authorization remains consumed; this task did not create or consume a runtime authorization.
+- Current proposal gate: RAW_AUTHORIZATION_PROPOSAL_PREPARED / HOST_FIXTURES_PASS_F3_PROVENANCE_REPAIR_GREEN / OWNER_DECISION_REQUIRED / ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / NOT_READY_FOR_DISPATCH / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED. The A4.2 authorization remains consumed; this task did not create or consume a runtime authorization.
 
-- Status: P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED / P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_EMITTER_PARSER_CONTRACT_PASS / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / P5E_9B_A4_3_HOST_FIXTURES_PASS_HISTORICAL / F3_PROVENANCE_REPAIR_REQUIRED / FRESH_RAW_EXACT_PREFLIGHT_READY / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / RAW_AUTHORIZATION_REQUIRED / RAW_NOT_RUN / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY. Historical completed statuses remain in the evidence sections below and are not current readiness claims.
+- Status: P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED / P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_EMITTER_PARSER_CONTRACT_PASS / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / P5E_9B_A4_3_HOST_FIXTURES_PASS_HISTORICAL / F3_PROVENANCE_REPAIR_GREEN / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / RAW_AUTHORIZATION_REQUIRED / RAW_NOT_RUN / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY. Historical completed statuses remain in the evidence sections below and are not current readiness claims.
 - Active authority: V5-SAFE.4.1.3-FULL; canonical plan `EDITORIAL_RECOVERY_V4_18.md`.
 - Workspace: D:\App Translate Books\App Translate Books-translation-profile.
+- Resume actual HEAD before this documentation snapshot: `31a262a806372dc804a0650c4d65f8012d4f78bb`; the helper/provenance repair and documentation changes are the current uncommitted group, and the snapshot records this baseline separately from its commit.
 - Historical implementation HEAD before the A3.2 result documentation commit: `9eaeaee322d38ddf66fe515f9726726400d4fe05`; the current implementation/test HEAD is recorded below. The result documentation commit is separate from this historical implementation baseline.
 - Branch: `feature/v4.18-p5e-audit-20260914` (host-only audit/repair continuation; release branch `feature/v4.18` is unchanged).
 - Pinned implementation/test source HEAD: `d51b7f3c16bdc482513b9904db07b97daed592d1`; host-repair start HEAD `0f52d36e516560bb33d294303c70fa1753cb64f9`; host-preparation commit `c2c79a19842f551fc752a53328024aab8ddb529d`; test correction commit `ea0d907a84a735b7ccb29237c1dd5add45defecf`; archive-policy documentation commit `2e08f3d392b044339a1df4cd883b6764d6b2a9d2`; build-tool corrections `1431b51156f0b9ba2d7080f10a751dcdc7335187` and `d51b7f3c16bdc482513b9904db07b97daed592d1`. Production source remains the frozen code207 candidate baseline and production was not rebuilt. The A4.2 result documentation is based on execution-start HEAD `005317cd83f107edbf275734cb2977b9929e88ce`; the documentation/result commit is separate.
@@ -27,7 +28,7 @@
 - New immutable AndroidTest-only artifact: `D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532\app-debug-androidTest.apk`, `1155224` bytes, SHA-256 `57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA`, certificate `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155`, package `com.ml.tblandroidtxt.test`, target `com.ml.tblandroidtxt`, runner `androidx.test.runner.AndroidJUnitRunner`, source/archive commit `d51b7f3c16bdc482513b9904db07b97daed592d1`, source ZIP SHA-256 `382EC5D12FC786BC358316434692E49A73BD62C2F9DD9AC6BD1BC9274CE0B3FA`, and identical backup under `backup\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532`. It was the pinned artifact in the single A4.2 test-package replacement and post-install readback matched.
 - The prior artifact `DC0E6790C1D82F3C7D3102711C929F8DC0CA2D380314E4EB77F1EEA46C41AC2B` remains outside Git and is `SUPERSEDED_NOT_INSTALLED_INVALID_STATUS_MAPPING`; it must not be used or installed. No exact-preflight readiness is claimed from either artifact.
 - A4.2 evidence event: `D:\P5E-private\a4-2-exact-preflight-device-20260914-185308591`; manifest `A4-2-EVIDENCE-MANIFEST.md` SHA-256 `7FBBECD3E2A8868D42D34CB3F9F2F8BA8CDAC236B4C7161F6747CBB19EE2474D`; raw instrumentation SHA-256 `1FFE572DF3ADEBA6A8AB55061BD75F2F5EEBBC479F8BB0D1EA97DB3957D1577C`; host parser result `accepted=true`. Pre/post DB SHA-256, schema24, integrity, FK, settings hash, fresh tuple and all lineage/report/receipt counts matched; all relevant counts remained zero.
-- The A4.2 single-use approval is consumed and not reusable. F2/F3 host preparation for the A4.3 decision is complete and recorded in `docs/P5E_RAW_HOST_PREPARATION_20260915.md`; its SHA-256 is `C54E55446629ADC161882C51333B25BD21633277C6A4B1020D5265E93DA11E3C`. The endpoint account fingerprint is pending the separately permitted memory-only account check. The current single next action is the owner decision on trusted expected-fingerprint provenance and that exact account operation. Current statuses remain `RAW_AUTHORIZATION_REQUIRED`, `RAW_NOT_RUN`, `NO_AUTHORIZATION_CREATED`, `NO_LIVE_CALL_PERFORMED`, `PROVIDER_CALLS_ZERO`, `RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED`, `EXECUTION_DISABLED`, `NOT_CERTIFIED`, `P6_NOT_READY`; P5/P5E exit is not claimed.
+- The A4.2 single-use approval is consumed and not reusable. F2/F3 host preparation for the A4.3 decision is complete and recorded in `docs/P5E_RAW_HOST_PREPARATION_20260915.md`; its final SHA-256 is recorded after this documentation group is frozen. The endpoint account fingerprint is pending the separately permitted memory-only account check, and no live-device collector evidence exists. The current single next action is the owner decision on trusted expected-fingerprint provenance and that exact account operation. Current statuses remain `RAW_AUTHORIZATION_REQUIRED`, `RAW_NOT_RUN`, `NO_AUTHORIZATION_CREATED`, `NO_LIVE_CALL_PERFORMED`, `PROVIDER_CALLS_ZERO`, `RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED`, `EXECUTION_DISABLED`, `NOT_CERTIFIED`, `P6_NOT_READY`; P5/P5E exit is not claimed.
 
 The A4.3 owner-review packet is prepared but not issued:
 docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md has SHA-256
@@ -40,13 +41,21 @@ authorization ID P5E-FRESH-MERCEDES-VOL5-RAW-20260911-01 and its
 A4.2 zero-count evidence shows that ID is unused.
 
 The repaired host supervisor is `scripts/p5e-raw-live-supervisor.ps1`, SHA-256
-`BEEFBB7733EED660B1F59435922D0594FBA1CBDED01B6C0B00482E786E456799`. The
-wrapper and helper are host-only; their self-test proves F2 RED-to-GREEN
-transport, four numeric process outcomes, redaction and the independent
-readback outcome matrix. The valid fixture alone is `RAW_ACCEPTED`, and it
-still reports `P6_READY=FALSE`. Full evidence is in
+`6FABAE1F53973942561EDA52002F052F775570A931EAB65188103E7DEE9955A2`. The
+wrapper and helper are host-only; their self-test and provenance probe prove
+F2 RED-to-GREEN transport, four numeric process outcomes, fingerprint
+redaction, a concrete synthetic producer, and independent readback acceptance.
+The valid synthetic producer controls are the only `RAW_ACCEPTED` cases and
+both report `P6_READY=FALSE`. Full evidence is in
 `docs/P5E_RAW_HOST_PREPARATION_20260915.md` with SHA-256
-`C54E55446629ADC161882C51333B25BD21633277C6A4B1020D5265E93DA11E3C`.
+`728E1F3986A1C7E921CD9DD5B3199BD8F1B36E8699EF9050C4306D38DABF5703`.
+The tracked provenance result is
+`docs/P5E_PROVENANCE_REVIEW_RESULT.json`, SHA-256
+`BCB2DE2BD98C8191EB32CBE8298089ADFB42A8DADF33231A2733B4C272B72D01`.
+
+The prior helper hash
+`BEEFBB7733EED660B1F59435922D0594FBA1CBDED01B6C0B00482E786E456799` remains
+the RED input for the provenance review, not the current helper pin.
 
 The account fingerprint is intentionally unresolved. Owner approval must
 separately permit the source-defined in-memory operation using

@@ -1,11 +1,11 @@
 # Editorial Recovery v4.18
 
-> Current provenance review (2026-09-15, resumed HEAD 9beafef8): F2 transport remains qualified by the prior host evidence. F3 prior fixtures passed, but four new synthetic provenance/timing/identity cases falsely return RAW_ACCEPTED; readback producer provenance and assertion fingerprint redaction also need closure. The next action is the bounded local repair and provenance work in docs/P5E_NEXT_WORK_REQUEST.md. F1 owner input remains pending; owner input alone is not sufficient for dispatch. A4.3 NOT_ISSUED / NOT_READY_FOR_DISPATCH; P5/P5E incomplete; P6_NOT_READY. Prior next-action/completion prose below is historical where it conflicts with this review. Evidence: docs/P5E_PROVENANCE_REVIEW_20260915.md.
+> Current provenance review (2026-09-15, resumed HEAD 31a262a8): F2 remains qualified and local F3 provenance repair is GREEN in the synthetic producer→verifier boundary. Four prior false accepts are rejected, serialized report/receipt bytes are validated and event-bound, and fingerprint assertion failures are redacted. F1 trusted expected fingerprint provenance and the exact account operation remain owner-pending; live-device collector evidence does not exist. A4.3 NOT_ISSUED / NOT_READY_FOR_DISPATCH; P5/P5E incomplete; P6_NOT_READY. Evidence: docs/P5E_PROVENANCE_REVIEW_20260915.md and docs/P5E_PROVENANCE_REVIEW_RESULT.json.
 
 
-Current proposal gate: RAW_AUTHORIZATION_PROPOSAL_PREPARED / HOST_FIXTURES_PASS_F3_REPAIR_REQUIRED / OWNER_DECISION_REQUIRED / ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / NOT_READY_FOR_DISPATCH / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED.
+Current proposal gate: RAW_AUTHORIZATION_PROPOSAL_PREPARED / HOST_FIXTURES_PASS_F3_PROVENANCE_REPAIR_GREEN / OWNER_DECISION_REQUIRED / ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / NOT_READY_FOR_DISPATCH / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED.
 
-Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILD_HISTORICAL / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / P5E_9B_A4_3_HOST_FIXTURES_PASS_HISTORICAL / F3_PROVENANCE_REPAIR_REQUIRED / FRESH_RAW_EXACT_PREFLIGHT_READY / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / RAW_AUTHORIZATION_REQUIRED / RAW_NOT_RUN / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY`
+Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILD_HISTORICAL / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / P5E_9B_A4_3_HOST_FIXTURES_PASS_HISTORICAL / F3_PROVENANCE_REPAIR_GREEN / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / RAW_AUTHORIZATION_REQUIRED / RAW_NOT_RUN / NO_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY`
 
 This document is the single product and execution authority for the v4.18 Editorial recovery. It supersedes active next actions from the historical v4.16 Editorial/RSC/IPC tracks without deleting or reinterpreting their evidence.
 
@@ -21,11 +21,12 @@ not installed or modified; no provider/API call, authorization, attempt,
 reconciliation, settings write or database write occurred.
 
 The current host-only continuation is on branch
-`feature/v4.18-p5e-audit-20260914`, starting from HEAD
-`0f52d36e516560bb33d294303c70fa1753cb64f9`. This branch is the audit/repair
-continuation, not a new release branch; the pinned AndroidTest source and
-production code207 artifact remain unchanged. The host-preparation commit is
-`c2c79a19842f551fc752a53328024aab8ddb529d`.
+`feature/v4.18-p5e-audit-20260914`. The earlier F2/F3 repair started from
+`0f52d36e516560bb33d294303c70fa1753cb64f9`; this provenance repair resumed at
+actual HEAD `31a262a806372dc804a0650c4d65f8012d4f78bb`. This branch is the
+audit/repair continuation, not a new release branch; the pinned AndroidTest
+source and production code207 artifact remain unchanged. The host-preparation
+commit is `c2c79a19842f551fc752a53328024aab8ddb529d`.
 
 ### Canonical current pin table
 
@@ -107,10 +108,22 @@ The narrative proposal is
 docs/P5E_RAW_AUTHORIZATION_PROPOSAL.md.
 The host supervisor is
 scripts/p5e-raw-live-supervisor.ps1, SHA-256
-BEEFBB7733EED660B1F59435922D0594FBA1CBDED01B6C0B00482E786E456799.
+6FABAE1F53973942561EDA52002F052F775570A931EAB65188103E7DEE9955A2.
 The preparation evidence is
 docs/P5E_RAW_HOST_PREPARATION_20260915.md, SHA-256
-C54E55446629ADC161882C51333B25BD21633277C6A4B1020D5265E93DA11E3C.
+728E1F3986A1C7E921CD9DD5B3199BD8F1B36E8699EF9050C4306D38DABF5703.
+
+F3 provenance repair is GREEN only in the offline synthetic boundary:
+`Invoke-P5ESyntheticReadbackCollector` creates a provenance-bound
+`post-readback.json` from disposable snapshot/transaction/artifact inputs;
+the tracked probe rejects the four prior mutations and all typed negative
+fixtures, and records `deviceActions=0`, `providerCalls=0`, `p6Ready=false`.
+The result JSON is
+`docs/P5E_PROVENANCE_REVIEW_RESULT.json`, SHA-256
+`BCB2DE2BD98C8191EB32CBE8298089ADFB42A8DADF33231A2733B4C272B72D01`.
+The live-device read-only collector is not demonstrated. The current owner
+decision remains F1 trusted expected fingerprint provenance plus permission for
+the exact memory-only account operation; it does not authorize A4.3 by itself.
 
 The packet preserves the harness authorization ID and the exact A4.2
 identities. It requests only RAW/GLOSSARY egress to the pinned route, one

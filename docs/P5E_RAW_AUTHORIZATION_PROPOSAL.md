@@ -1,8 +1,8 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Current provenance review (2026-09-15, resumed HEAD 9beafef8): F2 transport remains qualified by the prior host evidence. F3 prior fixtures passed, but four new synthetic provenance/timing/identity cases falsely return RAW_ACCEPTED; readback producer provenance and assertion fingerprint redaction also need closure. The next action is the bounded local repair and provenance work in docs/P5E_NEXT_WORK_REQUEST.md. F1 owner input remains pending; owner input alone is not sufficient for dispatch. A4.3 NOT_ISSUED / NOT_READY_FOR_DISPATCH; P5/P5E incomplete; P6_NOT_READY. Prior next-action/completion prose below is historical where it conflicts with this review. Evidence: docs/P5E_PROVENANCE_REVIEW_20260915.md.
+> Current provenance review (2026-09-15, resumed HEAD 31a262a8): F2 remains qualified and the local F3 provenance repair is GREEN in the synthetic producer→verifier boundary. The four prior false accepts are rejected, actual serialized report/receipt bytes are validated and bound to the event/source mapping, and fingerprint assertion failures are redacted. F1 trusted expected fingerprint provenance and the exact account operation remain owner-pending; the live-device collector is not proven. A4.3 NOT_ISSUED / NOT_READY_FOR_DISPATCH; P5/P5E incomplete; P6_NOT_READY. Evidence: docs/P5E_PROVENANCE_REVIEW_20260915.md and docs/P5E_PROVENANCE_REVIEW_RESULT.json.
 
-Proposal status: OWNER_REVIEW_REQUEST_PREPARED / HOST_FIXTURES_PASS_F3_REPAIR_REQUIRED /
+Proposal status: OWNER_REVIEW_REQUEST_PREPARED / HOST_FIXTURES_PASS_F3_PROVENANCE_REPAIR_GREEN /
 OWNER_DECISION_REQUIRED / NOT_ISSUED / NOT_READY_FOR_DISPATCH
 
 This packet requests owner approval for exactly one L1_RAW_DISCOVERY run. It
@@ -21,7 +21,11 @@ DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501.
 Pinned command SHA-256:
 1D9A67693C4C4F64AF182300CDEB963A9FD9D44361EF77E91371F88C92EDA15E.
 Host supervisor SHA-256:
-BEEFBB7733EED660B1F59435922D0594FBA1CBDED01B6C0B00482E786E456799.
+6FABAE1F53973942561EDA52002F052F775570A931EAB65188103E7DEE9955A2.
+
+The previous helper SHA-256
+BEEFBB7733EED660B1F59435922D0594FBA1CBDED01B6C0B00482E786E456799 is retained
+as the provenance-review RED input, not as an approval pin.
 
 ## Baseline and evidence
 
@@ -60,12 +64,41 @@ receipt, runtime authorization or provider result exists.
 
 The bounded host-preparation evidence is
 `docs/P5E_RAW_HOST_PREPARATION_20260915.md`, SHA-256
-`C54E55446629ADC161882C51333B25BD21633277C6A4B1020D5265E93DA11E3C`.
+`728E1F3986A1C7E921CD9DD5B3199BD8F1B36E8699EF9050C4306D38DABF5703`.
 It records the F2 RED-to-GREEN process-argv/remote-shell proof, the source
-required-argument contract, the F3 one-launch supervisor and independent
-readback verifier fixtures, the artifact parity checks and the unresolved F1
-owner decision. It is evidence for preparation only; it does not change the
+required-argument contract, the F3 one-launch supervisor, the repaired
+producer-to-verifier provenance result and the unresolved F1 owner decision.
+The hash above is the current frozen host-report hash for this documentation
+group. The result is evidence for preparation only; it does not change the
 manifest hash, authorize dispatch or establish a RAW predecessor.
+
+## Current local F3 provenance evidence
+
+The current helper adds `Invoke-P5ESyntheticReadbackCollector`, which consumes
+only disposable `collector-input.json`, WAL-aware `before-snapshot.json` and
+`after-snapshot.json`, `transaction-evidence.json`, `report.bin` and
+`receipt.bin`, then emits `post-readback.json`. It validates actual serialized
+bytes and computes their hashes/lengths; it does not accept caller-supplied
+`validationPassed`, `atomicClaim` or `allowedDiff` values as evidence. The
+collector and verifier bind event id, run identity, canonical paths, all source
+hashes, collector implementation hash, attempt/auth/lifecycle timestamps and
+the source mapping `p5e.raw.readback.source-map.v1`.
+
+The source-derived pack manifest fingerprint is
+`0353d751924d02ef0928bb6460c4ab894fee7c6324506e62b2972090e519c4da`; both
+report and receipt must carry this exact value. It is distinct from
+`endpointAccountFingerprint`, which remains pending owner provenance. The
+consume gate is `issued <= consumed < expires`; post-readback may be later than
+expiry when the durable chronology is valid. The tracked result
+`docs/P5E_PROVENANCE_REVIEW_RESULT.json` records two accepted controls, all
+four repaired mutations rejected, producer and verifier negative fixtures
+rejected, redaction success, `deviceActions=0`, `providerCalls=0` and
+`p6Ready=false`.
+
+This is synthetic offline producer evidence only. It is not a device DB
+collector, does not read settings or credentials, and does not authorize an
+instrumentation/provider call. A future live run must still prove the same
+mapping from an owner-permitted read-only device snapshot for the exact event.
 
 ## Exact identity requested
 
@@ -216,6 +249,29 @@ it is never a credential. If the owner cannot verify it in the permitted
 scope, or the account does not match, stop before constructing/consuming
 authorization and before provider dispatch.
 
+## Owner provenance input — not an authorization
+
+This template remains non-secret and unapproved until the owner supplies a
+trusted source and an exact scope. No API key, raw endpoint or actual
+fingerprint belongs in chat, Git or this proposal.
+
+| Field | Current value / required input |
+|---|---|
+| Decision | `NOT_APPROVED` |
+| Owner/authorized operator | `NOT_PROVIDED` — responsible person for account and scope |
+| Account/project label | `NOT_PROVIDED` — non-secret distinguishing label |
+| Credential reference | `NOT_PROVIDED` — label/version only, never credential value |
+| Expected source type | `NOT_PROVIDED` — trusted prior record or separately approved enrollment |
+| Source reference + created/verified time | `NOT_PROVIDED` — non-secret reference, time and verification method |
+| Algorithm/version | source-defined SHA-256/UTF-8/`normalizeEndpoint`/newline; exact implementation pinned |
+| Account mapping attestation | `NOT_PROVIDED` — basis that the credential reference maps to the approved account/project |
+| Fingerprint transport | `NOT_PROVIDED` — owner-controlled process-only lowercase 64-hex value; no chat/log/Git |
+| Credential rotation since verification | `UNKNOWN` — reverify after endpoint/key rotation |
+| Approved account operation | `NOT_APPROVED` — exact device-only load/normalize/hash/compare and redaction |
+| Approved data egress | `NOT_APPROVED` — RAW/GLOSSARY only; primary 1, repair 0, retry 0, no RECONCILE |
+| Approved artifact/code/command/helper refs | `FINAL_LOCAL_QA_COMPLETE` — manifest `DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501`, command `1D9A67693C4C4F64AF182300CDEB963A9FD9D44361EF77E91371F88C92EDA15E`, helper `6FABAE1F53973942561EDA52002F052F775570A931EAB65188103E7DEE9955A2`, host report `728E1F3986A1C7E921CD9DD5B3199BD8F1B36E8699EF9050C4306D38DABF5703`, result `BCB2DE2BD98C8191EB32CBE8298089ADFB42A8DADF33231A2733B4C272B72D01` |
+| Validity and stop conditions | `PENDING_DECISION` — expiry, mismatch, unavailable device, unknown outcome, no redispatch |
+
 ## Runtime checks and command
 
 Use only:
@@ -243,17 +299,23 @@ as unresolved, and do not retry or redispatch.
 
 The host implementation and its offline proof are in
 `scripts/p5e-raw-live-supervisor.ps1`, SHA-256
-`BEEFBB7733EED660B1F59435922D0594FBA1CBDED01B6C0B00482E786E456799`.
+`6FABAE1F53973942561EDA52002F052F775570A931EAB65188103E7DEE9955A2`.
 The repaired command wrapper is
 `docs/P5E_RAW_AUTHORIZATION_COMMAND.txt`, SHA-256
 `1D9A67693C4C4F64AF182300CDEB963A9FD9D44361EF77E91371F88C92EDA15E`.
 Host-preparation evidence is
 `docs/P5E_RAW_HOST_PREPARATION_20260915.md`, SHA-256
-`C54E55446629ADC161882C51333B25BD21633277C6A4B1020D5265E93DA11E3C`.
+`728E1F3986A1C7E921CD9DD5B3199BD8F1B36E8699EF9050C4306D38DABF5703`.
 The evidence records F2 RED-to-GREEN transport through fake process argv and
-the ADB/shell model, source-derived required arguments, F3 numeric outcomes
-and independent readback acceptance. The valid fixture is the only
-`RAW_ACCEPTED` case and keeps `P6_READY=false`; no live result is claimed.
+the ADB/shell model, source-derived required arguments, F3 numeric outcomes,
+the synthetic producer-to-verifier source mapping and independent readback
+acceptance. The current provenance result has two accepted synthetic controls;
+all four repaired mutations and the negative producer/verifier cases are
+rejected, with `p6Ready=false`. No live result is claimed.
+The result JSON SHA-256 is
+`BCB2DE2BD98C8191EB32CBE8298089ADFB42A8DADF33231A2733B4C272B72D01`.
+The probe wrapper SHA-256 is
+`EA38C04399436AC5FA9748877FEBD346CAD21D0F4C371CA29E5A28D3CA72AA53`.
 
 ## Allowed DB effects and acceptance
 
@@ -313,7 +375,7 @@ scope and the separate memory-only account verification, subject to the
 fail-closed conditions above. The host preparation does not itself grant this
 permission.
 
-Owner decision: PENDING / HOST_FIXTURES_PASS_F3_REPAIR_REQUIRED
+Owner decision: PENDING / HOST_FIXTURES_PASS_F3_PROVENANCE_REPAIR_GREEN
 endpointAccountFingerprint: PENDING_OWNER_VERIFICATION
 Runtime authorization: NOT CREATED
 Provider dispatch: NOT PERFORMED

@@ -1,7 +1,7 @@
 # P5E RAW host-preparation evidence — 2026-09-15
 
-Status: `HOST_PREPARATION_COMPLETE / P5E_CONTINUES / A4.3_NOT_ISSUED /
-RAW_NOT_RUN / P6_NOT_READY`
+Status: `HOST_PREPARATION_COMPLETE / F3_PROVENANCE_REPAIR_GREEN /
+F1_OWNER_PROVENANCE_PENDING / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`
 
 This is host-only evidence for the bounded P5/P5E continuation. It is not a
 new authorization, a new A4 proposal, or permission to dispatch. No credential,
@@ -15,7 +15,8 @@ performed while producing this evidence.
 |---|---|
 | Workspace | `D:\App Translate Books\App Translate Books-translation-profile` (the parent D1 checkout was not used) |
 | Branch | `feature/v4.18-p5e-audit-20260914` |
-| HEAD at start of host repair | `0f52d36e516560bb33d294303c70fa1753cb64f9` |
+| HEAD at start of earlier F2/F3 host repair | `0f52d36e516560bb33d294303c70fa1753cb64f9` |
+| HEAD at resume of this provenance repair | `31a262a806372dc804a0650c4d65f8012d4f78bb`; clean before local mutation |
 | Audit baseline | user-supplied prefix `f8fe433ef454772a1b55dea496a2c4bfd679766` resolves to `f8fe433ef454772a1b55dea496a2c4bfd679766f`; it is an ancestor of the start HEAD |
 | Frozen production | code207 / `v4.17-p5e.11`; APK `2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD`; source ZIP `B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348` |
 | AndroidTest pin | `57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA`, package `com.ml.tblandroidtxt.test`, runner `androidx.test.runner.AndroidJUnitRunner`, source/archive commit `d51b7f3c16bdc482513b9904db07b97daed592d1` |
@@ -34,11 +35,15 @@ The repaired command and helper are:
 | File | SHA-256 | Role |
 |---|---|---|
 | `docs/P5E_RAW_AUTHORIZATION_COMMAND.txt` | `1D9A67693C4C4F64AF182300CDEB963A9FD9D44361EF77E91371F88C92EDA15E` | review-only child-process wrapper; not executed |
-| `scripts/p5e-raw-live-supervisor.ps1` | `BEEFBB7733EED660B1F59435922D0594FBA1CBDED01B6C0B00482E786E456799` | host dispatcher, redacting capture, and independent outcome verifier |
+| `scripts/p5e-raw-live-supervisor.ps1` | `6FABAE1F53973942561EDA52002F052F775570A931EAB65188103E7DEE9955A2` | host dispatcher, redacting capture, synthetic producer, and independent outcome verifier |
 
 The command file still carries the original manifest hash and the immutable
 code207/test57EC99 pins. Its hash is deliberately different because the old
 command did not prove safe remote-shell transport or durable acceptance.
+
+The prior helper hash `BEEFBB7733EED660B1F59435922D0594FBA1CBDED01B6C0B00482E786E456799`
+is retained as the RED input for the provenance review; it is not the current
+packet helper. The manifest and command hashes are unchanged.
 
 ## Artifact and source checks
 
@@ -172,8 +177,9 @@ within the `$0.05` cap, valid token/deadline fields, schema/receipt validation,
 the four-source tuple, integrity/FK, and zero reconciliation/history.
 It does not impose A4.2's unrelated 67-field preflight schema.
 
-The valid fixture was the only `RAW_ACCEPTED` result and explicitly returned
-`p6Ready=false`. These fixtures were rejected:
+Within this earlier outcome-only matrix, the valid fixture was the only
+`RAW_ACCEPTED` result and explicitly returned `p6Ready=false`. These fixtures
+were rejected:
 
 ```text
 OK but RECOVERY_REQUIRED
@@ -187,6 +193,95 @@ unrelated write
 
 Result: `P5E_OUTCOME_FIXTURES=8_PASS`, counting the one valid fixture and the
 seven rejection fixtures. No fixture is device or provider evidence.
+
+## F3 — provenance repair and producer-to-verifier proof
+
+The four false accepts from the provenance review were repaired in the helper.
+The corrected consume boundary is `issued <= consumed < expires`; the verifier
+also binds `before <= claim`, `attempt.created <= attempt.updated <= observed <=
+collected`, and permits a post-readback observation after authorization expiry
+when the call/commit chronology is otherwise valid. Report and receipt bytes
+are read and validated independently, and both must carry the exact
+source-derived pack manifest fingerprint
+`0353d751924d02ef0928bb6460c4ab894fee7c6324506e62b2972090e519c4da`.
+This value is a pack-manifest identity, not the owner account fingerprint.
+
+The exact boundary fixture set is independently recorded as
+`issued-1=reject`, `issued=accept`, `expires-1=accept`, `expires=reject` and
+`expires+1=reject`. The fixtures align claim/attempt/observation timestamps so
+the result tests the authorization upper/lower bound itself.
+
+`Invoke-P5ESyntheticReadbackCollector` is a concrete offline producer entry
+point. It consumes only a disposable event directory containing:
+
+```text
+HOST_RUN_METADATA.json
+collector-input.json
+before-snapshot.json
+after-snapshot.json
+transaction-evidence.json
+report.bin
+receipt.bin
+```
+
+It validates the source input, event/run identity, WAL-aware snapshot marker,
+transaction evidence and actual UTF-8/no-BOM serialized artifact bytes; it
+then writes `post-readback.json` with hashes, lengths, source paths, collector
+identity/hash, timing and separate atomicity evidence. It has no ADB,
+instrumentation, provider, real database or credential path. This proves the
+producer-to-verifier contract on synthetic content, not that a live device
+collector exists on the pinned APK.
+
+### Field → source → transformation → gate
+
+The required root fields of `p5e.raw.readback.v1` are all covered by the
+mapping below: `schemaVersion`, `observedAtMillis`, `externalCallState`,
+`production`, `test`, `database`, `freshTuple`, `lineageBefore`,
+`lineageAfter`, `attempt`, `authorizationReceipt`, `lifecycle`, `artifacts`,
+`integrity` and `provenance`. Nested required fields are checked by the same
+producer/verifier path, rather than added as unproven placeholders.
+
+The nested required sets are: `production` package/version/versionCode/APK/cert;
+`test` package/target/APK/cert/runner/sourceCommit; `database`
+before/after/schema/integrity/FK; `freshTuple` project/selector/chapter/
+binding/run/evaluation/pack/profile/mode/projection/four sources; both lineage
+objects' six counts; `attempt` identity/status/timestamps/artifact hashes and
+metrics; `authorizationReceipt` identity/phase/attempt/timing/caps/consume
+result; `lifecycle` attempt/stage/byte counts/status/generation/response;
+`artifacts.report` and `.receipt` schema/type/identity/manifest/pack/profile/
+chapter/phase/predecessor/hash/length/validation; `integrity` allowed-diff,
+immutability, atomicity and delete flags; and `provenance` source paths/hashes,
+collector identity, event binding, timing and `atomicityEvidence`.
+
+| Field group | Source file/function | Transformation | Acceptance gate |
+|---|---|---|---|
+| Package/certificate | `collector-input.json` → `production`, `test` | preserve exact package, version/code, APK/certificate/source commit | pinned artifact/package/certificate identity |
+| Fresh tuple and four sources | `collector-input.json` → `freshTuple` | preserve project/selector/chapter/binding/run/evaluation, pack/profile, role/visibility, bytes and hashes | exact fresh tuple and immutable source/binding/run/settings projection |
+| DB/schema/integrity/FK | `before-snapshot.json`, `after-snapshot.json` | map snapshot SHA-256, schema, integrity, FK, tuple identity | `WAL_AWARE_CONSISTENT`, schema24, `ok`, FK `0`, exact path/source hash |
+| Lineage and allowed diff | snapshot `lineage` plus transaction evidence | compare zero-before with allowlisted after pair; do not edit DB | one attempt/receipt/lifecycle/report pair, reconciliation/history `0`, no unrelated write/delete |
+| Attempt/authorization/lifecycle | `collector-input.json` templates | bind exact event/run/attempt and replace artifact hash/length with validator output | consumed exact receipt, `COMMITTED` exact attempt, caps/timestamps/lifecycle identity |
+| Report/receipt bytes | `report.bin`, `receipt.bin` | real no-BOM UTF-8 JSON parse, schema/identity checks, SHA-256/length | stored bytes valid and cross-linked; validator result is not caller-supplied boolean |
+| Atomicity | `transaction-evidence.json` plus before/after | keep transaction semantics, row-pair and byte validation as separate evidence | transaction flags, matching source hash, allowed diff and no delete |
+| Provenance/timing | metadata + all six producer files + collector implementation | canonicalize paths, hash every source, record run/claim/consume/attempt/observation/collection times | exact event/file binding, collector identity/hash and chronology |
+
+The tracked probe result is `docs/P5E_PROVENANCE_REVIEW_RESULT.json`, SHA-256
+`BCB2DE2BD98C8191EB32CBE8298089ADFB42A8DADF33231A2733B4C272B72D01`. It
+records the two accepted controls
+(`valid_control`, `late_observation_control`), five exact authorization-boundary
+fixtures, rejection of all four repaired mutations, six typed producer stops,
+twelve verifier negatives, `P5E_FINGERPRINT_FAILURE_REDACTION=PASS`,
+`deviceActions=0`, `providerCalls=0` and `p6Ready=false`. No boolean was
+supplied by the owner or copied from `New-P5EValidReadbackFixture`; the
+synthetic transaction flags are disposable test inputs, while the producer
+creates the input files and the verifier recomputes hashes/validation,
+identity, path and chronology from those files.
+
+The producer negative cases are typed stops for missing report/receipt, wrong
+event, schema drift, incomplete WAL-consistency marker and invalid validator
+output. The verifier negatives cover missing rows, orphan lifecycle, duplicate
+attempt, wrong event, schema drift, incomplete snapshot, missing artifact,
+modified tuple, wrong source hash and unknown cost. None retries, calls a
+provider, or changes a database.
 
 ## F1 — source account path and the one missing owner decision
 
@@ -224,7 +319,7 @@ the owner-approved expected value.
 
 ## QA and boundary result
 
-QA round one passed after the final helper patch:
+QA round one passed after the final helper patch and provenance collector:
 
 ```text
 PARSE_ONLY=scripts/p5e-raw-live-supervisor.ps1:PASS
@@ -236,24 +331,28 @@ CURRENT_ANDROID_SOURCE_DIFF=0
 PRODUCTION_PAYLOAD_PARITY=5/5:PASS
 TEST_PAYLOAD_PARITY=8/8:PASS
 P5E_HOST_SELFTEST=PASS
+P5E_PROVENANCE_PROBE=PASS
+P5E_FINGERPRINT_FAILURE_REDACTION=PASS
+P5E_PRODUCER_TO_VERIFIER=PASS
 QA_ROUND_ONE=PASS
 ```
 
 Adversarial review items were checked against the implementation and source:
 expected fingerprint provenance is still explicitly pending; the pipe is
-byte-exact only in the repaired path; sensitive shapes are redacted on
-success/error/timeout; exit zero cannot bypass non-`COMMITTED` acceptance;
-timeout does not retry; only the allowlisted DB rows/diffs can be accepted;
-branch, source commit, artifact pins and proposal-era HEAD are distinguished;
-and the future permission must name the account operation in addition to the
-RAW/GLOSSARY egress and one-call budget. A second equivalent review is not
-required after the targeted corrections; any new owner input would be a new
-decision, not a third review loop.
+byte-exact only in the repaired path; fingerprint assertion digests are
+redacted on success/error/timeout fake captures; exit zero cannot bypass
+non-`COMMITTED` acceptance; timeout does not retry; only the allowlisted DB
+rows/diffs can be accepted; branch, source commit, artifact pins and
+proposal-era HEAD are distinguished; and the future permission must name the
+account operation in addition to the RAW/GLOSSARY egress and one-call budget.
+A second equivalent review is not required after the targeted corrections; any
+new owner input would be a new decision, not a third review loop.
 
 Not done: no actual account fingerprint was computed, no credential was read,
-no device or instrumentation run occurred, no post-live readback exists, RAW
-was not accepted, RECONCILE was not opened, P5/P5E exit was not claimed, and
-P6 remains false.
+no device or instrumentation run occurred, no live-device collector or
+post-live readback exists, RAW was not accepted, RECONCILE was not opened,
+P5/P5E exit was not claimed, and P6 remains false. F3 is GREEN only for the
+offline synthetic producer/verifier boundary.
 
 ## Single next action
 
