@@ -1,6 +1,6 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Current local closure at input baseline `8c24b7d2` and probe HEAD `35c52600`: H1–H4 are resolved by offline host evidence. This packet is `PENDING` owner review, not an authorization. F1 trusted expected fingerprint and live permission remain pending; A4.3 is not issued, RAW is not run, and P6 remains not ready. Evidence: `docs/P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json`.
+> Current local closure at input baseline `8c24b7d2` and final probe HEAD `1d0dfe88`: H1–H4 are resolved by offline host evidence. This packet is `PENDING` owner review, not an authorization. F1 trusted expected fingerprint and live permission remain pending; A4.3 is not issued, RAW is not run, and P6 remains not ready. Evidence: `docs/P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json`.
 
 Proposal status: PENDING_OWNER_REVIEW / F3_LOCAL_EVIDENCE_CHAIN_GREEN /
 F1_PROVENANCE_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN /
@@ -70,7 +70,7 @@ SHA-256 is
 
 The current host-preparation document is
 `docs/P5E_RAW_HOST_PREPARATION_20260915.md`, SHA-256
-`CF8DBC069457A998BD5BDC7C84B500B9566CB598ABF0AAD0F053D766E046C711`.
+`4A0E678ED298F4FF879062C9FD5F81A383D235F1C27ED4EAE7CA15563DEB6797`.
 
 Canonical plan: EDITORIAL_RECOVERY_V4_18.md
 Current host-repair branch: feature/v4.18-p5e-audit-20260914
@@ -353,7 +353,7 @@ serializer source SHA-256 is
 `1222B8AC9B79DAFC659DD364F50849DFBA4782C181606A92DA47EBD8C6164E3C`.
 Host-preparation evidence is
 `docs/P5E_RAW_HOST_PREPARATION_20260915.md`, SHA-256
-`CF8DBC069457A998BD5BDC7C84B500B9566CB598ABF0AAD0F053D766E046C711`.
+`4A0E678ED298F4FF879062C9FD5F81A383D235F1C27ED4EAE7CA15563DEB6797`.
 The evidence records F2 RED-to-GREEN transport through fake process argv and
 the ADB/shell model, source-derived required arguments, F3 numeric outcomes,
 the executable same-event collector path, separate artifact contract and

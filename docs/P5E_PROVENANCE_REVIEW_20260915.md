@@ -1,7 +1,7 @@
 # P5E — tái kiểm tra readiness và provenance, 2026-09-15
 
 > **Historical findings superseded for current readiness:** the local repair at
-> probe HEAD `35c52600` resolves H1–H4 with an exact helper hash gate, a
+> final probe HEAD `1d0dfe88` resolves H1–H4 with an exact helper hash gate, a
 > source-derived separate report/receipt contract, an executable same-event
 > Before/After collector and a typed recovery path. The timing/event/path and
 > redaction evidence below remains valid in its tested scope. Current evidence
@@ -17,14 +17,14 @@ remain `PENDING`. Đây là tiếp tục P5E, không tạo phase/release mới.
 
 The current branch is `feature/v4.18-p5e-audit-20260914`; input baseline
 `8c24b7d2` is an ancestor and the offline probe ran at
-`35c52600d59cb3cd068a5c566dc9f7e43bed50a5`. The unchanged manifest is
+`1d0dfe8854eddf99e3bc73478a3343ec8f9484c3`. The unchanged manifest is
 `DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501`.
 The final command SHA-256 is
 `30B50BFEF809225B33901AC130CC5EE83CC8AD76A3D958D987EF19C8FCA50D10`; the
 helper/collector SHA-256 is
 `4D68F4BB0B0D31FA6D443439967746C1C83CCB4514EE6D7AF830CF90DBE0EC76`.
 The current host-preparation document SHA-256 is
-`CF8DBC069457A998BD5BDC7C84B500B9566CB598ABF0AAD0F053D766E046C711`.
+`4A0E678ED298F4FF879062C9FD5F81A383D235F1C27ED4EAE7CA15563DEB6797`.
 The current local result SHA-256 is
 `ECD61953C8E9C4E4539EC5B2B5865EDBC08D686E37F4C4743D67084887D8E725`.
 

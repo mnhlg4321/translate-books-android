@@ -1,6 +1,6 @@
 # Editorial Recovery v4.18
 
-> Current P5E local closure (2026-09-15, input baseline `8c24b7d2`, probe HEAD `35c52600`): H1–H4 are resolved by offline host evidence. F3 is `LOCAL_EVIDENCE_CHAIN_GREEN`; F1 trusted expected fingerprint and live permission remain pending. Owner packet `PENDING`; A4.3 `NOT_ISSUED`; RAW `NOT_RUN`; P6 `NOT_READY`. No live action is authorized. Evidence: `docs/P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json`.
+> Current P5E local closure (2026-09-15, input baseline `8c24b7d2`, final probe HEAD `1d0dfe88`): H1–H4 are resolved by offline host evidence. F3 is `LOCAL_EVIDENCE_CHAIN_GREEN`; F1 trusted expected fingerprint and live permission remain pending. Owner packet `PENDING`; A4.3 `NOT_ISSUED`; RAW `NOT_RUN`; P6 `NOT_READY`. No live action is authorized. Evidence: `docs/P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json`.
 
 
 Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_LOCAL_EVIDENCE_CHAIN_GREEN / OWNER_PACKET_PENDING / ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY.
@@ -23,8 +23,8 @@ reconciliation, settings write or database write occurred.
 The current host-only continuation is on branch
 `feature/v4.18-p5e-audit-20260914`. The earlier F2/F3 repair started from
 `0f52d36e516560bb33d294303c70fa1753cb64f9`; this provenance repair resumed at
-actual HEAD `35c52600d59cb3cd068a5c566dc9f7e43bed50a5` before the current local
-mutation group. This branch is the
+actual HEAD `1d0dfe8854eddf99e3bc73478a3343ec8f9484c3` before the final docs-only
+refresh. This branch is the
 audit/repair continuation, not a new release branch; the pinned AndroidTest
 source and production code207 artifact remain unchanged. The host-preparation
 commit is `c2c79a19842f551fc752a53328024aab8ddb529d`.
@@ -67,7 +67,7 @@ permission decision; until then, do not dispatch.
 
 The current host-preparation document is
 `docs/P5E_RAW_HOST_PREPARATION_20260915.md`, SHA-256
-`CF8DBC069457A998BD5BDC7C84B500B9566CB598ABF0AAD0F053D766E046C711`.
+`4A0E678ED298F4FF879062C9FD5F81A383D235F1C27ED4EAE7CA15563DEB6797`.
 
 ### Canonical current pin table
 
@@ -153,7 +153,7 @@ scripts/p5e-raw-live-supervisor.ps1, SHA-256
 4D68F4BB0B0D31FA6D443439967746C1C83CCB4514EE6D7AF830CF90DBE0EC76.
 The preparation evidence is
 docs/P5E_RAW_HOST_PREPARATION_20260915.md, SHA-256
-CF8DBC069457A998BD5BDC7C84B500B9566CB598ABF0AAD0F053D766E046C711.
+4A0E678ED298F4FF879062C9FD5F81A383D235F1C27ED4EAE7CA15563DEB6797.
 
 The source-derived production artifact contract is
 docs/P5E_PRODUCTION_ARTIFACT_CONTRACT_20260915.json, SHA-256
