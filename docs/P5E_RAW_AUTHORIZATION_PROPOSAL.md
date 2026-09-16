@@ -1,6 +1,6 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Current local repair 2026-09-16, implementation HEAD `77f060ad`: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_PACKET_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. SQLite query/parser, exact persisted NULL handling, production serializer golden bridge and host negative matrix have concrete offline evidence. Live/device/account actions remain unauthorized. Current next action: owner review of the final hash-bound packet and one explicit account/readback/RAW decision; do not dispatch before that decision. Evidence: `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`.
+> Current local repair 2026-09-16, implementation HEAD `9e5ffb78`: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_CHECK_ARTIFACT_BUILT_NOT_INSTALLED / ACCOUNT_CHECK_NOT_EXECUTED / A4_3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. SQLite query/parser, exact persisted NULL handling, production serializer golden bridge and host negative matrix have concrete offline evidence. The owner-approved account-only boundary is now built but has not been installed or run because no trusted process-only expected fingerprint is present. Current next action: owner-controlled process-only expected value, then one separately scoped account check; do not dispatch RAW. Evidence: `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json` and `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`.
 
 Proposal status: LOCAL_BEHAVIORAL_GATE_GREEN / F1_PROVENANCE_PENDING /
 OWNER_DECISION_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN /
@@ -48,30 +48,42 @@ Both pass on the hashes above with zero failures and zero external actions.
 
 Owner input received on `2026-09-16` approves only one memory-only account
 check with result `MATCH`/`MISMATCH`; it forbids key/fingerprint/endpoint
-logging, provider calls, DB writes and RAW dispatch. The current pinned
-AndroidTest has no standalone entry point for that operation: its existing
-selected live method continues from the fingerprint comparison into DB/preflight
-and `dispatchRaw`. No safe account-only check was therefore executed, and no
-MATCH/MISMATCH is claimed. A separately qualified test-only verifier and
-process-only expected value are still required before this limited check can
-run; this is not permission to build/install or dispatch.
+logging, provider calls, DB writes and RAW dispatch. The current pinned RAW
+AndroidTest still has no standalone entry point: its selected live method
+continues from the fingerprint comparison into DB/preflight and `dispatchRaw`.
+A separate test-only verifier and host runner were therefore added and built
+without changing the RAW pins. The replacement APK is not installed, no
+device account check was executed, and no `MATCH`/`MISMATCH` is claimed because
+the trusted process-only expected value is not present. This does not authorize
+RAW or readback collection.
 
-The owner must decide all of the following together, with status currently
-`NOT_PROVIDED` / `NOT_APPROVED`:
+Account-check replacement pins are separate from the RAW/A4 test pin:
+
+| Item | SHA-256 / status |
+|---|---|
+| Test-only source `EditorialP5EAccountCheckOnlyInstrumentedTest` | `2F4BF9AD27CF5DF93D89456767423271907598EA209A0AD6E4C27599BC20063C` |
+| Host runner `scripts/p5e-account-check.ps1` | `0722A243C92724D59AFB7CF4B6DE674024F9BAE4FD76A712DF0210AF25B036F3` |
+| Replacement AndroidTest APK, event `p5e-account-check-20260916-01` | `058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8`, built/not installed |
+| Replacement source ZIP | `5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F` |
+| Local account-check result | `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`; no device result |
+| Unchanged RAW command/helper pins | `47044AB7…55AB` / `364A6AA2…6FFE7` |
+
+The remaining owner inputs have these separate statuses:
 
 - independent expected account fingerprint provenance and owner/account-key
-  mapping; the expected value must not be copied from a live mismatch or a
-  fixture, and no API key/raw endpoint is sent in chat or Git;
-- permission for the source-defined memory-only account operation
+  mapping — `NOT_PROVIDED`; the expected value must not be copied from a live
+  mismatch or a fixture, and no API key/raw endpoint is sent in chat or Git;
+- the source-defined memory-only account operation
   `SHA256(UTF8(normalizeEndpoint(baseUrl) + "\n" + apiKey))`, with actual computed
-  only on the approved device and compared to the trusted expected value;
+  only on the approved device and compared to the trusted expected value; the
+  operation scope is `RECEIVED`, but the expected value is still missing;
 - read-only package/certificate/SQLite/WAL-aware collection for the exact
   serial and event, with no settings content, credential, prompt, request body,
-  raw response or full database export in evidence;
+  raw response or full database export in evidence — `NOT_APPROVED`;
 - exactly one RAW/GLOSSARY dispatch to the pinned route: primary `1`, repair
   `0`, retry `0`, fallback/RECONCILE off, DRAFT/PRONOUN hidden; caps
   input/output/total `100000/4096/104096`, cost `USD0.05`, execution/auth/host
-  windows `120000/180000/240000 ms`.
+  windows `120000/180000/240000 ms` — `NOT_APPROVED`.
 
 The only allowed durable effects are the already reviewed exact authorization/
 attempt/lifecycle/report/receipt rows for this event and the allowlisted RAW
@@ -84,9 +96,11 @@ redaction failure is `UNKNOWN`/`RECOVERY_REQUIRED` or
 `ACCEPTANCE_NOT_PROVEN`, with no expiry refresh and no redispatch.
 
 Decision remains `PENDING`; account approval alone is not send-books approval.
-The one next action is owner review of these exact hashes and explicit account,
-readback and egress choices. Until approved, A4.3 is not issued and no live
-command may be run. Even a valid offline golden pair keeps `P6_READY=false`.
+The one next action is for the owner-controlled runner process to receive the
+trusted expected fingerprint without putting it in chat, Git, logs or command
+text, then perform the single account-only check with the replacement test
+artifact. A4.3 is not issued; no RAW command may be run. Even a valid account
+`MATCH` keeps `P6_READY=false` and does not approve readback or provider egress.
 
 ## Historical baseline and evidence
 

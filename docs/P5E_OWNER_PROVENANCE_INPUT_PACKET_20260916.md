@@ -1,7 +1,7 @@
 # P5E — owner provenance/input packet
 
 Ngày: `2026-09-16`
-Trạng thái local: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_PACKET_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`.
+Trạng thái local: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_CHECK_ARTIFACT_BUILT_NOT_INSTALLED / ACCOUNT_CHECK_NOT_EXECUTED / A4_3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`.
 
 ## Owner input received — limited account-check scope
 
@@ -12,24 +12,28 @@ one device-side memory-only account check whose only result may be
 fingerprint or endpoint, provider calls, database writes and RAW dispatch.
 No secret or fingerprint value is recorded here.
 
-This input does not make the current pinned APK executable for that operation.
+This input does not make the current pinned RAW APK executable for that operation.
 The pinned `EditorialP5EFreshRawLiveInstrumentedTest#authorizedFreshRawRunsOnlyWhenExplicitlyOptedIn`
 computes and compares the fingerprint, but then proceeds into DB/preflight and
 `dispatchRaw`; it is not an account-only method. The current AndroidTest pin
-has no separate memory-only `MATCH`/`MISMATCH` entry point, and no trusted
-expected fingerprint is available through the process-only channel. Therefore
-the check result is `NOT_EXECUTED`, not `MATCH` or `MISMATCH`; no device action
-was taken.
+has no separate memory-only `MATCH`/`MISMATCH` entry point. A separately
+qualified test-only method and host runner have now been added and built; the
+replacement artifact is not installed. No trusted expected fingerprint is
+available through the process-only channel, so the check result remains
+`NOT_EXECUTED`, not `MATCH` or `MISMATCH`; no device action was taken.
 
-The exact missing boundary is a separately qualified test-only account verifier
-that loads settings in memory, compares to an owner-controlled process-only
-expected value, emits only `MATCH`/`MISMATCH`, and has no DB/provider/RAW path.
-Building/installing or repinning that test-only artifact is outside the prior
-local authorization and is not performed by this input.
+The new boundary loads settings in memory, compares to an owner-controlled
+process-only expected value, emits only `MATCH`/`MISMATCH`, and has no
+DB/provider/RAW path. The host runner hash-checks itself, the existing helper,
+and the replacement APK before reading the expected value or creating an adb
+process. Its offline missing-value and fake-process checks are recorded in
+`docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`. This approval was used
+only to prepare the test-only artifact; installation and the one device check
+remain pending the owner-controlled expected value.
 
-## Điều owner cần xem và cung cấp
+## Điều còn thiếu trước khi chạy account check hoặc mở event RAW
 
-Owner chỉ cần gửi một quyết định không chứa secret, gồm:
+Không cần gửi secret trong chat/Git. Các mục còn thiếu hoặc cần giữ riêng là:
 
 1. Nhãn operator/project/account dùng để xác định đúng tài khoản và thời điểm
    xác minh.
@@ -37,8 +41,10 @@ Owner chỉ cần gửi một quyết định không chứa secret, gồm:
    chiếu tới trusted enrollment/record và mapping account/key. Không gửi actual
    fingerprint, API key, raw endpoint, settings hay credential qua chat, Git,
    log hoặc command text.
-3. Cho phép memory-only load/normalize/hash/compare account settings; kết quả
-   chỉ là `MATCH`/`MISMATCH`, không lưu hai digest.
+3. Account-check scope này đã được owner cho phép: memory-only
+   load/normalize/hash/compare, kết quả chỉ `MATCH`/`MISMATCH`, không lưu hai
+   digest. Expected value vẫn phải đi qua process-only channel từ nguồn độc
+   lập; không lấy actual trên thiết bị làm expected.
 4. Cho phép read-only package/APK/certificate, settings, WAL-aware SQLite,
    attempt/authorization/lifecycle, report/receipt/metrics và allowlisted
    lineage readback.
@@ -61,7 +67,12 @@ ngay trước owner decision:
 | Helper/collector | `364A6AA2C52A90E7AD20F28EC6C46A0EAD1BA39E8909727BEA7396287896FFE7` | source hiện hành; runtime hash gate |
 | Artifact contract | `FFE70A70E622706FABFA49D5843310ECD5A283B1CA114E32C636EA26B9FAE4BF` | report/receipt source-derived |
 | Production APK | `2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD` | frozen code207 artifact |
-| AndroidTest APK | `57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA` | frozen test artifact |
+| AndroidTest APK (historical RAW/A4 pin) | `57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA` | unchanged; not the account-check replacement |
+| Account-check AndroidTest APK | `058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8` | `p5e-account-check-20260916-01`, built/not installed |
+| Account-check AndroidTest source ZIP | `5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F` | source commit `9e5ffb7819bfb91dcb8ed9e25c901ab10aa48390` |
+| Account-check source | `2F4BF9AD27CF5DF93D89456767423271907598EA209A0AD6E4C27599BC20063C` | exact class/method; test-only |
+| Account-check host runner | `0722A243C92724D59AFB7CF4B6DE674024F9BAE4FD76A712DF0210AF25B036F3` | exact script; no retry/redispatch |
+| Account-check local result | `9096A7135C99A1CAF3FE14E20A3AFEEAE1F907DCE8657AC2A9B2C3FE3F29BDF1` | no device result; expected value absent |
 | Serializer source | `1222B8AC9B79DAFC659DD364F50849DFBA4782C181606A92DA47EBD8C6164E3C` | production bytes source |
 
 Thứ tự re-freeze nếu có sửa local pin: hash helper → cập nhật command helper
@@ -83,11 +94,11 @@ cùng event nếu được, không refresh ID, retry, repair hoặc redispatch.
 ## Readiness và nguyên nhân overthinking còn lại
 
 Local behavioral PASS chứng minh query/parser/collector/verifier và golden JVM
-offline trên fixture; nó không chứng minh installed-pin readback, account
-provenance hay live RAW. Vì vậy `OWNER_PACKET_PENDING` và `RAW_NOT_RUN` là nhất
-quán; chỉ F1 provenance và explicit scope còn chờ owner sau khi các hash trên
-được review. Overthinking trước đây đến từ proposal cũ trộn hash lịch sử với
-current packet và lặp lại các gate đã đóng. Current sections nay đã đồng bộ;
-chỉ dùng canonical current pins, packet này và
-`docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`; không mở lại H1–H4 khi input
-không đổi.
+offline trên fixture; account-check source/runner cũng đã được build và kiểm
+offline, nhưng chưa chứng minh installed-pin readback, expected account
+provenance hay live RAW. Vì vậy `ACCOUNT_CHECK_NOT_EXECUTED`, `OWNER_PACKET_PENDING`
+và `RAW_NOT_RUN` là nhất quán; expected fingerprint process-only và mọi
+readback/RAW permission còn chờ owner. Current sections nay đã đồng bộ; chỉ
+dùng canonical current pins, packet này và
+`docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`/`docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`;
+không mở lại H1–H4 khi input không đổi.

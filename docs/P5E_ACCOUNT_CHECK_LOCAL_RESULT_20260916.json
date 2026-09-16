@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "p5e.account-check.local-result.v1",
+  "date": "2026-09-16",
+  "status": "ACCOUNT_CHECK_NOT_EXECUTED",
+  "ownerScope": "RECEIVED_MEMORY_ONLY_MATCH_MISMATCH",
+  "expectedFingerprint": "NOT_PROVIDED",
+  "deviceCheck": {
+    "status": "NOT_EXECUTED_EXPECTED_PROCESS_VALUE_MISSING",
+    "serial": "15e84958",
+    "adbLaunches": 0,
+    "providerCalls": 0,
+    "dbWrites": 0,
+    "rawDispatches": 0
+  },
+  "offlineRunnerChecks": {
+    "powershellParse": "PASS",
+    "hashGateBeforeExpectedRead": "PASS",
+    "missingExpectedStop": "OWNER_ENDPOINT_ACCOUNT_FINGERPRINT_MISSING_OR_INVALID_STOP",
+    "fakeProcessOutcome": "ACCOUNT_CHECK_NONZERO_NOT_PROVEN",
+    "fakeProcessLaunchCount": 1,
+    "fakeProcessRedactionPass": true,
+    "fakeProcessProviderCalls": 0,
+    "fakeProcessDbWrites": 0,
+    "fakeProcessRawDispatches": 0
+  },
+  "sourceCommit": "9e5ffb7819bfb91dcb8ed9e25c901ab10aa48390",
+  "accountCheckSource": {
+    "path": "app/src/androidTest/java/com/ml/tblandroidtxt/EditorialP5EAccountCheckOnlyInstrumentedTest.java",
+    "sha256": "2F4BF9AD27CF5DF93D89456767423271907598EA209A0AD6E4C27599BC20063C",
+    "method": "EditorialP5EAccountCheckOnlyInstrumentedTest#ownerApprovedAccountCheckOnlyReturnsMatchOrMismatch"
+  },
+  "hostRunner": {
+    "path": "scripts/p5e-account-check.ps1",
+    "sha256": "0722A243C92724D59AFB7CF4B6DE674024F9BAE4FD76A712DF0210AF25B036F3",
+    "helperSha256": "364A6AA2C52A90E7AD20F28EC6C46A0EAD1BA39E8909727BEA7396287896FFE7",
+    "timeoutMilliseconds": 120000,
+    "noRetry": true,
+    "noRedispatch": true
+  },
+  "replacementTestArtifact": {
+    "eventId": "p5e-account-check-20260916-01",
+    "apkSha256": "058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8",
+    "apkBytes": 1155788,
+    "sourceArchiveSha256": "5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F",
+    "buildInfoSha256": "772F32E23AEF3537FEF00DACE8E4B9B994448BFEE2071150CF0E0540DDCCC5A9",
+    "certificateSha256": "47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155",
+    "installed": false,
+    "deviceOperations": 0,
+    "providerCalls": 0
+  },
+  "unchangedRawPins": {
+    "manifestSha256": "DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501",
+    "commandSha256": "47044AB73C0B76A00E3E40A85D6E893B0F94C015F6332036484EA5ABB5FA55AB",
+    "helperSha256": "364A6AA2C52A90E7AD20F28EC6C46A0EAD1BA39E8909727BEA7396287896FFE7",
+    "productionApkSha256": "2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD"
+  },
+  "readiness": {
+    "accountCheckReadyToRun": false,
+    "a4_3Issued": false,
+    "rawRun": false,
+    "p6Ready": false
+  }
+}

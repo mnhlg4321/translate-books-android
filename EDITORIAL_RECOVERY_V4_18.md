@@ -1,6 +1,6 @@
 # Editorial Recovery v4.18
 
-> Current audit 2026-09-16, repair HEAD `77f060ad`: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. SQLite query/parser defects and the missing production golden execution are resolved in offline evidence; the owner-approved account scope has no safe entry point on the pinned APK. Current next action: resolve that missing account-only test boundary with a separately qualified test-only verifier and process-only expected value. Evidence: `docs/P5E_OWNER_PROVENANCE_INPUT_PACKET_20260916.md`.
+> Current audit 2026-09-16, implementation baseline `9e5ffb78`: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_CHECK_ARTIFACT_BUILT_NOT_INSTALLED / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. SQLite query/parser defects and the missing production golden execution are resolved in offline evidence; the owner-approved account-only boundary is now built separately from the RAW pin but has not been installed or run because no trusted process-only expected value is present. Current next action: provide that value through the owner-controlled process channel and run only the account check. Evidence: `docs/P5E_OWNER_PROVENANCE_INPUT_PACKET_20260916.md` and `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`.
 
 
 Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_CHECK_NOT_EXECUTED / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY.
@@ -19,7 +19,10 @@ The owner has now approved only one memory-only account check with output
 `MATCH`/`MISMATCH` and no key/fingerprint/endpoint logging, provider call, DB
 write or RAW dispatch. The pinned live method is not a safe account-only
 entry point: it continues from comparison into DB/preflight and `dispatchRaw`.
-Accordingly no account check was executed and no result is claimed.
+The separately qualified test-only account method and host runner are now built
+in replacement event `p5e-account-check-20260916-01`, but the replacement APK
+is not installed and no device account check was executed. No result is
+claimed; the expected fingerprint remains process-only and `NOT_PROVIDED`.
 
 QA freeze is complete on these final hashes: round 1 executed the source query,
 SQLite fixture collector/parser, production golden serializer bridge and full
@@ -183,6 +186,23 @@ The current local evidence result is
 docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json, SHA-256
 C3B7B7C7B86580CF56A810E4ECBA623A54B45F123B92C8A7753484EC54A45B48.
 
+The account-only replacement source is
+app/src/androidTest/java/com/ml/tblandroidtxt/EditorialP5EAccountCheckOnlyInstrumentedTest.java,
+SHA-256 `2F4BF9AD27CF5DF93D89456767423271907598EA209A0AD6E4C27599BC20063C`;
+its host runner is `scripts/p5e-account-check.ps1`, SHA-256
+`0722A243C92724D59AFB7CF4B6DE674024F9BAE4FD76A712DF0210AF25B036F3`.
+The wrapper-built replacement AndroidTest APK is
+`058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8`, source
+ZIP `5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F`,
+event `p5e-account-check-20260916-01`, and it is `installed=false` with zero
+device/provider operations. These pins are for the account check only; the
+RAW command/helper and historical A4 test pin remain unchanged.
+
+The local account-check preparation result is
+`docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`, SHA-256
+`9096A7135C99A1CAF3FE14E20A3AFEEAE1F907DCE8657AC2A9B2C3FE3F29BDF1`. It records PowerShell parse,
+hash-gate and redaction/fake-process checks, but it is not a device result.
+
 The approval manifest remains unchanged at
 DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501.
 The production serializer source remains
@@ -206,15 +226,18 @@ RECONCILE. DRAFT and PRONOUN remain hidden from the model. The test package
 and production code207/certificate pins remain unchanged.
 
 endpointAccountFingerprint is not filled with a default or a settings-file
-hash. Before any runtime authorization is constructed, the owner must permit
-the source-defined in-memory operation:
+hash. For the separately scoped account check, the owner-controlled runner
+must receive an independently sourced expected value through its process-only
+channel before any device process is created. The test then performs the
+source-defined in-memory operation:
 SettingsStore.load(target).copy(), normalizeEndpoint(settings.baseUrl), then
 SHA-256 of UTF-8 endpoint + newline + in-memory settings.apiKey. The credential
 must remain in memory and never enter command text, logs or evidence. A
-mismatch or unverifiable account stops before authorization creation or
-dispatch. This operation has not been performed in this audit. The packet is
-ready for owner review of local H1–H4 closure but not for dispatch: runtime
-hash/contract/collector gates are closed locally, while F1 provenance and
+mismatch or unverifiable account returns `MISMATCH` and does not construct
+authorization or dispatch. This operation has not been performed in this
+audit. The packet is ready for owner review of local H1–H4 closure and the
+account-only boundary, but not for RAW dispatch: runtime hash/contract/
+collector gates are closed locally, while F1 expected provenance and
 account/readback/egress permission remain pending. No live account operation
 has occurred.
 
@@ -229,10 +252,11 @@ The selected live method performs its own preflightOnly checks internally; no
 separate instrumentation preflight is permitted. F2/F3 host evidence and the
 source-derived argument list are recorded in the preparation evidence above.
 
-The current single next action is owner review of the final hash-bound packet:
-trusted endpoint/account fingerprint provenance, the exact memory-only account
-operation, read-only collection permission and RAW/GLOSSARY egress must be
-decided together. A4.3 must not be dispatched before that decision.
+The current single next action is to make the independently sourced expected
+fingerprint available only to the owner-controlled account-check process and
+run the replacement account-only method once. A4.3, readback collection and
+RAW/GLOSSARY egress remain separate pending decisions; none may be dispatched
+from this account-check approval.
 
 ## Historical A4 exact-preflight evidence-channel blocker
 
