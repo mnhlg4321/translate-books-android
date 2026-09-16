@@ -1,12 +1,14 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Current audit 2026-09-16, baseline `31a09d02`: `LOCAL_VALIDATION_FAILED_REPAIR_REQUIRED / OWNER_PACKET_NOT_READY / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. F2 and H1 improvements are retained; collector SQL has three reproduced defects (schema lookup, LINEAGE width, NULL recovery row). Golden JVM→host evidence remains missing. Current next action: bounded local repair/test in `docs/P5E_NEXT_WORK_REQUEST.md`. Earlier GREEN/owner-only conclusions below are historical and superseded. Evidence: `docs/P5E_READINESS_AUDIT_20260916.md`.
+> Current local repair 2026-09-16, implementation HEAD `77f060ad`: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_PACKET_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. SQLite query/parser, exact persisted NULL handling, production serializer golden bridge and host negative matrix have concrete offline evidence. Live/device/account actions remain unauthorized. Current next action: owner review of the final hash-bound packet and one explicit account/readback/RAW decision; do not dispatch before that decision. Evidence: `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`.
 
-Proposal status: LOCAL_REPAIR_REQUIRED / F3_BEHAVIORAL_VALIDATION_FAILED /
-F1_PROVENANCE_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN /
+Proposal status: LOCAL_BEHAVIORAL_GATE_GREEN / F1_PROVENANCE_PENDING /
+OWNER_DECISION_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN /
 LIVE_ACTIONS_NOT_AUTHORIZED / P6_NOT_READY
 
-This historical packet is not ready for owner execution review: the 2026-09-16 audit reproduced three collector defects. Complete bounded local repair and behavioral QA, then refreeze changed helper/command/packet hashes. Independent account provenance and explicit owner account/readback/egress approval remain required afterward. This document creates no runtime authorization or permission to dispatch.
+The local repair is ready for owner decision review, but this document creates no
+runtime authorization or permission to dispatch. Independent account provenance
+and explicit owner account/readback/egress approval remain required.
 
 The fixed-scope file whose hash is passed to the live harness is
 docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md. Its hash is kept separate from
@@ -15,9 +17,9 @@ single command is in docs/P5E_RAW_AUTHORIZATION_COMMAND.txt.
 Pinned approval-manifest SHA-256:
 DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501.
 Pinned command SHA-256:
-30B50BFEF809225B33901AC130CC5EE83CC8AD76A3D958D987EF19C8FCA50D10.
+47044AB73C0B76A00E3E40A85D6E893B0F94C015F6332036484EA5ABB5FA55AB.
 Host supervisor SHA-256:
-4D68F4BB0B0D31FA6D443439967746C1C83CCB4514EE6D7AF830CF90DBE0EC76.
+364A6AA2C52A90E7AD20F28EC6C46A0EAD1BA39E8909727BEA7396287896FFE7.
 
 The approval manifest remains unchanged at
 `DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501`.
@@ -25,6 +27,56 @@ The approval manifest remains unchanged at
 The previous helper SHA-256
 BEEFBB7733EED660B1F59435922D0594FBA1CBDED01B6C0B00482E786E456799 is retained
 as the provenance-review RED input, not as an approval pin.
+
+## Current owner decision request — PENDING, not authorization
+
+Local evidence result: `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`, SHA-256
+`C3B7B7C7B86580CF56A810E4ECBA623A54B45F123B92C8A7753484EC54A45B48`.
+The manifest remains `DD58…4501`; final command/helper are
+`47044AB7…55AB` / `364A6AA2…6FFE7`; artifact contract is `FFE70A70…A4BF`;
+production serializer is `1222B8AC…64E3C`; the targeted JVM test source is
+`3D7C7A39…31A5`; frozen production/test APK pins remain code207 /
+`2CCBB844…800FD` and `57EC99…FDEA`. The local diff does not change production
+source, AndroidTest source/artifact pins, schema/migration, route/model,
+pack/profile, prompt, budget or input identities; it repairs only host
+query/parser/collector tests and adds a test-only golden-byte export.
+
+QA freeze: round 1 executed the real SQL/collector/parser/verifier chain and
+targeted JVM golden bridge; round 2 independently rejected identity/event,
+partial-artifact, recovery/unknown and timeout-redispatch counterexamples.
+Both pass on the hashes above with zero failures and zero external actions.
+
+The owner must decide all of the following together, with status currently
+`NOT_PROVIDED` / `NOT_APPROVED`:
+
+- independent expected account fingerprint provenance and owner/account-key
+  mapping; the expected value must not be copied from a live mismatch or a
+  fixture, and no API key/raw endpoint is sent in chat or Git;
+- permission for the source-defined memory-only account operation
+  `SHA256(UTF8(normalizeEndpoint(baseUrl) + "\n" + apiKey))`, with actual computed
+  only on the approved device and compared to the trusted expected value;
+- read-only package/certificate/SQLite/WAL-aware collection for the exact
+  serial and event, with no settings content, credential, prompt, request body,
+  raw response or full database export in evidence;
+- exactly one RAW/GLOSSARY dispatch to the pinned route: primary `1`, repair
+  `0`, retry `0`, fallback/RECONCILE off, DRAFT/PRONOUN hidden; caps
+  input/output/total `100000/4096/104096`, cost `USD0.05`, execution/auth/host
+  windows `120000/180000/240000 ms`.
+
+The only allowed durable effects are the already reviewed exact authorization/
+attempt/lifecycle/report/receipt rows for this event and the allowlisted RAW
+artifacts. Before dispatch the exact fresh tuple and lineage must be unused;
+afterwards the collector must prove the exact attempt/receipt pair, valid
+COMMITTED artifacts and metrics, reconciliation/history `0`, immutable
+source/binding/run/settings identities and no unrelated write/delete. Any
+timeout, nonzero, USB loss, missing post-readback, unknown cost, recovery or
+redaction failure is `UNKNOWN`/`RECOVERY_REQUIRED` or
+`ACCEPTANCE_NOT_PROVEN`, with no expiry refresh and no redispatch.
+
+Decision remains `PENDING`; account approval alone is not send-books approval.
+The one next action is owner review of these exact hashes and explicit account,
+readback and egress choices. Until approved, A4.3 is not issued and no live
+command may be run. Even a valid offline golden pair keeps `P6_READY=false`.
 
 ## Historical baseline and evidence
 

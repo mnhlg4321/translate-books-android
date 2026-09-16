@@ -4,6 +4,13 @@ Ngày: `2026-09-16`
 Baseline: `31a09d02323cd317a9089411901849e6d51b8f66`
 Status: `LOCAL_VALIDATION_FAILED_REPAIR_REQUIRED / NO_APK_BUILD / NO_DEVICE / NO_PROVIDER / P6_NOT_READY`
 
+> Superseded for current readiness by the completed local repair at implementation
+> HEAD `77f060ad4aba61852c2c92f22326c2ed02180e20`. The bounded work described
+> here produced `P5E_LOCAL_BEHAVIORAL_GATE_GREEN` with result
+> `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`; its original RED status and
+> scope remain historical input. Owner F1 provenance/permission is still
+> `PENDING`, A4.3 is not issued, RAW was not run and P6 is not ready.
+
 ## Mục tiêu và giới hạn
 
 Request này thay thế kế hoạch local trước đây sau khi kiểm tra behavioral đã

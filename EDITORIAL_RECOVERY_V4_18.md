@@ -1,17 +1,26 @@
 # Editorial Recovery v4.18
 
-> Current audit 2026-09-16, baseline `31a09d02`: `LOCAL_VALIDATION_FAILED_REPAIR_REQUIRED / OWNER_PACKET_NOT_READY / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. F2 and H1 improvements are retained; collector SQL has three reproduced defects (schema lookup, LINEAGE width, NULL recovery row). Golden JVM→host evidence remains missing. Current next action: bounded local repair/test in `docs/P5E_NEXT_WORK_REQUEST.md`. Earlier GREEN/owner-only conclusions below are historical and superseded. Evidence: `docs/P5E_READINESS_AUDIT_20260916.md`.
+> Current audit 2026-09-16, repair HEAD `77f060ad`: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_PACKET_PENDING / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. SQLite query/parser defects and the missing production golden execution are resolved in offline evidence; live/device/account authorization remains absent. Current next action: owner review of the final hash-bound packet with independent F1 provenance and separately approved read-only collection/RAW scope. Evidence: `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`.
 
 
-Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_BEHAVIORAL_VALIDATION_FAILED / OWNER_PACKET_NOT_READY / ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY.
+Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_PACKET_PENDING / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY.
 
-Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILD_HISTORICAL / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / P5E_9B_A4_3_HOST_FIXTURES_PASS_HISTORICAL / F2_TRANSPORT_QUALIFIED / F3_BEHAVIORAL_VALIDATION_FAILED / OWNER_PACKET_NOT_READY / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY`
+Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILD_HISTORICAL / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / P5E_9B_A4_3_HOST_FIXTURES_PASS_HISTORICAL / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_PACKET_PENDING / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY`
 
 This document is the single product and execution authority for the v4.18 Editorial recovery. It supersedes active next actions from the historical v4.16 Editorial/RSC/IPC tracks without deleting or reinterpreting their evidence.
 
-## Current active boundary — P5E behavioral repair before owner packet
+## Current active boundary — P5E local behavioral gate green; owner packet pending
 
-The 2026-09-16 source-derived SQLite probe reproduces three collector defects. F2 and H1 remain valid; collector success and production serializer-to-host acceptance remain unproven. Execute the bounded local request in `docs/P5E_NEXT_WORK_REQUEST.md`; only after behavioral PASS refreeze and request owner provenance/permissions. A4.3, RAW, RECONCILE, P5 exit and P6 remain gated.
+The final local repair ran the real `Get-P5EConsistentDatabaseReadback` SQL through a read-only SQLite bridge over six disposable DDL fixtures. Schema `24`, LINEAGE `17`, INPUT `7`, nullable CLAIMED/RECOVERY rows, exact COMMITTED golden report/receipt bytes, lineage/reconciliation source mapping and fail-closed parser mutations all have concrete results. The targeted production serializer JVM test ran on JBR `21.0.10`; its bytes passed the host validator and the required identity/byte mutation matrix was rejected. Helper self-test, SQL boundary probe and supervisor failure/timeout checks pass. See `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`.
+
+This closes only the local behavioral gate. It does not prove collection on the pinned APK/device, supply F1 expected fingerprint provenance, create runtime authorization, issue A4.3, run RAW, establish a RAW predecessor or open P6. The single next action is owner review of final manifest/command/helper/collector/serializer pins together with independent expected-account provenance, memory-only account-check permission, read-only collection permission and one RAW/GLOSSARY dispatch decision. Until that decision, do not dispatch.
+
+QA freeze is complete on these final hashes: round 1 executed the source query,
+SQLite fixture collector/parser, production golden serializer bridge and full
+mutation/timeout matrix; round 2 read the result independently and rejected
+wrong identity/event, partial artifact, recovery/unknown and redispatch cases.
+Both rounds pass with `failures=[]`, action counts `0` and `P6_READY=false`; no
+third review was opened for unchanged input.
 
 ## Historical A4.2 and 2026-09-15 local closure record (readiness superseded)
 
@@ -144,17 +153,19 @@ A2/A3.2 approvals remain unchanged.
 
 ## P5E.9B-A4.3 — current owner packet pending; not issued
 
+The local repair packet is now technically ready for owner review, but it is not an approval and it does not issue A4.3. Current status is `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_PACKET_PENDING / LIVE_ACTIONS_NOT_AUTHORIZED`.
+
 The fixed-scope owner packet is
 docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md, SHA-256
 DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501.
 The separate command is
 docs/P5E_RAW_AUTHORIZATION_COMMAND.txt, SHA-256
-30B50BFEF809225B33901AC130CC5EE83CC8AD76A3D958D987EF19C8FCA50D10.
+47044AB73C0B76A00E3E40A85D6E893B0F94C015F6332036484EA5ABB5FA55AB.
 The narrative proposal is
 docs/P5E_RAW_AUTHORIZATION_PROPOSAL.md.
 The host supervisor is
 scripts/p5e-raw-live-supervisor.ps1, SHA-256
-4D68F4BB0B0D31FA6D443439967746C1C83CCB4514EE6D7AF830CF90DBE0EC76.
+364A6AA2C52A90E7AD20F28EC6C46A0EAD1BA39E8909727BEA7396287896FFE7.
 The preparation evidence is
 docs/P5E_RAW_HOST_PREPARATION_20260915.md, SHA-256
 4A0E678ED298F4FF879062C9FD5F81A383D235F1C27ED4EAE7CA15563DEB6797.
@@ -163,17 +174,24 @@ The source-derived production artifact contract is
 docs/P5E_PRODUCTION_ARTIFACT_CONTRACT_20260915.json, SHA-256
 FFE70A70E622706FABFA49D5843310ECD5A283B1CA114E32C636EA26B9FAE4BF.
 The current local evidence result is
-docs/P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json, SHA-256
-ECD61953C8E9C4E4539EC5B2B5865EDBC08D686E37F4C4743D67084887D8E725.
+docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json, SHA-256
+C3B7B7C7B86580CF56A810E4ECBA623A54B45F123B92C8A7753484EC54A45B48.
+
+The approval manifest remains unchanged at
+DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501.
+The production serializer source remains
+editorial-engine/src/main/java/com/ml/tblandroidtxt/editorial/pack/EditorialP5PilotExecution.java,
+SHA-256 `1222B8AC9B79DAFC659DD364F50849DFBA4782C181606A92DA47EBD8C6164E3C`.
+The local golden report/receipt byte hashes are
+`739E83EB04F941C4690FA5C49FED1AA31B8D861C77FE92829BFA1062EEDB3848` and
+`3FCED2263D18BDDA7FC03ECE0F0FE85972E03B008DDE5FB74651790A48F3281A`.
 
 The prior F3 result remains historical synthetic evidence. The current local
-chain additionally has the executable same-event readback collector, exact
-helper hash gate, bounded `COLLECTOR_COMMAND_LOG.jsonl` and separate
-production artifact contract described above.
-The production serializer golden test source is present, but this request did
-not execute it because build is outside scope. The synthetic 11-case mutation
-matrix is regression-only. F1 trusted expected fingerprint provenance and the
-owner permission remain `PENDING`; they do not authorize A4.3 by themselves.
+chain additionally has the executable offline SQLite collector bridge, exact
+helper hash gate, source-derived production report/receipt golden bridge and
+bounded `COLLECTOR_COMMAND_LOG.jsonl` contract. F1 trusted expected fingerprint
+provenance and owner permission remain `PENDING`; they do not authorize A4.3 by
+themselves.
 
 The packet preserves the harness authorization ID and the exact A4.2
 identities. It requests only RAW/GLOSSARY egress to the pinned route, one

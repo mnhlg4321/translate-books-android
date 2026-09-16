@@ -1,5 +1,11 @@
 # P5E — kiểm tra hành vi collector và điều kiện chuyển pha, 2026-09-16
 
+> **Historical RED input, superseded for current readiness.** The bounded repair
+> at implementation HEAD `77f060ad4aba61852c2c92f22326c2ed02180e20` resolved the
+> three SQLite defects and executed the production golden JVM→host bridge. Use
+> `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json` for the current local gate;
+> A4.3, RAW and P6 remain closed. The RED findings below are retained unchanged.
+
 **Kết luận: LOCAL_VALIDATION_FAILED_REPAIR_REQUIRED. Chưa đủ điều kiện A4.3 hoặc P6; owner approval không sửa được lỗi collector.** Tiếp tục P5E với phạm vi sửa/kiểm thử local trong `P5E_NEXT_WORK_REQUEST.md`. Đây là yêu cầu tiếp tục phase hiện tại, không mở phase/release mới.
 
 ## Baseline và phạm vi

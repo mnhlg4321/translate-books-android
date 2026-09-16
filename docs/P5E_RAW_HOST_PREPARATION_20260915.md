@@ -1,6 +1,12 @@
 # P5E RAW host-preparation evidence — 2026-09-15
 
-Current status: `LOCAL_VALIDATION_FAILED_REPAIR_REQUIRED / OWNER_PACKET_NOT_READY`. See `P5E_READINESS_AUDIT_20260916.md` and `P5E_NEXT_WORK_REQUEST.md`; three SQL defects supersede this report's readiness conclusion. This report's tests remain historical evidence; its file hash changes with this notice.
+> **Historical host-preparation result, superseded for current readiness.** The
+> later SQL/collector/golden repair at implementation HEAD `77f060ad4aba61852c2c92f22326c2ed02180e20`
+> is recorded in `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`. Do not use
+> the old helper/command hashes below as current pins. A4.3, RAW and P6 remain
+> closed; the body below is retained as historical evidence.
+
+Historical status at report time: `LOCAL_VALIDATION_FAILED_REPAIR_REQUIRED / OWNER_PACKET_NOT_READY`. See `P5E_READINESS_AUDIT_20260916.md` and `P5E_NEXT_WORK_REQUEST.md`; three SQL defects superseded this report's readiness conclusion. This report's tests remain historical evidence; its file hash changes with this notice.
 
 Historical 2026-09-15 status: `P5E_LOCAL_EVIDENCE_CHAIN_GREEN / OWNER_PACKET_PENDING /
 A4.3_NOT_ISSUED / RAW_NOT_RUN / LIVE_ACTIONS_NOT_AUTHORIZED / P6_NOT_READY`

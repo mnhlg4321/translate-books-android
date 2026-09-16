@@ -1,5 +1,11 @@
 # P5E — tái kiểm tra readiness và provenance, 2026-09-15
 
+> **Historical provenance review, superseded for current readiness.** The
+> current local repair is bound to implementation HEAD
+> `77f060ad4aba61852c2c92f22326c2ed02180e20` and result
+> `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`. The historical H1–H4 and
+> hash claims below are retained for provenance but are not current pins.
+
 > **Historical findings superseded for current readiness:** the local repair at
 > final probe HEAD `1d0dfe88` resolves H1–H4 with an exact helper hash gate, a
 > source-derived separate report/receipt contract, an executable same-event
