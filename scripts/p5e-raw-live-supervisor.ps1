@@ -80,7 +80,10 @@ param(
     [string]$MetadataPath,
 
     [Parameter(ParameterSetName = 'ProvenanceProbe')]
-    [string]$OutputRoot
+    [string]$OutputRoot,
+
+    [Parameter(ParameterSetName = 'Library')]
+    [switch]$LibraryOnly
 )
 
 Set-StrictMode -Version Latest
@@ -1063,6 +1066,66 @@ function Invoke-P5ESqliteReadOnlyRow {
     return [pscustomobject]@{ Run = $run; Columns = @(Get-P5ESeparatedRow -Output $run.Stdout -ColumnCount $ColumnCount -Operation $Operation) }
 }
 
+function Get-P5ELocalDatabaseFileHashState {
+    param([Parameter(Mandatory = $true)][string]$DatabasePath)
+    if (-not (Test-Path -LiteralPath $DatabasePath -PathType Leaf)) {
+        throw 'P5E_LOCAL_SQLITE_DATABASE_MISSING'
+    }
+    return [ordered]@{
+        database = [ordered]@{ present = $true; sha256 = Get-P5ESha256 -Path $DatabasePath }
+        wal = [ordered]@{ present = $false; sha256 = '' }
+        shm = [ordered]@{ present = $false; sha256 = '' }
+        settings = [ordered]@{ present = $true; sha256 = 'offline-fixture-settings-only' }
+    }
+}
+
+function Invoke-P5ELocalSqliteReadOnly {
+    param(
+        [Parameter(Mandatory = $true)][string]$DatabasePath,
+        [Parameter(Mandatory = $true)][string]$Query
+    )
+    $bridgePath = Join-Path (Get-P5ERepoRoot) 'docs\P5E_SQLITE_BRIDGE.py'
+    if (-not (Test-Path -LiteralPath $bridgePath -PathType Leaf)) { throw 'P5E_LOCAL_SQLITE_BRIDGE_MISSING' }
+    $bridgeRoot = Join-Path ([IO.Path]::GetTempPath()) ('p5e-sqlite-bridge-' + [Guid]::NewGuid().ToString('N'))
+    [void](New-Item -ItemType Directory -Path $bridgeRoot -Force)
+    $queryPath = Join-Path $bridgeRoot 'query.sql'
+    Write-P5EUtf8NoBom -Path $queryPath -Text $Query
+    $python = Get-Command py.exe -ErrorAction SilentlyContinue
+    if ($null -eq $python) { $python = Get-Command py -ErrorAction SilentlyContinue }
+    if ($null -eq $python) { throw 'P5E_LOCAL_SQLITE_PYTHON_MISSING' }
+    $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
+    $startInfo.FileName = [string]$python.Source
+    $startInfo.UseShellExecute = $false
+    $startInfo.CreateNoWindow = $true
+    $startInfo.RedirectStandardOutput = $true
+    $startInfo.RedirectStandardError = $true
+    Set-P5EProcessStartInfoArguments -StartInfo $startInfo -ArgumentList @(
+        '-3', $bridgePath, '--database', $DatabasePath, '--query', $queryPath)
+    $process = [System.Diagnostics.Process]::new()
+    $process.StartInfo = $startInfo
+    try {
+        if (-not $process.Start()) { throw 'P5E_LOCAL_SQLITE_BRIDGE_START_FAILED' }
+        $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+        $stderrTask = $process.StandardError.ReadToEndAsync()
+        $process.WaitForExit()
+        $stdout = $stdoutTask.GetAwaiter().GetResult()
+        $stderr = $stderrTask.GetAwaiter().GetResult()
+        $exitCode = $process.ExitCode
+    } finally {
+        $process.Dispose()
+    }
+    if ($exitCode -ne 0) {
+        throw ('P5E_LOCAL_SQLITE_BRIDGE_FAILED:' + [string]$exitCode + ':' + [string]$stderr)
+    }
+    return [pscustomobject]@{
+        Stdout = [string]$stdout
+        Stderr = [string]$stderr
+        ExitCode = [int]$exitCode
+        QueryPath = $queryPath
+        BridgePath = Get-P5ECanonicalPath -Path $bridgePath
+    }
+}
+
 function Invoke-P5EAdbPresenceReadOnly {
     param(
         [Parameter(Mandatory = $true)][string]$AdbPath,
@@ -1244,7 +1307,7 @@ function ConvertTo-P5ESqlLiteral {
 }
 
 function Get-P5ETextFromHex {
-    param([Parameter(Mandatory = $true)][string]$Hex, [Parameter(Mandatory = $true)][string]$Name)
+    param([Parameter(Mandatory = $true)][AllowEmptyString()][string]$Hex, [Parameter(Mandatory = $true)][string]$Name)
     if ([string]::IsNullOrWhiteSpace($Hex)) { return '' }
     $bytes = Get-P5EHexBytes -Hex $Hex -Name $Name
     try { return [Text.UTF8Encoding]::new($false, $true).GetString($bytes) }
@@ -1456,18 +1519,13 @@ function Get-P5EDeviceFileHashState {
     return $state
 }
 
-function Get-P5EConsistentDatabaseReadback {
-    param(
-        [Parameter(Mandatory = $true)][string]$AdbPath,
-        [Parameter(Mandatory = $true)][string]$SerialValue
-    )
-    $filesBefore = Get-P5EDeviceFileHashState -AdbPath $AdbPath -SerialValue $SerialValue
+function New-P5EConsistentDatabaseReadbackQuery {
     $attemptLiteral = ConvertTo-P5ESqlLiteral $script:P5EAttemptIdentity
     $bindingLiteral = ConvertTo-P5ESqlLiteral $script:P5EBindingIdentity
     $query = @"
 PRAGMA foreign_keys=ON;
 BEGIN;
-SELECT 'SCHEMA' || char(9) || (SELECT user_version);
+SELECT 'SCHEMA' || char(9) || (SELECT user_version FROM pragma_user_version);
 SELECT 'BINDING' || char(9) || project_row_id || char(9) || attempt_request_selector || char(9) ||
  binding_identity || char(9) || run_declaration_identity || char(9) || canonical_pack_hash || char(9) ||
  manifest_fingerprint || char(9) || canonical_profile_hash || char(9) || compatibility_evaluation_id ||
@@ -1483,8 +1541,9 @@ SELECT 'ATTEMPT' || char(9) || attempt_identity || char(9) || request_identity |
  binding_identity || char(9) || run_declaration_identity || char(9) || chapter_key || char(9) ||
  phase || char(9) || predecessor_identity || char(9) || request_envelope_hash || char(9) ||
  provider || char(9) || model || char(9) || status || char(9) || response_identity || char(9) ||
- length(report_bytes) || char(9) || hex(report_bytes) || char(9) || length(receipt_bytes) || char(9) ||
- hex(receipt_bytes) || char(9) || hex(CAST(metrics_json AS BLOB)) || char(9) || created_at || char(9) ||
+ COALESCE(length(report_bytes), 'NULL') || char(9) || CASE WHEN report_bytes IS NULL THEN 'NULL' ELSE hex(report_bytes) END || char(9) ||
+ COALESCE(length(receipt_bytes), 'NULL') || char(9) || CASE WHEN receipt_bytes IS NULL THEN 'NULL' ELSE hex(receipt_bytes) END || char(9) ||
+ COALESCE(hex(CAST(metrics_json AS BLOB)), 'NULL') || char(9) || created_at || char(9) ||
  updated_at || char(9) || recovery_reason_code
  FROM editorial_p5c_attempts WHERE attempt_identity=$attemptLiteral;
 SELECT 'AUTH' || char(9) || authorization_id_hash || char(9) || exact_phase || char(9) ||
@@ -1514,7 +1573,12 @@ SELECT 'LINEAGE' || char(9) ||
  (SELECT COUNT(*) FROM editorial_p5d_reconciliation_history h JOIN editorial_p5c_attempts a ON h.attempt_identity=a.attempt_identity WHERE a.binding_identity=$bindingLiteral) || char(9) ||
  (SELECT COUNT(*) FROM editorial_p5c_attempts WHERE binding_identity=$bindingLiteral AND report_bytes IS NOT NULL AND receipt_bytes IS NOT NULL) || char(9) ||
  (SELECT COUNT(*) FROM editorial_p5c_attempts WHERE binding_identity=$bindingLiteral AND (report_bytes IS NOT NULL OR receipt_bytes IS NOT NULL) AND NOT (report_bytes IS NOT NULL AND receipt_bytes IS NOT NULL)) || char(9) ||
- (SELECT COUNT(*) FROM editorial_p5c_attempts WHERE status='CLAIMED' AND attempt_identity<>$attemptLiteral);
+ (SELECT COUNT(*) FROM editorial_p5c_attempts WHERE status='CLAIMED' AND attempt_identity<>$attemptLiteral) || char(9) ||
+ (SELECT COUNT(*) FROM editorial_p5c_attempts) || char(9) ||
+ (SELECT COUNT(*) FROM editorial_p5d_authorization_receipts) || char(9) ||
+ (SELECT COUNT(*) FROM editorial_p5d_network_lifecycle) || char(9) ||
+ (SELECT COUNT(*) FROM editorial_p5d_reconciliation) || char(9) ||
+ (SELECT COUNT(*) FROM editorial_p5d_reconciliation_history);
 SELECT 'GLOBAL' || char(9) || (SELECT COUNT(*) FROM editorial_p5c_attempts) || char(9) ||
  (SELECT COUNT(*) FROM editorial_p5d_authorization_receipts) || char(9) ||
  (SELECT COUNT(*) FROM editorial_p5d_network_lifecycle) || char(9) ||
@@ -1528,17 +1592,11 @@ PRAGMA foreign_key_check;
 SELECT 'FOREIGN_KEY_END';
 COMMIT;
 "@
-    $query = [regex]::Replace($query, '\s+', ' ').Trim()
-    $run = Invoke-P5EAdbShellReadOnly -AdbPath $AdbPath -SerialValue $SerialValue -Operation 'database-consistent-read-transaction' -RemoteTokens @('run-as', $script:P5ETargetPackage, 'sqlite3', '-readonly', '-batch', '-noheader', '-separator', $script:P5ECollectorSeparator, $script:P5EDatabaseDevicePath, $query) -TimeoutMilliseconds 60000L
-    $filesAfter = Get-P5EDeviceFileHashState -AdbPath $AdbPath -SerialValue $SerialValue
-    if (-not [bool]$filesBefore.settings.present) { throw 'P5E_COLLECTOR_SETTINGS_HASH_MISSING' }
-    foreach ($name in @('database', 'wal', 'shm', 'settings')) {
-        $beforeFile = $filesBefore[$name]
-        $afterFile = $filesAfter[$name]
-        if ([bool]$beforeFile.present -ne [bool]$afterFile.present -or [string]$beforeFile.sha256 -cne [string]$afterFile.sha256) {
-            throw ('P5E_COLLECTOR_DATABASE_CHANGED_DURING_READ_TRANSACTION:' + $name)
-        }
-    }
+    return [regex]::Replace($query, '\s+', ' ').Trim()
+}
+
+function ConvertFrom-P5EConsistentDatabaseReadbackOutput {
+    param([Parameter(Mandatory = $true)][string]$Output)
     $schema = $null
     $bindingRows = [System.Collections.Generic.List[object]]::new()
     $inputRows = [System.Collections.Generic.List[object]]::new()
@@ -1550,7 +1608,7 @@ COMMIT;
     $integrityValues = [System.Collections.Generic.List[string]]::new()
     $foreignKeyRows = [System.Collections.Generic.List[string]]::new()
     $mode = 'NONE'
-    $lines = @($run.Stdout -split '\r?\n' | Where-Object { $_ -ne '' })
+    $lines = @($Output -split '\r?\n' | Where-Object { $_ -ne '' })
     foreach ($line in $lines) {
         if ($line -ceq 'INTEGRITY_BEGIN') { $mode = 'INTEGRITY'; continue }
         if ($line -ceq 'INTEGRITY_END') { $mode = 'NONE'; continue }
@@ -1558,7 +1616,11 @@ COMMIT;
         if ($line -ceq 'FOREIGN_KEY_END') { $mode = 'NONE'; continue }
         if ($mode -eq 'INTEGRITY') { [void]$integrityValues.Add($line); continue }
         if ($mode -eq 'FOREIGN_KEY') { [void]$foreignKeyRows.Add($line); continue }
-        $columns = $line.Split([char]9)
+        $rawColumns = $line.Split([char]9)
+        $columns = [object[]]::new($rawColumns.Count)
+        for ($columnIndex = 0; $columnIndex -lt $rawColumns.Count; $columnIndex++) {
+            $columns[$columnIndex] = if ($rawColumns[$columnIndex] -ceq 'NULL') { $null } else { $rawColumns[$columnIndex] }
+        }
         if ($columns.Count -lt 1) { throw 'P5E_COLLECTOR_DATABASE_OUTPUT_INVALID' }
         switch ($columns[0]) {
             'SCHEMA' { if ($columns.Count -ne 2 -or $null -ne $schema) { throw 'P5E_COLLECTOR_SCHEMA_ROW_INVALID' }; $schema = $columns[1] }
@@ -1572,6 +1634,90 @@ COMMIT;
             default { throw ('P5E_COLLECTOR_DATABASE_UNEXPECTED_OUTPUT:' + $columns[0]) }
         }
     }
+    if ($null -eq $lineage -or $null -eq $globalCounts) { throw 'P5E_COLLECTOR_LINEAGE_OR_GLOBAL_ROW_MISSING' }
+    for ($index = 0; $index -lt 5; $index++) {
+        if ($lineage[11 + $index] -ne $globalCounts[$index]) { throw 'P5E_COLLECTOR_LINEAGE_GLOBAL_MISMATCH' }
+    }
+    foreach ($attemptRow in $attemptRows) {
+        $reportLength = if ($null -eq $attemptRow[12] -or [string]::IsNullOrWhiteSpace([string]$attemptRow[12])) { $null } else { ConvertTo-P5ECollectorLong -Value ([string]$attemptRow[12]) -Name 'report-byte-length' }
+        $reportHex = if ($null -eq $attemptRow[13]) { $null } else { [string]$attemptRow[13] }
+        $receiptLength = if ($null -eq $attemptRow[14] -or [string]::IsNullOrWhiteSpace([string]$attemptRow[14])) { $null } else { ConvertTo-P5ECollectorLong -Value ([string]$attemptRow[14]) -Name 'receipt-byte-length' }
+        $receiptHex = if ($null -eq $attemptRow[15]) { $null } else { [string]$attemptRow[15] }
+        if ((($null -eq $reportLength) -ne ($null -eq $reportHex)) -or
+                (($null -eq $receiptLength) -ne ($null -eq $receiptHex))) {
+            throw 'P5E_COLLECTOR_ATTEMPT_NULL_SENTINEL_PAIR_INVALID'
+        }
+        foreach ($blob in @(
+                [pscustomobject]@{ Name = 'report'; Length = $reportLength; Hex = $reportHex },
+                [pscustomobject]@{ Name = 'receipt'; Length = $receiptLength; Hex = $receiptHex })) {
+            if ($null -ne $blob.Hex) {
+                if ($blob.Hex -notmatch '^(?:[0-9A-Fa-f]{2})*$') { throw ('P5E_COLLECTOR_' + $blob.Name.ToUpperInvariant() + '_HEX_INVALID') }
+                if ($blob.Length -ne [long]($blob.Hex.Length / 2)) { throw ('P5E_COLLECTOR_' + $blob.Name.ToUpperInvariant() + '_BYTE_LENGTH_MISMATCH') }
+            }
+        }
+        if ($null -ne $attemptRow[16]) { Get-P5ETextFromHex -Hex ([string]$attemptRow[16]) -Name 'metrics-json' | Out-Null }
+    }
+    return [ordered]@{
+        schema = $schema
+        bindingRows = $bindingRows.ToArray()
+        inputRows = $inputRows.ToArray()
+        attemptRows = $attemptRows.ToArray()
+        authRows = $authRows.ToArray()
+        lifeRows = $lifeRows.ToArray()
+        lineage = $lineage
+        globalCounts = $globalCounts
+        integrityValues = $integrityValues.ToArray()
+        foreignKeyRows = $foreignKeyRows.ToArray()
+    }
+}
+
+function Get-P5EConsistentDatabaseReadback {
+    param(
+        [Parameter(Mandatory = $true)][string]$AdbPath,
+        [Parameter(Mandatory = $true)][string]$SerialValue,
+        [string]$LocalDatabasePath = '',
+        [string]$LocalOutputPath = ''
+    )
+    $offline = -not [string]::IsNullOrWhiteSpace($LocalDatabasePath)
+    $filesBefore = if ($offline) {
+        Get-P5ELocalDatabaseFileHashState -DatabasePath $LocalDatabasePath
+    } else {
+        Get-P5EDeviceFileHashState -AdbPath $AdbPath -SerialValue $SerialValue
+    }
+    $query = New-P5EConsistentDatabaseReadbackQuery
+    $run = if ($offline) {
+        $localRun = Invoke-P5ELocalSqliteReadOnly -DatabasePath $LocalDatabasePath -Query $query
+        if (-not [string]::IsNullOrWhiteSpace($LocalOutputPath)) {
+            Write-P5EUtf8NoBom -Path $LocalOutputPath -Text $localRun.Stdout
+        }
+        $localRun
+    } else {
+        Invoke-P5EAdbShellReadOnly -AdbPath $AdbPath -SerialValue $SerialValue -Operation 'database-consistent-read-transaction' -RemoteTokens @('run-as', $script:P5ETargetPackage, 'sqlite3', '-readonly', '-batch', '-noheader', '-separator', $script:P5ECollectorSeparator, $script:P5EDatabaseDevicePath, $query) -TimeoutMilliseconds 60000L
+    }
+    $filesAfter = if ($offline) {
+        Get-P5ELocalDatabaseFileHashState -DatabasePath $LocalDatabasePath
+    } else {
+        Get-P5EDeviceFileHashState -AdbPath $AdbPath -SerialValue $SerialValue
+    }
+    if (-not [bool]$filesBefore.settings.present) { throw 'P5E_COLLECTOR_SETTINGS_HASH_MISSING' }
+    foreach ($name in @('database', 'wal', 'shm', 'settings')) {
+        $beforeFile = $filesBefore[$name]
+        $afterFile = $filesAfter[$name]
+        if ([bool]$beforeFile.present -ne [bool]$afterFile.present -or [string]$beforeFile.sha256 -cne [string]$afterFile.sha256) {
+            throw ('P5E_COLLECTOR_DATABASE_CHANGED_DURING_READ_TRANSACTION:' + $name)
+        }
+    }
+    $parsed = ConvertFrom-P5EConsistentDatabaseReadbackOutput -Output ([string]$run.Stdout)
+    $schema = $parsed.schema
+    $bindingRows = @($parsed.bindingRows)
+    $inputRows = @($parsed.inputRows)
+    $attemptRows = @($parsed.attemptRows)
+    $authRows = @($parsed.authRows)
+    $lifeRows = @($parsed.lifeRows)
+    $lineage = $parsed.lineage
+    $globalCounts = $parsed.globalCounts
+    $integrityValues = @($parsed.integrityValues)
+    $foreignKeyRows = @($parsed.foreignKeyRows)
     if ($null -eq $schema -or (ConvertTo-P5ECollectorLong -Value $schema -Name 'schema-version') -ne $script:P5EDatabaseSchemaVersion) { throw 'P5E_COLLECTOR_DATABASE_SCHEMA_VERSION_MISMATCH' }
     if ($bindingRows.Count -ne 1) { throw 'P5E_COLLECTOR_BINDING_ROW_MISSING_OR_DUPLICATE' }
     if ($inputRows.Count -ne 4) { throw 'P5E_COLLECTOR_BINDING_INPUT_COUNT_INVALID' }
@@ -1623,17 +1769,31 @@ COMMIT;
     $attempt = $null
     if ($attemptRows.Count -eq 1) {
         $row = $attemptRows[0]
+        $reportLength = if ($null -eq $row[12] -or [string]::IsNullOrWhiteSpace([string]$row[12])) { $null } else { ConvertTo-P5ECollectorLong -Value ([string]$row[12]) -Name 'report-byte-length' }
+        $reportHex = if ($null -eq $row[13]) { $null } else { [string]$row[13] }
+        $receiptLength = if ($null -eq $row[14] -or [string]::IsNullOrWhiteSpace([string]$row[14])) { $null } else { ConvertTo-P5ECollectorLong -Value ([string]$row[14]) -Name 'receipt-byte-length' }
+        $receiptHex = if ($null -eq $row[15]) { $null } else { [string]$row[15] }
+        if ((($null -eq $reportLength) -ne ($null -eq $reportHex)) -or
+                (($null -eq $receiptLength) -ne ($null -eq $receiptHex))) {
+            throw 'P5E_COLLECTOR_ATTEMPT_NULL_SENTINEL_PAIR_INVALID'
+        }
+        foreach ($blob in @(
+                [pscustomobject]@{ Name = 'report'; Length = $reportLength; Hex = $reportHex },
+                [pscustomobject]@{ Name = 'receipt'; Length = $receiptLength; Hex = $receiptHex })) {
+            if ($null -ne $blob.Hex) {
+                if ($blob.Hex -notmatch '^(?:[0-9A-Fa-f]{2})*$') { throw ('P5E_COLLECTOR_' + $blob.Name.ToUpperInvariant() + '_HEX_INVALID') }
+                if ($blob.Length -ne [long]($blob.Hex.Length / 2)) { throw ('P5E_COLLECTOR_' + $blob.Name.ToUpperInvariant() + '_BYTE_LENGTH_MISMATCH') }
+            }
+        }
         $attempt = [ordered]@{
             rowCount = 1L; attemptIdentity = [string]$row[0]; requestIdentity = [string]$row[1]
             bindingIdentity = [string]$row[2]; runDeclarationIdentity = [string]$row[3]
             chapterKey = [string]$row[4]; phase = [string]$row[5]; predecessorIdentity = [string]$row[6]
             requestEnvelopeHash = [string]$row[7]; provider = [string]$row[8]; model = [string]$row[9]
             status = [string]$row[10]; responseIdentity = [string]$row[11]
-            reportByteLength = if ([string]::IsNullOrWhiteSpace([string]$row[12])) { $null } else { ConvertTo-P5ECollectorLong -Value ([string]$row[12]) -Name 'report-byte-length' }
-            reportHex = [string]$row[13]
-            receiptByteLength = if ([string]::IsNullOrWhiteSpace([string]$row[14])) { $null } else { ConvertTo-P5ECollectorLong -Value ([string]$row[14]) -Name 'receipt-byte-length' }
-            receiptHex = [string]$row[15]
-            metrics = if ([string]::IsNullOrWhiteSpace([string]$row[16])) { $null } else { Get-P5ETextFromHex -Hex ([string]$row[16]) -Name 'metrics-json' }
+            reportByteLength = $reportLength; reportHex = $reportHex
+            receiptByteLength = $receiptLength; receiptHex = $receiptHex
+            metrics = if ($null -eq $row[16]) { $null } else { Get-P5ETextFromHex -Hex ([string]$row[16]) -Name 'metrics-json' }
             createdAtMillis = ConvertTo-P5ECollectorLong -Value ([string]$row[17]) -Name 'attempt-created-at'
             updatedAtMillis = ConvertTo-P5ECollectorLong -Value ([string]$row[18]) -Name 'attempt-updated-at'
             recoveryReasonCode = [string]$row[19]
@@ -1649,7 +1809,7 @@ COMMIT;
             model = [string]$row[8]; endpointAccountFingerprint = [string]$row[9]
             issuedAtMillis = ConvertTo-P5ECollectorLong -Value ([string]$row[10]) -Name 'authorization-issued-at'
             expiresAtMillis = ConvertTo-P5ECollectorLong -Value ([string]$row[11]) -Name 'authorization-expires-at'
-            consumedAtMillis = ConvertTo-P5ECollectorLong -Value ([string]$row[12]) -Name 'authorization-consumed-at' -Minimum -1L
+            consumedAtMillis = ConvertTo-P5ECollectorLong -Value ([string]$row[12]) -Name 'authorization-consumed-at' -Minimum (-1L)
             maximumPrimaryCalls = ConvertTo-P5ECollectorLong -Value ([string]$row[13]) -Name 'maximum-primary-calls'
             maximumSchemaRepairCalls = ConvertTo-P5ECollectorLong -Value ([string]$row[14]) -Name 'maximum-schema-repair-calls'
             maximumNetworkRetries = ConvertTo-P5ECollectorLong -Value ([string]$row[15]) -Name 'maximum-network-retries'
@@ -1668,7 +1828,7 @@ COMMIT;
             rowCount = 1L; attemptIdentity = [string]$row[0]; stage = [string]$row[1]
             requestBodyBytes = ConvertTo-P5ECollectorLong -Value ([string]$row[2]) -Name 'lifecycle-request-bytes'
             responseBodyBytes = ConvertTo-P5ECollectorLong -Value ([string]$row[3]) -Name 'lifecycle-response-bytes'
-            httpStatus = [int](ConvertTo-P5ECollectorLong -Value ([string]$row[4]) -Name 'lifecycle-http-status' -Minimum -1L)
+            httpStatus = [int](ConvertTo-P5ECollectorLong -Value ([string]$row[4]) -Name 'lifecycle-http-status' -Minimum (-1L))
             responseContentType = [string]$row[5]; exceptionClass = [string]$row[6]
             elapsedMillis = ConvertTo-P5ECollectorLong -Value ([string]$row[7]) -Name 'lifecycle-elapsed'
             generationId = [string]$row[8]; providerResponseId = [string]$row[9]
@@ -3034,7 +3194,8 @@ function Test-P5ESerializedArtifactBytes {
         [Parameter(Mandatory = $true)][string]$Path,
         [Parameter(Mandatory = $true)][string]$ExpectedSchema,
         [Parameter(Mandatory = $true)][string]$Kind,
-        [Parameter(Mandatory = $true)][AllowEmptyCollection()][System.Collections.Generic.List[string]]$Errors
+        [Parameter(Mandatory = $true)][AllowEmptyCollection()][System.Collections.Generic.List[string]]$Errors,
+        $ExpectedIdentity = $null
     )
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
         Add-P5EError -Errors $Errors -Code ('ARTIFACT_BYTES_MISSING:' + $Kind)
@@ -3068,18 +3229,47 @@ function Test-P5ESerializedArtifactBytes {
     Test-P5EEqual $value 'schemaVersion' $ExpectedSchema $pathName $Errors
     Test-P5EEqual $value 'schemaVersion' ([string](Get-P5EProperty $spec 'schemaVersion')) $pathName $Errors
     Test-P5EEqual $value 'artifactType' 'REPORT_L1' $pathName $Errors
+    $identity = if ($null -eq $ExpectedIdentity) {
+        [ordered]@{
+            bindingIdentity = $script:P5EBindingIdentity
+            manifestFingerprint = $script:P5EExpectedManifestFingerprint
+            canonicalPackHash = $script:P5EPackHash
+            canonicalProfileHash = $script:P5EProfileHash
+            compatibilityEvaluationId = $script:P5EEvaluationId
+            chapterKey = $script:P5EChapterKey
+            phase = $script:P5EPhase
+            bundleIdentity = $null
+            predecessorIdentity = $script:P5ERunDeclarationIdentity
+        }
+    } else { $ExpectedIdentity }
+    foreach ($identityName in @('bindingIdentity', 'manifestFingerprint', 'canonicalPackHash',
+            'canonicalProfileHash', 'compatibilityEvaluationId', 'chapterKey', 'phase',
+            'bundleIdentity', 'predecessorIdentity')) {
+        if ($null -ne $ExpectedIdentity -and -not (Test-P5EHasProperty -Object $identity -Name $identityName)) {
+            Add-P5EError -Errors $Errors -Code ('ARTIFACT_EXPECTED_IDENTITY_FIELD_MISSING:' + $identityName)
+        }
+    }
+    $expectedBinding = [string](Get-P5EProperty $identity 'bindingIdentity')
+    $expectedManifest = [string](Get-P5EProperty $identity 'manifestFingerprint')
+    $expectedPack = [string](Get-P5EProperty $identity 'canonicalPackHash')
+    $expectedProfile = [string](Get-P5EProperty $identity 'canonicalProfileHash')
+    $expectedEvaluation = [string](Get-P5EProperty $identity 'compatibilityEvaluationId')
+    $expectedChapter = [string](Get-P5EProperty $identity 'chapterKey')
+    $expectedPhase = [string](Get-P5EProperty $identity 'phase')
+    $expectedBundle = [string](Get-P5EProperty $identity 'bundleIdentity')
+    $expectedPredecessor = [string](Get-P5EProperty $identity 'predecessorIdentity')
     if ($Kind -eq 'report') {
-        Test-P5ESha256 $value 'bindingIdentity' $pathName $Errors $script:P5EBindingIdentity
-        Test-P5ESha256 $value 'manifestFingerprint' $pathName $Errors $script:P5EExpectedManifestFingerprint
-        Test-P5ESha256 $value 'canonicalPackHash' $pathName $Errors $script:P5EPackHash
-        Test-P5ESha256 $value 'canonicalProfileHash' $pathName $Errors $script:P5EProfileHash
-        Test-P5EEqual $value 'compatibilityEvaluationId' $script:P5EEvaluationId $pathName $Errors
-        Test-P5EEqual $value 'chapterKey' $script:P5EChapterKey $pathName $Errors
+        Test-P5ESha256 $value 'bindingIdentity' $pathName $Errors $expectedBinding
+        Test-P5ESha256 $value 'manifestFingerprint' $pathName $Errors $expectedManifest
+        Test-P5ESha256 $value 'canonicalPackHash' $pathName $Errors $expectedPack
+        Test-P5ESha256 $value 'canonicalProfileHash' $pathName $Errors $expectedProfile
+        Test-P5EEqual $value 'compatibilityEvaluationId' $expectedEvaluation $pathName $Errors
+        Test-P5EEqual $value 'chapterKey' $expectedChapter $pathName $Errors
     } else {
-        Test-P5ESha256 $value 'bindingRef' $pathName $Errors $script:P5EBindingIdentity
-        Test-P5ESha256 $value 'manifestRef' $pathName $Errors $script:P5EExpectedManifestFingerprint
-        Test-P5ESha256 $value 'packRef' $pathName $Errors $script:P5EPackHash
-        Test-P5ESha256 $value 'profileRef' $pathName $Errors $script:P5EProfileHash
+        Test-P5ESha256 $value 'bindingRef' $pathName $Errors $expectedBinding
+        Test-P5ESha256 $value 'manifestRef' $pathName $Errors $expectedManifest
+        Test-P5ESha256 $value 'packRef' $pathName $Errors $expectedPack
+        Test-P5ESha256 $value 'profileRef' $pathName $Errors $expectedProfile
         if (-not (Test-P5EHasProperty -Object $value -Name 'canonAllowed') -or
                 -not ((Get-P5EProperty $value 'canonAllowed') -is [bool])) {
             Add-P5EError -Errors $Errors -Code ('ARTIFACT_BOOLEAN_INVALID:' + $Kind + ':canonAllowed')
@@ -3089,11 +3279,15 @@ function Test-P5ESerializedArtifactBytes {
             Add-P5EError -Errors $Errors -Code ('ARTIFACT_BOOLEAN_INVALID:' + $Kind + ':propagationAllowed')
         }
     }
-    Test-P5EEqual $value 'phase' $script:P5EPhase $pathName $Errors
+    Test-P5EEqual $value 'phase' $expectedPhase $pathName $Errors
     foreach ($name in @('bundleIdentity', 'predecessorIdentity', 'disposition')) {
         if ([string]::IsNullOrWhiteSpace([string](Get-P5EProperty $value $name))) {
             Add-P5EError -Errors $Errors -Code ('ARTIFACT_VALUE_MISSING:' + $Kind + ':' + $name)
         }
+    }
+    if ($null -ne $ExpectedIdentity) {
+        Test-P5EEqual $value 'bundleIdentity' $expectedBundle $pathName $Errors
+        Test-P5EEqual $value 'predecessorIdentity' $expectedPredecessor $pathName $Errors
     }
     $numberFields = if ($Kind -eq 'report') { @('populationTotal', 'accountedTotal', 'actualChangedSpans') } else { @('populationTotal', 'accountedTotal', 'changedSpanTotal', 'releaseAttemptCount') }
     foreach ($name in $numberFields) {
@@ -4907,6 +5101,10 @@ if ($PSCmdlet.ParameterSetName -eq 'Dispatch') {
     Invoke-P5EVerifyOutcome
 } elseif ($PSCmdlet.ParameterSetName -eq 'ProvenanceProbe') {
     Invoke-P5EProvenanceProbe
+} elseif ($PSCmdlet.ParameterSetName -eq 'Library') {
+    # Dot-sourced offline behavioral tests import the functions without
+    # dispatching SelfTest or any other external operation.
+    return
 } else {
     Invoke-P5ESelfTest
 }

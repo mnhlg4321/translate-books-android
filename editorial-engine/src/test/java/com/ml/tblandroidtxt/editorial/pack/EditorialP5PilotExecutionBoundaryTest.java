@@ -3,10 +3,13 @@ package com.ml.tblandroidtxt.editorial.pack;
 import org.junit.Test;
 
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -148,7 +151,7 @@ public final class EditorialP5PilotExecutionBoundaryTest {
         assertEquals(0, store.committed.size());
     }
 
-    @Test public void committedArtifactsAreGoldenBytesFromSeparateProductionSerializers() {
+    @Test public void committedArtifactsAreGoldenBytesFromSeparateProductionSerializers() throws Exception {
         Fixture fixture = fixture();
         EditorialP5PilotResult result = execute(fixture,
                 authorization(fixture.request, "auth-golden-bytes"),
@@ -182,6 +185,28 @@ public final class EditorialP5PilotExecutionBoundaryTest {
         assertEquals(report.get("canonicalProfileHash"), receipt.get("profileRef"));
         assertEquals(report.get("bindingIdentity"), receipt.get("bindingRef"));
         assertEquals(report.get("actualChangedSpans"), receipt.get("changedSpanTotal"));
+
+        String goldenOutput = System.getenv("P5E_GOLDEN_OUTPUT");
+        if (goldenOutput != null && !goldenOutput.isBlank()) {
+            Map<String, Object> fixtureIdentity = new LinkedHashMap<>();
+            fixtureIdentity.put("bindingIdentity", report.get("bindingIdentity"));
+            fixtureIdentity.put("manifestFingerprint", report.get("manifestFingerprint"));
+            fixtureIdentity.put("canonicalPackHash", report.get("canonicalPackHash"));
+            fixtureIdentity.put("canonicalProfileHash", report.get("canonicalProfileHash"));
+            fixtureIdentity.put("compatibilityEvaluationId", report.get("compatibilityEvaluationId"));
+            fixtureIdentity.put("chapterKey", report.get("chapterKey"));
+            fixtureIdentity.put("phase", report.get("phase"));
+            fixtureIdentity.put("bundleIdentity", report.get("bundleIdentity"));
+            fixtureIdentity.put("predecessorIdentity", report.get("predecessorIdentity"));
+            Map<String, Object> golden = new LinkedHashMap<>();
+            golden.put("source", "EditorialP5PilotExecution.reportBytes/receiptBytes");
+            golden.put("serializerClass", "com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotExecution");
+            golden.put("fixtureIdentity", fixtureIdentity);
+            golden.put("reportBase64", Base64.getEncoder().encodeToString(reportBytes));
+            golden.put("receiptBase64", Base64.getEncoder().encodeToString(receiptBytes));
+            Files.write(Path.of(goldenOutput),
+                    EditorialCanonicalJson.canonicalize(golden).getBytes(StandardCharsets.UTF_8));
+        }
     }
 
     @Test public void rawStopDispositionIsTypedAndNeverCommits() {
