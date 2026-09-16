@@ -1,9 +1,9 @@
 # Editorial Recovery v4.18
 
-> Current audit 2026-09-16, repair HEAD `77f060ad`: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_PACKET_PENDING / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. SQLite query/parser defects and the missing production golden execution are resolved in offline evidence; live/device/account authorization remains absent. Current next action: owner review of the final hash-bound packet with independent F1 provenance and separately approved read-only collection/RAW scope. Evidence: `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`.
+> Current audit 2026-09-16, repair HEAD `77f060ad`: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. SQLite query/parser defects and the missing production golden execution are resolved in offline evidence; the owner-approved account scope has no safe entry point on the pinned APK. Current next action: resolve that missing account-only test boundary with a separately qualified test-only verifier and process-only expected value. Evidence: `docs/P5E_OWNER_PROVENANCE_INPUT_PACKET_20260916.md`.
 
 
-Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_PACKET_PENDING / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY.
+Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_CHECK_NOT_EXECUTED / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY.
 
 Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILD_HISTORICAL / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / P5E_9B_A4_3_HOST_FIXTURES_PASS_HISTORICAL / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_PACKET_PENDING / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY`
 
@@ -14,6 +14,12 @@ This document is the single product and execution authority for the v4.18 Editor
 The final local repair ran the real `Get-P5EConsistentDatabaseReadback` SQL through a read-only SQLite bridge over six disposable DDL fixtures. Schema `24`, LINEAGE `17`, INPUT `7`, nullable CLAIMED/RECOVERY rows, exact COMMITTED golden report/receipt bytes, lineage/reconciliation source mapping and fail-closed parser mutations all have concrete results. The targeted production serializer JVM test ran on JBR `21.0.10`; its bytes passed the host validator and the required identity/byte mutation matrix was rejected. Helper self-test, SQL boundary probe and supervisor failure/timeout checks pass. See `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`.
 
 This closes only the local behavioral gate. It does not prove collection on the pinned APK/device, supply F1 expected fingerprint provenance, create runtime authorization, issue A4.3, run RAW, establish a RAW predecessor or open P6. The single next action is owner review of final manifest/command/helper/collector/serializer pins together with independent expected-account provenance, memory-only account-check permission, read-only collection permission and one RAW/GLOSSARY dispatch decision. Until that decision, do not dispatch.
+
+The owner has now approved only one memory-only account check with output
+`MATCH`/`MISMATCH` and no key/fingerprint/endpoint logging, provider call, DB
+write or RAW dispatch. The pinned live method is not a safe account-only
+entry point: it continues from comparison into DB/preflight and `dispatchRaw`.
+Accordingly no account check was executed and no result is claimed.
 
 QA freeze is complete on these final hashes: round 1 executed the source query,
 SQLite fixture collector/parser, production golden serializer bridge and full

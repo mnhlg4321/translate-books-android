@@ -1,9 +1,9 @@
 # Build State
 
-> Current audit 2026-09-16, repair HEAD `77f060ad`: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_PACKET_PENDING / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. The three SQLite defects and missing golden execution are repaired and evidenced offline; live/device/account authorization remains absent. Current next action: owner review of the final hash-bound packet with independent F1 provenance and separately approved read-only collection/RAW scope. Evidence: `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`.
+> Current audit 2026-09-16, repair HEAD `77f060ad`: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. The owner has approved only a memory-only account check, but the pinned APK has no safe standalone entry point; no live/device/account check was executed. Current next action: resolve that missing account-only test boundary with a separately qualified test-only verifier and process-only expected value. Evidence: `docs/P5E_OWNER_PROVENANCE_INPUT_PACKET_20260916.md`.
 
 
-- Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_PACKET_PENDING / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY. The A4.2 authorization remains consumed; this task did not create or consume a runtime authorization.
+- Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_CHECK_NOT_EXECUTED / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY. The A4.2 authorization remains consumed; this input did not create or consume a runtime authorization.
 
 - Status: P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED / P5E_9B_A2_FRESH_RAW_ROUTE_PRECONDITION_FAILED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_EMITTER_PARSER_CONTRACT_PASS / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / P5E_9B_A4_3_HOST_FIXTURES_PASS_HISTORICAL / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_PACKET_PENDING / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / RAW_AUTHORIZATION_REQUIRED / A4_3_NOT_ISSUED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY. Historical completed statuses remain in the evidence sections below and are not current live-readiness claims.
 - Active authority: V5-SAFE.4.1.3-FULL; canonical plan `EDITORIAL_RECOVERY_V4_18.md`.
@@ -24,6 +24,13 @@
 The final helper/query/parser path now passes the source-derived SQLite behavioral chain: schema `24`, LINEAGE `17` columns, INPUT `7` columns, CLAIMED/RECOVERY NULL rows preserved, COMMITTED golden bytes retained exactly, lineage/reconciliation counts mapped, malformed output rejected, and partial artifacts not accepted. The targeted `EditorialP5PilotExecutionBoundaryTest` ran on Android Studio JBR `21.0.10` and exported the production serializer bytes; the host validator accepted the valid pair and rejected identity/byte mutations. Helper self-test and SQL boundary probe pass. Evidence and final hashes are in `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`; action counts are device/provider/credential/ADB/instrumentation/build `0`.
 
 This is local/offline evidence only. F1 expected fingerprint provenance, owner account/readback/egress permission, installed-pin readback and any live dispatch remain pending. A4.3 is not issued, RAW is not run, P5 exit is not claimed and P6 remains not ready. Do not mark release checklist steps 05–09 from this gate.
+
+The owner has since approved one memory-only account check with only
+`MATCH`/`MISMATCH` output and no key/fingerprint/endpoint logging, provider,
+DB write or RAW dispatch. The pinned test method is not account-only: after its
+fingerprint comparison it proceeds into DB/preflight and `dispatchRaw`. No
+safe entry point exists on the pinned artifact, so the account check remains
+`NOT_EXECUTED`; this does not change the no-live/P6 gate.
 
 ## Historical A4.1/A4.2 and 2026-09-15 local closure claims (superseded for readiness)
 

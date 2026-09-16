@@ -46,6 +46,16 @@ targeted JVM golden bridge; round 2 independently rejected identity/event,
 partial-artifact, recovery/unknown and timeout-redispatch counterexamples.
 Both pass on the hashes above with zero failures and zero external actions.
 
+Owner input received on `2026-09-16` approves only one memory-only account
+check with result `MATCH`/`MISMATCH`; it forbids key/fingerprint/endpoint
+logging, provider calls, DB writes and RAW dispatch. The current pinned
+AndroidTest has no standalone entry point for that operation: its existing
+selected live method continues from the fingerprint comparison into DB/preflight
+and `dispatchRaw`. No safe account-only check was therefore executed, and no
+MATCH/MISMATCH is claimed. A separately qualified test-only verifier and
+process-only expected value are still required before this limited check can
+run; this is not permission to build/install or dispatch.
+
 The owner must decide all of the following together, with status currently
 `NOT_PROVIDED` / `NOT_APPROVED`:
 

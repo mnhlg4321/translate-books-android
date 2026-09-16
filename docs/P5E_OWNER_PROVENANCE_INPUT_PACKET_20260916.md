@@ -3,6 +3,30 @@
 Ngày: `2026-09-16`
 Trạng thái local: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_PACKET_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`.
 
+## Owner input received — limited account-check scope
+
+On `2026-09-16`, the owner attested that the API key currently stored in the
+Android app belongs to the permitted OpenRouter account for P5E, and approved
+one device-side memory-only account check whose only result may be
+`MATCH`/`MISMATCH`. The scope explicitly excludes logging or exporting the key,
+fingerprint or endpoint, provider calls, database writes and RAW dispatch.
+No secret or fingerprint value is recorded here.
+
+This input does not make the current pinned APK executable for that operation.
+The pinned `EditorialP5EFreshRawLiveInstrumentedTest#authorizedFreshRawRunsOnlyWhenExplicitlyOptedIn`
+computes and compares the fingerprint, but then proceeds into DB/preflight and
+`dispatchRaw`; it is not an account-only method. The current AndroidTest pin
+has no separate memory-only `MATCH`/`MISMATCH` entry point, and no trusted
+expected fingerprint is available through the process-only channel. Therefore
+the check result is `NOT_EXECUTED`, not `MATCH` or `MISMATCH`; no device action
+was taken.
+
+The exact missing boundary is a separately qualified test-only account verifier
+that loads settings in memory, compares to an owner-controlled process-only
+expected value, emits only `MATCH`/`MISMATCH`, and has no DB/provider/RAW path.
+Building/installing or repinning that test-only artifact is outside the prior
+local authorization and is not performed by this input.
+
 ## Điều owner cần xem và cung cấp
 
 Owner chỉ cần gửi một quyết định không chứa secret, gồm:
