@@ -359,7 +359,7 @@ fingerprint belongs in chat, Git or this proposal.
 | Credential rotation since verification | `UNKNOWN` — reverify after endpoint/key rotation |
 | Approved account operation | `NOT_APPROVED` — exact device-only load/normalize/hash/compare and redaction |
 | Approved data egress | `NOT_APPROVED` — RAW/GLOSSARY only; primary 1, repair 0, retry 0, no RECONCILE |
-| Approved artifact/code/command/helper refs | `PENDING_OWNER_DECISION` — current manifest `DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501`, command `30B50BFEF809225B33901AC130CC5EE83CC8AD76A3D958D987EF19C8FCA50D10`, helper/collector `4D68F4BB0B0D31FA6D443439967746C1C83CCB4514EE6D7AF830CF90DBE0EC76`, contract `FFE70A70E622706FABFA49D5843310ECD5A283B1CA114E32C636EA26B9FAE4BF`; owner must approve these exact final refs or stop |
+| Approved artifact/code/command/helper refs | `PENDING_OWNER_DECISION` — manifest `DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501`, command `47044AB73C0B76A00E3E40A85D6E893B0F94C015F6332036484EA5ABB5FA55AB`, helper/collector `364A6AA2C52A90E7AD20F28EC6C46A0EAD1BA39E8909727BEA7396287896FFE7`, contract `FFE70A70E622706FABFA49D5843310ECD5A283B1CA114E32C636EA26B9FAE4BF`, serializer `1222B8AC9B79DAFC659DD364F50849DFBA4782C181606A92DA47EBD8C6164E3C`, result `C3B7B7C7B86580CF56A810E4ECBA623A54B45F123B92C8A7753484EC54A45B48`; owner must approve these exact final refs or stop |
 | Validity and stop conditions | `PENDING_DECISION` — expiry, mismatch, unavailable device, unknown outcome, no redispatch |
 
 ## Runtime checks and command
@@ -387,20 +387,20 @@ The host observation deadline is 240000 ms, long enough to observe the
 that deadline, preserve the observed durable state, treat external call state
 as unresolved, and do not retry or redispatch.
 
-The host implementation and its offline proof are in
+Historical 2026-09-15 host evidence below retains its original pins. The
+current implementation and behavioral evidence are in
 `scripts/p5e-raw-live-supervisor.ps1`, SHA-256
-`4D68F4BB0B0D31FA6D443439967746C1C83CCB4514EE6D7AF830CF90DBE0EC76`.
+`364A6AA2C52A90E7AD20F28EC6C46A0EAD1BA39E8909727BEA7396287896FFE7`.
 The repaired command wrapper is
 `docs/P5E_RAW_AUTHORIZATION_COMMAND.txt`, SHA-256
-`30B50BFEF809225B33901AC130CC5EE83CC8AD76A3D958D987EF19C8FCA50D10`.
+`47044AB73C0B76A00E3E40A85D6E893B0F94C015F6332036484EA5ABB5FA55AB`.
 The separate production report/receipt contract is
 `docs/P5E_PRODUCTION_ARTIFACT_CONTRACT_20260915.json`, SHA-256
 `FFE70A70E622706FABFA49D5843310ECD5A283B1CA114E32C636EA26B9FAE4BF`;
 serializer source SHA-256 is
 `1222B8AC9B79DAFC659DD364F50849DFBA4782C181606A92DA47EBD8C6164E3C`.
-Host-preparation evidence is
-`docs/P5E_RAW_HOST_PREPARATION_20260915.md`, SHA-256
-`4A0E678ED298F4FF879062C9FD5F81A383D235F1C27ED4EAE7CA15563DEB6797`.
+Current local result is `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`, SHA-256
+`C3B7B7C7B86580CF56A810E4ECBA623A54B45F123B92C8A7753484EC54A45B48`.
 The evidence records F2 RED-to-GREEN transport through fake process argv and
 the ADB/shell model, source-derived required arguments, F3 numeric outcomes,
 the executable same-event collector path, separate artifact contract and
