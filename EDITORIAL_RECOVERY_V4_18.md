@@ -1,15 +1,19 @@
 # Editorial Recovery v4.18
 
-> Current P5E local closure (2026-09-15, input baseline `8c24b7d2`, final probe HEAD `1d0dfe88`): H1–H4 are resolved by offline host evidence. F3 is `LOCAL_EVIDENCE_CHAIN_GREEN`; F1 trusted expected fingerprint and live permission remain pending. Owner packet `PENDING`; A4.3 `NOT_ISSUED`; RAW `NOT_RUN`; P6 `NOT_READY`. No live action is authorized. Evidence: `docs/P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json`.
+> Current audit 2026-09-16, baseline `31a09d02`: `LOCAL_VALIDATION_FAILED_REPAIR_REQUIRED / OWNER_PACKET_NOT_READY / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. F2 and H1 improvements are retained; collector SQL has three reproduced defects (schema lookup, LINEAGE width, NULL recovery row). Golden JVM→host evidence remains missing. Current next action: bounded local repair/test in `docs/P5E_NEXT_WORK_REQUEST.md`. Earlier GREEN/owner-only conclusions below are historical and superseded. Evidence: `docs/P5E_READINESS_AUDIT_20260916.md`.
 
 
-Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_LOCAL_EVIDENCE_CHAIN_GREEN / OWNER_PACKET_PENDING / ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY.
+Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_BEHAVIORAL_VALIDATION_FAILED / OWNER_PACKET_NOT_READY / ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY.
 
-Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILD_HISTORICAL / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / P5E_9B_A4_3_HOST_FIXTURES_PASS_HISTORICAL / F2_TRANSPORT_QUALIFIED / F3_LOCAL_EVIDENCE_CHAIN_GREEN / OWNER_PACKET_PENDING / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY`
+Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILD_HISTORICAL / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / P5E_9B_A4_3_HOST_FIXTURES_PASS_HISTORICAL / F2_TRANSPORT_QUALIFIED / F3_BEHAVIORAL_VALIDATION_FAILED / OWNER_PACKET_NOT_READY / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY`
 
 This document is the single product and execution authority for the v4.18 Editorial recovery. It supersedes active next actions from the historical v4.16 Editorial/RSC/IPC tracks without deleting or reinterpreting their evidence.
 
-## Current active boundary — P5E local evidence-chain closed; owner packet pending
+## Current active boundary — P5E behavioral repair before owner packet
+
+The 2026-09-16 source-derived SQLite probe reproduces three collector defects. F2 and H1 remain valid; collector success and production serializer-to-host acceptance remain unproven. Execute the bounded local request in `docs/P5E_NEXT_WORK_REQUEST.md`; only after behavioral PASS refreeze and request owner provenance/permissions. A4.3, RAW, RECONCILE, P5 exit and P6 remain gated.
+
+## Historical A4.2 and 2026-09-15 local closure record (readiness superseded)
 
 A4.1 was host-only. A4.2 then used the separately approved single-use device
 boundary from execution-start HEAD
@@ -29,7 +33,7 @@ audit/repair continuation, not a new release branch; the pinned AndroidTest
 source and production code207 artifact remain unchanged. The host-preparation
 commit is `c2c79a19842f551fc752a53328024aab8ddb529d`.
 
-### Current local P5E evidence-chain result
+### Historical local P5E evidence-chain result
 
 H1–H4 are closed at the host boundary without touching the device: the command
 and helper both fail closed on the exact helper SHA-256 before sensitive or

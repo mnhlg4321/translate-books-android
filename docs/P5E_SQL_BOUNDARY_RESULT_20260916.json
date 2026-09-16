@@ -1,0 +1,18 @@
+{
+  "scope": "SOURCE_SQL_IN_MEMORY_ONLY",
+  "baselineHead": "31a09d02323cd317a9089411901849e6d51b8f66",
+  "helperSha256": "4d68f4bb0b0d31fa6d443439967746c1c83ccb4514ee6d7af830cf90dbe0ec76",
+  "sqliteVersion": "3.53.1",
+  "schemaStatementError": "no such column: user_version",
+  "schemaPositiveControl": 24,
+  "lineageActualColumns": 12,
+  "lineageParserExpectedColumns": 17,
+  "recoveryAttemptExists": 1,
+  "recoveryAttemptSerializedRow": null,
+  "confirmedDefects": [true, true, true],
+  "deviceActions": 0,
+  "providerCalls": 0,
+  "credentialReads": 0,
+  "readyForOwnerDecision": false,
+  "p6Ready": false
+}

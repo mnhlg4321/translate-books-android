@@ -1,6 +1,6 @@
 # P5E — Cài đặt có kiểm soát và bảo toàn pilot data
 
-> Current P5E local closure (2026-09-15, input baseline `8c24b7d2`, final probe HEAD `1d0dfe88`): F2 remains qualified and H1–H4 are resolved for the offline host/contract/collector boundary. F3 is `LOCAL_EVIDENCE_CHAIN_GREEN`; owner packet `PENDING`; A4.3 `NOT_ISSUED`; RAW `NOT_RUN`; live actions are not authorized; P6 `NOT_READY`. The runbook below remains conditional/historical where it conflicts with this banner. Evidence: `docs/P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json`.
+> Current audit 2026-09-16, baseline `31a09d02`: `LOCAL_VALIDATION_FAILED_REPAIR_REQUIRED / OWNER_PACKET_NOT_READY / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. F2 and H1 improvements are retained; collector SQL has three reproduced defects (schema lookup, LINEAGE width, NULL recovery row). Golden JVM→host evidence remains missing. Current next action: bounded local repair/test in `docs/P5E_NEXT_WORK_REQUEST.md`. Earlier GREEN/owner-only conclusions below are historical and superseded. Evidence: `docs/P5E_READINESS_AUDIT_20260916.md`.
 
 
 Tài liệu này chỉ áp dụng cho validation/pilot có package

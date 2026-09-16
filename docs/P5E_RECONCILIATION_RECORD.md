@@ -1,16 +1,16 @@
 # P5E — Đối soát generation, quyết định dữ liệu và local acceptance gate
 
-> Current P5E local closure (2026-09-15, input baseline `8c24b7d2`, final probe HEAD `1d0dfe88`): F2 remains qualified and H1–H4 are resolved for the offline host/contract/collector boundary. F3 is `LOCAL_EVIDENCE_CHAIN_GREEN`; owner packet `PENDING`; A4.3 `NOT_ISSUED`; RAW `NOT_RUN`; live actions are not authorized; P6 `NOT_READY`. The reconciliation record below remains conditional/historical where it conflicts with this banner. Evidence: `docs/P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json`.
+> Current audit 2026-09-16, baseline `31a09d02`: `LOCAL_VALIDATION_FAILED_REPAIR_REQUIRED / OWNER_PACKET_NOT_READY / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. F2 and H1 improvements are retained; collector SQL has three reproduced defects (schema lookup, LINEAGE width, NULL recovery row). Golden JVM→host evidence remains missing. Current next action: bounded local repair/test in `docs/P5E_NEXT_WORK_REQUEST.md`. Earlier GREEN/owner-only conclusions below are historical and superseded. Evidence: `docs/P5E_READINESS_AUDIT_20260916.md`.
 
 
-Current proposal gate: RAW_AUTHORIZATION_PROPOSAL_PREPARED / OWNER_DECISION_REQUIRED / ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / NOT_READY_FOR_DISPATCH / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED.
+Current proposal gate: LOCAL_REPAIR_REQUIRED / OWNER_PACKET_NOT_READY / ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / NOT_READY_FOR_DISPATCH / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED.
 
 Ngày ghi nhận: `2026-09-11` (+07:00); cập nhật A4.2 exact preflight result:
 `2026-09-14` (+07:00)
 Phạm vi: metadata OpenRouter được đọc qua Activity/Logs đã xác thực; không mở
 I/O logging và không lưu prompt, response body, source text hoặc secret.
 
-## Current active decision — P5E.9B-A4.2 exact preflight pass; RAW proposal prepared, not issued
+## Historical A4.2 decision — exact preflight pass; RAW proposal unissued
 
 The current decision uses execution-start HEAD
 `005317cd83f107edbf275734cb2977b9929e88ce` on branch

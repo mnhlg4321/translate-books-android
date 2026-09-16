@@ -1,9 +1,11 @@
 # P5E RAW host-preparation evidence — 2026-09-15
 
-Status: `P5E_LOCAL_EVIDENCE_CHAIN_GREEN / OWNER_PACKET_PENDING /
+Current status: `LOCAL_VALIDATION_FAILED_REPAIR_REQUIRED / OWNER_PACKET_NOT_READY`. See `P5E_READINESS_AUDIT_20260916.md` and `P5E_NEXT_WORK_REQUEST.md`; three SQL defects supersede this report's readiness conclusion. This report's tests remain historical evidence; its file hash changes with this notice.
+
+Historical 2026-09-15 status: `P5E_LOCAL_EVIDENCE_CHAIN_GREEN / OWNER_PACKET_PENDING /
 A4.3_NOT_ISSUED / RAW_NOT_RUN / LIVE_ACTIONS_NOT_AUTHORIZED / P6_NOT_READY`
 
-> Current local closure at input baseline `8c24b7d2` and final probe HEAD `1d0dfe88`:
+> Historical local closure at input baseline `8c24b7d2` and final probe HEAD `1d0dfe88`:
 > H1–H4 are resolved for the offline host boundary. F1 account provenance and
 > all live/device actions remain pending owner decision. The historical body
 > below is retained as evidence; current hash-bound results are in
@@ -15,7 +17,7 @@ instrumentation method, device, ADB command, provider call, runtime
 authorization, database mutation, settings read, or RECONCILE operation was
 performed while producing this evidence.
 
-## Current local closure — H1–H4
+## Historical local closure claim — H1–H4
 
 The final helper/collector is
 `scripts/p5e-raw-live-supervisor.ps1`, SHA-256

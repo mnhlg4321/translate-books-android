@@ -1,17 +1,12 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Current local closure at input baseline `8c24b7d2` and final probe HEAD `1d0dfe88`: H1–H4 are resolved by offline host evidence. This packet is `PENDING` owner review, not an authorization. F1 trusted expected fingerprint and live permission remain pending; A4.3 is not issued, RAW is not run, and P6 remains not ready. Evidence: `docs/P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json`.
+> Current audit 2026-09-16, baseline `31a09d02`: `LOCAL_VALIDATION_FAILED_REPAIR_REQUIRED / OWNER_PACKET_NOT_READY / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. F2 and H1 improvements are retained; collector SQL has three reproduced defects (schema lookup, LINEAGE width, NULL recovery row). Golden JVM→host evidence remains missing. Current next action: bounded local repair/test in `docs/P5E_NEXT_WORK_REQUEST.md`. Earlier GREEN/owner-only conclusions below are historical and superseded. Evidence: `docs/P5E_READINESS_AUDIT_20260916.md`.
 
-Proposal status: PENDING_OWNER_REVIEW / F3_LOCAL_EVIDENCE_CHAIN_GREEN /
+Proposal status: LOCAL_REPAIR_REQUIRED / F3_BEHAVIORAL_VALIDATION_FAILED /
 F1_PROVENANCE_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN /
 LIVE_ACTIONS_NOT_AUTHORIZED / P6_NOT_READY
 
-This packet requests owner review for exactly one future L1_RAW_DISCOVERY run,
-but remains `PENDING` until the owner supplies independent account provenance
-and explicitly approves the account/readback/egress operation. It does not create a runtime authorization, consume an
-authorization ID, read the device credential, call a provider, or open
-RECONCILE. The mandatory account fingerprint also remains pending, so this
-revision is not READY_FOR_DISPATCH.
+This historical packet is not ready for owner execution review: the 2026-09-16 audit reproduced three collector defects. Complete bounded local repair and behavioral QA, then refreeze changed helper/command/packet hashes. Independent account provenance and explicit owner account/readback/egress approval remain required afterward. This document creates no runtime authorization or permission to dispatch.
 
 The fixed-scope file whose hash is passed to the live harness is
 docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md. Its hash is kept separate from
@@ -33,7 +28,7 @@ as the provenance-review RED input, not as an approval pin.
 
 ## Historical baseline and evidence
 
-## Current local closure before owner decision
+## Historical 2026-09-15 local closure claims — superseded for readiness
 
 The final local chain binds the unchanged manifest, frozen production code207
 and AndroidTest 57EC99 pins to the review-only command and helper/collector.

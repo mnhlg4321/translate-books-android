@@ -1,6 +1,6 @@
 # Translate Books
 
-> Current P5E re-audit (2026-09-15, baseline `8c24b7d2`): F2 remains qualified, but F3 is not closed. The synthetic artifact shape differs from the production serializer, no executable live/recovery collector exists, the live method emits no post-dispatch readback, and the command does not runtime-pin the helper hash. The owner packet is not ready; A4.3 is not issued; P6 remains not ready. See `docs/P5E_READINESS_REAUDIT_20260915.md` and `docs/P5E_NEXT_WORK_REQUEST.md`.
+> Current audit 2026-09-16, baseline `31a09d02`: `LOCAL_VALIDATION_FAILED_REPAIR_REQUIRED / OWNER_PACKET_NOT_READY / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. F2 and H1 improvements are retained; collector SQL has three reproduced defects (schema lookup, LINEAGE width, NULL recovery row). Golden JVM→host evidence remains missing. Current next action: bounded local repair/test in `docs/P5E_NEXT_WORK_REQUEST.md`. Earlier GREEN/owner-only conclusions below are historical and superseded. Evidence: `docs/P5E_READINESS_AUDIT_20260916.md`.
 
 
 Translate Books is an Android app for translating long TXT books with OpenAI-compatible language-model APIs. It is designed for resumable, glossary-aware translation rather than one-shot chat: the app prepares stable chunks, injects only relevant terminology and pronoun rules, validates responses, persists progress, and writes partial output safely.
