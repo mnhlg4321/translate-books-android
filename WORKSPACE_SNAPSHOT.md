@@ -1,10 +1,10 @@
 # Workspace Snapshot
 
-- Updated: 2026-09-16 (+07:00), final P5E local SQL/collector/golden repair and packet synchronization; no live actions.
+- Updated: 2026-09-16 (+07:00), final P5E local SQL/collector/golden repair and handoff snapshot; no live actions.
 - Current version: frozen candidate `4.17-p5e.11` / Android code207; active release scope v4.18.
 - Current branch: `feature/v4.18-p5e-audit-20260914`; release branch unchanged.
 - Workspace: `D:\App Translate Books\App Translate Books-translation-profile`; parent D1 protected.
-- Current commit: `77f060ad4aba61852c2c92f22326c2ed02180e20`, implementation/test repair baseline immediately before this final documentation snapshot commit, not a self-referential hash. The final docs/result commit will follow; confirm actual HEAD on resume.
+- Current commit: `abdf8e3f0c9bbb655a5ec121b337b7a6cb4e95ae`, documentation/result baseline immediately before this handoff snapshot commit, not a self-referential hash. Technical repair commit: `77f060ad4aba61852c2c92f22326c2ed02180e20`. Confirm actual HEAD on resume.
 - Current build: production event `build-20260911-201725`, APK SHA-256 `2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD`; test event `a4-1-test-20260914-065532`, APK SHA-256 `57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA`. No new build/install. Canonical pin table retains source/certificate identities.
 - Current phase: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_PACKET_PENDING / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`; P5/P5E exit is not claimed.
 - Completed tasks: repaired source-derived schema/LINEAGE/NULL query path; added read-only Python SQLite bridge and DDL fixtures; ran six query→collector/parser scenarios, malformed parser mutations, exact production-serializer golden bytes through host validator, same/cross-event checks and supervisor failure/timeout checks. Final helper `364A6AA2…6FFE7` and command `47044AB7…55AB` are bound; manifest/APK/source pins remain unchanged.
