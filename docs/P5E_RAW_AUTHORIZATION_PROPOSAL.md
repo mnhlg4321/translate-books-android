@@ -1,6 +1,6 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Current local repair 2026-09-16, implementation HEAD `9e5ffb78`: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_CHECK_ARTIFACT_BUILT_NOT_INSTALLED / ACCOUNT_CHECK_NOT_EXECUTED / A4_3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. SQLite query/parser, exact persisted NULL handling, production serializer golden bridge and host negative matrix have concrete offline evidence. The owner-approved account-only boundary is now built but has not been installed or run because no trusted process-only expected fingerprint is present. Current next action: owner-controlled process-only expected value, then one separately scoped account check; do not dispatch RAW. Evidence: `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json` and `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`.
+> Current local repair 2026-09-17, implementation HEAD `9e5ffb78`: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_CHECK_ARTIFACT_BUILT_NOT_INSTALLED / TEST_PACKAGE_REPLACEMENT_NOT_EXECUTED_DEVICE_UNAVAILABLE / ACCOUNT_CHECK_NOT_EXECUTED / A4_3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. SQLite query/parser, exact persisted NULL handling, production serializer golden bridge and host negative matrix have concrete offline evidence. The owner-approved account-only boundary is built, but the one replacement was not attempted because two bounded read-only preflight commands for serial `15e84958` returned `DEVICE_NOT_FOUND`; no install or account check occurred. Current next action: resume only the separately scoped account check when the exact serial and trusted process-only expected value are available; do not dispatch RAW. Evidence: `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json` and `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`.
 
 Proposal status: LOCAL_BEHAVIORAL_GATE_GREEN / F1_PROVENANCE_PENDING /
 OWNER_DECISION_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN /
@@ -52,10 +52,11 @@ logging, provider calls, DB writes and RAW dispatch. The current pinned RAW
 AndroidTest still has no standalone entry point: its selected live method
 continues from the fingerprint comparison into DB/preflight and `dispatchRaw`.
 A separate test-only verifier and host runner were therefore added and built
-without changing the RAW pins. The replacement APK is not installed, no
-device account check was executed, and no `MATCH`/`MISMATCH` is claimed because
-the trusted process-only expected value is not present. This does not authorize
-RAW or readback collection.
+without changing the RAW pins. Two bounded read-only preflight commands for the
+exact serial returned `DEVICE_NOT_FOUND`; the replacement APK was not installed,
+no device account check was executed, and no `MATCH`/`MISMATCH` is claimed
+because the trusted process-only expected value is not present. This does not
+authorize RAW or readback collection.
 
 Account-check replacement pins are separate from the RAW/A4 test pin:
 
@@ -65,7 +66,7 @@ Account-check replacement pins are separate from the RAW/A4 test pin:
 | Host runner `scripts/p5e-account-check.ps1` | `0722A243C92724D59AFB7CF4B6DE674024F9BAE4FD76A712DF0210AF25B036F3` |
 | Replacement AndroidTest APK, event `p5e-account-check-20260916-01` | `058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8`, built/not installed |
 | Replacement source ZIP | `5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F` |
-| Local account-check result | `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`; no device result |
+| Local account-check result | `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`, SHA-256 `48300DF171FA4B44F4A35A50EAB7A03AB0D31E37344C45975A73190C458B68D8`; read-only preflight `DEVICE_NOT_FOUND`, no device result |
 | Unchanged RAW command/helper pins | `47044AB7…55AB` / `364A6AA2…6FFE7` |
 
 The remaining owner inputs have these separate statuses:
@@ -96,11 +97,12 @@ redaction failure is `UNKNOWN`/`RECOVERY_REQUIRED` or
 `ACCEPTANCE_NOT_PROVEN`, with no expiry refresh and no redispatch.
 
 Decision remains `PENDING`; account approval alone is not send-books approval.
-The one next action is for the owner-controlled runner process to receive the
-trusted expected fingerprint without putting it in chat, Git, logs or command
-text, then perform the single account-only check with the replacement test
-artifact. A4.3 is not issued; no RAW command may be run. Even a valid account
-`MATCH` keeps `P6_READY=false` and does not approve readback or provider egress.
+The one next action is to resume the single account-only check with the
+replacement test artifact once the exact serial is available and the
+owner-controlled runner process has the trusted expected fingerprint without
+putting it in chat, Git, logs or command text. A4.3 is not issued; no RAW command
+may be run. Even a valid account `MATCH` keeps `P6_READY=false` and does not
+approve readback or provider egress.
 
 ## Historical baseline and evidence
 

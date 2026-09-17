@@ -1,7 +1,7 @@
 # P5E — owner provenance/input packet
 
 Ngày: `2026-09-16`
-Trạng thái local: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_CHECK_ARTIFACT_BUILT_NOT_INSTALLED / ACCOUNT_CHECK_NOT_EXECUTED / A4_3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`.
+Trạng thái local: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_CHECK_ARTIFACT_BUILT_NOT_INSTALLED / TEST_PACKAGE_REPLACEMENT_NOT_EXECUTED_DEVICE_UNAVAILABLE / ACCOUNT_CHECK_NOT_EXECUTED / A4_3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`.
 
 ## Owner input received — limited account-check scope
 
@@ -20,7 +20,9 @@ has no separate memory-only `MATCH`/`MISMATCH` entry point. A separately
 qualified test-only method and host runner have now been added and built; the
 replacement artifact is not installed. No trusted expected fingerprint is
 available through the process-only channel, so the check result remains
-`NOT_EXECUTED`, not `MATCH` or `MISMATCH`; no device action was taken.
+`NOT_EXECUTED`, not `MATCH` or `MISMATCH`. A bounded read-only preflight then
+used two adb commands for the exact serial and returned `DEVICE_NOT_FOUND` for
+both; install attempts and device mutations were `0`.
 
 The new boundary loads settings in memory, compares to an owner-controlled
 process-only expected value, emits only `MATCH`/`MISMATCH`, and has no
@@ -28,8 +30,9 @@ DB/provider/RAW path. The host runner hash-checks itself, the existing helper,
 and the replacement APK before reading the expected value or creating an adb
 process. Its offline missing-value and fake-process checks are recorded in
 `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`. This approval was used
-only to prepare the test-only artifact; installation and the one device check
-remain pending the owner-controlled expected value.
+only to prepare the test-only artifact. The one replacement was not attempted
+because the exact serial was unavailable; the expected value is also still
+required through the owner-controlled process-only channel.
 
 ## Điều còn thiếu trước khi chạy account check hoặc mở event RAW
 
@@ -72,7 +75,7 @@ ngay trước owner decision:
 | Account-check AndroidTest source ZIP | `5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F` | source commit `9e5ffb7819bfb91dcb8ed9e25c901ab10aa48390` |
 | Account-check source | `2F4BF9AD27CF5DF93D89456767423271907598EA209A0AD6E4C27599BC20063C` | exact class/method; test-only |
 | Account-check host runner | `0722A243C92724D59AFB7CF4B6DE674024F9BAE4FD76A712DF0210AF25B036F3` | exact script; no retry/redispatch |
-| Account-check local result | `9096A7135C99A1CAF3FE14E20A3AFEEAE1F907DCE8657AC2A9B2C3FE3F29BDF1` | no device result; expected value absent |
+| Account-check local result | `48300DF171FA4B44F4A35A50EAB7A03AB0D31E37344C45975A73190C458B68D8` | read-only preflight `DEVICE_NOT_FOUND`; no install/account result; expected value absent |
 | Serializer source | `1222B8AC9B79DAFC659DD364F50849DFBA4782C181606A92DA47EBD8C6164E3C` | production bytes source |
 
 Thứ tự re-freeze nếu có sửa local pin: hash helper → cập nhật command helper
@@ -95,10 +98,11 @@ cùng event nếu được, không refresh ID, retry, repair hoặc redispatch.
 
 Local behavioral PASS chứng minh query/parser/collector/verifier và golden JVM
 offline trên fixture; account-check source/runner cũng đã được build và kiểm
-offline, nhưng chưa chứng minh installed-pin readback, expected account
-provenance hay live RAW. Vì vậy `ACCOUNT_CHECK_NOT_EXECUTED`, `OWNER_PACKET_PENDING`
-và `RAW_NOT_RUN` là nhất quán; expected fingerprint process-only và mọi
-readback/RAW permission còn chờ owner. Current sections nay đã đồng bộ; chỉ
-dùng canonical current pins, packet này và
+offline. Read-only preflight exact serial mới nhất trả `DEVICE_NOT_FOUND`, nên
+chưa có installed-pin readback, expected account provenance hay live RAW. Vì
+vậy `TEST_PACKAGE_REPLACEMENT_NOT_EXECUTED_DEVICE_UNAVAILABLE`,
+`ACCOUNT_CHECK_NOT_EXECUTED`, `OWNER_PACKET_PENDING` và `RAW_NOT_RUN` là nhất
+quán; expected fingerprint process-only và mọi readback/RAW permission còn chờ
+đúng preconditions/owner. Current sections nay đã đồng bộ; chỉ dùng canonical current pins, packet này và
 `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`/`docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`;
 không mở lại H1–H4 khi input không đổi.

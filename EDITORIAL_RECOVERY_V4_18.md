@@ -1,9 +1,9 @@
 # Editorial Recovery v4.18
 
-> Current audit 2026-09-16, implementation baseline `9e5ffb78`: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_CHECK_ARTIFACT_BUILT_NOT_INSTALLED / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. SQLite query/parser defects and the missing production golden execution are resolved in offline evidence; the owner-approved account-only boundary is now built separately from the RAW pin but has not been installed or run because no trusted process-only expected value is present. Current next action: provide that value through the owner-controlled process channel and run only the account check. Evidence: `docs/P5E_OWNER_PROVENANCE_INPUT_PACKET_20260916.md` and `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`.
+> Current audit 2026-09-17, implementation baseline `9e5ffb78`: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_CHECK_ARTIFACT_BUILT_NOT_INSTALLED / TEST_PACKAGE_REPLACEMENT_NOT_EXECUTED_DEVICE_UNAVAILABLE / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. SQLite query/parser defects and the missing production golden execution are resolved in offline evidence. The owner-approved account-only boundary is built separately from the RAW pin; a two-command read-only preflight for serial `15e84958` returned `DEVICE_NOT_FOUND`, so replacement/install/account execution did not occur. Current next action: resume only the single account-check boundary when the exact serial and trusted process-only expected value are available. Evidence: `docs/P5E_OWNER_PROVENANCE_INPUT_PACKET_20260916.md` and `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`.
 
 
-Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_CHECK_NOT_EXECUTED / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY.
+Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_CHECK_ARTIFACT_BUILT_NOT_INSTALLED / TEST_PACKAGE_REPLACEMENT_NOT_EXECUTED_DEVICE_UNAVAILABLE / ACCOUNT_CHECK_NOT_EXECUTED / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY.
 
 Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILD_HISTORICAL / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / P5E_9B_A4_3_HOST_FIXTURES_PASS_HISTORICAL / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_PACKET_PENDING / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY`
 
@@ -13,16 +13,18 @@ This document is the single product and execution authority for the v4.18 Editor
 
 The final local repair ran the real `Get-P5EConsistentDatabaseReadback` SQL through a read-only SQLite bridge over six disposable DDL fixtures. Schema `24`, LINEAGE `17`, INPUT `7`, nullable CLAIMED/RECOVERY rows, exact COMMITTED golden report/receipt bytes, lineage/reconciliation source mapping and fail-closed parser mutations all have concrete results. The targeted production serializer JVM test ran on JBR `21.0.10`; its bytes passed the host validator and the required identity/byte mutation matrix was rejected. Helper self-test, SQL boundary probe and supervisor failure/timeout checks pass. See `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`.
 
-This closes only the local behavioral gate. It does not prove collection on the pinned APK/device, supply F1 expected fingerprint provenance, create runtime authorization, issue A4.3, run RAW, establish a RAW predecessor or open P6. The single next action is owner review of final manifest/command/helper/collector/serializer pins together with independent expected-account provenance, memory-only account-check permission, read-only collection permission and one RAW/GLOSSARY dispatch decision. Until that decision, do not dispatch.
+This closes only the local behavioral gate. It does not prove collection on the pinned APK/device, supply F1 expected fingerprint provenance, create runtime authorization, issue A4.3, run RAW, establish a RAW predecessor or open P6. The single next action is to resume the one account-check boundary only after the exact serial and trusted process-only expected value are available; readback/RAW decisions remain separate. Until those decisions and preconditions are satisfied, do not dispatch.
 
 The owner has now approved only one memory-only account check with output
 `MATCH`/`MISMATCH` and no key/fingerprint/endpoint logging, provider call, DB
 write or RAW dispatch. The pinned live method is not a safe account-only
 entry point: it continues from comparison into DB/preflight and `dispatchRaw`.
 The separately qualified test-only account method and host runner are now built
-in replacement event `p5e-account-check-20260916-01`, but the replacement APK
-is not installed and no device account check was executed. No result is
-claimed; the expected fingerprint remains process-only and `NOT_PROVIDED`.
+in replacement event `p5e-account-check-20260916-01`. The replacement was not
+attempted because the exact-serial read-only preflight returned
+`DEVICE_NOT_FOUND` on both bounded commands. No device mutation or account
+check was executed, no result is claimed, and the expected fingerprint remains
+process-only and `NOT_PROVIDED`.
 
 QA freeze is complete on these final hashes: round 1 executed the source query,
 SQLite fixture collector/parser, production golden serializer bridge and full
@@ -198,10 +200,12 @@ event `p5e-account-check-20260916-01`, and it is `installed=false` with zero
 device/provider operations. These pins are for the account check only; the
 RAW command/helper and historical A4 test pin remain unchanged.
 
-The local account-check preparation result is
+The local account-check preparation/preflight result is
 `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`, SHA-256
-`9096A7135C99A1CAF3FE14E20A3AFEEAE1F907DCE8657AC2A9B2C3FE3F29BDF1`. It records PowerShell parse,
-hash-gate and redaction/fake-process checks, but it is not a device result.
+`48300DF171FA4B44F4A35A50EAB7A03AB0D31E37344C45975A73190C458B68D8`. It records PowerShell parse,
+hash-gate and redaction/fake-process checks plus two read-only preflight commands
+that returned `DEVICE_NOT_FOUND`; it contains no account result or device
+mutation.
 
 The approval manifest remains unchanged at
 DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501.
@@ -252,11 +256,11 @@ The selected live method performs its own preflightOnly checks internally; no
 separate instrumentation preflight is permitted. F2/F3 host evidence and the
 source-derived argument list are recorded in the preparation evidence above.
 
-The current single next action is to make the independently sourced expected
-fingerprint available only to the owner-controlled account-check process and
-run the replacement account-only method once. A4.3, readback collection and
-RAW/GLOSSARY egress remain separate pending decisions; none may be dispatched
-from this account-check approval.
+The current single next action is to resume the replacement account-only method
+once, only when the exact serial is available and the independently sourced
+expected fingerprint is available to the owner-controlled process. A4.3,
+readback collection and RAW/GLOSSARY egress remain separate pending decisions;
+none may be dispatched from this account-check approval.
 
 ## Historical A4 exact-preflight evidence-channel blocker
 

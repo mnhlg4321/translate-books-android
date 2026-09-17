@@ -1,7 +1,7 @@
 {
   "schemaVersion": "p5e.account-check.local-result.v1",
   "date": "2026-09-16",
-  "status": "ACCOUNT_CHECK_NOT_EXECUTED",
+  "status": "TEST_PACKAGE_REPLACEMENT_NOT_EXECUTED_DEVICE_UNAVAILABLE / ACCOUNT_CHECK_NOT_EXECUTED",
   "ownerScope": "RECEIVED_MEMORY_ONLY_MATCH_MISMATCH",
   "expectedFingerprint": "NOT_PROVIDED",
   "deviceCheck": {
@@ -11,6 +11,29 @@
     "providerCalls": 0,
     "dbWrites": 0,
     "rawDispatches": 0
+  },
+  "replacementPreflight": {
+    "status": "NOT_EXECUTED_DEVICE_UNAVAILABLE",
+    "serial": "15e84958",
+    "adbReadOnlyCommands": 2,
+    "deviceState": "NOT_FOUND",
+    "commands": [
+      {
+        "operation": "get-state",
+        "exitCode": 1,
+        "result": "DEVICE_NOT_FOUND"
+      },
+      {
+        "operation": "read-only-package-inspection",
+        "package": "com.ml.tblandroidtxt.test",
+        "exitCode": 1,
+        "result": "DEVICE_NOT_FOUND"
+      }
+    ],
+    "installAttempts": 0,
+    "deviceMutationCount": 0,
+    "productionPackageTouched": false,
+    "testPackageReplacement": "NOT_EXECUTED"
   },
   "offlineRunnerChecks": {
     "powershellParse": "PASS",
