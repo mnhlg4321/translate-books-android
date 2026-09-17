@@ -1,9 +1,9 @@
 # Editorial Recovery v4.18
 
-> Current audit 2026-09-17, account-check source baseline `9e5ffb78`, host-installer commit `b40a4f7e`: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_CHECK_ARTIFACT_BUILT_NOT_INSTALLED / ACCOUNT_TEST_INSTALLER_QUALIFIED_OFFLINE / TEST_PACKAGE_REPLACEMENT_NOT_EXECUTED_DEVICE_UNAVAILABLE / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. SQLite query/parser defects and the missing production golden execution are resolved in offline evidence. The owner-approved account-only boundary is built separately from the RAW pin; a two-command read-only preflight for serial `15e84958` returned `DEVICE_NOT_FOUND`, so replacement/install/account execution did not occur. Current next action: when the serial and trusted process-only expected value are both available, run one guarded test-package `CheckOnly`, one approved replacement, then one account check. Evidence: `docs/P5E_OWNER_PROVENANCE_INPUT_PACKET_20260916.md` and `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`.
+> Current audit 2026-09-17, account-check source baseline `9e5ffb78`, host-installer repair commit `afc34b87`: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_TEST_INSTALLER_QUALIFIED_OFFLINE / ACCOUNT_TEST_CHECKONLY_PASS / TEST_PACKAGE_REPLACEMENT_PASS / ACCOUNT_CHECK_NOT_EXECUTED_EXPECTED_PROCESS_VALUE_MISSING / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. SQLite query/parser defects and the missing production golden execution are resolved in offline evidence. The owner-approved account-only boundary is built separately from the RAW pin; the exact-serial `CheckOnly` passed, followed by one replacement of `com.ml.tblandroidtxt.test` with exact installed APK readback. Account-check execution is blocked because the trusted process-only expected value is absent. Current next action: make that value available only to the owner-controlled process and run the single account check; do not dispatch RAW. Evidence: `docs/P5E_OWNER_PROVENANCE_INPUT_PACKET_20260916.md` and `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`.
 
 
-Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_CHECK_ARTIFACT_BUILT_NOT_INSTALLED / ACCOUNT_TEST_INSTALLER_QUALIFIED_OFFLINE / TEST_PACKAGE_REPLACEMENT_NOT_EXECUTED_DEVICE_UNAVAILABLE / ACCOUNT_CHECK_NOT_EXECUTED / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY.
+Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_TEST_INSTALLER_QUALIFIED_OFFLINE / ACCOUNT_TEST_CHECKONLY_PASS / TEST_PACKAGE_REPLACEMENT_PASS / ACCOUNT_CHECK_NOT_EXECUTED_EXPECTED_PROCESS_VALUE_MISSING / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY.
 
 Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILD_HISTORICAL / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / P5E_9B_A4_3_HOST_FIXTURES_PASS_HISTORICAL / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_PACKET_PENDING / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY`
 
@@ -13,18 +13,26 @@ This document is the single product and execution authority for the v4.18 Editor
 
 The final local repair ran the real `Get-P5EConsistentDatabaseReadback` SQL through a read-only SQLite bridge over six disposable DDL fixtures. Schema `24`, LINEAGE `17`, INPUT `7`, nullable CLAIMED/RECOVERY rows, exact COMMITTED golden report/receipt bytes, lineage/reconciliation source mapping and fail-closed parser mutations all have concrete results. The targeted production serializer JVM test ran on JBR `21.0.10`; its bytes passed the host validator and the required identity/byte mutation matrix was rejected. Helper self-test, SQL boundary probe and supervisor failure/timeout checks pass. See `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`.
 
-This closes only the local behavioral gate. It does not prove collection on the pinned APK/device, supply F1 expected fingerprint provenance, create runtime authorization, issue A4.3, run RAW, establish a RAW predecessor or open P6. The next device boundary is fixed: guarded test-package `CheckOnly`, one approved test-package replacement, then one account check, only after the exact serial and trusted process-only expected value are available; readback/RAW decisions remain separate. Until those decisions and preconditions are satisfied, do not dispatch.
+This closes only the local behavioral gate. It does not supply F1 expected
+fingerprint provenance, create runtime authorization, issue A4.3, run RAW,
+establish a RAW predecessor or open P6. The exact-serial `CheckOnly` and one
+approved test-package replacement are now complete with no production operation;
+the account check did not launch because the trusted process-only expected value
+is absent. The next device boundary is only that single account check after its
+process-only input is available; readback/RAW decisions remain separate. Until
+those decisions and preconditions are satisfied, do not dispatch.
 
 The owner has now approved only one memory-only account check with output
 `MATCH`/`MISMATCH` and no key/fingerprint/endpoint logging, provider call, DB
 write or RAW dispatch. The pinned live method is not a safe account-only
 entry point: it continues from comparison into DB/preflight and `dispatchRaw`.
 The separately qualified test-only account method and host runner are now built
-in replacement event `p5e-account-check-20260916-01`. The replacement was not
-attempted because the exact-serial read-only preflight returned
-`DEVICE_NOT_FOUND` on both bounded commands. No device mutation or account
-check was executed, no result is claimed, and the expected fingerprint remains
-process-only and `NOT_PROVIDED`.
+in replacement event `p5e-account-check-20260916-01`. The exact-serial
+`CheckOnly` passed and one replacement of `com.ml.tblandroidtxt.test` passed;
+the installed APK was pulled back with the exact requested hash and certificate.
+No production package operation, provider call, DB write or RAW dispatch
+occurred. The account check was not launched because the expected fingerprint
+remains process-only and `NOT_PROVIDED`; no `MATCH`/`MISMATCH` is claimed.
 
 QA freeze is complete on these final hashes: round 1 executed the source query,
 SQLite fixture collector/parser, production golden serializer bridge and full
@@ -195,24 +203,29 @@ its host runner is `scripts/p5e-account-check.ps1`, SHA-256
 `0722A243C92724D59AFB7CF4B6DE674024F9BAE4FD76A712DF0210AF25B036F3`.
 The dedicated test-package installer is
 `scripts/p5e-install-account-check-test.ps1`, SHA-256
-`ABB7C133345F0F3A0CB56F48BADF4E6422DE494DCA015BE62C961FB4659F0304`;
+`21AADE819DB83464E96C0BB6AC28CB42FB26AB916D5905AD13CED37C15FC786B`;
 its offline parser/self-test and local APK package/target/runner/certificate
-inspection pass, but it has not contacted a device. Host-only QA evidence is
+inspection pass, and its bounded CheckOnly/replacement path has now run with
+the exact serial. Updated QA evidence is
 `docs/P5E_ACCOUNT_TEST_INSTALLER_QA_20260917.json`, SHA-256
-`4356A705D6CB248B5F5152BCB432D5BD16C0A0D2763FEC0E3B11856AB994FDFB`.
+`041760CD298DA06928D35D41321CF497D7DB49C25A0608D35609370884138519`. The
+CheckOnly result is
+`D:\P5E-private\p5e-account-check-install-checkonly-20260917-113519515-c1d4240c97d145d28939340dd8904ea0\ACCOUNT_TEST_INSTALL_RESULT.json`;
+the replacement result and installed APK are under
+`D:\P5E-private\p5e-account-check-install-replacement-20260917-113601720-80675f1e5c4746da97f0a884ee319472`.
 The wrapper-built replacement AndroidTest APK is
 `058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8`, source
 ZIP `5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F`,
-event `p5e-account-check-20260916-01`, and it is `installed=false` with zero
-device/provider operations. These pins are for the account check only; the
-RAW command/helper and historical A4 test pin remain unchanged.
+event `p5e-account-check-20260916-01`, and it was installed once with exact
+installed-byte/certificate readback. These pins are for the account check only;
+the RAW command/helper and historical A4 test pin remain unchanged.
 
 The local account-check preparation/preflight result is
 `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`, SHA-256
-`48300DF171FA4B44F4A35A50EAB7A03AB0D31E37344C45975A73190C458B68D8`. It records PowerShell parse,
-hash-gate and redaction/fake-process checks plus two read-only preflight commands
-that returned `DEVICE_NOT_FOUND`; it contains no account result or device
-mutation.
+`3FBE39142BA2DAA16AF6F5301271525E71FE1871CF6C14F0DF2A816346AA53EF`. It records PowerShell parse,
+hash-gate and redaction/fake-process checks plus the current CheckOnly,
+replacement and account-stop outcomes; it contains no credential or account
+fingerprint value.
 
 The approval manifest remains unchanged at
 DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501.

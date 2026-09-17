@@ -1,7 +1,8 @@
 {
   "schemaVersion": "p5e.account-check.local-result.v1",
   "date": "2026-09-16",
-  "status": "TEST_PACKAGE_REPLACEMENT_NOT_EXECUTED_DEVICE_UNAVAILABLE / ACCOUNT_CHECK_NOT_EXECUTED",
+  "status": "CHECK_ONLY_PASS / REPLACEMENT_PASS / ACCOUNT_CHECK_NOT_EXECUTED_EXPECTED_PROCESS_VALUE_MISSING",
+  "lastUpdatedDate": "2026-09-17",
   "ownerScope": "RECEIVED_MEMORY_ONLY_MATCH_MISMATCH",
   "expectedFingerprint": "NOT_PROVIDED",
   "deviceCheck": {
@@ -12,7 +13,7 @@
     "dbWrites": 0,
     "rawDispatches": 0
   },
-  "replacementPreflight": {
+  "priorReplacementPreflight": {
     "status": "NOT_EXECUTED_DEVICE_UNAVAILABLE",
     "serial": "15e84958",
     "adbReadOnlyCommands": 2,
@@ -34,6 +35,36 @@
     "deviceMutationCount": 0,
     "productionPackageTouched": false,
     "testPackageReplacement": "NOT_EXECUTED"
+  },
+  "liveSequence": {
+    "status": "CHECK_ONLY_PASS / REPLACEMENT_PASS / ACCOUNT_CHECK_NOT_EXECUTED_EXPECTED_PROCESS_VALUE_MISSING",
+    "date": "2026-09-17",
+    "serial": "15e84958",
+    "checkOnly": {
+      "evidenceDirectory": "D:\\P5E-private\\p5e-account-check-install-checkonly-20260917-113519515-c1d4240c97d145d28939340dd8904ea0",
+      "resultSha256": "31F22C8561CC403B7F11A437E2312B9CF784DC98DAAC5B4E8D52DF72146FD809",
+      "adbReadOnlyCommands": 3,
+      "installAttempts": 0,
+      "productionPackageOperations": 0,
+      "rawDispatches": 0
+    },
+    "replacement": {
+      "evidenceDirectory": "D:\\P5E-private\\p5e-account-check-install-replacement-20260917-113601720-80675f1e5c4746da97f0a884ee319472",
+      "resultSha256": "C6D4B73514135413BE72A6C08D859758FD3B644BF978FFB3A5E424D2DD46FD76",
+      "installedApkSha256": "058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8",
+      "installAttempts": 1,
+      "productionPackageOperations": 0,
+      "rawDispatches": 0
+    },
+    "accountCheck": {
+      "status": "NOT_EXECUTED_EXPECTED_PROCESS_VALUE_MISSING",
+      "expectedChannelPresent": false,
+      "adbLaunches": 0,
+      "providerCalls": 0,
+      "dbWrites": 0,
+      "rawDispatches": 0,
+      "output": "NOT_EMITTED"
+    }
   },
   "offlineRunnerChecks": {
     "powershellParse": "PASS",
@@ -60,6 +91,13 @@
     "noRetry": true,
     "noRedispatch": true
   },
+  "testPackageInstaller": {
+    "path": "scripts/p5e-install-account-check-test.ps1",
+    "sha256": "21AADE819DB83464E96C0BB6AC28CB42FB26AB916D5905AD13CED37C15FC786B",
+    "sourceCommit": "afc34b87158ccdd14ee109d3242fbb3c1be9ca7d",
+    "checkOnlyResultSha256": "31F22C8561CC403B7F11A437E2312B9CF784DC98DAAC5B4E8D52DF72146FD809",
+    "replacementResultSha256": "C6D4B73514135413BE72A6C08D859758FD3B644BF978FFB3A5E424D2DD46FD76"
+  },
   "replacementTestArtifact": {
     "eventId": "p5e-account-check-20260916-01",
     "apkSha256": "058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8",
@@ -67,7 +105,7 @@
     "sourceArchiveSha256": "5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F",
     "buildInfoSha256": "772F32E23AEF3537FEF00DACE8E4B9B994448BFEE2071150CF0E0540DDCCC5A9",
     "certificateSha256": "47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155",
-    "installed": false,
+    "installed": true,
     "deviceOperations": 0,
     "providerCalls": 0
   },

@@ -1,11 +1,13 @@
 {
   "schemaVersion": "p5e.account-test-installer.qa.v1",
   "date": "2026-09-17",
-  "sourceCommit": "b40a4f7e",
+  "sourceCommit": "afc34b87158ccdd14ee109d3242fbb3c1be9ca7d",
   "scope": "HOST_ONLY_NO_ADB_DEVICE_OR_PROVIDER",
   "installer": {
     "path": "scripts/p5e-install-account-check-test.ps1",
-    "sha256": "ABB7C133345F0F3A0CB56F48BADF4E6422DE494DCA015BE62C961FB4659F0304"
+    "sha256": "21AADE819DB83464E96C0BB6AC28CB42FB26AB916D5905AD13CED37C15FC786B",
+    "supersededSha256": "ABB7C133345F0F3A0CB56F48BADF4E6422DE494DCA015BE62C961FB4659F0304",
+    "repair": "certificate digest comparison normalized to uppercase before exact comparison"
   },
   "replacementTestApk": {
     "sha256": "058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8",
@@ -23,6 +25,7 @@
     "apkHashMismatchStopsBeforeSdkOrDeviceAction": "PASS",
     "localAapt2PackageTargetRunnerInspection": "PASS",
     "localApkSignerCertificateInspection": "PASS",
+    "certificateCaseNormalization": "PASS",
     "forbiddenUninstallClearDowngradeAbsent": "PASS",
     "gitDiffCheck": "PASS"
   },

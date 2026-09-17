@@ -1,7 +1,7 @@
 # P5E — owner provenance/input packet
 
 Ngày: `2026-09-16`
-Trạng thái local: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_CHECK_ARTIFACT_BUILT_NOT_INSTALLED / ACCOUNT_TEST_INSTALLER_QUALIFIED_OFFLINE / TEST_PACKAGE_REPLACEMENT_NOT_EXECUTED_DEVICE_UNAVAILABLE / ACCOUNT_CHECK_NOT_EXECUTED / A4_3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`.
+Trạng thái local: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_TEST_INSTALLER_QUALIFIED_OFFLINE / ACCOUNT_TEST_CHECKONLY_PASS / TEST_PACKAGE_REPLACEMENT_PASS / ACCOUNT_CHECK_NOT_EXECUTED_EXPECTED_PROCESS_VALUE_MISSING / A4_3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`.
 
 ## Owner input received — limited account-check scope
 
@@ -17,12 +17,11 @@ The pinned `EditorialP5EFreshRawLiveInstrumentedTest#authorizedFreshRawRunsOnlyW
 computes and compares the fingerprint, but then proceeds into DB/preflight and
 `dispatchRaw`; it is not an account-only method. The current AndroidTest pin
 has no separate memory-only `MATCH`/`MISMATCH` entry point. A separately
-qualified test-only method and host runner have now been added and built; the
-replacement artifact is not installed. No trusted expected fingerprint is
-available through the process-only channel, so the check result remains
-`NOT_EXECUTED`, not `MATCH` or `MISMATCH`. A bounded read-only preflight then
-used two adb commands for the exact serial and returned `DEVICE_NOT_FOUND` for
-both; install attempts and device mutations were `0`.
+qualified test-only method and host runner have now been added and built. The
+exact-serial `CheckOnly` passed, followed by exactly one replacement of
+`com.ml.tblandroidtxt.test`; installed APK hash/certificate readback matched.
+No trusted expected fingerprint is available through the process-only channel,
+so the account-check result remains `NOT_EXECUTED`, not `MATCH` or `MISMATCH`.
 
 The new boundary loads settings in memory, compares to an owner-controlled
 process-only expected value, emits only `MATCH`/`MISMATCH`, and has no
@@ -30,26 +29,27 @@ DB/provider/RAW path. The host runner hash-checks itself, the existing helper,
 and the replacement APK before reading the expected value or creating an adb
 process. Its offline missing-value and fake-process checks are recorded in
 `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`. This approval was used
-only to prepare the test-only artifact. The one replacement was not attempted
-because the exact serial was unavailable; the expected value is also still
-required through the owner-controlled process-only channel.
+to prepare and execute the separately approved test-package boundary. The
+CheckOnly and replacement evidence are outside Git under `D:\P5E-private`; the
+expected value is still required through the owner-controlled process-only
+channel before the account runner can launch.
 
 ## Hai blocker độc lập và bước tiếp theo
 
-`DEVICE_NOT_FOUND` và `expected fingerprint NOT_PROVIDED` là hai blocker độc
-lập. Read-only preflight không tìm thấy serial `15e84958`, nên runner hiện tại
-không cài AndroidTest APK và không chạy account check; đồng thời process-only
-expected value chưa được cung cấp từ provenance độc lập. Làm thiết bị hiện
-diện trở lại không tự cung cấp expected value, và cung cấp expected value không
-cho phép bỏ qua guard thiết bị.
+`DEVICE_NOT_FOUND` chỉ còn là kết quả lịch sử của preflight trước đó, được giữ
+nguyên trong `priorReplacementPreflight`; đó không còn là blocker hiện tại.
+Ngày 2026-09-17, `CheckOnly` đã PASS đúng serial `15e84958` với ba lệnh
+read-only, `installAttempts=0`, rồi đúng một `ExecuteOneReplacement` đã PASS.
+APK test được cài đúng một lần và pull-back hash/certificate trùng pin; không
+có thao tác production/provider/DB/RAW.
 
-Khi cả hai điều kiện sẵn sàng, thứ tự duy nhất là: (1) dùng dedicated
-test-package installer có guard để xác nhận exact serial, package/certificate,
-APK pin và trạng thái trước/sau; (2) sau khi installer thành công, chạy
-đúng một account-only memory check với expected value trong process-only
-channel; (3) ghi chỉ `MATCH` hoặc `MISMATCH` và readback tối thiểu theo scope.
-Không chạy RAW method để thay account check. Không cài production APK và
-không tự động retry sau `DEVICE_NOT_FOUND`.
+Blocker hiện tại duy nhất là expected fingerprint độc lập chưa có trong
+process-only channel (`expectedChannelPresent=false`). Vì vậy account runner
+đã không được launch, không có kết quả `MATCH`/`MISMATCH`, và không đọc key,
+actual fingerprint hay endpoint để dựng expected. Khi owner-controlled
+process-only value có provenance hợp lệ, bước kế tiếp duy nhất là chạy đúng
+một account-only memory check; không thay package lần nữa, không retry và
+không redispatch. Không chạy RAW method để thay account check.
 
 Account check thành công cũng chỉ chứng minh account boundary. A4.3 vẫn chưa
 được issue, RAW chưa được phép chạy, P5 exit chưa được claim và P6 vẫn đóng;
@@ -92,13 +92,13 @@ ngay trước owner decision:
 | Artifact contract | `FFE70A70E622706FABFA49D5843310ECD5A283B1CA114E32C636EA26B9FAE4BF` | report/receipt source-derived |
 | Production APK | `2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD` | frozen code207 artifact |
 | AndroidTest APK (historical RAW/A4 pin) | `57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA` | unchanged; not the account-check replacement |
-| Account-check AndroidTest APK | `058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8` | `p5e-account-check-20260916-01`, built/not installed |
+| Account-check AndroidTest APK | `058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8` | `p5e-account-check-20260916-01`, installed once; exact readback |
 | Account-check AndroidTest source ZIP | `5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F` | source commit `9e5ffb7819bfb91dcb8ed9e25c901ab10aa48390` |
 | Account-check source | `2F4BF9AD27CF5DF93D89456767423271907598EA209A0AD6E4C27599BC20063C` | exact class/method; test-only |
 | Account-check host runner | `0722A243C92724D59AFB7CF4B6DE674024F9BAE4FD76A712DF0210AF25B036F3` | exact script; no retry/redispatch |
-| Account-test installer | `ABB7C133345F0F3A0CB56F48BADF4E6422DE494DCA015BE62C961FB4659F0304` | dedicated guard; self-test PASS; not run against a device |
-| Account-test installer QA | `4356A705D6CB248B5F5152BCB432D5BD16C0A0D2763FEC0E3B11856AB994FDFB` | host-only result; no ADB/device/provider action |
-| Account-check local result | `48300DF171FA4B44F4A35A50EAB7A03AB0D31E37344C45975A73190C458B68D8` | read-only preflight `DEVICE_NOT_FOUND`; no install/account result; expected value absent |
+| Account-test installer | `21AADE819DB83464E96C0BB6AC28CB42FB26AB916D5905AD13CED37C15FC786B` | dedicated guard; CheckOnly and one replacement PASS |
+| Account-test installer QA | `041760CD298DA06928D35D41321CF497D7DB49C25A0608D35609370884138519` | `docs/P5E_ACCOUNT_TEST_INSTALLER_QA_20260917.json`; updated QA includes certificate-case repair; no provider/DB/RAW |
+| Account-check local result | `3FBE39142BA2DAA16AF6F5301271525E71FE1871CF6C14F0DF2A816346AA53EF` | `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`; CheckOnly PASS; replacement PASS; account not executed because expected value absent |
 | Serializer source | `1222B8AC9B79DAFC659DD364F50849DFBA4782C181606A92DA47EBD8C6164E3C` | production bytes source |
 
 Thứ tự re-freeze nếu có sửa local pin: hash helper → cập nhật command helper
@@ -121,11 +121,11 @@ cùng event nếu được, không refresh ID, retry, repair hoặc redispatch.
 
 Local behavioral PASS chứng minh query/parser/collector/verifier và golden JVM
 offline trên fixture; account-check source/runner cũng đã được build và kiểm
-offline. Read-only preflight exact serial mới nhất trả `DEVICE_NOT_FOUND`, nên
-chưa có installed-pin readback, expected account provenance hay live RAW. Vì
-vậy `TEST_PACKAGE_REPLACEMENT_NOT_EXECUTED_DEVICE_UNAVAILABLE`,
-`ACCOUNT_CHECK_NOT_EXECUTED`, `OWNER_PACKET_PENDING` và `RAW_NOT_RUN` là nhất
-quán; expected fingerprint process-only và mọi readback/RAW permission còn chờ
-đúng preconditions/owner. Current sections nay đã đồng bộ; chỉ dùng canonical current pins, packet này và
+offline. CheckOnly và đúng một replacement đã PASS trên serial xác định, nhưng
+account check chưa chạy vì expected fingerprint độc lập chưa có trong
+process-only channel. Vì vậy `ACCOUNT_TEST_CHECKONLY_PASS`,
+`TEST_PACKAGE_REPLACEMENT_PASS`, `ACCOUNT_CHECK_NOT_EXECUTED_EXPECTED_PROCESS_VALUE_MISSING`,
+`OWNER_PACKET_PENDING` và `RAW_NOT_RUN` là nhất quán; mọi readback/RAW
+permission còn chờ đúng preconditions/owner. Current sections nay đã đồng bộ; chỉ dùng canonical current pins, packet này và
 `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`/`docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`;
 không mở lại H1–H4 khi input không đổi.
