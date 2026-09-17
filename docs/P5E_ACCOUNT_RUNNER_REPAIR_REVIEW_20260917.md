@@ -38,6 +38,12 @@ conditions are not interpreted as `MISMATCH`.
 The Java account-only source was not changed and remains pinned at
 `2F4BF9AD27CF5DF93D89456767423271907598EA209A0AD6E4C27599BC20063C`.
 
+Transport scope is precise: the expected digest is absent from the host ADB
+argv and child environment, then reaches Android shell by stdin and is supplied
+to instrumentation as a temporary extra. It is not raw credential. A claim that
+the digest is absent from every device-side command argument would be inaccurate;
+if that exposure is unacceptable, the device branch must stay closed.
+
 ## Offline evidence
 
 `docs/P5E_ACCOUNT_RUNNER_REPAIR_QA_20260917.json` is `PASS` with 37/37

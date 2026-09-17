@@ -1,164 +1,188 @@
-# P5E — yêu cầu làm việc + provenance tiếp theo
+# P5E — yêu cầu công việc và provenance kế tiếp
 
-Ngày: `2026-09-17`
-Baseline evidence đầu vào: `c222b13cafbb0c58a868072b44ae6df17905d089`; resume HEAD mới có audit, không checkout/reset về baseline.
-Branch: `feature/v4.18-p5e-audit-20260914`
+> **Loại công việc:** chỉ xác minh metadata provenance và đồng bộ tài liệu.
+> **Không phải:** lệnh chạy thiết bị, kiểm tra tài khoản, A4.3, RAW, P5 exit hay P6.
 
-## 1. Quyết định tại điểm bàn giao
+## Quyết định hiện tại
 
-Kết quả hiện tại là:
+Tại HEAD `c6173e317a733e13080f041fdc152fe5fe08f4e8`, phần sửa host runner ở
+`70fe4b1b9820997bd345da2c3cdd689a63b9378e` đã được kiểm lại và đủ điều
+kiện để chuyển từ **sửa local** sang **review provenance của owner**.
 
-`ACCOUNT_TEST_CHECKONLY_PASS / TEST_PACKAGE_REPLACEMENT_PASS / ACCOUNT_CHECK_NOT_EXECUTED_EXPECTED_PROCESS_VALUE_MISSING / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`.
+| Gate | Trạng thái |
+| --- | --- |
+| Host runner / parser / transport fake-process | `HOST_RUNNER_REPAIR_OFFLINE_PASS` |
+| Provenance expected độc lập | `EXPECTED_PROVENANCE_UNAVAILABLE_STOP / EXPECTED_SOURCE_PENDING` |
+| Account check trên thiết bị | `ACCOUNT_CHECK_NOT_EXECUTED` |
+| A4.3, RAW và P5 exit | `A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED` |
+| P6 | `P6_NOT_READY` |
 
-Chưa đủ điều kiện chuyển P5/P6 hoặc phát hành A4.3. Audit phản biện đã bổ sung trạng thái `ACCOUNT_RUNNER_REPAIR_REQUIRED / EXPECTED_SOURCE_PENDING`: ngoài expected fingerprint độc lập chưa có, runner hiện còn lỗi contract cần sửa và kiểm thử offline trước mọi device run. Chỉ đủ điều kiện mở một work package hẹp để sửa/QA host runner, xác minh tính khả thi của expected fingerprint độc lập và kế thừa process-only. Work package này không được cài lại APK, không chạy RAW, không đọc credential/endpoint/fingerprint thực tế từ máy, không gọi provider, không ghi DB và không retry.
+Vì vậy, **chỉ P5E-owner-provenance có thể mở tiếp**. Chưa đủ điều kiện chạy
+một account check, không đủ điều kiện chuyển P5 exit hoặc P6.
 
-Account check chỉ được mở khi host repair/transport QA đạt và owner có expected độc lập trong đúng host process. Scope account check đã được owner duyệt; không xin lại cùng quyền đó. Nếu thiếu record/mapping, giữ `EXPECTED_PROVENANCE_UNAVAILABLE_STOP` cho nhánh device; vẫn hoàn tất sửa/QA local độc lập. Tuyệt đối không lấy actual vừa đọc trên thiết bị làm expected.
+## Vì sao công việc bị lặp và kéo dài
 
-## 2. Phân tích nguyên nhân vòng lặp overthinking
+1. Các tài liệu current từng giữ nhãn của audit cũ là
+   `ACCOUNT_RUNNER_REPAIR_REQUIRED` sau khi repair đã PASS. Điều đó khiến
+   cùng một sửa chữa bị xem như việc chưa làm.
+2. Một work package repair từng được ghi như một release branch/checklist
+   riêng. Nó làm lệch quy tắc một release chỉ có một canonical plan và một
+   release checklist.
+3. Bốn gate khác nhau bị trộn thành một câu “sẵn sàng”: sửa runner local,
+   provenance expected, account check, rồi A4.3/RAW/P6. PASS ở gate trước
+   không chứng minh gate sau.
+4. Audit trước repair đã có bốn false-green parser cases. Các lượt sau phải
+   sửa và QA đúng lỗi đó, nhưng các tài liệu cũ vẫn tiếp tục được dùng như
+   lệnh thực thi.
+5. “Process-only” trước đây được diễn đạt quá rộng. Sự thật cần giữ là: raw
+   credential không được chia sẻ; digest không có trong host `adb` argv hay
+   child environment. Sau stdin tới Android shell, digest vẫn được cấp cho
+   instrumentation như một extra tạm thời. Nếu mức lộ digest này không được
+   owner chấp nhận, phải dừng và thiết kế lại trước mọi device run.
 
-Vòng lặp phát sinh do nhiều lớp tài liệu cùng chứa “next step”, trong đó lịch sử và current bị đọc ngang hàng; các nhãn local PASS/GREEN cũ từng tồn tại cạnh behavioral RED. Ngoài ra, account boundary, A4.3 authorization, RAW egress, readback/reconcile và P6 bị suy diễn như một chuỗi liên tục, khiến mỗi thiếu một input lại tạo thêm proposal hoặc retry thay vì đóng một stop condition.
+Cách chấm dứt vòng lặp là dùng một bảng trạng thái hiện hành duy nhất, chỉ
+mở đúng một gate còn thiếu, và đóng ngay khi input owner không đổi. Không tạo
+branch, checklist, build, reinstall hoặc audit mới để “thử lại” một metadata
+chưa thay đổi.
 
-Nguyên nhân trực tiếp của trạng thái hiện tại gồm hai nhóm độc lập: CheckOnly/replacement đã có bằng chứng nhưng account runner chưa launch vì expected channel không có giá trị; và review source phát hiện runner chưa bảo đảm instrumentation component đầy đủ, parser chưa chứng minh terminal success, expected đang được truyền trong ADB argv nên không đạt transport memory-only nghiêm ngặt. Đây không phải lỗi provider, DB, RAW hay thiết bị. Lịch sử trước đó gồm `DEVICE_NOT_FOUND`, installer certificate-case bug và các lỗi SQL/collector là dữ liệu regression; không được dùng để mở lại gate đã đóng hoặc biện minh cho reinstall.
+## Provenance đã kiểm
 
-Quy tắc chống lặp: fail local thì sửa trong cùng scope và chạy lại đúng test liên quan; chỉ dừng bước phụ thuộc. Không thử lại live account/RAW. Chốt một bộ bằng chứng RED→GREEN và phản biện, không mở thêm vòng cho input không đổi. MATCH chỉ chứng minh equality cùng route predicate; không chứng minh provider account validity hoặc mở P6. MISMATCH có thể do route/load exception, không chắc là sai key.
+| Thành phần | SHA-256 / commit | Vai trò |
+| --- | --- | --- |
+| Repair implementation | `70fe4b1b9820997bd345da2c3cdd689a63b9378e` | baseline sửa runner/helper và QA |
+| Snapshot HEAD | `c6173e317a733e13080f041fdc152fe5fe08f4e8` | snapshot sau repair |
+| Account runner | `96E6B3B449D00B75989D3AD4E9403EA9510E504FBE90A53D6825E72E09B71E65` | full component, stdin, parser fail-closed |
+| RAW helper, future-only | `5B621B339F6234415AC7B72C0816F2CA5F657DFCAB8F01C4D6BBC10F84172E34` | component and bounded capture; không chạy RAW |
+| Offline QA | `D8940D498AB9DABBBFED4A0A31013448622E266D30ACBC2AEFF7C9E96FEF82D7` | 37/37 fake-process assertions |
+| Account test source | `2F4BF9AD27CF5DF93D89456767423271907598EA209A0AD6E4C27599BC20063C` | test-only account comparison boundary |
+| Account test APK, historical replacement | `058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8` | đã replacement đúng một lần; không reinstall |
+| Repair result | `937FDC4623BD2E1D6FF40CC73AB2160602A5ECDA47A67714CFB45C4D49B36BC0` | trạng thái local hiện hành |
 
-## 3. Provenance đầu vào đã xác nhận
+QA được chạy lại từ source hiện tại bằng
+`scripts/test-p5e-account-runner-repair.ps1` với output tạm ngoài repository:
+`37/37 PASS`, `fakeAdbCalls=0`, `deviceActions=0`, `providerCalls=0`,
+`dbWrites=0`, `rawDispatches=0`. Đây là bằng chứng local; nó không thay thế
+một device run.
 
-Các hash dưới đây được tính lại từ file local không chứa secret tại HEAD nêu trên:
+## Input owner cần gửi — metadata, không có secret
 
-| Thành phần | SHA-256 | Vai trò |
-|---|---|---|
-| `scripts/p5e-account-check.ps1` | `0722A243C92724D59AFB7CF4B6DE674024F9BAE4FD76A712DF0210AF25B036F3` | Host runner; hash gate trước expected read/ADB |
-| `scripts/p5e-raw-live-supervisor.ps1` | `364A6AA2C52A90E7AD20F28EC6C46A0EAD1BA39E8909727BEA7396287896FFE7` | Helper; import `-LibraryOnly` |
-| `scripts/p5e-install-account-check-test.ps1` | `21AADE819DB83464E96C0BB6AC28CB42FB26AB916D5905AD13CED37C15FC786B` | Installer guard; đã sửa ở `afc34b87` |
-| `EditorialP5EAccountCheckOnlyInstrumentedTest.java` | `2F4BF9AD27CF5DF93D89456767423271907598EA209A0AD6E4C27599BC20063C` | Test-only memory boundary |
-| account-check local result | `3FBE39142BA2DAA16AF6F5301271525E71FE1871CF6C14F0DF2A816346AA53EF` | CheckOnly/replacement/account-not-executed evidence |
-| installer QA | `041760CD298DA06928D35D41321CF497D7DB49C25A0608D35609370884138519` | Offline QA và certificate normalization |
-| replacement AndroidTest APK | `058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8` | Đã replacement đúng một lần; không dùng để reinstall |
-| runner audit probe result | `AA2E6FE3CBFB7084CCA15C5D3AA4F20A59BA9525714123D1ABAC3B863350173F` | Source-only classifier QA; 4 false acceptances |
+Owner đã cho biết còn giữ key gốc ở nơi lưu riêng. Thông tin đó chỉ xác nhận
+**khả năng có record**, chưa chứng minh record độc lập hoặc mapping. Owner chỉ
+cần trả lời mẫu dưới đây; điền `NOT_VERIFIED` nếu chưa biết. Không gửi API key,
+endpoint, fingerprint, ảnh màn hình hay transcript.
 
-Provenance lịch sử cần giữ nguyên: source boundary commit `9e5ffb7819bfb91dcb8ed9e25c901ab10aa48390`; installer correction commit `afc34b87158ccdd14ee109d3242fbb3c1be9ca7d`; current result commit `c222b13cafbb0c58a868072b44ae6df17905d089`. Hash thay đổi chỉ được refreeze sau khi source thực sự thay đổi; không sửa tài liệu để làm hash “xanh”.
+```text
+originalKeyAvailability=RETAINED_OUTSIDE_APP | APP_ONLY | NOT_VERIFIED
+recordAuthority=<nhãn nơi owner quản lý record, ví dụ password manager hoặc workspace record>
+recordReference=<mã/nhãn opaque; không phải key name, không phải digest>
+accountOrProjectMapping=<nhãn account hoặc project không chứa secret>
+verificationTime=<YYYY-MM-DDThh:mm:ss±hh:mm | NOT_VERIFIED>
+recordPredatesActualRead=YES | NO | NOT_VERIFIED
+endpointScopeMapping=YES | NO | NOT_VERIFIED
+```
 
-## 4. Kế hoạch thực hiện chi tiết
+Một record được chấp nhận khi nó tồn tại độc lập trước lần đọc actual từ thiết
+bị, có authority và reference, đồng thời mapping rõ tới cùng account/project
+và endpoint scope. Owner có thể tự tạo expected digest cục bộ từ record đó ở
+một bước sau; agent không đọc key, endpoint hoặc digest.
 
-### A. Khóa trạng thái và không tái diễn hành động cũ
+## Yêu cầu công việc hiện tại: P5E owner-provenance review
 
-1. Đọc `BUILD_STATE.md` rồi `WORKSPACE_SNAPSHOT.md`.
-2. Xác nhận HEAD, branch và diff, sau đó đọc `GIT_WORKFLOW.md`/`DEVELOPMENT_WORKFLOW.md` trước sửa; không reset, clean, stash hoặc đụng `.idea`/evidence của agent khác.
-3. Đối chiếu current banner với `P5E_OWNER_PROVENANCE_INPUT_PACKET_20260916.md`, `P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json` và `P5E_ACCOUNT_TEST_INSTALLER_QA_20260917.json`.
-4. Ghi nhận bất biến: `installAttempts=1` cho replacement trước đó, `CheckOnly installAttempts=0`, production package untouched, `providerCalls=0`, `dbWrites=0`, `rawDispatches=0`.
-5. Không gọi `p5e-install-account-check-test.ps1` nữa; không uninstall, clear-data, downgrade, reinstall hoặc pull APK lần nữa.
-6. Không gọi RAW supervisor, A4.3, reconciliation, provider, endpoint, database hoặc production instrumentation.
+Thực hiện đúng các bước sau, một lần cho mỗi gói metadata mới.
 
-### B. Kiểm tra feasibility của expected provenance
+1. Mở `EDITORIAL_RECOVERY_V4_18.md`, `BUILD_STATE.md`,
+   `WORKSPACE_SNAPSHOT.md` và xác nhận root checkout là
+   `D:\App Translate Books`, branch/HEAD hiện hành. Nested worktree audit là
+   evidence lịch sử, không phải nơi chạy follow-on.
+2. Xác nhận source pin và result/QA pin trong bảng trên. Nếu một pin lệch,
+   ghi `PIN_DRIFT_STOP`; không sửa pin hoặc chạy device trong gói này.
+3. Nhận đúng bảy trường metadata owner; từ chối bất kỳ raw key, endpoint,
+   fingerprint, screenshot hoặc command transcript nào và yêu cầu gửi lại chỉ
+   metadata.
+4. Kiểm tra `recordAuthority` và `recordReference` không rỗng, không phải tên
+   key, và không có chuỗi secret/digest 64-hex.
+5. Kiểm tra `accountOrProjectMapping` là nhãn không secret và có thể đối chiếu
+   với target account check mà không tiết lộ cấu hình endpoint.
+6. Kiểm tra `verificationTime` có timezone hoặc là `NOT_VERIFIED`; không thay
+   ngày tạo key cho ngày verification.
+7. Kiểm tra `recordPredatesActualRead=YES`. Giá trị `NO` hoặc
+   `NOT_VERIFIED` không đủ tính độc lập.
+8. Kiểm tra `endpointScopeMapping=YES`. Giá trị `NO` hoặc `NOT_VERIFIED` không
+   được suy diễn là pass.
+9. Ghi duy nhất một typed decision: `EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW`
+   hoặc `EXPECTED_PROVENANCE_UNAVAILABLE_STOP`. Decision không chứa giá trị
+   expected hay actual.
+10. Nếu stop, cập nhật snapshot với đúng một next action là owner làm rõ
+    metadata. Không mở repair, build, reinstall, ADB preflight hoặc account
+    run mới khi input không thay đổi.
+11. Nếu accepted, tạo **một request follow-on riêng** cho account check. Scope
+    `OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED` đã ghi nhận vẫn là scope hiện có; metadata
+    acceptance không tự launch. Receipt follow-on phải ghi owner/operator đã xác nhận
+    ranh giới digest temporary instrumentation-extra và giới hạn một launch. Đây là
+    xác nhận boundary trong scope hiện có, không phải cấp authorization mới. Gói hiện
+    tại vẫn kết thúc trước device action.
+12. Chạy QA tài liệu: `git diff --check`, parse JSON giữ nguyên, scan các file
+    mới/sửa đổi để không có key/digest/endpoint, rồi kiểm tra mọi current header
+    dùng cùng năm trạng thái ở bảng quyết định.
+13. Chạy phản biện độc lập: thử metadata thiếu authority/reference, mapping sai,
+    timestamp không xác minh, record xuất hiện sau actual read, hoặc mô tả
+    `MATCH` như provider validity. Mọi trường hợp phải bị stop.
+14. Chỉ commit tài liệu có thay đổi; không stage `.idea`, artifacts, nested
+    worktree, backups, evidence, raw hoặc output tạm của user.
+15. Snapshot phải nói rõ worktree có material user-owned chưa theo dõi và chỉ
+    nêu một next action. Không gọi worktree là “clean” nếu còn các file đó.
 
-7. Xác định owner-controlled record độc lập bằng mã tham chiếu opaque, nhãn account/project và thời điểm xác minh; không đưa giá trị fingerprint, API key, endpoint hay settings vào chat/Git/log.
-8. Kiểm tra record đó có nguồn gốc trước lần đọc actual của account runner, có người/authority xác nhận, và mapping rõ tới đúng account/endpoint scope hay không.
-9. Record có thể chứa digest đã xác minh, hoặc key gốc và cấu hình endpoint độc lập để owner tự tạo digest local. Không yêu cầu người dùng tự biết sẵn digest; tên key như `xzx` không phải digest. Agent không đọc key thật. Nếu cần tool tạo digest, viết/QA bằng dữ liệu giả trước, bám đúng normalizeEndpoint Java, UTF-8, LF một ký tự và key exact bytes; không tự trim key hoặc đổi settings để khớp.
-10. Nếu record không tồn tại, không độc lập hoặc mapping mơ hồ: ghi `EXPECTED_PROVENANCE_UNAVAILABLE_STOP` cho nhánh device, tiếp tục C và D.1 offline. Không yêu cầu owner cung cấp lại cùng input ở mỗi lượt, không dựng expected từ actual.
-11. Chỉ sau transport repair/QA và record hợp lệ mới nạp giá trị thật vào **Process** environment của đúng host. Không dùng User/Machine, file, clipboard, command line hoặc transcript để chuyển secret. Nếu không có record, phương án xác minh khác cần quyết định thay scope; không tự đổi key trong app.
-12. Host runner phải chạy trong chính PowerShell owner đã nạp biến hoặc là child được tạo từ đó. PowerShell mới không truyền env ngược vào Codex đang chạy; không yêu cầu “đặt biến ở cửa sổ khác rồi Codex sẽ thấy”. Chỉ kiểm presence/shape, không in value; dọn biến trong finally và kết thúc process riêng, không hứa zeroize được immutable string.
-13. Tạo một process-only inheritance probe offline bằng giá trị giả có cùng shape; assert parent Process → child Process nhận được, User/Machine vẫn không được dùng, và probe không gọi ADB.
-14. Xóa giá trị giả ngay sau probe; không dùng probe để suy ra account result.
-15. Nếu không chứng minh được kế thừa process-only đến đúng host child hoặc phát hiện value đi vào command/log/file: `PROCESS_ONLY_INHERITANCE_STOP`, không launch account check.
+## Follow-on bị hoãn: một account check duy nhất
 
-### C. Review tính đúng của account-only runner trước launch
+Danh sách này **không được thực hiện trong request hiện tại**. Nó chỉ là tiêu
+chí cho request sau khi metadata được accept và owner cho phép device event.
 
-16. Recompute tám hash ở mục 3 ngay trước review; nếu lệch pin thì dừng `PIN_DRIFT_STOP`, không tự sửa pin trong cùng event.
-17. Đọc runner để xác nhận hash-check script/helper/APK xảy ra trước khi đọc expected và trước khi tạo ADB process; ghi nhận current defect nếu expected được đặt vào argv.
-18. Xác nhận helper được import bằng `-LibraryOnly`, private module không ghi đè tham số runner và không thể dispatch.
-19. Xác nhận serial cố định là `15e84958`; mọi serial khác là `ACCOUNT_CHECK_SERIAL_MISMATCH_STOP`.
-20. Sửa command component thành cú pháp đầy đủ `com.ml.tblandroidtxt.test/androidx.test.runner.AndroidJUnitRunner` (hoặc component tương đương đã được aapt/manifest pin), rồi thêm test command builder để thiếu package hoặc sai runner bị reject trước ADB.
-21. Xác nhận Java test chỉ load settings trong memory, normalize endpoint, hash `endpoint + newline + apiKey`, so sánh case-insensitive và gửi status `MATCH`/`MISMATCH`.
-22. Xác nhận Java test không repository, DB, provider, RAW, authorization, response healing, retry hoặc redispatch; exception chỉ biến thành `MISMATCH`.
-23. Sửa transport phù hợp scope: tránh expected trong host ADB argv/environment không cần thiết, transcript, file/log; khảo sát stdin của một shell process có giám sát, dùng fake endpoint để chứng minh exact bytes/quoting và không log. Input environment chỉ chứng minh điểm nhập, không chứng minh Android args/process metadata vô hình. Nếu không đáp ứng được policy memory-only đã duyệt, ghi cụ thể vị trí lộ metadata, phương án và tradeoff để owner quyết định đúng thay đổi scope; không xin lại quyền account check chung hoặc âm thầm nới scope.
-24. Sửa parser để bắt buộc đúng một terminal success từ instrumentation (test finished/zero failures theo schema đã pin), đúng một `p5e.account.result`, exit code 0 và không có error/failure marker; chỉ regex `MATCH|MISMATCH` hoặc chỉ exit 0 là không đủ.
-25. Xác nhận stdout/stderr được redact expected và mọi digest 64-hex; redaction failure là stop, không diễn giải thành mismatch.
-26. Xác nhận exit non-zero, timeout, thiếu result, nhiều result, terminal failure hoặc launch failure đều là `NOT_PROVEN`, không phải `MISMATCH` và không được retry.
-27. QA độc lập phải cố tình kiểm tra fake process: missing expected, malformed expected, nonzero process, timeout, missing result, duplicate result, terminal failure, malformed component và digest leakage; phải reject ở boundary gần nhất.
-28. Nếu review phát hiện runner có thêm side effect hoặc không tách được account-only path, dừng `ACCOUNT_RUNNER_REVIEW_STOP`; sửa source là bắt buộc trong work package repair trước khi có event.
+1. Kiểm lại runner/helper/APK/certificate/serial pin trước khi đọc expected.
+2. Owner dùng process PowerShell tạm, kiểm soát riêng, để tự tạo digest theo
+   đúng Java semantics từ endpoint đã normalize, một LF và exact key bytes.
+   Agent không nhận raw values.
+3. Expected chỉ có trong process scope của process tạm. Không dùng User/Machine
+   environment, file, clipboard, Git, chat, host command line hay transcript.
+4. Trước launch, ghi nhận owner/operator đã xác nhận giới hạn đã nêu trong scope
+   account check hiện có: Android instrumentation nhận **digest** như extra tạm
+   thời sau stdin; raw key từ record owner không được truyền qua host tới thiết bị.
+5. Xác nhận account test APK historical replacement còn đúng pin; không install,
+   replace, uninstall, clear data, downgrade hay build lại APK.
+6. Chạy một preflight device read-only duy nhất. Nếu device/serial không sẵn
+   sàng, ghi typed stop một lần và không reconnect loop.
+7. Chạy đúng một account runner launch. Không retry, redispatch, refresh key,
+   đổi serial hoặc tạo authorization.
+8. Chỉ nhận output có exact class/method, đúng một result `MATCH|MISMATCH`,
+   `OK (1 test)`, đúng một terminal `INSTRUMENTATION_CODE: -1`, exit zero và
+   không có failure marker/redaction violation.
+9. Timeout, non-zero, output thiếu/trùng, identity sai hoặc redaction violation
+   là `ACCOUNT_CHECK_NOT_PROVEN_STOP`; không retry.
+10. `MATCH` chỉ xác nhận equality với record độc lập. Nó không cấp A4.3, RAW,
+    P5 exit hay P6.
+11. `MISMATCH` dừng để owner xem lại provenance/mapping. Không sửa settings,
+    không đổi key và không chạy lại để ép match.
+12. Xuất receipt chỉ có typed status, counts, source hashes và time metadata;
+    không có expected, actual, endpoint hoặc credential.
 
-### D.1. Bằng chứng RED đã tái hiện và phạm vi sửa
+## Ma trận sự cố đã biết và guard tương ứng
 
-29. Giữ nguyên audit result `docs/P5E_ACCOUNT_RUNNER_AUDIT_RESULT_20260917.json`: source-only, không process launch, không environment read, không device. Kết quả có `classifierUnexpectedAcceptances=4` cho `match_then_failure`, `truncated_after_match`, `wrong_test_identity` và `token_suffix`.
-30. Sửa identity ở cả account runner và helper dùng cho RAW tương lai; helper hiện cũng có `$script:P5ERunner='androidx.test.runner.AndroidJUnitRunner'` nên không được coi account fix là đã lan truyền sang RAW. Mọi propagation phải có source diff, pin mới và QA riêng; không được chạy RAW trong request này.
-31. Thêm test chứng minh parser không chấp nhận `MATCH` nếu instrumentation failure/terminal marker xuất hiện sau đó, nếu class/method sai, hoặc nếu result có suffix; test phải kiểm exact identity và terminal lifecycle.
-32. Đánh giá rủi ro timeout: sau kill, `GetAwaiter().GetResult()` có thể vẫn chờ task nếu stream đóng không hoàn tất. Tạo fake process offline để chứng minh bounded completion; nếu không chứng minh được, dừng `ACCOUNT_RUNNER_TIMEOUT_BOUNDARY_STOP`.
+| Sự cố / rủi ro | Guard bắt buộc |
+| --- | --- |
+| `DEVICE_NOT_FOUND` trước đây | stop một lần; không reconnect/reinstall loop |
+| code196 data loss hoặc downgrade | không production install, clear, uninstall, downgrade, connected suite |
+| certificate-case / APK pin drift | hash/certificate gate trước event; lệch thì dừng |
+| bốn parser false-green | exact component, identity, terminal success, một result và exit zero |
+| timeout capture | bounded capture; timeout là not-proven, không retry |
+| test APK bị nhầm với RAW artifact | account APK historical không chứng nhận A4.3/RAW |
+| expected suy từ device actual | cấm; record phải độc lập và predate actual-read |
+| phát tán secret trong docs/log | metadata-only, scan trước commit, receipt typed-only |
+| status cũ lấn status mới | canonical header, BUILD_STATE, snapshot và active release checklist dùng cùng table |
 
-### D. Một lần account check có kiểm soát
+## Điều kiện hoàn thành
 
-33. Nhánh này là điều kiện sau, không tự chạy trong host-only repair: chỉ khi toàn bộ local QA/phản biện E đạt, transport đúng scope, expected hợp lệ và quyền account check đã có vẫn áp dụng, ghi provenance receipt không chứa value. Không tạo RAW authorization.
-34. Xác nhận không có competing process/writer và cửa sổ hành động còn hiệu lực; không boot/reinstall để đạt điều kiện.
-35. Launch đúng một host runner với expected ở Process environment inherited; chỉ thực hiện sau khi transport repair đã chứng minh expected không đi vào argv.
-36. Ghi `launchCount`, timeout, exit code, terminal status và result token; không ghi actual/expected/endpoint/key.
-37. Nếu result là `MATCH` hoặc `MISMATCH` đúng một lần cùng terminal success, lưu typed outcome và counts; không chạy lại để xác nhận.
-38. Nếu result thiếu, duplicate, terminal failure, timeout, non-zero, redaction fail hoặc process chết: `ACCOUNT_CHECK_NOT_PROVEN_STOP`; không đổi ID, refresh expected, retry hay redispatch.
-39. `MATCH` chỉ cập nhật `ACCOUNT_CHECK_COMPLETED_MATCH`; nó không issue A4.3, không authorize RAW, không claim P5 exit và không làm P6 ready.
-40. `MISMATCH` là `ACCOUNT_CHECK_COMPLETED_MISMATCH`; dừng mọi bước sau và yêu cầu owner xử lý provenance/mapping riêng.
-
-### E. QA và phản biện trước khi xuất tài liệu
-
-41. Vòng QA 1 đối chiếu component đầy đủ, terminal instrumentation success, result với runner output, process launch count và hash pins; xác nhận đúng một lần và không có secret shape trong evidence.
-42. Vòng QA 2 dùng evidence đã đóng, thử đổi expected giả, serial, APK hash, helper hash, process inheritance, argv inspection, malformed component, terminal failure, timeout và result duplicate; mỗi biến thể phải stop và không side effect.
-43. Phản biện logic: kiểm tra rằng local `MATCH` không bị mô tả thành provider account validity; replacement PASS không bị mô tả thành account check PASS; `DEVICE_NOT_FOUND` lịch sử không bị nâng thành current blocker; expected thiếu và runner defect được báo cáo tách biệt.
-44. Phản biện provenance: kiểm tra expected không lấy từ actual, không dùng historical APK pin thay replacement pin, và hash table khớp file thực tế.
-45. Phản biện tiến trình: kiểm tra không có reinstall, second ADB account launch, RAW, DB/provider call, retry hoặc redispatch.
-46. Chạy `git diff --check`, secret scan trên tài liệu/result không chứa secret và kiểm tra JSON schema; không build APK.
-47. Chỉ cập nhật current result/snapshot khi có evidence mới; giữ nguyên toàn bộ historical failure, không sửa lịch sử thành PASS.
-48. Xuất báo cáo với năm trạng thái tách biệt: host runner repair, expected provenance, account boundary, A4.3/RAW/P5 và P6. Không dùng một nhãn “hoàn tất” chung.
-
-## 5. Ma trận stop bắt buộc
-
-| Phát hiện | Hành động |
-|---|---|
-| Không có record expected độc lập | `EXPECTED_PROVENANCE_UNAVAILABLE_STOP`; không launch |
-| Record không mapping đúng account/endpoint scope | Dừng owner review; không dựng expected |
-| Expected đi qua User/Machine/file/command line/log | `PROCESS_ONLY_CHANNEL_STOP`; không launch |
-| Component chỉ là runner class, thiếu package | `ACCOUNT_RUNNER_REPAIR_REQUIRED`; không ADB |
-| MATCH xuất hiện trước terminal failure hoặc sai identity vẫn được nhận | `ACCOUNT_RUNNER_REPAIR_REQUIRED`; không ADB |
-| Timeout kill không chứng minh bounded completion | `ACCOUNT_RUNNER_TIMEOUT_BOUNDARY_STOP` |
-| Hash/script/APK/certificate/package lệch | `PIN_DRIFT_STOP`; không reinstall |
-| Runner có DB/provider/RAW side effect | `ACCOUNT_RUNNER_REVIEW_STOP` |
-| Timeout/non-zero/missing/duplicate result | `ACCOUNT_CHECK_NOT_PROVEN_STOP`; không retry |
-| Redaction leak hoặc digest xuất hiện | `ACCOUNT_CHECK_REDACTION_FAILURE`; giữ evidence an toàn |
-| `MATCH` | Chỉ account equality; P5/P6 vẫn chưa sẵn sàng |
-| `MISMATCH` | Dừng; owner xử lý provenance, không retry |
-
-## 6. Tiêu chí hoàn thành và bàn giao
-
-Deliverable bắt buộc của work package trước mắt là host repair + test nguồn thật + phản biện + pin mới + hướng dẫn owner nhập local đã QA giả. Có thể hoàn tất deliverable này dù owner chưa có expected. Nhánh account-device là conditional follow-on, không nằm trong PASS local. Nếu local đã đạt nhưng thiếu record, ghi `BLOCKED_EXTERNAL_EXPECTED_PROVENANCE`, không tuyên bố account failed và không tạo thêm vòng audit/build. Baseline hiện tại vẫn `ACCOUNT_RUNNER_REPAIR_REQUIRED / EXPECTED_SOURCE_PENDING`.
-
-Sau PASS, packet tiếp theo phải ghi rõ result account, nguồn provenance bằng mã tham chiếu, hash runner/helper/APK, launch count, provider/DB/RAW counts và các gate vẫn đóng. `A4.3_NOT_ISSUED`, `RAW_NOT_RUN`, `P5_EXIT_NOT_CLAIMED`, `P6_NOT_READY` phải được giữ nguyên cho tới khi có authorization và work package riêng.
-
-Tài liệu này là request bounded và provenance review; không phải authorization cho device operation, RAW, provider, database, release, tag, merge hay P6.
-
-## 7. Input tối thiểu cần owner trả lời
-
-Owner chỉ cần xác nhận bằng metadata, không gửi secret: **còn giữ bản ghi gốc độc lập của credential/account đã dùng để xác minh expected fingerprint hay không**, bản ghi đó do authority nào quản lý, mã tham chiếu là gì, và mapping account/project nào. Nếu câu trả lời là không hoặc không thể chứng minh mapping, giữ `EXPECTED_SOURCE_PENDING` và dừng; không yêu cầu API key, endpoint, actual fingerprint hay ảnh chụp màn hình.
-
-Để trả lời ban đầu, chỉ cần: “Tôi còn key gốc ở nơi lưu riêng” hoặc “Key chỉ còn trong app”. Không bắt owner tự viết hash hoặc hiểu enrollment record. Metadata mapping được điền tiếp từ record có thật; chưa xác minh thì ghi NOT_VERIFIED, không tự lấy ngày tạo key làm ngày xác minh.
-
-## 8. Các lỗi cũ phải được bao phủ nhưng không chạy lại vô cớ
-
-| Lỗi/incident | Ràng buộc của request |
-|---|---|
-| code196 mất data; connected installer hạ version | Không connectedAndroidTest, install production, clear, uninstall, reset/downgrade. Không tuyên bố data gốc đã phục hồi; giữ RECONSTRUCTED_ONLY. |
-| A3.2 model/route mismatch, preservation gap | MISMATCH không tự sửa model/key/settings. Giữ gap lịch sử; package PASS không thay DB preservation proof. |
-| DEVICE_NOT_FOUND trước đây | Chỉ là lịch sử. Nếu device không có ở event sau: dừng; không reinstall/auto reconnect-loop. |
-| Certificate khác hoa/thường | Fixture phải gọi chính hàm so certificate đã sửa, không tự so một biểu thức khác rồi gọi PASS. Installer không chạy lại trong request này. |
-| SQL schema24/LINEAGE17/INPUT7/NULL/golden | Đã đóng bằng behavioral evidence; chỉ chạy lại test liên quan nếu sửa helper tác động code đó. |
-| RAW truncate/timeout/unknown, approval consumed | Không repair/retry/fallback/reconcile hoặc refresh ID. Readback cùng event theo scope sau này; không suy billing=0 từ failure. |
-| Runner/parser false-green mới | Command token thật và classifier source thật phải có test positive/negative, terminal + identity + exact token. |
-| Hash của helper sửa ảnh hưởng command | Refreeze helper → command reference → command hash → packet/current docs một lần; giữ result cũ theo baseline. |
-| Test APK account pin khác RAW/A4 pin | Không dùng installed 058BE… thay pin RAW 57EC…; account-only selection không chứng nhận toàn APK cho RAW. Mọi chuyển artifact tương lai phải kiểm riêng trong scope sau. |
-
-Sau account MATCH, bước sau là đánh giá packet A4.3 hiện hành, scope readback và một RAW/GLOSSARY call theo manifest; không tự mở P6. DRAFT/PRONOUN vẫn ẩn, primary=1, retry/repair=0; giữ caps và window trong manifest trừ khi owner đổi scope. Chỉ đánh giá P5 exit/P6 sau outcome, report/receipt, DB/readback, predecessor và đầy đủ tiêu chí canonical. Request này không cấp quyền các bước đó.
-
-## 9. QA/phản biện của chính request này
-
-Parent đã sửa bản nháp: bỏ điều kiện “chỉ cần expected”, không bắt có digest sẵn
-khi owner còn record key gốc, cho phép sửa offline dù input owner thiếu, sửa
-thứ tự startup và số bước, giữ quyền account đã nhận và tách local deliverable
-khỏi device follow-on. Luna review độc lập probe/audit xác nhận bốn false
-accept; timeout/transport là source risk, chưa là runtime reproduction.
-QA cuối kiểm pin/probe, reference, diff guard, JSON và checklist chưa đánh dấu.
+Gói **owner-provenance review** hoàn thành khi có một decision typed từ metadata
+hoặc một stop typed vì metadata chưa đủ. Cả hai đều là kết thúc hợp lệ của gói;
+không tạo thêm vòng audit cho cùng input. Chỉ decision accepted mở quyền soạn
+request device kế tiếp. Không trạng thái nào trong tài liệu này cho phép A4.3,
+RAW, P5 exit, P6, build, reinstall, provider call, database action hoặc đọc
+credential.

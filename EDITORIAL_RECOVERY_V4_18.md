@@ -1,11 +1,9 @@
 # Editorial Recovery v4.18
 
-> Current execution audit 2026-09-17 at c222b13c: TEST_PACKAGE_REPLACEMENT_PASS / ACCOUNT_RUNNER_REPAIR_REQUIRED / EXPECTED_SOURCE_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY. Installed test APK evidence is retained. Source-derived offline probe reproduced four false acceptances and found the incomplete instrumentation component. Next action is the bounded host repair and trusted-input feasibility work in docs/P5E_NEXT_WORK_REQUEST_20260917.md; no reinstall or device execution. See docs/P5E_EXECUTION_AUDIT_20260917.md and docs/P5E_ACCOUNT_RUNNER_AUDIT_RESULT_20260917.json. SQL/golden PASS remains limited to its tested scope.
+> Current P5E execution state 2026-09-17 at implementation baseline `70fe4b1b9820997bd345da2c3cdd689a63b9378e` (snapshot `c6173e317a733e13080f041fdc152fe5fe08f4e8`): `HOST_RUNNER_REPAIR_OFFLINE_PASS / EXPECTED_PROVENANCE_UNAVAILABLE_STOP / EXPECTED_SOURCE_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The repair source and 37/37 fake-process QA are current evidence; no reinstall, build or device execution occurred. The sole next action is metadata-only owner provenance review in `docs/P5E_NEXT_WORK_REQUEST_20260917.md`. See `docs/P5E_ACCOUNT_RUNNER_REPAIR_RESULT_20260917.json`, `docs/P5E_ACCOUNT_RUNNER_REPAIR_QA_20260917.json` and `docs/P5E_PROVENANCE_REVIEW_20260917.md`. Historical audit/local/replacement evidence remains unchanged; SQL/golden PASS remains limited to its tested scope.
 
-
-Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_TEST_INSTALLER_QUALIFIED_OFFLINE / ACCOUNT_TEST_CHECKONLY_PASS / TEST_PACKAGE_REPLACEMENT_PASS / ACCOUNT_RUNNER_REPAIR_REQUIRED / EXPECTED_SOURCE_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY.
-
-Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILD_HISTORICAL / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / P5E_9B_A4_3_HOST_FIXTURES_PASS_HISTORICAL / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_PACKET_PENDING / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY`
+Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_TEST_INSTALLER_QUALIFIED_OFFLINE / ACCOUNT_TEST_CHECKONLY_PASS / TEST_PACKAGE_REPLACEMENT_PASS / HOST_RUNNER_REPAIR_OFFLINE_PASS / EXPECTED_PROVENANCE_UNAVAILABLE_STOP / EXPECTED_SOURCE_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY.
+Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILD_HISTORICAL / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / P5E_9B_A4_3_HOST_FIXTURES_PASS_HISTORICAL / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / HOST_RUNNER_REPAIR_OFFLINE_PASS / EXPECTED_PROVENANCE_UNAVAILABLE_STOP / EXPECTED_SOURCE_PENDING / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY`
 
 This document is the single product and execution authority for the v4.18 Editorial recovery. It supersedes active next actions from the historical v4.16 Editorial/RSC/IPC tracks without deleting or reinterpreting their evidence.
 
@@ -276,11 +274,7 @@ The selected live method performs its own preflightOnly checks internally; no
 separate instrumentation preflight is permitted. F2/F3 host evidence and the
 source-derived argument list are recorded in the preparation evidence above.
 
-The current next action is the bounded host runner repair and independent
-expected-source feasibility work in `docs/P5E_NEXT_WORK_REQUEST_20260917.md`.
-Component and parser defects are established by the source audit. Transport
-and deadline must be qualified before one account check. No reinstall is
-needed. A4.3/readback/RAW remain separate pending decisions.
+The current next action is metadata-only owner provenance review in `docs/P5E_NEXT_WORK_REQUEST_20260917.md`. The host runner repair is complete; no reinstall, device account check, A4.3, readback or RAW action is part of the current work package.
 
 ## Historical A4 exact-preflight evidence-channel blocker
 
@@ -593,9 +587,10 @@ The release is not complete merely because 4.1.3 imports. It is complete only wh
 
 ## 9. Exact next action
 
-Current override, 2026-09-17: follow `docs/P5E_NEXT_WORK_REQUEST_20260917.md`.
-Repair the host runner contract before any account execution; preserve the
-completed test installation. The A4 checkpoint narrative below is historical
+Current override, 2026-09-17: `HOST_RUNNER_REPAIR_OFFLINE_PASS / EXPECTED_PROVENANCE_UNAVAILABLE_STOP / EXPECTED_SOURCE_PENDING`.
+Follow `docs/P5E_NEXT_WORK_REQUEST_20260917.md` for owner metadata only. The
+completed test installation is historical evidence; no device execution, A4.3
+or RAW action is authorized. The A4 checkpoint narrative below is historical
 and does not override this next action.
 
 The host-only A4.1 group corrected the actual status emitter and verified it

@@ -1,70 +1,54 @@
-# P5E owner local input guide — metadata only
+# P5E owner input — metadata provenance only
 
-This guide is for the owner’s next response. Do not send an API key, endpoint,
-fingerprint, settings value, screenshot, command transcript or credential in
-chat, Git, an issue or shared evidence.
+Dùng mẫu này cho phản hồi owner tiếp theo. Không gửi API key, endpoint,
+fingerprint, digest, settings value, ảnh màn hình hoặc command transcript vào
+chat, Git, issue hay evidence dùng chung.
 
-## Minimal response
+## Mẫu trả lời đơn giản
 
-Reply with one of these statements and the nonsecret metadata below:
-
-- `Tôi còn key gốc ở nơi lưu riêng.`
-- `Key chỉ còn trong app.`
-
-Then provide, if known:
+Sao chép rồi điền những phần biết chắc. Nếu chưa biết, dùng `NOT_VERIFIED`.
 
 ```text
-recordAvailability=YES | NO | NOT_VERIFIED
-recordAuthority=<owner-controlled authority label>
-recordReference=<opaque reference; no secret>
-accountOrProjectMapping=<nonsecret account/project label>
-verificationTime=<timestamp and timezone, or NOT_VERIFIED>
+originalKeyAvailability=RETAINED_OUTSIDE_APP | APP_ONLY | NOT_VERIFIED
+recordAuthority=<nhãn nơi quản lý record, ví dụ password manager hoặc workspace record>
+recordReference=<mã/nhãn opaque; không phải key name, không phải digest>
+accountOrProjectMapping=<nhãn account/project không secret>
+verificationTime=<YYYY-MM-DDThh:mm:ss±hh:mm | NOT_VERIFIED>
 recordPredatesActualRead=YES | NO | NOT_VERIFIED
 endpointScopeMapping=YES | NO | NOT_VERIFIED
 ```
 
-Do not invent a reference or use the key name itself as a digest. If the
-record is absent or the account/endpoint mapping is unclear, the result is
-`EXPECTED_PROVENANCE_UNAVAILABLE_STOP` and the device branch stays closed.
-The local host repair can still remain complete.
+Ví dụ `recordAuthority` có thể là nhãn password manager hoặc workspace; nó
+không phải API key. `recordReference` chỉ là mã để owner tự tìm lại record, ví
+dụ một ID nội bộ. Không dùng tên key hay chuỗi 64-hex làm reference.
 
-## What counts as an independent record
+## Khi nào metadata đủ
 
-The record must be controlled outside the device actual-read event, have an
-authority and opaque reference, and map unambiguously to the same account and
-endpoint scope. It may contain a previously verified 64-hex digest, or the
-original key plus independently recorded endpoint configuration for the owner
-to derive locally. The agent does not read either form.
+Record phải tồn tại độc lập trước event đọc actual từ thiết bị, có authority và
+reference, và mapping rõ tới cùng account/project và endpoint scope. Việc owner
+còn key gốc ở nơi lưu riêng chỉ là dấu hiệu record có thể tồn tại; nó chưa tự
+chứng minh mapping hoặc thời điểm xác minh.
 
-If the owner derives a digest locally, use the Android source semantics exactly:
-normalize the endpoint with the Java `normalizeEndpoint` behavior, then hash
-the UTF-8 bytes of `normalizedEndpoint + one LF character + exact API-key
-bytes`. Do not trim or rewrite the key, change endpoint settings, or tune the
-input to obtain a match. Keep the digest and source credential in the owner’s
-local controlled process only.
+`NO` hoặc `NOT_VERIFIED` ở hai trường mapping/predates là một stop hợp lệ:
+`EXPECTED_PROVENANCE_UNAVAILABLE_STOP`. Không tạo key mới, không lấy expected
+từ actual, và không chạy lại account check để giải quyết thiếu metadata.
 
-## Conditional process-only setup
+## Ranh giới kỹ thuật cho follow-on sau này
 
-This is not an instruction to launch now. Only after the repair QA is accepted
-and the owner record is independently verified may the owner load the expected
-digest into the exact PowerShell Process that will create the child runner.
-The value must not be placed in User/Machine environment, a file, clipboard,
-command line or transcript. A new PowerShell window does not inherit a value
-from a different existing window.
+Đây không phải hướng dẫn launch. Chỉ sau khi metadata được accept, scope hiện có
+`OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED` được đối chiếu và owner/operator xác nhận
+ranh giới transport, owner mới tự tạo expected digest trong một process tạm cục
+bộ theo Java semantics: endpoint đã normalize, một LF, rồi exact API-key bytes.
+Agent không đọc key, endpoint hoặc digest.
 
-Use a local placeholder in any shared example; never paste the real value here:
+Raw key từ record owner không được truyền qua host tới thiết bị. Test Android
+chỉ đọc key đã lưu trong app ở memory để tạo actual fingerprint; host/agent không
+đọc hoặc chuyển key đó. Digest không có trong host `adb` argv, child environment,
+file, clipboard, Git, chat hoặc transcript. Sau stdin tới Android shell, digest
+vẫn được chuyển vào instrumentation như một extra tạm thời. Đây là giới hạn thực tế
+được xác nhận trong scope account check hiện có; nếu owner/operator không chấp nhận,
+dừng để thiết kế lại transport.
 
-```powershell
-$env:P5E_OWNER_ENDPOINT_ACCOUNT_FINGERPRINT = '<owner-local-64-hex-digest>'
-```
-
-The host runner must be started from that same process or a child of it, with
-the new repair pins. It will pass the expected only through its in-memory
-stdin path to the remote shell and will reject any leak or incomplete
-instrumentation result. Do not run the command merely because a value can be
-supplied; owner metadata and the separate account-check gate are still
-required. Do not reinstall the APK or run RAW as part of this setup.
-
-After a permitted follow-on, the receipt may contain only typed status, counts,
-serial, launch/timeout/exit metadata and source hashes. It must not contain
-the expected value, actual value, key, endpoint or digest.
+Receipt sau một event được phép chỉ có typed status, counts, serial, timeout,
+exit metadata và source hashes. Nó không có expected, actual, endpoint, digest
+hoặc credential.
