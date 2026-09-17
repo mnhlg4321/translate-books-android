@@ -1,7 +1,7 @@
 # P5E — owner provenance/input packet
 
 Ngày: `2026-09-16`
-Trạng thái local: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_TEST_INSTALLER_QUALIFIED_OFFLINE / ACCOUNT_TEST_CHECKONLY_PASS / TEST_PACKAGE_REPLACEMENT_PASS / ACCOUNT_CHECK_NOT_EXECUTED_EXPECTED_PROCESS_VALUE_MISSING / A4_3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`.
+Trạng thái current: `TEST_PACKAGE_REPLACEMENT_PASS / ACCOUNT_RUNNER_REPAIR_REQUIRED / EXPECTED_SOURCE_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4_3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. Audit `P5E_EXECUTION_AUDIT_20260917.md` ghi đè kết luận trước đây “chỉ thiếu expected”; next action là `P5E_NEXT_WORK_REQUEST_20260917.md`.
 
 ## Owner input received — limited account-check scope
 
@@ -34,7 +34,7 @@ CheckOnly and replacement evidence are outside Git under `D:\P5E-private`; the
 expected value is still required through the owner-controlled process-only
 channel before the account runner can launch.
 
-## Hai blocker độc lập và bước tiếp theo
+## Blocker hiện hành và bước tiếp theo
 
 `DEVICE_NOT_FOUND` chỉ còn là kết quả lịch sử của preflight trước đó, được giữ
 nguyên trong `priorReplacementPreflight`; đó không còn là blocker hiện tại.
@@ -43,15 +43,16 @@ read-only, `installAttempts=0`, rồi đúng một `ExecuteOneReplacement` đã 
 APK test được cài đúng một lần và pull-back hash/certificate trùng pin; không
 có thao tác production/provider/DB/RAW.
 
-Blocker hiện tại duy nhất là expected fingerprint độc lập chưa có trong
-process-only channel (`expectedChannelPresent=false`). Vì vậy account runner
-đã không được launch, không có kết quả `MATCH`/`MISMATCH`, và không đọc key,
-actual fingerprint hay endpoint để dựng expected. Khi owner-controlled
-process-only value có provenance hợp lệ, bước kế tiếp duy nhất là chạy đúng
-một account-only memory check; không thay package lần nữa, không retry và
-không redispatch. Không chạy RAW method để thay account check.
+Account runner chưa launch, chưa có MATCH/MISMATCH. Ngoài expected độc lập còn
+thiếu, audit source phát hiện component instrumentation thiếu package, bốn
+false accept của parser và expected truyền trong ADB argv. Process-only chỉ
+mô tả input environment, chưa chứng minh toàn transport memory-only. Sửa/QA
+host theo request hiện hành trước; đồng thời xác định owner còn record key gốc
+độc lập hay không. Không reinstall hoặc nạp secret thật khi contract chưa đạt.
 
-Account check thành công cũng chỉ chứng minh account boundary. A4.3 vẫn chưa
+MATCH chỉ chứng minh digest equality và route predicate, không xác nhận key
+còn hiệu lực hoặc account/billing trên provider. MISMATCH cũng có thể do lỗi
+load/route, không đủ kết luận sai account. A4.3 vẫn chưa
 được issue, RAW chưa được phép chạy, P5 exit chưa được claim và P6 vẫn đóng;
 mọi readback/RAW egress hoặc provider action cần quyết định scope riêng.
 
@@ -118,6 +119,11 @@ process death hay thiếu post-readback: giữ `UNKNOWN`/`RECOVERY_REQUIRED`, đ
 cùng event nếu được, không refresh ID, retry, repair hoặc redispatch.
 
 ## Readiness và nguyên nhân overthinking còn lại
+
+Kết luận current: `ACCOUNT_RUNNER_REPAIR_REQUIRED / EXPECTED_SOURCE_PENDING`.
+Source-slice probe tái hiện bốn false accept; xem
+`P5E_ACCOUNT_RUNNER_AUDIT_RESULT_20260917.json`. Các kết quả build/offline
+trước dưới đây chỉ chứng minh phạm vi đã chạy, không chứng minh runner ready.
 
 Local behavioral PASS chứng minh query/parser/collector/verifier và golden JVM
 offline trên fixture; account-check source/runner cũng đã được build và kiểm

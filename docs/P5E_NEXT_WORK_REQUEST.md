@@ -1,5 +1,7 @@
 # P5E — yêu cầu local repair tiếp theo (SQL/collector/golden JVM)
 
+> Historical checkpoint; not current execution authority. Current audit: docs/P5E_EXECUTION_AUDIT_20260917.md. Current continuation request: docs/P5E_NEXT_WORK_REQUEST_20260917.md. Do not repeat completed SQL repair or test-package installation from this document.
+
 Ngày: `2026-09-16`
 Baseline: `31a09d02323cd317a9089411901849e6d51b8f66`
 Status: `LOCAL_VALIDATION_FAILED_REPAIR_REQUIRED / NO_APK_BUILD / NO_DEVICE / NO_PROVIDER / P6_NOT_READY`

@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "p5e.execution-audit.qa.v1",
+  "baseline": "c222b13cafbb0c58a868072b44ae6df17905d089",
+  "documentQa": "PASS",
+  "runtimeReadiness": "ACCOUNT_RUNNER_REPAIR_REQUIRED",
+  "artifacts": [
+    {
+      "path": "docs/P5E_EXECUTION_AUDIT_20260917.md",
+      "sha256": "9D74DBD60DC0DD38D72EBF277C068284FF6931F20681BB28156390D9473A65A5"
+    },
+    {
+      "path": "docs/P5E_NEXT_WORK_REQUEST_20260917.md",
+      "sha256": "E5E3615E89D3A6C8DE9ED8800778B2298E0DD2F45D33E8661CCB854E06B57D08"
+    },
+    {
+      "path": "docs/P5E_ACCOUNT_RUNNER_AUDIT_PROBE_20260917.ps1",
+      "sha256": "0FDDDB3428BECCB881DA30E01398C0BD2CA0681A1242B6AABDDBCC3C9D36BEE8"
+    },
+    {
+      "path": "docs/P5E_ACCOUNT_RUNNER_AUDIT_RESULT_20260917.json",
+      "sha256": "AA2E6FE3CBFB7084CCA15C5D3AA4F20A59BA9525714123D1ABAC3B863350173F"
+    },
+    {
+      "path": "docs/P5E_DOCUMENT_INVENTORY_20260917.json",
+      "sha256": "0A09CFF0BAFBF4F1A036282F93954A72F4A66F976388D844F83C41A7AD486F3F"
+    }
+  ],
+  "checks": {
+    "actualSourceClassifier": "RED_REPRODUCED_4_FALSE_ACCEPTANCES",
+    "independentLunaProbeReview": "PASS_WITH_SOURCE_ONLY_LIMITS",
+    "independentLunaFinalRequestReview": "PASS_WITH_LIMITS",
+    "requestSteps": 48,
+    "currentStateAndNextActionReferences": "PASS",
+    "runtimeSourcePinsUnchanged": "PASS",
+    "historicalEvidenceHashesUnchanged": "PASS",
+    "release05Through09": "UNCHECKED",
+    "credentialShapeScan": "PASS_LIMITED_TO_COMMON_KEY_PATTERNS",
+    "powershellProbeParse": "PASS",
+    "gitDiffCheck": "PASS"
+  },
+  "limitations": [
+    "No Android execution",
+    "No full regression or build",
+    "Timeout hang not reproduced",
+    "Transport exposure found by source inspection, no actual leak observed",
+    "File hashes do not independently prove every assertion in past reports",
+    "Inventory of 163 tracked Markdown/text files is not semantic review of all historical lines"
+  ],
+  "actions": {
+    "adb": 0,
+    "device": 0,
+    "credentialReads": 0,
+    "provider": 0,
+    "db": 0,
+    "runtimeAuthorization": 0,
+    "raw": 0
+  }
+}

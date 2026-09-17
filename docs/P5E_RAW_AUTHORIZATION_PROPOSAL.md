@@ -1,14 +1,16 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Current local repair 2026-09-17, account-check source HEAD `9e5ffb78`, host-installer repair commit `afc34b87`: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_TEST_INSTALLER_QUALIFIED_OFFLINE / ACCOUNT_TEST_CHECKONLY_PASS / TEST_PACKAGE_REPLACEMENT_PASS / ACCOUNT_CHECK_NOT_EXECUTED_EXPECTED_PROCESS_VALUE_MISSING / A4_3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. SQLite query/parser, exact persisted NULL handling, production serializer golden bridge and host negative matrix have concrete offline evidence. The exact-serial `CheckOnly` passed and one test-package replacement passed with installed APK readback; account-check execution remains blocked because the trusted process-only expected value is absent. Current next action: make that value available only to the owner-controlled process and run the single account check; do not dispatch RAW. Evidence: `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json` and `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`.
+> Current execution audit 2026-09-17 at c222b13c: TEST_PACKAGE_REPLACEMENT_PASS / ACCOUNT_RUNNER_REPAIR_REQUIRED / EXPECTED_SOURCE_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY. Installed test APK evidence is retained. Source-derived offline probe reproduced four false acceptances and found the incomplete instrumentation component. Next action is the bounded host repair and trusted-input feasibility work in docs/P5E_NEXT_WORK_REQUEST_20260917.md; no reinstall or device execution. See docs/P5E_EXECUTION_AUDIT_20260917.md and docs/P5E_ACCOUNT_RUNNER_AUDIT_RESULT_20260917.json. SQL/golden PASS remains limited to its tested scope.
 
 Proposal status: LOCAL_BEHAVIORAL_GATE_GREEN / F1_PROVENANCE_PENDING /
 OWNER_DECISION_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN /
 LIVE_ACTIONS_NOT_AUTHORIZED / P6_NOT_READY
 
-The local repair is ready for owner decision review, but this document creates no
-runtime authorization or permission to dispatch. Independent account provenance
-and explicit owner account/readback/egress approval remain required.
+The collector/SQL local result is retained. Account runner repair is required
+before device execution; see `P5E_EXECUTION_AUDIT_20260917.md`. This proposal
+does not create runtime authorization. Existing account-check permission is
+retained; independent expected provenance and separate readback/egress scope
+remain unresolved.
 
 The fixed-scope file whose hash is passed to the live harness is
 docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md. Its hash is kept separate from
@@ -101,9 +103,11 @@ redaction failure is `UNKNOWN`/`RECOVERY_REQUIRED` or
 `ACCEPTANCE_NOT_PROVEN`, with no expiry refresh and no redispatch.
 
 Decision remains `PENDING`; account approval alone is not send-books approval.
-The one next action is to make the trusted expected fingerprint available only
-to the owner-controlled runner process without putting it in chat, Git, logs or
-command text, then run the single account-only check. `CheckOnly` and the one
+The next action is the host runner repair in `P5E_NEXT_WORK_REQUEST_20260917.md`:
+component, terminal parser, transport contract and bounded drain. Independent
+expected-source feasibility is a parallel owner input. The current runner puts
+expected into ADB argv; do not claim no-command-text transport until repaired
+or explicitly reconciled with the approved scope. `CheckOnly` and the one
 approved test-package replacement are complete. A4.3 is not issued; no RAW
 command may be run. Even a valid account `MATCH` keeps `P6_READY=false` and
 does not approve readback or provider egress.

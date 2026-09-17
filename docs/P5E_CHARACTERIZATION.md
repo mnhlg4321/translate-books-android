@@ -1,5 +1,7 @@
 # P5E.2 — Characterization output hiện tại
 
+> Historical checkpoint; not current execution authority. Current audit: docs/P5E_EXECUTION_AUDIT_20260917.md. Current continuation request: docs/P5E_NEXT_WORK_REQUEST_20260917.md. Do not repeat completed SQL repair or test-package installation from this document.
+
 Ngày: `2026-09-11` (+07:00)
 Phạm vi: source VOL5 đã pin trong app-owned validation data; không gửi provider.
 

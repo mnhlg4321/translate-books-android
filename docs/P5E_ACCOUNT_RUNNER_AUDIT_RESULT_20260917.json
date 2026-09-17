@@ -1,0 +1,67 @@
+{
+  "baseline": "c222b13cafbb0c58a868072b44ae6df17905d089",
+  "sourceSha256": "0722A243C92724D59AFB7CF4B6DE674024F9BAE4FD76A712DF0210AF25B036F3",
+  "scope": "SOURCE_CLASSIFIER_SLICE_ONLY_SYNTHETIC_NO_PROCESS_LAUNCH_NO_ENVIRONMENT_READ",
+  "instrumentationComponent": {
+    "actual": "androidx.test.runner.AndroidJUnitRunner",
+    "expected": "com.ml.tblandroidtxt.test/androidx.test.runner.AndroidJUnitRunner",
+    "matches": false
+  },
+  "classifierCases": [
+    {
+      "name": "valid_control",
+      "expectedAccepted": true,
+      "actualAccepted": true,
+      "conforms": true,
+      "outcome": "ACCOUNT_CHECK_COMPLETED"
+    },
+    {
+      "name": "match_then_failure",
+      "expectedAccepted": false,
+      "actualAccepted": true,
+      "conforms": false,
+      "outcome": "ACCOUNT_CHECK_COMPLETED"
+    },
+    {
+      "name": "truncated_after_match",
+      "expectedAccepted": false,
+      "actualAccepted": true,
+      "conforms": false,
+      "outcome": "ACCOUNT_CHECK_COMPLETED"
+    },
+    {
+      "name": "wrong_test_identity",
+      "expectedAccepted": false,
+      "actualAccepted": true,
+      "conforms": false,
+      "outcome": "ACCOUNT_CHECK_COMPLETED"
+    },
+    {
+      "name": "token_suffix",
+      "expectedAccepted": false,
+      "actualAccepted": true,
+      "conforms": false,
+      "outcome": "ACCOUNT_CHECK_COMPLETED"
+    },
+    {
+      "name": "duplicate_control",
+      "expectedAccepted": false,
+      "actualAccepted": false,
+      "conforms": true,
+      "outcome": "ACCOUNT_CHECK_RESULT_MISSING_NOT_PROVEN"
+    },
+    {
+      "name": "missing_control",
+      "expectedAccepted": false,
+      "actualAccepted": false,
+      "conforms": true,
+      "outcome": "ACCOUNT_CHECK_RESULT_MISSING_NOT_PROVEN"
+    }
+  ],
+  "classifierUnexpectedAcceptances": 4,
+  "expectedPassedAsInstrumentationArgument": true,
+  "decision": "ACCOUNT_RUNNER_REPAIR_REQUIRED / EXPECTED_SOURCE_PENDING / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY",
+  "deviceActions": 0,
+  "providerCalls": 0,
+  "credentialReads": 0
+}

@@ -1,9 +1,9 @@
 # Editorial Recovery v4.18
 
-> Current audit 2026-09-17, account-check source baseline `9e5ffb78`, host-installer repair commit `afc34b87`: `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_TEST_INSTALLER_QUALIFIED_OFFLINE / ACCOUNT_TEST_CHECKONLY_PASS / TEST_PACKAGE_REPLACEMENT_PASS / ACCOUNT_CHECK_NOT_EXECUTED_EXPECTED_PROCESS_VALUE_MISSING / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. SQLite query/parser defects and the missing production golden execution are resolved in offline evidence. The owner-approved account-only boundary is built separately from the RAW pin; the exact-serial `CheckOnly` passed, followed by one replacement of `com.ml.tblandroidtxt.test` with exact installed APK readback. Account-check execution is blocked because the trusted process-only expected value is absent. Current next action: make that value available only to the owner-controlled process and run the single account check; do not dispatch RAW. Evidence: `docs/P5E_OWNER_PROVENANCE_INPUT_PACKET_20260916.md` and `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`.
+> Current execution audit 2026-09-17 at c222b13c: TEST_PACKAGE_REPLACEMENT_PASS / ACCOUNT_RUNNER_REPAIR_REQUIRED / EXPECTED_SOURCE_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY. Installed test APK evidence is retained. Source-derived offline probe reproduced four false acceptances and found the incomplete instrumentation component. Next action is the bounded host repair and trusted-input feasibility work in docs/P5E_NEXT_WORK_REQUEST_20260917.md; no reinstall or device execution. See docs/P5E_EXECUTION_AUDIT_20260917.md and docs/P5E_ACCOUNT_RUNNER_AUDIT_RESULT_20260917.json. SQL/golden PASS remains limited to its tested scope.
 
 
-Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_TEST_INSTALLER_QUALIFIED_OFFLINE / ACCOUNT_TEST_CHECKONLY_PASS / TEST_PACKAGE_REPLACEMENT_PASS / ACCOUNT_CHECK_NOT_EXECUTED_EXPECTED_PROCESS_VALUE_MISSING / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY.
+Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_TEST_INSTALLER_QUALIFIED_OFFLINE / ACCOUNT_TEST_CHECKONLY_PASS / TEST_PACKAGE_REPLACEMENT_PASS / ACCOUNT_RUNNER_REPAIR_REQUIRED / EXPECTED_SOURCE_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY.
 
 Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILD_HISTORICAL / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / P5E_9B_A4_3_HOST_FIXTURES_PASS_HISTORICAL / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_PACKET_PENDING / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY`
 
@@ -18,9 +18,9 @@ fingerprint provenance, create runtime authorization, issue A4.3, run RAW,
 establish a RAW predecessor or open P6. The exact-serial `CheckOnly` and one
 approved test-package replacement are now complete with no production operation;
 the account check did not launch because the trusted process-only expected value
-is absent. The next device boundary is only that single account check after its
-process-only input is available; readback/RAW decisions remain separate. Until
-those decisions and preconditions are satisfied, do not dispatch.
+is absent. The new source audit also requires host component/parser repair and
+transport/deadline qualification. Only after those gates and trusted input may
+the single account check run; readback/RAW decisions remain separate.
 
 The owner has now approved only one memory-only account check with output
 `MATCH`/`MISMATCH` and no key/fingerprint/endpoint logging, provider call, DB
@@ -276,11 +276,11 @@ The selected live method performs its own preflightOnly checks internally; no
 separate instrumentation preflight is permitted. F2/F3 host evidence and the
 source-derived argument list are recorded in the preparation evidence above.
 
-The current single next action is to resume the replacement account-only method
-once, only when the exact serial is available and the independently sourced
-expected fingerprint is available to the owner-controlled process. A4.3,
-readback collection and RAW/GLOSSARY egress remain separate pending decisions;
-none may be dispatched from this account-check approval.
+The current next action is the bounded host runner repair and independent
+expected-source feasibility work in `docs/P5E_NEXT_WORK_REQUEST_20260917.md`.
+Component and parser defects are established by the source audit. Transport
+and deadline must be qualified before one account check. No reinstall is
+needed. A4.3/readback/RAW remain separate pending decisions.
 
 ## Historical A4 exact-preflight evidence-channel blocker
 
@@ -593,6 +593,11 @@ The release is not complete merely because 4.1.3 imports. It is complete only wh
 
 ## 9. Exact next action
 
+Current override, 2026-09-17: follow `docs/P5E_NEXT_WORK_REQUEST_20260917.md`.
+Repair the host runner contract before any account execution; preserve the
+completed test installation. The A4 checkpoint narrative below is historical
+and does not override this next action.
+
 The host-only A4.1 group corrected the actual status emitter and verified it
 against the parser contract. A4.2 then used the immutable AndroidTest artifact
 `D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532\app-debug-androidTest.apk`
@@ -611,7 +616,7 @@ The run produced one `OK (1 test)`, terminal `-1`, accepted complete status,
 all route/preservation conditions true and zero provider/creation flags. DB,
 settings, tuple and lineage readback matched before and after.
 
-The current next action is owner review of the prepared A4.3 RAW authorization
+The historical next action at the A4.2 checkpoint was owner review of the prepared A4.3 RAW authorization
 packet derived from the A4.2 manifest. It remains single-use, RAW-only, one
 primary call, zero repair/retry and no RECONCILE. The A4.2 approval is
 consumed and not reusable. The endpoint account fingerprint is still pending
