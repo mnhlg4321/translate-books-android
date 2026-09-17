@@ -139,7 +139,8 @@ function Assert-ApkCertificate {
     $signing = Invoke-CheckedCommand -FilePath $ApkSignerPath -Arguments @('verify', '--print-certs', $ApkPath) `
         -ErrorCode 'ACCOUNT_TEST_INSTALLER_CERTIFICATE_READ_FAILED_STOP'
     $certificateMatch = [regex]::Match($signing, '(?im)certificate SHA-256 digest:\s*([0-9a-fA-F]{64})')
-    if (-not $certificateMatch.Success -or $certificateMatch.Groups[1].Value -cne $ExpectedCertificate) {
+    if (-not $certificateMatch.Success -or
+            $certificateMatch.Groups[1].Value.ToUpperInvariant() -cne $ExpectedCertificate.ToUpperInvariant()) {
         throw 'ACCOUNT_TEST_INSTALLER_CERTIFICATE_MISMATCH_STOP'
     }
 }
