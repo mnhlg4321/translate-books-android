@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "p5e.account-test-installer.qa.v1",
+  "date": "2026-09-17",
+  "sourceCommit": "b40a4f7e",
+  "scope": "HOST_ONLY_NO_ADB_DEVICE_OR_PROVIDER",
+  "installer": {
+    "path": "scripts/p5e-install-account-check-test.ps1",
+    "sha256": "ABB7C133345F0F3A0CB56F48BADF4E6422DE494DCA015BE62C961FB4659F0304"
+  },
+  "replacementTestApk": {
+    "sha256": "058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8",
+    "certificateSha256": "47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155",
+    "package": "com.ml.tblandroidtxt.test",
+    "targetPackage": "com.ml.tblandroidtxt",
+    "runner": "androidx.test.runner.AndroidJUnitRunner",
+    "versionCode": ""
+  },
+  "checks": {
+    "powershellParse": "PASS",
+    "selfTestBlankAndroidTestVersionCodeAccepted": "PASS",
+    "selfTestWrongPackageRejected": "PASS",
+    "scriptHashMismatchStopsBeforeAnyOtherAction": "PASS",
+    "apkHashMismatchStopsBeforeSdkOrDeviceAction": "PASS",
+    "localAapt2PackageTargetRunnerInspection": "PASS",
+    "localApkSignerCertificateInspection": "PASS",
+    "forbiddenUninstallClearDowngradeAbsent": "PASS",
+    "gitDiffCheck": "PASS"
+  },
+  "designCorrection": {
+    "previousGap": "The account-check runner invokes instrumentation only and does not install the replacement AndroidTest APK.",
+    "genericInstallerInapplicable": "install-validated.ps1 requires a numeric APK versionCode, while this AndroidTest APK has an empty versionCode.",
+    "newGuard": "Explicit CheckOnly or ExecuteOneReplacement mode; exact script/APK/certificate/manifest pins; production code207/signature verification before and after; post-install test APK pull/hash/certificate verification; no retry, uninstall, clear, downgrade, production installation, provider call, DB write or RAW dispatch."
+  },
+  "externalActions": {
+    "adbCommands": 0,
+    "deviceMutations": 0,
+    "installAttempts": 0,
+    "productionPackageOperations": 0,
+    "providerCalls": 0,
+    "dbWrites": 0,
+    "rawDispatches": 0
+  },
+  "readiness": {
+    "installerQualifiedOffline": true,
+    "devicePreflightStillRequired": true,
+    "expectedFingerprintStillRequired": true,
+    "accountCheckExecuted": false,
+    "a4_3Issued": false,
+    "rawRun": false,
+    "p6Ready": false
+  }
+}
