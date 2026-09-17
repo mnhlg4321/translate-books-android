@@ -27,7 +27,7 @@ $ErrorActionPreference = 'Stop'
 $scriptPath = [IO.Path]::GetFullPath($MyInvocation.MyCommand.Path)
 $helperPath = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot 'p5e-raw-live-supervisor.ps1'))
 $accountCheckClass = 'com.ml.tblandroidtxt.EditorialP5EAccountCheckOnlyInstrumentedTest#ownerApprovedAccountCheckOnlyReturnsMatchOrMismatch'
-$testRunner = 'androidx.test.runner.AndroidJUnitRunner'
+$testRunner = 'com.ml.tblandroidtxt.test/androidx.test.runner.AndroidJUnitRunner'
 $accountEnvironmentName = 'P5E_OWNER_ENDPOINT_ACCOUNT_FINGERPRINT'
 $timeoutMilliseconds = 120000L
 
@@ -67,94 +67,39 @@ function Write-AccountCheckJson {
         [Text.UTF8Encoding]::new($false))
 }
 
-function Invoke-AccountCheckProcess {
-    param(
-        [Parameter(Mandatory = $true)][string[]]$Arguments,
-        [Parameter(Mandatory = $true)][string]$OutputDirectory,
-        [Parameter(Mandatory = $true)][string]$SensitiveExpected
-    )
-    $startInfo = [Diagnostics.ProcessStartInfo]::new()
-    $startInfo.FileName = $AdbPath
-    $startInfo.UseShellExecute = $false
-    $startInfo.CreateNoWindow = $true
-    $startInfo.RedirectStandardOutput = $true
-    $startInfo.RedirectStandardError = $true
-    Set-P5EProcessStartInfoArguments -StartInfo $startInfo -ArgumentList $Arguments
-
-    $process = [Diagnostics.Process]::new()
-    $process.StartInfo = $startInfo
-    $launchCount = 0
-    $timedOut = $false
-    $exitCode = $null
-    $stdout = ''
-    $stderr = ''
-    $launchError = ''
-    try {
-        if (-not $process.Start()) { throw 'PROCESS_START_RETURNED_FALSE' }
-        $launchCount = 1
-        $stdoutTask = $process.StandardOutput.ReadToEndAsync()
-        $stderrTask = $process.StandardError.ReadToEndAsync()
-        if (-not $process.WaitForExit([int]$timeoutMilliseconds)) {
-            $timedOut = $true
-            try { $process.Kill($true) } catch { try { $process.Kill() } catch { } }
-            try { $process.WaitForExit(5000) | Out-Null } catch { }
-        } else {
-            $process.WaitForExit()
-        }
-        $stdout = $stdoutTask.GetAwaiter().GetResult()
-        $stderr = $stderrTask.GetAwaiter().GetResult()
-        if ($process.HasExited) { $exitCode = $process.ExitCode }
-    } catch {
-        if ($launchCount -eq 0) { $launchError = $_.Exception.GetType().Name }
-        else { $stderr = $_.Exception.GetType().Name }
-    } finally {
-        $process.Dispose()
-    }
-
-    $safeStdout = Protect-P5ECaptureText -Text ([string]$stdout) -SensitiveValues @($SensitiveExpected)
-    $safeStderr = Protect-P5ECaptureText -Text ([string]$stderr) -SensitiveValues @($SensitiveExpected)
-    $digestPattern = '(?i)(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])'
-    $digestObserved = ([string]$safeStdout.Text -match $digestPattern) -or
-        ([string]$safeStderr.Text -match $digestPattern)
-    $sensitiveShapeObserved = $safeStdout.Violation -or $safeStderr.Violation -or $digestObserved
-    $safeStdoutText = [regex]::Replace([string]$safeStdout.Text, $digestPattern, '[REDACTED_BY_ACCOUNT_CHECK]')
-    $safeStderrText = [regex]::Replace([string]$safeStderr.Text, $digestPattern, '[REDACTED_BY_ACCOUNT_CHECK]')
-    [IO.File]::WriteAllText((Join-Path $OutputDirectory 'instrumentation-stdout.txt'), $safeStdoutText, [Text.UTF8Encoding]::new($false))
-    [IO.File]::WriteAllText((Join-Path $OutputDirectory 'instrumentation-stderr.txt'), $safeStderrText, [Text.UTF8Encoding]::new($false))
-    return [pscustomobject]@{
-        launchCount = $launchCount
-        timedOut = $timedOut
-        exitCode = $exitCode
-        launchError = $launchError
-        stdout = $safeStdoutText
-        stderr = $safeStderrText
-        redactionPass = -not $sensitiveShapeObserved
-    }
-}
-
+# These pins are checked before this module reads the process-only expected
+# value and before any ADB Process is created.
 Assert-RegularFileHash -Path $scriptPath -ExpectedHash $ExpectedScriptSha256 -ErrorPrefix 'ACCOUNT_CHECK_SCRIPT' | Out-Null
 Assert-RegularFileHash -Path $helperPath -ExpectedHash $ExpectedHelperSha256 -ErrorPrefix 'ACCOUNT_CHECK_HELPER' | Out-Null
 Assert-RegularFileHash -Path $TestApkPath -ExpectedHash $ExpectedTestApkSha256 -ErrorPrefix 'ACCOUNT_CHECK_TEST_APK' | Out-Null
 
-# Import only the hash-checked helper library before reading the process-only
-# expected value or creating any adb process.  The private module prevents the
-# helper's parameter variables from overwriting this runner's parameters, and
-# -LibraryOnly cannot dispatch.
+# Import only the hash-checked helper library.  The private module prevents
+# helper parameter variables from overwriting this runner's parameters, and
+# -LibraryOnly cannot dispatch RAW, provider or device work.
 $helperModule = New-Module -Name ('P5EAccountCheckHelper_' + [Guid]::NewGuid().ToString('N')) -ScriptBlock {
     param([Parameter(Mandatory = $true)][string]$HelperFile)
     . $HelperFile -LibraryOnly
     Export-ModuleMember -Function @(
         'Get-P5EAccountFingerprint',
+        'Get-P5EInstrumentationComponent',
+        'Assert-P5EInstrumentationComponent',
+        'New-P5EAccountCheckRemoteCommandTokens',
+        'Test-P5EAccountCheckCommandArguments',
         'New-P5EAdbArgumentList',
         'Set-P5EProcessStartInfoArguments',
-        'Protect-P5ECaptureText'
+        'Protect-P5ECaptureText',
+        'Invoke-P5EProcessSupervisor',
+        'Parse-P5EAccountCheckInstrumentationOutput'
     )
 } -ArgumentList $helperPath
 Import-Module $helperModule -Force | Out-Null
 
 if ($Serial -cne '15e84958') { throw 'ACCOUNT_CHECK_SERIAL_MISMATCH_STOP' }
+[void](Assert-P5EInstrumentationComponent -Component $testRunner)
 if (-not (Get-Command $AdbPath -ErrorAction SilentlyContinue)) { throw 'ACCOUNT_CHECK_ADB_MISSING_STOP' }
 
+# The only expected-value read is from the owner PowerShell Process scope.
+# It is never put in host argv, child environment, a file or a transcript.
 $expected = Get-P5EAccountFingerprint
 if ([string]::IsNullOrWhiteSpace($EvidenceDirectory)) {
     $EvidenceDirectory = Join-Path 'D:\P5E-private' ('account-check-' + [DateTimeOffset]::UtcNow.ToString('yyyyMMdd-HHmmssfff') + '-' + [Guid]::NewGuid().ToString('N'))
@@ -163,34 +108,65 @@ $EvidenceDirectory = [IO.Path]::GetFullPath($EvidenceDirectory)
 New-Item -ItemType Directory -Path $EvidenceDirectory -Force | Out-Null
 if (@(Get-ChildItem -LiteralPath $EvidenceDirectory -Force).Count -ne 0) { throw 'ACCOUNT_CHECK_EVIDENCE_DIRECTORY_NOT_EMPTY_STOP' }
 
-$remoteTokens = @(
-    'am', 'instrument', '-w', '-r',
-    '-e', 'class', $accountCheckClass,
-    '-e', 'p5e_account_check', 'YES',
-    '-e', 'p5e_expected_endpoint_account_fingerprint', $expected,
-    $testRunner)
+# A remote sh child reads one exact UTF-8 line from adb stdin, then supplies
+# that in-memory shell variable to am instrument.  The value is absent from
+# every ADB argv token and is removed from the ADB child Process environment.
+$remoteTokens = New-P5EAccountCheckRemoteCommandTokens -ClassMethod $accountCheckClass -Component $testRunner
 $adbArguments = New-P5EAdbArgumentList -Serial $Serial -RemoteCommandTokens $remoteTokens
-$run = Invoke-AccountCheckProcess -Arguments $adbArguments -OutputDirectory $EvidenceDirectory -SensitiveExpected $expected
+$commandContract = Test-P5EAccountCheckCommandArguments -AdbArguments $adbArguments `
+    -ClassMethod $accountCheckClass -SensitiveValue $expected
+if (-not $commandContract.Passed) {
+    throw ('ACCOUNT_CHECK_COMMAND_CONTRACT_STOP:' + ($commandContract.Errors -join ','))
+}
+$run = Invoke-P5EProcessSupervisor -FilePath $AdbPath -ArgumentList $adbArguments `
+    -TimeoutMilliseconds $timeoutMilliseconds -EvidenceDirectory $EvidenceDirectory `
+    -SensitiveValues @($expected) -StandardInputText ($expected + "`n") `
+    -ClearInheritedEnvironmentVariableNames @($accountEnvironmentName)
 
-$stdout = [string]$run.stdout
-$matches = @([regex]::Matches($stdout, 'p5e\.account\.result=(MATCH|MISMATCH)'))
-$result = if ($matches.Count -eq 1) { $matches[0].Groups[1].Value } else { '' }
-$typedOutcome = if (-not $run.redactionPass) { 'ACCOUNT_CHECK_REDACTION_FAILURE' }
-    elseif ($run.launchCount -eq 0) { 'ACCOUNT_CHECK_FAILED_BEFORE_LAUNCH' }
-    elseif ($run.timedOut) { 'ACCOUNT_CHECK_TIMEOUT_NOT_PROVEN' }
-    elseif ($null -eq $run.exitCode -or $run.exitCode -ne 0) { 'ACCOUNT_CHECK_NONZERO_NOT_PROVEN' }
-    elseif ($result -notin @('MATCH', 'MISMATCH')) { 'ACCOUNT_CHECK_RESULT_MISSING_NOT_PROVEN' }
-    else { 'ACCOUNT_CHECK_COMPLETED' }
+$safeStdoutText = Get-Content -Raw -LiteralPath $run.StdoutPath
+$safeStderrText = Get-Content -Raw -LiteralPath $run.StderrPath
+$digestPattern = '(?i)(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])'
+$digestObserved = ($safeStdoutText -match $digestPattern) -or ($safeStderrText -match $digestPattern)
+$redactionPass = -not [bool]($run.RedactionViolation -or $digestObserved)
+if ($digestObserved) {
+    $safeStdoutText = [regex]::Replace($safeStdoutText, $digestPattern, '[REDACTED_BY_ACCOUNT_CHECK]')
+    $safeStderrText = [regex]::Replace($safeStderrText, $digestPattern, '[REDACTED_BY_ACCOUNT_CHECK]')
+    [IO.File]::WriteAllText((Join-Path $EvidenceDirectory 'instrumentation-stdout.txt'), $safeStdoutText, [Text.UTF8Encoding]::new($false))
+    [IO.File]::WriteAllText((Join-Path $EvidenceDirectory 'instrumentation-stderr.txt'), $safeStderrText, [Text.UTF8Encoding]::new($false))
+}
+$parsed = Parse-P5EAccountCheckInstrumentationOutput -Output $safeStdoutText -ExpectedClassMethod $accountCheckClass
+
+$typedOutcome = if (-not $redactionPass) { 'ACCOUNT_CHECK_REDACTION_FAILURE' }
+    elseif (-not $run.CaptureBounded) { 'ACCOUNT_CHECK_TIMEOUT_BOUNDARY_NOT_PROVEN' }
+    elseif (-not $run.InputWriteCompleted) { 'ACCOUNT_CHECK_INPUT_CHANNEL_NOT_PROVEN' }
+    elseif ($run.LaunchCount -eq 0) { 'ACCOUNT_CHECK_FAILED_BEFORE_LAUNCH' }
+    elseif ($run.TimedOut) { 'ACCOUNT_CHECK_TIMEOUT_NOT_PROVEN' }
+    elseif ($null -eq $run.ExitCode -or $run.ExitCode -ne 0) { 'ACCOUNT_CHECK_NONZERO_NOT_PROVEN' }
+    elseif (-not $parsed.Accepted) { 'ACCOUNT_CHECK_RESULT_NOT_PROVEN' }
+    elseif ($parsed.Result -ceq 'MATCH') { 'ACCOUNT_CHECK_COMPLETED_MATCH' }
+    else { 'ACCOUNT_CHECK_COMPLETED_MISMATCH' }
 
 $outcome = [ordered]@{
-    schemaVersion = 'p5e.account-check.result.v1'
+    schemaVersion = 'p5e.account-check.result.v2'
     outcome = $typedOutcome
-    result = if ($typedOutcome -eq 'ACCOUNT_CHECK_COMPLETED') { $result } else { 'NOT_PROVEN' }
+    result = if ($typedOutcome -in @('ACCOUNT_CHECK_COMPLETED_MATCH', 'ACCOUNT_CHECK_COMPLETED_MISMATCH')) { $parsed.Result } else { 'NOT_PROVEN' }
     serial = $Serial
-    launchCount = [int]$run.launchCount
-    timedOut = [bool]$run.timedOut
-    exitCode = $run.exitCode
-    redactionPass = [bool]$run.redactionPass
+    launchCount = [int]$run.LaunchCount
+    timedOut = [bool]$run.TimedOut
+    exitCode = $run.ExitCode
+    processOutcome = $run.Outcome
+    inputChannel = 'PROCESS_PARENT_TO_REMOTE_SHELL_STDIN_UTF8_LF'
+    inputWriteCompleted = [bool]$run.InputWriteCompleted
+    expectedInAdbArgv = $false
+    expectedInAdbChildEnvironment = $false
+    captureBounded = [bool]$run.CaptureBounded
+    terminalSuccess = [bool]$parsed.TerminalSuccess
+    testFinished = [bool]$parsed.TestFinished
+    testIdentityPass = [bool]$parsed.IdentityPass
+    resultTokenCount = [int]$parsed.ResultTokenCount
+    failureMarkerCount = [int]$parsed.FailureMarkerCount
+    parserErrors = @($parsed.Errors)
+    redactionPass = [bool]$redactionPass
     scriptSha256 = (Get-FileHash -LiteralPath $scriptPath -Algorithm SHA256).Hash.ToLowerInvariant()
     helperSha256 = (Get-FileHash -LiteralPath $helperPath -Algorithm SHA256).Hash.ToLowerInvariant()
     testApkSha256 = (Get-FileHash -LiteralPath $TestApkPath -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -204,5 +180,5 @@ Write-Output ('P5E_ACCOUNT_CHECK_OUTCOME=' + $typedOutcome)
 Write-Output 'P5E_ACCOUNT_CHECK_PROVIDER_CALLS=0'
 Write-Output 'P5E_ACCOUNT_CHECK_DB_WRITES=0'
 Write-Output 'P5E_ACCOUNT_CHECK_RAW_DISPATCHES=0'
-if ($typedOutcome -ne 'ACCOUNT_CHECK_COMPLETED') { exit 30 }
+if ($typedOutcome -notin @('ACCOUNT_CHECK_COMPLETED_MATCH', 'ACCOUNT_CHECK_COMPLETED_MISMATCH')) { exit 30 }
 exit 0

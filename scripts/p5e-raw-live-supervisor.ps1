@@ -123,7 +123,14 @@ $script:P5EClassMethod =
     $script:P5EClass + '#authorizedFreshRawRunsOnlyWhenExplicitlyOptedIn'
 $script:P5ETestPackage = 'com.ml.tblandroidtxt.test'
 $script:P5ETargetPackage = 'com.ml.tblandroidtxt'
-$script:P5ERunner = 'androidx.test.runner.AndroidJUnitRunner'
+$script:P5EInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
+$script:P5ERunner = $script:P5ETestPackage + '/' + $script:P5EInstrumentationRunner
+$script:P5EAccountCheckClassMethod =
+    'com.ml.tblandroidtxt.EditorialP5EAccountCheckOnlyInstrumentedTest#ownerApprovedAccountCheckOnlyReturnsMatchOrMismatch'
+$script:P5EAccountCheckOptInKey = 'p5e_account_check'
+$script:P5EAccountCheckExpectedKey = 'p5e_expected_endpoint_account_fingerprint'
+$script:P5EAccountCheckRemoteScript =
+    'IFS= read -r p5e_expected || exit 64; am instrument -w -r -e class "$1" -e p5e_account_check YES -e p5e_expected_endpoint_account_fingerprint "$p5e_expected" "$2"'
 $script:P5ETestSourceCommit = 'd51b7f3c16bdc482513b9904db07b97daed592d1'
 $script:P5EAccountEnvironmentName = 'P5E_OWNER_ENDPOINT_ACCOUNT_FINGERPRINT'
 $script:P5EHostObservationTimeoutMilliseconds = 240000L
@@ -461,6 +468,150 @@ function Get-P5EAccountFingerprint {
     # The Android method returns lowercase hex and uses assertEquals, while
     # the host accepts either case. Normalize only in process memory.
     return $value.ToLowerInvariant()
+}
+
+function Get-P5EInstrumentationComponent {
+    return $script:P5ETestPackage + '/' + $script:P5EInstrumentationRunner
+}
+
+function Assert-P5EInstrumentationComponent {
+    param([Parameter(Mandatory = $true)][AllowEmptyString()][string]$Component)
+    $expected = Get-P5EInstrumentationComponent
+    if ([string]::IsNullOrWhiteSpace($Component) -or $Component -cne $expected) {
+        throw 'P5E_INSTRUMENTATION_COMPONENT_INVALID_STOP'
+    }
+    return $Component
+}
+
+function New-P5EAccountCheckRemoteCommandTokens {
+    param(
+        [string]$ClassMethod = $script:P5EAccountCheckClassMethod,
+        [string]$Component = ''
+    )
+    if ([string]::IsNullOrWhiteSpace($Component)) { $Component = Get-P5EInstrumentationComponent }
+    if ($ClassMethod -cne $script:P5EAccountCheckClassMethod) {
+        throw 'P5E_ACCOUNT_CHECK_CLASS_METHOD_INVALID_STOP'
+    }
+    [void](Assert-P5EInstrumentationComponent -Component $Component)
+    return [string[]]@(
+        'sh',
+        '-c',
+        $script:P5EAccountCheckRemoteScript,
+        '--',
+        $ClassMethod,
+        $Component
+    )
+}
+
+function Test-P5EAccountCheckCommandArguments {
+    param(
+        [Parameter(Mandatory = $true)][string[]]$AdbArguments,
+        [string]$ClassMethod = $script:P5EAccountCheckClassMethod,
+        [AllowEmptyString()][string]$SensitiveValue = ''
+    )
+    $errors = [System.Collections.Generic.List[string]]::new()
+    try {
+        $remote = Get-P5ERemoteTokensFromAdbArguments -AdbArguments $AdbArguments
+    } catch {
+        return [pscustomobject]@{ Passed = $false; Errors = @('ACCOUNT_CHECK_REMOTE_ARGUMENT_PARSE_FAILED') }
+    }
+    if ($remote.Operators.Count -ne 0) { [void]$errors.Add('ACCOUNT_CHECK_REMOTE_SHELL_OPERATOR_PRESENT') }
+    try {
+        $expectedTokens = @(New-P5EAccountCheckRemoteCommandTokens -ClassMethod $ClassMethod)
+        if ((@($remote.Tokens) -join "`n") -cne (@($expectedTokens) -join "`n")) {
+            [void]$errors.Add('ACCOUNT_CHECK_REMOTE_COMMAND_SHAPE_INVALID')
+        }
+    } catch {
+        [void]$errors.Add($_.Exception.Message)
+    }
+    if (-not [string]::IsNullOrEmpty($SensitiveValue)) {
+        $remoteText = [string]::Join("`n", [string[]]$remote.Tokens)
+        $adbText = [string]::Join("`n", [string[]]$AdbArguments)
+        if ($remoteText.IndexOf($SensitiveValue, [StringComparison]::Ordinal) -ge 0 -or
+                $adbText.IndexOf($SensitiveValue, [StringComparison]::Ordinal) -ge 0) {
+            [void]$errors.Add('ACCOUNT_CHECK_EXPECTED_IN_COMMAND_STOP')
+        }
+    }
+    return [pscustomobject]@{ Passed = $errors.Count -eq 0; Errors = $errors.ToArray() }
+}
+
+function Parse-P5EAccountCheckInstrumentationOutput {
+    param(
+        [AllowEmptyString()][string]$Output,
+        [string]$ExpectedClassMethod = $script:P5EAccountCheckClassMethod
+    )
+    $errors = [System.Collections.Generic.List[string]]::new()
+    $classValues = [System.Collections.Generic.List[string]]::new()
+    $methodValues = [System.Collections.Generic.List[string]]::new()
+    $resultValues = [System.Collections.Generic.List[string]]::new()
+    $terminalValues = [System.Collections.Generic.List[string]]::new()
+    $failureMarkerCount = 0
+    $okTestCount = 0
+    $statusCodeFailureCount = 0
+    $lines = if ($null -eq $Output) { @() } else { @($Output -split '\r?\n') }
+    if ($null -eq $Output -or [string]::IsNullOrEmpty($Output)) { [void]$errors.Add('ACCOUNT_CHECK_OUTPUT_MISSING') }
+
+    foreach ($line in $lines) {
+        if ($line -match '^INSTRUMENTATION_STATUS: class=(.*)$') {
+            [void]$classValues.Add($Matches[1])
+        } elseif ($line -match '^INSTRUMENTATION_STATUS: test=(.*)$') {
+            [void]$methodValues.Add($Matches[1])
+        } elseif ($line -match '^INSTRUMENTATION_STATUS: p5e\.account\.result=(.*)$') {
+            [void]$resultValues.Add($Matches[1])
+        } elseif ($line -match '^INSTRUMENTATION_CODE:\s*(.*)$') {
+            [void]$terminalValues.Add($Matches[1])
+        } elseif ($line -match '^INSTRUMENTATION_STATUS_CODE:\s*-\d+\s*$') {
+            $statusCodeFailureCount++
+        }
+        if ($line.Trim() -ceq 'OK (1 test)') { $okTestCount++ }
+        if ($line -match '(?i)FAILURES!!!|INSTRUMENTATION_FAILED\b|There (?:was|were) \d+ failures?|AssumptionViolatedException|\bSKIPPED\b') {
+            $failureMarkerCount++
+        }
+    }
+
+    if ($classValues.Count -ne 1) { [void]$errors.Add('ACCOUNT_CHECK_CLASS_IDENTITY_COUNT_INVALID') }
+    if ($methodValues.Count -ne 1) { [void]$errors.Add('ACCOUNT_CHECK_METHOD_IDENTITY_COUNT_INVALID') }
+    $classSeparator = $ExpectedClassMethod.IndexOf('#')
+    $expectedClass = if ($classSeparator -gt 0) { $ExpectedClassMethod.Substring(0, $classSeparator) } else { '' }
+    $expectedMethod = if ($classSeparator -gt 0) { $ExpectedClassMethod.Substring($classSeparator + 1) } else { '' }
+    if ($classValues.Count -eq 1 -and $classValues[0] -cne $expectedClass) {
+        [void]$errors.Add('ACCOUNT_CHECK_CLASS_IDENTITY_MISMATCH')
+    }
+    if ($methodValues.Count -eq 1 -and $methodValues[0] -cne $expectedMethod) {
+        [void]$errors.Add('ACCOUNT_CHECK_METHOD_IDENTITY_MISMATCH')
+    }
+    if ($resultValues.Count -ne 1) {
+        [void]$errors.Add('ACCOUNT_CHECK_RESULT_TOKEN_COUNT_INVALID')
+    }
+    $result = if ($resultValues.Count -eq 1 -and $resultValues[0] -match '^(MATCH|MISMATCH)$') {
+        $resultValues[0]
+    } else { '' }
+    if ($resultValues.Count -eq 1 -and [string]::IsNullOrEmpty($result)) {
+        [void]$errors.Add('ACCOUNT_CHECK_RESULT_TOKEN_INVALID')
+    }
+    if ($terminalValues.Count -ne 1) {
+        [void]$errors.Add('ACCOUNT_CHECK_TERMINAL_MARKER_COUNT_INVALID')
+    }
+    $terminalSuccess = $terminalValues.Count -eq 1 -and $terminalValues[0].Trim() -ceq '-1'
+    if ($terminalValues.Count -eq 1 -and -not $terminalSuccess) {
+        [void]$errors.Add('ACCOUNT_CHECK_TERMINAL_MARKER_INVALID')
+    }
+    if ($okTestCount -ne 1) { [void]$errors.Add('ACCOUNT_CHECK_TEST_FINISHED_MARKER_INVALID') }
+    if ($statusCodeFailureCount -ne 0) { [void]$errors.Add('ACCOUNT_CHECK_INSTRUMENTATION_FAILURE_STATUS') }
+    if ($failureMarkerCount -ne 0) { [void]$errors.Add('ACCOUNT_CHECK_FAILURE_MARKER_PRESENT') }
+
+    return [pscustomobject]@{
+        Accepted = $errors.Count -eq 0
+        Result = $result
+        TerminalSuccess = $terminalSuccess
+        TestFinished = $okTestCount -eq 1
+        IdentityPass = $classValues.Count -eq 1 -and $methodValues.Count -eq 1 -and
+            $classValues[0] -ceq $expectedClass -and $methodValues[0] -ceq $expectedMethod
+        TerminalCode = if ($terminalValues.Count -eq 1) { $terminalValues[0].Trim() } else { '' }
+        ResultTokenCount = $resultValues.Count
+        FailureMarkerCount = $failureMarkerCount
+        Errors = $errors.ToArray()
+    }
 }
 
 function ConvertTo-P5EAndroidShellArgument {
@@ -838,22 +989,53 @@ function Set-P5EProcessStartInfoArguments {
     }))
 }
 
+function Get-P5EProcessTaskTextBounded {
+    param(
+        [Parameter(Mandatory = $true)][System.Threading.Tasks.Task]$Task,
+        [int]$TimeoutMilliseconds = 5000
+    )
+    try {
+        if (-not $Task.Wait($TimeoutMilliseconds)) {
+            return [pscustomobject]@{ Completed = $false; Text = ''; ErrorClass = 'TASK_WAIT_TIMEOUT' }
+        }
+        return [pscustomobject]@{
+            Completed = $true
+            Text = [string]$Task.GetAwaiter().GetResult()
+            ErrorClass = ''
+        }
+    } catch {
+        return [pscustomobject]@{ Completed = $false; Text = ''; ErrorClass = $_.Exception.GetType().Name }
+    }
+}
+
 function Invoke-P5EProcessSupervisor {
     param(
         [Parameter(Mandatory = $true)][string]$FilePath,
         [Parameter(Mandatory = $true)][AllowEmptyCollection()][string[]]$ArgumentList,
         [Parameter(Mandatory = $true)][long]$TimeoutMilliseconds,
         [Parameter(Mandatory = $true)][string]$EvidenceDirectory,
-        [AllowEmptyCollection()][string[]]$SensitiveValues = @()
+        [AllowEmptyCollection()][string[]]$SensitiveValues = @(),
+        [AllowEmptyString()][string]$StandardInputText = '',
+        [AllowEmptyCollection()][string[]]$ClearInheritedEnvironmentVariableNames = @()
     )
     $stdoutPath = Join-Path $EvidenceDirectory 'instrumentation-stdout.txt'
     $stderrPath = Join-Path $EvidenceDirectory 'instrumentation-stderr.txt'
+    $hasStandardInput = $PSBoundParameters.ContainsKey('StandardInputText')
     $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
     $startInfo.FileName = $FilePath
     $startInfo.UseShellExecute = $false
     $startInfo.CreateNoWindow = $true
+    $startInfo.RedirectStandardInput = $hasStandardInput
     $startInfo.RedirectStandardOutput = $true
     $startInfo.RedirectStandardError = $true
+    foreach ($name in @($ClearInheritedEnvironmentVariableNames | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })) {
+        $environmentProperty = $startInfo.PSObject.Properties['Environment']
+        if ($null -ne $environmentProperty) {
+            [void]$startInfo.Environment.Remove([string]$name)
+        } else {
+            [void]$startInfo.EnvironmentVariables.Remove([string]$name)
+        }
+    }
     Set-P5EProcessStartInfoArguments -StartInfo $startInfo -ArgumentList $ArgumentList
 
     $process = [System.Diagnostics.Process]::new()
@@ -862,16 +1044,30 @@ function Invoke-P5EProcessSupervisor {
     $timedOut = $false
     $exitCode = $null
     $launchErrorClass = ''
-    $stdout = ''
-    $stderr = ''
-    $redactionViolation = $false
-    $stdoutTask = $null
-    $stderrTask = $null
+    $inputWriteCompleted = -not $hasStandardInput
+    $inputWriteErrorClass = ''
+    $stdoutCapture = [pscustomobject]@{ Completed = $true; Text = ''; ErrorClass = '' }
+    $stderrCapture = [pscustomobject]@{ Completed = $true; Text = ''; ErrorClass = '' }
     try {
         if (-not $process.Start()) { throw 'PROCESS_START_RETURNED_FALSE' }
         $launchCount = 1
         $stdoutTask = $process.StandardOutput.ReadToEndAsync()
         $stderrTask = $process.StandardError.ReadToEndAsync()
+        if ($hasStandardInput) {
+            try {
+                $inputBytes = [Text.UTF8Encoding]::new($false).GetBytes($StandardInputText)
+                if ($inputBytes.Length -gt 0) {
+                    $process.StandardInput.BaseStream.Write($inputBytes, 0, $inputBytes.Length)
+                    $process.StandardInput.BaseStream.Flush()
+                }
+                $process.StandardInput.Close()
+                $inputWriteCompleted = $true
+            } catch {
+                $inputWriteErrorClass = $_.Exception.GetType().Name
+                try { $process.StandardInput.Close() } catch { }
+                try { if (-not $process.HasExited) { $process.Kill($true) } } catch { try { $process.Kill() } catch { } }
+            }
+        }
         if (-not $process.WaitForExit([int]$TimeoutMilliseconds)) {
             $timedOut = $true
             try { $process.Kill($true) } catch { try { $process.Kill() } catch { } }
@@ -879,22 +1075,33 @@ function Invoke-P5EProcessSupervisor {
         } else {
             $process.WaitForExit()
         }
-        if ($stdoutTask -ne $null) { $stdout = $stdoutTask.GetAwaiter().GetResult() }
-        if ($stderrTask -ne $null) { $stderr = $stderrTask.GetAwaiter().GetResult() }
+        $stdoutCapture = Get-P5EProcessTaskTextBounded -Task $stdoutTask
+        $stderrCapture = Get-P5EProcessTaskTextBounded -Task $stderrTask
         if ($process.HasExited) { $exitCode = $process.ExitCode }
     } catch {
         if ($launchCount -eq 0) { $launchErrorClass = $_.Exception.GetType().Name }
-        else { $stderr = $_.Exception.GetType().Name }
+        else { $inputWriteErrorClass = if ([string]::IsNullOrEmpty($inputWriteErrorClass)) { $_.Exception.GetType().Name } else { $inputWriteErrorClass } }
     } finally {
         if ($process -ne $null) { $process.Dispose() }
     }
-    $safeStdout = Protect-P5ECaptureText -Text ([string]$stdout) -SensitiveValues $SensitiveValues
-    $safeStderr = Protect-P5ECaptureText -Text ([string]$stderr) -SensitiveValues $SensitiveValues
+    $safeStdout = if ($stdoutCapture.Completed) {
+        Protect-P5ECaptureText -Text ([string]$stdoutCapture.Text) -SensitiveValues $SensitiveValues
+    } else {
+        [pscustomobject]@{ Text = 'P5E_CAPTURE_NOT_BOUNDED'; Violation = $false }
+    }
+    $safeStderr = if ($stderrCapture.Completed) {
+        Protect-P5ECaptureText -Text ([string]$stderrCapture.Text) -SensitiveValues $SensitiveValues
+    } else {
+        [pscustomobject]@{ Text = 'P5E_CAPTURE_NOT_BOUNDED'; Violation = $false }
+    }
+    $captureBounded = [bool]($stdoutCapture.Completed -and $stderrCapture.Completed)
     $redactionViolation = $safeStdout.Violation -or $safeStderr.Violation
     Write-P5EUtf8NoBom -Path $stdoutPath -Text $safeStdout.Text
     Write-P5EUtf8NoBom -Path $stderrPath -Text $safeStderr.Text
     $outcome = if ($launchCount -eq 0) { 'FAILED_BEFORE_LAUNCH' }
+        elseif (-not $inputWriteCompleted) { 'INPUT_NOT_DELIVERED' }
         elseif ($timedOut) { 'TIMEOUT' }
+        elseif (-not $captureBounded) { 'CAPTURE_NOT_BOUNDED' }
         elseif ($null -ne $exitCode -and $exitCode -eq 0) { 'PROCESS_EXITED_ZERO' }
         else { 'PROCESS_EXITED_NONZERO' }
     return [pscustomobject]@{
@@ -904,6 +1111,11 @@ function Invoke-P5EProcessSupervisor {
         TimedOut = $timedOut
         ExitCode = $exitCode
         LaunchErrorClass = $launchErrorClass
+        InputWriteCompleted = $inputWriteCompleted
+        InputWriteErrorClass = $inputWriteErrorClass
+        CaptureBounded = $captureBounded
+        StdoutCaptureErrorClass = $stdoutCapture.ErrorClass
+        StderrCaptureErrorClass = $stderrCapture.ErrorClass
         RedactionViolation = $redactionViolation
         StdoutPath = $stdoutPath
         StderrPath = $stderrPath

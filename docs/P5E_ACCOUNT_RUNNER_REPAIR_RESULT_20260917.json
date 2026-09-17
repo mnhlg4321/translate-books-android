@@ -1,0 +1,116 @@
+{
+  "schemaVersion": "p5e.account-runner-repair.result.v1",
+  "date": "2026-09-17",
+  "workPackage": "HOST_RUNNER_REPAIR_OFFLINE_QA_AND_EXPECTED_PROVENANCE_FEASIBILITY",
+  "parentEvidenceBaseline": "c222b13cafbb0c58a868072b44ae6df17905d089",
+  "parentAuditCommit": "db46941506eeadfad7b1cd09b32163cd9d21e1d3",
+  "repairBranch": "feature/v4.18-p5e-runner-repair-20260917",
+  "scope": {
+    "device": false,
+    "adb": false,
+    "accountRunnerLaunch": false,
+    "install": false,
+    "uninstall": false,
+    "clearData": false,
+    "downgrade": false,
+    "rawDispatch": false,
+    "provider": false,
+    "database": false,
+    "retry": false,
+    "redispatch": false,
+    "build": false,
+    "ownerSecretRead": false
+  },
+  "status": {
+    "hostRunnerRepair": "HOST_RUNNER_REPAIR_OFFLINE_PASS",
+    "expectedProvenance": "EXPECTED_PROVENANCE_UNAVAILABLE_STOP / EXPECTED_SOURCE_PENDING",
+    "accountBoundary": "ACCOUNT_CHECK_NOT_EXECUTED",
+    "a4_3": "A4.3_NOT_ISSUED",
+    "rawAndP5": "RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED",
+    "p6": "P6_NOT_READY"
+  },
+  "expectedProvenance": {
+    "recordStatus": "NOT_VERIFIED_AND_NOT_AVAILABLE_TO_THIS_WORK_PACKAGE",
+    "ownerMetadataReceived": false,
+    "expectedValueRead": false,
+    "expectedValueStored": false,
+    "derivedFromDeviceActual": false,
+    "mappingVerified": false,
+    "stop": "EXPECTED_PROVENANCE_UNAVAILABLE_STOP",
+    "nextInput": "authority, opaque record reference, account/project mapping and verification time only"
+  },
+  "offlineQa": {
+    "path": "docs/P5E_ACCOUNT_RUNNER_REPAIR_QA_20260917.json",
+    "sha256": "D8940D498AB9DABBBFED4A0A31013448622E266D30ACBC2AEFF7C9E96FEF82D7",
+    "status": "PASS",
+    "assertions": 37,
+    "fakeProcessLaunches": 5,
+    "fakeAdbCalls": 0,
+    "deviceActions": 0,
+    "providerCalls": 0,
+    "dbWrites": 0,
+    "rawDispatches": 0,
+    "retryCount": 0,
+    "processOnlyInheritance": "PASS_FAKE_SHAPE_ONLY",
+    "timeoutBoundary": "PASS_FAKE_PROCESS_BOUNDED_CAPTURE",
+    "expectedTransport": "PROCESS_PARENT_TO_REMOTE_SHELL_STDIN_UTF8_LF",
+    "parserTerminalAndIdentity": "PASS",
+    "redactionBoundary": "PASS_FAKE_DIGEST_LEAK_REJECTED"
+  },
+  "accountBoundary": {
+    "serial": "15e84958",
+    "launchCount": 0,
+    "result": "NOT_EXECUTED",
+    "providerCalls": 0,
+    "dbWrites": 0,
+    "rawDispatches": 0,
+    "installAttemptsThisWorkPackage": 0,
+    "productionPackageTouchedThisWorkPackage": false
+  },
+  "historicalEvidencePreserved": {
+    "checkOnlyInstallAttempts": 0,
+    "replacementInstallAttempts": 1,
+    "replacementApkReadbackMatched": true,
+    "productionPackageUntouched": true,
+    "historicalLocalResultStatus": "ACCOUNT_TEST_CHECKONLY_PASS / TEST_PACKAGE_REPLACEMENT_PASS / ACCOUNT_CHECK_NOT_EXECUTED_EXPECTED_PROCESS_VALUE_MISSING",
+    "historicalAuditFalseAcceptances": 4
+  },
+  "sourceChanges": {
+    "accountRunner": [
+      "full package/runner instrumentation component is required",
+      "expected is delivered only through parent Process to remote shell stdin",
+      "expected is excluded from ADB argv and removed from child Process environment",
+      "terminal instrumentation success, exact test identity and one exact result are required",
+      "timeout, non-zero, missing, duplicate, failure and redaction cases remain NOT_PROVEN"
+    ],
+    "rawHelper": [
+      "future RAW command identity now uses test-package/full-runner component",
+      "LibraryOnly import boundary retained",
+      "process stdout/stderr capture has bounded completion after timeout"
+    ],
+    "accountTestSourceChanged": false,
+    "installerChanged": false,
+    "apkRebuilt": false
+  },
+  "pins": {
+    "accountRunnerSha256": "96E6B3B449D00B75989D3AD4E9403EA9510E504FBE90A53D6825E72E09B71E65",
+    "rawHelperSha256": "5B621B339F6234415AC7B72C0816F2CA5F657DFCAB8F01C4D6BBC10F84172E34",
+    "installerSha256": "21AADE819DB83464E96C0BB6AC28CB42FB26AB916D5905AD13CED37C15FC786B",
+    "accountTestSourceSha256": "2F4BF9AD27CF5DF93D89456767423271907598EA209A0AD6E4C27599BC20063C",
+    "localResultSha256": "3FBE39142BA2DAA16AF6F5301271525E71FE1871CF6C14F0DF2A816346AA53EF",
+    "installerQaSha256": "041760CD298DA06928D35D41321CF497D7DB49C25A0608D35609370884138519",
+    "replacementAndroidTestApkSha256": "058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8",
+    "auditResultSha256": "AA2E6FE3CBFB7084CCA15C5D3AA4F20A59BA9525714123D1ABAC3B863350173F",
+    "historicalRawAndroidTestApkSha256": "57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA",
+    "historicalRawHelperSha256BeforeRepair": "364A6AA2C52A90E7AD20F28EC6C46A0EAD1BA39E8909727BEA7396287896FFE7"
+  },
+  "nextGate": "owner independently verifies record existence and mapping; only then may a separately approved account-check follow-on be considered",
+  "prohibitionsUntilNextGate": [
+    "do not run the account runner",
+    "do not reinstall or replace the test APK",
+    "do not call RAW, provider, endpoint or database",
+    "do not issue A4.3 or claim P5 exit",
+    "do not open P6",
+    "do not derive expected from actual device output"
+  ]
+}
