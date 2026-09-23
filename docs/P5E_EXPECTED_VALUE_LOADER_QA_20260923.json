@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "scope": "offline fake-input loader contract only",
+  "status": "PASS",
+  "assertionsTotal": 19,
+  "assertionsPassed": 19,
+  "assertions": [
+    {
+      "name": "library-only-import-does-not-prompt-or-load",
+      "passed": true
+    },
+    {
+      "name": "fixed-current-p5e-endpoint",
+      "passed": true
+    },
+    {
+      "name": "secure-prompt-required",
+      "passed": true
+    },
+    {
+      "name": "process-scope-only-write",
+      "passed": true
+    },
+    {
+      "name": "no-user-or-machine-environment-access",
+      "passed": true
+    },
+    {
+      "name": "no-child-or-network-launch",
+      "passed": true
+    },
+    {
+      "name": "no-clipboard-or-transcript-write",
+      "passed": true
+    },
+    {
+      "name": "typed-output-does-not-contain-fingerprint-variable",
+      "passed": true
+    },
+    {
+      "name": "no-api-key-command-line-parameter",
+      "passed": true
+    },
+    {
+      "name": "known-vector-v1-appends-chat-completions",
+      "passed": true
+    },
+    {
+      "name": "known-vector-trimmed-v1-slash-matches-current-endpoint",
+      "passed": true
+    },
+    {
+      "name": "known-vector-current-endpoint-is-stable",
+      "passed": true
+    },
+    {
+      "name": "known-vector-only-one-trailing-slash-is-removed",
+      "passed": true
+    },
+    {
+      "name": "known-vector-key-trailing-space-is-not-trimmed",
+      "passed": true
+    },
+    {
+      "name": "java-trim-removes-ascii-space-only",
+      "passed": true
+    },
+    {
+      "name": "java-trim-preserves-nonbreaking-space",
+      "passed": true
+    },
+    {
+      "name": "api-generate-is-not-rewritten",
+      "passed": true
+    },
+    {
+      "name": "process-write-is-lowercase-sha256-shape",
+      "passed": true
+    },
+    {
+      "name": "process-clear-removes-test-value",
+      "passed": true
+    }
+  ],
+  "loaderSha256": "9C78E2EED356A30A0CC2A7C2AA1A484A3F3E1CE39F18A644A84F6AB1CEFF2F0E",
+  "qaScriptSha256": "AC78798ECC01FDCB6D7FA04AA2E84968DDA5BCFF391169A91B518EDCEA1C006D",
+  "credentialInputs": 0,
+  "expectedValueLoads": 0,
+  "adbInvocations": 0,
+  "deviceActions": 0,
+  "providerCalls": 0,
+  "databaseActions": 0,
+  "rawDispatches": 0,
+  "note": "All digest vectors use synthetic values only; the interactive loader was not invoked."
+}
