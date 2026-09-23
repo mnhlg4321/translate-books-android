@@ -23,21 +23,32 @@
   },
   "status": {
     "hostRunnerRepair": "HOST_RUNNER_REPAIR_OFFLINE_PASS",
-    "expectedProvenance": "EXPECTED_PROVENANCE_UNAVAILABLE_STOP / EXPECTED_SOURCE_PENDING",
+    "expectedProvenance": "EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW / EXPECTED_VALUE_PROCESS_LOAD_PENDING",
     "accountBoundary": "ACCOUNT_CHECK_NOT_EXECUTED",
     "a4_3": "A4.3_NOT_ISSUED",
     "rawAndP5": "RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED",
     "p6": "P6_NOT_READY"
   },
   "expectedProvenance": {
-    "recordStatus": "NOT_VERIFIED_AND_NOT_AVAILABLE_TO_THIS_WORK_PACKAGE",
-    "ownerMetadataReceived": false,
+    "recordStatus": "OWNER_METADATA_ACCEPTED_FOR_REVIEW_EXPECTED_VALUE_NOT_READ",
+    "ownerMetadataReceived": true,
+    "metadataDecision": "EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW",
+    "originalKeyAvailability": "RETAINED_OUTSIDE_APP",
+    "recordAuthority": "OpenRouter Default Workspace / API Keys",
+    "recordReference": "OpenRouter dashboard / Default Workspace / API Keys / xzx",
+    "accountOrProjectMapping": "OpenRouter Default Workspace / App Translate Books",
+    "verificationTime": "2026-07-13 Asia/Ho_Chi_Minh",
+    "verificationTimePrecision": "DATE_ONLY_HOUR_NOT_RETAINED",
+    "recordPredatesActualRead": "YES",
+    "endpointScopeMapping": "YES",
+    "metadataAcceptanceMode": "OWNER_ASSERTION_METADATA_ONLY_NO_PROVIDER_OR_ENDPOINT_READ",
     "expectedValueRead": false,
     "expectedValueStored": false,
     "derivedFromDeviceActual": false,
     "mappingVerified": false,
-    "stop": "EXPECTED_PROVENANCE_UNAVAILABLE_STOP",
-    "nextInput": "authority, opaque record reference, account/project mapping and verification time only"
+    "mappingVerifiedByOwnerMetadata": true,
+    "stop": "EXPECTED_VALUE_PROCESS_LOAD_PENDING",
+    "nextInput": "owner-local expected digest load into the exact host PowerShell Process; value is not sent to the agent"
   },
   "offlineQa": {
     "path": "docs/P5E_ACCOUNT_RUNNER_REPAIR_QA_20260917.json",
@@ -104,7 +115,7 @@
     "historicalRawAndroidTestApkSha256": "57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA",
     "historicalRawHelperSha256BeforeRepair": "364A6AA2C52A90E7AD20F28EC6C46A0EAD1BA39E8909727BEA7396287896FFE7"
   },
-  "nextGate": "owner independently verifies record existence and mapping; only then may a separately approved account-check follow-on be considered",
+  "nextGate": "owner locally loads the expected digest into the exact host PowerShell Process without revealing it; only then may a separately bounded account-check follow-on be considered",
   "prohibitionsUntilNextGate": [
     "do not run the account runner",
     "do not reinstall or replace the test APK",

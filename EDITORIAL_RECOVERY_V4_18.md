@@ -1,24 +1,24 @@
 # Editorial Recovery v4.18
 
-> Current P5E execution state 2026-09-17 at implementation baseline `70fe4b1b9820997bd345da2c3cdd689a63b9378e` (snapshot `c6173e317a733e13080f041fdc152fe5fe08f4e8`): `HOST_RUNNER_REPAIR_OFFLINE_PASS / EXPECTED_PROVENANCE_UNAVAILABLE_STOP / EXPECTED_SOURCE_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The repair source and 37/37 fake-process QA are current evidence; no reinstall, build or device execution occurred. The sole next action is metadata-only owner provenance review in `docs/P5E_NEXT_WORK_REQUEST_20260917.md`. See `docs/P5E_ACCOUNT_RUNNER_REPAIR_RESULT_20260917.json`, `docs/P5E_ACCOUNT_RUNNER_REPAIR_QA_20260917.json` and `docs/P5E_PROVENANCE_REVIEW_20260917.md`. Historical audit/local/replacement evidence remains unchanged; SQL/golden PASS remains limited to its tested scope.
+> Current P5E execution state 2026-09-23 at documentation baseline `1d730bd2344cba146a3af91afafa7539f9929aa8`, implementation baseline `70fe4b1b9820997bd345da2c3cdd689a63b9378e`: `HOST_RUNNER_REPAIR_OFFLINE_PASS / EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW / EXPECTED_VALUE_PROCESS_LOAD_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The repair source and 37/37 fake-process QA are current evidence; owner metadata is recorded without reading an expected value; no reinstall, build or device execution occurred. The sole next action is owner-local Process-only expected-value preparation; it does not launch the account runner. See `docs/P5E_ACCOUNT_RUNNER_REPAIR_RESULT_20260917.json`, `docs/P5E_ACCOUNT_RUNNER_REPAIR_QA_20260917.json` and `docs/P5E_PROVENANCE_REVIEW_20260917.md`. Historical audit/local/replacement evidence remains unchanged; SQL/golden PASS remains limited to its tested scope.
 
-Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_TEST_INSTALLER_QUALIFIED_OFFLINE / ACCOUNT_TEST_CHECKONLY_PASS / TEST_PACKAGE_REPLACEMENT_PASS / HOST_RUNNER_REPAIR_OFFLINE_PASS / EXPECTED_PROVENANCE_UNAVAILABLE_STOP / EXPECTED_SOURCE_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY.
-Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILD_HISTORICAL / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / P5E_9B_A4_3_HOST_FIXTURES_PASS_HISTORICAL / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / HOST_RUNNER_REPAIR_OFFLINE_PASS / EXPECTED_PROVENANCE_UNAVAILABLE_STOP / EXPECTED_SOURCE_PENDING / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY`
+Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_TEST_INSTALLER_QUALIFIED_OFFLINE / ACCOUNT_TEST_CHECKONLY_PASS / TEST_PACKAGE_REPLACEMENT_PASS / HOST_RUNNER_REPAIR_OFFLINE_PASS / EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW / EXPECTED_VALUE_PROCESS_LOAD_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY.
+Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILD_HISTORICAL / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / P5E_9B_A4_3_HOST_FIXTURES_PASS_HISTORICAL / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / HOST_RUNNER_REPAIR_OFFLINE_PASS / EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW / EXPECTED_VALUE_PROCESS_LOAD_PENDING / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY`
 
 This document is the single product and execution authority for the v4.18 Editorial recovery. It supersedes active next actions from the historical v4.16 Editorial/RSC/IPC tracks without deleting or reinterpreting their evidence.
 
-## Current active boundary — P5E local behavioral gate green; owner packet pending
+## Current active boundary — P5E local behavioral gate green; expected Process value pending
 
 The final local repair ran the real `Get-P5EConsistentDatabaseReadback` SQL through a read-only SQLite bridge over six disposable DDL fixtures. Schema `24`, LINEAGE `17`, INPUT `7`, nullable CLAIMED/RECOVERY rows, exact COMMITTED golden report/receipt bytes, lineage/reconciliation source mapping and fail-closed parser mutations all have concrete results. The targeted production serializer JVM test ran on JBR `21.0.10`; its bytes passed the host validator and the required identity/byte mutation matrix was rejected. Helper self-test, SQL boundary probe and supervisor failure/timeout checks pass. See `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`.
 
-This closes only the local behavioral gate. It does not supply F1 expected
-fingerprint provenance, create runtime authorization, issue A4.3, run RAW,
-establish a RAW predecessor or open P6. The exact-serial `CheckOnly` and one
-approved test-package replacement are now complete with no production operation;
-the account check did not launch because the trusted process-only expected value
-is absent. The new source audit also requires host component/parser repair and
-transport/deadline qualification. Only after those gates and trusted input may
-the single account check run; readback/RAW decisions remain separate.
+This closes only the local behavioral gate. Owner provenance metadata is now
+accepted for review, but the expected value has not been read or loaded into
+the exact host `Process`. This does not create runtime authorization, issue
+A4.3, run RAW, establish a RAW predecessor or open P6. The exact-serial
+`CheckOnly` and one approved test-package replacement are complete with no
+production operation; the account check did not launch. Only after the owner
+locally loads the expected value and a separately bounded follow-on is prepared
+may the single account check run; readback/RAW decisions remain separate.
 
 The owner has now approved only one memory-only account check with output
 `MATCH`/`MISMATCH` and no key/fingerprint/endpoint logging, provider call, DB
@@ -30,7 +30,8 @@ in replacement event `p5e-account-check-20260916-01`. The exact-serial
 the installed APK was pulled back with the exact requested hash and certificate.
 No production package operation, provider call, DB write or RAW dispatch
 occurred. The account check was not launched because the expected fingerprint
-remains process-only and `NOT_PROVIDED`; no `MATCH`/`MISMATCH` is claimed.
+has not been loaded into the exact host `Process`; no `MATCH`/`MISMATCH` is
+claimed.
 
 QA freeze is complete on these final hashes: round 1 executed the source query,
 SQLite fixture collector/parser, production golden serializer bridge and full
@@ -180,9 +181,12 @@ docs/P5E_RAW_AUTHORIZATION_COMMAND.txt, SHA-256
 47044AB73C0B76A00E3E40A85D6E893B0F94C015F6332036484EA5ABB5FA55AB.
 The narrative proposal is
 docs/P5E_RAW_AUTHORIZATION_PROPOSAL.md.
-The host supervisor is
+The historical RAW packet host supervisor is
 scripts/p5e-raw-live-supervisor.ps1, SHA-256
 364A6AA2C52A90E7AD20F28EC6C46A0EAD1BA39E8909727BEA7396287896FFE7.
+The repaired future-only helper pin is
+`5B621B339F6234415AC7B72C0816F2CA5F657DFCAB8F01C4D6BBC10F84172E34`;
+the RAW packet is not refrozen or run in this package.
 The preparation evidence is
 docs/P5E_RAW_HOST_PREPARATION_20260915.md, SHA-256
 4A0E678ED298F4FF879062C9FD5F81A383D235F1C27ED4EAE7CA15563DEB6797.
@@ -198,7 +202,10 @@ The account-only replacement source is
 app/src/androidTest/java/com/ml/tblandroidtxt/EditorialP5EAccountCheckOnlyInstrumentedTest.java,
 SHA-256 `2F4BF9AD27CF5DF93D89456767423271907598EA209A0AD6E4C27599BC20063C`;
 its host runner is `scripts/p5e-account-check.ps1`, SHA-256
-`0722A243C92724D59AFB7CF4B6DE674024F9BAE4FD76A712DF0210AF25B036F3`.
+`96E6B3B449D00B75989D3AD4E9403EA9510E504FBE90A53D6825E72E09B71E65`.
+The repaired future-only RAW helper pin is
+`5B621B339F6234415AC7B72C0816F2CA5F657DFCAB8F01C4D6BBC10F84172E34`;
+no RAW command uses it in this package.
 The dedicated test-package installer is
 `scripts/p5e-install-account-check-test.ps1`, SHA-256
 `21AADE819DB83464E96C0BB6AC28CB42FB26AB916D5905AD13CED37C15FC786B`;
@@ -237,9 +244,9 @@ The local golden report/receipt byte hashes are
 The prior F3 result remains historical synthetic evidence. The current local
 chain additionally has the executable offline SQLite collector bridge, exact
 helper hash gate, source-derived production report/receipt golden bridge and
-bounded `COLLECTOR_COMMAND_LOG.jsonl` contract. F1 trusted expected fingerprint
-provenance and owner permission remain `PENDING`; they do not authorize A4.3 by
-themselves.
+bounded `COLLECTOR_COMMAND_LOG.jsonl` contract. The owner provenance metadata is
+accepted for review, but F1 expected-value Process loading and the account
+follow-on remain `PENDING`; they do not authorize A4.3 by themselves.
 
 The packet preserves the harness authorization ID and the exact A4.2
 identities. It requests only RAW/GLOSSARY egress to the pinned route, one
@@ -259,9 +266,9 @@ mismatch or unverifiable account returns `MISMATCH` and does not construct
 authorization or dispatch. This operation has not been performed in this
 audit. The packet is ready for owner review of local H1–H4 closure and the
 account-only boundary, but not for RAW dispatch: runtime hash/contract/
-collector gates are closed locally, while F1 expected provenance and
-account/readback/egress permission remain pending. No live account operation
-has occurred.
+collector gates are closed locally, while F1 expected-value Process loading and
+account/readback/egress permission remain pending. No live account operation has
+occurred.
 
 The repaired command invokes the supervisor as one child process. It computes
 fresh issuedAt/expiresAt values at owner-approved dispatch, uses a 240000 ms
@@ -274,7 +281,10 @@ The selected live method performs its own preflightOnly checks internally; no
 separate instrumentation preflight is permitted. F2/F3 host evidence and the
 source-derived argument list are recorded in the preparation evidence above.
 
-The current next action is metadata-only owner provenance review in `docs/P5E_NEXT_WORK_REQUEST_20260917.md`. The host runner repair is complete; no reinstall, device account check, A4.3, readback or RAW action is part of the current work package.
+The current next action is owner-local Process-only expected-value preparation
+as described in `docs/P5E_NEXT_WORK_REQUEST_20260917.md`. The host runner repair
+is complete; no reinstall, device account check, A4.3, readback or RAW action is
+part of the current work package.
 
 ## Historical A4 exact-preflight evidence-channel blocker
 
@@ -587,11 +597,12 @@ The release is not complete merely because 4.1.3 imports. It is complete only wh
 
 ## 9. Exact next action
 
-Current override, 2026-09-17: `HOST_RUNNER_REPAIR_OFFLINE_PASS / EXPECTED_PROVENANCE_UNAVAILABLE_STOP / EXPECTED_SOURCE_PENDING`.
-Follow `docs/P5E_NEXT_WORK_REQUEST_20260917.md` for owner metadata only. The
-completed test installation is historical evidence; no device execution, A4.3
-or RAW action is authorized. The A4 checkpoint narrative below is historical
-and does not override this next action.
+Current override, 2026-09-23: `HOST_RUNNER_REPAIR_OFFLINE_PASS / EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW / EXPECTED_VALUE_PROCESS_LOAD_PENDING`.
+Follow `docs/P5E_NEXT_WORK_REQUEST_20260917.md` for owner-local Process-only
+expected-value preparation. The completed test installation is historical
+evidence; no device execution, A4.3 or RAW action is authorized. The A4
+checkpoint narrative below is historical and does not override this next
+action.
 
 The host-only A4.1 group corrected the actual status emitter and verified it
 against the parser contract. A4.2 then used the immutable AndroidTest artifact

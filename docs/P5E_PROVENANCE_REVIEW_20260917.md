@@ -1,15 +1,16 @@
-# P5E provenance review — 2026-09-17
+# P5E provenance review — 2026-09-23 metadata continuation
 
 ## Decision
 
-The host-runner repair is locally qualified, but the account-check branch is
-not ready to run. The only admissible next stage is collection and independent
-verification of nonsecret owner metadata. It is not a device event and does
-not authorize A4.3, RAW, P5 exit, or P6.
+The host-runner repair is locally qualified. The owner supplied all required
+nonsecret provenance metadata, and that metadata is accepted for review. The
+account-check branch is still not ready to run because the expected value has
+not been read or loaded into the exact host PowerShell `Process`. This is not a
+device event and does not authorize A4.3, RAW, P5 exit, or P6.
 
 ```text
 HOST_RUNNER_REPAIR_OFFLINE_PASS
-EXPECTED_PROVENANCE_UNAVAILABLE_STOP / EXPECTED_SOURCE_PENDING
+EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW / EXPECTED_VALUE_PROCESS_LOAD_PENDING
 ACCOUNT_CHECK_NOT_EXECUTED
 A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY
 ```
@@ -21,14 +22,14 @@ database; it does not use ADB or call a provider.
 ## Scope and source classification
 
 The checkout examined is `D:\App Translate Books`, branch
-`feature/v4.18-p5e-runner-repair-20260917`, at snapshot commit
-`c6173e317a733e13080f041fdc152fe5fe08f4e8`. The implementation baseline
-immediately before that snapshot is
-`70fe4b1b9820997bd345da2c3cdd689a63b9378e`.
+`feature/v4.18-p5e-runner-repair-20260917`, at documentation baseline
+`1d730bd2344cba146a3af91afafa7539f9929aa8`. The implementation baseline
+remains `70fe4b1b9820997bd345da2c3cdd689a63b9378e`; the prior snapshot
+baseline was `c6173e317a733e13080f041fdc152fe5fe08f4e8`.
 
 | Classification | Evidence | Meaning in this review |
 | --- | --- | --- |
-| Current | `docs/P5E_ACCOUNT_RUNNER_REPAIR_RESULT_20260917.json` | Host repair PASS; expected record unavailable to this work package. |
+| Current | `docs/P5E_ACCOUNT_RUNNER_REPAIR_RESULT_20260917.json` | Host repair PASS; owner provenance metadata accepted for review, expected value not read. |
 | Current | `docs/P5E_ACCOUNT_RUNNER_REPAIR_QA_20260917.json` | 37/37 source/fake-process assertions pass; zero ADB/device/provider/DB/RAW actions. |
 | Current | `docs/P5E_OWNER_LOCAL_INPUT_GUIDE_20260917.md` | Required owner metadata and local-only handling rules. |
 | Current | `BUILD_STATE.md` and `WORKSPACE_SNAPSHOT.md` | State/P6 decision and the current intended next action. |
@@ -45,6 +46,7 @@ The repaired current pins were independently re-hashed during this review:
 | Account test installer | `21AADE819DB83464E96C0BB6AC28CB42FB26AB916D5905AD13CED37C15FC786B` |
 | Account-only test source | `2F4BF9AD27CF5DF93D89456767423271907598EA209A0AD6E4C27599BC20063C` |
 | Repair QA | `D8940D498AB9DABBBFED4A0A31013448622E266D30ACBC2AEFF7C9E96FEF82D7` |
+| Repair result after metadata receipt | `D72483FC31409424CB95EB0575D839CCC239B8BC8A84FAE8BEDCAC398C2773AC` |
 
 ## QA and adversarial review
 
@@ -75,59 +77,63 @@ A later device event supplies only the digest as a temporary Android
 instrumentation extra after stdin; the raw key from the owner record is never
 transferred through the host to the device.
 
-The owner has stated in this session that the original key is retained outside
-the app. That establishes only availability as a lead. It does **not** yet
-establish record authority, an opaque record reference, account/project
-mapping, endpoint-scope mapping, or verification time. Until those nonsecret
-facts are supplied and independently checked, the correct state remains
-`EXPECTED_PROVENANCE_UNAVAILABLE_STOP`.
-
-The owner can provide this metadata, with no secret values:
+The owner supplied this metadata in the current continuation; it contains no
+raw key, endpoint, fingerprint or digest:
 
 ```text
-recordAvailability=YES
-recordAuthority=<owner-controlled vault/password-manager/account record label>
-recordReference=<opaque record ID or opaque label; not the key and not a digest>
-accountOrProjectMapping=<nonsecret account/project label>
-verificationTime=<timestamp with timezone, or NOT_VERIFIED>
-recordPredatesActualRead=YES | NO | NOT_VERIFIED
-endpointScopeMapping=YES | NO | NOT_VERIFIED
+originalKeyAvailability=RETAINED_OUTSIDE_APP
+recordAuthority=OpenRouter Default Workspace / API Keys
+recordReference=OpenRouter dashboard / Default Workspace / API Keys / xzx
+accountOrProjectMapping=OpenRouter Default Workspace / App Translate Books
+verificationTime=2026-07-13 Asia/Ho_Chi_Minh (date only; hour not retained)
+recordPredatesActualRead=YES
+endpointScopeMapping=YES
 ```
 
-An unavailable or ambiguous record, a missing mapping, `recordPredatesActualRead=NO`
-or `NOT_VERIFIED`, or `endpointScopeMapping=NO` or `NOT_VERIFIED` stops the
-branch. Do not derive an expected value
-from the device actual, alter app settings to make a digest match, create a new
-key, or retry an account check to resolve uncertainty.
+The metadata decision is
+`EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW`. The record authority, reference,
+account/project mapping, predate assertion and endpoint-scope assertion are
+recorded as owner metadata only; no provider or endpoint was read to validate
+them. The reference `xzx` is an opaque record label, not an expected digest and
+was not used as one. Date-only verification time is retained with its stated
+precision; it is not converted into an invented hour.
+
+This decision does not read or store the expected value. Before a separately
+bounded account follow-on can be considered, the owner must locally create or
+retrieve the expected digest and place it only in the exact host PowerShell
+`Process`. The value must not be sent to Codex, chat, Git, shared evidence,
+host command line, file, User/Machine environment, clipboard or transcript.
+Do not derive an expected value from the device actual, alter app settings to
+make a digest match, create a new key, or retry an account check to resolve
+uncertainty.
 
 ## Exact next work request
 
 1. Keep the repaired runner/helper/APK pins fixed and do not reinstall the
    test package. The prior replacement is complete.
-2. Owner supplies the seven metadata fields above; no key, endpoint,
-   fingerprint, screenshot or command transcript is included.
-3. Reviewer checks that the opaque record existed independently before any
-   device actual-read and that its account/project and endpoint scope map to
-   the account-check target. Record only the metadata and the typed decision.
-4. If any check is missing or inconsistent, record
-   `EXPECTED_PROVENANCE_UNAVAILABLE_STOP` once and stop. Do not open a new
-   audit/build/replacement loop.
-5. If every check passes, create a separate, bounded account-check follow-on.
-   That follow-on re-hashes the repaired files, uses the exact Process-only
-   stdin transport, permits one account-runner launch and records only typed
-   result/counts. It does not reinstall, issue A4.3, dispatch RAW or open P6.
-6. Treat `MATCH` only as equality of the configured account/endpoint digest
+2. The seven owner metadata fields are now recorded and the typed decision is
+   `EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW`; no secret value was received.
+3. Keep the expected value unread by the agent. The next conditional step is
+   owner-local Process-only loading into the exact host PowerShell process;
+   loading it does not launch ADB or the account runner.
+4. After that load is independently confirmed without revealing the value,
+   create one separately bounded account-check follow-on. It re-hashes the
+   repaired files, uses the exact Process-only stdin transport, permits one
+   account-runner launch and records only typed result/counts. It does not
+   reinstall, issue A4.3, dispatch RAW or open P6.
+5. Treat `MATCH` only as equality of the configured account/endpoint digest
    against the independent record. Treat `MISMATCH`, timeout, non-zero exit,
    incomplete terminal status, duplicate result or redaction failure as a
    stop with no retry or redispatch.
-7. Assess A4.3, RAW/P5 exit and P6 only in later, separately authorized work
+6. Assess A4.3, RAW/P5 exit and P6 only in later, separately authorized work
    packages after their own required evidence exists.
 
 ## Documentation corrections in this change
 
 1. The canonical plan, `BUILD_STATE.md`, workspace snapshot and active v4.18
    release checklist now use `HOST_RUNNER_REPAIR_OFFLINE_PASS` with the same
-   expected-provenance stop. They no longer instruct a repeat runner repair.
+   accepted-for-review/process-load-pending boundary. They no longer instruct
+   a repeat runner repair or treat the owner record as a digest.
 2. The erroneous second file under `release_checklists/` was moved to
    `docs/P5E_ACCOUNT_RUNNER_REPAIR_WORKLOG_20260917.md` and marked historical.
    The canonical v4.18 release checklist remains the only release checklist.
@@ -152,8 +158,8 @@ key, or retry an account check to resolve uncertainty.
 
 ## Result
 
-The project may proceed to the metadata-only provenance stage. It may not
-proceed to a device account check, A4.3, RAW/P5 exit or P6. The current
-authority files were synchronized in this docs change. No local repair,
-additional hash, test-package replacement or repeated QA is needed while the
-metadata state remains unchanged.
+The project may proceed to the owner-local Process-only expected-value stage.
+It may not proceed to a device account check, A4.3, RAW/P5 exit or P6. The
+current authority files were synchronized in this metadata continuation. No
+local repair, additional hash, test-package replacement or repeated QA is
+needed while the source pins and metadata remain unchanged.

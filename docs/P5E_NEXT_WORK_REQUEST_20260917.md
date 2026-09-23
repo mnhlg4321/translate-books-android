@@ -5,20 +5,40 @@
 
 ## Quyết định hiện tại
 
-Tại HEAD `c6173e317a733e13080f041fdc152fe5fe08f4e8`, phần sửa host runner ở
-`70fe4b1b9820997bd345da2c3cdd689a63b9378e` đã được kiểm lại và đủ điều
-kiện để chuyển từ **sửa local** sang **review provenance của owner**.
+Tại documentation baseline `1d730bd2344cba146a3af91afafa7539f9929aa8`, phần
+sửa host runner ở `70fe4b1b9820997bd345da2c3cdd689a63b9378e` đã được kiểm lại.
+Owner đã trả lời đủ metadata provenance; package chuyển sang trạng thái review
+đã chấp nhận metadata, nhưng chưa nạp expected value vào host `Process`.
 
 | Gate | Trạng thái |
 | --- | --- |
 | Host runner / parser / transport fake-process | `HOST_RUNNER_REPAIR_OFFLINE_PASS` |
-| Provenance expected độc lập | `EXPECTED_PROVENANCE_UNAVAILABLE_STOP / EXPECTED_SOURCE_PENDING` |
+| Provenance expected độc lập | `EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW / EXPECTED_VALUE_PROCESS_LOAD_PENDING` |
 | Account check trên thiết bị | `ACCOUNT_CHECK_NOT_EXECUTED` |
 | A4.3, RAW và P5 exit | `A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED` |
 | P6 | `P6_NOT_READY` |
 
-Vì vậy, **chỉ P5E-owner-provenance có thể mở tiếp**. Chưa đủ điều kiện chạy
-một account check, không đủ điều kiện chuyển P5 exit hoặc P6.
+Vì vậy, **chỉ bước owner-local Process-only có thể mở tiếp**. Metadata acceptance
+không tự launch account check; chưa đủ điều kiện chuyển P5 exit hoặc P6.
+
+## Metadata owner đã nhận — decision typed, không có secret
+
+```text
+originalKeyAvailability=RETAINED_OUTSIDE_APP
+recordAuthority=OpenRouter Default Workspace / API Keys
+recordReference=OpenRouter dashboard / Default Workspace / API Keys / xzx
+accountOrProjectMapping=OpenRouter Default Workspace / App Translate Books
+verificationTime=2026-07-13 Asia/Ho_Chi_Minh (date only; hour not retained)
+recordPredatesActualRead=YES
+endpointScopeMapping=YES
+```
+
+Decision: `EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW`. Đây là owner metadata
+assertion, không phải provider/endpoint verification. `xzx` là nhãn record,
+không phải expected digest; agent không đọc, lưu hoặc nhận digest. Remaining
+gate là `EXPECTED_VALUE_PROCESS_LOAD_PENDING`, rồi mới xem xét một follow-on
+account check riêng với tối đa một launch. Không có ADB/device/provider/DB/RAW
+action trong package này.
 
 ## Vì sao công việc bị lặp và kéo dài
 
@@ -56,7 +76,7 @@ chưa thay đổi.
 | Offline QA | `D8940D498AB9DABBBFED4A0A31013448622E266D30ACBC2AEFF7C9E96FEF82D7` | 37/37 fake-process assertions |
 | Account test source | `2F4BF9AD27CF5DF93D89456767423271907598EA209A0AD6E4C27599BC20063C` | test-only account comparison boundary |
 | Account test APK, historical replacement | `058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8` | đã replacement đúng một lần; không reinstall |
-| Repair result | `937FDC4623BD2E1D6FF40CC73AB2160602A5ECDA47A67714CFB45C4D49B36BC0` | trạng thái local hiện hành |
+| Repair result | `D72483FC31409424CB95EB0575D839CCC239B8BC8A84FAE8BEDCAC398C2773AC` | trạng thái local hiện hành sau khi ghi nhận metadata owner |
 
 QA được chạy lại từ source hiện tại bằng
 `scripts/test-p5e-account-runner-repair.ps1` với output tạm ngoài repository:
@@ -96,15 +116,15 @@ Thực hiện đúng các bước sau, một lần cho mỗi gói metadata mới
    evidence lịch sử, không phải nơi chạy follow-on.
 2. Xác nhận source pin và result/QA pin trong bảng trên. Nếu một pin lệch,
    ghi `PIN_DRIFT_STOP`; không sửa pin hoặc chạy device trong gói này.
-3. Nhận đúng bảy trường metadata owner; từ chối bất kỳ raw key, endpoint,
-   fingerprint, screenshot hoặc command transcript nào và yêu cầu gửi lại chỉ
-   metadata.
+3. Bảy trường metadata owner đã được nhận; package này không nhận raw key,
+   endpoint, fingerprint, screenshot hoặc command transcript.
 4. Kiểm tra `recordAuthority` và `recordReference` không rỗng, không phải tên
    key, và không có chuỗi secret/digest 64-hex.
 5. Kiểm tra `accountOrProjectMapping` là nhãn không secret và có thể đối chiếu
    với target account check mà không tiết lộ cấu hình endpoint.
-6. Kiểm tra `verificationTime` có timezone hoặc là `NOT_VERIFIED`; không thay
-   ngày tạo key cho ngày verification.
+6. Kiểm tra `verificationTime` có timezone hoặc là `NOT_VERIFIED`; date-only có
+   timezone được giữ nguyên với độ chính xác đã khai báo, không thêm giờ và
+   không thay ngày tạo key cho ngày verification.
 7. Kiểm tra `recordPredatesActualRead=YES`. Giá trị `NO` hoặc
    `NOT_VERIFIED` không đủ tính độc lập.
 8. Kiểm tra `endpointScopeMapping=YES`. Giá trị `NO` hoặc `NOT_VERIFIED` không
@@ -115,12 +135,15 @@ Thực hiện đúng các bước sau, một lần cho mỗi gói metadata mới
 10. Nếu stop, cập nhật snapshot với đúng một next action là owner làm rõ
     metadata. Không mở repair, build, reinstall, ADB preflight hoặc account
     run mới khi input không thay đổi.
-11. Nếu accepted, tạo **một request follow-on riêng** cho account check. Scope
-    `OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED` đã ghi nhận vẫn là scope hiện có; metadata
-    acceptance không tự launch. Receipt follow-on phải ghi owner/operator đã xác nhận
-    ranh giới digest temporary instrumentation-extra và giới hạn một launch. Đây là
-    xác nhận boundary trong scope hiện có, không phải cấp authorization mới. Gói hiện
-    tại vẫn kết thúc trước device action.
+11. Nếu accepted, bước kế tiếp chỉ là owner tự tạo/nạp expected digest vào
+    `Process` của đúng host PowerShell; agent không nhận giá trị đó và bước này
+    không gọi ADB. Sau khi boundary được xác nhận, tạo **một request follow-on
+    riêng** cho account check. Scope `OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED` đã ghi
+    nhận vẫn là scope hiện có; metadata acceptance không tự launch. Receipt
+    follow-on phải ghi owner/operator đã xác nhận ranh giới digest temporary
+    instrumentation-extra và giới hạn một launch. Đây là xác nhận boundary trong
+    scope hiện có, không phải cấp authorization mới. Gói hiện tại kết thúc trước
+    device action.
 12. Chạy QA tài liệu: `git diff --check`, parse JSON giữ nguyên, scan các file
     mới/sửa đổi để không có key/digest/endpoint, rồi kiểm tra mọi current header
     dùng cùng năm trạng thái ở bảng quyết định.
