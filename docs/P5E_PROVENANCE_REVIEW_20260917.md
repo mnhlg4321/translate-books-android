@@ -4,13 +4,15 @@
 
 The host-runner repair is locally qualified. The owner supplied all required
 nonsecret provenance metadata, and that metadata is accepted for review. The
-account-check branch is still not ready to run because the expected value has
-not been read or loaded into the exact host PowerShell `Process`. This is not a
-device event and does not authorize A4.3, RAW, P5 exit, or P6.
+source-derived local loader now passes offline QA, but the account-check branch
+is still not ready to run because the expected value has not been loaded into
+the exact host PowerShell `Process`. This is not a device event and does not
+authorize A4.3, RAW, P5 exit, or P6.
 
 ```text
 HOST_RUNNER_REPAIR_OFFLINE_PASS
-EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW / EXPECTED_VALUE_PROCESS_LOAD_PENDING
+EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW / EXPECTED_VALUE_LOADER_OFFLINE_PASS
+EXPECTED_VALUE_PROCESS_LOAD_PENDING
 ACCOUNT_CHECK_NOT_EXECUTED
 A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY
 ```
@@ -22,16 +24,17 @@ database; it does not use ADB or call a provider.
 ## Scope and source classification
 
 The checkout examined is `D:\App Translate Books`, branch
-`feature/v4.18-p5e-runner-repair-20260917`, at documentation baseline
-`1d730bd2344cba146a3af91afafa7539f9929aa8`. The implementation baseline
-remains `70fe4b1b9820997bd345da2c3cdd689a63b9378e`; the prior snapshot
-baseline was `c6173e317a733e13080f041fdc152fe5fe08f4e8`.
+`feature/v4.18-p5e-runner-repair-20260917`, at pre-snapshot baseline
+`7a64b71acb1dafa32cdfe3d99c13e353589b19ab`. The prior host-repair
+implementation baseline remains `70fe4b1b9820997bd345da2c3cdd689a63b9378e`;
+the prior snapshot baseline was `c6173e317a733e13080f041fdc152fe5fe08f4e8`.
 
 | Classification | Evidence | Meaning in this review |
 | --- | --- | --- |
-| Current | `docs/P5E_ACCOUNT_RUNNER_REPAIR_RESULT_20260917.json` | Host repair PASS; owner provenance metadata accepted for review, expected value not read. |
+| Prior baseline | `docs/P5E_ACCOUNT_RUNNER_REPAIR_RESULT_20260917.json` | Immutable host-repair result; it predates the qualified loader and retains its then-current process-load-pending state. |
 | Current | `docs/P5E_ACCOUNT_RUNNER_REPAIR_QA_20260917.json` | 37/37 source/fake-process assertions pass; zero ADB/device/provider/DB/RAW actions. |
 | Current | `docs/P5E_OWNER_LOCAL_INPUT_GUIDE_20260917.md` | Required owner metadata and local-only handling rules. |
+| Current | `scripts/p5e-load-expected-digest.ps1` and `docs/P5E_EXPECTED_VALUE_LOADER_QA_20260923.json` | Fixed-endpoint, hidden-prompt Process-only loader; 26/26 synthetic offline assertions. |
 | Current | `BUILD_STATE.md` and `WORKSPACE_SNAPSHOT.md` | State/P6 decision and the current intended next action. |
 | Historical defect evidence | `docs/P5E_ACCOUNT_RUNNER_AUDIT_RESULT_20260917.json` | Four false acceptances in the pre-repair runner; do not use its old hash or acceptance rule. |
 | Historical device evidence | `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json` | One CheckOnly and one test-package replacement completed; no account check or `MATCH`/`MISMATCH`. |
@@ -43,6 +46,8 @@ The repaired current pins were independently re-hashed during this review:
 | --- | --- |
 | Account runner | `96E6B3B449D00B75989D3AD4E9403EA9510E504FBE90A53D6825E72E09B71E65` |
 | RAW helper (future-only) | `5B621B339F6234415AC7B72C0816F2CA5F657DFCAB8F01C4D6BBC10F84172E34` |
+| Expected-value loader | `28A6B0AC8669FC56D19C5C1C256E0F4EA1C0E8D693CC319A4FE8603FC165C078` |
+| Expected-value loader QA | `16B6ADF1694E541AEAD5197CDD1A060AF165D7A24A7BB9831836F87F924297C5` |
 | Account test installer | `21AADE819DB83464E96C0BB6AC28CB42FB26AB916D5905AD13CED37C15FC786B` |
 | Account-only test source | `2F4BF9AD27CF5DF93D89456767423271907598EA209A0AD6E4C27599BC20063C` |
 | Repair QA | `D8940D498AB9DABBBFED4A0A31013448622E266D30ACBC2AEFF7C9E96FEF82D7` |
@@ -99,13 +104,14 @@ was not used as one. Date-only verification time is retained with its stated
 precision; it is not converted into an invented hour.
 
 This decision does not read or store the expected value. Before a separately
-bounded account follow-on can be considered, the owner must locally create or
-retrieve the expected digest and place it only in the exact host PowerShell
+bounded account follow-on can be considered, the owner must use the qualified
+loader to place the expected digest only in the exact host PowerShell
 `Process`. The value must not be sent to Codex, chat, Git, shared evidence,
 host command line, file, User/Machine environment, clipboard or transcript.
-Do not derive an expected value from the device actual, alter app settings to
-make a digest match, create a new key, or retry an account check to resolve
-uncertainty.
+The exact private-window procedure and loader hashes are in
+`docs/P5E_EXPECTED_VALUE_LOADER_REVIEW_20260923.md`. Do not derive an expected
+value from the device actual, alter app settings to make a digest match, create
+a new key, or retry an account check to resolve uncertainty.
 
 ## Exact next work request
 
@@ -114,8 +120,9 @@ uncertainty.
 2. The seven owner metadata fields are now recorded and the typed decision is
    `EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW`; no secret value was received.
 3. Keep the expected value unread by the agent. The next conditional step is
-   owner-local Process-only loading into the exact host PowerShell process;
-   loading it does not launch ADB or the account runner.
+   owner-local Process-only loading with the 26/26-qualified helper into the
+   exact host PowerShell process; loading it does not launch ADB or the account
+   runner.
 4. After that load is independently confirmed without revealing the value,
    create one separately bounded account-check follow-on. It re-hashes the
    repaired files, uses the exact Process-only stdin transport, permits one

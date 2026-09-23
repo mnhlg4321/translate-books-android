@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "scope": "offline fake-input loader contract only",
   "status": "PASS",
-  "assertionsTotal": 19,
-  "assertionsPassed": 19,
+  "assertionsTotal": 26,
+  "assertionsPassed": 26,
   "assertions": [
     {
       "name": "library-only-import-does-not-prompt-or-load",
@@ -38,7 +38,23 @@
       "passed": true
     },
     {
-      "name": "no-api-key-command-line-parameter",
+      "name": "no-api-key-or-endpoint-top-level-parameter",
+      "passed": true
+    },
+    {
+      "name": "interactive-load-targets-fixed-process-name",
+      "passed": true
+    },
+    {
+      "name": "interactive-failure-is-typed-and-redacted",
+      "passed": true
+    },
+    {
+      "name": "java-utf8-replacement-is-explicit",
+      "passed": true
+    },
+    {
+      "name": "load-clears-stale-value-before-and-after-failure",
       "passed": true
     },
     {
@@ -62,6 +78,10 @@
       "passed": true
     },
     {
+      "name": "known-vector-java-utf8-malformed-surrogate-replaces-with-question-mark",
+      "passed": true
+    },
+    {
       "name": "java-trim-removes-ascii-space-only",
       "passed": true
     },
@@ -80,10 +100,18 @@
     {
       "name": "process-clear-removes-test-value",
       "passed": true
+    },
+    {
+      "name": "stale-process-value-failure-is-typed",
+      "passed": true
+    },
+    {
+      "name": "stale-process-value-is-cleared-on-load-failure",
+      "passed": true
     }
   ],
-  "loaderSha256": "9C78E2EED356A30A0CC2A7C2AA1A484A3F3E1CE39F18A644A84F6AB1CEFF2F0E",
-  "qaScriptSha256": "AC78798ECC01FDCB6D7FA04AA2E84968DDA5BCFF391169A91B518EDCEA1C006D",
+  "loaderSha256": "28A6B0AC8669FC56D19C5C1C256E0F4EA1C0E8D693CC319A4FE8603FC165C078",
+  "qaScriptSha256": "16B6ADF1694E541AEAD5197CDD1A060AF165D7A24A7BB9831836F87F924297C5",
   "credentialInputs": 0,
   "expectedValueLoads": 0,
   "adbInvocations": 0,

@@ -1,5 +1,11 @@
 # P5E owner input — metadata provenance only; expected value remains local
 
+> Current P5E state: `HOST_RUNNER_REPAIR_OFFLINE_PASS /
+> EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW /
+> EXPECTED_VALUE_LOADER_OFFLINE_PASS / EXPECTED_VALUE_PROCESS_LOAD_PENDING /
+> ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`.
+> The qualified loader does not launch an account check.
+
 Dùng mẫu này cho phản hồi owner tiếp theo. Không gửi API key, endpoint,
 fingerprint, digest, settings value, ảnh màn hình hoặc command transcript vào
 chat, Git, issue hay evidence dùng chung.
@@ -31,9 +37,10 @@ Workspace / API Keys`, reference là nhãn record
 `2026-07-13` theo `Asia/Ho_Chi_Minh` nhưng không lưu giờ, cùng với
 `recordPredatesActualRead=YES` và `endpointScopeMapping=YES`.
 
-Decision duy nhất được ghi là `EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW`.
-Reference `xzx` chỉ là nhãn record, không phải expected digest. Agent chưa đọc
-hoặc lưu expected value; account check vẫn chưa chạy.
+Decision provenance được ghi là `EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW`; local
+loader được ghi riêng là `EXPECTED_VALUE_LOADER_OFFLINE_PASS`. Reference `xzx`
+chỉ là nhãn record, không phải expected digest. Agent chưa đọc hoặc lưu expected
+value; account check vẫn chưa chạy.
 
 ## Khi nào metadata đủ
 
@@ -55,8 +62,18 @@ bộ theo Java semantics: endpoint đã normalize, một LF, rồi exact API-key
 Agent không đọc key, endpoint hoặc digest.
 
 Bước còn lại chưa thực hiện là owner tự nạp digest vào `Process` của đúng host
-PowerShell runner. Không gửi digest cho agent và không launch ADB trong bước
-nạp. Việc metadata được accept không tự mở account check.
+PowerShell runner. Dùng `scripts/p5e-load-expected-digest.ps1` theo hướng dẫn
+đã QA trong `docs/P5E_EXPECTED_VALUE_LOADER_REVIEW_20260923.md`: script chỉ
+hỏi key ở hidden prompt, khóa endpoint P5E hiện hành trong source và chỉ ghi
+digest lower-case vào Process scope. Không gửi digest cho agent và không launch
+ADB trong bước nạp. Việc metadata được accept hoặc loader QA PASS không tự mở
+account check.
+
+Chạy script trong một PowerShell window riêng do owner kiểm soát và giữ chính
+window đó mở sau signal `P5E_EXPECTED_VALUE_PROCESS_LOAD=PASS`. Không chạy nó
+qua `powershell -File` ở process khác vì value sẽ không còn ở host follow-on.
+Không đưa endpoint/key qua command line. `-Clear` xóa value khỏi Process khi
+owner muốn dừng hoặc đóng window.
 
 Raw key từ record owner không được truyền qua host tới thiết bị. Test Android
 chỉ đọc key đã lưu trong app ở memory để tạo actual fingerprint; host/agent không

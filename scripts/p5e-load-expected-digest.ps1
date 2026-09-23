@@ -59,6 +59,19 @@ function ConvertTo-P5ELowerHex {
     return $out.ToString()
 }
 
+function Get-P5EJavaUtf8Bytes {
+    param([Parameter(Mandatory = $true)][AllowEmptyString()][string]$Value)
+
+    # Java StandardCharsets.UTF_8 replaces a malformed UTF-16 input unit with
+    # ASCII '?'. Configure the .NET encoder explicitly rather than relying on
+    # its default U+FFFD replacement behavior.
+    $encoding = [Text.Encoding]::GetEncoding(
+        65001,
+        [Text.EncoderReplacementFallback]::new('?'),
+        [Text.DecoderReplacementFallback]::new([string][char]0xFFFD))
+    return $encoding.GetBytes($Value)
+}
+
 function Get-P5EEndpointAccountFingerprintFromSecureKey {
     param(
         [Parameter(Mandatory = $true)][AllowEmptyString()][string]$Endpoint,
@@ -86,7 +99,7 @@ function Get-P5EEndpointAccountFingerprintFromSecureKey {
 
         # Java source: SHA-256(UTF-8(normalizeEndpoint(baseUrl) + LF + apiKey)).
         # $keyText is intentionally not trimmed.
-        $payloadBytes = [Text.Encoding]::UTF8.GetBytes($normalizedEndpoint + "`n" + $keyText)
+        $payloadBytes = Get-P5EJavaUtf8Bytes -Value ($normalizedEndpoint + "`n" + $keyText)
         $sha256 = [Security.Cryptography.SHA256]::Create()
         $digestBytes = $sha256.ComputeHash($payloadBytes)
         return (ConvertTo-P5ELowerHex -Bytes $digestBytes)
@@ -118,19 +131,38 @@ function Clear-P5EProcessExpectedFingerprint {
     }
 }
 
-function Invoke-P5EExpectedFingerprintLoad {
-    $secureKey = $null
+function Invoke-P5EExpectedFingerprintLoadFromSecureKey {
+    param(
+        [Parameter(Mandatory = $true)][Security.SecureString]$ApiKey,
+        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string]$EnvironmentName = $script:P5EAccountEnvironmentName
+    )
+
     $fingerprint = $null
     try {
-        $secureKey = Read-Host -Prompt 'Paste original OpenRouter API key (hidden)' -AsSecureString
+        # A new attempt never inherits a stale expected value.
+        Clear-P5EProcessExpectedFingerprint -EnvironmentName $EnvironmentName
         $fingerprint = Get-P5EEndpointAccountFingerprintFromSecureKey `
-            -Endpoint $script:P5ECurrentEndpoint -ApiKey $secureKey
-        Set-P5EProcessExpectedFingerprint -Fingerprint $fingerprint
+            -Endpoint $script:P5ECurrentEndpoint -ApiKey $ApiKey
+        Set-P5EProcessExpectedFingerprint -Fingerprint $fingerprint -EnvironmentName $EnvironmentName
     } catch {
+        # A failed attempt must not leave either an old or partially loaded value.
+        try { Clear-P5EProcessExpectedFingerprint -EnvironmentName $EnvironmentName } catch { }
+        throw 'P5E_EXPECTED_VALUE_PROCESS_LOAD_FAILED'
+    } finally {
+        $fingerprint = $null
+    }
+}
+
+function Invoke-P5EExpectedFingerprintLoad {
+    $secureKey = $null
+    try {
+        $secureKey = Read-Host -Prompt 'Enter original OpenRouter API key (hidden)' -AsSecureString
+        Invoke-P5EExpectedFingerprintLoadFromSecureKey -ApiKey $secureKey
+    } catch {
+        try { Clear-P5EProcessExpectedFingerprint } catch { }
         throw 'P5E_EXPECTED_VALUE_PROCESS_LOAD_FAILED'
     } finally {
         if ($null -ne $secureKey) { $secureKey.Dispose() }
-        $fingerprint = $null
     }
     Write-Output 'P5E_EXPECTED_VALUE_PROCESS_LOAD=PASS'
 }

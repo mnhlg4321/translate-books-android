@@ -55,7 +55,8 @@ function New-P5ELoaderLibraryModule {
             'Normalize-P5EEndpointForFingerprint',
             'Get-P5EEndpointAccountFingerprintFromSecureKey',
             'Set-P5EProcessExpectedFingerprint',
-            'Clear-P5EProcessExpectedFingerprint'
+            'Clear-P5EProcessExpectedFingerprint',
+            'Invoke-P5EExpectedFingerprintLoadFromSecureKey'
         )
     } -ArgumentList $Path
     Import-Module $newModule -Force | Out-Null
@@ -68,16 +69,23 @@ try {
     }
     $module = New-P5ELoaderLibraryModule -Path $loaderPath
     $loaderSource = [IO.File]::ReadAllText($loaderPath)
+    $topLevelParamEnd = $loaderSource.IndexOf('Set-StrictMode', [StringComparison]::Ordinal)
+    if ($topLevelParamEnd -lt 0) { throw 'P5E_EXPECTED_LOADER_TOP_LEVEL_PARAM_PARSE_STOP' }
+    $topLevelParamBlock = $loaderSource.Substring(0, $topLevelParamEnd)
 
     Assert-P5ELoaderQa 'library-only-import-does-not-prompt-or-load' $true
     Assert-P5ELoaderQa 'fixed-current-p5e-endpoint' ($loaderSource.Contains("`$script:P5ECurrentEndpoint = 'https://openrouter.ai/api/v1/chat/completions'"))
-    Assert-P5ELoaderQa 'secure-prompt-required' ($loaderSource.Contains('Read-Host -Prompt ''Paste original OpenRouter API key (hidden)'' -AsSecureString'))
+    Assert-P5ELoaderQa 'secure-prompt-required' ($loaderSource.Contains('Read-Host -Prompt ''Enter original OpenRouter API key (hidden)'' -AsSecureString'))
     Assert-P5ELoaderQa 'process-scope-only-write' ($loaderSource.Contains("SetEnvironmentVariable(`$EnvironmentName, `$Fingerprint, 'Process')"))
     Assert-P5ELoaderQa 'no-user-or-machine-environment-access' ((-not $loaderSource.Contains("'User'")) -and (-not $loaderSource.Contains("'Machine'")))
     Assert-P5ELoaderQa 'no-child-or-network-launch' ((-not $loaderSource.Contains('Start-Process')) -and (-not $loaderSource.Contains('Invoke-WebRequest')) -and (-not $loaderSource.Contains('Invoke-RestMethod')))
     Assert-P5ELoaderQa 'no-clipboard-or-transcript-write' ((-not $loaderSource.Contains('Set-Clipboard')) -and (-not $loaderSource.Contains('Start-Transcript')) -and (-not $loaderSource.Contains('Tee-Object')) -and (-not $loaderSource.Contains('Out-File')))
     Assert-P5ELoaderQa 'typed-output-does-not-contain-fingerprint-variable' (-not [regex]::IsMatch($loaderSource, '(?im)^\s*Write-(Output|Host|Information|Verbose|Error)\b[^\r\n]*\$fingerprint'))
-    Assert-P5ELoaderQa 'no-api-key-command-line-parameter' ((-not $loaderSource.Contains('$ApiKey,')) -and (-not $loaderSource.Contains('[string]$ApiKey')))
+    Assert-P5ELoaderQa 'no-api-key-or-endpoint-top-level-parameter' ((-not $topLevelParamBlock.Contains('$ApiKey')) -and (-not $topLevelParamBlock.Contains('$Endpoint')))
+    Assert-P5ELoaderQa 'interactive-load-targets-fixed-process-name' ($loaderSource.Contains('Set-P5EProcessExpectedFingerprint -Fingerprint $fingerprint'))
+    Assert-P5ELoaderQa 'interactive-failure-is-typed-and-redacted' ($loaderSource.Contains("throw 'P5E_EXPECTED_VALUE_PROCESS_LOAD_FAILED'"))
+    Assert-P5ELoaderQa 'java-utf8-replacement-is-explicit' ($loaderSource.Contains("[Text.EncoderReplacementFallback]::new('?')"))
+    Assert-P5ELoaderQa 'load-clears-stale-value-before-and-after-failure' ($loaderSource.Contains('Clear-P5EProcessExpectedFingerprint -EnvironmentName $EnvironmentName'))
 
     $standardEndpoint = 'https://openrouter.ai/api/v1/chat/completions'
     $fakeKey = 'fake-key-001'
@@ -86,7 +94,8 @@ try {
         [ordered]@{ name = 'trimmed-v1-slash-matches-current-endpoint'; endpoint = ' https://openrouter.ai/api/v1/ '; key = $fakeKey; expected = 'ec835bcb518f4a409ceb35ad48c757c2f503110faee648900aead962622b76a9' },
         [ordered]@{ name = 'current-endpoint-is-stable'; endpoint = $standardEndpoint; key = $fakeKey; expected = 'ec835bcb518f4a409ceb35ad48c757c2f503110faee648900aead962622b76a9' },
         [ordered]@{ name = 'only-one-trailing-slash-is-removed'; endpoint = 'https://openrouter.ai/api/v1//'; key = $fakeKey; expected = '36b4445e322dd14e2db7a23fe22bf804baad59a11b2d5b57a74001d8780ef7db' },
-        [ordered]@{ name = 'key-trailing-space-is-not-trimmed'; endpoint = $standardEndpoint; key = ($fakeKey + ' '); expected = '9b529715d7e2cc2e03bd566d08c597202bc486631fae9fa7f0cc5253e5fac2d0' }
+        [ordered]@{ name = 'key-trailing-space-is-not-trimmed'; endpoint = $standardEndpoint; key = ($fakeKey + ' '); expected = '9b529715d7e2cc2e03bd566d08c597202bc486631fae9fa7f0cc5253e5fac2d0' },
+        [ordered]@{ name = 'java-utf8-malformed-surrogate-replaces-with-question-mark'; endpoint = $standardEndpoint; key = ('fake-key-' + [char]0xD800); expected = '29c8d493e83f47f4a1d58c7fb17015a065de68dc91a9444a94deec4d3d582f7c' }
     )
     foreach ($vector in $knownVectors) {
         $actual = Get-P5EFakeFingerprint -Endpoint ([string]$vector.endpoint) -Key ([string]$vector.key)
@@ -105,6 +114,21 @@ try {
     Assert-P5ELoaderQa 'process-write-is-lowercase-sha256-shape' ($loaded -ceq $fingerprintForProcessTest -and $loaded -match '^[0-9a-f]{64}$')
     Clear-P5EProcessExpectedFingerprint -EnvironmentName $testEnvironmentName
     Assert-P5ELoaderQa 'process-clear-removes-test-value' ($null -eq [Environment]::GetEnvironmentVariable($testEnvironmentName, 'Process'))
+
+    $staleFingerprint = 'c' * 64
+    Set-P5EProcessExpectedFingerprint -Fingerprint $staleFingerprint -EnvironmentName $testEnvironmentName
+    $emptySecure = [Security.SecureString]::new()
+    $emptySecure.MakeReadOnly()
+    $typedStop = $false
+    try {
+        Invoke-P5EExpectedFingerprintLoadFromSecureKey -ApiKey $emptySecure -EnvironmentName $testEnvironmentName
+    } catch {
+        $typedStop = ($_.Exception.Message -ceq 'P5E_EXPECTED_VALUE_PROCESS_LOAD_FAILED')
+    } finally {
+        $emptySecure.Dispose()
+    }
+    Assert-P5ELoaderQa 'stale-process-value-failure-is-typed' $typedStop
+    Assert-P5ELoaderQa 'stale-process-value-is-cleared-on-load-failure' ($null -eq [Environment]::GetEnvironmentVariable($testEnvironmentName, 'Process'))
 } catch {
     $failure = 'P5E_EXPECTED_LOADER_QA_FAILED'
 } finally {
