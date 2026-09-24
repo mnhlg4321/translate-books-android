@@ -1,4 +1,8 @@
-# P5E post-STOP event packet — owner decision pending
+# P5E post-STOP event packet — CLOSED HISTORICAL
+
+> HISTORICAL CLOSED EVENT — 2026-09-24: this packet describes the event that stopped at `PRODUCTION_PACKAGE / UNSUPPORTED_LAYOUT`. It was used and closed; it is not an unused proposal. Do not execute, reuse, rename or delete its command/evidence. The current local adapter packet is `P5E_SIGNATURE_LAYOUT_ADAPTER_EVENT_PACKET_20260924.md`.
+> The source-derived adapter is now locally qualified by synthetic preflight `189/189` and command `28/28`; this historical packet is retained only for provenance. Account has no result; A4.3/RAW/P5 exit/P6 remain closed.
+
 
 Date: 2026-09-24, Asia/Saigon  
 Branch: `feature/v4.18-p5e-runner-repair-20260917`  
@@ -8,7 +12,7 @@ Working tree: dirty only because protected owner/IDE/worktree material remains; 
 
 ## Decision boundary
 
-`LOCAL_REPAIR_GREEN / OWNER_EVENT_DECISION_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`.
+`CLOSED_EVENT_HISTORICAL / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`.
 
 This packet is a proposal for one possible account-only event. It is not owner
 approval, A4.3 authorization, RAW authorization, release authorization or P6
@@ -16,12 +20,13 @@ readiness. The closed event remains terminal and must not be reused:
 
 `D:\P5E-private\p5e-account-check-device-event-20260924-loader-contract-fix-01`
 
-The proposed evidence directory below is deliberately unused and was not created:
+The directory below is the historical event directory that was used and closed;
+it must not be reused:
 
 `D:\P5E-private\p5e-account-check-device-event-20260924-post-stop-proposed-01`
 
-Do not create it, prepare it, or invoke the command until the owner explicitly
-accepts this exact packet and the device is ready.
+Do not invoke this historical command. Any future event requires the separate
+current packet and a new explicit owner decision.
 
 ## Local repair and QA disposition
 

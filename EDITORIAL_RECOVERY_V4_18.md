@@ -1,8 +1,12 @@
 # Editorial Recovery v4.18
 
-> Current post-STOP local disposition — 2026-09-24: `LOCAL_REPAIR_GREEN / POST_STOP_PREFLIGHT_QA_133_OF_133 / POST_STOP_COMMAND_QA_26_OF_26 / PATH_GUARD_QA_12_OF_12 / OWNER_EVENT_DECISION_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`.
-> Both path-chain guards now inspect every ancestor; metadata diagnostics are typed and nonsecret. The old event remains terminal at `PRODUCTION_PACKAGE`; its two private receipts are unchanged. The old `71/71` and `22/22` files remain historical scoped evidence, while the post-STOP QA is bound to the committed source pins in [the proposed packet](docs/P5E_POST_STOP_EVENT_PACKET_20260924.md).
-> Sole next action: owner reviews that exact packet and, only if desired, gives one explicit decision for one new account-only event. This turn does not authorize or execute the event. Any older Current/Next-action text below is historical context and does not override this notice; release 05–09 remain incomplete.
+> Current signature-layout disposition — 2026-09-24: the prior event remains `CLOSED_STOP` at `PRODUCTION_PACKAGE / UNSUPPORTED_LAYOUT`; its receipts are unchanged. The source-derived AOSP wrapper adapter is now locally qualified by synthetic preflight `189/189` and command `28/28` on Windows PowerShell 5.1. No device compatibility or account result is claimed; A4.3/RAW/P5 exit/P6 remain closed.
+> Sole next action: owner reviews [the new packet](docs/P5E_SIGNATURE_LAYOUT_ADAPTER_EVENT_PACKET_20260924.md) and, only if desired, gives a separate decision for one new account-only event. Do not execute or reuse the closed event command. Earlier pending-event/unused-directory statements below are historical and superseded.
+
+
+> Current post-STOP local disposition — 2026-09-24: `HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / PREFLIGHT_QA_189_OF_189 / COMMAND_QA_28_OF_28 / PATH_GUARD_QA_12_OF_12 / OWNER_EVENT_DECISION_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`.
+> Both ancestor guards remain covered; the metadata adapter separates current signer, past signer, wrapper identity and scheme diagnostics. The old event remains terminal and its receipts are unchanged. The 133/133 and 26/26 post-STOP files remain historical scoped evidence; the new adapter QA is bound in `docs/P5E_LAYOUT_SIGNATURE_ADAPTER_PROVENANCE_20260924.json`.
+> Sole next action: owner reviews the exact new packet and decides whether to authorize one new account-only event. This update does not authorize or execute it; release 05–09 remain incomplete.
 
 
 > Current process boundary — the agent has not read the expected value and does not claim that the owner Process value is alive now. The proposed evidence directory is unused and uncreated. A new event, A4.3, RAW, provider, DB, release, P5 exit and P6 remain closed until separate decisions and evidence.
@@ -40,25 +44,25 @@ No production package operation, provider call, DB write or RAW dispatch
 occurred. The account check was not launched in that checkpoint; no
 `MATCH`/`MISMATCH` is claimed by the host repair.
 
-The post-STOP host-repair work package is now complete locally. The bounded
-preflight is `scripts/p5e-account-check-device-preflight.ps1` SHA-256
-`A82FAE2232C9F5C579CBC2D012B03EB55CCFEB567DAA399A89DEBC661BD235D5`; its
-post-STOP Windows PowerShell 5.1 synthetic QA is `133/133`, recorded in
-`docs/P5E_ACCOUNT_CHECK_DEVICE_PREFLIGHT_QA_20260924_POST_STOP.json` (SHA-256
-`431E8D60120604279CA651592B4A7BB4D553C10CBBC810E698373F415F84D15C`). It
-checks both production and test package identity, full pulled-APK bytes and
-certificates, bounded stdout/stderr drain, native exit codes, timeout/tree
-cleanup state, typed STOP receipts, detailed metadata reasons and zero
-installation/provider/DB/RAW side effects. The one-attempt command is
+The post-STOP host-repair work package is now complete locally, including the
+source-derived signature-layout adapter. The bounded preflight is
+`scripts/p5e-account-check-device-preflight.ps1` SHA-256
+`09A33DC74820A1AA18B3EE47AA96862DC0AFA03067D5B46B433B74E4EB1AFA22`; its
+Windows PowerShell 5.1 synthetic QA is `189/189`, recorded in
+`docs/P5E_ACCOUNT_CHECK_DEVICE_PREFLIGHT_QA_20260924_LAYOUT.json` (SHA-256
+`86A13ADBB27AABAC3D409DCBE65B47FDCDB8DF00CCD10DE992DB4B14ECC67E50`). It
+keeps legacy parsing, adds the source-derived AOSP wrapper with separate
+current/past diagnostics, rejects malformed/conflicting forms, and retains
+both full pulled-APK identity gates. The one-attempt command is
 `scripts/p5e-account-check-device-command.ps1` SHA-256
-`C09D66D8C576EF8EAD9C8EE86E87F7CB1A22B591A8BF01D207FCA8228190B4C0`; its
-post-STOP synthetic chain QA is `26/26`, recorded in
-`docs/P5E_ACCOUNT_CHECK_DEVICE_COMMAND_QA_20260924_POST_STOP.json` (SHA-256
-`4DC62B28D79CBD970FCE79FC006423E0688EF2264A07B1AB9A31803C02B452F3`). The
+`B79A6C7AD05DE30249DEBAA6C3E1E4FFBD0326754CFD3F14AFC0B69E265F1298`; its
+synthetic chain QA is `28/28`, recorded in
+`docs/P5E_ACCOUNT_CHECK_DEVICE_COMMAND_QA_20260924_LAYOUT.json` (SHA-256
+`EB8A9BBA81F1F08419810B52C9BFBDACE4AE2669E0C52C1AA5B963A100597895`). The
 two source guards also pass `12/12` against sandbox junction fixtures. This
-proves host orchestration only. It does not prove that the owner’s Process
-value is still present, does not produce `MATCH`/`MISMATCH`, and does not open
-A4.3, RAW, P5 exit or P6.
+proves host orchestration and qualified AOSP-derived compatibility only; it
+does not prove the device layout, produce `MATCH`/`MISMATCH`, or open A4.3,
+RAW, P5 exit or P6.
 
 The owner screenshot exposed a loader contract defect: the interactive loader
 prompted for `EnvironmentName` despite its intended canonical default, so its
@@ -68,18 +72,19 @@ was repaired without reading a real value. Its new SHA-256 is
 new synthetic QA is `27/27`, recorded in
 `docs/P5E_EXPECTED_VALUE_LOADER_QA_20260924.json` (SHA-256
 `933A7780700F3562106992BFF3F801B841AB09227C4A2664D192685541914E21`). The
-old owner event is terminal; the refrozen command uses a new event directory.
+old owner event is terminal; the current adapter packet names a separate new
+event directory that remains unused and uncreated.
 
 The owner subsequently ran that single-use command. It passed the canonical
 Process presence/shape gate and stopped during `PRODUCTION_PACKAGE` with
-`ACCOUNT_CHECK_PREFLIGHT_PACKAGE_METADATA_INVALID_STOP` after two successful
-read-only ADB child calls. The command receipt is redacted and records
-`accountRunnerLaunchCount=0`; no APK pull, provider, DB or RAW action occurred.
-The raw dumpsys was intentionally not retained. This is a device preflight
-STOP, not a `MATCH`/`MISMATCH` or account/provider result. The event is closed;
-the parser compatibility repair and new offline QA are recorded in
-`docs/P5E_ACCOUNT_CHECK_DEVICE_PREFLIGHT_STOP_20260924.json` and
-`docs/P5E_ACCOUNT_CHECK_DEVICE_REPAIR_20260924.md`. No automatic retry is
+`ACCOUNT_CHECK_PREFLIGHT_PACKAGE_METADATA_UNSUPPORTED_LAYOUT_STOP` after two
+successful read-only ADB child calls. The redacted receipt records no account
+runner launch and no APK pull, provider, DB or RAW action. The raw dumpsys was
+intentionally not retained. This is a device preflight STOP, not a
+`MATCH`/`MISMATCH` or account/provider result. The event is closed; the
+source-derived parser repair and new offline QA are recorded in
+`docs/P5E_LAYOUT_SIGNATURE_ADAPTER_PROVENANCE_20260924.json` and
+`docs/P5E_LAYOUT_SIGNATURE_ADAPTER_REVIEW_20260924.md`. No automatic retry is
 authorized.
 
 QA freeze is complete on these final hashes: round 1 executed the source query,

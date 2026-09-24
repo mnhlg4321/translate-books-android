@@ -1,7 +1,11 @@
 # P5E owner input — metadata provenance only; expected value remains local
 
-> Current post-STOP local disposition — 2026-09-24: `LOCAL_REPAIR_GREEN / POST_STOP_PREFLIGHT_QA_133_OF_133 / POST_STOP_COMMAND_QA_26_OF_26 / PATH_GUARD_QA_12_OF_12 / OWNER_EVENT_DECISION_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`.
-> The old event is terminal at `PRODUCTION_PACKAGE` and must not be reused. The current source pins and one-time owner command are in `docs/P5E_POST_STOP_EVENT_PACKET_20260924.md` and `docs/P5E_ACCOUNT_CHECK_DEVICE_OWNER_COMMAND_20260924.txt`; the proposed evidence directory is unused.
+> Current signature-layout disposition — 2026-09-24: the prior event remains CLOSED_STOP at PRODUCTION_PACKAGE / UNSUPPORTED_LAYOUT and its receipts are unchanged. The source-derived AOSP wrapper adapter is locally qualified by synthetic preflight 189/189 and command 28/28 on Windows PowerShell 5.1. No device compatibility or account result is claimed; A4.3/RAW/P5 exit/P6 remain closed.
+> Sole next action: owner reviews [the new event packet](P5E_SIGNATURE_LAYOUT_ADAPTER_EVENT_PACKET_20260924.md) and, only if desired, gives a separate decision. Do not execute or reuse the closed event command; older pending-event text is historical.
+
+
+> Current post-STOP local disposition — 2026-09-24: `HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / PREFLIGHT_QA_189_OF_189 / COMMAND_QA_28_OF_28 / PATH_GUARD_QA_12_OF_12 / OWNER_EVENT_DECISION_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`.
+> The old event is terminal at `PRODUCTION_PACKAGE` and must not be reused. The new packet contains the exact source pins and one-time command; its evidence directory is unused and uncreated.
 > Sole next action: owner reviews the exact packet and decides whether to authorize one new account-only event. This guide does not authorize device work. Earlier current/next-action text below is historical context; release 05–09 remain incomplete.
 
 

@@ -1,10 +1,16 @@
 # P5E account-check device repair — post-STOP disposition
 
+> Historical repair record: the closed event and its original pins remain
+> immutable. The current signature-layout adapter completion is recorded in
+> `P5E_LAYOUT_SIGNATURE_ADAPTER_PROVENANCE_20260924.json`,
+> `P5E_LAYOUT_SIGNATURE_ADAPTER_REVIEW_20260924.md` and
+> `P5E_SIGNATURE_LAYOUT_ADAPTER_EVENT_PACKET_20260924.md`.
+
 Date: 2026-09-24, Asia/Saigon  
 Branch: `feature/v4.18-p5e-runner-repair-20260917`  
 HEAD baseline before repair group: `8e6b16b650905fabf88b5023b4ec043741c39e42`
 Implementation commit: `d4c9a74f`
-Status: `LOCAL_REPAIR_GREEN / OWNER_EVENT_DECISION_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`
+Status: `HISTORICAL_POST_STOP_REPAIR_CLOSED / SIGNATURE_LAYOUT_ADAPTER_LOCAL_PASS / OWNER_EVENT_DECISION_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`
 
 ## Disposition
 

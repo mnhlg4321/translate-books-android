@@ -3,7 +3,7 @@
 - Updated: 2026-09-24 (+07:00), signature-layout adapter implementation and affected offline QA complete.
 - Current version: production 4.17-p5e.11 / code207; active release v4.18.
 - Current branch: feature/v4.18-p5e-runner-repair-20260917; same repair continuation, no new release track.
-- Current commit: bf97cd410ea63fe7f6d978b58324584249995e60 — implementation baseline immediately before the pending adapter code/snapshot commit; not a self-reference.
+- Current commit: 3d8ab021a8acea3f769e0a2d1695286f4618f29a — implementation baseline immediately before the pending documentation/snapshot commit; not a self-reference.
 - Workspace: D:\App Translate Books. Existing .idea changes and untracked owner directories/worktrees/artifacts remain protected. Worktree is not clean. The P5E preflight/orchestration source, tests and QA packets are committed in d4c9a74f; no unrelated dirt was staged or changed.
 - Current build: unchanged production build-20260911-201725, APK SHA256 2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD; account test event p5e-account-check-20260916-01, APK SHA256 058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8. Historical replacement only, no current device identity claim.
 - Current phase: EVENT_POST_STOP_PROPOSED_01_CLOSED / HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / ACCOUNT_CHECK_NOT_EXECUTED / ACCOUNT_CHECK_NOT_PROVEN / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY.

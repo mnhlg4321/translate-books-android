@@ -1,7 +1,11 @@
-P5E ACCOUNT-ONLY OWNER COMMAND — PROPOSAL, NOT AUTHORIZATION
+P5E ACCOUNT-ONLY OWNER COMMAND — CLOSED HISTORICAL, DO NOT EXECUTE
 
-Run this only after explicitly accepting the exact packet:
-docs/P5E_POST_STOP_EVENT_PACKET_20260924.md
+This file belongs to the closed `PRODUCTION_PACKAGE` event and is retained for
+provenance only. It must not be reused or renamed into a new event. Use
+`docs/P5E_SIGNATURE_LAYOUT_ADAPTER_EVENT_PACKET_20260924.md` for the current
+owner decision packet after local signature-layout QA.
+
+The command below is not a current command and must not be run.
 
 This command is intentionally entered in the same Windows PowerShell window
 that holds P5E_OWNER_ENDPOINT_ACCOUNT_FINGERPRINT. The explicit child below is
