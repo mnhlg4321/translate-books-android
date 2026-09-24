@@ -548,10 +548,46 @@ function Parse-P5EAccountCheckInstrumentationOutput {
     $failureMarkerCount = 0
     $okTestCount = 0
     $statusCodeFailureCount = 0
+    # AndroidJUnitRunner repeats identity in START and FINISH bundles. The
+    # account method emits a separate result-only sendStatus(0) between them.
+    $phase = 0
+    $packet = @{}
     $lines = if ($null -eq $Output) { @() } else { @($Output -split '\r?\n') }
     if ($null -eq $Output -or [string]::IsNullOrEmpty($Output)) { [void]$errors.Add('ACCOUNT_CHECK_OUTPUT_MISSING') }
 
     foreach ($line in $lines) {
+        if ($phase -eq 4 -and -not [string]::IsNullOrWhiteSpace($line)) {
+            [void]$errors.Add('ACCOUNT_CHECK_OUTPUT_AFTER_TERMINAL')
+        }
+        if ($line -cmatch '^INSTRUMENTATION_STATUS: ([^=]+)=(.*)$') {
+            $key = $Matches[1]; $value = $Matches[2]
+            if ($packet.ContainsKey($key)) { [void]$errors.Add('ACCOUNT_CHECK_DUPLICATE_PACKET_FIELD') }
+            $packet[$key] = $value
+            if ($phase -ge 3) { [void]$errors.Add('ACCOUNT_CHECK_STATUS_AFTER_FINISH') }
+        } elseif ($line -cmatch '^INSTRUMENTATION_STATUS_CODE: (-?[0-9]+)\s*$') {
+            $code = $Matches[1]
+            $parts = $ExpectedClassMethod.Split('#')
+            $identity = $parts.Count -eq 2 -and $packet.ContainsKey('class') -and $packet.ContainsKey('test') -and
+                $packet['class'] -ceq $parts[0] -and $packet['test'] -ceq $parts[1]
+            $validPacket = $false
+            if ($phase -eq 0 -or $phase -eq 2) {
+                $wantedCode = if ($phase -eq 0) { '1' } else { '0' }
+                $validPacket = $identity -and $code -ceq $wantedCode -and -not $packet.ContainsKey('p5e.account.result')
+                foreach ($name in @('current', 'numtests')) {
+                    if ($packet.ContainsKey($name) -and $packet[$name] -cne '1') { $validPacket = $false }
+                }
+                if ($packet.ContainsKey('id') -and $packet['id'] -cne 'AndroidJUnitRunner') { $validPacket = $false }
+            } elseif ($phase -eq 1) {
+                $validPacket = $code -ceq '0' -and $packet.Count -eq 1 -and
+                    $packet.ContainsKey('p5e.account.result') -and $packet['p5e.account.result'] -cmatch '^(MATCH|MISMATCH)$'
+            }
+            if (-not $validPacket) { [void]$errors.Add('ACCOUNT_CHECK_LIFECYCLE_PACKET_INVALID') }
+            $phase++
+            $packet = @{}
+        } elseif ($line -cmatch '^INSTRUMENTATION_CODE:') {
+            if ($phase -ne 3 -or $packet.Count -ne 0 -or $okTestCount -ne 1) { [void]$errors.Add('ACCOUNT_CHECK_TERMINAL_ORDER_INVALID') }
+            $phase = 4
+        }
         if ($line -match '^INSTRUMENTATION_STATUS: class=(.*)$') {
             [void]$classValues.Add($Matches[1])
         } elseif ($line -match '^INSTRUMENTATION_STATUS: test=(.*)$') {
@@ -563,27 +599,31 @@ function Parse-P5EAccountCheckInstrumentationOutput {
         } elseif ($line -match '^INSTRUMENTATION_STATUS_CODE:\s*-\d+\s*$') {
             $statusCodeFailureCount++
         }
-        if ($line.Trim() -ceq 'OK (1 test)') { $okTestCount++ }
+        if ($line.Trim() -ceq 'OK (1 test)') {
+            if ($phase -ne 3) { [void]$errors.Add('ACCOUNT_CHECK_SUMMARY_ORDER_INVALID') }
+            $okTestCount++
+        }
         if ($line -match '(?i)FAILURES!!!|INSTRUMENTATION_FAILED\b|There (?:was|were) \d+ failures?|AssumptionViolatedException|\bSKIPPED\b') {
             $failureMarkerCount++
         }
     }
 
-    if ($classValues.Count -ne 1) { [void]$errors.Add('ACCOUNT_CHECK_CLASS_IDENTITY_COUNT_INVALID') }
-    if ($methodValues.Count -ne 1) { [void]$errors.Add('ACCOUNT_CHECK_METHOD_IDENTITY_COUNT_INVALID') }
+    if ($phase -ne 4 -or $packet.Count -ne 0) { [void]$errors.Add('ACCOUNT_CHECK_LIFECYCLE_INCOMPLETE') }
+    if ($classValues.Count -ne 2) { [void]$errors.Add('ACCOUNT_CHECK_CLASS_IDENTITY_COUNT_INVALID') }
+    if ($methodValues.Count -ne 2) { [void]$errors.Add('ACCOUNT_CHECK_METHOD_IDENTITY_COUNT_INVALID') }
     $classSeparator = $ExpectedClassMethod.IndexOf('#')
     $expectedClass = if ($classSeparator -gt 0) { $ExpectedClassMethod.Substring(0, $classSeparator) } else { '' }
     $expectedMethod = if ($classSeparator -gt 0) { $ExpectedClassMethod.Substring($classSeparator + 1) } else { '' }
-    if ($classValues.Count -eq 1 -and $classValues[0] -cne $expectedClass) {
+    if (@($classValues | Where-Object { $_ -cne $expectedClass }).Count -gt 0) {
         [void]$errors.Add('ACCOUNT_CHECK_CLASS_IDENTITY_MISMATCH')
     }
-    if ($methodValues.Count -eq 1 -and $methodValues[0] -cne $expectedMethod) {
+    if (@($methodValues | Where-Object { $_ -cne $expectedMethod }).Count -gt 0) {
         [void]$errors.Add('ACCOUNT_CHECK_METHOD_IDENTITY_MISMATCH')
     }
     if ($resultValues.Count -ne 1) {
         [void]$errors.Add('ACCOUNT_CHECK_RESULT_TOKEN_COUNT_INVALID')
     }
-    $result = if ($resultValues.Count -eq 1 -and $resultValues[0] -match '^(MATCH|MISMATCH)$') {
+    $result = if ($resultValues.Count -eq 1 -and $resultValues[0] -cmatch '^(MATCH|MISMATCH)$') {
         $resultValues[0]
     } else { '' }
     if ($resultValues.Count -eq 1 -and [string]::IsNullOrEmpty($result)) {
@@ -605,8 +645,9 @@ function Parse-P5EAccountCheckInstrumentationOutput {
         Result = $result
         TerminalSuccess = $terminalSuccess
         TestFinished = $okTestCount -eq 1
-        IdentityPass = $classValues.Count -eq 1 -and $methodValues.Count -eq 1 -and
-            $classValues[0] -ceq $expectedClass -and $methodValues[0] -ceq $expectedMethod
+        IdentityPass = $classValues.Count -eq 2 -and $methodValues.Count -eq 2 -and
+            $classValues[0] -ceq $expectedClass -and $classValues[1] -ceq $expectedClass -and
+            $methodValues[0] -ceq $expectedMethod -and $methodValues[1] -ceq $expectedMethod -and $errors.Count -eq 0
         TerminalCode = if ($terminalValues.Count -eq 1) { $terminalValues[0].Trim() } else { '' }
         ResultTokenCount = $resultValues.Count
         FailureMarkerCount = $failureMarkerCount

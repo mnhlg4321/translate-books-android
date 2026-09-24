@@ -1,20 +1,19 @@
 # Editorial Recovery v4.18
 
-> Current signature-layout disposition — 2026-09-24: the prior event remains `CLOSED_STOP` at `PRODUCTION_PACKAGE / UNSUPPORTED_LAYOUT`; its receipts are unchanged. The source-derived AOSP wrapper adapter is now locally qualified by synthetic preflight `189/189` and command `28/28` on Windows PowerShell 5.1. No device compatibility or account result is claimed; A4.3/RAW/P5 exit/P6 remain closed.
-> Sole next action: owner reviews [the new packet](docs/P5E_SIGNATURE_LAYOUT_ADAPTER_EVENT_PACKET_20260924.md) and, only if desired, gives a separate decision for one new account-only event. Do not execute or reuse the closed event command. Earlier pending-event/unused-directory statements below are historical and superseded.
+> Current offline identity repair — 2026-09-24: ACCOUNT_IDENTITY_LIFECYCLE_REPAIRED_OFFLINE. The parser now validates START → account result → FINISH → summary → terminal, including both identity bundles and no data after terminal. Independent lifecycle QA 25/25, command chain 38/38, runner regression and helper self-test PASS. See docs/P5E_ACCOUNT_IDENTITY_REPAIR_20260924.md and docs/P5E_ACCOUNT_IDENTITY_REPAIR_PROVENANCE_20260924.json. The closed device event remains NOT_PROVEN; no retry occurred. Next action: owner decision for a separate account-only event using the repaired pins; no further offline parser work without a new failing case. A4.3/RAW/P5 exit/P6 remain closed. Older status text below is historical and does not override this repair disposition.
+
+> Current event disposition — 2026-09-24: owner approved packet `849E656BBD4AA69985B6FB0CD431347283326DDD8E10D68EF458D0A8389D5771` for exactly one account-only event. That event is now `CLOSED_STOP / ACCOUNT_CHECK_NOT_PROVEN / RUNNER_IDENTITY_VALIDATION_STOP`; its command, preflight and runner receipts are preserved under the approved event directory. Do not retry, reuse, rename or reopen it.
+
+> Current P5E state: `HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / PREFLIGHT_PASS_7_READ_ONLY_CALLS / ACCOUNT_CHECK_NOT_PROVEN / ACCOUNT_RUNNER_IDENTITY_VALIDATION_STOP / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. Preflight accepted the source-derived AOSP wrapper layout for both packages. The runner process exited zero with terminal success and redaction/capture pass, but strict class/method identity counts were invalid; this is `NOT_PROVEN`, not `MATCH` or `MISMATCH`.
+
+> Sole next action: review and repair the runner class/method identity contract offline from the redacted typed receipt; no device retry or new account event. See `docs/P5E_ACCOUNT_EVENT_RESULT_20260924.json`.
+
+> Historical pre-event packet/review text below remains unchanged as provenance. The closed event made no provider call, DB write, RAW dispatch, install attempt or new credential read; A4.3 and release checklist steps 05–09 remain closed/incomplete.
 
 
-> Current post-STOP local disposition — 2026-09-24: `HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / PREFLIGHT_QA_189_OF_189 / COMMAND_QA_28_OF_28 / PATH_GUARD_QA_12_OF_12 / OWNER_EVENT_DECISION_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`.
-> Both ancestor guards remain covered; the metadata adapter separates current signer, past signer, wrapper identity and scheme diagnostics. The old event remains terminal and its receipts are unchanged. The 133/133 and 26/26 post-STOP files remain historical scoped evidence; the new adapter QA is bound in `docs/P5E_LAYOUT_SIGNATURE_ADAPTER_PROVENANCE_20260924.json`.
-> Sole next action: owner reviews the exact new packet and decides whether to authorize one new account-only event. This update does not authorize or execute it; release 05–09 remain incomplete.
+> Historical pre-event P5E execution state 2026-09-23 at baseline `7a64b71acb1dafa32cdfe3d99c13e353589b19ab` is retained below for provenance; it is superseded by the current event disposition above.
 
-
-> Current process boundary — the agent has not read the expected value and does not claim that the owner Process value is alive now. The proposed evidence directory is unused and uncreated. A new event, A4.3, RAW, provider, DB, release, P5 exit and P6 remain closed until separate decisions and evidence.
-
-
-> Current P5E execution state 2026-09-23 at pre-snapshot baseline `7a64b71acb1dafa32cdfe3d99c13e353589b19ab`, prior host-repair implementation baseline `70fe4b1b9820997bd345da2c3cdd689a63b9378e`: `HOST_RUNNER_REPAIR_OFFLINE_PASS / EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW / EXPECTED_VALUE_LOADER_OFFLINE_PASS / EXPECTED_VALUE_PROCESS_LOAD_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The repair source has 37/37 fake-process PASS and the source-derived loader has 26/26 synthetic PASS; owner metadata is recorded without reading an expected value; no reinstall, build or device execution occurred. The sole next action is owner-local Process-only loading with the qualified helper; it does not launch the account runner. See `docs/P5E_EXPECTED_VALUE_LOADER_REVIEW_20260923.md`, `docs/P5E_ACCOUNT_RUNNER_REPAIR_QA_20260917.json` and `docs/P5E_PROVENANCE_REVIEW_20260917.md`. Historical audit/local/replacement evidence remains unchanged; SQL/golden PASS remains limited to its tested scope.
-
-Current proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_TEST_INSTALLER_QUALIFIED_OFFLINE / ACCOUNT_TEST_CHECKONLY_PASS / TEST_PACKAGE_REPLACEMENT_PASS / HOST_RUNNER_REPAIR_OFFLINE_PASS / EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW / EXPECTED_VALUE_LOADER_OFFLINE_PASS / EXPECTED_VALUE_PROCESS_SHAPE_PASS_AT_EVENT_START / ACCOUNT_CHECK_PREFLIGHT_DEVICE_STOP / ACCOUNT_CHECK_NOT_EXECUTED / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY.
+Historical pre-event proposal gate: AUTHORIZED_LOCAL_WORK_BY_CANONICAL_P5E_SCOPE / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_ACCOUNT_CHECK_SCOPE_RECEIVED / ACCOUNT_TEST_INSTALLER_QUALIFIED_OFFLINE / ACCOUNT_TEST_CHECKONLY_PASS / TEST_PACKAGE_REPLACEMENT_PASS / HOST_RUNNER_REPAIR_OFFLINE_PASS / EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW / EXPECTED_VALUE_LOADER_OFFLINE_PASS / EXPECTED_VALUE_PROCESS_SHAPE_PASS_AT_EVENT_START / ACCOUNT_CHECK_PREFLIGHT_DEVICE_STOP / ACCOUNT_CHECK_NOT_EXECUTED / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / LIVE_ACTIONS_NOT_AUTHORIZED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / P6_NOT_READY.
 Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A3_1_TECHNICAL_PASS / P5E_9B_A3_1R_DOCUMENTATION_AND_EVIDENCE_PASS / P5E_WORKFLOW_PRETAG_FAIL_CLOSED / P5E_9B_A3_2_MODEL_MISMATCH_OBSERVED_HISTORICAL / P5E_9B_A3_2_PRESERVATION_NOT_PROVEN_HISTORICAL / P5E_9B_A4_MODEL_REMEDIATION_PASS_HISTORICAL / P5E_9B_A4_EXACT_PREFLIGHT_EVIDENCE_CHANNEL_FAILED_HISTORICAL / P5E_9B_A4_1_HOST_CONTRACT_PASS / P5E_9B_A4_1_TEST_ARTIFACT_BUILD_HISTORICAL / P5E_9B_A4_2_EXACT_PREFLIGHT_PASS / P5E_9B_A4_3_HOST_FIXTURES_PASS_HISTORICAL / F2_TRANSPORT_QUALIFIED / F3_LOCAL_BEHAVIORAL_GATE_GREEN / HOST_RUNNER_REPAIR_OFFLINE_PASS / EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW / EXPECTED_VALUE_LOADER_OFFLINE_PASS / EXPECTED_VALUE_PROCESS_SHAPE_PASS_AT_EVENT_START / ACCOUNT_CHECK_PREFLIGHT_DEVICE_STOP / F1_EXPECTED_ENDPOINT_ACCOUNT_FINGERPRINT_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN / NO_RUNTIME_AUTHORIZATION_CREATED / NO_LIVE_CALL_PERFORMED / PROVIDER_CALLS_ZERO / RECONCILE_BLOCKED_RAW_PREDECESSOR_REQUIRED / EXECUTION_DISABLED / NOT_CERTIFIED / P6_NOT_READY`
 
 This document is the single product and execution authority for the v4.18 Editorial recovery. It supersedes active next actions from the historical v4.16 Editorial/RSC/IPC tracks without deleting or reinterpreting their evidence.
@@ -75,17 +74,21 @@ new synthetic QA is `27/27`, recorded in
 old owner event is terminal; the current adapter packet names a separate new
 event directory that remains unused and uncreated.
 
-The owner subsequently ran that single-use command. It passed the canonical
-Process presence/shape gate and stopped during `PRODUCTION_PACKAGE` with
-`ACCOUNT_CHECK_PREFLIGHT_PACKAGE_METADATA_UNSUPPORTED_LAYOUT_STOP` after two
-successful read-only ADB child calls. The redacted receipt records no account
-runner launch and no APK pull, provider, DB or RAW action. The raw dumpsys was
-intentionally not retained. This is a device preflight STOP, not a
-`MATCH`/`MISMATCH` or account/provider result. The event is closed; the
-source-derived parser repair and new offline QA are recorded in
-`docs/P5E_LAYOUT_SIGNATURE_ADAPTER_PROVENANCE_20260924.json` and
-`docs/P5E_LAYOUT_SIGNATURE_ADAPTER_REVIEW_20260924.md`. No automatic retry is
-authorized.
+The owner subsequently ran the approved single-use command. It passed the
+canonical Process presence/shape gate and the source-derived AOSP wrapper
+metadata path for both packages, completed seven read-only ADB calls and
+passed the full pulled-APK identity gates. Exactly one account runner process
+and one instrumentation attempt then ran. The process exited zero with
+terminal lifecycle success, one result token, bounded capture and redaction
+pass, but strict class/method identity counts were invalid:
+`ACCOUNT_CHECK_CLASS_IDENTITY_COUNT_INVALID` and
+`ACCOUNT_CHECK_METHOD_IDENTITY_COUNT_INVALID`. The typed outcome is therefore
+`ACCOUNT_CHECK_NOT_PROVEN_STOP`, not `MATCH` or `MISMATCH`; no provider call,
+DB write, RAW dispatch, install attempt or new credential read occurred. The
+event is closed and its hashes are recorded in
+`docs/P5E_ACCOUNT_EVENT_RESULT_20260924.json`. No automatic retry is
+authorized. The prior two-call `UNSUPPORTED_LAYOUT` event remains historical
+and its receipts are unchanged.
 
 QA freeze is complete on these final hashes: round 1 executed the source query,
 SQLite fixture collector/parser, production golden serializer bridge and full

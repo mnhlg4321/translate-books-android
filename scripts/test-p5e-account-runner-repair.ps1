@@ -94,7 +94,7 @@ try {
     $commandContract = Test-P5EAccountCheckCommandArguments -AdbArguments $adbArguments `
         -ClassMethod $accountClass -SensitiveValue $fakeExpected
     Assert-QA 'command-builder-positive-contract' ([bool]$commandContract.Passed)
-    Assert-QA 'expected-absent-from-adb-argv' (-not ([string]::Join("`n", [string[]]$adbArguments).Contains($fakeExpected, [StringComparison]::Ordinal)))
+    Assert-QA 'expected-absent-from-adb-argv' (-not ([string]::Join("`n", [string[]]$adbArguments).Contains($fakeExpected)))
     Assert-QAThrows 'component-missing-package-rejected' {
         New-P5EAccountCheckRemoteCommandTokens -ClassMethod $accountClass -Component 'androidx.test.runner.AndroidJUnitRunner' | Out-Null
     }
@@ -110,7 +110,11 @@ try {
     $successOutput = @(
         'INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.EditorialP5EAccountCheckOnlyInstrumentedTest',
         'INSTRUMENTATION_STATUS: test=ownerApprovedAccountCheckOnlyReturnsMatchOrMismatch',
+        'INSTRUMENTATION_STATUS_CODE: 1',
         'INSTRUMENTATION_STATUS: p5e.account.result=MATCH',
+        'INSTRUMENTATION_STATUS_CODE: 0',
+        'INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.EditorialP5EAccountCheckOnlyInstrumentedTest',
+        'INSTRUMENTATION_STATUS: test=ownerApprovedAccountCheckOnlyReturnsMatchOrMismatch',
         'INSTRUMENTATION_STATUS_CODE: 0',
         'OK (1 test)',
         'INSTRUMENTATION_CODE: -1'
@@ -148,7 +152,7 @@ switch ($Mode) {
     'stdin' {
         if ($inputText -cne ($fakeExpected + "`n")) { exit 11 }
         if (-not [string]::IsNullOrEmpty($processValue)) { exit 12 }
-        if ($argvText.Contains($fakeExpected, [StringComparison]::Ordinal)) { exit 13 }
+        if ($argvText.Contains($fakeExpected)) { exit 13 }
         Write-Output 'FAKE_STDIN_EXACT=PASS'
         exit 0
     }
@@ -242,7 +246,7 @@ switch ($Mode) {
     $passedCount = @($results | Where-Object { $_.passed }).Count
     $report = [ordered]@{
         schemaVersion = 'p5e.account-runner-repair.qa.v1'
-        date = '2026-09-17'
+        date = (Get-Date -Format 'yyyy-MM-dd')
         scope = 'OFFLINE_SOURCE_AND_FAKE_PROCESS_ONLY_NO_ADB_NO_DEVICE_NO_ENVIRONMENT_READ_OF_OWNER_VALUE'
         status = 'PASS'
         runnerSha256 = (Get-FileHash -LiteralPath $runnerPath -Algorithm SHA256).Hash
@@ -269,7 +273,7 @@ switch ($Mode) {
 } catch {
     $report = [ordered]@{
         schemaVersion = 'p5e.account-runner-repair.qa.v1'
-        date = '2026-09-17'
+        date = (Get-Date -Format 'yyyy-MM-dd')
         scope = 'OFFLINE_SOURCE_AND_FAKE_PROCESS_ONLY_NO_ADB_NO_DEVICE_NO_ENVIRONMENT_READ_OF_OWNER_VALUE'
         status = 'FAILED_REPAIRING'
         failure = $_.Exception.Message

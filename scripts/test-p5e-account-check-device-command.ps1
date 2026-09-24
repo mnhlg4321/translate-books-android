@@ -157,7 +157,13 @@ exit /b 99
 :INSTRUMENT
 echo INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.EditorialP5EAccountCheckOnlyInstrumentedTest
 echo INSTRUMENTATION_STATUS: test=ownerApprovedAccountCheckOnlyReturnsMatchOrMismatch
-echo INSTRUMENTATION_STATUS: p5e.account.result=MATCH
+echo INSTRUMENTATION_STATUS_CODE: 1
+if "%P5E_COMMAND_FAKE_MODE%"=="mismatch" (echo INSTRUMENTATION_STATUS: p5e.account.result=MISMATCH) else (echo INSTRUMENTATION_STATUS: p5e.account.result=MATCH)
+echo INSTRUMENTATION_STATUS_CODE: 0
+if "%P5E_COMMAND_FAKE_MODE%"=="wrongidentity" (echo INSTRUMENTATION_STATUS: class=wrong.Test) else (
+echo INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.EditorialP5EAccountCheckOnlyInstrumentedTest
+)
+echo INSTRUMENTATION_STATUS: test=ownerApprovedAccountCheckOnlyReturnsMatchOrMismatch
 echo INSTRUMENTATION_STATUS_CODE: 0
 echo OK (1 test)
 echo INSTRUMENTATION_CODE: -1
@@ -206,6 +212,21 @@ exit /b 0
     Assert-QA -Condition ($rerun.ExitCode -ne 0 -and ($rerun.Output -join '|') -match 'ACCOUNT_CHECK_DEVICE_COMMAND_EVIDENCE_NOT_EMPTY_STOP') -Code 'RERUN_NOT_BLOCKED'
     Assert-QA -Condition (@(Get-Content -LiteralPath $script:fakeLog).Count -eq $logAfterPass.Count) -Code 'RERUN_LAUNCHED_CHILD'
     $cases.repeated_command_blocked_before_live_work = 'PASS'
+
+    foreach ($mode in @('mismatch', 'wrongidentity')) {
+        $eventPath = Join-Path $root ($mode + '-event')
+        $run = Invoke-CommandChild -Evidence $eventPath -Mode $mode
+        $receipt = Get-ReceiptQA -Evidence $eventPath
+        $wanted = if ($mode -eq 'mismatch') { 'MISMATCH' } else { 'NOT_PROVEN' }
+        Assert-QA ($receipt.accountResult -ceq $wanted) ('CHAIN_RESULT_' + $mode)
+        Assert-QA ($receipt.accountLaunchCount -eq 1 -and $receipt.runnerProcessLaunchCount -eq 1) ('CHAIN_SINGLE_LAUNCH_' + $mode)
+        $wantedExit = if ($mode -eq 'mismatch') { 0 } else { 3 }
+        Assert-QA ($run.ExitCode -eq $wantedExit) ('CHAIN_EXIT_' + $mode)
+        $beforeRetry = @(Get-Content -LiteralPath $script:fakeLog).Count
+        $repeat = Invoke-CommandChild -Evidence $eventPath -Mode $mode
+        Assert-QA ($repeat.ExitCode -ne 0 -and @(Get-Content -LiteralPath $script:fakeLog).Count -eq $beforeRetry) ('CHAIN_RETRY_BLOCKED_' + $mode)
+        $cases[$mode] = 'PASS'
+    }
 
     $offlineEvidence = Join-Path $root 'offline-event'
     $offline = Invoke-CommandChild -Evidence $offlineEvidence -Mode 'offline'

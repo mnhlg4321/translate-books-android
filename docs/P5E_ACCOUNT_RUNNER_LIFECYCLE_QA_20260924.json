@@ -1,0 +1,182 @@
+{
+    "schemaVersion":  "p5e.account-runner-repair.qa.v1",
+    "date":  "2026-09-24",
+    "scope":  "OFFLINE_SOURCE_AND_FAKE_PROCESS_ONLY_NO_ADB_NO_DEVICE_NO_ENVIRONMENT_READ_OF_OWNER_VALUE",
+    "status":  "PASS",
+    "runnerSha256":  "96E6B3B449D00B75989D3AD4E9403EA9510E504FBE90A53D6825E72E09B71E65",
+    "helperSha256":  "B491DD4D26444ACA1234A1A03D8A932A2525FB7CD112F6B6F1520A735C631897",
+    "accountTestSourceSha256":  "2F4BF9AD27CF5DF93D89456767423271907598EA209A0AD6E4C27599BC20063C",
+    "commandComponent":  "com.ml.tblandroidtxt.test/androidx.test.runner.AndroidJUnitRunner",
+    "expectedTransport":  "PROCESS_PARENT_TO_REMOTE_SHELL_STDIN_UTF8_LF",
+    "processOnlyInheritance":  "PASS_FAKE_SHAPE_ONLY",
+    "fakeAdbCalls":  0,
+    "deviceActions":  0,
+    "providerCalls":  0,
+    "dbWrites":  0,
+    "rawDispatches":  0,
+    "launchCount":  5,
+    "retryCount":  0,
+    "parserCases":  [
+                        "match_then_failure",
+                        "truncated_after_match",
+                        "wrong_test_identity",
+                        "token_suffix",
+                        "duplicate_result",
+                        "missing_result",
+                        "terminal_failure",
+                        "failure_after_terminal",
+                        "negative_status_code"
+                    ],
+    "assertions":  37,
+    "assertionCount":  37,
+    "results":  [
+                    {
+                        "name":  "hash-gates-before-expected-read",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "expected-read-before-process-launch",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "runner-uses-full-instrumentation-component",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "runner-uses-stdin-transport",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "runner-removes-expected-from-child-environment",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "runner-uses-terminal-parser",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "runner-does-not-pass-expected-as-e-argument",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "runner-does-not-read-user-or-machine-environment",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "helper-raw-runner-uses-full-component",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "helper-account-fingerprint-uses-process-scope",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "helper-library-only-boundary-present",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "missing-expected-rejected-before-launch",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "malformed-expected-rejected-before-launch",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "component-builder-returns-full-component",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "command-builder-positive-contract",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "expected-absent-from-adb-argv",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "component-missing-package-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "component-wrong-runner-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "command-builder-malformed-component-rejected-before-adb",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "parser-positive-terminal-identity-result",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "parser-rejects-match_then_failure",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "parser-rejects-truncated_after_match",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "parser-rejects-wrong_test_identity",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "parser-rejects-token_suffix",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "parser-rejects-duplicate_result",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "parser-rejects-missing_result",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "parser-rejects-terminal_failure",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "parser-rejects-failure_after_terminal",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "parser-rejects-negative_status_code",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "process-only-parent-to-child-inheritance",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "inheritance-probe-does-not-call-adb",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "stdin-exact-utf8-lf-no-raw-output",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "stdin-child-environment-cleared",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "nonzero-process-rejected-without-retry",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "digest-leakage-redacted-and-flagged",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "timeout-kill-capture-is-bounded",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "timeout-does-not-retry",
+                        "passed":  true
+                    }
+                ]
+}
