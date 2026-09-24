@@ -1,6 +1,6 @@
 # P5E.9B-A4.3 — RAW authorization approval manifest
 
-Document status: FIXED_SCOPE_PACKET / OWNER_DECISION_REQUIRED / NOT_ISSUED / NOT_READY_FOR_DISPATCH
+Document status: FIXED_SCOPE_PACKET / OFFLINE_TECHNICAL_GATES_PASS / OWNER_DECISION_REQUIRED / NOT_ISSUED / NOT_READY_FOR_DISPATCH
 
 This is the fixed-scope packet for one owner decision. It is not a runtime
 authorization and it does not authorize a provider call by itself. The file
@@ -12,20 +12,22 @@ changes, the command hash must be recomputed before any use.
 ## Provenance and boundary
 
 - Canonical plan: EDITORIAL_RECOVERY_V4_18.md.
-- Branch: fix/v4.18-p5e-9b-a4-1.
-- HEAD when this proposal was prepared: c1e3ec6eec62e38a1e2f4fdb0d0f151d5efdcfae.
-- AndroidTest source/archive commit for the pinned APK:
-  d51b7f3c16bdc482513b9904db07b97daed592d1.
-- A4.2 execution-start HEAD:
-  005317cd83f107edbf275734cb2977b9929e88ce.
-- A4.2 host-preparation HEAD:
-  90c40c4959004657d527b9a385449589347e10aa.
+- Branch: feature/v4.18-p5e-runner-repair-20260917.
+- Requested implementation baseline: 356508d28bc7ff7b04a886335a67f7124859cf9f.
+- Actual HEAD before this packet integration: 98eba3c9bb97ea7cd7a01ce9321781fc74392147.
+- AndroidTest artifact/source-archive commit for the selected replacement bundle:
+  9e5ffb7819bfb91dcb8ed9e25c901ab10aa48390.
+- RAW live source-contract commit (separate from the selected APK bundle):
+  d51b7f3c16bdc482513b9904db07b97daed592d1. The RAW AndroidTest source is
+  byte-identical between this contract commit and the selected bundle commit.
+- Account MATCH result document:
+  docs/P5E_ACCOUNT_IDENTITY_ROUTE_CORRECTED_EVENT_RESULT_20260924.json.
 - The post-documentation commit is reported by the handoff and is not
   embedded in this file as a self-referential identity.
 - No new branch or release checklist is created. No APK is rebuilt.
 - No instrumentation preflight, model remediation, credential read, runtime
-  authorization construction, provider call or RECONCILE operation is performed
-  by this documentation task.
+  authorization construction, provider call, database readback/write, RAW
+  dispatch or RECONCILE operation is performed by this offline packet task.
 
 The A4.2 evidence pins are recorded as filename plus SHA-256, not as an
 unqualified reference:
@@ -76,26 +78,46 @@ lineage, zero attempts, zero reconciliation rows, zero reconciliation history,
 zero lifecycle rows and zero report/receipt rows. Therefore this ID hash has no
 consumed row in the pinned baseline. This task does not create or consume it.
 
-## Frozen artifact and device pins
+## Frozen artifact, source bundle and device pins
 
 - Device serial: 15e84958.
 - Production package: com.ml.tblandroidtxt.
 - Production version/code: v4.17-p5e.11 / 207.
-- Production APK file:
-  artifacts\builds\v4.17-p5e.11\build-20260911-201725\TranslateBooks-v4.17-p5e.11-code207.apk
+- Production APK artifact file:
+  D:\App Translate Books\App Translate Books-translation-profile\artifacts\builds\v4.17-p5e.11\build-20260911-201725\TranslateBooks-v4.17-p5e.11-code207.apk
   SHA-256 2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD.
-- Production source ZIP file:
-  artifacts\builds\v4.17-p5e.11\build-20260911-201725\project_source_build-20260911-201725.zip
+- Production APK backup file:
+  D:\App Translate Books\App Translate Books-translation-profile\backup\builds\v4.17-p5e.11\build-20260911-201725\TranslateBooks-v4.17-p5e.11-code207.apk
+  SHA-256 2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD.
+- Production source ZIP artifact file:
+  D:\App Translate Books\App Translate Books-translation-profile\artifacts\builds\v4.17-p5e.11\build-20260911-201725\project_source_build-20260911-201725.zip
   SHA-256 B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348.
+- Production source ZIP backup has the same SHA-256 B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348.
+- Production BUILD_INFO artifact/backup SHA-256:
+  DB20DA0CF708410AAAB65E5AF69ADF89A769ED62240B577A89CA4E2007FB7F06.
 - Production certificate SHA-256:
   47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155.
-- Test APK file:
-  artifacts\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532\app-debug-androidTest.apk
-  SHA-256 57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA,
-  size 1155224 bytes.
-- Test source ZIP file:
-  artifacts\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532\project_source_a4-1-test-20260914-065532.zip
-  SHA-256 382EC5D12FC786BC358316434692E49A73BD62C2F9DD9AC6BD1BC9274CE0B3FA.
+- Selected AndroidTest APK artifact file:
+  D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\p5e-account-check-20260916-01\app-debug-androidTest.apk
+  SHA-256 058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8,
+  size 1155788 bytes.
+- Selected AndroidTest APK backup file:
+  D:\App Translate Books\App Translate Books-translation-profile\backup\test-builds\v4.17-p5e.11\p5e-account-check-20260916-01\app-debug-androidTest.apk
+  SHA-256 058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8.
+- Selected AndroidTest source ZIP artifact file:
+  D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\p5e-account-check-20260916-01\project_source_p5e-account-check-20260916-01.zip
+  SHA-256 5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F.
+- Selected AndroidTest source ZIP backup has the same SHA-256
+  5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F.
+- Selected AndroidTest BUILD_INFO artifact/backup SHA-256:
+  772F32E23AEF3537FEF00DACE8E4B9B994448BFEE2071150CF0E0540DDCCC5A9.
+- BUILD_INFO declares source commit 9e5ffb7819bfb91dcb8ed9e25c901ab10aa48390,
+  APK SHA-256 058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8,
+  package com.ml.tblandroidtxt.test, target com.ml.tblandroidtxt and runner
+  androidx.test.runner.AndroidJUnitRunner. The source ZIP contains both the
+  selected account-check method and the RAW live AndroidTest method with the
+  current source bytes; the host helper/command remain separate root-runtime
+  controls and are not attributed to this APK source archive.
 - Test certificate SHA-256:
   47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155.
 - Test package/target/runner:
@@ -224,6 +246,22 @@ editorial_p5d_reconciliation or editorial_p5d_reconciliation_history write;
 deletes, cleanup, database restore, hash-forcing, or redispatch. The baseline
 has zero relevant rows, so an unexpected pre-existing row or stale claim is a
 stop condition rather than a cleanup target.
+
+## Offline packet gate
+
+| Gate | Status | Evidence |
+|---|---|---|
+| Account MATCH closure | PASS, reused | `docs/P5E_ACCOUNT_IDENTITY_ROUTE_CORRECTED_EVENT_RESULT_20260924.json` and its three receipt pins |
+| Production code207 APK/source/BUILD_INFO artifact and backup parity | PASS | Production hashes in this manifest; artifact and backup bytes match |
+| Selected AndroidTest APK/source/BUILD_INFO artifact and backup parity | PASS | `058BE851…158E8`, `5029E2AE…20C8F`, `772F32E2…CCC5A9`; source commit `9e5ffb78…` |
+| Root helper, command and manifest pin/path contract | PASS | Root helper/command paths and dependency checks are frozen; final byte hashes are recorded externally in the command, QA result and proposal to avoid self-reference |
+| Collector/verifier/recovery/redaction QA | PASS, synthetic only | `docs/P5E_A43_OFFLINE_QA_20260924.json` (QA hash is recorded outside this hashed manifest) |
+| Live package/DB/WAL readback, fresh authorization and allowlisted writes | PENDING owner decision | Not run in this offline task |
+| RAW/provider/P5/P6 | NOT ISSUED / NOT RUN | No live dispatch or P6 transition |
+
+The offline packet is technically ready for one owner decision, but this file
+does not issue runtime authorization. Any live event must create a new evidence
+directory and use fresh dispatch-time authorization timestamps.
 
 ## Owner outcome matrix
 

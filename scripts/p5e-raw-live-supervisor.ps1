@@ -21,12 +21,12 @@ param(
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
     [Parameter(ParameterSetName = 'CollectReadback')]
-    [string]$ManifestPath = 'D:\App Translate Books\App Translate Books-translation-profile\docs\P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md',
+    [string]$ManifestPath = 'D:\App Translate Books\docs\P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md',
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
     [Parameter(ParameterSetName = 'CollectReadback')]
-    [string]$ExpectedManifestSha256 = 'DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501',
+    [string]$ExpectedManifestSha256 = '412790E2E55A8289FF170D3EE93B683553468ADE252EF5C565D833599E5F5EA3',
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
@@ -39,12 +39,44 @@ param(
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
-    [string]$TestApkPath = 'D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532\app-debug-androidTest.apk',
+    [string]$TestApkPath = 'D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\p5e-account-check-20260916-01\app-debug-androidTest.apk',
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
     [Parameter(ParameterSetName = 'CollectReadback')]
-    [string]$ExpectedTestApkSha256 = '57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA',
+    [string]$ExpectedTestApkSha256 = '058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8',
+
+    [Parameter(ParameterSetName = 'Dispatch', Mandatory = $true)]
+    [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
+    [string]$ProductionSourceArchivePath,
+
+    [Parameter(ParameterSetName = 'Dispatch', Mandatory = $true)]
+    [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
+    [string]$ExpectedProductionSourceArchiveSha256,
+
+    [Parameter(ParameterSetName = 'Dispatch', Mandatory = $true)]
+    [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
+    [string]$ProductionBuildInfoPath,
+
+    [Parameter(ParameterSetName = 'Dispatch', Mandatory = $true)]
+    [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
+    [string]$ExpectedProductionBuildInfoSha256,
+
+    [Parameter(ParameterSetName = 'Dispatch', Mandatory = $true)]
+    [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
+    [string]$TestSourceArchivePath,
+
+    [Parameter(ParameterSetName = 'Dispatch', Mandatory = $true)]
+    [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
+    [string]$ExpectedTestSourceArchiveSha256,
+
+    [Parameter(ParameterSetName = 'Dispatch', Mandatory = $true)]
+    [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
+    [string]$TestBuildInfoPath,
+
+    [Parameter(ParameterSetName = 'Dispatch', Mandatory = $true)]
+    [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
+    [string]$ExpectedTestBuildInfoSha256,
 
     [Parameter(ParameterSetName = 'Dispatch', Mandatory = $true)]
     [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
@@ -131,7 +163,8 @@ $script:P5EAccountCheckOptInKey = 'p5e_account_check'
 $script:P5EAccountCheckExpectedKey = 'p5e_expected_endpoint_account_fingerprint'
 $script:P5EAccountCheckRemoteScript =
     'IFS= read -r p5e_expected || exit 64; am instrument -w -r -e class "$1" -e p5e_account_check YES -e p5e_expected_endpoint_account_fingerprint "$p5e_expected" "$2"'
-$script:P5ETestSourceCommit = 'd51b7f3c16bdc482513b9904db07b97daed592d1'
+$script:P5ETestSourceCommit = '9e5ffb7819bfb91dcb8ed9e25c901ab10aa48390'
+$script:P5ERawSourceContractCommit = 'd51b7f3c16bdc482513b9904db07b97daed592d1'
 $script:P5EAccountEnvironmentName = 'P5E_OWNER_ENDPOINT_ACCOUNT_FINGERPRINT'
 $script:P5EHostObservationTimeoutMilliseconds = 240000L
 $script:P5EAuthorizationValidityMilliseconds = 180000L
@@ -140,6 +173,8 @@ $script:P5EProductionVersion = 'v4.17-p5e.11'
 $script:P5EProductionVersionCode = 207L
 $script:P5EExpectedProductionApkSha256 =
     '2ccbb844c629132bb534b0d6aba516055c410bf96d20b14b3f80f91b962800fd'
+$script:P5EExpectedTestApkSha256 =
+    '058be8511fe733d02c0564fd434deec0e19b99025e098e58c838e3b36fc158e8'
 $script:P5ECertificateSha256 =
     '47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155'
 $script:P5EDatabaseSchemaVersion = 24L
@@ -360,6 +395,34 @@ function Assert-P5EHelperRuntimeHash {
     $actual = Get-P5ESha256 -Path $literalPath
     if ($actual -cne $ExpectedSha256.ToLowerInvariant()) {
         throw 'HELPER_RUNTIME_HASH_MISMATCH_STOP'
+    }
+    return $actual
+}
+
+function Assert-P5EArtifactHash {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][string]$ExpectedSha256,
+        [Parameter(Mandatory = $true)][string]$Label
+    )
+    if ($ExpectedSha256 -notmatch '^[0-9a-fA-F]{64}$') {
+        throw ($Label + '_HASH_EXPECTATION_INVALID_STOP')
+    }
+    $literalPath = [IO.Path]::GetFullPath($Path)
+    if (-not (Test-Path -LiteralPath $literalPath -PathType Leaf)) {
+        throw ($Label + '_MISSING_STOP')
+    }
+    $item = Get-Item -LiteralPath $literalPath -Force
+    if ($item.PSIsContainer -or (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0)) {
+        throw ($Label + '_PATH_REPARSE_OR_NOT_REGULAR_STOP')
+    }
+    $resolvedPath = [IO.Path]::GetFullPath((Resolve-Path -LiteralPath $literalPath).Path)
+    if (-not [StringComparer]::OrdinalIgnoreCase.Equals($literalPath, $resolvedPath)) {
+        throw ($Label + '_PATH_RESOLUTION_MISMATCH_STOP')
+    }
+    $actual = Get-P5ESha256 -Path $literalPath
+    if ($actual -cne $ExpectedSha256.ToLowerInvariant()) {
+        throw ($Label + '_HASH_MISMATCH_STOP')
     }
     return $actual
 }
@@ -857,7 +920,7 @@ function Test-P5ERequiredSourceContract {
                 [void]$errors.Add('SOURCE_REQUIRED_ARGUMENT_SET_MISMATCH')
             }
             $git = (Get-Command git -ErrorAction Stop).Source
-            & $git -C $RepoRoot diff --quiet $script:P5ETestSourceCommit -- app/src/androidTest/java/com/ml/tblandroidtxt/EditorialP5EFreshRawLiveInstrumentedTest.java
+            & $git -C $RepoRoot diff --quiet $script:P5ERawSourceContractCommit -- app/src/androidTest/java/com/ml/tblandroidtxt/EditorialP5EFreshRawLiveInstrumentedTest.java
             if ($LASTEXITCODE -ne 0) { [void]$errors.Add('TEST_SOURCE_DIFFERS_FROM_PINNED_APK_COMMIT') }
         } catch {
             [void]$errors.Add('SOURCE_REQUIRED_ARGUMENT_AUDIT_FAILED')
@@ -3910,7 +3973,7 @@ function Test-P5EReadback {
     Test-P5EObjectShape $test 'test' @('package', 'targetPackage', 'apkSha256', 'certificateSha256', 'runner', 'sourceCommit') @('package', 'targetPackage', 'apkSha256', 'certificateSha256', 'runner', 'sourceCommit') $Errors | Out-Null
     Test-P5EEqual $test 'package' $script:P5ETestPackage 'test' $Errors
     Test-P5EEqual $test 'targetPackage' $script:P5ETargetPackage 'test' $Errors
-    Test-P5ESha256 $test 'apkSha256' 'test' $Errors '57ec99a95ee2dc0f1759934c62cea39e2ec92eb77c3daf76cfeed28d41a2fdea'
+    Test-P5ESha256 $test 'apkSha256' 'test' $Errors $script:P5EExpectedTestApkSha256
     Test-P5ESha256 $test 'certificateSha256' 'test' $Errors $script:P5ECertificateSha256
     Test-P5EEqual $test 'runner' $script:P5ERunner 'test' $Errors
     Test-P5EEqual $test 'sourceCommit' $script:P5ETestSourceCommit 'test' $Errors
@@ -4162,7 +4225,7 @@ function New-P5EProducerInput {
         test = [ordered]@{
             package = $script:P5ETestPackage
             targetPackage = $script:P5ETargetPackage
-            apkSha256 = '57ec99a95ee2dc0f1759934c62cea39e2ec92eb77c3daf76cfeed28d41a2fdea'
+            apkSha256 = $script:P5EExpectedTestApkSha256
             certificateSha256 = $script:P5ECertificateSha256
             runner = $script:P5ERunner
             sourceCommit = $script:P5ETestSourceCommit
@@ -4610,7 +4673,7 @@ function New-P5EValidReadbackFixture {
         observedAtMillis = $IssuedAtMillis + 4000
         externalCallState = 'COMMITTED'
         production = @{ package = $script:P5ETargetPackage; version = $script:P5EProductionVersion; versionCode = $script:P5EProductionVersionCode; apkSha256 = $script:P5EExpectedProductionApkSha256; certificateSha256 = $script:P5ECertificateSha256 }
-        test = @{ package = $script:P5ETestPackage; targetPackage = $script:P5ETargetPackage; apkSha256 = '57ec99a95ee2dc0f1759934c62cea39e2ec92eb77c3daf76cfeed28d41a2fdea'; certificateSha256 = $script:P5ECertificateSha256; runner = $script:P5ERunner; sourceCommit = $script:P5ETestSourceCommit }
+        test = @{ package = $script:P5ETestPackage; targetPackage = $script:P5ETargetPackage; apkSha256 = $script:P5EExpectedTestApkSha256; certificateSha256 = $script:P5ECertificateSha256; runner = $script:P5ERunner; sourceCommit = $script:P5ETestSourceCommit }
         database = @{ beforeSha256 = $script:P5EDatabaseSha256; afterSha256 = $afterHash; schemaVersion = $script:P5EDatabaseSchemaVersion; integrityCheck = 'ok'; foreignKeyViolations = 0 }
         freshTuple = @{ projectRowId = $script:P5EProjectRowId; selector = $script:P5ESelector; chapterKey = $script:P5EChapterKey; bindingIdentity = $script:P5EBindingIdentity; runDeclarationIdentity = $script:P5ERunDeclarationIdentity; evaluationId = $script:P5EEvaluationId; packHash = $script:P5EPackHash; profileHash = $script:P5EProfileHash; sourceMode = 'NORMAL_FOUR_SOURCE'; sourceProjection = 'RAW_AND_GLOSSARY_VISIBLE_DRAFT_AND_PRONOUN_HIDDEN'; sources = @(
                 @{ role = 'RAW'; visibility = 'VISIBLE'; byteLength = $script:P5ERawSourceBytes; sha256 = $script:P5ERawSourceSha256 },
@@ -5249,24 +5312,37 @@ function Assert-P5EPinnedDispatchInputs {
         [Parameter(Mandatory = $true)][string]$ProductionApkFile,
         [Parameter(Mandatory = $true)][string]$ExpectedProductionHash,
         [Parameter(Mandatory = $true)][string]$TestApkFile,
-        [Parameter(Mandatory = $true)][string]$ExpectedTestHash
+        [Parameter(Mandatory = $true)][string]$ExpectedTestHash,
+        [Parameter(Mandatory = $true)][string]$ProductionSourceFile,
+        [Parameter(Mandatory = $true)][string]$ExpectedProductionSourceHash,
+        [Parameter(Mandatory = $true)][string]$ProductionBuildInfoFile,
+        [Parameter(Mandatory = $true)][string]$ExpectedProductionBuildInfoHash,
+        [Parameter(Mandatory = $true)][string]$TestSourceFile,
+        [Parameter(Mandatory = $true)][string]$ExpectedTestSourceHash,
+        [Parameter(Mandatory = $true)][string]$TestBuildInfoFile,
+        [Parameter(Mandatory = $true)][string]$ExpectedTestBuildInfoHash
     )
     $sourceContract = Test-P5ERequiredSourceContract -RepoRoot (Get-P5ERepoRoot)
     if (-not $sourceContract.Passed) { throw ('SOURCE_CONTRACT_STOP:' + ($sourceContract.Errors -join ',')) }
     [void](Get-P5EArtifactContract)
-    if (-not (Test-Path -LiteralPath $ManifestFile -PathType Leaf)) { throw 'OWNER_APPROVAL_MANIFEST_MISSING_STOP' }
-    if ((Get-P5ESha256 -Path $ManifestFile) -cne $ExpectedManifestHash.ToLowerInvariant()) { throw 'OWNER_APPROVAL_PACKET_HASH_MISMATCH_STOP' }
-    if (-not (Test-Path -LiteralPath $ProductionApkFile -PathType Leaf) -or
-            (Get-P5ESha256 -Path $ProductionApkFile) -cne $ExpectedProductionHash.ToLowerInvariant()) { throw 'PRODUCTION_CODE207_APK_HASH_MISMATCH_STOP' }
-    if (-not (Test-Path -LiteralPath $TestApkFile -PathType Leaf) -or
-            (Get-P5ESha256 -Path $TestApkFile) -cne $ExpectedTestHash.ToLowerInvariant()) { throw 'A4_2_TEST_APK_HASH_MISMATCH_STOP' }
+    [void](Assert-P5EArtifactHash -Path $ManifestFile -ExpectedSha256 $ExpectedManifestHash -Label 'OWNER_APPROVAL_PACKET')
+    [void](Assert-P5EArtifactHash -Path $ProductionApkFile -ExpectedSha256 $ExpectedProductionHash -Label 'PRODUCTION_CODE207_APK')
+    [void](Assert-P5EArtifactHash -Path $TestApkFile -ExpectedSha256 $ExpectedTestHash -Label 'SELECTED_TEST_APK')
+    [void](Assert-P5EArtifactHash -Path $ProductionSourceFile -ExpectedSha256 $ExpectedProductionSourceHash -Label 'PRODUCTION_SOURCE_ARCHIVE')
+    [void](Assert-P5EArtifactHash -Path $ProductionBuildInfoFile -ExpectedSha256 $ExpectedProductionBuildInfoHash -Label 'PRODUCTION_BUILD_INFO')
+    [void](Assert-P5EArtifactHash -Path $TestSourceFile -ExpectedSha256 $ExpectedTestSourceHash -Label 'SELECTED_TEST_SOURCE_ARCHIVE')
+    [void](Assert-P5EArtifactHash -Path $TestBuildInfoFile -ExpectedSha256 $ExpectedTestBuildInfoHash -Label 'SELECTED_TEST_BUILD_INFO')
 }
 
 function Invoke-P5EPrepareEvent {
     [void](Assert-P5EHelperRuntimeHash -ExpectedSha256 $ExpectedHelperSha256)
     Assert-P5EPinnedDispatchInputs -ManifestFile $ManifestPath -ExpectedManifestHash $ExpectedManifestSha256 `
         -ProductionApkFile $ProductionApkPath -ExpectedProductionHash $ExpectedProductionApkSha256 `
-        -TestApkFile $TestApkPath -ExpectedTestHash $ExpectedTestApkSha256
+        -TestApkFile $TestApkPath -ExpectedTestHash $ExpectedTestApkSha256 `
+        -ProductionSourceFile $ProductionSourceArchivePath -ExpectedProductionSourceHash $ExpectedProductionSourceArchiveSha256 `
+        -ProductionBuildInfoFile $ProductionBuildInfoPath -ExpectedProductionBuildInfoHash $ExpectedProductionBuildInfoSha256 `
+        -TestSourceFile $TestSourceArchivePath -ExpectedTestSourceHash $ExpectedTestSourceArchiveSha256 `
+        -TestBuildInfoFile $TestBuildInfoPath -ExpectedTestBuildInfoHash $ExpectedTestBuildInfoSha256
     $directory = Test-P5EExactEventDirectory -Directory $EvidenceDirectory
     if (@(Get-ChildItem -LiteralPath $directory -Force).Count -ne 0) { throw 'P5E_EVENT_DIRECTORY_NOT_EMPTY_STOP' }
     $plan = New-P5EEventPlan -EvidenceDirectory $directory -ManifestHash $ExpectedManifestSha256 `
@@ -5293,7 +5369,11 @@ function Invoke-P5EDispatch {
     }
     Assert-P5EPinnedDispatchInputs -ManifestFile $ManifestPath -ExpectedManifestHash $ExpectedManifestSha256 `
         -ProductionApkFile $ProductionApkPath -ExpectedProductionHash $ExpectedProductionApkSha256 `
-        -TestApkFile $TestApkPath -ExpectedTestHash $ExpectedTestApkSha256
+        -TestApkFile $TestApkPath -ExpectedTestHash $ExpectedTestApkSha256 `
+        -ProductionSourceFile $ProductionSourceArchivePath -ExpectedProductionSourceHash $ExpectedProductionSourceArchiveSha256 `
+        -ProductionBuildInfoFile $ProductionBuildInfoPath -ExpectedProductionBuildInfoHash $ExpectedProductionBuildInfoSha256 `
+        -TestSourceFile $TestSourceArchivePath -ExpectedTestSourceHash $ExpectedTestSourceArchiveSha256 `
+        -TestBuildInfoFile $TestBuildInfoPath -ExpectedTestBuildInfoHash $ExpectedTestBuildInfoSha256
     $accountFingerprint = Get-P5EAccountFingerprint
     $issued = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
     $expires = $issued + $script:P5EAuthorizationValidityMilliseconds

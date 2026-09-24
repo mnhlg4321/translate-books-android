@@ -1,14 +1,14 @@
 # Editorial Recovery v4.18
 
-> Post-MATCH A4.3 review — 2026-09-24: ACCOUNT_MATCH_EVIDENCE_VERIFIED / A43_PACKET_INTEGRATION_REQUIRED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY. The remaining concrete gaps are RAW host/path revision and test-artifact/source pin reconciliation, followed by separate collector/RAW/allowlisted-write authorization. Follow docs/P5E_POST_MATCH_A43_WORK_REQUEST_20260924.md to finish the bounded offline integration and QA, then present one final owner decision. Do not repeat the account event. Old packet hashes below are historical, not current dispatch readiness.
+> Post-MATCH A4.3 review — 2026-09-24: ACCOUNT_MATCH_EVIDENCE_VERIFIED / A43_OFFLINE_PACKET_TECHNICAL_GATES_PASS / OWNER_DECISION_REQUIRED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY. Artifact/source parity, root-runtime pin/path coherence, command/helper self-hash and targeted synthetic QA are PASS. Live package/DB/WAL readback, fresh runtime authorization, provider egress and allowlisted writes remain pending one owner decision. Do not repeat the account event; old packet hashes below are historical only.
 
 > Current offline identity repair — 2026-09-24: `ACCOUNT_IDENTITY_LIFECYCLE_REPAIRED_OFFLINE` remains PASS. The repaired account-only runner now has a terminal typed `MATCH`; no further offline parser work is authorized without a new failing case.
 
 > Current event disposition — 2026-09-24: event `D:\P5E-private\p5e-account-check-device-event-20260924-route-corrected-01` is `CLOSED_ACCOUNT_MATCH / ACCOUNT_CHECK_COMPLETED_MATCH`. Preflight passed 7 read-only calls; the runner launched once and exited zero. Receipt hashes are recorded in `docs/P5E_ACCOUNT_IDENTITY_ROUTE_CORRECTED_EVENT_RESULT_20260924.json`. Do not retry, reuse, rename or reopen this event.
 
-> Current P5E state: `HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / PREFLIGHT_PASS_7_READ_ONLY_CALLS / ACCOUNT_CHECK_COMPLETED_MATCH / ACCOUNT_RUNNER_COMPLETED_MATCH / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The typed result proves only the account-test predicate; it does not authorize provider access, RAW, P5 exit or P6.
+> Current P5E state: `HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / PREFLIGHT_PASS_7_READ_ONLY_CALLS / ACCOUNT_CHECK_COMPLETED_MATCH / ACCOUNT_RUNNER_COMPLETED_MATCH / A43_OFFLINE_PACKET_TECHNICAL_GATES_PASS / OWNER_DECISION_REQUIRED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The typed account result and offline packet do not authorize provider access, RAW, P5 exit or P6.
 
-> Superseded review action (completed by the post-MATCH audit above): review the remaining A4.3 gate conditions and propose the next separately authorized step; do not dispatch RAW/P6 or alter provider/DB state. Provider calls, DB writes, RAW dispatches and install attempts were all zero; release checklist steps 05–09 remain incomplete.
+> Superseded review action (completed by this offline packet): artifact/source selection, manifest, root helper, command and targeted QA are frozen for owner review; do not dispatch RAW/P6 or alter provider/DB state. Provider calls, DB writes, RAW dispatches, builds and installs in this task were all zero; release checklist steps 05–09 remain incomplete.
 
 > The prior route event `MISMATCH` remains historical and unchanged in `docs/P5E_ACCOUNT_IDENTITY_EVENT_RESULT_20260924.json`; the older signature-layout-adapter `NOT_PROVEN` receipt remains unchanged in `docs/P5E_ACCOUNT_EVENT_RESULT_20260924.json`.
 
@@ -168,11 +168,12 @@ The current host-preparation document is
 | Production APK SHA-256 | `2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD` | frozen artifact/backup fact |
 | Production source ZIP SHA-256 | `B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348` | frozen artifact/backup fact |
 | Certificate SHA-256 | `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155` | frozen candidate fact |
-| A4.1 test artifact | `D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532\app-debug-androidTest.apk` | installed once as test package under A4.2; post-install/readback exact |
-| A4.1 test APK SHA-256 / bytes | `57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA` / `1155224` | artifact and backup match |
-| A4.1 source/archive commit | `d51b7f3c16bdc482513b9904db07b97daed592d1` | exact tracked-source ZIP in payload |
-| A4.1 test certificate/package/target/runner | `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155` / `com.ml.tblandroidtxt.test` / `com.ml.tblandroidtxt` / `androidx.test.runner.AndroidJUnitRunner` | build-tool inspection |
-| A4.1 source ZIP SHA-256 | `382EC5D12FC786BC358316434692E49A73BD62C2F9DD9AC6BD1BC9274CE0B3FA` | artifact/backup payload |
+| Selected AndroidTest artifact | `D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\p5e-account-check-20260916-01\app-debug-androidTest.apk` | selected immutable artifact; artifact/backup bytes match |
+| Selected test APK SHA-256 / bytes | `058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8` / `1155788` | selected account-replacement bundle; not a live identity claim |
+| Selected test source/archive commit | `9e5ffb7819bfb91dcb8ed9e25c901ab10aa48390` | exact tracked-source ZIP in selected payload |
+| RAW source contract commit | `d51b7f3c16bdc482513b9904db07b97daed592d1` | separate source contract for RAW live method; not whole-bundle authority |
+| Selected test certificate/package/target/runner | `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155` / `com.ml.tblandroidtxt.test` / `com.ml.tblandroidtxt` / `androidx.test.runner.AndroidJUnitRunner` | BUILD_INFO/package contract |
+| Selected source ZIP / BUILD_INFO SHA-256 | `5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F` / `772F32E23AEF3537FEF00DACE8E4B9B994448BFEE2071150CF0E0540DDCCC5A9` | artifact/backup payload |
 | DB / schema | `3563F44BCE9E529955B6C39142243F59AF8F2F0D0095303F5C7A66BE07219391` / `24` | A4.2 WAL-aware pre/post readback matched; integrity `ok`, FK `0` |
 | Data classification | `RECONSTRUCTED_ONLY` | not code196 recovery |
 | Fresh selector / chapter | `p5e-fresh-mercedes-vol5-20260911-01` / `001` | frozen fresh tuple |
@@ -219,7 +220,7 @@ mutation was one `adb install -r` replacement of the test package; production
 package operations, provider/API calls, authorization creation, attempt
 creation and reconciliation creation were all `0`. The later local H1–H4
 repair closed the host evidence chain without changing the device pins. The
-current next action is owner review of the hash-bound packet. The historical
+current next action is one owner decision against the final hash-bound packet. The historical
 packet remains RAW-only with one primary call, zero repair/retry and no
 RECONCILE; it is not an authorization.
 P5/P5E have not exited; execution,
@@ -228,24 +229,25 @@ disabled. Historical `HISTORICAL_CODE196_PRESERVATION_FAILED`,
 `PILOT_DATA_PRESERVATION_FAILED`, the A3.2 preservation gap and consumed
 A2/A3.2 approvals remain unchanged.
 
-## P5E.9B-A4.3 — current owner packet pending; not issued
+## P5E.9B-A4.3 — offline packet technical gates pass; owner decision pending
 
-The local repair packet is now technically ready for owner review, but it is not an approval and it does not issue A4.3. Current status is `P5E_LOCAL_BEHAVIORAL_GATE_GREEN / OWNER_PACKET_PENDING / LIVE_ACTIONS_NOT_AUTHORIZED`.
+The local repair packet is technically ready for one owner decision, but it is not an approval and it does not issue A4.3. Current status is `ACCOUNT_MATCH_EVIDENCE_VERIFIED / A43_OFFLINE_PACKET_TECHNICAL_GATES_PASS / OWNER_DECISION_REQUIRED / LIVE_ACTIONS_NOT_AUTHORIZED`.
 
 The fixed-scope owner packet is
 docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md, SHA-256
-DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501.
+412790E2E55A8289FF170D3EE93B683553468ADE252EF5C565D833599E5F5EA3.
 The separate command is
 docs/P5E_RAW_AUTHORIZATION_COMMAND.txt, SHA-256
-47044AB73C0B76A00E3E40A85D6E893B0F94C015F6332036484EA5ABB5FA55AB.
+51A71D47BBFC91DE19658FEEA120CF419ECD0F2FFD77562D74B83C73F9A98AB5.
 The narrative proposal is
 docs/P5E_RAW_AUTHORIZATION_PROPOSAL.md.
-The historical RAW packet host supervisor is
+The current root-runtime host supervisor is
 scripts/p5e-raw-live-supervisor.ps1, SHA-256
-364A6AA2C52A90E7AD20F28EC6C46A0EAD1BA39E8909727BEA7396287896FFE7.
-The repaired future-only helper pin is
-`5B621B339F6234415AC7B72C0816F2CA5F657DFCAB8F01C4D6BBC10F84172E34`;
-the RAW packet is not refrozen or run in this package.
+CB9C07312E025DA94D8DB4840B7600CE9A3613DB75CC0E0E4F28EB059E00901F.
+The selected production/test artifact, source-archive and BUILD_INFO pairs are
+recorded in the manifest and `docs/P5E_A43_OFFLINE_QA_20260924.json`; the
+selected test source bundle is commit `9e5ffb7819bfb91dcb8ed9e25c901ab10aa48390`,
+while the separate RAW source contract remains `d51b7f3c16bdc482513b9904db07b97daed592d1`.
 The preparation evidence is
 docs/P5E_RAW_HOST_PREPARATION_20260915.md, SHA-256
 4A0E678ED298F4FF879062C9FD5F81A383D235F1C27ED4EAE7CA15563DEB6797.
@@ -262,9 +264,9 @@ app/src/androidTest/java/com/ml/tblandroidtxt/EditorialP5EAccountCheckOnlyInstru
 SHA-256 `2F4BF9AD27CF5DF93D89456767423271907598EA209A0AD6E4C27599BC20063C`;
 its host runner is `scripts/p5e-account-check.ps1`, SHA-256
 `96E6B3B449D00B75989D3AD4E9403EA9510E504FBE90A53D6825E72E09B71E65`.
-The repaired future-only RAW helper pin is
-`5B621B339F6234415AC7B72C0816F2CA5F657DFCAB8F01C4D6BBC10F84172E34`;
-no RAW command uses it in this package.
+The current root-runtime RAW helper pin is
+`CB9C07312E025DA94D8DB4840B7600CE9A3613DB75CC0E0E4F28EB059E00901F`;
+it is host-only and no RAW command is executed in this package.
 The dedicated test-package installer is
 `scripts/p5e-install-account-check-test.ps1`, SHA-256
 `21AADE819DB83464E96C0BB6AC28CB42FB26AB916D5905AD13CED37C15FC786B`;
@@ -281,8 +283,9 @@ The wrapper-built replacement AndroidTest APK is
 `058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8`, source
 ZIP `5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F`,
 event `p5e-account-check-20260916-01`, and it was installed once with exact
-installed-byte/certificate readback. These pins are for the account check only;
-the RAW command/helper and historical A4 test pin remain unchanged.
+installed-byte/certificate readback. The selected test bundle is also the
+immutable AndroidTest input for the offline A4.3 packet; the root RAW helper
+remains a separate host runtime authority.
 
 The local account-check preparation/preflight result is
 `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`, SHA-256
@@ -291,8 +294,8 @@ hash-gate and redaction/fake-process checks plus the current CheckOnly,
 replacement and account-stop outcomes; it contains no credential or account
 fingerprint value.
 
-The approval manifest remains unchanged at
-DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501.
+The approval manifest is frozen at
+412790E2E55A8289FF170D3EE93B683553468ADE252EF5C565D833599E5F5EA3.
 The production serializer source remains
 editorial-engine/src/main/java/com/ml/tblandroidtxt/editorial/pack/EditorialP5PilotExecution.java,
 SHA-256 `1222B8AC9B79DAFC659DD364F50849DFBA4782C181606A92DA47EBD8C6164E3C`.
@@ -328,6 +331,17 @@ receipts are preserved in the current event result document. The packet remains
 for owner review of the separate A4.3 conditions, not for automatic RAW
 dispatch; no provider call, DB write or RAW operation occurred.
 
+Targeted offline QA is
+`docs/P5E_A43_OFFLINE_QA_20260924.json`, SHA-256
+`D124711219DFC1FD205CDB9205C394E2DA4CB3569827CA6C9D3B0A592EEC7050`.
+The final host-only provenance result is
+`D:\P5E-private\p5e-a43-offline-provenance-qa-20260924-04\RESULT.json`,
+SHA-256 `5C327F8265567734A744F5A43E770A76C5C52B51B6D4378E45CE2E4B1C0E5A3D`;
+the final PrepareEvent plan is
+`D:\P5E-private\p5e-a43-offline-prepare-qa-20260924-04\EVENT_PLAN.json`,
+SHA-256 `9A87EAEB728994A281143DF068ABDBCB5D8F373B40E2EF56798A8DADCABFCAD6`.
+Both are synthetic/host-only and recorded zero device, provider and credential actions.
+
 The repaired command invokes the supervisor as one child process. It computes
 fresh issuedAt/expiresAt values at owner-approved dispatch, uses a 240000 ms
 host observation window, and must be run once only. The supervisor uses
@@ -339,10 +353,11 @@ The selected live method performs its own preflightOnly checks internally; no
 separate instrumentation preflight is permitted. F2/F3 host evidence and the
 source-derived argument list are recorded in the preparation evidence above.
 
-The current next action is owner review of the remaining A4.3 conditions. The
-host runner repair and bounded account-only check are complete; no reinstall,
-new device account check, readback or RAW action is part of the current work
-package.
+The single next action is one owner decision against the final manifest,
+command, root helper, artifact/source and QA hashes for this exact live scope:
+read-only before/after collector, memory-only account comparison in the live
+method, at most one RAW/GLOSSARY call, fresh runtime authorization and only the
+allowlisted exact tuple writes. No live action is issued by this document.
 
 ## Historical A4 exact-preflight evidence-channel blocker
 

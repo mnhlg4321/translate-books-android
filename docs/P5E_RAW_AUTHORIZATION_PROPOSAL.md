@@ -1,6 +1,6 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Post-MATCH A4.3 review — 2026-09-24: ACCOUNT_MATCH_EVIDENCE_VERIFIED / A43_PACKET_INTEGRATION_REQUIRED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY. The remaining concrete gaps are RAW host/path revision and test-artifact/source pin reconciliation, followed by separate collector/RAW/allowlisted-write authorization. Follow docs/P5E_POST_MATCH_A43_WORK_REQUEST_20260924.md to finish the bounded offline integration and QA, then present one final owner decision. Do not repeat the account event. Old packet hashes below are historical, not current dispatch readiness.
+> Current packet integration — 2026-09-24: ACCOUNT_MATCH_EVIDENCE_VERIFIED / OFFLINE_A43_TECHNICAL_GATES_PASS / OWNER_DECISION_REQUIRED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY. The selected replacement bundle, root helper, manifest and command are now aligned offline; live readback, runtime authorization, allowlisted writes and RAW/GLOSSARY egress remain owner-scoped and unissued. Do not repeat the account event. Old packet hashes below are historical only.
 
 > Historical execution audit 2026-09-17 at c222b13c: TEST_PACKAGE_REPLACEMENT_PASS / ACCOUNT_RUNNER_REPAIR_REQUIRED / EXPECTED_SOURCE_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY. Installed test APK evidence is retained. Source-derived offline probe reproduced four false acceptances and found the incomplete instrumentation component. Next action is the bounded host repair and trusted-input feasibility work in docs/P5E_NEXT_WORK_REQUEST_20260917.md; no reinstall or device execution. See docs/P5E_EXECUTION_AUDIT_20260917.md and docs/P5E_ACCOUNT_RUNNER_AUDIT_RESULT_20260917.json. SQL/golden PASS remains limited to its tested scope.
 
@@ -8,25 +8,25 @@ Historical proposal status (superseded above): LOCAL_BEHAVIORAL_GATE_GREEN / F1_
 OWNER_DECISION_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN /
 LIVE_ACTIONS_NOT_AUTHORIZED / P6_NOT_READY
 
-The collector/SQL local result is retained. Account runner repair is required
-before device execution; see `P5E_EXECUTION_AUDIT_20260917.md`. This proposal
-does not create runtime authorization. Existing account-check permission is
-retained; independent expected provenance and separate readback/egress scope
-remain unresolved.
+The collector/SQL local result and the account MATCH receipts are retained. This
+proposal does not create runtime authorization and does not grant device/provider
+permission. The current packet uses the root helper and the verified
+account-check replacement bundle; independent live readback, freshness and
+allowlisted-write scope remain pending owner decision.
 
 The fixed-scope file whose hash is passed to the live harness is
 docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md. Its hash is kept separate from
 this proposal and from the command; the manifest contains no self-hash. The
 single command is in docs/P5E_RAW_AUTHORIZATION_COMMAND.txt.
 Pinned approval-manifest SHA-256:
-DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501.
+412790E2E55A8289FF170D3EE93B683553468ADE252EF5C565D833599E5F5EA3.
 Pinned command SHA-256:
-47044AB73C0B76A00E3E40A85D6E893B0F94C015F6332036484EA5ABB5FA55AB.
+51A71D47BBFC91DE19658FEEA120CF419ECD0F2FFD77562D74B83C73F9A98AB5.
 Host supervisor SHA-256:
-364A6AA2C52A90E7AD20F28EC6C46A0EAD1BA39E8909727BEA7396287896FFE7.
+CB9C07312E025DA94D8DB4840B7600CE9A3613DB75CC0E0E4F28EB059E00901F.
 
-The approval manifest remains unchanged at
-`DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501`.
+The approval manifest is frozen for this packet at
+`412790E2E55A8289FF170D3EE93B683553468ADE252EF5C565D833599E5F5EA3`.
 
 The previous helper SHA-256
 BEEFBB7733EED660B1F59435922D0594FBA1CBDED01B6C0B00482E786E456799 is retained
@@ -34,35 +34,30 @@ as the provenance-review RED input, not as an approval pin.
 
 ## Current owner decision request — PENDING, not authorization
 
-Local evidence result: `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`, SHA-256
-`C3B7B7C7B86580CF56A810E4ECBA623A54B45F123B92C8A7753484EC54A45B48`.
-The manifest remains `DD58…4501`; final command/helper are
-`47044AB7…55AB` / `364A6AA2…6FFE7`; artifact contract is `FFE70A70…A4BF`;
+Local evidence result: `docs/P5E_A43_OFFLINE_QA_20260924.json`, SHA-256
+`D124711219DFC1FD205CDB9205C394E2DA4CB3569827CA6C9D3B0A592EEC7050`, recorded
+after the targeted packet QA. The manifest/command/root helper are
+`412790E2…5EA3` / `51A71D47…8AB5` / `CB9C0731…901F`; artifact contract is
+`FFE70A70…A4BF`;
 production serializer is `1222B8AC…64E3C`; the targeted JVM test source is
 `3D7C7A39…31A5`; frozen production/test APK pins remain code207 /
-`2CCBB844…800FD` and `57EC99…FDEA`. The local diff does not change production
-source, AndroidTest source/artifact pins, schema/migration, route/model,
+`2CCBB844…800FD` and `058BE851…158E8`; selected AndroidTest source archive is
+`5029E2AE…20C8F` from source commit `9e5ffb78…`. The local diff does not change production
+source, schema/migration, route/model,
 pack/profile, prompt, budget or input identities; it repairs only host
-query/parser/collector tests and adds a test-only golden-byte export.
+pin/path orchestration and provenance checks.
 
 QA freeze: round 1 executed the real SQL/collector/parser/verifier chain and
 targeted JVM golden bridge; round 2 independently rejected identity/event,
 partial-artifact, recovery/unknown and timeout-redispatch counterexamples.
 Both pass on the hashes above with zero failures and zero external actions.
 
-Owner input received on `2026-09-16` approves only one memory-only account
-check with result `MATCH`/`MISMATCH`; it forbids key/fingerprint/endpoint
-logging, provider calls, DB writes and RAW dispatch. The current pinned RAW
-AndroidTest still has no standalone entry point: its selected live method
-continues from the fingerprint comparison into DB/preflight and `dispatchRaw`.
-A separate test-only verifier and host runner were therefore added and built
-without changing the RAW pins. The exact-serial `CheckOnly` passed, and the
-dedicated installer performed exactly one replacement of
-`com.ml.tblandroidtxt.test`; the installed APK was pulled back with the exact
-requested hash/certificate. No production package operation, provider call, DB
-write or RAW dispatch occurred. No account check was launched because the
-trusted process-only expected value is not present, so no `MATCH`/`MISMATCH` is
-claimed. This does not authorize RAW or readback collection.
+The route-corrected account event on serial `15e84958` is closed with
+`ACCOUNT_CHECK_COMPLETED_MATCH`, seven read-only preflight attempts, one runner
+launch and exit `0`. The command, preflight and runner receipt hashes are
+`C00F4116…6BCE81`, `C0604F6A…4779C7` and `529B082D…9702C9`; provider calls,
+DB writes and RAW dispatches are all zero. This evidence proves only the
+account-only event and does not authorize RAW or readback collection.
 
 Account-check replacement pins are separate from the RAW/A4 test pin:
 
@@ -75,20 +70,22 @@ Account-check replacement pins are separate from the RAW/A4 test pin:
 | Replacement AndroidTest APK, event `p5e-account-check-20260916-01` | `058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8`, installed once; exact readback |
 | Replacement source ZIP | `5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F` |
 | Local account-check result | `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`, SHA-256 `3FBE39142BA2DAA16AF6F5301271525E71FE1871CF6C14F0DF2A816346AA53EF`; CheckOnly/replacement PASS; account check blocked by missing expected value |
-| Unchanged RAW command/helper pins | `47044AB7…55AB` / `364A6AA2…6FFE7` |
+| Current RAW command/root helper pins | `51A71D47…8AB5` / `CB9C0731…901F`; nested helper `364A6AA2…6FFE7` is historical only |
 
 The remaining owner inputs have these separate statuses:
 
-- independent expected account fingerprint provenance and owner/account-key
-  mapping — `NOT_PROVIDED`; the expected value must not be copied from a live
-  mismatch or a fixture, and no API key/raw endpoint is sent in chat or Git;
+- process-only expected account fingerprint for any future live dispatch —
+  `OWNER_PROCESS_VALUE_REQUIRED_AT_DISPATCH`; the account receipt is not a
+  substitute for fresh live verification, and no API key/raw endpoint is sent
+  in chat or Git;
 - the source-defined memory-only account operation
   `SHA256(UTF8(normalizeEndpoint(baseUrl) + "\n" + apiKey))`, with actual computed
   only on the approved device and compared to the trusted expected value; the
   operation scope is `RECEIVED`, but the expected value is still missing;
 - read-only package/certificate/SQLite/WAL-aware collection for the exact
-  serial and event, with no settings content, credential, prompt, request body,
-  raw response or full database export in evidence — `NOT_APPROVED`;
+  serial and newly created event, with no settings content, credential, prompt,
+  request body, raw response or full database export in evidence —
+  `OWNER_DECISION_PENDING`;
 - exactly one RAW/GLOSSARY dispatch to the pinned route: primary `1`, repair
   `0`, retry `0`, fallback/RECONCILE off, DRAFT/PRONOUN hidden; caps
   input/output/total `100000/4096/104096`, cost `USD0.05`, execution/auth/host
@@ -105,16 +102,15 @@ redaction failure is `UNKNOWN`/`RECOVERY_REQUIRED` or
 `ACCEPTANCE_NOT_PROVEN`, with no expiry refresh and no redispatch.
 
 Decision remains `PENDING`; account approval alone is not send-books approval.
-The next action is the host runner repair in `P5E_NEXT_WORK_REQUEST_20260917.md`:
-component, terminal parser, transport contract and bounded drain. Independent
-expected-source feasibility is a parallel owner input. The current runner puts
-expected into ADB argv; do not claim no-command-text transport until repaired
-or explicitly reconciled with the approved scope. `CheckOnly` and the one
-approved test-package replacement are complete. A4.3 is not issued; no RAW
-command may be run. Even a valid account `MATCH` keeps `P6_READY=false` and
-does not approve readback or provider egress.
+The next action is one owner decision over the exact current packet: read-only
+before/after collector, memory-only account comparison inside the live method,
+at most one RAW/GLOSSARY call, fresh runtime authorization and only the
+allowlisted exact tuple writes. No live action is issued by this document.
 
 ## Historical baseline and evidence
+
+Everything in this section is retained historical evidence; it is not the
+current command, helper, artifact or owner-decision pin.
 
 ## Historical 2026-09-15 local closure claims — superseded for readiness
 
@@ -395,7 +391,7 @@ fingerprint belongs in chat, Git or this proposal.
 | Credential rotation since verification | `UNKNOWN` — reverify after endpoint/key rotation |
 | Approved account operation | `NOT_APPROVED` — exact device-only load/normalize/hash/compare and redaction |
 | Approved data egress | `NOT_APPROVED` — RAW/GLOSSARY only; primary 1, repair 0, retry 0, no RECONCILE |
-| Approved artifact/code/command/helper refs | `PENDING_OWNER_DECISION` — manifest `DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501`, command `47044AB73C0B76A00E3E40A85D6E893B0F94C015F6332036484EA5ABB5FA55AB`, helper/collector `364A6AA2C52A90E7AD20F28EC6C46A0EAD1BA39E8909727BEA7396287896FFE7`, contract `FFE70A70E622706FABFA49D5843310ECD5A283B1CA114E32C636EA26B9FAE4BF`, serializer `1222B8AC9B79DAFC659DD364F50849DFBA4782C181606A92DA47EBD8C6164E3C`, result `C3B7B7C7B86580CF56A810E4ECBA623A54B45F123B92C8A7753484EC54A45B48`; owner must approve these exact final refs or stop |
+| Approved artifact/code/command/helper refs | `PENDING_OWNER_DECISION` — manifest `412790E2E55A8289FF170D3EE93B683553468ADE252EF5C565D833599E5F5EA3`, command `51A71D47BBFC91DE19658FEEA120CF419ECD0F2FFD77562D74B83C73F9A98AB5`, root helper `CB9C07312E025DA94D8DB4840B7600CE9A3613DB75CC0E0E4F28EB059E00901F`, contract `FFE70A70E622706FABFA49D5843310ECD5A283B1CA114E32C636EA26B9FAE4BF`, serializer `1222B8AC9B79DAFC659DD364F50849DFBA4782C181606A92DA47EBD8C6164E3C`, QA `D124711219DFC1FD205CDB9205C394E2DA4CB3569827CA6C9D3B0A592EEC7050`; owner must approve these exact final refs or stop |
 | Validity and stop conditions | `PENDING_DECISION` — expiry, mismatch, unavailable device, unknown outcome, no redispatch |
 
 ## Runtime checks and command

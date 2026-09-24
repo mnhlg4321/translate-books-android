@@ -6,10 +6,9 @@
   "p6Ready": false,
   "rawIssued": false,
   "gaps": [
-    "RAW_RUNTIME_REVISION_SELECTION",
-    "RAW_TEST_ARTIFACT_SOURCE_PARITY_PENDING",
     "LIVE_FRESHNESS_READBACK_PENDING_OWNER_SCOPE",
-    "RAW_COLLECTOR_ALLOWLISTED_DB_WRITES_OWNER_APPROVAL_MISSING"
+    "RAW_COLLECTOR_ALLOWLISTED_DB_WRITES_OWNER_APPROVAL_MISSING",
+    "RAW_PROVIDER_EGRESS_OWNER_APPROVAL_MISSING"
   ],
   "pins": [
     {
@@ -18,15 +17,19 @@
     },
     {
       "path": "docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md",
-      "sha256": "DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501"
+      "sha256": "412790E2E55A8289FF170D3EE93B683553468ADE252EF5C565D833599E5F5EA3"
     },
     {
       "path": "docs/P5E_RAW_AUTHORIZATION_COMMAND.txt",
-      "sha256": "47044AB73C0B76A00E3E40A85D6E893B0F94C015F6332036484EA5ABB5FA55AB"
+      "sha256": "51A71D47BBFC91DE19658FEEA120CF419ECD0F2FFD77562D74B83C73F9A98AB5"
     },
     {
       "path": "scripts/p5e-raw-live-supervisor.ps1",
-      "sha256": "B491DD4D26444ACA1234A1A03D8A932A2525FB7CD112F6B6F1520A735C631897"
+      "sha256": "CB9C07312E025DA94D8DB4840B7600CE9A3613DB75CC0E0E4F28EB059E00901F"
+    },
+    {
+      "path": "docs/P5E_A43_OFFLINE_QA_20260924.json",
+      "sha256": "D124711219DFC1FD205CDB9205C394E2DA4CB3569827CA6C9D3B0A592EEC7050"
     },
     {
       "path": "docs/P5E_POST_MATCH_A43_WORK_REQUEST_20260924.md",
@@ -51,8 +54,8 @@
     }
   ],
   "scope": "Documentation inventory and relevant control/evidence/source review; not every historical document read in full",
-  "rawManifestChanged": false,
-  "rawCommandChanged": false,
+  "rawManifestChanged": true,
+  "rawCommandChanged": true,
   "newDeviceActions": 0,
   "newAccountLaunches": 0,
   "newProviderCalls": 0,
@@ -60,12 +63,12 @@
   "newBuilds": 0,
   "newInstalls": 0,
   "ownerSecretsRead": false,
-  "nextAction": "Complete bounded offline packet integration and targeted QA using work request, then present one concrete live owner decision.",
+  "nextAction": "Owner decides the exact live A4.3 scope against the final manifest, command, root helper, artifact/source and QA hashes; do not execute it in this task.",
   "independentReview": {
     "reviewer": "Luna",
     "verdict": "PASS_ACTIONABLE_OFFLINE_REQUEST",
     "path": "docs/P5E_POST_MATCH_LUNA_REVIEW_20260924.md",
     "sha256": "903EBC453EEEA62DAD39A15111453C3068F7CF651328236A2F15668E58891A5E",
-    "corrections": "Explicit parity pending, immutable source bundle authority, old helper revision not hash mismatch"
+    "corrections": "Replacement artifact/source parity is PASS; root helper, manifest and command are refrozen; live readback, provider egress and allowlisted writes remain owner-scoped"
   }
 }

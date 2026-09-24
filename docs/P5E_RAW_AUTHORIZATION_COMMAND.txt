@@ -15,15 +15,102 @@
 # reconciles, or redispatches.  A timeout/nonzero/USB loss therefore ends with
 # typed UNKNOWN/RECOVERY/ACCEPTANCE_NOT_PROVEN evidence.
 
-$helperPath = 'D:\App Translate Books\App Translate Books-translation-profile\scripts\p5e-raw-live-supervisor.ps1'
-$manifestPath = 'D:\App Translate Books\App Translate Books-translation-profile\docs\P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md'
-$productionApkPath = 'D:\App Translate Books\App Translate Books-translation-profile\artifacts\builds\v4.17-p5e.11\build-20260911-201725\TranslateBooks-v4.17-p5e.11-code207.apk'
-$testApkPath = 'D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\a4-1-test-20260914-065532\app-debug-androidTest.apk'
+$commandPath = [IO.Path]::GetFullPath($MyInvocation.MyCommand.Path)
+$expectedCommandSha256 = [Environment]::GetEnvironmentVariable('P5E_A43_COMMAND_SHA256', 'Process')
+$helperPath = 'D:\App Translate Books\scripts\p5e-raw-live-supervisor.ps1'
+$manifestPath = 'D:\App Translate Books\docs\P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md'
+
+# These are immutable artifact inputs only.  The nested archive store is not a
+# runtime helper/manifest location; all executable host control remains rooted
+# at D:\App Translate Books.
+$productionArtifactRoot = 'D:\App Translate Books\App Translate Books-translation-profile\artifacts\builds\v4.17-p5e.11\build-20260911-201725'
+$productionBackupRoot = 'D:\App Translate Books\App Translate Books-translation-profile\backup\builds\v4.17-p5e.11\build-20260911-201725'
+$testArtifactRoot = 'D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\p5e-account-check-20260916-01'
+$testBackupRoot = 'D:\App Translate Books\App Translate Books-translation-profile\backup\test-builds\v4.17-p5e.11\p5e-account-check-20260916-01'
+$productionApkPath = Join-Path $productionArtifactRoot 'TranslateBooks-v4.17-p5e.11-code207.apk'
+$productionSourceArchivePath = Join-Path $productionArtifactRoot 'project_source_build-20260911-201725.zip'
+$productionBuildInfoPath = Join-Path $productionArtifactRoot 'BUILD_INFO.json'
+$productionBackupApkPath = Join-Path $productionBackupRoot 'TranslateBooks-v4.17-p5e.11-code207.apk'
+$productionBackupSourceArchivePath = Join-Path $productionBackupRoot 'project_source_build-20260911-201725.zip'
+$productionBackupBuildInfoPath = Join-Path $productionBackupRoot 'BUILD_INFO.json'
+$testApkPath = Join-Path $testArtifactRoot 'app-debug-androidTest.apk'
+$testSourceArchivePath = Join-Path $testArtifactRoot 'project_source_p5e-account-check-20260916-01.zip'
+$testBuildInfoPath = Join-Path $testArtifactRoot 'BUILD_INFO.json'
+$testBackupApkPath = Join-Path $testBackupRoot 'app-debug-androidTest.apk'
+$testBackupSourceArchivePath = Join-Path $testBackupRoot 'project_source_p5e-account-check-20260916-01.zip'
+$testBackupBuildInfoPath = Join-Path $testBackupRoot 'BUILD_INFO.json'
 $evidenceRoot = 'D:\P5E-private'
-$expectedManifestSha256 = 'DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501'
+$expectedManifestSha256 = '412790E2E55A8289FF170D3EE93B683553468ADE252EF5C565D833599E5F5EA3'
 $expectedProductionApkSha256 = '2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD'
-$expectedTestApkSha256 = '57EC99A95EE2DC0F1759934C62CEA39E2EC92EB77C3DAF76CFEED28D41A2FDEA'
-$expectedHelperSha256 = '364a6aa2c52a90e7ad20f28ec6c46a0ead1ba39e8909727bea7396287896ffe7'
+$expectedProductionSourceArchiveSha256 = 'B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348'
+$expectedProductionBuildInfoSha256 = 'DB20DA0CF708410AAAB65E5AF69ADF89A769ED62240B577A89CA4E2007FB7F06'
+$expectedTestApkSha256 = '058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8'
+$expectedTestSourceArchiveSha256 = '5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F'
+$expectedTestBuildInfoSha256 = '772F32E23AEF3537FEF00DACE8E4B9B994448BFEE2071150CF0E0540DDCCC5A9'
+$expectedHelperSha256 = 'CB9C07312E025DA94D8DB4840B7600CE9A3613DB75CC0E0E4F28EB059E00901F'
+
+function Assert-CommandHash {
+    if ($expectedCommandSha256 -notmatch '^[0-9a-fA-F]{64}$') {
+        throw 'COMMAND_SELF_HASH_EXPECTATION_MISSING_OR_INVALID_STOP'
+    }
+    if (-not (Test-Path -LiteralPath $commandPath -PathType Leaf)) {
+        throw 'COMMAND_SELF_FILE_MISSING_STOP'
+    }
+    $item = Get-Item -LiteralPath $commandPath -Force
+    if ($item.PSIsContainer -or (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0)) {
+        throw 'COMMAND_SELF_PATH_REPARSE_OR_NOT_REGULAR_STOP'
+    }
+    $resolved = [IO.Path]::GetFullPath((Resolve-Path -LiteralPath $commandPath).Path)
+    if (-not [StringComparer]::OrdinalIgnoreCase.Equals($commandPath, $resolved)) {
+        throw 'COMMAND_SELF_PATH_RESOLUTION_MISMATCH_STOP'
+    }
+    $actual = (Get-FileHash -LiteralPath $commandPath -Algorithm SHA256).Hash
+    if ($actual -cne $expectedCommandSha256.ToUpperInvariant()) {
+        throw 'COMMAND_SELF_HASH_MISMATCH_STOP'
+    }
+}
+
+function Assert-ImmutableFile {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][string]$ExpectedSha256,
+        [Parameter(Mandatory = $true)][string]$Label
+    )
+    if ($ExpectedSha256 -notmatch '^[0-9a-fA-F]{64}$') { throw ($Label + '_HASH_EXPECTATION_INVALID_STOP') }
+    $literal = [IO.Path]::GetFullPath($Path)
+    if (-not (Test-Path -LiteralPath $literal -PathType Leaf)) { throw ($Label + '_MISSING_STOP') }
+    $item = Get-Item -LiteralPath $literal -Force
+    if ($item.PSIsContainer -or (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0)) { throw ($Label + '_PATH_REPARSE_OR_NOT_REGULAR_STOP') }
+    $resolved = [IO.Path]::GetFullPath((Resolve-Path -LiteralPath $literal).Path)
+    if (-not [StringComparer]::OrdinalIgnoreCase.Equals($literal, $resolved)) { throw ($Label + '_PATH_RESOLUTION_MISMATCH_STOP') }
+    $actual = (Get-FileHash -LiteralPath $literal -Algorithm SHA256).Hash
+    if ($actual -cne $ExpectedSha256.ToUpperInvariant()) { throw ($Label + '_HASH_MISMATCH_STOP') }
+    return $actual
+}
+
+function Assert-ArtifactPair {
+    param(
+        [Parameter(Mandatory = $true)][string]$PrimaryPath,
+        [Parameter(Mandatory = $true)][string]$BackupPath,
+        [Parameter(Mandatory = $true)][string]$ExpectedSha256,
+        [Parameter(Mandatory = $true)][string]$Label
+    )
+    [void](Assert-ImmutableFile -Path $PrimaryPath -ExpectedSha256 $ExpectedSha256 -Label ($Label + '_ARTIFACT'))
+    [void](Assert-ImmutableFile -Path $BackupPath -ExpectedSha256 $ExpectedSha256 -Label ($Label + '_BACKUP'))
+}
+
+Assert-CommandHash
+if ($expectedManifestSha256 -notmatch '^[0-9a-fA-F]{64}$' -or $expectedHelperSha256 -notmatch '^[0-9a-fA-F]{64}$') {
+    throw 'CURRENT_PACKET_HASHES_MUST_BE_FROZEN_BEFORE_RUN_STOP'
+}
+[void](Assert-ImmutableFile -Path $manifestPath -ExpectedSha256 $expectedManifestSha256 -Label 'OWNER_APPROVAL_PACKET')
+[void](Assert-ImmutableFile -Path $helperPath -ExpectedSha256 $expectedHelperSha256 -Label 'ROOT_RUNTIME_HELPER')
+Assert-ArtifactPair -PrimaryPath $productionApkPath -BackupPath $productionBackupApkPath -ExpectedSha256 $expectedProductionApkSha256 -Label 'PRODUCTION_APK'
+Assert-ArtifactPair -PrimaryPath $productionSourceArchivePath -BackupPath $productionBackupSourceArchivePath -ExpectedSha256 $expectedProductionSourceArchiveSha256 -Label 'PRODUCTION_SOURCE_ARCHIVE'
+Assert-ArtifactPair -PrimaryPath $productionBuildInfoPath -BackupPath $productionBackupBuildInfoPath -ExpectedSha256 $expectedProductionBuildInfoSha256 -Label 'PRODUCTION_BUILD_INFO'
+Assert-ArtifactPair -PrimaryPath $testApkPath -BackupPath $testBackupApkPath -ExpectedSha256 $expectedTestApkSha256 -Label 'SELECTED_TEST_APK'
+Assert-ArtifactPair -PrimaryPath $testSourceArchivePath -BackupPath $testBackupSourceArchivePath -ExpectedSha256 $expectedTestSourceArchiveSha256 -Label 'SELECTED_TEST_SOURCE_ARCHIVE'
+Assert-ArtifactPair -PrimaryPath $testBuildInfoPath -BackupPath $testBackupBuildInfoPath -ExpectedSha256 $expectedTestBuildInfoSha256 -Label 'SELECTED_TEST_BUILD_INFO'
 
 function Assert-HelperHash {
     param([Parameter(Mandatory = $true)][string]$Path,
@@ -67,6 +154,14 @@ $prepareExit = Invoke-CheckedHelper -Arguments @(
     '-ExpectedProductionApkSha256', $expectedProductionApkSha256,
     '-TestApkPath', $testApkPath,
     '-ExpectedTestApkSha256', $expectedTestApkSha256,
+    '-ProductionSourceArchivePath', $productionSourceArchivePath,
+    '-ExpectedProductionSourceArchiveSha256', $expectedProductionSourceArchiveSha256,
+    '-ProductionBuildInfoPath', $productionBuildInfoPath,
+    '-ExpectedProductionBuildInfoSha256', $expectedProductionBuildInfoSha256,
+    '-TestSourceArchivePath', $testSourceArchivePath,
+    '-ExpectedTestSourceArchiveSha256', $expectedTestSourceArchiveSha256,
+    '-TestBuildInfoPath', $testBuildInfoPath,
+    '-ExpectedTestBuildInfoSha256', $expectedTestBuildInfoSha256,
     '-ExpectedHelperSha256', $expectedHelperSha256,
     '-EvidenceDirectory', $eventDirectory)
 if ($prepareExit -ne 0) { throw ('RAW_LIVE_PREPARE_FAILED_NO_DISPATCH_' + [string]$prepareExit) }
@@ -81,27 +176,54 @@ $beforeExit = Invoke-CheckedHelper -Arguments @(
     '-ApkSignerPath', 'apksigner')
 if ($beforeExit -ne 0) { throw ('RAW_LIVE_BEFORE_COLLECTION_FAILED_NO_DISPATCH_' + [string]$beforeExit) }
 
-# Exactly one dispatch.  Keep this exit code for classification, but always
-# perform the same-event after/recovery collection before deciding anything.
-$dispatchExit = Invoke-CheckedHelper -Arguments @(
-    '-Dispatch',
-    '-ManifestPath', $manifestPath,
-    '-ExpectedManifestSha256', $expectedManifestSha256,
-    '-ProductionApkPath', $productionApkPath,
-    '-ExpectedProductionApkSha256', $expectedProductionApkSha256,
-    '-TestApkPath', $testApkPath,
-    '-ExpectedTestApkSha256', $expectedTestApkSha256,
-    '-ExpectedHelperSha256', $expectedHelperSha256,
-    '-EvidenceDirectory', $eventDirectory)
-
-$afterExit = Invoke-CheckedHelper -Arguments @(
-    '-CollectReadback',
-    '-ExpectedHelperSha256', $expectedHelperSha256,
-    '-EvidenceDirectory', $eventDirectory,
-    '-CollectionPhase', 'After',
-    '-Serial', '15e84958',
-    '-AdbPath', 'adb',
-    '-ApkSignerPath', 'apksigner')
+# Exactly one dispatch. Keep this exit code for classification and always
+# attempt same-event after/recovery collection once the dispatch process has
+# been entered, including exception, nonzero and timeout paths.
+$dispatchExit = $null
+$dispatchError = $null
+$afterExit = $null
+$afterError = $null
+$dispatchStarted = $false
+try {
+    $dispatchStarted = $true
+    try {
+        $dispatchExit = Invoke-CheckedHelper -Arguments @(
+            '-Dispatch',
+            '-ManifestPath', $manifestPath,
+            '-ExpectedManifestSha256', $expectedManifestSha256,
+            '-ProductionApkPath', $productionApkPath,
+            '-ExpectedProductionApkSha256', $expectedProductionApkSha256,
+            '-TestApkPath', $testApkPath,
+            '-ExpectedTestApkSha256', $expectedTestApkSha256,
+            '-ProductionSourceArchivePath', $productionSourceArchivePath,
+            '-ExpectedProductionSourceArchiveSha256', $expectedProductionSourceArchiveSha256,
+            '-ProductionBuildInfoPath', $productionBuildInfoPath,
+            '-ExpectedProductionBuildInfoSha256', $expectedProductionBuildInfoSha256,
+            '-TestSourceArchivePath', $testSourceArchivePath,
+            '-ExpectedTestSourceArchiveSha256', $expectedTestSourceArchiveSha256,
+            '-TestBuildInfoPath', $testBuildInfoPath,
+            '-ExpectedTestBuildInfoSha256', $expectedTestBuildInfoSha256,
+            '-ExpectedHelperSha256', $expectedHelperSha256,
+            '-EvidenceDirectory', $eventDirectory)
+    } catch {
+        $dispatchError = $_.Exception.Message
+    }
+} finally {
+    if ($dispatchStarted) {
+        try {
+            $afterExit = Invoke-CheckedHelper -Arguments @(
+                '-CollectReadback',
+                '-ExpectedHelperSha256', $expectedHelperSha256,
+                '-EvidenceDirectory', $eventDirectory,
+                '-CollectionPhase', 'After',
+                '-Serial', '15e84958',
+                '-AdbPath', 'adb',
+                '-ApkSignerPath', 'apksigner')
+        } catch {
+            $afterError = $_.Exception.Message
+        }
+    }
+}
 
 $verifyExit = Invoke-CheckedHelper -Arguments @(
     '-VerifyOutcome',
@@ -109,8 +231,10 @@ $verifyExit = Invoke-CheckedHelper -Arguments @(
     '-MetadataPath', (Join-Path $eventDirectory 'HOST_RUN_METADATA.json'),
     '-PostReadbackPath', (Join-Path $eventDirectory 'post-readback.json'))
 
-if ($dispatchExit -ne 0) { throw ('RAW_LIVE_DISPATCH_OBSERVED_NONZERO_NO_REDISPATCH_' + [string]$dispatchExit) }
-if ($afterExit -ne 0) { throw ('RAW_LIVE_AFTER_COLLECTION_NOT_PROVEN_NO_REDISPATCH_' + [string]$afterExit) }
+if (-not [string]::IsNullOrWhiteSpace($dispatchError)) { throw ('RAW_LIVE_DISPATCH_EXCEPTION_AFTER_POSSIBLE_START_NO_REDISPATCH_' + $dispatchError) }
+if (-not [string]::IsNullOrWhiteSpace($afterError)) { throw ('RAW_LIVE_AFTER_COLLECTION_EXCEPTION_NO_REDISPATCH_' + $afterError) }
+if ($null -eq $dispatchExit -or $dispatchExit -ne 0) { throw ('RAW_LIVE_DISPATCH_OBSERVED_NONZERO_NO_REDISPATCH_' + [string]$dispatchExit) }
+if ($null -eq $afterExit -or $afterExit -ne 0) { throw ('RAW_LIVE_AFTER_COLLECTION_NOT_PROVEN_NO_REDISPATCH_' + [string]$afterExit) }
 if ($verifyExit -ne 0) { throw ('RAW_LIVE_ACCEPTANCE_NOT_PROVEN_NO_REDISPATCH_' + [string]$verifyExit) }
 
 Write-Output ('RAW_LIVE_EVENT_DIRECTORY=' + $eventDirectory)
