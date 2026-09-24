@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "p5e.account-identity-event.result.v1",
+  "date": "2026-09-24",
+  "branch": "feature/v4.18-p5e-runner-repair-20260917",
+  "baselineImplementation": "d0ba3e49b608ce940f71426c4bf09225d1562546",
+  "handoffCommit": "bb34ad8bd4ee5a3043a93ed38bf2b28aeca24255",
+  "headAtEventPreparation": "bb34ad8bd4ee5a3043a93ed38bf2b28aeca24255",
+  "ownerDecision": {
+    "status": "ONE_ACCOUNT_ONLY_EVENT_APPROVED",
+    "commandSha256": "9B64078D5A2A6EA2C3A9618C4B1F8CDBB01D3CCF6C3120A2D7D4AFFF3F5E6331",
+    "helperSha256": "B491DD4D26444ACA1234A1A03D8A932A2525FB7CD112F6B6F1520A735C631897",
+    "eventDirectory": "D:\\P5E-private\\p5e-account-check-device-event-20260924-identity-lifecycle-01",
+    "serial": "15e84958",
+    "scope": "UP_TO_7_READ_ONLY_PREFLIGHT_CALLS_THEN_UP_TO_ONE_MEMORY_ONLY_ACCOUNT_CHECK_NO_PROVIDER_DB_WRITE_RAW_INSTALL_OR_RETRY"
+  },
+  "eventDirectory": "D:\\P5E-private\\p5e-account-check-device-event-20260924-identity-lifecycle-01",
+  "eventStatus": "CLOSED_ACCOUNT_MISMATCH",
+  "command": {
+    "status": "PASS",
+    "outcome": "ACCOUNT_CHECK_COMPLETED_MISMATCH",
+    "accountResult": "MISMATCH",
+    "exitCode": 0,
+    "receiptPath": "D:\\P5E-private\\p5e-account-check-device-event-20260924-identity-lifecycle-01\\ACCOUNT_CHECK_DEVICE_COMMAND_RESULT.json",
+    "receiptSha256": "105F510ACC79C49299D3025E34F0328F54C735BE117BA7CA55921E995C25C062"
+  },
+  "preflight": {
+    "status": "PASS",
+    "deviceReadAttempts": 7,
+    "attemptCount": 1,
+    "receiptPath": "D:\\P5E-private\\p5e-account-check-device-event-20260924-identity-lifecycle-01\\preflight\\ACCOUNT_CHECK_DEVICE_PREFLIGHT_RESULT.json",
+    "receiptSha256": "C7D2153E70573467A2FE73B02E5FD53642AA9CA83CC8AEA6412EC2E983D87177",
+    "productionMetadataReason": "PASS",
+    "productionMetadataLayoutFamily": "AOSP_PACKAGE_SIGNATURES_WRAPPER",
+    "testMetadataReason": "PASS",
+    "testMetadataLayoutFamily": "AOSP_PACKAGE_SIGNATURES_WRAPPER"
+  },
+  "accountRunner": {
+    "processLaunchCount": 1,
+    "launchCount": 1,
+    "outcome": "ACCOUNT_CHECK_COMPLETED_MISMATCH",
+    "result": "MISMATCH",
+    "exitCode": 0,
+    "processOutcome": "PROCESS_EXITED_ZERO",
+    "terminalSuccess": true,
+    "testFinished": true,
+    "testIdentityPass": true,
+    "resultTokenCount": 1,
+    "failureMarkerCount": 0,
+    "parserErrors": [],
+    "redactionPass": true,
+    "captureBounded": true,
+    "receiptPath": "D:\\P5E-private\\p5e-account-check-device-event-20260924-identity-lifecycle-01\\account-runner\\ACCOUNT_CHECK_RESULT.json",
+    "receiptSha256": "0DBC66BAB08F0C87F2447DC8CC4BA52B013CB93AA8DC2869D6C917DD78BFB577"
+  },
+  "counts": {
+    "providerCalls": 0,
+    "dbWrites": 0,
+    "rawDispatches": 0,
+    "installAttempts": 0,
+    "productionPackageOperations": 0,
+    "newCredentialReads": 0
+  },
+  "privacy": {
+    "expectedValueReadByAgent": false,
+    "rawInstrumentationReadByAgent": false,
+    "rawDumpsysReadByAgent": false,
+    "secretOrEndpointRecorded": false
+  },
+  "gates": {
+    "accountMatch": false,
+    "accountMismatch": true,
+    "a4_3Issued": false,
+    "rawRun": false,
+    "p5ExitClaimed": false,
+    "p6Ready": false,
+    "retryAuthorized": false
+  },
+  "disposition": "TERMINAL_ACCOUNT_MISMATCH_REVIEW_MAPPING_OR_ROTATION_ONLY_NO_RETRY"
+}

@@ -1,17 +1,14 @@
 # Build State
 
-> Current offline identity repair — 2026-09-24: ACCOUNT_IDENTITY_LIFECYCLE_REPAIRED_OFFLINE. The parser now validates START → account result → FINISH → summary → terminal, including both identity bundles and no data after terminal. Independent lifecycle QA 25/25, command chain 38/38, runner regression and helper self-test PASS. See docs/P5E_ACCOUNT_IDENTITY_REPAIR_20260924.md and docs/P5E_ACCOUNT_IDENTITY_REPAIR_PROVENANCE_20260924.json. The closed device event remains NOT_PROVEN; no retry occurred. Next action: use docs/P5E_ACCOUNT_IDENTITY_NEXT_WORK_REQUEST_20260924.md for the single owner decision and bounded account-only event using the repaired pins; no further offline parser work without a new failing case. A4.3/RAW/P5 exit/P6 remain closed. Older status text below is historical and does not override this repair disposition.
+> Current offline identity repair — 2026-09-24: `ACCOUNT_IDENTITY_LIFECYCLE_REPAIRED_OFFLINE` remains PASS. The owner-approved follow-on account-only event completed with a typed `MISMATCH`; no further offline parser work is authorized without a new failing case.
 
-> Current event disposition — 2026-09-24: owner-approved packet `849E656BBD4AA69985B6FB0CD431347283326DDD8E10D68EF458D0A8389D5771` ran exactly once and is now `CLOSED_STOP / ACCOUNT_CHECK_NOT_PROVEN / RUNNER_IDENTITY_VALIDATION_STOP`. Preserve its receipts and do not retry or reuse the event directory.
+> Current event disposition — 2026-09-24: event `D:\P5E-private\p5e-account-check-device-event-20260924-identity-lifecycle-01` ran exactly once and is now `CLOSED_ACCOUNT_MISMATCH / ACCOUNT_CHECK_COMPLETED_MISMATCH`. Preserve its receipts and do not retry or reuse the event directory. Result and receipt hashes: `docs/P5E_ACCOUNT_IDENTITY_EVENT_RESULT_20260924.json`.
 
-> Current P5E state — `HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / PREFLIGHT_PASS_7_READ_ONLY_CALLS / ACCOUNT_CHECK_NOT_PROVEN / ACCOUNT_RUNNER_IDENTITY_VALIDATION_STOP / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The preflight passed both package metadata and full identity gates. One account runner process/one instrumentation attempt exited zero with terminal success, but class/method identity counts were invalid, so no account result was proven.
+> Current P5E state — `HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / PREFLIGHT_PASS_7_READ_ONLY_CALLS / ACCOUNT_CHECK_COMPLETED_MISMATCH / ACCOUNT_RUNNER_COMPLETED_MISMATCH / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. Preflight passed 7 read-only calls; the single runner launch exited zero with valid terminal, identity, capture and redaction gates. The account mismatch is not a provider, key or release conclusion.
 
-> Historical next action (completed by d0ba3e49): review and repair the runner class/method identity contract offline from the typed receipt; no device retry or new account event. Current result: `docs/P5E_ACCOUNT_EVENT_RESULT_20260924.json`.
+> Current next action: review only the account route/digest mapping or rotation evidence associated with `MISMATCH`; do not retry the device event or open provider, DB, RAW, A4.3, P5 exit or P6 work. Provider calls, DB writes, RAW dispatches and install attempts were `0`; release steps 05–09 remain incomplete.
 
-> Historical pre-event packet and review statements below are retained as historical provenance. This event recorded provider calls `0`, DB writes `0`, RAW dispatches `0`, install attempts `0` and new credential reads `0`; release steps 05–09 remain incomplete.
-
-
-> Current process boundary: the agent has not read the expected value and does not assert that the owner Process value remains alive. A4.3, RAW, provider, DB, P5 exit and P6 remain unavailable.
+> Historical pre-event packet and prior `NOT_PROVEN` event remain unchanged as provenance. The agent did not read the expected value or raw instrumentation; no secret or endpoint was recorded.
 
 
 > Historical pre-event execution audit 2026-09-23 is retained below for provenance; it is superseded by the current event disposition above.

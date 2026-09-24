@@ -1,14 +1,14 @@
 # Editorial Recovery v4.18
 
-> Current offline identity repair — 2026-09-24: ACCOUNT_IDENTITY_LIFECYCLE_REPAIRED_OFFLINE. The parser now validates START → account result → FINISH → summary → terminal, including both identity bundles and no data after terminal. Independent lifecycle QA 25/25, command chain 38/38, runner regression and helper self-test PASS. See docs/P5E_ACCOUNT_IDENTITY_REPAIR_20260924.md and docs/P5E_ACCOUNT_IDENTITY_REPAIR_PROVENANCE_20260924.json. The closed device event remains NOT_PROVEN; no retry occurred. Next action: use docs/P5E_ACCOUNT_IDENTITY_NEXT_WORK_REQUEST_20260924.md for the single owner decision and bounded account-only event using the repaired pins; no further offline parser work without a new failing case. A4.3/RAW/P5 exit/P6 remain closed. Older status text below is historical and does not override this repair disposition.
+> Current offline identity repair — 2026-09-24: `ACCOUNT_IDENTITY_LIFECYCLE_REPAIRED_OFFLINE` remains PASS. The owner-approved follow-on account-only event completed with a typed `MISMATCH`; no further offline parser work is authorized without a new failing case.
 
-> Current event disposition — 2026-09-24: owner approved packet `849E656BBD4AA69985B6FB0CD431347283326DDD8E10D68EF458D0A8389D5771` for exactly one account-only event. That event is now `CLOSED_STOP / ACCOUNT_CHECK_NOT_PROVEN / RUNNER_IDENTITY_VALIDATION_STOP`; its command, preflight and runner receipts are preserved under the approved event directory. Do not retry, reuse, rename or reopen it.
+> Current event disposition — 2026-09-24: event `D:\P5E-private\p5e-account-check-device-event-20260924-identity-lifecycle-01` is `CLOSED_ACCOUNT_MISMATCH / ACCOUNT_CHECK_COMPLETED_MISMATCH`. Preflight passed 7 read-only calls; the runner launched once and exited zero. Receipt hashes are recorded in `docs/P5E_ACCOUNT_IDENTITY_EVENT_RESULT_20260924.json`. Do not retry, reuse, rename or reopen this event.
 
-> Current P5E state: `HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / PREFLIGHT_PASS_7_READ_ONLY_CALLS / ACCOUNT_CHECK_NOT_PROVEN / ACCOUNT_RUNNER_IDENTITY_VALIDATION_STOP / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. Preflight accepted the source-derived AOSP wrapper layout for both packages. The runner process exited zero with terminal success and redaction/capture pass, but strict class/method identity counts were invalid; this is `NOT_PROVEN`, not `MATCH` or `MISMATCH`.
+> Current P5E state: `HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / PREFLIGHT_PASS_7_READ_ONLY_CALLS / ACCOUNT_CHECK_COMPLETED_MISMATCH / ACCOUNT_RUNNER_COMPLETED_MISMATCH / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The typed result is an account-test mismatch only; it is not a provider, key or release conclusion.
 
-> Historical next action (completed by d0ba3e49): review and repair the runner class/method identity contract offline from the redacted typed receipt; no device retry or new account event. See `docs/P5E_ACCOUNT_EVENT_RESULT_20260924.json`.
+> Current next action: review only the account route/digest mapping or rotation evidence associated with the `MISMATCH`; do not retry the device event or open provider, DB, RAW, A4.3, P5 exit or P6 work. Provider calls, DB writes, RAW dispatches and install attempts were all zero; release checklist steps 05–09 remain incomplete.
 
-> Historical pre-event packet/review text below remains unchanged as provenance. The closed event made no provider call, DB write, RAW dispatch, install attempt or new credential read; A4.3 and release checklist steps 05–09 remain closed/incomplete.
+> The prior signature-layout-adapter event and its `NOT_PROVEN` receipt remain historical and unchanged in `docs/P5E_ACCOUNT_EVENT_RESULT_20260924.json`.
 
 
 > Historical pre-event P5E execution state 2026-09-23 at baseline `7a64b71acb1dafa32cdfe3d99c13e353589b19ab` is retained below for provenance; it is superseded by the current event disposition above.
@@ -18,7 +18,7 @@ Status: `ACTIVE / P0_P4_COMPLETE / P5_P5E_INCOMPLETE / A2_FAIL_CLOSED / P5E_9B_A
 
 This document is the single product and execution authority for the v4.18 Editorial recovery. It supersedes active next actions from the historical v4.16 Editorial/RSC/IPC tracks without deleting or reinterpreting their evidence.
 
-## Current active boundary — P5E local behavioral gate green; expected Process value pending
+## Historical pre-event boundary — P5E local behavioral gate green; expected Process value pending at that checkpoint
 
 The final local repair ran the real `Get-P5EConsistentDatabaseReadback` SQL through a read-only SQLite bridge over six disposable DDL fixtures. Schema `24`, LINEAGE `17`, INPUT `7`, nullable CLAIMED/RECOVERY rows, exact COMMITTED golden report/receipt bytes, lineage/reconciliation source mapping and fail-closed parser mutations all have concrete results. The targeted production serializer JVM test ran on JBR `21.0.10`; its bytes passed the host validator and the required identity/byte mutation matrix was rejected. Helper self-test, SQL boundary probe and supervisor failure/timeout checks pass. See `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`.
 
