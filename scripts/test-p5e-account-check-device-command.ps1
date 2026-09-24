@@ -130,12 +130,12 @@ exit /b 99
 :DUMPSYS_TARGET
 echo Package [com.ml.tblandroidtxt] (fake):
 echo versionCode=207 minSdk=23
-echo signatures:[abebea4b]
+echo signatures=PackageSignatures{abc123 version:3, signatures:[abebea4b], past signatures:[]}
 exit /b 0
 :DUMPSYS_TEST
 echo Package [com.ml.tblandroidtxt.test] (fake):
 echo versionCode=1 minSdk=23
-echo signatures:[abebea4b]
+echo signatures=PackageSignatures{abc123 version:3, signatures:[abebea4b], past signatures:[]}
 exit /b 0
 :PMPATH
 if /i not "%3"=="path" exit /b 99
@@ -185,6 +185,14 @@ exit /b 0
     Assert-QA -Condition ($passReceipt.status -eq 'PASS' -and $passReceipt.typedOutcome -eq 'ACCOUNT_CHECK_COMPLETED_MATCH' -and
             $passReceipt.accountResult -eq 'MATCH' -and $passReceipt.accountLaunchCount -eq 1 -and
             $passReceipt.runnerProcessLaunchCount -eq 1 -and $passReceipt.preflightStatus -eq 'PASS') -Code 'COMMAND_PASS_RECEIPT_INVALID'
+    $passPreflightReceiptPath = Join-Path $passEvidence 'preflight\ACCOUNT_CHECK_DEVICE_PREFLIGHT_RESULT.json'
+    Assert-QA -Condition (Test-Path -LiteralPath $passPreflightReceiptPath -PathType Leaf) -Code 'COMMAND_PREFLIGHT_RECEIPT_MISSING'
+    $passPreflightReceipt = Get-Content -LiteralPath $passPreflightReceiptPath -Raw | ConvertFrom-Json
+    Assert-QA -Condition ($passPreflightReceipt.schemaVersion -eq 'p5e.account-check.device-preflight.result.v3' -and
+            $passPreflightReceipt.targetMetadataLayoutFamily -eq 'AOSP_PACKAGE_SIGNATURES_WRAPPER' -and
+            $passPreflightReceipt.testMetadataLayoutFamily -eq 'AOSP_PACKAGE_SIGNATURES_WRAPPER' -and
+            $passPreflightReceipt.targetMetadataSignatureCandidateCount -eq 1 -and
+            $passPreflightReceipt.testMetadataSignatureCandidateCount -eq 1) -Code 'COMMAND_NEW_LAYOUT_NOT_REACHED'
     Assert-QA -Condition ($passReceipt.providerCalls -eq 0 -and $passReceipt.dbWrites -eq 0 -and $passReceipt.rawDispatches -eq 0 -and
             $passReceipt.installAttempts -eq 0 -and (Test-Path -LiteralPath (Join-Path $passEvidence 'ACCOUNT_CHECK_ATTEMPT.marker') -PathType Leaf)) `
         -Code 'COMMAND_SCOPE_OR_MARKER_INVALID'
@@ -220,7 +228,8 @@ exit /b 0
     $source = Get-Content -LiteralPath $commandPath -Raw
     Assert-QA -Condition ($source -notmatch '(?i)ReadToEndAsync|Task\.WaitAll|WaitForExit\(\s*\)') -Code 'COMMAND_UNBOUNDED_OPERATION_PRESENT'
     Assert-QA -Condition ($source -match 'CreateNew' -and $source -match 'ClearInheritedEnvironmentVariableNames' -and
-            $source -match 'ExpectedTargetApkSha256' -and $source -match 'preflightReceipt\.deviceReadAttempts') -Code 'COMMAND_GATES_OR_MARKER_MISSING'
+            $source -match 'ExpectedTargetApkSha256' -and $source -match 'preflightReceipt\.deviceReadAttempts' -and
+            $source -match '09A33DC74820A1AA18B3EE47AA96862DC0AFA03067D5B46B433B74E4EB1AFA22') -Code 'COMMAND_GATES_OR_MARKER_MISSING'
     Assert-QA -Condition ($source -match '\$runnerArgs' -and $source -notmatch '\$runnerArgs[\s\S]{0,800}expectedProbe') -Code 'EXPECTED_VALUE_IN_RUNNER_ARGUMENT_CONSTRUCTION'
     Assert-QA -Condition (($source -match 'runnerComponent') -and ($source -match 'androidx\.test\.runner\.AndroidJUnitRunner')) -Code 'FULL_RUNNER_IDENTITY_NOT_PINNED'
     Assert-QA -Condition ($source -match '\$isLeaf' -and $source -match 'targetMetadataReason' -and

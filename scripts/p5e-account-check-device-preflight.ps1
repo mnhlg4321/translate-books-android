@@ -80,8 +80,12 @@ function New-P5EPackageMetadataState {
     return [pscustomobject]@{
         packagePresent = $false
         reason = 'NOT_EVALUATED'
+        layoutFamily = 'NOT_EVALUATED'
         versionCandidateCount = 0
         signatureCandidateCount = 0
+        pastSignatureCandidateCount = 0
+        wrapperIdentityCandidateCount = 0
+        signatureSchemeCandidateCount = 0
         versionFieldCount = 0
         signatureFieldCount = 0
         versionCode = $null
@@ -616,6 +620,40 @@ function Invoke-P5EDeviceRead {
         -ErrorCode $ErrorCode -TimeoutMilliseconds $TimeoutMilliseconds -Detailed:$Detailed
 }
 
+function Get-P5ESignatureListParse {
+    param(
+        [Parameter(Mandatory = $true)][AllowEmptyString()][string]$Raw,
+        [switch]$Past
+    )
+
+    $result = [pscustomobject]@{
+        empty = [string]::IsNullOrWhiteSpace($Raw)
+        valid = $true
+        candidateCount = 0
+        firstToken = ''
+    }
+    if ($result.empty) { return $result }
+
+    $entries = @($Raw.Split(',') | ForEach-Object { $_.Trim() })
+    foreach ($entry in $entries) {
+        $pattern = if ($Past) {
+            '^(?<token>[0-9a-fA-F]{8,128})\s+flags\s*:\s*[0-9a-fA-F]+$'
+        } else {
+            '^(?<token>[0-9a-fA-F]{8,128})$'
+        }
+        $match = [regex]::Match($entry, $pattern)
+        if (-not $match.Success) {
+            $result.valid = $false
+            continue
+        }
+        $result.candidateCount++
+        if ([string]::IsNullOrEmpty([string]$result.firstToken)) {
+            $result.firstToken = $match.Groups['token'].Value.ToLowerInvariant()
+        }
+    }
+    return $result
+}
+
 function Get-P5EPackageMetadataParse {
     param(
         [Parameter(Mandatory = $true)][AllowEmptyString()][string]$Text,
@@ -677,11 +715,65 @@ function Get-P5EPackageMetadataParse {
         return $state
     }
 
-    $signatureFields = [regex]::Matches($section, '(?im)^\s*signatures\s*:\s*\[(?<raw>[^\]]*)\]\s*$')
-    $signatureCandidates = [regex]::Matches($section, '(?im)^\s*signatures\s*:\s*\[\s*(?<value>[0-9a-fA-F]{8,128})\s*\]\s*$')
-    $state.signatureFieldCount = $signatureFields.Count
-    $state.signatureCandidateCount = $signatureCandidates.Count
-    if ($signatureFields.Count -eq 0) {
+    $legacySignatureFields = [regex]::Matches($section, '(?im)^\s*signatures\s*:\s*\[(?<raw>[^\]\r\n]*)\]\s*$')
+    $aospWrapperMarker = [regex]::Matches($section, '(?im)^\s*signatures\s*=\s*PackageSignatures\s*\{')
+    $aospWrapperPattern = '(?im)^\s*signatures\s*=\s*PackageSignatures\s*\{\s*(?<identity>[0-9a-fA-F]+)\s+version\s*:\s*(?<scheme>\d+)\s*,\s*signatures\s*:\s*\[(?<current>[^\]\r\n]*)\]\s*,\s*past\s+signatures\s*:\s*\[(?<past>[^\]\r\n]*)\]\s*\}\s*$'
+    $aospWrappers = [regex]::Matches($section, $aospWrapperPattern)
+
+    if ($aospWrapperMarker.Count -gt 0 -and $legacySignatureFields.Count -gt 0) {
+        $state.layoutFamily = 'CONFLICTING_SIGNATURE_FORMATS'
+        $state.signatureFieldCount = $aospWrapperMarker.Count + $legacySignatureFields.Count
+        $state.reason = 'UNSUPPORTED_LAYOUT'
+        return $state
+    }
+
+    if ($aospWrapperMarker.Count -gt 0) {
+        $state.layoutFamily = 'AOSP_PACKAGE_SIGNATURES_WRAPPER'
+        $state.signatureFieldCount = $aospWrapperMarker.Count
+        if ($aospWrappers.Count -ne 1 -or $aospWrapperMarker.Count -ne 1) {
+            $state.wrapperIdentityCandidateCount = $aospWrappers.Count
+            $state.signatureSchemeCandidateCount = $aospWrappers.Count
+            foreach ($wrapperCandidate in $aospWrappers) {
+                $currentCandidate = Get-P5ESignatureListParse -Raw ([string]$wrapperCandidate.Groups['current'].Value)
+                $state.signatureCandidateCount += $currentCandidate.candidateCount
+                $pastCandidate = Get-P5ESignatureListParse -Raw ([string]$wrapperCandidate.Groups['past'].Value) -Past
+                $state.pastSignatureCandidateCount += $pastCandidate.candidateCount
+            }
+            $state.reason = if ($aospWrappers.Count -gt 1 -or $aospWrapperMarker.Count -gt 1) {
+                'SIGNATURE_AMBIGUOUS'
+            } else {
+                'UNSUPPORTED_LAYOUT'
+            }
+            return $state
+        }
+
+        $wrapper = $aospWrappers[0]
+        $state.wrapperIdentityCandidateCount = 1
+        $state.signatureSchemeCandidateCount = 1
+        $current = Get-P5ESignatureListParse -Raw ([string]$wrapper.Groups['current'].Value)
+        $past = Get-P5ESignatureListParse -Raw ([string]$wrapper.Groups['past'].Value) -Past
+        $state.signatureCandidateCount = $current.candidateCount
+        $state.pastSignatureCandidateCount = $past.candidateCount
+        if ($current.empty) {
+            $state.reason = 'SIGNATURE_MISSING'
+            return $state
+        }
+        if (-not $current.valid -or -not $past.valid) {
+            $state.reason = 'SIGNATURE_INVALID'
+            return $state
+        }
+        if ($current.candidateCount -ne 1) {
+            $state.reason = 'SIGNATURE_AMBIGUOUS'
+            return $state
+        }
+        $state.reason = 'PASS'
+        $state.versionCode = [int]$versionCandidates[0].Groups['value'].Value
+        $state.signatureToken = $current.firstToken
+        return $state
+    }
+
+    $state.signatureFieldCount = $legacySignatureFields.Count
+    if ($legacySignatureFields.Count -eq 0) {
         $state.reason = if ([regex]::IsMatch($section, '(?im)^\s*signatures\s*(?::|=)')) {
             'UNSUPPORTED_LAYOUT'
         } else {
@@ -689,23 +781,39 @@ function Get-P5EPackageMetadataParse {
         }
         return $state
     }
-    if ($signatureFields.Count -ne 1 -or $signatureCandidates.Count -ne 1) {
-        if ($signatureFields.Count -gt 1 -or $signatureCandidates.Count -gt 1) {
-            $state.reason = 'SIGNATURE_AMBIGUOUS'
-        } else {
-            $rawSignature = [string]$signatureFields[0].Groups['raw'].Value
-            $state.reason = if ($rawSignature -match '(?i)Signature|PackageSignatures|\{') {
-                'UNSUPPORTED_LAYOUT'
-            } else {
-                'SIGNATURE_INVALID'
-            }
+    $state.layoutFamily = 'LEGACY_STANDALONE'
+    if ($legacySignatureFields.Count -ne 1) {
+        foreach ($legacyCandidate in $legacySignatureFields) {
+            $candidateList = Get-P5ESignatureListParse -Raw ([string]$legacyCandidate.Groups['raw'].Value)
+            $state.signatureCandidateCount += $candidateList.candidateCount
         }
+        $state.reason = 'SIGNATURE_AMBIGUOUS'
+        return $state
+    }
+
+    $legacy = Get-P5ESignatureListParse -Raw ([string]$legacySignatureFields[0].Groups['raw'].Value)
+    $state.signatureCandidateCount = $legacy.candidateCount
+    if ($legacy.empty) {
+        $state.reason = 'SIGNATURE_MISSING'
+        return $state
+    }
+    if (-not $legacy.valid) {
+        $rawSignature = [string]$legacySignatureFields[0].Groups['raw'].Value
+        $state.reason = if ($rawSignature -match '(?i)Signature|PackageSignatures|\{') {
+            'UNSUPPORTED_LAYOUT'
+        } else {
+            'SIGNATURE_INVALID'
+        }
+        return $state
+    }
+    if ($legacy.candidateCount -ne 1) {
+        $state.reason = 'SIGNATURE_AMBIGUOUS'
         return $state
     }
 
     $state.reason = 'PASS'
     $state.versionCode = [int]$versionCandidates[0].Groups['value'].Value
-    $state.signatureToken = $signatureCandidates[0].Groups['value'].Value.ToLowerInvariant()
+    $state.signatureToken = $legacy.firstToken
     return $state
 }
 
@@ -811,7 +919,7 @@ function Get-P5EReceiptBase {
 
     $last = $script:LastProcessRun
     return [ordered]@{
-        schemaVersion = 'p5e.account-check.device-preflight.result.v2'
+        schemaVersion = 'p5e.account-check.device-preflight.result.v3'
         status = $Status
         typedError = $TypedError
         stage = $script:Stage
@@ -824,14 +932,22 @@ function Get-P5EReceiptBase {
         testSignatureToken = $TestSignatureToken
         targetMetadataPackagePresent = [bool]$script:TargetPackageMetadata.packagePresent
         targetMetadataReason = [string]$script:TargetPackageMetadata.reason
+        targetMetadataLayoutFamily = [string]$script:TargetPackageMetadata.layoutFamily
         targetMetadataVersionCandidateCount = [int]$script:TargetPackageMetadata.versionCandidateCount
         targetMetadataSignatureCandidateCount = [int]$script:TargetPackageMetadata.signatureCandidateCount
+        targetMetadataPastSignatureCandidateCount = [int]$script:TargetPackageMetadata.pastSignatureCandidateCount
+        targetMetadataWrapperIdentityCandidateCount = [int]$script:TargetPackageMetadata.wrapperIdentityCandidateCount
+        targetMetadataSignatureSchemeCandidateCount = [int]$script:TargetPackageMetadata.signatureSchemeCandidateCount
         targetMetadataVersionFieldCount = [int]$script:TargetPackageMetadata.versionFieldCount
         targetMetadataSignatureFieldCount = [int]$script:TargetPackageMetadata.signatureFieldCount
         testMetadataPackagePresent = [bool]$script:TestPackageMetadata.packagePresent
         testMetadataReason = [string]$script:TestPackageMetadata.reason
+        testMetadataLayoutFamily = [string]$script:TestPackageMetadata.layoutFamily
         testMetadataVersionCandidateCount = [int]$script:TestPackageMetadata.versionCandidateCount
         testMetadataSignatureCandidateCount = [int]$script:TestPackageMetadata.signatureCandidateCount
+        testMetadataPastSignatureCandidateCount = [int]$script:TestPackageMetadata.pastSignatureCandidateCount
+        testMetadataWrapperIdentityCandidateCount = [int]$script:TestPackageMetadata.wrapperIdentityCandidateCount
+        testMetadataSignatureSchemeCandidateCount = [int]$script:TestPackageMetadata.signatureSchemeCandidateCount
         testMetadataVersionFieldCount = [int]$script:TestPackageMetadata.versionFieldCount
         testMetadataSignatureFieldCount = [int]$script:TestPackageMetadata.signatureFieldCount
         targetApkSha256 = $ExpectedTargetApkSha256.ToUpperInvariant()

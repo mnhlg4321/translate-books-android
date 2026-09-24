@@ -82,6 +82,29 @@ function Get-P5EReceipt {
     return Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
 }
 
+function Get-P5EFunctionTextFromSource {
+    param(
+        [Parameter(Mandatory = $true)][string]$Source,
+        [Parameter(Mandatory = $true)][string]$Name
+    )
+
+    $tokens = $null
+    $parseErrors = $null
+    $ast = [System.Management.Automation.Language.Parser]::ParseInput($Source, [ref]$tokens, [ref]$parseErrors)
+    Assert-P5ETrue -Condition ($parseErrors.Count -eq 0) -ErrorCode ('SOURCE_PARSE_FAILED_' + $Name)
+    $functionAst = $ast.Find({
+            param($node)
+            $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq $Name
+        }, $true) | Select-Object -First 1
+    Assert-P5ETrue -Condition ($null -ne $functionAst) -ErrorCode ('SOURCE_FUNCTION_MISSING_' + $Name)
+    return $functionAst.Extent.Text
+}
+
+function Remove-P5EParsedFunction {
+    param([Parameter(Mandatory = $true)][string]$Name)
+    Remove-Item -Path ('Function:\' + $Name) -Force -ErrorAction SilentlyContinue
+}
+
 function Assert-P5EStopCase {
     param(
         [Parameter(Mandatory = $true)][string]$Name,
@@ -160,13 +183,33 @@ if /i "%1"=="shell" if /i "%2"=="dumpsys" (
     if /i "%P5E_FAKE_MODE%"=="metadata-version-duplicate" echo versionCode=207 minSdk=23
     if /i "%P5E_FAKE_MODE%"=="wrong-version" echo versionCode=206 minSdk=23
     if /i "%P5E_FAKE_MODE%"=="real-dumpsys-spacing" echo   versionCode = 207 minSdk=23
-    if /i not "%P5E_FAKE_MODE%"=="metadata-version-missing" if /i not "%P5E_FAKE_MODE%"=="metadata-version-invalid" if /i not "%P5E_FAKE_MODE%"=="metadata-version-duplicate" if /i not "%P5E_FAKE_MODE%"=="wrong-version" if /i not "%P5E_FAKE_MODE%"=="real-dumpsys-spacing" echo versionCode=207 minSdk=23
+    if /i not "%P5E_FAKE_MODE%"=="metadata-version-missing" if /i not "%P5E_FAKE_MODE%"=="metadata-version-invalid" if /i not "%P5E_FAKE_MODE%"=="metadata-version-duplicate" if /i not "%P5E_FAKE_MODE%"=="wrong-version" if /i not "%P5E_FAKE_MODE%"=="real-dumpsys-spacing" if /i not "%P5E_FAKE_MODE%"=="aosp-wrapper" if /i not "%P5E_FAKE_MODE%"=="aosp-current-multiple" if /i not "%P5E_FAKE_MODE%"=="aosp-current-missing" if /i not "%P5E_FAKE_MODE%"=="aosp-identity-pin" if /i not "%P5E_FAKE_MODE%"=="aosp-duplicate-wrapper" if /i not "%P5E_FAKE_MODE%"=="aosp-conflicting-format" if /i not "%P5E_FAKE_MODE%"=="aosp-truncated" if /i not "%P5E_FAKE_MODE%"=="aosp-nonhex" if /i not "%P5E_FAKE_MODE%"=="aosp-past-malformed" echo versionCode=207 minSdk=23
     if /i "%P5E_FAKE_MODE%"=="metadata-version-duplicate" echo versionCode=207 minSdk=23
+    if /i "%P5E_FAKE_MODE%"=="aosp-wrapper" echo versionCode=207 minSdk=23
+    if /i "%P5E_FAKE_MODE%"=="aosp-current-multiple" echo versionCode=207 minSdk=23
+    if /i "%P5E_FAKE_MODE%"=="aosp-current-missing" echo versionCode=207 minSdk=23
+    if /i "%P5E_FAKE_MODE%"=="aosp-identity-pin" echo versionCode=207 minSdk=23
+    if /i "%P5E_FAKE_MODE%"=="aosp-duplicate-wrapper" echo versionCode=207 minSdk=23
+    if /i "%P5E_FAKE_MODE%"=="aosp-conflicting-format" echo versionCode=207 minSdk=23
+    if /i "%P5E_FAKE_MODE%"=="aosp-truncated" echo versionCode=207 minSdk=23
+    if /i "%P5E_FAKE_MODE%"=="aosp-nonhex" echo versionCode=207 minSdk=23
+    if /i "%P5E_FAKE_MODE%"=="aosp-past-malformed" echo versionCode=207 minSdk=23
     if /i "%P5E_FAKE_MODE%"=="real-dumpsys-spacing" echo   signatures: [abebea4b]
     if /i "%P5E_FAKE_MODE%"=="metadata-signature-invalid" echo signatures:[not-hex]
     if /i "%P5E_FAKE_MODE%"=="metadata-signature-duplicate" echo signatures:[abebea4b]
     if /i "%P5E_FAKE_MODE%"=="metadata-inline-wrapper" echo signatures: [PackageSignatures{signatures:[abebea4b]}]
-    if /i not "%P5E_FAKE_MODE%"=="metadata-signature-missing" if /i not "%P5E_FAKE_MODE%"=="metadata-signature-invalid" if /i not "%P5E_FAKE_MODE%"=="metadata-signature-duplicate" if /i not "%P5E_FAKE_MODE%"=="metadata-inline-wrapper" if /i not "%P5E_FAKE_MODE%"=="real-dumpsys-spacing" echo signatures:[abebea4b]
+    if /i "%P5E_FAKE_MODE%"=="aosp-wrapper" echo signatures=PackageSignatures{abc123 version:3, signatures:[abebea4b], past signatures:[]}
+    if /i "%P5E_FAKE_MODE%"=="aosp-current-multiple" echo signatures=PackageSignatures{abc123 version:3, signatures:[abebea4b, cafebabe], past signatures:[]}
+    if /i "%P5E_FAKE_MODE%"=="aosp-current-missing" echo signatures=PackageSignatures{abc123 version:3, signatures:[], past signatures:[abebea4b flags: 1]}
+    if /i "%P5E_FAKE_MODE%"=="aosp-identity-pin" echo signatures=PackageSignatures{abebea4b version:3, signatures:[cafebabe], past signatures:[abebea4b flags: 1]}
+    if /i "%P5E_FAKE_MODE%"=="aosp-duplicate-wrapper" echo signatures=PackageSignatures{abc123 version:3, signatures:[abebea4b], past signatures:[]}
+    if /i "%P5E_FAKE_MODE%"=="aosp-duplicate-wrapper" echo signatures=PackageSignatures{def456 version:3, signatures:[abebea4b], past signatures:[]}
+    if /i "%P5E_FAKE_MODE%"=="aosp-conflicting-format" echo signatures=PackageSignatures{abc123 version:3, signatures:[abebea4b], past signatures:[]}
+    if /i "%P5E_FAKE_MODE%"=="aosp-conflicting-format" echo signatures:[abebea4b]
+    if /i "%P5E_FAKE_MODE%"=="aosp-truncated" echo signatures=PackageSignatures{abc123 version:3, signatures:[abebea4b], past signatures:[]
+    if /i "%P5E_FAKE_MODE%"=="aosp-nonhex" echo signatures=PackageSignatures{abc123 version:3, signatures:[not-hex], past signatures:[]}
+    if /i "%P5E_FAKE_MODE%"=="aosp-past-malformed" echo signatures=PackageSignatures{abc123 version:3, signatures:[abebea4b], past signatures:[cafebabe]}
+    if /i not "%P5E_FAKE_MODE%"=="metadata-signature-missing" if /i not "%P5E_FAKE_MODE%"=="metadata-signature-invalid" if /i not "%P5E_FAKE_MODE%"=="metadata-signature-duplicate" if /i not "%P5E_FAKE_MODE%"=="metadata-inline-wrapper" if /i not "%P5E_FAKE_MODE%"=="real-dumpsys-spacing" if /i not "%P5E_FAKE_MODE%"=="aosp-wrapper" if /i not "%P5E_FAKE_MODE%"=="aosp-current-multiple" if /i not "%P5E_FAKE_MODE%"=="aosp-current-missing" if /i not "%P5E_FAKE_MODE%"=="aosp-identity-pin" if /i not "%P5E_FAKE_MODE%"=="aosp-duplicate-wrapper" if /i not "%P5E_FAKE_MODE%"=="aosp-conflicting-format" if /i not "%P5E_FAKE_MODE%"=="aosp-truncated" if /i not "%P5E_FAKE_MODE%"=="aosp-nonhex" if /i not "%P5E_FAKE_MODE%"=="aosp-past-malformed" echo signatures:[abebea4b]
     if /i "%P5E_FAKE_MODE%"=="metadata-signature-duplicate" echo signatures:[abebea4b]
     if /i "%P5E_FAKE_MODE%"=="metadata-stderr" echo metadata warning 1>&2
     exit /b 0
@@ -182,14 +225,34 @@ if /i "%1"=="shell" if /i "%2"=="dumpsys" (
     if /i "%P5E_FAKE_MODE%"=="metadata-version-invalid" echo versionCode=not-a-number
     if /i "%P5E_FAKE_MODE%"=="metadata-version-duplicate" echo versionCode=1 minSdk=23
     if /i "%P5E_FAKE_MODE%"=="real-dumpsys-spacing" echo   versionCode = 1 minSdk=23
-    if /i not "%P5E_FAKE_MODE%"=="metadata-version-missing" if /i not "%P5E_FAKE_MODE%"=="metadata-version-invalid" if /i not "%P5E_FAKE_MODE%"=="metadata-version-duplicate" if /i not "%P5E_FAKE_MODE%"=="real-dumpsys-spacing" echo versionCode=1 minSdk=23
+    if /i not "%P5E_FAKE_MODE%"=="metadata-version-missing" if /i not "%P5E_FAKE_MODE%"=="metadata-version-invalid" if /i not "%P5E_FAKE_MODE%"=="metadata-version-duplicate" if /i not "%P5E_FAKE_MODE%"=="real-dumpsys-spacing" if /i not "%P5E_FAKE_MODE%"=="aosp-wrapper" if /i not "%P5E_FAKE_MODE%"=="aosp-current-multiple" if /i not "%P5E_FAKE_MODE%"=="aosp-current-missing" if /i not "%P5E_FAKE_MODE%"=="aosp-identity-pin" if /i not "%P5E_FAKE_MODE%"=="aosp-duplicate-wrapper" if /i not "%P5E_FAKE_MODE%"=="aosp-conflicting-format" if /i not "%P5E_FAKE_MODE%"=="aosp-truncated" if /i not "%P5E_FAKE_MODE%"=="aosp-nonhex" if /i not "%P5E_FAKE_MODE%"=="aosp-past-malformed" echo versionCode=1 minSdk=23
     if /i "%P5E_FAKE_MODE%"=="metadata-version-duplicate" echo versionCode=1 minSdk=23
+    if /i "%P5E_FAKE_MODE%"=="aosp-wrapper" echo versionCode=1 minSdk=23
+    if /i "%P5E_FAKE_MODE%"=="aosp-current-multiple" echo versionCode=1 minSdk=23
+    if /i "%P5E_FAKE_MODE%"=="aosp-current-missing" echo versionCode=1 minSdk=23
+    if /i "%P5E_FAKE_MODE%"=="aosp-identity-pin" echo versionCode=1 minSdk=23
+    if /i "%P5E_FAKE_MODE%"=="aosp-duplicate-wrapper" echo versionCode=1 minSdk=23
+    if /i "%P5E_FAKE_MODE%"=="aosp-conflicting-format" echo versionCode=1 minSdk=23
+    if /i "%P5E_FAKE_MODE%"=="aosp-truncated" echo versionCode=1 minSdk=23
+    if /i "%P5E_FAKE_MODE%"=="aosp-nonhex" echo versionCode=1 minSdk=23
+    if /i "%P5E_FAKE_MODE%"=="aosp-past-malformed" echo versionCode=1 minSdk=23
     if /i "%P5E_FAKE_MODE%"=="real-dumpsys-spacing" echo   signatures: [abebea4b]
     if /i "%P5E_FAKE_MODE%"=="metadata-signature-invalid" echo signatures:[not-hex]
     if /i "%P5E_FAKE_MODE%"=="metadata-signature-duplicate" echo signatures:[abebea4b]
     if /i "%P5E_FAKE_MODE%"=="metadata-inline-wrapper" echo signatures: [PackageSignatures{signatures:[abebea4b]}]
     if /i "%P5E_FAKE_MODE%"=="wrong-test-signature" echo signatures:[deadbeef]
-    if /i not "%P5E_FAKE_MODE%"=="metadata-signature-missing" if /i not "%P5E_FAKE_MODE%"=="metadata-signature-invalid" if /i not "%P5E_FAKE_MODE%"=="metadata-signature-duplicate" if /i not "%P5E_FAKE_MODE%"=="metadata-inline-wrapper" if /i not "%P5E_FAKE_MODE%"=="real-dumpsys-spacing" if /i not "%P5E_FAKE_MODE%"=="wrong-test-signature" echo signatures:[abebea4b]
+    if /i "%P5E_FAKE_MODE%"=="aosp-wrapper" echo signatures=PackageSignatures{abc123 version:3, signatures:[abebea4b], past signatures:[]}
+    if /i "%P5E_FAKE_MODE%"=="aosp-current-multiple" echo signatures=PackageSignatures{abc123 version:3, signatures:[abebea4b, cafebabe], past signatures:[]}
+    if /i "%P5E_FAKE_MODE%"=="aosp-current-missing" echo signatures=PackageSignatures{abc123 version:3, signatures:[], past signatures:[abebea4b flags: 1]}
+    if /i "%P5E_FAKE_MODE%"=="aosp-identity-pin" echo signatures=PackageSignatures{abebea4b version:3, signatures:[cafebabe], past signatures:[abebea4b flags: 1]}
+    if /i "%P5E_FAKE_MODE%"=="aosp-duplicate-wrapper" echo signatures=PackageSignatures{abc123 version:3, signatures:[abebea4b], past signatures:[]}
+    if /i "%P5E_FAKE_MODE%"=="aosp-duplicate-wrapper" echo signatures=PackageSignatures{def456 version:3, signatures:[abebea4b], past signatures:[]}
+    if /i "%P5E_FAKE_MODE%"=="aosp-conflicting-format" echo signatures=PackageSignatures{abc123 version:3, signatures:[abebea4b], past signatures:[]}
+    if /i "%P5E_FAKE_MODE%"=="aosp-conflicting-format" echo signatures:[abebea4b]
+    if /i "%P5E_FAKE_MODE%"=="aosp-truncated" echo signatures=PackageSignatures{abc123 version:3, signatures:[abebea4b], past signatures:[]
+    if /i "%P5E_FAKE_MODE%"=="aosp-nonhex" echo signatures=PackageSignatures{abc123 version:3, signatures:[not-hex], past signatures:[]}
+    if /i "%P5E_FAKE_MODE%"=="aosp-past-malformed" echo signatures=PackageSignatures{abc123 version:3, signatures:[abebea4b], past signatures:[cafebabe]}
+    if /i not "%P5E_FAKE_MODE%"=="metadata-signature-missing" if /i not "%P5E_FAKE_MODE%"=="metadata-signature-invalid" if /i not "%P5E_FAKE_MODE%"=="metadata-signature-duplicate" if /i not "%P5E_FAKE_MODE%"=="metadata-inline-wrapper" if /i not "%P5E_FAKE_MODE%"=="real-dumpsys-spacing" if /i not "%P5E_FAKE_MODE%"=="wrong-test-signature" if /i not "%P5E_FAKE_MODE%"=="aosp-wrapper" if /i not "%P5E_FAKE_MODE%"=="aosp-current-multiple" if /i not "%P5E_FAKE_MODE%"=="aosp-current-missing" if /i not "%P5E_FAKE_MODE%"=="aosp-identity-pin" if /i not "%P5E_FAKE_MODE%"=="aosp-duplicate-wrapper" if /i not "%P5E_FAKE_MODE%"=="aosp-conflicting-format" if /i not "%P5E_FAKE_MODE%"=="aosp-truncated" if /i not "%P5E_FAKE_MODE%"=="aosp-nonhex" if /i not "%P5E_FAKE_MODE%"=="aosp-past-malformed" echo signatures:[abebea4b]
     if /i "%P5E_FAKE_MODE%"=="metadata-signature-duplicate" echo signatures:[abebea4b]
     if /i "%P5E_FAKE_MODE%"=="metadata-stderr" echo metadata warning 1>&2
     exit /b 0
@@ -246,7 +309,7 @@ exit /b 0
     Assert-P5ETrue -Condition ($pass.ExitCode -eq 0 -and $pass.Output -contains 'P5E_ACCOUNT_CHECK_DEVICE_PREFLIGHT=PASS') `
         -ErrorCode 'PASS_SIGNAL_MISSING'
     $passReceipt = Get-P5EReceipt -EvidencePath $passEvidence
-    Assert-P5ETrue -Condition ($passReceipt.status -eq 'PASS' -and $passReceipt.schemaVersion -eq 'p5e.account-check.device-preflight.result.v2') `
+    Assert-P5ETrue -Condition ($passReceipt.status -eq 'PASS' -and $passReceipt.schemaVersion -eq 'p5e.account-check.device-preflight.result.v3') `
         -ErrorCode 'PASS_RECEIPT_SCHEMA_INVALID'
     Assert-P5ETrue -Condition ($passReceipt.deviceReadAttempts -eq 7 -and $passReceipt.attemptedCommandCount -ge 10) `
         -ErrorCode 'PASS_COMMAND_COUNTS_INVALID'
@@ -270,6 +333,59 @@ exit /b 0
             $adbLines[5] -match 'shell pm path' -and $adbLines[6] -match 'pull') `
         -ErrorCode 'PASS_ADB_ORDER_INVALID'
     $cases.pass_full_identity_read_only = 'PASS'
+
+    $run = Invoke-P5EPreflightChild -EvidencePath (Join-Path $temporaryRoot 'aosp-wrapper') -Mode 'aosp-wrapper'
+    Assert-P5ETrue -Condition ($run.ExitCode -eq 0 -and $run.Output -contains 'P5E_ACCOUNT_CHECK_DEVICE_PREFLIGHT=PASS') `
+        -ErrorCode 'AOSP_WRAPPER_PASS_SIGNAL_MISSING'
+    $aospReceipt = Get-P5EReceipt -EvidencePath $run.EvidencePath
+    Assert-P5ETrue -Condition ($aospReceipt.status -eq 'PASS' -and
+            $aospReceipt.targetMetadataLayoutFamily -eq 'AOSP_PACKAGE_SIGNATURES_WRAPPER' -and
+            $aospReceipt.testMetadataLayoutFamily -eq 'AOSP_PACKAGE_SIGNATURES_WRAPPER' -and
+            $aospReceipt.targetMetadataWrapperIdentityCandidateCount -eq 1 -and
+            $aospReceipt.testMetadataWrapperIdentityCandidateCount -eq 1 -and
+            $aospReceipt.targetMetadataSignatureSchemeCandidateCount -eq 1 -and
+            $aospReceipt.testMetadataSignatureSchemeCandidateCount -eq 1 -and
+            $aospReceipt.targetMetadataSignatureCandidateCount -eq 1 -and
+            $aospReceipt.testMetadataSignatureCandidateCount -eq 1 -and
+            $aospReceipt.targetMetadataPastSignatureCandidateCount -eq 0 -and
+            $aospReceipt.testMetadataPastSignatureCandidateCount -eq 0 -and
+            $aospReceipt.targetSignatureToken -eq 'abebea4b' -and
+            $aospReceipt.testSignatureToken -eq 'abebea4b') `
+        -ErrorCode 'AOSP_WRAPPER_LAYOUT_NOT_PARSED'
+    $aospReceiptText = Get-Content -LiteralPath (Join-Path $run.EvidencePath 'ACCOUNT_CHECK_DEVICE_PREFLIGHT_RESULT.json') -Raw
+    Assert-P5ETrue -Condition ($aospReceiptText -notmatch 'PackageSignatures|past signatures|(?m)^\s*versionCode\s*=|(?m)^\s*signatures\s*[:=]') -ErrorCode 'AOSP_RAW_METADATA_LEAKED'
+    $cases.aosp_source_derived_current_vs_past_layout_pass = 'PASS'
+
+    $sourceDerivedFixture = @'
+Package [com.ml.tblandroidtxt] (source-derived synthetic fixture):
+  versionCode=207 minSdk=23
+  signatures=PackageSignatures{abc123 version:3, signatures:[abebea4b], past signatures:[cafebabe flags: 1]}
+'@
+    $baselineSourceRef = 'bf97cd410ea63fe7f6d978b58324584249995e60'
+    $oldSource = (& git -C $repoRoot show (('{0}:scripts/p5e-account-check-device-preflight.ps1' -f $baselineSourceRef))) -join "`n"
+    Remove-P5EParsedFunction -Name 'Get-P5EPackageMetadataParse'
+    Remove-P5EParsedFunction -Name 'New-P5EPackageMetadataState'
+    Invoke-Expression (Get-P5EFunctionTextFromSource -Source $oldSource -Name 'New-P5EPackageMetadataState')
+    Invoke-Expression (Get-P5EFunctionTextFromSource -Source $oldSource -Name 'Get-P5EPackageMetadataParse')
+    $oldParserResult = Get-P5EPackageMetadataParse -Text $sourceDerivedFixture -PackageName 'com.ml.tblandroidtxt'
+    Assert-P5ETrue -Condition ($oldParserResult.reason -eq 'UNSUPPORTED_LAYOUT') -ErrorCode 'OLD_PARSER_DID_NOT_REJECT_SOURCE_FIXTURE'
+    Remove-P5EParsedFunction -Name 'Get-P5EPackageMetadataParse'
+    Remove-P5EParsedFunction -Name 'Get-P5ESignatureListParse'
+    Remove-P5EParsedFunction -Name 'New-P5EPackageMetadataState'
+    $currentSource = Get-Content -LiteralPath $preflightPath -Raw
+    Invoke-Expression (Get-P5EFunctionTextFromSource -Source $currentSource -Name 'New-P5EPackageMetadataState')
+    Invoke-Expression (Get-P5EFunctionTextFromSource -Source $currentSource -Name 'Get-P5ESignatureListParse')
+    Invoke-Expression (Get-P5EFunctionTextFromSource -Source $currentSource -Name 'Get-P5EPackageMetadataParse')
+    $newParserResult = Get-P5EPackageMetadataParse -Text $sourceDerivedFixture -PackageName 'com.ml.tblandroidtxt'
+    Assert-P5ETrue -Condition ($newParserResult.reason -eq 'PASS' -and
+            $newParserResult.layoutFamily -eq 'AOSP_PACKAGE_SIGNATURES_WRAPPER' -and
+            $newParserResult.signatureCandidateCount -eq 1 -and
+            $newParserResult.pastSignatureCandidateCount -eq 1 -and
+            $newParserResult.signatureToken -eq 'abebea4b') -ErrorCode 'NEW_PARSER_DID_NOT_ACCEPT_SOURCE_FIXTURE'
+    $cases.source_derived_positive_red_to_green = 'PASS'
+    Remove-P5EParsedFunction -Name 'Get-P5EPackageMetadataParse'
+    Remove-P5EParsedFunction -Name 'Get-P5ESignatureListParse'
+    Remove-P5EParsedFunction -Name 'New-P5EPackageMetadataState'
 
     $run = Invoke-P5EPreflightChild -EvidencePath (Join-Path $temporaryRoot 'real-dumpsys-spacing') -Mode 'real-dumpsys-spacing'
     Assert-P5ETrue -Condition ($run.ExitCode -eq 0 -and $run.Output -contains 'P5E_ACCOUNT_CHECK_DEVICE_PREFLIGHT=PASS') `
@@ -328,6 +444,46 @@ exit /b 0
     $run = Invoke-P5EPreflightChild -EvidencePath (Join-Path $temporaryRoot 'metadata-inline-wrapper') -Mode 'metadata-inline-wrapper'
     Assert-P5EStopCase -Name 'metadata_inline_wrapper_unsupported' -ExpectedTypedError 'ACCOUNT_CHECK_PREFLIGHT_PACKAGE_METADATA_UNSUPPORTED_LAYOUT_STOP' -Run $run `
         -ExtraCheck { param($r) Assert-P5ETrue -Condition ($r.targetMetadataPackagePresent -and $r.targetMetadataReason -eq 'UNSUPPORTED_LAYOUT') -ErrorCode 'INLINE_WRAPPER_DIAGNOSTICS_INVALID' }
+
+    $run = Invoke-P5EPreflightChild -EvidencePath (Join-Path $temporaryRoot 'aosp-current-multiple') -Mode 'aosp-current-multiple'
+    Assert-P5EStopCase -Name 'aosp_current_multiple_signers' -ExpectedTypedError 'ACCOUNT_CHECK_PREFLIGHT_PACKAGE_METADATA_SIGNATURE_AMBIGUOUS_STOP' -Run $run `
+        -ExtraCheck { param($r) Assert-P5ETrue -Condition ($r.targetMetadataLayoutFamily -eq 'AOSP_PACKAGE_SIGNATURES_WRAPPER' -and
+                $r.targetMetadataSignatureCandidateCount -eq 2 -and $r.targetMetadataPastSignatureCandidateCount -eq 0) -ErrorCode 'AOSP_MULTIPLE_CURRENT_NOT_REJECTED' }
+
+    $run = Invoke-P5EPreflightChild -EvidencePath (Join-Path $temporaryRoot 'aosp-current-missing') -Mode 'aosp-current-missing'
+    Assert-P5EStopCase -Name 'aosp_current_missing_past_present' -ExpectedTypedError 'ACCOUNT_CHECK_PREFLIGHT_PACKAGE_METADATA_SIGNATURE_MISSING_STOP' -Run $run `
+        -ExtraCheck { param($r) Assert-P5ETrue -Condition ($r.targetMetadataLayoutFamily -eq 'AOSP_PACKAGE_SIGNATURES_WRAPPER' -and
+                $r.targetMetadataSignatureCandidateCount -eq 0 -and $r.targetMetadataPastSignatureCandidateCount -eq 1) -ErrorCode 'AOSP_PAST_SIGNER_SUBSTITUTION' }
+
+    $run = Invoke-P5EPreflightChild -EvidencePath (Join-Path $temporaryRoot 'aosp-identity-pin') -Mode 'aosp-identity-pin'
+    Assert-P5EStopCase -Name 'aosp_wrapper_identity_not_signer' -ExpectedTypedError 'ACCOUNT_CHECK_PREFLIGHT_TARGET_PRODUCTION_PIN_MISMATCH_STOP' -Run $run `
+        -ExtraCheck { param($r) Assert-P5ETrue -Condition ($r.targetMetadataLayoutFamily -eq 'AOSP_PACKAGE_SIGNATURES_WRAPPER' -and
+                $r.targetMetadataWrapperIdentityCandidateCount -eq 1 -and $r.targetSignatureToken -eq '') -ErrorCode 'AOSP_WRAPPER_IDENTITY_USED_AS_SIGNER' }
+
+    $run = Invoke-P5EPreflightChild -EvidencePath (Join-Path $temporaryRoot 'aosp-duplicate-wrapper') -Mode 'aosp-duplicate-wrapper'
+    Assert-P5EStopCase -Name 'aosp_duplicate_wrapper' -ExpectedTypedError 'ACCOUNT_CHECK_PREFLIGHT_PACKAGE_METADATA_SIGNATURE_AMBIGUOUS_STOP' -Run $run `
+        -ExtraCheck { param($r) Assert-P5ETrue -Condition ($r.targetMetadataLayoutFamily -eq 'AOSP_PACKAGE_SIGNATURES_WRAPPER' -and
+                $r.targetMetadataSignatureFieldCount -eq 2 -and $r.targetMetadataWrapperIdentityCandidateCount -eq 2) -ErrorCode 'AOSP_DUPLICATE_WRAPPER_NOT_REJECTED' }
+
+    $run = Invoke-P5EPreflightChild -EvidencePath (Join-Path $temporaryRoot 'aosp-conflicting-format') -Mode 'aosp-conflicting-format'
+    Assert-P5EStopCase -Name 'aosp_legacy_wrapper_conflict' -ExpectedTypedError 'ACCOUNT_CHECK_PREFLIGHT_PACKAGE_METADATA_UNSUPPORTED_LAYOUT_STOP' -Run $run `
+        -ExtraCheck { param($r) Assert-P5ETrue -Condition ($r.targetMetadataLayoutFamily -eq 'CONFLICTING_SIGNATURE_FORMATS' -and
+                $r.targetMetadataSignatureFieldCount -eq 2) -ErrorCode 'AOSP_CONFLICTING_FORMAT_NOT_REJECTED' }
+
+    $run = Invoke-P5EPreflightChild -EvidencePath (Join-Path $temporaryRoot 'aosp-truncated') -Mode 'aosp-truncated'
+    Assert-P5EStopCase -Name 'aosp_truncated_wrapper' -ExpectedTypedError 'ACCOUNT_CHECK_PREFLIGHT_PACKAGE_METADATA_UNSUPPORTED_LAYOUT_STOP' -Run $run `
+        -ExtraCheck { param($r) Assert-P5ETrue -Condition ($r.targetMetadataLayoutFamily -eq 'AOSP_PACKAGE_SIGNATURES_WRAPPER' -and
+                $r.targetMetadataSignatureFieldCount -eq 1 -and $r.targetMetadataWrapperIdentityCandidateCount -eq 0) -ErrorCode 'AOSP_TRUNCATED_WRAPPER_NOT_STOPPED' }
+
+    $run = Invoke-P5EPreflightChild -EvidencePath (Join-Path $temporaryRoot 'aosp-nonhex') -Mode 'aosp-nonhex'
+    Assert-P5EStopCase -Name 'aosp_current_nonhex' -ExpectedTypedError 'ACCOUNT_CHECK_PREFLIGHT_PACKAGE_METADATA_SIGNATURE_INVALID_STOP' -Run $run `
+        -ExtraCheck { param($r) Assert-P5ETrue -Condition ($r.targetMetadataLayoutFamily -eq 'AOSP_PACKAGE_SIGNATURES_WRAPPER' -and
+                $r.targetMetadataSignatureCandidateCount -eq 0 -and $r.targetMetadataPastSignatureCandidateCount -eq 0) -ErrorCode 'AOSP_NONHEX_NOT_TYPED' }
+
+    $run = Invoke-P5EPreflightChild -EvidencePath (Join-Path $temporaryRoot 'aosp-past-malformed') -Mode 'aosp-past-malformed'
+    Assert-P5EStopCase -Name 'aosp_past_malformed' -ExpectedTypedError 'ACCOUNT_CHECK_PREFLIGHT_PACKAGE_METADATA_SIGNATURE_INVALID_STOP' -Run $run `
+        -ExtraCheck { param($r) Assert-P5ETrue -Condition ($r.targetMetadataLayoutFamily -eq 'AOSP_PACKAGE_SIGNATURES_WRAPPER' -and
+                $r.targetMetadataSignatureCandidateCount -eq 1 -and $r.targetMetadataPastSignatureCandidateCount -eq 0) -ErrorCode 'AOSP_PAST_MALFORMED_NOT_TYPED' }
 
     $run = Invoke-P5EPreflightChild -EvidencePath (Join-Path $temporaryRoot 'metadata-stderr') -Mode 'metadata-stderr'
     Assert-P5EStopCase -Name 'metadata_stdout_valid_stderr_error' -ExpectedTypedError 'ACCOUNT_CHECK_PREFLIGHT_PACKAGE_METADATA_TOOL_STDERR_STOP' -Run $run `

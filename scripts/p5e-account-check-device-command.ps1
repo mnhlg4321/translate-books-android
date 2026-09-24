@@ -33,11 +33,12 @@ $testCertificateSha256 = '47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084
 $runnerSha256 = '96E6B3B449D00B75989D3AD4E9403EA9510E504FBE90A53D6825E72E09B71E65'
 $helperSha256 = '5B621B339F6234415AC7B72C0816F2CA5F657DFCAB8F01C4D6BBC10F84172E34'
 $loaderSha256 = '1D6C1DEA14E70001F81DB841668969A51DB15417436E742BA018837BFA587A9D'
-$preflightSha256 = 'A82FAE2232C9F5C579CBC2D012B03EB55CCFEB567DAA399A89DEBC661BD235D5'
+$preflightSha256 = '09A33DC74820A1AA18B3EE47AA96862DC0AFA03067D5B46B433B74E4EB1AFA22'
 $accountSourceSha256 = '2F4BF9AD27CF5DF93D89456767423271907598EA209A0AD6E4C27599BC20063C'
 $testApkPath = 'D:\P5E-private\p5e-account-check-install-replacement-20260917-113601720-80675f1e5c4746da97f0a884ee319472\installed-test-package.apk'
 $runnerClassMethod = 'com.ml.tblandroidtxt.EditorialP5EAccountCheckOnlyInstrumentedTest#ownerApprovedAccountCheckOnlyReturnsMatchOrMismatch'
 $runnerComponent = 'com.ml.tblandroidtxt.test/androidx.test.runner.AndroidJUnitRunner'
+$acceptedMetadataLayouts = @('LEGACY_STANDALONE', 'AOSP_PACKAGE_SIGNATURES_WRAPPER')
 $script:Stage = 'INITIALIZE'
 $script:EvidenceReady = $false
 $script:CommandReceiptPath = ''
@@ -517,7 +518,8 @@ try {
         Write-Output ('P5E_ACCOUNT_CHECK_DEVICE_COMMAND_OUTCOME=' + $typed)
         exit 2
     }
-    if ([string]$preflightReceipt.serial -cne $serial -or [int]$preflightReceipt.deviceReadAttempts -ne 7 -or
+    if ([string]$preflightReceipt.schemaVersion -cne 'p5e.account-check.device-preflight.result.v3' -or
+            [string]$preflightReceipt.serial -cne $serial -or [int]$preflightReceipt.deviceReadAttempts -ne 7 -or
             [int]$preflightReceipt.attemptCount -ne 1 -or [string]$preflightReceipt.scriptSha256 -cne $preflightSha256 -or
             [string]$preflightReceipt.targetApkSha256 -cne $targetApkSha256 -or
             [string]$preflightReceipt.targetCertificateSha256 -cne $targetCertificateSha256 -or
@@ -528,10 +530,12 @@ try {
              [string]$preflightReceipt.testSignatureToken -cne $testSignatureToken -or
              -not [bool]$preflightReceipt.targetMetadataPackagePresent -or
              [string]$preflightReceipt.targetMetadataReason -cne 'PASS' -or
+             -not ($acceptedMetadataLayouts -contains [string]$preflightReceipt.targetMetadataLayoutFamily) -or
              [int]$preflightReceipt.targetMetadataVersionCandidateCount -ne 1 -or
              [int]$preflightReceipt.targetMetadataSignatureCandidateCount -ne 1 -or
              -not [bool]$preflightReceipt.testMetadataPackagePresent -or
              [string]$preflightReceipt.testMetadataReason -cne 'PASS' -or
+             -not ($acceptedMetadataLayouts -contains [string]$preflightReceipt.testMetadataLayoutFamily) -or
              [int]$preflightReceipt.testMetadataVersionCandidateCount -ne 1 -or
              [int]$preflightReceipt.testMetadataSignatureCandidateCount -ne 1 -or
              [int]$preflightReceipt.installAttempts -ne 0 -or [int]$preflightReceipt.providerCalls -ne 0 -or
