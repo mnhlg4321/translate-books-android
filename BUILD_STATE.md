@@ -1,14 +1,14 @@
 # Build State
 
-> Current offline identity repair — 2026-09-24: `ACCOUNT_IDENTITY_LIFECYCLE_REPAIRED_OFFLINE` remains PASS. The owner-approved follow-on account-only event completed with a typed `MISMATCH`; no further offline parser work is authorized without a new failing case.
+> Current offline identity repair — 2026-09-24: `ACCOUNT_IDENTITY_LIFECYCLE_REPAIRED_OFFLINE` remains PASS. The repaired account-only runner now has a terminal typed `MATCH`; no further offline parser work is authorized without a new failing case.
 
-> Current event disposition — 2026-09-24: event `D:\P5E-private\p5e-account-check-device-event-20260924-identity-lifecycle-01` ran exactly once and is now `CLOSED_ACCOUNT_MISMATCH / ACCOUNT_CHECK_COMPLETED_MISMATCH`. Preserve its receipts and do not retry or reuse the event directory. Result and receipt hashes: `docs/P5E_ACCOUNT_IDENTITY_EVENT_RESULT_20260924.json`.
+> Current event disposition — 2026-09-24: event `D:\P5E-private\p5e-account-check-device-event-20260924-route-corrected-01` ran exactly once and is now `CLOSED_ACCOUNT_MATCH / ACCOUNT_CHECK_COMPLETED_MATCH`. Preserve its receipts and do not retry or reuse the event directory. Result and receipt hashes: `docs/P5E_ACCOUNT_IDENTITY_ROUTE_CORRECTED_EVENT_RESULT_20260924.json`.
 
-> Current P5E state — `HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / PREFLIGHT_PASS_7_READ_ONLY_CALLS / ACCOUNT_CHECK_COMPLETED_MISMATCH / ACCOUNT_RUNNER_COMPLETED_MISMATCH / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. Preflight passed 7 read-only calls; the single runner launch exited zero with valid terminal, identity, capture and redaction gates. The account mismatch is not a provider, key or release conclusion.
+> Current P5E state — `HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / PREFLIGHT_PASS_7_READ_ONLY_CALLS / ACCOUNT_CHECK_COMPLETED_MATCH / ACCOUNT_RUNNER_COMPLETED_MATCH / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. Preflight passed 7 read-only calls; the single runner launch exited zero with valid terminal, identity, capture and redaction gates. The account match does not authorize provider, RAW, P5 exit or P6.
 
-> Current next action: review only the account route/digest mapping or rotation evidence associated with `MISMATCH`; do not retry the device event or open provider, DB, RAW, A4.3, P5 exit or P6 work. Provider calls, DB writes, RAW dispatches and install attempts were `0`; release steps 05–09 remain incomplete.
+> Current next action: review the remaining A4.3 gate conditions and propose the next separately authorized step; do not dispatch RAW/P6 or alter provider/DB state. Provider calls, DB writes, RAW dispatches and install attempts were `0`; release steps 05–09 remain incomplete.
 
-> Historical pre-event packet and prior `NOT_PROVEN` event remain unchanged as provenance. The agent did not read the expected value or raw instrumentation; no secret or endpoint was recorded.
+> Historical MISMATCH and prior `NOT_PROVEN` events remain unchanged as provenance. The agent did not read the expected value or raw instrumentation; no secret or endpoint was recorded.
 
 
 > Historical pre-event execution audit 2026-09-23 is retained below for provenance; it is superseded by the current event disposition above.

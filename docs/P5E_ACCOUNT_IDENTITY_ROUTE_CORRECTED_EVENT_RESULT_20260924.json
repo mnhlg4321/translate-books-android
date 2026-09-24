@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "p5e.account-identity-route-corrected-event.result.v1",
+  "date": "2026-09-24",
+  "branch": "feature/v4.18-p5e-runner-repair-20260917",
+  "baselineImplementation": "d0ba3e49b608ce940f71426c4bf09225d1562546",
+  "handoffCommit": "bb34ad8bd4ee5a3043a93ed38bf2b28aeca24255",
+  "headAtEventPreparation": "8acb6893a4986a38da49b761422c15a1886f63dc",
+  "predecessorEvent": {
+    "eventDirectory": "D:\\P5E-private\\p5e-account-check-device-event-20260924-identity-lifecycle-01",
+    "result": "MISMATCH",
+    "resultDocument": "docs/P5E_ACCOUNT_IDENTITY_EVENT_RESULT_20260924.json"
+  },
+  "ownerScope": {
+    "status": "ONE_ACCOUNT_ONLY_EVENT_APPROVED",
+    "commandSha256": "9B64078D5A2A6EA2C3A9618C4B1F8CDBB01D3CCF6C3120A2D7D4AFFF3F5E6331",
+    "helperSha256": "B491DD4D26444ACA1234A1A03D8A932A2525FB7CD112F6B6F1520A735C631897",
+    "eventDirectory": "D:\\P5E-private\\p5e-account-check-device-event-20260924-route-corrected-01",
+    "serial": "15e84958",
+    "scope": "UP_TO_7_READ_ONLY_PREFLIGHT_CALLS_THEN_UP_TO_ONE_MEMORY_ONLY_ACCOUNT_CHECK_NO_PROVIDER_DB_WRITE_RAW_INSTALL_OR_RETRY"
+  },
+  "eventDirectory": "D:\\P5E-private\\p5e-account-check-device-event-20260924-route-corrected-01",
+  "eventStatus": "CLOSED_ACCOUNT_MATCH",
+  "command": {
+    "status": "PASS",
+    "outcome": "ACCOUNT_CHECK_COMPLETED_MATCH",
+    "accountResult": "MATCH",
+    "exitCode": 0,
+    "receiptPath": "D:\\P5E-private\\p5e-account-check-device-event-20260924-route-corrected-01\\ACCOUNT_CHECK_DEVICE_COMMAND_RESULT.json",
+    "receiptSha256": "C00F41164A3AC8AA50D5A025729D72606703E445088EA435FE8B6820296BCE81"
+  },
+  "preflight": {
+    "status": "PASS",
+    "deviceReadAttempts": 7,
+    "attemptCount": 1,
+    "receiptPath": "D:\\P5E-private\\p5e-account-check-device-event-20260924-route-corrected-01\\preflight\\ACCOUNT_CHECK_DEVICE_PREFLIGHT_RESULT.json",
+    "receiptSha256": "C0604F6AAA3E9BBF6BC978C97FDE667402C6F572CB368A4B4A8248023D4779C7",
+    "productionMetadataReason": "PASS",
+    "productionMetadataLayoutFamily": "AOSP_PACKAGE_SIGNATURES_WRAPPER",
+    "testMetadataReason": "PASS",
+    "testMetadataLayoutFamily": "AOSP_PACKAGE_SIGNATURES_WRAPPER"
+  },
+  "accountRunner": {
+    "processLaunchCount": 1,
+    "launchCount": 1,
+    "outcome": "ACCOUNT_CHECK_COMPLETED_MATCH",
+    "result": "MATCH",
+    "exitCode": 0,
+    "processOutcome": "PROCESS_EXITED_ZERO",
+    "terminalSuccess": true,
+    "testFinished": true,
+    "testIdentityPass": true,
+    "resultTokenCount": 1,
+    "failureMarkerCount": 0,
+    "parserErrors": [],
+    "redactionPass": true,
+    "captureBounded": true,
+    "receiptPath": "D:\\P5E-private\\p5e-account-check-device-event-20260924-route-corrected-01\\account-runner\\ACCOUNT_CHECK_RESULT.json",
+    "receiptSha256": "529B082D6255AEFE1323CAAFB6B29200BB4256F81A29DA0C7C597EDA549702C9"
+  },
+  "counts": {
+    "providerCalls": 0,
+    "dbWrites": 0,
+    "rawDispatches": 0,
+    "installAttempts": 0,
+    "productionPackageOperations": 0,
+    "newCredentialReads": 0
+  },
+  "privacy": {
+    "expectedValueReadByAgent": false,
+    "rawInstrumentationReadByAgent": false,
+    "rawDumpsysReadByAgent": false,
+    "secretOrEndpointRecorded": false
+  },
+  "gates": {
+    "accountMatch": true,
+    "accountMismatch": false,
+    "a4_3Issued": false,
+    "rawRun": false,
+    "p5ExitClaimed": false,
+    "p6Ready": false,
+    "retryAuthorized": false
+  },
+  "disposition": "ACCOUNT_MATCH_PROVEN_ONLY_A4_3_REVIEW_REQUIRED_NO_RAW_OR_P6"
+}

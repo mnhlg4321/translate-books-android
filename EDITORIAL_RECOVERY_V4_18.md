@@ -1,14 +1,14 @@
 # Editorial Recovery v4.18
 
-> Current offline identity repair — 2026-09-24: `ACCOUNT_IDENTITY_LIFECYCLE_REPAIRED_OFFLINE` remains PASS. The owner-approved follow-on account-only event completed with a typed `MISMATCH`; no further offline parser work is authorized without a new failing case.
+> Current offline identity repair — 2026-09-24: `ACCOUNT_IDENTITY_LIFECYCLE_REPAIRED_OFFLINE` remains PASS. The repaired account-only runner now has a terminal typed `MATCH`; no further offline parser work is authorized without a new failing case.
 
-> Current event disposition — 2026-09-24: event `D:\P5E-private\p5e-account-check-device-event-20260924-identity-lifecycle-01` is `CLOSED_ACCOUNT_MISMATCH / ACCOUNT_CHECK_COMPLETED_MISMATCH`. Preflight passed 7 read-only calls; the runner launched once and exited zero. Receipt hashes are recorded in `docs/P5E_ACCOUNT_IDENTITY_EVENT_RESULT_20260924.json`. Do not retry, reuse, rename or reopen this event.
+> Current event disposition — 2026-09-24: event `D:\P5E-private\p5e-account-check-device-event-20260924-route-corrected-01` is `CLOSED_ACCOUNT_MATCH / ACCOUNT_CHECK_COMPLETED_MATCH`. Preflight passed 7 read-only calls; the runner launched once and exited zero. Receipt hashes are recorded in `docs/P5E_ACCOUNT_IDENTITY_ROUTE_CORRECTED_EVENT_RESULT_20260924.json`. Do not retry, reuse, rename or reopen this event.
 
-> Current P5E state: `HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / PREFLIGHT_PASS_7_READ_ONLY_CALLS / ACCOUNT_CHECK_COMPLETED_MISMATCH / ACCOUNT_RUNNER_COMPLETED_MISMATCH / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The typed result is an account-test mismatch only; it is not a provider, key or release conclusion.
+> Current P5E state: `HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / PREFLIGHT_PASS_7_READ_ONLY_CALLS / ACCOUNT_CHECK_COMPLETED_MATCH / ACCOUNT_RUNNER_COMPLETED_MATCH / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The typed result proves only the account-test predicate; it does not authorize provider access, RAW, P5 exit or P6.
 
-> Current next action: review only the account route/digest mapping or rotation evidence associated with the `MISMATCH`; do not retry the device event or open provider, DB, RAW, A4.3, P5 exit or P6 work. Provider calls, DB writes, RAW dispatches and install attempts were all zero; release checklist steps 05–09 remain incomplete.
+> Current next action: review the remaining A4.3 gate conditions and propose the next separately authorized step; do not dispatch RAW/P6 or alter provider/DB state. Provider calls, DB writes, RAW dispatches and install attempts were all zero; release checklist steps 05–09 remain incomplete.
 
-> The prior signature-layout-adapter event and its `NOT_PROVEN` receipt remain historical and unchanged in `docs/P5E_ACCOUNT_EVENT_RESULT_20260924.json`.
+> The prior route event `MISMATCH` remains historical and unchanged in `docs/P5E_ACCOUNT_IDENTITY_EVENT_RESULT_20260924.json`; the older signature-layout-adapter `NOT_PROVEN` receipt remains unchanged in `docs/P5E_ACCOUNT_EVENT_RESULT_20260924.json`.
 
 
 > Historical pre-event P5E execution state 2026-09-23 at baseline `7a64b71acb1dafa32cdfe3d99c13e353589b19ab` is retained below for provenance; it is superseded by the current event disposition above.
@@ -301,9 +301,9 @@ The local golden report/receipt byte hashes are
 The prior F3 result remains historical synthetic evidence. The current local
 chain additionally has the executable offline SQLite collector bridge, exact
 helper hash gate, source-derived production report/receipt golden bridge and
-bounded `COLLECTOR_COMMAND_LOG.jsonl` contract. The owner provenance metadata is
-accepted for review, but F1 expected-value Process loading and the account
-follow-on remain `PENDING`; they do not authorize A4.3 by themselves.
+bounded `COLLECTOR_COMMAND_LOG.jsonl` contract. F1 expected-value Process
+loading and the bounded account-only event are complete for the current
+account predicate, but they do not authorize A4.3 by themselves.
 
 The packet preserves the harness authorization ID and the exact A4.2
 identities. It requests only RAW/GLOSSARY egress to the pinned route, one
@@ -320,12 +320,11 @@ SettingsStore.load(target).copy(), normalizeEndpoint(settings.baseUrl), then
 SHA-256 of UTF-8 endpoint + newline + in-memory settings.apiKey. The credential
 must remain in memory and never enter command text, logs or evidence. A
 mismatch or unverifiable account returns `MISMATCH` and does not construct
-authorization or dispatch. This operation has not been performed in this
-audit. The packet is ready for owner review of local H1–H4 closure and the
-account-only boundary, but not for RAW dispatch: runtime hash/contract/
-collector gates are closed locally, while F1 expected-value Process loading and
-account/readback/egress permission remain pending. No live account operation has
-occurred.
+authorization or dispatch. The route-corrected account-only event performed
+this operation once and returned `MATCH`; its command, preflight and runner
+receipts are preserved in the current event result document. The packet remains
+for owner review of the separate A4.3 conditions, not for automatic RAW
+dispatch; no provider call, DB write or RAW operation occurred.
 
 The repaired command invokes the supervisor as one child process. It computes
 fresh issuedAt/expiresAt values at owner-approved dispatch, uses a 240000 ms
@@ -338,11 +337,10 @@ The selected live method performs its own preflightOnly checks internally; no
 separate instrumentation preflight is permitted. F2/F3 host evidence and the
 source-derived argument list are recorded in the preparation evidence above.
 
-The current next action is owner-local Process-only expected-value loading with
-the qualified helper as described in
-`docs/P5E_EXPECTED_VALUE_LOADER_REVIEW_20260923.md`. The host runner repair is
-complete; no reinstall, device account check, A4.3, readback or RAW action is
-part of the current work package.
+The current next action is owner review of the remaining A4.3 conditions. The
+host runner repair and bounded account-only check are complete; no reinstall,
+new device account check, readback or RAW action is part of the current work
+package.
 
 ## Historical A4 exact-preflight evidence-channel blocker
 
