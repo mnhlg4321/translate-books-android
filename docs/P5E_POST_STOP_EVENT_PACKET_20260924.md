@@ -2,8 +2,9 @@
 
 Date: 2026-09-24, Asia/Saigon  
 Branch: `feature/v4.18-p5e-runner-repair-20260917`  
-HEAD baseline: `8e6b16b650905fabf88b5023b4ec043741c39e42`  
-Working tree: dirty; the hashes below bind the current uncommitted P5E bytes, not HEAD alone.
+HEAD baseline before this repair group: `8e6b16b650905fabf88b5023b4ec043741c39e42`
+Implementation commit: `d4c9a74f` (`fix(p5e): repair post-stop host guards and QA`)
+Working tree: dirty only because protected owner/IDE/worktree material remains; the hashes below bind the committed P5E repair bytes.
 
 ## Decision boundary
 

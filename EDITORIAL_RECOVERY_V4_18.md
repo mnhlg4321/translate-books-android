@@ -1,7 +1,7 @@
 # Editorial Recovery v4.18
 
 > Current post-STOP local disposition — 2026-09-24: `LOCAL_REPAIR_GREEN / POST_STOP_PREFLIGHT_QA_133_OF_133 / POST_STOP_COMMAND_QA_26_OF_26 / PATH_GUARD_QA_12_OF_12 / OWNER_EVENT_DECISION_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`.
-> Both path-chain guards now inspect every ancestor; metadata diagnostics are typed and nonsecret. The old event remains terminal at `PRODUCTION_PACKAGE`; its two private receipts are unchanged. The old `71/71` and `22/22` files remain historical scoped evidence, while the post-STOP QA is bound to the current uncommitted source pins in [the proposed packet](docs/P5E_POST_STOP_EVENT_PACKET_20260924.md).
+> Both path-chain guards now inspect every ancestor; metadata diagnostics are typed and nonsecret. The old event remains terminal at `PRODUCTION_PACKAGE`; its two private receipts are unchanged. The old `71/71` and `22/22` files remain historical scoped evidence, while the post-STOP QA is bound to the committed source pins in [the proposed packet](docs/P5E_POST_STOP_EVENT_PACKET_20260924.md).
 > Sole next action: owner reviews that exact packet and, only if desired, gives one explicit decision for one new account-only event. This turn does not authorize or execute the event. Any older Current/Next-action text below is historical context and does not override this notice; release 05–09 remain incomplete.
 
 

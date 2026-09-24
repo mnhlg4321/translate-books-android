@@ -2,7 +2,8 @@
 
 Date: 2026-09-24, Asia/Saigon  
 Branch: `feature/v4.18-p5e-runner-repair-20260917`  
-HEAD baseline: `8e6b16b650905fabf88b5023b4ec043741c39e42`  
+HEAD baseline before repair group: `8e6b16b650905fabf88b5023b4ec043741c39e42`
+Implementation commit: `d4c9a74f`
 Status: `LOCAL_REPAIR_GREEN / OWNER_EVENT_DECISION_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`
 
 ## Disposition
