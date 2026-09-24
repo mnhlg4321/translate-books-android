@@ -1,5 +1,7 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
+> Current owner handoff: docs/P5E_A43_OWNER_DECISION_WORK_REQUEST_20260924.md defines the one remaining live decision and ordered execution scope. Offline packet and account MATCH are closed; no account rerun or new credential provenance is requested. No authorization or live execution is created by this document.
+
 > Current packet integration — 2026-09-24: ACCOUNT_MATCH_EVIDENCE_VERIFIED / OFFLINE_A43_TECHNICAL_GATES_PASS / OWNER_DECISION_REQUIRED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY. The selected replacement bundle, root helper, manifest and command are now aligned offline; live readback, runtime authorization, allowlisted writes and RAW/GLOSSARY egress remain owner-scoped and unissued. Do not repeat the account event. Old packet hashes below are historical only.
 
 > Historical execution audit 2026-09-17 at c222b13c: TEST_PACKAGE_REPLACEMENT_PASS / ACCOUNT_RUNNER_REPAIR_REQUIRED / EXPECTED_SOURCE_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY. Installed test APK evidence is retained. Source-derived offline probe reproduced four false acceptances and found the incomplete instrumentation component. Next action is the bounded host repair and trusted-input feasibility work in docs/P5E_NEXT_WORK_REQUEST_20260917.md; no reinstall or device execution. See docs/P5E_EXECUTION_AUDIT_20260917.md and docs/P5E_ACCOUNT_RUNNER_AUDIT_RESULT_20260917.json. SQL/golden PASS remains limited to its tested scope.

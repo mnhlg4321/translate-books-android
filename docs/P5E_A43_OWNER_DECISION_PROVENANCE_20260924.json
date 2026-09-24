@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "p5e.a43.owner-handoff.v1",
+  "baseline": "6e405c1ceed3056232fb6829c2fe3ed8c8708aa3",
+  "status": "READY_FOR_OWNER_DECISION_NOT_AUTHORIZED",
+  "pins": [
+    {
+      "path": "docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md",
+      "sha256": "412790E2E55A8289FF170D3EE93B683553468ADE252EF5C565D833599E5F5EA3"
+    },
+    {
+      "path": "docs/P5E_RAW_AUTHORIZATION_COMMAND.txt",
+      "sha256": "51A71D47BBFC91DE19658FEEA120CF419ECD0F2FFD77562D74B83C73F9A98AB5"
+    },
+    {
+      "path": "scripts/p5e-raw-live-supervisor.ps1",
+      "sha256": "CB9C07312E025DA94D8DB4840B7600CE9A3613DB75CC0E0E4F28EB059E00901F"
+    },
+    {
+      "path": "docs/P5E_A43_OFFLINE_QA_20260924.json",
+      "sha256": "D124711219DFC1FD205CDB9205C394E2DA4CB3569827CA6C9D3B0A592EEC7050"
+    },
+    {
+      "path": "docs/P5E_A43_OWNER_DECISION_WORK_REQUEST_20260924.md",
+      "sha256": "B234114450DDBFF1E7D22CCE3638018886A08A19A33627212FFC64B8E6E1849E"
+    }
+  ],
+  "qa": "Packet/dependency/provenance-probe/PrepareEvent hashes verified; retained synthetic QA not rerun",
+  "accountMatch": "CLOSED_REUSED_EVIDENCE",
+  "runtimeChanges": 0,
+  "deviceActions": 0,
+  "providerCalls": 0,
+  "dbWrites": 0,
+  "credentialReads": 0,
+  "rawLaunches": 0,
+  "ownerDecisionReceived": false,
+  "p6Ready": false,
+  "nextAction": "One owner decision for the exact manifest/command/helper live scope; no further offline work absent changed bytes or a new defect.",
+  "independentReview": {
+    "reviewer": "Luna",
+    "verdict": "PASS",
+    "path": "docs/P5E_A43_OWNER_DECISION_REVIEW_20260924.md",
+    "sha256": "A4341E65C44858CFC413DE7080730C52FC915AC419FCBD493F8E46C59CDA4A9C"
+  }
+}
