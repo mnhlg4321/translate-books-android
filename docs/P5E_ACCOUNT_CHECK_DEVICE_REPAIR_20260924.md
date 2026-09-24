@@ -65,6 +65,31 @@ The old `71/71` preflight and `22/22` command JSON files remain historical
 inputs. They are not overwritten, relabeled as current, or used as device
 authorization.
 
+## Second-pass review disposition
+
+The affected source and fixtures were reviewed again against the six required
+questions; no new P1/P2 blocker was found:
+
+1. Native nonzero exit is preserved and typed; the `17` fake-process case is
+   rejected before any later stage.
+2. Process timeout, bounded stdout/stderr capture, overflow and cleanup status
+   are exercised by real synthetic child processes; timeout is not treated as
+   success or retried.
+3. Expected is scrubbed from preflight/tool descendants, while only the
+   account-runner child inherits the approved Process-only channel; fake logs,
+   argv checks and receipts contain no expected value.
+4. Production and account-test APK hash/certificate/version pins are checked
+   separately; the account APK is never substituted for the RAW/A4 artifact.
+5. Every affected STOP writes a typed receipt with stage/count/reason fields;
+   raw dumpsys, stderr and metadata lines are not written.
+6. The old nonempty event, an attempt marker, stale receipts and the default
+   closed-event path all stop before a live child; no retry path was added.
+
+This is a current-agent second-pass review, not a claim that an independent
+Luna agent completed a fresh PASS. The earlier Luna review and its findings
+remain historical evidence; this disposition records the concrete source and
+fixture checks performed after the repair.
+
 ## Owner/event boundary
 
 The old event directory is:

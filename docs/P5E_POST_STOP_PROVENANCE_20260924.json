@@ -16,7 +16,7 @@
   "metadataStopRootCause": "UNPROVEN_NO_RAW_CAPTURE",
   "closedEvent": "p5e-account-check-device-event-20260924-loader-contract-fix-01",
   "newDeviceActions": 0,
-  "review": "INDEPENDENT_LUNA_REVIEW_COMPLETED_FINDINGS_CLOSED",
+  "review": "SECOND_PASS_REVIEW_COMPLETED_NO_NEW_P1_P2;_PRIOR_LUNA_REVIEW_RETAINED_HISTORICAL;_NO_SEPARATE_AGENT_PASS_CLAIM",
   "eventDecision": "PENDING_OWNER_REVIEW_NOT_AUTHORIZED",
   "proposedEvidenceDirectory": "D:\\P5E-private\\p5e-account-check-device-event-20260924-post-stop-proposed-01",
   "proposedEvidenceDirectoryCreated": false,
@@ -116,7 +116,7 @@
     },
     {
       "path": "docs/P5E_ACCOUNT_CHECK_DEVICE_REPAIR_20260924.md",
-      "sha256": "11BFF9A46072F2E9B2D3C38E039444CC0810118DF7B37D2B4FF9C604C5FC139E"
+      "sha256": "49B80924528AED4286A878E534D65C0AF4853BAF48008E7A3372E952525D7E9E"
     },
     {
       "path": "EDITORIAL_RECOVERY_V4_18.md",
