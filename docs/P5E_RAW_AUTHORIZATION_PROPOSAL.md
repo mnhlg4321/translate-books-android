@@ -1,8 +1,10 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Current execution audit 2026-09-17 at c222b13c: TEST_PACKAGE_REPLACEMENT_PASS / ACCOUNT_RUNNER_REPAIR_REQUIRED / EXPECTED_SOURCE_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY. Installed test APK evidence is retained. Source-derived offline probe reproduced four false acceptances and found the incomplete instrumentation component. Next action is the bounded host repair and trusted-input feasibility work in docs/P5E_NEXT_WORK_REQUEST_20260917.md; no reinstall or device execution. See docs/P5E_EXECUTION_AUDIT_20260917.md and docs/P5E_ACCOUNT_RUNNER_AUDIT_RESULT_20260917.json. SQL/golden PASS remains limited to its tested scope.
+> Post-MATCH A4.3 review — 2026-09-24: ACCOUNT_MATCH_EVIDENCE_VERIFIED / A43_PACKET_INTEGRATION_REQUIRED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY. The remaining concrete gaps are RAW host/path revision and test-artifact/source pin reconciliation, followed by separate collector/RAW/allowlisted-write authorization. Follow docs/P5E_POST_MATCH_A43_WORK_REQUEST_20260924.md to finish the bounded offline integration and QA, then present one final owner decision. Do not repeat the account event. Old packet hashes below are historical, not current dispatch readiness.
 
-Proposal status: LOCAL_BEHAVIORAL_GATE_GREEN / F1_PROVENANCE_PENDING /
+> Historical execution audit 2026-09-17 at c222b13c: TEST_PACKAGE_REPLACEMENT_PASS / ACCOUNT_RUNNER_REPAIR_REQUIRED / EXPECTED_SOURCE_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY. Installed test APK evidence is retained. Source-derived offline probe reproduced four false acceptances and found the incomplete instrumentation component. Next action is the bounded host repair and trusted-input feasibility work in docs/P5E_NEXT_WORK_REQUEST_20260917.md; no reinstall or device execution. See docs/P5E_EXECUTION_AUDIT_20260917.md and docs/P5E_ACCOUNT_RUNNER_AUDIT_RESULT_20260917.json. SQL/golden PASS remains limited to its tested scope.
+
+Historical proposal status (superseded above): LOCAL_BEHAVIORAL_GATE_GREEN / F1_PROVENANCE_PENDING /
 OWNER_DECISION_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN /
 LIVE_ACTIONS_NOT_AUTHORIZED / P6_NOT_READY
 

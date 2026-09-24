@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "p5e.post-match.a43.review.v1",
+  "baseline": "356508d28bc7ff7b04a886335a67f7124859cf9f",
+  "account": "MATCH_RECEIPTS_VERIFIED",
+  "readiness": "A43_OFFLINE_INTEGRATION_READY_NOT_DISPATCH_READY",
+  "p6Ready": false,
+  "rawIssued": false,
+  "gaps": [
+    "RAW_RUNTIME_REVISION_SELECTION",
+    "RAW_TEST_ARTIFACT_SOURCE_PARITY_PENDING",
+    "LIVE_FRESHNESS_READBACK_PENDING_OWNER_SCOPE",
+    "RAW_COLLECTOR_ALLOWLISTED_DB_WRITES_OWNER_APPROVAL_MISSING"
+  ],
+  "pins": [
+    {
+      "path": "docs/P5E_ACCOUNT_IDENTITY_ROUTE_CORRECTED_EVENT_RESULT_20260924.json",
+      "sha256": "E46624D5C0C5E99EB85F6AC2800B5D0F65C1239CD2D30CBF6AC44D99439B7D57"
+    },
+    {
+      "path": "docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md",
+      "sha256": "DD58BF339FCC0C0C2A25895B5AE614AF31A5A281677B33A0D39F171F9DA24501"
+    },
+    {
+      "path": "docs/P5E_RAW_AUTHORIZATION_COMMAND.txt",
+      "sha256": "47044AB73C0B76A00E3E40A85D6E893B0F94C015F6332036484EA5ABB5FA55AB"
+    },
+    {
+      "path": "scripts/p5e-raw-live-supervisor.ps1",
+      "sha256": "B491DD4D26444ACA1234A1A03D8A932A2525FB7CD112F6B6F1520A735C631897"
+    },
+    {
+      "path": "docs/P5E_POST_MATCH_A43_WORK_REQUEST_20260924.md",
+      "sha256": "26FE0E90F987D265154BB5D68AC9038DCDD84B8E30F9BDB08023E4E6DE8067FA"
+    }
+  ],
+  "receiptPins": [
+    {
+      "path": "D:\\P5E-private\\p5e-account-check-device-event-20260924-route-corrected-01\\ACCOUNT_CHECK_DEVICE_COMMAND_RESULT.json",
+      "sha256": "C00F41164A3AC8AA50D5A025729D72606703E445088EA435FE8B6820296BCE81",
+      "verified": true
+    },
+    {
+      "path": "D:\\P5E-private\\p5e-account-check-device-event-20260924-route-corrected-01\\preflight\\ACCOUNT_CHECK_DEVICE_PREFLIGHT_RESULT.json",
+      "sha256": "C0604F6AAA3E9BBF6BC978C97FDE667402C6F572CB368A4B4A8248023D4779C7",
+      "verified": true
+    },
+    {
+      "path": "D:\\P5E-private\\p5e-account-check-device-event-20260924-route-corrected-01\\account-runner\\ACCOUNT_CHECK_RESULT.json",
+      "sha256": "529B082D6255AEFE1323CAAFB6B29200BB4256F81A29DA0C7C597EDA549702C9",
+      "verified": true
+    }
+  ],
+  "scope": "Documentation inventory and relevant control/evidence/source review; not every historical document read in full",
+  "rawManifestChanged": false,
+  "rawCommandChanged": false,
+  "newDeviceActions": 0,
+  "newAccountLaunches": 0,
+  "newProviderCalls": 0,
+  "newDbWrites": 0,
+  "newBuilds": 0,
+  "newInstalls": 0,
+  "ownerSecretsRead": false,
+  "nextAction": "Complete bounded offline packet integration and targeted QA using work request, then present one concrete live owner decision.",
+  "independentReview": {
+    "reviewer": "Luna",
+    "verdict": "PASS_ACTIONABLE_OFFLINE_REQUEST",
+    "path": "docs/P5E_POST_MATCH_LUNA_REVIEW_20260924.md",
+    "sha256": "903EBC453EEEA62DAD39A15111453C3068F7CF651328236A2F15668E58891A5E",
+    "corrections": "Explicit parity pending, immutable source bundle authority, old helper revision not hash mismatch"
+  }
+}

@@ -1,12 +1,14 @@
 # Editorial Recovery v4.18
 
+> Post-MATCH A4.3 review — 2026-09-24: ACCOUNT_MATCH_EVIDENCE_VERIFIED / A43_PACKET_INTEGRATION_REQUIRED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY. The remaining concrete gaps are RAW host/path revision and test-artifact/source pin reconciliation, followed by separate collector/RAW/allowlisted-write authorization. Follow docs/P5E_POST_MATCH_A43_WORK_REQUEST_20260924.md to finish the bounded offline integration and QA, then present one final owner decision. Do not repeat the account event. Old packet hashes below are historical, not current dispatch readiness.
+
 > Current offline identity repair — 2026-09-24: `ACCOUNT_IDENTITY_LIFECYCLE_REPAIRED_OFFLINE` remains PASS. The repaired account-only runner now has a terminal typed `MATCH`; no further offline parser work is authorized without a new failing case.
 
 > Current event disposition — 2026-09-24: event `D:\P5E-private\p5e-account-check-device-event-20260924-route-corrected-01` is `CLOSED_ACCOUNT_MATCH / ACCOUNT_CHECK_COMPLETED_MATCH`. Preflight passed 7 read-only calls; the runner launched once and exited zero. Receipt hashes are recorded in `docs/P5E_ACCOUNT_IDENTITY_ROUTE_CORRECTED_EVENT_RESULT_20260924.json`. Do not retry, reuse, rename or reopen this event.
 
 > Current P5E state: `HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / PREFLIGHT_PASS_7_READ_ONLY_CALLS / ACCOUNT_CHECK_COMPLETED_MATCH / ACCOUNT_RUNNER_COMPLETED_MATCH / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The typed result proves only the account-test predicate; it does not authorize provider access, RAW, P5 exit or P6.
 
-> Current next action: review the remaining A4.3 gate conditions and propose the next separately authorized step; do not dispatch RAW/P6 or alter provider/DB state. Provider calls, DB writes, RAW dispatches and install attempts were all zero; release checklist steps 05–09 remain incomplete.
+> Superseded review action (completed by the post-MATCH audit above): review the remaining A4.3 gate conditions and propose the next separately authorized step; do not dispatch RAW/P6 or alter provider/DB state. Provider calls, DB writes, RAW dispatches and install attempts were all zero; release checklist steps 05–09 remain incomplete.
 
 > The prior route event `MISMATCH` remains historical and unchanged in `docs/P5E_ACCOUNT_IDENTITY_EVENT_RESULT_20260924.json`; the older signature-layout-adapter `NOT_PROVEN` receipt remains unchanged in `docs/P5E_ACCOUNT_EVENT_RESULT_20260924.json`.
 
