@@ -1,0 +1,50 @@
+P5E ACCOUNT-ONLY OWNER COMMAND — PROPOSAL, NOT AUTHORIZATION
+
+Run this only after explicitly accepting the exact packet:
+docs/P5E_POST_STOP_EVENT_PACKET_20260924.md
+
+This command is intentionally entered in the same Windows PowerShell window
+that holds P5E_OWNER_ENDPOINT_ACCOUNT_FINGERPRINT. The explicit child below is
+created from that window so the Process value is inherited while the command's
+native exit does not close the owner shell. Do not open a separate unrelated
+shell. Do not create the evidence directory before this command. The old
+closed event directory is never reused.
+
+Set-Location -LiteralPath 'D:\App Translate Books'
+$commandPath = 'D:\App Translate Books\scripts\p5e-account-check-device-command.ps1'
+$expectedCommandSha256 = 'C09D66D8C576EF8EAD9C8EE86E87F7CB1A22B591A8BF01D207FCA8228190B4C0'
+$eventEvidenceDirectory = 'D:\P5E-private\p5e-account-check-device-event-20260924-post-stop-proposed-01'
+$actualCommandSha256 = (Get-FileHash -LiteralPath $commandPath -Algorithm SHA256).Hash.ToUpperInvariant()
+if ($actualCommandSha256 -cne $expectedCommandSha256) {
+    throw 'P5E_ACCOUNT_CHECK_DEVICE_COMMAND_PIN_DRIFT_STOP'
+}
+if (Test-Path -LiteralPath $eventEvidenceDirectory) {
+    throw 'P5E_ACCOUNT_CHECK_DEVICE_COMMAND_PROPOSED_EVIDENCE_NOT_UNUSED_STOP'
+}
+$expectedShapeProbe = [Environment]::GetEnvironmentVariable('P5E_OWNER_ENDPOINT_ACCOUNT_FINGERPRINT', 'Process')
+try {
+    if ([string]::IsNullOrWhiteSpace($expectedShapeProbe)) {
+        Write-Output 'P5E_ACCOUNT_CHECK_DEVICE_COMMAND=STOP'
+        Write-Output 'P5E_ACCOUNT_CHECK_DEVICE_COMMAND_OUTCOME=EXPECTED_LOAD_OWNER_REPORTED_PROCESS_MISSING_STOP'
+        return
+    }
+    if ($expectedShapeProbe -notmatch '^[0-9a-fA-F]{64}$') {
+        Write-Output 'P5E_ACCOUNT_CHECK_DEVICE_COMMAND=STOP'
+        Write-Output 'P5E_ACCOUNT_CHECK_DEVICE_COMMAND_OUTCOME=EXPECTED_LOAD_OWNER_REPORTED_PROCESS_SHAPE_STOP'
+        return
+    }
+} finally {
+    $expectedShapeProbe = $null
+}
+$ownerPowerShell = 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe'
+& $ownerPowerShell -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $commandPath -EvidenceDirectory $eventEvidenceDirectory
+$ownerExitCode = $LASTEXITCODE
+Write-Output ('P5E_ACCOUNT_CHECK_DEVICE_COMMAND_EXIT_CODE=' + [string]$ownerExitCode)
+
+Return only:
+P5E_ACCOUNT_CHECK_DEVICE_COMMAND=PASS|STOP
+P5E_ACCOUNT_CHECK_DEVICE_COMMAND_OUTCOME=<typed outcome>
+<redacted command receipt path>
+
+Do not retry, rename the directory, reinstall, uninstall, clear data, rotate
+the key, run a diagnostic ADB command, call RAW/provider/DB, or send raw output.

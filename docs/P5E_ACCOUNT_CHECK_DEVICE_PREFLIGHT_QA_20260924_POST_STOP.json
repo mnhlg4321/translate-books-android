@@ -1,0 +1,53 @@
+{
+    "schemaVersion":  "p5e.account-check.device-preflight.qa.v2",
+    "status":  "PASS",
+    "totalAssertions":  133,
+    "passedAssertions":  133,
+    "failures":  [
+
+                 ],
+    "source":  {
+                   "preflightSha256":  "A82FAE2232C9F5C579CBC2D012B03EB55CCFEB567DAA399A89DEBC661BD235D5",
+                   "qaScriptSha256":  "A84BC662D0942B453E9E887868E0224E03575996BD0B5AE10EE4DED1DF0E4B51"
+               },
+    "host":  {
+                 "expectedHost":  "Windows PowerShell 5.1",
+                 "actualHost":  "5.1.26100.9168",
+                 "actualHostProcess":  "5.1.26100.9168"
+             },
+    "cases":  {
+                  "pass_full_identity_read_only":  "PASS",
+                  "real_dumpsys_spacing_layout":  "PASS",
+                  "metadata_package_absent":  "PASS",
+                  "metadata_empty_output":  "PASS",
+                  "metadata_package_duplicate":  "PASS",
+                  "metadata_version_missing":  "PASS",
+                  "metadata_version_duplicate":  "PASS",
+                  "metadata_version_invalid":  "PASS",
+                  "metadata_signature_missing":  "PASS",
+                  "metadata_signature_duplicate":  "PASS",
+                  "metadata_signature_invalid":  "PASS",
+                  "metadata_inline_wrapper_unsupported":  "PASS",
+                  "metadata_stdout_valid_stderr_error":  "PASS",
+                  "wrong_production_hash":  "PASS",
+                  "wrong_production_certificate":  "PASS",
+                  "wrong_test_hash":  "PASS",
+                  "wrong_production_version":  "PASS",
+                  "wrong_test_signature_pin":  "PASS",
+                  "split_apk_path":  "PASS",
+                  "device_offline":  "PASS",
+                  "native_nonzero":  "PASS",
+                  "timeout_bounded":  "PASS",
+                  "capture_overflow":  "PASS",
+                  "reference_certificate_pin":  "PASS",
+                  "script_pin":  "PASS",
+                  "stale_evidence_stop_preserves_existing_files":  "PASS",
+                  "static_source_boundary_and_bounded_ops":  "PASS"
+              },
+    "syntheticOnly":  true,
+    "adbInvocations":  0,
+    "deviceActions":  0,
+    "providerCalls":  0,
+    "dbWrites":  0,
+    "rawDispatches":  0
+}

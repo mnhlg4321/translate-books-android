@@ -1,9 +1,15 @@
 # P5E owner input — metadata provenance only; expected value remains local
 
+> Current post-STOP local disposition — 2026-09-24: `LOCAL_REPAIR_GREEN / POST_STOP_PREFLIGHT_QA_133_OF_133 / POST_STOP_COMMAND_QA_26_OF_26 / PATH_GUARD_QA_12_OF_12 / OWNER_EVENT_DECISION_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`.
+> The old event is terminal at `PRODUCTION_PACKAGE` and must not be reused. The current source pins and one-time owner command are in `docs/P5E_POST_STOP_EVENT_PACKET_20260924.md` and `docs/P5E_ACCOUNT_CHECK_DEVICE_OWNER_COMMAND_20260924.txt`; the proposed evidence directory is unused.
+> Sole next action: owner reviews the exact packet and decides whether to authorize one new account-only event. This guide does not authorize device work. Earlier current/next-action text below is historical context; release 05–09 remain incomplete.
+
+
 > Current P5E state: `HOST_RUNNER_REPAIR_OFFLINE_PASS /
 > EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW /
-> EXPECTED_VALUE_LOADER_OFFLINE_PASS / EXPECTED_VALUE_PROCESS_LOAD_PENDING /
-> ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`.
+> EXPECTED_VALUE_LOADER_OFFLINE_PASS / EXPECTED_VALUE_PROCESS_LIFETIME_UNKNOWN /
+> OWNER_EVENT_DECISION_PENDING / ACCOUNT_CHECK_NOT_EXECUTED /
+> A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`.
 > The qualified loader does not launch an account check.
 
 Dùng mẫu này cho phản hồi owner tiếp theo. Không gửi API key, endpoint,
@@ -61,13 +67,14 @@ ranh giới transport, owner mới tự tạo expected digest trong một proces
 bộ theo Java semantics: endpoint đã normalize, một LF, rồi exact API-key bytes.
 Agent không đọc key, endpoint hoặc digest.
 
-Bước còn lại chưa thực hiện là owner tự nạp digest vào `Process` của đúng host
-PowerShell runner. Dùng `scripts/p5e-load-expected-digest.ps1` theo hướng dẫn
-đã QA trong `docs/P5E_EXPECTED_VALUE_LOADER_REVIEW_20260923.md`: script chỉ
+Bản ghi cũ chỉ xác nhận owner đã nạp trong một event trước; Process lifetime hiện
+tại không biết. Nếu packet mới được owner chấp thuận và cửa sổ hiện tại không
+còn value, owner có thể dùng `scripts/p5e-load-expected-digest.ps1` theo hướng
+dẫn đã QA trong `docs/P5E_EXPECTED_VALUE_LOADER_REVIEW_20260923.md`: script chỉ
 hỏi key ở hidden prompt, khóa endpoint P5E hiện hành trong source và chỉ ghi
-digest lower-case vào Process scope. Không gửi digest cho agent và không launch
-ADB trong bước nạp. Việc metadata được accept hoặc loader QA PASS không tự mở
-account check.
+digest lower-case vào Process scope. Đây là phục hồi input local, không phải
+account retry. Không gửi digest cho agent và không launch ADB trong bước nạp.
+Loader QA hoặc provenance metadata không tự mở account check.
 
 Chạy script trong một PowerShell window riêng do owner kiểm soát và giữ chính
 window đó mở sau signal `P5E_EXPECTED_VALUE_PROCESS_LOAD=PASS`. Không chạy nó

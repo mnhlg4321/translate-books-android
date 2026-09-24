@@ -1,5 +1,16 @@
 # P5E — yêu cầu công việc và provenance kế tiếp
 
+> Superseded navigation — 2026-09-24: local post-STOP repair is now green (`128/128` preflight, `26/26` command, `12/12` path guard). Do not follow this file's earlier owner-load/device sequence. Use `docs/P5E_POST_STOP_EVENT_PACKET_20260924.md` for the pending owner decision; the old event remains closed and no device action is authorized here.
+
+> Current post-STOP review — 2026-09-24: FAILED_REPAIRING (parent reparse guard defect reproduced offline in preflight and command). Existing 71/71 and 22/22 evidence remains scoped; it does not qualify this missed case. Owner event stays closed; account check not executed; A4.3/RAW/P5 exit/P6 remain unavailable.
+> Sole next action: repair the demonstrated path guard and metadata failure classification offline, close affected QA, then present one concrete new-event decision under [current work request](P5E_POST_STOP_NEXT_WORK_REQUEST_20260924.md). No device approval is requested before local repair is complete. Earlier current/next-action statements below are historical checkpoints and do not override this review.
+
+
+> Current override — 2026-09-24: `EXPECTED_LOAD_OWNER_REPORTED / EXPECTED_VALUE_LOADER_OFFLINE_PASS / EXPECTED_VALUE_PROCESS_SHAPE_PASS_AT_EVENT_START / PREFLIGHT_DEVICE_METADATA_STOP / PREFLIGHT_OFFLINE_PASS / ACCOUNT_COMMAND_OFFLINE_PASS / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`.
+> The owner event passed Process presence/shape and stopped at `PRODUCTION_PACKAGE` with `ACCOUNT_CHECK_PREFLIGHT_PACKAGE_METADATA_INVALID_STOP` after two read-only ADB child calls; no account runner or APK pull occurred. The agent did not read the value or retain raw dumpsys. Offline parser repair is `71/71`, command QA `22/22`; the event is terminal and no retry is authorized.
+> Sole next action: owner reviews the parser repair and explicitly decides whether a new single-use device event is warranted. Prior dated state/next-action statements below describe earlier checkpoints and do not override this notice. Release 05–09 remain incomplete.
+
+
 > **Loại công việc:** QA local loader và một bước owner-local Process-only.
 > **Không phải:** lệnh chạy thiết bị, kiểm tra tài khoản, A4.3, RAW, P5 exit hay P6.
 
@@ -79,8 +90,8 @@ chưa thay đổi.
 | Account test source | `2F4BF9AD27CF5DF93D89456767423271907598EA209A0AD6E4C27599BC20063C` | test-only account comparison boundary |
 | Account test APK, historical replacement | `058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8` | đã replacement đúng một lần; không reinstall |
 | Repair result | `D72483FC31409424CB95EB0575D839CCC239B8BC8A84FAE8BEDCAC398C2773AC` | immutable baseline sau metadata owner, trước loader |
-| Expected-value loader | `28A6B0AC8669FC56D19C5C1C256E0F4EA1C0E8D693CC319A4FE8603FC165C078` | fixed-endpoint, hidden-prompt Process-only loader |
-| Loader QA | `16B6ADF1694E541AEAD5197CDD1A060AF165D7A24A7BB9831836F87F924297C5` | 26/26 synthetic offline PASS |
+| Expected-value loader (corrected current) | `1D6C1DEA14E70001F81DB841668969A51DB15417436E742BA018837BFA587A9D` | fixed-endpoint, hidden-prompt Process-only loader |
+| Loader QA (corrected current) | `933A7780700F3562106992BFF3F801B841AB09227C4A2664D192685541914E21` | 27/27 synthetic offline PASS |
 
 QA được chạy lại từ source hiện tại bằng
 `scripts/test-p5e-account-runner-repair.ps1` với output tạm ngoài repository:
@@ -101,8 +112,8 @@ transcript vào chat, Git hay evidence chung.
 một lần trong window PowerShell riêng do owner kiểm soát.
 
 1. Mở `docs/P5E_EXPECTED_VALUE_LOADER_REVIEW_20260923.md`. Xác nhận loader
-   hash `28A6B0AC8669FC56D19C5C1C256E0F4EA1C0E8D693CC319A4FE8603FC165C078`
-   và QA hash `16B6ADF1694E541AEAD5197CDD1A060AF165D7A24A7BB9831836F87F924297C5`.
+   hash `1D6C1DEA14E70001F81DB841668969A51DB15417436E742BA018837BFA587A9D`
+   và QA hash `933A7780700F3562106992BFF3F801B841AB09227C4A2664D192685541914E21`.
    Hash lệch là `PIN_DRIFT_STOP`; không sửa file, build hay chạy device.
 2. Mở một Windows PowerShell window riêng, chuyển tới
    `D:\App Translate Books`, rồi chạy trực tiếp

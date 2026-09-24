@@ -1,0 +1,32 @@
+{
+    "schemaVersion":  "p5e.account-check.device-command.qa.v1",
+    "status":  "PASS",
+    "totalAssertions":  26,
+    "passedAssertions":  26,
+    "failures":  [
+
+                 ],
+    "source":  {
+                   "commandSha256":  "C09D66D8C576EF8EAD9C8EE86E87F7CB1A22B591A8BF01D207FCA8228190B4C0",
+                   "preflightSha256":  "A82FAE2232C9F5C579CBC2D012B03EB55CCFEB567DAA399A89DEBC661BD235D5",
+                   "qaScriptSha256":  "9EA40F3F3601A62DD68B72299E9F2660FABB7BCA6405E7C430E5C7BBDFA9A61D"
+               },
+    "host":  {
+                 "expectedHost":  "Windows PowerShell 5.1",
+                 "actualHost":  "5.1.26100.9168",
+                 "actualHostProcess":  "5.1.26100.9168"
+             },
+    "cases":  {
+                  "pass_preflight_then_one_runner":  "PASS",
+                  "repeated_command_blocked_before_live_work":  "PASS",
+                  "preflight_stop_never_launches_runner":  "PASS",
+                  "default_closed_event_blocked_before_live_work":  "PASS",
+                  "static_orchestration_guards":  "PASS"
+              },
+    "syntheticOnly":  true,
+    "adbInvocations":  0,
+    "deviceActions":  0,
+    "providerCalls":  0,
+    "dbWrites":  0,
+    "rawDispatches":  0
+}
