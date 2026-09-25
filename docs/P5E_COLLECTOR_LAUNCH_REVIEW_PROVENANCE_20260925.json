@@ -1,0 +1,57 @@
+{
+  "baseline": "148a6a52da7fec230c7e1c1e8bacae758c806816",
+  "status": "OFFLINE_DIAGNOSIS_COMPLETE_RUNTIME_REPAIR_REQUIRED",
+  "pins": [
+    {
+      "path": "D:\\P5E-private\\raw-live-20260925-005619067-59f53846763e4f09b0fb948551b3b98a\\COLLECTOR_COMMAND_LOG.jsonl",
+      "sha256": "E7C9A50F1443154D067E39D10FA1BB88F449F54DEBA2BAF50AEFFA248C79A5F9"
+    },
+    {
+      "path": "D:\\P5E-private\\raw-live-20260925-005619067-59f53846763e4f09b0fb948551b3b98a\\COLLECTOR_OUTCOME.json",
+      "sha256": "C5A1C44416519EFBD1FA8ED3B018D7D564FA2C851D6891857B0A7ACA30E6F83E"
+    },
+    {
+      "path": "D:\\P5E-private\\raw-live-20260925-005619067-59f53846763e4f09b0fb948551b3b98a\\EVENT_PLAN.json",
+      "sha256": "F89092CD396E8A025A58DF316C7ACF51377E92AF2B6E304755895398058638E3"
+    },
+    {
+      "path": "scripts/p5e-raw-live-supervisor.ps1",
+      "sha256": "CB9C07312E025DA94D8DB4840B7600CE9A3613DB75CC0E0E4F28EB059E00901F"
+    },
+    {
+      "path": "docs/P5E_RAW_AUTHORIZATION_COMMAND.txt",
+      "sha256": "51A71D47BBFC91DE19658FEEA120CF419ECD0F2FFD77562D74B83C73F9A98AB5"
+    },
+    {
+      "path": "scripts/test-p5e-collector-launch-probe.ps1",
+      "sha256": "C4C7F4899B0C8EC7C4293D908B1362F147661467DD622ECD821BA15F5FABC870"
+    },
+    {
+      "path": "docs/P5E_COLLECTOR_LAUNCH_PROBE_20260925.json",
+      "sha256": "FB9015212D9C36403304A18C80EE4649DD2FC56F9027068FEAEA9AA86459EE24"
+    },
+    {
+      "path": "docs/P5E_COLLECTOR_LAUNCH_NEXT_WORK_REQUEST_20260925.md",
+      "sha256": "2C85C82E5EA4BD63D0A84C6302A46BD74CC298A9E01541904F74F8FCAE0B422A"
+    }
+  ],
+  "historicalNativeErrorProven": false,
+  "currentAdbOnPath": false,
+  "sdkAdbFilePresent": true,
+  "syntheticProbe": "PASS_DIAGNOSTIC_NOT_REPAIR",
+  "runtimeChanged": false,
+  "realAdbLaunches": 0,
+  "deviceActions": 0,
+  "providerCalls": 0,
+  "credentialReads": 0,
+  "dbWrites": 0,
+  "rawDispatches": 0,
+  "oldEventClosed": true,
+  "p6Ready": false,
+  "independentReview": {
+    "reviewer": "Luna",
+    "verdict": "DIAGNOSTIC_PASS_REPAIR_NOT_GREEN",
+    "path": "docs/P5E_COLLECTOR_LAUNCH_LUNA_REVIEW_20260925.md",
+    "sha256": "86495C08102E525B587771D0C60D55050AFB65C7D602F2449CFD0AC9F84F3616"
+  }
+}

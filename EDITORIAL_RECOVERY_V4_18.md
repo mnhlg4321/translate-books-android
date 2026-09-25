@@ -1,5 +1,7 @@
 # Editorial Recovery v4.18
 
+> Offline launch audit 2026-09-25: RAW collector/Dispatch depend on bare tool names; current host cannot resolve adb/apksigner while configured SDK adb.exe exists. Exact historical native error remains unproven. Follow docs/P5E_COLLECTOR_LAUNCH_NEXT_WORK_REQUEST_20260925.md for one bounded toolchain/launch repair across Before, Dispatch and After, with synthetic integration and redacted diagnostics. No runtime repair or new owner event has been performed by this audit.
+
 > Current owner decision/result — 2026-09-25: the owner authorized exactly one A4.3 event on serial `15e84958` under the final hash-bound packet. That event was attempted once and stopped before dispatch; no retry or redispatch is permitted.
 
 > A4.3 live outcome — 2026-09-25: `A4_3_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The Before collector failed at `pm-path-production-before`; no provider, credential, DB or device mutation occurred.
