@@ -1,7 +1,7 @@
 # Luna review — RAW collector launch repair
 
-Date: 2026-09-25  
-Baseline: `148a6a52da7fec230c7e1c1e8bacae758c806816`  
+Date: 2026-09-25
+Baseline: `148a6a52da7fec230c7e1c1e8bacae758c806816`
 Scope: offline critique of `P5E_COLLECTOR_LAUNCH_NEXT_WORK_REQUEST_20260925.md`
 
 ## Verdict
@@ -23,4 +23,3 @@ Launch diagnostics should persist only an allowlisted error class/native code or
 ## Release boundary
 
 Until those gates pass, the state is `LOCAL_HOST_REPAIR_REQUIRED / OLD_EVENT_CLOSED / RAW_NOT_DISPATCHED / P6_NOT_READY`. A future live attempt requires a new packet and a new owner decision; the prior event decision and hashes cannot be reused. Even after offline repair is green, it establishes tool-launch readiness only and does not establish live RAW acceptance or P5/P6 readiness.
-
