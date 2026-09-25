@@ -1,16 +1,18 @@
 # Editorial Recovery v4.18
 
-> Current owner handoff: docs/P5E_A43_OWNER_DECISION_WORK_REQUEST_20260924.md defines the one remaining live decision and ordered execution scope. Offline packet and account MATCH are closed; no account rerun or new credential provenance is requested. No authorization or live execution is created by this document.
+> Current owner decision/result — 2026-09-25: the owner authorized exactly one A4.3 event on serial `15e84958` under the final hash-bound packet. That event was attempted once and stopped before dispatch; no retry or redispatch is permitted.
 
-> Post-MATCH A4.3 review — 2026-09-24: ACCOUNT_MATCH_EVIDENCE_VERIFIED / A43_OFFLINE_PACKET_TECHNICAL_GATES_PASS / OWNER_DECISION_REQUIRED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY. Artifact/source parity, root-runtime pin/path coherence, command/helper self-hash and targeted synthetic QA are PASS. Live package/DB/WAL readback, fresh runtime authorization, provider egress and allowlisted writes remain pending one owner decision. Do not repeat the account event; old packet hashes below are historical only.
+> A4.3 live outcome — 2026-09-25: `A4_3_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The Before collector failed at `pm-path-production-before`; no provider, credential, DB or device mutation occurred.
 
 > Current offline identity repair — 2026-09-24: `ACCOUNT_IDENTITY_LIFECYCLE_REPAIRED_OFFLINE` remains PASS. The repaired account-only runner now has a terminal typed `MATCH`; no further offline parser work is authorized without a new failing case.
 
-> Current event disposition — 2026-09-24: event `D:\P5E-private\p5e-account-check-device-event-20260924-route-corrected-01` is `CLOSED_ACCOUNT_MATCH / ACCOUNT_CHECK_COMPLETED_MATCH`. Preflight passed 7 read-only calls; the runner launched once and exited zero. Receipt hashes are recorded in `docs/P5E_ACCOUNT_IDENTITY_ROUTE_CORRECTED_EVENT_RESULT_20260924.json`. Do not retry, reuse, rename or reopen this event.
+> Current event disposition — 2026-09-25: event `D:\P5E-private\raw-live-20260925-005619067-59f53846763e4f09b0fb948551b3b98a` is `CLOSED_A43_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP`. One read-only collector command was recorded with `launchCount=0`, `outputCaptured=false`; provider calls, credential reads, device mutations and redispatches are all `0`. No After collector or live method dispatch was reached. Preserve this event and do not retry, reuse or rename it.
 
-> Current P5E state: `HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / PREFLIGHT_PASS_7_READ_ONLY_CALLS / ACCOUNT_CHECK_COMPLETED_MATCH / ACCOUNT_RUNNER_COMPLETED_MATCH / A43_OFFLINE_PACKET_TECHNICAL_GATES_PASS / OWNER_DECISION_REQUIRED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The typed account result and offline packet do not authorize provider access, RAW, P5 exit or P6.
+> Current P5E state: `HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / PREFLIGHT_PASS_7_READ_ONLY_CALLS / ACCOUNT_CHECK_COMPLETED_MATCH / ACCOUNT_RUNNER_COMPLETED_MATCH / A43_OFFLINE_PACKET_TECHNICAL_GATES_PASS / A43_OWNER_DECISION_RECEIVED / A43_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The event did not establish a RAW predecessor or acceptance.
 
-> Superseded review action (completed by this offline packet): artifact/source selection, manifest, root helper, command and targeted QA are frozen for owner review; do not dispatch RAW/P6 or alter provider/DB state. Provider calls, DB writes, RAW dispatches, builds and installs in this task were all zero; release checklist steps 05–09 remain incomplete.
+> Live evidence: `EVENT_PLAN.json` SHA-256 `F89092CD396E8A025A58DF316C7ACF51377E92AF2B6E304755895398058638E3`; `COLLECTOR_OUTCOME.json` SHA-256 `C5A1C44416519EFBD1FA8ED3B018D7D564FA2C851D6891857B0A7ACA30E6F83E`; `COLLECTOR_COMMAND_LOG.jsonl` SHA-256 `E7C9A50F1443154D067E39D10FA1BB88F449F54DEBA2BAF50AEFFA248C79A5F9`. The concrete limit is the collector launch failure; its root cause is not proven by this event.
+
+> The approved owner decision is consumed by this terminal one-event STOP. Diagnose the concrete `pm-path-production-before` collector failure offline before any new owner decision; do not retry this event or open P6.
 
 > The prior route event `MISMATCH` remains historical and unchanged in `docs/P5E_ACCOUNT_IDENTITY_EVENT_RESULT_20260924.json`; the older signature-layout-adapter `NOT_PROVEN` receipt remains unchanged in `docs/P5E_ACCOUNT_EVENT_RESULT_20260924.json`.
 
@@ -222,7 +224,7 @@ mutation was one `adb install -r` replacement of the test package; production
 package operations, provider/API calls, authorization creation, attempt
 creation and reconciliation creation were all `0`. The later local H1–H4
 repair closed the host evidence chain without changing the device pins. The
-current next action is one owner decision against the final hash-bound packet. The historical
+historical next action was one owner decision against the final hash-bound packet. The historical
 packet remains RAW-only with one primary call, zero repair/retry and no
 RECONCILE; it is not an authorization.
 P5/P5E have not exited; execution,
@@ -231,9 +233,9 @@ disabled. Historical `HISTORICAL_CODE196_PRESERVATION_FAILED`,
 `PILOT_DATA_PRESERVATION_FAILED`, the A3.2 preservation gap and consumed
 A2/A3.2 approvals remain unchanged.
 
-## P5E.9B-A4.3 — offline packet technical gates pass; owner decision pending
+## P5E.9B-A4.3 — owner-authorized event terminal pre-dispatch collector STOP
 
-The local repair packet is technically ready for one owner decision, but it is not an approval and it does not issue A4.3. Current status is `ACCOUNT_MATCH_EVIDENCE_VERIFIED / A43_OFFLINE_PACKET_TECHNICAL_GATES_PASS / OWNER_DECISION_REQUIRED / LIVE_ACTIONS_NOT_AUTHORIZED`.
+The local repair packet passed offline review and the owner decision was received. The single live event then stopped in the Before collector at `pm-path-production-before`, before any live method or provider dispatch. Current status is `A43_OFFLINE_PACKET_TECHNICAL_GATES_PASS / A43_OWNER_DECISION_RECEIVED / A43_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP / RAW_NOT_DISPATCHED / P6_NOT_READY`.
 
 The fixed-scope owner packet is
 docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md, SHA-256
@@ -355,11 +357,10 @@ The selected live method performs its own preflightOnly checks internally; no
 separate instrumentation preflight is permitted. F2/F3 host evidence and the
 source-derived argument list are recorded in the preparation evidence above.
 
-The single next action is one owner decision against the final manifest,
-command, root helper, artifact/source and QA hashes for this exact live scope:
-read-only before/after collector, memory-only account comparison in the live
-method, at most one RAW/GLOSSARY call, fresh runtime authorization and only the
-allowlisted exact tuple writes. No live action is issued by this document.
+The single next action is offline diagnosis of the concrete
+`pm-path-production-before` collector launch failure using the preserved event
+evidence. No retry or redispatch of this event is permitted, and P6 remains
+closed.
 
 ## Historical A4 exact-preflight evidence-channel blocker
 
