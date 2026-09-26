@@ -1,6 +1,6 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Current work package — 2026-09-26: `P5E_A43_AUTHORIZED_SINGLE_EVENT_EXECUTION / OWNER_DECISION_RECEIVED / SINGLE_EVENT_AUTHORIZED_NOT_YET_CONSUMED / NOT_DISPATCHED / A4_3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The exact single-event approval was received for serial `15e84958` and the final manifest/command/helper/exporter/bridge hashes. No live action occurred while recording the decision. Current work request: `docs/P5E_A43_AUTHORIZED_SINGLE_EVENT_NEXT_WORK_REQUEST_20260926.md`; provenance: `docs/P5E_A43_AUTHORIZED_SINGLE_EVENT_PROVENANCE_20260926.json`; post-authorization Luna review `PASS / 0 BLOCKER / 0 HIGH`.
+> Current work package — 2026-09-26: `AUTHORIZED_SINGLE_A43_EVENT_PRECHECK / EXPECTED_PROCESS_VALUE_MISSING / EVENT_NOT_OPENED / NOT_DISPATCHED / A4_3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. Frozen packet/artifact/path/serial checks passed, but the expected account digest was absent from the executing PowerShell Process. Typed stop: `docs/P5E_A43_AUTHORIZED_SINGLE_EVENT_PRECHECK_STOP_20260926.json`; the packet was not modified and the owner decision was not re-requested.
 
 > Closed historical A4.3 outcome — 2026-09-26: the explicit owner decision was received and consumed by exactly one event. The new packet stopped in the read-only Before collector with `COLLECTOR_TYPED_STOP / P5E_COLLECTOR_BINDING_TUPLE_MISMATCH`; RAW was not dispatched, P5 exit was not claimed and P6 remains not ready. Result: `docs/P5E_A43_EVENT_RESULT_20260926.json`. This does not authorize the current offline repair or a new event.
 
@@ -8,7 +8,7 @@
 
 > Current DB readback prerequisite — 2026-09-26: `OFFLINE_DB_HOST_READBACK_REPAIR_PASS` is bound by `docs/P5E_DB_HOST_READBACK_REPAIR_QA_20260925.json` at `56/56 PASS`. The old proposal, manifest/command and 2026-09-25 decision remain consumed; no live event is authorized by this work.
 
-> Current Next action: execute exactly one fresh A4.3 event under the authorized single-event work request using the frozen command. Do not ask for the same approval again; do not retry/redispatch, repair during the event, reuse a closed event, claim P5 exit without complete evidence or open P6.
+> Current Next action: preserve the typed precheck stop; do not execute the command, obtain or infer the expected digest, repair the packet, reuse the approval, retry or open P6.
 
 > Superseded DB diagnosis — 2026-09-25: WAL/SHM exit `1` are valid absence results. The actual stop was the direct Android `sqlite3` consistent-read command. This proposal remains consumed and is not executable; the offline binary-export/host-readback repair is now complete. No new key, account check or owner live decision was requested for that repair.
 
