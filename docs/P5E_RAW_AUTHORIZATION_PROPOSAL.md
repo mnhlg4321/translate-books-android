@@ -1,8 +1,26 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Current owner handoff: docs/P5E_A43_OWNER_DECISION_WORK_REQUEST_20260924.md defines the one remaining live decision and ordered execution scope. Offline packet and account MATCH are closed; no account rerun or new credential provenance is requested. No authorization or live execution is created by this document.
+> Current work package — 2026-09-26: `P5E_A43_FINAL_EXECUTABLE_PACKET_REPIN / FINAL_EXECUTABLE_PACKET_READY / OWNER_DECISION_PENDING / NOT_DISPATCHED / A4_3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. Final offline QA is `14/14 PASS` with `0` failures; binding `262/262`, regression `175/175`, DB QA `56/56`; Luna exact-byte review is `PASS / 0 BLOCKER / 0 HIGH`. Final manifest `23AF3DFAA81F50484187AFD183EA56454EBE38022C67DA2B963245A42D230053`, command `C84355B912DCF3BB59D52004EC80E06CE8B37FC75B5ABE083ECCA95D64C89BA3`, helper `17CC1C19BF4F6B1B71A77100D710375BDBCFDA7AC82D4508634B68E857DEFD2E`; provenance `docs/P5E_A43_FINAL_EXECUTABLE_PACKET_PROVENANCE_20260926.json`; sole current owner request `docs/P5E_A43_FINAL_EXECUTABLE_OWNER_AUTHORIZATION_REQUEST_20260926.md`.
 
-> Current packet integration — 2026-09-24: ACCOUNT_MATCH_EVIDENCE_VERIFIED / OFFLINE_A43_TECHNICAL_GATES_PASS / OWNER_DECISION_REQUIRED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY. The selected replacement bundle, root helper, manifest and command are now aligned offline; live readback, runtime authorization, allowlisted writes and RAW/GLOSSARY egress remain owner-scoped and unissued. Do not repeat the account event. Old packet hashes below are historical only.
+> Closed historical A4.3 outcome — 2026-09-26: the explicit owner decision was received and consumed by exactly one event. The new packet stopped in the read-only Before collector with `COLLECTOR_TYPED_STOP / P5E_COLLECTOR_BINDING_TUPLE_MISMATCH`; RAW was not dispatched, P5 exit was not claimed and P6 remains not ready. Result: `docs/P5E_A43_EVENT_RESULT_20260926.json`. This does not authorize the current offline repair or a new event.
+
+> Historical consumed-packet audit — 2026-09-26: this original proposal and its manifest/command remain historical and consumed. The separate post-repair packet was verified at execution with manifest `669C54049920C49344D2FB55533EFA9FA9F87E933A6A18DE5FA7215F1146D147`, helper `8A0509743403B28F7C074BE37DD7D08D41A1B9C0E56AC70D8A43024803CDF434`, exporter `D8783B31F9141458CA397915664CA79B07D3161A5E0F0D3B4365C5C65EA41D06`, bridge `4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111` and command `A2EF2BA90F07D3F4D2517E7F1541EA752615F6BCF61E304E579E301A8D5D3D08`.
+
+> Current DB readback prerequisite — 2026-09-26: `OFFLINE_DB_HOST_READBACK_REPAIR_PASS` is bound by `docs/P5E_DB_HOST_READBACK_REPAIR_QA_20260925.json` at `56/56 PASS`. The old proposal, manifest/command and 2026-09-25 decision remain consumed; no live event is authorized by this work.
+
+> Current Next action: owner reviews and, if intended, explicitly approves `docs/P5E_A43_FINAL_EXECUTABLE_OWNER_AUTHORIZATION_REQUEST_20260926.md`; do not execute the command, reuse a closed event/decision, claim P5 exit or open P6.
+
+> Superseded DB diagnosis — 2026-09-25: WAL/SHM exit `1` are valid absence results. The actual stop was the direct Android `sqlite3` consistent-read command. This proposal remains consumed and is not executable; the offline binary-export/host-readback repair is now complete. No new key, account check or owner live decision was requested for that repair.
+
+> Current version-contract repair: collector Android versionName expected is corrected to 4.17-p5e.11, independently confirmed by immutable BUILD_INFO and offline inspection of the hash-matched pulled production APK. Release label v4.17-p5e.11 remains a label, not Android versionName. Companion QA is `PASS` (collector version 5/5); the new event below is terminal and no retry occurred.
+
+> Historical owner handoff: this proposal carried the version-corrected packet. The owner decision was received and consumed by the one new event below; offline packet and account MATCH remain closed, and no account rerun or new credential provenance is requested. No authorization or live execution remains reusable from this document.
+
+> Superseded packet integration — 2026-09-25: ACCOUNT_MATCH_EVIDENCE_VERIFIED / OFFLINE_TOOLCHAIN_REPAIR_PASS / PACKAGE_VERSION_REPAIR_OFFLINE_PASS / A43_OWNER_DECISION_RECEIVED_AND_CONSUMED / A4.3_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP / P5E_COLLECTOR_ADB_NONZERO / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY. The selected replacement bundle, root helper, resolver, manifest and command were aligned offline; the new event stopped in the Before collector before runtime authorization, allowlisted writes or RAW/GLOSSARY egress. Do not repeat the account event, retry the A4.3 event or reuse its decision. Historical hashes below remain historical only.
+
+> Historical closed-event result — 2026-09-25: event `D:\P5E-private\raw-live-20260925-093707011-cc71e9e18029485c8e2411698c88f586` ran once on serial `15e84958`. Fourteen read-only Before commands launched once with bounded capture; 11 exited `0` and 3 exited `1` (`database-wal-presence`, `database-shm-presence`, `database-consistent-read-transaction`); `readOnlyCommandCount=14`, provider calls `0`, credential reads `0`, device mutations `0`, redispatches `0`. The first two exits are valid `ABSENT` results; `COLLECTOR_OUTCOME.json` stopped on the consistent-read command with detail `P5E_COLLECTOR_ADB_NONZERO`. No After collector, live method or RAW acceptance was reached, and the redacted receipt does not identify the native reason for that command.
+
+> Historical host launch repair closure — 2026-09-25: Before, Dispatch and After used one explicit SDK/toolchain contract. Resolver `C0AE7D431474F37597228A7AFA6F9382C63E26EB5A54CFB72604620D9DD5C3C8`, helper `4BF9E361AA2CD535C819EAE1D6F315F8DC929B989FE30285EAA98C9A0E98B31C`, command `D0F1462725CA51DD789480D4BBEC87FE1AC8AC2BBB5024B9101A74B67E14403B`, manifest `6C33FFA3742340E9099B83A676538B5D32D1942276CC3C9643E98054CE6E4EA4`, and companion QA `docs/P5E_PACKAGE_VERSION_TOOLCHAIN_QA_20260925.json` are historical pins. QA reported zero real ADB/signer/provider/device/credential actions, bounded timeout capture, legacy-dispatch rejection, verifier environment isolation and no redispatch. This repair does not prove device readiness or RAW acceptance.
 
 > Historical execution audit 2026-09-17 at c222b13c: TEST_PACKAGE_REPLACEMENT_PASS / ACCOUNT_RUNNER_REPAIR_REQUIRED / EXPECTED_SOURCE_PENDING / ACCOUNT_CHECK_NOT_EXECUTED / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY. Installed test APK evidence is retained. Source-derived offline probe reproduced four false acceptances and found the incomplete instrumentation component. Next action is the bounded host repair and trusted-input feasibility work in docs/P5E_NEXT_WORK_REQUEST_20260917.md; no reinstall or device execution. See docs/P5E_EXECUTION_AUDIT_20260917.md and docs/P5E_ACCOUNT_RUNNER_AUDIT_RESULT_20260917.json. SQL/golden PASS remains limited to its tested scope.
 
@@ -11,35 +29,52 @@ OWNER_DECISION_PENDING / A4_3_NOT_ISSUED / RAW_NOT_RUN /
 LIVE_ACTIONS_NOT_AUTHORIZED / P6_NOT_READY
 
 The collector/SQL local result and the account MATCH receipts are retained. This
-proposal does not create runtime authorization and does not grant device/provider
-permission. The current packet uses the root helper and the verified
-account-check replacement bundle; independent live readback, freshness and
-allowlisted-write scope remain pending owner decision.
+proposal did not create a reusable runtime authorization or grant a second
+device/provider event. The one approved event reached only the read-only Before
+collector and stopped on the typed ADB nonzero; no freshness readback,
+allowlisted write scope or RAW acceptance was established.
 
-The fixed-scope file whose hash is passed to the live harness is
-docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md. Its hash is kept separate from
-this proposal and from the command; the manifest contains no self-hash. The
-single command is in docs/P5E_RAW_AUTHORIZATION_COMMAND.txt.
-Pinned approval-manifest SHA-256:
-412790E2E55A8289FF170D3EE93B683553468ADE252EF5C565D833599E5F5EA3.
-Pinned command SHA-256:
-51A71D47BBFC91DE19658FEEA120CF419ECD0F2FFD77562D74B83C73F9A98AB5.
-Host supervisor SHA-256:
-CB9C07312E025DA94D8DB4840B7600CE9A3613DB75CC0E0E4F28EB059E00901F.
+The fixed-scope files for the current packet are
+`docs/P5E_A43_FINAL_EXECUTABLE_APPROVAL_MANIFEST_20260926.md` and
+`docs/P5E_A43_FINAL_EXECUTABLE_COMMAND_20260926.txt`. Their SHA-256 values are
+`23AF3DFAA81F50484187AFD183EA56454EBE38022C67DA2B963245A42D230053` and
+`C84355B912DCF3BB59D52004EC80E06CE8B37FC75B5ABE083ECCA95D64C89BA3`.
+The current helper is pinned to
+`17CC1C19BF4F6B1B71A77100D710375BDBCFDA7AC82D4508634B68E857DEFD2E`; the
+exporter is `D8783B31F9141458CA397915664CA79B07D3161A5E0F0D3B4365C5C65EA41D06`;
+the SQLite bridge is
+`4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111`; and the
+certificate identity is
+`47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155`.
+The sole current authorization request, including the APK/source/certificate
+and serial `15e84958` pins, is
+`docs/P5E_A43_FINAL_EXECUTABLE_OWNER_AUTHORIZATION_REQUEST_20260926.md`.
+All earlier manifest/command/helper values in this historical proposal remain
+historical and consumed; they are not fallback inputs.
 
-The approval manifest is frozen for this packet at
-`412790E2E55A8289FF170D3EE93B683553468ADE252EF5C565D833599E5F5EA3`.
+## Historical owner decision — RECEIVED AND CONSUMED, not reusable
 
-The previous helper SHA-256
-BEEFBB7733EED660B1F59435922D0594FBA1CBDED01B6C0B00482E786E456799 is retained
-as the provenance-review RED input, not as an approval pin.
+Local evidence result: `docs/P5E_PACKAGE_VERSION_TOOLCHAIN_QA_20260925.json`, SHA-256
+`893D1E4888D1905D50EAB6594AF6C29DF2EE79DA244EAA72C9943A2A2296D3E8`, recorded after the package-version
+ repair QA. The historical consumed packet refs are manifest `6C33FFA3…6E4EA4`, command
+`D0F14627…E14403B`, helper `4BF9E361…E98B31C`, resolver
+`C0AE7D43…D5C3C8`, and the prior A4.3 QA remains historical evidence.
+The historical consumed manifest/command/root helper/resolver are
+`6C33FFA3…6E4EA4` / `D0F14627…E14403B` / `4BF9E361…E98B31C` /
+`C0AE7D43…D5C3C8`; artifact contract is
+`FFE70A70…A4BF`;
+production serializer is `1222B8AC…64E3C`; the targeted JVM test source is
+`3D7C7A39…31A5`; frozen production/test APK pins remain code207 /
+`2CCBB844…800FD` and `058BE851…158E8`; selected AndroidTest source archive is
+`5029E2AE…20C8F` from source commit `9e5ffb78…`. The local diff does not
+change production source, schema/migration, route/model, pack/profile,
+prompt, budget or input identities; it repairs only host toolchain launch,
+dependency pins and redacted diagnostics.
 
-## Current owner decision request — PENDING, not authorization
-
-Local evidence result: `docs/P5E_A43_OFFLINE_QA_20260924.json`, SHA-256
+Earlier local result: `docs/P5E_A43_OFFLINE_QA_20260924.json`, SHA-256
 `D124711219DFC1FD205CDB9205C394E2DA4CB3569827CA6C9D3B0A592EEC7050`, recorded
 after the targeted packet QA. The manifest/command/root helper are
-`412790E2…5EA3` / `51A71D47…8AB5` / `CB9C0731…901F`; artifact contract is
+historical `412790E2…5EA3` / `51A71D47…8AB5` / `CB9C0731…901F`; artifact contract is
 `FFE70A70…A4BF`;
 production serializer is `1222B8AC…64E3C`; the targeted JVM test source is
 `3D7C7A39…31A5`; frozen production/test APK pins remain code207 /
@@ -72,9 +107,9 @@ Account-check replacement pins are separate from the RAW/A4 test pin:
 | Replacement AndroidTest APK, event `p5e-account-check-20260916-01` | `058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8`, installed once; exact readback |
 | Replacement source ZIP | `5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F` |
 | Local account-check result | `docs/P5E_ACCOUNT_CHECK_LOCAL_RESULT_20260916.json`, SHA-256 `3FBE39142BA2DAA16AF6F5301271525E71FE1871CF6C14F0DF2A816346AA53EF`; CheckOnly/replacement PASS; account check blocked by missing expected value |
-| Current RAW command/root helper pins | `51A71D47…8AB5` / `CB9C0731…901F`; nested helper `364A6AA2…6FFE7` is historical only |
+| Current RAW command/root helper pins | `D0F14627…E14403B` / `4BF9E361…E98B31C`; resolver `C0AE7D43…D5C3C8`; nested helper `364A6AA2…6FFE7` is historical only |
 
-The remaining owner inputs have these separate statuses:
+The live gate results and future prerequisites have these separate statuses:
 
 - process-only expected account fingerprint for any future live dispatch —
   `OWNER_PROCESS_VALUE_REQUIRED_AT_DISPATCH`; the account receipt is not a
@@ -85,29 +120,34 @@ The remaining owner inputs have these separate statuses:
   only on the approved device and compared to the trusted expected value; the
   operation scope is `RECEIVED`, but the expected value is still missing;
 - read-only package/certificate/SQLite/WAL-aware collection for the exact
-  serial and newly created event, with no settings content, credential, prompt,
-  request body, raw response or full database export in evidence —
-  `OWNER_DECISION_PENDING`;
+  serial and event — fourteen Before commands launched once with bounded
+  capture; 11 exited `0`, two presence probes returned exit `1` meaning
+  `ABSENT`, and the consistent-read command exited `1`; the collector stopped
+  with `P5E_COLLECTOR_ADB_NONZERO`, and the redacted receipt does not identify
+  that command's native reason;
 - exactly one RAW/GLOSSARY dispatch to the pinned route: primary `1`, repair
   `0`, retry `0`, fallback/RECONCILE off, DRAFT/PRONOUN hidden; caps
   input/output/total `100000/4096/104096`, cost `USD0.05`, execution/auth/host
-  windows `120000/180000/240000 ms` — `NOT_APPROVED`.
+  windows `120000/180000/240000 ms` — `BLOCKED_BY_BEFORE_COLLECTOR_STOP`.
 
-The only allowed durable effects are the already reviewed exact authorization/
-attempt/lifecycle/report/receipt rows for this event and the allowlisted RAW
-artifacts. Before dispatch the exact fresh tuple and lineage must be unused;
-afterwards the collector must prove the exact attempt/receipt pair, valid
-COMMITTED artifacts and metrics, reconciliation/history `0`, immutable
-source/binding/run/settings identities and no unrelated write/delete. Any
-timeout, nonzero, USB loss, missing post-readback, unknown cost, recovery or
-redaction failure is `UNKNOWN`/`RECOVERY_REQUIRED` or
-`ACCEPTANCE_NOT_PROVEN`, with no expiry refresh and no redispatch.
+The event did not reach the durable authorization/attempt/lifecycle/report/
+receipt write scope or the allowlisted RAW artifacts. For any future event, the
+exact fresh tuple and lineage must be unused before dispatch; afterwards the
+collector must prove the exact attempt/receipt pair, valid COMMITTED artifacts
+and metrics, reconciliation/history `0`, immutable source/binding/run/settings
+identities and no unrelated write/delete. Any timeout, nonzero, USB loss,
+missing post-readback, unknown cost, recovery or redaction failure is
+`UNKNOWN`/`RECOVERY_REQUIRED` or `ACCEPTANCE_NOT_PROVEN`, with no expiry refresh
+and no redispatch.
 
-Decision remains `PENDING`; account approval alone is not send-books approval.
-The next action is one owner decision over the exact current packet: read-only
-before/after collector, memory-only account comparison inside the live method,
-at most one RAW/GLOSSARY call, fresh runtime authorization and only the
-allowlisted exact tuple writes. No live action is issued by this document.
+The historical owner decision was received for exactly one event and is now consumed by
+the terminal Before-collector STOP above; account approval did not substitute
+for the A4.3 decision. No live action remains issued by this document. The
+previous next action was an offline diagnosis of
+`P5E_COLLECTOR_ADB_NONZERO` for `database-wal-presence`, `database-shm-presence`
+and `database-consistent-read-transaction` from the typed contract/evidence
+only. Any future live event requires a new owner decision; no retry,
+redispatch, account rerun or P6 transition is allowed.
 
 ## Historical baseline and evidence
 
@@ -141,23 +181,23 @@ but it was not executed because this request forbids build. The offline host
 probe still rejects 11 explicit bytes/shape mutations; those cases are marked
 `HOST_SYNTHETIC_SHAPE_REGRESSION_ONLY`, not production golden evidence.
 
-The current technical result is
+The historical technical result is
 `docs/P5E_LOCAL_EVIDENCE_CHAIN_RESULT_20260915.json`. It records H1–H4
 resolved assertions, self-test/probe/typed-stop evidence and zero device,
 provider and credential actions. This local result does not establish a live
-installed-package fact, RAW acceptance, P5 exit or P6 readiness. Its current
+installed-package fact, RAW acceptance, P5 exit or P6 readiness. Its historical
 SHA-256 is
 `ECD61953C8E9C4E4539EC5B2B5865EDBC08D686E37F4C4743D67084887D8E725`.
 
-The current host-preparation document is
+The historical host-preparation document is
 `docs/P5E_RAW_HOST_PREPARATION_20260915.md`, SHA-256
 `4A0E678ED298F4FF879062C9FD5F81A383D235F1C27ED4EAE7CA15563DEB6797`.
 
 Canonical plan: EDITORIAL_RECOVERY_V4_18.md
-Current host-repair branch: feature/v4.18-p5e-audit-20260914
-Host-repair HEAD before this evidence group: 0f52d36e516560bb33d294303c70fa1753cb64f9
-Host-preparation commit: c2c79a19842f551fc752a53328024aab8ddb529d
-HEAD that created this proposal: c1e3ec6eec62e38a1e2f4fdb0d0f151d5efdcfae
+Historical host-repair branch: feature/v4.18-p5e-audit-20260914
+Historical host-repair HEAD before this evidence group: 0f52d36e516560bb33d294303c70fa1753cb64f9
+Historical host-preparation commit: c2c79a19842f551fc752a53328024aab8ddb529d
+Historical HEAD that created this proposal: c1e3ec6eec62e38a1e2f4fdb0d0f151d5efdcfae
 AndroidTest source/archive commit: d51b7f3c16bdc482513b9904db07b97daed592d1
 A4.2 execution-start HEAD: 005317cd83f107edbf275734cb2977b9929e88ce
 A4.2 host-preparation HEAD: 90c40c4959004657d527b9a385449589347e10aa
@@ -208,12 +248,17 @@ collector and verifier bind event id, run identity, canonical paths, all source
 hashes, collector implementation hash, attempt/auth/lifecycle timestamps and
 the source mapping `p5e.raw.readback.source-map.v1`.
 
-The source-derived pack manifest fingerprint is
-`0353d751924d02ef0928bb6460c4ab894fee7c6324506e62b2972090e519c4da`; both
-report and receipt must carry this exact value. It is distinct from
-`endpointAccountFingerprint`, which remains pending owner provenance. The
-consume gate is `issued <= consumed < expires`; post-readback may be later than
-expiry when the durable chronology is valid. The tracked result
+This historical fixture used
+`0353d751924d02ef0928bb6460c4ab894fee7c6324506e62b2972090e519c4da` as its
+input-scope/legacy manifest value; that value is not the current pack-manifest
+authority. The production pack identity is
+`3e88503e312db8da351ca574820c98216ab6fd3fa233e35aedb0db379e50013a`, as
+defined by `EditorialP5PilotRequest.manifestFingerprint()`; current report and
+receipt validators must use that pack value while retaining the separate
+input-scope value. It is distinct from `endpointAccountFingerprint`, which
+remains pending owner provenance. The consume gate is `issued <= consumed <
+expires`; post-readback may be later than expiry when the durable chronology is
+valid. The tracked result
 `docs/P5E_PROVENANCE_REVIEW_RESULT.json` records two accepted controls, all
 four repaired mutations rejected, producer and verifier negative fixtures
 rejected, redaction success, `deviceActions=0`, `providerCalls=0` and

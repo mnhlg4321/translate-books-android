@@ -1,22 +1,44 @@
 # Build State
 
-> Offline launch audit 2026-09-25: RAW collector/Dispatch depend on bare tool names; current host cannot resolve adb/apksigner while configured SDK adb.exe exists. Exact historical native error remains unproven. Follow docs/P5E_COLLECTOR_LAUNCH_NEXT_WORK_REQUEST_20260925.md for one bounded toolchain/launch repair across Before, Dispatch and After, with synthetic integration and redacted diagnostics. No runtime repair or new owner event has been performed by this audit.
+> Current work package — 2026-09-26: `P5E_A43_FINAL_EXECUTABLE_PACKET_REPIN / FINAL_EXECUTABLE_PACKET_READY / OWNER_DECISION_PENDING / NOT_DISPATCHED / A4_3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. Final packet QA `14/14 PASS` with `0` failures, binding QA `262/262 PASS`, regression `175/175 PASS`, DB QA `56/56 PASS`, Luna exact-byte review `PASS / 0 BLOCKER / 0 HIGH`, and all live counters are `0`. Manifest `23AF3DFAA81F50484187AFD183EA56454EBE38022C67DA2B963245A42D230053`, command `C84355B912DCF3BB59D52004EC80E06CE8B37FC75B5ABE083ECCA95D64C89BA3`, helper `17CC1C19BF4F6B1B71A77100D710375BDBCFDA7AC82D4508634B68E857DEFD2E`; provenance `docs/P5E_A43_FINAL_EXECUTABLE_PACKET_PROVENANCE_20260926.json`; sole owner request `docs/P5E_A43_FINAL_EXECUTABLE_OWNER_AUTHORIZATION_REQUEST_20260926.md`.
 
-> Current owner decision/result — 2026-09-25: the owner authorized exactly one A4.3 event on serial `15e84958` under the final hash-bound packet. That event was attempted once and stopped before dispatch; no retry or redispatch is permitted.
+> Closed historical A4.3 outcome — 2026-09-26: owner decision was received and consumed by exactly one event. State is `OWNER_DECISION_RECEIVED_AND_CONSUMED / A4_3_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP / P5E_COLLECTOR_BINDING_TUPLE_MISMATCH / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. Result: `docs/P5E_A43_EVENT_RESULT_20260926.json`. This does not authorize the current offline repair or a new event.
 
-> A4.3 live outcome — 2026-09-25: `A4_3_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The Before collector failed at `pm-path-production-before`; no provider, credential, DB or device mutation occurred.
+> Historical consumed-packet audit — 2026-09-26: all final packet hashes matched at execution and the command was invoked once. Manifest `669C54049920C49344D2FB55533EFA9FA9F87E933A6A18DE5FA7215F1146D147`, helper `8A0509743403B28F7C074BE37DD7D08D41A1B9C0E56AC70D8A43024803CDF434`, exporter `D8783B31F9141458CA397915664CA79B07D3161A5E0F0D3B4365C5C65EA41D06`, bridge `4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111`, command `A2EF2BA90F07D3F4D2517E7F1541EA752615F6BCF61E304E579E301A8D5D3D08`.
+
+> Current DB readback prerequisite — 2026-09-26: `OFFLINE_DB_HOST_READBACK_REPAIR_PASS`, with `56/56 PASS` bound to `docs/P5E_DB_HOST_READBACK_REPAIR_QA_20260925.json`. It was consumed offline through a synthetic captured-export copy only; the closed event was not reused. A4.3, RAW, P5 exit and P6 remain not ready.
+
+> The final packet preserves the settings presence/hash gate, exact binary export and bounded host bridge contract. Its QA used only synthetic captured-export fixtures and PrepareEvent simulation; no event was opened and no provider, credential, database-write, build, install, RAW or redispatch action occurred.
+
+> Current Next action: owner reviews and, if intended, explicitly approves `docs/P5E_A43_FINAL_EXECUTABLE_OWNER_AUTHORIZATION_REQUEST_20260926.md`; do not execute the command, reuse a closed event/decision, claim P5 exit or open P6.
+
+> Superseded DB diagnosis — 2026-09-25: WAL/SHM presence exit `1` meant `ABSENT` under the helper contract. The sole proven blocker was the launched, non-timeout `database-consistent-read-transaction` exit `1`; native cause remains unproven. The bounded offline repair named there is now PASS; no live event is authorized by that result.
+
+> Current version-contract repair: collector Android versionName expected is corrected to 4.17-p5e.11, independently confirmed by immutable BUILD_INFO and offline inspection of the hash-matched pulled production APK. Release label v4.17-p5e.11 remains a label, not Android versionName. Companion QA is `PASS` (collector version 5/5); the new event below is terminal and no retry occurred.
+
+> Historical toolchain owner handoff: docs/P5E_PACKAGE_VERSION_NEXT_WORK_REQUEST_20260925.md bound the version-corrected working-tree packet. The owner decision was received and consumed by one new event; no new account provenance is needed and prior events remain closed.
+
+> Offline launch repair 2026-09-25: explicit toolchain resolver/contract is implemented for RAW Before, Dispatch and After. It pins SDK configuration, build-tools 35.0.0, absolute adb.exe and Java+apksigner.jar paths, with typed redacted launch diagnostics and child expected-value environment clearing. Windows PowerShell 5.1 targeted QA PASS; no runtime/device/provider/DB/credential action occurred.
+
+> Historical owner decision/result — 2026-09-25: the owner authorized exactly one new A4.3 event on serial `15e84958` under the version-corrected hash-bound packet. Event `raw-live-20260925-093707011-cc71e9e18029485c8e2411698c88f586` ran once and stopped before dispatch; the decision is consumed and no retry or redispatch is permitted.
+
+> A4.3 live outcome — 2026-09-25: `A4_3_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The Before collector stopped with typed detail `P5E_COLLECTOR_ADB_NONZERO`; no provider or credential read, live method dispatch, or device mutation occurred.
 
 > Current offline identity repair — 2026-09-24: `ACCOUNT_IDENTITY_LIFECYCLE_REPAIRED_OFFLINE` remains PASS. The repaired account-only runner now has a terminal typed `MATCH`; no further offline parser work is authorized without a new failing case.
 
-> Current event disposition — 2026-09-25: event `D:\P5E-private\raw-live-20260925-005619067-59f53846763e4f09b0fb948551b3b98a` ran exactly once and is now `CLOSED_A43_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP`. The collector log has `launchCount=0` and `outputCaptured=false`; provider calls, credential reads, device mutations and redispatches are `0`. Preserve the event and do not retry or reuse its directory.
+> Current event disposition — 2026-09-25: event `D:\P5E-private\raw-live-20260925-093707011-cc71e9e18029485c8e2411698c88f586` ran exactly once and is now `CLOSED_A43_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP`. Fourteen read-only Before commands each launched once with bounded capture; 11 exited `0` and 3 exited `1` (`database-wal-presence`, `database-shm-presence`, `database-consistent-read-transaction`); `readOnlyCommandCount=14`, provider calls `0`, credential reads `0`, device mutations `0`, redispatches `0`. No After collector or live method dispatch was reached. Preserve this event and do not retry or reuse its directory.
 
-> Current P5E state — `HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / PREFLIGHT_PASS_7_READ_ONLY_CALLS / ACCOUNT_CHECK_COMPLETED_MATCH / ACCOUNT_RUNNER_COMPLETED_MATCH / A43_OFFLINE_PACKET_TECHNICAL_GATES_PASS / A43_OWNER_DECISION_RECEIVED / A43_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. No After collector, live method or provider dispatch was reached; no RAW acceptance is claimed.
+> Superseded P5E state before DB repair — `HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / PREFLIGHT_PASS_7_READ_ONLY_CALLS / ACCOUNT_CHECK_COMPLETED_MATCH / ACCOUNT_RUNNER_COMPLETED_MATCH / A43_OFFLINE_PACKET_TECHNICAL_GATES_PASS / PACKAGE_VERSION_REPAIR_OFFLINE_PASS / A43_OWNER_DECISION_RECEIVED_AND_CONSUMED / A43_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP / P5E_COLLECTOR_ADB_NONZERO / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. No After collector, live method or provider dispatch was reached; no RAW acceptance is claimed.
 
-> Live evidence: `EVENT_PLAN.json` SHA-256 `F89092CD396E8A025A58DF316C7ACF51377E92AF2B6E304755895398058638E3`; `COLLECTOR_OUTCOME.json` SHA-256 `C5A1C44416519EFBD1FA8ED3B018D7D564FA2C851D6891857B0A7ACA30E6F83E`; `COLLECTOR_COMMAND_LOG.jsonl` SHA-256 `E7C9A50F1443154D067E39D10FA1BB88F449F54DEBA2BAF50AEFFA248C79A5F9`. The concrete gate failure is the collector launch at `pm-path-production-before`; its root cause is not proven by this event.
+> Live evidence: event `D:\P5E-private\raw-live-20260925-093707011-cc71e9e18029485c8e2411698c88f586`; `EVENT_PLAN.json` SHA-256 `4F43A09D4717827708ABF8932975CDF168C6014A3E57FDF1BC338110D0EFCB95`; `COLLECTOR_OUTCOME.json` SHA-256 `0DF2BA4435DAC7AAB38D7493E64FD1707F8C44B8A7C9BE1ED4ADA1A9DEFC35C1`; `COLLECTOR_COMMAND_LOG.jsonl` SHA-256 `E0FBF7EB667586D97D7CFD314A090AF914D92848A946DB0E4D6685EA1BC5BE40`. WAL/SHM presence returned the valid semantic result `ABSENT`; the typed blocker is the consistent-read command exit `1`, whose native reason is unavailable in the redacted receipt.
 
-> The approved owner decision is consumed by this terminal one-event STOP. Diagnose the concrete collector failure offline before any new owner decision; do not retry this event or open P6.
+> The approved owner decision is consumed by this terminal one-event STOP. The version-contract repair is PASS, but any future event requires a new owner decision after offline diagnosis of the ADB nonzero gate; do not retry/reuse this event or open P6.
 
-> Current offline A4.3 packet pins: manifest `412790E2E55A8289FF170D3EE93B683553468ADE252EF5C565D833599E5F5EA3`; command `51A71D47BBFC91DE19658FEEA120CF419ECD0F2FFD77562D74B83C73F9A98AB5`; root helper `CB9C07312E025DA94D8DB4840B7600CE9A3613DB75CC0E0E4F28EB059E00901F`; QA `D124711219DFC1FD205CDB9205C394E2DA4CB3569827CA6C9D3B0A592EEC7050`. These are offline packet evidence only; no live authorization is created.
+> Historical consumed-packet pins: manifest `6C33FFA3742340E9099B83A676538B5D32D1942276CC3C9643E98054CE6E4EA4`; command `D0F1462725CA51DD789480D4BBEC87FE1AC8AC2BBB5024B9101A74B67E14403B`; root helper `4BF9E361AA2CD535C819EAE1D6F315F8DC929B989FE30285EAA98C9A0E98B31C`; resolver `C0AE7D431474F37597228A7AFA6F9382C63E26EB5A54CFB72604620D9DD5C3C8`; companion QA `893D1E4888D1905D50EAB6594AF6C29DF2EE79DA244EAA72C9943A2A2296D3E8`. The live decision was consumed by the terminal STOP; no authorization remains reusable.
+
+> Offline repair gate: `PASS` for toolchain resolution, package-version producer/consumer contract, path/reparse guards, Java+JAR signer contract, bounded timeout/capture, legacy-plan dispatch rejection, redacted diagnostics, expected-value environment boundary and fake Prepare→Before→Dispatch→After→Verify orchestration. Live gate: terminal Before collector STOP on typed ADB nonzero; no RAW or P6 acceptance.
+
+> Superseded Next action: implement and QA the offline DB binary-export plus host-readback contract; completed by the PASS packet above. No device retry, A4.3, RAW or P6 action.
 
 > Historical MISMATCH and prior `NOT_PROVEN` events remain unchanged as provenance. The agent did not read the expected value or raw instrumentation; no secret or endpoint was recorded.
 
@@ -42,7 +64,7 @@
 - Historical phase and prior device/readback narrative: A2 remains fail-closed and its approval is consumed. A3.1R, A3.2, the earlier device A4 result and the pre-event account state are historical evidence. The current event result is recorded in `docs/P5E_ACCOUNT_EVENT_RESULT_20260924.json`; it is `NOT_PROVEN` and does not create a live RAW acceptance, authorization or predecessor.
 - Current data classification is `RECONSTRUCTED_ONLY` with a new fresh-pilot lineage appended; `RECONSTRUCTED_ONLY_FRESH_PILOT` is the private snapshot classification, not a recovery claim for code196.
 
-## Current active state — P5E local behavioral gate green, expected Process value pending
+## Historical pre-repair local behavioral gate — superseded for readiness
 
 The final helper/query/parser path now passes the source-derived SQLite behavioral chain: schema `24`, LINEAGE `17` columns, INPUT `7` columns, CLAIMED/RECOVERY NULL rows preserved, COMMITTED golden bytes retained exactly, lineage/reconciliation counts mapped, malformed output rejected, and partial artifacts not accepted. The targeted `EditorialP5PilotExecutionBoundaryTest` ran on Android Studio JBR `21.0.10` and exported the production serializer bytes; the host validator accepted the valid pair and rejected identity/byte mutations. Helper self-test and SQL boundary probe pass. Evidence and final hashes are in `docs/P5E_SQL_BEHAVIORAL_RESULT_20260916.json`; action counts are device/provider/credential/ADB/instrumentation/build `0`.
 
@@ -700,7 +722,7 @@ observed page listed JSON Schema structured outputs and pricing of $0.20/M
 input and $1.20/M output. This is reference information only; the proposed
 authorization retains the independently bounded $0.05 maximum cost.
 
-Current A1 state:
+Historical A1 state:
 
 ~~~
 P5E_9A_LQ_DV_COMPLETE
@@ -831,7 +853,7 @@ run declaration, evaluation, pack/profile hashes and RAW/DRAFT/GLOSSARY/
 PRONOUN byte/hash inventory pinned in the A2 approval. No fresh identity was
 created or rebound.
 
-Current state after the failed single run:
+Historical state after the failed single run:
 
 ~~~
 P5E_9B_A2_ZERO_CALL_PREFLIGHT_STOPPED

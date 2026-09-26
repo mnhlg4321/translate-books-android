@@ -1,20 +1,42 @@
 # Editorial Recovery v4.18
 
-> Offline launch audit 2026-09-25: RAW collector/Dispatch depend on bare tool names; current host cannot resolve adb/apksigner while configured SDK adb.exe exists. Exact historical native error remains unproven. Follow docs/P5E_COLLECTOR_LAUNCH_NEXT_WORK_REQUEST_20260925.md for one bounded toolchain/launch repair across Before, Dispatch and After, with synthetic integration and redacted diagnostics. No runtime repair or new owner event has been performed by this audit.
+> Current work package — 2026-09-26: `P5E_A43_FINAL_EXECUTABLE_PACKET_REPIN / FINAL_EXECUTABLE_PACKET_READY / OWNER_DECISION_PENDING / NOT_DISPATCHED / A4_3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. Final offline QA is `14/14 PASS` with `0` failures, binding QA `262/262 PASS`, regression `175/175 PASS`, DB host-readback `56/56 PASS`, and Luna exact-byte review `PASS / 0 BLOCKER / 0 HIGH`. Current manifest `23AF3DFAA81F50484187AFD183EA56454EBE38022C67DA2B963245A42D230053`, command `C84355B912DCF3BB59D52004EC80E06CE8B37FC75B5ABE083ECCA95D64C89BA3`, helper `17CC1C19BF4F6B1B71A77100D710375BDBCFDA7AC82D4508634B68E857DEFD2E`; provenance `docs/P5E_A43_FINAL_EXECUTABLE_PACKET_PROVENANCE_20260926.json`, review `docs/P5E_A43_FINAL_EXECUTABLE_PACKET_LUNA_REVIEW_20260926.md`, and the only current owner request is `docs/P5E_A43_FINAL_EXECUTABLE_OWNER_AUTHORIZATION_REQUEST_20260926.md`.
 
-> Current owner decision/result — 2026-09-25: the owner authorized exactly one A4.3 event on serial `15e84958` under the final hash-bound packet. That event was attempted once and stopped before dispatch; no retry or redispatch is permitted.
+> Closed historical A4.3 event outcome — 2026-09-26: `OWNER_DECISION_RECEIVED_AND_CONSUMED / A4_3_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP / P5E_COLLECTOR_BINDING_TUPLE_MISMATCH / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The new event ran exactly once; no provider, credential, DB-write, RAW or redispatch action occurred. Result: `docs/P5E_A43_EVENT_RESULT_20260926.json`. This does not authorize the current offline repair or a new event.
 
-> A4.3 live outcome — 2026-09-25: `A4_3_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The Before collector failed at `pm-path-production-before`; no provider, credential, DB or device mutation occurred.
+> Historical consumed-packet audit — 2026-09-26: the approved packet was verified and invoked once. Manifest `669C54049920C49344D2FB55533EFA9FA9F87E933A6A18DE5FA7215F1146D147`, helper `8A0509743403B28F7C074BE37DD7D08D41A1B9C0E56AC70D8A43024803CDF434`, exporter `D8783B31F9141458CA397915664CA79B07D3161A5E0F0D3B4365C5C65EA41D06`, bridge `4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111` and command `A2EF2BA90F07D3F4D2517E7F1541EA752615F6BCF61E304E579E301A8D5D3D08` matched. The old manifest/command, decision and 2026-09-25 event remain consumed and are not fallback.
+
+> Current DB readback prerequisite — 2026-09-26: `OFFLINE_DB_HOST_READBACK_REPAIR_PASS` remains a prerequisite and is bound by `docs/P5E_DB_HOST_READBACK_REPAIR_QA_20260925.json` at `56/56 PASS`. The binding-tuple repair consumed only a synthetic copy of the captured export; the closed event and its evidence remain immutable and were not reused. A4.3, RAW acceptance, P5 exit and P6 remain not ready.
+
+> Final freeze sequence is exporter/bridge → new manifest → helper → new command → final QA → Luna review → provenance/owner request. The historical live manifest/command and events remain closed/consumed and non-reusable. This work package opened no event and performed no ADB, device, provider, credential, database-write, build, install, RAW or redispatch action. Any future live event requires the single new owner decision requested in the final owner request.
+
+> Current Next action: owner reviews and, if intended, explicitly approves `docs/P5E_A43_FINAL_EXECUTABLE_OWNER_AUTHORIZATION_REQUEST_20260926.md`; do not execute the command, reuse a closed event/decision, claim P5 exit or open P6.
+
+> Superseded DB diagnosis — 2026-09-25: the two exit-`1` presence probes were valid `ABSENT` results for WAL/SHM and did not stop the collector. The actual blocker was `database-consistent-read-transaction`, which launched once and exited `1`; its native reason is unavailable in the redacted evidence. The bounded offline work package named in this diagnosis is complete; A4.3/RAW/P5 exit/P6 remain closed.
+
+> Current version-contract repair: collector Android versionName expected is corrected to 4.17-p5e.11, independently confirmed by immutable BUILD_INFO and offline inspection of the hash-matched pulled production APK. Release label v4.17-p5e.11 remains a label, not Android versionName. Companion QA is `PASS` (collector version 5/5); see docs/P5E_PACKAGE_VERSION_NEXT_WORK_REQUEST_20260925.md and companion provenance. The new event below is terminal and no retry occurred.
+
+> Historical toolchain owner handoff: docs/P5E_PACKAGE_VERSION_NEXT_WORK_REQUEST_20260925.md bound the version-corrected working-tree packet. The owner decision was received and consumed by one new event; no new account provenance is needed and prior events remain closed.
+
+> Offline launch audit 2026-09-25: the bounded RAW toolchain repair is complete. One explicit SDK/build-tools 35.0.0 contract now resolves absolute ADB and Java+apksigner.jar paths before event creation, and the same paths are bound through Before/Dispatch/After. Targeted Windows PowerShell 5.1 QA passed after closing timeout/capture, legacy-plan dispatch, and expected-value boundary findings; no ADB, signer, device, provider, DB or credential action was performed. The historical native cause remains unproven and the closed event is not reopened.
+
+> Historical owner decision/result — 2026-09-25: the owner authorized exactly one new A4.3 event on serial `15e84958` under the version-corrected hash-bound packet. Event `raw-live-20260925-093707011-cc71e9e18029485c8e2411698c88f586` ran once and stopped before dispatch; the decision is consumed and no retry or redispatch is permitted.
+
+> A4.3 live outcome — 2026-09-25: `A4_3_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The Before collector stopped with typed detail `P5E_COLLECTOR_ADB_NONZERO`; no provider or credential read, live method dispatch, or device mutation occurred.
 
 > Current offline identity repair — 2026-09-24: `ACCOUNT_IDENTITY_LIFECYCLE_REPAIRED_OFFLINE` remains PASS. The repaired account-only runner now has a terminal typed `MATCH`; no further offline parser work is authorized without a new failing case.
 
-> Current event disposition — 2026-09-25: event `D:\P5E-private\raw-live-20260925-005619067-59f53846763e4f09b0fb948551b3b98a` is `CLOSED_A43_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP`. One read-only collector command was recorded with `launchCount=0`, `outputCaptured=false`; provider calls, credential reads, device mutations and redispatches are all `0`. No After collector or live method dispatch was reached. Preserve this event and do not retry, reuse or rename it.
+> Current event disposition — 2026-09-25: event `D:\P5E-private\raw-live-20260925-093707011-cc71e9e18029485c8e2411698c88f586` is `CLOSED_A43_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP`. Fourteen read-only Before commands each launched once with bounded capture; 11 exited `0` and 3 exited `1` (`database-wal-presence`, `database-shm-presence`, `database-consistent-read-transaction`). `readOnlyCommandCount=14`, provider calls `0`, credential reads `0`, device mutations `0`, redispatches `0`; no After collector or live method dispatch was reached. Preserve this event and do not retry, reuse or rename it. Earlier events remain immutable history.
 
-> Current P5E state: `HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / PREFLIGHT_PASS_7_READ_ONLY_CALLS / ACCOUNT_CHECK_COMPLETED_MATCH / ACCOUNT_RUNNER_COMPLETED_MATCH / A43_OFFLINE_PACKET_TECHNICAL_GATES_PASS / A43_OWNER_DECISION_RECEIVED / A43_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The event did not establish a RAW predecessor or acceptance.
+> Superseded P5E state before DB repair: `HOST_SIGNATURE_LAYOUT_ADAPTER_OFFLINE_PASS / PREFLIGHT_PASS_7_READ_ONLY_CALLS / ACCOUNT_CHECK_COMPLETED_MATCH / ACCOUNT_RUNNER_COMPLETED_MATCH / A43_OFFLINE_PACKET_TECHNICAL_GATES_PASS / PACKAGE_VERSION_REPAIR_OFFLINE_PASS / A43_OWNER_DECISION_RECEIVED_AND_CONSUMED / A43_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP / P5E_COLLECTOR_ADB_NONZERO / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The event did not establish a RAW predecessor or acceptance.
 
-> Live evidence: `EVENT_PLAN.json` SHA-256 `F89092CD396E8A025A58DF316C7ACF51377E92AF2B6E304755895398058638E3`; `COLLECTOR_OUTCOME.json` SHA-256 `C5A1C44416519EFBD1FA8ED3B018D7D564FA2C851D6891857B0A7ACA30E6F83E`; `COLLECTOR_COMMAND_LOG.jsonl` SHA-256 `E7C9A50F1443154D067E39D10FA1BB88F449F54DEBA2BAF50AEFFA248C79A5F9`. The concrete limit is the collector launch failure; its root cause is not proven by this event.
+> Live evidence: event `D:\P5E-private\raw-live-20260925-093707011-cc71e9e18029485c8e2411698c88f586`; `EVENT_PLAN.json` SHA-256 `4F43A09D4717827708ABF8932975CDF168C6014A3E57FDF1BC338110D0EFCB95`; `COLLECTOR_OUTCOME.json` SHA-256 `0DF2BA4435DAC7AAB38D7493E64FD1707F8C44B8A7C9BE1ED4ADA1A9DEFC35C1`; `COLLECTOR_COMMAND_LOG.jsonl` SHA-256 `E0FBF7EB667586D97D7CFD314A090AF914D92848A946DB0E4D6685EA1BC5BE40`. Pulled production/test APK hashes matched the pinned `2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD` / `058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8`; the two presence results mean WAL/SHM were absent, while the redacted receipt does not identify the native reason for the consistent-read exit `1`.
 
-> The approved owner decision is consumed by this terminal one-event STOP. Diagnose the concrete `pm-path-production-before` collector failure offline before any new owner decision; do not retry this event or open P6.
+> The approved owner decision is consumed by this terminal one-event STOP. The version-contract repair remains closed offline; do not retry or reuse this event, and do not open P6. Any future live event would require a new owner decision after an offline diagnosis of the typed ADB nonzero gate.
+
+> Offline repair result — 2026-09-25: `OFFLINE_TOOLCHAIN_REPAIR_PASS / PACKAGE_VERSION_REPAIR_PASS / A43_OWNER_DECISION_CONSUMED / A43_PRE_DISPATCH_COLLECTOR_STOP / P5E_COLLECTOR_ADB_NONZERO / RAW_NOT_DISPATCHED / P6_NOT_READY`. Current packet provenance is `docs/P5E_PACKAGE_VERSION_REPAIR_PROVENANCE_20260925.json`; targeted QA is `docs/P5E_PACKAGE_VERSION_TOOLCHAIN_QA_20260925.json`. The consumed decision and all terminal events are not reusable.
+
+> Superseded Next action: implement and QA the offline DB binary-export plus host-readback contract; completed by the hash-bound PASS packet above. Do not touch the device or open a live event.
 
 > The prior route event `MISMATCH` remains historical and unchanged in `docs/P5E_ACCOUNT_IDENTITY_EVENT_RESULT_20260924.json`; the older signature-layout-adapter `NOT_PROVEN` receipt remains unchanged in `docs/P5E_ACCOUNT_EVENT_RESULT_20260924.json`.
 
@@ -675,12 +697,16 @@ The release is not complete merely because 4.1.3 imports. It is complete only wh
 
 ## 9. Exact next action
 
-Current override, 2026-09-23: `HOST_RUNNER_REPAIR_OFFLINE_PASS / EXPECTED_PROVENANCE_ACCEPTED_FOR_REVIEW / EXPECTED_VALUE_LOADER_OFFLINE_PASS / EXPECTED_VALUE_PROCESS_LOAD_PENDING`.
-Follow `docs/P5E_EXPECTED_VALUE_LOADER_REVIEW_20260923.md` for owner-local
-Process-only expected-value loading. The completed test installation is historical
-evidence; no device execution, A4.3 or RAW action is authorized. The A4
-checkpoint narrative below is historical and does not override this next
-action.
+Historical override, 2026-09-25: `OFFLINE_TOOLCHAIN_REPAIR_PASS / NEW_OWNER_DECISION_REQUIRED / RAW_NOT_DISPATCHED / P6_NOT_READY`.
+The final host repair packet is bound by
+`docs/P5E_COLLECTOR_LAUNCH_REPAIR_PROVENANCE_20260925.json`, with targeted
+Windows PowerShell 5.1 QA in `docs/P5E_RAW_TOOLCHAIN_REPAIR_QA_20260925.json`.
+The prior owner decision was consumed by the terminal pre-dispatch event; do not
+reuse that decision or event. No device execution, A4.3 dispatch, provider call,
+DB write or P6 action is authorized by this offline repair. The following A4
+checkpoint narrative is historical and does not override this next action.
+
+The following A4 checkpoint text is historical evidence only.
 
 The host-only A4.1 group corrected the actual status emitter and verified it
 against the parser contract. A4.2 then used the immutable AndroidTest artifact
