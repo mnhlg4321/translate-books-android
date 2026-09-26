@@ -1,6 +1,6 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Current work package — 2026-09-26: `P5E_A43_FINAL_EXECUTABLE_PACKET_REPIN / FINAL_EXECUTABLE_PACKET_READY / OWNER_DECISION_PENDING / NOT_DISPATCHED / A4_3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. Final offline QA is `14/14 PASS` with `0` failures; binding `262/262`, regression `175/175`, DB QA `56/56`; Luna exact-byte review is `PASS / 0 BLOCKER / 0 HIGH`. Final manifest `23AF3DFAA81F50484187AFD183EA56454EBE38022C67DA2B963245A42D230053`, command `C84355B912DCF3BB59D52004EC80E06CE8B37FC75B5ABE083ECCA95D64C89BA3`, helper `17CC1C19BF4F6B1B71A77100D710375BDBCFDA7AC82D4508634B68E857DEFD2E`; provenance `docs/P5E_A43_FINAL_EXECUTABLE_PACKET_PROVENANCE_20260926.json`; sole current owner request `docs/P5E_A43_FINAL_EXECUTABLE_OWNER_AUTHORIZATION_REQUEST_20260926.md`.
+> Current work package — 2026-09-26: `P5E_A43_AUTHORIZED_SINGLE_EVENT_EXECUTION / OWNER_DECISION_RECEIVED / SINGLE_EVENT_AUTHORIZED_NOT_YET_CONSUMED / NOT_DISPATCHED / A4_3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The exact single-event approval was received for serial `15e84958` and the final manifest/command/helper/exporter/bridge hashes. No live action occurred while recording the decision. Current work request: `docs/P5E_A43_AUTHORIZED_SINGLE_EVENT_NEXT_WORK_REQUEST_20260926.md`; provenance: `docs/P5E_A43_AUTHORIZED_SINGLE_EVENT_PROVENANCE_20260926.json`; post-authorization Luna review `PASS / 0 BLOCKER / 0 HIGH`.
 
 > Closed historical A4.3 outcome — 2026-09-26: the explicit owner decision was received and consumed by exactly one event. The new packet stopped in the read-only Before collector with `COLLECTOR_TYPED_STOP / P5E_COLLECTOR_BINDING_TUPLE_MISMATCH`; RAW was not dispatched, P5 exit was not claimed and P6 remains not ready. Result: `docs/P5E_A43_EVENT_RESULT_20260926.json`. This does not authorize the current offline repair or a new event.
 
@@ -8,7 +8,7 @@
 
 > Current DB readback prerequisite — 2026-09-26: `OFFLINE_DB_HOST_READBACK_REPAIR_PASS` is bound by `docs/P5E_DB_HOST_READBACK_REPAIR_QA_20260925.json` at `56/56 PASS`. The old proposal, manifest/command and 2026-09-25 decision remain consumed; no live event is authorized by this work.
 
-> Current Next action: owner reviews and, if intended, explicitly approves `docs/P5E_A43_FINAL_EXECUTABLE_OWNER_AUTHORIZATION_REQUEST_20260926.md`; do not execute the command, reuse a closed event/decision, claim P5 exit or open P6.
+> Current Next action: execute exactly one fresh A4.3 event under the authorized single-event work request using the frozen command. Do not ask for the same approval again; do not retry/redispatch, repair during the event, reuse a closed event, claim P5 exit without complete evidence or open P6.
 
 > Superseded DB diagnosis — 2026-09-25: WAL/SHM exit `1` are valid absence results. The actual stop was the direct Android `sqlite3` consistent-read command. This proposal remains consumed and is not executable; the offline binary-export/host-readback repair is now complete. No new key, account check or owner live decision was requested for that repair.
 
