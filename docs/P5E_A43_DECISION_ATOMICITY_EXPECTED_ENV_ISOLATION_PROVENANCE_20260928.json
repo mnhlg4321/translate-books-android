@@ -1,0 +1,191 @@
+{
+  "schemaVersion": "p5e.a43.decision-atomicity-expected-env-isolation-provenance.v1",
+  "artifactType": "OFFLINE_PACKET_PROVENANCE",
+  "generatedDate": "2026-09-28",
+  "workPackage": "P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_REPAIR",
+  "packetIdentifier": "P5E-A43-DECISION-ATOMICITY-ENV-20260928-01",
+  "packetState": "OFFLINE_PACKET_REVIEWABLE / NOT_AUTHORIZED / NOT_DISPATCHED / P6_NOT_READY",
+  "branch": "feature/v4.18-p5e-runner-repair-20260917",
+  "implementationBaselineCommit": "0730110a261edbab8f07f7db9e5831f567976fd3",
+  "dependencyProvenanceCommit": "6faebf0ad82ec6f0efba3ef42f50fec9e7bf3a74",
+  "runtimeCandidateCommit": "5597a3b20a4a1614c411c71872ee1333196cbe9c",
+  "closedEventsPreserved": [
+    "raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc",
+    "raw-live-20260925-093707011-cc71e9e18029485c8e2411698c88f586"
+  ],
+  "oldInputs": {
+    "status": "SUPERSEDED_NON_REUSABLE",
+    "manifestSha256": "B093AB871072D78A9A935914AEC9FF56835606BB344F034AA5EE2F38EA83FF4F",
+    "commandSha256": "FA63C5D2498AA345C6AC426AD253B466D6BD3206D525BAE4E0E8E6158BA78F80",
+    "runtimeGuardSha256": "F332954FB8AA2048EDF18630C5D1EF7B2039D57458C85CD6BB5CB07F59D96DBA"
+  },
+  "runtimePins": {
+    "manifest": {
+      "path": "docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_MANIFEST_20260928.md",
+      "length": 8163,
+      "sha256": "D8F5BECE61116217E8F9C0108AE08624A16C6736A2E9DE04F4BF73E0CEEFD5DE"
+    },
+    "command": {
+      "path": "docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_COMMAND_20260928.txt",
+      "length": 24220,
+      "sha256": "52B961DEC64429B786970D47083F94067E739AD9A9A9D5E988B3F8C8198F246D"
+    },
+    "helper": {
+      "path": "scripts/p5e-raw-live-supervisor.ps1",
+      "length": 417314,
+      "sha256": "4DAD6E30928DD0D78396BDDFA57AFA1053E75481524D2EA05659227869C57444"
+    },
+    "runtimeGuard": {
+      "path": "scripts/p5e-a43-runtime-guards.ps1",
+      "length": 23180,
+      "sha256": "C31217CDBD40F22DB9A74AFB529B1ECC33F725F485ECD462992073235F59ADD8"
+    },
+    "exporter": {
+      "path": "scripts/p5e-db-binary-export.ps1",
+      "length": 52379,
+      "sha256": "813F6ED0ABD110EBF32550990940E975971988FBCF806DC26464EE311021CF99"
+    },
+    "sqliteBridge": {
+      "path": "docs/P5E_SQLITE_BRIDGE.py",
+      "length": 5958,
+      "sha256": "4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111"
+    },
+    "toolchain": {
+      "path": "scripts/p5e-raw-toolchain.ps1",
+      "length": 9002,
+      "sha256": "C0AE7D431474F37597228A7AFA6F9382C63E26EB5A54CFB72604620D9DD5C3C8"
+    },
+    "localProperties": {
+      "path": "local.properties",
+      "length": 368,
+      "sha256": "71EB9D8E8E0179D863D919E329B56A1F3251126C15C2295E1F8E132B745770C2"
+    },
+    "requiredSourceContract": {
+      "path": "app/src/androidTest/java/com/ml/tblandroidtxt/EditorialP5EFreshRawLiveInstrumentedTest.java",
+      "length": 43245,
+      "sha256": "B3F974A185F8B2590424471F3A1317EC436CFBEF3D92244EFAE1674F935AC04A"
+    }
+  },
+  "artifactPins": {
+    "serial": "15e84958",
+    "certificateSha256": "47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155",
+    "productionApkSha256": "2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD",
+    "productionSourceArchiveSha256": "B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348",
+    "productionBuildInfoSha256": "DB20DA0CF708410AAAB65E5AF69ADF89A769ED62240B577A89CA4E2007FB7F06",
+    "testApkSha256": "058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8",
+    "testSourceArchiveSha256": "5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F",
+    "testBuildInfoSha256": "772F32E23AEF3537FEF00DACE8E4B9B994448BFEE2071150CF0E0540DDCCC5A9"
+  },
+  "redEvidence": {
+    "path": "docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_RED_20260928.json",
+    "length": 2288,
+    "sha256": "4539A932C099532D5C53746BFB70C6E74B2B9B183D895A5F08C8FC6CF192A569",
+    "status": "RED_REPRODUCED"
+  },
+  "qa": {
+    "main": {
+      "script": "scripts/test-p5e-a43-preauth-runtime-guard-closure.ps1",
+      "scriptLength": 38030,
+      "scriptSha256": "0F4614F6404FFC2F77233682E4ECC32C94FAA152E23FD555489DD7E9CD83AD1B",
+      "report": "docs/P5E_A43_PREAUTH_RUNTIME_GUARD_CLOSURE_QA_20260928.json",
+      "reportLength": 11097,
+      "reportSha256": "F31E504DF6ED339BC4D8FD09DB5DE338D0BC7CBCEA486CAF3F3F699ED5E3C651",
+      "passed": "21/21",
+      "powershell51ParseFiles": 10,
+      "gitDiffCheck": "PASS"
+    },
+    "atomicityExpectedEnvironment": {
+      "script": "scripts/test-p5e-a43-decision-atomicity-expected-env.ps1",
+      "scriptLength": 32508,
+      "scriptSha256": "BDD0D4D0F401EC050876A1C584762687D58F524D1FF4A6F02266ABE3BEC8F97E",
+      "report": "docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_QA_20260928.json",
+      "reportLength": 8156,
+      "reportSha256": "20632D9F39637DCBEA822EFC2A40AC2F377CDE33ED34D62188634BA678BB769E",
+      "passed": "28/28",
+      "highFailures": 0
+    },
+    "binding": {
+      "script": "scripts/test-p5e-a43-binding-tuple-matrix.ps1",
+      "scriptLength": 6332,
+      "scriptSha256": "1E843BA4EACC89778C48E12F8FD53CF8E64B3CA892FDF6F72D172E36D372B3DB",
+      "report": "docs/P5E_A43_BINDING_TUPLE_MATRIX_20260928.json",
+      "reportLength": 126775,
+      "reportSha256": "CA43ACA77A08DFF75F789FADC9CC96C3B789A4E84E2CDE18915322972F0ED930",
+      "passed": "262/262",
+      "regression": "175/175"
+    },
+    "dbHostReadback": {
+      "script": "scripts/test-p5e-a43-db-host-readback-matrix.ps1",
+      "scriptLength": 15391,
+      "scriptSha256": "61ECE7837EB5F9EA769A37CEAB6272C507F7AD37E6EB1F9BF87262F3754EEF7D",
+      "report": "docs/P5E_A43_DB_HOST_READBACK_MATRIX_20260928.json",
+      "reportLength": 13762,
+      "reportSha256": "B2F5341EB92A832CCD922D901118E052FA4E0182961373010879DB80A340242D",
+      "passed": "56/56"
+    },
+    "archiveClean": {
+      "script": "scripts/test-p5e-a43-archive-clean-reconstruction.ps1",
+      "scriptLength": 9653,
+      "scriptSha256": "144D0D96D5ACC4DCC9B010676CF3891514F014CA3C414C78CF2469EF1CE73444",
+      "report": "docs/P5E_A43_ARCHIVE_CLEAN_RECONSTRUCTION_20260928.json",
+      "reportLength": 9789,
+      "reportSha256": "7ED941AD44B398AE304E1420AC096A214B671077EED3FF8E5EB409964FA4875B",
+      "candidateCommit": "5597a3b20a4a1614c411c71872ee1333196cbe9c",
+      "status": "PASS"
+    }
+  },
+  "qaDependencyPolicy": {
+    "mode": "ELIMINATE",
+    "historicalUntrackedScripts": [
+      {
+        "path": "scripts/test-p5e-binding-tuple-host-contract-repair.ps1",
+        "length": 34183,
+        "sha256": "118DCA80D318EA71C07A171EEA0D5994EE59AFD306F5E79748F80969CB4A8697"
+      },
+      {
+        "path": "scripts/test-p5e-db-host-readback-repair.ps1",
+        "length": 36733,
+        "sha256": "12B27AE04AA230F065BFE4CC20C1AB0560991494EDBC4B241C2233CF6B3B8FFC"
+      }
+    ],
+    "replacementSuites": [
+      "scripts/test-p5e-a43-binding-tuple-matrix.ps1",
+      "scripts/test-p5e-a43-db-host-readback-matrix.ps1"
+    ],
+    "archiveProof": "Historical untracked scripts are absent from the exact Git archive; replacement suites run from the archive."
+  },
+  "independentReview": {
+    "reviewer": "Luna",
+    "path": "docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_LUNA_REVIEW_20260928.md",
+    "length": 4499,
+    "sha256": "1DCC13AD7A3A1052777063280B0DED9B154E9D3CA3126AADC2085BFC1B8D4190",
+    "verdict": "PASS",
+    "severity": {
+      "BLOCKER": 0,
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 0
+    }
+  },
+  "counters": {
+    "adb": 0,
+    "device": 0,
+    "provider": 0,
+    "credential": 0,
+    "databaseWrite": 0,
+    "build": 0,
+    "install": 0,
+    "raw": 0,
+    "redispatch": 0
+  },
+  "ownerDecision": {
+    "receiptCreated": false,
+    "authorizationRequested": false,
+    "authorizationConsumed": false,
+    "liveEventOpened": false,
+    "p5ExitClaimed": false,
+    "p6Ready": false
+  },
+  "provenanceSelfHash": "EXCLUDED_TO_AVOID_CIRCULAR_HASH",
+  "singleNextAction": "Owner review of this exact offline packet; do not authorize or dispatch a live event from this work package."
+}
