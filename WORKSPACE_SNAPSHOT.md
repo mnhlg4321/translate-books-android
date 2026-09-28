@@ -1,21 +1,21 @@
 # Workspace Snapshot
 
-- Updated: 2026-09-28 (+07:00), independent Luna review invalidated the current packet readiness claim and defined one bounded offline repair.
+- Updated: 2026-09-28 (+07:00), offline atomicity/environment repair and independent Luna review completed.
 - Current version: production 4.17-p5e.11 / code207; active release v4.18.
 - Current branch: feature/v4.18-p5e-runner-repair-20260917; same repair continuation, no new release track.
-- Current commit: 0730110a261edbab8f07f7db9e5831f567976fd3 — packet state-sync baseline immediately before this audit/snapshot commit; unrelated owner changes remain unstaged.
+- Current commit: 36eb3284a9450cd9106e9da580e698ddb3d422d0 — implementation/evidence baseline immediately before this canonical state-sync commit; unrelated owner changes remain unstaged.
 - Workspace: D:\App Translate Books. Existing .idea changes, untracked owner directories/worktrees/artifacts and the owner-session launcher remain protected. Worktree is not clean; no unrelated dirt was staged or changed.
 - Current build: unchanged production build-20260911-201725, APK SHA256 2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD; account test event p5e-account-check-20260916-01, APK SHA256 058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8. Historical replacement only, no current device identity claim.
-- Current phase: `INDEPENDENT_REVIEW_STOP / FINAL_EXECUTABLE_A43_PACKET_INVALIDATED / DECISION_ATOMICITY_AND_EXPECTED_ENV_ISOLATION_REPAIR_REQUIRED / 0_BLOCKER / 1_HIGH / 1_MEDIUM / NOT_AUTHORIZED / NOT_DISPATCHED / P6_NOT_READY / CLOSED_EVENTS_NON_REUSABLE`.
-- Completed tasks: exact pins, archive reconstruction of selected runtime dependencies, Job Object containment, bounded capture and existing `21/21` QA were rechecked offline; Luna reproduced the missing same-decision/different-receipt reservation failure. No owner receipt or live action was created.
-- Pending tasks: implement decision identity uniqueness independent of receipt hash, immutable receipt binding, crash-window consumption, phase-only expected digest inheritance, and clean-archive execution of all QA dependencies. Release steps 05–09, live A4.3, RAW acceptance, P5 exit and P6 remain not ready.
-- Known bugs/gaps: HIGH — one `decisionId` can reserve twice with different receipt hashes before a plan exists. MEDIUM — expected digest reaches non-Dispatch helpers. Provenance gap — binding and DB QA scripts are untracked and absent from the packet commit archive.
-- Regression status: `STOP / 0 BLOCKER / 1 HIGH / 1 MEDIUM / 0 LOW`; the old `21/21` suite still passes but lacks the failing cases. ADB/device/provider/credential/DB-write/build/install/RAW/redispatch counters are `0`.
+- Current phase: `OFFLINE_PACKET_REVIEWABLE / LUNA_PASS / 0_BLOCKER / 0_HIGH / 0_MEDIUM / 0_LOW / OWNER_DECISION_NOT_REQUESTED / NOT_DISPATCHED / P6_NOT_READY / CLOSED_EVENTS_NON_REUSABLE`.
+- Completed tasks: atomic decision/receipt reservation and crash-window matrix `28/28`, expected-value phase isolation, closed-event rejection alignment, main QA `21/21`, binding `262/262`, regression `175/175`, DB `56/56`, exact Git archive reconstruction, PowerShell 5.1 parse and diff check. No owner receipt or live action was created.
+- Pending tasks: owner review of the exact offline packet. Release steps 05–09, live A4.3, RAW acceptance, P5 exit and P6 remain not ready.
+- Known bugs/gaps: none in the repaired decision, receipt, environment, archive or closed-event controls; closed events and consumed decisions remain immutable and non-reusable.
+- Regression status: `PASS / 0 BLOCKER / 0 HIGH / 0 MEDIUM / 0 LOW`; ADB/device/provider/credential/DB-write/build/install/RAW/redispatch counters are `0`.
 - Data/auth state: `RECONSTRUCTED_ONLY`; prior decisions/events are closed/consumed; current owner decision is pending and no receipt exists in the repository.
-- Current repair evidence: `docs/P5E_A43_FINAL_EXECUTABLE_INDEPENDENT_LUNA_REVIEW_20260928.md`, `docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_NEXT_WORK_REQUEST_20260928.md`, `docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_WORK_REQUEST_PROVENANCE_20260928.json` and `docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_WORK_REQUEST_QA_20260928.json`.
+- Current repair evidence: `docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_PROVENANCE_20260928.json`, `docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_LUNA_REVIEW_20260928.md`, `docs/P5E_A43_ARCHIVE_CLEAN_RECONSTRUCTION_20260928.json` and the packet QA reports.
 - Latest adapter evidence: docs/P5E_LAYOUT_SIGNATURE_ADAPTER_PROVENANCE_20260924.json; docs/P5E_LAYOUT_SIGNATURE_ADAPTER_REVIEW_20260924.md; docs/P5E_ACCOUNT_CHECK_DEVICE_PREFLIGHT_QA_20260924_LAYOUT.json; docs/P5E_ACCOUNT_CHECK_DEVICE_COMMAND_QA_20260924_LAYOUT.json; docs/P5E_SIGNATURE_LAYOUT_ADAPTER_EVENT_PACKET_20260924.md.
 - Earlier evidence: docs/P5E_ACCOUNT_CHECK_DEVICE_REPAIR_20260924.md; docs/P5E_EXPECTED_VALUE_LOADER_QA_20260924.json; docs/P5E_ACCOUNT_CHECK_DEVICE_OWNER_STOP_20260924.json; docs/P5E_ACCOUNT_CHECK_DEVICE_PREFLIGHT_STOP_20260924.json; docs/P5E_ACCOUNT_CHECK_DEVICE_PREFLIGHT_QA_20260924.json; docs/P5E_ACCOUNT_CHECK_DEVICE_COMMAND_QA_20260924.json; docs/P5E_NEXT_WORK_REQUEST_20260924.md; docs/P5E_WORK_REQUEST_PROVENANCE_20260924.json.
-- Current Next action: execute the single bounded offline atomicity/environment/archive repair and independent review; no owner authorization request, command/event, ADB/device/provider/credential/DB/build/install/RAW/retry/redispatch/P5-exit or P6 action.
+- Current Next action: owner review of the exact offline packet only; no owner authorization request, receipt, command/event, ADB/device/provider/credential/DB/build/install/RAW/retry/redispatch/P5 exit or P6 action.
 
 - Historical evidence: the terminal 2026-09-26 A4.3 event under `D:\P5E-private\raw-live-20260926-024601307-fd3c6cfb9afb4aa794f60718ba9632b1`; only its redacted event plan/collector outcome/command log, export manifest and pulled APK hashes were read. Instrumentation stdout/stderr, provider payloads and credentials were not read.
 
