@@ -1,0 +1,51 @@
+{
+    "schemaVersion":  "p5e.a43.decision-atomicity-expected-env-isolation-red.v1",
+    "generatedDate":  "2026-09-28",
+    "source":  "current-byte-runtime-guard-before-repair",
+    "tempRoot":  "REDACTED_TEMP_ROOT",
+    "status":  "RED_REPRODUCED",
+    "tests":  [
+                  {
+                      "name":  "RED-sequential-cross-hash",
+                      "passed":  true,
+                      "detail":  "same decisionId with receipt A then B accepted by current reservation path"
+                  },
+                  {
+                      "name":  "RED-concurrent-cross-hash",
+                      "passed":  true,
+                      "detail":  "current contract produced wins=2 for two receipt hashes"
+                  },
+                  {
+                      "name":  "RED-same-hash-control",
+                      "passed":  true,
+                      "detail":  "same decisionId and same receipt hash is blocked by old prefix marker"
+                  },
+                  {
+                      "name":  "RED-crash-window-before-plan",
+                      "passed":  true,
+                      "detail":  "synthetic worker left old marker before receipt/plan; different hash reused decision"
+                  },
+                  {
+                      "name":  "RED-environment-inheritance",
+                      "passed":  true,
+                      "detail":  "old helper launch inheritance: Before=PRESENT;PrepareEvent=PRESENT;Verify=PRESENT;After=PRESENT"
+                  }
+              ],
+    "redFindings":  [
+                        "cross-hash decision reuse",
+                        "cross-hash concurrent double reservation",
+                        "crash-window decision reuse",
+                        "non-Dispatch expected digest inheritance"
+                    ],
+    "secretDisclosure":  "NONE",
+    "liveCounters":  {
+                         "adb":  0,
+                         "device":  0,
+                         "provider":  0,
+                         "credential":  0,
+                         "databaseWrites":  0,
+                         "buildInstall":  0,
+                         "raw":  0,
+                         "redispatch":  0
+                     }
+}

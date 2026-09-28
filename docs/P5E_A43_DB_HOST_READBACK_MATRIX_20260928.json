@@ -1,0 +1,245 @@
+{
+    "schemaVersion":  "p5e.a43.db-host-readback-matrix.v1",
+    "generatedDate":  "2026-09-28",
+    "status":  "PASS",
+    "testCount":  56,
+    "failureCount":  0,
+    "tests":  {
+                  "fixture-created-under-bounded-temp-root":  {
+                                                                  "passed":  true,
+                                                                  "detail":  ""
+                                                              },
+                  "read-select-count":  {
+                                            "passed":  true,
+                                            "detail":  ""
+                                        },
+                  "read-integrity-check":  {
+                                               "passed":  true,
+                                               "detail":  ""
+                                           },
+                  "read-foreign-key-check":  {
+                                                 "passed":  true,
+                                                 "detail":  ""
+                                             },
+                  "read-user-version":  {
+                                            "passed":  true,
+                                            "detail":  ""
+                                        },
+                  "read-null-rendering":  {
+                                              "passed":  true,
+                                              "detail":  ""
+                                          },
+                  "read-blob-rendering":  {
+                                              "passed":  true,
+                                              "detail":  ""
+                                          },
+                  "read-quoted-semicolon":  {
+                                                "passed":  true,
+                                                "detail":  ""
+                                            },
+                  "read-where-zero-empty-result":  {
+                                                       "passed":  true,
+                                                       "detail":  ""
+                                                   },
+                  "read-multi-statement-bounded":  {
+                                                       "passed":  true,
+                                                       "detail":  ""
+                                                   },
+                  "read-immutable-flag-recorded":  {
+                                                       "passed":  true,
+                                                       "detail":  ""
+                                                   },
+                  "read-space-hash-percent-path":  {
+                                                       "passed":  true,
+                                                       "detail":  ""
+                                                   },
+                  "read-capture-bounded":  {
+                                               "passed":  true,
+                                               "detail":  ""
+                                           },
+                  "read-two-column-shape":  {
+                                                "passed":  true,
+                                                "detail":  ""
+                                            },
+                  "read-aggregate":  {
+                                         "passed":  true,
+                                         "detail":  ""
+                                     },
+                  "read-pragma-query-only-on":  {
+                                                    "passed":  true,
+                                                    "detail":  ""
+                                                },
+                  "read-pragma-foreign-keys-on":  {
+                                                      "passed":  true,
+                                                      "detail":  ""
+                                                  },
+                  "write-create-rejected":  {
+                                                "passed":  true,
+                                                "detail":  ""
+                                            },
+                  "write-insert-rejected":  {
+                                                "passed":  true,
+                                                "detail":  ""
+                                            },
+                  "write-update-rejected":  {
+                                                "passed":  true,
+                                                "detail":  ""
+                                            },
+                  "write-delete-rejected":  {
+                                                "passed":  true,
+                                                "detail":  ""
+                                            },
+                  "write-replace-rejected":  {
+                                                 "passed":  true,
+                                                 "detail":  ""
+                                             },
+                  "write-alter-rejected":  {
+                                               "passed":  true,
+                                               "detail":  ""
+                                           },
+                  "write-drop-rejected":  {
+                                              "passed":  true,
+                                              "detail":  ""
+                                          },
+                  "write-vacuum-rejected":  {
+                                                "passed":  true,
+                                                "detail":  ""
+                                            },
+                  "write-reindex-rejected":  {
+                                                 "passed":  true,
+                                                 "detail":  ""
+                                             },
+                  "write-attach-rejected":  {
+                                                "passed":  true,
+                                                "detail":  ""
+                                            },
+                  "write-detach-rejected":  {
+                                                "passed":  true,
+                                                "detail":  ""
+                                            },
+                  "write-begin-rejected":  {
+                                               "passed":  true,
+                                               "detail":  ""
+                                           },
+                  "write-commit-rejected":  {
+                                                "passed":  true,
+                                                "detail":  ""
+                                            },
+                  "write-rollback-rejected":  {
+                                                  "passed":  true,
+                                                  "detail":  ""
+                                              },
+                  "write-savepoint-rejected":  {
+                                                   "passed":  true,
+                                                   "detail":  ""
+                                               },
+                  "write-release-rejected":  {
+                                                 "passed":  true,
+                                                 "detail":  ""
+                                             },
+                  "write-query-only-off-rejected":  {
+                                                        "passed":  true,
+                                                        "detail":  ""
+                                                    },
+                  "write-foreign-keys-off-rejected":  {
+                                                          "passed":  true,
+                                                          "detail":  ""
+                                                      },
+                  "write-pragma-assignment-rejected":  {
+                                                           "passed":  true,
+                                                           "detail":  ""
+                                                       },
+                  "write-with-insert-rejected":  {
+                                                     "passed":  true,
+                                                     "detail":  ""
+                                                 },
+                  "invalid-select-rejected":  {
+                                                  "passed":  true,
+                                                  "detail":  ""
+                                              },
+                  "empty-query-rejected":  {
+                                               "passed":  true,
+                                               "detail":  ""
+                                           },
+                  "nonselect-rejected":  {
+                                             "passed":  true,
+                                             "detail":  ""
+                                         },
+                  "malformed-quote-rejected":  {
+                                                   "passed":  true,
+                                                   "detail":  ""
+                                               },
+                  "output-limit-rejected":  {
+                                                "passed":  true,
+                                                "detail":  ""
+                                            },
+                  "timeout-rejected":  {
+                                           "passed":  true,
+                                           "detail":  ""
+                                       },
+                  "python-path-missing-rejected":  {
+                                                       "passed":  true,
+                                                       "detail":  ""
+                                                   },
+                  "database-missing-rejected":  {
+                                                    "passed":  true,
+                                                    "detail":  ""
+                                                },
+                  "query-missing-rejected":  {
+                                                 "passed":  true,
+                                                 "detail":  ""
+                                             },
+                  "corrupt-database-rejected":  {
+                                                    "passed":  true,
+                                                    "detail":  ""
+                                                },
+                  "database-remains-unchanged":  {
+                                                     "passed":  true,
+                                                     "detail":  ""
+                                                 },
+                  "no-database-write-counter":  {
+                                                    "passed":  true,
+                                                    "detail":  ""
+                                                },
+                  "no-wal-or-shm-created":  {
+                                                "passed":  true,
+                                                "detail":  ""
+                                            },
+                  "fixture-regular-file-no-reparse":  {
+                                                          "passed":  true,
+                                                          "detail":  ""
+                                                      },
+                  "query-regular-file-no-reparse":  {
+                                                        "passed":  true,
+                                                        "detail":  ""
+                                                    },
+                  "query-path-under-temp-root":  {
+                                                     "passed":  true,
+                                                     "detail":  ""
+                                                 },
+                  "bridge-python-source-parses":  {
+                                                      "passed":  true,
+                                                      "detail":  ""
+                                                  },
+                  "report-secret-sentinel-absent":  {
+                                                        "passed":  true,
+                                                        "detail":  ""
+                                                    },
+                  "live-counters-all-zero":  {
+                                                 "passed":  true,
+                                                 "detail":  ""
+                                             }
+              },
+    "counters":  {
+                     "adb":  0,
+                     "device":  0,
+                     "provider":  0,
+                     "credential":  0,
+                     "databaseWrites":  0,
+                     "build":  0,
+                     "install":  0,
+                     "raw":  0,
+                     "redispatch":  0
+                 },
+    "fixturePolicy":  "TEMP_ROOT_ONLY_NO_RAW_OUTPUT_NO_DEVICE_PROVIDER_CREDENTIAL_OR_DATABASE_WRITE"
+}

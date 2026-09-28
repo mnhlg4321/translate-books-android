@@ -101,8 +101,9 @@ param(
     [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
     [string]$OwnerDecisionId,
 
-    [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
-    [string]$OwnerDecisionReceiptSha256,
+    [Parameter(ParameterSetName = 'PrepareEvent')]
+    [AllowEmptyString()]
+    [string]$OwnerDecisionReceiptSha256 = '',
 
     [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
     [string]$OwnerDecisionPacketIdentifier,
@@ -195,7 +196,7 @@ if ((Get-FileHash -LiteralPath $script:P5ERawToolchainPath -Algorithm SHA256).Ha
 . $script:P5ERawToolchainPath -LibraryOnly
 
 $script:P5EA43RuntimeGuardPath = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot 'p5e-a43-runtime-guards.ps1'))
-$script:P5EA43RuntimeGuardSha256 = 'f332954fb8aa2048edf18630c5d1ef7b2039d57458c85cd6bb5cb07f59d96dba'
+$script:P5EA43RuntimeGuardSha256 = 'c31217cdbd40f22db9a74afb529b1ecc33f725f485ecd462992073235f59add8'
 if (-not (Test-Path -LiteralPath $script:P5EA43RuntimeGuardPath -PathType Leaf)) { throw 'P5E_A43_RUNTIME_GUARD_MISSING_STOP' }
 $guardLibraryItem = Get-Item -LiteralPath $script:P5EA43RuntimeGuardPath -Force
 if (($guardLibraryItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'P5E_A43_RUNTIME_GUARD_REPARSE_STOP' }
@@ -6180,6 +6181,15 @@ function Assert-P5EPinnedDispatchInputs {
 }
 
 function Invoke-P5EPrepareEvent {
+    if (-not [string]::IsNullOrWhiteSpace($OwnerDecisionReceiptSha256)) {
+        throw 'P5E_OWNER_RECEIPT_HASH_ARGV_FORBIDDEN_STOP'
+    }
+    $OwnerDecisionReceiptSha256 = [Environment]::GetEnvironmentVariable('P5E_A43_RESERVATION_RECEIPT_SHA256', 'Process')
+    if ([string]::IsNullOrWhiteSpace($OwnerDecisionReceiptSha256) -or
+        $OwnerDecisionReceiptSha256 -notmatch '^[0-9a-fA-F]{64}$') {
+        throw 'P5E_OWNER_RECEIPT_HASH_ENV_MISSING_OR_INVALID_STOP'
+    }
+    $OwnerDecisionReceiptSha256 = $OwnerDecisionReceiptSha256.ToLowerInvariant()
     $toolchain = Resolve-P5ERawToolchain -AndroidSdkPath $AndroidSdkPath -LocalPropertiesPath $LocalPropertiesPath `
         -AdbPath $AdbPath -JavaPath $JavaPath -ApkSignerJarPath $ApkSignerJarPath -BuildToolsVersion $BuildToolsVersion
     [void](Assert-P5EHelperRuntimeHash -ExpectedSha256 $ExpectedHelperSha256)

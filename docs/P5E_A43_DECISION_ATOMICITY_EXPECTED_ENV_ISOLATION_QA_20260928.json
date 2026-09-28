@@ -1,0 +1,199 @@
+{
+    "schemaVersion":  "p5e.a43.decision-atomicity-expected-env-isolation-qa.v2",
+    "generatedDate":  "2026-09-28",
+    "status":  "GREEN_PASS",
+    "severity":  "NONE",
+    "redEvidence":  {
+                        "path":  "docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_RED_20260928.json",
+                        "sha256":  "4539A932C099532D5C53746BFB70C6E74B2B9B183D895A5F08C8FC6CF192A569",
+                        "status":  "RED_REPRODUCED"
+                    },
+    "testCount":  28,
+    "passedTestCount":  28,
+    "failedTestCount":  0,
+    "highFailureCount":  0,
+    "tests":  [
+                  {
+                      "name":  "red-evidence-preserved",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "RED_HASH=4539A932C099532D5C53746BFB70C6E74B2B9B183D895A5F08C8FC6CF192A569"
+                  },
+                  {
+                      "name":  "canonical-decision-key-full-sha256",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "noncanonical-decision-stop-002",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "noncanonical-decision-stop-003",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "noncanonical-decision-stop-004",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "noncanonical-decision-stop-005",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "sequential-same-decision-different-receipt-one-use",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "sequential-same-decision-same-receipt-one-use",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "concurrent-same-decision-different-receipt-one-winner",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "concurrent-same-decision-same-receipt-one-winner",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "different-decision-same-receipt-consumes-second-decision",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "concurrent-different-decision-same-receipt-one-event",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "different-decision-different-receipt-independent-reservations",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "receipt-full-hash-prefix-collision-is-distinct",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "event-path-uses-decision-key-only",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "crash-window-after-decision-marker-fail-closed",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "crash-window-after-receipt-marker-fail-closed",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "partial-marker-ledger-unknown-fail-closed",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "malformed-marker-filename-ledger-unknown",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "receipt-marker-binding-mismatch-ledger-unknown",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "atomic-marker-create-new-and-flush-contract",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "phase-environment-exact-isolation",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "unknown-phase-stops-before-launch",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "phase-environments-do-not-cross-contaminate",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "receipt-hash-not-passed-through-prepare-argv",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "expected-value-not-in-exception-or-report-contract",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "marker-state-monotonic-no-cleanup",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  },
+                  {
+                      "name":  "concurrent-child-status-is-redacted",
+                      "passed":  true,
+                      "severity":  "HIGH",
+                      "detail":  "PASS"
+                  }
+              ],
+    "secretDisclosure":  "NONE",
+    "rawOutputRetained":  false,
+    "tempFixtureRoot":  "REDACTED_TEMP_ROOT",
+    "liveCounters":  {
+                         "adb":  0,
+                         "device":  0,
+                         "provider":  0,
+                         "credential":  0,
+                         "databaseWrites":  0,
+                         "buildInstall":  0,
+                         "raw":  0,
+                         "redispatch":  0
+                     },
+    "nextAction":  "Continue offline archive-clean QA and final independent review."
+}
