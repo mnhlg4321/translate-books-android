@@ -1,6 +1,6 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Current work package — 2026-09-28: `OFFLINE_RUNTIME_GUARD_CLOSURE_QA_PASS / LUNA_REVIEW_PENDING / OWNER_DECISION_PENDING / NOT_DISPATCHED / P6_NOT_READY / 0_BLOCKER / 0_HIGH / 0_MEDIUM / 0_LOW / CLOSED_EVENTS_NON_REUSABLE`. The prior event and every older decision/packet remain closed/consumed. The current A4.3 packet is offline-only, exact-byte reviewable and contains no authorization request or owner receipt.
+> Current work package — 2026-09-28: `FINAL_EXECUTABLE_A43_PACKET_READY / OWNER_DECISION_PENDING / NOT_DISPATCHED / P6_NOT_READY / 0_BLOCKER / 0_HIGH / 0_MEDIUM / 0_LOW / CLOSED_EVENTS_NON_REUSABLE`. The prior event and every older decision/packet remain closed/consumed. The current A4.3 packet is offline-only, exact-byte reviewable, Luna-approved and contains no authorization request or owner receipt.
 
 > Current review-only packet pins are manifest `B093AB871072D78A9A935914AEC9FF56835606BB344F034AA5EE2F38EA83FF4F`, command `FA63C5D2498AA345C6AC426AD253B466D6BD3206D525BAE4E0E8E6158BA78F80`, helper `86E386375B771B001B911FB2F538E112F6AD9F709BB933726FEB981D6F875FB6`, exporter `813F6ED0ABD110EBF32550990940E975971988FBCF806DC26464EE311021CF99`, guard `F332954FB8AA2048EDF18630C5D1EF7B2039D57458C85CD6BB5CB07F59D96DBA`, bridge `4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111`, toolchain `C0AE7D431474F37597228A7AFA6F9382C63E26EB5A54CFB72604620D9DD5C3C8`, certificate `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155`, serial `15e84958`. QA is `9E461ADF9471B9B836B506079BCD34F9D01805E66FD07E29DD37E776F929F393`.
 
@@ -10,7 +10,7 @@
 
 > Current DB readback prerequisite — 2026-09-26: `OFFLINE_DB_HOST_READBACK_REPAIR_PASS` is bound by `docs/P5E_DB_HOST_READBACK_REPAIR_QA_20260925.json` at `56/56 PASS`. The old proposal, manifest/command and 2026-09-25 decision remain consumed; no live event is authorized by this work.
 
-> Current Next action: complete Luna exact-byte review of this packet. Do not create or consume authorization, execute the command, create an event, use ADB/device/provider/credential/DB writes, build/install, retry/redispatch, dispatch RAW or open P6.
+> Current Next action: owner reviews this exact packet. Do not create or consume authorization, execute the command, create an event, use ADB/device/provider/credential/DB writes, build/install, retry/redispatch, dispatch RAW or open P6.
 
 > Superseded DB diagnosis — 2026-09-25: WAL/SHM exit `1` are valid absence results. The actual stop was the direct Android `sqlite3` consistent-read command. This proposal remains consumed and is not executable; the offline binary-export/host-readback repair is now complete. No new key, account check or owner live decision was requested for that repair.
 

@@ -1,6 +1,6 @@
 # Build State
 
-> Current work package — 2026-09-28: `OFFLINE_RUNTIME_GUARD_CLOSURE_QA_PASS / LUNA_REVIEW_PENDING / OWNER_DECISION_PENDING / NOT_DISPATCHED / P6_NOT_READY / 0_BLOCKER / 0_HIGH / 0_MEDIUM / 0_LOW / CLOSED_EVENTS_NON_REUSABLE`. No owner receipt, authorization request, event or live action was created or executed. QA is `21/21 PASS`, binding `262/262`, regression `175/175`, DB host-readback `56/56`, with all live-action counters `0`; exact-byte Luna review and final provenance are pending.
+> Current work package — 2026-09-28: `FINAL_EXECUTABLE_A43_PACKET_READY / OWNER_DECISION_PENDING / NOT_DISPATCHED / P6_NOT_READY / 0_BLOCKER / 0_HIGH / 0_MEDIUM / 0_LOW / CLOSED_EVENTS_NON_REUSABLE`. No owner receipt, authorization request, event or live action was created or executed. QA is `21/21 PASS`, binding `262/262`, regression `175/175`, DB host-readback `56/56`, Luna exact-byte review is PASS and all live-action counters are `0`.
 
 > Current offline pins: manifest `B093AB871072D78A9A935914AEC9FF56835606BB344F034AA5EE2F38EA83FF4F`; command `FA63C5D2498AA345C6AC426AD253B466D6BD3206D525BAE4E0E8E6158BA78F80`; helper `86E386375B771B001B911FB2F538E112F6AD9F709BB933726FEB981D6F875FB6`; exporter `813F6ED0ABD110EBF32550990940E975971988FBCF806DC26464EE311021CF99`; guard `F332954FB8AA2048EDF18630C5D1EF7B2039D57458C85CD6BB5CB07F59D96DBA`; bridge `4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111`; toolchain `C0AE7D431474F37597228A7AFA6F9382C63E26EB5A54CFB72604620D9DD5C3C8`; certificate `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155`; serial `15e84958`.
 
@@ -14,7 +14,7 @@
 
 > The consumed live packet remains historical: `PrepareEvent` completed, `pm-path-production-before` exited `1` without timeout and the outer code `125` reflected incomplete helper stream drain. The offline repair keeps the collector typed stop and the helper process exit/drain states separate.
 
-> Current Next action: complete Luna exact-byte review of this packet; no authorization request is created or consumed, no command/event/ADB/device/provider/credential/DB/build/install/RAW/retry/redispatch/P5-exit/P6 action is taken.
+> Current Next action: owner reviews this exact packet; no authorization request is created or consumed, no command/event/ADB/device/provider/credential/DB/build/install/RAW/retry/redispatch/P5-exit/P6 action is taken.
 
 > Superseded DB diagnosis — 2026-09-25: WAL/SHM presence exit `1` meant `ABSENT` under the helper contract. The sole proven blocker was the launched, non-timeout `database-consistent-read-transaction` exit `1`; native cause remains unproven. The bounded offline repair named there is now PASS; no live event is authorized by that result.
 

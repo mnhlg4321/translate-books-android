@@ -1,117 +1,89 @@
 {
-  "schemaVersion": "p5e.a43.preauth-runtime-guard-closure-provenance.v1",
+  "schemaVersion": "p5e.a43.preauth-runtime-guard-closure-provenance.v2",
   "generatedDate": "2026-09-28",
-  "state": "OFFLINE_REPAIR_BEHAVIOR_PASS / LIVE_PACKET_NOT_READY / A43_OUTER_PROCESS_TREE_AND_AUTHORITY_GATE_CLOSURE_REQUIRED / 0_BLOCKER / 1_HIGH / 2_MEDIUM / 2_LOW / CLOSED_CONSUMED_NON_REUSABLE / NOT_AUTHORIZED / NOT_DISPATCHED / P6_NOT_READY",
+  "state": "FINAL_EXECUTABLE_A43_PACKET_READY / OWNER_DECISION_PENDING / NOT_DISPATCHED / P6_NOT_READY / 0_BLOCKER / 0_HIGH / 0_MEDIUM / 0_LOW / CLOSED_EVENTS_NON_REUSABLE",
   "branch": "feature/v4.18-p5e-runner-repair-20260917",
-  "packetCommit": "a30a4d1653c3a5a1e0d39fac4b07ae000d588edf",
-  "packetFreezeBaseline": "b8326f5b8c9649c741e4c2124efb35a6a1045919",
-  "workRequest": {
-    "path": "docs/P5E_A43_PREAUTH_RUNTIME_GUARD_CLOSURE_NEXT_WORK_REQUEST_20260928.md",
-    "sha256": "BC2ECB5C18691E9553558C48FD237E99940BAEE8FF6F9EA0010AD5F89230F716"
-  },
+  "implementationBaselineCommit": "a30a4d1653c3a5a1e0d39fac4b07ae000d588edf",
+  "startingChildCommit": "d1c15a07d1ddbed2b105b7954920d72bc7002f76",
+  "dependencyProvenanceCommit": "6faebf0ad82ec6f0efba3ef42f50fec9e7bf3a74",
+  "packetContentCommit": "6faebf0ad82ec6f0efba3ef42f50fec9e7bf3a74",
   "worktreePolicy": "PRESERVE_EXISTING_OWNER_CHANGES_NO_RESET_NO_CLEAN_NO_UNRELATED_STAGE",
-  "reviewedPins": {
-    "manifest": "C08C3F6D8EE1B802B0D68AB1FF0302E82655D17C72B06619752B65396C11ADC3",
-    "command": "C641F6A01C01209AD08FB820871E575895DC998A4CB6AD15769F1D2222BA4CD5",
-    "helper": "959F2BBDC2EF163F00F3A56900B903DF529FDCDD9024AD6CEE906A01E080A8F0",
-    "exporter": "D8783B31F9141458CA397915664CA79B07D3161A5E0F0D3B4365C5C65EA41D06",
-    "sqliteBridge": "4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111",
-    "toolchain": "C0AE7D431474F37597228A7AFA6F9382C63E26EB5A54CFB72604620D9DD5C3C8",
-    "certificate": "47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155",
-    "serial": "15e84958"
+  "packet": {
+    "identifier": "P5E-A43-PREAUTH-RUNTIME-GUARD-CLOSURE-20260928-01",
+    "scope": "RAW/GLOSSARY",
+    "serial": "15e84958",
+    "certificateSha256": "47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155",
+    "expectedProcessValueGate": "presence_and_lowercase_64_hex_shape_only_no_read_no_persist_no_derivation",
+    "stdoutCaptureLimitBytes": 4194304,
+    "stderrCaptureLimitBytes": 1048576
   },
-  "offlineEvidence": {
-    "qaPath": "docs/P5E_A43_PM_PATH_CAPTURE_REPAIR_QA_20260928.json",
-    "qaSha256": "92C3539069A8F285250F7F18AC154C2E85643A229BA449813C1D830099D0CEE7",
+  "runtimePins": [
+    { "role": "manifest", "path": "docs/P5E_A43_PREAUTH_RUNTIME_GUARD_CLOSURE_MANIFEST_20260928.md", "length": 8302, "sha256": "B093AB871072D78A9A935914AEC9FF56835606BB344F034AA5EE2F38EA83FF4F" },
+    { "role": "command", "path": "docs/P5E_A43_PREAUTH_RUNTIME_GUARD_CLOSURE_COMMAND_20260928.txt", "length": 22236, "sha256": "FA63C5D2498AA345C6AC426AD253B466D6BD3206D525BAE4E0E8E6158BA78F80" },
+    { "role": "helper", "path": "scripts/p5e-raw-live-supervisor.ps1", "length": 416665, "sha256": "86E386375B771B001B911FB2F538E112F6AD9F709BB933726FEB981D6F875FB6" },
+    { "role": "exporter", "path": "scripts/p5e-db-binary-export.ps1", "length": 52379, "sha256": "813F6ED0ABD110EBF32550990940E975971988FBCF806DC26464EE311021CF99" },
+    { "role": "runtimeGuard", "path": "scripts/p5e-a43-runtime-guards.ps1", "length": 13940, "sha256": "F332954FB8AA2048EDF18630C5D1EF7B2039D57458C85CD6BB5CB07F59D96DBA" },
+    { "role": "sqliteBridge", "path": "docs/P5E_SQLITE_BRIDGE.py", "length": 5958, "sha256": "4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111" },
+    { "role": "toolchain", "path": "scripts/p5e-raw-toolchain.ps1", "length": 9002, "sha256": "C0AE7D431474F37597228A7AFA6F9382C63E26EB5A54CFB72604620D9DD5C3C8" },
+    { "role": "qaScript", "path": "scripts/test-p5e-a43-preauth-runtime-guard-closure.ps1", "length": 35665, "sha256": "393196B7DC9C7BBA98A319DE1828E3CD6641A091946232C420B63556CF48B9EB" },
+    { "role": "qaReport", "path": "docs/P5E_A43_PREAUTH_RUNTIME_GUARD_CLOSURE_QA_20260928.json", "length": 10621, "sha256": "9E461ADF9471B9B836B506079BCD34F9D01805E66FD07E29DD37E776F929F393" },
+    { "role": "ownerLocalInput", "path": "local.properties", "length": 368, "sha256": "71EB9D8E8E0179D863D919E329B56A1F3251126C15C2295E1F8E132B745770C2", "provenance": "owner-local-input-pinned-by-command-and-not-staged" }
+  ],
+  "artifactPins": {
+    "productionApkSha256": "2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD",
+    "productionSourceSha256": "B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348",
+    "productionBuildInfoSha256": "DB20DA0CF708410AAAB65E5AF69ADF89A769ED62240B577A89CA4E2007FB7F06",
+    "testApkSha256": "058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8",
+    "testSourceSha256": "5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F",
+    "testBuildInfoSha256": "772F32E23AEF3537FEF00DACE8E4B9B994448BFEE2071150CF0E0540DDCCC5A9"
+  },
+  "qa": {
+    "path": "docs/P5E_A43_PREAUTH_RUNTIME_GUARD_CLOSURE_QA_20260928.json",
     "status": "PASS",
-    "tests": "36/36",
+    "tests": "21/21",
     "binding": "262/262",
     "regression": "175/175",
-    "dbReadback": "56/56",
-    "liveCounters": "ALL_ZERO"
-  },
-  "readinessAssessment": {
-    "pmPathClassifier": "READY_OFFLINE",
-    "processExitAndDrainSeparation": "READY_OFFLINE",
-    "ownerReview": "READY",
-    "liveAuthorizationRequest": "DEFER_UNTIL_HIGH_AND_MEDIUM_RUNTIME_GUARDS_CLOSE",
-    "a43Live": false,
-    "p5Exit": false,
-    "p6": false
-  },
-  "findingsDrivingNextWork": [
-    {
-      "severity": "HIGH",
-      "code": "DESCENDANT_CONTAINMENT_NOT_PROVEN",
-      "evidence": "Windows PowerShell 5.1 on .NET Framework 4.8 exposes Kill() but not Kill(Boolean); current fallback proves parent-only termination and does not prove ADB/instrumentation/provider descendants stopped",
-      "requiredClosure": "verified Windows PowerShell 5.1 process-tree containment, bounded post-termination verification, and EXTERNAL_PROCESS_STATE_UNKNOWN on unproven cleanup"
+    "dbHostReadback": "56/56",
+    "powershell51Parse": "PASS",
+    "gitDiffCheck": "PASS",
+    "severity": { "BLOCKER": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0 },
+    "runtimeEvidence": {
+      "suspendedJobLaunch": "PASS / containmentAttachedBeforeResume=true / ALL_DESCENDANTS_EXITED",
+      "drainFailure": "PASS / processExitCode=0 / captureErrorClass=TASK_WAIT_TIMEOUT / stdoutDrainStatus=DRAIN_COMPLETED_AFTER_TIMEOUT / stderrDrainStatus=DRAIN_COMPLETED_AFTER_TIMEOUT / captureBounded=false / containmentVerified=true / descendantExited=true",
+      "wrapperBinding": "PASS / captureErrorChecked=true / processExitPreserved=true / typedWrapperStatus=STREAM_CAPTURE_FAILED"
     },
-    {
-      "severity": "MEDIUM",
-      "code": "RUNTIME_DEPENDENCY_BUNDLE_NOT_DURABLE",
-      "evidence": "exporter and toolchain are untracked and SQLite bridge differs from its tracked blob; packet commit cannot reconstruct the exact runtime bundle despite matching current hashes",
-      "requiredClosure": "tracked exact dependencies or immutable hash-bound source archive proven reconstructible from clean checkout"
+    "counters": {
+      "adbLaunches": 0,
+      "deviceReads": 0,
+      "deviceWrites": 0,
+      "providerCalls": 0,
+      "credentialReads": 0,
+      "databaseWrites": 0,
+      "builds": 0,
+      "installs": 0,
+      "rawDispatches": 0,
+      "redispatches": 0
     },
-    {
-      "severity": "MEDIUM",
-      "code": "OWNER_DECISION_AND_EXPECTED_VALUE_NOT_PRE_EVENT_GATED",
-      "evidence": "review-only command has no machine-enforced owner receipt and no presence/shape check for the Process expected value before event creation and ADB",
-      "requiredClosure": "hash-bound single-use owner receipt plus zero-disclosure expected-value presence/shape gate and atomic race-safe decision reservation before event creation"
-    },
-    {
-      "severity": "LOW",
-      "code": "OUTER_CAPTURE_NO_INDEPENDENT_BYTE_CAP",
-      "evidence": "ReadToEndAsync may retain uncapped transient output in memory",
-      "requiredClosure": "bounded stream pump with cap and overflow typed stop"
-    },
-    {
-      "severity": "LOW",
-      "code": "QA_SEVERITY_METADATA_NOT_INDEPENDENT",
-      "evidence": "severity values are metadata rather than derived policy results",
-      "requiredClosure": "derive QA severity from assertion/policy mapping and retain independent Luna review"
-    }
-  ],
-  "historicalFailureCoverage": [
-    "expected process value missing before event",
-    "package metadata and AOSP signature layout drift",
-    "runner class and method identity mismatch",
-    "toolchain launch and capture ambiguity",
-    "Android sqlite3 unavailability",
-    "version contract mismatch",
-    "binding tuple mismatch",
-    "pm-path production nonzero",
-    "outer wrapper status 125 masking known helper exit"
-  ],
-  "independentLunaReview": {
-    "path": "docs/P5E_A43_PM_PATH_CAPTURE_REPAIR_FINAL_LUNA_REVIEW_20260928.md",
-    "sha256": "76ABB92C3F29ECDE3A6A62C6263F095CEAB8A5FF96356DDBCC9352FD7BB638E9",
-    "verdict": "OFFLINE_REPAIR_BEHAVIOR_PASS / LIVE_PACKET_NOT_READY / 0 BLOCKER / 1 HIGH / 2 MEDIUM / 2 LOW"
+    "archiveReconstruction": "PASS / 9 packet and dependency files byte-match Git archive at dependencyProvenanceCommit"
   },
-  "closedEventPolicy": {
-    "latestEvent": "raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc",
-    "eventReusable": false,
-    "decisionReusable": false,
-    "oldPacketReusable": false
+  "lunaReview": {
+    "path": "docs/P5E_A43_PREAUTH_RUNTIME_GUARD_CLOSURE_LUNA_REVIEW_20260928.md",
+    "reviewedCommit": "6faebf0ad82ec6f0efba3ef42f50fec9e7bf3a74",
+    "verdict": "PASS",
+    "severity": { "BLOCKER": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0 },
+    "exactBytes": "PASS",
+    "reviewedNoLiveExecution": true
   },
-  "authorizedActions": [
-    "offline source review",
-    "synthetic fixture creation",
-    "offline command/helper repair",
-    "offline QA and independent review",
-    "documentation and provenance synchronization"
-  ],
-  "prohibitedActions": [
-    "ADB",
-    "device access",
-    "provider call",
-    "credential read",
-    "database write",
-    "build or install",
-    "RAW dispatch",
-    "retry or redispatch",
-    "RECONCILE",
-    "P6 action",
-    "owner decision fabrication"
-  ],
-  "nextAction": "EXECUTE_A43_OUTER_PROCESS_TREE_AND_AUTHORITY_GATE_CLOSURE_OFFLINE_ONLY"
+  "decisionAndHistory": {
+    "currentOwnerReceiptCreated": false,
+    "currentAuthorizationRequestCreated": false,
+    "currentDecisionConsumed": false,
+    "closedEvent": "D:\\P5E-private\\raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc",
+    "closedEventMutated": false,
+    "closedEventsAndDecisionsReusable": false,
+    "oldCommandOrManifestFallback": false,
+    "oldCommand": "A2EF2BA90F07D3F4D2517E7F1541EA752615F6BCF61E304E579E301A8D5D3D08",
+    "oldManifest": "669C54049920C49344D2FB55533EFA9FA9F87E933A6A18DE5FA7215F1146D147"
+  },
+  "nextAction": "OWNER_REVIEW_EXACT_PACKET_ONLY; no authorization consumption, live command, event creation, ADB/device/provider/credential/DB write, build/install, RAW, retry, fallback, RECONCILE, redispatch or P6"
 }
