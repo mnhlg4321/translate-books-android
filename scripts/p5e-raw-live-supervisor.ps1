@@ -333,6 +333,7 @@ $script:P5EAccountCheckRemoteScript =
     'IFS= read -r p5e_expected || exit 64; am instrument -w -r -e class "$1" -e p5e_account_check YES -e p5e_expected_endpoint_account_fingerprint "$p5e_expected" "$2"'
 $script:P5ETestSourceCommit = '9e5ffb7819bfb91dcb8ed9e25c901ab10aa48390'
 $script:P5ERawSourceContractCommit = 'd51b7f3c16bdc482513b9904db07b97daed592d1'
+$script:P5ERawSourceContractSha256 = 'b3f974a185f8b2590424471f3a1317ec436cfbef3d92244efae1674f935ac04a'
 $script:P5EAccountEnvironmentName = 'P5E_OWNER_ENDPOINT_ACCOUNT_FINGERPRINT'
 $script:P5EAccountFingerprintRedactionSentinel = 'REDACTED'
 $script:P5EHostObservationTimeoutMilliseconds = 240000L
@@ -1274,8 +1275,13 @@ function Test-P5ERequiredSourceContract {
                 [void]$errors.Add('SOURCE_REQUIRED_ARGUMENT_SET_MISMATCH')
             }
             $git = (Get-Command git -ErrorAction Stop).Source
-            & $git -C $RepoRoot diff --quiet $script:P5ERawSourceContractCommit -- app/src/androidTest/java/com/ml/tblandroidtxt/EditorialP5EFreshRawLiveInstrumentedTest.java
-            if ($LASTEXITCODE -ne 0) { [void]$errors.Add('TEST_SOURCE_DIFFERS_FROM_PINNED_APK_COMMIT') }
+            & $git -C $RepoRoot cat-file -e ($script:P5ERawSourceContractCommit + '^{commit}') 2>$null
+            if ($LASTEXITCODE -eq 0) {
+                & $git -C $RepoRoot diff --quiet $script:P5ERawSourceContractCommit -- app/src/androidTest/java/com/ml/tblandroidtxt/EditorialP5EFreshRawLiveInstrumentedTest.java
+                if ($LASTEXITCODE -ne 0) { [void]$errors.Add('TEST_SOURCE_DIFFERS_FROM_PINNED_APK_COMMIT') }
+            } elseif ((Get-P5ESha256 -Path $sourcePath) -cne $script:P5ERawSourceContractSha256) {
+                [void]$errors.Add('TEST_SOURCE_SHA256_MISMATCH')
+            }
         } catch {
             [void]$errors.Add('SOURCE_REQUIRED_ARGUMENT_AUDIT_FAILED')
         }

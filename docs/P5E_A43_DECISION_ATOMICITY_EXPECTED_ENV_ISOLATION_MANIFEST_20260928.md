@@ -51,7 +51,7 @@ action is authorized by this document.
 |---|---|---:|---|
 | Review-only command | `docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_COMMAND_20260928.txt` | `PROCESS_SELF_HASH_REQUIRED` | `PROCESS_SELF_HASH_REQUIRED` |
 | Approval manifest | `docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_MANIFEST_20260928.md` | `PROCESS_PINNED_BY_COMMAND` | `PROCESS_PINNED_BY_COMMAND` |
-| Live helper | `scripts/p5e-raw-live-supervisor.ps1` | 417229 | `343E2346D48CE68461556E8A83B74FCC29462EDD5EBB57CFF5DE39F507FCE15B` |
+| Live helper | `scripts/p5e-raw-live-supervisor.ps1` | 417661 | `3FE3B764C52DAF1520FE61901BC0861AFA229E4B3C4E775EAE878567106C0D16` |
 | Runtime guard | `scripts/p5e-a43-runtime-guards.ps1` | 23180 | `C31217CDBD40F22DB9A74AFB529B1ECC33F725F485ECD462992073235F59ADD8` |
 | Job/capture exporter | `scripts/p5e-db-binary-export.ps1` | 52379 | `813F6ED0ABD110EBF32550990940E975971988FBCF806DC26464EE311021CF99` |
 | SQLite bridge | `docs/P5E_SQLITE_BRIDGE.py` | 5958 | `4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111` |
@@ -129,6 +129,10 @@ references. Their needed assertions are carried by the tracked package suites
 `scripts/test-p5e-a43-binding-tuple-matrix.ps1` and
 `scripts/test-p5e-a43-db-host-readback-matrix.ps1`. Archive-clean QA must run
 from the exact candidate commit without workspace fallback or cached results.
+The helper source-contract audit uses the historical commit when that object is
+available and otherwise verifies the pinned AndroidTest source SHA-256
+`B3F974A185F8B2590424471F3A1317EC436CFBEF3D92244EFAE1674F935AC04A` inside
+the clean archive; it never treats a missing history object as a pass.
 
 All live counters for this work package are zero: ADB, device, provider,
 credential, database write, build, install, RAW and redispatch. P6 remains not
