@@ -87,6 +87,10 @@ try {
     foreach ($old in $oldReferences) { Assert-True (-not (($qaTexts -join "`n").Contains($old))) ('ARCHIVE_OLD_QA_REFERENCE_' + $old) }
     Add-Check -Name 'historical-untracked-qa-dependencies-eliminated' -Passed $true
 
+    . (Join-Path $archiveRoot 'scripts\p5e-raw-live-supervisor.ps1') -LibraryOnly
+    $sourceContract = Test-P5ERequiredSourceContract -RepoRoot $archiveRoot
+    $result.suites.archiveSourceContract = [ordered]@{ passed = [bool]$sourceContract.Passed; errors = @($sourceContract.Errors) }
+
     $mainOut = Join-Path $archiveRoot 'docs\ARCHIVE_MAIN_QA.json'
     $atomicOut = Join-Path $archiveRoot 'docs\ARCHIVE_ATOMIC_QA.json'
     $bindingOut = Join-Path $archiveRoot 'docs\ARCHIVE_BINDING_QA.json'

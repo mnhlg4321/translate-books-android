@@ -1274,12 +1274,7 @@ function Test-P5ERequiredSourceContract {
             if ((@($sourceKeys) -join "`n") -cne (@($expectedKeys) -join "`n")) {
                 [void]$errors.Add('SOURCE_REQUIRED_ARGUMENT_SET_MISMATCH')
             }
-            $git = (Get-Command git -ErrorAction Stop).Source
-            & $git -C $RepoRoot cat-file -e ($script:P5ERawSourceContractCommit + '^{commit}') 2>$null
-            if ($LASTEXITCODE -eq 0) {
-                & $git -C $RepoRoot diff --quiet $script:P5ERawSourceContractCommit -- app/src/androidTest/java/com/ml/tblandroidtxt/EditorialP5EFreshRawLiveInstrumentedTest.java
-                if ($LASTEXITCODE -ne 0) { [void]$errors.Add('TEST_SOURCE_DIFFERS_FROM_PINNED_APK_COMMIT') }
-            } elseif ((Get-P5ESha256 -Path $sourcePath) -cne $script:P5ERawSourceContractSha256) {
+            if ((Get-P5ESha256 -Path $sourcePath) -cne $script:P5ERawSourceContractSha256) {
                 [void]$errors.Add('TEST_SOURCE_SHA256_MISMATCH')
             }
         } catch {
