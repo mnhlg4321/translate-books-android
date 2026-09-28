@@ -21,12 +21,12 @@ param(
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
     [Parameter(ParameterSetName = 'CollectReadback')]
-    [string]$ManifestPath = 'D:\App Translate Books\docs\P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md',
+    [string]$ManifestPath = 'D:\App Translate Books\docs\P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST_REPAIRED_20260926.md',
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
     [Parameter(ParameterSetName = 'CollectReadback')]
-    [string]$ExpectedManifestSha256 = '412790E2E55A8289FF170D3EE93B683553468ADE252EF5C565D833599E5F5EA3',
+    [string]$ExpectedManifestSha256 = '669C54049920C49344D2FB55533EFA9FA9F87E933A6A18DE5FA7215F1146D147',
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
@@ -81,7 +81,22 @@ param(
     [Parameter(ParameterSetName = 'Dispatch', Mandatory = $true)]
     [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
     [Parameter(ParameterSetName = 'CollectReadback', Mandatory = $true)]
+    [Parameter(ParameterSetName = 'VerifyOutcome', Mandatory = $true)]
     [string]$ExpectedHelperSha256,
+
+    [Parameter(ParameterSetName = 'Dispatch', Mandatory = $true)]
+    [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
+    [Parameter(ParameterSetName = 'CollectReadback', Mandatory = $true)]
+    [Parameter(ParameterSetName = 'VerifyOutcome', Mandatory = $true)]
+    [AllowEmptyString()]
+    [string]$ExpectedDatabaseExporterSha256,
+
+    [Parameter(ParameterSetName = 'Dispatch', Mandatory = $true)]
+    [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
+    [Parameter(ParameterSetName = 'CollectReadback', Mandatory = $true)]
+    [Parameter(ParameterSetName = 'VerifyOutcome', Mandatory = $true)]
+    [AllowEmptyString()]
+    [string]$ExpectedSqliteBridgeSha256,
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [string]$EvidenceRoot = 'D:\P5E-private',
@@ -100,10 +115,39 @@ param(
     [string]$Serial = '15e84958',
 
     [Parameter(ParameterSetName = 'CollectReadback')]
-    [string]$AdbPath = 'adb',
+    [Parameter(ParameterSetName = 'Dispatch')]
+    [Parameter(ParameterSetName = 'PrepareEvent')]
+    [string]$AndroidSdkPath = '',
 
+    [Parameter(ParameterSetName = 'Dispatch')]
+    [Parameter(ParameterSetName = 'PrepareEvent')]
     [Parameter(ParameterSetName = 'CollectReadback')]
-    [string]$ApkSignerPath = 'apksigner',
+    [string]$LocalPropertiesPath = '',
+
+    [Parameter(ParameterSetName = 'Dispatch')]
+    [Parameter(ParameterSetName = 'PrepareEvent')]
+    [Parameter(ParameterSetName = 'CollectReadback')]
+    [string]$BuildToolsVersion = '35.0.0',
+
+    [Parameter(ParameterSetName = 'Dispatch')]
+    [Parameter(ParameterSetName = 'PrepareEvent')]
+    [Parameter(ParameterSetName = 'CollectReadback')]
+    [string]$AdbPath = '',
+
+    [Parameter(ParameterSetName = 'Dispatch')]
+    [Parameter(ParameterSetName = 'PrepareEvent')]
+    [Parameter(ParameterSetName = 'CollectReadback')]
+    [string]$JavaPath = '',
+
+    [Parameter(ParameterSetName = 'Dispatch')]
+    [Parameter(ParameterSetName = 'PrepareEvent')]
+    [Parameter(ParameterSetName = 'CollectReadback')]
+    [string]$ApkSignerJarPath = '',
+
+    # Retained only so an old caller fails through the new resolver instead of
+    # silently falling back to a PATH-based signer.
+    [Parameter(ParameterSetName = 'CollectReadback')]
+    [string]$ApkSignerPath = '',
 
     [Parameter(ParameterSetName = 'VerifyOutcome')]
     [string]$PostReadbackPath,
@@ -121,23 +165,122 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$script:P5EHostRunSchema = 'p5e.raw.host-run.v1'
-$script:P5EReadbackSchema = 'p5e.raw.readback.v1'
-$script:P5EReadbackProvenanceSchema = 'p5e.raw.readback.provenance.v1'
-$script:P5EProducerInputSchema = 'p5e.raw.readback.producer-input.v1'
-$script:P5ECollectorImplementationId = 'p5e.raw.host-readback-collector.v1'
-$script:P5ECollectorImplementationVersion = '2'
-$script:P5ESourceMappingVersion = 'p5e.raw.readback.source-map.v1'
+$script:P5ERawToolchainPath = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot 'p5e-raw-toolchain.ps1'))
+$script:P5ERawToolchainSha256 = 'c0ae7d431474f37597228a7afa6f9382c63e26eb5a54cfb72604620d9dd5c3c8'
+if (-not (Test-Path -LiteralPath $script:P5ERawToolchainPath -PathType Leaf)) {
+    throw 'P5E_RAW_TOOLCHAIN_LIBRARY_MISSING_STOP'
+}
+$toolchainLibraryItem = Get-Item -LiteralPath $script:P5ERawToolchainPath -Force
+if (($toolchainLibraryItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+    throw 'P5E_RAW_TOOLCHAIN_LIBRARY_REPARSE_STOP'
+}
+if ((Get-FileHash -LiteralPath $script:P5ERawToolchainPath -Algorithm SHA256).Hash.ToLowerInvariant() -cne $script:P5ERawToolchainSha256) {
+    throw 'P5E_RAW_TOOLCHAIN_LIBRARY_HASH_MISMATCH_STOP'
+}
+. $script:P5ERawToolchainPath -LibraryOnly
+
+$script:P5EDatabaseExporterPath = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot 'p5e-db-binary-export.ps1'))
+$script:P5ESqliteBridgePath = [IO.Path]::GetFullPath((Join-Path (Get-Item $PSScriptRoot).Parent.FullName 'docs\P5E_SQLITE_BRIDGE.py'))
+$script:P5EExpectedDatabaseExporterSha256 = ''
+$script:P5EExpectedSqliteBridgeSha256 = ''
+$script:P5ELivePinParameterSets = @('PrepareEvent', 'CollectReadback', 'Dispatch', 'VerifyOutcome')
+
+function Assert-P5EDatabaseReadbackDependencyPin {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][AllowEmptyString()][string]$ExpectedSha256,
+        [Parameter(Mandatory = $true)][ValidateSet('DATABASE_EXPORTER', 'SQLITE_BRIDGE')][string]$Label,
+        [Parameter(Mandatory = $true)][string]$PinnedPath
+    )
+    $prefix = 'P5E_' + $Label
+    if ([string]::IsNullOrWhiteSpace($ExpectedSha256)) { throw ($prefix + '_EXPECTED_HASH_MISSING_STOP') }
+    if ($ExpectedSha256 -notmatch '^[0-9a-fA-F]{64}$') { throw ($prefix + '_EXPECTED_HASH_INVALID_STOP') }
+    $literalPath = [IO.Path]::GetFullPath($Path)
+    $literalPinnedPath = [IO.Path]::GetFullPath($PinnedPath)
+    if (-not [StringComparer]::OrdinalIgnoreCase.Equals($literalPath, $literalPinnedPath)) {
+        throw ($prefix + '_PATH_SWAP_STOP')
+    }
+    if (-not (Test-Path -LiteralPath $literalPath -PathType Leaf)) { throw ($prefix + '_MISSING_STOP') }
+    $item = Get-Item -LiteralPath $literalPath -Force
+    if ($item.PSIsContainer) { throw ($prefix + '_NOT_REGULAR_STOP') }
+    if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw ($prefix + '_LEAF_REPARSE_STOP') }
+    $resolvedPath = [IO.Path]::GetFullPath((Resolve-Path -LiteralPath $literalPath).Path)
+    if (-not [StringComparer]::OrdinalIgnoreCase.Equals($literalPath, $resolvedPath)) { throw ($prefix + '_PATH_SWAP_STOP') }
+    $cursor = [IO.Directory]::GetParent($literalPath)
+    while ($null -ne $cursor) {
+        if (-not (Test-Path -LiteralPath $cursor.FullName -PathType Container)) { throw ($prefix + '_ANCESTOR_MISSING_STOP') }
+        $cursorItem = Get-Item -LiteralPath $cursor.FullName -Force
+        if (($cursorItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw ($prefix + '_ANCESTOR_REPARSE_STOP') }
+        $parent = $cursor.Parent
+        if ($null -eq $parent -or $parent.FullName -ceq $cursor.FullName) { break }
+        $cursor = $parent
+    }
+    $actualSha256 = (Get-FileHash -LiteralPath $literalPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($actualSha256 -cne $ExpectedSha256.ToLowerInvariant()) { throw ($prefix + '_HASH_MISMATCH_STOP') }
+    return $actualSha256
+}
+
+$script:P5EIsLivePinPhase = $script:P5ELivePinParameterSets -contains [string]$PSCmdlet.ParameterSetName
+if ($script:P5EIsLivePinPhase) {
+    $script:P5EExpectedDatabaseExporterSha256 = Assert-P5EDatabaseReadbackDependencyPin `
+        -Path $script:P5EDatabaseExporterPath -PinnedPath $script:P5EDatabaseExporterPath `
+        -ExpectedSha256 $ExpectedDatabaseExporterSha256 -Label 'DATABASE_EXPORTER'
+    $script:P5EExpectedSqliteBridgeSha256 = Assert-P5EDatabaseReadbackDependencyPin `
+        -Path $script:P5ESqliteBridgePath -PinnedPath $script:P5ESqliteBridgePath `
+        -ExpectedSha256 $ExpectedSqliteBridgeSha256 -Label 'SQLITE_BRIDGE'
+} else {
+    foreach ($dependency in @(
+            [pscustomobject]@{ Path = $script:P5EDatabaseExporterPath; Missing = 'P5E_DATABASE_EXPORTER_MISSING_STOP'; Reparse = 'P5E_DATABASE_EXPORTER_REPARSE_STOP' },
+            [pscustomobject]@{ Path = $script:P5ESqliteBridgePath; Missing = 'P5E_SQLITE_BRIDGE_MISSING_STOP'; Reparse = 'P5E_SQLITE_BRIDGE_REPARSE_STOP' })) {
+        if (-not (Test-Path -LiteralPath $dependency.Path -PathType Leaf)) { throw $dependency.Missing }
+        $dependencyItem = Get-Item -LiteralPath $dependency.Path -Force
+        if (($dependencyItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw $dependency.Reparse }
+    }
+}
+. $script:P5EDatabaseExporterPath -LibraryOnly
+
+$script:P5EHostRunSchema = 'p5e.raw.host-run.v2'
+$script:P5EHostRunLegacySchema = 'p5e.raw.host-run.v1'
+$script:P5EReadbackSchema = 'p5e.raw.readback.v2'
+$script:P5EReadbackProvenanceSchema = 'p5e.raw.readback.provenance.v2'
+$script:P5EProducerInputSchema = 'p5e.raw.readback.producer-input.v2'
+$script:P5ECollectorImplementationId = 'p5e.raw.host-readback-collector.v2'
+$script:P5ECollectorImplementationVersion = '3'
+$script:P5ESourceMappingVersion = 'p5e.raw.readback.source-map.v2'
 $script:P5ESyntheticArtifactValidatorId = 'p5e.raw.production-serialized-artifact-validator.v2'
 $script:P5EArtifactContractPath = 'docs\P5E_PRODUCTION_ARTIFACT_CONTRACT_20260915.json'
 $script:P5EArtifactContractSha256 = 'ffe70a70e622706fabfa49d5843310ecd5a283b1ca114e32c636ea26b9fae4bf'
-$script:P5EEventPlanSchema = 'p5e.raw.event-plan.v1'
+$script:P5EEventPlanSchema = 'p5e.raw.event-plan.v3'
+$script:P5EEventPlanLegacySchema = 'p5e.raw.event-plan.v2'
 $script:P5ECollectorOutcomeSchema = 'p5e.raw.collector-outcome.v1'
+$script:P5ECollectorCommandSchema = 'p5e.raw.collector-command.v3'
+$script:P5ELaunchReasonAllowlist = @(
+    'PATH_OR_FILE_NOT_FOUND',
+    'ACCESS_DENIED',
+    'BAD_EXE_FORMAT',
+    'DIRECTORY_NAME_INVALID',
+    'NATIVE_START_ERROR',
+    'PROCESS_START_RETURNED_FALSE',
+    'UNKNOWN_START_ERROR'
+)
+$script:P5EPresenceSemanticOutcomeAllowlist = @(
+    'PRESENT', 'ABSENT', 'REDACTION_FAILED', 'OUTPUT_LIMIT', 'CAPTURE_FAILED',
+    'LAUNCH_FAILED', 'TIMEOUT', 'QUERY_FAILED'
+)
+$script:P5EGenericSemanticOutcomeAllowlist = @(
+    'PROCESS_EXITED_ZERO', 'PROCESS_EXITED_NONZERO', 'REDACTION_FAILED',
+    'OUTPUT_LIMIT', 'CAPTURE_FAILED', 'LAUNCH_FAILED', 'TIMEOUT',
+    'QUERY_FAILED', 'PROCESS_EXIT_UNKNOWN', 'WRITE_FAILED', 'HASH_MISMATCH'
+)
+$script:P5EPackagePathClassificationAllowlist = @(
+    'PACKAGE_PRESENT', 'PACKAGE_NOT_FOUND', 'DEVICE_UNAVAILABLE',
+    'PM_SERVICE_FAILURE', 'MALFORMED_RESPONSE', 'UNKNOWN_NONZERO'
+)
 $script:P5ECollectorCommandLogFileName = 'COLLECTOR_COMMAND_LOG.jsonl'
 $script:P5ECollectorCommandLog = [System.Collections.Generic.List[object]]::new()
 $script:P5EActiveCollectorEvidenceDirectory = ''
 $script:P5EActiveCollectorPhase = ''
-$script:P5ECollectorReadbackMode = 'READ_ONLY_ADB_SQLITE_TRANSACTION'
+$script:P5ECollectorReadbackMode = 'READ_ONLY_ADB_BINARY_EXPORT_HOST_SQLITE'
 $script:P5EReadOnlyCommandCount = 0L
 $script:P5ETransactionSourcePath = 'app/src/main/java/com/ml/tblandroidtxt/EditorialP5CAttemptStore.java'
 $script:P5ETransactionTestPath = 'app/src/androidTest/java/com/ml/tblandroidtxt/EditorialP5CExactBindingFakeE2EInstrumentedTest.java'
@@ -166,10 +309,11 @@ $script:P5EAccountCheckRemoteScript =
 $script:P5ETestSourceCommit = '9e5ffb7819bfb91dcb8ed9e25c901ab10aa48390'
 $script:P5ERawSourceContractCommit = 'd51b7f3c16bdc482513b9904db07b97daed592d1'
 $script:P5EAccountEnvironmentName = 'P5E_OWNER_ENDPOINT_ACCOUNT_FINGERPRINT'
+$script:P5EAccountFingerprintRedactionSentinel = 'REDACTED'
 $script:P5EHostObservationTimeoutMilliseconds = 240000L
 $script:P5EAuthorizationValidityMilliseconds = 180000L
 $script:P5EExecutionDeadlineMilliseconds = 120000L
-$script:P5EProductionVersion = 'v4.17-p5e.11'
+$script:P5EProductionVersion = '4.17-p5e.11'
 $script:P5EProductionVersionCode = 207L
 $script:P5EExpectedProductionApkSha256 =
     '2ccbb844c629132bb534b0d6aba516055c410bf96d20b14b3f80f91b962800fd'
@@ -221,7 +365,9 @@ $script:P5EDraftSourceBytes = 26462L
 $script:P5EPronounSourceSha256 =
     '4947ff9184995be5f850f2323fbe0a04c67302fb8d5afb63cf12202b44720686'
 $script:P5EPronounSourceBytes = 452L
-$script:P5EExpectedManifestFingerprint =
+$script:P5EPackManifestFingerprint =
+    '3e88503e312db8da351ca574820c98216ab6fd3fa233e35aedb0db379e50013a'
+$script:P5EInputScopeManifestFingerprint =
     '0353d751924d02ef0928bb6460c4ab894fee7c6324506e62b2972090e519c4da'
 $script:P5EStopAuthority =
     'OWNER_CONTROLLED|RAW_ONLY|NO_SCHEMA_REPAIR|NO_AUTOMATIC_RETRY|NO_RECONCILE|NO_RESPONSE_HEALING|NO_FALLBACK|PRESERVE_DURABLE_RECOVERY_STATE'
@@ -295,8 +441,7 @@ function Get-P5ECollectorCommandClass {
         '^database-.*-presence$' { return 'DEVICE_FILE_PRESENCE_READ_ONLY' }
         '^database-(main|wal|shm)-hash$' { return 'DATABASE_FILE_HASH_READ_ONLY' }
         '^database-.*-sha256$' { return 'DATABASE_FILE_HASH_READ_ONLY' }
-        '^database-(integrity|foreign-key-check|consistent-read-transaction)$' { return 'SQLITE_READ_ONLY' }
-        '^(binding-tuple|binding-inputs|lineage-counts|attempt-row|authorization-row|lifecycle-row)$' { return 'SQLITE_READ_ONLY' }
+        '^database-(main|wal|shm)-binary-export$' { return 'DATABASE_BINARY_EXPORT_READ_ONLY' }
         default { throw ('P5E_COLLECTOR_OPERATION_NOT_ALLOWLISTED:' + $Operation) }
     }
 }
@@ -319,18 +464,24 @@ function Initialize-P5ECollectorCommandLog {
     $lines = @(Get-Content -LiteralPath $path | Where-Object { $_ -ne '' })
     foreach ($line in $lines) {
         try { $entry = $line | ConvertFrom-Json } catch { throw 'P5E_COLLECTOR_COMMAND_LOG_INVALID_JSON_STOP' }
-        $required = @('schemaVersion', 'eventId', 'evidenceDirectory', 'collectionPhase',
+        $legacyRequired = @('schemaVersion', 'eventId', 'evidenceDirectory', 'collectionPhase',
             'sequence', 'operation', 'commandClass', 'launchCount', 'exitCode', 'timedOut',
             'outcome', 'redactionPass', 'outputCaptured')
+        $diagnostic = @('launchErrorClass', 'launchNativeErrorCode', 'launchReason', 'captureBounded')
+        $typed = @('semanticOutcome', 'operationId', 'timeoutMilliseconds', 'byteLength', 'hostSha256', 'safeClassification')
         $properties = @($entry.PSObject.Properties.Name)
-        if (@($properties | Where-Object { $_ -notin $required }).Count -ne 0 -or
+        $schemaVersion = [string](Get-P5EProperty $entry 'schemaVersion')
+        $isLegacy = $schemaVersion -in @('p5e.raw.collector-command.v1', 'p5e.raw.collector-command.v2')
+        $required = if ($schemaVersion -eq $script:P5ECollectorCommandSchema) { $legacyRequired + $diagnostic + $typed } else { $legacyRequired }
+        $allowed = if ($schemaVersion -eq $script:P5ECollectorCommandSchema) { $required } elseif ($isLegacy) { $legacyRequired + $diagnostic } else { @() }
+        if ($allowed.Count -eq 0 -or
+                @($properties | Where-Object { $_ -notin $allowed }).Count -ne 0 -or
                 @($required | Where-Object { $_ -notin $properties }).Count -ne 0) {
             throw 'P5E_COLLECTOR_COMMAND_LOG_SHAPE_INVALID_STOP'
         }
         $expectedClass = $null
         try { $expectedClass = Get-P5ECollectorCommandClass -Operation ([string](Get-P5EProperty $entry 'operation')) } catch { throw 'P5E_COLLECTOR_COMMAND_LOG_OPERATION_INVALID_STOP' }
-        if ([string](Get-P5EProperty $entry 'schemaVersion') -cne 'p5e.raw.collector-command.v1' -or
-                [string](Get-P5EProperty $entry 'eventId') -cne (Split-Path -Leaf $script:P5EActiveCollectorEvidenceDirectory) -or
+        if ([string](Get-P5EProperty $entry 'eventId') -cne (Split-Path -Leaf $script:P5EActiveCollectorEvidenceDirectory) -or
                 -not (Test-P5EPathEqual -Left ([string](Get-P5EProperty $entry 'evidenceDirectory')) -Right $script:P5EActiveCollectorEvidenceDirectory) -or
                 [string](Get-P5EProperty $entry 'collectionPhase') -notin @('Before', 'After') -or
                 [string](Get-P5EProperty $entry 'commandClass') -cne $expectedClass -or
@@ -340,31 +491,160 @@ function Initialize-P5ECollectorCommandLog {
                 [bool](Get-P5EProperty $entry 'outputCaptured')) {
             throw 'P5E_COLLECTOR_COMMAND_LOG_ENTRY_INVALID_STOP'
         }
+        if ($schemaVersion -eq $script:P5ECollectorCommandSchema) {
+            $errorClass = Get-P5EProperty $entry 'launchErrorClass'
+            $nativeCode = Get-P5EProperty $entry 'launchNativeErrorCode'
+            $reason = [string](Get-P5EProperty $entry 'launchReason')
+            $captureBounded = Get-P5EProperty $entry 'captureBounded'
+            if (($null -ne $errorClass -and [string]$errorClass -notmatch '^[A-Za-z0-9_.]+$') -or
+                    ($null -ne $nativeCode -and ((-not ($nativeCode -is [int]) -and -not ($nativeCode -is [long])) -or [long]$nativeCode -lt 0)) -or
+                    $reason -notin (@('') + $script:P5ELaunchReasonAllowlist) -or
+                    ($null -ne $captureBounded -and -not ($captureBounded -is [bool])) -or
+                    [string](Get-P5EProperty $entry 'semanticOutcome') -notmatch '^[A-Z][A-Z0-9_]+$' -or
+                    [string](Get-P5EProperty $entry 'operationId') -notmatch '^[0-9a-fA-F-]{16,64}$' -or
+                    ((Get-P5EProperty $entry 'timeoutMilliseconds') -isnot [int] -and (Get-P5EProperty $entry 'timeoutMilliseconds') -isnot [long]) -or
+                    [long](Get-P5EProperty $entry 'timeoutMilliseconds') -lt 0L -or
+                    ((Get-P5EProperty $entry 'byteLength') -isnot [int] -and (Get-P5EProperty $entry 'byteLength') -isnot [long]) -or
+                    [long](Get-P5EProperty $entry 'byteLength') -lt 0L -or
+                    ([string](Get-P5EProperty $entry 'hostSha256') -ne '' -and [string](Get-P5EProperty $entry 'hostSha256') -notmatch '^[0-9a-fA-F]{64}$') -or
+                    [string](Get-P5EProperty $entry 'safeClassification') -notin (@('') + $script:P5EPackagePathClassificationAllowlist)) {
+                throw 'P5E_COLLECTOR_COMMAND_LAUNCH_DIAGNOSTIC_INVALID_STOP'
+            }
+            $semanticAllowlist = if ($expectedClass -eq 'DEVICE_FILE_PRESENCE_READ_ONLY') {
+                $script:P5EPresenceSemanticOutcomeAllowlist
+            } else {
+                $script:P5EGenericSemanticOutcomeAllowlist
+            }
+            if ([string](Get-P5EProperty $entry 'semanticOutcome') -notin $semanticAllowlist) {
+                throw 'P5E_COLLECTOR_COMMAND_SEMANTIC_OUTCOME_INVALID_STOP'
+            }
+        }
         [void]$script:P5ECollectorCommandLog.Add($entry)
     }
+}
+
+function Get-P5ECollectorSemanticOutcome {
+    param([Parameter(Mandatory = $true)]$Run)
+    if ([bool](Get-P5EProperty $Run 'RedactionViolation')) { return 'REDACTION_FAILED' }
+    if ([bool](Get-P5EProperty $Run 'OutputTooLarge')) { return 'OUTPUT_LIMIT' }
+    if (-not [bool](Get-P5EProperty $Run 'CaptureBounded')) { return 'CAPTURE_FAILED' }
+    if ([long](Get-P5EProperty $Run 'LaunchCount') -eq 0L) { return 'LAUNCH_FAILED' }
+    if ([bool](Get-P5EProperty $Run 'TimedOut')) { return 'TIMEOUT' }
+    if ($null -ne (Get-P5EProperty $Run 'ExitCode') -and [long](Get-P5EProperty $Run 'ExitCode') -eq 0L) { return 'PROCESS_EXITED_ZERO' }
+    return 'PROCESS_EXITED_NONZERO'
+}
+
+function Get-P5EPackagePathClassification {
+    param(
+        [Parameter(Mandatory = $true)]$Run,
+        [Parameter(Mandatory = $true)][string]$PackageName
+    )
+    $unknown = [pscustomobject]@{
+        Classification = 'UNKNOWN_NONZERO'
+        DevicePath = ''
+        SafeReason = 'FAIL_CLOSED'
+    }
+    if ([string]::IsNullOrWhiteSpace($PackageName) -or $PackageName -notmatch '^[A-Za-z0-9._]+$') {
+        return $unknown
+    }
+    if ([bool](Get-P5EProperty $Run 'RedactionViolation') -or
+            [bool](Get-P5EProperty $Run 'OutputTooLarge') -or
+            -not [bool](Get-P5EProperty $Run 'CaptureBounded')) {
+        return $unknown
+    }
+    $launchCount = [long](Get-P5EProperty $Run 'LaunchCount')
+    if ($launchCount -eq 0L -or [bool](Get-P5EProperty $Run 'TimedOut')) {
+        return [pscustomobject]@{ Classification = 'DEVICE_UNAVAILABLE'; DevicePath = ''; SafeReason = 'PROCESS_UNAVAILABLE' }
+    }
+    $stdoutCapture = Protect-P5ECaptureText -Text ([string](Get-P5EProperty $Run 'Stdout'))
+    $stderrCapture = Protect-P5ECaptureText -Text ([string](Get-P5EProperty $Run 'Stderr'))
+    if ($stdoutCapture.Violation -or $stderrCapture.Violation) { return $unknown }
+    $stdout = [string]$stdoutCapture.Text
+    $stderr = [string]$stderrCapture.Text
+    $combined = ($stdout + "`n" + $stderr).Trim()
+    $exitCode = Get-P5EProperty $Run 'ExitCode'
+    if ($null -eq $exitCode) { return $unknown }
+
+    if ([long]$exitCode -eq 0L) {
+        if (-not [string]::IsNullOrWhiteSpace($stderr)) {
+            return [pscustomobject]@{ Classification = 'MALFORMED_RESPONSE'; DevicePath = ''; SafeReason = 'STDERR_ON_SUCCESS' }
+        }
+        $lines = @($stdout -split "`r?`n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+        if ($lines.Count -ne 1 -or $lines[0] -notmatch '^package:(/data/app/[^\r\n ]+\.apk)$') {
+            return [pscustomobject]@{ Classification = 'MALFORMED_RESPONSE'; DevicePath = ''; SafeReason = 'PATH_SHAPE_INVALID' }
+        }
+        $devicePath = [string]$Matches[1]
+        $packagePattern = [regex]::Escape($PackageName)
+        if ($devicePath -match '(?i)(?:^|/)' + $packagePattern + '(?:[-_.~][^/\r\n ]*)?(?:/|$)' -and
+                $devicePath -notmatch '\.\.' -and $devicePath -notmatch '//') {
+            return [pscustomobject]@{ Classification = 'PACKAGE_PRESENT'; DevicePath = $devicePath; SafeReason = 'EXACT_PACKAGE_PATH' }
+        }
+        return [pscustomobject]@{ Classification = 'MALFORMED_RESPONSE'; DevicePath = ''; SafeReason = 'PACKAGE_IDENTITY_MISMATCH' }
+    }
+
+    if ($combined -match '(?i)(?:no devices?\/emulators? found|device\s+(?:offline|unauthorized|not found)|unauthorized device|transport\s+(?:error|offline)|cannot connect to|more than one device)') {
+        return [pscustomobject]@{ Classification = 'DEVICE_UNAVAILABLE'; DevicePath = ''; SafeReason = 'DEVICE_STATE' }
+    }
+    if ($combined -match '(?i)(?:can''t|cannot|could not)\s+find\s+service\s*:\s*package|\bsecurity\s+exception\b|\bpermission\s+denied\b|(?:^|\s)pm(?:\.exe)?\s*:\s*(?:not found|unknown command)|\bfailure\s*\[') {
+        return [pscustomobject]@{ Classification = 'PM_SERVICE_FAILURE'; DevicePath = ''; SafeReason = 'PM_SERVICE' }
+    }
+    $packagePattern = [regex]::Escape($PackageName)
+    if ($combined -match '(?i)\bunknown\s+package\s*:\s*' + $packagePattern + '\b' -or
+            $combined -match '(?i)\bpackage\s+' + $packagePattern + '\s+(?:was\s+)?not\s+found\b' -or
+            $combined -match '(?i)\b' + $packagePattern + '\s+is\s+not\s+installed\b') {
+        return [pscustomobject]@{ Classification = 'PACKAGE_NOT_FOUND'; DevicePath = ''; SafeReason = 'PACKAGE_IDENTITY_NOT_FOUND' }
+    }
+    if ($combined -match '(?i)\bpackage:|/data/app/') {
+        return [pscustomobject]@{ Classification = 'MALFORMED_RESPONSE'; DevicePath = ''; SafeReason = 'PATH_RESPONSE_INVALID' }
+    }
+    return $unknown
 }
 
 function Add-P5ECollectorCommandRecord {
     param(
         [Parameter(Mandatory = $true)][string]$Operation,
-        [Parameter(Mandatory = $true)]$Run
+        [Parameter(Mandatory = $true)]$Run,
+        [string]$SemanticOutcome = '',
+        [string]$OperationId = '',
+        [long]$TimeoutMilliseconds = -1L,
+        [long]$ByteLength = -1L,
+        [string]$HostSha256 = '',
+        [string]$SafeClassification = ''
     )
     if ([string]::IsNullOrWhiteSpace($script:P5EActiveCollectorEvidenceDirectory)) { return }
     if ($script:P5ECollectorCommandLog.Count -ge 128) { throw 'P5E_COLLECTOR_COMMAND_LOG_LIMIT_STOP' }
+    $commandClass = Get-P5ECollectorCommandClass -Operation $Operation
+    $semanticValue = if ([string]::IsNullOrWhiteSpace($SemanticOutcome)) { Get-P5ECollectorSemanticOutcome -Run $Run } else { $SemanticOutcome }
+    $semanticAllowlist = if ($commandClass -eq 'DEVICE_FILE_PRESENCE_READ_ONLY') {
+        $script:P5EPresenceSemanticOutcomeAllowlist
+    } else {
+        $script:P5EGenericSemanticOutcomeAllowlist
+    }
+    if ($semanticValue -notin $semanticAllowlist) { throw 'P5E_COLLECTOR_COMMAND_SEMANTIC_OUTCOME_INVALID_STOP' }
     $record = [ordered]@{
-        schemaVersion = 'p5e.raw.collector-command.v1'
+        schemaVersion = $script:P5ECollectorCommandSchema
         eventId = Split-Path -Leaf $script:P5EActiveCollectorEvidenceDirectory
         evidenceDirectory = $script:P5EActiveCollectorEvidenceDirectory
         collectionPhase = $script:P5EActiveCollectorPhase
         sequence = [long]($script:P5ECollectorCommandLog.Count + 1)
         operation = $Operation
-        commandClass = Get-P5ECollectorCommandClass -Operation $Operation
+        commandClass = $commandClass
         launchCount = [long]$Run.LaunchCount
         exitCode = $Run.ExitCode
         timedOut = [bool]$Run.TimedOut
         outcome = [string]$Run.Outcome
+        semanticOutcome = $semanticValue
+        operationId = if ([string]::IsNullOrWhiteSpace($OperationId)) { [Guid]::NewGuid().ToString('N') } else { $OperationId }
+        timeoutMilliseconds = if ($TimeoutMilliseconds -lt 0L) { [long](Get-P5EProperty $Run 'TimeoutMilliseconds') } else { $TimeoutMilliseconds }
+        byteLength = if ($ByteLength -lt 0L) { [long](Get-P5EProperty $Run 'ByteLength') } else { $ByteLength }
+        hostSha256 = if ([string]::IsNullOrWhiteSpace($HostSha256)) { [string](Get-P5EProperty $Run 'HostSha256') } else { $HostSha256.ToLowerInvariant() }
+        safeClassification = $SafeClassification
         redactionPass = -not [bool]$Run.RedactionViolation
         outputCaptured = $false
+        launchErrorClass = if ([string]::IsNullOrWhiteSpace([string](Get-P5EProperty $Run 'LaunchErrorClass'))) { $null } else { [string](Get-P5EProperty $Run 'LaunchErrorClass') }
+        launchNativeErrorCode = Get-P5EProperty $Run 'LaunchNativeErrorCode'
+        launchReason = if ([string]::IsNullOrWhiteSpace([string](Get-P5EProperty $Run 'LaunchReason'))) { '' } else { [string](Get-P5EProperty $Run 'LaunchReason') }
+        captureBounded = [bool](Get-P5EProperty $Run 'CaptureBounded')
     }
     [void]$script:P5ECollectorCommandLog.Add($record)
     $path = Get-P5ECollectorCommandLogPath -EvidenceDirectory $script:P5EActiveCollectorEvidenceDirectory
@@ -452,6 +732,53 @@ function Test-P5EPathUnderDirectory {
     $canonicalPath = Get-P5ECanonicalPath -Path $Path
     $canonicalDirectory = (Get-P5ECanonicalPath -Path $Directory).TrimEnd('\') + '\'
     return $canonicalPath.StartsWith($canonicalDirectory, [StringComparison]::OrdinalIgnoreCase)
+}
+
+function Assert-P5EEventDescendantNoReparse {
+    param(
+        [Parameter(Mandatory = $true)][string]$EventDirectory,
+        [Parameter(Mandatory = $true)][string]$Path,
+        [ValidateSet('Leaf', 'Container')][string]$Kind = 'Leaf'
+    )
+    $eventLiteral = [IO.Path]::GetFullPath($EventDirectory)
+    if (-not (Test-Path -LiteralPath $eventLiteral -PathType Container)) { throw 'P5E_DB_EXPORT_EVENT_DIRECTORY_MISSING' }
+    $eventLiteralItem = Get-Item -LiteralPath $eventLiteral -Force
+    if (($eventLiteralItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'P5E_DB_EXPORT_EVENT_DIRECTORY_REPARSE_STOP' }
+    $event = Get-P5ECanonicalPath -Path $eventLiteral
+    if (-not (Test-Path -LiteralPath $event -PathType Container)) { throw 'P5E_DB_EXPORT_EVENT_DIRECTORY_MISSING' }
+    $eventItem = Get-Item -LiteralPath $event -Force
+    if (($eventItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'P5E_DB_EXPORT_EVENT_DIRECTORY_REPARSE_STOP' }
+    $candidate = [IO.Path]::GetFullPath($Path)
+    $candidateExists = Test-Path -LiteralPath $candidate
+    if ($candidateExists) {
+        $candidateItem = Get-Item -LiteralPath $candidate -Force
+        if (($candidateItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+            throw 'P5E_DB_EXPORT_DESTINATION_REPARSE_OR_OUTSIDE_EVENT'
+        }
+        if ($Kind -eq 'Leaf' -and $candidateItem.PSIsContainer) { throw 'P5E_DB_EXPORT_DESTINATION_NOT_REGULAR_FILE' }
+        if ($Kind -eq 'Container' -and -not $candidateItem.PSIsContainer) { throw 'P5E_DB_EXPORT_DESTINATION_NOT_DIRECTORY' }
+    } elseif ($Kind -eq 'Container') {
+        throw 'P5E_DB_EXPORT_DESTINATION_MISSING'
+    }
+    $cursor = if ($Kind -eq 'Container') { $candidate } else { Split-Path -Parent $candidate }
+    $foundEvent = $false
+    while (-not [string]::IsNullOrWhiteSpace($cursor)) {
+        if (-not (Test-Path -LiteralPath $cursor -PathType Container)) { throw 'P5E_DB_EXPORT_DESTINATION_PARENT_MISSING' }
+        $cursorItem = Get-Item -LiteralPath $cursor -Force
+        if (($cursorItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+            throw 'P5E_DB_EXPORT_DESTINATION_ANCESTOR_REPARSE_STOP'
+        }
+        if (Test-P5EPathEqual -Left $cursor -Right $event) { $foundEvent = $true; break }
+        $parent = [IO.Directory]::GetParent($cursor)
+        if ($null -eq $parent -or $parent.FullName -ceq $cursor) { break }
+        $cursor = $parent.FullName
+    }
+    if (-not $foundEvent) { throw 'P5E_DB_EXPORT_DESTINATION_OUTSIDE_EVENT' }
+    $resolved = Get-P5ECanonicalPath -Path $candidate
+    if (-not (Test-P5EPathUnderDirectory -Path $resolved -Directory $event)) {
+        throw 'P5E_DB_EXPORT_DESTINATION_OUTSIDE_EVENT'
+    }
+    return $resolved
 }
 
 function Get-P5ESha256 {
@@ -1093,22 +1420,52 @@ function Set-P5EProcessStartInfoArguments {
     }))
 }
 
-function Get-P5EProcessTaskTextBounded {
+function Get-P5ELaunchDiagnostics {
+    param([Parameter(Mandatory = $true)][System.Management.Automation.ErrorRecord]$ErrorRecord)
+    $exception = $ErrorRecord.Exception
+    $nativeCode = $null
+    $candidate = $exception
+    while ($null -ne $candidate) {
+        if ($candidate -is [System.ComponentModel.Win32Exception]) {
+            $nativeCode = [int]$candidate.NativeErrorCode
+            break
+        }
+        $candidate = $candidate.InnerException
+    }
+    $reason = 'UNKNOWN_START_ERROR'
+    if ($null -ne $nativeCode) {
+        switch ([int]$nativeCode) {
+            2 { $reason = 'PATH_OR_FILE_NOT_FOUND'; break }
+            3 { $reason = 'PATH_OR_FILE_NOT_FOUND'; break }
+            5 { $reason = 'ACCESS_DENIED'; break }
+            193 { $reason = 'BAD_EXE_FORMAT'; break }
+            267 { $reason = 'DIRECTORY_NAME_INVALID'; break }
+            default { $reason = 'NATIVE_START_ERROR'; break }
+        }
+    } elseif ($exception.GetType().Name -eq 'RuntimeException' -and
+            $ErrorRecord.Exception.StackTrace -and
+            $ErrorRecord.Exception.StackTrace -match 'PROCESS_START_RETURNED_FALSE') {
+        $reason = 'PROCESS_START_RETURNED_FALSE'
+    }
+    return [pscustomobject]@{
+        ErrorClass = $exception.GetType().Name
+        NativeErrorCode = $nativeCode
+        Reason = $reason
+    }
+}
+
+function Remove-P5EInheritedEnvironment {
     param(
-        [Parameter(Mandatory = $true)][System.Threading.Tasks.Task]$Task,
-        [int]$TimeoutMilliseconds = 5000
+        [Parameter(Mandatory = $true)][System.Diagnostics.ProcessStartInfo]$StartInfo,
+        [AllowEmptyCollection()][string[]]$Names = @()
     )
-    try {
-        if (-not $Task.Wait($TimeoutMilliseconds)) {
-            return [pscustomobject]@{ Completed = $false; Text = ''; ErrorClass = 'TASK_WAIT_TIMEOUT' }
+    foreach ($name in @($Names | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })) {
+        $environmentProperty = $StartInfo.PSObject.Properties['Environment']
+        if ($null -ne $environmentProperty) {
+            [void]$StartInfo.Environment.Remove([string]$name)
+        } else {
+            [void]$StartInfo.EnvironmentVariables.Remove([string]$name)
         }
-        return [pscustomobject]@{
-            Completed = $true
-            Text = [string]$Task.GetAwaiter().GetResult()
-            ErrorClass = ''
-        }
-    } catch {
-        return [pscustomobject]@{ Completed = $false; Text = ''; ErrorClass = $_.Exception.GetType().Name }
     }
 }
 
@@ -1132,14 +1489,7 @@ function Invoke-P5EProcessSupervisor {
     $startInfo.RedirectStandardInput = $hasStandardInput
     $startInfo.RedirectStandardOutput = $true
     $startInfo.RedirectStandardError = $true
-    foreach ($name in @($ClearInheritedEnvironmentVariableNames | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })) {
-        $environmentProperty = $startInfo.PSObject.Properties['Environment']
-        if ($null -ne $environmentProperty) {
-            [void]$startInfo.Environment.Remove([string]$name)
-        } else {
-            [void]$startInfo.EnvironmentVariables.Remove([string]$name)
-        }
-    }
+    Remove-P5EInheritedEnvironment -StartInfo $startInfo -Names $ClearInheritedEnvironmentVariableNames
     Set-P5EProcessStartInfoArguments -StartInfo $startInfo -ArgumentList $ArgumentList
 
     $process = [System.Diagnostics.Process]::new()
@@ -1148,42 +1498,31 @@ function Invoke-P5EProcessSupervisor {
     $timedOut = $false
     $exitCode = $null
     $launchErrorClass = ''
+    $launchNativeErrorCode = $null
+    $launchReason = ''
     $inputWriteCompleted = -not $hasStandardInput
     $inputWriteErrorClass = ''
     $stdoutCapture = [pscustomobject]@{ Completed = $true; Text = ''; ErrorClass = '' }
     $stderrCapture = [pscustomobject]@{ Completed = $true; Text = ''; ErrorClass = '' }
+    $textCapture = $null
     try {
         if (-not $process.Start()) { throw 'PROCESS_START_RETURNED_FALSE' }
         $launchCount = 1
-        $stdoutTask = $process.StandardOutput.ReadToEndAsync()
-        $stderrTask = $process.StandardError.ReadToEndAsync()
-        if ($hasStandardInput) {
-            try {
-                $inputBytes = [Text.UTF8Encoding]::new($false).GetBytes($StandardInputText)
-                if ($inputBytes.Length -gt 0) {
-                    $process.StandardInput.BaseStream.Write($inputBytes, 0, $inputBytes.Length)
-                    $process.StandardInput.BaseStream.Flush()
-                }
-                $process.StandardInput.Close()
-                $inputWriteCompleted = $true
-            } catch {
-                $inputWriteErrorClass = $_.Exception.GetType().Name
-                try { $process.StandardInput.Close() } catch { }
-                try { if (-not $process.HasExited) { $process.Kill($true) } } catch { try { $process.Kill() } catch { } }
-            }
-        }
-        if (-not $process.WaitForExit([int]$TimeoutMilliseconds)) {
-            $timedOut = $true
-            try { $process.Kill($true) } catch { try { $process.Kill() } catch { } }
-            try { $process.WaitForExit(5000) | Out-Null } catch { }
-        } else {
-            $process.WaitForExit()
-        }
-        $stdoutCapture = Get-P5EProcessTaskTextBounded -Task $stdoutTask
-        $stderrCapture = Get-P5EProcessTaskTextBounded -Task $stderrTask
-        if ($process.HasExited) { $exitCode = $process.ExitCode }
+        $inputBytes = if ($hasStandardInput) { [Text.UTF8Encoding]::new($false).GetBytes($StandardInputText) } else { $null }
+        $textCapture = [P5EProcessTextCapture]::Capture($process, 4194304, 1048576, [int]$TimeoutMilliseconds, $inputBytes)
+        $timedOut = [bool]$textCapture.TimedOut
+        $inputWriteCompleted = [bool]$textCapture.InputWriteCompleted
+        $inputWriteErrorClass = [string]$textCapture.InputWriteErrorClass
+        $stdoutCapture = [pscustomobject]@{ Completed = [bool]$textCapture.CaptureBounded; Text = [string]$textCapture.Stdout; ErrorClass = [string]$textCapture.CaptureErrorClass }
+        $stderrCapture = [pscustomobject]@{ Completed = [bool]$textCapture.CaptureBounded; Text = [string]$textCapture.Stderr; ErrorClass = [string]$textCapture.CaptureErrorClass }
+        if ($null -ne $textCapture.ExitCode) { $exitCode = $textCapture.ExitCode }
     } catch {
-        if ($launchCount -eq 0) { $launchErrorClass = $_.Exception.GetType().Name }
+        if ($launchCount -eq 0) {
+            $launchDiagnostics = Get-P5ELaunchDiagnostics -ErrorRecord $_
+            $launchErrorClass = $launchDiagnostics.ErrorClass
+            $launchNativeErrorCode = $launchDiagnostics.NativeErrorCode
+            $launchReason = $launchDiagnostics.Reason
+        }
         else { $inputWriteErrorClass = if ([string]::IsNullOrEmpty($inputWriteErrorClass)) { $_.Exception.GetType().Name } else { $inputWriteErrorClass } }
     } finally {
         if ($process -ne $null) { $process.Dispose() }
@@ -1198,7 +1537,8 @@ function Invoke-P5EProcessSupervisor {
     } else {
         [pscustomobject]@{ Text = 'P5E_CAPTURE_NOT_BOUNDED'; Violation = $false }
     }
-    $captureBounded = [bool]($stdoutCapture.Completed -and $stderrCapture.Completed)
+    $captureBounded = [bool]($stdoutCapture.Completed -and $stderrCapture.Completed -and
+        $null -ne $textCapture -and [string]::IsNullOrWhiteSpace([string]$textCapture.CaptureErrorClass))
     $redactionViolation = $safeStdout.Violation -or $safeStderr.Violation
     Write-P5EUtf8NoBom -Path $stdoutPath -Text $safeStdout.Text
     Write-P5EUtf8NoBom -Path $stderrPath -Text $safeStderr.Text
@@ -1215,6 +1555,8 @@ function Invoke-P5EProcessSupervisor {
         TimedOut = $timedOut
         ExitCode = $exitCode
         LaunchErrorClass = $launchErrorClass
+        LaunchNativeErrorCode = $launchNativeErrorCode
+        LaunchReason = $launchReason
         InputWriteCompleted = $inputWriteCompleted
         InputWriteErrorClass = $inputWriteErrorClass
         CaptureBounded = $captureBounded
@@ -1231,7 +1573,8 @@ function Invoke-P5EReadOnlyProcess {
         [Parameter(Mandatory = $true)][string]$FilePath,
         [Parameter(Mandatory = $true)][AllowEmptyCollection()][string[]]$ArgumentList,
         [Parameter(Mandatory = $true)][long]$TimeoutMilliseconds,
-        [AllowEmptyCollection()][string[]]$SensitiveValues = @()
+        [AllowEmptyCollection()][string[]]$SensitiveValues = @(),
+        [AllowEmptyCollection()][string[]]$ClearInheritedEnvironmentVariableNames = @()
     )
     $script:P5EReadOnlyCommandCount = [long]$script:P5EReadOnlyCommandCount + 1L
     $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
@@ -1240,6 +1583,7 @@ function Invoke-P5EReadOnlyProcess {
     $startInfo.CreateNoWindow = $true
     $startInfo.RedirectStandardOutput = $true
     $startInfo.RedirectStandardError = $true
+    Remove-P5EInheritedEnvironment -StartInfo $startInfo -Names $ClearInheritedEnvironmentVariableNames
     Set-P5EProcessStartInfoArguments -StartInfo $startInfo -ArgumentList $ArgumentList
     $process = [System.Diagnostics.Process]::new()
     $process.StartInfo = $startInfo
@@ -1247,41 +1591,61 @@ function Invoke-P5EReadOnlyProcess {
     $timedOut = $false
     $exitCode = $null
     $launchErrorClass = ''
+    $launchNativeErrorCode = $null
+    $launchReason = ''
     $stdout = ''
     $stderr = ''
-    $stdoutTask = $null
-    $stderrTask = $null
+    $stdoutCapture = [pscustomobject]@{ Completed = $true; Text = ''; ErrorClass = '' }
+    $stderrCapture = [pscustomobject]@{ Completed = $true; Text = ''; ErrorClass = '' }
+    $textCapture = $null
     try {
         if (-not $process.Start()) { throw 'PROCESS_START_RETURNED_FALSE' }
         $launchCount = 1
-        $stdoutTask = $process.StandardOutput.ReadToEndAsync()
-        $stderrTask = $process.StandardError.ReadToEndAsync()
-        if (-not $process.WaitForExit([int]$TimeoutMilliseconds)) {
-            $timedOut = $true
-            try { $process.Kill($true) } catch { try { $process.Kill() } catch { } }
-            try { $process.WaitForExit(5000) | Out-Null } catch { }
-        } else { $process.WaitForExit() }
-        if ($stdoutTask -ne $null) { $stdout = $stdoutTask.GetAwaiter().GetResult() }
-        if ($stderrTask -ne $null) { $stderr = $stderrTask.GetAwaiter().GetResult() }
-        if ($process.HasExited) { $exitCode = $process.ExitCode }
+        $textCapture = [P5EProcessTextCapture]::Capture($process, 4194304, 1048576, [int]$TimeoutMilliseconds, $null)
+        $timedOut = [bool]$textCapture.TimedOut
+        $stdoutCapture = [pscustomobject]@{ Completed = [bool]$textCapture.CaptureBounded; Text = [string]$textCapture.Stdout; ErrorClass = [string]$textCapture.CaptureErrorClass }
+        $stderrCapture = [pscustomobject]@{ Completed = [bool]$textCapture.CaptureBounded; Text = [string]$textCapture.Stderr; ErrorClass = [string]$textCapture.CaptureErrorClass }
+        $stdout = if ($stdoutCapture.Completed) { [string]$stdoutCapture.Text } else { 'P5E_CAPTURE_NOT_BOUNDED' }
+        $stderr = if ($stderrCapture.Completed) { [string]$stderrCapture.Text } else { 'P5E_CAPTURE_NOT_BOUNDED' }
+        if ($null -ne $textCapture.ExitCode) { $exitCode = $textCapture.ExitCode }
     } catch {
-        if ($launchCount -eq 0) { $launchErrorClass = $_.Exception.GetType().Name }
+        if ($launchCount -eq 0) {
+            $launchDiagnostics = Get-P5ELaunchDiagnostics -ErrorRecord $_
+            $launchErrorClass = $launchDiagnostics.ErrorClass
+            $launchNativeErrorCode = $launchDiagnostics.NativeErrorCode
+            $launchReason = $launchDiagnostics.Reason
+        }
         else { $stderr = $_.Exception.GetType().Name }
     } finally { $process.Dispose() }
     $safeStdout = Protect-P5ECaptureText -Text ([string]$stdout) -SensitiveValues $SensitiveValues
     $safeStderr = Protect-P5ECaptureText -Text ([string]$stderr) -SensitiveValues $SensitiveValues
-    $outputTooLarge = ([string]$safeStdout.Text).Length -gt 4194304 -or ([string]$safeStderr.Text).Length -gt 1048576
-    if ($outputTooLarge) { $safeStdout = Protect-P5ECaptureText -Text 'P5E_COLLECTOR_OUTPUT_TOO_LARGE' }
+    $outputTooLarge = ($null -ne $textCapture -and
+        ([bool]$textCapture.StdoutTruncated -or [bool]$textCapture.StderrTruncated)) -or
+        ([string]$safeStdout.Text).Length -gt 4194304 -or ([string]$safeStderr.Text).Length -gt 1048576
+    if ($outputTooLarge) {
+        $safeStdout = Protect-P5ECaptureText -Text 'P5E_COLLECTOR_OUTPUT_TOO_LARGE'
+        $safeStderr = Protect-P5ECaptureText -Text 'P5E_COLLECTOR_OUTPUT_TOO_LARGE'
+    }
+    $captureBounded = [bool]($stdoutCapture.Completed -and $stderrCapture.Completed -and
+        $null -ne $textCapture -and [string]::IsNullOrWhiteSpace([string]$textCapture.CaptureErrorClass))
     return [pscustomobject]@{
         Outcome = if ($launchCount -eq 0) { 'FAILED_BEFORE_LAUNCH' } elseif ($timedOut) { 'TIMEOUT' } elseif ($null -eq $exitCode) { 'PROCESS_EXIT_UNKNOWN' } elseif ($exitCode -eq 0) { 'PROCESS_EXITED_ZERO' } else { 'PROCESS_EXITED_NONZERO' }
         LaunchCount = $launchCount
         ExitCode = $exitCode
         TimedOut = $timedOut
+        TimeoutMilliseconds = [long]$TimeoutMilliseconds
         LaunchErrorClass = $launchErrorClass
+        LaunchNativeErrorCode = $launchNativeErrorCode
+        LaunchReason = $launchReason
+        CaptureBounded = $captureBounded
+        StdoutCaptureErrorClass = $stdoutCapture.ErrorClass
+        StderrCaptureErrorClass = $stderrCapture.ErrorClass
         RedactionViolation = [bool]($safeStdout.Violation -or $safeStderr.Violation)
         OutputTooLarge = $outputTooLarge
         Stdout = [string]$safeStdout.Text
         Stderr = [string]$safeStderr.Text
+        ByteLength = [long]([Text.Encoding]::UTF8.GetByteCount([string]$safeStdout.Text))
+        HostSha256 = ''
     }
 }
 
@@ -1296,11 +1660,16 @@ function Invoke-P5EAdbReadOnly {
     )
     if ($SerialValue -cne $script:P5ESerial) { throw 'P5E_COLLECTOR_SERIAL_MISMATCH' }
     $run = Invoke-P5EReadOnlyProcess -FilePath $AdbPath -ArgumentList (@('-s', $SerialValue) + $Arguments) `
-        -TimeoutMilliseconds $TimeoutMilliseconds -SensitiveValues $SensitiveValues
+        -TimeoutMilliseconds $TimeoutMilliseconds -SensitiveValues $SensitiveValues `
+        -ClearInheritedEnvironmentVariableNames @($script:P5EAccountEnvironmentName)
+    if ($Operation -match '^pm-path-') {
+        return $run
+    }
     Add-P5ECollectorCommandRecord -Operation $Operation -Run $run
     if ($run.RedactionViolation) { throw ('P5E_COLLECTOR_REDACTION_FAILURE:' + $Operation) }
     if ($run.OutputTooLarge) { throw ('P5E_COLLECTOR_OUTPUT_TOO_LARGE:' + $Operation) }
-    if ($run.LaunchCount -eq 0) { throw ('P5E_COLLECTOR_ADB_FAILED_BEFORE_LAUNCH:' + $Operation) }
+    if (-not $run.CaptureBounded) { throw ('P5E_COLLECTOR_CAPTURE_NOT_BOUNDED:' + $Operation) }
+    if ($run.LaunchCount -eq 0) { throw ('P5E_COLLECTOR_ADB_FAILED_BEFORE_LAUNCH:' + $Operation + ':' + [string]$run.LaunchReason) }
     if ($run.TimedOut) { throw ('P5E_COLLECTOR_TIMEOUT:' + $Operation) }
     if ($null -eq $run.ExitCode -or $run.ExitCode -ne 0) { throw ('P5E_COLLECTOR_ADB_NONZERO:' + $Operation) }
     return $run
@@ -1321,65 +1690,23 @@ function Invoke-P5EAdbShellReadOnly {
         -TimeoutMilliseconds $TimeoutMilliseconds
 }
 
-function Get-P5ESeparatedRow {
+function Invoke-P5EPackagePathReadOnly {
     param(
-        [Parameter(Mandatory = $true)][string]$Output,
-        [Parameter(Mandatory = $true)][int]$ColumnCount,
-        [Parameter(Mandatory = $true)][string]$Operation
+        [Parameter(Mandatory = $true)][string]$AdbPath,
+        [Parameter(Mandatory = $true)][string]$SerialValue,
+        [Parameter(Mandatory = $true)][string]$Operation,
+        [Parameter(Mandatory = $true)][string]$PackageName,
+        [long]$TimeoutMilliseconds = 30000L
     )
-    $lines = @($Output -split "`r?`n" | Where-Object { $_ -ne '' })
-    if ($lines.Count -ne 1) { throw ('P5E_COLLECTOR_SQL_ROW_COUNT:' + $Operation) }
-    $columns = $lines[0].Split([char]9)
-    if ($columns.Count -ne $ColumnCount) { throw ('P5E_COLLECTOR_SQL_COLUMN_COUNT:' + $Operation) }
-    return ,@($columns | ForEach-Object { if ($_ -ceq 'NULL') { $null } else { $_ } })
-}
-
-function Get-P5ESeparatedRows {
-    param(
-        [Parameter(Mandatory = $true)][string]$Output,
-        [Parameter(Mandatory = $true)][int]$ColumnCount,
-        [Parameter(Mandatory = $true)][string]$Operation
-    )
-    $lines = @($Output -split "`r?`n" | Where-Object { $_ -ne '' })
-    $rows = [System.Collections.Generic.List[object]]::new()
-    foreach ($line in $lines) {
-        $columns = $line.Split([char]9)
-        if ($columns.Count -ne $ColumnCount) { throw ('P5E_COLLECTOR_SQL_COLUMN_COUNT:' + $Operation) }
-        [void]$rows.Add(@($columns | ForEach-Object { if ($_ -ceq 'NULL') { $null } else { $_ } }))
+    if ($SerialValue -cne $script:P5ESerial) { throw 'P5E_COLLECTOR_SERIAL_MISMATCH' }
+    $run = Invoke-P5EAdbShellReadOnly -AdbPath $AdbPath -SerialValue $SerialValue -Operation $Operation `
+        -RemoteTokens @('pm', 'path', $PackageName) -TimeoutMilliseconds $TimeoutMilliseconds
+    $classification = Get-P5EPackagePathClassification -Run $run -PackageName $PackageName
+    Add-P5ECollectorCommandRecord -Operation $Operation -Run $run -SafeClassification $classification.Classification
+    if ([string]$classification.Classification -ne 'PACKAGE_PRESENT') {
+        throw ('P5E_COLLECTOR_PM_PATH_' + [string]$classification.Classification)
     }
-    return $rows.ToArray()
-}
-
-function Invoke-P5ESqliteReadOnlyRows {
-    param(
-        [Parameter(Mandatory = $true)][string]$AdbPath,
-        [Parameter(Mandatory = $true)][string]$SerialValue,
-        [Parameter(Mandatory = $true)][string]$Operation,
-        [Parameter(Mandatory = $true)][string]$Query,
-        [Parameter(Mandatory = $true)][int]$ColumnCount
-    )
-    $readOnlyQuery = 'PRAGMA foreign_keys=ON;BEGIN;' + $Query + ';COMMIT;'
-    $run = Invoke-P5EAdbShellReadOnly -AdbPath $AdbPath -SerialValue $SerialValue -Operation $Operation `
-        -RemoteTokens @('run-as', $script:P5ETargetPackage, 'sqlite3', '-readonly', '-batch', '-noheader',
-            '-separator', $script:P5ECollectorSeparator, $script:P5EDatabaseDevicePath, $readOnlyQuery) `
-        -TimeoutMilliseconds 30000L
-    return [pscustomobject]@{ Run = $run; Rows = @(Get-P5ESeparatedRows -Output $run.Stdout -ColumnCount $ColumnCount -Operation $Operation) }
-}
-
-function Invoke-P5ESqliteReadOnlyRow {
-    param(
-        [Parameter(Mandatory = $true)][string]$AdbPath,
-        [Parameter(Mandatory = $true)][string]$SerialValue,
-        [Parameter(Mandatory = $true)][string]$Operation,
-        [Parameter(Mandatory = $true)][string]$Query,
-        [Parameter(Mandatory = $true)][int]$ColumnCount
-    )
-    $readOnlyQuery = 'PRAGMA foreign_keys=ON;BEGIN;' + $Query + ';COMMIT;'
-    $run = Invoke-P5EAdbShellReadOnly -AdbPath $AdbPath -SerialValue $SerialValue -Operation $Operation `
-        -RemoteTokens @('run-as', $script:P5ETargetPackage, 'sqlite3', '-readonly', '-batch', '-noheader',
-            '-separator', $script:P5ECollectorSeparator, $script:P5EDatabaseDevicePath, $readOnlyQuery) `
-        -TimeoutMilliseconds 30000L
-    return [pscustomobject]@{ Run = $run; Columns = @(Get-P5ESeparatedRow -Output $run.Stdout -ColumnCount $ColumnCount -Operation $Operation) }
+    return $classification
 }
 
 function Get-P5ELocalDatabaseFileHashState {
@@ -1388,10 +1715,10 @@ function Get-P5ELocalDatabaseFileHashState {
         throw 'P5E_LOCAL_SQLITE_DATABASE_MISSING'
     }
     return [ordered]@{
-        database = [ordered]@{ present = $true; sha256 = Get-P5ESha256 -Path $DatabasePath }
-        wal = [ordered]@{ present = $false; sha256 = '' }
-        shm = [ordered]@{ present = $false; sha256 = '' }
-        settings = [ordered]@{ present = $true; sha256 = 'offline-fixture-settings-only' }
+        database = [ordered]@{ path = Get-P5ECanonicalPath -Path $DatabasePath; status = 'PRESENT'; present = $true; sha256 = Get-P5ESha256 -Path $DatabasePath }
+        wal = [ordered]@{ path = (Get-P5ECanonicalPath -Path $DatabasePath) + '-wal'; status = 'ABSENT'; present = $false; sha256 = '' }
+        shm = [ordered]@{ path = (Get-P5ECanonicalPath -Path $DatabasePath) + '-shm'; status = 'ABSENT'; present = $false; sha256 = '' }
+        settings = [ordered]@{ path = 'offline-fixture-settings-only'; status = 'PRESENT'; present = $true; sha256 = 'offline-fixture-settings-only' }
     }
 }
 
@@ -1400,45 +1727,60 @@ function Invoke-P5ELocalSqliteReadOnly {
         [Parameter(Mandatory = $true)][string]$DatabasePath,
         [Parameter(Mandatory = $true)][string]$Query
     )
-    $bridgePath = Join-Path (Get-P5ERepoRoot) 'docs\P5E_SQLITE_BRIDGE.py'
-    if (-not (Test-Path -LiteralPath $bridgePath -PathType Leaf)) { throw 'P5E_LOCAL_SQLITE_BRIDGE_MISSING' }
     $bridgeRoot = Join-Path ([IO.Path]::GetTempPath()) ('p5e-sqlite-bridge-' + [Guid]::NewGuid().ToString('N'))
     [void](New-Item -ItemType Directory -Path $bridgeRoot -Force)
     $queryPath = Join-Path $bridgeRoot 'query.sql'
     Write-P5EUtf8NoBom -Path $queryPath -Text $Query
-    $python = Get-Command py.exe -ErrorAction SilentlyContinue
-    if ($null -eq $python) { $python = Get-Command py -ErrorAction SilentlyContinue }
-    if ($null -eq $python) { throw 'P5E_LOCAL_SQLITE_PYTHON_MISSING' }
-    $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
-    $startInfo.FileName = [string]$python.Source
-    $startInfo.UseShellExecute = $false
-    $startInfo.CreateNoWindow = $true
-    $startInfo.RedirectStandardOutput = $true
-    $startInfo.RedirectStandardError = $true
-    Set-P5EProcessStartInfoArguments -StartInfo $startInfo -ArgumentList @(
-        '-3', $bridgePath, '--database', $DatabasePath, '--query', $queryPath)
-    $process = [System.Diagnostics.Process]::new()
-    $process.StartInfo = $startInfo
-    try {
-        if (-not $process.Start()) { throw 'P5E_LOCAL_SQLITE_BRIDGE_START_FAILED' }
-        $stdoutTask = $process.StandardOutput.ReadToEndAsync()
-        $stderrTask = $process.StandardError.ReadToEndAsync()
-        $process.WaitForExit()
-        $stdout = $stdoutTask.GetAwaiter().GetResult()
-        $stderr = $stderrTask.GetAwaiter().GetResult()
-        $exitCode = $process.ExitCode
-    } finally {
-        $process.Dispose()
+    return Invoke-P5EHostSqliteBridge -DatabasePath $DatabasePath -QueryPath $queryPath -Immutable
+}
+
+function Invoke-P5EHostSqliteBridge {
+    param(
+        [Parameter(Mandatory = $true)][string]$DatabasePath,
+        [Parameter(Mandatory = $true)][string]$QueryPath,
+        [switch]$Immutable,
+        [long]$TimeoutMilliseconds = 60000L,
+        [long]$MaximumOutputBytes = 4194304L,
+        [string]$PythonPath = ''
+    )
+    if ($script:P5EIsLivePinPhase) {
+        [void](Assert-P5EDatabaseReadbackDependencyPin -Path $script:P5ESqliteBridgePath `
+            -PinnedPath $script:P5ESqliteBridgePath -ExpectedSha256 $script:P5EExpectedSqliteBridgeSha256 `
+            -Label 'SQLITE_BRIDGE')
     }
-    if ($exitCode -ne 0) {
-        throw ('P5E_LOCAL_SQLITE_BRIDGE_FAILED:' + [string]$exitCode + ':' + [string]$stderr)
+    foreach ($path in @($DatabasePath, $QueryPath, $script:P5ESqliteBridgePath)) {
+        if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw 'P5E_HOST_SQLITE_INPUT_MISSING' }
+        $item = Get-Item -LiteralPath $path -Force
+        if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'P5E_HOST_SQLITE_INPUT_REPARSE_STOP' }
     }
+    $python = if ([string]::IsNullOrWhiteSpace($PythonPath)) { Get-Command py.exe -ErrorAction SilentlyContinue } else { $null }
+    if ($null -eq $python -and [string]::IsNullOrWhiteSpace($PythonPath)) { $python = Get-Command py -ErrorAction SilentlyContinue }
+    $pythonExecutable = if ([string]::IsNullOrWhiteSpace($PythonPath)) { if ($null -eq $python) { '' } else { [string]$python.Source } } else { [IO.Path]::GetFullPath($PythonPath) }
+    if ([string]::IsNullOrWhiteSpace($pythonExecutable) -or -not (Test-Path -LiteralPath $pythonExecutable -PathType Leaf)) { throw 'P5E_HOST_SQLITE_PYTHON_MISSING' }
+    $arguments = [System.Collections.Generic.List[string]]::new()
+    foreach ($argument in @('-3', $script:P5ESqliteBridgePath, '--database', $DatabasePath, '--query', $QueryPath,
+            '--timeout-ms', [string]$TimeoutMilliseconds, '--max-output-bytes', [string]$MaximumOutputBytes)) {
+        [void]$arguments.Add([string]$argument)
+    }
+    if ($Immutable) { [void]$arguments.Add('--immutable') }
+    $run = Invoke-P5EReadOnlyProcess -FilePath $pythonExecutable -ArgumentList $arguments.ToArray() `
+        -TimeoutMilliseconds $TimeoutMilliseconds -ClearInheritedEnvironmentVariableNames @($script:P5EAccountEnvironmentName)
+    if ($run.RedactionViolation) { throw 'P5E_HOST_SQLITE_REDACTION_FAILURE' }
+    if ($run.OutputTooLarge) { throw 'P5E_HOST_SQLITE_OUTPUT_LIMIT' }
+    if (-not $run.CaptureBounded) { throw 'P5E_HOST_SQLITE_CAPTURE_NOT_BOUNDED' }
+    if ($run.LaunchCount -eq 0) { throw 'P5E_HOST_SQLITE_PYTHON_LAUNCH_FAILED' }
+    if ($run.TimedOut) { throw 'P5E_HOST_SQLITE_TIMEOUT' }
+    if ($null -eq $run.ExitCode -or $run.ExitCode -ne 0) { throw 'P5E_HOST_SQLITE_OPEN_OR_QUERY_FAILED' }
     return [pscustomobject]@{
-        Stdout = [string]$stdout
-        Stderr = [string]$stderr
-        ExitCode = [int]$exitCode
-        QueryPath = $queryPath
-        BridgePath = Get-P5ECanonicalPath -Path $bridgePath
+        Stdout = [string]$run.Stdout
+        Stderr = ''
+        ExitCode = [int]$run.ExitCode
+        QueryPath = Get-P5ECanonicalPath -Path $QueryPath
+        BridgePath = Get-P5ECanonicalPath -Path $script:P5ESqliteBridgePath
+        BridgeSha256 = Get-P5ESha256 -Path $script:P5ESqliteBridgePath
+        QuerySha256 = Get-P5ESha256 -Path $QueryPath
+        Immutable = [bool]$Immutable
+        Run = $run
     }
 }
 
@@ -1447,21 +1789,177 @@ function Invoke-P5EAdbPresenceReadOnly {
         [Parameter(Mandatory = $true)][string]$AdbPath,
         [Parameter(Mandatory = $true)][string]$SerialValue,
         [Parameter(Mandatory = $true)][string]$DevicePath,
-        [Parameter(Mandatory = $true)][string]$Operation
+        [Parameter(Mandatory = $true)][string]$Operation,
+        [long]$TimeoutMilliseconds = 30000L
     )
+    if ($SerialValue -cne $script:P5ESerial) { throw 'P5E_COLLECTOR_SERIAL_MISMATCH' }
+    $allowedPaths = @(
+        $script:P5EDatabaseDevicePath,
+        ($script:P5EDatabaseDevicePath + '-wal'),
+        ($script:P5EDatabaseDevicePath + '-shm'),
+        $script:P5ESettingsDevicePath)
+    if ($DevicePath -cnotin $allowedPaths) { throw 'P5E_COLLECTOR_DEVICE_PATH_NOT_PINNED' }
     $quotedPath = ConvertTo-P5EAndroidShellArgument -Value $DevicePath
     $remote = @('run-as', $script:P5ETargetPackage, 'sh', '-c', "test -e $quotedPath")
     $quotedTokens = @($remote | ForEach-Object { ConvertTo-P5EAndroidShellArgument -Value ([string]$_) })
     $run = Invoke-P5EReadOnlyProcess -FilePath $AdbPath -ArgumentList (@('-s', $SerialValue, 'shell') + $quotedTokens) `
-        -TimeoutMilliseconds 30000L
-    Add-P5ECollectorCommandRecord -Operation $Operation -Run $run
-    if ($run.RedactionViolation -or $run.OutputTooLarge) { throw 'P5E_COLLECTOR_PRESENCE_CAPTURE_INVALID' }
-    if ($run.LaunchCount -eq 0) { throw 'P5E_COLLECTOR_ADB_FAILED_BEFORE_LAUNCH:presence' }
-    if ($run.TimedOut) { throw 'P5E_COLLECTOR_TIMEOUT:presence' }
-    if ($null -eq $run.ExitCode) { throw 'P5E_COLLECTOR_PRESENCE_UNKNOWN' }
-    if ($run.ExitCode -eq 0) { return $true }
-    if ($run.ExitCode -eq 1) { return $false }
+        -TimeoutMilliseconds $TimeoutMilliseconds -ClearInheritedEnvironmentVariableNames @($script:P5EAccountEnvironmentName)
+    if ($run.LaunchCount -eq 0) {
+        Add-P5ECollectorCommandRecord -Operation $Operation -Run $run -SemanticOutcome 'LAUNCH_FAILED'
+        throw 'P5E_COLLECTOR_PRESENCE_LAUNCH_FAILED'
+    }
+    if ($run.RedactionViolation) {
+        Add-P5ECollectorCommandRecord -Operation $Operation -Run $run -SemanticOutcome 'REDACTION_FAILED'
+        throw 'P5E_COLLECTOR_PRESENCE_REDACTION_FAILURE'
+    }
+    if ($run.OutputTooLarge) {
+        Add-P5ECollectorCommandRecord -Operation $Operation -Run $run -SemanticOutcome 'OUTPUT_LIMIT'
+        throw 'P5E_COLLECTOR_PRESENCE_OUTPUT_LIMIT'
+    }
+    if (-not $run.CaptureBounded) {
+        Add-P5ECollectorCommandRecord -Operation $Operation -Run $run -SemanticOutcome 'CAPTURE_FAILED'
+        throw 'P5E_COLLECTOR_PRESENCE_CAPTURE_FAILED'
+    }
+    if (-not [string]::IsNullOrEmpty([string]$run.Stdout) -or -not [string]::IsNullOrEmpty([string]$run.Stderr)) {
+        Add-P5ECollectorCommandRecord -Operation $Operation -Run $run -SemanticOutcome 'QUERY_FAILED'
+        throw 'P5E_COLLECTOR_PRESENCE_MALFORMED_OUTPUT'
+    }
+    if ($run.TimedOut) {
+        Add-P5ECollectorCommandRecord -Operation $Operation -Run $run -SemanticOutcome 'TIMEOUT'
+        throw 'P5E_COLLECTOR_PRESENCE_TIMEOUT'
+    }
+    if ($null -eq $run.ExitCode) {
+        Add-P5ECollectorCommandRecord -Operation $Operation -Run $run -SemanticOutcome 'QUERY_FAILED'
+        throw 'P5E_COLLECTOR_PRESENCE_QUERY_FAILED'
+    }
+    if ($run.ExitCode -eq 0) {
+        Add-P5ECollectorCommandRecord -Operation $Operation -Run $run -SemanticOutcome 'PRESENT'
+        return [pscustomobject]@{ Status = 'PRESENT'; Present = $true; DevicePath = $DevicePath; Operation = $Operation; Run = $run }
+    }
+    if ($run.ExitCode -eq 1) {
+        Add-P5ECollectorCommandRecord -Operation $Operation -Run $run -SemanticOutcome 'ABSENT'
+        return [pscustomobject]@{ Status = 'ABSENT'; Present = $false; DevicePath = $DevicePath; Operation = $Operation; Run = $run }
+    }
+    Add-P5ECollectorCommandRecord -Operation $Operation -Run $run -SemanticOutcome 'QUERY_FAILED'
     throw 'P5E_COLLECTOR_PRESENCE_QUERY_FAILED'
+}
+
+function Assert-P5EDatabaseExportDestination {
+    param(
+        [Parameter(Mandatory = $true)][string]$EvidenceDirectory,
+        [Parameter(Mandatory = $true)][string]$CollectionPhase
+    )
+    if ($CollectionPhase -notin @('Before', 'After')) { throw 'P5E_DB_EXPORT_PHASE_INVALID' }
+    $eventLiteral = [IO.Path]::GetFullPath($EvidenceDirectory)
+    if (-not (Test-Path -LiteralPath $eventLiteral -PathType Container)) { throw 'P5E_DB_EXPORT_EVENT_DIRECTORY_MISSING' }
+    $eventLiteralItem = Get-Item -LiteralPath $eventLiteral -Force
+    if (($eventLiteralItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'P5E_DB_EXPORT_EVENT_DIRECTORY_REPARSE_STOP' }
+    $eventDirectory = Get-P5ECanonicalPath -Path $eventLiteral
+    if (-not (Test-Path -LiteralPath $eventDirectory -PathType Container)) { throw 'P5E_DB_EXPORT_EVENT_DIRECTORY_MISSING' }
+    $eventItem = Get-Item -LiteralPath $eventDirectory -Force
+    if (($eventItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'P5E_DB_EXPORT_EVENT_DIRECTORY_REPARSE_STOP' }
+    if ((Split-Path -Leaf $eventDirectory) -eq 'raw-live-20260925-093707011-cc71e9e18029485c8e2411698c88f586') {
+        throw 'P5E_DB_EXPORT_CLOSED_EVENT_REUSE_STOP'
+    }
+    $phaseDirectory = Join-Path $eventDirectory ('database-snapshot-' + $CollectionPhase.ToLowerInvariant())
+    if (-not (Test-Path -LiteralPath $phaseDirectory)) { [void](New-Item -ItemType Directory -Path $phaseDirectory -Force) }
+    return Assert-P5EEventDescendantNoReparse -EventDirectory $eventDirectory -Path $phaseDirectory -Kind Container
+}
+
+function Invoke-P5EDatabaseSnapshotExport {
+    param(
+        [Parameter(Mandatory = $true)][string]$AdbPath,
+        [Parameter(Mandatory = $true)][string]$SerialValue,
+        [Parameter(Mandatory = $true)]$DeviceFileState,
+        [Parameter(Mandatory = $true)][string]$EvidenceDirectory,
+        [Parameter(Mandatory = $true)][ValidateSet('Before', 'After')][string]$CollectionPhase,
+        [long]$TimeoutMilliseconds = 60000L
+    )
+    if ($script:P5EIsLivePinPhase) {
+        [void](Assert-P5EDatabaseReadbackDependencyPin -Path $script:P5EDatabaseExporterPath `
+            -PinnedPath $script:P5EDatabaseExporterPath -ExpectedSha256 $script:P5EExpectedDatabaseExporterSha256 `
+            -Label 'DATABASE_EXPORTER')
+    }
+    if ($SerialValue -cne $script:P5ESerial) { throw 'P5E_COLLECTOR_SERIAL_MISMATCH' }
+    $phaseDirectory = Assert-P5EDatabaseExportDestination -EvidenceDirectory $EvidenceDirectory -CollectionPhase $CollectionPhase
+    if (-not [bool]$DeviceFileState.database.present -or [string]$DeviceFileState.database.status -cne 'PRESENT') {
+        throw 'P5E_COLLECTOR_DATABASE_MAIN_ABSENT'
+    }
+    $walPresent = [bool]$DeviceFileState.wal.present
+    $shmPresent = [bool]$DeviceFileState.shm.present
+    if ($walPresent -xor $shmPresent) { throw 'P5E_DB_WAL_SNAPSHOT_UNSUPPORTED' }
+    $files = [System.Collections.Generic.List[object]]::new()
+    foreach ($entry in @(
+            [pscustomobject]@{ Name = 'main'; DevicePath = $script:P5EDatabaseDevicePath; Present = [bool]$DeviceFileState.database.present; DeviceHash = [string]$DeviceFileState.database.sha256; FileName = 'tbl_android_txt.db' },
+            [pscustomobject]@{ Name = 'wal'; DevicePath = $script:P5EDatabaseDevicePath + '-wal'; Present = $walPresent; DeviceHash = [string]$DeviceFileState.wal.sha256; FileName = 'tbl_android_txt.db-wal' },
+            [pscustomobject]@{ Name = 'shm'; DevicePath = $script:P5EDatabaseDevicePath + '-shm'; Present = $shmPresent; DeviceHash = [string]$DeviceFileState.shm.sha256; FileName = 'tbl_android_txt.db-shm' })) {
+        if (-not $entry.Present) { continue }
+        $destination = Join-Path $phaseDirectory $entry.FileName
+        $partial = $destination + '.partial'
+        foreach ($candidate in @($destination, $partial)) {
+            if (Test-Path -LiteralPath $candidate) { throw 'P5E_DB_EXPORT_DESTINATION_EXISTS' }
+        }
+        [void](Assert-P5EEventDescendantNoReparse -EventDirectory $EvidenceDirectory -Path $partial -Kind Leaf)
+        $operation = 'database-' + $entry.Name + '-binary-export'
+        $operationId = [Guid]::NewGuid().ToString('N')
+        $run = Invoke-P5EDatabaseBinaryExportProcess -FilePath $AdbPath -ArgumentList @(
+            '-s', $SerialValue, 'exec-out', 'run-as', $script:P5ETargetPackage, 'cat', $entry.DevicePath) `
+            -PartialPath $partial -TimeoutMilliseconds $TimeoutMilliseconds
+        $semantic = if ($run.LaunchCount -eq 0) { 'LAUNCH_FAILED' }
+            elseif ($run.TimedOut) { 'TIMEOUT' }
+            elseif (-not $run.CaptureBounded) { 'CAPTURE_FAILED' }
+            elseif ($run.StdoutTruncated -or $run.StderrTruncated) { 'OUTPUT_LIMIT' }
+            elseif (-not [string]::IsNullOrWhiteSpace([string]$run.CaptureErrorClass)) { 'CAPTURE_FAILED' }
+            elseif ($null -eq $run.ExitCode) { 'PROCESS_EXIT_UNKNOWN' }
+            elseif ([int]$run.ExitCode -ne 0) { 'PROCESS_EXITED_NONZERO' }
+            else { 'PROCESS_EXITED_ZERO' }
+        $hostHash = ''
+        if (Test-Path -LiteralPath $partial -PathType Leaf) {
+            try { $hostHash = Get-P5ESha256 -Path $partial } catch { $semantic = 'WRITE_FAILED' }
+        }
+        if ($semantic -eq 'PROCESS_EXITED_ZERO' -and $hostHash -cne [string]$entry.DeviceHash) { $semantic = 'HASH_MISMATCH' }
+        $byteLength = if (Test-Path -LiteralPath $partial -PathType Leaf) { [long](Get-Item -LiteralPath $partial).Length } else { 0L }
+        Add-P5ECollectorCommandRecord -Operation $operation -Run $run -SemanticOutcome $semantic `
+            -OperationId $operationId -TimeoutMilliseconds $TimeoutMilliseconds -ByteLength $byteLength -HostSha256 $hostHash
+        if ($semantic -ne 'PROCESS_EXITED_ZERO') {
+            switch ($semantic) {
+                'LAUNCH_FAILED' { throw 'P5E_DB_EXPORT_LAUNCH_FAILED' }
+                'TIMEOUT' { throw 'P5E_DB_EXPORT_TIMEOUT' }
+                'CAPTURE_FAILED' { throw 'P5E_DB_EXPORT_CAPTURE_FAILED' }
+                'OUTPUT_LIMIT' { throw 'P5E_DB_EXPORT_TRUNCATED' }
+                'WRITE_FAILED' { throw 'P5E_DB_EXPORT_WRITE_FAILED' }
+                'HASH_MISMATCH' { throw 'P5E_DB_EXPORT_HASH_MISMATCH' }
+                default { throw 'P5E_DB_EXPORT_PROCESS_NONZERO' }
+            }
+        }
+        if ($byteLength -lt 0L -or $hostHash -cne [string]$entry.DeviceHash) { throw 'P5E_DB_EXPORT_HASH_MISMATCH' }
+        if (-not (Test-Path -LiteralPath $partial -PathType Leaf)) { throw 'P5E_DB_EXPORT_PARTIAL_MISSING' }
+        Move-Item -LiteralPath $partial -Destination $destination
+        $safeDestination = Assert-P5EEventDescendantNoReparse -EventDirectory $EvidenceDirectory -Path $destination -Kind Leaf
+        [void]$files.Add([ordered]@{
+            name = $entry.Name; devicePath = $entry.DevicePath; destinationPath = $safeDestination
+            operationId = $operationId; launchCount = [long]$run.LaunchCount; timeoutMilliseconds = $TimeoutMilliseconds
+            byteLength = $byteLength; deviceSha256 = [string]$entry.DeviceHash; hostSha256 = $hostHash; status = 'EXPORTED'
+        })
+    }
+    return [ordered]@{ contractVersion = $script:P5EDatabaseExporterContractVersion; collectionPhase = $CollectionPhase; directory = $phaseDirectory; files = $files.ToArray() }
+}
+
+function Assert-P5EDatabaseSnapshotStable {
+    param(
+        [Parameter(Mandatory = $true)]$Before,
+        [Parameter(Mandatory = $true)]$After
+    )
+    foreach ($name in @('database', 'wal', 'shm', 'settings')) {
+        $beforeFile = Get-P5EProperty $Before $name
+        $afterFile = Get-P5EProperty $After $name
+        if ([string]$beforeFile.status -cne [string]$afterFile.status -or
+                [bool]$beforeFile.present -ne [bool]$afterFile.present -or
+                [string]$beforeFile.sha256 -cne [string]$afterFile.sha256) {
+            throw 'P5E_DB_SNAPSHOT_CHANGED_DURING_EXPORT'
+        }
+    }
+    return $true
 }
 
 function Get-P5EHexBytes {
@@ -1497,16 +1995,17 @@ function Get-P5ETransactionSourceEvidence {
 
 function Get-P5EApkSignerDigest {
     param(
-        [Parameter(Mandatory = $true)][string]$ApkSigner,
+        [Parameter(Mandatory = $true)][string]$JavaPath,
+        [Parameter(Mandatory = $true)][string]$ApkSignerJarPath,
         [Parameter(Mandatory = $true)][string]$ApkPath,
         [Parameter(Mandatory = $true)][string]$Name,
         [Parameter(Mandatory = $true)][string]$EvidenceDirectory
     )
-    $run = Invoke-P5EReadOnlyProcess -FilePath $ApkSigner -ArgumentList @('verify', '--print-certs', $ApkPath) `
-        -TimeoutMilliseconds 30000L
+    $run = Invoke-P5EReadOnlyProcess -FilePath $JavaPath -ArgumentList @('-jar', $ApkSignerJarPath, 'verify', '--print-certs', $ApkPath) `
+        -TimeoutMilliseconds 30000L -ClearInheritedEnvironmentVariableNames @($script:P5EAccountEnvironmentName)
     Add-P5ECollectorCommandRecord -Operation ('apk-signer-verify-' + $Name) -Run $run
-    if ($run.RedactionViolation -or $run.OutputTooLarge) { throw ('P5E_COLLECTOR_APKSIGNER_CAPTURE_INVALID:' + $Name) }
-    if ($run.LaunchCount -eq 0) { throw ('P5E_COLLECTOR_APKSIGNER_UNAVAILABLE:' + $Name) }
+    if ($run.RedactionViolation -or $run.OutputTooLarge -or -not $run.CaptureBounded) { throw ('P5E_COLLECTOR_APKSIGNER_CAPTURE_INVALID:' + $Name) }
+    if ($run.LaunchCount -eq 0) { throw ('P5E_COLLECTOR_APKSIGNER_UNAVAILABLE:' + $Name + ':' + [string]$run.LaunchReason) }
     if ($run.TimedOut -or $null -eq $run.ExitCode -or $run.ExitCode -ne 0) { throw ('P5E_COLLECTOR_APKSIGNER_FAILED:' + $Name) }
     $match = [regex]::Match(($run.Stdout + "`n" + $run.Stderr), '(?im)certificate\s+SHA-256\s+digest:\s*([0-9a-f:]{64,95})')
     if (-not $match.Success) { throw ('P5E_COLLECTOR_CERTIFICATE_DIGEST_MISSING:' + $Name) }
@@ -1522,17 +2021,14 @@ function Get-P5EPackageReadback {
         [Parameter(Mandatory = $true)][string]$ExpectedApkSha256,
         [Parameter(Mandatory = $true)][string]$LocalFileName,
         [Parameter(Mandatory = $true)][string]$Name,
-        [Parameter(Mandatory = $true)][string]$ApkSigner,
+        [Parameter(Mandatory = $true)][string]$ApkSignerJavaPath,
+        [Parameter(Mandatory = $true)][string]$ApkSignerJarPath,
         [int]$ExpectedVersionCode = -1,
         [string]$ExpectedVersion = ''
     )
-    $pathRun = Invoke-P5EAdbShellReadOnly -AdbPath $AdbPath -SerialValue $SerialValue -Operation ('pm-path-' + $Name) `
-        -RemoteTokens @('pm', 'path', $PackageName) -TimeoutMilliseconds 30000L
-    $pathLines = @($pathRun.Stdout -split "`r?`n" | Where-Object { $_ -ne '' })
-    if ($pathLines.Count -ne 1 -or $pathLines[0] -notmatch '^package:(/data/app/[^\r\n ]+\.apk)$') {
-        throw ('P5E_COLLECTOR_PACKAGE_PATH_INVALID:' + $Name)
-    }
-    $devicePath = $Matches[1]
+    $pathResult = Invoke-P5EPackagePathReadOnly -AdbPath $AdbPath -SerialValue $SerialValue `
+        -Operation ('pm-path-' + $Name) -PackageName $PackageName -TimeoutMilliseconds 30000L
+    $devicePath = [string]$pathResult.DevicePath
     $localPath = Join-Path (Get-P5ECanonicalPath -Path $EvidenceDirectory) $LocalFileName
     if (-not (Test-Path -LiteralPath $localPath -PathType Leaf)) {
         $pull = Invoke-P5EAdbReadOnly -AdbPath $AdbPath -SerialValue $SerialValue -Operation ('pull-apk-' + $Name) `
@@ -1541,7 +2037,8 @@ function Get-P5EPackageReadback {
     }
     $apkHash = Get-P5ESha256 -Path $localPath
     if ($apkHash -cne $ExpectedApkSha256.ToLowerInvariant()) { throw ('P5E_COLLECTOR_PACKAGE_APK_HASH_MISMATCH:' + $Name) }
-    $certificateHash = Get-P5EApkSignerDigest -ApkSigner $ApkSigner -ApkPath $localPath -Name $Name -EvidenceDirectory $EvidenceDirectory
+    $certificateHash = Get-P5EApkSignerDigest -JavaPath $ApkSignerJavaPath -ApkSignerJarPath $ApkSignerJarPath `
+        -ApkPath $localPath -Name $Name -EvidenceDirectory $EvidenceDirectory
     if ($certificateHash -cne $script:P5ECertificateSha256) { throw ('P5E_COLLECTOR_PACKAGE_CERTIFICATE_MISMATCH:' + $Name) }
     $versionCode = $null
     $version = ''
@@ -1557,63 +2054,13 @@ function Get-P5EPackageReadback {
     }
     return [ordered]@{
         package = $PackageName
-        deviceApkPath = $devicePath
+        pmPathClassification = 'PACKAGE_PRESENT'
         localApkPath = Get-P5ECanonicalPath -Path $localPath
         apkSha256 = $apkHash
         apkByteLength = [long](Get-Item -LiteralPath $localPath).Length
         certificateSha256 = $certificateHash
         version = $version
         versionCode = $versionCode
-    }
-}
-
-function Get-P5EDatabaseSnapshot {
-    param(
-        [Parameter(Mandatory = $true)][string]$AdbPath,
-        [Parameter(Mandatory = $true)][string]$SerialValue,
-        [Parameter(Mandatory = $true)][long]$ObservedAtMillis
-    )
-    $mainHashRun = Invoke-P5EAdbShellReadOnly -AdbPath $AdbPath -SerialValue $SerialValue -Operation 'database-main-hash' `
-        -RemoteTokens @('run-as', $script:P5ETargetPackage, 'sha256sum', $script:P5EDatabaseDevicePath) -TimeoutMilliseconds 30000L
-    $hashMatch = [regex]::Match($mainHashRun.Stdout, '(?im)^([0-9a-f]{64})\s+')
-    if (-not $hashMatch.Success) { throw 'P5E_COLLECTOR_DATABASE_MAIN_HASH_INVALID' }
-    $mainHash = $hashMatch.Groups[1].Value.ToLowerInvariant()
-    $walPath = $script:P5EDatabaseDevicePath + '-wal'
-    $shmPath = $script:P5EDatabaseDevicePath + '-shm'
-    $walPresent = Invoke-P5EAdbPresenceReadOnly -AdbPath $AdbPath -SerialValue $SerialValue -DevicePath $walPath -Operation 'database-wal-presence'
-    $shmPresent = Invoke-P5EAdbPresenceReadOnly -AdbPath $AdbPath -SerialValue $SerialValue -DevicePath $shmPath -Operation 'database-shm-presence'
-    $walHash = ''
-    $shmHash = ''
-    foreach ($item in @([pscustomobject]@{ Name = 'wal'; Path = $walPath; Present = $walPresent },
-            [pscustomobject]@{ Name = 'shm'; Path = $shmPath; Present = $shmPresent })) {
-        if ($item.Present) {
-            $run = Invoke-P5EAdbShellReadOnly -AdbPath $AdbPath -SerialValue $SerialValue -Operation ('database-' + $item.Name + '-hash') `
-                -RemoteTokens @('run-as', $script:P5ETargetPackage, 'sha256sum', $item.Path) -TimeoutMilliseconds 30000L
-            $match = [regex]::Match($run.Stdout, '(?im)^([0-9a-f]{64})\s+')
-            if (-not $match.Success) { throw ('P5E_COLLECTOR_DATABASE_' + $item.Name.ToUpperInvariant() + '_HASH_INVALID') }
-            if ($item.Name -eq 'wal') { $walHash = $match.Groups[1].Value.ToLowerInvariant() } else { $shmHash = $match.Groups[1].Value.ToLowerInvariant() }
-        }
-    }
-    $integrityRun = Invoke-P5ESqliteReadOnlyRow -AdbPath $AdbPath -SerialValue $SerialValue -Operation 'database-integrity' `
-        -Query 'PRAGMA integrity_check' -ColumnCount 1
-    $integrity = [string]$integrityRun.Columns[0]
-    if ($integrity -cne 'ok') { throw 'P5E_COLLECTOR_DATABASE_INTEGRITY_FAILED' }
-    $fkRun = Invoke-P5EAdbShellReadOnly -AdbPath $AdbPath -SerialValue $SerialValue -Operation 'database-foreign-key-check' `
-        -RemoteTokens @('run-as', $script:P5ETargetPackage, 'sqlite3', '-readonly', '-batch', '-noheader',
-            $script:P5EDatabaseDevicePath, 'PRAGMA foreign_key_check;') -TimeoutMilliseconds 30000L
-    $fkLines = @($fkRun.Stdout -split "`r?`n" | Where-Object { $_ -ne '' })
-    if ($fkLines.Count -ne 0) { throw 'P5E_COLLECTOR_DATABASE_FOREIGN_KEY_FAILED' }
-    return [ordered]@{
-        observedAtMillis = $ObservedAtMillis
-        snapshotMode = 'WAL_AWARE_READ_TRANSACTION'
-        databaseSha256 = $mainHash
-        databaseWalSha256 = $walHash
-        databaseShmSha256 = $shmHash
-        walPresent = [bool]$walPresent
-        shmPresent = [bool]$shmPresent
-        databaseSchemaVersion = $script:P5EDatabaseSchemaVersion
-        integrityCheck = 'ok'
-        foreignKeyViolations = 0
     }
 }
 
@@ -1628,170 +2075,6 @@ function Get-P5ETextFromHex {
     $bytes = Get-P5EHexBytes -Hex $Hex -Name $Name
     try { return [Text.UTF8Encoding]::new($false, $true).GetString($bytes) }
     catch { throw ('P5E_COLLECTOR_UTF8_INVALID:' + $Name) }
-}
-
-function Get-P5EBindingReadback {
-    param(
-        [Parameter(Mandatory = $true)][string]$AdbPath,
-        [Parameter(Mandatory = $true)][string]$SerialValue
-    )
-    $binding = Invoke-P5ESqliteReadOnlyRow -AdbPath $AdbPath -SerialValue $SerialValue -Operation 'binding-tuple' `
-        -Query ("SELECT project_row_id,attempt_request_selector,binding_identity,run_declaration_identity," +
-            "canonical_pack_hash,manifest_fingerprint,canonical_profile_hash,compatibility_evaluation_id," +
-            "source_mode,phase_identity,execution_allowed,certification_state FROM editorial_p4_bindings WHERE " +
-            "binding_identity=" + (ConvertTo-P5ESqlLiteral $script:P5EBindingIdentity) +
-            " AND project_row_id=" + [string]$script:P5EProjectRowId) -ColumnCount 12
-    $c = $binding.Columns
-    if ([long]$c[0] -ne $script:P5EProjectRowId -or [string]$c[2] -cne $script:P5EBindingIdentity -or
-            [string]$c[3] -cne $script:P5ERunDeclarationIdentity -or [string]$c[4] -cne $script:P5EPackHash -or
-            [string]$c[5] -cne $script:P5EExpectedManifestFingerprint -or [string]$c[6] -cne $script:P5EProfileHash -or
-            [string]$c[7] -cne $script:P5EEvaluationId -or [string]$c[8] -cne 'NORMAL_FOUR_SOURCE' -or
-            [string]$c[9] -cne $script:P5EBindingPhaseIdentity -or [int]$c[10] -ne 0 -or [string]$c[11] -cne 'NOT_CERTIFIED') {
-        throw 'P5E_COLLECTOR_BINDING_TUPLE_MISMATCH'
-    }
-    $inputQuery = "SELECT role,byte_length,sha256,encoding,schema_status,ordinal FROM editorial_p4_binding_inputs WHERE binding_identity=" +
-        (ConvertTo-P5ESqlLiteral $script:P5EBindingIdentity) + ' ORDER BY role,ordinal'
-    $inputs = Invoke-P5ESqliteReadOnlyRows -AdbPath $AdbPath -SerialValue $SerialValue -Operation 'binding-inputs' `
-        -Query $inputQuery -ColumnCount 6
-    if ($inputs.Count -ne 4) { throw 'P5E_COLLECTOR_BINDING_INPUT_COUNT_INVALID' }
-    $expectedSources = [ordered]@{
-        RAW = @($script:P5ERawSourceBytes, $script:P5ERawSourceSha256, 'VISIBLE')
-        GLOSSARY = @($script:P5EGlossarySourceBytes, $script:P5EGlossarySourceSha256, 'VISIBLE')
-        DRAFT = @($script:P5EDraftSourceBytes, $script:P5EDraftSourceSha256, 'HIDDEN')
-        PRONOUN = @($script:P5EPronounSourceBytes, $script:P5EPronounSourceSha256, 'HIDDEN')
-    }
-    $sources = [System.Collections.Generic.List[object]]::new()
-    $roles = [System.Collections.Generic.HashSet[string]]::new()
-    foreach ($row in $inputs) {
-        $role = [string]$row[0]
-        if (-not $roles.Add($role) -or -not $expectedSources.Contains($role) -or
-                [long]$row[1] -ne [long]$expectedSources[$role][0] -or
-                [string]$row[2] -cne [string]$expectedSources[$role][1] -or
-                [string]::IsNullOrWhiteSpace([string]$row[3]) -or [string]::IsNullOrWhiteSpace([string]$row[4])) {
-            throw ('P5E_COLLECTOR_SOURCE_INPUT_MISMATCH:' + $role)
-        }
-        [void]$sources.Add([ordered]@{ role = $role; visibility = $expectedSources[$role][2]; byteLength = [long]$row[1]; sha256 = ([string]$row[2]).ToLowerInvariant(); encoding = [string]$row[3]; schemaStatus = [string]$row[4]; ordinal = [long]$row[5] })
-    }
-    return [ordered]@{
-        projectRowId = [long]$c[0]
-        selector = [string]$c[1]
-        bindingIdentity = [string]$c[2]
-        runDeclarationIdentity = [string]$c[3]
-        packHash = [string]$c[4]
-        manifestFingerprint = [string]$c[5]
-        profileHash = [string]$c[6]
-        evaluationId = [string]$c[7]
-        sourceMode = [string]$c[8]
-        phaseIdentity = [string]$c[9]
-        sources = $sources.ToArray()
-    }
-}
-
-function Get-P5ELineageReadback {
-    param(
-        [Parameter(Mandatory = $true)][string]$AdbPath,
-        [Parameter(Mandatory = $true)][string]$SerialValue
-    )
-    $attempt = ConvertTo-P5ESqlLiteral $script:P5EAttemptIdentity
-    $binding = ConvertTo-P5ESqlLiteral $script:P5EBindingIdentity
-    $run = ConvertTo-P5ESqlLiteral $script:P5ERunDeclarationIdentity
-    $query = "SELECT " +
-        "(SELECT COUNT(*) FROM editorial_p5c_attempts WHERE attempt_identity=$attempt)," +
-        "(SELECT COUNT(*) FROM editorial_p5d_authorization_receipts WHERE attempt_identity=$attempt)," +
-        "(SELECT COUNT(*) FROM editorial_p5d_network_lifecycle WHERE attempt_identity=$attempt)," +
-        "(SELECT COUNT(*) FROM editorial_p5c_attempts WHERE binding_identity=$binding AND chapter_key='001' AND phase='L1_RAW_DISCOVERY')," +
-        "(SELECT COUNT(*) FROM editorial_p5d_authorization_receipts ar JOIN editorial_p5c_attempts a ON ar.attempt_identity=a.attempt_identity WHERE a.binding_identity=$binding AND a.chapter_key='001' AND a.phase='L1_RAW_DISCOVERY')," +
-        "(SELECT COUNT(*) FROM editorial_p5d_network_lifecycle l JOIN editorial_p5c_attempts a ON l.attempt_identity=a.attempt_identity WHERE a.binding_identity=$binding AND a.chapter_key='001' AND a.phase='L1_RAW_DISCOVERY')," +
-        "(SELECT COUNT(*) FROM editorial_p5d_reconciliation r JOIN editorial_p5c_attempts a ON r.attempt_identity=a.attempt_identity WHERE a.binding_identity=$binding)," +
-        "(SELECT COUNT(*) FROM editorial_p5d_reconciliation_history h JOIN editorial_p5c_attempts a ON h.attempt_identity=a.attempt_identity WHERE a.binding_identity=$binding)," +
-        "(SELECT COUNT(*) FROM editorial_p5c_attempts WHERE binding_identity=$binding AND report_bytes IS NOT NULL AND receipt_bytes IS NOT NULL)," +
-        "(SELECT COUNT(*) FROM editorial_p5c_attempts WHERE binding_identity=$binding AND (report_bytes IS NOT NULL OR receipt_bytes IS NOT NULL) AND NOT (report_bytes IS NOT NULL AND receipt_bytes IS NOT NULL))," +
-        "(SELECT COUNT(*) FROM editorial_p5c_attempts WHERE status='CLAIMED' AND attempt_identity<>$attempt)," +
-        "(SELECT COUNT(*) FROM editorial_p5c_attempts)," +
-        "(SELECT COUNT(*) FROM editorial_p5d_authorization_receipts)," +
-        "(SELECT COUNT(*) FROM editorial_p5d_network_lifecycle)," +
-        "(SELECT COUNT(*) FROM editorial_p5d_reconciliation)," +
-        "(SELECT COUNT(*) FROM editorial_p5d_reconciliation_history)"
-    $row = Invoke-P5ESqliteReadOnlyRow -AdbPath $AdbPath -SerialValue $SerialValue -Operation 'lineage-counts' -Query $query -ColumnCount 16
-    $values = @($row.Columns | ForEach-Object { [long]$_ })
-    return [ordered]@{
-        exactAttempt = $values[0]; exactAuthorization = $values[1]; exactLifecycle = $values[2]
-        attempts = $values[3]; authorizationReceipts = $values[4]; lifecycle = $values[5]
-        reconciliation = $values[6]; reconciliationHistory = $values[7]; reportOrReceipt = $values[8]
-        partialArtifactPair = $values[9]; activeCompetingWriter = $values[10]
-        globalCounts = [ordered]@{ attempts = $values[11]; authorizationReceipts = $values[12]; lifecycle = $values[13]; reconciliation = $values[14]; reconciliationHistory = $values[15] }
-    }
-}
-
-function Get-P5EAttemptReadback {
-    param(
-        [Parameter(Mandatory = $true)][string]$AdbPath,
-        [Parameter(Mandatory = $true)][string]$SerialValue
-    )
-    $attempt = ConvertTo-P5ESqlLiteral $script:P5EAttemptIdentity
-    $query = "SELECT attempt_identity,request_identity,binding_identity,run_declaration_identity,chapter_key,phase," +
-        "predecessor_identity,request_envelope_hash,provider,model,status,response_identity," +
-        "length(report_bytes),hex(report_bytes),length(receipt_bytes),hex(receipt_bytes),hex(CAST(metrics_json AS BLOB))," +
-        "created_at,updated_at,recovery_reason_code FROM editorial_p5c_attempts WHERE attempt_identity=$attempt"
-    $result = Invoke-P5ESqliteReadOnlyRows -AdbPath $AdbPath -SerialValue $SerialValue -Operation 'attempt-row' -Query $query -ColumnCount 20
-    if ($result.Count -ne 1) { throw 'P5E_COLLECTOR_ATTEMPT_ROW_MISSING_OR_DUPLICATE' }
-    $c = $result[0]
-    $metricsText = Get-P5ETextFromHex -Hex ([string]$c[16]) -Name 'metrics-json'
-    $metrics = $null
-    if (-not [string]::IsNullOrWhiteSpace($metricsText)) {
-        try { $metrics = $metricsText | ConvertFrom-Json } catch { throw 'P5E_COLLECTOR_METRICS_JSON_INVALID' }
-    }
-    return [ordered]@{
-        attemptIdentity = [string]$c[0]; requestIdentity = [string]$c[1]; bindingIdentity = [string]$c[2]; runDeclarationIdentity = [string]$c[3]
-        chapterKey = [string]$c[4]; phase = [string]$c[5]; predecessorIdentity = [string]$c[6]; requestEnvelopeHash = [string]$c[7]
-        provider = [string]$c[8]; model = [string]$c[9]; status = [string]$c[10]; responseIdentity = [string]$c[11]
-        reportByteLength = if ($null -eq $c[12]) { $null } else { [long]$c[12] }; reportHex = [string]$c[13]
-        receiptByteLength = if ($null -eq $c[14]) { $null } else { [long]$c[14] }; receiptHex = [string]$c[15]
-        metrics = $metrics; createdAtMillis = [long]$c[17]; updatedAtMillis = [long]$c[18]; recoveryReasonCode = [string]$c[19]
-    }
-}
-
-function Get-P5EAuthorizationReadback {
-    param(
-        [Parameter(Mandatory = $true)][string]$AdbPath,
-        [Parameter(Mandatory = $true)][string]$SerialValue
-    )
-    $attempt = ConvertTo-P5ESqlLiteral $script:P5EAttemptIdentity
-    $query = "SELECT authorization_id_hash,exact_phase,attempt_identity,request_identity,binding_identity,run_declaration_identity," +
-        "chapter_key,provider,model,endpoint_account_fingerprint,issued_at,expires_at,consumed_at,maximum_primary_calls," +
-        "maximum_schema_repair_calls,maximum_network_retries,maximum_input_tokens,maximum_output_tokens,maximum_total_tokens," +
-        "maximum_total_cost,maximum_execution_time_ms,consumption_result,consumed_attempt_identity FROM " +
-        "editorial_p5d_authorization_receipts WHERE attempt_identity=$attempt"
-    $result = Invoke-P5ESqliteReadOnlyRows -AdbPath $AdbPath -SerialValue $SerialValue -Operation 'authorization-row' -Query $query -ColumnCount 23
-    if ($result.Count -ne 1) { throw 'P5E_COLLECTOR_AUTHORIZATION_ROW_MISSING_OR_DUPLICATE' }
-    $c = $result[0]
-    return [ordered]@{
-        authorizationIdHash = [string]$c[0]; exactPhase = [string]$c[1]; attemptIdentity = [string]$c[2]; requestIdentity = [string]$c[3]
-        bindingIdentity = [string]$c[4]; runDeclarationIdentity = [string]$c[5]; chapterKey = [string]$c[6]; provider = [string]$c[7]
-        model = [string]$c[8]; endpointAccountFingerprint = [string]$c[9]; issuedAtMillis = [long]$c[10]; expiresAtMillis = [long]$c[11]
-        consumedAtMillis = [long]$c[12]; maximumPrimaryCalls = [long]$c[13]; maximumSchemaRepairCalls = [long]$c[14]
-        maximumNetworkRetries = [long]$c[15]; maximumInputTokens = [long]$c[16]; maximumOutputTokens = [long]$c[17]
-        maximumTotalTokens = [long]$c[18]; maximumTotalCost = [string]$c[19]; maximumExecutionTimeMillis = [long]$c[20]
-        consumptionResult = [string]$c[21]; consumedAttemptIdentity = [string]$c[22]
-    }
-}
-
-function Get-P5ELifecycleReadback {
-    param(
-        [Parameter(Mandatory = $true)][string]$AdbPath,
-        [Parameter(Mandatory = $true)][string]$SerialValue
-    )
-    $attempt = ConvertTo-P5ESqlLiteral $script:P5EAttemptIdentity
-    $query = "SELECT attempt_identity,stage,request_body_bytes,response_body_bytes,http_status,response_content_type,exception_class," +
-        "elapsed_ms,generation_id,provider_response_id,cancellation_source,updated_at FROM editorial_p5d_network_lifecycle WHERE attempt_identity=$attempt"
-    $result = Invoke-P5ESqliteReadOnlyRows -AdbPath $AdbPath -SerialValue $SerialValue -Operation 'lifecycle-row' -Query $query -ColumnCount 12
-    if ($result.Count -ne 1) { throw 'P5E_COLLECTOR_LIFECYCLE_ROW_MISSING_OR_DUPLICATE' }
-    $c = $result[0]
-    return [ordered]@{
-        attemptIdentity = [string]$c[0]; stage = [string]$c[1]; requestBodyBytes = [long]$c[2]; responseBodyBytes = [long]$c[3]
-        httpStatus = [long]$c[4]; responseContentType = [string]$c[5]; exceptionClass = [string]$c[6]; elapsedMillis = [long]$c[7]
-        generationId = [string]$c[8]; providerResponseId = [string]$c[9]; cancellationSource = [string]$c[10]; updatedAtMillis = [long]$c[11]
-    }
 }
 
 function ConvertTo-P5ECollectorLong {
@@ -1821,8 +2104,10 @@ function Get-P5EDeviceFileHashState {
     }
     $state = [ordered]@{}
     foreach ($entry in $paths.GetEnumerator()) {
-        $present = Invoke-P5EAdbPresenceReadOnly -AdbPath $AdbPath -SerialValue $SerialValue -DevicePath $entry.Value `
+        $presence = Invoke-P5EAdbPresenceReadOnly -AdbPath $AdbPath -SerialValue $SerialValue -DevicePath $entry.Value `
             -Operation ('database-' + $entry.Key + '-presence')
+        $present = [bool]$presence.Present
+        if ($entry.Key -eq 'database' -and -not $present) { throw 'P5E_COLLECTOR_DATABASE_MAIN_ABSENT' }
         $hash = ''
         if ($present) {
             $run = Invoke-P5EAdbShellReadOnly -AdbPath $AdbPath -SerialValue $SerialValue -Operation ('database-' + $entry.Key + '-sha256') -RemoteTokens @('run-as', $script:P5ETargetPackage, 'sha256sum', $entry.Value) -TimeoutMilliseconds 30000L
@@ -1830,7 +2115,7 @@ function Get-P5EDeviceFileHashState {
             if (-not $match.Success) { throw ('P5E_COLLECTOR_DATABASE_FILE_HASH_INVALID:' + $entry.Key) }
             $hash = $match.Groups[1].Value.ToLowerInvariant()
         }
-        $state[$entry.Key] = [ordered]@{ path = $entry.Value; present = [bool]$present; sha256 = $hash }
+        $state[$entry.Key] = [ordered]@{ path = $entry.Value; status = [string]$presence.Status; present = $present; sha256 = $hash }
     }
     return $state
 }
@@ -1840,11 +2125,10 @@ function New-P5EConsistentDatabaseReadbackQuery {
     $bindingLiteral = ConvertTo-P5ESqlLiteral $script:P5EBindingIdentity
     $query = @"
 PRAGMA foreign_keys=ON;
-BEGIN;
 SELECT 'SCHEMA' || char(9) || (SELECT user_version FROM pragma_user_version);
 SELECT 'BINDING' || char(9) || project_row_id || char(9) || attempt_request_selector || char(9) ||
  binding_identity || char(9) || run_declaration_identity || char(9) || canonical_pack_hash || char(9) ||
- manifest_fingerprint || char(9) || canonical_profile_hash || char(9) || compatibility_evaluation_id ||
+ manifest_fingerprint || char(9) || input_manifest_fingerprint || char(9) || canonical_profile_hash || char(9) || compatibility_evaluation_id ||
  char(9) || source_mode || char(9) || phase_identity || char(9) || execution_allowed || char(9) ||
  certification_state
  FROM editorial_p4_bindings
@@ -1865,7 +2149,7 @@ SELECT 'ATTEMPT' || char(9) || attempt_identity || char(9) || request_identity |
 SELECT 'AUTH' || char(9) || authorization_id_hash || char(9) || exact_phase || char(9) ||
  attempt_identity || char(9) || request_identity || char(9) || binding_identity || char(9) ||
  run_declaration_identity || char(9) || chapter_key || char(9) || provider || char(9) || model ||
- char(9) || endpoint_account_fingerprint || char(9) || issued_at || char(9) || expires_at ||
+ char(9) || 'REDACTED' || char(9) || issued_at || char(9) || expires_at ||
  char(9) || consumed_at || char(9) || maximum_primary_calls || char(9) ||
  maximum_schema_repair_calls || char(9) || maximum_network_retries || char(9) ||
  maximum_input_tokens || char(9) || maximum_output_tokens || char(9) || maximum_total_tokens ||
@@ -1906,7 +2190,6 @@ SELECT 'INTEGRITY_END';
 SELECT 'FOREIGN_KEY_BEGIN';
 PRAGMA foreign_key_check;
 SELECT 'FOREIGN_KEY_END';
-COMMIT;
 "@
     return [regex]::Replace($query, '\s+', ' ').Trim()
 }
@@ -1940,7 +2223,7 @@ function ConvertFrom-P5EConsistentDatabaseReadbackOutput {
         if ($columns.Count -lt 1) { throw 'P5E_COLLECTOR_DATABASE_OUTPUT_INVALID' }
         switch ($columns[0]) {
             'SCHEMA' { if ($columns.Count -ne 2 -or $null -ne $schema) { throw 'P5E_COLLECTOR_SCHEMA_ROW_INVALID' }; $schema = $columns[1] }
-            'BINDING' { if ($columns.Count -ne 13) { throw 'P5E_COLLECTOR_BINDING_ROW_INVALID' }; [void]$bindingRows.Add(@($columns[1..12])) }
+            'BINDING' { if ($columns.Count -ne 14) { throw 'P5E_COLLECTOR_BINDING_ROW_INVALID' }; [void]$bindingRows.Add(@($columns[1..13])) }
             'INPUT' { if ($columns.Count -ne 7) { throw 'P5E_COLLECTOR_INPUT_ROW_INVALID' }; [void]$inputRows.Add(@($columns[1..6])) }
             'ATTEMPT' { if ($columns.Count -ne 21) { throw 'P5E_COLLECTOR_ATTEMPT_ROW_INVALID' }; [void]$attemptRows.Add(@($columns[1..20])) }
             'AUTH' { if ($columns.Count -ne 24) { throw 'P5E_COLLECTOR_AUTH_ROW_INVALID' }; [void]$authRows.Add(@($columns[1..23])) }
@@ -1987,12 +2270,62 @@ function ConvertFrom-P5EConsistentDatabaseReadbackOutput {
     }
 }
 
+function Assert-P5ECollectorSourceRows {
+    param([Parameter(Mandatory = $true)][AllowEmptyCollection()][object[]]$Rows)
+    $expectedSources = [ordered]@{
+        RAW = @($script:P5ERawSourceBytes, $script:P5ERawSourceSha256, 'VISIBLE', 0L, 'UTF-8', 'VALID')
+        GLOSSARY = @($script:P5EGlossarySourceBytes, $script:P5EGlossarySourceSha256, 'VISIBLE', 0L, 'UTF-8', 'VALID')
+        DRAFT = @($script:P5EDraftSourceBytes, $script:P5EDraftSourceSha256, 'HIDDEN', 0L, 'UTF-8', 'VALID')
+        PRONOUN = @($script:P5EPronounSourceBytes, $script:P5EPronounSourceSha256, 'HIDDEN', 0L, 'UTF-8', 'VALID')
+    }
+    $seenRoles = [System.Collections.Generic.HashSet[string]]::new()
+    $sources = [System.Collections.Generic.List[object]]::new()
+    foreach ($row in $Rows) {
+        $role = [string]$row[0]
+        if (-not $expectedSources.Contains($role) -or -not $seenRoles.Add($role)) {
+            throw 'P5E_COLLECTOR_BINDING_SOURCE_FIELD_MISMATCH:role'
+        }
+    }
+    $seenRoles.Clear()
+    foreach ($row in $Rows) {
+        $role = [string]$row[0]
+        if (-not $expectedSources.Contains($role)) { throw 'P5E_COLLECTOR_BINDING_SOURCE_FIELD_MISMATCH:role' }
+        if (-not $seenRoles.Add($role)) { throw 'P5E_COLLECTOR_BINDING_SOURCE_FIELD_MISMATCH:role' }
+        $sourceLength = 0L
+        try { $sourceLength = ConvertTo-P5ECollectorLong -Value ([string]$row[1]) -Name ('source-byte-length-' + $role) }
+        catch { throw 'P5E_COLLECTOR_BINDING_SOURCE_FIELD_MISMATCH:byte-length' }
+        if ($sourceLength -ne [long]$expectedSources[$role][0]) {
+            throw 'P5E_COLLECTOR_BINDING_SOURCE_FIELD_MISMATCH:byte-length'
+        }
+        if ([string]$row[2] -cne [string]$expectedSources[$role][1]) {
+            throw 'P5E_COLLECTOR_BINDING_SOURCE_FIELD_MISMATCH:sha256'
+        }
+        if ([string]$row[3] -cne [string]$expectedSources[$role][4]) { throw 'P5E_COLLECTOR_BINDING_SOURCE_FIELD_MISMATCH:encoding' }
+        if ([string]$row[4] -cne [string]$expectedSources[$role][5]) { throw 'P5E_COLLECTOR_BINDING_SOURCE_FIELD_MISMATCH:schema-status' }
+        $sourceOrdinal = 0L
+        try { $sourceOrdinal = ConvertTo-P5ECollectorLong -Value ([string]$row[5]) -Name ('source-ordinal-' + $role) }
+        catch { throw 'P5E_COLLECTOR_BINDING_SOURCE_FIELD_MISMATCH:ordinal' }
+        if ($sourceOrdinal -ne [long]$expectedSources[$role][3]) {
+            throw 'P5E_COLLECTOR_BINDING_SOURCE_FIELD_MISMATCH:ordinal'
+        }
+        [void]$sources.Add([ordered]@{
+            role = $role; visibility = $expectedSources[$role][2]; byteLength = $sourceLength
+            sha256 = ([string]$row[2]).ToLowerInvariant(); encoding = [string]$row[3]
+            schemaStatus = [string]$row[4]; ordinal = $sourceOrdinal
+        })
+    }
+    if ($seenRoles.Count -ne $expectedSources.Count) { throw 'P5E_COLLECTOR_BINDING_SOURCE_FIELD_MISMATCH:role' }
+    return $sources.ToArray()
+}
+
 function Get-P5EConsistentDatabaseReadback {
     param(
         [Parameter(Mandatory = $true)][string]$AdbPath,
         [Parameter(Mandatory = $true)][string]$SerialValue,
         [string]$LocalDatabasePath = '',
-        [string]$LocalOutputPath = ''
+        [string]$LocalOutputPath = '',
+        [string]$EvidenceDirectory = '',
+        [ValidateSet('Before', 'After')][string]$CollectionPhase = 'Before'
     )
     $offline = -not [string]::IsNullOrWhiteSpace($LocalDatabasePath)
     $filesBefore = if ($offline) {
@@ -2001,6 +2334,11 @@ function Get-P5EConsistentDatabaseReadback {
         Get-P5EDeviceFileHashState -AdbPath $AdbPath -SerialValue $SerialValue
     }
     $query = New-P5EConsistentDatabaseReadbackQuery
+    $export = $null
+    $hostRun = $null
+    $immutable = $false
+    $queryPath = ''
+    $exportManifestPath = ''
     $run = if ($offline) {
         $localRun = Invoke-P5ELocalSqliteReadOnly -DatabasePath $LocalDatabasePath -Query $query
         if (-not [string]::IsNullOrWhiteSpace($LocalOutputPath)) {
@@ -2008,7 +2346,24 @@ function Get-P5EConsistentDatabaseReadback {
         }
         $localRun
     } else {
-        Invoke-P5EAdbShellReadOnly -AdbPath $AdbPath -SerialValue $SerialValue -Operation 'database-consistent-read-transaction' -RemoteTokens @('run-as', $script:P5ETargetPackage, 'sqlite3', '-readonly', '-batch', '-noheader', '-separator', $script:P5ECollectorSeparator, $script:P5EDatabaseDevicePath, $query) -TimeoutMilliseconds 60000L
+        if ([string]::IsNullOrWhiteSpace($EvidenceDirectory)) { throw 'P5E_DB_EXPORT_EVENT_DIRECTORY_MISSING' }
+        $export = Invoke-P5EDatabaseSnapshotExport -AdbPath $AdbPath -SerialValue $SerialValue `
+            -DeviceFileState $filesBefore -EvidenceDirectory $EvidenceDirectory -CollectionPhase $CollectionPhase
+        $immutable = (-not [bool]$filesBefore.wal.present -and -not [bool]$filesBefore.shm.present)
+        $exportManifestPath = Join-Path (Get-P5ECanonicalPath -Path $EvidenceDirectory) ('database-export-manifest-' + $CollectionPhase.ToLowerInvariant() + '.json')
+        $manifestBytes = [Text.UTF8Encoding]::new($false).GetBytes((ConvertTo-P5ECanonicalJson -Value $export))
+        Write-P5EImmutableBytes -Path $exportManifestPath -Bytes $manifestBytes -Name ('database-export-manifest-' + $CollectionPhase.ToLowerInvariant())
+        $queryPath = Join-Path (Get-P5ECanonicalPath -Path $EvidenceDirectory) ('database-consistent-read-' + $CollectionPhase.ToLowerInvariant() + '.sql')
+        $queryBytes = [Text.UTF8Encoding]::new($false).GetBytes($query)
+        Write-P5EImmutableBytes -Path $queryPath -Bytes $queryBytes -Name ('database-query-' + $CollectionPhase.ToLowerInvariant())
+        $databasePath = Join-Path ([string]$export.directory) 'tbl_android_txt.db'
+        try {
+            $hostRun = Invoke-P5EHostSqliteBridge -DatabasePath $databasePath -QueryPath $queryPath -Immutable:$immutable
+        } catch {
+            if (-not $immutable) { throw 'P5E_DB_WAL_SNAPSHOT_UNSUPPORTED' }
+            throw
+        }
+        $hostRun
     }
     $filesAfter = if ($offline) {
         Get-P5ELocalDatabaseFileHashState -DatabasePath $LocalDatabasePath
@@ -2016,13 +2371,7 @@ function Get-P5EConsistentDatabaseReadback {
         Get-P5EDeviceFileHashState -AdbPath $AdbPath -SerialValue $SerialValue
     }
     if (-not [bool]$filesBefore.settings.present) { throw 'P5E_COLLECTOR_SETTINGS_HASH_MISSING' }
-    foreach ($name in @('database', 'wal', 'shm', 'settings')) {
-        $beforeFile = $filesBefore[$name]
-        $afterFile = $filesAfter[$name]
-        if ([bool]$beforeFile.present -ne [bool]$afterFile.present -or [string]$beforeFile.sha256 -cne [string]$afterFile.sha256) {
-            throw ('P5E_COLLECTOR_DATABASE_CHANGED_DURING_READ_TRANSACTION:' + $name)
-        }
-    }
+    [void](Assert-P5EDatabaseSnapshotStable -Before $filesBefore -After $filesAfter)
     $parsed = ConvertFrom-P5EConsistentDatabaseReadbackOutput -Output ([string]$run.Stdout)
     $schema = $parsed.schema
     $bindingRows = @($parsed.bindingRows)
@@ -2040,37 +2389,23 @@ function Get-P5EConsistentDatabaseReadback {
     if ($attemptRows.Count -gt 1 -or $authRows.Count -gt 1 -or $lifeRows.Count -gt 1) { throw 'P5E_COLLECTOR_EXACT_ROW_DUPLICATE' }
     if ($null -eq $lineage -or $null -eq $globalCounts -or $integrityValues.Count -ne 1 -or $integrityValues[0] -cne 'ok' -or $foreignKeyRows.Count -ne 0) { throw 'P5E_COLLECTOR_DATABASE_INTEGRITY_OR_OUTPUT_INVALID' }
     $bindingRow = $bindingRows[0]
-    $expectedSources = [ordered]@{
-        RAW = @($script:P5ERawSourceBytes, $script:P5ERawSourceSha256, 'VISIBLE')
-        GLOSSARY = @($script:P5EGlossarySourceBytes, $script:P5EGlossarySourceSha256, 'VISIBLE')
-        DRAFT = @($script:P5EDraftSourceBytes, $script:P5EDraftSourceSha256, 'HIDDEN')
-        PRONOUN = @($script:P5EPronounSourceBytes, $script:P5EPronounSourceSha256, 'HIDDEN')
-    }
-    $seenRoles = [System.Collections.Generic.HashSet[string]]::new()
-    $sources = [System.Collections.Generic.List[object]]::new()
-    foreach ($row in $inputRows) {
-        $role = [string]$row[0]
-        if (-not $seenRoles.Add($role) -or -not $expectedSources.Contains($role) -or
-                (ConvertTo-P5ECollectorLong -Value ([string]$row[1]) -Name ('source-byte-length-' + $role)) -ne [long]$expectedSources[$role][0] -or
-                [string]$row[2] -cne [string]$expectedSources[$role][1] -or
-                [string]::IsNullOrWhiteSpace([string]$row[3]) -or [string]::IsNullOrWhiteSpace([string]$row[4])) {
-            throw ('P5E_COLLECTOR_SOURCE_INPUT_MISMATCH:' + $role)
-        }
-        [void]$sources.Add([ordered]@{
-            role = $role; visibility = $expectedSources[$role][2]; byteLength = [long]$row[1]
-            sha256 = ([string]$row[2]).ToLowerInvariant(); encoding = [string]$row[3]
-            schemaStatus = [string]$row[4]; ordinal = [long]$row[5]
-        })
-    }
+    $sources = @(Assert-P5ECollectorSourceRows -Rows $inputRows)
+    $projectRowId = 0L
+    try { $projectRowId = ConvertTo-P5ECollectorLong -Value ([string]$bindingRow[0]) -Name 'binding-project-row-id' }
+    catch { throw 'P5E_COLLECTOR_BINDING_FIELD_MISMATCH:project-row-id' }
+    $executionAllowedValue = 0L
+    try { $executionAllowedValue = ConvertTo-P5ECollectorLong -Value ([string]$bindingRow[11]) -Name 'binding-execution-allowed' }
+    catch { throw 'P5E_COLLECTOR_BINDING_FIELD_MISMATCH:execution-allowed' }
     $binding = [ordered]@{
-        projectRowId = ConvertTo-P5ECollectorLong -Value ([string]$bindingRow[0]) -Name 'binding-project-row-id'
+        projectRowId = $projectRowId
         selector = [string]$bindingRow[1]; bindingIdentity = [string]$bindingRow[2]
         runDeclarationIdentity = [string]$bindingRow[3]; packHash = [string]$bindingRow[4]
-        manifestFingerprint = [string]$bindingRow[5]; profileHash = [string]$bindingRow[6]
-        evaluationId = [string]$bindingRow[7]; sourceMode = [string]$bindingRow[8]
-        phaseIdentity = [string]$bindingRow[9]
-        executionAllowed = (ConvertTo-P5ECollectorLong -Value ([string]$bindingRow[10]) -Name 'binding-execution-allowed') -eq 1L
-        certificationState = [string]$bindingRow[11]; sources = $sources.ToArray()
+        manifestFingerprint = [string]$bindingRow[5]; inputManifestFingerprint = [string]$bindingRow[6]
+        profileHash = [string]$bindingRow[7]
+        evaluationId = [string]$bindingRow[8]; sourceMode = [string]$bindingRow[9]
+        phaseIdentity = [string]$bindingRow[10]
+        executionAllowed = $executionAllowedValue -eq 1L
+        certificationState = [string]$bindingRow[12]; sources = $sources
     }
     $lineageValue = [ordered]@{
         exactAttempt = $lineage[0]; exactAuthorization = $lineage[1]; exactLifecycle = $lineage[2]
@@ -2153,6 +2488,24 @@ function Get-P5EConsistentDatabaseReadback {
     }
     return [ordered]@{
         filesBefore = $filesBefore; filesAfter = $filesAfter
+        snapshotContractVersion = $script:P5EDatabaseExporterContractVersion
+        snapshotMode = if ($offline) { 'HOST_SQLITE_OFFLINE_FIXTURE' } elseif ($immutable) { 'BINARY_EXPORT_HOST_READBACK_IMMUTABLE' } else { 'BINARY_EXPORT_HOST_READBACK_WAL_AWARE' }
+        eventId = if ([string]::IsNullOrWhiteSpace($EvidenceDirectory)) { '' } else { Split-Path -Leaf (Get-P5ECanonicalPath -Path $EvidenceDirectory) }
+        exportedDatabaseFiles = if ($null -eq $export) { @() } else { @($export.files) }
+        databaseSnapshotDirectory = if ($null -eq $export) { '' } else { [string]$export.directory }
+        databaseQueryPath = if ([string]::IsNullOrWhiteSpace($queryPath)) { '' } else { Get-P5ECanonicalPath -Path $queryPath }
+        hostQuerySha256 = if ([string]::IsNullOrWhiteSpace($queryPath)) { '' } else { Get-P5ESha256 -Path $queryPath }
+        exportManifestPath = if ([string]::IsNullOrWhiteSpace($exportManifestPath)) { '' } else { Get-P5ECanonicalPath -Path $exportManifestPath }
+        exportManifestSha256 = if ([string]::IsNullOrWhiteSpace($exportManifestPath)) { '' } else { Get-P5ESha256 -Path $exportManifestPath }
+        sqliteBridgePath = Get-P5ECanonicalPath -Path $script:P5ESqliteBridgePath
+        sqliteBridgeSha256 = Get-P5ESha256 -Path $script:P5ESqliteBridgePath
+        databaseExporterPath = Get-P5ECanonicalPath -Path $script:P5EDatabaseExporterPath
+        databaseExporterSha256 = Get-P5ESha256 -Path $script:P5EDatabaseExporterPath
+        collectorHelperSha256 = Get-P5ESha256 -Path (Get-P5ECollectorPath)
+        sourceDeviceFileHashes = [ordered]@{
+            database = [string]$filesBefore.database.sha256; wal = [string]$filesBefore.wal.sha256
+            shm = [string]$filesBefore.shm.sha256; settings = [string]$filesBefore.settings.sha256
+        }
         databaseSha256 = [string]$filesAfter.database.sha256
         databaseWalSha256 = [string]$filesAfter.wal.sha256; databaseShmSha256 = [string]$filesAfter.shm.sha256
         settingsSha256 = [string]$filesAfter.settings.sha256
@@ -2344,23 +2697,36 @@ function Write-P5ECollectorJsonImmutable {
 
 function Assert-P5ECollectorBinding {
     param([Parameter(Mandatory = $true)]$Binding)
-    if ([long](Get-P5EProperty $Binding 'projectRowId') -ne $script:P5EProjectRowId -or
-            [string](Get-P5EProperty $Binding 'bindingIdentity') -cne $script:P5EBindingIdentity -or
-            [string](Get-P5EProperty $Binding 'runDeclarationIdentity') -cne $script:P5ERunDeclarationIdentity -or
-            [string](Get-P5EProperty $Binding 'packHash') -cne $script:P5EPackHash -or
-            [string](Get-P5EProperty $Binding 'manifestFingerprint') -cne $script:P5EExpectedManifestFingerprint -or
-            [string](Get-P5EProperty $Binding 'profileHash') -cne $script:P5EProfileHash -or
-            [string](Get-P5EProperty $Binding 'evaluationId') -cne $script:P5EEvaluationId -or
-            [string](Get-P5EProperty $Binding 'sourceMode') -cne 'NORMAL_FOUR_SOURCE' -or
-            [string](Get-P5EProperty $Binding 'phaseIdentity') -cne $script:P5EBindingPhaseIdentity -or
-            [bool](Get-P5EProperty $Binding 'executionAllowed') -or
-            [string](Get-P5EProperty $Binding 'certificationState') -cne 'NOT_CERTIFIED') {
-        throw 'P5E_COLLECTOR_BINDING_TUPLE_MISMATCH'
+    $checks = @(
+        [pscustomobject]@{ Field = 'project-row-id'; Actual = [long](Get-P5EProperty $Binding 'projectRowId'); Expected = $script:P5EProjectRowId },
+        [pscustomobject]@{ Field = 'selector'; Actual = [string](Get-P5EProperty $Binding 'selector'); Expected = $script:P5ESelector },
+        [pscustomobject]@{ Field = 'binding-identity'; Actual = [string](Get-P5EProperty $Binding 'bindingIdentity'); Expected = $script:P5EBindingIdentity },
+        [pscustomobject]@{ Field = 'run-declaration-identity'; Actual = [string](Get-P5EProperty $Binding 'runDeclarationIdentity'); Expected = $script:P5ERunDeclarationIdentity },
+        [pscustomobject]@{ Field = 'pack-hash'; Actual = [string](Get-P5EProperty $Binding 'packHash'); Expected = $script:P5EPackHash },
+        [pscustomobject]@{ Field = 'pack-manifest-fingerprint'; Actual = [string](Get-P5EProperty $Binding 'manifestFingerprint'); Expected = $script:P5EPackManifestFingerprint },
+        [pscustomobject]@{ Field = 'input-scope-manifest-fingerprint'; Actual = [string](Get-P5EProperty $Binding 'inputManifestFingerprint'); Expected = $script:P5EInputScopeManifestFingerprint },
+        [pscustomobject]@{ Field = 'profile-hash'; Actual = [string](Get-P5EProperty $Binding 'profileHash'); Expected = $script:P5EProfileHash },
+        [pscustomobject]@{ Field = 'evaluation-id'; Actual = [string](Get-P5EProperty $Binding 'evaluationId'); Expected = $script:P5EEvaluationId },
+        [pscustomobject]@{ Field = 'source-mode'; Actual = [string](Get-P5EProperty $Binding 'sourceMode'); Expected = 'NORMAL_FOUR_SOURCE' },
+        [pscustomobject]@{ Field = 'phase-identity'; Actual = [string](Get-P5EProperty $Binding 'phaseIdentity'); Expected = $script:P5EBindingPhaseIdentity },
+        [pscustomobject]@{ Field = 'execution-allowed'; Actual = [bool](Get-P5EProperty $Binding 'executionAllowed'); Expected = $false },
+        [pscustomobject]@{ Field = 'certification-state'; Actual = [string](Get-P5EProperty $Binding 'certificationState'); Expected = 'NOT_CERTIFIED' }
+    )
+    foreach ($check in $checks) {
+        if ($check.Actual -cne $check.Expected) { throw ('P5E_COLLECTOR_BINDING_FIELD_MISMATCH:' + $check.Field) }
     }
-    $roles = @((Get-P5EProperty $Binding 'sources') | ForEach-Object { [string](Get-P5EProperty $_ 'role') } | Sort-Object)
-    if (($roles -join ',') -cne 'DRAFT,GLOSSARY,PRONOUN,RAW') {
-        throw 'P5E_COLLECTOR_SOURCE_ROLE_SET_INVALID'
+    $expectedRoles = [System.Collections.Generic.HashSet[string]]::new([string[]]@('DRAFT', 'GLOSSARY', 'PRONOUN', 'RAW'))
+    $seenRoles = [System.Collections.Generic.HashSet[string]]::new()
+    foreach ($source in @((Get-P5EProperty $Binding 'sources'))) {
+        $role = [string](Get-P5EProperty $source 'role')
+        if (-not $expectedRoles.Contains($role) -or -not $seenRoles.Add($role)) {
+            throw 'P5E_COLLECTOR_BINDING_SOURCE_FIELD_MISMATCH:role'
+        }
+        if ((ConvertTo-P5ECollectorLong -Value ([string](Get-P5EProperty $source 'ordinal')) -Name 'source-ordinal') -ne 0L) {
+            throw 'P5E_COLLECTOR_BINDING_SOURCE_FIELD_MISMATCH:ordinal'
+        }
     }
+    if ($seenRoles.Count -ne $expectedRoles.Count) { throw 'P5E_COLLECTOR_BINDING_SOURCE_FIELD_MISMATCH:role' }
 }
 
 function Assert-P5ECollectorZeroBefore {
@@ -2428,6 +2794,7 @@ function New-P5ECollectorFreshTuple {
             visibility = [string](Get-P5EProperty $source 'visibility')
             byteLength = [long](Get-P5EProperty $source 'byteLength')
             sha256 = ([string](Get-P5EProperty $source 'sha256')).ToLowerInvariant()
+            ordinal = [long](Get-P5EProperty $source 'ordinal')
         })
     }
     return [ordered]@{
@@ -2438,6 +2805,8 @@ function New-P5ECollectorFreshTuple {
         runDeclarationIdentity = [string](Get-P5EProperty $Binding 'runDeclarationIdentity')
         evaluationId = [string](Get-P5EProperty $Binding 'evaluationId')
         packHash = [string](Get-P5EProperty $Binding 'packHash')
+        packManifestFingerprint = [string](Get-P5EProperty $Binding 'manifestFingerprint')
+        inputScopeManifestFingerprint = [string](Get-P5EProperty $Binding 'inputManifestFingerprint')
         profileHash = [string](Get-P5EProperty $Binding 'profileHash')
         sourceMode = [string](Get-P5EProperty $Binding 'sourceMode')
         sourceProjection = 'RAW_AND_GLOSSARY_VISIBLE_DRAFT_AND_PRONOUN_HIDDEN'
@@ -2458,10 +2827,10 @@ function New-P5ECollectorSnapshot {
         Get-P5EProperty $Database 'filesAfter'
     }
     return [ordered]@{
-        schemaVersion = 'p5e.raw.snapshot.v1'
+        schemaVersion = 'p5e.raw.snapshot.v2'
         eventId = [string](Get-P5EProperty $Plan 'eventId')
         runIdentity = [string](Get-P5EProperty $Plan 'runIdentity')
-        snapshotMode = 'WAL_AWARE_READ_TRANSACTION'
+        snapshotMode = [string](Get-P5EProperty $Database 'snapshotMode')
         observedAtMillis = $ObservedAtMillis
         databaseSha256 = [string](Get-P5EProperty (Get-P5EProperty $files 'database') 'sha256')
         databaseWalSha256 = [string](Get-P5EProperty (Get-P5EProperty $files 'wal') 'sha256')
@@ -2477,6 +2846,20 @@ function New-P5ECollectorSnapshot {
         immutableTupleIdentity = [string](Get-P5EProperty (Get-P5EProperty $Database 'binding') 'bindingIdentity')
         unrelatedWrites = 0L
         deletedRows = 0L
+        snapshotContractVersion = [string](Get-P5EProperty $Database 'snapshotContractVersion')
+        eventIdFromSnapshot = [string](Get-P5EProperty $Database 'eventId')
+        exportedDatabaseFiles = Get-P5EProperty $Database 'exportedDatabaseFiles'
+        databaseSnapshotDirectory = [string](Get-P5EProperty $Database 'databaseSnapshotDirectory')
+        databaseQueryPath = [string](Get-P5EProperty $Database 'databaseQueryPath')
+        hostQuerySha256 = [string](Get-P5EProperty $Database 'hostQuerySha256')
+        exportManifestPath = [string](Get-P5EProperty $Database 'exportManifestPath')
+        exportManifestSha256 = [string](Get-P5EProperty $Database 'exportManifestSha256')
+        sqliteBridgePath = [string](Get-P5EProperty $Database 'sqliteBridgePath')
+        sqliteBridgeSha256 = [string](Get-P5EProperty $Database 'sqliteBridgeSha256')
+        databaseExporterPath = [string](Get-P5EProperty $Database 'databaseExporterPath')
+        databaseExporterSha256 = [string](Get-P5EProperty $Database 'databaseExporterSha256')
+        collectorHelperSha256 = [string](Get-P5EProperty $Database 'collectorHelperSha256')
+        sourceDeviceFileHashes = Get-P5EProperty $Database 'sourceDeviceFileHashes'
     }
 }
 
@@ -2507,6 +2890,11 @@ function New-P5ECollectorInput {
         eventId = [string](Get-P5EProperty $Plan 'eventId')
         runIdentity = [string](Get-P5EProperty $Plan 'runIdentity')
         sourceMappingVersion = $script:P5ESourceMappingVersion
+        databaseReadbackContractVersion = $script:P5EDatabaseExporterContractVersion
+        databaseExporterPath = Get-P5ECanonicalPath -Path $script:P5EDatabaseExporterPath
+        databaseExporterSha256 = Get-P5ESha256 -Path $script:P5EDatabaseExporterPath
+        sqliteBridgePath = Get-P5ECanonicalPath -Path $script:P5ESqliteBridgePath
+        sqliteBridgeSha256 = Get-P5ESha256 -Path $script:P5ESqliteBridgePath
         production = $productionIdentity
         test = $testIdentity
         freshTuple = $FreshTuple
@@ -2590,12 +2978,23 @@ function Invoke-P5ELiveReadbackCollectorCore {
         [Parameter(Mandatory = $true)][string]$ExpectedHelperSha256,
         [Parameter(Mandatory = $true)][string]$SerialValue,
         [Parameter(Mandatory = $true)][string]$AdbPath,
-        [Parameter(Mandatory = $true)][string]$ApkSigner
+        [Parameter(Mandatory = $true)][string]$JavaPath,
+        [Parameter(Mandatory = $true)][string]$ApkSignerJarPath,
+        [string]$AndroidSdkPath = '',
+        [string]$LocalPropertiesPath = '',
+        [Parameter(Mandatory = $true)][string]$BuildToolsVersion
     )
     $script:P5EReadOnlyCommandCount = 0L
+    $toolchain = Resolve-P5ERawToolchain -AndroidSdkPath $AndroidSdkPath -LocalPropertiesPath $LocalPropertiesPath `
+        -AdbPath $AdbPath -JavaPath $JavaPath -ApkSignerJarPath $ApkSignerJarPath -BuildToolsVersion $BuildToolsVersion
+    $AdbPath = [string](Get-P5EProperty $toolchain 'adbPath')
+    $JavaPath = [string](Get-P5EProperty $toolchain 'javaPath')
+    $ApkSignerJarPath = [string](Get-P5EProperty $toolchain 'apksignerJarPath')
     [void](Assert-P5EHelperRuntimeHash -ExpectedSha256 $ExpectedHelperSha256)
     $directory = Test-P5EExactEventDirectory -Directory $EvidenceDirectory
     $plan = Read-P5EEventPlan -EvidenceDirectory $directory
+    Assert-P5EEventPlanDependencyPins -Plan $plan
+    Assert-P5ERawToolchainMatchesEventPlan -Plan $plan -Toolchain $toolchain -AllowLegacy
     Initialize-P5ECollectorCommandLog -EvidenceDirectory $directory -CollectionPhase $CollectionPhase
     if ([string](Get-P5EProperty $plan 'helperSha256') -cne $ExpectedHelperSha256.ToLowerInvariant()) {
         throw 'P5E_COLLECTOR_EVENT_HELPER_HASH_MISMATCH'
@@ -2611,9 +3010,9 @@ function Invoke-P5ELiveReadbackCollectorCore {
     $eventPlanPath = Get-P5EEventPlanPath -Directory $directory
     $postReadbackPath = Join-Path $directory 'post-readback.json'
     if ($CollectionPhase -eq 'Before') {
-        $production = Get-P5EPackageReadback -AdbPath $AdbPath -SerialValue $SerialValue -EvidenceDirectory $directory -PackageName $script:P5ETargetPackage -ExpectedApkSha256 ([string](Get-P5EProperty $plan 'productionApkSha256')) -LocalFileName 'installed-production-before.apk' -Name 'production-before' -ApkSigner $ApkSigner -ExpectedVersionCode $script:P5EProductionVersionCode -ExpectedVersion $script:P5EProductionVersion
-        $testPackage = Get-P5EPackageReadback -AdbPath $AdbPath -SerialValue $SerialValue -EvidenceDirectory $directory -PackageName $script:P5ETestPackage -ExpectedApkSha256 ([string](Get-P5EProperty $plan 'testApkSha256')) -LocalFileName 'installed-test-before.apk' -Name 'test-before' -ApkSigner $ApkSigner
-        $database = Get-P5EConsistentDatabaseReadback -AdbPath $AdbPath -SerialValue $SerialValue
+        $production = Get-P5EPackageReadback -AdbPath $AdbPath -SerialValue $SerialValue -EvidenceDirectory $directory -PackageName $script:P5ETargetPackage -ExpectedApkSha256 ([string](Get-P5EProperty $plan 'productionApkSha256')) -LocalFileName 'installed-production-before.apk' -Name 'production-before' -ApkSignerJavaPath $JavaPath -ApkSignerJarPath $ApkSignerJarPath -ExpectedVersionCode $script:P5EProductionVersionCode -ExpectedVersion $script:P5EProductionVersion
+        $testPackage = Get-P5EPackageReadback -AdbPath $AdbPath -SerialValue $SerialValue -EvidenceDirectory $directory -PackageName $script:P5ETestPackage -ExpectedApkSha256 ([string](Get-P5EProperty $plan 'testApkSha256')) -LocalFileName 'installed-test-before.apk' -Name 'test-before' -ApkSignerJavaPath $JavaPath -ApkSignerJarPath $ApkSignerJarPath
+        $database = Get-P5EConsistentDatabaseReadback -AdbPath $AdbPath -SerialValue $SerialValue -EvidenceDirectory $directory -CollectionPhase Before
         Assert-P5ECollectorBinding -Binding (Get-P5EProperty $database 'binding')
         if ([string](Get-P5EProperty $database 'databaseSha256') -cne $script:P5EDatabaseSha256) {
             throw 'P5E_COLLECTOR_PRELIVE_DATABASE_HASH_MISMATCH'
@@ -2655,12 +3054,12 @@ function Invoke-P5ELiveReadbackCollectorCore {
     if ([string](Get-P5EProperty $beforeSnapshot 'eventId') -cne [string](Get-P5EProperty $plan 'eventId') -or [string](Get-P5EProperty $beforeSnapshot 'runIdentity') -cne $script:P5ERunDeclarationIdentity) {
         throw 'P5E_COLLECTOR_BEFORE_SNAPSHOT_EVENT_INVALID'
     }
-    $production = Get-P5EPackageReadback -AdbPath $AdbPath -SerialValue $SerialValue -EvidenceDirectory $directory -PackageName $script:P5ETargetPackage -ExpectedApkSha256 ([string](Get-P5EProperty $plan 'productionApkSha256')) -LocalFileName 'installed-production-after.apk' -Name 'production-after' -ApkSigner $ApkSigner -ExpectedVersionCode $script:P5EProductionVersionCode -ExpectedVersion $script:P5EProductionVersion
-    $testPackage = Get-P5EPackageReadback -AdbPath $AdbPath -SerialValue $SerialValue -EvidenceDirectory $directory -PackageName $script:P5ETestPackage -ExpectedApkSha256 ([string](Get-P5EProperty $plan 'testApkSha256')) -LocalFileName 'installed-test-after.apk' -Name 'test-after' -ApkSigner $ApkSigner
+    $production = Get-P5EPackageReadback -AdbPath $AdbPath -SerialValue $SerialValue -EvidenceDirectory $directory -PackageName $script:P5ETargetPackage -ExpectedApkSha256 ([string](Get-P5EProperty $plan 'productionApkSha256')) -LocalFileName 'installed-production-after.apk' -Name 'production-after' -ApkSignerJavaPath $JavaPath -ApkSignerJarPath $ApkSignerJarPath -ExpectedVersionCode $script:P5EProductionVersionCode -ExpectedVersion $script:P5EProductionVersion
+    $testPackage = Get-P5EPackageReadback -AdbPath $AdbPath -SerialValue $SerialValue -EvidenceDirectory $directory -PackageName $script:P5ETestPackage -ExpectedApkSha256 ([string](Get-P5EProperty $plan 'testApkSha256')) -LocalFileName 'installed-test-after.apk' -Name 'test-after' -ApkSignerJavaPath $JavaPath -ApkSignerJarPath $ApkSignerJarPath
     Assert-P5ECollectorStablePackage -Expected (Get-P5EProperty $input 'production') -Actual $production -Name 'production'
     $testPackage['sourceCommit'] = $script:P5ETestSourceCommit
     Assert-P5ECollectorStablePackage -Expected (Get-P5EProperty $input 'test') -Actual $testPackage -Name 'test'
-    $database = Get-P5EConsistentDatabaseReadback -AdbPath $AdbPath -SerialValue $SerialValue
+    $database = Get-P5EConsistentDatabaseReadback -AdbPath $AdbPath -SerialValue $SerialValue -EvidenceDirectory $directory -CollectionPhase After
     Assert-P5ECollectorBinding -Binding (Get-P5EProperty $database 'binding')
     $freshTuple = New-P5ECollectorFreshTuple -Binding (Get-P5EProperty $database 'binding')
     if ((ConvertTo-P5ECanonicalJson -Value $freshTuple) -cne (ConvertTo-P5ECanonicalJson -Value (Get-P5EProperty $input 'freshTuple'))) {
@@ -2700,9 +3099,9 @@ function Invoke-P5ELiveReadbackCollectorCore {
     }
     $auth = Get-P5EProperty $database 'authorizationReceipt'
     $lifecycle = Get-P5EProperty $database 'lifecycle'
-    $expectedFingerprint = Get-P5EAccountFingerprint
-    if ([string](Get-P5EProperty $auth 'endpointAccountFingerprint') -cne $expectedFingerprint) {
-        throw 'P5E_COLLECTOR_ACCOUNT_FINGERPRINT_MISMATCH'
+    $storedFingerprint = [string](Get-P5EProperty $auth 'endpointAccountFingerprint')
+    if ($storedFingerprint -cne $script:P5EAccountFingerprintRedactionSentinel) {
+        throw 'P5E_COLLECTOR_ACCOUNT_FINGERPRINT_NOT_REDACTED'
     }
     $issued = [long](Get-P5EProperty $auth 'issuedAtMillis')
     $expires = [long](Get-P5EProperty $auth 'expiresAtMillis')
@@ -2812,9 +3211,32 @@ function Invoke-P5ELiveReadbackCollectorCore {
         database = [ordered]@{
             beforeSha256 = [string](Get-P5EProperty $beforeSnapshot 'databaseSha256')
             afterSha256 = [string](Get-P5EProperty $afterSnapshot 'databaseSha256')
+            beforeWalSha256 = [string](Get-P5EProperty $beforeSnapshot 'databaseWalSha256')
+            afterWalSha256 = [string](Get-P5EProperty $afterSnapshot 'databaseWalSha256')
+            beforeShmSha256 = [string](Get-P5EProperty $beforeSnapshot 'databaseShmSha256')
+            afterShmSha256 = [string](Get-P5EProperty $afterSnapshot 'databaseShmSha256')
+            beforeWalPresent = [bool](Get-P5EProperty $beforeSnapshot 'walPresent')
+            afterWalPresent = [bool](Get-P5EProperty $afterSnapshot 'walPresent')
+            beforeShmPresent = [bool](Get-P5EProperty $beforeSnapshot 'shmPresent')
+            afterShmPresent = [bool](Get-P5EProperty $afterSnapshot 'shmPresent')
             schemaVersion = [long](Get-P5EProperty $afterSnapshot 'databaseSchemaVersion')
             integrityCheck = [string](Get-P5EProperty $afterSnapshot 'integrityCheck')
             foreignKeyViolations = [long](Get-P5EProperty $afterSnapshot 'foreignKeyViolations')
+            snapshotMode = [string](Get-P5EProperty $afterSnapshot 'snapshotMode')
+            readbackContractVersion = [string](Get-P5EProperty $afterSnapshot 'snapshotContractVersion')
+            databaseSnapshotDirectory = [string](Get-P5EProperty $afterSnapshot 'databaseSnapshotDirectory')
+            databaseQueryPath = [string](Get-P5EProperty $afterSnapshot 'databaseQueryPath')
+            hostQuerySha256 = [string](Get-P5EProperty $afterSnapshot 'hostQuerySha256')
+            exportManifestPath = [string](Get-P5EProperty $afterSnapshot 'exportManifestPath')
+            exportManifestSha256 = [string](Get-P5EProperty $afterSnapshot 'exportManifestSha256')
+            exportedDatabaseFiles = Get-P5EProperty $afterSnapshot 'exportedDatabaseFiles'
+            sqliteBridgePath = [string](Get-P5EProperty $afterSnapshot 'sqliteBridgePath')
+            sqliteBridgeSha256 = [string](Get-P5EProperty $afterSnapshot 'sqliteBridgeSha256')
+            databaseExporterPath = [string](Get-P5EProperty $afterSnapshot 'databaseExporterPath')
+            databaseExporterSha256 = [string](Get-P5EProperty $afterSnapshot 'databaseExporterSha256')
+            collectorHelperSha256 = [string](Get-P5EProperty $afterSnapshot 'collectorHelperSha256')
+            sourceDeviceFileHashesBefore = Get-P5EProperty $beforeSnapshot 'sourceDeviceFileHashes'
+            sourceDeviceFileHashesAfter = Get-P5EProperty $afterSnapshot 'sourceDeviceFileHashes'
         }
         freshTuple = $freshTuple
         lineageBefore = $lineageBeforeValue
@@ -2858,6 +3280,19 @@ function Invoke-P5ELiveReadbackCollectorCore {
             attemptUpdatedAtMillis = $updated
             observedAtMillis = $afterObserved
             collectedAtMillis = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+            databaseReadbackContractVersion = [string](Get-P5EProperty $afterSnapshot 'snapshotContractVersion')
+            databaseQueryPath = [string](Get-P5EProperty $afterSnapshot 'databaseQueryPath')
+            databaseQuerySha256 = [string](Get-P5EProperty $afterSnapshot 'hostQuerySha256')
+            databaseExportManifestPath = [string](Get-P5EProperty $afterSnapshot 'exportManifestPath')
+            databaseExportManifestSha256 = [string](Get-P5EProperty $afterSnapshot 'exportManifestSha256')
+            databaseExporterPath = [string](Get-P5EProperty $afterSnapshot 'databaseExporterPath')
+            databaseExporterSha256 = [string](Get-P5EProperty $afterSnapshot 'databaseExporterSha256')
+            sqliteBridgePath = [string](Get-P5EProperty $afterSnapshot 'sqliteBridgePath')
+            sqliteBridgeSha256 = [string](Get-P5EProperty $afterSnapshot 'sqliteBridgeSha256')
+            collectorHelperSha256 = [string](Get-P5EProperty $afterSnapshot 'collectorHelperSha256')
+            sourceDeviceFileHashesBefore = Get-P5EProperty $beforeSnapshot 'sourceDeviceFileHashes'
+            sourceDeviceFileHashesAfter = Get-P5EProperty $afterSnapshot 'sourceDeviceFileHashes'
+            exportedDatabaseFiles = Get-P5EProperty $afterSnapshot 'exportedDatabaseFiles'
             atomicityEvidence = [ordered]@{
                 transactionEvidencePath = Get-P5ECanonicalPath -Path $transactionPath
                 transactionEvidenceSha256 = Get-P5ESha256 -Path $transactionPath
@@ -2890,10 +3325,14 @@ function Invoke-P5ELiveReadbackCollector {
         [Parameter(Mandatory = $true)][string]$ExpectedHelperSha256,
         [Parameter(Mandatory = $true)][string]$SerialValue,
         [Parameter(Mandatory = $true)][string]$AdbPath,
-        [Parameter(Mandatory = $true)][string]$ApkSigner
+        [Parameter(Mandatory = $true)][string]$JavaPath,
+        [Parameter(Mandatory = $true)][string]$ApkSignerJarPath,
+        [string]$AndroidSdkPath = '',
+        [string]$LocalPropertiesPath = '',
+        [Parameter(Mandatory = $true)][string]$BuildToolsVersion
     )
     try {
-        return Invoke-P5ELiveReadbackCollectorCore -EvidenceDirectory $EvidenceDirectory -CollectionPhase $CollectionPhase -ExpectedHelperSha256 $ExpectedHelperSha256 -SerialValue $SerialValue -AdbPath $AdbPath -ApkSigner $ApkSigner
+        return Invoke-P5ELiveReadbackCollectorCore -EvidenceDirectory $EvidenceDirectory -CollectionPhase $CollectionPhase -ExpectedHelperSha256 $ExpectedHelperSha256 -SerialValue $SerialValue -AdbPath $AdbPath -JavaPath $JavaPath -ApkSignerJarPath $ApkSignerJarPath -AndroidSdkPath $AndroidSdkPath -LocalPropertiesPath $LocalPropertiesPath -BuildToolsVersion $BuildToolsVersion
     } catch {
         $detail = [string]$_.Exception.Message
         try {
@@ -2944,6 +3383,9 @@ function New-P5EHostMetadata {
         launchCount = $Run.LaunchCount
         dispatchCount = $Run.DispatchCount
         timedOut = [bool]$Run.TimedOut
+        launchErrorClass = if ([string]::IsNullOrWhiteSpace([string](Get-P5EProperty $Run 'LaunchErrorClass'))) { $null } else { [string](Get-P5EProperty $Run 'LaunchErrorClass') }
+        launchNativeErrorCode = Get-P5EProperty $Run 'LaunchNativeErrorCode'
+        launchReason = if ([string]::IsNullOrWhiteSpace([string](Get-P5EProperty $Run 'LaunchReason'))) { '' } else { [string](Get-P5EProperty $Run 'LaunchReason') }
         redactionPass = -not [bool]$Run.RedactionViolation
         redactionViolation = [bool]$Run.RedactionViolation
         externalCallState = if ($Run.TimedOut -or $Run.LaunchCount -eq 0 -or
@@ -2982,7 +3424,10 @@ function New-P5EEventPlan {
         [Parameter(Mandatory = $true)][string]$ManifestHash,
         [Parameter(Mandatory = $true)][string]$ProductionApkHash,
         [Parameter(Mandatory = $true)][string]$TestApkHash,
-        [Parameter(Mandatory = $true)][string]$HelperHash
+        [Parameter(Mandatory = $true)][string]$HelperHash,
+        [Parameter(Mandatory = $true)][string]$DatabaseExporterHash,
+        [Parameter(Mandatory = $true)][string]$SqliteBridgeHash,
+        [Parameter(Mandatory = $true)]$Toolchain
     )
     $directory = Test-P5EExactEventDirectory -Directory $EvidenceDirectory
     $eventId = Split-Path -Leaf $directory
@@ -3009,6 +3454,12 @@ function New-P5EEventPlan {
         collectorImplementationId = $script:P5ECollectorImplementationId
         collectorImplementationVersion = $script:P5ECollectorImplementationVersion
         collectionMode = $script:P5ECollectorReadbackMode
+        databaseReadbackContractVersion = $script:P5EDatabaseExporterContractVersion
+        databaseExporterPath = Get-P5ECanonicalPath -Path $script:P5EDatabaseExporterPath
+        databaseExporterSha256 = $DatabaseExporterHash.ToLowerInvariant()
+        sqliteBridgePath = Get-P5ECanonicalPath -Path $script:P5ESqliteBridgePath
+        sqliteBridgeSha256 = $SqliteBridgeHash.ToLowerInvariant()
+        toolchain = $Toolchain
         authorizationWindow = 'FRESH_ISSUED_AT_DISPATCH_HALF_OPEN'
         authorizationValidityMillis = $script:P5EAuthorizationValidityMilliseconds
         executionDeadlineMillis = $script:P5EExecutionDeadlineMilliseconds
@@ -3029,6 +3480,10 @@ function New-P5EEventPlan {
             receiptBytes = 'receipt.bin'
             installedProductionApk = 'installed-production.apk'
             installedTestApk = 'installed-test.apk'
+            databaseSnapshotBefore = 'database-snapshot-before\tbl_android_txt.db'
+            databaseSnapshotAfter = 'database-snapshot-after\tbl_android_txt.db'
+            databaseQueryBefore = 'database-consistent-read-before.sql'
+            databaseQueryAfter = 'database-consistent-read-after.sql'
         }
         noRedispatch = $true
         noProviderFromCollector = $true
@@ -3051,16 +3506,21 @@ function Read-P5EEventPlan {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw 'P5E_EVENT_PLAN_MISSING_STOP' }
     try { $plan = Get-Content -Raw -LiteralPath $path | ConvertFrom-Json }
     catch { throw 'P5E_EVENT_PLAN_INVALID_JSON_STOP' }
-    $required = @('schemaVersion', 'eventId', 'evidenceDirectory', 'serial', 'targetPackage', 'testPackage',
+    $baseRequired = @('schemaVersion', 'eventId', 'evidenceDirectory', 'serial', 'targetPackage', 'testPackage',
         'runner', 'selectedMethod', 'runIdentity', 'attemptIdentity', 'requestIdentity', 'bindingIdentity',
         'chapterKey', 'phase', 'manifestSha256', 'productionApkSha256', 'testApkSha256', 'certificateSha256',
         'helperSha256', 'collectorImplementationId', 'collectorImplementationVersion', 'collectionMode',
         'authorizationWindow', 'authorizationValidityMillis', 'executionDeadlineMillis',
         'hostObservationTimeoutMillis', 'plannedFilenames', 'noRedispatch', 'noProviderFromCollector',
         'noMutationFromCollector')
+    $schemaVersion = [string](Get-P5EProperty $plan 'schemaVersion')
+    $currentContractRequired = @('databaseReadbackContractVersion', 'databaseExporterPath', 'databaseExporterSha256', 'sqliteBridgePath', 'sqliteBridgeSha256')
+    $required = if ($schemaVersion -eq $script:P5EEventPlanSchema) { $baseRequired + $currentContractRequired + @('toolchain') } else { $baseRequired }
     $errors = [System.Collections.Generic.List[string]]::new()
     Test-P5EObjectShape -Object $plan -Path 'eventPlan' -Required $required -Allowed $required -Errors $errors | Out-Null
-    Test-P5EEqual $plan 'schemaVersion' $script:P5EEventPlanSchema 'eventPlan' $errors
+    if ($schemaVersion -notin @($script:P5EEventPlanLegacySchema, $script:P5EEventPlanSchema)) {
+        Add-P5EError $errors 'EVENT_PLAN_SCHEMA_UNSUPPORTED'
+    }
     Test-P5EEqual $plan 'eventId' (Split-Path -Leaf $directory) 'eventPlan' $errors
     if (-not (Test-P5EPathEqual -Left ([string](Get-P5EProperty $plan 'evidenceDirectory')) -Right $directory)) { Add-P5EError $errors 'EVENT_PLAN_DIRECTORY_MISMATCH' }
     Test-P5EEqual $plan 'serial' $script:P5ESerial 'eventPlan' $errors
@@ -3077,6 +3537,13 @@ function Read-P5EEventPlan {
     foreach ($name in @('manifestSha256', 'productionApkSha256', 'testApkSha256', 'certificateSha256', 'helperSha256')) {
         Test-P5ESha256 $plan $name 'eventPlan' $errors
     }
+    if ($schemaVersion -eq $script:P5EEventPlanSchema) {
+        Test-P5EEqual $plan 'databaseReadbackContractVersion' $script:P5EDatabaseExporterContractVersion 'eventPlan' $errors
+        if (-not (Test-P5EPathEqual -Left ([string](Get-P5EProperty $plan 'databaseExporterPath')) -Right $script:P5EDatabaseExporterPath)) { Add-P5EError $errors 'EVENT_PLAN_DATABASE_EXPORTER_PATH_INVALID' }
+        if (-not (Test-P5EPathEqual -Left ([string](Get-P5EProperty $plan 'sqliteBridgePath')) -Right $script:P5ESqliteBridgePath)) { Add-P5EError $errors 'EVENT_PLAN_SQLITE_BRIDGE_PATH_INVALID' }
+        Test-P5ESha256 $plan 'databaseExporterSha256' 'eventPlan' $errors (Get-P5ESha256 -Path $script:P5EDatabaseExporterPath)
+        Test-P5ESha256 $plan 'sqliteBridgeSha256' 'eventPlan' $errors (Get-P5ESha256 -Path $script:P5ESqliteBridgePath)
+    }
     Test-P5EEqual $plan 'collectorImplementationId' $script:P5ECollectorImplementationId 'eventPlan' $errors
     Test-P5EEqual $plan 'collectorImplementationVersion' $script:P5ECollectorImplementationVersion 'eventPlan' $errors
     Test-P5EEqual $plan 'collectionMode' $script:P5ECollectorReadbackMode 'eventPlan' $errors
@@ -3085,6 +3552,7 @@ function Read-P5EEventPlan {
         'instrumentationStdout', 'instrumentationStderr', 'hostMetadata', 'postReadback',
         'outcome', 'collectorOutcome', 'collectorCommandLog', 'reportBytes', 'receiptBytes',
         'installedProductionApk', 'installedTestApk')
+    if ($schemaVersion -eq $script:P5EEventPlanSchema) { $plannedRequired += @('databaseSnapshotBefore', 'databaseSnapshotAfter', 'databaseQueryBefore', 'databaseQueryAfter') }
     Test-P5EObjectShape -Object $planned -Path 'eventPlan.plannedFilenames' -Required $plannedRequired -Allowed $plannedRequired -Errors $errors | Out-Null
     if ($null -ne $planned) {
         Test-P5EEqual $planned 'collectorCommandLog' $script:P5ECollectorCommandLogFileName 'eventPlan.plannedFilenames' $errors
@@ -3093,8 +3561,64 @@ function Read-P5EEventPlan {
     Test-P5ELong $plan 'executionDeadlineMillis' $script:P5EExecutionDeadlineMilliseconds 'eventPlan' $errors -Minimum 1 | Out-Null
     Test-P5ELong $plan 'hostObservationTimeoutMillis' $script:P5EHostObservationTimeoutMilliseconds 'eventPlan' $errors -Minimum 1 | Out-Null
     foreach ($name in @('noRedispatch', 'noProviderFromCollector', 'noMutationFromCollector')) { Test-P5EBoolean $plan $name $true 'eventPlan' $errors }
+    if ($schemaVersion -eq $script:P5EEventPlanSchema) {
+        $toolchain = Get-P5EProperty $plan 'toolchain'
+        $toolchainRequired = @('contractVersion', 'sdkPath', 'buildToolsVersion', 'signerLaunchKind',
+            'adbPath', 'adbSha256', 'javaPath', 'javaSha256', 'apksignerJarPath', 'apksignerJarSha256')
+        Test-P5EObjectShape -Object $toolchain -Path 'eventPlan.toolchain' -Required $toolchainRequired -Allowed $toolchainRequired -Errors $errors | Out-Null
+        Test-P5EEqual $toolchain 'contractVersion' $script:P5ERawToolchainContractVersion 'eventPlan.toolchain' $errors
+        Test-P5EEqual $toolchain 'signerLaunchKind' 'JAVA_JAR' 'eventPlan.toolchain' $errors
+        foreach ($name in @('adbSha256', 'javaSha256', 'apksignerJarSha256')) { Test-P5ESha256 $toolchain $name 'eventPlan.toolchain' $errors }
+        foreach ($name in @('sdkPath', 'adbPath', 'javaPath', 'apksignerJarPath', 'buildToolsVersion')) {
+            if ([string]::IsNullOrWhiteSpace([string](Get-P5EProperty $toolchain $name))) { Add-P5EError $errors ('EVENT_PLAN_TOOLCHAIN_' + $name.ToUpperInvariant() + '_MISSING') }
+        }
+    }
     if ($errors.Count -ne 0) { throw ('P5E_EVENT_PLAN_INVALID_STOP:' + ($errors -join ',')) }
     return $plan
+}
+
+function Assert-P5EEventPlanDependencyPins {
+    param([Parameter(Mandatory = $true)]$Plan)
+    if ([string](Get-P5EProperty $Plan 'schemaVersion') -cne $script:P5EEventPlanSchema) {
+        throw 'P5E_EVENT_PLAN_DEPENDENCY_SCHEMA_V3_REQUIRED_STOP'
+    }
+    [void](Assert-P5EDatabaseReadbackDependencyPin -Path $script:P5EDatabaseExporterPath `
+        -PinnedPath $script:P5EDatabaseExporterPath -ExpectedSha256 $script:P5EExpectedDatabaseExporterSha256 `
+        -Label 'DATABASE_EXPORTER')
+    [void](Assert-P5EDatabaseReadbackDependencyPin -Path $script:P5ESqliteBridgePath `
+        -PinnedPath $script:P5ESqliteBridgePath -ExpectedSha256 $script:P5EExpectedSqliteBridgeSha256 `
+        -Label 'SQLITE_BRIDGE')
+    if (-not (Test-P5EPathEqual -Left ([string](Get-P5EProperty $Plan 'databaseExporterPath')) -Right $script:P5EDatabaseExporterPath)) {
+        throw 'P5E_EVENT_PLAN_DATABASE_EXPORTER_PATH_INVALID_STOP'
+    }
+    if (-not (Test-P5EPathEqual -Left ([string](Get-P5EProperty $Plan 'sqliteBridgePath')) -Right $script:P5ESqliteBridgePath)) {
+        throw 'P5E_EVENT_PLAN_SQLITE_BRIDGE_PATH_INVALID_STOP'
+    }
+    if ([string](Get-P5EProperty $Plan 'databaseExporterSha256') -cne $script:P5EExpectedDatabaseExporterSha256.ToLowerInvariant()) {
+        throw 'P5E_EVENT_PLAN_DATABASE_EXPORTER_HASH_MISMATCH_STOP'
+    }
+    if ([string](Get-P5EProperty $Plan 'sqliteBridgeSha256') -cne $script:P5EExpectedSqliteBridgeSha256.ToLowerInvariant()) {
+        throw 'P5E_EVENT_PLAN_SQLITE_BRIDGE_HASH_MISMATCH_STOP'
+    }
+}
+
+function Assert-P5ERawToolchainMatchesEventPlan {
+    param(
+        [Parameter(Mandatory = $true)]$Plan,
+        [Parameter(Mandatory = $true)]$Toolchain,
+        [switch]$AllowLegacy
+    )
+    if ([string](Get-P5EProperty $Plan 'schemaVersion') -eq $script:P5EEventPlanLegacySchema) {
+        if (-not $AllowLegacy) { throw 'P5E_EVENT_PLAN_LEGACY_TOOLCHAIN_UNBOUND_STOP' }
+        return
+    }
+    $planned = Get-P5EProperty $Plan 'toolchain'
+    foreach ($name in @('contractVersion', 'sdkPath', 'buildToolsVersion', 'signerLaunchKind',
+            'adbPath', 'adbSha256', 'javaPath', 'javaSha256', 'apksignerJarPath', 'apksignerJarSha256')) {
+        if ([string](Get-P5EProperty $planned $name) -cne [string](Get-P5EProperty $Toolchain $name)) {
+            throw ('P5E_EVENT_PLAN_TOOLCHAIN_MISMATCH_STOP:' + $name)
+        }
+    }
 }
 
 function Get-P5EProperty {
@@ -3346,18 +3870,37 @@ function Invoke-P5EOutcomeVerifier {
         catch { Add-P5EError -Errors $errors -Code 'HOST_METADATA_INVALID' }
     }
     if ($null -ne $metadata) {
+        $metadataSchema = [string](Get-P5EProperty $metadata 'schemaVersion')
+        $metadataBaseFields = @('schemaVersion', 'eventId', 'runIdentity', 'metadataPath', 'classMethod', 'serial', 'runner', 'observationTimeoutMillis',
+            'authorizationValidityMillis', 'maximumExecutionTimeMillis',
+            'authorizationIssuedAtMillis', 'authorizationExpiresAtMillis', 'processExitCode',
+            'launchCount', 'dispatchCount', 'timedOut', 'redactionPass', 'redactionViolation',
+            'externalCallState', 'rawAcceptance', 'evidenceDirectory')
+        $metadataAllowedFields = @('schemaVersion', 'eventId', 'runIdentity', 'metadataPath', 'classMethod', 'serial', 'testPackage', 'targetPackage', 'runner',
+            'observationTimeoutMillis', 'authorizationValidityMillis', 'maximumExecutionTimeMillis',
+            'authorizationIssuedAtMillis', 'authorizationExpiresAtMillis', 'processExitCode',
+            'launchCount', 'dispatchCount', 'timedOut', 'redactionPass', 'redactionViolation',
+            'externalCallState', 'rawAcceptance', 'evidenceDirectory')
+        if ($metadataSchema -eq $script:P5EHostRunSchema) {
+            $metadataBaseFields += @('launchErrorClass', 'launchNativeErrorCode', 'launchReason')
+            $metadataAllowedFields += @('launchErrorClass', 'launchNativeErrorCode', 'launchReason')
+        }
         Test-P5EObjectShape -Object $metadata -Path 'metadata' `
-            -Required @('schemaVersion', 'eventId', 'runIdentity', 'metadataPath', 'classMethod', 'serial', 'runner', 'observationTimeoutMillis',
-                'authorizationValidityMillis', 'maximumExecutionTimeMillis',
-                'authorizationIssuedAtMillis', 'authorizationExpiresAtMillis', 'processExitCode',
-                'launchCount', 'dispatchCount', 'timedOut', 'redactionPass', 'redactionViolation',
-                'externalCallState', 'rawAcceptance', 'evidenceDirectory') `
-            -Allowed @('schemaVersion', 'eventId', 'runIdentity', 'metadataPath', 'classMethod', 'serial', 'testPackage', 'targetPackage', 'runner',
-                'observationTimeoutMillis', 'authorizationValidityMillis', 'maximumExecutionTimeMillis',
-                'authorizationIssuedAtMillis', 'authorizationExpiresAtMillis', 'processExitCode',
-                'launchCount', 'dispatchCount', 'timedOut', 'redactionPass', 'redactionViolation',
-                'externalCallState', 'rawAcceptance', 'evidenceDirectory') -Errors $errors | Out-Null
-        Test-P5EEqual -Object $metadata -Name 'schemaVersion' -Expected $script:P5EHostRunSchema -Path 'metadata' -Errors $errors
+            -Required $metadataBaseFields `
+            -Allowed $metadataAllowedFields -Errors $errors | Out-Null
+        if ($metadataSchema -notin @($script:P5EHostRunLegacySchema, $script:P5EHostRunSchema)) {
+            Add-P5EError -Errors $errors -Code 'HOST_METADATA_SCHEMA_UNSUPPORTED'
+        }
+        if ($metadataSchema -eq $script:P5EHostRunSchema) {
+            $metadataLaunchReason = [string](Get-P5EProperty $metadata 'launchReason')
+            $metadataErrorClass = Get-P5EProperty $metadata 'launchErrorClass'
+            $metadataNativeCode = Get-P5EProperty $metadata 'launchNativeErrorCode'
+            if (($null -ne $metadataErrorClass -and [string]$metadataErrorClass -notmatch '^[A-Za-z0-9_.]+$') -or
+                    ($null -ne $metadataNativeCode -and ((-not ($metadataNativeCode -is [int]) -and -not ($metadataNativeCode -is [long])) -or [long]$metadataNativeCode -lt 0)) -or
+                    $metadataLaunchReason -notin (@('') + $script:P5ELaunchReasonAllowlist)) {
+                Add-P5EError -Errors $errors -Code 'HOST_METADATA_LAUNCH_DIAGNOSTIC_INVALID'
+            }
+        }
         Test-P5EEqual -Object $metadata -Name 'runIdentity' -Expected $script:P5ERunDeclarationIdentity -Path 'metadata' -Errors $errors
         Test-P5EEqual -Object $metadata -Name 'classMethod' -Expected $script:P5EClassMethod -Path 'metadata' -Errors $errors
         Test-P5EEqual -Object $metadata -Name 'serial' -Expected $script:P5ESerial -Path 'metadata' -Errors $errors
@@ -3399,11 +3942,14 @@ function Invoke-P5EOutcomeVerifier {
     if (-not $observation.TestMethodExact) { Add-P5EError -Errors $errors -Code 'INSTRUMENTATION_METHOD_MISMATCH' }
     if (-not $observation.OneTestMarker -or $observation.FailureMarker) { Add-P5EError -Errors $errors -Code 'INSTRUMENTATION_TEST_COUNT_OR_FAILURE_INVALID' }
     if (-not $observation.TerminalMinusOne) { Add-P5EError -Errors $errors -Code 'INSTRUMENTATION_TERMINAL_INVALID' }
-    if ([string]::IsNullOrWhiteSpace($ExpectedAccountFingerprint) -or
-            $ExpectedAccountFingerprint -notmatch '^[0-9a-fA-F]{64}$') {
-        Add-P5EError -Errors $errors -Code 'EXPECTED_ACCOUNT_FINGERPRINT_MISSING_OR_INVALID'
+    if (-not [string]::IsNullOrWhiteSpace($ExpectedAccountFingerprint)) {
+        if ($ExpectedAccountFingerprint -notmatch '^[0-9a-fA-F]{64}$') {
+            Add-P5EError -Errors $errors -Code 'EXPECTED_ACCOUNT_FINGERPRINT_INVALID'
+            $ExpectedAccountFingerprint = ''
+        } else { $ExpectedAccountFingerprint = $ExpectedAccountFingerprint.ToLowerInvariant() }
+    } else {
         $ExpectedAccountFingerprint = ''
-    } else { $ExpectedAccountFingerprint = $ExpectedAccountFingerprint.ToLowerInvariant() }
+    }
 
     $readback = $null
     if ([string]::IsNullOrWhiteSpace($PostReadbackPath) -or
@@ -3548,7 +4094,7 @@ function Test-P5ESerializedArtifactBytes {
     $identity = if ($null -eq $ExpectedIdentity) {
         [ordered]@{
             bindingIdentity = $script:P5EBindingIdentity
-            manifestFingerprint = $script:P5EExpectedManifestFingerprint
+            manifestFingerprint = $script:P5EPackManifestFingerprint
             canonicalPackHash = $script:P5EPackHash
             canonicalProfileHash = $script:P5EProfileHash
             compatibilityEvaluationId = $script:P5EEvaluationId
@@ -3674,7 +4220,12 @@ function Test-P5EReadbackProvenance {
         'receiptBytesPath', 'receiptBytesSha256', 'receiptBytesLength',
         'runStartedAtMillis', 'beforeSnapshotObservedAtMillis', 'claimObservedAtMillis',
         'consumedAtMillis', 'attemptCreatedAtMillis', 'attemptUpdatedAtMillis',
-        'observedAtMillis', 'collectedAtMillis', 'atomicityEvidence')
+        'observedAtMillis', 'collectedAtMillis', 'databaseReadbackContractVersion',
+        'databaseQueryPath', 'databaseQuerySha256', 'databaseExportManifestPath',
+        'databaseExportManifestSha256', 'databaseExporterPath', 'databaseExporterSha256',
+        'sqliteBridgePath', 'sqliteBridgeSha256', 'collectorHelperSha256',
+        'sourceDeviceFileHashesBefore', 'sourceDeviceFileHashesAfter',
+        'exportedDatabaseFiles', 'atomicityEvidence')
     Test-P5EObjectShape -Object $provenance -Path 'readback.provenance' -Required $required -Allowed $required -Errors $Errors | Out-Null
     if ($null -eq $provenance -or $null -eq $Metadata) { return }
 
@@ -3689,6 +4240,58 @@ function Test-P5EReadbackProvenance {
     if (-not (Test-Path -LiteralPath $CollectorPath -PathType Leaf) -or
             [string](Get-P5EProperty $provenance 'collectorImplementationSha256') -ine (Get-P5ESha256 -Path $CollectorPath)) {
         Add-P5EError -Errors $Errors -Code 'COLLECTOR_IMPLEMENTATION_HASH_MISMATCH'
+    }
+    $provenanceEvidenceDirectory = [string](Get-P5EProperty $provenance 'evidenceDirectory')
+    if ([string](Get-P5EProperty $provenance 'databaseReadbackContractVersion') -cne $script:P5EDatabaseExporterContractVersion) {
+        Add-P5EError -Errors $Errors -Code 'DATABASE_READBACK_CONTRACT_MISMATCH'
+    }
+    foreach ($mapping in @(
+            [pscustomobject]@{ PathName = 'databaseQueryPath'; HashName = 'databaseQuerySha256'; Label = 'DATABASE_QUERY' },
+            [pscustomobject]@{ PathName = 'databaseExportManifestPath'; HashName = 'databaseExportManifestSha256'; Label = 'DATABASE_EXPORT_MANIFEST' })) {
+        $candidate = [string](Get-P5EProperty $provenance $mapping.PathName)
+        if ([string]::IsNullOrWhiteSpace($candidate) -or -not (Test-P5EPathUnderDirectory -Path $candidate -Directory $provenanceEvidenceDirectory) -or
+                -not (Test-Path -LiteralPath $candidate -PathType Leaf)) {
+            Add-P5EError -Errors $Errors -Code ($mapping.Label + '_PATH_INVALID')
+        } else {
+            $candidateItem = Get-Item -LiteralPath $candidate -Force
+            if (($candidateItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0 -or
+                    [string](Get-P5EProperty $provenance $mapping.HashName) -ine (Get-P5ESha256 -Path $candidate)) {
+                Add-P5EError -Errors $Errors -Code ($mapping.Label + '_HASH_INVALID')
+            }
+        }
+    }
+    foreach ($mapping in @(
+            [pscustomobject]@{ PathName = 'databaseExporterPath'; HashName = 'databaseExporterSha256'; Expected = $script:P5EDatabaseExporterPath; Label = 'DATABASE_EXPORTER' },
+            [pscustomobject]@{ PathName = 'sqliteBridgePath'; HashName = 'sqliteBridgeSha256'; Expected = $script:P5ESqliteBridgePath; Label = 'SQLITE_BRIDGE' })) {
+        if (-not (Test-P5EPathEqual -Left ([string](Get-P5EProperty $provenance $mapping.PathName)) -Right $mapping.Expected) -or
+                [string](Get-P5EProperty $provenance $mapping.HashName) -ine (Get-P5ESha256 -Path $mapping.Expected)) {
+            Add-P5EError -Errors $Errors -Code ($mapping.Label + '_PIN_INVALID')
+        }
+    }
+    if ([string](Get-P5EProperty $provenance 'collectorHelperSha256') -ine (Get-P5ESha256 -Path $CollectorPath)) {
+        Add-P5EError -Errors $Errors -Code 'DATABASE_COLLECTOR_HELPER_PIN_INVALID'
+    }
+    foreach ($hashSetName in @('sourceDeviceFileHashesBefore', 'sourceDeviceFileHashesAfter')) {
+        $hashSet = Get-P5EProperty $provenance $hashSetName
+        foreach ($name in @('database', 'wal', 'shm', 'settings')) {
+            $hash = [string](Get-P5EProperty $hashSet $name)
+            if (-not [string]::IsNullOrWhiteSpace($hash) -and $hash -notmatch '^[0-9a-fA-F]{64}$' -and $hash -ne 'offline-fixture-settings-only') {
+                Add-P5EError -Errors $Errors -Code ('DATABASE_SOURCE_HASH_INVALID:' + $hashSetName + ':' + $name)
+            }
+        }
+    }
+    $exported = @(Get-P5EProperty $provenance 'exportedDatabaseFiles')
+    if ($exported.Count -lt 1) { Add-P5EError -Errors $Errors -Code 'DATABASE_EXPORT_MANIFEST_EMPTY' }
+    foreach ($exportedFile in $exported) {
+        $exportedPath = [string](Get-P5EProperty $exportedFile 'destinationPath')
+        if (-not (Test-P5EPathUnderDirectory -Path $exportedPath -Directory $provenanceEvidenceDirectory) -or
+                -not (Test-Path -LiteralPath $exportedPath -PathType Leaf) -or
+                [string](Get-P5EProperty $exportedFile 'hostSha256') -ine (Get-P5ESha256 -Path $exportedPath) -or
+                [long](Get-P5EProperty $exportedFile 'byteLength') -ne [long](Get-Item -LiteralPath $exportedPath).Length -or
+                [string](Get-P5EProperty $exportedFile 'status') -cne 'EXPORTED' -or
+                [string](Get-P5EProperty $exportedFile 'operationId') -notmatch '^[0-9a-fA-F-]{16,64}$') {
+            Add-P5EError -Errors $Errors -Code 'DATABASE_EXPORT_RECORD_INVALID'
+        }
     }
 
     $evidenceDirectory = [string](Get-P5EProperty $Metadata 'evidenceDirectory')
@@ -3746,7 +4349,7 @@ function Test-P5EReadbackProvenance {
     }
     if ($null -ne $sourceInput) {
         Test-P5EObjectShape -Object $sourceInput -Path 'producerInput' -Required @('schemaVersion', 'eventId', 'runIdentity', 'sourceMappingVersion') `
-            -Allowed @('schemaVersion', 'eventId', 'runIdentity', 'sourceMappingVersion', 'production', 'test', 'freshTuple', 'attemptTemplate', 'authorizationReceipt', 'lifecycle', 'reportArtifactTemplate', 'receiptArtifactTemplate', 'eventPlanPath', 'eventPlanSha256', 'collectorImplementationId', 'collectorImplementationVersion', 'collectionMode', 'serial', 'settingsSourcePath', 'settingsSourceSha256', 'transactionSourcePath', 'transactionSourceSha256', 'transactionTestPath', 'transactionTestSha256') -Errors $Errors | Out-Null
+            -Allowed @('schemaVersion', 'eventId', 'runIdentity', 'sourceMappingVersion', 'production', 'test', 'freshTuple', 'attemptTemplate', 'authorizationReceipt', 'lifecycle', 'reportArtifactTemplate', 'receiptArtifactTemplate', 'eventPlanPath', 'eventPlanSha256', 'collectorImplementationId', 'collectorImplementationVersion', 'collectionMode', 'serial', 'settingsSourcePath', 'settingsSourceSha256', 'transactionSourcePath', 'transactionSourceSha256', 'transactionTestPath', 'transactionTestSha256', 'databaseReadbackContractVersion', 'databaseExporterPath', 'databaseExporterSha256', 'sqliteBridgePath', 'sqliteBridgeSha256') -Errors $Errors | Out-Null
         Test-P5EEqual $sourceInput 'schemaVersion' $script:P5EProducerInputSchema 'producerInput' $Errors
         Test-P5EEqual $sourceInput 'eventId' $eventId 'producerInput' $Errors
         Test-P5EEqual $sourceInput 'runIdentity' $script:P5ERunDeclarationIdentity 'producerInput' $Errors
@@ -3795,14 +4398,26 @@ function Test-P5EReadbackProvenance {
         if (Test-P5EHasProperty -Object $sourceInput -Name 'transactionTestSha256') {
             Test-P5ESha256 $sourceInput 'transactionTestSha256' 'producerInput' $Errors $script:P5ETransactionTestSha256
         }
+        if (Test-P5EHasProperty -Object $sourceInput -Name 'databaseExporterPath') {
+            if (-not (Test-P5EPathEqual -Left ([string](Get-P5EProperty $sourceInput 'databaseExporterPath')) -Right $script:P5EDatabaseExporterPath)) {
+                Add-P5EError -Errors $Errors -Code 'PRODUCER_DATABASE_EXPORTER_PATH_INVALID'
+            }
+            Test-P5ESha256 $sourceInput 'databaseExporterSha256' 'producerInput' $Errors (Get-P5ESha256 -Path $script:P5EDatabaseExporterPath)
+        }
+        if (Test-P5EHasProperty -Object $sourceInput -Name 'sqliteBridgePath') {
+            if (-not (Test-P5EPathEqual -Left ([string](Get-P5EProperty $sourceInput 'sqliteBridgePath')) -Right $script:P5ESqliteBridgePath)) {
+                Add-P5EError -Errors $Errors -Code 'PRODUCER_SQLITE_BRIDGE_PATH_INVALID'
+            }
+            Test-P5ESha256 $sourceInput 'sqliteBridgeSha256' 'producerInput' $Errors (Get-P5ESha256 -Path $script:P5ESqliteBridgePath)
+        }
     }
     foreach ($source in @($before, $after)) {
         if ($null -ne $source) {
             Test-P5EObjectShape -Object $source -Path 'producerSnapshot' -Required @('schemaVersion', 'eventId', 'runIdentity', 'snapshotMode', 'observedAtMillis', 'databaseSha256', 'databaseSchemaVersion', 'integrityCheck', 'foreignKeyViolations', 'lineage', 'globalCounts', 'immutableTupleIdentity', 'unrelatedWrites', 'deletedRows') `
-                -Allowed @('schemaVersion', 'eventId', 'runIdentity', 'snapshotMode', 'observedAtMillis', 'databaseSha256', 'databaseWalSha256', 'databaseShmSha256', 'walPresent', 'shmPresent', 'settingsSha256', 'databaseSchemaVersion', 'integrityCheck', 'foreignKeyViolations', 'lineage', 'globalCounts', 'immutableTupleIdentity', 'unrelatedWrites', 'deletedRows') -Errors $Errors | Out-Null
+                -Allowed @('schemaVersion', 'eventId', 'runIdentity', 'snapshotMode', 'observedAtMillis', 'databaseSha256', 'databaseWalSha256', 'databaseShmSha256', 'walPresent', 'shmPresent', 'settingsSha256', 'databaseSchemaVersion', 'integrityCheck', 'foreignKeyViolations', 'lineage', 'globalCounts', 'immutableTupleIdentity', 'unrelatedWrites', 'deletedRows', 'snapshotContractVersion', 'eventIdFromSnapshot', 'exportedDatabaseFiles', 'databaseSnapshotDirectory', 'databaseQueryPath', 'hostQuerySha256', 'exportManifestPath', 'exportManifestSha256', 'sqliteBridgePath', 'sqliteBridgeSha256', 'databaseExporterPath', 'databaseExporterSha256', 'collectorHelperSha256', 'sourceDeviceFileHashes') -Errors $Errors | Out-Null
             Test-P5EEqual $source 'eventId' $eventId 'producerSnapshot' $Errors
             Test-P5EEqual $source 'runIdentity' $script:P5ERunDeclarationIdentity 'producerSnapshot' $Errors
-            if ([string](Get-P5EProperty $source 'snapshotMode') -notin @('WAL_AWARE_CONSISTENT', 'WAL_AWARE_READ_TRANSACTION')) {
+            if ([string](Get-P5EProperty $source 'snapshotMode') -notin @('BINARY_EXPORT_HOST_READBACK_IMMUTABLE', 'BINARY_EXPORT_HOST_READBACK_WAL_AWARE', 'HOST_SQLITE_OFFLINE_FIXTURE', 'WAL_AWARE_CONSISTENT', 'WAL_AWARE_READ_TRANSACTION')) {
                 Add-P5EError -Errors $Errors -Code 'PRODUCER_SNAPSHOT_MODE_INVALID'
             }
             Test-P5ELongRange -Object $source -Name 'observedAtMillis' -Path 'producerSnapshot' -Errors $Errors -Minimum 0 | Out-Null
@@ -3941,7 +4556,7 @@ function Test-P5EReadbackProvenance {
 function Test-P5EReadback {
     param(
         [Parameter(Mandatory = $true)]$Readback,
-        [Parameter(Mandatory = $true)][string]$ExpectedAccountFingerprint,
+        [Parameter(Mandatory = $true)][AllowEmptyString()][string]$ExpectedAccountFingerprint,
         $Metadata,
         [Parameter(Mandatory = $true)][string]$PostReadbackPath,
         [Parameter(Mandatory = $true)][string]$MetadataPath,
@@ -3979,15 +4594,22 @@ function Test-P5EReadback {
     Test-P5EEqual $test 'sourceCommit' $script:P5ETestSourceCommit 'test' $Errors
 
     $database = Get-P5EProperty $Readback 'database'
-    Test-P5EObjectShape $database 'database' @('beforeSha256', 'afterSha256', 'schemaVersion', 'integrityCheck', 'foreignKeyViolations') @('beforeSha256', 'afterSha256', 'schemaVersion', 'integrityCheck', 'foreignKeyViolations') $Errors | Out-Null
+    Test-P5EObjectShape $database 'database' @('beforeSha256', 'afterSha256', 'schemaVersion', 'integrityCheck', 'foreignKeyViolations', 'snapshotMode', 'readbackContractVersion', 'hostQuerySha256', 'exportManifestSha256', 'sqliteBridgeSha256', 'databaseExporterSha256', 'collectorHelperSha256') @('beforeSha256', 'afterSha256', 'beforeWalSha256', 'afterWalSha256', 'beforeShmSha256', 'afterShmSha256', 'beforeWalPresent', 'afterWalPresent', 'beforeShmPresent', 'afterShmPresent', 'schemaVersion', 'integrityCheck', 'foreignKeyViolations', 'snapshotMode', 'readbackContractVersion', 'databaseSnapshotDirectory', 'databaseQueryPath', 'hostQuerySha256', 'exportManifestPath', 'exportManifestSha256', 'exportedDatabaseFiles', 'sqliteBridgePath', 'sqliteBridgeSha256', 'databaseExporterPath', 'databaseExporterSha256', 'collectorHelperSha256', 'sourceDeviceFileHashesBefore', 'sourceDeviceFileHashesAfter') $Errors | Out-Null
     Test-P5ESha256 $database 'beforeSha256' 'database' $Errors $script:P5EDatabaseSha256
     Test-P5ESha256 $database 'afterSha256' 'database' $Errors
     Test-P5ELong $database 'schemaVersion' $script:P5EDatabaseSchemaVersion 'database' $Errors -Minimum 0 | Out-Null
     Test-P5EEqual $database 'integrityCheck' 'ok' 'database' $Errors
     Test-P5ELong $database 'foreignKeyViolations' 0L 'database' $Errors -Minimum 0 | Out-Null
+    Test-P5EEqual $database 'readbackContractVersion' $script:P5EDatabaseExporterContractVersion 'database' $Errors
+    if ([string](Get-P5EProperty $database 'snapshotMode') -notin @('BINARY_EXPORT_HOST_READBACK_IMMUTABLE', 'BINARY_EXPORT_HOST_READBACK_WAL_AWARE', 'HOST_SQLITE_OFFLINE_FIXTURE')) { Add-P5EError $Errors 'DATABASE_SNAPSHOT_MODE_INVALID' }
+    Test-P5ESha256 $database 'hostQuerySha256' 'database' $Errors
+    Test-P5ESha256 $database 'exportManifestSha256' 'database' $Errors
+    Test-P5ESha256 $database 'sqliteBridgeSha256' 'database' $Errors (Get-P5ESha256 -Path $script:P5ESqliteBridgePath)
+    Test-P5ESha256 $database 'databaseExporterSha256' 'database' $Errors (Get-P5ESha256 -Path $script:P5EDatabaseExporterPath)
+    Test-P5ESha256 $database 'collectorHelperSha256' 'database' $Errors (Get-P5ESha256 -Path $CollectorPath)
 
     $tuple = Get-P5EProperty $Readback 'freshTuple'
-    Test-P5EObjectShape $tuple 'freshTuple' @('projectRowId', 'selector', 'chapterKey', 'bindingIdentity', 'runDeclarationIdentity', 'evaluationId', 'packHash', 'profileHash', 'sourceMode', 'sourceProjection', 'sources') @('projectRowId', 'selector', 'chapterKey', 'bindingIdentity', 'runDeclarationIdentity', 'evaluationId', 'packHash', 'profileHash', 'sourceMode', 'sourceProjection', 'sources') $Errors | Out-Null
+    Test-P5EObjectShape $tuple 'freshTuple' @('projectRowId', 'selector', 'chapterKey', 'bindingIdentity', 'runDeclarationIdentity', 'evaluationId', 'packHash', 'packManifestFingerprint', 'inputScopeManifestFingerprint', 'profileHash', 'sourceMode', 'sourceProjection', 'sources') @('projectRowId', 'selector', 'chapterKey', 'bindingIdentity', 'runDeclarationIdentity', 'evaluationId', 'packHash', 'packManifestFingerprint', 'inputScopeManifestFingerprint', 'profileHash', 'sourceMode', 'sourceProjection', 'sources') $Errors | Out-Null
     Test-P5ELong $tuple 'projectRowId' $script:P5EProjectRowId 'freshTuple' $Errors -Minimum 1 | Out-Null
     Test-P5EEqual $tuple 'selector' $script:P5ESelector 'freshTuple' $Errors
     Test-P5EEqual $tuple 'chapterKey' $script:P5EChapterKey 'freshTuple' $Errors
@@ -3995,26 +4617,29 @@ function Test-P5EReadback {
     Test-P5EEqual $tuple 'runDeclarationIdentity' $script:P5ERunDeclarationIdentity 'freshTuple' $Errors
     Test-P5EEqual $tuple 'evaluationId' $script:P5EEvaluationId 'freshTuple' $Errors
     Test-P5EEqual $tuple 'packHash' $script:P5EPackHash 'freshTuple' $Errors
+    Test-P5ESha256 $tuple 'packManifestFingerprint' 'freshTuple' $Errors $script:P5EPackManifestFingerprint
+    Test-P5ESha256 $tuple 'inputScopeManifestFingerprint' 'freshTuple' $Errors $script:P5EInputScopeManifestFingerprint
     Test-P5EEqual $tuple 'profileHash' $script:P5EProfileHash 'freshTuple' $Errors
     Test-P5EEqual $tuple 'sourceMode' 'NORMAL_FOUR_SOURCE' 'freshTuple' $Errors
     Test-P5EEqual $tuple 'sourceProjection' 'RAW_AND_GLOSSARY_VISIBLE_DRAFT_AND_PRONOUN_HIDDEN' 'freshTuple' $Errors
     $sourceArray = @(Get-P5EProperty $tuple 'sources')
     if ($sourceArray.Count -ne 4) { Add-P5EError $Errors 'SOURCE_IDENTITY_COUNT_INVALID' }
     $sourceExpected = [ordered]@{
-        RAW = @($script:P5ERawSourceBytes, $script:P5ERawSourceSha256, 'VISIBLE')
-        GLOSSARY = @($script:P5EGlossarySourceBytes, $script:P5EGlossarySourceSha256, 'VISIBLE')
-        DRAFT = @($script:P5EDraftSourceBytes, $script:P5EDraftSourceSha256, 'HIDDEN')
-        PRONOUN = @($script:P5EPronounSourceBytes, $script:P5EPronounSourceSha256, 'HIDDEN')
+        RAW = @($script:P5ERawSourceBytes, $script:P5ERawSourceSha256, 'VISIBLE', 0L, 'UTF-8', 'VALID')
+        GLOSSARY = @($script:P5EGlossarySourceBytes, $script:P5EGlossarySourceSha256, 'VISIBLE', 0L, 'UTF-8', 'VALID')
+        DRAFT = @($script:P5EDraftSourceBytes, $script:P5EDraftSourceSha256, 'HIDDEN', 0L, 'UTF-8', 'VALID')
+        PRONOUN = @($script:P5EPronounSourceBytes, $script:P5EPronounSourceSha256, 'HIDDEN', 0L, 'UTF-8', 'VALID')
     }
     $seenRoles = [System.Collections.Generic.HashSet[string]]::new()
     foreach ($source in $sourceArray) {
-        Test-P5EObjectShape $source 'freshTuple.sources[]' @('role', 'visibility', 'byteLength', 'sha256') @('role', 'visibility', 'byteLength', 'sha256') $Errors | Out-Null
+        Test-P5EObjectShape $source 'freshTuple.sources[]' @('role', 'visibility', 'byteLength', 'sha256', 'ordinal') @('role', 'visibility', 'byteLength', 'sha256', 'ordinal') $Errors | Out-Null
         $role = [string](Get-P5EProperty $source 'role')
         if (-not $seenRoles.Add($role) -or -not $sourceExpected.Contains($role)) { Add-P5EError $Errors 'SOURCE_ROLE_DUPLICATE_OR_UNEXPECTED' ; continue }
         $expectedSource = $sourceExpected[$role]
         Test-P5EEqual $source 'visibility' $expectedSource[2] ('freshTuple.sources.' + $role) $Errors
         Test-P5ELong $source 'byteLength' ([long]$expectedSource[0]) ('freshTuple.sources.' + $role) $Errors -Minimum 0 | Out-Null
         Test-P5ESha256 $source 'sha256' ('freshTuple.sources.' + $role) $Errors $expectedSource[1]
+        Test-P5ELong $source 'ordinal' ([long]$expectedSource[3]) ('freshTuple.sources.' + $role) $Errors -Minimum 0 | Out-Null
     }
 
     $countRequired = @('attempts', 'authorizationReceipts', 'reconciliation', 'reconciliationHistory', 'lifecycle', 'reportOrReceipt')
@@ -4097,7 +4722,10 @@ function Test-P5EReadback {
     Test-P5EEqual $auth 'chapterKey' $script:P5EChapterKey 'authorizationReceipt' $Errors
     Test-P5EEqual $auth 'provider' $script:P5EProvider 'authorizationReceipt' $Errors
     Test-P5EEqual $auth 'model' $script:P5EModel 'authorizationReceipt' $Errors
-    if ([string]$ExpectedAccountFingerprint -eq '' -or [string](Get-P5EProperty $auth 'endpointAccountFingerprint') -cne $ExpectedAccountFingerprint) { Add-P5EError $Errors 'ACCOUNT_FINGERPRINT_MISMATCH' }
+    $storedFingerprint = [string](Get-P5EProperty $auth 'endpointAccountFingerprint')
+    if ($storedFingerprint -cne $script:P5EAccountFingerprintRedactionSentinel) {
+        Add-P5EError $Errors 'ACCOUNT_FINGERPRINT_NOT_REDACTED'
+    }
     $issued = Test-P5ELong $auth 'issuedAtMillis' ([long](Get-P5EProperty $auth 'issuedAtMillis')) 'authorizationReceipt' $Errors -Minimum 0
     $expires = Test-P5ELong $auth 'expiresAtMillis' ([long](Get-P5EProperty $auth 'expiresAtMillis')) 'authorizationReceipt' $Errors -Minimum 0
     $consumed = Test-P5ELong $auth 'consumedAtMillis' ([long](Get-P5EProperty $auth 'consumedAtMillis')) 'authorizationReceipt' $Errors -Minimum 0
@@ -4158,14 +4786,14 @@ function Test-P5EReadback {
         Test-P5EEqual $artifact 'artifactType' 'REPORT_L1' ('artifacts.' + $kind) $Errors
         if ($kind -eq 'report') {
             Test-P5ESha256 $artifact 'bindingIdentity' ('artifacts.' + $kind) $Errors $script:P5EBindingIdentity
-            Test-P5ESha256 $artifact 'manifestFingerprint' ('artifacts.' + $kind) $Errors $script:P5EExpectedManifestFingerprint
+            Test-P5ESha256 $artifact 'manifestFingerprint' ('artifacts.' + $kind) $Errors $script:P5EPackManifestFingerprint
             Test-P5ESha256 $artifact 'canonicalPackHash' ('artifacts.' + $kind) $Errors $script:P5EPackHash
             Test-P5ESha256 $artifact 'canonicalProfileHash' ('artifacts.' + $kind) $Errors $script:P5EProfileHash
             Test-P5EEqual $artifact 'compatibilityEvaluationId' $script:P5EEvaluationId ('artifacts.' + $kind) $Errors
             Test-P5EEqual $artifact 'chapterKey' $script:P5EChapterKey ('artifacts.' + $kind) $Errors
         } else {
             Test-P5ESha256 $artifact 'bindingRef' ('artifacts.' + $kind) $Errors $script:P5EBindingIdentity
-            Test-P5ESha256 $artifact 'manifestRef' ('artifacts.' + $kind) $Errors $script:P5EExpectedManifestFingerprint
+            Test-P5ESha256 $artifact 'manifestRef' ('artifacts.' + $kind) $Errors $script:P5EPackManifestFingerprint
             Test-P5ESha256 $artifact 'packRef' ('artifacts.' + $kind) $Errors $script:P5EPackHash
             Test-P5ESha256 $artifact 'profileRef' ('artifacts.' + $kind) $Errors $script:P5EProfileHash
         }
@@ -4215,6 +4843,11 @@ function New-P5EProducerInput {
         eventId = $EventId
         runIdentity = $script:P5ERunDeclarationIdentity
         sourceMappingVersion = $script:P5ESourceMappingVersion
+        databaseReadbackContractVersion = $script:P5EDatabaseExporterContractVersion
+        databaseExporterPath = Get-P5ECanonicalPath -Path $script:P5EDatabaseExporterPath
+        databaseExporterSha256 = Get-P5ESha256 -Path $script:P5EDatabaseExporterPath
+        sqliteBridgePath = Get-P5ECanonicalPath -Path $script:P5ESqliteBridgePath
+        sqliteBridgeSha256 = Get-P5ESha256 -Path $script:P5ESqliteBridgePath
         production = [ordered]@{
             package = $script:P5ETargetPackage
             version = $script:P5EProductionVersion
@@ -4238,14 +4871,16 @@ function New-P5EProducerInput {
             runDeclarationIdentity = $script:P5ERunDeclarationIdentity
             evaluationId = $script:P5EEvaluationId
             packHash = $script:P5EPackHash
+            packManifestFingerprint = $script:P5EPackManifestFingerprint
+            inputScopeManifestFingerprint = $script:P5EInputScopeManifestFingerprint
             profileHash = $script:P5EProfileHash
             sourceMode = 'NORMAL_FOUR_SOURCE'
             sourceProjection = 'RAW_AND_GLOSSARY_VISIBLE_DRAFT_AND_PRONOUN_HIDDEN'
             sources = @(
-                [ordered]@{ role = 'RAW'; visibility = 'VISIBLE'; byteLength = $script:P5ERawSourceBytes; sha256 = $script:P5ERawSourceSha256 },
-                [ordered]@{ role = 'GLOSSARY'; visibility = 'VISIBLE'; byteLength = $script:P5EGlossarySourceBytes; sha256 = $script:P5EGlossarySourceSha256 },
-                [ordered]@{ role = 'DRAFT'; visibility = 'HIDDEN'; byteLength = $script:P5EDraftSourceBytes; sha256 = $script:P5EDraftSourceSha256 },
-                [ordered]@{ role = 'PRONOUN'; visibility = 'HIDDEN'; byteLength = $script:P5EPronounSourceBytes; sha256 = $script:P5EPronounSourceSha256 }
+                [ordered]@{ role = 'RAW'; visibility = 'VISIBLE'; byteLength = $script:P5ERawSourceBytes; sha256 = $script:P5ERawSourceSha256; ordinal = 0 },
+                [ordered]@{ role = 'GLOSSARY'; visibility = 'VISIBLE'; byteLength = $script:P5EGlossarySourceBytes; sha256 = $script:P5EGlossarySourceSha256; ordinal = 0 },
+                [ordered]@{ role = 'DRAFT'; visibility = 'HIDDEN'; byteLength = $script:P5EDraftSourceBytes; sha256 = $script:P5EDraftSourceSha256; ordinal = 0 },
+                [ordered]@{ role = 'PRONOUN'; visibility = 'HIDDEN'; byteLength = $script:P5EPronounSourceBytes; sha256 = $script:P5EPronounSourceSha256; ordinal = 0 }
             )
         }
         attemptTemplate = [ordered]@{
@@ -4298,7 +4933,7 @@ function New-P5EProducerInput {
             chapterKey = $script:P5EChapterKey
             provider = $script:P5EProvider
             model = $script:P5EModel
-            endpointAccountFingerprint = $AccountFingerprint
+            endpointAccountFingerprint = $script:P5EAccountFingerprintRedactionSentinel
             issuedAtMillis = $IssuedAtMillis
             expiresAtMillis = $IssuedAtMillis + $script:P5EAuthorizationValidityMilliseconds
             consumedAtMillis = $IssuedAtMillis + 200
@@ -4331,7 +4966,7 @@ function New-P5EProducerInput {
             schemaVersion = 'safe4.full.report-l1.v1'
             artifactType = 'REPORT_L1'
             bindingIdentity = $script:P5EBindingIdentity
-            manifestFingerprint = $script:P5EExpectedManifestFingerprint
+            manifestFingerprint = $script:P5EPackManifestFingerprint
             canonicalPackHash = $script:P5EPackHash
             canonicalProfileHash = $script:P5EProfileHash
             compatibilityEvaluationId = $script:P5EEvaluationId
@@ -4356,7 +4991,7 @@ function New-P5EProducerInput {
         receiptArtifactTemplate = [ordered]@{
             schemaVersion = 'safe4.full.receipt.v1'
             artifactType = 'REPORT_L1'
-            manifestRef = $script:P5EExpectedManifestFingerprint
+            manifestRef = $script:P5EPackManifestFingerprint
             packRef = $script:P5EPackHash
             profileRef = $script:P5EProfileHash
             bindingRef = $script:P5EBindingIdentity
@@ -4425,9 +5060,9 @@ function Invoke-P5ESyntheticReadbackCollector {
         throw 'P5E_COLLECTOR_INPUT_SCHEMA_OR_IDENTITY_INVALID'
     }
     foreach ($snapshot in @($before, $after)) {
-        if ([string](Get-P5EProperty $snapshot 'schemaVersion') -cne 'p5e.raw.snapshot.v1' -or
+        if ([string](Get-P5EProperty $snapshot 'schemaVersion') -notin @('p5e.raw.snapshot.v1', 'p5e.raw.snapshot.v2') -or
                 [string](Get-P5EProperty $snapshot 'runIdentity') -cne $script:P5ERunDeclarationIdentity -or
-                [string](Get-P5EProperty $snapshot 'snapshotMode') -notin @('WAL_AWARE_CONSISTENT', 'WAL_AWARE_READ_TRANSACTION')) {
+                [string](Get-P5EProperty $snapshot 'snapshotMode') -notin @('BINARY_EXPORT_HOST_READBACK_IMMUTABLE', 'BINARY_EXPORT_HOST_READBACK_WAL_AWARE', 'HOST_SQLITE_OFFLINE_FIXTURE', 'WAL_AWARE_CONSISTENT', 'WAL_AWARE_READ_TRANSACTION')) {
             throw 'P5E_COLLECTOR_SNAPSHOT_NOT_CONSISTENT'
         }
     }
@@ -4531,6 +5166,19 @@ function Invoke-P5ESyntheticReadbackCollector {
         attemptUpdatedAtMillis = [long]$attempt['updatedAtMillis']
         observedAtMillis = [long](Get-P5EProperty $after 'observedAtMillis')
         collectedAtMillis = [long](Get-P5EProperty $after 'observedAtMillis') + 100
+        databaseReadbackContractVersion = [string](Get-P5EProperty $after 'snapshotContractVersion')
+        databaseQueryPath = [string](Get-P5EProperty $after 'databaseQueryPath')
+        databaseQuerySha256 = [string](Get-P5EProperty $after 'hostQuerySha256')
+        databaseExportManifestPath = [string](Get-P5EProperty $after 'exportManifestPath')
+        databaseExportManifestSha256 = [string](Get-P5EProperty $after 'exportManifestSha256')
+        databaseExporterPath = [string](Get-P5EProperty $after 'databaseExporterPath')
+        databaseExporterSha256 = [string](Get-P5EProperty $after 'databaseExporterSha256')
+        sqliteBridgePath = [string](Get-P5EProperty $after 'sqliteBridgePath')
+        sqliteBridgeSha256 = [string](Get-P5EProperty $after 'sqliteBridgeSha256')
+        collectorHelperSha256 = [string](Get-P5EProperty $after 'collectorHelperSha256')
+        sourceDeviceFileHashesBefore = Get-P5EProperty $before 'sourceDeviceFileHashes'
+        sourceDeviceFileHashesAfter = Get-P5EProperty $after 'sourceDeviceFileHashes'
+        exportedDatabaseFiles = Get-P5EProperty $after 'exportedDatabaseFiles'
         atomicityEvidence = [ordered]@{
             transactionEvidencePath = $sourceMap.transactionEvidence
             transactionEvidenceSha256 = Get-P5ESha256 -Path $transactionPath
@@ -4558,9 +5206,32 @@ function Invoke-P5ESyntheticReadbackCollector {
         database = [ordered]@{
             beforeSha256 = Get-P5EProperty $before 'databaseSha256'
             afterSha256 = Get-P5EProperty $after 'databaseSha256'
+            beforeWalSha256 = Get-P5EProperty $before 'databaseWalSha256'
+            afterWalSha256 = Get-P5EProperty $after 'databaseWalSha256'
+            beforeShmSha256 = Get-P5EProperty $before 'databaseShmSha256'
+            afterShmSha256 = Get-P5EProperty $after 'databaseShmSha256'
+            beforeWalPresent = [bool](Get-P5EProperty $before 'walPresent')
+            afterWalPresent = [bool](Get-P5EProperty $after 'walPresent')
+            beforeShmPresent = [bool](Get-P5EProperty $before 'shmPresent')
+            afterShmPresent = [bool](Get-P5EProperty $after 'shmPresent')
             schemaVersion = [long](Get-P5EProperty $after 'databaseSchemaVersion')
             integrityCheck = Get-P5EProperty $after 'integrityCheck'
             foreignKeyViolations = [long](Get-P5EProperty $after 'foreignKeyViolations')
+            snapshotMode = [string](Get-P5EProperty $after 'snapshotMode')
+            readbackContractVersion = [string](Get-P5EProperty $after 'snapshotContractVersion')
+            databaseSnapshotDirectory = [string](Get-P5EProperty $after 'databaseSnapshotDirectory')
+            databaseQueryPath = [string](Get-P5EProperty $after 'databaseQueryPath')
+            hostQuerySha256 = [string](Get-P5EProperty $after 'hostQuerySha256')
+            exportManifestPath = [string](Get-P5EProperty $after 'exportManifestPath')
+            exportManifestSha256 = [string](Get-P5EProperty $after 'exportManifestSha256')
+            exportedDatabaseFiles = Get-P5EProperty $after 'exportedDatabaseFiles'
+            sqliteBridgePath = [string](Get-P5EProperty $after 'sqliteBridgePath')
+            sqliteBridgeSha256 = [string](Get-P5EProperty $after 'sqliteBridgeSha256')
+            databaseExporterPath = [string](Get-P5EProperty $after 'databaseExporterPath')
+            databaseExporterSha256 = [string](Get-P5EProperty $after 'databaseExporterSha256')
+            collectorHelperSha256 = [string](Get-P5EProperty $after 'collectorHelperSha256')
+            sourceDeviceFileHashesBefore = Get-P5EProperty $before 'sourceDeviceFileHashes'
+            sourceDeviceFileHashesAfter = Get-P5EProperty $after 'sourceDeviceFileHashes'
         }
         freshTuple = Get-P5EProperty $producerInput 'freshTuple'
         lineageBefore = Get-P5EProperty $before 'lineage'
@@ -4600,17 +5271,61 @@ function New-P5ESyntheticProducerFixture {
     $afterLineage = [ordered]@{ attempts = 1; authorizationReceipts = 1; reconciliation = 0; reconciliationHistory = 0; lifecycle = 1; reportOrReceipt = 1 }
     $zeroGlobalCounts = [ordered]@{ attempts = 0; authorizationReceipts = 0; lifecycle = 0; reconciliation = 0; reconciliationHistory = 0 }
     $afterGlobalCounts = [ordered]@{ attempts = 1; authorizationReceipts = 1; lifecycle = 1; reconciliation = 0; reconciliationHistory = 0 }
+    $databaseExporterHash = Get-P5ESha256 -Path $script:P5EDatabaseExporterPath
+    $sqliteBridgeHash = Get-P5ESha256 -Path $script:P5ESqliteBridgePath
+    $collectorHelperHash = Get-P5ESha256 -Path (Get-P5ECollectorPath)
+    $syntheticDatabaseRoots = @{}
+    $syntheticExportRecords = @{}
+    foreach ($phase in @('before', 'after')) {
+        $snapshotDirectory = Join-Path $EvidenceDirectory ('database-snapshot-' + $phase)
+        [void](New-Item -ItemType Directory -Path $snapshotDirectory -Force)
+        $databaseFile = Join-Path $snapshotDirectory 'tbl_android_txt.db'
+        [IO.File]::WriteAllBytes($databaseFile, [Text.UTF8Encoding]::new($false).GetBytes('synthetic-db-' + $phase))
+        $queryFile = Join-Path $EvidenceDirectory ('database-consistent-read-' + $phase + '.sql')
+        Write-P5EUtf8NoBom -Path $queryFile -Text 'SELECT 1;'
+        $exportRecord = [ordered]@{
+            name = 'main'; devicePath = $script:P5EDatabaseDevicePath; destinationPath = Get-P5ECanonicalPath -Path $databaseFile
+            operationId = [Guid]::NewGuid().ToString('N'); launchCount = 1; timeoutMilliseconds = 60000
+            byteLength = [long](Get-Item -LiteralPath $databaseFile).Length; deviceSha256 = Get-P5ESha256 -Path $databaseFile
+            hostSha256 = Get-P5ESha256 -Path $databaseFile; status = 'EXPORTED'
+        }
+        $manifest = [ordered]@{ contractVersion = $script:P5EDatabaseExporterContractVersion; collectionPhase = $phase; directory = Get-P5ECanonicalPath -Path $snapshotDirectory; files = @($exportRecord) }
+        $manifestFile = Join-Path $EvidenceDirectory ('database-export-manifest-' + $phase + '.json')
+        Write-P5EUtf8NoBom -Path $manifestFile -Text (ConvertTo-P5ECanonicalJson -Value $manifest)
+        $syntheticDatabaseRoots[$phase] = [ordered]@{
+            snapshotDirectory = Get-P5ECanonicalPath -Path $snapshotDirectory; databaseFile = Get-P5ECanonicalPath -Path $databaseFile
+            queryFile = Get-P5ECanonicalPath -Path $queryFile; manifestFile = Get-P5ECanonicalPath -Path $manifestFile
+            exportRecord = $exportRecord
+        }
+    }
+    $sourceDeviceHashes = [ordered]@{ database = $script:P5EDatabaseSha256; wal = ''; shm = ''; settings = 'f' * 64 }
     $before = [ordered]@{
-        schemaVersion = 'p5e.raw.snapshot.v1'; eventId = $metadata['eventId']; runIdentity = $script:P5ERunDeclarationIdentity
-        snapshotMode = 'WAL_AWARE_CONSISTENT'; observedAtMillis = $IssuedAtMillis + 20; databaseSha256 = $script:P5EDatabaseSha256
+        schemaVersion = 'p5e.raw.snapshot.v2'; eventId = $metadata['eventId']; runIdentity = $script:P5ERunDeclarationIdentity
+        snapshotMode = 'BINARY_EXPORT_HOST_READBACK_IMMUTABLE'; observedAtMillis = $IssuedAtMillis + 20; databaseSha256 = $script:P5EDatabaseSha256
+        databaseWalSha256 = ''; databaseShmSha256 = ''; walPresent = $false; shmPresent = $false; settingsSha256 = 'f' * 64
         databaseSchemaVersion = $script:P5EDatabaseSchemaVersion; integrityCheck = 'ok'; foreignKeyViolations = 0
         lineage = $zeroLineage; globalCounts = $zeroGlobalCounts; immutableTupleIdentity = $script:P5EBindingIdentity; unrelatedWrites = 0; deletedRows = 0
+        snapshotContractVersion = $script:P5EDatabaseExporterContractVersion; eventIdFromSnapshot = $metadata['eventId']
+        exportedDatabaseFiles = @($syntheticDatabaseRoots['before'].exportRecord); databaseSnapshotDirectory = $syntheticDatabaseRoots['before'].snapshotDirectory
+        databaseQueryPath = $syntheticDatabaseRoots['before'].queryFile; hostQuerySha256 = Get-P5ESha256 -Path $syntheticDatabaseRoots['before'].queryFile
+        exportManifestPath = $syntheticDatabaseRoots['before'].manifestFile; exportManifestSha256 = Get-P5ESha256 -Path $syntheticDatabaseRoots['before'].manifestFile
+        sqliteBridgePath = Get-P5ECanonicalPath -Path $script:P5ESqliteBridgePath; sqliteBridgeSha256 = $sqliteBridgeHash
+        databaseExporterPath = Get-P5ECanonicalPath -Path $script:P5EDatabaseExporterPath; databaseExporterSha256 = $databaseExporterHash
+        collectorHelperSha256 = $collectorHelperHash; sourceDeviceFileHashes = $sourceDeviceHashes
     }
     $after = [ordered]@{
-        schemaVersion = 'p5e.raw.snapshot.v1'; eventId = $metadata['eventId']; runIdentity = $script:P5ERunDeclarationIdentity
-        snapshotMode = 'WAL_AWARE_CONSISTENT'; observedAtMillis = $ObservationAtMillis; databaseSha256 = 'e' * 64
+        schemaVersion = 'p5e.raw.snapshot.v2'; eventId = $metadata['eventId']; runIdentity = $script:P5ERunDeclarationIdentity
+        snapshotMode = 'BINARY_EXPORT_HOST_READBACK_IMMUTABLE'; observedAtMillis = $ObservationAtMillis; databaseSha256 = 'e' * 64
+        databaseWalSha256 = ''; databaseShmSha256 = ''; walPresent = $false; shmPresent = $false; settingsSha256 = 'f' * 64
         databaseSchemaVersion = $script:P5EDatabaseSchemaVersion; integrityCheck = 'ok'; foreignKeyViolations = 0
         lineage = $afterLineage; globalCounts = $afterGlobalCounts; immutableTupleIdentity = $script:P5EBindingIdentity; unrelatedWrites = 0; deletedRows = 0
+        snapshotContractVersion = $script:P5EDatabaseExporterContractVersion; eventIdFromSnapshot = $metadata['eventId']
+        exportedDatabaseFiles = @($syntheticDatabaseRoots['after'].exportRecord); databaseSnapshotDirectory = $syntheticDatabaseRoots['after'].snapshotDirectory
+        databaseQueryPath = $syntheticDatabaseRoots['after'].queryFile; hostQuerySha256 = Get-P5ESha256 -Path $syntheticDatabaseRoots['after'].queryFile
+        exportManifestPath = $syntheticDatabaseRoots['after'].manifestFile; exportManifestSha256 = Get-P5ESha256 -Path $syntheticDatabaseRoots['after'].manifestFile
+        sqliteBridgePath = Get-P5ECanonicalPath -Path $script:P5ESqliteBridgePath; sqliteBridgeSha256 = $sqliteBridgeHash
+        databaseExporterPath = Get-P5ECanonicalPath -Path $script:P5EDatabaseExporterPath; databaseExporterSha256 = $databaseExporterHash
+        collectorHelperSha256 = $collectorHelperHash; sourceDeviceFileHashes = $sourceDeviceHashes
     }
     Write-P5EUtf8NoBom -Path (Join-Path $EvidenceDirectory 'before-snapshot.json') -Text (ConvertTo-P5EJson -Value $before)
     Write-P5EUtf8NoBom -Path (Join-Path $EvidenceDirectory 'after-snapshot.json') -Text (ConvertTo-P5EJson -Value $after)
@@ -4654,7 +5369,7 @@ function New-P5EValidReadbackFixture {
     $responseHash = 'b' * 64
     # Shape-only fixture retained for negative tests; the producer path is
     # Invoke-P5ESyntheticReadbackCollector, not this constructor.
-    $manifestFingerprint = $script:P5EExpectedManifestFingerprint
+    $manifestFingerprint = $script:P5EPackManifestFingerprint
     $commonArtifact = @{
         artifactType = 'REPORT_L1'
         bindingIdentity = $script:P5EBindingIdentity
@@ -4675,15 +5390,15 @@ function New-P5EValidReadbackFixture {
         production = @{ package = $script:P5ETargetPackage; version = $script:P5EProductionVersion; versionCode = $script:P5EProductionVersionCode; apkSha256 = $script:P5EExpectedProductionApkSha256; certificateSha256 = $script:P5ECertificateSha256 }
         test = @{ package = $script:P5ETestPackage; targetPackage = $script:P5ETargetPackage; apkSha256 = $script:P5EExpectedTestApkSha256; certificateSha256 = $script:P5ECertificateSha256; runner = $script:P5ERunner; sourceCommit = $script:P5ETestSourceCommit }
         database = @{ beforeSha256 = $script:P5EDatabaseSha256; afterSha256 = $afterHash; schemaVersion = $script:P5EDatabaseSchemaVersion; integrityCheck = 'ok'; foreignKeyViolations = 0 }
-        freshTuple = @{ projectRowId = $script:P5EProjectRowId; selector = $script:P5ESelector; chapterKey = $script:P5EChapterKey; bindingIdentity = $script:P5EBindingIdentity; runDeclarationIdentity = $script:P5ERunDeclarationIdentity; evaluationId = $script:P5EEvaluationId; packHash = $script:P5EPackHash; profileHash = $script:P5EProfileHash; sourceMode = 'NORMAL_FOUR_SOURCE'; sourceProjection = 'RAW_AND_GLOSSARY_VISIBLE_DRAFT_AND_PRONOUN_HIDDEN'; sources = @(
-                @{ role = 'RAW'; visibility = 'VISIBLE'; byteLength = $script:P5ERawSourceBytes; sha256 = $script:P5ERawSourceSha256 },
-                @{ role = 'GLOSSARY'; visibility = 'VISIBLE'; byteLength = $script:P5EGlossarySourceBytes; sha256 = $script:P5EGlossarySourceSha256 },
-                @{ role = 'DRAFT'; visibility = 'HIDDEN'; byteLength = $script:P5EDraftSourceBytes; sha256 = $script:P5EDraftSourceSha256 },
-                @{ role = 'PRONOUN'; visibility = 'HIDDEN'; byteLength = $script:P5EPronounSourceBytes; sha256 = $script:P5EPronounSourceSha256 }) }
+        freshTuple = @{ projectRowId = $script:P5EProjectRowId; selector = $script:P5ESelector; chapterKey = $script:P5EChapterKey; bindingIdentity = $script:P5EBindingIdentity; runDeclarationIdentity = $script:P5ERunDeclarationIdentity; evaluationId = $script:P5EEvaluationId; packHash = $script:P5EPackHash; packManifestFingerprint = $script:P5EPackManifestFingerprint; inputScopeManifestFingerprint = $script:P5EInputScopeManifestFingerprint; profileHash = $script:P5EProfileHash; sourceMode = 'NORMAL_FOUR_SOURCE'; sourceProjection = 'RAW_AND_GLOSSARY_VISIBLE_DRAFT_AND_PRONOUN_HIDDEN'; sources = @(
+                @{ role = 'RAW'; visibility = 'VISIBLE'; byteLength = $script:P5ERawSourceBytes; sha256 = $script:P5ERawSourceSha256; ordinal = 0 },
+                @{ role = 'GLOSSARY'; visibility = 'VISIBLE'; byteLength = $script:P5EGlossarySourceBytes; sha256 = $script:P5EGlossarySourceSha256; ordinal = 0 },
+                @{ role = 'DRAFT'; visibility = 'HIDDEN'; byteLength = $script:P5EDraftSourceBytes; sha256 = $script:P5EDraftSourceSha256; ordinal = 0 },
+                @{ role = 'PRONOUN'; visibility = 'HIDDEN'; byteLength = $script:P5EPronounSourceBytes; sha256 = $script:P5EPronounSourceSha256; ordinal = 0 }) }
         lineageBefore = @{ attempts = 0; authorizationReceipts = 0; reconciliation = 0; reconciliationHistory = 0; lifecycle = 0; reportOrReceipt = 0 }
         lineageAfter = @{ attempts = 1; authorizationReceipts = 1; reconciliation = 0; reconciliationHistory = 0; lifecycle = 1; reportOrReceipt = 1 }
         attempt = @{ rowCount = 1; attemptIdentity = $script:P5EAttemptIdentity; requestIdentity = $script:P5ERequestIdentity; bindingIdentity = $script:P5EBindingIdentity; runDeclarationIdentity = $script:P5ERunDeclarationIdentity; chapterKey = $script:P5EChapterKey; phase = $script:P5EPhase; predecessorIdentity = $script:P5ERunDeclarationIdentity; requestEnvelopeHash = $script:P5ERequestEnvelopeHash; provider = $script:P5EProvider; model = $script:P5EModel; status = 'COMMITTED'; responseIdentity = $responseHash; createdAtMillis = $IssuedAtMillis + 100; updatedAtMillis = $IssuedAtMillis + 3000; reportByteLength = 100; reportSha256 = $reportHash; receiptByteLength = 120; receiptSha256 = $receiptHash; metrics = @{ providerCallsBeforePreflight = 0; primaryCalls = 1; repairCalls = 0; networkRetries = 0; inputTokens = 1000; outputTokens = 100; reasoningTokens = 0; totalTokens = 1100; estimatedCost = '0.000'; actualReportedCost = '0.012'; requestContextSize = 80317; finishReason = 'stop'; truncated = $false; schemaValidationPassed = $true; receiptValidationPassed = $true; preserveDraftCount = 0; findingCount = 1; falseStopCount = 0; latencyMillis = 1000; costAccountingComplete = $true } }
-        authorizationReceipt = @{ rowCount = 1; authorizationIdHash = $script:P5EAuthorizationIdSha256; exactPhase = $script:P5EPhase; attemptIdentity = $script:P5EAttemptIdentity; requestIdentity = $script:P5ERequestIdentity; bindingIdentity = $script:P5EBindingIdentity; runDeclarationIdentity = $script:P5ERunDeclarationIdentity; chapterKey = $script:P5EChapterKey; provider = $script:P5EProvider; model = $script:P5EModel; endpointAccountFingerprint = $AccountFingerprint; issuedAtMillis = $IssuedAtMillis; expiresAtMillis = $IssuedAtMillis + $script:P5EAuthorizationValidityMilliseconds; consumedAtMillis = $IssuedAtMillis + 200; maximumPrimaryCalls = 1; maximumSchemaRepairCalls = 0; maximumNetworkRetries = 0; maximumInputTokens = 100000; maximumOutputTokens = 4096; maximumTotalTokens = 104096; maximumTotalCost = '0.05'; maximumExecutionTimeMillis = $script:P5EExecutionDeadlineMilliseconds; consumptionResult = 'CONSUMED'; consumedAttemptIdentity = $script:P5EAttemptIdentity }
+        authorizationReceipt = @{ rowCount = 1; authorizationIdHash = $script:P5EAuthorizationIdSha256; exactPhase = $script:P5EPhase; attemptIdentity = $script:P5EAttemptIdentity; requestIdentity = $script:P5ERequestIdentity; bindingIdentity = $script:P5EBindingIdentity; runDeclarationIdentity = $script:P5ERunDeclarationIdentity; chapterKey = $script:P5EChapterKey; provider = $script:P5EProvider; model = $script:P5EModel; endpointAccountFingerprint = $script:P5EAccountFingerprintRedactionSentinel; issuedAtMillis = $IssuedAtMillis; expiresAtMillis = $IssuedAtMillis + $script:P5EAuthorizationValidityMilliseconds; consumedAtMillis = $IssuedAtMillis + 200; maximumPrimaryCalls = 1; maximumSchemaRepairCalls = 0; maximumNetworkRetries = 0; maximumInputTokens = 100000; maximumOutputTokens = 4096; maximumTotalTokens = 104096; maximumTotalCost = '0.05'; maximumExecutionTimeMillis = $script:P5EExecutionDeadlineMilliseconds; consumptionResult = 'CONSUMED'; consumedAttemptIdentity = $script:P5EAttemptIdentity }
         lifecycle = @{ rowCount = 1; attemptIdentity = $script:P5EAttemptIdentity; stage = 'RESPONSE_BODY_COMPLETE'; requestBodyBytes = 3000; responseBodyBytes = 300; httpStatus = 200; responseContentType = 'application/json'; exceptionClass = ''; elapsedMillis = 1000; generationId = 'generation-1'; providerResponseId = 'response-1'; cancellationSource = '' }
         artifacts = @{ report = $report; receipt = $receipt }
         integrity = @{ allowedDiff = $true; unrelatedWrites = 0; bindingChanged = $false; sourceChanged = $false; runDeclarationChanged = $false; settingsChanged = $false; packChanged = $false; profileChanged = $false; freshTupleChanged = $false; atomicClaim = $true; reportReceiptAtomic = $true; noDeletes = $true }
@@ -4710,7 +5425,7 @@ function Invoke-P5ESelfTest {
         'apk-signer-verify-production-before' = 'APK_CERTIFICATE_READ_ONLY'
         'database-wal-presence' = 'DEVICE_FILE_PRESENCE_READ_ONLY'
         'database-wal-sha256' = 'DATABASE_FILE_HASH_READ_ONLY'
-        'database-consistent-read-transaction' = 'SQLITE_READ_ONLY'
+        'database-main-binary-export' = 'DATABASE_BINARY_EXPORT_READ_ONLY'
     }
     foreach ($item in $commandClassCases.GetEnumerator()) {
         Assert-P5ESelfTest ((Get-P5ECollectorCommandClass -Operation $item.Key) -ceq $item.Value) ('collector-command-class-' + $item.Key)
@@ -5335,6 +6050,8 @@ function Assert-P5EPinnedDispatchInputs {
 }
 
 function Invoke-P5EPrepareEvent {
+    $toolchain = Resolve-P5ERawToolchain -AndroidSdkPath $AndroidSdkPath -LocalPropertiesPath $LocalPropertiesPath `
+        -AdbPath $AdbPath -JavaPath $JavaPath -ApkSignerJarPath $ApkSignerJarPath -BuildToolsVersion $BuildToolsVersion
     [void](Assert-P5EHelperRuntimeHash -ExpectedSha256 $ExpectedHelperSha256)
     Assert-P5EPinnedDispatchInputs -ManifestFile $ManifestPath -ExpectedManifestHash $ExpectedManifestSha256 `
         -ProductionApkFile $ProductionApkPath -ExpectedProductionHash $ExpectedProductionApkSha256 `
@@ -5347,7 +6064,9 @@ function Invoke-P5EPrepareEvent {
     if (@(Get-ChildItem -LiteralPath $directory -Force).Count -ne 0) { throw 'P5E_EVENT_DIRECTORY_NOT_EMPTY_STOP' }
     $plan = New-P5EEventPlan -EvidenceDirectory $directory -ManifestHash $ExpectedManifestSha256 `
         -ProductionApkHash $ExpectedProductionApkSha256 -TestApkHash $ExpectedTestApkSha256 `
-        -HelperHash $ExpectedHelperSha256
+        -HelperHash $ExpectedHelperSha256 -DatabaseExporterHash $ExpectedDatabaseExporterSha256 `
+        -SqliteBridgeHash $ExpectedSqliteBridgeSha256 -Toolchain $toolchain
+    Assert-P5EEventPlanDependencyPins -Plan $plan
     $planPath = Write-P5EEventPlan -Plan $plan
     Write-Output ('P5E_EVENT_PREPARED=' + $directory)
     Write-Output ('P5E_EVENT_PLAN=' + $planPath)
@@ -5358,9 +6077,19 @@ function Invoke-P5EPrepareEvent {
 }
 
 function Invoke-P5EDispatch {
+    [void](Assert-P5EDatabaseReadbackDependencyPin -Path $script:P5EDatabaseExporterPath `
+        -PinnedPath $script:P5EDatabaseExporterPath -ExpectedSha256 $ExpectedDatabaseExporterSha256 `
+        -Label 'DATABASE_EXPORTER')
+    [void](Assert-P5EDatabaseReadbackDependencyPin -Path $script:P5ESqliteBridgePath `
+        -PinnedPath $script:P5ESqliteBridgePath -ExpectedSha256 $ExpectedSqliteBridgeSha256 `
+        -Label 'SQLITE_BRIDGE')
+    $toolchain = Resolve-P5ERawToolchain -AndroidSdkPath $AndroidSdkPath -LocalPropertiesPath $LocalPropertiesPath `
+        -AdbPath $AdbPath -JavaPath $JavaPath -ApkSignerJarPath $ApkSignerJarPath -BuildToolsVersion $BuildToolsVersion
     [void](Assert-P5EHelperRuntimeHash -ExpectedSha256 $ExpectedHelperSha256)
     $directory = Test-P5EExactEventDirectory -Directory $EvidenceDirectory
     $eventPlan = Read-P5EEventPlan -EvidenceDirectory $directory
+    Assert-P5EEventPlanDependencyPins -Plan $eventPlan
+    Assert-P5ERawToolchainMatchesEventPlan -Plan $eventPlan -Toolchain $toolchain
     if ([string](Get-P5EProperty $eventPlan 'helperSha256') -cne $ExpectedHelperSha256.ToLowerInvariant()) { throw 'P5E_DISPATCH_EVENT_HELPER_HASH_MISMATCH_STOP' }
     if ([string](Get-P5EProperty $eventPlan 'manifestSha256') -cne $ExpectedManifestSha256.ToLowerInvariant() -or
             [string](Get-P5EProperty $eventPlan 'productionApkSha256') -cne $ExpectedProductionApkSha256.ToLowerInvariant() -or
@@ -5385,9 +6114,10 @@ function Invoke-P5EDispatch {
         -ManifestHash $ExpectedManifestSha256.ToLowerInvariant() -AccountFingerprint $accountFingerprint `
         -IssuedAtMillis $issued -ExpiresAtMillis $expires
     if (-not $argumentContract.Passed) { throw ('HOST_ARGUMENT_CONTRACT_STOP:' + ($argumentContract.Errors -join ',')) }
-    $run = Invoke-P5EProcessSupervisor -FilePath 'adb' -ArgumentList $adbArguments `
+    $run = Invoke-P5EProcessSupervisor -FilePath ([string](Get-P5EProperty $toolchain 'adbPath')) -ArgumentList $adbArguments `
         -TimeoutMilliseconds $script:P5EHostObservationTimeoutMilliseconds -EvidenceDirectory $directory `
-        -SensitiveValues @($accountFingerprint)
+        -SensitiveValues @($accountFingerprint) `
+        -ClearInheritedEnvironmentVariableNames @($script:P5EAccountEnvironmentName)
     $metadata = New-P5EHostMetadata -Run $run -IssuedAtMillis $issued -ExpiresAtMillis $expires `
         -EvidenceDirectory $directory -MetadataPath (Join-Path $directory 'HOST_RUN_METADATA.json')
     Write-P5EUtf8NoBom -Path (Join-Path $directory 'HOST_RUN_METADATA.json') -Text (ConvertTo-P5EJson $metadata)
@@ -5408,11 +6138,9 @@ function Invoke-P5EVerifyOutcome {
     $stderrPath = Join-Path $EvidenceDirectory 'instrumentation-stderr.txt'
     if ([string]::IsNullOrWhiteSpace($MetadataPath)) { $MetadataPath = Join-Path $EvidenceDirectory 'HOST_RUN_METADATA.json' }
     if ([string]::IsNullOrWhiteSpace($PostReadbackPath)) { $PostReadbackPath = Join-Path $EvidenceDirectory 'post-readback.json' }
-    $expected = [Environment]::GetEnvironmentVariable($script:P5EAccountEnvironmentName, 'Process')
-    if (-not [string]::IsNullOrWhiteSpace($expected) -and $expected -match '^[0-9a-fA-F]{64}$') { $expected = $expected.ToLowerInvariant() }
     $collectorOutcomePath = Get-P5ECollectorOutcomePath -Directory $EvidenceDirectory
     $result = Invoke-P5EOutcomeVerifier -InstrumentationStdoutPath $stdoutPath -InstrumentationStderrPath $stderrPath `
-        -MetadataPath $MetadataPath -PostReadbackPath $PostReadbackPath -ExpectedAccountFingerprint $expected `
+        -MetadataPath $MetadataPath -PostReadbackPath $PostReadbackPath `
         -CollectorOutcomePath $collectorOutcomePath
     Write-P5EUtf8NoBom -Path (Join-Path $EvidenceDirectory 'OUTCOME_VERIFICATION.json') -Text (ConvertTo-P5EJson -Value $result)
     Write-Output ('RAW_OUTCOME_DECISION=' + $result.decision)
@@ -5427,8 +6155,13 @@ if ($PSCmdlet.ParameterSetName -eq 'Dispatch') {
 } elseif ($PSCmdlet.ParameterSetName -eq 'PrepareEvent') {
     Invoke-P5EPrepareEvent
 } elseif ($PSCmdlet.ParameterSetName -eq 'CollectReadback') {
+    if ([string]::IsNullOrWhiteSpace($ApkSignerJarPath) -and -not [string]::IsNullOrWhiteSpace($ApkSignerPath)) {
+        $ApkSignerJarPath = $ApkSignerPath
+    }
     Invoke-P5ELiveReadbackCollector -EvidenceDirectory $EvidenceDirectory -CollectionPhase $CollectionPhase `
-        -ExpectedHelperSha256 $ExpectedHelperSha256 -SerialValue $Serial -AdbPath $AdbPath -ApkSigner $ApkSignerPath | Out-Host
+        -ExpectedHelperSha256 $ExpectedHelperSha256 -SerialValue $Serial -AdbPath $AdbPath `
+        -JavaPath $JavaPath -ApkSignerJarPath $ApkSignerJarPath -AndroidSdkPath $AndroidSdkPath `
+        -LocalPropertiesPath $LocalPropertiesPath -BuildToolsVersion $BuildToolsVersion | Out-Host
     exit 0
 } elseif ($PSCmdlet.ParameterSetName -eq 'VerifyOutcome') {
     Invoke-P5EVerifyOutcome

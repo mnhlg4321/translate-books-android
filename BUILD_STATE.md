@@ -1,6 +1,10 @@
 # Build State
 
-> Current work package — 2026-09-28: `OWNER_DECISION_RECEIVED_AND_CONSUMED / A4_3_PRE_DISPATCH_COLLECTOR_STOP / P5E_COLLECTOR_ADB_NONZERO / PM_PATH_PRODUCTION_EXIT_1 / OUTER_CAPTURE_STATUS_125 / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. Event `raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc` opened once and stopped on the first Before read-only command. Pinned ADB launched once and exited `1`; provider, credential, device mutation, DB write, build/install, RAW, retry and redispatch counters are `0`. Result/provenance: `docs/P5E_A43_FINAL_EVENT_RESULT_20260928.json` and `docs/P5E_A43_PM_PATH_CAPTURE_STOP_PROVENANCE_20260928.json`.
+> Current work package — 2026-09-28: `OFFLINE_PM_PATH_CLASSIFICATION_AND_OUTER_CAPTURE_REPAIR_PASS / CLOSED_CONSUMED_NON_REUSABLE / OWNER_REVIEW_PENDING / NOT_DISPATCHED / P6_NOT_READY`. The closed event `raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc` remains immutable and was not retried, renamed or reused. Result/provenance: `docs/P5E_A43_PM_PATH_CAPTURE_REPAIR_RESULT_20260928.json` and `docs/P5E_A43_PM_PATH_CAPTURE_REPAIR_PROVENANCE_20260928.json`; QA `36/36`, binding `262/262`, regression `175/175`, DB `56/56`, Luna `0 BLOCKER / 0 HIGH`.
+
+> Final offline pins: manifest `C08C3F6D8EE1B802B0D68AB1FF0302E82655D17C72B06619752B65396C11ADC3`; command `C641F6A01C01209AD08FB820871E575895DC998A4CB6AD15769F1D2222BA4CD5`; helper `959F2BBDC2EF163F00F3A56900B903DF529FDCDD9024AD6CEE906A01E080A8F0`; exporter `D8783B31F9141458CA397915664CA79B07D3161A5E0F0D3B4365C5C65EA41D06`; bridge `4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111`; certificate `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155`; serial `15e84958`.
+
+> Repair evidence is synthetic/offline only: PM-path enum matrix and outer capture RED/GREEN pass, helper self-test PASS, PowerShell 5.1 parse PASS, secret scan PASS, `git diff --check` PASS, and all ADB/device/provider/credential/DB-write/build/install/RAW/redispatch counters are `0`. The old packet is closed/consumed/non-reusable; no new owner decision is requested here.
 
 > Closed historical A4.3 outcome — 2026-09-26: owner decision was received and consumed by exactly one event. State is `OWNER_DECISION_RECEIVED_AND_CONSUMED / A4_3_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP / P5E_COLLECTOR_BINDING_TUPLE_MISMATCH / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. Result: `docs/P5E_A43_EVENT_RESULT_20260926.json`. This does not authorize the current offline repair or a new event.
 
@@ -8,9 +12,9 @@
 
 > Current DB readback prerequisite — 2026-09-26: `OFFLINE_DB_HOST_READBACK_REPAIR_PASS`, with `56/56 PASS` bound to `docs/P5E_DB_HOST_READBACK_REPAIR_QA_20260925.json`. It was consumed offline through a synthetic captured-export copy only; the closed event was not reused. A4.3, RAW, P5 exit and P6 remain not ready.
 
-> The final packet and private launcher matched command SHA-256 `C84355B912DCF3BB59D52004EC80E06CE8B37FC75B5ABE083ECCA95D64C89BA3`. `PrepareEvent` completed. Collector receipt is authoritative for the first failure: `pm-path-production-before`, exit `1`, no timeout, `P5E_COLLECTOR_ADB_NONZERO`. Outer code `125` separately indicates incomplete helper stream drain and masks the child process exit in the top-level message.
+> The consumed live packet remains historical: `PrepareEvent` completed, `pm-path-production-before` exited `1` without timeout and the outer code `125` reflected incomplete helper stream drain. The offline repair keeps the collector typed stop and the helper process exit/drain states separate.
 
-> Current Next action: run only the offline PM-path classification and outer-capture repair work request; no ADB, event retry, provider, build/install, new authorization or P6 action.
+> Current Next action: owner reviews the repaired offline packet only; no command execution, live event, new authorization, retry/redispatch, P5 exit claim or P6 action.
 
 > Superseded DB diagnosis — 2026-09-25: WAL/SHM presence exit `1` meant `ABSENT` under the helper contract. The sole proven blocker was the launched, non-timeout `database-consistent-read-transaction` exit `1`; native cause remains unproven. The bounded offline repair named there is now PASS; no live event is authorized by that result.
 

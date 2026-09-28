@@ -1,6 +1,8 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Current work package — 2026-09-28: `OWNER_DECISION_RECEIVED_AND_CONSUMED / A4_3_PRE_DISPATCH_COLLECTOR_STOP / P5E_COLLECTOR_ADB_NONZERO / PM_PATH_PRODUCTION_EXIT_1 / OUTER_CAPTURE_STATUS_125 / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. Event `raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc` opened once and stopped on the first Before read-only command. Result: `docs/P5E_A43_FINAL_EVENT_RESULT_20260928.json`; provenance: `docs/P5E_A43_PM_PATH_CAPTURE_STOP_PROVENANCE_20260928.json`.
+> Current work package — 2026-09-28: `OFFLINE_PM_PATH_CLASSIFICATION_AND_OUTER_CAPTURE_REPAIR_PASS / CLOSED_CONSUMED_NON_REUSABLE / OWNER_REVIEW_PENDING / NOT_DISPATCHED / P6_NOT_READY`. The prior event `raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc` remains closed and immutable. Repair result/provenance: `docs/P5E_A43_PM_PATH_CAPTURE_REPAIR_RESULT_20260928.json` and `docs/P5E_A43_PM_PATH_CAPTURE_REPAIR_PROVENANCE_20260928.json`; QA `36/36`, binding `262/262`, regression `175/175`, DB `56/56`, Luna `0 BLOCKER / 0 HIGH`.
+
+> Repaired review-only packet pins are manifest `C08C3F6D8EE1B802B0D68AB1FF0302E82655D17C72B06619752B65396C11ADC3`, command `C641F6A01C01209AD08FB820871E575895DC998A4CB6AD15769F1D2222BA4CD5`, helper `959F2BBDC2EF163F00F3A56900B903DF529FDCDD9024AD6CEE906A01E080A8F0`, exporter `D8783B31F9141458CA397915664CA79B07D3161A5E0F0D3B4365C5C65EA41D06`, bridge `4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111`, certificate `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155`, serial `15e84958`. This proposal is not an owner authorization request and does not authorize a new event.
 
 > Closed historical A4.3 outcome — 2026-09-26: the explicit owner decision was received and consumed by exactly one event. The new packet stopped in the read-only Before collector with `COLLECTOR_TYPED_STOP / P5E_COLLECTOR_BINDING_TUPLE_MISMATCH`; RAW was not dispatched, P5 exit was not claimed and P6 remains not ready. Result: `docs/P5E_A43_EVENT_RESULT_20260926.json`. This does not authorize the current offline repair or a new event.
 
@@ -8,7 +10,7 @@
 
 > Current DB readback prerequisite — 2026-09-26: `OFFLINE_DB_HOST_READBACK_REPAIR_PASS` is bound by `docs/P5E_DB_HOST_READBACK_REPAIR_QA_20260925.json` at `56/56 PASS`. The old proposal, manifest/command and 2026-09-25 decision remain consumed; no live event is authorized by this work.
 
-> Current Next action: perform only `docs/P5E_A43_PM_PATH_CAPTURE_STOP_NEXT_WORK_REQUEST_20260928.md` offline. Do not retry/reuse the event or decision, run extra ADB, infer package absence, dispatch RAW or open P6.
+> Current Next action: owner reviews the repaired offline packet only. Do not execute the command, create a live event, request or reuse an owner decision, retry/redispatch, infer package absence, dispatch RAW or open P6.
 
 > Superseded DB diagnosis — 2026-09-25: WAL/SHM exit `1` are valid absence results. The actual stop was the direct Android `sqlite3` consistent-read command. This proposal remains consumed and is not executable; the offline binary-export/host-readback repair is now complete. No new key, account check or owner live decision was requested for that repair.
 
@@ -34,23 +36,25 @@ device/provider event. The one approved event reached only the read-only Before
 collector and stopped on the typed ADB nonzero; no freshness readback,
 allowlisted write scope or RAW acceptance was established.
 
-The fixed-scope files for the current packet are
+The fixed-scope files for the consumed historical packet were
 `docs/P5E_A43_FINAL_EXECUTABLE_APPROVAL_MANIFEST_20260926.md` and
 `docs/P5E_A43_FINAL_EXECUTABLE_COMMAND_20260926.txt`. Their SHA-256 values are
 `23AF3DFAA81F50484187AFD183EA56454EBE38022C67DA2B963245A42D230053` and
 `C84355B912DCF3BB59D52004EC80E06CE8B37FC75B5ABE083ECCA95D64C89BA3`.
-The current helper is pinned to
+The historical helper was pinned to
 `17CC1C19BF4F6B1B71A77100D710375BDBCFDA7AC82D4508634B68E857DEFD2E`; the
 exporter is `D8783B31F9141458CA397915664CA79B07D3161A5E0F0D3B4365C5C65EA41D06`;
 the SQLite bridge is
 `4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111`; and the
 certificate identity is
 `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155`.
-The sole current authorization request, including the APK/source/certificate
-and serial `15e84958` pins, is
+The historical authorization request, including the APK/source/certificate
+and serial `15e84958` pins, was
 `docs/P5E_A43_FINAL_EXECUTABLE_OWNER_AUTHORIZATION_REQUEST_20260926.md`.
 All earlier manifest/command/helper values in this historical proposal remain
-historical and consumed; they are not fallback inputs.
+historical and consumed; they are not fallback inputs. The repaired offline
+packet and its exact pins are recorded at the top of this proposal, but no new
+authorization request is created by this work package.
 
 ## Historical owner decision — RECEIVED AND CONSUMED, not reusable
 
