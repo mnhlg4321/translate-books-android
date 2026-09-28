@@ -1,0 +1,117 @@
+{
+  "schemaVersion": "p5e.a43.preauth-runtime-guard-closure-provenance.v1",
+  "generatedDate": "2026-09-28",
+  "state": "OFFLINE_REPAIR_BEHAVIOR_PASS / LIVE_PACKET_NOT_READY / A43_OUTER_PROCESS_TREE_AND_AUTHORITY_GATE_CLOSURE_REQUIRED / 0_BLOCKER / 1_HIGH / 2_MEDIUM / 2_LOW / CLOSED_CONSUMED_NON_REUSABLE / NOT_AUTHORIZED / NOT_DISPATCHED / P6_NOT_READY",
+  "branch": "feature/v4.18-p5e-runner-repair-20260917",
+  "packetCommit": "a30a4d1653c3a5a1e0d39fac4b07ae000d588edf",
+  "packetFreezeBaseline": "b8326f5b8c9649c741e4c2124efb35a6a1045919",
+  "workRequest": {
+    "path": "docs/P5E_A43_PREAUTH_RUNTIME_GUARD_CLOSURE_NEXT_WORK_REQUEST_20260928.md",
+    "sha256": "BC2ECB5C18691E9553558C48FD237E99940BAEE8FF6F9EA0010AD5F89230F716"
+  },
+  "worktreePolicy": "PRESERVE_EXISTING_OWNER_CHANGES_NO_RESET_NO_CLEAN_NO_UNRELATED_STAGE",
+  "reviewedPins": {
+    "manifest": "C08C3F6D8EE1B802B0D68AB1FF0302E82655D17C72B06619752B65396C11ADC3",
+    "command": "C641F6A01C01209AD08FB820871E575895DC998A4CB6AD15769F1D2222BA4CD5",
+    "helper": "959F2BBDC2EF163F00F3A56900B903DF529FDCDD9024AD6CEE906A01E080A8F0",
+    "exporter": "D8783B31F9141458CA397915664CA79B07D3161A5E0F0D3B4365C5C65EA41D06",
+    "sqliteBridge": "4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111",
+    "toolchain": "C0AE7D431474F37597228A7AFA6F9382C63E26EB5A54CFB72604620D9DD5C3C8",
+    "certificate": "47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155",
+    "serial": "15e84958"
+  },
+  "offlineEvidence": {
+    "qaPath": "docs/P5E_A43_PM_PATH_CAPTURE_REPAIR_QA_20260928.json",
+    "qaSha256": "92C3539069A8F285250F7F18AC154C2E85643A229BA449813C1D830099D0CEE7",
+    "status": "PASS",
+    "tests": "36/36",
+    "binding": "262/262",
+    "regression": "175/175",
+    "dbReadback": "56/56",
+    "liveCounters": "ALL_ZERO"
+  },
+  "readinessAssessment": {
+    "pmPathClassifier": "READY_OFFLINE",
+    "processExitAndDrainSeparation": "READY_OFFLINE",
+    "ownerReview": "READY",
+    "liveAuthorizationRequest": "DEFER_UNTIL_HIGH_AND_MEDIUM_RUNTIME_GUARDS_CLOSE",
+    "a43Live": false,
+    "p5Exit": false,
+    "p6": false
+  },
+  "findingsDrivingNextWork": [
+    {
+      "severity": "HIGH",
+      "code": "DESCENDANT_CONTAINMENT_NOT_PROVEN",
+      "evidence": "Windows PowerShell 5.1 on .NET Framework 4.8 exposes Kill() but not Kill(Boolean); current fallback proves parent-only termination and does not prove ADB/instrumentation/provider descendants stopped",
+      "requiredClosure": "verified Windows PowerShell 5.1 process-tree containment, bounded post-termination verification, and EXTERNAL_PROCESS_STATE_UNKNOWN on unproven cleanup"
+    },
+    {
+      "severity": "MEDIUM",
+      "code": "RUNTIME_DEPENDENCY_BUNDLE_NOT_DURABLE",
+      "evidence": "exporter and toolchain are untracked and SQLite bridge differs from its tracked blob; packet commit cannot reconstruct the exact runtime bundle despite matching current hashes",
+      "requiredClosure": "tracked exact dependencies or immutable hash-bound source archive proven reconstructible from clean checkout"
+    },
+    {
+      "severity": "MEDIUM",
+      "code": "OWNER_DECISION_AND_EXPECTED_VALUE_NOT_PRE_EVENT_GATED",
+      "evidence": "review-only command has no machine-enforced owner receipt and no presence/shape check for the Process expected value before event creation and ADB",
+      "requiredClosure": "hash-bound single-use owner receipt plus zero-disclosure expected-value presence/shape gate and atomic race-safe decision reservation before event creation"
+    },
+    {
+      "severity": "LOW",
+      "code": "OUTER_CAPTURE_NO_INDEPENDENT_BYTE_CAP",
+      "evidence": "ReadToEndAsync may retain uncapped transient output in memory",
+      "requiredClosure": "bounded stream pump with cap and overflow typed stop"
+    },
+    {
+      "severity": "LOW",
+      "code": "QA_SEVERITY_METADATA_NOT_INDEPENDENT",
+      "evidence": "severity values are metadata rather than derived policy results",
+      "requiredClosure": "derive QA severity from assertion/policy mapping and retain independent Luna review"
+    }
+  ],
+  "historicalFailureCoverage": [
+    "expected process value missing before event",
+    "package metadata and AOSP signature layout drift",
+    "runner class and method identity mismatch",
+    "toolchain launch and capture ambiguity",
+    "Android sqlite3 unavailability",
+    "version contract mismatch",
+    "binding tuple mismatch",
+    "pm-path production nonzero",
+    "outer wrapper status 125 masking known helper exit"
+  ],
+  "independentLunaReview": {
+    "path": "docs/P5E_A43_PM_PATH_CAPTURE_REPAIR_FINAL_LUNA_REVIEW_20260928.md",
+    "sha256": "76ABB92C3F29ECDE3A6A62C6263F095CEAB8A5FF96356DDBCC9352FD7BB638E9",
+    "verdict": "OFFLINE_REPAIR_BEHAVIOR_PASS / LIVE_PACKET_NOT_READY / 0 BLOCKER / 1 HIGH / 2 MEDIUM / 2 LOW"
+  },
+  "closedEventPolicy": {
+    "latestEvent": "raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc",
+    "eventReusable": false,
+    "decisionReusable": false,
+    "oldPacketReusable": false
+  },
+  "authorizedActions": [
+    "offline source review",
+    "synthetic fixture creation",
+    "offline command/helper repair",
+    "offline QA and independent review",
+    "documentation and provenance synchronization"
+  ],
+  "prohibitedActions": [
+    "ADB",
+    "device access",
+    "provider call",
+    "credential read",
+    "database write",
+    "build or install",
+    "RAW dispatch",
+    "retry or redispatch",
+    "RECONCILE",
+    "P6 action",
+    "owner decision fabrication"
+  ],
+  "nextAction": "EXECUTE_A43_OUTER_PROCESS_TREE_AND_AUTHORITY_GATE_CLOSURE_OFFLINE_ONLY"
+}

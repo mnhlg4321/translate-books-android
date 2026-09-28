@@ -1,10 +1,10 @@
 # Build State
 
-> Current work package — 2026-09-28: `OFFLINE_PM_PATH_CLASSIFICATION_AND_OUTER_CAPTURE_REPAIR_PASS / CLOSED_CONSUMED_NON_REUSABLE / OWNER_REVIEW_PENDING / NOT_DISPATCHED / P6_NOT_READY`. The closed event `raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc` remains immutable and was not retried, renamed or reused. Result/provenance: `docs/P5E_A43_PM_PATH_CAPTURE_REPAIR_RESULT_20260928.json` and `docs/P5E_A43_PM_PATH_CAPTURE_REPAIR_PROVENANCE_20260928.json`; QA `36/36`, binding `262/262`, regression `175/175`, DB `56/56`, Luna `0 BLOCKER / 0 HIGH`.
+> Current work package — 2026-09-28: `OFFLINE_REPAIR_BEHAVIOR_PASS / LIVE_PACKET_NOT_READY / A43_OUTER_PROCESS_TREE_AND_AUTHORITY_GATE_CLOSURE_REQUIRED / 0_BLOCKER / 1_HIGH / 2_MEDIUM / 2_LOW / CLOSED_CONSUMED_NON_REUSABLE / NOT_AUTHORIZED / NOT_DISPATCHED / P6_NOT_READY`. Behavioral QA remains PASS (`36/36`, binding `262/262`, regression `175/175`, DB `56/56`), but final Luna audit found parent-only timeout termination on Windows PowerShell 5.1, non-durable exact dependency provenance, and missing machine gates before event creation. Final source review: `docs/P5E_A43_PM_PATH_CAPTURE_REPAIR_FINAL_LUNA_REVIEW_20260928.md`; next-work QA `29/29 PASS` and Luna plan review `0 BLOCKER / 0 HIGH / 0 MEDIUM`.
 
 > Final offline pins: manifest `C08C3F6D8EE1B802B0D68AB1FF0302E82655D17C72B06619752B65396C11ADC3`; command `C641F6A01C01209AD08FB820871E575895DC998A4CB6AD15769F1D2222BA4CD5`; helper `959F2BBDC2EF163F00F3A56900B903DF529FDCDD9024AD6CEE906A01E080A8F0`; exporter `D8783B31F9141458CA397915664CA79B07D3161A5E0F0D3B4365C5C65EA41D06`; bridge `4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111`; certificate `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155`; serial `15e84958`.
 
-> Repair evidence is synthetic/offline only: PM-path enum matrix and outer capture RED/GREEN pass, helper self-test PASS, PowerShell 5.1 parse PASS, secret scan PASS, `git diff --check` PASS, and all ADB/device/provider/credential/DB-write/build/install/RAW/redispatch counters are `0`. The old packet is closed/consumed/non-reusable; no new owner decision is requested here.
+> Repair evidence is synthetic/offline only: PM-path enum matrix and outer capture RED/GREEN pass, helper self-test PASS, PowerShell 5.1 parse PASS, secret scan PASS, `git diff --check` PASS, and all live counters are `0`. These results close the original classification/masking defects but do not prove safe live process-tree termination or a reconstructible runtime bundle. The old packet remains closed/consumed/non-reusable.
 
 > Closed historical A4.3 outcome — 2026-09-26: owner decision was received and consumed by exactly one event. State is `OWNER_DECISION_RECEIVED_AND_CONSUMED / A4_3_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP / P5E_COLLECTOR_BINDING_TUPLE_MISMATCH / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. Result: `docs/P5E_A43_EVENT_RESULT_20260926.json`. This does not authorize the current offline repair or a new event.
 
@@ -14,7 +14,7 @@
 
 > The consumed live packet remains historical: `PrepareEvent` completed, `pm-path-production-before` exited `1` without timeout and the outer code `125` reflected incomplete helper stream drain. The offline repair keeps the collector typed stop and the helper process exit/drain states separate.
 
-> Current Next action: owner reviews the repaired offline packet only; no command execution, live event, new authorization, retry/redispatch, P5 exit claim or P6 action.
+> Current Next action: run only `docs/P5E_A43_PREAUTH_RUNTIME_GUARD_CLOSURE_NEXT_WORK_REQUEST_20260928.md` offline; no owner authorization request, command execution, live event, ADB, retry/redispatch, P5 claim or P6 action.
 
 > Superseded DB diagnosis — 2026-09-25: WAL/SHM presence exit `1` meant `ABSENT` under the helper contract. The sole proven blocker was the launched, non-timeout `database-consistent-read-transaction` exit `1`; native cause remains unproven. The bounded offline repair named there is now PASS; no live event is authorized by that result.
 

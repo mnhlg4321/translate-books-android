@@ -1,8 +1,8 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Current work package — 2026-09-28: `OFFLINE_PM_PATH_CLASSIFICATION_AND_OUTER_CAPTURE_REPAIR_PASS / CLOSED_CONSUMED_NON_REUSABLE / OWNER_REVIEW_PENDING / NOT_DISPATCHED / P6_NOT_READY`. The prior event `raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc` remains closed and immutable. Repair result/provenance: `docs/P5E_A43_PM_PATH_CAPTURE_REPAIR_RESULT_20260928.json` and `docs/P5E_A43_PM_PATH_CAPTURE_REPAIR_PROVENANCE_20260928.json`; QA `36/36`, binding `262/262`, regression `175/175`, DB `56/56`, Luna `0 BLOCKER / 0 HIGH`.
+> Current work package — 2026-09-28: `OFFLINE_REPAIR_BEHAVIOR_PASS / LIVE_PACKET_NOT_READY / A43_OUTER_PROCESS_TREE_AND_AUTHORITY_GATE_CLOSURE_REQUIRED / 0_BLOCKER / 1_HIGH / 2_MEDIUM / 2_LOW / CLOSED_CONSUMED_NON_REUSABLE / NOT_AUTHORIZED / NOT_DISPATCHED / P6_NOT_READY`. The prior event remains closed/consumed. Behavioral QA is PASS, but final independent review found unproven PowerShell 5.1 descendant termination, non-durable exact dependency provenance, and missing owner/expected-value machine gates before event creation.
 
-> Repaired review-only packet pins are manifest `C08C3F6D8EE1B802B0D68AB1FF0302E82655D17C72B06619752B65396C11ADC3`, command `C641F6A01C01209AD08FB820871E575895DC998A4CB6AD15769F1D2222BA4CD5`, helper `959F2BBDC2EF163F00F3A56900B903DF529FDCDD9024AD6CEE906A01E080A8F0`, exporter `D8783B31F9141458CA397915664CA79B07D3161A5E0F0D3B4365C5C65EA41D06`, bridge `4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111`, certificate `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155`, serial `15e84958`. This proposal is not an owner authorization request and does not authorize a new event.
+> Repaired review-only packet pins remain manifest `C08C3F6D8EE1B802B0D68AB1FF0302E82655D17C72B06619752B65396C11ADC3`, command `C641F6A01C01209AD08FB820871E575895DC998A4CB6AD15769F1D2222BA4CD5`, helper `959F2BBDC2EF163F00F3A56900B903DF529FDCDD9024AD6CEE906A01E080A8F0`, exporter `D8783B31F9141458CA397915664CA79B07D3161A5E0F0D3B4365C5C65EA41D06`, bridge `4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111`, certificate `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155`, serial `15e84958`. They are evidence inputs for the next offline closure, not a live authorization packet.
 
 > Closed historical A4.3 outcome — 2026-09-26: the explicit owner decision was received and consumed by exactly one event. The new packet stopped in the read-only Before collector with `COLLECTOR_TYPED_STOP / P5E_COLLECTOR_BINDING_TUPLE_MISMATCH`; RAW was not dispatched, P5 exit was not claimed and P6 remains not ready. Result: `docs/P5E_A43_EVENT_RESULT_20260926.json`. This does not authorize the current offline repair or a new event.
 
@@ -10,7 +10,7 @@
 
 > Current DB readback prerequisite — 2026-09-26: `OFFLINE_DB_HOST_READBACK_REPAIR_PASS` is bound by `docs/P5E_DB_HOST_READBACK_REPAIR_QA_20260925.json` at `56/56 PASS`. The old proposal, manifest/command and 2026-09-25 decision remain consumed; no live event is authorized by this work.
 
-> Current Next action: owner reviews the repaired offline packet only. Do not execute the command, create a live event, request or reuse an owner decision, retry/redispatch, infer package absence, dispatch RAW or open P6.
+> Current Next action: execute only `docs/P5E_A43_PREAUTH_RUNTIME_GUARD_CLOSURE_NEXT_WORK_REQUEST_20260928.md` offline. Do not request authorization, execute the command, create an event, use ADB/device/provider/credential/DB writes, retry/redispatch, dispatch RAW or open P6.
 
 > Superseded DB diagnosis — 2026-09-25: WAL/SHM exit `1` are valid absence results. The actual stop was the direct Android `sqlite3` consistent-read command. This proposal remains consumed and is not executable; the offline binary-export/host-readback repair is now complete. No new key, account check or owner live decision was requested for that repair.
 
