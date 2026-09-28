@@ -21,12 +21,12 @@ param(
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
     [Parameter(ParameterSetName = 'CollectReadback')]
-    [string]$ManifestPath = 'D:\App Translate Books\docs\P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST_REPAIRED_20260926.md',
+    [string]$ManifestPath = '',
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
     [Parameter(ParameterSetName = 'CollectReadback')]
-    [string]$ExpectedManifestSha256 = '669C54049920C49344D2FB55533EFA9FA9F87E933A6A18DE5FA7215F1146D147',
+    [string]$ExpectedManifestSha256 = '',
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
@@ -97,6 +97,21 @@ param(
     [Parameter(ParameterSetName = 'VerifyOutcome', Mandatory = $true)]
     [AllowEmptyString()]
     [string]$ExpectedSqliteBridgeSha256,
+
+    [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
+    [string]$OwnerDecisionId,
+
+    [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
+    [string]$OwnerDecisionReceiptSha256,
+
+    [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
+    [string]$OwnerDecisionPacketIdentifier,
+
+    [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
+    [string]$OwnerDecisionSerial,
+
+    [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
+    [string]$OwnerDecisionScope,
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [string]$EvidenceRoot = 'D:\P5E-private',
@@ -178,6 +193,14 @@ if ((Get-FileHash -LiteralPath $script:P5ERawToolchainPath -Algorithm SHA256).Ha
     throw 'P5E_RAW_TOOLCHAIN_LIBRARY_HASH_MISMATCH_STOP'
 }
 . $script:P5ERawToolchainPath -LibraryOnly
+
+$script:P5EA43RuntimeGuardPath = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot 'p5e-a43-runtime-guards.ps1'))
+$script:P5EA43RuntimeGuardSha256 = 'f332954fb8aa2048edf18630c5d1ef7b2039d57458c85cd6bb5cb07f59d96dba'
+if (-not (Test-Path -LiteralPath $script:P5EA43RuntimeGuardPath -PathType Leaf)) { throw 'P5E_A43_RUNTIME_GUARD_MISSING_STOP' }
+$guardLibraryItem = Get-Item -LiteralPath $script:P5EA43RuntimeGuardPath -Force
+if (($guardLibraryItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'P5E_A43_RUNTIME_GUARD_REPARSE_STOP' }
+if ((Get-FileHash -LiteralPath $script:P5EA43RuntimeGuardPath -Algorithm SHA256).Hash.ToLowerInvariant() -cne $script:P5EA43RuntimeGuardSha256) { throw 'P5E_A43_RUNTIME_GUARD_HASH_MISMATCH_STOP' }
+. $script:P5EA43RuntimeGuardPath -LibraryOnly
 
 $script:P5EDatabaseExporterPath = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot 'p5e-db-binary-export.ps1'))
 $script:P5ESqliteBridgePath = [IO.Path]::GetFullPath((Join-Path (Get-Item $PSScriptRoot).Parent.FullName 'docs\P5E_SQLITE_BRIDGE.py'))
@@ -270,7 +293,8 @@ $script:P5EPresenceSemanticOutcomeAllowlist = @(
 $script:P5EGenericSemanticOutcomeAllowlist = @(
     'PROCESS_EXITED_ZERO', 'PROCESS_EXITED_NONZERO', 'REDACTION_FAILED',
     'OUTPUT_LIMIT', 'CAPTURE_FAILED', 'LAUNCH_FAILED', 'TIMEOUT',
-    'QUERY_FAILED', 'PROCESS_EXIT_UNKNOWN', 'WRITE_FAILED', 'HASH_MISMATCH'
+    'QUERY_FAILED', 'PROCESS_EXIT_UNKNOWN', 'WRITE_FAILED', 'HASH_MISMATCH',
+    'EXTERNAL_PROCESS_STATE_UNKNOWN'
 )
 $script:P5EPackagePathClassificationAllowlist = @(
     'PACKAGE_PRESENT', 'PACKAGE_NOT_FOUND', 'DEVICE_UNAVAILABLE',
@@ -525,6 +549,7 @@ function Initialize-P5ECollectorCommandLog {
 
 function Get-P5ECollectorSemanticOutcome {
     param([Parameter(Mandatory = $true)]$Run)
+    if ((Get-P5EProperty $Run 'ContainmentVerified') -is [bool] -and -not [bool](Get-P5EProperty $Run 'ContainmentVerified')) { return 'EXTERNAL_PROCESS_STATE_UNKNOWN' }
     if ([bool](Get-P5EProperty $Run 'RedactionViolation')) { return 'REDACTION_FAILED' }
     if ([bool](Get-P5EProperty $Run 'OutputTooLarge')) { return 'OUTPUT_LIMIT' }
     if (-not [bool](Get-P5EProperty $Run 'CaptureBounded')) { return 'CAPTURE_FAILED' }
@@ -547,6 +572,7 @@ function Get-P5EPackagePathClassification {
     if ([string]::IsNullOrWhiteSpace($PackageName) -or $PackageName -notmatch '^[A-Za-z0-9._]+$') {
         return $unknown
     }
+    if ((Get-P5EProperty $Run 'ContainmentVerified') -is [bool] -and -not [bool](Get-P5EProperty $Run 'ContainmentVerified')) { return $unknown }
     if ([bool](Get-P5EProperty $Run 'RedactionViolation') -or
             [bool](Get-P5EProperty $Run 'OutputTooLarge') -or
             -not [bool](Get-P5EProperty $Run 'CaptureBounded')) {
@@ -1410,11 +1436,6 @@ function Set-P5EProcessStartInfoArguments {
         [Parameter(Mandatory = $true)][System.Diagnostics.ProcessStartInfo]$StartInfo,
         [Parameter(Mandatory = $true)][AllowEmptyCollection()][string[]]$ArgumentList
     )
-    $argumentListProperty = $StartInfo.PSObject.Properties['ArgumentList']
-    if ($null -ne $argumentListProperty) {
-        foreach ($argument in $ArgumentList) { [void]$StartInfo.ArgumentList.Add([string]$argument) }
-        return
-    }
     $StartInfo.Arguments = [string]::Join(' ', @($ArgumentList | ForEach-Object {
         ConvertTo-P5EWindowsProcessArgument -Value ([string]$_)
     }))
@@ -1492,8 +1513,8 @@ function Invoke-P5EProcessSupervisor {
     Remove-P5EInheritedEnvironment -StartInfo $startInfo -Names $ClearInheritedEnvironmentVariableNames
     Set-P5EProcessStartInfoArguments -StartInfo $startInfo -ArgumentList $ArgumentList
 
-    $process = [System.Diagnostics.Process]::new()
-    $process.StartInfo = $startInfo
+    $process = $null
+    $launch = $null
     $launchCount = 0
     $timedOut = $false
     $exitCode = $null
@@ -1502,19 +1523,22 @@ function Invoke-P5EProcessSupervisor {
     $launchReason = ''
     $inputWriteCompleted = -not $hasStandardInput
     $inputWriteErrorClass = ''
-    $stdoutCapture = [pscustomobject]@{ Completed = $true; Text = ''; ErrorClass = '' }
-    $stderrCapture = [pscustomobject]@{ Completed = $true; Text = ''; ErrorClass = '' }
+    $stdoutCapture = [pscustomobject]@{ Completed = $true; Text = ''; ErrorClass = ''; ByteCount = 0L; Truncated = $false }
+    $stderrCapture = [pscustomobject]@{ Completed = $true; Text = ''; ErrorClass = ''; ByteCount = 0L; Truncated = $false }
     $textCapture = $null
     try {
-        if (-not $process.Start()) { throw 'PROCESS_START_RETURNED_FALSE' }
+        $launch = [P5EProcessLauncher]::Start($startInfo)
+        $process = $launch.Process
         $launchCount = 1
         $inputBytes = if ($hasStandardInput) { [Text.UTF8Encoding]::new($false).GetBytes($StandardInputText) } else { $null }
-        $textCapture = [P5EProcessTextCapture]::Capture($process, 4194304, 1048576, [int]$TimeoutMilliseconds, $inputBytes)
+        $textCapture = [P5EProcessTextCapture]::Capture($launch, 4194304, 1048576, [int]$TimeoutMilliseconds, $inputBytes)
         $timedOut = [bool]$textCapture.TimedOut
         $inputWriteCompleted = [bool]$textCapture.InputWriteCompleted
         $inputWriteErrorClass = [string]$textCapture.InputWriteErrorClass
-        $stdoutCapture = [pscustomobject]@{ Completed = [bool]$textCapture.CaptureBounded; Text = [string]$textCapture.Stdout; ErrorClass = [string]$textCapture.CaptureErrorClass }
-        $stderrCapture = [pscustomobject]@{ Completed = [bool]$textCapture.CaptureBounded; Text = [string]$textCapture.Stderr; ErrorClass = [string]$textCapture.CaptureErrorClass }
+        $stdoutText = if ([bool]$textCapture.StdoutTruncated) { 'P5E_OUTPUT_TOO_LARGE' } else { [string]$textCapture.Stdout }
+        $stderrText = if ([bool]$textCapture.StderrTruncated) { 'P5E_OUTPUT_TOO_LARGE' } else { [string]$textCapture.Stderr }
+        $stdoutCapture = [pscustomobject]@{ Completed = [bool]$textCapture.CaptureBounded; Text = $stdoutText; ErrorClass = [string]$textCapture.CaptureErrorClass; ByteCount = [long]$textCapture.StdoutByteLength; Truncated = [bool]$textCapture.StdoutTruncated }
+        $stderrCapture = [pscustomobject]@{ Completed = [bool]$textCapture.CaptureBounded; Text = $stderrText; ErrorClass = [string]$textCapture.CaptureErrorClass; ByteCount = [long]$textCapture.StderrByteLength; Truncated = [bool]$textCapture.StderrTruncated }
         if ($null -ne $textCapture.ExitCode) { $exitCode = $textCapture.ExitCode }
     } catch {
         if ($launchCount -eq 0) {
@@ -1525,7 +1549,7 @@ function Invoke-P5EProcessSupervisor {
         }
         else { $inputWriteErrorClass = if ([string]::IsNullOrEmpty($inputWriteErrorClass)) { $_.Exception.GetType().Name } else { $inputWriteErrorClass } }
     } finally {
-        if ($process -ne $null) { $process.Dispose() }
+        if ($null -ne $launch) { $launch.Dispose() } elseif ($null -ne $process) { $process.Dispose() }
     }
     $safeStdout = if ($stdoutCapture.Completed) {
         Protect-P5ECaptureText -Text ([string]$stdoutCapture.Text) -SensitiveValues $SensitiveValues
@@ -1540,10 +1564,17 @@ function Invoke-P5EProcessSupervisor {
     $captureBounded = [bool]($stdoutCapture.Completed -and $stderrCapture.Completed -and
         $null -ne $textCapture -and [string]::IsNullOrWhiteSpace([string]$textCapture.CaptureErrorClass))
     $redactionViolation = $safeStdout.Violation -or $safeStderr.Violation
-    Write-P5EUtf8NoBom -Path $stdoutPath -Text $safeStdout.Text
-    Write-P5EUtf8NoBom -Path $stderrPath -Text $safeStderr.Text
+    # Persist only an allowlisted observation summary. Raw instrumentation
+    # stdout/stderr never leaves this function and is not retained in evidence.
+    Write-P5EUtf8NoBom -Path $stdoutPath -Text (New-P5ESafeInstrumentationEvidenceText -Text ([string]$stdoutCapture.Text))
+    Write-P5EUtf8NoBom -Path $stderrPath -Text (New-P5ESafeInstrumentationEvidenceText -Text ([string]$stderrCapture.Text) -ErrorStream)
+    $containmentVerified = [bool]($null -ne $textCapture -and $textCapture.ContainmentVerified)
+    $outputTooLarge = [bool]($null -ne $textCapture -and $textCapture.OutputTooLarge)
     $outcome = if ($launchCount -eq 0) { 'FAILED_BEFORE_LAUNCH' }
         elseif (-not $inputWriteCompleted) { 'INPUT_NOT_DELIVERED' }
+        elseif (-not $containmentVerified) { 'EXTERNAL_PROCESS_STATE_UNKNOWN' }
+        elseif ($outputTooLarge) { 'OUTPUT_TOO_LARGE' }
+        elseif ($null -ne $textCapture -and -not [string]::IsNullOrWhiteSpace([string]$textCapture.CaptureErrorClass)) { 'CAPTURE_FAILED' }
         elseif ($timedOut) { 'TIMEOUT' }
         elseif (-not $captureBounded) { 'CAPTURE_NOT_BOUNDED' }
         elseif ($null -ne $exitCode -and $exitCode -eq 0) { 'PROCESS_EXITED_ZERO' }
@@ -1560,6 +1591,16 @@ function Invoke-P5EProcessSupervisor {
         InputWriteCompleted = $inputWriteCompleted
         InputWriteErrorClass = $inputWriteErrorClass
         CaptureBounded = $captureBounded
+        CaptureErrorClass = if ($null -eq $textCapture) { '' } else { [string]$textCapture.CaptureErrorClass }
+        ContainmentStatus = if ($null -eq $textCapture) { 'NOT_STARTED' } else { [string]$textCapture.ContainmentStatus }
+        ContainmentVerified = $containmentVerified
+        StdoutDrainStatus = if ($null -eq $textCapture) { 'NOT_STARTED' } else { [string]$textCapture.StdoutDrainStatus }
+        StderrDrainStatus = if ($null -eq $textCapture) { 'NOT_STARTED' } else { [string]$textCapture.StderrDrainStatus }
+        OutputTooLarge = $outputTooLarge
+        StdoutByteLength = [long]$stdoutCapture.ByteCount
+        StderrByteLength = [long]$stderrCapture.ByteCount
+        StdoutTruncated = [bool]$stdoutCapture.Truncated
+        StderrTruncated = [bool]$stderrCapture.Truncated
         StdoutCaptureErrorClass = $stdoutCapture.ErrorClass
         StderrCaptureErrorClass = $stderrCapture.ErrorClass
         RedactionViolation = $redactionViolation
@@ -1585,8 +1626,8 @@ function Invoke-P5EReadOnlyProcess {
     $startInfo.RedirectStandardError = $true
     Remove-P5EInheritedEnvironment -StartInfo $startInfo -Names $ClearInheritedEnvironmentVariableNames
     Set-P5EProcessStartInfoArguments -StartInfo $startInfo -ArgumentList $ArgumentList
-    $process = [System.Diagnostics.Process]::new()
-    $process.StartInfo = $startInfo
+    $process = $null
+    $launch = $null
     $launchCount = 0
     $timedOut = $false
     $exitCode = $null
@@ -1595,16 +1636,19 @@ function Invoke-P5EReadOnlyProcess {
     $launchReason = ''
     $stdout = ''
     $stderr = ''
-    $stdoutCapture = [pscustomobject]@{ Completed = $true; Text = ''; ErrorClass = '' }
-    $stderrCapture = [pscustomobject]@{ Completed = $true; Text = ''; ErrorClass = '' }
+    $stdoutCapture = [pscustomobject]@{ Completed = $true; Text = ''; ErrorClass = ''; ByteCount = 0L; Truncated = $false }
+    $stderrCapture = [pscustomobject]@{ Completed = $true; Text = ''; ErrorClass = ''; ByteCount = 0L; Truncated = $false }
     $textCapture = $null
     try {
-        if (-not $process.Start()) { throw 'PROCESS_START_RETURNED_FALSE' }
+        $launch = [P5EProcessLauncher]::Start($startInfo)
+        $process = $launch.Process
         $launchCount = 1
-        $textCapture = [P5EProcessTextCapture]::Capture($process, 4194304, 1048576, [int]$TimeoutMilliseconds, $null)
+        $textCapture = [P5EProcessTextCapture]::Capture($launch, 4194304, 1048576, [int]$TimeoutMilliseconds, $null)
         $timedOut = [bool]$textCapture.TimedOut
-        $stdoutCapture = [pscustomobject]@{ Completed = [bool]$textCapture.CaptureBounded; Text = [string]$textCapture.Stdout; ErrorClass = [string]$textCapture.CaptureErrorClass }
-        $stderrCapture = [pscustomobject]@{ Completed = [bool]$textCapture.CaptureBounded; Text = [string]$textCapture.Stderr; ErrorClass = [string]$textCapture.CaptureErrorClass }
+        $stdoutText = if ([bool]$textCapture.StdoutTruncated) { 'P5E_OUTPUT_TOO_LARGE' } else { [string]$textCapture.Stdout }
+        $stderrText = if ([bool]$textCapture.StderrTruncated) { 'P5E_OUTPUT_TOO_LARGE' } else { [string]$textCapture.Stderr }
+        $stdoutCapture = [pscustomobject]@{ Completed = [bool]$textCapture.CaptureBounded; Text = $stdoutText; ErrorClass = [string]$textCapture.CaptureErrorClass; ByteCount = [long]$textCapture.StdoutByteLength; Truncated = [bool]$textCapture.StdoutTruncated }
+        $stderrCapture = [pscustomobject]@{ Completed = [bool]$textCapture.CaptureBounded; Text = $stderrText; ErrorClass = [string]$textCapture.CaptureErrorClass; ByteCount = [long]$textCapture.StderrByteLength; Truncated = [bool]$textCapture.StderrTruncated }
         $stdout = if ($stdoutCapture.Completed) { [string]$stdoutCapture.Text } else { 'P5E_CAPTURE_NOT_BOUNDED' }
         $stderr = if ($stderrCapture.Completed) { [string]$stderrCapture.Text } else { 'P5E_CAPTURE_NOT_BOUNDED' }
         if ($null -ne $textCapture.ExitCode) { $exitCode = $textCapture.ExitCode }
@@ -1616,11 +1660,11 @@ function Invoke-P5EReadOnlyProcess {
             $launchReason = $launchDiagnostics.Reason
         }
         else { $stderr = $_.Exception.GetType().Name }
-    } finally { $process.Dispose() }
+    } finally { if ($null -ne $launch) { $launch.Dispose() } elseif ($null -ne $process) { $process.Dispose() } }
     $safeStdout = Protect-P5ECaptureText -Text ([string]$stdout) -SensitiveValues $SensitiveValues
     $safeStderr = Protect-P5ECaptureText -Text ([string]$stderr) -SensitiveValues $SensitiveValues
     $outputTooLarge = ($null -ne $textCapture -and
-        ([bool]$textCapture.StdoutTruncated -or [bool]$textCapture.StderrTruncated)) -or
+        ([bool]$textCapture.StdoutTruncated -or [bool]$textCapture.StderrTruncated -or [bool]$textCapture.OutputTooLarge)) -or
         ([string]$safeStdout.Text).Length -gt 4194304 -or ([string]$safeStderr.Text).Length -gt 1048576
     if ($outputTooLarge) {
         $safeStdout = Protect-P5ECaptureText -Text 'P5E_COLLECTOR_OUTPUT_TOO_LARGE'
@@ -1629,7 +1673,7 @@ function Invoke-P5EReadOnlyProcess {
     $captureBounded = [bool]($stdoutCapture.Completed -and $stderrCapture.Completed -and
         $null -ne $textCapture -and [string]::IsNullOrWhiteSpace([string]$textCapture.CaptureErrorClass))
     return [pscustomobject]@{
-        Outcome = if ($launchCount -eq 0) { 'FAILED_BEFORE_LAUNCH' } elseif ($timedOut) { 'TIMEOUT' } elseif ($null -eq $exitCode) { 'PROCESS_EXIT_UNKNOWN' } elseif ($exitCode -eq 0) { 'PROCESS_EXITED_ZERO' } else { 'PROCESS_EXITED_NONZERO' }
+        Outcome = if ($launchCount -eq 0) { 'FAILED_BEFORE_LAUNCH' } elseif ($null -ne $textCapture -and -not [bool]$textCapture.ContainmentVerified) { 'EXTERNAL_PROCESS_STATE_UNKNOWN' } elseif ($outputTooLarge) { 'OUTPUT_TOO_LARGE' } elseif ($null -ne $textCapture -and -not [string]::IsNullOrWhiteSpace([string]$textCapture.CaptureErrorClass)) { 'CAPTURE_FAILED' } elseif ($timedOut) { 'TIMEOUT' } elseif ($null -eq $exitCode) { 'PROCESS_EXIT_UNKNOWN' } elseif ($exitCode -eq 0) { 'PROCESS_EXITED_ZERO' } else { 'PROCESS_EXITED_NONZERO' }
         LaunchCount = $launchCount
         ExitCode = $exitCode
         TimedOut = $timedOut
@@ -1638,13 +1682,21 @@ function Invoke-P5EReadOnlyProcess {
         LaunchNativeErrorCode = $launchNativeErrorCode
         LaunchReason = $launchReason
         CaptureBounded = $captureBounded
+        CaptureErrorClass = if ($null -eq $textCapture) { '' } else { [string]$textCapture.CaptureErrorClass }
         StdoutCaptureErrorClass = $stdoutCapture.ErrorClass
         StderrCaptureErrorClass = $stderrCapture.ErrorClass
         RedactionViolation = [bool]($safeStdout.Violation -or $safeStderr.Violation)
         OutputTooLarge = $outputTooLarge
         Stdout = [string]$safeStdout.Text
         Stderr = [string]$safeStderr.Text
-        ByteLength = [long]([Text.Encoding]::UTF8.GetByteCount([string]$safeStdout.Text))
+        ByteLength = [long]$stdoutCapture.ByteCount
+        StderrByteLength = [long]$stderrCapture.ByteCount
+        StdoutTruncated = [bool]$stdoutCapture.Truncated
+        StderrTruncated = [bool]$stderrCapture.Truncated
+        ContainmentStatus = if ($null -eq $textCapture) { 'NOT_STARTED' } else { [string]$textCapture.ContainmentStatus }
+        ContainmentVerified = [bool]($null -ne $textCapture -and $textCapture.ContainmentVerified)
+        StdoutDrainStatus = if ($null -eq $textCapture) { 'NOT_STARTED' } else { [string]$textCapture.StdoutDrainStatus }
+        StderrDrainStatus = if ($null -eq $textCapture) { 'NOT_STARTED' } else { [string]$textCapture.StderrDrainStatus }
         HostSha256 = ''
     }
 }
@@ -3427,11 +3479,16 @@ function New-P5EEventPlan {
         [Parameter(Mandatory = $true)][string]$HelperHash,
         [Parameter(Mandatory = $true)][string]$DatabaseExporterHash,
         [Parameter(Mandatory = $true)][string]$SqliteBridgeHash,
-        [Parameter(Mandatory = $true)]$Toolchain
+        [Parameter(Mandatory = $true)]$Toolchain,
+        [string]$OwnerDecisionId = '',
+        [string]$OwnerDecisionReceiptSha256 = '',
+        [string]$OwnerDecisionPacketIdentifier = '',
+        [string]$OwnerDecisionSerial = '',
+        [string]$OwnerDecisionScope = ''
     )
     $directory = Test-P5EExactEventDirectory -Directory $EvidenceDirectory
     $eventId = Split-Path -Leaf $directory
-    return [ordered]@{
+    $plan = [ordered]@{
         schemaVersion = $script:P5EEventPlanSchema
         eventId = $eventId
         evidenceDirectory = $directory
@@ -3489,6 +3546,20 @@ function New-P5EEventPlan {
         noProviderFromCollector = $true
         noMutationFromCollector = $true
     }
+    if (-not [string]::IsNullOrWhiteSpace($OwnerDecisionId)) {
+        $plan.ownerDecisionBindingVersion = 'p5e.a43.owner-decision-binding.v1'
+        $plan.ownerDecisionId = $OwnerDecisionId
+        $plan.ownerDecisionReceiptSha256 = $OwnerDecisionReceiptSha256.ToLowerInvariant()
+        $plan.ownerDecisionPacketIdentifier = $OwnerDecisionPacketIdentifier
+        $plan.ownerDecisionSerial = $OwnerDecisionSerial
+        $plan.ownerDecisionScope = $OwnerDecisionScope
+        $plan.ownerDecisionOneEventLimit = 1L
+        $plan.ownerDecisionOneProviderCallLimit = 1L
+        $plan.ownerDecisionNoRetry = $true
+        $plan.ownerDecisionNoFallback = $true
+        $plan.ownerDecisionNoRedispatch = $true
+    }
+    return $plan
 }
 
 function Write-P5EEventPlan {
@@ -3516,8 +3587,12 @@ function Read-P5EEventPlan {
     $schemaVersion = [string](Get-P5EProperty $plan 'schemaVersion')
     $currentContractRequired = @('databaseReadbackContractVersion', 'databaseExporterPath', 'databaseExporterSha256', 'sqliteBridgePath', 'sqliteBridgeSha256')
     $required = if ($schemaVersion -eq $script:P5EEventPlanSchema) { $baseRequired + $currentContractRequired + @('toolchain') } else { $baseRequired }
+    $ownerBindingFields = @('ownerDecisionBindingVersion', 'ownerDecisionId', 'ownerDecisionReceiptSha256',
+        'ownerDecisionPacketIdentifier', 'ownerDecisionSerial', 'ownerDecisionScope',
+        'ownerDecisionOneEventLimit', 'ownerDecisionOneProviderCallLimit', 'ownerDecisionNoRetry',
+        'ownerDecisionNoFallback', 'ownerDecisionNoRedispatch')
     $errors = [System.Collections.Generic.List[string]]::new()
-    Test-P5EObjectShape -Object $plan -Path 'eventPlan' -Required $required -Allowed $required -Errors $errors | Out-Null
+    Test-P5EObjectShape -Object $plan -Path 'eventPlan' -Required $required -Allowed ($required + $ownerBindingFields) -Errors $errors | Out-Null
     if ($schemaVersion -notin @($script:P5EEventPlanLegacySchema, $script:P5EEventPlanSchema)) {
         Add-P5EError $errors 'EVENT_PLAN_SCHEMA_UNSUPPORTED'
     }
@@ -3561,6 +3636,21 @@ function Read-P5EEventPlan {
     Test-P5ELong $plan 'executionDeadlineMillis' $script:P5EExecutionDeadlineMilliseconds 'eventPlan' $errors -Minimum 1 | Out-Null
     Test-P5ELong $plan 'hostObservationTimeoutMillis' $script:P5EHostObservationTimeoutMilliseconds 'eventPlan' $errors -Minimum 1 | Out-Null
     foreach ($name in @('noRedispatch', 'noProviderFromCollector', 'noMutationFromCollector')) { Test-P5EBoolean $plan $name $true 'eventPlan' $errors }
+    $ownerBindingPresent = @($ownerBindingFields | Where-Object { $null -ne $plan.PSObject.Properties[$_] }).Count -gt 0
+    if ($ownerBindingPresent) {
+        foreach ($name in $ownerBindingFields) {
+            if ($null -eq $plan.PSObject.Properties[$name]) { Add-P5EError $errors ('EVENT_PLAN_OWNER_' + $name.ToUpperInvariant() + '_MISSING') }
+        }
+        Test-P5EEqual $plan 'ownerDecisionBindingVersion' 'p5e.a43.owner-decision-binding.v1' 'eventPlan' $errors
+        if ([string](Get-P5EProperty $plan 'ownerDecisionId') -notmatch '^[A-Za-z0-9._-]{1,96}$') { Add-P5EError $errors 'EVENT_PLAN_OWNER_DECISION_ID_INVALID' }
+        Test-P5ESha256 $plan 'ownerDecisionReceiptSha256' 'eventPlan' $errors
+        if ([string](Get-P5EProperty $plan 'ownerDecisionPacketIdentifier') -notmatch '^[A-Za-z0-9._-]{1,160}$') { Add-P5EError $errors 'EVENT_PLAN_OWNER_PACKET_INVALID' }
+        Test-P5EEqual $plan 'ownerDecisionSerial' $script:P5ESerial 'eventPlan' $errors
+        Test-P5EEqual $plan 'ownerDecisionScope' 'RAW/GLOSSARY' 'eventPlan' $errors
+        Test-P5ELong $plan 'ownerDecisionOneEventLimit' 1L 'eventPlan' $errors -Minimum 1 | Out-Null
+        Test-P5ELong $plan 'ownerDecisionOneProviderCallLimit' 1L 'eventPlan' $errors -Minimum 1 | Out-Null
+        foreach ($name in @('ownerDecisionNoRetry', 'ownerDecisionNoFallback', 'ownerDecisionNoRedispatch')) { Test-P5EBoolean $plan $name $true 'eventPlan' $errors }
+    }
     if ($schemaVersion -eq $script:P5EEventPlanSchema) {
         $toolchain = Get-P5EProperty $plan 'toolchain'
         $toolchainRequired = @('contractVersion', 'sdkPath', 'buildToolsVersion', 'signerLaunchKind',
@@ -3811,7 +3901,7 @@ function Get-P5EInstrumentationObservation {
             } else { $malformedTerminal = $true }
         }
     }
-    $failure = $Text -match '(?is)FAILURES!!!|There was [0-9]+ failure|AssumptionViolatedException|\bskipped\b'
+    $failure = $Text -match '(?is)FAILURES!!!|There was [0-9]+ failure|AssumptionViolatedException|\bskipped\b|P5E_SAFE_FAILURE_MARKER'
     return [pscustomobject]@{
         ClassValues = $classes.ToArray()
         TestValues = $tests.ToArray()
@@ -3823,6 +3913,35 @@ function Get-P5EInstrumentationObservation {
         TestMethodExact = $tests.Count -gt 0 -and @($tests | Where-Object { $_ -ne 'authorizedFreshRawRunsOnlyWhenExplicitlyOptedIn' }).Count -eq 0
         TerminalMinusOne = $terminalCodes.Count -eq 1 -and $terminalCodes[0] -eq -1 -and -not $malformedTerminal
     }
+}
+
+function New-P5ESafeInstrumentationEvidenceText {
+    param(
+        [Parameter(Mandatory = $true)][AllowEmptyString()][string]$Text,
+        [switch]$ErrorStream
+    )
+    if ($ErrorStream) {
+        return $(if ([string]::IsNullOrWhiteSpace($Text)) { 'P5E_SAFE_STDERR_EMPTY' } else { 'P5E_SAFE_STDERR_PRESENT' })
+    }
+    $observation = Get-P5EInstrumentationObservation -Text $Text
+    $safe = [System.Collections.Generic.List[string]]::new()
+    foreach ($classValue in @($observation.ClassValues)) {
+        if ([string]$classValue -ceq $script:P5EClass) { [void]$safe.Add('INSTRUMENTATION_STATUS: class=' + $script:P5EClass) }
+    }
+    foreach ($testValue in @($observation.TestValues)) {
+        if ([string]$testValue -ceq 'authorizedFreshRawRunsOnlyWhenExplicitlyOptedIn') { [void]$safe.Add('INSTRUMENTATION_STATUS: test=authorizedFreshRawRunsOnlyWhenExplicitlyOptedIn') }
+    }
+    foreach ($terminalCode in @($observation.TerminalCodes)) {
+        [void]$safe.Add('INSTRUMENTATION_CODE:' + [string][int]$terminalCode)
+    }
+    foreach ($line in ($Text -split "`r?`n")) {
+        if ($line.Trim() -in @('EXPECTED_ABSENT', 'EXPECTED_PRESENT')) { [void]$safe.Add($line.Trim()) }
+    }
+    if ($observation.OneTestMarker) { [void]$safe.Add('OK (1 test)') }
+    if ($observation.FailureMarker) { [void]$safe.Add('P5E_SAFE_FAILURE_MARKER') }
+    if ($observation.MalformedTerminal) { [void]$safe.Add('P5E_SAFE_MALFORMED_TERMINAL') }
+    if ($safe.Count -eq 0) { [void]$safe.Add('P5E_SAFE_NO_ALLOWED_MARKERS') }
+    return ($safe -join [Environment]::NewLine)
 }
 
 function Invoke-P5EOutcomeVerifier {
@@ -5527,8 +5646,12 @@ switch ($Mode) {
             (Test-Path -LiteralPath $fakePowerShell -PathType Leaf)) 'fake-powershell-available'
         $success = Invoke-P5EProcessSupervisor -FilePath $fakePowerShell -ArgumentList @('-NoProfile', '-NonInteractive', '-File', $fakeScript, 'success') -TimeoutMilliseconds 2000 -EvidenceDirectory $tempRoot -SensitiveValues @($fakeAccount)
         Assert-P5ESelfTest ($success.DispatchCount -eq 1 -and $success.ExitCode -eq 0 -and -not $success.TimedOut -and $success.RedactionViolation) 'fake-success-numeric-outcome-and-redaction'
+        $persistedSuccess = (Get-Content -Raw -LiteralPath (Join-Path $tempRoot 'instrumentation-stdout.txt')) + (Get-Content -Raw -LiteralPath (Join-Path $tempRoot 'instrumentation-stderr.txt'))
+        Assert-P5ESelfTest ($persistedSuccess -notmatch 'success-secret|FAKE_SUCCESS|apiKey=') 'fake-success-safe-evidence-only'
         $nonzero = Invoke-P5EProcessSupervisor -FilePath $fakePowerShell -ArgumentList @('-NoProfile', '-NonInteractive', '-File', $fakeScript, 'nonzero') -TimeoutMilliseconds 2000 -EvidenceDirectory $tempRoot -SensitiveValues @($fakeAccount)
         Assert-P5ESelfTest ($nonzero.DispatchCount -eq 1 -and $nonzero.ExitCode -eq 7 -and -not $nonzero.TimedOut -and $nonzero.RedactionViolation) 'fake-nonzero-numeric-outcome-and-redaction'
+        $persistedNonzero = (Get-Content -Raw -LiteralPath (Join-Path $tempRoot 'instrumentation-stdout.txt')) + (Get-Content -Raw -LiteralPath (Join-Path $tempRoot 'instrumentation-stderr.txt'))
+        Assert-P5ESelfTest ($persistedNonzero -notmatch 'nonzero-secret|FAKE_NONZERO|apiKey=') 'fake-nonzero-safe-evidence-only'
         $timeoutDir = Join-Path $tempRoot 'timeout'
         [void](New-Item -ItemType Directory -Path $timeoutDir)
         $timeout = Invoke-P5EProcessSupervisor -FilePath $fakePowerShell -ArgumentList @('-NoProfile', '-NonInteractive', '-File', $fakeScript, 'timeout') -TimeoutMilliseconds 100 -EvidenceDirectory $timeoutDir -SensitiveValues @($fakeAccount)
@@ -5574,13 +5697,20 @@ switch ($Mode) {
         # POSIX-shell parser.  The fake process cannot invoke adb or a provider.
         $greenDir = Join-Path $tempRoot 'green-argv'
         [void](New-Item -ItemType Directory -Path $greenDir)
-        $greenRun = Invoke-P5EProcessSupervisor -FilePath $fakePowerShell `
-            -ArgumentList (@('-NoProfile', '-NonInteractive', '-File', $fakeScript, 'argv') + $adbArgs) `
-            -TimeoutMilliseconds 2000 -EvidenceDirectory $greenDir
-        $greenArgv = @(Get-Content -LiteralPath (Join-Path $greenDir 'instrumentation-stdout.txt') |
-            Where-Object { $_ -like 'P5E_ARG=*' } |
-            ForEach-Object { $_.Substring(8) })
-        Assert-P5ESelfTest ($greenRun.DispatchCount -eq 1 -and $greenRun.ExitCode -eq 0 -and $greenArgv.Count -gt 3) 'green-process-argv-captured'
+        $greenStartInfo = [Diagnostics.ProcessStartInfo]::new()
+        $greenStartInfo.FileName = $fakePowerShell
+        $greenStartInfo.UseShellExecute = $false
+        $greenStartInfo.CreateNoWindow = $true
+        $greenStartInfo.RedirectStandardOutput = $true
+        $greenStartInfo.RedirectStandardError = $true
+        Set-P5EProcessStartInfoArguments -StartInfo $greenStartInfo -ArgumentList (@('-NoProfile', '-NonInteractive', '-File', $fakeScript, 'argv') + $adbArgs)
+        $greenProcess = [Diagnostics.Process]::new(); $greenProcess.StartInfo = $greenStartInfo
+        try {
+            Assert-P5ESelfTest $greenProcess.Start() 'green-process-started'
+            $greenCapture = [P5EProcessTextCapture]::Capture($greenProcess, 4194304, 1048576, 2000, $null)
+            $greenArgv = @(([string]$greenCapture.Stdout -split "`r?`n") | Where-Object { $_ -like 'P5E_ARG=*' } | ForEach-Object { $_.Substring(8) })
+            Assert-P5ESelfTest ($greenCapture.ExitCode -eq 0 -and $greenCapture.ContainmentVerified -and $greenArgv.Count -gt 3) 'green-process-argv-captured'
+        } finally { $greenProcess.Dispose() }
         $greenRemoteText = [string]::Join(' ', [string[]]$greenArgv[3..($greenArgv.Count - 1)])
         $greenParsed = ConvertFrom-P5EPosixCommandLine -CommandLine $greenRemoteText
         Assert-P5ESelfTest ($greenParsed.Operators.Count -eq 0) 'green-quoted-pipe-reaches-remote-shell-as-data'
@@ -6060,13 +6190,23 @@ function Invoke-P5EPrepareEvent {
         -ProductionBuildInfoFile $ProductionBuildInfoPath -ExpectedProductionBuildInfoHash $ExpectedProductionBuildInfoSha256 `
         -TestSourceFile $TestSourceArchivePath -ExpectedTestSourceHash $ExpectedTestSourceArchiveSha256 `
         -TestBuildInfoFile $TestBuildInfoPath -ExpectedTestBuildInfoHash $ExpectedTestBuildInfoSha256
+    if ($OwnerDecisionId -notmatch '^[A-Za-z0-9._-]{1,96}$') { throw 'P5E_OWNER_DECISION_ID_INVALID_STOP' }
+    if ($OwnerDecisionReceiptSha256 -notmatch '^[0-9a-fA-F]{64}$') { throw 'P5E_OWNER_RECEIPT_HASH_INVALID_STOP' }
+    if ($OwnerDecisionSerial -cne $script:P5ESerial) { throw 'P5E_OWNER_DECISION_SERIAL_MISMATCH_STOP' }
+    if ($OwnerDecisionScope -cne 'RAW/GLOSSARY') { throw 'P5E_OWNER_DECISION_SCOPE_MISMATCH_STOP' }
     $directory = Test-P5EExactEventDirectory -Directory $EvidenceDirectory
     if (@(Get-ChildItem -LiteralPath $directory -Force).Count -ne 0) { throw 'P5E_EVENT_DIRECTORY_NOT_EMPTY_STOP' }
     $plan = New-P5EEventPlan -EvidenceDirectory $directory -ManifestHash $ExpectedManifestSha256 `
         -ProductionApkHash $ExpectedProductionApkSha256 -TestApkHash $ExpectedTestApkSha256 `
         -HelperHash $ExpectedHelperSha256 -DatabaseExporterHash $ExpectedDatabaseExporterSha256 `
-        -SqliteBridgeHash $ExpectedSqliteBridgeSha256 -Toolchain $toolchain
+        -SqliteBridgeHash $ExpectedSqliteBridgeSha256 -Toolchain $toolchain `
+        -OwnerDecisionId $OwnerDecisionId -OwnerDecisionReceiptSha256 $OwnerDecisionReceiptSha256 `
+        -OwnerDecisionPacketIdentifier $OwnerDecisionPacketIdentifier -OwnerDecisionSerial $OwnerDecisionSerial `
+        -OwnerDecisionScope $OwnerDecisionScope
     Assert-P5EEventPlanDependencyPins -Plan $plan
+    Assert-P5EA43OwnerPlanBinding -Plan $plan -DecisionId $OwnerDecisionId `
+        -ReceiptSha256 $OwnerDecisionReceiptSha256.ToLowerInvariant() -PacketIdentifier $OwnerDecisionPacketIdentifier `
+        -Serial $OwnerDecisionSerial -Scope $OwnerDecisionScope | Out-Null
     $planPath = Write-P5EEventPlan -Plan $plan
     Write-Output ('P5E_EVENT_PREPARED=' + $directory)
     Write-Output ('P5E_EVENT_PLAN=' + $planPath)
