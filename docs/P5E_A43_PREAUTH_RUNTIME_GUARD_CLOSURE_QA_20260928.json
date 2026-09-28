@@ -154,7 +154,7 @@
                                         },
                      "powershell51Parse":  {
                                                "status":  "PASS",
-                                               "files":  9
+                                               "files":  10
                                            },
                      "gitDiffCheck":  {
                                           "status":  "PASS"

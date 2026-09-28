@@ -16,6 +16,7 @@ $oldCommandPath = Join-Path $repoRoot 'docs\P5E_A43_PM_PATH_CAPTURE_REPAIR_COMMA
 $atomicQaPath = Join-Path $repoRoot 'scripts\test-p5e-a43-decision-atomicity-expected-env.ps1'
 $bindingQaPath = Join-Path $repoRoot 'scripts\test-p5e-a43-binding-tuple-matrix.ps1'
 $dbQaPath = Join-Path $repoRoot 'scripts\test-p5e-a43-db-host-readback-matrix.ps1'
+$archiveQaPath = Join-Path $repoRoot 'scripts\test-p5e-a43-archive-clean-reconstruction.ps1'
 $serial = '15e84958'
 $scope = 'RAW/GLOSSARY'
 $packetIdentifier = 'P5E-A43-DECISION-ATOMICITY-ENV-20260928-01'
@@ -177,7 +178,7 @@ Run-Test 'GREEN-helper-selftest-and-offline-regression-matrices' {
     $do=Join-Path $tempRoot 'db-56.json';$c=Invoke-PS51Script $dbQaPath @('-OutputPath',$do);Assert-True ($c-eq 0) ('DB_QA_EXIT_'+$c);$d=Get-Content -Raw $do|ConvertFrom-Json;Assert-True ([string]$d.status-eq 'PASS'-and@($d.tests.PSObject.Properties).Count-eq 56-and[int]$d.failureCount-eq 0) 'DB_NOT_56_OF_56';$matrixEvidence.dbHostReadback=[ordered]@{status=[string]$d.status;testCount=@($d.tests.PSObject.Properties).Count;passedTestCount=(@($d.tests.PSObject.Properties).Count-[int]$d.failureCount);failureCount=[int]$d.failureCount}
  }
 Run-Test 'GREEN-secret-scan-no-raw-output-and-counters-zero' {$x=$newCommandText+$manifestText+(Get-Content -Raw $guardPath);Assert-True ($x-notmatch 'qa-sentinel') 'SECRET_SENTINEL_IN_PACKET';Assert-True ($x-notmatch '(?i)(password|credential|secret|api[_-]?key)\s*[:=]\s*[0-9A-Za-z._/-]{8,}') 'SECRET_VALUE_IN_PACKET';Assert-True ($x-notmatch '(?i)P5E_OWNER_ENDPOINT_ACCOUNT_FINGERPRINT\s*[:=]\s*[0-9a-f]{64}') 'EXPECTED_VALUE_IN_PACKET'}
-Run-Test 'GREEN-powershell-51-parse-and-diff-check' {foreach($p in @($guardPath,$exporterPath,$helperPath,$toolchainPath,$commandPath,$atomicQaPath,$bindingQaPath,$dbQaPath,$PSCommandPath)){$t=$null;$e=$null;[Management.Automation.Language.Parser]::ParseFile($p,[ref]$t,[ref]$e)|Out-Null;Assert-True ($e.Count-eq 0) ('PS51_PARSE_FAILED:'+([IO.Path]::GetFileName($p)))};$matrixEvidence.powershell51Parse=[ordered]@{status='PASS';files=9};@(& git -C $repoRoot diff --check 2>&1)|Out-Null;Assert-True ($LASTEXITCODE-eq 0) 'GIT_DIFF_CHECK_FAILED';$matrixEvidence.gitDiffCheck=[ordered]@{status='PASS'} }
+Run-Test 'GREEN-powershell-51-parse-and-diff-check' {foreach($p in @($guardPath,$exporterPath,$helperPath,$toolchainPath,$commandPath,$atomicQaPath,$bindingQaPath,$dbQaPath,$archiveQaPath,$PSCommandPath)){$t=$null;$e=$null;[Management.Automation.Language.Parser]::ParseFile($p,[ref]$t,[ref]$e)|Out-Null;Assert-True ($e.Count-eq 0) ('PS51_PARSE_FAILED:'+([IO.Path]::GetFileName($p)))};$matrixEvidence.powershell51Parse=[ordered]@{status='PASS';files=10};@(& git -C $repoRoot diff --check 2>&1)|Out-Null;Assert-True ($LASTEXITCODE-eq 0) 'GIT_DIFF_CHECK_FAILED';$matrixEvidence.gitDiffCheck=[ordered]@{status='PASS'} }
 
 $failures=@($tests|Where-Object{-not[bool]$_.passed});$sev=[ordered]@{BLOCKER=0;HIGH=0;MEDIUM=0;LOW=0}
 foreach($f in $failures){$s=if([string]$f.name-match 'receipt|reservation|race|job|capture|expected|process|tree'){'HIGH'}elseif([string]$f.name-match 'parse|diff|binding|regression|db|secret'){'MEDIUM'}else{'LOW'};$sev[$s]=[int]$sev[$s]+1}
