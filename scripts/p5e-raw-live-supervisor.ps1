@@ -276,6 +276,10 @@ $script:P5EArtifactContractPath = 'docs\P5E_PRODUCTION_ARTIFACT_CONTRACT_2026091
 $script:P5EArtifactContractSha256 = 'ffe70a70e622706fabfa49d5843310ecd5a283b1ca114e32c636ea26b9fae4bf'
 $script:P5EEventPlanSchema = 'p5e.raw.event-plan.v3'
 $script:P5EEventPlanLegacySchema = 'p5e.raw.event-plan.v2'
+$script:P5EClosedEventNames = @(
+    'raw-live-20260925-093707011-cc71e9e18029485c8e2411698c88f586',
+    'raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc'
+)
 $script:P5ECollectorOutcomeSchema = 'p5e.raw.collector-outcome.v1'
 $script:P5ECollectorCommandSchema = 'p5e.raw.collector-command.v3'
 $script:P5ELaunchReasonAllowlist = @(
@@ -1912,7 +1916,7 @@ function Assert-P5EDatabaseExportDestination {
     if (-not (Test-Path -LiteralPath $eventDirectory -PathType Container)) { throw 'P5E_DB_EXPORT_EVENT_DIRECTORY_MISSING' }
     $eventItem = Get-Item -LiteralPath $eventDirectory -Force
     if (($eventItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'P5E_DB_EXPORT_EVENT_DIRECTORY_REPARSE_STOP' }
-    if ((Split-Path -Leaf $eventDirectory) -eq 'raw-live-20260925-093707011-cc71e9e18029485c8e2411698c88f586') {
+    if ($script:P5EClosedEventNames -contains (Split-Path -Leaf $eventDirectory)) {
         throw 'P5E_DB_EXPORT_CLOSED_EVENT_REUSE_STOP'
     }
     $phaseDirectory = Join-Path $eventDirectory ('database-snapshot-' + $CollectionPhase.ToLowerInvariant())
