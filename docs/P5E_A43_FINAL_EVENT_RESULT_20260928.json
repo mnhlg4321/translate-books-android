@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "p5e.a43.final-event-result.v1",
+  "generatedDate": "2026-09-28",
+  "branch": "feature/v4.18-p5e-runner-repair-20260917",
+  "headAtEventPreparation": "ea3e0876948d267a2352468a1010e70ad20985d9",
+  "packetCommit": "cbe820deea077ffd3ef920959bfbccb396f2455a",
+  "ownerDecision": {
+    "status": "RECEIVED_CONSUMED_SINGLE_EVENT",
+    "serial": "15e84958",
+    "eventLimit": 1,
+    "retryAuthorized": false,
+    "redispatchAuthorized": false
+  },
+  "packet": {
+    "manifestSha256": "23AF3DFAA81F50484187AFD183EA56454EBE38022C67DA2B963245A42D230053",
+    "commandSha256": "C84355B912DCF3BB59D52004EC80E06CE8B37FC75B5ABE083ECCA95D64C89BA3",
+    "launcherSha256": "C84355B912DCF3BB59D52004EC80E06CE8B37FC75B5ABE083ECCA95D64C89BA3",
+    "helperSha256": "17CC1C19BF4F6B1B71A77100D710375BDBCFDA7AC82D4508634B68E857DEFD2E",
+    "exporterSha256": "D8783B31F9141458CA397915664CA79B07D3161A5E0F0D3B4365C5C65EA41D06",
+    "sqliteBridgeSha256": "4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111"
+  },
+  "event": {
+    "eventId": "raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc",
+    "eventDirectory": "D:\\P5E-private\\raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc",
+    "terminalStatus": "A4_3_PRE_DISPATCH_COLLECTOR_STOP",
+    "typedOutcome": "COLLECTOR_TYPED_STOP",
+    "detailCode": "P5E_COLLECTOR_ADB_NONZERO",
+    "failingOperation": "pm-path-production-before",
+    "collectionPhase": "Before",
+    "eventOpened": true,
+    "prepareEventCompleted": true,
+    "dispatchStarted": false,
+    "afterCollectionRun": false,
+    "verifyOutcomeRun": false,
+    "rawDispatched": false,
+    "rawAccepted": false,
+    "p5ExitClaimed": false,
+    "p6Ready": false
+  },
+  "outerCommandObservation": {
+    "source": "owner-provided terminal excerpt",
+    "terminalCode": "RAW_LIVE_BEFORE_COLLECTION_FAILED_NO_DISPATCH_125",
+    "wrapperExitCode": 125,
+    "classification": "HELPER_STREAM_CAPTURE_INCOMPLETE_OR_UNAVAILABLE",
+    "relationshipToCollectorStop": "SECONDARY_WRAPPER_STATUS; COLLECTOR_RECEIPT_PROVES_PM_PATH_PRODUCTION_EXIT_1",
+    "launcherPath": "D:\\P5E-private\\p5e-a43-owner-live-launcher-20260928-093530901\\P5E_A43_FINAL_EXECUTABLE_COMMAND_20260926.ps1"
+  },
+  "evidence": {
+    "eventPlan": {
+      "path": "D:\\P5E-private\\raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc\\EVENT_PLAN.json",
+      "sha256": "1C163DC499D934F25B5E4C5EAB911543773D01D333CF7990D0D57DF4D4E9CBE4"
+    },
+    "collectorOutcome": {
+      "path": "D:\\P5E-private\\raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc\\COLLECTOR_OUTCOME.json",
+      "sha256": "7674858E7D3164EED7873A492AB88742F2AB90A162E71E5210F60CCEAF84A5BC"
+    },
+    "collectorCommandLog": {
+      "path": "D:\\P5E-private\\raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc\\COLLECTOR_COMMAND_LOG.jsonl",
+      "sha256": "B90CEAB274D510B37D09910313E18E35F4F39AC6FE7F76B0019ABF1B8020826C"
+    }
+  },
+  "collector": {
+    "readOnlyCommandCount": 1,
+    "operation": "pm-path-production-before",
+    "commandClass": "PACKAGE_METADATA_READ_ONLY",
+    "launchCount": 1,
+    "exitCode": 1,
+    "timedOut": false,
+    "captureBounded": true,
+    "outputCaptured": false,
+    "redactionPass": true,
+    "nativeReasonAvailable": false,
+    "safeConclusion": "THE_PINNED_ADB_PROCESS_LAUNCHED_AND_PM_PATH_PRODUCTION_RETURNED_NONZERO",
+    "unsupportedConclusion": "PACKAGE_MISSING_OR_DEVICE_USB_CAUSE_NOT_PROVEN"
+  },
+  "counters": {
+    "adbReadOnlyLaunches": 1,
+    "deviceReadCommands": 1,
+    "deviceMutations": 0,
+    "providerCalls": 0,
+    "credentialReads": 0,
+    "databaseWrites": 0,
+    "builds": 0,
+    "installs": 0,
+    "rawDispatches": 0,
+    "retries": 0,
+    "redispatches": 0
+  },
+  "privacy": {
+    "expectedDigestReadOrStoredByAgent": false,
+    "instrumentationStdoutReadByAgent": false,
+    "instrumentationStderrReadByAgent": false,
+    "providerPayloadReadByAgent": false,
+    "nativeAdbStderrReadByAgent": false
+  },
+  "disposition": "CLOSED_CONSUMED_A43_PRE_DISPATCH_COLLECTOR_STOP_NO_RAW_NO_P5_EXIT_NO_P6",
+  "nextAction": "OFFLINE_PM_PATH_CLASSIFICATION_AND_OUTER_CAPTURE_REPAIR_ONLY; DO_NOT_RETRY_OR_TOUCH_DEVICE"
+}

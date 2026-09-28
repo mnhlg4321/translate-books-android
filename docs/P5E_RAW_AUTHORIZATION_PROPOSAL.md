@@ -1,6 +1,6 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Current work package — 2026-09-26: `AUTHORIZED_SINGLE_A43_EVENT_PRECHECK / EXPECTED_PROCESS_VALUE_MISSING / EVENT_NOT_OPENED / NOT_DISPATCHED / A4_3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. Frozen packet/artifact/path/serial checks passed, but the expected account digest was absent from the executing PowerShell Process. Typed stop: `docs/P5E_A43_AUTHORIZED_SINGLE_EVENT_PRECHECK_STOP_20260926.json`; the packet was not modified and the owner decision was not re-requested.
+> Current work package — 2026-09-28: `OWNER_DECISION_RECEIVED_AND_CONSUMED / A4_3_PRE_DISPATCH_COLLECTOR_STOP / P5E_COLLECTOR_ADB_NONZERO / PM_PATH_PRODUCTION_EXIT_1 / OUTER_CAPTURE_STATUS_125 / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. Event `raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc` opened once and stopped on the first Before read-only command. Result: `docs/P5E_A43_FINAL_EVENT_RESULT_20260928.json`; provenance: `docs/P5E_A43_PM_PATH_CAPTURE_STOP_PROVENANCE_20260928.json`.
 
 > Closed historical A4.3 outcome — 2026-09-26: the explicit owner decision was received and consumed by exactly one event. The new packet stopped in the read-only Before collector with `COLLECTOR_TYPED_STOP / P5E_COLLECTOR_BINDING_TUPLE_MISMATCH`; RAW was not dispatched, P5 exit was not claimed and P6 remains not ready. Result: `docs/P5E_A43_EVENT_RESULT_20260926.json`. This does not authorize the current offline repair or a new event.
 
@@ -8,7 +8,7 @@
 
 > Current DB readback prerequisite — 2026-09-26: `OFFLINE_DB_HOST_READBACK_REPAIR_PASS` is bound by `docs/P5E_DB_HOST_READBACK_REPAIR_QA_20260925.json` at `56/56 PASS`. The old proposal, manifest/command and 2026-09-25 decision remain consumed; no live event is authorized by this work.
 
-> Current Next action: preserve the typed precheck stop; do not execute the command, obtain or infer the expected digest, repair the packet, reuse the approval, retry or open P6.
+> Current Next action: perform only `docs/P5E_A43_PM_PATH_CAPTURE_STOP_NEXT_WORK_REQUEST_20260928.md` offline. Do not retry/reuse the event or decision, run extra ADB, infer package absence, dispatch RAW or open P6.
 
 > Superseded DB diagnosis — 2026-09-25: WAL/SHM exit `1` are valid absence results. The actual stop was the direct Android `sqlite3` consistent-read command. This proposal remains consumed and is not executable; the offline binary-export/host-readback repair is now complete. No new key, account check or owner live decision was requested for that repair.
 

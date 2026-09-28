@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "p5e.a43.pm-path-capture-stop-review-qa.v1",
+  "generatedDate": "2026-09-28",
+  "status": "PASS",
+  "tests": 17,
+  "passed": 17,
+  "failures": 0,
+  "liveActionsDuringReview": {
+    "adb": 0,
+    "device": 0,
+    "provider": 0,
+    "credential": 0,
+    "databaseWrites": 0,
+    "buildInstall": 0,
+    "rawDispatch": 0,
+    "redispatch": 0
+  },
+  "checks": [
+    {
+      "name": "event-hash-COLLECTOR_COMMAND_LOG.jsonl",
+      "pass": true,
+      "actual": "B90CEAB274D510B37D09910313E18E35F4F39AC6FE7F76B0019ABF1B8020826C"
+    },
+    {
+      "name": "event-hash-COLLECTOR_OUTCOME.json",
+      "pass": true,
+      "actual": "7674858E7D3164EED7873A492AB88742F2AB90A162E71E5210F60CCEAF84A5BC"
+    },
+    {
+      "name": "event-hash-EVENT_PLAN.json",
+      "pass": true,
+      "actual": "1C163DC499D934F25B5E4C5EAB911543773D01D333CF7990D0D57DF4D4E9CBE4"
+    },
+    {
+      "name": "event-id-consistent",
+      "pass": true,
+      "actual": "raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc"
+    },
+    {
+      "name": "collector-terminal",
+      "pass": true,
+      "actual": "COLLECTOR_TYPED_STOP/P5E_COLLECTOR_ADB_NONZERO"
+    },
+    {
+      "name": "one-command-only",
+      "pass": true,
+      "actual": "1"
+    },
+    {
+      "name": "pm-path-exit1",
+      "pass": true,
+      "actual": "pm-path-production-before/exit1"
+    },
+    {
+      "name": "redacted-capture",
+      "pass": true,
+      "actual": "bounded/redacted/no-output"
+    },
+    {
+      "name": "zero-downstream",
+      "pass": true,
+      "actual": "all-zero"
+    },
+    {
+      "name": "json-parse-docs/P5E_A43_FINAL_EVENT_RESULT_20260928.json",
+      "pass": true,
+      "actual": "valid"
+    },
+    {
+      "name": "json-parse-docs/P5E_A43_PM_PATH_CAPTURE_STOP_PROVENANCE_20260928.json",
+      "pass": true,
+      "actual": "valid"
+    },
+    {
+      "name": "launcher-command-exact",
+      "pass": true,
+      "actual": "C84355B912DCF3BB59D52004EC80E06CE8B37FC75B5ABE083ECCA95D64C89BA3"
+    },
+    {
+      "name": "state-EDITORIAL_RECOVERY_V4_18.md",
+      "pass": true,
+      "actual": "current-state"
+    },
+    {
+      "name": "state-BUILD_STATE.md",
+      "pass": true,
+      "actual": "current-state"
+    },
+    {
+      "name": "state-WORKSPACE_SNAPSHOT.md",
+      "pass": true,
+      "actual": "current-state"
+    },
+    {
+      "name": "state-release_checklists/v4.18-editorial-v5-safe-4-1-3.md",
+      "pass": true,
+      "actual": "current-state"
+    },
+    {
+      "name": "state-docs/P5E_RAW_AUTHORIZATION_PROPOSAL.md",
+      "pass": true,
+      "actual": "current-state"
+    }
+  ]
+}

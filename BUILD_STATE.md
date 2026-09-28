@@ -1,6 +1,6 @@
 # Build State
 
-> Current work package — 2026-09-26: `AUTHORIZED_SINGLE_A43_EVENT_PRECHECK / EXPECTED_PROCESS_VALUE_MISSING / EVENT_NOT_OPENED / NOT_DISPATCHED / A4_3_NOT_ISSUED / RAW_NOT_RUN / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. Exact frozen packet/artifact/path/serial checks passed; the expected account digest was absent from the executing PowerShell Process. Typed stop: `docs/P5E_A43_AUTHORIZED_SINGLE_EVENT_PRECHECK_STOP_20260926.json`; all live counters remain `0`, and the owner decision was not consumed.
+> Current work package — 2026-09-28: `OWNER_DECISION_RECEIVED_AND_CONSUMED / A4_3_PRE_DISPATCH_COLLECTOR_STOP / P5E_COLLECTOR_ADB_NONZERO / PM_PATH_PRODUCTION_EXIT_1 / OUTER_CAPTURE_STATUS_125 / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. Event `raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc` opened once and stopped on the first Before read-only command. Pinned ADB launched once and exited `1`; provider, credential, device mutation, DB write, build/install, RAW, retry and redispatch counters are `0`. Result/provenance: `docs/P5E_A43_FINAL_EVENT_RESULT_20260928.json` and `docs/P5E_A43_PM_PATH_CAPTURE_STOP_PROVENANCE_20260928.json`.
 
 > Closed historical A4.3 outcome — 2026-09-26: owner decision was received and consumed by exactly one event. State is `OWNER_DECISION_RECEIVED_AND_CONSUMED / A4_3_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP / P5E_COLLECTOR_BINDING_TUPLE_MISMATCH / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. Result: `docs/P5E_A43_EVENT_RESULT_20260926.json`. This does not authorize the current offline repair or a new event.
 
@@ -8,9 +8,9 @@
 
 > Current DB readback prerequisite — 2026-09-26: `OFFLINE_DB_HOST_READBACK_REPAIR_PASS`, with `56/56 PASS` bound to `docs/P5E_DB_HOST_READBACK_REPAIR_QA_20260925.json`. It was consumed offline through a synthetic captured-export copy only; the closed event was not reused. A4.3, RAW, P5 exit and P6 remain not ready.
 
-> The final packet remains frozen and unmodified. This authorized run stopped before PrepareEvent because `EXPECTED_PROCESS_VALUE_MISSING`; no event was opened and no provider, credential, database-write, build, install, RAW or redispatch action occurred.
+> The final packet and private launcher matched command SHA-256 `C84355B912DCF3BB59D52004EC80E06CE8B37FC75B5ABE083ECCA95D64C89BA3`. `PrepareEvent` completed. Collector receipt is authoritative for the first failure: `pm-path-production-before`, exit `1`, no timeout, `P5E_COLLECTOR_ADB_NONZERO`. Outer code `125` separately indicates incomplete helper stream drain and masks the child process exit in the top-level message.
 
-> Current Next action: preserve the typed precheck stop; do not execute the command, obtain or infer the expected digest, repair the packet, reuse the approval, retry or open P6.
+> Current Next action: run only the offline PM-path classification and outer-capture repair work request; no ADB, event retry, provider, build/install, new authorization or P6 action.
 
 > Superseded DB diagnosis — 2026-09-25: WAL/SHM presence exit `1` meant `ABSENT` under the helper contract. The sole proven blocker was the launched, non-timeout `database-consistent-read-transaction` exit `1`; native cause remains unproven. The bounded offline repair named there is now PASS; no live event is authorized by that result.
 
