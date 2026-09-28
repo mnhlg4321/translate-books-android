@@ -1,10 +1,10 @@
 # Build State
 
-> Current work package — 2026-09-28: `FINAL_EXECUTABLE_A43_PACKET_READY / OWNER_DECISION_PENDING / NOT_DISPATCHED / P6_NOT_READY / 0_BLOCKER / 0_HIGH / 0_MEDIUM / 0_LOW / CLOSED_EVENTS_NON_REUSABLE`. No owner receipt, authorization request, event or live action was created or executed. QA is `21/21 PASS`, binding `262/262`, regression `175/175`, DB host-readback `56/56`, Luna exact-byte review is PASS and all live-action counters are `0`.
+> Current work package — 2026-09-28: `INDEPENDENT_REVIEW_STOP / FINAL_EXECUTABLE_A43_PACKET_INVALIDATED / DECISION_ATOMICITY_AND_EXPECTED_ENV_ISOLATION_REPAIR_REQUIRED / 0_BLOCKER / 1_HIGH / 1_MEDIUM / NOT_AUTHORIZED / NOT_DISPATCHED / P6_NOT_READY / CLOSED_EVENTS_NON_REUSABLE`. No live action occurred. The current packet is internally hash-consistent but cannot be authorized because same `decisionId` plus a different receipt hash can reserve a second event before a plan exists; non-Dispatch helpers also inherit the expected digest.
 
 > Current offline pins: manifest `B093AB871072D78A9A935914AEC9FF56835606BB344F034AA5EE2F38EA83FF4F`; command `FA63C5D2498AA345C6AC426AD253B466D6BD3206D525BAE4E0E8E6158BA78F80`; helper `86E386375B771B001B911FB2F538E112F6AD9F709BB933726FEB981D6F875FB6`; exporter `813F6ED0ABD110EBF32550990940E975971988FBCF806DC26464EE311021CF99`; guard `F332954FB8AA2048EDF18630C5D1EF7B2039D57458C85CD6BB5CB07F59D96DBA`; bridge `4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111`; toolchain `C0AE7D431474F37597228A7AFA6F9382C63E26EB5A54CFB72604620D9DD5C3C8`; certificate `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155`; serial `15e84958`.
 
-> Repair evidence is synthetic/offline only: four RED→GREEN closure fixtures, suspended Job Object process-tree verification, independent stdout/stderr caps and drain statuses, PM-path mutation matrix, owner-receipt negative matrix, atomic race/rollback, expected-value isolation, path/reparse guards, helper self-test, secret scan and `git diff --check` all pass. The command contains no old packet fallback; exact exporter/toolchain/bridge bytes are ready for the packet commit. Closed events and decisions remain non-reusable.
+> Existing QA still runs `21/21 PASS` with zero live counters, but it does not test sequential/concurrent cross-hash reuse, interruption before `EVENT_PLAN.json`, or phase-specific expected-value absence. The binding and DB QA launchers are also untracked dependencies, so full QA is not reproducible from the packet commit archive. Independent finding: `docs/P5E_A43_FINAL_EXECUTABLE_INDEPENDENT_LUNA_REVIEW_20260928.md`. The only accepted repair scope is `docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_NEXT_WORK_REQUEST_20260928.md` plus its provenance companion.
 
 > Closed historical A4.3 outcome — 2026-09-26: owner decision was received and consumed by exactly one event. State is `OWNER_DECISION_RECEIVED_AND_CONSUMED / A4_3_PRE_DISPATCH_COLLECTOR_STOP / COLLECTOR_TYPED_STOP / P5E_COLLECTOR_BINDING_TUPLE_MISMATCH / RAW_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. Result: `docs/P5E_A43_EVENT_RESULT_20260926.json`. This does not authorize the current offline repair or a new event.
 
@@ -14,7 +14,7 @@
 
 > The consumed live packet remains historical: `PrepareEvent` completed, `pm-path-production-before` exited `1` without timeout and the outer code `125` reflected incomplete helper stream drain. The offline repair keeps the collector typed stop and the helper process exit/drain states separate.
 
-> Current Next action: owner reviews this exact packet; no authorization request is created or consumed, no command/event/ADB/device/provider/credential/DB/build/install/RAW/retry/redispatch/P5-exit/P6 action is taken.
+> Current Next action: run the bounded offline decision/receipt atomicity, phase-specific environment and clean-archive QA repair; no owner authorization request, command/event, ADB/device/provider/credential/DB/build/install/RAW/retry/redispatch/P5-exit/P6 action.
 
 > Superseded DB diagnosis — 2026-09-25: WAL/SHM presence exit `1` meant `ABSENT` under the helper contract. The sole proven blocker was the launched, non-timeout `database-consistent-read-transaction` exit `1`; native cause remains unproven. The bounded offline repair named there is now PASS; no live event is authorized by that result.
 

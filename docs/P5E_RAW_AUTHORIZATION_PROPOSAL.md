@@ -1,8 +1,8 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Current work package — 2026-09-28: `FINAL_EXECUTABLE_A43_PACKET_READY / OWNER_DECISION_PENDING / NOT_DISPATCHED / P6_NOT_READY / 0_BLOCKER / 0_HIGH / 0_MEDIUM / 0_LOW / CLOSED_EVENTS_NON_REUSABLE`. The prior event and every older decision/packet remain closed/consumed. The current A4.3 packet is offline-only, exact-byte reviewable, Luna-approved and contains no authorization request or owner receipt.
+> Current work package — 2026-09-28: `INDEPENDENT_REVIEW_STOP / FINAL_EXECUTABLE_A43_PACKET_INVALIDATED / DECISION_ATOMICITY_AND_EXPECTED_ENV_ISOLATION_REPAIR_REQUIRED / 0_BLOCKER / 1_HIGH / 1_MEDIUM / NOT_AUTHORIZED / NOT_DISPATCHED / P6_NOT_READY / CLOSED_EVENTS_NON_REUSABLE`. The prior event and every older decision/packet remain closed/consumed. The current A4.3 hashes must not be used for owner authorization: independent offline review reproduced cross-hash reuse of one `decisionId` before `EVENT_PLAN.json`, and non-Dispatch helpers inherit the expected digest.
 
-> Current review-only packet pins are manifest `B093AB871072D78A9A935914AEC9FF56835606BB344F034AA5EE2F38EA83FF4F`, command `FA63C5D2498AA345C6AC426AD253B466D6BD3206D525BAE4E0E8E6158BA78F80`, helper `86E386375B771B001B911FB2F538E112F6AD9F709BB933726FEB981D6F875FB6`, exporter `813F6ED0ABD110EBF32550990940E975971988FBCF806DC26464EE311021CF99`, guard `F332954FB8AA2048EDF18630C5D1EF7B2039D57458C85CD6BB5CB07F59D96DBA`, bridge `4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111`, toolchain `C0AE7D431474F37597228A7AFA6F9382C63E26EB5A54CFB72604620D9DD5C3C8`, certificate `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155`, serial `15e84958`. QA is `9E461ADF9471B9B836B506079BCD34F9D01805E66FD07E29DD37E776F929F393`.
+> The old hashes and QA are frozen RED-test inputs only. Existing `21/21 PASS` omits the reproduced cross-hash/crash windows, and its binding/DB evidence depends on two untracked QA scripts. Independent review is `docs/P5E_A43_FINAL_EXECUTABLE_INDEPENDENT_LUNA_REVIEW_20260928.md`. The replacement offline work request and provenance are `docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_NEXT_WORK_REQUEST_20260928.md` and `docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_WORK_REQUEST_PROVENANCE_20260928.json`.
 
 > Closed historical A4.3 outcome — 2026-09-26: the explicit owner decision was received and consumed by exactly one event. The new packet stopped in the read-only Before collector with `COLLECTOR_TYPED_STOP / P5E_COLLECTOR_BINDING_TUPLE_MISMATCH`; RAW was not dispatched, P5 exit was not claimed and P6 remains not ready. Result: `docs/P5E_A43_EVENT_RESULT_20260926.json`. This does not authorize the current offline repair or a new event.
 
@@ -10,7 +10,7 @@
 
 > Current DB readback prerequisite — 2026-09-26: `OFFLINE_DB_HOST_READBACK_REPAIR_PASS` is bound by `docs/P5E_DB_HOST_READBACK_REPAIR_QA_20260925.json` at `56/56 PASS`. The old proposal, manifest/command and 2026-09-25 decision remain consumed; no live event is authorized by this work.
 
-> Current Next action: owner reviews this exact packet. Do not create or consume authorization, execute the command, create an event, use ADB/device/provider/credential/DB writes, build/install, retry/redispatch, dispatch RAW or open P6.
+> Current Next action: execute only the bounded offline atomicity, environment-isolation and clean-archive QA repair. Do not create or consume authorization, execute the live command, create an event, use ADB/device/provider/credential/DB writes, build/install, retry/redispatch, dispatch RAW or open P6.
 
 > Superseded DB diagnosis — 2026-09-25: WAL/SHM exit `1` are valid absence results. The actual stop was the direct Android `sqlite3` consistent-read command. This proposal remains consumed and is not executable; the offline binary-export/host-readback repair is now complete. No new key, account check or owner live decision was requested for that repair.
 

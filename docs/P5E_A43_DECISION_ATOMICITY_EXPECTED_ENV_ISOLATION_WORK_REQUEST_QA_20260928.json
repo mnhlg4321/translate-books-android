@@ -1,0 +1,200 @@
+{
+  "schemaVersion": "p5e.a43.decision-atomicity-expected-env-isolation-work-request-qa.v1",
+  "generatedDate": "2026-09-28",
+  "status": "PASS",
+  "testCount": 32,
+  "passedTestCount": 32,
+  "failureCount": 0,
+  "branch": "feature/v4.18-p5e-runner-repair-20260917",
+  "head": "0730110a261edbab8f07f7db9e5831f567976fd3",
+  "verdict": "CURRENT_PACKET_NOT_READY_FOR_OWNER_AUTHORIZATION",
+  "severity": {
+    "BLOCKER": 0,
+    "HIGH": 1,
+    "MEDIUM": 1,
+    "LOW": 0
+  },
+  "workRequestSha256": "4B446A29C1B7D67A2E50DBB72997B0ED525005EB4DB34D3717AB5D8AB8BC0C05",
+  "provenanceSha256": "0A8DF8297CA73C25FA232AF23FADCA28B0640C9905E07DA07A6772ADFCB447B4",
+  "independentReviewSha256": "FACBDF6B54216C5D389804636DC177C66ACD01E2103453B5F57636DF045198F1",
+  "oldQaReproduction": {
+    "status": "PASS",
+    "tests": "21/21",
+    "interpretation": "INSUFFICIENT_MATRIX_FALSE_READINESS",
+    "liveCountersAllZero": true
+  },
+  "liveActions": {
+    "adb": 0,
+    "device": 0,
+    "provider": 0,
+    "credential": 0,
+    "databaseWrites": 0,
+    "buildInstall": 0,
+    "rawDispatch": 0,
+    "redispatch": 0
+  },
+  "tests": [
+    {
+      "name": "audit-head",
+      "passed": true,
+      "detail": "0730110a261edbab8f07f7db9e5831f567976fd3"
+    },
+    {
+      "name": "old-manifest-pin",
+      "passed": true,
+      "detail": "B093AB871072D78A9A935914AEC9FF56835606BB344F034AA5EE2F38EA83FF4F"
+    },
+    {
+      "name": "old-command-pin",
+      "passed": true,
+      "detail": "FA63C5D2498AA345C6AC426AD253B466D6BD3206D525BAE4E0E8E6158BA78F80"
+    },
+    {
+      "name": "independent-review-pin",
+      "passed": true,
+      "detail": "FACBDF6B54216C5D389804636DC177C66ACD01E2103453B5F57636DF045198F1"
+    },
+    {
+      "name": "work-request-pin",
+      "passed": true,
+      "detail": "4B446A29C1B7D67A2E50DBB72997B0ED525005EB4DB34D3717AB5D8AB8BC0C05"
+    },
+    {
+      "name": "provenance-pin",
+      "passed": true,
+      "detail": "0A8DF8297CA73C25FA232AF23FADCA28B0640C9905E07DA07A6772ADFCB447B4"
+    },
+    {
+      "name": "provenance-json-parse",
+      "passed": true,
+      "detail": "valid"
+    },
+    {
+      "name": "atomic-decision-key",
+      "passed": true,
+      "detail": "decisionKey = SHA-256"
+    },
+    {
+      "name": "cross-hash-sequential",
+      "passed": true,
+      "detail": "RED sequential cross-hash"
+    },
+    {
+      "name": "cross-hash-concurrent",
+      "passed": true,
+      "detail": "RED concurrent cross-hash"
+    },
+    {
+      "name": "crash-window",
+      "passed": true,
+      "detail": "Crash-window matrix"
+    },
+    {
+      "name": "registry-wide-partial-stop",
+      "passed": true,
+      "detail": "registry state unknown"
+    },
+    {
+      "name": "phase-prepare-absent",
+      "passed": true,
+      "detail": "PrepareEvent environment: expected digest `ABSENT`"
+    },
+    {
+      "name": "phase-dispatch-present",
+      "passed": true,
+      "detail": "Dispatch/account environment: expected digest `PRESENT`"
+    },
+    {
+      "name": "qa-untracked-dependencies",
+      "passed": true,
+      "detail": "Main QA currently invokes two worktree scripts that are not tracked"
+    },
+    {
+      "name": "clean-archive",
+      "passed": true,
+      "detail": "Archive-clean reconstruction gate"
+    },
+    {
+      "name": "legacy-21",
+      "passed": true,
+      "detail": "`21/21 PASS`"
+    },
+    {
+      "name": "binding-262",
+      "passed": true,
+      "detail": "`262/262 PASS`"
+    },
+    {
+      "name": "regression-175",
+      "passed": true,
+      "detail": "`175/175 PASS`"
+    },
+    {
+      "name": "db-56",
+      "passed": true,
+      "detail": "`56/56 PASS`"
+    },
+    {
+      "name": "no-live",
+      "passed": true,
+      "detail": "Không ADB hoặc đọc/chạm thiết bị"
+    },
+    {
+      "name": "no-p6",
+      "passed": true,
+      "detail": "Không tự mở hoặc đánh dấu P6 ready"
+    },
+    {
+      "name": "finding-untracked-test-p5e-binding-tuple-host-contract-repair.ps1",
+      "passed": true,
+      "detail": "exists=True;tracked=False"
+    },
+    {
+      "name": "finding-untracked-test-p5e-db-host-readback-repair.ps1",
+      "passed": true,
+      "detail": "exists=True;tracked=False"
+    },
+    {
+      "name": "old-suite-reproduces-but-is-insufficient",
+      "passed": true,
+      "detail": "status=PASS;tests=21;failures=0"
+    },
+    {
+      "name": "state-EDITORIAL_RECOVERY_V4_18.md",
+      "passed": true,
+      "detail": "synced"
+    },
+    {
+      "name": "state-BUILD_STATE.md",
+      "passed": true,
+      "detail": "synced"
+    },
+    {
+      "name": "state-WORKSPACE_SNAPSHOT.md",
+      "passed": true,
+      "detail": "synced"
+    },
+    {
+      "name": "state-release_checklists/v4.18-editorial-v5-safe-4-1-3.md",
+      "passed": true,
+      "detail": "synced"
+    },
+    {
+      "name": "state-docs/P5E_RAW_AUTHORIZATION_PROPOSAL.md",
+      "passed": true,
+      "detail": "synced"
+    },
+    {
+      "name": "secret-value-scan",
+      "passed": true,
+      "detail": "0 hits"
+    },
+    {
+      "name": "git-diff-check",
+      "passed": true,
+      "detail": "exit=0"
+    }
+  ],
+  "failures": [],
+  "nextAction": "EXECUTE_OFFLINE_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_AND_ARCHIVE_CLOSURE_ONLY"
+}
