@@ -1,8 +1,8 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Current work package — 2026-09-29: `OFFLINE_MANIFEST_BINDING_REPAIR_PASS / REVIEW_PASS / 0_BLOCKER / 0 HIGH / 0 MEDIUM / 0 LOW / PREVIOUS_APPROVAL_NOT_CONSUMED / PREVIOUS_RECEIPT_NOT_CONSUMED_SUPERSEDED / OWNER_REVIEW_REQUIRED_FOR_NEW_HASHES / EVENT_NOT_OPENED / ADB_NOT_CALLED / NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The owner launch stopped before receipt consumption/reservation on a missing manifest-binding literal. The exact mismatch is repaired; every prior event/decision remains closed.
+> Current work package — 2026-09-29: `OFFLINE_PLAN_BINDING_RUNTIME_REPAIR_PASS / OWNER_DECISION_CONSUMED / OWNER_RECEIPT_CONSUMED / EMPTY_EVENT_NO_PLAN / ADB_NOT_CALLED / NOT_DISPATCHED / OWNER_REVIEW_REQUIRED_FOR_NEW_HASHES / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The single launch passed receipt/reservation and stopped inside `PrepareEvent` because an in-memory `OrderedDictionary` was validated as a `PSCustomObject`; the exact path is repaired and verified offline.
 
-> Current packet: manifest `DF239F267245B9636C0A30367DCF07AFA0D5FCBAC1229163C87CA2FE3932236C`, command `FDF60C2478275160654EFD548FE59340CC0E58826929DACD072B9C3AD872147F`, helper `4DAD6E30928DD0D78396BDDFA57AFA1053E75481524D2EA05659227869C57444`, serial `15e84958`, provenance `82E61496E9A3271AC491033C599EB47DF73829E679BAA9B989CF3B43D62E0E27`, final review `9A15D49A2AE98A712FDBC2137BCBFB1B74F33A70A8781490ECAFB6DB62BFB3A4`. Final QA is main `21/21`, atomicity/environment `28/28`, binding `262/262`, regression `175/175`, DB `56/56`, pre-reservation smoke PASS and archive-clean PASS from `b69cfcd7`.
+> Current packet: manifest `FCDC4747D54075B0518A92D837FC74C67D7F3804F9BAA4EFFC3CB34C7764A01D`, command `510F2A9A93CD9B566F9BC153B2745750840B0CEE78768788CB98EB7817E0D0D4`, helper `998A5E45F13F61A5F2B53B46E1F6CF57D97EF1C3A6690FC0854530F57A53C7BF`, guard `5F78F59FCFE5FD7BB904C8D0B4815CA7C714E03999DB97CDCA2737E5F4C3DC3E`, serial `15e84958`. Final QA is main `21/21`, atomicity/environment `28/28`, binding `262/262`, regression `175/175`, DB `56/56`; direct synthetic `PrepareEvent` writes `EVENT_PLAN` with exit `0`.
 
 > Closed historical A4.3 outcome — 2026-09-26: the explicit owner decision was received and consumed by exactly one event. The new packet stopped in the read-only Before collector with `COLLECTOR_TYPED_STOP / P5E_COLLECTOR_BINDING_TUPLE_MISMATCH`; RAW was not dispatched, P5 exit was not claimed and P6 remains not ready. Result: `docs/P5E_A43_EVENT_RESULT_20260926.json`. This does not authorize the current offline repair or a new event.
 
@@ -10,7 +10,7 @@
 
 > Current DB readback prerequisite — 2026-09-26: `OFFLINE_DB_HOST_READBACK_REPAIR_PASS` is bound by `docs/P5E_DB_HOST_READBACK_REPAIR_QA_20260925.json` at `56/56 PASS`. The old proposal, manifest/command and 2026-09-25 decision remain consumed; no live event is authorized by this work.
 
-> Current Next action: owner reviews the exact repaired packet and chooses `STOP_NO_EVENT` or issues one new exact-hash approval. Do not reuse the previous receipt, launcher, decision ID, owner directory or old command hash; no live execution follows automatically.
+> Current Next action: owner reviews the exact repaired packet and chooses `STOP_NO_EVENT` or issues one new exact-hash approval. Do not reuse decision `p5e-a43-20260929-010454009-c645b67bbe804f3f821b8fbb92613059`, receipt `0BDAD399...6AB5CF`, its launcher, empty event directory or any old packet hash; no live execution follows automatically.
 
 > Superseded DB diagnosis — 2026-09-25: WAL/SHM exit `1` are valid absence results. The actual stop was the direct Android `sqlite3` consistent-read command. This proposal remains consumed and is not executable; the offline binary-export/host-readback repair is now complete. No new key, account check or owner live decision was requested for that repair.
 

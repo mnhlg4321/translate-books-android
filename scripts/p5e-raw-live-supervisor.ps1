@@ -196,7 +196,7 @@ if ((Get-FileHash -LiteralPath $script:P5ERawToolchainPath -Algorithm SHA256).Ha
 . $script:P5ERawToolchainPath -LibraryOnly
 
 $script:P5EA43RuntimeGuardPath = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot 'p5e-a43-runtime-guards.ps1'))
-$script:P5EA43RuntimeGuardSha256 = 'c31217cdbd40f22db9a74afb529b1ecc33f725f485ecd462992073235f59add8'
+$script:P5EA43RuntimeGuardSha256 = '5f78f59fcfe5fd7bb904c8d0b4815ca7c714e03999db97cdca2737e5f4c3dc3e'
 if (-not (Test-Path -LiteralPath $script:P5EA43RuntimeGuardPath -PathType Leaf)) { throw 'P5E_A43_RUNTIME_GUARD_MISSING_STOP' }
 $guardLibraryItem = Get-Item -LiteralPath $script:P5EA43RuntimeGuardPath -Force
 if (($guardLibraryItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'P5E_A43_RUNTIME_GUARD_REPARSE_STOP' }

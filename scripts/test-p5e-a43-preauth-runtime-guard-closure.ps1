@@ -144,6 +144,8 @@ Run-Test 'GREEN-prepare-event-plan-binds-owner-decision-without-device' {
     $dir=Join-Path $tempRoot 'prepare-event-simulation';[void](New-Item -ItemType Directory -Path $dir)
     $tc=[ordered]@{contractVersion='p5e.raw.toolchain.v1';sdkPath='offline-sdk';buildToolsVersion='35.0.0';signerLaunchKind='JAVA_JAR';adbPath='offline-adb';adbSha256=([string]::new('a',64));javaPath='offline-java';javaSha256=([string]::new('b',64));apksignerJarPath='offline-apksigner.jar';apksignerJarSha256=([string]::new('c',64))}
     $plan=New-P5EEventPlan -EvidenceDirectory $dir -ManifestHash (Get-HashUpper $manifestPath) -ProductionApkHash ('a'*64) -TestApkHash ('b'*64) -HelperHash (Get-HashUpper $helperPath) -DatabaseExporterHash (Get-HashUpper $exporterPath) -SqliteBridgeHash (Get-HashUpper $bridgePath) -Toolchain $tc -OwnerDecisionId 'qa-prepare-decision' -OwnerDecisionReceiptSha256 ('c'*64) -OwnerDecisionPacketIdentifier $packetIdentifier -OwnerDecisionSerial $serial -OwnerDecisionScope $scope
+    Assert-True ($plan -is [System.Collections.Specialized.OrderedDictionary]) 'PREPARE_PLAN_IN_MEMORY_TYPE_NOT_ORDERED_DICTIONARY'
+    [void](Assert-P5EA43OwnerPlanBinding -Plan $plan -DecisionId 'qa-prepare-decision' -ReceiptSha256 ('c'*64) -PacketIdentifier $packetIdentifier -Serial $serial -Scope $scope)
     [void](Write-P5EEventPlan -Plan $plan);$read=Read-P5EEventPlan -EvidenceDirectory $dir;[void](Assert-P5EA43OwnerPlanBinding -Plan $read -DecisionId 'qa-prepare-decision' -ReceiptSha256 ('c'*64) -PacketIdentifier $packetIdentifier -Serial $serial -Scope $scope)
     Assert-True ((Get-Content -Raw (Join-Path $dir 'EVENT_PLAN.json')).IndexOf('P5E_OWNER_ENDPOINT_ACCOUNT_FINGERPRINT',[StringComparison]::OrdinalIgnoreCase)-lt 0) 'PREPARE_PLAN_EXPECTED_VALUE_LEAK'
 }

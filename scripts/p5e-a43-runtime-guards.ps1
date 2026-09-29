@@ -378,21 +378,34 @@ function Assert-P5EA43OwnerPlanBinding {
         [Parameter(Mandatory = $true)][string]$Serial,
         [Parameter(Mandatory = $true)][string]$Scope
     )
-    foreach ($name in @('ownerDecisionBindingVersion', 'ownerDecisionId', 'ownerDecisionReceiptSha256', 'ownerDecisionPacketIdentifier', 'ownerDecisionSerial', 'ownerDecisionScope')) {
-        if ($null -eq $Plan.PSObject.Properties[$name]) { throw 'P5E_OWNER_DECISION_PLAN_BINDING_MISSING_STOP' }
+    $required = @(
+        'ownerDecisionBindingVersion', 'ownerDecisionId', 'ownerDecisionReceiptSha256',
+        'ownerDecisionPacketIdentifier', 'ownerDecisionSerial', 'ownerDecisionScope',
+        'ownerDecisionOneEventLimit', 'ownerDecisionOneProviderCallLimit',
+        'ownerDecisionNoRetry', 'ownerDecisionNoFallback', 'ownerDecisionNoRedispatch')
+    $values = @{}
+    foreach ($name in $required) {
+        if ($Plan -is [System.Collections.IDictionary]) {
+            if (-not $Plan.Contains($name)) { throw 'P5E_OWNER_DECISION_PLAN_BINDING_MISSING_STOP' }
+            $values[$name] = $Plan[$name]
+        } else {
+            $property = $Plan.PSObject.Properties[$name]
+            if ($null -eq $property) { throw 'P5E_OWNER_DECISION_PLAN_BINDING_MISSING_STOP' }
+            $values[$name] = $property.Value
+        }
     }
-    if ([string]$Plan.ownerDecisionBindingVersion -cne $script:P5EA43OwnerBindingSchema -or
-        [string]$Plan.ownerDecisionId -cne $DecisionId -or
-        [string]$Plan.ownerDecisionReceiptSha256 -cne $ReceiptSha256.ToLowerInvariant() -or
-        [string]$Plan.ownerDecisionPacketIdentifier -cne $PacketIdentifier -or
-        [string]$Plan.ownerDecisionSerial -cne $Serial -or
-        [string]$Plan.ownerDecisionScope -cne $Scope) {
+    if ([string]$values.ownerDecisionBindingVersion -cne $script:P5EA43OwnerBindingSchema -or
+        [string]$values.ownerDecisionId -cne $DecisionId -or
+        [string]$values.ownerDecisionReceiptSha256 -cne $ReceiptSha256.ToLowerInvariant() -or
+        [string]$values.ownerDecisionPacketIdentifier -cne $PacketIdentifier -or
+        [string]$values.ownerDecisionSerial -cne $Serial -or
+        [string]$values.ownerDecisionScope -cne $Scope) {
         throw 'P5E_OWNER_DECISION_PLAN_BINDING_MISMATCH_STOP'
     }
-    if ([long]$Plan.ownerDecisionOneEventLimit -ne 1L -or [long]$Plan.ownerDecisionOneProviderCallLimit -ne 1L -or
-        $Plan.ownerDecisionNoRetry -isnot [bool] -or -not [bool]$Plan.ownerDecisionNoRetry -or
-        $Plan.ownerDecisionNoFallback -isnot [bool] -or -not [bool]$Plan.ownerDecisionNoFallback -or
-        $Plan.ownerDecisionNoRedispatch -isnot [bool] -or -not [bool]$Plan.ownerDecisionNoRedispatch) {
+    if ([long]$values.ownerDecisionOneEventLimit -ne 1L -or [long]$values.ownerDecisionOneProviderCallLimit -ne 1L -or
+        $values.ownerDecisionNoRetry -isnot [bool] -or -not [bool]$values.ownerDecisionNoRetry -or
+        $values.ownerDecisionNoFallback -isnot [bool] -or -not [bool]$values.ownerDecisionNoFallback -or
+        $values.ownerDecisionNoRedispatch -isnot [bool] -or -not [bool]$values.ownerDecisionNoRedispatch) {
         throw 'P5E_OWNER_DECISION_PLAN_LIMIT_BINDING_STOP'
     }
     return $true
