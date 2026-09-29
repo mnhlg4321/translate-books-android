@@ -69,6 +69,9 @@ serial. It accepts no receipt or account value through argv.
 The receipt validator runs before reservation and requires the exact canonical
 decision ID, packet, serial, scope, hashes, one-event/one-provider-call
 limits, no-retry/no-fallback/no-redispatch flags and valid time window.
+The exact receipt schema is `p5e.a43.owner-decision-receipt.v1`; the live
+command checks this literal in the manifest before it reads or consumes any
+owner receipt.
 
 `decisionKey` is the full SHA-256 of the UTF-8 canonical decision ID. The
 decision marker is `.decisions/<decisionKey>.reservation`; the receipt marker
@@ -106,7 +109,8 @@ state.
 ## Process and capture controls retained
 
 The existing Windows Job Object containment and independent stdout/stderr
-byte caps remain in force. The packet does not use `Process.Kill(Boolean)` as
+byte caps remain in force: stdout `4194304` bytes and stderr `1048576` bytes.
+The packet does not use `Process.Kill(Boolean)` as
 tree-kill evidence, does not use input-built `taskkill`, and does not infer
 success when descendants or pipe handles remain unverified. Process exit,
 containment, drain status, timeout, overflow and bounded-capture status remain

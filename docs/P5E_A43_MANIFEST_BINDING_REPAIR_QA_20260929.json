@@ -1,0 +1,221 @@
+{
+    "schemaVersion":  "p5e.a43.decision-atomicity-expected-env-isolation-qa.v1",
+    "generatedDate":  "2026-09-28",
+    "workPackage":  "P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_REPAIR",
+    "status":  "PASS",
+    "packetState":  "OFFLINE_PACKET_REVIEWABLE / NOT_AUTHORIZED / NOT_DISPATCHED / P6_NOT_READY",
+    "syntheticOnly":  true,
+    "redToGreen":  {
+                       "redFixtures":  6,
+                       "greenFixtures":  6,
+                       "allRequired":  true
+                   },
+    "severity":  {
+                     "BLOCKER":  0,
+                     "HIGH":  0,
+                     "MEDIUM":  0,
+                     "LOW":  0
+                 },
+    "testCount":  21,
+    "passedTestCount":  21,
+    "failureCount":  0,
+    "failures":  [
+
+                 ],
+    "tests":  [
+                  {
+                      "name":  "RED-1-old-wrapper-masks-known-exit-when-drain-fails",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "RED-2-old-command-creates-event-before-owner-gate",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "RED-3-old-command-has-no-pre-event-expected-value-shape-gate",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "RED-4-old-wrapper-uses-uncapped-read-to-end",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "GREEN-job-object-normal-nonzero-timeout-overflow",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "GREEN-job-object-child-grandchild-and-delayed-close",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "GREEN-job-assign-failure-runtime-stop",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "GREEN-job-already-exited-race-runtime-verified",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "GREEN-job-drain-failure-preserves-exit-and-closes-tree",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "GREEN-job-containment-contract-no-parent-fallback",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "GREEN-capture-matrix-independent-caps-and-secret-not-emitted",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "GREEN-pm-path-classifier-matrix-and-mutation-fail-closed",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "GREEN-owner-receipt-positive-and-negative-matrix",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "GREEN-prepare-event-plan-binds-owner-decision-without-device",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "GREEN-expected-process-value-presence-shape-without-disclosure",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "GREEN-atomic-reservation-reuse-and-simultaneous-race",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "GREEN-path-reparse-guard-and-consumed-scan-fail-closed",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "GREEN-dependency-hash-order-and-command-binding",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "GREEN-helper-selftest-and-offline-regression-matrices",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "GREEN-secret-scan-no-raw-output-and-counters-zero",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "GREEN-powershell-51-parse-and-diff-check",
+                      "passed":  true,
+                      "detail":  ""
+                  }
+              ],
+    "evidence":  {
+                     "atomicityExpectedEnvironment":  {
+                                                          "status":  "GREEN_PASS",
+                                                          "testCount":  28,
+                                                          "passedTestCount":  28,
+                                                          "highFailureCount":  0
+                                                      },
+                     "binding":  {
+                                     "status":  "PASS",
+                                     "testCount":  262,
+                                     "passedTestCount":  262
+                                 },
+                     "regression":  {
+                                        "status":  "PASS",
+                                        "caseCount":  175,
+                                        "passedCaseCount":  175
+                                    },
+                     "dbHostReadback":  {
+                                            "status":  "PASS",
+                                            "testCount":  56,
+                                            "passedTestCount":  56,
+                                            "failureCount":  0
+                                        },
+                     "powershell51Parse":  {
+                                               "status":  "PASS",
+                                               "files":  10
+                                           },
+                     "gitDiffCheck":  {
+                                          "status":  "PASS"
+                                      },
+                     "runtime":  {
+                                     "suspendedJobLaunch":  {
+                                                                "status":  "PASS",
+                                                                "containmentAttachedBeforeResume":  true,
+                                                                "childDescendantVerification":  "ALL_DESCENDANTS_EXITED"
+                                                            },
+                                     "drainFailure":  {
+                                                          "status":  "PASS",
+                                                          "processExitCode":  0,
+                                                          "captureErrorClass":  "TASK_WAIT_TIMEOUT",
+                                                          "stdoutDrainStatus":  "DRAIN_COMPLETED_AFTER_TIMEOUT",
+                                                          "stderrDrainStatus":  "DRAIN_COMPLETED_AFTER_TIMEOUT",
+                                                          "captureBounded":  false,
+                                                          "containmentVerified":  true,
+                                                          "descendantExited":  true
+                                                      },
+                                     "wrapperBinding":  {
+                                                            "status":  "PASS",
+                                                            "captureErrorChecked":  true,
+                                                            "processExitPreserved":  true,
+                                                            "typedWrapperStatus":  "STREAM_CAPTURE_FAILED"
+                                                        }
+                                 }
+                 },
+    "finalPins":  {
+                      "manifestPath":  "D:\\App Translate Books\\docs\\P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_MANIFEST_20260928.md",
+                      "manifestSha256":  "DF239F267245B9636C0A30367DCF07AFA0D5FCBAC1229163C87CA2FE3932236C",
+                      "commandPath":  "D:\\App Translate Books\\docs\\P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_COMMAND_20260928.txt",
+                      "commandSha256":  "FDF60C2478275160654EFD548FE59340CC0E58826929DACD072B9C3AD872147F",
+                      "helperPath":  "D:\\App Translate Books\\scripts\\p5e-raw-live-supervisor.ps1",
+                      "helperSha256":  "4DAD6E30928DD0D78396BDDFA57AFA1053E75481524D2EA05659227869C57444",
+                      "exporterPath":  "D:\\App Translate Books\\scripts\\p5e-db-binary-export.ps1",
+                      "exporterSha256":  "813F6ED0ABD110EBF32550990940E975971988FBCF806DC26464EE311021CF99",
+                      "guardPath":  "D:\\App Translate Books\\scripts\\p5e-a43-runtime-guards.ps1",
+                      "guardSha256":  "C31217CDBD40F22DB9A74AFB529B1ECC33F725F485ECD462992073235F59ADD8",
+                      "bridgePath":  "D:\\App Translate Books\\docs\\P5E_SQLITE_BRIDGE.py",
+                      "bridgeSha256":  "4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111",
+                      "serial":  "15e84958",
+                      "stdoutCaptureLimit":  4194304,
+                      "stderrCaptureLimit":  1048576
+                  },
+    "counters":  {
+                     "adbLaunches":  0,
+                     "deviceReads":  0,
+                     "deviceWrites":  0,
+                     "providerCalls":  0,
+                     "credentialReads":  0,
+                     "databaseWrites":  0,
+                     "builds":  0,
+                     "installs":  0,
+                     "rawDispatches":  0,
+                     "redispatches":  0
+                 },
+    "consumedEventsPreserved":  true,
+    "ownerDecision":  "NOT_AUTHORIZED",
+    "liveEventOpened":  false,
+    "p5ExitClaimed":  false,
+    "p6Ready":  false,
+    "nextAction":  "Complete archive-clean QA and independent exact-byte review; no authorization request is executed and no live event is dispatched."
+}

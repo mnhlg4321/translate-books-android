@@ -169,7 +169,26 @@ Run-Test 'GREEN-path-reparse-guard-and-consumed-scan-fail-closed' {
     $bad=Join-Path $tempRoot 'bad-scan';[void](New-Item -ItemType Directory -Path $bad);$decisions=Join-Path $bad '.decisions';[void](New-Item -ItemType Directory -Path $decisions);[IO.File]::WriteAllText((Join-Path $decisions ([string]::new('e',64)+'.reservation')),'partial',[Text.UTF8Encoding]::new($false));Expect-Stop {Get-P5EA43ReservationLedger -EvidenceRoot $bad -DecisionKey ([string]::new('f',64)) -ReceiptSha256 ([string]::new('a',64))} 'P5E_OWNER_DECISION_RESERVATION_LEDGER_UNKNOWN_STOP'
 }
 Run-Test 'GREEN-dependency-hash-order-and-command-binding' {
-    $mh=(Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToUpperInvariant();Assert-True ($newCommandText.IndexOf($mh,[StringComparison]::OrdinalIgnoreCase)-ge 0) 'COMMAND_MANIFEST_HASH_NOT_EXACT';foreach($h in @((Get-HashUpper $helperPath),(Get-HashUpper $exporterPath),(Get-HashUpper $guardPath),(Get-HashUpper $bridgePath))){Assert-True ($newCommandText.IndexOf($h,[StringComparison]::OrdinalIgnoreCase)-ge 0) 'COMMAND_DEPENDENCY_HASH_MISSING'};Assert-True ($newCommandText.IndexOf('P5E_A43_PM_PATH_CAPTURE_REPAIR_COMMAND_20260928',[StringComparison]::OrdinalIgnoreCase)-lt 0) 'OLD_COMMAND_PATH_REUSED';Assert-True ($newCommandText.IndexOf('C08C3F6D8EE1B802B0D68AB1FF0302E82655D17C72B06619752B65396C11ADC3',[StringComparison]::OrdinalIgnoreCase)-lt 0) 'OLD_MANIFEST_HASH_REUSED';Assert-True ($newCommandText.IndexOf('A2EF2BA90F07D3F4D2517E7F1541EA752615F6BCF61E304E579E301A8D5D3D08',[StringComparison]::OrdinalIgnoreCase)-lt 0) 'OLD_COMMAND_HASH_REUSED';Assert-True ($newCommandText.IndexOf('[void](Assert-PinnedFile -Path $manifestPath',[StringComparison]::Ordinal)-lt $newCommandText.IndexOf('. $guardPath -LibraryOnly',[StringComparison]::Ordinal)) 'HASH_BEFORE_GUARD_DOTSOURCE';$ht=Get-Content -Raw $helperPath;Assert-True ($ht.IndexOf('Assert-P5EDatabaseReadbackDependencyPin',[StringComparison]::Ordinal)-lt $ht.IndexOf('. $script:P5EDatabaseExporterPath -LibraryOnly',[StringComparison]::Ordinal)) 'HELPER_HASH_BEFORE_EXPORTER_DOTSOURCE'
+    $mh=(Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToUpperInvariant()
+    Assert-True ($newCommandText.IndexOf($mh,[StringComparison]::OrdinalIgnoreCase)-ge 0) 'COMMAND_MANIFEST_HASH_NOT_EXACT'
+    foreach($h in @((Get-HashUpper $helperPath),(Get-HashUpper $exporterPath),(Get-HashUpper $guardPath),(Get-HashUpper $bridgePath))){
+        Assert-True ($newCommandText.IndexOf($h,[StringComparison]::OrdinalIgnoreCase)-ge 0) 'COMMAND_DEPENDENCY_HASH_MISSING'
+    }
+    $requiredManifestLiterals=@(
+        'P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION',$packetIdentifier,$serial,
+        (Get-HashUpper $helperPath),(Get-HashUpper $exporterPath),(Get-HashUpper $guardPath),
+        (Get-HashUpper $bridgePath),'47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155',
+        'p5e.a43.owner-decision-receipt.v1','P5E_OWNER_DECISION_RESERVATION_LEDGER_UNKNOWN_STOP',
+        'EXPECTED_ABSENT','EXPECTED_PRESENT','4194304','1048576','NOT_AUTHORIZED','P6_NOT_READY')
+    foreach($literal in $requiredManifestLiterals){
+        Assert-True ($manifestText.IndexOf([string]$literal,[StringComparison]::OrdinalIgnoreCase)-ge 0) ('MANIFEST_BINDING_LITERAL_MISSING:'+([string]$literal))
+    }
+    Assert-True ($newCommandText.IndexOf('P5E_A43_PM_PATH_CAPTURE_REPAIR_COMMAND_20260928',[StringComparison]::OrdinalIgnoreCase)-lt 0) 'OLD_COMMAND_PATH_REUSED'
+    Assert-True ($newCommandText.IndexOf('C08C3F6D8EE1B802B0D68AB1FF0302E82655D17C72B06619752B65396C11ADC3',[StringComparison]::OrdinalIgnoreCase)-lt 0) 'OLD_MANIFEST_HASH_REUSED'
+    Assert-True ($newCommandText.IndexOf('A2EF2BA90F07D3F4D2517E7F1541EA752615F6BCF61E304E579E301A8D5D3D08',[StringComparison]::OrdinalIgnoreCase)-lt 0) 'OLD_COMMAND_HASH_REUSED'
+    Assert-True ($newCommandText.IndexOf('[void](Assert-PinnedFile -Path $manifestPath',[StringComparison]::Ordinal)-lt $newCommandText.IndexOf('. $guardPath -LibraryOnly',[StringComparison]::Ordinal)) 'HASH_BEFORE_GUARD_DOTSOURCE'
+    $ht=Get-Content -Raw $helperPath
+    Assert-True ($ht.IndexOf('Assert-P5EDatabaseReadbackDependencyPin',[StringComparison]::Ordinal)-lt $ht.IndexOf('. $script:P5EDatabaseExporterPath -LibraryOnly',[StringComparison]::Ordinal)) 'HELPER_HASH_BEFORE_EXPORTER_DOTSOURCE'
 }
 Run-Test 'GREEN-helper-selftest-and-offline-regression-matrices' {
     $c=Invoke-PS51Script $helperPath @('-SelfTest');Assert-True ($c-eq 0) ('HELPER_SELFTEST_EXIT_'+$c)
