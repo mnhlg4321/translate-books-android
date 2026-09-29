@@ -1,8 +1,8 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Current work package — 2026-09-29: `OFFLINE_PACKET_REVIEWABLE_REPIN_PASS / LUNA_PASS / 0_BLOCKER / 0_HIGH / 0_MEDIUM / 0_LOW / OWNER_REVIEW_PENDING / NOT_AUTHORIZED / NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY / CLOSED_EVENTS_NON_REUSABLE`. The stale next-action and superseded current pins are repaired and independently closed. Every prior event/decision remains closed and no authorization is created by this document.
+> Current work package — 2026-09-29: `OFFLINE_MANIFEST_BINDING_REPAIR_PASS / REVIEW_PASS / 0_BLOCKER / 0 HIGH / 0 MEDIUM / 0 LOW / PREVIOUS_APPROVAL_NOT_CONSUMED / PREVIOUS_RECEIPT_NOT_CONSUMED_SUPERSEDED / OWNER_REVIEW_REQUIRED_FOR_NEW_HASHES / EVENT_NOT_OPENED / ADB_NOT_CALLED / NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The owner launch stopped before receipt consumption/reservation on a missing manifest-binding literal. The exact mismatch is repaired; every prior event/decision remains closed.
 
-> Current packet: manifest `9F0928876963EBE00187A384008D10569C0667C18C54588C20A9BE0E9D30E200`, command `A179433558798687452E061AEAE8C0D20E4D8C96AA2F6C9ADC05B0A573B656B1`, helper `4DAD6E30928DD0D78396BDDFA57AFA1053E75481524D2EA05659227869C57444`, serial `15e84958`, provenance `E6CFD0194DD76A50FEDB178E02ED46F9D2FEAAA983C964D3F6CD05067669BE79`, final Luna review `3AB5817924B0F13BBD5180F72E2D3148698F1DB4B717A883D63630137A36D619`. Final QA is atomicity/environment `28/28`, main `21/21`, binding `262/262`, regression `175/175`, DB `56/56`, archive-clean PASS from `a68d6ceb`.
+> Current packet: manifest `DF239F267245B9636C0A30367DCF07AFA0D5FCBAC1229163C87CA2FE3932236C`, command `FDF60C2478275160654EFD548FE59340CC0E58826929DACD072B9C3AD872147F`, helper `4DAD6E30928DD0D78396BDDFA57AFA1053E75481524D2EA05659227869C57444`, serial `15e84958`, provenance `82E61496E9A3271AC491033C599EB47DF73829E679BAA9B989CF3B43D62E0E27`, final review `9A15D49A2AE98A712FDBC2137BCBFB1B74F33A70A8781490ECAFB6DB62BFB3A4`. Final QA is main `21/21`, atomicity/environment `28/28`, binding `262/262`, regression `175/175`, DB `56/56`, pre-reservation smoke PASS and archive-clean PASS from `b69cfcd7`.
 
 > Closed historical A4.3 outcome — 2026-09-26: the explicit owner decision was received and consumed by exactly one event. The new packet stopped in the read-only Before collector with `COLLECTOR_TYPED_STOP / P5E_COLLECTOR_BINDING_TUPLE_MISMATCH`; RAW was not dispatched, P5 exit was not claimed and P6 remains not ready. Result: `docs/P5E_A43_EVENT_RESULT_20260926.json`. This does not authorize the current offline repair or a new event.
 
@@ -10,7 +10,7 @@
 
 > Current DB readback prerequisite — 2026-09-26: `OFFLINE_DB_HOST_READBACK_REPAIR_PASS` is bound by `docs/P5E_DB_HOST_READBACK_REPAIR_QA_20260925.json` at `56/56 PASS`. The old proposal, manifest/command and 2026-09-25 decision remain consumed; no live event is authorized by this work.
 
-> Current Next action: owner review of the exact offline packet only. Do not create or consume authorization, execute the live command, create an event, use ADB/device/provider/credential/DB writes, build/install, retry/redispatch, dispatch RAW or open P6.
+> Current Next action: owner reviews the exact repaired packet and chooses `STOP_NO_EVENT` or issues one new exact-hash approval. Do not reuse the previous receipt, launcher, decision ID, owner directory or old command hash; no live execution follows automatically.
 
 > Superseded DB diagnosis — 2026-09-25: WAL/SHM exit `1` are valid absence results. The actual stop was the direct Android `sqlite3` consistent-read command. This proposal remains consumed and is not executable; the offline binary-export/host-readback repair is now complete. No new key, account check or owner live decision was requested for that repair.
 
