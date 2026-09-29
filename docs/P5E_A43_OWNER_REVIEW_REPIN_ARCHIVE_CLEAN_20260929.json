@@ -1,0 +1,134 @@
+{
+  "schemaVersion": "p5e.a43.archive-clean-reconstruction.v1",
+  "candidateCommit": "a68d6ceb",
+  "status": "PASS",
+  "sourcePolicy": "EXACT_GIT_ARCHIVE_NO_WORKSPACE_FALLBACK_NO_CACHED_RESULTS",
+  "checks": {
+    "archive-created-extracted-and-candidate-diff-clean": {
+      "passed": true,
+      "detail": ""
+    },
+    "exact-runtime-and-qa-dependencies-present": {
+      "passed": true,
+      "detail": ""
+    },
+    "historical-untracked-qa-dependencies-eliminated": {
+      "passed": true,
+      "detail": ""
+    },
+    "archive-main-qa-21-of-21": {
+      "passed": true,
+      "detail": ""
+    },
+    "archive-atomicity-28-of-28-zero-high": {
+      "passed": true,
+      "detail": ""
+    },
+    "archive-binding-262-and-regression-175": {
+      "passed": true,
+      "detail": ""
+    },
+    "archive-db-56-of-56": {
+      "passed": true,
+      "detail": ""
+    },
+    "archive-live-counters-zero": {
+      "passed": true,
+      "detail": ""
+    }
+  },
+  "dependencies": {
+    "scripts/p5e-db-binary-export.ps1": {
+      "length": 52379,
+      "sha256": "813F6ED0ABD110EBF32550990940E975971988FBCF806DC26464EE311021CF99"
+    },
+    "scripts/p5e-raw-toolchain.ps1": {
+      "length": 9002,
+      "sha256": "C0AE7D431474F37597228A7AFA6F9382C63E26EB5A54CFB72604620D9DD5C3C8"
+    },
+    "docs/P5E_SQLITE_BRIDGE.py": {
+      "length": 5958,
+      "sha256": "4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111"
+    },
+    "scripts/p5e-a43-runtime-guards.ps1": {
+      "length": 23180,
+      "sha256": "C31217CDBD40F22DB9A74AFB529B1ECC33F725F485ECD462992073235F59ADD8"
+    },
+    "scripts/p5e-raw-live-supervisor.ps1": {
+      "length": 417314,
+      "sha256": "4DAD6E30928DD0D78396BDDFA57AFA1053E75481524D2EA05659227869C57444"
+    },
+    "scripts/test-p5e-a43-preauth-runtime-guard-closure.ps1": {
+      "length": 38030,
+      "sha256": "0F4614F6404FFC2F77233682E4ECC32C94FAA152E23FD555489DD7E9CD83AD1B"
+    },
+    "scripts/test-p5e-a43-decision-atomicity-expected-env.ps1": {
+      "length": 32508,
+      "sha256": "BDD0D4D0F401EC050876A1C584762687D58F524D1FF4A6F02266ABE3BEC8F97E"
+    },
+    "scripts/test-p5e-a43-binding-tuple-matrix.ps1": {
+      "length": 6332,
+      "sha256": "1E843BA4EACC89778C48E12F8FD53CF8E64B3CA892FDF6F72D172E36D372B3DB"
+    },
+    "scripts/test-p5e-a43-db-host-readback-matrix.ps1": {
+      "length": 15391,
+      "sha256": "61ECE7837EB5F9EA769A37CEAB6272C507F7AD37E6EB1F9BF87262F3754EEF7D"
+    },
+    "docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_MANIFEST_20260928.md": {
+      "length": 8201,
+      "sha256": "9F0928876963EBE00187A384008D10569C0667C18C54588C20A9BE0E9D30E200"
+    },
+    "docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_COMMAND_20260928.txt": {
+      "length": 24220,
+      "sha256": "A179433558798687452E061AEAE8C0D20E4D8C96AA2F6C9ADC05B0A573B656B1"
+    }
+  },
+  "suites": {
+    "archiveSourceContract": {
+      "passed": true,
+      "errors": []
+    },
+    "main": {
+      "exit": 0,
+      "status": "PASS",
+      "tests": 21,
+      "passed": 21,
+      "failures": 0,
+      "failureNames": [],
+      "failureDetails": []
+    },
+    "atomicityExpectedEnvironment": {
+      "exit": 0,
+      "status": "GREEN_PASS",
+      "tests": 28,
+      "passed": 28,
+      "failures": 0,
+      "highFailures": 0,
+      "failureNames": []
+    },
+    "binding": {
+      "exit": 0,
+      "status": "PASS",
+      "tests": 262,
+      "passed": 262,
+      "regression": 175
+    },
+    "dbHostReadback": {
+      "exit": 0,
+      "status": "PASS",
+      "tests": 56,
+      "failures": 0
+    }
+  },
+  "counters": {
+    "adb": 0,
+    "device": 0,
+    "provider": 0,
+    "credential": 0,
+    "databaseWrites": 0,
+    "buildInstall": 0,
+    "raw": 0,
+    "redispatch": 0
+  },
+  "archiveRoot": "REDACTED_TEMP_ROOT"
+}
