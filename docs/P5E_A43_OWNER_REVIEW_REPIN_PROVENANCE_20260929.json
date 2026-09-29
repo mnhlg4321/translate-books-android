@@ -6,6 +6,7 @@
   "packetState": "OFFLINE_PACKET_REVIEWABLE_REPIN_PASS / OWNER_REVIEW_PENDING / NOT_AUTHORIZED / NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY",
   "branch": "feature/v4.18-p5e-runner-repair-20260917",
   "runtimeCandidateCommit": "a68d6ceb4e727bc67d1672cde3a284246d62e09e",
+  "canonicalSyncHeadReviewed": "1f38c4e30baafd98001d2102d49aebabe2fb81de",
   "rootCause": {
     "classification": "STALE_CANONICAL_NEXT_ACTION_AND_SUPERSEDED_PIN_REFERENCES",
     "detail": "The runtime packet was green, but the manifest still requested already-completed archive/review work and canonical documents still advertised the superseded manifest/command. The stale authority chain caused repeated offline review instead of a single owner decision.",
@@ -87,21 +88,18 @@
   },
   "independentReview": {
     "reviewer": "Luna",
-    "path": "docs/P5E_A43_OWNER_REVIEW_REPIN_LUNA_REVIEW_20260929.md",
-    "length": 5829,
-    "sha256": "FC8187450C5BF1F86106093217BAE5A9E0643B3EDF769494376E0479C2A7A555",
-    "verdictBeforeCanonicalSync": "CONDITIONAL PASS",
-    "severityBeforeCanonicalSync": {
+    "path": "docs/P5E_A43_OWNER_REVIEW_REPIN_FINAL_LUNA_REVIEW_20260929.md",
+    "length": 5100,
+    "sha256": "3AB5817924B0F13BBD5180F72E2D3148698F1DB4B717A883D63630137A36D619",
+    "verdict": "PASS",
+    "severity": {
       "BLOCKER": 0,
       "HIGH": 0,
-      "MEDIUM": 2,
+      "MEDIUM": 0,
       "LOW": 0
     },
-    "mediumFindings": [
-      "Canonical current pins still referenced the superseded packet.",
-      "Snapshot/provenance still described work already completed by candidate a68d6ceb."
-    ],
-    "disposition": "RESOLVED_BY_THIS_CANONICAL_SYNC_PENDING_FINAL_REVIEW"
+    "priorMediumFindingsClosed": 2,
+    "disposition": "PASS_OWNER_REVIEW_ONLY"
   },
   "nextWorkRequest": {
     "path": "docs/P5E_A43_OWNER_REVIEW_REPIN_NEXT_WORK_REQUEST_20260929.md",
