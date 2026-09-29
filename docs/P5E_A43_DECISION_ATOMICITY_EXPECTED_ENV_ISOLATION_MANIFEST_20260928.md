@@ -147,5 +147,6 @@ ready. Closed events and consumed decisions remain closed/consumed.
 - Live dispatch: `NOT_DISPATCHED`.
 - P5 exit: `NOT_CLAIMED`.
 - P6: `NOT_READY`.
-- Next action: complete archive-clean QA and independent exact-byte review;
-  do not request or execute owner authorization in this repair package.
+- Next action: owner review of this exact offline packet only. Do not create
+  or consume authorization, open a live event, dispatch RAW/GLOSSARY or start
+  P6 from this repair package.
