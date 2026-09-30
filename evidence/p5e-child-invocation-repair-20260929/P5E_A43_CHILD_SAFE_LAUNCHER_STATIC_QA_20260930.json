@@ -3,9 +3,9 @@
     "result":  "PASS",
     "failureCount":  0,
     "launcherPath":  "D:\\P5E-private\\P5E_A43_FINAL_OWNER_SINGLE_USE_LAUNCHER_20260930_CHILD_SAFE.ps1",
-    "launcherSha256":  "9B43F3C5BD68D4837E7B38FA3A60A342720C97299D27C2F30122CB98AD4BEE06",
+    "launcherSha256":  "3212F686D7C2AEE599A4D85B274B9055112C8814D7B9133138B4314F416DEAF4",
     "contractPath":  "scripts/p5e-child-invocation-contract.ps1",
-    "contractSha256":  "96CD616BF27ED18FF110996F99B96CACCDCF92B9A3E2DC7CA74A2B7E16D7EAE4",
+    "contractSha256":  "2A1474494E2760D851DC9378AF8252968A65A4779E2E1786434AB70918E6D2EB",
     "executed":  false,
     "liveBoundariesCalled":  false,
     "checks":  [
@@ -17,7 +17,7 @@
                    {
                        "Name":  "exact-contract-hash",
                        "Passed":  true,
-                       "Evidence":  "96CD616BF27ED18FF110996F99B96CACCDCF92B9A3E2DC7CA74A2B7E16D7EAE4"
+                       "Evidence":  "2A1474494E2760D851DC9378AF8252968A65A4779E2E1786434AB70918E6D2EB"
                    },
                    {
                        "Name":  "approval-prompt-visible",
@@ -58,6 +58,11 @@
                        "Name":  "bindings-cleared-finally",
                        "Passed":  true,
                        "Evidence":  "Process bindings clear in finally"
+                   },
+                   {
+                       "Name":  "exception-message-not-retained",
+                       "Passed":  true,
+                       "Evidence":  "fake-secret-sentinel exception messages are not copied to stopCode, output, or metadata"
                    },
                    {
                        "Name":  "safe-counter-classification",

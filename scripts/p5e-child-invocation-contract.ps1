@@ -311,6 +311,7 @@ function Invoke-P5EPhaseChildInvocation {
     )
     $allowedPhases = @('PrepareEvent', 'Before', 'Dispatch', 'After', 'Verify')
     if ($allowedPhases -notcontains $Phase) { throw 'P5E_CHILD_PHASE_UNKNOWN_STOP' }
+    if ([string]::IsNullOrWhiteSpace($ExpectedEnvironmentName)) { throw 'P5E_EXPECTED_ENVIRONMENT_NAME_INVALID_STOP' }
     $clearNames = @($ExpectedEnvironmentName)
     $overrides = @{}
     if ($Phase -eq 'Dispatch') {

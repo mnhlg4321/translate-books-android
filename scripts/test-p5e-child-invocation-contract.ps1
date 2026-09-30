@@ -343,6 +343,21 @@ try {
         -Passed ($envEmptyParent.TypedCode -eq 'CHILD_EXIT_ZERO' -and $envEmptyParent.ChildExitCode -eq 0) `
         -Observation $envEmptyParent -Assertion 'An inherited empty variable is removed by name; IsNullOrEmpty cannot falsely prove absence.'
 
+    $emptyEnvironmentNameCaught = $false
+    $emptyEnvironmentNameClass = ''
+    try {
+        [void](Invoke-P5EPhaseChildInvocation -Phase 'Before' -ExpectedEnvironmentName '   ' `
+            -FilePath $psPath -ArgumentList ($common + @('marker', (Join-Path $fixtureRoot 'empty-name.marker'))) `
+            -WorkingDirectory $fixtureRoot -TimeoutMilliseconds 3000)
+    } catch {
+        $emptyEnvironmentNameCaught = $true
+        $emptyEnvironmentNameClass = $_.Exception.GetType().Name
+    }
+    Add-P5ESyntheticCase -Name 'GREEN-empty-environment-name-stop' -Expected 'P5E_EXPECTED_ENVIRONMENT_NAME_INVALID_STOP/no-child' `
+        -Passed ($emptyEnvironmentNameCaught -and $emptyEnvironmentNameClass -eq 'RuntimeException') `
+        -Observation ([ordered]@{ TypedCode = 'P5E_EXPECTED_ENVIRONMENT_NAME_INVALID_STOP'; ProcessCreated = 'FALSE'; ProcessId = 'PID_UNKNOWN'; ChildExitCode = $null; LauncherExitCode = 2 }) `
+        -Assertion 'A blank environment variable name is rejected before child construction.'
+
     $unknownPhaseCaught = $false
     $unknownPhaseClass = ''
     try {
