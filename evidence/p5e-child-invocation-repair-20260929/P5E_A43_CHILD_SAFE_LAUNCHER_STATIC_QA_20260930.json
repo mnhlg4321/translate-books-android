@@ -1,0 +1,78 @@
+{
+    "schema":  "p5e.a43.child-safe-launcher-static-qa.v1",
+    "result":  "PASS",
+    "failureCount":  0,
+    "launcherPath":  "D:\\P5E-private\\P5E_A43_FINAL_OWNER_SINGLE_USE_LAUNCHER_20260930_CHILD_SAFE.ps1",
+    "launcherSha256":  "9B43F3C5BD68D4837E7B38FA3A60A342720C97299D27C2F30122CB98AD4BEE06",
+    "contractPath":  "scripts/p5e-child-invocation-contract.ps1",
+    "contractSha256":  "96CD616BF27ED18FF110996F99B96CACCDCF92B9A3E2DC7CA74A2B7E16D7EAE4",
+    "executed":  false,
+    "liveBoundariesCalled":  false,
+    "checks":  [
+                   {
+                       "Name":  "powershell-5.1-parse",
+                       "Passed":  true,
+                       "Evidence":  "errors=0"
+                   },
+                   {
+                       "Name":  "exact-contract-hash",
+                       "Passed":  true,
+                       "Evidence":  "96CD616BF27ED18FF110996F99B96CACCDCF92B9A3E2DC7CA74A2B7E16D7EAE4"
+                   },
+                   {
+                       "Name":  "approval-prompt-visible",
+                       "Passed":  true,
+                       "Evidence":  "visible approval prompt literal present"
+                   },
+                   {
+                       "Name":  "key-prompt-hidden",
+                       "Passed":  true,
+                       "Evidence":  "secure key prompt literal present"
+                   },
+                   {
+                       "Name":  "tracked-invocation-source-used",
+                       "Passed":  true,
+                       "Evidence":  "ProcessStartInfo contract call present"
+                   },
+                   {
+                       "Name":  "expiry-checked-before-child",
+                       "Passed":  true,
+                       "Evidence":  "expiry gate precedes child invocation"
+                   },
+                   {
+                       "Name":  "raw-command-copy",
+                       "Passed":  true,
+                       "Evidence":  "command bytes copied without text round-trip"
+                   },
+                   {
+                       "Name":  "single-use-create-new",
+                       "Passed":  true,
+                       "Evidence":  "CreateNew marker and monotonic consumed state present"
+                   },
+                   {
+                       "Name":  "outer-nonzero-propagation",
+                       "Passed":  true,
+                       "Evidence":  "exception/child nonzero reaches launcher nonzero exit"
+                   },
+                   {
+                       "Name":  "bindings-cleared-finally",
+                       "Passed":  true,
+                       "Evidence":  "Process bindings clear in finally"
+                   },
+                   {
+                       "Name":  "safe-counter-classification",
+                       "Passed":  true,
+                       "Evidence":  "outer metadata does not claim unobserved live outcomes"
+                   },
+                   {
+                       "Name":  "no-native-operator-wrapper",
+                       "Passed":  true,
+                       "Evidence":  "no stderr-promoting operator or unbounded read or uncontrolled fallback"
+                   },
+                   {
+                       "Name":  "old-authority-not-reused",
+                       "Passed":  true,
+                       "Evidence":  "old launcher/receipt identifiers absent"
+                   }
+               ]
+}
