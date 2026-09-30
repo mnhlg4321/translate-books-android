@@ -1,5 +1,25 @@
 # Editorial v4.18 implementation and verification map
 
+## Current implementation map — 2026-10-01
+
+Supporting map only; scope/order/limits are in `EDITORIAL_RECOVERY_V4_18.md`. Source inspection baseline: HEAD `5e2c6120f4b188ef5c8f91a7696d7914e15365d7` plus existing dirty working tree. No implementation or new test execution in this planning update. The table distinguishes available components from demonstrated product behavior.
+
+| Work group | Reuse / inspected anchors | Required implementation or evidence | Focused verification |
+|---|---|---|---|
+| P5 entry | `scripts/p5e-a43-pre-reservation-launcher-entrypoint.ps1`, parent launcher, child-invocation contract | Observe real process/argument/console boundary, including startup failures outside parent diagnostics; do not add a second supervisor | Clean PS5.1 process, space-containing paths, harmless prompt input, synthetic child, terminal exit/error; no device/provider access |
+| P5 L1 | `EditorialP5PilotRequest.Phase` has L1_RAW_DISCOVERY/L1_RECONCILE; `EditorialP5PilotExecution`; `EditorialP5CExactBindingExecution.execute/executeRaw`; `EditorialP5CAttemptStore.commit/findCommitted` | Accepted real RAW followed by properly scoped RECONCILE; report/receipt persisted atomically and read back | Existing execution-boundary/exact-binding tests for affected changes; live acceptance remains separate |
+| P6 L2 | `EditorialPhaseContextProjector`, `EditorialReceiptValidator`, `EditorialLedgerValidator`, `EditorialDiffValidator`, `EditorialSafe4Workflow` | Phase coordinator/provider contract plus durable text/map commit and exact predecessor readback; assess existing store before any migration | Valid/no-edit/preserve, incorrect predecessor, missing change ID, changed source, interrupted transaction/reopen |
+| P6 L3 | Same validators/projection; `EditorialSafe4Contract` visibility definitions | Independent raw-first context, reconcile, coverage/regression adversarial passes; actual final diff and atomic FINAL_QA/QA_RECEIPT | Hidden-source leakage rejected; unjustified dialogue edit/preserved span; one-of-pair commit rejected; valid final reopen |
+| P6 final gate | `EditorialReleaseValidator` validates artifact set/hashes/flags; `EditorialTextDiff.render` is display-oriented | Derive five release numbers from actual evidence and full diff; text display counts are not acceptance evidence | Insert/delete/reorder/Unicode and no-change cases; missing/orphan changes, protected regression, model-declared PASS without proof |
+| P6 UI/export | `EditorialPageFactory` currently exposes locked execution/input snapshots; `EditorialReleaseDestinationTest` only checks archive naming | Wire the same coordinator/store into user actions, progress/recovery, final viewer and TXT export; do not create a separate CLI product | One complete chapter from app; reopen after process death; export cancellation/error preserves final; read exported bytes and compare |
+| P7 | Existing build wrapper and preserved Translation suites | Current-source regression, numbered immutable artifacts/backups, device QA and required release evidence | App/engine/lint plus Glossary4/Pronoun7; import compatible-next, stale chain, recovery, export; real required performance evidence |
+
+App classes: `app/src/main/java/com/ml/tblandroidtxt/`. Engine classes: `editorial-engine/src/main/java/com/ml/tblandroidtxt/editorial/pack/`. Verify call sites before adding a new class; enum/validator existence alone is not a runtime implementation claim. No generic DAG engine, provider framework or new persistence platform is needed by this map.
+
+For each implementation group: preserve prior valid phase outputs, patch only the proven gap, run its focused checks, record output/exit/failure disposition in the existing report/checklist. Broaden regression only for new risk or final release gates. Offline fixtures must execute the production coordinator/store path with only external boundaries replaced; they cannot certify provider behavior or real content quality.
+
+## Historical P0 map — reference only
+
 > Scope note (2026-09-14): the baseline and proposed implementation map below describe P0 at code169, not current device/build readiness. Current candidate is code207; use EDITORIAL_RECOVERY_V4_18.md and WORKSPACE_SNAPSHOT.md for actual pins/phase/next action. Do not restart P1 from the historical map.
 
 

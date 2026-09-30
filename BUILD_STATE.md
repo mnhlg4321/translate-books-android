@@ -1,5 +1,18 @@
 # Build State
 
+## Current planning handoff — 2026-10-01
+
+- Owner requires the completed edited text after L1–L3; intermediate files need not be delivered separately. Internal phase/receipt evidence remains required.
+- Canonical plan has been rewritten in place: `EDITORIAL_RECOVERY_V4_18.md`. Its previous contents are preserved verbatim in `docs/EDITORIAL_RECOVERY_V4_18_HISTORY_20260930.md`. Follow the rewritten plan's section 10 for the sole next action; historical next-action banners below do not control execution.
+- Actual branch/HEAD: `feature/v4.18-p5e-runner-repair-20260917` / `5e2c6120f4b188ef5c8f91a7696d7914e15365d7`; index/working tree differ. No source, APK, device or provider change was made by this planning work.
+- Build remains code208 development export, not installed; code207 pilot pins remain applicable. P5 is incomplete, P6/P7 are not complete. No new runtime authorization or QA PASS is created by a plan.
+- Supporting acceptance: `docs/EDITORIAL_FINAL_OUTPUT_ACCEPTANCE.md`; current code-gap map: `docs/EDITORIAL_V4_18_IMPLEMENTATION_MAP.md`. Snapshot contains the compact current handoff.
+- Agent continuation entrypoint: `HANDOFF.md`; it consolidates current gates, commands, failed approaches and the bounded offline next action. It creates no new runtime evidence.
+
+## Retained build and execution evidence — historical next actions superseded
+
+> Owner-requested development export 2026-09-30: 4.18-dev.1/code208 built via build-and-save.ps1 in isolated source snapshot 240cdc814a324bca36543a8091af6bf6cdd07831; 249/249 app unit tests, lint PASS. APK SHA-256 DB3FE9056A3477FA18D4F9F44A18E1FCCA0F7195F95DD99C91F1BD60AA6FE465. artifacts/builds and backup/builds parity PASS. Delivery artifacts/deliveries/TranslateBooks-v4.18-dev.1-code208-20260930.zip verified 9/9 entries and backup hash parity. Not installed; existing production code207/A4.3 pins unchanged; no P5/P6 certification. Consolidated report: docs/P5E_CONSOLIDATED_FAILURES_20260930.md.
+
 > Current status 2026-09-30: the fresh visible owner-window attempt exited before the approval prompt, before reservation/receipt/key/child, and produced no audit file. The result is `OWNER_WINDOW_PRE_PROMPT_EXIT / EVIDENCE_INCOMPLETE`; provider/database/RAW outcomes are unknown, not zero. Follow Current completion priorities in EDITORIAL_RECOVERY_V4_18.md; no live retry or speculative launcher rewrite. P5/P6 remain unclaimed.
 
 > Latest owner-window evidence — 2026-09-30: candidate hash `68DF8061CECB22D64AA4B85245714AC3AEE1895EBC8846F1BF51FC13D2E170BA` and 13 dependency pins matched before launch. DecisionId `p5e-a43-owner-4abe5015e63643c0b5bf31b1c9576c3a` used audit path `D:\P5E-private\.p5e-a43-audit\p5e-a43-owner-4abe5015e63643c0b5bf31b1c9576c3a.json`; the PowerShell process exited before the owner prompt, and the audit, reservation marker and owner root are absent. No owner decision, key, receipt, child, stage code or dispatch evidence exists. Do not infer counters from absence.
