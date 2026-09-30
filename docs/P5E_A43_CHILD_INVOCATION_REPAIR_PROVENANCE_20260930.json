@@ -1,0 +1,115 @@
+{
+  "schema": "p5e.a43.child-invocation-repair-provenance.v1",
+  "date": "2026-09-30",
+  "branch": "feature/v4.18-p5e-runner-repair-20260917",
+  "baseline": "010f61898862ced4bb351bdedf993832f8372427",
+  "packetImplementationCommit": "01a425e7",
+  "repairImplementationCommit": "c076d8dc3df1dc0c250491bda2f37d4c7497ce51",
+  "sourceRepairCommits": [
+    "3a568e79",
+    "4ee266421212d7a2811fb72fb513663564fd5528",
+    "01a425e7"
+  ],
+  "status": "LAUNCHER_OFFLINE_REPAIR_PASS / FINAL_OWNER_REVIEW_REQUIRED / NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY",
+  "packetPins": {
+    "manifestSha256": "FCDC4747D54075B0518A92D837FC74C67D7F3804F9BAA4EFFC3CB34C7764A01D",
+    "commandSha256": "510F2A9A93CD9B566F9BC153B2745750840B0CEE78768788CB98EB7817E0D0D4",
+    "helperSha256": "998A5E45F13F61A5F2B53B46E1F6CF57D97EF1C3A6690FC0854530F57A53C7BF",
+    "runtimeGuardSha256": "5F78F59FCFE5FD7BB904C8D0B4815CA7C714E03999DB97CDCA2737E5F4C3DC3E",
+    "exporterSha256": "813F6ED0ABD110EBF32550990940E975971988FBCF806DC26464EE311021CF99",
+    "sqliteBridgeSha256": "4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111",
+    "toolchainSha256": "C0AE7D431474F37597228A7AFA6F9382C63E26EB5A54CFB72604620D9DD5C3C8",
+    "certificateSha256": "47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155",
+    "serial": "15e84958"
+  },
+  "repairArtifacts": {
+    "childInvocationContractPath": "scripts/p5e-child-invocation-contract.ps1",
+    "childInvocationContractSha256": "2A1474494E2760D851DC9378AF8252968A65A4779E2E1786434AB70918E6D2EB",
+    "syntheticQaScriptPath": "scripts/test-p5e-child-invocation-contract.ps1",
+    "syntheticQaScriptSha256": "BE34225D547CEA82A2B629693FBEA55BEEC49B6A45134583ACBFA8504097D1D9",
+    "staticQaScriptPath": "scripts/test-p5e-child-invocation-launcher-static.ps1",
+    "staticQaScriptSha256": "2ABCAAE353BB87D31F545F3445A098C1A857366724E1BAC1E762D40666644EE9",
+    "syntheticQaReportPath": "evidence/p5e-child-invocation-repair-20260929/P5E_A43_CHILD_INVOCATION_REPAIR_QA_20260929.json",
+    "syntheticQaReportSha256": "EE03540BAB9BDFD754595C5AEBE5276CBED3875104BC78BECEDEE822EE32F328",
+    "staticQaReportPath": "evidence/p5e-child-invocation-repair-20260929/P5E_A43_CHILD_SAFE_LAUNCHER_STATIC_QA_20260930.json",
+    "staticQaReportSha256": "ADE91A69C08793E409FE7B37E91B35448B1E41128B8366390F24FB4905A1D7F1",
+    "candidateLauncherPath": "D:\\P5E-private\\P5E_A43_FINAL_OWNER_SINGLE_USE_LAUNCHER_20260930_CHILD_SAFE.ps1",
+    "candidateLauncherSha256": "569F8437A0630D52E8F26D5631AF2D9CBC089947BFD337E7FEC510B831D98A41",
+    "testBuildInfoSha256": "772F32E23AEF3537FEF00DACE8E4B9B994448BFEE2071150CF0E0540DDCCC5A9"
+  },
+  "qa": {
+    "syntheticCases": 27,
+    "syntheticPassed": 27,
+    "syntheticFailed": 0,
+    "staticChecks": 16,
+    "staticPassed": 16,
+    "staticFailed": 0,
+    "powershell51Parse": "PASS",
+    "gitDiffCheck": "PASS",
+    "secretScan": "PASS",
+    "historicalSuites": {
+      "main": "21/21 PASS — inherited evidence, not rerun",
+      "atomicityEnvironment": "28/28 PASS — inherited evidence, not rerun",
+      "binding": "262/262 PASS — inherited evidence, not rerun",
+      "regression": "175/175 PASS — inherited evidence, not rerun",
+      "dbHostReadback": "56/56 PASS — inherited evidence, not rerun"
+    }
+  },
+  "counters": {
+    "syntheticFixtureOnly": {
+      "adb": 0,
+      "deviceRead": 0,
+      "deviceWrite": 0,
+      "provider": 0,
+      "credential": 0,
+      "dbWrite": 0,
+      "buildInstall": 0,
+      "raw": 0,
+      "redispatch": 0,
+      "retry": 0
+    },
+    "live": {
+      "adb": "NOT_EVALUATED",
+      "deviceRead": "NOT_EVALUATED",
+      "deviceWrite": "NOT_EVALUATED",
+      "provider": "NOT_EVALUATED",
+      "credential": "NOT_EVALUATED",
+      "dbWrite": "NOT_EVALUATED",
+      "buildInstall": "NOT_EVALUATED",
+      "raw": "NOT_EVALUATED",
+      "redispatch": "NOT_EVALUATED",
+      "retry": "NOT_EVALUATED"
+    }
+  },
+  "lunaReview": {
+    "path": "docs/P5E_A43_CHILD_INVOCATION_FINAL_LUNA_REVIEW_20260930.md",
+    "sha256": "B802C3735048A2B518383B7942649A12F24A86011985A534907A37C36843CBAE",
+    "verdict": "ACCEPT",
+    "blocker": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 2,
+    "candidateExecuted": false,
+    "lowDisposition": "Snapshot counts corrected in canonical sync; post-child metadata-write suppression retained as explicit evidence-durability caveat and cannot yield live/P5/P6 PASS."
+  },
+  "liveBoundary": {
+    "launcherExecuted": false,
+    "receiptCreated": false,
+    "decisionCreated": false,
+    "eventCreated": false,
+    "adbCalled": false,
+    "providerCalled": false,
+    "credentialRead": false,
+    "dbWrite": false,
+    "buildInstall": false,
+    "rawDispatched": false,
+    "p6Opened": false
+  },
+  "consumedAuthority": {
+    "historicalManualLauncher": "D:\\P5E-private\\P5E_A43_FINAL_OWNER_SINGLE_USE_LAUNCHER_20260929_MANUAL.ps1",
+    "historicalManualLauncherSha256": "568D6182BFD27419EDAFEDCE5E2CA963FC69F045EFA6CA01DB066C573161B21F",
+    "historicalReceiptSha256": "6A21368CD3F4F666810BF0AE60BB4B764F5F9644950AF849C703D6240E9D75A7",
+    "reuse": "FORBIDDEN"
+  },
+  "rawOrSecretPayloads": "NOT_INCLUDED"
+}

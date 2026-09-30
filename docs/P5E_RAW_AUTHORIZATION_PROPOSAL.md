@@ -1,8 +1,10 @@
 # P5E.9B-A4.3 — One-run RAW authorization proposal
 
-> Current work package — 2026-09-29: `OFFLINE_PLAN_BINDING_RUNTIME_REPAIR_PASS / OWNER_DECISION_CONSUMED / OWNER_RECEIPT_CONSUMED / EMPTY_EVENT_NO_PLAN / ADB_NOT_CALLED / NOT_DISPATCHED / OWNER_REVIEW_REQUIRED_FOR_NEW_HASHES / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The single launch passed receipt/reservation and stopped inside `PrepareEvent` because an in-memory `OrderedDictionary` was validated as a `PSCustomObject`; the exact path is repaired and verified offline.
+> Current audit — 2026-09-30: `LAUNCHER_OFFLINE_REPAIR_PASS / FINAL_OWNER_REVIEW_REQUIRED / NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`. The tracked ProcessStartInfo child-invocation contract passed 27/27 synthetic cases, the candidate launcher passed 16/16 static checks without execution, and Luna accepted the exact bytes at `0 BLOCKER / 0 HIGH / 0 MEDIUM / 2 LOW`. No live action occurred.
 
 > Current packet: manifest `FCDC4747D54075B0518A92D837FC74C67D7F3804F9BAA4EFFC3CB34C7764A01D`, command `510F2A9A93CD9B566F9BC153B2745750840B0CEE78768788CB98EB7817E0D0D4`, helper `998A5E45F13F61A5F2B53B46E1F6CF57D97EF1C3A6690FC0854530F57A53C7BF`, guard `5F78F59FCFE5FD7BB904C8D0B4815CA7C714E03999DB97CDCA2737E5F4C3DC3E`, serial `15e84958`. Final QA is main `21/21`, atomicity/environment `28/28`, binding `262/262`, regression `175/175`, DB `56/56`; direct synthetic `PrepareEvent` writes `EVENT_PLAN` with exit `0`.
+
+> Final child-invocation evidence: contract `2A1474494E2760D851DC9378AF8252968A65A4779E2E1786434AB70918E6D2EB`, synthetic QA `EE03540BAB9BDFD754595C5AEBE5276CBED3875104BC78BECEDEE822EE32F328` (`27/27`), static QA `ADE91A69C08793E409FE7B37E91B35448B1E41128B8366390F24FB4905A1D7F1` (`16/16`), candidate `D:\P5E-private\P5E_A43_FINAL_OWNER_SINGLE_USE_LAUNCHER_20260930_CHILD_SAFE.ps1` hash `569F8437A0630D52E8F26D5631AF2D9CBC089947BFD337E7FEC510B831D98A41`; candidate was not run.
 
 > Closed historical A4.3 outcome — 2026-09-26: the explicit owner decision was received and consumed by exactly one event. The new packet stopped in the read-only Before collector with `COLLECTOR_TYPED_STOP / P5E_COLLECTOR_BINDING_TUPLE_MISMATCH`; RAW was not dispatched, P5 exit was not claimed and P6 remains not ready. Result: `docs/P5E_A43_EVENT_RESULT_20260926.json`. This does not authorize the current offline repair or a new event.
 
@@ -10,7 +12,7 @@
 
 > Current DB readback prerequisite — 2026-09-26: `OFFLINE_DB_HOST_READBACK_REPAIR_PASS` is bound by `docs/P5E_DB_HOST_READBACK_REPAIR_QA_20260925.json` at `56/56 PASS`. The old proposal, manifest/command and 2026-09-25 decision remain consumed; no live event is authorized by this work.
 
-> Current Next action: owner reviews the exact repaired packet and chooses `STOP_NO_EVENT` or issues one new exact-hash approval. Do not reuse decision `p5e-a43-20260929-010454009-c645b67bbe804f3f821b8fbb92613059`, receipt `0BDAD399...6AB5CF`, its launcher, empty event directory or any old packet hash; no live execution follows automatically.
+> Current Next action: Owner reviews the exact candidate launcher and offline provenance, then chooses whether to issue one new approval; no live launch is performed by this work package.
 
 > Superseded DB diagnosis — 2026-09-25: WAL/SHM exit `1` are valid absence results. The actual stop was the direct Android `sqlite3` consistent-read command. This proposal remains consumed and is not executable; the offline binary-export/host-readback repair is now complete. No new key, account check or owner live decision was requested for that repair.
 
