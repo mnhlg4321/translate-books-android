@@ -3,7 +3,7 @@
     "result":  "PASS",
     "failureCount":  0,
     "launcherPath":  "D:\\P5E-private\\P5E_A43_FINAL_OWNER_SINGLE_USE_LAUNCHER_20260930_CHILD_SAFE.ps1",
-    "launcherSha256":  "3212F686D7C2AEE599A4D85B274B9055112C8814D7B9133138B4314F416DEAF4",
+    "launcherSha256":  "569F8437A0630D52E8F26D5631AF2D9CBC089947BFD337E7FEC510B831D98A41",
     "contractPath":  "scripts/p5e-child-invocation-contract.ps1",
     "contractSha256":  "2A1474494E2760D851DC9378AF8252968A65A4779E2E1786434AB70918E6D2EB",
     "executed":  false,
@@ -43,6 +43,16 @@
                        "Name":  "raw-command-copy",
                        "Passed":  true,
                        "Evidence":  "command bytes copied without text round-trip"
+                   },
+                   {
+                       "Name":  "receipt-current-schema-only",
+                       "Passed":  true,
+                       "Evidence":  "receipt contains only fields accepted by the current strict validator"
+                   },
+                   {
+                       "Name":  "certificate-build-info-bound",
+                       "Passed":  true,
+                       "Evidence":  "certificate is checked against current BUILD_INFO before prompt"
                    },
                    {
                        "Name":  "single-use-create-new",

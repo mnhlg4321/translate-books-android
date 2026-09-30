@@ -441,7 +441,13 @@ try {
     $report['stdoutCaptureCap'] = $script:P5EChildInvocationStdoutCap
     $report['stderrCaptureCap'] = $script:P5EChildInvocationStderrCap
     $report['red'] = [ordered]@{ oldOperatorStderrExceptionReproduced = $redCaught; exceptionClass = $redExceptionClass }
-    $report['counters'] = [ordered]@{
+    $report['counterClassification'] = 'OFFLINE_SYNTHETIC_ONLY; LIVE_NOT_EVALUATED'
+    $report['liveCounters'] = [ordered]@{
+        adb = 'NOT_EVALUATED'; deviceRead = 'NOT_EVALUATED'; deviceWrite = 'NOT_EVALUATED'
+        provider = 'NOT_EVALUATED'; credential = 'NOT_EVALUATED'; dbWrite = 'NOT_EVALUATED'
+        buildInstall = 'NOT_EVALUATED'; raw = 'NOT_EVALUATED'; redispatch = 'NOT_EVALUATED'; retry = 'NOT_EVALUATED'
+    }
+    $report['syntheticFixtureCounters'] = [ordered]@{
         adb = 0; deviceRead = 0; deviceWrite = 0; provider = 0; credential = 0
         dbWrite = 0; buildInstall = 0; raw = 0; redispatch = 0; retry = 0
     }
