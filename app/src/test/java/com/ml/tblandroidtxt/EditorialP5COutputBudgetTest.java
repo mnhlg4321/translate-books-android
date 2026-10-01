@@ -85,6 +85,9 @@ public final class EditorialP5COutputBudgetTest {
         assertEquals(EditorialP5EFreshRawRoutingPolicy.DATA_COLLECTION_POLICY,
                 provider.getString("data_collection"));
         assertFalse(body.has("plugins"));
+        // Reasoning-model route with require_parameters: temperature is unsupported by every
+        // endpoint, so it must not be sent (live HTTP 404 on 2026-10-01).
+        assertFalse(body.has("temperature"));
         assertEquals(EditorialP5EFreshRawRoutingPolicy.MODEL, body.getString("model"));
         assertEquals(4096, body.getInt("max_tokens"));
         assertFalse(body.getBoolean("stream"));
@@ -98,6 +101,25 @@ public final class EditorialP5COutputBudgetTest {
         assertFalse(body.getJSONObject("provider").has("allow_fallbacks"));
         assertFalse(body.getJSONObject("provider").has("only"));
         assertFalse(body.getJSONObject("provider").has("data_collection"));
+        // No reasoning request on this route, so the configured temperature is still sent.
+        assertTrue(body.has("temperature"));
+    }
+
+    @Test public void temperatureIsOnlyDroppedForRequireParametersWithReasoning() throws Exception {
+        AppSettings settings = new AppSettings();
+        PromptPair prompt = new PromptPair("system", "synthetic");
+        assertTrue(OpenAICompatibleClient.buildChatRequestBody(settings, prompt, 512)
+                .has("temperature"));
+        JSONObject required = new JSONObject().put("require_parameters", true);
+        JSONObject notRequired = new JSONObject().put("require_parameters", false);
+        assertFalse(OpenAICompatibleClient.buildChatRequestBody(settings, prompt, 512, null,
+                required, "minimal").has("temperature"));
+        assertTrue(OpenAICompatibleClient.buildChatRequestBody(settings, prompt, 512, null,
+                required, "").has("temperature"));
+        assertTrue(OpenAICompatibleClient.buildChatRequestBody(settings, prompt, 512, null,
+                notRequired, "minimal").has("temperature"));
+        assertTrue(OpenAICompatibleClient.buildChatRequestBody(settings, prompt, 512, null,
+                (JSONObject) null, "minimal").has("temperature"));
     }
 
     @Test(expected = IllegalArgumentException.class)

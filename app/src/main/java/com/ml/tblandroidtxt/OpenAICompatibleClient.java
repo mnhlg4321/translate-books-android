@@ -421,7 +421,14 @@ public class OpenAICompatibleClient {
         }
         JSONObject body = new JSONObject();
         body.put("model", s.model);
-        body.put("temperature", s.temperature);
+        // With provider.require_parameters the provider keeps only endpoints that support every
+        // request parameter. The P5E RAW route (reasoning model, reasoning_effort set) has no
+        // endpoint that lists temperature, so sending it there yields HTTP 404 "no endpoints"
+        // before any completion. Requests without that combination keep sending temperature.
+        boolean requireParameters = providerPreferences != null
+                && providerPreferences.optBoolean("require_parameters", false);
+        boolean reasoningRequest = reasoningEffort != null && !reasoningEffort.isBlank();
+        if (!(requireParameters && reasoningRequest)) body.put("temperature", s.temperature);
         body.put("max_tokens", maxOutputTokens);
         body.put("stream", false);
         if (responseFormat != null) body.put("response_format", responseFormat);
