@@ -16,7 +16,7 @@ Ba chương chạy tuần tự, mỗi chương có chain/source identity riêng;
 
 | Hạng mục | Sự thật hiện tại | Giới hạn kết luận |
 |---|---|---|
-| Workspace | `D:\App Translate Books`, `feature/v4.18-p5e-runner-repair-20260917`, HEAD `5e2c6120f4b188ef5c8f91a7696d7914e15365d7` | Giữ continuation này, không quay về branch theo banner lịch sử |
+| Workspace | `D:\App Translate Books`, `feature/v4.18-p5e-runner-repair-20260917`, HEAD `4828a831a74d9c5384125a25ab71c2c661147f73` | Giữ continuation này, không quay về branch theo banner lịch sử |
 | Nguồn | Staged/working tree khác nhau; entrypoint có sửa chưa stage | Không commit index cũ như candidate đã test |
 | Build phát triển | `4.18-dev.1`/code208, source snapshot `240cdc814a324bca36543a8091af6bf6cdd07831`; APK SHA-256 `DB3FE9056A3477FA18D4F9F44A18E1FCCA0F7195F95DD99C91F1BD60AA6FE465` đã đối chiếu | Chưa cài; không chứng minh L1–L3 |
 | Pilot | Last-known production `4.17-p5e.11`/code207; A4.3 pins giữ nguyên | Không thay bằng code208 mà kế thừa acceptance cũ |
