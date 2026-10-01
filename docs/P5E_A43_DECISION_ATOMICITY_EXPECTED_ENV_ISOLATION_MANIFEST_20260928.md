@@ -55,6 +55,9 @@ action is authorized by this document.
 - Package/version/code: `com.ml.tblandroidtxt` / `4.18-p5e.1` / `209`.
 - Test package/runner: `com.ml.tblandroidtxt.test` /
   `androidx.test.runner.AndroidJUnitRunner`.
+- Authorization window: `issuedAtMillis` is the host time minus 10,000 ms and `expiresAtMillis` is `issuedAtMillis` + 180,000 ms. The device clock can
+  trail the host by about 1-2.5 s and the app rejects `now < issuedAtMillis` before any provider call (`P5_AUTHORIZATION_EXPIRED`), which stopped the
+  2026-10-01 10:35 event without a request. Single use, call caps and the 180,000 ms length are unchanged.
 - Device DB main-file SHA-256 (pre-live Before gate):
   `8D084050974E0681BF05AE46D799DB8741BB2593FFEFE92B2D12B5920FDFE685`,
   18,952,192 bytes, schema 24, observed read-only on 2026-10-01. It replaces the
@@ -68,7 +71,7 @@ action is authorized by this document.
 |---|---|---:|---|
 | Review-only command | `docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_COMMAND_20260928.txt` | `PROCESS_SELF_HASH_REQUIRED` | `PROCESS_SELF_HASH_REQUIRED` |
 | Approval manifest | `docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_MANIFEST_20260928.md` | `PROCESS_PINNED_BY_COMMAND` | `PROCESS_PINNED_BY_COMMAND` |
-| Live helper | `scripts/p5e-raw-live-supervisor.ps1` | 417228 | `83A92AB997E4924A4BAD5806245BDF3CC107C505B7DDB6BEA25508570F06D159` |
+| Live helper | `scripts/p5e-raw-live-supervisor.ps1` | 417625 | `424E1FA3A4C821DB87AD4E8662AE2BBC1666D8D104E3A7F6E72B0C1CCD39E5CA` |
 | Runtime guard | `scripts/p5e-a43-runtime-guards.ps1` | 23743 | `5F78F59FCFE5FD7BB904C8D0B4815CA7C714E03999DB97CDCA2737E5F4C3DC3E` |
 | Job/capture exporter | `scripts/p5e-db-binary-export.ps1` | 52379 | `813F6ED0ABD110EBF32550990940E975971988FBCF806DC26464EE311021CF99` |
 | SQLite bridge | `docs/P5E_SQLITE_BRIDGE.py` | 5958 | `4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111` |

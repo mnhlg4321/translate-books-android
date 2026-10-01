@@ -342,6 +342,9 @@ $script:P5EAccountEnvironmentName = 'P5E_OWNER_ENDPOINT_ACCOUNT_FINGERPRINT'
 $script:P5EAccountFingerprintRedactionSentinel = 'REDACTED'
 $script:P5EHostObservationTimeoutMilliseconds = 240000L
 $script:P5EAuthorizationValidityMilliseconds = 180000L
+# The device clock can trail the host (observed 1.3-2.4 s on 2026-10-01). EditorialP5PilotAuthorization rejects now < issuedAt before any provider call,
+# so the authorization window starts this much before the host stamps it; its length stays P5EAuthorizationValidityMilliseconds.
+$script:P5EAuthorizationClockSkewMarginMilliseconds = 10000L
 $script:P5EExecutionDeadlineMilliseconds = 120000L
 $script:P5EProductionVersion = '4.18-p5e.1'
 $script:P5EProductionVersionCode = 209L
@@ -6259,7 +6262,7 @@ function Invoke-P5EDispatch {
         -TestSourceFile $TestSourceArchivePath -ExpectedTestSourceHash $ExpectedTestSourceArchiveSha256 `
         -TestBuildInfoFile $TestBuildInfoPath -ExpectedTestBuildInfoHash $ExpectedTestBuildInfoSha256
     $accountFingerprint = Get-P5EAccountFingerprint
-    $issued = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+    $issued = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() - $script:P5EAuthorizationClockSkewMarginMilliseconds
     $expires = $issued + $script:P5EAuthorizationValidityMilliseconds
     $plan = New-P5EPlan -ManifestHash $ExpectedManifestSha256.ToLowerInvariant() -AccountFingerprint $accountFingerprint `
         -IssuedAtMillis $issued -ExpiresAtMillis $expires
