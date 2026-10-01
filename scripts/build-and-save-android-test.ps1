@@ -195,7 +195,10 @@ try {
         throw "Refusing non-test or connected Gradle task: $gradleTask"
     }
     $gradleCommand = @($gradleTask, '--rerun-tasks', '--no-daemon', '--console=plain')
-    $assembleOutput = @(& $gradleWrapper @gradleCommand 2>&1)
+    # Windows PowerShell 5.1 turns native stderr (e.g. javac Notes) into terminating errors under Stop; capture it as output instead.
+    $gradleErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try { $assembleOutput = @(& $gradleWrapper @gradleCommand 2>&1) } finally { $ErrorActionPreference = $gradleErrorActionPreference }
     $assembleExitCode = $LASTEXITCODE
     Write-Utf8File (Join-Path $payload 'assemble-output.txt') @($assembleOutput)
     if ($assembleExitCode -ne 0) {
