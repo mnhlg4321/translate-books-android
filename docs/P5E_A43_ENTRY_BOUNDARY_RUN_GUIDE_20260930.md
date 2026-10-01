@@ -7,33 +7,37 @@ Candidate SHA-256: 29029B4620887A0752F52A57FB3CAC54C451FCA9C4518EB513C33DD8CAE08
 Mở Windows PowerShell nhìn thấy được. Đoạn sau kiểm hash và mở đúng launcher một lần. Launcher hỏi quyết định cho đúng một event A4.3: serial 15e84958, Before/After read-only, account memory-only, fresh authorization, tối đa một RAW/GLOSSARY provider call, USD0.05 và DB allowlist theo manifest 456909096B308ACECE74FD708AF0EA712065A8F77F40A09CD95873078869EFF6. Không retry/fallback/RECONCILE/build/install/P6. Nhập APPROVE_ONE_FRESH_EVENT chỉ khi đồng ý; prompt có thể che ký tự. Sau đó nhập key trực tiếp vào prompt hidden, không gửi chat.
 
 ```powershell
-$p5eCandidate = 'D:\App Translate Books\scripts\p5e-a43-pre-reservation-launcher-entrypoint.ps1'
-$p5eHash = '29029B4620887A0752F52A57FB3CAC54C451FCA9C4518EB513C33DD8CAE082B5'
-if ((Get-FileHash -LiteralPath $p5eCandidate -Algorithm SHA256).Hash -cne $p5eHash) { throw 'CANDIDATE_HASH_MISMATCH_STOP' }
-$p5eDecision = 'p5e-a43-owner-' + [Guid]::NewGuid().ToString('N')
-$p5eAudit = Join-Path 'D:\P5E-private\.p5e-a43-audit' ($p5eDecision + '.json')
-$p5eOuter = Join-Path 'D:\P5E-private' ('.p5e-a43-outer-' + $p5eDecision + '.log')
-$p5eArgs = @(
-    '-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass',
-    '-File', $p5eCandidate, '-Execute',
-    '-RepoRoot', 'D:\App Translate Books',
-    '-PrivateRoot', 'D:\P5E-private',
-    '-AndroidSdkPath', 'C:\Users\ADMIN\AppData\Local\Android\Sdk',
-    '-LocalPropertiesPath', 'D:\App Translate Books\local.properties',
-    '-JavaPath', 'C:\Program Files\Android\Android Studio\jbr\bin\java.exe',
-    '-BuildToolsVersion', '35.0.0',
-    '-ExpectedCandidateSha256', $p5eHash,
-    '-AuditPath', $p5eAudit,
-    '-DecisionId', $p5eDecision
-)
-$p5eOut = & 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' @p5eArgs 2>&1
-$p5eExit = $LASTEXITCODE
-$p5eBytes = [Text.UTF8Encoding]::new($false).GetBytes('EXIT=' + $p5eExit + [Environment]::NewLine + ($p5eOut | Out-String))
-$p5eStream = [IO.File]::Open($p5eOuter, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
-try { $p5eStream.Write($p5eBytes, 0, $p5eBytes.Length) } finally { $p5eStream.Dispose() }
-$p5eOut
-'OUTER_EXIT=' + $p5eExit
+& {
+    $p5eCandidate = 'D:\App Translate Books\scripts\p5e-a43-pre-reservation-launcher-entrypoint.ps1'
+    $p5eHash = '29029B4620887A0752F52A57FB3CAC54C451FCA9C4518EB513C33DD8CAE082B5'
+    if ((Get-FileHash -LiteralPath $p5eCandidate -Algorithm SHA256).Hash -cne $p5eHash) { throw 'CANDIDATE_HASH_MISMATCH_STOP' }
+    $p5eDecision = 'p5e-a43-owner-' + [Guid]::NewGuid().ToString('N')
+    $p5eAudit = Join-Path 'D:\P5E-private\.p5e-a43-audit' ($p5eDecision + '.json')
+    $p5eOuter = Join-Path 'D:\P5E-private' ('.p5e-a43-outer-' + $p5eDecision + '.log')
+    $p5eArgs = @(
+        '-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass',
+        '-File', $p5eCandidate, '-Execute',
+        '-RepoRoot', 'D:\App Translate Books',
+        '-PrivateRoot', 'D:\P5E-private',
+        '-AndroidSdkPath', 'C:\Users\ADMIN\AppData\Local\Android\Sdk',
+        '-LocalPropertiesPath', 'D:\App Translate Books\local.properties',
+        '-JavaPath', 'C:\Program Files\Android\Android Studio\jbr\bin\java.exe',
+        '-BuildToolsVersion', '35.0.0',
+        '-ExpectedCandidateSha256', $p5eHash,
+        '-AuditPath', $p5eAudit,
+        '-DecisionId', $p5eDecision
+    )
+    $p5eOut = & 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' @p5eArgs 2>&1
+    $p5eExit = $LASTEXITCODE
+    $p5eBytes = [Text.UTF8Encoding]::new($false).GetBytes('EXIT=' + $p5eExit + [Environment]::NewLine + ($p5eOut | Out-String))
+    $p5eStream = [IO.File]::Open($p5eOuter, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
+    try { $p5eStream.Write($p5eBytes, 0, $p5eBytes.Length) } finally { $p5eStream.Dispose() }
+    $p5eOut
+    'OUTER_EXIT=' + $p5eExit
+}
 ```
+
+Dán nguyên khối trên một lần (đã gói thành một lệnh duy nhất, nên không có dòng nào đứng sau lệnh khởi chạy để prompt ẩn nuốt mất), nhấn Enter đúng một lần, rồi chỉ gõ literal ở prompt ẩn. Lần 2026-10-01 10:04 dừng ở `P5E_OWNER_APPROVAL_LITERAL_REQUIRED_STOP` (không reservation, không key, không child; chưa dùng gì): literal nhận được không đúng; nguyên nhân chính xác không xác định được.
 
 Audit mặc định của entry chỉ đặt tên theo hash candidate. `D:\P5E-private\.p5e-a43-audit\68df8061….json` đã tồn tại từ lần chạy 2026-09-30 18:11, nên lần chạy thứ hai với tên mặc định dừng ở biên ngoài bằng `P5E_A43_AUDIT_ALREADY_EXISTS_STOP` trước prompt (case 5 và 6 của `scripts/test-p5e-a43-entry-console.ps1`). Vì vậy đoạn trên dùng `-AuditPath` theo DecisionId và ghi kết quả ngoài cùng vào `.p5e-a43-outer-<DecisionId>.log` (CreateNew, không chứa key). Không sửa hay xóa file audit cũ. Va chạm audit là một failure mode đã tái hiện, không phải nguyên nhân đã chứng minh của lần owner-window gần nhất: bản ghi lần đó đã ghi audit path theo DecisionId. Nguyên nhân lịch sử vẫn UNRESOLVED; outer log là cách có stderr thật nếu nó tái diễn.
 

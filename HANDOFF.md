@@ -4,13 +4,13 @@ Ngày bàn giao: 2026-10-01 (+07:00).
 
 ## Trạng thái mới nhất — ưu tiên đọc trước
 
-Baseline HEAD là commit docs cuối của nhánh; code/pin ở `c496cab4` (candidate `29029B46…`). Test package đã được thay một lần trên máy theo duyệt của owner: APK AndroidTest đang cài là `D2B0E590…` (đã xác minh chỉ-đọc). M0 chạy lại sau khi thay đạt trọn vẹn lúc 09:52: APK production/version khớp, DB `8D084050…` nguyên vẹn, WAL/SHM vắng. Event đầu `raw-live-a43-preauth-33253efa…` vẫn đã dùng, `EXTERNAL_CALL_STATE_UNKNOWN`, RAW chưa chấp nhận.
+Baseline HEAD là commit docs cuối của nhánh; code/pin ở `c496cab4` (candidate `29029B46…`). Lần chạy owner thứ hai (10:04, DecisionId `p5e-a43-owner-f543a7a3…`) dừng ở prompt approval với `P5E_OWNER_APPROVAL_LITERAL_REQUIRED_STOP`, exit 1, trước mọi reservation/key/child: chưa dùng gì, không thể có provider call; chỉ có audit và outer log mới. Nguyên nhân (literal nhận được không đúng) không xác định được. Run guide giờ là một lệnh duy nhất. Test package `D2B0E590…` đang cài; DB `8D084050…` nguyên vẹn.
 
 - Event A4.3 `raw-live-a43-preauth-33253efa…` (DecisionId `p5e-a43-owner-1599345c…`) đã dùng và không được dùng lại. Kết quả: Before, một lần launch instrumentation, After; `EXTERNAL_CALL_STATE_UNKNOWN` / `P5E_POST_DISPATCH_DURABLE_STATE_INCOMPLETE`; RAW chưa được chấp nhận.
 - Nguyên nhân (đã xác nhận bằng source và source ZIP đã pin): AndroidTest APK `058BE851…` hard-code `EXPECTED_DB_SHA256 = 3563f44b…` và yêu cầu cả tham số launch `p5e_expected_db_sha256` lẫn hash DB thật bằng hằng số đó. Re-pin phía host sang `8D084050…` làm tham số khác hằng số nên test thất bại trước khi đọc key, settings, DB hay mạng. Lỗi của tôi: lúc re-pin chỉ tìm trong scripts/docs, không tìm trong `app/src/androidTest` và APK test.
 - Bằng chứng cục bộ: hash DB After bằng Before, lineage toàn 0, chạy khoảng 20 giây, stderr instrumentation rỗng. Chính thức vẫn là UNKNOWN; không suy ra `$0` ở phía nhà cung cấp.
 - Nguyên nhân lần owner-window lịch sử trước đó vẫn UNRESOLVED.
-- Next action: owner chạy run guide cho candidate `29029B46…` (xem mục Next action duy nhất).
+- Next action: owner dán khối run guide một lần, Enter một lần, và gõ tay `APPROVE_ONE_FRESH_EVENT` ở prompt ẩn chỉ khi đồng ý (xem mục Next action duy nhất).
 
 ## Đọc theo thứ tự này
 
@@ -77,7 +77,7 @@ Offline/component PASS không thay live/product acceptance. Enum/schema/validato
 
 ## Next action duy nhất
 
-Owner chạy run guide `docs/P5E_A43_ENTRY_BOUNDARY_RUN_GUIDE_20260930.md` cho candidate `29029B46…` trong cửa sổ PowerShell nhìn thấy khi trạng thái M0 còn đúng (không mở app trên điện thoại, giữ USB) và quyết định ở prompt: một RAW call, chương 001 VOL5, trần đã pin, DecisionId mới với `-AuditPath` và outer log, key chỉ nhập ở prompt ẩn. Sau đó owner báo kết quả; tôi đọc outer log, audit và evidence event (chỉ hash) rồi phân loại. Tùy chọn: owner xem Activity OpenRouter cho event 09:25 trước đó.
+Owner dán khối run guide một lần (giờ là một lệnh duy nhất), nhấn Enter một lần và chỉ gõ tay `APPROVE_ONE_FRESH_EVENT` ở prompt ẩn nếu đồng ý; DecisionId mới mỗi lần chạy, lần 10:04 chưa dùng gì. Nếu cửa sổ lại dừng ở prompt approval thì outer log và audit cho thấy; không mở vòng chẩn đoán mới. Sau đó owner báo kết quả.
 
 Bước chẩn đoán offline launcher đã đóng ở 2/2 vòng (≈30/60 phút): không mở vòng thứ ba. Nếu cửa sổ owner vẫn lỗi dù đã có outer log, dùng phương án B ở canonical plan §6: trình môi trường Android thử riêng/dữ liệu thay thế/cùng production path và phần nào còn phải kiểm lại trên target; không tự cài, xóa DB, gọi provider hoặc thay scope.
 
