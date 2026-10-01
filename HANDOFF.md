@@ -4,13 +4,13 @@ Ngày bàn giao: 2026-10-01 (+07:00).
 
 ## Trạng thái mới nhất — ưu tiên đọc trước
 
-Lần chạy owner thứ ba (10:10) chạy trọn đường; request tới nhà cung cấp trả HTTP 404 (`RECOVERY_REQUIRED` / `RETRY_PROVIDER_HTTP_ERROR`). Đọc metadata công khai (không key, không gọi model) cho thấy cả 7 endpoint của `openai/gpt-5.6-luna` không liệt kê `temperature` trong tham số được hỗ trợ, trong khi request RAW luôn gửi `temperature` cùng `provider.require_parameters=true`; nhiều khả năng đây là nguyên nhân (bằng chứng mạnh, chưa quan sát trực tiếp vì thân lỗi không được lưu). Sửa cần thay đổi production nên cần owner duyệt. Decision, event và reservation candidate `29029B46…` đã dùng.
+Sửa đã duyệt được commit (`16b5c97e`): request RAW fresh không còn gửi `temperature` khi có cả `require_parameters` và `reasoning_effort`; unit test app 250/250; `app/src/main` khác snapshot build code207 (`995d3b6c`) chỉ đúng thay đổi này. Chưa build, cài hay chạy trên máy. Event lần 3 (`raw-live-a43-preauth-df7ee78f…`) vẫn là HTTP 404 `RECOVERY_REQUIRED`; decision, event và reservation candidate `29029B46…` đã dùng.
 
 - Event A4.3 `raw-live-a43-preauth-33253efa…` (DecisionId `p5e-a43-owner-1599345c…`) đã dùng và không được dùng lại. Kết quả: Before, một lần launch instrumentation, After; `EXTERNAL_CALL_STATE_UNKNOWN` / `P5E_POST_DISPATCH_DURABLE_STATE_INCOMPLETE`; RAW chưa được chấp nhận.
 - Nguyên nhân (đã xác nhận bằng source và source ZIP đã pin): AndroidTest APK `058BE851…` hard-code `EXPECTED_DB_SHA256 = 3563f44b…` và yêu cầu cả tham số launch `p5e_expected_db_sha256` lẫn hash DB thật bằng hằng số đó. Re-pin phía host sang `8D084050…` làm tham số khác hằng số nên test thất bại trước khi đọc key, settings, DB hay mạng. Lỗi của tôi: lúc re-pin chỉ tìm trong scripts/docs, không tìm trong `app/src/androidTest` và APK test.
 - Bằng chứng cục bộ: hash DB After bằng Before, lineage toàn 0, chạy khoảng 20 giây, stderr instrumentation rỗng. Chính thức vẫn là UNKNOWN; không suy ra `$0` ở phía nhà cung cấp.
 - Nguyên nhân lần owner-window lịch sử trước đó vẫn UNRESOLVED.
-- Next action: owner duyệt hướng sửa (bỏ `temperature` khỏi request RAW của route P5E), xem mục Next action duy nhất.
+- Next action: owner duyệt build production (xem mục Next action duy nhất).
 
 ## Đọc theo thứ tự này
 
@@ -77,7 +77,7 @@ Offline/component PASS không thay live/product acceptance. Enum/schema/validato
 
 ## Next action duy nhất
 
-Owner duyệt hướng sửa: bỏ `temperature` khỏi request RAW fresh của route P5E (`OpenAICompatibleClient`, chỉ khi provider preferences đòi `require_parameters`) kèm unit test. Sau đó, mỗi bước có duyệt riêng: build APK production bằng `scripts/build-and-save.ps1` (version code mới), cài giữ dữ liệu đè lên code207, preflight chính xác trên máy để tính lại hash request/body/envelope, re-pin, build lại APK test nếu cần, candidate hash mới, decision và event mới. Phương án thay thế không ưu tiên: `require_parameters=false` (nhà cung cấp tự bỏ tham số, đổi route fingerprint).
+Owner duyệt build production: `scripts/build-and-save.ps1 -Series 4.18-p5e` (dự kiến `4.18-p5e.1`, versionCode 209; offline; lưu ở `artifacts/` và `backup/`). Sau đó, mỗi bước có duyệt riêng: cập nhật pin production (helper, hằng số nguồn AndroidTest, manifest, command, entry), build lại APK test, cài giữ dữ liệu cả hai đè lên code207 và giữ bản sao DB trên host, preflight chính xác trên máy để tính lại hash request/body/envelope, re-pin, candidate hash và decision mới.
 
 Bước chẩn đoán offline launcher đã đóng ở 2/2 vòng (≈30/60 phút): không mở vòng thứ ba. Nếu cửa sổ owner vẫn lỗi dù đã có outer log, dùng phương án B ở canonical plan §6: trình môi trường Android thử riêng/dữ liệu thay thế/cùng production path và phần nào còn phải kiểm lại trên target; không tự cài, xóa DB, gọi provider hoặc thay scope.
 
