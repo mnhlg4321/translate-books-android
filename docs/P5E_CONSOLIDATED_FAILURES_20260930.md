@@ -188,3 +188,17 @@ Owner yêu cầu chấm dứt vòng lặp build/review tốn thời gian. Review
 Mặc định đề xuất A có giới hạn rồi B nếu cần; đây là khuyến nghị, chưa thay đổi canonical scope hoặc quyền live. Không thể hứa hoàn tất dứt điểm trước khi có bằng chứng chạy sản phẩm, nhưng có thể chấm dứt việc tiếp tục cùng phương pháp mà không có tiêu chí dừng.
 
 Tiêu chí sản phẩm theo câu trả lời của owner: một chương đi hết L1–L3 và tạo bản đã biên tập được lưu, mở lại và xuất ra sau kiểm tra cuối; sau đó xác minh trên bộ ba chương đại diện theo kế hoạch. Output L1/L2 không bắt buộc thành file giao riêng. Phương án C không được chọn; A/B chỉ là phương tiện đạt cùng kết quả cuối.
+
+## Vòng chẩn đoán entry owner-window 1/2 — 2026-10-01
+
+- Bộ đếm: active ≈ 15/60 phút; 1/2 vòng (1 reproducer + 1 test mới; không sửa entrypoint thêm).
+- Giả thuyết: switch `-LibraryOnly` của các thư viện dot-source ghi đè `$LibraryOnly` trong cùng scope entrypoint, nên `if ($LibraryOnly) { return }` thoát im lặng trước audit.
+- Reproducer: Windows PowerShell 5.1 sạch, console thật có input (`Start-Process` + `WriteConsoleInput`), đường dẫn có khoảng trắng, đúng argument của run guide, PrivateRoot tạm, chỉ gõ literal sai. Không key/ADB/provider.
+- Kết quả:
+  - Bytes staged `CC01C33F…8E23` (stdin redirect và console thật): exit 0, stdout/stderr rỗng, không audit, không prompt — chính là triệu chứng pre-prompt exit và là false exit 0. Giả thuyết được xác nhận.
+  - Bytes working-tree `68DF8061…70BA`: tới prompt (audit tạo trước prompt), nhận input trong console thật, trả JSON `P5E_OWNER_APPROVAL_LITERAL_REQUIRED_STOP`, exit 1.
+  - Outer failure (thiếu `-JavaPath`): stderr giữ `P5E_A43_INTEGRATION_CONTRACT_MISSING_STOP`, exit 1, không audit.
+  - Redirected stdin + prompt: treo ở `Read-Host` (không phải console); `-NonInteractive`: typed `UNKNOWN_STOP/PSInvalidOperationException`, exit 1, audit ghi (mất message gốc; chấp nhận, không sửa vì đổi mã typed buộc re-pin file parent).
+- Kết luận: tested bytes = 68DF (đã có trong working tree); staged CC01 là bytes cũ lỗi, không được commit/dùng. Owner phải chạy 68DF, không dùng launcher/hash cũ.
+- Test mới: `scripts/test-p5e-a43-entry-console.ps1` (2 case PASS, report `evidence/p5e-a43-parent-integration-20260930/P5E_A43_ENTRY_CONSOLE_QA.json`).
+- Không chứng minh: RAW/L1/P5 exit; đường owner thật vẫn cần một lần chạy có thẩm quyền.
