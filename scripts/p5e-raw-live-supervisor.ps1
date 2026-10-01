@@ -30,21 +30,21 @@ param(
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
-    [string]$ProductionApkPath = 'D:\App Translate Books\artifacts\builds\v4.18-p5e.1\build-20261001-102120\TranslateBooks-v4.18-p5e.1-code209.apk',
+    [string]$ProductionApkPath = 'D:\App Translate Books\artifacts\builds\v4.18-p5e.2\build-20261001-105237\TranslateBooks-v4.18-p5e.2-code210.apk',
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
     [Parameter(ParameterSetName = 'CollectReadback')]
-    [string]$ExpectedProductionApkSha256 = '4F3DAF9C77DAD104A57CC54536A237D09B941610600A60A5876BD608C168D41C',
+    [string]$ExpectedProductionApkSha256 = 'AE2896BE38163C7DAF9B903B78368B0A5B06F3D881C8F95B7575499F3B64EBCE',
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
-    [string]$TestApkPath = 'D:\App Translate Books\artifacts\test-builds\v4.18-p5e.1\p5e-a43-prod209-20261001-01\app-debug-androidTest.apk',
+    [string]$TestApkPath = 'D:\App Translate Books\artifacts\test-builds\v4.18-p5e.2\p5e-a43-prod210-20261001-01\app-debug-androidTest.apk',
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
     [Parameter(ParameterSetName = 'CollectReadback')]
-    [string]$ExpectedTestApkSha256 = '8F3329631DA2B35C66412B480CCD0C93F1CF6C52BE7D1B6FD21FBE3FE1C43566',
+    [string]$ExpectedTestApkSha256 = '92974AA58013CE926B2C8BB8BA654BD973D16F30F0397A55E8DF4DA02BBDEA97',
 
     [Parameter(ParameterSetName = 'Dispatch', Mandatory = $true)]
     [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
@@ -335,9 +335,9 @@ $script:P5EAccountCheckOptInKey = 'p5e_account_check'
 $script:P5EAccountCheckExpectedKey = 'p5e_expected_endpoint_account_fingerprint'
 $script:P5EAccountCheckRemoteScript =
     'IFS= read -r p5e_expected || exit 64; am instrument -w -r -e class "$1" -e p5e_account_check YES -e p5e_expected_endpoint_account_fingerprint "$p5e_expected" "$2"'
-$script:P5ETestSourceCommit = 'ed54d2b6c5ba75128c18f286d5a85186520744e7'
+$script:P5ETestSourceCommit = '6134ce5141306186330c3221e84cba0df1e0298f'
 $script:P5ERawSourceContractCommit = 'd51b7f3c16bdc482513b9904db07b97daed592d1'
-$script:P5ERawSourceContractSha256 = '2cfc25a182e966ca2a0d003f40d7d53c23aae07b943fe7b6b688c7d672fb4d4b'
+$script:P5ERawSourceContractSha256 = '9c0c2b1dec5e324e9c38f4d0ee72bdfd2509e35f8498ac852187820e7fa94457'
 $script:P5EAccountEnvironmentName = 'P5E_OWNER_ENDPOINT_ACCOUNT_FINGERPRINT'
 $script:P5EAccountFingerprintRedactionSentinel = 'REDACTED'
 $script:P5EHostObservationTimeoutMilliseconds = 240000L
@@ -346,12 +346,12 @@ $script:P5EAuthorizationValidityMilliseconds = 180000L
 # so the authorization window starts this much before the host stamps it; its length stays P5EAuthorizationValidityMilliseconds.
 $script:P5EAuthorizationClockSkewMarginMilliseconds = 10000L
 $script:P5EExecutionDeadlineMilliseconds = 120000L
-$script:P5EProductionVersion = '4.18-p5e.1'
-$script:P5EProductionVersionCode = 209L
+$script:P5EProductionVersion = '4.18-p5e.2'
+$script:P5EProductionVersionCode = 210L
 $script:P5EExpectedProductionApkSha256 =
-    '4f3daf9c77dad104a57cc54536a237d09b941610600a60a5876bd608c168d41c'
+    'ae2896be38163c7daf9b903b78368b0a5b06f3d881c8f95b7575499f3b64ebce'
 $script:P5EExpectedTestApkSha256 =
-    '8f3329631da2b35c66412b480ccd0c93f1cf6c52be7d1b6fd21fbe3fe1c43566'
+    '92974aa58013ce926b2c8bb8ba654bd973d16f30f0397a55e8df4da02bbdea97'
 $script:P5ECertificateSha256 =
     '47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155'
 $script:P5EDatabaseSchemaVersion = 24L

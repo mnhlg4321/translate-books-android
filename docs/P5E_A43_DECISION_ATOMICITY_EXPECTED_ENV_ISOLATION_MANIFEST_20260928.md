@@ -30,29 +30,29 @@ action is authorized by this document.
 
 - Serial: `15e84958`.
 - Production APK SHA-256:
-  `4F3DAF9C77DAD104A57CC54536A237D09B941610600A60A5876BD608C168D41C`.
+  `AE2896BE38163C7DAF9B903B78368B0A5B06F3D881C8F95B7575499F3B64EBCE`.
 - Production source ZIP SHA-256:
-  `CA39E984CD3AEB0F59582CB7E6BA6EFFDE83792D6C8DE945C216EEA60F81B4C3`.
+  `DF712FF89D66A0BDCCC76DA5BD7D977958D36CAE1DF3BF0FB8AE820122E5D3CD`.
 - Production BUILD_INFO SHA-256:
-  `561C5211774BF339928FB919327F2E24CF48FF9F93338D6B514E5D27E5B8EE75`.
+  `C160802E613061B3D6D24C51C658E4BDF88765E5E132A1E87DDE54DB1A41F6FC`.
 - AndroidTest APK SHA-256:
-  `8F3329631DA2B35C66412B480CCD0C93F1CF6C52BE7D1B6FD21FBE3FE1C43566`.
+  `92974AA58013CE926B2C8BB8BA654BD973D16F30F0397A55E8DF4DA02BBDEA97`.
 - AndroidTest source ZIP SHA-256:
-  `49BEDB483F0A6F63ADE266B2AE5515042EDF5A2FC96E1F98F9BC18A5E88A3BCB`.
+  `C307326C49870D7B0C01481DCA8003A027EF5505605BA0665CA5643D79BAD30A`.
 - AndroidTest BUILD_INFO SHA-256:
-  `02E43140C3867137724AC38915370A4CB02C662CDCDD873A66F97743411D9B37`.
-- AndroidTest build: source commit `ed54d2b6c5ba75128c18f286d5a85186520744e7`,
-  event `p5e-a43-prod209-20261001-01`, built with
+  `AEFF93BAD61CF3A202A48AE80B6F665DE3829B6E8CA3AE0FACC5A7354C086243`.
+- AndroidTest build: source commit `6134ce5141306186330c3221e84cba0df1e0298f`,
+  event `p5e-a43-prod210-20261001-01`, built with
   `scripts/build-and-save-android-test.ps1` and archived in
   `artifacts/test-builds` and `backup/test-builds` with matching hashes. It
   replaces the `058BE851…` APK, which compiled in the old DB hash. The
   instrumented test now takes the expected DB hash from the launch argument
   `p5e_expected_db_sha256` (pinned in the helper) and compares it with the real
   DB file hash. The Live test source hash pinned in the helper is
-  `2CFC25A182E966CA2A0D003F40D7D53C23AAE07B943FE7B6B688C7D672FB4D4B`.
+  `9C0C2B1DEC5E324E9C38F4D0EE72BDFD2509E35F8498AC852187820E7FA94457`.
 - Certificate SHA-256:
   `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155`.
-- Package/version/code: `com.ml.tblandroidtxt` / `4.18-p5e.1` / `209`.
+- Package/version/code: `com.ml.tblandroidtxt` / `4.18-p5e.2` / `210`.
 - Test package/runner: `com.ml.tblandroidtxt.test` /
   `androidx.test.runner.AndroidJUnitRunner`.
 - Authorization window: `issuedAtMillis` is the host time minus 10,000 ms and `expiresAtMillis` is `issuedAtMillis` + 180,000 ms. The device clock can
@@ -71,7 +71,7 @@ action is authorized by this document.
 |---|---|---:|---|
 | Review-only command | `docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_COMMAND_20260928.txt` | `PROCESS_SELF_HASH_REQUIRED` | `PROCESS_SELF_HASH_REQUIRED` |
 | Approval manifest | `docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_MANIFEST_20260928.md` | `PROCESS_PINNED_BY_COMMAND` | `PROCESS_PINNED_BY_COMMAND` |
-| Live helper | `scripts/p5e-raw-live-supervisor.ps1` | 417625 | `424E1FA3A4C821DB87AD4E8662AE2BBC1666D8D104E3A7F6E72B0C1CCD39E5CA` |
+| Live helper | `scripts/p5e-raw-live-supervisor.ps1` | 417625 | `5490EB37DFD0B329C401C97F45CE0D06A9C8090AAE29B2781B8711F42025711F` |
 | Runtime guard | `scripts/p5e-a43-runtime-guards.ps1` | 23743 | `5F78F59FCFE5FD7BB904C8D0B4815CA7C714E03999DB97CDCA2737E5F4C3DC3E` |
 | Job/capture exporter | `scripts/p5e-db-binary-export.ps1` | 52379 | `813F6ED0ABD110EBF32550990940E975971988FBCF806DC26464EE311021CF99` |
 | SQLite bridge | `docs/P5E_SQLITE_BRIDGE.py` | 5958 | `4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111` |
@@ -155,7 +155,7 @@ references. Their needed assertions are carried by the tracked package suites
 from the exact candidate commit without workspace fallback or cached results.
 The helper source-contract audit uses the historical commit when that object is
 available and otherwise verifies the pinned AndroidTest source SHA-256
-`2CFC25A182E966CA2A0D003F40D7D53C23AAE07B943FE7B6B688C7D672FB4D4B` inside
+`9C0C2B1DEC5E324E9C38F4D0EE72BDFD2509E35F8498AC852187820E7FA94457` inside
 the clean archive; it never treats a missing history object as a pass.
 
 All live counters for this work package are zero: ADB, device, provider,
