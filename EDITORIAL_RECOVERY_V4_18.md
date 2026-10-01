@@ -161,8 +161,25 @@ Thay thế các hàng P5/P6 tương ứng ở mục 5 về mức chi tiết; th�
 | G6 Ba final + regression/device QA | Chưa có | Ba chain riêng (ngắn, dày thoại, dài); full regression, wrapper build, hai archive, device QA | G5; owner chốt chương + ngân sách chuỗi | Bảng evidence theo mục 5 | `PRODUCT_FINAL_OUTPUT_ACCEPTED` | Conflict thật: thêm chương hợp lệ, không hạ tiêu chí |
 
 Ước lượng chi phí L2/L3 trước live: lấy số đo thật event 7 (RAW: 21,143 prompt / 535 completion token, USD 0.00295, 8.2 s) làm mốc; L2_EDIT thêm DRAFT + REPORT_L1 (~2× prompt) và output là danh sách change rows (không phải toàn văn). Bảng call/cap/USD theo phase lập khi G3 có wire cố định.
+### G2 chi tiết — M4 RECONCILE chương 001 (nhóm active sau quyết định B)
+
+Quyết định owner 2026-10-01: **B** — RAW event 7 (attempt `7a5e3428…`) là predecessor duy nhất cho M4; verdict formal giữ `RAW_NOT_ACCEPTED`. Quyết định này không cấp quyền cài APK, migrate DB hay gọi provider.
+
+| Bước | Việc | Trạng thái | PASS / dừng |
+|---|---|---|---|
+| M4.a App | Compact wire RECONCILE + `executeReconcile` (`7763085e`); adapter fresh chỉ cho RECONCILE (`withFreshReconcileLifecyclePersistence`), `dispatchReconcile` yêu cầu lineage đúng trạng thái event 7 (`inspectReconcileLineage` = READY), `dispatchRaw` không đổi byte | **Xong** `4a603695` (app 268/268) | JVM tests + androidTest compile |
+| M4.b Runner thiết bị | `EditorialP5EReconcileLiveInstrumentedTest`, opt-in `p5e_reconcile_live=YES`; pin APK/DB nhận qua argument và đối chiếu thiết bị; 1 call, 0 repair/retry, ≤USD 0.05, ≤120 s | **Xong** `1f8e7334` (compile) | Compile; không chạy nếu chưa có quyền |
+| M4.c Host | Script gọn dùng thư viện supervisor (`-LibraryOnly`: xuất DB Before/After chỉ-đọc, đọc lại SQLite trên host, hash APK), một lần `am instrument`, ghi outcome. **Không** mở rộng supervisor RAW | **Xong** `a64ae460` (self-test 74/74, chưa chạy thiết bị) | Self-test bằng DB fixture; không chạm thiết bị khi test |
+| M4.d Build | `build-and-save.ps1` production + test APK mới. Bản build từ HEAD có schema v25: mở app sẽ migrate DB pilot v24→v25 (thêm một bảng). Bản sao lưu trước: ảnh `database-snapshot-after` của event 7 (`9fa69f6b…`) + bản copy chỉ-đọc ngay trước cài | Cần quyền thiết bị | Hash APK/DB sau cài đọc lại khớp; migration chỉ thêm `editorial_phase_artifacts` |
+| M4.e Event | Một RECONCILE call | Cần quyền provider riêng | Readback: attempt `L1_RECONCILE` COMMITTED, report `phase=L1_RECONCILE`, predecessor `7a5e3428…`, receipt atomic, lineage +1; UNKNOWN → không retry |
+| M5–M7 | Restart/reopen đọc lại REPORT_L1 + receipt cùng hash; ghi P5.4/P5 exit | Sau M4.e | Theo bảng mốc mục 5 |
+
+Phạm vi quyền sẽ xin một lần khi M4.a–c xong: cài production + test APK mới trên serial `15e84958` (kèm migrate v25 có sao lưu), một RECONCILE call trần USD 0.05 / 104,096 token / 120 s, đọc logcat `P5E_RAW` chỉ-đọc. Ước tính chi phí theo event 7: ~USD 0.003–0.006.
+
+Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288fe` (app 276/276); L3 re-audit mù + reconcile + 5 release numbers do app tính, FINAL + QA_RECEIPT một hàng `e8b21d26` (engine 244/244). Còn thiếu: L2_RAW_DISCOVERY đối chiếu candidate counts, adapter OpenRouter cho L3, coordinator app nối L1→L2→L3 với store (G5), UI/export.
+
 ## 10. Next action duy nhất
 
-Owner quyết định G1: chấp nhận RAW đã commit của event 7 làm predecessor cho M4 chương 001 theo ngoại lệ hẹp (B, khuyến nghị) hoặc chạy event RAW mới (C). Trong lúc chờ, tiếp tục G3 offline: wire L2 compact + L2 execution trong engine với fake provider, rồi bảng artifact L2 một hàng. Không provider, không thiết bị, không khôi phục DB, không mở vòng launcher thứ ba.
+Owner duyệt một phạm vi quyền M4 (bảng ở G2 chi tiết): build + cài production/test APK mới trên serial `15e84958` (migrate DB v24→v25, sao lưu trước), một RECONCILE call trần USD 0.05 / 104,096 token / 120 s qua `scripts/p5e-m4-reconcile-event.ps1`. M4.a–c đã xong offline. Trong lúc chờ: G3/G4 offline còn lại (adapter L3, L2_RAW_DISCOVERY), không provider/thiết bị.
 
 Lịch sử next action trước (giữ để tra cứu): event 7 commit RAW + REPORT_L1-phase-RAW + receipt (verifier formal `RAW_NOT_ACCEPTED` do collector); collector đã sửa ở `3057919b`. Offline entry-boundary đã đóng 2/2 vòng; nguyên nhân owner-window lịch sử vẫn UNRESOLVED.
