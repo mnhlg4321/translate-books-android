@@ -10,7 +10,7 @@ Sửa đã duyệt được commit (`16b5c97e`): request RAW fresh không còn g
 - Nguyên nhân (đã xác nhận bằng source và source ZIP đã pin): AndroidTest APK `058BE851…` hard-code `EXPECTED_DB_SHA256 = 3563f44b…` và yêu cầu cả tham số launch `p5e_expected_db_sha256` lẫn hash DB thật bằng hằng số đó. Re-pin phía host sang `8D084050…` làm tham số khác hằng số nên test thất bại trước khi đọc key, settings, DB hay mạng. Lỗi của tôi: lúc re-pin chỉ tìm trong scripts/docs, không tìm trong `app/src/androidTest` và APK test.
 - Bằng chứng cục bộ: hash DB After bằng Before, lineage toàn 0, chạy khoảng 20 giây, stderr instrumentation rỗng. Chính thức vẫn là UNKNOWN; không suy ra `$0` ở phía nhà cung cấp.
 - Nguyên nhân lần owner-window lịch sử trước đó vẫn UNRESOLVED.
-- Next action: owner duyệt build production (xem mục Next action duy nhất).
+- Next action: owner quyết định khôi phục DB trước event lên máy (xem mục Next action duy nhất).
 
 ## Đọc theo thứ tự này
 
@@ -77,7 +77,7 @@ Offline/component PASS không thay live/product acceptance. Enum/schema/validato
 
 ## Next action duy nhất
 
-Owner duyệt build production: `scripts/build-and-save.ps1 -Series 4.18-p5e` (dự kiến `4.18-p5e.1`, versionCode 209; offline; lưu ở `artifacts/` và `backup/`). Sau đó, mỗi bước có duyệt riêng: cập nhật pin production (helper, hằng số nguồn AndroidTest, manifest, command, entry), build lại APK test, cài giữ dữ liệu cả hai đè lên code207 và giữ bản sao DB trên host, preflight chính xác trên máy để tính lại hash request/body/envelope, re-pin, candidate hash và decision mới.
+Owner quyết định khôi phục ảnh DB trước event lên máy: cổng Before của host và preflight chính xác đều đòi attempt/receipt/lifecycle bằng 0, mà DB hiện tại còn dòng attempt từ event HTTP 404, và pin `8D084050…` chính là ảnh DB trước event. Khuyến nghị: khôi phục từ bản sao host đã xác minh hash (`m0-observation-20261001-025250216`), app đang dừng, sau khi xác nhận ảnh sau event `FA71CB75…` đã được giữ trên host (có ở ba nơi). Sau đó chạy preflight chính xác trên máy, tính lại hash request và re-pin, rồi trao candidate mới cho owner.
 
 Bước chẩn đoán offline launcher đã đóng ở 2/2 vòng (≈30/60 phút): không mở vòng thứ ba. Nếu cửa sổ owner vẫn lỗi dù đã có outer log, dùng phương án B ở canonical plan §6: trình môi trường Android thử riêng/dữ liệu thay thế/cùng production path và phần nào còn phải kiểm lại trên target; không tự cài, xóa DB, gọi provider hoặc thay scope.
 
