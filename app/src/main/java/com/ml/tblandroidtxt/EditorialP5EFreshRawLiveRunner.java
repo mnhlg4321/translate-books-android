@@ -51,6 +51,13 @@ public final class EditorialP5EFreshRawLiveRunner {
     public static final String CANONICAL_PROFILE_HASH =
             "beec03a42e37f424a6f071ad48f35878b27e1083141699352cda4474d8cc2e21";
 
+    /**
+     * The event 7 RAW attempt (committed 2026-10-01). Owner decision B accepts it
+     * as the only RECONCILE predecessor for this chapter; its formal verdict is unchanged.
+     */
+    public static final String RAW_PREDECESSOR_ATTEMPT_IDENTITY =
+            "7a5e34287d90055a5f0e7d6bb5c9c459202eadcfc538b9f452d548bea298fd6e";
+
     private final TranslationRepository database;
     private final EditorialPackStorageLayout storage;
 
@@ -169,6 +176,115 @@ public final class EditorialP5EFreshRawLiveRunner {
             return result;
         } catch (RuntimeException error) {
             return stop("P5E_FRESH_RAW_DISPATCH_SETUP_FAILED");
+        }
+    }
+
+    /**
+     * M4: the only live RECONCILE entry point. It requires the exact lineage
+     * event 7 left (one committed RAW attempt with the pinned identity, nothing
+     * after it) and a separate single-use L1_RECONCILE authorization. RAW is
+     * never re-sent; the predecessor is read back from the durable row.
+     */
+    public EditorialP5CExactBindingExecution.Result dispatchReconcile(
+            long projectId, String selector, String chapterKey,
+            EditorialP5PilotAuthorization authorization, AppSettings settings) {
+        if (projectId <= 0 || !SELECTOR.equals(selector) || !CHAPTER_KEY.equals(chapterKey)) {
+            return stop("P5E_RECONCILE_SELECTOR_OR_CHAPTER_MISMATCH");
+        }
+        if (authorization == null) return stop("P5E_RECONCILE_AUTHORIZATION_REQUIRED");
+        if (!EditorialP5EFreshRawRoutingPolicy.matches(settings)) {
+            return stop("P5E_RECONCILE_ROUTE_SETTINGS_MISMATCH");
+        }
+        if (!reconcileAuthorizationMatches(authorization)) {
+            return stop("P5E_RECONCILE_AUTHORIZATION_MISMATCH");
+        }
+        EditorialP4Binding binding;
+        long persistedProjectId;
+        try {
+            binding = new EditorialP4BindingDao(database)
+                    .findByAttemptRequestSelector(SELECTOR).orElse(null);
+            persistedProjectId = binding == null ? -1L : projectIdFor(binding);
+        } catch (RuntimeException error) {
+            return stop("P5E_RECONCILE_LINEAGE_CHECK_FAILED");
+        }
+        if (binding == null || !BINDING_IDENTITY.equals(binding.bindingIdentity())
+                || !RUN_DECLARATION_IDENTITY.equals(binding.runDeclarationIdentity())
+                || !CANONICAL_PACK_HASH.equals(binding.canonicalPackHash())
+                || !CANONICAL_PROFILE_HASH.equals(binding.canonicalProfileHash())
+                || !COMPATIBILITY_EVALUATION_ID.equals(binding.compatibilityEvaluationId())
+                || persistedProjectId != projectId) {
+            return stop("P5E_RECONCILE_BINDING_MISMATCH");
+        }
+        ReconcileLineage lineage;
+        try {
+            lineage = inspectReconcileLineage(database.editorialReadableDatabase());
+        } catch (RuntimeException error) {
+            lineage = ReconcileLineage.CHECK_FAILED;
+        }
+        if (lineage != ReconcileLineage.READY) return stop("P5E_RECONCILE_LINEAGE_" + lineage.name());
+        try {
+            OpenRouterEditorialP5PilotProvider provider =
+                    OpenRouterEditorialP5PilotProvider.withFreshReconcileLifecyclePersistence(
+                            settings, authorization.maximumOutputTokens(), database);
+            EditorialP5CExactBindingExecution.Result result =
+                    new EditorialP5CExactBindingExecution(database, storage)
+                            .executeReconcile(projectId, SELECTOR, CHAPTER_KEY, authorization, provider);
+            P5ERawDiagnostics.dispatch(result);
+            return result;
+        } catch (RuntimeException error) {
+            return stop("P5E_RECONCILE_DISPATCH_SETUP_FAILED");
+        }
+    }
+
+    /** Same single-call limits as RAW: one primary call, no repair/retry/storage, qualified route. */
+    static boolean reconcileAuthorizationMatches(EditorialP5PilotAuthorization authorization) {
+        return "L1_RECONCILE".equals(authorization.phase())
+                && authorization.singleUse()
+                && authorization.allowChapterToProvider()
+                && authorization.maximumPrimarySemanticCalls() == 1
+                && authorization.maximumSchemaRepairCalls() == 0
+                && authorization.maximumNetworkRetries() == 0
+                && authorization.maximumOutputTokens() == EditorialP5RawWireContract.OUTPUT_TOKEN_CAP
+                && !authorization.allowFullModelResponseStorage()
+                && !authorization.allowRequestBodyStorage()
+                && EditorialP5EFreshRawRoutingPolicy.PROVIDER.equalsIgnoreCase(authorization.provider())
+                && EditorialP5EFreshRawRoutingPolicy.MODEL.equals(authorization.model())
+                && BINDING_IDENTITY.equals(authorization.projectBindingIdentity())
+                && RUN_DECLARATION_IDENTITY.equals(authorization.runDeclarationIdentity())
+                && CANONICAL_PACK_HASH.equals(authorization.canonicalPackHash())
+                && CANONICAL_PROFILE_HASH.equals(authorization.canonicalProfileHash())
+                && COMPATIBILITY_EVALUATION_ID.equals(authorization.compatibilityEvaluationId())
+                && CHAPTER_KEY.equals(authorization.chapterKey());
+    }
+
+    enum ReconcileLineage { READY, NOT_READY, ALREADY_USED, CHECK_FAILED }
+
+    /**
+     * READY only for the exact state event 7 left: one COMMITTED RAW attempt
+     * with the pinned identity and both artifacts, one consumed authorization
+     * receipt, one lifecycle row, no reconciliation rows, no RECONCILE attempt.
+     */
+    static ReconcileLineage inspectReconcileLineage(SQLiteDatabase db) {
+        if (db == null) return ReconcileLineage.CHECK_FAILED;
+        try {
+            long reconcileAttempts = count(db, "SELECT COUNT(*) FROM editorial_p5c_attempts "
+                    + "WHERE binding_identity=? AND phase='L1_RECONCILE'", BINDING_IDENTITY);
+            if (reconcileAttempts < 0L) return ReconcileLineage.CHECK_FAILED;
+            if (reconcileAttempts > 0L) return ReconcileLineage.ALREADY_USED;
+            long committedRaw = count(db, "SELECT COUNT(*) FROM editorial_p5c_attempts "
+                    + "WHERE binding_identity=? AND attempt_identity=? AND phase='L1_RAW_DISCOVERY' "
+                    + "AND status='COMMITTED' AND report_bytes IS NOT NULL AND receipt_bytes IS NOT NULL",
+                    BINDING_IDENTITY, RAW_PREDECESSOR_ATTEMPT_IDENTITY);
+            FreshRawLineageCheck rows = inspectLineage(db, BINDING_IDENTITY);
+            if (committedRaw < 0L || rows.status() == FreshRawLineageCheck.Status.CHECK_FAILED) {
+                return ReconcileLineage.CHECK_FAILED;
+            }
+            boolean exact = committedRaw == 1L && rows.attempts() == 1L
+                    && rows.authorizationReceipts() == 1L && rows.lifecycle() == 1L
+                    && rows.reconciliation() == 0L && rows.reconciliationHistory() == 0L;
+            return exact ? ReconcileLineage.READY : ReconcileLineage.NOT_READY;
+        } catch (RuntimeException error) {
+            return ReconcileLineage.CHECK_FAILED;
         }
     }
 

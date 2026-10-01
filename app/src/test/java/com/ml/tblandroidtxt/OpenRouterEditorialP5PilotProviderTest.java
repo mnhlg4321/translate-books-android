@@ -174,6 +174,49 @@ public final class OpenRouterEditorialP5PilotProviderTest {
         }
     }
 
+    private static OpenRouterEditorialP5PilotProvider reconcileFreshAdapter(AppSettings settings)
+            throws Exception {
+        // The public factory needs a TranslationRepository (Android SQLite), so build the
+        // same adapter through its private constructor; no recorder, no transport.
+        java.lang.reflect.Constructor<OpenRouterEditorialP5PilotProvider> ctor =
+                OpenRouterEditorialP5PilotProvider.class.getDeclaredConstructor(AppSettings.class,
+                        int.class, OpenRouterEditorialP5PilotProvider.NetworkLifecycleRecorder.class,
+                        String.class);
+        ctor.setAccessible(true);
+        return ctor.newInstance(settings, EditorialP5RawWireContract.OUTPUT_TOKEN_CAP, null,
+                "L1_RECONCILE");
+    }
+
+    @Test public void reconcileFreshAdapterRejectsRawBeforeTransport() throws Exception {
+        AppSettings settings = new AppSettings();
+        settings.provider = EditorialP5EFreshRawRoutingPolicy.PROVIDER;
+        settings.model = EditorialP5EFreshRawRoutingPolicy.MODEL;
+        settings.baseUrl = AppSettings.defaultBaseUrl(EditorialP5EFreshRawRoutingPolicy.PROVIDER);
+        settings.apiKey = "test-only-no-dispatch";
+        try {
+            reconcileFreshAdapter(settings).call(
+                    request(EditorialP5EFreshRawRoutingPolicy.MODEL, "L1_RAW_DISCOVERY"));
+            throw new AssertionError("reconcile fresh adapter must not route RAW");
+        } catch (IllegalStateException expected) {
+            assertEquals("P5E_FRESH_RAW_ROUTE_PHASE_OR_MODEL_INVALID", expected.getMessage());
+        }
+    }
+
+    @Test public void reconcileFreshAdapterPassesPhaseGuardForReconcile() throws Exception {
+        AppSettings settings = new AppSettings();
+        settings.provider = EditorialP5EFreshRawRoutingPolicy.PROVIDER;
+        settings.model = EditorialP5EFreshRawRoutingPolicy.MODEL;
+        settings.baseUrl = AppSettings.defaultBaseUrl(EditorialP5EFreshRawRoutingPolicy.PROVIDER);
+        settings.apiKey = ""; // configured() is false, so nothing can reach transport
+        try {
+            reconcileFreshAdapter(settings).call(
+                    request(EditorialP5EFreshRawRoutingPolicy.MODEL, "L1_RECONCILE"));
+            throw new AssertionError("expected configuration failure");
+        } catch (IllegalStateException expected) {
+            assertEquals("OPENROUTER_CONFIGURATION_INCOMPLETE", expected.getMessage());
+        }
+    }
+
     @Test public void freshRawPromptStatesTheTokenSyntaxTheParserEnforces() throws Exception {
         AppSettings settings = new AppSettings();
         settings.provider = EditorialP5EFreshRawRoutingPolicy.PROVIDER;

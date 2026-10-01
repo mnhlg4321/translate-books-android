@@ -39,3 +39,12 @@ Giới hạn: S1 là chạy ở chế độ thư viện với lớp ánh xạ đ
 - **C (event mới)**: khôi phục zero-state (xóa kết quả commit) và chạy lại RAW với candidate `67423A0C…`. Chi phí ~USD 0.003 + một chu trình thiết bị; lợi ích duy nhất là verdict formal PASS. Không khuyến nghị trừ khi owner không chấp nhận B.
 
 Đây là chuẩn bị quyết định, không phải phê duyệt ngoại lệ, reset DB hay lượt provider mới.
+
+## 5. Quyết định owner — 2026-10-01
+
+Owner chọn **phương án B** ("chọn B khuyến nghị", phiên chat 2026-10-01). Phạm vi đúng như mục 4:
+
+- RAW đã commit của event 7 (attempt `COMMITTED` `7a5e3428…`, report `6c1c183b…`, receipt `f1255272…`, DB thiết bị `9fa69f6b…`) được chấp nhận làm **predecessor duy nhất cho M4 RECONCILE của chương 001** theo ngoại lệ hẹp.
+- Verdict formal của event 7 giữ nguyên `RAW_NOT_ACCEPTED`; checklist P5E.9 ghi "accepted as RECONCILE predecessor by narrow owner exception", không ghi `RAW_ACCEPTED`.
+- Không khôi phục DB, không event RAW mới. Mọi event sau phải đạt verifier formal với collector đã sửa.
+- Quyết định này **không** cấp quyền gọi provider cho M4, không cấp quyền cài APK hay migrate DB; các quyền đó xin riêng khi gói M4 sẵn sàng.

@@ -46,6 +46,8 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
     private final int maximumOutputTokens;
     private final NetworkLifecycleRecorder lifecycleRecorder;
     private final boolean freshRawRouting;
+    /** The single L1 phase a fresh-route adapter may dispatch; empty when not fresh. */
+    private final String freshPhase;
     private final Map<String, EditorialP5L1Output> parsedOutputs = new ConcurrentHashMap<>();
     private final OpenAICompatibleClient.CallControl rawCallControl =
             new OpenAICompatibleClient.CallControl();
@@ -64,6 +66,13 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
     private OpenRouterEditorialP5PilotProvider(AppSettings settings, int maximumOutputTokens,
                                                NetworkLifecycleRecorder lifecycleRecorder,
                                                boolean freshRawRouting) {
+        this(settings, maximumOutputTokens, lifecycleRecorder,
+                freshRawRouting ? "L1_RAW_DISCOVERY" : "");
+    }
+
+    private OpenRouterEditorialP5PilotProvider(AppSettings settings, int maximumOutputTokens,
+                                               NetworkLifecycleRecorder lifecycleRecorder,
+                                               String freshPhase) {
         if (settings == null) throw new IllegalArgumentException("OpenRouter settings are required");
         this.settings = settings.copy();
         if (maximumOutputTokens <= 0) {
@@ -71,7 +80,8 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         }
         this.maximumOutputTokens = maximumOutputTokens;
         this.lifecycleRecorder = lifecycleRecorder;
-        this.freshRawRouting = freshRawRouting;
+        this.freshPhase = freshPhase;
+        this.freshRawRouting = !freshPhase.isEmpty();
     }
 
     /** Creates the one P5D live adapter with durable, redacted lifecycle evidence. */
@@ -92,6 +102,18 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
             AppSettings settings, int maximumOutputTokens) {
         return new OpenRouterEditorialP5PilotProvider(settings, maximumOutputTokens,
                 null, true);
+    }
+
+    /**
+     * Fresh-route adapter for the separately authorized M4 RECONCILE call. It
+     * dispatches only L1_RECONCILE on the qualified route; RAW stays refused.
+     */
+    public static OpenRouterEditorialP5PilotProvider withFreshReconcileLifecyclePersistence(
+            AppSettings settings, int maximumOutputTokens, TranslationRepository database) {
+        EditorialP5CAttemptStore store = new EditorialP5CAttemptStore(
+                java.util.Objects.requireNonNull(database, "database"));
+        return new OpenRouterEditorialP5PilotProvider(settings, maximumOutputTokens,
+                store::recordNetworkLifecycle, "L1_RECONCILE");
     }
 
     /** Fresh RAW adapter with the same redacted lifecycle recorder as P5D. */
@@ -155,7 +177,7 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         if (request == null || request.context() == null) {
             return invalidResponse("REQUEST_CONTEXT_MISSING", new byte[0]);
         }
-        if (freshRawRouting && (!"L1_RAW_DISCOVERY".equals(request.phase())
+        if (freshRawRouting && (!freshPhase.equals(request.phase())
                 || request.callKind() != EditorialP5PilotProvider.CallKind.PRIMARY_SEMANTIC
                 || !EditorialP5EFreshRawRoutingPolicy.PROVIDER.equalsIgnoreCase(request.provider())
                 || !EditorialP5EFreshRawRoutingPolicy.MODEL.equals(request.model()))) {
