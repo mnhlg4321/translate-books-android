@@ -2,14 +2,14 @@
 
 Bản sửa này giữ nguyên toàn bộ tham số qua dot-source (LibraryOnly, Execute, SDK/Java và các binding), và copy command thành .ps1 để PowerShell 5.1 thực thi. Không có live event trong lượt sửa. Đừng dùng launcher/hash cũ.
 
-Candidate SHA-256: 29029B4620887A0752F52A57FB3CAC54C451FCA9C4518EB513C33DD8CAE082B5
+Candidate SHA-256: D9B3E26E7BB70F70551A32132858983DAFE94391CD240369D208E9CB088250F0
 
-Mở Windows PowerShell nhìn thấy được. Đoạn sau kiểm hash và mở đúng launcher một lần. Launcher hỏi quyết định cho đúng một event A4.3: serial 15e84958, Before/After read-only, account memory-only, fresh authorization, tối đa một RAW/GLOSSARY provider call, USD0.05 và DB allowlist theo manifest 456909096B308ACECE74FD708AF0EA712065A8F77F40A09CD95873078869EFF6. Không retry/fallback/RECONCILE/build/install/P6. Nhập APPROVE_ONE_FRESH_EVENT chỉ khi đồng ý; prompt có thể che ký tự. Sau đó nhập key trực tiếp vào prompt hidden, không gửi chat.
+Mở Windows PowerShell nhìn thấy được. Đoạn sau kiểm hash và mở đúng launcher một lần. Launcher hỏi quyết định cho đúng một event A4.3: serial 15e84958, Before/After read-only, account memory-only, fresh authorization, tối đa một RAW/GLOSSARY provider call, USD0.05 và DB allowlist theo manifest B6BD7B8408FEA8A1A8848B43A3735D25F4D74FECAD0D9B4C1E7004321B569F16. Không retry/fallback/RECONCILE/build/install/P6. Nhập APPROVE_ONE_FRESH_EVENT chỉ khi đồng ý; prompt có thể che ký tự. Sau đó nhập key trực tiếp vào prompt hidden, không gửi chat.
 
 ```powershell
 & {
     $p5eCandidate = 'D:\App Translate Books\scripts\p5e-a43-pre-reservation-launcher-entrypoint.ps1'
-    $p5eHash = '29029B4620887A0752F52A57FB3CAC54C451FCA9C4518EB513C33DD8CAE082B5'
+    $p5eHash = 'D9B3E26E7BB70F70551A32132858983DAFE94391CD240369D208E9CB088250F0'
     if ((Get-FileHash -LiteralPath $p5eCandidate -Algorithm SHA256).Hash -cne $p5eHash) { throw 'CANDIDATE_HASH_MISMATCH_STOP' }
     $p5eDecision = 'p5e-a43-owner-' + [Guid]::NewGuid().ToString('N')
     $p5eAudit = Join-Path 'D:\P5E-private\.p5e-a43-audit' ($p5eDecision + '.json')

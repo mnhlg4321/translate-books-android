@@ -9,7 +9,7 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 if ([string]::IsNullOrWhiteSpace($OutputPath)) { $OutputPath = Join-Path $repoRoot 'docs\P5E_PRODUCTION_VERSION_CONTRACT_QA_20260925.json' }
 $helperPath = Join-Path $repoRoot 'scripts\p5e-raw-live-supervisor.ps1'
-$buildInfoPath = Join-Path $repoRoot 'App Translate Books-translation-profile\artifacts\builds\v4.17-p5e.11\build-20260911-201725\BUILD_INFO.json'
+$buildInfoPath = Join-Path $repoRoot 'artifacts\builds\v4.18-p5e.1\build-20261001-102120\BUILD_INFO.json'
 $buildInfo = Get-Content -Raw -LiteralPath $buildInfoPath | ConvertFrom-Json
 $apkPath = Join-Path (Split-Path -Parent $buildInfoPath) ([string]$buildInfo.apk)
 if (-not (Test-Path -LiteralPath $apkPath -PathType Leaf)) { throw 'IMMUTABLE_PRODUCTION_APK_NOT_FOUND' }

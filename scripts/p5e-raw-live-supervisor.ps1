@@ -30,21 +30,21 @@ param(
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
-    [string]$ProductionApkPath = 'D:\App Translate Books\App Translate Books-translation-profile\artifacts\builds\v4.17-p5e.11\build-20260911-201725\TranslateBooks-v4.17-p5e.11-code207.apk',
+    [string]$ProductionApkPath = 'D:\App Translate Books\artifacts\builds\v4.18-p5e.1\build-20261001-102120\TranslateBooks-v4.18-p5e.1-code209.apk',
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
     [Parameter(ParameterSetName = 'CollectReadback')]
-    [string]$ExpectedProductionApkSha256 = '2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD',
+    [string]$ExpectedProductionApkSha256 = '4F3DAF9C77DAD104A57CC54536A237D09B941610600A60A5876BD608C168D41C',
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
-    [string]$TestApkPath = 'D:\App Translate Books\artifacts\test-builds\v4.17-p5e.11\p5e-a43-db-arg-20261001-01\app-debug-androidTest.apk',
+    [string]$TestApkPath = 'D:\App Translate Books\artifacts\test-builds\v4.18-p5e.1\p5e-a43-prod209-20261001-01\app-debug-androidTest.apk',
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
     [Parameter(ParameterSetName = 'CollectReadback')]
-    [string]$ExpectedTestApkSha256 = 'D2B0E590C30DA5DAE73C5C28EA98BC9C6CB37DC4CE362C991EA46812D301B42F',
+    [string]$ExpectedTestApkSha256 = '8F3329631DA2B35C66412B480CCD0C93F1CF6C52BE7D1B6FD21FBE3FE1C43566',
 
     [Parameter(ParameterSetName = 'Dispatch', Mandatory = $true)]
     [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
@@ -335,20 +335,20 @@ $script:P5EAccountCheckOptInKey = 'p5e_account_check'
 $script:P5EAccountCheckExpectedKey = 'p5e_expected_endpoint_account_fingerprint'
 $script:P5EAccountCheckRemoteScript =
     'IFS= read -r p5e_expected || exit 64; am instrument -w -r -e class "$1" -e p5e_account_check YES -e p5e_expected_endpoint_account_fingerprint "$p5e_expected" "$2"'
-$script:P5ETestSourceCommit = '35470f6d22873ec361fd8fea58345cb177f46c4e'
+$script:P5ETestSourceCommit = 'ed54d2b6c5ba75128c18f286d5a85186520744e7'
 $script:P5ERawSourceContractCommit = 'd51b7f3c16bdc482513b9904db07b97daed592d1'
-$script:P5ERawSourceContractSha256 = 'cd890651aee8cf5fe05546e7892672de90808805aa634607032014f21baa0aaa'
+$script:P5ERawSourceContractSha256 = '2cfc25a182e966ca2a0d003f40d7d53c23aae07b943fe7b6b688c7d672fb4d4b'
 $script:P5EAccountEnvironmentName = 'P5E_OWNER_ENDPOINT_ACCOUNT_FINGERPRINT'
 $script:P5EAccountFingerprintRedactionSentinel = 'REDACTED'
 $script:P5EHostObservationTimeoutMilliseconds = 240000L
 $script:P5EAuthorizationValidityMilliseconds = 180000L
 $script:P5EExecutionDeadlineMilliseconds = 120000L
-$script:P5EProductionVersion = '4.17-p5e.11'
-$script:P5EProductionVersionCode = 207L
+$script:P5EProductionVersion = '4.18-p5e.1'
+$script:P5EProductionVersionCode = 209L
 $script:P5EExpectedProductionApkSha256 =
-    '2ccbb844c629132bb534b0d6aba516055c410bf96d20b14b3f80f91b962800fd'
+    '4f3daf9c77dad104a57cc54536a237d09b941610600a60a5876bd608c168d41c'
 $script:P5EExpectedTestApkSha256 =
-    'd2b0e590c30da5dae73c5c28ea98bc9c6cb37dc4ce362c991ea46812d301b42f'
+    '8f3329631da2b35c66412b480ccd0c93f1cf6c52be7d1b6fd21fbe3fe1c43566'
 $script:P5ECertificateSha256 =
     '47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155'
 $script:P5EDatabaseSchemaVersion = 24L
