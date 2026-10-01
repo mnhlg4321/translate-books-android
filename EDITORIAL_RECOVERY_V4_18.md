@@ -152,4 +152,4 @@ Review 2026-10-01: Luna soạn acceptance và phản biện giới hạn năm đ
 Offline entry-boundary đã đóng (2/2 vòng, ≈30/60 phút). M0 chỉ-đọc ngày 2026-10-01 cho thấy APK/version khớp pin, nội dung DB khớp tuple tươi với lineage bằng 0, hash file DB `8D084050…` lệch pin cũ. Owner đã đồng ý re-pin: helper, child contract, manifest, command và entry được cập nhật theo thứ tự; candidate mới `D8E4D0FCB346491E4E9A9EF45C0890339BA67A54F47B2569026F26DF96704F0D` (commit `68f0e8da`); test liên quan PASS và kiểm lại từ extract `git archive` độc lập. Nguyên nhân lần owner-window lịch sử vẫn UNRESOLVED.
 
 
-Next action: owner ổn định đường USB rồi báo; tôi chạy lại M0 và chỉ coi là đạt khi một lượt có đủ hash DB, hai APK, version. Sau đó owner chạy run guide cho candidate `D8E4D0FC…` và quyết định ở prompt. Không mở vòng launcher thứ ba; lỗi cửa vào dù có outer log thì dùng phương án B (mục 6).
+Next action: M0 đã đạt (02:21). Owner chạy run guide cho candidate `D8E4D0FC…` trong cửa sổ PowerShell nhìn thấy khi trạng thái còn đúng và quyết định ở prompt; sau đó báo kết quả để tôi phân loại. Không mở vòng launcher thứ ba; lỗi cửa vào dù có outer log thì dùng phương án B (mục 6).

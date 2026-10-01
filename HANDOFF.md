@@ -10,7 +10,7 @@ Baseline HEAD `68f0e8da` (re-pin sang `8D084050…`, candidate `D8E4D0FC…`). V
 - Console QA (hidden console thật, input synthetic) phủ: prompt + literal sai, outer failure, approval→key→synthetic child thành công qua integration fixture, bytes CC01 (exit 0 im lặng), audit hash có sẵn và dạng `-AuditPath` riêng.
 - Nguyên nhân lần owner-window gần nhất vẫn UNRESOLVED: không có stderr. `P5E_A43_AUDIT_ALREADY_EXISTS_STOP` đã tái hiện nhưng bản ghi lần đó ghi audit path theo DecisionId nên không chứng minh là nguyên nhân. CC01 silent exit là lỗi của bytes cũ, tách biệt. M0 (2026-10-01): APK/version khớp pin, nội dung DB khớp tuple tươi với lineage bằng 0, nhưng hash file DB `8D084050…` lệch pin `3563F44B…`, nên Before sẽ dừng cứng trước khi gọi provider.
 - Giới hạn: không phải cửa sổ owner nhìn thấy; case thành công dùng integration fixture, không qua `-Execute` của entry live. Không có bằng chứng RAW/L1/provider; P5 vẫn chưa PASS, P6 chưa sẵn sàng.
-- Next action: owner ổn định đường USB (cổng trực tiếp, cáp ngắn tốt, tắt USB selective suspend, giữ màn hình sáng) rồi báo; tôi chạy lại M0 và yêu cầu một lượt đầy đủ (hash DB, hash hai APK, version) trước khi duyệt event.
+- Next action: M0 đã đạt (02:21). Owner chạy run guide cho candidate `D8E4D0FC…` trong cửa sổ PowerShell nhìn thấy, không mở app trên điện thoại, và quyết định ở prompt; sau đó báo kết quả cho tôi.
 
 ## Đọc theo thứ tự này
 
@@ -77,7 +77,7 @@ Offline/component PASS không thay live/product acceptance. Enum/schema/validato
 
 ## Next action duy nhất
 
-M0 lần 3 (2026-10-01 02:18): hash DB `8D084050…` khớp pin mới và trùng bản export lúc 01:56 (ổn định, chỉ đọc); production code207 đúng. Nhưng cả hai lần đọc APK đều bị USB ngắt (`adb pull` dừng ở 2%; `exec-out cat` cụt ở 849,408 B dù exit 0; transport_id đổi 3→5→7). Collector dùng `adb pull` cho APK nên Before sẽ dừng `P5E_COLLECTOR_PACKAGE_PULL_FAILED` và event bị tiêu hao. Windows đang bật USB selective suspend (AC và DC). Owner ổn định đường USB rồi báo; tôi chạy lại M0 và chỉ coi là đạt khi một lượt có đủ hash DB, hai APK, version. Sau đó owner chạy run guide cho candidate `D8E4D0FC…` và quyết định ở prompt.
+M0 đạt ngày 2026-10-01 02:21 trong một lượt đầy đủ: máy, production code207, hash DB `8D084050…`, hash hai APK, WAL/SHM vắng, readback nội dung (schema 24, tuple tươi, lineage bằng 0, integrity ok). Owner chạy run guide `docs/P5E_A43_ENTRY_BOUNDARY_RUN_GUIDE_20260930.md` cho candidate `D8E4D0FC…` trong cửa sổ PowerShell nhìn thấy khi trạng thái này còn đúng (không mở app trên điện thoại, giữ USB) và quyết định ở prompt: một RAW call, trần đã pin, `-AuditPath` theo DecisionId, outer log, key chỉ nhập ở prompt ẩn. Sau đó owner báo kết quả; tôi đọc outer log, audit và evidence event (chỉ hash) rồi phân loại.
 
 Bước chẩn đoán offline launcher đã đóng ở 2/2 vòng (≈30/60 phút): không mở vòng thứ ba. Nếu cửa sổ owner vẫn lỗi dù đã có outer log, dùng phương án B ở canonical plan §6: trình môi trường Android thử riêng/dữ liệu thay thế/cùng production path và phần nào còn phải kiểm lại trên target; không tự cài, xóa DB, gọi provider hoặc thay scope.
 

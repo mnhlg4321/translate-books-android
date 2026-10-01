@@ -303,3 +303,10 @@ QA tại lần xuất: năm file entry/parent/test parse không lỗi bằng par
 - Không đạt: hash APK lần này không xác nhận được. `adb pull` APK production dừng ở 2% (2,228,224 B); đọc lại bằng `exec-out cat` bị cụt ở 849,408 B với exit 0 (nên cần kiểm độ dài/hash, không tin exit 0); transport_id đổi 3 → 5 → 7. Hai APK đã khớp pin trong lượt đầy đủ lúc 01:56; APK không đổi nếu không cài.
 - Rủi ro: collector đọc APK bằng `adb pull` (`P5E_COLLECTOR_PACKAGE_PULL_FAILED` nếu lỗi). Đọc APK bị ngắt 3/4 lần quan sát. Windows đang bật USB selective suspend (AC và DC). Một lần ngắt ở Before dừng event trước provider nhưng tiêu hao decision. Lần event 09-28 dừng ở `pm path` có thể cùng nhóm nguyên nhân (chưa chứng minh).
 - Chưa làm: thay đổi cài đặt nguồn Windows (cài đặt hệ thống, thuộc owner); không thêm probe ổn định ngoài phạm vi M0.
+
+### M0 sau khi sửa USB (lần 4) — 2026-10-01 02:21: ĐẠT
+
+- Evidence: `D:\P5E-private\m0-observation-20261001-022149935\` (`M0_OBSERVATION.json` SHA-256 bắt đầu `7f667559`). Chỉ đọc; không key/provider/ghi; 11 lệnh, không bị ngắt.
+- Một lượt đầy đủ: máy có mặt; production `4.17-p5e.11`/code207; APK production `2CCBB844…` và test `058BE851…` khớp pin; WAL/SHM vắng; DB 18,952,192 B `8D084050…` khớp pin mới (cùng hash ở 01:56, 02:18, 02:21).
+- Readback host (SQL của collector, `--immutable`, bản sao): giống hệt lượt 01:56 — schema 24, binding và bốn input đúng pin, lineage/global toàn 0, integrity ok, không vi phạm foreign key.
+- Còn lại cho owner: mỗi thay đổi trên máy (mở app, cài, chạm DB) có thể đổi hash file; chạy run guide khi trạng thái này còn đúng. Không có approval/quyền nào được tạo bởi M0.
