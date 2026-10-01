@@ -6,11 +6,13 @@ Ngày bàn giao: 2026-10-01 (+07:00).
 
 Lần chạy owner thứ sáu (candidate `32C011C5…`, DecisionId `p5e-a43-owner-12374ba7…`, event `raw-live-a43-preauth-6a3f0841…`) lại nhận HTTP 200 và log `P5E_RAW` đã chỉ ra nguyên nhân: parser của app từ chối output với `finding.evidenceRefs_contains_invalid_token` (content chỉ 1,764 B, finish=stop, 20,931 prompt / 665 completion / 128 reasoning token, chi phí báo cáo USD 0.0060306, 9.1 s). Giả thuyết giới hạn byte đã bị bác. Prompt RAW nay nêu đúng cú pháp token và luật cấu trúc (commit `32af5ed4`); body request đổi nên cần chu trình build, preflight, re-pin. Decision, event và reservation của `32C011C5…` đã dùng.
 
+Chu trình sửa prompt đã xong (commit `dd41e858`): production `4.18-p5e.3`/211 APK `E9CF282C…` và AndroidTest `CCAAE0AD…` đã cài và đọc lại khớp pin; DB đã khôi phục zero-state `8D084050…`; preflight trên máy cho body hash mới `59f9de57…` (identity và route không đổi); pin đã cascade tới candidate `FA3F5F1182F48A7B17524F78F4AEFEC7DCC2DCFCF06E4176B0056B2F5E78DA00`; mọi suite offline PASS (cả từ extract `git archive` sạch) và M0 chỉ-đọc cuối khớp pin. Event thứ bảy chưa chạy.
+
 - Event A4.3 `raw-live-a43-preauth-33253efa…` (DecisionId `p5e-a43-owner-1599345c…`) đã dùng và không được dùng lại. Kết quả: Before, một lần launch instrumentation, After; `EXTERNAL_CALL_STATE_UNKNOWN` / `P5E_POST_DISPATCH_DURABLE_STATE_INCOMPLETE`; RAW chưa được chấp nhận.
 - Nguyên nhân (đã xác nhận bằng source và source ZIP đã pin): AndroidTest APK `058BE851…` hard-code `EXPECTED_DB_SHA256 = 3563f44b…` và yêu cầu cả tham số launch `p5e_expected_db_sha256` lẫn hash DB thật bằng hằng số đó. Re-pin phía host sang `8D084050…` làm tham số khác hằng số nên test thất bại trước khi đọc key, settings, DB hay mạng. Lỗi của tôi: lúc re-pin chỉ tìm trong scripts/docs, không tìm trong `app/src/androidTest` và APK test.
 - Bằng chứng cục bộ: hash DB After bằng Before, lineage toàn 0, chạy khoảng 20 giây, stderr instrumentation rỗng. Chính thức vẫn là UNKNOWN; không suy ra `$0` ở phía nhà cung cấp.
 - Nguyên nhân lần owner-window lịch sử trước đó vẫn UNRESOLVED.
-- Next action: owner quyết định có chạy chu trình sửa prompt hay không (xem mục Next action duy nhất).
+- Next action: owner chạy một event với candidate `FA3F5F11…` (xem mục Next action duy nhất).
 
 ## Đọc theo thứ tự này
 
@@ -77,7 +79,7 @@ Offline/component PASS không thay live/product acceptance. Enum/schema/validato
 
 ## Next action duy nhất
 
-Owner quyết định có chạy chu trình sửa prompt: build production `4.18-p5e.3`/211 và AndroidTest, cài giữ dữ liệu, khôi phục DB zero-state (bản sao `8D084050…`), preflight để tính lại hash body request, re-pin sang candidate mới; owner chạy thêm một event. Mỗi lần gọi live tốn khoảng USD 0.006 (tổng 4 lần gọi hoàn tất hoặc bị lỗi tới giờ dưới USD 0.03; chi phí chính xác chỉ có cho lần gần nhất).
+Owner chạy một event A4.3 với candidate `FA3F5F1182F48A7B17524F78F4AEFEC7DCC2DCFCF06E4176B0056B2F5E78DA00`: dán khối lệnh trong `docs/P5E_A43_ENTRY_BOUNDARY_RUN_GUIDE_20260930.md` một lần, Enter một lần, tự gõ `APPROVE_ONE_FRESH_EVENT` chỉ khi đồng ý, rồi nhập key ở prompt hidden tiếp theo; không chạm điện thoại trước đó. Một RAW call (chương 001 VOL5, trần đã pin), khoảng USD 0.006. Sau đó tôi đọc evidence và log `P5E_RAW` chỉ-đọc rồi phân loại; không retry.
 
 Bước chẩn đoán offline launcher đã đóng ở 2/2 vòng (≈30/60 phút): không mở vòng thứ ba. Nếu cửa sổ owner vẫn lỗi dù đã có outer log, dùng phương án B ở canonical plan §6: trình môi trường Android thử riêng/dữ liệu thay thế/cùng production path và phần nào còn phải kiểm lại trên target; không tự cài, xóa DB, gọi provider hoặc thay scope.
 
