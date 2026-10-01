@@ -135,4 +135,6 @@ Review 2026-10-01: Luna soạn acceptance và phản biện giới hạn năm đ
 
 ## 10. Next action duy nhất
 
-P5 offline entry-boundary diagnosis: tái hiện đúng cách mở process/arguments/console bằng đường thử không có quyền gọi device/provider; thu lỗi trước audit, xác minh prompt thử và terminal result. Áp giới hạn 60 phút hoặc hai vòng sửa. Không retry event cũ, không build APK, không hỏi key. Không đạt thì chuyển quyết định phương pháp theo mục 6, không mở vòng launcher thứ ba.
+Offline entry-boundary đã đóng (2/2 vòng, ≈30/60 phút): entry 68DF8061, parent, loader, test và evidence nằm trong một commit chạy được từ extract `git archive` độc lập; console QA 6/6 (prompt, outer failure, approval→key→synthetic child, CC01, audit-hash collision, explicit `-AuditPath`). Cơ chế đủ giải thích lần owner-window gần nhất là audit mặc định đặt tên chỉ theo hash candidate và file `68df8061….json` đã tồn tại; chưa chứng minh bằng stderr thực.
+
+Next action: trình owner quyết định scope một event A4.3 RAW (chapter/source identity, call/USD caps, quyền hiện hành) với run guide có `-AuditPath` theo DecisionId và log ngoài cùng. Không tự chạy owner run, không retry event cũ, không build APK, không hỏi key; không mở vòng launcher thứ ba — nếu vẫn lỗi dù có outer log thì chuyển phương pháp theo mục 6.

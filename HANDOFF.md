@@ -2,6 +2,16 @@
 
 Ngày bàn giao: 2026-10-01 (+07:00).
 
+## Trạng thái mới nhất — ưu tiên đọc trước
+
+Baseline HEAD `b2f689cb4948bc4e715b6cf85f4396e49afd9525`. Vòng entry-boundary 2/2 đã dùng (≈30/60 phút); bước offline đã đóng, không mở vòng launcher thứ ba. Chi tiết ở mục “Vòng chẩn đoán entry owner-window 2/2” trong `docs/P5E_CONSOLIDATED_FAILURES_20260930.md`.
+
+- Một commit đã chứa entry 68DF8061, parent, loader và mọi test/evidence cần thiết; chạy từ extract `git archive HEAD` trong đường dẫn có khoảng trắng: console QA 6/6, integration 21/21.
+- Console QA (hidden console thật, input synthetic) phủ: prompt + literal sai, outer failure, approval→key→synthetic child thành công qua integration fixture, bytes CC01 (exit 0 im lặng), audit hash có sẵn và dạng `-AuditPath` riêng.
+- Nguyên nhân lần owner-window gần nhất: cơ chế đủ và nhất quán với dấu vết là audit mặc định đặt tên chỉ theo hash candidate, mà `D:\P5E-private\.p5e-a43-audit\68df8061….json` đã tồn tại, nên chạy lại dừng ở biên ngoài bằng `P5E_A43_AUDIT_ALREADY_EXISTS_STOP`. Chưa chứng minh bằng stderr thực (không được lưu). CC01 silent exit là lỗi của bytes cũ, tách biệt.
+- Giới hạn: không phải cửa sổ owner nhìn thấy; case thành công dùng integration fixture, không qua `-Execute` của entry live. Không có bằng chứng RAW/L1/provider; P5 vẫn chưa PASS, P6 chưa sẵn sàng.
+- Next action: trình owner quyết định scope một event A4.3 RAW (chapter/source identity, call/USD caps) cùng run guide mới (`-AuditPath` theo DecisionId + log ngoài cùng). Không tự chạy. Nếu cửa sổ owner vẫn lỗi dù có outer log, dùng phương án B canonical §6.
+
 ## Đọc theo thứ tự này
 
 1. `EDITORIAL_RECOVERY_V4_18.md` — canonical plan hiện hành và next action duy nhất.
@@ -18,9 +28,9 @@ Bản canonical plan trước lần viết lại được giữ nguyên byte t�
 
 - Workspace: `D:\App Translate Books`.
 - Branch: `feature/v4.18-p5e-runner-repair-20260917`.
-- Baseline HEAD trước commit handoff: `5e2c6120f4b188ef5c8f91a7696d7914e15365d7`.
+- Baseline HEAD trước commit docs đồng bộ: `b2f689cb4948bc4e715b6cf85f4396e49afd9525`.
 - Remote push: `origin = https://github.com/mnhlg4321/translate-books-android.git`.
-- Working tree không sạch. Có thay đổi owner `.idea`, nhiều staged/untracked evidence và source sửa dở. Staged `scripts/p5e-a43-pre-reservation-launcher-entrypoint.ps1` khác working-tree candidate. Không reset/clean/stash hàng loạt; không commit toàn bộ index. Trước commit implementation phải đối chiếu bytes đã test và stage đúng nhóm file.
+- Working tree không sạch. Có thay đổi owner `.idea`, các docs P5E cũ chưa commit và nhiều evidence untracked. Nhóm entry A4.3 (entrypoint 68DF, parent, loader, test, evidence) đã commit tại `b2f689cb`; không còn bytes CC01 trong index. Không reset/clean/stash hàng loạt; không commit toàn bộ working tree; stage đúng nhóm file.
 - Last-known installed production: `4.17-p5e.11` / code207. A4.3 pins hiện tại thuộc code207.
 - Development export: `4.18-dev.1` / code208, event `build-20260930-185915`, source snapshot `240cdc814a324bca36543a8091af6bf6cdd07831`, APK SHA-256 `DB3FE9056A3477FA18D4F9F44A18E1FCCA0F7195F95DD99C91F1BD60AA6FE465`. Artifact/backup/delivery parity đã PASS; APK chưa cài và không chứng minh P5/P6.
 - Current phase: `P5 incomplete / OWNER_WINDOW_PRE_PROMPT_EXIT / EVIDENCE_INCOMPLETE / P5_EXIT_NOT_CLAIMED / P6_NOT_READY`.
@@ -67,16 +77,9 @@ Offline/component PASS không thay live/product acceptance. Enum/schema/validato
 
 ## Next action duy nhất
 
-Chẩn đoán offline đường mở process/nhận input của owner window. Tái hiện đúng `powershell.exe` process, argument quoting, console/input và path có khoảng trắng bằng prompt/child giả hoàn toàn; tuyệt đối không dùng key, device, ADB hoặc provider. Bắt và lưu lỗi ngoài cùng trước khi parent audit bên trong có thể khởi tạo. Phải kiểm cả:
+Trình owner quyết định scope một event live A4.3 RAW: chapter/source identity, trần call/token/time/USD và quyền hiện hành. Chỉ sau quyết định đó owner mới chạy run guide `docs/P5E_A43_ENTRY_BOUNDARY_RUN_GUIDE_20260930.md` cho candidate 68DF8061 (`-AuditPath` theo DecisionId và log ngoài cùng `.p5e-a43-outer-<DecisionId>.log`). Không tự chạy, không dùng key/device/ADB/provider trong lượt offline.
 
-- success path tới prompt thử và terminal result;
-- failure path giữ nguyên cause/exit, không đổi thành exit 0 hoặc mất diagnostic;
-- invocation từ Windows PowerShell 5.1 process sạch;
-- synthetic child không có khả năng gọi live dependencies.
-
-Giới hạn cứng: tối đa 60 phút active diagnosis hoặc hai vòng patch–targeted-test, điều kiện nào đến trước. Bộ đếm tại handoff: `0/60 phút`, `0/2 vòng`; viết plan/handoff không tính. Mỗi vòng phải ghi trong `docs/P5E_CONSOLIDATED_FAILURES_20260930.md`: giả thuyết, reproducer, patch, bằng chứng mới, kết luận. Rerun cùng bytes/input không tính là tiến độ.
-
-Hết giới hạn mà chưa đạt: dừng phương pháp launcher hiện tại, không mở vòng thứ ba. Làm theo phương án B ở canonical plan §6: trình môi trường Android thử riêng/dữ liệu thay thế/cùng production path và phần nào còn phải kiểm lại trên target. Không tự cài, xóa DB, gọi provider hoặc thay scope.
+Bước chẩn đoán offline launcher đã đóng ở 2/2 vòng (≈30/60 phút): không mở vòng thứ ba. Nếu cửa sổ owner vẫn lỗi dù đã có outer log, dùng phương án B ở canonical plan §6: trình môi trường Android thử riêng/dữ liệu thay thế/cùng production path và phần nào còn phải kiểm lại trên target; không tự cài, xóa DB, gọi provider hoặc thay scope.
 
 Sau khi offline gate đạt, chưa được tự chạy live. Trước event tương ứng phải chốt exact chapter/source identity, phase/call caps, token/output/time/USD budget và quyền hiện hành. Consumed event/decision/receipt không được dùng lại; dispatch UNKNOWN không được retry.
 
