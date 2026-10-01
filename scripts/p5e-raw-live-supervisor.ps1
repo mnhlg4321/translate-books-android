@@ -2924,6 +2924,20 @@ function New-P5ECollectorSnapshot {
     }
 }
 
+# Get-P5EPackageReadback does not return the instrumentation target or runner. Both are bound to the
+# pinned constants, which the event plan is validated against and the instrumentation launch uses.
+function New-P5ECollectorTestIdentity {
+    param([Parameter(Mandatory = $true)]$Test)
+    return [ordered]@{
+        package = [string](Get-P5EProperty $Test 'package')
+        targetPackage = $script:P5ETargetPackage
+        apkSha256 = [string](Get-P5EProperty $Test 'apkSha256')
+        certificateSha256 = [string](Get-P5EProperty $Test 'certificateSha256')
+        runner = $script:P5ERunner
+        sourceCommit = $script:P5ETestSourceCommit
+    }
+}
+
 function New-P5ECollectorInput {
     param(
         [Parameter(Mandatory = $true)]$Plan,
@@ -2938,14 +2952,7 @@ function New-P5ECollectorInput {
         apkSha256 = [string](Get-P5EProperty $Production 'apkSha256')
         certificateSha256 = [string](Get-P5EProperty $Production 'certificateSha256')
     }
-    $testIdentity = [ordered]@{
-        package = [string](Get-P5EProperty $Test 'package')
-        targetPackage = [string](Get-P5EProperty $Test 'targetPackage')
-        apkSha256 = [string](Get-P5EProperty $Test 'apkSha256')
-        certificateSha256 = [string](Get-P5EProperty $Test 'certificateSha256')
-        runner = [string](Get-P5EProperty $Test 'runner')
-        sourceCommit = $script:P5ETestSourceCommit
-    }
+    $testIdentity = New-P5ECollectorTestIdentity -Test $Test
     return [ordered]@{
         schemaVersion = $script:P5EProducerInputSchema
         eventId = [string](Get-P5EProperty $Plan 'eventId')
@@ -5561,6 +5568,19 @@ function Invoke-P5ESelfTest {
     $unknownOperationRejected = $false
     try { [void](Get-P5ECollectorCommandClass -Operation 'provider-call') } catch { $unknownOperationRejected = $_.Exception.Message -eq 'P5E_COLLECTOR_OPERATION_NOT_ALLOWLISTED:provider-call' }
     Assert-P5ESelfTest $unknownOperationRejected 'collector-command-class-unknown-rejected'
+    $packageReadbackShape = [ordered]@{
+        package = $script:P5ETestPackage
+        pmPathClassification = 'PACKAGE_PRESENT'
+        localApkPath = 'installed-test-before.apk'
+        apkSha256 = $script:P5EExpectedTestApkSha256
+        apkByteLength = 1L
+        certificateSha256 = $script:P5ECertificateSha256
+        version = ''
+        versionCode = $null
+    }
+    $collectedTestIdentity = New-P5ECollectorTestIdentity -Test $packageReadbackShape
+    Assert-P5ESelfTest ($collectedTestIdentity['targetPackage'] -ceq $script:P5ETargetPackage -and $collectedTestIdentity['runner'] -ceq $script:P5ERunner) 'collector-test-identity-binds-target-and-runner'
+    Assert-P5ESelfTest (-not [string]::IsNullOrEmpty($collectedTestIdentity['package']) -and -not [string]::IsNullOrEmpty($collectedTestIdentity['apkSha256']) -and -not [string]::IsNullOrEmpty($collectedTestIdentity['certificateSha256']) -and $collectedTestIdentity['sourceCommit'] -ceq $script:P5ETestSourceCommit) 'collector-test-identity-complete'
     $helperPath = Get-P5ECollectorPath
     $helperHash = Get-P5ESha256 -Path $helperPath
     $h1Results = [ordered]@{}

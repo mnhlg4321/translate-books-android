@@ -17,7 +17,7 @@ $ErrorActionPreference = 'Stop'
 $script:P5EChildInvocationSupervisorPath = [IO.Path]::GetFullPath(
     (Join-Path $PSScriptRoot 'p5e-raw-live-supervisor.ps1'))
 $script:P5EChildInvocationSupervisorSha256 =
-    '9963a027f8cd91e4252d5c7fe40ca10b5e8d40f6147b5896e6f97d1a9fe0892e'
+    'a4ffeda9b8e7d4af3b867efb42042c595fb538ac3b0c267e19296340764919d0'
 if (-not (Test-Path -LiteralPath $script:P5EChildInvocationSupervisorPath -PathType Leaf)) {
     throw 'P5E_CHILD_INVOCATION_SUPERVISOR_MISSING_STOP'
 }

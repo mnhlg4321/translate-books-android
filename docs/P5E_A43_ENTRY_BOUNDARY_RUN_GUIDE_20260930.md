@@ -1,15 +1,17 @@
 # A4.3 — bước thực hiện sau sửa cửa vào launcher
 
+> **Trạng thái 2026-10-01 (sau event 7): chưa dùng khối lệnh này cho event mới.** Candidate `FA3F5F11…` đã dùng ở event 7: app commit RAW cùng REPORT_L1 + receipt, còn verifier host báo `RAW_NOT_ACCEPTED` do lỗi collector (xem `docs/P5E_CONSOLIDATED_FAILURES_20260930.md`). DB trên máy giờ giữ kết quả đó nên Before của một event mới sẽ dừng ở `P5E_COLLECTOR_PRELIVE_DATABASE_HASH_MISMATCH` trước provider; không khôi phục DB về zero-state khi chưa có quyết định của owner. Collector đã được sửa trong helper và pin đã cascade sang candidate hiện ghi bên dưới; mọi nội dung 'DB đã khôi phục zero-state' trong tài liệu này là lịch sử tới trước event 7.
+
 Bản sửa này giữ nguyên toàn bộ tham số qua dot-source (LibraryOnly, Execute, SDK/Java và các binding), và copy command thành .ps1 để PowerShell 5.1 thực thi. Không có live event trong lượt sửa. Đừng dùng launcher/hash cũ.
 
-Candidate SHA-256: FA3F5F1182F48A7B17524F78F4AEFEC7DCC2DCFCF06E4176B0056B2F5E78DA00
+Candidate SHA-256: 67423A0C132EE245E8702E01F3877575C00A960652F59611A78CE3C19E4070DA
 
-Mở Windows PowerShell nhìn thấy được. Đoạn sau kiểm hash và mở đúng launcher một lần. Launcher hỏi quyết định cho đúng một event A4.3: serial 15e84958, Before/After read-only, account memory-only, fresh authorization, tối đa một RAW/GLOSSARY provider call, USD0.05 và DB allowlist theo manifest 3635E810484973BF2CBC55D2B54C47F884630C3F399E3F7C7DF65D5F4C84F162. Không retry/fallback/RECONCILE/build/install/P6. Nhập APPROVE_ONE_FRESH_EVENT chỉ khi đồng ý; prompt có thể che ký tự. Sau đó nhập key trực tiếp vào prompt hidden, không gửi chat.
+Mở Windows PowerShell nhìn thấy được. Đoạn sau kiểm hash và mở đúng launcher một lần. Launcher hỏi quyết định cho đúng một event A4.3: serial 15e84958, Before/After read-only, account memory-only, fresh authorization, tối đa một RAW/GLOSSARY provider call, USD0.05 và DB allowlist theo manifest 10693E7C2BE025A51BE5AE1E36B4DEE7C82367B6B5B66FBA0CFAF3A7764BB6D6. Không retry/fallback/RECONCILE/build/install/P6. Nhập APPROVE_ONE_FRESH_EVENT chỉ khi đồng ý; prompt có thể che ký tự. Sau đó nhập key trực tiếp vào prompt hidden, không gửi chat.
 
 ```powershell
 & {
     $p5eCandidate = 'D:\App Translate Books\scripts\p5e-a43-pre-reservation-launcher-entrypoint.ps1'
-    $p5eHash = 'FA3F5F1182F48A7B17524F78F4AEFEC7DCC2DCFCF06E4176B0056B2F5E78DA00'
+    $p5eHash = '67423A0C132EE245E8702E01F3877575C00A960652F59611A78CE3C19E4070DA'
     if ((Get-FileHash -LiteralPath $p5eCandidate -Algorithm SHA256).Hash -cne $p5eHash) { throw 'CANDIDATE_HASH_MISMATCH_STOP' }
     $p5eDecision = 'p5e-a43-owner-' + [Guid]::NewGuid().ToString('N')
     $p5eAudit = Join-Path 'D:\P5E-private\.p5e-a43-audit' ($p5eDecision + '.json')
@@ -45,11 +47,11 @@ Audit mặc định của entry chỉ đặt tên theo hash candidate. `D:\P5E-p
 
 ## Scope event A4.3 RAW trình owner (dữ liệu có sẵn, không phải approval)
 
-| Mục | Giá trị (nguồn: helper `9963A027…`, manifest `3635E810…`, checklist) | Mức kiểm |
+| Mục | Giá trị (nguồn: helper `A4FFEDA9…`, manifest `10693E7C…`, checklist) | Mức kiểm |
 |---|---|---|
 | Phạm vi | Một event, một primary call `L1_RAW_DISCOVERY`; 0 schema-repair, 0 network retry, không RECONCILE/L2/L3/build/install | Pin trong helper |
 | Chương/nguồn | selector `p5e-fresh-mercedes-vol5-20260911-01`, chapter key `001` (VOL5); RAW 23,814 B `a308210e…`, GLOSSARY 3,249 B `4bc3e2dd…`, DRAFT 26,462 B `64adecd8…`, PRONOUN 452 B `4947ff91…`; pack `497786e1…`, profile `beec03a4…`, binding `845976b3…`, run `8466b95d…` | Pin trong helper; chưa quan sát lại trên máy |
-| Candidate | entry `FA3F5F11…`, helper `9963A027…`, command `7F2B0FA4…`, manifest `3635E810…`, child contract `B181801B…`; production `4.18-p5e.3`/code211 APK `E9CF282C…` (prompt RAW nay nêu cú pháp token; request body hash mới `59f9de57…`, 89,420 B; log chẩn đoán `P5E_RAW` đã làm sạch), AndroidTest APK `CCAAE0AD…` (source commit `419d84b3…`) | Đã kiểm hash tại working tree và từ bản `git archive` sạch (commit `dd41e858`) |
+| Candidate | entry `67423A0C…`, helper `A4FFEDA9…`, command `A5D61ACA…`, manifest `10693E7C…`, child contract `720B39E5…`; production `4.18-p5e.3`/code211 APK `E9CF282C…` (prompt RAW nay nêu cú pháp token; request body hash mới `59f9de57…`, 89,420 B; log chẩn đoán `P5E_RAW` đã làm sạch), AndroidTest APK `CCAAE0AD…` (source commit `419d84b3…`) | Đã kiểm hash tại working tree và từ bản `git archive` sạch (commit `dd41e858`) |
 | Thiết bị/app | serial `15e84958`, signature token `abebea4b`, production `4.18-p5e.3`/code211 APK `E9CF282C…`, certificate `47F31389…`, AndroidTest APK `CCAAE0AD…`, schema v24 | Cả hai APK đã cài và đọc lại khớp pin ngày 2026-10-01 (sau lần cài của chu kỳ 3, đọc lại độc lập) |
 | DB | Pin helper `8D084050…` (18,952,192 B). DB trên máy đã được khôi phục từ ảnh trước event (hash khớp, lineage và global bằng 0, integrity ok); ảnh sau event 6 (`DDBB1C1A…`) được giữ trên host. Preflight chính xác trên máy: `UNUSED`, 0 provider call, DB không đổi | Hash file có thể đổi nếu máy/app được dùng (mở app, chạy test khác): chạy lại M0 ngay trước khi duyệt; lệch thì Before dừng `P5E_COLLECTOR_PRELIVE_DATABASE_HASH_MISMATCH` trước provider |
 | Route | OpenRouter `openai/gpt-5.6-luna`, upstream `openai`, route fingerprint `23149071…`; key nhập trực tiếp ở prompt ẩn, chỉ trong bộ nhớ | Route từng `MATCH`; account kiểm trong event |
