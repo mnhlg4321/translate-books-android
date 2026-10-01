@@ -4,13 +4,13 @@ Ngày bàn giao: 2026-10-01 (+07:00).
 
 ## Trạng thái mới nhất — ưu tiên đọc trước
 
-Lần chạy owner thứ năm (10:43, candidate `252A7F8E…`, DecisionId `p5e-a43-owner-eea4b635…`, event `raw-live-a43-preauth-38e2b7cc…`) là lần gọi nhà cung cấp hoàn tất đầu tiên: HTTP 200 sau 6.7 s, thân phản hồi 5,213 B (generation `gen-1790826235-CxEmgSBXcWB8J8jac87C`). App coi output của model không hợp lệ (`REPAIR_OUTPUT_SCHEMA_INVALID`, `RECOVERY_REQUIRED`); không có repair call, không response identity/report/receipt. Chi tiết lỗi kiểm tra không được lưu. Decision, event và reservation đã dùng.
+Vòng chẩn đoán đã chuẩn bị xong: production `4.18-p5e.2`/210 (log `P5E_RAW` đã làm sạch) và AndroidTest `92974AA5…` đã build, cài, đọc lại; DB khôi phục về ảnh zero-state `8D084050…`; preflight chính xác không đổi (cùng hash body, identity, route); pin cascade tới candidate `32C011C5…` (commit `3be72845`); M0 cuối (03:58 UTC) đạt. Event lần 5 vẫn là HTTP 200 nhưng output bị từ chối (`REPAIR_OUTPUT_SCHEMA_INVALID`). Bước tiếp theo là lần chạy của owner; tôi đọc logcat ngay sau đó.
 
 - Event A4.3 `raw-live-a43-preauth-33253efa…` (DecisionId `p5e-a43-owner-1599345c…`) đã dùng và không được dùng lại. Kết quả: Before, một lần launch instrumentation, After; `EXTERNAL_CALL_STATE_UNKNOWN` / `P5E_POST_DISPATCH_DURABLE_STATE_INCOMPLETE`; RAW chưa được chấp nhận.
 - Nguyên nhân (đã xác nhận bằng source và source ZIP đã pin): AndroidTest APK `058BE851…` hard-code `EXPECTED_DB_SHA256 = 3563f44b…` và yêu cầu cả tham số launch `p5e_expected_db_sha256` lẫn hash DB thật bằng hằng số đó. Re-pin phía host sang `8D084050…` làm tham số khác hằng số nên test thất bại trước khi đọc key, settings, DB hay mạng. Lỗi của tôi: lúc re-pin chỉ tìm trong scripts/docs, không tìm trong `app/src/androidTest` và APK test.
 - Bằng chứng cục bộ: hash DB After bằng Before, lineage toàn 0, chạy khoảng 20 giây, stderr instrumentation rỗng. Chính thức vẫn là UNKNOWN; không suy ra `$0` ở phía nhà cung cấp.
 - Nguyên nhân lần owner-window lịch sử trước đó vẫn UNRESOLVED.
-- Next action: owner quyết định có chạy thêm một vòng chẩn đoán hay không (xem mục Next action duy nhất).
+- Next action: owner chạy run guide cho candidate `32C011C5…` (xem mục Next action duy nhất).
 
 ## Đọc theo thứ tự này
 
@@ -77,7 +77,7 @@ Offline/component PASS không thay live/product acceptance. Enum/schema/validato
 
 ## Next action duy nhất
 
-Owner quyết định có chạy thêm một vòng chẩn đoán: thêm chẩn đoán đã làm sạch (mã luật parse/validation, độ dài content, finish reason, số token và chi phí; không có nội dung model) vào đường RAW production qua logcat, build lại và cài lại production 210 cùng AndroidTest, khôi phục DB zero-state lần nữa (bản sao host `8D084050…` còn nguyên), re-pin, cắt candidate mới; owner chạy thêm một event rồi tôi đọc kết quả. Giả thuyết cần xác nhận: output vượt giới hạn wire 3,584 B hoặc một luật `RAW_WIRE_*` khác.
+Owner dán khối run guide một lần (candidate `32C011C5…`), Enter một lần, gõ tay `APPROVE_ONE_FRESH_EVENT` ở prompt ẩn chỉ khi đồng ý (một RAW call, chương 001 VOL5, trần đã pin), rồi nhập key ở prompt ẩn kế tiếp; không chạm điện thoại trước đó. Sau đó owner báo kết quả; tôi đọc evidence event và các dòng logcat `P5E_RAW` (mã luật đã làm sạch, số byte content, finish reason, token, chi phí) rồi đề xuất cách sửa output bị từ chối.
 
 Bước chẩn đoán offline launcher đã đóng ở 2/2 vòng (≈30/60 phút): không mở vòng thứ ba. Nếu cửa sổ owner vẫn lỗi dù đã có outer log, dùng phương án B ở canonical plan §6: trình môi trường Android thử riêng/dữ liệu thay thế/cùng production path và phần nào còn phải kiểm lại trên target; không tự cài, xóa DB, gọi provider hoặc thay scope.
 
