@@ -162,8 +162,11 @@ public final class EditorialP5EFreshRawLiveRunner {
             OpenRouterEditorialP5PilotProvider provider =
                     OpenRouterEditorialP5PilotProvider.withFreshRawLifecyclePersistence(
                             settings, authorization.maximumOutputTokens(), database);
-            return new EditorialP5CExactBindingExecution(database, storage)
-                    .executeRaw(projectId, SELECTOR, CHAPTER_KEY, authorization, provider);
+            EditorialP5CExactBindingExecution.Result result =
+                    new EditorialP5CExactBindingExecution(database, storage)
+                            .executeRaw(projectId, SELECTOR, CHAPTER_KEY, authorization, provider);
+            P5ERawDiagnostics.dispatch(result);
+            return result;
         } catch (RuntimeException error) {
             return stop("P5E_FRESH_RAW_DISPATCH_SETUP_FAILED");
         }
@@ -471,6 +474,7 @@ public final class EditorialP5EFreshRawLiveRunner {
     }
 
     private static EditorialP5CExactBindingExecution.Result stop(String reason) {
+        P5ERawDiagnostics.stop(reason);
         return new EditorialP5CExactBindingExecution.Result(
                 EditorialP5CExactBindingExecution.Status.STOP, reason,
                 null, null, 0, false, "NOT_CERTIFIED");

@@ -196,8 +196,12 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
             // A response that cannot be represented as the typed contract is
             // returned as schema-invalid. The engine decides whether a single
             // safe repair is possible; this adapter never invents semantics.
+            P5ERawDiagnostics.parseRejected(invalid, responseBytes.length);
         }
         CostResolution cost = reportedOrEstimated(result, request);
+        P5ERawDiagnostics.chat(result.finishReason, responseBytes.length, result.promptTokens,
+                result.completionTokens, result.reasoningTokens, result.totalTokens,
+                result.providerCostReported, cost.known(), cost.value());
         String responseId = result.providerResponseId == null || result.providerResponseId.isBlank()
                 ? "openrouter-" + EditorialCanonicalJson.sha256Hex(responseBytes)
                 : result.providerResponseId;
