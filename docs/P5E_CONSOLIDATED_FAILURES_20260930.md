@@ -278,3 +278,13 @@ QA tại lần xuất: năm file entry/parent/test parse không lỗi bằng par
 - Kết quả: `adb devices` trống; `get-state` exit 1 `device '15e84958' not found`. Windows không liệt kê thiết bị Android/USB nào. Không có `pm path`, pull APK hay export DB vì không có máy; không có provider call, key hay ghi thiết bị.
 - Kết luận: M0 CHƯA quan sát được (máy không kết nối). Hash DB/APK so với pins vẫn chưa biết; khoảng thiếu pin DB `3563F44B…` vs `2CC23078…` (09-26) chưa đóng. Có thể cùng nhóm nguyên nhân với event 09-28 dừng ở `pm path` (chưa chứng minh).
 - Evidence riêng: `D:\P5E-private\m0-observation-20261001-014636633\M0_OBSERVATION.json` (SHA-256 bắt đầu `4b5c6b24a133f3b8`) và `M0_COMMAND_LOG.json`; không đổi/xóa.
+
+### M0 chạy lại sau khi cắm máy — kết quả
+
+- Lần 1 (`m0-observation-20261001-015546420`) bị hỏng do USB: sau khi `adb pull` APK production dừng ở khoảng 2% (1,572,864 B), mọi lệnh sau báo `device '15e84958' not found` (transport_id đổi 1 → 3). File APK dở và DB rỗng trong thư mục đó không có giá trị; không đọc thành mismatch.
+- Lần 2 (`m0-observation-20261001-015631487`, thứ tự đã đổi: đọc nhỏ trước, truyền lớn sau) hoàn tất 11 lệnh chỉ-đọc, không key/provider/ghi:
+  - Production `4.17-p5e.11`/code207, APK SHA-256 `2CCBB844…` khớp pin; test package có mặt, APK `058BE851…` khớp pin. WAL/SHM vắng (exit 1 = ABSENT hợp lệ).
+  - DB chính 18,952,192 B, SHA-256 `8D084050974E0681BF05AE46D799DB8741BB2593FFEFE92B2D12B5920FDFE685`: **khác pin `3563F44B…` và khác lần đo 09-26 `2CC23078…`**.
+  - Readback host (cùng SQL của collector, bridge `--immutable`, trên bản sao): schema 24; binding đúng selector/binding/run/pack/manifest fingerprint/profile/evaluation đã pin; bốn input RAW/GLOSSARY/DRAFT/PRONOUN đúng byte và hash đã pin; `LINEAGE` và `GLOBAL` toàn số 0; `integrity_check` ok; không vi phạm foreign key.
+- Kết luận: nội dung DB khớp tuple tươi, không có lineage; chỉ hash file lệch pin. Before sẽ dừng cứng `P5E_COLLECTOR_PRELIVE_DATABASE_HASH_MISMATCH`, không gọi provider. Hash file đã đổi ba lần (09-13, 09-26, 10-01) trong khi nội dung tuple không đổi, nên pin hash file dễ vỡ. Chưa biết vì sao file đổi và có ổn định khi máy để yên hay không; chưa đo.
+- Còn lại: bản sao chỉ-đọc DB hiện tại và hai APK đã nằm trong thư mục evidence (hash bắt đầu `3bd872a8` cho `M0_OBSERVATION.json`). Đây chưa phải bằng chứng P5E.8 trong checklist.

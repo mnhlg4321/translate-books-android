@@ -8,9 +8,9 @@ Baseline HEAD `b2f689cb4948bc4e715b6cf85f4396e49afd9525`. Vòng entry-boundary 2
 
 - Một commit đã chứa entry 68DF8061, parent, loader và mọi test/evidence cần thiết; chạy từ extract `git archive HEAD` trong đường dẫn có khoảng trắng: console QA 6/6, integration 21/21.
 - Console QA (hidden console thật, input synthetic) phủ: prompt + literal sai, outer failure, approval→key→synthetic child thành công qua integration fixture, bytes CC01 (exit 0 im lặng), audit hash có sẵn và dạng `-AuditPath` riêng.
-- Nguyên nhân lần owner-window gần nhất vẫn UNRESOLVED: không có stderr. `P5E_A43_AUDIT_ALREADY_EXISTS_STOP` đã tái hiện nhưng bản ghi lần đó ghi audit path theo DecisionId nên không chứng minh là nguyên nhân. CC01 silent exit là lỗi của bytes cũ, tách biệt. Khoảng thiếu cụ thể trước event: pin DB `3563F44B…` so với hash DB đo lần cuối `2CC23078…` (09-26); Before dừng cứng nếu lệch và cổng này chưa từng chạm live.
+- Nguyên nhân lần owner-window gần nhất vẫn UNRESOLVED: không có stderr. `P5E_A43_AUDIT_ALREADY_EXISTS_STOP` đã tái hiện nhưng bản ghi lần đó ghi audit path theo DecisionId nên không chứng minh là nguyên nhân. CC01 silent exit là lỗi của bytes cũ, tách biệt. M0 (2026-10-01): APK/version khớp pin, nội dung DB khớp tuple tươi với lineage bằng 0, nhưng hash file DB `8D084050…` lệch pin `3563F44B…`, nên Before sẽ dừng cứng trước khi gọi provider.
 - Giới hạn: không phải cửa sổ owner nhìn thấy; case thành công dùng integration fixture, không qua `-Execute` của entry live. Không có bằng chứng RAW/L1/provider; P5 vẫn chưa PASS, P6 chưa sẵn sàng.
-- Next action: owner kết nối máy 15e84958 (USB, đã cấp quyền debug) rồi báo; sau đó chạy lại đúng một lần M0 chỉ-đọc. M0 ngày 2026-10-01 không thấy máy (`adb devices` trống, `get-state` exit 1, Windows không liệt kê thiết bị USB). Khớp: owner duyệt một event theo bảng scope; lệch: re-pin offline có giải thích rồi trình lại.
+- Next action: owner quyết định cách xử lý pin hash file DB (xem mục 80). Khuyến nghị re-pin sang `8D084050…`.
 
 ## Đọc theo thứ tự này
 
@@ -77,7 +77,7 @@ Offline/component PASS không thay live/product acceptance. Enum/schema/validato
 
 ## Next action duy nhất
 
-Owner kết nối máy 15e84958 (USB, đã cấp quyền debug) rồi báo; sau đó chạy lại đúng một lần M0 chỉ-đọc (serial, `pm path` hai package, export DB về host, so với pins; không key/provider/ghi). M0 ngày 2026-10-01 đã được cho phép nhưng không thấy máy nên chưa có quan sát. Khớp: owner duyệt một event theo bảng scope trong `docs/P5E_A43_ENTRY_BOUNDARY_RUN_GUIDE_20260930.md`. Lệch: re-pin offline có giải thích rồi trình lại. Mốc M0–M7 nằm ở mục 5 của canonical plan.
+Owner quyết định cách xử lý pin hash file DB. M0 đã chạy xong ngày 2026-10-01: APK/version khớp pin; nội dung DB khớp tuple tươi, lineage bằng 0, integrity ok; nhưng hash file DB là `8D084050…`, khác pin `3563F44B…` và khác `2CC23078…` (09-26), nên Before sẽ dừng `P5E_COLLECTOR_PRELIVE_DATABASE_HASH_MISMATCH` trước khi gọi provider. Khuyến nghị: re-pin sang `8D084050…` (cascade offline helper → manifest → command → entry, test, candidate hash và guide mới), rồi chạy lại M0 chỉ-đọc ngay trước khi duyệt một event. Nếu hash file lệch lần nữa, thay cổng hash file bằng readback nội dung (binding tuple, lineage bằng 0, integrity) là một quyết định riêng của owner.
 
 Bước chẩn đoán offline launcher đã đóng ở 2/2 vòng (≈30/60 phút): không mở vòng thứ ba. Nếu cửa sổ owner vẫn lỗi dù đã có outer log, dùng phương án B ở canonical plan §6: trình môi trường Android thử riêng/dữ liệu thay thế/cùng production path và phần nào còn phải kiểm lại trên target; không tự cài, xóa DB, gọi provider hoặc thay scope.
 
