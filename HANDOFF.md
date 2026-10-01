@@ -4,13 +4,13 @@ Ngày bàn giao: 2026-10-01 (+07:00).
 
 ## Trạng thái mới nhất — ưu tiên đọc trước
 
-Mọi bước đã duyệt đã xong: DB trên máy được khôi phục về ảnh trước event (`8D084050…`, lineage bằng 0), preflight chính xác trên máy đạt với 0 provider call, identity attempt/request/envelope và route fingerprint không đổi, chỉ hash body HTTP chuẩn tắc đổi (`a9d54a4c…`, do bỏ `temperature`). Pin đã cascade; candidate là `9A4F4666…` (commit `8fdb6de3`). M0 cuối trước event đạt trọn vẹn (03:31 UTC): production `4.18-p5e.1`/209, AndroidTest `8F332963…`, DB `8D084050…`, WAL/SHM vắng. Event kế tiếp là lần chạy của owner.
+Lần chạy owner thứ tư (10:35, candidate `9A4F4666…`, DecisionId `p5e-a43-owner-c08fc7ef…`, event `raw-live-a43-preauth-db88e47a…`) dừng trước mọi request: đồng hồ máy chậm hơn host khoảng 2.0 s nên app từ chối authorization có `issuedAt` ở tương lai (`P5_AUTHORIZATION_EXPIRED`); DB không đổi, lineage bằng 0, không có provider call (chính thức vẫn `EXTERNAL_CALL_STATE_UNKNOWN`). Host giờ lùi `issuedAt` 10 s; candidate mới `252A7F8E…` (commit `817326ef`); mọi suite offline PASS; M0 cuối (03:41 UTC) đạt. Decision, event và reservation của `9A4F4666…` đã dùng.
 
 - Event A4.3 `raw-live-a43-preauth-33253efa…` (DecisionId `p5e-a43-owner-1599345c…`) đã dùng và không được dùng lại. Kết quả: Before, một lần launch instrumentation, After; `EXTERNAL_CALL_STATE_UNKNOWN` / `P5E_POST_DISPATCH_DURABLE_STATE_INCOMPLETE`; RAW chưa được chấp nhận.
 - Nguyên nhân (đã xác nhận bằng source và source ZIP đã pin): AndroidTest APK `058BE851…` hard-code `EXPECTED_DB_SHA256 = 3563f44b…` và yêu cầu cả tham số launch `p5e_expected_db_sha256` lẫn hash DB thật bằng hằng số đó. Re-pin phía host sang `8D084050…` làm tham số khác hằng số nên test thất bại trước khi đọc key, settings, DB hay mạng. Lỗi của tôi: lúc re-pin chỉ tìm trong scripts/docs, không tìm trong `app/src/androidTest` và APK test.
 - Bằng chứng cục bộ: hash DB After bằng Before, lineage toàn 0, chạy khoảng 20 giây, stderr instrumentation rỗng. Chính thức vẫn là UNKNOWN; không suy ra `$0` ở phía nhà cung cấp.
 - Nguyên nhân lần owner-window lịch sử trước đó vẫn UNRESOLVED.
-- Next action: owner chạy run guide cho candidate `9A4F4666…` (xem mục Next action duy nhất).
+- Next action: owner chạy run guide cho candidate `252A7F8E…` (xem mục Next action duy nhất).
 
 ## Đọc theo thứ tự này
 
@@ -77,7 +77,7 @@ Offline/component PASS không thay live/product acceptance. Enum/schema/validato
 
 ## Next action duy nhất
 
-Owner dán khối run guide một lần (candidate `9A4F4666…`), Enter một lần, gõ tay `APPROVE_ONE_FRESH_EVENT` ở prompt ẩn chỉ khi đồng ý (một RAW call, chương 001 VOL5, trần đã pin), rồi nhập key ở prompt ẩn kế tiếp. Không mở app hay chạm điện thoại trước khi chạy. Sau đó owner báo kết quả; tôi phân loại từ outer log, audit và evidence event.
+Owner dán khối run guide một lần (candidate `252A7F8E…`), Enter một lần, gõ tay `APPROVE_ONE_FRESH_EVENT` ở prompt ẩn chỉ khi đồng ý (một RAW call, chương 001 VOL5, trần đã pin), rồi nhập key ở prompt ẩn kế tiếp. Không mở app hay chạm điện thoại trước đó. Tùy chọn: bật tự động ngày giờ trên điện thoại (biên 10 s đã đủ cho độ lệch 2.0 s đo được). Sau đó owner báo kết quả.
 
 Bước chẩn đoán offline launcher đã đóng ở 2/2 vòng (≈30/60 phút): không mở vòng thứ ba. Nếu cửa sổ owner vẫn lỗi dù đã có outer log, dùng phương án B ở canonical plan §6: trình môi trường Android thử riêng/dữ liệu thay thế/cùng production path và phần nào còn phải kiểm lại trên target; không tự cài, xóa DB, gọi provider hoặc thay scope.
 
