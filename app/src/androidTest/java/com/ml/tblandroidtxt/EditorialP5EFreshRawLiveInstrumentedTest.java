@@ -68,10 +68,10 @@ public final class EditorialP5EFreshRawLiveInstrumentedTest {
     private static final String PREFLIGHT_MANIFEST_VERSION =
             "p5e.9b.a4.redacted-preflight.v2";
 
-    private static final String PRODUCTION_VERSION = "v4.17-p5e.11";
-    private static final long PRODUCTION_VERSION_CODE = 207L;
+    private static final String PRODUCTION_VERSION = "v4.18-p5e.1";
+    private static final long PRODUCTION_VERSION_CODE = 209L;
     private static final String PRODUCTION_APK_SHA256 =
-            "2ccbb844c629132bb534b0d6aba516055c410bf96d20b14b3f80f91b962800fd";
+            "4f3daf9c77dad104a57cc54536a237d09b941610600a60a5876bd608c168d41c";
     private static final String CERTIFICATE_SHA256 =
             "47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155";
     private static final int DATABASE_SCHEMA_VERSION = 24;
