@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-01 (+07:00): sixth owner run (candidate 32C011C5…) returned HTTP 200 again and the P5E_RAW diagnostics named the cause: the app parser rejected the output with finding.evidenceRefs_contains_invalid_token (content only 1,764 bytes, finish=stop, 20,931 prompt / 665 completion / 128 reasoning tokens, reported cost USD 0.0060306, 9.1 s). The earlier byte-limit hypothesis is disproved. The RAW prompt now states the exact token syntax and structural rules; the request body hash changes and needs a build, preflight and re-pin cycle.
+- Updated: 2026-10-01 (+07:00): prompt-fix cycle running: production 4.18-p5e.3/211 built (RAW prompt states the exact wire token syntax); AndroidTest rebuild, installs, zero-state DB restore, preflight and re-pin follow. No live call since the sixth event.
 - Current version: active release v4.18; last-known installed production 4.17-p5e.11/code207; exported development build 4.18-dev.1/code208 is not installed.
 - Current branch: feature/v4.18-p5e-runner-repair-20260917; same continuation, no new branch/release/checklist.
 - Current commit: c496cab4 — implementation baseline immediately before this snapshot update (candidate entry 29029B46…, helper 23801AD5…, command F7EB3AF6…, manifest 45690909…, child contract 70CBC0B2…, AndroidTest APK D2B0E590… archived in artifacts/ and backup/test-builds/v4.17-p5e.11/p5e-a43-db-arg-20261001-01). Build source snapshot of code208 remains 240cdc814a324bca36543a8091af6bf6cdd07831.
