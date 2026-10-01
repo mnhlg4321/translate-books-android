@@ -181,5 +181,14 @@ public final class EditorialMigrationSpec {
     public static List<String> from23To24(){return Arrays.asList(
             "ALTER TABLE editorial_p5d_network_lifecycle ADD COLUMN response_body_bytes INTEGER NOT NULL DEFAULT 0 CHECK(response_body_bytes>=0)"
     );}
+    /**
+     * L2/L3 phase artifacts. The edited text and its change map/receipt live in
+     * one row, so a single UPDATE commits the pair atomically; a CLAIMED or
+     * RECOVERY_REQUIRED row can never expose half a result.
+     */
+    public static List<String> from24To25(){return Arrays.asList(
+            "CREATE TABLE IF NOT EXISTS editorial_phase_artifacts (attempt_identity TEXT PRIMARY KEY NOT NULL CHECK(length(attempt_identity)=64 AND attempt_identity NOT GLOB '*[^0-9a-f]*'), phase TEXT NOT NULL CHECK(phase IN ('L2_EDIT','L3_FINAL')), chapter_key TEXT NOT NULL CHECK(length(trim(chapter_key))>0), predecessor_identity TEXT NOT NULL CHECK(length(predecessor_identity)=64 AND predecessor_identity NOT GLOB '*[^0-9a-f]*'), bundle_identity TEXT NOT NULL CHECK(length(bundle_identity)=64 AND bundle_identity NOT GLOB '*[^0-9a-f]*'), status TEXT NOT NULL CHECK(status IN ('CLAIMED','RECOVERY_REQUIRED','COMMITTED')), text_bytes BLOB, text_sha256 TEXT NOT NULL DEFAULT '', evidence_bytes BLOB, evidence_sha256 TEXT NOT NULL DEFAULT '', recovery_reason_code TEXT NOT NULL DEFAULT '', created_at INTEGER NOT NULL CHECK(created_at>=0), updated_at INTEGER NOT NULL CHECK(updated_at>=0), CHECK((status='COMMITTED' AND text_bytes IS NOT NULL AND evidence_bytes IS NOT NULL AND length(text_sha256)=64 AND length(evidence_sha256)=64) OR (status<>'COMMITTED' AND text_bytes IS NULL AND evidence_bytes IS NULL)))",
+            "CREATE INDEX IF NOT EXISTS idx_editorial_phase_artifacts_chain ON editorial_phase_artifacts(chapter_key,phase,predecessor_identity)"
+    );}
     private EditorialMigrationSpec() {}
 }

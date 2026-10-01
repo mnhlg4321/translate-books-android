@@ -12,7 +12,7 @@ import java.util.List;
 
 public class TranslationRepository extends SQLiteOpenHelper {
     private static final String DB = "tbl_android_txt.db";
-    private static final int VER = 24;
+    private static final int VER = 25;
 
     public TranslationRepository(Context context) { this(context, DB); }
 
@@ -39,6 +39,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
         createEditorialP5DTransportFields(db);
         createEditorialP5DRecoveryHistory(db);
         createEditorialP5DBodyProgress(db);
+        createEditorialPhaseArtifacts(db);
     }
 
     @Override public void onConfigure(SQLiteDatabase db) {
@@ -102,6 +103,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
         if (oldVersion < 22) createEditorialP5DTransportFields(db);
         if (oldVersion < 23) createEditorialP5DRecoveryHistory(db);
         if (oldVersion < 24) createEditorialP5DBodyProgress(db);
+        if (oldVersion < 25) createEditorialPhaseArtifacts(db);
     }
 
     @Override public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -140,6 +142,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
     private static void createEditorialP5DTransportFields(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from21To22())safeExec(db,sql);}
     private static void createEditorialP5DRecoveryHistory(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from22To23())db.execSQL(sql);}
     private static void createEditorialP5DBodyProgress(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from23To24())safeExec(db,sql);}
+    private static void createEditorialPhaseArtifacts(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from24To25())db.execSQL(sql);}
 
     SQLiteDatabase editorialWritableDatabase() { return getWritableDatabase(); }
     SQLiteDatabase editorialReadableDatabase() { return getReadableDatabase(); }
