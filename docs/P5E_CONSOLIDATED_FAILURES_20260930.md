@@ -288,3 +288,10 @@ QA tại lần xuất: năm file entry/parent/test parse không lỗi bằng par
   - Readback host (cùng SQL của collector, bridge `--immutable`, trên bản sao): schema 24; binding đúng selector/binding/run/pack/manifest fingerprint/profile/evaluation đã pin; bốn input RAW/GLOSSARY/DRAFT/PRONOUN đúng byte và hash đã pin; `LINEAGE` và `GLOBAL` toàn số 0; `integrity_check` ok; không vi phạm foreign key.
 - Kết luận: nội dung DB khớp tuple tươi, không có lineage; chỉ hash file lệch pin. Before sẽ dừng cứng `P5E_COLLECTOR_PRELIVE_DATABASE_HASH_MISMATCH`, không gọi provider. Hash file đã đổi ba lần (09-13, 09-26, 10-01) trong khi nội dung tuple không đổi, nên pin hash file dễ vỡ. Chưa biết vì sao file đổi và có ổn định khi máy để yên hay không; chưa đo.
 - Còn lại: bản sao chỉ-đọc DB hiện tại và hai APK đã nằm trong thư mục evidence (hash bắt đầu `3bd872a8` cho `M0_OBSERVATION.json`). Đây chưa phải bằng chứng P5E.8 trong checklist.
+
+### Re-pin hash file DB — 2026-10-01 (owner đã đồng ý)
+
+- Thay đổi (commit `68f0e8da`): pin DB của helper `3563F44B…` → `8D084050…`; cập nhật theo thứ tự child contract, manifest (thêm dòng pin DB), command, entry. Hash mới: helper `F0A567A2…`, child contract `70BB550C…`, manifest `B3A79783…`, command `6E87E8F5…`, entry (candidate) `D8E4D0FC…`. Run guide cập nhật candidate/manifest/scope.
+- Kiểm: entry-boundary 6, integration 21/21, console 5/5 (report `*_REPIN_20261001.json`), child-invocation contract, decision-atomicity 28/28, binding-tuple 262/262, DB host-readback 56/56, preauth guard closure 21/21, production-version, collector launch probe; integration/boundary/console chạy lại PASS từ extract `git archive HEAD`.
+- Không chạy được/không còn áp dụng: `test-p5e-child-invocation-launcher-static` (cần launcher riêng cũ), `test-p5e-a43-pm-path-capture-repair` (gọi `pwsh` chưa cài trên máy này; không liên quan pin). Case CC01 của console test bị gỡ vì bytes cũ dừng ở pin gate của chính nó; kết quả cũ giữ ở `P5E_A43_ENTRY_CONSOLE_QA_03.json`.
+- Giới hạn: hash file DB có thể đổi lần nữa nếu máy/app được dùng; M0 chạy lại ngay trước khi owner duyệt event.

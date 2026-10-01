@@ -24,7 +24,7 @@ Ba chương chạy tuần tự, mỗi chương có chain/source identity riêng;
 | P5 | Owner-window thoát trước prompt; không có audit/terminal evidence mới | `EVIDENCE_INCOMPLETE`; không suy provider/DB bằng 0 |
 | P6/P7 | Chưa hoàn tất | Enum/schema không chứng minh luồng sản phẩm đã chạy |
 
-Last candidate: `scripts/p5e-a43-pre-reservation-launcher-entrypoint.ps1`, SHA-256 `68DF8061CECB22D64AA4B85245714AC3AEE1895EBC8846F1BF51FC13D2E170BA`. Last visible attempt: DecisionId `p5e-a43-owner-4abe5015e63643c0b5bf31b1c9576c3a`; audit dự kiến dưới `D:\P5E-private\.p5e-a43-audit` không được quan sát. Giữ nguyên sự kiện, không thử lại.
+Last candidate: `scripts/p5e-a43-pre-reservation-launcher-entrypoint.ps1`, SHA-256 `D8E4D0FCB346491E4E9A9EF45C0890339BA67A54F47B2569026F26DF96704F0D` (re-pin 2026-10-01 cho pin hash file DB; thay `68DF8061…` là candidate của lần owner-window thất bại gần nhất). Last visible attempt: DecisionId `p5e-a43-owner-4abe5015e63643c0b5bf31b1c9576c3a`; audit dự kiến dưới `D:\P5E-private\.p5e-a43-audit` không được quan sát. Giữ nguyên sự kiện, không thử lại.
 
 Bằng chứng: `docs/P5E_CONSOLIDATED_FAILURES_20260930.md`, `docs/P5E_A43_ENTRY_BOUNDARY_REPAIR_PROVENANCE_20260930.json`, `docs/P5E_A43_PARENT_INTEGRATION_FINAL_PROVENANCE_20260930.json`, BUILD_INFO trong `artifacts/builds/v4.18-dev.1/build-20260930-185915/`. Các test PASS dẫn lại là lịch sử, không phải test mới trong lượt lập kế hoạch.
 
@@ -149,8 +149,7 @@ Review 2026-10-01: Luna soạn acceptance và phản biện giới hạn năm đ
 
 ## 10. Next action duy nhất
 
-Offline entry-boundary đã đóng (2/2 vòng, ≈30/60 phút): entry 68DF8061, parent, loader, test và evidence nằm trong một commit chạy được từ extract `git archive` độc lập; console QA 6/6. Nguyên nhân lần owner-window gần nhất vẫn UNRESOLVED: lỗi `P5E_A43_AUDIT_ALREADY_EXISTS_STOP` đã tái hiện được, nhưng bản ghi lần đó ghi audit path theo DecisionId nên không chứng minh đó là nguyên nhân; run guide giờ có outer log để lần sau có stderr thật.
+Offline entry-boundary đã đóng (2/2 vòng, ≈30/60 phút). M0 chỉ-đọc ngày 2026-10-01 cho thấy APK/version khớp pin, nội dung DB khớp tuple tươi với lineage bằng 0, hash file DB `8D084050…` lệch pin cũ. Owner đã đồng ý re-pin: helper, child contract, manifest, command và entry được cập nhật theo thứ tự; candidate mới `D8E4D0FCB346491E4E9A9EF45C0890339BA67A54F47B2569026F26DF96704F0D` (commit `68f0e8da`); test liên quan PASS và kiểm lại từ extract `git archive` độc lập. Nguyên nhân lần owner-window lịch sử vẫn UNRESOLVED.
 
-Review chuyển P5: đủ để chuẩn bị một event RAW giới hạn; còn một khoảng thiếu cụ thể, không phải gate mới. Hash DB trên máy đo lần cuối (2026-09-26) là `2CC23078…`, trong khi pin của helper là `3563F44B…` và Before dừng cứng bằng `P5E_COLLECTOR_PRELIVE_DATABASE_HASH_MISMATCH` nếu lệch; cổng này chưa từng được chạm ở event live nào (09-26 dừng sớm hơn ở tuple, 09-28 dừng ở `pm path`). Bảng scope đề xuất nằm trong `docs/P5E_A43_ENTRY_BOUNDARY_RUN_GUIDE_20260930.md`.
 
-Next action: owner quyết định cách xử lý pin hash file DB (M0 đã chạy: nội dung DB khớp, hash file lệch pin). Khuyến nghị re-pin sang `8D084050…` rồi chạy lại M0 ngay trước khi duyệt một event; nếu lệch lần nữa thì đổi cổng sang readback nội dung theo quyết định riêng. Không mở vòng launcher thứ ba; lỗi cửa vào dù có outer log thì dùng phương án B (mục 6).
+Next action: owner báo sẵn sàng (máy cắm, chưa mở app); tôi chạy lại M0 chỉ-đọc ngay lúc đó vì hash file DB có thể đổi. Khớp `8D084050…`: owner chạy run guide cho candidate `D8E4D0FC…` và quyết định ở prompt. Lệch lần nữa: owner quyết định có thay cổng hash file bằng readback nội dung hay không. Không mở vòng launcher thứ ba; lỗi cửa vào dù có outer log thì dùng phương án B (mục 6).

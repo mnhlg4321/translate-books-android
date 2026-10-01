@@ -4,13 +4,13 @@ Ngày bàn giao: 2026-10-01 (+07:00).
 
 ## Trạng thái mới nhất — ưu tiên đọc trước
 
-Baseline HEAD `b2f689cb4948bc4e715b6cf85f4396e49afd9525`. Vòng entry-boundary 2/2 đã dùng (≈30/60 phút); bước offline đã đóng, không mở vòng launcher thứ ba. Chi tiết ở mục “Vòng chẩn đoán entry owner-window 2/2” trong `docs/P5E_CONSOLIDATED_FAILURES_20260930.md`.
+Baseline HEAD `68f0e8da` (re-pin sang `8D084050…`, candidate `D8E4D0FC…`). Vòng entry-boundary 2/2 đã dùng (≈30/60 phút); bước offline đã đóng, không mở vòng launcher thứ ba. Chi tiết ở mục “Vòng chẩn đoán entry owner-window 2/2” trong `docs/P5E_CONSOLIDATED_FAILURES_20260930.md`.
 
-- Một commit đã chứa entry 68DF8061, parent, loader và mọi test/evidence cần thiết; chạy từ extract `git archive HEAD` trong đường dẫn có khoảng trắng: console QA 6/6, integration 21/21.
+- Commit `b2f689cb` chứa entry 68DF8061 cùng parent, loader, test, evidence; `68f0e8da` re-pin sang candidate `D8E4D0FC…`; chạy từ extract `git archive HEAD` trong đường dẫn có khoảng trắng: console QA 5/5 (case CC01 đã chuyển thành evidence lịch sử), integration 21/21 sau re-pin.
 - Console QA (hidden console thật, input synthetic) phủ: prompt + literal sai, outer failure, approval→key→synthetic child thành công qua integration fixture, bytes CC01 (exit 0 im lặng), audit hash có sẵn và dạng `-AuditPath` riêng.
 - Nguyên nhân lần owner-window gần nhất vẫn UNRESOLVED: không có stderr. `P5E_A43_AUDIT_ALREADY_EXISTS_STOP` đã tái hiện nhưng bản ghi lần đó ghi audit path theo DecisionId nên không chứng minh là nguyên nhân. CC01 silent exit là lỗi của bytes cũ, tách biệt. M0 (2026-10-01): APK/version khớp pin, nội dung DB khớp tuple tươi với lineage bằng 0, nhưng hash file DB `8D084050…` lệch pin `3563F44B…`, nên Before sẽ dừng cứng trước khi gọi provider.
 - Giới hạn: không phải cửa sổ owner nhìn thấy; case thành công dùng integration fixture, không qua `-Execute` của entry live. Không có bằng chứng RAW/L1/provider; P5 vẫn chưa PASS, P6 chưa sẵn sàng.
-- Next action: owner quyết định cách xử lý pin hash file DB (xem mục 80). Khuyến nghị re-pin sang `8D084050…`.
+- Next action: owner báo sẵn sàng (máy cắm, chưa mở app); tôi chạy lại M0 chỉ-đọc đúng lúc đó vì hash file DB có thể đổi. Khớp `8D084050…`: owner chạy run guide cho candidate `D8E4D0FC…` và quyết định ở prompt. Lệch lần nữa: owner quyết định có thay cổng hash file bằng readback nội dung hay không.
 
 ## Đọc theo thứ tự này
 
@@ -77,7 +77,7 @@ Offline/component PASS không thay live/product acceptance. Enum/schema/validato
 
 ## Next action duy nhất
 
-Owner quyết định cách xử lý pin hash file DB. M0 đã chạy xong ngày 2026-10-01: APK/version khớp pin; nội dung DB khớp tuple tươi, lineage bằng 0, integrity ok; nhưng hash file DB là `8D084050…`, khác pin `3563F44B…` và khác `2CC23078…` (09-26), nên Before sẽ dừng `P5E_COLLECTOR_PRELIVE_DATABASE_HASH_MISMATCH` trước khi gọi provider. Khuyến nghị: re-pin sang `8D084050…` (cascade offline helper → manifest → command → entry, test, candidate hash và guide mới), rồi chạy lại M0 chỉ-đọc ngay trước khi duyệt một event. Nếu hash file lệch lần nữa, thay cổng hash file bằng readback nội dung (binding tuple, lineage bằng 0, integrity) là một quyết định riêng của owner.
+Re-pin pin hash file DB sang `8D084050…` đã xong và commit (`68f0e8da`): helper → child contract → manifest → command → entry, candidate mới `D8E4D0FC…`, run guide cập nhật. Owner báo sẵn sàng (máy cắm, chưa mở app); tôi chạy lại M0 chỉ-đọc đúng lúc đó vì hash file DB có thể đổi. Khớp: owner chạy run guide trong cửa sổ PowerShell nhìn thấy và quyết định ở prompt (một RAW call, trần đã pin, `-AuditPath` theo DecisionId, outer log). Lệch lần nữa: owner quyết định có thay cổng hash file bằng readback nội dung (binding tuple, lineage bằng 0, integrity) hay không.
 
 Bước chẩn đoán offline launcher đã đóng ở 2/2 vòng (≈30/60 phút): không mở vòng thứ ba. Nếu cửa sổ owner vẫn lỗi dù đã có outer log, dùng phương án B ở canonical plan §6: trình môi trường Android thử riêng/dữ liệu thay thế/cùng production path và phần nào còn phải kiểm lại trên target; không tự cài, xóa DB, gọi provider hoặc thay scope.
 
