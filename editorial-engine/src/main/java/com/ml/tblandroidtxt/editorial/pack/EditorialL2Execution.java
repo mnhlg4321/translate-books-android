@@ -375,11 +375,11 @@ public final class EditorialL2Execution {
         };
     }
 
-    private static void keys(Map<String, Object> value, Set<String> allowed, String path) {
+    static void keys(Map<String, Object> value, Set<String> allowed, String path) {
         keys(value, allowed, path, Set.of());
     }
 
-    private static void keys(Map<String, Object> value, Set<String> allowed, String path, Set<String> optional) {
+    static void keys(Map<String, Object> value, Set<String> allowed, String path, Set<String> optional) {
         for (String key : value.keySet()) {
             if (!allowed.contains(key)) throw new IllegalArgumentException("L2_WIRE_UNKNOWN_KEY:" + path);
         }
@@ -391,12 +391,12 @@ public final class EditorialL2Execution {
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<String, Object> object(Object value, String path) {
+    static Map<String, Object> object(Object value, String path) {
         if (!(value instanceof Map)) throw new IllegalArgumentException("L2_WIRE_OBJECT_EXPECTED:" + path);
         return (Map<String, Object>) value;
     }
 
-    private static String text(Map<String, Object> value, String key) {
+    static String text(Map<String, Object> value, String key) {
         Object text = value.get(key);
         if (!(text instanceof String) || ((String) text).length() > MAX_TEXT_FIELD) {
             throw new IllegalArgumentException("L2_WIRE_TEXT_INVALID:" + key);
@@ -404,13 +404,13 @@ public final class EditorialL2Execution {
         return (String) text;
     }
 
-    private static boolean bool(Map<String, Object> value, String key) {
+    static boolean bool(Map<String, Object> value, String key) {
         Object flag = value.get(key);
         if (!(flag instanceof Boolean)) throw new IllegalArgumentException("L2_WIRE_BOOLEAN_INVALID:" + key);
         return (Boolean) flag;
     }
 
-    private static int line(Map<String, Object> value) {
+    static int line(Map<String, Object> value) {
         Object number = value.get("line");
         if (!(number instanceof BigDecimal)) throw new IllegalArgumentException("L2_WIRE_LINE_INVALID");
         try {
@@ -428,7 +428,7 @@ public final class EditorialL2Execution {
         }
     }
 
-    private static String safeMessage(RuntimeException error) {
+    static String safeMessage(RuntimeException error) {
         String message = error.getMessage();
         return message != null && message.matches("[A-Z0-9_:./-]{1,96}") ? message : "L2_WIRE_PARSE_FAILED";
     }

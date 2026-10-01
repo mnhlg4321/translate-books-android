@@ -20,12 +20,21 @@ import java.util.Optional;
  */
 public final class EditorialPhaseArtifactStore implements EditorialL2Execution.Store {
     static final String TABLE = "editorial_phase_artifacts";
-    private static final String L2_PHASE = "L2_EDIT";
+    static final String L2_PHASE = "L2_EDIT";
+    static final String L3_PHASE = "L3_FINAL";
 
     private final TranslationRepository database;
     private final String chapterKey;
+    private final String phase;
 
     public EditorialPhaseArtifactStore(TranslationRepository database, String chapterKey) {
+        this(database, chapterKey, L2_PHASE);
+    }
+
+    /** The same one-row pair store for L3: FINAL text + QA_RECEIPT. */
+    public EditorialPhaseArtifactStore(TranslationRepository database, String chapterKey, String phase) {
+        if (!L2_PHASE.equals(phase) && !L3_PHASE.equals(phase)) throw new IllegalArgumentException("phase is invalid");
+        this.phase = phase;
         this.database = Objects.requireNonNull(database, "database");
         if (chapterKey == null || chapterKey.isBlank()) throw new IllegalArgumentException("chapter key is required");
         this.chapterKey = chapterKey;
@@ -41,7 +50,7 @@ public final class EditorialPhaseArtifactStore implements EditorialL2Execution.S
             long now = System.currentTimeMillis();
             ContentValues values = new ContentValues();
             values.put("attempt_identity", attemptIdentity);
-            values.put("phase", L2_PHASE);
+            values.put("phase", phase);
             values.put("chapter_key", chapterKey);
             values.put("predecessor_identity", predecessorIdentity);
             values.put("bundle_identity", bundleIdentity);
@@ -58,7 +67,7 @@ public final class EditorialPhaseArtifactStore implements EditorialL2Execution.S
                 if (existing == null) throw race;
             }
         }
-        if (!existing.phase.equals(L2_PHASE) || !existing.chapterKey.equals(chapterKey)
+        if (!existing.phase.equals(phase) || !existing.chapterKey.equals(chapterKey)
                 || !existing.predecessorIdentity.equals(predecessorIdentity)
                 || !existing.bundleIdentity.equals(bundleIdentity)) {
             throw new IllegalStateException("L2 attempt identity facts changed");
