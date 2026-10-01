@@ -4,13 +4,13 @@ Ngày bàn giao: 2026-10-01 (+07:00).
 
 ## Trạng thái mới nhất — ưu tiên đọc trước
 
-Baseline HEAD `68f0e8da` (re-pin sang `8D084050…`, candidate `D8E4D0FC…`). Vòng entry-boundary 2/2 đã dùng (≈30/60 phút); bước offline đã đóng, không mở vòng launcher thứ ba. Chi tiết ở mục “Vòng chẩn đoán entry owner-window 2/2” trong `docs/P5E_CONSOLIDATED_FAILURES_20260930.md`.
+Baseline HEAD là commit docs cuối của nhánh (candidate `D8E4D0FC…`, pin DB `8D084050…`). Cửa vào launcher đã chạy trọn vẹn trong cửa sổ owner thật: prompt, approval, reservation, owner root, receipt, một lần nhập key, một lần gọi child, outer log và audit đều ghi, exit giữ đúng.
 
-- Commit `b2f689cb` chứa entry 68DF8061 cùng parent, loader, test, evidence; `68f0e8da` re-pin sang candidate `D8E4D0FC…`; chạy từ extract `git archive HEAD` trong đường dẫn có khoảng trắng: console QA 5/5 (case CC01 đã chuyển thành evidence lịch sử), integration 21/21 sau re-pin.
-- Console QA (hidden console thật, input synthetic) phủ: prompt + literal sai, outer failure, approval→key→synthetic child thành công qua integration fixture, bytes CC01 (exit 0 im lặng), audit hash có sẵn và dạng `-AuditPath` riêng.
-- Nguyên nhân lần owner-window gần nhất vẫn UNRESOLVED: không có stderr. `P5E_A43_AUDIT_ALREADY_EXISTS_STOP` đã tái hiện nhưng bản ghi lần đó ghi audit path theo DecisionId nên không chứng minh là nguyên nhân. CC01 silent exit là lỗi của bytes cũ, tách biệt. M0 (2026-10-01): APK/version khớp pin, nội dung DB khớp tuple tươi với lineage bằng 0, nhưng hash file DB `8D084050…` lệch pin `3563F44B…`, nên Before sẽ dừng cứng trước khi gọi provider.
-- Giới hạn: không phải cửa sổ owner nhìn thấy; case thành công dùng integration fixture, không qua `-Execute` của entry live. Không có bằng chứng RAW/L1/provider; P5 vẫn chưa PASS, P6 chưa sẵn sàng.
-- Next action: M0 đã đạt (02:21). Owner chạy run guide cho candidate `D8E4D0FC…` trong cửa sổ PowerShell nhìn thấy, không mở app trên điện thoại, và quyết định ở prompt; sau đó báo kết quả cho tôi.
+- Event A4.3 `raw-live-a43-preauth-33253efa…` (DecisionId `p5e-a43-owner-1599345c…`) đã dùng và không được dùng lại. Kết quả: Before, một lần launch instrumentation, After; `EXTERNAL_CALL_STATE_UNKNOWN` / `P5E_POST_DISPATCH_DURABLE_STATE_INCOMPLETE`; RAW chưa được chấp nhận.
+- Nguyên nhân (đã xác nhận bằng source và source ZIP đã pin): AndroidTest APK `058BE851…` hard-code `EXPECTED_DB_SHA256 = 3563f44b…` và yêu cầu cả tham số launch `p5e_expected_db_sha256` lẫn hash DB thật bằng hằng số đó. Re-pin phía host sang `8D084050…` làm tham số khác hằng số nên test thất bại trước khi đọc key, settings, DB hay mạng. Lỗi của tôi: lúc re-pin chỉ tìm trong scripts/docs, không tìm trong `app/src/androidTest` và APK test.
+- Bằng chứng cục bộ: hash DB After bằng Before, lineage toàn 0, chạy khoảng 20 giây, stderr instrumentation rỗng. Chính thức vẫn là UNKNOWN; không suy ra `$0` ở phía nhà cung cấp.
+- Nguyên nhân lần owner-window lịch sử trước đó vẫn UNRESOLVED.
+- Next action: owner chọn hướng sửa (xem mục Next action duy nhất).
 
 ## Đọc theo thứ tự này
 
@@ -77,7 +77,7 @@ Offline/component PASS không thay live/product acceptance. Enum/schema/validato
 
 ## Next action duy nhất
 
-M0 đạt ngày 2026-10-01 02:21 trong một lượt đầy đủ: máy, production code207, hash DB `8D084050…`, hash hai APK, WAL/SHM vắng, readback nội dung (schema 24, tuple tươi, lineage bằng 0, integrity ok). Owner chạy run guide `docs/P5E_A43_ENTRY_BOUNDARY_RUN_GUIDE_20260930.md` cho candidate `D8E4D0FC…` trong cửa sổ PowerShell nhìn thấy khi trạng thái này còn đúng (không mở app trên điện thoại, giữ USB) và quyết định ở prompt: một RAW call, trần đã pin, `-AuditPath` theo DecisionId, outer log, key chỉ nhập ở prompt ẩn. Sau đó owner báo kết quả; tôi đọc outer log, audit và evidence event (chỉ hash) rồi phân loại.
+Owner quyết định hướng sửa. Khuyến nghị: sửa source AndroidTest để kỳ vọng hash DB lấy từ tham số launch do helper pin (so với hash DB thật) thay cho hằng số; build lại APK test bằng `scripts/build-and-save-android-test.ps1` (offline, không chạm máy); re-pin hash APK test, source ZIP, BUILD_INFO và source commit theo thứ tự helper → manifest → command → entry; kiểm lại offline. Sau đó trình hash mới để owner duyệt riêng việc thay test package trên máy và một event mới (decision mới). Tùy chọn: owner xem trang Activity của OpenRouter cho khoảng 09:25 giờ địa phương ngày 2026-10-01 (02:25 UTC) để đóng UNKNOWN; không cần key trong chat. Chưa build, cài hay gọi provider trước khi có duyệt đó.
 
 Bước chẩn đoán offline launcher đã đóng ở 2/2 vòng (≈30/60 phút): không mở vòng thứ ba. Nếu cửa sổ owner vẫn lỗi dù đã có outer log, dùng phương án B ở canonical plan §6: trình môi trường Android thử riêng/dữ liệu thay thế/cùng production path và phần nào còn phải kiểm lại trên target; không tự cài, xóa DB, gọi provider hoặc thay scope.
 
