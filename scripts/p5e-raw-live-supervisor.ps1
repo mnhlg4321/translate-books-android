@@ -39,12 +39,12 @@ param(
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
-    [string]$TestApkPath = 'D:\App Translate Books\App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\p5e-account-check-20260916-01\app-debug-androidTest.apk',
+    [string]$TestApkPath = 'D:\App Translate Books\artifacts\test-builds\v4.17-p5e.11\p5e-a43-db-arg-20261001-01\app-debug-androidTest.apk',
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
     [Parameter(ParameterSetName = 'CollectReadback')]
-    [string]$ExpectedTestApkSha256 = '058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8',
+    [string]$ExpectedTestApkSha256 = 'D2B0E590C30DA5DAE73C5C28EA98BC9C6CB37DC4CE362C991EA46812D301B42F',
 
     [Parameter(ParameterSetName = 'Dispatch', Mandatory = $true)]
     [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
@@ -335,9 +335,9 @@ $script:P5EAccountCheckOptInKey = 'p5e_account_check'
 $script:P5EAccountCheckExpectedKey = 'p5e_expected_endpoint_account_fingerprint'
 $script:P5EAccountCheckRemoteScript =
     'IFS= read -r p5e_expected || exit 64; am instrument -w -r -e class "$1" -e p5e_account_check YES -e p5e_expected_endpoint_account_fingerprint "$p5e_expected" "$2"'
-$script:P5ETestSourceCommit = '9e5ffb7819bfb91dcb8ed9e25c901ab10aa48390'
+$script:P5ETestSourceCommit = '35470f6d22873ec361fd8fea58345cb177f46c4e'
 $script:P5ERawSourceContractCommit = 'd51b7f3c16bdc482513b9904db07b97daed592d1'
-$script:P5ERawSourceContractSha256 = 'b3f974a185f8b2590424471f3a1317ec436cfbef3d92244efae1674f935ac04a'
+$script:P5ERawSourceContractSha256 = 'cd890651aee8cf5fe05546e7892672de90808805aa634607032014f21baa0aaa'
 $script:P5EAccountEnvironmentName = 'P5E_OWNER_ENDPOINT_ACCOUNT_FINGERPRINT'
 $script:P5EAccountFingerprintRedactionSentinel = 'REDACTED'
 $script:P5EHostObservationTimeoutMilliseconds = 240000L
@@ -348,7 +348,7 @@ $script:P5EProductionVersionCode = 207L
 $script:P5EExpectedProductionApkSha256 =
     '2ccbb844c629132bb534b0d6aba516055c410bf96d20b14b3f80f91b962800fd'
 $script:P5EExpectedTestApkSha256 =
-    '058be8511fe733d02c0564fd434deec0e19b99025e098e58c838e3b36fc158e8'
+    'd2b0e590c30da5dae73c5c28ea98bc9c6cb37dc4ce362c991ea46812d301b42f'
 $script:P5ECertificateSha256 =
     '47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155'
 $script:P5EDatabaseSchemaVersion = 24L

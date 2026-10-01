@@ -36,11 +36,20 @@ action is authorized by this document.
 - Production BUILD_INFO SHA-256:
   `DB20DA0CF708410AAAB65E5AF69ADF89A769ED62240B577A89CA4E2007FB7F06`.
 - AndroidTest APK SHA-256:
-  `058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8`.
+  `D2B0E590C30DA5DAE73C5C28EA98BC9C6CB37DC4CE362C991EA46812D301B42F`.
 - AndroidTest source ZIP SHA-256:
-  `5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F`.
+  `EEE56868E4410AA425796EA63BDC6E860EEC8B2843BA8B92D93729A05E780811`.
 - AndroidTest BUILD_INFO SHA-256:
-  `772F32E23AEF3537FEF00DACE8E4B9B994448BFEE2071150CF0E0540DDCCC5A9`.
+  `D4CEBF685A2A91A5F1087F6C73D8E0A5594B23CC54BBE34F4E4A2B39885BD5BA`.
+- AndroidTest build: source commit `35470f6d22873ec361fd8fea58345cb177f46c4e`,
+  event `p5e-a43-db-arg-20261001-01`, built with
+  `scripts/build-and-save-android-test.ps1` and archived in
+  `artifacts/test-builds` and `backup/test-builds` with matching hashes. It
+  replaces the `058BE851…` APK, which compiled in the old DB hash. The
+  instrumented test now takes the expected DB hash from the launch argument
+  `p5e_expected_db_sha256` (pinned in the helper) and compares it with the real
+  DB file hash. The Live test source hash pinned in the helper is
+  `CD890651AEE8CF5FE05546E7892672DE90808805AA634607032014F21BAA0AAA`.
 - Certificate SHA-256:
   `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155`.
 - Package/version/code: `com.ml.tblandroidtxt` / `4.17-p5e.11` / `207`.
@@ -59,7 +68,7 @@ action is authorized by this document.
 |---|---|---:|---|
 | Review-only command | `docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_COMMAND_20260928.txt` | `PROCESS_SELF_HASH_REQUIRED` | `PROCESS_SELF_HASH_REQUIRED` |
 | Approval manifest | `docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_MANIFEST_20260928.md` | `PROCESS_PINNED_BY_COMMAND` | `PROCESS_PINNED_BY_COMMAND` |
-| Live helper | `scripts/p5e-raw-live-supervisor.ps1` | 417314 | `F0A567A25C13E534C824973EAFDDB76D7FEA1754D7FE199074958F12EAC87C97` |
+| Live helper | `scripts/p5e-raw-live-supervisor.ps1` | 417271 | `23801AD53CEF9547D6C5C759FA4F5CA48124251DDF1AF817B855EB90EB743DC8` |
 | Runtime guard | `scripts/p5e-a43-runtime-guards.ps1` | 23743 | `5F78F59FCFE5FD7BB904C8D0B4815CA7C714E03999DB97CDCA2737E5F4C3DC3E` |
 | Job/capture exporter | `scripts/p5e-db-binary-export.ps1` | 52379 | `813F6ED0ABD110EBF32550990940E975971988FBCF806DC26464EE311021CF99` |
 | SQLite bridge | `docs/P5E_SQLITE_BRIDGE.py` | 5958 | `4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111` |
@@ -143,7 +152,7 @@ references. Their needed assertions are carried by the tracked package suites
 from the exact candidate commit without workspace fallback or cached results.
 The helper source-contract audit uses the historical commit when that object is
 available and otherwise verifies the pinned AndroidTest source SHA-256
-`B3F974A185F8B2590424471F3A1317EC436CFBEF3D92244EFAE1674F935AC04A` inside
+`CD890651AEE8CF5FE05546E7892672DE90808805AA634607032014F21BAA0AAA` inside
 the clean archive; it never treats a missing history object as a pass.
 
 All live counters for this work package are zero: ADB, device, provider,
