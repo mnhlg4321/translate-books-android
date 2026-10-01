@@ -10,7 +10,7 @@ Baseline HEAD `b2f689cb4948bc4e715b6cf85f4396e49afd9525`. Vòng entry-boundary 2
 - Console QA (hidden console thật, input synthetic) phủ: prompt + literal sai, outer failure, approval→key→synthetic child thành công qua integration fixture, bytes CC01 (exit 0 im lặng), audit hash có sẵn và dạng `-AuditPath` riêng.
 - Nguyên nhân lần owner-window gần nhất vẫn UNRESOLVED: không có stderr. `P5E_A43_AUDIT_ALREADY_EXISTS_STOP` đã tái hiện nhưng bản ghi lần đó ghi audit path theo DecisionId nên không chứng minh là nguyên nhân. CC01 silent exit là lỗi của bytes cũ, tách biệt. Khoảng thiếu cụ thể trước event: pin DB `3563F44B…` so với hash DB đo lần cuối `2CC23078…` (09-26); Before dừng cứng nếu lệch và cổng này chưa từng chạm live.
 - Giới hạn: không phải cửa sổ owner nhìn thấy; case thành công dùng integration fixture, không qua `-Execute` của entry live. Không có bằng chứng RAW/L1/provider; P5 vẫn chưa PASS, P6 chưa sẵn sàng.
-- Next action: xin owner một quyết định: cho phép quan sát chỉ-đọc M0 (serial, `pm path` hai package, export DB về host, so với pins; không key/provider/ghi). Khớp: owner duyệt một event theo bảng scope trong run guide. Lệch: re-pin offline có giải thích rồi trình lại.
+- Next action: owner kết nối máy 15e84958 (USB, đã cấp quyền debug) rồi báo; sau đó chạy lại đúng một lần M0 chỉ-đọc. M0 ngày 2026-10-01 không thấy máy (`adb devices` trống, `get-state` exit 1, Windows không liệt kê thiết bị USB). Khớp: owner duyệt một event theo bảng scope; lệch: re-pin offline có giải thích rồi trình lại.
 
 ## Đọc theo thứ tự này
 
@@ -77,7 +77,7 @@ Offline/component PASS không thay live/product acceptance. Enum/schema/validato
 
 ## Next action duy nhất
 
-Xin owner một quyết định: cho phép quan sát chỉ-đọc M0 (serial, `pm path` của hai package, export DB về host, so với pins; không key, không provider, không ghi). Khớp: owner duyệt một event theo bảng scope trong `docs/P5E_A43_ENTRY_BOUNDARY_RUN_GUIDE_20260930.md` (chương 001 VOL5, một RAW call, trần đã pin, `-AuditPath` theo DecisionId, outer log). Lệch: re-pin offline có giải thích rồi trình lại. Mốc M0–M7 và hành động khi FAIL nằm ở mục 5 của canonical plan.
+Owner kết nối máy 15e84958 (USB, đã cấp quyền debug) rồi báo; sau đó chạy lại đúng một lần M0 chỉ-đọc (serial, `pm path` hai package, export DB về host, so với pins; không key/provider/ghi). M0 ngày 2026-10-01 đã được cho phép nhưng không thấy máy nên chưa có quan sát. Khớp: owner duyệt một event theo bảng scope trong `docs/P5E_A43_ENTRY_BOUNDARY_RUN_GUIDE_20260930.md`. Lệch: re-pin offline có giải thích rồi trình lại. Mốc M0–M7 nằm ở mục 5 của canonical plan.
 
 Bước chẩn đoán offline launcher đã đóng ở 2/2 vòng (≈30/60 phút): không mở vòng thứ ba. Nếu cửa sổ owner vẫn lỗi dù đã có outer log, dùng phương án B ở canonical plan §6: trình môi trường Android thử riêng/dữ liệu thay thế/cùng production path và phần nào còn phải kiểm lại trên target; không tự cài, xóa DB, gọi provider hoặc thay scope.
 

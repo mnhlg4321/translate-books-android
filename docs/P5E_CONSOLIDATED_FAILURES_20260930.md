@@ -271,3 +271,10 @@ QA tại lần xuất: năm file entry/parent/test parse không lỗi bằng par
 | Chưa kiểm | Entry `-Execute` live với command thật; đường PrivateRoot thật; log CreateNew vào `D:\P5E-private`; `-LocalPropertiesPath`/`-BuildToolsVersion` thật trong test lưu; trạng thái DB/APK hiện tại trên máy |
 | Khoảng thiếu cụ thể | Before dừng cứng `P5E_COLLECTOR_PRELIVE_DATABASE_HASH_MISMATCH` nếu hash DB khác pin. Cổng này chưa từng được chạm ở event live (09-26 dừng sớm ở tuple, 09-28 dừng ở `pm path`). Cần một quan sát chỉ-đọc (M0) trước khi owner duyệt event |
 | Đánh giá | Đủ để chuẩn bị event RAW giới hạn theo scope trong run guide; không thêm gate mới ngoài cổng đã có trong helper. Success qua integration fixture vẫn dùng `Invoke-P5EPhaseChildInvocation` thật; phần chưa phủ là nội dung command thật chạy như `.ps1` |
+
+## M0 quan sát chỉ-đọc — 2026-10-01 (owner đã cho phép)
+
+- Đã chạy: `adb version`, `adb devices -l`, `adb -s 15e84958 get-state`. Daemon adb chưa chạy và được khởi động (host, không chạm máy).
+- Kết quả: `adb devices` trống; `get-state` exit 1 `device '15e84958' not found`. Windows không liệt kê thiết bị Android/USB nào. Không có `pm path`, pull APK hay export DB vì không có máy; không có provider call, key hay ghi thiết bị.
+- Kết luận: M0 CHƯA quan sát được (máy không kết nối). Hash DB/APK so với pins vẫn chưa biết; khoảng thiếu pin DB `3563F44B…` vs `2CC23078…` (09-26) chưa đóng. Có thể cùng nhóm nguyên nhân với event 09-28 dừng ở `pm path` (chưa chứng minh).
+- Evidence riêng: `D:\P5E-private\m0-observation-20261001-014636633\M0_OBSERVATION.json` (SHA-256 bắt đầu `4b5c6b24a133f3b8`) và `M0_COMMAND_LOG.json`; không đổi/xóa.
