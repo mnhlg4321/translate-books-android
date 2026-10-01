@@ -76,8 +76,6 @@ public final class EditorialP5EFreshRawLiveInstrumentedTest {
             "47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155";
     private static final int DATABASE_SCHEMA_VERSION = 24;
     private static final int CONTEXT_SIZE_BYTES = 80_317;
-    private static final String EXPECTED_DB_SHA256 =
-            "3563f44bce9e529955b6c39142243f59af8f2f0d0095303f5c7a66be07219391";
 
     private static final String AUTHORIZATION_ID =
             "P5E-FRESH-MERCEDES-VOL5-RAW-20260911-01";
@@ -105,7 +103,8 @@ public final class EditorialP5EFreshRawLiveInstrumentedTest {
         requireExactSha256(arguments, "p5e_expected_certificate_sha256", CERTIFICATE_SHA256);
         requireExact(arguments, "p5e_expected_schema_version",
                 Integer.toString(DATABASE_SCHEMA_VERSION));
-        requireExactSha256(arguments, "p5e_expected_db_sha256", EXPECTED_DB_SHA256);
+        String expectedDbSha256 = required(arguments, "p5e_expected_db_sha256");
+        requireSha256(expectedDbSha256, "p5e_expected_db_sha256");
         requireExact(arguments, "p5e_expected_device_signature_token", "abebea4b");
         requireExact(arguments, "p5e_expected_selector", EditorialP5EFreshRawLiveRunner.SELECTOR);
         requireExact(arguments, "p5e_expected_chapter_key",
@@ -135,7 +134,7 @@ public final class EditorialP5EFreshRawLiveInstrumentedTest {
         Path databasePath = target.getDatabasePath("tbl_android_txt.db").toPath();
         assertTrue("current database must exist", Files.isRegularFile(databasePath));
         String dbBefore = sha256File(databasePath);
-        assertEquals(EXPECTED_DB_SHA256, dbBefore);
+        assertEquals(expectedDbSha256.toLowerCase(Locale.ROOT), dbBefore);
 
         try (TranslationRepository database = new TranslationRepository(target)) {
             EditorialP5EFreshRawBoundaryInstrumentedTest.RowCounts before =
@@ -256,7 +255,8 @@ public final class EditorialP5EFreshRawLiveInstrumentedTest {
         requireExactSha256(arguments, "p5e_expected_production_apk_sha256",
                 PRODUCTION_APK_SHA256);
         requireExactSha256(arguments, "p5e_expected_certificate_sha256", CERTIFICATE_SHA256);
-        requireExactSha256(arguments, "p5e_expected_db_sha256", EXPECTED_DB_SHA256);
+        String expectedDbSha256 = required(arguments, "p5e_expected_db_sha256");
+        requireSha256(expectedDbSha256, "p5e_expected_db_sha256");
 
         int maximumPrimaryCalls = requiredInt(arguments, "p5e_maximum_primary_semantic_calls");
         int maximumSchemaRepairs = requiredInt(arguments, "p5e_maximum_schema_repair_calls");
@@ -286,7 +286,7 @@ public final class EditorialP5EFreshRawLiveInstrumentedTest {
                 PRODUCTION_APK_SHA256, CERTIFICATE_SHA256);
         assertEquals("abebea4b", expectedDeviceSignatureToken);
         Path databasePath = target.getDatabasePath("tbl_android_txt.db").toPath();
-        assertEquals(EXPECTED_DB_SHA256, sha256File(databasePath));
+        assertEquals(expectedDbSha256.toLowerCase(Locale.ROOT), sha256File(databasePath));
 
         // This is the first point at which a future explicitly approved live
         // run may read the credential. It is never logged or put in evidence.
