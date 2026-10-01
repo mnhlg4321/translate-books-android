@@ -21,8 +21,10 @@ import java.util.TreeMap;
 public final class EditorialP5PilotExecution {
     private static final String L1_OUTPUT_SCHEMA = "safe4.full.report-l1.v1";
 
+    // Both L1 phases use the compact wire: the model never echoes app-owned
+    // identities or chapter text; the app materializes the typed REPORT_L1.
     private static String outputSchemaFor(String phase) {
-        return "L1_RAW_DISCOVERY".equals(phase)
+        return "L1_RAW_DISCOVERY".equals(phase) || "L1_RECONCILE".equals(phase)
                 ? EditorialP5RawWireContract.SCHEMA_VERSION : L1_OUTPUT_SCHEMA;
     }
 
@@ -707,6 +709,17 @@ public final class EditorialP5PilotExecution {
                 } catch (RuntimeException invalidRaw) {
                     issues.add("RAW_SOURCE_MATERIALIZATION_INVALID");
                 }
+            }
+        }
+        if ("L1_RECONCILE".equals(request.phase())) {
+            // L1 does not edit the draft: the report is pinned to the exact DRAFT bytes.
+            if (!output.declaredChanges().isEmpty()) issues.add("RECONCILE_DECLARED_CHANGES_FORBIDDEN");
+            byte[] draftBytes = request.source(EditorialSafe4Contract.DRAFT) == null
+                    ? null : request.source(EditorialSafe4Contract.DRAFT).bytes();
+            String draft = draftBytes == null ? null : new String(draftBytes, StandardCharsets.UTF_8);
+            if (draft == null || !java.util.Arrays.equals(draftBytes, draft.getBytes(StandardCharsets.UTF_8))
+                    || !draft.equals(output.beforeText()) || !draft.equals(output.afterText())) {
+                issues.add("RECONCILE_DRAFT_MATERIALIZATION_MISMATCH");
             }
         }
         EditorialLedgerValidator.Result ledger = new EditorialLedgerValidator().validate(output.ledger());

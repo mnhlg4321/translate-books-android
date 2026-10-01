@@ -863,9 +863,10 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
                         request.populationIds().get(0), "PROCESSED", List.of("fake-evidence"), false)));
         Map<String, String> gates = new LinkedHashMap<>();
         for (String gate : EditorialSafe4Contract.GATE_IDS) gates.put(gate, "PASS");
+        // L1 never edits: RAW discovery pins the RAW bytes, RECONCILE the exact DRAFT bytes.
         String rawText = request.phase().equals(EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY.name())
                 ? new String(request.source(EditorialSafe4Contract.RAW).bytes(), StandardCharsets.UTF_8)
-                : "draft";
+                : new String(request.source(EditorialSafe4Contract.DRAFT).bytes(), StandardCharsets.UTF_8);
         return new EditorialP5L1Output("safe4.full.report-l1.v1",
                 EditorialSafe4Contract.RECEIPT_SCHEMA_VERSION, request.binding().bindingIdentity(),
                 request.manifestFingerprint(), CHAPTER_KEY, "L1", request.bundleIdentity(),

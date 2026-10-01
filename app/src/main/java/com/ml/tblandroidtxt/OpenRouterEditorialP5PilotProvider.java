@@ -169,7 +169,7 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         OpenAICompatibleClient.ChatResult result;
         long deadlineNanos = attemptDeadlineNanos.get();
         try {
-            boolean rawDiscovery = "L1_RAW_DISCOVERY".equals(request.phase());
+            boolean rawDiscovery = isL1WirePhase(request.phase());
             if (freshRawRouting) {
                 result = OpenAICompatibleClient.chatWithUsage(settings, prompt, maximumOutputTokens,
                         request.attemptIdentity(), lifecycle, false, deadlineNanos, rawCallControl,
@@ -399,15 +399,23 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
             + "- disposition.phase is L1; blockingGate is one gate ID or NONE; for CONTINUE or PRESERVE_DRAFT use stopClass NONE and retryable false.\n"
             + "- reasonCode, affectedScope, recoveryAction, resumeFrom: at most 32 characters, start with a letter or digit, then only letters, digits, spaces and . _ : / ; ( ) -.\n";
 
+    /** Both L1 phases use the compact wire; only the materialized base text differs. */
+    static boolean isL1WirePhase(String phase) {
+        return "L1_RAW_DISCOVERY".equals(phase) || "L1_RECONCILE".equals(phase);
+    }
+
     private PromptPair buildPrompt(Request request) {
         boolean rawDiscovery = "L1_RAW_DISCOVERY".equals(request.phase());
+        boolean reconcile = "L1_RECONCILE".equals(request.phase());
         StringBuilder system = new StringBuilder();
         system.append("You are an untrusted SAFE4 L1 analysis assistant. The app is the authority.\n")
                 .append("Return exactly one JSON object and no Markdown or commentary.\n")
                 .append("Do not declare certification, change state, choose a pack, or invent hashes.\n")
                 .append("For L1_RAW_DISCOVERY, use only the visible RAW and GLOSSARY blocks.\n")
                 .append("For L1_RECONCILE, use only the visible blocks supplied below.\n")
-                .append(rawDiscovery
+                .append(reconcile
+                        ? "RECONCILE is a compact wire response. Never return source text, beforeText, afterText, canonical pack/profile bytes, or app-owned identities except the two replay echoes required below. declaredChanges must be an empty array; L1 never edits the draft.\n"
+                        : rawDiscovery
                         ? "RAW discovery is a compact wire response. Never return source text, beforeText, afterText, canonical pack/profile bytes, or app-owned identities except the two replay echoes required below. declaredChanges must be an empty array.\n"
                         : "The JSON must contain the exact identity values from the envelope, all gate IDs, an exhaustive ledger, and disposition metadata.\n")
                 .append("\n")
@@ -451,8 +459,10 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
                     .append(new String(request.visibleSources().get(role), StandardCharsets.UTF_8))
                     .append("\n--- END ").append(role).append(" ---\n");
         }
-        if (rawDiscovery) {
-            user.append("\nReturn only this compact wire object. The app materializes beforeText=afterText from the exact pinned RAW bytes and builds the final REPORT_L1/receipt itself.\n")
+        if (rawDiscovery || reconcile) {
+            user.append(reconcile
+                    ? "\nReturn only this compact wire object. The app materializes beforeText=afterText from the exact pinned DRAFT bytes and builds the final REPORT_L1/receipt itself.\n"
+                    : "\nReturn only this compact wire object. The app materializes beforeText=afterText from the exact pinned RAW bytes and builds the final REPORT_L1/receipt itself.\n")
                     .append("Hard limits: findings<=").append(EditorialP5RawWireContract.MAX_FINDINGS)
                     .append(", evidenceRefs<=").append(EditorialP5RawWireContract.MAX_EVIDENCE_REFS)
                     .append(", preservedInventory<=").append(EditorialP5RawWireContract.MAX_PRESERVED_ITEMS)
@@ -496,7 +506,7 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
     /** Routes RAW discovery to the compact wire parser; final output remains typed. */
     public static EditorialP5L1Output parseOutput(String raw, Request request)
             throws JSONException {
-        if (request != null && "L1_RAW_DISCOVERY".equals(request.phase())) {
+        if (request != null && isL1WirePhase(request.phase())) {
             return parseRawOutput(raw, request).materialize(request);
         }
         return parseCanonicalOutput(raw, request);

@@ -193,6 +193,60 @@ public final class OpenRouterEditorialP5PilotProviderTest {
         assertTrue(EditorialP5RawWireContract.gateOrNone("NONE"));
     }
 
+    private static EditorialP5PilotProvider.Request reconcileRequest() {
+        EditorialP5PilotProvider.Request.Context context =
+                new EditorialP5PilotProvider.Request.Context(
+                        "binding", "run", "manifest", "bundle", "predecessor",
+                        List.of("chapter:001"), List.of("population:001"));
+        return new EditorialP5PilotProvider.Request("a".repeat(64),
+                EditorialP5PilotProvider.CallKind.PRIMARY_SEMANTIC, "openrouter",
+                "google/gemini-2.5-flash", "L1_RECONCILE", "e".repeat(64),
+                Map.of("RAW", "raw".getBytes(), "DRAFT", "draft text".getBytes()),
+                new EditorialP5PilotRequest.PackAuthority(Map.of()),
+                EditorialP5RawWireContract.SCHEMA_VERSION, "001", "", context);
+    }
+
+    @Test public void reconcileCompactWireMaterializesExactDraftBytes() throws Exception {
+        EditorialP5PilotProvider.Request request = reconcileRequest();
+        var output = OpenRouterEditorialP5PilotProvider.parseOutput(
+                compactRoot(request).toString(), request);
+        assertEquals("draft text", output.beforeText());
+        assertEquals("draft text", output.afterText());
+        assertEquals("binding", output.bindingIdentity());
+        assertTrue(output.declaredChanges().isEmpty());
+    }
+
+    @Test public void reconcileCanonicalFullShapeIsRejectedByParseOutput() throws Exception {
+        EditorialP5PilotProvider.Request request = reconcileRequest();
+        JSONObject full = new JSONObject().put("reportSchemaVersion", "safe4.full.report-l1.v1")
+                .put("beforeText", "draft text").put("afterText", "draft text");
+        try {
+            OpenRouterEditorialP5PilotProvider.parseOutput(full.toString(), request);
+            throw new AssertionError("canonical shape must be rejected for RECONCILE");
+        } catch (RuntimeException expected) {
+            // compact strict parser rejects unknown/missing fields
+        }
+    }
+
+    @Test public void reconcileAndRawPromptsNameTheirOwnPinnedBytes() throws Exception {
+        AppSettings settings = new AppSettings();
+        settings.provider = EditorialP5EFreshRawRoutingPolicy.PROVIDER;
+        settings.model = EditorialP5EFreshRawRoutingPolicy.MODEL;
+        settings.baseUrl = AppSettings.defaultBaseUrl(EditorialP5EFreshRawRoutingPolicy.PROVIDER);
+        OpenRouterEditorialP5PilotProvider renderer = new OpenRouterEditorialP5PilotProvider(
+                settings, EditorialP5RawWireContract.OUTPUT_TOKEN_CAP);
+        java.lang.reflect.Method build = OpenRouterEditorialP5PilotProvider.class
+                .getDeclaredMethod("buildPrompt", EditorialP5PilotProvider.Request.class);
+        build.setAccessible(true);
+        PromptPair reconcile = (PromptPair) build.invoke(renderer, reconcileRequest());
+        PromptPair raw = (PromptPair) build.invoke(renderer,
+                request(EditorialP5EFreshRawRoutingPolicy.MODEL, "L1_RAW_DISCOVERY"));
+        assertTrue(reconcile.user.contains("exact pinned DRAFT bytes"));
+        assertFalse(reconcile.user.contains("exact pinned RAW bytes"));
+        assertTrue(raw.user.contains("exact pinned RAW bytes"));
+        assertFalse(raw.user.contains("exact pinned DRAFT bytes"));
+    }
+
     private static EditorialP5PilotProvider.Request request() {
         return request("google/gemini-2.5-flash", "L1_RAW_DISCOVERY");
     }

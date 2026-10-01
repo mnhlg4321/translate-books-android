@@ -106,8 +106,15 @@ public final class EditorialP5RawWireResponse {
         if (request == null || request.context() == null) {
             throw new IllegalArgumentException("RAW materialization request context is missing");
         }
-        if (!"L1_RAW_DISCOVERY".equals(request.phase())) {
-            throw new IllegalArgumentException("RAW materialization requires L1_RAW_DISCOVERY");
+        // L1 never edits: RAW discovery materializes the exact RAW bytes and
+        // RECONCILE the exact DRAFT bytes as beforeText=afterText.
+        String baseRole;
+        if ("L1_RAW_DISCOVERY".equals(request.phase())) {
+            baseRole = EditorialSafe4Contract.RAW;
+        } else if ("L1_RECONCILE".equals(request.phase())) {
+            baseRole = EditorialSafe4Contract.DRAFT;
+        } else {
+            throw new IllegalArgumentException("Wire materialization requires an L1 phase");
         }
         if (!attemptIdentity.equals(request.attemptIdentity())) {
             throw new IllegalArgumentException("RAW wire attempt identity mismatch");
@@ -115,8 +122,8 @@ public final class EditorialP5RawWireResponse {
         if (!request.requestEnvelopeHash().equals(requestEnvelopeHash)) {
             throw new IllegalArgumentException("RAW wire request envelope mismatch");
         }
-        byte[] rawBytes = request.visibleSources().get(EditorialSafe4Contract.RAW);
-        if (rawBytes == null) throw new IllegalArgumentException("RAW source bytes are missing");
+        byte[] rawBytes = request.visibleSources().get(baseRole);
+        if (rawBytes == null) throw new IllegalArgumentException(baseRole + " source bytes are missing");
         String rawText = strictUtf8(rawBytes);
         if (!Arrays.equals(rawBytes, rawText.getBytes(StandardCharsets.UTF_8))) {
             throw new IllegalArgumentException("RAW source bytes are not stable UTF-8");

@@ -252,6 +252,54 @@ public final class EditorialP5RawWireContractTest {
         }
     }
 
+    @Test public void reconcileMaterializesExactDraftBytesNotRaw() {
+        byte[] draft = "DRAFT exact bytes\n".getBytes(StandardCharsets.UTF_8);
+        String attempt = "a".repeat(64);
+        String envelope = "b".repeat(64);
+        EditorialP5RawWireResponse wire = wire(attempt, envelope);
+        EditorialP5PilotProvider.Request request = providerRequest(attempt, envelope,
+                "L1_RECONCILE", Map.of(EditorialSafe4Contract.RAW, bytes("RAW other"),
+                        EditorialSafe4Contract.DRAFT, draft));
+        EditorialP5L1Output output = wire.materialize(request);
+        assertEquals("DRAFT exact bytes\n", output.beforeText());
+        assertEquals(output.beforeText(), output.afterText());
+        assertTrue(Arrays.equals(draft, output.afterText().getBytes(StandardCharsets.UTF_8)));
+        assertTrue(output.declaredChanges().isEmpty());
+    }
+
+    @Test public void materializeRejectsNonL1Phase() {
+        String attempt = "a".repeat(64);
+        String envelope = "b".repeat(64);
+        try {
+            wire(attempt, envelope).materialize(providerRequest(attempt, envelope, "L2_AUDIT",
+                    Map.of(EditorialSafe4Contract.RAW, bytes("raw"))));
+            throw new AssertionError("L2 phase must not materialize");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("L1 phase"));
+        }
+    }
+
+    private static EditorialP5RawWireResponse wire(String attempt, String envelope) {
+        return new EditorialP5RawWireResponse(
+                EditorialP5RawWireContract.SCHEMA_VERSION, attempt, envelope,
+                List.of(new EditorialLedgerValidator.Entry("population:001", "PROCESSED",
+                        List.of("evidence:raw"), true)), gates(), List.of("evidence:raw"),
+                List.of(), 0, EditorialStopDecision.continueWithoutStop(
+                        "L1", "COVERAGE", "LOCAL_REVIEW"), true);
+    }
+
+    private static EditorialP5PilotProvider.Request providerRequest(String attempt,
+            String envelope, String phase, Map<String, byte[]> sources) {
+        return new EditorialP5PilotProvider.Request(attempt,
+                EditorialP5PilotProvider.CallKind.PRIMARY_SEMANTIC, "openrouter",
+                "openai/gpt-5.6-luna", phase, envelope, sources,
+                new EditorialP5PilotRequest.PackAuthority(Map.of()),
+                EditorialP5RawWireContract.SCHEMA_VERSION, "001", "",
+                new EditorialP5PilotProvider.Request.Context(
+                        "binding-from-app", "run-from-app", "manifest-from-app", "bundle-from-app",
+                        "predecessor-from-app", List.of("chapter:001"), List.of("population:001")));
+    }
+
     private static EditorialP5PilotProvider.Request providerRequest(String attempt,
                                                                       String envelope,
                                                                       byte[] raw) {

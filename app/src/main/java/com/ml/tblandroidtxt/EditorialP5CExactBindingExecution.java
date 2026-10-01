@@ -243,6 +243,117 @@ public final class EditorialP5CExactBindingExecution {
     }
 
     /**
+     * Executes only the separately authorized RECONCILE phase on top of a RAW
+     * predecessor that is already durably committed for the same exact binding,
+     * chapter and source bundle. RAW is never re-dispatched here: the RAW
+     * attempt identity is recomputed from the persisted facts and its committed
+     * row is read back as the sole predecessor authority.
+     */
+    public Result executeReconcile(long projectId, String attemptRequestSelector, String chapterKey,
+                                   EditorialP5PilotAuthorization reconcileAuthorization,
+                                   EditorialP5PilotProvider provider) {
+        AtomicInteger providerCalls = new AtomicInteger();
+        try {
+            if (projectId <= 0 || blank(attemptRequestSelector) || blank(chapterKey)) {
+                return stop("P5C_EXACT_BINDING_INPUT_INVALID", providerCalls.get());
+            }
+            if (reconcileAuthorization == null) {
+                return stop("LIVE_AUTHORIZATION_INCOMPLETE", providerCalls.get());
+            }
+            if (provider == null) return stop("LIVE_PROVIDER_NOT_CONFIGURED", providerCalls.get());
+            EditorialP4Binding binding = bindings.findByAttemptRequestSelector(
+                    attemptRequestSelector).orElse(null);
+            if (binding == null || projectIdFor(binding) != projectId) {
+                return stop("P5C_EXACT_BINDING_NOT_FOUND", providerCalls.get());
+            }
+            if (!chapterExists(projectId, chapterKey)) {
+                return stop("INPUT_CHAPTER_NOT_FOUND", providerCalls.get());
+            }
+            if (!authorizationMatches(reconcileAuthorization, binding, chapterKey, "L1_RECONCILE")) {
+                return stop("LIVE_AUTHORIZATION_INCOMPLETE", providerCalls.get());
+            }
+            List<EditorialP4InputSource> currentSources = currentSources(projectId, chapterKey, binding);
+            EditorialP4ResumeResult resume = new EditorialP4BindingTransactionService(database, storage)
+                    .resumeProject(projectId, attemptRequestSelector, currentSources);
+            if (resume.code() != EditorialP4ResumeResult.Code.RESTORED
+                    || resume.binding() == null
+                    || !resume.binding().bindingIdentity().equals(binding.bindingIdentity())) {
+                return stop("STOP_SOURCE_DRIFT", providerCalls.get());
+            }
+
+            EditorialPackManifest manifest = resolveManifest(binding);
+            EditorialP5PilotRequest.PackAuthority authority = resolveAuthority(binding, manifest);
+            List<EditorialP5PilotRequest.SourceBytes> sources = sourceBytes(binding, currentSources);
+            List<String> stableAnchors = List.of("chapter:" + chapterKey);
+            List<String> populationIds = List.of("population:" + chapterKey);
+            // Same facts as executeRaw; the output cap is not part of the attempt identity.
+            EditorialP5PilotRequest rawRequest = new EditorialP5PilotRequest(binding, manifest,
+                    authority, chapterKey, EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY,
+                    sources, binding.runDeclarationIdentity(), stableAnchors, populationIds,
+                    true, boundedOutputTokens(reconcileAuthorization));
+
+            EditorialP5CAttemptStore attemptStore = new EditorialP5CAttemptStore(database);
+            EditorialP5PilotResult.CommittedResult rawPersisted = attemptStore.findCommitted(
+                    rawRequest.attemptIdentity()).orElse(null);
+            if (rawPersisted == null) {
+                return stop("INPUT_RAW_PREDECESSOR_NOT_COMMITTED", providerCalls.get());
+            }
+            String predecessorIssue = rawPredecessorIssue(rawPersisted, binding, chapterKey);
+            if (predecessorIssue != null) return stop(predecessorIssue, providerCalls.get());
+
+            EditorialP5PilotRequest reconcileRequest = new EditorialP5PilotRequest(binding, manifest,
+                    authority, chapterKey, EditorialP5PilotRequest.Phase.L1_RECONCILE,
+                    sources, rawPersisted.attemptIdentity(), stableAnchors, populationIds, true,
+                    boundedOutputTokens(reconcileAuthorization));
+            EditorialP5PilotProvider countedProvider = countedProvider(provider, providerCalls);
+            EditorialP5PilotResult reconcileResult = engine.execute(reconcileRequest,
+                    reconcileAuthorization, countedProvider, attemptStore);
+            if (!committedLike(reconcileResult)) {
+                String reason = reconcileResult == null
+                        ? "P5C_RECONCILE_RESULT_MISSING" : reconcileResult.reasonCode();
+                return new Result(Status.STOP, reason, null, reconcileResult,
+                        providerCalls.get(), false, "NOT_CERTIFIED");
+            }
+            if (attemptStore.findCommitted(reconcileResult.committedResult().attemptIdentity()).isEmpty()) {
+                return new Result(Status.STOP, "RETRY_RECONCILE_RESULT_READBACK_FAILED", null,
+                        reconcileResult, providerCalls.get(), false, "NOT_CERTIFIED");
+            }
+            Status status = reconcileResult.outcome() == EditorialP5PilotResult.Outcome.ALREADY_COMMITTED
+                    ? Status.ALREADY_COMMITTED : Status.COMMITTED;
+            return new Result(status, status == Status.ALREADY_COMMITTED
+                    ? "P5C_RECONCILE_ALREADY_COMMITTED" : "P5C_RECONCILE_COMMITTED",
+                    null, reconcileResult, providerCalls.get(), false, "NOT_CERTIFIED");
+        } catch (IOException | RuntimeException error) {
+            return stop(errorCode(error), providerCalls.get());
+        }
+    }
+
+    /** The persisted RAW report must be the exact, non-stopped RAW phase artifact of this binding. */
+    static String rawPredecessorIssue(EditorialP5PilotResult.CommittedResult raw,
+                                      EditorialP4Binding binding, String chapterKey) {
+        Map<String, Object> report;
+        try {
+            report = EditorialCanonicalJson.parseObject(raw.reportBytes());
+        } catch (RuntimeException invalid) {
+            return "INPUT_RAW_PREDECESSOR_REPORT_INVALID";
+        }
+        if (!"L1_RAW_DISCOVERY".equals(report.get("phase"))
+                || !"REPORT_L1".equals(report.get("artifactType"))) {
+            return "INPUT_RAW_PREDECESSOR_PHASE_INVALID";
+        }
+        if (!binding.bindingIdentity().equals(report.get("bindingIdentity"))
+                || !binding.canonicalPackHash().equals(report.get("canonicalPackHash"))
+                || !chapterKey.equals(report.get("chapterKey"))) {
+            return "INPUT_RAW_PREDECESSOR_IDENTITY_MISMATCH";
+        }
+        Object disposition = report.get("disposition");
+        if (!"CONTINUE".equals(disposition) && !"PRESERVE_DRAFT".equals(disposition)) {
+            return "INPUT_RAW_PREDECESSOR_DISPOSITION_INVALID";
+        }
+        return null;
+    }
+
+    /**
      * Keeps the call counter transparent to the engine. In particular, the
      * attempt deadline must reach the real provider rather than stopping at a
      * counting lambda.

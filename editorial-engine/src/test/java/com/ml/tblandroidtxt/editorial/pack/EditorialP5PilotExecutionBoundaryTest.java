@@ -491,6 +491,75 @@ public final class EditorialP5PilotExecutionBoundaryTest {
         assertFalse(provider.requests.get(0).visibleSources().containsKey(EditorialSafe4Contract.PAIR_CONTEXT));
     }
 
+    @Test public void reconcileRequestCarriesTheCompactWireSchemaId() {
+        Fixture fixture = fixture();
+        EditorialP5PilotRequest request = fixture.request.withPhase("L1_RECONCILE");
+        FakeProvider provider = new FakeProvider(response(request, true));
+
+        execute(fixture.withRequest(request), authorization(request, "auth-reconcile-schema"),
+                provider, new Store());
+
+        assertEquals(EditorialP5RawWireContract.SCHEMA_VERSION,
+                provider.requests.get(0).outputSchemaId());
+    }
+
+    @Test public void reconcileOutputDifferingFromDraftIsRepairRequired() {
+        Fixture fixture = fixture();
+        EditorialP5PilotRequest request = fixture.request.withPhase("L1_RECONCILE");
+        EditorialP5PilotResult result = executeReconcileWith(fixture, request,
+                reconcileVariant(output(request), "edited", "edited", List.of()));
+
+        assertEquals(EditorialP5PilotResult.Outcome.STOP, result.outcome());
+        assertEquals(EditorialP5PilotResult.StopClass.REPAIR_REQUIRED,
+                result.stopReceipt().stopClass());
+        assertNull(result.committedResult());
+        assertTrue(result.stopReceipt().evidenceRefs().toString(),
+                result.stopReceipt().evidenceRefs().contains("RECONCILE_DRAFT_MATERIALIZATION_MISMATCH"));
+    }
+
+    @Test public void reconcileOutputWithOnlyAfterTextChangedIsRejected() {
+        Fixture fixture = fixture();
+        EditorialP5PilotRequest request = fixture.request.withPhase("L1_RECONCILE");
+        EditorialP5PilotResult result = executeReconcileWith(fixture, request,
+                reconcileVariant(output(request), "draft", "draft changed", List.of()));
+
+        assertEquals(EditorialP5PilotResult.Outcome.STOP, result.outcome());
+        assertTrue(result.stopReceipt().evidenceRefs().contains("RECONCILE_DRAFT_MATERIALIZATION_MISMATCH"));
+    }
+
+    @Test public void reconcileOutputWithDeclaredChangeIsRejected() {
+        Fixture fixture = fixture();
+        EditorialP5PilotRequest request = fixture.request.withPhase("L1_RECONCILE");
+        EditorialP5PilotResult result = executeReconcileWith(fixture, request,
+                reconcileVariant(output(request), "draft", "draft", List.of(
+                        new EditorialDiffValidator.DeclaredChange(1, "draft", "draft", "edit"))));
+
+        assertEquals(EditorialP5PilotResult.Outcome.STOP, result.outcome());
+        assertEquals(EditorialP5PilotResult.StopClass.REPAIR_REQUIRED,
+                result.stopReceipt().stopClass());
+        assertNull(result.committedResult());
+        assertTrue(result.stopReceipt().evidenceRefs().toString(),
+                result.stopReceipt().evidenceRefs().contains("RECONCILE_DECLARED_CHANGES_FORBIDDEN"));
+    }
+
+    private EditorialP5PilotResult executeReconcileWith(Fixture fixture,
+            EditorialP5PilotRequest request, EditorialP5L1Output output) {
+        FakeProvider provider = new FakeProvider(new EditorialP5PilotProvider.Response(
+                "response-reconcile", bytes("reconcile"), "stop", true, 80, 30, 110,
+                BigDecimal.ZERO, output, true));
+        return execute(fixture.withRequest(request), authorization(request, "auth-reconcile-bad"),
+                provider, new Store());
+    }
+
+    private static EditorialP5L1Output reconcileVariant(EditorialP5L1Output v, String before,
+            String after, List<EditorialDiffValidator.DeclaredChange> changes) {
+        return new EditorialP5L1Output(v.reportSchemaVersion(), v.receiptSchemaVersion(),
+                v.bindingIdentity(), v.manifestFingerprint(), v.chapterKey(), v.phase(),
+                v.bundleIdentity(), v.predecessorIdentity(), v.stableAnchors(), v.ledger(),
+                v.gates(), v.preservedInventory(), changes, before, after,
+                v.releaseAttemptCount(), v.disposition(), v.evidenceRefs(), true);
+    }
+
     @Test public void providerConsentAndExpiredAuthorizationAreFailClosed() {
         Fixture fixture = fixture();
         FakeProvider provider = new FakeProvider(response(fixture.request, true));
