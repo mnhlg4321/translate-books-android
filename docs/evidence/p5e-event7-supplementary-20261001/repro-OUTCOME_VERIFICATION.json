@@ -1,0 +1,1 @@
+{"accepted":false,"decision":"RAW_NOT_ACCEPTED","p6Ready":false,"errorCount":2,"errors":["VALUE_MISMATCH:test.targetPackage","VALUE_MISMATCH:test.runner"],"processExitCode":0,"launchCount":1,"dispatchCount":1,"terminalCode":-1,"testCountMarker":"OK (1 test)","classMethodExact":true,"methodExact":true,"redactionPass":true,"collectorOutcome":"COMMITTED_READBACK_CAPTURED"}
