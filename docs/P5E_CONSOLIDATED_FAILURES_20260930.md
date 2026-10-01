@@ -295,3 +295,11 @@ QA tại lần xuất: năm file entry/parent/test parse không lỗi bằng par
 - Kiểm: entry-boundary 6, integration 21/21, console 5/5 (report `*_REPIN_20261001.json`), child-invocation contract, decision-atomicity 28/28, binding-tuple 262/262, DB host-readback 56/56, preauth guard closure 21/21, production-version, collector launch probe; integration/boundary/console chạy lại PASS từ extract `git archive HEAD`.
 - Không chạy được/không còn áp dụng: `test-p5e-child-invocation-launcher-static` (cần launcher riêng cũ), `test-p5e-a43-pm-path-capture-repair` (gọi `pwsh` chưa cài trên máy này; không liên quan pin). Case CC01 của console test bị gỡ vì bytes cũ dừng ở pin gate của chính nó; kết quả cũ giữ ở `P5E_A43_ENTRY_CONSOLE_QA_03.json`.
 - Giới hạn: hash file DB có thể đổi lần nữa nếu máy/app được dùng; M0 chạy lại ngay trước khi owner duyệt event.
+
+### M0 sau re-pin (lần 3) — 2026-10-01 02:18
+
+- Evidence: `D:\P5E-private\m0-observation-20261001-021833029\` (`M0_OBSERVATION.json` SHA-256 bắt đầu `b2531f63`). Chỉ đọc; không key/provider/ghi.
+- Đạt: máy có mặt; production `4.17-p5e.11`/code207; WAL/SHM vắng; DB 18,952,192 B SHA-256 `8D084050…` khớp pin mới và trùng bản export 01:56 (ổn định ít nhất 22 phút khi chỉ đọc). Cờ `dbMatchesPin=false` trong file là so với pin cũ trong script quan sát, không phải kết quả.
+- Không đạt: hash APK lần này không xác nhận được. `adb pull` APK production dừng ở 2% (2,228,224 B); đọc lại bằng `exec-out cat` bị cụt ở 849,408 B với exit 0 (nên cần kiểm độ dài/hash, không tin exit 0); transport_id đổi 3 → 5 → 7. Hai APK đã khớp pin trong lượt đầy đủ lúc 01:56; APK không đổi nếu không cài.
+- Rủi ro: collector đọc APK bằng `adb pull` (`P5E_COLLECTOR_PACKAGE_PULL_FAILED` nếu lỗi). Đọc APK bị ngắt 3/4 lần quan sát. Windows đang bật USB selective suspend (AC và DC). Một lần ngắt ở Before dừng event trước provider nhưng tiêu hao decision. Lần event 09-28 dừng ở `pm path` có thể cùng nhóm nguyên nhân (chưa chứng minh).
+- Chưa làm: thay đổi cài đặt nguồn Windows (cài đặt hệ thống, thuộc owner); không thêm probe ổn định ngoài phạm vi M0.
