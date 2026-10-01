@@ -30,21 +30,21 @@ param(
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
-    [string]$ProductionApkPath = 'D:\App Translate Books\artifacts\builds\v4.18-p5e.2\build-20261001-105237\TranslateBooks-v4.18-p5e.2-code210.apk',
+    [string]$ProductionApkPath = 'D:\App Translate Books\artifacts\builds\v4.18-p5e.3\build-20261001-190833\TranslateBooks-v4.18-p5e.3-code211.apk',
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
     [Parameter(ParameterSetName = 'CollectReadback')]
-    [string]$ExpectedProductionApkSha256 = 'AE2896BE38163C7DAF9B903B78368B0A5B06F3D881C8F95B7575499F3B64EBCE',
+    [string]$ExpectedProductionApkSha256 = 'E9CF282CB19CE35C4B65F347E537007A2C74884C0333CE2A7CCDD61D4E150C82',
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
-    [string]$TestApkPath = 'D:\App Translate Books\artifacts\test-builds\v4.18-p5e.2\p5e-a43-prod210-20261001-01\app-debug-androidTest.apk',
+    [string]$TestApkPath = 'D:\App Translate Books\artifacts\test-builds\v4.18-p5e.3\p5e-a43-prod211-20261001-01\app-debug-androidTest.apk',
 
     [Parameter(ParameterSetName = 'Dispatch')]
     [Parameter(ParameterSetName = 'PrepareEvent')]
     [Parameter(ParameterSetName = 'CollectReadback')]
-    [string]$ExpectedTestApkSha256 = '92974AA58013CE926B2C8BB8BA654BD973D16F30F0397A55E8DF4DA02BBDEA97',
+    [string]$ExpectedTestApkSha256 = 'CCAAE0ADEA69F60FAA41B42E81C74FD785E2BA3576ABD3FEBCAC1A7233E24E66',
 
     [Parameter(ParameterSetName = 'Dispatch', Mandatory = $true)]
     [Parameter(ParameterSetName = 'PrepareEvent', Mandatory = $true)]
@@ -335,9 +335,9 @@ $script:P5EAccountCheckOptInKey = 'p5e_account_check'
 $script:P5EAccountCheckExpectedKey = 'p5e_expected_endpoint_account_fingerprint'
 $script:P5EAccountCheckRemoteScript =
     'IFS= read -r p5e_expected || exit 64; am instrument -w -r -e class "$1" -e p5e_account_check YES -e p5e_expected_endpoint_account_fingerprint "$p5e_expected" "$2"'
-$script:P5ETestSourceCommit = '6134ce5141306186330c3221e84cba0df1e0298f'
+$script:P5ETestSourceCommit = '419d84b361c50f5320828a30f9f9ffa5516a15d9'
 $script:P5ERawSourceContractCommit = 'd51b7f3c16bdc482513b9904db07b97daed592d1'
-$script:P5ERawSourceContractSha256 = '9c0c2b1dec5e324e9c38f4d0ee72bdfd2509e35f8498ac852187820e7fa94457'
+$script:P5ERawSourceContractSha256 = 'd4b775253c0402497390e268a4fc0a37b4082e7707dd39c08da773703d4dc73c'
 $script:P5EAccountEnvironmentName = 'P5E_OWNER_ENDPOINT_ACCOUNT_FINGERPRINT'
 $script:P5EAccountFingerprintRedactionSentinel = 'REDACTED'
 $script:P5EHostObservationTimeoutMilliseconds = 240000L
@@ -346,12 +346,12 @@ $script:P5EAuthorizationValidityMilliseconds = 180000L
 # so the authorization window starts this much before the host stamps it; its length stays P5EAuthorizationValidityMilliseconds.
 $script:P5EAuthorizationClockSkewMarginMilliseconds = 10000L
 $script:P5EExecutionDeadlineMilliseconds = 120000L
-$script:P5EProductionVersion = '4.18-p5e.2'
-$script:P5EProductionVersionCode = 210L
+$script:P5EProductionVersion = '4.18-p5e.3'
+$script:P5EProductionVersionCode = 211L
 $script:P5EExpectedProductionApkSha256 =
-    'ae2896be38163c7daf9b903b78368b0a5b06f3d881c8f95b7575499f3b64ebce'
+    'e9cf282cb19ce35c4b65f347e537007a2c74884c0333ce2a7ccdd61d4e150c82'
 $script:P5EExpectedTestApkSha256 =
-    '92974aa58013ce926b2c8bb8ba654bd973d16f30f0397a55e8df4da02bbdea97'
+    'ccaae0adea69f60faa41b42e81c74fd785e2ba3576abd3febcac1a7233e24e66'
 $script:P5ECertificateSha256 =
     '47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155'
 $script:P5EDatabaseSchemaVersion = 24L
@@ -367,7 +367,7 @@ $script:P5ERequestIdentity =
 $script:P5ERequestEnvelopeHash =
     '5c25e1850c7f70081bd21d67effa2a3a642f410f025ab91cf8044b6ed1bd87f2'
 $script:P5ECanonicalRequestBodySha256 =
-    'a9d54a4c4c85d4aa367f23ffa1d7c2846575f55d23d8a10bfdf8ecbf0f970641'
+    '59f9de579af1c9f8246a2309cfad36ea162dcbc82f7ff61eec7f81f6cc0fc034'
 $script:P5ERouteFingerprint =
     '23149071716043a2a4dc7fb7af51073b4de838ba072919bb6fd750bc9e62948c'
 $script:P5EProjectRowId = 2L
