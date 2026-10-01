@@ -385,6 +385,20 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
                 null, false, false, false);
     }
 
+    /**
+     * Exact syntax the app enforces on the compact wire object. A live response was rejected with
+     * finding.evidenceRefs_contains_invalid_token because this contract was never stated to the
+     * model; keep these rules in sync with {@link EditorialP5RawWireContract}.
+     */
+    static final String RAW_WIRE_FORMAT_RULES =
+            "Syntax rules enforced by the app (a violation rejects the whole response):\n"
+            + "- itemId and every evidenceRefs entry: 1-48 ASCII characters matching [A-Za-z0-9][A-Za-z0-9._:/-]*; "
+            + "never spaces, quotes, brackets, accents or other symbols (invalid: \"RAW line 12\"; valid: \"chapter:001\", \"evidence:raw\").\n"
+            + "- findings contains exactly one entry per populationIds value, itemId copied exactly; a PROCESSED entry needs 1-2 evidenceRefs tokens.\n"
+            + "- gateObservations lists every gate ID in the envelope with PASS or NOT_APPLICABLE; declaredChanges is [].\n"
+            + "- disposition.phase is L1; blockingGate is one gate ID or NONE; for CONTINUE or PRESERVE_DRAFT use stopClass NONE and retryable false.\n"
+            + "- reasonCode, affectedScope, recoveryAction, resumeFrom: at most 32 characters, start with a letter or digit, then only letters, digits, spaces and . _ : / ; ( ) -.\n";
+
     private PromptPair buildPrompt(Request request) {
         boolean rawDiscovery = "L1_RAW_DISCOVERY".equals(request.phase());
         StringBuilder system = new StringBuilder();
@@ -444,6 +458,7 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
                     .append(", preservedInventory<=").append(EditorialP5RawWireContract.MAX_PRESERVED_ITEMS)
                     .append(", each ID/ref<=").append(EditorialP5RawWireContract.MAX_REF_LENGTH)
                     .append("; no chapter-sized free-form value.\n")
+                    .append(RAW_WIRE_FORMAT_RULES)
                     .append("{\"wireSchemaVersion\":\"safe4.raw.discovery.wire.v1\",\"attemptIdentity\":\"<exact replay echo>\",\"requestEnvelopeHash\":\"<exact replay echo>\",\"findings\":[{\"itemId\":\"...\",\"disposition\":\"PROCESSED|PRESERVE_DRAFT|NOT_EVALUATED\",\"evidenceRefs\":[\"...\"],\"modelDeclaredPass\":false}],\n")
                     .append("\"gateObservations\":{\"ARTIFACT_IDENTITY\":\"PASS|NOT_APPLICABLE\",...},\"evidenceRefs\":[\"...\"],\"preservedInventory\":[],\"declaredChanges\":[],\n")
                     .append("\"disposition\":{\"disposition\":\"CONTINUE|PRESERVE_DRAFT|STOP\",\"reasonCode\":\"...\",\"phase\":\"L1\",\"blockingGate\":\"...\",\"evidenceRefs\":[],\"affectedScope\":\"...\",\"recoveryAction\":\"...\",\"resumeFrom\":\"...\",\"stopClass\":\"NONE|INPUT_REQUIRED|REPAIR_REQUIRED|RETRY_REQUIRED|CONTENT_BLOCKED\",\"retryable\":false},\"modelDeclaredPass\":false}\n");

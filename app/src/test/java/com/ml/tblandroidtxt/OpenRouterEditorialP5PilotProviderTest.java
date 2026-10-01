@@ -174,6 +174,25 @@ public final class OpenRouterEditorialP5PilotProviderTest {
         }
     }
 
+    @Test public void freshRawPromptStatesTheTokenSyntaxTheParserEnforces() throws Exception {
+        AppSettings settings = new AppSettings();
+        settings.provider = EditorialP5EFreshRawRoutingPolicy.PROVIDER;
+        settings.model = EditorialP5EFreshRawRoutingPolicy.MODEL;
+        settings.baseUrl = AppSettings.defaultBaseUrl(EditorialP5EFreshRawRoutingPolicy.PROVIDER);
+        org.json.JSONObject body = OpenRouterEditorialP5PilotProvider.buildFreshRawRequestBodyForPreflight(
+                settings, request(EditorialP5EFreshRawRoutingPolicy.MODEL, "L1_RAW_DISCOVERY"),
+                EditorialP5RawWireContract.OUTPUT_TOKEN_CAP);
+        String user = body.getJSONArray("messages").getJSONObject(1).getString("content");
+        assertTrue(user.contains(OpenRouterEditorialP5PilotProvider.RAW_WIRE_FORMAT_RULES));
+        assertTrue(user.contains("[A-Za-z0-9][A-Za-z0-9._:/-]*"));
+        // The examples in the prompt must agree with the contract the parser applies.
+        assertTrue(EditorialP5RawWireContract.token("chapter:001", EditorialP5RawWireContract.MAX_REF_LENGTH));
+        assertTrue(EditorialP5RawWireContract.token("evidence:raw", EditorialP5RawWireContract.MAX_REF_LENGTH));
+        assertTrue(!EditorialP5RawWireContract.token("RAW line 12", EditorialP5RawWireContract.MAX_REF_LENGTH));
+        assertTrue(EditorialP5RawWireContract.safeText("NO_ACTION"));
+        assertTrue(EditorialP5RawWireContract.gateOrNone("NONE"));
+    }
+
     private static EditorialP5PilotProvider.Request request() {
         return request("google/gemini-2.5-flash", "L1_RAW_DISCOVERY");
     }
