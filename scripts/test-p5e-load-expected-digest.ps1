@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$OutputPath = (Join-Path $PSScriptRoot '..\docs\P5E_EXPECTED_VALUE_LOADER_QA_20260923.json')
+    [string]$OutputPath = ''
 )
 
 Set-StrictMode -Version Latest
@@ -8,6 +8,8 @@ $ErrorActionPreference = 'Stop'
 
 $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $loaderPath = Join-Path $repoRoot 'scripts\p5e-load-expected-digest.ps1'
+$defaultOutputPath = Join-Path $repoRoot 'docs\P5E_EXPECTED_VALUE_LOADER_QA_20260923.json'
+if ([string]::IsNullOrWhiteSpace($OutputPath)) { $OutputPath = $defaultOutputPath }
 $results = [System.Collections.Generic.List[object]]::new()
 $testEnvironmentName = 'P5E_EXPECTED_LOADER_QA_' + [Guid]::NewGuid().ToString('N')
 $module = $null
@@ -114,6 +116,20 @@ try {
     Assert-P5ELoaderQa 'process-write-is-lowercase-sha256-shape' ($loaded -ceq $fingerprintForProcessTest -and $loaded -match '^[0-9a-f]{64}$')
     Clear-P5EProcessExpectedFingerprint -EnvironmentName $testEnvironmentName
     Assert-P5ELoaderQa 'process-clear-removes-test-value' ($null -eq [Environment]::GetEnvironmentVariable($testEnvironmentName, 'Process'))
+
+    $defaultEnvironmentKey = 'synthetic-default-environment-key'
+    $defaultEnvironmentExpected = Get-P5EFakeFingerprint -Endpoint $standardEndpoint -Key $defaultEnvironmentKey
+    $defaultEnvironmentSecure = New-P5EFakeSecureString -Text $defaultEnvironmentKey
+    try {
+        Invoke-P5EExpectedFingerprintLoadFromSecureKey -ApiKey $defaultEnvironmentSecure
+        $defaultLoaded = [Environment]::GetEnvironmentVariable('P5E_OWNER_ENDPOINT_ACCOUNT_FINGERPRINT', 'Process')
+        Assert-P5ELoaderQa 'default-environment-name-does-not-prompt' ($defaultLoaded -ceq $defaultEnvironmentExpected)
+    } catch {
+        Assert-P5ELoaderQa 'default-environment-name-does-not-prompt' $false
+    } finally {
+        try { Clear-P5EProcessExpectedFingerprint } catch { }
+        $defaultEnvironmentSecure.Dispose()
+    }
 
     $staleFingerprint = 'c' * 64
     Set-P5EProcessExpectedFingerprint -Fingerprint $staleFingerprint -EnvironmentName $testEnvironmentName

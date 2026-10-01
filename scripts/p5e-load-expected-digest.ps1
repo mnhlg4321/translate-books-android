@@ -114,7 +114,7 @@ function Get-P5EEndpointAccountFingerprintFromSecureKey {
 function Set-P5EProcessExpectedFingerprint {
     param(
         [Parameter(Mandatory = $true)][ValidatePattern('^[0-9a-f]{64}$')][string]$Fingerprint,
-        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string]$EnvironmentName = $script:P5EAccountEnvironmentName
+        [ValidateNotNullOrEmpty()][string]$EnvironmentName = $script:P5EAccountEnvironmentName
     )
 
     [Environment]::SetEnvironmentVariable($EnvironmentName, $Fingerprint, 'Process')
@@ -122,7 +122,7 @@ function Set-P5EProcessExpectedFingerprint {
 
 function Clear-P5EProcessExpectedFingerprint {
     param(
-        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string]$EnvironmentName = $script:P5EAccountEnvironmentName
+        [ValidateNotNullOrEmpty()][string]$EnvironmentName = $script:P5EAccountEnvironmentName
     )
 
     $environmentPath = 'Env:' + $EnvironmentName
@@ -134,7 +134,7 @@ function Clear-P5EProcessExpectedFingerprint {
 function Invoke-P5EExpectedFingerprintLoadFromSecureKey {
     param(
         [Parameter(Mandatory = $true)][Security.SecureString]$ApiKey,
-        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string]$EnvironmentName = $script:P5EAccountEnvironmentName
+        [ValidateNotNullOrEmpty()][string]$EnvironmentName = $script:P5EAccountEnvironmentName
     )
 
     $fingerprint = $null

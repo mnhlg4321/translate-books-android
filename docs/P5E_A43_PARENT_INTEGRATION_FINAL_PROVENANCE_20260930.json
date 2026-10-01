@@ -1,0 +1,180 @@
+{
+  "schema": "p5e.parent.integration.final-provenance.v1",
+  "date": "2026-09-30",
+  "branch": "feature/v4.18-p5e-runner-repair-20260917",
+  "head": "fb0ebaf110c3bb87aed9bcfe8767b48b4d5ea310",
+  "status": "OFFLINE_EXECUTABLE_INTEGRATION_PASS_NOT_AUTHORIZED",
+  "historicalFirstStop": "UNRESOLVED",
+  "candidate": {
+    "path": "scripts/p5e-a43-pre-reservation-launcher-entrypoint.ps1",
+    "sha256": "CC01C33F056F86F4ACC4E3BD45AAAA2910CCEE9719AC5830EDAE99987A7C8E23",
+    "executed": false,
+    "directExecuteMode": "NOT_RUN",
+    "qaMode": "LibraryOnly plus Invoke-P5EA43ExecutableLauncher with synthetic seams"
+  },
+  "sourceBindings": [
+    {
+      "path": "scripts/test-p5e-a43-pre-reservation-integration.ps1",
+      "sha256": "4353DE8FC2F60B7BCCA9FF5EB13A817F8FB22E1475CE2D614371B0FD38B5C423"
+    },
+    {
+      "path": "scripts/p5e-a43-pre-reservation-launcher.ps1",
+      "sha256": "9183619AD9C3BA5E5C0AF2701968F1F2121894472A8FD136C0DC6B54898F9A8D"
+    },
+    {
+      "path": "scripts/p5e-raw-toolchain.ps1",
+      "sha256": "C0AE7D431474F37597228A7AFA6F9382C63E26EB5A54CFB72604620D9DD5C3C8"
+    },
+    {
+      "path": "scripts/p5e-child-invocation-contract.ps1",
+      "sha256": "2A1474494E2760D851DC9378AF8252968A65A4779E2E1786434AB70918E6D2EB"
+    },
+    {
+      "path": "scripts/p5e-a43-runtime-guards.ps1",
+      "sha256": "5F78F59FCFE5FD7BB904C8D0B4815CA7C714E03999DB97CDCA2737E5F4C3DC3E"
+    },
+    {
+      "path": "scripts/p5e-load-expected-digest.ps1",
+      "sha256": "1D6C1DEA14E70001F81DB841668969A51DB15417436E742BA018837BFA587A9D"
+    }
+  ],
+  "packetBindings": [
+    {
+      "path": "docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_MANIFEST_20260928.md",
+      "sha256": "FCDC4747D54075B0518A92D837FC74C67D7F3804F9BAA4EFFC3CB34C7764A01D"
+    },
+    {
+      "path": "docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_COMMAND_20260928.txt",
+      "sha256": "510F2A9A93CD9B566F9BC153B2745750840B0CEE78768788CB98EB7817E0D0D4"
+    },
+    {
+      "path": "scripts/p5e-raw-live-supervisor.ps1",
+      "sha256": "998A5E45F13F61A5F2B53B46E1F6CF57D97EF1C3A6690FC0854530F57A53C7BF"
+    },
+    {
+      "path": "scripts/p5e-db-binary-export.ps1",
+      "sha256": "813F6ED0ABD110EBF32550990940E975971988FBCF806DC26464EE311021CF99"
+    },
+    {
+      "path": "docs/P5E_SQLITE_BRIDGE.py",
+      "sha256": "4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111"
+    }
+  ],
+  "dependencySlots": [
+    {
+      "name": "ResolveToolchain",
+      "adapter": "New-P5EA43ExecutableDependencies.ResolveToolchain",
+      "source": "Resolve-P5ERawToolchain",
+      "assertion": "Spy calls the pinned resolver once; SDK is Container and adb/java/apksigner are Leaf; resolver output is consumed by the parent."
+    },
+    {
+      "name": "ReadApproval",
+      "adapter": "New-P5EA43ExecutableDependencies.ReadApproval",
+      "source": "Read-Host -AsSecureString through ApprovalReader seam",
+      "assertion": "Exact literal reaches the parent; wrong, empty, EOF and cancel stop before reservation/key without echo."
+    },
+    {
+      "name": "ReserveLauncher",
+      "adapter": "New-P5EA43ExecutableDependencies.ReserveLauncher",
+      "source": "New-P5EA43ReservationMarker",
+      "assertion": "CreateNew reservation and collision/no-overwrite are exercised in the per-case sandbox."
+    },
+    {
+      "name": "CreateOwnerRoot",
+      "adapter": "New-P5EA43ExecutableDependencies.CreateOwnerRoot",
+      "source": "Get-P5EA43DecisionKey plus Assert-P5EA43NoReparsePath",
+      "assertion": "Unique root, no reuse and no overwrite are exercised."
+    },
+    {
+      "name": "CreateReceipt",
+      "adapter": "New-P5EA43ExecutableDependencies.CreateReceipt",
+      "source": "Strict p5e.a43.owner-decision-receipt.v1 serializer",
+      "assertion": "CreateNew receipt uses exact packet pins, scope, serial, one-use limits and TTL."
+    },
+    {
+      "name": "ValidateReceipt",
+      "adapter": "New-P5EA43ExecutableDependencies.ValidateReceipt",
+      "source": "Read-P5EA43OwnerDecisionReceipt",
+      "assertion": "Real validator checks hash, schema, pins, scope, serial and expiry; expiry is rechecked after key."
+    },
+    {
+      "name": "ReadKey",
+      "adapter": "New-P5EA43ExecutableDependencies.ReadKey",
+      "source": "Invoke-P5EExpectedFingerprintLoadFromSecureKey",
+      "assertion": "Synthetic SecureString only; process fingerprint is cleared on success and partial failure; raw key/digest are absent from evidence."
+    },
+    {
+      "name": "InvokeChild",
+      "adapter": "New-P5EA43ExecutableDependencies.InvokeChild",
+      "source": "Invoke-P5EPhaseChildInvocation",
+      "assertion": "Command bytes are copied and hashed exactly; fake child covers success, start, exit, timeout and capture limits exactly once."
+    },
+    {
+      "name": "ClearKey",
+      "adapter": "New-P5EA43ExecutableDependencies.ClearKey",
+      "source": "Clear-P5EA43IntegrationEnvironment plus SecureString.Dispose",
+      "assertion": "Cleanup runs on all tested branches and a cleanup failure remains secondary to the primary child stop."
+    },
+    {
+      "name": "WriteDiagnostic",
+      "adapter": "New-P5EA43ExecutableDependencies.WriteDiagnostic",
+      "source": "Write-P5EA43DiagnosticCreateNew",
+      "assertion": "Bounded diagnostic records are redacted; diagnostic failure yields EVIDENCE_INCOMPLETE and no false PASS."
+    }
+  ],
+  "qa": {
+    "integrationReport": {
+      "path": "evidence/p5e-a43-parent-integration-20260930/P5E_A43_PARENT_INTEGRATION_QA_20260930_03.json",
+      "sha256": "DC54F9788BDAA2D5D0FB50BC65B07B69485CA9235107FECD9DB4C63B1DD3E457",
+      "status": "PASS",
+      "cases": 21,
+      "passed": 21,
+      "failed": 0,
+      "candidateExecuted": false,
+      "liveActions": 0,
+      "processExitProbe": {
+        "successProcessExit": 0,
+        "childFailureProcessExit": 1,
+        "outputRedacted": true
+      }
+    },
+    "parentRegression": "26/26 PASS",
+    "childRegression": "27/27 PASS",
+    "powershell51Parse": "PASS",
+    "diffCheck": "PASS",
+    "providerAdbDatabaseCredentialActions": 0,
+    "authorityReceiptEventCreated": false,
+    "candidateDirectRun": false
+  },
+  "finalArtifacts": {
+    "review": {
+      "path": "docs/P5E_A43_PARENT_INTEGRATION_FINAL_REVIEW_20260930.md",
+      "sha256": "B353BA62DB0089A69EE08F03328737DAF743535AEFF11127E643A92731D8863B"
+    },
+    "delivery": {
+      "path": "docs/P5E_A43_PARENT_INTEGRATION_DELIVERY_20260930.json"
+    }
+  },
+  "supersedesPendingRecords": [
+    {
+      "path": "docs/P5E_A43_PARENT_INTEGRATION_PROVENANCE_20260930.json",
+      "sha256BeforeSupersession": "4A5BFFCF162748BAE61436C8624FB1786D0F66DD4470D378E849EFAF288A49E6"
+    },
+    {
+      "path": "docs/P5E_A43_PARENT_INTEGRATION_REVIEW_20260930.md",
+      "sha256BeforeSupersession": "2FEB504FEC1EEB58541A52CCFA29A4DF8E4D6707594DEC255CAE6526432C9BF6"
+    },
+    {
+      "path": "docs/P5E_A43_PARENT_INTEGRATION_WORK_REQUEST_20260930.md",
+      "sha256": "D83A66C7F16EB6927FFE6398725B5EB4915E0B3B8A33DE46CAA34E97E6F7070D"
+    }
+  ],
+  "authorization": {
+    "newApproval": false,
+    "liveRunAuthorized": false,
+    "a43RunClaimed": false,
+    "p5ExitClaimed": false,
+    "p6Ready": false
+  },
+  "nextAction": "Owner may review this exact delivery bundle for one separate future A4.3 decision; this work package does not request key entry, approval, live dispatch, retry or P6."
+}

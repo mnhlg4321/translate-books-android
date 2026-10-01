@@ -1,0 +1,44 @@
+{
+  "schema": "p5e.entry-boundary.repair.v1",
+  "date": "2026-09-30",
+  "head": "fb0ebaf110c3bb87aed9bcfe8767b48b4d5ea310",
+  "status": "ENTRY_BOUNDARY_REPAIR_AND_INTEGRATION_PASS_NOT_LIVE",
+  "fixes": [
+    "Preserve all entry parameters across dot-sourced libraries",
+    "Copy command bytes to .ps1 for PS5.1 -File"
+  ],
+  "red": "No Execute silently exited0 before repair",
+  "green": {
+    "noExecute": "exit1 EXECUTION_MODE_REQUIRED_STOP",
+    "missingArguments": "exit1 EXECUTION_ARGUMENTS_REQUIRED_STOP",
+    "libraryOnly": "exit0",
+    "integration": "21/21 PASS"
+  },
+  "files": [
+    {
+      "path": "scripts/p5e-a43-pre-reservation-launcher-entrypoint.ps1",
+      "sha256": "68DF8061CECB22D64AA4B85245714AC3AEE1895EBC8846F1BF51FC13D2E170BA"
+    },
+    {
+      "path": "docs/P5E_A43_ENTRY_BOUNDARY_RUN_GUIDE_20260930.md",
+      "sha256": "0BE0FE9A7F2A02447E744F5E3CEB327A148A3E1690D7C88EC90ED801B1830D4D"
+    },
+    {
+      "path": "evidence/p5e-a43-parent-integration-20260930/P5E_A43_ENTRY_BOUNDARY_INTEGRATION_QA_20260930_02.json",
+      "sha256": "B67EB27BA960F802219C75A3797391BB86A29B6D4BDC2FD58579E8558AF9A874"
+    }
+  ],
+  "reportWriteCollision": "First rerun targeted an existing report and was rejected; final rerun uses unique _02 report, passed",
+  "liveActions": 0,
+  "ownerApprovalCreated": false,
+  "historicalFirstStop": "UNRESOLVED",
+  "p6Ready": false,
+  "independentQa": {
+    "agent": "Luna",
+    "result": "6/6 PASS",
+    "script": "scripts/test-p5e-a43-entry-boundary.ps1",
+    "scriptSha256": "D1DD5106B0760EC4F5C46A6A6954400D795D826B3801BA9F5A99329E33B3162C",
+    "report": "evidence/p5e-a43-parent-integration-20260930/P5E_A43_ENTRY_BOUNDARY_QA.json",
+    "reportSha256": "2C08B6F85FAFDFEFE08C07A431497C03C4795DBC16F7D93E8AA838BAE1F0F9BA"
+  }
+}

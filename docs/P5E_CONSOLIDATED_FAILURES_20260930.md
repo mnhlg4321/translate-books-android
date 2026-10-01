@@ -191,6 +191,8 @@ Tiêu chí sản phẩm theo câu trả lời của owner: một chương đi h�
 
 ## Vòng chẩn đoán entry owner-window 1/2 — 2026-10-01
 
+> Record lịch sử của vòng 1; giới hạn kết luận và next action đã được hiệu chỉnh trong mục QA ngay dưới. Reproducer CC01 không chứng minh nguyên nhân latest owner attempt đã pin 68DF; không thực hiện chỉ dẫn owner-run dưới đây trước offline closure. Tiêu chí hiện hành yêu cầu ba final thành công, không tính conflict stop thay một final.
+
 - Bộ đếm: active ≈ 15/60 phút; 1/2 vòng (1 reproducer + 1 test mới; không sửa entrypoint thêm).
 - Giả thuyết: switch `-LibraryOnly` của các thư viện dot-source ghi đè `$LibraryOnly` trong cùng scope entrypoint, nên `if ($LibraryOnly) { return }` thoát im lặng trước audit.
 - Reproducer: Windows PowerShell 5.1 sạch, console thật có input (`Start-Process` + `WriteConsoleInput`), đường dẫn có khoảng trắng, đúng argument của run guide, PrivateRoot tạm, chỉ gõ literal sai. Không key/ADB/provider.
@@ -202,3 +204,60 @@ Tiêu chí sản phẩm theo câu trả lời của owner: một chương đi h�
 - Kết luận: tested bytes = 68DF (đã có trong working tree); staged CC01 là bytes cũ lỗi, không được commit/dùng. Owner phải chạy 68DF, không dùng launcher/hash cũ.
 - Test mới: `scripts/test-p5e-a43-entry-console.ps1` (2 case PASS, report `evidence/p5e-a43-parent-integration-20260930/P5E_A43_ENTRY_CONSOLE_QA.json`).
 - Không chứng minh: RAW/L1/P5 exit; đường owner thật vẫn cần một lần chạy có thẩm quyền.
+
+## QA và phản biện bàn giao Claude — 2026-10-01
+
+Phạm vi: primary kiểm tra source/diff/Git tree/report; Luna chỉ audit test console mới, bốn findings, không thực thi. Baseline quan sát `a4051e00c648c659589f1cccde4ae2a475a1bf17`, branch `feature/v4.18-p5e-runner-repair-20260917`; remote lúc kiểm tra khớp HEAD này. Không sửa runtime, không chạy lại launcher/suite/build, không đọc private payload. Phần này làm rõ giới hạn kết luận vòng 1 ở trên, không sửa evidence bất biến.
+
+### Kết luận nguyên nhân không tiến triển
+
+1. **Mã đã test chưa thành bộ mã có thể bàn giao từ Git.** `git ls-tree HEAD` có `scripts/test-p5e-a43-entry-console.ps1`, nhưng thiếu entrypoint, parent launcher, `test-p5e-a43-pre-reservation-integration.ps1` và `test-p5e-a43-entry-boundary.ps1`. Các file này có ở local index/working tree. Vì vậy clone đúng HEAD cũng chưa chạy được chuỗi QA. Bàn giao tài liệu trước đây chưa phải bàn giao đủ implementation; không thể yêu cầu Claude tái lập từ GitHub bằng chỉ một lệnh test.
+2. **Kết luận nguyên nhân vượt quá bằng chứng.** BUILD_STATE ghi hash 68DF đã khớp trước latest owner-window failure, còn vòng 1 tái hiện triệu chứng trên CC01. Đó là hai phiên bản khác nhau. Diff chứng minh bản cũ dùng `$LibraryOnly` sau dot-source, bản working bảo toàn intent/arguments; đây là defect cụ thể của bản cũ. Nhưng chưa có chain evidence chứng minh process thất bại gốc chạy CC01. Không được viết “68DF chưa từng được owner chạy” hoặc “đã xác định root cause của lần lỗi gốc”. Chỉ có thể nói lần owner attempt được ghi nhận đã pin 68DF, execution/output thực tế không đủ rõ.
+3. **Test mới có tiến bộ nhưng chưa phủ cả tiêu chí được đề ra.** Test có console input injection và typed terminal rejection; nó chỉ thử WRONG_LITERAL và thiếu JavaPath. Test không có CC01 variant, không ghi nhận prompt được hiển thị cho owner, không chạy approval→synthetic child success. `-WindowStyle Hidden` có thể vẫn có console; không được kết luận test vô giá trị, cũng không được gọi đó là bằng chứng cho đúng cửa sổ owner-visible.
+4. **Thông tin lỗi bị mất qua nhiều lớp.** Test mới ghi JSON tổng hợp hai case rồi xóa temporary output/audit, không lưu observed per-case facts. Entry pin checks/dot-source/contract construction nằm trước parent diagnostic. Vì vậy có trường hợp wrapper/test báo PASS mà người xử lý lỗi sau không có dữ kiện để xác định process dừng ở đâu. Không cần log secret: chỉ cần path/hash, invocation shape không nhạy cảm, stage, exit/typed cause và bounded redacted error.
+5. **Handoff và state dẫn tới lặp lại hoặc nhảy bước.** HANDOFF cũ ghi 0/2 vòng trong khi round record ghi 1/2; canonical nói chẩn đoán còn snapshot chuyển thẳng tới owner run guide. Mỗi agent có thể chọn một next action khác. Cập nhật đồng bộ cùng một kết luận và giữ bộ đếm đã dùng; không khởi động lại diagnosis vì đổi agent.
+6. **Tiến độ tập trung vào harness, còn deliverable sản phẩm chưa có.** P5E.9/P5.4 vẫn thiếu accepted RAW và persisted/reopened L1 report/receipt. L1 request enum chỉ có RAW/RECONCILE; L2/L3 có contracts/validators nhưng UI vẫn locked. Build code208, số test và số tài liệu không đóng những khoảng thiếu này. Đây là phân tích điểm nghẽn từ code/evidence, không phải số liệu đo token hoặc thời gian toàn dự án.
+
+### Fact / chưa chứng minh
+
+| Kết luận | Mức chứng minh |
+|---|---|
+| Working entrypoint hash = 68DF8061…70BA, trùng report console | Đã hash/readback trong lượt QA này |
+| Latest console report ghi PASS/2 cases | Report hiện có; không rerun trong lượt review |
+| CC01 có lỗi intent bị library scope ghi đè | Diff/source phù hợp giải thích; reproduction CC01 chỉ được ghi trong narrative, test đã commit không chứa case đó |
+| Chính CC01 gây latest owner-window failure | Chưa chứng minh; mâu thuẫn với hash 68DF được ghi trước launch |
+| Bản 68DF đã qua valid approval→child trong owner console | Chưa chứng minh bằng test console này |
+| Không thể đi live vì một lỗi code mới đã được chứng minh | Chưa kết luận; phần thiếu là độ phủ/bằng chứng, không tự phát minh thêm blocker runtime |
+| Clone HEAD có đủ source để tái lập | Không; thiếu các file runtime/test nêu trên |
+
+### Hướng giải quyết có giới hạn để Claude thực hiện
+
+**Một nhóm việc còn lại: đóng khả năng tái lập của entry boundary offline.** Không viết lại plan hoặc launcher framework.
+
+1. Đối chiếu HEAD/index/working bytes và dependency pins. Chuẩn bị commit đúng working 68DF cùng parent/dependencies/test/report cần thiết, đọc cả diff của expected-digest loader nếu nó là dependency. Không stage toàn workspace; không đưa private data hay `.idea` vào. Mục tiêu là một commit chứa đủ source để checkout độc lập, không chỉ file test trỏ vào mã local chưa commit.
+2. Dùng phần ngân sách chẩn đoán còn lại để bổ sung đúng case còn thiếu ở process boundary: prompt thử và successful synthetic child trên cùng entry/control flow; thay external action tại biên để không có quyền tới provider/device/secret. Kiểm cả failure trước parent audit bằng outer capture. Dữ liệu approval giả chỉ hợp lệ trong fixture đã tách khỏi live; tuyệt đối không bơm literal APPROVE thật vào candidate live để “test”. Tái dùng integration fixture hiện có, không tạo thêm supervisor.
+3. Persist per-case hash/arguments shape/observed stage/exit/typed cause và action counts từ spies vào report hiện có hoặc event QA duy nhất, không hard-code counters thành bằng chứng. Không xóa nguồn diagnostic duy nhất trước khi lưu bản đã lọc. Hạn chế trường log; không ghi environment/secret/payload hàng loạt.
+4. Xác minh source trong commit chứa đủ references và fixture chạy từ checkout độc lập. Một clone chạy được cần môi trường/toolchain được mô tả; không đồng nghĩa private/live evidence phải được upload.
+5. Chỉ khi offline closure đạt mới bàn giao scope live review được. RAW accepted vẫn phải nối RECONCILE có quyền phù hợp, atomic REPORT_L1/receipt và reopen trước P5 exit. Không dùng lịch sử mất native cause làm yêu cầu vô hạn: có thể giữ historical cause UNRESOLVED nếu đường hiện tại đã được chứng minh và các gate còn lại đạt.
+
+Budget không reset: đã ghi 1/2 vòng và khoảng 15/60 phút trước lượt QA này; cộng thời gian active review/diagnosis thực tế, không tuyên bố còn nguyên 45 phút nếu chưa đo. Lượt này chỉ QA nguồn/tài liệu, không có vòng patch–runtime-test mới. Claude xác nhận elapsed còn lại khi bắt đầu; tối đa một vòng còn lại, hết 60 phút thì dừng ngay. Nếu không đóng được phần thiếu trong giới hạn, trình phương án B đã có trong canonical §6, không mở vòng launcher thứ ba.
+
+### Phản biện trước xuất
+
+- “68DF tới prompt rồi, chạy owner ngay?” — kết quả mới đáng giữ; nhưng chỉ rejection/outer-error, thiếu success synthetic child ở boundary và bộ commit đầy đủ. Hoàn thiện đúng phần thiếu một lần, không rerun tất cả suites.
+- “Staged CC01 sai nên mọi lỗi gốc đã rõ?” — không; hash của latest attempt được ghi là 68DF. Phải phân biệt defect phiên bản cũ với nguyên nhân event cụ thể.
+- “Ẩn cửa sổ nghĩa là không có console?” — sai; console injection có thể hoạt động. Điều chưa chứng minh là tương đương với đường owner-visible và full orchestration.
+- “Phải thêm log toàn bộ mới điều tra được?” — không; bounded redacted process/exit/stage facts đủ cho bước này, không cần key/provider output.
+- “Cứ tiếp tục review cho chắc?” — không. Đây là review bounded; không review lại cùng bytes. Chỉ một targeted closure còn lại, hoặc đổi phương pháp đúng hạn.
+
+QA tại lần xuất: năm file entry/parent/test parse không lỗi bằng parser của shell hiện tại; không nhận là PS5.1 execution PASS. Console JSON đọc được, hash candidate khớp; Git tree đối chiếu được các file chưa commit; source guard từ chối WRONG_LITERAL trước reservation/key/child. Luna rà độc lập và primary đối chiếu các findings với source. Giữ console report gốc, staged runtime bytes và các private events nguyên trạng.
+
+## Vòng chẩn đoán entry owner-window 2/2 — 2026-10-01
+
+- Bộ đếm: ≈30/60 phút (≈15 trước QA + ≈15 active từ 08:21 theo đồng hồ máy); 2/2 vòng. Đây là vòng cuối của phương pháp launcher; không mở vòng thứ ba.
+- Giả thuyết cần loại trừ: nguyên nhân latest owner attempt (hash 68DF đã khớp trước launch, audit/reservation/owner-root vắng) không phải CC01. Dữ kiện mới: `D:\P5E-private\.p5e-a43-audit` đang chứa `68df8061….json` (tạo 2026-09-30 18:11:37) cùng hai audit đặt tên theo DecisionId (18:16, 18:40); cả ba là `APPROVAL / P5E_OWNER_APPROVAL_LITERAL_REQUIRED_STOP`, exit 1, không reservation/key/child. Audit mặc định của entry chỉ đặt tên theo hash candidate.
+- Reproducer (root tổng hợp, không đụng private thật): seed `.p5e-a43-audit\<hash>.json` rồi chạy 68DF `-Execute` đúng argument guide. Kết quả: stderr `P5E_A43_AUDIT_ALREADY_EXISTS_STOP`, exit 1, không prompt, không audit/reservation/owner-root mới, file cũ nguyên vẹn. Đây là một cơ chế đủ và nhất quán với dấu vết (pre-prompt exit, audit của DecisionId mới vắng). Chưa chứng minh là stderr thực của lần đó vì không có stderr nào được lưu.
+- Patch: không sửa entrypoint (68DF giữ nguyên). Guide chạy owner thêm `-AuditPath` theo DecisionId và ghi kết quả ngoài cùng vào log CreateNew `.p5e-a43-outer-<DecisionId>.log`.
+- Targeted test mới: `scripts/test-p5e-a43-entry-console.ps1` mở rộng lên 6 case trong console thật, mọi input là synthetic: (1) prompt + literal sai; (2) thiếu JavaPath giữ stderr/exit; (3) approval→key→synthetic child thành công (`CHILD_EXIT_ZERO`, exit 0, counters từ spy, live=0) bằng integration fixture với Read-Host thật; (4) bytes CC01 giữ lại: exit 0 im lặng; (5) audit hash có sẵn → `P5E_A43_AUDIT_ALREADY_EXISTS_STOP`, exit 1; (6) cùng trạng thái nhưng có `-AuditPath` riêng → tới prompt, typed stop, file cũ nguyên. Report: `evidence/p5e-a43-parent-integration-20260930/P5E_A43_ENTRY_CONSOLE_QA_03.json`. Integration test thêm `-ConsoleProbe`; chạy lại 21/21 vì bytes đổi (`..._QA_20260930_04.json`).
+- Giới hạn: console là hidden-window thật, không phải cửa sổ owner nhìn thấy; case 3 chạy qua integration fixture, không qua `-Execute` của entry (entry live sẽ chạy command thật); không bằng chứng cho RAW/L1/provider/P5 exit.
+- Kết luận: đường mở process/nhận input được tái lập offline ở cả success (prompt → terminal result → synthetic child) và failure (cause + exit giữ nguyên). Mơ hồ còn lại: lần chạy lịch sử vẫn UNRESOLVED ở mức stderr thực. Không chạy owner trước khi owner xác nhận scope live.
