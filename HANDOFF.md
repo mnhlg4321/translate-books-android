@@ -8,6 +8,8 @@ Lần chạy owner thứ sáu (candidate `32C011C5…`, DecisionId `p5e-a43-owne
 
 Chu trình sửa prompt đã xong (commit `dd41e858`): production `4.18-p5e.3`/211 APK `E9CF282C…` và AndroidTest `CCAAE0AD…` đã cài và đọc lại khớp pin; DB đã khôi phục zero-state `8D084050…`; preflight trên máy cho body hash mới `59f9de57…` (identity và route không đổi); pin đã cascade tới candidate `FA3F5F1182F48A7B17524F78F4AEFEC7DCC2DCFCF06E4176B0056B2F5E78DA00`; mọi suite offline PASS (cả từ extract `git archive` sạch) và M0 chỉ-đọc cuối khớp pin. Event thứ bảy chưa chạy.
 
+Event thứ bảy (candidate `FA3F5F11…`, DecisionId `p5e-a43-owner-30c83137…`, event `raw-live-a43-preauth-f8a0ee32…`) đã chạy: log `P5E_RAW` ghi `dispatch status=COMMITTED`, `schemaOk=true receiptOk=true`, một primary call, chi phí báo cáo USD 0.00294841; readback cho thấy attempt `COMMITTED` cùng REPORT_L1 và receipt commit atomic, lineage 1/1/1, DB integrity ok. Verifier formal vẫn báo `RAW_NOT_ACCEPTED` vì lỗi collector phía host (`test.targetPackage` và `test.runner` rỗng; chi tiết trong docs/P5E_CONSOLIDATED_FAILURES_20260930.md). DB trên máy đang giữ kết quả: không khôi phục zero-state. Decision, event và reservation của `FA3F5F11…` đã dùng.
+
 - Event A4.3 `raw-live-a43-preauth-33253efa…` (DecisionId `p5e-a43-owner-1599345c…`) đã dùng và không được dùng lại. Kết quả: Before, một lần launch instrumentation, After; `EXTERNAL_CALL_STATE_UNKNOWN` / `P5E_POST_DISPATCH_DURABLE_STATE_INCOMPLETE`; RAW chưa được chấp nhận.
 - Nguyên nhân (đã xác nhận bằng source và source ZIP đã pin): AndroidTest APK `058BE851…` hard-code `EXPECTED_DB_SHA256 = 3563f44b…` và yêu cầu cả tham số launch `p5e_expected_db_sha256` lẫn hash DB thật bằng hằng số đó. Re-pin phía host sang `8D084050…` làm tham số khác hằng số nên test thất bại trước khi đọc key, settings, DB hay mạng. Lỗi của tôi: lúc re-pin chỉ tìm trong scripts/docs, không tìm trong `app/src/androidTest` và APK test.
 - Bằng chứng cục bộ: hash DB After bằng Before, lineage toàn 0, chạy khoảng 20 giây, stderr instrumentation rỗng. Chính thức vẫn là UNKNOWN; không suy ra `$0` ở phía nhà cung cấp.
@@ -79,7 +81,7 @@ Offline/component PASS không thay live/product acceptance. Enum/schema/validato
 
 ## Next action duy nhất
 
-Owner chạy một event A4.3 với candidate `FA3F5F1182F48A7B17524F78F4AEFEC7DCC2DCFCF06E4176B0056B2F5E78DA00`: dán khối lệnh trong `docs/P5E_A43_ENTRY_BOUNDARY_RUN_GUIDE_20260930.md` một lần, Enter một lần, tự gõ `APPROVE_ONE_FRESH_EVENT` chỉ khi đồng ý, rồi nhập key ở prompt hidden tiếp theo; không chạm điện thoại trước đó. Một RAW call (chương 001 VOL5, trần đã pin), khoảng USD 0.006. Sau đó tôi đọc evidence và log `P5E_RAW` chỉ-đọc rồi phân loại; không retry.
+Sửa lỗi collector phía host offline (ràng `test.targetPackage`/`test.runner` từ event plan), thêm test cho đường COMMITTED với collector-input thật, rồi kiểm lại một bản sao post-readback của event 7 bằng verifier đã sửa. Không gọi provider, không đổi thiết bị, không khôi phục DB. Sau đó xác định từ source xem chương 001 có cần RECONCILE (M4) hay không và chuẩn bị bằng chứng M5/M6.
 
 Bước chẩn đoán offline launcher đã đóng ở 2/2 vòng (≈30/60 phút): không mở vòng thứ ba. Nếu cửa sổ owner vẫn lỗi dù đã có outer log, dùng phương án B ở canonical plan §6: trình môi trường Android thử riêng/dữ liệu thay thế/cùng production path và phần nào còn phải kiểm lại trên target; không tự cài, xóa DB, gọi provider hoặc thay scope.
 
