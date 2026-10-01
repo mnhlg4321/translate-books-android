@@ -2,13 +2,13 @@
 
 Bản sửa này giữ nguyên toàn bộ tham số qua dot-source (LibraryOnly, Execute, SDK/Java và các binding), và copy command thành .ps1 để PowerShell 5.1 thực thi. Không có live event trong lượt sửa. Đừng dùng launcher/hash cũ.
 
-Candidate SHA-256: 68DF8061CECB22D64AA4B85245714AC3AEE1895EBC8846F1BF51FC13D2E170BA
+Candidate SHA-256: D8E4D0FCB346491E4E9A9EF45C0890339BA67A54F47B2569026F26DF96704F0D
 
-Mở Windows PowerShell nhìn thấy được. Đoạn sau kiểm hash và mở đúng launcher một lần. Launcher hỏi quyết định cho đúng một event A4.3: serial 15e84958, Before/After read-only, account memory-only, fresh authorization, tối đa một RAW/GLOSSARY provider call, USD0.05 và DB allowlist theo manifest FCDC4747D54075B0518A92D837FC74C67D7F3804F9BAA4EFFC3CB34C7764A01D. Không retry/fallback/RECONCILE/build/install/P6. Nhập APPROVE_ONE_FRESH_EVENT chỉ khi đồng ý; prompt có thể che ký tự. Sau đó nhập key trực tiếp vào prompt hidden, không gửi chat.
+Mở Windows PowerShell nhìn thấy được. Đoạn sau kiểm hash và mở đúng launcher một lần. Launcher hỏi quyết định cho đúng một event A4.3: serial 15e84958, Before/After read-only, account memory-only, fresh authorization, tối đa một RAW/GLOSSARY provider call, USD0.05 và DB allowlist theo manifest B3A79783A56AF2911F535A8327FFC34D704C9CF39BDC3D7761C0552F8CBD4F7E. Không retry/fallback/RECONCILE/build/install/P6. Nhập APPROVE_ONE_FRESH_EVENT chỉ khi đồng ý; prompt có thể che ký tự. Sau đó nhập key trực tiếp vào prompt hidden, không gửi chat.
 
 ```powershell
 $p5eCandidate = 'D:\App Translate Books\scripts\p5e-a43-pre-reservation-launcher-entrypoint.ps1'
-$p5eHash = '68DF8061CECB22D64AA4B85245714AC3AEE1895EBC8846F1BF51FC13D2E170BA'
+$p5eHash = 'D8E4D0FCB346491E4E9A9EF45C0890339BA67A54F47B2569026F26DF96704F0D'
 if ((Get-FileHash -LiteralPath $p5eCandidate -Algorithm SHA256).Hash -cne $p5eHash) { throw 'CANDIDATE_HASH_MISMATCH_STOP' }
 $p5eDecision = 'p5e-a43-owner-' + [Guid]::NewGuid().ToString('N')
 $p5eAudit = Join-Path 'D:\P5E-private\.p5e-a43-audit' ($p5eDecision + '.json')
@@ -45,9 +45,9 @@ Audit mặc định của entry chỉ đặt tên theo hash candidate. `D:\P5E-p
 |---|---|---|
 | Phạm vi | Một event, một primary call `L1_RAW_DISCOVERY`; 0 schema-repair, 0 network retry, không RECONCILE/L2/L3/build/install | Pin trong helper |
 | Chương/nguồn | selector `p5e-fresh-mercedes-vol5-20260911-01`, chapter key `001` (VOL5); RAW 23,814 B `a308210e…`, GLOSSARY 3,249 B `4bc3e2dd…`, DRAFT 26,462 B `64adecd8…`, PRONOUN 452 B `4947ff91…`; pack `497786e1…`, profile `beec03a4…`, binding `845976b3…`, run `8466b95d…` | Pin trong helper; chưa quan sát lại trên máy |
-| Candidate | entry `68DF8061…`, helper `998A5E45…`, command `510F2A9A…`, manifest `FCDC4747…` | Đã kiểm hash tại HEAD |
-| Thiết bị/app | serial `15e84958`, signature token `abebea4b`, production `4.17-p5e.11`/code207 APK `2CCBB844…`, certificate `47F31389…`, test APK `058BE851…`, schema v24 | APK/test APK khớp ở Before ngày 09-26; chưa kiểm lại |
-| DB | Pin helper `3563F44B…`; hash DB đo lần cuối 09-26 là `2CC23078…` (17,784,832 B, bản sao host còn trong event 09-26) | **Lệch, chưa giải quyết**: Before dừng cứng `P5E_COLLECTOR_PRELIVE_DATABASE_HASH_MISMATCH` nếu lệch |
+| Candidate | entry `D8E4D0FC…`, helper `F0A567A2…`, command `6E87E8F5…`, manifest `B3A79783…`, child contract `70BB550C…` (re-pin 2026-10-01 chỉ để đổi pin hash file DB) | Đã kiểm hash tại working tree; xem trạng thái commit ở cuối mục |
+| Thiết bị/app | serial `15e84958`, signature token `abebea4b`, production `4.17-p5e.11`/code207 APK `2CCBB844…`, certificate `47F31389…`, test APK `058BE851…`, schema v24 | APK/version/test APK khớp pin qua M0 chỉ-đọc ngày 2026-10-01 |
+| DB | Pin helper `8D084050…` (18,952,192 B, đo chỉ-đọc 2026-10-01; thay pin cũ `3563F44B…`, hash file đã đổi ngày 09-26 và 10-01). Nội dung khớp tuple tươi, lineage bằng 0, integrity ok | Hash file có thể đổi lần nữa nếu máy/app được dùng: chạy lại M0 ngay trước khi duyệt; lệch thì Before dừng `P5E_COLLECTOR_PRELIVE_DATABASE_HASH_MISMATCH` trước provider |
 | Route | OpenRouter `openai/gpt-5.6-luna`, upstream `openai`, route fingerprint `23149071…`; key nhập trực tiếp ở prompt ẩn, chỉ trong bộ nhớ | Route từng `MATCH`; account kiểm trong event |
 | Trần (giữ nguyên như đã pin) | input ≤ 100,000 token, output ≤ 4,096, tổng ≤ 104,096, ≤ USD 0.05, ≤ 120,000 ms; hiệu lực authorization sinh mới lúc owner duyệt | Pin trong helper |
 | Cơ sở của trần | Compact wire xấu nhất 2,785 B dưới ngưỡng 3,584 B; input cũ khoảng 23.7k token; hai generation bị hủy trước đây tốn USD 0.0047 và 0.0037 | Số đo thật; tokenizer không chính xác |

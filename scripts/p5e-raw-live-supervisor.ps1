@@ -353,7 +353,7 @@ $script:P5ECertificateSha256 =
     '47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155'
 $script:P5EDatabaseSchemaVersion = 24L
 $script:P5EDatabaseSha256 =
-    '3563f44bce9e529955b6c39142243f59af8f2f0d0095303f5c7a66be07219391'
+    '8d084050974e0681bf05ae46d799db8741bb2593ffefe92b2d12b5920fdfe685'
 $script:P5EAuthorizationId = 'P5E-FRESH-MERCEDES-VOL5-RAW-20260911-01'
 $script:P5EAuthorizationIdSha256 =
     '0aa82c5897e3df3ec8a7a1586736dbf184b316c66ec165e95e64e8e4832145eb'

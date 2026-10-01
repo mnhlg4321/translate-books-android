@@ -16,7 +16,7 @@ param(
 #   2 console-outer-failure-preserved       missing -JavaPath: stderr cause + exit 1, no audit
 #   3 console-approval-key-synthetic-child  integration fixture, real Read-Host approval+key,
 #                                           synthetic child, CHILD_EXIT_ZERO, exit 0
-#   4 legacy-cc01-silent-exit-defect        retained CC01 bytes: silent exit 0, no audit, no prompt
+#   4 (retired) legacy-cc01-silent-exit-defect: historical, see QA_03
 # Per-case observed facts are persisted in the report; temporary roots are
 # removed only after those facts are captured.
 
@@ -26,7 +26,6 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $entrypointPath = Join-Path $PSScriptRoot 'p5e-a43-pre-reservation-launcher-entrypoint.ps1'
 $integrationPath = Join-Path $PSScriptRoot 'test-p5e-a43-pre-reservation-integration.ps1'
-$legacyEntryPath = Join-Path $repoRoot 'evidence\p5e-a43-parent-integration-20260930\legacy\P5E_A43_ENTRY_CC01_LEGACY.ps1.txt'
 $powershellPath = Join-Path $env:WINDIR 'System32\WindowsPowerShell\v1.0\powershell.exe'
 
 function Assert-EntryConsole {
@@ -261,20 +260,8 @@ Assert-EntryConsole ($probe.InnerExitCode -eq 0 -and [int]$f.outerExitCode -eq 0
 Assert-EntryConsole ($f.reservationCreated -and $f.ownerRootCreated -and $f.receiptCreated) 'P5E_A43_ENTRY_CONSOLE_PROBE_STATE_STOP'
 Assert-EntryConsole ([int]$f.liveCalls -eq 0 -and -not [bool]$f.environmentRetained) 'P5E_A43_ENTRY_CONSOLE_PROBE_LIVE_OR_ENV_STOP'
 
-# Case 4 — characterization of the retained legacy bytes (not a candidate).
-$legacyCopy = Join-Path ([IO.Path]::GetTempPath()) ('p5e legacy cc01 ' + [Guid]::NewGuid().ToString('N').Substring(0, 8) + '.ps1')
-try {
-    Copy-Item -LiteralPath $legacyEntryPath -Destination $legacyCopy
-    $legacy = Invoke-EntryConsoleCase -EntryPath $legacyCopy -PromptWaitSeconds 8
-} finally {
-    if (Test-Path -LiteralPath $legacyCopy) { Remove-Item -LiteralPath $legacyCopy -Force }
-}
-$cases.Add([ordered]@{ name = 'legacy-cc01-silent-exit-defect'; entrySha256 = $legacy.EntrySha256; argumentNames = $legacy.ArgumentNames; pathsContainSpace = $legacy.PathsContainSpace
-        auditSeenBeforeInput = $legacy.AuditSeen; exited = $legacy.Exited; exitCode = $legacy.InnerExitCode; auditFiles = $legacy.AuditFiles
-        outputLength = ([string]$legacy.Result).Length; excerpt = $legacy.ResultExcerpt })
-Assert-EntryConsole ($legacy.EntrySha256 -ceq 'CC01C33F056F86F4ACC4E3BD45AAAA2910CCEE9719AC5830EDAE99987A7C8E23') 'P5E_A43_ENTRY_CONSOLE_LEGACY_BYTES_CHANGED_STOP'
-Assert-EntryConsole ($legacy.Exited -and $legacy.InnerExitCode -eq 0 -and -not $legacy.AuditSeen -and $legacy.AuditFiles -eq 0) 'P5E_A43_ENTRY_CONSOLE_LEGACY_DEFECT_NOT_OBSERVED_STOP'
-Assert-EntryConsole ([string]::IsNullOrWhiteSpace($legacy.TypedCode)) 'P5E_A43_ENTRY_CONSOLE_LEGACY_UNEXPECTED_TYPED_RESULT_STOP'
+# Case 4 (legacy CC01 silent exit) was recorded in P5E_A43_ENTRY_CONSOLE_QA_03.json against the previous pins. After the 2026-10-01 DB re-pin the legacy bytes stop at their own
+# pin gate before reaching the defect, so that characterization is historical evidence only and is no longer executed here.
 
 # Case 5 — state-consistent candidate for the latest owner-window pre-prompt
 # exit: the default audit file is named by candidate hash only, and the real
