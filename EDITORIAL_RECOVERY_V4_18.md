@@ -75,6 +75,20 @@ Giữ P5 -> P6 -> P7 và checklist `release_checklists/v4.18-editorial-v5-safe-4
 | P6: ba chương | Chương ngắn, thoại/xưng hô dày, chương dài gần giới hạn; negative conflict/no-edit riêng | Ba final hợp lệ; negative conflict dừng đúng không tính vào ba final | Conflict thật ghi rõ và bổ sung chương hợp lệ, không hạ tiêu chí để tăng PASS |
 | P7: bàn giao | Targeted + full regression bắt buộc; wrapper build, hai archive; device QA import/restart/recovery/stale input/export/Translation | APK, final samples và checklist evidence; tag/release chỉ sau gates | Sửa local trong phase, không mở release track mới |
 
+**Mốc P5 sau cửa vào (một RAW event không phải quyền cho cả chuỗi).** Mỗi mốc có evidence PASS riêng; không mốc nào suy ra từ mốc trước.
+
+| Mốc | Đầu ra | Evidence PASS | FAIL thì làm gì |
+|---|---|---|---|
+| M0 quan sát chỉ-đọc trước event | Serial, APK production/test, certificate, DB sha so với pins của helper | Mọi hash khớp pins; số dòng lineage bằng không | Lệch: không mở event, không provider. Chỉ re-pin offline khi drift được giải thích bằng hash đã đo, rồi trình owner lại |
+| M1 mở event + Before | Outer log, audit theo DecisionId, reservation, receipt, Before snapshot | `BEFORE_STATE_CAPTURED` | Typed stop: event đã dùng, phân loại bằng outer log + audit, không retry. Nếu là lỗi cửa vào, dùng phương án B (mục 6), không vòng launcher thứ ba |
+| M2 một RAW call | Request/response identity, cost, terminal state | After + verifier: response đầy đủ, `finish` hoàn tất, cost trong trần, identity đúng | Truncated/lỗi/timeout: typed result, không retry/repair. UNKNOWN: sang M2b |
+| M2b đối chiếu trạng thái ngoài (chỉ khi UNKNOWN) | Phân loại generation, cost | Đọc metadata nhà cung cấp, không gọi model, trong phạm vi owner cho phép riêng | Vẫn không rõ: dừng, owner quyết định; không suy ra `$0` |
+| M3 RAW predecessor | Predecessor bền vững | Readback đúng identity/hash/payload | Partial: không được nhận làm predecessor |
+| M4 RECONCILE (L1, phase riêng) | Kết quả reconcile | Quyền, trần call/USD riêng; validator đạt; không thừa kế quyền RAW | Theo typed contract (INPUT/REPAIR/RETRY_REQUIRED); không retry mù |
+| M5 REPORT_L1 + receipt atomic | Cả hai cùng commit | Readback đúng schema/identity/predecessor/hash; failpoint trước/sau commit | Partial: không nhận cái nào; sửa store cục bộ, không gọi provider lại |
+| M6 restart/reopen | Đọc lại REPORT_L1, receipt, predecessor | Cùng hash sau restart | Sửa app path cục bộ |
+| M7 P5 exit | `P5_EXIT_PASS / P6_READY` ghi vào checklist P5E.8/P5E.9/P5.4/exit và bảng chapter manifest → pack hash → chain/run → RAW → REPORT_L1 → receipt → reopen | Mọi mốc trên có evidence cụ thể; gate P5D lịch sử phân loại historical/superseded hoặc còn bắt buộc | Ghi đúng mốc thiếu; không chạy provider chỉ để đóng track lịch sử |
+
 Build phục vụ kiểm chứng Android được phép ở milestone cần artifact mới theo policy, không phải đợi P7. Không build cho host/docs thuần. APK mới cần pins/evidence mới; archive trước cài; không dùng connected installer bị cấm trên pilot. Full regression cuối gồm engine/app, lint, Translation Glossary4/Pronoun7 và các checks release/performance bắt buộc trong workflow; không dùng báo cáo thay benchmark thật.
 
 Kiểm thử atomic tối thiểu cho cả L2 và L3: failpoint trước write, sau write thành phần thứ nhất nhưng trước transaction commit, và sau commit trước UI acknowledgement; restart/readback chứng minh hoặc cả cặp tồn tại với đúng hash/predecessor hoặc không cặp nào được nhận hợp lệ. Thêm double-submit/concurrent writer, stale source và UNKNOWN dispatch không gây call lặp. Đây là một transaction cho cặp, không phải hai commit rồi vá consistency.
@@ -98,7 +112,7 @@ Phương án B tối thiểu để trình quyết định: ưu tiên thiết b�
 
 ## 7. Quyền, dữ liệu và chi phí
 
-Lượt này là nghiên cứu/viết lại/phản biện plan, không phải live approval. Không tái dùng consumed decision/event/receipt, đọc secret, tự nhập approval, retry UNKNOWN, bỏ identity hoặc nới DB allowlist. A4.3 vẫn chỉ một RAW/GLOSSARY call theo packet hiện hành; RECONCILE/L2/L3 không thừa kế quyền đó.
+Lượt này là nghiên cứu/viết lại/phản biện plan, không phải live approval. Không tái dùng consumed decision/event/receipt, đọc secret, tự nhập approval, retry UNKNOWN, bỏ identity hoặc nới DB allowlist. A4.3 vẫn chỉ một RAW/GLOSSARY call theo packet hiện hành (M2); RECONCILE (M4), đối chiếu trạng thái ngoài (M2b) và L2/L3 không thừa kế quyền đó. Quyền cho cả chuỗi (trần call/USD theo phase) chỉ xin sau khi M2 cho số cost/thời gian thật.
 
 Trước pilot đầy đủ, chuẩn bị một bảng scope review được: chương/nguồn/hash, device/app/model route, từng phase/số call tối đa, input/output cap, thời gian, tổng trần USD, timeout/unknown behavior. Có thể xin phạm vi bao trọn chuỗi và chuyển phase xác định để giảm hỏi lặp; chỉ áp dụng sau owner cho phép, không hồi tố A4.3. Giá/capability cần thì kiểm nguồn chính thức tại lúc chọn cấu hình, không đoán.
 
@@ -135,6 +149,8 @@ Review 2026-10-01: Luna soạn acceptance và phản biện giới hạn năm đ
 
 ## 10. Next action duy nhất
 
-Offline entry-boundary đã đóng (2/2 vòng, ≈30/60 phút): entry 68DF8061, parent, loader, test và evidence nằm trong một commit chạy được từ extract `git archive` độc lập; console QA 6/6 (prompt, outer failure, approval→key→synthetic child, CC01, audit-hash collision, explicit `-AuditPath`). Cơ chế đủ giải thích lần owner-window gần nhất là audit mặc định đặt tên chỉ theo hash candidate và file `68df8061….json` đã tồn tại; chưa chứng minh bằng stderr thực.
+Offline entry-boundary đã đóng (2/2 vòng, ≈30/60 phút): entry 68DF8061, parent, loader, test và evidence nằm trong một commit chạy được từ extract `git archive` độc lập; console QA 6/6. Nguyên nhân lần owner-window gần nhất vẫn UNRESOLVED: lỗi `P5E_A43_AUDIT_ALREADY_EXISTS_STOP` đã tái hiện được, nhưng bản ghi lần đó ghi audit path theo DecisionId nên không chứng minh đó là nguyên nhân; run guide giờ có outer log để lần sau có stderr thật.
 
-Next action: trình owner quyết định scope một event A4.3 RAW (chapter/source identity, call/USD caps, quyền hiện hành) với run guide có `-AuditPath` theo DecisionId và log ngoài cùng. Không tự chạy owner run, không retry event cũ, không build APK, không hỏi key; không mở vòng launcher thứ ba — nếu vẫn lỗi dù có outer log thì chuyển phương pháp theo mục 6.
+Review chuyển P5: đủ để chuẩn bị một event RAW giới hạn; còn một khoảng thiếu cụ thể, không phải gate mới. Hash DB trên máy đo lần cuối (2026-09-26) là `2CC23078…`, trong khi pin của helper là `3563F44B…` và Before dừng cứng bằng `P5E_COLLECTOR_PRELIVE_DATABASE_HASH_MISMATCH` nếu lệch; cổng này chưa từng được chạm ở event live nào (09-26 dừng sớm hơn ở tuple, 09-28 dừng ở `pm path`). Bảng scope đề xuất nằm trong `docs/P5E_A43_ENTRY_BOUNDARY_RUN_GUIDE_20260930.md`.
+
+Next action: xin owner một quyết định: cho phép quan sát chỉ-đọc M0 (serial, `pm path` của hai package, export DB về host, so với pins; không key, không provider, không ghi). Khớp: owner duyệt event theo guide. Lệch: re-pin offline có giải thích rồi trình lại. Không mở vòng launcher thứ ba; nếu event vẫn dừng ở cửa vào dù có outer log, dùng phương án B (mục 6).

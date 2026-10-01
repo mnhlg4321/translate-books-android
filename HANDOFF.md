@@ -8,9 +8,9 @@ Baseline HEAD `b2f689cb4948bc4e715b6cf85f4396e49afd9525`. Vòng entry-boundary 2
 
 - Một commit đã chứa entry 68DF8061, parent, loader và mọi test/evidence cần thiết; chạy từ extract `git archive HEAD` trong đường dẫn có khoảng trắng: console QA 6/6, integration 21/21.
 - Console QA (hidden console thật, input synthetic) phủ: prompt + literal sai, outer failure, approval→key→synthetic child thành công qua integration fixture, bytes CC01 (exit 0 im lặng), audit hash có sẵn và dạng `-AuditPath` riêng.
-- Nguyên nhân lần owner-window gần nhất: cơ chế đủ và nhất quán với dấu vết là audit mặc định đặt tên chỉ theo hash candidate, mà `D:\P5E-private\.p5e-a43-audit\68df8061….json` đã tồn tại, nên chạy lại dừng ở biên ngoài bằng `P5E_A43_AUDIT_ALREADY_EXISTS_STOP`. Chưa chứng minh bằng stderr thực (không được lưu). CC01 silent exit là lỗi của bytes cũ, tách biệt.
+- Nguyên nhân lần owner-window gần nhất vẫn UNRESOLVED: không có stderr. `P5E_A43_AUDIT_ALREADY_EXISTS_STOP` đã tái hiện nhưng bản ghi lần đó ghi audit path theo DecisionId nên không chứng minh là nguyên nhân. CC01 silent exit là lỗi của bytes cũ, tách biệt. Khoảng thiếu cụ thể trước event: pin DB `3563F44B…` so với hash DB đo lần cuối `2CC23078…` (09-26); Before dừng cứng nếu lệch và cổng này chưa từng chạm live.
 - Giới hạn: không phải cửa sổ owner nhìn thấy; case thành công dùng integration fixture, không qua `-Execute` của entry live. Không có bằng chứng RAW/L1/provider; P5 vẫn chưa PASS, P6 chưa sẵn sàng.
-- Next action: trình owner quyết định scope một event A4.3 RAW (chapter/source identity, call/USD caps) cùng run guide mới (`-AuditPath` theo DecisionId + log ngoài cùng). Không tự chạy. Nếu cửa sổ owner vẫn lỗi dù có outer log, dùng phương án B canonical §6.
+- Next action: xin owner một quyết định: cho phép quan sát chỉ-đọc M0 (serial, `pm path` hai package, export DB về host, so với pins; không key/provider/ghi). Khớp: owner duyệt một event theo bảng scope trong run guide. Lệch: re-pin offline có giải thích rồi trình lại.
 
 ## Đọc theo thứ tự này
 
@@ -77,7 +77,7 @@ Offline/component PASS không thay live/product acceptance. Enum/schema/validato
 
 ## Next action duy nhất
 
-Trình owner quyết định scope một event live A4.3 RAW: chapter/source identity, trần call/token/time/USD và quyền hiện hành. Chỉ sau quyết định đó owner mới chạy run guide `docs/P5E_A43_ENTRY_BOUNDARY_RUN_GUIDE_20260930.md` cho candidate 68DF8061 (`-AuditPath` theo DecisionId và log ngoài cùng `.p5e-a43-outer-<DecisionId>.log`). Không tự chạy, không dùng key/device/ADB/provider trong lượt offline.
+Xin owner một quyết định: cho phép quan sát chỉ-đọc M0 (serial, `pm path` của hai package, export DB về host, so với pins; không key, không provider, không ghi). Khớp: owner duyệt một event theo bảng scope trong `docs/P5E_A43_ENTRY_BOUNDARY_RUN_GUIDE_20260930.md` (chương 001 VOL5, một RAW call, trần đã pin, `-AuditPath` theo DecisionId, outer log). Lệch: re-pin offline có giải thích rồi trình lại. Mốc M0–M7 và hành động khi FAIL nằm ở mục 5 của canonical plan.
 
 Bước chẩn đoán offline launcher đã đóng ở 2/2 vòng (≈30/60 phút): không mở vòng thứ ba. Nếu cửa sổ owner vẫn lỗi dù đã có outer log, dùng phương án B ở canonical plan §6: trình môi trường Android thử riêng/dữ liệu thay thế/cùng production path và phần nào còn phải kiểm lại trên target; không tự cài, xóa DB, gọi provider hoặc thay scope.
 
