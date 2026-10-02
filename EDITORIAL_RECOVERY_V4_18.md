@@ -188,7 +188,7 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-R2 đã viết xong mã (ledger v2 trong engine P5, provider, exact-binding) và qua test host; còn chứng minh DB trên emulator bằng APK lưu trữ (serialize → DB → khởi động lại → `committedL1`). Next action: build APK production + AndroidTest bằng wrapper từ commit R2 trong worktree sạch, chạy riêng test ledger trên emulator, đóng R2 rồi sang R3 (L2 + reconstruction + protected spans); R4, R5 offline; dừng cuối R5 với bảng ngân sách và Q1–Q5.
+R2 đã đóng (ledger v2 trong engine P5/provider/binding; chứng minh DB trên emulator bằng APK lưu trữ 4.18-p6.3/code216: RAW → RECONCILE → DB → khởi động lại → `committedL1`, FakeE2E 20/20). Next action: R3 — L2 xử lý từng finding của L1 (FIXED/REJECTED/PRESERVED/UNRESOLVED), protected spans từ REPORT_L1 vào coordinator, reconstructor thêm INSERT_AFTER/DELETE/MERGE_WITH_NEXT, final-read VI_L2, gắn revision của report vào identity L2/L3 và từ chối report legacy, test từ điểm vào coordinator; rồi R4, R5 offline; dừng cuối R5 với bảng ngân sách và Q1–Q5.
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 
