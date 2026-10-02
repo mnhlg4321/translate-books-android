@@ -180,6 +180,6 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-Owner duyệt một phạm vi quyền M4 (bảng ở G2 chi tiết): build + cài production/test APK mới trên serial `15e84958` (migrate DB v24→v25, sao lưu trước), một RECONCILE call trần USD 0.05 / 104,096 token / 120 s qua `scripts/p5e-m4-reconcile-event.ps1`. M4.a–c đã xong offline. Trong lúc chờ: G3/G4 offline còn lại (adapter L3, L2_RAW_DISCOVERY), không provider/thiết bị.
+Owner đã duyệt phạm vi M4 (2026-10-01, `docs/P5E_M4_RECONCILE_WORK_REQUEST_20261001.md`). Bước 1 (M0) bị chặn ngoài: máy `15e84958` chưa kết nối ADB (2026-10-02). Next action: owner cắm máy và cho phép USB debugging, rồi tiếp tục yêu cầu từ bước 1. Offline đã thêm: adapter L3 `be105e16`, coordinator + export `ba8b4bbb`.
 
 Lịch sử next action trước (giữ để tra cứu): event 7 commit RAW + REPORT_L1-phase-RAW + receipt (verifier formal `RAW_NOT_ACCEPTED` do collector); collector đã sửa ở `3057919b`. Offline entry-boundary đã đóng 2/2 vòng; nguyên nhân owner-window lịch sử vẫn UNRESOLVED.
