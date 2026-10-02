@@ -161,6 +161,8 @@ Thay thế các hàng P5/P6 tương ứng ở mục 5 về mức chi tiết; th�
 | G6 Ba final + regression/device QA | Chưa có | Ba chain riêng (ngắn, dày thoại, dài); full regression, wrapper build, hai archive, device QA | G5; owner chốt chương + ngân sách chuỗi | Bảng evidence theo mục 5 | `PRODUCT_FINAL_OUTPUT_ACCEPTED` | Conflict thật: thêm chương hợp lệ, không hạ tiêu chí |
 
 Ước lượng chi phí L2/L3 trước live: lấy số đo thật event 7 (RAW: 21,143 prompt / 535 completion token, USD 0.00295, 8.2 s) làm mốc; L2_EDIT thêm DRAFT + REPORT_L1 (~2× prompt) và output là danh sách change rows (không phải toàn văn). Bảng call/cap/USD theo phase lập khi G3 có wire cố định.
+Tiến độ G5 offline (2026-10-02, `a6da1a35`): `EditorialChapterFinalCoordinator.inspect` đọc tiến độ L1→L2→L3→FINAL chỉ từ hàng bền (không claim/dispatch/repair); `EditorialChapterProgress` (JVM) phân loại stage, typed stop và next action — hàng `CLAIMED` sau process death hoặc `RECOVERY_REQUIRED` là quyết định phục hồi của owner, không bao giờ tự retry; thẻ chương P4 có tiến độ, xem bản cuối và Xuất TXT qua SAF (ghi đúng byte FINAL, đọc lại SHA-256/độ dài, lỗi/hủy không đụng FINAL đã lưu); chạy L2/L3 vẫn khóa chờ cấp phép riêng. App unit 298/298, lint PASS, androidTest compile PASS (4 test instrumented mới chưa chạy trên máy; UI chưa kiểm trên máy). **Phát hiện:** `L2_RAW_DISCOVERY` (đọc RAW độc lập, tái lập candidate counts) chưa được nối: REPORT_L1 thật chỉ mang `populationTotal=1`/`accountedTotal=1` (một population app-owned, không có đếm UNIT/TG/SR/RC), nên đối chiếu count hiện không có sức phân biệt; cần quyết định (xem mục 10).
+
 ### G2 chi tiết — M4 RECONCILE chương 001 (nhóm active sau quyết định B)
 
 Quyết định owner 2026-10-01: **B** — RAW event 7 (attempt `7a5e3428…`) là predecessor duy nhất cho M4; verdict formal giữ `RAW_NOT_ACCEPTED`. Quyết định này không cấp quyền cài APK, migrate DB hay gọi provider.
@@ -180,7 +182,7 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-P5 đạt ở mức app/DB theo ngoại lệ B (M4–M7: `docs/P5E_CONSOLIDATED_FAILURES_20260930.md` mục Event M4 lần 2; `P5_EXIT_PASS_UNDER_EXCEPTION_B / P6_READY_OFFLINE_ENGINE`). Next action: G5 offline — nối UI/coordinator vào cùng đường `EditorialP5CExactBindingExecution`/`EditorialPhaseArtifactStore` (tiến độ, typed stop, recovery, xem final, export TXT) và pha `L2_RAW_DISCOVERY` đối chiếu candidate counts với REPORT_L1, mỗi phần có test JVM/fake provider. Mọi live L2/L3 chờ owner chốt tên ba chương và ngân sách call/token/USD theo pha; chưa có thì không build-cài-gọi provider.
+P5 đạt ở mức app/DB theo ngoại lệ B (`P5_EXIT_PASS_UNDER_EXCEPTION_B`); G5 offline đã có tiến độ/xem/xuất (`a6da1a35`). Next action: G5 offline tiếp — nút chạy L2/L3 trên thẻ chương: hộp thoại cấp phép nơi người dùng xác nhận trần call/token/USD từng pha, chạy nền qua cùng `EditorialChapterFinalCoordinator.runToFinal` với adapter OpenRouter L2/L3, hiển thị tiến độ qua `inspect`; test JVM/fake provider, không gọi provider thật. Trước mọi live L2/L3 cần owner: (1) tên ba chương và ngân sách theo pha; (2) chọn cách xử lý `L2_RAW_DISCOVERY`: (a) mở rộng wire L1 để mang đếm candidate theo ledger rồi chạy lại L1 (đổi wire đã pin), (b) coi `L2_EDIT` đã đọc RAW và bỏ cuộc gọi riêng (lệch contract pha), hoặc (c) thêm cuộc gọi blind RAW chỉ đối chiếu `populationTotal` (rẻ nhưng gần như vô nghĩa).
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 
