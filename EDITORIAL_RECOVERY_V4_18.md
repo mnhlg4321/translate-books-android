@@ -188,10 +188,114 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-Chương 001: chất lượng đã được owner chấp nhận (1/3 chương đại diện). Next action: owner chọn hai chương còn lại trong `docs/P6_G6_CHAPTER_CANDIDATES_20261002.md` (đề xuất `007` dày thoại/xưng hô và `010` dài nhất; `013` nếu 001 không tính là nhóm ngắn) và cấp quyền cho từng chương: tạo project/binding trên pilot, L1 RAW + RECONCILE và chuỗi L2/L3 theo trần D3, kèm quyết định cách xử lý hai khoảng trống tiêu chí. Chưa có quyền này thì không tạo project, không gọi provider, không cài lại.
+Theo yêu cầu owner 2026-10-02, ưu tiên hiện tại là bàn giao cho Claude điều phối sửa các lỗi ledger, kiểm ngữ nghĩa và bằng chứng nghiệm thu theo mục 11. Next action duy nhất: Claude xác minh baseline và hoàn tất R0 — bảng lỗi có chứng cứ + đặc tả fixture — rồi tiếp tục các nhóm offline theo phụ thuộc; chưa dùng hai chương mới để thay thế việc sửa lỗi đã biết. Chất lượng chương 001 được owner chấp nhận trước đây là sự kiện lịch sử, không chứng nhận cơ chế mới. Bản FINAL đính kèm do owner làm thủ công, độc lập với app. Việc lập kế hoạch không cấp thêm quyền provider/device hay đổi nguồn pilot.
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 
 Lịch sử next action trước 2026-10-02 (giữ để tra cứu): M0 bị chặn vì máy chưa kết nối ADB; owner đã cắm máy và M4 chạy như trên. 
 
 Lịch sử next action trước (giữ để tra cứu): event 7 commit RAW + REPORT_L1-phase-RAW + receipt (verifier formal `RAW_NOT_ACCEPTED` do collector); collector đã sửa ở `3057919b`. Offline entry-boundary đã đóng 2/2 vòng; nguyên nhân owner-window lịch sử vẫn UNRESOLVED.
+
+## 11. Kế hoạch sửa và phản biện để Claude điều phối — 2026-10-02
+
+Đây là chi tiết sửa trong P6 của canonical plan hiện có, không mở release/branch/checklist mới. Tài liệu bàn giao hỗ trợ: `docs/P6_LEDGER_QA_CLAUDE_HANDOFF_20261002.md`. Căn cứ: `docs/P6_CHAPTER_001_INDEPENDENT_AUDIT_20261002.md` và tiêu chí `docs/EDITORIAL_FINAL_OUTPUT_ACCEPTANCE.md`. Mục tiêu là đóng mọi lỗi đã xác minh bằng test và evidence, không hứa mô hình ngôn ngữ sẽ không bao giờ bỏ sót lỗi mới.
+
+### 11.1. Baseline và các kết luận phải sửa ngay
+
+- Branch `feature/v4.18-p5e-runner-repair-20260917`, HEAD khi lập kế hoạch `547c8a4d48f11856b29654e3d65749201d847efd`. Phải đọc HEAD/status thật khi tiếp quản; giữ dirty files không thuộc công việc. Build pilot lưu lại: `4.18-p6.2`/215 từ `4bc1aa27`; source có hai UX fix chưa build/cài.
+- RAW/DRAFT/GLOSSARY chương 001 khớp binding pilot; PRONOUN khớp khi bỏ BOM. Pilot FINAL `a7d5f99e…` chỉ sửa `今回` ở dòng 237; FINAL thủ công của owner `ebb091d6…` có thêm sáu khác biệt nội dung và hai chỗ gộp đoạn. Không dùng reference thủ công làm đầu vào model hoặc tự coi mọi khác biệt là lỗi.
+- L1 không sửa văn là đúng. Lỗi nằm ở việc không có Error Ledger đủ nội dung và việc report lưu bền bỏ các entry. `findingCount=0` không chứng minh model tìm được 0 lỗi: biến hiện không được gán. Không dùng metric này để chấm năng lực cũ.
+- Receipt L3 có 4 probe, không phải 8. L3 không sửa dòng nào tự nó không chứng minh thất bại; lỗi nghĩa còn sót trong pilot FINAL mới là đối chứng.
+- Phân biệt `踏破`/`攻略` theo ngữ cảnh RAW là lỗi nghĩa cần test; nhóm xưng hô `嬢ちゃん` là kiểm tra tuân thủ profile và speaker/scope; `特権階級` cần phân xử riêng, không tự tính là lỗi bắt buộc.
+- Đọc thêm khi lập kế hoạch: `EditorialChapterFinalCoordinator.runToFinal` truyền `protectedLines = Set.of()` vì REPORT_L1 chưa mang protected spans. Vì vậy chỉ số protected regression bằng 0 chưa chứng minh bảo vệ span. `EditorialL3Execution` tạo `finalReadOrder` bằng danh sách cố định, và sau reconstruct QA edits đi tới commit, chưa có bước provider đọc lại FINAL đã dựng. Đưa cả hai vào phạm vi kiểm chứng/sửa, không coi marker tĩnh là bằng chứng đã đọc.
+
+### 11.2. Phân công và thứ tự
+
+Claude là điều phối chính, chịu trách nhiệm thiết kế contract chung, tích hợp, kiểm định kết quả sub-agent và cập nhật trạng thái. Mỗi nhiệm vụ có file ownership, đầu ra và test rõ; không cho nhiều writer sửa cùng file. Luna nhận việc nhỏ: đối chiếu fixture, rà schema/round-trip, rà bảng claim→evidence hoặc phản biện một nhóm test; không giao Luna tự kết luận toàn bộ semantic acceptance. Chỉ song song việc độc lập. Không tạo nhiều release track để chia việc.
+
+Thứ tự: **R0 → R1 → R2 → R3 → R4 → R5 → R6 → R7**. Có thể chuẩn bị harness R5 song song sau khi contract R1 đã chốt. Các mã R chỉ là nhóm sửa trong P6, không phải phase sản phẩm mới. Khi một nhóm test fail: FAILED_REPAIRING, sửa/rerun cùng nhóm; không xin owner giải quyết lỗi code thường lệ. Hai vòng cùng failure signature: điều phối xem lại giả thuyết, không tăng gate hoặc hạ test để đạt PASS.
+
+| Nhóm | Công việc/ownership chính | Điều kiện đóng nhóm |
+|---|---|---|
+| R0 — sự thật và đối chứng | Claude chốt bảng issue → bằng chứng → nguyên nhân → test; Luna đối chiếu RAW/DRAFT/pilot/manual và occurrence anchors | Phân loại confirmed defect / profile violation / preference / uncertain; mỗi lỗi xác nhận có expected semantic invariant, nguồn và cách chấm; không sửa file nguồn |
+| R1 — contract và coverage | Engine contract, projector, parser, provider wire; định nghĩa inventory, Error Ledger, proofs, protected spans, version và budget | Schema/negative fixtures chứng minh biểu diễn được toàn bộ R0; có phương án vượt 4 findings và giới hạn 300 candidates, không cắt im lặng; giữ đúng visibility từng phase |
+| R2 — L1 và lưu bền | `EditorialP5RawWireContract`, `EditorialP5RawWireResponse`, `EditorialP5PilotExecution`, provider L1 và store/readback liên quan | RAW discovery giữ đúng vai trò raw-first; RECONCILE xuất ledger đầy đủ; serialize→DB→restart→L2 giữ nguyên entry/proof; metrics tính từ dữ liệu đã validate |
+| R3 — L2 và reconstruction | `EditorialL2Execution`, `EditorialChangeMapReconstructor`, provider L2, coordinator | Mọi L1 Error ID có cách xử lý và evidence; sửa đúng chứ không chỉ đủ ID; protected span thực đi vào runtime; final-read áp dụng lên đúng VI_L2 đã dựng |
+| R4 — L3 và release | `EditorialL3Execution`, provider L3, receipt/release validators | Bắt được lỗi cài trực tiếp trong VI_L2; probe có anchors và lập luận cụ thể; nếu QA edit thì đọc lại đúng FINAL đã dựng trước commit; generic PASS không đủ |
+| R5 — đánh giá độc lập | Harness offline/fake + bộ semantic evaluation được tách khỏi đáp án | Test cấu trúc đạt; fixture/holdout và scoring đóng băng trước chạy model; bảng ngân sách/call mới cụ thể, chưa gọi provider |
+| R6 — build và xác minh live có phạm vi | Claude tích hợp, regression, wrapper archive, chuẩn bị rồi thực hiện đúng quyền live được owner cấp | Cùng code/prompt/schema được kiểm qua model thật, lưu evidence đầy đủ; không dùng fake tests để tuyên bố semantic PASS |
+| R7 — tái nghiệm thu sản phẩm | Chạy chương 001 và hai category còn lại theo nguồn/quyền đã chốt, UI save/reopen/export; cập nhật checklist hiện có | Đủ ba chapter theo contract sửa, kiểm nội dung độc lập và technical gates; P7/tag/release chỉ sau gates hiện có |
+
+### 11.3. Contract bắt buộc — sửa từ gốc, không chỉ tăng trần
+
+**Tách bốn khái niệm:** raw unit/occurrence là phần nguồn cần kiểm; candidate là nghi vấn cần xét; finding là lỗi có chứng cứ; change là thao tác sửa. Không gộp một population acknowledgement thành một lỗi. Định nghĩa metric cùng schema: uniqueFindingCount, occurrenceCount, unresolved/preserved, applied/revertedChangeCount; số candidate không là số lỗi. Dữ liệu lịch sử thiếu metric phải ghi unavailable/legacy, không suy đoán 0 hoặc hồi tố PASS.
+
+App dựng inventory RAW ổn định từ byte snapshot: đoạn/câu/thoại với offset và ID gắn source hash; quy tắc loại trừ blank/markup được ghi rõ. Scene grouping có thể là phân tích của model nhưng không thay inventory gốc. Mọi span nội dung thuộc inventory, mọi candidate/finding map về nguồn; lỗi nội dung thiếu trong DRAFT dùng RAW anchor và vị trí chèn, không cần giả một dòng DRAFT đang tồn tại. Hỗ trợ một-nhiều/nhiều-một; không ép 49=257. Theo dõi coverage hai chiều, orphan, duplicate và phần bị loại trừ có lý do. Raw coverage đạt không đồng nghĩa đã hiểu đúng nghĩa.
+
+L1 Error Ledger tối thiểu: Error ID duy nhất ổn định trong report; loại/mức độ; RAW anchor(s), DRAFT anchor/range hoặc missing target; quan sát ngắn; expected meaning/ràng buộc; bằng chứng; quan hệ với candidate/occurrence; disposition và evidence-limit khi thiếu chắc chắn. TG/SR/RC/Pair/Speaker records phải giữ được dữ liệu mà pinned workflow yêu cầu, không chỉ status. Sửa lời thoại cần direct listener và căn cứ RAW/ngữ cảnh; protected spans phải có nguồn, scope và lý do. Không bảo vệ cả chương chỉ để làm chỉ số regression đẹp.
+
+Phân biệt source role trong anchor. App xác minh bounds, hash/quote khớp, ID/reference hợp lệ và coverage phép đếm; model/reviewer chịu phần suy luận nghĩa. Một quote đúng không tự chứng minh kết luận đúng. Không yêu cầu model xuất chain-of-thought; chỉ cần lập luận kiểm chứng ngắn và trích đoạn liên quan.
+
+Lưu bền đầy đủ inventory, ledger entries, evidence, preserved/protected spans trong report/receipt hoặc artifact nội bộ được hash-link. Reopen phải phục hồi được nội dung tương đương, không chỉ tổng số. Sửa `findingCount` theo định nghĩa mới và thêm fixture 0/1/nhiều finding + nhiều occurrence cùng một finding. Số byte/token/call/cost, truncation và model/prompt/schema revision phải truy vết được; nếu provider không trả cost thì ghi unknown/estimated đúng nguồn.
+
+**Version/compatibility:** tăng revision cho wire/report/validator thay đổi không tương thích và bind vào identity. Report cũ vẫn đọc để xem lịch sử, không được coi là đủ ledger theo contract mới. Không sửa blob/receipt cũ, không tái dùng COMMITTED cũ cho chain đã đổi semantics. Xác định rõ predecessor nào tương thích; nếu RAW inventory đổi, chạy lại RAW khi được phép. Không mặc định có thể kế thừa event 7. Migration chỉ khi cần, ưu tiên artifact blob hiện có; test upgrade/reopen/rollback trước pilot.
+
+**Giới hạn tải:** lập sizing theo chương ngắn/dày thoại/dài và payload đầy ledger. Ưu tiên một response khi vừa; nếu vượt, chunk theo inventory/scene với context chồng lấn cần thiết, ownership rõ, dedup và tổng hợp không mất mục. Cross-scene speaker/listener phải được kiểm. Freeze quy tắc chunk/offset; test Unicode, CRLF, BOM, cuối file, gộp/tách/chèn/xóa đoạn. Không buộc model nhận biết mọi lỗi bằng cách tăng vô hạn trần. Mỗi call/chunk, tổng phase và chain có budget/token/time/call cap; thiếu chunk hoặc truncation không được commit report đầy đủ; UNKNOWN không tự retry.
+
+### 11.4. Trách nhiệm L2/L3 và gate nội dung
+
+L2 phải xử lý từng L1 finding: sửa với Change ID/diff chứng minh, bác với RAW evidence, preserve có exact span/evidence-limit theo contract, hoặc unresolved với typed stop thích hợp. Finding mới do L2 tự phát hiện phải được thêm và truy vết. Không được ghi PROCESSED rồi làm biến mất lỗi. L1 false positive có thể bị bác; không ép L2 sửa theo một kết luận sai của L1. Known-defect fixture bị preserve thay vì sửa vẫn là semantic test fail, dù preserve đúng cấu trúc.
+
+Reconstructor phải biểu diễn được missing/extra sentence và split/merge thực tế, không chỉ thay một dòng nếu cách đó không thể sửa fixture. Audit khả năng hiện tại trước khi mở rộng. Áp edit bằng exact anchor/hash, phát hiện overlap và remap vị trí qua DRAFT→VI_L2→FINAL; stale line number không được dùng để bảo vệ nhầm câu. Test từ entrypoint coordinator thật, không chỉ truyền protected set bằng tay trong unit test.
+
+L3 blind pass chỉ nhận nguồn được phép (RAW/GLOSSARY/VI_L2 theo contract); không nhận manual FINAL, gold labels hoặc kết luận L1/L2. Reconcile mới mở nguồn trước và PRONOUN theo visibility/status đã pin. Expected relations và QA findings có anchors; adversarial coverage phải thử bác nghĩa/vai/tác nhân/speaker/listener/số/phủ định/thiếu-thừa; regression phải xét mọi actual edit. Không thêm số lượng probe tối thiểu tùy tiện để giả lập độ sâu. Thay `NO_DEFECT` chung chung bằng record phạm vi đã kiểm, đối chứng nguồn, kết luận và action; validator kiểm cấu trúc, reviewer/evaluation kiểm nghĩa.
+
+Đọc lại sau sửa là operation gắn hash của văn bản đã dựng. Nếu L3 sửa, app dựng candidate FINAL rồi thực hiện final-read/verification có ngân sách trước commit; sửa tiếp làm invalid lần đọc cũ và phải kiểm lại trong số vòng đã giới hạn. Hết cap giữ typed incomplete/recovery, không xuất FINAL đạt. Nếu không sửa, có thể tái dùng lần đọc đúng cùng hash nếu đủ coverage. Tương tự cho final-read VI_L2. Marker thứ tự do app tự điền không chứng minh operation đã xảy ra.
+
+Giữ hai kết luận riêng: **structural execution valid** và **semantic evaluation đạt bộ kiểm đã định**. UI không gắn “không còn lỗi” chỉ từ COMMITTED hoặc các số 0. Không biến uncertainty hợp lệ thành CONTENT_BLOCKED; cũng không cho PRESERVE_DRAFT che known unresolved conflict trái contract.
+
+### 11.5. Ma trận test và nghiệm thu đo được
+
+R0 lập bộ đối chứng có RAW/profile proof; manual FINAL là nguồn gợi ý, không phải chuỗi ký tự bắt model chép. Reviewer kiểm các invariant nghĩa độc lập với model sửa. Chốt labels trước chạy; bất đồng phải phân xử và lưu lý do. Luna có thể đối chiếu anchors; Claude chịu kiểm định nghĩa khó, owner quyết định trường hợp còn mơ hồ cần tri thức ngoài nguồn.
+
+| Bộ kiểm | Đầu vào và điều cần chứng minh | Tiêu chí |
+|---|---|---|
+| Reproduction 001 | RAW/DRAFT thật; lỗi `今回`, nhóm dungeon, profile nếu được R0 xác nhận | Mỗi lỗi xác nhận có L1 finding; L2 sửa đúng; L3 không xác nhận sạch khi còn lỗi |
+| L1-only | Một lỗi mỗi fixture, rồi case tổng hợp >4 lỗi độc lập; không đưa manual FINAL | Phát hiện đủ lỗi đã chốt, có evidence; không sửa DRAFT; ledger/readback không mất mục |
+| L2-only | Ledger gồm lỗi thật + một false positive có chủ ý | Sửa đúng lỗi thật; bác false positive có proof; mọi Error ID được xử lý, 0 edit vô căn cứ |
+| L3-only | VI_L2 có lỗi cài trực tiếp, không qua L2; có trường hợp lỗi mới không có trong REPORT_L1 | Bắt/sửa lỗi cài; không phụ thuộc danh sách L1; no-edit PASS bị từ chối nếu còn lỗi đã biết |
+| Clean/ambiguous controls | Bản đúng và bản có nhiều cách diễn đạt hợp lệ; intentional Japanese quote/term hợp lệ | Không sửa sai nghĩa; không ép xóa mọi ký tự Nhật; uncertainty giữ đúng contract |
+| Giới hạn và fault injection | >4 findings, >300 candidates, nhiều occurrence, chunk boundary; malformed/missing/duplicate/forged refs; crash trước/sau commit | Đầy đủ hoặc typed incomplete; không silent truncation/partial PASS, không dùng lại stale artifact |
+| Protected/final-read | Coordinator với span thật; QA edit gây regression; marker có nhưng không có verification đúng hash | Bắt protected regression, stale read và stale anchor; final-read thực trên output sau sửa |
+| Holdout | Đoạn/chương chưa dùng chỉnh prompt, lỗi tự nhiên và seeded riêng; không có đáp án trong runtime | Chấm độc lập theo lớp lỗi; công khai miss/false repair/preserved; không chọn lượt đẹp nhất |
+
+Phân loại seeded tối thiểu: sót từ, sai nghĩa/vai, thiếu/thừa câu, số/phủ định, tên/glossary, speaker/listener/xưng hô, mất protected span. Từng mutation phải vẫn tạo đầu vào hợp lệ và có một lỗi mục tiêu rõ; mutation tạo thêm lỗi ngoài ý muốn phải loại/chỉnh trước chạy. Đáp án, tên fixture gợi đáp án, manual FINAL và expected labels không được vào runtime prompt. App inventory/dedup phải deterministic; không hứa output model deterministic chỉ nhờ seed.
+
+L3-only dùng harness/copy cô lập: dựng predecessor và hash nhất quán cho fixture trước khi chạy, dùng cùng projector/provider/parser/validator/reconstructor của production. Không chèn lỗi vào blob DB đã COMMITTED của pilot, không tắt identity gates để test chạy được, không mở một production bypass. Phải có một test end-to-end qua coordinator/UI thật bên cạnh các phép đo từng phase; fixture harness không thay thế nghiệm thu đường ứng dụng.
+
+**Ngưỡng đề xuất chốt trước chạy:** toàn bộ structural/negative tests PASS; 100% lỗi xác nhận R0 và seeded bắt buộc được phát hiện đúng ở L1/L3 riêng, sửa đúng ở L2/L3; 0 lỗi nghĩa mới/sửa sai trên clean controls; 0 oracle leak; 0 mất ledger/proof sau reopen. Known defects không được đóng bằng preserve. Báo riêng TP/FP/FN, recall/precision theo loại, correct-repair rate, regression rate, counts và mẫu số; N/A khi mẫu số 0. Bộ nhỏ đạt 100% không có nghĩa chất lượng mọi sách đạt 100%.
+
+R5 chốt holdout và ngưỡng trước nhìn kết quả; mặc định yêu cầu không còn lỗi nghiêm trọng đã adjudicate trên holdout, công khai mọi lỗi nhẹ. Không đạt thì sửa và đánh giá bằng holdout mới khi bộ cũ đã dùng để chỉnh. Dự kiến ba lượt độc lập cho subset lỗi trọng yếu để đo biến thiên, lưu mọi lượt và tiêu hao; chỉ chạy trong quyền/ngân sách thực tế, nếu chưa đủ lượt thì ghi thiếu evidence. Fake provider chỉ chứng minh plumbing/contract, không được tính vào semantic recall.
+
+### 11.6. Phản biện bắt buộc trước kết luận
+
+| Đề xuất dễ sai | Phản biện và cách xử lý |
+|---|---|
+| Chỉ tăng MAX_FINDINGS hoặc viết prompt mạnh hơn | Không sửa việc report bỏ entry, thiếu anchor/proof và gate chỉ đếm status. Phải sửa xuyên suốt provider→parser→report→store→L2/L3 |
+| Gieo 10 lỗi rồi chạy cả chuỗi là đủ | L2 có thể sửa hết trước L3. Cần L1-only, L2-only, L3-only và end-to-end riêng |
+| L1=0 finding/L3=0 edit chứng minh không làm việc | Metric L1 hiện hỏng; L3 có thể đúng khi bản sạch. Dùng bộ lỗi đã biết và clean controls |
+| Bản sửa tay luôn là đáp án; phải khớp toàn văn | Có sửa phong cách/format và cách dịch tương đương. Chấm invariant nghĩa/profile, phân xử từng khác biệt |
+| Candidate counts bằng nhau thì coverage đủ | Hai model có thể chia khác nhau hoặc cùng bỏ sót. Kiểm mapping theo raw inventory và proof; không equality số thô |
+| App tự tính 0 nên app đã chứng minh ngữ nghĩa | Input trạng thái vẫn do model khai; protected set hiện rỗng. Tách kiểm máy khỏi kiểm nghĩa, test actual runtime |
+| Tăng reasoning/đổi model sẽ chữa tận gốc | Có thể giúp semantic sensitivity nhưng không chữa contract hỏng. Giữ baseline route trước; chỉ thử model/reasoning khác như biến đo riêng sau sửa cấu trúc, có ngân sách, không tự đổi pins |
+| Fake tests xanh và finalReadOrder đủ nghiệm thu | Fake tests không kiểm năng lực model; marker tĩnh không chứng minh đọc. Cần semantic evaluation thật và operation gắn output hash |
+| Chunk nhỏ là giải pháp mặc định | Có thể mất ngữ cảnh speaker/quan hệ xuyên đoạn. Chỉ chunk khi sizing cần, overlap/ownership rõ và có boundary tests |
+| USD 0.05/lần đủ cho mọi phép thử | Số cũ chủ yếu là L2/L3 bốn call. Full L1–L3, ledger lớn, chunk và final-read làm đổi chi phí. Tính lại từng call + tổng worst-case; không thừa kế budget cũ |
+
+### 11.7. Bàn giao, quyền và định nghĩa hoàn tất
+
+Phiên này chỉ lập kế hoạch/tài liệu, không triển khai code hay chạy model. Khi tiếp tục, Claude thực hiện công việc offline nằm trong phạm vi sửa đã được owner giao; không hỏi lại cho đọc mã, fixture, implementation và test thường lệ đã được phép. Chuẩn bị xong thay đổi reviewable, tests, build/archive và bảng execution cụ thể trước khi xin phần quyền live còn thiếu. Bảng đó nêu chapter/source hashes, schema/prompt/model revision, số call theo phase/chunk/verification, trần token/USD/time, stop/retry policy, cách giữ DB và event evidence. Không hỏi lại quyền đã được cấp rõ trong session tiếp theo.
+
+Mọi APK dùng `scripts/build-and-save.ps1`, immutable payload hai nơi và exact-source ZIP. Không cài pilot, migrate pilot, tạo binding hay gọi provider theo quyền cũ đã tiêu thụ. Rerun sau schema đổi cần chain mới đúng identity trong project/binding được phép, giữ toàn bộ chain cũ. Không ghi đè file DRAFT/RAW/manual FINAL của owner. Không sửa acceptance để hợp thức hóa report cũ.
+
+Mỗi nhóm bàn giao bằng: file/commit, lỗi gốc, thay đổi hành vi, test mới và kết quả, còn thiếu gì, đúng một next action. Update checklist hiện có chỉ với evidence thật. Khi kết thúc R6/R7, bảng issue→test→artifact phải đóng từng lỗi xác nhận; source/build/pilot cùng revision đã kiểm; chapter 001 chạy lại theo contract mới và đủ ba category được nghiệm thu; UI lưu/mở lại/export đúng text và hash. Trước đó chỉ được tuyên bố phần đã hoàn tất, không “đã sửa dứt điểm toàn bộ” dựa vào unit tests hoặc số phase COMMITTED.
