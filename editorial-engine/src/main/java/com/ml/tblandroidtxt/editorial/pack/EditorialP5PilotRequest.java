@@ -12,6 +12,7 @@ import java.util.Objects;
 public final class EditorialP5PilotRequest {
     private static final String REQUEST_IDENTITY_DOMAIN = "EDITORIAL_P5_L1_REQUEST_IDENTITY_V1\n";
     private static final String ATTEMPT_IDENTITY_DOMAIN = "EDITORIAL_P5_L1_ATTEMPT_IDENTITY_V1\n";
+    private static final String LEDGER_ATTEMPT_IDENTITY_DOMAIN = "EDITORIAL_P5_L1_ATTEMPT_IDENTITY_V2\n";
 
     public enum Phase {
         L1_RAW_DISCOVERY,
@@ -81,6 +82,8 @@ public final class EditorialP5PilotRequest {
     private final List<String> populationIds;
     private final boolean evidenceContentSufficient;
     private final int requestedOutputTokens;
+    private final String contractRevision;
+    private final byte[] predecessorReport;
 
     public EditorialP5PilotRequest(
             EditorialP4Binding binding,
@@ -111,6 +114,30 @@ public final class EditorialP5PilotRequest {
             List<String> populationIds,
             boolean evidenceContentSufficient,
             int requestedOutputTokens) {
+        this(binding, manifest, authority, chapterKey, phase, sources, predecessorIdentity, stableAnchors,
+                populationIds, evidenceContentSufficient, requestedOutputTokens,
+                EditorialContractRevision.LEGACY_V1, null);
+    }
+
+    private EditorialP5PilotRequest(
+            EditorialP4Binding binding,
+            EditorialPackManifest manifest,
+            PackAuthority authority,
+            String chapterKey,
+            String phase,
+            List<SourceBytes> sources,
+            String predecessorIdentity,
+            List<String> stableAnchors,
+            List<String> populationIds,
+            boolean evidenceContentSufficient,
+            int requestedOutputTokens,
+            String contractRevision,
+            byte[] predecessorReport) {
+        if (!EditorialContractRevision.known(contractRevision)) {
+            throw new IllegalArgumentException("unknown contract revision");
+        }
+        this.contractRevision = contractRevision;
+        this.predecessorReport = predecessorReport == null ? null : predecessorReport.clone();
         this.binding = Objects.requireNonNull(binding, "binding");
         this.manifest = Objects.requireNonNull(manifest, "manifest");
         this.authority = Objects.requireNonNull(authority, "authority");
@@ -144,6 +171,15 @@ public final class EditorialP5PilotRequest {
     public boolean evidenceContentSufficient() { return evidenceContentSufficient; }
     public int requestedOutputTokens() { return requestedOutputTokens; }
 
+    /** Contract revision this attempt runs under; the legacy value reproduces every pre-ledger identity. */
+    public String contractRevision() { return contractRevision; }
+
+    /**
+     * Persisted REPORT_L1 of the RAW-phase predecessor for a ledger-contract RECONCILE; null otherwise. It is
+     * app-owned evidence (its hash is already part of the predecessor attempt) and not a source role.
+     */
+    public byte[] predecessorReport() { return predecessorReport == null ? null : predecessorReport.clone(); }
+
     public String manifestFingerprint() {
         return EditorialCanonicalJson.sha256Hex(manifest.canonicalJson().getBytes(StandardCharsets.UTF_8));
     }
@@ -159,6 +195,11 @@ public final class EditorialP5PilotRequest {
                 + binding.canonicalPackHash() + "\n" + binding.canonicalProfileHash() + "\n"
                 + binding.compatibilityEvaluationId() + "\n" + chapterKey + "\n" + phase + "\n"
                 + predecessorIdentity + "\n" + bundleIdentity();
+        if (EditorialContractRevision.isLedger(contractRevision)) {
+            return EditorialCanonicalJson.sha256Hex((LEDGER_ATTEMPT_IDENTITY_DOMAIN + value
+                    + EditorialContractRevision.identitySuffix(contractRevision))
+                    .getBytes(StandardCharsets.UTF_8));
+        }
         return EditorialCanonicalJson.sha256Hex((ATTEMPT_IDENTITY_DOMAIN + value)
                 .getBytes(StandardCharsets.UTF_8));
     }
@@ -171,9 +212,24 @@ public final class EditorialP5PilotRequest {
         String value = binding.bindingIdentity() + "\n" + manifestFingerprint() + "\n"
                 + chapterKey + "\n" + phase + "\n" + predecessorIdentity + "\n"
                 + String.join("\n", stableAnchors) + "\n" + String.join("\n", populationIds)
-                + "\n" + String.join("\n", descriptors);
+                + "\n" + String.join("\n", descriptors)
+                + EditorialContractRevision.identitySuffix(contractRevision);
         return EditorialCanonicalJson.sha256Hex((REQUEST_IDENTITY_DOMAIN + value)
                 .getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** The same facts under another contract revision; the attempt and request identities change with it. */
+    public EditorialP5PilotRequest withContractRevision(String revision) {
+        return new EditorialP5PilotRequest(binding, manifest, authority, chapterKey, phase, sources,
+                predecessorIdentity, stableAnchors, populationIds, evidenceContentSufficient,
+                requestedOutputTokens, revision, predecessorReport);
+    }
+
+    /** Attaches the RAW-phase REPORT_L1 bytes a ledger-contract RECONCILE resolves. */
+    public EditorialP5PilotRequest withPredecessorReport(byte[] report) {
+        return new EditorialP5PilotRequest(binding, manifest, authority, chapterKey, phase, sources,
+                predecessorIdentity, stableAnchors, populationIds, evidenceContentSufficient,
+                requestedOutputTokens, contractRevision, report);
     }
 
     public EditorialP5PilotRequest withPhase(String value) {
@@ -213,7 +269,7 @@ public final class EditorialP5PilotRequest {
     private EditorialP5PilotRequest copy(String phase, List<SourceBytes> sources, boolean evidenceSufficient) {
         return new EditorialP5PilotRequest(binding, manifest, authority, chapterKey, phase,
                 sources, predecessorIdentity, stableAnchors, populationIds,
-                evidenceSufficient, requestedOutputTokens);
+                evidenceSufficient, requestedOutputTokens, contractRevision, predecessorReport);
     }
 
     EditorialPhaseContextProjector.Bundle bundleForExecution() {

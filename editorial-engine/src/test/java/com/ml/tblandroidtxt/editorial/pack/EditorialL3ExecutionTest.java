@@ -18,6 +18,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /** L3 (blind re-audit + reconcile) boundary tests; provider and store are in-memory fakes. */
 public final class EditorialL3ExecutionTest {
@@ -31,6 +32,33 @@ public final class EditorialL3ExecutionTest {
             100_000, 4_000, new BigDecimal("0.50"), 60_000L);
 
     // ---- cases ----
+
+    @Test public void legacyIdentitiesAreFrozen() {
+        EditorialP5PilotRequest req = ctx();
+        assertEquals("6bb51cceb4e38b5d7db80b281070f97dbf783cd3a9344e29c13545c284abc73e", req.attemptIdentity());
+        assertEquals("d84a70ce260e4aff12fc009081452f751b70ed1ecb2c1d397df68555810c0888", req.requestIdentity());
+    }
+
+    @Test public void ledgerRevisionChangesIdentitiesAndIsDeterministic() {
+        EditorialP5PilotRequest legacy = ctx();
+        EditorialP5PilotRequest ledger = legacy.withContractRevision(EditorialContractRevision.L1_LEDGER_V2);
+        assertEquals(EditorialContractRevision.LEGACY_V1, legacy.contractRevision());
+        assertFalse(legacy.attemptIdentity().equals(ledger.attemptIdentity()));
+        assertFalse(legacy.requestIdentity().equals(ledger.requestIdentity()));
+        assertEquals(ledger.attemptIdentity(), ctx().withContractRevision(EditorialContractRevision.L1_LEDGER_V2).attemptIdentity());
+        // the legacy revision given explicitly is the identity from before the revision existed
+        assertEquals(legacy.attemptIdentity(), legacy.withContractRevision(EditorialContractRevision.LEGACY_V1).attemptIdentity());
+        // phase and predecessor report copies keep the revision
+        assertEquals(EditorialContractRevision.L1_LEDGER_V2, ledger.withPhase("L1_RECONCILE").contractRevision());
+        assertArrayEquals(new byte[] {1}, ledger.withPredecessorReport(new byte[] {1}).predecessorReport());
+        assertEquals(EditorialContractRevision.L1_LEDGER_V2, ledger.withPredecessorReport(new byte[] {1}).contractRevision());
+        try {
+            legacy.withContractRevision("L1_LEDGER_V9");
+            fail();
+        } catch (IllegalArgumentException expected) {
+            assertEquals("unknown contract revision", expected.getMessage());
+        }
+    }
 
     @Test public void happyPathCommitsFinalAndReceipt() {
         Fx f = fx(Set.of());

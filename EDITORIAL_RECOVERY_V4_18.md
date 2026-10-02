@@ -188,7 +188,7 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-R0 đã đóng (`docs/P6_R0_ISSUE_TABLE.md`, `docs/P6_R0_FIXTURE_MANIFEST.json`, fixture riêng ở `D:\P5E-private\p6-fixtures`, holdout đã khóa). Next action: R1 — contract v2 (inventory cấp dòng với unit id ổn định, Error Ledger/candidate/finding/proof/protected-span, định nghĩa metric, `contractRevision` gắn vào attempt identity L1/L2/L3, sizing và quy tắc chunk) rồi R2→R5 offline; dừng cuối R5 với bảng ngân sách và câu hỏi Q1–Q5.
+R1 đã đóng (inventory dòng, ledger v2 + validator, `contractRevision` trong identity L1, sizing/chunk có test). Next action: R2 — L1 + persistence (nối ledger v2 vào `EditorialP5PilotExecution`/provider/store, gán `findingCount`, lưu entries qua P5C store, RECONCILE nhận khối candidates của RAW pass; chứng minh serialize → DB → khởi động lại → `committedL1` → đầu vào L2), rồi R3→R5 offline; dừng cuối R5 với bảng ngân sách và Q1–Q5.
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 

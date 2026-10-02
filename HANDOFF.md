@@ -4,7 +4,7 @@ Ngày bàn giao: 2026-10-01 (+07:00).
 
 ## Trạng thái mới nhất — ưu tiên đọc trước
 
-**P6 R0–R7 (tiến độ, cập nhật mỗi nhóm).** Bước 0 (`4417d130`, baseline engine 255/255, app 312/312) và R0 xong: `docs/P6_R0_ISSUE_TABLE.md` (lỗi nội dung I-001..I-005, lỗi công cụ F1..F10 đối chiếu mã), 14 fixture riêng + `docs/P6_R0_FIXTURE_MANIFEST.json` (holdout 003/005 đã khóa), `scripts/p6/build_fixtures.py` và `verify_fixtures.py`. Chuỗi chương 001 trên pilot gắn nhãn LEGACY_CONTRACT_V1. Chưa sửa code tool; next: R1.
+**P6 R0–R7 (tiến độ, cập nhật mỗi nhóm).** R0 và R1 xong. R1: `EditorialRawInventory` (id `u:<dòng>:<8 hex>`, CRLF/BOM/dòng trống/marker ảnh, kiểm tra phủ, chunk 200+6), `EditorialL1Ledger` (wire RAW/RECONCILE, kiểm chặt unit/coverage/quote/anchor/ref/trùng, metric unique≠occurrence≠candidate, report body v2 round-trip), `EditorialContractRevision` gắn vào identity L1 (identity legacy được khóa bằng golden test). Engine 287/287. Chưa nối vào P5 engine (R2); L2/L3 identity revision làm ở R3.
 
 **Cập nhật 2026-10-02 (owner chấp nhận chất lượng chương 001).** W6 đạt; chương 001 quality-accepted (hai khoảng trống tiêu chí L1-khung và đếm candidate chưa đóng chính thức). 1/3 chương đại diện. Ứng viên hai chương còn lại (số liệu chỉ-đọc từ `D:\Ebooks\MERCEDES\VOL 5`): `docs/P6_G6_CHAPTER_CANDIDATES_20261002.md` — đề xuất 007 (dày thoại/xưng hô) và 010 (DRAFT dài nhất). Mỗi chương mới cần project/binding riêng + L1 RAW/RECONCILE + chuỗi L2/L3 (ước tính ~USD 0.05). Next action: owner chọn chương và cấp quyền (plan mục 10).
 
