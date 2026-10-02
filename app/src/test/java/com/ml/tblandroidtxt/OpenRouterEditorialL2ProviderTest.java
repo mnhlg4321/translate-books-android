@@ -59,7 +59,20 @@ public final class OpenRouterEditorialL2ProviderTest {
         map.put(EditorialSafe4Contract.RAW, b("raw line one\nraw line two"));
         map.put(EditorialSafe4Contract.GLOSSARY, b("term,target"));
         map.put(EditorialSafe4Contract.DRAFT, b("dong mot\ndong hai\n"));
+        map.put(EditorialL2Execution.CANDIDATES_BLOCK,
+                b("{\"candidates\":[{\"candidateId\":\"U001\",\"ledger\":\"UNIT\",\"line\":1}]}"));
         return map;
+    }
+
+    private static Map<String, byte[]> discoverySources() {
+        Map<String, byte[]> map = new LinkedHashMap<>();
+        map.put(EditorialSafe4Contract.RAW, b("raw line one\nraw line two"));
+        map.put(EditorialSafe4Contract.GLOSSARY, b("term,target"));
+        return map;
+    }
+
+    private static EditorialL2Execution.Provider.Request discoveryRequest(Map<String, byte[]> sources) {
+        return request(EditorialL2Execution.DISCOVERY_PHASE, EditorialL2Execution.DISCOVERY_WIRE, sources);
     }
 
     private static void assertThrowsMessage(String expected, AppSettings settings,
@@ -81,6 +94,64 @@ public final class OpenRouterEditorialL2ProviderTest {
         assertThrowsMessage("P6_L2_REQUEST_INVALID", good, null);
     }
 
+    @Test public void editWithoutTheCandidateBlockAndImpureDiscoveryAreRejectedBeforeTransport() throws Exception {
+        AppSettings good = routeSettings("test-only-no-dispatch");
+        Map<String, byte[]> noBlock = sources();
+        noBlock.remove(EditorialL2Execution.CANDIDATES_BLOCK);
+        assertThrowsMessage("P6_L2_REQUEST_INVALID", good, validRequest(noBlock));
+
+        // Discovery is blind: a DRAFT, REPORT_L1, PRONOUN, VI_L2 or candidate block makes the request invalid.
+        for (String hidden : List.of(EditorialSafe4Contract.DRAFT, "REPORT_L1", EditorialSafe4Contract.PRONOUN, "VI_L2",
+                EditorialL2Execution.CANDIDATES_BLOCK)) {
+            Map<String, byte[]> leaky = discoverySources();
+            leaky.put(hidden, b("hidden"));
+            assertThrowsMessage("P6_L2_REQUEST_INVALID", good, discoveryRequest(leaky));
+        }
+        Map<String, byte[]> noRaw = discoverySources();
+        noRaw.remove(EditorialSafe4Contract.RAW);
+        assertThrowsMessage("P6_L2_REQUEST_INVALID", good, discoveryRequest(noRaw));
+        assertThrowsMessage("P6_L2_REQUEST_INVALID", good,
+                request(EditorialL2Execution.DISCOVERY_PHASE, EditorialL2Execution.WIRE_SCHEMA_VERSION, discoverySources()));
+        // A valid discovery request reaches the next gate (route), not the request gate.
+        AppSettings wrongModel = routeSettings("test-only-no-dispatch");
+        wrongModel.model = "google/gemini-2.5-flash";
+        assertThrowsMessage("P6_L2_ROUTE_SETTINGS_MISMATCH", wrongModel, discoveryRequest(discoverySources()));
+    }
+
+    @Test public void discoveryPromptShowsNumberedRawOnlyAndItsSampleParses() throws Exception {
+        PromptPair prompt = OpenRouterEditorialL2Provider.buildPrompt(discoveryRequest(discoverySources()));
+        assertTrue(prompt.system.contains(OpenRouterEditorialL2Provider.DISCOVERY_RULES));
+        assertFalse(prompt.system.contains(OpenRouterEditorialL2Provider.WIRE_FORMAT_RULES));
+        assertTrue(prompt.user.contains("--- RAW ---\nL1|raw line one\nL2|raw line two\n--- END RAW ---"));
+        assertTrue(prompt.user.contains("--- GLOSSARY ---\nterm,target\n--- END GLOSSARY ---"));
+        assertFalse(prompt.user.contains("--- DRAFT ---"));
+        assertFalse(prompt.user.contains("--- REPORT_L1 ---"));
+        assertTrue(prompt.user.contains("\"phaseActivation\":\"" + EditorialL2Execution.DISCOVERY_PHASE + "\""));
+
+        String marker = "Return only this object:\n";
+        JSONObject object = new JSONObject(prompt.user.substring(prompt.user.indexOf(marker) + marker.length()).trim());
+        assertEquals(EditorialL2Execution.DISCOVERY_WIRE, object.getString("wireSchemaVersion"));
+        object.put("attemptIdentity", ATTEMPT);
+        object.getJSONArray("candidates").getJSONObject(0).put("ledger", "UNIT");
+        Method parse = EditorialL2Execution.class.getDeclaredMethod("parseDiscovery", byte[].class, String.class, int.class);
+        parse.setAccessible(true);
+        assertEquals(1, ((List<?>) parse.invoke(null, b(object.toString()), ATTEMPT, 2)).size());
+        try {
+            parse.invoke(null, b(new JSONObject(prompt.user.substring(prompt.user.indexOf(marker) + marker.length()).trim()).toString()),
+                    ATTEMPT, 2);
+            throw new AssertionError("unfilled placeholders must be rejected");
+        } catch (java.lang.reflect.InvocationTargetException expected) {
+            assertTrue(expected.getCause() instanceof RuntimeException);
+        }
+    }
+
+    @Test public void editPromptStatesTheResolutionRules() {
+        PromptPair prompt = OpenRouterEditorialL2Provider.buildPrompt(validRequest(sources()));
+        assertTrue(prompt.system.contains(OpenRouterEditorialL2Provider.RESOLUTION_RULES));
+        assertTrue(prompt.user.contains("--- L2_RAW_CANDIDATES ---"));
+        assertTrue(prompt.user.contains("\"resolutions\":[{\"candidateId\":\"U001\""));
+    }
+
     @Test public void routeMismatchAndBlankKeyAreRejectedBeforeTransport() throws Exception {
         AppSettings wrongModel = routeSettings("test-only-no-dispatch");
         wrongModel.model = "google/gemini-2.5-flash";
@@ -99,10 +170,9 @@ public final class OpenRouterEditorialL2ProviderTest {
         PromptPair prompt = OpenRouterEditorialL2Provider.buildPrompt(validRequest(sources()));
         String user = prompt.user;
         assertTrue(user, user.contains("--- DRAFT ---\nL1|dong mot\nL2|dong hai\nL3|\n--- END DRAFT ---"));
-        assertTrue(user.contains("--- RAW ---\nraw line one\nraw line two\n--- END RAW ---"));
+        assertTrue(user.contains("--- RAW ---\nL1|raw line one\nL2|raw line two\n--- END RAW ---"));
         assertTrue(user.contains("--- GLOSSARY ---\nterm,target\n--- END GLOSSARY ---"));
         assertTrue(user.contains("--- REPORT_L1 ---\nreport l1 body\n--- END REPORT_L1 ---"));
-        assertFalse(user.contains("L1|raw"));
         assertFalse(user.contains("L1|report"));
         assertFalse(user.contains("L1|term"));
 
@@ -194,6 +264,7 @@ public final class OpenRouterEditorialL2ProviderTest {
         assertEquals(EditorialL2Execution.WIRE_SCHEMA_VERSION, object.getString("wireSchemaVersion"));
 
         object.put("attemptIdentity", ATTEMPT);
+        object.getJSONArray("resolutions").getJSONObject(0).put("status", "PROCESSED");
         JSONObject change = object.getJSONArray("changes").getJSONObject(0);
         change.put("before", "dong mot").put("after", "dong mot sua").put("reason", "fix wording");
         JSONObject preserved = object.getJSONArray("preserved").getJSONObject(0);
@@ -201,17 +272,24 @@ public final class OpenRouterEditorialL2ProviderTest {
         object.getJSONObject("disposition").put("disposition", "CONTINUE")
                 .put("reasonCode", "OK").put("stopClass", "NONE");
 
-        Method parse = EditorialL2Execution.class.getDeclaredMethod("parseWire", byte[].class, String.class);
+        List<EditorialL2Execution.Candidate> known = List.of(new EditorialL2Execution.Candidate("U001", "UNIT", 1));
+        Method parse = EditorialL2Execution.class.getDeclaredMethod("parseEditWire", byte[].class, String.class, List.class);
         parse.setAccessible(true);
-        Object wire = parse.invoke(null, b(object.toString()), ATTEMPT);
+        Object editWire = parse.invoke(null, b(object.toString()), ATTEMPT, known);
+        Method rows = editWire.getClass().getDeclaredMethod("rows");
+        rows.setAccessible(true);
+        Object wire = rows.invoke(editWire);
         Method changes = wire.getClass().getDeclaredMethod("changes");
         changes.setAccessible(true);
         assertEquals(1, ((List<?>) changes.invoke(wire)).size());
+        Method resolutions = editWire.getClass().getDeclaredMethod("resolutions");
+        resolutions.setAccessible(true);
+        assertEquals(Map.of("U001", "PROCESSED"), resolutions.invoke(editWire));
 
         // Same sample with the unsubstituted placeholders must NOT pass (the model has to fill it in).
         JSONObject raw = new JSONObject(sample);
         try {
-            parse.invoke(null, b(raw.toString()), ATTEMPT);
+            parse.invoke(null, b(raw.toString()), ATTEMPT, known);
             throw new AssertionError("unfilled placeholders must be rejected");
         } catch (java.lang.reflect.InvocationTargetException expected) {
             assertTrue(expected.getCause() instanceof RuntimeException);

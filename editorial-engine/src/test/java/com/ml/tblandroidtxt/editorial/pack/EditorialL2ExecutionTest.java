@@ -37,11 +37,11 @@ public final class EditorialL2ExecutionTest {
                 false, null, "CLOSED")), "CONTINUE", "NONE"));
         FakeStore store = new FakeStore();
 
-        EditorialL2Execution.Result r = new EditorialL2Execution().execute(req, BUDGET, provider, store);
+        EditorialL2Execution.Result r = new EditorialL2Execution().execute(req, BUDGET, BUDGET, provider, store);
 
         assertEquals(r.reasonCode() + r.issues(), EditorialL2Execution.Outcome.COMMITTED, r.outcome());
-        assertEquals(1, r.providerCalls());
-        assertEquals(1, provider.calls);
+        assertEquals(2, r.providerCalls());
+        assertEquals(2, provider.calls);
         EditorialL2Execution.Committed stored = store.committed.get(req.attemptIdentity());
         assertArrayEquals(bytes("dong mot\ndong hai sua\ndong ba\n"), stored.viL2Bytes());
         Map<String, Object> map = EditorialCanonicalJson.parseObject(stored.changeMapBytes());
@@ -57,7 +57,7 @@ public final class EditorialL2ExecutionTest {
         Ctx c = ctx();
         EditorialL2Execution.Request req = c.request();
         FakeStore store = new FakeStore();
-        EditorialL2Execution.Result r = new EditorialL2Execution().execute(req, BUDGET,
+        EditorialL2Execution.Result r = new EditorialL2Execution().execute(req, BUDGET, BUDGET,
                 new FakeProvider(wire(req, List.of(), "CONTINUE", "NONE")), store);
         assertEquals(r.reasonCode(), EditorialL2Execution.Outcome.COMMITTED, r.outcome());
         assertArrayEquals(bytes(DRAFT), store.committed.get(req.attemptIdentity()).viL2Bytes());
@@ -69,11 +69,11 @@ public final class EditorialL2ExecutionTest {
         FakeProvider provider = new FakeProvider(wire(req, List.of(), "CONTINUE", "NONE"));
         FakeStore store = new FakeStore();
         EditorialL2Execution exec = new EditorialL2Execution();
-        assertEquals(EditorialL2Execution.Outcome.COMMITTED, exec.execute(req, BUDGET, provider, store).outcome());
-        EditorialL2Execution.Result again = exec.execute(req, BUDGET, provider, store);
+        assertEquals(EditorialL2Execution.Outcome.COMMITTED, exec.execute(req, BUDGET, BUDGET, provider, store).outcome());
+        EditorialL2Execution.Result again = exec.execute(req, BUDGET, BUDGET, provider, store);
         assertEquals(EditorialL2Execution.Outcome.ALREADY_COMMITTED, again.outcome());
         assertEquals(0, again.providerCalls());
-        assertEquals(1, provider.calls);
+        assertEquals(2, provider.calls);
     }
 
     @Test public void predecessorGatesStopBeforeProvider() {
@@ -97,13 +97,13 @@ public final class EditorialL2ExecutionTest {
         provider.finish = "length";
         FakeStore store = new FakeStore();
         EditorialL2Execution exec = new EditorialL2Execution();
-        EditorialL2Execution.Result r = exec.execute(req, BUDGET, provider, store);
+        EditorialL2Execution.Result r = exec.execute(req, BUDGET, BUDGET, provider, store);
         assertStop(r, EditorialL2Execution.StopClass.RETRY_REQUIRED, "RETRY_L2_OUTPUT_TRUNCATED");
         assertEquals(1, r.providerCalls());
         assertTrue(store.recovery.containsKey(req.attemptIdentity()));
         assertTrue(store.committed.isEmpty());
         provider.finish = "stop";
-        EditorialL2Execution.Result later = exec.execute(req, BUDGET, provider, store);
+        EditorialL2Execution.Result later = exec.execute(req, BUDGET, BUDGET, provider, store);
         assertStop(later, EditorialL2Execution.StopClass.RETRY_REQUIRED, "STOP_L2_EXTERNAL_CALL_STATE_UNRESOLVED");
         assertEquals(0, later.providerCalls());
         assertEquals(1, provider.calls);
@@ -115,14 +115,14 @@ public final class EditorialL2ExecutionTest {
         FakeProvider expensive = new FakeProvider(wire(req, List.of(), "CONTINUE", "NONE"));
         expensive.cost = new BigDecimal("9.99");
         FakeStore store = new FakeStore();
-        EditorialL2Execution.Result r = new EditorialL2Execution().execute(req, BUDGET, expensive, store);
+        EditorialL2Execution.Result r = new EditorialL2Execution().execute(req, BUDGET, BUDGET, expensive, store);
         assertEquals(EditorialL2Execution.StopClass.BUDGET_EXCEEDED, r.stopClass());
         assertTrue(store.committed.isEmpty());
 
         FakeProvider unknown = new FakeProvider(wire(req, List.of(), "CONTINUE", "NONE"));
         unknown.costKnown = false;
         FakeStore store2 = new FakeStore();
-        EditorialL2Execution.Result u = new EditorialL2Execution().execute(req, BUDGET, unknown, store2);
+        EditorialL2Execution.Result u = new EditorialL2Execution().execute(req, BUDGET, BUDGET, unknown, store2);
         assertStop(u, EditorialL2Execution.StopClass.RETRY_REQUIRED, "RETRY_L2_PROVIDER_COST_UNAVAILABLE");
         assertTrue(store2.committed.isEmpty());
     }
@@ -146,7 +146,7 @@ public final class EditorialL2ExecutionTest {
         bad.add(bytes("not json"));
         for (byte[] wireBytes : bad) {
             FakeStore store = new FakeStore();
-            EditorialL2Execution.Result r = new EditorialL2Execution().execute(req, BUDGET,
+            EditorialL2Execution.Result r = new EditorialL2Execution().execute(req, BUDGET, BUDGET,
                     new FakeProvider(wireBytes), store);
             assertStop(r, EditorialL2Execution.StopClass.REPAIR_REQUIRED, "REPAIR_L2_OUTPUT_SCHEMA_INVALID");
             assertTrue(store.committed.isEmpty());
@@ -157,7 +157,7 @@ public final class EditorialL2ExecutionTest {
         Ctx c = ctx();
         EditorialL2Execution.Request req = c.request();
         FakeStore store = new FakeStore();
-        EditorialL2Execution.Result r = new EditorialL2Execution().execute(req, BUDGET,
+        EditorialL2Execution.Result r = new EditorialL2Execution().execute(req, BUDGET, BUDGET,
                 new FakeProvider(wire(req, List.of(change("c1", 2, "WRONG BEFORE", "x", false, null, "CLOSED")),
                         "CONTINUE", "NONE")), store);
         assertStop(r, EditorialL2Execution.StopClass.REPAIR_REQUIRED, "REPAIR_L2_CHANGE_MAP_INVALID");
@@ -171,7 +171,7 @@ public final class EditorialL2ExecutionTest {
         Ctx c = ctx();
         EditorialL2Execution.Request req = c.request();
         FakeStore store = new FakeStore();
-        EditorialL2Execution.Result r = new EditorialL2Execution().execute(req, BUDGET,
+        EditorialL2Execution.Result r = new EditorialL2Execution().execute(req, BUDGET, BUDGET,
                 new FakeProvider(wire(req, List.of(change("c1", 2, "dong hai", "sua", true, null, "CLOSED")),
                         "CONTINUE", "NONE")), store);
         assertEquals(r.reasonCode() + r.issues(), EditorialL2Execution.Outcome.COMMITTED, r.outcome());
@@ -189,14 +189,14 @@ public final class EditorialL2ExecutionTest {
         Ctx c = ctx();
         EditorialL2Execution.Request req = c.request();
         FakeStore store = new FakeStore();
-        EditorialL2Execution.Result r = new EditorialL2Execution().execute(req, BUDGET,
+        EditorialL2Execution.Result r = new EditorialL2Execution().execute(req, BUDGET, BUDGET,
                 new FakeProvider(wire(req, List.of(), "STOP", "CONTENT_BLOCKED")), store);
         assertEquals(EditorialL2Execution.Outcome.STOPPED, r.outcome());
         assertEquals(EditorialL2Execution.StopClass.CONTENT_BLOCKED, r.stopClass());
         assertTrue(store.committed.isEmpty());
 
         FakeStore store2 = new FakeStore();
-        EditorialL2Execution.Result bad = new EditorialL2Execution().execute(req, BUDGET,
+        EditorialL2Execution.Result bad = new EditorialL2Execution().execute(req, BUDGET, BUDGET,
                 new FakeProvider(wire(req, List.of(), "STOP", "REPAIR_REQUIRED")), store2);
         assertStop(bad, EditorialL2Execution.StopClass.REPAIR_REQUIRED, "REPAIR_L2_OUTPUT_SCHEMA_INVALID");
         assertTrue(store2.committed.isEmpty());
@@ -207,14 +207,14 @@ public final class EditorialL2ExecutionTest {
         EditorialL2Execution.Request req = c.request();
         FakeStore failing = new FakeStore();
         failing.failCommit = true;
-        EditorialL2Execution.Result r = new EditorialL2Execution().execute(req, BUDGET,
+        EditorialL2Execution.Result r = new EditorialL2Execution().execute(req, BUDGET, BUDGET,
                 new FakeProvider(wire(req, List.of(), "CONTINUE", "NONE")), failing);
         assertStop(r, EditorialL2Execution.StopClass.RETRY_REQUIRED, "RETRY_L2_ATOMIC_COMMIT_FAILED");
         assertTrue(failing.findCommitted(req.attemptIdentity()).isEmpty());
 
         FakeStore mismatch = new FakeStore();
         mismatch.corruptReadback = true;
-        EditorialL2Execution.Result m = new EditorialL2Execution().execute(req, BUDGET,
+        EditorialL2Execution.Result m = new EditorialL2Execution().execute(req, BUDGET, BUDGET,
                 new FakeProvider(wire(req, List.of(), "CONTINUE", "NONE")), mismatch);
         assertStop(m, EditorialL2Execution.StopClass.RETRY_REQUIRED, "RETRY_L2_READBACK_MISMATCH");
     }
@@ -224,13 +224,14 @@ public final class EditorialL2ExecutionTest {
         EditorialL2Execution.Request req = c.request();
         FakeProvider tiny = new FakeProvider(wire(req, List.of(), "CONTINUE", "NONE"));
         EditorialL2Execution.Result r = new EditorialL2Execution().execute(req,
+                new EditorialL2Execution.Budget(10, 4_000, BigDecimal.ONE, 60_000L),
                 new EditorialL2Execution.Budget(10, 4_000, BigDecimal.ONE, 60_000L), tiny, new FakeStore());
         assertStop(r, EditorialL2Execution.StopClass.BUDGET_EXCEEDED, "L2_INPUT_BUDGET_EXCEEDED");
         assertEquals(0, r.providerCalls());
         assertEquals(0, tiny.calls);
 
         FakeProvider ok = new FakeProvider(wire(req, List.of(), "CONTINUE", "NONE"));
-        new EditorialL2Execution().execute(req, BUDGET, ok, new FakeStore());
+        new EditorialL2Execution().execute(req, BUDGET, BUDGET, ok, new FakeStore());
         Set<String> keys = ok.lastRequest.visibleSources().keySet();
         assertFalse(keys.contains("VI_L2"));
         assertTrue(keys.contains(EditorialSafe4Contract.RAW));
@@ -241,7 +242,182 @@ public final class EditorialL2ExecutionTest {
         boolean pronounAuthoritative = req.context().bundleForExecution().assets().stream()
                 .anyMatch(a -> EditorialSafe4Contract.PRONOUN.equals(a.role()) && a.authoritative());
         assertEquals(keys.toString(), pronounAuthoritative, keys.contains(EditorialSafe4Contract.PRONOUN));
-        assertEquals(keys.toString(), pronounAuthoritative ? 5 : 4, keys.size());
+        assertTrue(keys.toString(), keys.contains(EditorialL2Execution.CANDIDATES_BLOCK));
+        assertEquals(keys.toString(), pronounAuthoritative ? 6 : 5, keys.size());
+    }
+
+    @Test public void discoveryIsBlindAndEditReceivesTheAppOwnedCandidateBlock() {
+        Ctx c = ctx();
+        EditorialL2Execution.Request req = c.request();
+        FakeProvider provider = new FakeProvider(wire(req, List.of(), "CONTINUE", "NONE"));
+        EditorialL2Execution.Result r = new EditorialL2Execution().execute(req, BUDGET, BUDGET, provider, new FakeStore());
+        assertEquals(r.reasonCode(), EditorialL2Execution.Outcome.COMMITTED, r.outcome());
+        assertEquals(2, provider.requests.size());
+
+        EditorialL2Execution.Provider.Request first = provider.requests.get(0);
+        assertEquals(EditorialL2Execution.DISCOVERY_PHASE, first.phase());
+        assertEquals(EditorialL2Execution.DISCOVERY_WIRE, first.outputSchemaId());
+        assertEquals(Set.of(EditorialSafe4Contract.RAW, EditorialSafe4Contract.GLOSSARY), first.visibleSources().keySet());
+
+        EditorialL2Execution.Provider.Request second = provider.requests.get(1);
+        assertEquals(EditorialL2Execution.PHASE, second.phase());
+        assertTrue(second.visibleSources().containsKey(EditorialL2Execution.CANDIDATES_BLOCK));
+        Map<String, Object> block = EditorialCanonicalJson.parseObject(second.visibleSources().get(EditorialL2Execution.CANDIDATES_BLOCK));
+        assertEquals(2, ((List<?>) block.get("candidates")).size());
+        assertFalse(second.visibleSources().containsKey("VI_L2"));
+        assertEquals(first.attemptIdentity(), second.attemptIdentity());
+    }
+
+    @Test public void committedChangeMapRecordsTheDiscoveryAndKeepsTheL3Fields() {
+        Ctx c = ctx();
+        EditorialL2Execution.Request req = c.request();
+        FakeStore store = new FakeStore();
+        EditorialL2Execution.Result r = new EditorialL2Execution().execute(req, BUDGET, BUDGET,
+                new FakeProvider(wire(req, List.of(change("c1", 2, "dong hai", "dong hai sua", false, null, "CLOSED")),
+                        "CONTINUE", "NONE")), store);
+        assertEquals(r.reasonCode(), EditorialL2Execution.Outcome.COMMITTED, r.outcome());
+        Map<String, Object> map = EditorialCanonicalJson.parseObject(store.committed.get(req.attemptIdentity()).changeMapBytes());
+        assertEquals("CHANGE_MAP_L2", map.get("artifactType"));
+        assertEquals(EditorialCanonicalJson.sha256Hex(bytes(DRAFT)), map.get("baseSha256"));
+        assertEquals(store.committed.get(req.attemptIdentity()).viL2Sha256(), map.get("outputSha256"));
+        @SuppressWarnings("unchecked") Map<String, Object> discovery = (Map<String, Object>) map.get("rawDiscovery");
+        assertEquals(EditorialL2Execution.DISCOVERY_PHASE, discovery.get("phase"));
+        assertEquals(new BigDecimal(2), discovery.get("candidateCount"));
+        @SuppressWarnings("unchecked") Map<String, Object> ledgers = (Map<String, Object>) discovery.get("ledgers");
+        @SuppressWarnings("unchecked") Map<String, Object> unit = (Map<String, Object>) ledgers.get("UNIT");
+        assertEquals(new BigDecimal(1), unit.get("PROCESSED"));
+        assertEquals(64, String.valueOf(discovery.get("candidatesSha256")).length());
+    }
+
+    @Test public void discoveryWithoutRawUnitsOrWithBadRowsIsRepairRequiredAfterOneCall() {
+        Ctx c = ctx();
+        EditorialL2Execution.Request req = c.request();
+        String attempt = req.attemptIdentity();
+        List<byte[]> bad = new ArrayList<>();
+        bad.add(discovery(attempt, List.of(candidate("TG001", "TG", 1))));
+        bad.add(discovery(attempt, List.of(candidate("U001", "UNIT", 1), candidate("U001", "TG", 1))));
+        bad.add(discovery(attempt, List.of(candidate("U001", "UNIT", 99))));
+        bad.add(discovery(attempt, List.of(candidate("U001", "WRONG", 1))));
+        bad.add(discovery("0".repeat(64), List.of(candidate("U001", "UNIT", 1))));
+        Map<String, Object> extra = EditorialCanonicalJson.parseObject(discovery(attempt, List.of(candidate("U001", "UNIT", 1))));
+        extra = new LinkedHashMap<>(extra);
+        extra.put("note", "x");
+        bad.add(canon(extra));
+        bad.add(bytes("not json"));
+        for (byte[] discoveryBytes : bad) {
+            FakeProvider provider = new FakeProvider(wire(req, List.of(), "CONTINUE", "NONE"));
+            provider.discoveryWire = discoveryBytes;
+            FakeStore store = new FakeStore();
+            EditorialL2Execution.Result r = new EditorialL2Execution().execute(req, BUDGET, BUDGET, provider, store);
+            assertStop(r, EditorialL2Execution.StopClass.REPAIR_REQUIRED, "REPAIR_L2_DISCOVERY_SCHEMA_INVALID");
+            assertEquals(1, r.providerCalls());
+            assertEquals(1, provider.calls);
+            assertTrue(store.committed.isEmpty());
+            assertTrue(store.recovery.containsKey(attempt));
+        }
+    }
+
+    @Test public void candidateResolutionsAreCountedByTheApp() {
+        Ctx c = ctx();
+        EditorialL2Execution.Request req = c.request();
+
+        Map<String, Object> missing = wireMap(req, List.of(), "CONTINUE", "NONE");
+        missing.put("resolutions", new ArrayList<Object>(resolutions("PROCESSED").subList(0, 1)));
+        assertStop(run(req, canon(missing)), EditorialL2Execution.StopClass.REPAIR_REQUIRED, "REPAIR_L2_RESOLUTIONS_INCOMPLETE");
+
+        Map<String, Object> unknown = wireMap(req, List.of(), "CONTINUE", "NONE");
+        List<Object> withUnknown = resolutions("PROCESSED");
+        Map<String, Object> ghost = new LinkedHashMap<>();
+        ghost.put("candidateId", "NOPE");
+        ghost.put("status", "PROCESSED");
+        withUnknown.add(ghost);
+        unknown.put("resolutions", withUnknown);
+        assertStop(run(req, canon(unknown)), EditorialL2Execution.StopClass.REPAIR_REQUIRED, "REPAIR_L2_OUTPUT_SCHEMA_INVALID");
+
+        Map<String, Object> duplicate = wireMap(req, List.of(), "CONTINUE", "NONE");
+        List<Object> twice = resolutions("PROCESSED");
+        twice.add(resolutions("PROCESSED").get(0));
+        duplicate.put("resolutions", twice);
+        assertStop(run(req, canon(duplicate)), EditorialL2Execution.StopClass.REPAIR_REQUIRED, "REPAIR_L2_OUTPUT_SCHEMA_INVALID");
+
+        Map<String, Object> badStatus = wireMap(req, List.of(), "CONTINUE", "NONE");
+        badStatus.put("resolutions", resolutions("DONE"));
+        assertStop(run(req, canon(badStatus)), EditorialL2Execution.StopClass.REPAIR_REQUIRED, "REPAIR_L2_OUTPUT_SCHEMA_INVALID");
+
+        Map<String, Object> unprocessed = wireMap(req, List.of(), "CONTINUE", "NONE");
+        unprocessed.put("resolutions", resolutions("UNPROCESSED"));
+        EditorialL2Execution.Result u = run(req, canon(unprocessed));
+        assertStop(u, EditorialL2Execution.StopClass.REPAIR_REQUIRED, "REPAIR_L2_CANDIDATES_UNPROCESSED");
+        assertEquals(2, u.providerCalls());
+
+        Map<String, Object> conflict = wireMap(req, List.of(), "CONTINUE", "NONE");
+        conflict.put("resolutions", resolutions("CONFLICT"));
+        assertStop(run(req, canon(conflict)), EditorialL2Execution.StopClass.CONTENT_BLOCKED, "CONTENT_L2_CANDIDATE_CONFLICT");
+
+        // A proven conflict outranks an unprocessed candidate.
+        Map<String, Object> mixed = wireMap(req, List.of(), "CONTINUE", "NONE");
+        List<Object> mixedRows = resolutions("UNPROCESSED");
+        ((Map<String, Object>) mixedRows.get(1)).put("status", "CONFLICT");
+        mixed.put("resolutions", mixedRows);
+        assertStop(run(req, canon(mixed)), EditorialL2Execution.StopClass.CONTENT_BLOCKED, "CONTENT_L2_CANDIDATE_CONFLICT");
+
+        // PRESERVED is a resolved state, not a failure.
+        Map<String, Object> preserved = wireMap(req, List.of(), "CONTINUE", "NONE");
+        preserved.put("resolutions", resolutions("PRESERVED"));
+        assertEquals(EditorialL2Execution.Outcome.COMMITTED, run(req, canon(preserved)).outcome());
+    }
+
+    @Test public void modelStopMayOmitResolutions() {
+        Ctx c = ctx();
+        EditorialL2Execution.Request req = c.request();
+        Map<String, Object> stop = wireMap(req, List.of(), "STOP", "CONTENT_BLOCKED");
+        stop.put("resolutions", new ArrayList<Object>());
+        EditorialL2Execution.Result r = run(req, canon(stop));
+        assertEquals(EditorialL2Execution.StopClass.CONTENT_BLOCKED, r.stopClass());
+        assertEquals(2, r.providerCalls());
+    }
+
+    @Test public void editCallFailureLeavesRecoveryAndResumeNeverRedispatches() {
+        Ctx c = ctx();
+        EditorialL2Execution.Request req = c.request();
+        FakeProvider provider = new FakeProvider(wire(req, List.of(), "CONTINUE", "NONE"));
+        provider.failPhase = EditorialL2Execution.PHASE;
+        FakeStore store = new FakeStore();
+        EditorialL2Execution exec = new EditorialL2Execution();
+        EditorialL2Execution.Result r = exec.execute(req, BUDGET, BUDGET, provider, store);
+        assertStop(r, EditorialL2Execution.StopClass.RETRY_REQUIRED, "RETRY_L2_PROVIDER_CALL_FAILED");
+        assertEquals(2, r.providerCalls());
+        provider.failPhase = null;
+        EditorialL2Execution.Result later = exec.execute(req, BUDGET, BUDGET, provider, store);
+        assertStop(later, EditorialL2Execution.StopClass.RETRY_REQUIRED, "STOP_L2_EXTERNAL_CALL_STATE_UNRESOLVED");
+        assertEquals(0, later.providerCalls());
+        assertEquals(2, provider.calls);
+    }
+
+    @Test public void eachCallHasItsOwnBudget() {
+        Ctx c = ctx();
+        EditorialL2Execution.Request req = c.request();
+        EditorialL2Execution.Budget cheap = new EditorialL2Execution.Budget(100_000, 4_000, new BigDecimal("0.005"), 60_000L);
+        FakeProvider provider = new FakeProvider(wire(req, List.of(), "CONTINUE", "NONE"));
+        provider.cost = new BigDecimal("0.01");
+        EditorialL2Execution.Result discoveryOver = new EditorialL2Execution().execute(req, cheap, BUDGET, provider, new FakeStore());
+        assertStop(discoveryOver, EditorialL2Execution.StopClass.BUDGET_EXCEEDED, "L2_TOKEN_OR_COST_BUDGET_EXCEEDED");
+        assertEquals(1, discoveryOver.providerCalls());
+
+        FakeProvider second = new FakeProvider(wire(req, List.of(), "CONTINUE", "NONE"));
+        second.cost = new BigDecimal("0.01");
+        EditorialL2Execution.Result editOver = new EditorialL2Execution().execute(req, BUDGET, cheap, second, new FakeStore());
+        assertStop(editOver, EditorialL2Execution.StopClass.BUDGET_EXCEEDED, "L2_TOKEN_OR_COST_BUDGET_EXCEEDED");
+        assertEquals(2, editOver.providerCalls());
+
+        assertStop(new EditorialL2Execution().execute(req, BUDGET, null, new FakeProvider(bytes("{}")), new FakeStore()),
+                EditorialL2Execution.StopClass.AUTHORIZATION_REQUIRED, "L2_BUDGET_REQUIRED");
+        assertEquals(EditorialL2Execution.StopClass.AUTHORIZATION_REQUIRED,
+                new EditorialL2Execution().execute(req, null, BUDGET, new FakeProvider(bytes("{}")), new FakeStore()).stopClass());
+    }
+
+    private EditorialL2Execution.Result run(EditorialL2Execution.Request req, byte[] editWire) {
+        return new EditorialL2Execution().execute(req, BUDGET, BUDGET, new FakeProvider(editWire), new FakeStore());
     }
 
     // ---- helpers ----
@@ -250,7 +426,7 @@ public final class EditorialL2ExecutionTest {
         EditorialL2Execution.Request req = new EditorialL2Execution.Request(context, L1_ID, reportBytes, Set.of());
         FakeProvider provider = new FakeProvider(bytes("{}"));
         FakeStore store = new FakeStore();
-        EditorialL2Execution.Result r = new EditorialL2Execution().execute(req, BUDGET, provider, store);
+        EditorialL2Execution.Result r = new EditorialL2Execution().execute(req, BUDGET, BUDGET, provider, store);
         assertStop(r, EditorialL2Execution.StopClass.INPUT_REQUIRED, reason);
         assertEquals(0, r.providerCalls());
         assertEquals(0, provider.calls);
@@ -299,6 +475,7 @@ public final class EditorialL2ExecutionTest {
         Map<String, Object> root = new LinkedHashMap<>();
         root.put("wireSchemaVersion", EditorialL2Execution.WIRE_SCHEMA_VERSION);
         root.put("attemptIdentity", req.attemptIdentity());
+        root.put("resolutions", resolutions("PROCESSED"));
         root.put("changes", new ArrayList<Object>(changes));
         root.put("preserved", new ArrayList<Object>());
         Map<String, Object> d = new LinkedHashMap<>();
@@ -318,18 +495,55 @@ public final class EditorialL2ExecutionTest {
         return EditorialCanonicalJson.canonicalize(m).getBytes(StandardCharsets.UTF_8);
     }
 
+    private static List<Object> resolutions(String status) {
+        List<Object> rows = new ArrayList<>();
+        for (String id : List.of("U001", "TG001")) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("candidateId", id);
+            row.put("status", status);
+            rows.add(row);
+        }
+        return rows;
+    }
+
+    private static Map<String, Object> candidate(String id, String ledger, int line) {
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("candidateId", id);
+        row.put("ledger", ledger);
+        row.put("line", BigDecimal.valueOf(line));
+        return row;
+    }
+
+    private static byte[] discovery(String attempt, List<Map<String, Object>> rows) {
+        Map<String, Object> root = new LinkedHashMap<>();
+        root.put("wireSchemaVersion", EditorialL2Execution.DISCOVERY_WIRE);
+        root.put("attemptIdentity", attempt);
+        root.put("candidates", new ArrayList<Object>(rows));
+        return canon(root);
+    }
+
     private static final class FakeProvider implements EditorialL2Execution.Provider {
         final byte[] wire;
+        byte[] discoveryWire;
         String finish = "stop";
         boolean costKnown = true;
         BigDecimal cost = new BigDecimal("0.01");
+        String failPhase;
         int calls;
         Request lastRequest;
+        final List<Request> requests = new ArrayList<>();
         FakeProvider(byte[] wire) { this.wire = wire; }
-        @Override public Response call(Request request) {
+        @Override public Response call(Request request) throws Exception {
             calls++;
             lastRequest = request;
-            return new Response(wire, finish, true, 100, 50, cost, costKnown);
+            requests.add(request);
+            if (request.phase().equals(failPhase)) throw new java.io.IOException("transport down");
+            byte[] out = wire;
+            if (EditorialL2Execution.DISCOVERY_PHASE.equals(request.phase())) {
+                out = discoveryWire != null ? discoveryWire : discovery(request.attemptIdentity(),
+                        List.of(candidate("U001", "UNIT", 1), candidate("TG001", "TG", 1)));
+            }
+            return new Response(out, finish, true, 100, 50, cost, costKnown);
         }
     }
 

@@ -93,11 +93,28 @@ public final class EditorialL3Execution {
      */
     public Result execute(Request request, EditorialL2Execution.Budget budget,
                           EditorialL2Execution.Provider provider, EditorialL2Execution.Store store) {
+        return execute(request, budget, budget, budget == null ? null : budget.maximumCost(), provider, store);
+    }
+
+    /**
+     * Separate caps per call (re-audit and reconcile); the summed cost may not exceed the sum of both caps.
+     */
+    public Result execute(Request request, EditorialL2Execution.Budget reauditBudget,
+                          EditorialL2Execution.Budget reconcileBudget,
+                          EditorialL2Execution.Provider provider, EditorialL2Execution.Store store) {
+        java.math.BigDecimal total = reauditBudget == null || reconcileBudget == null || reauditBudget.maximumCost() == null
+                || reconcileBudget.maximumCost() == null ? null
+                : reauditBudget.maximumCost().add(reconcileBudget.maximumCost());
+        return execute(request, reauditBudget, reconcileBudget, total, provider, store);
+    }
+
+    private Result execute(Request request, EditorialL2Execution.Budget reauditBudget,
+                           EditorialL2Execution.Budget reconcileBudget, BigDecimal totalCap,
+                           EditorialL2Execution.Provider provider, EditorialL2Execution.Store store) {
         if (request == null || request.context() == null) {
             return stop(EditorialL2Execution.StopClass.INPUT_REQUIRED, "INPUT_L3_REQUEST_MISSING", List.of(), 0);
         }
-        if (budget == null || budget.maximumInputBytes() <= 0 || budget.maximumOutputTokens() <= 0
-                || budget.maximumCost().signum() < 0 || budget.maximumExecutionTimeMillis() <= 0) {
+        if (!validBudget(reauditBudget) || !validBudget(reconcileBudget) || totalCap == null) {
             return stop(EditorialL2Execution.StopClass.AUTHORIZATION_REQUIRED, "L3_BUDGET_REQUIRED", List.of(), 0);
         }
         String issue = predecessorIssue(request);
@@ -113,7 +130,7 @@ public final class EditorialL3Execution {
         }
         Map<String, byte[]> reauditSources = visible(reaudit);
         Map<String, byte[]> reconcileSources = visible(reconcile);
-        if (size(reauditSources) > budget.maximumInputBytes() || size(reconcileSources) > budget.maximumInputBytes()) {
+        if (size(reauditSources) > reauditBudget.maximumInputBytes() || size(reconcileSources) > reconcileBudget.maximumInputBytes()) {
             return stop(EditorialL2Execution.StopClass.BUDGET_EXCEEDED, "L3_INPUT_BUDGET_EXCEEDED", List.of(), 0);
         }
         if (provider == null || store == null) {
@@ -146,7 +163,7 @@ public final class EditorialL3Execution {
         BigDecimal spent = BigDecimal.ZERO;
         // Call 1: blind RAW-first re-audit. It never sees DRAFT, REPORT_L1 or CHANGE_MAP_L2.
         CallOutcome first = call(provider, store, attemptIdentity, REAUDIT_PHASE, REAUDIT_WIRE,
-                reauditSources, request, budget, spent, 0);
+                reauditSources, request, reauditBudget, totalCap, spent, 0);
         if (first.stop != null) return first.stop;
         spent = first.cost;
         List<Candidate> candidates;
@@ -161,7 +178,7 @@ public final class EditorialL3Execution {
         // Call 2: reconcile sees the full chain; the app-owned candidate list travels in the envelope.
         Map<String, byte[]> secondSources = new TreeMap<>(reconcileSources);
         CallOutcome second = call(provider, store, attemptIdentity, RECONCILE_PHASE, RECONCILE_WIRE,
-                secondSources, request, budget, spent, 1, candidateEnvelope(candidates));
+                secondSources, request, reconcileBudget, totalCap, spent, 1, candidateEnvelope(candidates));
         if (second.stop != null) return second.stop;
         ReconcileWire wire;
         try {
@@ -266,15 +283,17 @@ public final class EditorialL3Execution {
     private static CallOutcome call(EditorialL2Execution.Provider provider, EditorialL2Execution.Store store,
                                     String attemptIdentity, String phase, String schema,
                                     Map<String, byte[]> sources, Request request,
-                                    EditorialL2Execution.Budget budget, BigDecimal spent, int priorCalls) {
-        return call(provider, store, attemptIdentity, phase, schema, sources, request, budget, spent, priorCalls, null);
+                                    EditorialL2Execution.Budget budget, BigDecimal totalCap, BigDecimal spent,
+                                    int priorCalls) {
+        return call(provider, store, attemptIdentity, phase, schema, sources, request, budget, totalCap, spent,
+                priorCalls, null);
     }
 
     private static CallOutcome call(EditorialL2Execution.Provider provider, EditorialL2Execution.Store store,
                                     String attemptIdentity, String phase, String schema,
                                     Map<String, byte[]> sources, Request request,
-                                    EditorialL2Execution.Budget budget, BigDecimal spent, int priorCalls,
-                                    byte[] candidateEnvelope) {
+                                    EditorialL2Execution.Budget budget, BigDecimal totalCap, BigDecimal spent,
+                                    int priorCalls, byte[] candidateEnvelope) {
         int calls = priorCalls + 1;
         Map<String, byte[]> visible = new TreeMap<>(sources);
         if (candidateEnvelope != null) visible.put("L3_REAUDIT_CANDIDATES", candidateEnvelope);
@@ -306,7 +325,8 @@ public final class EditorialL3Execution {
                     "RETRY_L3_PROVIDER_COST_UNAVAILABLE", List.of(phase), calls));
         }
         BigDecimal total = spent.add(response.cost());
-        if (response.outputTokens() > budget.maximumOutputTokens() || total.compareTo(budget.maximumCost()) > 0) {
+        if (response.outputTokens() > budget.maximumOutputTokens()
+                || response.cost().compareTo(budget.maximumCost()) > 0 || total.compareTo(totalCap) > 0) {
             recover(store, attemptIdentity, "L3_TOKEN_OR_COST_BUDGET_EXCEEDED");
             return new CallOutcome(null, total, stop(EditorialL2Execution.StopClass.BUDGET_EXCEEDED,
                     "L3_TOKEN_OR_COST_BUDGET_EXCEEDED", List.of(phase), calls));
@@ -541,6 +561,11 @@ public final class EditorialL3Execution {
         long total = 0L;
         for (byte[] bytes : sources.values()) total += bytes == null ? 0 : bytes.length;
         return total;
+    }
+
+    private static boolean validBudget(EditorialL2Execution.Budget budget) {
+        return budget != null && budget.maximumInputBytes() > 0 && budget.maximumOutputTokens() > 0
+                && budget.maximumCost().signum() >= 0 && budget.maximumExecutionTimeMillis() > 0;
     }
 
     private static void recover(EditorialL2Execution.Store store, String attemptIdentity, String reason) {

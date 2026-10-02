@@ -14,12 +14,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * OpenRouter adapter for one L2_EDIT call on the qualified fresh route. It only
- * renders the prompt and transports bytes: the model returns line-anchored change
- * rows, never the edited text, and {@link EditorialL2Execution} decides validity,
+ * OpenRouter adapter for the two L2 calls on the qualified fresh route: the blind
+ * {@code L2_RAW_DISCOVERY} (RAW and GLOSSARY only, candidate list) and
+ * {@code L2_EDIT} (line-anchored change rows plus a resolution for every app-owned
+ * candidate). It only renders the prompt and transports bytes: the model never
+ * returns the edited text, and {@link EditorialL2Execution} decides validity,
  * reconstruction and commit. No retry, repair or fallback happens here.
  */
 public final class OpenRouterEditorialL2Provider implements EditorialL2Execution.Provider {
@@ -39,6 +42,24 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
             + "reasonCode: at most 32 characters, starts with a letter or digit, then letters, digits, spaces and . _ : / ; ( ) -.\n"
             + "- Never return the whole chapter, hashes or identities other than the attemptIdentity echo.\n";
 
+    static final String DISCOVERY_RULES =
+            "Discovery rules enforced by the app (any violation rejects the whole response):\n"
+            + "- You see only RAW and GLOSSARY. Read RAW first and independently; the draft translation is hidden.\n"
+            + "- candidates lists every raw unit (ledger UNIT) and every title/glossary (TG), semantic (SR) and relation (RC) "
+            + "candidate you can ground in RAW.\n"
+            + "- line is the RAW line shown as L<n>|, or 0 when the candidate has no single RAW line.\n"
+            + "- candidateId: 1-48 ASCII characters matching [A-Za-z0-9][A-Za-z0-9._:/-]*, unique. At least one UNIT is required.\n"
+            + "- Never return chapter text, a translation, hashes or identities other than the attemptIdentity echo.\n";
+
+    static final String RESOLUTION_RULES =
+            "Candidate resolutions enforced by the app:\n"
+            + "- The block " + EditorialL2Execution.CANDIDATES_BLOCK + " is the app-owned candidate list from the blind RAW pass. "
+            + "resolutions must contain every candidateId exactly once and no other id.\n"
+            + "- status: PROCESSED (the draft already renders RAW correctly, or your change fixes it), PRESERVED (kept with a "
+            + "preserved row and evidence limit), UNPROCESSED (not handled; the app rejects the response), "
+            + "CONFLICT (proven conflict that cannot be fixed or kept; the app stops the chapter).\n"
+            + "- The app counts the resolutions itself; a PASS claim is not evidence.\n";
+
     private final AppSettings settings;
 
     public OpenRouterEditorialL2Provider(AppSettings settings) {
@@ -47,8 +68,7 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
     }
 
     @Override public Response call(Request request) throws Exception {
-        if (request == null || !EditorialL2Execution.PHASE.equals(request.phase())
-                || !EditorialL2Execution.WIRE_SCHEMA_VERSION.equals(request.outputSchemaId())) {
+        if (request == null || !validRequest(request)) {
             throw new IllegalStateException("P6_L2_REQUEST_INVALID");
         }
         if (!EditorialP5EFreshRawRoutingPolicy.matches(settings)) {
@@ -83,15 +103,38 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
                 true, result.promptTokens, result.completionTokens, cost, costKnown);
     }
 
+    /** The edit call must carry the app-owned candidate block; discovery sees only RAW and GLOSSARY. */
+    static boolean validRequest(Request request) {
+        Map<String, byte[]> sources = request.visibleSources();
+        if (sources == null) return false;
+        boolean edit = EditorialL2Execution.PHASE.equals(request.phase())
+                && EditorialL2Execution.WIRE_SCHEMA_VERSION.equals(request.outputSchemaId())
+                && sources.containsKey(EditorialL2Execution.CANDIDATES_BLOCK);
+        boolean discovery = EditorialL2Execution.DISCOVERY_PHASE.equals(request.phase())
+                && EditorialL2Execution.DISCOVERY_WIRE.equals(request.outputSchemaId())
+                && sources.containsKey(EditorialSafe4Contract.RAW)
+                && Set.of(EditorialSafe4Contract.RAW, EditorialSafe4Contract.GLOSSARY).containsAll(sources.keySet());
+        return edit || discovery;
+    }
+
     /** Pure rendering; visible roles come only from the app-side phase projection. */
     static PromptPair buildPrompt(Request request) {
+        boolean discovery = EditorialL2Execution.DISCOVERY_PHASE.equals(request.phase());
         StringBuilder system = new StringBuilder();
-        system.append("You are an untrusted SAFE4 L2 editor. The app is the authority.\n")
-                .append("Return exactly one JSON object and no Markdown or commentary.\n")
-                .append("Read RAW first and independently, then the DRAFT and REPORT_L1. Fix coverage, meaning, ")
-                .append("titles and glossary before relations, then local naturalness. ")
-                .append("When the evidence does not clearly prove a better target, keep the draft line.\n")
-                .append(WIRE_FORMAT_RULES)
+        if (discovery) {
+            system.append("You are an untrusted SAFE4 L2 raw-first discoverer. The app is the authority.\n")
+                    .append("Return exactly one JSON object and no Markdown or commentary.\n")
+                    .append(DISCOVERY_RULES);
+        } else {
+            system.append("You are an untrusted SAFE4 L2 editor. The app is the authority.\n")
+                    .append("Return exactly one JSON object and no Markdown or commentary.\n")
+                    .append("Read RAW first and independently, then the DRAFT and REPORT_L1. Fix coverage, meaning, ")
+                    .append("titles and glossary before relations, then local naturalness. ")
+                    .append("When the evidence does not clearly prove a better target, keep the draft line.\n")
+                    .append(RESOLUTION_RULES)
+                    .append(WIRE_FORMAT_RULES);
+        }
+        system
                 .append("\n[PROJECT_INSTRUCTION]\n").append(authority(request, EditorialPackFileRole.PROJECT_INSTRUCTION))
                 .append("\n[/PROJECT_INSTRUCTION]\n[TURN_PROMPT]\n").append(authority(request, EditorialPackFileRole.TURN_PROMPT))
                 .append("\n[/TURN_PROMPT]\n[WORKFLOW]\n").append(authority(request, EditorialPackFileRole.WORKFLOW))
@@ -112,12 +155,20 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
         for (String role : roles) {
             String text = new String(request.visibleSources().get(role), StandardCharsets.UTF_8);
             user.append("\n--- ").append(role).append(" ---\n")
-                    .append(EditorialSafe4Contract.DRAFT.equals(role) ? numbered(text) : text)
+                    .append(EditorialSafe4Contract.DRAFT.equals(role) || EditorialSafe4Contract.RAW.equals(role)
+                            ? numbered(text) : text)
                     .append("\n--- END ").append(role).append(" ---\n");
         }
-        user.append("\nReturn only this object:\n")
-                .append("{\"wireSchemaVersion\":\"").append(EditorialL2Execution.WIRE_SCHEMA_VERSION)
+        user.append("\nReturn only this object:\n");
+        if (discovery) {
+            user.append("{\"wireSchemaVersion\":\"").append(EditorialL2Execution.DISCOVERY_WIRE)
+                    .append("\",\"attemptIdentity\":\"<exact echo>\",\"candidates\":[{\"candidateId\":\"U001\",")
+                    .append("\"ledger\":\"UNIT|TG|SR|RC\",\"line\":1}]}\n");
+            return new PromptPair(system.toString(), user.toString());
+        }
+        user.append("{\"wireSchemaVersion\":\"").append(EditorialL2Execution.WIRE_SCHEMA_VERSION)
                 .append("\",\"attemptIdentity\":\"<exact echo>\",")
+                .append("\"resolutions\":[{\"candidateId\":\"U001\",\"status\":\"PROCESSED|PRESERVED|UNPROCESSED|CONFLICT\"}],")
                 .append("\"changes\":[{\"changeId\":\"C001\",\"errorId\":\"E001\",\"line\":1,\"before\":\"...\",")
                 .append("\"after\":\"...\",\"reason\":\"...\",\"dialogue\":false,\"status\":\"CLOSED\"}],")
                 .append("\"preserved\":[{\"preserveId\":\"P001\",\"line\":1,\"before\":\"...\",\"evidenceLimit\":\"...\"}],")

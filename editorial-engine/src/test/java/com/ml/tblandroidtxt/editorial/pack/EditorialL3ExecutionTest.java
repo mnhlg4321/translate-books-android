@@ -332,6 +332,36 @@ public final class EditorialL3ExecutionTest {
         assertEquals(1, provider.calls);
     }
 
+    @Test public void eachL3CallCarriesItsOwnOutputCapAndCostCap() {
+        Fx f = fx(Set.of());
+        EditorialL3Execution.Request req = f.l3();
+        String id = req.attemptIdentity();
+        EditorialL2Execution.Budget reaudit = new EditorialL2Execution.Budget(200_000, 8_192, new BigDecimal("0.05"), 180_000L);
+        EditorialL2Execution.Budget reconcile = new EditorialL2Execution.Budget(200_000, 16_384, new BigDecimal("0.10"), 180_000L);
+        ScriptProvider provider = new ScriptProvider(reaudit(id, defaultCandidates()),
+                reconcile(id, defaultResolutions(), List.of(), List.of(), probes("cov", "NO_DEFECT"),
+                        probes("reg", "NO_DEFECT")));
+        EditorialL3Execution.Result r = new EditorialL3Execution().execute(req, reaudit, reconcile, provider, new FakeStore());
+        assertEquals(r.reasonCode() + r.issues(), EditorialL3Execution.Outcome.COMMITTED, r.outcome());
+        assertEquals(8_192, provider.requests.get(0).maximumOutputTokens());
+        assertEquals(16_384, provider.requests.get(1).maximumOutputTokens());
+
+        // A call above its own cap is a budget stop even when the other cap would have allowed it.
+        ScriptProvider pricey = new ScriptProvider(reaudit(id, defaultCandidates()),
+                reconcile(id, defaultResolutions(), List.of(), List.of(), probes("cov", "NO_DEFECT"),
+                        probes("reg", "NO_DEFECT")));
+        pricey.cost = new BigDecimal("0.07");
+        FakeStore store = new FakeStore();
+        EditorialL3Execution.Result over = new EditorialL3Execution().execute(f.l3(), reaudit, reconcile, pricey, store);
+        assertEquals(EditorialL2Execution.StopClass.BUDGET_EXCEEDED, over.stopClass());
+        assertEquals(1, over.providerCalls());
+        assertTrue(store.committed.isEmpty());
+
+        EditorialL3Execution.Result noBudget = new EditorialL3Execution().execute(f.l3(), reaudit, null,
+                new ScriptProvider(), new FakeStore());
+        assertEquals(EditorialL2Execution.StopClass.AUTHORIZATION_REQUIRED, noBudget.stopClass());
+    }
+
     @Test public void summedCostAcrossCallsExceedsMaximum() {
         Fx f = fx(Set.of());
         EditorialL3Execution.Request req = f.l3();
@@ -585,6 +615,20 @@ public final class EditorialL3ExecutionTest {
             Map<String, Object> root = new LinkedHashMap<>();
             root.put("wireSchemaVersion", EditorialL2Execution.WIRE_SCHEMA_VERSION);
             root.put("attemptIdentity", l2Request.attemptIdentity());
+            List<Object> l2Resolutions = new ArrayList<>();
+            List<Object> l2Candidates = new ArrayList<>();
+            for (String[] c : new String[][]{{"U001", "UNIT"}, {"TG001", "TG"}}) {
+                Map<String, Object> r = new LinkedHashMap<>();
+                r.put("candidateId", c[0]);
+                r.put("status", "PROCESSED");
+                l2Resolutions.add(r);
+                Map<String, Object> cand = new LinkedHashMap<>();
+                cand.put("candidateId", c[0]);
+                cand.put("ledger", c[1]);
+                cand.put("line", BigDecimal.ONE);
+                l2Candidates.add(cand);
+            }
+            root.put("resolutions", l2Resolutions);
             root.put("changes", new ArrayList<Object>(List.of(change)));
             root.put("preserved", new ArrayList<Object>());
             Map<String, Object> d = new LinkedHashMap<>();
@@ -593,11 +637,17 @@ public final class EditorialL3ExecutionTest {
             d.put("stopClass", "NONE");
             root.put("disposition", d);
             final byte[] l2Wire = canon(root);
+            Map<String, Object> discovery = new LinkedHashMap<>();
+            discovery.put("wireSchemaVersion", EditorialL2Execution.DISCOVERY_WIRE);
+            discovery.put("attemptIdentity", l2Request.attemptIdentity());
+            discovery.put("candidates", l2Candidates);
+            final byte[] l2Discovery = canon(discovery);
             EditorialL2Execution.Provider l2Provider = request ->
-                    new EditorialL2Execution.Provider.Response(l2Wire, "stop", true, 100, 50,
-                            new BigDecimal("0.01"), true);
+                    new EditorialL2Execution.Provider.Response(
+                            EditorialL2Execution.DISCOVERY_PHASE.equals(request.phase()) ? l2Discovery : l2Wire,
+                            "stop", true, 100, 50, new BigDecimal("0.01"), true);
             EditorialL2Execution.Result l2Result = new EditorialL2Execution().execute(l2Request,
-                    BUDGET, l2Provider, new FakeStore());
+                    BUDGET, BUDGET, l2Provider, new FakeStore());
             if (l2Result.outcome() != EditorialL2Execution.Outcome.COMMITTED) {
                 throw new AssertionError("L2 fixture failed: " + l2Result.reasonCode() + l2Result.issues());
             }

@@ -46,13 +46,16 @@ public final class EditorialChapterFinalCoordinator {
     }
 
     /**
-     * Runs or resumes L2 then L3 for a chapter whose L1 is committed. Each budget
-     * covers its own stage; providers are injected so tests use fakes and the app
-     * uses the OpenRouter adapters under an explicit user authorization.
+     * Runs or resumes L2 (blind discovery + edit) then L3 (blind re-audit + reconcile) for a chapter whose
+     * L1 is committed. The per-phase caps and the chain cap come from {@code budgets}; providers are
+     * injected so tests use fakes and the app uses the OpenRouter adapters under an explicit user
+     * authorization. Nothing here retries, repairs or re-dispatches a stage whose state is unknown.
      */
-    public Result runToFinal(long projectId, String selector, String chapterKey,
-                             EditorialL2Execution.Budget l2Budget, EditorialL2Execution.Provider l2Provider,
-                             EditorialL2Execution.Budget l3Budget, EditorialL2Execution.Provider l3Provider) {
+    public Result runToFinal(long projectId, String selector, String chapterKey, EditorialChainBudgets budgets,
+                             EditorialL2Execution.Provider l2Provider, EditorialL2Execution.Provider l3Provider) {
+        if (budgets == null || !budgets.valid()) {
+            return new Result(Stage.L2, false, "L2_BUDGET_REQUIRED", null, 0);
+        }
         Optional<EditorialP5CExactBindingExecution.CommittedL1> l1;
         try {
             l1 = new EditorialP5CExactBindingExecution(database, storage).committedL1(projectId, selector, chapterKey);
@@ -63,18 +66,17 @@ public final class EditorialChapterFinalCoordinator {
         EditorialP5CExactBindingExecution.CommittedL1 chain = l1.get();
         // Protected spans are not yet carried by REPORT_L1; the set stays empty until it does.
         Set<Integer> protectedLines = Set.of();
-
         EditorialL2Execution.Result l2 = new EditorialL2Execution().execute(
                 new EditorialL2Execution.Request(chain.context(), chain.reportL1AttemptIdentity(),
                         chain.reportL1Bytes(), protectedLines),
-                l2Budget, l2Provider, new EditorialPhaseArtifactStore(database, chapterKey,
+                budgets.discovery(), budgets.edit(), l2Provider, new EditorialPhaseArtifactStore(database, chapterKey,
                         EditorialPhaseArtifactStore.L2_PHASE));
         if (!l2.accepted()) return new Result(Stage.L2, false, l2.reasonCode(), null, l2.providerCalls());
 
         EditorialL3Execution.Result l3 = new EditorialL3Execution().execute(
                 new EditorialL3Execution.Request(chain.context(), chain.reportL1AttemptIdentity(),
                         chain.reportL1Bytes(), l2.committed(), protectedLines),
-                l3Budget, l3Provider, new EditorialPhaseArtifactStore(database, chapterKey,
+                budgets.reaudit(), budgets.reconcile(), l3Provider, new EditorialPhaseArtifactStore(database, chapterKey,
                         EditorialPhaseArtifactStore.L3_PHASE));
         int calls = l2.providerCalls() + l3.providerCalls();
         if (!l3.accepted()) return new Result(Stage.L3, false, l3.reasonCode(), null, calls);

@@ -68,8 +68,7 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
     private static final String SELECTOR = "final-coordinator-binding-selector";
     private static final String DRAFT_LINE = "original draft bytes";
     private static final String EDITED_LINE = "edited draft bytes";
-    private static final EditorialL2Execution.Budget BUDGET =
-            new EditorialL2Execution.Budget(1_000_000, 4_000, new BigDecimal("1.00"), 60_000L);
+    private static final EditorialChainBudgets CHAIN = EditorialChainBudgets.d3Recommended();
 
     private Context context;
     private String databaseName;
@@ -96,7 +95,7 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
         ScriptedProvider l2 = new ScriptedProvider();
         ScriptedProvider l3 = new ScriptedProvider();
         EditorialChapterFinalCoordinator.Result result = new EditorialChapterFinalCoordinator(database, storage)
-                .runToFinal(fixture.projectId, SELECTOR, CHAPTER_KEY, BUDGET, l2, BUDGET, l3);
+                .runToFinal(fixture.projectId, SELECTOR, CHAPTER_KEY, CHAIN, l2, l3);
         assertEquals(EditorialChapterFinalCoordinator.Stage.L1_INCOMPLETE, result.stage());
         assertEquals("INPUT_REPORT_L1_NOT_COMMITTED", result.reasonCode());
         assertFalse(result.finalReady());
@@ -113,13 +112,13 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
         ScriptedProvider l3 = new ScriptedProvider();
         EditorialChapterFinalCoordinator coordinator = new EditorialChapterFinalCoordinator(database, storage);
         EditorialChapterFinalCoordinator.Result first = coordinator.runToFinal(fixture.projectId, SELECTOR,
-                CHAPTER_KEY, BUDGET, l2, BUDGET, l3);
+                CHAPTER_KEY, CHAIN, l2, l3);
 
         assertEquals(first.reasonCode(), EditorialChapterFinalCoordinator.Stage.FINAL, first.stage());
         assertTrue(first.finalReady());
         assertEquals("L3_FINAL_COMMITTED", first.reasonCode());
-        assertEquals(3, first.providerCalls());
-        assertEquals(1, l2.calls);
+        assertEquals(4, first.providerCalls());
+        assertEquals(2, l2.calls);
         assertEquals(2, l3.calls);
         EditorialL2Execution.Committed fin = first.finalArtifact();
         assertNotNull(fin);
@@ -141,7 +140,7 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
         ScriptedProvider noL2 = new ScriptedProvider();
         ScriptedProvider noL3 = new ScriptedProvider();
         EditorialChapterFinalCoordinator.Result second = coordinator.runToFinal(fixture.projectId, SELECTOR,
-                CHAPTER_KEY, BUDGET, noL2, BUDGET, noL3);
+                CHAPTER_KEY, CHAIN, noL2, noL3);
         assertEquals(second.reasonCode(), EditorialChapterFinalCoordinator.Stage.FINAL, second.stage());
         assertTrue(second.finalReady());
         assertEquals(0, second.providerCalls());
@@ -154,7 +153,7 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
         ScriptedProvider afterL2 = new ScriptedProvider();
         ScriptedProvider afterL3 = new ScriptedProvider();
         EditorialChapterFinalCoordinator.Result third = new EditorialChapterFinalCoordinator(database, storage)
-                .runToFinal(fixture.projectId, SELECTOR, CHAPTER_KEY, BUDGET, afterL2, BUDGET, afterL3);
+                .runToFinal(fixture.projectId, SELECTOR, CHAPTER_KEY, CHAIN, afterL2, afterL3);
         assertEquals(third.reasonCode(), EditorialChapterFinalCoordinator.Stage.FINAL, third.stage());
         assertEquals(0, third.providerCalls());
         assertEquals(0, afterL2.calls + afterL3.calls);
@@ -180,7 +179,7 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
         assertFalse(afterL1.progress().finalReady());
 
         EditorialChapterFinalCoordinator.Result run = coordinator.runToFinal(fixture.projectId, SELECTOR, CHAPTER_KEY,
-                BUDGET, new ScriptedProvider(), BUDGET, new ScriptedProvider());
+                CHAIN, new ScriptedProvider(), new ScriptedProvider());
         assertTrue(run.reasonCode(), run.finalReady());
 
         // Fresh repository over the same file: progress and FINAL are read from durable rows only.
@@ -202,11 +201,14 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
 
         // An Error escapes the execution boundary like a process death: the L3 row stays CLAIMED.
         EditorialL2Execution.Provider dying = request -> {
-            if (!EditorialL2Execution.PHASE.equals(request.phase())) throw new AssertionError("simulated process death");
+            if (EditorialL3Execution.REAUDIT_PHASE.equals(request.phase())
+                    || EditorialL3Execution.RECONCILE_PHASE.equals(request.phase())) {
+                throw new AssertionError("simulated process death");
+            }
             return new ScriptedProvider().call(request);
         };
         try {
-            coordinator.runToFinal(fixture.projectId, SELECTOR, CHAPTER_KEY, BUDGET, dying, BUDGET, dying);
+            coordinator.runToFinal(fixture.projectId, SELECTOR, CHAPTER_KEY, CHAIN, dying, dying);
             org.junit.Assert.fail("the simulated death must escape");
         } catch (AssertionError expected) {
             assertEquals("simulated process death", expected.getMessage());
@@ -221,7 +223,7 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
         ScriptedProvider l2 = new ScriptedProvider();
         ScriptedProvider l3 = new ScriptedProvider();
         EditorialChapterFinalCoordinator.Result resumed = coordinator.runToFinal(fixture.projectId, SELECTOR,
-                CHAPTER_KEY, BUDGET, l2, BUDGET, l3);
+                CHAPTER_KEY, CHAIN, l2, l3);
         assertFalse(resumed.finalReady());
         assertEquals(EditorialChapterFinalCoordinator.Stage.L3, resumed.stage());
         assertEquals(0, l2.calls + l3.calls);
@@ -233,7 +235,7 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
         EditorialChapterFinalCoordinator coordinator = new EditorialChapterFinalCoordinator(database, storage);
         EditorialL2Execution.Provider failing = request -> { throw new IOException("transport down"); };
         EditorialChapterFinalCoordinator.Result result = coordinator.runToFinal(fixture.projectId, SELECTOR, CHAPTER_KEY,
-                BUDGET, failing, BUDGET, new ScriptedProvider());
+                CHAIN, failing, new ScriptedProvider());
         assertFalse(result.finalReady());
         assertEquals(EditorialChapterFinalCoordinator.Stage.L2, result.stage());
 
@@ -249,7 +251,7 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
         commitL1(fixture);
         EditorialChapterFinalCoordinator coordinator = new EditorialChapterFinalCoordinator(database, storage);
         EditorialL2Execution.Committed fin = coordinator.runToFinal(fixture.projectId, SELECTOR, CHAPTER_KEY,
-                BUDGET, new ScriptedProvider(), BUDGET, new ScriptedProvider()).finalArtifact();
+                CHAIN, new ScriptedProvider(), new ScriptedProvider()).finalArtifact();
         assertNotNull(fin);
 
         EditorialChapterFinalCoordinator.ExportResult writeFailure = EditorialChapterFinalCoordinator.exportTxt(fin,
@@ -292,6 +294,7 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
             calls++;
             String wire;
             switch (request.phase()) {
+                case EditorialL2Execution.DISCOVERY_PHASE -> wire = discoveryWire(request.attemptIdentity());
                 case EditorialL2Execution.PHASE -> wire = l2Wire(request.attemptIdentity());
                 case EditorialL3Execution.REAUDIT_PHASE -> wire = reauditWire(request.attemptIdentity());
                 case EditorialL3Execution.RECONCILE_PHASE -> wire = reconcileWire(request.attemptIdentity());
@@ -302,9 +305,16 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
         }
     }
 
+    private static String discoveryWire(String attempt) {
+        return "{\"wireSchemaVersion\":\"" + EditorialL2Execution.DISCOVERY_WIRE + "\","
+                + "\"attemptIdentity\":\"" + attempt + "\","
+                + "\"candidates\":[{\"candidateId\":\"d1\",\"ledger\":\"UNIT\",\"line\":1}]}";
+    }
+
     private static String l2Wire(String attempt) {
         return "{\"wireSchemaVersion\":\"" + EditorialL2Execution.WIRE_SCHEMA_VERSION + "\","
                 + "\"attemptIdentity\":\"" + attempt + "\","
+                + "\"resolutions\":[{\"candidateId\":\"d1\",\"status\":\"PROCESSED\"}],"
                 + "\"changes\":[{\"changeId\":\"c1\",\"errorId\":\"e1\",\"line\":1,"
                 + "\"before\":\"" + DRAFT_LINE + "\",\"after\":\"" + EDITED_LINE + "\","
                 + "\"reason\":\"fix wording\",\"dialogue\":false,\"status\":\"CLOSED\"}],"

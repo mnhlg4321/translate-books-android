@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,13 +25,19 @@ import java.util.TreeMap;
  */
 public final class EditorialL2Execution {
     public static final String PHASE = "L2_EDIT";
+    public static final String DISCOVERY_PHASE = "L2_RAW_DISCOVERY";
+    public static final String DISCOVERY_WIRE = "safe4.l2.raw-discovery.wire.v1";
+    public static final String CANDIDATES_BLOCK = "L2_RAW_CANDIDATES";
+    public static final int MAX_CANDIDATES = 300;
+    static final Set<String> LEDGERS = Set.of("UNIT", "TG", "SR", "RC");
+    static final Set<String> STATUSES = Set.of("PROCESSED", "PRESERVED", "UNPROCESSED", "CONFLICT");
     public static final String WIRE_SCHEMA_VERSION = "safe4.l2.edit.wire.v1";
     public static final String VI_L2_SCHEMA = "safe4.full.vi-l2.v1";
     public static final int MAX_WIRE_BYTES = 65_536;
     public static final int MAX_CHANGES = 200;
     public static final int MAX_PRESERVED = 100;
     public static final int MAX_TEXT_FIELD = 2_000;
-    private static final String ATTEMPT_DOMAIN = "EDITORIAL_L2_EDIT_ATTEMPT_IDENTITY_V1\n";
+    private static final String ATTEMPT_DOMAIN = "EDITORIAL_L2_EDIT_ATTEMPT_IDENTITY_V2\n";
 
     public enum Outcome { COMMITTED, ALREADY_COMMITTED, STOPPED }
 
@@ -124,11 +131,22 @@ public final class EditorialL2Execution {
         }
     }
 
-    public Result execute(Request request, Budget budget, Provider provider, Store store) {
+    /** One blind-discovery candidate: the app-owned unit the edit call must resolve. */
+    public record Candidate(String candidateId, String ledger, int line) { }
+
+    /**
+     * Two calls under one claim: a blind {@code L2_RAW_DISCOVERY} (RAW and GLOSSARY only) that lists the
+     * candidates, then {@code L2_EDIT} which receives that list as the app-owned block
+     * {@value #CANDIDATES_BLOCK} and must resolve every candidate. The app counts the resolutions.
+     *
+     * @param discoveryBudget caps for the discovery call
+     * @param editBudget caps for the edit call
+     */
+    public Result execute(Request request, Budget discoveryBudget, Budget editBudget, Provider provider, Store store) {
         if (request == null || request.context() == null) {
             return stop(StopClass.INPUT_REQUIRED, "INPUT_L2_REQUEST_MISSING", List.of(), 0);
         }
-        if (budget == null || !budget.valid()) {
+        if (discoveryBudget == null || !discoveryBudget.valid() || editBudget == null || !editBudget.valid()) {
             return stop(StopClass.AUTHORIZATION_REQUIRED, "L2_BUDGET_REQUIRED", List.of(), 0);
         }
         EditorialP5PilotRequest context = request.context();
@@ -136,21 +154,16 @@ public final class EditorialL2Execution {
         if (predecessorIssue != null) {
             return stop(StopClass.INPUT_REQUIRED, predecessorIssue, List.of(), 0);
         }
-        EditorialPhaseContextProjector.PhaseProjection projection;
+        Map<String, byte[]> discoverySources;
+        Map<String, byte[]> editSources;
         try {
-            projection = project(request);
+            discoverySources = visible(project(request, DISCOVERY_PHASE));
+            editSources = visible(project(request, PHASE));
         } catch (RuntimeException invalid) {
             return stop(StopClass.INPUT_REQUIRED, "INPUT_L2_PROJECTION_INVALID", List.of(), 0);
         }
-        long inputBytes = 0L;
-        Map<String, byte[]> visible = new TreeMap<>();
-        for (Map.Entry<String, EditorialPhaseContextProjector.BundleAsset> entry
-                : projection.visibleAssets().entrySet()) {
-            byte[] bytes = entry.getValue().bytes();
-            visible.put(entry.getKey(), bytes);
-            inputBytes += bytes == null ? 0 : bytes.length;
-        }
-        if (inputBytes > budget.maximumInputBytes()) {
+        if (size(discoverySources) > discoveryBudget.maximumInputBytes()
+                || size(editSources) > editBudget.maximumInputBytes()) {
             return stop(StopClass.BUDGET_EXCEEDED, "L2_INPUT_BUDGET_EXCEEDED", List.of(), 0);
         }
         if (provider == null || store == null) {
@@ -182,53 +195,74 @@ public final class EditorialL2Execution {
             case ACQUIRED -> { }
         }
 
-        Provider.Response response;
+        // Call 1: blind discovery. It never sees DRAFT, REPORT_L1 or PRONOUN.
+        CallOutcome first = call(provider, store, attemptIdentity, DISCOVERY_PHASE, DISCOVERY_WIRE,
+                discoverySources, context, discoveryBudget, 0);
+        if (first.stop != null) return first.stop;
+        List<Candidate> candidates;
         try {
-            response = provider.call(new Provider.Request(attemptIdentity, PHASE, WIRE_SCHEMA_VERSION,
-                    Collections.unmodifiableMap(visible), context.authority(), context.chapterKey(),
-                    budget.maximumOutputTokens(), budget.maximumExecutionTimeMillis()));
-        } catch (Exception error) {
-            recover(store, attemptIdentity, "RETRY_L2_PROVIDER_CALL_FAILED");
-            return stop(StopClass.RETRY_REQUIRED, "RETRY_L2_PROVIDER_CALL_FAILED", List.of(), 1);
-        }
-        if (response == null || response.responseBytes() == null) {
-            recover(store, attemptIdentity, "RETRY_L2_PROVIDER_EMPTY_RESPONSE");
-            return stop(StopClass.RETRY_REQUIRED, "RETRY_L2_PROVIDER_EMPTY_RESPONSE", List.of(), 1);
-        }
-        String finish = response.finishReason() == null ? "" : response.finishReason().toLowerCase(java.util.Locale.ROOT);
-        if (!response.transportComplete() || "length".equals(finish) || "max_tokens".equals(finish)
-                || "max_output_tokens".equals(finish)) {
-            recover(store, attemptIdentity, "RETRY_L2_OUTPUT_TRUNCATED");
-            return stop(StopClass.RETRY_REQUIRED, "RETRY_L2_OUTPUT_TRUNCATED", List.of(), 1);
-        }
-        if (!response.costKnown()) {
-            recover(store, attemptIdentity, "RETRY_L2_PROVIDER_COST_UNAVAILABLE");
-            return stop(StopClass.RETRY_REQUIRED, "RETRY_L2_PROVIDER_COST_UNAVAILABLE", List.of(), 1);
-        }
-        if (response.outputTokens() > budget.maximumOutputTokens()
-                || response.cost().compareTo(budget.maximumCost()) > 0) {
-            recover(store, attemptIdentity, "L2_TOKEN_OR_COST_BUDGET_EXCEEDED");
-            return stop(StopClass.BUDGET_EXCEEDED, "L2_TOKEN_OR_COST_BUDGET_EXCEEDED", List.of(), 1);
+            candidates = parseDiscovery(first.bytes, attemptIdentity, rawLineCount(context));
+        } catch (RuntimeException invalid) {
+            recover(store, attemptIdentity, "REPAIR_L2_DISCOVERY_SCHEMA_INVALID");
+            return stop(StopClass.REPAIR_REQUIRED, "REPAIR_L2_DISCOVERY_SCHEMA_INVALID",
+                    List.of(safeMessage(invalid)), 1);
         }
 
-        Wire wire;
+        // Call 2: edit, with the app-owned candidate list as an extra visible block.
+        byte[] block = candidateBlock(candidates);
+        Map<String, byte[]> secondSources = new TreeMap<>(editSources);
+        secondSources.put(CANDIDATES_BLOCK, block);
+        if (size(secondSources) > editBudget.maximumInputBytes()) {
+            recover(store, attemptIdentity, "L2_INPUT_BUDGET_EXCEEDED");
+            return stop(StopClass.BUDGET_EXCEEDED, "L2_INPUT_BUDGET_EXCEEDED", List.of(), 1);
+        }
+        CallOutcome second = call(provider, store, attemptIdentity, PHASE, WIRE_SCHEMA_VERSION,
+                secondSources, context, editBudget, 1);
+        if (second.stop != null) return second.stop;
+
+        EditWire wire;
         try {
-            wire = parseWire(response.responseBytes(), attemptIdentity);
+            wire = parseEditWire(second.bytes, attemptIdentity, candidates);
         } catch (RuntimeException invalid) {
             recover(store, attemptIdentity, "REPAIR_L2_OUTPUT_SCHEMA_INVALID");
             return stop(StopClass.REPAIR_REQUIRED, "REPAIR_L2_OUTPUT_SCHEMA_INVALID",
-                    List.of(safeMessage(invalid)), 1);
+                    List.of(safeMessage(invalid)), 2);
         }
-        if (wire.stopClass() != null) {
-            recover(store, attemptIdentity, wire.reasonCode());
-            return stop(wire.stopClass(), wire.reasonCode(), List.of(), 1);
+        if (wire.rows().stopClass() != null) {
+            recover(store, attemptIdentity, wire.rows().reasonCode());
+            return stop(wire.rows().stopClass(), wire.rows().reasonCode(), List.of(), 2);
+        }
+        // A model-declared PASS is not evidence: the app counts every candidate itself.
+        int unresolved = 0;
+        int unprocessed = 0;
+        int conflicts = 0;
+        for (Candidate candidate : candidates) {
+            String status = wire.resolutions().get(candidate.candidateId());
+            if (status == null) unresolved++;
+            else if ("UNPROCESSED".equals(status)) unprocessed++;
+            else if ("CONFLICT".equals(status)) conflicts++;
+        }
+        if (unresolved > 0) {
+            recover(store, attemptIdentity, "REPAIR_L2_RESOLUTIONS_INCOMPLETE");
+            return stop(StopClass.REPAIR_REQUIRED, "REPAIR_L2_RESOLUTIONS_INCOMPLETE",
+                    List.of("L2_UNRESOLVED_CANDIDATES:" + unresolved), 2);
+        }
+        if (conflicts > 0) {
+            recover(store, attemptIdentity, "CONTENT_L2_CANDIDATE_CONFLICT");
+            return stop(StopClass.CONTENT_BLOCKED, "CONTENT_L2_CANDIDATE_CONFLICT",
+                    List.of("L2_CONFLICT_CANDIDATES:" + conflicts), 2);
+        }
+        if (unprocessed > 0) {
+            recover(store, attemptIdentity, "REPAIR_L2_CANDIDATES_UNPROCESSED");
+            return stop(StopClass.REPAIR_REQUIRED, "REPAIR_L2_CANDIDATES_UNPROCESSED",
+                    List.of("L2_UNPROCESSED_CANDIDATES:" + unprocessed), 2);
         }
 
         EditorialChangeMapReconstructor.Result reconstruction = new EditorialChangeMapReconstructor()
                 .reconstruct(new EditorialChangeMapReconstructor.Request(
                         EditorialChangeMapReconstructor.Kind.L2_DRAFT_TO_VI_L2,
                         context.source(EditorialSafe4Contract.DRAFT).bytes(),
-                        request.reportL1AttemptIdentity(), wire.changes(), wire.preserved(),
+                        request.reportL1AttemptIdentity(), wire.rows().changes(), wire.rows().preserved(),
                         request.protectedLineNumbers()));
         if (!reconstruction.accepted()) {
             StopClass stopClass = reconstruction.status() == EditorialChangeMapReconstructor.Status.INPUT_REQUIRED
@@ -236,11 +270,11 @@ public final class EditorialL2Execution {
             String reason = stopClass == StopClass.INPUT_REQUIRED
                     ? "INPUT_L2_BASE_INVALID" : "REPAIR_L2_CHANGE_MAP_INVALID";
             recover(store, attemptIdentity, reason);
-            return stop(stopClass, reason, reconstruction.issues(), 1);
+            return stop(stopClass, reason, reconstruction.issues(), 2);
         }
 
         byte[] viL2 = reconstruction.outputBytes();
-        byte[] changeMap = reconstruction.changeMapBytes();
+        byte[] changeMap = withDiscoveryEvidence(reconstruction.changeMapBytes(), candidates, wire.resolutions(), block);
         Committed committed = new Committed(attemptIdentity, request.reportL1AttemptIdentity(),
                 bundleIdentity, viL2, EditorialCanonicalJson.sha256Hex(viL2), changeMap,
                 EditorialCanonicalJson.sha256Hex(changeMap));
@@ -248,14 +282,180 @@ public final class EditorialL2Execution {
             store.commit(committed);
         } catch (RuntimeException error) {
             recover(store, attemptIdentity, "RETRY_L2_ATOMIC_COMMIT_FAILED");
-            return stop(StopClass.RETRY_REQUIRED, "RETRY_L2_ATOMIC_COMMIT_FAILED", List.of(), 1);
+            return stop(StopClass.RETRY_REQUIRED, "RETRY_L2_ATOMIC_COMMIT_FAILED", List.of(), 2);
         }
         Optional<Committed> readback = store.findCommitted(attemptIdentity);
         if (readback.isEmpty() || !readback.get().viL2Sha256().equals(committed.viL2Sha256())
                 || !readback.get().changeMapSha256().equals(committed.changeMapSha256())) {
-            return stop(StopClass.RETRY_REQUIRED, "RETRY_L2_READBACK_MISMATCH", List.of(), 1);
+            return stop(StopClass.RETRY_REQUIRED, "RETRY_L2_READBACK_MISMATCH", List.of(), 2);
         }
-        return new Result(Outcome.COMMITTED, null, "L2_COMMITTED", List.of(), readback.get(), 1);
+        return new Result(Outcome.COMMITTED, null, "L2_COMMITTED", List.of(), readback.get(), 2);
+    }
+
+    private record CallOutcome(byte[] bytes, Result stop) { }
+
+    private static CallOutcome call(Provider provider, Store store, String attemptIdentity, String phase,
+                                    String schema, Map<String, byte[]> sources, EditorialP5PilotRequest context,
+                                    Budget budget, int priorCalls) {
+        int calls = priorCalls + 1;
+        Provider.Response response;
+        try {
+            response = provider.call(new Provider.Request(attemptIdentity, phase, schema,
+                    Collections.unmodifiableMap(new TreeMap<>(sources)), context.authority(), context.chapterKey(),
+                    budget.maximumOutputTokens(), budget.maximumExecutionTimeMillis()));
+        } catch (Exception error) {
+            recover(store, attemptIdentity, "RETRY_L2_PROVIDER_CALL_FAILED");
+            return new CallOutcome(null, stop(StopClass.RETRY_REQUIRED, "RETRY_L2_PROVIDER_CALL_FAILED",
+                    List.of(phase), calls));
+        }
+        if (response == null || response.responseBytes() == null) {
+            recover(store, attemptIdentity, "RETRY_L2_PROVIDER_EMPTY_RESPONSE");
+            return new CallOutcome(null, stop(StopClass.RETRY_REQUIRED, "RETRY_L2_PROVIDER_EMPTY_RESPONSE",
+                    List.of(phase), calls));
+        }
+        String finish = response.finishReason() == null ? "" : response.finishReason().toLowerCase(java.util.Locale.ROOT);
+        if (!response.transportComplete() || "length".equals(finish) || "max_tokens".equals(finish)
+                || "max_output_tokens".equals(finish)) {
+            recover(store, attemptIdentity, "RETRY_L2_OUTPUT_TRUNCATED");
+            return new CallOutcome(null, stop(StopClass.RETRY_REQUIRED, "RETRY_L2_OUTPUT_TRUNCATED",
+                    List.of(phase), calls));
+        }
+        if (!response.costKnown()) {
+            recover(store, attemptIdentity, "RETRY_L2_PROVIDER_COST_UNAVAILABLE");
+            return new CallOutcome(null, stop(StopClass.RETRY_REQUIRED, "RETRY_L2_PROVIDER_COST_UNAVAILABLE",
+                    List.of(phase), calls));
+        }
+        if (response.outputTokens() > budget.maximumOutputTokens()
+                || response.cost().compareTo(budget.maximumCost()) > 0) {
+            recover(store, attemptIdentity, "L2_TOKEN_OR_COST_BUDGET_EXCEEDED");
+            return new CallOutcome(null, stop(StopClass.BUDGET_EXCEEDED, "L2_TOKEN_OR_COST_BUDGET_EXCEEDED",
+                    List.of(phase), calls));
+        }
+        return new CallOutcome(response.responseBytes(), null);
+    }
+
+    /** Strict blind-discovery wire: unknown keys, bad ids/ledgers and out-of-range RAW lines are rejected. */
+    static List<Candidate> parseDiscovery(byte[] bytes, String attemptIdentity, int rawLines) {
+        if (bytes.length > MAX_WIRE_BYTES) throw new IllegalArgumentException("L2_WIRE_BYTE_LIMIT_EXCEEDED");
+        Map<String, Object> root = EditorialCanonicalJson.parseObject(bytes);
+        keys(root, Set.of("wireSchemaVersion", "attemptIdentity", "candidates"), "root");
+        if (!DISCOVERY_WIRE.equals(root.get("wireSchemaVersion"))) throw new IllegalArgumentException("L2_WIRE_SCHEMA_INVALID");
+        if (!attemptIdentity.equals(root.get("attemptIdentity"))) throw new IllegalArgumentException("L2_WIRE_ATTEMPT_ECHO_MISMATCH");
+        List<Object> values = EditorialCanonicalJson.array(root.get("candidates"), "candidates");
+        if (values.size() > MAX_CANDIDATES) throw new IllegalArgumentException("L2_WIRE_ROW_LIMIT_EXCEEDED");
+        List<Candidate> result = new ArrayList<>();
+        Set<String> ids = new HashSet<>();
+        boolean unit = false;
+        for (Object value : values) {
+            Map<String, Object> row = object(value, "candidate");
+            keys(row, Set.of("candidateId", "ledger", "line"), "candidate");
+            String id = text(row, "candidateId");
+            if (!EditorialP5RawWireContract.token(id, EditorialP5RawWireContract.MAX_ID_LENGTH) || !ids.add(id)) {
+                throw new IllegalArgumentException("L2_WIRE_CANDIDATE_ID_INVALID");
+            }
+            String ledger = text(row, "ledger");
+            if (!LEDGERS.contains(ledger)) throw new IllegalArgumentException("L2_WIRE_LEDGER_INVALID");
+            int line = line(row);
+            if (line < 0 || line > rawLines) throw new IllegalArgumentException("L2_WIRE_LINE_OUT_OF_RANGE");
+            unit |= "UNIT".equals(ledger);
+            result.add(new Candidate(id, ledger, line));
+        }
+        // An exhaustive discovery always enumerates raw units; an empty unit ledger is not evidence.
+        if (!unit) throw new IllegalArgumentException("L2_WIRE_RAW_UNITS_MISSING");
+        return List.copyOf(result);
+    }
+
+    record EditWire(Wire rows, Map<String, String> resolutions) { }
+
+    /**
+     * L2_EDIT wire = the strict row grammar of {@link #parseWire} plus {@code resolutions}. Every known
+     * candidate id may appear at most once; completeness is judged by the app after STOP wires are handled.
+     */
+    static EditWire parseEditWire(byte[] bytes, String attemptIdentity, List<Candidate> candidates) {
+        if (bytes.length > MAX_WIRE_BYTES) throw new IllegalArgumentException("L2_WIRE_BYTE_LIMIT_EXCEEDED");
+        Map<String, Object> root = EditorialCanonicalJson.parseObject(bytes);
+        keys(root, Set.of("wireSchemaVersion", "attemptIdentity", "resolutions", "changes", "preserved", "disposition"),
+                "root");
+        Map<String, Object> rowsShape = new LinkedHashMap<>(root);
+        rowsShape.remove("resolutions");
+        Wire rows = parseWire(EditorialCanonicalJson.canonicalize(rowsShape).getBytes(StandardCharsets.UTF_8),
+                attemptIdentity);
+        Set<String> known = new HashSet<>();
+        for (Candidate candidate : candidates) known.add(candidate.candidateId());
+        Map<String, String> resolutions = new TreeMap<>();
+        for (Object value : EditorialCanonicalJson.array(root.get("resolutions"), "resolutions")) {
+            Map<String, Object> row = object(value, "resolution");
+            keys(row, Set.of("candidateId", "status"), "resolution");
+            String id = text(row, "candidateId");
+            String status = text(row, "status");
+            if (!known.contains(id) || resolutions.containsKey(id)) {
+                throw new IllegalArgumentException("L2_WIRE_RESOLUTION_ID_INVALID");
+            }
+            if (!STATUSES.contains(status)) throw new IllegalArgumentException("L2_WIRE_STATUS_INVALID");
+            resolutions.put(id, status);
+        }
+        return new EditWire(rows, Map.copyOf(resolutions));
+    }
+
+    static byte[] candidateBlock(List<Candidate> candidates) {
+        List<Object> rows = new ArrayList<>();
+        for (Candidate candidate : candidates) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("candidateId", candidate.candidateId());
+            row.put("ledger", candidate.ledger());
+            row.put("line", BigDecimal.valueOf(candidate.line()));
+            rows.add(row);
+        }
+        return EditorialCanonicalJson.canonicalize(Map.of("candidates", rows)).getBytes(StandardCharsets.UTF_8);
+    }
+
+    /** Adds the discovery candidates and their resolutions to the canonical CHANGE_MAP_L2 (one extra key). */
+    private static byte[] withDiscoveryEvidence(byte[] changeMap, List<Candidate> candidates,
+                                                Map<String, String> resolutions, byte[] block) {
+        Map<String, Object> root = new LinkedHashMap<>(EditorialCanonicalJson.parseObject(changeMap));
+        Map<String, Object> discovery = new LinkedHashMap<>();
+        discovery.put("phase", DISCOVERY_PHASE);
+        discovery.put("candidatesSha256", EditorialCanonicalJson.sha256Hex(block));
+        discovery.put("candidateCount", BigDecimal.valueOf(candidates.size()));
+        Map<String, Object> ledgers = new TreeMap<>();
+        List<Object> rows = new ArrayList<>();
+        for (Candidate candidate : candidates) {
+            String status = resolutions.get(candidate.candidateId());
+            Map<String, Object> counts = castMap(ledgers.computeIfAbsent(candidate.ledger(), k -> new TreeMap<String, Object>()));
+            counts.merge(status, BigDecimal.ONE, (a, b) -> ((BigDecimal) a).add((BigDecimal) b));
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("candidateId", candidate.candidateId());
+            row.put("ledger", candidate.ledger());
+            row.put("line", BigDecimal.valueOf(candidate.line()));
+            row.put("status", status);
+            rows.add(row);
+        }
+        discovery.put("ledgers", ledgers);
+        discovery.put("candidates", rows);
+        root.put("rawDiscovery", discovery);
+        return EditorialCanonicalJson.canonicalize(root).getBytes(StandardCharsets.UTF_8);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> castMap(Object value) { return (Map<String, Object>) value; }
+
+    private static int rawLineCount(EditorialP5PilotRequest context) {
+        byte[] raw = context.source(EditorialSafe4Contract.RAW) == null ? null : context.source(EditorialSafe4Contract.RAW).bytes();
+        return raw == null ? 0 : new String(raw, StandardCharsets.UTF_8).split("\\r?\\n", -1).length;
+    }
+
+    private static Map<String, byte[]> visible(EditorialPhaseContextProjector.PhaseProjection projection) {
+        Map<String, byte[]> result = new TreeMap<>();
+        for (Map.Entry<String, EditorialPhaseContextProjector.BundleAsset> entry : projection.visibleAssets().entrySet()) {
+            result.put(entry.getKey(), entry.getValue().bytes());
+        }
+        return result;
+    }
+
+    private static long size(Map<String, byte[]> sources) {
+        long total = 0L;
+        for (byte[] bytes : sources.values()) total += bytes == null ? 0 : bytes.length;
+        return total;
     }
 
     /** REPORT_L1 must be the persisted, non-stopped RECONCILE artifact of this exact chain. */
@@ -297,14 +497,14 @@ public final class EditorialL2Execution {
         return null;
     }
 
-    private static EditorialPhaseContextProjector.PhaseProjection project(Request request) {
+    private static EditorialPhaseContextProjector.PhaseProjection project(Request request, String phase) {
         EditorialPhaseContextProjector.Bundle l1 = request.context().bundleForExecution();
         List<EditorialPhaseContextProjector.BundleAsset> assets = new ArrayList<>(l1.assets());
         assets.add(new EditorialPhaseContextProjector.BundleAsset("REPORT_L1",
                 "report-l1:" + request.reportL1AttemptIdentity(), request.reportL1Bytes(), true,
                 EditorialP5RawWireContract.FINAL_REPORT_SCHEMA));
         return new EditorialPhaseContextProjector().project(
-                new EditorialPhaseContextProjector.Bundle(assets, l1.pronounStatus()), PHASE);
+                new EditorialPhaseContextProjector.Bundle(assets, l1.pronounStatus()), phase);
     }
 
     record Wire(List<EditorialChangeMapReconstructor.ChangeRow> changes,
