@@ -4,7 +4,7 @@ Ngày bàn giao: 2026-10-01 (+07:00).
 
 ## Trạng thái mới nhất — ưu tiên đọc trước
 
-**P6 R0–R7 (tiến độ, cập nhật mỗi nhóm).** R0–R4 xong, mỗi nhóm có commit và bằng chứng. R4 trên emulator-5554 với APK lưu trữ 4.18-p6.5/code218 (production EFBADCAA…2712, AndroidTest 114AD1D3…52FB): coordinator 9/9 gồm chuỗi ledger (protected span, INSERT_AFTER, final-read VI_L2 và FINAL, receipt VERIFIED, export từ chối receipt giả, resume không gọi lại). Pilot không bị đụng. Next: R5 rồi dừng hỏi Q1–Q5.
+**P6 R0–R7 (tiến độ, cập nhật mỗi nhóm).** R0–R5 xong, dừng đúng yêu cầu. Phần còn lại cần owner: Q1–Q5 trong `docs/P6_R5_EXECUTION_BUDGET_TABLE.md` (72 call, worst-case USD 2.724, xin ≤ 3.25; chạy lại 001 bằng binding/run declaration mới; cài lên pilot sau sao lưu DB; chọn hai chương R7; U1–U3). Bộ chấm `scripts/p6/score_run.py` + `thresholds.json` (đóng băng) + 16 test offline; mọi kết quả xanh hiện tại là STRUCTURAL, chất lượng nghĩa chưa đo. Chuỗi pilot cũ vẫn LEGACY_CONTRACT_V1, chưa bị sửa. 22 test instrumented lịch sử fail từ trước (schema v24).
 
 **Cập nhật 2026-10-02 (owner chấp nhận chất lượng chương 001).** W6 đạt; chương 001 quality-accepted (hai khoảng trống tiêu chí L1-khung và đếm candidate chưa đóng chính thức). 1/3 chương đại diện. Ứng viên hai chương còn lại (số liệu chỉ-đọc từ `D:\Ebooks\MERCEDES\VOL 5`): `docs/P6_G6_CHAPTER_CANDIDATES_20261002.md` — đề xuất 007 (dày thoại/xưng hô) và 010 (DRAFT dài nhất). Mỗi chương mới cần project/binding riêng + L1 RAW/RECONCILE + chuỗi L2/L3 (ước tính ~USD 0.05). Next action: owner chọn chương và cấp quyền (plan mục 10).
 

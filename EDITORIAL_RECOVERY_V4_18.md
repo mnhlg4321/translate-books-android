@@ -188,7 +188,7 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-R4 đã đóng (APK lưu trữ 4.18-p6.5/code218; coordinator 9/9 và test lưu bền ledger trên emulator). Next action: R5 — harness chấm (bộ chấm tự động cho invariant máy kiểm được trên nhãn fixture đã khóa + phiếu chấm người cho phần nghĩa + ngưỡng đóng băng), builder L2-only/L3-only offline, rồi bảng execution với worst-case token/USD từng call; dừng lại hỏi Q1–Q5.
+R0–R5 đã xong offline, mỗi nhóm có commit và bằng chứng (R2–R4 có chứng minh trên emulator bằng APK lưu trữ 4.18-p6.3/.4/.5). R5 gồm bộ chấm đã đóng băng + phiếu chấm người (`docs/P6_R5_EVALUATION_PROTOCOL.md`) và bảng execution 72 call, worst-case USD 2.724, xin trần USD 3.25 (`docs/P6_R5_EXECUTION_BUDGET_TABLE.md`). Next action: owner trả lời Q1–Q5 (duyệt bảng ngân sách; cách chạy lại chương 001; cài lên pilot sau khi sao lưu DB; chọn hai chương cho R7; xác nhận U1–U3). Chưa có call provider, chưa đụng pilot; R6/R7 chỉ bắt đầu sau câu trả lời.
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 
