@@ -1,15 +1,15 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-02 (+07:00): executing docs/P5E_M4_RECONCILE_WORK_REQUEST_20261001.md (owner approved the M4 scope). Step 1 (M0) could not run: `adb devices` is empty, serial 15e84958 is not connected; the aborted M0 folder D:\P5E-private\m4-m0-20261001-235745967 holds only ABORTED_NO_DEVICE.txt and a 0-byte file (no device command reached a device). Offline work continues: L3 OpenRouter adapter; app chain coordinator in progress.
-- Current version: active release v4.18; installed production 4.18-p5e.3/code211 (APK E9CF282C…), AndroidTest CCAAE0AD…; neither contains the M4/L2/L3 code.
+- Updated: 2026-10-02 (+07:00): docs/P5E_M4_RECONCILE_WORK_REQUEST_20261001.md executed through step 8. M4 attempt 1 ran once on device 15e84958 and stopped before the provider: RECONCILE_NOT_DISPATCHED, `dispatch status=STOP reason=P5_TOKEN_BUDGET_EXCEEDED providerCalls=0`, launchCount=1. Root cause: the L1 pre-dispatch gate compared 107,231 context bytes (RAW+GLOSSARY+DRAFT+PRONOUN+authority) with the 100,000-token cap; fixed offline in e2e1d3c5 (not built or run on the device).
+- Current version: active release v4.18; installed production 4.18-p5e.4/code212 (APK 8B6A4683…), AndroidTest 26CB0563…; neither contains the gate fix e2e1d3c5.
 - Current branch: feature/v4.18-p5e-runner-repair-20260917; same continuation, no new branch/release/checklist.
-- Current commit: f3924579 — implementation baseline immediately before this snapshot update.
-- Current build: 4.18-p5e.3/code211, build-20261001-190833 (unchanged); no M4 build yet (work request step 3 follows M0).
-- Current phase: P5 incomplete; M4_SCOPE_APPROVED / M4_STEP1_BLOCKED_EXTERNAL_DEVICE_NOT_CONNECTED / P5_EXIT_NOT_CLAIMED; P6 offline: L2+L3 engine boundaries, L2 and L3 adapters, v25 store done; coordinator + export in progress.
-- Completed tasks: G1; G2 offline M4 package; G3 (reconstructor, L2 boundary, v25 store, L2 adapter); G4 core (L3 boundary) + L3 adapter.
-- Pending tasks: connect device 15e84958 and resume the work request at step 1 (M0); then steps 2–11; G5 coordinator tests, UI wiring; G6 three finals; P7.
-- Known bugs/gaps: no new code has run on a device; M4 host script live path untested on hardware; L2/L3 edits are line-level only; REPORT_L1 carries no protected spans yet (coordinator passes an empty set); historical owner-window failure UNRESOLVED; code196 loss stays FAIL.
-- Regression status: editorial-engine 244/244, app unit 282/282, M4 host self-test 74/74, androidTest compile PASS; no device test run.
-- Workspace/data: owner .idea and old P5E docs edits plus untracked evidence preserved, not staged; event 7 evidence unchanged; device DB 9fa69f6b… must not be restored.
-- Evidence pointers: docs/P5E_M4_RECONCILE_WORK_REQUEST_20261001.md; docs/P5E_EVENT7_SUPPLEMENTARY_VERIFICATION_20261001.md; EDITORIAL_RECOVERY_V4_18.md section 9a.
-- Current Next action: owner connects phone 15e84958 by USB with debugging authorized; then resume the M4 work request at step 1 (read-only M0).
+- Current commit: e2e1d3c5 — implementation baseline immediately before this snapshot update.
+- Current build: 4.18-p5e.4/code212, build-20261002-071732 (source 2232ee63), AndroidTest event p5e-m4-prod212-20261002-01; both payloads identical in artifacts/ and backup/. Next build must be a new numbered build (versionCode > 212).
+- Current phase: P5 incomplete; M4_ATTEMPT_1_USED_NOT_DISPATCHED / P5_EXIT_NOT_CLAIMED / P6_NOT_READY; M5/M6 not applicable (no REPORT_L1 after RECONCILE); P6 offline: L2+L3 engines, adapters, v25 store, coordinator + export done.
+- Completed tasks: G1; G2 offline M4 package; M4 steps 1–8 (M0, preinstall DB copy, build, install, params, final M0, one event, readback); gate fix e2e1d3c5; G3 (reconstructor, L2 boundary, v25 store, L2 adapter); G4 core + L3 adapter; coordinator + TXT export.
+- Pending tasks: owner decision on a second M4 attempt (rebuild, reinstall, one RECONCILE call, then M5–M7); G5 coordinator tests and UI wiring; G6 three finals; P7.
+- Known bugs/gaps: nothing after the budget gate has run on a device for RECONCILE (HTTP request, compact-wire parse, atomic REPORT_L1 + receipt commit); installed APK still has the byte-vs-token gate; device DB is v25 `bfce0b42…` (only editorial_phase_artifacts + 1 index added, 0 rows); historical owner-window failure UNRESOLVED; code196 loss stays FAIL; 2-bytes-per-token estimator is my engineering choice pending owner view.
+- Regression status: editorial-engine 247/247, app unit 289/289, lint PASS, androidTest compile PASS, M4 host self-test 74/74 (not rerun); the live event ran once with the code212 pair.
+- Workspace/data: owner .idea and old P5E docs edits plus untracked evidence preserved, not staged; event 7 evidence unchanged (RAW report 6c1c183b…, receipt f1255272… unchanged after migration); M4 evidence in D:\P5E-private\reconcile-m4-20261002T002135Z-d3985fe030424a7484240f87d3cb4065 and m4-* folders (not in Git); do not restore any DB.
+- Evidence pointers: docs/P5E_CONSOLIDATED_FAILURES_20260930.md section Event M4; docs/P5E_M4_RECONCILE_WORK_REQUEST_20261001.md; docs/P5E_EVENT7_SUPPLEMENTARY_VERIFICATION_20261001.md; EDITORIAL_RECOVERY_V4_18.md section 10.
+- Current Next action: owner decides whether to grant a second M4 attempt (rebuild with e2e1d3c5, reinstall on 15e84958, one L1_RECONCILE call under the same caps, M5–M7 readback); without that grant no build, install or provider call.
