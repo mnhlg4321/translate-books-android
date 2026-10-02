@@ -4,7 +4,7 @@ Ngày bàn giao: 2026-10-01 (+07:00).
 
 ## Trạng thái mới nhất — ưu tiên đọc trước
 
-**P6 R0–R7 (tiến độ, cập nhật mỗi nhóm).** R0–R3 xong (R3: coordinator ledger 9/9 trên emulator, APK 4.18-p6.4/code217). R4 mã xong, qua test host (engine 340, app 324): L2 discovery và L3 re-audit phủ theo inventory, probe L3 có anchor RAW+VI_L2 và action kiểm với change đã áp dụng, defect do final-read L2 để lại phải được L3 trả lời, final-read FINAL thật rồi mới commit, receipt v2 + `EditorialQaReceiptValidator` (coordinator coi receipt không hợp lệ là chưa final, export từ chối). Còn lại: chạy coordinator trên emulator với APK mới. 22 test instrumented cũ fail (schema v24/seed lịch sử), ngoài phạm vi R. Pilot không bị đụng.
+**P6 R0–R7 (tiến độ, cập nhật mỗi nhóm).** R0–R4 xong, mỗi nhóm có commit và bằng chứng. R4 trên emulator-5554 với APK lưu trữ 4.18-p6.5/code218 (production EFBADCAA…2712, AndroidTest 114AD1D3…52FB): coordinator 9/9 gồm chuỗi ledger (protected span, INSERT_AFTER, final-read VI_L2 và FINAL, receipt VERIFIED, export từ chối receipt giả, resume không gọi lại). Pilot không bị đụng. Next: R5 rồi dừng hỏi Q1–Q5.
 
 **Cập nhật 2026-10-02 (owner chấp nhận chất lượng chương 001).** W6 đạt; chương 001 quality-accepted (hai khoảng trống tiêu chí L1-khung và đếm candidate chưa đóng chính thức). 1/3 chương đại diện. Ứng viên hai chương còn lại (số liệu chỉ-đọc từ `D:\Ebooks\MERCEDES\VOL 5`): `docs/P6_G6_CHAPTER_CANDIDATES_20261002.md` — đề xuất 007 (dày thoại/xưng hô) và 010 (DRAFT dài nhất). Mỗi chương mới cần project/binding riêng + L1 RAW/RECONCILE + chuỗi L2/L3 (ước tính ~USD 0.05). Next action: owner chọn chương và cấp quyền (plan mục 10).
 
