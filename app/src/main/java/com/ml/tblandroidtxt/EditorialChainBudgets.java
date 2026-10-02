@@ -55,10 +55,14 @@ public record EditorialChainBudgets(EditorialL2Execution.Budget discovery, Edito
                 + "\nL3_RECONCILE: 1 call, output ≤ " + reconcile.maximumOutputTokens() + " token, ≤ USD " + usd(reconcile)
                 + "\nInput ≤ " + discovery.maximumInputBytes() + " byte mỗi call • " + discovery.maximumExecutionTimeMillis() / 1000L
                 + " s mỗi call • 0 repair • 0 retry"
-                + "\nTrần cả chuỗi: USD " + chainMaximumCost.stripTrailingZeros().toPlainString();
+                + "\nTrần cả chuỗi: USD " + money(chainMaximumCost);
+    }
+
+    private static String money(BigDecimal value) {
+        return (value.scale() < 2 ? value.setScale(2) : value).toPlainString();
     }
 
     private static String usd(EditorialL2Execution.Budget budget) {
-        return budget.maximumCost().stripTrailingZeros().toPlainString();
+        return money(budget.maximumCost());
     }
 }
