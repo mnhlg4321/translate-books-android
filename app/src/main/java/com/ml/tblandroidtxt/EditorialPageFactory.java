@@ -77,7 +77,7 @@ final class EditorialPageFactory {
         String identity = p4Project
                 ? chapters.size() + " chapter • " + project.boundPackId + " v" + project.boundPackVersion
                 + " • hash " + shortHash(project.boundCanonicalPackHash)
-                + "\nTương thích contract • Đã lưu • Chờ chứng nhận • Execution đang khóa"
+                + "\nTương thích contract • Đã lưu • Chờ chứng nhận • Chạy L2/L3 cần cấp phép riêng từng lần"
                 : safe4Project
                 ? chapters.size() + " chapter • V5-SAFE.4 • " + shortHash(project.workflowHash)
                 : chapters.size() + " chapter • LEGACY V5 • chỉ đọc lịch sử";
@@ -99,7 +99,7 @@ final class EditorialPageFactory {
         }
 
         for (EditorialRepository.Chapter chapter : chapters) {
-            View chapterView = chapterCard(chapter);
+            View chapterView = chapterCard(chapter, p4Project);
             if (p4Project && chapterView instanceof LinearLayout) {
                 ((LinearLayout) chapterView).addView(new EditorialChapterFinalPanel(a).build(project, chapter),
                         a.marginLP(-1, -2, 0, 6, 0, 0));
@@ -136,7 +136,7 @@ final class EditorialPageFactory {
         if (rawCount > 0 || draftCount > 0) box.addView(a.secondaryButton("Xem trước mapping và lưu snapshot", v -> a.previewEditorialSelection(project.id)), a.marginLP(-1, a.dp(46), 0, 8, 0, 0));
     }
 
-    private View chapterCard(EditorialRepository.Chapter chapter) {
+    private View chapterCard(EditorialRepository.Chapter chapter, boolean p4Project) {
         LinearLayout card = a.card(12, a.PANEL, a.BORDER);
         card.setOrientation(LinearLayout.VERTICAL);
         card.setPadding(a.dp(10), a.dp(8), a.dp(10), a.dp(8));
@@ -144,6 +144,7 @@ final class EditorialPageFactory {
         card.addView(a.text(chapter.chapterKey + " • " + chapter.state.name(), 12, legacy ? a.MUTED : a.AMBER, false));
         String status = legacy
                 ? "LEGACY V5 • chỉ đọc; không dùng evidence/gate cũ để phát hành SAFE4"
+                : p4Project ? "Pack đã bind • L1 xong thì L2/L3 chạy ở khung bên dưới, mỗi lần cần cấp phép riêng."
                 : "SAFE4 • execution blocked: " + EditorialSafe4Pack.blockedReason();
         TextView state = a.text(status, 11, legacy ? a.MUTED : a.AMBER, false);
         state.setSingleLine(false);

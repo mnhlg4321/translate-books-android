@@ -1,15 +1,15 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-02 (+07:00): verified M4 attempt 2 (RECONCILE_COMMITTED, REPORT_L1 b33baf33…) and the G5 slice; wrote docs/P6_G5_G6_WORK_REQUEST_20261002.md (analysis, owner decisions D1–D4, groups W1–W6). Device 15e84958 online with 4.18-p5e.5/213; AVD tbl-code113-dqa-api35 available for instrumented QA.
-- Current version: active release v4.18; installed production 4.18-p5e.5/code213 (APK 88854E47…5793), AndroidTest 26CB0563…; neither contains the G5 UI changes (a6da1a35).
+- Updated: 2026-10-02 (+07:00): P6 work request docs/P6_G5_G6_WORK_REQUEST_20261002.md in progress. D1–D4 in section 3 are NOT checked in the committed request (only recommendations), so W1–W3 (no authority needed) were done and W4–W6 are held. W1 L2_RAW_DISCOVERY (option d, recommended) and W2 run-L2/L3 gate are committed; W3 emulator run of the four instrumented classes passed (38/38 on the 214 pair); a final rebuild is pending after a UI wording fix.
+- Current version: active release v4.18; installed on pilot 15e84958: production 4.18-p5e.5/code213 (88854E47…5793), AndroidTest 26CB0563…; emulator-5554 only: 4.18-p6.1/code214 + test APK 41ED827E….
 - Current branch: feature/v4.18-p5e-runner-repair-20260917; same continuation, no new branch/release/checklist.
-- Current commit: d71865f1 — implementation baseline immediately before this snapshot update.
-- Current build: 4.18-p5e.5/code213, build-20261002-073259 (source b3f6e3de); no build for G5 yet.
-- Current phase: P5_EXIT_PASS_UNDER_EXCEPTION_B (chapter 001, app/DB level); P6 offline: engines, adapters, coordinator, export and now progress/viewer/export UI done; run-action UI and live L2/L3 pending.
-- Completed tasks: G1; G2 (M4–M7); G3; G4 core + L3 adapter; coordinator + TXT export; G5 progress/inspect/viewer/export (a6da1a35).
-- Pending tasks: run-action UI with user-confirmed per-phase caps (offline); owner decisions (three chapters, per-phase budget, L2_RAW_DISCOVERY approach); G6 three finals; P7 regression, numbered build, archives, device QA.
-- Known bugs/gaps: G5 UI and the 4 new instrumented coordinator tests have not run on a device; L2_RAW_DISCOVERY not wired (contract phase skipped; see plan section 10); no live L2/L3 run; REPORT_L1 semantic quality not reviewed; reopen verified at DB level only; event 7 formal verdict stays RAW_NOT_ACCEPTED (exception B); L2/L3 edits are line-level only; REPORT_L1 carries no protected spans; historical owner-window failure UNRESOLVED; code196 loss stays FAIL.
-- Regression status: editorial-engine 247/247, app unit 298/298, lint PASS, androidTest compile PASS; no device test run for G5.
-- Workspace/data: owner .idea and old P5E docs edits plus untracked evidence preserved, not staged; device DB v25 06C4C48E… holds the committed RAW + RECONCILE; do not restore any DB.
-- Evidence pointers: EDITORIAL_RECOVERY_V4_18.md sections 9a and 10; docs/P5E_CONSOLIDATED_FAILURES_20260930.md section Event M4 lần 2; release_checklists/v4.18-editorial-v5-safe-4-1-3.md.
-- Current Next action: owner fills section 3 (D1–D4) of docs/P6_G5_G6_WORK_REQUEST_20261002.md and hands it to a new session (W1 L2_RAW_DISCOVERY option d → W2 run-action UI → W3 emulator instrumented QA; W4–W6 on the pilot only once approved).
+- Current commit: 7078a1d3 — implementation baseline immediately before this snapshot update (the UI wording fix is staged on top).
+- Current build: 4.18-p6.1/code214, build-20261002-080130 (source bc10aca1), AndroidTest p6-w3-prod214-20261002-02; superseded by the pending rebuild; neither is installed on the pilot.
+- Current phase: P5_EXIT_PASS_UNDER_EXCEPTION_B (chapter 001); P6 W1–W2 done, W3 emulator pass pending final rebuild, W4–W6 awaiting owner D1–D4.
+- Completed tasks: W1 (blind discovery + app-counted resolutions, per-call budgets), W2 (authorization dialog, single run gate, progress polling), W3 emulator instrumented run on the 214 pair and UI smoke (fresh install, L1 card with run button and dialog, FINAL card with viewer and SAF export, exported file SHA-256 = stored FINAL).
+- Pending tasks: rebuild production + AndroidTest from the wording-fix commit and re-run W3 on that exact pair; owner decisions D1–D4; W4 pilot install, W5 one live L2/L3 chain, W6 final view/export/owner quality check; G6 three finals; P7.
+- Known bugs/gaps: no live L2/L3 call yet; REPORT_L1 has populationTotal=1 so discovery is the only candidate source; emulator AVD held a foreign-lineage DB (user_version 25, no editorial_p4_bindings) that crashed the Editorial tab until app data was cleared (emulator artifact, copy kept); historical owner-window failure UNRESOLVED; code196 loss stays FAIL.
+- Regression status: editorial-engine 255/255, app unit 311/311, lint PASS, androidTest compile PASS; emulator instrumented: FinalCoordinator 7, PhaseArtifactStore 8, ReconcileLineage 5, ExactBindingFakeE2E 19 (all OK).
+- Workspace/data: owner .idea and old P5E docs edits plus untracked evidence preserved, not staged; pilot DB untouched since M4 (v25 06C4C48E…); emulator evidence in D:\P5E-private\p6-w3-emulator-20261002T010247Z (not in Git).
+- Evidence pointers: docs/P6_G5_G6_WORK_REQUEST_20261002.md; EDITORIAL_RECOVERY_V4_18.md sections 9a and 10; artifacts/builds/v4.18-p6.1 and artifacts/test-builds/v4.18-p6.1.
+- Current Next action: finish W3 (rebuild from the wording-fix commit, re-run the four classes and the UI smoke on that pair), then ask the owner to check D1–D4 in the work request; W4 starts only after D4.
