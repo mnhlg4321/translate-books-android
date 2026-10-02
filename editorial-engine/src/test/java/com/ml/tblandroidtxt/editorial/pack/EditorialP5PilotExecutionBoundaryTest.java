@@ -542,6 +542,95 @@ public final class EditorialP5PilotExecutionBoundaryTest {
                 result.stopReceipt().evidenceRefs().contains("RECONCILE_DECLARED_CHANGES_FORBIDDEN"));
     }
 
+    // M4 2026-10-02: the live L1_RECONCILE stopped before any provider call with
+    // P5_TOKEN_BUDGET_EXCEEDED. The gate compared 107,231 context bytes (RAW 23,814 + GLOSSARY
+    // 3,249 + DRAFT 26,462 + PRONOUN 452 + 53,254 authority) with the 100,000-token cap.
+    private static final int EVENT_CONTEXT_BYTES = 107_231;
+
+    private static String repeat(char c, int count) { return String.valueOf(c).repeat(count); }
+
+    /**
+     * Builds a fixture whose projected context is exactly {@code totalContextBytes}: the visible
+     * sources of the phase plus all authority bytes (RAW sees RAW and GLOSSARY, RECONCILE also
+     * sees DRAFT and PRONOUN). The project instruction absorbs the remainder.
+     */
+    private static Fixture eventSizedFixture(int totalContextBytes, String draftText,
+                                             boolean reconcilePhase) {
+        String raw = repeat('r', 23_814);
+        String glossary = "term\ttarget";
+        String pronoun = "from\ttarget";
+        int fixed = raw.length() + glossary.length() + PROMPT.length + WORKFLOW.length
+                + (reconcilePhase ? draftText.length() + pronoun.length() : 0);
+        return fixture(bytes(repeat('p', totalContextBytes - fixed)), raw, draftText, glossary, pronoun);
+    }
+
+    private static EditorialP5PilotAuthorization inputCap(EditorialP5PilotRequest request, String id,
+                                                          int maximumInputTokens) {
+        return authorizationVariant(request, id, request.binding().bindingIdentity(), 0,
+                maximumInputTokens, 4_096, maximumInputTokens + 4_096, BigDecimal.ONE, 120_000L, true,
+                0L, Long.MAX_VALUE);
+    }
+
+    @Test public void reconcileAtEventSevenSizesIsNotStoppedByTheByteVersusTokenGate() {
+        String draft = repeat('d', 26_462);
+        Fixture fixture = eventSizedFixture(EVENT_CONTEXT_BYTES, draft, true);
+        EditorialP5PilotRequest request = fixture.request.withPhase("L1_RECONCILE");
+        FakeProvider provider = new FakeProvider(new EditorialP5PilotProvider.Response(
+                "response-reconcile-sized", bytes("reconcile"), "stop", true, 80, 30, 110,
+                BigDecimal.ZERO, reconcileVariant(output(request), draft, draft, List.of()), true));
+
+        EditorialP5PilotResult result = execute(fixture.withRequest(request),
+                inputCap(request, "auth-reconcile-sized", 100_000), provider, new Store());
+
+        assertEquals(EVENT_CONTEXT_BYTES, result.metrics().requestContextSize());
+        assertTrue(result.metrics().requestContextSize() > 100_000);
+        assertEquals(EditorialP5PilotResult.Outcome.COMMITTED, result.outcome());
+        assertEquals(1, provider.calls);
+    }
+
+    @Test public void inputGateEstimatesTokensAtTwoBytesPerTokenAndStillStopsAboveTheCap() {
+        assertEquals(0, EditorialP5PilotExecution.estimatedInputTokens(0));
+        assertEquals(1, EditorialP5PilotExecution.estimatedInputTokens(1));
+        assertEquals(1, EditorialP5PilotExecution.estimatedInputTokens(2));
+        assertEquals(2, EditorialP5PilotExecution.estimatedInputTokens(3));
+        assertEquals(100_000, EditorialP5PilotExecution.estimatedInputTokens(200_000));
+        assertEquals(100_001, EditorialP5PilotExecution.estimatedInputTokens(200_001));
+        assertEquals(1_073_741_824, EditorialP5PilotExecution.estimatedInputTokens(Integer.MAX_VALUE));
+
+        Fixture atCap = eventSizedFixture(200_000, "draft", false);
+        FakeProvider atCapProvider = new FakeProvider(response(atCap.request, true));
+        EditorialP5PilotResult atCapResult = execute(atCap,
+                inputCap(atCap.request, "auth-at-cap", 100_000), atCapProvider, new Store());
+        assertEquals(200_000, atCapResult.metrics().requestContextSize());
+        assertEquals(EditorialP5PilotResult.Outcome.COMMITTED, atCapResult.outcome());
+        assertEquals(1, atCapProvider.calls);
+
+        Fixture overCap = eventSizedFixture(200_001, "draft", false);
+        FakeProvider overCapProvider = new FakeProvider(response(overCap.request, true));
+        EditorialP5PilotResult overCapResult = execute(overCap,
+                inputCap(overCap.request, "auth-over-cap", 100_000), overCapProvider, new Store());
+        assertEquals(200_001, overCapResult.metrics().requestContextSize());
+        assertEquals(EditorialP5PilotResult.Outcome.STOP, overCapResult.outcome());
+        assertEquals(EditorialP5PilotResult.StopClass.BUDGET_EXCEEDED,
+                overCapResult.stopReceipt().stopClass());
+        assertEquals("P5_TOKEN_BUDGET_EXCEEDED", overCapResult.stopReceipt().reasonCode());
+        assertEquals(0, overCapProvider.calls);
+    }
+
+    @Test public void outputCapIsStillComparedDirectly() {
+        Fixture fixture = fixture();
+        FakeProvider provider = new FakeProvider(response(fixture.request, true));
+        EditorialP5PilotResult result = execute(fixture,
+                authorizationVariant(fixture.request, "auth-output-below-request",
+                        fixture.request.binding().bindingIdentity(), 0, 10_000,
+                        fixture.request.requestedOutputTokens() - 1, 12_000, BigDecimal.ONE,
+                        60_000L, true, 0L, Long.MAX_VALUE),
+                provider, new Store());
+
+        assertEquals("P5_TOKEN_BUDGET_EXCEEDED", result.stopReceipt().reasonCode());
+        assertEquals(0, provider.calls);
+    }
+
     private EditorialP5PilotResult executeReconcileWith(Fixture fixture,
             EditorialP5PilotRequest request, EditorialP5L1Output output) {
         FakeProvider provider = new FakeProvider(new EditorialP5PilotProvider.Response(
@@ -729,16 +818,21 @@ public final class EditorialP5PilotExecutionBoundaryTest {
     }
 
     private static Fixture fixture() {
+        return fixture(PROJECT, "raw chapter", "draft", "term\ttarget", "from\ttarget");
+    }
+
+    private static Fixture fixture(byte[] project, String raw, String draft, String glossary,
+                                   String pronoun) {
         Map<EditorialPackFileRole, byte[]> authority = new LinkedHashMap<>();
-        authority.put(EditorialPackFileRole.PROJECT_INSTRUCTION, PROJECT);
+        authority.put(EditorialPackFileRole.PROJECT_INSTRUCTION, project);
         authority.put(EditorialPackFileRole.TURN_PROMPT, PROMPT);
         authority.put(EditorialPackFileRole.WORKFLOW, WORKFLOW);
         EditorialPackManifest manifest = manifest(authority);
         List<EditorialP5PilotRequest.SourceBytes> sources = List.of(
-                source(EditorialSafe4Contract.RAW, "raw", "raw chapter"),
-                source(EditorialSafe4Contract.DRAFT, "draft", "draft"),
-                source(EditorialSafe4Contract.GLOSSARY, "glossary", "term\ttarget"),
-                source(EditorialSafe4Contract.PRONOUN, "pronoun", "from\ttarget"));
+                source(EditorialSafe4Contract.RAW, "raw", raw),
+                source(EditorialSafe4Contract.DRAFT, "draft", draft),
+                source(EditorialSafe4Contract.GLOSSARY, "glossary", glossary),
+                source(EditorialSafe4Contract.PRONOUN, "pronoun", pronoun));
         EditorialP4Binding binding = binding(manifest, sources);
         EditorialP5PilotRequest request = new EditorialP5PilotRequest(binding, manifest,
                 new EditorialP5PilotRequest.PackAuthority(authority), "chapter-1",

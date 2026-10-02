@@ -189,7 +189,7 @@ public final class EditorialP5PilotExecution {
 
         int contextSize = contextSize(request, projection);
         metrics.requestContextSize = contextSize;
-        if (contextSize > authorization.maximumInputTokens()
+        if (estimatedInputTokens(contextSize) > authorization.maximumInputTokens()
                 || request.requestedOutputTokens() > authorization.maximumOutputTokens()) {
             return stopped(requestIdentity, EditorialP5PilotResult.StopClass.BUDGET_EXCEEDED,
                     "P5_TOKEN_BUDGET_EXCEEDED", request.phase(), "TOKEN_BUDGET", List.of(),
@@ -582,6 +582,20 @@ public final class EditorialP5PilotExecution {
         }
         return Collections.unmodifiableMap(result);
     }
+
+    /**
+     * Upper-bound input token estimate for a context of {@code contextBytes} UTF-8 bytes. The
+     * authorization caps tokens, so the pre-dispatch gate must compare tokens: comparing raw bytes
+     * stopped the 107,231-byte L1_RECONCILE request (about 28k tokens by the event-7 ratio of 3.8
+     * bytes per token) against the 100,000-token cap before any provider call. Two bytes per token
+     * keeps a margin of about 1.9x over that measurement; the post-call check on the provider's
+     * reported input tokens and the USD cap remain the hard limits.
+     */
+    static int estimatedInputTokens(int contextBytes) {
+        return (int) ((contextBytes + (long) MIN_BYTES_PER_INPUT_TOKEN - 1L) / MIN_BYTES_PER_INPUT_TOKEN);
+    }
+
+    private static final int MIN_BYTES_PER_INPUT_TOKEN = 2;
 
     private static int contextSize(EditorialP5PilotRequest request,
                                    EditorialPhaseContextProjector.PhaseProjection projection) {
