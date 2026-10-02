@@ -77,8 +77,8 @@ final class EditorialChapterFinalPanel {
         EditorialChapterProgress.Progress progress = inspection.progress();
         String lockKey = EditorialChapterRunService.lockKey(project.id, chapter.chapterKey);
         boolean running = EditorialChapterRunService.isRunning(lockKey);
-        status.setText(running ? "Đang chạy L2/L3… giữ app mở; tiến độ tự cập nhật. "
-                + EditorialChapterProgress.describe(progress) : EditorialChapterProgress.describe(progress));
+        status.setText(running ? EditorialChapterProgress.describeRunning(progress)
+                : EditorialChapterProgress.describe(progress));
         if (running) {
             // Poll the durable rows from the UI thread's timer; the single-thread preflight executor is never blocked.
             box.postDelayed(() -> { if (!a.isFinishing() && !a.isDestroyed()) refresh(box, status, actions, project, chapter); },
@@ -205,12 +205,19 @@ final class EditorialChapterFinalPanel {
         body.setTextIsSelectable(true);
         int pad = a.dp(16);
         body.setPadding(pad, pad, pad, pad);
+        String sha = finalArtifact.viL2Sha256();
+        TextView header = a.text("sha256 " + (sha.length() > 12 ? sha.substring(0, 12) + "…" : sha) + " • "
+                + finalArtifact.viL2Bytes().length + " byte", 12, a.MUTED, false);
+        header.setPadding(pad, pad / 2, pad, 0);
+        // A long chapter must not push the dialog buttons off screen: the text gets a bounded scroll area.
         ScrollView scroll = new ScrollView(a);
         scroll.addView(body);
-        String sha = finalArtifact.viL2Sha256();
+        int maxHeight = (int) (a.getResources().getDisplayMetrics().heightPixels * 0.55f);
+        LinearLayout content = new LinearLayout(a);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.addView(header);
+        content.addView(scroll, new LinearLayout.LayoutParams(-1, maxHeight));
         new AlertDialog.Builder(a).setTitle("Chương " + chapterKey + " • bản biên tập cuối")
-                .setMessage("sha256 " + (sha.length() > 12 ? sha.substring(0, 12) + "…" : sha) + " • "
-                        + finalArtifact.viL2Bytes().length + " byte")
-                .setView(scroll).setPositiveButton("Đóng", null).show();
+                .setView(content).setPositiveButton("Đóng", null).show();
     }
 }

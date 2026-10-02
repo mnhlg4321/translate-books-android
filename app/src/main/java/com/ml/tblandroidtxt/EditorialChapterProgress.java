@@ -96,6 +96,15 @@ public final class EditorialChapterProgress {
         return StopClass.UNCLASSIFIED;
     }
 
+    /**
+     * Status text while this process is actually running the chain: the CLAIMED row is expected then and must
+     * not be shown as an unknown-state stop.
+     */
+    public static String describeRunning(Progress progress) {
+        String done = progress.stage() == Stage.L3 ? "L1 ✓ • L2 ✓" : "L1 ✓";
+        return "Đang chạy " + (progress.stage() == Stage.L3 ? "L3" : "L2") + " (" + done + "). Giữ app mở; tiến độ tự cập nhật.";
+    }
+
     /** Vietnamese one-paragraph status for the chapter card; no model text, only fixed wording and codes. */
     public static String describe(Progress progress) {
         switch (progress.stage()) {

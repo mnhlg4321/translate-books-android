@@ -97,6 +97,18 @@ public final class EditorialChapterProgressTest {
         assertEquals(StopClass.UNCLASSIFIED, EditorialChapterProgress.classify(null));
     }
 
+    @Test public void whileThisProcessRunsTheClaimedRowIsNotShownAsAnUnknownStop() {
+        Progress claimed = EditorialChapterProgress.derive(true, new StageRow("CLAIMED", "", false), null);
+        String running = EditorialChapterProgress.describeRunning(claimed);
+        assertTrue(running, running.contains("Đang chạy L2"));
+        assertFalse(running, running.contains("UNKNOWN"));
+        assertFalse(running, running.contains("không tự gọi lại"));
+        Progress l3 = EditorialChapterProgress.derive(true, committed(), new StageRow("CLAIMED", "", false));
+        assertTrue(EditorialChapterProgress.describeRunning(l3).contains("Đang chạy L3 (L1 ✓ • L2 ✓)"));
+        // Outside a run the same row is still reported as an unknown state.
+        assertTrue(EditorialChapterProgress.describe(claimed).contains("RETRY_L2_CALL_STATE_UNKNOWN"));
+    }
+
     @Test public void descriptionNeverContainsModelTextOnlyFixedWordingAndCodes() {
         Progress p = EditorialChapterProgress.derive(true, committed(), new StageRow("CLAIMED", "", false));
         String text = EditorialChapterProgress.describe(p);
