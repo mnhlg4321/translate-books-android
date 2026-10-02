@@ -111,6 +111,18 @@ public final class EditorialP4BindingDao {
         }
     }
 
+    /** The attempt request selector the binding was stored under; empty when the binding is unknown. */
+    public Optional<String> selectorFor(String bindingIdentity) {
+        if (bindingIdentity == null || bindingIdentity.isBlank()) return Optional.empty();
+        try (Cursor cursor = database.editorialReadableDatabase().rawQuery(
+                "SELECT attempt_request_selector FROM " + TABLE + " WHERE binding_identity=?",
+                new String[]{bindingIdentity})) {
+            return cursor.moveToFirst() && !cursor.isNull(0) ? Optional.of(cursor.getString(0)) : Optional.empty();
+        } catch (RuntimeException invalidStoredRow) {
+            return Optional.empty();
+        }
+    }
+
     public Optional<EditorialP4Binding> findByAttemptRequestSelector(String selector) {
         if (selector == null || selector.isBlank()) return Optional.empty();
         try (Cursor cursor = database.editorialReadableDatabase().rawQuery(

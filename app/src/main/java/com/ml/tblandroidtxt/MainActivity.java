@@ -78,6 +78,7 @@ public class MainActivity extends Activity {
     static final int REQ_EDITORIAL_REFERENCE = 28;
     static final int REQ_EDITORIAL_DRAFT = 29;
     static final int REQ_EDITORIAL_BUNDLE = 30;
+    static final int REQ_EDITORIAL_FINAL_EXPORT = 31;
 
     int BG, PANEL, CARD, FIELD, BORDER, TEXT, MUTED, BLUE, CYAN;
     final int GREEN = Color.rgb(43, 207, 126); // semantic success/running
@@ -163,6 +164,9 @@ public class MainActivity extends Activity {
     PronounStore.Profile editingPronoun = null;
     String pendingPronounReplaceId = "";
     long pendingEditorialProjectId = -1L;
+    long pendingFinalProjectId = -1L;
+    String pendingFinalBindingIdentity = "";
+    String pendingFinalChapterKey = "";
     final Map<Long,ArrayList<EditorialImportPlanner.Source>> pendingEditorialRaw=new HashMap<>();
     final Map<Long,ArrayList<EditorialImportPlanner.Source>> pendingEditorialDraft=new HashMap<>();
     final Map<Long,Map<String,EditorialImportPlanner.Source>> pendingEditorialGlossaryOverrides=new HashMap<>();
@@ -926,6 +930,16 @@ public class MainActivity extends Activity {
 
     void chooseEditorialDraft(long projectId) { chooseEditorialChapterFiles(projectId,false); }
 
+    void startEditorialFinalExport(long projectId, String bindingIdentity, String chapterKey) {
+        if (projectId <= 0 || bindingIdentity == null || bindingIdentity.isEmpty() || chapterKey == null || chapterKey.isEmpty()) return;
+        pendingFinalProjectId = projectId; pendingFinalBindingIdentity = bindingIdentity; pendingFinalChapterKey = chapterKey;
+        Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("text/plain");
+        i.putExtra(Intent.EXTRA_TITLE, "editorial_" + chapterKey + "_final.txt");
+        startActivityForResult(i, REQ_EDITORIAL_FINAL_EXPORT);
+    }
+
     void chooseEditorialBundle(long projectId) {
         if(projectId<=0)return;
         pendingEditorialProjectId=projectId;
@@ -1259,6 +1273,7 @@ public class MainActivity extends Activity {
             if (requestCode == REQ_PRONOUN) pendingPronounReplaceId = "";
             if (requestCode == REQ_EDITORIAL_REFERENCE) { pendingEditorialReferenceProjectId=-1L; pendingEditorialReferenceRole=null; }
             if(requestCode==REQ_EDITORIAL_BATCH||requestCode==REQ_EDITORIAL_DRAFT||requestCode==REQ_EDITORIAL_BUNDLE)pendingEditorialProjectId=-1L;
+            if(requestCode==REQ_EDITORIAL_FINAL_EXPORT){pendingFinalProjectId=-1L;pendingFinalBindingIdentity="";pendingFinalChapterKey="";}
             return;
         }
         Uri uri = data.getData();
@@ -1421,6 +1436,10 @@ public class MainActivity extends Activity {
             previewEditorialBatch(data, takeFlags);
         } else if(requestCode==REQ_EDITORIAL_DRAFT){
             previewEditorialDraft(data,takeFlags);
+        } else if(requestCode==REQ_EDITORIAL_FINAL_EXPORT){
+            long exportProject=pendingFinalProjectId;String exportBinding=pendingFinalBindingIdentity;String exportChapter=pendingFinalChapterKey;
+            pendingFinalProjectId=-1L;pendingFinalBindingIdentity="";pendingFinalChapterKey="";
+            if(uri!=null&&exportProject>0)new EditorialChapterFinalPanel(this).exportTo(exportProject,exportBinding,exportChapter,uri);
         } else if(requestCode==REQ_EDITORIAL_BUNDLE){
             previewEditorialBundle(data,takeFlags);
         }

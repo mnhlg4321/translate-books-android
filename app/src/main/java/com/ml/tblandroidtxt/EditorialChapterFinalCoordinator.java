@@ -81,6 +81,46 @@ public final class EditorialChapterFinalCoordinator {
         return new Result(Stage.FINAL, true, l3.reasonCode(), l3.committed(), calls);
     }
 
+    /** Durable progress of a chapter plus the committed FINAL when there is one. */
+    public record Inspection(EditorialChapterProgress.Progress progress, EditorialL2Execution.Committed finalArtifact) { }
+
+    /**
+     * Read-only: derives the chapter's progress from durable rows without claiming, dispatching or
+     * repairing anything, so the UI can show it after any restart or process death.
+     */
+    public Inspection inspect(long projectId, String selector, String chapterKey) {
+        Optional<EditorialP5CExactBindingExecution.CommittedL1> l1;
+        try {
+            l1 = new EditorialP5CExactBindingExecution(database, storage).committedL1(projectId, selector, chapterKey);
+        } catch (IOException | RuntimeException error) {
+            return new Inspection(EditorialChapterProgress.derive(false, null, null), null);
+        }
+        if (l1.isEmpty()) return new Inspection(EditorialChapterProgress.derive(false, null, null), null);
+        EditorialP5CExactBindingExecution.CommittedL1 chain = l1.get();
+        EditorialPhaseArtifactStore l2Store = new EditorialPhaseArtifactStore(database, chapterKey,
+                EditorialPhaseArtifactStore.L2_PHASE);
+        EditorialPhaseArtifactStore l3Store = new EditorialPhaseArtifactStore(database, chapterKey,
+                EditorialPhaseArtifactStore.L3_PHASE);
+        try {
+            String l2Identity = new EditorialL2Execution.Request(chain.context(), chain.reportL1AttemptIdentity(),
+                    chain.reportL1Bytes(), Set.of()).attemptIdentity();
+            EditorialChapterProgress.StageRow l2Row = l2Store.inspect(l2Identity).orElse(null);
+            EditorialChapterProgress.StageRow l3Row = null;
+            EditorialL2Execution.Committed finalArtifact = null;
+            Optional<EditorialL2Execution.Committed> l2Committed = l2Store.findCommitted(l2Identity);
+            if (l2Committed.isPresent()) {
+                String l3Identity = new EditorialL3Execution.Request(chain.context(), chain.reportL1AttemptIdentity(),
+                        chain.reportL1Bytes(), l2Committed.get(), Set.of()).attemptIdentity();
+                l3Row = l3Store.inspect(l3Identity).orElse(null);
+                finalArtifact = l3Store.findCommitted(l3Identity).orElse(null);
+            }
+            EditorialChapterProgress.Progress progress = EditorialChapterProgress.derive(true, l2Row, l3Row);
+            return new Inspection(progress, progress.finalReady() ? finalArtifact : null);
+        } catch (RuntimeException error) {
+            return new Inspection(EditorialChapterProgress.derive(false, null, null), null);
+        }
+    }
+
     /**
      * Writes exactly the FINAL bytes (UTF-8 text only, no report or JSON), then
      * reads the destination back and compares SHA-256 and length. A failed or

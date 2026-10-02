@@ -165,6 +165,109 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
         assertArrayEquals(fin.viL2Bytes(), stored.viL2Bytes());
     }
 
+    @Test public void inspectReportsEachStageFromDurableRowsWithoutDispatching() throws Exception {
+        BindingFixture fixture = createBoundChapter();
+        EditorialChapterFinalCoordinator coordinator = new EditorialChapterFinalCoordinator(database, storage);
+
+        EditorialChapterFinalCoordinator.Inspection beforeL1 = coordinator.inspect(fixture.projectId, SELECTOR, CHAPTER_KEY);
+        assertEquals(EditorialChapterProgress.Stage.L1_INCOMPLETE, beforeL1.progress().stage());
+        assertNull(beforeL1.finalArtifact());
+
+        commitL1(fixture);
+        EditorialChapterFinalCoordinator.Inspection afterL1 = coordinator.inspect(fixture.projectId, SELECTOR, CHAPTER_KEY);
+        assertEquals(EditorialChapterProgress.Stage.L2, afterL1.progress().stage());
+        assertEquals(EditorialChapterProgress.NextAction.RUN_STAGE_WITH_AUTHORIZATION, afterL1.progress().next());
+        assertFalse(afterL1.progress().finalReady());
+
+        EditorialChapterFinalCoordinator.Result run = coordinator.runToFinal(fixture.projectId, SELECTOR, CHAPTER_KEY,
+                BUDGET, new ScriptedProvider(), BUDGET, new ScriptedProvider());
+        assertTrue(run.reasonCode(), run.finalReady());
+
+        // Fresh repository over the same file: progress and FINAL are read from durable rows only.
+        database.close();
+        database = new TranslationRepository(context, databaseName);
+        EditorialChapterFinalCoordinator.Inspection done = new EditorialChapterFinalCoordinator(database, storage)
+                .inspect(fixture.projectId, SELECTOR, CHAPTER_KEY);
+        assertEquals(EditorialChapterProgress.Stage.FINAL, done.progress().stage());
+        assertEquals(EditorialChapterProgress.NextAction.VIEW_AND_EXPORT, done.progress().next());
+        assertNotNull(done.finalArtifact());
+        assertEquals(run.finalArtifact().viL2Sha256(), done.finalArtifact().viL2Sha256());
+        assertArrayEquals(run.finalArtifact().viL2Bytes(), done.finalArtifact().viL2Bytes());
+    }
+
+    @Test public void interruptedL3IsUnknownStateAndResumeNeverRedispatches() throws Exception {
+        BindingFixture fixture = createBoundChapter();
+        commitL1(fixture);
+        EditorialChapterFinalCoordinator coordinator = new EditorialChapterFinalCoordinator(database, storage);
+
+        // An Error escapes the execution boundary like a process death: the L3 row stays CLAIMED.
+        EditorialL2Execution.Provider dying = request -> {
+            if (!EditorialL2Execution.PHASE.equals(request.phase())) throw new AssertionError("simulated process death");
+            return new ScriptedProvider().call(request);
+        };
+        try {
+            coordinator.runToFinal(fixture.projectId, SELECTOR, CHAPTER_KEY, BUDGET, dying, BUDGET, dying);
+            org.junit.Assert.fail("the simulated death must escape");
+        } catch (AssertionError expected) {
+            assertEquals("simulated process death", expected.getMessage());
+        }
+
+        EditorialChapterFinalCoordinator.Inspection interrupted = coordinator.inspect(fixture.projectId, SELECTOR, CHAPTER_KEY);
+        assertEquals(EditorialChapterProgress.Stage.L3, interrupted.progress().stage());
+        assertEquals(EditorialChapterProgress.StageState.IN_FLIGHT_UNKNOWN, interrupted.progress().l3());
+        assertEquals(EditorialChapterProgress.NextAction.OWNER_RECOVERY_DECISION, interrupted.progress().next());
+        assertNull(interrupted.finalArtifact());
+
+        ScriptedProvider l2 = new ScriptedProvider();
+        ScriptedProvider l3 = new ScriptedProvider();
+        EditorialChapterFinalCoordinator.Result resumed = coordinator.runToFinal(fixture.projectId, SELECTOR,
+                CHAPTER_KEY, BUDGET, l2, BUDGET, l3);
+        assertFalse(resumed.finalReady());
+        assertEquals(EditorialChapterFinalCoordinator.Stage.L3, resumed.stage());
+        assertEquals(0, l2.calls + l3.calls);
+    }
+
+    @Test public void failedProviderCallLeavesRecoveryRequiredWithTheTypedReason() throws Exception {
+        BindingFixture fixture = createBoundChapter();
+        commitL1(fixture);
+        EditorialChapterFinalCoordinator coordinator = new EditorialChapterFinalCoordinator(database, storage);
+        EditorialL2Execution.Provider failing = request -> { throw new IOException("transport down"); };
+        EditorialChapterFinalCoordinator.Result result = coordinator.runToFinal(fixture.projectId, SELECTOR, CHAPTER_KEY,
+                BUDGET, failing, BUDGET, new ScriptedProvider());
+        assertFalse(result.finalReady());
+        assertEquals(EditorialChapterFinalCoordinator.Stage.L2, result.stage());
+
+        EditorialChapterProgress.Progress progress = coordinator.inspect(fixture.projectId, SELECTOR, CHAPTER_KEY).progress();
+        assertEquals(EditorialChapterProgress.StageState.RECOVERY_REQUIRED, progress.l2());
+        assertEquals("RETRY_L2_PROVIDER_CALL_FAILED", progress.reasonCode());
+        assertEquals(EditorialChapterProgress.StopClass.RETRY_REQUIRED, progress.stopClass());
+        assertEquals(EditorialChapterProgress.NextAction.OWNER_RECOVERY_DECISION, progress.next());
+    }
+
+    @Test public void failedExportKeepsTheStoredFinalUntouched() throws Exception {
+        BindingFixture fixture = createBoundChapter();
+        commitL1(fixture);
+        EditorialChapterFinalCoordinator coordinator = new EditorialChapterFinalCoordinator(database, storage);
+        EditorialL2Execution.Committed fin = coordinator.runToFinal(fixture.projectId, SELECTOR, CHAPTER_KEY,
+                BUDGET, new ScriptedProvider(), BUDGET, new ScriptedProvider()).finalArtifact();
+        assertNotNull(fin);
+
+        EditorialChapterFinalCoordinator.ExportResult writeFailure = EditorialChapterFinalCoordinator.exportTxt(fin,
+                () -> { throw new IOException("destination refused"); }, () -> new ByteArrayInputStream(new byte[0]));
+        assertFalse(writeFailure.verified());
+        assertEquals("EXPORT_WRITE_FAILED", writeFailure.reasonCode());
+
+        EditorialChapterFinalCoordinator.ExportResult mismatch = EditorialChapterFinalCoordinator.exportTxt(fin,
+                java.io.OutputStream::nullOutputStream, () -> new ByteArrayInputStream("different".getBytes(StandardCharsets.UTF_8)));
+        assertFalse(mismatch.verified());
+        assertEquals("EXPORT_READBACK_MISMATCH", mismatch.reasonCode());
+
+        EditorialChapterFinalCoordinator.Inspection after = coordinator.inspect(fixture.projectId, SELECTOR, CHAPTER_KEY);
+        assertEquals(EditorialChapterProgress.Stage.FINAL, after.progress().stage());
+        assertArrayEquals(fin.viL2Bytes(), after.finalArtifact().viL2Bytes());
+        assertEquals(fin.viL2Sha256(), after.finalArtifact().viL2Sha256());
+    }
+
     private void commitL1(BindingFixture fixture) throws Exception {
         EditorialP5PilotRequest rawRequest = request(fixture, EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY,
                 fixture.binding.runDeclarationIdentity());

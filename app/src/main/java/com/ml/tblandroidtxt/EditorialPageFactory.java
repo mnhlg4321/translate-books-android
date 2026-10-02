@@ -99,7 +99,12 @@ final class EditorialPageFactory {
         }
 
         for (EditorialRepository.Chapter chapter : chapters) {
-            box.addView(chapterCard(chapter), a.marginLP(-1, -2, 0, 0, 0, 8));
+            View chapterView = chapterCard(chapter);
+            if (p4Project && chapterView instanceof LinearLayout) {
+                ((LinearLayout) chapterView).addView(new EditorialChapterFinalPanel(a).build(project, chapter),
+                        a.marginLP(-1, -2, 0, 6, 0, 0));
+            }
+            box.addView(chapterView, a.marginLP(-1, -2, 0, 0, 0, 8));
         }
         return box;
     }

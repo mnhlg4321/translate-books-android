@@ -119,6 +119,25 @@ public final class EditorialPhaseArtifactStore implements EditorialL2Execution.S
                 row.bundleIdentity, row.textBytes, row.textSha256, row.evidenceBytes, row.evidenceSha256));
     }
 
+    /**
+     * Read-only status of one attempt row for progress display; never claims or mutates. An empty
+     * result means the attempt was never claimed. {@code intact} re-hashes both blobs of a COMMITTED row.
+     */
+    public synchronized Optional<EditorialChapterProgress.StageRow> inspect(String attemptIdentity) {
+        requireHash(attemptIdentity, "attempt identity");
+        Row row = findRow(attemptIdentity);
+        if (row == null) return Optional.empty();
+        String reason = "";
+        try (Cursor cursor = database.editorialReadableDatabase().rawQuery(
+                "SELECT recovery_reason_code FROM " + TABLE + " WHERE attempt_identity=?", new String[]{attemptIdentity})) {
+            if (cursor.moveToFirst() && !cursor.isNull(0)) reason = cursor.getString(0);
+        }
+        boolean intact = row.textBytes != null && row.evidenceBytes != null
+                && EditorialCanonicalJson.sha256Hex(row.textBytes).equals(row.textSha256)
+                && EditorialCanonicalJson.sha256Hex(row.evidenceBytes).equals(row.evidenceSha256);
+        return Optional.of(new EditorialChapterProgress.StageRow(row.status, reason, intact));
+    }
+
     @Override public synchronized void markRecoveryRequired(String attemptIdentity, String reasonCode) {
         requireHash(attemptIdentity, "attempt identity");
         if (reasonCode == null || reasonCode.isBlank()) throw new IllegalArgumentException("reason code is required");
