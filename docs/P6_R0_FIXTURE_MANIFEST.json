@@ -1,0 +1,656 @@
+{
+ "fixtures": [
+  {
+   "chapter": "001",
+   "derivedFrom": null,
+   "description": "chapter 001 as translated (natural defects: I-001, I-002 x4, I-003; I-004/I-005 uncertain)",
+   "files": {
+    "DRAFT.txt": {
+     "bytes": 26462,
+     "path": "fx-a01/DRAFT.txt",
+     "sha256": "64adecd8ceccbb13446ef14c494ca9bb1987117c428c5758e7442270ec7f62b5"
+    },
+    "GLOSSARY.csv": {
+     "bytes": 3249,
+     "path": "fx-a01/GLOSSARY.csv",
+     "sha256": "4bc3e2dd05542aa5ca6b7e5fcac43ed53e9af57060eb69c6fa71e9d0a2ea0314"
+    },
+    "PRONOUN.csv": {
+     "bytes": 455,
+     "path": "fx-a01/PRONOUN.csv",
+     "sha256": "63e79eebcbfe6bedcea088640339eb7d05aeda75c28fd4a4e17b282b8ed1a49c"
+    },
+    "RAW.txt": {
+     "bytes": 23814,
+     "path": "fx-a01/RAW.txt",
+     "sha256": "a308210eca80557cfa9fec7ed55b2ee3de5c1c4776e59b2b5edbf0efb04504be"
+    }
+   },
+   "id": "fx-a01",
+   "kind": "real",
+   "labels": {
+    "path": "_labels/fx-a01.json",
+    "sha256": "be9fde200c43aa991daa0937175e2886b4b7a9f5fec75cb8d6ab1a6033b1056d"
+   },
+   "targets": [
+    {
+     "basis": "RAW 237 DRAFT 237",
+     "class": "OMITTED_WORD_UNTRANSLATED",
+     "id": "I-001",
+     "severity": "minor"
+    },
+    {
+     "basis": "RAW 105,147,175,215 DRAFT 107,148,176,216",
+     "class": "SENSE_LOSS_CONTRAST",
+     "id": "I-002",
+     "severity": "major"
+    },
+    {
+     "basis": "RAW 319 DRAFT 321 PRONOUN row 3",
+     "class": "ADDRESS_PROFILE",
+     "id": "I-003",
+     "severity": "minor"
+    }
+   ]
+  },
+  {
+   "chapter": "001",
+   "derivedFrom": "owner-manual-final-001",
+   "description": "chapter 001 with the owner-corrected text as DRAFT (no known defect; control)",
+   "files": {
+    "DRAFT.txt": {
+     "bytes": 26564,
+     "path": "fx-a02/DRAFT.txt",
+     "sha256": "ebb091d6b3f8cb52aecc1b3191ab53799853738a746ae3300da3568813293d38"
+    },
+    "GLOSSARY.csv": {
+     "bytes": 3249,
+     "path": "fx-a02/GLOSSARY.csv",
+     "sha256": "4bc3e2dd05542aa5ca6b7e5fcac43ed53e9af57060eb69c6fa71e9d0a2ea0314"
+    },
+    "PRONOUN.csv": {
+     "bytes": 455,
+     "path": "fx-a02/PRONOUN.csv",
+     "sha256": "63e79eebcbfe6bedcea088640339eb7d05aeda75c28fd4a4e17b282b8ed1a49c"
+    },
+    "RAW.txt": {
+     "bytes": 23814,
+     "path": "fx-a02/RAW.txt",
+     "sha256": "a308210eca80557cfa9fec7ed55b2ee3de5c1c4776e59b2b5edbf0efb04504be"
+    }
+   },
+   "id": "fx-a02",
+   "kind": "clean",
+   "labels": {
+    "path": "_labels/fx-a02.json",
+    "sha256": "03d8f93e7fb389942699050362d010c355b027878f446af3e6e803c091f54b04"
+   },
+   "targets": []
+  },
+  {
+   "chapter": "001",
+   "derivedFrom": "fx-a02",
+   "description": "single seeded error on the clean control (OMITTED_WORD_UNTRANSLATED)",
+   "files": {
+    "DRAFT.txt": {
+     "bytes": 26561,
+     "path": "fx-a03/DRAFT.txt",
+     "sha256": "7d73716151bf1fce5e06ae06cb51a45352ea155461d8b7cae5f2a006037bba71"
+    },
+    "GLOSSARY.csv": {
+     "bytes": 3249,
+     "path": "fx-a03/GLOSSARY.csv",
+     "sha256": "4bc3e2dd05542aa5ca6b7e5fcac43ed53e9af57060eb69c6fa71e9d0a2ea0314"
+    },
+    "PRONOUN.csv": {
+     "bytes": 455,
+     "path": "fx-a03/PRONOUN.csv",
+     "sha256": "63e79eebcbfe6bedcea088640339eb7d05aeda75c28fd4a4e17b282b8ed1a49c"
+    },
+    "RAW.txt": {
+     "bytes": 23814,
+     "path": "fx-a03/RAW.txt",
+     "sha256": "a308210eca80557cfa9fec7ed55b2ee3de5c1c4776e59b2b5edbf0efb04504be"
+    }
+   },
+   "id": "fx-a03",
+   "kind": "seeded",
+   "labels": {
+    "path": "_labels/fx-a03.json",
+    "sha256": "61bae8b188a50543a0e6518d843135d10d500779695a23ac108e11d7fa761868"
+   },
+   "targets": [
+    {
+     "basis": "DRAFT line 99",
+     "class": "OMITTED_WORD_UNTRANSLATED",
+     "id": "T-S1",
+     "severity": "major"
+    }
+   ]
+  },
+  {
+   "chapter": "001",
+   "derivedFrom": "fx-a02",
+   "description": "single seeded error on the clean control (ROLE_SWAP)",
+   "files": {
+    "DRAFT.txt": {
+     "bytes": 26564,
+     "path": "fx-a04/DRAFT.txt",
+     "sha256": "d4854f8b94015bf7073e0054ca4408b72443df0b81d43b8d952a27589a3829b0"
+    },
+    "GLOSSARY.csv": {
+     "bytes": 3249,
+     "path": "fx-a04/GLOSSARY.csv",
+     "sha256": "4bc3e2dd05542aa5ca6b7e5fcac43ed53e9af57060eb69c6fa71e9d0a2ea0314"
+    },
+    "PRONOUN.csv": {
+     "bytes": 455,
+     "path": "fx-a04/PRONOUN.csv",
+     "sha256": "63e79eebcbfe6bedcea088640339eb7d05aeda75c28fd4a4e17b282b8ed1a49c"
+    },
+    "RAW.txt": {
+     "bytes": 23814,
+     "path": "fx-a04/RAW.txt",
+     "sha256": "a308210eca80557cfa9fec7ed55b2ee3de5c1c4776e59b2b5edbf0efb04504be"
+    }
+   },
+   "id": "fx-a04",
+   "kind": "seeded",
+   "labels": {
+    "path": "_labels/fx-a04.json",
+    "sha256": "811cd10cfa76c287071b3c68cda7fc5c736f7814501403ff3481f13ae275b10c"
+   },
+   "targets": [
+    {
+     "basis": "DRAFT line 71",
+     "class": "ROLE_SWAP",
+     "id": "T-S2",
+     "severity": "major"
+    }
+   ]
+  },
+  {
+   "chapter": "001",
+   "derivedFrom": "fx-a02",
+   "description": "single seeded error on the clean control (MISSING_SENTENCE)",
+   "files": {
+    "DRAFT.txt": {
+     "bytes": 26491,
+     "path": "fx-a05/DRAFT.txt",
+     "sha256": "8472ea05fe4bf42cfd3fb8d4717e29155b0a78dec8cc00d8c8818e8256c1e9d7"
+    },
+    "GLOSSARY.csv": {
+     "bytes": 3249,
+     "path": "fx-a05/GLOSSARY.csv",
+     "sha256": "4bc3e2dd05542aa5ca6b7e5fcac43ed53e9af57060eb69c6fa71e9d0a2ea0314"
+    },
+    "PRONOUN.csv": {
+     "bytes": 455,
+     "path": "fx-a05/PRONOUN.csv",
+     "sha256": "63e79eebcbfe6bedcea088640339eb7d05aeda75c28fd4a4e17b282b8ed1a49c"
+    },
+    "RAW.txt": {
+     "bytes": 23814,
+     "path": "fx-a05/RAW.txt",
+     "sha256": "a308210eca80557cfa9fec7ed55b2ee3de5c1c4776e59b2b5edbf0efb04504be"
+    }
+   },
+   "id": "fx-a05",
+   "kind": "seeded",
+   "labels": {
+    "path": "_labels/fx-a05.json",
+    "sha256": "c42b5723c1dec36a903b8b905b2f9c688dba441932197777029ee392894456f6"
+   },
+   "targets": [
+    {
+     "basis": "DRAFT line 327",
+     "class": "MISSING_SENTENCE",
+     "id": "T-S3",
+     "severity": "major"
+    }
+   ]
+  },
+  {
+   "chapter": "001",
+   "derivedFrom": "fx-a02",
+   "description": "single seeded error on the clean control (EXTRA_SENTENCE)",
+   "files": {
+    "DRAFT.txt": {
+     "bytes": 26621,
+     "path": "fx-a06/DRAFT.txt",
+     "sha256": "668fa271a88dc5d28ea1e57dfc9843cc75aa4a0185df2d763e820cfbbd56f5b2"
+    },
+    "GLOSSARY.csv": {
+     "bytes": 3249,
+     "path": "fx-a06/GLOSSARY.csv",
+     "sha256": "4bc3e2dd05542aa5ca6b7e5fcac43ed53e9af57060eb69c6fa71e9d0a2ea0314"
+    },
+    "PRONOUN.csv": {
+     "bytes": 455,
+     "path": "fx-a06/PRONOUN.csv",
+     "sha256": "63e79eebcbfe6bedcea088640339eb7d05aeda75c28fd4a4e17b282b8ed1a49c"
+    },
+    "RAW.txt": {
+     "bytes": 23814,
+     "path": "fx-a06/RAW.txt",
+     "sha256": "a308210eca80557cfa9fec7ed55b2ee3de5c1c4776e59b2b5edbf0efb04504be"
+    }
+   },
+   "id": "fx-a06",
+   "kind": "seeded",
+   "labels": {
+    "path": "_labels/fx-a06.json",
+    "sha256": "59c9700a2c61d2e87b5a3d6d314893aee8d5629baaaf91438ad0591604aedc44"
+   },
+   "targets": [
+    {
+     "basis": "DRAFT line 53",
+     "class": "EXTRA_SENTENCE",
+     "id": "T-S3B",
+     "severity": "major"
+    }
+   ]
+  },
+  {
+   "chapter": "001",
+   "derivedFrom": "fx-a02",
+   "description": "single seeded error on the clean control (NUMBER)",
+   "files": {
+    "DRAFT.txt": {
+     "bytes": 26565,
+     "path": "fx-a07/DRAFT.txt",
+     "sha256": "62733089a415615046fbd58a714a3da9df8b0dcdc7e882d7283c58ea135baff9"
+    },
+    "GLOSSARY.csv": {
+     "bytes": 3249,
+     "path": "fx-a07/GLOSSARY.csv",
+     "sha256": "4bc3e2dd05542aa5ca6b7e5fcac43ed53e9af57060eb69c6fa71e9d0a2ea0314"
+    },
+    "PRONOUN.csv": {
+     "bytes": 455,
+     "path": "fx-a07/PRONOUN.csv",
+     "sha256": "63e79eebcbfe6bedcea088640339eb7d05aeda75c28fd4a4e17b282b8ed1a49c"
+    },
+    "RAW.txt": {
+     "bytes": 23814,
+     "path": "fx-a07/RAW.txt",
+     "sha256": "a308210eca80557cfa9fec7ed55b2ee3de5c1c4776e59b2b5edbf0efb04504be"
+    }
+   },
+   "id": "fx-a07",
+   "kind": "seeded",
+   "labels": {
+    "path": "_labels/fx-a07.json",
+    "sha256": "2a18ed7d0b72d2cca18b6ab1007e8be6a4425cfa51396ed218c0a3e5f50c151f"
+   },
+   "targets": [
+    {
+     "basis": "DRAFT line 5",
+     "class": "NUMBER",
+     "id": "T-S4A",
+     "severity": "major"
+    }
+   ]
+  },
+  {
+   "chapter": "001",
+   "derivedFrom": "fx-a02",
+   "description": "single seeded error on the clean control (NEGATION)",
+   "files": {
+    "DRAFT.txt": {
+     "bytes": 26561,
+     "path": "fx-a08/DRAFT.txt",
+     "sha256": "ed81ec1ef267c08c82a424b12e71c73a4286a23566061d721d0b641db88a5857"
+    },
+    "GLOSSARY.csv": {
+     "bytes": 3249,
+     "path": "fx-a08/GLOSSARY.csv",
+     "sha256": "4bc3e2dd05542aa5ca6b7e5fcac43ed53e9af57060eb69c6fa71e9d0a2ea0314"
+    },
+    "PRONOUN.csv": {
+     "bytes": 455,
+     "path": "fx-a08/PRONOUN.csv",
+     "sha256": "63e79eebcbfe6bedcea088640339eb7d05aeda75c28fd4a4e17b282b8ed1a49c"
+    },
+    "RAW.txt": {
+     "bytes": 23814,
+     "path": "fx-a08/RAW.txt",
+     "sha256": "a308210eca80557cfa9fec7ed55b2ee3de5c1c4776e59b2b5edbf0efb04504be"
+    }
+   },
+   "id": "fx-a08",
+   "kind": "seeded",
+   "labels": {
+    "path": "_labels/fx-a08.json",
+    "sha256": "56294a96c76f01928873f4f1181ba7063b525bfb8c9d89a8005d23e0f9b8eb66"
+   },
+   "targets": [
+    {
+     "basis": "DRAFT line 47",
+     "class": "NEGATION",
+     "id": "T-S4B",
+     "severity": "major"
+    }
+   ]
+  },
+  {
+   "chapter": "001",
+   "derivedFrom": "fx-a02",
+   "description": "single seeded error on the clean control (GLOSSARY_TERM)",
+   "files": {
+    "DRAFT.txt": {
+     "bytes": 26564,
+     "path": "fx-a09/DRAFT.txt",
+     "sha256": "97dbf94caf737a16750255e23d680a3927247afc1f689bed1dac49045dc41cdd"
+    },
+    "GLOSSARY.csv": {
+     "bytes": 3249,
+     "path": "fx-a09/GLOSSARY.csv",
+     "sha256": "4bc3e2dd05542aa5ca6b7e5fcac43ed53e9af57060eb69c6fa71e9d0a2ea0314"
+    },
+    "PRONOUN.csv": {
+     "bytes": 455,
+     "path": "fx-a09/PRONOUN.csv",
+     "sha256": "63e79eebcbfe6bedcea088640339eb7d05aeda75c28fd4a4e17b282b8ed1a49c"
+    },
+    "RAW.txt": {
+     "bytes": 23814,
+     "path": "fx-a09/RAW.txt",
+     "sha256": "a308210eca80557cfa9fec7ed55b2ee3de5c1c4776e59b2b5edbf0efb04504be"
+    }
+   },
+   "id": "fx-a09",
+   "kind": "seeded",
+   "labels": {
+    "path": "_labels/fx-a09.json",
+    "sha256": "03ad33ca306a7d66d8d528559438afbfc7d2f0ac5b904385665f5905a0c9088d"
+   },
+   "targets": [
+    {
+     "basis": "DRAFT line 13",
+     "class": "GLOSSARY_TERM",
+     "id": "T-S5",
+     "severity": "major"
+    }
+   ]
+  },
+  {
+   "chapter": "001",
+   "derivedFrom": "fx-a02",
+   "description": "single seeded error on the clean control (ADDRESS_PROFILE)",
+   "files": {
+    "DRAFT.txt": {
+     "bytes": 26563,
+     "path": "fx-a10/DRAFT.txt",
+     "sha256": "a294d5b0b117f1d2d56c2675449d30527af02813f8cb65bd43b12493c503481f"
+    },
+    "GLOSSARY.csv": {
+     "bytes": 3249,
+     "path": "fx-a10/GLOSSARY.csv",
+     "sha256": "4bc3e2dd05542aa5ca6b7e5fcac43ed53e9af57060eb69c6fa71e9d0a2ea0314"
+    },
+    "PRONOUN.csv": {
+     "bytes": 455,
+     "path": "fx-a10/PRONOUN.csv",
+     "sha256": "63e79eebcbfe6bedcea088640339eb7d05aeda75c28fd4a4e17b282b8ed1a49c"
+    },
+    "RAW.txt": {
+     "bytes": 23814,
+     "path": "fx-a10/RAW.txt",
+     "sha256": "a308210eca80557cfa9fec7ed55b2ee3de5c1c4776e59b2b5edbf0efb04504be"
+    }
+   },
+   "id": "fx-a10",
+   "kind": "seeded",
+   "labels": {
+    "path": "_labels/fx-a10.json",
+    "sha256": "81094df6ad4f1deb793e91d7431767b8e48c287c745e707448128727f916f15a"
+   },
+   "targets": [
+    {
+     "basis": "DRAFT line 91",
+     "class": "ADDRESS_PROFILE",
+     "id": "T-S6",
+     "severity": "major"
+    }
+   ]
+  },
+  {
+   "chapter": "001",
+   "derivedFrom": "fx-a02",
+   "description": "six independent seeded errors on the clean control (more than four findings)",
+   "files": {
+    "DRAFT.txt": {
+     "bytes": 26488,
+     "path": "fx-a11/DRAFT.txt",
+     "sha256": "10fd0db4ee0c060fde1c8fa0033dad0741f4373185cc153816419a2dab7d45ea"
+    },
+    "GLOSSARY.csv": {
+     "bytes": 3249,
+     "path": "fx-a11/GLOSSARY.csv",
+     "sha256": "4bc3e2dd05542aa5ca6b7e5fcac43ed53e9af57060eb69c6fa71e9d0a2ea0314"
+    },
+    "PRONOUN.csv": {
+     "bytes": 455,
+     "path": "fx-a11/PRONOUN.csv",
+     "sha256": "63e79eebcbfe6bedcea088640339eb7d05aeda75c28fd4a4e17b282b8ed1a49c"
+    },
+    "RAW.txt": {
+     "bytes": 23814,
+     "path": "fx-a11/RAW.txt",
+     "sha256": "a308210eca80557cfa9fec7ed55b2ee3de5c1c4776e59b2b5edbf0efb04504be"
+    }
+   },
+   "id": "fx-a11",
+   "kind": "seeded",
+   "labels": {
+    "path": "_labels/fx-a11.json",
+    "sha256": "ceb905cbad441307b6e2e315270d97bf15b2156500e6cbf80f8bb041239d06d8"
+   },
+   "targets": [
+    {
+     "basis": "DRAFT line 99",
+     "class": "OMITTED_WORD_UNTRANSLATED",
+     "id": "T-S1",
+     "severity": "major"
+    },
+    {
+     "basis": "DRAFT line 71",
+     "class": "ROLE_SWAP",
+     "id": "T-S2",
+     "severity": "major"
+    },
+    {
+     "basis": "DRAFT line 327",
+     "class": "MISSING_SENTENCE",
+     "id": "T-S3",
+     "severity": "major"
+    },
+    {
+     "basis": "DRAFT line 5",
+     "class": "NUMBER",
+     "id": "T-S4A",
+     "severity": "major"
+    },
+    {
+     "basis": "DRAFT line 13",
+     "class": "GLOSSARY_TERM",
+     "id": "T-S5",
+     "severity": "major"
+    },
+    {
+     "basis": "DRAFT line 91",
+     "class": "ADDRESS_PROFILE",
+     "id": "T-S6",
+     "severity": "major"
+    }
+   ]
+  },
+  {
+   "chapter": "001",
+   "derivedFrom": "fx-a02",
+   "description": "three equivalent paraphrases on the clean control; romaji monster names stay untranslated by design",
+   "files": {
+    "DRAFT.txt": {
+     "bytes": 26579,
+     "path": "fx-a12/DRAFT.txt",
+     "sha256": "edf0688501cfb6a71bda8417b95267b32e106e7c87f1a0ae678792abf44da1ce"
+    },
+    "GLOSSARY.csv": {
+     "bytes": 3249,
+     "path": "fx-a12/GLOSSARY.csv",
+     "sha256": "4bc3e2dd05542aa5ca6b7e5fcac43ed53e9af57060eb69c6fa71e9d0a2ea0314"
+    },
+    "PRONOUN.csv": {
+     "bytes": 455,
+     "path": "fx-a12/PRONOUN.csv",
+     "sha256": "63e79eebcbfe6bedcea088640339eb7d05aeda75c28fd4a4e17b282b8ed1a49c"
+    },
+    "RAW.txt": {
+     "bytes": 23814,
+     "path": "fx-a12/RAW.txt",
+     "sha256": "a308210eca80557cfa9fec7ed55b2ee3de5c1c4776e59b2b5edbf0efb04504be"
+    }
+   },
+   "id": "fx-a12",
+   "kind": "ambiguous",
+   "labels": {
+    "path": "_labels/fx-a12.json",
+    "sha256": "10d7f12a20eda2dfbb99c9b3727f7e91863d8dcf877673a4804038d482745265"
+   },
+   "targets": []
+  },
+  {
+   "chapter": "003",
+   "derivedFrom": "source-draft-003",
+   "description": "chapter 003 DRAFT with rule-based seeded errors; natural defects unknown, adjudicated after the run",
+   "files": {
+    "DRAFT.txt": {
+     "bytes": 25149,
+     "path": "fx-h01/DRAFT.txt",
+     "sha256": "afd62d3390045c4e4ff11890e72c51cd2ad5ef378d2290460829fa70992b67ac"
+    },
+    "GLOSSARY.csv": {
+     "bytes": 1970,
+     "path": "fx-h01/GLOSSARY.csv",
+     "sha256": "141bae0094c27d618a1c68ed546e3c91d11259c7eb75ca19c9620fe8ed73bb21"
+    },
+    "PRONOUN.csv": {
+     "bytes": 690,
+     "path": "fx-h01/PRONOUN.csv",
+     "sha256": "b237c1bec070bfcec6266fc9e4a5b136a1d7370c3473355598e0ff368aa1aa74"
+    },
+    "RAW.txt": {
+     "bytes": 21706,
+     "path": "fx-h01/RAW.txt",
+     "sha256": "f3c451184b50159446221d71d89d61723ef671b689fc1197c79a9b5386ea0333"
+    }
+   },
+   "id": "fx-h01",
+   "kind": "holdout",
+   "labels": {
+    "path": "_labels/fx-h01.json",
+    "sha256": "484cb3c315be0b573dc843e671b64e191b2894a7c2bbf5706edafd0aa652022d"
+   },
+   "targets": [
+    {
+     "basis": "DRAFT line 3",
+     "class": "OMITTED_WORD_UNTRANSLATED",
+     "id": "T-H-A",
+     "severity": "major"
+    },
+    {
+     "basis": "DRAFT line 23",
+     "class": "NUMBER",
+     "id": "T-H-B",
+     "severity": "major"
+    },
+    {
+     "basis": "DRAFT line 146",
+     "class": "MISSING_SENTENCE",
+     "id": "T-H-C",
+     "severity": "major"
+    }
+   ]
+  },
+  {
+   "chapter": "005",
+   "derivedFrom": "source-draft-005",
+   "description": "chapter 005 DRAFT with rule-based seeded errors; natural defects unknown, adjudicated after the run",
+   "files": {
+    "DRAFT.txt": {
+     "bytes": 25937,
+     "path": "fx-h02/DRAFT.txt",
+     "sha256": "8ea21e2573ca276f7f71c0cebe2442e48040659fdcf064cf44594c46da4e03c1"
+    },
+    "GLOSSARY.csv": {
+     "bytes": 2495,
+     "path": "fx-h02/GLOSSARY.csv",
+     "sha256": "7f54029fc85ce59ce9c0eedf2a39cde7f5485d8d8842765a23b274d90d5584f0"
+    },
+    "PRONOUN.csv": {
+     "bytes": 709,
+     "path": "fx-h02/PRONOUN.csv",
+     "sha256": "5ef596a8576eda7083cf0be94b14488d7ad0aeb23af3fb6ac8ddad848194fe47"
+    },
+    "RAW.txt": {
+     "bytes": 22611,
+     "path": "fx-h02/RAW.txt",
+     "sha256": "767871594924f353a3efaf60a2056a2d994f413a3dee5120c656a0fbfadca24c"
+    }
+   },
+   "id": "fx-h02",
+   "kind": "holdout",
+   "labels": {
+    "path": "_labels/fx-h02.json",
+    "sha256": "0d67f3dfbc7a7df0fe68fbf19e8b1239b45d8ee15a6e53c2ae33923b244323ce"
+   },
+   "targets": [
+    {
+     "basis": "DRAFT line 347",
+     "class": "OMITTED_WORD_UNTRANSLATED",
+     "id": "T-H-A",
+     "severity": "major"
+    },
+    {
+     "basis": "DRAFT line 124",
+     "class": "NUMBER",
+     "id": "T-H-B",
+     "severity": "major"
+    },
+    {
+     "basis": "DRAFT line 77",
+     "class": "MISSING_SENTENCE",
+     "id": "T-H-C",
+     "severity": "major"
+    }
+   ]
+  }
+ ],
+ "generatedUtc": "2026-10-02T11:32:15Z",
+ "holdout": {
+  "ids": [
+   "fx-h01",
+   "fx-h02"
+  ],
+  "lockSha256": "8872e28118242babb1f7333528d94fbd9ae7a462628a21e5e7816175a3714f21",
+  "lockedBeforeAnyNewModelOutput": true,
+  "note": "mutation sites were chosen by rule from chapters 003/005; no prompt or contract has been tuned on them"
+ },
+ "privateRoot": "D:/P5E-private/p6-fixtures",
+ "runtimeRules": [
+  "labels live under _labels and never enter a prompt",
+  "fixture directory names are opaque",
+  "the runtime builder refuses any path containing 6.FINAL"
+ ],
+ "schema": "p6.r0.fixture-manifest.v1",
+ "sources": {
+  "cleanControlBase": "owner-manual-final-001 (6.FINAL/001, used as DRAFT input only)",
+  "cleanControlSha256": "ebb091d6b3f8cb52aecc1b3191ab53799853738a746ae3300da3568813293d38",
+  "draftSha256": "64adecd8ceccbb13446ef14c494ca9bb1987117c428c5758e7442270ec7f62b5",
+  "glossarySha256": "4bc3e2dd05542aa5ca6b7e5fcac43ed53e9af57060eb69c6fa71e9d0a2ea0314",
+  "pronounSha256": "63e79eebcbfe6bedcea088640339eb7d05aeda75c28fd4a4e17b282b8ed1a49c",
+  "rawSha256": "a308210eca80557cfa9fec7ed55b2ee3de5c1c4776e59b2b5edbf0efb04504be",
+  "volume": "MERCEDES VOL 5"
+ }
+}

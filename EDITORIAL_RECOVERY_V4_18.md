@@ -188,7 +188,7 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-Theo yêu cầu owner 2026-10-02, ưu tiên hiện tại là bàn giao cho Claude điều phối sửa các lỗi ledger, kiểm ngữ nghĩa và bằng chứng nghiệm thu theo mục 11. Next action duy nhất: Claude xác minh baseline và hoàn tất R0 — bảng lỗi có chứng cứ + đặc tả fixture — rồi tiếp tục các nhóm offline theo phụ thuộc; chưa dùng hai chương mới để thay thế việc sửa lỗi đã biết. Chất lượng chương 001 được owner chấp nhận trước đây là sự kiện lịch sử, không chứng nhận cơ chế mới. Bản FINAL đính kèm do owner làm thủ công, độc lập với app. Việc lập kế hoạch không cấp thêm quyền provider/device hay đổi nguồn pilot.
+R0 đã đóng (`docs/P6_R0_ISSUE_TABLE.md`, `docs/P6_R0_FIXTURE_MANIFEST.json`, fixture riêng ở `D:\P5E-private\p6-fixtures`, holdout đã khóa). Next action: R1 — contract v2 (inventory cấp dòng với unit id ổn định, Error Ledger/candidate/finding/proof/protected-span, định nghĩa metric, `contractRevision` gắn vào attempt identity L1/L2/L3, sizing và quy tắc chunk) rồi R2→R5 offline; dừng cuối R5 với bảng ngân sách và câu hỏi Q1–Q5.
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 
