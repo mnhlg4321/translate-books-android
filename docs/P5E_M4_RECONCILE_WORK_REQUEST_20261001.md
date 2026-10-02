@@ -1,7 +1,15 @@
 # Yêu cầu làm việc — M4 RECONCILE chương 001 (v4.18)
 
-Ngày lập: 2026-10-01. Người giao: owner. Dùng nguyên văn tài liệu này làm chỉ dẫn cho một phiên làm việc mới.
-Repository: `D:\App Translate Books`, branch `feature/v4.18-p5e-runner-repair-20260917`, mốc bắt đầu `f93842ec` (hoặc commit docs ngay sau đó chứa chính tài liệu này).
+Ngày lập: 2026-10-01, cập nhật 2026-10-02. Người giao: owner. Dùng nguyên văn tài liệu này làm chỉ dẫn cho một phiên làm việc mới.
+Repository: `D:\App Translate Books`, branch `feature/v4.18-p5e-runner-repair-20260917`, mốc bắt đầu = commit chứa bản cập nhật 2026-10-02 của tài liệu này (sau `ba58cefc`).
+
+## Trạng thái khi giao (2026-10-02)
+
+- Owner đã duyệt phạm vi mục 0 (2026-10-01). Chưa bước nào thực hiện xong: chưa build, chưa cài, chưa gọi provider; DB pilot vẫn `9fa69f6b…`.
+- Lần thử bước 1 trước đó dừng vì máy chưa cắm; thư mục `D:\P5E-private\m4-m0-20261001-235745967` chỉ có `ABORTED_NO_DEVICE.txt` và một file 0 byte (không phải DB export). Giữ nguyên, không dùng làm evidence.
+- Owner đã cắm máy: lúc giao `adb devices -l` thấy `15e84958 device` (CPH2691). Phiên mới vẫn phải kiểm lại.
+- Code offline đã có trên branch (sẽ vào APK M4): ngoài gói M4 còn có L2/L3 engine, adapter L2/L3, coordinator + export (`be105e16`, `ba8b4bbb`). Mốc kiểm thử: engine 244/244, app unit 289/289, lint PASS, androidTest compile PASS, M4 host self-test 74/74.
+- Endpoint account fingerprint (bước 5) do owner đưa vào phiên mới; thiếu thì làm bước 1–4 rồi hỏi đúng giá trị này trước bước 5.
 
 ## 0. Quyền được cấp trong yêu cầu này
 
@@ -33,7 +41,7 @@ Mỗi bước ghi kết quả (lệnh, exit code, hash, đường dẫn evidence
 
 | # | Việc | Đạt khi | Nếu không đạt |
 |---|---|---|---|
-| 1 | **M0 chỉ-đọc trước mọi thay đổi**: thiết bị `15e84958` online; production `4.18-p5e.3`/211, APK `E9CF282C…`; test `CCAAE0AD…`; cert `47f31389…c155`; DB `tbl_android_txt.db` SHA-256 `9fa69f6b909c16b61ed2925c0c1509d1b60c910aa3cc4e8057166184e8db7c98`; WAL/SHM vắng; lineage: 1 attempt RAW `COMMITTED` = `7a5e3428…`, 1 authorization receipt, 1 lifecycle, 0 reconciliation, 0 attempt `L1_RECONCILE` | Mọi giá trị khớp | Dừng toàn bộ, không build/cài; báo owner giá trị lệch |
+| 1 | **M0 chỉ-đọc trước mọi thay đổi** (`powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\p5e-m4-m0-observation.ps1 -Label m4-m0`; kiểm lineage trên bản DB sao bằng SQLite host chỉ-đọc, ví dụ `py -3` + `sqlite3` với URI `mode=ro`): thiết bị `15e84958` online; production `4.18-p5e.3`/211, APK `E9CF282C…`; test `CCAAE0AD…`; cert `47f31389…c155`; DB `tbl_android_txt.db` SHA-256 `9fa69f6b909c16b61ed2925c0c1509d1b60c910aa3cc4e8057166184e8db7c98`; WAL/SHM vắng; lineage: 1 attempt RAW `COMMITTED` = `7a5e3428…`, 1 authorization receipt, 1 lifecycle, 0 reconciliation, 0 attempt `L1_RECONCILE` | Mọi giá trị khớp | Dừng toàn bộ, không build/cài; báo owner giá trị lệch |
 | 2 | **Sao lưu DB trước cài**: export nhị phân chỉ-đọc (cùng cơ chế `p5e-db-binary-export.ps1`/thư viện supervisor) vào thư mục mới `D:\P5E-private\m4-preinstall-<UTC>`; ghi SHA-256 | Hash bản sao = hash M0 | Không cài; sửa cục bộ cách export (tối đa 2 vòng), không đổi thiết bị |
 | 3 | **Build**: `scripts/build-and-save.ps1` (versionCode > 211, versionName mới tự gán) và `scripts/build-and-save-android-test.ps1` cho đúng production đó; payload ở `artifacts/` và `backup/` | Hai payload đủ APK/README/BUILD_INFO/SHA-256/source ZIP, parity hai nơi; unit tests trong build đạt | Lỗi build/test là `FAILED_REPAIRING`: sửa trong phase, build lại; không cài APK chưa archive |
 | 4 | **Cài**: `scripts/install-validated.ps1` check-only rồi cài production; script cài test package check-only rồi cài (lỗi stderr sau khi cài là lỗi đã biết — xác minh bằng readback độc lập). **Không mở app** sau khi cài | Readback: version/code/APK hash/cert khớp build vừa archive; test APK hash khớp; DB hash vẫn `9fa69f6b…` (chưa migrate) | Hash lệch: dừng, không chạy event; báo owner. Cài thất bại giữa chừng: không thử thiết bị khác; đọc trạng thái, báo owner |
