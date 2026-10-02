@@ -75,6 +75,8 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
     private TranslationRepository database;
     private Path storageRoot;
     private EditorialPackStorageLayout storage;
+    private String rawText = "raw chapter bytes";
+    private String draftText = DRAFT_LINE;
 
     @Before public void setUp() {
         context = ApplicationProvider.getApplicationContext();
@@ -363,6 +365,212 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
                 + "\"disposition\":{\"disposition\":\"CONTINUE\",\"reasonCode\":\"L3_OK\",\"stopClass\":\"NONE\"}}";
     }
 
+    // ---- ledger contract through the coordinator entry point ----
+
+    private static final String LEDGER_RAW = String.join("\n", "王は城に入った。", "騎士が言った。", "「踏破した。」", "「今回は無理だ。」",
+            "彼女は笑った。", "「踏破だ。」", "雨が降る。", "彼は歩いた。", "「踏破完了。」", "空は暗い。");
+    private static final String LEDGER_DRAFT = String.join("\n", "Vua vao thanh.", "Hiep si noi.", "\"Da chinh phuc.\"",
+            "\"今回 khong the.\"", "Co ay cuoi.", "\"Chinh phuc roi.\"", "Troi mua.", "Anh di.", "\"Chinh phuc xong.\"", "Troi toi.");
+
+    private static final class LedgerWires {
+        static String unit(int line) {
+            return com.ml.tblandroidtxt.editorial.pack.EditorialRawInventory.build(
+                    LEDGER_RAW.getBytes(StandardCharsets.UTF_8)).units().get(line - 1).id();
+        }
+
+        static Map<String, Object> m(Object... kv) {
+            Map<String, Object> map = new LinkedHashMap<>();
+            for (int i = 0; i < kv.length; i += 2) map.put((String) kv[i], kv[i + 1]);
+            return map;
+        }
+
+        static List<Object> l(Object... v) { return new ArrayList<>(List.of(v)); }
+
+        static byte[] json(Map<String, Object> map) {
+            return EditorialCanonicalJson.canonicalize(map).getBytes(StandardCharsets.UTF_8);
+        }
+
+        static List<Object> coverage() { return l(m("from", unit(1), "to", unit(10), "status", "PROCESSED")); }
+
+        static byte[] rawWire(String attempt) {
+            return json(m("wireSchemaVersion", com.ml.tblandroidtxt.editorial.pack.EditorialL1Ledger.RAW_WIRE,
+                    "attemptIdentity", attempt, "coverage", coverage(), "candidates", l()));
+        }
+
+        static Map<String, Object> finding(String id, String type, int rawLine, Map<String, Object> draft, String rawQuote,
+                                           String draftQuote, List<Object> occurrences) {
+            return m("errorId", id, "type", type, "severity", "MAJOR", "rawUnits", l(unit(rawLine)), "draft", draft,
+                    "rawQuote", rawQuote, "draftQuote", draftQuote, "observation", "obs", "expectedMeaning", "exp",
+                    "evidenceRefs", l(), "candidateIds", l(), "occurrenceUnits", occurrences, "disposition", "OPEN",
+                    "evidenceLimit", "");
+        }
+
+        static byte[] reconcileWire(String attempt) {
+            Map<String, Object> lines3 = m("kind", "LINES", "start", BigDecimal.valueOf(3), "end", BigDecimal.valueOf(3), "after", BigDecimal.ZERO);
+            Map<String, Object> lines4 = m("kind", "LINES", "start", BigDecimal.valueOf(4), "end", BigDecimal.valueOf(4), "after", BigDecimal.ZERO);
+            Map<String, Object> missing = m("kind", "MISSING", "start", BigDecimal.ZERO, "end", BigDecimal.ZERO, "after", BigDecimal.valueOf(6));
+            return json(m("wireSchemaVersion", com.ml.tblandroidtxt.editorial.pack.EditorialL1Ledger.RECONCILE_WIRE,
+                    "attemptIdentity", attempt, "coverage", coverage(), "resolutions", l(),
+                    "findings", l(finding("e1", "MEANING", 3, lines3, "踏破", "chinh phuc", l(unit(6), unit(9))),
+                            finding("e2", "UNTRANSLATED", 4, lines4, "今回", "今回", l()),
+                            finding("e3", "OMISSION", 7, missing, "雨が降る", "", l())),
+                    "speakerRecords", l(),
+                    "protectedSpans", l(m("spanId", "p1", "start", BigDecimal.valueOf(7), "end", BigDecimal.valueOf(7),
+                            "source", "PRONOUN_ROW", "reason", "profile row")),
+                    "disposition", m("disposition", "CONTINUE", "reasonCode", "L1_OK", "stopClass", "NONE")));
+        }
+
+        static Map<String, Object> change(String id, String errorId, String op, int line, String before, String after) {
+            Map<String, Object> map = m("changeId", id, "errorId", errorId, "line", BigDecimal.valueOf(line), "before", before,
+                    "after", after, "reason", "fix", "dialogue", Boolean.FALSE, "status", "CLOSED");
+            if (op != null) map.put("op", op);
+            return map;
+        }
+
+        static Map<String, Object> resolution(String errorId, List<Object> changeIds, List<Object> occurrences) {
+            return m("errorId", errorId, "status", "FIXED", "changeIds", changeIds, "preserveIds", l(),
+                    "occurrences", occurrences, "evidenceQuote", "", "reason", "");
+        }
+
+        static byte[] editWire(String attempt) {
+            return json(m("wireSchemaVersion", EditorialL2Execution.WIRE_SCHEMA_VERSION_V2, "attemptIdentity", attempt,
+                    "resolutions", l(m("candidateId", "U001", "status", "PROCESSED")),
+                    "findingResolutions", l(
+                            resolution("e1", l("C1", "C2", "C3"), l(m("unitId", unit(6), "ref", "C2"), m("unitId", unit(9), "ref", "C3"))),
+                            resolution("e2", l("C4"), l()), resolution("e3", l("C5"), l())),
+                    "changes", l(change("C1", "e1", null, 3, "\"Da chinh phuc.\"", "\"Da vuot qua.\""),
+                            change("C2", "e1", null, 6, "\"Chinh phuc roi.\"", "\"Vuot qua roi.\""),
+                            change("C3", "e1", null, 9, "\"Chinh phuc xong.\"", "\"Vuot qua xong.\""),
+                            change("C4", "e2", null, 4, "\"今回 khong the.\"", "\"Lan nay khong the.\""),
+                            change("C5", "e3", "INSERT_AFTER", 6, "\"Chinh phuc roi.\"", "Troi bat dau mua.")),
+                    "preserved", l(),
+                    "disposition", m("disposition", "CONTINUE", "reasonCode", "OK", "stopClass", "NONE")));
+        }
+
+        static byte[] readWire(EditorialL2Execution.Provider.Request request) {
+            byte[] target = request.visibleSources().get(com.ml.tblandroidtxt.editorial.pack.EditorialFinalRead.TARGET_ROLE);
+            List<String> lines = com.ml.tblandroidtxt.editorial.pack.EditorialFinalRead.lines(target);
+            List<Object> tails = l();
+            for (Integer line : com.ml.tblandroidtxt.editorial.pack.EditorialFinalRead.probeLines(target)) {
+                String text = lines.get(line - 1);
+                tails.add(m("line", BigDecimal.valueOf(line), "tail", text.length() <= 12 ? text : text.substring(text.length() - 12)));
+            }
+            return json(m("wireSchemaVersion", com.ml.tblandroidtxt.editorial.pack.EditorialFinalRead.WIRE,
+                    "attemptIdentity", request.attemptIdentity(), "readSha256", EditorialCanonicalJson.sha256Hex(target),
+                    "probeTails", tails, "verdict", "CLEAN", "defects", l()));
+        }
+
+        static byte[] l3Wire(EditorialL2Execution.Provider.Request request) {
+            if (EditorialL3Execution.REAUDIT_PHASE.equals(request.phase())) {
+                return json(m("wireSchemaVersion", EditorialL3Execution.REAUDIT_WIRE, "attemptIdentity", request.attemptIdentity(),
+                        "candidates", l(m("candidateId", "u1", "ledger", "UNIT", "line", BigDecimal.ONE, "status", "PROCESSED"))));
+            }
+            return json(m("wireSchemaVersion", EditorialL3Execution.RECONCILE_WIRE, "attemptIdentity", request.attemptIdentity(),
+                    "resolutions", l(), "changes", l(
+                            change("Q1", "L3-1", null, 8, "Troi mua.", "Troi mua to.")),
+                    "preserved", l(),
+                    "adversarialCoverage", l(m("probeId", "cov1", "finding", "none", "verdict", "NO_DEFECT")),
+                    "adversarialRegression", l(m("probeId", "reg1", "finding", "none", "verdict", "NO_DEFECT")),
+                    "disposition", m("disposition", "CONTINUE", "reasonCode", "L3_OK", "stopClass", "NONE")));
+        }
+    }
+
+    private void commitLedgerL1(BindingFixture fixture) throws Exception {
+        EditorialP5PilotProvider l1Provider = request -> {
+            byte[] wire = "L1_RAW_DISCOVERY".equals(request.phase()) ? LedgerWires.rawWire(request.attemptIdentity())
+                    : LedgerWires.reconcileWire(request.attemptIdentity());
+            return new EditorialP5PilotProvider.Response("fake-ledger-" + request.phase(), wire, "stop", true, 40, 20, 60,
+                    BigDecimal.ZERO, null, true);
+        };
+        EditorialP5CExactBindingExecution.Result result = EditorialP5CExactBindingExecution.forContract(database, storage,
+                com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.L1_LEDGER_V2).execute(
+                fixture.projectId, SELECTOR, CHAPTER_KEY,
+                authorization(fixture.binding, "auth-raw-v2", "L1_RAW_DISCOVERY"),
+                authorization(fixture.binding, "auth-reconcile-v2", "L1_RECONCILE"), l1Provider);
+        assertEquals(result.reasonCode(), EditorialP5CExactBindingExecution.Status.COMMITTED, result.status());
+    }
+
+    private static final class LedgerL2 implements EditorialL2Execution.Provider {
+        int calls;
+        final List<String> phases = new ArrayList<>();
+
+        @Override public Response call(Request request) {
+            calls++;
+            phases.add(request.phase());
+            byte[] body;
+            switch (request.phase()) {
+                case EditorialL2Execution.DISCOVERY_PHASE -> body = LedgerWires.json(LedgerWires.m(
+                        "wireSchemaVersion", EditorialL2Execution.DISCOVERY_WIRE, "attemptIdentity", request.attemptIdentity(),
+                        "candidates", LedgerWires.l(LedgerWires.m("candidateId", "U001", "ledger", "UNIT", "line", BigDecimal.ONE))));
+                case EditorialL2Execution.PHASE -> body = LedgerWires.editWire(request.attemptIdentity());
+                default -> body = LedgerWires.readWire(request);
+            }
+            return new Response(body, "stop", true, 100, 50, new BigDecimal("0.01"), true);
+        }
+    }
+
+    private static final class LedgerL3 implements EditorialL2Execution.Provider {
+        int calls;
+
+        @Override public Response call(Request request) {
+            calls++;
+            return new Response(LedgerWires.l3Wire(request), "stop", true, 100, 50, new BigDecimal("0.01"), true);
+        }
+    }
+
+    @Test public void ledgerChainRunsFromTheCoordinatorWithProtectedSpansStructureAndRestart() throws Exception {
+        rawText = LEDGER_RAW;
+        draftText = LEDGER_DRAFT;
+        BindingFixture fixture = createBoundChapter();
+        commitLedgerL1(fixture);
+
+        LedgerL2 l2 = new LedgerL2();
+        LedgerL3 l3 = new LedgerL3();
+        EditorialChapterFinalCoordinator coordinator = new EditorialChapterFinalCoordinator(database, storage);
+        EditorialChapterFinalCoordinator.Result first = coordinator.runToFinal(fixture.projectId, SELECTOR, CHAPTER_KEY,
+                EditorialChainBudgets.ledgerRecommended(), l2, l3);
+        assertEquals(first.reasonCode(), EditorialChapterFinalCoordinator.Stage.FINAL, first.stage());
+        assertTrue(first.finalReady());
+        assertEquals(5, first.providerCalls());
+        assertEquals(List.of(EditorialL2Execution.DISCOVERY_PHASE, EditorialL2Execution.PHASE,
+                com.ml.tblandroidtxt.editorial.pack.EditorialFinalRead.L2_PHASE), l2.phases);
+        String fin = new String(first.finalArtifact().viL2Bytes(), StandardCharsets.UTF_8);
+        String[] lines = fin.split("\n", -1);
+        assertEquals("\"Da vuot qua.\"", lines[2]);
+        assertEquals("Troi bat dau mua.", lines[6]);
+        // the report protected DRAFT line 7: it sits at line 8 after the insert and the L3 edit of it was reverted
+        assertEquals("Troi mua.", lines[7]);
+        assertEquals(11, lines.length);
+
+        // restart: a new repository over the same file resumes without a call and exposes the same FINAL
+        database.close();
+        database = new TranslationRepository(context, databaseName);
+        coordinator = new EditorialChapterFinalCoordinator(database, storage);
+        LedgerL2 noL2 = new LedgerL2();
+        LedgerL3 noL3 = new LedgerL3();
+        EditorialChapterFinalCoordinator.Result again = coordinator.runToFinal(fixture.projectId, SELECTOR, CHAPTER_KEY,
+                EditorialChainBudgets.ledgerRecommended(), noL2, noL3);
+        assertEquals(again.reasonCode(), EditorialChapterFinalCoordinator.Stage.FINAL, again.stage());
+        assertEquals(0, noL2.calls + noL3.calls);
+        EditorialChapterFinalCoordinator.Inspection inspection = coordinator.inspect(fixture.projectId, SELECTOR, CHAPTER_KEY);
+        assertTrue(inspection.progress().finalReady());
+        assertArrayEquals(first.finalArtifact().viL2Bytes(), inspection.finalArtifact().viL2Bytes());
+    }
+
+    @Test public void ledgerChainWithoutAFinalReadBudgetStopsBeforeAnyCall() throws Exception {
+        rawText = LEDGER_RAW;
+        draftText = LEDGER_DRAFT;
+        BindingFixture fixture = createBoundChapter();
+        commitLedgerL1(fixture);
+        LedgerL2 l2 = new LedgerL2();
+        LedgerL3 l3 = new LedgerL3();
+        EditorialChapterFinalCoordinator.Result result = new EditorialChapterFinalCoordinator(database, storage)
+                .runToFinal(fixture.projectId, SELECTOR, CHAPTER_KEY, EditorialChainBudgets.d3Recommended(), l2, l3);
+        assertEquals(EditorialChapterFinalCoordinator.Stage.L2, result.stage());
+        assertEquals("L2_FINAL_READ_BUDGET_REQUIRED", result.reasonCode());
+        assertEquals(0, l2.calls + l3.calls);
+    }
+
     // ---- fixture (mirrors EditorialP5CExactBindingFakeE2EInstrumentedTest) ----
 
     private BindingFixture createBoundChapter() throws Exception {
@@ -421,8 +629,8 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
 
     private List<EditorialP4InputSource> sourceInputs() {
         return List.of(
-                input("RAW", "raw", "raw chapter bytes"),
-                input("DRAFT", "draft", DRAFT_LINE),
+                input("RAW", "raw", rawText),
+                input("DRAFT", "draft", draftText),
                 input("GLOSSARY", "glossary", "term\ttarget\tPOS\tnote"),
                 input("PRONOUN", "pronoun", "from\ttarget\tgender\tnumber"));
     }

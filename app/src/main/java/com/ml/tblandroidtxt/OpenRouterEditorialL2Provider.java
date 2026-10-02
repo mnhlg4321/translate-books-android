@@ -1,6 +1,7 @@
 package com.ml.tblandroidtxt;
 
 import com.ml.tblandroidtxt.editorial.pack.EditorialCanonicalJson;
+import com.ml.tblandroidtxt.editorial.pack.EditorialFinalRead;
 import com.ml.tblandroidtxt.editorial.pack.EditorialL2Execution;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5RawWireContract;
 import com.ml.tblandroidtxt.editorial.pack.EditorialPackFileRole;
@@ -60,6 +61,34 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
             + "CONFLICT (proven conflict that cannot be fixed or kept; the app stops the chapter).\n"
             + "- The app counts the resolutions itself; a PASS claim is not evidence.\n";
 
+    static final String LEDGER_EDIT_RULES =
+            "Ledger-contract rules enforced by the app (any violation rejects the whole response):\n"
+            + "- REPORT_L1 lists the findings of the first review in findings[] (errorId, type, rawUnits, draft anchor, rawQuote, draftQuote, "
+            + "observation, expectedMeaning, occurrenceUnits, disposition). findingResolutions must contain EXACTLY ONE row per finding errorId and no other id.\n"
+            + "- status FIXED: changeIds are the CLOSED changes whose errorId equals the finding's errorId; at least one must sit on the finding's DRAFT anchor "
+            + "(for a MISSING anchor, an INSERT_AFTER within two lines of its 'after'); every change carrying that errorId must be listed. "
+            + "occurrences must contain one {unitId, ref} for EVERY unit in the finding's occurrenceUnits, ref being one of its changeIds or preserveIds, "
+            + "so a defect that repeats is fixed in every place.\n"
+            + "- status REJECTED: the RAW supports the draft. evidenceQuote is an exact substring (at most 80 characters) of one of the finding's RAW units; "
+            + "reason says why; no change may carry that errorId.\n"
+            + "- status PRESERVED: keep the draft; preserveIds lists preserved rows on the finding's DRAFT lines and occurrences map the other places to those rows.\n"
+            + "- status UNRESOLVED: you could not decide; the app stops the chapter. reason says why.\n"
+            + "- A change that fixes a defect you found yourself uses an errorId that starts with L2- (for example L2-001). Every other errorId is a finding errorId.\n"
+            + "- Change operations. op is REPLACE (default; line is a DRAFT line, before and after are its whole text), INSERT_AFTER (new line after DRAFT line n; "
+            + "line 0 inserts at the top; before is the exact text of line n, empty for 0; after is the new line), DELETE (before is the line, after is empty) "
+            + "or MERGE_WITH_NEXT (lines n and n+1 become the single line in after; before is line n). At most one change per line or insertion slot. "
+            + "Use INSERT_AFTER for omitted content and MERGE_WITH_NEXT or DELETE for wrongly split or duplicated lines.\n"
+            + "- findingResolutions row keys: errorId, status, changeIds, preserveIds, occurrences, evidenceQuote, reason (use [] and \"\" where nothing applies).\n";
+
+    static final String FINAL_READ_RULES =
+            "Final-read rules enforced by the app (any violation rejects the response):\n"
+            + "- READ_TARGET is the exact text the app built. Read all of it against RAW and GLOSSARY. Do not rewrite it.\n"
+            + "- readSha256 is the targetSha256 shown in READ_PROBE_LINES, copied exactly. probeTails has one row per probeLines number: "
+            + "the last " + EditorialFinalRead.TAIL_LENGTH + " characters of that line of READ_TARGET (the whole line when it is shorter), exactly as written.\n"
+            + "- verdict is CLEAN only when you found nothing wrong, otherwise DEFECTS with one row per remaining defect: line (as shown L<n>|), "
+            + "quote (exact substring of that line, at most 80 characters), type (" + String.join("|", new java.util.TreeSet<>(EditorialFinalRead.jsonSchemaTypes())) + "), "
+            + "note (short). A CLEAN verdict is only your judgement, not a certificate.\n";
+
     private final AppSettings settings;
 
     public OpenRouterEditorialL2Provider(AppSettings settings) {
@@ -108,20 +137,32 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
         Map<String, byte[]> sources = request.visibleSources();
         if (sources == null) return false;
         boolean edit = EditorialL2Execution.PHASE.equals(request.phase())
-                && EditorialL2Execution.WIRE_SCHEMA_VERSION.equals(request.outputSchemaId())
+                && (EditorialL2Execution.WIRE_SCHEMA_VERSION.equals(request.outputSchemaId())
+                || EditorialL2Execution.WIRE_SCHEMA_VERSION_V2.equals(request.outputSchemaId()))
                 && sources.containsKey(EditorialL2Execution.CANDIDATES_BLOCK);
+        boolean read = EditorialFinalRead.L2_PHASE.equals(request.phase())
+                && EditorialFinalRead.WIRE.equals(request.outputSchemaId())
+                && sources.containsKey(EditorialFinalRead.TARGET_ROLE)
+                && sources.containsKey(EditorialFinalRead.PROBES_ROLE)
+                && sources.containsKey(EditorialSafe4Contract.RAW);
         boolean discovery = EditorialL2Execution.DISCOVERY_PHASE.equals(request.phase())
                 && EditorialL2Execution.DISCOVERY_WIRE.equals(request.outputSchemaId())
                 && sources.containsKey(EditorialSafe4Contract.RAW)
                 && Set.of(EditorialSafe4Contract.RAW, EditorialSafe4Contract.GLOSSARY).containsAll(sources.keySet());
-        return edit || discovery;
+        return edit || discovery || read;
     }
 
     /** Pure rendering; visible roles come only from the app-side phase projection. */
     static PromptPair buildPrompt(Request request) {
         boolean discovery = EditorialL2Execution.DISCOVERY_PHASE.equals(request.phase());
+        boolean read = EditorialFinalRead.L2_PHASE.equals(request.phase());
+        boolean ledger = EditorialL2Execution.WIRE_SCHEMA_VERSION_V2.equals(request.outputSchemaId());
         StringBuilder system = new StringBuilder();
-        if (discovery) {
+        if (read) {
+            system.append("You are an untrusted SAFE4 final reader. The app is the authority.\n")
+                    .append("Return exactly one JSON object and no Markdown or commentary.\n")
+                    .append(FINAL_READ_RULES);
+        } else if (discovery) {
             system.append("You are an untrusted SAFE4 L2 raw-first discoverer. The app is the authority.\n")
                     .append("Return exactly one JSON object and no Markdown or commentary.\n")
                     .append(DISCOVERY_RULES);
@@ -133,6 +174,7 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
                     .append("When the evidence does not clearly prove a better target, keep the draft line.\n")
                     .append(RESOLUTION_RULES)
                     .append(WIRE_FORMAT_RULES);
+            if (ledger) system.append(LEDGER_EDIT_RULES);
         }
         system
                 .append("\n[PROJECT_INSTRUCTION]\n").append(authority(request, EditorialPackFileRole.PROJECT_INSTRUCTION))
@@ -156,14 +198,35 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
             String text = new String(request.visibleSources().get(role), StandardCharsets.UTF_8);
             user.append("\n--- ").append(role).append(" ---\n")
                     .append(EditorialSafe4Contract.DRAFT.equals(role) || EditorialSafe4Contract.RAW.equals(role)
-                            ? numbered(text) : text)
+                            || EditorialFinalRead.TARGET_ROLE.equals(role) ? numbered(text) : text)
                     .append("\n--- END ").append(role).append(" ---\n");
         }
         user.append("\nReturn only this object:\n");
+        if (read) {
+            user.append("{\"wireSchemaVersion\":\"").append(EditorialFinalRead.WIRE)
+                    .append("\",\"attemptIdentity\":\"<exact echo>\",\"readSha256\":\"<targetSha256 copied>\",")
+                    .append("\"probeTails\":[{\"line\":1,\"tail\":\"...\"}],\"verdict\":\"CLEAN|DEFECTS\",")
+                    .append("\"defects\":[{\"line\":1,\"quote\":\"...\",\"type\":\"MEANING\",\"note\":\"...\"}]}\n");
+            return new PromptPair(system.toString(), user.toString());
+        }
         if (discovery) {
             user.append("{\"wireSchemaVersion\":\"").append(EditorialL2Execution.DISCOVERY_WIRE)
                     .append("\",\"attemptIdentity\":\"<exact echo>\",\"candidates\":[{\"candidateId\":\"U001\",")
                     .append("\"ledger\":\"UNIT|TG|SR|RC\",\"line\":1}]}\n");
+            return new PromptPair(system.toString(), user.toString());
+        }
+        if (ledger) {
+            user.append("{\"wireSchemaVersion\":\"").append(EditorialL2Execution.WIRE_SCHEMA_VERSION_V2)
+                    .append("\",\"attemptIdentity\":\"<exact echo>\",")
+                    .append("\"resolutions\":[{\"candidateId\":\"U001\",\"status\":\"PROCESSED|PRESERVED|UNPROCESSED|CONFLICT\"}],")
+                    .append("\"findingResolutions\":[{\"errorId\":\"<finding errorId>\",\"status\":\"FIXED|REJECTED|PRESERVED|UNRESOLVED\",")
+                    .append("\"changeIds\":[\"C001\"],\"preserveIds\":[],\"occurrences\":[{\"unitId\":\"<RAW unit id>\",\"ref\":\"C001\"}],")
+                    .append("\"evidenceQuote\":\"\",\"reason\":\"\"}],")
+                    .append("\"changes\":[{\"changeId\":\"C001\",\"errorId\":\"<finding errorId or L2-001>\",\"op\":\"REPLACE|INSERT_AFTER|DELETE|MERGE_WITH_NEXT\",")
+                    .append("\"line\":1,\"before\":\"...\",\"after\":\"...\",\"reason\":\"...\",\"dialogue\":false,\"status\":\"CLOSED\"}],")
+                    .append("\"preserved\":[{\"preserveId\":\"P001\",\"line\":1,\"before\":\"...\",\"evidenceLimit\":\"...\"}],")
+                    .append("\"disposition\":{\"disposition\":\"CONTINUE|PRESERVE_DRAFT|STOP\",\"reasonCode\":\"...\",")
+                    .append("\"stopClass\":\"NONE|CONTENT_BLOCKED|INPUT_REQUIRED\"}}\n");
             return new PromptPair(system.toString(), user.toString());
         }
         user.append("{\"wireSchemaVersion\":\"").append(EditorialL2Execution.WIRE_SCHEMA_VERSION)

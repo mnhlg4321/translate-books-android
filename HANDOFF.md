@@ -4,7 +4,7 @@ Ngày bàn giao: 2026-10-01 (+07:00).
 
 ## Trạng thái mới nhất — ưu tiên đọc trước
 
-**P6 R0–R7 (tiến độ, cập nhật mỗi nhóm).** R0, R1, R2 xong. R2: ledger v2 trong engine P5/provider/exact-binding; bằng chứng DB trên emulator-5554 với APK lưu trữ 4.18-p6.3/code216 (production F441D40F…E5D4, AndroidTest EF0233BB…F6D6): RAW → RECONCILE → DB → khởi động lại → `committedL1` đọc đúng report `L1_LEDGER_V2`, `findingCount=1` được lưu, instance legacy không thấy chuỗi, replay ALREADY_COMMITTED 0 call; FakeE2E 20/20. Pilot không bị đụng. Next: R3.
+**P6 R0–R7 (tiến độ, cập nhật mỗi nhóm).** R0–R2 xong. R3 mã xong, qua test host (engine 334, app 320): L2 ledger (findingResolutions kiểm chặt), reconstructor có INSERT_AFTER/DELETE/MERGE_WITH_NEXT + line map + replay hash, protected span từ REPORT_L1 vào L2/L3 (remap), `EditorialFinalRead` (call thứ ba của L2 đọc đúng bytes VI_L2, echo hash và đuôi dòng), revision trong identity L2/L3 (legacy khóa bằng golden), coordinator ưu tiên chuỗi ledger, `ledgerRecommended` budgets. Còn lại: chạy test coordinator trên emulator bằng APK lưu trữ. Pilot không bị đụng.
 
 **Cập nhật 2026-10-02 (owner chấp nhận chất lượng chương 001).** W6 đạt; chương 001 quality-accepted (hai khoảng trống tiêu chí L1-khung và đếm candidate chưa đóng chính thức). 1/3 chương đại diện. Ứng viên hai chương còn lại (số liệu chỉ-đọc từ `D:\Ebooks\MERCEDES\VOL 5`): `docs/P6_G6_CHAPTER_CANDIDATES_20261002.md` — đề xuất 007 (dày thoại/xưng hô) và 010 (DRAFT dài nhất). Mỗi chương mới cần project/binding riêng + L1 RAW/RECONCILE + chuỗi L2/L3 (ước tính ~USD 0.05). Next action: owner chọn chương và cấp quyền (plan mục 10).
 

@@ -51,7 +51,8 @@ public final class EditorialL3Execution {
             String value = binding.bindingIdentity() + "\n" + binding.runDeclarationIdentity() + "\n"
                     + binding.canonicalPackHash() + "\n" + context.chapterKey() + "\nL3\n"
                     + reportL1AttemptIdentity + "\n" + (l2 == null ? "" : l2.attemptIdentity() + "\n"
-                    + l2.viL2Sha256() + "\n" + l2.changeMapSha256()) + "\n" + context.bundleIdentity();
+                    + l2.viL2Sha256() + "\n" + l2.changeMapSha256()) + "\n" + context.bundleIdentity()
+                    + EditorialContractRevision.identitySuffix(context.contractRevision());
             return EditorialCanonicalJson.sha256Hex((ATTEMPT_DOMAIN + value).getBytes(StandardCharsets.UTF_8));
         }
     }
@@ -196,7 +197,7 @@ public final class EditorialL3Execution {
         EditorialChangeMapReconstructor.Result qa = new EditorialChangeMapReconstructor().reconstruct(
                 new EditorialChangeMapReconstructor.Request(EditorialChangeMapReconstructor.Kind.L3_VI_L2_TO_FINAL,
                         request.l2().viL2Bytes(), request.l2().attemptIdentity(), wire.changes(), wire.preserved(),
-                        request.protectedLineNumbers()));
+                        protectedForViL2(request)));
         if (!qa.accepted()) {
             recover(store, attemptIdentity, "REPAIR_L3_QA_CHANGE_MAP_INVALID");
             return stop(EditorialL2Execution.StopClass.REPAIR_REQUIRED, "REPAIR_L3_QA_CHANGE_MAP_INVALID", qa.issues(), 2);
@@ -267,7 +268,8 @@ public final class EditorialL3Execution {
         List<EditorialPhaseContextProjector.BundleAsset> assets = new ArrayList<>(l1.assets());
         assets.add(new EditorialPhaseContextProjector.BundleAsset("REPORT_L1",
                 "report-l1:" + request.reportL1AttemptIdentity(), request.reportL1Bytes(), true,
-                EditorialP5RawWireContract.FINAL_REPORT_SCHEMA));
+                EditorialContractRevision.isLedger(request.context().contractRevision())
+                        ? EditorialContractRevision.REPORT_SCHEMA_V2 : EditorialP5RawWireContract.FINAL_REPORT_SCHEMA));
         assets.add(new EditorialPhaseContextProjector.BundleAsset("VI_L2",
                 "vi-l2:" + request.l2().attemptIdentity(), request.l2().viL2Bytes(), true,
                 EditorialL2Execution.VI_L2_SCHEMA));
@@ -448,6 +450,10 @@ public final class EditorialL3Execution {
         for (Probe probe : wire.regression()) if ("CONFLICT".equals(probe.verdict())) conflicts++;
         preserved += qa.preserved().size();
 
+        if (EditorialContractRevision.isLedger(request.context().contractRevision())) {
+            int[] accounted = ledgerAccounting(request, qa);
+            return new ReleaseNumbers(unprocessedUnits, unprocessed, conflicts, accounted[0], accounted[1], preserved);
+        }
         // DRAFT -> FINAL: every actual changed line must be owned by an applied L2 or L3 change.
         Set<Integer> owned = new TreeSet<>(appliedLines(request.l2().changeMapBytes()));
         for (EditorialChangeMapReconstructor.AppliedChange change : qa.applied()) owned.add(change.row().lineNumber());
@@ -460,6 +466,68 @@ public final class EditorialL3Execution {
             if (request.protectedLineNumbers().contains(span.lineNumber())) protectedRegressions++;
         }
         return new ReleaseNumbers(unprocessedUnits, unprocessed, conflicts, unaccounted, protectedRegressions, preserved);
+    }
+
+    /**
+     * Protected DRAFT lines of a ledger chain: the caller's set plus the spans persisted in REPORT_L1 v2. For
+     * the legacy contract only the caller's set exists.
+     */
+    static Set<Integer> protectedDraftLines(Request request) {
+        Set<Integer> lines = new TreeSet<>(request.protectedLineNumbers());
+        if (EditorialContractRevision.isLedger(request.context().contractRevision())) {
+            try {
+                lines.addAll(EditorialL1Ledger.protectedLines(EditorialL1Ledger.parseBody(
+                        EditorialCanonicalJson.parseObject(request.reportL1Bytes())).protectedSpans()));
+            } catch (RuntimeException invalid) {
+                // L2 refused such a report before it could commit; nothing more to add here
+            }
+        }
+        return lines;
+    }
+
+    /** Protected lines in VI_L2 numbering: DRAFT numbers moved through the L2 line map; removed lines drop out. */
+    private static Set<Integer> protectedForViL2(Request request) {
+        if (!EditorialContractRevision.isLedger(request.context().contractRevision())) return request.protectedLineNumbers();
+        List<Integer> map = EditorialChangeMapReconstructor.lineMapFromChangeMap(
+                EditorialFinalRead.lines(request.context().source(EditorialSafe4Contract.DRAFT).bytes()).size(),
+                request.l2().changeMapBytes());
+        Set<Integer> result = new TreeSet<>();
+        for (Integer line : protectedDraftLines(request)) {
+            if (line >= 1 && line <= map.size() && map.get(line - 1) > 0) result.add(map.get(line - 1));
+        }
+        return result;
+    }
+
+    /**
+     * Ledger chains account for every line by replaying the declared operations of each stage on line hashes
+     * (a stage that does not reproduce its bytes counts as one unaccounted change) and check that each protected
+     * DRAFT line reaches FINAL with identical content.
+     *
+     * @return {unaccountedChangedAnchors, protectedSpanRegressions}
+     */
+    private static int[] ledgerAccounting(Request request, EditorialChangeMapReconstructor.Result qa) {
+        byte[] draft = request.context().source(EditorialSafe4Contract.DRAFT).bytes();
+        byte[] vi = request.l2().viL2Bytes();
+        byte[] fin = qa.outputBytes();
+        int unaccounted = 0;
+        if (!EditorialChangeMapReconstructor.replayMatches(draft, vi, request.l2().changeMapBytes())) unaccounted++;
+        if (!EditorialChangeMapReconstructor.replayMatches(vi, fin, qa.changeMapBytes())) unaccounted++;
+        List<String> draftHashes = EditorialChangeMapReconstructor.lineHashes(draft);
+        List<String> finalHashes = EditorialChangeMapReconstructor.lineHashes(fin);
+        List<Integer> toVi = EditorialChangeMapReconstructor.lineMapFromChangeMap(draftHashes.size(), request.l2().changeMapBytes());
+        List<Integer> toFinal = EditorialChangeMapReconstructor.lineMapFromChangeMap(
+                EditorialChangeMapReconstructor.lineHashes(vi).size(), qa.changeMapBytes());
+        int regressions = 0;
+        for (Integer line : protectedDraftLines(request)) {
+            if (line < 1 || line > draftHashes.size()) continue;
+            int viLine = toVi.get(line - 1);
+            int finalLine = viLine == 0 || viLine > toFinal.size() ? 0 : toFinal.get(viLine - 1);
+            if (finalLine == 0 || finalLine > finalHashes.size()
+                    || !finalHashes.get(finalLine - 1).equals(draftHashes.get(line - 1))) {
+                regressions++;
+            }
+        }
+        return new int[] {unaccounted, regressions};
     }
 
     private static List<Integer> appliedLines(byte[] changeMap) {

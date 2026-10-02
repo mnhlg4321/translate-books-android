@@ -416,6 +416,9 @@ public final class EditorialL2ExecutionTest {
                 new EditorialL2Execution().execute(req, null, BUDGET, new FakeProvider(bytes("{}")), new FakeStore()).stopClass());
     }
 
+    @Test public void legacyL2IdentityIsFrozen() {
+        assertEquals("1d7385390705b56ec826458ec17b2c78ac81d61f8518b8de847b4c16d5832dec", ctx().request().attemptIdentity());
+    }
     private EditorialL2Execution.Result run(EditorialL2Execution.Request req, byte[] editWire) {
         return new EditorialL2Execution().execute(req, BUDGET, BUDGET, new FakeProvider(editWire), new FakeStore());
     }

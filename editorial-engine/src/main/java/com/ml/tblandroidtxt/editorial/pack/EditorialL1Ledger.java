@@ -199,7 +199,22 @@ public final class EditorialL1Ledger {
             if (start < 1 || end < start || end > draftLines.size()) throw bad("L1_PROTECTED_RANGE_INVALID");
             spans.add(new ProtectedSpan(spanId, start, end, enumOf(row, "source", PROTECTED_SOURCES), str(row, "reason", MAX_TEXT, true)));
         }
+        // a line the report protects cannot also be the anchor of an open defect
+        Set<Integer> protectedNumbers = protectedLines(spans);
+        for (Finding finding : findings) {
+            if (!"OPEN".equals(finding.disposition()) || !"LINES".equals(finding.draft().kind())) continue;
+            for (int line = finding.draft().start(); line <= finding.draft().end(); line++) {
+                if (protectedNumbers.contains(line)) throw bad("L1_PROTECTED_OVERLAPS_OPEN_FINDING");
+            }
+        }
         return new ReconcilePass(coverage, new ArrayList<>(resolved.values()), findings, speakers, spans, disposition);
+    }
+
+    /** DRAFT line numbers covered by the protected spans. */
+    public static Set<Integer> protectedLines(List<ProtectedSpan> spans) {
+        Set<Integer> lines = new java.util.TreeSet<>();
+        for (ProtectedSpan span : spans) for (int line = span.start(); line <= span.end(); line++) lines.add(line);
+        return lines;
     }
 
     private static Finding finding(Map<String, Object> row, EditorialRawInventory.Inventory inventory,

@@ -33,6 +33,9 @@ public final class EditorialL3ExecutionTest {
 
     // ---- cases ----
 
+    @Test public void legacyL3IdentityIsFrozen() {
+        assertEquals("d5719d09f853221866d1eee8bace62b38b92979988b3d22ee14cba9bef661bea", fx(Set.of()).l3().attemptIdentity());
+    }
     @Test public void legacyIdentitiesAreFrozen() {
         EditorialP5PilotRequest req = ctx();
         assertEquals("6bb51cceb4e38b5d7db80b281070f97dbf783cd3a9344e29c13545c284abc73e", req.attemptIdentity());

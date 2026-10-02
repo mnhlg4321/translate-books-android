@@ -239,6 +239,21 @@ public final class EditorialL1LedgerTest {
     }
 
     @Test
+    public void aProtectedSpanCannotCoverTheAnchorOfAnOpenFinding() {
+        Map<String, Object> wire = reconcileWire(new ArrayList<>(List.of(finding("e1", "MEANING", 3, 3, 3, "踏破", "chinh phuc"))), new ArrayList<>());
+        wire.put("protectedSpans", new ArrayList<Object>(List.of(map("spanId", "p1", "start", BigDecimal.valueOf(2),
+                "end", BigDecimal.valueOf(4), "source", "PRONOUN_ROW", "reason", "r"))));
+        expectCode("L1_PROTECTED_OVERLAPS_OPEN_FINDING", () -> reconcile(wire, List.of()));
+        // a PRESERVED finding may sit on a protected line: nothing will be edited there
+        Map<String, Object> kept = finding("e1", "MEANING", 3, 3, 3, "踏破", "chinh phuc");
+        kept.put("disposition", "PRESERVED");
+        kept.put("evidenceLimit", "profile row decides");
+        wire.put("findings", new ArrayList<Object>(List.of(kept)));
+        assertEquals(1, reconcile(wire, List.of()).findings().size());
+        assertEquals(java.util.Set.of(2, 3, 4), EditorialL1Ledger.protectedLines(reconcile(wire, List.of()).protectedSpans()));
+    }
+
+    @Test
     public void unknownKeysAndForgedDispositionsAreRefused() {
         Map<String, Object> wire = reconcileWire(new ArrayList<>(), new ArrayList<>());
         wire.put("extra", "x");
@@ -270,8 +285,8 @@ public final class EditorialL1LedgerTest {
         f.put("evidenceRefs", new ArrayList<Object>(List.of("gl-1")));
         Map<String, Object> wire = reconcileWire(new ArrayList<>(List.of(f)), new ArrayList<>(List.of(
                 map("candidateId", "c1", "status", "PROCESSED", "findingRef", "e1"))));
-        wire.put("protectedSpans", new ArrayList<Object>(List.of(map("spanId", "p1", "start", BigDecimal.valueOf(3),
-                "end", BigDecimal.valueOf(3), "source", "L1_PROOF", "reason", "proof"))));
+        wire.put("protectedSpans", new ArrayList<Object>(List.of(map("spanId", "p1", "start", BigDecimal.valueOf(5),
+                "end", BigDecimal.valueOf(5), "source", "L1_PROOF", "reason", "proof"))));
         EditorialL1Ledger.ReconcilePass pass = reconcile(wire, cands);
         EditorialL1Ledger.RawPass raw = new EditorialL1Ledger.RawPass(List.of(new EditorialRawInventory.Range(id(1), id(12), "PROCESSED")), cands);
         EditorialL1Ledger.Body body = EditorialL1Ledger.bodyOfReconcile(inv(), raw, pass);

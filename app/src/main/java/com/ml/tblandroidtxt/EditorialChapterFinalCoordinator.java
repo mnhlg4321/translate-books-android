@@ -1,6 +1,8 @@
 package com.ml.tblandroidtxt;
 
 import com.ml.tblandroidtxt.editorial.pack.EditorialCanonicalJson;
+import com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision;
+import com.ml.tblandroidtxt.editorial.pack.EditorialL1Ledger;
 import com.ml.tblandroidtxt.editorial.pack.EditorialL2Execution;
 import com.ml.tblandroidtxt.editorial.pack.EditorialL3Execution;
 
@@ -58,19 +60,24 @@ public final class EditorialChapterFinalCoordinator {
         }
         Optional<EditorialP5CExactBindingExecution.CommittedL1> l1;
         try {
-            l1 = new EditorialP5CExactBindingExecution(database, storage).committedL1(projectId, selector, chapterKey);
+            l1 = committedChain(projectId, selector, chapterKey);
         } catch (IOException | RuntimeException error) {
             return new Result(Stage.L1_INCOMPLETE, false, "INPUT_L1_READBACK_FAILED", null, 0);
         }
         if (l1.isEmpty()) return new Result(Stage.L1_INCOMPLETE, false, "INPUT_REPORT_L1_NOT_COMMITTED", null, 0);
         EditorialP5CExactBindingExecution.CommittedL1 chain = l1.get();
-        // Protected spans are not yet carried by REPORT_L1; the set stays empty until it does.
-        Set<Integer> protectedLines = Set.of();
+        boolean ledger = EditorialContractRevision.isLedger(chain.context().contractRevision());
+        if (ledger && budgets.finalRead() == null) {
+            return new Result(Stage.L2, false, "L2_FINAL_READ_BUDGET_REQUIRED", null, 0);
+        }
+        // The protected spans of a ledger-contract REPORT_L1 (DRAFT numbering) go to both stages; the legacy
+        // report carries none. Each stage maps them through the line map of the stages before it.
+        Set<Integer> protectedLines = protectedLines(chain);
         EditorialL2Execution.Result l2 = new EditorialL2Execution().execute(
                 new EditorialL2Execution.Request(chain.context(), chain.reportL1AttemptIdentity(),
                         chain.reportL1Bytes(), protectedLines),
-                budgets.discovery(), budgets.edit(), l2Provider, new EditorialPhaseArtifactStore(database, chapterKey,
-                        EditorialPhaseArtifactStore.L2_PHASE));
+                budgets.discovery(), budgets.edit(), budgets.finalRead(), l2Provider,
+                new EditorialPhaseArtifactStore(database, chapterKey, EditorialPhaseArtifactStore.L2_PHASE));
         if (!l2.accepted()) return new Result(Stage.L2, false, l2.reasonCode(), null, l2.providerCalls());
 
         EditorialL3Execution.Result l3 = new EditorialL3Execution().execute(
@@ -83,6 +90,25 @@ public final class EditorialChapterFinalCoordinator {
         return new Result(Stage.FINAL, true, l3.reasonCode(), l3.committed(), calls);
     }
 
+    /**
+     * The committed L1 chain of a chapter: the ledger-contract chain when there is one, otherwise the legacy
+     * chain (history stays readable; a legacy report is never fed to a ledger chain).
+     */
+    private Optional<EditorialP5CExactBindingExecution.CommittedL1> committedChain(
+            long projectId, String selector, String chapterKey) throws IOException {
+        Optional<EditorialP5CExactBindingExecution.CommittedL1> ledger = EditorialP5CExactBindingExecution
+                .forContract(database, storage, EditorialContractRevision.L1_LEDGER_V2)
+                .committedL1(projectId, selector, chapterKey);
+        if (ledger.isPresent()) return ledger;
+        return new EditorialP5CExactBindingExecution(database, storage).committedL1(projectId, selector, chapterKey);
+    }
+
+    static Set<Integer> protectedLines(EditorialP5CExactBindingExecution.CommittedL1 chain) {
+        if (!EditorialContractRevision.isLedger(chain.context().contractRevision())) return Set.of();
+        return EditorialL1Ledger.protectedLines(EditorialL1Ledger.parseBody(
+                EditorialCanonicalJson.parseObject(chain.reportL1Bytes())).protectedSpans());
+    }
+
     /** Durable progress of a chapter plus the committed FINAL when there is one. */
     public record Inspection(EditorialChapterProgress.Progress progress, EditorialL2Execution.Committed finalArtifact) { }
 
@@ -93,7 +119,7 @@ public final class EditorialChapterFinalCoordinator {
     public Inspection inspect(long projectId, String selector, String chapterKey) {
         Optional<EditorialP5CExactBindingExecution.CommittedL1> l1;
         try {
-            l1 = new EditorialP5CExactBindingExecution(database, storage).committedL1(projectId, selector, chapterKey);
+            l1 = committedChain(projectId, selector, chapterKey);
         } catch (IOException | RuntimeException error) {
             return new Inspection(EditorialChapterProgress.derive(false, null, null), null);
         }

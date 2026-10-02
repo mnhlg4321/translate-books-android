@@ -32,6 +32,8 @@ public final class EditorialL2Execution {
     static final Set<String> LEDGERS = Set.of("UNIT", "TG", "SR", "RC");
     static final Set<String> STATUSES = Set.of("PROCESSED", "PRESERVED", "UNPROCESSED", "CONFLICT");
     public static final String WIRE_SCHEMA_VERSION = "safe4.l2.edit.wire.v1";
+    /** Edit wire of the ledger contract: change operations and one resolution per L1 finding. */
+    public static final String WIRE_SCHEMA_VERSION_V2 = "safe4.l2.edit.wire.v2";
     public static final String VI_L2_SCHEMA = "safe4.full.vi-l2.v1";
     public static final int MAX_WIRE_BYTES = 65_536;
     public static final int MAX_CHANGES = 200;
@@ -126,7 +128,8 @@ public final class EditorialL2Execution {
             String value = binding.bindingIdentity() + "\n" + binding.runDeclarationIdentity() + "\n"
                     + binding.canonicalPackHash() + "\n" + context.chapterKey() + "\n" + PHASE + "\n"
                     + reportL1AttemptIdentity + "\n"
-                    + EditorialCanonicalJson.sha256Hex(reportL1Bytes) + "\n" + context.bundleIdentity();
+                    + EditorialCanonicalJson.sha256Hex(reportL1Bytes) + "\n" + context.bundleIdentity()
+                    + EditorialContractRevision.identitySuffix(context.contractRevision());
             return EditorialCanonicalJson.sha256Hex((ATTEMPT_DOMAIN + value).getBytes(StandardCharsets.UTF_8));
         }
     }
@@ -143,6 +146,15 @@ public final class EditorialL2Execution {
      * @param editBudget caps for the edit call
      */
     public Result execute(Request request, Budget discoveryBudget, Budget editBudget, Provider provider, Store store) {
+        return execute(request, discoveryBudget, editBudget, null, provider, store);
+    }
+
+    /**
+     * Ledger contract: a third call, {@value EditorialFinalRead#L2_PHASE}, reads the exact VI_L2 bytes the app
+     * built before they are committed. The legacy contract ignores {@code finalReadBudget}.
+     */
+    public Result execute(Request request, Budget discoveryBudget, Budget editBudget, Budget finalReadBudget,
+                          Provider provider, Store store) {
         if (request == null || request.context() == null) {
             return stop(StopClass.INPUT_REQUIRED, "INPUT_L2_REQUEST_MISSING", List.of(), 0);
         }
@@ -153,6 +165,23 @@ public final class EditorialL2Execution {
         String predecessorIssue = predecessorIssue(request);
         if (predecessorIssue != null) {
             return stop(StopClass.INPUT_REQUIRED, predecessorIssue, List.of(), 0);
+        }
+        final boolean ledger = EditorialContractRevision.isLedger(context.contractRevision());
+        EditorialL1Ledger.Body l1 = null;
+        EditorialRawInventory.Inventory inventory = null;
+        if (ledger) {
+            if (finalReadBudget == null || !finalReadBudget.valid()) {
+                return stop(StopClass.AUTHORIZATION_REQUIRED, "L2_FINAL_READ_BUDGET_REQUIRED", List.of(), 0);
+            }
+            try {
+                l1 = EditorialL1Ledger.parseBody(EditorialCanonicalJson.parseObject(request.reportL1Bytes()));
+                inventory = EditorialRawInventory.build(context.source(EditorialSafe4Contract.RAW).bytes());
+            } catch (RuntimeException invalid) {
+                return stop(StopClass.INPUT_REQUIRED, "INPUT_REPORT_L1_LEDGER_INVALID", List.of(), 0);
+            }
+            if (!inventory.inventorySha256().equals(l1.inventorySha256()) || !inventory.rawSha256().equals(l1.rawSha256())) {
+                return stop(StopClass.INPUT_REQUIRED, "INPUT_REPORT_L1_LEDGER_STALE", List.of(), 0);
+            }
         }
         Map<String, byte[]> discoverySources;
         Map<String, byte[]> editSources;
@@ -216,13 +245,14 @@ public final class EditorialL2Execution {
             recover(store, attemptIdentity, "L2_INPUT_BUDGET_EXCEEDED");
             return stop(StopClass.BUDGET_EXCEEDED, "L2_INPUT_BUDGET_EXCEEDED", List.of(), 1);
         }
-        CallOutcome second = call(provider, store, attemptIdentity, PHASE, WIRE_SCHEMA_VERSION,
+        CallOutcome second = call(provider, store, attemptIdentity, PHASE, ledger ? WIRE_SCHEMA_VERSION_V2 : WIRE_SCHEMA_VERSION,
                 secondSources, context, editBudget, 1);
         if (second.stop != null) return second.stop;
 
         EditWire wire;
         try {
-            wire = parseEditWire(second.bytes, attemptIdentity, candidates);
+            wire = ledger ? parseEditWireV2(second.bytes, attemptIdentity, candidates, l1)
+                    : parseEditWire(second.bytes, attemptIdentity, candidates);
         } catch (RuntimeException invalid) {
             recover(store, attemptIdentity, "REPAIR_L2_OUTPUT_SCHEMA_INVALID");
             return stop(StopClass.REPAIR_REQUIRED, "REPAIR_L2_OUTPUT_SCHEMA_INVALID",
@@ -258,12 +288,18 @@ public final class EditorialL2Execution {
                     List.of("L2_UNPROCESSED_CANDIDATES:" + unprocessed), 2);
         }
 
+        Set<Integer> protectedLines = request.protectedLineNumbers();
+        if (ledger) {
+            Set<Integer> merged = new java.util.TreeSet<>(protectedLines);
+            merged.addAll(EditorialL1Ledger.protectedLines(l1.protectedSpans()));
+            protectedLines = merged;
+        }
         EditorialChangeMapReconstructor.Result reconstruction = new EditorialChangeMapReconstructor()
                 .reconstruct(new EditorialChangeMapReconstructor.Request(
                         EditorialChangeMapReconstructor.Kind.L2_DRAFT_TO_VI_L2,
                         context.source(EditorialSafe4Contract.DRAFT).bytes(),
                         request.reportL1AttemptIdentity(), wire.rows().changes(), wire.rows().preserved(),
-                        request.protectedLineNumbers()));
+                        protectedLines));
         if (!reconstruction.accepted()) {
             StopClass stopClass = reconstruction.status() == EditorialChangeMapReconstructor.Status.INPUT_REQUIRED
                     ? StopClass.INPUT_REQUIRED : StopClass.REPAIR_REQUIRED;
@@ -273,8 +309,52 @@ public final class EditorialL2Execution {
             return stop(stopClass, reason, reconstruction.issues(), 2);
         }
 
+        Map<String, Object> l1Evidence = null;
+        Map<String, Object> readEvidence = null;
+        if (ledger) {
+            EditorialL2Findings.Verdict verdict = EditorialL2Findings.verify(l1, inventory, wire.findingResolutions(),
+                    wire.rows().changes(), wire.rows().preserved(), reconstruction);
+            if (!verdict.issues().isEmpty()) {
+                recover(store, attemptIdentity, "REPAIR_L2_FINDING_RESOLUTION_INVALID");
+                return stop(StopClass.REPAIR_REQUIRED, "REPAIR_L2_FINDING_RESOLUTION_INVALID", verdict.issues(), 2);
+            }
+            if (!verdict.unresolved().isEmpty()) {
+                recover(store, attemptIdentity, "CONTENT_L2_FINDING_UNRESOLVED");
+                List<String> open = new ArrayList<>();
+                for (String id : verdict.unresolved()) open.add("L2_UNRESOLVED_FINDING:" + id);
+                return stop(StopClass.CONTENT_BLOCKED, "CONTENT_L2_FINDING_UNRESOLVED", open, 2);
+            }
+            l1Evidence = EditorialL2Findings.evidence(l1, verdict, wire.findingResolutions(), request.reportL1Bytes());
+        }
+
         byte[] viL2 = reconstruction.outputBytes();
+        if (ledger) {
+            // Third call: the model reads the exact built bytes; the app checks the echoed hash and probe tails.
+            Map<String, byte[]> readSources = new TreeMap<>();
+            readSources.put(EditorialSafe4Contract.RAW, context.source(EditorialSafe4Contract.RAW).bytes());
+            if (context.source(EditorialSafe4Contract.GLOSSARY) != null && context.source(EditorialSafe4Contract.GLOSSARY).bytes() != null) {
+                readSources.put(EditorialSafe4Contract.GLOSSARY, context.source(EditorialSafe4Contract.GLOSSARY).bytes());
+            }
+            readSources.put(EditorialFinalRead.TARGET_ROLE, viL2);
+            readSources.put(EditorialFinalRead.PROBES_ROLE, EditorialFinalRead.probeBlock(viL2));
+            if (size(readSources) > finalReadBudget.maximumInputBytes()) {
+                recover(store, attemptIdentity, "L2_INPUT_BUDGET_EXCEEDED");
+                return stop(StopClass.BUDGET_EXCEEDED, "L2_INPUT_BUDGET_EXCEEDED", List.of(EditorialFinalRead.L2_PHASE), 2);
+            }
+            CallOutcome third = call(provider, store, attemptIdentity, EditorialFinalRead.L2_PHASE, EditorialFinalRead.WIRE,
+                    readSources, context, finalReadBudget, 2);
+            if (third.stop != null) return third.stop;
+            try {
+                readEvidence = EditorialFinalRead.evidence(EditorialFinalRead.L2_PHASE,
+                        EditorialFinalRead.parse(third.bytes, attemptIdentity, viL2));
+            } catch (RuntimeException invalid) {
+                recover(store, attemptIdentity, "REPAIR_L2_FINAL_READ_INVALID");
+                return stop(StopClass.REPAIR_REQUIRED, "REPAIR_L2_FINAL_READ_INVALID", List.of(safeMessage(invalid)), 3);
+            }
+        }
         byte[] changeMap = withDiscoveryEvidence(reconstruction.changeMapBytes(), candidates, wire.resolutions(), block);
+        if (ledger) changeMap = withLedgerEvidence(changeMap, l1Evidence, readEvidence);
+        final int totalCalls = ledger ? 3 : 2;
         Committed committed = new Committed(attemptIdentity, request.reportL1AttemptIdentity(),
                 bundleIdentity, viL2, EditorialCanonicalJson.sha256Hex(viL2), changeMap,
                 EditorialCanonicalJson.sha256Hex(changeMap));
@@ -282,14 +362,14 @@ public final class EditorialL2Execution {
             store.commit(committed);
         } catch (RuntimeException error) {
             recover(store, attemptIdentity, "RETRY_L2_ATOMIC_COMMIT_FAILED");
-            return stop(StopClass.RETRY_REQUIRED, "RETRY_L2_ATOMIC_COMMIT_FAILED", List.of(), 2);
+            return stop(StopClass.RETRY_REQUIRED, "RETRY_L2_ATOMIC_COMMIT_FAILED", List.of(), totalCalls);
         }
         Optional<Committed> readback = store.findCommitted(attemptIdentity);
         if (readback.isEmpty() || !readback.get().viL2Sha256().equals(committed.viL2Sha256())
                 || !readback.get().changeMapSha256().equals(committed.changeMapSha256())) {
-            return stop(StopClass.RETRY_REQUIRED, "RETRY_L2_READBACK_MISMATCH", List.of(), 2);
+            return stop(StopClass.RETRY_REQUIRED, "RETRY_L2_READBACK_MISMATCH", List.of(), totalCalls);
         }
-        return new Result(Outcome.COMMITTED, null, "L2_COMMITTED", List.of(), readback.get(), 2);
+        return new Result(Outcome.COMMITTED, null, "L2_COMMITTED", List.of(), readback.get(), totalCalls);
     }
 
     private record CallOutcome(byte[] bytes, Result stop) { }
@@ -365,7 +445,59 @@ public final class EditorialL2Execution {
         return List.copyOf(result);
     }
 
-    record EditWire(Wire rows, Map<String, String> resolutions) { }
+    record EditWire(Wire rows, Map<String, String> resolutions,
+                    List<EditorialL2Findings.Resolution> findingResolutions) {
+        EditWire(Wire rows, Map<String, String> resolutions) { this(rows, resolutions, List.of()); }
+    }
+
+    /**
+     * Ledger-contract edit wire: the v1 row grammar (with the optional {@code op}) plus
+     * {@code findingResolutions}. The set of L1 error ids comes from the persisted report, never from the model.
+     */
+    static EditWire parseEditWireV2(byte[] bytes, String attemptIdentity, List<Candidate> candidates,
+                                    EditorialL1Ledger.Body l1) {
+        if (bytes.length > MAX_WIRE_BYTES) throw new IllegalArgumentException("L2_WIRE_BYTE_LIMIT_EXCEEDED");
+        Map<String, Object> root = EditorialCanonicalJson.parseObject(bytes);
+        keys(root, Set.of("wireSchemaVersion", "attemptIdentity", "resolutions", "findingResolutions", "changes",
+                "preserved", "disposition"), "root");
+        if (!WIRE_SCHEMA_VERSION_V2.equals(root.get("wireSchemaVersion"))) {
+            throw new IllegalArgumentException("L2_WIRE_SCHEMA_INVALID");
+        }
+        Map<String, Object> rowsShape = new LinkedHashMap<>(root);
+        rowsShape.remove("resolutions");
+        rowsShape.remove("findingResolutions");
+        rowsShape.put("wireSchemaVersion", WIRE_SCHEMA_VERSION);
+        Wire rows = parseWire(EditorialCanonicalJson.canonicalize(rowsShape).getBytes(StandardCharsets.UTF_8),
+                attemptIdentity, true);
+        Set<String> known = new HashSet<>();
+        for (Candidate candidate : candidates) known.add(candidate.candidateId());
+        Map<String, String> resolutions = new TreeMap<>();
+        for (Object value : EditorialCanonicalJson.array(root.get("resolutions"), "resolutions")) {
+            Map<String, Object> row = object(value, "resolution");
+            keys(row, Set.of("candidateId", "status"), "resolution");
+            String id = text(row, "candidateId");
+            String status = text(row, "status");
+            if (!known.contains(id) || resolutions.containsKey(id)) {
+                throw new IllegalArgumentException("L2_WIRE_RESOLUTION_ID_INVALID");
+            }
+            if (!STATUSES.contains(status)) throw new IllegalArgumentException("L2_WIRE_STATUS_INVALID");
+            resolutions.put(id, status);
+        }
+        Set<String> errorIds = new HashSet<>();
+        for (EditorialL1Ledger.Finding finding : l1.findings()) errorIds.add(finding.errorId());
+        List<EditorialL2Findings.Resolution> findingResolutions =
+                EditorialL2Findings.parse(root.get("findingResolutions"), errorIds);
+        return new EditWire(rows, Map.copyOf(resolutions), findingResolutions);
+    }
+
+    /** Adds what became of every L1 finding and the final read of the built VI_L2 to the CHANGE_MAP_L2. */
+    private static byte[] withLedgerEvidence(byte[] changeMap, Map<String, Object> l1Resolution,
+                                             Map<String, Object> finalRead) {
+        Map<String, Object> root = new LinkedHashMap<>(EditorialCanonicalJson.parseObject(changeMap));
+        root.put("l1Resolution", l1Resolution);
+        root.put("finalRead", finalRead);
+        return EditorialCanonicalJson.canonicalize(root).getBytes(StandardCharsets.UTF_8);
+    }
 
     /**
      * L2_EDIT wire = the strict row grammar of {@link #parseWire} plus {@code resolutions}. Every known
@@ -471,9 +603,17 @@ public final class EditorialL2Execution {
             return "INPUT_REPORT_L1_INVALID";
         }
         EditorialP5PilotRequest context = request.context();
-        if (!"REPORT_L1".equals(report.get("artifactType"))
-                || !EditorialP5RawWireContract.FINAL_REPORT_SCHEMA.equals(report.get("schemaVersion"))
-                || !"L1_RECONCILE".equals(report.get("phase"))) {
+        boolean ledgerChain = EditorialContractRevision.isLedger(context.contractRevision());
+        String reportRevision = EditorialContractRevision.ofReport(report);
+        if (!"REPORT_L1".equals(report.get("artifactType")) || !"L1_RECONCILE".equals(report.get("phase"))) {
+            return "INPUT_REPORT_L1_PHASE_INVALID";
+        }
+        // a report of the other contract is never an eligible predecessor; legacy reports stay readable elsewhere
+        if (ledgerChain && !EditorialContractRevision.isLedger(reportRevision)) return "INPUT_REPORT_L1_LEGACY_CONTRACT";
+        if (!ledgerChain && EditorialContractRevision.isLedger(reportRevision)) return "INPUT_REPORT_L1_CONTRACT_MISMATCH";
+        String expectedSchema = ledgerChain ? EditorialContractRevision.REPORT_SCHEMA_V2
+                : EditorialP5RawWireContract.FINAL_REPORT_SCHEMA;
+        if (!expectedSchema.equals(report.get("schemaVersion"))) {
             return "INPUT_REPORT_L1_PHASE_INVALID";
         }
         if (!context.binding().bindingIdentity().equals(report.get("bindingIdentity"))
@@ -502,7 +642,8 @@ public final class EditorialL2Execution {
         List<EditorialPhaseContextProjector.BundleAsset> assets = new ArrayList<>(l1.assets());
         assets.add(new EditorialPhaseContextProjector.BundleAsset("REPORT_L1",
                 "report-l1:" + request.reportL1AttemptIdentity(), request.reportL1Bytes(), true,
-                EditorialP5RawWireContract.FINAL_REPORT_SCHEMA));
+                EditorialContractRevision.isLedger(request.context().contractRevision())
+                        ? EditorialContractRevision.REPORT_SCHEMA_V2 : EditorialP5RawWireContract.FINAL_REPORT_SCHEMA));
         return new EditorialPhaseContextProjector().project(
                 new EditorialPhaseContextProjector.Bundle(assets, l1.pronounStatus()), phase);
     }
@@ -513,6 +654,11 @@ public final class EditorialL2Execution {
 
     /** Strict compact wire parser; unknown keys, oversize values and wrong echoes are rejected. */
     static Wire parseWire(byte[] bytes, String attemptIdentity) {
+        return parseWire(bytes, attemptIdentity, false);
+    }
+
+    /** {@code allowOps} (ledger contract) admits the optional {@code op} of a change row. */
+    static Wire parseWire(byte[] bytes, String attemptIdentity, boolean allowOps) {
         if (bytes.length > MAX_WIRE_BYTES) throw new IllegalArgumentException("L2_WIRE_BYTE_LIMIT_EXCEEDED");
         Map<String, Object> root = EditorialCanonicalJson.parseObject(bytes);
         keys(root, Set.of("wireSchemaVersion", "attemptIdentity", "changes", "preserved", "disposition"), "root");
@@ -530,8 +676,21 @@ public final class EditorialL2Execution {
         List<EditorialChangeMapReconstructor.ChangeRow> changes = new ArrayList<>();
         for (Object value : changeValues) {
             Map<String, Object> row = object(value, "change");
-            keys(row, Set.of("changeId", "errorId", "line", "before", "after", "reason", "dialogue",
-                    "speakerProof", "status"), "change", Set.of("speakerProof"));
+            if (allowOps) {
+                keys(row, Set.of("changeId", "errorId", "line", "before", "after", "reason", "dialogue",
+                        "speakerProof", "status", "op"), "change", Set.of("speakerProof", "op"));
+            } else {
+                keys(row, Set.of("changeId", "errorId", "line", "before", "after", "reason", "dialogue",
+                        "speakerProof", "status"), "change", Set.of("speakerProof"));
+            }
+            EditorialChangeMapReconstructor.Op changeOp = EditorialChangeMapReconstructor.Op.REPLACE;
+            if (row.containsKey("op")) {
+                try {
+                    changeOp = EditorialChangeMapReconstructor.Op.valueOf(text(row, "op"));
+                } catch (IllegalArgumentException invalid) {
+                    throw new IllegalArgumentException("L2_WIRE_OP_INVALID");
+                }
+            }
             EditorialChangeMapReconstructor.SpeakerProof proof = null;
             if (row.containsKey("speakerProof")) {
                 Map<String, Object> p = object(row.get("speakerProof"), "speakerProof");
@@ -547,7 +706,7 @@ public final class EditorialL2Execution {
             }
             changes.add(new EditorialChangeMapReconstructor.ChangeRow(text(row, "changeId"),
                     text(row, "errorId"), line(row), text(row, "before"), text(row, "after"),
-                    text(row, "reason"), bool(row, "dialogue"), proof, status));
+                    text(row, "reason"), bool(row, "dialogue"), proof, status, changeOp));
         }
         List<EditorialChangeMapReconstructor.PreservedRow> preserved = new ArrayList<>();
         for (Object value : preservedValues) {
