@@ -114,8 +114,9 @@ public final class EditorialL2LedgerChainTest {
             byte[] body;
             switch (request.phase()) {
                 case EditorialL2Execution.DISCOVERY_PHASE -> body = json(map(
-                        "wireSchemaVersion", EditorialL2Execution.DISCOVERY_WIRE, "attemptIdentity", request.attemptIdentity(),
-                        "candidates", list(map("candidateId", "U001", "ledger", "UNIT", "line", BigDecimal.ONE))));
+                        "wireSchemaVersion", EditorialL2Execution.DISCOVERY_WIRE_V2, "attemptIdentity", request.attemptIdentity(),
+                        "coverage", list(map("from", unit(1), "to", unit(10), "status", "PROCESSED")),
+                        "candidates", list(map("candidateId", "U001", "ledger", "UNIT", "unitId", unit(1), "note", "n"))));
                 case EditorialL2Execution.PHASE -> body = editFor.apply(request.attemptIdentity());
                 default -> body = readWire(request);
             }
@@ -194,11 +195,15 @@ public final class EditorialL2LedgerChainTest {
         assertEquals(3, r.providerCalls());
         assertEquals(3, provider.requests.size());
         assertEquals(EditorialFinalRead.L2_PHASE, provider.requests.get(2).phase());
+        assertEquals(EditorialL2Execution.DISCOVERY_WIRE_V2, provider.requests.get(0).outputSchemaId());
         String vi = new String(r.committed().viL2Bytes(), StandardCharsets.UTF_8);
         assertTrue(vi, vi.contains("\"Da vuot qua.\"\n"));
         assertTrue(vi.contains("Troi bat dau mua."));
         assertFalse(vi.contains("Chinh phuc"));
         Map<String, Object> map = EditorialCanonicalJson.parseObject(r.committed().changeMapBytes());
+        @SuppressWarnings("unchecked") Map<String, Object> discovery = (Map<String, Object>) map.get("discoveryCoverage");
+        assertEquals(10, ((Number) discovery.get("unitCount")).intValue());
+        assertEquals(1, ((List<?>) discovery.get("ranges")).size());
         @SuppressWarnings("unchecked") Map<String, Object> l1 = (Map<String, Object>) map.get("l1Resolution");
         @SuppressWarnings("unchecked") Map<String, Object> counts = (Map<String, Object>) l1.get("counts");
         assertEquals(3, ((Number) counts.get("FIXED")).intValue());
@@ -373,52 +378,110 @@ public final class EditorialL2LedgerChainTest {
         assertArrayEquals(first.committed().viL2Bytes(), again.committed().viL2Bytes());
     }
 
-    // ---- L3 on a ledger chain (structure-aware accounting, protected remap, contract gate) ----
+    // ---- L3 on a ledger chain (v2 wires, anchored probes, carried defects, final read of FINAL) ----
 
-    private static EditorialL3Execution.Result runL3(Ledger l, EditorialL2Execution.Committed l2, byte[] reconcileChanges) {
+    private static final EditorialL2Execution.Budget READ_BUDGET = new EditorialL2Execution.Budget(
+            100_000, 4_000, new BigDecimal("0.50"), 60_000L);
+
+    private static Map<String, Object> probe(String id, String kind, int rawLine, int viLine, String rawQuote, String viQuote,
+                                             String verdict, String action) {
+        return map("probeId", id, "kind", kind, "rawUnits", list(unit(rawLine)), "viStart", BigDecimal.valueOf(viLine),
+                "viEnd", BigDecimal.valueOf(viLine), "scope", "checked this unit", "contrast", "compared with the glossary",
+                "rawQuote", rawQuote, "viQuote", viQuote, "verdict", verdict, "action", action);
+    }
+
+    /** Six anchored probes over six different units of the happy-path VI_L2. */
+    private static List<Object> goodProbes() {
+        return list(
+                probe("P1", "COVERAGE", 1, 1, "王は城", "Vua vao", "NO_DEFECT", "NONE"),
+                probe("P2", "COVERAGE", 2, 2, "騎士が", "Hiep si", "NO_DEFECT", "NONE"),
+                probe("P3", "COVERAGE", 3, 3, "踏破", "vuot qua", "NO_DEFECT", "NONE"),
+                probe("P4", "REGRESSION", 4, 4, "今回", "Lan nay", "NO_DEFECT", "NONE"),
+                probe("P5", "REGRESSION", 6, 6, "踏破", "Vuot qua roi", "NO_DEFECT", "NONE"),
+                probe("P6", "REGRESSION", 7, 7, "雨が降る", "bat dau mua", "NO_DEFECT", "NONE"));
+    }
+
+    private static byte[] reauditWire(String attempt) {
+        return json(map("wireSchemaVersion", EditorialL3Execution.REAUDIT_WIRE_V2, "attemptIdentity", attempt,
+                "coverage", list(map("from", unit(1), "to", unit(10), "status", "PROCESSED")),
+                "candidates", list(map("candidateId", "R001", "ledger", "TG", "unitId", unit(3), "viLine", BigDecimal.valueOf(3),
+                        "status", "PROCESSED", "note", "contrast"))));
+    }
+
+    private static Map<String, Object> reconcileV2(List<Object> changes, List<Object> carried, List<Object> preserved, List<Object> probes) {
+        return map("wireSchemaVersion", EditorialL3Execution.RECONCILE_WIRE_V2, "attemptIdentity", "x",
+                "resolutions", list(map("candidateId", "R001", "status", "PROCESSED")), "carriedResolutions", carried,
+                "changes", changes, "preserved", preserved, "probes", probes,
+                "disposition", map("disposition", "CONTINUE", "reasonCode", "OK", "stopClass", "NONE"));
+    }
+
+    private static byte[] readEcho(EditorialL2Execution.Provider.Request r, String hashOverride, List<Map<String, Object>> defects) {
+        byte[] target = r.visibleSources().get(EditorialFinalRead.TARGET_ROLE);
+        List<String> lines = EditorialFinalRead.lines(target);
+        List<Object> tails = new ArrayList<>();
+        for (Integer line : EditorialFinalRead.probeLines(target)) {
+            String text = lines.get(line - 1);
+            tails.add(map("line", BigDecimal.valueOf(line), "tail", text.length() <= 12 ? text : text.substring(text.length() - 12)));
+        }
+        return json(map("wireSchemaVersion", EditorialFinalRead.WIRE, "attemptIdentity", r.attemptIdentity(),
+                "readSha256", hashOverride != null ? hashOverride : EditorialCanonicalJson.sha256Hex(target), "probeTails", tails,
+                "verdict", defects.isEmpty() ? "CLEAN" : "DEFECTS", "defects", new ArrayList<Object>(defects)));
+    }
+
+    private static EditorialL3Execution.Result runL3(Ledger l, EditorialL2Execution.Committed l2, Map<String, Object> reconcileWire,
+                                                     String readHash, List<Map<String, Object>> readDefects, Store store) {
         EditorialL3Execution.Request request = new EditorialL3Execution.Request(l.context, L1_ID, l.report, l2, Set.of());
         EditorialL2Execution.Provider provider = r -> {
             byte[] body;
             if (EditorialL3Execution.REAUDIT_PHASE.equals(r.phase())) {
-                body = json(map("wireSchemaVersion", EditorialL3Execution.REAUDIT_WIRE, "attemptIdentity", r.attemptIdentity(),
-                        "candidates", list(map("candidateId", "R001", "ledger", "UNIT", "line", BigDecimal.ONE, "status", "PROCESSED"))));
-            } else {
-                Map<String, Object> wire = EditorialCanonicalJson.parseObject(reconcileChanges);
+                body = reauditWire(r.attemptIdentity());
+            } else if (EditorialL3Execution.RECONCILE_PHASE.equals(r.phase())) {
+                Map<String, Object> wire = new LinkedHashMap<>(reconcileWire);
                 wire.put("attemptIdentity", r.attemptIdentity());
                 body = json(wire);
+            } else {
+                body = readEcho(r, readHash, readDefects);
             }
             return new EditorialL2Execution.Provider.Response(body, "stop", true, 100, 50, new BigDecimal("0.01"), true);
         };
-        return new EditorialL3Execution().execute(request, BUDGET, BUDGET, provider, new Store());
+        return new EditorialL3Execution().execute(request, BUDGET, BUDGET, READ_BUDGET, provider, store);
     }
 
-    private static byte[] reconcileWire(List<Object> changes) {
-        return json(map("wireSchemaVersion", EditorialL3Execution.RECONCILE_WIRE, "attemptIdentity", "x",
-                "resolutions", list(map("candidateId", "R001", "status", "PROCESSED")), "changes", changes, "preserved", list(),
-                "adversarialCoverage", list(map("probeId", "A1", "finding", "checked", "verdict", "NO_DEFECT")),
-                "adversarialRegression", list(map("probeId", "B1", "finding", "checked", "verdict", "NO_DEFECT")),
-                "disposition", map("disposition", "CONTINUE", "reasonCode", "OK", "stopClass", "NONE")));
+    private static EditorialL3Execution.Result runL3(Ledger l, EditorialL2Execution.Committed l2, Map<String, Object> reconcileWire) {
+        return runL3(l, l2, reconcileWire, null, List.of(), new Store());
+    }
+
+    private static EditorialL2Execution.Committed committedL2(Ledger l, Script script) {
+        EditorialL2Execution.Result l2 = run(l, script, new Store());
+        assertEquals(l2.reasonCode() + l2.issues(), EditorialL2Execution.Outcome.COMMITTED, l2.outcome());
+        return l2.committed();
     }
 
     @Test public void l3AccountsForStructuralL2StagesAndCarriesProtectedLinesThroughTheLineMap() {
         // DRAFT line 7 is protected; L2 inserts a line after line 6, so it becomes VI_L2 line 8
         Ledger l = new Ledger(threeFindings(), List.of(new EditorialL1Ledger.ProtectedSpan("p1", 7, 7, "PRONOUN_ROW", "row")));
-        EditorialL2Execution.Result l2 = run(l, happyScript(null), new Store());
-        assertEquals(l2.reasonCode() + l2.issues(), EditorialL2Execution.Outcome.COMMITTED, l2.outcome());
-        String vi = new String(l2.committed().viL2Bytes(), StandardCharsets.UTF_8);
+        EditorialL2Execution.Committed l2 = committedL2(l, happyScript(null));
+        String vi = new String(l2.viL2Bytes(), StandardCharsets.UTF_8);
         assertEquals("Troi mua.", vi.split("\n", -1)[7]);
 
         // no L3 change: FINAL is VI_L2, every stage replays on hashes, the protected line arrived unchanged
-        EditorialL3Execution.Result clean = runL3(l, l2.committed(), reconcileWire(list()));
+        Store cleanStore = new Store();
+        EditorialL3Execution.Result clean = runL3(l, l2, reconcileV2(list(), list(), list(), goodProbes()), null, List.of(), cleanStore);
         assertEquals(clean.reasonCode() + clean.issues(), EditorialL3Execution.Outcome.COMMITTED, clean.outcome());
+        assertEquals(3, clean.providerCalls());
         assertEquals(0, clean.releaseNumbers().unaccountedChangedAnchors());
         assertEquals(0, clean.releaseNumbers().protectedSpanRegressions());
-        assertArrayEquals(l2.committed().viL2Bytes(), clean.committed().viL2Bytes());
+        assertArrayEquals(l2.viL2Bytes(), clean.committed().viL2Bytes());
+        // the receipt is backed by recorded operations and passes the validator on the exact FINAL bytes
+        EditorialQaReceiptValidator.Result receipt = EditorialQaReceiptValidator.validate(
+                clean.committed().changeMapBytes(), clean.committed().viL2Bytes());
+        assertTrue(receipt.issues().toString(), receipt.valid());
+        assertFalse(receipt.legacy());
 
         // an L3 edit of the remapped protected line (VI_L2 line 8) is reverted; the inserted line 7 may change
-        EditorialL3Execution.Result guarded = runL3(l, l2.committed(), reconcileWire(list(
+        EditorialL3Execution.Result guarded = runL3(l, l2, reconcileV2(list(
                 change("Q1", "L3-1", null, 8, "Troi mua.", "Troi mua to."),
-                change("Q2", "L3-2", null, 7, "Troi bat dau mua.", "Troi bat dau mua nho."))));
+                change("Q2", "L3-2", null, 7, "Troi bat dau mua.", "Troi bat dau mua nho.")), list(), list(), goodProbes()));
         assertEquals(guarded.reasonCode() + guarded.issues(), EditorialL3Execution.Outcome.COMMITTED, guarded.outcome());
         String fin = new String(guarded.committed().viL2Bytes(), StandardCharsets.UTF_8);
         assertEquals("Troi mua.", fin.split("\n", -1)[7]);
@@ -428,21 +491,181 @@ public final class EditorialL2LedgerChainTest {
         assertTrue(new String(guarded.committed().changeMapBytes(), StandardCharsets.UTF_8).contains("PROTECTED_SPAN_TOUCHED"));
     }
 
+    @Test public void probesMustBeAnchoredQuotedDistinctAndBroad() {
+        Ledger l = new Ledger(threeFindings(), List.of());
+        EditorialL2Execution.Committed l2 = committedL2(l, happyScript(null));
+        // a generic "no defect" without an anchor
+        Map<String, Object> unanchored = probe("P1", "COVERAGE", 1, 1, "王は城", "Vua vao", "NO_DEFECT", "NONE");
+        unanchored.put("rawUnits", list());
+        List<Object> probes = goodProbes();
+        probes.set(0, unanchored);
+        EditorialL3Execution.Result r = runL3(l, l2, reconcileV2(list(), list(), list(), probes));
+        assertEquals("REPAIR_L3_PROBES_INVALID", r.reasonCode());
+        assertTrue(r.issues().toString(), r.issues().contains("L3_PROBE_RAW_ANCHOR_REQUIRED:P1"));
+
+        probes = goodProbes();
+        probes.set(1, probe("P2", "COVERAGE", 2, 2, "not in raw", "Hiep si", "NO_DEFECT", "NONE"));
+        assertTrue(runL3(l, l2, reconcileV2(list(), list(), list(), probes)).issues().contains("L3_PROBE_RAW_QUOTE_NOT_IN_ANCHOR:P2"));
+
+        probes = goodProbes();
+        probes.set(2, probe("P3", "COVERAGE", 3, 3, "踏破", "not in vi", "NO_DEFECT", "NONE"));
+        assertTrue(runL3(l, l2, reconcileV2(list(), list(), list(), probes)).issues().contains("L3_PROBE_VI_QUOTE_NOT_IN_ANCHOR:P3"));
+
+        probes = goodProbes();
+        probes.set(3, probe("P4", "REGRESSION", 4, 99, "今回", "Lan nay", "NO_DEFECT", "NONE"));
+        assertTrue(runL3(l, l2, reconcileV2(list(), list(), list(), probes)).issues().contains("L3_PROBE_VI_ANCHOR_OUT_OF_RANGE:P4"));
+
+        probes = goodProbes();
+        probes.set(4, probe("P5", "REGRESSION", 1, 1, "王は城", "Vua vao", "NO_DEFECT", "NONE"));   // same anchor as P1
+        assertTrue(runL3(l, l2, reconcileV2(list(), list(), list(), probes)).issues().contains("L3_PROBE_ANCHOR_DUPLICATE:P5"));
+
+        EditorialL3Execution.Result few = runL3(l, l2, reconcileV2(list(), list(), list(), goodProbes().subList(0, 4)));
+        assertTrue(few.issues().toString(), few.issues().contains("L3_PROBES_REGRESSION_TOO_FEW"));
+
+        // an action must match the verdict and name a real applied change near the anchor
+        probes = goodProbes();
+        probes.set(0, probe("P1", "COVERAGE", 1, 1, "王は城", "Vua vao", "DEFECT_FOUND", "NONE"));
+        assertTrue(runL3(l, l2, reconcileV2(list(), list(), list(), probes)).issues().contains("L3_PROBE_ACTION_CHANGE_UNKNOWN:P1"));
+        probes = goodProbes();
+        probes.set(0, probe("P1", "COVERAGE", 1, 1, "王は城", "Vua vao", "NO_DEFECT", "CHANGE:Q1"));
+        assertTrue(runL3(l, l2, reconcileV2(list(), list(), list(), probes)).issues().contains("L3_PROBE_ACTION_INVALID:P1"));
+
+        // a probe that found a defect and fixed it on its anchor is accepted
+        probes = goodProbes();
+        probes.set(0, probe("P1", "COVERAGE", 1, 1, "王は城", "Vua vao", "DEFECT_FOUND", "CHANGE:Q1"));
+        EditorialL3Execution.Result fixed = runL3(l, l2, reconcileV2(list(change("Q1", "L3-1", null, 1, "Vua vao thanh.", "Vua buoc vao thanh.")),
+                list(), list(), probes));
+        assertEquals(fixed.reasonCode() + fixed.issues(), EditorialL3Execution.Outcome.COMMITTED, fixed.outcome());
+        assertTrue(new String(fixed.committed().viL2Bytes(), StandardCharsets.UTF_8).startsWith("Vua buoc vao thanh."));
+    }
+
+    @Test public void aConflictProbeIsATypedContentStop() {
+        Ledger l = new Ledger(threeFindings(), List.of());
+        EditorialL2Execution.Committed l2 = committedL2(l, happyScript(null));
+        List<Object> probes = goodProbes();
+        probes.set(0, probe("P1", "COVERAGE", 1, 1, "王は城", "Vua vao", "CONFLICT", "NONE"));
+        EditorialL3Execution.Result r = runL3(l, l2, reconcileV2(list(), list(), list(), probes));
+        assertEquals("CONTENT_L3_PROVEN_CONFLICT_UNRESOLVED", r.reasonCode());
+        assertEquals(EditorialL2Execution.StopClass.CONTENT_BLOCKED, r.stopClass());
+    }
+
+    @Test public void l2FinalReadDefectsAreCarriedAndEveryOneMustBeAnswered() {
+        Ledger l = new Ledger(threeFindings(), List.of());
+        Script script = happyScript(null);
+        script.readDefects.add(map("line", BigDecimal.valueOf(5), "quote", "Co ay", "type", "ADDRESS_PROFILE", "note", "check call"));
+        EditorialL2Execution.Committed l2 = committedL2(l, script);
+        // not answered at all
+        EditorialL3Execution.Result none = runL3(l, l2, reconcileV2(list(), list(), list(), goodProbes()));
+        assertEquals("REPAIR_L3_CARRIED_RESOLUTION_INVALID", none.reasonCode());
+        assertTrue(none.issues().toString(), none.issues().contains("L3_CARRIED_NOT_RESOLVED:0"));
+        // the model asks to see the carried block
+        // fixed on the line
+        EditorialL3Execution.Result fixed = runL3(l, l2, reconcileV2(list(change("Q1", "L3-1", null, 5, "Co ay cuoi.", "Co gai cuoi.")),
+                list(map("index", BigDecimal.ZERO, "status", "FIXED", "changeIds", list("Q1"), "preserveIds", list(),
+                        "evidenceQuote", "", "reason", "")), list(), goodProbes()));
+        assertEquals(fixed.reasonCode() + fixed.issues(), EditorialL3Execution.Outcome.COMMITTED, fixed.outcome());
+        // rejected needs a quote of that very line
+        EditorialL3Execution.Result badReject = runL3(l, l2, reconcileV2(list(), list(map("index", BigDecimal.ZERO, "status", "REJECTED",
+                "changeIds", list(), "preserveIds", list(), "evidenceQuote", "not there", "reason", "fine")), list(), goodProbes()));
+        assertTrue(badReject.issues().toString(), badReject.issues().contains("L3_CARRIED_REJECTED_WITHOUT_EVIDENCE:0"));
+        EditorialL3Execution.Result reject = runL3(l, l2, reconcileV2(list(), list(map("index", BigDecimal.ZERO, "status", "REJECTED",
+                "changeIds", list(), "preserveIds", list(), "evidenceQuote", "Co ay", "reason", "profile row says so")), list(), goodProbes()));
+        assertEquals(reject.reasonCode() + reject.issues(), EditorialL3Execution.Outcome.COMMITTED, reject.outcome());
+        // unresolved stops the chapter
+        EditorialL3Execution.Result open = runL3(l, l2, reconcileV2(list(), list(map("index", BigDecimal.ZERO, "status", "UNRESOLVED",
+                "changeIds", list(), "preserveIds", list(), "evidenceQuote", "", "reason", "cannot tell")), list(), goodProbes()));
+        assertEquals("CONTENT_L3_CARRIED_DEFECT_UNRESOLVED", open.reasonCode());
+        // an unknown index is a schema error
+        EditorialL3Execution.Result unknownIndex = runL3(l, l2, reconcileV2(list(), list(map("index", BigDecimal.valueOf(7), "status", "UNRESOLVED",
+                "changeIds", list(), "preserveIds", list(), "evidenceQuote", "", "reason", "x")), list(), goodProbes()));
+        assertEquals("REPAIR_L3_RECONCILE_SCHEMA_INVALID", unknownIndex.reasonCode());
+    }
+
+    @Test public void theFinalReadOfFinalMustEchoTheBytesAndAReadWithDefectsIsNotReleased() {
+        Ledger l = new Ledger(threeFindings(), List.of());
+        EditorialL2Execution.Committed l2 = committedL2(l, happyScript(null));
+        Store store = new Store();
+        EditorialL3Execution.Result bad = runL3(l, l2, reconcileV2(list(), list(), list(), goodProbes()), "0".repeat(64), List.of(), store);
+        assertEquals("REPAIR_L3_FINAL_READ_INVALID", bad.reasonCode());
+        assertEquals(List.of("FINAL_READ_HASH_ECHO_MISMATCH"), bad.issues());
+        assertTrue(store.committed.isEmpty());
+
+        Store store2 = new Store();
+        EditorialL3Execution.Result defects = runL3(l, l2, reconcileV2(list(), list(), list(), goodProbes()), null,
+                List.of(map("line", BigDecimal.valueOf(9), "quote", "Anh di", "type", "MEANING", "note", "n")), store2);
+        assertEquals("CONTENT_L3_FINAL_READ_DEFECTS", defects.reasonCode());
+        assertEquals(List.of("L3_FINAL_READ_DEFECT:9:MEANING"), defects.issues());
+        assertEquals(3, defects.providerCalls());
+        assertTrue(store2.committed.isEmpty());
+    }
+
+    @Test public void theLedgerChainNeedsAFinalReadBudgetOnL3Too() {
+        Ledger l = new Ledger(threeFindings(), List.of());
+        EditorialL2Execution.Committed l2 = committedL2(l, happyScript(null));
+        EditorialL3Execution.Result r = new EditorialL3Execution().execute(
+                new EditorialL3Execution.Request(l.context, L1_ID, l.report, l2, Set.of()), BUDGET, BUDGET,
+                x -> { throw new AssertionError("no call expected"); }, new Store());
+        assertEquals(EditorialL2Execution.StopClass.AUTHORIZATION_REQUIRED, r.stopClass());
+        assertEquals("L3_FINAL_READ_BUDGET_REQUIRED", r.reasonCode());
+    }
+
+    @Test public void theReceiptValidatorRefusesClaimsWithoutOperationsAndAcceptsLegacyAsUnverified() {
+        Ledger l = new Ledger(threeFindings(), List.of());
+        EditorialL2Execution.Committed l2 = committedL2(l, happyScript(null));
+        EditorialL3Execution.Result ok = runL3(l, l2, reconcileV2(list(), list(), list(), goodProbes()));
+        byte[] fin = ok.committed().viL2Bytes();
+        Map<String, Object> receipt = EditorialCanonicalJson.parseObject(ok.committed().changeMapBytes());
+        assertTrue(EditorialQaReceiptValidator.validate(json(receipt), fin).valid());
+
+        Map<String, Object> noOps = new LinkedHashMap<>(receipt);
+        noOps.put("operations", list());
+        assertTrue(EditorialQaReceiptValidator.validate(json(noOps), fin).issues().contains("RECEIPT_FINAL_READ_WITHOUT_OPERATION"));
+        Map<String, Object> staticMarker = new LinkedHashMap<>(receipt);
+        staticMarker.put("finalReadOrder", list("L3_RAW_FIRST_REAUDIT", "APP_RELEASE_NUMBERS"));
+        assertTrue(EditorialQaReceiptValidator.validate(json(staticMarker), fin).issues().contains("RECEIPT_STATIC_FINAL_READ_MARKER"));
+        assertTrue(EditorialQaReceiptValidator.validate(json(receipt), bytes("another text")).issues().contains("RECEIPT_FINAL_HASH_MISMATCH"));
+        Map<String, Object> wrongTarget = new LinkedHashMap<>(receipt);
+        @SuppressWarnings("unchecked") Map<String, Object> read = new LinkedHashMap<>((Map<String, Object>) receipt.get("finalRead"));
+        read.put("targetSha256", "0".repeat(64));
+        wrongTarget.put("finalRead", read);
+        assertTrue(EditorialQaReceiptValidator.validate(json(wrongTarget), fin).issues().contains("RECEIPT_FINAL_READ_TARGET_MISMATCH"));
+        Map<String, Object> unanchored = new LinkedHashMap<>(receipt);
+        unanchored.put("probes", list(map("probeId", "P1", "kind", "COVERAGE", "rawUnits", list(), "viStart", BigDecimal.ZERO,
+                "viEnd", BigDecimal.ZERO, "scope", "", "contrast", "", "rawQuote", "", "viQuote", "", "verdict", "NO_DEFECT", "action", "NONE")));
+        EditorialQaReceiptValidator.Result thin = EditorialQaReceiptValidator.validate(json(unanchored), fin);
+        assertTrue(thin.issues().toString(), thin.issues().contains("RECEIPT_PROBE_UNANCHORED"));
+        assertTrue(thin.issues().contains("RECEIPT_PROBES_TOO_FEW"));
+        Map<String, Object> badNumbers = new LinkedHashMap<>(receipt);
+        @SuppressWarnings("unchecked") Map<String, Object> numbers = new LinkedHashMap<>((Map<String, Object>) receipt.get("releaseNumbers"));
+        numbers.put("unaccountedChangedAnchors", BigDecimal.ONE);
+        badNumbers.put("releaseNumbers", numbers);
+        assertTrue(EditorialQaReceiptValidator.validate(json(badNumbers), fin).issues().contains("RECEIPT_RELEASE_NUMBER_NOT_ZERO:unaccountedChangedAnchors"));
+
+        // a receipt written before the revision existed is readable but never evidence of a read
+        EditorialQaReceiptValidator.Result legacy = EditorialQaReceiptValidator.validate(
+                json(map("schemaVersion", EditorialL3Execution.QA_RECEIPT_SCHEMA, "artifactType", "QA_RECEIPT",
+                        "finalReadOrder", list("L3_RAW_FIRST_REAUDIT"))), fin);
+        assertTrue(legacy.valid());
+        assertTrue(legacy.legacy());
+        assertFalse(EditorialQaReceiptValidator.validate(bytes("not json"), fin).valid());
+    }
+
     @Test public void l3RefusesALegacyReportOnALedgerChainAndBindsTheRevisionIntoItsIdentity() {
         Ledger l = new Ledger(threeFindings(), List.of());
-        EditorialL2Execution.Result l2 = run(l, happyScript(null), new Store());
+        EditorialL2Execution.Committed l2 = committedL2(l, happyScript(null));
         byte[] legacyReport = json(map("artifactType", "REPORT_L1", "schemaVersion", EditorialP5RawWireContract.FINAL_REPORT_SCHEMA,
                 "phase", "L1_RECONCILE", "bindingIdentity", l.context.binding().bindingIdentity(),
                 "canonicalPackHash", l.context.binding().canonicalPackHash(), "manifestFingerprint", l.context.manifestFingerprint(),
                 "chapterKey", l.context.chapterKey(), "bundleIdentity", l.context.bundleIdentity(), "disposition", "CONTINUE"));
         EditorialL3Execution.Result refused = new EditorialL3Execution().execute(
-                new EditorialL3Execution.Request(l.context, L1_ID, legacyReport, l2.committed(), Set.of()), BUDGET, BUDGET,
+                new EditorialL3Execution.Request(l.context, L1_ID, legacyReport, l2, Set.of()), BUDGET, BUDGET, READ_BUDGET,
                 r -> { throw new AssertionError("no call expected"); }, new Store());
         assertEquals("INPUT_REPORT_L1_LEGACY_CONTRACT", refused.reasonCode());
         EditorialP5PilotRequest legacyContext = l.context.withContractRevision(EditorialContractRevision.LEGACY_V1);
-        assertFalse(new EditorialL3Execution.Request(l.context, L1_ID, l.report, l2.committed(), Set.of()).attemptIdentity()
-                .equals(new EditorialL3Execution.Request(legacyContext, L1_ID, l.report, l2.committed(), Set.of()).attemptIdentity()));
+        assertFalse(new EditorialL3Execution.Request(l.context, L1_ID, l.report, l2, Set.of()).attemptIdentity()
+                .equals(new EditorialL3Execution.Request(legacyContext, L1_ID, l.report, l2, Set.of()).attemptIdentity()));
     }
+
     // ---- fixture (same minimal helpers as the other engine tests) ----
 
     private static EditorialP5PilotRequest fixture(String raw, String draft) {

@@ -5,6 +5,7 @@ import com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision;
 import com.ml.tblandroidtxt.editorial.pack.EditorialL1Ledger;
 import com.ml.tblandroidtxt.editorial.pack.EditorialL2Execution;
 import com.ml.tblandroidtxt.editorial.pack.EditorialL3Execution;
+import com.ml.tblandroidtxt.editorial.pack.EditorialQaReceiptValidator;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -83,8 +84,8 @@ public final class EditorialChapterFinalCoordinator {
         EditorialL3Execution.Result l3 = new EditorialL3Execution().execute(
                 new EditorialL3Execution.Request(chain.context(), chain.reportL1AttemptIdentity(),
                         chain.reportL1Bytes(), l2.committed(), protectedLines),
-                budgets.reaudit(), budgets.reconcile(), l3Provider, new EditorialPhaseArtifactStore(database, chapterKey,
-                        EditorialPhaseArtifactStore.L3_PHASE));
+                budgets.reaudit(), budgets.reconcile(), budgets.finalRead(), l3Provider,
+                new EditorialPhaseArtifactStore(database, chapterKey, EditorialPhaseArtifactStore.L3_PHASE));
         int calls = l2.providerCalls() + l3.providerCalls();
         if (!l3.accepted()) return new Result(Stage.L3, false, l3.reasonCode(), null, calls);
         return new Result(Stage.FINAL, true, l3.reasonCode(), l3.committed(), calls);
@@ -110,7 +111,12 @@ public final class EditorialChapterFinalCoordinator {
     }
 
     /** Durable progress of a chapter plus the committed FINAL when there is one. */
-    public record Inspection(EditorialChapterProgress.Progress progress, EditorialL2Execution.Committed finalArtifact) { }
+    public record Inspection(EditorialChapterProgress.Progress progress, EditorialL2Execution.Committed finalArtifact,
+                             String receiptStatus) {
+        public Inspection(EditorialChapterProgress.Progress progress, EditorialL2Execution.Committed finalArtifact) {
+            this(progress, finalArtifact, "NOT_APPLICABLE");
+        }
+    }
 
     /**
      * Read-only: derives the chapter's progress from durable rows without claiming, dispatching or
@@ -142,8 +148,21 @@ public final class EditorialChapterFinalCoordinator {
                 l3Row = l3Store.inspect(l3Identity).orElse(null);
                 finalArtifact = l3Store.findCommitted(l3Identity).orElse(null);
             }
+            String receiptStatus = "NOT_APPLICABLE";
+            if (finalArtifact != null && EditorialContractRevision.isLedger(chain.context().contractRevision())) {
+                // a ledger-contract FINAL is only final when its receipt is backed by operations on these exact bytes
+                EditorialQaReceiptValidator.Result receipt = EditorialQaReceiptValidator.validate(
+                        finalArtifact.changeMapBytes(), finalArtifact.viL2Bytes());
+                receiptStatus = receipt.valid() ? "VERIFIED" : "INVALID:" + receipt.issues().get(0);
+                if (!receipt.valid() && l3Row != null) {
+                    l3Row = new EditorialChapterProgress.StageRow(l3Row.status(), l3Row.recoveryReasonCode(), false);
+                    finalArtifact = null;
+                }
+            } else if (finalArtifact != null) {
+                receiptStatus = "LEGACY_UNVERIFIED";
+            }
             EditorialChapterProgress.Progress progress = EditorialChapterProgress.derive(true, l2Row, l3Row);
-            return new Inspection(progress, progress.finalReady() ? finalArtifact : null);
+            return new Inspection(progress, progress.finalReady() ? finalArtifact : null, receiptStatus);
         } catch (RuntimeException error) {
             return new Inspection(EditorialChapterProgress.derive(false, null, null), null);
         }
@@ -161,6 +180,9 @@ public final class EditorialChapterFinalCoordinator {
         if (!EditorialCanonicalJson.sha256Hex(bytes).equals(finalArtifact.viL2Sha256())) {
             return new ExportResult(false, "EXPORT_FINAL_INTEGRITY_INVALID", "", 0L);
         }
+        // a receipt of the ledger contract must be backed by its recorded operations; legacy receipts stay exportable
+        EditorialQaReceiptValidator.Result receipt = EditorialQaReceiptValidator.validate(finalArtifact.changeMapBytes(), bytes);
+        if (!receipt.valid()) return new ExportResult(false, "EXPORT_RECEIPT_INVALID", "", 0L);
         try (OutputStream out = output.open()) {
             out.write(bytes);
             out.flush();

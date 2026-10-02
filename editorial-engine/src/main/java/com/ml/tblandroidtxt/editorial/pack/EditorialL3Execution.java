@@ -29,6 +29,10 @@ public final class EditorialL3Execution {
     public static final String REAUDIT_WIRE = "safe4.l3.reaudit.wire.v1";
     public static final String RECONCILE_WIRE = "safe4.l3.reconcile.wire.v1";
     public static final String QA_RECEIPT_SCHEMA = "safe4.full.qa-receipt.v1";
+    /** Receipt of the ledger contract: anchored probes, carried defects and a real final read of FINAL. */
+    public static final String QA_RECEIPT_SCHEMA_V2 = "safe4.full.qa-receipt.v2";
+    public static final String REAUDIT_WIRE_V2 = EditorialL3Ledger.REAUDIT_WIRE_V2;
+    public static final String RECONCILE_WIRE_V2 = EditorialL3Ledger.RECONCILE_WIRE_V2;
     public static final int MAX_CANDIDATES = 300;
     public static final int MAX_PROBES = 40;
     static final Set<String> LEDGERS = Set.of("UNIT", "TG", "SR", "RC");
@@ -109,8 +113,29 @@ public final class EditorialL3Execution {
         return execute(request, reauditBudget, reconcileBudget, total, provider, store);
     }
 
+    /**
+     * Ledger contract: a third call, {@value EditorialFinalRead#L3_PHASE}, reads the exact FINAL bytes the app
+     * built before they are committed. The total cap is the sum of the three caps.
+     */
+    public Result execute(Request request, EditorialL2Execution.Budget reauditBudget,
+                          EditorialL2Execution.Budget reconcileBudget, EditorialL2Execution.Budget finalReadBudget,
+                          EditorialL2Execution.Provider provider, EditorialL2Execution.Store store) {
+        if (finalReadBudget == null) return execute(request, reauditBudget, reconcileBudget, provider, store);
+        BigDecimal total = reauditBudget == null || reconcileBudget == null || reauditBudget.maximumCost() == null
+                || reconcileBudget.maximumCost() == null || finalReadBudget.maximumCost() == null ? null
+                : reauditBudget.maximumCost().add(reconcileBudget.maximumCost()).add(finalReadBudget.maximumCost());
+        return execute(request, reauditBudget, reconcileBudget, total, finalReadBudget, provider, store);
+    }
+
     private Result execute(Request request, EditorialL2Execution.Budget reauditBudget,
                            EditorialL2Execution.Budget reconcileBudget, BigDecimal totalCap,
+                           EditorialL2Execution.Provider provider, EditorialL2Execution.Store store) {
+        return execute(request, reauditBudget, reconcileBudget, totalCap, null, provider, store);
+    }
+
+    private Result execute(Request request, EditorialL2Execution.Budget reauditBudget,
+                           EditorialL2Execution.Budget reconcileBudget, BigDecimal totalCap,
+                           EditorialL2Execution.Budget finalReadBudget,
                            EditorialL2Execution.Provider provider, EditorialL2Execution.Store store) {
         if (request == null || request.context() == null) {
             return stop(EditorialL2Execution.StopClass.INPUT_REQUIRED, "INPUT_L3_REQUEST_MISSING", List.of(), 0);
@@ -120,6 +145,10 @@ public final class EditorialL3Execution {
         }
         String issue = predecessorIssue(request);
         if (issue != null) return stop(EditorialL2Execution.StopClass.INPUT_REQUIRED, issue, List.of(), 0);
+        final boolean ledger = EditorialContractRevision.isLedger(request.context().contractRevision());
+        if (ledger && !validBudget(finalReadBudget)) {
+            return stop(EditorialL2Execution.StopClass.AUTHORIZATION_REQUIRED, "L3_FINAL_READ_BUDGET_REQUIRED", List.of(), 0);
+        }
 
         EditorialPhaseContextProjector.PhaseProjection reaudit;
         EditorialPhaseContextProjector.PhaseProjection reconcile;
@@ -161,6 +190,10 @@ public final class EditorialL3Execution {
             case ACQUIRED -> { }
         }
 
+        if (ledger) {
+            return executeLedger(request, reauditBudget, reconcileBudget, finalReadBudget, totalCap, provider, store,
+                    attemptIdentity, reauditSources, reconcileSources);
+        }
         BigDecimal spent = BigDecimal.ZERO;
         // Call 1: blind RAW-first re-audit. It never sees DRAFT, REPORT_L1 or CHANGE_MAP_L2.
         CallOutcome first = call(provider, store, attemptIdentity, REAUDIT_PHASE, REAUDIT_WIRE,
@@ -231,6 +264,245 @@ public final class EditorialL3Execution {
             return stop(EditorialL2Execution.StopClass.RETRY_REQUIRED, "RETRY_L3_READBACK_MISMATCH", List.of(), 2);
         }
         return new Result(Outcome.COMMITTED, null, "L3_FINAL_COMMITTED", List.of(), readback.get(), numbers, 2);
+    }
+
+    /** The ledger-contract flow: three calls, anchored probes, carried defects, a real read of FINAL. */
+    private Result executeLedger(Request request, EditorialL2Execution.Budget reauditBudget,
+                                 EditorialL2Execution.Budget reconcileBudget, EditorialL2Execution.Budget finalReadBudget,
+                                 BigDecimal totalCap, EditorialL2Execution.Provider provider,
+                                 EditorialL2Execution.Store store, String attemptIdentity,
+                                 Map<String, byte[]> reauditSources, Map<String, byte[]> reconcileSources) {
+        EditorialRawInventory.Inventory inventory;
+        EditorialL1Ledger.Body l1;
+        List<String> viLines;
+        List<EditorialL3Ledger.Carried> carried;
+        try {
+            inventory = EditorialRawInventory.build(request.context().source(EditorialSafe4Contract.RAW).bytes());
+            l1 = EditorialL1Ledger.parseBody(EditorialCanonicalJson.parseObject(request.reportL1Bytes()));
+            viLines = EditorialFinalRead.lines(request.l2().viL2Bytes());
+            carried = EditorialL3Ledger.carriedFrom(request.l2().changeMapBytes());
+        } catch (RuntimeException invalid) {
+            recover(store, attemptIdentity, "INPUT_L3_LEDGER_CHAIN_INVALID");
+            return stop(EditorialL2Execution.StopClass.INPUT_REQUIRED, "INPUT_L3_LEDGER_CHAIN_INVALID", List.of(), 0);
+        }
+
+        BigDecimal spent = BigDecimal.ZERO;
+        CallOutcome first = call(provider, store, attemptIdentity, REAUDIT_PHASE, REAUDIT_WIRE_V2, reauditSources, request,
+                reauditBudget, totalCap, spent, 0);
+        if (first.stop != null) return first.stop;
+        spent = first.cost;
+        EditorialL3Ledger.ReauditPass pass;
+        try {
+            pass = EditorialL3Ledger.parseReaudit(first.bytes, attemptIdentity, inventory, viLines.size());
+        } catch (RuntimeException invalid) {
+            recover(store, attemptIdentity, "REPAIR_L3_REAUDIT_SCHEMA_INVALID");
+            return stop(EditorialL2Execution.StopClass.REPAIR_REQUIRED, "REPAIR_L3_REAUDIT_SCHEMA_INVALID",
+                    List.of(EditorialL1Ledger.safeMessage(invalid)), 1);
+        }
+
+        Map<String, byte[]> secondSources = new TreeMap<>(reconcileSources);
+        secondSources.put(EditorialL3Ledger.CARRIED_ROLE, EditorialL3Ledger.carriedBlock(carried));
+        CallOutcome second = call(provider, store, attemptIdentity, RECONCILE_PHASE, RECONCILE_WIRE_V2, secondSources, request,
+                reconcileBudget, totalCap, spent, 1, EditorialL3Ledger.candidateBlock(pass.candidates()));
+        if (second.stop != null) return second.stop;
+        spent = second.cost;
+        EditorialL3Ledger.ReconcileWire wire;
+        try {
+            wire = EditorialL3Ledger.parseReconcile(second.bytes, attemptIdentity, pass.candidates(), carried.size());
+        } catch (RuntimeException invalid) {
+            recover(store, attemptIdentity, "REPAIR_L3_RECONCILE_SCHEMA_INVALID");
+            return stop(EditorialL2Execution.StopClass.REPAIR_REQUIRED, "REPAIR_L3_RECONCILE_SCHEMA_INVALID",
+                    List.of(EditorialL1Ledger.safeMessage(invalid)), 2);
+        }
+        if (wire.rows().stopClass() != null) {
+            recover(store, attemptIdentity, wire.rows().reasonCode());
+            return stop(wire.rows().stopClass(), wire.rows().reasonCode(), List.of(), 2);
+        }
+
+        EditorialChangeMapReconstructor.Result qa = new EditorialChangeMapReconstructor().reconstruct(
+                new EditorialChangeMapReconstructor.Request(EditorialChangeMapReconstructor.Kind.L3_VI_L2_TO_FINAL,
+                        request.l2().viL2Bytes(), request.l2().attemptIdentity(), wire.rows().changes(),
+                        wire.rows().preserved(), protectedForViL2(request)));
+        if (!qa.accepted()) {
+            recover(store, attemptIdentity, "REPAIR_L3_QA_CHANGE_MAP_INVALID");
+            return stop(EditorialL2Execution.StopClass.REPAIR_REQUIRED, "REPAIR_L3_QA_CHANGE_MAP_INVALID", qa.issues(), 2);
+        }
+
+        EditorialL3Ledger.CarriedVerdict carriedVerdict = EditorialL3Ledger.verifyCarried(carried, wire.carried(), viLines,
+                wire.rows().changes(), wire.rows().preserved(), qa);
+        if (!carriedVerdict.issues().isEmpty()) {
+            recover(store, attemptIdentity, "REPAIR_L3_CARRIED_RESOLUTION_INVALID");
+            return stop(EditorialL2Execution.StopClass.REPAIR_REQUIRED, "REPAIR_L3_CARRIED_RESOLUTION_INVALID",
+                    carriedVerdict.issues(), 2);
+        }
+        if (!carriedVerdict.unresolved().isEmpty()) {
+            recover(store, attemptIdentity, "CONTENT_L3_CARRIED_DEFECT_UNRESOLVED");
+            List<String> open = new ArrayList<>();
+            for (String index : carriedVerdict.unresolved()) open.add("L3_UNRESOLVED_CARRIED_DEFECT:" + index);
+            return stop(EditorialL2Execution.StopClass.CONTENT_BLOCKED, "CONTENT_L3_CARRIED_DEFECT_UNRESOLVED", open, 2);
+        }
+        int[] probeConflicts = new int[1];
+        List<String> probeIssues = EditorialL3Ledger.verifyProbes(wire.probes(), inventory, viLines, wire.rows().changes(),
+                wire.rows().preserved(), qa, probeConflicts);
+        if (!probeIssues.isEmpty()) {
+            recover(store, attemptIdentity, "REPAIR_L3_PROBES_INVALID");
+            return stop(EditorialL2Execution.StopClass.REPAIR_REQUIRED, "REPAIR_L3_PROBES_INVALID", probeIssues, 2);
+        }
+
+        int unprocessed = 0;
+        int conflicts = probeConflicts[0];
+        int preserved = qa.preserved().size();
+        for (EditorialL3Ledger.Candidate candidate : pass.candidates()) {
+            // Reconcile may resolve a re-audit candidate; an unresolved one keeps its re-audit status.
+            String status = wire.resolutions().getOrDefault(candidate.candidateId(), candidate.status());
+            switch (status) {
+                case "UNPROCESSED" -> unprocessed++;
+                case "CONFLICT" -> conflicts++;
+                case "PRESERVED" -> preserved++;
+                default -> { }
+            }
+        }
+        // coverage over the inventory was verified closed, so no RAW unit is unprocessed by construction
+        int[] accounted = ledgerAccounting(request, qa);
+        ReleaseNumbers numbers = new ReleaseNumbers(0, unprocessed, conflicts, accounted[0], accounted[1], preserved);
+        if (numbers.provenUnresolvedConflicts() > 0) {
+            recover(store, attemptIdentity, "CONTENT_L3_PROVEN_CONFLICT_UNRESOLVED");
+            return new Result(Outcome.STOPPED, EditorialL2Execution.StopClass.CONTENT_BLOCKED,
+                    "CONTENT_L3_PROVEN_CONFLICT_UNRESOLVED", List.of(), null, numbers, 2);
+        }
+        if (!numbers.releasable()) {
+            recover(store, attemptIdentity, "REPAIR_L3_RELEASE_NUMBERS_NOT_ZERO");
+            return new Result(Outcome.STOPPED, EditorialL2Execution.StopClass.REPAIR_REQUIRED,
+                    "REPAIR_L3_RELEASE_NUMBERS_NOT_ZERO", List.of(), null, numbers, 2);
+        }
+
+        // Call 3: the model reads the exact FINAL bytes; the app checks the echoed hash and probe tails.
+        byte[] finalBytes = qa.outputBytes();
+        Map<String, byte[]> readSources = new TreeMap<>();
+        readSources.put(EditorialSafe4Contract.RAW, request.context().source(EditorialSafe4Contract.RAW).bytes());
+        if (request.context().source(EditorialSafe4Contract.GLOSSARY) != null
+                && request.context().source(EditorialSafe4Contract.GLOSSARY).bytes() != null) {
+            readSources.put(EditorialSafe4Contract.GLOSSARY, request.context().source(EditorialSafe4Contract.GLOSSARY).bytes());
+        }
+        readSources.put(EditorialFinalRead.TARGET_ROLE, finalBytes);
+        readSources.put(EditorialFinalRead.PROBES_ROLE, EditorialFinalRead.probeBlock(finalBytes));
+        if (size(readSources) > finalReadBudget.maximumInputBytes()) {
+            recover(store, attemptIdentity, "L3_INPUT_BUDGET_EXCEEDED");
+            return new Result(Outcome.STOPPED, EditorialL2Execution.StopClass.BUDGET_EXCEEDED, "L3_INPUT_BUDGET_EXCEEDED",
+                    List.of(EditorialFinalRead.L3_PHASE), null, numbers, 2);
+        }
+        CallOutcome third = call(provider, store, attemptIdentity, EditorialFinalRead.L3_PHASE, EditorialFinalRead.WIRE,
+                readSources, request, finalReadBudget, totalCap, spent, 2);
+        if (third.stop != null) return third.stop;
+        EditorialFinalRead.Result read;
+        try {
+            read = EditorialFinalRead.parse(third.bytes, attemptIdentity, finalBytes);
+        } catch (RuntimeException invalid) {
+            recover(store, attemptIdentity, "REPAIR_L3_FINAL_READ_INVALID");
+            return stop(EditorialL2Execution.StopClass.REPAIR_REQUIRED, "REPAIR_L3_FINAL_READ_INVALID",
+                    List.of(EditorialL1Ledger.safeMessage(invalid)), 3);
+        }
+        if (!read.defects().isEmpty()) {
+            // No fix-after-read round is spent in this contract revision: a FINAL that still reads wrong is not released.
+            recover(store, attemptIdentity, "CONTENT_L3_FINAL_READ_DEFECTS");
+            List<String> open = new ArrayList<>();
+            for (EditorialFinalRead.Defect d : read.defects()) open.add("L3_FINAL_READ_DEFECT:" + d.line() + ":" + d.type());
+            return new Result(Outcome.STOPPED, EditorialL2Execution.StopClass.CONTENT_BLOCKED,
+                    "CONTENT_L3_FINAL_READ_DEFECTS", open, null, numbers, 3);
+        }
+
+        byte[] receipt = receiptV2(request, l1, inventory, pass, carried, carriedVerdict, wire, qa, numbers, read, attemptIdentity);
+        EditorialL2Execution.Committed committed = new EditorialL2Execution.Committed(attemptIdentity,
+                request.l2().attemptIdentity(), request.context().bundleIdentity(), finalBytes,
+                EditorialCanonicalJson.sha256Hex(finalBytes), receipt, EditorialCanonicalJson.sha256Hex(receipt));
+        try {
+            store.commit(committed);
+        } catch (RuntimeException error) {
+            recover(store, attemptIdentity, "RETRY_L3_ATOMIC_COMMIT_FAILED");
+            return stop(EditorialL2Execution.StopClass.RETRY_REQUIRED, "RETRY_L3_ATOMIC_COMMIT_FAILED", List.of(), 3);
+        }
+        Optional<EditorialL2Execution.Committed> readback = store.findCommitted(attemptIdentity);
+        if (readback.isEmpty() || !readback.get().viL2Sha256().equals(committed.viL2Sha256())
+                || !readback.get().changeMapSha256().equals(committed.changeMapSha256())) {
+            return stop(EditorialL2Execution.StopClass.RETRY_REQUIRED, "RETRY_L3_READBACK_MISMATCH", List.of(), 3);
+        }
+        return new Result(Outcome.COMMITTED, null, "L3_FINAL_COMMITTED", List.of(), readback.get(), numbers, 3);
+    }
+
+    /** QA receipt of the ledger contract. Every claim in it is backed by an operation recorded in the same file. */
+    private static byte[] receiptV2(Request request, EditorialL1Ledger.Body l1, EditorialRawInventory.Inventory inventory,
+                                    EditorialL3Ledger.ReauditPass pass, List<EditorialL3Ledger.Carried> carried,
+                                    EditorialL3Ledger.CarriedVerdict carriedVerdict, EditorialL3Ledger.ReconcileWire wire,
+                                    EditorialChangeMapReconstructor.Result qa, ReleaseNumbers numbers,
+                                    EditorialFinalRead.Result read, String attemptIdentity) {
+        Map<String, Object> root = new LinkedHashMap<>();
+        root.put("schemaVersion", QA_RECEIPT_SCHEMA_V2);
+        root.put("artifactType", "QA_RECEIPT");
+        root.put("contractRevision", EditorialContractRevision.L1_LEDGER_V2);
+        root.put("attemptIdentity", attemptIdentity);
+        root.put("bindingIdentity", request.context().binding().bindingIdentity());
+        root.put("chapterKey", request.context().chapterKey());
+        root.put("bundleIdentity", request.context().bundleIdentity());
+        root.put("reportL1AttemptIdentity", request.reportL1AttemptIdentity());
+        root.put("reportL1Sha256", EditorialCanonicalJson.sha256Hex(request.reportL1Bytes()));
+        root.put("viL2AttemptIdentity", request.l2().attemptIdentity());
+        root.put("viL2Sha256", request.l2().viL2Sha256());
+        root.put("changeMapL2Sha256", request.l2().changeMapSha256());
+        root.put("finalSha256", qa.outputSha256());
+        root.put("finalByteCount", BigDecimal.valueOf(qa.outputBytes().length));
+        root.put("finalLineCount", BigDecimal.valueOf(read.lineCount()));
+        root.put("qaChangeMap", EditorialCanonicalJson.parse(qa.changeMapBytes()));
+        root.put("reauditCoverage", EditorialL3Ledger.coverageEvidence(inventory, pass));
+        Map<String, Object> ledgers = new TreeMap<>();
+        for (EditorialL3Ledger.Candidate candidate : pass.candidates()) {
+            String status = wire.resolutions().getOrDefault(candidate.candidateId(), candidate.status());
+            @SuppressWarnings("unchecked") Map<String, Object> counts =
+                    (Map<String, Object>) ledgers.computeIfAbsent(candidate.ledger(), k -> new TreeMap<String, Object>());
+            counts.merge(status, BigDecimal.ONE, (a, b) -> ((BigDecimal) a).add((BigDecimal) b));
+        }
+        root.put("ledgers", ledgers);
+        root.put("probes", EditorialL3Ledger.probeRows(wire.probes()));
+        root.put("carriedDefects", EditorialL3Ledger.carriedEvidence(carried, carriedVerdict, wire.carried()));
+        Set<String> flagged = new TreeSet<>();
+        for (EditorialL1Ledger.Candidate c : l1.candidates()) flagged.add(c.unitId());
+        for (EditorialL1Ledger.Finding f : l1.findings()) {
+            flagged.addAll(f.rawUnits());
+            flagged.addAll(f.occurrenceUnits());
+        }
+        for (EditorialL3Ledger.Candidate c : pass.candidates()) flagged.add(c.unitId());
+        Map<String, Object> reconciliation = new LinkedHashMap<>();
+        reconciliation.put("l1Candidates", BigDecimal.valueOf(l1.candidates().size()));
+        reconciliation.put("l1Findings", BigDecimal.valueOf(l1.findings().size()));
+        reconciliation.put("l3Candidates", BigDecimal.valueOf(pass.candidates().size()));
+        reconciliation.put("distinctUnitsFlagged", BigDecimal.valueOf(flagged.size()));
+        reconciliation.put("inventoryUnits", BigDecimal.valueOf(inventory.units().size()));
+        root.put("reconciliation", reconciliation);
+        Map<String, Object> release = new LinkedHashMap<>();
+        release.put("unprocessedRawUnits", BigDecimal.valueOf(numbers.unprocessedRawUnits()));
+        release.put("unprocessedCandidates", BigDecimal.valueOf(numbers.unprocessedCandidates()));
+        release.put("provenUnresolvedConflicts", BigDecimal.valueOf(numbers.provenUnresolvedConflicts()));
+        release.put("unaccountedChangedAnchors", BigDecimal.valueOf(numbers.unaccountedChangedAnchors()));
+        release.put("protectedSpanRegressions", BigDecimal.valueOf(numbers.protectedSpanRegressions()));
+        release.put("preserved", BigDecimal.valueOf(numbers.preserved()));
+        root.put("releaseNumbers", release);
+        root.put("finalRead", EditorialFinalRead.evidence(EditorialFinalRead.L3_PHASE, read));
+        // one entry per operation that really ran, in order; nothing is claimed without one
+        List<Object> operations = new ArrayList<>();
+        operations.add(operation(1, REAUDIT_PHASE, null));
+        operations.add(operation(2, RECONCILE_PHASE, null));
+        operations.add(operation(3, EditorialFinalRead.L3_PHASE, read.targetSha256()));
+        root.put("operations", operations);
+        root.put("pairDeltaQa", "NONE");
+        root.put("stopReceipt", "NONE");
+        return EditorialCanonicalJson.canonicalize(root).getBytes(StandardCharsets.UTF_8);
+    }
+
+    private static Map<String, Object> operation(int order, String phase, String targetSha256) {
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("order", BigDecimal.valueOf(order));
+        row.put("phase", phase);
+        if (targetSha256 != null) row.put("targetSha256", targetSha256);
+        return row;
     }
 
     /** L2 must be the committed result of this chain: same REPORT_L1, bundle and intact bytes. */

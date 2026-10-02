@@ -188,7 +188,7 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-R3 đã viết xong mã và qua test host (engine 334, app 320): L2 xử lý từng finding L1 (FIXED/REJECTED/PRESERVED/UNRESOLVED, kiểm theo occurrence, anchor, trích RAW), op INSERT_AFTER/DELETE/MERGE_WITH_NEXT, protected span từ REPORT_L1 qua coordinator, final-read VI_L2 (echo hash + đuôi dòng thăm dò), revision trong identity L2/L3. Next action: build APK production + AndroidTest từ commit R3 trong worktree sạch, chạy lớp coordinator trên emulator, đóng R3 rồi sang R4 (L3 probe có anchor, final-read FINAL thật); R5 offline; dừng cuối R5 với bảng ngân sách và Q1–Q5.
+R3 đã đóng (APK lưu trữ 4.18-p6.4/code217; coordinator 9/9 trên emulator; full instrumented 210 test, 22 fail cũ ngoài phạm vi R). R4 đã viết xong mã và qua test host (engine 340, app 324): discovery/re-audit phủ theo inventory (F9), probe L3 có anchor RAW + VI_L2 (F8), defect do final-read L2 để lại phải được trả lời, final-read FINAL thật (echo hash + đuôi dòng), receipt v2 + validator từ chối marker không có operation. Next action: build APK production + AndroidTest từ commit R4 trong worktree sạch, chạy lớp coordinator trên emulator, đóng R4 rồi sang R5 (harness chấm + bảng ngân sách); dừng cuối R5 với bảng ngân sách và Q1–Q5.
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 

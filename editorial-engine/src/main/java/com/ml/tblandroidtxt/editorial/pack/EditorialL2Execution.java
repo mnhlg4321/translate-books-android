@@ -27,6 +27,8 @@ public final class EditorialL2Execution {
     public static final String PHASE = "L2_EDIT";
     public static final String DISCOVERY_PHASE = "L2_RAW_DISCOVERY";
     public static final String DISCOVERY_WIRE = "safe4.l2.raw-discovery.wire.v1";
+    /** Ledger-contract discovery: coverage ranges and sparse candidates over the app's RAW inventory. */
+    public static final String DISCOVERY_WIRE_V2 = "safe4.l2.raw-discovery.wire.v2";
     public static final String CANDIDATES_BLOCK = "L2_RAW_CANDIDATES";
     public static final int MAX_CANDIDATES = 300;
     static final Set<String> LEDGERS = Set.of("UNIT", "TG", "SR", "RC");
@@ -225,12 +227,24 @@ public final class EditorialL2Execution {
         }
 
         // Call 1: blind discovery. It never sees DRAFT, REPORT_L1 or PRONOUN.
-        CallOutcome first = call(provider, store, attemptIdentity, DISCOVERY_PHASE, DISCOVERY_WIRE,
+        CallOutcome first = call(provider, store, attemptIdentity, DISCOVERY_PHASE, ledger ? DISCOVERY_WIRE_V2 : DISCOVERY_WIRE,
                 discoverySources, context, discoveryBudget, 0);
         if (first.stop != null) return first.stop;
         List<Candidate> candidates;
+        List<EditorialRawInventory.Range> discoveryCoverage = List.of();
         try {
-            candidates = parseDiscovery(first.bytes, attemptIdentity, rawLineCount(context));
+            if (ledger) {
+                EditorialL1Ledger.RawPass pass = EditorialL1Ledger.parseRawPass(first.bytes, attemptIdentity, inventory,
+                        DISCOVERY_WIRE_V2);
+                List<Candidate> converted = new ArrayList<>();
+                for (EditorialL1Ledger.Candidate c : pass.candidates()) {
+                    converted.add(new Candidate(c.candidateId(), c.ledger(), inventory.unit(c.unitId()).line()));
+                }
+                candidates = List.copyOf(converted);
+                discoveryCoverage = pass.coverage();
+            } else {
+                candidates = parseDiscovery(first.bytes, attemptIdentity, rawLineCount(context));
+            }
         } catch (RuntimeException invalid) {
             recover(store, attemptIdentity, "REPAIR_L2_DISCOVERY_SCHEMA_INVALID");
             return stop(StopClass.REPAIR_REQUIRED, "REPAIR_L2_DISCOVERY_SCHEMA_INVALID",
@@ -353,7 +367,7 @@ public final class EditorialL2Execution {
             }
         }
         byte[] changeMap = withDiscoveryEvidence(reconstruction.changeMapBytes(), candidates, wire.resolutions(), block);
-        if (ledger) changeMap = withLedgerEvidence(changeMap, l1Evidence, readEvidence);
+        if (ledger) changeMap = withLedgerEvidence(changeMap, l1Evidence, readEvidence, inventory, discoveryCoverage);
         final int totalCalls = ledger ? 3 : 2;
         Committed committed = new Committed(attemptIdentity, request.reportL1AttemptIdentity(),
                 bundleIdentity, viL2, EditorialCanonicalJson.sha256Hex(viL2), changeMap,
@@ -492,10 +506,25 @@ public final class EditorialL2Execution {
 
     /** Adds what became of every L1 finding and the final read of the built VI_L2 to the CHANGE_MAP_L2. */
     private static byte[] withLedgerEvidence(byte[] changeMap, Map<String, Object> l1Resolution,
-                                             Map<String, Object> finalRead) {
+                                             Map<String, Object> finalRead, EditorialRawInventory.Inventory inventory,
+                                             List<EditorialRawInventory.Range> discoveryCoverage) {
         Map<String, Object> root = new LinkedHashMap<>(EditorialCanonicalJson.parseObject(changeMap));
         root.put("l1Resolution", l1Resolution);
         root.put("finalRead", finalRead);
+        // the blind pass is judged on the app's inventory: closed ranges over every unit, not on a raw count
+        Map<String, Object> coverage = new LinkedHashMap<>();
+        coverage.put("inventorySha256", inventory.inventorySha256());
+        coverage.put("unitCount", BigDecimal.valueOf(inventory.units().size()));
+        List<Object> ranges = new ArrayList<>();
+        for (EditorialRawInventory.Range range : discoveryCoverage) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("from", range.fromId());
+            row.put("to", range.toId());
+            row.put("status", range.status());
+            ranges.add(row);
+        }
+        coverage.put("ranges", ranges);
+        root.put("discoveryCoverage", coverage);
         return EditorialCanonicalJson.canonicalize(root).getBytes(StandardCharsets.UTF_8);
     }
 

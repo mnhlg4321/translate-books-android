@@ -460,17 +460,27 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
                     "probeTails", tails, "verdict", "CLEAN", "defects", l()));
         }
 
+        static Map<String, Object> probe(String id, String kind, int rawLine, int viLine, String rawQuote, String viQuote) {
+            return m("probeId", id, "kind", kind, "rawUnits", l(unit(rawLine)), "viStart", BigDecimal.valueOf(viLine),
+                    "viEnd", BigDecimal.valueOf(viLine), "scope", "checked this unit", "contrast", "compared with the glossary",
+                    "rawQuote", rawQuote, "viQuote", viQuote, "verdict", "NO_DEFECT", "action", "NONE");
+        }
+
         static byte[] l3Wire(EditorialL2Execution.Provider.Request request) {
             if (EditorialL3Execution.REAUDIT_PHASE.equals(request.phase())) {
-                return json(m("wireSchemaVersion", EditorialL3Execution.REAUDIT_WIRE, "attemptIdentity", request.attemptIdentity(),
-                        "candidates", l(m("candidateId", "u1", "ledger", "UNIT", "line", BigDecimal.ONE, "status", "PROCESSED"))));
+                return json(m("wireSchemaVersion", EditorialL3Execution.REAUDIT_WIRE_V2, "attemptIdentity", request.attemptIdentity(),
+                        "coverage", coverage(),
+                        "candidates", l(m("candidateId", "u1", "ledger", "TG", "unitId", unit(3), "viLine", BigDecimal.valueOf(3),
+                                "status", "PROCESSED", "note", "contrast"))));
             }
-            return json(m("wireSchemaVersion", EditorialL3Execution.RECONCILE_WIRE, "attemptIdentity", request.attemptIdentity(),
-                    "resolutions", l(), "changes", l(
-                            change("Q1", "L3-1", null, 8, "Troi mua.", "Troi mua to.")),
+            if (com.ml.tblandroidtxt.editorial.pack.EditorialFinalRead.L3_PHASE.equals(request.phase())) return readWire(request);
+            return json(m("wireSchemaVersion", EditorialL3Execution.RECONCILE_WIRE_V2, "attemptIdentity", request.attemptIdentity(),
+                    "resolutions", l(m("candidateId", "u1", "status", "PROCESSED")), "carriedResolutions", l(),
+                    "changes", l(change("Q1", "L3-1", null, 8, "Troi mua.", "Troi mua to.")),
                     "preserved", l(),
-                    "adversarialCoverage", l(m("probeId", "cov1", "finding", "none", "verdict", "NO_DEFECT")),
-                    "adversarialRegression", l(m("probeId", "reg1", "finding", "none", "verdict", "NO_DEFECT")),
+                    "probes", l(probe("P1", "COVERAGE", 1, 1, "王は城", "Vua vao"), probe("P2", "COVERAGE", 2, 2, "騎士が", "Hiep si"),
+                            probe("P3", "COVERAGE", 3, 3, "踏破", "vuot qua"), probe("P4", "REGRESSION", 4, 4, "今回", "Lan nay"),
+                            probe("P5", "REGRESSION", 6, 6, "踏破", "Vuot qua roi"), probe("P6", "REGRESSION", 7, 7, "雨が降る", "bat dau mua")),
                     "disposition", m("disposition", "CONTINUE", "reasonCode", "L3_OK", "stopClass", "NONE")));
         }
     }
@@ -500,8 +510,9 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
             byte[] body;
             switch (request.phase()) {
                 case EditorialL2Execution.DISCOVERY_PHASE -> body = LedgerWires.json(LedgerWires.m(
-                        "wireSchemaVersion", EditorialL2Execution.DISCOVERY_WIRE, "attemptIdentity", request.attemptIdentity(),
-                        "candidates", LedgerWires.l(LedgerWires.m("candidateId", "U001", "ledger", "UNIT", "line", BigDecimal.ONE))));
+                        "wireSchemaVersion", EditorialL2Execution.DISCOVERY_WIRE_V2, "attemptIdentity", request.attemptIdentity(),
+                        "coverage", LedgerWires.coverage(),
+                        "candidates", LedgerWires.l(LedgerWires.m("candidateId", "U001", "ledger", "UNIT", "unitId", LedgerWires.unit(1), "note", "n"))));
                 case EditorialL2Execution.PHASE -> body = LedgerWires.editWire(request.attemptIdentity());
                 default -> body = LedgerWires.readWire(request);
             }
@@ -531,7 +542,7 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
                 EditorialChainBudgets.ledgerRecommended(), l2, l3);
         assertEquals(first.reasonCode(), EditorialChapterFinalCoordinator.Stage.FINAL, first.stage());
         assertTrue(first.finalReady());
-        assertEquals(5, first.providerCalls());
+        assertEquals(6, first.providerCalls());
         assertEquals(List.of(EditorialL2Execution.DISCOVERY_PHASE, EditorialL2Execution.PHASE,
                 com.ml.tblandroidtxt.editorial.pack.EditorialFinalRead.L2_PHASE), l2.phases);
         String fin = new String(first.finalArtifact().viL2Bytes(), StandardCharsets.UTF_8);
@@ -554,6 +565,26 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
         assertEquals(0, noL2.calls + noL3.calls);
         EditorialChapterFinalCoordinator.Inspection inspection = coordinator.inspect(fixture.projectId, SELECTOR, CHAPTER_KEY);
         assertTrue(inspection.progress().finalReady());
+        assertEquals("VERIFIED", inspection.receiptStatus());
+        Path target = context.getCacheDir().toPath().resolve("ledger-export-" + UUID.randomUUID() + ".txt");
+        try {
+            EditorialChapterFinalCoordinator.ExportResult export = EditorialChapterFinalCoordinator.exportTxt(
+                    inspection.finalArtifact(), () -> Files.newOutputStream(target), () -> Files.newInputStream(target));
+            assertTrue(export.reasonCode(), export.verified());
+        } finally {
+            Files.deleteIfExists(target);
+        }
+        // a FINAL whose receipt does not back its claims is refused by export
+        EditorialL2Execution.Committed forged = new EditorialL2Execution.Committed(
+                inspection.finalArtifact().attemptIdentity(), inspection.finalArtifact().predecessorIdentity(),
+                inspection.finalArtifact().bundleIdentity(), inspection.finalArtifact().viL2Bytes(),
+                inspection.finalArtifact().viL2Sha256(),
+                new String(inspection.finalArtifact().changeMapBytes(), StandardCharsets.UTF_8)
+                        .replace("\"operations\"", "\"operationsX\"").getBytes(StandardCharsets.UTF_8),
+                EditorialCanonicalJson.sha256Hex(new String(inspection.finalArtifact().changeMapBytes(), StandardCharsets.UTF_8)
+                        .replace("\"operations\"", "\"operationsX\"").getBytes(StandardCharsets.UTF_8)));
+        assertEquals("EXPORT_RECEIPT_INVALID", EditorialChapterFinalCoordinator.exportTxt(forged,
+                () -> new java.io.ByteArrayOutputStream(), () -> new java.io.ByteArrayInputStream(new byte[0])).reasonCode());
         assertArrayEquals(first.finalArtifact().viL2Bytes(), inspection.finalArtifact().viL2Bytes());
     }
 

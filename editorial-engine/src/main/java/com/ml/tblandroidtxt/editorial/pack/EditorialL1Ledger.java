@@ -115,7 +115,16 @@ public final class EditorialL1Ledger {
     // ---- RAW pass ----
 
     public static RawPass parseRawPass(byte[] bytes, String attemptIdentity, EditorialRawInventory.Inventory inventory) {
-        Map<String, Object> root = rootOf(bytes, attemptIdentity, RAW_WIRE, Set.of("wireSchemaVersion", "attemptIdentity", "coverage", "candidates"));
+        return parseRawPass(bytes, attemptIdentity, inventory, RAW_WIRE);
+    }
+
+    /**
+     * Same grammar under another wire label: the blind RAW passes of L2 and L3 report coverage over the same
+     * inventory and raise sparse candidates exactly like the L1 RAW pass.
+     */
+    public static RawPass parseRawPass(byte[] bytes, String attemptIdentity, EditorialRawInventory.Inventory inventory,
+                                       String wireLabel) {
+        Map<String, Object> root = rootOf(bytes, attemptIdentity, wireLabel, Set.of("wireSchemaVersion", "attemptIdentity", "coverage", "candidates"));
         List<EditorialRawInventory.Range> coverage = coverage(root.get("coverage"), inventory);
         List<Object> rows = EditorialCanonicalJson.array(root.get("candidates"), "candidates");
         if (rows.size() > MAX_CANDIDATES_PER_CALL) throw bad("L1_CANDIDATE_LIMIT_EXCEEDED");
@@ -470,8 +479,13 @@ public final class EditorialL1Ledger {
 
     /** JSON schema of the wire for a strict response format; every key is required, unused values are empty/0. */
     public static Map<String, Object> jsonSchema(boolean rawPass) {
+        return jsonSchema(rawPass, rawPass ? RAW_WIRE : RECONCILE_WIRE);
+    }
+
+    /** The RAW-pass schema under another wire label (L2 discovery, L3 re-audit); RECONCILE keeps its own label. */
+    public static Map<String, Object> jsonSchema(boolean rawPass, String wireLabel) {
         Map<String, Object> props = new LinkedHashMap<>();
-        props.put("wireSchemaVersion", enumSchema(List.of(rawPass ? RAW_WIRE : RECONCILE_WIRE)));
+        props.put("wireSchemaVersion", enumSchema(List.of(wireLabel)));
         props.put("attemptIdentity", stringSchema(128));
         props.put("coverage", arraySchema(MAX_RANGES, objectSchema(
                 "from", stringSchema(64), "to", stringSchema(64), "status", enumSchema(List.copyOf(new java.util.TreeSet<>(RANGE_STATUSES))))));
@@ -638,7 +652,7 @@ public final class EditorialL1Ledger {
         return out;
     }
 
-    private static List<EditorialRawInventory.Range> coverage(Object value, EditorialRawInventory.Inventory inventory) {
+    static List<EditorialRawInventory.Range> coverage(Object value, EditorialRawInventory.Inventory inventory) {
         List<Object> rows = EditorialCanonicalJson.array(value, "coverage");
         if (rows.size() > MAX_RANGES) throw bad("L1_COVERAGE_RANGE_LIMIT_EXCEEDED");
         List<EditorialRawInventory.Range> ranges = new ArrayList<>();
@@ -661,7 +675,7 @@ public final class EditorialL1Ledger {
         return ranges;
     }
 
-    private static Map<String, Object> rootOf(byte[] bytes, String attemptIdentity, String wire, Set<String> keys) {
+    static Map<String, Object> rootOf(byte[] bytes, String attemptIdentity, String wire, Set<String> keys) {
         if (bytes == null || bytes.length > MAX_WIRE_BYTES) throw bad("L1_WIRE_BYTE_LIMIT_EXCEEDED");
         Map<String, Object> root = EditorialCanonicalJson.parseObject(bytes);
         keys(root, keys, "root");
@@ -670,19 +684,19 @@ public final class EditorialL1Ledger {
         return root;
     }
 
-    private static String id(Map<String, Object> row, String key) {
+    static String id(Map<String, Object> row, String key) {
         String value = str(row, key, EditorialP5RawWireContract.MAX_ID_LENGTH, true);
         if (!EditorialP5RawWireContract.token(value, EditorialP5RawWireContract.MAX_ID_LENGTH)) throw bad("L1_ID_INVALID");
         return value;
     }
 
-    private static String enumOf(Map<String, Object> row, String key, Set<String> allowed) {
+    static String enumOf(Map<String, Object> row, String key, Set<String> allowed) {
         String value = str(row, key, 32, true);
         if (!allowed.contains(value)) throw bad("L1_ENUM_INVALID");
         return value;
     }
 
-    private static String str(Map<String, Object> row, String key, int max, boolean required) {
+    static String str(Map<String, Object> row, String key, int max, boolean required) {
         Object value = row.get(key);
         if (!(value instanceof String)) throw bad("L1_TEXT_INVALID");
         String text = (String) value;
@@ -692,7 +706,7 @@ public final class EditorialL1Ledger {
         return text;
     }
 
-    private static int intOf(Map<String, Object> row, String key) {
+    static int intOf(Map<String, Object> row, String key) {
         Object value = row.get(key);
         if (!(value instanceof BigDecimal)) throw bad("L1_INT_INVALID");
         try {
@@ -702,7 +716,7 @@ public final class EditorialL1Ledger {
         }
     }
 
-    private static List<String> stringList(Object value, String path, int maxItems, int maxLength) {
+    static List<String> stringList(Object value, String path, int maxItems, int maxLength) {
         List<Object> rows = EditorialCanonicalJson.array(value, path);
         if (rows.size() > maxItems) throw bad("L1_LIST_TOO_LONG");
         List<String> out = new ArrayList<>();
@@ -714,16 +728,16 @@ public final class EditorialL1Ledger {
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<String, Object> object(Object value, String path) {
+    static Map<String, Object> object(Object value, String path) {
         if (!(value instanceof Map)) throw bad("L1_OBJECT_EXPECTED");
         return (Map<String, Object>) value;
     }
 
-    private static void keys(Map<String, Object> value, Set<String> allowed, String path) {
+    static void keys(Map<String, Object> value, Set<String> allowed, String path) {
         keys(value, allowed, path, Set.of());
     }
 
-    private static void keys(Map<String, Object> value, Set<String> allowed, String path, Set<String> optional) {
+    static void keys(Map<String, Object> value, Set<String> allowed, String path, Set<String> optional) {
         for (String key : value.keySet()) if (!allowed.contains(key)) throw bad("L1_UNKNOWN_KEY");
         for (String key : allowed) if (!optional.contains(key) && !value.containsKey(key)) throw bad("L1_MISSING_KEY");
     }
@@ -732,7 +746,7 @@ public final class EditorialL1Ledger {
 
     private static BigDecimal num(int value) { return BigDecimal.valueOf(value); }
 
-    private static IllegalArgumentException bad(String code) { return new IllegalArgumentException(code); }
+    static IllegalArgumentException bad(String code) { return new IllegalArgumentException(code); }
 
     /** Typed, allow-listed message of a parse failure; anything else collapses to a generic code. */
     public static String safeMessage(RuntimeException error) {
