@@ -328,6 +328,55 @@ public final class EditorialP5CExactBindingExecution {
         }
     }
 
+    /** The committed L1 chain an L2 run builds on; never dispatches anything. */
+    public record CommittedL1(EditorialP5PilotRequest context, String reportL1AttemptIdentity,
+                              byte[] reportL1Bytes) {
+        public CommittedL1 {
+            reportL1Bytes = reportL1Bytes.clone();
+        }
+
+        @Override public byte[] reportL1Bytes() { return reportL1Bytes.clone(); }
+    }
+
+    /**
+     * Reads back the committed RAW and RECONCILE attempts for the exact binding,
+     * chapter and current source bundle. Empty when L1 is incomplete or the
+     * sources drifted; read-only.
+     */
+    public Optional<CommittedL1> committedL1(long projectId, String attemptRequestSelector,
+                                             String chapterKey) throws IOException {
+        EditorialP4Binding binding = bindings.findByAttemptRequestSelector(attemptRequestSelector).orElse(null);
+        if (binding == null || projectIdFor(binding) != projectId || !chapterExists(projectId, chapterKey)) {
+            return Optional.empty();
+        }
+        List<EditorialP4InputSource> currentSources = currentSources(projectId, chapterKey, binding);
+        EditorialP4ResumeResult resume = new EditorialP4BindingTransactionService(database, storage)
+                .resumeProject(projectId, attemptRequestSelector, currentSources);
+        if (resume.code() != EditorialP4ResumeResult.Code.RESTORED || resume.binding() == null
+                || !resume.binding().bindingIdentity().equals(binding.bindingIdentity())) {
+            return Optional.empty();
+        }
+        EditorialPackManifest manifest = resolveManifest(binding);
+        EditorialP5PilotRequest.PackAuthority authority = resolveAuthority(binding, manifest);
+        List<EditorialP5PilotRequest.SourceBytes> sources = sourceBytes(binding, currentSources);
+        List<String> stableAnchors = List.of("chapter:" + chapterKey);
+        List<String> populationIds = List.of("population:" + chapterKey);
+        // The output cap is not part of either attempt identity.
+        EditorialP5PilotRequest rawRequest = new EditorialP5PilotRequest(binding, manifest, authority,
+                chapterKey, EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY, sources,
+                binding.runDeclarationIdentity(), stableAnchors, populationIds, true, 1);
+        EditorialP5CAttemptStore store = new EditorialP5CAttemptStore(database);
+        EditorialP5PilotResult.CommittedResult raw = store.findCommitted(rawRequest.attemptIdentity()).orElse(null);
+        if (raw == null) return Optional.empty();
+        EditorialP5PilotRequest reconcileRequest = new EditorialP5PilotRequest(binding, manifest, authority,
+                chapterKey, EditorialP5PilotRequest.Phase.L1_RECONCILE, sources, raw.attemptIdentity(),
+                stableAnchors, populationIds, true, 1);
+        EditorialP5PilotResult.CommittedResult reconcile =
+                store.findCommitted(reconcileRequest.attemptIdentity()).orElse(null);
+        if (reconcile == null) return Optional.empty();
+        return Optional.of(new CommittedL1(reconcileRequest, reconcile.attemptIdentity(), reconcile.reportBytes()));
+    }
+
     /** The persisted RAW report must be the exact, non-stopped RAW phase artifact of this binding. */
     static String rawPredecessorIssue(EditorialP5PilotResult.CommittedResult raw,
                                       EditorialP4Binding binding, String chapterKey) {
