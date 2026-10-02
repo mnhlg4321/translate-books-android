@@ -270,6 +270,32 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
         assertEquals(fin.viL2Sha256(), after.finalArtifact().viL2Sha256());
     }
 
+    /**
+     * EMULATOR ONLY, opt-in ({@code p6_seed_emulator_ui=L1|FINAL}): seeds the app's real database and files
+     * directory with one P4-bound chapter (L1 committed, or the full fake chain) so the chapter-card UI can be
+     * looked at by hand. It refuses, before writing anything, when the database already holds any P4 binding,
+     * so it can never touch pilot data. No provider or network is involved.
+     */
+    @Test public void seedMainDatabaseForEmulatorUiSmoke() throws Exception {
+        String mode = InstrumentationRegistry.getArguments().getString("p6_seed_emulator_ui");
+        org.junit.Assume.assumeTrue("L1".equals(mode) || "FINAL".equals(mode));
+        database.close();
+        database = new TranslationRepository(context);
+        try (android.database.Cursor cursor = database.editorialReadableDatabase().rawQuery(
+                "SELECT COUNT(*) FROM editorial_p4_bindings", null)) {
+            assertTrue(cursor.moveToFirst());
+            assertEquals("refusing to seed a database that already has P4 bindings", 0L, cursor.getLong(0));
+        }
+        storage = new EditorialPackStorageLayout(context.getFilesDir().toPath());
+        BindingFixture fixture = createBoundChapter();
+        commitL1(fixture);
+        if ("FINAL".equals(mode)) {
+            EditorialChapterFinalCoordinator.Result result = new EditorialChapterFinalCoordinator(database, storage)
+                    .runToFinal(fixture.projectId, SELECTOR, CHAPTER_KEY, CHAIN, new ScriptedProvider(), new ScriptedProvider());
+            assertTrue(result.reasonCode(), result.finalReady());
+        }
+    }
+
     private void commitL1(BindingFixture fixture) throws Exception {
         EditorialP5PilotRequest rawRequest = request(fixture, EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY,
                 fixture.binding.runDeclarationIdentity());
