@@ -232,6 +232,13 @@ public final class EditorialP5PilotRequest {
                 requestedOutputTokens, contractRevision, report);
     }
 
+    /** The same facts with another predecessor attempt identity (the RAW attempt of a RECONCILE). */
+    public EditorialP5PilotRequest withPredecessorIdentity(String value) {
+        return new EditorialP5PilotRequest(binding, manifest, authority, chapterKey, phase, sources,
+                value, stableAnchors, populationIds, evidenceContentSufficient,
+                requestedOutputTokens, contractRevision, predecessorReport);
+    }
+
     public EditorialP5PilotRequest withPhase(String value) {
         return copy(value, sources, evidenceContentSufficient);
     }

@@ -4,7 +4,7 @@ Ngày bàn giao: 2026-10-01 (+07:00).
 
 ## Trạng thái mới nhất — ưu tiên đọc trước
 
-**P6 R0–R7 (tiến độ, cập nhật mỗi nhóm).** R0 và R1 xong. R1: `EditorialRawInventory` (id `u:<dòng>:<8 hex>`, CRLF/BOM/dòng trống/marker ảnh, kiểm tra phủ, chunk 200+6), `EditorialL1Ledger` (wire RAW/RECONCILE, kiểm chặt unit/coverage/quote/anchor/ref/trùng, metric unique≠occurrence≠candidate, report body v2 round-trip), `EditorialContractRevision` gắn vào identity L1 (identity legacy được khóa bằng golden test). Engine 287/287. Chưa nối vào P5 engine (R2); L2/L3 identity revision làm ở R3.
+**P6 R0–R7 (tiến độ, cập nhật mỗi nhóm).** R0, R1 xong; R2 mã xong và qua test host (engine 296, app 316): ledger v2 nối vào `EditorialP5PilotExecution` qua `EditorialL1LedgerRun`, `findingCount` gán từ ledger, RECONCILE nhận khối `L1_RAW_CANDIDATES` và report RAW, report legacy bị từ chối, wire sai dừng REPAIR_REQUIRED không gọi repair, provider có prompt/response schema chặt, `EditorialP5CExactBindingExecution.forContract(L1_LEDGER_V2)`. Còn lại của R2: chạy test instrumented ledger trên emulator bằng APK lưu trữ. Pilot không bị đụng.
 
 **Cập nhật 2026-10-02 (owner chấp nhận chất lượng chương 001).** W6 đạt; chương 001 quality-accepted (hai khoảng trống tiêu chí L1-khung và đếm candidate chưa đóng chính thức). 1/3 chương đại diện. Ứng viên hai chương còn lại (số liệu chỉ-đọc từ `D:\Ebooks\MERCEDES\VOL 5`): `docs/P6_G6_CHAPTER_CANDIDATES_20261002.md` — đề xuất 007 (dày thoại/xưng hô) và 010 (DRAFT dài nhất). Mỗi chương mới cần project/binding riêng + L1 RAW/RECONCILE + chuỗi L2/L3 (ước tính ~USD 0.05). Next action: owner chọn chương và cấp quyền (plan mục 10).
 

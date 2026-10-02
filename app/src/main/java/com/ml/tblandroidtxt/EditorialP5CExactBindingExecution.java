@@ -1,6 +1,7 @@
 package com.ml.tblandroidtxt;
 
 import com.ml.tblandroidtxt.editorial.pack.EditorialCanonicalJson;
+import com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP4Binding;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP4SourceIdentity;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotAuthorization;
@@ -61,6 +62,7 @@ public final class EditorialP5CExactBindingExecution {
     private final EditorialPackStorageLayout storage;
     private final EditorialP4BindingDao bindings;
     private final EditorialP5PilotExecution engine;
+    private final String contractRevision;
 
     public EditorialP5CExactBindingExecution(TranslationRepository database,
                                              EditorialPackStorageLayout storage) {
@@ -70,6 +72,27 @@ public final class EditorialP5CExactBindingExecution {
     EditorialP5CExactBindingExecution(TranslationRepository database,
                                       EditorialPackStorageLayout storage,
                                       EditorialP5PilotExecution.Clock clock) {
+        this(database, storage, clock, EditorialContractRevision.LEGACY_V1);
+    }
+
+    /**
+     * The L1 contract this instance runs and reads. The legacy value reproduces every request and identity
+     * written before the ledger contract; {@link EditorialContractRevision#L1_LEDGER_V2} runs the error ledger.
+     */
+    public static EditorialP5CExactBindingExecution forContract(TranslationRepository database,
+                                                                EditorialPackStorageLayout storage,
+                                                                String contractRevision) {
+        return new EditorialP5CExactBindingExecution(database, storage, System::currentTimeMillis, contractRevision);
+    }
+
+    EditorialP5CExactBindingExecution(TranslationRepository database,
+                                      EditorialPackStorageLayout storage,
+                                      EditorialP5PilotExecution.Clock clock,
+                                      String contractRevision) {
+        if (!EditorialContractRevision.known(contractRevision)) {
+            throw new IllegalArgumentException("unknown contract revision");
+        }
+        this.contractRevision = contractRevision;
         this.database = Objects.requireNonNull(database, "database");
         this.storage = Objects.requireNonNull(storage, "storage");
         this.bindings = new EditorialP4BindingDao(database);
@@ -122,10 +145,10 @@ public final class EditorialP5CExactBindingExecution {
             List<EditorialP5PilotRequest.SourceBytes> sources = sourceBytes(binding, currentSources);
             List<String> stableAnchors = List.of("chapter:" + chapterKey);
             List<String> populationIds = List.of("population:" + chapterKey);
-            EditorialP5PilotRequest rawRequest = new EditorialP5PilotRequest(binding, manifest,
+            EditorialP5PilotRequest rawRequest = revised(new EditorialP5PilotRequest(binding, manifest,
                     authority, chapterKey, EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY,
                     sources, binding.runDeclarationIdentity(), stableAnchors, populationIds,
-                    true, boundedOutputTokens(rawAuthorization));
+                    true, boundedOutputTokens(rawAuthorization)));
 
             EditorialP5CAttemptStore attemptStore = new EditorialP5CAttemptStore(database);
             EditorialP5PilotProvider countedProvider = countedProvider(provider, providerCalls);
@@ -144,10 +167,10 @@ public final class EditorialP5CExactBindingExecution {
                 return stop("RETRY_RAW_PREDECESSOR_READBACK_FAILED", providerCalls.get());
             }
             String predecessor = rawPersisted.attemptIdentity();
-            EditorialP5PilotRequest reconcileRequest = new EditorialP5PilotRequest(binding, manifest,
+            EditorialP5PilotRequest reconcileRequest = revised(new EditorialP5PilotRequest(binding, manifest,
                     authority, chapterKey, EditorialP5PilotRequest.Phase.L1_RECONCILE,
                     sources, predecessor, stableAnchors, populationIds, true,
-                    boundedOutputTokens(reconcileAuthorization));
+                    boundedOutputTokens(reconcileAuthorization)), rawPersisted);
             EditorialP5PilotResult reconcileResult = engine.execute(reconcileRequest,
                     reconcileAuthorization, countedProvider, attemptStore);
             if (!committedLike(reconcileResult)) {
@@ -214,10 +237,10 @@ public final class EditorialP5CExactBindingExecution {
             List<EditorialP5PilotRequest.SourceBytes> sources = sourceBytes(binding, currentSources);
             List<String> stableAnchors = List.of("chapter:" + chapterKey);
             List<String> populationIds = List.of("population:" + chapterKey);
-            EditorialP5PilotRequest rawRequest = new EditorialP5PilotRequest(binding, manifest,
+            EditorialP5PilotRequest rawRequest = revised(new EditorialP5PilotRequest(binding, manifest,
                     authority, chapterKey, EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY,
                     sources, binding.runDeclarationIdentity(), stableAnchors, populationIds,
-                    true, boundedOutputTokens(rawAuthorization));
+                    true, boundedOutputTokens(rawAuthorization)));
 
             EditorialP5CAttemptStore attemptStore = new EditorialP5CAttemptStore(database);
             EditorialP5PilotProvider countedProvider = countedProvider(provider, providerCalls);
@@ -287,10 +310,10 @@ public final class EditorialP5CExactBindingExecution {
             List<String> stableAnchors = List.of("chapter:" + chapterKey);
             List<String> populationIds = List.of("population:" + chapterKey);
             // Same facts as executeRaw; the output cap is not part of the attempt identity.
-            EditorialP5PilotRequest rawRequest = new EditorialP5PilotRequest(binding, manifest,
+            EditorialP5PilotRequest rawRequest = revised(new EditorialP5PilotRequest(binding, manifest,
                     authority, chapterKey, EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY,
                     sources, binding.runDeclarationIdentity(), stableAnchors, populationIds,
-                    true, boundedOutputTokens(reconcileAuthorization));
+                    true, boundedOutputTokens(reconcileAuthorization)));
 
             EditorialP5CAttemptStore attemptStore = new EditorialP5CAttemptStore(database);
             EditorialP5PilotResult.CommittedResult rawPersisted = attemptStore.findCommitted(
@@ -301,10 +324,10 @@ public final class EditorialP5CExactBindingExecution {
             String predecessorIssue = rawPredecessorIssue(rawPersisted, binding, chapterKey);
             if (predecessorIssue != null) return stop(predecessorIssue, providerCalls.get());
 
-            EditorialP5PilotRequest reconcileRequest = new EditorialP5PilotRequest(binding, manifest,
+            EditorialP5PilotRequest reconcileRequest = revised(new EditorialP5PilotRequest(binding, manifest,
                     authority, chapterKey, EditorialP5PilotRequest.Phase.L1_RECONCILE,
                     sources, rawPersisted.attemptIdentity(), stableAnchors, populationIds, true,
-                    boundedOutputTokens(reconcileAuthorization));
+                    boundedOutputTokens(reconcileAuthorization)), rawPersisted);
             EditorialP5PilotProvider countedProvider = countedProvider(provider, providerCalls);
             EditorialP5PilotResult reconcileResult = engine.execute(reconcileRequest,
                     reconcileAuthorization, countedProvider, attemptStore);
@@ -328,9 +351,25 @@ public final class EditorialP5CExactBindingExecution {
         }
     }
 
+    private EditorialP5PilotRequest revised(EditorialP5PilotRequest request) {
+        return EditorialContractRevision.isLedger(contractRevision)
+                ? request.withContractRevision(contractRevision) : request;
+    }
+
+    /** A RECONCILE request also carries the persisted RAW-phase report it resolves (ledger contract only). */
+    private EditorialP5PilotRequest revised(EditorialP5PilotRequest request,
+                                            EditorialP5PilotResult.CommittedResult raw) {
+        return EditorialContractRevision.isLedger(contractRevision)
+                ? request.withContractRevision(contractRevision).withPredecessorReport(raw.reportBytes())
+                : request;
+    }
+
     /** The committed L1 chain an L2 run builds on; never dispatches anything. */
     public record CommittedL1(EditorialP5PilotRequest context, String reportL1AttemptIdentity,
                               byte[] reportL1Bytes) {
+        /** Contract revision this chain was written under, as recorded in the persisted report itself. */
+        public String reportRevision() { return EditorialContractRevision.ofReportBytes(reportL1Bytes); }
+
         public CommittedL1 {
             reportL1Bytes = reportL1Bytes.clone();
         }
@@ -362,15 +401,15 @@ public final class EditorialP5CExactBindingExecution {
         List<String> stableAnchors = List.of("chapter:" + chapterKey);
         List<String> populationIds = List.of("population:" + chapterKey);
         // The output cap is not part of either attempt identity.
-        EditorialP5PilotRequest rawRequest = new EditorialP5PilotRequest(binding, manifest, authority,
+        EditorialP5PilotRequest rawRequest = revised(new EditorialP5PilotRequest(binding, manifest, authority,
                 chapterKey, EditorialP5PilotRequest.Phase.L1_RAW_DISCOVERY, sources,
-                binding.runDeclarationIdentity(), stableAnchors, populationIds, true, 1);
+                binding.runDeclarationIdentity(), stableAnchors, populationIds, true, 1));
         EditorialP5CAttemptStore store = new EditorialP5CAttemptStore(database);
         EditorialP5PilotResult.CommittedResult raw = store.findCommitted(rawRequest.attemptIdentity()).orElse(null);
         if (raw == null) return Optional.empty();
-        EditorialP5PilotRequest reconcileRequest = new EditorialP5PilotRequest(binding, manifest, authority,
+        EditorialP5PilotRequest reconcileRequest = revised(new EditorialP5PilotRequest(binding, manifest, authority,
                 chapterKey, EditorialP5PilotRequest.Phase.L1_RECONCILE, sources, raw.attemptIdentity(),
-                stableAnchors, populationIds, true, 1);
+                stableAnchors, populationIds, true, 1), raw);
         EditorialP5PilotResult.CommittedResult reconcile =
                 store.findCommitted(reconcileRequest.attemptIdentity()).orElse(null);
         if (reconcile == null) return Optional.empty();

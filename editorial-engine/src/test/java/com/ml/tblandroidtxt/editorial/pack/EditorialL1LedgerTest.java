@@ -314,6 +314,39 @@ public final class EditorialL1LedgerTest {
         assertTrue(EditorialL1Ledger.MAX_WIRE_BYTES >= 16_384 * 4);
     }
 
+    @SuppressWarnings("unchecked")
+    @Test
+    public void responseSchemaRequiresExactlyTheKeysTheParserAccepts() {
+        Map<String, Object> raw = EditorialL1Ledger.jsonSchema(true);
+        assertEquals(java.util.Set.of("wireSchemaVersion", "attemptIdentity", "coverage", "candidates"),
+                new java.util.HashSet<>((List<Object>) raw.get("required")));
+        Map<String, Object> rec = EditorialL1Ledger.jsonSchema(false);
+        Map<String, Object> props = (Map<String, Object>) rec.get("properties");
+        assertEquals(new java.util.HashSet<>(reconcileWire(new ArrayList<>(), new ArrayList<>()).keySet()),
+                new java.util.HashSet<>((List<Object>) rec.get("required")));
+        assertEquals(props.keySet(), new java.util.LinkedHashSet<>((List<Object>) rec.get("required")));
+        Map<String, Object> findingItem = (Map<String, Object>) ((Map<String, Object>) props.get("findings")).get("items");
+        assertEquals(new java.util.HashSet<>(finding("e1", "MEANING", 3, 3, 3, "踏破", "chinh phuc").keySet()),
+                new java.util.HashSet<>((List<Object>) findingItem.get("required")));
+        // no union types: a strict response schema cannot express them
+        assertFalse(EditorialCanonicalJson.canonicalize(rec).contains("oneOf"));
+        assertFalse(EditorialCanonicalJson.canonicalize(rec).contains("anyOf"));
+    }
+
+    @Test
+    public void anchorShapeIsUniformAndUnusedNumbersMustBeZero() {
+        Map<String, Object> lines = finding("e1", "MEANING", 3, 3, 3, "踏破", "chinh phuc");
+        lines.put("draft", map("kind", "LINES", "start", BigDecimal.valueOf(3), "end", BigDecimal.valueOf(3), "after", BigDecimal.ZERO));
+        assertEquals(1, reconcile(reconcileWire(new ArrayList<>(List.of(lines)), new ArrayList<>()), List.of()).findings().size());
+        lines.put("draft", map("kind", "LINES", "start", BigDecimal.valueOf(3), "end", BigDecimal.valueOf(3), "after", BigDecimal.valueOf(2)));
+        expectCode("L1_DRAFT_ANCHOR_UNUSED_FIELD", () -> reconcile(reconcileWire(new ArrayList<>(List.of(lines)), new ArrayList<>()), List.of()));
+        Map<String, Object> missing = finding("e1", "OMISSION", 7, 6, 6, "雨が降る", "");
+        missing.put("draft", map("kind", "MISSING", "start", BigDecimal.ZERO, "end", BigDecimal.ZERO, "after", BigDecimal.valueOf(6)));
+        assertEquals("MISSING", reconcile(reconcileWire(new ArrayList<>(List.of(missing)), new ArrayList<>()), List.of()).findings().get(0).draft().kind());
+        missing.put("draft", map("kind", "MISSING", "start", BigDecimal.valueOf(2), "end", BigDecimal.ZERO, "after", BigDecimal.valueOf(6)));
+        expectCode("L1_DRAFT_ANCHOR_UNUSED_FIELD", () -> reconcile(reconcileWire(new ArrayList<>(List.of(missing)), new ArrayList<>()), List.of()));
+    }
+
     @Test
     public void typedParseFailureMessageIsAllowListed() {
         assertEquals("L1_UNIT_UNKNOWN", EditorialL1Ledger.safeMessage(new IllegalArgumentException("L1_UNIT_UNKNOWN")));

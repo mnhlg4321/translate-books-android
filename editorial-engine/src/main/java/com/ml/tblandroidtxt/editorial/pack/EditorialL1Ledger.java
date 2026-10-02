@@ -218,15 +218,18 @@ public final class EditorialL1Ledger {
         Map<String, Object> draftRow = object(row.get("draft"), "draft");
         String kind = str(draftRow, "kind", 16, true);
         DraftAnchor anchor;
+        // one object shape for both kinds (a strict response schema cannot express a union); unused numbers are 0
+        keys(draftRow, Set.of("kind", "start", "end", "after"), "draft", Set.of("start", "end", "after"));
         if ("LINES".equals(kind)) {
-            keys(draftRow, Set.of("kind", "start", "end"), "draft");
             int start = intOf(draftRow, "start");
             int end = intOf(draftRow, "end");
+            if (draftRow.containsKey("after") && intOf(draftRow, "after") != 0) throw bad("L1_DRAFT_ANCHOR_UNUSED_FIELD");
             if (start < 1 || end < start || end > draftLines.size()) throw bad("L1_DRAFT_ANCHOR_OUT_OF_RANGE");
             anchor = DraftAnchor.lines(start, end);
         } else if ("MISSING".equals(kind)) {
-            keys(draftRow, Set.of("kind", "after"), "draft");
             int after = intOf(draftRow, "after");
+            if ((draftRow.containsKey("start") && intOf(draftRow, "start") != 0)
+                    || (draftRow.containsKey("end") && intOf(draftRow, "end") != 0)) throw bad("L1_DRAFT_ANCHOR_UNUSED_FIELD");
             if (after < 0 || after > draftLines.size()) throw bad("L1_DRAFT_ANCHOR_OUT_OF_RANGE");
             anchor = DraftAnchor.missingAfter(after);
         } else {
@@ -443,6 +446,100 @@ public final class EditorialL1Ledger {
                 (String) inv.get("inventorySha256"), (String) inv.get("rawSha256"), rawCoverage, candidates,
                 rangesFromList(report.get("reviewCoverage")), resolutions, findings, speakers, spans,
                 new Disposition((String) d.get("disposition"), (String) d.get("reasonCode"), (String) d.get("stopClass")), metrics);
+    }
+
+    // ---- strict response schema (provider response_format); the parsers above stay the authority ----
+
+    public static final String RAW_SCHEMA_NAME = "safe4_l1_raw_ledger_v2";
+    public static final String RECONCILE_SCHEMA_NAME = "safe4_l1_reconcile_ledger_v2";
+
+    /** JSON schema of the wire for a strict response format; every key is required, unused values are empty/0. */
+    public static Map<String, Object> jsonSchema(boolean rawPass) {
+        Map<String, Object> props = new LinkedHashMap<>();
+        props.put("wireSchemaVersion", enumSchema(List.of(rawPass ? RAW_WIRE : RECONCILE_WIRE)));
+        props.put("attemptIdentity", stringSchema(128));
+        props.put("coverage", arraySchema(MAX_RANGES, objectSchema(
+                "from", stringSchema(64), "to", stringSchema(64), "status", enumSchema(List.copyOf(new java.util.TreeSet<>(RANGE_STATUSES))))));
+        if (rawPass) {
+            props.put("candidates", arraySchema(MAX_CANDIDATES_PER_CALL, objectSchema(
+                    "candidateId", stringSchema(EditorialP5RawWireContract.MAX_ID_LENGTH),
+                    "ledger", enumSchema(List.copyOf(new java.util.TreeSet<>(CANDIDATE_LEDGERS))),
+                    "unitId", stringSchema(64), "note", stringSchema(80))));
+            return topSchema(props);
+        }
+        props.put("resolutions", arraySchema(MAX_CANDIDATES_PER_CALL, objectSchema(
+                "candidateId", stringSchema(EditorialP5RawWireContract.MAX_ID_LENGTH),
+                "status", enumSchema(List.copyOf(new java.util.TreeSet<>(CANDIDATE_STATUSES))),
+                "findingRef", stringSchema(48))));
+        Map<String, Object> draft = objectSchema("kind", enumSchema(List.of("LINES", "MISSING")),
+                "start", integerSchema(), "end", integerSchema(), "after", integerSchema());
+        props.put("findings", arraySchema(MAX_FINDINGS_PER_CALL, objectSchema(
+                "errorId", stringSchema(EditorialP5RawWireContract.MAX_ID_LENGTH),
+                "type", enumSchema(List.copyOf(new java.util.TreeSet<>(FINDING_TYPES))),
+                "severity", enumSchema(List.of("MINOR", "MAJOR", "CRITICAL")),
+                "rawUnits", arraySchema(MAX_RAW_UNITS_PER_FINDING, stringSchema(64)),
+                "draft", draft,
+                "rawQuote", stringSchema(MAX_QUOTE), "draftQuote", stringSchema(MAX_QUOTE),
+                "observation", stringSchema(MAX_TEXT), "expectedMeaning", stringSchema(MAX_TEXT),
+                "evidenceRefs", arraySchema(MAX_REFS, stringSchema(48)),
+                "candidateIds", arraySchema(8, stringSchema(48)),
+                "occurrenceUnits", arraySchema(MAX_OCCURRENCE_UNITS, stringSchema(64)),
+                "disposition", enumSchema(List.of("OPEN", "PRESERVED")),
+                "evidenceLimit", stringSchema(MAX_TEXT))));
+        props.put("speakerRecords", arraySchema(MAX_SPEAKER_RECORDS_PER_CALL, objectSchema(
+                "unitId", stringSchema(64), "speaker", stringSchema(80), "listener", stringSchema(80),
+                "basis", stringSchema(MAX_TEXT))));
+        props.put("protectedSpans", arraySchema(MAX_PROTECTED_SPANS_PER_CALL, objectSchema(
+                "spanId", stringSchema(48), "start", integerSchema(), "end", integerSchema(),
+                "source", enumSchema(List.copyOf(new java.util.TreeSet<>(PROTECTED_SOURCES))),
+                "reason", stringSchema(MAX_TEXT))));
+        props.put("disposition", objectSchema("disposition", enumSchema(List.of("CONTINUE", "PRESERVE_DRAFT", "STOP")),
+                "reasonCode", stringSchema(32),
+                "stopClass", enumSchema(List.of("NONE", "CONTENT_BLOCKED", "INPUT_REQUIRED"))));
+        return topSchema(props);
+    }
+
+    private static Map<String, Object> topSchema(Map<String, Object> props) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("type", "object");
+        m.put("additionalProperties", Boolean.FALSE);
+        m.put("required", new ArrayList<Object>(props.keySet()));
+        m.put("properties", props);
+        return m;
+    }
+
+    private static Map<String, Object> objectSchema(Object... kv) {
+        Map<String, Object> props = new LinkedHashMap<>();
+        for (int i = 0; i < kv.length; i += 2) props.put((String) kv[i], kv[i + 1]);
+        return topSchema(props);
+    }
+
+    private static Map<String, Object> stringSchema(int maxLength) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("type", "string");
+        m.put("maxLength", num(maxLength));
+        return m;
+    }
+
+    private static Map<String, Object> integerSchema() {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("type", "integer");
+        return m;
+    }
+
+    private static Map<String, Object> enumSchema(List<String> values) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("type", "string");
+        m.put("enum", new ArrayList<Object>(values));
+        return m;
+    }
+
+    private static Map<String, Object> arraySchema(int maxItems, Map<String, Object> items) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("type", "array");
+        m.put("maxItems", num(maxItems));
+        m.put("items", items);
+        return m;
     }
 
     // ---- helpers ----

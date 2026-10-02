@@ -749,6 +749,132 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
                 .orElseThrow().newAuthorizationIdHash());
     }
 
+    @Test public void ledgerContractPersistsReloadsAfterRestartAndFeedsTheChain() throws Exception {
+        BindingFixture fixture = createBoundChapter();
+        LedgerFakeProvider provider = new LedgerFakeProvider();
+        EditorialP5CExactBindingExecution ledgerExec = EditorialP5CExactBindingExecution.forContract(
+                database, storage, com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.L1_LEDGER_V2);
+
+        EditorialP5CExactBindingExecution.Result result = ledgerExec.execute(fixture.projectId, SELECTOR, CHAPTER_KEY,
+                authorization(fixture.binding, "auth-raw-v2", "L1_RAW_DISCOVERY"),
+                authorization(fixture.binding, "auth-reconcile-v2", "L1_RECONCILE"), provider);
+        assertEquals(result.reasonCode(), EditorialP5CExactBindingExecution.Status.COMMITTED, result.status());
+        assertEquals(2, provider.calls);
+        assertEquals(com.ml.tblandroidtxt.editorial.pack.EditorialL1Ledger.RAW_WIRE, provider.requests.get(0).outputSchemaId());
+        assertEquals(com.ml.tblandroidtxt.editorial.pack.EditorialL1Ledger.RECONCILE_WIRE, provider.requests.get(1).outputSchemaId());
+        assertFalse(provider.requests.get(0).visibleSources().containsKey("L1_RAW_CANDIDATES"));
+        assertTrue(provider.requests.get(1).visibleSources().containsKey("L1_RAW_CANDIDATES"));
+        assertEquals(1, result.reconcileResult().metrics().findingCount());
+
+        EditorialP5CAttemptStore attemptStore = new EditorialP5CAttemptStore(database);
+        EditorialP5CAttemptStore.AttemptRecord reconcileRecord = attemptStore.findRecord(
+                result.reconcileResult().committedResult().attemptIdentity()).orElseThrow();
+        assertEquals("COMMITTED", reconcileRecord.status());
+        assertTrue(reconcileRecord.metricsJson().contains("\"findingCount\":1"));
+        byte[] persisted = reconcileRecord.reportBytes();
+        assertEquals(com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.L1_LEDGER_V2,
+                com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.ofReportBytes(persisted));
+        com.ml.tblandroidtxt.editorial.pack.EditorialL1Ledger.Body before =
+                com.ml.tblandroidtxt.editorial.pack.EditorialL1Ledger.parseBody(EditorialCanonicalJson.parseObject(persisted));
+        assertEquals(1, before.findings().size());
+        assertEquals(1, before.candidates().size());
+
+        // restart: a new repository instance over the same file, nothing in memory
+        database.close();
+        database = new TranslationRepository(context, databaseName);
+        EditorialP5CExactBindingExecution reopened = EditorialP5CExactBindingExecution.forContract(
+                database, storage, com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.L1_LEDGER_V2);
+        EditorialP5CExactBindingExecution.CommittedL1 chain = reopened.committedL1(
+                fixture.projectId, SELECTOR, CHAPTER_KEY).orElseThrow();
+        assertArrayEquals(persisted, chain.reportL1Bytes());
+        assertEquals(com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.L1_LEDGER_V2, chain.reportRevision());
+        assertEquals(before, com.ml.tblandroidtxt.editorial.pack.EditorialL1Ledger.parseBody(
+                EditorialCanonicalJson.parseObject(chain.reportL1Bytes())));
+
+        // the legacy contract never sees the ledger chain, and the ledger chain never answers for legacy
+        assertFalse(new EditorialP5CExactBindingExecution(database, storage)
+                .committedL1(fixture.projectId, SELECTOR, CHAPTER_KEY).isPresent());
+
+        // replay after restart: durable, no provider call
+        LedgerFakeProvider none = new LedgerFakeProvider();
+        none.refuse = true;
+        EditorialP5CExactBindingExecution.Result again = reopened.execute(fixture.projectId, SELECTOR, CHAPTER_KEY,
+                authorization(fixture.binding, "auth-raw-v2b", "L1_RAW_DISCOVERY"),
+                authorization(fixture.binding, "auth-reconcile-v2b", "L1_RECONCILE"), none);
+        assertEquals(EditorialP5CExactBindingExecution.Status.ALREADY_COMMITTED, again.status());
+        assertEquals(0, none.calls);
+    }
+
+    /** Answers the two ledger wires from the request itself (ids come from the app's inventory). */
+    private static final class LedgerFakeProvider implements EditorialP5PilotProvider {
+        private final List<Request> requests = new ArrayList<>();
+        private int calls;
+        private boolean refuse;
+
+        @Override public Response call(Request request) {
+            calls++;
+            requests.add(request);
+            if (refuse) throw new AssertionError("provider must not be called");
+            com.ml.tblandroidtxt.editorial.pack.EditorialRawInventory.Inventory inv =
+                    com.ml.tblandroidtxt.editorial.pack.EditorialRawInventory.build(
+                            request.visibleSources().get(EditorialSafe4Contract.RAW));
+            String unit = inv.units().get(0).id();
+            Map<String, Object> coverage = new LinkedHashMap<>();
+            coverage.put("from", unit);
+            coverage.put("to", unit);
+            coverage.put("status", "PROCESSED");
+            Map<String, Object> wire = new LinkedHashMap<>();
+            wire.put("attemptIdentity", request.attemptIdentity());
+            wire.put("coverage", new ArrayList<Object>(List.of(coverage)));
+            Map<String, Object> candidate = new LinkedHashMap<>();
+            candidate.put("candidateId", "c1");
+            candidate.put("ledger", "UNIT");
+            candidate.put("unitId", unit);
+            candidate.put("note", "n");
+            if ("L1_RAW_DISCOVERY".equals(request.phase())) {
+                wire.put("wireSchemaVersion", com.ml.tblandroidtxt.editorial.pack.EditorialL1Ledger.RAW_WIRE);
+                wire.put("candidates", new ArrayList<Object>(List.of(candidate)));
+            } else {
+                wire.put("wireSchemaVersion", com.ml.tblandroidtxt.editorial.pack.EditorialL1Ledger.RECONCILE_WIRE);
+                Map<String, Object> resolution = new LinkedHashMap<>();
+                resolution.put("candidateId", "c1");
+                resolution.put("status", "PROCESSED");
+                resolution.put("findingRef", "e1");
+                Map<String, Object> draft = new LinkedHashMap<>();
+                draft.put("kind", "LINES");
+                draft.put("start", BigDecimal.ONE);
+                draft.put("end", BigDecimal.ONE);
+                draft.put("after", BigDecimal.ZERO);
+                Map<String, Object> finding = new LinkedHashMap<>();
+                finding.put("errorId", "e1");
+                finding.put("type", "MEANING");
+                finding.put("severity", "MAJOR");
+                finding.put("rawUnits", new ArrayList<Object>(List.of(unit)));
+                finding.put("draft", draft);
+                finding.put("rawQuote", "raw chapter");
+                finding.put("draftQuote", "original draft");
+                finding.put("observation", "obs");
+                finding.put("expectedMeaning", "exp");
+                finding.put("evidenceRefs", new ArrayList<Object>());
+                finding.put("candidateIds", new ArrayList<Object>(List.of("c1")));
+                finding.put("occurrenceUnits", new ArrayList<Object>());
+                finding.put("disposition", "OPEN");
+                finding.put("evidenceLimit", "");
+                Map<String, Object> disposition = new LinkedHashMap<>();
+                disposition.put("disposition", "CONTINUE");
+                disposition.put("reasonCode", "L1_OK");
+                disposition.put("stopClass", "NONE");
+                wire.put("resolutions", new ArrayList<Object>(List.of(resolution)));
+                wire.put("findings", new ArrayList<Object>(List.of(finding)));
+                wire.put("speakerRecords", new ArrayList<Object>());
+                wire.put("protectedSpans", new ArrayList<Object>());
+                wire.put("disposition", disposition);
+            }
+            return new Response("fake-ledger-" + calls, EditorialCanonicalJson.canonicalize(wire).getBytes(StandardCharsets.UTF_8),
+                    "stop", true, 40, 20, 60, BigDecimal.ZERO, null, true);
+        }
+    }
+
     private BindingFixture createBoundChapter() throws Exception {
         PackFixture pack = readPack(CANONICAL_ASSET);
         assertEquals(CANONICAL_ZIP_SHA256, EditorialCanonicalJson.sha256Hex(pack.zipBytes));

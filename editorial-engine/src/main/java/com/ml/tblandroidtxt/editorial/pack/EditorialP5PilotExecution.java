@@ -28,6 +28,14 @@ public final class EditorialP5PilotExecution {
                 ? EditorialP5RawWireContract.SCHEMA_VERSION : L1_OUTPUT_SCHEMA;
     }
 
+    private static String outputSchemaFor(EditorialP5PilotRequest request) {
+        if (EditorialContractRevision.isLedger(request.contractRevision())) {
+            return "L1_RAW_DISCOVERY".equals(request.phase())
+                    ? EditorialL1Ledger.RAW_WIRE : EditorialL1Ledger.RECONCILE_WIRE;
+        }
+        return outputSchemaFor(request.phase());
+    }
+
     @FunctionalInterface
     public interface Clock {
         long nowMillis();
@@ -200,13 +208,26 @@ public final class EditorialP5PilotExecution {
         // The compact RAW wire has an exhaustive findings bound. Do not let a
         // provider response silently omit app-owned population items; a larger
         // population needs an explicitly measured contract or a new binding.
-        if ("L1_RAW_DISCOVERY".equals(request.phase())
+        final boolean ledgerContract = EditorialContractRevision.isLedger(request.contractRevision());
+        if (!ledgerContract && "L1_RAW_DISCOVERY".equals(request.phase())
                 && request.populationIds().size() > EditorialP5RawWireContract.MAX_FINDINGS) {
             return stopped(requestIdentity, EditorialP5PilotResult.StopClass.INPUT_REQUIRED,
                     "RAW_WIRE_POPULATION_LIMIT_EXCEEDED", request.phase(), "RAW_WIRE_CONTRACT",
                     List.of(), request.chapterKey(),
                     "Partition the app-owned population or approve a separately measured wire contract",
                     request.phase(), false, metrics);
+        }
+
+        EditorialL1LedgerRun.Context ledgerContext = null;
+        if (ledgerContract) {
+            try {
+                ledgerContext = EditorialL1LedgerRun.prepare(request);
+            } catch (RuntimeException invalid) {
+                return stopped(requestIdentity, EditorialP5PilotResult.StopClass.INPUT_REQUIRED,
+                        EditorialL1Ledger.safeMessage(invalid), request.phase(), "L1_LEDGER_INPUT",
+                        List.of(), request.chapterKey(), "Restore a valid RAW inventory and RAW-phase ledger report",
+                        "L1_SOURCE_PREFLIGHT", false, metrics);
+            }
         }
 
         if (provider == null || store == null) {
@@ -235,7 +256,7 @@ public final class EditorialP5PilotExecution {
                     request.phase(), true, metrics);
         }
 
-        String requestEnvelopeHash = requestEnvelopeHash(request, projection, authorization);
+        String requestEnvelopeHash = requestEnvelopeHash(request, projection, authorization, ledgerContext);
         AttemptStore.Claim claim;
         try {
             store.prepare(request, authorization, requestEnvelopeHash);
@@ -285,7 +306,7 @@ public final class EditorialP5PilotExecution {
         EditorialP5PilotProvider.Request providerRequest = new EditorialP5PilotProvider.Request(
                 request.attemptIdentity(), EditorialP5PilotProvider.CallKind.PRIMARY_SEMANTIC,
                 authorization.provider(), authorization.model(), request.phase(), requestEnvelopeHash,
-                visibleSourceBytes(projection), request.authority(), outputSchemaFor(request.phase()),
+                visibleSourceBytes(projection, ledgerContext), request.authority(), outputSchemaFor(request),
                 request.chapterKey(), "", requestContext(request, projection));
 
         EditorialP5PilotProvider.Response primary;
@@ -338,7 +359,22 @@ public final class EditorialP5PilotExecution {
         }
 
         EditorialP5L1Output output = primary.output();
-        if (!primary.schemaValid() || output == null) {
+        EditorialL1LedgerRun.Outcome ledgerOutcome = null;
+        if (ledgerContext != null) {
+            try {
+                ledgerOutcome = EditorialL1LedgerRun.interpret(request, projection, ledgerContext,
+                        primary.responseBytes());
+            } catch (RuntimeException invalid) {
+                // the wire is judged by the app; there is no automatic repair call in the ledger contract
+                recover(store, request.attemptIdentity(), "REPAIR_L1_LEDGER_INVALID");
+                return stopped(requestIdentity, EditorialP5PilotResult.StopClass.REPAIR_REQUIRED,
+                        "REPAIR_L1_LEDGER_INVALID", request.phase(), "L1_LEDGER_WIRE",
+                        List.of(EditorialL1Ledger.safeMessage(invalid)), request.chapterKey(),
+                        "Rerun only after an explicit owner decision", request.phase(), true, metrics);
+            }
+            output = ledgerOutcome.output;
+            metrics.findingCount = ledgerOutcome.body.metrics().uniqueFindingCount();
+        } else if (!primary.schemaValid() || output == null) {
             if (output == null || authorization.maximumSchemaRepairCalls() < 1) {
                 recover(store, request.attemptIdentity(), "REPAIR_OUTPUT_SCHEMA_INVALID");
                 return stopped(requestIdentity, EditorialP5PilotResult.StopClass.REPAIR_REQUIRED,
@@ -351,7 +387,7 @@ public final class EditorialP5PilotExecution {
                     request.attemptIdentity(), EditorialP5PilotProvider.CallKind.SCHEMA_REPAIR,
                     authorization.provider(), authorization.model(), request.phase(),
                     repairEnvelopeHash(requestEnvelopeHash), Map.of(), request.authority(),
-                    outputSchemaFor(request.phase()), request.chapterKey(), semanticFingerprint,
+                    outputSchemaFor(request), request.chapterKey(), semanticFingerprint,
                     requestContext(request, projection));
             EditorialP5PilotProvider.Response repair;
             try {
@@ -433,7 +469,10 @@ public final class EditorialP5PilotExecution {
                     output.disposition().stopReceipt().retryable(), metrics);
         }
 
-        byte[] reportBytes = reportBytes(request, projection, output, validation);
+        byte[] reportBytes = ledgerOutcome != null
+                ? EditorialL1LedgerRun.reportBytes(request, projection, output,
+                        validation.ledger.populationTotal(), validation.ledger.accountedTotal(), ledgerOutcome)
+                : reportBytes(request, projection, output, validation);
         byte[] receiptBytes = receiptBytes(request, projection, output, validation);
         // The provider deadline covers the network call. This final guard is
         // the app-owned commit deadline and prevents a late local commit after
@@ -574,11 +613,14 @@ public final class EditorialP5PilotExecution {
     }
 
     private static Map<String, byte[]> visibleSourceBytes(
-            EditorialPhaseContextProjector.PhaseProjection projection) {
+            EditorialPhaseContextProjector.PhaseProjection projection, EditorialL1LedgerRun.Context ledgerContext) {
         TreeMap<String, byte[]> result = new TreeMap<>();
         for (Map.Entry<String, EditorialPhaseContextProjector.BundleAsset> entry
                 : projection.visibleAssets().entrySet()) {
             result.put(entry.getKey(), entry.getValue().bytes());
+        }
+        if (ledgerContext != null && ledgerContext.reconcile) {
+            result.put(EditorialL1LedgerRun.RAW_CANDIDATES_ROLE, ledgerContext.rawCandidateBlock);
         }
         return Collections.unmodifiableMap(result);
     }
@@ -612,10 +654,11 @@ public final class EditorialP5PilotExecution {
 
     private static String requestEnvelopeHash(EditorialP5PilotRequest request,
                                               EditorialPhaseContextProjector.PhaseProjection projection,
-                                              EditorialP5PilotAuthorization authorization) {
+                                              EditorialP5PilotAuthorization authorization,
+                                              EditorialL1LedgerRun.Context ledgerContext) {
         Map<String, Object> root = new LinkedHashMap<>();
         root.put("contractVersion", EditorialSafe4Contract.CONTRACT_VERSION);
-        root.put("outputSchema", outputSchemaFor(request.phase()));
+        root.put("outputSchema", outputSchemaFor(request));
         root.put("attemptIdentity", request.attemptIdentity());
         root.put("requestIdentity", request.requestIdentity());
         root.put("bindingIdentity", request.binding().bindingIdentity());
@@ -631,6 +674,12 @@ public final class EditorialP5PilotExecution {
         root.put("stableAnchors", request.stableAnchors());
         root.put("populationIds", request.populationIds());
         root.put("visibleSources", sourceFingerprints(projection));
+        if (ledgerContext != null) {
+            // legacy envelopes stay bit for bit; a ledger envelope also binds its revision and app-owned block
+            root.put("contractRevision", request.contractRevision());
+            root.put("inventorySha256", ledgerContext.inventory.inventorySha256());
+            root.put("appOwnedBlockSha256", EditorialCanonicalJson.sha256Hex(ledgerContext.rawCandidateBlock));
+        }
         return EditorialCanonicalJson.sha256Hex(EditorialCanonicalJson.canonicalize(root)
                 .getBytes(StandardCharsets.UTF_8));
     }
@@ -690,7 +739,9 @@ public final class EditorialP5PilotExecution {
                                              EditorialPhaseContextProjector.PhaseProjection projection,
                                              EditorialP5L1Output output) {
         ArrayList<String> issues = new ArrayList<>();
-        if (!L1_OUTPUT_SCHEMA.equals(output.reportSchemaVersion())) issues.add("REPORT_L1_SCHEMA_INVALID");
+        String expectedSchema = EditorialContractRevision.isLedger(request.contractRevision())
+                ? EditorialContractRevision.REPORT_SCHEMA_V2 : L1_OUTPUT_SCHEMA;
+        if (!expectedSchema.equals(output.reportSchemaVersion())) issues.add("REPORT_L1_SCHEMA_INVALID");
         if (!EditorialSafe4Contract.RECEIPT_SCHEMA_VERSION.equals(output.receiptSchemaVersion())) {
             issues.add("RECEIPT_SCHEMA_INVALID");
         }

@@ -2,6 +2,8 @@ package com.ml.tblandroidtxt;
 
 import com.ml.tblandroidtxt.editorial.pack.EditorialCanonicalJson;
 import com.ml.tblandroidtxt.editorial.pack.EditorialDiffValidator;
+import com.ml.tblandroidtxt.editorial.pack.EditorialL1Ledger;
+import com.ml.tblandroidtxt.editorial.pack.EditorialRawInventory;
 import com.ml.tblandroidtxt.editorial.pack.EditorialLedgerValidator;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5L1Output;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5RawWireContract;
@@ -185,7 +187,8 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         }
         if (!configured()) throw new IllegalStateException("OPENROUTER_CONFIGURATION_INCOMPLETE");
 
-        PromptPair prompt = buildPrompt(request);
+        final boolean ledger = isLedgerSchema(request.outputSchemaId());
+        PromptPair prompt = ledger ? buildLedgerPrompt(request) : buildPrompt(request);
         OpenRouterLifecycleObserver lifecycle = new OpenRouterLifecycleObserver(
                 request.attemptIdentity(), lifecycleRecorder);
         OpenAICompatibleClient.ChatResult result;
@@ -195,12 +198,14 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
             if (freshRawRouting) {
                 result = OpenAICompatibleClient.chatWithUsage(settings, prompt, maximumOutputTokens,
                         request.attemptIdentity(), lifecycle, false, deadlineNanos, rawCallControl,
-                        rawResponseFormat(), EditorialP5EFreshRawRoutingPolicy.providerPreferences(),
+                        ledger ? ledgerResponseFormat(request.outputSchemaId()) : rawResponseFormat(),
+                        EditorialP5EFreshRawRoutingPolicy.providerPreferences(),
                         EditorialP5RawWireContract.REASONING_POLICY);
             } else {
                 result = OpenAICompatibleClient.chatWithUsage(settings, prompt, maximumOutputTokens,
                         request.attemptIdentity(), lifecycle, false, deadlineNanos, rawCallControl,
-                        rawDiscovery ? rawResponseFormat() : null,
+                        ledger ? ledgerResponseFormat(request.outputSchemaId())
+                                : rawDiscovery ? rawResponseFormat() : null,
                         rawDiscovery, rawDiscovery ? EditorialP5RawWireContract.REASONING_POLICY : "");
             }
         } catch (Exception error) {
@@ -211,9 +216,15 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         EditorialP5L1Output output = null;
         boolean schemaValid = false;
         try {
-            output = parseOutput(result.content, request);
-            schemaValid = true;
-            parsedOutputs.put(request.attemptIdentity(), output);
+            if (ledger) {
+                // The engine owns the ledger judgement (inventory, coverage, quotes); this adapter only
+                // transports the bytes and never builds a typed output for it.
+                schemaValid = true;
+            } else {
+                output = parseOutput(result.content, request);
+                schemaValid = true;
+                parsedOutputs.put(request.attemptIdentity(), output);
+            }
         } catch (RuntimeException | JSONException invalid) {
             // A response that cannot be represented as the typed contract is
             // returned as schema-invalid. The engine decides whether a single
@@ -506,6 +517,117 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
                     .append("\"evidenceRefs\":[\"...\"],\"modelDeclaredPass\":false}\n");
         }
         return new PromptPair(system.toString(), user.toString());
+    }
+
+    static boolean isLedgerSchema(String schemaId) {
+        return EditorialL1Ledger.RAW_WIRE.equals(schemaId) || EditorialL1Ledger.RECONCILE_WIRE.equals(schemaId);
+    }
+
+    static JSONObject ledgerResponseFormat(String schemaId) throws JSONException {
+        boolean raw = EditorialL1Ledger.RAW_WIRE.equals(schemaId);
+        return new JSONObject()
+                .put("type", "json_schema")
+                .put("json_schema", new JSONObject()
+                        .put("name", raw ? EditorialL1Ledger.RAW_SCHEMA_NAME : EditorialL1Ledger.RECONCILE_SCHEMA_NAME)
+                        .put("strict", true)
+                        .put("schema", new JSONObject(EditorialCanonicalJson.canonicalize(EditorialL1Ledger.jsonSchema(raw)))));
+    }
+
+    static final String LEDGER_RAW_TASK =
+            "TASK (L1 RAW discovery). You see only the numbered RAW units and the GLOSSARY. You cannot see any translation, so do not judge one.\n"
+            + "1. coverage: ordered, contiguous, non-overlapping ranges {from,to,status} over the unit ids from the first to the last unit with no gap and no overlap. "
+            + "Use PROCESSED for units you read and PRESERVED only for units you could not assess.\n"
+            + "2. candidates: only where a later comparison with a translation could go wrong. ledger: TG = glossary or title term occurring in the unit; "
+            + "SR = relationship or form of address (who speaks to whom, honorific, pronoun choice); RC = recurring or contrasting concept (the same source word that must be rendered consistently, "
+            + "or two different source words that must stay distinguishable); PAIR = named pair or relation; SPEAKER = unclear or switching speaker; UNIT = any other trap (number, negation, idiom, wordplay). "
+            + "candidateId is a short token such as c1, c2; unitId is copied exactly from the numbered units; note is at most 80 characters and contains no source text. "
+            + "Do not raise a candidate for every unit; a chapter normally has far fewer candidates than units.\n";
+
+    static final String LEDGER_RECONCILE_TASK =
+            "TASK (L1 RECONCILE). You see the numbered RAW units, the DRAFT numbered D<n>|, the GLOSSARY, the PRONOUN rows and the app-owned L1_RAW_CANDIDATES block.\n"
+            + "1. findings: compare every RAW unit with the DRAFT and report each real defect as its own finding; there is no cap of four. "
+            + "A defect repeated in several places is ONE finding and the other RAW units go into occurrenceUnits. Types: UNTRANSLATED (source-language text left in the draft), "
+            + "MEANING (wrong meaning, a conflation, or a contrast between different source words that was lost), OMISSION (RAW content missing from the draft), ADDITION (content not in RAW), NUMBER, NEGATION, "
+            + "GLOSSARY (glossary target not used), ADDRESS_PROFILE (a form of address that contradicts a PRONOUN row), SPEAKER_LISTENER, STRUCTURE (lines wrongly split or merged).\n"
+            + "   rawUnits: 1 to 6 unit ids copied exactly. rawQuote: an exact substring (at most 80 characters) of one of those units. "
+            + "draft: {kind:LINES,start,end,after:0} with D<n> line numbers, or for missing content {kind:MISSING,start:0,end:0,after:n} meaning it belongs after DRAFT line n. "
+            + "draftQuote: an exact substring (at most 80 characters) of the anchored DRAFT lines, empty for MISSING. observation says what is wrong and expectedMeaning what the meaning should be, both short; do not write a new translation. "
+            + "disposition OPEN when the defect is clear enough to fix; PRESERVED when it is only a preference or the evidence is insufficient, and then evidenceLimit says why. "
+            + "evidenceRefs are optional tokens naming glossary or pronoun rows (for example gl:12).\n"
+            + "2. resolutions: resolve EVERY candidate in L1_RAW_CANDIDATES exactly once: PROCESSED with findingRef (an errorId) when it became a finding, PROCESSED with empty findingRef when checked and fine, "
+            + "PRESERVED when it cannot be assessed, CONFLICT when the evidence contradicts, UNPROCESSED only if you did not get to it. Link findings to candidates through candidateIds.\n"
+            + "3. coverage: ordered, contiguous, non-overlapping ranges over every RAW unit id you compared, from the first to the last unit.\n"
+            + "4. speakerRecords for dialogue where speaker or listener matters; protectedSpans = DRAFT line ranges already correct against a PRONOUN or GLOSSARY row that a later edit must not change "
+            + "(source PRONOUN_ROW, GLOSSARY_ROW, L1_PROOF or SPEAKER_PROOF).\n"
+            + "5. disposition: CONTINUE normally; PRESERVE_DRAFT when the draft cannot be assessed; STOP only with stopClass CONTENT_BLOCKED or INPUT_REQUIRED. reasonCode at most 32 characters.\n";
+
+    static PromptPair buildLedgerPrompt(Request request) {
+        boolean reconcile = "L1_RECONCILE".equals(request.phase());
+        StringBuilder system = new StringBuilder();
+        system.append("You are an untrusted SAFE4 L1 analysis assistant for a Japanese to Vietnamese chapter translation. The app is the authority: ")
+                .append("it owns ids, hashes, coverage checks and the report. Return exactly one JSON object that matches the response schema and nothing else. ")
+                .append("Never invent unit ids; copy them exactly from the numbered blocks. Do not return source text beyond the short quotes asked for.\n\n")
+                .append("[PROJECT_INSTRUCTION]\n")
+                .append(authority(request, com.ml.tblandroidtxt.editorial.pack.EditorialPackFileRole.PROJECT_INSTRUCTION))
+                .append("\n[/PROJECT_INSTRUCTION]\n[TURN_PROMPT]\n")
+                .append(authority(request, com.ml.tblandroidtxt.editorial.pack.EditorialPackFileRole.TURN_PROMPT))
+                .append("\n[/TURN_PROMPT]\n[WORKFLOW]\n")
+                .append(authority(request, com.ml.tblandroidtxt.editorial.pack.EditorialPackFileRole.WORKFLOW))
+                .append("\n[/WORKFLOW]");
+
+        Map<String, Object> envelope = new TreeMap<>();
+        envelope.put("wireSchemaVersion", request.outputSchemaId());
+        envelope.put("attemptIdentity", request.attemptIdentity());
+        envelope.put("chapterKey", request.chapterKey());
+        envelope.put("phase", request.phase());
+        envelope.put("callKind", request.callKind().name());
+
+        StringBuilder user = new StringBuilder();
+        user.append("APP-OWNED ENVELOPE (return attemptIdentity and wireSchemaVersion exactly as shown):\n")
+                .append(EditorialCanonicalJson.canonicalize(envelope))
+                .append("\n\nVISIBLE SOURCE BLOCKS. Do not infer or request hidden roles:\n");
+        ArrayList<String> roles = new ArrayList<>(request.visibleSources().keySet());
+        Collections.sort(roles);
+        for (String role : roles) {
+            byte[] bytes = request.visibleSources().get(role);
+            user.append("\n--- ").append(role).append(" ---\n");
+            if (EditorialSafe4Contract.RAW.equals(role)) {
+                user.append(renderUnits(bytes));
+            } else if (EditorialSafe4Contract.DRAFT.equals(role)) {
+                user.append(renderDraft(bytes));
+            } else {
+                user.append(new String(bytes, StandardCharsets.UTF_8));
+            }
+            user.append("\n--- END ").append(role).append(" ---\n");
+        }
+        user.append("\n").append(reconcile ? LEDGER_RECONCILE_TASK : LEDGER_RAW_TASK)
+                .append("Hard limits: coverage ranges <=").append(EditorialL1Ledger.MAX_RANGES);
+        if (reconcile) {
+            user.append(", findings <=").append(EditorialL1Ledger.MAX_FINDINGS_PER_CALL)
+                    .append(", speakerRecords <=").append(EditorialL1Ledger.MAX_SPEAKER_RECORDS_PER_CALL)
+                    .append(", protectedSpans <=").append(EditorialL1Ledger.MAX_PROTECTED_SPANS_PER_CALL);
+        } else {
+            user.append(", candidates <=").append(EditorialL1Ledger.MAX_CANDIDATES_PER_CALL);
+        }
+        user.append(", text fields <=").append(EditorialL1Ledger.MAX_TEXT).append(" characters. Every key in the schema is required; use empty strings, empty arrays or 0 where nothing applies.\n");
+        return new PromptPair(system.toString(), user.toString());
+    }
+
+    /** RAW rendered as {@code <unitId>|<text>} using the same inventory the app checks the response against. */
+    static String renderUnits(byte[] raw) {
+        StringBuilder out = new StringBuilder();
+        for (EditorialRawInventory.Unit unit : EditorialRawInventory.build(raw).units()) {
+            out.append(unit.id()).append('|').append(unit.text()).append('\n');
+        }
+        return out.toString();
+    }
+
+    /** DRAFT rendered as {@code D<n>|<text>}, lines numbered exactly as the app splits them. */
+    static String renderDraft(byte[] draft) {
+        StringBuilder out = new StringBuilder();
+        List<String> lines = EditorialL1Ledger.draftLines(draft);
+        for (int i = 0; i < lines.size(); i++) out.append('D').append(i + 1).append('|').append(lines.get(i)).append('\n');
+        return out.toString();
     }
 
     private static String authority(Request request,

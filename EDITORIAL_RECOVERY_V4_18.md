@@ -188,7 +188,7 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-R1 đã đóng (inventory dòng, ledger v2 + validator, `contractRevision` trong identity L1, sizing/chunk có test). Next action: R2 — L1 + persistence (nối ledger v2 vào `EditorialP5PilotExecution`/provider/store, gán `findingCount`, lưu entries qua P5C store, RECONCILE nhận khối candidates của RAW pass; chứng minh serialize → DB → khởi động lại → `committedL1` → đầu vào L2), rồi R3→R5 offline; dừng cuối R5 với bảng ngân sách và Q1–Q5.
+R2 đã viết xong mã (ledger v2 trong engine P5, provider, exact-binding) và qua test host; còn chứng minh DB trên emulator bằng APK lưu trữ (serialize → DB → khởi động lại → `committedL1`). Next action: build APK production + AndroidTest bằng wrapper từ commit R2 trong worktree sạch, chạy riêng test ledger trên emulator, đóng R2 rồi sang R3 (L2 + reconstruction + protected spans); R4, R5 offline; dừng cuối R5 với bảng ngân sách và Q1–Q5.
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 
