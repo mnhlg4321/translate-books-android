@@ -45,9 +45,9 @@ Result: `L3_FINAL_COMMITTED` with all release numbers 0.
 | L2 final-read, actual diff, Change Map, dialogue proof, no unaccounted change | met for what the app can compute (1 non-dialogue change, 0 unaccounted); there is no separate L2 "final-read" marker |
 | L3 re-audit, adversarial records, release numbers 0, receipt → FINAL | met |
 | FINAL complete, saved, reopened, exported as UTF-8 with hash/count readback | met |
-| Owner quality check against RAW/DRAFT | **pending** |
+| Owner quality check against RAW/DRAFT | **met**: the owner accepted the quality of the chapter 001 FINAL (chat, 2026-10-02) |
 
-So chapter 001 is a **candidate** for `FINAL_OUTPUT_ACCEPTED`, not accepted: the owner has not read it, the L1 criterion is not met as written, and the FINAL differs from the DRAFT in one line out of 386, so any weakness of the draft passes through unchanged.
+So chapter 001 has **owner-accepted quality** and meets every criterion except the L1 ledger one as written (REPORT_L1 is a frame) and the unreconciled candidate counts; the owner accepted the quality only, not those two gaps, so it is recorded as quality-accepted, not as a formally closed `FINAL_OUTPUT_ACCEPTED`. The FINAL differs from the DRAFT in one line out of 386, so any weakness of the draft passes through unchanged.
 
 ## Observations
 

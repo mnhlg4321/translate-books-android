@@ -167,6 +167,8 @@ Tiến độ P6 W1–W3 (2026-10-02, phiên theo `docs/P6_G5_G6_WORK_REQUEST_202
 
 Tiến độ P6 W4–W6 (2026-10-02, owner đã ☑ D1–D4, commit `10e3cd60`): đã cài `4.18-p6.2`/215 lên pilot (sao lưu DB, M0, readback khớp) và chạy **một** chuỗi L2/L3 cho chương 001 từ UI: `L2_EDIT` + `L3_FINAL` COMMITTED (VI_L2 = FINAL `a7d5f99e…`, 26,466 B), release numbers = 0, 4 call, 0 repair/retry, USD 0.04257 (trần 0.30); mở lại và xuất TXT trên máy có hash = FINAL. Ứng viên `FINAL_OUTPUT_ACCEPTED` cho chương 001, chưa nghiệm thu: owner chưa đọc chất lượng, tiêu chí "L1 đóng đủ ledger" chưa đạt như văn bản (REPORT_L1 là bộ khung), và các đếm candidate không tái lập giữa L2 (49) và L3 (257). Chi tiết `docs/P6_W4_W6_CHAPTER_001_EVIDENCE_20261002.md`.
 
+Owner chấp nhận chất lượng FINAL chương 001 (2026-10-02): W6 đạt. Chương 001 ghi nhận là *quality-accepted* (không đóng chính thức `FINAL_OUTPUT_ACCEPTED` vì hai khoảng trống tiêu chí: L1 là bộ khung, đếm candidate L2 49 ≠ L3 257 — owner mới chấp nhận chất lượng). 1/3 chương đại diện. Ứng viên hai chương còn lại: `docs/P6_G6_CHAPTER_CANDIDATES_20261002.md`.
+
 ### G2 chi tiết — M4 RECONCILE chương 001 (nhóm active sau quyết định B)
 
 Quyết định owner 2026-10-01: **B** — RAW event 7 (attempt `7a5e3428…`) là predecessor duy nhất cho M4; verdict formal giữ `RAW_NOT_ACCEPTED`. Quyết định này không cấp quyền cài APK, migrate DB hay gọi provider.
@@ -186,7 +188,7 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-Chương 001 đã có FINAL đầu tiên trên pilot (xem mục 9a). Next action: owner đọc mẫu bản cuối đối chiếu RAW/DRAFT (file `Download/editorial_001_final.txt` trên máy; DRAFT→FINAL chỉ khác dòng 237) rồi quyết định: (1) chấp nhận hay không chất lượng chương 001; (2) tên hai chương còn lại (dày thoại/xưng hô, dài gần giới hạn) và ngân sách chuỗi cho chúng để làm G6; (3) cách xử lý hai khoảng trống tiêu chí: L1 chỉ là bộ khung và đếm candidate không tái lập giữa L2/L3. Lượt L2/L3 thứ hai hoặc cài lại build có sửa UX (`describeRunning`, trình xem bản cuối) đều cần quyền mới.
+Chương 001: chất lượng đã được owner chấp nhận (1/3 chương đại diện). Next action: owner chọn hai chương còn lại trong `docs/P6_G6_CHAPTER_CANDIDATES_20261002.md` (đề xuất `007` dày thoại/xưng hô và `010` dài nhất; `013` nếu 001 không tính là nhóm ngắn) và cấp quyền cho từng chương: tạo project/binding trên pilot, L1 RAW + RECONCILE và chuỗi L2/L3 theo trần D3, kèm quyết định cách xử lý hai khoảng trống tiêu chí. Chưa có quyền này thì không tạo project, không gọi provider, không cài lại.
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 
