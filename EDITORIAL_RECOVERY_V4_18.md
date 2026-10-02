@@ -182,7 +182,7 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-P5 đạt ở mức app/DB theo ngoại lệ B (`P5_EXIT_PASS_UNDER_EXCEPTION_B`); G5 offline đã có tiến độ/xem/xuất (`a6da1a35`). Next action: G5 offline tiếp — nút chạy L2/L3 trên thẻ chương: hộp thoại cấp phép nơi người dùng xác nhận trần call/token/USD từng pha, chạy nền qua cùng `EditorialChapterFinalCoordinator.runToFinal` với adapter OpenRouter L2/L3, hiển thị tiến độ qua `inspect`; test JVM/fake provider, không gọi provider thật. Trước mọi live L2/L3 cần owner: (1) tên ba chương và ngân sách theo pha; (2) chọn cách xử lý `L2_RAW_DISCOVERY`: (a) mở rộng wire L1 để mang đếm candidate theo ledger rồi chạy lại L1 (đổi wire đã pin), (b) coi `L2_EDIT` đã đọc RAW và bỏ cuộc gọi riêng (lệch contract pha), hoặc (c) thêm cuộc gọi blind RAW chỉ đối chiếu `populationTotal` (rẻ nhưng gần như vô nghĩa).
+P5 đạt ở mức app/DB theo ngoại lệ B (`P5_EXIT_PASS_UNDER_EXCEPTION_B`); G5 offline đã có tiến độ/xem/xuất (`a6da1a35`). L1 thật chỉ là bộ khung (populationTotal=1, findingCount=0), nên chất lượng bản cuối dựa vào L2/L3. Next action: owner điền mục 3 (D1–D4) của `docs/P6_G5_G6_WORK_REQUEST_20261002.md` rồi giao cho phiên mới; phiên đó làm W1 (L2_RAW_DISCOVERY theo hướng d) → W2 (nút chạy L2/L3) → W3 (test instrumented trên emulator), sau đó W4–W6 trên máy pilot nếu đã được duyệt.
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 
