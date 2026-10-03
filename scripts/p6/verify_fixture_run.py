@@ -100,8 +100,15 @@ def check_ledger(path):
 def check_oracle_probe(fixture, output, fixtures_root):
     names = ("RAW.txt", "DRAFT.txt", "GLOSSARY.csv", "PRONOUN.csv")
     source = b"\n".join(open(os.path.join(fixtures_root, fixture["id"], name), "rb").read() for name in names)
-    model_inputs = [open(os.path.join(output, name), "rb").read()
-                    for name in ("report-l1.json", "l2-edit-prompt.txt")]
+    model_inputs = [open(os.path.join(output, "report-l1.json"), "rb").read()]
+    prompt_root = os.path.join(output, "prompts")
+    if os.path.isdir(prompt_root):
+        for name in sorted(os.listdir(prompt_root)):
+            if name.endswith(".txt"):
+                model_inputs.append(open(os.path.join(prompt_root, name), "rb").read())
+    legacy_prompt = os.path.join(output, "l2-edit-prompt.txt")
+    if os.path.isfile(legacy_prompt):
+        model_inputs.append(open(legacy_prompt, "rb").read())
     combined = b"\n".join(model_inputs)
     if b"mustContain" in combined or b"mustNotContain" in combined:
         raise ValueError(fixture["id"] + ": label field name reached REPORT_L1 or the L2 edit prompt")
@@ -119,19 +126,34 @@ def check_oracle_probe(fixture, output, fixtures_root):
                 raise ValueError(fixture["id"] + ": corrected label text reached REPORT_L1 or the L2 edit prompt")
 
 
+def select_fixtures(manifest, fixture_ids):
+    fixtures = manifest.get("fixtures", [])
+    by_id = {fixture.get("id"): fixture for fixture in fixtures}
+    selected_ids = fixture_ids or list(by_id)
+    if (not selected_ids or len(selected_ids) != len(set(selected_ids))
+            or any(fixture_id not in by_id for fixture_id in selected_ids)):
+        raise ValueError("fixture selection must be unique and belong to the frozen fixture set")
+    return [by_id[fixture_id] for fixture_id in selected_ids]
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--fixtures-root", required=True)
     parser.add_argument("--manifest", required=True)
     parser.add_argument("--run-dir", required=True)
-    parser.add_argument("--mode", choices=("L1_ONLY", "L2_ONLY", "L3_ONLY", "CHAIN"), required=True)
+    parser.add_argument("--mode", choices=("L1_ONLY", "L2_ONLY", "L3_ONLY", "L1_THEN_L2", "CHAIN"), required=True)
+    parser.add_argument("--fixture-ids", nargs="+")
+    parser.add_argument("--live", action="store_true")
     args = parser.parse_args()
     fixtures_root, run_dir = os.path.abspath(args.fixtures_root), os.path.abspath(args.run_dir)
     if "6.FINAL" in fixtures_root or "6.FINAL" in run_dir:
         raise ValueError("refusing a path through 6.FINAL")
     manifest = score_run.load_json(args.manifest)
+    selected = select_fixtures(manifest, args.fixture_ids)
+    if args.live and args.mode == "L2_ONLY":
+        raise ValueError("live L2 requires reused G1 L1 state; use L1_THEN_L2")
     reports = []
-    for fixture in manifest["fixtures"]:
+    for fixture in selected:
         output = fixture_output(os.path.join(run_dir, "results"), fixture["id"])
         direct_output = os.path.join(run_dir, "results", fixture["id"])
         if os.path.abspath(output) != os.path.abspath(direct_output):
@@ -143,39 +165,62 @@ def main():
             structural = json.load(handle)
         with open(os.path.join(output, "run-metadata.json"), encoding="utf-8") as handle:
             metadata = json.load(handle)
-        expected_stage = {"L1_ONLY": "L1", "L2_ONLY": "L2", "L3_ONLY": "L3", "CHAIN": "CHAIN"}[args.mode]
+        expected_stage = {"L1_ONLY": "L1", "L2_ONLY": "L2", "L3_ONLY": "L3",
+                          "L1_THEN_L2": "L2", "CHAIN": "CHAIN"}[args.mode]
         if not structural.get("valid") or structural.get("stage") != expected_stage:
             raise ValueError(fixture["id"] + ": production structural contract failed")
-        if metadata.get("providerKind") != "FAKE_OFFLINE" or metadata.get("actualProviderCalls") != 0:
+        if args.live:
+            if metadata.get("providerKind") != "LIVE" or metadata.get("actualProviderCalls", 0) <= 0:
+                raise ValueError(fixture["id"] + ": expected a live provider run")
+            expected_live_calls = {"L1_ONLY": 2, "L3_ONLY": 3, "L1_THEN_L2": 3, "CHAIN": 8}[args.mode]
+            if (metadata.get("actualProviderCalls") != expected_live_calls
+                    or structural.get("providerCalls") != expected_live_calls):
+                raise ValueError(fixture["id"] + ": live provider call count differs from the approved mode")
+            if args.mode == "L1_THEN_L2" and metadata.get("l1ReusedFromPriorGroup") is not True:
+                raise ValueError(fixture["id"] + ": live L1_THEN_L2 did not reuse G1 L1 state")
+        elif metadata.get("providerKind") != "FAKE_OFFLINE" or metadata.get("actualProviderCalls") != 0:
             raise ValueError(fixture["id"] + ": a non-fake provider ran")
+        else:
+            expected_fake_calls = (3 if args.mode == "L1_THEN_L2"
+                                   and metadata.get("l1ReusedFromPriorGroup") is True
+                                   else {"L1_ONLY": 2, "L2_ONLY": 5, "L3_ONLY": 8,
+                                         "L1_THEN_L2": 5, "CHAIN": 8}[args.mode])
+            if (metadata.get("fakeProviderCalls") != expected_fake_calls
+                    or structural.get("providerCalls") != expected_fake_calls):
+                raise ValueError(fixture["id"] + ": fake provider call count differs from the expected mode")
         final = open(os.path.join(output, "final.txt"), "rb").read()
         if sha(final) != metadata.get("finalSha256"):
             raise ValueError(fixture["id"] + ": final hash mismatch")
         report = json.load(open(os.path.join(output, "report-l1.json"), encoding="utf-8"))
         if report.get("artifactType") != "REPORT_L1" or report.get("phase") != "L1_RECONCILE":
             raise ValueError(fixture["id"] + ": REPORT_L1 evidence is invalid")
-        with open(os.path.join(output, "l2-edit-prompt.txt"), "rb") as handle:
-            if not handle.read():
-                raise ValueError(fixture["id"] + ": production L2 edit prompt capture is empty")
+        if args.mode != "L1_ONLY":
+            with open(os.path.join(output, "l2-edit-prompt.txt"), "rb") as handle:
+                if not handle.read():
+                    raise ValueError(fixture["id"] + ": production L2 edit prompt capture is empty")
         check_oracle_probe(fixture, output, fixtures_root)
         ledger = check_ledger(os.path.join(output, "spend-ledger.jsonl"))
         reports.append({"fixture": fixture["id"], "providerCalls": structural.get("providerCalls"), "ledger": ledger})
 
     report_path = os.path.join(run_dir, "score-report.json")
+    selected_manifest = os.path.join(run_dir, "selected-fixture-manifest.json")
+    with open(selected_manifest, "w", encoding="utf-8", newline="\n") as handle:
+        json.dump({"fixtures": selected}, handle, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        handle.write("\n")
     result_code = score_run.main(["--fixtures-root", fixtures_root, "--run-dir", os.path.join(run_dir, "results"),
-                                  "--manifest", args.manifest, "--out", report_path])
+                                  "--manifest", selected_manifest, "--out", report_path])
     if result_code != 0:
         raise ValueError("frozen scorer refused the run")
     score = score_run.load_json(report_path)
     summary = score["summary"]
-    if summary["fixtures"] != len(manifest["fixtures"]):
+    if summary["fixtures"] != len(selected):
         raise ValueError("scorer did not read every fixture output")
-    if summary["STRUCTURAL_VALID"] != f"{len(manifest['fixtures'])}/{len(manifest['fixtures'])}":
+    if summary["STRUCTURAL_VALID"] != f"{len(selected)}/{len(selected)}":
         raise ValueError("scorer found structurally invalid outputs")
     print("offline fixtures:", summary["fixtures"])
     print("STRUCTURAL_VALID:", summary["STRUCTURAL_VALID"])
     print("SEMANTIC_EVAL:", json.dumps(summary["SEMANTIC_EVAL"], sort_keys=True))
-    print("actual provider calls: 0; provider responses were generated by local fakes")
+    print("actual provider calls:", "reported in run metadata" if args.live else "0; provider responses were generated by local fakes")
     print("spend-ledger entries:", sum(item["ledger"]["entries"] for item in reports),
           "pending UNKNOWN reservations: 0")
     return 0

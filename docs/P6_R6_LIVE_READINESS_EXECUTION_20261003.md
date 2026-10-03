@@ -43,7 +43,16 @@ Scope: owner request `docs/P6_R6_LIVE_READINESS_WORK_REQUEST_20261003.md`. Compl
 - `:app:compileDebugAndroidTestJavaWithJavac`: PASS. Runtime execution is queued for the current-source emulator regression in L7/L8 after the required wrapper build. Both tests use only local fake providers; no live provider, device data, or spend was used for this package.
 - **L4 instrumentation source/compile PASS; emulator runtime evidence pending L7/L8.**
 
-## L5–L8
+## L5 — G2 L1_THEN_L2 wiring
+
+- Added `L1_THEN_L2`. An offline run creates and commits `REPORT_L1`, then commits `VI_L2`, in the same temporary database and reports the expected five fake provider calls. Live `L1_THEN_L2` requires the G1 base `RunId`; it reopens the retained app-private database and pack storage, verifies binding/project/pack plus all four normalized source inputs, reads the committed `REPORT_L1`, and dispatches only the three L2 calls. Live `L2_ONLY` is refused by both host and instrumentation.
+- Added host fixture selection and selective retention so the eight-fixture G1 base run preserves only `fx-a04`, `fx-a11`, and `fx-a02`; repeat runs can share the G1 group ledger without replacing those source databases. G2 can pass the base G1 `RunId` for exact predecessor reuse. The frozen budget table now describes this wiring while keeping G1 at 24 calls / USD 0.954 and G2 at 24 calls / USD 0.875.
+- The verifier checks selected fixtures, provider kind and mode call counts, REPORT_L1, final hashes, spend-ledger integrity, and captured prompt leaks. L1_ONLY no longer requires an L2 edit-prompt file because that phase is not run.
+- `:app:compileDebugAndroidTestJavaWithJavac`: PASS; `test_verify_fixture_run.py`: **4/4 PASS**; Python bytecode compile: PASS; `run_group.ps1` parser: PASS; `git diff --check` for this package: PASS. The three-fixture fake emulator run will be exercised with the archived current-source APKs in L8.
+- No emulator call, live provider request, API-key read, fingerprint use, or spend occurred in L5.
+- **L5 offline implementation and compile gates PASS; emulator dry-run proof pending L8.**
+
+## L6–L8
 
 Pending.
 
@@ -53,4 +62,4 @@ Not started. Authorized only after L0–L8 pass; maximum total spend USD 1.00; z
 
 ## Current next action
 
-Implement L5's `L1_THEN_L2` fake-run mode and update the frozen budget table descriptions without changing call counts or worst-case totals.
+Implement L6's host pre-dispatch prompt/source leak guard and full prompt-capture verification tests.

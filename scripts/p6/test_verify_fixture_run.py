@@ -37,6 +37,19 @@ class FixtureOutputLayoutTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "duplicate output directories differ"):
                 verify_fixture_run.fixture_output(results, "fx-a01")
 
+    def test_fixture_selection_preserves_the_requested_order(self):
+        selected = verify_fixture_run.select_fixtures({"fixtures": [
+            {"id": "fx-a01"}, {"id": "fx-a02"}, {"id": "fx-a03"},
+        ]}, ["fx-a03", "fx-a01"])
+        self.assertEqual(["fx-a03", "fx-a01"], [fixture["id"] for fixture in selected])
+
+    def test_fixture_selection_rejects_duplicates_and_unknown_ids(self):
+        manifest = {"fixtures": [{"id": "fx-a01"}, {"id": "fx-a02"}]}
+        for ids in (["fx-a01", "fx-a01"], ["fx-a99"]):
+            with self.subTest(ids=ids):
+                with self.assertRaisesRegex(ValueError, "fixture selection"):
+                    verify_fixture_run.select_fixtures(manifest, ids)
+
 
 if __name__ == "__main__":
     unittest.main()

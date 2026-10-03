@@ -4,8 +4,12 @@ param(
     [string]$Serial = 'emulator-5554',
     [ValidatePattern('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')]
     [string]$RunId = ([guid]::NewGuid().ToString('D').ToLowerInvariant()),
-    [ValidateSet('L1_ONLY', 'L2_ONLY', 'L3_ONLY', 'CHAIN')]
+    [ValidateSet('L1_ONLY', 'L2_ONLY', 'L3_ONLY', 'L1_THEN_L2', 'CHAIN')]
     [string]$Mode = 'CHAIN',
+    [string[]]$FixtureIds,
+    [string[]]$RetainL1FixtureIds,
+    [ValidatePattern('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')]
+    [string]$L1SourceRunId,
     [switch]$Live,
     [string]$ExpectedEndpointAccountFingerprint,
     [ValidatePattern('^[A-Za-z0-9._-]{3,100}$')]
@@ -30,8 +34,21 @@ if ($Live -and ($ExpectedEndpointAccountFingerprint -notmatch '^[0-9a-fA-F]{64}$
     throw 'Live fixture mode requires the owner-supplied endpoint/account fingerprint.'
 }
 if ($GroupMaximumUsd -le 0 -or $GroupMaximumUsd -gt 1.00) { throw 'The P6 group cap must be within the approved per-group limit.' }
-if ($Live -and $Mode -notin @('L1_ONLY', 'L2_ONLY', 'L3_ONLY', 'CHAIN')) {
+if ($Live -and $Mode -notin @('L1_ONLY', 'L3_ONLY', 'L1_THEN_L2', 'CHAIN')) {
     throw 'Live fixture mode requires a supported single group mode.'
+}
+if ($Live -and $Mode -eq 'L2_ONLY') {
+    throw 'Live L2 requires the committed, reused G1 REPORT_L1; use L1_THEN_L2 with L1SourceRunId.'
+}
+if ($Live -and $Mode -eq 'L1_THEN_L2' -and [string]::IsNullOrWhiteSpace($L1SourceRunId)) {
+    throw 'Live L1_THEN_L2 requires committed G1 L1 state; it will not rerun L1.'
+}
+if (-not [string]::IsNullOrWhiteSpace($L1SourceRunId)) {
+    $L1SourceRunId = $L1SourceRunId.ToLowerInvariant()
+    if ($Mode -ne 'L1_THEN_L2') { throw 'L1SourceRunId is only valid for L1_THEN_L2.' }
+}
+if ($RetainL1FixtureIds -and $Mode -ne 'L1_ONLY') {
+    throw 'L1 state can be retained only by a successful L1_ONLY run.'
 }
 $PrivateParent = Split-Path -Parent $FixturesRoot
 $RunRoot = Join-Path (Join-Path $PrivateParent 'p6-runs') $RunId
@@ -47,6 +64,7 @@ $WorstCaseByMode = @{
     L1_ONLY = [decimal]::Parse('0.0794912', [Globalization.CultureInfo]::InvariantCulture)
     L2_ONLY = [decimal]::Parse('0.1094064', [Globalization.CultureInfo]::InvariantCulture)
     L3_ONLY = [decimal]::Parse('0.1094064', [Globalization.CultureInfo]::InvariantCulture)
+    L1_THEN_L2 = [decimal]::Parse('0.1094064', [Globalization.CultureInfo]::InvariantCulture)
     CHAIN = [decimal]::Parse('0.298304', [Globalization.CultureInfo]::InvariantCulture)
 }
 
@@ -93,13 +111,30 @@ if ($LASTEXITCODE -ne 0) { throw 'The private fixture set did not pass its froze
 if ($LASTEXITCODE -ne 0) { throw 'Could not prepare the label-free fixture payload.' }
 
 $TransferRoot = Join-Path $RunRoot 'to-device'
-$FixtureIds = Get-Content (Join-Path $RunRoot 'fixture-ids.json') -Raw | ConvertFrom-Json
+$AvailableFixtureIds = @(Get-Content (Join-Path $RunRoot 'fixture-ids.json') -Raw | ConvertFrom-Json)
+if (-not $FixtureIds -or $FixtureIds.Count -eq 0) {
+    $FixtureIds = $AvailableFixtureIds
+} else {
+    if (($FixtureIds.Count -ne @($FixtureIds | Select-Object -Unique).Count) -or
+            (@($FixtureIds | Where-Object { $_ -notin $AvailableFixtureIds }).Count -gt 0)) {
+        throw 'FixtureIds must be unique members of the frozen fixture set.'
+    }
+}
+if ($RetainL1FixtureIds) {
+    if ((@($RetainL1FixtureIds | Select-Object -Unique).Count -ne $RetainL1FixtureIds.Count) -or
+            (@($RetainL1FixtureIds | Where-Object { $_ -notin $FixtureIds }).Count -gt 0)) {
+        throw 'RetainL1FixtureIds must be unique fixtures selected for this L1_ONLY run.'
+    }
+}
 $Failed = [System.Collections.Generic.List[string]]::new()
 $LiveArguments = @()
 $LiveArguments = @('-e', 'p6_group_id', $GroupId, '-e', 'p6_group_maximum_usd', $GroupCapText)
 if ($Live) {
     $LiveArguments += @('-e', 'p6_fixture_live', 'YES', '-e',
         'p6_expected_endpoint_account_fingerprint', $ExpectedEndpointAccountFingerprint)
+}
+if (-not [string]::IsNullOrWhiteSpace($L1SourceRunId)) {
+    $LiveArguments += @('-e', 'p6_l1_source_run_id', $L1SourceRunId)
 }
 try {
     & adb -s $Serial shell mkdir -p $DeviceInputRoot
@@ -129,8 +164,12 @@ try {
         $BeforeSnapshot = Get-GroupSpendState $RequiredUsd ("{0:D3}-before-{1}.jsonl" -f $FixtureIndex, $FixtureId)
         if ($BeforeSnapshot.pending -ne 0) { throw 'UNKNOWN provider cost blocks the next fixture in this group.' }
         $LogPath = Join-Path (Join-Path $RunRoot 'logs') "$FixtureId-instrumentation.txt"
+        $FixtureArguments = @()
+        if ($RetainL1FixtureIds -and $FixtureId -in $RetainL1FixtureIds) {
+            $FixtureArguments += @('-e', 'p6_keep_l1_state', 'YES')
+        }
         $Output = & adb -s $Serial shell am instrument -w `
-            -e p6_fixture_run YES -e p6_run_id $RunId -e p6_fixture_id $FixtureId -e p6_mode $Mode @LiveArguments `
+            -e p6_fixture_run YES -e p6_run_id $RunId -e p6_fixture_id $FixtureId -e p6_mode $Mode @LiveArguments @FixtureArguments `
             -e class com.ml.tblandroidtxt.EditorialP6FixtureRunnerInstrumentedTest#runFixture $Instrumentation 2>&1
         $CommandExit = $LASTEXITCODE
         [IO.File]::WriteAllText($LogPath, ($Output -join [Environment]::NewLine), [Text.UTF8Encoding]::new($false))
@@ -150,9 +189,11 @@ try {
     & adb -s $Serial shell rm -r $DeviceInputRoot 2>&1 | Out-Null
     & adb -s $Serial shell run-as com.ml.tblandroidtxt rm -r "files/p6-fixtures/$RunId" 2>&1 | Out-Null
 }
-& py -3 (Join-Path $RepoRoot 'scripts\p6\verify_fixture_run.py') `
-    --fixtures-root $FixturesRoot --manifest $ManifestPath --run-dir $RunRoot --mode $Mode
-if ($LASTEXITCODE -ne 0) { throw 'Offline fixture outputs, spend ledger, leak probes, or scorer validation failed.' }
+$VerifyArguments = @('--fixtures-root', $FixturesRoot, '--manifest', $ManifestPath,
+    '--run-dir', $RunRoot, '--mode', $Mode, '--fixture-ids') + @($FixtureIds)
+if ($Live) { $VerifyArguments += '--live' }
+& py -3 (Join-Path $RepoRoot 'scripts\p6\verify_fixture_run.py') @VerifyArguments
+if ($LASTEXITCODE -ne 0) { throw 'Fixture outputs, spend ledger, leak probes, or scorer validation failed.' }
 if ($Failed.Count -gt 0) { throw ('Instrumented fixture failures: ' + ($Failed -join ', ')) }
 
-Write-Output "Completed $Mode for $($FixtureIds.Count) offline fixtures. Private evidence: $RunRoot"
+Write-Output "Completed $Mode for $($FixtureIds.Count) fixtures. Private evidence: $RunRoot"

@@ -2,6 +2,7 @@ package com.ml.tblandroidtxt;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 
@@ -23,6 +24,7 @@ import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotAuthorization;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotProvider;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotResult;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5RawWireContract;
+import com.ml.tblandroidtxt.editorial.pack.EditorialPackManifest;
 import com.ml.tblandroidtxt.editorial.pack.EditorialRawInventory;
 import com.ml.tblandroidtxt.editorial.pack.EditorialSafe4Contract;
 
@@ -42,6 +44,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +67,8 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
     private String databaseName;
     private Path storageRoot;
     private EditorialPackStorageLayout storage;
+    private boolean preserveL1Database;
+    private boolean preserveL1Storage;
 
     @Test public void runFixture() throws Exception {
         Bundle args = InstrumentationRegistry.getArguments();
@@ -72,12 +77,25 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         String fixtureId = args.getString("p6_fixture_id", "");
         String mode = args.getString("p6_mode", "CHAIN");
         if (!fixtureId.matches("fx-[ah][0-9]{2}")) throw new IllegalArgumentException("P6_FIXTURE_ID_INVALID");
-        if (!Set.of("L1_ONLY", "L2_ONLY", "L3_ONLY", "CHAIN").contains(mode)) {
+        if (!Set.of("L1_ONLY", "L2_ONLY", "L3_ONLY", "L1_THEN_L2", "CHAIN").contains(mode)) {
             throw new IllegalArgumentException("P6_FIXTURE_MODE_INVALID");
+        }
+        String l1SourceRunId = args.getString("p6_l1_source_run_id", "");
+        if (l1SourceRunId != null && !l1SourceRunId.isBlank()) l1SourceRunId = uuid(l1SourceRunId);
+        boolean reuseL1State = "L1_THEN_L2".equals(mode) && l1SourceRunId != null && !l1SourceRunId.isBlank();
+        if ("L1_THEN_L2".equals(mode)
+                && "YES".equalsIgnoreCase(args.getString("p6_fixture_live", "")) && !reuseL1State) {
+            throw new IllegalArgumentException("P6_L1_THEN_L2_LIVE_REQUIRES_G1_STATE");
+        }
+        if (!"L1_THEN_L2".equals(mode) && l1SourceRunId != null && !l1SourceRunId.isBlank()) {
+            throw new IllegalArgumentException("P6_L1_SOURCE_MODE_MISMATCH");
         }
 
         context = ApplicationProvider.getApplicationContext();
         boolean liveMode = "YES".equalsIgnoreCase(args.getString("p6_fixture_live", ""));
+        if (liveMode && "L2_ONLY".equals(mode)) {
+            throw new IllegalArgumentException("P6_LIVE_L2_ONLY_REQUIRES_REUSED_G1_L1_STATE");
+        }
         AppSettings liveSettings = null;
         if (liveMode) {
             liveSettings = SettingsStore.load(context).copy();
@@ -142,9 +160,12 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         if (!groupLedgerPath.startsWith(externalRoot)) throw new IllegalArgumentException("P6_SPEND_GROUP_PATH_REFUSED");
         EditorialP6GroupSpendLedger spend = new EditorialP6GroupSpendLedger(
                 groupLedgerPath, groupId, groupMaximum);
-        String opaqueChapterKey = "p6-fixture-" + EditorialCanonicalJson.sha256Hex((runId + "|" + fixtureId)
+        String databaseRunId = reuseL1State ? l1SourceRunId : runId;
+        String opaqueChapterKey = "p6-fixture-" + EditorialCanonicalJson.sha256Hex((databaseRunId + "|" + fixtureId)
                 .getBytes(StandardCharsets.UTF_8)).substring(0, 16);
-        FixtureSetup fixture = createSetup(fixtureId, chapter, input, runId, opaqueChapterKey);
+        FixtureSetup fixture = reuseL1State
+                ? openExistingL1Setup(fixtureId, chapter, input, databaseRunId, opaqueChapterKey)
+                : createSetup(fixtureId, chapter, input, databaseRunId, opaqueChapterKey);
         FakeL1 l1 = new FakeL1();
         FakeL2 l2 = new FakeL2();
         FakeL3 l3 = new FakeL3();
@@ -162,7 +183,7 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         EditorialL2Execution.Provider l2Delegate = l2;
         EditorialL2Execution.Provider l3Delegate = l3;
         boolean liveL1 = liveMode && ("L1_ONLY".equals(mode) || "CHAIN".equals(mode));
-        boolean liveL2 = liveMode && ("L2_ONLY".equals(mode) || "CHAIN".equals(mode));
+        boolean liveL2 = liveMode && ("L2_ONLY".equals(mode) || "L1_THEN_L2".equals(mode) || "CHAIN".equals(mode));
         boolean liveL3 = liveMode && ("L3_ONLY".equals(mode) || "CHAIN".equals(mode));
         if (liveL1) {
             l1Delegate = new OpenRouterEditorialP6L1Provider(
@@ -215,23 +236,30 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         } else {
             EditorialP5CExactBindingExecution l1Execution = EditorialP5CExactBindingExecution.forContract(
                     database, storage, EditorialContractRevision.L1_LEDGER_V2);
-            EditorialP6L1Authorizations.Pair consent = EditorialP6L1Authorizations.create(
-                    fixture.binding(), fixture.chapterKey(), "offline-fake-provider", budgets, System.currentTimeMillis());
-            EditorialP5CExactBindingExecution.Result raw = l1Execution.executeRaw(
-                    fixture.projectId(), fixture.selector(), fixture.chapterKey(), consent.raw(), budgetedL1);
-            EditorialP5CExactBindingExecution.Result reconcile = raw.accepted()
-                    ? l1Execution.executeReconcile(fixture.projectId(), fixture.selector(), fixture.chapterKey(),
-                    consent.reconcile(), budgetedL1) : raw;
-            if (!reconcile.accepted()) throw new IllegalStateException("P6_L1_PREDECESSOR_FAILED:" + reconcile.reasonCode());
-            EditorialP5CExactBindingExecution.CommittedL1 committedL1 = l1Execution.committedL1(
-                    fixture.projectId(), fixture.selector(), fixture.chapterKey()).orElseThrow(
-                    () -> new IllegalStateException("P6_REPORT_L1_READBACK_FAILED"));
+            EditorialP5CExactBindingExecution.CommittedL1 committedL1;
+            int l1Calls = 0;
+            if (reuseL1State) {
+                committedL1 = l1Execution.committedL1(fixture.projectId(), fixture.selector(), fixture.chapterKey())
+                        .orElseThrow(() -> new IllegalStateException("P6_REUSED_REPORT_L1_MISSING"));
+            } else {
+                EditorialP6L1Authorizations.Pair consent = EditorialP6L1Authorizations.create(
+                        fixture.binding(), fixture.chapterKey(), "offline-fake-provider", budgets, System.currentTimeMillis());
+                EditorialP5CExactBindingExecution.Result raw = l1Execution.executeRaw(
+                        fixture.projectId(), fixture.selector(), fixture.chapterKey(), consent.raw(), budgetedL1);
+                EditorialP5CExactBindingExecution.Result reconcile = raw.accepted()
+                        ? l1Execution.executeReconcile(fixture.projectId(), fixture.selector(), fixture.chapterKey(),
+                        consent.reconcile(), budgetedL1) : raw;
+                if (!reconcile.accepted()) throw new IllegalStateException("P6_L1_PREDECESSOR_FAILED:" + reconcile.reasonCode());
+                committedL1 = l1Execution.committedL1(fixture.projectId(), fixture.selector(), fixture.chapterKey())
+                        .orElseThrow(() -> new IllegalStateException("P6_REPORT_L1_READBACK_FAILED"));
+                l1Calls = raw.providerCalls() + reconcile.providerCalls();
+            }
             Files.write(reportPath, committedL1.reportL1Bytes());
             if ("L1_ONLY".equals(mode)) {
                 finalBytes = input.get("DRAFT.txt");
                 reason = "L1_REPORT_COMMITTED";
                 valid = true;
-                measuredCalls = raw.providerCalls() + reconcile.providerCalls();
+                measuredCalls = l1Calls;
                 stage = "L1";
             } else {
                 EditorialL2Execution.Request l2Request = new EditorialL2Execution.Request(
@@ -242,11 +270,11 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
                 if (!l2Result.accepted() || l2Result.committed() == null) {
                     throw new IllegalStateException("P6_L2_PREDECESSOR_FAILED:" + l2Result.reasonCode());
                 }
-                if ("L2_ONLY".equals(mode)) {
+                if ("L2_ONLY".equals(mode) || "L1_THEN_L2".equals(mode)) {
                     finalBytes = l2Result.committed().viL2Bytes();
                     reason = "L2_COMMITTED";
                     valid = true;
-                    measuredCalls = raw.providerCalls() + reconcile.providerCalls() + l2Result.providerCalls();
+                    measuredCalls = l1Calls + l2Result.providerCalls();
                     stage = "L2";
                 } else {
                     EditorialL3Execution.Request l3Request = new EditorialL3Execution.Request(
@@ -261,8 +289,7 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
                     finalBytes = l3Result.committed().viL2Bytes();
                     reason = "L3_FINAL_COMMITTED";
                     valid = true;
-                    measuredCalls = raw.providerCalls() + reconcile.providerCalls()
-                            + l2Result.providerCalls() + l3Result.providerCalls();
+                    measuredCalls = l1Calls + l2Result.providerCalls() + l3Result.providerCalls();
                     stage = "L3";
                 }
             }
@@ -286,6 +313,9 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         metadata.put("fixtureId", fixtureId);
         metadata.put("mode", mode);
         metadata.put("providerKind", liveMode ? "LIVE" : "FAKE_OFFLINE");
+        metadata.put("l1ReusedFromPriorGroup", reuseL1State);
+        metadata.put("l1SourceRunId", reuseL1State ? l1SourceRunId : "");
+        metadata.put("l1ThenL2SameDatabase", "L1_THEN_L2".equals(mode));
         metadata.put("groupId", groupId);
         metadata.put("groupMaximumUsd", groupMaximum.toPlainString());
         metadata.put("actualProviderCalls", BigDecimal.valueOf(metrics.calls));
@@ -305,6 +335,10 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         assertTrue("offline fake provider must be called only through the production stage boundary", fakeCalls <= FAKE_PROVIDER_CALL_LIMIT);
         assertTrue("production artifacts must validate: " + reason
                 + (l2.failure.isEmpty() ? "" : ":fakeL2=" + l2.failure), valid);
+        if ("L1_ONLY".equals(mode) && "YES".equalsIgnoreCase(args.getString("p6_keep_l1_state", ""))) {
+            preserveL1Database = true;
+            preserveL1Storage = true;
+        }
     }
 
     @Test public void liveModeRejectsMismatchedFingerprintBeforeAnyDispatch() {
@@ -326,15 +360,17 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
 
     @After public void tearDown() throws Exception {
         if (database != null) database.close();
-        if (context != null && databaseName != null) context.deleteDatabase(databaseName);
-        if (storageRoot != null) deleteTree(storageRoot);
+        if (context != null && databaseName != null && !preserveL1Database) context.deleteDatabase(databaseName);
+        if (storageRoot != null && !preserveL1Storage) deleteTree(storageRoot);
     }
 
     private FixtureSetup createSetup(String fixtureId, String chapter, Map<String, byte[]> input, String runId,
                                     String chapterKey) throws Exception {
-        databaseName = "p6-fixture-" + runId.substring(0, 8) + "-" + fixtureId + ".db";
+        databaseName = databaseName(runId, fixtureId);
         database = new TranslationRepository(context, databaseName);
-        storageRoot = context.getCacheDir().toPath().resolve("p6-fixture-pack-" + UUID.randomUUID());
+        storageRoot = context.getFilesDir().toPath().resolve("p6-fixture-pack-state")
+                .resolve(runId.substring(0, 8) + "-" + fixtureId);
+        if (Files.exists(storageRoot)) throw new IllegalStateException("P6_FIXTURE_STORAGE_ALREADY_EXISTS");
         storage = new EditorialPackStorageLayout(storageRoot);
         byte[] zip = readAssetZip(CANONICAL_ASSET);
         EditorialPackImportResult imported = new EditorialPackImportService(database, storage,
@@ -369,6 +405,62 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         insertChapter(result.projectId(), chapterKey, fixtureId, chapter, sources);
         return new FixtureSetup(result.projectId(), chapterKey, selector, result.binding(), sources,
                 candidate.manifest());
+    }
+
+    private FixtureSetup openExistingL1Setup(String fixtureId, String chapter, Map<String, byte[]> input,
+                                             String sourceRunId, String chapterKey) throws Exception {
+        databaseName = databaseName(sourceRunId, fixtureId);
+        storageRoot = context.getFilesDir().toPath().resolve("p6-fixture-pack-state")
+                .resolve(sourceRunId.substring(0, 8) + "-" + fixtureId);
+        if (!Files.isDirectory(storageRoot) || !context.getDatabasePath(databaseName).isFile()) {
+            throw new IllegalStateException("P6_REUSED_L1_STATE_MISSING");
+        }
+        preserveL1Database = true;
+        preserveL1Storage = true;
+        database = new TranslationRepository(context, databaseName);
+        storage = new EditorialPackStorageLayout(storageRoot);
+        String selector = "p6-fixture-" + sourceRunId.substring(0, 8) + "-" + fixtureId;
+        EditorialP4Binding binding = new EditorialP4BindingDao(database).findByAttemptRequestSelector(selector)
+                .orElseThrow(() -> new IllegalStateException("P6_REUSED_L1_BINDING_MISSING"));
+        long projectId;
+        try (Cursor cursor = database.editorialReadableDatabase().rawQuery(
+                "SELECT project_row_id FROM editorial_p4_bindings WHERE attempt_request_selector=?",
+                new String[]{selector})) {
+            if (!cursor.moveToFirst()) throw new IllegalStateException("P6_REUSED_L1_PROJECT_MISSING");
+            projectId = cursor.getLong(0);
+        }
+        EditorialPackManifest manifest = new EditorialPackSelectionPolicy(database, storage)
+                .resolve(binding.packId(), binding.packVersion())
+                .orElseThrow(() -> new IllegalStateException("P6_REUSED_L1_PACK_MISSING")).manifest();
+        FixtureSetup fixture = new FixtureSetup(projectId, chapterKey, selector, binding, List.of(), manifest);
+        List<EditorialP4InputSource> storedSources = currentAssetSources(fixture);
+        assertFixtureInputsMatch(input, storedSources);
+        if (!"RESTORED".equals(new EditorialP4BindingTransactionService(database, storage)
+                .resumeProject(projectId, selector, storedSources).code().name())) {
+            throw new IllegalStateException("P6_REUSED_L1_SOURCE_PREFLIGHT_FAILED");
+        }
+        if (!new EditorialRepository(database).listChapters(projectId).stream()
+                .anyMatch(existing -> chapterKey.equals(existing.chapterKey))) {
+            throw new IllegalStateException("P6_REUSED_L1_CHAPTER_MISSING");
+        }
+        return fixture;
+    }
+
+    private static void assertFixtureInputsMatch(Map<String, byte[]> input, List<EditorialP4InputSource> stored)
+            throws CharacterCodingException {
+        Map<String, EditorialP4InputSource> byRole = new LinkedHashMap<>();
+        for (EditorialP4InputSource source : stored) byRole.put(source.role(), source);
+        for (String name : SOURCE_NAMES) {
+            String role = name.substring(0, name.lastIndexOf('.'));
+            EditorialP4InputSource source = byRole.get(role);
+            if (source == null || !Arrays.equals(appTextBytes(input.get(name)), source.bytes())) {
+                throw new IllegalStateException("P6_REUSED_L1_SOURCE_MISMATCH");
+            }
+        }
+    }
+
+    private static String databaseName(String runId, String fixtureId) {
+        return "p6-fixture-" + runId.substring(0, 8) + "-" + fixtureId + ".db";
     }
 
     /** Match FileUtil's UTF-8 text import: decode strictly and consume a leading UTF-8 BOM. */
