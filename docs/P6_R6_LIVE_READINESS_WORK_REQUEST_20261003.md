@@ -61,3 +61,7 @@ Sau L0–L9: tiếp tục G1 → G2 → G4 → G3 → R7 đúng như `docs/P6_R6
 ## 5. Báo cáo cuối
 
 1. Gói đã đóng + bằng chứng. 2. Call/chi phí thật (phải 0 cho tới khi G1 bắt đầu). 3. Test đã chạy, giới hạn. 4. Commit/push. 5. Đúng một bước tiếp theo hoặc câu hỏi L9.
+
+## 6. Trả lời L9 của owner (2026-10-03)
+
+Owner xác nhận: API key đã lưu trong Settings của app trên **cả emulator và máy pilot `15e84958`**, và là **cùng một key** với endpoint account fingerprint owner đã đưa. Câu trả lời này đóng L9 về mặt thông tin; việc kiểm thật vẫn do runner làm trên từng thiết bị (fingerprint tính từ `SettingsStore` phải khớp giá trị owner đưa, lệch thì dừng trước call, 0 call). Codex không đọc, in hay ghi key; fingerprint không vào Git. G1 được bắt đầu ngay khi L0–L8 đạt.
