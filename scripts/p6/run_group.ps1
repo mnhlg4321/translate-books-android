@@ -57,9 +57,6 @@ foreach ($FixtureId in $FixtureIds) {
     & adb -s $Serial push (Join-Path $TransferRoot "$FixtureId.runtime.json") "$DeviceInputRoot/$FixtureId.runtime.json" | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "Could not push the sanitized runtime manifest for $FixtureId." }
 }
-$Permissions = & adb -s $Serial shell chmod -R a+rX $DeviceInputRoot 2>&1
-if ($LASTEXITCODE -ne 0) { throw "Could not grant the app read access to the pushed fixture payloads: $($Permissions -join ' ')" }
-
 $Instrumentation = 'com.ml.tblandroidtxt.test/androidx.test.runner.AndroidJUnitRunner'
 foreach ($FixtureId in $FixtureIds) {
     $LogPath = Join-Path (Join-Path $RunRoot 'logs') "$FixtureId-instrumentation.txt"

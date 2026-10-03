@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -83,7 +84,7 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
                 || fixtureRoot.toString().contains("6.FINAL") || Files.exists(outputRoot)) {
             throw new IllegalStateException("P6_FIXTURE_PATH_REFUSED");
         }
-        Map<String, Object> runtime = EditorialCanonicalJson.parseObject(Files.readAllBytes(
+        Map<String, Object> runtime = EditorialCanonicalJson.parseObject(readPushedFile(
                 externalRoot.resolve("p6-fixtures").resolve(runId).resolve(fixtureId + ".runtime.json")));
         if (!fixtureId.equals(string(runtime, "fixtureId"))) throw new IllegalStateException("P6_RUNTIME_ID_MISMATCH");
         String chapter = string(runtime, "chapter");
@@ -92,8 +93,8 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         Map<String, byte[]> input = new LinkedHashMap<>();
         for (String name : SOURCE_NAMES) {
             Path source = fixtureRoot.resolve(name).normalize();
-            if (!source.startsWith(fixtureRoot) || Files.isSymbolicLink(source)) throw new IllegalStateException("P6_FIXTURE_SOURCE_PATH_REFUSED");
-            byte[] bytes = Files.readAllBytes(source);
+            if (!source.startsWith(fixtureRoot)) throw new IllegalStateException("P6_FIXTURE_SOURCE_PATH_REFUSED");
+            byte[] bytes = readPushedFile(source);
             Map<String, Object> metadata = object(manifestFiles.get(name));
             if (bytes.length != integer(metadata, "bytes")
                     || !EditorialCanonicalJson.sha256Hex(bytes).equals(string(metadata, "sha256"))) {
@@ -429,6 +430,19 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
             return parsed.toString();
         } catch (RuntimeException invalid) {
             throw new IllegalArgumentException("P6_RUN_ID_INVALID");
+        }
+    }
+
+    private static byte[] readPushedFile(Path path) throws IOException {
+        String quotedPath = "'" + path.toString().replace("'", "'\\''") + "'";
+        ParcelFileDescriptor descriptor = InstrumentationRegistry.getInstrumentation().getUiAutomation()
+                .executeShellCommand("cat " + quotedPath);
+        try (InputStream input = new ParcelFileDescriptor.AutoCloseInputStream(descriptor);
+             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = input.read(buffer)) != -1) output.write(buffer, 0, read);
+            return output.toByteArray();
         }
     }
 
