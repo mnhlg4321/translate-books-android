@@ -40,7 +40,7 @@ public final class EditorialP6FixtureLivePreflightInstrumentedTest {
 
     @Test public void wrongRouteIsRejectedBeforeProviderConstruction() {
         AppSettings settings = valid("synthetic-key");
-        settings.model = "openai/gpt-5.6-luna";
+        settings.model = "not-the-approved-model";
         assertEquals(EditorialP6FixtureLivePreflight.ROUTE_MISMATCH,
                 EditorialP6FixtureLivePreflight.check(settings, "0".repeat(64)));
     }

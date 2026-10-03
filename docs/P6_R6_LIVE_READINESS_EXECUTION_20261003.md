@@ -60,9 +60,18 @@ Scope: owner request `docs/P6_R6_LIVE_READINESS_WORK_REQUEST_20261003.md`. Compl
 - The actual emulator capture round-trip will be exercised during L8 after the wrapper build. No emulator dispatch, live provider request, API-key read, fingerprint use, or spend occurred in L6.
 - **L6 guard implementation and host tests PASS; emulator prompt-capture evidence pending L8.**
 
-## L7–L8
+## L7 — current emulator AndroidTest sweep (FAILED_REPAIRING)
 
-Pending.
+- Built with the required wrappers in clean temporary worktree `D:\P5E-builds\wt-p6-r6-live-l7-20261003`, source commit `57806a6f32347c6183bdac66a5441220989ccdd5`. Production `4.18-p6.12`/code225, event `build-20261003-115734`, APK SHA-256 `9DC483656DEE23D828D0644E21156E753F49FFC8E9C13738D1F02B96AA3F8677`, source ZIP SHA-256 `D7D6770C8C76EABBDC8AB11FA5FE8E7B19A44BC02E948B43550F9351C2841C32`. App unit tests `331/331` and lint PASS. Payload parity is under `artifacts/builds` and `backup/builds`; installed only on `emulator-5554`.
+- AndroidTest event `p6-r6r7-57806a6f-20261003-12`, tied to production code225 and the same source commit; APK SHA-256 `9CC64BF2408911EDD1ABD57E862160C98EFB5AD47850A45BA0ACC84E3BEE6665`, signer SHA-256 matches the production certificate. Eight-file payload is mirrored under `artifacts/test-builds` and `backup/test-builds`; installed after archive/hash/signer checks on `emulator-5554`.
+- First current-source sweep ran 26 of 42 instrumented test classes with no live/provider opt-in arguments: **172 passed, 1 failed**. The only failure was `EditorialP6FixtureLivePreflightInstrumentedTest#wrongRouteIsRejectedBeforeProviderConstruction`; its fixture set model `openai/gpt-5.6-luna`, which is the approved model, so the guard correctly returned fingerprint mismatch instead of route mismatch. Changed the synthetic fixture to `not-the-approved-model`; this source repair is not yet rebuilt or rerun. L7 stays `FAILED_REPAIRING` pending that verification.
+- The excluded 16 classes are: `EditorialP5CLiveL1PilotInstrumentedTest`, `EditorialP5CLiveRecoveryInspectionInstrumentedTest`, `EditorialP5CRealBindingDeviceSetupInstrumentedTest`, `EditorialP5DVol5RawPilotInstrumentedTest`, `EditorialP5EAccountCheckOnlyInstrumentedTest`, `EditorialP5EFreshPilotInstrumentedTest`, `EditorialP5EFreshRawBoundaryInstrumentedTest`, `EditorialP5EFreshRawLiveInstrumentedTest`, `EditorialP5EFreshRawRouteDiagnosticInstrumentedTest`, `EditorialP5EReconcileLiveInstrumentedTest`, `Hotfix441InstrumentedTest`, `V415LibraryScrollInstrumentedTest`, `V415MultiProfileImportInstrumentedTest`, `V415SettingsPersistenceInstrumentedTest`, `V46DashboardInstrumentedTest`, and `V48RealApiPromptInstrumentedTest`. They either opt into live/provider/account work, read or write the installed pilot/main DB, seed persistent jobs/bindings, or clear/snapshot the `settings` preferences that may contain the owner key. The explicit `EditorialChapterFinalCoordinator#seedMainDatabaseForEmulatorUiSmoke` method received no opt-in argument and stopped at its assumption before opening the app DB.
+- The included P5C fake E2E class uses only an in-process loopback server and test key; all 20 methods passed. Instrumentation supplied no `p6_fixture_live`, fingerprint, account, or provider argument. Actual external provider calls and spend remain **0**. The full per-class logs are under `D:\P5E-private\p6-runs\l7-regression-57806a6f-20261003-1200`.
+- C9's original 22 historical failure log was not found in the retained execution files. Commit `d9ccdcda` already updated 13 stale schema-v24 expectation sites across six classes; those classes passed in this current sweep. The exact historical IDs for the remainder are not inferred from current exclusions. This limitation is reported separately from the current sweep result.
+
+## L8
+
+Pending. Rebuild the repaired test source through both required wrappers, rerun the preflight class, then complete the emulator regression, 14-fixture fake run, and wrong-fingerprint zero-call check.
 
 ## G1
 
