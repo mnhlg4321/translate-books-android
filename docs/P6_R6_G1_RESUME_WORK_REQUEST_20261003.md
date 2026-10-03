@@ -37,3 +37,7 @@ Không làm trong yêu cầu này: G2/G3/G4/R7; nới validator (ví dụ tự c
 ## 5. Báo cáo cuối
 
 1. Điều mới được chứng minh. 2. Call/chi phí thật so với trần còn lại. 3. Mã từ chối cụ thể nếu có. 4. Commit/push. 5. Đúng một bước tiếp theo.
+
+## 6. Quyết định owner
+
+**D-G1 đã được owner duyệt (2026-10-03, "đồng ý D-g1"):** chạy tiếp G1 trong phần trần còn lại của nhóm (USD 1.00 − 0.0081852 đã tiêu), chạy lại `fx-a03` như attempt mới, dừng cả nhóm ngay khi một fixture bị từ chối ở L1. Các luật khác giữ nguyên: 0 retry, 0 repair call, UNKNOWN dừng, trần nhóm kiểm trước mỗi fixture, G2 chưa được bắt đầu.
