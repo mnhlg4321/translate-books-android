@@ -1,5 +1,12 @@
 # Build State
 
+## Current P6 live-readiness checkpoint — 2026-10-03
+
+- §7 network check on `emulator-5554` passed: Wi-Fi/mobile data enabled, airplane mode off, and pings to `8.8.8.8` and `openrouter.ai` succeeded. No connectivity setting was changed.
+- The intentionally wrong fingerprint preflight returned `P6_LIVE_FINGERPRINT_MISMATCH`, provider calls `0`. The live runner with the owner-supplied fingerprint also returned `P6_LIVE_FINGERPRINT_MISMATCH`, provider calls `0`. The route predicate and non-empty-key check passed before fingerprint comparison. No API key or fingerprint value is recorded.
+- G1 was not started; §7 provider calls/spend are `0` / USD `0.00`. No G1 score exists. G2 remains unstarted. Redacted evidence: `D:\P5E-private\p6-live-checks\20261003\`; report: `docs/P6_R6_G1_LIVE_PREFLIGHT_20261003.md`.
+- Next action: owner verifies the intended key saved on `emulator-5554` or supplies the fingerprint matching the saved endpoint/key pair; rerun the matching zero-call preflight and start G1 only after `MATCH`.
+
 ## P6 R6/R7 offline checkpoint — 2026-10-03
 
 - P0–P3 offline execution is complete on `feature/v4.18-p5e-runner-repair-20260917`; available test/artifact gates pass, while C9's historical failure inventory remains open. P4 price and fixture/leak checks pass; no provider call was made. Source/report baseline before this P4 documentation commit is `fe082a6ab742c51451858d987712280f4e5a3a77`. The owner's pre-existing `.idea`, P5E files, evidence, artifacts and backups were preserved and not staged.
