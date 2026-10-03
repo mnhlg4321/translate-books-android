@@ -188,7 +188,7 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-Owner đã duyệt Q1–Q5 theo khuyến nghị (2026-10-02). Claude kiểm lại R0–R5 độc lập và lập `docs/P6_R6_R7_CODEX_WORK_REQUEST_20261003.md` (phản biện C1–C12, gói P0–P10). Chặn trước live: chưa có đường sản phẩm chạy L1 cho binding mới (C1) và chưa chốt bề mặt chạy fixture/key (C2). Next action duy nhất: Codex làm P1 (L1 trong hành động chạy trên thẻ chương, hộp thoại cấp phép 8 call) rồi P2, P3; live chỉ sau P4.
+Claude đã review P0–P4 của Codex (`fbde77f6`, đã push). Chưa được chi tiền: runner fixture chỉ có fake provider, trần nhóm chưa áp xuyên fixture, panel gọi L1 cho chương đã có L1 legacy. Next action duy nhất: Codex làm L0–L8 trong `docs/P6_R6_LIVE_READINESS_WORK_REQUEST_20261003.md`, rồi owner xác nhận vị trí key (L9) trước G1.
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 
