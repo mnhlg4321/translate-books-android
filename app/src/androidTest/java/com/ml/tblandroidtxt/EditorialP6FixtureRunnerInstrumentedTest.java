@@ -236,7 +236,8 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         if (!Files.exists(reportPath)) throw new IllegalStateException("P6_REPORT_L1_EVIDENCE_MISSING");
         if (!Files.exists(promptPath)) Files.write(promptPath, new byte[0]);
         assertTrue("offline fake provider must be called only through the production stage boundary", fakeCalls <= FAKE_PROVIDER_CALL_LIMIT);
-        assertTrue("production artifacts must validate: " + reason, valid);
+        assertTrue("production artifacts must validate: " + reason
+                + (l2.failure.isEmpty() ? "" : ":fakeL2=" + l2.failure), valid);
     }
 
     @After public void tearDown() throws Exception {
@@ -557,14 +558,28 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
     private static final class FakeL2 implements EditorialL2Execution.Provider {
         final Path promptPath;
         int calls;
+        String failure = "";
         FakeL2(Path promptPath) { this.promptPath = promptPath; }
         @Override public Response call(Request request) throws Exception {
             calls++;
-            PromptPair prompt = OpenRouterEditorialL2Provider.buildPrompt(request);
-            if (EditorialL2Execution.PHASE.equals(request.phase())) {
-                Files.write(promptPath, ("SYSTEM\n" + prompt.system + "\nUSER\n" + prompt.user).getBytes(StandardCharsets.UTF_8));
+            try {
+                PromptPair prompt = OpenRouterEditorialL2Provider.buildPrompt(request);
+                if (EditorialL2Execution.PHASE.equals(request.phase())) {
+                    Files.write(promptPath, ("SYSTEM\n" + prompt.system + "\nUSER\n" + prompt.user)
+                            .getBytes(StandardCharsets.UTF_8));
+                }
+                return new Response(l2Wire(request), "stop", true, 0, 0, BigDecimal.ZERO, true);
+            } catch (Exception error) {
+                StackTraceElement[] trace = error.getStackTrace();
+                if (trace.length > 0) {
+                    StackTraceElement at = trace[0];
+                    failure = error.getClass().getSimpleName() + "@" + at.getClassName()
+                            + "#" + at.getMethodName() + ":" + at.getLineNumber();
+                } else {
+                    failure = error.getClass().getSimpleName();
+                }
+                throw error;
             }
-            return new Response(l2Wire(request), "stop", true, 0, 0, BigDecimal.ZERO, true);
         }
     }
 
