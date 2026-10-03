@@ -2,10 +2,11 @@
 
 ## Current P6 live-readiness checkpoint — 2026-10-03
 
-- §7 network check on `emulator-5554` passed: Wi-Fi/mobile data enabled, airplane mode off, and pings to `8.8.8.8` and `openrouter.ai` succeeded. No connectivity setting was changed.
-- The intentionally wrong fingerprint preflight returned `P6_LIVE_FINGERPRINT_MISMATCH`, provider calls `0`. The live runner with the owner-supplied fingerprint also returned `P6_LIVE_FINGERPRINT_MISMATCH`, provider calls `0`. The route predicate and non-empty-key check passed before fingerprint comparison. No API key or fingerprint value is recorded.
-- G1 was not started; §7 provider calls/spend are `0` / USD `0.00`. No G1 score exists. G2 remains unstarted. Redacted evidence: `D:\P5E-private\p6-live-checks\20261003\`; report: `docs/P6_R6_G1_LIVE_PREFLIGHT_20261003.md`.
-- Next action: owner verifies the intended key saved on `emulator-5554` or supplies the fingerprint matching the saved endpoint/key pair; rerun the matching zero-call preflight and start G1 only after `MATCH`.
+- §7 network and both preflights passed: deliberately wrong fingerprint rejected with `P6_LIVE_FINGERPRINT_MISMATCH`, zero calls; new owner fingerprint returned `MATCH`, zero calls. Emulator network is working; no connectivity or app settings were changed.
+- G1 group `G1-20261003-ecbf8c55` started with cap USD `1.00` and stopped on its first fixture, `fx-a03`, after one `L1_RAW_DISCOVERY` call returned `REPAIR_L1_LEDGER_INVALID`. The ledger verifies one settled call at USD `0.0081852`, two entries, zero pending UNKNOWN reservations. No retry/repair call was made.
+- No `REPORT_L1`, structural artifact or final text was produced. Partial `score_run.py`: `STRUCTURAL_VALID=0/1`; `SEMANTIC_EVAL=FAIL` from missing final text, not a quality assessment. G1 is incomplete; G2 not started. No API key or fingerprint value is recorded.
+- Report: `docs/P6_R6_G1_LIVE_EXECUTION_20261003.md`; private run: `D:\P5E-private\p6-runs\c2f57361-61ba-47d2-bba5-20110261453a\`.
+- Next action: diagnose `REPAIR_L1_LEDGER_INVALID` offline and obtain owner authorization before any further live G1 call.
 
 ## P6 R6/R7 offline checkpoint — 2026-10-03
 
