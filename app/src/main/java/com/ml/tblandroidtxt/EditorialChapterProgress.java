@@ -101,6 +101,9 @@ public final class EditorialChapterProgress {
      * not be shown as an unknown-state stop.
      */
     public static String describeRunning(Progress progress) {
+        if (progress.stage() == Stage.L1_INCOMPLETE) {
+            return "Đang chạy L1. Giữ app mở; tiến độ tự cập nhật.";
+        }
         String done = progress.stage() == Stage.L3 ? "L1 ✓ • L2 ✓" : "L1 ✓";
         return "Đang chạy " + (progress.stage() == Stage.L3 ? "L3" : "L2") + " (" + done + "). Giữ app mở; tiến độ tự cập nhật.";
     }

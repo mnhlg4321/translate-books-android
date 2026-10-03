@@ -602,6 +602,44 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
         assertEquals(0, l2.calls + l3.calls);
     }
 
+    @Test public void fullLedgerChainStartsAtL1AndReopensWithoutRepeatingAnyStage() throws Exception {
+        rawText = LEDGER_RAW;
+        draftText = LEDGER_DRAFT;
+        BindingFixture fixture = createBoundChapter();
+        AtomicL1 l1 = new AtomicL1();
+        LedgerL2 l2 = new LedgerL2();
+        LedgerL3 l3 = new LedgerL3();
+        EditorialChapterFinalCoordinator coordinator = new EditorialChapterFinalCoordinator(database, storage);
+        EditorialChainBudgets budgets = EditorialChainBudgets.fullLedgerRecommended();
+        EditorialChapterFinalCoordinator.Result result = coordinator.runFromL1(fixture.projectId, SELECTOR,
+                CHAPTER_KEY, budgets, fullAuthorization(fixture.binding, "raw-first", "L1_RAW_DISCOVERY", budgets.l1Raw()),
+                fullAuthorization(fixture.binding, "reconcile-first", "L1_RECONCILE", budgets.l1Reconcile()),
+                l1, l2, l3);
+
+        assertEquals(result.reasonCode(), EditorialChapterFinalCoordinator.Stage.FINAL, result.stage());
+        assertTrue(result.finalReady());
+        assertEquals(8, result.providerCalls());
+        assertEquals(2, l1.calls);
+        assertEquals(List.of("L1_RAW_DISCOVERY", "L1_RECONCILE"), l1.phases);
+        assertEquals(3, l2.calls);
+        assertEquals(3, l3.calls);
+
+        database.close();
+        database = new TranslationRepository(context, databaseName);
+        EditorialChapterFinalCoordinator reopened = new EditorialChapterFinalCoordinator(database, storage);
+        AtomicL1 noL1 = new AtomicL1();
+        noL1.refuse = true;
+        LedgerL2 noL2 = new LedgerL2();
+        LedgerL3 noL3 = new LedgerL3();
+        EditorialChapterFinalCoordinator.Result again = reopened.runFromL1(fixture.projectId, SELECTOR,
+                CHAPTER_KEY, budgets, fullAuthorization(fixture.binding, "raw-resume", "L1_RAW_DISCOVERY", budgets.l1Raw()),
+                fullAuthorization(fixture.binding, "reconcile-resume", "L1_RECONCILE", budgets.l1Reconcile()),
+                noL1, noL2, noL3);
+        assertEquals(EditorialChapterFinalCoordinator.Stage.FINAL, again.stage());
+        assertEquals(0, again.providerCalls());
+        assertEquals(0, noL1.calls + noL2.calls + noL3.calls);
+    }
+
     // ---- fixture (mirrors EditorialP5CExactBindingFakeE2EInstrumentedTest) ----
 
     private BindingFixture createBoundChapter() throws Exception {
@@ -701,6 +739,34 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
                 phase, "FAKE_PROVIDER", "fake/model", "fake-account-fingerprint", 1, 1, 0,
                 200_000, 2_000, 200_000, BigDecimal.ONE, 60_000L, true, false, false,
                 "HASH_ONLY", "TEST_STOP_AUTHORITY", 0L, Long.MAX_VALUE, true);
+    }
+
+    private static EditorialP5PilotAuthorization fullAuthorization(EditorialP4Binding binding, String id,
+                                                                    String phase, EditorialL2Execution.Budget budget) {
+        int inputTokens = (budget.maximumInputBytes() + 1) / 2;
+        return new EditorialP5PilotAuthorization(id, binding.bindingIdentity(), binding.runDeclarationIdentity(),
+                binding.canonicalPackHash(), binding.canonicalProfileHash(), binding.compatibilityEvaluationId(),
+                CHAPTER_KEY, phase, "FAKE_PROVIDER", "fake/model", "fake-account-fingerprint", 1, 0, 0,
+                inputTokens, budget.maximumOutputTokens(), inputTokens + budget.maximumOutputTokens(),
+                budget.maximumCost(), budget.maximumExecutionTimeMillis(), true, false, false,
+                "HASH_ONLY", "TEST_STOP_AUTHORITY", 0L, Long.MAX_VALUE, true);
+    }
+
+    private static final class AtomicL1 implements EditorialP5PilotProvider {
+        int calls;
+        boolean refuse;
+        final List<String> phases = new ArrayList<>();
+
+        @Override public Response call(Request request) {
+            calls++;
+            phases.add(request.phase());
+            if (refuse) throw new AssertionError("committed L1 stages must not be called again");
+            byte[] wire = "L1_RAW_DISCOVERY".equals(request.phase())
+                    ? LedgerWires.rawWire(request.attemptIdentity())
+                    : LedgerWires.reconcileWire(request.attemptIdentity());
+            return new Response("fake-" + request.phase(), wire, "stop", true,
+                    40, 20, 60, new BigDecimal("0.01"), null, true);
+        }
     }
 
     private static EditorialP5L1Output l1Output(EditorialP5PilotRequest request) {

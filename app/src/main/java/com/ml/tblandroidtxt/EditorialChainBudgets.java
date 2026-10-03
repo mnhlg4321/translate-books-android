@@ -11,14 +11,22 @@ import java.util.Objects;
  * chain-wide USD cap. The authorization dialog shows exactly these numbers and the coordinator enforces
  * exactly these numbers; nothing else grants a provider call.
  */
-public record EditorialChainBudgets(EditorialL2Execution.Budget discovery, EditorialL2Execution.Budget edit,
+public record EditorialChainBudgets(EditorialL2Execution.Budget l1Raw,
+                                    EditorialL2Execution.Budget l1Reconcile,
+                                    EditorialL2Execution.Budget discovery, EditorialL2Execution.Budget edit,
                                     EditorialL2Execution.Budget reaudit, EditorialL2Execution.Budget reconcile,
                                     BigDecimal chainMaximumCost, EditorialL2Execution.Budget finalRead) {
     /** The legacy chain: four calls and no final read. */
     public EditorialChainBudgets(EditorialL2Execution.Budget discovery, EditorialL2Execution.Budget edit,
                                  EditorialL2Execution.Budget reaudit, EditorialL2Execution.Budget reconcile,
                                  BigDecimal chainMaximumCost) {
-        this(discovery, edit, reaudit, reconcile, chainMaximumCost, null);
+        this(null, null, discovery, edit, reaudit, reconcile, chainMaximumCost, null);
+    }
+
+    public EditorialChainBudgets(EditorialL2Execution.Budget discovery, EditorialL2Execution.Budget edit,
+                                 EditorialL2Execution.Budget reaudit, EditorialL2Execution.Budget reconcile,
+                                 BigDecimal chainMaximumCost, EditorialL2Execution.Budget finalRead) {
+        this(null, null, discovery, edit, reaudit, reconcile, chainMaximumCost, finalRead);
     }
 
     public EditorialChainBudgets {
@@ -50,10 +58,24 @@ public record EditorialChainBudgets(EditorialL2Execution.Budget discovery, Edito
                 new EditorialL2Execution.Budget(200_000, 4_096, new BigDecimal("0.03"), 180_000L));
     }
 
+    /** All eight ledger-v2 calls, using the owner-approved G4 cap. Pricing must be checked again before live use. */
+    public static EditorialChainBudgets fullLedgerRecommended() {
+        EditorialChainBudgets ledger = ledgerRecommended();
+        long timeout = 180_000L;
+        return new EditorialChainBudgets(
+                new EditorialL2Execution.Budget(200_000, 8_192, new BigDecimal("0.05"), timeout),
+                new EditorialL2Execution.Budget(200_000, 16_384, new BigDecimal("0.10"), timeout),
+                ledger.discovery(), ledger.edit(), ledger.reaudit(), ledger.reconcile(), new BigDecimal("0.50"),
+                ledger.finalRead());
+    }
+
+    public boolean includesL1() { return l1Raw != null && l1Reconcile != null; }
+
     /** Sum of the per-call USD caps, final reads included (two reads in a ledger chain). */
     public BigDecimal summedPhaseCost() {
         BigDecimal sum = discovery.maximumCost().add(edit.maximumCost()).add(reaudit.maximumCost()).add(reconcile.maximumCost());
         if (finalRead != null) sum = sum.add(finalRead.maximumCost()).add(finalRead.maximumCost());
+        if (includesL1()) sum = sum.add(l1Raw.maximumCost()).add(l1Reconcile.maximumCost());
         return sum;
     }
 
@@ -62,21 +84,45 @@ public record EditorialChainBudgets(EditorialL2Execution.Budget discovery, Edito
         java.util.List<EditorialL2Execution.Budget> all = new java.util.ArrayList<>(
                 java.util.List.of(discovery, edit, reaudit, reconcile));
         if (finalRead != null) all.add(finalRead);
+        if ((l1Raw == null) != (l1Reconcile == null)) return false;
+        if (includesL1()) { all.add(l1Raw); all.add(l1Reconcile); }
         for (EditorialL2Execution.Budget budget : all) {
             if (budget.maximumInputBytes() <= 0 || budget.maximumOutputTokens() <= 0
                     || budget.maximumCost().signum() < 0 || budget.maximumExecutionTimeMillis() <= 0) return false;
         }
-        return chainMaximumCost.signum() > 0 && summedPhaseCost().compareTo(chainMaximumCost) <= 0;
+        if (chainMaximumCost.signum() <= 0) return false;
+        if (!includesL1()) return summedPhaseCost().compareTo(chainMaximumCost) <= 0;
+        if (finalRead == null) return false;
+        // The per-call USD ceilings intentionally sum to 0.51 while G4 is capped at 0.50.
+        // Validate the stricter token-cap worst case using the pinned R5 price basis; P4 must reprice this
+        // before any live call, and the run coordinator still enforces each response's reported cost.
+        BigDecimal worstCase = worstCase(l1Raw).add(worstCase(l1Reconcile)).add(worstCase(discovery))
+                .add(worstCase(edit)).add(worstCase(finalRead)).add(worstCase(reaudit))
+                .add(worstCase(reconcile)).add(worstCase(finalRead));
+        return worstCase.compareTo(chainMaximumCost) <= 0;
     }
 
     /** Fixed wording for the authorization dialog; the same values the engine enforces. */
     public String describe() {
-        return "L2_RAW_DISCOVERY: 1 call, output ≤ " + discovery.maximumOutputTokens() + " token, ≤ USD " + usd(discovery)
-                + "\nL2_EDIT: 1 call, output ≤ " + edit.maximumOutputTokens() + " token, ≤ USD " + usd(edit)
-                + "\nL3_RAW_FIRST_REAUDIT: 1 call, output ≤ " + reaudit.maximumOutputTokens() + " token, ≤ USD " + usd(reaudit)
-                + "\nL3_RECONCILE: 1 call, output ≤ " + reconcile.maximumOutputTokens() + " token, ≤ USD " + usd(reconcile)
-                + (finalRead == null ? "" : "\nFINAL_READ (sau L2 và sau L3): 2 call, mỗi call output ≤ " + finalRead.maximumOutputTokens()
-                        + " token, ≤ USD " + usd(finalRead))
+        String phases;
+        if (includesL1()) {
+            phases = "1. L1_RAW_DISCOVERY: 1 call, output ≤ " + l1Raw.maximumOutputTokens() + " token, ≤ USD " + usd(l1Raw)
+                    + "\n2. L1_RECONCILE: 1 call, output ≤ " + l1Reconcile.maximumOutputTokens() + " token, ≤ USD " + usd(l1Reconcile)
+                    + "\n3. L2_RAW_DISCOVERY: 1 call, output ≤ " + discovery.maximumOutputTokens() + " token, ≤ USD " + usd(discovery)
+                    + "\n4. L2_EDIT: 1 call, output ≤ " + edit.maximumOutputTokens() + " token, ≤ USD " + usd(edit)
+                    + "\n5. L2_FINAL_READ: 1 call, output ≤ " + finalRead.maximumOutputTokens() + " token, ≤ USD " + usd(finalRead)
+                    + "\n6. L3_RAW_FIRST_REAUDIT: 1 call, output ≤ " + reaudit.maximumOutputTokens() + " token, ≤ USD " + usd(reaudit)
+                    + "\n7. L3_RECONCILE: 1 call, output ≤ " + reconcile.maximumOutputTokens() + " token, ≤ USD " + usd(reconcile)
+                    + "\n8. L3_FINAL_READ: 1 call, output ≤ " + finalRead.maximumOutputTokens() + " token, ≤ USD " + usd(finalRead);
+        } else {
+            phases = "L2_RAW_DISCOVERY: 1 call, output ≤ " + discovery.maximumOutputTokens() + " token, ≤ USD " + usd(discovery)
+                    + "\nL2_EDIT: 1 call, output ≤ " + edit.maximumOutputTokens() + " token, ≤ USD " + usd(edit)
+                    + "\nL3_RAW_FIRST_REAUDIT: 1 call, output ≤ " + reaudit.maximumOutputTokens() + " token, ≤ USD " + usd(reaudit)
+                    + "\nL3_RECONCILE: 1 call, output ≤ " + reconcile.maximumOutputTokens() + " token, ≤ USD " + usd(reconcile)
+                    + (finalRead == null ? "" : "\nFINAL_READ (sau L2 và sau L3): 2 call, mỗi call output ≤ "
+                    + finalRead.maximumOutputTokens() + " token, ≤ USD " + usd(finalRead));
+        }
+        return phases
                 + "\nInput ≤ " + discovery.maximumInputBytes() + " byte mỗi call • " + discovery.maximumExecutionTimeMillis() / 1000L
                 + " s mỗi call • 0 repair • 0 retry"
                 + "\nTrần cả chuỗi: USD " + money(chainMaximumCost);
@@ -88,5 +134,13 @@ public record EditorialChainBudgets(EditorialL2Execution.Budget discovery, Edito
 
     private static String usd(EditorialL2Execution.Budget budget) {
         return money(budget.maximumCost());
+    }
+
+    private static BigDecimal worstCase(EditorialL2Execution.Budget budget) {
+        if (budget == null) return BigDecimal.ZERO;
+        BigDecimal inputTokens = BigDecimal.valueOf((budget.maximumInputBytes() + 1L) / 2L);
+        return inputTokens.multiply(new BigDecimal("0.25")).add(
+                BigDecimal.valueOf(budget.maximumOutputTokens()).multiply(new BigDecimal("1.20")))
+                .movePointLeft(6);
     }
 }

@@ -7,6 +7,10 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.ml.tblandroidtxt.editorial.pack.EditorialL2Execution;
+import com.ml.tblandroidtxt.editorial.pack.EditorialCanonicalJson;
+import com.ml.tblandroidtxt.editorial.pack.EditorialP4Binding;
+import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotAuthorization;
+import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotProvider;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -94,8 +98,9 @@ final class EditorialChapterFinalPanel {
             actions.addView(a.space(8, 1));
             actions.addView(a.secondaryButton("Xuất TXT", v -> a.startEditorialFinalExport(project.id,
                     project.bindingIdentity, chapter.chapterKey)), new LinearLayout.LayoutParams(0, a.dp(44), 1));
-        } else if (!running && progress.next() == EditorialChapterProgress.NextAction.RUN_STAGE_WITH_AUTHORIZATION) {
-            actions.addView(a.primaryButton("Chạy L2 → L3 (cần cấp phép)",
+        } else if (!running && (progress.next() == EditorialChapterProgress.NextAction.RUN_STAGE_WITH_AUTHORIZATION
+                || progress.next() == EditorialChapterProgress.NextAction.L1_REQUIRED)) {
+            actions.addView(a.primaryButton("Chạy L1 → L2 → L3 (cần cấp phép)",
                     v -> confirmRun(box, status, actions, project, chapter)),
                     new LinearLayout.LayoutParams(-1, a.dp(44)));
         }
@@ -103,10 +108,13 @@ final class EditorialChapterFinalPanel {
 
     private void confirmRun(LinearLayout box, TextView status, LinearLayout actions, EditorialRepository.Project project,
                             EditorialRepository.Chapter chapter) {
-        EditorialChainBudgets budgets = EditorialChainBudgets.d3Recommended();
+        EditorialChainBudgets budgets = EditorialChainBudgets.fullLedgerRecommended();
         String message = "Chương " + chapter.chapterKey + " sẽ được gửi tới OpenRouter (" + EditorialP5EFreshRawRoutingPolicy.MODEL
-                + "): RAW, DRAFT, GLOSSARY, PRONOUN và các artifact L1/L2 của chính chương này, để chạy L2 rồi L3.\n\n"
-                + budgets.describe() + "\n\nCấp phép này dùng một lần. Lỗi hoặc trạng thái chưa rõ sẽ dừng và không tự gọi lại.";
+                + ") trong tối đa 8 call theo thứ tự L1 → L2 → L3. L1_RAW_DISCOVERY chỉ thấy RAW + GLOSSARY; "
+                + "L1_RECONCILE thấy RAW + DRAFT + GLOSSARY + PRONOUN và candidates của L1_RAW_DISCOVERY. "
+                + "L2/L3 tiếp tục theo ranh giới nguồn của từng phase, gồm final-read trên đúng byte đã dựng.\n\n"
+                + budgets.describe() + "\n\nTrần toàn chuỗi: USD 0.50. Không repair, không retry; trạng thái UNKNOWN sẽ dừng và không gọi lại. "
+                + "Cấp phép này chỉ dùng cho chương đang mở.";
         TextView body = a.text(message, 13, a.TEXT, false);
         body.setSingleLine(false);
         int pad = a.dp(20);
@@ -167,8 +175,27 @@ final class EditorialChapterFinalPanel {
                     return new EditorialChapterFinalCoordinator.Result(EditorialChapterFinalCoordinator.Stage.L1_INCOMPLETE,
                             false, "INPUT_BINDING_SELECTOR_MISSING", null, 0);
                 }
+                EditorialP4Binding binding = new EditorialP4BindingDao(database)
+                        .findByAttemptRequestSelector(selector.get()).orElse(null);
+                if (binding == null) {
+                    return new EditorialChapterFinalCoordinator.Result(EditorialChapterFinalCoordinator.Stage.L1_INCOMPLETE,
+                            false, "INPUT_BINDING_NOT_FOUND", null, 0);
+                }
+                String keyFingerprint = EditorialCanonicalJson.sha256Hex(
+                        settings.apiKey.getBytes(StandardCharsets.UTF_8));
+                String endpointAccountFingerprint = EditorialCanonicalJson.sha256Hex(
+                        (AppSettings.normalizeEndpoint(settings.baseUrl) + "|" + keyFingerprint)
+                                .getBytes(StandardCharsets.UTF_8));
+                EditorialP6L1Authorizations.Pair l1Authorization = EditorialP6L1Authorizations.create(
+                        binding, chapterKey, endpointAccountFingerprint, budgets, System.currentTimeMillis());
+                EditorialP5PilotProvider l1Provider = new OpenRouterEditorialP6L1Provider(
+                        OpenRouterEditorialP5PilotProvider.withFreshRawLifecyclePersistence(
+                                settings, budgets.l1Raw().maximumOutputTokens(), database),
+                        OpenRouterEditorialP5PilotProvider.withFreshReconcileLifecyclePersistence(
+                                settings, budgets.l1Reconcile().maximumOutputTokens(), database));
                 return new EditorialChapterFinalCoordinator(database, new EditorialPackStorageLayout(a.getFilesDir().toPath()))
-                        .runToFinal(project.id, selector.get(), chapterKey, budgets,
+                        .runFromL1(project.id, selector.get(), chapterKey, budgets,
+                                l1Authorization.raw(), l1Authorization.reconcile(), l1Provider,
                                 new OpenRouterEditorialL2Provider(settings), new OpenRouterEditorialL3Provider(settings));
             }
         }

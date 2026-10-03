@@ -71,6 +71,15 @@ public final class EditorialChapterRunServiceTest {
         assertEquals(1, chain.runs.get());
     }
 
+    @Test public void fullLedgerConsentCanStartAtL1WhenNoReportIsCommitted() {
+        FakeChain chain = new FakeChain(state(false, null, null));
+        EditorialChainBudgets full = EditorialChainBudgets.fullLedgerRecommended();
+        EditorialChapterRunService.Outcome outcome = EditorialChapterRunService.run("1:001-new", chain, full, true);
+        assertTrue(outcome.started());
+        assertEquals(1, chain.runs.get());
+        assertEquals(full, chain.lastBudgets);
+    }
+
     @Test public void withoutExplicitConfirmationNothingRuns() {
         FakeChain chain = new FakeChain(state(true, null, null));
         EditorialChapterRunService.Outcome outcome = EditorialChapterRunService.run("1:003", chain, BUDGETS, false);

@@ -45,7 +45,10 @@ public final class EditorialChapterRunService {
             String issue = chain.preflightIssue();
             if (issue != null) return refused("RUN_PREFLIGHT:" + issue);
             EditorialChapterProgress.Progress progress = chain.inspect().progress();
-            if (progress.next() != EditorialChapterProgress.NextAction.RUN_STAGE_WITH_AUTHORIZATION) {
+            boolean l1StartAllowed = budgets.includesL1()
+                    && progress.next() == EditorialChapterProgress.NextAction.L1_REQUIRED;
+            if (progress.next() != EditorialChapterProgress.NextAction.RUN_STAGE_WITH_AUTHORIZATION
+                    && !l1StartAllowed) {
                 return refused("RUN_NOT_ALLOWED:" + progress.reasonCode());
             }
             try {

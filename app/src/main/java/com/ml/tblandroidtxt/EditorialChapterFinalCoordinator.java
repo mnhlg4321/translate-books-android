@@ -5,6 +5,8 @@ import com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision;
 import com.ml.tblandroidtxt.editorial.pack.EditorialL1Ledger;
 import com.ml.tblandroidtxt.editorial.pack.EditorialL2Execution;
 import com.ml.tblandroidtxt.editorial.pack.EditorialL3Execution;
+import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotAuthorization;
+import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotProvider;
 import com.ml.tblandroidtxt.editorial.pack.EditorialQaReceiptValidator;
 
 import java.io.IOException;
@@ -89,6 +91,66 @@ public final class EditorialChapterFinalCoordinator {
         int calls = l2.providerCalls() + l3.providerCalls();
         if (!l3.accepted()) return new Result(Stage.L3, false, l3.reasonCode(), null, calls);
         return new Result(Stage.FINAL, true, l3.reasonCode(), l3.committed(), calls);
+    }
+
+    /**
+     * Starts or resumes the complete ledger-v2 chapter action at L1. RAW and RECONCILE keep their own durable
+     * attempt identities; after a restart, a committed phase is read back and an UNKNOWN phase is refused by
+     * the attempt store before the provider can be called. Only after both L1 artifacts read back does the
+     * same coordinator continue through L2, L3, and FINAL.
+     */
+    public Result runFromL1(long projectId, String selector, String chapterKey, EditorialChainBudgets budgets,
+                            EditorialP5PilotAuthorization rawAuthorization,
+                            EditorialP5PilotAuthorization reconcileAuthorization,
+                            EditorialP5PilotProvider l1Provider,
+                            EditorialL2Execution.Provider l2Provider,
+                            EditorialL2Execution.Provider l3Provider) {
+        if (budgets == null || !budgets.valid() || !budgets.includesL1() || budgets.finalRead() == null) {
+            return new Result(Stage.L1_INCOMPLETE, false, "L1_FULL_CHAIN_BUDGET_REQUIRED", null, 0);
+        }
+        if (!authorizationFits(rawAuthorization, "L1_RAW_DISCOVERY", budgets.l1Raw())
+                || !authorizationFits(reconcileAuthorization, "L1_RECONCILE", budgets.l1Reconcile())) {
+            return new Result(Stage.L1_INCOMPLETE, false, "L1_AUTHORIZATION_SCOPE_MISMATCH", null, 0);
+        }
+        if (l1Provider == null || l2Provider == null || l3Provider == null) {
+            return new Result(Stage.L1_INCOMPLETE, false, "L1_PROVIDER_NOT_CONFIGURED", null, 0);
+        }
+        EditorialP5CExactBindingExecution l1 = EditorialP5CExactBindingExecution.forContract(
+                database, storage, EditorialContractRevision.L1_LEDGER_V2);
+        EditorialP5CExactBindingExecution.Result raw = l1.executeRaw(projectId, selector, chapterKey,
+                rawAuthorization, l1Provider);
+        if (!raw.accepted()) {
+            return new Result(Stage.L1_INCOMPLETE, false, raw.reasonCode(), null, raw.providerCalls());
+        }
+        EditorialP5CExactBindingExecution.Result reconcile = l1.executeReconcile(projectId, selector, chapterKey,
+                reconcileAuthorization, l1Provider);
+        int l1Calls = raw.providerCalls() + reconcile.providerCalls();
+        if (!reconcile.accepted()) {
+            return new Result(Stage.L1_INCOMPLETE, false, reconcile.reasonCode(), null, l1Calls);
+        }
+        Result remainder = runToFinal(projectId, selector, chapterKey, budgets, l2Provider, l3Provider);
+        return new Result(remainder.stage(), remainder.finalReady(), remainder.reasonCode(),
+                remainder.finalArtifact(), l1Calls + remainder.providerCalls());
+    }
+
+    private static boolean authorizationFits(EditorialP5PilotAuthorization authorization, String phase,
+                                             EditorialL2Execution.Budget budget) {
+        if (authorization == null || budget == null) return false;
+        int inputTokens = (budget.maximumInputBytes() + 1) / 2;
+        return phase.equals(authorization.phase())
+                && authorization.maximumPrimarySemanticCalls() == 1
+                && authorization.maximumSchemaRepairCalls() == 0
+                && authorization.maximumNetworkRetries() == 0
+                && authorization.maximumInputTokens() == inputTokens
+                && authorization.maximumOutputTokens() == budget.maximumOutputTokens()
+                && authorization.maximumTotalTokens() == inputTokens + budget.maximumOutputTokens()
+                && authorization.maximumTotalCost().compareTo(budget.maximumCost()) == 0
+                && authorization.maximumExecutionTimeMillis() == budget.maximumExecutionTimeMillis()
+                && authorization.allowChapterToProvider()
+                && !authorization.allowFullModelResponseStorage()
+                && !authorization.allowRequestBodyStorage()
+                && "HASH_ONLY".equals(authorization.evidenceRedactionPolicy())
+                && authorization.singleUse();
     }
 
     /**
