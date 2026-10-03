@@ -117,6 +117,14 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         FakeL1 l1 = new FakeL1();
         FakeL2 l2 = new FakeL2(promptPath);
         FakeL3 l3 = new FakeL3();
+        List<EditorialP4InputSource> reloadedSources = currentAssetSources(fixture);
+        EditorialP4ResumeResult sourcePreflight = new EditorialP4BindingTransactionService(database, storage)
+                .resumeProject(fixture.projectId(), fixture.selector(), reloadedSources);
+        if (!"RESTORED".equals(sourcePreflight.code().name())) {
+            throw new IllegalStateException("P6_FIXTURE_P4_PREFLIGHT_FAILED:" + sourcePreflight.code()
+                    + ":" + sourcePreflight.detail() + ":fields="
+                    + String.join(",", sourceIdentityDrifts(fixture, reloadedSources)));
+        }
         EditorialP5PilotProvider budgetedL1 = new EditorialP6BudgetedL1Provider(l1, spend, budgets);
         EditorialL2Execution.Provider budgetedL2 = new EditorialP6BudgetedPhaseProvider(l2, spend, budgets, true);
         EditorialL2Execution.Provider budgetedL3 = new EditorialP6BudgetedPhaseProvider(l3, spend, budgets, false);
@@ -310,6 +318,39 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         try (InputStream source = InstrumentationRegistry.getInstrumentation().getContext().getAssets().open(asset)) {
             return source.readAllBytes();
         }
+    }
+
+    private List<EditorialP4InputSource> currentAssetSources(FixtureSetup fixture) {
+        EditorialRepository repository = new EditorialRepository(database);
+        EditorialRepository.Chapter chapter = repository.listChapters(fixture.projectId()).stream()
+                .filter(value -> fixture.chapterKey().equals(value.chapterKey)).findFirst().orElseThrow(
+                        () -> new IllegalStateException("P6_FIXTURE_CHAPTER_READBACK_FAILED"));
+        Map<String, EditorialRepository.AssetSnapshot> assets = new LinkedHashMap<>();
+        for (EditorialRepository.AssetSnapshot asset : repository.chapterAssets(chapter.id)) {
+            assets.put(asset.role.name(), asset);
+        }
+        List<EditorialP4InputSource> sources = new ArrayList<>();
+        for (var identity : fixture.binding().inputs()) {
+            EditorialRepository.AssetSnapshot asset = assets.get(identity.role());
+            if (asset == null) throw new IllegalStateException("P6_FIXTURE_SOURCE_ASSET_MISSING:" + identity.role());
+            sources.add(new EditorialP4InputSource(identity.role(), asset.sourceUri,
+                    asset.content.getBytes(StandardCharsets.UTF_8), identity.encoding(),
+                    identity.schemaStatus(), identity.ordinal()));
+        }
+        return List.copyOf(sources);
+    }
+
+    private static List<String> sourceIdentityDrifts(FixtureSetup fixture,
+                                                      List<EditorialP4InputSource> current) {
+        List<String> drift = new ArrayList<>();
+        for (int i = 0; i < fixture.binding().inputs().size(); i++) {
+            var identity = fixture.binding().inputs().get(i);
+            EditorialP4InputSource actual = current.get(i);
+            if (!identity.sourceReference().equals(actual.sourceReference())) drift.add(identity.role() + ":reference");
+            if (identity.byteLength() != actual.bytes().length) drift.add(identity.role() + ":length");
+            if (!identity.sha256().equals(EditorialCanonicalJson.sha256Hex(actual.bytes()))) drift.add(identity.role() + ":sha256");
+        }
+        return List.copyOf(drift);
     }
 
     private static Map<String, Object> rawWire(String attempt, EditorialRawInventory.Inventory inventory) {
