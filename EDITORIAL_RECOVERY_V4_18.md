@@ -188,7 +188,7 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-G1 lượt 1 dừng sau 1 call (USD 0.0081852): app từ chối ledger L1 (`REPAIR_L1_LEDGER_INVALID`), response đầy đủ. Claude đã sửa offline: runner ghi mã dừng chi tiết, prompt L1 nêu rõ dữ kiện coverage. Next action duy nhất: owner quyết D-G1 trong `docs/P6_R6_G1_RESUME_WORK_REQUEST_20261003.md`; Codex làm W1–W2 offline rồi W3 nếu được duyệt.
+G1 resume đã làm W1–W3 theo `docs/P6_R6_G1_RESUME_WORK_REQUEST_20261003.md`: wrapper build/archive/install đạt; fake CHAIN 14/14 structural; negative typed-stop gate giữ `L1_COVERAGE_GAP`; lượt live mới của `fx-a03` dừng sau 1 call (USD 0.00478465) với `REPAIR_L1_LEDGER_INVALID` và chi tiết `L1_UNIT_UNKNOWN`, cộng dồn group USD 0.01296985, 0 UNKNOWN. Next action duy nhất: chẩn đoán offline `L1_UNIT_UNKNOWN`, sau đó xin owner quyết định trước live call tiếp theo; G2 chưa bắt đầu.
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 

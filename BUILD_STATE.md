@@ -1,12 +1,13 @@
 # Build State
 
-## Current P6 live-readiness checkpoint — 2026-10-03
+## Current P6 G1-resume checkpoint — 2026-10-03
 
-- §7 network and both preflights passed: deliberately wrong fingerprint rejected with `P6_LIVE_FINGERPRINT_MISMATCH`, zero calls; new owner fingerprint returned `MATCH`, zero calls. Emulator network is working; no connectivity or app settings were changed.
-- G1 group `G1-20261003-ecbf8c55` started with cap USD `1.00` and stopped on its first fixture, `fx-a03`, after one `L1_RAW_DISCOVERY` call returned `REPAIR_L1_LEDGER_INVALID`. The ledger verifies one settled call at USD `0.0081852`, two entries, zero pending UNKNOWN reservations. No retry/repair call was made.
-- No `REPORT_L1`, structural artifact or final text was produced. Partial `score_run.py`: `STRUCTURAL_VALID=0/1`; `SEMANTIC_EVAL=FAIL` from missing final text, not a quality assessment. G1 is incomplete; G2 not started. No API key or fingerprint value is recorded.
-- Report: `docs/P6_R6_G1_LIVE_EXECUTION_20261003.md`; private run: `D:\P5E-private\p6-runs\c2f57361-61ba-47d2-bba5-20110261453a\`.
-- Next action: diagnose `REPAIR_L1_LEDGER_INVALID` offline and obtain owner authorization before any further live G1 call.
+- W1–W2 đạt trên source commit `a178ff97`: production `4.18-p6.15`/code228 và AndroidTest event `p6-r6r7-a178ff97-20261003-15` được build bằng wrapper, archive hai nơi, cài trên `emulator-5554`; preflight `5/5`, coordinator `1/1`, fake CHAIN `STRUCTURAL_VALID 14/14`, 0 actual provider call.
+- W2 negative gate đạt: `p6_fake_invalid_l1=YES` tạo `valid=false`, stage `L1`, `L1_COVERAGE_GAP`; verifier/scorer đọc được, 0 actual provider call.
+- W3 group `G1-20261003-ecbf8c55` tiếp tục từ USD `0.0081852`, run `f7f71d89-9cc2-47fb-a8c7-4fd9e6d9bc2e` dừng tại `fx-a03` sau một call `L1_RAW_DISCOVERY`: `P6_L1_PREDECESSOR_FAILED:REPAIR_L1_LEDGER_INVALID`, chi tiết `L1_UNIT_UNKNOWN`, USD `0.00478465`, 0 UNKNOWN. Ledger cộng dồn USD `0.01296985` / trần `1.00`, còn USD `0.98703015`.
+- Scorer live partial: `STRUCTURAL_VALID=0/1`; `SEMANTIC_EVAL=FAIL` vì final vẫn là DRAFT (`KNOWN_DEFECT_NOT_FIXED:T-S1`), không phải quality verdict. G2 chưa bắt đầu; không retry/repair call và không ghi API key/fingerprint.
+- Report: `docs/P6_R6_G1_RESUME_EXECUTION_20261003.md`; private run: `D:\P5E-private\p6-runs\f7f71d89-9cc2-47fb-a8c7-4fd9e6d9bc2e\`.
+- Next action: diagnose `L1_UNIT_UNKNOWN` offline and obtain owner authorization before any further live G1 call; do not start G2.
 
 ## P6 R6/R7 offline checkpoint — 2026-10-03
 
