@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-03 (+07:00), after the first G1 live fixture stopped. The new owner fingerprint passed the zero-call matching preflight; G1 then stopped on `fx-a03` after one settled call.
+- Updated: 2026-10-03 (+07:00): G1 attempt 1 (Codex, a9d82e40): one L1_RAW_DISCOVERY call, complete response (finish=stop, 7,330 B, 2,238 output tokens), rejected REPAIR_L1_LEDGER_INVALID; USD 0.0081852 of the 1.00 G1 cap, 0 UNKNOWN. Claude fixed offline: the fixture runner now records typed stops with the engine safe detail code instead of crashing, and the L1 prompt states the app-checked coverage facts (unit count, first/last id, contiguity, id and note rules). App unit 341/341, lint and androidTest compile PASS; APK rebuild needed.
 - Current version: active release v4.18. Pilot `15e84958` remains last known on production `4.18-p6.2`/code215 and was not accessed. Emulator `emulator-5554` has production `4.18-p6.14`/code227 and AndroidTest event #14.
 - Current branch: `feature/v4.18-p5e-runner-repair-20260917`; same v4.18 continuation, no new branch, checklist, or release track.
-- Current commit: `ecbf8c55e2a39c84c6b12934a4c9f6c945382256` — implementation baseline immediately before this documentation and snapshot update; no source or APK change was made.
+- Current commit: a9d82e40 — implementation baseline immediately before this snapshot update.
 - Current build: production `4.18-p6.14`/code227, event `build-20261003-123317`, source `6631abc6ed778ccd84b17784899b3e62b3f413ff`; AndroidTest event `p6-r6r7-6631abc6-20261003-14`. Both payloads are mirrored under `artifacts/` and `backup/`, installed only on `emulator-5554`.
 - Current phase: P6 R6 §7 live G1 attempt, stopped before completing the first fixture. The correct fingerprint preflight passed with zero calls. `fx-a03` stopped at `REPAIR_L1_LEDGER_INVALID` after one `L1_RAW_DISCOVERY` call. G2 has not started.
 - Completed tasks: P0–P4 and offline L0–L8 as recorded; network recheck passed; wrong-fingerprint preflight rejected with zero calls; matching-fingerprint preflight passed with zero calls; G1 host fixture and prompt-input checks passed; one live call was settled and recorded in the G1 ledger.
@@ -12,4 +12,4 @@
 - Regression status: existing code227 build and offline L0–L8 regressions remain as recorded. The G1 group ledger verifies one call, USD `0.0081852` settled, USD `1.00` cap and zero pending UNKNOWN reservations. Partial scorer result: `STRUCTURAL_VALID=0/1`; `SEMANTIC_EVAL=FAIL` because final output is missing, so no translation-quality verdict exists. No retry or repair call was made.
 - Workspace/data: pre-existing owner `.idea`, P5E files, evidence, artifacts and backups remain unstaged and untouched. Pilot `15e84958` was not accessed. No app settings were changed. No API key or fingerprint value is recorded.
 - Evidence pointers: [P6 §7 live execution report](docs/P6_R6_G1_LIVE_EXECUTION_20261003.md); [earlier preflight stop](docs/P6_R6_G1_LIVE_PREFLIGHT_20261003.md); [evaluation protocol](docs/P6_R5_EVALUATION_PROTOCOL.md); [G1 budget](docs/P6_R5_EXECUTION_BUDGET_TABLE.md).
-- Current Next action: diagnose `REPAIR_L1_LEDGER_INVALID` offline and obtain owner authorization before any further live G1 call.
+- Current Next action: owner decides D-G1 (resume G1 within the remaining ~USD 0.99, fx-a03 first, stop the group on the first L1 rejection); Codex then runs W1–W3 of docs/P6_R6_G1_RESUME_WORK_REQUEST_20261003.md.

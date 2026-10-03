@@ -212,6 +212,8 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         String reason;
         boolean valid;
         String stage;
+        List<String> stops = new ArrayList<>();
+        boolean reportRequired = true;
 
         if ("CHAIN".equals(mode)) {
             EditorialP6L1Authorizations.Pair consent = EditorialP6L1Authorizations.create(
@@ -234,6 +236,7 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
             Files.write(reportPath, committedL1.reportL1Bytes());
             stage = "CHAIN";
         } else {
+          try {
             EditorialP5CExactBindingExecution l1Execution = EditorialP5CExactBindingExecution.forContract(
                     database, storage, EditorialContractRevision.L1_LEDGER_V2);
             EditorialP5CExactBindingExecution.CommittedL1 committedL1;
@@ -249,7 +252,11 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
                 EditorialP5CExactBindingExecution.Result reconcile = raw.accepted()
                         ? l1Execution.executeReconcile(fixture.projectId(), fixture.selector(), fixture.chapterKey(),
                         consent.reconcile(), budgetedL1) : raw;
-                if (!reconcile.accepted()) throw new IllegalStateException("P6_L1_PREDECESSOR_FAILED:" + reconcile.reasonCode());
+                if (!reconcile.accepted()) {
+                    int calls = raw.providerCalls() + (reconcile == raw ? 0 : reconcile.providerCalls());
+                    throw new StageStop("L1", "P6_L1_PREDECESSOR_FAILED:" + reconcile.reasonCode(),
+                            stopDetails(reconcile), calls);
+                }
                 committedL1 = l1Execution.committedL1(fixture.projectId(), fixture.selector(), fixture.chapterKey())
                         .orElseThrow(() -> new IllegalStateException("P6_REPORT_L1_READBACK_FAILED"));
                 l1Calls = raw.providerCalls() + reconcile.providerCalls();
@@ -268,7 +275,8 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
                         budgets.discovery(), budgets.edit(), budgets.finalRead(), budgetedL2,
                         new EditorialPhaseArtifactStore(database, fixture.chapterKey(), EditorialPhaseArtifactStore.L2_PHASE));
                 if (!l2Result.accepted() || l2Result.committed() == null) {
-                    throw new IllegalStateException("P6_L2_PREDECESSOR_FAILED:" + l2Result.reasonCode());
+                    throw new StageStop("L2", "P6_L2_PREDECESSOR_FAILED:" + l2Result.reasonCode(),
+                            l2Result.issues(), l1Calls + l2Result.providerCalls());
                 }
                 if ("L2_ONLY".equals(mode) || "L1_THEN_L2".equals(mode)) {
                     finalBytes = l2Result.committed().viL2Bytes();
@@ -284,7 +292,8 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
                             budgets.reaudit(), budgets.reconcile(), budgets.finalRead(), budgetedL3,
                             new EditorialPhaseArtifactStore(database, fixture.chapterKey(), EditorialPhaseArtifactStore.L3_PHASE));
                     if (!l3Result.accepted() || l3Result.committed() == null) {
-                        throw new IllegalStateException("P6_L3_PREDECESSOR_FAILED:" + l3Result.reasonCode());
+                        throw new StageStop("L3", "P6_L3_PREDECESSOR_FAILED:" + l3Result.reasonCode(),
+                                l3Result.issues(), l1Calls + l2Result.providerCalls() + l3Result.providerCalls());
                     }
                     finalBytes = l3Result.committed().viL2Bytes();
                     reason = "L3_FINAL_COMMITTED";
@@ -293,6 +302,18 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
                     stage = "L3";
                 }
             }
+          } catch (StageStop stopped) {
+            // A typed stop is a structural result, not a crash: keep the reason and the
+            // engine's safe detail so the run can be diagnosed without retaining model output.
+            finalBytes = input.get("DRAFT.txt");
+            reason = stopped.reason;
+            valid = false;
+            stage = stopped.stage;
+            measuredCalls = stopped.calls;
+            stops.add(stopped.reason);
+            stops.addAll(stopped.details);
+            reportRequired = !"L1".equals(stopped.stage);
+          }
             fakeCalls = l1.calls + l2.calls + l3.calls;
         }
 
@@ -307,7 +328,7 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         structural.put("inputTokens", BigDecimal.valueOf(metrics.inputTokens));
         structural.put("outputTokens", BigDecimal.valueOf(metrics.outputTokens));
         structural.put("usd", metrics.usd.toPlainString());
-        structural.put("stops", valid ? List.of() : List.of(reason));
+        structural.put("stops", valid ? List.of() : (stops.isEmpty() ? List.of(reason) : List.copyOf(stops)));
         Files.write(outputRoot.resolve("structural.json"), EditorialCanonicalJson.canonicalize(structural).getBytes(StandardCharsets.UTF_8));
         Map<String, Object> metadata = new LinkedHashMap<>();
         metadata.put("fixtureId", fixtureId);
@@ -330,7 +351,7 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         metadata.put("finalSha256", EditorialCanonicalJson.sha256Hex(finalBytes));
         Files.write(outputRoot.resolve("run-metadata.json"), EditorialCanonicalJson.canonicalize(metadata).getBytes(StandardCharsets.UTF_8));
         Files.copy(groupLedgerPath, outputRoot.resolve("spend-ledger.jsonl"));
-        if (!Files.exists(reportPath)) throw new IllegalStateException("P6_REPORT_L1_EVIDENCE_MISSING");
+        if (reportRequired && !Files.exists(reportPath)) throw new IllegalStateException("P6_REPORT_L1_EVIDENCE_MISSING");
         spend.inspect();
         assertTrue("offline fake provider must be called only through the production stage boundary", fakeCalls <= FAKE_PROVIDER_CALL_LIMIT);
         assertTrue("production artifacts must validate: " + reason
@@ -713,6 +734,33 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         try (var paths = Files.walk(root)) {
             for (Path path : paths.sorted(java.util.Comparator.reverseOrder()).toList()) Files.deleteIfExists(path);
         }
+    }
+
+    /** A stage that ended in a typed stop; carries only app-generated safe codes, never model text. */
+    private static final class StageStop extends RuntimeException {
+        final String stage;
+        final String reason;
+        final List<String> details;
+        final int calls;
+
+        StageStop(String stage, String reason, List<String> details, int calls) {
+            super(reason);
+            this.stage = stage;
+            this.reason = reason;
+            this.details = details == null ? List.of() : List.copyOf(details);
+            this.calls = calls;
+        }
+    }
+
+    private static List<String> stopDetails(EditorialP5CExactBindingExecution.Result result) {
+        List<String> details = new ArrayList<>();
+        for (EditorialP5PilotResult phase : new EditorialP5PilotResult[]{result.rawResult(), result.reconcileResult()}) {
+            if (phase != null && phase.stopReceipt() != null) {
+                details.add("phase=" + phase.stopReceipt().phase());
+                details.addAll(phase.stopReceipt().evidenceRefs());
+            }
+        }
+        return details;
     }
 
     private static final class PromptCapture {

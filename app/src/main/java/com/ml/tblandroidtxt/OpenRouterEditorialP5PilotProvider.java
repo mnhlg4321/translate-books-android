@@ -614,7 +614,27 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
             user.append(", candidates <=").append(EditorialL1Ledger.MAX_CANDIDATES_PER_CALL);
         }
         user.append(", text fields <=").append(EditorialL1Ledger.MAX_TEXT).append(" characters. Every key in the schema is required; use empty strings, empty arrays or 0 where nothing applies.\n");
+        user.append(coverageFacts(request.visibleSources().get(EditorialSafe4Contract.RAW)));
         return new PromptPair(system.toString(), user.toString());
+    }
+
+    /**
+     * App-known coverage facts the validator enforces: the unit count, the first and last ids and
+     * the contiguity rule. Stating them avoids a rejected ledger for a rule the model had to infer.
+     */
+    static String coverageFacts(byte[] raw) {
+        if (raw == null) return "";
+        List<EditorialRawInventory.Unit> units = EditorialRawInventory.build(raw).units();
+        if (units.isEmpty()) return "";
+        return "Coverage facts checked by the app: the RAW block has exactly " + units.size()
+                + " units, the first is " + units.get(0).id() + " and the last is "
+                + units.get(units.size() - 1).id() + ". coverage[0].from must be the first id, the last range's "
+                + "to must be the last id, and each range's from must be the unit listed right after the previous "
+                + "range's to; never skip or repeat a unit and never name a line that has no unit id. Use a few "
+                + "large ranges, not one per unit. candidateId must be unique and match [A-Za-z0-9][A-Za-z0-9._:/-]* "
+                + "(for example c1, c2); every unitId and range id is copied character for character, including "
+                + "the 8 hex characters after the second colon; note is at most "
+                + "80 characters including spaces.\n";
     }
 
     /** RAW rendered as {@code <unitId>|<text>} using the same inventory the app checks the response against. */
