@@ -22,7 +22,9 @@ param(
 
     [switch]$AllowMissingPackage,
 
-    [switch]$Install
+    [switch]$Install,
+
+    [switch]$Offline
 )
 
 $ErrorActionPreference = 'Stop'
@@ -285,6 +287,7 @@ $gradleArguments = @(
     "-PbuildGitCommit=$commit",
     "-PbuildTimestamp=$timestamp"
 )
+if ($Offline) { $gradleArguments += '--offline' }
 
 $wrapperPropertiesPath = Join-Path $repositoryRoot 'gradle\wrapper\gradle-wrapper.properties'
 $wrapperProperties = Get-Content -LiteralPath $wrapperPropertiesPath -Raw

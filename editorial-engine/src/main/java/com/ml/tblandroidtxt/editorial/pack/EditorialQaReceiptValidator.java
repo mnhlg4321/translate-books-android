@@ -44,7 +44,7 @@ public final class EditorialQaReceiptValidator {
 
     @SuppressWarnings("unchecked")
     private static void check(Map<String, Object> receipt, byte[] finalBytes, List<String> issues) {
-        if (!EditorialContractRevision.L1_LEDGER_V2.equals(receipt.get("contractRevision"))) issues.add("RECEIPT_REVISION_UNKNOWN");
+        if (!EditorialContractRevision.isLedger((String) receipt.get("contractRevision"))) issues.add("RECEIPT_REVISION_UNKNOWN");
         if (!EditorialL3Execution.QA_RECEIPT_SCHEMA_V2.equals(receipt.get("schemaVersion"))) issues.add("RECEIPT_SCHEMA_INVALID");
         if (!"QA_RECEIPT".equals(receipt.get("artifactType"))) issues.add("RECEIPT_ARTIFACT_TYPE_INVALID");
         String finalSha = EditorialCanonicalJson.sha256Hex(finalBytes);

@@ -753,7 +753,7 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
         BindingFixture fixture = createBoundChapter();
         LedgerFakeProvider provider = new LedgerFakeProvider();
         EditorialP5CExactBindingExecution ledgerExec = EditorialP5CExactBindingExecution.forContract(
-                database, storage, com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.L1_LEDGER_V2);
+                database, storage, com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.L1_LEDGER_V3);
 
         EditorialP5CExactBindingExecution.Result result = ledgerExec.execute(fixture.projectId, SELECTOR, CHAPTER_KEY,
                 authorization(fixture.binding, "auth-raw-v2", "L1_RAW_DISCOVERY"),
@@ -772,7 +772,7 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
         assertEquals("COMMITTED", reconcileRecord.status());
         assertTrue(reconcileRecord.metricsJson().contains("\"findingCount\":1"));
         byte[] persisted = reconcileRecord.reportBytes();
-        assertEquals(com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.L1_LEDGER_V2,
+        assertEquals(com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.L1_LEDGER_V3,
                 com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.ofReportBytes(persisted));
         com.ml.tblandroidtxt.editorial.pack.EditorialL1Ledger.Body before =
                 com.ml.tblandroidtxt.editorial.pack.EditorialL1Ledger.parseBody(EditorialCanonicalJson.parseObject(persisted));
@@ -783,11 +783,11 @@ public final class EditorialP5CExactBindingFakeE2EInstrumentedTest {
         database.close();
         database = new TranslationRepository(context, databaseName);
         EditorialP5CExactBindingExecution reopened = EditorialP5CExactBindingExecution.forContract(
-                database, storage, com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.L1_LEDGER_V2);
+                database, storage, com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.L1_LEDGER_V3);
         EditorialP5CExactBindingExecution.CommittedL1 chain = reopened.committedL1(
                 fixture.projectId, SELECTOR, CHAPTER_KEY).orElseThrow();
         assertArrayEquals(persisted, chain.reportL1Bytes());
-        assertEquals(com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.L1_LEDGER_V2, chain.reportRevision());
+        assertEquals(com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.L1_LEDGER_V3, chain.reportRevision());
         assertEquals(before, com.ml.tblandroidtxt.editorial.pack.EditorialL1Ledger.parseBody(
                 EditorialCanonicalJson.parseObject(chain.reportL1Bytes())));
 

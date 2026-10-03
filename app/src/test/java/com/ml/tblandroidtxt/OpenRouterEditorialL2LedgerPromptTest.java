@@ -52,14 +52,14 @@ public final class OpenRouterEditorialL2LedgerPromptTest {
 
     @Test public void v2EditRequestIsAcceptedAndCarriesTheLedgerRulesAndTheV2Example() {
         EditorialL2Execution.Provider.Request request = request(EditorialL2Execution.PHASE,
-                EditorialL2Execution.WIRE_SCHEMA_VERSION_V2, editSources());
+                EditorialL2Execution.WIRE_SCHEMA_VERSION_V3, editSources());
         assertTrue(OpenRouterEditorialL2Provider.validRequest(request));
         PromptPair prompt = OpenRouterEditorialL2Provider.buildPrompt(request);
         assertTrue(prompt.system.contains("findingResolutions must contain EXACTLY ONE row per finding errorId"));
         assertTrue(prompt.system.contains("INSERT_AFTER"));
         assertTrue(prompt.system.contains("MERGE_WITH_NEXT"));
         assertTrue(prompt.system.contains("occurrences must contain one {unitId, ref} for EVERY unit"));
-        assertTrue(prompt.user.contains(EditorialL2Execution.WIRE_SCHEMA_VERSION_V2));
+        assertTrue(prompt.user.contains(EditorialL2Execution.WIRE_SCHEMA_VERSION_V3));
         assertTrue(prompt.user.contains("\"findingResolutions\""));
         assertTrue(prompt.user.contains("L1|Vua vao thanh."));
         // the legacy request is unchanged: no ledger rules, v1 example
@@ -87,7 +87,7 @@ public final class OpenRouterEditorialL2LedgerPromptTest {
         assertFalse(OpenRouterEditorialL2Provider.validRequest(request(EditorialFinalRead.L2_PHASE, EditorialFinalRead.WIRE, noTarget)));
         // a read must not be dispatched under the edit schema, nor an edit under the read schema
         assertFalse(OpenRouterEditorialL2Provider.validRequest(request(EditorialFinalRead.L2_PHASE,
-                EditorialL2Execution.WIRE_SCHEMA_VERSION_V2, readSources())));
+                EditorialL2Execution.WIRE_SCHEMA_VERSION_V3, readSources())));
         assertFalse(OpenRouterEditorialL2Provider.validRequest(request(EditorialL2Execution.PHASE,
                 EditorialFinalRead.WIRE, editSources())));
     }

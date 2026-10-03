@@ -394,7 +394,7 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
         static List<Object> l(Object... v) { return new ArrayList<>(List.of(v)); }
 
         static byte[] json(Map<String, Object> map) {
-            return EditorialCanonicalJson.canonicalize(map).getBytes(StandardCharsets.UTF_8);
+            return EditorialCanonicalJson.canonicalize(wireView(map)).getBytes(StandardCharsets.UTF_8);
         }
 
         static List<Object> coverage() { return l(m("from", unit(1), "to", unit(10), "status", "PROCESSED")); }
@@ -440,7 +440,7 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
         }
 
         static byte[] editWire(String attempt) {
-            return json(m("wireSchemaVersion", EditorialL2Execution.WIRE_SCHEMA_VERSION_V2, "attemptIdentity", attempt,
+            return json(m("wireSchemaVersion", EditorialL2Execution.WIRE_SCHEMA_VERSION_V3, "attemptIdentity", attempt,
                     "resolutions", l(m("candidateId", "U001", "status", "PROCESSED")),
                     "findingResolutions", l(
                             resolution("e1", l("C1", "C2", "C3"), l(m("unitId", unit(6), "ref", "C2"), m("unitId", unit(9), "ref", "C3"))),
@@ -475,13 +475,13 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
 
         static byte[] l3Wire(EditorialL2Execution.Provider.Request request) {
             if (EditorialL3Execution.REAUDIT_PHASE.equals(request.phase())) {
-                return json(m("wireSchemaVersion", EditorialL3Execution.REAUDIT_WIRE_V2, "attemptIdentity", request.attemptIdentity(),
+                return json(m("wireSchemaVersion", EditorialL3Execution.REAUDIT_WIRE_V3, "attemptIdentity", request.attemptIdentity(),
                         "coverage", coverage(),
                         "candidates", l(m("candidateId", "u1", "ledger", "TG", "unitId", unit(3), "viLine", BigDecimal.valueOf(3),
                                 "status", "PROCESSED", "note", "contrast"))));
             }
             if (com.ml.tblandroidtxt.editorial.pack.EditorialFinalRead.L3_PHASE.equals(request.phase())) return readWire(request);
-            return json(m("wireSchemaVersion", EditorialL3Execution.RECONCILE_WIRE_V2, "attemptIdentity", request.attemptIdentity(),
+            return json(m("wireSchemaVersion", EditorialL3Execution.RECONCILE_WIRE_V3, "attemptIdentity", request.attemptIdentity(),
                     "resolutions", l(m("candidateId", "u1", "status", "PROCESSED")), "carriedResolutions", l(),
                     "changes", l(change("Q1", "L3-1", null, 8, "Troi mua.", "Troi mua to.")),
                     "preserved", l(),
@@ -500,7 +500,7 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
                     BigDecimal.ZERO, null, true);
         };
         EditorialP5CExactBindingExecution.Result result = EditorialP5CExactBindingExecution.forContract(database, storage,
-                com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.L1_LEDGER_V2).execute(
+                com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.L1_LEDGER_V3).execute(
                 fixture.projectId, SELECTOR, CHAPTER_KEY,
                 authorization(fixture.binding, "auth-raw-v2", "L1_RAW_DISCOVERY"),
                 authorization(fixture.binding, "auth-reconcile-v2", "L1_RECONCILE"), l1Provider);
@@ -517,7 +517,7 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
             byte[] body;
             switch (request.phase()) {
                 case EditorialL2Execution.DISCOVERY_PHASE -> body = LedgerWires.json(LedgerWires.m(
-                        "wireSchemaVersion", EditorialL2Execution.DISCOVERY_WIRE_V2, "attemptIdentity", request.attemptIdentity(),
+                        "wireSchemaVersion", EditorialL2Execution.DISCOVERY_WIRE_V3, "attemptIdentity", request.attemptIdentity(),
                         "coverage", LedgerWires.coverage(),
                         "candidates", LedgerWires.l(LedgerWires.m("candidateId", "U001", "ledger", "UNIT", "unitId", LedgerWires.unit(1), "note", "n"))));
                 case EditorialL2Execution.PHASE -> body = LedgerWires.editWire(request.attemptIdentity());
@@ -545,7 +545,7 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
         LedgerL2 l2 = new LedgerL2();
         LedgerL3 l3 = new LedgerL3();
         EditorialChapterFinalCoordinator coordinator = new EditorialChapterFinalCoordinator(database, storage);
-        assertEquals(com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.L1_LEDGER_V2,
+        assertEquals(com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.L1_LEDGER_V3,
                 coordinator.inspect(fixture.projectId, SELECTOR, CHAPTER_KEY).l1ContractRevision());
         EditorialChapterFinalCoordinator.Result first = coordinator.runToFinal(fixture.projectId, SELECTOR, CHAPTER_KEY,
                 EditorialChainBudgets.ledgerRecommended(), l2, l3);
@@ -949,4 +949,10 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
                     true, 40, 20, 60, BigDecimal.ZERO, output, true);
         }
     }
+    private static Object wireView(Map<String, Object> value) {
+        Object schema = value.get("wireSchemaVersion");
+        return schema instanceof String && ((String) schema).endsWith(".v3")
+                ? com.ml.tblandroidtxt.editorial.pack.EditorialUnitReference.wireView(value) : value;
+    }
+
 }

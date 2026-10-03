@@ -116,7 +116,7 @@ public final class EditorialChapterFinalCoordinator {
             return new Result(Stage.L1_INCOMPLETE, false, "L1_PROVIDER_NOT_CONFIGURED", null, 0);
         }
         EditorialP5CExactBindingExecution l1 = EditorialP5CExactBindingExecution.forContract(
-                database, storage, EditorialContractRevision.L1_LEDGER_V2);
+                database, storage, EditorialContractRevision.L1_LEDGER_V3);
         EditorialP5CExactBindingExecution.Result raw = l1.executeRaw(projectId, selector, chapterKey,
                 rawAuthorization, l1Provider);
         if (!raw.accepted()) {
@@ -160,7 +160,7 @@ public final class EditorialChapterFinalCoordinator {
     private Optional<EditorialP5CExactBindingExecution.CommittedL1> committedChain(
             long projectId, String selector, String chapterKey) throws IOException {
         Optional<EditorialP5CExactBindingExecution.CommittedL1> ledger = EditorialP5CExactBindingExecution
-                .forContract(database, storage, EditorialContractRevision.L1_LEDGER_V2)
+                .forContract(database, storage, EditorialContractRevision.L1_LEDGER_V3)
                 .committedL1(projectId, selector, chapterKey);
         if (ledger.isPresent()) return ledger;
         return new EditorialP5CExactBindingExecution(database, storage).committedL1(projectId, selector, chapterKey);

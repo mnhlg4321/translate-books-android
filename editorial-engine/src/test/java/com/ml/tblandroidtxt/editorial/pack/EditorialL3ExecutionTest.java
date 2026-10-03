@@ -42,19 +42,28 @@ public final class EditorialL3ExecutionTest {
         assertEquals("d84a70ce260e4aff12fc009081452f751b70ed1ecb2c1d397df68555810c0888", req.requestIdentity());
     }
 
+    @Test public void v2IdentityIsFrozenAndV3DoesNotReuseIt() {
+        EditorialP5PilotRequest v2 = ctx().withContractRevision(EditorialContractRevision.L1_LEDGER_V2);
+        assertEquals("5a770ec2a0b85ff02a80590e892cab52e68f9741761b6500584296cb0d828b52", v2.attemptIdentity());
+        assertEquals("7b8a1a10bb2a804badeeeebc7d239b8e0a3084d6fb8be0d19ddfc3f17342cc0e", v2.requestIdentity());
+        EditorialP5PilotRequest v3 = v2.withContractRevision(EditorialContractRevision.L1_LEDGER_V3);
+        assertFalse(v2.attemptIdentity().equals(v3.attemptIdentity()));
+        assertFalse(v2.requestIdentity().equals(v3.requestIdentity()));
+    }
+
     @Test public void ledgerRevisionChangesIdentitiesAndIsDeterministic() {
         EditorialP5PilotRequest legacy = ctx();
-        EditorialP5PilotRequest ledger = legacy.withContractRevision(EditorialContractRevision.L1_LEDGER_V2);
+        EditorialP5PilotRequest ledger = legacy.withContractRevision(EditorialContractRevision.L1_LEDGER_V3);
         assertEquals(EditorialContractRevision.LEGACY_V1, legacy.contractRevision());
         assertFalse(legacy.attemptIdentity().equals(ledger.attemptIdentity()));
         assertFalse(legacy.requestIdentity().equals(ledger.requestIdentity()));
-        assertEquals(ledger.attemptIdentity(), ctx().withContractRevision(EditorialContractRevision.L1_LEDGER_V2).attemptIdentity());
+        assertEquals(ledger.attemptIdentity(), ctx().withContractRevision(EditorialContractRevision.L1_LEDGER_V3).attemptIdentity());
         // the legacy revision given explicitly is the identity from before the revision existed
         assertEquals(legacy.attemptIdentity(), legacy.withContractRevision(EditorialContractRevision.LEGACY_V1).attemptIdentity());
         // phase and predecessor report copies keep the revision
-        assertEquals(EditorialContractRevision.L1_LEDGER_V2, ledger.withPhase("L1_RECONCILE").contractRevision());
+        assertEquals(EditorialContractRevision.L1_LEDGER_V3, ledger.withPhase("L1_RECONCILE").contractRevision());
         assertArrayEquals(new byte[] {1}, ledger.withPredecessorReport(new byte[] {1}).predecessorReport());
-        assertEquals(EditorialContractRevision.L1_LEDGER_V2, ledger.withPredecessorReport(new byte[] {1}).contractRevision());
+        assertEquals(EditorialContractRevision.L1_LEDGER_V3, ledger.withPredecessorReport(new byte[] {1}).contractRevision());
         try {
             legacy.withContractRevision("L1_LEDGER_V9");
             fail();

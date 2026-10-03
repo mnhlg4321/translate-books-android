@@ -28,14 +28,14 @@ public final class EditorialL2Execution {
     public static final String DISCOVERY_PHASE = "L2_RAW_DISCOVERY";
     public static final String DISCOVERY_WIRE = "safe4.l2.raw-discovery.wire.v1";
     /** Ledger-contract discovery: coverage ranges and sparse candidates over the app's RAW inventory. */
-    public static final String DISCOVERY_WIRE_V2 = "safe4.l2.raw-discovery.wire.v2";
+    public static final String DISCOVERY_WIRE_V3 = "safe4.l2.raw-discovery.wire.v3";
     public static final String CANDIDATES_BLOCK = "L2_RAW_CANDIDATES";
     public static final int MAX_CANDIDATES = 300;
     static final Set<String> LEDGERS = Set.of("UNIT", "TG", "SR", "RC");
     static final Set<String> STATUSES = Set.of("PROCESSED", "PRESERVED", "UNPROCESSED", "CONFLICT");
     public static final String WIRE_SCHEMA_VERSION = "safe4.l2.edit.wire.v1";
     /** Edit wire of the ledger contract: change operations and one resolution per L1 finding. */
-    public static final String WIRE_SCHEMA_VERSION_V2 = "safe4.l2.edit.wire.v2";
+    public static final String WIRE_SCHEMA_VERSION_V3 = "safe4.l2.edit.wire.v3";
     public static final String VI_L2_SCHEMA = "safe4.full.vi-l2.v1";
     public static final int MAX_WIRE_BYTES = 65_536;
     public static final int MAX_CHANGES = 200;
@@ -227,7 +227,7 @@ public final class EditorialL2Execution {
         }
 
         // Call 1: blind discovery. It never sees DRAFT, REPORT_L1 or PRONOUN.
-        CallOutcome first = call(provider, store, attemptIdentity, DISCOVERY_PHASE, ledger ? DISCOVERY_WIRE_V2 : DISCOVERY_WIRE,
+        CallOutcome first = call(provider, store, attemptIdentity, DISCOVERY_PHASE, ledger ? DISCOVERY_WIRE_V3 : DISCOVERY_WIRE,
                 discoverySources, context, discoveryBudget, 0);
         if (first.stop != null) return first.stop;
         List<Candidate> candidates;
@@ -235,7 +235,7 @@ public final class EditorialL2Execution {
         try {
             if (ledger) {
                 EditorialL1Ledger.RawPass pass = EditorialL1Ledger.parseRawPass(first.bytes, attemptIdentity, inventory,
-                        DISCOVERY_WIRE_V2);
+                        DISCOVERY_WIRE_V3);
                 List<Candidate> converted = new ArrayList<>();
                 for (EditorialL1Ledger.Candidate c : pass.candidates()) {
                     converted.add(new Candidate(c.candidateId(), c.ledger(), inventory.unit(c.unitId()).line()));
@@ -259,13 +259,13 @@ public final class EditorialL2Execution {
             recover(store, attemptIdentity, "L2_INPUT_BUDGET_EXCEEDED");
             return stop(StopClass.BUDGET_EXCEEDED, "L2_INPUT_BUDGET_EXCEEDED", List.of(), 1);
         }
-        CallOutcome second = call(provider, store, attemptIdentity, PHASE, ledger ? WIRE_SCHEMA_VERSION_V2 : WIRE_SCHEMA_VERSION,
+        CallOutcome second = call(provider, store, attemptIdentity, PHASE, ledger ? WIRE_SCHEMA_VERSION_V3 : WIRE_SCHEMA_VERSION,
                 secondSources, context, editBudget, 1);
         if (second.stop != null) return second.stop;
 
         EditWire wire;
         try {
-            wire = ledger ? parseEditWireV2(second.bytes, attemptIdentity, candidates, l1)
+            wire = ledger ? parseEditWireV3(second.bytes, attemptIdentity, candidates, l1, inventory)
                     : parseEditWire(second.bytes, attemptIdentity, candidates);
         } catch (RuntimeException invalid) {
             recover(store, attemptIdentity, "REPAIR_L2_OUTPUT_SCHEMA_INVALID");
@@ -468,13 +468,13 @@ public final class EditorialL2Execution {
      * Ledger-contract edit wire: the v1 row grammar (with the optional {@code op}) plus
      * {@code findingResolutions}. The set of L1 error ids comes from the persisted report, never from the model.
      */
-    static EditWire parseEditWireV2(byte[] bytes, String attemptIdentity, List<Candidate> candidates,
-                                    EditorialL1Ledger.Body l1) {
+    static EditWire parseEditWireV3(byte[] bytes, String attemptIdentity, List<Candidate> candidates,
+                                    EditorialL1Ledger.Body l1, EditorialRawInventory.Inventory inventory) {
         if (bytes.length > MAX_WIRE_BYTES) throw new IllegalArgumentException("L2_WIRE_BYTE_LIMIT_EXCEEDED");
         Map<String, Object> root = EditorialCanonicalJson.parseObject(bytes);
         keys(root, Set.of("wireSchemaVersion", "attemptIdentity", "resolutions", "findingResolutions", "changes",
                 "preserved", "disposition"), "root");
-        if (!WIRE_SCHEMA_VERSION_V2.equals(root.get("wireSchemaVersion"))) {
+        if (!WIRE_SCHEMA_VERSION_V3.equals(root.get("wireSchemaVersion"))) {
             throw new IllegalArgumentException("L2_WIRE_SCHEMA_INVALID");
         }
         Map<String, Object> rowsShape = new LinkedHashMap<>(root);
@@ -500,7 +500,7 @@ public final class EditorialL2Execution {
         Set<String> errorIds = new HashSet<>();
         for (EditorialL1Ledger.Finding finding : l1.findings()) errorIds.add(finding.errorId());
         List<EditorialL2Findings.Resolution> findingResolutions =
-                EditorialL2Findings.parse(root.get("findingResolutions"), errorIds);
+                EditorialL2Findings.parse(root.get("findingResolutions"), errorIds, inventory);
         return new EditWire(rows, Map.copyOf(resolutions), findingResolutions);
     }
 
@@ -639,6 +639,7 @@ public final class EditorialL2Execution {
         }
         // a report of the other contract is never an eligible predecessor; legacy reports stay readable elsewhere
         if (ledgerChain && !EditorialContractRevision.isLedger(reportRevision)) return "INPUT_REPORT_L1_LEGACY_CONTRACT";
+        if (ledgerChain && !EditorialContractRevision.eligiblePredecessor(reportRevision, context.contractRevision())) return "INPUT_REPORT_L1_CONTRACT_MISMATCH";
         if (!ledgerChain && EditorialContractRevision.isLedger(reportRevision)) return "INPUT_REPORT_L1_CONTRACT_MISMATCH";
         String expectedSchema = ledgerChain ? EditorialContractRevision.REPORT_SCHEMA_V2
                 : EditorialP5RawWireContract.FINAL_REPORT_SCHEMA;

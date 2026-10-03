@@ -1,5 +1,11 @@
 # Build State
 
+## P6 R6 wire v3 V1 — 2026-10-04
+
+- V1 offline PASS: engine 351/351, app JVM 341/341, lintDebug and AndroidTest compile PASS; Python 33/33. Wire v3 uses L<physical line> externally and resolves to full ids before validation/persistence. Current contract L1_LEDGER_V3; legacy/v2 identity golden tests pass. No provider call and no pilot access.
+- V2 wrapper build/archive/emulator gates pending; installed emulator stays 4.18-p6.15/code228. D-G1b authorizes V3 after V1–V2 pass on the same G1 ledger (USD 0.01296985/1.00); expected owner fingerprint value requested, no key requested/read. Stop before G2.
+- Evidence: docs/P6_R6_UNIT_REF_EXECUTION_20261004.md. Next action: complete V2.
+
 ## Current P6 G1-resume checkpoint — 2026-10-03
 
 - W1–W2 đạt trên source commit `a178ff97`: production `4.18-p6.15`/code228 và AndroidTest event `p6-r6r7-a178ff97-20261003-15` được build bằng wrapper, archive hai nơi, cài trên `emulator-5554`; preflight `5/5`, coordinator `1/1`, fake CHAIN `STRUCTURAL_VALID 14/14`, 0 actual provider call.

@@ -20,8 +20,8 @@ public final class OpenRouterLedgerCoverageFactsTest {
 
         assertEquals(3, units.size());
         assertTrue(facts.contains("exactly 3 units"));
-        assertTrue(facts.contains("the first is " + units.get(0).id()));
-        assertTrue(facts.contains("the last is " + units.get(2).id()));
+        assertTrue(facts.contains("the first is " + "L" + units.get(0).line()));
+        assertTrue(facts.contains("the last is " + "L" + units.get(2).line()));
         assertTrue(facts.contains("never skip or repeat a unit"));
         assertTrue(facts.contains("at most 80 characters"));
     }

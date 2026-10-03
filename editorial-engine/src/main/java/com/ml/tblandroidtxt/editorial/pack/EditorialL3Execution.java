@@ -31,8 +31,8 @@ public final class EditorialL3Execution {
     public static final String QA_RECEIPT_SCHEMA = "safe4.full.qa-receipt.v1";
     /** Receipt of the ledger contract: anchored probes, carried defects and a real final read of FINAL. */
     public static final String QA_RECEIPT_SCHEMA_V2 = "safe4.full.qa-receipt.v2";
-    public static final String REAUDIT_WIRE_V2 = EditorialL3Ledger.REAUDIT_WIRE_V2;
-    public static final String RECONCILE_WIRE_V2 = EditorialL3Ledger.RECONCILE_WIRE_V2;
+    public static final String REAUDIT_WIRE_V3 = EditorialL3Ledger.REAUDIT_WIRE_V3;
+    public static final String RECONCILE_WIRE_V3 = EditorialL3Ledger.RECONCILE_WIRE_V3;
     public static final int MAX_CANDIDATES = 300;
     public static final int MAX_PROBES = 40;
     static final Set<String> LEDGERS = Set.of("UNIT", "TG", "SR", "RC");
@@ -287,7 +287,7 @@ public final class EditorialL3Execution {
         }
 
         BigDecimal spent = BigDecimal.ZERO;
-        CallOutcome first = call(provider, store, attemptIdentity, REAUDIT_PHASE, REAUDIT_WIRE_V2, reauditSources, request,
+        CallOutcome first = call(provider, store, attemptIdentity, REAUDIT_PHASE, REAUDIT_WIRE_V3, reauditSources, request,
                 reauditBudget, totalCap, spent, 0);
         if (first.stop != null) return first.stop;
         spent = first.cost;
@@ -302,13 +302,13 @@ public final class EditorialL3Execution {
 
         Map<String, byte[]> secondSources = new TreeMap<>(reconcileSources);
         secondSources.put(EditorialL3Ledger.CARRIED_ROLE, EditorialL3Ledger.carriedBlock(carried));
-        CallOutcome second = call(provider, store, attemptIdentity, RECONCILE_PHASE, RECONCILE_WIRE_V2, secondSources, request,
+        CallOutcome second = call(provider, store, attemptIdentity, RECONCILE_PHASE, RECONCILE_WIRE_V3, secondSources, request,
                 reconcileBudget, totalCap, spent, 1, EditorialL3Ledger.candidateBlock(pass.candidates()));
         if (second.stop != null) return second.stop;
         spent = second.cost;
         EditorialL3Ledger.ReconcileWire wire;
         try {
-            wire = EditorialL3Ledger.parseReconcile(second.bytes, attemptIdentity, pass.candidates(), carried.size());
+            wire = EditorialL3Ledger.parseReconcile(second.bytes, attemptIdentity, pass.candidates(), carried.size(), inventory);
         } catch (RuntimeException invalid) {
             recover(store, attemptIdentity, "REPAIR_L3_RECONCILE_SCHEMA_INVALID");
             return stop(EditorialL2Execution.StopClass.REPAIR_REQUIRED, "REPAIR_L3_RECONCILE_SCHEMA_INVALID",
@@ -438,7 +438,7 @@ public final class EditorialL3Execution {
         Map<String, Object> root = new LinkedHashMap<>();
         root.put("schemaVersion", QA_RECEIPT_SCHEMA_V2);
         root.put("artifactType", "QA_RECEIPT");
-        root.put("contractRevision", EditorialContractRevision.L1_LEDGER_V2);
+        root.put("contractRevision", EditorialContractRevision.L1_LEDGER_V3);
         root.put("attemptIdentity", attemptIdentity);
         root.put("bindingIdentity", request.context().binding().bindingIdentity());
         root.put("chapterKey", request.context().chapterKey());

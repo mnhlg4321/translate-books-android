@@ -42,7 +42,9 @@ param(
 
     [string]$Runner = 'androidx.test.runner.AndroidJUnitRunner',
 
-    [string]$Notes = 'Host-only AndroidTest artifact; not installed and not device-verified.'
+    [string]$Notes = 'Host-only AndroidTest artifact; not installed and not device-verified.',
+
+    [switch]$Offline
 )
 
 $ErrorActionPreference = 'Stop'
@@ -195,6 +197,7 @@ try {
         throw "Refusing non-test or connected Gradle task: $gradleTask"
     }
     $gradleCommand = @($gradleTask, '--rerun-tasks', '--no-daemon', '--console=plain')
+    if ($Offline) { $gradleCommand += '--offline' }
     # Windows PowerShell 5.1 turns native stderr (e.g. javac Notes) into terminating errors under Stop; capture it as output instead.
     $gradleErrorActionPreference = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'

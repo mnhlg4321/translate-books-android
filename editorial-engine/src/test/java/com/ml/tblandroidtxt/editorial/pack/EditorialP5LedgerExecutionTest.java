@@ -41,7 +41,7 @@ public final class EditorialP5LedgerExecutionTest {
         return m;
     }
 
-    private static byte[] json(Map<String, Object> m) { return EditorialCanonicalJson.canonicalize(m).getBytes(StandardCharsets.UTF_8); }
+    private static byte[] json(Map<String, Object> m) { return EditorialCanonicalJson.canonicalize(wireView(m)).getBytes(StandardCharsets.UTF_8); }
 
     private static EditorialRawInventory.Inventory inv() { return EditorialRawInventory.build(bytes(RAW)); }
 
@@ -82,7 +82,7 @@ public final class EditorialP5LedgerExecutionTest {
     // ---- flow ----
 
     private static EditorialP5PilotRequest ledgerRaw(Fixture f) {
-        return f.request.withContractRevision(EditorialContractRevision.L1_LEDGER_V2);
+        return f.request.withContractRevision(EditorialContractRevision.L1_LEDGER_V3);
     }
 
     private static EditorialP5PilotRequest ledgerReconcile(Fixture f, EditorialP5PilotRequest raw, byte[] rawReport) {
@@ -99,7 +99,7 @@ public final class EditorialP5LedgerExecutionTest {
         EditorialP5PilotResult rawResult = run(raw, authorization(raw, "auth-raw"), provider, store);
         assertEquals(rawResult.reasonCode(), EditorialP5PilotResult.Outcome.COMMITTED, rawResult.outcome());
         byte[] rawReport = rawResult.committedResult().reportBytes();
-        assertEquals(EditorialContractRevision.L1_LEDGER_V2, EditorialContractRevision.ofReportBytes(rawReport));
+        assertEquals(EditorialContractRevision.L1_LEDGER_V3, EditorialContractRevision.ofReportBytes(rawReport));
         EditorialL1Ledger.Body rawBody = EditorialL1Ledger.parseBody(EditorialCanonicalJson.parseObject(rawReport));
         assertEquals(2, rawBody.candidates().size());
         assertEquals(0, rawBody.metrics().uniqueFindingCount());
@@ -124,8 +124,8 @@ public final class EditorialP5LedgerExecutionTest {
         byte[] block = provider2.requests.get(0).visibleSources().get(EditorialL1LedgerRun.RAW_CANDIDATES_ROLE);
         assertNotNull(block);
         String blockText = new String(block, StandardCharsets.UTF_8);
-        assertTrue(blockText.contains("c1\tTG\t" + id(3)));
-        assertTrue(blockText.contains("c2\tUNIT\t" + id(4)));
+        assertTrue(blockText.contains("c1\tTG\tL3"));
+        assertTrue(blockText.contains("c2\tUNIT\tL4"));
 
         byte[] report = store.committed.get(reconcile.attemptIdentity()).reportBytes();
         Map<String, Object> parsed = EditorialCanonicalJson.parseObject(report);
@@ -418,4 +418,10 @@ public final class EditorialP5LedgerExecutionTest {
             inFlight.add(attemptIdentity);
         }
     }
+    private static Object wireView(Map<String, Object> value) {
+        Object schema = value.get("wireSchemaVersion");
+        return schema instanceof String && ((String) schema).endsWith(".v3")
+                ? com.ml.tblandroidtxt.editorial.pack.EditorialUnitReference.wireView(value) : value;
+    }
+
 }

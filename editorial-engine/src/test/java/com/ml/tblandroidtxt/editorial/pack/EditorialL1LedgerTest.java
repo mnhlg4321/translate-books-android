@@ -41,7 +41,7 @@ public final class EditorialL1LedgerTest {
 
     private static List<Object> fullCoverage() { return new ArrayList<>(List.of(range(1, 12, "PROCESSED"))); }
 
-    private static byte[] json(Map<String, Object> m) { return EditorialCanonicalJson.canonicalize(m).getBytes(StandardCharsets.UTF_8); }
+    private static byte[] json(Map<String, Object> m) { return EditorialCanonicalJson.canonicalize(wireView(m)).getBytes(StandardCharsets.UTF_8); }
 
     private static Map<String, Object> rawWire(List<Object> coverage, List<Object> candidates) {
         return map("wireSchemaVersion", EditorialL1Ledger.RAW_WIRE, "attemptIdentity", ATT, "coverage", coverage, "candidates", candidates);
@@ -101,7 +101,7 @@ public final class EditorialL1LedgerTest {
                 json(rawWire(new ArrayList<>(List.of(range(1, 7, "PROCESSED"), range(7, 12, "PROCESSED"))), new ArrayList<>())), ATT, inv()));
         expectCode("L1_COVERAGE_EMPTY", () -> EditorialL1Ledger.parseRawPass(json(rawWire(new ArrayList<>(), new ArrayList<>())), ATT, inv()));
         Map<String, Object> forged = candidate("c1", "TG", 3);
-        forged.put("unitId", "u:3:00000000");
+        forged.put("unitId", "L999");
         expectCode("L1_UNIT_UNKNOWN", () -> EditorialL1Ledger.parseRawPass(
                 json(rawWire(fullCoverage(), new ArrayList<>(List.of(forged)))), ATT, inv()));
     }
@@ -176,7 +176,7 @@ public final class EditorialL1LedgerTest {
         expectCode("L1_DRAFT_ANCHOR_OUT_OF_RANGE", () -> reconcile(reconcileWire(new ArrayList<>(List.of(
                 finding("e1", "MEANING", 3, 3, 13, "踏破", "chinh phuc"))), new ArrayList<>()), List.of()));
         Map<String, Object> forgedUnit = finding("e1", "MEANING", 3, 3, 3, "踏破", "chinh phuc");
-        forgedUnit.put("rawUnits", new ArrayList<Object>(List.of("u:3:00000000")));
+        forgedUnit.put("rawUnits", new ArrayList<Object>(List.of("L999")));
         expectCode("L1_UNIT_UNKNOWN", () -> reconcile(reconcileWire(new ArrayList<>(List.of(forgedUnit)), new ArrayList<>()), List.of()));
         Map<String, Object> forgedCandidate = finding("e1", "MEANING", 3, 3, 3, "踏破", "chinh phuc");
         forgedCandidate.put("candidateIds", new ArrayList<Object>(List.of("nope")));
@@ -295,7 +295,7 @@ public final class EditorialL1LedgerTest {
         assertEquals(body, back);
         byte[] again = EditorialCanonicalJson.canonicalize(EditorialL1Ledger.bodyToMap(back)).getBytes(StandardCharsets.UTF_8);
         assertTrue(java.util.Arrays.equals(bytes, again));
-        assertEquals(EditorialContractRevision.L1_LEDGER_V2, EditorialContractRevision.ofReportBytes(bytes));
+        assertEquals(EditorialContractRevision.L1_LEDGER_V3, EditorialContractRevision.ofReportBytes(bytes));
         assertEquals(1, back.metrics().uniqueFindingCount());
         assertEquals(3, back.metrics().occurrenceCount());
     }
@@ -305,8 +305,8 @@ public final class EditorialL1LedgerTest {
         Map<String, Object> legacy = map("phase", "L1_RECONCILE", "artifactType", "REPORT_L1");
         assertEquals(EditorialContractRevision.LEGACY_V1, EditorialContractRevision.ofReport(legacy));
         expectCode("L1_REPORT_NOT_LEDGER_V2", () -> EditorialL1Ledger.parseBody(legacy));
-        assertFalse(EditorialContractRevision.eligiblePredecessor(EditorialContractRevision.LEGACY_V1, EditorialContractRevision.L1_LEDGER_V2));
-        assertTrue(EditorialContractRevision.eligiblePredecessor(EditorialContractRevision.L1_LEDGER_V2, EditorialContractRevision.L1_LEDGER_V2));
+        assertFalse(EditorialContractRevision.eligiblePredecessor(EditorialContractRevision.LEGACY_V1, EditorialContractRevision.L1_LEDGER_V3));
+        assertTrue(EditorialContractRevision.eligiblePredecessor(EditorialContractRevision.L1_LEDGER_V3, EditorialContractRevision.L1_LEDGER_V3));
         assertEquals(EditorialContractRevision.LEGACY_V1, EditorialContractRevision.ofReportBytes("not json".getBytes(StandardCharsets.UTF_8)));
         assertEquals("", EditorialContractRevision.identitySuffix(EditorialContractRevision.LEGACY_V1));
     }
@@ -368,4 +368,10 @@ public final class EditorialL1LedgerTest {
         assertEquals("L1_WIRE_PARSE_FAILED", EditorialL1Ledger.safeMessage(new IllegalArgumentException("contains 王は城 text")));
         assertEquals("L1_WIRE_PARSE_FAILED", EditorialL1Ledger.safeMessage(new IllegalArgumentException((String) null)));
     }
+    private static Object wireView(Map<String, Object> value) {
+        Object schema = value.get("wireSchemaVersion");
+        return schema instanceof String && ((String) schema).endsWith(".v3")
+                ? com.ml.tblandroidtxt.editorial.pack.EditorialUnitReference.wireView(value) : value;
+    }
+
 }

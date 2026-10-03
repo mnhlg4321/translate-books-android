@@ -31,7 +31,7 @@ public final class OpenRouterEditorialP5LedgerPromptTest {
             sources.put(EditorialSafe4Contract.DRAFT, DRAFT.getBytes(StandardCharsets.UTF_8));
             sources.put(EditorialSafe4Contract.PRONOUN, "from,speaker,target\n".getBytes(StandardCharsets.UTF_8));
             if (withCandidates) {
-                sources.put("L1_RAW_CANDIDATES", "candidateId\tledger\tunitId\tnote\nc1\tTG\tu:3:aaaaaaaa\tcontrast\n"
+                sources.put("L1_RAW_CANDIDATES", "candidateId\tledger\tunitId\tnote\nc1\tTG\tL3\tcontrast\n"
                         .getBytes(StandardCharsets.UTF_8));
             }
         }
@@ -47,14 +47,15 @@ public final class OpenRouterEditorialP5LedgerPromptTest {
                 request("L1_RAW_DISCOVERY", EditorialL1Ledger.RAW_WIRE, false));
         EditorialRawInventory.Inventory inv = EditorialRawInventory.build(RAW.getBytes(StandardCharsets.UTF_8));
         assertEquals(2, inv.units().size());
-        assertTrue(prompt.user.contains(inv.units().get(0).id() + "|王は城に入った。"));
-        assertTrue(prompt.user.contains(inv.units().get(1).id() + "|「踏破した。」"));
+        assertTrue(prompt.user.contains("L" + inv.units().get(0).line() + "|王は城に入った。"));
+        assertTrue(prompt.user.contains("L" + inv.units().get(1).line() + "|「踏破した。」"));
         assertTrue(prompt.user.contains("TASK (L1 RAW discovery)"));
         assertTrue(prompt.user.contains(EditorialL1Ledger.RAW_WIRE));
         assertTrue(prompt.user.contains("a".repeat(64)));
         assertFalse(prompt.user.contains("TASK (L1 RECONCILE)"));
         // a blank line has no unit id and is not shown as a unit
-        assertFalse(prompt.user.contains("u:2:"));
+        assertFalse(prompt.user.contains("L2|"));
+        assertFalse(prompt.user.matches("(?s).*u:[0-9]+:[0-9a-f]{8}.*"));
     }
 
     @Test public void reconcilePromptShowsNumberedDraftCandidatesAndNoCap() {
@@ -64,10 +65,11 @@ public final class OpenRouterEditorialP5LedgerPromptTest {
         assertTrue(prompt.user.contains("D2|"));
         assertTrue(prompt.user.contains("D3|\"Da chinh phuc.\""));
         assertTrue(prompt.user.contains("--- L1_RAW_CANDIDATES ---"));
-        assertTrue(prompt.user.contains("c1\tTG\tu:3:aaaaaaaa"));
+        assertTrue(prompt.user.contains("c1\tTG\tL3"));
         assertTrue(prompt.user.contains("there is no cap of four"));
         assertTrue(prompt.user.contains("findings <=" + EditorialL1Ledger.MAX_FINDINGS_PER_CALL));
         assertTrue(prompt.user.contains("TASK (L1 RECONCILE)"));
+        assertFalse(prompt.user.matches("(?s).*u:[0-9]+:[0-9a-f]{8}.*"));
     }
 
     @Test public void responseFormatIsStrictAndEveryKeyIsRequired() throws Exception {

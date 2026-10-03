@@ -1,15 +1,15 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-03 (+07:00): G1 resume (Codex a178ff97/a14e1661): W1–W2 passed; W3 fx-a03 one L1_RAW_DISCOVERY call rejected with L1_UNIT_UNKNOWN (USD 0.00478465; G1 total 0.01296985 of 1.00, 0 UNKNOWN). Claude rebuilt the RAW inventory independently: the 191 ids in the sent prompt match the validator inventory exactly, so the model returned a non-existent unit id. Second consecutive id/coverage-bookkeeping rejection: approach changes to line-number unit references (wire v3), see docs/P6_R6_UNIT_REF_WORK_REQUEST_20261003.md.
-- Current version: active release v4.18. Pilot `15e84958` remains last known on production `4.18-p6.2`/code215 and was not accessed. Emulator `emulator-5554` has production `4.18-p6.15`/code228 and AndroidTest event `p6-r6r7-a178ff97-20261003-15`.
-- Current branch: `feature/v4.18-p5e-runner-repair-20260917`; same v4.18 continuation, no new branch, checklist, or release track.
-- Current commit: a14e1661 — implementation baseline immediately before this snapshot update.
-- Current build: production `4.18-p6.15`/code228, event `build-20261003-200206`, source `a178ff97`; APK SHA-256 `AB0AAA1EA0A6DE8C79678A5A9D8F82413338935EA8491F03CC25C908CD38E3F0`; AndroidTest event `p6-r6r7-a178ff97-20261003-15`, test APK SHA-256 `7ECB59586D61D1AFF788869C4D284DFC85FF9BC8082690F99E568F2F2E16B78F`. Both payloads are mirrored under `artifacts/` and `backup/`, installed only on `emulator-5554`.
-- Current phase: P6 R6 G1 resume, stopped at the first fixture after one live L1 call. Network and fingerprint preflights remain passed with zero calls. `fx-a03` returned `REPAIR_L1_LEDGER_INVALID` with detail `L1_UNIT_UNKNOWN`; G2 has not started.
-- Completed tasks: P0–P4 and offline L0–L8; W1 wrapper build/archive/install and emulator checks; W2 typed-stop fake gate; W3 one-call G1 resume with immediate group stop and cumulative ledger verification.
-- Pending tasks: diagnose `L1_UNIT_UNKNOWN` offline. Any live retry or continuation requires new owner authorization; current scope still has 0 retry/repair calls. G1 must be reported before G2.
-- Known bugs/gaps: fake-run `SEMANTIC_EVAL` remains FAIL 12/PASS 2 and does not measure translation quality. The 22 historical C9 failure IDs remain unavailable. Live `fx-a03` has no REPORT_L1/final predecessor because L1 was rejected; the exact safe engine detail is now retained.
-- Regression status: W1 preflight 5/5, coordinator 1/1, fake CHAIN 14/14 structural and 0 actual calls; W2 verifier/scorer negative path passes with 0 actual calls. W3 ledger has 2 calls, USD `0.01296985` settled/exposed, USD `1.00` cap, USD `0.98703015` remaining, zero pending UNKNOWN. No retry or repair call was made.
-- Workspace/data: pre-existing owner `.idea`, P5E files, evidence, artifacts and backups remain unstaged and untouched. Pilot `15e84958` was not accessed. No app settings were changed. No API key or fingerprint value is recorded.
-- Evidence pointers: [P6 G1 resume report](docs/P6_R6_G1_RESUME_EXECUTION_20261003.md); [P6 §7 live execution report](docs/P6_R6_G1_LIVE_EXECUTION_20261003.md); [evaluation protocol](docs/P6_R5_EVALUATION_PROTOCOL.md); [G1 budget](docs/P6_R5_EXECUTION_BUDGET_TABLE.md).
-- Current Next action: owner decides D-G1b; Codex implements wire v3 line-number unit references (V1), rebuilds and re-verifies on the emulator (V2), then resumes G1 within the remaining cap (V3) per docs/P6_R6_UNIT_REF_WORK_REQUEST_20261003.md.
+- Updated: 2026-10-04 (+07:00), P6 R6 V1 wire v3 offline PASS.
+- Current version: active v4.18; emulator production 4.18-p6.15/code228; pilot remains last known 4.18-p6.2/code215, not accessed.
+- Current branch: feature/v4.18-p5e-runner-repair-20260917; existing continuation/checklist only.
+- Current commit: e268770c91cd7a4439c965983e8645cb80671379 — implementation baseline immediately before this snapshot commit; confirm actual HEAD on resume.
+- Current build: 4.18-p6.15/code228, build-20261003-200206, source a178ff97; APK SHA-256 AB0AAA1EA0A6DE8C79678A5A9D8F82413338935EA8491F03CC25C908CD38E3F0, verified against retained APK; installed emulator only. V3 source not built yet.
+- Current phase: P6 R6, V1 complete; V2 build/emulator verification next; V3 authorized by D-G1b only after V1–V2 pass.
+- Completed tasks: line references for all ledger RAW-pass/anchor wires, app resolution to unchanged full inventory ids, v3 revision/identity, full-id durable readback, fake wire updates, offline wrapper option. Engine 351/351, app 341/341, lint and AndroidTest compile PASS; Python 33/33.
+- Pending tasks: V2 wrapper build and dual archive/install, preflight/coordinator/fake CHAIN 14/14 and negative gate; V3 same G1 ledger from fx-a03. Expected owner fingerprint value/file requested, previous private preflight captures are redacted. Stop before G2.
+- Known bugs/gaps: G1 historical fx-a03 failures remain immutable (last L1_UNIT_UNKNOWN). Wire v3 has no new live semantic evidence. Fake/no-edit semantic FAIL 12/PASS 2 is not model quality. The 22 historical C9 failure IDs remain unavailable.
+- Regression status: current offline JVM/lint/compile gates PASS; V2 emulator gates not rerun yet. Actual provider calls this session 0; cumulative G1 USD 0.01296985/1.00, remaining 0.98703015, 0 pending UNKNOWN at last durable checkpoint.
+- Workspace/data: owner .idea/P5E changes and prior artifacts/backups remain protected and unstaged. Existing emulator restarted without wipe. No pilot/Settings/key read or change.
+- Evidence: docs/P6_R6_UNIT_REF_EXECUTION_20261004.md; D:/P5E-private/unit-ref-v1-final-tests.log; D:/P5E-private/unit-ref-python-tests.log.
+- Next action: complete V2 wrapper build/archive/install and fake verification on emulator-5554.

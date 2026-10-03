@@ -50,14 +50,14 @@ public final class OpenRouterEditorialL3LedgerPromptTest {
 
     @Test public void reauditV2ShowsUnitIdsAndNumberedViL2AndAsksForCoverageRanges() throws Exception {
         EditorialL2Execution.Provider.Request request = request(EditorialL3Execution.REAUDIT_PHASE,
-                EditorialL3Execution.REAUDIT_WIRE_V2, reauditSources());
+                EditorialL3Execution.REAUDIT_WIRE_V3, reauditSources());
         assertTrue(valid(request));
         PromptPair prompt = OpenRouterEditorialL3Provider.buildPrompt(request);
         EditorialRawInventory.Inventory inventory = EditorialRawInventory.build(b(RAW));
-        assertTrue(prompt.user.contains(inventory.units().get(0).id() + "|王は城に入った。"));
+        assertTrue(prompt.user.contains("L" + inventory.units().get(0).line() + "|王は城に入った。"));
         assertTrue(prompt.user.contains("L1|Vua vao thanh."));
         assertTrue(prompt.system.contains("coverage: ordered, contiguous, non-overlapping ranges"));
-        assertTrue(prompt.user.contains(EditorialL3Execution.REAUDIT_WIRE_V2));
+        assertTrue(prompt.user.contains(EditorialL3Execution.REAUDIT_WIRE_V3));
         assertTrue(prompt.user.contains("\"viLine\""));
     }
 
@@ -69,7 +69,7 @@ public final class OpenRouterEditorialL3LedgerPromptTest {
         sources.put(OpenRouterEditorialL3Provider.CANDIDATES_ROLE, b("{\"candidates\":[]}"));
         sources.put(OpenRouterEditorialL3Provider.CARRIED_ROLE, b("{\"defects\":[]}"));
         EditorialL2Execution.Provider.Request request = request(EditorialL3Execution.RECONCILE_PHASE,
-                EditorialL3Execution.RECONCILE_WIRE_V2, sources);
+                EditorialL3Execution.RECONCILE_WIRE_V3, sources);
         assertTrue(valid(request));
         PromptPair prompt = OpenRouterEditorialL3Provider.buildPrompt(request);
         assertTrue(prompt.system.contains("carriedResolutions has EXACTLY one row per entry"));
@@ -111,13 +111,14 @@ public final class OpenRouterEditorialL3LedgerPromptTest {
         sources.put(EditorialSafe4Contract.RAW, b(RAW));
         sources.put(EditorialSafe4Contract.GLOSSARY, b("term,target"));
         EditorialL2Execution.Provider.Request request = request(EditorialL2Execution.DISCOVERY_PHASE,
-                EditorialL2Execution.DISCOVERY_WIRE_V2, sources);
+                EditorialL2Execution.DISCOVERY_WIRE_V3, sources);
         assertTrue(OpenRouterEditorialL2Provider.validRequest(request));
         PromptPair prompt = OpenRouterEditorialL2Provider.buildPrompt(request);
         EditorialRawInventory.Inventory inventory = EditorialRawInventory.build(b(RAW));
-        assertTrue(prompt.user.contains(inventory.units().get(1).id() + "|騎士が言った。"));
+        assertTrue(prompt.user.contains("L" + inventory.units().get(1).line() + "|騎士が言った。"));
         assertTrue(prompt.user.contains("\"coverage\""));
         assertTrue(prompt.system.contains("candidates are sparse"));
-        assertFalse(prompt.user.contains("L1|王は"));
+        assertTrue(prompt.user.contains("L1|王は"));
+        assertFalse(prompt.user.matches("(?s).*u:[0-9]+:[0-9a-f]{8}.*"));
     }
 }

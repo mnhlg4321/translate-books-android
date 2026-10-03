@@ -52,14 +52,14 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
             + "- candidateId: 1-48 ASCII characters matching [A-Za-z0-9][A-Za-z0-9._:/-]*, unique. At least one UNIT is required.\n"
             + "- Never return chapter text, a translation, hashes or identities other than the attemptIdentity echo.\n";
 
-    static final String DISCOVERY_RULES_V2 =
+    static final String DISCOVERY_RULES_V3 =
             "Discovery rules enforced by the app (any violation rejects the whole response):\n"
             + "- You see only RAW and GLOSSARY. Read RAW first and independently; the draft translation is hidden.\n"
-            + "- RAW is shown as <unitId>|<text>. coverage: ordered, contiguous, non-overlapping ranges {from,to,status} over the unit ids from the first "
+            + "- RAW is shown as L<physical line>|<text>. coverage: ordered, contiguous, non-overlapping ranges {from,to,status} over the L-number references from the first "
             + "to the last unit, no gap and no overlap; PROCESSED for units you read, PRESERVED only for units you could not assess.\n"
             + "- candidates are sparse: only where a later comparison with a translation could go wrong. ledger: TG glossary or title term, "
             + "SR relationship or address, RC recurring or contrasting concept, PAIR named pair, SPEAKER unclear speaker, UNIT any other trap. "
-            + "unitId is copied exactly; candidateId is a short unique token such as c1; note is at most 80 characters with no source text.\n"
+            + "unitId is an L-number copied exactly; candidateId is a short unique token such as c1; note is at most 80 characters with no source text.\n"
             + "- Never return chapter text, a translation, hashes or identities other than the attemptIdentity echo.\n";
 
     static final String RESOLUTION_RULES =
@@ -148,7 +148,7 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
         if (sources == null) return false;
         boolean edit = EditorialL2Execution.PHASE.equals(request.phase())
                 && (EditorialL2Execution.WIRE_SCHEMA_VERSION.equals(request.outputSchemaId())
-                || EditorialL2Execution.WIRE_SCHEMA_VERSION_V2.equals(request.outputSchemaId()))
+                || EditorialL2Execution.WIRE_SCHEMA_VERSION_V3.equals(request.outputSchemaId()))
                 && sources.containsKey(EditorialL2Execution.CANDIDATES_BLOCK);
         boolean read = EditorialFinalRead.L2_PHASE.equals(request.phase())
                 && EditorialFinalRead.WIRE.equals(request.outputSchemaId())
@@ -157,7 +157,7 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
                 && sources.containsKey(EditorialSafe4Contract.RAW);
         boolean discovery = EditorialL2Execution.DISCOVERY_PHASE.equals(request.phase())
                 && (EditorialL2Execution.DISCOVERY_WIRE.equals(request.outputSchemaId())
-                || EditorialL2Execution.DISCOVERY_WIRE_V2.equals(request.outputSchemaId()))
+                || EditorialL2Execution.DISCOVERY_WIRE_V3.equals(request.outputSchemaId()))
                 && sources.containsKey(EditorialSafe4Contract.RAW)
                 && Set.of(EditorialSafe4Contract.RAW, EditorialSafe4Contract.GLOSSARY).containsAll(sources.keySet());
         return edit || discovery || read;
@@ -167,8 +167,8 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
     static PromptPair buildPrompt(Request request) {
         boolean discovery = EditorialL2Execution.DISCOVERY_PHASE.equals(request.phase());
         boolean read = EditorialFinalRead.L2_PHASE.equals(request.phase());
-        boolean ledger = EditorialL2Execution.WIRE_SCHEMA_VERSION_V2.equals(request.outputSchemaId());
-        boolean discoveryV2 = EditorialL2Execution.DISCOVERY_WIRE_V2.equals(request.outputSchemaId());
+        boolean ledger = EditorialL2Execution.WIRE_SCHEMA_VERSION_V3.equals(request.outputSchemaId());
+        boolean discoveryV3 = EditorialL2Execution.DISCOVERY_WIRE_V3.equals(request.outputSchemaId());
         StringBuilder system = new StringBuilder();
         if (read) {
             system.append("You are an untrusted SAFE4 final reader. The app is the authority.\n")
@@ -177,7 +177,7 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
         } else if (discovery) {
             system.append("You are an untrusted SAFE4 L2 raw-first discoverer. The app is the authority.\n")
                     .append("Return exactly one JSON object and no Markdown or commentary.\n")
-                    .append(discoveryV2 ? DISCOVERY_RULES_V2 : DISCOVERY_RULES);
+                    .append(discoveryV3 ? DISCOVERY_RULES_V3 : DISCOVERY_RULES);
         } else {
             system.append("You are an untrusted SAFE4 L2 editor. The app is the authority.\n")
                     .append("Return exactly one JSON object and no Markdown or commentary.\n")
@@ -208,8 +208,12 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
         Collections.sort(roles);
         for (String role : roles) {
             String text = new String(request.visibleSources().get(role), StandardCharsets.UTF_8);
+            if ((ledger && ("REPORT_L1".equals(role) || "CHANGE_MAP_L2".equals(role)))) {
+                text = EditorialCanonicalJson.canonicalize(com.ml.tblandroidtxt.editorial.pack.EditorialUnitReference.wireView(
+                        EditorialCanonicalJson.parseObject(request.visibleSources().get(role))));
+            }
             user.append("\n--- ").append(role).append(" ---\n")
-                    .append(discoveryV2 && EditorialSafe4Contract.RAW.equals(role)
+                    .append((discoveryV3 || ledger) && EditorialSafe4Contract.RAW.equals(role)
                             ? OpenRouterEditorialP5PilotProvider.renderUnits(request.visibleSources().get(role))
                             : EditorialSafe4Contract.DRAFT.equals(role) || EditorialSafe4Contract.RAW.equals(role)
                             || EditorialFinalRead.TARGET_ROLE.equals(role) ? numbered(text) : text)
@@ -223,11 +227,12 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
                     .append("\"defects\":[{\"line\":1,\"quote\":\"...\",\"type\":\"MEANING\",\"note\":\"...\"}]}\n");
             return new PromptPair(system.toString(), user.toString());
         }
-        if (discovery && discoveryV2) {
-            user.append("{\"wireSchemaVersion\":\"").append(EditorialL2Execution.DISCOVERY_WIRE_V2)
+        if (discovery && discoveryV3) {
+            user.append(OpenRouterEditorialP5PilotProvider.coverageFacts(request.visibleSources().get(EditorialSafe4Contract.RAW)));
+            user.append("{\"wireSchemaVersion\":\"").append(EditorialL2Execution.DISCOVERY_WIRE_V3)
                     .append("\",\"attemptIdentity\":\"<exact echo>\",")
                     .append("\"coverage\":[{\"from\":\"<first unitId>\",\"to\":\"<last unitId>\",\"status\":\"PROCESSED|PRESERVED\"}],")
-                    .append("\"candidates\":[{\"candidateId\":\"c1\",\"ledger\":\"UNIT|TG|SR|RC|PAIR|SPEAKER\",\"unitId\":\"<unitId>\",\"note\":\"...\"}]}\n");
+                    .append("\"candidates\":[{\"candidateId\":\"c1\",\"ledger\":\"UNIT|TG|SR|RC|PAIR|SPEAKER\",\"unitId\":\"<RAW L-number>\",\"note\":\"...\"}]}\n");
             return new PromptPair(system.toString(), user.toString());
         }
         if (discovery) {
@@ -237,11 +242,11 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
             return new PromptPair(system.toString(), user.toString());
         }
         if (ledger) {
-            user.append("{\"wireSchemaVersion\":\"").append(EditorialL2Execution.WIRE_SCHEMA_VERSION_V2)
+            user.append("{\"wireSchemaVersion\":\"").append(EditorialL2Execution.WIRE_SCHEMA_VERSION_V3)
                     .append("\",\"attemptIdentity\":\"<exact echo>\",")
                     .append("\"resolutions\":[{\"candidateId\":\"U001\",\"status\":\"PROCESSED|PRESERVED|UNPROCESSED|CONFLICT\"}],")
                     .append("\"findingResolutions\":[{\"errorId\":\"<finding errorId>\",\"status\":\"FIXED|REJECTED|PRESERVED|UNRESOLVED\",")
-                    .append("\"changeIds\":[\"C001\"],\"preserveIds\":[],\"occurrences\":[{\"unitId\":\"<RAW unit id>\",\"ref\":\"C001\"}],")
+                    .append("\"changeIds\":[\"C001\"],\"preserveIds\":[],\"occurrences\":[{\"unitId\":\"<RAW L-number>\",\"ref\":\"C001\"}],")
                     .append("\"evidenceQuote\":\"\",\"reason\":\"\"}],")
                     .append("\"changes\":[{\"changeId\":\"C001\",\"errorId\":\"<finding errorId or L2-001>\",\"op\":\"REPLACE|INSERT_AFTER|DELETE|MERGE_WITH_NEXT\",")
                     .append("\"line\":1,\"before\":\"...\",\"after\":\"...\",\"reason\":\"...\",\"dialogue\":false,\"status\":\"CLOSED\"}],")

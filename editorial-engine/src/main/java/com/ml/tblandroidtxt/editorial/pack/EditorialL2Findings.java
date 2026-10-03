@@ -33,7 +33,7 @@ final class EditorialL2Findings {
     private EditorialL2Findings() { }
 
     /** Strict parse of the {@code findingResolutions} array; completeness is judged by {@link #verify}. */
-    static List<Resolution> parse(Object rows, Set<String> knownErrorIds) {
+    static List<Resolution> parse(Object rows, Set<String> knownErrorIds, EditorialRawInventory.Inventory inventory) {
         List<Object> values = EditorialCanonicalJson.array(rows, "findingResolutions");
         if (values.size() > EditorialL1Ledger.MAX_FINDINGS_PER_CALL) throw bad("L2_WIRE_ROW_LIMIT_EXCEEDED");
         List<Resolution> result = new ArrayList<>();
@@ -52,7 +52,7 @@ final class EditorialL2Findings {
             for (Object o : EditorialCanonicalJson.array(row.get("occurrences"), "occurrences")) {
                 Map<String, Object> occ = EditorialL2Execution.object(o, "occurrence");
                 EditorialL2Execution.keys(occ, Set.of("unitId", "ref"), "occurrence");
-                occurrences.add(new Occurrence(EditorialL2Execution.text(occ, "unitId"), EditorialL2Execution.text(occ, "ref")));
+                occurrences.add(new Occurrence(EditorialUnitReference.resolve(occ.get("unitId"), inventory), EditorialL2Execution.text(occ, "ref")));
             }
             if (occurrences.size() > MAX_OCCURRENCES) throw bad("L2_WIRE_ROW_LIMIT_EXCEEDED");
             String quote = EditorialL2Execution.text(row, "evidenceQuote");
@@ -222,7 +222,7 @@ final class EditorialL2Findings {
         Map<String, Resolution> byId = new HashMap<>();
         for (Resolution r : resolutions) byId.put(r.errorId(), r);
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("contractRevision", EditorialContractRevision.L1_LEDGER_V2);
+        m.put("contractRevision", EditorialContractRevision.L1_LEDGER_V3);
         m.put("reportL1Sha256", EditorialCanonicalJson.sha256Hex(reportL1Bytes));
         Map<String, Object> counts = new LinkedHashMap<>();
         for (String s : new String[] {"FIXED", "REJECTED", "PRESERVED", "UNRESOLVED"}) counts.put(s, java.math.BigDecimal.ZERO);

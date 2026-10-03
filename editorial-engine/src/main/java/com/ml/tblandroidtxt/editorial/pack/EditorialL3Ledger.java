@@ -18,8 +18,8 @@ import java.util.TreeSet;
  * changes it actually applied.
  */
 final class EditorialL3Ledger {
-    static final String REAUDIT_WIRE_V2 = "safe4.l3.reaudit.wire.v2";
-    static final String RECONCILE_WIRE_V2 = "safe4.l3.reconcile.wire.v2";
+    static final String REAUDIT_WIRE_V3 = "safe4.l3.reaudit.wire.v3";
+    static final String RECONCILE_WIRE_V3 = "safe4.l3.reconcile.wire.v3";
     static final String CARRIED_ROLE = "L3_CARRIED_DEFECTS";
     static final Set<String> CANDIDATE_STATUSES = Set.of("PROCESSED", "PRESERVED", "UNPROCESSED", "CONFLICT");
     static final Set<String> PROBE_KINDS = Set.of("COVERAGE", "REGRESSION");
@@ -52,7 +52,7 @@ final class EditorialL3Ledger {
 
     static ReauditPass parseReaudit(byte[] bytes, String attemptIdentity, EditorialRawInventory.Inventory inventory,
                                     int viLineCount) {
-        Map<String, Object> root = EditorialL1Ledger.rootOf(bytes, attemptIdentity, REAUDIT_WIRE_V2,
+        Map<String, Object> root = EditorialL1Ledger.rootOf(bytes, attemptIdentity, REAUDIT_WIRE_V3,
                 Set.of("wireSchemaVersion", "attemptIdentity", "coverage", "candidates"));
         List<EditorialRawInventory.Range> coverage = EditorialL1Ledger.coverage(root.get("coverage"), inventory);
         List<Object> rows = EditorialCanonicalJson.array(root.get("candidates"), "candidates");
@@ -65,8 +65,7 @@ final class EditorialL3Ledger {
             String id = EditorialL1Ledger.id(row, "candidateId");
             if (!ids.add(id)) throw EditorialL1Ledger.bad("L3_CANDIDATE_ID_DUPLICATE");
             String ledger = EditorialL1Ledger.enumOf(row, "ledger", EditorialL1Ledger.CANDIDATE_LEDGERS);
-            String unit = EditorialL1Ledger.str(row, "unitId", 64, true);
-            if (!inventory.has(unit)) throw EditorialL1Ledger.bad("L3_UNIT_UNKNOWN");
+            String unit = EditorialUnitReference.resolve(row.get("unitId"), inventory);
             int viLine = EditorialL1Ledger.intOf(row, "viLine");
             if (viLine < 0 || viLine > viLineCount) throw EditorialL1Ledger.bad("L3_VI_LINE_OUT_OF_RANGE");
             String status = EditorialL1Ledger.enumOf(row, "status", CANDIDATE_STATUSES);
@@ -82,7 +81,7 @@ final class EditorialL3Ledger {
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("candidateId", c.candidateId());
             row.put("ledger", c.ledger());
-            row.put("unitId", c.unitId());
+            row.put("unitId", EditorialUnitReference.fromId(c.unitId()));
             row.put("viLine", BigDecimal.valueOf(c.viLine()));
             row.put("status", c.status());
             row.put("note", c.note());
@@ -124,8 +123,8 @@ final class EditorialL3Ledger {
 
     // ---- reconcile ----
 
-    static ReconcileWire parseReconcile(byte[] bytes, String attemptIdentity, List<Candidate> candidates, int carriedCount) {
-        Map<String, Object> root = EditorialL1Ledger.rootOf(bytes, attemptIdentity, RECONCILE_WIRE_V2,
+    static ReconcileWire parseReconcile(byte[] bytes, String attemptIdentity, List<Candidate> candidates, int carriedCount, EditorialRawInventory.Inventory inventory) {
+        Map<String, Object> root = EditorialL1Ledger.rootOf(bytes, attemptIdentity, RECONCILE_WIRE_V3,
                 Set.of("wireSchemaVersion", "attemptIdentity", "resolutions", "carriedResolutions", "changes", "preserved",
                         "probes", "disposition"));
         Map<String, Object> shape = new LinkedHashMap<>();
@@ -172,7 +171,7 @@ final class EditorialL3Ledger {
             String id = EditorialL1Ledger.id(row, "probeId");
             if (!probeIds.add(id)) throw EditorialL1Ledger.bad("L3_PROBE_ID_DUPLICATE");
             probes.add(new Probe(id, EditorialL1Ledger.enumOf(row, "kind", PROBE_KINDS),
-                    EditorialL1Ledger.stringList(row.get("rawUnits"), "rawUnits", EditorialL1Ledger.MAX_RAW_UNITS_PER_FINDING, 64),
+                    EditorialUnitReference.resolveList(row.get("rawUnits"), "rawUnits", EditorialL1Ledger.MAX_RAW_UNITS_PER_FINDING, inventory),
                     EditorialL1Ledger.intOf(row, "viStart"), EditorialL1Ledger.intOf(row, "viEnd"),
                     EditorialL1Ledger.str(row, "scope", MAX_PROBE_TEXT, true), EditorialL1Ledger.str(row, "contrast", MAX_PROBE_TEXT, true),
                     EditorialL1Ledger.str(row, "rawQuote", EditorialL1Ledger.MAX_QUOTE, true),

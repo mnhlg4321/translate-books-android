@@ -80,7 +80,7 @@ public final class EditorialL2LedgerChainTest {
         return m;
     }
 
-    private static byte[] json(Map<String, Object> m) { return EditorialCanonicalJson.canonicalize(m).getBytes(StandardCharsets.UTF_8); }
+    private static byte[] json(Map<String, Object> m) { return EditorialCanonicalJson.canonicalize(wireView(m)).getBytes(StandardCharsets.UTF_8); }
 
     private static Map<String, Object> change(String id, String errorId, String op, int line, String before, String after) {
         Map<String, Object> m = map("changeId", id, "errorId", errorId, "line", BigDecimal.valueOf(line), "before", before,
@@ -114,7 +114,7 @@ public final class EditorialL2LedgerChainTest {
             byte[] body;
             switch (request.phase()) {
                 case EditorialL2Execution.DISCOVERY_PHASE -> body = json(map(
-                        "wireSchemaVersion", EditorialL2Execution.DISCOVERY_WIRE_V2, "attemptIdentity", request.attemptIdentity(),
+                        "wireSchemaVersion", EditorialL2Execution.DISCOVERY_WIRE_V3, "attemptIdentity", request.attemptIdentity(),
                         "coverage", list(map("from", unit(1), "to", unit(10), "status", "PROCESSED")),
                         "candidates", list(map("candidateId", "U001", "ledger", "UNIT", "unitId", unit(1), "note", "n"))));
                 case EditorialL2Execution.PHASE -> body = editFor.apply(request.attemptIdentity());
@@ -140,7 +140,7 @@ public final class EditorialL2LedgerChainTest {
     }
 
     private static byte[] editWire(String attempt, List<Object> changes, List<Object> preserved, List<Object> findingResolutions) {
-        return json(map("wireSchemaVersion", EditorialL2Execution.WIRE_SCHEMA_VERSION_V2, "attemptIdentity", attempt,
+        return json(map("wireSchemaVersion", EditorialL2Execution.WIRE_SCHEMA_VERSION_V3, "attemptIdentity", attempt,
                 "resolutions", list(map("candidateId", "U001", "status", "PROCESSED")),
                 "findingResolutions", findingResolutions, "changes", changes, "preserved", preserved,
                 "disposition", map("disposition", "CONTINUE", "reasonCode", "OK", "stopClass", "NONE")));
@@ -151,7 +151,7 @@ public final class EditorialL2LedgerChainTest {
         final byte[] report;
 
         Ledger(List<EditorialL1Ledger.Finding> findings, List<EditorialL1Ledger.ProtectedSpan> spans) {
-            this.context = fixture(RAW, DRAFT).withContractRevision(EditorialContractRevision.L1_LEDGER_V2);
+            this.context = fixture(RAW, DRAFT).withContractRevision(EditorialContractRevision.L1_LEDGER_V3);
             this.report = reportOf(context, RAW, findings, spans);
         }
 
@@ -195,7 +195,7 @@ public final class EditorialL2LedgerChainTest {
         assertEquals(3, r.providerCalls());
         assertEquals(3, provider.requests.size());
         assertEquals(EditorialFinalRead.L2_PHASE, provider.requests.get(2).phase());
-        assertEquals(EditorialL2Execution.DISCOVERY_WIRE_V2, provider.requests.get(0).outputSchemaId());
+        assertEquals(EditorialL2Execution.DISCOVERY_WIRE_V3, provider.requests.get(0).outputSchemaId());
         String vi = new String(r.committed().viL2Bytes(), StandardCharsets.UTF_8);
         assertTrue(vi, vi.contains("\"Da vuot qua.\"\n"));
         assertTrue(vi.contains("Troi bat dau mua."));
@@ -216,7 +216,7 @@ public final class EditorialL2LedgerChainTest {
         assertEquals(Set.of("RAW", "GLOSSARY", EditorialFinalRead.TARGET_ROLE, EditorialFinalRead.PROBES_ROLE),
                 readRequest.visibleSources().keySet());
         // the edit call sees the ledger report and the v2 schema
-        assertEquals(EditorialL2Execution.WIRE_SCHEMA_VERSION_V2, provider.requests.get(1).outputSchemaId());
+        assertEquals(EditorialL2Execution.WIRE_SCHEMA_VERSION_V3, provider.requests.get(1).outputSchemaId());
         assertTrue(provider.requests.get(1).visibleSources().containsKey("REPORT_L1"));
         // the contract revision is part of the attempt identity
         EditorialP5PilotRequest legacyContext = l.context.withContractRevision(EditorialContractRevision.LEGACY_V1);
@@ -402,14 +402,14 @@ public final class EditorialL2LedgerChainTest {
     }
 
     private static byte[] reauditWire(String attempt) {
-        return json(map("wireSchemaVersion", EditorialL3Execution.REAUDIT_WIRE_V2, "attemptIdentity", attempt,
+        return json(map("wireSchemaVersion", EditorialL3Execution.REAUDIT_WIRE_V3, "attemptIdentity", attempt,
                 "coverage", list(map("from", unit(1), "to", unit(10), "status", "PROCESSED")),
                 "candidates", list(map("candidateId", "R001", "ledger", "TG", "unitId", unit(3), "viLine", BigDecimal.valueOf(3),
                         "status", "PROCESSED", "note", "contrast"))));
     }
 
     private static Map<String, Object> reconcileV2(List<Object> changes, List<Object> carried, List<Object> preserved, List<Object> probes) {
-        return map("wireSchemaVersion", EditorialL3Execution.RECONCILE_WIRE_V2, "attemptIdentity", "x",
+        return map("wireSchemaVersion", EditorialL3Execution.RECONCILE_WIRE_V3, "attemptIdentity", "x",
                 "resolutions", list(map("candidateId", "R001", "status", "PROCESSED")), "carriedResolutions", carried,
                 "changes", changes, "preserved", preserved, "probes", probes,
                 "disposition", map("disposition", "CONTINUE", "reasonCode", "OK", "stopClass", "NONE"));
@@ -786,4 +786,10 @@ public final class EditorialL2LedgerChainTest {
 
         @Override public void markRecoveryRequired(String attempt, String reason) { }
     }
+    private static Object wireView(Map<String, Object> value) {
+        Object schema = value.get("wireSchemaVersion");
+        return schema instanceof String && ((String) schema).endsWith(".v3")
+                ? com.ml.tblandroidtxt.editorial.pack.EditorialUnitReference.wireView(value) : value;
+    }
+
 }

@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * Ledger-contract ({@code L1_LEDGER_V2}) side of an L1 phase: prepares the app-owned inventory and the
+ * Ledger-contract ({@code L1_LEDGER_V3}) side of an L1 phase: prepares the app-owned inventory and the
  * RAW-pass block, interprets the model's wire strictly, and builds the typed output, report and metrics. The
  * model supplies judgement rows only; the app owns identity, inventory, coverage checks, gates and the report.
  */
@@ -66,7 +66,7 @@ final class EditorialL1LedgerRun {
         List<String> draftLines = EditorialL1Ledger.draftLines(draft.bytes());
         byte[] predecessor = request.predecessorReport();
         if (predecessor == null) throw new IllegalArgumentException("INPUT_RAW_LEDGER_REPORT_MISSING");
-        if (!EditorialContractRevision.isLedger(EditorialContractRevision.ofReportBytes(predecessor))) {
+        if (!EditorialContractRevision.eligiblePredecessor(EditorialContractRevision.ofReportBytes(predecessor), request.contractRevision())) {
             throw new IllegalArgumentException("INPUT_REPORT_L1_LEGACY_CONTRACT");
         }
         EditorialL1Ledger.Body body;
@@ -86,7 +86,7 @@ final class EditorialL1LedgerRun {
     static byte[] candidateBlock(List<EditorialL1Ledger.Candidate> candidates) {
         StringBuilder out = new StringBuilder("candidateId\tledger\tunitId\tnote\n");
         for (EditorialL1Ledger.Candidate c : candidates) {
-            out.append(c.candidateId()).append('\t').append(c.ledger()).append('\t').append(c.unitId()).append('\t')
+            out.append(c.candidateId()).append('\t').append(c.ledger()).append('\t').append(EditorialUnitReference.fromId(c.unitId())).append('\t')
                     .append(c.note().replace('\t', ' ')).append('\n');
         }
         return out.toString().getBytes(StandardCharsets.UTF_8);

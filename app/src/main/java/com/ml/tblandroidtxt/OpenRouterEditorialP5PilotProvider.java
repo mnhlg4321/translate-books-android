@@ -4,6 +4,7 @@ import com.ml.tblandroidtxt.editorial.pack.EditorialCanonicalJson;
 import com.ml.tblandroidtxt.editorial.pack.EditorialDiffValidator;
 import com.ml.tblandroidtxt.editorial.pack.EditorialL1Ledger;
 import com.ml.tblandroidtxt.editorial.pack.EditorialRawInventory;
+import com.ml.tblandroidtxt.editorial.pack.EditorialUnitReference;
 import com.ml.tblandroidtxt.editorial.pack.EditorialLedgerValidator;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5L1Output;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5RawWireContract;
@@ -539,7 +540,7 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
 
     static final String LEDGER_RAW_TASK =
             "TASK (L1 RAW discovery). You see only the numbered RAW units and the GLOSSARY. You cannot see any translation, so do not judge one.\n"
-            + "1. coverage: ordered, contiguous, non-overlapping ranges {from,to,status} over the unit ids from the first to the last unit with no gap and no overlap. "
+            + "1. coverage: ordered, contiguous, non-overlapping ranges {from,to,status} over the L-number references from the first to the last unit with no gap and no overlap. "
             + "Use PROCESSED for units you read and PRESERVED only for units you could not assess.\n"
             + "2. candidates: only where a later comparison with a translation could go wrong. ledger: TG = glossary or title term occurring in the unit; "
             + "SR = relationship or form of address (who speaks to whom, honorific, pronoun choice); RC = recurring or contrasting concept (the same source word that must be rendered consistently, "
@@ -553,14 +554,14 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
             + "A defect repeated in several places is ONE finding and the other RAW units go into occurrenceUnits. Types: UNTRANSLATED (source-language text left in the draft), "
             + "MEANING (wrong meaning, a conflation, or a contrast between different source words that was lost), OMISSION (RAW content missing from the draft), ADDITION (content not in RAW), NUMBER, NEGATION, "
             + "GLOSSARY (glossary target not used), ADDRESS_PROFILE (a form of address that contradicts a PRONOUN row), SPEAKER_LISTENER, STRUCTURE (lines wrongly split or merged).\n"
-            + "   rawUnits: 1 to 6 unit ids copied exactly. rawQuote: an exact substring (at most 80 characters) of one of those units. "
+            + "   rawUnits: 1 to 6 L-number references copied exactly. rawQuote: an exact substring (at most 80 characters) of one of those units. "
             + "draft: {kind:LINES,start,end,after:0} with D<n> line numbers, or for missing content {kind:MISSING,start:0,end:0,after:n} meaning it belongs after DRAFT line n. "
             + "draftQuote: an exact substring (at most 80 characters) of the anchored DRAFT lines, empty for MISSING. observation says what is wrong and expectedMeaning what the meaning should be, both short; do not write a new translation. "
             + "disposition OPEN when the defect is clear enough to fix; PRESERVED when it is only a preference or the evidence is insufficient, and then evidenceLimit says why. "
             + "evidenceRefs are optional tokens naming glossary or pronoun rows (for example gl:12).\n"
             + "2. resolutions: resolve EVERY candidate in L1_RAW_CANDIDATES exactly once: PROCESSED with findingRef (an errorId) when it became a finding, PROCESSED with empty findingRef when checked and fine, "
             + "PRESERVED when it cannot be assessed, CONFLICT when the evidence contradicts, UNPROCESSED only if you did not get to it. Link findings to candidates through candidateIds.\n"
-            + "3. coverage: ordered, contiguous, non-overlapping ranges over every RAW unit id you compared, from the first to the last unit.\n"
+            + "3. coverage: ordered, contiguous, non-overlapping ranges over every RAW L-number reference you compared, from the first to the last unit.\n"
             + "4. speakerRecords for dialogue where speaker or listener matters; protectedSpans = DRAFT line ranges already correct against a PRONOUN or GLOSSARY row that a later edit must not change "
             + "(source PRONOUN_ROW, GLOSSARY_ROW, L1_PROOF or SPEAKER_PROOF).\n"
             + "5. disposition: CONTINUE normally; PRESERVE_DRAFT when the draft cannot be assessed; STOP only with stopClass CONTENT_BLOCKED or INPUT_REQUIRED. reasonCode at most 32 characters.\n";
@@ -569,8 +570,8 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         boolean reconcile = "L1_RECONCILE".equals(request.phase());
         StringBuilder system = new StringBuilder();
         system.append("You are an untrusted SAFE4 L1 analysis assistant for a Japanese to Vietnamese chapter translation. The app is the authority: ")
-                .append("it owns ids, hashes, coverage checks and the report. Return exactly one JSON object that matches the response schema and nothing else. ")
-                .append("Never invent unit ids; copy them exactly from the numbered blocks. Do not return source text beyond the short quotes asked for.\n\n")
+                .append("it owns ids, hashes, coverage checks and the report. RAW references must be L<physical line> (for example L3); the app resolves full ids. Return exactly one JSON object that matches the response schema and nothing else. ")
+                .append("Never invent L-number references; copy them exactly from the numbered blocks. Do not return source text beyond the short quotes asked for.\n\n")
                 .append("[PROJECT_INSTRUCTION]\n")
                 .append(authority(request, com.ml.tblandroidtxt.editorial.pack.EditorialPackFileRole.PROJECT_INSTRUCTION))
                 .append("\n[/PROJECT_INSTRUCTION]\n[TURN_PROMPT]\n")
@@ -627,21 +628,21 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         List<EditorialRawInventory.Unit> units = EditorialRawInventory.build(raw).units();
         if (units.isEmpty()) return "";
         return "Coverage facts checked by the app: the RAW block has exactly " + units.size()
-                + " units, the first is " + units.get(0).id() + " and the last is "
-                + units.get(units.size() - 1).id() + ". coverage[0].from must be the first id, the last range's "
+                + " units, the first is " + EditorialUnitReference.of(units.get(0)) + " and the last is "
+                + EditorialUnitReference.of(units.get(units.size() - 1)) + ". coverage[0].from must be the first id, the last range's "
                 + "to must be the last id, and each range's from must be the unit listed right after the previous "
-                + "range's to; never skip or repeat a unit and never name a line that has no unit id. Use a few "
+                + "range's to; never skip or repeat a unit and never name a line that has no L-number reference. Use a few "
                 + "large ranges, not one per unit. candidateId must be unique and match [A-Za-z0-9][A-Za-z0-9._:/-]* "
-                + "(for example c1, c2); every unitId and range id is copied character for character, including "
-                + "the 8 hex characters after the second colon; note is at most "
+                + "(for example c1, c2); every RAW reference is L<physical line>, matching ^L[1-9][0-9]*$. "
+                + "Copy only the L-number; the app resolves it to the full inventory id. note is at most "
                 + "80 characters including spaces.\n";
     }
 
-    /** RAW rendered as {@code <unitId>|<text>} using the same inventory the app checks the response against. */
+    /** RAW rendered as {@code L<physical line>|<text>} using the same inventory the app checks the response against. */
     static String renderUnits(byte[] raw) {
         StringBuilder out = new StringBuilder();
         for (EditorialRawInventory.Unit unit : EditorialRawInventory.build(raw).units()) {
-            out.append(unit.id()).append('|').append(unit.text()).append('\n');
+            out.append(EditorialUnitReference.of(unit)).append('|').append(unit.text()).append('\n');
         }
         return out.toString();
     }
