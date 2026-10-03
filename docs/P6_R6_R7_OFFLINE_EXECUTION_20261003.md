@@ -26,9 +26,11 @@ Scope: owner request `docs/P6_R6_R7_CODEX_WORK_REQUEST_20261003.md` at `1f1dd8b1
 - Verification so far: engine **340/340 PASS**, app JVM **330/330 PASS**, AndroidTest Java compile PASS, focused spend/budget tests **7/7 PASS**, `verify_fixtures.py` **14/14 hash/leak checks PASS**, Python/PowerShell source parse PASS, `git diff --check` PASS. No provider request or Settings/key access occurred.
 - The 14-fixture emulator dry-run has not run yet. It is scheduled after P3 archives the exact APK and AndroidTest APK through the required wrapper; structural and semantic verdicts remain unmeasured until then.
 
-## P3 — pending
+## P3 — source corrections prepared; archived build and emulator regression pending
 
-Wrapper build/archive from a temporary worktree, emulator fixture dry-run and targeted R1–R4 regression. Record APK hashes, artifact parity, test results and C8/C9 handling here. The full instrumented suite is not a valid shortcut because it includes pilot/history and provider opt-in tests.
+- C8: corrected chapter 001 to **191 units**. `EditorialRawInventory` excludes the `[IMAGE: …]` marker; the prior 192 count was one too high.
+- C9 audit: the retained private P6 emulator output contains per-method logs for four classes, all passing; it does not include the 22 historical failing methods. No matching connected-test XML or failure report is retained in the checked workspace or the searched P6 evidence directories. Source review found 13 stale current-schema (`24`) assertions in six isolated disposable-database classes; these expectations now target schema 25. The pilot/main-database characterization classes remain excluded from the offline run. This corrects the stale assertions but does not claim that the unrecorded historical 22 have been individually mapped.
+- Still required: production build/archive and AndroidTest archive from a temporary worktree through both required wrappers; emulator fixture dry-run; targeted safe R1–R4 and schema-regression classes; record APK/test-APK hashes, payload parity, exact instrumented counts, and structural/semantic verdicts. The full instrumented suite is not a valid shortcut because it includes pilot/history and provider opt-in tests.
 
 ## P4 stop point
 

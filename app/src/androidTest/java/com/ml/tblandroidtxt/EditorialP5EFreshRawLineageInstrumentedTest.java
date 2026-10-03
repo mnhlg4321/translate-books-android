@@ -38,7 +38,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
- * Exercises the production-owned P5E lineage query only on disposable v24
+ * Exercises the production-owned P5E lineage query only on disposable v25
  * databases. No test in this class opens the current pilot DB.
  */
 @RunWith(AndroidJUnit4.class)
@@ -79,8 +79,8 @@ public final class EditorialP5EFreshRawLineageInstrumentedTest {
         deleteTree(storageRoot);
     }
 
-    @Test public void schemaV24EmptyFreshLineageIsUnusedAndAllReadsComplete() {
-        assertEquals(24, database.editorialReadableDatabase().getVersion());
+    @Test public void schemaV25EmptyFreshLineageIsUnusedAndAllReadsComplete() {
+        assertEquals(25, database.editorialReadableDatabase().getVersion());
         EditorialP5EFreshRawLiveRunner.FreshRawLineageCheck check = inspectPrimary();
 
         assertEquals(EditorialP5EFreshRawLiveRunner.FreshRawLineageCheck.Status.UNUSED,
@@ -88,13 +88,13 @@ public final class EditorialP5EFreshRawLineageInstrumentedTest {
         assertZero(check);
     }
 
-    @Test public void historicalPredicateIsRedOnSchemaV24WithoutBindingColumn() {
+    @Test public void historicalPredicateIsRedOnSchemaV25WithoutBindingColumn() {
         SQLiteDatabase db = database.editorialReadableDatabase();
         assertFalse(hasColumn(db, "editorial_p5d_reconciliation", "binding_identity"));
         try (android.database.Cursor ignored = db.rawQuery(
                 "SELECT COUNT(*) FROM editorial_p5d_reconciliation WHERE binding_identity=?",
                 new String[]{fixture.binding().bindingIdentity()})) {
-            fail("the historical predicate must not execute on schema v24");
+            fail("the historical predicate must not execute on schema v25");
         } catch (SQLiteException expected) {
             assertTrue(expected.getMessage().contains("binding_identity"));
         }

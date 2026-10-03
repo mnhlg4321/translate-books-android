@@ -31,7 +31,7 @@ Quy ước: "L1-only" = RAW + RECONCILE trên fixture; "L2-only" / "L3-only" = h
 | **G1** L1-only | `fx-a03` (từ chưa dịch), `fx-a04` (đảo vai), `fx-a05` (thiếu câu), `fx-a07` (số), `fx-a08` (phủ định), `fx-a11` (6 lỗi > 4 finding), `fx-a02` (đối chứng sạch), `fx-a12` (mơ hồ) × 1 lượt = 16 call; thêm 2 lượt cho `fx-a11` và `fx-a04` = 8 call | 24 | 0.954 | **≤ 1.00** | ledger có đủ finding (không trần 4), anchor đúng dòng lỗi gieo, đối chứng không có finding sai, lưu bền |
 | **G2** L2-only, L3-only, đối chứng | L2-only: `fx-a04`, `fx-a11`, `fx-a02` (predecessor REPORT_L1 phải được tạo qua P4/L1 production execution từ bốn source fixture, với fake provider; chỉ có anchor và quan sát trung tính, không dùng nhãn/đáp án) = 3 chuỗi × 3 call = 9; L3-only: `fx-a03`, `fx-a05`, `fx-a08`, `fx-a02`, `fx-a12` (VI_L2 dựng qua L1/L2 production execution bằng fake provider, lỗi fixture còn nguyên, receipt L2 hợp lệ) = 5 × 3 = 15 | 24 | 0.875 | **≤ 1.00** | L2 xử lý đủ finding và mọi occurrence; L3 tự tìm và sửa lỗi gieo trong VI_L2; đối chứng không bị sửa |
 | **G3** holdout | `fx-h01` (chương 003), `fx-h02` (chương 005): chuỗi 8 call mỗi chương, **chạy một lần**, không chỉnh prompt sau đó | 16 | 0.597 | **≤ 0.75** | khái quát hóa trên chương chưa từng nhìn, lỗi gieo theo luật |
-| **G4** chương 001 | `fx-a01`: chuỗi 8 call trên binding/run declaration mới (Q2) | 8 | 0.298 | **≤ 0.50** | `今回` còn, `踏破` đủ 4 chỗ, `嬢ちゃん` đúng hồ sơ; lưu bền, mở lại, xuất TXT |
+| **G4** chương 001 | `fx-a01`: chuỗi 8 call trên binding/run declaration mới (Q2); inventory là **191 unit** vì marker ảnh `[IMAGE: …]` bị loại theo `EditorialRawInventory` | 8 | 0.298 | **≤ 0.50** | `今回` còn, `踏破` đủ 4 chỗ, `嬢ちゃん` đúng hồ sơ; lưu bền, mở lại, xuất TXT |
 | **Tổng R6** | | **72** | **2.724** | **≤ USD 3.25** | dự phòng 0.53 chỉ dùng khi owner đồng ý riêng |
 
 Ngoài bảng (R7, xin riêng): hai chương còn lại, chuỗi 8 call mỗi chương = 16 call, worst-case USD 0.597, trần xin ≤ USD 0.75 (Q4).
@@ -60,7 +60,7 @@ Không nằm trong R6 và nói rõ để khỏi hiểu nhầm là đã phủ: c�
 
 ## 5. Giới hạn đã biết khi vào R6
 
-- Chương dài hơn 600 unit dừng có kiểu (`L1_UNIT_LIMIT_EXCEEDED`), chưa có chunking; chương 001 có 192 unit, các chương ứng viên đều dưới ngưỡng này.
+- Chương dài hơn 600 unit dừng có kiểu (`L1_UNIT_LIMIT_EXCEEDED`), chưa có chunking; chương 001 có **191 unit** (không tính dòng marker ảnh `[IMAGE: …]` theo `EditorialRawInventory`), các chương ứng viên đều dưới ngưỡng này.
 - Hợp đồng cho phép tối đa 1 vòng sửa sau final-read; bản v2.0 dùng 0 vòng: final-read còn defect thì dừng `CONTENT_L3_FINAL_READ_DEFECTS`, không phát hành FINAL.
 - 22 test instrumented lịch sử (schema v24, seed lịch sử) fail từ trước, ngoài phạm vi R; sẽ ghi vào checklist, không che.
 - Chất lượng nghĩa chỉ được kết luận sau G1–G4 bằng bộ chấm đã đóng băng; mọi số "đạt" trước đó chỉ là cấu trúc.
