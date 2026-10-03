@@ -73,6 +73,23 @@ public final class EditorialP6GroupSpendLedgerTest {
         }
     }
 
+    @Test public void oneAttemptUsesDistinctStableCallIdsForItsPhases() throws Exception {
+        Path path = temporary.getRoot().toPath().resolve("phases.jsonl");
+        String attempt = "a".repeat(64);
+        String discovery = EditorialP6GroupSpendLedger.callId(attempt, "L2_RAW_DISCOVERY");
+        String edit = EditorialP6GroupSpendLedger.callId(attempt, "L2_EDIT");
+        assertTrue(!discovery.equals(edit));
+        assertEquals(discovery, EditorialP6GroupSpendLedger.callId(attempt, "L2_RAW_DISCOVERY"));
+
+        EditorialP6GroupSpendLedger ledger = ledger(path, "0.50");
+        ledger.reserve(discovery, "L2_RAW_DISCOVERY", new BigDecimal("0.20"));
+        ledger.settle(discovery, BigDecimal.ZERO);
+        ledger.reserve(edit, "L2_EDIT", new BigDecimal("0.20"));
+        EditorialP6GroupSpendLedger.Snapshot settled = ledger.settle(edit, BigDecimal.ZERO);
+        assertEquals(0, settled.pendingCalls());
+        assertEquals(4, settled.entries());
+    }
+
     private static EditorialP6GroupSpendLedger ledger(Path path, String cap) {
         return new EditorialP6GroupSpendLedger(path, "group-test", new BigDecimal(cap));
     }

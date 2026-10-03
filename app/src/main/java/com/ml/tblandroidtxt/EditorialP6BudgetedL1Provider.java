@@ -25,9 +25,10 @@ final class EditorialP6BudgetedL1Provider implements EditorialP5PilotProvider {
     @Override public Response call(Request request) throws Exception {
         EditorialL2Execution.Budget budget = budgets.get(request.phase());
         if (budget == null) throw new IllegalStateException("P6_SPEND_PHASE_NOT_ALLOWED");
-        ledger.reserve(request.attemptIdentity(), request.phase(), EditorialP6GroupSpendLedger.worstCase(budget));
+        String callId = EditorialP6GroupSpendLedger.callId(request.attemptIdentity(), request.phase());
+        ledger.reserve(callId, request.phase(), EditorialP6GroupSpendLedger.worstCase(budget));
         Response response = delegate.call(request);
-        if (response.costKnown()) ledger.settle(request.attemptIdentity(), response.reportedCost());
+        if (response.costKnown()) ledger.settle(callId, response.reportedCost());
         return response;
     }
 }

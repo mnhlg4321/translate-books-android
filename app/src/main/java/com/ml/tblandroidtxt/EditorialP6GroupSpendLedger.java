@@ -44,6 +44,14 @@ public final class EditorialP6GroupSpendLedger {
         this.lock = LOCKS.computeIfAbsent(this.path, ignored -> new Object());
     }
 
+    /** One ledger identity per provider phase; a production chain attempt can contain several calls. */
+    static String callId(String attemptIdentity, String phase) {
+        requireText(attemptIdentity, "P6_SPEND_ATTEMPT_ID_REQUIRED");
+        requireText(phase, "P6_SPEND_PHASE_REQUIRED");
+        return EditorialCanonicalJson.sha256Hex(("P6_GROUP_CALL_ID_V1\n" + attemptIdentity + "\n" + phase)
+                .getBytes(StandardCharsets.UTF_8));
+    }
+
     /** Worst-case input and output cost on the pinned R5 rate basis. P4 must reprice before live use. */
     public static BigDecimal worstCase(EditorialL2Execution.Budget budget) {
         Objects.requireNonNull(budget, "budget");
