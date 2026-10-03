@@ -32,7 +32,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -45,8 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -239,7 +236,8 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
                         BundledEditorialEngineContractProfileRegistry.load()))
                 .importZip(new ByteArrayInputStream(zip));
         if (imported.state() != EditorialPackImportState.STORED_READY_FOR_CERTIFICATION) {
-            throw new IllegalStateException("P6_CANONICAL_PACK_IMPORT_FAILED");
+            throw new IllegalStateException("P6_CANONICAL_PACK_IMPORT_FAILED:" + imported.state()
+                    + ":" + imported.error() + ":" + imported.blockedReason());
         }
         EditorialPackSelectionCandidate candidate = new EditorialPackSelectionPolicy(database, storage)
                 .resolve(imported.packId(), imported.version()).orElseThrow(
@@ -301,22 +299,8 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
     }
 
     private static byte[] readAssetZip(String asset) throws IOException {
-        try (InputStream source = InstrumentationRegistry.getInstrumentation().getContext().getAssets().open(asset);
-             ZipInputStream zip = new ZipInputStream(source)) {
-            ByteArrayOutputStream output = new ByteArrayOutputStream();
-            ZipEntry entry;
-            byte[] buffer = new byte[8192];
-            while ((entry = zip.getNextEntry()) != null) {
-                if (!entry.isDirectory()) {
-                    while (true) {
-                        int count = zip.read(buffer);
-                        if (count < 0) break;
-                        output.write(buffer, 0, count);
-                    }
-                }
-                zip.closeEntry();
-            }
-            return output.toByteArray();
+        try (InputStream source = InstrumentationRegistry.getInstrumentation().getContext().getAssets().open(asset)) {
+            return source.readAllBytes();
         }
     }
 
