@@ -188,7 +188,7 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-R0–R5 đã xong offline, mỗi nhóm có commit và bằng chứng (R2–R4 có chứng minh trên emulator bằng APK lưu trữ 4.18-p6.3/.4/.5). R5 gồm bộ chấm đã đóng băng + phiếu chấm người (`docs/P6_R5_EVALUATION_PROTOCOL.md`) và bảng execution 72 call, worst-case USD 2.724, xin trần USD 3.25 (`docs/P6_R5_EXECUTION_BUDGET_TABLE.md`). Next action: owner trả lời Q1–Q5 (duyệt bảng ngân sách; cách chạy lại chương 001; cài lên pilot sau khi sao lưu DB; chọn hai chương cho R7; xác nhận U1–U3). Chưa có call provider, chưa đụng pilot; R6/R7 chỉ bắt đầu sau câu trả lời.
+Owner đã duyệt Q1–Q5 theo khuyến nghị (2026-10-02). Claude kiểm lại R0–R5 độc lập và lập `docs/P6_R6_R7_CODEX_WORK_REQUEST_20261003.md` (phản biện C1–C12, gói P0–P10). Chặn trước live: chưa có đường sản phẩm chạy L1 cho binding mới (C1) và chưa chốt bề mặt chạy fixture/key (C2). Next action duy nhất: Codex làm P1 (L1 trong hành động chạy trên thẻ chương, hộp thoại cấp phép 8 call) rồi P2, P3; live chỉ sau P4.
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 
