@@ -141,8 +141,10 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
             EditorialP5CExactBindingExecution l1Execution = EditorialP5CExactBindingExecution.forContract(
                     database, storage, EditorialContractRevision.L1_LEDGER_V2);
             EditorialP5CExactBindingExecution.CommittedL1 committedL1 = l1Execution.committedL1(
-                    fixture.projectId(), fixture.selector(), fixture.chapterKey()).orElseThrow(
-                    () -> new IllegalStateException("P6_REPORT_L1_READBACK_FAILED"));
+                    fixture.projectId(), fixture.selector(), fixture.chapterKey()).orElse(null);
+            if (committedL1 == null) throw new IllegalStateException("P6_REPORT_L1_READBACK_FAILED:"
+                    + result.stage() + ":" + result.reasonCode() + ":providerCalls="
+                    + result.providerCalls() + ":fakeCalls=" + fakeCalls);
             Files.write(reportPath, committedL1.reportL1Bytes());
             stage = "CHAIN";
         } else {
