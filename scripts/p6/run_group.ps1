@@ -6,6 +6,8 @@ param(
     [string]$RunId = ([guid]::NewGuid().ToString('D').ToLowerInvariant()),
     [ValidateSet('L1_ONLY', 'L2_ONLY', 'L3_ONLY', 'CHAIN')]
     [string]$Mode = 'CHAIN',
+    [switch]$Live,
+    [string]$ExpectedEndpointAccountFingerprint,
     [string]$FixturesRoot = 'D:\P5E-private\p6-fixtures'
 )
 
@@ -17,6 +19,9 @@ $ExpectedRoot = [IO.Path]::GetFullPath('D:\P5E-private\p6-fixtures').TrimEnd('\'
 $FixturesRoot = [IO.Path]::GetFullPath($FixturesRoot).TrimEnd('\')
 if ($FixturesRoot -ne $ExpectedRoot -or $FixturesRoot.Contains('6.FINAL')) {
     throw 'Fixture root must be the private P6 fixture directory, outside 6.FINAL.'
+}
+if ($Live -and ($ExpectedEndpointAccountFingerprint -notmatch '^[0-9a-fA-F]{64}$')) {
+    throw 'Live fixture mode requires the owner-supplied endpoint/account fingerprint.'
 }
 $PrivateParent = Split-Path -Parent $FixturesRoot
 $RunRoot = Join-Path (Join-Path $PrivateParent 'p6-runs') $RunId
@@ -45,6 +50,11 @@ if ($LASTEXITCODE -ne 0) { throw 'Could not prepare the label-free fixture paylo
 $TransferRoot = Join-Path $RunRoot 'to-device'
 $FixtureIds = Get-Content (Join-Path $RunRoot 'fixture-ids.json') -Raw | ConvertFrom-Json
 $Failed = [System.Collections.Generic.List[string]]::new()
+$LiveArguments = @()
+if ($Live) {
+    $LiveArguments = @('-e', 'p6_fixture_live', 'YES', '-e',
+        'p6_expected_endpoint_account_fingerprint', $ExpectedEndpointAccountFingerprint)
+}
 try {
     & adb -s $Serial shell mkdir -p $DeviceInputRoot
     if ($LASTEXITCODE -ne 0) { throw 'Could not prepare emulator input storage.' }
@@ -69,7 +79,7 @@ try {
     foreach ($FixtureId in $FixtureIds) {
         $LogPath = Join-Path (Join-Path $RunRoot 'logs') "$FixtureId-instrumentation.txt"
         $Output = & adb -s $Serial shell am instrument -w `
-            -e p6_fixture_run YES -e p6_run_id $RunId -e p6_fixture_id $FixtureId -e p6_mode $Mode `
+            -e p6_fixture_run YES -e p6_run_id $RunId -e p6_fixture_id $FixtureId -e p6_mode $Mode @LiveArguments `
             -e class com.ml.tblandroidtxt.EditorialP6FixtureRunnerInstrumentedTest#runFixture $Instrumentation 2>&1
         $CommandExit = $LASTEXITCODE
         [IO.File]::WriteAllText($LogPath, ($Output -join [Environment]::NewLine), [Text.UTF8Encoding]::new($false))

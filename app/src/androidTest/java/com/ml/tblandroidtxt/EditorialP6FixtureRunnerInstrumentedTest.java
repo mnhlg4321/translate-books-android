@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.Locale;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -76,6 +77,16 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         }
 
         context = ApplicationProvider.getApplicationContext();
+        boolean liveMode = "YES".equalsIgnoreCase(args.getString("p6_fixture_live", ""));
+        AppSettings liveSettings = null;
+        if (liveMode) {
+            liveSettings = SettingsStore.load(context).copy();
+            String preflight = EditorialP6FixtureLivePreflight.check(liveSettings,
+                    args.getString("p6_expected_endpoint_account_fingerprint", ""));
+            if (!EditorialP6FixtureLivePreflight.MATCH.equals(preflight)) {
+                throw new IllegalStateException(preflight);
+            }
+        }
         Path externalRoot = context.getExternalFilesDir(null).toPath().toAbsolutePath().normalize();
         Path appFilesRoot = context.getFilesDir().toPath().toAbsolutePath().normalize();
         Path fixtureInputRoot = appFilesRoot.resolve("p6-fixtures").normalize();
@@ -109,16 +120,33 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         Files.createDirectories(outputRoot);
         Path reportPath = outputRoot.resolve("report-l1.json");
         Path promptPath = outputRoot.resolve("l2-edit-prompt.txt");
+        PromptCapture promptCapture = new PromptCapture(outputRoot.resolve("prompts"), promptPath);
+        ProviderMetrics metrics = new ProviderMetrics();
         EditorialChainBudgets budgets = EditorialChainBudgets.fullLedgerRecommended();
-        String groupId = EditorialCanonicalJson.sha256Hex((runId + "|" + fixtureId + "|" + mode + "|P6-OFFLINE-GROUP")
-                .getBytes(StandardCharsets.UTF_8));
+        String groupId = args.getString("p6_group_id", liveMode ? "" : "P6-OFFLINE-" + runId);
+        if (liveMode && (groupId == null || groupId.isBlank())) throw new IllegalArgumentException("P6_LIVE_GROUP_ID_REQUIRED");
+        if (!groupId.matches("[A-Za-z0-9._-]{3,100}")) throw new IllegalArgumentException("P6_SPEND_GROUP_INVALID");
+        String capText = args.getString("p6_group_maximum_usd", liveMode ? "" : budgets.chainMaximumCost().toPlainString());
+        if (liveMode && (capText == null || capText.isBlank())) throw new IllegalArgumentException("P6_LIVE_GROUP_CAP_REQUIRED");
+        BigDecimal groupMaximum;
+        try {
+            groupMaximum = new BigDecimal(capText);
+        } catch (RuntimeException invalid) {
+            throw new IllegalArgumentException("P6_SPEND_GROUP_CAP_INVALID");
+        }
+        if (groupMaximum.signum() <= 0 || groupMaximum.compareTo(new BigDecimal("1.00")) > 0) {
+            throw new IllegalArgumentException("P6_SPEND_GROUP_CAP_INVALID");
+        }
+        Path groupLedgerPath = appFilesRoot.resolve("evidence").resolve("p6-spend-ledger")
+                .resolve("groups").resolve(groupId + ".jsonl").normalize();
+        if (!groupLedgerPath.startsWith(appFilesRoot)) throw new IllegalArgumentException("P6_SPEND_GROUP_PATH_REFUSED");
         EditorialP6GroupSpendLedger spend = new EditorialP6GroupSpendLedger(
-                outputRoot.resolve("spend-ledger.jsonl"), groupId, budgets.chainMaximumCost());
+                groupLedgerPath, groupId, groupMaximum);
         String opaqueChapterKey = "p6-fixture-" + EditorialCanonicalJson.sha256Hex((runId + "|" + fixtureId)
                 .getBytes(StandardCharsets.UTF_8)).substring(0, 16);
         FixtureSetup fixture = createSetup(fixtureId, chapter, input, runId, opaqueChapterKey);
         FakeL1 l1 = new FakeL1();
-        FakeL2 l2 = new FakeL2(promptPath);
+        FakeL2 l2 = new FakeL2();
         FakeL3 l3 = new FakeL3();
         List<EditorialP4InputSource> reloadedSources = currentAssetSources(fixture);
         EditorialP4ResumeResult sourcePreflight = new EditorialP4BindingTransactionService(database, storage)
@@ -130,9 +158,26 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
                     + ":lengths=" + sourceIdentityLengths(fixture, reloadedSources)
                     + ":sha256=" + sourceIdentityHashes(fixture, reloadedSources));
         }
-        EditorialP5PilotProvider budgetedL1 = new EditorialP6BudgetedL1Provider(l1, spend, budgets);
-        EditorialL2Execution.Provider budgetedL2 = new EditorialP6BudgetedPhaseProvider(l2, spend, budgets, true);
-        EditorialL2Execution.Provider budgetedL3 = new EditorialP6BudgetedPhaseProvider(l3, spend, budgets, false);
+        EditorialP5PilotProvider l1Delegate = l1;
+        EditorialL2Execution.Provider l2Delegate = l2;
+        EditorialL2Execution.Provider l3Delegate = l3;
+        if (liveMode) {
+            l1Delegate = new OpenRouterEditorialP6L1Provider(
+                    OpenRouterEditorialP5PilotProvider.withFreshRawLifecyclePersistence(
+                            liveSettings, budgets.l1Raw().maximumOutputTokens(), database),
+                    OpenRouterEditorialP5PilotProvider.withFreshReconcileLifecyclePersistence(
+                            liveSettings, budgets.l1Reconcile().maximumOutputTokens(), database));
+            l2Delegate = new OpenRouterEditorialL2Provider(liveSettings);
+            l3Delegate = new OpenRouterEditorialL3Provider(liveSettings);
+        }
+        EditorialP5PilotProvider budgetedL1 = new EditorialP6BudgetedL1Provider(
+                new PromptRecordingL1Provider(l1Delegate, promptCapture, liveMode ? metrics : null), spend, budgets);
+        EditorialL2Execution.Provider budgetedL2 = new EditorialP6BudgetedPhaseProvider(
+                new PromptRecordingPhaseProvider(l2Delegate, promptCapture, liveMode ? metrics : null, true),
+                spend, budgets, true);
+        EditorialL2Execution.Provider budgetedL3 = new EditorialP6BudgetedPhaseProvider(
+                new PromptRecordingPhaseProvider(l3Delegate, promptCapture, liveMode ? metrics : null, false),
+                spend, budgets, false);
         int fakeCalls;
         int measuredCalls;
         byte[] finalBytes;
@@ -220,24 +265,56 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         Files.write(outputRoot.resolve("final.txt"), finalBytes);
         Map<String, Object> structural = new LinkedHashMap<>();
         structural.put("valid", valid);
+        structural.put("providerKind", liveMode ? "LIVE" : "FAKE_OFFLINE");
         structural.put("reasonCode", reason);
         structural.put("stage", stage);
         structural.put("providerCalls", BigDecimal.valueOf(measuredCalls));
+        structural.put("actualProviderCalls", BigDecimal.valueOf(metrics.calls));
+        structural.put("inputTokens", BigDecimal.valueOf(metrics.inputTokens));
+        structural.put("outputTokens", BigDecimal.valueOf(metrics.outputTokens));
+        structural.put("usd", metrics.usd.toPlainString());
         structural.put("stops", valid ? List.of() : List.of(reason));
         Files.write(outputRoot.resolve("structural.json"), EditorialCanonicalJson.canonicalize(structural).getBytes(StandardCharsets.UTF_8));
         Map<String, Object> metadata = new LinkedHashMap<>();
         metadata.put("fixtureId", fixtureId);
         metadata.put("mode", mode);
-        metadata.put("providerKind", "FAKE_OFFLINE");
-        metadata.put("actualProviderCalls", BigDecimal.ZERO);
-        metadata.put("fakeProviderCalls", BigDecimal.valueOf(fakeCalls));
+        metadata.put("providerKind", liveMode ? "LIVE" : "FAKE_OFFLINE");
+        metadata.put("groupId", groupId);
+        metadata.put("groupMaximumUsd", groupMaximum.toPlainString());
+        metadata.put("actualProviderCalls", BigDecimal.valueOf(metrics.calls));
+        metadata.put("inputTokens", BigDecimal.valueOf(metrics.inputTokens));
+        metadata.put("outputTokens", BigDecimal.valueOf(metrics.outputTokens));
+        metadata.put("usd", metrics.usd.toPlainString());
+        metadata.put("knownCostCalls", BigDecimal.valueOf(metrics.knownCostCalls));
+        metadata.put("unknownCostCalls", BigDecimal.valueOf(metrics.calls - metrics.knownCostCalls));
+        metadata.put("reportedCostCalls", BigDecimal.valueOf(metrics.reportedCostCalls));
+        metadata.put("finishReasons", List.copyOf(metrics.finishReasons));
+        metadata.put("fakeProviderCalls", BigDecimal.valueOf(liveMode ? 0 : fakeCalls));
         metadata.put("finalSha256", EditorialCanonicalJson.sha256Hex(finalBytes));
         Files.write(outputRoot.resolve("run-metadata.json"), EditorialCanonicalJson.canonicalize(metadata).getBytes(StandardCharsets.UTF_8));
+        Files.copy(groupLedgerPath, outputRoot.resolve("spend-ledger.jsonl"));
         if (!Files.exists(reportPath)) throw new IllegalStateException("P6_REPORT_L1_EVIDENCE_MISSING");
-        if (!Files.exists(promptPath)) Files.write(promptPath, new byte[0]);
+        spend.inspect();
         assertTrue("offline fake provider must be called only through the production stage boundary", fakeCalls <= FAKE_PROVIDER_CALL_LIMIT);
         assertTrue("production artifacts must validate: " + reason
                 + (l2.failure.isEmpty() ? "" : ":fakeL2=" + l2.failure), valid);
+    }
+
+    @Test public void liveModeRejectsMismatchedFingerprintBeforeAnyDispatch() {
+        Bundle args = InstrumentationRegistry.getArguments();
+        Assume.assumeTrue("zero-call live preflight is opt-in",
+                "YES".equalsIgnoreCase(args.getString("p6_fixture_live", ""))
+                        && "YES".equalsIgnoreCase(args.getString("p6_live_preflight_only", "")));
+        String expected = args.getString("p6_expected_endpoint_account_fingerprint", "");
+        Assume.assumeTrue("expected value must be a non-zero SHA-256",
+                expected != null && expected.matches("[0-9a-fA-F]{64}") && !expected.matches("0{64}"));
+        AppSettings settings = SettingsStore.load(ApplicationProvider.getApplicationContext()).copy();
+        assertEquals(EditorialP6FixtureLivePreflight.FINGERPRINT_MISMATCH,
+                EditorialP6FixtureLivePreflight.check(settings, expected));
+        Bundle status = new Bundle();
+        status.putString("p6.live.preflight.result", "FINGERPRINT_MISMATCH");
+        status.putInt("p6.live.preflight.providerCalls", 0);
+        InstrumentationRegistry.getInstrumentation().sendStatus(0, status);
     }
 
     @After public void tearDown() throws Exception {
@@ -539,6 +616,110 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         }
     }
 
+    private static final class PromptCapture {
+        private final Path root;
+        private final Path legacyL2EditPath;
+        private int sequence;
+
+        PromptCapture(Path root, Path legacyL2EditPath) {
+            this.root = root;
+            this.legacyL2EditPath = legacyL2EditPath;
+        }
+
+        synchronized void record(String phase, PromptPair prompt) throws IOException {
+            if (phase == null || !phase.matches("[A-Z0-9_]{1,48}") || prompt == null) {
+                throw new IllegalArgumentException("P6_PROMPT_CAPTURE_INVALID");
+            }
+            Files.createDirectories(root);
+            byte[] bytes = ("SYSTEM\n" + prompt.system + "\nUSER\n" + prompt.user)
+                    .getBytes(StandardCharsets.UTF_8);
+            Path path = root.resolve(String.format(Locale.ROOT, "%03d-%s.txt", ++sequence, phase));
+            Files.write(path, bytes, java.nio.file.StandardOpenOption.CREATE_NEW,
+                    java.nio.file.StandardOpenOption.WRITE);
+            if ("L2_EDIT".equals(phase)) {
+                Files.write(legacyL2EditPath, bytes, java.nio.file.StandardOpenOption.CREATE_NEW,
+                        java.nio.file.StandardOpenOption.WRITE);
+            }
+        }
+    }
+
+    private static final class ProviderMetrics {
+        int calls;
+        int knownCostCalls;
+        int reportedCostCalls;
+        long inputTokens;
+        long outputTokens;
+        BigDecimal usd = BigDecimal.ZERO;
+        final List<String> finishReasons = new ArrayList<>();
+
+        synchronized void started() { calls++; }
+
+        synchronized void response(long input, long output, BigDecimal cost, boolean known,
+                                   boolean reported, String finishReason) {
+            inputTokens += input;
+            outputTokens += output;
+            if (known) {
+                knownCostCalls++;
+                usd = usd.add(cost);
+            }
+            if (reported) reportedCostCalls++;
+            String safe = finishReason != null && finishReason.matches("[A-Za-z0-9_-]{1,32}")
+                    ? finishReason : "OTHER";
+            finishReasons.add(safe);
+        }
+    }
+
+    private static final class PromptRecordingL1Provider implements EditorialP5PilotProvider {
+        private final EditorialP5PilotProvider delegate;
+        private final PromptCapture prompts;
+        private final ProviderMetrics metrics;
+
+        PromptRecordingL1Provider(EditorialP5PilotProvider delegate, PromptCapture prompts, ProviderMetrics metrics) {
+            this.delegate = delegate;
+            this.prompts = prompts;
+            this.metrics = metrics;
+        }
+
+        @Override public void beginAttempt(long maximumExecutionTimeMillis) {
+            delegate.beginAttempt(maximumExecutionTimeMillis);
+        }
+
+        @Override public Response call(Request request) throws Exception {
+            prompts.record(request.phase(), OpenRouterEditorialP5PilotProvider.buildLedgerPrompt(request));
+            if (metrics != null) metrics.started();
+            Response response = delegate.call(request);
+            if (metrics != null) metrics.response(response.inputTokens(), response.outputTokens(),
+                    response.reportedCost(), response.costKnown(), response.costReported(), response.finishReason());
+            return response;
+        }
+    }
+
+    private static final class PromptRecordingPhaseProvider implements EditorialL2Execution.Provider {
+        private final EditorialL2Execution.Provider delegate;
+        private final PromptCapture prompts;
+        private final ProviderMetrics metrics;
+        private final boolean l2;
+
+        PromptRecordingPhaseProvider(EditorialL2Execution.Provider delegate, PromptCapture prompts,
+                                     ProviderMetrics metrics, boolean l2) {
+            this.delegate = delegate;
+            this.prompts = prompts;
+            this.metrics = metrics;
+            this.l2 = l2;
+        }
+
+        @Override public Response call(Request request) throws Exception {
+            PromptPair prompt = l2 ? OpenRouterEditorialL2Provider.buildPrompt(request)
+                    : OpenRouterEditorialL3Provider.buildPrompt(request);
+            prompts.record(request.phase(), prompt);
+            if (metrics != null) metrics.started();
+            Response response = delegate.call(request);
+            if (metrics != null) metrics.response(response.inputTokens(), response.outputTokens(),
+                    response.cost(), response.costKnown(), false, response.finishReason());
+            return response;
+        }
+    }
+
     private record FixtureSetup(long projectId, String chapterKey, String selector, EditorialP4Binding binding,
                                 List<EditorialP4InputSource> sources, com.ml.tblandroidtxt.editorial.pack.EditorialPackManifest manifest) { }
 
@@ -556,18 +737,11 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
     }
 
     private static final class FakeL2 implements EditorialL2Execution.Provider {
-        final Path promptPath;
         int calls;
         String failure = "";
-        FakeL2(Path promptPath) { this.promptPath = promptPath; }
         @Override public Response call(Request request) throws Exception {
             calls++;
             try {
-                PromptPair prompt = OpenRouterEditorialL2Provider.buildPrompt(request);
-                if (EditorialL2Execution.PHASE.equals(request.phase())) {
-                    Files.write(promptPath, ("SYSTEM\n" + prompt.system + "\nUSER\n" + prompt.user)
-                            .getBytes(StandardCharsets.UTF_8));
-                }
                 return new Response(l2Wire(request), "stop", true, 0, 0, BigDecimal.ZERO, true);
             } catch (Exception error) {
                 StackTraceElement[] trace = error.getStackTrace();
