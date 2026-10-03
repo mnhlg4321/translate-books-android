@@ -22,7 +22,7 @@ $PrivateParent = Split-Path -Parent $FixturesRoot
 $RunRoot = Join-Path (Join-Path $PrivateParent 'p6-runs') $RunId
 if (Test-Path -LiteralPath $RunRoot) { throw 'Run directory already exists; use a new RunId.' }
 
-$DeviceInputRoot = "/sdcard/Android/data/com.ml.tblandroidtxt/files/p6-fixtures/$RunId"
+$DeviceInputRoot = "/data/local/tmp/p6-fixtures/$RunId"
 $DeviceOutputRoot = "/sdcard/Android/data/com.ml.tblandroidtxt/files/p6-fixture-results/$RunId"
 $state = & adb -s $Serial get-state 2>&1
 if ($LASTEXITCODE -ne 0 -or ($state -join '').Trim() -ne 'device') { throw 'The selected emulator is not online.' }

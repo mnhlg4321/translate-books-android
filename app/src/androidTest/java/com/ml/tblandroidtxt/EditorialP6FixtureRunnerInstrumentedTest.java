@@ -78,14 +78,17 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
 
         context = ApplicationProvider.getApplicationContext();
         Path externalRoot = context.getExternalFilesDir(null).toPath().toAbsolutePath().normalize();
-        Path fixtureRoot = externalRoot.resolve("p6-fixtures").resolve(runId).resolve(fixtureId).normalize();
+        Path fixtureInputRoot = java.nio.file.Paths.get("/data/local/tmp/p6-fixtures").toAbsolutePath().normalize();
+        Path runInputRoot = fixtureInputRoot.resolve(runId).normalize();
+        Path fixtureRoot = runInputRoot.resolve(fixtureId).normalize();
         Path outputRoot = externalRoot.resolve("p6-fixture-results").resolve(runId).resolve(fixtureId).normalize();
-        if (!fixtureRoot.startsWith(externalRoot) || !outputRoot.startsWith(externalRoot)
+        if (!fixtureRoot.startsWith(runInputRoot) || !runInputRoot.startsWith(fixtureInputRoot)
+                || !outputRoot.startsWith(externalRoot)
                 || fixtureRoot.toString().contains("6.FINAL") || Files.exists(outputRoot)) {
             throw new IllegalStateException("P6_FIXTURE_PATH_REFUSED");
         }
         Map<String, Object> runtime = EditorialCanonicalJson.parseObject(readPushedFile(
-                externalRoot.resolve("p6-fixtures").resolve(runId).resolve(fixtureId + ".runtime.json")));
+                runInputRoot.resolve(fixtureId + ".runtime.json")));
         if (!fixtureId.equals(string(runtime, "fixtureId"))) throw new IllegalStateException("P6_RUNTIME_ID_MISMATCH");
         String chapter = string(runtime, "chapter");
         Map<String, Object> manifestFiles = object(runtime.get("files"));
