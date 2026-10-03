@@ -122,7 +122,7 @@ def expected_live_call_counts(mode):
     return actual_calls[mode], pipeline_calls[mode]
 
 
-def check_prompt_captures(output, mode, reused_l1=False):
+def check_prompt_captures(output, mode, reused_l1=False, invalid_l1=False):
     prompt_root = os.path.join(output, "prompts")
     if not os.path.isdir(prompt_root):
         raise ValueError("prompt capture directory is missing")
@@ -130,7 +130,7 @@ def check_prompt_captures(output, mode, reused_l1=False):
     if any(not os.path.isfile(os.path.join(prompt_root, name)) or not name.endswith(".txt")
            for name in files):
         raise ValueError("prompt capture directory contains an unexpected entry")
-    expected = expected_prompt_phases(mode, reused_l1)
+    expected = (["L1_RAW_DISCOVERY"] if invalid_l1 else expected_prompt_phases(mode, reused_l1))
     captured = []
     for sequence, (name, phase) in enumerate(zip(files, expected), start=1):
         match = re.fullmatch(r"([0-9]{3})-([A-Z0-9_]{1,48})\.txt", name)
@@ -198,6 +198,8 @@ def main():
     parser.add_argument("--mode", choices=("L1_ONLY", "L2_ONLY", "L3_ONLY", "L1_THEN_L2", "CHAIN"), required=True)
     parser.add_argument("--fixture-ids", nargs="+")
     parser.add_argument("--live", action="store_true")
+    parser.add_argument("--expect-invalid-l1", action="store_true",
+                        help="accept the explicit fake-only typed L1 stop used by W2")
     args = parser.parse_args()
     fixtures_root, run_dir = os.path.abspath(args.fixtures_root), os.path.abspath(args.run_dir)
     if "6.FINAL" in fixtures_root or "6.FINAL" in run_dir:
@@ -206,6 +208,8 @@ def main():
     selected = select_fixtures(manifest, args.fixture_ids)
     if args.live and args.mode == "L2_ONLY":
         raise ValueError("live L2 requires reused G1 L1 state; use L1_THEN_L2")
+    if args.expect_invalid_l1 and (args.live or args.mode != "L1_ONLY" or len(selected) != 1):
+        raise ValueError("--expect-invalid-l1 is restricted to one offline L1_ONLY fixture")
     reports = []
     for fixture in selected:
         output = fixture_output(os.path.join(run_dir, "results"), fixture["id"])
@@ -225,6 +229,25 @@ def main():
             raise ValueError(fixture["id"] + ": L1_THEN_L2 database contract marker is invalid")
         expected_stage = {"L1_ONLY": "L1", "L2_ONLY": "L2", "L3_ONLY": "L3",
                           "L1_THEN_L2": "L2", "CHAIN": "CHAIN"}[args.mode]
+        if args.expect_invalid_l1:
+            if (metadata.get("testOnlyInvalidL1") is not True
+                    or metadata.get("providerKind") != "FAKE_OFFLINE"
+                    or metadata.get("actualProviderCalls") != 0
+                    or metadata.get("fakeProviderCalls") != 1
+                    or structural.get("valid") is not False
+                    or structural.get("stage") != "L1"
+                    or structural.get("providerCalls") != 1
+                    or "L1_COVERAGE_GAP" not in structural.get("stops", [])):
+                raise ValueError(fixture["id"] + ": explicit fake invalid-L1 contract failed")
+            check_prompt_captures(output, args.mode, invalid_l1=True)
+            final = open(os.path.join(output, "final.txt"), "rb").read()
+            if sha(final) != metadata.get("finalSha256"):
+                raise ValueError(fixture["id"] + ": final hash mismatch")
+            if os.path.exists(os.path.join(output, "report-l1.json")):
+                raise ValueError(fixture["id"] + ": invalid L1 unexpectedly produced REPORT_L1")
+            ledger = check_ledger(os.path.join(output, "spend-ledger.jsonl"))
+            reports.append({"fixture": fixture["id"], "providerCalls": structural.get("providerCalls"), "ledger": ledger})
+            continue
         if not structural.get("valid") or structural.get("stage") != expected_stage:
             raise ValueError(fixture["id"] + ": production structural contract failed")
         if args.live:
@@ -271,8 +294,9 @@ def main():
     summary = score["summary"]
     if summary["fixtures"] != len(selected):
         raise ValueError("scorer did not read every fixture output")
-    if summary["STRUCTURAL_VALID"] != f"{len(selected)}/{len(selected)}":
-        raise ValueError("scorer found structurally invalid outputs")
+    expected_structural = "0/1" if args.expect_invalid_l1 else f"{len(selected)}/{len(selected)}"
+    if summary["STRUCTURAL_VALID"] != expected_structural:
+        raise ValueError("scorer found an unexpected structural result")
     print("fixtures:", summary["fixtures"])
     print("STRUCTURAL_VALID:", summary["STRUCTURAL_VALID"])
     print("SEMANTIC_EVAL:", json.dumps(summary["SEMANTIC_EVAL"], sort_keys=True))

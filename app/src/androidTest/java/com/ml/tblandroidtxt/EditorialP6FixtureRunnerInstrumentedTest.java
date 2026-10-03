@@ -93,6 +93,13 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
 
         context = ApplicationProvider.getApplicationContext();
         boolean liveMode = "YES".equalsIgnoreCase(args.getString("p6_fixture_live", ""));
+        boolean fakeInvalidL1 = "YES".equalsIgnoreCase(args.getString("p6_fake_invalid_l1", ""));
+        if (fakeInvalidL1 && liveMode) {
+            throw new IllegalArgumentException("P6_FAKE_INVALID_L1_LIVE_FORBIDDEN");
+        }
+        if (fakeInvalidL1 && !"L1_ONLY".equals(mode)) {
+            throw new IllegalArgumentException("P6_FAKE_INVALID_L1_MODE_INVALID");
+        }
         if (liveMode && "L2_ONLY".equals(mode)) {
             throw new IllegalArgumentException("P6_LIVE_L2_ONLY_REQUIRES_REUSED_G1_L1_STATE");
         }
@@ -166,7 +173,7 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         FixtureSetup fixture = reuseL1State
                 ? openExistingL1Setup(fixtureId, chapter, input, databaseRunId, opaqueChapterKey)
                 : createSetup(fixtureId, chapter, input, databaseRunId, opaqueChapterKey);
-        FakeL1 l1 = new FakeL1();
+        FakeL1 l1 = new FakeL1(fakeInvalidL1);
         FakeL2 l2 = new FakeL2();
         FakeL3 l3 = new FakeL3();
         List<EditorialP4InputSource> reloadedSources = currentAssetSources(fixture);
@@ -348,14 +355,23 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         metadata.put("reportedCostCalls", BigDecimal.valueOf(metrics.reportedCostCalls));
         metadata.put("finishReasons", List.copyOf(metrics.finishReasons));
         metadata.put("fakeProviderCalls", BigDecimal.valueOf(liveMode ? 0 : fakeCalls));
+        metadata.put("testOnlyInvalidL1", fakeInvalidL1);
         metadata.put("finalSha256", EditorialCanonicalJson.sha256Hex(finalBytes));
         Files.write(outputRoot.resolve("run-metadata.json"), EditorialCanonicalJson.canonicalize(metadata).getBytes(StandardCharsets.UTF_8));
         Files.copy(groupLedgerPath, outputRoot.resolve("spend-ledger.jsonl"));
         if (reportRequired && !Files.exists(reportPath)) throw new IllegalStateException("P6_REPORT_L1_EVIDENCE_MISSING");
         spend.inspect();
         assertTrue("offline fake provider must be called only through the production stage boundary", fakeCalls <= FAKE_PROVIDER_CALL_LIMIT);
-        assertTrue("production artifacts must validate: " + reason
-                + (l2.failure.isEmpty() ? "" : ":fakeL2=" + l2.failure), valid);
+        if (fakeInvalidL1) {
+            assertTrue("test-only invalid L1 must produce a typed structural stop", !valid);
+            assertTrue("test-only invalid L1 must stop at L1", "L1".equals(stage));
+            assertTrue("test-only invalid L1 must preserve the engine detail code",
+                    stops.contains("L1_COVERAGE_GAP"));
+            assertTrue("test-only invalid L1 must not call a provider", metrics.calls == 0);
+        } else {
+            assertTrue("production artifacts must validate: " + reason
+                    + (l2.failure.isEmpty() ? "" : ":fakeL2=" + l2.failure), valid);
+        }
         if ("L1_ONLY".equals(mode) && "YES".equalsIgnoreCase(args.getString("p6_keep_l1_state", ""))) {
             preserveL1Database = true;
             preserveL1Storage = true;
@@ -599,6 +615,13 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
     private static Map<String, Object> rawWire(String attempt, EditorialRawInventory.Inventory inventory) {
         return map("wireSchemaVersion", EditorialL1Ledger.RAW_WIRE, "attemptIdentity", attempt,
                 "coverage", coverage(inventory), "candidates", List.of());
+    }
+
+    private static Map<String, Object> invalidRawWire(String attempt, EditorialRawInventory.Inventory inventory) {
+        EditorialRawInventory.Unit first = inventory.units().get(0);
+        return map("wireSchemaVersion", EditorialL1Ledger.RAW_WIRE, "attemptIdentity", attempt,
+                "coverage", List.of(map("from", first.id(), "to", first.id(), "status", "PROCESSED")),
+                "candidates", List.of());
     }
 
     private static Map<String, Object> reconcileWire(String attempt, EditorialRawInventory.Inventory inventory) {
@@ -871,13 +894,21 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
                                 List<EditorialP4InputSource> sources, com.ml.tblandroidtxt.editorial.pack.EditorialPackManifest manifest) { }
 
     private static final class FakeL1 implements EditorialP5PilotProvider {
+        private final boolean invalidRawCoverage;
         int calls;
+
+        FakeL1(boolean invalidRawCoverage) {
+            this.invalidRawCoverage = invalidRawCoverage;
+        }
+
         @Override public Response call(Request request) {
             calls++;
             byte[] raw = request.visibleSources().get(EditorialSafe4Contract.RAW);
             EditorialRawInventory.Inventory inventory = EditorialRawInventory.build(raw);
             Map<String, Object> wire = "L1_RAW_DISCOVERY".equals(request.phase())
-                    ? rawWire(request.attemptIdentity(), inventory) : reconcileWire(request.attemptIdentity(), inventory);
+                    ? (invalidRawCoverage ? invalidRawWire(request.attemptIdentity(), inventory)
+                    : rawWire(request.attemptIdentity(), inventory))
+                    : reconcileWire(request.attemptIdentity(), inventory);
             return new Response("offline-fake-" + request.phase(), json(wire), "stop", true,
                     0, 0, 0, BigDecimal.ZERO, null, true);
         }
