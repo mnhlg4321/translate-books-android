@@ -188,7 +188,7 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-Claude đã kiểm L0–L8 của Codex (`3ee406c7`): đạt. L8 dừng vì emulator mất mạng (Wi-Fi tắt, data 0) nên không chọn được model Luna; đã bật lại mạng. Next action duy nhất: owner chọn `openai/gpt-5.6-luna` (OpenRouter, Base URL mặc định) trong Settings của app trên emulator; sau đó Codex chạy lại preflight 0-call và chạy G1 theo §7 của `docs/P6_R6_LIVE_READINESS_WORK_REQUEST_20261003.md`, dừng trước G2.
+G1 lượt 1 dừng sau 1 call (USD 0.0081852): app từ chối ledger L1 (`REPAIR_L1_LEDGER_INVALID`), response đầy đủ. Claude đã sửa offline: runner ghi mã dừng chi tiết, prompt L1 nêu rõ dữ kiện coverage. Next action duy nhất: owner quyết D-G1 trong `docs/P6_R6_G1_RESUME_WORK_REQUEST_20261003.md`; Codex làm W1–W2 offline rồi W3 nếu được duyệt.
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 
