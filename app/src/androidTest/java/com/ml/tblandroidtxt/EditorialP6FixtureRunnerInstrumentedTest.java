@@ -435,8 +435,27 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
 
     private static byte[] readPushedFile(Path path) throws IOException {
         String quotedPath = "'" + path.toString().replace("'", "'\\''") + "'";
-        ParcelFileDescriptor descriptor = InstrumentationRegistry.getInstrumentation().getUiAutomation()
-                .executeShellCommand("cat " + quotedPath);
+        ParcelFileDescriptor[] pipes = InstrumentationRegistry.getInstrumentation().getUiAutomation()
+                .executeShellCommandRwe("cat " + quotedPath);
+        if (pipes == null || pipes.length != 3) throw new IOException("P6_FIXTURE_SHELL_BRIDGE_UNAVAILABLE");
+        try {
+            pipes[1].close();
+            byte[] output = readDescriptor(pipes[0]);
+            byte[] errors = readDescriptor(pipes[2]);
+            if (errors.length != 0) {
+                throw new IOException("P6_FIXTURE_SHELL_READ_FAILED: "
+                        + new String(errors, StandardCharsets.UTF_8).trim());
+            }
+            if (output.length == 0) throw new IOException("P6_FIXTURE_SHELL_READ_EMPTY");
+            return output;
+        } finally {
+            for (ParcelFileDescriptor pipe : pipes) {
+                if (pipe != null) try { pipe.close(); } catch (IOException ignored) { }
+            }
+        }
+    }
+
+    private static byte[] readDescriptor(ParcelFileDescriptor descriptor) throws IOException {
         try (InputStream input = new ParcelFileDescriptor.AutoCloseInputStream(descriptor);
              ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             byte[] buffer = new byte[8192];
