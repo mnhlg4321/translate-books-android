@@ -188,7 +188,7 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-Claude đã review P0–P4 của Codex (`fbde77f6`, đã push). Chưa được chi tiền: runner fixture chỉ có fake provider, trần nhóm chưa áp xuyên fixture, panel gọi L1 cho chương đã có L1 legacy. Next action duy nhất: Codex làm L0–L8 trong `docs/P6_R6_LIVE_READINESS_WORK_REQUEST_20261003.md`, rồi owner xác nhận vị trí key (L9) trước G1.
+Claude đã kiểm L0–L8 của Codex (`3ee406c7`): đạt. L8 dừng vì emulator mất mạng (Wi-Fi tắt, data 0) nên không chọn được model Luna; đã bật lại mạng. Next action duy nhất: owner chọn `openai/gpt-5.6-luna` (OpenRouter, Base URL mặc định) trong Settings của app trên emulator; sau đó Codex chạy lại preflight 0-call và chạy G1 theo §7 của `docs/P6_R6_LIVE_READINESS_WORK_REQUEST_20261003.md`, dừng trước G2.
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 
