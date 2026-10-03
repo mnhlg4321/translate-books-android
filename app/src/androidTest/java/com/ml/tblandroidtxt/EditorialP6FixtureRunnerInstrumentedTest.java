@@ -138,6 +138,12 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
             finalBytes = valid ? result.finalArtifact().viL2Bytes() : input.get("DRAFT.txt");
             measuredCalls = result.providerCalls();
             fakeCalls = l1.calls + l2.calls + l3.calls;
+            EditorialP5CExactBindingExecution l1Execution = EditorialP5CExactBindingExecution.forContract(
+                    database, storage, EditorialContractRevision.L1_LEDGER_V2);
+            EditorialP5CExactBindingExecution.CommittedL1 committedL1 = l1Execution.committedL1(
+                    fixture.projectId(), fixture.selector(), fixture.chapterKey()).orElseThrow(
+                    () -> new IllegalStateException("P6_REPORT_L1_READBACK_FAILED"));
+            Files.write(reportPath, committedL1.reportL1Bytes());
             stage = "CHAIN";
         } else {
             EditorialP5CExactBindingExecution l1Execution = EditorialP5CExactBindingExecution.forContract(
