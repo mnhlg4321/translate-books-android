@@ -123,7 +123,9 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         if (!"RESTORED".equals(sourcePreflight.code().name())) {
             throw new IllegalStateException("P6_FIXTURE_P4_PREFLIGHT_FAILED:" + sourcePreflight.code()
                     + ":" + sourcePreflight.detail() + ":fields="
-                    + String.join(",", sourceIdentityDrifts(fixture, reloadedSources)));
+                    + String.join(",", sourceIdentityDrifts(fixture, reloadedSources))
+                    + ":lengths=" + sourceIdentityLengths(fixture, reloadedSources)
+                    + ":sha256=" + sourceIdentityHashes(fixture, reloadedSources));
         }
         EditorialP5PilotProvider budgetedL1 = new EditorialP6BudgetedL1Provider(l1, spend, budgets);
         EditorialL2Execution.Provider budgetedL2 = new EditorialP6BudgetedPhaseProvider(l2, spend, budgets, true);
@@ -351,6 +353,34 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
             if (!identity.sha256().equals(EditorialCanonicalJson.sha256Hex(actual.bytes()))) drift.add(identity.role() + ":sha256");
         }
         return List.copyOf(drift);
+    }
+
+    private static String sourceIdentityLengths(FixtureSetup fixture,
+                                                List<EditorialP4InputSource> current) {
+        List<String> values = new ArrayList<>();
+        for (int i = 0; i < fixture.binding().inputs().size(); i++) {
+            var identity = fixture.binding().inputs().get(i);
+            EditorialP4InputSource actual = current.get(i);
+            if (identity.byteLength() != actual.bytes().length) {
+                values.add(identity.role() + ":" + identity.byteLength() + "/" + actual.bytes().length);
+            }
+        }
+        return values.isEmpty() ? "none" : String.join(",", values);
+    }
+
+    private static String sourceIdentityHashes(FixtureSetup fixture,
+                                               List<EditorialP4InputSource> current) {
+        List<String> values = new ArrayList<>();
+        for (int i = 0; i < fixture.binding().inputs().size(); i++) {
+            var identity = fixture.binding().inputs().get(i);
+            EditorialP4InputSource actual = current.get(i);
+            String actualHash = EditorialCanonicalJson.sha256Hex(actual.bytes());
+            if (!identity.sha256().equals(actualHash)) {
+                values.add(identity.role() + ":" + identity.sha256().substring(0, 12)
+                        + "/" + actualHash.substring(0, 12));
+            }
+        }
+        return values.isEmpty() ? "none" : String.join(",", values);
     }
 
     private static Map<String, Object> rawWire(String attempt, EditorialRawInventory.Inventory inventory) {
