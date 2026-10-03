@@ -1,11 +1,11 @@
-# P6 R5 — bảng execution, ngân sách worst-case và câu hỏi Q1–Q5 (2026-10-02)
+# P6 R5 — bảng execution, ngân sách worst-case và câu hỏi Q1–Q5 (P4 repricing 2026-10-03)
 
-Trạng thái: **offline, chưa có call provider nào**. R0–R4 đã xong và có bằng chứng (xem `EDITORIAL_RECOVERY_V4_18.md` mục 10 và `HANDOFF.md`). Bảng này là phần duy nhất cần owner quyết định để mở R6/R7. Không bước nào dưới đây được chạy khi chưa có câu trả lời.
+Trạng thái: Q1–Q5 đã được owner duyệt ngày 2026-10-02. P4 đã kiểm tra lại giá chính thức và fixture/leak guards; **chưa có provider call nào**. R0–R4 và offline P0–P3 evidence ở `EDITORIAL_RECOVERY_V4_18.md` mục 10, `HANDOFF.md`, và `docs/P6_R6_R7_OFFLINE_EXECUTION_20261003.md`.
 
 ## 1. Cách tính
 
-- **Giá**: USD 0.25 / 1M token vào, USD 1.20 / 1M token ra (reasoning tính trong token ra). Suy ra bằng cách giải hệ hai phương trình từ hai call đo thật không dính cache (RAW event 7: 20,931 vào + 665 ra = USD 0.0060306; RECONCILE M4: 26,940 vào + 616 ra = USD 0.00747405) — nghiệm chính xác 0.25 và 1.20. Call thứ ba (21,143 vào, 535 ra, USD 0.00294841) rẻ hơn vì cache; **worst-case không giả định cache**.
-- **Trần vào**: 200,000 byte/call, cổng của engine đổi sang token bằng `ceil(byte/2)` ⇒ ≤ 100,000 token ⇒ USD 0.0250. Mức thực tế đo được: 21k–27k token vào/call cho chương 001.
+- **Giá P4 đã xác minh**: OpenRouter hiện niêm yết Standard cho model `openai/gpt-5.6-luna` với USD **0.20 / 1M token input không cache**, **0.25 / 1M cache-write**, **0.02 / 1M cache-read**, và **1.20 / 1M token output** (reasoning tính trong token ra). Tra cứu trang giá chính thức lúc **2026-10-03 03:29:53 UTC** ([OpenRouter — GPT-5.6 Luna pricing](https://openrouter.ai/openai/gpt-5.6-luna)); route production ghim upstream `openai`, không fallback. OpenRouter ghi OpenAI tự cache prompt từ 1,024 token và tính cache-write cho prefix mới; request hiện tại không đặt `prompt_cache_options.mode=explicit`, nên budget worst-case tiếp tục dùng mức cache-write cao hơn **USD 0.25/M** cho input, không trừ cache-read. Đây cũng khớp với giá reservation bảo thủ trong mã.
+- **Trần vào**: 200,000 byte/call, cổng của engine đổi sang token bằng `ceil(byte/2)` ⇒ ≤ 100,000 token ⇒ USD 0.0250 theo worst-case cache-write. Mức thực tế đo được: 21k–27k token vào/call cho chương 001.
 - **Trần ra** theo từng call như dưới; **thời gian** 180 s/call; **0 retry tự động, 0 repair call**; một call trạng thái UNKNOWN **không chạy lại** (chỉ owner quyết).
 - Worst-case/call = 100,000 × 0.25/1M + trần ra × 1.20/1M. Nó luôn nhỏ hơn trần USD của chính call đó (cột cuối), nên trần USD không bao giờ là thứ bị chạm trước trần token.
 
@@ -20,7 +20,7 @@ Trạng thái: **offline, chưa có call provider nào**. R0–R4 đã xong và 
 | 7 | L3_RECONCILE (probe có anchor, defect còn lại từ L2) | 16,384 | 0.0447 | 0.10 |
 | 8 | L3_FINAL_READ (đọc đúng byte FINAL) | 4,096 | 0.0299 | 0.03 |
 
-Một chuỗi đầy đủ ledger-v2 = **8 call**, worst-case theo trần token **USD 0.2983**: hai call L1 = 0.0795, ba call L2 = 0.1094, ba call L3 = 0.1094. Trần trong app: L1 có hai phép cấp riêng (0.05 + 0.10), phần L2+L3 có trần chuỗi `ledgerRecommended()` = USD 0.36 (0.05+0.10+0.05+0.10 + hai lần đọc 0.03). Tổng trần từng call cộng lại (0.51) lớn hơn worst-case token (0.298) và lớn hơn trần nhóm G4 (0.50), nên **trần nhóm do runner cộng dồn và dừng khi chạm**, không dựa vào tổng trần từng call. Mức điển hình dự kiến cho cả chuỗi khoảng USD 0.10–0.15 (call thực đo 0.003–0.0075, ledger ra nhiều token hơn).
+Một chuỗi đầy đủ ledger-v2 = **8 call**, worst-case theo giá P4 **USD 0.298304**: hai call L1 = 0.0794912, ba call L2 = 0.1094064, ba call L3 = 0.1094064. App `EditorialP6GroupSpendLedger` dùng giá input USD 0.25 trong reservation, đúng với mức cache-write worst-case; không đổi quyền chi tiêu hay cấu hình provider. Trần trong app: L1 có hai phép cấp riêng (0.05 + 0.10), phần L2+L3 có trần chuỗi `ledgerRecommended()` = USD 0.36 (0.05+0.10+0.05+0.10 + hai lần đọc 0.03). Trần nhóm vẫn được cộng dồn và chặn trước dispatch.
 
 ## 2. Bảng execution (mục 4 của yêu cầu, điền số thật)
 
@@ -34,9 +34,9 @@ Quy ước: "L1-only" = RAW + RECONCILE trên fixture; "L2-only" / "L3-only" = h
 | **G4** chương 001 | `fx-a01`: chuỗi 8 call trên binding/run declaration mới (Q2); inventory là **191 unit** vì marker ảnh `[IMAGE: …]` bị loại theo `EditorialRawInventory` | 8 | 0.298 | **≤ 0.50** | `今回` còn, `踏破` đủ 4 chỗ, `嬢ちゃん` đúng hồ sơ; lưu bền, mở lại, xuất TXT |
 | **Tổng R6** | | **72** | **2.724** | **≤ USD 3.25** | dự phòng 0.53 chỉ dùng khi owner đồng ý riêng |
 
-Ngoài bảng (R7, xin riêng): hai chương còn lại, chuỗi 8 call mỗi chương = 16 call, worst-case USD 0.597, trần xin ≤ USD 0.75 (Q4).
+Ngoài bảng (R7, xin riêng): hai chương còn lại, chuỗi 8 call mỗi chương = 16 call, worst-case USD 0.597 theo giá P4/cache-write worst-case, trần xin ≤ USD 0.75 (Q4).
 
-Không nằm trong R6 và nói rõ để khỏi hiểu nhầm là đã phủ: các lớp lỗi `GLOSSARY_TERM` (`fx-a09`), `ADDRESS_PROFILE` gieo (`fx-a10`) và `EXTRA_SENTENCE` (`fx-a06`) có nhãn và bộ chấm nhưng không có call trong 72 call trên (hồ sơ xưng hô được phủ bởi `嬢ちゃん` ở `fx-a01`; muốn thêm ba fixture này cần thêm ~6 call L1-only, worst-case USD 0.477, vượt trần G1).
+Không nằm trong R6 và nói rõ để khỏi hiểu nhầm là đã phủ: các lớp lỗi `GLOSSARY_TERM` (`fx-a09`), `ADDRESS_PROFILE` gieo (`fx-a10`) và `EXTRA_SENTENCE` (`fx-a06`) có nhãn và bộ chấm nhưng không có call trong 72 call trên (hồ sơ xưng hô được phủ bởi `嬢ちゃん` ở `fx-a01`; muốn thêm ba fixture này cần khoảng 6 lượt fixture L1-only / 12 provider call, worst-case USD 0.477, vượt trần G1 khi cộng với G1 hiện tại).
 
 Điều kiện chạy chung (mọi nhóm): trước nhóm đầu có một lượt kiểm **không gọi provider** (fixture, prompt, validator, bộ chấm) bằng APK đã archive trên emulator; key do owner tự cấp ở bề mặt chạy (app/emulator hoặc biến môi trường của owner) — Claude không đọc, in, ghi hay chuyển key; mỗi call có log redacted (token, USD, finish reason); dừng toàn nhóm ngay khi một call ra trạng thái UNKNOWN hoặc vượt trần; dừng nhóm tiếp theo nếu nhóm trước chạm trần USD. Báo cáo cuối luôn tách `STRUCTURAL_VALID` và `SEMANTIC_EVAL`.
 
