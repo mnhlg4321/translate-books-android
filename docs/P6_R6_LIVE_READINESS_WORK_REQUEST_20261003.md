@@ -11,7 +11,7 @@ Repo `D:\App Translate Books`, branch `feature/v4.18-p5e-runner-repair-20260917`
 |---|---|
 | Test từ `git archive` sạch của `fbde77f6` | engine 340/340, app unit 331/331, lint PASS, androidTest compile PASS, `test_score_run.py` 16/16, `test_verify_fixture_run.py` 2/2 |
 | Rò rỉ trong 23 commit mới | Không có key, fingerprint hay văn bản sách; mọi 64-hex là hash APK/ZIP/fixture có nhãn |
-| Giá P4 | Đúng nguồn chính thức; worst-case dùng mức cache-write 0.25/M là thận trọng hợp lý; tổng R6 0.724 dưới trần 3.25 |
+| Giá P4 | Đúng nguồn chính thức; worst-case dùng mức cache-write 0.25/M là thận trọng hợp lý; tổng R6 2.724 dưới trần 3.25 |
 | Build/emulator | code224 archive hai nơi; 14/14 fixture `STRUCTURAL_VALID` với fake provider; regression an toàn 78/78 |
 
 | Kế hoạch | Đánh giá | Bằng chứng |
