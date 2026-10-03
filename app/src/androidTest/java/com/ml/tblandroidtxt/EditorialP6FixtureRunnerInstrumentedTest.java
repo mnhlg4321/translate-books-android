@@ -35,6 +35,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -265,7 +268,7 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         for (String name : SOURCE_NAMES) {
             String role = name.substring(0, name.lastIndexOf('.'));
             sources.add(new EditorialP4InputSource(role, "content://p6-fixture/" + fixtureId + "/" + role.toLowerCase(),
-                    input.get(name), "UTF-8", "VALID", ordinal++));
+                    appTextBytes(input.get(name)), "UTF-8", "VALID", ordinal++));
         }
         String selector = "p6-fixture-" + runId.substring(0, 8) + "-" + fixtureId;
         EditorialP4BindingResult result = new EditorialP4BindingTransactionService(database, storage).createSetup(
@@ -281,6 +284,18 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         insertChapter(result.projectId(), chapterKey, fixtureId, chapter, sources);
         return new FixtureSetup(result.projectId(), chapterKey, selector, result.binding(), sources,
                 candidate.manifest());
+    }
+
+    /** Match FileUtil's UTF-8 text import: decode strictly and consume a leading UTF-8 BOM. */
+    private static byte[] appTextBytes(byte[] fixtureBytes) throws CharacterCodingException {
+        int offset = fixtureBytes.length >= 3 && (fixtureBytes[0] & 0xff) == 0xef
+                && (fixtureBytes[1] & 0xff) == 0xbb && (fixtureBytes[2] & 0xff) == 0xbf ? 3 : 0;
+        String text = StandardCharsets.UTF_8.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT)
+                .decode(ByteBuffer.wrap(fixtureBytes, offset, fixtureBytes.length - offset))
+                .toString();
+        return text.getBytes(StandardCharsets.UTF_8);
     }
 
     private void insertChapter(long projectId, String chapterKey, String fixtureId, String chapterName,
