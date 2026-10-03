@@ -1,6 +1,15 @@
 # Build State
 
-## Current planning handoff — 2026-10-01
+## P6 R6/R7 offline checkpoint — 2026-10-03
+
+- P0–P3 offline acceptance is complete on `feature/v4.18-p5e-runner-repair-20260917`; source/report baseline before the next documentation commit is `e5927c56553310f60221844446016690267bf8df`. The owner's pre-existing `.idea`, P5E files, evidence, artifacts and backups were preserved and not staged.
+- Production `4.18-p6.11`/code224 was built with `scripts/build-and-save.ps1`, event `build-20261003-094552`, source `f1bf2268aa718232b155f8faf15a9450b8d2ddf5`; APK SHA-256 `4097F314313F19DBFBE5D7C38AB8A222D9296594F7542D4F7F5C6A78B9607397`, source ZIP SHA-256 `262C13728B515275A90C1242CD337D2B3AACF36252EC13A92BA13702D3718407`. App JVM `331/331`, lint PASS; payload parity exists under `artifacts/builds` and `backup/builds`. It is installed only on `emulator-5554`.
+- AndroidTest archive `p6-r6r7-f1bf2268-20261003-11`, source `f1bf2268aa718232b155f8faf15a9450b8d2ddf5`, APK SHA-256 `A78E051B5D8AFD9291DC9FD55209DE1A8765074D6867CE3628CCD1603B46C5CA`, source ZIP SHA-256 `262C13728B515275A90C1242CD337D2B3AACF36252EC13A92BA13702D3718407`, mirrored in both test-build roots and installed only on `emulator-5554`. Safe offline R1–R4/v25 regression passed `18` selectors, `78/78` tests, `0` failures; logs are outside Git at `D:\P5E-private\p6-runs\regression-code224-20261003`.
+- Fixture evidence: `fx-a01` CHAIN smoke committed `L3_FINAL_COMMITTED`, 8 fake calls, 0 actual calls, 16 spend-ledger entries. Full run `dcafc158-4f02-4fdc-b396-948a4d01f873`: `STRUCTURAL_VALID=14/14`, fake/no-edit `SEMANTIC_EVAL` FAIL 12/PASS 2 (not real translation-quality evidence), 224 spend entries, 0 pending UNKNOWN, 0 actual provider calls. P3 C8 is 191 units; 13 stale v24 assertions were updated across six disposable-database test classes. Historical evidence for the requested 22 v24/seed failures is unavailable and remains an explicit inventory gap.
+- P4 is not started. No API key was read or entered by Codex, no endpoint/account fingerprint was handled, no price lookup or real provider request occurred, and no pilot device/main database was accessed. Live P6/P7 acceptance and release certification are not claimed. See `docs/P6_R6_R7_OFFLINE_EXECUTION_20261003.md`.
+- Current next action: owner enters the key in emulator app Settings and provides the endpoint/account fingerprint; only then can the P4 price and pre-call checks begin.
+
+## Previous planning handoff — 2026-10-01 (historical; superseded by the P6 checkpoint above)
 
 - P6 R0–R7 (rolling): R5 is docs, a Python scorer and its tests: no build. Last archived build 4.18-p6.5/code218 (source 850458b0), installed on emulator-5554 only; the pilot still runs 4.18-p6.2/code215.
 - P6 W4–W6 (2026-10-02): pilot `15e84958` now runs `4.18-p6.2`/code215 (APK SHA-256 `51BA2A2B38730FC4498C92E1B687882BBDF8BBB5BD34D49F90BED63B8BCA9703`, build `build-20261002-082255`); one live L2/L3 chain on chapter 001 committed (`L3_FINAL_COMMITTED`, release numbers 0, USD 0.04257). Device DB after the run `C1F40D14…` (v25, integrity ok). Source after the install adds two UX fixes (not built, not installed): 312 app unit tests. See `docs/P6_W4_W6_CHAPTER_001_EVIDENCE_20261002.md`.
