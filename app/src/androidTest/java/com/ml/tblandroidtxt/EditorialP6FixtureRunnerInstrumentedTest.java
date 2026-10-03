@@ -201,7 +201,7 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         structural.put("valid", valid);
         structural.put("reasonCode", reason);
         structural.put("stage", stage);
-        structural.put("providerCalls", measuredCalls);
+        structural.put("providerCalls", BigDecimal.valueOf(measuredCalls));
         structural.put("stops", valid ? List.of() : List.of(reason));
         Files.write(outputRoot.resolve("structural.json"), EditorialCanonicalJson.canonicalize(structural).getBytes(StandardCharsets.UTF_8));
         Map<String, Object> metadata = new LinkedHashMap<>();
