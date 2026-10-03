@@ -17,7 +17,7 @@ Scope: owner request `docs/P6_R6_LIVE_READINESS_WORK_REQUEST_20261003.md`. Compl
 - Live calls use the production ledger-v2 RAW and RECONCILE OpenRouter adapters, production L2/L3 adapters, and the existing `EditorialP6Budgeted*Provider` wrappers. The runner requires a group ID and cap (maximum USD 1.00); its hash-chained group ledger is stored under app-private files and is not removed by test teardown.
 - A test-only recorder writes exact rendered prompt bytes for every phase to the private run directory before delegate dispatch. Structural and run metadata distinguish LIVE from FAKE_OFFLINE and include provider call count, usage, known USD, finish reasons, and a cumulative spend-ledger copy. The fingerprint itself is excluded.
 - Added synthetic preflight tests for missing expected fingerprint, wrong route, missing key, and mismatched/matching fingerprint. Added an opt-in emulator test for a deliberately wrong fingerprint that reports only `FINGERPRINT_MISMATCH` and zero dispatches.
-- `:app:compileDebugAndroidTestJavaWithJavac`: PASS. PowerShell parser check for `scripts/p6/run_group.ps1`: PASS. The emulator preflight test will run in L8 after the final archived production/test APKs are built and installed.
+- `:app:compileDebugAndroidTestJavaWithJavac`: PASS. PowerShell parser check for `scripts/p6/run_group.ps1`: PASS. The L7 preflight suite passed 5/5 on the final archived test APK; the L8 saved-Settings wrong-fingerprint attempt stopped earlier at route mismatch.
 - No API key was read by Codex; the test code only reads it in emulator process memory as required. No provider call, pilot access, or spend occurred.
 
 ## L2 — group-level spend guard
@@ -25,7 +25,7 @@ Scope: owner request `docs/P6_R6_LIVE_READINESS_WORK_REQUEST_20261003.md`. Compl
 - The fixture runner now uses one hash-chained ledger per group ID under the app-specific external evidence directory, with the approved group cap passed explicitly. The file is outside per-test teardown and is shared by fixture calls on the emulator; it contains spend/phase/hash metadata only.
 - `scripts/p6/run_group.ps1` prechecks the remaining cap against the mode's per-fixture worst case before instrumentation, retrieves and validates the cumulative ledger before and after each fixture, preserves snapshots under the private run directory, and stops on pending UNKNOWN cost, cap exhaustion, ledger loss, or fixture failure.
 - Added `spend_ledger.py`, `verify_spend_ledger.py`, and three host tests covering pre-dispatch cap refusal, UNKNOWN stop, and cumulative spend surviving a copied host snapshot. `test_spend_ledger.py`: **3/3 PASS**. `EditorialP6GroupSpendLedgerTest`: **6/6 PASS**, including distinct ledger instances sharing the same cumulative cap. PowerShell syntax and Python syntax checks pass.
-- These tests establish the guard logic; emulator persistence and per-fixture host transfer will be rechecked with the final L8 fake run. No provider calls or spend occurred.
+- The L8 14-fixture fake CHAIN run verified emulator group-ledger persistence and host transfer: 1,680 entries, zero pending UNKNOWN, all 14 outputs structurally valid. No provider calls or spend occurred.
 
 ## L3 — committed-contract continuation
 
@@ -48,7 +48,7 @@ Scope: owner request `docs/P6_R6_LIVE_READINESS_WORK_REQUEST_20261003.md`. Compl
 - Added `L1_THEN_L2`. An offline run creates and commits `REPORT_L1`, then commits `VI_L2`, in the same temporary database and reports the expected five fake provider calls. Live `L1_THEN_L2` requires the G1 base `RunId`; it reopens the retained app-private database and pack storage, verifies binding/project/pack plus all four normalized source inputs, reads the committed `REPORT_L1`, and dispatches only the three L2 calls. Live `L2_ONLY` is refused by both host and instrumentation.
 - Added host fixture selection and selective retention so the eight-fixture G1 base run preserves only `fx-a04`, `fx-a11`, and `fx-a02`; repeat runs can share the G1 group ledger without replacing those source databases. G2 can pass the base G1 `RunId` for exact predecessor reuse. The frozen budget table now describes this wiring while keeping G1 at 24 calls / USD 0.954 and G2 at 24 calls / USD 0.875.
 - The verifier checks selected fixtures, provider kind and mode call counts, REPORT_L1, final hashes, spend-ledger integrity, and captured prompt leaks. L1_ONLY no longer requires an L2 edit-prompt file because that phase is not run.
-- `:app:compileDebugAndroidTestJavaWithJavac`: PASS; `test_verify_fixture_run.py`: **4/4 PASS**; Python bytecode compile: PASS; `run_group.ps1` parser: PASS; `git diff --check` for this package: PASS. The three-fixture fake emulator run will be exercised with the archived current-source APKs in L8.
+- `:app:compileDebugAndroidTestJavaWithJavac`: PASS; `test_verify_fixture_run.py`: **4/4 PASS**; Python bytecode compile: PASS; `run_group.ps1` parser: PASS; `git diff --check` for this package: PASS. On the archived current-source APKs, fake `L1_THEN_L2` for `fx-a04`, `fx-a11`, and `fx-a02` completed **3/3 STRUCTURAL_VALID**, with `REPORT_L1` and `VI_L2` in each fixture, 60 spend-ledger entries, and zero UNKNOWN. Fake semantic scores were `FAIL 2/PASS 1`; actual provider calls and spend were 0. Evidence: `D:\P5E-private\p6-runs\69472869-941b-4144-b660-761db38f673c`.
 - No emulator call, live provider request, API-key read, fingerprint use, or spend occurred in L5.
 - **L5 offline implementation and compile gates PASS; emulator dry-run proof pending L8.**
 
@@ -71,14 +71,18 @@ Scope: owner request `docs/P6_R6_LIVE_READINESS_WORK_REQUEST_20261003.md`. Compl
 - Temporary user10 was removed after the reruns; the emulator is back on user0 and `stay_on_while_plugged_in` was restored to its original value `1`. Pilot `15e84958` was not accessed.
 - **L7 PASS for current emulator regression and failure classification.**
 
-## L8
+## L8 — wrapper, fake fixtures, and live-mode zero-call gate (BLOCKED_EXTERNAL)
 
-Pending. Reuse the verified code227 artifacts for the 14-fixture fake run, then run the opt-in wrong-fingerprint preflight on emulator user0 and require `FINGERPRINT_MISMATCH` with zero provider calls. No live provider call is part of L8.
+- Reused the verified code227 production/test artifacts and L7 emulator regression. Ran `scripts/p6/run_group.ps1` in `CHAIN` mode for all 14 fixtures with no `-Live` switch, using group `L8-FAKE-f2e0a00b-31a0-4d2c-8f7e-45324a96578a`. Fixture hashes and pre-dispatch prompt-input guard passed. Result: `STRUCTURAL_VALID 14/14`; `SEMANTIC_EVAL` remains `FAIL 12/PASS 2` (offline fake providers preserve DRAFT); 1,680 spend-ledger entries, 0 pending UNKNOWN reservations, **0 actual provider calls**. Private evidence: `D:\P5E-private\p6-runs\f2e0a00b-31a0-4d2c-8f7e-45324a96578a`.
+- Also completed L5's targeted fake `L1_THEN_L2` run on `fx-a04`, `fx-a11`, `fx-a02`: `STRUCTURAL_VALID 3/3`, both reports committed per fixture, zero pending UNKNOWN, 0 actual provider calls/spend. The fake semantic score is recorded separately and does not measure a model.
+- Ran the live-mode deliberately-wrong-fingerprint preflight on emulator user0 using a fresh synthetic 64-hex value that was not retained or logged. The test stopped at `P6_LIVE_ROUTE_SETTINGS_MISMATCH` instead of reaching `P6_LIVE_FINGERPRINT_MISMATCH`. This check constructs no provider and dispatched no request, but it does not prove the fingerprint-comparison branch against the saved emulator Settings. Redacted log: `D:\P5E-private\p6-runs\l8-live-preflight-20261003\wrong-fingerprint-preflight.txt`.
+- The gate requires Settings to match the approved route (`openrouter`, model `openai/gpt-5.6-luna`, and OpenRouter's default endpoint). The owner confirmed the key is saved, but the saved route precondition did not match. Codex did not read the key or alter provider/model/endpoint/key settings. Pilot `15e84958` was not accessed.
+- **L8 is blocked pending the owner aligning emulator Settings with the approved route. Do not start G1 until the wrong-fingerprint preflight returns `P6_LIVE_FINGERPRINT_MISMATCH` and zero provider calls.** No live provider request or spend occurred; G1 and G2 remain not started.
 
 ## G1
 
-Not started. Authorized only after L0–L8 pass; maximum total spend USD 1.00; zero retries or repair calls; stop on UNKNOWN or cap exhaustion. Report separately before G2.
+Not started. Authorized only after L0–L8 pass; currently gated by L8 route preflight. Maximum total spend USD 1.00; zero retries or repair calls; stop on UNKNOWN or cap exhaustion. Report separately before G2.
 
 ## Current next action
 
-Complete the L8 14-fixture fake run and wrong-fingerprint zero-call check using the verified code227 artifacts.
+Owner: align emulator app Settings to the approved OpenRouter route while preserving the saved key, then rerun L8's wrong-fingerprint zero-call preflight. Start G1 only after that check passes.
