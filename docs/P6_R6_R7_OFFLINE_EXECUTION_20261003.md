@@ -18,13 +18,17 @@ Scope: owner request `docs/P6_R6_R7_CODEX_WORK_REQUEST_20261003.md` at `1f1dd8b1
 - `:app:compileDebugAndroidTestJavaWithJavac`: PASS. The emulator end-to-end run-from-L1 test is added but remains pending the P3 archived build and emulator run.
 - No provider calls, key reads by the agent, pilot access, installation or database changes.
 
-## P2 — pending
+## P2 — offline implementation ready; emulator acceptance runs under P3
 
-Offline instrumented fixture runner, neutral L2 predecessor/oracle-leak checks, and durable append-only group-spend ledger.
+- Added an opt-in Android instrumented fixture harness with `L1_ONLY`, `L2_ONLY`, `L3_ONLY`, and `CHAIN` modes. Each invocation creates an isolated temporary database and uses `EditorialP4BindingTransactionService.createSetup`, then the production L1/L2/L3 execution and durable stores with local fake providers. L2-only and L3-only predecessors are produced by the production chain; the neutral L1 report has no findings, target labels, `mustContain` data, or corrected text.
+- `scripts/p6/run_group.ps1` verifies the frozen private fixture set, builds a runtime manifest containing only fixture id/chapter/file hashes and byte counts, pushes only `RAW.txt`, `DRAFT.txt`, `GLOSSARY.csv`, and `PRONOUN.csv`, runs the opt-in test on `emulator-5554`, then pulls private outputs. `scripts/p6/verify_fixture_run.py` checks the exact stored `REPORT_L1` and production-rendered L2 edit prompt against host-only labels, verifies the spend hash chain, and runs the frozen scorer with separate verdicts. Labels are never transferred to the emulator.
+- The product chain now reserves each call's pinned R5 worst-case cost before dispatch into an append-only, per-binding/chapter JSONL ledger under app-private `files/evidence/p6-spend-ledger`. Hash-chain validation, restart-persistent UNKNOWN blocking, group-cap refusal before append/dispatch, and tamper rejection are covered by unit tests. The R5 price basis is explicitly provisional until the owner-controlled P4 repricing; no current price lookup was done.
+- Verification so far: engine **340/340 PASS**, app JVM **330/330 PASS**, AndroidTest Java compile PASS, focused spend/budget tests **7/7 PASS**, `verify_fixtures.py` **14/14 hash/leak checks PASS**, Python/PowerShell source parse PASS, `git diff --check` PASS. No provider request or Settings/key access occurred.
+- The 14-fixture emulator dry-run has not run yet. It is scheduled after P3 archives the exact APK and AndroidTest APK through the required wrapper; structural and semantic verdicts remain unmeasured until then.
 
 ## P3 — pending
 
-Wrapper build/archive from a temporary worktree, emulator fixture dry-run and targeted regression. Record APK hashes, artifact parity, test results and C8/C9 handling here.
+Wrapper build/archive from a temporary worktree, emulator fixture dry-run and targeted R1–R4 regression. Record APK hashes, artifact parity, test results and C8/C9 handling here. The full instrumented suite is not a valid shortcut because it includes pilot/history and provider opt-in tests.
 
 ## P4 stop point
 

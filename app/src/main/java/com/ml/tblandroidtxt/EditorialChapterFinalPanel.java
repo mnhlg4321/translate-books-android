@@ -13,6 +13,7 @@ import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotAuthorization;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotProvider;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -193,10 +194,18 @@ final class EditorialChapterFinalPanel {
                                 settings, budgets.l1Raw().maximumOutputTokens(), database),
                         OpenRouterEditorialP5PilotProvider.withFreshReconcileLifecyclePersistence(
                                 settings, budgets.l1Reconcile().maximumOutputTokens(), database));
+                String groupId = EditorialCanonicalJson.sha256Hex((project.bindingIdentity + "|" + chapterKey + "|"
+                        + binding.runDeclarationIdentity() + "|P6-GROUP-V1").getBytes(StandardCharsets.UTF_8));
+                Path spendPath = a.getFilesDir().toPath().resolve("evidence").resolve("p6-spend-ledger")
+                        .resolve(groupId + ".jsonl");
+                EditorialP6GroupSpendLedger spendLedger = new EditorialP6GroupSpendLedger(
+                        spendPath, groupId, budgets.chainMaximumCost());
                 return new EditorialChapterFinalCoordinator(database, new EditorialPackStorageLayout(a.getFilesDir().toPath()))
                         .runFromL1(project.id, selector.get(), chapterKey, budgets,
-                                l1Authorization.raw(), l1Authorization.reconcile(), l1Provider,
-                                new OpenRouterEditorialL2Provider(settings), new OpenRouterEditorialL3Provider(settings));
+                                l1Authorization.raw(), l1Authorization.reconcile(),
+                                new EditorialP6BudgetedL1Provider(l1Provider, spendLedger, budgets),
+                                new EditorialP6BudgetedPhaseProvider(new OpenRouterEditorialL2Provider(settings), spendLedger, budgets, true),
+                                new EditorialP6BudgetedPhaseProvider(new OpenRouterEditorialL3Provider(settings), spendLedger, budgets, false));
             }
         }
     }
