@@ -178,11 +178,18 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
         EditorialChapterFinalCoordinator.Inspection afterL1 = coordinator.inspect(fixture.projectId, SELECTOR, CHAPTER_KEY);
         assertEquals(EditorialChapterProgress.Stage.L2, afterL1.progress().stage());
         assertEquals(EditorialChapterProgress.NextAction.RUN_STAGE_WITH_AUTHORIZATION, afterL1.progress().next());
+        assertEquals(com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.LEGACY_V1,
+                afterL1.l1ContractRevision());
         assertFalse(afterL1.progress().finalReady());
 
+        ScriptedProvider legacyL2 = new ScriptedProvider();
+        ScriptedProvider legacyL3 = new ScriptedProvider();
         EditorialChapterFinalCoordinator.Result run = coordinator.runToFinal(fixture.projectId, SELECTOR, CHAPTER_KEY,
-                CHAIN, new ScriptedProvider(), new ScriptedProvider());
+                CHAIN, legacyL2, legacyL3);
         assertTrue(run.reasonCode(), run.finalReady());
+        assertEquals(4, run.providerCalls());
+        assertEquals(2, legacyL2.calls);
+        assertEquals(2, legacyL3.calls);
 
         // Fresh repository over the same file: progress and FINAL are read from durable rows only.
         database.close();
@@ -538,6 +545,8 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
         LedgerL2 l2 = new LedgerL2();
         LedgerL3 l3 = new LedgerL3();
         EditorialChapterFinalCoordinator coordinator = new EditorialChapterFinalCoordinator(database, storage);
+        assertEquals(com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.L1_LEDGER_V2,
+                coordinator.inspect(fixture.projectId, SELECTOR, CHAPTER_KEY).l1ContractRevision());
         EditorialChapterFinalCoordinator.Result first = coordinator.runToFinal(fixture.projectId, SELECTOR, CHAPTER_KEY,
                 EditorialChainBudgets.ledgerRecommended(), l2, l3);
         assertEquals(first.reasonCode(), EditorialChapterFinalCoordinator.Stage.FINAL, first.stage());

@@ -174,9 +174,24 @@ public final class EditorialChapterFinalCoordinator {
 
     /** Durable progress of a chapter plus the committed FINAL when there is one. */
     public record Inspection(EditorialChapterProgress.Progress progress, EditorialL2Execution.Committed finalArtifact,
-                             String receiptStatus) {
+                             String receiptStatus, String l1ContractRevision, boolean stateReadable) {
+        public Inspection {
+            receiptStatus = receiptStatus == null ? "NOT_APPLICABLE" : receiptStatus;
+            l1ContractRevision = l1ContractRevision == null ? "" : l1ContractRevision;
+        }
+
+        public Inspection(EditorialChapterProgress.Progress progress, EditorialL2Execution.Committed finalArtifact,
+                          String receiptStatus, String l1ContractRevision) {
+            this(progress, finalArtifact, receiptStatus, l1ContractRevision, true);
+        }
+
+        public Inspection(EditorialChapterProgress.Progress progress, EditorialL2Execution.Committed finalArtifact,
+                          String receiptStatus) {
+            this(progress, finalArtifact, receiptStatus, "", true);
+        }
+
         public Inspection(EditorialChapterProgress.Progress progress, EditorialL2Execution.Committed finalArtifact) {
-            this(progress, finalArtifact, "NOT_APPLICABLE");
+            this(progress, finalArtifact, "NOT_APPLICABLE", "", true);
         }
     }
 
@@ -189,7 +204,8 @@ public final class EditorialChapterFinalCoordinator {
         try {
             l1 = committedChain(projectId, selector, chapterKey);
         } catch (IOException | RuntimeException error) {
-            return new Inspection(EditorialChapterProgress.derive(false, null, null), null);
+            return new Inspection(EditorialChapterProgress.unreadable("INPUT_L1_READBACK_FAILED"), null,
+                    "NOT_APPLICABLE", "", false);
         }
         if (l1.isEmpty()) return new Inspection(EditorialChapterProgress.derive(false, null, null), null);
         EditorialP5CExactBindingExecution.CommittedL1 chain = l1.get();
@@ -224,9 +240,11 @@ public final class EditorialChapterFinalCoordinator {
                 receiptStatus = "LEGACY_UNVERIFIED";
             }
             EditorialChapterProgress.Progress progress = EditorialChapterProgress.derive(true, l2Row, l3Row);
-            return new Inspection(progress, progress.finalReady() ? finalArtifact : null, receiptStatus);
+            return new Inspection(progress, progress.finalReady() ? finalArtifact : null, receiptStatus,
+                    chain.context().contractRevision());
         } catch (RuntimeException error) {
-            return new Inspection(EditorialChapterProgress.derive(false, null, null), null);
+            return new Inspection(EditorialChapterProgress.unreadable("INPUT_CHAPTER_STATE_READBACK_FAILED"), null,
+                    "NOT_APPLICABLE", chain.context().contractRevision(), false);
         }
     }
 

@@ -27,7 +27,16 @@ Scope: owner request `docs/P6_R6_LIVE_READINESS_WORK_REQUEST_20261003.md`. Compl
 - Added `spend_ledger.py`, `verify_spend_ledger.py`, and three host tests covering pre-dispatch cap refusal, UNKNOWN stop, and cumulative spend surviving a copied host snapshot. `test_spend_ledger.py`: **3/3 PASS**. `EditorialP6GroupSpendLedgerTest`: **6/6 PASS**, including distinct ledger instances sharing the same cumulative cap. PowerShell syntax and Python syntax checks pass.
 - These tests establish the guard logic; emulator persistence and per-fixture host transfer will be rechecked with the final L8 fake run. No provider calls or spend occurred.
 
-## L3–L8
+## L3 — committed-contract continuation
+
+- `Inspection` now reports the durable L1 contract revision and whether its state was read successfully. Readback failures fail closed: they offer no run action and show a typed unreadable-state message.
+- Added a pure chapter action policy. Only a readable `L1_REQUIRED` state selects the L1 entry point. A committed legacy L1 displays the “create a new binding for v2” notice and may continue only through its stored legacy L2/L3 contract; a committed ledger-v2 L1 continues only through ledger-v2 L2/L3.
+- `AppChain` re-inspects after confirmation and before provider construction. The continuation branch constructs no L1 authorization or adapter and calls `runToFinal`; a stale confirmation is refused before dispatch. Ledger-v2 continuation keeps the original USD 0.50 group cap and presents six remaining calls; legacy continuation presents four calls with no final-read.
+- Removed `withFreshLedgerL1LifecyclePersistence` and the special `L1_LEDGER` phase allowance.
+- Targeted JVM tests: `EditorialChapterRunActionPolicyTest` **5/5**, `EditorialChainBudgetsLedgerTest` **5/5**, `EditorialChapterRunServiceTest` **11/11** (21 total, all pass). `:app:compileDebugAndroidTestJavaWithJavac`: PASS. The instrumented coordinator tests are included in the later emulator verification; no device or provider was used for this package.
+- No provider call or spend occurred. **L3 offline implementation and compile gates PASS; emulator runtime evidence remains pending L7/L8.**
+
+## L4–L8
 
 Pending.
 
@@ -37,4 +46,4 @@ Not started. Authorized only after L0–L8 pass; maximum total spend USD 1.00; z
 
 ## Current next action
 
-Implement L3's chapter-panel contract branch so a committed legacy L1 never enters ledger-v2 L1.
+Implement L4's instrumented RAW and RECONCILE UNKNOWN-after-claim tests; verify restart refuses redispatch.

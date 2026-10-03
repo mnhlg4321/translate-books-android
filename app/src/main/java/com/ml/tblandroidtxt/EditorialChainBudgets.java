@@ -58,6 +58,13 @@ public record EditorialChainBudgets(EditorialL2Execution.Budget l1Raw,
                 new EditorialL2Execution.Budget(200_000, 4_096, new BigDecimal("0.03"), 180_000L));
     }
 
+    /** L2/L3 caps after L1 was committed under the same ledger-v2 chain-wide USD 0.50 ceiling. */
+    public static EditorialChainBudgets ledgerContinuationRecommended() {
+        EditorialChainBudgets continuation = ledgerRecommended();
+        return new EditorialChainBudgets(continuation.discovery(), continuation.edit(), continuation.reaudit(),
+                continuation.reconcile(), new BigDecimal("0.50"), continuation.finalRead());
+    }
+
     /** All eight ledger-v2 calls, using the owner-approved G4 cap. Pricing must be checked again before live use. */
     public static EditorialChainBudgets fullLedgerRecommended() {
         EditorialChainBudgets ledger = ledgerRecommended();
@@ -126,6 +133,37 @@ public record EditorialChainBudgets(EditorialL2Execution.Budget l1Raw,
                 + "\nInput ≤ " + discovery.maximumInputBytes() + " byte mỗi call • " + discovery.maximumExecutionTimeMillis() / 1000L
                 + " s mỗi call • 0 repair • 0 retry"
                 + "\nTrần cả chuỗi: USD " + money(chainMaximumCost);
+    }
+
+    /** Exact authorization view when L1 is committed and only the contract's L2/L3 calls remain. */
+    public String describeL2L3Continuation() {
+        if (finalRead == null) {
+            String legacyPhases = "L2_RAW_DISCOVERY: 1 call, output ≤ " + discovery.maximumOutputTokens()
+                    + " token, ≤ USD " + usd(discovery)
+                    + "\nL2_EDIT: 1 call, output ≤ " + edit.maximumOutputTokens()
+                    + " token, ≤ USD " + usd(edit)
+                    + "\nL3_RAW_FIRST_REAUDIT: 1 call, output ≤ " + reaudit.maximumOutputTokens()
+                    + " token, ≤ USD " + usd(reaudit)
+                    + "\nL3_RECONCILE: 1 call, output ≤ " + reconcile.maximumOutputTokens()
+                    + " token, ≤ USD " + usd(reconcile);
+            return legacyPhases + "\nInput ≤ " + discovery.maximumInputBytes() + " byte mỗi call • "
+                    + discovery.maximumExecutionTimeMillis() / 1000L
+                    + " s mỗi call • 0 repair • 0 retry\nTrần cả chuỗi: USD " + money(chainMaximumCost);
+        }
+        String phases = "L2_RAW_DISCOVERY: 1 call, output ≤ " + discovery.maximumOutputTokens()
+                + " token, ≤ USD " + usd(discovery)
+                + "\nL2_EDIT: 1 call, output ≤ " + edit.maximumOutputTokens() + " token, ≤ USD " + usd(edit)
+                + "\nL2_FINAL_READ: 1 call, output ≤ " + finalRead.maximumOutputTokens()
+                + " token, ≤ USD " + usd(finalRead)
+                + "\nL3_RAW_FIRST_REAUDIT: 1 call, output ≤ " + reaudit.maximumOutputTokens()
+                + " token, ≤ USD " + usd(reaudit)
+                + "\nL3_RECONCILE: 1 call, output ≤ " + reconcile.maximumOutputTokens()
+                + " token, ≤ USD " + usd(reconcile)
+                + "\nL3_FINAL_READ: 1 call, output ≤ " + finalRead.maximumOutputTokens()
+                + " token, ≤ USD " + usd(finalRead);
+        return phases + "\nInput ≤ " + discovery.maximumInputBytes() + " byte mỗi call • "
+                + discovery.maximumExecutionTimeMillis() / 1000L
+                + " s mỗi call • 0 repair • 0 retry\nTrần cả chuỗi: USD " + money(chainMaximumCost);
     }
 
     private static String money(BigDecimal value) {

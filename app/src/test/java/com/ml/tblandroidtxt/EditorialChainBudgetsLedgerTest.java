@@ -49,4 +49,26 @@ public final class EditorialChainBudgetsLedgerTest {
         assertTrue(description.contains("8. L3_FINAL_READ: 1 call, output ≤ 4096 token, ≤ USD 0.03"));
         assertFalse(description.contains("FINAL_READ (sau L2 và sau L3): 2 call"));
     }
+
+    @Test public void committedL1AuthorizationListsOnlyTheSixL2AndL3Calls() {
+        EditorialChainBudgets continuation = EditorialChainBudgets.ledgerContinuationRecommended();
+        assertTrue(continuation.valid());
+        assertEquals(new BigDecimal("0.36"), continuation.summedPhaseCost());
+        assertEquals(new BigDecimal("0.50"), continuation.chainMaximumCost());
+        String description = continuation.describeL2L3Continuation();
+        assertTrue(description.startsWith("L2_RAW_DISCOVERY: 1 call, output ≤ 8192 token, ≤ USD 0.05"));
+        assertTrue(description.contains("L2_FINAL_READ: 1 call, output ≤ 4096 token, ≤ USD 0.03"));
+        assertTrue(description.contains("L3_FINAL_READ: 1 call, output ≤ 4096 token, ≤ USD 0.03"));
+        assertFalse(description.contains("L1_RAW_DISCOVERY"));
+        assertTrue(description.contains("Trần cả chuỗi: USD 0.50"));
+    }
+
+    @Test public void legacyCommittedL1AuthorizationListsOnlyTheFourLegacyL2AndL3Calls() {
+        String description = EditorialChainBudgets.d3Recommended().describeL2L3Continuation();
+        assertTrue(description.startsWith("L2_RAW_DISCOVERY: 1 call"));
+        assertTrue(description.contains("L3_RECONCILE: 1 call"));
+        assertFalse(description.contains("L1_RAW_DISCOVERY"));
+        assertFalse(description.contains("FINAL_READ"));
+        assertTrue(description.contains("Trần cả chuỗi: USD 0.30"));
+    }
 }

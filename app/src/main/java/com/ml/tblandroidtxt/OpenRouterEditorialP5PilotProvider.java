@@ -127,15 +127,6 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
                 store::recordNetworkLifecycle, true);
     }
 
-    /** Fresh route adapter for the production chapter action's two ledger-v2 L1 stages. */
-    public static OpenRouterEditorialP5PilotProvider withFreshLedgerL1LifecyclePersistence(
-            AppSettings settings, int maximumOutputTokens, TranslationRepository database) {
-        EditorialP5CAttemptStore store = new EditorialP5CAttemptStore(
-                java.util.Objects.requireNonNull(database, "database"));
-        return new OpenRouterEditorialP5PilotProvider(settings, maximumOutputTokens,
-                store::recordNetworkLifecycle, "L1_LEDGER");
-    }
-
     /**
      * Builds the exact fresh RAW request locally for a zero-call preflight.
      * This method only renders JSON; it does not validate an API key, create
@@ -256,9 +247,7 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
     }
 
     private boolean freshPhaseAllows(String phase) {
-        return "L1_LEDGER".equals(freshPhase)
-                ? "L1_RAW_DISCOVERY".equals(phase) || "L1_RECONCILE".equals(phase)
-                : freshPhase.equals(phase);
+        return freshPhase.equals(phase);
     }
 
     private static String failureReason(Throwable error, OpenRouterLifecycleObserver lifecycle,

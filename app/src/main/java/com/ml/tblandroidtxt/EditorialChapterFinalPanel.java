@@ -66,14 +66,16 @@ final class EditorialChapterFinalPanel {
             Optional<String> selector = new EditorialP4BindingDao(database).selectorFor(bindingIdentity);
             if (selector.isEmpty()) {
                 return new EditorialChapterFinalCoordinator.Inspection(
-                        EditorialChapterProgress.derive(false, null, null), null);
+                        EditorialChapterProgress.unreadable("INPUT_BINDING_SELECTOR_MISSING"), null,
+                        "NOT_APPLICABLE", "", false);
             }
             return new EditorialChapterFinalCoordinator(database,
                     new EditorialPackStorageLayout(a.getFilesDir().toPath()))
                     .inspect(projectId, selector.get(), chapterKey);
         } catch (RuntimeException error) {
             return new EditorialChapterFinalCoordinator.Inspection(
-                    EditorialChapterProgress.derive(false, null, null), null);
+                    EditorialChapterProgress.unreadable("INPUT_CHAPTER_STATE_READBACK_FAILED"), null,
+                    "NOT_APPLICABLE", "", false);
         }
     }
 
@@ -82,8 +84,10 @@ final class EditorialChapterFinalPanel {
         EditorialChapterProgress.Progress progress = inspection.progress();
         String lockKey = EditorialChapterRunService.lockKey(project.id, chapter.chapterKey);
         boolean running = EditorialChapterRunService.isRunning(lockKey);
-        status.setText(running ? EditorialChapterProgress.describeRunning(progress)
-                : EditorialChapterProgress.describe(progress));
+        String description = running ? EditorialChapterProgress.describeRunning(progress)
+                : EditorialChapterProgress.describe(progress);
+        String legacyNotice = EditorialChapterRunActionPolicy.legacyNotice(inspection);
+        status.setText(legacyNotice.isBlank() ? description : description + "\n" + legacyNotice);
         if (running) {
             // Poll the durable rows from the UI thread's timer; the single-thread preflight executor is never blocked.
             box.postDelayed(() -> { if (!a.isFinishing() && !a.isDestroyed()) refresh(box, status, actions, project, chapter); },
@@ -99,23 +103,39 @@ final class EditorialChapterFinalPanel {
             actions.addView(a.space(8, 1));
             actions.addView(a.secondaryButton("Xuất TXT", v -> a.startEditorialFinalExport(project.id,
                     project.bindingIdentity, chapter.chapterKey)), new LinearLayout.LayoutParams(0, a.dp(44), 1));
-        } else if (!running && (progress.next() == EditorialChapterProgress.NextAction.RUN_STAGE_WITH_AUTHORIZATION
-                || progress.next() == EditorialChapterProgress.NextAction.L1_REQUIRED)) {
-            actions.addView(a.primaryButton("Chạy L1 → L2 → L3 (cần cấp phép)",
-                    v -> confirmRun(box, status, actions, project, chapter)),
+        } else if (!running && EditorialChapterRunActionPolicy.action(inspection)
+                != EditorialChapterRunActionPolicy.Action.NONE) {
+            actions.addView(a.primaryButton(EditorialChapterRunActionPolicy.buttonLabel(inspection),
+                    v -> confirmRun(box, status, actions, project, chapter, inspection)),
                     new LinearLayout.LayoutParams(-1, a.dp(44)));
         }
     }
 
     private void confirmRun(LinearLayout box, TextView status, LinearLayout actions, EditorialRepository.Project project,
-                            EditorialRepository.Chapter chapter) {
-        EditorialChainBudgets budgets = EditorialChainBudgets.fullLedgerRecommended();
-        String message = "Chương " + chapter.chapterKey + " sẽ được gửi tới OpenRouter (" + EditorialP5EFreshRawRoutingPolicy.MODEL
-                + ") trong tối đa 8 call theo thứ tự L1 → L2 → L3. L1_RAW_DISCOVERY chỉ thấy RAW + GLOSSARY; "
-                + "L1_RECONCILE thấy RAW + DRAFT + GLOSSARY + PRONOUN và candidates của L1_RAW_DISCOVERY. "
-                + "L2/L3 tiếp tục theo ranh giới nguồn của từng phase, gồm final-read trên đúng byte đã dựng.\n\n"
-                + budgets.describe() + "\n\nTrần toàn chuỗi: USD 0.50. Không repair, không retry; trạng thái UNKNOWN sẽ dừng và không gọi lại. "
-                + "Cấp phép này chỉ dùng cho chương đang mở.";
+                            EditorialRepository.Chapter chapter,
+                            EditorialChapterFinalCoordinator.Inspection inspection) {
+        EditorialChapterRunActionPolicy.Action action = EditorialChapterRunActionPolicy.action(inspection);
+        if (action == EditorialChapterRunActionPolicy.Action.NONE) return;
+        boolean legacy = EditorialChapterRunActionPolicy.legacyL1(inspection);
+        EditorialChainBudgets budgets = action == EditorialChapterRunActionPolicy.Action.START_FROM_L1
+                ? EditorialChainBudgets.fullLedgerRecommended()
+                : legacy ? EditorialChainBudgets.d3Recommended() : EditorialChainBudgets.ledgerContinuationRecommended();
+        String message;
+        if (action == EditorialChapterRunActionPolicy.Action.START_FROM_L1) {
+            message = "Chương " + chapter.chapterKey + " sẽ được gửi tới OpenRouter (" + EditorialP5EFreshRawRoutingPolicy.MODEL
+                    + ") trong tối đa 8 call theo thứ tự L1 → L2 → L3. L1_RAW_DISCOVERY chỉ thấy RAW + GLOSSARY; "
+                    + "L1_RECONCILE thấy RAW + DRAFT + GLOSSARY + PRONOUN và candidates của L1_RAW_DISCOVERY. "
+                    + "L2/L3 tiếp tục theo ranh giới nguồn của từng phase, gồm final-read trên đúng byte đã dựng.\n\n"
+                    + budgets.describe() + "\n\nKhông repair, không retry; trạng thái UNKNOWN sẽ dừng và không gọi lại. "
+                    + "Cấp phép này chỉ dùng cho chương đang mở.";
+        } else {
+            String contractNotice = legacy
+                    ? "Binding này đã có L1 theo contract legacy. Tạo binding mới để chạy contract v2; lần này chỉ tiếp tục L2/L3 theo contract legacy đã lưu.\n\n"
+                    : "L1 đã được commit theo contract v2; lần này chạy tiếp L2/L3 và final-read trên đúng byte đã dựng.\n\n";
+            message = "Chương " + chapter.chapterKey + ": " + contractNotice + budgets.describeL2L3Continuation()
+                    + "\n\nKhông chạy lại L1, không repair và không retry; trạng thái UNKNOWN sẽ dừng và không gọi lại. "
+                    + "Cấp phép này chỉ dùng cho chương đang mở.";
+        }
         TextView body = a.text(message, 13, a.TEXT, false);
         body.setSingleLine(false);
         int pad = a.dp(20);
@@ -169,18 +189,43 @@ final class EditorialChapterFinalPanel {
         }
 
         @Override public EditorialChapterFinalCoordinator.Result run(EditorialChainBudgets budgets) {
-            AppSettings settings = SettingsStore.load(a);
             try (TranslationRepository database = new TranslationRepository(a)) {
                 Optional<String> selector = new EditorialP4BindingDao(database).selectorFor(project.bindingIdentity);
                 if (selector.isEmpty()) {
                     return new EditorialChapterFinalCoordinator.Result(EditorialChapterFinalCoordinator.Stage.L1_INCOMPLETE,
                             false, "INPUT_BINDING_SELECTOR_MISSING", null, 0);
                 }
+                EditorialChapterFinalCoordinator coordinator = new EditorialChapterFinalCoordinator(database,
+                        new EditorialPackStorageLayout(a.getFilesDir().toPath()));
+                EditorialChapterFinalCoordinator.Inspection current = coordinator.inspect(
+                        project.id, selector.get(), chapterKey);
+                EditorialChapterRunActionPolicy.Action action = EditorialChapterRunActionPolicy.action(current);
+                boolean startsFromL1 = action == EditorialChapterRunActionPolicy.Action.START_FROM_L1;
+                if (action == EditorialChapterRunActionPolicy.Action.NONE || budgets.includesL1() != startsFromL1
+                        || (action == EditorialChapterRunActionPolicy.Action.CONTINUE_L2_L3
+                        && (EditorialChapterRunActionPolicy.legacyL1(current) != (budgets.finalRead() == null)))) {
+                    return new EditorialChapterFinalCoordinator.Result(EditorialChapterFinalCoordinator.Stage.L1_INCOMPLETE,
+                            false, "RUN_STATE_CHANGED_BEFORE_DISPATCH", null, 0);
+                }
                 EditorialP4Binding binding = new EditorialP4BindingDao(database)
                         .findByAttemptRequestSelector(selector.get()).orElse(null);
                 if (binding == null) {
                     return new EditorialChapterFinalCoordinator.Result(EditorialChapterFinalCoordinator.Stage.L1_INCOMPLETE,
                             false, "INPUT_BINDING_NOT_FOUND", null, 0);
+                }
+                AppSettings settings = SettingsStore.load(a);
+                String groupId = EditorialCanonicalJson.sha256Hex((project.bindingIdentity + "|" + chapterKey + "|"
+                        + binding.runDeclarationIdentity() + "|P6-GROUP-V1").getBytes(StandardCharsets.UTF_8));
+                Path spendPath = a.getFilesDir().toPath().resolve("evidence").resolve("p6-spend-ledger")
+                        .resolve(groupId + ".jsonl");
+                EditorialP6GroupSpendLedger spendLedger = new EditorialP6GroupSpendLedger(
+                        spendPath, groupId, budgets.chainMaximumCost());
+                EditorialP6BudgetedPhaseProvider l2Provider = new EditorialP6BudgetedPhaseProvider(
+                        new OpenRouterEditorialL2Provider(settings), spendLedger, budgets, true);
+                EditorialP6BudgetedPhaseProvider l3Provider = new EditorialP6BudgetedPhaseProvider(
+                        new OpenRouterEditorialL3Provider(settings), spendLedger, budgets, false);
+                if (action == EditorialChapterRunActionPolicy.Action.CONTINUE_L2_L3) {
+                    return coordinator.runToFinal(project.id, selector.get(), chapterKey, budgets, l2Provider, l3Provider);
                 }
                 String keyFingerprint = EditorialCanonicalJson.sha256Hex(
                         settings.apiKey.getBytes(StandardCharsets.UTF_8));
@@ -194,18 +239,9 @@ final class EditorialChapterFinalPanel {
                                 settings, budgets.l1Raw().maximumOutputTokens(), database),
                         OpenRouterEditorialP5PilotProvider.withFreshReconcileLifecyclePersistence(
                                 settings, budgets.l1Reconcile().maximumOutputTokens(), database));
-                String groupId = EditorialCanonicalJson.sha256Hex((project.bindingIdentity + "|" + chapterKey + "|"
-                        + binding.runDeclarationIdentity() + "|P6-GROUP-V1").getBytes(StandardCharsets.UTF_8));
-                Path spendPath = a.getFilesDir().toPath().resolve("evidence").resolve("p6-spend-ledger")
-                        .resolve(groupId + ".jsonl");
-                EditorialP6GroupSpendLedger spendLedger = new EditorialP6GroupSpendLedger(
-                        spendPath, groupId, budgets.chainMaximumCost());
-                return new EditorialChapterFinalCoordinator(database, new EditorialPackStorageLayout(a.getFilesDir().toPath()))
-                        .runFromL1(project.id, selector.get(), chapterKey, budgets,
-                                l1Authorization.raw(), l1Authorization.reconcile(),
-                                new EditorialP6BudgetedL1Provider(l1Provider, spendLedger, budgets),
-                                new EditorialP6BudgetedPhaseProvider(new OpenRouterEditorialL2Provider(settings), spendLedger, budgets, true),
-                                new EditorialP6BudgetedPhaseProvider(new OpenRouterEditorialL3Provider(settings), spendLedger, budgets, false));
+                return coordinator.runFromL1(project.id, selector.get(), chapterKey, budgets,
+                        l1Authorization.raw(), l1Authorization.reconcile(),
+                        new EditorialP6BudgetedL1Provider(l1Provider, spendLedger, budgets), l2Provider, l3Provider);
             }
         }
     }

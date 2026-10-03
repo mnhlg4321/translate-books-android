@@ -54,6 +54,12 @@ public final class EditorialChapterProgress {
                 NextAction.VIEW_AND_EXPORT, true);
     }
 
+    static Progress unreadable(String reasonCode) {
+        String reason = reasonCode == null || reasonCode.isBlank() ? "INPUT_CHAPTER_STATE_READBACK_FAILED" : reasonCode;
+        return new Progress(Stage.L1_INCOMPLETE, StageState.PENDING, StageState.PENDING, reason,
+                StopClass.INPUT_REQUIRED, NextAction.OWNER_RECOVERY_DECISION, false);
+    }
+
     private static Progress blocked(Stage stage, StageState l2State, StageState l3State, StageRow row) {
         StageState current = stage == Stage.L2 ? l2State : l3State;
         String prefix = stage.name() + "_";
@@ -112,6 +118,10 @@ public final class EditorialChapterProgress {
     public static String describe(Progress progress) {
         switch (progress.stage()) {
             case L1_INCOMPLETE:
+                if (progress.next() == NextAction.OWNER_RECOVERY_DECISION) {
+                    return "Editorial L1: không thể đọc trạng thái đã lưu (" + progress.reasonCode()
+                            + "); không tự chạy lại.";
+                }
                 return "Editorial L1: chưa có REPORT_L1 đã commit cho chương này (" + progress.reasonCode() + ").";
             case FINAL:
                 return "Editorial L1 ✓ • L2 ✓ • L3 ✓ — bản biên tập cuối đã lưu; có thể xem và xuất TXT.";
