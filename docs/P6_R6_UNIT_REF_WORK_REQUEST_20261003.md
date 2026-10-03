@@ -38,3 +38,7 @@ Hai lượt thật liên tiếp bị từ chối trong cùng họ lỗi "giữ s
 ## 5. Báo cáo cuối
 
 1. Điều mới được chứng minh. 2. Call/chi phí thật so với trần. 3. Mã từ chối nếu có. 4. Commit/push. 5. Đúng một bước tiếp theo.
+
+## 6. Quyết định owner
+
+**D-G1b đã được owner duyệt (2026-10-03, "đồng ý D-G1b"):** sau khi V1–V2 đạt, chạy tiếp G1 trên wire v3 trong phần trần G1 còn lại (USD 1.00 − 0.01296985 đã tiêu), bắt đầu `fx-a03`, dừng cả nhóm ngay khi một fixture bị từ chối ở L1. Giữ nguyên: 0 retry, 0 repair call, UNKNOWN dừng, trần nhóm kiểm trước mỗi fixture, chưa bắt đầu G2.
