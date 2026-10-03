@@ -8,11 +8,17 @@ param(
     [string]$Mode = 'CHAIN',
     [switch]$Live,
     [string]$ExpectedEndpointAccountFingerprint,
+    [ValidatePattern('^[A-Za-z0-9._-]{3,100}$')]
+    [string]$GroupId,
+    [ValidateRange(0.01, 1.00)]
+    [decimal]$GroupMaximumUsd = 0.50,
     [string]$FixturesRoot = 'D:\P5E-private\p6-fixtures'
 )
 
 $ErrorActionPreference = 'Stop'
 $RunId = $RunId.ToLowerInvariant()
+$GroupId = if ([string]::IsNullOrWhiteSpace($GroupId)) { "$Mode-$RunId" } else { $GroupId }
+$GroupCapText = $GroupMaximumUsd.ToString('0.00####', [Globalization.CultureInfo]::InvariantCulture)
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $ManifestPath = Join-Path $RepoRoot 'docs\P6_R0_FIXTURE_MANIFEST.json'
 $ExpectedRoot = [IO.Path]::GetFullPath('D:\P5E-private\p6-fixtures').TrimEnd('\')
@@ -23,6 +29,10 @@ if ($FixturesRoot -ne $ExpectedRoot -or $FixturesRoot.Contains('6.FINAL')) {
 if ($Live -and ($ExpectedEndpointAccountFingerprint -notmatch '^[0-9a-fA-F]{64}$')) {
     throw 'Live fixture mode requires the owner-supplied endpoint/account fingerprint.'
 }
+if ($GroupMaximumUsd -le 0 -or $GroupMaximumUsd -gt 1.00) { throw 'The P6 group cap must be within the approved per-group limit.' }
+if ($Live -and $Mode -notin @('L1_ONLY', 'L2_ONLY', 'L3_ONLY', 'CHAIN')) {
+    throw 'Live fixture mode requires a supported single group mode.'
+}
 $PrivateParent = Split-Path -Parent $FixturesRoot
 $RunRoot = Join-Path (Join-Path $PrivateParent 'p6-runs') $RunId
 if (Test-Path -LiteralPath $RunRoot) { throw 'Run directory already exists; use a new RunId.' }
@@ -30,6 +40,41 @@ if (Test-Path -LiteralPath $RunRoot) { throw 'Run directory already exists; use 
 $DeviceInputRoot = "/data/local/tmp/p6-fixtures/$RunId"
 $DeviceAppInputRoot = "files/p6-fixtures/$RunId"
 $DeviceOutputRoot = "/sdcard/Android/data/com.ml.tblandroidtxt/files/p6-fixture-results/$RunId"
+$DeviceGroupLedger = "/sdcard/Android/data/com.ml.tblandroidtxt/files/p6-spend-ledger-groups/$GroupId.jsonl"
+$HostGroupLedger = Join-Path $RunRoot 'group-ledger-current.jsonl'
+$GroupLedgerSnapshots = Join-Path $RunRoot 'group-ledger-snapshots'
+$WorstCaseByMode = @{
+    L1_ONLY = [decimal]::Parse('0.0794912', [Globalization.CultureInfo]::InvariantCulture)
+    L2_ONLY = [decimal]::Parse('0.1094064', [Globalization.CultureInfo]::InvariantCulture)
+    L3_ONLY = [decimal]::Parse('0.1094064', [Globalization.CultureInfo]::InvariantCulture)
+    CHAIN = [decimal]::Parse('0.298304', [Globalization.CultureInfo]::InvariantCulture)
+}
+
+function Get-GroupSpendState([decimal]$RequiredUsd, [string]$SnapshotName) {
+    $RemoteTest = & adb -s $Serial shell test -f $DeviceGroupLedger 2>$null
+    $HasDeviceLedger = $LASTEXITCODE -eq 0
+    if ($HasDeviceLedger) {
+        & adb -s $Serial pull $DeviceGroupLedger $HostGroupLedger | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw 'Could not pull the durable group ledger to the host.' }
+    } elseif (Test-Path -LiteralPath $HostGroupLedger) {
+        throw 'The previously retained group ledger is missing from the emulator.'
+    }
+    $Checker = Join-Path $RepoRoot 'scripts\p6\verify_spend_ledger.py'
+    $CheckOutput = & py -3 $Checker --ledger $HostGroupLedger --group-id $GroupId `
+        --maximum-usd $GroupCapText --required-usd $RequiredUsd.ToString('0.#######', [Globalization.CultureInfo]::InvariantCulture) --allow-empty 2>&1
+    if ($LASTEXITCODE -ne 0) { throw ('Group spend precheck stopped: ' + ($CheckOutput -join ' ')) }
+    $Snapshot = ($CheckOutput -join "`n") | ConvertFrom-Json
+    if (-not [string]::IsNullOrWhiteSpace($SnapshotName)) {
+        if (-not (Test-Path -LiteralPath $GroupLedgerSnapshots)) {
+            New-Item -ItemType Directory -Path $GroupLedgerSnapshots | Out-Null
+        }
+        if (Test-Path -LiteralPath $HostGroupLedger) {
+            $SnapshotPath = Join-Path $GroupLedgerSnapshots $SnapshotName
+            Copy-Item -LiteralPath $HostGroupLedger -Destination $SnapshotPath
+        }
+    }
+    return $Snapshot
+}
 $state = & adb -s $Serial get-state 2>&1
 if ($LASTEXITCODE -ne 0 -or ($state -join '').Trim() -ne 'device') { throw 'The selected emulator is not online.' }
 $installed = & adb -s $Serial shell pm path com.ml.tblandroidtxt 2>&1
@@ -51,8 +96,9 @@ $TransferRoot = Join-Path $RunRoot 'to-device'
 $FixtureIds = Get-Content (Join-Path $RunRoot 'fixture-ids.json') -Raw | ConvertFrom-Json
 $Failed = [System.Collections.Generic.List[string]]::new()
 $LiveArguments = @()
+$LiveArguments = @('-e', 'p6_group_id', $GroupId, '-e', 'p6_group_maximum_usd', $GroupCapText)
 if ($Live) {
-    $LiveArguments = @('-e', 'p6_fixture_live', 'YES', '-e',
+    $LiveArguments += @('-e', 'p6_fixture_live', 'YES', '-e',
         'p6_expected_endpoint_account_fingerprint', $ExpectedEndpointAccountFingerprint)
 }
 try {
@@ -76,7 +122,12 @@ try {
         if ($LASTEXITCODE -ne 0) { throw "Could not stage the sanitized runtime manifest for $FixtureId." }
     }
     $Instrumentation = 'com.ml.tblandroidtxt.test/androidx.test.runner.AndroidJUnitRunner'
+    $FixtureIndex = 0
     foreach ($FixtureId in $FixtureIds) {
+        $FixtureIndex++
+        $RequiredUsd = $WorstCaseByMode[$Mode]
+        $BeforeSnapshot = Get-GroupSpendState $RequiredUsd ("{0:D3}-before-{1}.jsonl" -f $FixtureIndex, $FixtureId)
+        if ($BeforeSnapshot.pending -ne 0) { throw 'UNKNOWN provider cost blocks the next fixture in this group.' }
         $LogPath = Join-Path (Join-Path $RunRoot 'logs') "$FixtureId-instrumentation.txt"
         $Output = & adb -s $Serial shell am instrument -w `
             -e p6_fixture_run YES -e p6_run_id $RunId -e p6_fixture_id $FixtureId -e p6_mode $Mode @LiveArguments `
@@ -87,11 +138,14 @@ try {
         if (($CommandExit -ne 0) -or $CombinedOutput.Contains('FAILURES!!!') -or $CombinedOutput.Contains('INSTRUMENTATION_FAILED')) {
             $Failed.Add($FixtureId)
         }
+        $LocalResults = Join-Path $RunRoot 'results'
+        if (-not (Test-Path -LiteralPath $LocalResults)) { New-Item -ItemType Directory -Path $LocalResults | Out-Null }
+        & adb -s $Serial pull "$DeviceOutputRoot/$FixtureId" $LocalResults | Out-Null
+        if ($LASTEXITCODE -ne 0) { $Failed.Add($FixtureId) }
+        $AfterSnapshot = Get-GroupSpendState ([decimal]0) ("{0:D3}-after-{1}.jsonl" -f $FixtureIndex, $FixtureId)
+        if ($AfterSnapshot.pending -ne 0) { throw 'UNKNOWN provider cost stops the group immediately.' }
+        if ($Failed.Contains($FixtureId)) { throw "Fixture execution failed; group stopped after $FixtureId." }
     }
-    $LocalResults = Join-Path $RunRoot 'results'
-    New-Item -ItemType Directory -Path $LocalResults | Out-Null
-    & adb -s $Serial pull $DeviceOutputRoot $LocalResults | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw 'Could not pull the private offline fixture outputs.' }
 } finally {
     & adb -s $Serial shell rm -r $DeviceInputRoot 2>&1 | Out-Null
     & adb -s $Serial shell run-as com.ml.tblandroidtxt rm -r "files/p6-fixtures/$RunId" 2>&1 | Out-Null

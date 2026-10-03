@@ -59,6 +59,24 @@ public final class EditorialP6GroupSpendLedgerTest {
         assertEquals(entriesBefore, Files.readAllLines(path).size());
     }
 
+    @Test public void cumulativeGroupCapIsSharedAcrossFixtureLedgerInstances() throws Exception {
+        Path path = temporary.getRoot().toPath().resolve("shared-group.jsonl");
+        EditorialP6GroupSpendLedger fixtureOne = ledger(path, "1.00");
+        fixtureOne.reserve("fixture-one-call", "L1_RAW_DISCOVERY", new BigDecimal("0.10"));
+        EditorialP6GroupSpendLedger.Snapshot settled = fixtureOne.settle("fixture-one-call", new BigDecimal("0.07"));
+        assertEquals(new BigDecimal("0.07"), settled.exposedUsd());
+
+        EditorialP6GroupSpendLedger fixtureTwo = ledger(path, "1.00");
+        try {
+            fixtureTwo.reserve("fixture-two-call", "L1_RECONCILE", new BigDecimal("0.94"));
+            fail("the cumulative exposure from an earlier fixture must block this reservation");
+        } catch (IllegalStateException expected) {
+            assertEquals("P6_SPEND_GROUP_CAP_EXCEEDED", expected.getMessage());
+        }
+        assertEquals(new BigDecimal("0.07"), fixtureTwo.inspect().exposedUsd());
+        assertEquals(2, fixtureTwo.inspect().entries());
+    }
+
     @Test public void modifiedLedgerBytesAreRejectedOnReopen() throws Exception {
         Path path = temporary.getRoot().toPath().resolve("tampered.jsonl");
         EditorialP6GroupSpendLedger ledger = ledger(path, "0.50");

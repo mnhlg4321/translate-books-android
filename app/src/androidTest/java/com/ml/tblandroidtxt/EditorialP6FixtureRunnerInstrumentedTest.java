@@ -137,9 +137,9 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         if (groupMaximum.signum() <= 0 || groupMaximum.compareTo(new BigDecimal("1.00")) > 0) {
             throw new IllegalArgumentException("P6_SPEND_GROUP_CAP_INVALID");
         }
-        Path groupLedgerPath = appFilesRoot.resolve("evidence").resolve("p6-spend-ledger")
-                .resolve("groups").resolve(groupId + ".jsonl").normalize();
-        if (!groupLedgerPath.startsWith(appFilesRoot)) throw new IllegalArgumentException("P6_SPEND_GROUP_PATH_REFUSED");
+        Path groupLedgerPath = externalRoot.resolve("p6-spend-ledger-groups")
+                .resolve(groupId + ".jsonl").normalize();
+        if (!groupLedgerPath.startsWith(externalRoot)) throw new IllegalArgumentException("P6_SPEND_GROUP_PATH_REFUSED");
         EditorialP6GroupSpendLedger spend = new EditorialP6GroupSpendLedger(
                 groupLedgerPath, groupId, groupMaximum);
         String opaqueChapterKey = "p6-fixture-" + EditorialCanonicalJson.sha256Hex((runId + "|" + fixtureId)
@@ -161,22 +161,29 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         EditorialP5PilotProvider l1Delegate = l1;
         EditorialL2Execution.Provider l2Delegate = l2;
         EditorialL2Execution.Provider l3Delegate = l3;
-        if (liveMode) {
+        boolean liveL1 = liveMode && ("L1_ONLY".equals(mode) || "CHAIN".equals(mode));
+        boolean liveL2 = liveMode && ("L2_ONLY".equals(mode) || "CHAIN".equals(mode));
+        boolean liveL3 = liveMode && ("L3_ONLY".equals(mode) || "CHAIN".equals(mode));
+        if (liveL1) {
             l1Delegate = new OpenRouterEditorialP6L1Provider(
                     OpenRouterEditorialP5PilotProvider.withFreshRawLifecyclePersistence(
                             liveSettings, budgets.l1Raw().maximumOutputTokens(), database),
                     OpenRouterEditorialP5PilotProvider.withFreshReconcileLifecyclePersistence(
                             liveSettings, budgets.l1Reconcile().maximumOutputTokens(), database));
+        }
+        if (liveL2) {
             l2Delegate = new OpenRouterEditorialL2Provider(liveSettings);
+        }
+        if (liveL3) {
             l3Delegate = new OpenRouterEditorialL3Provider(liveSettings);
         }
         EditorialP5PilotProvider budgetedL1 = new EditorialP6BudgetedL1Provider(
-                new PromptRecordingL1Provider(l1Delegate, promptCapture, liveMode ? metrics : null), spend, budgets);
+                new PromptRecordingL1Provider(l1Delegate, promptCapture, liveL1 ? metrics : null), spend, budgets);
         EditorialL2Execution.Provider budgetedL2 = new EditorialP6BudgetedPhaseProvider(
-                new PromptRecordingPhaseProvider(l2Delegate, promptCapture, liveMode ? metrics : null, true),
+                new PromptRecordingPhaseProvider(l2Delegate, promptCapture, liveL2 ? metrics : null, true),
                 spend, budgets, true);
         EditorialL2Execution.Provider budgetedL3 = new EditorialP6BudgetedPhaseProvider(
-                new PromptRecordingPhaseProvider(l3Delegate, promptCapture, liveMode ? metrics : null, false),
+                new PromptRecordingPhaseProvider(l3Delegate, promptCapture, liveL3 ? metrics : null, false),
                 spend, budgets, false);
         int fakeCalls;
         int measuredCalls;
