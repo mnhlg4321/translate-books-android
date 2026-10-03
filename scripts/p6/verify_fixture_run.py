@@ -26,9 +26,28 @@ def fixture_output(root, fixture_id):
     for current, dirs, files in os.walk(root):
         if os.path.basename(current) == fixture_id and "final.txt" in files:
             matches.append(current)
-    if len(matches) != 1:
+    if not matches:
         raise ValueError("expected one output directory for " + fixture_id)
-    return matches[0]
+    canonical = os.path.abspath(os.path.join(root, fixture_id))
+    selected = next((path for path in matches if os.path.abspath(path) == canonical), matches[0])
+    if len(matches) > 1:
+        expected = tree_sha256s(selected)
+        for candidate in matches:
+            if tree_sha256s(candidate) != expected:
+                raise ValueError("duplicate output directories differ for " + fixture_id)
+        print("byte-identical duplicate output copies:", fixture_id, len(matches))
+    return selected
+
+
+def tree_sha256s(root):
+    result = {}
+    for current, dirs, files in os.walk(root):
+        for name in files:
+            path = os.path.join(current, name)
+            relative = os.path.relpath(path, root).replace(os.sep, "/")
+            with open(path, "rb") as handle:
+                result[relative] = sha(handle.read())
+    return result
 
 
 def check_ledger(path):
