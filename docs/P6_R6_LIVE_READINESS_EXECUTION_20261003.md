@@ -52,7 +52,15 @@ Scope: owner request `docs/P6_R6_LIVE_READINESS_WORK_REQUEST_20261003.md`. Compl
 - No emulator call, live provider request, API-key read, fingerprint use, or spend occurred in L5.
 - **L5 offline implementation and compile gates PASS; emulator dry-run proof pending L8.**
 
-## L6–L8
+## L6 — host and captured-prompt leak guards
+
+- Added `verify_prompt_inputs.py`; `run_group.ps1` invokes it after preparing the selected transfer files and before pushing them to the emulator. It checks the exact four transfer-source hashes against the frozen manifest, reads the three OpenRouter prompt builders plus the three canonical pack instruction assets, and rejects target IDs, corrected label text not present in visible sources, and label-field names. Diagnostics contain only fixture IDs and fixed error codes.
+- The device-side recorder already writes the rendered bytes before delegate dispatch. The host verifier now requires the exact ordered capture set for each mode: L1 phases, L2 discovery/edit/final-read, and L3 reaudit/reconcile/final-read; reused G1 `REPORT_L1` in `L1_THEN_L2` correctly requires L2 prompts only. It rejects missing/extra/empty captures, checks that the legacy L2 prompt copy is byte-identical to the captured `L2_EDIT`, and checks every capture plus `REPORT_L1` for answer leaks. It also distinguishes three billable calls from eight total fake/live pipeline calls in `L3_ONLY`.
+- Host tests: `test_verify_fixture_run.py` **9/9 PASS** and `test_verify_prompt_inputs.py` **5/5 PASS**; Python bytecode compile: PASS; `run_group.ps1` parser: PASS. The prompt-input guard passed across all 14 fixture sources and prompt templates; frozen fixture verification reported **14 fixtures, 0 errors**.
+- The actual emulator capture round-trip will be exercised during L8 after the wrapper build. No emulator dispatch, live provider request, API-key read, fingerprint use, or spend occurred in L6.
+- **L6 guard implementation and host tests PASS; emulator prompt-capture evidence pending L8.**
+
+## L7–L8
 
 Pending.
 
@@ -62,4 +70,4 @@ Not started. Authorized only after L0–L8 pass; maximum total spend USD 1.00; z
 
 ## Current next action
 
-Implement L6's host pre-dispatch prompt/source leak guard and full prompt-capture verification tests.
+Complete L7's C9 instrumented-test inventory and classify the current emulator test failures.

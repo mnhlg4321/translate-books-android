@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
-"""Verify private emulator outputs, spend-ledger integrity, and C3 oracle-leak probes."""
+"""Verify private emulator outputs, exact prompt captures, spend integrity, and C3 leak probes."""
 import argparse
 import decimal
 import hashlib
 import json
 import os
+import re
 import shutil
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import score_run  # noqa: E402
+
+L1_PROMPT_PHASES = ("L1_RAW_DISCOVERY", "L1_RECONCILE")
+L2_PROMPT_PHASES = ("L2_RAW_DISCOVERY", "L2_EDIT", "L2_FINAL_READ")
+L3_PROMPT_PHASES = ("L3_RAW_FIRST_REAUDIT", "L3_RECONCILE", "L3_FINAL_READ")
 
 
 def sha(data):
@@ -97,25 +102,74 @@ def check_ledger(path):
     return {"entries": entries, "calls": len(calls), "pending": len(pending), "exposureUsd": str(exposure), "capUsd": str(cap)}
 
 
-def check_oracle_probe(fixture, output, fixtures_root):
-    names = ("RAW.txt", "DRAFT.txt", "GLOSSARY.csv", "PRONOUN.csv")
-    source = b"\n".join(open(os.path.join(fixtures_root, fixture["id"], name), "rb").read() for name in names)
-    model_inputs = [open(os.path.join(output, "report-l1.json"), "rb").read()]
+def expected_prompt_phases(mode, reused_l1=False):
+    if mode == "L1_ONLY":
+        return list(L1_PROMPT_PHASES)
+    if mode == "L1_THEN_L2" and reused_l1:
+        return list(L2_PROMPT_PHASES)
+    if mode in ("L2_ONLY", "L1_THEN_L2"):
+        return list(L1_PROMPT_PHASES + L2_PROMPT_PHASES)
+    if mode in ("L3_ONLY", "CHAIN"):
+        return list(L1_PROMPT_PHASES + L2_PROMPT_PHASES + L3_PROMPT_PHASES)
+    raise ValueError("unsupported mode for prompt capture verification")
+
+
+def expected_live_call_counts(mode):
+    actual_calls = {"L1_ONLY": 2, "L3_ONLY": 3, "L1_THEN_L2": 3, "CHAIN": 8}
+    pipeline_calls = {"L1_ONLY": 2, "L3_ONLY": 8, "L1_THEN_L2": 3, "CHAIN": 8}
+    if mode not in actual_calls:
+        raise ValueError("unsupported live fixture mode")
+    return actual_calls[mode], pipeline_calls[mode]
+
+
+def check_prompt_captures(output, mode, reused_l1=False):
     prompt_root = os.path.join(output, "prompts")
-    if os.path.isdir(prompt_root):
-        for name in sorted(os.listdir(prompt_root)):
-            if name.endswith(".txt"):
-                model_inputs.append(open(os.path.join(prompt_root, name), "rb").read())
-    legacy_prompt = os.path.join(output, "l2-edit-prompt.txt")
-    if os.path.isfile(legacy_prompt):
-        model_inputs.append(open(legacy_prompt, "rb").read())
+    if not os.path.isdir(prompt_root):
+        raise ValueError("prompt capture directory is missing")
+    files = sorted(os.listdir(prompt_root))
+    if any(not os.path.isfile(os.path.join(prompt_root, name)) or not name.endswith(".txt")
+           for name in files):
+        raise ValueError("prompt capture directory contains an unexpected entry")
+    expected = expected_prompt_phases(mode, reused_l1)
+    captured = []
+    for sequence, (name, phase) in enumerate(zip(files, expected), start=1):
+        match = re.fullmatch(r"([0-9]{3})-([A-Z0-9_]{1,48})\.txt", name)
+        if not match or int(match.group(1)) != sequence or match.group(2) != phase:
+            raise ValueError("prompt capture phase set or order differs from the selected mode")
+        with open(os.path.join(prompt_root, name), "rb") as handle:
+            prompt_bytes = handle.read()
+        if not prompt_bytes:
+            raise ValueError("captured prompt is empty")
+        captured.append(prompt_bytes)
+    if len(files) != len(expected):
+        raise ValueError("prompt capture phase count differs from the selected mode")
+    legacy_path = os.path.join(output, "l2-edit-prompt.txt")
+    if "L2_EDIT" in expected:
+        with open(legacy_path, "rb") as handle:
+            if handle.read() != captured[expected.index("L2_EDIT")]:
+                raise ValueError("legacy L2 prompt copy differs from the captured dispatch bytes")
+    elif os.path.exists(legacy_path):
+        raise ValueError("unexpected L2 edit prompt exists for a mode that did not run L2")
+    return captured
+
+
+def check_oracle_probe(fixture, output, fixtures_root, mode, reused_l1=False):
+    names = ("RAW.txt", "DRAFT.txt", "GLOSSARY.csv", "PRONOUN.csv")
+    source_parts = []
+    for name in names:
+        with open(os.path.join(fixtures_root, fixture["id"], name), "rb") as handle:
+            source_parts.append(handle.read())
+    source = b"\n".join(source_parts)
+    with open(os.path.join(output, "report-l1.json"), "rb") as handle:
+        model_inputs = [handle.read()]
+    model_inputs.extend(check_prompt_captures(output, mode, reused_l1))
     combined = b"\n".join(model_inputs)
     if b"mustContain" in combined or b"mustNotContain" in combined:
-        raise ValueError(fixture["id"] + ": label field name reached REPORT_L1 or the L2 edit prompt")
+        raise ValueError(fixture["id"] + ": label field name reached a captured model input")
     labels = score_run.load_json(os.path.join(fixtures_root, fixture["labels"]["path"]))
     for target in labels.get("targets", []):
         if target.get("id", "").encode("utf-8") in combined:
-            raise ValueError(fixture["id"] + ": target id reached REPORT_L1 or the L2 edit prompt")
+            raise ValueError(fixture["id"] + ": target id reached a captured model input")
         terms = []
         if target.get("old"):
             terms.append(target["old"])
@@ -123,7 +177,7 @@ def check_oracle_probe(fixture, output, fixtures_root):
         for term in terms:
             encoded = term.encode("utf-8") if term else b""
             if encoded and encoded not in source and encoded in combined:
-                raise ValueError(fixture["id"] + ": corrected label text reached REPORT_L1 or the L2 edit prompt")
+                raise ValueError(fixture["id"] + ": corrected label text reached a captured model input")
 
 
 def select_fixtures(manifest, fixture_ids):
@@ -165,6 +219,10 @@ def main():
             structural = json.load(handle)
         with open(os.path.join(output, "run-metadata.json"), encoding="utf-8") as handle:
             metadata = json.load(handle)
+        if metadata.get("mode") != args.mode:
+            raise ValueError(fixture["id"] + ": metadata mode does not match the requested mode")
+        if metadata.get("l1ThenL2SameDatabase") != (args.mode == "L1_THEN_L2"):
+            raise ValueError(fixture["id"] + ": L1_THEN_L2 database contract marker is invalid")
         expected_stage = {"L1_ONLY": "L1", "L2_ONLY": "L2", "L3_ONLY": "L3",
                           "L1_THEN_L2": "L2", "CHAIN": "CHAIN"}[args.mode]
         if not structural.get("valid") or structural.get("stage") != expected_stage:
@@ -172,9 +230,9 @@ def main():
         if args.live:
             if metadata.get("providerKind") != "LIVE" or metadata.get("actualProviderCalls", 0) <= 0:
                 raise ValueError(fixture["id"] + ": expected a live provider run")
-            expected_live_calls = {"L1_ONLY": 2, "L3_ONLY": 3, "L1_THEN_L2": 3, "CHAIN": 8}[args.mode]
+            expected_live_calls, expected_pipeline_calls = expected_live_call_counts(args.mode)
             if (metadata.get("actualProviderCalls") != expected_live_calls
-                    or structural.get("providerCalls") != expected_live_calls):
+                    or structural.get("providerCalls") != expected_pipeline_calls):
                 raise ValueError(fixture["id"] + ": live provider call count differs from the approved mode")
             if args.mode == "L1_THEN_L2" and metadata.get("l1ReusedFromPriorGroup") is not True:
                 raise ValueError(fixture["id"] + ": live L1_THEN_L2 did not reuse G1 L1 state")
@@ -191,14 +249,12 @@ def main():
         final = open(os.path.join(output, "final.txt"), "rb").read()
         if sha(final) != metadata.get("finalSha256"):
             raise ValueError(fixture["id"] + ": final hash mismatch")
-        report = json.load(open(os.path.join(output, "report-l1.json"), encoding="utf-8"))
+        with open(os.path.join(output, "report-l1.json"), encoding="utf-8") as handle:
+            report = json.load(handle)
         if report.get("artifactType") != "REPORT_L1" or report.get("phase") != "L1_RECONCILE":
             raise ValueError(fixture["id"] + ": REPORT_L1 evidence is invalid")
-        if args.mode != "L1_ONLY":
-            with open(os.path.join(output, "l2-edit-prompt.txt"), "rb") as handle:
-                if not handle.read():
-                    raise ValueError(fixture["id"] + ": production L2 edit prompt capture is empty")
-        check_oracle_probe(fixture, output, fixtures_root)
+        check_oracle_probe(fixture, output, fixtures_root, args.mode,
+                           metadata.get("l1ReusedFromPriorGroup") is True)
         ledger = check_ledger(os.path.join(output, "spend-ledger.jsonl"))
         reports.append({"fixture": fixture["id"], "providerCalls": structural.get("providerCalls"), "ledger": ledger})
 
@@ -217,7 +273,7 @@ def main():
         raise ValueError("scorer did not read every fixture output")
     if summary["STRUCTURAL_VALID"] != f"{len(selected)}/{len(selected)}":
         raise ValueError("scorer found structurally invalid outputs")
-    print("offline fixtures:", summary["fixtures"])
+    print("fixtures:", summary["fixtures"])
     print("STRUCTURAL_VALID:", summary["STRUCTURAL_VALID"])
     print("SEMANTIC_EVAL:", json.dumps(summary["SEMANTIC_EVAL"], sort_keys=True))
     print("actual provider calls:", "reported in run metadata" if args.live else "0; provider responses were generated by local fakes")

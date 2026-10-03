@@ -126,6 +126,11 @@ if ($RetainL1FixtureIds) {
         throw 'RetainL1FixtureIds must be unique fixtures selected for this L1_ONLY run.'
     }
 }
+$PromptGuard = Join-Path $RepoRoot 'scripts\p6\verify_prompt_inputs.py'
+$PromptGuardArguments = @('--fixtures-root', $FixturesRoot, '--manifest', $ManifestPath,
+    '--transfer-root', $TransferRoot, '--fixture-ids') + @($FixtureIds)
+& py -3 $PromptGuard @PromptGuardArguments
+if ($LASTEXITCODE -ne 0) { throw 'Host prompt-input guard refused the selected fixture sources.' }
 $Failed = [System.Collections.Generic.List[string]]::new()
 $LiveArguments = @()
 $LiveArguments = @('-e', 'p6_group_id', $GroupId, '-e', 'p6_group_maximum_usd', $GroupCapText)
