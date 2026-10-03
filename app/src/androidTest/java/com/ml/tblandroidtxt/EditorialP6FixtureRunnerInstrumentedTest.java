@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.os.ParcelFileDescriptor;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -78,7 +77,8 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
 
         context = ApplicationProvider.getApplicationContext();
         Path externalRoot = context.getExternalFilesDir(null).toPath().toAbsolutePath().normalize();
-        Path fixtureInputRoot = java.nio.file.Paths.get("/data/local/tmp/p6-fixtures").toAbsolutePath().normalize();
+        Path appFilesRoot = context.getFilesDir().toPath().toAbsolutePath().normalize();
+        Path fixtureInputRoot = appFilesRoot.resolve("p6-fixtures").normalize();
         Path runInputRoot = fixtureInputRoot.resolve(runId).normalize();
         Path fixtureRoot = runInputRoot.resolve(fixtureId).normalize();
         Path outputRoot = externalRoot.resolve("p6-fixture-results").resolve(runId).resolve(fixtureId).normalize();
@@ -87,7 +87,7 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
                 || fixtureRoot.toString().contains("6.FINAL") || Files.exists(outputRoot)) {
             throw new IllegalStateException("P6_FIXTURE_PATH_REFUSED");
         }
-        Map<String, Object> runtime = EditorialCanonicalJson.parseObject(readPushedFile(
+        Map<String, Object> runtime = EditorialCanonicalJson.parseObject(Files.readAllBytes(
                 runInputRoot.resolve(fixtureId + ".runtime.json")));
         if (!fixtureId.equals(string(runtime, "fixtureId"))) throw new IllegalStateException("P6_RUNTIME_ID_MISMATCH");
         String chapter = string(runtime, "chapter");
@@ -97,7 +97,7 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         for (String name : SOURCE_NAMES) {
             Path source = fixtureRoot.resolve(name).normalize();
             if (!source.startsWith(fixtureRoot)) throw new IllegalStateException("P6_FIXTURE_SOURCE_PATH_REFUSED");
-            byte[] bytes = readPushedFile(source);
+            byte[] bytes = Files.readAllBytes(source);
             Map<String, Object> metadata = object(manifestFiles.get(name));
             if (bytes.length != integer(metadata, "bytes")
                     || !EditorialCanonicalJson.sha256Hex(bytes).equals(string(metadata, "sha256"))) {
@@ -433,38 +433,6 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
             return parsed.toString();
         } catch (RuntimeException invalid) {
             throw new IllegalArgumentException("P6_RUN_ID_INVALID");
-        }
-    }
-
-    private static byte[] readPushedFile(Path path) throws IOException {
-        String quotedPath = "'" + path.toString().replace("'", "'\\''") + "'";
-        ParcelFileDescriptor[] pipes = InstrumentationRegistry.getInstrumentation().getUiAutomation()
-                .executeShellCommandRwe("cat " + quotedPath);
-        if (pipes == null || pipes.length != 3) throw new IOException("P6_FIXTURE_SHELL_BRIDGE_UNAVAILABLE");
-        try {
-            pipes[1].close();
-            byte[] output = readDescriptor(pipes[0]);
-            byte[] errors = readDescriptor(pipes[2]);
-            if (errors.length != 0) {
-                throw new IOException("P6_FIXTURE_SHELL_READ_FAILED: "
-                        + new String(errors, StandardCharsets.UTF_8).trim());
-            }
-            if (output.length == 0) throw new IOException("P6_FIXTURE_SHELL_READ_EMPTY");
-            return output;
-        } finally {
-            for (ParcelFileDescriptor pipe : pipes) {
-                if (pipe != null) try { pipe.close(); } catch (IOException ignored) { }
-            }
-        }
-    }
-
-    private static byte[] readDescriptor(ParcelFileDescriptor descriptor) throws IOException {
-        try (InputStream input = new ParcelFileDescriptor.AutoCloseInputStream(descriptor);
-             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            byte[] buffer = new byte[8192];
-            int read;
-            while ((read = input.read(buffer)) != -1) output.write(buffer, 0, read);
-            return output.toByteArray();
         }
     }
 
