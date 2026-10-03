@@ -301,7 +301,7 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
     }
 
     private static byte[] readAssetZip(String asset) throws IOException {
-        try (InputStream source = ApplicationProvider.<Context>getApplicationContext().getAssets().open(asset);
+        try (InputStream source = InstrumentationRegistry.getInstrumentation().getContext().getAssets().open(asset);
              ZipInputStream zip = new ZipInputStream(source)) {
             ByteArrayOutputStream output = new ByteArrayOutputStream();
             ZipEntry entry;
