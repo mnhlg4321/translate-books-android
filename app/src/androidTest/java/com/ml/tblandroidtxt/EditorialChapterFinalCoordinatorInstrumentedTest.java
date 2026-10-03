@@ -649,6 +649,102 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
         assertEquals(0, noL1.calls + noL2.calls + noL3.calls);
     }
 
+    @Test public void interruptedRawClaimIsUnknownAfterReopenAndNeverRedispatches() throws Exception {
+        rawText = LEDGER_RAW;
+        draftText = LEDGER_DRAFT;
+        BindingFixture fixture = createBoundChapter();
+        EditorialChainBudgets budgets = EditorialChainBudgets.fullLedgerRecommended();
+        String[] rawAttempt = {""};
+        EditorialP5PilotProvider diesAfterRawClaim = request -> {
+            rawAttempt[0] = request.attemptIdentity();
+            throw new AssertionError("simulated process death after RAW claim");
+        };
+        EditorialChapterFinalCoordinator coordinator = new EditorialChapterFinalCoordinator(database, storage);
+        try {
+            coordinator.runFromL1(fixture.projectId, SELECTOR, CHAPTER_KEY, budgets,
+                    fullAuthorization(fixture.binding, "raw-death-first", "L1_RAW_DISCOVERY", budgets.l1Raw()),
+                    fullAuthorization(fixture.binding, "raw-death-reconcile", "L1_RECONCILE", budgets.l1Reconcile()),
+                    diesAfterRawClaim, new LedgerL2(), new LedgerL3());
+            org.junit.Assert.fail("the simulated process death must escape");
+        } catch (AssertionError expected) {
+            assertEquals("simulated process death after RAW claim", expected.getMessage());
+        }
+        assertFalse(rawAttempt[0].isBlank());
+        EditorialP5CAttemptStore.AttemptRecord firstRecord = new EditorialP5CAttemptStore(database)
+                .findRecord(rawAttempt[0]).orElseThrow();
+        assertEquals("L1_RAW_DISCOVERY", firstRecord.phase());
+        assertEquals("CLAIMED", firstRecord.status());
+
+        database.close();
+        database = new TranslationRepository(context, databaseName);
+        EditorialP5CAttemptStore.AttemptRecord reopenedRecord = new EditorialP5CAttemptStore(database)
+                .findRecord(rawAttempt[0]).orElseThrow();
+        assertEquals("CLAIMED", reopenedRecord.status());
+        AtomicL1 noL1 = new AtomicL1();
+        noL1.refuse = true;
+        LedgerL2 noL2 = new LedgerL2();
+        LedgerL3 noL3 = new LedgerL3();
+        EditorialChapterFinalCoordinator.Result resumed = new EditorialChapterFinalCoordinator(database, storage)
+                .runFromL1(fixture.projectId, SELECTOR, CHAPTER_KEY, budgets,
+                        fullAuthorization(fixture.binding, "raw-death-resume", "L1_RAW_DISCOVERY", budgets.l1Raw()),
+                        fullAuthorization(fixture.binding, "raw-death-resume-reconcile", "L1_RECONCILE", budgets.l1Reconcile()),
+                        noL1, noL2, noL3);
+        assertEquals("RETRY_PROVIDER_CALL_STATE_UNKNOWN", resumed.reasonCode());
+        assertEquals(0, resumed.providerCalls());
+        assertEquals(0, noL1.calls + noL2.calls + noL3.calls);
+    }
+
+    @Test public void interruptedReconcileClaimIsUnknownAfterReopenAndNeverRedispatches() throws Exception {
+        rawText = LEDGER_RAW;
+        draftText = LEDGER_DRAFT;
+        BindingFixture fixture = createBoundChapter();
+        EditorialChainBudgets budgets = EditorialChainBudgets.fullLedgerRecommended();
+        String[] rawAttempt = {""};
+        String[] reconcileAttempt = {""};
+        AtomicL1 committedRaw = new AtomicL1();
+        EditorialP5PilotProvider diesAfterReconcileClaim = request -> {
+            if ("L1_RAW_DISCOVERY".equals(request.phase())) {
+                rawAttempt[0] = request.attemptIdentity();
+                return committedRaw.call(request);
+            }
+            reconcileAttempt[0] = request.attemptIdentity();
+            throw new AssertionError("simulated process death after RECONCILE claim");
+        };
+        EditorialChapterFinalCoordinator coordinator = new EditorialChapterFinalCoordinator(database, storage);
+        try {
+            coordinator.runFromL1(fixture.projectId, SELECTOR, CHAPTER_KEY, budgets,
+                    fullAuthorization(fixture.binding, "reconcile-death-raw", "L1_RAW_DISCOVERY", budgets.l1Raw()),
+                    fullAuthorization(fixture.binding, "reconcile-death-first", "L1_RECONCILE", budgets.l1Reconcile()),
+                    diesAfterReconcileClaim, new LedgerL2(), new LedgerL3());
+            org.junit.Assert.fail("the simulated process death must escape");
+        } catch (AssertionError expected) {
+            assertEquals("simulated process death after RECONCILE claim", expected.getMessage());
+        }
+        assertEquals(1, committedRaw.calls);
+        assertEquals(List.of("L1_RAW_DISCOVERY"), committedRaw.phases);
+        EditorialP5CAttemptStore firstStore = new EditorialP5CAttemptStore(database);
+        assertEquals("COMMITTED", firstStore.findRecord(rawAttempt[0]).orElseThrow().status());
+        assertEquals("CLAIMED", firstStore.findRecord(reconcileAttempt[0]).orElseThrow().status());
+
+        database.close();
+        database = new TranslationRepository(context, databaseName);
+        EditorialP5CAttemptStore reopenedStore = new EditorialP5CAttemptStore(database);
+        assertEquals("COMMITTED", reopenedStore.findRecord(rawAttempt[0]).orElseThrow().status());
+        assertEquals("CLAIMED", reopenedStore.findRecord(reconcileAttempt[0]).orElseThrow().status());
+        AtomicL1 noL1 = new AtomicL1();
+        noL1.refuse = true;
+        LedgerL2 noL2 = new LedgerL2();
+        LedgerL3 noL3 = new LedgerL3();
+        EditorialChapterFinalCoordinator.Result resumed = new EditorialChapterFinalCoordinator(database, storage)
+                .runFromL1(fixture.projectId, SELECTOR, CHAPTER_KEY, budgets,
+                        fullAuthorization(fixture.binding, "reconcile-death-resume-raw", "L1_RAW_DISCOVERY", budgets.l1Raw()),
+                        fullAuthorization(fixture.binding, "reconcile-death-resume", "L1_RECONCILE", budgets.l1Reconcile()),
+                        noL1, noL2, noL3);
+        assertEquals("RETRY_PROVIDER_CALL_STATE_UNKNOWN", resumed.reasonCode());
+        assertEquals(0, resumed.providerCalls());
+        assertEquals(0, noL1.calls + noL2.calls + noL3.calls);
+    }
+
     // ---- fixture (mirrors EditorialP5CExactBindingFakeE2EInstrumentedTest) ----
 
     private BindingFixture createBoundChapter() throws Exception {

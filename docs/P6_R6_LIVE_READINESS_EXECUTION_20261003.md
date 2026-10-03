@@ -36,7 +36,14 @@ Scope: owner request `docs/P6_R6_LIVE_READINESS_WORK_REQUEST_20261003.md`. Compl
 - Targeted JVM tests: `EditorialChapterRunActionPolicyTest` **5/5**, `EditorialChainBudgetsLedgerTest` **5/5**, `EditorialChapterRunServiceTest` **11/11** (21 total, all pass). `:app:compileDebugAndroidTestJavaWithJavac`: PASS. The instrumented coordinator tests are included in the later emulator verification; no device or provider was used for this package.
 - No provider call or spend occurred. **L3 offline implementation and compile gates PASS; emulator runtime evidence remains pending L7/L8.**
 
-## L4–L8
+## L4 — UNKNOWN after L1 claims
+
+- Added an instrumented RAW interruption test that throws a simulated process-death `AssertionError` immediately after provider dispatch begins and the durable attempt is `CLAIMED`. After closing and reopening the database, the attempt remains `CLAIMED`; the next coordinator run returns `RETRY_PROVIDER_CALL_STATE_UNKNOWN` with zero L1/L2/L3 provider calls.
+- Added the corresponding RECONCILE interruption test. It first commits RAW, then simulates process death after RECONCILE claim. After reopen, RAW remains `COMMITTED`, RECONCILE remains `CLAIMED`, and the next run returns `RETRY_PROVIDER_CALL_STATE_UNKNOWN` with zero redispatches.
+- `:app:compileDebugAndroidTestJavaWithJavac`: PASS. Runtime execution is queued for the current-source emulator regression in L7/L8 after the required wrapper build. Both tests use only local fake providers; no live provider, device data, or spend was used for this package.
+- **L4 instrumentation source/compile PASS; emulator runtime evidence pending L7/L8.**
+
+## L5–L8
 
 Pending.
 
@@ -46,4 +53,4 @@ Not started. Authorized only after L0–L8 pass; maximum total spend USD 1.00; z
 
 ## Current next action
 
-Implement L4's instrumented RAW and RECONCILE UNKNOWN-after-claim tests; verify restart refuses redispatch.
+Implement L5's `L1_THEN_L2` fake-run mode and update the frozen budget table descriptions without changing call counts or worst-case totals.
