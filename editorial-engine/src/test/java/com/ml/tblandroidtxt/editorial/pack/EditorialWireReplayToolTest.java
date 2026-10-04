@@ -129,7 +129,7 @@ public final class EditorialWireReplayToolTest {
     @Test public void unexpectedInvalidResponseFailsWithNonzeroExitAndProductionIsFailFast() throws Exception {
         Path root = Files.createTempDirectory("p6-replay-process-invalid-");
         try {
-            Fixture f = fixture(root, List.of(finding("E1", 1, "draft 2"), finding("E2", 2, "draft 3")));
+            Fixture f = fixture(root, List.of(finding("E1", 1, "absent 2"), finding("E2", 2, "absent 3")));
             ProcessResult result = process("L1_RECONCILE", f.reconcileResponse().toString(), f.raw().toString(),
                     f.draft().toString(), f.rawResponse().toString());
             Map<String, Object> report = report(result);
@@ -145,7 +145,7 @@ public final class EditorialWireReplayToolTest {
     @Test public void expectedRejectIsHashAndCodeBoundButDoesNotMakeResponseValid() throws Exception {
         Path root = Files.createTempDirectory("p6-replay-manifest-");
         try {
-            Fixture f = fixture(root, List.of(finding("E1", 1, "draft 2")));
+            Fixture f = fixture(root, List.of(finding("E1", 1, "absent 2")));
             String hash = EditorialCanonicalJson.sha256Hex(Files.readAllBytes(f.reconcileResponse()));
             Path m = manifest(root, List.of(caseRow("reconcile", "L1_RECONCILE", f.reconcileResponse(), f.raw(), f.draft(),
                     null, "EXPECTED_REJECT", hash, List.of("L1_DRAFT_QUOTE_NOT_IN_ANCHOR:findings.0.draftQuote"), true)));
@@ -185,7 +185,7 @@ public final class EditorialWireReplayToolTest {
 
             Path badRoot = root.resolve("bad-case");
             Files.createDirectories(badRoot);
-            Fixture bad = fixture(badRoot, List.of(finding("E1", 1, "draft 2")));
+            Fixture bad = fixture(badRoot, List.of(finding("E1", 1, "absent 2")));
             String badResponseHash = EditorialCanonicalJson.sha256Hex(Files.readAllBytes(bad.reconcileResponse()));
             Path mismatchedCode = manifest(root.resolve("bad-case"), List.of(caseRow("mismatched-code", "L1_RECONCILE",
                     bad.reconcileResponse(), bad.raw(), bad.draft(), null, "EXPECTED_REJECT", badResponseHash,
@@ -199,7 +199,7 @@ public final class EditorialWireReplayToolTest {
     @Test public void diagnosticCollectsIndependentFindingsAndSkipsDependencies() throws Exception {
         Path root = Files.createTempDirectory("p6-replay-diagnostic-");
         try {
-            Fixture f = fixture(root, List.of(finding("E1", 1, "draft 2"), finding("E2", 2, "draft 3")));
+            Fixture f = fixture(root, List.of(finding("E1", 1, "absent 2"), finding("E2", 2, "absent 3")));
             String reconcileHash = EditorialCanonicalJson.sha256Hex(Files.readAllBytes(f.reconcileResponse()));
             Path m = manifest(root, List.of(caseRow("reconcile", "L1_RECONCILE", f.reconcileResponse(), f.raw(), f.draft(),
                     null, "EXPECTED_REJECT", reconcileHash,
@@ -212,7 +212,7 @@ public final class EditorialWireReplayToolTest {
 
             Path mixedRoot = root.resolve("mixed-case");
             Files.createDirectories(mixedRoot);
-            Fixture mixed = fixture(mixedRoot, List.of(finding("E1", 1, "draft 2"), finding("E2", 2, "draft 2")));
+            Fixture mixed = fixture(mixedRoot, List.of(finding("E1", 1, "absent 2"), finding("E2", 2, "draft 2")));
             String mixedHash = EditorialCanonicalJson.sha256Hex(Files.readAllBytes(mixed.reconcileResponse()));
             Path mixedManifest = manifest(mixedRoot, List.of(caseRow("mixed", "L1_RECONCILE",
                     mixed.reconcileResponse(), mixed.raw(), mixed.draft(), null, "EXPECTED_REJECT", mixedHash,

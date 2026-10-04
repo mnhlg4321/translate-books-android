@@ -173,9 +173,11 @@ public final class EditorialL1LedgerTest {
                 finding("e1", "MEANING", 3, 3, 3, "攻略", "chinh phuc"))), new ArrayList<>()), List.of()));
         expectCode("L1_DRAFT_QUOTE_NOT_IN_ANCHOR", () -> reconcile(reconcileWire(new ArrayList<>(List.of(
                 finding("e1", "MEANING", 3, 3, 3, "踏破", "khong co"))), new ArrayList<>()), List.of()));
-        // a draft quote that sits on another line than the anchor is not accepted
-        expectCode("L1_DRAFT_QUOTE_NOT_IN_ANCHOR", () -> reconcile(reconcileWire(new ArrayList<>(List.of(
-                finding("e1", "MEANING", 3, 4, 4, "踏破", "chinh phuc"))), new ArrayList<>()), List.of()));
+        // a draft quote that sits on another line than the hinted one is anchored where the quote is
+        EditorialL1Ledger.ReconcilePass moved = reconcile(reconcileWire(new ArrayList<>(List.of(
+                finding("e1", "MEANING", 3, 4, 4, "踏破", "chinh phuc"))), new ArrayList<>()), List.of());
+        assertEquals(EditorialL1Ledger.DraftAnchor.lines(3, 3), moved.findings().get(0).draft());
+        assertEquals(1, moved.draftAnchorsDerivedFromQuote());
         expectCode("L1_DRAFT_QUOTE_REQUIRED", () -> reconcile(reconcileWire(new ArrayList<>(List.of(
                 finding("e1", "MEANING", 3, 3, 3, "踏破", ""))), new ArrayList<>()), List.of()));
     }
@@ -202,8 +204,9 @@ public final class EditorialL1LedgerTest {
 
     @Test
     public void anchorsAndReferencesMustResolve() {
-        expectCode("L1_DRAFT_ANCHOR_OUT_OF_RANGE", () -> reconcile(reconcileWire(new ArrayList<>(List.of(
-                finding("e1", "MEANING", 3, 3, 13, "踏破", "chinh phuc"))), new ArrayList<>()), List.of()));
+        // DRAFT line numbers are hints: an out-of-range end is clamped and the quote decides the anchor
+        assertEquals(EditorialL1Ledger.DraftAnchor.lines(3, 12), reconcile(reconcileWire(new ArrayList<>(List.of(
+                finding("e1", "MEANING", 3, 3, 13, "踏破", "chinh phuc"))), new ArrayList<>()), List.of()).findings().get(0).draft());
         Map<String, Object> forgedUnit = finding("e1", "MEANING", 3, 3, 3, "踏破", "chinh phuc");
         forgedUnit.put("rawUnits", new ArrayList<Object>(List.of("L999")));
         expectCode("L1_UNIT_UNKNOWN", () -> reconcile(reconcileWire(new ArrayList<>(List.of(forgedUnit)), new ArrayList<>()), List.of()));

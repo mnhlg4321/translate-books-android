@@ -13,7 +13,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-/** Synthetic anchor matrix: the validator checks the declared RAW/DRAFT range and never searches for a new anchor. */
+/** Synthetic anchor matrix: line numbers are hints and the app derives the DRAFT anchor from the quote. */
 public final class EditorialL1AnchorRegressionTest {
     private static Map<String, Object> map(Object... values) {
         Map<String, Object> result = new LinkedHashMap<>();
@@ -78,64 +78,129 @@ public final class EditorialL1AnchorRegressionTest {
 
     @FunctionalInterface private interface Throwing { void run(); }
 
-    @Test public void exactAnchorAcceptsAndNeighborAnchorRejects() {
-        assertEquals(1, parse("raw 1\nraw 2", "draft 1\ndraft 2",
-                finding(1, 1, 1, "raw 1", "draft 1")).findings().size());
-        expectCode("L1_DRAFT_QUOTE_NOT_IN_ANCHOR", "findings.0.draftQuote",
-                () -> parse("raw 1\nraw 2", "draft 1\ndraft 2", finding(1, 1, 1, "raw 1", "draft 2")));
+    private static List<String> numbered(String prefix, int count) {
+        List<String> rows = new ArrayList<>();
+        for (int line = 1; line <= count; line++) rows.add(prefix + " " + line);
+        return rows;
     }
 
-    @Test public void duplicateQuoteStillUsesDeclaredAnchor() {
+    @Test public void quoteOnTheHintedLineKeepsTheHintAndRecordsNothing() {
+        EditorialL1Ledger.ReconcilePass pass = parse("raw 1\nraw 2", "draft 1\ndraft 2", finding(1, 1, 1, "raw 1", "draft 1"));
+        assertEquals(EditorialL1Ledger.DraftAnchor.lines(1, 1), pass.findings().get(0).draft());
+        assertEquals(0, pass.draftAnchorsDerivedFromQuote());
+        assertEquals(0, pass.maxDraftAnchorDeviation());
+    }
+
+    @Test public void uniqueQuoteElsewhereMovesTheAnchorAndRecordsTheDeviation() {
+        EditorialL1Ledger.ReconcilePass pass = parse("raw 1\nraw 2", "draft 1\ndraft 2", finding(1, 1, 1, "raw 1", "draft 2"));
+        assertEquals(EditorialL1Ledger.DraftAnchor.lines(2, 2), pass.findings().get(0).draft());
+        assertEquals(1, pass.draftAnchorsDerivedFromQuote());
+        assertEquals(1, pass.maxDraftAnchorDeviation());
+    }
+
+    @Test public void savedU6ShapeIsAnchoredToTheQuoteLine() {
+        List<String> raw = numbered("raw", 101);
+        List<String> draft = numbered("draft", 101);
+        EditorialL1Ledger.ReconcilePass pass = parse(String.join("\n", raw), String.join("\n", draft),
+                finding(99, 99, 99, "raw 99", "draft 101"));
+        assertEquals(EditorialL1Ledger.DraftAnchor.lines(101, 101), pass.findings().get(0).draft());
+        assertEquals(1, pass.draftAnchorsDerivedFromQuote());
+        assertEquals(2, pass.maxDraftAnchorDeviation());
+    }
+
+    @Test public void multiLineHintKeepsItsLengthFromTheQuoteLine() {
+        EditorialL1Ledger.ReconcilePass pass = parse("raw 1\nraw 2\nraw 3", "draft 1\ndraft 2\ndraft 3\ndraft 4",
+                finding(1, 1, 2, "raw 1", "draft 3"));
+        assertEquals(EditorialL1Ledger.DraftAnchor.lines(3, 4), pass.findings().get(0).draft());
+        // the quote line already inside the hinted span keeps the span as hinted
+        assertEquals(EditorialL1Ledger.DraftAnchor.lines(1, 2), parse("raw 1\nraw 2\nraw 3", "draft 1\ndraft 2\ndraft 3",
+                finding(1, 1, 2, "raw 1", "draft 2")).findings().get(0).draft());
+        // a span that would run past the end is clamped to the last line
+        assertEquals(EditorialL1Ledger.DraftAnchor.lines(3, 3), parse("raw 1\nraw 2\nraw 3", "draft 1\ndraft 2\ndraft 3",
+                finding(1, 1, 2, "raw 1", "draft 3")).findings().get(0).draft());
+    }
+
+    @Test public void repeatedQuoteIsDisambiguatedByTheNearestLineInsideTheWindow() {
+        // repeated on 2 and 6: a hint on line 5 is one line from 6 and three from 2
+        EditorialL1Ledger.ReconcilePass pass = parse("raw 1\nraw 2\nraw 3\nraw 4\nraw 5\nraw 6\nraw 7",
+                "x\nsame\ny\nz\nw\nsame\nv", finding(1, 5, 5, "raw 1", "same"));
+        assertEquals(EditorialL1Ledger.DraftAnchor.lines(6, 6), pass.findings().get(0).draft());
+        // a hint exactly on one of the repeats coincides with it
+        assertEquals(EditorialL1Ledger.DraftAnchor.lines(2, 2), parse("raw 1\nraw 2\nraw 3\nraw 4\nraw 5\nraw 6\nraw 7",
+                "x\nsame\ny\nz\nw\nsame\nv", finding(1, 2, 2, "raw 1", "same")).findings().get(0).draft());
+    }
+
+    @Test public void repeatedQuoteWithoutAUniqueNearestLineIsAmbiguous() {
+        // equidistant from the hint
+        expectCode("L1_DRAFT_QUOTE_AMBIGUOUS", "findings.0.draftQuote",
+                () -> parse("raw 1\nraw 2\nraw 3", "same\nother\nsame", finding(1, 2, 2, "raw 1", "same")));
+        // both repeats are outside the +-3 window
+        List<String> draft = new ArrayList<>(numbered("draft", 12));
+        draft.set(0, "same");
+        draft.set(11, "same");
+        expectCode("L1_DRAFT_QUOTE_AMBIGUOUS", "findings.0.draftQuote",
+                () -> parse(String.join("\n", numbered("raw", 12)), String.join("\n", draft), finding(1, 6, 6, "raw 1", "same")));
+    }
+
+    @Test public void quoteMissingFromTheWholeDraftIsStillRejected() {
         expectCode("L1_DRAFT_QUOTE_NOT_IN_ANCHOR", "findings.0.draftQuote",
-                () -> parse("raw 1\nraw 2\nraw 3", "same\nsame\nother",
-                        finding(1, 3, 3, "raw 1", "same")));
+                () -> parse("raw 1\nraw 2", "draft 1\ndraft 2", finding(1, 1, 1, "raw 1", "draft 3")));
+        expectCode("L1_DRAFT_QUOTE_NOT_IN_ANCHOR", "findings.0.draftQuote",
+                () -> parse("raw 1", "draft 1", finding(1, 1, 1, "raw 1", "raw 1")));
     }
 
     @Test public void rawAndDraftNamespacesAreIndependent() {
         expectCode("L1_RAW_QUOTE_NOT_IN_ANCHOR", "findings.0.rawQuote",
                 () -> parse("raw 1", "draft 1", finding(1, 1, 1, "draft 1", "draft 1")));
-        expectCode("L1_DRAFT_QUOTE_NOT_IN_ANCHOR", "findings.0.draftQuote",
-                () -> parse("raw 1", "draft 1", finding(1, 1, 1, "raw 1", "raw 1")));
     }
 
-    @Test public void rangeAndMissingTargetRulesAreExplicit() {
-        assertEquals(1, parse("raw 1\nraw 2\nraw 3", "draft 1\ndraft 2\ndraft 3",
-                finding(1, 1, 2, "raw 1", "draft 2")).findings().size());
-        expectCode("L1_DRAFT_QUOTE_NOT_IN_ANCHOR", "findings.0.draftQuote",
-                () -> parse("raw 1\nraw 2\nraw 3", "draft 1\ndraft 2\ndraft 3",
-                        finding(1, 1, 2, "raw 1", "draft 3")));
+    @Test public void missingTargetAndEmptyQuoteRulesAreUnchanged() {
         assertEquals(1, parse("raw 1", "draft 1", missingFinding(1, 0, "")).findings().size());
+        assertEquals(EditorialL1Ledger.DraftAnchor.missingAfter(0),
+                parse("raw 1", "draft 1", missingFinding(1, 0, "")).findings().get(0).draft());
         expectCode("L1_DRAFT_QUOTE_FORBIDDEN_FOR_MISSING", "findings.0.draftQuote",
                 () -> parse("raw 1", "draft 1", missingFinding(1, 0, "draft 1")));
+        expectCode("L1_DRAFT_ANCHOR_OUT_OF_RANGE", "findings.0.draft.after",
+                () -> parse("raw 1", "draft 1", missingFinding(1, 5, "")));
         expectCode("L1_DRAFT_QUOTE_REQUIRED", "findings.0.draftQuote",
                 () -> parse("raw 1", "draft 1", finding(1, 1, 1, "raw 1", "")));
     }
 
-    @Test public void normalizationRubyAndEmptyCitationRulesApplyWithoutReanchoring() {
-        assertEquals(1, parse("cafe\u0301《よみ》", "café", finding(1, 1, 1, " cafe\u0301 ", " café ")).findings().size());
-        assertEquals(1, parse("揃《そろ》えても", "draft", finding(1, 1, 1, "揃えても", "draft")).findings().size());
+    @Test public void normalizationRubyAndEmptyCitationRulesApply() {
+        assertEquals(1, parse("café《よみ》", "café", finding(1, 1, 1, " café ", " café ")).findings().size());
+        assertEquals(1, parse("ab《cd》ef", "draft", finding(1, 1, 1, "abef", "draft")).findings().size());
         expectCode("L1_RAW_QUOTE_NOT_IN_ANCHOR", "findings.0.rawQuote",
-                () -> parse("揃《そろ》えても", "draft", finding(1, 1, 1, "そろ", "draft")));
+                () -> parse("ab《cd》ef", "draft", finding(1, 1, 1, "cd", "draft")));
+        // a quote that is empty once ruby markup and whitespace are gone has nothing to search for
         expectCode("L1_DRAFT_QUOTE_NOT_IN_ANCHOR", "findings.0.draftQuote",
                 () -> parse("raw 1", "draft", finding(1, 1, 1, "raw 1", " 《よみ》 ")));
     }
 
-    @Test public void crlfTrimAndOutOfRangeAreBoundedToDeclaredLines() {
+    @Test public void crlfTrimAndOutOfRangeNumbersAreOnlyHints() {
         assertEquals(1, parse("raw 1\r\nraw 2", "  draft 1  \r\ndraft 2\r\n",
                 finding(1, 1, 1, " raw 1 ", " draft 1 ")).findings().size());
-        expectCode("L1_DRAFT_ANCHOR_OUT_OF_RANGE", "findings.0.draft",
-                () -> parse("raw 1", "draft 1", finding(1, 2, 2, "raw 1", "draft 1")));
+        // a hint outside the draft is clamped; the quote still decides
+        EditorialL1Ledger.ReconcilePass pass = parse("raw 1", "draft 1", finding(1, 2, 2, "raw 1", "draft 1"));
+        assertEquals(EditorialL1Ledger.DraftAnchor.lines(1, 1), pass.findings().get(0).draft());
+        assertEquals(0, pass.draftAnchorsDerivedFromQuote());
+        EditorialL1Ledger.ReconcilePass zero = parse("raw 1\nraw 2", "draft 1\ndraft 2", finding(1, 0, 0, "raw 1", "draft 2"));
+        assertEquals(EditorialL1Ledger.DraftAnchor.lines(2, 2), zero.findings().get(0).draft());
     }
 
-    @Test public void savedU6ShapeKeepsDraft99AndRejectsQuoteFrom101() {
-        List<String> raw = new ArrayList<>();
-        List<String> draft = new ArrayList<>();
-        for (int line = 1; line <= 101; line++) {
-            raw.add("raw " + line);
-            draft.add("draft " + line);
-        }
-        expectCode("L1_DRAFT_QUOTE_NOT_IN_ANCHOR", "findings.0.draftQuote",
-                () -> parse(String.join("\n", raw), String.join("\n", draft),
-                        finding(99, 99, 99, "raw 99", "draft 101")));
+    @Test public void derivationIsPersistedInTheReportBodyAndRestored() {
+        EditorialRawInventory.Inventory inventory = EditorialRawInventory.build("raw 1\nraw 2".getBytes(StandardCharsets.UTF_8));
+        EditorialL1Ledger.RawPass rawPass = new EditorialL1Ledger.RawPass(
+                List.of(new EditorialRawInventory.Range("L1", "L2", "PROCESSED")), List.of());
+        EditorialL1Ledger.ReconcilePass pass = parse("raw 1\nraw 2", "draft 1\ndraft 2", finding(1, 1, 1, "raw 1", "draft 2"));
+        EditorialL1Ledger.Body body = EditorialL1Ledger.bodyOfReconcile(inventory, rawPass, pass);
+        Map<String, Object> artifact = EditorialL1Ledger.bodyToMap(body);
+        @SuppressWarnings("unchecked") Map<String, Object> normalizations = (Map<String, Object>) artifact.get("normalizations");
+        assertEquals(1, ((BigDecimal) normalizations.get("draftAnchorDerivedFromQuote")).intValueExact());
+        assertEquals(1, ((BigDecimal) normalizations.get("maxDraftAnchorDeviation")).intValueExact());
+        EditorialL1Ledger.Body restored = EditorialL1Ledger.parseBody(artifact);
+        assertEquals(1, restored.draftAnchorsDerivedFromQuote());
+        assertEquals(1, restored.maxDraftAnchorDeviation());
+        assertEquals(EditorialContractRevision.L1_LEDGER_V8, artifact.get("contractRevision"));
+        assertTrue(EditorialContractRevision.isLedger(EditorialContractRevision.L1_LEDGER_V8));
     }
 }

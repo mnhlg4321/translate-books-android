@@ -9,8 +9,20 @@ import java.util.Set;
 final class EditorialReferenceNormalization {
     static final class Counter {
         private int duplicateReferencesRemoved;
+        private int draftAnchorsDerivedFromQuote;
+        private int maxDraftAnchorDeviation;
 
         int duplicateReferencesRemoved() { return duplicateReferencesRemoved; }
+
+        int draftAnchorsDerivedFromQuote() { return draftAnchorsDerivedFromQuote; }
+
+        int maxDraftAnchorDeviation() { return maxDraftAnchorDeviation; }
+
+        /** The app moved a hinted line anchor onto the line that carries the quote. */
+        void draftAnchorDerived(int deviationLines) {
+            draftAnchorsDerivedFromQuote++;
+            maxDraftAnchorDeviation = Math.max(maxDraftAnchorDeviation, deviationLines);
+        }
 
         <T> List<T> distinct(List<T> values) {
             Set<T> seen = new HashSet<>();

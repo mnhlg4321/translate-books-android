@@ -17,10 +17,11 @@ public final class EditorialContractRevision {
     public static final String L1_LEDGER_V5 = "L1_LEDGER_V5";
     public static final String L1_LEDGER_V6 = "L1_LEDGER_V6";
     public static final String L1_LEDGER_V7 = "L1_LEDGER_V7";
-    public static final String CURRENT_LEDGER = L1_LEDGER_V7;
+    public static final String L1_LEDGER_V8 = "L1_LEDGER_V8";
+    public static final String CURRENT_LEDGER = L1_LEDGER_V8;
     public static final String REPORT_SCHEMA_V2 = "safe4.full.report-l1.v2";
     private static final Set<String> KNOWN = Set.of(LEGACY_V1, L1_LEDGER_V2, L1_LEDGER_V3, L1_LEDGER_V4, L1_LEDGER_V5,
-            L1_LEDGER_V6, L1_LEDGER_V7);
+            L1_LEDGER_V6, L1_LEDGER_V7, L1_LEDGER_V8);
 
     private EditorialContractRevision() { }
 
@@ -28,7 +29,8 @@ public final class EditorialContractRevision {
 
     public static boolean isLedger(String revision) {
         return L1_LEDGER_V2.equals(revision) || L1_LEDGER_V3.equals(revision) || L1_LEDGER_V4.equals(revision)
-                || L1_LEDGER_V5.equals(revision) || L1_LEDGER_V6.equals(revision) || L1_LEDGER_V7.equals(revision);
+                || L1_LEDGER_V5.equals(revision) || L1_LEDGER_V6.equals(revision) || L1_LEDGER_V7.equals(revision)
+                || L1_LEDGER_V8.equals(revision);
     }
 
     /** Revision recorded in a parsed REPORT_L1; a missing or unknown value means the legacy contract. */

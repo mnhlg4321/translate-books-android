@@ -83,11 +83,17 @@ public final class EditorialL1Ledger {
     public record ReconcilePass(List<EditorialRawInventory.Range> coverage, List<Resolution> resolutions,
                                 List<Finding> findings, List<SpeakerRecord> speakerRecords,
                                 List<ProtectedSpan> protectedSpans, Disposition disposition,
-                                int duplicateReferencesRemoved) {
+                                int duplicateReferencesRemoved, int draftAnchorsDerivedFromQuote,
+                                int maxDraftAnchorDeviation) {
         public ReconcilePass(List<EditorialRawInventory.Range> coverage, List<Resolution> resolutions,
                              List<Finding> findings, List<SpeakerRecord> speakerRecords,
                              List<ProtectedSpan> protectedSpans, Disposition disposition) {
-            this(coverage, resolutions, findings, speakerRecords, protectedSpans, disposition, 0);
+            this(coverage, resolutions, findings, speakerRecords, protectedSpans, disposition, 0, 0, 0);
+        }
+        public ReconcilePass(List<EditorialRawInventory.Range> coverage, List<Resolution> resolutions,
+                             List<Finding> findings, List<SpeakerRecord> speakerRecords,
+                             List<ProtectedSpan> protectedSpans, Disposition disposition, int duplicateReferencesRemoved) {
+            this(coverage, resolutions, findings, speakerRecords, protectedSpans, disposition, duplicateReferencesRemoved, 0, 0);
         }
         public ReconcilePass {
             coverage = List.copyOf(coverage);
@@ -246,7 +252,8 @@ public final class EditorialL1Ledger {
             }
         }
         return new ReconcilePass(coverage, new ArrayList<>(resolved.values()), findings, speakers, spans, disposition,
-                normalizations.duplicateReferencesRemoved());
+                normalizations.duplicateReferencesRemoved(), normalizations.draftAnchorsDerivedFromQuote(),
+                normalizations.maxDraftAnchorDeviation());
     }
 
     /**
@@ -352,8 +359,10 @@ public final class EditorialL1Ledger {
             int start = intOf(draftRow, "start", path + ".draft.start");
             int end = intOf(draftRow, "end", path + ".draft.end");
             if (draftRow.containsKey("after") && intOf(draftRow, "after", path + ".draft.after") != 0) throw bad("L1_DRAFT_ANCHOR_UNUSED_FIELD", path + ".draft.after");
-            if (start < 1 || end < start || end > draftLines.size()) throw bad("L1_DRAFT_ANCHOR_OUT_OF_RANGE", path + ".draft");
-            anchor = DraftAnchor.lines(start, end);
+            // the numbers are only a hint: the app derives the anchor from draftQuote below
+            int hintStart = Math.max(1, Math.min(start, draftLines.size()));
+            int hintEnd = Math.max(hintStart, Math.min(end, draftLines.size()));
+            anchor = DraftAnchor.lines(hintStart, hintEnd);
         } else if ("MISSING".equals(kind)) {
             int after = intOf(draftRow, "after", path + ".draft.after");
             if ((draftRow.containsKey("start") && intOf(draftRow, "start", path + ".draft.start") != 0)
@@ -371,9 +380,7 @@ public final class EditorialL1Ledger {
         String draftQuote = fieldStr(phase, row, "draftQuote", path + ".draftQuote");
         if ("LINES".equals(anchor.kind())) {
             if (draftQuote.isEmpty()) throw bad("L1_DRAFT_QUOTE_REQUIRED", path + ".draftQuote");
-            StringBuilder span = new StringBuilder();
-            for (int i = anchor.start(); i <= anchor.end(); i++) span.append(draftLines.get(i - 1)).append('\n');
-            if (!EditorialQuoteMatcher.contains(span.toString(), draftQuote)) throw bad("L1_DRAFT_QUOTE_NOT_IN_ANCHOR", path + ".draftQuote");
+            anchor = deriveDraftAnchor(anchor, draftLines, draftQuote, path + ".draftQuote", normalizations);
         } else if (!draftQuote.isEmpty()) {
             throw bad("L1_DRAFT_QUOTE_FORBIDDEN_FOR_MISSING", path + ".draftQuote");
         }
@@ -403,6 +410,56 @@ public final class EditorialL1Ledger {
         if ("PRESERVED".equals(disposition) && limit.isEmpty()) throw bad("L1_PRESERVED_NEEDS_EVIDENCE_LIMIT", path + ".evidenceLimit");
         return new Finding(errorId, type, severity, rawUnits, anchor, rawQuote, draftQuote, observation, expected, refs,
                 candidateIds, occurrences, disposition, limit);
+    }
+
+    /** Largest distance between the hinted line and the quote line that still disambiguates repeated quotes. */
+    static final int DRAFT_HINT_WINDOW = 3;
+
+    /**
+     * The DRAFT anchor is a fact about the quote, not about the model's line counting: the line carrying
+     * {@code draftQuote} is the anchor and the hinted numbers only choose between repeated occurrences. A hint that
+     * already contains the quote line is kept as it is; otherwise the span moves to the quote line with the hinted length.
+     */
+    static DraftAnchor deriveDraftAnchor(DraftAnchor hint, List<String> draftLines, String draftQuote, String quotePath,
+                                         EditorialReferenceNormalization.Counter normalizations) {
+        int size = draftLines.size();
+        int length = hint.end() - hint.start();
+        List<Integer> lines = new ArrayList<>();
+        for (int line = 1; line <= size; line++) {
+            if (EditorialQuoteMatcher.contains(draftLines.get(line - 1), draftQuote)) lines.add(line);
+        }
+        if (lines.isEmpty() && length > 0) {
+            // a quote that crosses a line break starts on the line where the hinted span would reach it
+            for (int line = 1; line <= size; line++) {
+                int last = Math.min(size, line + length);
+                if (last == line) continue;
+                StringBuilder window = new StringBuilder();
+                for (int i = line; i <= last; i++) window.append(draftLines.get(i - 1)).append('\n');
+                if (!EditorialQuoteMatcher.contains(window.toString(), draftQuote)) continue;
+                StringBuilder tail = new StringBuilder();
+                for (int i = line + 1; i <= last; i++) tail.append(draftLines.get(i - 1)).append('\n');
+                if (!EditorialQuoteMatcher.contains(tail.toString(), draftQuote)) lines.add(line);
+            }
+        }
+        if (lines.isEmpty()) throw bad("L1_DRAFT_QUOTE_NOT_IN_ANCHOR", quotePath);
+        int chosen;
+        if (lines.size() == 1) {
+            chosen = lines.get(0);
+        } else {
+            int best = Integer.MAX_VALUE;
+            int bestCount = 0;
+            chosen = -1;
+            for (int line : lines) {
+                int distance = line < hint.start() ? hint.start() - line : (line > hint.end() ? line - hint.end() : 0);
+                if (distance > DRAFT_HINT_WINDOW) continue;
+                if (distance < best) { best = distance; bestCount = 1; chosen = line; }
+                else if (distance == best) bestCount++;
+            }
+            if (chosen < 0 || bestCount != 1) throw bad("L1_DRAFT_QUOTE_AMBIGUOUS", quotePath);
+        }
+        if (chosen >= hint.start() && chosen <= hint.end()) return hint;
+        normalizations.draftAnchorDerived(chosen < hint.start() ? hint.start() - chosen : chosen - hint.end());
+        return DraftAnchor.lines(chosen, Math.min(size, chosen + length));
     }
 
     private static Disposition disposition(Map<String, Object> row, String path, String phase) {
@@ -450,7 +507,8 @@ public final class EditorialL1Ledger {
                        String rawSha256, List<EditorialRawInventory.Range> rawCoverage, List<Candidate> candidates,
                        List<EditorialRawInventory.Range> reviewCoverage, List<Resolution> resolutions, List<Finding> findings,
                        List<SpeakerRecord> speakerRecords, List<ProtectedSpan> protectedSpans, Disposition disposition,
-                       Metrics metrics, int duplicateReferencesRemoved) {
+                       Metrics metrics, int duplicateReferencesRemoved, int draftAnchorsDerivedFromQuote,
+                       int maxDraftAnchorDeviation) {
         public Body {
             rawCoverage = List.copyOf(rawCoverage);
             candidates = List.copyOf(candidates);
@@ -466,14 +524,15 @@ public final class EditorialL1Ledger {
         Metrics metrics = new Metrics(0, 0, 0, 0, raw.candidates().size(), 0, 0, 0, 0, inventory.units().size(), inventory.excluded().size());
         return new Body("L1_RAW_DISCOVERY", EditorialRawInventory.REVISION, inventory.units().size(), inventory.excluded().size(),
                 inventory.inventorySha256(), inventory.rawSha256(), raw.coverage(), raw.candidates(), List.of(), List.of(), List.of(),
-                List.of(), List.of(), new Disposition("CONTINUE", "L1_RAW_LEDGER", "NONE"), metrics, 0);
+                List.of(), List.of(), new Disposition("CONTINUE", "L1_RAW_LEDGER", "NONE"), metrics, 0, 0, 0);
     }
 
     public static Body bodyOfReconcile(EditorialRawInventory.Inventory inventory, RawPass raw, ReconcilePass pass) {
         return new Body("L1_RECONCILE", EditorialRawInventory.REVISION, inventory.units().size(), inventory.excluded().size(),
                 inventory.inventorySha256(), inventory.rawSha256(), raw.coverage(), raw.candidates(), pass.coverage(), pass.resolutions(),
                 pass.findings(), pass.speakerRecords(), pass.protectedSpans(), pass.disposition(),
-                metrics(inventory, raw.candidates(), pass), pass.duplicateReferencesRemoved());
+                metrics(inventory, raw.candidates(), pass), pass.duplicateReferencesRemoved(),
+                pass.draftAnchorsDerivedFromQuote(), pass.maxDraftAnchorDeviation());
     }
 
     public static Map<String, Object> bodyToMap(Body body) {
@@ -482,6 +541,8 @@ public final class EditorialL1Ledger {
         m.put("phase", body.phase());
         Map<String, Object> normalizations = new LinkedHashMap<>();
         normalizations.put("duplicateReferencesRemoved", num(body.duplicateReferencesRemoved()));
+        normalizations.put("draftAnchorDerivedFromQuote", num(body.draftAnchorsDerivedFromQuote()));
+        normalizations.put("maxDraftAnchorDeviation", num(body.maxDraftAnchorDeviation()));
         m.put("normalizations", normalizations);
         Map<String, Object> inv = new LinkedHashMap<>();
         inv.put("revision", body.inventoryRevision());
@@ -583,16 +644,19 @@ public final class EditorialL1Ledger {
                 i(mm, "conflictCandidateCount"), i(mm, "speakerRecordCount"), i(mm, "protectedSpanCount"), i(mm, "unitCount"),
                 i(mm, "excludedLineCount"));
         int duplicateReferencesRemoved = 0;
+        int draftAnchorsDerived = 0;
+        int maxDraftDeviation = 0;
         Object normalizationValue = report.get("normalizations");
-        if (normalizationValue instanceof Map<?, ?> normalizationMap
-                && normalizationMap.get("duplicateReferencesRemoved") instanceof BigDecimal count) {
-            duplicateReferencesRemoved = count.intValueExact();
+        if (normalizationValue instanceof Map<?, ?> normalizationMap) {
+            if (normalizationMap.get("duplicateReferencesRemoved") instanceof BigDecimal count) duplicateReferencesRemoved = count.intValueExact();
+            if (normalizationMap.get("draftAnchorDerivedFromQuote") instanceof BigDecimal count) draftAnchorsDerived = count.intValueExact();
+            if (normalizationMap.get("maxDraftAnchorDeviation") instanceof BigDecimal count) maxDraftDeviation = count.intValueExact();
         }
         return new Body((String) report.get("phase"), (String) inv.get("revision"), i(inv, "unitCount"), i(inv, "excludedLineCount"),
                 (String) inv.get("inventorySha256"), (String) inv.get("rawSha256"), rawCoverage, candidates,
                 rangesFromList(report.get("reviewCoverage")), resolutions, findings, speakers, spans,
                 new Disposition((String) d.get("disposition"), (String) d.get("reasonCode"), (String) d.get("stopClass")), metrics,
-                duplicateReferencesRemoved);
+                duplicateReferencesRemoved, draftAnchorsDerived, maxDraftDeviation);
     }
 
     // ---- strict response schema (provider response_format); the parsers above stay the authority ----

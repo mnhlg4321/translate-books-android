@@ -574,9 +574,18 @@ public final class EditorialL2LedgerChainTest {
         probes.set(2, probe("P3", "COVERAGE", 3, 3, "踏破", "not in vi", "NO_DEFECT", "NONE"));
         assertTrue(runL3(l, l2, reconcileV2(list(), list(), list(), probes)).issues().contains("L3_PROBE_VI_QUOTE_NOT_IN_ANCHOR:P3"));
 
+        // a quote that sits on another VI line than the hinted one anchors that other line
+        probes = goodProbes();
+        probes.set(2, probe("P3", "COVERAGE", 3, 3, "踏破", "Vua vao", "NO_DEFECT", "NONE"));
+        assertTrue(runL3(l, l2, reconcileV2(list(), list(), list(), probes)).issues().stream()
+                .noneMatch(issue -> issue.equals("L3_PROBE_VI_QUOTE_NOT_IN_ANCHOR:P3")));
+
         probes = goodProbes();
         probes.set(3, probe("P4", "REGRESSION", 4, 99, "今回", "Lan nay", "NO_DEFECT", "NONE"));
-        assertTrue(runL3(l, l2, reconcileV2(list(), list(), list(), probes)).issues().contains("L3_PROBE_VI_ANCHOR_OUT_OF_RANGE:P4"));
+        // viStart/viEnd are only hints: the quote decides the anchor, so an out-of-range end is not an error
+        assertTrue(runL3(l, l2, reconcileV2(list(), list(), list(), probes)).issues().toString(),
+                runL3(l, l2, reconcileV2(list(), list(), list(), probes)).issues().stream()
+                        .noneMatch(issue -> issue.endsWith(":P4")));
 
         probes = goodProbes();
         probes.set(4, probe("P5", "REGRESSION", 1, 1, "王は城", "Vua vao", "NO_DEFECT", "NONE"));   // same anchor as P1

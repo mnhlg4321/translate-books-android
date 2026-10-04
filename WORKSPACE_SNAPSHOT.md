@@ -1,13 +1,13 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-05 (+07:00): U1–U6 + replay repair verified at ab95da25 (engine 391/391, app 341/341). U6 live: RAW passed a third time (38 candidates); RECONCILE refused L1_DRAFT_QUOTE_NOT_IN_ANCHOR because the model copied the RAW line number (99) into the DRAFT anchor while its quote sits uniquely on DRAFT line 101. G1 9 calls, USD 0.07381520/1.00. Decision: DRAFT/VI anchors derived by the app from the model quote (line number only a hint).
+- Updated: 2026-10-05 (+07:00): W1 implemented offline (docs/P6_R6_WIRE_SIMPLIFICATION_PROPOSAL_20261004.md §12). L1 `draft` and L3 `viStart/viEnd` are hints; the app derives the anchor from `draftQuote`/`viQuote` (unique line, else nearest within +-3 lines, else `L1_DRAFT_QUOTE_AMBIGUOUS`), records `draftAnchorDerivedFromQuote` and `maxDraftAnchorDeviation` in REPORT_L1 `normalizations`, and `contractRevision` is now `L1_LEDGER_V8`. No provider call.
 - Current version: active v4.18.
 - Current branch: `feature/v4.18-p5e-runner-repair-20260917`; continue the existing branch and release checklist.
-- Current commit: ab95da25 — implementation baseline immediately before this snapshot update; confirm actual HEAD on resume.
-- Current build: no APK build in this offline package. Existing U5 artifacts remain unchanged historical evidence; no emulator/pilot operation occurred.
-- Current phase: P6 R6; offline replay repair complete. U6 response remains a correct model rejection and no REPORT_L1/FINAL is accepted.
-- Completed tasks: structured replay result/exit contract; hash-bound PASS/EXPECTED_REJECT manifest; bounded independent-finding diagnostic with production fail-fast preserved; process and anchor regressions; exact U6 replay; semantic second-finding classification; report/plan updates. Engine 391/391.
-- Pending tasks: owner review of a concrete bounded G1 proposal. No live G1 dispatch, G2 or pilot action is authorized by this package.
-- Known bugs: none in the repaired replay/diagnostic scope. U6 finding anchors DRAFT 99 but quotes 101 remains an invalid response; second semantic finding remains `UNRESOLVED_SUSPECTED_FALSE_POSITIVE`.
-- Regression status: latest G1 ledger readback is 6,732 bytes, SHA-256 `cd617c2fe252e006050ee8d760705fbbdc058187d10507d599e0905aac0a9997`; 9 settled calls / 18 entries, USD `0.07381520` / `1.00`, USD `0.92618480` remaining, 0 pending UNKNOWN. The two U6 calls cost USD `0.01842575`; no G2 or pilot access.
-- Next action: Codex does W1–W3 of docs/P6_R6_WIRE_SIMPLIFICATION_PROPOSAL_20261004.md §12 offline (quote-derived DRAFT/VI anchors, replay U6 to PASS, rebuild + emulator), then W4 continues G1 under D-G1c.
+- Current commit: f5db3ec3 — implementation baseline immediately before this snapshot update; confirm actual HEAD on resume.
+- Current build: no APK build in this package; W3 rebuilds through the wrapper from the W1/W2 HEAD.
+- Current phase: P6 R6 W1 (quote-derived DRAFT/VI anchors) complete offline; W2 replay-all and W3 wrapper build/emulator checks pending.
+- Completed tasks: W1: `EditorialL1Ledger.deriveDraftAnchor`, L3 probe VI anchors derived from `viQuote`, metadata persisted/restored, contractRevision bump, synthetic regression matrix (unique, deviating, ambiguous inside/outside window, not found, empty after normalization, MISSING unchanged, U6 shape). Engine 396/396, app unit and androidTest compile PASS.
+- Pending tasks: W2 replay-all with the U6 RECONCILE response; W3 wrapper builds + emulator checks; W4 live G1 continuation under D-G1c (fx-a03 first, stop before G2).
+- Known bugs: none known in the W1 scope. The U6 response (DRAFT 99 vs quote on 101) should now replay PASS; its second finding remains semantic `UNRESOLVED_SUSPECTED_FALSE_POSITIVE`.
+- Regression status: engine 396/396, app unit PASS, androidTest compile PASS. G1 ledger unchanged since the last readback: 9 settled calls, USD 0.07381520 / 1.00, 0 pending UNKNOWN; no G2 or pilot access.
+- Next action: W2: replay-all (old RAW response expected-reject L1_UNIT_UNKNOWN:coverage.0.from, current RAW PASS, U6 RECONCILE PASS), then W3 wrapper build and emulator checks.

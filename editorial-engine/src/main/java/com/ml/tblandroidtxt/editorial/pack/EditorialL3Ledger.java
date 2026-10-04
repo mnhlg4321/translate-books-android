@@ -252,15 +252,29 @@ final class EditorialL3Ledger {
                 }
             }
             if (rawOk && !quoted) issues.add("L3_PROBE_RAW_QUOTE_NOT_IN_ANCHOR:" + id);
-            if (p.viStart() < 1 || p.viEnd() < p.viStart() || p.viEnd() > viLines.size()) {
+            // viStart/viEnd are hints: the line carrying viQuote is the anchor (same rule as the L1 DRAFT anchor)
+            int viStart = 0;
+            int viEnd = 0;
+            if (viLines.isEmpty()) {
                 issues.add("L3_PROBE_VI_ANCHOR_OUT_OF_RANGE:" + id);
             } else {
-                StringBuilder span = new StringBuilder();
-                for (int i = p.viStart(); i <= p.viEnd(); i++) span.append(viLines.get(i - 1)).append('\n');
-                if (!EditorialQuoteMatcher.contains(span.toString(), p.viQuote())) issues.add("L3_PROBE_VI_QUOTE_NOT_IN_ANCHOR:" + id);
+                int hintStart = Math.max(1, Math.min(p.viStart(), viLines.size()));
+                int hintEnd = Math.max(hintStart, Math.min(p.viEnd(), viLines.size()));
+                try {
+                    EditorialL1Ledger.DraftAnchor derived = EditorialL1Ledger.deriveDraftAnchor(
+                            EditorialL1Ledger.DraftAnchor.lines(hintStart, hintEnd), viLines, p.viQuote(), "viQuote",
+                            new EditorialReferenceNormalization.Counter());
+                    viStart = derived.start();
+                    viEnd = derived.end();
+                } catch (WireViolation invalid) {
+                    issues.add(("L1_DRAFT_QUOTE_AMBIGUOUS".equals(invalid.code())
+                            ? "L3_PROBE_VI_QUOTE_AMBIGUOUS:" : "L3_PROBE_VI_QUOTE_NOT_IN_ANCHOR:") + id);
+                }
+            }
+            if (viStart > 0) {
                 List<String> sorted = new ArrayList<>(p.rawUnits());
                 java.util.Collections.sort(sorted);
-                if (!anchors.add(sorted + "|" + p.viStart() + "|" + p.viEnd())) issues.add("L3_PROBE_ANCHOR_DUPLICATE:" + id);
+                if (!anchors.add(sorted + "|" + viStart + "|" + viEnd)) issues.add("L3_PROBE_ANCHOR_DUPLICATE:" + id);
             }
             String action = p.action();
             switch (p.verdict()) {
@@ -275,7 +289,7 @@ final class EditorialL3Ledger {
                         issues.add("L3_PROBE_ACTION_CHANGE_UNKNOWN:" + id);
                     } else if (!applied.contains(changeId)) {
                         conflicts++;   // the app reverted the fix: the defect the probe found is still there
-                    } else if (!touches(row, p.viStart(), p.viEnd())) {
+                    } else if (viStart > 0 && !touches(row, viStart, viEnd)) {
                         issues.add("L3_PROBE_ACTION_OFF_ANCHOR:" + id);
                     }
                 }
@@ -283,7 +297,7 @@ final class EditorialL3Ledger {
                     String preserveId = action.startsWith("PRESERVE:") ? action.substring(9) : "";
                     EditorialChangeMapReconstructor.PreservedRow row = preservedById.get(preserveId);
                     if (row == null) issues.add("L3_PROBE_ACTION_PRESERVE_UNKNOWN:" + id);
-                    else if (row.lineNumber() < p.viStart() || row.lineNumber() > p.viEnd()) issues.add("L3_PROBE_ACTION_OFF_ANCHOR:" + id);
+                    else if (viStart > 0 && (row.lineNumber() < viStart || row.lineNumber() > viEnd)) issues.add("L3_PROBE_ACTION_OFF_ANCHOR:" + id);
                 }
             }
         }
