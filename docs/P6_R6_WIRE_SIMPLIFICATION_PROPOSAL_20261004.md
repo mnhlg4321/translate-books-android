@@ -182,7 +182,7 @@ Structural gate của gói đã đóng; semantic quality của model chưa đư�
 
 ## 12. Review U1–U6 + replay repair; quyết định neo DRAFT theo trích dẫn (Claude, 2026-10-05)
 
-**Kiểm độc lập `ab95da25`:** `git archive` sạch: engine 391/391, app 341/341, lint + androidTest compile PASS. Không key/fingerprint (hash duy nhất bị nghi là SHA-256 APK). U4 chưa xong hẳn: `EditorialL1AnchorRegressionTest.java:116-118` vẫn dùng mảnh `揃《そろ》えても` (5 ký tự, cũng có sẵn trong fixture cũ `app/src/test/resources/fixtures/v417/...`); mức độ nhỏ, thay bằng câu tổng hợp khi chạm file.
+**Kiểm độc lập `ab95da25`:** `git archive` sạch: engine 391/391, app 341/341, lint + androidTest compile PASS. Không key/fingerprint (hash duy nhất bị nghi là SHA-256 APK). U4 chưa xong hẳn: `EditorialL1AnchorRegressionTest.java:116-118` vẫn dùng mảnh một mảnh furigana thật (5 ký tự, cũng có sẵn trong fixture cũ `app/src/test/resources/fixtures/v417/...`); mức độ nhỏ, thay bằng câu tổng hợp khi chạm file.
 
 **Live U6 (run `3559de99-…`, `fx-a03`):** 2 call, USD 0.01842575, 51,605 vào / 4,604 ra, `finish=stop`. RAW **PASS lần 3** (38 candidate). RECONCILE bị từ chối `L1_DRAFT_QUOTE_NOT_IN_ANCHOR:findings.0.draftQuote`. G1 = **9 call, USD 0.07381520 / 1.00**, 0 UNKNOWN.
 
@@ -205,3 +205,13 @@ Structural gate của gói đã đóng; semantic quality của model chưa đư�
 | **W4** live theo D-G1c | Khi W2 PASS: tiếp G1 cùng sổ (còn USD 0.92618480), `fx-a03` trước; nếu L1 `fx-a03` commit → chạy tiếp các fixture G1 còn lại theo bảng | Báo cáo G1: `STRUCTURAL_VALID`/`SEMANTIC_EVAL` theo fixture, call/token/USD | Mã lỗi mới / UNKNOWN / chạm trần → dừng, replay-all, báo |
 
 Giả thuyết cần live (không kiểm được offline): với neo DRAFT do app suy ra, RECONCILE của model thật qua validator ổn định trên nhiều fixture; ngân sách: phần còn lại của G1 (đã duyệt), ước ≈ USD 0.02 mỗi cặp L1.
+
+## 13. Review W1–W2; quyết định W5 về `speakerRecords` (Claude, 2026-10-05)
+
+**Kiểm độc lập `2fd8a3d3`:** `git archive` sạch: engine 396/396, app 341/341, androidTest compile PASS; không key. W1 đúng quyết định §12 (`L1_LEDGER_V8`, metadata `draftAnchorDerivedFromQuote`/`maxDraftAnchorDeviation`). Replay U6: **cả hai finding đã qua**; còn đúng hai lỗi `L1_UNIT_LINE_NOT_A_UNIT` ở `speakerRecords[6]` (L126) và `speakerRecords[7]` (L140) — dòng RAW trống. Codex dừng đúng quy tắc (lỗi khác họ). 0 call; G1 vẫn 9 call, USD 0.07381520. Mảnh furigana thật cuối cùng (trong chính §12 do Claude viết) đã được thay.
+
+**Dữ kiện quyết định:** `speakerRecords` **không được L2/L3 hay coordinator dùng** (chỉ L1 parse/lưu và replay tool liệt kê). Speaker proof cho mỗi thay đổi thoại nằm ở `changes[].speakerProof` của L2/L3, kiểm riêng. Vậy đây là ghi chú phụ của L1, không phải bằng chứng lỗi hay coverage.
+
+**Quyết định W5 (điều phối):** giữ `speakerRecords` trong REPORT_L1 nhưng **một bản ghi có tham chiếu không hợp lệ** (dòng không phải unit / ngoài phạm vi / sai cú pháp) **bị loại khỏi artifact và đếm vào `normalizations.speakerRecordsDropped` kèm đường dẫn**, không làm hỏng cả ledger. Không đoán dòng thay thế (từ chối phương án 3 của Codex vì không có trích dẫn để kiểm). Prompt ghi rõ `speakerRecords` là MAY (có thể rỗng). Findings, coverage, candidates, protectedSpans **giữ nghiêm** như cũ. Đây là phương án 2 của Codex được làm cụ thể: không bỏ dữ liệu hợp lệ, không bịa dữ liệu thiếu.
+
+**Gói:** W5 (sửa parser + FieldSpec/prompt + test tổng hợp: bản ghi hợp lệ giữ, bản ghi dòng trống/ngoài phạm vi bị loại có đếm, ledger vẫn PASS; findings sai vẫn bị từ chối) → replay-all: response U6 phải **PASS** với `speakerRecordsDropped=2` → W3 (build wrapper, emulator) → W4 live theo D-G1c (`fx-a03` trước, rồi các fixture G1 còn lại; dừng ở mã lỗi mới/UNKNOWN/trần; dừng trước G2).

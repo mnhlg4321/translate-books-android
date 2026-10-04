@@ -188,7 +188,7 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-U6: RAW qua lần 3; RECONCILE dừng vì model chép số dòng RAW vào neo DRAFT (trích dẫn nằm ở DRAFT 101). G1 USD 0.07381520/1.00. Quyết định: app suy neo DRAFT/VI từ trích dẫn. Next action duy nhất: Codex làm W1–W3 trong mục 12 của `docs/P6_R6_WIRE_SIMPLIFICATION_PROPOSAL_20261004.md`, rồi W4 tiếp G1 theo D-G1c.
+W1–W2: neo DRAFT theo trích dẫn đã gỡ cả hai finding của U6; replay còn 2 speakerRecords trỏ vào dòng RAW trống. Quyết định W5: loại bản ghi speaker không hợp lệ có đếm, giữ nghiêm findings/coverage. Next action duy nhất: Codex làm W5, replay U6 PASS, rồi W3 và W4 theo mục 13 của `docs/P6_R6_WIRE_SIMPLIFICATION_PROPOSAL_20261004.md`.
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 
