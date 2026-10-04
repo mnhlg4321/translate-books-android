@@ -179,3 +179,29 @@ Replay đúng response U6 nguyên bản: `D:\P5E-private\p6-runs\3559de99-978b-4
 Phân tích gánh chép dữ liệu: prompt giữ source role RAW/DRAFT và số dòng riêng, nhưng bắt model chép lại cả `rawQuote` và `draftQuote`; đây là điểm dễ nhầm namespace và dòng. App có thể lấy văn bản theo anchor nếu đổi contract, nhưng quote do app tạo chỉ chứng minh vị trí, không chứng minh model đã so sánh đúng nghĩa. Vì vậy trong gói này chỉ ghi đề xuất contract version mới kèm invariant liên kết finding–RAW evidence–DRAFT anchor và test chống nhầm câu; không bỏ trường, không nới matcher, không đổi pin để lấy PASS.
 
 Structural gate của gói đã đóng; semantic quality của model chưa được đo. Bước tiếp theo duy nhất là owner xem một đề xuất G1 mới có giả thuyết đo, source/prompt/schema revision, fixture, số call tối đa, ngân sách, điều kiện dừng và cách chấm; không dispatch từ quyết định offline này.
+
+## 12. Review U1–U6 + replay repair; quyết định neo DRAFT theo trích dẫn (Claude, 2026-10-05)
+
+**Kiểm độc lập `ab95da25`:** `git archive` sạch: engine 391/391, app 341/341, lint + androidTest compile PASS. Không key/fingerprint (hash duy nhất bị nghi là SHA-256 APK). U4 chưa xong hẳn: `EditorialL1AnchorRegressionTest.java:116-118` vẫn dùng mảnh `揃《そろ》えても` (5 ký tự, cũng có sẵn trong fixture cũ `app/src/test/resources/fixtures/v417/...`); mức độ nhỏ, thay bằng câu tổng hợp khi chạm file.
+
+**Live U6 (run `3559de99-…`, `fx-a03`):** 2 call, USD 0.01842575, 51,605 vào / 4,604 ra, `finish=stop`. RAW **PASS lần 3** (38 candidate). RECONCILE bị từ chối `L1_DRAFT_QUOTE_NOT_IN_ANCHOR:findings.0.draftQuote`. G1 = **9 call, USD 0.07381520 / 1.00**, 0 UNKNOWN.
+
+**Chẩn đoán (chứng minh từ response lưu + DRAFT fixture):** finding `E99-UNTRANSLATED` có RAW `L99` và `draft.start=end=99`; `draftQuote` (79 ký tự) xuất hiện **duy nhất ở DRAFT dòng 101**. Model chép số dòng RAW sang neo DRAFT (RAW 384 dòng, DRAFT 382 dòng, bố cục lệch). Finding thứ hai (`L183` → `182`) căn đúng. Đây là lần thứ năm cùng họ "model tự ghi sổ tham chiếu" (token → hash id → trường rỗng → minLength → số dòng DRAFT). Ghi nhận ngữ nghĩa (chưa chấm): `E99-UNTRANSLATED` đúng loại lỗi gieo của `fx-a03`.
+
+**Quyết định (điều phối):** **neo DRAFT do app suy ra từ trích dẫn**:
+- Model vẫn bắt buộc gửi `draftQuote` (bằng chứng so sánh) và số dòng DRAFT như **gợi ý**.
+- App tìm `draftQuote` (sau NFC/trim/bỏ furigana, không rỗng) trong DRAFT: **đúng một** vị trí → dùng dòng đó; nhiều vị trí → chọn vị trí trùng hoặc gần gợi ý nhất trong cửa sổ ±3 dòng, nếu vẫn mơ hồ → từ chối `L1_DRAFT_QUOTE_AMBIGUOUS:path`; không thấy → từ chối như cũ. Với `LINES` nhiều dòng: dòng chứa trích dẫn là điểm neo, độ dài khoảng giữ theo gợi ý (`end-start`).
+- Ghi vào metadata artifact: `draftAnchorDerivedFromQuote`, độ lệch so với gợi ý. Không tự tạo/thay trích dẫn, không đổi nghĩa.
+- Áp cùng nguyên tắc cho neo VI_L2 của L3 (`viQuote`) và L2 (`before` đã làm ở S4). RAW giữ nguyên (đã ổn định, tham chiếu `L<n>` + `rawQuote` kiểm chuỗi con).
+- Tăng `contractRevision`.
+
+### Gói cho Codex
+
+| Gói | Việc | PASS | Dừng |
+|---|---|---|---|
+| **W1** | Hiện thực quyết định trên cho L1 `findings[].draft` (+ L3 `viQuote` anchor); test: duy nhất/lệch gợi ý/nhiều vị trí trong và ngoài cửa sổ/không thấy/rỗng sau chuẩn hóa/MISSING không đổi; dữ liệu tổng hợp | JVM xanh | — |
+| **W2** | Replay-all 3 case + response U6: RECONCILE U6 phải **PASS** (hoặc liệt kê đủ lỗi còn lại) | U6 PASS | Còn lỗi khác họ → dừng, báo |
+| **W3** | Build wrapper, archive, emulator: preflight, fake CHAIN 14/14, negative gate | Đạt, 0 call | — |
+| **W4** live theo D-G1c | Khi W2 PASS: tiếp G1 cùng sổ (còn USD 0.92618480), `fx-a03` trước; nếu L1 `fx-a03` commit → chạy tiếp các fixture G1 còn lại theo bảng | Báo cáo G1: `STRUCTURAL_VALID`/`SEMANTIC_EVAL` theo fixture, call/token/USD | Mã lỗi mới / UNKNOWN / chạm trần → dừng, replay-all, báo |
+
+Giả thuyết cần live (không kiểm được offline): với neo DRAFT do app suy ra, RECONCILE của model thật qua validator ổn định trên nhiều fixture; ngân sách: phần còn lại của G1 (đã duyệt), ước ≈ USD 0.02 mỗi cặp L1.

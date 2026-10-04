@@ -188,7 +188,7 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-Review U6 xác nhận response neo DRAFT sai, parser từ chối đúng; U3 còn lỗi exit code và chưa thu thập mọi lỗi item độc lập. Nhóm sửa offline đã đóng hai khoảng trống này bằng báo cáo replay cấu trúc, diagnostic giới hạn cho `findings[]`, process regression và ma trận neo; response U6 vẫn là EXPECTED_REJECT theo hash, không tạo REPORT_L1. Owner đã duyệt điều chỉnh D-G1c theo mục 12 `docs/P6_R6_WIRE_SIMPLIFICATION_PROPOSAL_20261004.md`; chưa chạy live ngay. G1 đã tiêu USD 0.07381520/1.00, 9 call quyết toán, không UNKNOWN. Next action duy nhất: owner xem đề xuất G1 mới có giả thuyết, fixture, phiên bản source/prompt/schema, trần call/chi phí và điều kiện dừng; không dispatch trong gói offline này.
+U6: RAW qua lần 3; RECONCILE dừng vì model chép số dòng RAW vào neo DRAFT (trích dẫn nằm ở DRAFT 101). G1 USD 0.07381520/1.00. Quyết định: app suy neo DRAFT/VI từ trích dẫn. Next action duy nhất: Codex làm W1–W3 trong mục 12 của `docs/P6_R6_WIRE_SIMPLIFICATION_PROPOSAL_20261004.md`, rồi W4 tiếp G1 theo D-G1c.
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 
