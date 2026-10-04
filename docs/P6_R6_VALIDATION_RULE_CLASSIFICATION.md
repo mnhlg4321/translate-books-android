@@ -4,9 +4,9 @@ Source of truth: `editorial-engine/src/test/resources/rejection-classification.c
 
 Rule: **if dropping or fixing a value changes no claim the app verified against the source, it is BOOKKEEPING** (normalize, record `kind:path` in the artifact `normalizations`/`wireWarnings`, never invent content). Everything the app can disprove from the source or the applied text stays **SEMANTIC** (refused or measured). **PROTOCOL** = envelope, echo, JSON typing (constrained by the strict schema at generation time). **APP** = input, chain, store, provider, budget, receipt and stop-reason labels the model cannot cause. **MIXED** = some paths are normalized (see action), the rest stay rejected. **NOT_A_CODE** = enum values, roles and phase names that matched the literal scan.
 
-Totals: APP 169, BOOKKEEPING 10, MIXED 20, NOT_A_CODE 61, PROTOCOL 30, SEMANTIC 131 (total 421).
+Totals: APP 169, BOOKKEEPING 11, MIXED 20, NOT_A_CODE 61, PROTOCOL 30, SEMANTIC 132 (total 423).
 
-## BOOKKEEPING (10)
+## BOOKKEEPING (11)
 
 | Code | Phase | Action / reason |
 |---|---|---|
@@ -20,6 +20,7 @@ Totals: APP 169, BOOKKEEPING 10, MIXED 20, NOT_A_CODE 61, PROTOCOL 30, SEMANTIC 
 | `L1_SPEAKER_LIMIT_EXCEEDED` | L1 | removed: records beyond the cap are dropped, counted in speakerRecordsDropped |
 | `L1_UNKNOWN_KEY` | L1/L2/L3 | removed: unknown keys are ignored, note unknownKeyIgnored:<path> |
 | `L2_WIRE_UNKNOWN_KEY` | L1/L2/L3 | removed: unknown keys are ignored, note unknownKeyIgnored:<path> |
+| `L3_PROBE_UNIT_UNKNOWN` | L3 | removed: unusable probe rawUnits references are dropped and the unit carrying rawQuote is the anchor (rawAnchorDerivedFromQuote) |
 
 ## MIXED (20)
 
@@ -46,7 +47,7 @@ Totals: APP 169, BOOKKEEPING 10, MIXED 20, NOT_A_CODE 61, PROTOCOL 30, SEMANTIC 
 | `L2_WIRE_TEXT_REQUIRED` | L2/L3 | blank content fields stay rejected; note fields are sanitized, not rejected |
 | `L3_PROBE_VI_ANCHOR_OUT_OF_RANGE` | L3 | viStart/viEnd are hints (clamped; the line carrying viQuote decides the anchor); the code remains only for a VI text with no lines at all |
 
-## SEMANTIC (131)
+## SEMANTIC (132)
 
 | Code | Phase | Action / reason |
 |---|---|---|
@@ -99,6 +100,7 @@ Totals: APP 169, BOOKKEEPING 10, MIXED 20, NOT_A_CODE 61, PROTOCOL 30, SEMANTIC 
 | `L1_PRESERVED_NEEDS_EVIDENCE_LIMIT` | L1 | identity, reference, coverage or disposition claim that contradicts the inventory or itself |
 | `L1_PROTECTED_LIMIT_EXCEEDED` | L1 | volume beyond the contract would silently drop claims; rejected |
 | `L1_PROTECTED_OVERLAPS_OPEN_FINDING` | L1 | identity, reference, coverage or disposition claim that contradicts the inventory or itself |
+| `L1_RAW_QUOTE_AMBIGUOUS` | L1/L3 | the RAW quote occurs in several units and no declared unit or nearby hint decides |
 | `L1_RAW_QUOTE_NOT_IN_ANCHOR` | L1 | a quote that is not in the source (or is ambiguous) is a claim the app can disprove |
 | `L1_REPORT_NOT_LEDGER_V2` | L1 | identity, reference, coverage or disposition claim that contradicts the inventory or itself |
 | `L1_RESOLUTION_ID_INVALID` | L1 | identity, reference, coverage or disposition claim that contradicts the inventory or itself |
@@ -158,8 +160,8 @@ Totals: APP 169, BOOKKEEPING 10, MIXED 20, NOT_A_CODE 61, PROTOCOL 30, SEMANTIC 
 | `L3_PROBE_ID_DUPLICATE` | L3 | probe, carried-defect and re-audit claims that contradict the texts, the applied changes or the minimum evidence |
 | `L3_PROBE_LIMIT_EXCEEDED` | L3 | probe, carried-defect and re-audit claims that contradict the texts, the applied changes or the minimum evidence |
 | `L3_PROBE_RAW_ANCHOR_REQUIRED` | L3 | probe, carried-defect and re-audit claims that contradict the texts, the applied changes or the minimum evidence |
+| `L3_PROBE_RAW_QUOTE_AMBIGUOUS` | L1/L3 | the RAW quote occurs in several units and no declared unit or nearby hint decides |
 | `L3_PROBE_RAW_QUOTE_NOT_IN_ANCHOR` | L3 | probe, carried-defect and re-audit claims that contradict the texts, the applied changes or the minimum evidence |
-| `L3_PROBE_UNIT_UNKNOWN` | L3 | probe, carried-defect and re-audit claims that contradict the texts, the applied changes or the minimum evidence |
 | `L3_PROBE_VI_QUOTE_AMBIGUOUS` | L3 | probe, carried-defect and re-audit claims that contradict the texts, the applied changes or the minimum evidence |
 | `L3_PROBE_VI_QUOTE_NOT_IN_ANCHOR` | L3 | probe, carried-defect and re-audit claims that contradict the texts, the applied changes or the minimum evidence |
 | `L3_RESOLUTION_ID_INVALID` | L3 | probe, carried-defect and re-audit claims that contradict the texts, the applied changes or the minimum evidence |

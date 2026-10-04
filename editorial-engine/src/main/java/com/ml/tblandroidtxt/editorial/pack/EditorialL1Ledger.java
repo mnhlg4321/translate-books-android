@@ -420,10 +420,9 @@ public final class EditorialL1Ledger {
         String errorId = id(row, "errorId", path + ".errorId", phase);
         String type = enumOf(row, "type", FINDING_TYPES, path + ".type", phase);
         String severity = enumOf(row, "severity", SEVERITIES, path + ".severity", phase);
-        List<String> rawUnits = EditorialUnitReference.resolveList(row.get("rawUnits"), path + ".rawUnits", MAX_RAW_UNITS_PER_FINDING, inventory);
-        if (rawUnits.isEmpty()) throw bad("L1_FINDING_RAW_ANCHOR_REQUIRED", path + ".rawUnits");
-        for (int index = 0; index < rawUnits.size(); index++) if (!inventory.has(rawUnits.get(index))) throw bad("L1_UNIT_UNKNOWN", path + ".rawUnits." + index);
-        rawUnits = normalizations.distinct(rawUnits);
+        // Z2: the RAW unit numbers are hints like the DRAFT numbers; the unit carrying rawQuote is the anchor
+        List<String> declaredUnits = lenientUnits(row.get("rawUnits"), path + ".rawUnits", MAX_RAW_UNITS_PER_FINDING, inventory);
+        List<String> rawUnits = List.of();
 
         Map<String, Object> draftRow = object(row.get("draft"), path + ".draft");
         String kind = fieldStr(phase, draftRow, "kind", path + ".draft.kind");
@@ -460,9 +459,7 @@ public final class EditorialL1Ledger {
         }
 
         String rawQuote = fieldStr(phase, row, "rawQuote", path + ".rawQuote");
-        boolean quoted = false;
-        for (String unit : rawUnits) quoted |= EditorialQuoteMatcher.containsRaw(inventory.unit(unit).text(), rawQuote);
-        if (!quoted) throw bad("L1_RAW_QUOTE_NOT_IN_ANCHOR", path + ".rawQuote");
+        rawUnits = normalizations.distinct(deriveRawUnits(declaredUnits, inventory, rawQuote, path));
         String draftQuote = fieldStr(phase, row, "draftQuote", path + ".draftQuote");
         if ("LINES".equals(anchor.kind())) {
             if (draftQuote.isEmpty()) throw bad("L1_DRAFT_QUOTE_REQUIRED", path + ".draftQuote");
@@ -491,6 +488,43 @@ public final class EditorialL1Ledger {
         if ("PRESERVED".equals(disposition) && limit.isEmpty()) throw bad("L1_PRESERVED_NEEDS_EVIDENCE_LIMIT", path + ".evidenceLimit");
         return new Finding(errorId, type, severity, rawUnits, anchor, rawQuote, draftQuote, observation, expected, refs,
                 candidateIds, occurrences, disposition, limit);
+    }
+
+    /**
+     * The RAW anchor is a fact about the quote: when a declared unit contains {@code rawQuote} the declaration stands;
+     * otherwise the unit that contains it is the anchor (a unique unit, or the one nearest to the declared lines within
+     * {@link #DRAFT_HINT_WINDOW} lines). No unit containing the quote is a refusal; so is an ambiguous quote.
+     */
+    static List<String> deriveRawUnits(List<String> declared, EditorialRawInventory.Inventory inventory, String rawQuote,
+                                       String findingPath) {
+        for (String unit : declared) {
+            if (EditorialQuoteMatcher.containsRaw(inventory.unit(unit).text(), rawQuote)) return declared;
+        }
+        List<EditorialRawInventory.Unit> hits = new ArrayList<>();
+        for (EditorialRawInventory.Unit unit : inventory.units()) {
+            if (EditorialQuoteMatcher.containsRaw(unit.text(), rawQuote)) hits.add(unit);
+        }
+        String quotePath = findingPath + ".rawQuote";
+        if (hits.isEmpty()) throw bad("L1_RAW_QUOTE_NOT_IN_ANCHOR", quotePath);
+        EditorialRawInventory.Unit chosen;
+        if (hits.size() == 1) {
+            chosen = hits.get(0);
+        } else {
+            if (declared.isEmpty()) throw bad("L1_FINDING_RAW_ANCHOR_REQUIRED", findingPath + ".rawUnits");
+            int best = Integer.MAX_VALUE;
+            int bestCount = 0;
+            chosen = null;
+            for (EditorialRawInventory.Unit hit : hits) {
+                int distance = Integer.MAX_VALUE;
+                for (String unit : declared) distance = Math.min(distance, Math.abs(hit.line() - inventory.unit(unit).line()));
+                if (distance > DRAFT_HINT_WINDOW) continue;
+                if (distance < best) { best = distance; bestCount = 1; chosen = hit; }
+                else if (distance == best) bestCount++;
+            }
+            if (chosen == null || bestCount != 1) throw bad("L1_RAW_QUOTE_AMBIGUOUS", quotePath);
+        }
+        WireNotes.note("rawAnchorDerivedFromQuote", findingPath + ".rawUnits");
+        return List.of(chosen.id());
     }
 
     /** Largest distance between the hinted line and the quote line that still disambiguates repeated quotes. */

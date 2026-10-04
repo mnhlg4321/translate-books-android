@@ -295,4 +295,20 @@ public final class OpenRouterEditorialL2ProviderTest {
             assertTrue(expected.getCause() instanceof RuntimeException);
         }
     }
+
+    @Test public void generatedWiresAreSentWithAStrictSchemaAndLegacyWiresKeepJsonObject() throws Exception {
+        JSONObject strict = OpenRouterEditorialL2Provider.responseFormat(
+                request(EditorialL2Execution.PHASE, EditorialL2Execution.WIRE_SCHEMA_VERSION_V3, sources()));
+        assertEquals("json_schema", strict.getString("type"));
+        JSONObject schema = strict.getJSONObject("json_schema");
+        assertEquals("safe4_l2_edit_strict", schema.getString("name"));
+        assertTrue(schema.getBoolean("strict"));
+        JSONObject root = schema.getJSONObject("schema");
+        assertFalse(root.getBoolean("additionalProperties"));
+        assertTrue(root.getJSONObject("properties").has("findingResolutions"));
+        JSONObject legacy = OpenRouterEditorialL2Provider.responseFormat(
+                request(EditorialL2Execution.PHASE, EditorialL2Execution.WIRE_SCHEMA_VERSION, sources()));
+        assertEquals("json_object", legacy.getString("type"));
+        assertFalse(legacy.has("json_schema"));
+    }
 }

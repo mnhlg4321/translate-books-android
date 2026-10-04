@@ -563,8 +563,9 @@ public final class EditorialL2LedgerChainTest {
         List<Object> probes = goodProbes();
         probes.set(0, unanchored);
         EditorialL3Execution.Result r = runL3(l, l2, reconcileV2(list(), list(), list(), probes));
-        assertEquals("REPAIR_L3_PROBES_INVALID", r.reasonCode());
-        assertTrue(r.issues().toString(), r.issues().contains("L3_PROBE_RAW_ANCHOR_REQUIRED:P1"));
+        // Z2: the RAW unit numbers are hints; the unit carrying rawQuote anchors the probe
+        assertTrue(r.issues().toString(), !r.issues().contains("L3_PROBE_RAW_ANCHOR_REQUIRED:P1"));
+        assertTrue(r.issues().toString(), !r.issues().contains("L3_PROBE_RAW_QUOTE_NOT_IN_ANCHOR:P1"));
 
         probes = goodProbes();
         probes.set(1, probe("P2", "COVERAGE", 2, 2, "not in raw", "Hiep si", "NO_DEFECT", "NONE"));

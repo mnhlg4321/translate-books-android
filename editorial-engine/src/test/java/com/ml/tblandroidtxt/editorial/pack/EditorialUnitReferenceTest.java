@@ -102,10 +102,14 @@ public final class EditorialUnitReferenceTest {
                 "att", pass.candidates(), 0, INV,
                 "\uFEFFfirst\r\n\r\n[IMG_001]\n　\nlast".getBytes(StandardCharsets.UTF_8));
         assertEquals(List.of(INV.units().get(1).id()), parsed.probes().get(0).rawUnits());
+        // Z2: a hint that names a blank line is dropped; the unit carrying rawQuote is derived at verification
         probe.put("rawUnits", List.of("L3"));
-        code("L1_UNIT_LINE_NOT_A_UNIT", () -> EditorialL3Ledger.parseReconcile(
+        var hinted = EditorialL3Ledger.parseReconcile(
                 EditorialCanonicalJson.canonicalize(root).getBytes(StandardCharsets.UTF_8), "att", pass.candidates(), 0, INV,
-                "\uFEFFfirst\r\n\r\n[IMG_001]\n　\nlast".getBytes(StandardCharsets.UTF_8)));
+                "\uFEFFfirst\r\n\r\n[IMG_001]\n　\nlast".getBytes(StandardCharsets.UTF_8));
+        assertEquals(List.of(), hinted.probes().get(0).rawUnits());
+        assertEquals(List.of(INV.units().get(1).id()),
+                EditorialL1Ledger.deriveRawUnits(hinted.probes().get(0).rawUnits(), INV, "last", "probe"));
     }
 
     @Test public void l3CandidateFailureReportsItsIndexedField() {

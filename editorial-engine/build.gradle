@@ -63,3 +63,19 @@ tasks.register('replayP6WireResponsesAll', JavaExec) {
         }
     }
 }
+
+tasks.register('mutateP6WireResponses', JavaExec) {
+    group = 'verification'
+    description = 'Z2: derive bookkeeping and semantic variants from saved live L1 responses and check the production parser (offline).'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.ml.tblandroidtxt.editorial.pack.EditorialWireMutationTool'
+    doFirst {
+        def raw = providers.gradleProperty('p6MutRaw').orNull
+        def draft = providers.gradleProperty('p6MutDraft').orNull
+        def pairs = providers.gradleProperty('p6MutPairs').orNull
+        if (!raw || !draft || !pairs) {
+            throw new GradleException('Provide p6MutRaw, p6MutDraft and p6MutPairs (comma separated rawResponse,reconcileResponse,...).')
+        }
+        args([raw, draft] + pairs.split(',').toList())
+    }
+}

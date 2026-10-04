@@ -820,7 +820,8 @@ public final class EditorialL2Execution {
                 before = appBefore(baseBytes, lineNumber, changeOp, path + ".line");
                 if (row.containsKey("before")) {
                     String modelBefore = text(row, "before", path + ".before", phase);
-                    if (!isSourceLineSubstring(modelBefore, before)) {
+                    // an empty `before` is how a strict schema says "not supplied"; the app has derived it anyway
+                    if (!modelBefore.isEmpty() && !isSourceLineSubstring(modelBefore, before)) {
                         warnings.add("CHANGE_BEFORE_SUBSTRING_MISMATCH:" + changeId);
                     }
                 }

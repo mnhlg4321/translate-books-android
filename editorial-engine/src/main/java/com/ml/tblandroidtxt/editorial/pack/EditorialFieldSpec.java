@@ -148,6 +148,10 @@ public final class EditorialFieldSpec {
                         .append(field.kind() == Kind.INTEGER ? "integer" : "boolean").append('\n');
             }
         }
+        result.append("The decoder enforces this field list: every key above is present in your JSON. A value that does not "
+                + "apply is an empty string, an empty array, 0, or an object whose strings are empty (for example draft.after of "
+                + "a LINES anchor, speakerProof of a change that is not dialogue, before when the app derives it); the app ignores "
+                + "it. Never invent content to fill a value that does not apply.\n");
         return result.toString();
     }
 

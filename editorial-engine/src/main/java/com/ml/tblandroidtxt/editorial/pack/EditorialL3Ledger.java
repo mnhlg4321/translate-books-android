@@ -198,7 +198,7 @@ final class EditorialL3Ledger {
                     "rawQuote", "viQuote", "verdict", "action"), path);
             String id = EditorialL1Ledger.id(row, "probeId", path + ".probeId", EditorialFieldSpec.L3_RECONCILE);
             if (!probeIds.add(id)) throw EditorialL1Ledger.bad("L3_PROBE_ID_DUPLICATE", path + ".probeId");
-            List<String> rawUnits = EditorialUnitReference.resolveList(row.get("rawUnits"), path + ".rawUnits",
+            List<String> rawUnits = EditorialL1Ledger.lenientUnits(row.get("rawUnits"), path + ".rawUnits",
                     EditorialL1Ledger.MAX_RAW_UNITS_PER_FINDING, inventory);
             rawUnits = normalizations.distinct(rawUnits);
             probes.add(new Probe(id, EditorialL1Ledger.enumOf(row, "kind", PROBE_KINDS, path + ".kind", EditorialFieldSpec.L3_RECONCILE),
@@ -244,20 +244,17 @@ final class EditorialL3Ledger {
         for (Probe p : probes) {
             String id = p.probeId();
             if ("COVERAGE".equals(p.kind())) coverage++; else regression++;
-            if (p.rawUnits().isEmpty()) issues.add("L3_PROBE_RAW_ANCHOR_REQUIRED:" + id);
-            boolean rawOk = !p.rawUnits().isEmpty();
-            boolean quoted = false;
-            for (String unit : p.rawUnits()) {
-                EditorialRawInventory.Unit u = inventory.unit(unit);
-                if (u == null) {
-                    issues.add("L3_PROBE_UNIT_UNKNOWN:" + id);
-                    rawOk = false;
-                } else {
-                    quoted |= EditorialQuoteMatcher.containsRaw(u.text(), p.rawQuote());
-                    units.add(unit);
-                }
+            // Z2: the RAW unit numbers of a probe are hints; the unit carrying rawQuote is the anchor
+            List<String> probeUnits = p.rawUnits();
+            try {
+                probeUnits = EditorialL1Ledger.deriveRawUnits(p.rawUnits(), inventory, p.rawQuote(), "probe");
+            } catch (WireViolation invalid) {
+                issues.add(("L1_RAW_QUOTE_AMBIGUOUS".equals(invalid.code()) ? "L3_PROBE_RAW_QUOTE_AMBIGUOUS:"
+                        : p.rawUnits().isEmpty() && "L1_FINDING_RAW_ANCHOR_REQUIRED".equals(invalid.code())
+                        ? "L3_PROBE_RAW_ANCHOR_REQUIRED:" : "L3_PROBE_RAW_QUOTE_NOT_IN_ANCHOR:") + id);
+                probeUnits = List.of();
             }
-            if (rawOk && !quoted) issues.add("L3_PROBE_RAW_QUOTE_NOT_IN_ANCHOR:" + id);
+            units.addAll(probeUnits);
             // viStart/viEnd are hints: the line carrying viQuote is the anchor (same rule as the L1 DRAFT anchor)
             int viStart = 0;
             int viEnd = 0;
@@ -278,7 +275,7 @@ final class EditorialL3Ledger {
                 }
             }
             if (viStart > 0) {
-                List<String> sorted = new ArrayList<>(p.rawUnits());
+                List<String> sorted = new ArrayList<>(probeUnits);
                 java.util.Collections.sort(sorted);
                 if (!anchors.add(sorted + "|" + viStart + "|" + viEnd)) issues.add("L3_PROBE_ANCHOR_DUPLICATE:" + id);
             }

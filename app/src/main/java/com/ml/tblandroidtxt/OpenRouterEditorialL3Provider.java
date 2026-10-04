@@ -7,6 +7,7 @@ import com.ml.tblandroidtxt.editorial.pack.EditorialL2Execution;
 import com.ml.tblandroidtxt.editorial.pack.EditorialL3Execution;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5RawWireContract;
 import com.ml.tblandroidtxt.editorial.pack.EditorialPackFileRole;
+import com.ml.tblandroidtxt.editorial.pack.EditorialStrictSchema;
 import com.ml.tblandroidtxt.editorial.pack.EditorialSafe4Contract;
 
 import org.json.JSONObject;
@@ -114,7 +115,7 @@ public final class OpenRouterEditorialL3Provider implements EditorialL2Execution
                 null, false, OpenAICompatibleClient.monotonicDeadlineNanosFromNowMillis(
                         request.maximumExecutionTimeMillis()),
                 new OpenAICompatibleClient.CallControl(),
-                new JSONObject().put("type", "json_object"),
+                responseFormat(request),
                 EditorialP5EFreshRawRoutingPolicy.providerPreferences(),
                 EditorialP5RawWireContract.REASONING_POLICY);
         BigDecimal cost = BigDecimal.ZERO;
@@ -133,6 +134,21 @@ public final class OpenRouterEditorialL3Provider implements EditorialL2Execution
         }
         return new Response(result.content.getBytes(StandardCharsets.UTF_8), result.finishReason,
                 true, result.promptTokens, result.completionTokens, cost, costKnown);
+    }
+
+    /**
+     * Z2: the generated wires (ledger contract) are sent with a strict JSON schema built from the field table, so the
+     * decoder refuses a malformed shape at generation time; legacy wires keep a plain JSON object format.
+     */
+    static JSONObject responseFormat(Request request) throws org.json.JSONException {
+        EditorialStrictSchema.Spec spec = EditorialStrictSchema.forRequest(request.outputSchemaId(), request.phase());
+        if (spec == null) return new JSONObject().put("type", "json_object");
+        return new JSONObject()
+                .put("type", "json_schema")
+                .put("json_schema", new JSONObject()
+                        .put("name", spec.name())
+                        .put("strict", true)
+                        .put("schema", new JSONObject(EditorialCanonicalJson.canonicalize(spec.schema()))));
     }
 
     private static boolean validPhase(Request request) {

@@ -207,9 +207,20 @@ public final class EditorialL1LedgerTest {
         // DRAFT line numbers are hints: an out-of-range end is clamped and the quote decides the anchor
         assertEquals(EditorialL1Ledger.DraftAnchor.lines(3, 12), reconcile(reconcileWire(new ArrayList<>(List.of(
                 finding("e1", "MEANING", 3, 3, 13, "踏破", "chinh phuc"))), new ArrayList<>()), List.of()).findings().get(0).draft());
-        Map<String, Object> forgedUnit = finding("e1", "MEANING", 3, 3, 3, "踏破", "chinh phuc");
+        Map<String, Object> forgedUnit = finding("e1", "MEANING", 4, 4, 4, "今回は無理だ", "今回");
         forgedUnit.put("rawUnits", new ArrayList<Object>(List.of("L999")));
-        expectCode("L1_UNIT_UNKNOWN", () -> reconcile(reconcileWire(new ArrayList<>(List.of(forgedUnit)), new ArrayList<>()), List.of()));
+        // Z2: a unit number the inventory does not have is only a hint; the quote finds the real unit
+        EditorialL1Ledger.ReconcilePass derived = reconcile(reconcileWire(new ArrayList<>(List.of(forgedUnit)), new ArrayList<>()), List.of());
+        assertEquals(List.of(id(4)), derived.findings().get(0).rawUnits());
+        assertTrue(derived.bookkeepingNotes().contains("rawAnchorDerivedFromQuote:findings.0.rawUnits"));
+        // a quote that occurs in several units and a hint that points nowhere cannot be decided by the app
+        Map<String, Object> repeated = finding("e1", "MEANING", 3, 3, 3, "踏破", "chinh phuc");
+        repeated.put("rawUnits", new ArrayList<Object>(List.of("L999")));
+        expectCode("L1_FINDING_RAW_ANCHOR_REQUIRED", () -> reconcile(reconcileWire(new ArrayList<>(List.of(repeated)), new ArrayList<>()), List.of()));
+        Map<String, Object> nowhere = finding("e1", "MEANING", 3, 3, 3, "踏破", "chinh phuc");
+        nowhere.put("rawUnits", new ArrayList<Object>(List.of("L999")));
+        nowhere.put("rawQuote", "not in the text");
+        expectCode("L1_RAW_QUOTE_NOT_IN_ANCHOR", () -> reconcile(reconcileWire(new ArrayList<>(List.of(nowhere)), new ArrayList<>()), List.of()));
         Map<String, Object> forgedCandidate = finding("e1", "MEANING", 3, 3, 3, "踏破", "chinh phuc");
         forgedCandidate.put("candidateIds", new ArrayList<Object>(List.of("nope")));
         expectCode("L1_CANDIDATE_REF_UNKNOWN", () -> reconcile(reconcileWire(new ArrayList<>(List.of(forgedCandidate)), new ArrayList<>()), List.of()));
