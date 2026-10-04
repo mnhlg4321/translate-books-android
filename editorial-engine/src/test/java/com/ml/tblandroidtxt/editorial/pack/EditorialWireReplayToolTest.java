@@ -252,6 +252,18 @@ public final class EditorialWireReplayToolTest {
             assertFalse(malformed.stdout().contains("Authorization"));
             assertFalse(malformed.stdout().contains("model"));
             assertTrue(malformed.stderr().isEmpty());
+
+            Path brokenReconcileRoot = root.resolve("broken-reconcile");
+            Files.createDirectories(brokenReconcileRoot);
+            Fixture brokenReconcile = fixture(brokenReconcileRoot, List.of(finding("E1", 1, "draft 1")));
+            Files.writeString(brokenReconcile.reconcileResponse(), "{bad", StandardCharsets.UTF_8);
+            Path diagnosticManifest = manifest(brokenReconcileRoot, List.of(caseRow("broken-reconcile",
+                    "L1_RECONCILE", brokenReconcile.reconcileResponse(), brokenReconcile.raw(), brokenReconcile.draft(),
+                    null, "UNSPECIFIED", null, List.of(), true)));
+            ProcessResult malformedReconcile = process("replay-all", diagnosticManifest.toString());
+            Map<String, Object> malformedReconcileReport = report(malformedReconcile);
+            assertEquals(2, malformedReconcile.exit());
+            assertTrue(((List<Object>) check(malformedReconcileReport, 0).get("skipped")).contains("structure"));
         } finally { delete(root); }
     }
 

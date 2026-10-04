@@ -253,6 +253,7 @@ public final class EditorialWireReplayTool {
         check.put("expectedStatus", spec.expected().name());
         check.put("expectedResponseSha256", spec.expectedHash() == null ? "" : spec.expectedHash());
         check.put("expectedCodes", spec.expectedCodes());
+        check.put("diagnosticScope", spec.diagnostic() ? "findings-independent-bounded" : "production-fail-fast");
         List<String> codes = new ArrayList<>();
         List<String> skipped = new ArrayList<>();
         List<String> completed = new ArrayList<>();
@@ -324,7 +325,18 @@ public final class EditorialWireReplayTool {
             actual = "REJECTED";
             String code = WireViolation.safeMessage(invalid, "L1_WIRE_REPLAY_FAILED");
             if (!codes.contains(code)) codes.add(code);
-            if (!spec.diagnostic()) skipped.add("remainingItems");
+            if (!spec.diagnostic()) {
+                skipped.add("remainingItems");
+            } else if (completed.isEmpty()) {
+                if ("L1_RECONCILE".equals(spec.phase())) {
+                    skipped.add("structure");
+                    skipped.add("findings");
+                } else {
+                    skipped.add("coverage");
+                    skipped.add("candidates");
+                }
+                skipped.add("remainingItems");
+            }
         }
         deduplicate(codes);
         deduplicate(skipped);
@@ -389,6 +401,7 @@ public final class EditorialWireReplayTool {
         check.put("actualStatus", "TOOL_ERROR");
         check.put("expectedStatus", "UNSPECIFIED");
         check.put("expectedCodes", List.of());
+        check.put("diagnosticScope", "tool-error");
         check.put("codes", List.of(codePath));
         check.put("skipped", List.of("input"));
         check.put("completed", List.of());

@@ -8,6 +8,7 @@ Phạm vi: sửa công cụ replay và validator diagnostic trên branch hiện 
 - Manifest `replay-all` yêu cầu expectation tường minh. `PASS` và `EXPECTED_REJECT` đều hash-bound; `EXPECTED_REJECT` phải khớp chính xác danh sách mã. Cú pháp sáu tham số cũ chỉ là `UNSPECIFIED` diagnostic và được ghi trong report, không gắn ngầm vào fixture nào.
 - Exit code 0 chỉ khi mọi expectation đạt. Validation/input/JSON/expectation/tool failure trả exit 2. Production `parseReconcile` vẫn fail-fast.
 - `EditorialL1Ledger.diagnoseReconcile` kiểm từng finding độc lập bằng cùng hàm production. Phạm vi diagnostic có giới hạn ở `findings[]`; khi có lỗi, resolutions/speakerRecords/protectedSpans/post-finding invariants được ghi `skipped`. Khi findings đều hợp lệ, production parser kiểm nốt phần còn lại.
+- Nếu không đọc được cấu trúc gốc, report ghi rõ `structure` và các item chưa kiểm là `skipped`; không tuyên bố coverage đầy đủ.
 - Không đổi matcher để tự reanchor, thay quote, đi tìm toàn chương hoặc tạo proof thay model.
 
 ## Regression
@@ -20,7 +21,7 @@ Engine `391/391` PASS. Process regression `EditorialWireReplayToolTest` `6/6` PA
 
 - Response: `D:\P5E-private\p6-runs\3559de99-978b-410e-b863-c082062187fa\results\fx-a03\responses\002-L1_RECONCILE.json`
 - SHA-256: `18c5ddb34caf6d197b346ad4b86e8b785b6e8bae5cc96bdeea9de12e0ea126e3`
-- Manifest/log ngoài Git: `D:\P5E-private\p6-item12-u7-replay-all-manifest-20261004.json`, `D:\P5E-private\p6-item12-u7-replay-all-20261004.json` (log SHA-256 `324ddc7e2779b4e256d250ee8c315fca2c71e4f7ef4c0a9e9e2bf346ce4b69fd`). Replay-all exit `0`: old RAW actual `REJECTED`/expected `EXPECTED_REJECT` với `L1_UNIT_UNKNOWN:coverage.0.from`; current RAW actual `PASS`/expected `PASS`; RECONCILE actual `REJECTED`/expected `EXPECTED_REJECT` với `L1_DRAFT_QUOTE_NOT_IN_ANCHOR:findings.0.draftQuote`. Diagnostic còn thấy finding độc lập `findings.1` hợp lệ về cấu trúc và ghi rõ phần dependent bị skip. Đây không phải REPORT_L1 hợp lệ và không phải semantic PASS.
+- Manifest/log ngoài Git: `D:\P5E-private\p6-item12-u7-replay-all-manifest-20261004.json`, `D:\P5E-private\p6-item12-u7-replay-all-20261004.json` (log SHA-256 `2991b717c258c1b6156a270b5357dc0dae5ed91adfaeb4e9524334de1181ce1e`). Replay-all exit `0`: old RAW actual `REJECTED`/expected `EXPECTED_REJECT` với `L1_UNIT_UNKNOWN:coverage.0.from`; current RAW actual `PASS`/expected `PASS`; RECONCILE actual `REJECTED`/expected `EXPECTED_REJECT` với `L1_DRAFT_QUOTE_NOT_IN_ANCHOR:findings.0.draftQuote`. Diagnostic còn thấy finding độc lập `findings.1` hợp lệ về cấu trúc và ghi rõ phần dependent bị skip. Đây không phải REPORT_L1 hợp lệ và không phải semantic PASS.
 
 ## Phân loại semantic và gánh bằng chứng
 
