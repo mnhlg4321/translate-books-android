@@ -49,7 +49,10 @@ final class EditorialL2Findings {
             String path = "findingResolutions." + index;
             Map<String, Object> row = EditorialL2Execution.object(values.get(index), path);
             EditorialL2Execution.keys(row, Set.of("errorId", "status", "changeIds", "preserveIds", "occurrences",
-                    "evidenceQuote", "reason"), path);
+                    "evidenceQuote", "reason"), path, Set.of("changeIds", "preserveIds", "occurrences", "evidenceQuote", "reason"));
+            row = EditorialL1Ledger.withDefaults(row, path, "changeIds", new ArrayList<Object>(),
+                    "preserveIds", new ArrayList<Object>(), "occurrences", new ArrayList<Object>(),
+                    "evidenceQuote", "", "reason", "");
             String errorId = EditorialL2Execution.text(row, "errorId", path + ".errorId");
             if (!knownErrorIds.contains(errorId) || !seen.add(errorId)) throw bad("L2_WIRE_FINDING_ID_INVALID", path + ".errorId");
             String status = EditorialL2Execution.text(row, "status", path + ".status");

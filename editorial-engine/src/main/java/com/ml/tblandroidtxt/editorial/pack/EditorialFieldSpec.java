@@ -384,8 +384,8 @@ public final class EditorialFieldSpec {
 
     private static void disposition(List<Field> fields, String phase) {
         e(fields, phase, "disposition.disposition", List.of("CONTINUE", "PRESERVE_DRAFT", "STOP"), "");
-        s(fields, phase, "disposition.reasonCode", Requirement.MUST, 1, 32,
-                "^[A-Za-z0-9][A-Za-z0-9 ._:/;()/-]{0,31}$", "");
+        s(fields, phase, "disposition.reasonCode", Requirement.CONDITIONAL, 0, 32, OPTIONAL_REASON_PATTERN,
+                "required when disposition=STOP; empty is allowed for CONTINUE/PRESERVE_DRAFT");
         e(fields, phase, "disposition.stopClass", List.of("CONTENT_BLOCKED", "INPUT_REQUIRED", "NONE"), "");
     }
 

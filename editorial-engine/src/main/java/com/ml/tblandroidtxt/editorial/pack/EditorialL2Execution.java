@@ -479,10 +479,11 @@ public final class EditorialL2Execution {
     static EditWire parseEditWireV3(byte[] bytes, String attemptIdentity, List<Candidate> candidates,
                                     EditorialL1Ledger.Body l1, EditorialRawInventory.Inventory inventory,
                                     byte[] baseBytes) {
+        WireNotes.begin();
         if (bytes == null || bytes.length > MAX_WIRE_BYTES) throw WireViolation.at("L2_WIRE_BYTE_LIMIT_EXCEEDED", "root");
-        Map<String, Object> root = EditorialCanonicalJson.parseObject(bytes);
-        keys(root, Set.of("wireSchemaVersion", "attemptIdentity", "resolutions", "findingResolutions", "changes",
-                "preserved", "disposition"), "root");
+        Map<String, Object> root = withArrayDefaults(EditorialCanonicalJson.parseObject(bytes),
+                Set.of("wireSchemaVersion", "attemptIdentity", "resolutions", "findingResolutions", "changes",
+                        "preserved", "disposition"), Set.of("resolutions", "findingResolutions", "changes", "preserved"));
         if (!WIRE_SCHEMA_VERSION_V3.equals(root.get("wireSchemaVersion"))) {
             throw WireViolation.at("L2_WIRE_SCHEMA_INVALID", "wireSchemaVersion");
         }
@@ -512,7 +513,7 @@ public final class EditorialL2Execution {
         for (EditorialL1Ledger.Finding finding : l1.findings()) errorIds.add(finding.errorId());
         EditorialL2Findings.ParseResult findingResolutions =
                 EditorialL2Findings.parse(root.get("findingResolutions"), errorIds, inventory);
-        return new EditWire(rows, Map.copyOf(resolutions), findingResolutions.resolutions(),
+        return new EditWire(rows.withNotes(WireNotes.drain()), Map.copyOf(resolutions), findingResolutions.resolutions(),
                 findingResolutions.duplicateReferencesRemoved());
     }
 
@@ -556,10 +557,11 @@ public final class EditorialL2Execution {
      * candidate id may appear at most once; completeness is judged by the app after STOP wires are handled.
      */
     static EditWire parseEditWire(byte[] bytes, String attemptIdentity, List<Candidate> candidates) {
+        WireNotes.begin();
         if (bytes == null || bytes.length > MAX_WIRE_BYTES) throw WireViolation.at("L2_WIRE_BYTE_LIMIT_EXCEEDED", "root");
-        Map<String, Object> root = EditorialCanonicalJson.parseObject(bytes);
-        keys(root, Set.of("wireSchemaVersion", "attemptIdentity", "resolutions", "changes", "preserved", "disposition"),
-                "root");
+        Map<String, Object> root = withArrayDefaults(EditorialCanonicalJson.parseObject(bytes),
+                Set.of("wireSchemaVersion", "attemptIdentity", "resolutions", "changes", "preserved", "disposition"),
+                Set.of("resolutions", "changes", "preserved"));
         Map<String, Object> rowsShape = new LinkedHashMap<>(root);
         rowsShape.remove("resolutions");
         Wire rows = parseWire(EditorialCanonicalJson.canonicalize(rowsShape).getBytes(StandardCharsets.UTF_8),
@@ -580,7 +582,20 @@ public final class EditorialL2Execution {
             if (!STATUSES.contains(status)) throw WireViolation.at("L2_WIRE_STATUS_INVALID", path + ".status");
             resolutions.put(id, status);
         }
-        return new EditWire(rows, Map.copyOf(resolutions));
+        return new EditWire(rows.withNotes(WireNotes.drain()), Map.copyOf(resolutions));
+    }
+
+    /** MAY arrays of the field specification: an absent one is an empty array, noted. Returns a mutable copy. */
+    static Map<String, Object> withArrayDefaults(Map<String, Object> root, Set<String> allowed, Set<String> arrayKeys) {
+        keys(root, allowed, "root", arrayKeys);
+        Map<String, Object> copy = new LinkedHashMap<>(root);
+        for (String key : new java.util.TreeSet<>(arrayKeys)) {
+            if (!copy.containsKey(key)) {
+                copy.put(key, new ArrayList<Object>());
+                WireNotes.note("missingOptionalKeyDefaulted", key);
+            }
+        }
+        return copy;
     }
 
     static byte[] candidateBlock(List<Candidate> candidates) {
@@ -716,6 +731,14 @@ public final class EditorialL2Execution {
              StopClass stopClass, String reasonCode) {
             this(changes, preserved, stopClass, reasonCode, List.of());
         }
+
+        /** The same wire with the BOOKKEEPING notes of its parse appended to the warnings that reach the artifact. */
+        Wire withNotes(List<String> notes) {
+            if (notes.isEmpty()) return this;
+            List<String> all = new ArrayList<>(warnings);
+            for (String note : notes) all.add("BOOKKEEPING:" + note);
+            return new Wire(changes, preserved, stopClass, reasonCode, all);
+        }
     }
 
     /** Strict compact wire parser; unknown keys, oversize values and wrong echoes are rejected. */
@@ -819,15 +842,21 @@ public final class EditorialL2Execution {
                     text(row, "evidenceLimit", path + ".evidenceLimit", phase)));
         }
         Map<String, Object> disposition = object(root.get("disposition"), "disposition");
-        keys(disposition, Set.of("disposition", "reasonCode", "stopClass"), "disposition");
+        keys(disposition, Set.of("disposition", "reasonCode", "stopClass"), "disposition", Set.of("reasonCode", "stopClass"));
         String kind = text(disposition, "disposition", "disposition.disposition", phase);
+        if ("CONTINUE".equals(kind) || "PRESERVE_DRAFT".equals(kind)) {
+            // Z1 BOOKKEEPING: a continuing disposition has no stop class and its reason is only a label
+            String reason = "";
+            if (disposition.get("reasonCode") instanceof String given && !given.isEmpty()) {
+                if (given.length() <= 32 && EditorialP5RawWireContract.safeText(given)) reason = given;
+                else WireNotes.note("dispositionReasonDropped", "disposition.reasonCode");
+            }
+            if (!"NONE".equals(disposition.get("stopClass"))) WireNotes.note("dispositionStopClassIgnored", "disposition.stopClass");
+            return new Wire(changes, preserved, null, reason, warnings);
+        }
         String reason = text(disposition, "reasonCode", "disposition.reasonCode", phase);
         if (!EditorialP5RawWireContract.safeText(reason)) throw WireViolation.at("L2_WIRE_REASON_INVALID", "disposition.reasonCode");
         String stopClass = text(disposition, "stopClass", "disposition.stopClass", phase);
-        if ("CONTINUE".equals(kind) || "PRESERVE_DRAFT".equals(kind)) {
-            if (!"NONE".equals(stopClass)) throw WireViolation.at("L2_WIRE_STOP_CLASS_INVALID", "disposition.stopClass");
-            return new Wire(changes, preserved, null, reason, warnings);
-        }
         if (!"STOP".equals(kind)) throw WireViolation.at("L2_WIRE_DISPOSITION_INVALID", "disposition.disposition");
         // A model may only request a content stop or input; it cannot claim PASS or a technical class.
         return switch (stopClass) {
@@ -858,8 +887,9 @@ public final class EditorialL2Execution {
     }
 
     static void keys(Map<String, Object> value, Set<String> allowed, String path, Set<String> optional) {
+        // Z1 BOOKKEEPING: a key the contract does not define changes no verified claim; ignore it and say so
         for (String key : value.keySet()) {
-            if (!allowed.contains(key)) throw WireViolation.at("L2_WIRE_UNKNOWN_KEY", path);
+            if (!allowed.contains(key)) WireNotes.note("unknownKeyIgnored", path);
         }
         for (String key : allowed) {
             if (!optional.contains(key) && !value.containsKey(key)) {
@@ -884,6 +914,10 @@ public final class EditorialL2Execution {
 
     static String text(Map<String, Object> value, String key, String path, String phase) {
         EditorialFieldSpec.Field spec = EditorialFieldSpec.find(phase, path);
+        if (spec != null && value.get(key) instanceof String note && EditorialL1Ledger.NOTE_FIELDS.contains(spec.path())) {
+            return EditorialFieldSpec.validateString(phase, path, EditorialL1Ledger.sanitizeNote(note, spec.maxLength(), path),
+                    "L2_WIRE_TEXT_INVALID", "L2_WIRE_TEXT_REQUIRED", "L2_WIRE_TEXT_INVALID", "L2_WIRE_TEXT_INVALID");
+        }
         if (spec == null) {
             Object raw = value.get(key);
             if (!(raw instanceof String) || ((String) raw).length() > MAX_TEXT_FIELD) {

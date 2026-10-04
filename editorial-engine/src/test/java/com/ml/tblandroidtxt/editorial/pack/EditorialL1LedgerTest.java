@@ -267,7 +267,10 @@ public final class EditorialL1LedgerTest {
         Map<String, Object> protectedWire = reconcileWire(new ArrayList<>(), new ArrayList<>());
         protectedWire.put("protectedSpans", new ArrayList<>(List.of(map("spanId", "p1", "start", BigDecimal.ONE,
                 "end", BigDecimal.ONE, "source", "L1_PROOF", "reason", ""))));
-        expectSafeMessage("L1_TEXT_REQUIRED:protectedSpans.0.reason", () -> reconcile(protectedWire, List.of()));
+        // Z1: a protected span without a reason is kept; the missing reason is stated, not invented
+        EditorialL1Ledger.ReconcilePass defaulted = reconcile(protectedWire, List.of());
+        assertEquals("reason not stated", defaulted.protectedSpans().get(0).reason());
+        assertTrue(defaulted.bookkeepingNotes().contains("protectedSpanReasonDefaulted:protectedSpans.0.reason"));
     }
 
     @Test
@@ -304,7 +307,16 @@ public final class EditorialL1LedgerTest {
         assertEquals(1, pass.speakerRecords().size());
         wire.put("protectedSpans", new ArrayList<Object>(List.of(map("spanId", "p1", "start", BigDecimal.valueOf(2),
                 "end", BigDecimal.valueOf(13), "source", "PRONOUN_ROW", "reason", "r"))));
-        expectCode("L1_PROTECTED_RANGE_INVALID", () -> reconcile(wire, List.of()));
+        // Z1: the range is clamped to the draft (the span is a claim about lines, not a number to get right)
+        EditorialL1Ledger.ReconcilePass clamped = reconcile(wire, List.of());
+        assertEquals(2, clamped.protectedSpans().get(0).start());
+        assertEquals(12, clamped.protectedSpans().get(0).end());
+        assertTrue(clamped.bookkeepingNotes().contains("protectedSpanRangeAdjusted:protectedSpans.0"));
+        wire.put("protectedSpans", new ArrayList<Object>(List.of(map("spanId", "p1", "start", BigDecimal.valueOf(40),
+                "end", BigDecimal.valueOf(41), "source", "PRONOUN_ROW", "reason", "r"))));
+        EditorialL1Ledger.ReconcilePass dropped = reconcile(wire, List.of());
+        assertTrue(dropped.protectedSpans().isEmpty());
+        assertTrue(dropped.bookkeepingNotes().contains("protectedSpanDropped:protectedSpans.0"));
     }
 
     @Test
@@ -323,13 +335,18 @@ public final class EditorialL1LedgerTest {
     }
 
     @Test
-    public void unknownKeysAndForgedDispositionsAreRefused() {
+    public void unknownKeysAndStopClassOfAContinuingDispositionAreNormalizedButForgedKindsAreRefused() {
         Map<String, Object> wire = reconcileWire(new ArrayList<>(), new ArrayList<>());
         wire.put("extra", "x");
-        expectCode("L1_UNKNOWN_KEY", () -> reconcile(wire, List.of()));
+        assertTrue(reconcile(wire, List.of()).bookkeepingNotes().contains("unknownKeyIgnored:root"));
         Map<String, Object> stop = reconcileWire(new ArrayList<>(), new ArrayList<>());
         stop.put("disposition", map("disposition", "CONTINUE", "reasonCode", "L1_OK", "stopClass", "CONTENT_BLOCKED"));
-        expectCode("L1_DISPOSITION_STOP_CLASS_INVALID", () -> reconcile(stop, List.of()));
+        EditorialL1Ledger.ReconcilePass continued = reconcile(stop, List.of());
+        assertEquals("NONE", continued.disposition().stopClass());
+        assertTrue(continued.bookkeepingNotes().contains("dispositionStopClassIgnored:disposition.stopClass"));
+        Map<String, Object> stopWithBadClass = reconcileWire(new ArrayList<>(), new ArrayList<>());
+        stopWithBadClass.put("disposition", map("disposition", "STOP", "reasonCode", "L1_X", "stopClass", "NONE"));
+        expectCode("L1_DISPOSITION_STOP_CLASS_INVALID", () -> reconcile(stopWithBadClass, List.of()));
         Map<String, Object> pass = reconcileWire(new ArrayList<>(), new ArrayList<>());
         pass.put("disposition", map("disposition", "PASS", "reasonCode", "L1_OK", "stopClass", "NONE"));
         expectCode("L1_DISPOSITION_INVALID", () -> reconcile(pass, List.of()));
@@ -429,17 +446,21 @@ public final class EditorialL1LedgerTest {
     }
 
     @Test
-    public void anchorShapeIsUniformAndUnusedNumbersMustBeZero() {
+    public void anchorShapeIsUniformAndUnusedNumbersAreIgnored() {
         Map<String, Object> lines = finding("e1", "MEANING", 3, 3, 3, "踏破", "chinh phuc");
         lines.put("draft", map("kind", "LINES", "start", BigDecimal.valueOf(3), "end", BigDecimal.valueOf(3), "after", BigDecimal.ZERO));
         assertEquals(1, reconcile(reconcileWire(new ArrayList<>(List.of(lines)), new ArrayList<>()), List.of()).findings().size());
         lines.put("draft", map("kind", "LINES", "start", BigDecimal.valueOf(3), "end", BigDecimal.valueOf(3), "after", BigDecimal.valueOf(2)));
-        expectCode("L1_DRAFT_ANCHOR_UNUSED_FIELD", () -> reconcile(reconcileWire(new ArrayList<>(List.of(lines)), new ArrayList<>()), List.of()));
+        EditorialL1Ledger.ReconcilePass ignoredAfter = reconcile(reconcileWire(new ArrayList<>(List.of(lines)), new ArrayList<>()), List.of());
+        assertEquals(EditorialL1Ledger.DraftAnchor.lines(3, 3), ignoredAfter.findings().get(0).draft());
+        assertTrue(ignoredAfter.bookkeepingNotes().contains("unusedAnchorFieldIgnored:findings.0.draft.after"));
         Map<String, Object> missing = finding("e1", "OMISSION", 7, 6, 6, "雨が降る", "");
         missing.put("draft", map("kind", "MISSING", "start", BigDecimal.ZERO, "end", BigDecimal.ZERO, "after", BigDecimal.valueOf(6)));
         assertEquals("MISSING", reconcile(reconcileWire(new ArrayList<>(List.of(missing)), new ArrayList<>()), List.of()).findings().get(0).draft().kind());
         missing.put("draft", map("kind", "MISSING", "start", BigDecimal.valueOf(2), "end", BigDecimal.ZERO, "after", BigDecimal.valueOf(6)));
-        expectCode("L1_DRAFT_ANCHOR_UNUSED_FIELD", () -> reconcile(reconcileWire(new ArrayList<>(List.of(missing)), new ArrayList<>()), List.of()));
+        EditorialL1Ledger.ReconcilePass ignoredStart = reconcile(reconcileWire(new ArrayList<>(List.of(missing)), new ArrayList<>()), List.of());
+        assertEquals(EditorialL1Ledger.DraftAnchor.missingAfter(6), ignoredStart.findings().get(0).draft());
+        assertTrue(ignoredStart.bookkeepingNotes().contains("unusedAnchorFieldIgnored:findings.0.draft.start"));
     }
 
     @Test
@@ -450,7 +471,7 @@ public final class EditorialL1LedgerTest {
     }
 
     @Test
-    public void violationsReportTheAppAuthoredNestedPathWithoutEchoingUnknownKeys() {
+    public void violationsAndNotesReportTheAppAuthoredNestedPathWithoutEchoingUnknownKeys() {
         Map<String, Object> row = finding("e1", "MEANING", 3, 3, 3, "踏破", "chinh phuc");
         row.put("observation", "");
         try {
@@ -462,14 +483,11 @@ public final class EditorialL1LedgerTest {
 
         row = finding("e1", "MEANING", 3, 3, 3, "踏破", "chinh phuc");
         row.put("apiKey-from-model", "must-not-be-echoed");
-        try {
-            reconcile(reconcileWire(new ArrayList<>(List.of(row)), new ArrayList<>()), List.of());
-            fail("expected unknown key rejection");
-        } catch (RuntimeException invalid) {
-            assertEquals("L1_UNKNOWN_KEY:findings.0", EditorialL1Ledger.safeMessage(invalid));
-            assertFalse(EditorialL1Ledger.safeMessage(invalid).contains("apiKey-from-model"));
-            assertFalse(EditorialL1Ledger.safeMessage(invalid).contains("must-not-be-echoed"));
-        }
+        // Z1: the unknown key is ignored; the note carries the app-authored path only, never the key or its value
+        List<String> notes = reconcile(reconcileWire(new ArrayList<>(List.of(row)), new ArrayList<>()), List.of()).bookkeepingNotes();
+        assertTrue(notes.contains("unknownKeyIgnored:findings.0"));
+        assertFalse(notes.toString().contains("apiKey-from-model"));
+        assertFalse(notes.toString().contains("must-not-be-echoed"));
     }
     private static Object wireView(Map<String, Object> value) {
         Object schema = value.get("wireSchemaVersion");

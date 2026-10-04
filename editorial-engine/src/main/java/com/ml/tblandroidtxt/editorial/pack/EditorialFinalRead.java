@@ -37,10 +37,15 @@ public final class EditorialFinalRead {
 
     /** What the app verified about one read. */
     public record Result(String targetSha256, int lineCount, List<Integer> probeLines, String verdict,
-                         List<Defect> defects) {
+                         List<Defect> defects, List<String> bookkeepingNotes) {
+        public Result(String targetSha256, int lineCount, List<Integer> probeLines, String verdict, List<Defect> defects) {
+            this(targetSha256, lineCount, probeLines, verdict, defects, List.of());
+        }
+
         public Result {
             probeLines = List.copyOf(probeLines);
             defects = List.copyOf(defects);
+            bookkeepingNotes = List.copyOf(bookkeepingNotes);
         }
     }
 
@@ -96,11 +101,18 @@ public final class EditorialFinalRead {
     }
 
     public static Result parse(byte[] response, String attemptIdentity, byte[] target, String phase) {
+        WireNotes.begin();
         if (response == null || response.length > MAX_WIRE_BYTES) throw bad("FINAL_READ_WIRE_BYTE_LIMIT_EXCEEDED", "root");
         List<String> targetLines = lines(target);
         String sha = EditorialCanonicalJson.sha256Hex(target);
         Map<String, Object> root = EditorialCanonicalJson.parseObject(response);
-        keys(root, Set.of("wireSchemaVersion", "attemptIdentity", "readSha256", "probeTails", "verdict", "defects"), "root");
+        keys(root, Set.of("wireSchemaVersion", "attemptIdentity", "readSha256", "probeTails", "verdict", "defects"), "root",
+                Set.of("defects"));
+        if (!root.containsKey("defects")) {
+            root = new LinkedHashMap<>(root);
+            root.put("defects", new ArrayList<Object>());
+            WireNotes.note("missingOptionalKeyDefaulted", "defects");
+        }
         if (!WIRE.equals(root.get("wireSchemaVersion"))) throw bad("FINAL_READ_WIRE_SCHEMA_INVALID", "wireSchemaVersion");
         if (!attemptIdentity.equals(root.get("attemptIdentity"))) throw bad("FINAL_READ_ATTEMPT_ECHO_MISMATCH", "attemptIdentity");
         if (!sha.equals(root.get("readSha256"))) throw bad("FINAL_READ_HASH_ECHO_MISMATCH", "readSha256");
@@ -128,8 +140,12 @@ public final class EditorialFinalRead {
         String verdict = fieldText(phase, "verdict", root.get("verdict"));
         if (!"CLEAN".equals(verdict) && !"DEFECTS".equals(verdict)) throw bad("FINAL_READ_VERDICT_INVALID", "verdict");
         List<Object> rows = EditorialCanonicalJson.array(root.get("defects"), "defects");
-        if (rows.size() > MAX_DEFECTS) throw bad("FINAL_READ_DEFECT_LIMIT_EXCEEDED", "defects");
         if (("CLEAN".equals(verdict)) != rows.isEmpty()) throw bad("FINAL_READ_VERDICT_DEFECT_MISMATCH", "defects");
+        if (rows.size() > MAX_DEFECTS) {
+            // Z1 BOOKKEEPING: the list is capped; the verdict stays DEFECTS and the first defects are kept
+            rows = new ArrayList<>(rows.subList(0, MAX_DEFECTS));
+            WireNotes.note("listTruncated", "defects");
+        }
         List<Defect> defects = new ArrayList<>();
         for (int index = 0; index < rows.size(); index++) {
             String path = "defects." + index;
@@ -145,7 +161,7 @@ public final class EditorialFinalRead {
             if (quote.isEmpty() || !EditorialQuoteMatcher.contains(targetLines.get(line - 1), quote)) throw bad("FINAL_READ_DEFECT_QUOTE_NOT_IN_LINE", path + ".quote");
             defects.add(new Defect(line, quote, typeValue, note));
         }
-        return new Result(sha, targetLines.size(), probes, verdict, defects);
+        return new Result(sha, targetLines.size(), probes, verdict, defects, WireNotes.drain());
     }
 
     /** Canonical evidence block stored with the artifact; round-trips through {@link #parseEvidence}. */
@@ -169,6 +185,7 @@ public final class EditorialFinalRead {
             defects.add(d);
         }
         m.put("defects", defects);
+        if (!result.bookkeepingNotes().isEmpty()) m.put("bookkeepingNotes", new ArrayList<Object>(result.bookkeepingNotes()));
         return m;
     }
 
@@ -182,8 +199,12 @@ public final class EditorialFinalRead {
             defects.add(new Defect(((BigDecimal) d.get("line")).intValueExact(), (String) d.get("quote"),
                     (String) d.get("type"), (String) d.get("note")));
         }
+        List<String> notes = new ArrayList<>();
+        if (block.get("bookkeepingNotes") instanceof List<?> noteList) {
+            for (Object note : noteList) if (note instanceof String text) notes.add(text);
+        }
         return new Result((String) block.get("targetSha256"), ((BigDecimal) block.get("lineCount")).intValueExact(),
-                probes, (String) block.get("verdict"), defects);
+                probes, (String) block.get("verdict"), defects, notes);
     }
 
     private static String strict(byte[] bytes) {
@@ -203,7 +224,13 @@ public final class EditorialFinalRead {
     }
 
     private static void keys(Map<String, Object> value, Set<String> allowed, String path) {
-        if (!value.keySet().equals(allowed)) throw bad("FINAL_READ_KEYS_INVALID", path);
+        keys(value, allowed, path, Set.of());
+    }
+
+    private static void keys(Map<String, Object> value, Set<String> allowed, String path, Set<String> optional) {
+        // Z1 BOOKKEEPING: unknown keys are ignored (noted); a missing required key is still a refusal
+        for (String key : value.keySet()) if (!allowed.contains(key)) WireNotes.note("unknownKeyIgnored", path);
+        for (String key : allowed) if (!optional.contains(key) && !value.containsKey(key)) throw bad("FINAL_READ_KEYS_INVALID", path);
     }
 
     private static int integer(Object value, String path) {
@@ -216,6 +243,10 @@ public final class EditorialFinalRead {
     }
 
     private static String fieldText(String phase, String path, Object value) {
+        EditorialFieldSpec.Field spec = EditorialFieldSpec.find(phase, path);
+        if (spec != null && value instanceof String note && EditorialL1Ledger.NOTE_FIELDS.contains(spec.path())) {
+            value = EditorialL1Ledger.sanitizeNote(note, spec.maxLength(), path);
+        }
         String text = EditorialFieldSpec.validateString(phase, path, value, "FINAL_READ_TEXT_INVALID",
                 "FINAL_READ_TEXT_REQUIRED", "FINAL_READ_TEXT_INVALID", "FINAL_READ_TEXT_INVALID");
         for (char c : text.toCharArray()) if (Character.isISOControl(c)) throw bad("FINAL_READ_TEXT_CONTROL_CHARACTER", path);

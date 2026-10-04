@@ -65,7 +65,7 @@ public final class EditorialL3ExecutionTest {
         assertArrayEquals(new byte[] {1}, ledger.withPredecessorReport(new byte[] {1}).predecessorReport());
         assertEquals(EditorialContractRevision.CURRENT_LEDGER, ledger.withPredecessorReport(new byte[] {1}).contractRevision());
         try {
-            legacy.withContractRevision("L1_LEDGER_V10");
+            legacy.withContractRevision("L1_LEDGER_V99");
             fail();
         } catch (IllegalArgumentException expected) {
             assertEquals("unknown contract revision", expected.getMessage());
@@ -274,10 +274,6 @@ public final class EditorialL3ExecutionTest {
         badReaudit.add(reaudit(id, List.of(cand("t1", "TG", 1, "PROCESSED"))));
         // Wrong attempt echo.
         badReaudit.add(reaudit("0".repeat(64), defaultCandidates()));
-        // Unknown key.
-        Map<String, Object> unknown = reauditMap(id, defaultCandidates());
-        unknown.put("extra", "x");
-        badReaudit.add(canon(unknown));
         // Line beyond VI_L2 line count (VI_L2 splits into 4 entries: 3 lines + trailing empty).
         badReaudit.add(reaudit(id, List.of(cand("u1", "UNIT", 5, "PROCESSED"))));
         // Unknown ledger / status / duplicate id / not json.
@@ -309,10 +305,6 @@ public final class EditorialL3ExecutionTest {
         badStatus.put("u1", "DONE");
         badReconcile.add(reconcile(id, badStatus, List.of(), List.of(), probes("cov", "NO_DEFECT"),
                 probes("reg", "NO_DEFECT")));
-        Map<String, Object> extra = reconcileMap(id, defaultResolutions(), List.of(), List.of(),
-                probes("cov", "NO_DEFECT"), probes("reg", "NO_DEFECT"));
-        extra.put("extra", "x");
-        badReconcile.add(canon(extra));
         Map<String, Object> badProbe = reconcileMap(id, defaultResolutions(), List.of(), List.of(),
                 probes("cov", "MAYBE"), probes("reg", "NO_DEFECT"));
         badReconcile.add(canon(badProbe));

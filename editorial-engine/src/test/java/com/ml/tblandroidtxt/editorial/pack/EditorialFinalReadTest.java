@@ -162,10 +162,14 @@ public final class EditorialFinalReadTest {
         assertEquals(" \u00e9 ", result.defects().get(0).quote());
     }
 
-    @Test public void unknownKeysAndOversizeAreRefused() {
+    @Test public void unknownKeysAreIgnoredAndNotedButOversizeIsRefused() {
         byte[] t = b(target());
         Map<String, Object> w = goodWire(t);
         w.put("extra", "x");
+        EditorialFinalRead.Result noted = EditorialFinalRead.parse(json(w), ATT, t);
+        assertTrue(noted.bookkeepingNotes().contains("unknownKeyIgnored:root"));
+        w.remove("extra");
+        w.remove("verdict");
         expect("FINAL_READ_KEYS_INVALID", json(w), t);
         expect("FINAL_READ_WIRE_BYTE_LIMIT_EXCEEDED", new byte[EditorialFinalRead.MAX_WIRE_BYTES + 1], t);
     }

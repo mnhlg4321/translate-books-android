@@ -58,8 +58,9 @@ final class EditorialL3Ledger {
 
     static ReauditPass parseReaudit(byte[] bytes, String attemptIdentity, EditorialRawInventory.Inventory inventory,
                                     int viLineCount) {
+        WireNotes.begin();
         Map<String, Object> root = EditorialL1Ledger.rootOf(bytes, attemptIdentity, REAUDIT_WIRE_V3,
-                Set.of("wireSchemaVersion", "attemptIdentity", "coverage", "candidates"));
+                Set.of("wireSchemaVersion", "attemptIdentity", "coverage", "candidates"), Set.of("candidates"));
         List<EditorialRawInventory.Range> coverage = EditorialL1Ledger.coverage(root.get("coverage"), inventory,
                 EditorialFieldSpec.L3_RAW_FIRST_REAUDIT);
         List<Object> rows = EditorialCanonicalJson.array(root.get("candidates"), "candidates");
@@ -69,7 +70,8 @@ final class EditorialL3Ledger {
         for (int index = 0; index < rows.size(); index++) {
             String path = "candidates." + index;
             Map<String, Object> row = EditorialL1Ledger.object(rows.get(index), path);
-            EditorialL1Ledger.keys(row, Set.of("candidateId", "ledger", "unitId", "viLine", "status", "note"), path);
+            EditorialL1Ledger.keys(row, Set.of("candidateId", "ledger", "unitId", "viLine", "status", "note"), path, Set.of("note"));
+            row = EditorialL1Ledger.withDefaults(row, path, "note", "");
             String id = EditorialL1Ledger.id(row, "candidateId", path + ".candidateId", EditorialFieldSpec.L3_RAW_FIRST_REAUDIT);
             if (!ids.add(id)) throw EditorialL1Ledger.bad("L3_CANDIDATE_ID_DUPLICATE", path + ".candidateId");
             String ledger = EditorialL1Ledger.enumOf(row, "ledger", EditorialL1Ledger.CANDIDATE_LEDGERS,
@@ -136,9 +138,10 @@ final class EditorialL3Ledger {
 
     static ReconcileWire parseReconcile(byte[] bytes, String attemptIdentity, List<Candidate> candidates, int carriedCount,
                                         EditorialRawInventory.Inventory inventory, byte[] baseBytes) {
+        WireNotes.begin();
         Map<String, Object> root = EditorialL1Ledger.rootOf(bytes, attemptIdentity, RECONCILE_WIRE_V3,
                 Set.of("wireSchemaVersion", "attemptIdentity", "resolutions", "carriedResolutions", "changes", "preserved",
-                        "probes", "disposition"));
+                        "probes", "disposition"), Set.of("resolutions", "carriedResolutions", "changes", "preserved", "probes"));
         Map<String, Object> shape = new LinkedHashMap<>();
         shape.put("wireSchemaVersion", EditorialL2Execution.WIRE_SCHEMA_VERSION);
         shape.put("attemptIdentity", attemptIdentity);
@@ -170,7 +173,10 @@ final class EditorialL3Ledger {
         for (int index = 0; index < carriedRows.size(); index++) {
             String path = "carriedResolutions." + index;
             Map<String, Object> row = EditorialL1Ledger.object(carriedRows.get(index), path);
-            EditorialL1Ledger.keys(row, Set.of("index", "status", "changeIds", "preserveIds", "evidenceQuote", "reason"), path);
+            EditorialL1Ledger.keys(row, Set.of("index", "status", "changeIds", "preserveIds", "evidenceQuote", "reason"), path,
+                    Set.of("changeIds", "preserveIds", "evidenceQuote", "reason"));
+            row = EditorialL1Ledger.withDefaults(row, path, "changeIds", new ArrayList<Object>(),
+                    "preserveIds", new ArrayList<Object>(), "evidenceQuote", "", "reason", "");
             int carriedIndex = EditorialL1Ledger.intOf(row, "index", path + ".index");
             if (carriedIndex < 0 || carriedIndex >= carriedCount || !seen.add(carriedIndex)) throw EditorialL1Ledger.bad("L3_CARRIED_INDEX_INVALID", path + ".index");
             carried.add(new CarriedResolution(carriedIndex, EditorialL1Ledger.enumOf(row, "status", CARRIED_STATUSES,
@@ -205,8 +211,8 @@ final class EditorialL3Ledger {
                     EditorialL1Ledger.enumOf(row, "verdict", PROBE_VERDICTS, path + ".verdict", EditorialFieldSpec.L3_RECONCILE),
                     EditorialL1Ledger.fieldStr(EditorialFieldSpec.L3_RECONCILE, row, "action", path + ".action")));
         }
-        return new ReconcileWire(Map.copyOf(resolutions), List.copyOf(carried), rows, List.copyOf(probes),
-                normalizations.duplicateReferencesRemoved());
+        return new ReconcileWire(Map.copyOf(resolutions), List.copyOf(carried), rows.withNotes(WireNotes.drain()),
+                List.copyOf(probes), normalizations.duplicateReferencesRemoved());
     }
 
     private static List<String> refs(Object value, String path, EditorialReferenceNormalization.Counter normalizations) {

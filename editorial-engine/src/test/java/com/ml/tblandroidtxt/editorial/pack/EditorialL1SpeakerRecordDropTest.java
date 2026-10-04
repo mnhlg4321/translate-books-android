@@ -101,24 +101,23 @@ public final class EditorialL1SpeakerRecordDropTest {
         assertEquals(2, pass.speakerRecordsDropped().size());
     }
 
-    @Test public void aMissingUnitKeyIsStillAStructuralError() {
+    @Test public void aMissingUnitKeyDropsOnlyThatRecord() {
         Map<String, Object> missing = speaker("L1", "A");
         missing.remove("unitId");
-        expectCode("L1_MISSING_KEY", "speakerRecords.0.unitId", () -> parse(List.of(), List.of(missing)));
+        EditorialL1Ledger.ReconcilePass pass = parse(List.of(), List.of(missing, speaker("L3", "B")));
+        assertEquals(1, pass.speakerRecords().size());
+        assertEquals(List.of("speakerRecords.0.unitId"), pass.speakerRecordsDropped());
     }
 
-    @Test public void otherDefectsOfARecordStayFatal() {
-        // a valid reference does not excuse an empty required field, an unknown key or a missing basis
+    @Test public void everyOtherDefectOfARecordDropsThatRecordToo() {
         Map<String, Object> blankSpeaker = speaker("L1", "");
-        expectCode("L1_TEXT_REQUIRED", "speakerRecords.0.speaker", () -> parse(List.of(), List.of(blankSpeaker)));
-        Map<String, Object> extra = speaker("L1", "A");
+        Map<String, Object> extra = speaker("L3", "A");
         extra.put("surprise", "x");
-        try {
-            parse(List.of(), List.of(extra));
-            fail("unknown key must be rejected");
-        } catch (WireViolation invalid) {
-            assertTrue(invalid.path(), invalid.path().startsWith("speakerRecords.0"));
-        }
+        EditorialL1Ledger.ReconcilePass pass = parse(List.of(), List.of(blankSpeaker, extra, speaker("L1", "B")));
+        // the blank label drops its record; an unknown key is ignored and the record kept
+        assertEquals(2, pass.speakerRecords().size());
+        assertEquals(List.of("speakerRecords.0.speaker"), pass.speakerRecordsDropped());
+        assertTrue(pass.bookkeepingNotes().contains("unknownKeyIgnored:speakerRecords.1"));
     }
 
     @Test public void findingsStayStrictWhileRecordsAreDropped() {
@@ -138,7 +137,7 @@ public final class EditorialL1SpeakerRecordDropTest {
         EditorialL1Ledger.Body restored = EditorialL1Ledger.parseBody(artifact);
         assertEquals(List.of("speakerRecords.1.unitId"), restored.speakerRecordsDropped());
         assertEquals(1, restored.speakerRecords().size());
-        assertEquals(EditorialContractRevision.L1_LEDGER_V9, artifact.get("contractRevision"));
+        assertEquals(EditorialContractRevision.CURRENT_LEDGER, artifact.get("contractRevision"));
     }
 
     @Test public void promptStatesThatSpeakerRecordsAreOptional() {

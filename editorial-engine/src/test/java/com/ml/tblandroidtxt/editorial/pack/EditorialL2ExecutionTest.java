@@ -108,16 +108,15 @@ public final class EditorialL2ExecutionTest {
             assertEquals("L2_WIRE_TEXT_INVALID:changes.0.reason", WireViolation.safeMessage(invalid, "L2_WIRE_PARSE_FAILED"));
         }
 
+        // Z1: an unknown key is ignored; the note carries the app-authored path only
+        badChange.put("reason", "reason text");
         badChange.put("untrustedModelKey", "secret-value");
-        try {
-            EditorialL2Execution.parseWire(canon(root), L1_ID);
-            throw new AssertionError("expected unknown key violation");
-        } catch (RuntimeException invalid) {
-            String safe = WireViolation.safeMessage(invalid, "L2_WIRE_PARSE_FAILED");
-            assertEquals("L2_WIRE_UNKNOWN_KEY:changes.0", safe);
-            assertFalse(safe.contains("untrustedModelKey"));
-            assertFalse(safe.contains("secret-value"));
-        }
+        WireNotes.begin();
+        EditorialL2Execution.parseWire(canon(root), L1_ID);
+        List<String> notes = WireNotes.drain();
+        assertEquals(List.of("unknownKeyIgnored:changes.0"), notes);
+        assertFalse(notes.toString().contains("untrustedModelKey"));
+        assertFalse(notes.toString().contains("secret-value"));
     }
 
     @Test public void ledgerWireDerivesBeforeAndChecksOptionalTextAfterNfcAndTrim() {
@@ -190,9 +189,6 @@ public final class EditorialL2ExecutionTest {
         Ctx c = ctx();
         EditorialL2Execution.Request req = c.request();
         List<byte[]> bad = new ArrayList<>();
-        Map<String, Object> unknownKey = wireMap(req, List.of(), "CONTINUE", "NONE");
-        unknownKey.put("extra", "x");
-        bad.add(canon(unknownKey));
         Map<String, Object> wrongEcho = wireMap(req, List.of(), "CONTINUE", "NONE");
         wrongEcho.put("attemptIdentity", "0".repeat(64));
         bad.add(canon(wrongEcho));
@@ -358,10 +354,6 @@ public final class EditorialL2ExecutionTest {
         bad.add(discovery(attempt, List.of(candidate("U001", "UNIT", 99))));
         bad.add(discovery(attempt, List.of(candidate("U001", "WRONG", 1))));
         bad.add(discovery("0".repeat(64), List.of(candidate("U001", "UNIT", 1))));
-        Map<String, Object> extra = EditorialCanonicalJson.parseObject(discovery(attempt, List.of(candidate("U001", "UNIT", 1))));
-        extra = new LinkedHashMap<>(extra);
-        extra.put("note", "x");
-        bad.add(canon(extra));
         bad.add(bytes("not json"));
         for (byte[] discoveryBytes : bad) {
             FakeProvider provider = new FakeProvider(wire(req, List.of(), "CONTINUE", "NONE"));

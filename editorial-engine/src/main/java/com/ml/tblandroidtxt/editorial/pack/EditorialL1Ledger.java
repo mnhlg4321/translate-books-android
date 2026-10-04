@@ -70,9 +70,6 @@ public final class EditorialL1Ledger {
         }
     }
 
-    /** Reference failures that drop a speaker record instead of failing the ledger. */
-    private static final Set<String> SPEAKER_DROPPABLE = Set.of("L1_UNIT_REF_INVALID", "L1_UNIT_UNKNOWN", "L1_UNIT_LINE_NOT_A_UNIT");
-
     public record SpeakerRecord(String unitId, String speaker, String listener, String basis) { }
 
     public record ProtectedSpan(String spanId, int start, int end, String source, String reason) { }
@@ -87,13 +84,22 @@ public final class EditorialL1Ledger {
                                 List<Finding> findings, List<SpeakerRecord> speakerRecords,
                                 List<ProtectedSpan> protectedSpans, Disposition disposition,
                                 int duplicateReferencesRemoved, int draftAnchorsDerivedFromQuote,
-                                int maxDraftAnchorDeviation, List<String> speakerRecordsDropped) {
+                                int maxDraftAnchorDeviation, List<String> speakerRecordsDropped,
+                                List<String> bookkeepingNotes) {
+        public ReconcilePass(List<EditorialRawInventory.Range> coverage, List<Resolution> resolutions,
+                             List<Finding> findings, List<SpeakerRecord> speakerRecords,
+                             List<ProtectedSpan> protectedSpans, Disposition disposition,
+                             int duplicateReferencesRemoved, int draftAnchorsDerivedFromQuote, int maxDraftAnchorDeviation,
+                             List<String> speakerRecordsDropped) {
+            this(coverage, resolutions, findings, speakerRecords, protectedSpans, disposition, duplicateReferencesRemoved,
+                    draftAnchorsDerivedFromQuote, maxDraftAnchorDeviation, speakerRecordsDropped, List.of());
+        }
         public ReconcilePass(List<EditorialRawInventory.Range> coverage, List<Resolution> resolutions,
                              List<Finding> findings, List<SpeakerRecord> speakerRecords,
                              List<ProtectedSpan> protectedSpans, Disposition disposition,
                              int duplicateReferencesRemoved, int draftAnchorsDerivedFromQuote, int maxDraftAnchorDeviation) {
             this(coverage, resolutions, findings, speakerRecords, protectedSpans, disposition, duplicateReferencesRemoved,
-                    draftAnchorsDerivedFromQuote, maxDraftAnchorDeviation, List.of());
+                    draftAnchorsDerivedFromQuote, maxDraftAnchorDeviation, List.of(), List.of());
         }
         public ReconcilePass(List<EditorialRawInventory.Range> coverage, List<Resolution> resolutions,
                              List<Finding> findings, List<SpeakerRecord> speakerRecords,
@@ -112,6 +118,7 @@ public final class EditorialL1Ledger {
             speakerRecords = List.copyOf(speakerRecords);
             protectedSpans = List.copyOf(protectedSpans);
             speakerRecordsDropped = List.copyOf(speakerRecordsDropped);
+            bookkeepingNotes = List.copyOf(bookkeepingNotes);
         }
     }
 
@@ -164,7 +171,9 @@ public final class EditorialL1Ledger {
      */
     public static RawPass parseRawPass(byte[] bytes, String attemptIdentity, EditorialRawInventory.Inventory inventory,
                                        String wireLabel) {
-        Map<String, Object> root = rootOf(bytes, attemptIdentity, wireLabel, Set.of("wireSchemaVersion", "attemptIdentity", "coverage", "candidates"));
+        WireNotes.begin();
+        Map<String, Object> root = rootOf(bytes, attemptIdentity, wireLabel,
+                Set.of("wireSchemaVersion", "attemptIdentity", "coverage", "candidates"), Set.of("candidates"));
         String phase = rawPhase(wireLabel);
         List<EditorialRawInventory.Range> coverage = coverage(root.get("coverage"), inventory, phase);
         List<Object> rows = EditorialCanonicalJson.array(root.get("candidates"), "candidates");
@@ -174,7 +183,8 @@ public final class EditorialL1Ledger {
         for (int index = 0; index < rows.size(); index++) {
             String path = "candidates." + index;
             Map<String, Object> row = object(rows.get(index), path);
-            keys(row, Set.of("candidateId", "ledger", "unitId", "note"), path);
+            keys(row, Set.of("candidateId", "ledger", "unitId", "note"), path, Set.of("note"));
+            row = withDefaults(row, path, "note", "");
             String id = id(row, "candidateId", path + ".candidateId", phase);
             if (!ids.add(id)) throw bad("L1_CANDIDATE_ID_DUPLICATE", path + ".candidateId");
             String ledger = enumOf(row, "ledger", CANDIDATE_LEDGERS, path + ".ledger", phase);
@@ -189,8 +199,10 @@ public final class EditorialL1Ledger {
 
     public static ReconcilePass parseReconcile(byte[] bytes, String attemptIdentity, EditorialRawInventory.Inventory inventory,
                                                List<String> draftLines, List<Candidate> rawCandidates) {
+        WireNotes.begin();
         Map<String, Object> root = rootOf(bytes, attemptIdentity, RECONCILE_WIRE, Set.of("wireSchemaVersion", "attemptIdentity",
-                "coverage", "resolutions", "findings", "speakerRecords", "protectedSpans", "disposition"));
+                "coverage", "resolutions", "findings", "speakerRecords", "protectedSpans", "disposition"),
+                Set.of("resolutions", "findings", "speakerRecords", "protectedSpans"));
         Disposition disposition = disposition(object(root.get("disposition"), "disposition"), "disposition", EditorialFieldSpec.L1_RECONCILE);
         boolean stop = "STOP".equals(disposition.kind());
         List<EditorialRawInventory.Range> coverage = stop && EditorialCanonicalJson.array(root.get("coverage"), "coverage").isEmpty()
@@ -230,25 +242,25 @@ public final class EditorialL1Ledger {
 
         List<SpeakerRecord> speakers = new ArrayList<>();
         List<Object> speakerRows = EditorialCanonicalJson.array(root.get("speakerRecords"), "speakerRecords");
-        if (speakerRows.size() > MAX_SPEAKER_RECORDS_PER_CALL) throw bad("L1_SPEAKER_LIMIT_EXCEEDED");
         for (int index = 0; index < speakerRows.size(); index++) {
             String path = "speakerRecords." + index;
-            Map<String, Object> row = object(speakerRows.get(index), path);
-            keys(row, Set.of("unitId", "speaker", "listener", "basis"), path);
-            String unit;
-            try {
-                unit = EditorialUnitReference.resolve(row.get("unitId"), inventory, path + ".unitId");
-            } catch (WireViolation invalid) {
-                // speakerRecords is an optional side note nothing downstream reads: a record whose reference is not
-                // a unit line is dropped and counted; the app never guesses another line for it
-                if (!SPEAKER_DROPPABLE.contains(invalid.code())) throw invalid;
-                normalizations.speakerRecordDropped(invalid.path());
+            // speakerRecords is an optional side note nothing downstream reads: a record that cannot be read as a whole
+            // (bad reference, blank label, wrong shape) is dropped and counted with the path; the app never guesses
+            if (speakers.size() >= MAX_SPEAKER_RECORDS_PER_CALL) {
+                normalizations.speakerRecordDropped(path);
                 continue;
             }
-            speakers.add(new SpeakerRecord(unit,
-                    fieldStr(EditorialFieldSpec.L1_RECONCILE, row, "speaker", path + ".speaker"),
-                    fieldStr(EditorialFieldSpec.L1_RECONCILE, row, "listener", path + ".listener"),
-                    fieldStr(EditorialFieldSpec.L1_RECONCILE, row, "basis", path + ".basis")));
+            try {
+                Map<String, Object> row = withDefaults(object(speakerRows.get(index), path), path, "listener", "");
+                keys(row, Set.of("unitId", "speaker", "listener", "basis"), path, Set.of("listener"));
+                String unit = EditorialUnitReference.resolve(row.get("unitId"), inventory, path + ".unitId");
+                speakers.add(new SpeakerRecord(unit,
+                        fieldStr(EditorialFieldSpec.L1_RECONCILE, row, "speaker", path + ".speaker"),
+                        fieldStr(EditorialFieldSpec.L1_RECONCILE, row, "listener", path + ".listener"),
+                        fieldStr(EditorialFieldSpec.L1_RECONCILE, row, "basis", path + ".basis")));
+            } catch (WireViolation invalid) {
+                normalizations.speakerRecordDropped(invalid.path());
+            }
         }
 
         List<ProtectedSpan> spans = new ArrayList<>();
@@ -258,15 +270,51 @@ public final class EditorialL1Ledger {
         for (int index = 0; index < spanRows.size(); index++) {
             String path = "protectedSpans." + index;
             Map<String, Object> row = object(spanRows.get(index), path);
-            keys(row, Set.of("spanId", "start", "end", "source", "reason"), path);
-            String spanId = id(row, "spanId", path + ".spanId", EditorialFieldSpec.L1_RECONCILE);
-            if (!spanIds.add(spanId)) throw bad("L1_PROTECTED_ID_DUPLICATE", path + ".spanId");
+            keys(row, Set.of("spanId", "start", "end", "source", "reason"), path, Set.of("reason"));
+            row = withDefaults(row, path, "reason", "");
+            // Z1 BOOKKEEPING: the span id is a label, the range is clamped to the draft, a missing reason is stated as such
+            String spanId;
+            Object rawSpanId = row.get("spanId");
+            if (rawSpanId instanceof String text && EditorialP5RawWireContract.token(text, EditorialFieldSpec.MAX_ID_LENGTH)) {
+                spanId = text;
+            } else {
+                spanId = "SPAN-" + (index + 1);
+                WireNotes.note("protectedSpanIdAssigned", path + ".spanId");
+            }
+            if (!spanIds.add(spanId)) {
+                String candidate = spanId;
+                int suffix = 2;
+                while (!spanIds.add(candidate = spanId + "-" + suffix)) suffix++;
+                spanId = candidate;
+                WireNotes.note("protectedSpanIdAssigned", path + ".spanId");
+            }
             int start = intOf(row, "start", path + ".start");
             int end = intOf(row, "end", path + ".end");
-            if (start < 1 || end < start || end > draftLines.size()) throw bad("L1_PROTECTED_RANGE_INVALID", path);
+            if (end < start) {
+                int swap = start;
+                start = end;
+                end = swap;
+                WireNotes.note("protectedSpanRangeAdjusted", path);
+            }
+            if (end < 1 || start > draftLines.size()) {
+                WireNotes.note("protectedSpanDropped", path);
+                continue;
+            }
+            if (start < 1 || end > draftLines.size()) {
+                start = Math.max(1, start);
+                end = Math.min(draftLines.size(), end);
+                WireNotes.note("protectedSpanRangeAdjusted", path);
+            }
+            String reasonText;
+            if (!(row.get("reason") instanceof String given) || given.isBlank()) {
+                reasonText = "reason not stated";
+                WireNotes.note("protectedSpanReasonDefaulted", path + ".reason");
+            } else {
+                reasonText = fieldStr(EditorialFieldSpec.L1_RECONCILE, row, "reason", path + ".reason");
+            }
             spans.add(new ProtectedSpan(spanId, start, end,
                     enumOf(row, "source", PROTECTED_SOURCES, path + ".source", EditorialFieldSpec.L1_RECONCILE),
-                    fieldStr(EditorialFieldSpec.L1_RECONCILE, row, "reason", path + ".reason")));
+                    reasonText));
         }
         // a line the report protects cannot also be the anchor of an open defect
         Set<Integer> protectedNumbers = protectedLines(spans);
@@ -278,7 +326,7 @@ public final class EditorialL1Ledger {
         }
         return new ReconcilePass(coverage, new ArrayList<>(resolved.values()), findings, speakers, spans, disposition,
                 normalizations.duplicateReferencesRemoved(), normalizations.draftAnchorsDerivedFromQuote(),
-                normalizations.maxDraftAnchorDeviation(), normalizations.speakerRecordsDropped());
+                normalizations.maxDraftAnchorDeviation(), normalizations.speakerRecordsDropped(), WireNotes.drain());
     }
 
     /**
@@ -366,7 +414,9 @@ public final class EditorialL1Ledger {
                            EditorialReferenceNormalization.Counter normalizations) {
         keys(row, Set.of("errorId", "type", "severity", "rawUnits", "draft", "rawQuote", "draftQuote",
                 "observation", "expectedMeaning", "evidenceRefs", "candidateIds", "occurrenceUnits", "disposition",
-                "evidenceLimit"), path);
+                "evidenceLimit"), path, Set.of("evidenceRefs", "candidateIds", "occurrenceUnits", "evidenceLimit"));
+        row = withDefaults(row, path, "evidenceRefs", new ArrayList<Object>(), "candidateIds", new ArrayList<Object>(),
+                "occurrenceUnits", new ArrayList<Object>(), "evidenceLimit", "");
         String errorId = id(row, "errorId", path + ".errorId", phase);
         String type = enumOf(row, "type", FINDING_TYPES, path + ".type", phase);
         String severity = enumOf(row, "severity", SEVERITIES, path + ".severity", phase);
@@ -379,20 +429,31 @@ public final class EditorialL1Ledger {
         String kind = fieldStr(phase, draftRow, "kind", path + ".draft.kind");
         DraftAnchor anchor;
         // one object shape for both kinds (a strict response schema cannot express a union); unused numbers are 0
-        keys(draftRow, Set.of("kind", "start", "end", "after"), path + ".draft");
+        keys(draftRow, Set.of("kind", "start", "end", "after"), path + ".draft", Set.of("start", "end", "after"));
         if ("LINES".equals(kind)) {
-            int start = intOf(draftRow, "start", path + ".draft.start");
-            int end = intOf(draftRow, "end", path + ".draft.end");
-            if (draftRow.containsKey("after") && intOf(draftRow, "after", path + ".draft.after") != 0) throw bad("L1_DRAFT_ANCHOR_UNUSED_FIELD", path + ".draft.after");
+            // Z1 BOOKKEEPING: start/end are hints and `after` belongs to MISSING; absent or unused values are ignored
+            int start = draftRow.containsKey("start") ? intOf(draftRow, "start", path + ".draft.start") : 0;
+            int end = draftRow.containsKey("end") ? intOf(draftRow, "end", path + ".draft.end") : 0;
+            if (draftRow.containsKey("after") && intOf(draftRow, "after", path + ".draft.after") != 0) {
+                WireNotes.note("unusedAnchorFieldIgnored", path + ".draft.after");
+            }
             // the numbers are only a hint: the app derives the anchor from draftQuote below
             int hintStart = Math.max(1, Math.min(start, draftLines.size()));
             int hintEnd = Math.max(hintStart, Math.min(end, draftLines.size()));
             anchor = DraftAnchor.lines(hintStart, hintEnd);
         } else if ("MISSING".equals(kind)) {
             int after = intOf(draftRow, "after", path + ".draft.after");
-            if ((draftRow.containsKey("start") && intOf(draftRow, "start", path + ".draft.start") != 0)
-                    || (draftRow.containsKey("end") && intOf(draftRow, "end", path + ".draft.end") != 0)) throw bad("L1_DRAFT_ANCHOR_UNUSED_FIELD", path + ".draft");
-            if (after < 0 || after > draftLines.size()) throw bad("L1_DRAFT_ANCHOR_OUT_OF_RANGE", path + ".draft.after");
+            if (draftRow.containsKey("start") && intOf(draftRow, "start", path + ".draft.start") != 0) {
+                WireNotes.note("unusedAnchorFieldIgnored", path + ".draft.start");
+            }
+            if (draftRow.containsKey("end") && intOf(draftRow, "end", path + ".draft.end") != 0) {
+                WireNotes.note("unusedAnchorFieldIgnored", path + ".draft.end");
+            }
+            if (after < 0 || after > draftLines.size()) {
+                // the insertion position is a hint about where the omission shows; keep it inside the draft
+                after = Math.max(0, Math.min(after, draftLines.size()));
+                WireNotes.note("anchorClamped", path + ".draft.after");
+            }
             anchor = DraftAnchor.missingAfter(after);
         } else {
             throw bad("L1_DRAFT_ANCHOR_KIND_INVALID", path + ".draft.kind");
@@ -412,21 +473,16 @@ public final class EditorialL1Ledger {
 
         String observation = fieldStr(phase, row, "observation", path + ".observation");
         String expected = fieldStr(phase, row, "expectedMeaning", path + ".expectedMeaning");
-        List<String> refs = stringList(row.get("evidenceRefs"), path + ".evidenceRefs",
+        List<String> refs = lenientTokens(row.get("evidenceRefs"), path + ".evidenceRefs",
                 EditorialFieldSpec.MAX_EVIDENCE_REFS, EditorialFieldSpec.MAX_ID_LENGTH);
-        for (int index = 0; index < refs.size(); index++) if (!EditorialP5RawWireContract.token(refs.get(index), EditorialP5RawWireContract.MAX_ID_LENGTH)) throw bad("L1_EVIDENCE_REF_INVALID", path + ".evidenceRefs." + index);
         refs = normalizations.distinct(refs);
         List<String> candidateIds = stringList(row.get("candidateIds"), path + ".candidateIds",
                 EditorialFieldSpec.MAX_CANDIDATE_REFS, EditorialFieldSpec.MAX_ID_LENGTH);
         for (int index = 0; index < candidateIds.size(); index++) if (!knownCandidates.contains(candidateIds.get(index))) throw bad("L1_CANDIDATE_REF_UNKNOWN", path + ".candidateIds." + index);
         candidateIds = normalizations.distinct(candidateIds);
-        List<String> occurrences = EditorialUnitReference.resolveList(row.get("occurrenceUnits"), path + ".occurrenceUnits",
+        List<String> occurrences = lenientUnits(row.get("occurrenceUnits"), path + ".occurrenceUnits",
                 MAX_OCCURRENCE_UNITS, inventory);
         Set<String> seen = new HashSet<>(rawUnits);
-        for (int index = 0; index < occurrences.size(); index++) {
-            String unit = occurrences.get(index);
-            if (!inventory.has(unit)) throw bad("L1_UNIT_UNKNOWN", path + ".occurrenceUnits." + index);
-        }
         List<String> normalizedOccurrences = new ArrayList<>();
         for (String unit : occurrences) if (normalizations.addReference(seen, unit)) normalizedOccurrences.add(unit);
         occurrences = List.copyOf(normalizedOccurrences);
@@ -488,14 +544,23 @@ public final class EditorialL1Ledger {
     }
 
     private static Disposition disposition(Map<String, Object> row, String path, String phase) {
-        keys(row, Set.of("disposition", "reasonCode", "stopClass"), path);
+        keys(row, Set.of("disposition", "reasonCode", "stopClass"), path, Set.of("reasonCode", "stopClass"));
         String kind = fieldStr(phase, row, "disposition", path + ".disposition");
+        if ("CONTINUE".equals(kind) || "PRESERVE_DRAFT".equals(kind)) {
+            // Z1 BOOKKEEPING: a continuing disposition has no stop class and its reason is only a label
+            String reason = "";
+            Object rawReason = row.get("reasonCode");
+            if (rawReason instanceof String text && !text.isEmpty()) {
+                if (text.length() <= 32 && EditorialP5RawWireContract.safeText(text)) reason = text;
+                else WireNotes.note("dispositionReasonDropped", path + ".reasonCode");
+            }
+            Object rawClass = row.get("stopClass");
+            if (!"NONE".equals(rawClass)) WireNotes.note("dispositionStopClassIgnored", path + ".stopClass");
+            return new Disposition(kind, reason, "NONE");
+        }
         String reason = fieldStr(phase, row, "reasonCode", path + ".reasonCode");
         String stopClass = fieldStr(phase, row, "stopClass", path + ".stopClass");
-        if ("CONTINUE".equals(kind) || "PRESERVE_DRAFT".equals(kind)) {
-            if (!reason.isEmpty() && !EditorialP5RawWireContract.safeText(reason)) throw bad("L1_DISPOSITION_REASON_INVALID", path + ".reasonCode");
-            if (!"NONE".equals(stopClass)) throw bad("L1_DISPOSITION_STOP_CLASS_INVALID");
-        } else if ("STOP".equals(kind)) {
+        if ("STOP".equals(kind)) {
             if (reason.isEmpty()) throw bad("L1_TEXT_REQUIRED", path + ".reasonCode");
             if (!EditorialP5RawWireContract.safeText(reason)) throw bad("L1_DISPOSITION_REASON_INVALID", path + ".reasonCode");
             if (!"CONTENT_BLOCKED".equals(stopClass) && !"INPUT_REQUIRED".equals(stopClass)) throw bad("L1_DISPOSITION_STOP_CLASS_INVALID");
@@ -533,7 +598,7 @@ public final class EditorialL1Ledger {
                        List<EditorialRawInventory.Range> reviewCoverage, List<Resolution> resolutions, List<Finding> findings,
                        List<SpeakerRecord> speakerRecords, List<ProtectedSpan> protectedSpans, Disposition disposition,
                        Metrics metrics, int duplicateReferencesRemoved, int draftAnchorsDerivedFromQuote,
-                       int maxDraftAnchorDeviation, List<String> speakerRecordsDropped) {
+                       int maxDraftAnchorDeviation, List<String> speakerRecordsDropped, List<String> bookkeepingNotes) {
         public Body {
             rawCoverage = List.copyOf(rawCoverage);
             candidates = List.copyOf(candidates);
@@ -543,6 +608,7 @@ public final class EditorialL1Ledger {
             speakerRecords = List.copyOf(speakerRecords);
             protectedSpans = List.copyOf(protectedSpans);
             speakerRecordsDropped = List.copyOf(speakerRecordsDropped);
+            bookkeepingNotes = List.copyOf(bookkeepingNotes);
         }
     }
 
@@ -550,7 +616,7 @@ public final class EditorialL1Ledger {
         Metrics metrics = new Metrics(0, 0, 0, 0, raw.candidates().size(), 0, 0, 0, 0, inventory.units().size(), inventory.excluded().size());
         return new Body("L1_RAW_DISCOVERY", EditorialRawInventory.REVISION, inventory.units().size(), inventory.excluded().size(),
                 inventory.inventorySha256(), inventory.rawSha256(), raw.coverage(), raw.candidates(), List.of(), List.of(), List.of(),
-                List.of(), List.of(), new Disposition("CONTINUE", "L1_RAW_LEDGER", "NONE"), metrics, 0, 0, 0, List.of());
+                List.of(), List.of(), new Disposition("CONTINUE", "L1_RAW_LEDGER", "NONE"), metrics, 0, 0, 0, List.of(), List.of());
     }
 
     public static Body bodyOfReconcile(EditorialRawInventory.Inventory inventory, RawPass raw, ReconcilePass pass) {
@@ -558,7 +624,7 @@ public final class EditorialL1Ledger {
                 inventory.inventorySha256(), inventory.rawSha256(), raw.coverage(), raw.candidates(), pass.coverage(), pass.resolutions(),
                 pass.findings(), pass.speakerRecords(), pass.protectedSpans(), pass.disposition(),
                 metrics(inventory, raw.candidates(), pass), pass.duplicateReferencesRemoved(),
-                pass.draftAnchorsDerivedFromQuote(), pass.maxDraftAnchorDeviation(), pass.speakerRecordsDropped());
+                pass.draftAnchorsDerivedFromQuote(), pass.maxDraftAnchorDeviation(), pass.speakerRecordsDropped(), pass.bookkeepingNotes());
     }
 
     public static Map<String, Object> bodyToMap(Body body) {
@@ -571,6 +637,8 @@ public final class EditorialL1Ledger {
         normalizations.put("maxDraftAnchorDeviation", num(body.maxDraftAnchorDeviation()));
         normalizations.put("speakerRecordsDropped", num(body.speakerRecordsDropped().size()));
         normalizations.put("speakerRecordsDroppedPaths", new ArrayList<Object>(body.speakerRecordsDropped()));
+        normalizations.put("bookkeepingNoteCount", num(body.bookkeepingNotes().size()));
+        normalizations.put("bookkeepingNotes", new ArrayList<Object>(body.bookkeepingNotes()));
         m.put("normalizations", normalizations);
         Map<String, Object> inv = new LinkedHashMap<>();
         inv.put("revision", body.inventoryRevision());
@@ -675,11 +743,15 @@ public final class EditorialL1Ledger {
         int draftAnchorsDerived = 0;
         int maxDraftDeviation = 0;
         List<String> droppedSpeakers = new ArrayList<>();
+        List<String> notes = new ArrayList<>();
         Object normalizationValue = report.get("normalizations");
         if (normalizationValue instanceof Map<?, ?> normalizationMap) {
             if (normalizationMap.get("duplicateReferencesRemoved") instanceof BigDecimal count) duplicateReferencesRemoved = count.intValueExact();
             if (normalizationMap.get("draftAnchorDerivedFromQuote") instanceof BigDecimal count) draftAnchorsDerived = count.intValueExact();
             if (normalizationMap.get("maxDraftAnchorDeviation") instanceof BigDecimal count) maxDraftDeviation = count.intValueExact();
+            if (normalizationMap.get("bookkeepingNotes") instanceof List<?> noteList) {
+                for (Object note : noteList) if (note instanceof String text) notes.add(text);
+            }
             if (normalizationMap.get("speakerRecordsDroppedPaths") instanceof List<?> paths) {
                 for (Object path : paths) if (path instanceof String text) droppedSpeakers.add(text);
             }
@@ -688,7 +760,7 @@ public final class EditorialL1Ledger {
                 (String) inv.get("inventorySha256"), (String) inv.get("rawSha256"), rawCoverage, candidates,
                 rangesFromList(report.get("reviewCoverage")), resolutions, findings, speakers, spans,
                 new Disposition((String) d.get("disposition"), (String) d.get("reasonCode"), (String) d.get("stopClass")), metrics,
-                duplicateReferencesRemoved, draftAnchorsDerived, maxDraftDeviation, droppedSpeakers);
+                duplicateReferencesRemoved, draftAnchorsDerived, maxDraftDeviation, droppedSpeakers, notes);
     }
 
     // ---- strict response schema (provider response_format); the parsers above stay the authority ----
@@ -918,9 +990,27 @@ public final class EditorialL1Ledger {
     }
 
     static Map<String, Object> rootOf(byte[] bytes, String attemptIdentity, String wire, Set<String> keys) {
+        return rootOf(bytes, attemptIdentity, wire, keys, Set.of());
+    }
+
+    /**
+     * {@code arrayKeys} are the MAY arrays of the field specification: the prompt tells the model it may omit them, so
+     * an absent one is an empty array (noted) rather than a rejection.
+     */
+    static Map<String, Object> rootOf(byte[] bytes, String attemptIdentity, String wire, Set<String> keys,
+                                      Set<String> arrayKeys) {
         if (bytes == null || bytes.length > MAX_WIRE_BYTES) throw bad("L1_WIRE_BYTE_LIMIT_EXCEEDED", "root");
         Map<String, Object> root = EditorialCanonicalJson.parseObject(bytes);
-        keys(root, keys, "root");
+        keys(root, keys, "root", arrayKeys);
+        if (!arrayKeys.isEmpty()) {
+            root = new LinkedHashMap<>(root);
+            for (String key : new java.util.TreeSet<>(arrayKeys)) {
+                if (!root.containsKey(key)) {
+                    root.put(key, new ArrayList<Object>());
+                    WireNotes.note("missingOptionalKeyDefaulted", key);
+                }
+            }
+        }
         if (!wire.equals(root.get("wireSchemaVersion"))) throw bad("L1_WIRE_SCHEMA_INVALID", "wireSchemaVersion");
         if (!attemptIdentity.equals(root.get("attemptIdentity"))) throw bad("L1_WIRE_ATTEMPT_ECHO_MISMATCH", "attemptIdentity");
         return root;
@@ -958,13 +1048,96 @@ public final class EditorialL1Ledger {
         return value;
     }
 
+    /** Free-text notes the app only displays: control characters and overlong text are normalized, not rejected. */
+    static final Set<String> NOTE_FIELDS = Set.of("findings[].observation", "findings[].expectedMeaning",
+            "findings[].evidenceLimit", "candidates[].note", "speakerRecords[].speaker", "speakerRecords[].listener",
+            "speakerRecords[].basis", "protectedSpans[].reason", "changes[].reason", "preserved[].evidenceLimit",
+            "findingResolutions[].reason", "carriedResolutions[].reason", "probes[].scope", "probes[].contrast",
+            "defects[].note");
+
     static String fieldStr(String phase, Map<String, Object> row, String key, String path) {
-        String text = EditorialFieldSpec.validateString(phase, path, row.get(key), "L1_TEXT_INVALID",
+        Object value = row.get(key);
+        EditorialFieldSpec.Field spec = EditorialFieldSpec.find(phase, path);
+        if (value instanceof String note && spec != null && NOTE_FIELDS.contains(spec.path())) {
+            value = sanitizeNote(note, spec.maxLength(), path);
+        }
+        String text = EditorialFieldSpec.validateString(phase, path, value, "L1_TEXT_INVALID",
                 "L1_TEXT_REQUIRED", "L1_TEXT_TOO_LONG", "L1_TEXT_PATTERN_INVALID");
         for (int i = 0; i < text.length(); i++) if (Character.isISOControl(text.charAt(i))) {
             throw bad("L1_TEXT_CONTROL_CHARACTER", path);
         }
         return text;
+    }
+
+    static String sanitizeNote(String text, int maxLength, String path) {
+        StringBuilder cleaned = new StringBuilder(text.length());
+        boolean changed = false;
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (Character.isISOControl(c)) { cleaned.append(' '); changed = true; }
+            else cleaned.append(c);
+        }
+        if (changed) WireNotes.note("textControlCharactersReplaced", path);
+        String result = cleaned.toString();
+        if (result.length() > maxLength) {
+            int end = maxLength;
+            if (end > 0 && Character.isHighSurrogate(result.charAt(end - 1))) end--;
+            result = result.substring(0, end);
+            WireNotes.note("textTruncated", path);
+        }
+        return result;
+    }
+
+    /** Optional (MAY) keys that are absent take their empty value; the default is noted, never invented content. */
+    static Map<String, Object> withDefaults(Map<String, Object> row, String path, Object... keyAndDefault) {
+        Map<String, Object> copy = new LinkedHashMap<>(row);
+        for (int i = 0; i < keyAndDefault.length; i += 2) {
+            String key = (String) keyAndDefault[i];
+            if (!copy.containsKey(key)) {
+                copy.put(key, keyAndDefault[i + 1]);
+                WireNotes.note("missingOptionalKeyDefaulted", path + "." + key);
+            }
+        }
+        return copy;
+    }
+
+    /** A list of side references: unusable items are dropped and extra items beyond the cap are cut, each noted. */
+    static List<String> lenientTokens(Object value, String path, int maxItems, int maxLength) {
+        List<Object> rows;
+        try { rows = EditorialCanonicalJson.array(value, path); }
+        catch (RuntimeException invalid) { throw WireViolation.from(invalid, "L1_LIST_INVALID", path); }
+        List<String> out = new ArrayList<>();
+        for (int index = 0; index < rows.size(); index++) {
+            Object o = rows.get(index);
+            if (!(o instanceof String text) || text.isBlank() || text.length() > maxLength
+                    || !EditorialP5RawWireContract.token(text, EditorialP5RawWireContract.MAX_ID_LENGTH)) {
+                WireNotes.note("listItemDropped", path + "." + index);
+                continue;
+            }
+            if (out.size() >= maxItems) { WireNotes.note("listTruncated", path); break; }
+            out.add(text);
+        }
+        return out;
+    }
+
+    /** Extra occurrence units: an unusable reference is dropped (noted); the primary anchor stays strict. */
+    static List<String> lenientUnits(Object value, String path, int maxItems, EditorialRawInventory.Inventory inventory) {
+        List<Object> rows;
+        try { rows = EditorialCanonicalJson.array(value, path); }
+        catch (RuntimeException invalid) { throw WireViolation.from(invalid, "L1_LIST_INVALID", path); }
+        List<String> out = new ArrayList<>();
+        for (int index = 0; index < rows.size(); index++) {
+            String id;
+            try {
+                id = EditorialUnitReference.resolve(rows.get(index), inventory, path + "." + index);
+            } catch (WireViolation invalid) {
+                WireNotes.note("unitReferenceDropped", path + "." + index);
+                continue;
+            }
+            if (out.size() >= maxItems) { WireNotes.note("listTruncated", path); break; }
+            out.add(id);
+        }
+        return out;
     }
 
     private static String rawPhase(String wireLabel) {
@@ -1026,7 +1199,8 @@ public final class EditorialL1Ledger {
     }
 
     static void keys(Map<String, Object> value, Set<String> allowed, String path, Set<String> optional) {
-        for (String key : value.keySet()) if (!allowed.contains(key)) throw bad("L1_UNKNOWN_KEY", path);
+        // Z1 BOOKKEEPING: a key the contract does not define changes no verified claim; ignore it and say so
+        for (String key : value.keySet()) if (!allowed.contains(key)) WireNotes.note("unknownKeyIgnored", path);
         for (String key : allowed) if (!optional.contains(key) && !value.containsKey(key)) throw bad("L1_MISSING_KEY", path + "." + key);
     }
 

@@ -160,8 +160,10 @@ public final class EditorialL1AnchorRegressionTest {
                 parse("raw 1", "draft 1", missingFinding(1, 0, "")).findings().get(0).draft());
         expectCode("L1_DRAFT_QUOTE_FORBIDDEN_FOR_MISSING", "findings.0.draftQuote",
                 () -> parse("raw 1", "draft 1", missingFinding(1, 0, "draft 1")));
-        expectCode("L1_DRAFT_ANCHOR_OUT_OF_RANGE", "findings.0.draft.after",
-                () -> parse("raw 1", "draft 1", missingFinding(1, 5, "")));
+        // Z1: a MISSING insertion position past the draft is clamped (the omission is anchored in RAW anyway)
+        EditorialL1Ledger.ReconcilePass clamped = parse("raw 1", "draft 1", missingFinding(1, 5, ""));
+        assertEquals(EditorialL1Ledger.DraftAnchor.missingAfter(1), clamped.findings().get(0).draft());
+        assertTrue(clamped.bookkeepingNotes().contains("anchorClamped:findings.0.draft.after"));
         expectCode("L1_DRAFT_QUOTE_REQUIRED", "findings.0.draftQuote",
                 () -> parse("raw 1", "draft 1", finding(1, 1, 1, "raw 1", "")));
     }
