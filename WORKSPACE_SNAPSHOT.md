@@ -1,13 +1,13 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-05 (+07:00): W1 implemented offline (docs/P6_R6_WIRE_SIMPLIFICATION_PROPOSAL_20261004.md §12). L1 `draft` and L3 `viStart/viEnd` are hints; the app derives the anchor from `draftQuote`/`viQuote` (unique line, else nearest within +-3 lines, else `L1_DRAFT_QUOTE_AMBIGUOUS`), records `draftAnchorDerivedFromQuote` and `maxDraftAnchorDeviation` in REPORT_L1 `normalizations`, and `contractRevision` is now `L1_LEDGER_V8`. No provider call.
+- Updated: 2026-10-05 (+07:00): W1 committed (21499cc0) and W2 replay-all run (docs/P6_R6_W1_W2_EXECUTION_20261005.md). The U6 RECONCILE response now passes both findings but still FAILS replay: `L1_UNIT_LINE_NOT_A_UNIT:speakerRecords.6.unitId` (also `speakerRecords.7.unitId`) - two speaker records name blank RAW lines. A different family than the DRAFT anchor, so per the W2 rule W3 (build/emulator) and W4 (live G1) were not started. No provider call; G1 ledger unchanged.
 - Current version: active v4.18.
 - Current branch: `feature/v4.18-p5e-runner-repair-20260917`; continue the existing branch and release checklist.
-- Current commit: f5db3ec3 — implementation baseline immediately before this snapshot update; confirm actual HEAD on resume.
+- Current commit: 21499cc0 — implementation baseline immediately before this snapshot update; confirm actual HEAD on resume.
 - Current build: no APK build in this package; W3 rebuilds through the wrapper from the W1/W2 HEAD.
-- Current phase: P6 R6 W1 (quote-derived DRAFT/VI anchors) complete offline; W2 replay-all and W3 wrapper build/emulator checks pending.
-- Completed tasks: W1: `EditorialL1Ledger.deriveDraftAnchor`, L3 probe VI anchors derived from `viQuote`, metadata persisted/restored, contractRevision bump, synthetic regression matrix (unique, deviating, ambiguous inside/outside window, not found, empty after normalization, MISSING unchanged, U6 shape). Engine 396/396, app unit and androidTest compile PASS.
-- Pending tasks: W2 replay-all with the U6 RECONCILE response; W3 wrapper builds + emulator checks; W4 live G1 continuation under D-G1c (fx-a03 first, stop before G2).
-- Known bugs: none known in the W1 scope. The U6 response (DRAFT 99 vs quote on 101) should now replay PASS; its second finding remains semantic `UNRESOLVED_SUSPECTED_FALSE_POSITIVE`.
+- Current phase: P6 R6 W2 reported: replay-all does not give U6 RECONCILE PASS; waiting for the owner decision on speakerRecords unit references.
+- Completed tasks: W1 (quote-derived DRAFT/VI anchors, contractRevision L1_LEDGER_V8, metadata, synthetic matrix; engine 396/396, app unit + androidTest compile PASS). W2 replay-all executed: old RAW expected-reject OK, current RAW PASS, U6 RECONCILE findings.0/1 pass, remaining errors listed (exactly two speakerRecords blank-line references; scratch copy with those fixed passes entirely).
+- Pending tasks: Owner decision W5 for speakerRecords[].unitId on blank lines; then W3 wrapper build + emulator checks and W4 live G1 under D-G1c (fx-a03 first, stop before G2).
+- Known bugs: Saved U6 RECONCILE response is a genuine model error: speakerRecords L126 and L140 are blank RAW lines (`L1_UNIT_LINE_NOT_A_UNIT:speakerRecords.6.unitId`). Response `D:\P5E-private\p6-runs\3559de99-978b-410e-b863-c082062187fa\results\fx-a03\responses\002-L1_RECONCILE.json`, SHA-256 `18c5ddb34caf6d197b346ad4b86e8b785b6e8bae5cc96bdeea9de12e0ea126e3`.
 - Regression status: engine 396/396, app unit PASS, androidTest compile PASS. G1 ledger unchanged since the last readback: 9 settled calls, USD 0.07381520 / 1.00, 0 pending UNKNOWN; no G2 or pilot access.
-- Next action: W2: replay-all (old RAW response expected-reject L1_UNIT_UNKNOWN:coverage.0.from, current RAW PASS, U6 RECONCILE PASS), then W3 wrapper build and emulator checks.
+- Next action: Owner chooses how speaker-record unit references are handled (see W5 options in docs/P6_R6_W1_W2_EXECUTION_20261005.md); no live call before that.
