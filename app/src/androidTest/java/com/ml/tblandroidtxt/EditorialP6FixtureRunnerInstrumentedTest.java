@@ -53,6 +53,7 @@ import java.util.UUID;
 import java.util.Locale;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 
 /** Opt-in emulator harness. It reads only four fixture sources plus a label-free runtime manifest. */
@@ -69,6 +70,23 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
     private EditorialPackStorageLayout storage;
     private boolean preserveL1Database;
     private boolean preserveL1Storage;
+
+    @Test public void responseCaptureRetainsExactContentBytes() throws Exception {
+        Path root = Files.createTempDirectory(contextFilesRoot(), "p6-response-capture-test-");
+        byte[] content = "{\"model\":\"text-only\"}".getBytes(StandardCharsets.UTF_8);
+        try {
+            ResponseCapture capture = new ResponseCapture(root);
+            capture.record("L1_RECONCILE", content);
+            Path saved = root.resolve("001-L1_RECONCILE.json");
+            assertArrayEquals(content, Files.readAllBytes(saved));
+        } finally {
+            deleteTree(root);
+        }
+    }
+
+    private Path contextFilesRoot() {
+        return ApplicationProvider.getApplicationContext().getCacheDir().toPath();
+    }
 
     @Test public void runFixture() throws Exception {
         Bundle args = InstrumentationRegistry.getArguments();
@@ -146,6 +164,7 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         Path reportPath = outputRoot.resolve("report-l1.json");
         Path promptPath = outputRoot.resolve("l2-edit-prompt.txt");
         PromptCapture promptCapture = new PromptCapture(outputRoot.resolve("prompts"), promptPath);
+        ResponseCapture responseCapture = new ResponseCapture(outputRoot.resolve("responses"));
         ProviderMetrics metrics = new ProviderMetrics();
         EditorialChainBudgets budgets = EditorialChainBudgets.fullLedgerRecommended();
         String groupId = args.getString("p6_group_id", liveMode ? "" : "P6-OFFLINE-" + runId);
@@ -206,12 +225,12 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
             l3Delegate = new OpenRouterEditorialL3Provider(liveSettings);
         }
         EditorialP5PilotProvider budgetedL1 = new EditorialP6BudgetedL1Provider(
-                new PromptRecordingL1Provider(l1Delegate, promptCapture, liveL1 ? metrics : null), spend, budgets);
+                new PromptRecordingL1Provider(l1Delegate, promptCapture, responseCapture, liveL1 ? metrics : null), spend, budgets);
         EditorialL2Execution.Provider budgetedL2 = new EditorialP6BudgetedPhaseProvider(
-                new PromptRecordingPhaseProvider(l2Delegate, promptCapture, liveL2 ? metrics : null, true),
+                new PromptRecordingPhaseProvider(l2Delegate, promptCapture, responseCapture, liveL2 ? metrics : null, true),
                 spend, budgets, true);
         EditorialL2Execution.Provider budgetedL3 = new EditorialP6BudgetedPhaseProvider(
-                new PromptRecordingPhaseProvider(l3Delegate, promptCapture, liveL3 ? metrics : null, false),
+                new PromptRecordingPhaseProvider(l3Delegate, promptCapture, responseCapture, liveL3 ? metrics : null, false),
                 spend, budgets, false);
         int fakeCalls;
         int measuredCalls;
@@ -814,6 +833,25 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         }
     }
 
+    /** Fixture-only archive of model content bytes, written before the engine validates them. */
+    private static final class ResponseCapture {
+        private final Path root;
+        private int sequence;
+
+        ResponseCapture(Path root) { this.root = root; }
+
+        synchronized void record(String phase, byte[] content) throws IOException {
+            if (phase == null || !phase.matches("[A-Z0-9_]{1,48}") || content == null
+                    || content.length > 65_536) {
+                throw new IllegalArgumentException("P6_RESPONSE_CAPTURE_INVALID");
+            }
+            Files.createDirectories(root);
+            Path path = root.resolve(String.format(Locale.ROOT, "%03d-%s.json", ++sequence, phase));
+            Files.write(path, content, java.nio.file.StandardOpenOption.CREATE_NEW,
+                    java.nio.file.StandardOpenOption.WRITE);
+        }
+    }
+
     private static final class ProviderMetrics {
         int calls;
         int knownCostCalls;
@@ -843,11 +881,14 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
     private static final class PromptRecordingL1Provider implements EditorialP5PilotProvider {
         private final EditorialP5PilotProvider delegate;
         private final PromptCapture prompts;
+        private final ResponseCapture responses;
         private final ProviderMetrics metrics;
 
-        PromptRecordingL1Provider(EditorialP5PilotProvider delegate, PromptCapture prompts, ProviderMetrics metrics) {
+        PromptRecordingL1Provider(EditorialP5PilotProvider delegate, PromptCapture prompts,
+                                  ResponseCapture responses, ProviderMetrics metrics) {
             this.delegate = delegate;
             this.prompts = prompts;
+            this.responses = responses;
             this.metrics = metrics;
         }
 
@@ -859,6 +900,7 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
             prompts.record(request.phase(), OpenRouterEditorialP5PilotProvider.buildLedgerPrompt(request));
             if (metrics != null) metrics.started();
             Response response = delegate.call(request);
+            responses.record(request.phase(), response.responseBytes());
             if (metrics != null) metrics.response(response.inputTokens(), response.outputTokens(),
                     response.reportedCost(), response.costKnown(), response.costReported(), response.finishReason());
             return response;
@@ -868,13 +910,15 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
     private static final class PromptRecordingPhaseProvider implements EditorialL2Execution.Provider {
         private final EditorialL2Execution.Provider delegate;
         private final PromptCapture prompts;
+        private final ResponseCapture responses;
         private final ProviderMetrics metrics;
         private final boolean l2;
 
         PromptRecordingPhaseProvider(EditorialL2Execution.Provider delegate, PromptCapture prompts,
-                                     ProviderMetrics metrics, boolean l2) {
+                                     ResponseCapture responses, ProviderMetrics metrics, boolean l2) {
             this.delegate = delegate;
             this.prompts = prompts;
+            this.responses = responses;
             this.metrics = metrics;
             this.l2 = l2;
         }
@@ -885,6 +929,7 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
             prompts.record(request.phase(), prompt);
             if (metrics != null) metrics.started();
             Response response = delegate.call(request);
+            responses.record(request.phase(), response.responseBytes());
             if (metrics != null) metrics.response(response.inputTokens(), response.outputTokens(),
                     response.cost(), response.costKnown(), false, response.finishReason());
             return response;

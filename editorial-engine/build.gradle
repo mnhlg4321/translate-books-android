@@ -14,3 +14,26 @@ dependencies {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
+
+tasks.register('replayP6WireResponse', JavaExec) {
+    group = 'verification'
+    description = 'Replay one archived P6 L1 response through the production parser without network access.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.ml.tblandroidtxt.editorial.pack.EditorialWireReplayTool'
+    doFirst {
+        def phase = providers.gradleProperty('p6ReplayPhase').orNull
+        def response = providers.gradleProperty('p6ReplayResponse').orNull
+        def raw = providers.gradleProperty('p6ReplayRaw').orNull
+        if (phase == 'L1_RAW_DISCOVERY' && response && raw) {
+            args phase, response, raw
+        } else if (phase == 'L1_RECONCILE' && response && raw
+                && providers.gradleProperty('p6ReplayDraft').orNull
+                && providers.gradleProperty('p6ReplayRawResponse').orNull) {
+            args phase, response, raw,
+                    providers.gradleProperty('p6ReplayDraft').get(),
+                    providers.gradleProperty('p6ReplayRawResponse').get()
+        } else {
+            throw new GradleException('Provide p6ReplayPhase, p6ReplayResponse, p6ReplayRaw and phase-specific replay inputs.')
+        }
+    }
+}
