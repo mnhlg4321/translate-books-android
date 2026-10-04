@@ -2,12 +2,14 @@
 
 ## Current P6 item 11 checkpoint — 2026-10-04
 
-- Current branch is `feature/v4.18-p5e-runner-repair-20260917`; source commit `78851930091804317cac02d6af51c8d424628fc6` is the implementation baseline immediately before the accompanying snapshot commit.
+- Current branch is `feature/v4.18-p5e-runner-repair-20260917`; source commit `8fb2ceef75c2de363a9cb825853f2c9b1c304fd0` is the implementation baseline immediately before the accompanying snapshot commit.
 - `scripts/build-and-save.ps1 -Offline` built production `4.18-p6.21`/code234, event `build-20261004-193841`; APK SHA-256 `ccefceb5513c55fbcd55a8c5fdbff9a877b9451db1acdd2e75d312fbe4fc8f2c`, exact-source ZIP SHA-256 `e2021b1f4cad770970cc97f98c43f6a8811b2fc16d9a35a852d159e8c39fcc23`. Five-file artifact and backup payloads match; app installed and verified on `emulator-5554`.
 - AndroidTest wrapper event `p6-u5-78851930-20261004-01`, APK SHA-256 `df3e6a0fb7d3b21cccd13e599ae5e74789ab1879495169cef76a8eb5658c2661`, source ZIP identical to production; eight-file artifact and backup payloads match. Preflight `5/5`, coordinator `12/12` (main-DB seed opt-in skipped), fake CHAIN `STRUCTURAL_VALID 14/14`, expected negative gate `0/1`; all used 0 actual provider calls. Engine tests `380/380`, app tests `341/341`, lint PASS.
 - U1–U4 implementation and snapshot packages were pushed individually. Contract revision V7 normalizes duplicate references with metadata; empty-normalized citations are rejected; replay-all reports the expected invalid old RAW and PASS for current RAW and exact RECONCILE; synthetic text replaced the brief source excerpt. U5 report: `docs/P6_R6_U1_U6_EXECUTION_20261004.md`.
-- The exact saved `fx-a03` RECONCILE response replays PASS (1 finding, 32 resolutions), allowing U6 under D-G1c. The same device G1 ledger remains 5,237 bytes, SHA-256 `d4826b2bca52494441b9d056323fb5d14e98cd15d9df651ac77027f82f33d14e`; 7 settled calls / 14 entries, USD `0.05538945` spent of `1.00`, USD `0.94461055` remaining, 0 pending UNKNOWN. No new G1 call yet; no G2 or pilot access.
-- Next action: continue G1 from `fx-a03` using the same ledger under D-G1c; stop and run replay-all/report on a new error, UNKNOWN or cap, before G2.
+- The exact saved `fx-a03` RECONCILE response replayed PASS (1 finding, 32 resolutions) before U6. U6 run `3559de99-978b-410e-b863-c082062187fa` continued the same group ledger at `fx-a03`: RAW passed (38 candidates, one range); RECONCILE stopped on `L1_DRAFT_QUOTE_NOT_IN_ANCHOR:findings.0.draftQuote`. Replay-all reported that single unexpected `CODE:path`; the old RAW `L1_UNIT_UNKNOWN:coverage.0.from` remains expected.
+- U6 used 2 calls, 51,605 input / 4,604 output tokens, USD `0.01842575` (`0.00680570` RAW + `0.01162005` RECONCILE); both finish `stop`, no retry/repair/UNKNOWN. Group stopped before the next fixture. Device ledger hash-chain verified: 6,732 bytes, SHA-256 `cd617c2fe252e006050ee8d760705fbbdc058187d10507d599e0905aac0a9997`; 9 settled calls / 18 entries, USD `0.07381520` spent of `1.00`, USD `0.92618480` remaining, pending 0. G2 and pilot untouched.
+- Report and exact response/replay paths: `docs/P6_R6_U1_U6_EXECUTION_20261004.md` and `D:\P5E-private\p6-item11-u6-20261004\`.
+- Next action: diagnose the `fx-a03` RECONCILE mismatch offline; resume G1 only after a regression and exact-response replay pass under D-G1c, before G2.
 
 ## P6 R6 wire v3 V1–V3 checkpoint — 2026-10-04
 

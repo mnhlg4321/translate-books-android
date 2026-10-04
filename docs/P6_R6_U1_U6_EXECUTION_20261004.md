@@ -22,8 +22,24 @@ The AndroidTest wrapper event `p6-u5-78851930-20261004-01` produced APK SHA-256 
 
 Private build and emulator logs are under `D:\P5E-private\p6-item11-u5-20261004\`; fake-run evidence is under `D:\P5E-private\p6-runs\4bb83094-7692-477a-9a5e-e0cef1fbcb46\` and `D:\P5E-private\p6-runs\9b5904fc-bb49-4dbc-b7a7-6185c3c8ab72\`.
 
-## D-G1c replay gate and U6 state
+## D-G1c replay gate
 
 On the current production parser, the exact saved `fx-a03` RECONCILE response replayed as `PASS L1_RECONCILE findings=1 resolutions=32`. Response SHA-256 is `865c956537ef6f75f22e951dbd7fe62c199e61a00425666727bd202aac33b513`; replay log: `D:\P5E-private\p6-item11-u5-20261004\fx-a03-reconcile-exact-replay.log`.
 
-The same G1 device ledger remains byte-identical at 5,237 bytes, SHA-256 `d4826b2bca52494441b9d056323fb5d14e98cd15d9df651ac77027f82f33d14e`: 7 settled calls / 14 entries, USD `0.05538945` spent of `1.00`, USD `0.94461055` remaining, 0 pending UNKNOWN. U5 added no G1 call. The exact-response D-G1c gate is met; U6 has not yet sent a provider call. No G2 or pilot access.
+Before U6, the same G1 device ledger was byte-identical at 5,237 bytes, SHA-256 `d4826b2bca52494441b9d056323fb5d14e98cd15d9df651ac77027f82f33d14e`: 7 settled calls / 14 entries, USD `0.05538945` spent of `1.00`, USD `0.94461055` remaining, 0 pending UNKNOWN. U5 added no G1 call. The exact-response D-G1c gate was met before resuming the group.
+
+## U6 — G1 base resumed, group stopped at fx-a03
+
+Run `3559de99-978b-410e-b863-c082062187fa` resumed the existing group `G1-20261003-ecbf8c55` at `fx-a03`, using the approved eight-fixture base order and retaining L1 only for `fx-a04`, `fx-a11`, and `fx-a02`. The production parser accepted RAW (38 candidates, one coverage range), then rejected RECONCILE. The runner stopped the entire group at `fx-a03`; it did not start another fixture or repeat round.
+
+- Full stop details: `P6_L1_PREDECESSOR_FAILED:REPAIR_L1_LEDGER_INVALID`; `phase=L1_RECONCILE`; `L1_DRAFT_QUOTE_NOT_IN_ANCHOR:findings.0.draftQuote`.
+- Actual calls: 2; `L1_RAW_DISCOVERY` cost USD `0.00680570`, `L1_RECONCILE` cost USD `0.01162005`, total USD `0.01842575`; 51,605 input / 4,604 output tokens; both finish reasons `stop`; 0 retry, 0 repair, 0 UNKNOWN.
+- Exact saved responses: RAW `D:\P5E-private\p6-runs\3559de99-978b-410e-b863-c082062187fa\results\fx-a03\responses\001-L1_RAW_DISCOVERY.json` (SHA-256 `652045f9f28666f4e94296e93bf4403d37acb4819cd3a44ad5840b8238bafe8a`); RECONCILE `D:\P5E-private\p6-runs\3559de99-978b-410e-b863-c082062187fa\results\fx-a03\responses\002-L1_RECONCILE.json` (SHA-256 `18c5ddb34caf6d197b346ad4b86e8b785b6e8bae5cc96bdeea9de12e0ea126e3`).
+- Replay-all output: expected old RAW code `L1_UNIT_UNKNOWN:coverage.0.from`; new RAW PASS (38 candidates, one coverage range); one unexpected code: **`L1_DRAFT_QUOTE_NOT_IN_ANCHOR:findings.0.draftQuote`** for the RECONCILE response above; `REPLAY_ALL FAIL`. Full log: `D:\P5E-private\p6-item11-u6-20261004\replay-all.log`.
+- G1 device ledger now matches the host snapshot at 6,732 bytes, SHA-256 `cd617c2fe252e006050ee8d760705fbbdc058187d10507d599e0905aac0a9997`: 9 settled calls / 18 entries, USD `0.07381520` spent of `1.00`, USD `0.92618480` remaining, 0 pending UNKNOWN. The ledger verifier passed, including capacity for another base fixture. No fixture after `fx-a03` was dispatched; G2 and the pilot remain untouched.
+
+Complete unexpected `CODE:path` list:
+
+`L1_DRAFT_QUOTE_NOT_IN_ANCHOR:findings.0.draftQuote` — `D:\P5E-private\p6-runs\3559de99-978b-410e-b863-c082062187fa\results\fx-a03\responses\002-L1_RECONCILE.json`
+
+No further provider call was made. Resume G1 only after offline diagnosis, a regression test, and replay of this exact RECONCILE response to PASS under D-G1c; stop before G2.
