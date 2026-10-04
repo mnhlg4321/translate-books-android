@@ -66,3 +66,7 @@ Z1–Z4: USD 0. Z5: tối đa phần còn lại của G1 (USD 0.9064, đã duy�
 ## 5. Quyết định cần owner
 
 **D-Z3:** thay quy tắc dừng của G1 bằng Z3 (từ chối là kết quả đo; chỉ dừng nhóm khi UNKNOWN/trần/hạ tầng/3 lỗi cùng mã liên tiếp). Khuyến nghị **đồng ý** — đây là thay đổi then chốt để một lượt live cho ra kết quả thay vì dừng ở lỗi đầu tiên. Z1–Z4 offline, không cần quyền thêm.
+
+## 6. Quyết định owner
+
+**D-Z3 đã được owner duyệt (2026-10-05, "đồng ý"):** quy tắc chạy G1 đổi theo Z3 — fixture bị từ chối (SEMANTIC hoặc BOOKKEEPING sót) được ghi là kết quả đo và chạy tiếp fixture kế; chỉ dừng nhóm khi UNKNOWN, chạm trần nhóm (phần còn lại USD 0.9064), lỗi hạ tầng (mạng/route/fingerprint), hoặc 3 fixture liên tiếp bị từ chối cùng một mã. Z1–Z4 làm offline trước; Z5 chạy đủ G1 (8 fixture + 2 lượt lặp) rồi dừng trước G2. 0 retry tự động, 0 repair call, không đụng pilot.
