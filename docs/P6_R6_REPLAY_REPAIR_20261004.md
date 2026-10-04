@@ -20,8 +20,7 @@ Engine `391/391` PASS. Process regression `EditorialWireReplayToolTest` `6/6` PA
 
 - Response: `D:\P5E-private\p6-runs\3559de99-978b-410e-b863-c082062187fa\results\fx-a03\responses\002-L1_RECONCILE.json`
 - SHA-256: `18c5ddb34caf6d197b346ad4b86e8b785b6e8bae5cc96bdeea9de12e0ea126e3`
-- Manifest/log ngoài Git: `D:\P5E-private\p6-item12-u7-replay-manifest-20261004.json`, `D:\P5E-private\p6-item12-u7-exact-u6-replay.json`
-- Kết quả process: exit `0`; actual `REJECTED`; expected `EXPECTED_REJECT`; `L1_DRAFT_QUOTE_NOT_IN_ANCHOR:findings.0.draftQuote`; test conclusion `PASS`. Diagnostic còn thấy finding độc lập `findings.1` hợp lệ về cấu trúc và ghi rõ phần dependent bị skip. Đây không phải REPORT_L1 hợp lệ và không phải semantic PASS.
+- Manifest/log ngoài Git: `D:\P5E-private\p6-item12-u7-replay-all-manifest-20261004.json`, `D:\P5E-private\p6-item12-u7-replay-all-20261004.json` (log SHA-256 `324ddc7e2779b4e256d250ee8c315fca2c71e4f7ef4c0a9e9e2bf346ce4b69fd`). Replay-all exit `0`: old RAW actual `REJECTED`/expected `EXPECTED_REJECT` với `L1_UNIT_UNKNOWN:coverage.0.from`; current RAW actual `PASS`/expected `PASS`; RECONCILE actual `REJECTED`/expected `EXPECTED_REJECT` với `L1_DRAFT_QUOTE_NOT_IN_ANCHOR:findings.0.draftQuote`. Diagnostic còn thấy finding độc lập `findings.1` hợp lệ về cấu trúc và ghi rõ phần dependent bị skip. Đây không phải REPORT_L1 hợp lệ và không phải semantic PASS.
 
 ## Phân loại semantic và gánh bằng chứng
 
