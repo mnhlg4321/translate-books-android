@@ -47,3 +47,35 @@ Compare quotes against the anchored RAW text after the same normalization the pr
 ## Next action
 
 Owner/Claude decision on the ruby-aware quote comparison (it changes validation, not just a prompt), then a new G1 continuation from `fx-a03` under the standing rule; nothing further is dispatched before that.
+
+## Item 10 continuation — quote fix, wrapper rebuild, and replay gate (2026-10-04)
+
+The owner-approved D-G1c standing rule was applied: the exact refused response must replay successfully with a regression test before continuing live G1. No provider call was made during this continuation.
+
+### T1 — quote comparison regression (offline, PASS)
+
+- `bee24f9a2cc1c1fb71ff9b0b57d86665cfd18063` adds a shared matcher for NFC and outer whitespace normalization and ruby-aware RAW anchors across L1, L2, L3 and final-read quote fields; prompts explain RAW `漢字《reading》` markup. Contract revision is `L1_LEDGER_V6`.
+- The first exact-response replay passed the ruby quote check but exposed the next independent invariant below. To cover both provider forms and the local fake harness, `3480dda8a7638a072ef05afd277fa1afd358c2d8` also removes closed `《…》` spans from quote excerpts during RAW-anchor comparison; the regression asserts both reading-free and ruby-marked excerpts are accepted, while a quote consisting only of the reading is rejected.
+- Offline checks on the follow-up source: engine 375/375, app 341/341, AndroidTest compile PASS; wrapper clean build also ran app unit tests and lint successfully. The PowerShell 5.1 adb transfer repair is included in `run_group.ps1` and was checked with the 5.1 parser.
+
+### T2 — clean-HEAD wrapper build and emulator validation (offline, PASS)
+
+- Clean worktree HEAD `3480dda8a7638a072ef05afd277fa1afd358c2d8`; production built through `scripts/build-and-save.ps1 -Offline`: `4.18-p6.20` / code 233, event `build-20261004-103109`, APK SHA-256 `746AF50FCD1ADCCD246665FD15A6CF162B2BDC8758DB5BF1C89C29E5E81C1E49`, exact-source ZIP SHA-256 `281DF34DAEF12459ED1255F26C89CA25C29D454BBDA4718208B0D33DDB5F275F`. Five-file payloads in `artifacts/builds` and `backup/builds` were byte-identical. Installed and verified on `emulator-5554` only.
+- AndroidTest wrapper event `p6-ruby-anchor-3480dda8-20261004-01`; APK SHA-256 `316E03A3F6657B6A84F7BD5DC9939E9F262FEC9E67C8DBDB91E90CEBBC5104C4`, same exact-source ZIP. Eight-file payloads in `artifacts/test-builds` and `backup/test-builds` were byte-identical; APK installed on `emulator-5554`.
+- Emulator preflight `5/5` and coordinator `12/12` passed. Fake CHAIN run `8f9a1072-f2ae-488c-b00a-b402f5661014`: `STRUCTURAL_VALID 14/14`, 0 actual provider calls, 1,680 ledger entries, 0 pending UNKNOWN; fake no-edit semantic control was FAIL 12 / PASS 2. The PowerShell 5.1 transfer path completed.
+- Negative gate run `8f9a1072-f2ae-488c-b00a-b402f5661015`, only `fx-a03`: `STRUCTURAL_VALID 0/1` as expected, `P6_L1_PREDECESSOR_FAILED:REPAIR_L1_LEDGER_INVALID`, `phase=L1_RAW_DISCOVERY`, `L1_COVERAGE_GAP:coverage`, 0 actual provider calls, 0 cost.
+- The older invalid RAW response still replays to `L1_UNIT_UNKNOWN:coverage.0.from`; response `D:\P5E-private\p6-runs\7b6ac5b8-aea9-44b0-8f92-da72ca0d2e7e\results\fx-a03\responses\001-L1_RAW_DISCOVERY.json`. Final replay log: `D:\P5E-private\p6-item10-qa-20261004\fx-a03-raw-replay-final.log`.
+
+### T3 — stop before another live call on the exact-response replay gate
+
+On the final parser, replaying the exact `fx-a03` RECONCILE response now advances past the furigana-aware quote check and stops at the independent overlap invariant:
+
+`L1_OCCURRENCE_DUPLICATE:findings.0.occurrenceUnits.0`
+
+Response to replay: `D:\P5E-private\p6-runs\3a9c1d54-7e20-4b6f-9a31-5c8e4f2d7b02\results\fx-a03\responses\002-L1_RECONCILE.json` (SHA-256 `865C956537EF6F75F22E951DBD7FE62C199E61A00425666727BD202AAC33B513`). The finding repeats a unit already present in `rawUnits`; the parser currently requires `occurrenceUnits` to identify additional distinct units. Replay log: `D:\P5E-private\p6-item10-qa-20261004\fx-a03-reconcile-replay-final.log`.
+
+This response does not yet replay to PASS, so the standing D-G1c continuation condition is unmet. The group was not restarted and no additional provider call or repair call was sent. The current device ledger was read back as 5,237 bytes, SHA-256 `D4826B2BCA52494441B9D056323FB5D14E98CD15D9DF651AC77027F82F33D14E`, 7 settled calls / 14 entries, USD `0.05538945` of `1.00`, USD `0.94461055` remaining, pending UNKNOWN `0`. This includes the two previously reported calls; this continuation added USD `0`. No G2 or pilot access.
+
+## Next action
+
+Resolve offline whether `occurrenceUnits` must exclude the primary `rawUnits` anchor or whether the parser should accept that overlap; add a regression and replay this exact response to PASS before resuming G1 at `fx-a03`. Stop before G2.

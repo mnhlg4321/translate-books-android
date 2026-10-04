@@ -1,5 +1,15 @@
 # Build State
 
+## Current P6 item 10 checkpoint — 2026-10-04
+
+- Current branch is `feature/v4.18-p5e-runner-repair-20260917`; source commit `3480dda8a7638a072ef05afd277fa1afd358c2d8` is the implementation baseline immediately before the accompanying snapshot commit.
+- `scripts/build-and-save.ps1 -Offline` built production `4.18-p6.20`/code233, event `build-20261004-103109`; APK SHA-256 `746AF50FCD1ADCCD246665FD15A6CF162B2BDC8758DB5BF1C89C29E5E81C1E49`, exact-source ZIP SHA-256 `281DF34DAEF12459ED1255F26C89CA25C29D454BBDA4718208B0D33DDB5F275F`. The five-file artifact and backup payloads match; app installed and verified on `emulator-5554`.
+- AndroidTest wrapper event `p6-ruby-anchor-3480dda8-20261004-01`, APK SHA-256 `316E03A3F6657B6A84F7BD5DC9939E9F262FEC9E67C8DBDB91E90CEBBC5104C4`, source ZIP identical to production; eight-file artifact and backup payloads match. Preflight `5/5`, coordinator `12/12`, fake CHAIN `STRUCTURAL_VALID 14/14` and negative gate expected `0/1` all pass with 0 real provider calls.
+- Ruby-aware quote matching is committed as `bee24f9a` and `3480dda8`; contract revision is `L1_LEDGER_V6`. Engine tests `375/375`, app tests `341/341`, AndroidTest compilation pass. Old invalid RAW response replay remains `L1_UNIT_UNKNOWN:coverage.0.from`.
+- Exact stored `fx-a03` RECONCILE response now clears the ruby quote check but replays to `L1_OCCURRENCE_DUPLICATE:findings.0.occurrenceUnits.0`. Under the approved D-G1c standing rule, no further live G1 call is allowed until this exact response passes replay plus regression. G1 remains 7 settled calls / 14 entries, USD `0.05538945` spent of `1.00`, USD `0.94461055` remaining, 0 pending UNKNOWN; no G2 or pilot access.
+- Evidence: `docs/P6_R6_T1_T3_EXECUTION_20261004.md`; private emulator QA and replay logs are under `D:\P5E-private\p6-item10-qa-20261004\`.
+- Next action: resolve the `occurrenceUnits` overlap with its primary `rawUnits` anchor offline and replay the exact response to PASS before resuming G1 at `fx-a03`.
+
 ## P6 R6 wire v3 V1–V3 checkpoint — 2026-10-04
 
 - V1/V2 PASS on implementation d1cc1452: engine 351/351, app 341/341, lint/AndroidTest compile PASS, Python 33/33. Offline wrapper 4.18-p6.16/code229, build-20261004-065614, APK SHA-256 98AAE03A23DD6D0573E2C5FFBCB46C6B18918D35D6A68B663143B0D5B6673141; AndroidTest event p6-unit-ref-d1cc1452-20261004-16 SHA-256 7A03D658CE7B83C59509791E6315976D943A67661D234B236F265E1777DF7AAF; source ZIP A7F543DBCC394C5295F61CF4FABF5FAE8750D827258D0E30430C3AFFFFEF2170. Mirrored payloads verified, installed emulator only. Preflight 5/5, coordinator 1/1, fake CHAIN 14/14 structural, typed negative L1_COVERAGE_GAP verifier/scorer PASS, 0 actual calls in V1–V2.
