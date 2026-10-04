@@ -237,7 +237,7 @@ def main():
                     or structural.get("valid") is not False
                     or structural.get("stage") != "L1"
                     or structural.get("providerCalls") != 1
-                    or "L1_COVERAGE_GAP" not in structural.get("stops", [])):
+                    or "L1_COVERAGE_GAP:coverage" not in structural.get("stops", [])):
                 raise ValueError(fixture["id"] + ": explicit fake invalid-L1 contract failed")
             check_prompt_captures(output, args.mode, invalid_l1=True)
             final = open(os.path.join(output, "final.txt"), "rb").read()
