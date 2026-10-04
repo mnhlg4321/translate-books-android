@@ -37,7 +37,7 @@ Scorer on the partial output: `STRUCTURAL_VALID 0/1`, `SEMANTIC_EVAL FAIL` (`KNO
 ### What the refusal is (diagnosed offline from the stored response, not a model-quality finding)
 
 - The model found exactly the seeded defect: one finding on `L99`, type `UNTRANSLATED`, DRAFT lines 99–99, `draftQuote` present in the DRAFT line, observation and expected meaning correct; 32 candidate resolutions; disposition CONTINUE with an empty `reasonCode` (the S3b rule worked).
-- The `rawQuote` (13 characters) is not a substring of RAW line 99 because that RAW line carries ruby furigana markup `…揃《そろ》えても…`; the model quoted the reading-free text `…揃えても`. No RAW line contains the quote. So the validator's exact-substring rule rejected a faithful quote of the visible sentence.
+- The model's `rawQuote` omitted a furigana annotation present on RAW line 99. The exact-substring check therefore rejected a faithful quote of the visible Japanese text. The source phrase is intentionally omitted from this report.
 - Same family elsewhere (not yet exercised): L2 `evidenceQuote`, L3 probe `rawQuote`/`viQuote`, final-read `quote` use the same exact-substring comparison; RAW chapters carry `《…》` ruby throughout.
 
 ### Proposed fix (needs a decision under the standing rule: this is a new code, so the group stopped)

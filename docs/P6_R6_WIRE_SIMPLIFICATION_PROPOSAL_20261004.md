@@ -129,11 +129,11 @@ Owner duyệt **S1–S4** (offline, thay đổi wire và parser trong production
 - (b) **Trùng tham chiếu trong một danh sách** (`rawUnits[]`, `occurrenceUnits[]`, `candidateIds[]`, `evidenceRefs[]`, `changeIds[]`, `preserveIds[]`, `probes[].rawUnits[]`) và (c) **`occurrenceUnits` chồng `rawUnits`**: app **chuẩn hóa xác định**: bỏ phần lặp, giữ thứ tự lần xuất hiện đầu; bỏ khỏi `occurrenceUnits` các unit đã có trong `rawUnits`. Không thêm/bớt nội dung nghĩa. Ghi số mục đã khử vào metadata của artifact (`normalizations.duplicateReferencesRemoved`), không vào prompt.
 - `L3_PROBE_ANCHOR_DUPLICATE` (hai probe khác nhau cùng anchor) giữ nguyên; chỉ xem lại nếu có từ chối thật.
 
-**Quyết định 2 — bịt lỗ hổng trích dẫn:** `EditorialQuoteMatcher.contains/containsRaw` trả **false** khi trích dẫn **rỗng sau chuẩn hóa** (NFC + trim + bỏ `《…》`), áp cho mọi nơi dùng (`rawQuote`, `evidenceQuote`, `draftQuote`, `viQuote`, final-read `quote`, `before`). Test: `《x》`, chuỗi toàn khoảng trắng, chỉ furigana → không khớp; `揃《そろ》えても` ↔ `揃えても` vẫn khớp (dùng văn bản tổng hợp).
+**Quyết định 2 — bịt lỗ hổng trích dẫn:** `EditorialQuoteMatcher.contains/containsRaw` trả **false** khi trích dẫn **rỗng sau chuẩn hóa** (NFC + trim + bỏ `《…》`), áp cho mọi nơi dùng (`rawQuote`, `evidenceQuote`, `draftQuote`, `viQuote`, final-read `quote`, `before`). Test: `《x》`, chuỗi toàn khoảng trắng, chỉ furigana → không khớp; văn bản tổng hợp `試験例《しけんれい》を表示` ↔ `試験例を表示` vẫn khớp.
 
 **Quyết định 3 — gỡ hết lỗi trong một lần replay:** thêm chế độ **replay-all** (chỉ offline, chỉ công cụ replay): parser chạy ở chế độ thu thập, tiếp tục qua từng item độc lập và in toàn bộ `CODE:path` của một response; parser production vẫn fail-fast. Nếu chế độ thu thập quá xâm lấn, tối thiểu cho công cụ replay áp các chuẩn hóa đã duyệt rồi chạy lại cho tới khi gặp lỗi không thuộc danh sách — và in đủ chuỗi lỗi.
 
-**Quyết định 4 — dữ liệu sách:** thay mảnh RAW thật `…揃《そろ》えても…` trong `docs/P6_R6_T1_T3_EXECUTION_20261004.md` và test (`揃《そろ》えても行99です。`) bằng câu tổng hợp có furigana; không viết lại lịch sử Git (mảnh rất ngắn, đã nằm trong commit cũ — ghi nhận, không force-push).
+**Quyết định 4 — dữ liệu sách:** thay mảnh RAW ngắn còn trong `docs/P6_R6_T1_T3_EXECUTION_20261004.md` và test (`試験用《しけんよう》行99です。`) bằng câu tổng hợp có furigana; không viết lại lịch sử Git (mảnh rất ngắn đã nằm trong commit cũ — ghi nhận, không force-push).
 
 ### Gói cho Codex
 

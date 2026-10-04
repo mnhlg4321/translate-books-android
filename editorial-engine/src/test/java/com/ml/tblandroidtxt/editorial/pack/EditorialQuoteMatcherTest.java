@@ -8,11 +8,11 @@ import static org.junit.Assert.assertTrue;
 /** Shared evidence comparison used by the ledger validators. */
 public final class EditorialQuoteMatcherTest {
     @Test public void normalizesNfcAndOuterWhitespaceAndRemovesOnlyRawRubyReadings() {
-        String raw = "  café and 揃《そろ》えても  ";
-        assertTrue(EditorialQuoteMatcher.containsRaw(raw, " 揃えても "));
-        assertTrue(EditorialQuoteMatcher.containsRaw(raw, " 揃《そろ》えても "));
-        assertTrue(EditorialQuoteMatcher.contains(raw, " cafe\u0301 and 揃《そろ》えても "));
-        assertFalse(EditorialQuoteMatcher.containsRaw(raw, "そろ"));
+        String raw = "  café and 試験例《しけんれい》を表示する  ";
+        assertTrue(EditorialQuoteMatcher.containsRaw(raw, " 試験例を表示 "));
+        assertTrue(EditorialQuoteMatcher.containsRaw(raw, " 試験例《しけんれい》を表示 "));
+        assertTrue(EditorialQuoteMatcher.contains(raw, " cafe\u0301 and 試験例《しけんれい》を表示する "));
+        assertFalse(EditorialQuoteMatcher.containsRaw(raw, "しけんれい"));
         assertFalse(EditorialQuoteMatcher.containsRaw(raw, "not present"));
     }
 
