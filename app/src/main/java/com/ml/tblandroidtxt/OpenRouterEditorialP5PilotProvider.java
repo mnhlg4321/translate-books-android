@@ -3,6 +3,7 @@ package com.ml.tblandroidtxt;
 import com.ml.tblandroidtxt.editorial.pack.EditorialCanonicalJson;
 import com.ml.tblandroidtxt.editorial.pack.EditorialDiffValidator;
 import com.ml.tblandroidtxt.editorial.pack.EditorialL1Ledger;
+import com.ml.tblandroidtxt.editorial.pack.EditorialFieldSpec;
 import com.ml.tblandroidtxt.editorial.pack.EditorialRawInventory;
 import com.ml.tblandroidtxt.editorial.pack.EditorialUnitReference;
 import com.ml.tblandroidtxt.editorial.pack.EditorialLedgerValidator;
@@ -614,7 +615,9 @@ public final class OpenRouterEditorialP5PilotProvider implements EditorialP5Pilo
         } else {
             user.append(", candidates <=").append(EditorialL1Ledger.MAX_CANDIDATES_PER_CALL);
         }
-        user.append(", text fields <=").append(EditorialL1Ledger.MAX_TEXT).append(" characters. Every key in the schema is required; use empty strings, empty arrays or 0 where nothing applies.\n");
+        user.append(", text fields <=").append(EditorialL1Ledger.MAX_TEXT)
+                .append(" characters. Every shown key is required; empty values are allowed only where the field specification says MAY or CONDITIONAL.\n")
+                .append(EditorialFieldSpec.promptRules(request.phase()));
         user.append(coverageFacts(request.visibleSources().get(EditorialSafe4Contract.RAW)));
         return new PromptPair(system.toString(), user.toString());
     }

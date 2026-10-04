@@ -77,7 +77,7 @@ public final class EditorialP5CExactBindingExecution {
 
     /**
      * The L1 contract this instance runs and reads. The legacy value reproduces every request and identity
-     * written before the ledger contract; {@link EditorialContractRevision#L1_LEDGER_V3} runs the error ledger.
+     * written before the ledger contract; {@link EditorialContractRevision#CURRENT_LEDGER} runs the error ledger.
      */
     public static EditorialP5CExactBindingExecution forContract(TranslationRepository database,
                                                                 EditorialPackStorageLayout storage,

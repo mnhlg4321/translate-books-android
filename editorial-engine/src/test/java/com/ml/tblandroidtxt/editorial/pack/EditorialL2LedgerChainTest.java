@@ -151,7 +151,7 @@ public final class EditorialL2LedgerChainTest {
         final byte[] report;
 
         Ledger(List<EditorialL1Ledger.Finding> findings, List<EditorialL1Ledger.ProtectedSpan> spans) {
-            this.context = fixture(RAW, DRAFT).withContractRevision(EditorialContractRevision.L1_LEDGER_V3);
+            this.context = fixture(RAW, DRAFT).withContractRevision(EditorialContractRevision.CURRENT_LEDGER);
             this.report = reportOf(context, RAW, findings, spans);
         }
 

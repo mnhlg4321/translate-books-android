@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * L1 Error Ledger, contract revision {@code L1_LEDGER_V3}. Four notions stay apart: a RAW unit/occurrence is a
+ * L1 Error Ledger, current contract revision {@code L1_LEDGER_V4}. Four notions stay apart: a RAW unit/occurrence is a
  * part of the source (the app's {@link EditorialRawInventory}); a candidate is a suspicion raised by the blind RAW
  * pass; a finding is a defect with evidence in the DRAFT; a change is an edit (L2/L3). The model supplies
  * judgement and the app checks everything checkable: every unit id exists, coverage ranges close over the whole
@@ -28,16 +28,16 @@ public final class EditorialL1Ledger {
      * and is never truncated. The count and text limits below keep a realistic call far under it.
      */
     public static final int MAX_WIRE_BYTES = 65_536;
-    public static final int MAX_FINDINGS_PER_CALL = 48;
-    public static final int MAX_CANDIDATES_PER_CALL = 400;
-    public static final int MAX_SPEAKER_RECORDS_PER_CALL = 200;
-    public static final int MAX_PROTECTED_SPANS_PER_CALL = 100;
-    public static final int MAX_RANGES = 120;
-    public static final int MAX_TEXT = 240;
-    public static final int MAX_QUOTE = 80;
-    public static final int MAX_REFS = 4;
-    public static final int MAX_RAW_UNITS_PER_FINDING = 6;
-    public static final int MAX_OCCURRENCE_UNITS = 40;
+    public static final int MAX_FINDINGS_PER_CALL = EditorialFieldSpec.MAX_FINDINGS;
+    public static final int MAX_CANDIDATES_PER_CALL = EditorialFieldSpec.MAX_L1_CANDIDATES;
+    public static final int MAX_SPEAKER_RECORDS_PER_CALL = EditorialFieldSpec.MAX_SPEAKERS;
+    public static final int MAX_PROTECTED_SPANS_PER_CALL = EditorialFieldSpec.MAX_PROTECTED_SPANS;
+    public static final int MAX_RANGES = EditorialFieldSpec.MAX_RANGES;
+    public static final int MAX_TEXT = EditorialFieldSpec.MAX_TEXT;
+    public static final int MAX_QUOTE = EditorialFieldSpec.MAX_QUOTE;
+    public static final int MAX_REFS = EditorialFieldSpec.MAX_EVIDENCE_REFS;
+    public static final int MAX_RAW_UNITS_PER_FINDING = EditorialFieldSpec.MAX_RAW_UNITS_PER_FINDING;
+    public static final int MAX_OCCURRENCE_UNITS = EditorialFieldSpec.MAX_OCCURRENCES;
 
     public static final Set<String> FINDING_TYPES = Set.of("UNTRANSLATED", "MEANING", "OMISSION", "ADDITION", "NUMBER",
             "NEGATION", "GLOSSARY", "ADDRESS_PROFILE", "SPEAKER_LISTENER", "STRUCTURE");
@@ -125,7 +125,8 @@ public final class EditorialL1Ledger {
     public static RawPass parseRawPass(byte[] bytes, String attemptIdentity, EditorialRawInventory.Inventory inventory,
                                        String wireLabel) {
         Map<String, Object> root = rootOf(bytes, attemptIdentity, wireLabel, Set.of("wireSchemaVersion", "attemptIdentity", "coverage", "candidates"));
-        List<EditorialRawInventory.Range> coverage = coverage(root.get("coverage"), inventory);
+        String phase = rawPhase(wireLabel);
+        List<EditorialRawInventory.Range> coverage = coverage(root.get("coverage"), inventory, phase);
         List<Object> rows = EditorialCanonicalJson.array(root.get("candidates"), "candidates");
         if (rows.size() > MAX_CANDIDATES_PER_CALL) throw bad("L1_CANDIDATE_LIMIT_EXCEEDED");
         List<Candidate> candidates = new ArrayList<>();
@@ -133,12 +134,12 @@ public final class EditorialL1Ledger {
         for (int index = 0; index < rows.size(); index++) {
             String path = "candidates." + index;
             Map<String, Object> row = object(rows.get(index), path);
-            keys(row, Set.of("candidateId", "ledger", "unitId", "note"), path, Set.of("note"));
-            String id = id(row, "candidateId", path + ".candidateId");
+            keys(row, Set.of("candidateId", "ledger", "unitId", "note"), path);
+            String id = id(row, "candidateId", path + ".candidateId", phase);
             if (!ids.add(id)) throw bad("L1_CANDIDATE_ID_DUPLICATE", path + ".candidateId");
-            String ledger = enumOf(row, "ledger", CANDIDATE_LEDGERS, path + ".ledger");
+            String ledger = enumOf(row, "ledger", CANDIDATE_LEDGERS, path + ".ledger", phase);
             String unit = EditorialUnitReference.resolve(row.get("unitId"), inventory, path + ".unitId");
-            String note = row.containsKey("note") ? str(row, "note", 80, false, path + ".note") : "";
+            String note = fieldStr(phase, row, "note", path + ".note");
             candidates.add(new Candidate(id, ledger, unit, note));
         }
         return new RawPass(coverage, candidates);
@@ -150,10 +151,10 @@ public final class EditorialL1Ledger {
                                                List<String> draftLines, List<Candidate> rawCandidates) {
         Map<String, Object> root = rootOf(bytes, attemptIdentity, RECONCILE_WIRE, Set.of("wireSchemaVersion", "attemptIdentity",
                 "coverage", "resolutions", "findings", "speakerRecords", "protectedSpans", "disposition"));
-        Disposition disposition = disposition(object(root.get("disposition"), "disposition"), "disposition");
+        Disposition disposition = disposition(object(root.get("disposition"), "disposition"), "disposition", EditorialFieldSpec.L1_RECONCILE);
         boolean stop = "STOP".equals(disposition.kind());
         List<EditorialRawInventory.Range> coverage = stop && EditorialCanonicalJson.array(root.get("coverage"), "coverage").isEmpty()
-                ? List.of() : coverage(root.get("coverage"), inventory);
+                ? List.of() : coverage(root.get("coverage"), inventory, EditorialFieldSpec.L1_RECONCILE);
 
         List<Finding> findings = new ArrayList<>();
         Set<String> errorIds = new HashSet<>();
@@ -163,7 +164,8 @@ public final class EditorialL1Ledger {
         if (findingRows.size() > MAX_FINDINGS_PER_CALL) throw bad("L1_FINDING_LIMIT_EXCEEDED");
         for (int index = 0; index < findingRows.size(); index++) {
             String path = "findings." + index;
-            Finding finding = finding(object(findingRows.get(index), path), inventory, draftLines, knownCandidates, path);
+            Finding finding = finding(object(findingRows.get(index), path), inventory, draftLines, knownCandidates,
+                    path, EditorialFieldSpec.L1_RECONCILE);
             if (!errorIds.add(finding.errorId())) throw bad("L1_ERROR_ID_DUPLICATE", path + ".errorId");
             findings.add(finding);
         }
@@ -173,11 +175,11 @@ public final class EditorialL1Ledger {
         for (int index = 0; index < resolutionRows.size(); index++) {
             String path = "resolutions." + index;
             Map<String, Object> row = object(resolutionRows.get(index), path);
-            keys(row, Set.of("candidateId", "status", "findingRef"), path, Set.of("findingRef"));
-            String candidateId = id(row, "candidateId", path + ".candidateId");
+            keys(row, Set.of("candidateId", "status", "findingRef"), path);
+            String candidateId = id(row, "candidateId", path + ".candidateId", EditorialFieldSpec.L1_RECONCILE);
             if (!knownCandidates.contains(candidateId) || resolved.containsKey(candidateId)) throw bad("L1_RESOLUTION_ID_INVALID", path + ".candidateId");
-            String status = enumOf(row, "status", CANDIDATE_STATUSES, path + ".status");
-            String ref = row.containsKey("findingRef") ? str(row, "findingRef", 48, false, path + ".findingRef") : "";
+            String status = enumOf(row, "status", CANDIDATE_STATUSES, path + ".status", EditorialFieldSpec.L1_RECONCILE);
+            String ref = fieldStr(EditorialFieldSpec.L1_RECONCILE, row, "findingRef", path + ".findingRef");
             if (!ref.isEmpty() && !errorIds.contains(ref)) throw bad("L1_FINDING_REF_UNKNOWN", path + ".findingRef");
             resolved.put(candidateId, new Resolution(candidateId, status, ref));
         }
@@ -193,8 +195,10 @@ public final class EditorialL1Ledger {
             Map<String, Object> row = object(speakerRows.get(index), path);
             keys(row, Set.of("unitId", "speaker", "listener", "basis"), path);
             String unit = EditorialUnitReference.resolve(row.get("unitId"), inventory, path + ".unitId");
-            speakers.add(new SpeakerRecord(unit, str(row, "speaker", 80, true, path + ".speaker"),
-                    str(row, "listener", 80, true, path + ".listener"), str(row, "basis", MAX_TEXT, true, path + ".basis")));
+            speakers.add(new SpeakerRecord(unit,
+                    fieldStr(EditorialFieldSpec.L1_RECONCILE, row, "speaker", path + ".speaker"),
+                    fieldStr(EditorialFieldSpec.L1_RECONCILE, row, "listener", path + ".listener"),
+                    fieldStr(EditorialFieldSpec.L1_RECONCILE, row, "basis", path + ".basis")));
         }
 
         List<ProtectedSpan> spans = new ArrayList<>();
@@ -205,13 +209,14 @@ public final class EditorialL1Ledger {
             String path = "protectedSpans." + index;
             Map<String, Object> row = object(spanRows.get(index), path);
             keys(row, Set.of("spanId", "start", "end", "source", "reason"), path);
-            String spanId = id(row, "spanId", path + ".spanId");
+            String spanId = id(row, "spanId", path + ".spanId", EditorialFieldSpec.L1_RECONCILE);
             if (!spanIds.add(spanId)) throw bad("L1_PROTECTED_ID_DUPLICATE", path + ".spanId");
             int start = intOf(row, "start", path + ".start");
             int end = intOf(row, "end", path + ".end");
             if (start < 1 || end < start || end > draftLines.size()) throw bad("L1_PROTECTED_RANGE_INVALID", path);
-            spans.add(new ProtectedSpan(spanId, start, end, enumOf(row, "source", PROTECTED_SOURCES, path + ".source"),
-                    str(row, "reason", MAX_TEXT, true, path + ".reason")));
+            spans.add(new ProtectedSpan(spanId, start, end,
+                    enumOf(row, "source", PROTECTED_SOURCES, path + ".source", EditorialFieldSpec.L1_RECONCILE),
+                    fieldStr(EditorialFieldSpec.L1_RECONCILE, row, "reason", path + ".reason")));
         }
         // a line the report protects cannot also be the anchor of an open defect
         Set<Integer> protectedNumbers = protectedLines(spans);
@@ -232,23 +237,23 @@ public final class EditorialL1Ledger {
     }
 
     private static Finding finding(Map<String, Object> row, EditorialRawInventory.Inventory inventory,
-                                   List<String> draftLines, Set<String> knownCandidates, String path) {
+                                   List<String> draftLines, Set<String> knownCandidates, String path, String phase) {
         keys(row, Set.of("errorId", "type", "severity", "rawUnits", "draft", "rawQuote", "draftQuote",
                 "observation", "expectedMeaning", "evidenceRefs", "candidateIds", "occurrenceUnits", "disposition",
-                "evidenceLimit"), path, Set.of("candidateIds", "occurrenceUnits", "evidenceLimit", "evidenceRefs"));
-        String errorId = id(row, "errorId", path + ".errorId");
-        String type = enumOf(row, "type", FINDING_TYPES, path + ".type");
-        String severity = enumOf(row, "severity", SEVERITIES, path + ".severity");
+                "evidenceLimit"), path);
+        String errorId = id(row, "errorId", path + ".errorId", phase);
+        String type = enumOf(row, "type", FINDING_TYPES, path + ".type", phase);
+        String severity = enumOf(row, "severity", SEVERITIES, path + ".severity", phase);
         List<String> rawUnits = EditorialUnitReference.resolveList(row.get("rawUnits"), path + ".rawUnits", MAX_RAW_UNITS_PER_FINDING, inventory);
         if (rawUnits.isEmpty()) throw bad("L1_FINDING_RAW_ANCHOR_REQUIRED", path + ".rawUnits");
         if (new HashSet<>(rawUnits).size() != rawUnits.size()) throw bad("L1_FINDING_RAW_ANCHOR_DUPLICATE", path + ".rawUnits");
         for (int index = 0; index < rawUnits.size(); index++) if (!inventory.has(rawUnits.get(index))) throw bad("L1_UNIT_UNKNOWN", path + ".rawUnits." + index);
 
         Map<String, Object> draftRow = object(row.get("draft"), path + ".draft");
-        String kind = str(draftRow, "kind", 16, true, path + ".draft.kind");
+        String kind = fieldStr(phase, draftRow, "kind", path + ".draft.kind");
         DraftAnchor anchor;
         // one object shape for both kinds (a strict response schema cannot express a union); unused numbers are 0
-        keys(draftRow, Set.of("kind", "start", "end", "after"), path + ".draft", Set.of("start", "end", "after"));
+        keys(draftRow, Set.of("kind", "start", "end", "after"), path + ".draft");
         if ("LINES".equals(kind)) {
             int start = intOf(draftRow, "start", path + ".draft.start");
             int end = intOf(draftRow, "end", path + ".draft.end");
@@ -265,11 +270,11 @@ public final class EditorialL1Ledger {
             throw bad("L1_DRAFT_ANCHOR_KIND_INVALID", path + ".draft.kind");
         }
 
-        String rawQuote = str(row, "rawQuote", MAX_QUOTE, true, path + ".rawQuote");
+        String rawQuote = fieldStr(phase, row, "rawQuote", path + ".rawQuote");
         boolean quoted = false;
         for (String unit : rawUnits) quoted |= inventory.unit(unit).text().contains(rawQuote);
         if (!quoted) throw bad("L1_RAW_QUOTE_NOT_IN_ANCHOR", path + ".rawQuote");
-        String draftQuote = str(row, "draftQuote", MAX_QUOTE, false, path + ".draftQuote");
+        String draftQuote = fieldStr(phase, row, "draftQuote", path + ".draftQuote");
         if ("LINES".equals(anchor.kind())) {
             if (draftQuote.isEmpty()) throw bad("L1_DRAFT_QUOTE_REQUIRED", path + ".draftQuote");
             StringBuilder span = new StringBuilder();
@@ -279,36 +284,40 @@ public final class EditorialL1Ledger {
             throw bad("L1_DRAFT_QUOTE_FORBIDDEN_FOR_MISSING", path + ".draftQuote");
         }
 
-        String observation = str(row, "observation", MAX_TEXT, true, path + ".observation");
-        String expected = str(row, "expectedMeaning", MAX_TEXT, true, path + ".expectedMeaning");
-        List<String> refs = row.containsKey("evidenceRefs") ? stringList(row.get("evidenceRefs"), path + ".evidenceRefs", MAX_REFS, 48) : List.of();
+        String observation = fieldStr(phase, row, "observation", path + ".observation");
+        String expected = fieldStr(phase, row, "expectedMeaning", path + ".expectedMeaning");
+        List<String> refs = stringList(row.get("evidenceRefs"), path + ".evidenceRefs",
+                EditorialFieldSpec.MAX_EVIDENCE_REFS, EditorialFieldSpec.MAX_ID_LENGTH);
         for (int index = 0; index < refs.size(); index++) if (!EditorialP5RawWireContract.token(refs.get(index), EditorialP5RawWireContract.MAX_ID_LENGTH)) throw bad("L1_EVIDENCE_REF_INVALID", path + ".evidenceRefs." + index);
-        List<String> candidateIds = row.containsKey("candidateIds") ? stringList(row.get("candidateIds"), path + ".candidateIds", 8, 48) : List.of();
+        List<String> candidateIds = stringList(row.get("candidateIds"), path + ".candidateIds",
+                EditorialFieldSpec.MAX_CANDIDATE_REFS, EditorialFieldSpec.MAX_ID_LENGTH);
         for (int index = 0; index < candidateIds.size(); index++) if (!knownCandidates.contains(candidateIds.get(index))) throw bad("L1_CANDIDATE_REF_UNKNOWN", path + ".candidateIds." + index);
-        List<String> occurrences = row.containsKey("occurrenceUnits")
-                ? EditorialUnitReference.resolveList(row.get("occurrenceUnits"), path + ".occurrenceUnits", MAX_OCCURRENCE_UNITS, inventory) : List.of();
+        List<String> occurrences = EditorialUnitReference.resolveList(row.get("occurrenceUnits"), path + ".occurrenceUnits",
+                MAX_OCCURRENCE_UNITS, inventory);
         Set<String> seen = new HashSet<>(rawUnits);
         for (int index = 0; index < occurrences.size(); index++) {
             String unit = occurrences.get(index);
             if (!inventory.has(unit)) throw bad("L1_UNIT_UNKNOWN", path + ".occurrenceUnits." + index);
             if (!seen.add(unit)) throw bad("L1_OCCURRENCE_DUPLICATE", path + ".occurrenceUnits." + index);
         }
-        String disposition = enumOf(row, "disposition", DISPOSITIONS, path + ".disposition");
-        String limit = row.containsKey("evidenceLimit") ? str(row, "evidenceLimit", MAX_TEXT, false, path + ".evidenceLimit") : "";
+        String disposition = enumOf(row, "disposition", DISPOSITIONS, path + ".disposition", phase);
+        String limit = fieldStr(phase, row, "evidenceLimit", path + ".evidenceLimit");
         if ("PRESERVED".equals(disposition) && limit.isEmpty()) throw bad("L1_PRESERVED_NEEDS_EVIDENCE_LIMIT", path + ".evidenceLimit");
         return new Finding(errorId, type, severity, rawUnits, anchor, rawQuote, draftQuote, observation, expected, refs,
                 candidateIds, occurrences, disposition, limit);
     }
 
-    private static Disposition disposition(Map<String, Object> row, String path) {
+    private static Disposition disposition(Map<String, Object> row, String path, String phase) {
         keys(row, Set.of("disposition", "reasonCode", "stopClass"), path);
-        String kind = str(row, "disposition", 24, true, path + ".disposition");
-        String reason = str(row, "reasonCode", 32, true, path + ".reasonCode");
-        String stopClass = str(row, "stopClass", 24, true, path + ".stopClass");
-        if (!EditorialP5RawWireContract.safeText(reason)) throw bad("L1_DISPOSITION_REASON_INVALID", path + ".reasonCode");
+        String kind = fieldStr(phase, row, "disposition", path + ".disposition");
+        String reason = fieldStr(phase, row, "reasonCode", path + ".reasonCode");
+        String stopClass = fieldStr(phase, row, "stopClass", path + ".stopClass");
         if ("CONTINUE".equals(kind) || "PRESERVE_DRAFT".equals(kind)) {
+            if (!reason.isEmpty() && !EditorialP5RawWireContract.safeText(reason)) throw bad("L1_DISPOSITION_REASON_INVALID", path + ".reasonCode");
             if (!"NONE".equals(stopClass)) throw bad("L1_DISPOSITION_STOP_CLASS_INVALID");
         } else if ("STOP".equals(kind)) {
+            if (reason.isEmpty()) throw bad("L1_TEXT_REQUIRED", path + ".reasonCode");
+            if (!EditorialP5RawWireContract.safeText(reason)) throw bad("L1_DISPOSITION_REASON_INVALID", path + ".reasonCode");
             if (!"CONTENT_BLOCKED".equals(stopClass) && !"INPUT_REQUIRED".equals(stopClass)) throw bad("L1_DISPOSITION_STOP_CLASS_INVALID");
         } else {
             throw bad("L1_DISPOSITION_INVALID");
@@ -371,7 +380,7 @@ public final class EditorialL1Ledger {
 
     public static Map<String, Object> bodyToMap(Body body) {
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("contractRevision", EditorialContractRevision.L1_LEDGER_V3);
+        m.put("contractRevision", EditorialContractRevision.CURRENT_LEDGER);
         m.put("phase", body.phase());
         Map<String, Object> inv = new LinkedHashMap<>();
         inv.put("revision", body.inventoryRevision());
@@ -480,8 +489,8 @@ public final class EditorialL1Ledger {
 
     // ---- strict response schema (provider response_format); the parsers above stay the authority ----
 
-    public static final String RAW_SCHEMA_NAME = "safe4_l1_raw_ledger_v3";
-    public static final String RECONCILE_SCHEMA_NAME = "safe4_l1_reconcile_ledger_v3";
+    public static final String RAW_SCHEMA_NAME = "safe4_l1_raw_ledger_v4";
+    public static final String RECONCILE_SCHEMA_NAME = "safe4_l1_reconcile_ledger_v4";
 
     /** JSON schema of the wire for a strict response format; every key is required, unused values are empty/0. */
     public static Map<String, Object> jsonSchema(boolean rawPass) {
@@ -491,46 +500,53 @@ public final class EditorialL1Ledger {
     /** The RAW-pass schema under another wire label (L2 discovery, L3 re-audit); RECONCILE keeps its own label. */
     public static Map<String, Object> jsonSchema(boolean rawPass, String wireLabel) {
         Map<String, Object> props = new LinkedHashMap<>();
-        props.put("wireSchemaVersion", enumSchema(List.of(wireLabel)));
-        props.put("attemptIdentity", stringSchema(128));
-        props.put("coverage", arraySchema(MAX_RANGES, objectSchema(
-                "from", unitRefSchema(), "to", unitRefSchema(), "status", enumSchema(List.copyOf(new java.util.TreeSet<>(RANGE_STATUSES))))));
+        String phase = rawPass ? EditorialFieldSpec.L1_RAW_DISCOVERY : EditorialFieldSpec.L1_RECONCILE;
+        Map<String, Object> wireVersion = fieldSchema(phase, "wireSchemaVersion");
+        wireVersion.put("enum", new ArrayList<Object>(List.of(wireLabel)));
+        props.put("wireSchemaVersion", wireVersion);
+        props.put("attemptIdentity", fieldSchema(phase, "attemptIdentity"));
+        props.put("coverage", fieldArraySchema(phase, "coverage", objectSchema(
+                "from", fieldSchema(phase, "coverage[].from"), "to", fieldSchema(phase, "coverage[].to"),
+                "status", fieldSchema(phase, "coverage[].status"))));
         if (rawPass) {
-            props.put("candidates", arraySchema(MAX_CANDIDATES_PER_CALL, objectSchema(
-                    "candidateId", stringSchema(EditorialP5RawWireContract.MAX_ID_LENGTH),
-                    "ledger", enumSchema(List.copyOf(new java.util.TreeSet<>(CANDIDATE_LEDGERS))),
-                    "unitId", unitRefSchema(), "note", stringSchema(80))));
+            props.put("candidates", fieldArraySchema(phase, "candidates", objectSchema(
+                    "candidateId", fieldSchema(phase, "candidates[].candidateId"),
+                    "ledger", fieldSchema(phase, "candidates[].ledger"),
+                    "unitId", fieldSchema(phase, "candidates[].unitId"),
+                    "note", fieldSchema(phase, "candidates[].note"))));
             return topSchema(props);
         }
-        props.put("resolutions", arraySchema(MAX_CANDIDATES_PER_CALL, objectSchema(
-                "candidateId", stringSchema(EditorialP5RawWireContract.MAX_ID_LENGTH),
-                "status", enumSchema(List.copyOf(new java.util.TreeSet<>(CANDIDATE_STATUSES))),
-                "findingRef", stringSchema(48))));
-        Map<String, Object> draft = objectSchema("kind", enumSchema(List.of("LINES", "MISSING")),
+        props.put("resolutions", fieldArraySchema(phase, "resolutions", objectSchema(
+                "candidateId", fieldSchema(phase, "resolutions[].candidateId"),
+                "status", fieldSchema(phase, "resolutions[].status"),
+                "findingRef", fieldSchema(phase, "resolutions[].findingRef"))));
+        Map<String, Object> draft = objectSchema("kind", fieldSchema(phase, "findings[].draft.kind"),
                 "start", integerSchema(), "end", integerSchema(), "after", integerSchema());
-        props.put("findings", arraySchema(MAX_FINDINGS_PER_CALL, objectSchema(
-                "errorId", stringSchema(EditorialP5RawWireContract.MAX_ID_LENGTH),
-                "type", enumSchema(List.copyOf(new java.util.TreeSet<>(FINDING_TYPES))),
-                "severity", enumSchema(List.of("MINOR", "MAJOR", "CRITICAL")),
-                "rawUnits", arraySchema(MAX_RAW_UNITS_PER_FINDING, unitRefSchema()),
+        props.put("findings", fieldArraySchema(phase, "findings", objectSchema(
+                "errorId", fieldSchema(phase, "findings[].errorId"),
+                "type", fieldSchema(phase, "findings[].type"),
+                "severity", fieldSchema(phase, "findings[].severity"),
+                "rawUnits", fieldArraySchema(phase, "findings[].rawUnits", fieldSchema(phase, "findings[].rawUnits[]")),
                 "draft", draft,
-                "rawQuote", stringSchema(MAX_QUOTE), "draftQuote", stringSchema(MAX_QUOTE),
-                "observation", stringSchema(MAX_TEXT), "expectedMeaning", stringSchema(MAX_TEXT),
-                "evidenceRefs", arraySchema(MAX_REFS, stringSchema(48)),
-                "candidateIds", arraySchema(8, stringSchema(48)),
-                "occurrenceUnits", arraySchema(MAX_OCCURRENCE_UNITS, unitRefSchema()),
-                "disposition", enumSchema(List.of("OPEN", "PRESERVED")),
-                "evidenceLimit", stringSchema(MAX_TEXT))));
-        props.put("speakerRecords", arraySchema(MAX_SPEAKER_RECORDS_PER_CALL, objectSchema(
-                "unitId", unitRefSchema(), "speaker", stringSchema(80), "listener", stringSchema(80),
-                "basis", stringSchema(MAX_TEXT))));
-        props.put("protectedSpans", arraySchema(MAX_PROTECTED_SPANS_PER_CALL, objectSchema(
-                "spanId", stringSchema(48), "start", integerSchema(), "end", integerSchema(),
-                "source", enumSchema(List.copyOf(new java.util.TreeSet<>(PROTECTED_SOURCES))),
-                "reason", stringSchema(MAX_TEXT))));
-        props.put("disposition", objectSchema("disposition", enumSchema(List.of("CONTINUE", "PRESERVE_DRAFT", "STOP")),
-                "reasonCode", stringSchema(32),
-                "stopClass", enumSchema(List.of("NONE", "CONTENT_BLOCKED", "INPUT_REQUIRED"))));
+                "rawQuote", fieldSchema(phase, "findings[].rawQuote"), "draftQuote", fieldSchema(phase, "findings[].draftQuote"),
+                "observation", fieldSchema(phase, "findings[].observation"), "expectedMeaning", fieldSchema(phase, "findings[].expectedMeaning"),
+                "evidenceRefs", fieldArraySchema(phase, "findings[].evidenceRefs", fieldSchema(phase, "findings[].evidenceRefs[]")),
+                "candidateIds", fieldArraySchema(phase, "findings[].candidateIds", fieldSchema(phase, "findings[].candidateIds[]")),
+                "occurrenceUnits", fieldArraySchema(phase, "findings[].occurrenceUnits", fieldSchema(phase, "findings[].occurrenceUnits[]")),
+                "disposition", fieldSchema(phase, "findings[].disposition"),
+                "evidenceLimit", fieldSchema(phase, "findings[].evidenceLimit"))));
+        props.put("speakerRecords", fieldArraySchema(phase, "speakerRecords", objectSchema(
+                "unitId", fieldSchema(phase, "speakerRecords[].unitId"),
+                "speaker", fieldSchema(phase, "speakerRecords[].speaker"),
+                "listener", fieldSchema(phase, "speakerRecords[].listener"),
+                "basis", fieldSchema(phase, "speakerRecords[].basis"))));
+        props.put("protectedSpans", fieldArraySchema(phase, "protectedSpans", objectSchema(
+                "spanId", fieldSchema(phase, "protectedSpans[].spanId"), "start", integerSchema(), "end", integerSchema(),
+                "source", fieldSchema(phase, "protectedSpans[].source"),
+                "reason", fieldSchema(phase, "protectedSpans[].reason"))));
+        props.put("disposition", objectSchema("disposition", fieldSchema(phase, "disposition.disposition"),
+                "reasonCode", fieldSchema(phase, "disposition.reasonCode"),
+                "stopClass", fieldSchema(phase, "disposition.stopClass")));
         return topSchema(props);
     }
 
@@ -549,17 +565,16 @@ public final class EditorialL1Ledger {
         return topSchema(props);
     }
 
-    private static Map<String, Object> unitRefSchema() {
-        Map<String, Object> schema = stringSchema(64);
-        schema.put("pattern", "^L[1-9][0-9]*$");
-        return schema;
+    private static Map<String, Object> fieldSchema(String phase, String path) {
+        return EditorialFieldSpec.schema(phase, path);
     }
 
-    private static Map<String, Object> stringSchema(int maxLength) {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("type", "string");
-        m.put("maxLength", num(maxLength));
-        return m;
+    private static Map<String, Object> fieldArraySchema(String phase, String path, Map<String, Object> items) {
+        EditorialFieldSpec.Field spec = EditorialFieldSpec.find(phase, path);
+        if (spec == null || spec.kind() != EditorialFieldSpec.Kind.ARRAY) {
+            throw new IllegalArgumentException("EDITORIAL_FIELD_SPEC_MISSING:" + phase + ":" + path);
+        }
+        return arraySchema(spec.minItems(), spec.maxItems(), items);
     }
 
     private static Map<String, Object> integerSchema() {
@@ -576,8 +591,13 @@ public final class EditorialL1Ledger {
     }
 
     private static Map<String, Object> arraySchema(int maxItems, Map<String, Object> items) {
+        return arraySchema(0, maxItems, items);
+    }
+
+    private static Map<String, Object> arraySchema(int minItems, int maxItems, Map<String, Object> items) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("type", "array");
+        if (minItems > 0) m.put("minItems", num(minItems));
         m.put("maxItems", num(maxItems));
         m.put("items", items);
         return m;
@@ -665,6 +685,10 @@ public final class EditorialL1Ledger {
     }
 
     static List<EditorialRawInventory.Range> coverage(Object value, EditorialRawInventory.Inventory inventory) {
+        return coverage(value, inventory, EditorialFieldSpec.L1_RAW_DISCOVERY);
+    }
+
+    static List<EditorialRawInventory.Range> coverage(Object value, EditorialRawInventory.Inventory inventory, String phase) {
         List<Object> rows = EditorialCanonicalJson.array(value, "coverage");
         if (rows.size() > MAX_RANGES) throw bad("L1_COVERAGE_RANGE_LIMIT_EXCEEDED");
         List<EditorialRawInventory.Range> ranges = new ArrayList<>();
@@ -674,7 +698,7 @@ public final class EditorialL1Ledger {
             keys(row, Set.of("from", "to", "status"), path);
             ranges.add(new EditorialRawInventory.Range(EditorialUnitReference.resolve(row.get("from"), inventory, path + ".from"),
                     EditorialUnitReference.resolve(row.get("to"), inventory, path + ".to"),
-                    enumOf(row, "status", RANGE_STATUSES, path + ".status")));
+                    enumOf(row, "status", RANGE_STATUSES, path + ".status", phase)));
         }
         List<String> issues = EditorialRawInventory.coverageIssues(inventory, ranges);
         if (!issues.isEmpty()) {
@@ -703,8 +727,14 @@ public final class EditorialL1Ledger {
     }
 
     static String id(Map<String, Object> row, String key, String path) {
-        String value = str(row, key, EditorialP5RawWireContract.MAX_ID_LENGTH, true, path);
-        if (!EditorialP5RawWireContract.token(value, EditorialP5RawWireContract.MAX_ID_LENGTH)) throw bad("L1_ID_INVALID", path);
+        String value = str(row, key, EditorialFieldSpec.MAX_ID_LENGTH, true, path);
+        if (!EditorialP5RawWireContract.token(value, EditorialFieldSpec.MAX_ID_LENGTH)) throw bad("L1_ID_INVALID", path);
+        return value;
+    }
+
+    static String id(Map<String, Object> row, String key, String path, String phase) {
+        String value = fieldStr(phase, row, key, path);
+        if (!EditorialP5RawWireContract.token(value, EditorialFieldSpec.MAX_ID_LENGTH)) throw bad("L1_ID_INVALID", path);
         return value;
     }
 
@@ -716,6 +746,27 @@ public final class EditorialL1Ledger {
         String value = str(row, key, 32, true, path);
         if (!allowed.contains(value)) throw bad("L1_ENUM_INVALID", path);
         return value;
+    }
+
+    static String enumOf(Map<String, Object> row, String key, Set<String> allowed, String path, String phase) {
+        String value = fieldStr(phase, row, key, path);
+        if (!allowed.contains(value)) throw bad("L1_ENUM_INVALID", path);
+        return value;
+    }
+
+    static String fieldStr(String phase, Map<String, Object> row, String key, String path) {
+        String text = EditorialFieldSpec.validateString(phase, path, row.get(key), "L1_TEXT_INVALID",
+                "L1_TEXT_REQUIRED", "L1_TEXT_TOO_LONG", "L1_TEXT_PATTERN_INVALID");
+        for (int i = 0; i < text.length(); i++) if (Character.isISOControl(text.charAt(i))) {
+            throw bad("L1_TEXT_CONTROL_CHARACTER", path);
+        }
+        return text;
+    }
+
+    private static String rawPhase(String wireLabel) {
+        if (EditorialL2Execution.DISCOVERY_WIRE_V3.equals(wireLabel)) return EditorialFieldSpec.L2_RAW_DISCOVERY;
+        if (EditorialL3Execution.REAUDIT_WIRE_V3.equals(wireLabel)) return EditorialFieldSpec.L3_RAW_FIRST_REAUDIT;
+        return EditorialFieldSpec.L1_RAW_DISCOVERY;
     }
 
     static String str(Map<String, Object> row, String key, int max, boolean required) {

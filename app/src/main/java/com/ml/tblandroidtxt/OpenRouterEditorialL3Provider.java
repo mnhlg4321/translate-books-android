@@ -2,6 +2,7 @@ package com.ml.tblandroidtxt;
 
 import com.ml.tblandroidtxt.editorial.pack.EditorialCanonicalJson;
 import com.ml.tblandroidtxt.editorial.pack.EditorialFinalRead;
+import com.ml.tblandroidtxt.editorial.pack.EditorialFieldSpec;
 import com.ml.tblandroidtxt.editorial.pack.EditorialL2Execution;
 import com.ml.tblandroidtxt.editorial.pack.EditorialL3Execution;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5RawWireContract;
@@ -160,6 +161,7 @@ public final class OpenRouterEditorialL3Provider implements EditorialL2Execution
                 .append("Return exactly one JSON object and no Markdown or commentary.\n")
                 .append(read ? OpenRouterEditorialL2Provider.FINAL_READ_RULES
                         : reaudit ? (v3 ? REAUDIT_RULES_V3 : REAUDIT_RULES) : (v3 ? RECONCILE_RULES_V3 : RECONCILE_RULES))
+                .append(v3 || read ? EditorialFieldSpec.promptRules(request.phase()) : "")
                 .append("\n[PROJECT_INSTRUCTION]\n").append(authority(request, EditorialPackFileRole.PROJECT_INSTRUCTION))
                 .append("\n[/PROJECT_INSTRUCTION]\n[TURN_PROMPT]\n").append(authority(request, EditorialPackFileRole.TURN_PROMPT))
                 .append("\n[/TURN_PROMPT]\n[WORKFLOW]\n").append(authority(request, EditorialPackFileRole.WORKFLOW))

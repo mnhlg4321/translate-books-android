@@ -13,14 +13,18 @@ public final class EditorialContractRevision {
     public static final String LEGACY_V1 = "LEGACY_CONTRACT_V1";
     public static final String L1_LEDGER_V2 = "L1_LEDGER_V2";
     public static final String L1_LEDGER_V3 = "L1_LEDGER_V3";
+    public static final String L1_LEDGER_V4 = "L1_LEDGER_V4";
+    public static final String CURRENT_LEDGER = L1_LEDGER_V4;
     public static final String REPORT_SCHEMA_V2 = "safe4.full.report-l1.v2";
-    private static final Set<String> KNOWN = Set.of(LEGACY_V1, L1_LEDGER_V2, L1_LEDGER_V3);
+    private static final Set<String> KNOWN = Set.of(LEGACY_V1, L1_LEDGER_V2, L1_LEDGER_V3, L1_LEDGER_V4);
 
     private EditorialContractRevision() { }
 
     public static boolean known(String revision) { return revision != null && KNOWN.contains(revision); }
 
-    public static boolean isLedger(String revision) { return L1_LEDGER_V2.equals(revision) || L1_LEDGER_V3.equals(revision); }
+    public static boolean isLedger(String revision) {
+        return L1_LEDGER_V2.equals(revision) || L1_LEDGER_V3.equals(revision) || L1_LEDGER_V4.equals(revision);
+    }
 
     /** Revision recorded in a parsed REPORT_L1; a missing or unknown value means the legacy contract. */
     public static String ofReport(Map<String, Object> report) {

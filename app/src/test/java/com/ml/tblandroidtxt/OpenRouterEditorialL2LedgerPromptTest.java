@@ -1,6 +1,7 @@
 package com.ml.tblandroidtxt;
 
 import com.ml.tblandroidtxt.editorial.pack.EditorialFinalRead;
+import com.ml.tblandroidtxt.editorial.pack.EditorialFieldSpec;
 import com.ml.tblandroidtxt.editorial.pack.EditorialL2Execution;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotRequest;
 import com.ml.tblandroidtxt.editorial.pack.EditorialPackFileRole;
@@ -58,6 +59,8 @@ public final class OpenRouterEditorialL2LedgerPromptTest {
         assertTrue(prompt.system.contains("findingResolutions must contain EXACTLY ONE row per finding errorId"));
         assertTrue(prompt.system.contains("INSERT_AFTER"));
         assertTrue(prompt.system.contains("MERGE_WITH_NEXT"));
+        assertTrue(prompt.system.contains("MUST changes[].reason length 1.." + EditorialFieldSpec.MAX_MODEL_TEXT));
+        assertTrue(prompt.system.contains("MAY omit changes[].op; when present its value MUST ∈ {DELETE|INSERT_AFTER|MERGE_WITH_NEXT|REPLACE}"));
         assertTrue(prompt.system.contains("occurrences must contain one {unitId, ref} for EVERY unit"));
         assertTrue(prompt.user.contains(EditorialL2Execution.WIRE_SCHEMA_VERSION_V3));
         assertTrue(prompt.user.contains("\"findingResolutions\""));
@@ -79,6 +82,8 @@ public final class OpenRouterEditorialL2LedgerPromptTest {
         assertTrue(prompt.user.contains("targetSha256"));
         assertTrue(prompt.user.contains(EditorialFinalRead.WIRE));
         assertTrue(prompt.system.contains("last " + EditorialFinalRead.TAIL_LENGTH + " characters"));
+        assertTrue(prompt.system.contains("MUST readSha256 length 64..64"));
+        assertTrue(prompt.system.contains("MUST probeTails[].tail length 1.." + EditorialFieldSpec.MAX_FINAL_READ_TAIL));
         Map<String, byte[]> noProbes = readSources();
         noProbes.remove(EditorialFinalRead.PROBES_ROLE);
         assertFalse(OpenRouterEditorialL2Provider.validRequest(request(EditorialFinalRead.L2_PHASE, EditorialFinalRead.WIRE, noProbes)));

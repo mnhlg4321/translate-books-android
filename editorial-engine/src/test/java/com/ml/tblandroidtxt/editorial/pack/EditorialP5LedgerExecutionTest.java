@@ -59,7 +59,7 @@ public final class EditorialP5LedgerExecutionTest {
     private static Map<String, Object> finding(String errorId, int rawLine, int draftLine, String rawQuote, String draftQuote,
                                                String type, List<Object> candidateIds, List<Object> occurrences) {
         return map("errorId", errorId, "type", type, "severity", "MAJOR", "rawUnits", new ArrayList<Object>(List.of(id(rawLine))),
-                "draft", map("kind", "LINES", "start", BigDecimal.valueOf(draftLine), "end", BigDecimal.valueOf(draftLine)),
+                "draft", map("kind", "LINES", "start", BigDecimal.valueOf(draftLine), "end", BigDecimal.valueOf(draftLine), "after", BigDecimal.ZERO),
                 "rawQuote", rawQuote, "draftQuote", draftQuote, "observation", "obs", "expectedMeaning", "exp",
                 "evidenceRefs", new ArrayList<Object>(), "candidateIds", candidateIds, "occurrenceUnits", occurrences,
                 "disposition", "OPEN", "evidenceLimit", "");
@@ -82,7 +82,7 @@ public final class EditorialP5LedgerExecutionTest {
     // ---- flow ----
 
     private static EditorialP5PilotRequest ledgerRaw(Fixture f) {
-        return f.request.withContractRevision(EditorialContractRevision.L1_LEDGER_V3);
+        return f.request.withContractRevision(EditorialContractRevision.CURRENT_LEDGER);
     }
 
     private static EditorialP5PilotRequest ledgerReconcile(Fixture f, EditorialP5PilotRequest raw, byte[] rawReport) {
@@ -99,7 +99,7 @@ public final class EditorialP5LedgerExecutionTest {
         EditorialP5PilotResult rawResult = run(raw, authorization(raw, "auth-raw"), provider, store);
         assertEquals(rawResult.reasonCode(), EditorialP5PilotResult.Outcome.COMMITTED, rawResult.outcome());
         byte[] rawReport = rawResult.committedResult().reportBytes();
-        assertEquals(EditorialContractRevision.L1_LEDGER_V3, EditorialContractRevision.ofReportBytes(rawReport));
+        assertEquals(EditorialContractRevision.CURRENT_LEDGER, EditorialContractRevision.ofReportBytes(rawReport));
         EditorialL1Ledger.Body rawBody = EditorialL1Ledger.parseBody(EditorialCanonicalJson.parseObject(rawReport));
         assertEquals(2, rawBody.candidates().size());
         assertEquals(0, rawBody.metrics().uniqueFindingCount());

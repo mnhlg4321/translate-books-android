@@ -20,7 +20,8 @@ public final class EditorialUnitReference {
     }
 
     public static String resolve(Object reference, EditorialRawInventory.Inventory inventory, String path) {
-        if (!(reference instanceof String) || !((String) reference).matches("^L[1-9][0-9]*$")) {
+        if (!(reference instanceof String) || ((String) reference).length() > EditorialFieldSpec.MAX_UNIT_REFERENCE_LENGTH
+                || !((String) reference).matches(EditorialFieldSpec.UNIT_REFERENCE_PATTERN)) {
             throw WireViolation.at("L1_UNIT_REF_INVALID", path);
         }
         int line;

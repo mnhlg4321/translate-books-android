@@ -2,6 +2,7 @@ package com.ml.tblandroidtxt;
 
 import com.ml.tblandroidtxt.editorial.pack.EditorialCanonicalJson;
 import com.ml.tblandroidtxt.editorial.pack.EditorialFinalRead;
+import com.ml.tblandroidtxt.editorial.pack.EditorialFieldSpec;
 import com.ml.tblandroidtxt.editorial.pack.EditorialL2Execution;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5RawWireContract;
 import com.ml.tblandroidtxt.editorial.pack.EditorialPackFileRole;
@@ -188,6 +189,7 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
                     .append(WIRE_FORMAT_RULES);
             if (ledger) system.append(LEDGER_EDIT_RULES);
         }
+        if (ledger || discoveryV3 || read) system.append(EditorialFieldSpec.promptRules(request.phase()));
         system
                 .append("\n[PROJECT_INSTRUCTION]\n").append(authority(request, EditorialPackFileRole.PROJECT_INSTRUCTION))
                 .append("\n[/PROJECT_INSTRUCTION]\n[TURN_PROMPT]\n").append(authority(request, EditorialPackFileRole.TURN_PROMPT))

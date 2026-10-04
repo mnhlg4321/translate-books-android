@@ -38,7 +38,7 @@ public final class EditorialChapterRunActionPolicyTest {
     }
 
     @Test public void committedLedgerL1OnlyOffersL2L3Continuation() {
-        EditorialChapterFinalCoordinator.Inspection inspection = afterL1(EditorialContractRevision.L1_LEDGER_V3);
+        EditorialChapterFinalCoordinator.Inspection inspection = afterL1(EditorialContractRevision.CURRENT_LEDGER);
         assertEquals(EditorialChapterRunActionPolicy.Action.CONTINUE_L2_L3,
                 EditorialChapterRunActionPolicy.action(inspection));
         assertFalse(EditorialChapterRunActionPolicy.legacyL1(inspection));
@@ -49,7 +49,7 @@ public final class EditorialChapterRunActionPolicyTest {
         EditorialChapterFinalCoordinator.Inspection unknown = new EditorialChapterFinalCoordinator.Inspection(
                 EditorialChapterProgress.derive(true,
                         new EditorialChapterProgress.StageRow("CLAIMED", "", false), null),
-                null, "NOT_APPLICABLE", EditorialContractRevision.L1_LEDGER_V3);
+                null, "NOT_APPLICABLE", EditorialContractRevision.CURRENT_LEDGER);
         assertEquals(EditorialChapterRunActionPolicy.Action.NONE,
                 EditorialChapterRunActionPolicy.action(unknown));
         assertEquals(EditorialChapterRunActionPolicy.Action.NONE,

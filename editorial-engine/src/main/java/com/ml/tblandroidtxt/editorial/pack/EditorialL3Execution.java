@@ -396,7 +396,7 @@ public final class EditorialL3Execution {
         if (third.stop != null) return third.stop;
         EditorialFinalRead.Result read;
         try {
-            read = EditorialFinalRead.parse(third.bytes, attemptIdentity, finalBytes);
+            read = EditorialFinalRead.parse(third.bytes, attemptIdentity, finalBytes, EditorialFinalRead.L3_PHASE);
         } catch (RuntimeException invalid) {
             recover(store, attemptIdentity, "REPAIR_L3_FINAL_READ_INVALID");
             return stop(EditorialL2Execution.StopClass.REPAIR_REQUIRED, "REPAIR_L3_FINAL_READ_INVALID",
@@ -438,7 +438,7 @@ public final class EditorialL3Execution {
         Map<String, Object> root = new LinkedHashMap<>();
         root.put("schemaVersion", QA_RECEIPT_SCHEMA_V2);
         root.put("artifactType", "QA_RECEIPT");
-        root.put("contractRevision", EditorialContractRevision.L1_LEDGER_V3);
+        root.put("contractRevision", EditorialContractRevision.CURRENT_LEDGER);
         root.put("attemptIdentity", attemptIdentity);
         root.put("bindingIdentity", request.context().binding().bindingIdentity());
         root.put("chapterKey", request.context().chapterKey());

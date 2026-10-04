@@ -500,7 +500,7 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
                     BigDecimal.ZERO, null, true);
         };
         EditorialP5CExactBindingExecution.Result result = EditorialP5CExactBindingExecution.forContract(database, storage,
-                com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.L1_LEDGER_V3).execute(
+                com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.CURRENT_LEDGER).execute(
                 fixture.projectId, SELECTOR, CHAPTER_KEY,
                 authorization(fixture.binding, "auth-raw-v2", "L1_RAW_DISCOVERY"),
                 authorization(fixture.binding, "auth-reconcile-v2", "L1_RECONCILE"), l1Provider);
@@ -545,7 +545,7 @@ public final class EditorialChapterFinalCoordinatorInstrumentedTest {
         LedgerL2 l2 = new LedgerL2();
         LedgerL3 l3 = new LedgerL3();
         EditorialChapterFinalCoordinator coordinator = new EditorialChapterFinalCoordinator(database, storage);
-        assertEquals(com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.L1_LEDGER_V3,
+        assertEquals(com.ml.tblandroidtxt.editorial.pack.EditorialContractRevision.CURRENT_LEDGER,
                 coordinator.inspect(fixture.projectId, SELECTOR, CHAPTER_KEY).l1ContractRevision());
         EditorialChapterFinalCoordinator.Result first = coordinator.runToFinal(fixture.projectId, SELECTOR, CHAPTER_KEY,
                 EditorialChainBudgets.ledgerRecommended(), l2, l3);

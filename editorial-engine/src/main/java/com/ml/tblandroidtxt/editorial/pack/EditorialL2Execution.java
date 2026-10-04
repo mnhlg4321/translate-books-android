@@ -30,7 +30,7 @@ public final class EditorialL2Execution {
     /** Ledger-contract discovery: coverage ranges and sparse candidates over the app's RAW inventory. */
     public static final String DISCOVERY_WIRE_V3 = "safe4.l2.raw-discovery.wire.v3";
     public static final String CANDIDATES_BLOCK = "L2_RAW_CANDIDATES";
-    public static final int MAX_CANDIDATES = 300;
+    public static final int MAX_CANDIDATES = EditorialFieldSpec.MAX_L2_CANDIDATES;
     static final Set<String> LEDGERS = Set.of("UNIT", "TG", "SR", "RC");
     static final Set<String> STATUSES = Set.of("PROCESSED", "PRESERVED", "UNPROCESSED", "CONFLICT");
     public static final String WIRE_SCHEMA_VERSION = "safe4.l2.edit.wire.v1";
@@ -38,9 +38,9 @@ public final class EditorialL2Execution {
     public static final String WIRE_SCHEMA_VERSION_V3 = "safe4.l2.edit.wire.v3";
     public static final String VI_L2_SCHEMA = "safe4.full.vi-l2.v1";
     public static final int MAX_WIRE_BYTES = 65_536;
-    public static final int MAX_CHANGES = 200;
-    public static final int MAX_PRESERVED = 100;
-    public static final int MAX_TEXT_FIELD = 2_000;
+    public static final int MAX_CHANGES = EditorialFieldSpec.MAX_L2_CHANGES;
+    public static final int MAX_PRESERVED = EditorialFieldSpec.MAX_L2_PRESERVED;
+    public static final int MAX_TEXT_FIELD = EditorialFieldSpec.MAX_MODEL_TEXT;
     private static final String ATTEMPT_DOMAIN = "EDITORIAL_L2_EDIT_ATTEMPT_IDENTITY_V2\n";
 
     public enum Outcome { COMMITTED, ALREADY_COMMITTED, STOPPED }
@@ -444,11 +444,11 @@ public final class EditorialL2Execution {
             String path = "candidates." + index;
             Map<String, Object> row = object(values.get(index), path);
             keys(row, Set.of("candidateId", "ledger", "line"), path);
-            String id = text(row, "candidateId", path + ".candidateId");
+            String id = text(row, "candidateId", path + ".candidateId", EditorialFieldSpec.L2_RAW_DISCOVERY);
             if (!EditorialP5RawWireContract.token(id, EditorialP5RawWireContract.MAX_ID_LENGTH) || !ids.add(id)) {
                 throw WireViolation.at("L2_WIRE_CANDIDATE_ID_INVALID", path + ".candidateId");
             }
-            String ledger = text(row, "ledger", path + ".ledger");
+            String ledger = text(row, "ledger", path + ".ledger", EditorialFieldSpec.L2_RAW_DISCOVERY);
             if (!LEDGERS.contains(ledger)) throw WireViolation.at("L2_WIRE_LEDGER_INVALID", path + ".ledger");
             int line = line(row, path + ".line");
             if (line < 0 || line > rawLines) throw WireViolation.at("L2_WIRE_LINE_OUT_OF_RANGE", path + ".line");
@@ -483,7 +483,7 @@ public final class EditorialL2Execution {
         rowsShape.remove("findingResolutions");
         rowsShape.put("wireSchemaVersion", WIRE_SCHEMA_VERSION);
         Wire rows = parseWire(EditorialCanonicalJson.canonicalize(rowsShape).getBytes(StandardCharsets.UTF_8),
-                attemptIdentity, true);
+                attemptIdentity, true, EditorialFieldSpec.L2_EDIT);
         Set<String> known = new HashSet<>();
         for (Candidate candidate : candidates) known.add(candidate.candidateId());
         Map<String, String> resolutions = new TreeMap<>();
@@ -492,8 +492,8 @@ public final class EditorialL2Execution {
             String path = "resolutions." + index;
             Map<String, Object> row = object(resolutionRows.get(index), path);
             keys(row, Set.of("candidateId", "status"), path);
-            String id = text(row, "candidateId", path + ".candidateId");
-            String status = text(row, "status", path + ".status");
+            String id = text(row, "candidateId", path + ".candidateId", EditorialFieldSpec.L2_EDIT);
+            String status = text(row, "status", path + ".status", EditorialFieldSpec.L2_EDIT);
             if (!known.contains(id) || resolutions.containsKey(id)) {
                 throw WireViolation.at("L2_WIRE_RESOLUTION_ID_INVALID", path + ".candidateId");
             }
@@ -543,7 +543,7 @@ public final class EditorialL2Execution {
         Map<String, Object> rowsShape = new LinkedHashMap<>(root);
         rowsShape.remove("resolutions");
         Wire rows = parseWire(EditorialCanonicalJson.canonicalize(rowsShape).getBytes(StandardCharsets.UTF_8),
-                attemptIdentity);
+                attemptIdentity, false, EditorialFieldSpec.L2_EDIT);
         Set<String> known = new HashSet<>();
         for (Candidate candidate : candidates) known.add(candidate.candidateId());
         Map<String, String> resolutions = new TreeMap<>();
@@ -552,8 +552,8 @@ public final class EditorialL2Execution {
             String path = "resolutions." + index;
             Map<String, Object> row = object(resolutionRows.get(index), path);
             keys(row, Set.of("candidateId", "status"), path);
-            String id = text(row, "candidateId", path + ".candidateId");
-            String status = text(row, "status", path + ".status");
+            String id = text(row, "candidateId", path + ".candidateId", EditorialFieldSpec.L2_EDIT);
+            String status = text(row, "status", path + ".status", EditorialFieldSpec.L2_EDIT);
             if (!known.contains(id) || resolutions.containsKey(id)) {
                 throw WireViolation.at("L2_WIRE_RESOLUTION_ID_INVALID", path + ".candidateId");
             }
@@ -689,11 +689,15 @@ public final class EditorialL2Execution {
 
     /** Strict compact wire parser; unknown keys, oversize values and wrong echoes are rejected. */
     static Wire parseWire(byte[] bytes, String attemptIdentity) {
-        return parseWire(bytes, attemptIdentity, false);
+        return parseWire(bytes, attemptIdentity, false, EditorialFieldSpec.L2_EDIT);
     }
 
     /** {@code allowOps} (ledger contract) admits the optional {@code op} of a change row. */
     static Wire parseWire(byte[] bytes, String attemptIdentity, boolean allowOps) {
+        return parseWire(bytes, attemptIdentity, allowOps, EditorialFieldSpec.L2_EDIT);
+    }
+
+    static Wire parseWire(byte[] bytes, String attemptIdentity, boolean allowOps, String phase) {
         if (bytes == null || bytes.length > MAX_WIRE_BYTES) throw WireViolation.at("L2_WIRE_BYTE_LIMIT_EXCEEDED", "root");
         Map<String, Object> root = EditorialCanonicalJson.parseObject(bytes);
         keys(root, Set.of("wireSchemaVersion", "attemptIdentity", "changes", "preserved", "disposition"), "root");
@@ -722,7 +726,7 @@ public final class EditorialL2Execution {
             EditorialChangeMapReconstructor.Op changeOp = EditorialChangeMapReconstructor.Op.REPLACE;
             if (row.containsKey("op")) {
                 try {
-                    changeOp = EditorialChangeMapReconstructor.Op.valueOf(text(row, "op", path + ".op"));
+                    changeOp = EditorialChangeMapReconstructor.Op.valueOf(text(row, "op", path + ".op", phase));
                 } catch (IllegalArgumentException invalid) {
                     throw WireViolation.at("L2_WIRE_OP_INVALID", path + ".op");
                 }
@@ -732,36 +736,36 @@ public final class EditorialL2Execution {
                 String proofPath = path + ".speakerProof";
                 Map<String, Object> p = object(row.get("speakerProof"), proofPath);
                 keys(p, Set.of("speaker", "listener", "anchorBefore", "anchorAfter"), proofPath);
-                proof = new EditorialChangeMapReconstructor.SpeakerProof(text(p, "speaker", proofPath + ".speaker"),
-                        text(p, "listener", proofPath + ".listener"), text(p, "anchorBefore", proofPath + ".anchorBefore"),
-                        text(p, "anchorAfter", proofPath + ".anchorAfter"));
+                proof = new EditorialChangeMapReconstructor.SpeakerProof(text(p, "speaker", proofPath + ".speaker", phase),
+                        text(p, "listener", proofPath + ".listener", phase), text(p, "anchorBefore", proofPath + ".anchorBefore", phase),
+                        text(p, "anchorAfter", proofPath + ".anchorAfter", phase));
             }
             EditorialChangeMapReconstructor.DeclaredStatus status;
             try {
-                status = EditorialChangeMapReconstructor.DeclaredStatus.valueOf(text(row, "status", path + ".status"));
+                status = EditorialChangeMapReconstructor.DeclaredStatus.valueOf(text(row, "status", path + ".status", phase));
             } catch (IllegalArgumentException invalid) {
                 throw WireViolation.at("L2_WIRE_STATUS_INVALID", path + ".status");
             }
-            changes.add(new EditorialChangeMapReconstructor.ChangeRow(text(row, "changeId", path + ".changeId"),
-                    text(row, "errorId", path + ".errorId"), line(row, path + ".line"),
-                    text(row, "before", path + ".before"), text(row, "after", path + ".after"),
-                    text(row, "reason", path + ".reason"), bool(row, "dialogue", path + ".dialogue"), proof, status, changeOp));
+            changes.add(new EditorialChangeMapReconstructor.ChangeRow(text(row, "changeId", path + ".changeId", phase),
+                    text(row, "errorId", path + ".errorId", phase), line(row, path + ".line"),
+                    text(row, "before", path + ".before", phase), text(row, "after", path + ".after", phase),
+                    text(row, "reason", path + ".reason", phase), bool(row, "dialogue", path + ".dialogue"), proof, status, changeOp));
         }
         List<EditorialChangeMapReconstructor.PreservedRow> preserved = new ArrayList<>();
         for (int index = 0; index < preservedValues.size(); index++) {
             String path = "preserved." + index;
             Map<String, Object> row = object(preservedValues.get(index), path);
             keys(row, Set.of("preserveId", "line", "before", "evidenceLimit"), path);
-            preserved.add(new EditorialChangeMapReconstructor.PreservedRow(text(row, "preserveId", path + ".preserveId"),
-                    line(row, path + ".line"), text(row, "before", path + ".before"),
-                    text(row, "evidenceLimit", path + ".evidenceLimit")));
+            preserved.add(new EditorialChangeMapReconstructor.PreservedRow(text(row, "preserveId", path + ".preserveId", phase),
+                    line(row, path + ".line"), text(row, "before", path + ".before", phase),
+                    text(row, "evidenceLimit", path + ".evidenceLimit", phase)));
         }
         Map<String, Object> disposition = object(root.get("disposition"), "disposition");
         keys(disposition, Set.of("disposition", "reasonCode", "stopClass"), "disposition");
-        String kind = text(disposition, "disposition", "disposition.disposition");
-        String reason = text(disposition, "reasonCode", "disposition.reasonCode");
+        String kind = text(disposition, "disposition", "disposition.disposition", phase);
+        String reason = text(disposition, "reasonCode", "disposition.reasonCode", phase);
         if (!EditorialP5RawWireContract.safeText(reason)) throw WireViolation.at("L2_WIRE_REASON_INVALID", "disposition.reasonCode");
-        String stopClass = text(disposition, "stopClass", "disposition.stopClass");
+        String stopClass = text(disposition, "stopClass", "disposition.stopClass", phase);
         if ("CONTINUE".equals(kind) || "PRESERVE_DRAFT".equals(kind)) {
             if (!"NONE".equals(stopClass)) throw WireViolation.at("L2_WIRE_STOP_CLASS_INVALID", "disposition.stopClass");
             return new Wire(List.copyOf(changes), List.copyOf(preserved), null, reason);
@@ -801,11 +805,20 @@ public final class EditorialL2Execution {
     }
 
     static String text(Map<String, Object> value, String key, String path) {
-        Object text = value.get(key);
-        if (!(text instanceof String) || ((String) text).length() > MAX_TEXT_FIELD) {
-            throw WireViolation.at("L2_WIRE_TEXT_INVALID", path);
+        return text(value, key, path, EditorialFieldSpec.L2_EDIT);
+    }
+
+    static String text(Map<String, Object> value, String key, String path, String phase) {
+        EditorialFieldSpec.Field spec = EditorialFieldSpec.find(phase, path);
+        if (spec == null) {
+            Object raw = value.get(key);
+            if (!(raw instanceof String) || ((String) raw).length() > MAX_TEXT_FIELD) {
+                throw WireViolation.at("L2_WIRE_TEXT_INVALID", path);
+            }
+            return (String) raw;
         }
-        return (String) text;
+        return EditorialFieldSpec.validateString(phase, path, value.get(key), "L2_WIRE_TEXT_INVALID",
+                "L2_WIRE_TEXT_REQUIRED", "L2_WIRE_TEXT_INVALID", "L2_WIRE_TEXT_INVALID");
     }
 
     static boolean bool(Map<String, Object> value, String key) {

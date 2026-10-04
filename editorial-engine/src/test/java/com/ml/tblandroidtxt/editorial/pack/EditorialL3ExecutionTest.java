@@ -51,19 +51,19 @@ public final class EditorialL3ExecutionTest {
         assertFalse(v2.requestIdentity().equals(v3.requestIdentity()));
     }
 
-    @Test public void ledgerRevisionChangesIdentitiesAndIsDeterministic() {
+    @Test public void currentLedgerRevisionChangesIdentitiesAndIsDeterministic() {
         EditorialP5PilotRequest legacy = ctx();
-        EditorialP5PilotRequest ledger = legacy.withContractRevision(EditorialContractRevision.L1_LEDGER_V3);
+        EditorialP5PilotRequest ledger = legacy.withContractRevision(EditorialContractRevision.CURRENT_LEDGER);
         assertEquals(EditorialContractRevision.LEGACY_V1, legacy.contractRevision());
         assertFalse(legacy.attemptIdentity().equals(ledger.attemptIdentity()));
         assertFalse(legacy.requestIdentity().equals(ledger.requestIdentity()));
-        assertEquals(ledger.attemptIdentity(), ctx().withContractRevision(EditorialContractRevision.L1_LEDGER_V3).attemptIdentity());
+        assertEquals(ledger.attemptIdentity(), ctx().withContractRevision(EditorialContractRevision.CURRENT_LEDGER).attemptIdentity());
         // the legacy revision given explicitly is the identity from before the revision existed
         assertEquals(legacy.attemptIdentity(), legacy.withContractRevision(EditorialContractRevision.LEGACY_V1).attemptIdentity());
         // phase and predecessor report copies keep the revision
-        assertEquals(EditorialContractRevision.L1_LEDGER_V3, ledger.withPhase("L1_RECONCILE").contractRevision());
+        assertEquals(EditorialContractRevision.CURRENT_LEDGER, ledger.withPhase("L1_RECONCILE").contractRevision());
         assertArrayEquals(new byte[] {1}, ledger.withPredecessorReport(new byte[] {1}).predecessorReport());
-        assertEquals(EditorialContractRevision.L1_LEDGER_V3, ledger.withPredecessorReport(new byte[] {1}).contractRevision());
+        assertEquals(EditorialContractRevision.CURRENT_LEDGER, ledger.withPredecessorReport(new byte[] {1}).contractRevision());
         try {
             legacy.withContractRevision("L1_LEDGER_V9");
             fail();

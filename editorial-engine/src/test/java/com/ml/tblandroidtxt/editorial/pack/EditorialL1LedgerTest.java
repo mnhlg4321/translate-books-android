@@ -54,7 +54,7 @@ public final class EditorialL1LedgerTest {
     private static Map<String, Object> finding(String errorId, String type, int rawLine, int draftStart, int draftEnd,
                                                String rawQuote, String draftQuote) {
         return map("errorId", errorId, "type", type, "severity", "MAJOR", "rawUnits", new ArrayList<Object>(List.of(id(rawLine))),
-                "draft", map("kind", "LINES", "start", BigDecimal.valueOf(draftStart), "end", BigDecimal.valueOf(draftEnd)),
+                "draft", map("kind", "LINES", "start", BigDecimal.valueOf(draftStart), "end", BigDecimal.valueOf(draftEnd), "after", BigDecimal.ZERO),
                 "rawQuote", rawQuote, "draftQuote", draftQuote, "observation", "obs", "expectedMeaning", "exp",
                 "evidenceRefs", new ArrayList<Object>(), "candidateIds", new ArrayList<Object>(),
                 "occurrenceUnits", new ArrayList<Object>(), "disposition", "OPEN", "evidenceLimit", "");
@@ -80,6 +80,15 @@ public final class EditorialL1LedgerTest {
             fail("expected " + code);
         } catch (IllegalArgumentException e) {
             assertEquals(code, e.getMessage());
+        }
+    }
+
+    private static void expectSafeMessage(String message, Runnable r) {
+        try {
+            r.run();
+            fail("expected " + message);
+        } catch (IllegalArgumentException e) {
+            assertEquals(message, EditorialL1Ledger.safeMessage(e));
         }
     }
 
@@ -151,7 +160,7 @@ public final class EditorialL1LedgerTest {
     @Test
     public void missingTargetUsesAMissingAnchorWithoutDraftQuote() {
         Map<String, Object> f = finding("e1", "OMISSION", 7, 6, 6, "雨が降る", "");
-        f.put("draft", map("kind", "MISSING", "after", BigDecimal.valueOf(6)));
+        f.put("draft", map("kind", "MISSING", "start", BigDecimal.ZERO, "end", BigDecimal.ZERO, "after", BigDecimal.valueOf(6)));
         EditorialL1Ledger.ReconcilePass pass = reconcile(reconcileWire(new ArrayList<>(List.of(f)), new ArrayList<>()), List.of());
         assertEquals("MISSING", pass.findings().get(0).draft().kind());
         f.put("draftQuote", "Troi mua");
@@ -199,6 +208,26 @@ public final class EditorialL1LedgerTest {
         assertEquals(1, EditorialL1Ledger.metrics(inv(), List.of(), pass).preservedFindingCount());
         Map<String, Object> badType = finding("e2", "VIBES", 3, 3, 3, "踏破", "chinh phuc");
         expectCode("L1_ENUM_INVALID", () -> reconcile(reconcileWire(new ArrayList<>(List.of(badType)), new ArrayList<>()), List.of()));
+    }
+
+    @Test
+    public void unusedDispositionReasonAndUnknownListenerMayBeEmptyButStopAndProtectedReasonMayNot() {
+        Map<String, Object> wire = reconcileWire(new ArrayList<>(), new ArrayList<>());
+        ((Map<String, Object>) wire.get("disposition")).put("reasonCode", "");
+        wire.put("speakerRecords", new ArrayList<>(List.of(map("unitId", id(1), "speaker", "narrator",
+                "listener", "", "basis", "no listener stated"))));
+        EditorialL1Ledger.ReconcilePass pass = reconcile(wire, List.of());
+        assertEquals("", pass.speakerRecords().get(0).listener());
+        assertEquals("", pass.disposition().reasonCode());
+
+        Map<String, Object> stopWire = reconcileWire(new ArrayList<>(), new ArrayList<>());
+        stopWire.put("disposition", map("disposition", "STOP", "reasonCode", "", "stopClass", "INPUT_REQUIRED"));
+        expectSafeMessage("L1_TEXT_REQUIRED:disposition.reasonCode", () -> reconcile(stopWire, List.of()));
+
+        Map<String, Object> protectedWire = reconcileWire(new ArrayList<>(), new ArrayList<>());
+        protectedWire.put("protectedSpans", new ArrayList<>(List.of(map("spanId", "p1", "start", BigDecimal.ONE,
+                "end", BigDecimal.ONE, "source", "L1_PROOF", "reason", ""))));
+        expectSafeMessage("L1_TEXT_REQUIRED:protectedSpans.0.reason", () -> reconcile(protectedWire, List.of()));
     }
 
     @Test
@@ -295,7 +324,7 @@ public final class EditorialL1LedgerTest {
         assertEquals(body, back);
         byte[] again = EditorialCanonicalJson.canonicalize(EditorialL1Ledger.bodyToMap(back)).getBytes(StandardCharsets.UTF_8);
         assertTrue(java.util.Arrays.equals(bytes, again));
-        assertEquals(EditorialContractRevision.L1_LEDGER_V3, EditorialContractRevision.ofReportBytes(bytes));
+        assertEquals(EditorialContractRevision.CURRENT_LEDGER, EditorialContractRevision.ofReportBytes(bytes));
         assertEquals(1, back.metrics().uniqueFindingCount());
         assertEquals(3, back.metrics().occurrenceCount());
     }
@@ -305,8 +334,12 @@ public final class EditorialL1LedgerTest {
         Map<String, Object> legacy = map("phase", "L1_RECONCILE", "artifactType", "REPORT_L1");
         assertEquals(EditorialContractRevision.LEGACY_V1, EditorialContractRevision.ofReport(legacy));
         expectCode("L1_REPORT_NOT_LEDGER_V2", () -> EditorialL1Ledger.parseBody(legacy));
-        assertFalse(EditorialContractRevision.eligiblePredecessor(EditorialContractRevision.LEGACY_V1, EditorialContractRevision.L1_LEDGER_V3));
-        assertTrue(EditorialContractRevision.eligiblePredecessor(EditorialContractRevision.L1_LEDGER_V3, EditorialContractRevision.L1_LEDGER_V3));
+        assertTrue(EditorialContractRevision.known(EditorialContractRevision.L1_LEDGER_V3));
+        assertFalse(EditorialContractRevision.eligiblePredecessor(EditorialContractRevision.L1_LEDGER_V3,
+                EditorialContractRevision.CURRENT_LEDGER));
+        assertFalse(EditorialContractRevision.eligiblePredecessor(EditorialContractRevision.LEGACY_V1, EditorialContractRevision.CURRENT_LEDGER));
+        assertTrue(EditorialContractRevision.eligiblePredecessor(EditorialContractRevision.CURRENT_LEDGER,
+                EditorialContractRevision.CURRENT_LEDGER));
         assertEquals(EditorialContractRevision.LEGACY_V1, EditorialContractRevision.ofReportBytes("not json".getBytes(StandardCharsets.UTF_8)));
         assertEquals("", EditorialContractRevision.identitySuffix(EditorialContractRevision.LEGACY_V1));
     }

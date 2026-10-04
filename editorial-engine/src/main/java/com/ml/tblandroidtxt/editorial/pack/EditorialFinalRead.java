@@ -26,9 +26,9 @@ public final class EditorialFinalRead {
     public static final String L3_PHASE = "L3_FINAL_READ";
     public static final String TARGET_ROLE = "READ_TARGET";
     public static final String PROBES_ROLE = "READ_PROBE_LINES";
-    public static final int PROBE_COUNT = 3;
-    public static final int TAIL_LENGTH = 12;
-    public static final int MAX_DEFECTS = 40;
+    public static final int PROBE_COUNT = EditorialFieldSpec.MAX_FINAL_READ_PROBES;
+    public static final int TAIL_LENGTH = EditorialFieldSpec.MAX_FINAL_READ_TAIL;
+    public static final int MAX_DEFECTS = EditorialFieldSpec.MAX_FINAL_READ_DEFECTS;
     public static final int MAX_WIRE_BYTES = 16_384;
     static final Set<String> TYPES = EditorialL1Ledger.FINDING_TYPES;
 
@@ -92,6 +92,10 @@ public final class EditorialFinalRead {
 
     /** Strict parse of the response against the exact target bytes; IllegalArgumentException with a typed code. */
     public static Result parse(byte[] response, String attemptIdentity, byte[] target) {
+        return parse(response, attemptIdentity, target, L2_PHASE);
+    }
+
+    public static Result parse(byte[] response, String attemptIdentity, byte[] target, String phase) {
         if (response == null || response.length > MAX_WIRE_BYTES) throw bad("FINAL_READ_WIRE_BYTE_LIMIT_EXCEEDED", "root");
         List<String> targetLines = lines(target);
         String sha = EditorialCanonicalJson.sha256Hex(target);
@@ -102,6 +106,7 @@ public final class EditorialFinalRead {
         if (!sha.equals(root.get("readSha256"))) throw bad("FINAL_READ_HASH_ECHO_MISMATCH", "readSha256");
 
         List<Integer> probes = probeLines(target);
+        fieldText(phase, "readSha256", root.get("readSha256"));
         Map<Integer, String> tails = new LinkedHashMap<>();
         List<Object> probeRows = EditorialCanonicalJson.array(root.get("probeTails"), "probeTails");
         for (int index = 0; index < probeRows.size(); index++) {
@@ -111,6 +116,7 @@ public final class EditorialFinalRead {
             int line = integer(row.get("line"), path + ".line");
             Object tail = row.get("tail");
             if (!(tail instanceof String) || tails.put(line, (String) tail) != null) throw bad("FINAL_READ_PROBE_INVALID", path + ".tail");
+            fieldText(phase, path + ".tail", tail);
         }
         if (!tails.keySet().equals(new HashSet<>(probes))) throw bad("FINAL_READ_PROBE_SET_MISMATCH", "probeTails");
         for (Integer line : probes) {
@@ -119,7 +125,7 @@ public final class EditorialFinalRead {
             if (!expected.equals(tails.get(line))) throw bad("FINAL_READ_PROBE_TAIL_MISMATCH", "probeTails");
         }
 
-        String verdict = root.get("verdict") instanceof String ? (String) root.get("verdict") : "";
+        String verdict = fieldText(phase, "verdict", root.get("verdict"));
         if (!"CLEAN".equals(verdict) && !"DEFECTS".equals(verdict)) throw bad("FINAL_READ_VERDICT_INVALID", "verdict");
         List<Object> rows = EditorialCanonicalJson.array(root.get("defects"), "defects");
         if (rows.size() > MAX_DEFECTS) throw bad("FINAL_READ_DEFECT_LIMIT_EXCEEDED", "defects");
@@ -131,12 +137,13 @@ public final class EditorialFinalRead {
             keys(row, Set.of("line", "quote", "type", "note"), path);
             int line = integer(row.get("line"), path + ".line");
             if (line < 1 || line > targetLines.size()) throw bad("FINAL_READ_DEFECT_LINE_OUT_OF_RANGE", path + ".line");
-            String quote = text(row.get("quote"), 80, path + ".quote");
-            String note = text(row.get("note"), EditorialL1Ledger.MAX_TEXT, path + ".note");
+            String quote = fieldText(phase, path + ".quote", row.get("quote"));
+            String note = fieldText(phase, path + ".note", row.get("note"));
             Object type = row.get("type");
-            if (!(type instanceof String) || !TYPES.contains(type)) throw bad("FINAL_READ_DEFECT_TYPE_INVALID", path + ".type");
+            String typeValue = fieldText(phase, path + ".type", type);
+            if (!TYPES.contains(typeValue)) throw bad("FINAL_READ_DEFECT_TYPE_INVALID", path + ".type");
             if (quote.isEmpty() || !targetLines.get(line - 1).contains(quote)) throw bad("FINAL_READ_DEFECT_QUOTE_NOT_IN_LINE", path + ".quote");
-            defects.add(new Defect(line, quote, (String) type, note));
+            defects.add(new Defect(line, quote, typeValue, note));
         }
         return new Result(sha, targetLines.size(), probes, verdict, defects);
     }
@@ -208,10 +215,11 @@ public final class EditorialFinalRead {
         }
     }
 
-    private static String text(Object value, int max, String path) {
-        if (!(value instanceof String) || ((String) value).length() > max) throw bad("FINAL_READ_TEXT_INVALID", path);
-        for (char c : ((String) value).toCharArray()) if (Character.isISOControl(c)) throw bad("FINAL_READ_TEXT_CONTROL_CHARACTER", path);
-        return (String) value;
+    private static String fieldText(String phase, String path, Object value) {
+        String text = EditorialFieldSpec.validateString(phase, path, value, "FINAL_READ_TEXT_INVALID",
+                "FINAL_READ_TEXT_REQUIRED", "FINAL_READ_TEXT_INVALID", "FINAL_READ_TEXT_INVALID");
+        for (char c : text.toCharArray()) if (Character.isISOControl(c)) throw bad("FINAL_READ_TEXT_CONTROL_CHARACTER", path);
+        return text;
     }
 
     private static IllegalArgumentException bad(String code) { return bad(code, "root"); }
@@ -219,20 +227,31 @@ public final class EditorialFinalRead {
 
     /** Strict response schema for the provider; the parser above stays the authority. */
     public static Map<String, Object> jsonSchema() {
+        String phase = EditorialFieldSpec.L2_FINAL_READ;
         Map<String, Object> props = new LinkedHashMap<>();
-        props.put("wireSchemaVersion", Map.of("type", "string", "enum", List.of(WIRE)));
-        props.put("attemptIdentity", Map.of("type", "string", "maxLength", BigDecimal.valueOf(128)));
-        props.put("readSha256", Map.of("type", "string", "maxLength", BigDecimal.valueOf(64)));
-        props.put("probeTails", Map.of("type", "array", "maxItems", BigDecimal.valueOf(PROBE_COUNT),
-                "items", object(Map.of("line", Map.of("type", "integer"),
-                        "tail", Map.of("type", "string", "maxLength", BigDecimal.valueOf(TAIL_LENGTH))))));
-        props.put("verdict", Map.of("type", "string", "enum", List.of("CLEAN", "DEFECTS")));
-        props.put("defects", Map.of("type", "array", "maxItems", BigDecimal.valueOf(MAX_DEFECTS),
-                "items", object(Map.of("line", Map.of("type", "integer"),
-                        "quote", Map.of("type", "string", "maxLength", BigDecimal.valueOf(80)),
-                        "type", Map.of("type", "string", "enum", List.copyOf(new TreeSet<>(TYPES))),
-                        "note", Map.of("type", "string", "maxLength", BigDecimal.valueOf(EditorialL1Ledger.MAX_TEXT))))));
+        props.put("wireSchemaVersion", EditorialFieldSpec.schema(phase, "wireSchemaVersion"));
+        props.put("attemptIdentity", EditorialFieldSpec.schema(phase, "attemptIdentity"));
+        props.put("readSha256", EditorialFieldSpec.schema(phase, "readSha256"));
+        props.put("probeTails", fieldArray(phase, "probeTails", object(Map.of(
+                "line", Map.of("type", "integer"),
+                "tail", EditorialFieldSpec.schema(phase, "probeTails[].tail")))));
+        props.put("verdict", EditorialFieldSpec.schema(phase, "verdict"));
+        props.put("defects", fieldArray(phase, "defects", object(Map.of(
+                "line", Map.of("type", "integer"),
+                "quote", EditorialFieldSpec.schema(phase, "defects[].quote"),
+                "type", EditorialFieldSpec.schema(phase, "defects[].type"),
+                "note", EditorialFieldSpec.schema(phase, "defects[].note")))));
         return object(props);
+    }
+
+    private static Map<String, Object> fieldArray(String phase, String path, Map<String, Object> itemSchema) {
+        EditorialFieldSpec.Field spec = EditorialFieldSpec.find(phase, path);
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("type", "array");
+        if (spec.minItems() > 0) result.put("minItems", BigDecimal.valueOf(spec.minItems()));
+        result.put("maxItems", BigDecimal.valueOf(spec.maxItems()));
+        result.put("items", itemSchema);
+        return result;
     }
 
     private static Map<String, Object> object(Map<String, ?> props) {

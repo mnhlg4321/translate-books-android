@@ -253,7 +253,7 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
             measuredCalls = result.providerCalls();
             fakeCalls = l1.calls + l2.calls + l3.calls;
             EditorialP5CExactBindingExecution l1Execution = EditorialP5CExactBindingExecution.forContract(
-                    database, storage, EditorialContractRevision.L1_LEDGER_V3);
+                    database, storage, EditorialContractRevision.CURRENT_LEDGER);
             EditorialP5CExactBindingExecution.CommittedL1 committedL1 = l1Execution.committedL1(
                     fixture.projectId(), fixture.selector(), fixture.chapterKey()).orElse(null);
             if (committedL1 == null) throw new IllegalStateException("P6_REPORT_L1_READBACK_FAILED:"
@@ -264,7 +264,7 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         } else {
           try {
             EditorialP5CExactBindingExecution l1Execution = EditorialP5CExactBindingExecution.forContract(
-                    database, storage, EditorialContractRevision.L1_LEDGER_V3);
+                    database, storage, EditorialContractRevision.CURRENT_LEDGER);
             EditorialP5CExactBindingExecution.CommittedL1 committedL1;
             int l1Calls = 0;
             if (reuseL1State) {

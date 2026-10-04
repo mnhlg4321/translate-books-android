@@ -19,7 +19,7 @@ import java.util.TreeSet;
  */
 final class EditorialL2Findings {
     static final Set<String> STATUSES = Set.of("FIXED", "REJECTED", "PRESERVED", "UNRESOLVED");
-    static final int MAX_REFS = 20;
+    static final int MAX_REFS = EditorialFieldSpec.MAX_CHANGE_REFS;
     static final int MAX_OCCURRENCES = EditorialL1Ledger.MAX_OCCURRENCE_UNITS;
 
     record Occurrence(String unitId, String ref) { }
@@ -228,7 +228,7 @@ final class EditorialL2Findings {
         Map<String, Resolution> byId = new HashMap<>();
         for (Resolution r : resolutions) byId.put(r.errorId(), r);
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("contractRevision", EditorialContractRevision.L1_LEDGER_V3);
+        m.put("contractRevision", EditorialContractRevision.CURRENT_LEDGER);
         m.put("reportL1Sha256", EditorialCanonicalJson.sha256Hex(reportL1Bytes));
         Map<String, Object> counts = new LinkedHashMap<>();
         for (String s : new String[] {"FIXED", "REJECTED", "PRESERVED", "UNRESOLVED"}) counts.put(s, java.math.BigDecimal.ZERO);

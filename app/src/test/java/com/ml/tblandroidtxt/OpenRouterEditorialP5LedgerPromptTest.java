@@ -1,6 +1,7 @@
 package com.ml.tblandroidtxt;
 
 import com.ml.tblandroidtxt.editorial.pack.EditorialL1Ledger;
+import com.ml.tblandroidtxt.editorial.pack.EditorialFieldSpec;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotProvider;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotRequest;
 import com.ml.tblandroidtxt.editorial.pack.EditorialRawInventory;
@@ -51,6 +52,7 @@ public final class OpenRouterEditorialP5LedgerPromptTest {
         assertTrue(prompt.user.contains("L" + inv.units().get(1).line() + "|「踏破した。」"));
         assertTrue(prompt.user.contains("TASK (L1 RAW discovery)"));
         assertTrue(prompt.user.contains(EditorialL1Ledger.RAW_WIRE));
+        assertTrue(prompt.user.contains("MUST candidates[].candidateId length 1.." + EditorialFieldSpec.MAX_ID_LENGTH));
         assertTrue(prompt.user.contains("a".repeat(64)));
         assertFalse(prompt.user.contains("TASK (L1 RECONCILE)"));
         // a blank line has no unit id and is not shown as a unit
@@ -69,6 +71,10 @@ public final class OpenRouterEditorialP5LedgerPromptTest {
         assertTrue(prompt.user.contains("there is no cap of four"));
         assertTrue(prompt.user.contains("findings <=" + EditorialL1Ledger.MAX_FINDINGS_PER_CALL));
         assertTrue(prompt.user.contains("TASK (L1 RECONCILE)"));
+        assertTrue(prompt.user.contains("MUST findings[].observation length 1.." + EditorialFieldSpec.MAX_TEXT));
+        assertTrue(prompt.user.contains("MUST protectedSpans[].reason length 1.." + EditorialFieldSpec.MAX_TEXT));
+        assertTrue(prompt.user.contains("CONDITIONAL disposition.reasonCode length 0..32"));
+        assertTrue(prompt.user.contains("MAY speakerRecords[].listener length 0.." + EditorialFieldSpec.MAX_SPEAKER_LABEL));
         assertFalse(prompt.user.matches("(?s).*u:[0-9]+:[0-9a-f]{8}.*"));
     }
 

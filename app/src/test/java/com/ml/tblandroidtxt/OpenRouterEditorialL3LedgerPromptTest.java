@@ -1,6 +1,7 @@
 package com.ml.tblandroidtxt;
 
 import com.ml.tblandroidtxt.editorial.pack.EditorialFinalRead;
+import com.ml.tblandroidtxt.editorial.pack.EditorialFieldSpec;
 import com.ml.tblandroidtxt.editorial.pack.EditorialL2Execution;
 import com.ml.tblandroidtxt.editorial.pack.EditorialL3Execution;
 import com.ml.tblandroidtxt.editorial.pack.EditorialP5PilotRequest;
@@ -57,6 +58,7 @@ public final class OpenRouterEditorialL3LedgerPromptTest {
         assertTrue(prompt.user.contains("L" + inventory.units().get(0).line() + "|王は城に入った。"));
         assertTrue(prompt.user.contains("L1|Vua vao thanh."));
         assertTrue(prompt.system.contains("coverage: ordered, contiguous, non-overlapping ranges"));
+        assertTrue(prompt.system.contains("MUST candidates[].candidateId length 1.." + EditorialFieldSpec.MAX_ID_LENGTH));
         assertTrue(prompt.user.contains(EditorialL3Execution.REAUDIT_WIRE_V3));
         assertTrue(prompt.user.contains("\"viLine\""));
     }
@@ -75,6 +77,8 @@ public final class OpenRouterEditorialL3LedgerPromptTest {
         assertTrue(prompt.system.contains("carriedResolutions has EXACTLY one row per entry"));
         assertTrue(prompt.system.contains("probes: at least 3 COVERAGE and 3 REGRESSION, each anchored"));
         assertTrue(prompt.system.contains("MERGE_WITH_NEXT"));
+        assertTrue(prompt.system.contains("MUST probes[].scope length 1.." + EditorialFieldSpec.MAX_PROBE_TEXT));
+        assertTrue(prompt.system.contains("MUST changes[].reason length 1.." + EditorialFieldSpec.MAX_MODEL_TEXT));
         assertTrue(prompt.user.contains("\"probes\""));
         assertTrue(prompt.user.contains("\"carriedResolutions\""));
         assertFalse(prompt.user.contains("adversarialCoverage"));
@@ -96,6 +100,7 @@ public final class OpenRouterEditorialL3LedgerPromptTest {
         PromptPair prompt = OpenRouterEditorialL3Provider.buildPrompt(request);
         assertTrue(prompt.user.contains("L1|Dong mot"));
         assertTrue(prompt.system.contains("READ_TARGET is the exact text the app built"));
+        assertTrue(prompt.system.contains("MUST readSha256 length 64..64"));
         sources.remove(EditorialFinalRead.PROBES_ROLE);
         assertFalse(valid(request(EditorialFinalRead.L3_PHASE, EditorialFinalRead.WIRE, sources)));
         // the L2 read phase is not an L3 phase
@@ -118,6 +123,7 @@ public final class OpenRouterEditorialL3LedgerPromptTest {
         assertTrue(prompt.user.contains("L" + inventory.units().get(1).line() + "|騎士が言った。"));
         assertTrue(prompt.user.contains("\"coverage\""));
         assertTrue(prompt.system.contains("candidates are sparse"));
+        assertTrue(prompt.system.contains("MUST coverage[].from length 3.." + EditorialFieldSpec.MAX_UNIT_REFERENCE_LENGTH));
         assertTrue(prompt.user.contains("L1|王は"));
         assertFalse(prompt.user.matches("(?s).*u:[0-9]+:[0-9a-f]{8}.*"));
     }
