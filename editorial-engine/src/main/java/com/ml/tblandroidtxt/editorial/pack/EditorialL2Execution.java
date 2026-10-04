@@ -2,7 +2,7 @@ package com.ml.tblandroidtxt.editorial.pack;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.text.Normalizer;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -841,17 +841,7 @@ public final class EditorialL2Execution {
     }
 
     private static boolean isSourceLineSubstring(String modelBefore, String appBefore) {
-        String model = Normalizer.normalize(trimWhitespace(modelBefore), Normalizer.Form.NFC);
-        String source = Normalizer.normalize(trimWhitespace(appBefore), Normalizer.Form.NFC);
-        return source.contains(model);
-    }
-
-    private static String trimWhitespace(String value) {
-        int start = 0;
-        int end = value.length();
-        while (start < end && Character.isWhitespace(value.charAt(start))) start++;
-        while (end > start && Character.isWhitespace(value.charAt(end - 1))) end--;
-        return value.substring(start, end);
+        return EditorialQuoteMatcher.contains(appBefore, modelBefore);
     }
 
     static void keys(Map<String, Object> value, Set<String> allowed, String path) {

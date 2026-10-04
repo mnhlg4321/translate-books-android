@@ -57,6 +57,7 @@ public final class OpenRouterEditorialL2LedgerPromptTest {
         assertTrue(OpenRouterEditorialL2Provider.validRequest(request));
         PromptPair prompt = OpenRouterEditorialL2Provider.buildPrompt(request);
         assertTrue(prompt.system.contains("findingResolutions must contain EXACTLY ONE row per finding errorId"));
+        assertTrue(prompt.system.contains("evidenceQuote may omit the 《reading》 annotation"));
         assertTrue(prompt.system.contains("INSERT_AFTER"));
         assertTrue(prompt.system.contains("MERGE_WITH_NEXT"));
         assertTrue(prompt.system.contains("MUST changes[].reason length 1.." + EditorialFieldSpec.MAX_MODEL_TEXT));
@@ -81,10 +82,12 @@ public final class OpenRouterEditorialL2LedgerPromptTest {
         EditorialL2Execution.Provider.Request request = request(EditorialFinalRead.L2_PHASE, EditorialFinalRead.WIRE, readSources());
         assertTrue(OpenRouterEditorialL2Provider.validRequest(request));
         PromptPair prompt = OpenRouterEditorialL2Provider.buildPrompt(request);
+        assertTrue(prompt.system.contains("checked after NFC normalization and trimming outer whitespace"));
         assertTrue(prompt.user.contains("L1|Dong mot"));
         assertTrue(prompt.user.contains("L4|Dong bon"));
         assertTrue(prompt.user.contains("targetSha256"));
         assertTrue(prompt.user.contains(EditorialFinalRead.WIRE));
+        assertTrue(prompt.system.contains("checked after NFC normalization and trimming outer whitespace"));
         assertTrue(prompt.system.contains("last " + EditorialFinalRead.TAIL_LENGTH + " characters"));
         assertTrue(prompt.system.contains("MUST readSha256 length 64..64"));
         assertTrue(prompt.system.contains("MUST probeTails[].tail length 1.." + EditorialFieldSpec.MAX_FINAL_READ_TAIL));

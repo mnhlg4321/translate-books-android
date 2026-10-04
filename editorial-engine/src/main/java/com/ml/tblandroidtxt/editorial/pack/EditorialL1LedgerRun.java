@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * Ledger-contract ({@code L1_LEDGER_V5}) side of an L1 phase: prepares the app-owned inventory and the
+ * Ledger-contract ({@code L1_LEDGER_V6}) side of an L1 phase: prepares the app-owned inventory and the
  * RAW-pass block, interprets the model's wire strictly, and builds the typed output, report and metrics. The
  * model supplies judgement rows only; the app owns identity, inventory, coverage checks, gates and the report.
  */

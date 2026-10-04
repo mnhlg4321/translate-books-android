@@ -88,7 +88,10 @@ public final class EditorialGoldenWireSchemaTest {
 
     private static EditorialRawInventory.Inventory inventory() {
         StringBuilder raw = new StringBuilder();
-        for (int i = 1; i <= RAW_LINES; i++) raw.append("行").append(i).append("です。\n");
+        for (int i = 1; i <= RAW_LINES; i++) {
+            if (i == 99) raw.append("揃《そろ》えても行99です。\n");
+            else raw.append("行").append(i).append("です。\n");
+        }
         return EditorialRawInventory.build(raw.toString().getBytes(StandardCharsets.UTF_8));
     }
 
@@ -214,6 +217,19 @@ public final class EditorialGoldenWireSchemaTest {
         assertEquals("", pass.disposition().reasonCode());
         assertEquals(List.of(inv.units().get(0).id(), inv.units().get(8).id(), inv.units().get(9).id()), pass.findings().get(0).rawUnits());
         assertEquals(List.of(inv.units().get(99).id(), inv.units().get(RAW_LINES - 1).id()), pass.findings().get(0).occurrenceUnits());
+    }
+
+    @Test public void l1ReconcileRubyQuoteOmittingReadingPassesSchemaAndProductionParser() {
+        EditorialRawInventory.Inventory inv = inventory();
+        Map<String, Object> wire = reconcileWire(continueDisposition());
+        @SuppressWarnings("unchecked") List<Object> findings = (List<Object>) wire.get("findings");
+        @SuppressWarnings("unchecked") Map<String, Object> rubyFinding = (Map<String, Object>) findings.get(1);
+        rubyFinding.put("rawQuote", "揃えても");
+        byte[] bytes = json(wire);
+        assertEquals(List.of(), errorsOf(EditorialL1Ledger.jsonSchema(false), bytes));
+        EditorialL1Ledger.ReconcilePass pass = EditorialL1Ledger.parseReconcile(
+                bytes, ATT, inv, draftLines(), rawCandidates(inv));
+        assertEquals("揃えても", pass.findings().get(1).rawQuote());
     }
 
     @Test public void l1ReconcileStopAndPreserveDispositionsPassBothSides() {

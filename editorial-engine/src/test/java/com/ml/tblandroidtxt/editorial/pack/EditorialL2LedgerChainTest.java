@@ -24,7 +24,7 @@ public final class EditorialL2LedgerChainTest {
     private static final byte[] PROMPT = bytes("prompt authority");
     private static final byte[] WORKFLOW = bytes("workflow authority");
     private static final String L1_ID = "l1-attempt-identity-1";
-    private static final String RAW = String.join("\n", "王は城に入った。", "騎士が言った。", "「踏破した。」", "「今回は無理だ。」",
+    private static final String RAW = String.join("\n", "王は城に入った。", "騎士が言った。", "「踏《とう》破した。」", "「今回は無理だ。」",
             "彼女は笑った。", "「踏破だ。」", "雨が降る。", "彼は歩いた。", "「踏破完了。」", "空は暗い。");
     private static final String DRAFT = String.join("\n", "Vua vao thanh.", "Hiep si noi.", "\"Da chinh phuc.\"",
             "\"今回 khong the.\"", "Co ay cuoi.", "\"Chinh phuc roi.\"", "Troi mua.", "Anh di.", "\"Chinh phuc xong.\"", "Troi toi.");
@@ -291,7 +291,7 @@ public final class EditorialL2LedgerChainTest {
         assertTrue(forged.issues().toString(), forged.issues().contains("L2_FINDING_REJECTED_WITHOUT_RAW_EVIDENCE:e1"));
         Store ok = new Store();
         EditorialL2Execution.Result rejected = run(l, new Script(a -> editWire(a, list(), list(),
-                list(resolution("e1", "REJECTED", list(), list(), list(), "踏破", "the draft verb matches the RAW sense")))), ok);
+                list(resolution("e1", "REJECTED", list(), list(), list(), " 踏破 ", "the draft verb matches the RAW sense")))), ok);
         assertEquals(rejected.reasonCode() + rejected.issues(), EditorialL2Execution.Outcome.COMMITTED, rejected.outcome());
         assertArrayEquals(bytes(DRAFT), rejected.committed().viL2Bytes());
 
@@ -415,7 +415,7 @@ public final class EditorialL2LedgerChainTest {
         return list(
                 probe("P1", "COVERAGE", 1, 1, "王は城", "Vua vao", "NO_DEFECT", "NONE"),
                 probe("P2", "COVERAGE", 2, 2, "騎士が", "Hiep si", "NO_DEFECT", "NONE"),
-                probe("P3", "COVERAGE", 3, 3, "踏破", "vuot qua", "NO_DEFECT", "NONE"),
+                probe("P3", "COVERAGE", 3, 3, "踏破", " vuot qua ", "NO_DEFECT", "NONE"),
                 probe("P4", "REGRESSION", 4, 4, "今回", "Lan nay", "NO_DEFECT", "NONE"),
                 probe("P5", "REGRESSION", 6, 6, "踏破", "Vuot qua roi", "NO_DEFECT", "NONE"),
                 probe("P6", "REGRESSION", 7, 7, "雨が降る", "bat dau mua", "NO_DEFECT", "NONE"));
@@ -610,7 +610,7 @@ public final class EditorialL2LedgerChainTest {
                 "changeIds", list(), "preserveIds", list(), "evidenceQuote", "not there", "reason", "fine")), list(), goodProbes()));
         assertTrue(badReject.issues().toString(), badReject.issues().contains("L3_CARRIED_REJECTED_WITHOUT_EVIDENCE:0"));
         EditorialL3Execution.Result reject = runL3(l, l2, reconcileV2(list(), list(map("index", BigDecimal.ZERO, "status", "REJECTED",
-                "changeIds", list(), "preserveIds", list(), "evidenceQuote", "Co ay", "reason", "profile row says so")), list(), goodProbes()));
+                "changeIds", list(), "preserveIds", list(), "evidenceQuote", " Co ay ", "reason", "profile row says so")), list(), goodProbes()));
         assertEquals(reject.reasonCode() + reject.issues(), EditorialL3Execution.Outcome.COMMITTED, reject.outcome());
         // unresolved stops the chapter
         EditorialL3Execution.Result open = runL3(l, l2, reconcileV2(list(), list(map("index", BigDecimal.ZERO, "status", "UNRESOLVED",

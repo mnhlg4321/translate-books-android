@@ -235,7 +235,7 @@ final class EditorialL3Ledger {
                     issues.add("L3_PROBE_UNIT_UNKNOWN:" + id);
                     rawOk = false;
                 } else {
-                    quoted |= u.text().contains(p.rawQuote());
+                    quoted |= EditorialQuoteMatcher.containsRaw(u.text(), p.rawQuote());
                     units.add(unit);
                 }
             }
@@ -245,7 +245,7 @@ final class EditorialL3Ledger {
             } else {
                 StringBuilder span = new StringBuilder();
                 for (int i = p.viStart(); i <= p.viEnd(); i++) span.append(viLines.get(i - 1)).append('\n');
-                if (!span.toString().contains(p.viQuote())) issues.add("L3_PROBE_VI_QUOTE_NOT_IN_ANCHOR:" + id);
+                if (!EditorialQuoteMatcher.contains(span.toString(), p.viQuote())) issues.add("L3_PROBE_VI_QUOTE_NOT_IN_ANCHOR:" + id);
                 List<String> sorted = new ArrayList<>(p.rawUnits());
                 java.util.Collections.sort(sorted);
                 if (!anchors.add(sorted + "|" + p.viStart() + "|" + p.viEnd())) issues.add("L3_PROBE_ANCHOR_DUPLICATE:" + id);
@@ -339,7 +339,7 @@ final class EditorialL3Ledger {
                 }
                 case "REJECTED" -> {
                     boolean quoted = !r.evidenceQuote().isEmpty() && c.line() >= 1 && c.line() <= viLines.size()
-                            && viLines.get(c.line() - 1).contains(r.evidenceQuote());
+                            && EditorialQuoteMatcher.contains(viLines.get(c.line() - 1), r.evidenceQuote());
                     if (!quoted || r.reason().isBlank()) issues.add("L3_CARRIED_REJECTED_WITHOUT_EVIDENCE:" + key);
                     if (!r.changeIds().isEmpty()) issues.add("L3_CARRIED_REJECTED_BUT_CHANGED:" + key);
                 }

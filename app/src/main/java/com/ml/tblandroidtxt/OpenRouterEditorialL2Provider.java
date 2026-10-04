@@ -80,8 +80,8 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
             + "(for a MISSING anchor, an INSERT_AFTER within two lines of its 'after'); every change carrying that errorId must be listed. "
             + "occurrences must contain one {unitId, ref} for EVERY unit in the finding's occurrenceUnits, ref being one of its changeIds or preserveIds, "
             + "so a defect that repeats is fixed in every place.\n"
-            + "- status REJECTED: the RAW supports the draft. evidenceQuote is an exact substring (at most 80 characters) of one of the finding's RAW units; "
-            + "reason says why; no change may carry that errorId.\n"
+            + "- status REJECTED: the RAW supports the draft. evidenceQuote quotes the visible RAW base text (at most 80 characters) from one of the finding's RAW units; "
+            + "reason says why; no change may carry that errorId. RAW furigana appears as 漢字《reading》; evidenceQuote may omit the 《reading》 annotation. Quote checks NFC-normalize and trim outer whitespace, and RAW checks remove closed ruby readings from the anchored RAW text only.\n"
             + "- status PRESERVED: keep the draft; preserveIds lists preserved rows on the finding's DRAFT lines and occurrences map the other places to those rows.\n"
             + "- status UNRESOLVED: you could not decide; the app stops the chapter. reason says why.\n"
             + "- A change that fixes a defect you found yourself uses an errorId that starts with L2- (for example L2-001). Every other errorId is a finding errorId.\n"
@@ -98,7 +98,7 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
             + "- readSha256 is the targetSha256 shown in READ_PROBE_LINES, copied exactly. probeTails has one row per probeLines number: "
             + "the last " + EditorialFinalRead.TAIL_LENGTH + " characters of that line of READ_TARGET (the whole line when it is shorter), exactly as written.\n"
             + "- verdict is CLEAN only when you found nothing wrong, otherwise DEFECTS with one row per remaining defect: line (as shown L<n>|), "
-            + "quote (exact substring of that line, at most 80 characters), type (" + String.join("|", new java.util.TreeSet<>(EditorialFinalRead.jsonSchemaTypes())) + "), "
+            + "quote (exact substring of that line, at most 80 characters; checked after NFC normalization and trimming outer whitespace), type (" + String.join("|", new java.util.TreeSet<>(EditorialFinalRead.jsonSchemaTypes())) + "), "
             + "note (short). A CLEAN verdict is only your judgement, not a certificate.\n";
 
     private final AppSettings settings;

@@ -76,6 +76,7 @@ public final class OpenRouterEditorialL3LedgerPromptTest {
         PromptPair prompt = OpenRouterEditorialL3Provider.buildPrompt(request);
         assertTrue(prompt.system.contains("carriedResolutions has EXACTLY one row per entry"));
         assertTrue(prompt.system.contains("probes: at least 3 COVERAGE and 3 REGRESSION, each anchored"));
+        assertTrue(prompt.system.contains("rawQuote may omit the 《reading》 annotation"));
         assertTrue(prompt.system.contains("MERGE_WITH_NEXT"));
         assertTrue(prompt.system.contains("MUST probes[].scope length 1.." + EditorialFieldSpec.MAX_PROBE_TEXT));
         assertTrue(prompt.system.contains("MUST changes[].reason length 1.." + EditorialFieldSpec.MAX_MODEL_TEXT));

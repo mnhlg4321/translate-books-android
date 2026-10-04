@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * L1 Error Ledger, current contract revision {@code L1_LEDGER_V5}. Four notions stay apart: a RAW unit/occurrence is a
+ * L1 Error Ledger, current contract revision {@code L1_LEDGER_V6}. Four notions stay apart: a RAW unit/occurrence is a
  * part of the source (the app's {@link EditorialRawInventory}); a candidate is a suspicion raised by the blind RAW
  * pass; a finding is a defect with evidence in the DRAFT; a change is an edit (L2/L3). The model supplies
  * judgement and the app checks everything checkable: every unit id exists, coverage ranges close over the whole
@@ -272,14 +272,14 @@ public final class EditorialL1Ledger {
 
         String rawQuote = fieldStr(phase, row, "rawQuote", path + ".rawQuote");
         boolean quoted = false;
-        for (String unit : rawUnits) quoted |= inventory.unit(unit).text().contains(rawQuote);
+        for (String unit : rawUnits) quoted |= EditorialQuoteMatcher.containsRaw(inventory.unit(unit).text(), rawQuote);
         if (!quoted) throw bad("L1_RAW_QUOTE_NOT_IN_ANCHOR", path + ".rawQuote");
         String draftQuote = fieldStr(phase, row, "draftQuote", path + ".draftQuote");
         if ("LINES".equals(anchor.kind())) {
             if (draftQuote.isEmpty()) throw bad("L1_DRAFT_QUOTE_REQUIRED", path + ".draftQuote");
             StringBuilder span = new StringBuilder();
             for (int i = anchor.start(); i <= anchor.end(); i++) span.append(draftLines.get(i - 1)).append('\n');
-            if (!span.toString().contains(draftQuote)) throw bad("L1_DRAFT_QUOTE_NOT_IN_ANCHOR", path + ".draftQuote");
+            if (!EditorialQuoteMatcher.contains(span.toString(), draftQuote)) throw bad("L1_DRAFT_QUOTE_NOT_IN_ANCHOR", path + ".draftQuote");
         } else if (!draftQuote.isEmpty()) {
             throw bad("L1_DRAFT_QUOTE_FORBIDDEN_FOR_MISSING", path + ".draftQuote");
         }

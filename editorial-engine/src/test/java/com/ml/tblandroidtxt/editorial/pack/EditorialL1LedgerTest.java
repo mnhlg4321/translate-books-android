@@ -19,7 +19,7 @@ public final class EditorialL1LedgerTest {
     private static final String ATT = "att-1";
     // 12 lines; lines 3, 6, 9 contain 踏破 (the same defect repeated); line 4 has 今回
     private static final String RAW = String.join("\n",
-            "王は城に入った。", "騎士が言った。", "「踏破した。」", "「今回は無理だ。」", "彼女は笑った。", "「踏破だ。」",
+            "王は城に入った。", "騎士が言った。", "「踏《とう》破した。」", "「今回は無理だ。」", "彼女は笑った。", "「踏破だ。」",
             "雨が降る。", "彼は歩いた。", "「踏破完了。」", "空は暗い。", "三人が来た。", "終わり。");
     private static final String DRAFT = String.join("\n",
             "Vua vao thanh.", "Hiep si noi.", "\"Da chinh phuc.\"", "\"今回 khong the.\"", "Co ay cuoi.", "\"Chinh phuc roi.\"",
@@ -178,6 +178,26 @@ public final class EditorialL1LedgerTest {
                 finding("e1", "MEANING", 3, 4, 4, "踏破", "chinh phuc"))), new ArrayList<>()), List.of()));
         expectCode("L1_DRAFT_QUOTE_REQUIRED", () -> reconcile(reconcileWire(new ArrayList<>(List.of(
                 finding("e1", "MEANING", 3, 3, 3, "踏破", ""))), new ArrayList<>()), List.of()));
+    }
+
+    @Test
+    public void quotesNormalizeFuriganaNfcAndOuterWhitespaceWithoutLeavingTheirAnchor() {
+        Map<String, Object> ruby = finding("e1", "MEANING", 3, 3, 3, " 踏破 ", " chinh phuc ");
+        EditorialL1Ledger.ReconcilePass rubyPass = reconcile(
+                reconcileWire(new ArrayList<>(List.of(ruby)), new ArrayList<>()), List.of());
+        assertEquals(1, rubyPass.findings().size());
+
+        List<String> decomposedDraft = new ArrayList<>(draft());
+        decomposedDraft.set(3, "今回 e\u0301");
+        Map<String, Object> nfc = finding("e1", "MEANING", 4, 4, 4, "今回", " \u00e9 ");
+        EditorialL1Ledger.ReconcilePass nfcPass = EditorialL1Ledger.parseReconcile(
+                json(reconcileWire(new ArrayList<>(List.of(nfc)), new ArrayList<>())),
+                ATT, inv(), decomposedDraft, List.of());
+        assertEquals(" \u00e9 ", nfcPass.findings().get(0).draftQuote());
+
+        expectCode("L1_RAW_QUOTE_NOT_IN_ANCHOR", () -> reconcile(
+                reconcileWire(new ArrayList<>(List.of(finding("e1", "MEANING", 3, 3, 3, "そろ", "chinh phuc"))),
+                        new ArrayList<>()), List.of()));
     }
 
     @Test
@@ -340,6 +360,10 @@ public final class EditorialL1LedgerTest {
         assertTrue(EditorialContractRevision.known(EditorialContractRevision.L1_LEDGER_V4));
         assertFalse(EditorialContractRevision.eligiblePredecessor(EditorialContractRevision.L1_LEDGER_V4,
                 EditorialContractRevision.CURRENT_LEDGER));
+        assertTrue(EditorialContractRevision.known(EditorialContractRevision.L1_LEDGER_V5));
+        assertFalse(EditorialContractRevision.eligiblePredecessor(EditorialContractRevision.L1_LEDGER_V5,
+                EditorialContractRevision.CURRENT_LEDGER));
+        assertTrue(EditorialContractRevision.known(EditorialContractRevision.L1_LEDGER_V6));
         assertFalse(EditorialContractRevision.eligiblePredecessor(EditorialContractRevision.LEGACY_V1, EditorialContractRevision.CURRENT_LEDGER));
         assertTrue(EditorialContractRevision.eligiblePredecessor(EditorialContractRevision.CURRENT_LEDGER,
                 EditorialContractRevision.CURRENT_LEDGER));

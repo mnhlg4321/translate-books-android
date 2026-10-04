@@ -151,6 +151,17 @@ public final class EditorialFinalReadTest {
         expect("FINAL_READ_VERDICT_DEFECT_MISMATCH", json(w), t);
     }
 
+    @Test public void defectQuotesNormalizeNfcAndOuterWhitespaceWithinTheSelectedLine() {
+        byte[] t = b("first line\nCafe\u0301 au lait\nthird line\nfourth line\nfifth line\n");
+        Map<String, Object> wire = goodWire(t);
+        wire.put("verdict", "DEFECTS");
+        wire.put("defects", new ArrayList<Object>(List.of(Map.of(
+                "line", BigDecimal.valueOf(2), "quote", " \u00e9 ", "type", "MEANING", "note", "n"))));
+        EditorialFinalRead.Result result = EditorialFinalRead.parse(json(wire), ATT, t);
+        assertEquals(1, result.defects().size());
+        assertEquals(" \u00e9 ", result.defects().get(0).quote());
+    }
+
     @Test public void unknownKeysAndOversizeAreRefused() {
         byte[] t = b(target());
         Map<String, Object> w = goodWire(t);

@@ -192,7 +192,7 @@ final class EditorialL2Findings {
             units.addAll(f.occurrenceUnits());
             for (String unit : units) {
                 EditorialRawInventory.Unit u = inventory.unit(unit);
-                quoted |= u != null && u.text().contains(r.evidenceQuote());
+                quoted |= u != null && EditorialQuoteMatcher.containsRaw(u.text(), r.evidenceQuote());
             }
         }
         if (!quoted) issues.add("L2_FINDING_REJECTED_WITHOUT_RAW_EVIDENCE:" + id);

@@ -142,7 +142,7 @@ public final class EditorialFinalRead {
             Object type = row.get("type");
             String typeValue = fieldText(phase, path + ".type", type);
             if (!TYPES.contains(typeValue)) throw bad("FINAL_READ_DEFECT_TYPE_INVALID", path + ".type");
-            if (quote.isEmpty() || !targetLines.get(line - 1).contains(quote)) throw bad("FINAL_READ_DEFECT_QUOTE_NOT_IN_LINE", path + ".quote");
+            if (quote.isEmpty() || !EditorialQuoteMatcher.contains(targetLines.get(line - 1), quote)) throw bad("FINAL_READ_DEFECT_QUOTE_NOT_IN_LINE", path + ".quote");
             defects.add(new Defect(line, quote, typeValue, note));
         }
         return new Result(sha, targetLines.size(), probes, verdict, defects);

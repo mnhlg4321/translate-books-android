@@ -71,6 +71,7 @@ public final class OpenRouterEditorialP5LedgerPromptTest {
         assertTrue(prompt.user.contains("there is no cap of four"));
         assertTrue(prompt.user.contains("findings <=" + EditorialL1Ledger.MAX_FINDINGS_PER_CALL));
         assertTrue(prompt.user.contains("TASK (L1 RECONCILE)"));
+        assertTrue(prompt.user.contains("RAW furigana appears as 漢字《reading》"));
         assertTrue(prompt.user.contains("MUST findings[].observation length 1.." + EditorialFieldSpec.MAX_TEXT));
         assertTrue(prompt.user.contains("MUST protectedSpans[].reason length 1.." + EditorialFieldSpec.MAX_TEXT));
         assertTrue(prompt.user.contains("CONDITIONAL disposition.reasonCode length 0..32"));
