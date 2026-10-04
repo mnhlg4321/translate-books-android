@@ -11,6 +11,7 @@ param(
     [ValidatePattern('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')]
     [string]$L1SourceRunId,
     [switch]$Live,
+    [switch]$NegativeGate,
     [string]$ExpectedEndpointAccountFingerprint,
     [ValidatePattern('^[A-Za-z0-9._-]{3,100}$')]
     [string]$GroupId,
@@ -29,6 +30,9 @@ $ExpectedRoot = [IO.Path]::GetFullPath('D:\P5E-private\p6-fixtures').TrimEnd('\'
 $FixturesRoot = [IO.Path]::GetFullPath($FixturesRoot).TrimEnd('\')
 if ($FixturesRoot -ne $ExpectedRoot -or $FixturesRoot.Contains('6.FINAL')) {
     throw 'Fixture root must be the private P6 fixture directory, outside 6.FINAL.'
+}
+if ($NegativeGate -and ($Live -or $Mode -ne 'L1_ONLY' -or -not $FixtureIds -or $FixtureIds.Count -ne 1)) {
+    throw 'The negative gate is an offline L1_ONLY check of exactly one fixture.'
 }
 if ($Live -and ($ExpectedEndpointAccountFingerprint -notmatch '^[0-9a-fA-F]{64}$')) {
     throw 'Live fixture mode requires the owner-supplied endpoint/account fingerprint.'
@@ -134,6 +138,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Host prompt-input guard refused the selected f
 $Failed = [System.Collections.Generic.List[string]]::new()
 $LiveArguments = @()
 $LiveArguments = @('-e', 'p6_group_id', $GroupId, '-e', 'p6_group_maximum_usd', $GroupCapText)
+if ($NegativeGate) { $LiveArguments += @('-e', 'p6_fake_invalid_l1', 'YES') }
 if ($Live) {
     $LiveArguments += @('-e', 'p6_fixture_live', 'YES', '-e',
         'p6_expected_endpoint_account_fingerprint', $ExpectedEndpointAccountFingerprint)
@@ -197,6 +202,7 @@ try {
 $VerifyArguments = @('--fixtures-root', $FixturesRoot, '--manifest', $ManifestPath,
     '--run-dir', $RunRoot, '--mode', $Mode, '--fixture-ids') + @($FixtureIds)
 if ($Live) { $VerifyArguments += '--live' }
+if ($NegativeGate) { $VerifyArguments += '--expect-invalid-l1' }
 & py -3 (Join-Path $RepoRoot 'scripts\p6\verify_fixture_run.py') @VerifyArguments
 if ($LASTEXITCODE -ne 0) { throw 'Fixture outputs, spend ledger, leak probes, or scorer validation failed.' }
 if ($Failed.Count -gt 0) { throw ('Instrumented fixture failures: ' + ($Failed -join ', ')) }
