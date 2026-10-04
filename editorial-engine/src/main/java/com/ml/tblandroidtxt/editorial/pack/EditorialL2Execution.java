@@ -430,32 +430,33 @@ public final class EditorialL2Execution {
 
     /** Strict blind-discovery wire: unknown keys, bad ids/ledgers and out-of-range RAW lines are rejected. */
     static List<Candidate> parseDiscovery(byte[] bytes, String attemptIdentity, int rawLines) {
-        if (bytes.length > MAX_WIRE_BYTES) throw new IllegalArgumentException("L2_WIRE_BYTE_LIMIT_EXCEEDED");
+        if (bytes == null || bytes.length > MAX_WIRE_BYTES) throw WireViolation.at("L2_WIRE_BYTE_LIMIT_EXCEEDED", "root");
         Map<String, Object> root = EditorialCanonicalJson.parseObject(bytes);
         keys(root, Set.of("wireSchemaVersion", "attemptIdentity", "candidates"), "root");
-        if (!DISCOVERY_WIRE.equals(root.get("wireSchemaVersion"))) throw new IllegalArgumentException("L2_WIRE_SCHEMA_INVALID");
-        if (!attemptIdentity.equals(root.get("attemptIdentity"))) throw new IllegalArgumentException("L2_WIRE_ATTEMPT_ECHO_MISMATCH");
+        if (!DISCOVERY_WIRE.equals(root.get("wireSchemaVersion"))) throw WireViolation.at("L2_WIRE_SCHEMA_INVALID", "wireSchemaVersion");
+        if (!attemptIdentity.equals(root.get("attemptIdentity"))) throw WireViolation.at("L2_WIRE_ATTEMPT_ECHO_MISMATCH", "attemptIdentity");
         List<Object> values = EditorialCanonicalJson.array(root.get("candidates"), "candidates");
-        if (values.size() > MAX_CANDIDATES) throw new IllegalArgumentException("L2_WIRE_ROW_LIMIT_EXCEEDED");
+        if (values.size() > MAX_CANDIDATES) throw WireViolation.at("L2_WIRE_ROW_LIMIT_EXCEEDED", "candidates");
         List<Candidate> result = new ArrayList<>();
         Set<String> ids = new HashSet<>();
         boolean unit = false;
-        for (Object value : values) {
-            Map<String, Object> row = object(value, "candidate");
-            keys(row, Set.of("candidateId", "ledger", "line"), "candidate");
-            String id = text(row, "candidateId");
+        for (int index = 0; index < values.size(); index++) {
+            String path = "candidates." + index;
+            Map<String, Object> row = object(values.get(index), path);
+            keys(row, Set.of("candidateId", "ledger", "line"), path);
+            String id = text(row, "candidateId", path + ".candidateId");
             if (!EditorialP5RawWireContract.token(id, EditorialP5RawWireContract.MAX_ID_LENGTH) || !ids.add(id)) {
-                throw new IllegalArgumentException("L2_WIRE_CANDIDATE_ID_INVALID");
+                throw WireViolation.at("L2_WIRE_CANDIDATE_ID_INVALID", path + ".candidateId");
             }
-            String ledger = text(row, "ledger");
-            if (!LEDGERS.contains(ledger)) throw new IllegalArgumentException("L2_WIRE_LEDGER_INVALID");
-            int line = line(row);
-            if (line < 0 || line > rawLines) throw new IllegalArgumentException("L2_WIRE_LINE_OUT_OF_RANGE");
+            String ledger = text(row, "ledger", path + ".ledger");
+            if (!LEDGERS.contains(ledger)) throw WireViolation.at("L2_WIRE_LEDGER_INVALID", path + ".ledger");
+            int line = line(row, path + ".line");
+            if (line < 0 || line > rawLines) throw WireViolation.at("L2_WIRE_LINE_OUT_OF_RANGE", path + ".line");
             unit |= "UNIT".equals(ledger);
             result.add(new Candidate(id, ledger, line));
         }
         // An exhaustive discovery always enumerates raw units; an empty unit ledger is not evidence.
-        if (!unit) throw new IllegalArgumentException("L2_WIRE_RAW_UNITS_MISSING");
+        if (!unit) throw WireViolation.at("L2_WIRE_RAW_UNITS_MISSING", "candidates");
         return List.copyOf(result);
     }
 
@@ -470,12 +471,12 @@ public final class EditorialL2Execution {
      */
     static EditWire parseEditWireV3(byte[] bytes, String attemptIdentity, List<Candidate> candidates,
                                     EditorialL1Ledger.Body l1, EditorialRawInventory.Inventory inventory) {
-        if (bytes.length > MAX_WIRE_BYTES) throw new IllegalArgumentException("L2_WIRE_BYTE_LIMIT_EXCEEDED");
+        if (bytes == null || bytes.length > MAX_WIRE_BYTES) throw WireViolation.at("L2_WIRE_BYTE_LIMIT_EXCEEDED", "root");
         Map<String, Object> root = EditorialCanonicalJson.parseObject(bytes);
         keys(root, Set.of("wireSchemaVersion", "attemptIdentity", "resolutions", "findingResolutions", "changes",
                 "preserved", "disposition"), "root");
         if (!WIRE_SCHEMA_VERSION_V3.equals(root.get("wireSchemaVersion"))) {
-            throw new IllegalArgumentException("L2_WIRE_SCHEMA_INVALID");
+            throw WireViolation.at("L2_WIRE_SCHEMA_INVALID", "wireSchemaVersion");
         }
         Map<String, Object> rowsShape = new LinkedHashMap<>(root);
         rowsShape.remove("resolutions");
@@ -486,15 +487,17 @@ public final class EditorialL2Execution {
         Set<String> known = new HashSet<>();
         for (Candidate candidate : candidates) known.add(candidate.candidateId());
         Map<String, String> resolutions = new TreeMap<>();
-        for (Object value : EditorialCanonicalJson.array(root.get("resolutions"), "resolutions")) {
-            Map<String, Object> row = object(value, "resolution");
-            keys(row, Set.of("candidateId", "status"), "resolution");
-            String id = text(row, "candidateId");
-            String status = text(row, "status");
+        List<Object> resolutionRows = EditorialCanonicalJson.array(root.get("resolutions"), "resolutions");
+        for (int index = 0; index < resolutionRows.size(); index++) {
+            String path = "resolutions." + index;
+            Map<String, Object> row = object(resolutionRows.get(index), path);
+            keys(row, Set.of("candidateId", "status"), path);
+            String id = text(row, "candidateId", path + ".candidateId");
+            String status = text(row, "status", path + ".status");
             if (!known.contains(id) || resolutions.containsKey(id)) {
-                throw new IllegalArgumentException("L2_WIRE_RESOLUTION_ID_INVALID");
+                throw WireViolation.at("L2_WIRE_RESOLUTION_ID_INVALID", path + ".candidateId");
             }
-            if (!STATUSES.contains(status)) throw new IllegalArgumentException("L2_WIRE_STATUS_INVALID");
+            if (!STATUSES.contains(status)) throw WireViolation.at("L2_WIRE_STATUS_INVALID", path + ".status");
             resolutions.put(id, status);
         }
         Set<String> errorIds = new HashSet<>();
@@ -533,7 +536,7 @@ public final class EditorialL2Execution {
      * candidate id may appear at most once; completeness is judged by the app after STOP wires are handled.
      */
     static EditWire parseEditWire(byte[] bytes, String attemptIdentity, List<Candidate> candidates) {
-        if (bytes.length > MAX_WIRE_BYTES) throw new IllegalArgumentException("L2_WIRE_BYTE_LIMIT_EXCEEDED");
+        if (bytes == null || bytes.length > MAX_WIRE_BYTES) throw WireViolation.at("L2_WIRE_BYTE_LIMIT_EXCEEDED", "root");
         Map<String, Object> root = EditorialCanonicalJson.parseObject(bytes);
         keys(root, Set.of("wireSchemaVersion", "attemptIdentity", "resolutions", "changes", "preserved", "disposition"),
                 "root");
@@ -544,15 +547,17 @@ public final class EditorialL2Execution {
         Set<String> known = new HashSet<>();
         for (Candidate candidate : candidates) known.add(candidate.candidateId());
         Map<String, String> resolutions = new TreeMap<>();
-        for (Object value : EditorialCanonicalJson.array(root.get("resolutions"), "resolutions")) {
-            Map<String, Object> row = object(value, "resolution");
-            keys(row, Set.of("candidateId", "status"), "resolution");
-            String id = text(row, "candidateId");
-            String status = text(row, "status");
+        List<Object> resolutionRows = EditorialCanonicalJson.array(root.get("resolutions"), "resolutions");
+        for (int index = 0; index < resolutionRows.size(); index++) {
+            String path = "resolutions." + index;
+            Map<String, Object> row = object(resolutionRows.get(index), path);
+            keys(row, Set.of("candidateId", "status"), path);
+            String id = text(row, "candidateId", path + ".candidateId");
+            String status = text(row, "status", path + ".status");
             if (!known.contains(id) || resolutions.containsKey(id)) {
-                throw new IllegalArgumentException("L2_WIRE_RESOLUTION_ID_INVALID");
+                throw WireViolation.at("L2_WIRE_RESOLUTION_ID_INVALID", path + ".candidateId");
             }
-            if (!STATUSES.contains(status)) throw new IllegalArgumentException("L2_WIRE_STATUS_INVALID");
+            if (!STATUSES.contains(status)) throw WireViolation.at("L2_WIRE_STATUS_INVALID", path + ".status");
             resolutions.put(id, status);
         }
         return new EditWire(rows, Map.copyOf(resolutions));
@@ -689,14 +694,14 @@ public final class EditorialL2Execution {
 
     /** {@code allowOps} (ledger contract) admits the optional {@code op} of a change row. */
     static Wire parseWire(byte[] bytes, String attemptIdentity, boolean allowOps) {
-        if (bytes.length > MAX_WIRE_BYTES) throw new IllegalArgumentException("L2_WIRE_BYTE_LIMIT_EXCEEDED");
+        if (bytes == null || bytes.length > MAX_WIRE_BYTES) throw WireViolation.at("L2_WIRE_BYTE_LIMIT_EXCEEDED", "root");
         Map<String, Object> root = EditorialCanonicalJson.parseObject(bytes);
         keys(root, Set.of("wireSchemaVersion", "attemptIdentity", "changes", "preserved", "disposition"), "root");
         if (!WIRE_SCHEMA_VERSION.equals(root.get("wireSchemaVersion"))) {
-            throw new IllegalArgumentException("L2_WIRE_SCHEMA_INVALID");
+            throw WireViolation.at("L2_WIRE_SCHEMA_INVALID", "wireSchemaVersion");
         }
         if (!attemptIdentity.equals(root.get("attemptIdentity"))) {
-            throw new IllegalArgumentException("L2_WIRE_ATTEMPT_ECHO_MISMATCH");
+            throw WireViolation.at("L2_WIRE_ATTEMPT_ECHO_MISMATCH", "attemptIdentity");
         }
         List<Object> changeValues = EditorialCanonicalJson.array(root.get("changes"), "changes");
         List<Object> preservedValues = EditorialCanonicalJson.array(root.get("preserved"), "preserved");
@@ -704,63 +709,69 @@ public final class EditorialL2Execution {
             throw new IllegalArgumentException("L2_WIRE_ROW_LIMIT_EXCEEDED");
         }
         List<EditorialChangeMapReconstructor.ChangeRow> changes = new ArrayList<>();
-        for (Object value : changeValues) {
-            Map<String, Object> row = object(value, "change");
+        for (int index = 0; index < changeValues.size(); index++) {
+            String path = "changes." + index;
+            Map<String, Object> row = object(changeValues.get(index), path);
             if (allowOps) {
                 keys(row, Set.of("changeId", "errorId", "line", "before", "after", "reason", "dialogue",
-                        "speakerProof", "status", "op"), "change", Set.of("speakerProof", "op"));
+                        "speakerProof", "status", "op"), path, Set.of("speakerProof", "op"));
             } else {
                 keys(row, Set.of("changeId", "errorId", "line", "before", "after", "reason", "dialogue",
-                        "speakerProof", "status"), "change", Set.of("speakerProof"));
+                        "speakerProof", "status"), path, Set.of("speakerProof"));
             }
             EditorialChangeMapReconstructor.Op changeOp = EditorialChangeMapReconstructor.Op.REPLACE;
             if (row.containsKey("op")) {
                 try {
-                    changeOp = EditorialChangeMapReconstructor.Op.valueOf(text(row, "op"));
+                    changeOp = EditorialChangeMapReconstructor.Op.valueOf(text(row, "op", path + ".op"));
                 } catch (IllegalArgumentException invalid) {
-                    throw new IllegalArgumentException("L2_WIRE_OP_INVALID");
+                    throw WireViolation.at("L2_WIRE_OP_INVALID", path + ".op");
                 }
             }
             EditorialChangeMapReconstructor.SpeakerProof proof = null;
             if (row.containsKey("speakerProof")) {
-                Map<String, Object> p = object(row.get("speakerProof"), "speakerProof");
-                keys(p, Set.of("speaker", "listener", "anchorBefore", "anchorAfter"), "speakerProof");
-                proof = new EditorialChangeMapReconstructor.SpeakerProof(text(p, "speaker"),
-                        text(p, "listener"), text(p, "anchorBefore"), text(p, "anchorAfter"));
+                String proofPath = path + ".speakerProof";
+                Map<String, Object> p = object(row.get("speakerProof"), proofPath);
+                keys(p, Set.of("speaker", "listener", "anchorBefore", "anchorAfter"), proofPath);
+                proof = new EditorialChangeMapReconstructor.SpeakerProof(text(p, "speaker", proofPath + ".speaker"),
+                        text(p, "listener", proofPath + ".listener"), text(p, "anchorBefore", proofPath + ".anchorBefore"),
+                        text(p, "anchorAfter", proofPath + ".anchorAfter"));
             }
             EditorialChangeMapReconstructor.DeclaredStatus status;
             try {
-                status = EditorialChangeMapReconstructor.DeclaredStatus.valueOf(text(row, "status"));
+                status = EditorialChangeMapReconstructor.DeclaredStatus.valueOf(text(row, "status", path + ".status"));
             } catch (IllegalArgumentException invalid) {
-                throw new IllegalArgumentException("L2_WIRE_STATUS_INVALID");
+                throw WireViolation.at("L2_WIRE_STATUS_INVALID", path + ".status");
             }
-            changes.add(new EditorialChangeMapReconstructor.ChangeRow(text(row, "changeId"),
-                    text(row, "errorId"), line(row), text(row, "before"), text(row, "after"),
-                    text(row, "reason"), bool(row, "dialogue"), proof, status, changeOp));
+            changes.add(new EditorialChangeMapReconstructor.ChangeRow(text(row, "changeId", path + ".changeId"),
+                    text(row, "errorId", path + ".errorId"), line(row, path + ".line"),
+                    text(row, "before", path + ".before"), text(row, "after", path + ".after"),
+                    text(row, "reason", path + ".reason"), bool(row, "dialogue", path + ".dialogue"), proof, status, changeOp));
         }
         List<EditorialChangeMapReconstructor.PreservedRow> preserved = new ArrayList<>();
-        for (Object value : preservedValues) {
-            Map<String, Object> row = object(value, "preserved");
-            keys(row, Set.of("preserveId", "line", "before", "evidenceLimit"), "preserved");
-            preserved.add(new EditorialChangeMapReconstructor.PreservedRow(text(row, "preserveId"),
-                    line(row), text(row, "before"), text(row, "evidenceLimit")));
+        for (int index = 0; index < preservedValues.size(); index++) {
+            String path = "preserved." + index;
+            Map<String, Object> row = object(preservedValues.get(index), path);
+            keys(row, Set.of("preserveId", "line", "before", "evidenceLimit"), path);
+            preserved.add(new EditorialChangeMapReconstructor.PreservedRow(text(row, "preserveId", path + ".preserveId"),
+                    line(row, path + ".line"), text(row, "before", path + ".before"),
+                    text(row, "evidenceLimit", path + ".evidenceLimit")));
         }
         Map<String, Object> disposition = object(root.get("disposition"), "disposition");
         keys(disposition, Set.of("disposition", "reasonCode", "stopClass"), "disposition");
-        String kind = text(disposition, "disposition");
-        String reason = text(disposition, "reasonCode");
-        if (!EditorialP5RawWireContract.safeText(reason)) throw new IllegalArgumentException("L2_WIRE_REASON_INVALID");
-        String stopClass = text(disposition, "stopClass");
+        String kind = text(disposition, "disposition", "disposition.disposition");
+        String reason = text(disposition, "reasonCode", "disposition.reasonCode");
+        if (!EditorialP5RawWireContract.safeText(reason)) throw WireViolation.at("L2_WIRE_REASON_INVALID", "disposition.reasonCode");
+        String stopClass = text(disposition, "stopClass", "disposition.stopClass");
         if ("CONTINUE".equals(kind) || "PRESERVE_DRAFT".equals(kind)) {
-            if (!"NONE".equals(stopClass)) throw new IllegalArgumentException("L2_WIRE_STOP_CLASS_INVALID");
+            if (!"NONE".equals(stopClass)) throw WireViolation.at("L2_WIRE_STOP_CLASS_INVALID", "disposition.stopClass");
             return new Wire(List.copyOf(changes), List.copyOf(preserved), null, reason);
         }
-        if (!"STOP".equals(kind)) throw new IllegalArgumentException("L2_WIRE_DISPOSITION_INVALID");
+        if (!"STOP".equals(kind)) throw WireViolation.at("L2_WIRE_DISPOSITION_INVALID", "disposition.disposition");
         // A model may only request a content stop or input; it cannot claim PASS or a technical class.
         return switch (stopClass) {
             case "CONTENT_BLOCKED" -> new Wire(List.of(), List.of(), StopClass.CONTENT_BLOCKED, reason);
             case "INPUT_REQUIRED" -> new Wire(List.of(), List.of(), StopClass.INPUT_REQUIRED, reason);
-            default -> throw new IllegalArgumentException("L2_WIRE_STOP_CLASS_INVALID");
+            default -> throw WireViolation.at("L2_WIRE_STOP_CLASS_INVALID", "disposition.stopClass");
         };
     }
 
@@ -770,42 +781,54 @@ public final class EditorialL2Execution {
 
     static void keys(Map<String, Object> value, Set<String> allowed, String path, Set<String> optional) {
         for (String key : value.keySet()) {
-            if (!allowed.contains(key)) throw new IllegalArgumentException("L2_WIRE_UNKNOWN_KEY:" + path);
+            if (!allowed.contains(key)) throw WireViolation.at("L2_WIRE_UNKNOWN_KEY", path);
         }
         for (String key : allowed) {
             if (!optional.contains(key) && !value.containsKey(key)) {
-                throw new IllegalArgumentException("L2_WIRE_MISSING_KEY:" + path);
+                throw WireViolation.at("L2_WIRE_MISSING_KEY", path + "." + key);
             }
         }
     }
 
     @SuppressWarnings("unchecked")
     static Map<String, Object> object(Object value, String path) {
-        if (!(value instanceof Map)) throw new IllegalArgumentException("L2_WIRE_OBJECT_EXPECTED:" + path);
+        if (!(value instanceof Map)) throw WireViolation.at("L2_WIRE_OBJECT_EXPECTED", path);
         return (Map<String, Object>) value;
     }
 
     static String text(Map<String, Object> value, String key) {
+        return text(value, key, key);
+    }
+
+    static String text(Map<String, Object> value, String key, String path) {
         Object text = value.get(key);
         if (!(text instanceof String) || ((String) text).length() > MAX_TEXT_FIELD) {
-            throw new IllegalArgumentException("L2_WIRE_TEXT_INVALID:" + key);
+            throw WireViolation.at("L2_WIRE_TEXT_INVALID", path);
         }
         return (String) text;
     }
 
     static boolean bool(Map<String, Object> value, String key) {
+        return bool(value, key, key);
+    }
+
+    static boolean bool(Map<String, Object> value, String key, String path) {
         Object flag = value.get(key);
-        if (!(flag instanceof Boolean)) throw new IllegalArgumentException("L2_WIRE_BOOLEAN_INVALID:" + key);
+        if (!(flag instanceof Boolean)) throw WireViolation.at("L2_WIRE_BOOLEAN_INVALID", path);
         return (Boolean) flag;
     }
 
     static int line(Map<String, Object> value) {
+        return line(value, "line");
+    }
+
+    static int line(Map<String, Object> value, String path) {
         Object number = value.get("line");
-        if (!(number instanceof BigDecimal)) throw new IllegalArgumentException("L2_WIRE_LINE_INVALID");
+        if (!(number instanceof BigDecimal)) throw WireViolation.at("L2_WIRE_LINE_INVALID", path);
         try {
             return ((BigDecimal) number).intValueExact();
         } catch (ArithmeticException invalid) {
-            throw new IllegalArgumentException("L2_WIRE_LINE_INVALID");
+            throw WireViolation.at("L2_WIRE_LINE_INVALID", path);
         }
     }
 
@@ -818,8 +841,7 @@ public final class EditorialL2Execution {
     }
 
     static String safeMessage(RuntimeException error) {
-        String message = error.getMessage();
-        return message != null && message.matches("[A-Z0-9_:./-]{1,96}") ? message : "L2_WIRE_PARSE_FAILED";
+        return WireViolation.safeMessage(error, "L2_WIRE_PARSE_FAILED");
     }
 
     private static Result stop(StopClass stopClass, String reason, List<String> issues, int calls) {

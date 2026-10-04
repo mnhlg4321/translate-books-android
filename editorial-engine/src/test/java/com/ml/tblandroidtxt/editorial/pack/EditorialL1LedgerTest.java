@@ -364,9 +364,32 @@ public final class EditorialL1LedgerTest {
 
     @Test
     public void typedParseFailureMessageIsAllowListed() {
-        assertEquals("L1_UNIT_UNKNOWN", EditorialL1Ledger.safeMessage(new IllegalArgumentException("L1_UNIT_UNKNOWN")));
-        assertEquals("L1_WIRE_PARSE_FAILED", EditorialL1Ledger.safeMessage(new IllegalArgumentException("contains 王は城 text")));
-        assertEquals("L1_WIRE_PARSE_FAILED", EditorialL1Ledger.safeMessage(new IllegalArgumentException((String) null)));
+        assertEquals("L1_UNIT_UNKNOWN:root", EditorialL1Ledger.safeMessage(new IllegalArgumentException("L1_UNIT_UNKNOWN")));
+        assertEquals("L1_WIRE_PARSE_FAILED:root", EditorialL1Ledger.safeMessage(new IllegalArgumentException("contains 王は城 text")));
+        assertEquals("L1_WIRE_PARSE_FAILED:root", EditorialL1Ledger.safeMessage(new IllegalArgumentException((String) null)));
+    }
+
+    @Test
+    public void violationsReportTheAppAuthoredNestedPathWithoutEchoingUnknownKeys() {
+        Map<String, Object> row = finding("e1", "MEANING", 3, 3, 3, "踏破", "chinh phuc");
+        row.put("observation", "");
+        try {
+            reconcile(reconcileWire(new ArrayList<>(List.of(row)), new ArrayList<>()), List.of());
+            fail("expected required observation rejection");
+        } catch (RuntimeException invalid) {
+            assertEquals("L1_TEXT_REQUIRED:findings.0.observation", EditorialL1Ledger.safeMessage(invalid));
+        }
+
+        row = finding("e1", "MEANING", 3, 3, 3, "踏破", "chinh phuc");
+        row.put("apiKey-from-model", "must-not-be-echoed");
+        try {
+            reconcile(reconcileWire(new ArrayList<>(List.of(row)), new ArrayList<>()), List.of());
+            fail("expected unknown key rejection");
+        } catch (RuntimeException invalid) {
+            assertEquals("L1_UNKNOWN_KEY:findings.0", EditorialL1Ledger.safeMessage(invalid));
+            assertFalse(EditorialL1Ledger.safeMessage(invalid).contains("apiKey-from-model"));
+            assertFalse(EditorialL1Ledger.safeMessage(invalid).contains("must-not-be-echoed"));
+        }
     }
     private static Object wireView(Map<String, Object> value) {
         Object schema = value.get("wireSchemaVersion");

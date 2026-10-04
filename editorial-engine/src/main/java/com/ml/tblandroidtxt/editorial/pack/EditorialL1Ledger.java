@@ -130,14 +130,15 @@ public final class EditorialL1Ledger {
         if (rows.size() > MAX_CANDIDATES_PER_CALL) throw bad("L1_CANDIDATE_LIMIT_EXCEEDED");
         List<Candidate> candidates = new ArrayList<>();
         Set<String> ids = new HashSet<>();
-        for (Object value : rows) {
-            Map<String, Object> row = object(value, "candidate");
-            keys(row, Set.of("candidateId", "ledger", "unitId", "note"), "candidate", Set.of("note"));
-            String id = id(row, "candidateId");
-            if (!ids.add(id)) throw bad("L1_CANDIDATE_ID_DUPLICATE");
-            String ledger = enumOf(row, "ledger", CANDIDATE_LEDGERS);
-            String unit = EditorialUnitReference.resolve(row.get("unitId"), inventory);
-            String note = row.containsKey("note") ? str(row, "note", 80, false) : "";
+        for (int index = 0; index < rows.size(); index++) {
+            String path = "candidates." + index;
+            Map<String, Object> row = object(rows.get(index), path);
+            keys(row, Set.of("candidateId", "ledger", "unitId", "note"), path, Set.of("note"));
+            String id = id(row, "candidateId", path + ".candidateId");
+            if (!ids.add(id)) throw bad("L1_CANDIDATE_ID_DUPLICATE", path + ".candidateId");
+            String ledger = enumOf(row, "ledger", CANDIDATE_LEDGERS, path + ".ledger");
+            String unit = EditorialUnitReference.resolve(row.get("unitId"), inventory, path + ".unitId");
+            String note = row.containsKey("note") ? str(row, "note", 80, false, path + ".note") : "";
             candidates.add(new Candidate(id, ledger, unit, note));
         }
         return new RawPass(coverage, candidates);
@@ -149,7 +150,7 @@ public final class EditorialL1Ledger {
                                                List<String> draftLines, List<Candidate> rawCandidates) {
         Map<String, Object> root = rootOf(bytes, attemptIdentity, RECONCILE_WIRE, Set.of("wireSchemaVersion", "attemptIdentity",
                 "coverage", "resolutions", "findings", "speakerRecords", "protectedSpans", "disposition"));
-        Disposition disposition = disposition(object(root.get("disposition"), "disposition"));
+        Disposition disposition = disposition(object(root.get("disposition"), "disposition"), "disposition");
         boolean stop = "STOP".equals(disposition.kind());
         List<EditorialRawInventory.Range> coverage = stop && EditorialCanonicalJson.array(root.get("coverage"), "coverage").isEmpty()
                 ? List.of() : coverage(root.get("coverage"), inventory);
@@ -160,51 +161,57 @@ public final class EditorialL1Ledger {
         for (Candidate candidate : rawCandidates) knownCandidates.add(candidate.candidateId());
         List<Object> findingRows = EditorialCanonicalJson.array(root.get("findings"), "findings");
         if (findingRows.size() > MAX_FINDINGS_PER_CALL) throw bad("L1_FINDING_LIMIT_EXCEEDED");
-        for (Object value : findingRows) {
-            Finding finding = finding(object(value, "finding"), inventory, draftLines, knownCandidates);
-            if (!errorIds.add(finding.errorId())) throw bad("L1_ERROR_ID_DUPLICATE");
+        for (int index = 0; index < findingRows.size(); index++) {
+            String path = "findings." + index;
+            Finding finding = finding(object(findingRows.get(index), path), inventory, draftLines, knownCandidates, path);
+            if (!errorIds.add(finding.errorId())) throw bad("L1_ERROR_ID_DUPLICATE", path + ".errorId");
             findings.add(finding);
         }
 
         Map<String, Resolution> resolved = new LinkedHashMap<>();
-        for (Object value : EditorialCanonicalJson.array(root.get("resolutions"), "resolutions")) {
-            Map<String, Object> row = object(value, "resolution");
-            keys(row, Set.of("candidateId", "status", "findingRef"), "resolution", Set.of("findingRef"));
-            String candidateId = id(row, "candidateId");
-            if (!knownCandidates.contains(candidateId) || resolved.containsKey(candidateId)) throw bad("L1_RESOLUTION_ID_INVALID");
-            String status = enumOf(row, "status", CANDIDATE_STATUSES);
-            String ref = row.containsKey("findingRef") ? str(row, "findingRef", 48, false) : "";
-            if (!ref.isEmpty() && !errorIds.contains(ref)) throw bad("L1_FINDING_REF_UNKNOWN");
+        List<Object> resolutionRows = EditorialCanonicalJson.array(root.get("resolutions"), "resolutions");
+        for (int index = 0; index < resolutionRows.size(); index++) {
+            String path = "resolutions." + index;
+            Map<String, Object> row = object(resolutionRows.get(index), path);
+            keys(row, Set.of("candidateId", "status", "findingRef"), path, Set.of("findingRef"));
+            String candidateId = id(row, "candidateId", path + ".candidateId");
+            if (!knownCandidates.contains(candidateId) || resolved.containsKey(candidateId)) throw bad("L1_RESOLUTION_ID_INVALID", path + ".candidateId");
+            String status = enumOf(row, "status", CANDIDATE_STATUSES, path + ".status");
+            String ref = row.containsKey("findingRef") ? str(row, "findingRef", 48, false, path + ".findingRef") : "";
+            if (!ref.isEmpty() && !errorIds.contains(ref)) throw bad("L1_FINDING_REF_UNKNOWN", path + ".findingRef");
             resolved.put(candidateId, new Resolution(candidateId, status, ref));
         }
         if (!stop) {
-            for (String id : knownCandidates) if (!resolved.containsKey(id)) throw bad("L1_CANDIDATE_UNRESOLVED");
+            for (String id : knownCandidates) if (!resolved.containsKey(id)) throw bad("L1_CANDIDATE_UNRESOLVED", "resolutions");
         }
 
         List<SpeakerRecord> speakers = new ArrayList<>();
         List<Object> speakerRows = EditorialCanonicalJson.array(root.get("speakerRecords"), "speakerRecords");
         if (speakerRows.size() > MAX_SPEAKER_RECORDS_PER_CALL) throw bad("L1_SPEAKER_LIMIT_EXCEEDED");
-        for (Object value : speakerRows) {
-            Map<String, Object> row = object(value, "speakerRecord");
-            keys(row, Set.of("unitId", "speaker", "listener", "basis"), "speakerRecord");
-            String unit = EditorialUnitReference.resolve(row.get("unitId"), inventory);
-            speakers.add(new SpeakerRecord(unit, str(row, "speaker", 80, true), str(row, "listener", 80, true),
-                    str(row, "basis", MAX_TEXT, true)));
+        for (int index = 0; index < speakerRows.size(); index++) {
+            String path = "speakerRecords." + index;
+            Map<String, Object> row = object(speakerRows.get(index), path);
+            keys(row, Set.of("unitId", "speaker", "listener", "basis"), path);
+            String unit = EditorialUnitReference.resolve(row.get("unitId"), inventory, path + ".unitId");
+            speakers.add(new SpeakerRecord(unit, str(row, "speaker", 80, true, path + ".speaker"),
+                    str(row, "listener", 80, true, path + ".listener"), str(row, "basis", MAX_TEXT, true, path + ".basis")));
         }
 
         List<ProtectedSpan> spans = new ArrayList<>();
         Set<String> spanIds = new HashSet<>();
         List<Object> spanRows = EditorialCanonicalJson.array(root.get("protectedSpans"), "protectedSpans");
         if (spanRows.size() > MAX_PROTECTED_SPANS_PER_CALL) throw bad("L1_PROTECTED_LIMIT_EXCEEDED");
-        for (Object value : spanRows) {
-            Map<String, Object> row = object(value, "protectedSpan");
-            keys(row, Set.of("spanId", "start", "end", "source", "reason"), "protectedSpan");
-            String spanId = id(row, "spanId");
-            if (!spanIds.add(spanId)) throw bad("L1_PROTECTED_ID_DUPLICATE");
-            int start = intOf(row, "start");
-            int end = intOf(row, "end");
-            if (start < 1 || end < start || end > draftLines.size()) throw bad("L1_PROTECTED_RANGE_INVALID");
-            spans.add(new ProtectedSpan(spanId, start, end, enumOf(row, "source", PROTECTED_SOURCES), str(row, "reason", MAX_TEXT, true)));
+        for (int index = 0; index < spanRows.size(); index++) {
+            String path = "protectedSpans." + index;
+            Map<String, Object> row = object(spanRows.get(index), path);
+            keys(row, Set.of("spanId", "start", "end", "source", "reason"), path);
+            String spanId = id(row, "spanId", path + ".spanId");
+            if (!spanIds.add(spanId)) throw bad("L1_PROTECTED_ID_DUPLICATE", path + ".spanId");
+            int start = intOf(row, "start", path + ".start");
+            int end = intOf(row, "end", path + ".end");
+            if (start < 1 || end < start || end > draftLines.size()) throw bad("L1_PROTECTED_RANGE_INVALID", path);
+            spans.add(new ProtectedSpan(spanId, start, end, enumOf(row, "source", PROTECTED_SOURCES, path + ".source"),
+                    str(row, "reason", MAX_TEXT, true, path + ".reason")));
         }
         // a line the report protects cannot also be the anchor of an open defect
         Set<Integer> protectedNumbers = protectedLines(spans);
@@ -225,79 +232,80 @@ public final class EditorialL1Ledger {
     }
 
     private static Finding finding(Map<String, Object> row, EditorialRawInventory.Inventory inventory,
-                                   List<String> draftLines, Set<String> knownCandidates) {
+                                   List<String> draftLines, Set<String> knownCandidates, String path) {
         keys(row, Set.of("errorId", "type", "severity", "rawUnits", "draft", "rawQuote", "draftQuote",
                 "observation", "expectedMeaning", "evidenceRefs", "candidateIds", "occurrenceUnits", "disposition",
-                "evidenceLimit"), "finding", Set.of("candidateIds", "occurrenceUnits", "evidenceLimit", "evidenceRefs"));
-        String errorId = id(row, "errorId");
-        String type = enumOf(row, "type", FINDING_TYPES);
-        String severity = enumOf(row, "severity", SEVERITIES);
-        List<String> rawUnits = EditorialUnitReference.resolveList(row.get("rawUnits"), "rawUnits", MAX_RAW_UNITS_PER_FINDING, inventory);
-        if (rawUnits.isEmpty()) throw bad("L1_FINDING_RAW_ANCHOR_REQUIRED");
-        if (new HashSet<>(rawUnits).size() != rawUnits.size()) throw bad("L1_FINDING_RAW_ANCHOR_DUPLICATE");
-        for (String unit : rawUnits) if (!inventory.has(unit)) throw bad("L1_UNIT_UNKNOWN");
+                "evidenceLimit"), path, Set.of("candidateIds", "occurrenceUnits", "evidenceLimit", "evidenceRefs"));
+        String errorId = id(row, "errorId", path + ".errorId");
+        String type = enumOf(row, "type", FINDING_TYPES, path + ".type");
+        String severity = enumOf(row, "severity", SEVERITIES, path + ".severity");
+        List<String> rawUnits = EditorialUnitReference.resolveList(row.get("rawUnits"), path + ".rawUnits", MAX_RAW_UNITS_PER_FINDING, inventory);
+        if (rawUnits.isEmpty()) throw bad("L1_FINDING_RAW_ANCHOR_REQUIRED", path + ".rawUnits");
+        if (new HashSet<>(rawUnits).size() != rawUnits.size()) throw bad("L1_FINDING_RAW_ANCHOR_DUPLICATE", path + ".rawUnits");
+        for (int index = 0; index < rawUnits.size(); index++) if (!inventory.has(rawUnits.get(index))) throw bad("L1_UNIT_UNKNOWN", path + ".rawUnits." + index);
 
-        Map<String, Object> draftRow = object(row.get("draft"), "draft");
-        String kind = str(draftRow, "kind", 16, true);
+        Map<String, Object> draftRow = object(row.get("draft"), path + ".draft");
+        String kind = str(draftRow, "kind", 16, true, path + ".draft.kind");
         DraftAnchor anchor;
         // one object shape for both kinds (a strict response schema cannot express a union); unused numbers are 0
-        keys(draftRow, Set.of("kind", "start", "end", "after"), "draft", Set.of("start", "end", "after"));
+        keys(draftRow, Set.of("kind", "start", "end", "after"), path + ".draft", Set.of("start", "end", "after"));
         if ("LINES".equals(kind)) {
-            int start = intOf(draftRow, "start");
-            int end = intOf(draftRow, "end");
-            if (draftRow.containsKey("after") && intOf(draftRow, "after") != 0) throw bad("L1_DRAFT_ANCHOR_UNUSED_FIELD");
-            if (start < 1 || end < start || end > draftLines.size()) throw bad("L1_DRAFT_ANCHOR_OUT_OF_RANGE");
+            int start = intOf(draftRow, "start", path + ".draft.start");
+            int end = intOf(draftRow, "end", path + ".draft.end");
+            if (draftRow.containsKey("after") && intOf(draftRow, "after", path + ".draft.after") != 0) throw bad("L1_DRAFT_ANCHOR_UNUSED_FIELD", path + ".draft.after");
+            if (start < 1 || end < start || end > draftLines.size()) throw bad("L1_DRAFT_ANCHOR_OUT_OF_RANGE", path + ".draft");
             anchor = DraftAnchor.lines(start, end);
         } else if ("MISSING".equals(kind)) {
-            int after = intOf(draftRow, "after");
-            if ((draftRow.containsKey("start") && intOf(draftRow, "start") != 0)
-                    || (draftRow.containsKey("end") && intOf(draftRow, "end") != 0)) throw bad("L1_DRAFT_ANCHOR_UNUSED_FIELD");
-            if (after < 0 || after > draftLines.size()) throw bad("L1_DRAFT_ANCHOR_OUT_OF_RANGE");
+            int after = intOf(draftRow, "after", path + ".draft.after");
+            if ((draftRow.containsKey("start") && intOf(draftRow, "start", path + ".draft.start") != 0)
+                    || (draftRow.containsKey("end") && intOf(draftRow, "end", path + ".draft.end") != 0)) throw bad("L1_DRAFT_ANCHOR_UNUSED_FIELD", path + ".draft");
+            if (after < 0 || after > draftLines.size()) throw bad("L1_DRAFT_ANCHOR_OUT_OF_RANGE", path + ".draft.after");
             anchor = DraftAnchor.missingAfter(after);
         } else {
-            throw bad("L1_DRAFT_ANCHOR_KIND_INVALID");
+            throw bad("L1_DRAFT_ANCHOR_KIND_INVALID", path + ".draft.kind");
         }
 
-        String rawQuote = str(row, "rawQuote", MAX_QUOTE, true);
+        String rawQuote = str(row, "rawQuote", MAX_QUOTE, true, path + ".rawQuote");
         boolean quoted = false;
         for (String unit : rawUnits) quoted |= inventory.unit(unit).text().contains(rawQuote);
-        if (!quoted) throw bad("L1_RAW_QUOTE_NOT_IN_ANCHOR");
-        String draftQuote = str(row, "draftQuote", MAX_QUOTE, false);
+        if (!quoted) throw bad("L1_RAW_QUOTE_NOT_IN_ANCHOR", path + ".rawQuote");
+        String draftQuote = str(row, "draftQuote", MAX_QUOTE, false, path + ".draftQuote");
         if ("LINES".equals(anchor.kind())) {
-            if (draftQuote.isEmpty()) throw bad("L1_DRAFT_QUOTE_REQUIRED");
+            if (draftQuote.isEmpty()) throw bad("L1_DRAFT_QUOTE_REQUIRED", path + ".draftQuote");
             StringBuilder span = new StringBuilder();
             for (int i = anchor.start(); i <= anchor.end(); i++) span.append(draftLines.get(i - 1)).append('\n');
-            if (!span.toString().contains(draftQuote)) throw bad("L1_DRAFT_QUOTE_NOT_IN_ANCHOR");
+            if (!span.toString().contains(draftQuote)) throw bad("L1_DRAFT_QUOTE_NOT_IN_ANCHOR", path + ".draftQuote");
         } else if (!draftQuote.isEmpty()) {
-            throw bad("L1_DRAFT_QUOTE_FORBIDDEN_FOR_MISSING");
+            throw bad("L1_DRAFT_QUOTE_FORBIDDEN_FOR_MISSING", path + ".draftQuote");
         }
 
-        String observation = str(row, "observation", MAX_TEXT, true);
-        String expected = str(row, "expectedMeaning", MAX_TEXT, true);
-        List<String> refs = row.containsKey("evidenceRefs") ? stringList(row.get("evidenceRefs"), "evidenceRefs", MAX_REFS, 48) : List.of();
-        for (String ref : refs) if (!EditorialP5RawWireContract.token(ref, EditorialP5RawWireContract.MAX_ID_LENGTH)) throw bad("L1_EVIDENCE_REF_INVALID");
-        List<String> candidateIds = row.containsKey("candidateIds") ? stringList(row.get("candidateIds"), "candidateIds", 8, 48) : List.of();
-        for (String candidate : candidateIds) if (!knownCandidates.contains(candidate)) throw bad("L1_CANDIDATE_REF_UNKNOWN");
+        String observation = str(row, "observation", MAX_TEXT, true, path + ".observation");
+        String expected = str(row, "expectedMeaning", MAX_TEXT, true, path + ".expectedMeaning");
+        List<String> refs = row.containsKey("evidenceRefs") ? stringList(row.get("evidenceRefs"), path + ".evidenceRefs", MAX_REFS, 48) : List.of();
+        for (int index = 0; index < refs.size(); index++) if (!EditorialP5RawWireContract.token(refs.get(index), EditorialP5RawWireContract.MAX_ID_LENGTH)) throw bad("L1_EVIDENCE_REF_INVALID", path + ".evidenceRefs." + index);
+        List<String> candidateIds = row.containsKey("candidateIds") ? stringList(row.get("candidateIds"), path + ".candidateIds", 8, 48) : List.of();
+        for (int index = 0; index < candidateIds.size(); index++) if (!knownCandidates.contains(candidateIds.get(index))) throw bad("L1_CANDIDATE_REF_UNKNOWN", path + ".candidateIds." + index);
         List<String> occurrences = row.containsKey("occurrenceUnits")
-                ? EditorialUnitReference.resolveList(row.get("occurrenceUnits"), "occurrenceUnits", MAX_OCCURRENCE_UNITS, inventory) : List.of();
+                ? EditorialUnitReference.resolveList(row.get("occurrenceUnits"), path + ".occurrenceUnits", MAX_OCCURRENCE_UNITS, inventory) : List.of();
         Set<String> seen = new HashSet<>(rawUnits);
-        for (String unit : occurrences) {
-            if (!inventory.has(unit)) throw bad("L1_UNIT_UNKNOWN");
-            if (!seen.add(unit)) throw bad("L1_OCCURRENCE_DUPLICATE");
+        for (int index = 0; index < occurrences.size(); index++) {
+            String unit = occurrences.get(index);
+            if (!inventory.has(unit)) throw bad("L1_UNIT_UNKNOWN", path + ".occurrenceUnits." + index);
+            if (!seen.add(unit)) throw bad("L1_OCCURRENCE_DUPLICATE", path + ".occurrenceUnits." + index);
         }
-        String disposition = enumOf(row, "disposition", DISPOSITIONS);
-        String limit = row.containsKey("evidenceLimit") ? str(row, "evidenceLimit", MAX_TEXT, false) : "";
-        if ("PRESERVED".equals(disposition) && limit.isEmpty()) throw bad("L1_PRESERVED_NEEDS_EVIDENCE_LIMIT");
+        String disposition = enumOf(row, "disposition", DISPOSITIONS, path + ".disposition");
+        String limit = row.containsKey("evidenceLimit") ? str(row, "evidenceLimit", MAX_TEXT, false, path + ".evidenceLimit") : "";
+        if ("PRESERVED".equals(disposition) && limit.isEmpty()) throw bad("L1_PRESERVED_NEEDS_EVIDENCE_LIMIT", path + ".evidenceLimit");
         return new Finding(errorId, type, severity, rawUnits, anchor, rawQuote, draftQuote, observation, expected, refs,
                 candidateIds, occurrences, disposition, limit);
     }
 
-    private static Disposition disposition(Map<String, Object> row) {
-        keys(row, Set.of("disposition", "reasonCode", "stopClass"), "disposition");
-        String kind = str(row, "disposition", 24, true);
-        String reason = str(row, "reasonCode", 32, true);
-        String stopClass = str(row, "stopClass", 24, true);
-        if (!EditorialP5RawWireContract.safeText(reason)) throw bad("L1_DISPOSITION_REASON_INVALID");
+    private static Disposition disposition(Map<String, Object> row, String path) {
+        keys(row, Set.of("disposition", "reasonCode", "stopClass"), path);
+        String kind = str(row, "disposition", 24, true, path + ".disposition");
+        String reason = str(row, "reasonCode", 32, true, path + ".reasonCode");
+        String stopClass = str(row, "stopClass", 24, true, path + ".stopClass");
+        if (!EditorialP5RawWireContract.safeText(reason)) throw bad("L1_DISPOSITION_REASON_INVALID", path + ".reasonCode");
         if ("CONTINUE".equals(kind) || "PRESERVE_DRAFT".equals(kind)) {
             if (!"NONE".equals(stopClass)) throw bad("L1_DISPOSITION_STOP_CLASS_INVALID");
         } else if ("STOP".equals(kind)) {
@@ -660,11 +668,13 @@ public final class EditorialL1Ledger {
         List<Object> rows = EditorialCanonicalJson.array(value, "coverage");
         if (rows.size() > MAX_RANGES) throw bad("L1_COVERAGE_RANGE_LIMIT_EXCEEDED");
         List<EditorialRawInventory.Range> ranges = new ArrayList<>();
-        for (Object o : rows) {
-            Map<String, Object> row = object(o, "range");
-            keys(row, Set.of("from", "to", "status"), "range");
-            ranges.add(new EditorialRawInventory.Range(EditorialUnitReference.resolve(row.get("from"), inventory), EditorialUnitReference.resolve(row.get("to"), inventory),
-                    enumOf(row, "status", RANGE_STATUSES)));
+        for (int index = 0; index < rows.size(); index++) {
+            String path = "coverage." + index;
+            Map<String, Object> row = object(rows.get(index), path);
+            keys(row, Set.of("from", "to", "status"), path);
+            ranges.add(new EditorialRawInventory.Range(EditorialUnitReference.resolve(row.get("from"), inventory, path + ".from"),
+                    EditorialUnitReference.resolve(row.get("to"), inventory, path + ".to"),
+                    enumOf(row, "status", RANGE_STATUSES, path + ".status")));
         }
         List<String> issues = EditorialRawInventory.coverageIssues(inventory, ranges);
         if (!issues.isEmpty()) {
@@ -672,60 +682,79 @@ public final class EditorialL1Ledger {
             for (String[] known : new String[][] {{"COVERAGE_UNKNOWN", "L1_COVERAGE_UNKNOWN_ID"},
                     {"COVERAGE_REVERSED", "L1_COVERAGE_REVERSED"}, {"COVERAGE_OVERLAP", "L1_COVERAGE_OVERLAP"},
                     {"COVERAGE_GAP", "L1_COVERAGE_GAP"}}) {
-                for (String issue : issues) if (issue.startsWith(known[0])) throw bad(known[1]);
+                for (String issue : issues) if (issue.startsWith(known[0])) throw bad(known[1], "coverage");
             }
-            throw bad("L1_COVERAGE_EMPTY");
+            throw bad("L1_COVERAGE_EMPTY", "coverage");
         }
         return ranges;
     }
 
     static Map<String, Object> rootOf(byte[] bytes, String attemptIdentity, String wire, Set<String> keys) {
-        if (bytes == null || bytes.length > MAX_WIRE_BYTES) throw bad("L1_WIRE_BYTE_LIMIT_EXCEEDED");
+        if (bytes == null || bytes.length > MAX_WIRE_BYTES) throw bad("L1_WIRE_BYTE_LIMIT_EXCEEDED", "root");
         Map<String, Object> root = EditorialCanonicalJson.parseObject(bytes);
         keys(root, keys, "root");
-        if (!wire.equals(root.get("wireSchemaVersion"))) throw bad("L1_WIRE_SCHEMA_INVALID");
-        if (!attemptIdentity.equals(root.get("attemptIdentity"))) throw bad("L1_WIRE_ATTEMPT_ECHO_MISMATCH");
+        if (!wire.equals(root.get("wireSchemaVersion"))) throw bad("L1_WIRE_SCHEMA_INVALID", "wireSchemaVersion");
+        if (!attemptIdentity.equals(root.get("attemptIdentity"))) throw bad("L1_WIRE_ATTEMPT_ECHO_MISMATCH", "attemptIdentity");
         return root;
     }
 
     static String id(Map<String, Object> row, String key) {
-        String value = str(row, key, EditorialP5RawWireContract.MAX_ID_LENGTH, true);
-        if (!EditorialP5RawWireContract.token(value, EditorialP5RawWireContract.MAX_ID_LENGTH)) throw bad("L1_ID_INVALID");
+        return id(row, key, key);
+    }
+
+    static String id(Map<String, Object> row, String key, String path) {
+        String value = str(row, key, EditorialP5RawWireContract.MAX_ID_LENGTH, true, path);
+        if (!EditorialP5RawWireContract.token(value, EditorialP5RawWireContract.MAX_ID_LENGTH)) throw bad("L1_ID_INVALID", path);
         return value;
     }
 
     static String enumOf(Map<String, Object> row, String key, Set<String> allowed) {
-        String value = str(row, key, 32, true);
-        if (!allowed.contains(value)) throw bad("L1_ENUM_INVALID");
+        return enumOf(row, key, allowed, key);
+    }
+
+    static String enumOf(Map<String, Object> row, String key, Set<String> allowed, String path) {
+        String value = str(row, key, 32, true, path);
+        if (!allowed.contains(value)) throw bad("L1_ENUM_INVALID", path);
         return value;
     }
 
     static String str(Map<String, Object> row, String key, int max, boolean required) {
+        return str(row, key, max, required, key);
+    }
+
+    static String str(Map<String, Object> row, String key, int max, boolean required, String path) {
         Object value = row.get(key);
-        if (!(value instanceof String)) throw bad("L1_TEXT_INVALID");
+        if (!(value instanceof String)) throw bad("L1_TEXT_INVALID", path);
         String text = (String) value;
-        if (text.length() > max) throw bad("L1_TEXT_TOO_LONG");
-        if (required && text.isBlank()) throw bad("L1_TEXT_REQUIRED");
-        for (int i = 0; i < text.length(); i++) if (Character.isISOControl(text.charAt(i))) throw bad("L1_TEXT_CONTROL_CHARACTER");
+        if (text.length() > max) throw bad("L1_TEXT_TOO_LONG", path);
+        if (required && text.isBlank()) throw bad("L1_TEXT_REQUIRED", path);
+        for (int i = 0; i < text.length(); i++) if (Character.isISOControl(text.charAt(i))) throw bad("L1_TEXT_CONTROL_CHARACTER", path);
         return text;
     }
 
     static int intOf(Map<String, Object> row, String key) {
+        return intOf(row, key, key);
+    }
+
+    static int intOf(Map<String, Object> row, String key, String path) {
         Object value = row.get(key);
-        if (!(value instanceof BigDecimal)) throw bad("L1_INT_INVALID");
+        if (!(value instanceof BigDecimal)) throw bad("L1_INT_INVALID", path);
         try {
             return ((BigDecimal) value).intValueExact();
         } catch (ArithmeticException invalid) {
-            throw bad("L1_INT_INVALID");
+            throw bad("L1_INT_INVALID", path);
         }
     }
 
     static List<String> stringList(Object value, String path, int maxItems, int maxLength) {
-        List<Object> rows = EditorialCanonicalJson.array(value, path);
-        if (rows.size() > maxItems) throw bad("L1_LIST_TOO_LONG");
+        List<Object> rows;
+        try { rows = EditorialCanonicalJson.array(value, path); }
+        catch (RuntimeException invalid) { throw WireViolation.from(invalid, "L1_LIST_INVALID", path); }
+        if (rows.size() > maxItems) throw bad("L1_LIST_TOO_LONG", path);
         List<String> out = new ArrayList<>();
-        for (Object o : rows) {
-            if (!(o instanceof String) || ((String) o).isBlank() || ((String) o).length() > maxLength) throw bad("L1_LIST_ITEM_INVALID");
+        for (int index = 0; index < rows.size(); index++) {
+            Object o = rows.get(index);
+            if (!(o instanceof String) || ((String) o).isBlank() || ((String) o).length() > maxLength) throw bad("L1_LIST_ITEM_INVALID", path + "." + index);
             out.add((String) o);
         }
         return out;
@@ -733,7 +762,7 @@ public final class EditorialL1Ledger {
 
     @SuppressWarnings("unchecked")
     static Map<String, Object> object(Object value, String path) {
-        if (!(value instanceof Map)) throw bad("L1_OBJECT_EXPECTED");
+        if (!(value instanceof Map)) throw bad("L1_OBJECT_EXPECTED", path);
         return (Map<String, Object>) value;
     }
 
@@ -742,20 +771,21 @@ public final class EditorialL1Ledger {
     }
 
     static void keys(Map<String, Object> value, Set<String> allowed, String path, Set<String> optional) {
-        for (String key : value.keySet()) if (!allowed.contains(key)) throw bad("L1_UNKNOWN_KEY");
-        for (String key : allowed) if (!optional.contains(key) && !value.containsKey(key)) throw bad("L1_MISSING_KEY");
+        for (String key : value.keySet()) if (!allowed.contains(key)) throw bad("L1_UNKNOWN_KEY", path);
+        for (String key : allowed) if (!optional.contains(key) && !value.containsKey(key)) throw bad("L1_MISSING_KEY", path + "." + key);
     }
 
     private static int i(Map<String, Object> m, String key) { return ((BigDecimal) m.get(key)).intValueExact(); }
 
     private static BigDecimal num(int value) { return BigDecimal.valueOf(value); }
 
-    static IllegalArgumentException bad(String code) { return new IllegalArgumentException(code); }
+    static IllegalArgumentException bad(String code) { return WireViolation.at(code, "root"); }
+
+    static IllegalArgumentException bad(String code, String path) { return WireViolation.at(code, path); }
 
     /** Typed, allow-listed message of a parse failure; anything else collapses to a generic code. */
     public static String safeMessage(RuntimeException error) {
-        String message = error.getMessage();
-        return message != null && message.matches("[A-Z0-9_:./-]{1,96}") ? message : "L1_WIRE_PARSE_FAILED";
+        return WireViolation.safeMessage(error, "L1_WIRE_PARSE_FAILED");
     }
 
     /** Sorted copy used by tests and reports to compare ledgers independent of insertion order. */

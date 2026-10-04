@@ -154,8 +154,8 @@ public final class EditorialP5LedgerExecutionTest {
         Fixture f = fixture(RAW, DRAFT);
         EditorialP5PilotRequest raw = ledgerRaw(f);
         byte[] legacy = json(map("phase", "L1_RAW_DISCOVERY", "artifactType", "REPORT_L1"));
-        assertRefused("INPUT_REPORT_L1_LEGACY_CONTRACT", ledgerReconcile(f, raw, legacy));
-        assertRefused("INPUT_RAW_LEDGER_REPORT_MISSING", raw.withPhase("L1_RECONCILE"));
+        assertRefused("INPUT_REPORT_L1_LEGACY_CONTRACT:root", ledgerReconcile(f, raw, legacy));
+        assertRefused("INPUT_RAW_LEDGER_REPORT_MISSING:root", raw.withPhase("L1_RECONCILE"));
         // a ledger report of a different RAW is stale
         Fixture other = fixture(RAW + "\n追加。", DRAFT);
         EditorialP5PilotRequest otherRaw = ledgerRaw(other);
@@ -166,7 +166,7 @@ public final class EditorialP5LedgerExecutionTest {
                                 "to", EditorialRawInventory.build(bytes(RAW + "\n追加。")).units().get(10).id(), "status", "PROCESSED"))),
                         "candidates", new ArrayList<Object>())))), s);
         assertEquals(r.reasonCode(), EditorialP5PilotResult.Outcome.COMMITTED, r.outcome());
-        assertRefused("INPUT_RAW_LEDGER_STALE", ledgerReconcile(f, raw, r.committedResult().reportBytes()));
+        assertRefused("INPUT_RAW_LEDGER_STALE:root", ledgerReconcile(f, raw, r.committedResult().reportBytes()));
     }
 
     private void assertRefused(String code, EditorialP5PilotRequest request) {
@@ -190,7 +190,7 @@ public final class EditorialP5LedgerExecutionTest {
         EditorialP5PilotResult r = run(raw, authorization(raw, "a"), provider, store);
         assertEquals(EditorialP5PilotResult.Outcome.STOP, r.outcome());
         assertEquals("REPAIR_L1_LEDGER_INVALID", r.reasonCode());
-        assertEquals(List.of("L1_COVERAGE_GAP"), r.stopReceipt().evidenceRefs());
+        assertEquals(List.of("L1_COVERAGE_GAP:coverage"), r.stopReceipt().evidenceRefs());
         assertEquals(1, provider.calls);
         assertTrue(store.committed.isEmpty());
         assertTrue(store.inFlight.contains(raw.attemptIdentity()));
@@ -210,7 +210,7 @@ public final class EditorialP5LedgerExecutionTest {
                 reconcile.attemptIdentity(), new ArrayList<>(), new ArrayList<>(List.of(
                         map("candidateId", "c1", "status", "PRESERVED", "findingRef", ""))), cont()))), new Store());
         assertEquals("REPAIR_L1_LEDGER_INVALID", r.reasonCode());
-        assertEquals(List.of("L1_CANDIDATE_UNRESOLVED"), r.stopReceipt().evidenceRefs());
+        assertEquals(List.of("L1_CANDIDATE_UNRESOLVED:resolutions"), r.stopReceipt().evidenceRefs());
         // forged raw quote
         List<Object> findings = new ArrayList<>(List.of(finding("e1", 3, 3, "攻略", "chinh phuc", "MEANING",
                 new ArrayList<>(), new ArrayList<>())));
@@ -218,7 +218,7 @@ public final class EditorialP5LedgerExecutionTest {
                 reconcile.attemptIdentity(), findings, new ArrayList<>(List.of(
                         map("candidateId", "c1", "status", "PRESERVED", "findingRef", ""),
                         map("candidateId", "c2", "status", "PRESERVED", "findingRef", ""))), cont()))), new Store());
-        assertEquals(List.of("L1_RAW_QUOTE_NOT_IN_ANCHOR"), q.stopReceipt().evidenceRefs());
+        assertEquals(List.of("L1_RAW_QUOTE_NOT_IN_ANCHOR:findings.0.rawQuote"), q.stopReceipt().evidenceRefs());
     }
 
     @Test
@@ -245,7 +245,7 @@ public final class EditorialP5LedgerExecutionTest {
         StringBuilder big = new StringBuilder();
         for (int i = 0; i <= EditorialL1LedgerRun.MAX_UNITS_SINGLE_CALL; i++) big.append("行").append(i).append('\n');
         Fixture f = fixture(big.toString(), DRAFT);
-        assertRefused("L1_UNIT_LIMIT_EXCEEDED", ledgerRaw(f));
+        assertRefused("L1_UNIT_LIMIT_EXCEEDED:root", ledgerRaw(f));
     }
 
     // ---- fixture ----

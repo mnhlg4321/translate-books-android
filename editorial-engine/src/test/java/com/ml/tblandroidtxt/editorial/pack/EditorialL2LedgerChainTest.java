@@ -353,7 +353,7 @@ public final class EditorialL2LedgerChainTest {
         Store store = new Store();
         EditorialL2Execution.Result r = run(l, bad, store);
         assertEquals("REPAIR_L2_FINAL_READ_INVALID", r.reasonCode());
-        assertEquals(List.of("FINAL_READ_HASH_ECHO_MISMATCH"), r.issues());
+        assertEquals(List.of("FINAL_READ_HASH_ECHO_MISMATCH:readSha256"), r.issues());
         assertEquals(3, r.providerCalls());
         assertTrue(store.committed.isEmpty());
 
@@ -587,7 +587,7 @@ public final class EditorialL2LedgerChainTest {
         Store store = new Store();
         EditorialL3Execution.Result bad = runL3(l, l2, reconcileV2(list(), list(), list(), goodProbes()), "0".repeat(64), List.of(), store);
         assertEquals("REPAIR_L3_FINAL_READ_INVALID", bad.reasonCode());
-        assertEquals(List.of("FINAL_READ_HASH_ECHO_MISMATCH"), bad.issues());
+        assertEquals(List.of("FINAL_READ_HASH_ECHO_MISMATCH:readSha256"), bad.issues());
         assertTrue(store.committed.isEmpty());
 
         Store store2 = new Store();

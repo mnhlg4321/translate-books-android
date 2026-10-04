@@ -59,17 +59,18 @@ final class EditorialL3Ledger {
         if (rows.size() > MAX_CANDIDATES) throw EditorialL1Ledger.bad("L3_CANDIDATE_LIMIT_EXCEEDED");
         List<Candidate> candidates = new ArrayList<>();
         Set<String> ids = new HashSet<>();
-        for (Object value : rows) {
-            Map<String, Object> row = EditorialL1Ledger.object(value, "candidate");
-            EditorialL1Ledger.keys(row, Set.of("candidateId", "ledger", "unitId", "viLine", "status", "note"), "candidate");
-            String id = EditorialL1Ledger.id(row, "candidateId");
-            if (!ids.add(id)) throw EditorialL1Ledger.bad("L3_CANDIDATE_ID_DUPLICATE");
-            String ledger = EditorialL1Ledger.enumOf(row, "ledger", EditorialL1Ledger.CANDIDATE_LEDGERS);
-            String unit = EditorialUnitReference.resolve(row.get("unitId"), inventory);
-            int viLine = EditorialL1Ledger.intOf(row, "viLine");
-            if (viLine < 0 || viLine > viLineCount) throw EditorialL1Ledger.bad("L3_VI_LINE_OUT_OF_RANGE");
-            String status = EditorialL1Ledger.enumOf(row, "status", CANDIDATE_STATUSES);
-            candidates.add(new Candidate(id, ledger, unit, viLine, status, EditorialL1Ledger.str(row, "note", 80, false)));
+        for (int index = 0; index < rows.size(); index++) {
+            String path = "candidates." + index;
+            Map<String, Object> row = EditorialL1Ledger.object(rows.get(index), path);
+            EditorialL1Ledger.keys(row, Set.of("candidateId", "ledger", "unitId", "viLine", "status", "note"), path);
+            String id = EditorialL1Ledger.id(row, "candidateId", path + ".candidateId");
+            if (!ids.add(id)) throw EditorialL1Ledger.bad("L3_CANDIDATE_ID_DUPLICATE", path + ".candidateId");
+            String ledger = EditorialL1Ledger.enumOf(row, "ledger", EditorialL1Ledger.CANDIDATE_LEDGERS, path + ".ledger");
+            String unit = EditorialUnitReference.resolve(row.get("unitId"), inventory, path + ".unitId");
+            int viLine = EditorialL1Ledger.intOf(row, "viLine", path + ".viLine");
+            if (viLine < 0 || viLine > viLineCount) throw EditorialL1Ledger.bad("L3_VI_LINE_OUT_OF_RANGE", path + ".viLine");
+            String status = EditorialL1Ledger.enumOf(row, "status", CANDIDATE_STATUSES, path + ".status");
+            candidates.add(new Candidate(id, ledger, unit, viLine, status, EditorialL1Ledger.str(row, "note", 80, false, path + ".note")));
         }
         return new ReauditPass(coverage, List.copyOf(candidates));
     }
@@ -139,51 +140,57 @@ final class EditorialL3Ledger {
         Set<String> known = new HashSet<>();
         for (Candidate candidate : candidates) known.add(candidate.candidateId());
         Map<String, String> resolutions = new java.util.TreeMap<>();
-        for (Object value : EditorialCanonicalJson.array(root.get("resolutions"), "resolutions")) {
-            Map<String, Object> row = EditorialL1Ledger.object(value, "resolution");
-            EditorialL1Ledger.keys(row, Set.of("candidateId", "status"), "resolution");
-            String id = EditorialL1Ledger.id(row, "candidateId");
-            if (!known.contains(id) || resolutions.containsKey(id)) throw EditorialL1Ledger.bad("L3_RESOLUTION_ID_INVALID");
-            resolutions.put(id, EditorialL1Ledger.enumOf(row, "status", CANDIDATE_STATUSES));
+        List<Object> resolutionRows = EditorialCanonicalJson.array(root.get("resolutions"), "resolutions");
+        for (int index = 0; index < resolutionRows.size(); index++) {
+            String path = "resolutions." + index;
+            Map<String, Object> row = EditorialL1Ledger.object(resolutionRows.get(index), path);
+            EditorialL1Ledger.keys(row, Set.of("candidateId", "status"), path);
+            String id = EditorialL1Ledger.id(row, "candidateId", path + ".candidateId");
+            if (!known.contains(id) || resolutions.containsKey(id)) throw EditorialL1Ledger.bad("L3_RESOLUTION_ID_INVALID", path + ".candidateId");
+            resolutions.put(id, EditorialL1Ledger.enumOf(row, "status", CANDIDATE_STATUSES, path + ".status"));
         }
 
         List<CarriedResolution> carried = new ArrayList<>();
         Set<Integer> seen = new HashSet<>();
-        for (Object value : EditorialCanonicalJson.array(root.get("carriedResolutions"), "carriedResolutions")) {
-            Map<String, Object> row = EditorialL1Ledger.object(value, "carriedResolution");
-            EditorialL1Ledger.keys(row, Set.of("index", "status", "changeIds", "preserveIds", "evidenceQuote", "reason"), "carriedResolution");
-            int index = EditorialL1Ledger.intOf(row, "index");
-            if (index < 0 || index >= carriedCount || !seen.add(index)) throw EditorialL1Ledger.bad("L3_CARRIED_INDEX_INVALID");
-            carried.add(new CarriedResolution(index, EditorialL1Ledger.enumOf(row, "status", CARRIED_STATUSES),
-                    refs(row.get("changeIds")), refs(row.get("preserveIds")),
-                    EditorialL1Ledger.str(row, "evidenceQuote", EditorialL1Ledger.MAX_QUOTE, false),
-                    EditorialL1Ledger.str(row, "reason", EditorialL1Ledger.MAX_TEXT, false)));
+        List<Object> carriedRows = EditorialCanonicalJson.array(root.get("carriedResolutions"), "carriedResolutions");
+        for (int index = 0; index < carriedRows.size(); index++) {
+            String path = "carriedResolutions." + index;
+            Map<String, Object> row = EditorialL1Ledger.object(carriedRows.get(index), path);
+            EditorialL1Ledger.keys(row, Set.of("index", "status", "changeIds", "preserveIds", "evidenceQuote", "reason"), path);
+            int carriedIndex = EditorialL1Ledger.intOf(row, "index", path + ".index");
+            if (carriedIndex < 0 || carriedIndex >= carriedCount || !seen.add(carriedIndex)) throw EditorialL1Ledger.bad("L3_CARRIED_INDEX_INVALID", path + ".index");
+            carried.add(new CarriedResolution(carriedIndex, EditorialL1Ledger.enumOf(row, "status", CARRIED_STATUSES, path + ".status"),
+                    refs(row.get("changeIds"), path + ".changeIds"), refs(row.get("preserveIds"), path + ".preserveIds"),
+                    EditorialL1Ledger.str(row, "evidenceQuote", EditorialL1Ledger.MAX_QUOTE, false, path + ".evidenceQuote"),
+                    EditorialL1Ledger.str(row, "reason", EditorialL1Ledger.MAX_TEXT, false, path + ".reason")));
         }
 
         List<Object> probeRows = EditorialCanonicalJson.array(root.get("probes"), "probes");
         if (probeRows.size() > MAX_PROBES) throw EditorialL1Ledger.bad("L3_PROBE_LIMIT_EXCEEDED");
         List<Probe> probes = new ArrayList<>();
         Set<String> probeIds = new HashSet<>();
-        for (Object value : probeRows) {
-            Map<String, Object> row = EditorialL1Ledger.object(value, "probe");
+        for (int index = 0; index < probeRows.size(); index++) {
+            String path = "probes." + index;
+            Map<String, Object> row = EditorialL1Ledger.object(probeRows.get(index), path);
             EditorialL1Ledger.keys(row, Set.of("probeId", "kind", "rawUnits", "viStart", "viEnd", "scope", "contrast",
-                    "rawQuote", "viQuote", "verdict", "action"), "probe");
-            String id = EditorialL1Ledger.id(row, "probeId");
-            if (!probeIds.add(id)) throw EditorialL1Ledger.bad("L3_PROBE_ID_DUPLICATE");
-            probes.add(new Probe(id, EditorialL1Ledger.enumOf(row, "kind", PROBE_KINDS),
-                    EditorialUnitReference.resolveList(row.get("rawUnits"), "rawUnits", EditorialL1Ledger.MAX_RAW_UNITS_PER_FINDING, inventory),
-                    EditorialL1Ledger.intOf(row, "viStart"), EditorialL1Ledger.intOf(row, "viEnd"),
-                    EditorialL1Ledger.str(row, "scope", MAX_PROBE_TEXT, true), EditorialL1Ledger.str(row, "contrast", MAX_PROBE_TEXT, true),
-                    EditorialL1Ledger.str(row, "rawQuote", EditorialL1Ledger.MAX_QUOTE, true),
-                    EditorialL1Ledger.str(row, "viQuote", EditorialL1Ledger.MAX_QUOTE, true),
-                    EditorialL1Ledger.enumOf(row, "verdict", PROBE_VERDICTS), EditorialL1Ledger.str(row, "action", 64, true)));
+                    "rawQuote", "viQuote", "verdict", "action"), path);
+            String id = EditorialL1Ledger.id(row, "probeId", path + ".probeId");
+            if (!probeIds.add(id)) throw EditorialL1Ledger.bad("L3_PROBE_ID_DUPLICATE", path + ".probeId");
+            probes.add(new Probe(id, EditorialL1Ledger.enumOf(row, "kind", PROBE_KINDS, path + ".kind"),
+                    EditorialUnitReference.resolveList(row.get("rawUnits"), path + ".rawUnits", EditorialL1Ledger.MAX_RAW_UNITS_PER_FINDING, inventory),
+                    EditorialL1Ledger.intOf(row, "viStart", path + ".viStart"), EditorialL1Ledger.intOf(row, "viEnd", path + ".viEnd"),
+                    EditorialL1Ledger.str(row, "scope", MAX_PROBE_TEXT, true, path + ".scope"), EditorialL1Ledger.str(row, "contrast", MAX_PROBE_TEXT, true, path + ".contrast"),
+                    EditorialL1Ledger.str(row, "rawQuote", EditorialL1Ledger.MAX_QUOTE, true, path + ".rawQuote"),
+                    EditorialL1Ledger.str(row, "viQuote", EditorialL1Ledger.MAX_QUOTE, true, path + ".viQuote"),
+                    EditorialL1Ledger.enumOf(row, "verdict", PROBE_VERDICTS, path + ".verdict"),
+                    EditorialL1Ledger.str(row, "action", 64, true, path + ".action")));
         }
         return new ReconcileWire(Map.copyOf(resolutions), List.copyOf(carried), rows, List.copyOf(probes));
     }
 
-    private static List<String> refs(Object value) {
-        List<String> ids = EditorialL1Ledger.stringList(value, "ids", EditorialL2Findings.MAX_REFS, EditorialP5RawWireContract.MAX_ID_LENGTH);
-        for (String id : ids) if (!EditorialP5RawWireContract.token(id, EditorialP5RawWireContract.MAX_ID_LENGTH)) throw EditorialL1Ledger.bad("L3_ID_INVALID");
+    private static List<String> refs(Object value, String path) {
+        List<String> ids = EditorialL1Ledger.stringList(value, path, EditorialL2Findings.MAX_REFS, EditorialP5RawWireContract.MAX_ID_LENGTH);
+        for (int index = 0; index < ids.size(); index++) if (!EditorialP5RawWireContract.token(ids.get(index), EditorialP5RawWireContract.MAX_ID_LENGTH)) throw EditorialL1Ledger.bad("L3_ID_INVALID", path + "." + index);
         return ids;
     }
 

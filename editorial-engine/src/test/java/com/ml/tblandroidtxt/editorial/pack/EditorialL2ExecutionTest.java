@@ -90,6 +90,36 @@ public final class EditorialL2ExecutionTest {
                 "INPUT_REPORT_L1_DISPOSITION_INVALID");
     }
 
+    @Test public void wireFailuresCarrySafeIndexedPaths() {
+        Map<String, Object> badChange = new LinkedHashMap<>();
+        badChange.put("changeId", "c1"); badChange.put("errorId", "e1"); badChange.put("line", BigDecimal.ONE);
+        badChange.put("before", "before"); badChange.put("after", "after"); badChange.put("reason", BigDecimal.ONE);
+        badChange.put("dialogue", false); badChange.put("status", "CLOSED");
+        Map<String, Object> disposition = new LinkedHashMap<>();
+        disposition.put("disposition", "CONTINUE"); disposition.put("reasonCode", "OK"); disposition.put("stopClass", "NONE");
+        Map<String, Object> root = new LinkedHashMap<>();
+        root.put("wireSchemaVersion", EditorialL2Execution.WIRE_SCHEMA_VERSION); root.put("attemptIdentity", L1_ID);
+        root.put("changes", new ArrayList<>(List.of(badChange))); root.put("preserved", new ArrayList<>());
+        root.put("disposition", disposition);
+        try {
+            EditorialL2Execution.parseWire(canon(root), L1_ID);
+            throw new AssertionError("expected reason text violation");
+        } catch (RuntimeException invalid) {
+            assertEquals("L2_WIRE_TEXT_INVALID:changes.0.reason", WireViolation.safeMessage(invalid, "L2_WIRE_PARSE_FAILED"));
+        }
+
+        badChange.put("untrustedModelKey", "secret-value");
+        try {
+            EditorialL2Execution.parseWire(canon(root), L1_ID);
+            throw new AssertionError("expected unknown key violation");
+        } catch (RuntimeException invalid) {
+            String safe = WireViolation.safeMessage(invalid, "L2_WIRE_PARSE_FAILED");
+            assertEquals("L2_WIRE_UNKNOWN_KEY:changes.0", safe);
+            assertFalse(safe.contains("untrustedModelKey"));
+            assertFalse(safe.contains("secret-value"));
+        }
+    }
+
     @Test public void truncatedOutputMarksRecoveryAndNeverRedispatches() {
         Ctx c = ctx();
         EditorialL2Execution.Request req = c.request();

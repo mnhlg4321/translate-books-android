@@ -106,6 +106,19 @@ public final class EditorialUnitReferenceTest {
                 EditorialCanonicalJson.canonicalize(root).getBytes(StandardCharsets.UTF_8), "att", pass.candidates(), 0, INV));
     }
 
+    @Test public void l3CandidateFailureReportsItsIndexedField() {
+        var coverage = List.of(Map.of("from", "L1", "to", "L5", "status", "PROCESSED"));
+        var badCandidate = Map.of("candidateId", "c1", "ledger", "UNIT", "unitId", "L5",
+                "viLine", "one", "status", "PROCESSED", "note", "n");
+        try {
+            EditorialL3Ledger.parseReaudit(wire(EditorialL3Execution.REAUDIT_WIRE_V3, coverage, List.of(badCandidate)),
+                    "att", INV, 1);
+            fail("expected candidate line type failure");
+        } catch (RuntimeException invalid) {
+            assertEquals("L1_INT_INVALID:candidates.0.viLine", WireViolation.safeMessage(invalid, "L3_PARSE_FAILED"));
+        }
+    }
+
     @Test public void modelViewChangesOnlyReferenceFieldsAndKeepsDurableInputIntact() {
         String id = INV.units().get(0).id();
         Map<String, Object> report = Map.of("unitId", id, "rawUnits", List.of(id), "occurrenceUnits", List.of(id),

@@ -92,47 +92,50 @@ public final class EditorialFinalRead {
 
     /** Strict parse of the response against the exact target bytes; IllegalArgumentException with a typed code. */
     public static Result parse(byte[] response, String attemptIdentity, byte[] target) {
-        if (response == null || response.length > MAX_WIRE_BYTES) throw bad("FINAL_READ_WIRE_BYTE_LIMIT_EXCEEDED");
+        if (response == null || response.length > MAX_WIRE_BYTES) throw bad("FINAL_READ_WIRE_BYTE_LIMIT_EXCEEDED", "root");
         List<String> targetLines = lines(target);
         String sha = EditorialCanonicalJson.sha256Hex(target);
         Map<String, Object> root = EditorialCanonicalJson.parseObject(response);
-        keys(root, Set.of("wireSchemaVersion", "attemptIdentity", "readSha256", "probeTails", "verdict", "defects"));
-        if (!WIRE.equals(root.get("wireSchemaVersion"))) throw bad("FINAL_READ_WIRE_SCHEMA_INVALID");
-        if (!attemptIdentity.equals(root.get("attemptIdentity"))) throw bad("FINAL_READ_ATTEMPT_ECHO_MISMATCH");
-        if (!sha.equals(root.get("readSha256"))) throw bad("FINAL_READ_HASH_ECHO_MISMATCH");
+        keys(root, Set.of("wireSchemaVersion", "attemptIdentity", "readSha256", "probeTails", "verdict", "defects"), "root");
+        if (!WIRE.equals(root.get("wireSchemaVersion"))) throw bad("FINAL_READ_WIRE_SCHEMA_INVALID", "wireSchemaVersion");
+        if (!attemptIdentity.equals(root.get("attemptIdentity"))) throw bad("FINAL_READ_ATTEMPT_ECHO_MISMATCH", "attemptIdentity");
+        if (!sha.equals(root.get("readSha256"))) throw bad("FINAL_READ_HASH_ECHO_MISMATCH", "readSha256");
 
         List<Integer> probes = probeLines(target);
         Map<Integer, String> tails = new LinkedHashMap<>();
-        for (Object value : EditorialCanonicalJson.array(root.get("probeTails"), "probeTails")) {
-            Map<String, Object> row = EditorialCanonicalJson.object(value, "probeTail");
-            keys(row, Set.of("line", "tail"));
-            int line = integer(row.get("line"));
+        List<Object> probeRows = EditorialCanonicalJson.array(root.get("probeTails"), "probeTails");
+        for (int index = 0; index < probeRows.size(); index++) {
+            String path = "probeTails." + index;
+            Map<String, Object> row = object(probeRows.get(index), path);
+            keys(row, Set.of("line", "tail"), path);
+            int line = integer(row.get("line"), path + ".line");
             Object tail = row.get("tail");
-            if (!(tail instanceof String) || tails.put(line, (String) tail) != null) throw bad("FINAL_READ_PROBE_INVALID");
+            if (!(tail instanceof String) || tails.put(line, (String) tail) != null) throw bad("FINAL_READ_PROBE_INVALID", path + ".tail");
         }
-        if (!tails.keySet().equals(new HashSet<>(probes))) throw bad("FINAL_READ_PROBE_SET_MISMATCH");
+        if (!tails.keySet().equals(new HashSet<>(probes))) throw bad("FINAL_READ_PROBE_SET_MISMATCH", "probeTails");
         for (Integer line : probes) {
             String text = targetLines.get(line - 1);
             String expected = text.length() <= TAIL_LENGTH ? text : text.substring(text.length() - TAIL_LENGTH);
-            if (!expected.equals(tails.get(line))) throw bad("FINAL_READ_PROBE_TAIL_MISMATCH");
+            if (!expected.equals(tails.get(line))) throw bad("FINAL_READ_PROBE_TAIL_MISMATCH", "probeTails");
         }
 
         String verdict = root.get("verdict") instanceof String ? (String) root.get("verdict") : "";
-        if (!"CLEAN".equals(verdict) && !"DEFECTS".equals(verdict)) throw bad("FINAL_READ_VERDICT_INVALID");
+        if (!"CLEAN".equals(verdict) && !"DEFECTS".equals(verdict)) throw bad("FINAL_READ_VERDICT_INVALID", "verdict");
         List<Object> rows = EditorialCanonicalJson.array(root.get("defects"), "defects");
-        if (rows.size() > MAX_DEFECTS) throw bad("FINAL_READ_DEFECT_LIMIT_EXCEEDED");
-        if (("CLEAN".equals(verdict)) != rows.isEmpty()) throw bad("FINAL_READ_VERDICT_DEFECT_MISMATCH");
+        if (rows.size() > MAX_DEFECTS) throw bad("FINAL_READ_DEFECT_LIMIT_EXCEEDED", "defects");
+        if (("CLEAN".equals(verdict)) != rows.isEmpty()) throw bad("FINAL_READ_VERDICT_DEFECT_MISMATCH", "defects");
         List<Defect> defects = new ArrayList<>();
-        for (Object value : rows) {
-            Map<String, Object> row = EditorialCanonicalJson.object(value, "defect");
-            keys(row, Set.of("line", "quote", "type", "note"));
-            int line = integer(row.get("line"));
-            if (line < 1 || line > targetLines.size()) throw bad("FINAL_READ_DEFECT_LINE_OUT_OF_RANGE");
-            String quote = text(row.get("quote"), 80);
-            String note = text(row.get("note"), EditorialL1Ledger.MAX_TEXT);
+        for (int index = 0; index < rows.size(); index++) {
+            String path = "defects." + index;
+            Map<String, Object> row = object(rows.get(index), path);
+            keys(row, Set.of("line", "quote", "type", "note"), path);
+            int line = integer(row.get("line"), path + ".line");
+            if (line < 1 || line > targetLines.size()) throw bad("FINAL_READ_DEFECT_LINE_OUT_OF_RANGE", path + ".line");
+            String quote = text(row.get("quote"), 80, path + ".quote");
+            String note = text(row.get("note"), EditorialL1Ledger.MAX_TEXT, path + ".note");
             Object type = row.get("type");
-            if (!(type instanceof String) || !TYPES.contains(type)) throw bad("FINAL_READ_DEFECT_TYPE_INVALID");
-            if (quote.isEmpty() || !targetLines.get(line - 1).contains(quote)) throw bad("FINAL_READ_DEFECT_QUOTE_NOT_IN_LINE");
+            if (!(type instanceof String) || !TYPES.contains(type)) throw bad("FINAL_READ_DEFECT_TYPE_INVALID", path + ".type");
+            if (quote.isEmpty() || !targetLines.get(line - 1).contains(quote)) throw bad("FINAL_READ_DEFECT_QUOTE_NOT_IN_LINE", path + ".quote");
             defects.add(new Defect(line, quote, (String) type, note));
         }
         return new Result(sha, targetLines.size(), probes, verdict, defects);
@@ -186,26 +189,33 @@ public final class EditorialFinalRead {
         }
     }
 
-    private static void keys(Map<String, Object> value, Set<String> allowed) {
-        if (!value.keySet().equals(allowed)) throw bad("FINAL_READ_KEYS_INVALID");
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> object(Object value, String path) {
+        if (!(value instanceof Map<?, ?>)) throw bad("FINAL_READ_OBJECT_EXPECTED", path);
+        return (Map<String, Object>) value;
     }
 
-    private static int integer(Object value) {
-        if (!(value instanceof BigDecimal)) throw bad("FINAL_READ_INT_INVALID");
+    private static void keys(Map<String, Object> value, Set<String> allowed, String path) {
+        if (!value.keySet().equals(allowed)) throw bad("FINAL_READ_KEYS_INVALID", path);
+    }
+
+    private static int integer(Object value, String path) {
+        if (!(value instanceof BigDecimal)) throw bad("FINAL_READ_INT_INVALID", path);
         try {
             return ((BigDecimal) value).intValueExact();
         } catch (ArithmeticException invalid) {
-            throw bad("FINAL_READ_INT_INVALID");
+            throw bad("FINAL_READ_INT_INVALID", path);
         }
     }
 
-    private static String text(Object value, int max) {
-        if (!(value instanceof String) || ((String) value).length() > max) throw bad("FINAL_READ_TEXT_INVALID");
-        for (char c : ((String) value).toCharArray()) if (Character.isISOControl(c)) throw bad("FINAL_READ_TEXT_CONTROL_CHARACTER");
+    private static String text(Object value, int max, String path) {
+        if (!(value instanceof String) || ((String) value).length() > max) throw bad("FINAL_READ_TEXT_INVALID", path);
+        for (char c : ((String) value).toCharArray()) if (Character.isISOControl(c)) throw bad("FINAL_READ_TEXT_CONTROL_CHARACTER", path);
         return (String) value;
     }
 
-    private static IllegalArgumentException bad(String code) { return new IllegalArgumentException(code); }
+    private static IllegalArgumentException bad(String code) { return bad(code, "root"); }
+    private static IllegalArgumentException bad(String code, String path) { return WireViolation.at(code, path); }
 
     /** Strict response schema for the provider; the parser above stays the authority. */
     public static Map<String, Object> jsonSchema() {

@@ -106,6 +106,19 @@ public final class EditorialFinalReadTest {
         expect("FINAL_READ_HASH_ECHO_MISMATCH", json(goodWire(t)), other);
     }
 
+    @Test public void hashEchoFailureIncludesItsWireFieldPath() {
+        byte[] t = b(target());
+        Map<String, Object> wire = goodWire(t);
+        wire.put("readSha256", "0".repeat(64));
+        try {
+            EditorialFinalRead.parse(json(wire), ATT, t);
+            fail("expected hash echo rejection");
+        } catch (RuntimeException invalid) {
+            assertEquals("FINAL_READ_HASH_ECHO_MISMATCH:readSha256",
+                    WireViolation.safeMessage(invalid, "FINAL_READ_PARSE_FAILED"));
+        }
+    }
+
     @Test public void defectsAreCheckedAgainstTheBuiltLines() {
         byte[] t = b(target());
         Map<String, Object> w = goodWire(t);

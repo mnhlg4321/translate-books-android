@@ -16,15 +16,19 @@ public final class EditorialUnitReference {
     public static String of(EditorialRawInventory.Unit unit) { return "L" + unit.line(); }
 
     public static String resolve(Object reference, EditorialRawInventory.Inventory inventory) {
+        return resolve(reference, inventory, "unitId");
+    }
+
+    public static String resolve(Object reference, EditorialRawInventory.Inventory inventory, String path) {
         if (!(reference instanceof String) || !((String) reference).matches("^L[1-9][0-9]*$")) {
-            throw new IllegalArgumentException("L1_UNIT_REF_INVALID");
+            throw WireViolation.at("L1_UNIT_REF_INVALID", path);
         }
         int line;
         try { line = Integer.parseInt(((String) reference).substring(1)); }
-        catch (NumberFormatException outside) { throw new IllegalArgumentException("L1_UNIT_UNKNOWN"); }
-        if (line > inventory.physicalLines()) throw new IllegalArgumentException("L1_UNIT_UNKNOWN");
+        catch (NumberFormatException outside) { throw WireViolation.at("L1_UNIT_UNKNOWN", path); }
+        if (line > inventory.physicalLines()) throw WireViolation.at("L1_UNIT_UNKNOWN", path);
         for (EditorialRawInventory.Unit unit : inventory.units()) if (unit.line() == line) return unit.id();
-        throw new IllegalArgumentException("L1_UNIT_LINE_NOT_A_UNIT");
+        throw WireViolation.at("L1_UNIT_LINE_NOT_A_UNIT", path);
     }
 
     public static List<String> resolveAll(List<String> references, EditorialRawInventory.Inventory inventory) {
@@ -35,10 +39,12 @@ public final class EditorialUnitReference {
 
     public static List<String> resolveList(Object value, String path, int maximum,
                                            EditorialRawInventory.Inventory inventory) {
-        List<Object> references = EditorialCanonicalJson.array(value, path);
-        if (references.size() > maximum) throw new IllegalArgumentException("L1_LIST_TOO_LONG");
+        List<Object> references;
+        try { references = EditorialCanonicalJson.array(value, path); }
+        catch (RuntimeException invalid) { throw WireViolation.from(invalid, "L1_LIST_INVALID", path); }
+        if (references.size() > maximum) throw WireViolation.at("L1_LIST_TOO_LONG", path);
         List<String> ids = new ArrayList<>();
-        for (Object reference : references) ids.add(resolve(reference, inventory));
+        for (int i = 0; i < references.size(); i++) ids.add(resolve(references.get(i), inventory, path + "." + i));
         return List.copyOf(ids);
     }
 

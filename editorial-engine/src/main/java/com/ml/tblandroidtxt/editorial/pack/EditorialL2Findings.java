@@ -34,31 +34,37 @@ final class EditorialL2Findings {
 
     /** Strict parse of the {@code findingResolutions} array; completeness is judged by {@link #verify}. */
     static List<Resolution> parse(Object rows, Set<String> knownErrorIds, EditorialRawInventory.Inventory inventory) {
-        List<Object> values = EditorialCanonicalJson.array(rows, "findingResolutions");
-        if (values.size() > EditorialL1Ledger.MAX_FINDINGS_PER_CALL) throw bad("L2_WIRE_ROW_LIMIT_EXCEEDED");
+        List<Object> values;
+        try { values = EditorialCanonicalJson.array(rows, "findingResolutions"); }
+        catch (RuntimeException invalid) { throw WireViolation.from(invalid, "L2_WIRE_ARRAY_INVALID", "findingResolutions"); }
+        if (values.size() > EditorialL1Ledger.MAX_FINDINGS_PER_CALL) throw bad("L2_WIRE_ROW_LIMIT_EXCEEDED", "findingResolutions");
         List<Resolution> result = new ArrayList<>();
         Set<String> seen = new HashSet<>();
-        for (Object value : values) {
-            Map<String, Object> row = EditorialL2Execution.object(value, "findingResolution");
+        for (int index = 0; index < values.size(); index++) {
+            String path = "findingResolutions." + index;
+            Map<String, Object> row = EditorialL2Execution.object(values.get(index), path);
             EditorialL2Execution.keys(row, Set.of("errorId", "status", "changeIds", "preserveIds", "occurrences",
-                    "evidenceQuote", "reason"), "findingResolution");
-            String errorId = EditorialL2Execution.text(row, "errorId");
-            if (!knownErrorIds.contains(errorId) || !seen.add(errorId)) throw bad("L2_WIRE_FINDING_ID_INVALID");
-            String status = EditorialL2Execution.text(row, "status");
-            if (!STATUSES.contains(status)) throw bad("L2_WIRE_FINDING_STATUS_INVALID");
-            List<String> changeIds = ids(row.get("changeIds"), MAX_REFS);
-            List<String> preserveIds = ids(row.get("preserveIds"), MAX_REFS);
+                    "evidenceQuote", "reason"), path);
+            String errorId = EditorialL2Execution.text(row, "errorId", path + ".errorId");
+            if (!knownErrorIds.contains(errorId) || !seen.add(errorId)) throw bad("L2_WIRE_FINDING_ID_INVALID", path + ".errorId");
+            String status = EditorialL2Execution.text(row, "status", path + ".status");
+            if (!STATUSES.contains(status)) throw bad("L2_WIRE_FINDING_STATUS_INVALID", path + ".status");
+            List<String> changeIds = ids(row.get("changeIds"), MAX_REFS, path + ".changeIds");
+            List<String> preserveIds = ids(row.get("preserveIds"), MAX_REFS, path + ".preserveIds");
             List<Occurrence> occurrences = new ArrayList<>();
-            for (Object o : EditorialCanonicalJson.array(row.get("occurrences"), "occurrences")) {
-                Map<String, Object> occ = EditorialL2Execution.object(o, "occurrence");
-                EditorialL2Execution.keys(occ, Set.of("unitId", "ref"), "occurrence");
-                occurrences.add(new Occurrence(EditorialUnitReference.resolve(occ.get("unitId"), inventory), EditorialL2Execution.text(occ, "ref")));
+            List<Object> occurrenceRows = EditorialCanonicalJson.array(row.get("occurrences"), path + ".occurrences");
+            for (int occurrenceIndex = 0; occurrenceIndex < occurrenceRows.size(); occurrenceIndex++) {
+                String occurrencePath = path + ".occurrences." + occurrenceIndex;
+                Map<String, Object> occ = EditorialL2Execution.object(occurrenceRows.get(occurrenceIndex), occurrencePath);
+                EditorialL2Execution.keys(occ, Set.of("unitId", "ref"), occurrencePath);
+                occurrences.add(new Occurrence(EditorialUnitReference.resolve(occ.get("unitId"), inventory, occurrencePath + ".unitId"),
+                        EditorialL2Execution.text(occ, "ref", occurrencePath + ".ref")));
             }
-            if (occurrences.size() > MAX_OCCURRENCES) throw bad("L2_WIRE_ROW_LIMIT_EXCEEDED");
-            String quote = EditorialL2Execution.text(row, "evidenceQuote");
-            String reason = EditorialL2Execution.text(row, "reason");
+            if (occurrences.size() > MAX_OCCURRENCES) throw bad("L2_WIRE_ROW_LIMIT_EXCEEDED", path + ".occurrences");
+            String quote = EditorialL2Execution.text(row, "evidenceQuote", path + ".evidenceQuote");
+            String reason = EditorialL2Execution.text(row, "reason", path + ".reason");
             if (quote.length() > EditorialL1Ledger.MAX_QUOTE || reason.length() > EditorialL1Ledger.MAX_TEXT) {
-                throw bad("L2_WIRE_TEXT_INVALID:findingResolution");
+                throw bad("L2_WIRE_TEXT_INVALID", path);
             }
             result.add(new Resolution(errorId, status, changeIds, preserveIds, occurrences, quote, reason));
         }
@@ -249,18 +255,20 @@ final class EditorialL2Findings {
         return m;
     }
 
-    private static List<String> ids(Object value, int max) {
-        List<Object> values = EditorialCanonicalJson.array(value, "ids");
-        if (values.size() > max) throw bad("L2_WIRE_ROW_LIMIT_EXCEEDED");
+    private static List<String> ids(Object value, int max, String path) {
+        List<Object> values = EditorialCanonicalJson.array(value, path);
+        if (values.size() > max) throw bad("L2_WIRE_ROW_LIMIT_EXCEEDED", path);
         List<String> result = new ArrayList<>();
-        for (Object o : values) {
+        for (int index = 0; index < values.size(); index++) {
+            Object o = values.get(index);
             if (!(o instanceof String) || !EditorialP5RawWireContract.token((String) o, EditorialP5RawWireContract.MAX_ID_LENGTH)) {
-                throw bad("L2_WIRE_ID_INVALID");
+                throw bad("L2_WIRE_ID_INVALID", path + "." + index);
             }
             result.add((String) o);
         }
         return List.copyOf(result);
     }
 
-    private static IllegalArgumentException bad(String code) { return new IllegalArgumentException(code); }
+    private static IllegalArgumentException bad(String code) { return WireViolation.at(code, "root"); }
+    private static IllegalArgumentException bad(String code, String path) { return WireViolation.at(code, path); }
 }
