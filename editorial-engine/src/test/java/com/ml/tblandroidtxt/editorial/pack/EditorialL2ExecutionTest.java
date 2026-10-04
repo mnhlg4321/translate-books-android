@@ -120,6 +120,35 @@ public final class EditorialL2ExecutionTest {
         }
     }
 
+    @Test public void ledgerWireDerivesBeforeAndChecksOptionalTextAfterNfcAndTrim() {
+        Map<String, Object> row = change("c1", 1, "ignored", "Cafe", false, null, "CLOSED");
+        row.remove("before");
+        Map<String, Object> root = new LinkedHashMap<>();
+        root.put("wireSchemaVersion", EditorialL2Execution.WIRE_SCHEMA_VERSION);
+        root.put("attemptIdentity", "att");
+        root.put("changes", List.of(row));
+        root.put("preserved", List.of());
+        root.put("disposition", Map.of("disposition", "CONTINUE", "reasonCode", "OK", "stopClass", "NONE"));
+        byte[] base = bytes("Caf\u00e9\n");
+
+        EditorialL2Execution.Wire omitted = EditorialL2Execution.parseWire(canon(root), "att", true,
+                EditorialFieldSpec.L2_EDIT, base, true);
+        assertEquals("Caf\u00e9", omitted.changes().get(0).before());
+        assertTrue(omitted.warnings().isEmpty());
+
+        row.put("before", "  Cafe\u0301  ");
+        EditorialL2Execution.Wire normalized = EditorialL2Execution.parseWire(canon(root), "att", true,
+                EditorialFieldSpec.L2_EDIT, base, true);
+        assertEquals("Caf\u00e9", normalized.changes().get(0).before());
+        assertTrue(normalized.warnings().isEmpty());
+
+        row.put("before", "not a source substring");
+        EditorialL2Execution.Wire mismatch = EditorialL2Execution.parseWire(canon(root), "att", true,
+                EditorialFieldSpec.L2_EDIT, base, true);
+        assertEquals("Caf\u00e9", mismatch.changes().get(0).before());
+        assertEquals(List.of("CHANGE_BEFORE_SUBSTRING_MISMATCH:c1"), mismatch.warnings());
+    }
+
     @Test public void truncatedOutputMarksRecoveryAndNeverRedispatches() {
         Ctx c = ctx();
         EditorialL2Execution.Request req = c.request();

@@ -308,7 +308,8 @@ public final class EditorialL3Execution {
         spent = second.cost;
         EditorialL3Ledger.ReconcileWire wire;
         try {
-            wire = EditorialL3Ledger.parseReconcile(second.bytes, attemptIdentity, pass.candidates(), carried.size(), inventory);
+            wire = EditorialL3Ledger.parseReconcile(second.bytes, attemptIdentity, pass.candidates(), carried.size(), inventory,
+                    request.l2().viL2Bytes());
         } catch (RuntimeException invalid) {
             recover(store, attemptIdentity, "REPAIR_L3_RECONCILE_SCHEMA_INVALID");
             return stop(EditorialL2Execution.StopClass.REPAIR_REQUIRED, "REPAIR_L3_RECONCILE_SCHEMA_INVALID",
@@ -452,6 +453,7 @@ public final class EditorialL3Execution {
         root.put("finalByteCount", BigDecimal.valueOf(qa.outputBytes().length));
         root.put("finalLineCount", BigDecimal.valueOf(read.lineCount()));
         root.put("qaChangeMap", EditorialCanonicalJson.parse(qa.changeMapBytes()));
+        if (!wire.rows().warnings().isEmpty()) root.put("wireWarnings", new ArrayList<>(wire.rows().warnings()));
         root.put("reauditCoverage", EditorialL3Ledger.coverageEvidence(inventory, pass));
         Map<String, Object> ledgers = new TreeMap<>();
         for (EditorialL3Ledger.Candidate candidate : pass.candidates()) {

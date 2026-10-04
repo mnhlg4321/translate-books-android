@@ -2,6 +2,7 @@ package com.ml.tblandroidtxt.editorial.pack;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -265,7 +266,8 @@ public final class EditorialL2Execution {
 
         EditWire wire;
         try {
-            wire = ledger ? parseEditWireV3(second.bytes, attemptIdentity, candidates, l1, inventory)
+            wire = ledger ? parseEditWireV3(second.bytes, attemptIdentity, candidates, l1, inventory,
+                    context.source(EditorialSafe4Contract.DRAFT).bytes())
                     : parseEditWire(second.bytes, attemptIdentity, candidates);
         } catch (RuntimeException invalid) {
             recover(store, attemptIdentity, "REPAIR_L2_OUTPUT_SCHEMA_INVALID");
@@ -368,6 +370,7 @@ public final class EditorialL2Execution {
         }
         byte[] changeMap = withDiscoveryEvidence(reconstruction.changeMapBytes(), candidates, wire.resolutions(), block);
         if (ledger) changeMap = withLedgerEvidence(changeMap, l1Evidence, readEvidence, inventory, discoveryCoverage);
+        changeMap = withWireWarnings(changeMap, wire.rows().warnings());
         final int totalCalls = ledger ? 3 : 2;
         Committed committed = new Committed(attemptIdentity, request.reportL1AttemptIdentity(),
                 bundleIdentity, viL2, EditorialCanonicalJson.sha256Hex(viL2), changeMap,
@@ -470,7 +473,8 @@ public final class EditorialL2Execution {
      * {@code findingResolutions}. The set of L1 error ids comes from the persisted report, never from the model.
      */
     static EditWire parseEditWireV3(byte[] bytes, String attemptIdentity, List<Candidate> candidates,
-                                    EditorialL1Ledger.Body l1, EditorialRawInventory.Inventory inventory) {
+                                    EditorialL1Ledger.Body l1, EditorialRawInventory.Inventory inventory,
+                                    byte[] baseBytes) {
         if (bytes == null || bytes.length > MAX_WIRE_BYTES) throw WireViolation.at("L2_WIRE_BYTE_LIMIT_EXCEEDED", "root");
         Map<String, Object> root = EditorialCanonicalJson.parseObject(bytes);
         keys(root, Set.of("wireSchemaVersion", "attemptIdentity", "resolutions", "findingResolutions", "changes",
@@ -483,7 +487,7 @@ public final class EditorialL2Execution {
         rowsShape.remove("findingResolutions");
         rowsShape.put("wireSchemaVersion", WIRE_SCHEMA_VERSION);
         Wire rows = parseWire(EditorialCanonicalJson.canonicalize(rowsShape).getBytes(StandardCharsets.UTF_8),
-                attemptIdentity, true, EditorialFieldSpec.L2_EDIT);
+                attemptIdentity, true, EditorialFieldSpec.L2_EDIT, baseBytes, true);
         Set<String> known = new HashSet<>();
         for (Candidate candidate : candidates) known.add(candidate.candidateId());
         Map<String, String> resolutions = new TreeMap<>();
@@ -528,6 +532,13 @@ public final class EditorialL2Execution {
         }
         coverage.put("ranges", ranges);
         root.put("discoveryCoverage", coverage);
+        return EditorialCanonicalJson.canonicalize(root).getBytes(StandardCharsets.UTF_8);
+    }
+
+    private static byte[] withWireWarnings(byte[] changeMap, List<String> warnings) {
+        if (warnings == null || warnings.isEmpty()) return changeMap;
+        Map<String, Object> root = new LinkedHashMap<>(EditorialCanonicalJson.parseObject(changeMap));
+        root.put("wireWarnings", new ArrayList<>(warnings));
         return EditorialCanonicalJson.canonicalize(root).getBytes(StandardCharsets.UTF_8);
     }
 
@@ -685,7 +696,18 @@ public final class EditorialL2Execution {
 
     record Wire(List<EditorialChangeMapReconstructor.ChangeRow> changes,
                 List<EditorialChangeMapReconstructor.PreservedRow> preserved,
-                StopClass stopClass, String reasonCode) { }
+                StopClass stopClass, String reasonCode, List<String> warnings) {
+        Wire {
+            changes = List.copyOf(changes == null ? List.of() : changes);
+            preserved = List.copyOf(preserved == null ? List.of() : preserved);
+            warnings = List.copyOf(warnings == null ? List.of() : warnings);
+        }
+        Wire(List<EditorialChangeMapReconstructor.ChangeRow> changes,
+             List<EditorialChangeMapReconstructor.PreservedRow> preserved,
+             StopClass stopClass, String reasonCode) {
+            this(changes, preserved, stopClass, reasonCode, List.of());
+        }
+    }
 
     /** Strict compact wire parser; unknown keys, oversize values and wrong echoes are rejected. */
     static Wire parseWire(byte[] bytes, String attemptIdentity) {
@@ -698,6 +720,11 @@ public final class EditorialL2Execution {
     }
 
     static Wire parseWire(byte[] bytes, String attemptIdentity, boolean allowOps, String phase) {
+        return parseWire(bytes, attemptIdentity, allowOps, phase, null, false);
+    }
+
+    static Wire parseWire(byte[] bytes, String attemptIdentity, boolean allowOps, String phase,
+                          byte[] baseBytes, boolean allowMissingBefore) {
         if (bytes == null || bytes.length > MAX_WIRE_BYTES) throw WireViolation.at("L2_WIRE_BYTE_LIMIT_EXCEEDED", "root");
         Map<String, Object> root = EditorialCanonicalJson.parseObject(bytes);
         keys(root, Set.of("wireSchemaVersion", "attemptIdentity", "changes", "preserved", "disposition"), "root");
@@ -713,16 +740,23 @@ public final class EditorialL2Execution {
             throw new IllegalArgumentException("L2_WIRE_ROW_LIMIT_EXCEEDED");
         }
         List<EditorialChangeMapReconstructor.ChangeRow> changes = new ArrayList<>();
+        List<String> warnings = new ArrayList<>();
         for (int index = 0; index < changeValues.size(); index++) {
             String path = "changes." + index;
             Map<String, Object> row = object(changeValues.get(index), path);
+            Set<String> allowed = new HashSet<>(Set.of("changeId", "errorId", "line", "before", "after", "reason",
+                    "dialogue", "speakerProof", "status"));
+            Set<String> optional = new HashSet<>();
+            optional.add("speakerProof");
             if (allowOps) {
-                keys(row, Set.of("changeId", "errorId", "line", "before", "after", "reason", "dialogue",
-                        "speakerProof", "status", "op"), path, Set.of("speakerProof", "op"));
-            } else {
-                keys(row, Set.of("changeId", "errorId", "line", "before", "after", "reason", "dialogue",
-                        "speakerProof", "status"), path, Set.of("speakerProof"));
+                allowed.add("op");
+                optional.add("op");
             }
+            if (allowMissingBefore) {
+                if (baseBytes == null) throw WireViolation.at("L2_WIRE_BASE_TEXT_MISSING", "changes");
+                optional.add("before");
+            }
+            keys(row, allowed, path, optional);
             EditorialChangeMapReconstructor.Op changeOp = EditorialChangeMapReconstructor.Op.REPLACE;
             if (row.containsKey("op")) {
                 try {
@@ -746,9 +780,24 @@ public final class EditorialL2Execution {
             } catch (IllegalArgumentException invalid) {
                 throw WireViolation.at("L2_WIRE_STATUS_INVALID", path + ".status");
             }
-            changes.add(new EditorialChangeMapReconstructor.ChangeRow(text(row, "changeId", path + ".changeId", phase),
-                    text(row, "errorId", path + ".errorId", phase), line(row, path + ".line"),
-                    text(row, "before", path + ".before", phase), text(row, "after", path + ".after", phase),
+            String changeId = text(row, "changeId", path + ".changeId", phase);
+            String errorId = text(row, "errorId", path + ".errorId", phase);
+            int lineNumber = line(row, path + ".line");
+            String before;
+            if (allowMissingBefore) {
+                before = appBefore(baseBytes, lineNumber, changeOp, path + ".line");
+                if (row.containsKey("before")) {
+                    String modelBefore = text(row, "before", path + ".before", phase);
+                    if (!isSourceLineSubstring(modelBefore, before)) {
+                        warnings.add("CHANGE_BEFORE_SUBSTRING_MISMATCH:" + changeId);
+                    }
+                }
+            } else {
+                before = text(row, "before", path + ".before", phase);
+            }
+            changes.add(new EditorialChangeMapReconstructor.ChangeRow(changeId,
+                    errorId, lineNumber,
+                    before, text(row, "after", path + ".after", phase),
                     text(row, "reason", path + ".reason", phase), bool(row, "dialogue", path + ".dialogue"), proof, status, changeOp));
         }
         List<EditorialChangeMapReconstructor.PreservedRow> preserved = new ArrayList<>();
@@ -768,15 +817,41 @@ public final class EditorialL2Execution {
         String stopClass = text(disposition, "stopClass", "disposition.stopClass", phase);
         if ("CONTINUE".equals(kind) || "PRESERVE_DRAFT".equals(kind)) {
             if (!"NONE".equals(stopClass)) throw WireViolation.at("L2_WIRE_STOP_CLASS_INVALID", "disposition.stopClass");
-            return new Wire(List.copyOf(changes), List.copyOf(preserved), null, reason);
+            return new Wire(changes, preserved, null, reason, warnings);
         }
         if (!"STOP".equals(kind)) throw WireViolation.at("L2_WIRE_DISPOSITION_INVALID", "disposition.disposition");
         // A model may only request a content stop or input; it cannot claim PASS or a technical class.
         return switch (stopClass) {
-            case "CONTENT_BLOCKED" -> new Wire(List.of(), List.of(), StopClass.CONTENT_BLOCKED, reason);
-            case "INPUT_REQUIRED" -> new Wire(List.of(), List.of(), StopClass.INPUT_REQUIRED, reason);
+            case "CONTENT_BLOCKED" -> new Wire(List.of(), List.of(), StopClass.CONTENT_BLOCKED, reason, warnings);
+            case "INPUT_REQUIRED" -> new Wire(List.of(), List.of(), StopClass.INPUT_REQUIRED, reason, warnings);
             default -> throw WireViolation.at("L2_WIRE_STOP_CLASS_INVALID", "disposition.stopClass");
         };
+    }
+
+    private static String appBefore(byte[] baseBytes, int lineNumber, EditorialChangeMapReconstructor.Op op, String path) {
+        List<String> lines;
+        try {
+            lines = EditorialFinalRead.lines(baseBytes);
+        } catch (RuntimeException invalid) {
+            throw WireViolation.from(invalid, "L2_WIRE_BASE_TEXT_INVALID", path);
+        }
+        if (op == EditorialChangeMapReconstructor.Op.INSERT_AFTER && lineNumber == 0) return "";
+        if (lineNumber < 1 || lineNumber > lines.size()) return "";
+        return lines.get(lineNumber - 1);
+    }
+
+    private static boolean isSourceLineSubstring(String modelBefore, String appBefore) {
+        String model = Normalizer.normalize(trimWhitespace(modelBefore), Normalizer.Form.NFC);
+        String source = Normalizer.normalize(trimWhitespace(appBefore), Normalizer.Form.NFC);
+        return source.contains(model);
+    }
+
+    private static String trimWhitespace(String value) {
+        int start = 0;
+        int end = value.length();
+        while (start < end && Character.isWhitespace(value.charAt(start))) start++;
+        while (end > start && Character.isWhitespace(value.charAt(end - 1))) end--;
+        return value.substring(start, end);
     }
 
     static void keys(Map<String, Object> value, Set<String> allowed, String path) {

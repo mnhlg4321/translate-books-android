@@ -280,7 +280,8 @@ public final class EditorialFieldSpec {
         s(fields, phase, "changes[].changeId", Requirement.MUST, 1, MAX_ID_LENGTH, ID_PATTERN, "");
         s(fields, phase, "changes[].errorId", Requirement.MUST, 1, MAX_ID_LENGTH, ID_PATTERN, "");
         n(fields, phase, "changes[].line");
-        s(fields, phase, "changes[].before", Requirement.CONDITIONAL, 0, MAX_MODEL_TEXT, "", "exact source line; may be empty when the line is empty or INSERT_AFTER is after line 0");
+        sOptional(fields, phase, "changes[].before", Requirement.CONDITIONAL, 0, MAX_MODEL_TEXT, "",
+                "app reconstructs it from line; if supplied, it must match a source-line substring after NFC/trim (mismatch is a warning)");
         s(fields, phase, "changes[].after", Requirement.CONDITIONAL, 0, MAX_MODEL_TEXT, "", "empty only for DELETE");
         s(fields, phase, "changes[].reason", Requirement.MUST, 1, MAX_MODEL_TEXT, NON_BLANK_PATTERN, "");
         b(fields, phase, "changes[].dialogue");
@@ -341,7 +342,8 @@ public final class EditorialFieldSpec {
         s(fields, phase, "changes[].changeId", Requirement.MUST, 1, MAX_ID_LENGTH, ID_PATTERN, "");
         s(fields, phase, "changes[].errorId", Requirement.MUST, 1, MAX_ID_LENGTH, ID_PATTERN, "");
         n(fields, phase, "changes[].line");
-        s(fields, phase, "changes[].before", Requirement.CONDITIONAL, 0, MAX_MODEL_TEXT, "", "exact source line; may be empty when the line is empty or INSERT_AFTER is after line 0");
+        sOptional(fields, phase, "changes[].before", Requirement.CONDITIONAL, 0, MAX_MODEL_TEXT, "",
+                "app reconstructs it from line; if supplied, it must match a source-line substring after NFC/trim (mismatch is a warning)");
         s(fields, phase, "changes[].after", Requirement.CONDITIONAL, 0, MAX_MODEL_TEXT, "", "empty only for DELETE");
         s(fields, phase, "changes[].reason", Requirement.MUST, 1, MAX_MODEL_TEXT, NON_BLANK_PATTERN, "");
         b(fields, phase, "changes[].dialogue");
@@ -386,6 +388,12 @@ public final class EditorialFieldSpec {
     private static void s(List<Field> fields, String phase, String path, Requirement requirement,
                           int min, int max, String pattern, String condition) {
         fields.add(new Field(phase, path, Kind.STRING, requirement, true, min, max, -1, -1,
+                pattern, List.of(), condition));
+    }
+
+    private static void sOptional(List<Field> fields, String phase, String path, Requirement requirement,
+                                  int min, int max, String pattern, String condition) {
+        fields.add(new Field(phase, path, Kind.STRING, requirement, false, min, max, -1, -1,
                 pattern, List.of(), condition));
     }
 

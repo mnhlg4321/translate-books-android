@@ -224,6 +224,26 @@ public final class EditorialL2LedgerChainTest {
                 new EditorialL2Execution.Request(legacyContext, L1_ID, l.report, Set.of()).attemptIdentity()));
     }
 
+    @Test public void ledgerEditDerivesBeforeAndPersistsOnlyMismatchWarnings() {
+        Ledger l = new Ledger(List.of(finding("e1", 3, 3, 3, "踏破", "\"Da chinh phuc.\"", List.of(), "OPEN")), List.of());
+        Map<String, Object> omitted = change("C1", "e1", null, 3, "ignored", "\"Da vuot qua.\"");
+        omitted.remove("before");
+        Script omittedProvider = new Script(attempt -> editWire(attempt, list(omitted), list(),
+                list(resolution("e1", "FIXED", list("C1"), list(), list(), "", ""))));
+        EditorialL2Execution.Result derived = run(l, omittedProvider, new Store());
+        assertEquals(derived.reasonCode() + derived.issues(), EditorialL2Execution.Outcome.COMMITTED, derived.outcome());
+        assertTrue(new String(derived.committed().viL2Bytes(), StandardCharsets.UTF_8).contains("\"Da vuot qua.\""));
+        assertFalse(EditorialCanonicalJson.parseObject(derived.committed().changeMapBytes()).containsKey("wireWarnings"));
+
+        Map<String, Object> mismatch = change("C1", "e1", null, 3, "not a source substring", "\"Da vuot qua.\"");
+        Script mismatchProvider = new Script(attempt -> editWire(attempt, list(mismatch), list(),
+                list(resolution("e1", "FIXED", list("C1"), list(), list(), "", ""))));
+        EditorialL2Execution.Result warned = run(l, mismatchProvider, new Store());
+        assertEquals(warned.reasonCode() + warned.issues(), EditorialL2Execution.Outcome.COMMITTED, warned.outcome());
+        assertEquals(List.of("CHANGE_BEFORE_SUBSTRING_MISMATCH:C1"),
+                EditorialCanonicalJson.parseObject(warned.committed().changeMapBytes()).get("wireWarnings"));
+    }
+
     @Test public void anOccurrenceWithoutAChangeOrPreservedRowIsRefused() {
         Ledger l = new Ledger(List.of(finding("e1", 3, 3, 3, "踏破", "chinh phuc", List.of(unit(6), unit(9)), "OPEN")), List.of());
         Script provider = new Script(a -> editWire(a,
@@ -489,6 +509,27 @@ public final class EditorialL2LedgerChainTest {
         assertEquals(0, guarded.releaseNumbers().protectedSpanRegressions());
         assertEquals(0, guarded.releaseNumbers().unaccountedChangedAnchors());
         assertTrue(new String(guarded.committed().changeMapBytes(), StandardCharsets.UTF_8).contains("PROTECTED_SPAN_TOUCHED"));
+    }
+
+    @Test public void l3DerivesBeforeAndStoresMismatchWarningsInTheQaReceipt() {
+        Ledger l = new Ledger(threeFindings(), List.of());
+        EditorialL2Execution.Committed l2 = committedL2(l, happyScript(null));
+
+        Map<String, Object> omitted = change("Q1", "L3-1", null, 1, "ignored", "Vua buoc vao thanh.");
+        omitted.remove("before");
+        List<Object> derivedProbes = goodProbes();
+        derivedProbes.set(0, probe("P1", "COVERAGE", 1, 1, "王は城", "Vua vao", "DEFECT_FOUND", "CHANGE:Q1"));
+        EditorialL3Execution.Result derived = runL3(l, l2, reconcileV2(list(omitted), list(), list(), derivedProbes));
+        assertEquals(derived.reasonCode() + derived.issues(), EditorialL3Execution.Outcome.COMMITTED, derived.outcome());
+        assertFalse(EditorialCanonicalJson.parseObject(derived.committed().changeMapBytes()).containsKey("wireWarnings"));
+
+        Map<String, Object> mismatch = change("Q1", "L3-1", null, 1, "not a source substring", "Vua buoc vao thanh.");
+        List<Object> mismatchProbes = goodProbes();
+        mismatchProbes.set(0, probe("P1", "COVERAGE", 1, 1, "王は城", "Vua vao", "DEFECT_FOUND", "CHANGE:Q1"));
+        EditorialL3Execution.Result warned = runL3(l, l2, reconcileV2(list(mismatch), list(), list(), mismatchProbes));
+        assertEquals(warned.reasonCode() + warned.issues(), EditorialL3Execution.Outcome.COMMITTED, warned.outcome());
+        Map<String, Object> receipt = EditorialCanonicalJson.parseObject(warned.committed().changeMapBytes());
+        assertEquals(List.of("CHANGE_BEFORE_SUBSTRING_MISMATCH:Q1"), receipt.get("wireWarnings"));
     }
 
     @Test public void probesMustBeAnchoredQuotedDistinctAndBroad() {

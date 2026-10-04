@@ -79,6 +79,9 @@ public final class OpenRouterEditorialL3LedgerPromptTest {
         assertTrue(prompt.system.contains("MERGE_WITH_NEXT"));
         assertTrue(prompt.system.contains("MUST probes[].scope length 1.." + EditorialFieldSpec.MAX_PROBE_TEXT));
         assertTrue(prompt.system.contains("MUST changes[].reason length 1.." + EditorialFieldSpec.MAX_MODEL_TEXT));
+        assertTrue(prompt.system.contains("MAY omit changes[].before"));
+        assertTrue(prompt.system.contains("mismatch is a warning"));
+        assertFalse(prompt.user.contains("\"line\":1,\"before\":\"...\",\"after\":\"...\""));
         assertTrue(prompt.user.contains("\"probes\""));
         assertTrue(prompt.user.contains("\"carriedResolutions\""));
         assertFalse(prompt.user.contains("adversarialCoverage"));

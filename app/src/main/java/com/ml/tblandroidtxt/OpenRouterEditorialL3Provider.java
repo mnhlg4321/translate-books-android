@@ -77,9 +77,10 @@ public final class OpenRouterEditorialL3Provider implements EditorialL2Execution
             + "- carriedResolutions has EXACTLY one row per entry of " + CARRIED_ROLE + ", by index (an empty list when there are none): status FIXED "
             + "(changeIds are CLOSED changes touching that VI_L2 line or its neighbours), REJECTED (evidenceQuote is an exact substring of that VI_L2 line and "
             + "reason says why the line is right), PRESERVED (preserveIds name a preserved row on that very line), UNRESOLVED (the app stops the chapter).\n"
-            + "- QA edits use VI_L2 lines: line is the L<n>| number. op is REPLACE (default; before is the exact line, after the full replacement without line breaks), "
-            + "INSERT_AFTER (new line after VI_L2 line n; 0 inserts at the top; before is the exact text of line n, empty for 0), DELETE (after is empty) or "
-            + "MERGE_WITH_NEXT (lines n and n+1 become the single line in after). Every change has its own QA errorId and changeId; dialogue changes need "
+            + "- QA edits use VI_L2 lines: line is the L<n>| number. op is REPLACE (default), INSERT_AFTER (new line after VI_L2 line n; 0 inserts at the top), "
+            + "DELETE (after is empty) or MERGE_WITH_NEXT (lines n and n+1 become the single line in after). The app derives before from the line number; "
+            + "before may be omitted, or if present must be a source-line substring after NFC/trim normalization (a mismatch is only a warning). "
+            + "Every change has its own QA errorId and changeId; dialogue changes need "
             + "speakerProof {speaker, listener, anchorBefore, anchorAfter} grounded in RAW, otherwise keep the line with a preserved row.\n"
             + "- probes: at least " + 3 + " COVERAGE and " + 3 + " REGRESSION, each anchored: rawUnits (1-6 exact L-number references), viStart..viEnd (VI_L2 lines), "
             + "scope (what you checked), contrast (the counter-check or control you compared against), rawQuote (exact substring of one rawUnit, at most 80 "
@@ -213,7 +214,7 @@ public final class OpenRouterEditorialL3Provider implements EditorialL2Execution
                     .append("\"carriedResolutions\":[{\"index\":0,\"status\":\"FIXED|REJECTED|PRESERVED|UNRESOLVED\",\"changeIds\":[],")
                     .append("\"preserveIds\":[],\"evidenceQuote\":\"\",\"reason\":\"\"}],")
                     .append("\"changes\":[{\"changeId\":\"QC001\",\"errorId\":\"QE001\",\"op\":\"REPLACE|INSERT_AFTER|DELETE|MERGE_WITH_NEXT\",")
-                    .append("\"line\":1,\"before\":\"...\",\"after\":\"...\",\"reason\":\"...\",\"dialogue\":false,\"status\":\"CLOSED\"}],")
+                    .append("\"line\":1,\"after\":\"...\",\"reason\":\"...\",\"dialogue\":false,\"status\":\"CLOSED\"}],")
                     .append("\"preserved\":[{\"preserveId\":\"QP001\",\"line\":1,\"before\":\"...\",\"evidenceLimit\":\"...\"}],")
                     .append("\"probes\":[{\"probeId\":\"P001\",\"kind\":\"COVERAGE|REGRESSION\",\"rawUnits\":[\"<RAW L-number>\"],\"viStart\":1,\"viEnd\":1,")
                     .append("\"scope\":\"...\",\"contrast\":\"...\",\"rawQuote\":\"...\",\"viQuote\":\"...\",")

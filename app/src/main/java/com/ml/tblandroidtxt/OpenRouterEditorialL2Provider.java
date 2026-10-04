@@ -31,7 +31,7 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
     static final String WIRE_FORMAT_RULES =
             "Wire rules enforced by the app (any violation rejects the whole response):\n"
             + "- Edit only by whole DRAFT lines. line is the number shown as L<n>| in the DRAFT block; "
-            + "before is that line's exact text without the L<n>| prefix; after is the full replacement line without line breaks.\n"
+            + "for ledger wires the app derives before from line (legacy wires still require before); after is the full replacement line without line breaks.\n"
             + "- changeId and errorId: 1-48 ASCII characters matching [A-Za-z0-9][A-Za-z0-9._:/-]* (for example C001, E001). "
             + "Every change has its own errorId opened before the edit and at most one CLOSED change per line.\n"
             + "- dialogue is true when the line contains spoken words. A dialogue change needs speakerProof "
@@ -85,9 +85,10 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
             + "- status PRESERVED: keep the draft; preserveIds lists preserved rows on the finding's DRAFT lines and occurrences map the other places to those rows.\n"
             + "- status UNRESOLVED: you could not decide; the app stops the chapter. reason says why.\n"
             + "- A change that fixes a defect you found yourself uses an errorId that starts with L2- (for example L2-001). Every other errorId is a finding errorId.\n"
-            + "- Change operations. op is REPLACE (default; line is a DRAFT line, before and after are its whole text), INSERT_AFTER (new line after DRAFT line n; "
-            + "line 0 inserts at the top; before is the exact text of line n, empty for 0; after is the new line), DELETE (before is the line, after is empty) "
-            + "or MERGE_WITH_NEXT (lines n and n+1 become the single line in after; before is line n). At most one change per line or insertion slot. "
+            + "- Change operations. op is REPLACE (default), INSERT_AFTER (new line after DRAFT line n; line 0 inserts at the top), DELETE (after is empty) "
+            + "or MERGE_WITH_NEXT (lines n and n+1 become the single line in after). The app derives before from the line number. "
+            + "You may omit before; if you include it, quote a substring of that source line after NFC/trim normalization (a mismatch is only a warning). "
+            + "At most one change per line or insertion slot. "
             + "Use INSERT_AFTER for omitted content and MERGE_WITH_NEXT or DELETE for wrongly split or duplicated lines.\n"
             + "- findingResolutions row keys: errorId, status, changeIds, preserveIds, occurrences, evidenceQuote, reason (use [] and \"\" where nothing applies).\n";
 
@@ -251,7 +252,7 @@ public final class OpenRouterEditorialL2Provider implements EditorialL2Execution
                     .append("\"changeIds\":[\"C001\"],\"preserveIds\":[],\"occurrences\":[{\"unitId\":\"<RAW L-number>\",\"ref\":\"C001\"}],")
                     .append("\"evidenceQuote\":\"\",\"reason\":\"\"}],")
                     .append("\"changes\":[{\"changeId\":\"C001\",\"errorId\":\"<finding errorId or L2-001>\",\"op\":\"REPLACE|INSERT_AFTER|DELETE|MERGE_WITH_NEXT\",")
-                    .append("\"line\":1,\"before\":\"...\",\"after\":\"...\",\"reason\":\"...\",\"dialogue\":false,\"status\":\"CLOSED\"}],")
+                    .append("\"line\":1,\"after\":\"...\",\"reason\":\"...\",\"dialogue\":false,\"status\":\"CLOSED\"}],")
                     .append("\"preserved\":[{\"preserveId\":\"P001\",\"line\":1,\"before\":\"...\",\"evidenceLimit\":\"...\"}],")
                     .append("\"disposition\":{\"disposition\":\"CONTINUE|PRESERVE_DRAFT|STOP\",\"reasonCode\":\"...\",")
                     .append("\"stopClass\":\"NONE|CONTENT_BLOCKED|INPUT_REQUIRED\"}}\n");

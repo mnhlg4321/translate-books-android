@@ -128,7 +128,8 @@ final class EditorialL3Ledger {
 
     // ---- reconcile ----
 
-    static ReconcileWire parseReconcile(byte[] bytes, String attemptIdentity, List<Candidate> candidates, int carriedCount, EditorialRawInventory.Inventory inventory) {
+    static ReconcileWire parseReconcile(byte[] bytes, String attemptIdentity, List<Candidate> candidates, int carriedCount,
+                                        EditorialRawInventory.Inventory inventory, byte[] baseBytes) {
         Map<String, Object> root = EditorialL1Ledger.rootOf(bytes, attemptIdentity, RECONCILE_WIRE_V3,
                 Set.of("wireSchemaVersion", "attemptIdentity", "resolutions", "carriedResolutions", "changes", "preserved",
                         "probes", "disposition"));
@@ -140,7 +141,7 @@ final class EditorialL3Ledger {
         shape.put("disposition", root.get("disposition"));
         EditorialL2Execution.Wire rows = EditorialL2Execution.parseWire(
                 EditorialCanonicalJson.canonicalize(shape).getBytes(java.nio.charset.StandardCharsets.UTF_8), attemptIdentity, true,
-                EditorialFieldSpec.L3_RECONCILE);
+                EditorialFieldSpec.L3_RECONCILE, baseBytes, true);
 
         Set<String> known = new HashSet<>();
         for (Candidate candidate : candidates) known.add(candidate.candidateId());

@@ -61,6 +61,9 @@ public final class OpenRouterEditorialL2LedgerPromptTest {
         assertTrue(prompt.system.contains("MERGE_WITH_NEXT"));
         assertTrue(prompt.system.contains("MUST changes[].reason length 1.." + EditorialFieldSpec.MAX_MODEL_TEXT));
         assertTrue(prompt.system.contains("MAY omit changes[].op; when present its value MUST ∈ {DELETE|INSERT_AFTER|MERGE_WITH_NEXT|REPLACE}"));
+        assertTrue(prompt.system.contains("MAY omit changes[].before"));
+        assertTrue(prompt.system.contains("mismatch is a warning"));
+        assertFalse(prompt.user.contains("\"line\":1,\"before\":\"...\",\"after\":\"...\""));
         assertTrue(prompt.system.contains("occurrences must contain one {unitId, ref} for EVERY unit"));
         assertTrue(prompt.user.contains(EditorialL2Execution.WIRE_SCHEMA_VERSION_V3));
         assertTrue(prompt.user.contains("\"findingResolutions\""));
@@ -71,6 +74,7 @@ public final class OpenRouterEditorialL2LedgerPromptTest {
         assertFalse(legacy.system.contains("findingResolutions"));
         assertFalse(legacy.user.contains("findingResolutions"));
         assertTrue(legacy.user.contains(EditorialL2Execution.WIRE_SCHEMA_VERSION));
+        assertTrue(legacy.user.contains("\"line\":1,\"before\":\"...\""));
     }
 
     @Test public void finalReadRequestNeedsTheTargetTheProbesAndRawAndShowsNumberedLines() {

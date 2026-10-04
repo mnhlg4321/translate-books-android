@@ -337,6 +337,9 @@ public final class EditorialL1LedgerTest {
         assertTrue(EditorialContractRevision.known(EditorialContractRevision.L1_LEDGER_V3));
         assertFalse(EditorialContractRevision.eligiblePredecessor(EditorialContractRevision.L1_LEDGER_V3,
                 EditorialContractRevision.CURRENT_LEDGER));
+        assertTrue(EditorialContractRevision.known(EditorialContractRevision.L1_LEDGER_V4));
+        assertFalse(EditorialContractRevision.eligiblePredecessor(EditorialContractRevision.L1_LEDGER_V4,
+                EditorialContractRevision.CURRENT_LEDGER));
         assertFalse(EditorialContractRevision.eligiblePredecessor(EditorialContractRevision.LEGACY_V1, EditorialContractRevision.CURRENT_LEDGER));
         assertTrue(EditorialContractRevision.eligiblePredecessor(EditorialContractRevision.CURRENT_LEDGER,
                 EditorialContractRevision.CURRENT_LEDGER));

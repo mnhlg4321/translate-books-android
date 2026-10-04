@@ -99,11 +99,13 @@ public final class EditorialUnitReferenceTest {
                 "carriedResolutions", List.of(), "changes", List.of(), "preserved", List.of(), "probes", List.of(probe),
                 "disposition", Map.of("disposition", "CONTINUE", "reasonCode", "OK", "stopClass", "NONE"));
         var parsed = EditorialL3Ledger.parseReconcile(EditorialCanonicalJson.canonicalize(root).getBytes(StandardCharsets.UTF_8),
-                "att", pass.candidates(), 0, INV);
+                "att", pass.candidates(), 0, INV,
+                "\uFEFFfirst\r\n\r\n[IMG_001]\n　\nlast".getBytes(StandardCharsets.UTF_8));
         assertEquals(List.of(INV.units().get(1).id()), parsed.probes().get(0).rawUnits());
         probe.put("rawUnits", List.of("L3"));
         code("L1_UNIT_LINE_NOT_A_UNIT", () -> EditorialL3Ledger.parseReconcile(
-                EditorialCanonicalJson.canonicalize(root).getBytes(StandardCharsets.UTF_8), "att", pass.candidates(), 0, INV));
+                EditorialCanonicalJson.canonicalize(root).getBytes(StandardCharsets.UTF_8), "att", pass.candidates(), 0, INV,
+                "\uFEFFfirst\r\n\r\n[IMG_001]\n　\nlast".getBytes(StandardCharsets.UTF_8)));
     }
 
     @Test public void l3CandidateFailureReportsItsIndexedField() {

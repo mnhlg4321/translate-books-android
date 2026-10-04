@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * L1 Error Ledger, current contract revision {@code L1_LEDGER_V4}. Four notions stay apart: a RAW unit/occurrence is a
+ * L1 Error Ledger, current contract revision {@code L1_LEDGER_V5}. Four notions stay apart: a RAW unit/occurrence is a
  * part of the source (the app's {@link EditorialRawInventory}); a candidate is a suspicion raised by the blind RAW
  * pass; a finding is a defect with evidence in the DRAFT; a change is an edit (L2/L3). The model supplies
  * judgement and the app checks everything checkable: every unit id exists, coverage ranges close over the whole

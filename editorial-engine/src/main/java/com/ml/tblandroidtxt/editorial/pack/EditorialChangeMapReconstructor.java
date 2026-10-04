@@ -29,10 +29,14 @@ import java.util.TreeSet;
  * Malformed or stale declarations reject the whole set as REPAIR_REQUIRED.</p>
  *
  * <p>Operations (ledger contract): {@code REPLACE} (default, one whole line), {@code INSERT_AFTER n}
- * (a new line after base line n, n = 0 inserts first; {@code before} is the text of line n),
+ * (a new line after base line n, n = 0 inserts first),
  * {@code DELETE n} ({@code after} is empty) and {@code MERGE_WITH_NEXT n} (lines n and n+1 become the
  * single line {@code after}). A change set with only {@code REPLACE} reproduces the original behaviour and
  * the original change-map bytes. No operation edits inside a line by offset.</p>
+ *
+ * <p>Ledger wire adapters reconstruct {@link ChangeRow#before()} from the app-owned base text and line number.
+ * The model may omit its redundant {@code before} field; if supplied, the adapter only warns when it does not
+ * identify a substring of the source line.</p>
  */
 public final class EditorialChangeMapReconstructor {
     public enum Kind {
