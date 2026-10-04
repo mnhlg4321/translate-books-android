@@ -1,14 +1,14 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-04 (+07:00), after S4 offline implementation; implementation baseline immediately before this snapshot commit is `a4e17a97`.
-- Current version: active v4.18; the emulator still has archived build `4.18-p6.16`/code229 from `d1cc1452`. The pilot remains at the last documented `4.18-p6.2`/code215 and has not been accessed.
+- Updated: 2026-10-04 (+07:00), after S5 stopped at the first L1 refusal; implementation baseline immediately before this snapshot commit is `c4529088`.
+- Current version: active v4.18; installed emulator build is `4.18-p6.17`/code230. The pilot remains at the last documented `4.18-p6.2`/code215 and was not accessed.
 - Current branch: `feature/v4.18-p5e-runner-repair-20260917`; continue the existing branch and release checklist.
-- Current commit: `a4e17a97` — implementation baseline immediately before this snapshot commit.
-- Current build: `4.18-p6.16`/code229, event `build-20261004-065614`, source `d1cc1452`; it remains the latest archived and installed build. S4 has not been built or installed.
-- Current phase: approved P6 R6 S1–S4. S1–S4 are implemented offline and pass JVM tests. The S4 package is ready for its commit/push, followed by wrapper build and emulator fake-chain/negative-gate validation, then authorized S5.
-- Completed tasks: S1 safe `CODE:path` diagnostics pushed in `71ebab19`; S2 fixture response-content capture and offline production-parser replay pushed in `883129d6`; S3 shared FieldSpec and empty-value rules pushed in `a4e17a97` with contract revision V4; S4 derives L2/L3 `before` from app-owned lines, warns on mismatches, records warnings in artifacts, and bumps contract revision to V5.
-- Pending tasks: commit/push S4, then wrapper-build and install to the emulator, and verify fake CHAIN 14/14 plus the negative gate. After both pass, resume S5 on the same G1 ledger at `fx-a03`, stop the group on any refusal, and do not start G2.
-- Known bugs: the earlier live `fx-a03` L1 response was rejected with `L1_TEXT_REQUIRED`; its exact response was not retained and cannot be replayed. S2 captures new fixture response bytes for offline replay.
-- Regression status: `:editorial-engine:test` PASS 362/362; `:app:testDebugUnitTest` PASS 341/341; `:app:compileDebugAndroidTestJavaWithJavac` PASS, all offline. No S4 build or emulator validation has run. Earlier fake CHAIN 14/14 and negative-gate results apply to source `d1cc1452` only.
-- Workspace/data: unrelated owner `.idea`/P5E edits, artifacts and backups remain unstaged. During S4 there were no provider calls, settings/key access, G2 work, or pilot-device access.
-- Next action: commit/push the tested S4 package, then wrapper-build and verify it on the emulator.
+- Current commit: `c4529088` — implementation baseline immediately before this snapshot commit.
+- Current build: `4.18-p6.17`/code230, event `build-20261004-084923`, source `cc3747ad`; production APK SHA-256 `380C6042B6D22E84142ACCB083C3A16740809DF867EC2FD18F84042B4C560721`. Installed on `emulator-5554` and archived in both build payload roots.
+- Current phase: approved P6 R6 S1–S4 complete; S5 resumed the existing G1 ledger and stopped at `fx-a03` on `L1_UNIT_UNKNOWN:coverage.0.from`. No G2 or pilot work.
+- Completed tasks: S1–S4 pushed as `71ebab19`, `883129d6`, `a4e17a97`, `cc3747ad`; contract revision V5; wrapper build/install; fake CHAIN 14/14; negative gate verified; follow-up gate test/verifier fixes pushed as `8a2b11ba` and `c4529088`. S5 made one actual call, 21,186 input/222 output tokens, USD 0.00556275; response replay reproduced the same safe code/path offline.
+- Pending tasks: remaining G1 fixtures and the two planned repeats were not started after the fx-a03 L1 refusal. G2 remains out of scope.
+- Known bugs: live `fx-a03` L1 RAW response references an unknown unit at `coverage.0.from`; safe diagnostic `L1_UNIT_UNKNOWN:coverage.0.from`. Captured response is outside Git under `D:\P5E-private\p6-runs\7b6ac5b8-aea9-44b0-8f92-da72ca0d2e7e\results\fx-a03\responses\001-L1_RAW_DISCOVERY.json`.
+- Regression status: engine 362/362, app unit 341/341, AndroidTest compile PASS, P6 Python verifier 9/9, production wrapper build PASS, fake CHAIN `STRUCTURAL_VALID 14/14`, negative gate `STRUCTURAL_VALID 0/1` with expected typed stop. G1 cumulative ledger: 5 settled calls, USD 0.03779120 / 1.00, USD 0.96220880 remaining, pending 0.
+- Workspace/data: unrelated owner `.idea`/P5E changes and artifacts remain unstaged. Fixture responses and run evidence remain under `D:\P5E-private`; no response body, fingerprint value, or key was added to Git.
+- Next action: review the captured fx-a03 response offline and decide whether to authorize a new G1 continuation; do not dispatch another provider call before that decision.
