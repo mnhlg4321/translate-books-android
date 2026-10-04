@@ -188,7 +188,7 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-Wire v3 đã gỡ lỗi chép id: RAW ledger thật đầu tiên qua; RECONCILE dừng `L1_TEXT_REQUIRED` (G1 USD 0.03222845/1.00). Nguyên nhân là một họ lệch prompt–schema–parser về trường rỗng, lỗi không có đường dẫn trường và response không được giữ. Next action duy nhất: owner quyết S1–S4 trong `docs/P6_R6_WIRE_SIMPLIFICATION_PROPOSAL_20261004.md`; sau đó Codex làm S1–S4 rồi chạy tiếp G1 (S5).
+S1–S4 đạt. S5 dừng `L1_UNIT_UNKNOWN:coverage.0.from` (G1 USD 0.03779120/1.00); nguyên nhân là schema S3 đặt minLength 3 cho tham chiếu unit nên không thể sinh `L1`…`L9`; đã sửa ở `7f3c25ba`. Next action duy nhất: owner quyết D-G1c (mục 10 của `docs/P6_R6_WIRE_SIMPLIFICATION_PROPOSAL_20261004.md`); Codex làm T1–T2 offline rồi T3.
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 

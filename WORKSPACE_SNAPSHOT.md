@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-04 (+07:00), after S5 stopped at the first L1 refusal; implementation baseline immediately before this snapshot commit is `c4529088`.
+- Updated: 2026-10-04 (+07:00): S1–S4 verified at 7ed88fb4 (engine 362/362, app 341/341, no leaks, response retention fixture-only). S5 fx-a03 stopped L1_UNIT_UNKNOWN:coverage.0.from (model wrote "L1173"; G1 USD 0.03779120/1.00). Root cause proven: EditorialFieldSpec gave unit references minLength 3, so the strict schema could not emit L1..L9. Claude fixed it in 7f3c25ba (min 2 + regression test; engine 363/363, app 341/341).
 - Current version: active v4.18; installed emulator build is `4.18-p6.17`/code230. The pilot remains at the last documented `4.18-p6.2`/code215 and was not accessed.
 - Current branch: `feature/v4.18-p5e-runner-repair-20260917`; continue the existing branch and release checklist.
-- Current commit: `c4529088` — implementation baseline immediately before this snapshot commit.
+- Current commit: 7f3c25ba — implementation baseline immediately before this snapshot update; confirm actual HEAD on resume.
 - Current build: `4.18-p6.17`/code230, event `build-20261004-084923`, source `cc3747ad`; production APK SHA-256 `380C6042B6D22E84142ACCB083C3A16740809DF867EC2FD18F84042B4C560721`. Installed on `emulator-5554` and archived in both build payload roots.
 - Current phase: approved P6 R6 S1–S4 complete; S5 resumed the existing G1 ledger and stopped at `fx-a03` on `L1_UNIT_UNKNOWN:coverage.0.from`. No G2 or pilot work.
 - Completed tasks: S1–S4 pushed as `71ebab19`, `883129d6`, `a4e17a97`, `cc3747ad`; contract revision V5; wrapper build/install; fake CHAIN 14/14; negative gate verified; follow-up gate test/verifier fixes pushed as `8a2b11ba` and `c4529088`. S5 made one actual call, 21,186 input/222 output tokens, USD 0.00556275; response replay reproduced the same safe code/path offline.
@@ -11,4 +11,4 @@
 - Known bugs: live `fx-a03` L1 RAW response references an unknown unit at `coverage.0.from`; safe diagnostic `L1_UNIT_UNKNOWN:coverage.0.from`. Captured response is outside Git under `D:\P5E-private\p6-runs\7b6ac5b8-aea9-44b0-8f92-da72ca0d2e7e\results\fx-a03\responses\001-L1_RAW_DISCOVERY.json`.
 - Regression status: engine 362/362, app unit 341/341, AndroidTest compile PASS, P6 Python verifier 9/9, production wrapper build PASS, fake CHAIN `STRUCTURAL_VALID 14/14`, negative gate `STRUCTURAL_VALID 0/1` with expected typed stop. G1 cumulative ledger: 5 settled calls, USD 0.03779120 / 1.00, USD 0.96220880 remaining, pending 0.
 - Workspace/data: unrelated owner `.idea`/P5E changes and artifacts remain unstaged. Fixture responses and run evidence remain under `D:\P5E-private`; no response body, fingerprint value, or key was added to Git.
-- Next action: review the captured fx-a03 response offline and decide whether to authorize a new G1 continuation; do not dispatch another provider call before that decision.
+- Next action: owner decides D-G1c (resume G1 within ~USD 0.962 with a standing rule for proven-by-replay fixes) in docs/P6_R6_WIRE_SIMPLIFICATION_PROPOSAL_20261004.md §10; Codex does T1–T2 offline (golden-wire schema test, rebuild from ≥7f3c25ba, emulator checks), then T3.

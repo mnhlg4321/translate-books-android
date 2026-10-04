@@ -95,3 +95,25 @@ Owner duyệt **S1–S4** (offline, thay đổi wire và parser trong production
 ## 9. Quyết định owner
 
 **S1–S4 đã được owner duyệt (2026-10-04, "đồng ý s1-s4"):** triển khai offline S1 (lỗi wire kèm đường dẫn trường an toàn), S2 (giữ bytes nội dung response của fixture run trong `D:\P5E-private`, không key/header; pilot/sản phẩm **tắt**), S3 (bảng đặc tả trường duy nhất sinh prompt/schema + test nhất quán; S3b quy tắc rỗng hợp lý), S4 (L2/L3 bỏ chép dòng `before`). Thay đổi wire/parser → tăng `contractRevision`. Sau khi S1–S4 đạt offline + emulator: **S5** chạy tiếp G1 trong phần trần G1 còn lại theo quyền D-G1b đã có (dừng nhóm khi bị từ chối, báo `CODE:path` + đường dẫn response). **S6 chưa được duyệt.** Không đụng pilot, không G2.
+
+## 10. Kết quả S1–S5 và chẩn đoán lần dừng mới (Claude, 2026-10-04)
+
+**Kiểm độc lập `7ed88fb4`:** engine 362/362, app 341/341, lint (0 lỗi) và androidTest compile PASS, Python 4/4 file; không rò rỉ. S2 đúng chính sách: chỉ runner fixture (`EditorialP6FixtureRunnerInstrumentedTest` `ResponseCapture`) lưu đúng bytes nội dung; `src/main` không lưu; coordinator vẫn bắt buộc `!allowFullModelResponseStorage()`. Công cụ replay `:editorial-engine:replayP6WireResponse` tái hiện đúng `L1_UNIT_UNKNOWN:coverage.0.from` từ response lưu.
+
+**S5 (fx-a03, `L1_RAW_DISCOVERY`):** 1 call, 21,186 vào / 222 ra, USD 0.00556275; G1 = 5 call, **USD 0.03779120 / 1.00**, 0 UNKNOWN. Response: một dải coverage và một candidate, cả hai dùng `"L1173"` — id không tồn tại (unit đầu là `L1`, cuối `L383`, prompt nêu đúng).
+
+**Nguyên nhân gốc (đã chứng minh từ mã + response):** bảng `EditorialFieldSpec` (S3) đặt `minLength = 3` cho cả 10 trường tham chiếu unit, trong khi pattern `^L[1-9][0-9]*$` cho phép `L1`…`L9` (2 ký tự). Schema strict khiến decoder **không thể** sinh `"L1"` nên sinh chuỗi dài hơn không tồn tại. Đây là lỗi do S3 đưa vào, không phải lỗi model. Fake run 14/14 không bắt được vì schema chỉ áp ở phía provider, parser vốn chấp nhận `L1`. Output ngắn bất thường (222 token so với 1,764–2,238 trước đó) nhiều khả năng cùng nguyên nhân (decoder bị ép ngay ở trường đầu); sẽ đo lại sau sửa.
+
+**Đã sửa (Claude, `7f3c25ba`):** `MIN_UNIT_REFERENCE_LENGTH = 2` cho mọi trường tham chiếu unit; test hồi quy `lengthBoundsAdmitTheShortestValueOfEveryPattern` bắt cả họ lỗi "giới hạn độ dài loại trừ giá trị hợp lệ của chính pattern"; sửa một test prompt đã ghim giá trị sai. Engine 363/363, app 341/341, lint + androidTest compile PASS. Soát các trường còn lại: id/text min 1, hash đúng 64 — không còn trường nào cùng họ. Parser không đổi nên không tăng `contractRevision`.
+
+**Khoảng trống còn lại:** test so schema↔bảng chỉ phủ L1_RAW, L1_RECONCILE và final-read; L2_EDIT, L3_RAW, L3_RECONCILE chưa sinh schema (chỉ `json_object` + luật prompt). Bổ sung một test "golden wire hợp lệ phải qua schema sinh ra" (bộ kiểm min/max/pattern/enum đơn giản) để fake không còn che lệch schema↔parser.
+
+### Gói tiếp theo cho Codex
+
+| Gói | Việc | PASS | Dừng |
+|---|---|---|---|
+| **T1** offline | Test golden-wire-qua-schema cho mọi phase có schema; với mỗi trường tham chiếu, chèn giá trị biên `L1`, `L9`, `L10`, số lớn nhất có thật | JVM xanh | — |
+| **T2** offline | Build lại production + AndroidTest qua wrapper từ HEAD (≥ `7f3c25ba`), archive hai nơi, cài emulator; preflight, fake CHAIN 14/14, negative gate; replay response `fx-a03` cũ trên mã mới vẫn báo `L1_UNIT_UNKNOWN` (response cũ thật sự sai) | Đạt, 0 call | Lỗi mã → sửa trong gói |
+| **T3** live (cần D-G1c) | Tiếp G1 cùng sổ chi tiêu, `fx-a03` trước, cùng quy tắc dừng nhóm; mỗi từ chối có `CODE:path` + response replay | Báo cáo theo fixture, call/token/USD | Từ chối → replay offline, sửa, hỏi owner |
+
+**D-G1c (cần owner):** chạy T3 trong phần trần G1 còn lại (USD 1.00 − 0.03779120 ≈ 0.962). Khuyến nghị **đồng ý**, kèm quy tắc thường trực để giảm hỏi lặp: *sau một lần dừng, nếu bản sửa đã được chứng minh offline bằng replay đúng response gây lỗi và test hồi quy, Codex được chạy tiếp G1 trong trần G1 mà không cần hỏi lại; mọi mã lỗi **mới** hoặc vượt trần vẫn dừng và báo.*
