@@ -8,13 +8,20 @@ final class EditorialQuoteMatcher {
 
     static boolean contains(String anchor, String quote) {
         if (anchor == null || quote == null) return false;
+        if (normalizedCitation(quote).isEmpty()) return false;
         return nfcTrim(anchor).contains(nfcTrim(quote));
     }
 
     /** RAW may render ruby readings as base text followed by 《reading》. */
     static boolean containsRaw(String anchor, String quote) {
-        return anchor != null && quote != null
-                && contains(withoutRubyReadings(anchor), withoutRubyReadings(quote));
+        if (anchor == null || quote == null) return false;
+        String normalizedQuote = withoutRubyReadings(nfcTrim(quote));
+        if (nfcTrim(normalizedQuote).isEmpty()) return false;
+        return contains(withoutRubyReadings(anchor), withoutRubyReadings(quote));
+    }
+
+    private static String normalizedCitation(String quote) {
+        return nfcTrim(withoutRubyReadings(nfcTrim(quote)));
     }
 
     private static String nfcTrim(String value) {
