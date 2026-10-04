@@ -82,7 +82,13 @@ public final class EditorialL1Ledger {
 
     public record ReconcilePass(List<EditorialRawInventory.Range> coverage, List<Resolution> resolutions,
                                 List<Finding> findings, List<SpeakerRecord> speakerRecords,
-                                List<ProtectedSpan> protectedSpans, Disposition disposition) {
+                                List<ProtectedSpan> protectedSpans, Disposition disposition,
+                                int duplicateReferencesRemoved) {
+        public ReconcilePass(List<EditorialRawInventory.Range> coverage, List<Resolution> resolutions,
+                             List<Finding> findings, List<SpeakerRecord> speakerRecords,
+                             List<ProtectedSpan> protectedSpans, Disposition disposition) {
+            this(coverage, resolutions, findings, speakerRecords, protectedSpans, disposition, 0);
+        }
         public ReconcilePass {
             coverage = List.copyOf(coverage);
             resolutions = List.copyOf(resolutions);
@@ -157,6 +163,7 @@ public final class EditorialL1Ledger {
                 ? List.of() : coverage(root.get("coverage"), inventory, EditorialFieldSpec.L1_RECONCILE);
 
         List<Finding> findings = new ArrayList<>();
+        EditorialReferenceNormalization.Counter normalizations = new EditorialReferenceNormalization.Counter();
         Set<String> errorIds = new HashSet<>();
         Set<String> knownCandidates = new HashSet<>();
         for (Candidate candidate : rawCandidates) knownCandidates.add(candidate.candidateId());
@@ -165,7 +172,7 @@ public final class EditorialL1Ledger {
         for (int index = 0; index < findingRows.size(); index++) {
             String path = "findings." + index;
             Finding finding = finding(object(findingRows.get(index), path), inventory, draftLines, knownCandidates,
-                    path, EditorialFieldSpec.L1_RECONCILE);
+                    path, EditorialFieldSpec.L1_RECONCILE, normalizations);
             if (!errorIds.add(finding.errorId())) throw bad("L1_ERROR_ID_DUPLICATE", path + ".errorId");
             findings.add(finding);
         }
@@ -226,7 +233,8 @@ public final class EditorialL1Ledger {
                 if (protectedNumbers.contains(line)) throw bad("L1_PROTECTED_OVERLAPS_OPEN_FINDING");
             }
         }
-        return new ReconcilePass(coverage, new ArrayList<>(resolved.values()), findings, speakers, spans, disposition);
+        return new ReconcilePass(coverage, new ArrayList<>(resolved.values()), findings, speakers, spans, disposition,
+                normalizations.duplicateReferencesRemoved());
     }
 
     /** DRAFT line numbers covered by the protected spans. */
@@ -237,7 +245,8 @@ public final class EditorialL1Ledger {
     }
 
     private static Finding finding(Map<String, Object> row, EditorialRawInventory.Inventory inventory,
-                                   List<String> draftLines, Set<String> knownCandidates, String path, String phase) {
+                                   List<String> draftLines, Set<String> knownCandidates, String path, String phase,
+                                   EditorialReferenceNormalization.Counter normalizations) {
         keys(row, Set.of("errorId", "type", "severity", "rawUnits", "draft", "rawQuote", "draftQuote",
                 "observation", "expectedMeaning", "evidenceRefs", "candidateIds", "occurrenceUnits", "disposition",
                 "evidenceLimit"), path);
@@ -246,8 +255,8 @@ public final class EditorialL1Ledger {
         String severity = enumOf(row, "severity", SEVERITIES, path + ".severity", phase);
         List<String> rawUnits = EditorialUnitReference.resolveList(row.get("rawUnits"), path + ".rawUnits", MAX_RAW_UNITS_PER_FINDING, inventory);
         if (rawUnits.isEmpty()) throw bad("L1_FINDING_RAW_ANCHOR_REQUIRED", path + ".rawUnits");
-        if (new HashSet<>(rawUnits).size() != rawUnits.size()) throw bad("L1_FINDING_RAW_ANCHOR_DUPLICATE", path + ".rawUnits");
         for (int index = 0; index < rawUnits.size(); index++) if (!inventory.has(rawUnits.get(index))) throw bad("L1_UNIT_UNKNOWN", path + ".rawUnits." + index);
+        rawUnits = normalizations.distinct(rawUnits);
 
         Map<String, Object> draftRow = object(row.get("draft"), path + ".draft");
         String kind = fieldStr(phase, draftRow, "kind", path + ".draft.kind");
@@ -289,17 +298,21 @@ public final class EditorialL1Ledger {
         List<String> refs = stringList(row.get("evidenceRefs"), path + ".evidenceRefs",
                 EditorialFieldSpec.MAX_EVIDENCE_REFS, EditorialFieldSpec.MAX_ID_LENGTH);
         for (int index = 0; index < refs.size(); index++) if (!EditorialP5RawWireContract.token(refs.get(index), EditorialP5RawWireContract.MAX_ID_LENGTH)) throw bad("L1_EVIDENCE_REF_INVALID", path + ".evidenceRefs." + index);
+        refs = normalizations.distinct(refs);
         List<String> candidateIds = stringList(row.get("candidateIds"), path + ".candidateIds",
                 EditorialFieldSpec.MAX_CANDIDATE_REFS, EditorialFieldSpec.MAX_ID_LENGTH);
         for (int index = 0; index < candidateIds.size(); index++) if (!knownCandidates.contains(candidateIds.get(index))) throw bad("L1_CANDIDATE_REF_UNKNOWN", path + ".candidateIds." + index);
+        candidateIds = normalizations.distinct(candidateIds);
         List<String> occurrences = EditorialUnitReference.resolveList(row.get("occurrenceUnits"), path + ".occurrenceUnits",
                 MAX_OCCURRENCE_UNITS, inventory);
         Set<String> seen = new HashSet<>(rawUnits);
         for (int index = 0; index < occurrences.size(); index++) {
             String unit = occurrences.get(index);
             if (!inventory.has(unit)) throw bad("L1_UNIT_UNKNOWN", path + ".occurrenceUnits." + index);
-            if (!seen.add(unit)) throw bad("L1_OCCURRENCE_DUPLICATE", path + ".occurrenceUnits." + index);
         }
+        List<String> normalizedOccurrences = new ArrayList<>();
+        for (String unit : occurrences) if (normalizations.addReference(seen, unit)) normalizedOccurrences.add(unit);
+        occurrences = List.copyOf(normalizedOccurrences);
         String disposition = enumOf(row, "disposition", DISPOSITIONS, path + ".disposition", phase);
         String limit = fieldStr(phase, row, "evidenceLimit", path + ".evidenceLimit");
         if ("PRESERVED".equals(disposition) && limit.isEmpty()) throw bad("L1_PRESERVED_NEEDS_EVIDENCE_LIMIT", path + ".evidenceLimit");
@@ -352,7 +365,7 @@ public final class EditorialL1Ledger {
                        String rawSha256, List<EditorialRawInventory.Range> rawCoverage, List<Candidate> candidates,
                        List<EditorialRawInventory.Range> reviewCoverage, List<Resolution> resolutions, List<Finding> findings,
                        List<SpeakerRecord> speakerRecords, List<ProtectedSpan> protectedSpans, Disposition disposition,
-                       Metrics metrics) {
+                       Metrics metrics, int duplicateReferencesRemoved) {
         public Body {
             rawCoverage = List.copyOf(rawCoverage);
             candidates = List.copyOf(candidates);
@@ -368,20 +381,23 @@ public final class EditorialL1Ledger {
         Metrics metrics = new Metrics(0, 0, 0, 0, raw.candidates().size(), 0, 0, 0, 0, inventory.units().size(), inventory.excluded().size());
         return new Body("L1_RAW_DISCOVERY", EditorialRawInventory.REVISION, inventory.units().size(), inventory.excluded().size(),
                 inventory.inventorySha256(), inventory.rawSha256(), raw.coverage(), raw.candidates(), List.of(), List.of(), List.of(),
-                List.of(), List.of(), new Disposition("CONTINUE", "L1_RAW_LEDGER", "NONE"), metrics);
+                List.of(), List.of(), new Disposition("CONTINUE", "L1_RAW_LEDGER", "NONE"), metrics, 0);
     }
 
     public static Body bodyOfReconcile(EditorialRawInventory.Inventory inventory, RawPass raw, ReconcilePass pass) {
         return new Body("L1_RECONCILE", EditorialRawInventory.REVISION, inventory.units().size(), inventory.excluded().size(),
                 inventory.inventorySha256(), inventory.rawSha256(), raw.coverage(), raw.candidates(), pass.coverage(), pass.resolutions(),
                 pass.findings(), pass.speakerRecords(), pass.protectedSpans(), pass.disposition(),
-                metrics(inventory, raw.candidates(), pass));
+                metrics(inventory, raw.candidates(), pass), pass.duplicateReferencesRemoved());
     }
 
     public static Map<String, Object> bodyToMap(Body body) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("contractRevision", EditorialContractRevision.CURRENT_LEDGER);
         m.put("phase", body.phase());
+        Map<String, Object> normalizations = new LinkedHashMap<>();
+        normalizations.put("duplicateReferencesRemoved", num(body.duplicateReferencesRemoved()));
+        m.put("normalizations", normalizations);
         Map<String, Object> inv = new LinkedHashMap<>();
         inv.put("revision", body.inventoryRevision());
         inv.put("unitCount", num(body.unitCount()));
@@ -481,10 +497,17 @@ public final class EditorialL1Ledger {
                 i(mm, "preservedFindingCount"), i(mm, "candidateCount"), i(mm, "unprocessedCandidateCount"),
                 i(mm, "conflictCandidateCount"), i(mm, "speakerRecordCount"), i(mm, "protectedSpanCount"), i(mm, "unitCount"),
                 i(mm, "excludedLineCount"));
+        int duplicateReferencesRemoved = 0;
+        Object normalizationValue = report.get("normalizations");
+        if (normalizationValue instanceof Map<?, ?> normalizationMap
+                && normalizationMap.get("duplicateReferencesRemoved") instanceof BigDecimal count) {
+            duplicateReferencesRemoved = count.intValueExact();
+        }
         return new Body((String) report.get("phase"), (String) inv.get("revision"), i(inv, "unitCount"), i(inv, "excludedLineCount"),
                 (String) inv.get("inventorySha256"), (String) inv.get("rawSha256"), rawCoverage, candidates,
                 rangesFromList(report.get("reviewCoverage")), resolutions, findings, speakers, spans,
-                new Disposition((String) d.get("disposition"), (String) d.get("reasonCode"), (String) d.get("stopClass")), metrics);
+                new Disposition((String) d.get("disposition"), (String) d.get("reasonCode"), (String) d.get("stopClass")), metrics,
+                duplicateReferencesRemoved);
     }
 
     // ---- strict response schema (provider response_format); the parsers above stay the authority ----

@@ -44,9 +44,15 @@ final class EditorialL3Ledger {
                  String contrast, String rawQuote, String viQuote, String verdict, String action) { }
 
     record ReconcileWire(Map<String, String> resolutions, List<CarriedResolution> carried,
-                         EditorialL2Execution.Wire rows, List<Probe> probes) { }
+                         EditorialL2Execution.Wire rows, List<Probe> probes, int duplicateReferencesRemoved) { }
 
     private EditorialL3Ledger() { }
+
+    static Map<String, Object> normalizationEvidence(ReconcileWire wire) {
+        Map<String, Object> evidence = new LinkedHashMap<>();
+        evidence.put("duplicateReferencesRemoved", BigDecimal.valueOf(wire.duplicateReferencesRemoved()));
+        return evidence;
+    }
 
     // ---- blind re-audit ----
 
@@ -158,6 +164,7 @@ final class EditorialL3Ledger {
         }
 
         List<CarriedResolution> carried = new ArrayList<>();
+        EditorialReferenceNormalization.Counter normalizations = new EditorialReferenceNormalization.Counter();
         Set<Integer> seen = new HashSet<>();
         List<Object> carriedRows = EditorialCanonicalJson.array(root.get("carriedResolutions"), "carriedResolutions");
         for (int index = 0; index < carriedRows.size(); index++) {
@@ -168,7 +175,8 @@ final class EditorialL3Ledger {
             if (carriedIndex < 0 || carriedIndex >= carriedCount || !seen.add(carriedIndex)) throw EditorialL1Ledger.bad("L3_CARRIED_INDEX_INVALID", path + ".index");
             carried.add(new CarriedResolution(carriedIndex, EditorialL1Ledger.enumOf(row, "status", CARRIED_STATUSES,
                     path + ".status", EditorialFieldSpec.L3_RECONCILE),
-                    refs(row.get("changeIds"), path + ".changeIds"), refs(row.get("preserveIds"), path + ".preserveIds"),
+                    refs(row.get("changeIds"), path + ".changeIds", normalizations),
+                    refs(row.get("preserveIds"), path + ".preserveIds", normalizations),
                     EditorialL1Ledger.fieldStr(EditorialFieldSpec.L3_RECONCILE, row, "evidenceQuote", path + ".evidenceQuote"),
                     EditorialL1Ledger.fieldStr(EditorialFieldSpec.L3_RECONCILE, row, "reason", path + ".reason")));
         }
@@ -184,8 +192,11 @@ final class EditorialL3Ledger {
                     "rawQuote", "viQuote", "verdict", "action"), path);
             String id = EditorialL1Ledger.id(row, "probeId", path + ".probeId", EditorialFieldSpec.L3_RECONCILE);
             if (!probeIds.add(id)) throw EditorialL1Ledger.bad("L3_PROBE_ID_DUPLICATE", path + ".probeId");
+            List<String> rawUnits = EditorialUnitReference.resolveList(row.get("rawUnits"), path + ".rawUnits",
+                    EditorialL1Ledger.MAX_RAW_UNITS_PER_FINDING, inventory);
+            rawUnits = normalizations.distinct(rawUnits);
             probes.add(new Probe(id, EditorialL1Ledger.enumOf(row, "kind", PROBE_KINDS, path + ".kind", EditorialFieldSpec.L3_RECONCILE),
-                    EditorialUnitReference.resolveList(row.get("rawUnits"), path + ".rawUnits", EditorialL1Ledger.MAX_RAW_UNITS_PER_FINDING, inventory),
+                    rawUnits,
                     EditorialL1Ledger.intOf(row, "viStart", path + ".viStart"), EditorialL1Ledger.intOf(row, "viEnd", path + ".viEnd"),
                     EditorialL1Ledger.fieldStr(EditorialFieldSpec.L3_RECONCILE, row, "scope", path + ".scope"),
                     EditorialL1Ledger.fieldStr(EditorialFieldSpec.L3_RECONCILE, row, "contrast", path + ".contrast"),
@@ -194,13 +205,14 @@ final class EditorialL3Ledger {
                     EditorialL1Ledger.enumOf(row, "verdict", PROBE_VERDICTS, path + ".verdict", EditorialFieldSpec.L3_RECONCILE),
                     EditorialL1Ledger.fieldStr(EditorialFieldSpec.L3_RECONCILE, row, "action", path + ".action")));
         }
-        return new ReconcileWire(Map.copyOf(resolutions), List.copyOf(carried), rows, List.copyOf(probes));
+        return new ReconcileWire(Map.copyOf(resolutions), List.copyOf(carried), rows, List.copyOf(probes),
+                normalizations.duplicateReferencesRemoved());
     }
 
-    private static List<String> refs(Object value, String path) {
+    private static List<String> refs(Object value, String path, EditorialReferenceNormalization.Counter normalizations) {
         List<String> ids = EditorialL1Ledger.stringList(value, path, EditorialL2Findings.MAX_REFS, EditorialP5RawWireContract.MAX_ID_LENGTH);
         for (int index = 0; index < ids.size(); index++) if (!EditorialP5RawWireContract.token(ids.get(index), EditorialP5RawWireContract.MAX_ID_LENGTH)) throw EditorialL1Ledger.bad("L3_ID_INVALID", path + "." + index);
-        return ids;
+        return normalizations.distinct(ids);
     }
 
     // ---- verification against the exact bytes and the applied changes ----

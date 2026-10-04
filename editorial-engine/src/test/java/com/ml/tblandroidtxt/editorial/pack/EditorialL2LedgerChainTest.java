@@ -224,6 +224,28 @@ public final class EditorialL2LedgerChainTest {
                 new EditorialL2Execution.Request(legacyContext, L1_ID, l.report, Set.of()).attemptIdentity()));
     }
 
+    @Test public void duplicateFindingReferenceIdsAreNormalizedAndCountedInChangeMap() {
+        Ledger l = new Ledger(threeFindings(), List.of());
+        Script provider = new Script(attempt -> editWire(attempt,
+                list(change("C1", "e1", null, 3, "\"Da chinh phuc.\"", "\"Da vuot qua.\""),
+                        change("C2", "e1", null, 6, "\"Chinh phuc roi.\"", "\"Vuot qua roi.\""),
+                        change("C3", "e1", null, 9, "\"Chinh phuc xong.\"", "\"Vuot qua xong.\""),
+                        change("C4", "e2", null, 4, "\"今回 khong the.\"", "\"Lan nay khong the.\""),
+                        change("C5", "e3", "INSERT_AFTER", 6, "\"Chinh phuc roi.\"", "Troi bat dau mua.")),
+                list(),
+                list(resolution("e1", "FIXED", list("C1", "C1", "C2", "C3"), list(), list(occ(6, "C2"), occ(9, "C3")), "", ""),
+                        resolution("e2", "FIXED", list("C4"), list(), list(), "", ""),
+                        resolution("e3", "FIXED", list("C5"), list(), list(), "", ""))));
+        EditorialL2Execution.Result r = run(l, provider, new Store());
+        assertEquals(r.reasonCode() + r.issues(), EditorialL2Execution.Outcome.COMMITTED, r.outcome());
+        Map<String, Object> map = EditorialCanonicalJson.parseObject(r.committed().changeMapBytes());
+        @SuppressWarnings("unchecked") Map<String, Object> normalizations = (Map<String, Object>) map.get("normalizations");
+        assertEquals(1, ((BigDecimal) normalizations.get("duplicateReferencesRemoved")).intValueExact());
+        @SuppressWarnings("unchecked") Map<String, Object> l1Resolution = (Map<String, Object>) map.get("l1Resolution");
+        @SuppressWarnings("unchecked") List<Map<String, Object>> findings = (List<Map<String, Object>>) l1Resolution.get("findings");
+        assertEquals(List.of("C1", "C2", "C3"), findings.get(0).get("changeIds"));
+    }
+
     @Test public void ledgerEditDerivesBeforeAndPersistsOnlyMismatchWarnings() {
         Ledger l = new Ledger(List.of(finding("e1", 3, 3, 3, "踏破", "\"Da chinh phuc.\"", List.of(), "OPEN")), List.of());
         Map<String, Object> omitted = change("C1", "e1", null, 3, "ignored", "\"Da vuot qua.\"");

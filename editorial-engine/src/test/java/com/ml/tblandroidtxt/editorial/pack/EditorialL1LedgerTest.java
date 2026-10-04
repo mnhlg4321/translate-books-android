@@ -213,9 +213,26 @@ public final class EditorialL1LedgerTest {
         expectCode("L1_ERROR_ID_DUPLICATE", () -> reconcile(reconcileWire(new ArrayList<>(List.of(
                 finding("e1", "MEANING", 3, 3, 3, "踏破", "chinh phuc"),
                 finding("e1", "MEANING", 6, 6, 6, "踏破", "Chinh phuc"))), new ArrayList<>()), List.of()));
-        Map<String, Object> dupOcc = finding("e1", "MEANING", 3, 3, 3, "踏破", "chinh phuc");
-        dupOcc.put("occurrenceUnits", new ArrayList<Object>(List.of(id(3))));
-        expectCode("L1_OCCURRENCE_DUPLICATE", () -> reconcile(reconcileWire(new ArrayList<>(List.of(dupOcc)), new ArrayList<>()), List.of()));
+        Map<String, Object> duplicateReferences = finding("e1", "MEANING", 3, 3, 3, "踏破", "chinh phuc");
+        duplicateReferences.put("rawUnits", new ArrayList<Object>(List.of(id(3), id(3))));
+        duplicateReferences.put("evidenceRefs", new ArrayList<Object>(List.of("R1", "R1")));
+        duplicateReferences.put("candidateIds", new ArrayList<Object>(List.of("c1", "c1")));
+        duplicateReferences.put("occurrenceUnits", new ArrayList<Object>(List.of(id(3), id(6), id(6))));
+        EditorialL1Ledger.ReconcilePass normalized = reconcile(reconcileWire(new ArrayList<>(List.of(duplicateReferences)),
+                        new ArrayList<>(List.of(map("candidateId", "c1", "status", "PROCESSED", "findingRef", "")))),
+                List.of(new EditorialL1Ledger.Candidate("c1", "UNIT", id(3), "n")));
+        EditorialL1Ledger.Finding normalizedFinding = normalized.findings().get(0);
+        assertEquals(List.of(id(3)), normalizedFinding.rawUnits());
+        assertEquals(List.of("R1"), normalizedFinding.evidenceRefs());
+        assertEquals(List.of("c1"), normalizedFinding.candidateIds());
+        assertEquals(List.of(id(6)), normalizedFinding.occurrenceUnits());
+        assertEquals(5, normalized.duplicateReferencesRemoved());
+        EditorialL1Ledger.RawPass rawPass = new EditorialL1Ledger.RawPass(
+                List.of(new EditorialRawInventory.Range(id(1), id(12), "PROCESSED")), List.of());
+        Map<String, Object> artifact = EditorialL1Ledger.bodyToMap(EditorialL1Ledger.bodyOfReconcile(inv(), rawPass, normalized));
+        @SuppressWarnings("unchecked") Map<String, Object> normalizations = (Map<String, Object>) artifact.get("normalizations");
+        assertEquals(5, ((BigDecimal) normalizations.get("duplicateReferencesRemoved")).intValueExact());
+        assertEquals(5, EditorialL1Ledger.parseBody(artifact).duplicateReferencesRemoved());
     }
 
     @Test

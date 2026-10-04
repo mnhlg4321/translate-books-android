@@ -453,6 +453,7 @@ public final class EditorialL3Execution {
         root.put("finalByteCount", BigDecimal.valueOf(qa.outputBytes().length));
         root.put("finalLineCount", BigDecimal.valueOf(read.lineCount()));
         root.put("qaChangeMap", EditorialCanonicalJson.parse(qa.changeMapBytes()));
+        root.put("normalizations", EditorialL3Ledger.normalizationEvidence(wire));
         if (!wire.rows().warnings().isEmpty()) root.put("wireWarnings", new ArrayList<>(wire.rows().warnings()));
         root.put("reauditCoverage", EditorialL3Ledger.coverageEvidence(inventory, pass));
         Map<String, Object> ledgers = new TreeMap<>();

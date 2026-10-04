@@ -369,7 +369,8 @@ public final class EditorialL2Execution {
             }
         }
         byte[] changeMap = withDiscoveryEvidence(reconstruction.changeMapBytes(), candidates, wire.resolutions(), block);
-        if (ledger) changeMap = withLedgerEvidence(changeMap, l1Evidence, readEvidence, inventory, discoveryCoverage);
+        if (ledger) changeMap = withLedgerEvidence(changeMap, l1Evidence, readEvidence, inventory, discoveryCoverage,
+                wire.duplicateReferencesRemoved());
         changeMap = withWireWarnings(changeMap, wire.rows().warnings());
         final int totalCalls = ledger ? 3 : 2;
         Committed committed = new Committed(attemptIdentity, request.reportL1AttemptIdentity(),
@@ -464,8 +465,11 @@ public final class EditorialL2Execution {
     }
 
     record EditWire(Wire rows, Map<String, String> resolutions,
-                    List<EditorialL2Findings.Resolution> findingResolutions) {
-        EditWire(Wire rows, Map<String, String> resolutions) { this(rows, resolutions, List.of()); }
+                    List<EditorialL2Findings.Resolution> findingResolutions, int duplicateReferencesRemoved) {
+        EditWire(Wire rows, Map<String, String> resolutions, List<EditorialL2Findings.Resolution> findingResolutions) {
+            this(rows, resolutions, findingResolutions, 0);
+        }
+        EditWire(Wire rows, Map<String, String> resolutions) { this(rows, resolutions, List.of(), 0); }
     }
 
     /**
@@ -506,15 +510,17 @@ public final class EditorialL2Execution {
         }
         Set<String> errorIds = new HashSet<>();
         for (EditorialL1Ledger.Finding finding : l1.findings()) errorIds.add(finding.errorId());
-        List<EditorialL2Findings.Resolution> findingResolutions =
+        EditorialL2Findings.ParseResult findingResolutions =
                 EditorialL2Findings.parse(root.get("findingResolutions"), errorIds, inventory);
-        return new EditWire(rows, Map.copyOf(resolutions), findingResolutions);
+        return new EditWire(rows, Map.copyOf(resolutions), findingResolutions.resolutions(),
+                findingResolutions.duplicateReferencesRemoved());
     }
 
     /** Adds what became of every L1 finding and the final read of the built VI_L2 to the CHANGE_MAP_L2. */
     private static byte[] withLedgerEvidence(byte[] changeMap, Map<String, Object> l1Resolution,
                                              Map<String, Object> finalRead, EditorialRawInventory.Inventory inventory,
-                                             List<EditorialRawInventory.Range> discoveryCoverage) {
+                                             List<EditorialRawInventory.Range> discoveryCoverage,
+                                             int duplicateReferencesRemoved) {
         Map<String, Object> root = new LinkedHashMap<>(EditorialCanonicalJson.parseObject(changeMap));
         root.put("l1Resolution", l1Resolution);
         root.put("finalRead", finalRead);
@@ -532,6 +538,9 @@ public final class EditorialL2Execution {
         }
         coverage.put("ranges", ranges);
         root.put("discoveryCoverage", coverage);
+        Map<String, Object> normalizations = new LinkedHashMap<>();
+        normalizations.put("duplicateReferencesRemoved", BigDecimal.valueOf(duplicateReferencesRemoved));
+        root.put("normalizations", normalizations);
         return EditorialCanonicalJson.canonicalize(root).getBytes(StandardCharsets.UTF_8);
     }
 

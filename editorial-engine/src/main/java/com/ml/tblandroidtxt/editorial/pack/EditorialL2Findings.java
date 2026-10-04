@@ -27,18 +27,23 @@ final class EditorialL2Findings {
     record Resolution(String errorId, String status, List<String> changeIds, List<String> preserveIds,
                       List<Occurrence> occurrences, String evidenceQuote, String reason) { }
 
+    record ParseResult(List<Resolution> resolutions, int duplicateReferencesRemoved) {
+        ParseResult { resolutions = List.copyOf(resolutions); }
+    }
+
     /** Result of the app's check: structural problems, findings that stay open, and the effective status of each. */
     record Verdict(List<String> issues, List<String> unresolved, Map<String, String> effective) { }
 
     private EditorialL2Findings() { }
 
     /** Strict parse of the {@code findingResolutions} array; completeness is judged by {@link #verify}. */
-    static List<Resolution> parse(Object rows, Set<String> knownErrorIds, EditorialRawInventory.Inventory inventory) {
+    static ParseResult parse(Object rows, Set<String> knownErrorIds, EditorialRawInventory.Inventory inventory) {
         List<Object> values;
         try { values = EditorialCanonicalJson.array(rows, "findingResolutions"); }
         catch (RuntimeException invalid) { throw WireViolation.from(invalid, "L2_WIRE_ARRAY_INVALID", "findingResolutions"); }
         if (values.size() > EditorialL1Ledger.MAX_FINDINGS_PER_CALL) throw bad("L2_WIRE_ROW_LIMIT_EXCEEDED", "findingResolutions");
         List<Resolution> result = new ArrayList<>();
+        EditorialReferenceNormalization.Counter normalizations = new EditorialReferenceNormalization.Counter();
         Set<String> seen = new HashSet<>();
         for (int index = 0; index < values.size(); index++) {
             String path = "findingResolutions." + index;
@@ -49,8 +54,8 @@ final class EditorialL2Findings {
             if (!knownErrorIds.contains(errorId) || !seen.add(errorId)) throw bad("L2_WIRE_FINDING_ID_INVALID", path + ".errorId");
             String status = EditorialL2Execution.text(row, "status", path + ".status");
             if (!STATUSES.contains(status)) throw bad("L2_WIRE_FINDING_STATUS_INVALID", path + ".status");
-            List<String> changeIds = ids(row.get("changeIds"), MAX_REFS, path + ".changeIds");
-            List<String> preserveIds = ids(row.get("preserveIds"), MAX_REFS, path + ".preserveIds");
+            List<String> changeIds = ids(row.get("changeIds"), MAX_REFS, path + ".changeIds", normalizations);
+            List<String> preserveIds = ids(row.get("preserveIds"), MAX_REFS, path + ".preserveIds", normalizations);
             List<Occurrence> occurrences = new ArrayList<>();
             List<Object> occurrenceRows = EditorialCanonicalJson.array(row.get("occurrences"), path + ".occurrences");
             for (int occurrenceIndex = 0; occurrenceIndex < occurrenceRows.size(); occurrenceIndex++) {
@@ -68,7 +73,7 @@ final class EditorialL2Findings {
             }
             result.add(new Resolution(errorId, status, changeIds, preserveIds, occurrences, quote, reason));
         }
-        return List.copyOf(result);
+        return new ParseResult(result, normalizations.duplicateReferencesRemoved());
     }
 
     static Verdict verify(EditorialL1Ledger.Body l1, EditorialRawInventory.Inventory inventory, List<Resolution> resolutions,
@@ -255,7 +260,7 @@ final class EditorialL2Findings {
         return m;
     }
 
-    private static List<String> ids(Object value, int max, String path) {
+    private static List<String> ids(Object value, int max, String path, EditorialReferenceNormalization.Counter normalizations) {
         List<Object> values = EditorialCanonicalJson.array(value, path);
         if (values.size() > max) throw bad("L2_WIRE_ROW_LIMIT_EXCEEDED", path);
         List<String> result = new ArrayList<>();
@@ -266,7 +271,7 @@ final class EditorialL2Findings {
             }
             result.add((String) o);
         }
-        return List.copyOf(result);
+        return normalizations.distinct(result);
     }
 
     private static IllegalArgumentException bad(String code) { return WireViolation.at(code, "root"); }
