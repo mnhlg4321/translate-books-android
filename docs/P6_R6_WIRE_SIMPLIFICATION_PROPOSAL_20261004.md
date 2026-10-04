@@ -91,3 +91,7 @@ S1–S4: 0 USD (offline). S5: phần còn lại của G1 (≤ USD 0.968, đã du
 ## 8. Một bước tiếp theo
 
 Owner duyệt **S1–S4** (offline, thay đổi wire và parser trong production, có thể hoàn nguyên) và chính sách S2 (giữ response cho fixture run ngoài Git; pilot tắt). Sau đó giao Codex S1–S4 rồi S5.
+
+## 9. Quyết định owner
+
+**S1–S4 đã được owner duyệt (2026-10-04, "đồng ý s1-s4"):** triển khai offline S1 (lỗi wire kèm đường dẫn trường an toàn), S2 (giữ bytes nội dung response của fixture run trong `D:\P5E-private`, không key/header; pilot/sản phẩm **tắt**), S3 (bảng đặc tả trường duy nhất sinh prompt/schema + test nhất quán; S3b quy tắc rỗng hợp lý), S4 (L2/L3 bỏ chép dòng `before`). Thay đổi wire/parser → tăng `contractRevision`. Sau khi S1–S4 đạt offline + emulator: **S5** chạy tiếp G1 trong phần trần G1 còn lại theo quyền D-G1b đã có (dừng nhóm khi bị từ chối, báo `CODE:path` + đường dẫn response). **S6 chưa được duyệt.** Không đụng pilot, không G2.
