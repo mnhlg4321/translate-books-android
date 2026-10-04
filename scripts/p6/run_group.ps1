@@ -115,7 +115,7 @@ if ($LASTEXITCODE -ne 0) { throw 'The private fixture set did not pass its froze
 if ($LASTEXITCODE -ne 0) { throw 'Could not prepare the label-free fixture payload.' }
 
 $TransferRoot = Join-Path $RunRoot 'to-device'
-$AvailableFixtureIds = @(Get-Content (Join-Path $RunRoot 'fixture-ids.json') -Raw | ConvertFrom-Json)
+$AvailableFixtureIds = @((Get-Content (Join-Path $RunRoot 'fixture-ids.json') -Raw | ConvertFrom-Json) | ForEach-Object { $_ })
 if (-not $FixtureIds -or $FixtureIds.Count -eq 0) {
     $FixtureIds = $AvailableFixtureIds
 } else {
