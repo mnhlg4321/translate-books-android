@@ -385,7 +385,7 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
             assertTrue("test-only invalid L1 must produce a typed structural stop", !valid);
             assertTrue("test-only invalid L1 must stop at L1", "L1".equals(stage));
             assertTrue("test-only invalid L1 must preserve the engine detail code",
-                    stops.contains("L1_COVERAGE_GAP"));
+                    stops.stream().anyMatch(detail -> detail.startsWith("L1_COVERAGE_GAP:coverage")));
             assertTrue("test-only invalid L1 must not call a provider", metrics.calls == 0);
         } else {
             assertTrue("production artifacts must validate: " + reason
