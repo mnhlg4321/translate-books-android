@@ -40,19 +40,26 @@ tasks.register('replayP6WireResponse', JavaExec) {
 
 tasks.register('replayP6WireResponsesAll', JavaExec) {
     group = 'verification'
-    description = 'Replay the saved P6 fx-a03 RAW and RECONCILE responses independently without network access.'
+    description = 'Replay saved P6 responses from an explicit hash-bound manifest without network access.'
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.ml.tblandroidtxt.editorial.pack.EditorialWireReplayTool'
     doFirst {
+        def manifest = providers.gradleProperty('p6ReplayManifest').orNull
+        if (manifest) {
+            args 'replay-all', manifest
+            return
+        }
         def oldRawResponse = providers.gradleProperty('p6ReplayOldRawResponse').orNull
         def currentRawResponse = providers.gradleProperty('p6ReplayCurrentRawResponse').orNull
         def reconcileResponse = providers.gradleProperty('p6ReplayReconcileResponse').orNull
         def raw = providers.gradleProperty('p6ReplayRaw').orNull
         def draft = providers.gradleProperty('p6ReplayDraft').orNull
         if (oldRawResponse && currentRawResponse && reconcileResponse && raw && draft) {
+            // Legacy arguments remain accepted for callers that have not migrated, but they are explicitly
+            // expectation-free diagnostic mode; use p6ReplayManifest for PASS/EXPECTED_REJECT gates.
             args 'replay-all', oldRawResponse, currentRawResponse, reconcileResponse, raw, draft
         } else {
-            throw new GradleException('Provide both RAW response paths, the RECONCILE response, RAW and DRAFT replay inputs.')
+            throw new GradleException('Provide p6ReplayManifest, or the legacy response/raw/draft paths.')
         }
     }
 }

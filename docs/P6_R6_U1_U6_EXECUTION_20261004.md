@@ -43,3 +43,14 @@ Complete unexpected `CODE:path` list:
 `L1_DRAFT_QUOTE_NOT_IN_ANCHOR:findings.0.draftQuote` — `D:\P5E-private\p6-runs\3559de99-978b-410e-b863-c082062187fa\results\fx-a03\responses\002-L1_RECONCILE.json`
 
 No further provider call was made. Resume G1 only after offline diagnosis, a regression test, and replay of this exact RECONCILE response to PASS under D-G1c; stop before G2.
+
+## Offline replay repair after U6 review — 2026-10-04
+
+The follow-up package is recorded in `docs/P6_R6_REPLAY_REPAIR_20261004.md`. It is offline-only: no provider call, emulator/pilot operation, G1/G2 dispatch or APK build.
+
+- Replay now emits a structured JSON report with response hash, actual/expected status, exact `CODE:path` list, dependency skips, bounded coverage and exit status. Hash-bound `EXPECTED_REJECT` is a negative-test conclusion; it does not accept the response as REPORT_L1.
+- Production reconciliation remains fail-fast. Diagnostic replay independently checks `findings[]` with the production finding validator, then records dependent arrays as skipped when needed. The scope is explicit and bounded.
+- Engine regression is `391/391`; process replay and anchor matrices pass. Exact U6 replay retained the response SHA-256 `18c5ddb34caf6d197b346ad4b86e8b785b6e8bae5cc96bdeea9de12e0ea126e3`, returned actual `REJECTED` with `L1_DRAFT_QUOTE_NOT_IN_ANCHOR:findings.0.draftQuote`, matched `EXPECTED_REJECT`, and exited `0`. It remains invalid and cannot produce REPORT_L1.
+- The independent second finding (`E182-MEANING`, RAW `L183`, DRAFT `182`) is structurally recorded but semantically `UNRESOLVED_SUSPECTED_FALSE_POSITIVE`; no expected code was added. The prompt/contract analysis is proposal-only and does not manufacture quotes or reanchor lines.
+
+The existing G1 ledger remains at 9 settled calls and USD `0.07381520` spent; this package cost USD `0`. The live group remains stopped before G2. The next action is owner review of a bounded, concrete G1 proposal; no automatic live continuation follows from this offline PASS.

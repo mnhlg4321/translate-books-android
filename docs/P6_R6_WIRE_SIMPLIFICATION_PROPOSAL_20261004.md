@@ -145,3 +145,37 @@ Owner duyệt **S1–S4** (offline, thay đổi wire và parser trong production
 | **U4** | Quyết định 4 | grep không còn mảnh RAW thật trong repo hiện tại | — |
 | **U5** | Build wrapper từ HEAD, archive, emulator: preflight, fake CHAIN 14/14, negative gate | Đạt, 0 call | — |
 | **U6** live (theo D-G1c) | Chỉ khi replay **đúng** response RECONCILE `fx-a03` PASS: tiếp G1 trên cùng sổ, `fx-a03` trước | Báo cáo theo fixture | Mã lỗi mới / UNKNOWN / chạm trần → dừng, replay-all, báo |
+
+
+## 12. Owner điều chỉnh điều kiện D-G1c — 2026-10-04
+
+Owner trả lời **“đồng ý”** cho đề xuất review `ede51de7`: phân loại kết quả replay thành PASS và EXPECTED_REJECT thay vì buộc mọi response từng bị từ chối phải trở thành PASS. Mục này thay điều kiện replay ở các mục 10–11 khi có khác biệt; không sửa lịch sử event.
+
+- **App từ chối nhầm response hợp lệ:** sửa app, test hồi quy và replay chính response nguyên bản phải PASS.
+- **Model trả response sai thật:** giữ nguyên response, validator phải tiếp tục từ chối đúng `CODE:path`; ghi EXPECTED_REJECT theo response hash và lý do đã kiểm chứng. Đây là PASS của negative test, không phải response hợp lệ, REPORT_L1 được chấp nhận hay semantic PASS. Không tự thêm mã lỗi vào danh sách kỳ vọng để qua gate.
+- Response U6 `002-L1_RECONCILE.json`, SHA-256 `18c5ddb34caf6d197b346ad4b86e8b785b6e8bae5cc96bdeea9de12e0ea126e3`: finding đầu neo DRAFT 99 nhưng quote thuộc 101; giữ EXPECTED_REJECT `L1_DRAFT_QUOTE_NOT_IN_ANCHOR:findings.0.draftQuote`. Không tự chuyển neo, thay quote hoặc nới matcher.
+- **Chưa cho chạy live ngay.** Trước đề xuất tiếp G1, hoàn tất nhóm offline dưới đây và cập nhật bằng chứng. Giữ nguyên D-G1c: cùng sổ G1, trần USD 1.00; đã quyết toán USD 0.07381520, còn USD 0.92618480 tại lần đo gần nhất (phải đọc lại trước dispatch); 0 retry tự động, 0 repair call; mã lỗi mới/UNKNOWN/chạm trần dừng nhóm và báo. Không mở G2/G3/G4/R7 hoặc pilot bằng quyết định này.
+
+### Nhóm offline tiếp theo trong phạm vi hiện có
+
+1. Sửa replay-all có kết quả máy đọc được và exit khác 0 khi có lỗi ngoài kỳ vọng. EXPECTED_REJECT phải khớp fixture/response hash và đúng mã/path đã phân xử; test process thật cho PASS, expected rejection và unexpected failure.
+2. Thu thập lỗi của các item độc lập trong cùng response, production vẫn fail-fast; test ít nhất hai finding sai cùng lúc. Không gọi danh sách lỗi đầu tiên mỗi file là toàn bộ lỗi.
+3. Regression cho neo đúng, sai dòng lân cận, quote trùng, nhầm namespace RAW/DRAFT, NFC/CRLF và chuẩn hóa đã duyệt; exact U6 response vẫn bị từ chối đúng.
+4. Đánh giá cách giảm gánh chép bằng chứng của model mà không tự tạo proof; đưa finding quan hệ gia đình thứ hai vào adjudication false-positive, không tự coi là lỗi dịch đã được chứng minh.
+5. Báo riêng structural/semantic và cập nhật plan/snapshot. Không biến negative-test PASS thành điều kiện phát hành artifact bị từ chối.
+
+Review độc lập nằm ở `D:/P5E-private/review-ede51de7-20261004-codex/REVIEW.md`: engine 380/380, app 341/341 từ archive sạch; replay-all tái hiện in FAIL nhưng exit 0; ledger/response hashes khớp. Đây là evidence trước sửa, không phải nghiệm thu nhóm offline mới.
+
+## 13. Kết quả gói sửa replay offline sau review U6 — 2026-10-04
+
+Gói này chỉ sửa công cụ/engine và test offline; không gọi provider, không build/cài APK, không thao tác emulator hoặc pilot. `EditorialWireReplayTool` hiện xuất một JSON report schema 2 với `phase`, response SHA-256, `actualStatus`, `expectedStatus`, `codes`, `skipped`, `completed`, expectation errors và kết luận từng case/cả lượt. Manifest replay-all yêu cầu expectation tường minh; `EXPECTED_REJECT` bị ràng buộc bởi hash và danh sách `CODE:path`. Cú pháp sáu tham số cũ vẫn chạy ở chế độ `UNSPECIFIED` được ghi rõ, không tự gắn vào `fx-a03` và không thể biến lỗi thành PASS. Mọi kết luận FAIL, input thiếu, hash/mã không khớp hoặc tool error đều trả exit 2; PASS thực trả exit 0.
+
+Production `parseReconcile` vẫn fail-fast. Diagnostic offline dùng lại hàm kiểm finding production cho từng item độc lập trong `findings[]`; khi một finding lỗi, các phần phụ thuộc `resolutions`, `speakerRecords`, `protectedSpans` và hậu kiểm được ghi `skipped`, không dựng dữ liệu thay thế. Khi mọi finding hợp lệ, parser production chạy nốt toàn bộ tail. Phạm vi này được ghi rõ là diagnostic có giới hạn, không tuyên bố đã thu thập lỗi của mọi mảng ngoài `findings[]`.
+
+Evidence hồi quy process thật: engine `391/391` (trong đó replay `6/6` và ma trận neo `6/6`). Có test PASS exit 0, lỗi ngoài kỳ vọng exit 2, EXPECTED_REJECT đúng hash/mã exit 0 trong khi actual vẫn `REJECTED`, expected rejection nhưng actual PASS exit 2, hash/mã sai exit 2, JSON hỏng hoặc file thiếu exit 2; test cũng kiểm log không xuất khóa/header/model. Hai finding độc lập cùng sai được báo theo thứ tự ổn định; production path chỉ báo finding đầu và đánh dấu phần còn lại bỏ qua. Ma trận neo bao gồm exact/range, dòng lân cận, quote trùng nhưng anchor khác, tách namespace RAW/DRAFT, NFC/CRLF/trim, furigana đúng vai trò, quote rỗng sau chuẩn hóa, MISSING và out-of-range. Không có automatic reanchor, thay quote hay proof do app tạo.
+
+Replay đúng response U6 nguyên bản: `D:\P5E-private\p6-runs\3559de99-978b-410e-b863-c082062187fa\results\fx-a03\responses\002-L1_RECONCILE.json`, SHA-256 `18c5ddb34caf6d197b346ad4b86e8b785b6e8bae5cc96bdeea9de12e0ea126e3`. Manifest và JSON evidence giữ ngoài Git tại `D:\P5E-private\p6-item12-u7-replay-manifest-20261004.json` và `D:\P5E-private\p6-item12-u7-exact-u6-replay.json` (log SHA-256 `0ffdebd8d9b060f0e6cbd1a2a7a060f07834c8a7f1742b9b544c6fdb5e38e8e6`); kết quả: actual `REJECTED`, expected `EXPECTED_REJECT`, `L1_DRAFT_QUOTE_NOT_IN_ANCHOR:findings.0.draftQuote`, test conclusion `PASS`, process exit 0. Finding `E182-MEANING` (RAW `L183`, DRAFT `182`) được diagnostic kiểm riêng về cấu trúc; đối chiếu prompt/RAW/DRAFT cho thấy bằng chứng đã nêu không đủ để khẳng định quan hệ gia đình cụ thể hơn, nên phân loại `UNRESOLVED_SUSPECTED_FALSE_POSITIVE`, không thêm mã expected và không coi là semantic PASS.
+
+Phân tích gánh chép dữ liệu: prompt giữ source role RAW/DRAFT và số dòng riêng, nhưng bắt model chép lại cả `rawQuote` và `draftQuote`; đây là điểm dễ nhầm namespace và dòng. App có thể lấy văn bản theo anchor nếu đổi contract, nhưng quote do app tạo chỉ chứng minh vị trí, không chứng minh model đã so sánh đúng nghĩa. Vì vậy trong gói này chỉ ghi đề xuất contract version mới kèm invariant liên kết finding–RAW evidence–DRAFT anchor và test chống nhầm câu; không bỏ trường, không nới matcher, không đổi pin để lấy PASS.
+
+Structural gate của gói đã đóng; semantic quality của model chưa được đo. Bước tiếp theo duy nhất là owner xem một đề xuất G1 mới có giả thuyết đo, source/prompt/schema revision, fixture, số call tối đa, ngân sách, điều kiện dừng và cách chấm; không dispatch từ quyết định offline này.

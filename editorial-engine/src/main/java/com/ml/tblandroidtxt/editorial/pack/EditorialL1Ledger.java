@@ -99,6 +99,18 @@ public final class EditorialL1Ledger {
     }
 
     /**
+     * Bounded offline diagnostics for a reconcile response.  The production parser remains fail-fast; this result is
+     * only used by replay tooling to inspect independent finding rows before dependent arrays are considered.
+     */
+    public record ReconcileDiagnostic(List<String> errors, List<String> skipped, List<String> completed) {
+        public ReconcileDiagnostic {
+            errors = List.copyOf(errors);
+            skipped = List.copyOf(skipped);
+            completed = List.copyOf(completed);
+        }
+    }
+
+    /**
      * Definitions: {@code uniqueFindingCount} counts findings (error ids), {@code occurrenceCount} counts every
      * place a finding applies (the anchor plus its extra occurrence units), candidates are never findings.
      */
@@ -237,6 +249,79 @@ public final class EditorialL1Ledger {
                 normalizations.duplicateReferencesRemoved());
     }
 
+    /**
+     * Diagnose independent {@code findings[]} rows while retaining the production validation rules.  This deliberately
+     * has a narrow scope: root/disposition/coverage are checked first, each finding is checked independently through
+     * {@link #finding(Map, EditorialRawInventory.Inventory, List, Set, String, String,
+     * EditorialReferenceNormalization.Counter)}, and the dependent resolution/tail checks are skipped when any
+     * finding is invalid.  When all findings pass, the complete production parser is invoked so no second validator
+     * exists for the rest of the wire.
+     */
+    static ReconcileDiagnostic diagnoseReconcile(byte[] bytes, String attemptIdentity,
+                                                 EditorialRawInventory.Inventory inventory, List<String> draftLines,
+                                                 List<Candidate> rawCandidates) {
+        Map<String, Object> root = rootOf(bytes, attemptIdentity, RECONCILE_WIRE, Set.of("wireSchemaVersion", "attemptIdentity",
+                "coverage", "resolutions", "findings", "speakerRecords", "protectedSpans", "disposition"));
+        Disposition disposition = disposition(object(root.get("disposition"), "disposition"), "disposition",
+                EditorialFieldSpec.L1_RECONCILE);
+        boolean stop = "STOP".equals(disposition.kind());
+        if (stop && EditorialCanonicalJson.array(root.get("coverage"), "coverage").isEmpty()) {
+            // A STOP response may omit review coverage.  The production rule is explicit and is completed here.
+        } else {
+            coverage(root.get("coverage"), inventory, EditorialFieldSpec.L1_RECONCILE);
+        }
+
+        List<String> completed = new ArrayList<>(List.of("root", "disposition", "coverage"));
+        List<String> skipped = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+        List<Object> findingRows = EditorialCanonicalJson.array(root.get("findings"), "findings");
+        if (findingRows.size() > MAX_FINDINGS_PER_CALL) throw bad("L1_FINDING_LIMIT_EXCEEDED");
+
+        EditorialReferenceNormalization.Counter normalizations = new EditorialReferenceNormalization.Counter();
+        Set<String> errorIds = new HashSet<>();
+        Set<String> knownCandidates = new HashSet<>();
+        for (Candidate candidate : rawCandidates) knownCandidates.add(candidate.candidateId());
+        for (int index = 0; index < findingRows.size(); index++) {
+            String path = "findings." + index;
+            try {
+                Finding parsed = finding(object(findingRows.get(index), path), inventory, draftLines, knownCandidates,
+                        path, EditorialFieldSpec.L1_RECONCILE, normalizations);
+                if (!errorIds.add(parsed.errorId())) throw bad("L1_ERROR_ID_DUPLICATE", path + ".errorId");
+                completed.add(path);
+            } catch (RuntimeException invalid) {
+                addDiagnosticError(errors, invalid, "L1_WIRE_PARSE_FAILED", path);
+            }
+        }
+        completed.add("findings");
+        if (!errors.isEmpty()) {
+            // Resolutions reference finding ids and candidates; the remaining arrays are outside this bounded scope.
+            skipped.add("resolutions");
+            skipped.add("speakerRecords");
+            skipped.add("protectedSpans");
+            skipped.add("postFindingInvariants");
+            return new ReconcileDiagnostic(errors, skipped, completed);
+        }
+
+        try {
+            parseReconcile(bytes, attemptIdentity, inventory, draftLines, rawCandidates);
+            completed.add("resolutions");
+            completed.add("speakerRecords");
+            completed.add("protectedSpans");
+            completed.add("postFindingInvariants");
+            return new ReconcileDiagnostic(List.of(), List.of(), completed);
+        } catch (RuntimeException invalid) {
+            addDiagnosticError(errors, invalid, "L1_WIRE_PARSE_FAILED", "root");
+            skipped.add("remainingItems");
+            return new ReconcileDiagnostic(errors, skipped, completed);
+        }
+    }
+
+    private static void addDiagnosticError(List<String> errors, RuntimeException invalid, String fallbackCode, String fallbackPath) {
+        String safe = WireViolation.safeMessage(invalid, fallbackCode);
+        if (safe.indexOf(':') < 0) safe = fallbackCode + ":" + fallbackPath;
+        if (!errors.contains(safe)) errors.add(safe);
+    }
+
     /** DRAFT line numbers covered by the protected spans. */
     public static Set<Integer> protectedLines(List<ProtectedSpan> spans) {
         Set<Integer> lines = new java.util.TreeSet<>();
@@ -244,9 +329,9 @@ public final class EditorialL1Ledger {
         return lines;
     }
 
-    private static Finding finding(Map<String, Object> row, EditorialRawInventory.Inventory inventory,
-                                   List<String> draftLines, Set<String> knownCandidates, String path, String phase,
-                                   EditorialReferenceNormalization.Counter normalizations) {
+    static Finding finding(Map<String, Object> row, EditorialRawInventory.Inventory inventory,
+                           List<String> draftLines, Set<String> knownCandidates, String path, String phase,
+                           EditorialReferenceNormalization.Counter normalizations) {
         keys(row, Set.of("errorId", "type", "severity", "rawUnits", "draft", "rawQuote", "draftQuote",
                 "observation", "expectedMeaning", "evidenceRefs", "candidateIds", "occurrenceUnits", "disposition",
                 "evidenceLimit"), path);
