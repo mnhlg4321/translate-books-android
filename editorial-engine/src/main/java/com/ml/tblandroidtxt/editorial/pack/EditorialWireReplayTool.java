@@ -12,7 +12,8 @@ public final class EditorialWireReplayTool {
 
     public static void main(String[] args) {
         try {
-            System.out.println(run(args));
+            System.out.println(args != null && args.length > 0 && "replay-all".equals(args[0])
+                    ? runAll(args) : run(args));
         } catch (RuntimeException invalid) {
             System.err.println(WireViolation.safeMessage(invalid, "L1_WIRE_REPLAY_FAILED"));
             System.exit(2);
@@ -52,6 +53,61 @@ public final class EditorialWireReplayTool {
                     + " resolutions=" + parsed.resolutions().size();
         }
         throw WireViolation.at("L1_WIRE_REPLAY_ARGUMENTS_INVALID", "root");
+    }
+
+    /** Replay the known-invalid old RAW capture and the exact current RAW/RECONCILE pair independently. */
+    public static String runAll(String[] args) throws IOException {
+        if (args == null || args.length != 6 || !"replay-all".equals(args[0])) {
+            throw WireViolation.at("L1_WIRE_REPLAY_ALL_USAGE", "root");
+        }
+        Path oldRawResponse = Path.of(args[1]);
+        Path currentRawResponse = Path.of(args[2]);
+        Path reconcileResponse = Path.of(args[3]);
+        Path raw = Path.of(args[4]);
+        Path draft = Path.of(args[5]);
+        EditorialRawInventory.Inventory inventory = EditorialRawInventory.build(Files.readAllBytes(raw));
+        List<String> output = new java.util.ArrayList<>();
+
+        boolean expectedOldRawRefusal = false;
+        try {
+            byte[] bytes = Files.readAllBytes(oldRawResponse);
+            EditorialL1Ledger.RawPass pass = EditorialL1Ledger.parseRawPass(bytes, attemptIdentity(bytes), inventory);
+            output.add("ERROR L1_RAW_OLD_EXPECTED_INVALID_NOT_REPRODUCED response=" + oldRawResponse);
+        } catch (RuntimeException refusal) {
+            String diagnostic = EditorialL1Ledger.safeMessage(refusal);
+            expectedOldRawRefusal = "L1_UNIT_UNKNOWN:coverage.0.from".equals(diagnostic);
+            output.add((expectedOldRawRefusal ? "EXPECTED " : "CODE ") + diagnostic + " response=" + oldRawResponse);
+        }
+
+        EditorialL1Ledger.RawPass rawPass = null;
+        try {
+            byte[] bytes = Files.readAllBytes(currentRawResponse);
+            rawPass = EditorialL1Ledger.parseRawPass(bytes, attemptIdentity(bytes), inventory);
+            output.add("PASS L1_RAW_DISCOVERY candidates=" + rawPass.candidates().size()
+                    + " coverageRanges=" + rawPass.coverage().size() + " response=" + currentRawResponse);
+        } catch (RuntimeException refusal) {
+            output.add("CODE " + EditorialL1Ledger.safeMessage(refusal) + " response=" + currentRawResponse);
+        }
+
+        boolean reconcilePass = false;
+        if (rawPass == null) {
+            output.add("SKIP L1_RECONCILE raw prerequisite failed response=" + reconcileResponse);
+        } else {
+            try {
+                byte[] bytes = Files.readAllBytes(reconcileResponse);
+                EditorialL1Ledger.ReconcilePass pass = EditorialL1Ledger.parseReconcile(bytes, attemptIdentity(bytes), inventory,
+                        EditorialL1Ledger.draftLines(Files.readAllBytes(draft)), rawPass.candidates());
+                reconcilePass = true;
+                output.add("PASS L1_RECONCILE findings=" + pass.findings().size()
+                        + " resolutions=" + pass.resolutions().size()
+                        + " duplicateReferencesRemoved=" + pass.duplicateReferencesRemoved()
+                        + " response=" + reconcileResponse);
+            } catch (RuntimeException refusal) {
+                output.add("CODE " + EditorialL1Ledger.safeMessage(refusal) + " response=" + reconcileResponse);
+            }
+        }
+        output.add(expectedOldRawRefusal && rawPass != null && reconcilePass ? "REPLAY_ALL PASS" : "REPLAY_ALL FAIL");
+        return String.join(System.lineSeparator(), output);
     }
 
     private static String attemptIdentity(byte[] response) {

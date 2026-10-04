@@ -75,4 +75,42 @@ public final class EditorialWireReplayToolTest {
             }
         }
     }
+
+    @Test public void replayAllContinuesAfterTheExpectedOldRawRefusalAndChecksTheCurrentPair() throws Exception {
+        Path root = Files.createTempDirectory("p6-wire-replay-all-");
+        try {
+            Path raw = root.resolve("RAW.txt");
+            Path draft = root.resolve("DRAFT.txt");
+            Path oldRawResponse = root.resolve("old-RAW.json");
+            Path currentRawResponse = root.resolve("current-RAW.json");
+            Path reconcileResponse = root.resolve("current-RECONCILE.json");
+            Files.writeString(raw, "source one\nsource two", StandardCharsets.UTF_8);
+            Files.writeString(draft, "target one\ntarget two", StandardCharsets.UTF_8);
+
+            Files.write(oldRawResponse, json(map("wireSchemaVersion", EditorialL1Ledger.RAW_WIRE,
+                    "attemptIdentity", "old-raw", "coverage", List.of(map("from", "L3", "to", "L3", "status", "PROCESSED")),
+                    "candidates", List.of())));
+            Files.write(currentRawResponse, json(map("wireSchemaVersion", EditorialL1Ledger.RAW_WIRE,
+                    "attemptIdentity", "current-raw", "coverage", List.of(map("from", "L1", "to", "L2", "status", "PROCESSED")),
+                    "candidates", List.of())));
+            Files.write(reconcileResponse, json(map("wireSchemaVersion", EditorialL1Ledger.RECONCILE_WIRE,
+                    "attemptIdentity", "current-reconcile",
+                    "coverage", List.of(map("from", "L1", "to", "L2", "status", "PROCESSED")),
+                    "resolutions", List.of(), "findings", List.of(), "speakerRecords", List.of(), "protectedSpans", List.of(),
+                    "disposition", map("disposition", "CONTINUE", "reasonCode", "OK", "stopClass", "NONE"))));
+
+            String result = EditorialWireReplayTool.runAll(new String[] {"replay-all", oldRawResponse.toString(),
+                    currentRawResponse.toString(), reconcileResponse.toString(), raw.toString(), draft.toString()});
+            assertTrue(result, result.contains("EXPECTED L1_UNIT_UNKNOWN:coverage.0.from response=" + oldRawResponse));
+            assertTrue(result, result.contains("PASS L1_RAW_DISCOVERY"));
+            assertTrue(result, result.contains("PASS L1_RECONCILE"));
+            assertTrue(result, result.endsWith("REPLAY_ALL PASS"));
+        } finally {
+            try (var paths = Files.walk(root)) {
+                paths.sorted(java.util.Comparator.reverseOrder()).forEach(path -> {
+                    try { Files.deleteIfExists(path); } catch (java.io.IOException ignored) { }
+                });
+            }
+        }
+    }
 }
