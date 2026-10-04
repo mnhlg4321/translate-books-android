@@ -1,14 +1,13 @@
 # Build State
 
-## Current P6 item 10 checkpoint — 2026-10-04
+## Current P6 item 11 checkpoint — 2026-10-04
 
-- Current branch is `feature/v4.18-p5e-runner-repair-20260917`; source commit `3480dda8a7638a072ef05afd277fa1afd358c2d8` is the implementation baseline immediately before the accompanying snapshot commit.
-- `scripts/build-and-save.ps1 -Offline` built production `4.18-p6.20`/code233, event `build-20261004-103109`; APK SHA-256 `746AF50FCD1ADCCD246665FD15A6CF162B2BDC8758DB5BF1C89C29E5E81C1E49`, exact-source ZIP SHA-256 `281DF34DAEF12459ED1255F26C89CA25C29D454BBDA4718208B0D33DDB5F275F`. The five-file artifact and backup payloads match; app installed and verified on `emulator-5554`.
-- AndroidTest wrapper event `p6-ruby-anchor-3480dda8-20261004-01`, APK SHA-256 `316E03A3F6657B6A84F7BD5DC9939E9F262FEC9E67C8DBDB91E90CEBBC5104C4`, source ZIP identical to production; eight-file artifact and backup payloads match. Preflight `5/5`, coordinator `12/12`, fake CHAIN `STRUCTURAL_VALID 14/14` and negative gate expected `0/1` all pass with 0 real provider calls.
-- Ruby-aware quote matching is committed as `bee24f9a` and `3480dda8`; contract revision is `L1_LEDGER_V6`. Engine tests `375/375`, app tests `341/341`, AndroidTest compilation pass. Old invalid RAW response replay remains `L1_UNIT_UNKNOWN:coverage.0.from`.
-- Exact stored `fx-a03` RECONCILE response now clears the ruby quote check but replays to `L1_OCCURRENCE_DUPLICATE:findings.0.occurrenceUnits.0`. Under the approved D-G1c standing rule, no further live G1 call is allowed until this exact response passes replay plus regression. G1 remains 7 settled calls / 14 entries, USD `0.05538945` spent of `1.00`, USD `0.94461055` remaining, 0 pending UNKNOWN; no G2 or pilot access.
-- Evidence: `docs/P6_R6_T1_T3_EXECUTION_20261004.md`; private emulator QA and replay logs are under `D:\P5E-private\p6-item10-qa-20261004\`.
-- Next action: resolve the `occurrenceUnits` overlap with its primary `rawUnits` anchor offline and replay the exact response to PASS before resuming G1 at `fx-a03`.
+- Current branch is `feature/v4.18-p5e-runner-repair-20260917`; source commit `78851930091804317cac02d6af51c8d424628fc6` is the implementation baseline immediately before the accompanying snapshot commit.
+- `scripts/build-and-save.ps1 -Offline` built production `4.18-p6.21`/code234, event `build-20261004-193841`; APK SHA-256 `ccefceb5513c55fbcd55a8c5fdbff9a877b9451db1acdd2e75d312fbe4fc8f2c`, exact-source ZIP SHA-256 `e2021b1f4cad770970cc97f98c43f6a8811b2fc16d9a35a852d159e8c39fcc23`. Five-file artifact and backup payloads match; app installed and verified on `emulator-5554`.
+- AndroidTest wrapper event `p6-u5-78851930-20261004-01`, APK SHA-256 `df3e6a0fb7d3b21cccd13e599ae5e74789ab1879495169cef76a8eb5658c2661`, source ZIP identical to production; eight-file artifact and backup payloads match. Preflight `5/5`, coordinator `12/12` (main-DB seed opt-in skipped), fake CHAIN `STRUCTURAL_VALID 14/14`, expected negative gate `0/1`; all used 0 actual provider calls. Engine tests `380/380`, app tests `341/341`, lint PASS.
+- U1–U4 implementation and snapshot packages were pushed individually. Contract revision V7 normalizes duplicate references with metadata; empty-normalized citations are rejected; replay-all reports the expected invalid old RAW and PASS for current RAW and exact RECONCILE; synthetic text replaced the brief source excerpt. U5 report: `docs/P6_R6_U1_U6_EXECUTION_20261004.md`.
+- The exact saved `fx-a03` RECONCILE response replays PASS (1 finding, 32 resolutions), allowing U6 under D-G1c. The same device G1 ledger remains 5,237 bytes, SHA-256 `d4826b2bca52494441b9d056323fb5d14e98cd15d9df651ac77027f82f33d14e`; 7 settled calls / 14 entries, USD `0.05538945` spent of `1.00`, USD `0.94461055` remaining, 0 pending UNKNOWN. No new G1 call yet; no G2 or pilot access.
+- Next action: continue G1 from `fx-a03` using the same ledger under D-G1c; stop and run replay-all/report on a new error, UNKNOWN or cap, before G2.
 
 ## P6 R6 wire v3 V1–V3 checkpoint — 2026-10-04
 
