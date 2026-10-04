@@ -188,7 +188,7 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-W1–W2: neo DRAFT theo trích dẫn đã gỡ cả hai finding của U6; replay còn 2 speakerRecords trỏ vào dòng RAW trống. Quyết định W5: loại bản ghi speaker không hợp lệ có đếm, giữ nghiêm findings/coverage. Next action duy nhất: Codex làm W5, replay U6 PASS, rồi W3 và W4 theo mục 13 của `docs/P6_R6_WIRE_SIMPLIFICATION_PROPOSAL_20261004.md`.
+7/7 lần dừng live đều là lỗi hình thức/ghi sổ. Kế hoạch sửa dứt điểm `docs/P6_R6_DECISIVE_FIX_PLAN_20261005.md`: phân loại toàn bộ luật từ chối và chuẩn hóa mọi lỗi ghi sổ một lần (cả L2/L3), kiểm thử đột biến từ response thật, và coi từ chối là kết quả đo thay vì dừng nhóm. Next action duy nhất: owner quyết D-Z3; Codex làm Z1–Z4 rồi Z5 (G1 đủ 8 fixture).
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 
