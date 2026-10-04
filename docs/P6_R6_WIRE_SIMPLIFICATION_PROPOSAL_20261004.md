@@ -119,3 +119,29 @@ Owner duyệt **S1–S4** (offline, thay đổi wire và parser trong production
 **D-G1c (cần owner):** chạy T3 trong phần trần G1 còn lại (USD 1.00 − 0.03779120 ≈ 0.962). Khuyến nghị **đồng ý**, kèm quy tắc thường trực để giảm hỏi lặp: *sau một lần dừng, nếu bản sửa đã được chứng minh offline bằng replay đúng response gây lỗi và test hồi quy, Codex được chạy tiếp G1 trong trần G1 mà không cần hỏi lại; mọi mã lỗi **mới** hoặc vượt trần vẫn dừng và báo.*
 
 **D-G1c đã được owner duyệt (2026-10-04, "đồng ý D-G1c"):** sau khi T1–T2 đạt, chạy T3 — tiếp G1 trên cùng sổ chi tiêu trong phần trần G1 còn lại (USD 1.00 − 0.03779120), `fx-a03` trước. **Quy tắc thường trực có hiệu lực:** sau một lần dừng, nếu bản sửa đã được chứng minh offline bằng replay đúng response gây lỗi cộng test hồi quy, Codex được chạy tiếp G1 trong trần G1 mà không cần hỏi lại; mọi **mã lỗi mới**, trạng thái UNKNOWN hoặc chạm trần vẫn dừng nhóm và báo (`CODE:path` + đường dẫn response). Quy tắc chỉ áp cho G1; G2/G3/G4/R7 và pilot vẫn cần owner quyết. 0 retry tự động, 0 repair call giữ nguyên.
+
+## 11. Review T1–T3 và quyết định trùng lặp/trích dẫn (Claude, 2026-10-04)
+
+**Kiểm độc lập `37958eab`:** engine 375/375, app 341/341, lint + androidTest compile PASS, Python 4/4 file. Không key/fingerprint. Live T3 (run `3a9c1d54-…`, `fx-a03`): **RAW được chấp nhận lần thứ hai**; RECONCILE bị từ chối `L1_RAW_QUOTE_NOT_IN_ANCHOR:findings.0.rawQuote` — khoảng trống thật của app: dòng RAW có furigana `《…》`, model trích phần chữ không kèm cách đọc. G1: 7 call, **USD 0.05538945 / 1.00**, 0 UNKNOWN. Replay đúng response sau bản sửa furigana đi tiếp tới `L1_OCCURRENCE_DUPLICATE:findings.0.occurrenceUnits.0` → điều kiện thường trực D-G1c chưa đạt, Codex dừng đúng.
+
+**Quyết định 1 — trùng lặp (điều phối quyết, theo nguyên tắc "app làm phần ghi sổ"):**
+- (a) **Trùng id định nghĩa thực thể** (`candidateId`, `errorId`, `spanId`, `probeId`, `changeId`, `preserveId`, resolution hai lần cho một candidate): **giữ từ chối** — đây là mơ hồ thật về thực thể.
+- (b) **Trùng tham chiếu trong một danh sách** (`rawUnits[]`, `occurrenceUnits[]`, `candidateIds[]`, `evidenceRefs[]`, `changeIds[]`, `preserveIds[]`, `probes[].rawUnits[]`) và (c) **`occurrenceUnits` chồng `rawUnits`**: app **chuẩn hóa xác định**: bỏ phần lặp, giữ thứ tự lần xuất hiện đầu; bỏ khỏi `occurrenceUnits` các unit đã có trong `rawUnits`. Không thêm/bớt nội dung nghĩa. Ghi số mục đã khử vào metadata của artifact (`normalizations.duplicateReferencesRemoved`), không vào prompt.
+- `L3_PROBE_ANCHOR_DUPLICATE` (hai probe khác nhau cùng anchor) giữ nguyên; chỉ xem lại nếu có từ chối thật.
+
+**Quyết định 2 — bịt lỗ hổng trích dẫn:** `EditorialQuoteMatcher.contains/containsRaw` trả **false** khi trích dẫn **rỗng sau chuẩn hóa** (NFC + trim + bỏ `《…》`), áp cho mọi nơi dùng (`rawQuote`, `evidenceQuote`, `draftQuote`, `viQuote`, final-read `quote`, `before`). Test: `《x》`, chuỗi toàn khoảng trắng, chỉ furigana → không khớp; `揃《そろ》えても` ↔ `揃えても` vẫn khớp (dùng văn bản tổng hợp).
+
+**Quyết định 3 — gỡ hết lỗi trong một lần replay:** thêm chế độ **replay-all** (chỉ offline, chỉ công cụ replay): parser chạy ở chế độ thu thập, tiếp tục qua từng item độc lập và in toàn bộ `CODE:path` của một response; parser production vẫn fail-fast. Nếu chế độ thu thập quá xâm lấn, tối thiểu cho công cụ replay áp các chuẩn hóa đã duyệt rồi chạy lại cho tới khi gặp lỗi không thuộc danh sách — và in đủ chuỗi lỗi.
+
+**Quyết định 4 — dữ liệu sách:** thay mảnh RAW thật `…揃《そろ》えても…` trong `docs/P6_R6_T1_T3_EXECUTION_20261004.md` và test (`揃《そろ》えても行99です。`) bằng câu tổng hợp có furigana; không viết lại lịch sử Git (mảnh rất ngắn, đã nằm trong commit cũ — ghi nhận, không force-push).
+
+### Gói cho Codex
+
+| Gói | Việc | PASS | Dừng |
+|---|---|---|---|
+| **U1** | Quyết định 1: chuẩn hóa (b)/(c) ở L1/L2/L3 + metadata; test từng đường dẫn; giữ (a) | JVM xanh; replay response RECONCILE `fx-a03` không còn `L1_OCCURRENCE_DUPLICATE` | — |
+| **U2** | Quyết định 2 + test | JVM xanh | — |
+| **U3** | Quyết định 3; chạy replay-all trên **cả hai** response `fx-a03` (RAW cũ phải vẫn báo `L1_UNIT_UNKNOWN` — response cũ sai thật; RECONCILE mới phải PASS hoặc liệt kê đủ lỗi còn lại) | Báo đủ danh sách | Còn lỗi không thuộc họ đã duyệt → dừng, báo, không gọi live |
+| **U4** | Quyết định 4 | grep không còn mảnh RAW thật trong repo hiện tại | — |
+| **U5** | Build wrapper từ HEAD, archive, emulator: preflight, fake CHAIN 14/14, negative gate | Đạt, 0 call | — |
+| **U6** live (theo D-G1c) | Chỉ khi replay **đúng** response RECONCILE `fx-a03` PASS: tiếp G1 trên cùng sổ, `fx-a03` trước | Báo cáo theo fixture | Mã lỗi mới / UNKNOWN / chạm trần → dừng, replay-all, báo |

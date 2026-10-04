@@ -188,7 +188,7 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-S1–S4 đạt. S5 dừng `L1_UNIT_UNKNOWN:coverage.0.from` (G1 USD 0.03779120/1.00); nguyên nhân là schema S3 đặt minLength 3 cho tham chiếu unit nên không thể sinh `L1`…`L9`; đã sửa ở `7f3c25ba`. Next action duy nhất: owner quyết D-G1c (mục 10 của `docs/P6_R6_WIRE_SIMPLIFICATION_PROPOSAL_20261004.md`); Codex làm T1–T2 offline rồi T3.
+T3: RAW qua lần 2; RECONCILE vướng furigana (đã sửa), replay dừng ở `L1_OCCURRENCE_DUPLICATE`. G1 USD 0.05538945/1.00. Điều phối đã quyết: app khử trùng tham chiếu, bịt lỗ hổng trích dẫn rỗng, thêm replay-all. Next action duy nhất: Codex làm U1–U5 trong mục 11 của `docs/P6_R6_WIRE_SIMPLIFICATION_PROPOSAL_20261004.md`, rồi U6 theo D-G1c.
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 
