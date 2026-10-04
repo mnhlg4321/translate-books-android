@@ -11,12 +11,18 @@ final class EditorialReferenceNormalization {
         private int duplicateReferencesRemoved;
         private int draftAnchorsDerivedFromQuote;
         private int maxDraftAnchorDeviation;
+        private final List<String> speakerRecordsDropped = new ArrayList<>();
 
         int duplicateReferencesRemoved() { return duplicateReferencesRemoved; }
 
         int draftAnchorsDerivedFromQuote() { return draftAnchorsDerivedFromQuote; }
 
         int maxDraftAnchorDeviation() { return maxDraftAnchorDeviation; }
+
+        /** Paths of the speaker records the app dropped because their unit reference was not a unit line. */
+        List<String> speakerRecordsDropped() { return List.copyOf(speakerRecordsDropped); }
+
+        void speakerRecordDropped(String path) { speakerRecordsDropped.add(path); }
 
         /** The app moved a hinted line anchor onto the line that carries the quote. */
         void draftAnchorDerived(int deviationLines) {

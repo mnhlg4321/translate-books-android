@@ -23,7 +23,14 @@ public final class EditorialWireReplayTool {
 
     private record CaseSpec(String id, String phase, Path response, Path raw, Path draft, Path rawResponse,
                             String dependency, ExpectedStatus expected, String expectedHash,
-                            List<String> expectedCodes, boolean diagnostic) {
+                            List<String> expectedCodes, boolean diagnostic, int expectedSpeakerRecordsDropped) {
+        private CaseSpec(String id, String phase, Path response, Path raw, Path draft, Path rawResponse,
+                         String dependency, ExpectedStatus expected, String expectedHash,
+                         List<String> expectedCodes, boolean diagnostic) {
+            this(id, phase, response, raw, draft, rawResponse, dependency, expected, expectedHash, expectedCodes,
+                    diagnostic, -1);
+        }
+
         private CaseSpec {
             expectedCodes = List.copyOf(expectedCodes);
         }
@@ -174,7 +181,8 @@ public final class EditorialWireReplayTool {
             try {
                 Map<String, Object> row = EditorialCanonicalJson.object(rows.get(index), path);
                 requireKeys(row, Set.of("id", "phase", "response", "raw", "draft", "rawResponse",
-                        "dependsOn", "expectedStatus", "responseSha256", "expectedCodes", "diagnostic"), path);
+                        "dependsOn", "expectedStatus", "responseSha256", "expectedCodes", "diagnostic",
+                        "expectedSpeakerRecordsDropped"), path);
                 String id = requiredString(row, "id", path + ".id");
                 if (!ids.add(id)) throw WireViolation.at("L1_REPLAY_CASE_ID_DUPLICATE", path + ".id");
                 String phase = requiredString(row, "phase", path + ".phase");
@@ -213,8 +221,16 @@ public final class EditorialWireReplayTool {
                 if ("L1_RECONCILE".equals(phase) && draft == null) {
                     throw WireViolation.at("L1_REPLAY_INPUT_MISSING", path + ".draft");
                 }
+                int expectedDropped = -1;
+                if (row.get("expectedSpeakerRecordsDropped") != null) {
+                    if (!(row.get("expectedSpeakerRecordsDropped") instanceof java.math.BigDecimal count)
+                            || count.intValue() < 0 || count.intValue() > 1000) {
+                        throw WireViolation.at("L1_REPLAY_FIELD_INVALID", path + ".expectedSpeakerRecordsDropped");
+                    }
+                    expectedDropped = count.intValue();
+                }
                 cases.add(new CaseSpec(id, phase, response, raw, draft, rawResponse, dependency, expected,
-                        expectedHash, expectedCodes, diagnostic));
+                        expectedHash, expectedCodes, diagnostic, expectedDropped));
             } catch (RuntimeException invalid) {
                 throw WireViolation.from(invalid, "L1_REPLAY_MANIFEST_INVALID", path);
             }
@@ -258,6 +274,7 @@ public final class EditorialWireReplayTool {
         List<String> skipped = new ArrayList<>();
         List<String> completed = new ArrayList<>();
         List<String> expectationErrors = new ArrayList<>();
+        List<String> speakerDropped = new ArrayList<>();
         byte[] responseBytes;
         try {
             responseBytes = Files.readAllBytes(spec.response());
@@ -303,11 +320,13 @@ public final class EditorialWireReplayTool {
                         codes.addAll(diagnostic.errors());
                         skipped.addAll(diagnostic.skipped());
                         completed.addAll(diagnostic.completed());
+                        speakerDropped.addAll(diagnostic.speakerRecordsDropped());
                         actual = diagnostic.errors().isEmpty() ? "PASS" : "REJECTED";
                     } else {
                         EditorialL1Ledger.ReconcilePass parsed = EditorialL1Ledger.parseReconcile(
                                 responseBytes, attemptIdentity(responseBytes), inventory, draftLines, rawPass.candidates());
                         actual = "PASS";
+                        speakerDropped.addAll(parsed.speakerRecordsDropped());
                         completed.add("reconcile");
                         completed.add("resolutions");
                         completed.add("findings");
@@ -345,6 +364,13 @@ public final class EditorialWireReplayTool {
         check.put("codes", codes);
         check.put("skipped", skipped);
         check.put("completed", completed);
+        Map<String, Object> normalizations = new LinkedHashMap<>();
+        normalizations.put("speakerRecordsDropped", java.math.BigDecimal.valueOf(speakerDropped.size()));
+        normalizations.put("speakerRecordsDroppedPaths", new ArrayList<Object>(speakerDropped));
+        check.put("normalizations", normalizations);
+        if (spec.expectedSpeakerRecordsDropped() >= 0 && spec.expectedSpeakerRecordsDropped() != speakerDropped.size()) {
+            expectationErrors.add("L1_REPLAY_EXPECTATION_SPEAKER_DROPPED_MISMATCH:expectedSpeakerRecordsDropped");
+        }
         check.put("expectationErrors", expectationErrors);
         check.put("testConclusion", conclusion(spec, actual, responseHash, codes, expectationErrors));
         if ("TOOL_ERROR".equals(actual)) report.toolError(codes.isEmpty() ? "L1_REPLAY_TOOL_ERROR:root" : codes.get(0));

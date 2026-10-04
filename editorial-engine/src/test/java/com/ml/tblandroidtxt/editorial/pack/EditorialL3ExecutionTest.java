@@ -65,7 +65,7 @@ public final class EditorialL3ExecutionTest {
         assertArrayEquals(new byte[] {1}, ledger.withPredecessorReport(new byte[] {1}).predecessorReport());
         assertEquals(EditorialContractRevision.CURRENT_LEDGER, ledger.withPredecessorReport(new byte[] {1}).contractRevision());
         try {
-            legacy.withContractRevision("L1_LEDGER_V9");
+            legacy.withContractRevision("L1_LEDGER_V10");
             fail();
         } catch (IllegalArgumentException expected) {
             assertEquals("unknown contract revision", expected.getMessage());

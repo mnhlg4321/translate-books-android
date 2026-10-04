@@ -200,7 +200,7 @@ public final class EditorialL1AnchorRegressionTest {
         EditorialL1Ledger.Body restored = EditorialL1Ledger.parseBody(artifact);
         assertEquals(1, restored.draftAnchorsDerivedFromQuote());
         assertEquals(1, restored.maxDraftAnchorDeviation());
-        assertEquals(EditorialContractRevision.L1_LEDGER_V8, artifact.get("contractRevision"));
+        assertEquals(EditorialContractRevision.CURRENT_LEDGER, artifact.get("contractRevision"));
         assertTrue(EditorialContractRevision.isLedger(EditorialContractRevision.L1_LEDGER_V8));
     }
 }

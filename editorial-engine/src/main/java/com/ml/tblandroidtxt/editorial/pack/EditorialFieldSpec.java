@@ -137,7 +137,8 @@ public final class EditorialFieldSpec {
             } else if (field.kind() == Kind.ARRAY) {
                 result.append("- ").append(field.keyRequired() ? "MUST include " : "MAY omit ")
                         .append(field.path()).append(" array; items ").append(field.minItems()).append("..")
-                        .append(field.maxItems()).append('\n');
+                        .append(field.maxItems())
+                        .append(field.condition().isEmpty() ? "" : "; " + field.condition()).append('\n');
             } else if (field.kind() == Kind.OBJECT) {
                 result.append("- ").append(field.keyRequired() ? "MUST include " : "MAY omit ")
                         .append(field.path()).append(" object")
@@ -240,7 +241,8 @@ public final class EditorialFieldSpec {
         s(fields, phase, "findings[].occurrenceUnits[]", Requirement.MUST, MIN_UNIT_REFERENCE_LENGTH, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
         e(fields, phase, "findings[].disposition", List.of("OPEN", "PRESERVED"), "");
         s(fields, phase, "findings[].evidenceLimit", Requirement.MAY, 0, MAX_TEXT, "", "");
-        a(fields, phase, "speakerRecords", 0, MAX_SPEAKERS, Requirement.MAY);
+        aNote(fields, phase, "speakerRecords", 0, MAX_SPEAKERS, Requirement.MAY,
+                "MAY be empty; an optional side note nothing depends on, so a record whose unitId is not a unit line is dropped, never repaired");
         s(fields, phase, "speakerRecords[].unitId", Requirement.MUST, MIN_UNIT_REFERENCE_LENGTH, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
         s(fields, phase, "speakerRecords[].speaker", Requirement.MUST, 1, MAX_SPEAKER_LABEL, NON_BLANK_PATTERN, "");
         s(fields, phase, "speakerRecords[].listener", Requirement.MAY, 0, MAX_SPEAKER_LABEL, "", "empty or UNKNOWN is allowed");
@@ -412,6 +414,12 @@ public final class EditorialFieldSpec {
     private static void a(List<Field> fields, String phase, String path, int minItems, int maxItems, Requirement requirement) {
         fields.add(new Field(phase, path, Kind.ARRAY, requirement, true, -1, -1, minItems, maxItems,
                 "", List.of(), ""));
+    }
+
+    private static void aNote(List<Field> fields, String phase, String path, int minItems, int maxItems,
+                              Requirement requirement, String condition) {
+        fields.add(new Field(phase, path, Kind.ARRAY, requirement, true, -1, -1, minItems, maxItems,
+                "", List.of(), condition));
     }
 
     private static void n(List<Field> fields, String phase, String path) {

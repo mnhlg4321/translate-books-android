@@ -41,6 +41,11 @@ public final class EditorialWireReplayToolTest {
     }
 
     private static Fixture fixture(Path root, List<Map<String, Object>> findings) throws IOException {
+        return fixture(root, findings, List.of());
+    }
+
+    private static Fixture fixture(Path root, List<Map<String, Object>> findings, List<Map<String, Object>> speakers)
+            throws IOException {
         Path raw = root.resolve("RAW.txt");
         Path draft = root.resolve("DRAFT.txt");
         Path rawResponse = root.resolve("001-L1_RAW_DISCOVERY.json");
@@ -57,7 +62,7 @@ public final class EditorialWireReplayToolTest {
                 "attemptIdentity", "reconcile-attempt",
                 "coverage", List.of(map("from", "L1", "to", "L3", "status", "PROCESSED")),
                 "resolutions", List.of(), "findings", findings,
-                "speakerRecords", List.of(), "protectedSpans", List.of(),
+                "speakerRecords", speakers, "protectedSpans", List.of(),
                 "disposition", map("disposition", "CONTINUE", "reasonCode", "OK", "stopClass", "NONE"))));
         return new Fixture(raw, draft, rawResponse, reconcileResponse);
     }
@@ -193,6 +198,30 @@ public final class EditorialWireReplayToolTest {
             ProcessResult badExpectedCode = process("replay-all", mismatchedCode.toString());
             assertEquals(2, badExpectedCode.exit());
             assertEquals("FAIL", check(report(badExpectedCode), 0).get("testConclusion"));
+        } finally { delete(root); }
+    }
+
+    @Test public void droppedSpeakerRecordsAreReportedAndBoundByTheManifest() throws Exception {
+        Path root = Files.createTempDirectory("p6-replay-speaker-drop-");
+        try {
+            // raw 1..3 have no blank line, so L9 is not a unit line
+            Fixture f = fixture(root, List.of(), List.of(
+                    map("unitId", "L1", "speaker", "A", "listener", "", "basis", "synthetic"),
+                    map("unitId", "L9", "speaker", "B", "listener", "", "basis", "synthetic"),
+                    map("unitId", "L8", "speaker", "C", "listener", "", "basis", "synthetic")));
+            String hash = EditorialCanonicalJson.sha256Hex(Files.readAllBytes(f.reconcileResponse()));
+            Map<String, Object> row = caseRow("reconcile", "L1_RECONCILE", f.reconcileResponse(), f.raw(), f.draft(),
+                    null, "PASS", hash, List.of(), true);
+            row.put("expectedSpeakerRecordsDropped", BigDecimal.valueOf(2));
+            Map<String, Object> report = report(process("replay-all", manifest(root, List.of(row)).toString()));
+            assertEquals("PASS", report.get("conclusion"));
+            @SuppressWarnings("unchecked") Map<String, Object> normalizations = (Map<String, Object>) check(report, 0).get("normalizations");
+            assertEquals(BigDecimal.valueOf(2), normalizations.get("speakerRecordsDropped"));
+            assertEquals(List.of("speakerRecords.1.unitId", "speakerRecords.2.unitId"), normalizations.get("speakerRecordsDroppedPaths"));
+
+            row.put("expectedSpeakerRecordsDropped", BigDecimal.valueOf(1));
+            Map<String, Object> wrong = report(process("replay-all", manifest(root, List.of(row)).toString()));
+            assertEquals("FAIL", wrong.get("conclusion"));
         } finally { delete(root); }
     }
 

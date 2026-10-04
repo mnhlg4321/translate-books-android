@@ -70,6 +70,9 @@ public final class EditorialL1Ledger {
         }
     }
 
+    /** Reference failures that drop a speaker record instead of failing the ledger. */
+    private static final Set<String> SPEAKER_DROPPABLE = Set.of("L1_UNIT_REF_INVALID", "L1_UNIT_UNKNOWN", "L1_UNIT_LINE_NOT_A_UNIT");
+
     public record SpeakerRecord(String unitId, String speaker, String listener, String basis) { }
 
     public record ProtectedSpan(String spanId, int start, int end, String source, String reason) { }
@@ -84,7 +87,14 @@ public final class EditorialL1Ledger {
                                 List<Finding> findings, List<SpeakerRecord> speakerRecords,
                                 List<ProtectedSpan> protectedSpans, Disposition disposition,
                                 int duplicateReferencesRemoved, int draftAnchorsDerivedFromQuote,
-                                int maxDraftAnchorDeviation) {
+                                int maxDraftAnchorDeviation, List<String> speakerRecordsDropped) {
+        public ReconcilePass(List<EditorialRawInventory.Range> coverage, List<Resolution> resolutions,
+                             List<Finding> findings, List<SpeakerRecord> speakerRecords,
+                             List<ProtectedSpan> protectedSpans, Disposition disposition,
+                             int duplicateReferencesRemoved, int draftAnchorsDerivedFromQuote, int maxDraftAnchorDeviation) {
+            this(coverage, resolutions, findings, speakerRecords, protectedSpans, disposition, duplicateReferencesRemoved,
+                    draftAnchorsDerivedFromQuote, maxDraftAnchorDeviation, List.of());
+        }
         public ReconcilePass(List<EditorialRawInventory.Range> coverage, List<Resolution> resolutions,
                              List<Finding> findings, List<SpeakerRecord> speakerRecords,
                              List<ProtectedSpan> protectedSpans, Disposition disposition) {
@@ -101,6 +111,7 @@ public final class EditorialL1Ledger {
             findings = List.copyOf(findings);
             speakerRecords = List.copyOf(speakerRecords);
             protectedSpans = List.copyOf(protectedSpans);
+            speakerRecordsDropped = List.copyOf(speakerRecordsDropped);
         }
     }
 
@@ -108,8 +119,13 @@ public final class EditorialL1Ledger {
      * Bounded offline diagnostics for a reconcile response.  The production parser remains fail-fast; this result is
      * only used by replay tooling to inspect independent finding rows before dependent arrays are considered.
      */
-    public record ReconcileDiagnostic(List<String> errors, List<String> skipped, List<String> completed) {
+    public record ReconcileDiagnostic(List<String> errors, List<String> skipped, List<String> completed,
+                                      List<String> speakerRecordsDropped) {
+        public ReconcileDiagnostic(List<String> errors, List<String> skipped, List<String> completed) {
+            this(errors, skipped, completed, List.of());
+        }
         public ReconcileDiagnostic {
+            speakerRecordsDropped = List.copyOf(speakerRecordsDropped);
             errors = List.copyOf(errors);
             skipped = List.copyOf(skipped);
             completed = List.copyOf(completed);
@@ -219,7 +235,16 @@ public final class EditorialL1Ledger {
             String path = "speakerRecords." + index;
             Map<String, Object> row = object(speakerRows.get(index), path);
             keys(row, Set.of("unitId", "speaker", "listener", "basis"), path);
-            String unit = EditorialUnitReference.resolve(row.get("unitId"), inventory, path + ".unitId");
+            String unit;
+            try {
+                unit = EditorialUnitReference.resolve(row.get("unitId"), inventory, path + ".unitId");
+            } catch (WireViolation invalid) {
+                // speakerRecords is an optional side note nothing downstream reads: a record whose reference is not
+                // a unit line is dropped and counted; the app never guesses another line for it
+                if (!SPEAKER_DROPPABLE.contains(invalid.code())) throw invalid;
+                normalizations.speakerRecordDropped(invalid.path());
+                continue;
+            }
             speakers.add(new SpeakerRecord(unit,
                     fieldStr(EditorialFieldSpec.L1_RECONCILE, row, "speaker", path + ".speaker"),
                     fieldStr(EditorialFieldSpec.L1_RECONCILE, row, "listener", path + ".listener"),
@@ -253,7 +278,7 @@ public final class EditorialL1Ledger {
         }
         return new ReconcilePass(coverage, new ArrayList<>(resolved.values()), findings, speakers, spans, disposition,
                 normalizations.duplicateReferencesRemoved(), normalizations.draftAnchorsDerivedFromQuote(),
-                normalizations.maxDraftAnchorDeviation());
+                normalizations.maxDraftAnchorDeviation(), normalizations.speakerRecordsDropped());
     }
 
     /**
@@ -310,12 +335,12 @@ public final class EditorialL1Ledger {
         }
 
         try {
-            parseReconcile(bytes, attemptIdentity, inventory, draftLines, rawCandidates);
+            ReconcilePass pass = parseReconcile(bytes, attemptIdentity, inventory, draftLines, rawCandidates);
             completed.add("resolutions");
             completed.add("speakerRecords");
             completed.add("protectedSpans");
             completed.add("postFindingInvariants");
-            return new ReconcileDiagnostic(List.of(), List.of(), completed);
+            return new ReconcileDiagnostic(List.of(), List.of(), completed, pass.speakerRecordsDropped());
         } catch (RuntimeException invalid) {
             addDiagnosticError(errors, invalid, "L1_WIRE_PARSE_FAILED", "root");
             skipped.add("remainingItems");
@@ -508,7 +533,7 @@ public final class EditorialL1Ledger {
                        List<EditorialRawInventory.Range> reviewCoverage, List<Resolution> resolutions, List<Finding> findings,
                        List<SpeakerRecord> speakerRecords, List<ProtectedSpan> protectedSpans, Disposition disposition,
                        Metrics metrics, int duplicateReferencesRemoved, int draftAnchorsDerivedFromQuote,
-                       int maxDraftAnchorDeviation) {
+                       int maxDraftAnchorDeviation, List<String> speakerRecordsDropped) {
         public Body {
             rawCoverage = List.copyOf(rawCoverage);
             candidates = List.copyOf(candidates);
@@ -517,6 +542,7 @@ public final class EditorialL1Ledger {
             findings = List.copyOf(findings);
             speakerRecords = List.copyOf(speakerRecords);
             protectedSpans = List.copyOf(protectedSpans);
+            speakerRecordsDropped = List.copyOf(speakerRecordsDropped);
         }
     }
 
@@ -524,7 +550,7 @@ public final class EditorialL1Ledger {
         Metrics metrics = new Metrics(0, 0, 0, 0, raw.candidates().size(), 0, 0, 0, 0, inventory.units().size(), inventory.excluded().size());
         return new Body("L1_RAW_DISCOVERY", EditorialRawInventory.REVISION, inventory.units().size(), inventory.excluded().size(),
                 inventory.inventorySha256(), inventory.rawSha256(), raw.coverage(), raw.candidates(), List.of(), List.of(), List.of(),
-                List.of(), List.of(), new Disposition("CONTINUE", "L1_RAW_LEDGER", "NONE"), metrics, 0, 0, 0);
+                List.of(), List.of(), new Disposition("CONTINUE", "L1_RAW_LEDGER", "NONE"), metrics, 0, 0, 0, List.of());
     }
 
     public static Body bodyOfReconcile(EditorialRawInventory.Inventory inventory, RawPass raw, ReconcilePass pass) {
@@ -532,7 +558,7 @@ public final class EditorialL1Ledger {
                 inventory.inventorySha256(), inventory.rawSha256(), raw.coverage(), raw.candidates(), pass.coverage(), pass.resolutions(),
                 pass.findings(), pass.speakerRecords(), pass.protectedSpans(), pass.disposition(),
                 metrics(inventory, raw.candidates(), pass), pass.duplicateReferencesRemoved(),
-                pass.draftAnchorsDerivedFromQuote(), pass.maxDraftAnchorDeviation());
+                pass.draftAnchorsDerivedFromQuote(), pass.maxDraftAnchorDeviation(), pass.speakerRecordsDropped());
     }
 
     public static Map<String, Object> bodyToMap(Body body) {
@@ -543,6 +569,8 @@ public final class EditorialL1Ledger {
         normalizations.put("duplicateReferencesRemoved", num(body.duplicateReferencesRemoved()));
         normalizations.put("draftAnchorDerivedFromQuote", num(body.draftAnchorsDerivedFromQuote()));
         normalizations.put("maxDraftAnchorDeviation", num(body.maxDraftAnchorDeviation()));
+        normalizations.put("speakerRecordsDropped", num(body.speakerRecordsDropped().size()));
+        normalizations.put("speakerRecordsDroppedPaths", new ArrayList<Object>(body.speakerRecordsDropped()));
         m.put("normalizations", normalizations);
         Map<String, Object> inv = new LinkedHashMap<>();
         inv.put("revision", body.inventoryRevision());
@@ -646,17 +674,21 @@ public final class EditorialL1Ledger {
         int duplicateReferencesRemoved = 0;
         int draftAnchorsDerived = 0;
         int maxDraftDeviation = 0;
+        List<String> droppedSpeakers = new ArrayList<>();
         Object normalizationValue = report.get("normalizations");
         if (normalizationValue instanceof Map<?, ?> normalizationMap) {
             if (normalizationMap.get("duplicateReferencesRemoved") instanceof BigDecimal count) duplicateReferencesRemoved = count.intValueExact();
             if (normalizationMap.get("draftAnchorDerivedFromQuote") instanceof BigDecimal count) draftAnchorsDerived = count.intValueExact();
             if (normalizationMap.get("maxDraftAnchorDeviation") instanceof BigDecimal count) maxDraftDeviation = count.intValueExact();
+            if (normalizationMap.get("speakerRecordsDroppedPaths") instanceof List<?> paths) {
+                for (Object path : paths) if (path instanceof String text) droppedSpeakers.add(text);
+            }
         }
         return new Body((String) report.get("phase"), (String) inv.get("revision"), i(inv, "unitCount"), i(inv, "excludedLineCount"),
                 (String) inv.get("inventorySha256"), (String) inv.get("rawSha256"), rawCoverage, candidates,
                 rangesFromList(report.get("reviewCoverage")), resolutions, findings, speakers, spans,
                 new Disposition((String) d.get("disposition"), (String) d.get("reasonCode"), (String) d.get("stopClass")), metrics,
-                duplicateReferencesRemoved, draftAnchorsDerived, maxDraftDeviation);
+                duplicateReferencesRemoved, draftAnchorsDerived, maxDraftDeviation, droppedSpeakers);
     }
 
     // ---- strict response schema (provider response_format); the parsers above stay the authority ----
