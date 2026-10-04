@@ -25,6 +25,47 @@ $RunId = $RunId.ToLowerInvariant()
 $GroupId = if ([string]::IsNullOrWhiteSpace($GroupId)) { "$Mode-$RunId" } else { $GroupId }
 $GroupCapText = $GroupMaximumUsd.ToString('0.00####', [Globalization.CultureInfo]::InvariantCulture)
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
+
+function Invoke-AdbPush {
+    param(
+        [Parameter(Mandatory = $true)][string]$LocalPath,
+        [Parameter(Mandatory = $true)][string]$RemotePath,
+        [Parameter(Mandatory = $true)][string]$FailureMessage
+    )
+
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+        # Windows PowerShell 5.1 turns adb's stderr progress line into a terminating error under Stop.
+        $ErrorActionPreference = 'Continue'
+        & adb -s $Serial push $LocalPath $RemotePath 2>&1 | Out-Null
+        $pushExitCode = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+    if ($pushExitCode -ne 0) { throw $FailureMessage }
+}
+
+function Invoke-AdbPull {
+    param(
+        [Parameter(Mandatory = $true)][string]$RemotePath,
+        [Parameter(Mandatory = $true)][string]$LocalPath,
+        [Parameter(Mandatory = $true)][string]$FailureMessage
+    )
+
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+        # Windows PowerShell 5.1 turns adb's stderr progress line into a terminating error under Stop.
+        $ErrorActionPreference = 'Continue'
+        & adb -s $Serial pull $RemotePath $LocalPath 2>&1 | Out-Null
+        $pullExitCode = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+    if ($pullExitCode -ne 0) { throw $FailureMessage }
+}
+
 $ManifestPath = Join-Path $RepoRoot 'docs\P6_R0_FIXTURE_MANIFEST.json'
 $ExpectedRoot = [IO.Path]::GetFullPath('D:\P5E-private\p6-fixtures').TrimEnd('\')
 $FixturesRoot = [IO.Path]::GetFullPath($FixturesRoot).TrimEnd('\')
@@ -76,8 +117,7 @@ function Get-GroupSpendState([decimal]$RequiredUsd, [string]$SnapshotName) {
     $RemoteTest = & adb -s $Serial shell test -f $DeviceGroupLedger 2>$null
     $HasDeviceLedger = $LASTEXITCODE -eq 0
     if ($HasDeviceLedger) {
-        & adb -s $Serial pull $DeviceGroupLedger $HostGroupLedger | Out-Null
-        if ($LASTEXITCODE -ne 0) { throw 'Could not pull the durable group ledger to the host.' }
+        Invoke-AdbPull -RemotePath $DeviceGroupLedger -LocalPath $HostGroupLedger -FailureMessage 'Could not pull the durable group ledger to the host.'
     } elseif (Test-Path -LiteralPath $HostGroupLedger) {
         throw 'The previously retained group ledger is missing from the emulator.'
     }
@@ -156,13 +196,11 @@ try {
         & adb -s $Serial shell run-as com.ml.tblandroidtxt mkdir -p "$DeviceAppInputRoot/$FixtureId"
         if ($LASTEXITCODE -ne 0) { throw "Could not prepare app-private input path for $FixtureId." }
         foreach ($Name in @('RAW.txt', 'DRAFT.txt', 'GLOSSARY.csv', 'PRONOUN.csv')) {
-            & adb -s $Serial push (Join-Path (Join-Path $TransferRoot $FixtureId) $Name) "$RemoteFixture/$Name" | Out-Null
-            if ($LASTEXITCODE -ne 0) { throw "Could not push a source file for $FixtureId." }
+            Invoke-AdbPush -LocalPath (Join-Path (Join-Path $TransferRoot $FixtureId) $Name) -RemotePath "$RemoteFixture/$Name" -FailureMessage "Could not push a source file for $FixtureId."
             & adb -s $Serial shell run-as com.ml.tblandroidtxt cp "$RemoteFixture/$Name" "$DeviceAppInputRoot/$FixtureId/$Name"
             if ($LASTEXITCODE -ne 0) { throw "Could not stage a source file for $FixtureId." }
         }
-        & adb -s $Serial push (Join-Path $TransferRoot "$FixtureId.runtime.json") "$DeviceInputRoot/$FixtureId.runtime.json" | Out-Null
-        if ($LASTEXITCODE -ne 0) { throw "Could not push the sanitized runtime manifest for $FixtureId." }
+        Invoke-AdbPush -LocalPath (Join-Path $TransferRoot "$FixtureId.runtime.json") -RemotePath "$DeviceInputRoot/$FixtureId.runtime.json" -FailureMessage "Could not push the sanitized runtime manifest for $FixtureId."
         & adb -s $Serial shell run-as com.ml.tblandroidtxt cp "$DeviceInputRoot/$FixtureId.runtime.json" "$DeviceAppInputRoot/$FixtureId.runtime.json"
         if ($LASTEXITCODE -ne 0) { throw "Could not stage the sanitized runtime manifest for $FixtureId." }
     }
@@ -189,8 +227,11 @@ try {
         }
         $LocalResults = Join-Path $RunRoot 'results'
         if (-not (Test-Path -LiteralPath $LocalResults)) { New-Item -ItemType Directory -Path $LocalResults | Out-Null }
-        & adb -s $Serial pull "$DeviceOutputRoot/$FixtureId" $LocalResults | Out-Null
-        if ($LASTEXITCODE -ne 0) { $Failed.Add($FixtureId) }
+        try {
+            Invoke-AdbPull -RemotePath "$DeviceOutputRoot/$FixtureId" -LocalPath $LocalResults -FailureMessage "Could not pull fixture output for $FixtureId."
+        } catch {
+            $Failed.Add($FixtureId)
+        }
         $AfterSnapshot = Get-GroupSpendState ([decimal]0) ("{0:D3}-after-{1}.jsonl" -f $FixtureIndex, $FixtureId)
         if ($AfterSnapshot.pending -ne 0) { throw 'UNKNOWN provider cost stops the group immediately.' }
         if ($Failed.Contains($FixtureId)) { throw "Fixture execution failed; group stopped after $FixtureId." }

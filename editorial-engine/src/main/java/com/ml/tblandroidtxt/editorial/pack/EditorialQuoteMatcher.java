@@ -13,7 +13,8 @@ final class EditorialQuoteMatcher {
 
     /** RAW may render ruby readings as base text followed by 《reading》. */
     static boolean containsRaw(String anchor, String quote) {
-        return anchor != null && quote != null && contains(withoutRubyReadings(anchor), quote);
+        return anchor != null && quote != null
+                && contains(withoutRubyReadings(anchor), withoutRubyReadings(quote));
     }
 
     private static String nfcTrim(String value) {
