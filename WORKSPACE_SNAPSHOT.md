@@ -3,7 +3,7 @@
 - Updated: 2026-10-04 (+07:00): offline replay repair completed and pushed; no live execution. See `docs/P6_R6_REPLAY_REPAIR_20261004.md` and proposal section 13.
 - Current version: active v4.18.
 - Current branch: `feature/v4.18-p5e-runner-repair-20260917`; continue the existing branch and release checklist.
-- Current commit: `ef3361df` — implementation baseline immediately before this snapshot update, not a self-reference to a snapshot commit; actual HEAD verified.
+- Current commit: `6cc32c25` — implementation baseline immediately before this snapshot update, not a self-reference to a snapshot commit; actual HEAD verified.
 - Current build: no APK build in this offline package. Existing U5 artifacts remain unchanged historical evidence; no emulator/pilot operation occurred.
 - Current phase: P6 R6; offline replay repair complete. U6 response remains a correct model rejection and no REPORT_L1/FINAL is accepted.
 - Completed tasks: structured replay result/exit contract; hash-bound PASS/EXPECTED_REJECT manifest; bounded independent-finding diagnostic with production fail-fast preserved; process and anchor regressions; exact U6 replay; semantic second-finding classification; report/plan updates. Engine 391/391.

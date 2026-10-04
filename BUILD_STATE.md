@@ -6,7 +6,7 @@ D-G1c replay gate now distinguishes valid-response PASS from hash-bound EXPECTED
 
 ## Current P6 item 12 checkpoint — 2026-10-04
 
-- Current branch is `feature/v4.18-p5e-runner-repair-20260917`; implementation commit `ef3361df` contains the offline replay repair and is pushed. Snapshot commit `3f324d3b` records this commit as its implementation baseline.
+- Current branch is `feature/v4.18-p5e-runner-repair-20260917`; implementation through `6cc32c25` contains the offline replay repair and bounded coverage reporting, and is pushed. The snapshot records this implementation baseline.
 - No APK build, emulator/pilot operation or provider call occurred in this package. Existing U5 production/test artifacts and emulator evidence remain historical and unchanged.
 - `EditorialWireReplayTool` now emits structured JSON schema 2 with hash-bound `PASS`/`EXPECTED_REJECT`, explicit legacy `UNSPECIFIED` mode and exit 0/2 semantics. `EditorialL1Ledger` keeps production fail-fast and adds bounded diagnostic collection for independent `findings[]` rows.
 - Offline evidence: engine `391/391`; process replay `6/6`; anchor regression `6/6`. Missing/bad JSON, unexpected validation, hash/code mismatch and expected rejection with actual PASS all exit nonzero. Exact U6 response remains `REJECTED` with `L1_DRAFT_QUOTE_NOT_IN_ANCHOR:findings.0.draftQuote`; hash-bound EXPECTED_REJECT test exits 0 without accepting REPORT_L1.
