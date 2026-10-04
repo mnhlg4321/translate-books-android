@@ -12,6 +12,8 @@ import java.util.regex.Pattern;
 public final class EditorialFieldSpec {
     public static final int MAX_ID_LENGTH = 48;
     public static final int MAX_UNIT_REFERENCE_LENGTH = 64;
+    /** "L1".."L9" are valid references; a larger minimum forces the decoder to invent a longer id. */
+    public static final int MIN_UNIT_REFERENCE_LENGTH = 2;
     public static final int MAX_ATTEMPT_IDENTITY_LENGTH = 128;
     public static final int MAX_RANGES = 120;
     public static final int MAX_L1_CANDIDATES = 400;
@@ -188,13 +190,13 @@ public final class EditorialFieldSpec {
                 : l1Strict ? List.of("safe4.l1.raw-ledger.wire.v3")
                 : List.of("safe4.l2.raw-discovery.wire.v3"), "");
         a(fields, phase, "coverage", 0, MAX_RANGES, Requirement.MUST);
-        s(fields, phase, "coverage[].from", Requirement.MUST, 3, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
-        s(fields, phase, "coverage[].to", Requirement.MUST, 3, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
+        s(fields, phase, "coverage[].from", Requirement.MUST, MIN_UNIT_REFERENCE_LENGTH, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
+        s(fields, phase, "coverage[].to", Requirement.MUST, MIN_UNIT_REFERENCE_LENGTH, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
         e(fields, phase, "coverage[].status", List.of("PROCESSED", "PRESERVED"), "");
         a(fields, phase, "candidates", 0, l1Strict ? MAX_L1_CANDIDATES : l3 ? MAX_L3_CANDIDATES : MAX_L2_CANDIDATES, Requirement.MAY);
         s(fields, phase, "candidates[].candidateId", Requirement.MUST, 1, MAX_ID_LENGTH, ID_PATTERN, "");
         e(fields, phase, "candidates[].ledger", List.of("PAIR", "RC", "SPEAKER", "SR", "TG", "UNIT"), "");
-        s(fields, phase, "candidates[].unitId", Requirement.MUST, 3, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
+        s(fields, phase, "candidates[].unitId", Requirement.MUST, MIN_UNIT_REFERENCE_LENGTH, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
         if (l3) {
             i(fields, phase, "candidates[].viLine");
             e(fields, phase, "candidates[].status", List.of("CONFLICT", "PRESERVED", "PROCESSED", "UNPROCESSED"), "");
@@ -207,8 +209,8 @@ public final class EditorialFieldSpec {
         s(fields, phase, "attemptIdentity", Requirement.MUST, 1, MAX_ATTEMPT_IDENTITY_LENGTH, "", "");
         e(fields, phase, "wireSchemaVersion", List.of("safe4.l1.reconcile-ledger.wire.v3"), "");
         a(fields, phase, "coverage", 0, MAX_RANGES, Requirement.MUST);
-        s(fields, phase, "coverage[].from", Requirement.MUST, 3, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
-        s(fields, phase, "coverage[].to", Requirement.MUST, 3, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
+        s(fields, phase, "coverage[].from", Requirement.MUST, MIN_UNIT_REFERENCE_LENGTH, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
+        s(fields, phase, "coverage[].to", Requirement.MUST, MIN_UNIT_REFERENCE_LENGTH, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
         e(fields, phase, "coverage[].status", List.of("PROCESSED", "PRESERVED"), "");
         a(fields, phase, "resolutions", 0, MAX_L1_CANDIDATES, Requirement.MAY);
         s(fields, phase, "resolutions[].candidateId", Requirement.MUST, 1, MAX_ID_LENGTH, ID_PATTERN, "");
@@ -220,7 +222,7 @@ public final class EditorialFieldSpec {
                 "NUMBER", "OMISSION", "SPEAKER_LISTENER", "STRUCTURE", "UNTRANSLATED"), "");
         e(fields, phase, "findings[].severity", List.of("CRITICAL", "MAJOR", "MINOR"), "");
         a(fields, phase, "findings[].rawUnits", 1, MAX_RAW_UNITS_PER_FINDING, Requirement.MUST);
-        s(fields, phase, "findings[].rawUnits[]", Requirement.MUST, 3, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
+        s(fields, phase, "findings[].rawUnits[]", Requirement.MUST, MIN_UNIT_REFERENCE_LENGTH, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
         e(fields, phase, "findings[].draft.kind", List.of("LINES", "MISSING"), "");
         n(fields, phase, "findings[].draft.start");
         n(fields, phase, "findings[].draft.end");
@@ -235,11 +237,11 @@ public final class EditorialFieldSpec {
         a(fields, phase, "findings[].candidateIds", 0, MAX_CANDIDATE_REFS, Requirement.MAY);
         s(fields, phase, "findings[].candidateIds[]", Requirement.MUST, 1, MAX_ID_LENGTH, ID_PATTERN, "");
         a(fields, phase, "findings[].occurrenceUnits", 0, MAX_OCCURRENCES, Requirement.MAY);
-        s(fields, phase, "findings[].occurrenceUnits[]", Requirement.MUST, 3, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
+        s(fields, phase, "findings[].occurrenceUnits[]", Requirement.MUST, MIN_UNIT_REFERENCE_LENGTH, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
         e(fields, phase, "findings[].disposition", List.of("OPEN", "PRESERVED"), "");
         s(fields, phase, "findings[].evidenceLimit", Requirement.MAY, 0, MAX_TEXT, "", "");
         a(fields, phase, "speakerRecords", 0, MAX_SPEAKERS, Requirement.MAY);
-        s(fields, phase, "speakerRecords[].unitId", Requirement.MUST, 3, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
+        s(fields, phase, "speakerRecords[].unitId", Requirement.MUST, MIN_UNIT_REFERENCE_LENGTH, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
         s(fields, phase, "speakerRecords[].speaker", Requirement.MUST, 1, MAX_SPEAKER_LABEL, NON_BLANK_PATTERN, "");
         s(fields, phase, "speakerRecords[].listener", Requirement.MAY, 0, MAX_SPEAKER_LABEL, "", "empty or UNKNOWN is allowed");
         s(fields, phase, "speakerRecords[].basis", Requirement.MUST, 1, MAX_TEXT, NON_BLANK_PATTERN, "");
@@ -274,7 +276,7 @@ public final class EditorialFieldSpec {
         s(fields, phase, "findingResolutions[].reason", Requirement.CONDITIONAL, 0, MAX_TEXT, "",
                 "required when status=REJECTED or UNRESOLVED");
         a(fields, phase, "findingResolutions[].occurrences", 0, 40, Requirement.MAY);
-        s(fields, phase, "findingResolutions[].occurrences[].unitId", Requirement.MUST, 3, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
+        s(fields, phase, "findingResolutions[].occurrences[].unitId", Requirement.MUST, MIN_UNIT_REFERENCE_LENGTH, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
         s(fields, phase, "findingResolutions[].occurrences[].ref", Requirement.MUST, 1, MAX_ID_LENGTH, ID_PATTERN, "");
         a(fields, phase, "changes", 0, MAX_L2_CHANGES, Requirement.MAY);
         s(fields, phase, "changes[].changeId", Requirement.MUST, 1, MAX_ID_LENGTH, ID_PATTERN, "");
@@ -325,7 +327,7 @@ public final class EditorialFieldSpec {
         s(fields, phase, "probes[].probeId", Requirement.MUST, 1, MAX_ID_LENGTH, ID_PATTERN, "");
         e(fields, phase, "probes[].kind", List.of("COVERAGE", "REGRESSION"), "");
         a(fields, phase, "probes[].rawUnits", 1, MAX_RAW_UNITS_PER_FINDING, Requirement.MUST);
-        s(fields, phase, "probes[].rawUnits[]", Requirement.MUST, 3, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
+        s(fields, phase, "probes[].rawUnits[]", Requirement.MUST, MIN_UNIT_REFERENCE_LENGTH, MAX_UNIT_REFERENCE_LENGTH, UNIT_PATTERN, "");
         n(fields, phase, "probes[].viStart");
         n(fields, phase, "probes[].viEnd");
         s(fields, phase, "probes[].scope", Requirement.MUST, 1, MAX_PROBE_TEXT, NON_BLANK_PATTERN, "");

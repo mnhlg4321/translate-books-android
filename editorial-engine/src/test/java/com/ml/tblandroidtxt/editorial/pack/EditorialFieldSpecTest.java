@@ -17,6 +17,28 @@ public final class EditorialFieldSpecTest {
             EditorialFieldSpec.L2_RAW_DISCOVERY, EditorialFieldSpec.L2_EDIT, EditorialFieldSpec.L2_FINAL_READ,
             EditorialFieldSpec.L3_RAW_FIRST_REAUDIT, EditorialFieldSpec.L3_RECONCILE, EditorialFieldSpec.L3_FINAL_READ);
 
+    /**
+     * Regression for the G1 S5 stop: the strict schema said minLength 3 for unit references, so the first
+     * unit "L1" could not be emitted and the model wrote "L1173". Every field's length bounds must admit the
+     * shortest and a long legal value of its own pattern.
+     */
+    @Test public void lengthBoundsAdmitTheShortestValueOfEveryPattern() {
+        Map<String, String> shortest = Map.of(
+                EditorialFieldSpec.UNIT_REFERENCE_PATTERN, "L1",
+                "^[A-Za-z0-9][A-Za-z0-9._:/-]*$", "c");
+        for (String phase : ALL_PHASES) {
+            for (EditorialFieldSpec.Field field : EditorialFieldSpec.fields(phase)) {
+                String sample = shortest.get(field.pattern());
+                if (sample == null) continue;
+                assertTrue(phase + ":" + field.path() + " pattern rejects its own sample", sample.matches(field.pattern()));
+                assertTrue(phase + ":" + field.path() + " minLength " + field.minLength() + " excludes " + sample,
+                        field.minLength() <= sample.length());
+                assertTrue(phase + ":" + field.path() + " maxLength too small", field.maxLength() >= 4);
+            }
+        }
+        assertTrue(EditorialUnitReference.class.getSimpleName(), "L1".matches(EditorialFieldSpec.UNIT_REFERENCE_PATTERN));
+    }
+
     @Test public void allEightPhasesHaveRequiredPromptRulesForEveryField() {
         assertEquals(ALL_PHASES, EditorialFieldSpec.phases());
         for (String phase : ALL_PHASES) {

@@ -126,7 +126,7 @@ public final class OpenRouterEditorialL3LedgerPromptTest {
         assertTrue(prompt.user.contains("L" + inventory.units().get(1).line() + "|騎士が言った。"));
         assertTrue(prompt.user.contains("\"coverage\""));
         assertTrue(prompt.system.contains("candidates are sparse"));
-        assertTrue(prompt.system.contains("MUST coverage[].from length 3.." + EditorialFieldSpec.MAX_UNIT_REFERENCE_LENGTH));
+        assertTrue(prompt.system.contains("MUST coverage[].from length " + EditorialFieldSpec.MIN_UNIT_REFERENCE_LENGTH + ".." + EditorialFieldSpec.MAX_UNIT_REFERENCE_LENGTH));
         assertTrue(prompt.user.contains("L1|王は"));
         assertFalse(prompt.user.matches("(?s).*u:[0-9]+:[0-9a-f]{8}.*"));
     }
