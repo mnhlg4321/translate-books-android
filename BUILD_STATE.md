@@ -1,10 +1,10 @@
 # Build State
 
-## P6 R6 wire v3 V1 — 2026-10-04
+## P6 R6 wire v3 V1–V2 — 2026-10-04
 
-- V1 offline PASS: engine 351/351, app JVM 341/341, lintDebug and AndroidTest compile PASS; Python 33/33. Wire v3 uses L<physical line> externally and resolves to full ids before validation/persistence. Current contract L1_LEDGER_V3; legacy/v2 identity golden tests pass. No provider call and no pilot access.
-- V2 wrapper build/archive/emulator gates pending; installed emulator stays 4.18-p6.15/code228. D-G1b authorizes V3 after V1–V2 pass on the same G1 ledger (USD 0.01296985/1.00); expected owner fingerprint value requested, no key requested/read. Stop before G2.
-- Evidence: docs/P6_R6_UNIT_REF_EXECUTION_20261004.md. Next action: complete V2.
+- V1 PASS: engine 351/351, app 341/341, lint and AndroidTest compile PASS, Python 33/33; L-number wire v3 resolves to full inventory ids, contract L1_LEDGER_V3. V2 PASS on source d1cc1452: wrapper production 4.18-p6.16/code229, build-20261004-065614, APK SHA-256 98AAE03A23DD6D0573E2C5FFBCB46C6B18918D35D6A68B663143B0D5B6673141; test event p6-unit-ref-d1cc1452-20261004-16, APK 7A03D658CE7B83C59509791E6315976D943A67661D234B236F265E1777DF7AAF; shared source ZIP A7F543DBCC394C5295F61CF4FABF5FAE8750D827258D0E30430C3AFFFFEF2170. Both dual archives verified, installed emulator only.
+- Emulator preflight 5/5, coordinator 1/1, fake CHAIN 14/14 structural, negative L1_COVERAGE_GAP read by verifier/scorer; 0 actual calls. Fake semantic FAIL 12/PASS 2 is not quality evidence. G1 durable ledger unchanged: 2 calls, USD 0.01296985/1.00, pending 0. Owner resupplied fingerprint; no value/key recorded in Git.
+- Evidence: docs/P6_R6_UNIT_REF_EXECUTION_20261004.md. Next action: matching zero-call preflight and approved V3 G1 from fx-a03; stop before G2.
 
 ## Current P6 G1-resume checkpoint — 2026-10-03
 
