@@ -11,11 +11,11 @@ public final class EditPromptBuilder {
     public static final String WRONG_PAIR_OPEN = "<WRONG_PAIR>";
     public static final String WRONG_PAIR_CLOSE = "</WRONG_PAIR>";
 
-    static final String NO_REFERENCE =
+    public static final String NO_REFERENCE =
             "No glossary and no pronoun rows are supplied. Keep the way characters are named and addressed that is already "
             + "consistent in the DRAFT, unless RAW contradicts it.";
 
-    static final String OUTPUT_CONTRACT =
+    public static final String OUTPUT_CONTRACT =
             "OUTPUT CONTRACT\n"
             + "Return the complete corrected text between " + EDITED_OPEN + " and " + EDITED_CLOSE + ". Do not shorten it and do not "
             + "add anything inside the tags that is not part of the text.\n"

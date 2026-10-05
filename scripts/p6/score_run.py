@@ -131,6 +131,24 @@ def judge_target(target, config, draft, opcodes, final, final_text):
     return result
 
 
+def api_v1_block(run):
+    """EDITORIAL_API_V1 extras read from run-metadata.json (present only for API_V1 runs).
+
+    New errors introduced by the edit are NOT_MEASURED here: they are adjudicated by a person afterwards, exactly like the
+    P6 G1 adjudication, and are never guessed by the scorer.
+    """
+    meta_path = os.path.join(run, "run-metadata.json")
+    if not os.path.exists(meta_path):
+        return None
+    meta = load_json(meta_path)
+    api = meta.get("apiV1")
+    if not isinstance(api, dict):
+        return None
+    return {"newErrors": "NOT_MEASURED", "rewriteRatio": api.get("rewriteRatio"), "guardFlags": list(api.get("guardFlags", [])),
+            "calls": api.get("calls"), "mode": api.get("mode"), "state": api.get("state"),
+            "inputTokens": meta.get("inputTokens"), "outputTokens": meta.get("outputTokens"), "usd": meta.get("usd")}
+
+
 def score_fixture(fixture, root, run_dir, thresholds):
     fid = fixture["id"]
     kind = fixture["kind"]
@@ -148,6 +166,10 @@ def score_fixture(fixture, root, run_dir, thresholds):
                                       "stops": structural.get("stops", [])}
     else:
         report["STRUCTURAL_VALID"] = {"valid": False, "reasonCode": "STRUCTURAL_RESULT_MISSING"}
+
+    api = api_v1_block(run)
+    if api is not None:
+        report["API_V1"] = api
 
     final_path = os.path.join(run, "final.txt")
     if not os.path.exists(final_path):

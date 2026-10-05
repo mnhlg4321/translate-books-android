@@ -22,6 +22,11 @@ def sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def read_bytes(path):
+    with open(path, "rb") as handle:
+        return handle.read()
+
+
 def canonical(value):
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
 
@@ -198,6 +203,129 @@ def check_oracle_probe(fixture, output, fixtures_root, mode, reused_l1=False):
                     raise ValueError(fixture["id"] + ": corrected label text reached a captured model input")
 
 
+API_MODES = ("API_V1_QUICK", "API_V1_THOROUGH")
+API_STEP_NAMES = ("EDIT", "CHECK", "RECHECK")
+API_MIN_CALLS = 2
+API_MAX_CALLS = 6
+API_FINISHED_STATES = ("FINAL_OK", "FINAL_NOTES")
+API_UNFINISHED_STATES = ("RETRY_REQUIRED", "WRONG_PAIR", "CANCELLED")
+
+
+def check_api_prompt_captures(output, calls):
+    """Prompts and answers of an API_V1 run: one file per request, numbered from 1, the first one an EDIT."""
+    names = {}
+    for folder, suffix in (("prompts", ".txt"), ("responses", ".json")):
+        root = os.path.join(output, folder)
+        if not os.path.isdir(root):
+            raise ValueError("API_V1 " + folder + " capture directory is missing")
+        files = sorted(os.listdir(root))
+        if len(files) != calls:
+            raise ValueError("API_V1 " + folder + " capture count differs from the number of requests")
+        steps = []
+        for sequence, name in enumerate(files, start=1):
+            match = re.fullmatch(r"([0-9]{3})-(EDIT|CHECK|RECHECK)" + re.escape(suffix), name)
+            if not match or int(match.group(1)) != sequence:
+                raise ValueError("API_V1 " + folder + " capture name or order is invalid")
+            if not os.path.isfile(os.path.join(root, name)):
+                raise ValueError("API_V1 " + folder + " capture is not a file")
+            steps.append(match.group(2))
+        names[folder] = steps
+    if names["prompts"] != names["responses"] or names["prompts"][0] != "EDIT":
+        raise ValueError("API_V1 captures do not start with the edit request or differ between prompts and answers")
+    if names["prompts"].count("EDIT") > 2:
+        raise ValueError("API_V1 captures show more than one technical retry of the edit")
+    prompts = []
+    for sequence, step in enumerate(names["prompts"], start=1):
+        with open(os.path.join(output, "prompts", f"{sequence:03d}-{step}.txt"), "rb") as handle:
+            data = handle.read()
+        if not data:
+            raise ValueError("captured API_V1 prompt is empty")
+        prompts.append(data)
+    return prompts, names["prompts"]
+
+
+def check_api_oracle_probe(fixture, output, fixtures_root, prompts):
+    """No label field name, target id or corrected label text may reach a request before a model answer produced it."""
+    names = ("RAW.txt", "DRAFT.txt", "GLOSSARY.csv", "PRONOUN.csv")
+    source = b"\n".join(read_bytes(os.path.join(fixtures_root, fixture["id"], name)) for name in names)
+    combined = b"\n".join(prompts)
+    if b"mustContain" in combined or b"mustNotContain" in combined:
+        raise ValueError(fixture["id"] + ": label field name reached a captured model input")
+    prior_by_prompt = []
+    prior = b""
+    for sequence in range(1, len(prompts) + 1):
+        prior_by_prompt.append(prior)
+        for name in os.listdir(os.path.join(output, "responses")):
+            if name.startswith(f"{sequence:03d}-"):
+                with open(os.path.join(output, "responses", name), "rb") as handle:
+                    prior += b"\n" + handle.read()
+    labels = score_run.load_json(os.path.join(fixtures_root, fixture["labels"]["path"]))
+    for target in labels.get("targets", []):
+        if target.get("id", "").encode("utf-8") in combined:
+            raise ValueError(fixture["id"] + ": target id reached a captured model input")
+        terms = []
+        if target.get("old"):
+            terms.append(target["old"])
+        terms.extend(target.get("mustContain", []))
+        for term in terms:
+            encoded = term.encode("utf-8") if term else b""
+            if not encoded or encoded in source:
+                continue
+            for prompt, earlier in zip(prompts, prior_by_prompt):
+                if encoded in prompt and encoded not in earlier:
+                    raise ValueError(fixture["id"] + ": corrected label text reached a captured model input")
+
+
+def check_api_fixture(fixture, output, fixtures_root, args, structural, metadata):
+    """Verification of one EDITORIAL_API_V1 output; returns the report entry."""
+    fid = fixture["id"]
+    api = metadata.get("apiV1")
+    if not isinstance(api, dict):
+        raise ValueError(fid + ": API_V1 metadata block is missing")
+    expected_mode = "QUICK" if args.mode == "API_V1_QUICK" else "THOROUGH"
+    if api.get("mode") != expected_mode:
+        raise ValueError(fid + ": API_V1 mode differs from the requested mode")
+    for key in ("model", "route", "contractRevision", "qualityCoreSha256", "sourceCommit", "apkVersionName"):
+        if key not in metadata:
+            raise ValueError(fid + ": API_V1 metadata lacks " + key)
+    if not re.fullmatch(r"[0-9a-f]{64}", str(metadata.get("qualityCoreSha256"))):
+        raise ValueError(fid + ": Quality Core SHA-256 is not recorded")
+    state = api.get("state")
+    finished = state in API_FINISHED_STATES
+    if structural.get("stage") != "API_V1" or structural.get("valid") is not finished or structural.get("reasonCode") != state:
+        raise ValueError(fid + ": API_V1 structural result does not match the run state")
+    if not finished:
+        if state not in API_UNFINISHED_STATES or not args.measure_refusals:
+            raise ValueError(fid + ": API_V1 run did not finish (" + str(state) + ")")
+        if not structural.get("stops"):
+            raise ValueError(fid + ": an unfinished API_V1 run must carry its stops")
+    calls = structural.get("providerCalls")
+    if not isinstance(calls, int) or isinstance(calls, bool) or calls < 1 or calls > API_MAX_CALLS:
+        raise ValueError(fid + ": API_V1 request count is outside 1..6")
+    if finished and calls < API_MIN_CALLS:
+        raise ValueError(fid + ": a finished API_V1 run needs at least an edit and a check")
+    if args.live:
+        if metadata.get("providerKind") != "LIVE" or metadata.get("actualProviderCalls") != calls:
+            raise ValueError(fid + ": expected a live provider run with one actual call per request")
+    elif (metadata.get("providerKind") != "FAKE_OFFLINE" or metadata.get("actualProviderCalls") != 0
+          or metadata.get("fakeProviderCalls") != calls):
+        raise ValueError(fid + ": a non-fake provider ran or the fake call count differs")
+    if args.mode == "API_V1_QUICK" and calls > 4:
+        raise ValueError(fid + ": QUICK used more requests than edit, check and one retry each")
+    final = read_bytes(os.path.join(output, "final.txt"))
+    if sha(final) != metadata.get("finalSha256"):
+        raise ValueError(fid + ": final hash mismatch")
+    prompts, steps = check_api_prompt_captures(output, calls)
+    if args.mode == "API_V1_QUICK" and "RECHECK" in steps:
+        raise ValueError(fid + ": QUICK must not re-check")
+    check_api_oracle_probe(fixture, output, fixtures_root, prompts)
+    ledger = check_ledger(os.path.join(output, "spend-ledger.jsonl"))
+    entry = {"fixture": fid, "providerCalls": calls, "ledger": ledger}
+    if not finished:
+        entry["refusal"] = structural.get("stops")
+    return entry
+
+
 def select_fixtures(manifest, fixture_ids):
     fixtures = manifest.get("fixtures", [])
     by_id = {fixture.get("id"): fixture for fixture in fixtures}
@@ -213,7 +341,7 @@ def main():
     parser.add_argument("--fixtures-root", required=True)
     parser.add_argument("--manifest", required=True)
     parser.add_argument("--run-dir", required=True)
-    parser.add_argument("--mode", choices=("L1_ONLY", "L2_ONLY", "L3_ONLY", "L1_THEN_L2", "CHAIN"), required=True)
+    parser.add_argument("--mode", choices=("L1_ONLY", "L2_ONLY", "L3_ONLY", "L1_THEN_L2", "CHAIN") + API_MODES, required=True)
     parser.add_argument("--fixture-ids", nargs="+")
     parser.add_argument("--live", action="store_true")
     parser.add_argument("--measure-refusals", action="store_true",
@@ -245,6 +373,9 @@ def main():
             metadata = json.load(handle)
         if metadata.get("mode") != args.mode:
             raise ValueError(fixture["id"] + ": metadata mode does not match the requested mode")
+        if args.mode in API_MODES:
+            reports.append(check_api_fixture(fixture, output, fixtures_root, args, structural, metadata))
+            continue
         if metadata.get("l1ThenL2SameDatabase") != (args.mode == "L1_THEN_L2"):
             raise ValueError(fixture["id"] + ": L1_THEN_L2 database contract marker is invalid")
         expected_stage = {"L1_ONLY": "L1", "L2_ONLY": "L2", "L3_ONLY": "L3",
@@ -260,7 +391,7 @@ def main():
                     or "L1_COVERAGE_GAP:coverage" not in structural.get("stops", [])):
                 raise ValueError(fixture["id"] + ": explicit fake invalid-L1 contract failed")
             check_prompt_captures(output, args.mode, invalid_l1=True)
-            final = open(os.path.join(output, "final.txt"), "rb").read()
+            final = read_bytes(os.path.join(output, "final.txt"))
             if sha(final) != metadata.get("finalSha256"):
                 raise ValueError(fixture["id"] + ": final hash mismatch")
             if os.path.exists(os.path.join(output, "report-l1.json")):
@@ -274,7 +405,7 @@ def main():
                 raise ValueError(fixture["id"] + ": a refusal can only be measured on a live provider call")
             if not structural.get("stops"):
                 raise ValueError(fixture["id"] + ": a measured refusal must carry its stops")
-            final = open(os.path.join(output, "final.txt"), "rb").read()
+            final = read_bytes(os.path.join(output, "final.txt"))
             if sha(final) != metadata.get("finalSha256"):
                 raise ValueError(fixture["id"] + ": final hash mismatch")
             check_prompt_captures(output, args.mode, metadata.get("l1ReusedFromPriorGroup") is True, partial=True)
@@ -303,7 +434,7 @@ def main():
             if (metadata.get("fakeProviderCalls") != expected_fake_calls
                     or structural.get("providerCalls") != expected_fake_calls):
                 raise ValueError(fixture["id"] + ": fake provider call count differs from the expected mode")
-        final = open(os.path.join(output, "final.txt"), "rb").read()
+        final = read_bytes(os.path.join(output, "final.txt"))
         if sha(final) != metadata.get("finalSha256"):
             raise ValueError(fixture["id"] + ": final hash mismatch")
         with open(os.path.join(output, "report-l1.json"), encoding="utf-8") as handle:

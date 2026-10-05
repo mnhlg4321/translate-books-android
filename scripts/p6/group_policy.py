@@ -56,6 +56,12 @@ def classify(structural, instrumentation_ok, unknown_cost_calls=0):
         if not instrumentation_ok:
             return INFRASTRUCTURE, "", "HARNESS_FAILED_AFTER_VALID_OUTPUT"
         return VALID, "", ""
+    if structural.get("stage") == "API_V1":
+        # EDITORIAL_API_V1 has no refusal codes: a wrong pair is a finding about the input, everything else
+        # (technical failure after the one retry, cost cap, cancel) stops the group
+        if structural.get("reasonCode") == "WRONG_PAIR" and instrumentation_ok:
+            return REFUSED, "API_V1_WRONG_PAIR", "WRONG_PAIR"
+        return INFRASTRUCTURE, "", "API_V1_" + str(structural.get("reasonCode", ""))
     reason, code = refusal_detail(structural)
     if reason is None:
         return INFRASTRUCTURE, "", "NOT_A_TYPED_STAGE_STOP:" + str(structural.get("reasonCode", ""))

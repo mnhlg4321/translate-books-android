@@ -124,6 +124,9 @@ def verifyEditorialEngineProfileAsset = tasks.register('verifyEditorialEnginePro
 }
 
 android.sourceSets.main.assets.srcDir(editorialEngineProfileAssetRoot)
+// test doubles shared by the JVM tests and the instrumented tests (never part of the app)
+android.sourceSets.test.java.srcDir("src/sharedTest/java")
+android.sourceSets.androidTest.java.srcDir("src/sharedTest/java")
 
 def verifyEditorialSafe4Pack = tasks.register('verifyEditorialSafe4Pack') {
     group = 'verification'

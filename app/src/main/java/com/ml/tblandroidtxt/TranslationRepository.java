@@ -12,7 +12,7 @@ import java.util.List;
 
 public class TranslationRepository extends SQLiteOpenHelper {
     private static final String DB = "tbl_android_txt.db";
-    private static final int VER = 25;
+    private static final int VER = 26;
 
     public TranslationRepository(Context context) { this(context, DB); }
 
@@ -40,6 +40,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
         createEditorialP5DRecoveryHistory(db);
         createEditorialP5DBodyProgress(db);
         createEditorialPhaseArtifacts(db);
+        createEditorialApiTables(db);
     }
 
     @Override public void onConfigure(SQLiteDatabase db) {
@@ -104,6 +105,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
         if (oldVersion < 23) createEditorialP5DRecoveryHistory(db);
         if (oldVersion < 24) createEditorialP5DBodyProgress(db);
         if (oldVersion < 25) createEditorialPhaseArtifacts(db);
+        if (oldVersion < 26) createEditorialApiTables(db);
     }
 
     @Override public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -123,6 +125,8 @@ public class TranslationRepository extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE IF NOT EXISTS prepared_chunks (batch_id TEXT, input_ordinal INTEGER, idx INTEGER, stable_id TEXT, start_offset INTEGER, end_offset INTEGER, context_start_offset INTEGER, context_end_offset INTEGER, context_before TEXT, source TEXT, context_after TEXT, source_hash TEXT, normalized_source_hash TEXT, parent_stable_id TEXT, PRIMARY KEY(batch_id,input_ordinal,idx))");
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_prepared_selection ON prepared_batches(selection_key,status)");
     }
+
+    private static void createEditorialApiTables(SQLiteDatabase db) { for (String sql : EditorialApiMigrationSpec.from25To26()) db.execSQL(sql); }
 
     private static void createEditorialTables(SQLiteDatabase db) {
         for (String sql : EditorialMigrationSpec.from10To11()) safeExec(db, sql);

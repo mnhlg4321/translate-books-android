@@ -4,7 +4,7 @@ param(
     [string]$Serial = 'emulator-5554',
     [ValidatePattern('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')]
     [string]$RunId = ([guid]::NewGuid().ToString('D').ToLowerInvariant()),
-    [ValidateSet('L1_ONLY', 'L2_ONLY', 'L3_ONLY', 'L1_THEN_L2', 'CHAIN')]
+    [ValidateSet('L1_ONLY', 'L2_ONLY', 'L3_ONLY', 'L1_THEN_L2', 'CHAIN', 'API_V1_QUICK', 'API_V1_THOROUGH')]
     [string]$Mode = 'CHAIN',
     [string[]]$FixtureIds,
     [string[]]$RetainL1FixtureIds,
@@ -20,6 +20,9 @@ param(
     [string]$GroupId,
     [ValidateRange(0.01, 1.00)]
     [decimal]$GroupMaximumUsd = 0.50,
+    # EDITORIAL_API_V1: the cap of one chapter; the run service checks it before every request
+    [ValidateRange(0.01, 0.50)]
+    [decimal]$ChapterCapUsd = 0.10,
     [string]$FixturesRoot = 'D:\P5E-private\p6-fixtures'
 )
 
@@ -82,7 +85,7 @@ if ($Live -and ($ExpectedEndpointAccountFingerprint -notmatch '^[0-9a-fA-F]{64}$
     throw 'Live fixture mode requires the owner-supplied endpoint/account fingerprint.'
 }
 if ($GroupMaximumUsd -le 0 -or $GroupMaximumUsd -gt 1.00) { throw 'The P6 group cap must be within the approved per-group limit.' }
-if ($Live -and $Mode -notin @('L1_ONLY', 'L3_ONLY', 'L1_THEN_L2', 'CHAIN')) {
+if ($Live -and $Mode -notin @('L1_ONLY', 'L3_ONLY', 'L1_THEN_L2', 'CHAIN', 'API_V1_QUICK', 'API_V1_THOROUGH')) {
     throw 'Live fixture mode requires a supported single group mode.'
 }
 if ($Live -and $Mode -eq 'L2_ONLY') {
@@ -114,7 +117,12 @@ $WorstCaseByMode = @{
     L3_ONLY = [decimal]::Parse('0.1094064', [Globalization.CultureInfo]::InvariantCulture)
     L1_THEN_L2 = [decimal]::Parse('0.1094064', [Globalization.CultureInfo]::InvariantCulture)
     CHAIN = [decimal]::Parse('0.298304', [Globalization.CultureInfo]::InvariantCulture)
+    API_V1_QUICK = $ChapterCapUsd
+    API_V1_THOROUGH = $ChapterCapUsd
 }
+$IsApiMode = $Mode -in @('API_V1_QUICK', 'API_V1_THOROUGH')
+$RunnerClass = if ($IsApiMode) { 'EditorialApiV1FixtureRunnerInstrumentedTest' } else { 'EditorialP6FixtureRunnerInstrumentedTest' }
+$SourceCommit = (& git -C $RepoRoot rev-parse HEAD).Trim()
 
 function Get-GroupSpendState([decimal]$RequiredUsd, [string]$SnapshotName) {
     $RemoteTest = & adb -s $Serial shell test -f $DeviceGroupLedger 2>$null
@@ -186,6 +194,10 @@ $StopReason = ''
 $Decisions = [System.Collections.Generic.List[object]]::new()
 $LiveArguments = @()
 $LiveArguments = @('-e', 'p6_group_id', $GroupId, '-e', 'p6_group_maximum_usd', $GroupCapText)
+if ($IsApiMode) {
+    $ChapterCapText = $ChapterCapUsd.ToString('0.00####', [Globalization.CultureInfo]::InvariantCulture)
+    $LiveArguments += @('-e', 'p6_chapter_cap_usd', $ChapterCapText, '-e', 'p6_source_commit', $SourceCommit)
+}
 if ($NegativeGate) { $LiveArguments += @('-e', 'p6_fake_invalid_l1', 'YES') }
 if ($MeasureRefusals) { $LiveArguments += @('-e', 'p6_measure_refusals', 'YES') }
 if ($Live) {
@@ -237,7 +249,7 @@ try {
         }
         $Output = & adb -s $Serial shell am instrument -w `
             -e p6_fixture_run YES -e p6_run_id $RunId -e p6_fixture_id $FixtureId -e p6_mode $Mode @LiveArguments @FixtureArguments `
-            -e class com.ml.tblandroidtxt.EditorialP6FixtureRunnerInstrumentedTest#runFixture $Instrumentation 2>&1
+            -e class "com.ml.tblandroidtxt.$RunnerClass#runFixture" $Instrumentation 2>&1
         $CommandExit = $LASTEXITCODE
         [IO.File]::WriteAllText($LogPath, ($Output -join [Environment]::NewLine), [Text.UTF8Encoding]::new($false))
         $CombinedOutput = $Output -join "`n"

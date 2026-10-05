@@ -88,6 +88,11 @@ public final class EditorialApiFlow {
 
     public boolean done() { return outcome != null; }
 
+    /** The steps recorded so far (also while the run is still going), for progress that survives a restart. */
+    public List<StepRecord> stepsSoFar() { return List.copyOf(steps); }
+
+    public String editedSoFar() { return edited; }
+
     public Outcome outcome() { return outcome; }
 
     /** The request to send now, or {@code null} when the run is finished. Asking twice returns the same request. */
@@ -100,6 +105,24 @@ public final class EditorialApiFlow {
     /** Stops the run on the user's request; the draft stays the final text and nothing the model returned is kept as final. */
     public void cancel() {
         if (outcome == null) finish(RunState.CANCELLED, inputs.draft(), "");
+    }
+
+    /**
+     * The app decided not to send the waiting request (for example the cost cap would be exceeded). No call is counted as
+     * made: the step is recorded with {@code reason}, an edit that was not sent leaves the draft with RETRY_REQUIRED, and a
+     * check that was not sent leaves the edit standing with the check marked unavailable.
+     */
+    public void skipStep(String reason) {
+        if (outcome != null || pending == null) throw new IllegalStateException("no request is waiting");
+        Request request = pending;
+        pending = null;
+        steps.add(new StepRecord(request.step(), request.attempt(), "", 0, 0, BigDecimal.ZERO, true, "", "", reason));
+        if (request.step() == Step.EDIT) {
+            finish(RunState.RETRY_REQUIRED, inputs.draft(), "");
+        } else {
+            checkUnavailable = true;
+            finish(RunState.FINAL_NOTES, edited, "");
+        }
     }
 
     public void accept(StepResponse response) {

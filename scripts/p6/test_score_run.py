@@ -278,5 +278,39 @@ class ScorerTest(unittest.TestCase):
         self.assertIn("SEMANTIC_EVAL", report["summary"])
 
 
+class ApiV1BlockTest(unittest.TestCase):
+    """The EDITORIAL_API_V1 extras of a run: synthetic metadata only, no fixtures needed."""
+
+    def make_run(self, metadata):
+        run = tempfile.mkdtemp(prefix="p6-api-")
+        self.addCleanup(shutil.rmtree, run, True)
+        if metadata is not None:
+            write(os.path.join(run, "run-metadata.json"), json.dumps(metadata))
+        return run
+
+    def test_new_errors_are_never_guessed(self):
+        run = self.make_run({"inputTokens": 100, "outputTokens": 50, "usd": "0.01",
+                             "apiV1": {"rewriteRatio": 0.12, "guardFlags": ["STRUCTURE_WARN", "SYMBOL_WARN"], "calls": 3,
+                                       "mode": "THOROUGH", "state": "FINAL_NOTES"}})
+        block = score_run.api_v1_block(run)
+        self.assertEqual("NOT_MEASURED", block["newErrors"])
+        self.assertEqual(0.12, block["rewriteRatio"])
+        self.assertEqual(["STRUCTURE_WARN", "SYMBOL_WARN"], block["guardFlags"])
+        self.assertEqual(3, block["calls"])
+        self.assertEqual("THOROUGH", block["mode"])
+        self.assertEqual("0.01", block["usd"])
+
+    def test_runs_without_the_api_block_are_unchanged(self):
+        self.assertIsNone(score_run.api_v1_block(self.make_run({"inputTokens": 1})))
+        self.assertIsNone(score_run.api_v1_block(self.make_run(None)))
+        self.assertIsNone(score_run.api_v1_block(self.make_run({"apiV1": "not an object"})))
+
+    def test_missing_optional_values_do_not_break_the_block(self):
+        block = score_run.api_v1_block(self.make_run({"apiV1": {}}))
+        self.assertEqual([], block["guardFlags"])
+        self.assertIsNone(block["rewriteRatio"])
+        self.assertEqual("NOT_MEASURED", block["newErrors"])
+
+
 if __name__ == "__main__":
     unittest.main()

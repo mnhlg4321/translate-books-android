@@ -143,6 +143,9 @@ public class OpenAICompatibleClient {
         public boolean providerCostReported = false;
         public String finishReason = "";
         public String providerResponseId = "";
+        /** Model and upstream provider the response says served the call (route evidence); empty when absent. */
+        public String responseModel = "";
+        public String responseProvider = "";
     }
 
     public static String chat(AppSettings s, PromptPair prompt) throws Exception {
@@ -458,6 +461,8 @@ public class OpenAICompatibleClient {
         String content = message != null ? message.optString("content", "") : first.optString("text", "");
         ChatResult result = new ChatResult();
         result.providerResponseId=json.optString("id","");
+        result.responseModel=json.optString("model","");
+        result.responseProvider=json.optString("provider","");
         result.content = content == null ? "" : content;
         result.finishReason = first.optString("finish_reason", "");
         JSONObject usage = json.optJSONObject("usage");

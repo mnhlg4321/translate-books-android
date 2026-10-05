@@ -204,4 +204,22 @@ public final class EditorialApiFlowTest {
         while (second.nextRequest() != null) { second.accept(EditorialApiFlow.StepResponse.failure("X")); more++; }
         assertEquals(2, more);
     }
+
+    @Test public void skippedStepsEndTheRunWithoutCountingACall() {
+        EditorialApiFlow edit = new EditorialApiFlow(inputs(), EditorialApiFlow.Config.of(Mode.THOROUGH));
+        assertEquals(Step.EDIT, edit.nextRequest().step());
+        edit.skipStep("COST_CAP");
+        assertEquals(RunState.RETRY_REQUIRED, edit.outcome().state());
+        assertEquals(DRAFT, edit.outcome().finalText());
+        assertEquals(0, edit.outcome().inputTokens());
+        EditorialApiFlow check = new EditorialApiFlow(inputs(), EditorialApiFlow.Config.of(Mode.THOROUGH));
+        check.nextRequest();
+        check.accept(ok(edited(EDITED), "stop"));
+        assertEquals(Step.CHECK, check.nextRequest().step());
+        check.skipStep("COST_CAP");
+        assertEquals(RunState.FINAL_NOTES, check.outcome().state());
+        assertTrue(check.outcome().checkUnavailable());
+        assertEquals(EDITED, check.outcome().finalText());
+        assertEquals("COST_CAP", check.outcome().steps().get(1).result());
+    }
 }
