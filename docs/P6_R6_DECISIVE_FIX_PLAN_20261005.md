@@ -104,3 +104,11 @@ Required deliverables: private target/finding adjudication table; safe claim→e
 PASS: all 12 outputs accounted for; all seeded targets and all unmatched findings judged or explicitly unresolved; detection and repair metrics separated; any code fix has a failing-before/passing-after regression on clean committed source; G2 inputs, caps and stop rules are reviewable; no private text/credentials committed. FAIL/FAILED_REPAIRING: unsupported detection claims, known verifier failures or altered acceptance. Missing indispensable private evidence is NOT_MEASURED with the exact missing item, not a fabricated verdict. Completion does not require perfect model recall.
 
 Stop after delivering the concrete G2 proposal for the owner's separate decision. No new live permission is created by this document. The sole next action is to complete this offline package.
+
+### 7.1 Offline package completed — 2026-10-05
+
+The required retrospective review is complete without provider/device work. The safe aggregate adjudication is in `docs/P6_R6_G1_SEMANTIC_ADJUDICATION_20261005.md`; private response bodies and source excerpts remain under `D:\P5E-private` and were not staged. All 12 outputs are accounted for. The review records 25 seeded-target opportunities, 10 semantic detections and 15 misses; this is detection only, while L1-only repair remains `NOT_MEASURED`. It classifies all 17 finding rows: 2 confirmed additional defects, 3 false positives, 1 preference and 1 unresolved relation finding.
+
+Normalization review found 17 duplicate references removed, 13 invalid speaker side records dropped, zero DRAFT anchor derivations, zero anchor deviation, no protected-span adjustment, no list truncation and no exercised optional-field default. Furigana/NFC/trim matching was observed on the untranslated target and did not re-anchor or create proof. No response was altered or made valid, and acceptance was unchanged.
+
+The concrete owner-decision package is `docs/P6_R6_G2_PROPOSAL_20261005.md`: 3 L2 fixtures using exact retained predecessors (including an explicitly justified fx-a04 repeat-1 selection) plus 5 L3 isolation fixtures, 24 calls, a separate USD 1.00 cap, detection/repair scoring, and typed stop rules. G1's remaining balance is not authorization for G2. The only next action is owner decision on that proposal; no live dispatch follows this package.
