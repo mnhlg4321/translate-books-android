@@ -188,7 +188,7 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-7/7 lần dừng live đều là lỗi hình thức/ghi sổ. Kế hoạch sửa dứt điểm `docs/P6_R6_DECISIVE_FIX_PLAN_20261005.md`: phân loại toàn bộ luật từ chối và chuẩn hóa mọi lỗi ghi sổ một lần (cả L2/L3), kiểm thử đột biến từ response thật, và coi từ chối là kết quả đo thay vì dừng nhóm. Next action duy nhất: owner quyết D-Z3; Codex làm Z1–Z4 rồi Z5 (G1 đủ 8 fixture).
+Z1–Z5 đã hoàn tất; G1 base 8/8 và hai vòng lặp 4/4 qua cấu trúc. Điều đó chưa chứng minh chất lượng phát hiện của L1. Review baseline `006434da` phát hiện và sửa lỗi verifier dùng response tương lai để bỏ qua rò đáp án; 12 output đã lưu vẫn qua phép kiểm sửa. Next action duy nhất: hoàn tất gói chấm nội dung offline và đề xuất G2 cụ thể tại `docs/P6_R6_DECISIVE_FIX_PLAN_20261005.md` mục 7. D-Z3 đã được duyệt; G2 chưa được duyệt/chạy. Không chạy lại G1, gọi provider hay đụng thiết bị trong gói này.
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 

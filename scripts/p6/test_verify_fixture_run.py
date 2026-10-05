@@ -113,5 +113,53 @@ class PromptCaptureVerificationTest(unittest.TestCase):
                 verify_fixture_run.check_oracle_probe(fixture, output, fixture_root, "L1_ONLY")
 
 
+class OracleChronologyTest(unittest.TestCase):
+    def probe(self, response_sequence=None, report=False, reused=False):
+        import json
+        with tempfile.TemporaryDirectory() as temporary:
+            root = os.path.join(temporary, "fixtures")
+            output = os.path.join(temporary, "output")
+            os.makedirs(os.path.join(root, "fx-test"))
+            os.makedirs(os.path.join(output, "responses"))
+            for name in ("RAW.txt", "DRAFT.txt", "GLOSSARY.csv", "PRONOUN.csv"):
+                with open(os.path.join(root, "fx-test", name), "wb") as handle:
+                    handle.write(b"ordinary source")
+            term = "synthetic_gold_answer"
+            with open(os.path.join(root, "labels.json"), "w") as handle:
+                json.dump({"targets": [{"id": "hidden-target", "mustContain": [term]}]}, handle)
+            with open(os.path.join(output, "report-l1.json"), "w") as handle:
+                json.dump({"observation": term if report else "ordinary"}, handle)
+            mode = "L1_THEN_L2" if reused else "L1_ONLY"
+            phases = verify_fixture_run.expected_prompt_phases(mode, reused)
+            PromptCaptureVerificationTest.write_captures(
+                output, phases, leak_phase=phases[1], leak=term.encode())
+            if response_sequence is not None:
+                phase = phases[min(response_sequence, len(phases)) - 1]
+                filename = f"{response_sequence:03d}-{phase}.json"
+                with open(os.path.join(output, "responses", filename), "w") as handle:
+                    json.dump({"observation": term}, handle)
+            verify_fixture_run.check_oracle_probe(
+                {"id": "fx-test", "labels": {"path": "labels.json"}},
+                output, root, mode, reused)
+
+    def test_current_response_cannot_excuse_leaked_prompt(self):
+        with self.assertRaisesRegex(ValueError, "corrected label text"):
+            self.probe(response_sequence=2)
+
+    def test_future_response_cannot_excuse_leaked_prompt(self):
+        with self.assertRaisesRegex(ValueError, "corrected label text"):
+            self.probe(response_sequence=3)
+
+    def test_final_report_cannot_excuse_earlier_l1_prompt(self):
+        with self.assertRaisesRegex(ValueError, "corrected label text"):
+            self.probe(report=True)
+
+    def test_prior_response_may_be_repeated_in_next_prompt(self):
+        self.probe(response_sequence=1)
+
+    def test_reused_predecessor_report_may_be_in_l2_edit(self):
+        self.probe(report=True, reused=True)
+
+
 if __name__ == "__main__":
     unittest.main()

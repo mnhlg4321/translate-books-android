@@ -1,5 +1,9 @@
 # Build State
 
+## Current Z5 independent review — 2026-10-05
+
+Source/report baseline `006434da`; retained APK p6.24/code237 from `3b570135`. No new APK or device verification in this review. Clean baseline engine 422/422, app 342/342; chronological oracle-probe regression repaired, Python 54/54; 12 saved G1 runs pass the repaired probe. G1 structural gate passed, detection remains provisional and repair NOT_MEASURED. Ledger verified: 41 calls, USD 0.28859445, pending 0. Next action: offline adjudication and concrete G2 proposal in decisive plan section 7. G2 not started; historical checkpoints below do not control the next action.
+
 ## Owner decision after U6 review — 2026-10-04
 
 D-G1c replay gate now distinguishes valid-response PASS from hash-bound EXPECTED_REJECT for genuinely invalid model output; see wire simplification proposal section 12. U6 anchor mismatch is a correct rejection. Replay-all exit status/collection require offline repair before further live work; no immediate live permission is created. Build/pilot states below are unchanged.
