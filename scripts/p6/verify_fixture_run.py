@@ -122,7 +122,7 @@ def expected_live_call_counts(mode):
     return actual_calls[mode], pipeline_calls[mode]
 
 
-def check_prompt_captures(output, mode, reused_l1=False, invalid_l1=False):
+def check_prompt_captures(output, mode, reused_l1=False, invalid_l1=False, partial=False):
     prompt_root = os.path.join(output, "prompts")
     if not os.path.isdir(prompt_root):
         raise ValueError("prompt capture directory is missing")
@@ -141,7 +141,7 @@ def check_prompt_captures(output, mode, reused_l1=False, invalid_l1=False):
         if not prompt_bytes:
             raise ValueError("captured prompt is empty")
         captured.append(prompt_bytes)
-    if len(files) != len(expected):
+    if len(files) != len(expected) and not (partial and 0 < len(files) < len(expected)):
         raise ValueError("prompt capture phase count differs from the selected mode")
     legacy_path = os.path.join(output, "l2-edit-prompt.txt")
     if "L2_EDIT" in expected:
@@ -198,6 +198,8 @@ def main():
     parser.add_argument("--mode", choices=("L1_ONLY", "L2_ONLY", "L3_ONLY", "L1_THEN_L2", "CHAIN"), required=True)
     parser.add_argument("--fixture-ids", nargs="+")
     parser.add_argument("--live", action="store_true")
+    parser.add_argument("--measure-refusals", action="store_true",
+                        help="Z3: a typed refusal of the production engine is a recorded measurement, not a failure")
     parser.add_argument("--expect-invalid-l1", action="store_true",
                         help="accept the explicit fake-only typed L1 stop used by W2")
     args = parser.parse_args()
@@ -248,6 +250,20 @@ def main():
             ledger = check_ledger(os.path.join(output, "spend-ledger.jsonl"))
             reports.append({"fixture": fixture["id"], "providerCalls": structural.get("providerCalls"), "ledger": ledger})
             continue
+        if args.measure_refusals and args.live and structural.get("valid") is False and structural.get("measuredRefusal") is True:
+            # a live refusal: the engine stopped with a typed reason; the evidence is the prompts sent, the ledger and the stops
+            if metadata.get("providerKind") != "LIVE" or metadata.get("actualProviderCalls", 0) <= 0:
+                raise ValueError(fixture["id"] + ": a refusal can only be measured on a live provider call")
+            if not structural.get("stops"):
+                raise ValueError(fixture["id"] + ": a measured refusal must carry its stops")
+            final = open(os.path.join(output, "final.txt"), "rb").read()
+            if sha(final) != metadata.get("finalSha256"):
+                raise ValueError(fixture["id"] + ": final hash mismatch")
+            check_prompt_captures(output, args.mode, metadata.get("l1ReusedFromPriorGroup") is True, partial=True)
+            ledger = check_ledger(os.path.join(output, "spend-ledger.jsonl"))
+            reports.append({"fixture": fixture["id"], "providerCalls": structural.get("providerCalls"), "ledger": ledger,
+                            "refusal": structural.get("stops")})
+            continue
         if not structural.get("valid") or structural.get("stage") != expected_stage:
             raise ValueError(fixture["id"] + ": production structural contract failed")
         if args.live:
@@ -295,6 +311,9 @@ def main():
     if summary["fixtures"] != len(selected):
         raise ValueError("scorer did not read every fixture output")
     expected_structural = "0/1" if args.expect_invalid_l1 else f"{len(selected)}/{len(selected)}"
+    if args.measure_refusals:
+        refused = sum(1 for item in reports if item.get("refusal"))
+        expected_structural = f"{len(selected) - refused}/{len(selected)}"
     if summary["STRUCTURAL_VALID"] != expected_structural:
         raise ValueError("scorer found an unexpected structural result")
     print("fixtures:", summary["fixtures"])

@@ -12,6 +12,9 @@ param(
     [string]$L1SourceRunId,
     [switch]$Live,
     [switch]$NegativeGate,
+    # Z3: by default a live group treats a typed refusal of the production engine as a measurement and continues;
+    # this switch restores the older rule (stop the group after the first failed fixture).
+    [switch]$StopOnFirstRefusal,
     [string]$ExpectedEndpointAccountFingerprint,
     [ValidatePattern('^[A-Za-z0-9._-]{3,100}$')]
     [string]$GroupId,
@@ -176,9 +179,15 @@ $PromptGuardArguments = @('--fixtures-root', $FixturesRoot, '--manifest', $Manif
 & py -3 $PromptGuard @PromptGuardArguments
 if ($LASTEXITCODE -ne 0) { throw 'Host prompt-input guard refused the selected fixture sources.' }
 $Failed = [System.Collections.Generic.List[string]]::new()
+$MeasureRefusals = $Live -and -not $StopOnFirstRefusal
+$Executed = [System.Collections.Generic.List[string]]::new()
+$DecisionHistory = Join-Path $RunRoot 'group-decisions.jsonl'
+$StopReason = ''
+$Decisions = [System.Collections.Generic.List[object]]::new()
 $LiveArguments = @()
 $LiveArguments = @('-e', 'p6_group_id', $GroupId, '-e', 'p6_group_maximum_usd', $GroupCapText)
 if ($NegativeGate) { $LiveArguments += @('-e', 'p6_fake_invalid_l1', 'YES') }
+if ($MeasureRefusals) { $LiveArguments += @('-e', 'p6_measure_refusals', 'YES') }
 if ($Live) {
     $LiveArguments += @('-e', 'p6_fixture_live', 'YES', '-e',
         'p6_expected_endpoint_account_fingerprint', $ExpectedEndpointAccountFingerprint)
@@ -209,7 +218,17 @@ try {
     foreach ($FixtureId in $FixtureIds) {
         $FixtureIndex++
         $RequiredUsd = $WorstCaseByMode[$Mode]
-        $BeforeSnapshot = Get-GroupSpendState $RequiredUsd ("{0:D3}-before-{1}.jsonl" -f $FixtureIndex, $FixtureId)
+        if ($MeasureRefusals) {
+            # Z3: not enough budget left for a worst-case fixture is the group cap, a clean stop that is reported
+            try {
+                $BeforeSnapshot = Get-GroupSpendState $RequiredUsd ("{0:D3}-before-{1}.jsonl" -f $FixtureIndex, $FixtureId)
+            } catch {
+                $StopReason = 'GROUP_CAP_OR_SPEND_PRECHECK: ' + $_.Exception.Message
+                break
+            }
+        } else {
+            $BeforeSnapshot = Get-GroupSpendState $RequiredUsd ("{0:D3}-before-{1}.jsonl" -f $FixtureIndex, $FixtureId)
+        }
         if ($BeforeSnapshot.pending -ne 0) { throw 'UNKNOWN provider cost blocks the next fixture in this group.' }
         $LogPath = Join-Path (Join-Path $RunRoot 'logs') "$FixtureId-instrumentation.txt"
         $FixtureArguments = @()
@@ -234,18 +253,40 @@ try {
         }
         $AfterSnapshot = Get-GroupSpendState ([decimal]0) ("{0:D3}-after-{1}.jsonl" -f $FixtureIndex, $FixtureId)
         if ($AfterSnapshot.pending -ne 0) { throw 'UNKNOWN provider cost stops the group immediately.' }
-        if ($Failed.Contains($FixtureId)) { throw "Fixture execution failed; group stopped after $FixtureId." }
+        if ($MeasureRefusals) {
+            $StructuralPath = Join-Path (Join-Path (Join-Path $RunRoot 'results') $FixtureId) 'structural.json'
+            $MetadataPath = Join-Path (Join-Path (Join-Path $RunRoot 'results') $FixtureId) 'run-metadata.json'
+            $PolicyArguments = @('--instrumentation-exit', "$CommandExit", '--history', $DecisionHistory, '--fixture', $FixtureId)
+            if (Test-Path -LiteralPath $StructuralPath) { $PolicyArguments += @('--structural', $StructuralPath) }
+            if (Test-Path -LiteralPath $MetadataPath) { $PolicyArguments += @('--metadata', $MetadataPath) }
+            # the next fixture needs a worst-case reservation; the precheck above reports the cap, the policy only sees "yes"
+            $PolicyOutput = & py -3 (Join-Path $RepoRoot 'scripts\p6\group_policy.py') @PolicyArguments
+            if ($LASTEXITCODE -ne 0) { throw 'The group policy could not judge the fixture.' }
+            $Decision = ($PolicyOutput -join "`n") | ConvertFrom-Json
+            $Decisions.Add($Decision)
+            if ($Decision.outcome -ne 'INFRASTRUCTURE') { $Executed.Add($FixtureId) }
+            if ($Decision.action -eq 'STOP') { $StopReason = $Decision.stopReason + ' after ' + $FixtureId; break }
+        } elseif ($Failed.Contains($FixtureId)) { throw "Fixture execution failed; group stopped after $FixtureId." }
+        else { $Executed.Add($FixtureId) }
     }
 } finally {
     & adb -s $Serial shell rm -r $DeviceInputRoot 2>&1 | Out-Null
     & adb -s $Serial shell run-as com.ml.tblandroidtxt rm -r "files/p6-fixtures/$RunId" 2>&1 | Out-Null
 }
+if ($MeasureRefusals -and $Executed.Count -eq 0) { throw ('No fixture produced a measurement. ' + $StopReason) }
+$VerifiedIds = if ($MeasureRefusals) { @($Executed) } else { @($FixtureIds) }
 $VerifyArguments = @('--fixtures-root', $FixturesRoot, '--manifest', $ManifestPath,
-    '--run-dir', $RunRoot, '--mode', $Mode, '--fixture-ids') + @($FixtureIds)
+    '--run-dir', $RunRoot, '--mode', $Mode, '--fixture-ids') + $VerifiedIds
 if ($Live) { $VerifyArguments += '--live' }
+if ($MeasureRefusals) { $VerifyArguments += '--measure-refusals' }
 if ($NegativeGate) { $VerifyArguments += '--expect-invalid-l1' }
 & py -3 (Join-Path $RepoRoot 'scripts\p6\verify_fixture_run.py') @VerifyArguments
 if ($LASTEXITCODE -ne 0) { throw 'Fixture outputs, spend ledger, leak probes, or scorer validation failed.' }
-if ($Failed.Count -gt 0) { throw ('Instrumented fixture failures: ' + ($Failed -join ', ')) }
+if ($MeasureRefusals) {
+    foreach ($Decision in $Decisions) {
+        Write-Output ("fixture {0}: {1} {2} ({3})" -f $Decision.fixture, $Decision.outcome, $Decision.code, $Decision.why)
+    }
+    if ($StopReason) { throw ("Group stopped by the run rule: $StopReason") }
+} elseif ($Failed.Count -gt 0) { throw ('Instrumented fixture failures: ' + ($Failed -join ', ')) }
 
-Write-Output "Completed $Mode for $($FixtureIds.Count) fixtures. Private evidence: $RunRoot"
+Write-Output "Completed $Mode for $($Executed.Count) of $($FixtureIds.Count) fixtures. Private evidence: $RunRoot"

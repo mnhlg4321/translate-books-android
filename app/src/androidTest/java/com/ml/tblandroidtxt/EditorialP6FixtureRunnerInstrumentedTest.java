@@ -237,6 +237,9 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         byte[] finalBytes;
         String reason;
         boolean valid;
+        // Z3: a typed refusal of the production engine is a measurement, not a crash of the harness
+        boolean measureRefusals = liveMode && "YES".equalsIgnoreCase(args.getString("p6_measure_refusals", ""));
+        boolean refusedByEngine = false;
         String stage;
         List<String> stops = new ArrayList<>();
         boolean reportRequired = true;
@@ -339,6 +342,7 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
             stops.add(stopped.reason);
             stops.addAll(stopped.details);
             reportRequired = !"L1".equals(stopped.stage);
+            refusedByEngine = true;
           }
             fakeCalls = l1.calls + l2.calls + l3.calls;
         }
@@ -346,6 +350,7 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
         Files.write(outputRoot.resolve("final.txt"), finalBytes);
         Map<String, Object> structural = new LinkedHashMap<>();
         structural.put("valid", valid);
+        structural.put("measuredRefusal", refusedByEngine && measureRefusals);
         structural.put("providerKind", liveMode ? "LIVE" : "FAKE_OFFLINE");
         structural.put("reasonCode", reason);
         structural.put("stage", stage);
@@ -387,11 +392,13 @@ public final class EditorialP6FixtureRunnerInstrumentedTest {
             assertTrue("test-only invalid L1 must preserve the engine detail code",
                     stops.stream().anyMatch(detail -> detail.startsWith("L1_COVERAGE_GAP:coverage")));
             assertTrue("test-only invalid L1 must not call a provider", metrics.calls == 0);
+        } else if (measureRefusals && refusedByEngine) {
+            // recorded in structural.json and judged by the group policy; the group continues or stops there
         } else {
             assertTrue("production artifacts must validate: " + reason
                     + (l2.failure.isEmpty() ? "" : ":fakeL2=" + l2.failure), valid);
         }
-        if ("L1_ONLY".equals(mode) && "YES".equalsIgnoreCase(args.getString("p6_keep_l1_state", ""))) {
+        if (valid && "L1_ONLY".equals(mode) && "YES".equalsIgnoreCase(args.getString("p6_keep_l1_state", ""))) {
             preserveL1Database = true;
             preserveL1Storage = true;
         }
