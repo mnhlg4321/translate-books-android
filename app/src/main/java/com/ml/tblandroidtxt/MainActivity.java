@@ -264,6 +264,7 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onDestroy() {
+        if (editorialApiShared != null) editorialApiShared.detach(this);
         ModelCatalog.removeListener(catalogListener);
         preflightGeneration.incrementAndGet();
         preflightExecutor.shutdownNow();
@@ -376,7 +377,7 @@ public class MainActivity extends Activity {
         topTitle = text(AppBuildInfo.APP_TITLE, 17, TEXT, true);
         topTitle.setSingleLine(true);
         topTitle.setEllipsize(TextUtils.TruncateAt.END);
-        topSubtitle = text(currentTab + " • " + compactProviderMeta(), 12, MUTED, false);
+        topSubtitle = text(tabLabel(currentTab) + " • " + compactProviderMeta(), 12, MUTED, false);
         topSubtitle.setSingleLine(true);
         topSubtitle.setEllipsize(TextUtils.TruncateAt.END);
         titleBox.addView(topTitle, new LinearLayout.LayoutParams(-1, -2));
@@ -412,7 +413,7 @@ public class MainActivity extends Activity {
 
     Button tabButton(String name) {
         Button b = new Button(this);
-        b.setText(primaryIcon(name) + "\n" + name);
+        b.setText(primaryIcon(name) + "\n" + tabLabel(name));
         b.setTextSize(isWideLayout()?11:10);
         b.setAllCaps(false);
         b.setSingleLine(false);
@@ -426,6 +427,8 @@ public class MainActivity extends Activity {
         tint(b, active ? CARD : PANEL, active ? BLUE : PANEL, 1, 10);
         return b;
     }
+
+    String tabLabel(String name) { return "Editorial".equals(name) ? EditorialApiPresenter.TAB_TITLE : name; }
 
     String primaryIcon(String name){if("Translate".equals(name))return "↗";if("Jobs".equals(name))return "◷";if("Editorial".equals(name))return "✎";if("Library".equals(name))return "▤";return "⚙";}
     boolean primaryActive(String name){if("Library".equals(name))return "Files".equals(currentTab)||"Glossaries".equals(currentTab)||"Pronouns".equals(currentTab)||"Sample".equals(currentTab);return name.equals(currentTab);}
@@ -487,6 +490,7 @@ public class MainActivity extends Activity {
     }
 
     @Override public void onBackPressed() {
+        if ("Editorial".equals(currentTab) && editorialApiShared != null && editorialApiShared.handleBack()) return;
         AppBackNavigationPolicy.Action action = AppBackNavigationPolicy.resolve(
                 currentTab, editingGlossary != null, editingPronoun != null, settingsCategory);
         if (action == AppBackNavigationPolicy.Action.SAVE_AND_CLOSE_GLOSSARY) {
@@ -600,14 +604,14 @@ public class MainActivity extends Activity {
     }
 
     void refreshTabs() {
-        if (topSubtitle != null) topSubtitle.setText(currentTab + " • " + compactProviderMeta());
+        if (topSubtitle != null) topSubtitle.setText(tabLabel(currentTab) + " • " + compactProviderMeta());
         refreshTopStatusChip();
         if (tabBar == null) return;
         for (int i = 0; i < tabBar.getChildCount(); i++) {
             View v = tabBar.getChildAt(i);
             if (v instanceof Button) {
                 Button b = (Button) v;
-                String label=b.getText().toString();boolean active=(label.contains("Library")&&primaryActive("Library"))||label.contains(currentTab);
+                String label=b.getText().toString();boolean active=(label.contains("Library")&&primaryActive("Library"))||label.contains(tabLabel(currentTab));
                 if (b.getTag() instanceof Boolean && ((Boolean) b.getTag()) == active) continue;
                 b.setTag(active);
                 b.setTextColor(active ? TEXT : MUTED);
@@ -669,7 +673,16 @@ public class MainActivity extends Activity {
     View buildJobsPage() {
         return new JobsMainPageFactory(this).build();
     }
-    View buildEditorialPage() { return new EditorialPageFactory(this).build(); }
+    private static EditorialApiUiController editorialApiShared;
+
+    /** One controller for the process, so a run and its screen survive the activity being recreated. */
+    EditorialApiUiController editorialApi() {
+        if (editorialApiShared == null) editorialApiShared = new EditorialApiUiController(this);
+        editorialApiShared.attach(this);
+        return editorialApiShared;
+    }
+
+    View buildEditorialPage() { return new EditorialApiPageFactory(this, editorialApi()).build(); }
 
     /** Thin request entry point; ZIP parsing, validation and persistence stay outside Activity. */
     void openEditorialPackZipImport() { EditorialPackImportPageFactory.showInstructions(this); }
@@ -1256,6 +1269,8 @@ public class MainActivity extends Activity {
 
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (editorialApiShared != null) editorialApiShared.attach(this);
+        if (editorialApiShared != null && editorialApiShared.onActivityResult(requestCode, resultCode, data)) return;
         if (EditorialPackSafBridge.isRequest(requestCode)) {
             EditorialPackImportCoordinator coordinator = editorialPackImportCoordinator;
             if (coordinator != null) {

@@ -25,6 +25,12 @@ final class EditorialPageFactory {
         ScrollView scroll = a.scroll();
         LinearLayout root = a.pageRoot();
         scroll.addView(root);
+        populate(root);
+        return scroll;
+    }
+
+    /** The legacy project/import content, also embedded in the collapsed developer section of the Biên tập tab. */
+    void populate(LinearLayout root) {
         LinearLayout intro = a.sectionCard("✎", "Biên tập V5-SAFE.4");
         TextView help = a.text("Bộ 3 chỉ dẫn SAFE4 đã được đóng gói bất biến. Lõi V5 cũ đã ngừng hoạt động; chạy model và phát hành đang bị khóa cho đến khi đủ schema, lineage và Golden Replay G1–G10.", 14, a.TEXT, false);
         help.setSingleLine(false);
@@ -52,7 +58,6 @@ final class EditorialPageFactory {
         } else {
             for (EditorialRepository.Project project : projects) root.addView(projectCard(project), a.marginLP(-1, -2, 0, 0, 0, 10));
         }
-        return scroll;
     }
 
     private View projectCard(EditorialRepository.Project project) {
