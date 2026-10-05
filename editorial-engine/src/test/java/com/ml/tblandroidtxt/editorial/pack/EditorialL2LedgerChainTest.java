@@ -143,7 +143,7 @@ public final class EditorialL2LedgerChainTest {
         return json(map("wireSchemaVersion", EditorialL2Execution.WIRE_SCHEMA_VERSION_V3, "attemptIdentity", attempt,
                 "resolutions", list(map("candidateId", "U001", "status", "PROCESSED")),
                 "findingResolutions", findingResolutions, "changes", changes, "preserved", preserved,
-                "disposition", map("disposition", "CONTINUE", "reasonCode", "OK", "stopClass", "NONE")));
+                "disposition", map("disposition", "CONTINUE", "reasonCode", "", "stopClass", "NONE")));
     }
 
     private static final class Ledger {
@@ -454,7 +454,7 @@ public final class EditorialL2LedgerChainTest {
         return map("wireSchemaVersion", EditorialL3Execution.RECONCILE_WIRE_V3, "attemptIdentity", "x",
                 "resolutions", list(map("candidateId", "R001", "status", "PROCESSED")), "carriedResolutions", carried,
                 "changes", changes, "preserved", preserved, "probes", probes,
-                "disposition", map("disposition", "CONTINUE", "reasonCode", "OK", "stopClass", "NONE"));
+                "disposition", map("disposition", "CONTINUE", "reasonCode", "", "stopClass", "NONE"));
     }
 
     private static byte[] readEcho(EditorialL2Execution.Provider.Request r, String hashOverride, List<Map<String, Object>> defects) {

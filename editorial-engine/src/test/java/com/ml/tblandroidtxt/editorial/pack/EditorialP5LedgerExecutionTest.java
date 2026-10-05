@@ -255,6 +255,80 @@ public final class EditorialP5LedgerExecutionTest {
         return new EditorialP5PilotExecution(() -> 1_000L).execute(request, authorization, provider, store);
     }
 
+    /**
+     * Z2: parsing is not the whole path. Every bookkeeping variant of a RECONCILE wire must be committed by the real
+     * engine (decision, report, readback), and a refusal must never be the generic parse failure that hides a bug.
+     */
+    @Test
+    public void everyBookkeepingVariantIsCommittedEndToEndAndRefusalsCarryTypedDetails() {
+        Fixture f = fixture(RAW, DRAFT);
+        EditorialP5PilotRequest raw = ledgerRaw(f);
+        Store base = new Store();
+        byte[] rawReport = run(raw, authorization(raw, "auth-raw"),
+                new FakeProvider(ok(rawWire(raw.attemptIdentity(), candidates()))), base).committedResult().reportBytes();
+        EditorialP5PilotRequest reconcile = ledgerReconcile(f, raw, rawReport);
+        List<Object> findings = new ArrayList<>(List.of(
+                finding("e1", 3, 3, "踏破", "chinh phuc", "MEANING", new ArrayList<>(List.of("c1")), new ArrayList<>(List.of(id(6), id(9)))),
+                finding("e2", 4, 4, "今回", "今回", "UNTRANSLATED", new ArrayList<>(List.of("c2")), new ArrayList<>())));
+        List<Object> resolutions = new ArrayList<>(List.of(
+                map("candidateId", "c1", "status", "PROCESSED", "findingRef", "e1"),
+                map("candidateId", "c2", "status", "PROCESSED", "findingRef", "e2")));
+        byte[] baseline = reconcileWire(reconcile.attemptIdentity(), findings, resolutions, cont());
+        List<EditorialWireMutationEngine.Mutation> mutations = EditorialWireMutationEngine.l1Reconcile(
+                EditorialWireMutationEngine.copy(baseline), 10, 0, 10, "L3", java.util.Set.of(3, 4), quote -> {
+                    int hits = 0;
+                    for (EditorialRawInventory.Unit unit : inv().units()) {
+                        if (EditorialQuoteMatcher.containsRaw(unit.text(), quote)) hits++;
+                    }
+                    return hits;
+                });
+        int committed = 0;
+        int refused = 0;
+        for (EditorialWireMutationEngine.Mutation mutation : mutations) {
+            Map<String, Object> variant = EditorialWireMutationEngine.copy(baseline);
+            mutation.apply().accept(variant);
+            Store store = new Store();
+            run(raw, authorization(raw, "auth-raw"), new FakeProvider(ok(rawWire(raw.attemptIdentity(), candidates()))), store);
+            EditorialP5PilotResult result = run(reconcile, authorization(reconcile, "auth-rec"),
+                    new FakeProvider(ok(EditorialWireMutationEngine.bytes(variant))), store);
+            if (mutation.expect() == EditorialWireMutationEngine.Expect.NORMALIZED) {
+                assertEquals(mutation.name() + ": " + result.reasonCode()
+                                + (result.stopReceipt() == null ? "" : result.stopReceipt().evidenceRefs()),
+                        EditorialP5PilotResult.Outcome.COMMITTED, result.outcome());
+                committed++;
+            } else {
+                assertEquals(mutation.name(), EditorialP5PilotResult.Outcome.STOP, result.outcome());
+                assertFalse(mutation.name() + " was refused with the generic parse failure",
+                        result.stopReceipt().evidenceRefs().toString().contains("L1_WIRE_PARSE_FAILED"));
+                refused++;
+            }
+        }
+        assertTrue("committed variants " + committed, committed >= 25);
+        assertTrue("refused variants " + refused, refused >= 8);
+    }
+
+    @Test
+    public void aContinuingDispositionWithAnEmptyReasonIsCommitted() {
+        Fixture f = fixture(RAW, DRAFT);
+        EditorialP5PilotRequest raw = ledgerRaw(f);
+        Store store = new Store();
+        byte[] rawReport = run(raw, authorization(raw, "auth-raw"),
+                new FakeProvider(ok(rawWire(raw.attemptIdentity(), candidates()))), store).committedResult().reportBytes();
+        EditorialP5PilotRequest reconcile = ledgerReconcile(f, raw, rawReport);
+        List<Object> resolutions = new ArrayList<>(List.of(
+                map("candidateId", "c1", "status", "PRESERVED", "findingRef", ""),
+                map("candidateId", "c2", "status", "PRESERVED", "findingRef", "")));
+        for (String kind : List.of("CONTINUE", "PRESERVE_DRAFT")) {
+            Store fresh = new Store();
+            run(raw, authorization(raw, "auth-raw"), new FakeProvider(ok(rawWire(raw.attemptIdentity(), candidates()))), fresh);
+            EditorialP5PilotResult result = run(reconcile, authorization(reconcile, "auth-rec"), new FakeProvider(ok(reconcileWire(
+                    reconcile.attemptIdentity(), new ArrayList<>(), resolutions,
+                    map("disposition", kind, "reasonCode", "", "stopClass", "NONE")))), fresh);
+            assertEquals(kind + ": " + result.reasonCode(), EditorialP5PilotResult.Outcome.valueOf(
+                    "CONTINUE".equals(kind) ? "COMMITTED" : "PRESERVE_DRAFT"), result.outcome());
+        }
+    }
+
     private static EditorialP5PilotProvider.Response ok(byte[] wire) {
         return new EditorialP5PilotProvider.Response("response-success", wire, "stop", true, 80, 30, 110,
                 BigDecimal.ZERO, null, true);

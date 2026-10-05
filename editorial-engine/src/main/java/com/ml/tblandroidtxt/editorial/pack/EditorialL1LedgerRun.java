@@ -131,11 +131,13 @@ final class EditorialL1LedgerRun {
     private static EditorialStopDecision.Decision decisionOf(EditorialL1Ledger.Disposition d) {
         String phase = EditorialP5RawWireContract.FINAL_PHASE;
         List<String> evidence = List.of(EVIDENCE);
+        // a continuing disposition may carry no reason label (the contract allows it); the decision record needs one
+        String reason = d.reasonCode().isEmpty() ? "L1_" + d.kind() : d.reasonCode();
         switch (d.kind()) {
             case "CONTINUE":
-                return EditorialStopDecision.continueWithoutStop(phase, "NONE", d.reasonCode());
+                return EditorialStopDecision.continueWithoutStop(phase, "NONE", reason);
             case "PRESERVE_DRAFT":
-                return EditorialStopDecision.preserveDraft(d.reasonCode(), phase, "NONE", evidence, "CHAPTER",
+                return EditorialStopDecision.preserveDraft(reason, phase, "NONE", evidence, "CHAPTER",
                         "Keep the draft", "L1_RECONCILE");
             default:
                 return "CONTENT_BLOCKED".equals(d.stopClass())
