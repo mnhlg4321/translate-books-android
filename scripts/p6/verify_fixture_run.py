@@ -161,11 +161,24 @@ def check_oracle_probe(fixture, output, fixtures_root, mode, reused_l1=False):
             source_parts.append(handle.read())
     source = b"\n".join(source_parts)
     with open(os.path.join(output, "report-l1.json"), "rb") as handle:
-        model_inputs = [handle.read()]
-    model_inputs.extend(check_prompt_captures(output, mode, reused_l1))
+        report_bytes = handle.read()
+    captures = check_prompt_captures(output, mode, reused_l1)
+    model_inputs = [report_bytes] + captures
     combined = b"\n".join(model_inputs)
     if b"mustContain" in combined or b"mustNotContain" in combined:
         raise ValueError(fixture["id"] + ": label field name reached a captured model input")
+    # The report is the model's own L1 answer: a correct finding legitimately names the corrected text. The corrected-text
+    # probe therefore judges what the app sent. Every L1 prompt is checked outright; a later-stage prompt may repeat what the
+    # model itself wrote in its report, so there the term must not come from anywhere but the report.
+    first_prompt = 0 if reused_l1 else min(1, len(captures))
+    app_sent = b"\n".join(captures[:first_prompt])
+    later_sent = b"\n".join(captures[first_prompt:])
+    model_written = report_bytes
+    responses_dir = os.path.join(output, "responses")
+    if os.path.isdir(responses_dir):
+        for name in sorted(os.listdir(responses_dir)):
+            with open(os.path.join(responses_dir, name), "rb") as handle:
+                model_written += b"\n" + handle.read()
     labels = score_run.load_json(os.path.join(fixtures_root, fixture["labels"]["path"]))
     for target in labels.get("targets", []):
         if target.get("id", "").encode("utf-8") in combined:
@@ -176,7 +189,9 @@ def check_oracle_probe(fixture, output, fixtures_root, mode, reused_l1=False):
         terms.extend(target.get("mustContain", []))
         for term in terms:
             encoded = term.encode("utf-8") if term else b""
-            if encoded and encoded not in source and encoded in combined:
+            if not encoded or encoded in source:
+                continue
+            if encoded in app_sent or (encoded in later_sent and encoded not in model_written):
                 raise ValueError(fixture["id"] + ": corrected label text reached a captured model input")
 
 
