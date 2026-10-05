@@ -1,8 +1,8 @@
 # Build State
 
-## Current Z5 independent review — 2026-10-05
+## Current offline G1 adjudication — 2026-10-05
 
-Source/report baseline `006434da`; retained APK p6.24/code237 from `3b570135`. No new APK or device verification in this review. Clean baseline engine 422/422, app 342/342; chronological oracle-probe regression repaired, Python 54/54; 12 saved G1 runs pass the repaired probe. G1 structural gate passed, detection remains provisional and repair NOT_MEASURED. Ledger verified: 41 calls, USD 0.28859445, pending 0. Next action: offline adjudication and concrete G2 proposal in decisive plan section 7. G2 not started; historical checkpoints below do not control the next action.
+Runtime/source baseline `270a27b9`; documentation and proposal package `0d9b5507` is pushed on the current branch. No APK, emulator/pilot operation or provider call occurred in this package. The 12 retained G1 outputs are all accounted for: 17 finding rows, 25 seeded-target opportunities, 10 semantic detections and 15 misses. Normalization audit: 17 duplicate references removed, 13 invalid speaker side records dropped, zero DRAFT anchor derivations, zero protected-span adjustment and no exercised truncation/default path. L1-only repair remains NOT_MEASURED. G1 ledger is verified at 41 settled calls, USD 0.28859445 / 1.00, pending 0. The concrete G2 proposal is `docs/P6_R6_G2_PROPOSAL_20261005.md`; G2 has not started. Next action: owner decision on that proposal; no live dispatch.
 
 ## Owner decision after U6 review — 2026-10-04
 
