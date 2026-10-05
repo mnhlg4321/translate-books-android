@@ -157,7 +157,7 @@ public final class EditorialApiBienTapFlowInstrumentedTest {
 
         onUi(scenario, activity -> { activity.editorialApi().startRun(); return null; });
         waitFor("result", () -> controller.screen == EditorialApiUiController.Screen.RESULT && !controller.running());
-        assertEquals("requests; error=[" + controller.error + "] progress=[" + controller.progress + "]", 2, provider.requests.size());
+        assertEquals("requests; error=[" + controller.error + "] progress=[" + controller.progress + "]", mode == EditorialApiContract.Mode.QUICK ? 1 : 2, provider.requests.size());
 
         String resultText = onUi(scenario, activity -> screenText(activity, activity));
         assertTrue(resultText, resultText.contains("Đã biên tập xong"));

@@ -29,7 +29,9 @@ def ledger_rows(calls):
     return "\n".join(rows) + "\n"
 
 
-def build(temporary, steps=("EDIT", "CHECK"), state="FINAL_OK", mode="QUICK", leak=b"", live=False, final=b"final text"):
+def build(temporary, steps=None, state="FINAL_OK", mode="QUICK", leak=b"", live=False, final=b"final text"):
+    if steps is None:
+        steps = ("EDIT",) if mode == "QUICK" else ("EDIT", "CHECK")
     fixtures = os.path.join(temporary, "fixtures")
     output = os.path.join(temporary, "out")
     os.makedirs(os.path.join(fixtures, "fx-a01"))
@@ -70,16 +72,24 @@ class ApiV1VerificationTest(unittest.TestCase):
     def test_a_clean_quick_run_is_accepted(self):
         with tempfile.TemporaryDirectory() as temporary:
             entry = check(*build(temporary))
-            self.assertEqual(2, entry["providerCalls"])
+            self.assertEqual(1, entry["providerCalls"])
             self.assertEqual(0, entry["ledger"]["pending"])
 
-    def test_thorough_may_recheck_but_quick_may_not(self):
-        steps = ("EDIT", "CHECK", "RECHECK")
+    def test_thorough_may_check_and_recheck_but_quick_is_the_edit_alone(self):
         with tempfile.TemporaryDirectory() as temporary:
+            self.assertEqual(2, check(*build(temporary, mode="THOROUGH"), mode="THOROUGH")["providerCalls"])
+        with tempfile.TemporaryDirectory() as temporary:
+            steps = ("EDIT", "CHECK", "RECHECK")
             self.assertEqual(3, check(*build(temporary, mode="THOROUGH", steps=steps), mode="THOROUGH")["providerCalls"])
         with tempfile.TemporaryDirectory() as temporary:
-            with self.assertRaisesRegex(ValueError, "QUICK must not re-check"):
-                check(*build(temporary, mode="QUICK", steps=steps))
+            with self.assertRaisesRegex(ValueError, "QUICK must not check"):
+                check(*build(temporary, mode="QUICK", steps=("EDIT", "CHECK")))
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaisesRegex(ValueError, "only one technical retry"):
+                check(*build(temporary, mode="QUICK", steps=("EDIT", "EDIT", "EDIT")))
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaisesRegex(ValueError, "at least an edit and a check"):
+                check(*build(temporary, mode="THOROUGH", steps=("EDIT",)), mode="THOROUGH")
 
     def test_a_run_that_does_not_begin_with_the_edit_is_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -114,8 +124,8 @@ class ApiV1VerificationTest(unittest.TestCase):
     def test_a_live_run_needs_one_actual_call_per_request(self):
         with tempfile.TemporaryDirectory() as temporary:
             fixtures, output, structural, metadata = build(temporary, live=True)
-            self.assertEqual(2, check(fixtures, output, structural, metadata, live=True)["providerCalls"])
-            metadata["actualProviderCalls"] = 1
+            self.assertEqual(1, check(fixtures, output, structural, metadata, live=True)["providerCalls"])
+            metadata["actualProviderCalls"] = 0
             with self.assertRaisesRegex(ValueError, "live provider run"):
                 check(fixtures, output, structural, metadata, live=True)
 
@@ -136,10 +146,10 @@ class ApiV1VerificationTest(unittest.TestCase):
 
     def test_a_missing_capture_is_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
-            fixtures, output, structural, metadata = build(temporary)
+            fixtures, output, structural, metadata = build(temporary, mode="THOROUGH")
             os.remove(os.path.join(output, "responses", "002-CHECK.json"))
             with self.assertRaisesRegex(ValueError, "capture count"):
-                check(fixtures, output, structural, metadata)
+                check(fixtures, output, structural, metadata, mode="THOROUGH")
 
 
 class ApiV1GroupPolicyTest(unittest.TestCase):

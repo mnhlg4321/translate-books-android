@@ -118,7 +118,7 @@ final class EditorialApiPresenter {
         c.rawHead = head(sources.raw);
         c.draftHead = head(sources.draft);
         c.modeLine = "Chế độ: " + modeLabel(settings.mode) + (settings.mode == EditorialApiContract.Mode.THOROUGH
-                ? " (biên tập, kiểm, kiểm lại)" : " (biên tập, kiểm)");
+                ? " (biên tập, kiểm, kiểm lại nếu có sửa)" : " (chỉ biên tập, 1 lượt gọi)");
         c.modelLine = "Model: " + (model.isEmpty() ? "(chưa chọn trong Cài đặt)" : model);
 
         if (sources.hasGlossary()) {
@@ -184,7 +184,7 @@ final class EditorialApiPresenter {
         long draftTokens = Math.max(1L, sources.draft.length() / 2L);
         long checkIn = editIn + draftTokens;
         long checkOut = 600L;
-        int checks = settings.mode == EditorialApiContract.Mode.THOROUGH ? 2 : 1;
+        int checks = settings.mode == EditorialApiContract.Mode.THOROUGH ? 2 : 0;
         BigDecimal usd = inputPerToken.multiply(BigDecimal.valueOf(editIn + checks * checkIn))
                 .add(outputPerToken.multiply(BigDecimal.valueOf(draftTokens + checks * checkOut)));
         return "Ước tính chi phí: khoảng " + usd(usd.setScale(3, RoundingMode.UP)) + " (tối đa " + usd(settings.maxUsdPerChapter) + " cho chương này)";
@@ -244,7 +244,9 @@ final class EditorialApiPresenter {
         switch (run.state) {
             case FINAL_OK:
                 r.headline = "Đã biên tập xong";
-                r.detail = "Bản cuối đã qua bước kiểm. Không có mục nào cần xem thêm.";
+                r.detail = run.mode == EditorialApiContract.Mode.QUICK
+                        ? "Chế độ Nhanh chỉ biên tập, không có bước kiểm riêng. Không có cờ nào cần lưu ý."
+                        : "Bản cuối đã qua bước kiểm. Không có mục nào cần xem thêm.";
                 break;
             case FINAL_NOTES:
                 r.headline = "Đã biên tập xong — có mục cần xem";

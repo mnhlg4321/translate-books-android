@@ -205,7 +205,6 @@ def check_oracle_probe(fixture, output, fixtures_root, mode, reused_l1=False):
 
 API_MODES = ("API_V1_QUICK", "API_V1_THOROUGH")
 API_STEP_NAMES = ("EDIT", "CHECK", "RECHECK")
-API_MIN_CALLS = 2
 API_MAX_CALLS = 6
 API_FINISHED_STATES = ("FINAL_OK", "FINAL_NOTES")
 API_UNFINISHED_STATES = ("RETRY_REQUIRED", "WRONG_PAIR", "CANCELLED")
@@ -302,22 +301,22 @@ def check_api_fixture(fixture, output, fixtures_root, args, structural, metadata
     calls = structural.get("providerCalls")
     if not isinstance(calls, int) or isinstance(calls, bool) or calls < 1 or calls > API_MAX_CALLS:
         raise ValueError(fid + ": API_V1 request count is outside 1..6")
-    if finished and calls < API_MIN_CALLS:
-        raise ValueError(fid + ": a finished API_V1 run needs at least an edit and a check")
+    if finished and args.mode == "API_V1_THOROUGH" and calls < 2:
+        raise ValueError(fid + ": a finished THOROUGH run needs at least an edit and a check")
     if args.live:
         if metadata.get("providerKind") != "LIVE" or metadata.get("actualProviderCalls") != calls:
             raise ValueError(fid + ": expected a live provider run with one actual call per request")
     elif (metadata.get("providerKind") != "FAKE_OFFLINE" or metadata.get("actualProviderCalls") != 0
           or metadata.get("fakeProviderCalls") != calls):
         raise ValueError(fid + ": a non-fake provider ran or the fake call count differs")
-    if args.mode == "API_V1_QUICK" and calls > 4:
-        raise ValueError(fid + ": QUICK used more requests than edit, check and one retry each")
+    if args.mode == "API_V1_QUICK" and calls > 2:
+        raise ValueError(fid + ": QUICK is one edit; only one technical retry may add a request")
     final = read_bytes(os.path.join(output, "final.txt"))
     if sha(final) != metadata.get("finalSha256"):
         raise ValueError(fid + ": final hash mismatch")
     prompts, steps = check_api_prompt_captures(output, calls)
-    if args.mode == "API_V1_QUICK" and "RECHECK" in steps:
-        raise ValueError(fid + ": QUICK must not re-check")
+    if args.mode == "API_V1_QUICK" and any(step != "EDIT" for step in steps):
+        raise ValueError(fid + ": QUICK must not check or re-check")
     check_api_oracle_probe(fixture, output, fixtures_root, prompts)
     ledger = check_ledger(os.path.join(output, "spend-ledger.jsonl"))
     entry = {"fixture": fid, "providerCalls": calls, "ledger": ledger}

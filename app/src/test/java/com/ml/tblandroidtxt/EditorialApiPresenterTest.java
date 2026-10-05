@@ -148,6 +148,22 @@ public final class EditorialApiPresenterTest {
         assertTrue(thoroughUsd < 0.10);
     }
 
+    @Test public void quickIsTheEditAloneAndSaysSoEverywhere() {
+        EditorialApiSources s = sources("原文です", "Văn bản", true, true);
+        EditorialApiPresenter.Confirmation quick = EditorialApiPresenter.confirmation(combo(), s, "g", "p", "m", IN, OUT);
+        assertTrue(quick.modeLine, quick.modeLine.contains("chỉ biên tập, 1 lượt gọi"));
+        EditorialApiCombo thorough = combo();
+        EditorialApiCombo.Settings settings = new EditorialApiCombo.Settings();
+        settings.mode = EditorialApiContract.Mode.THOROUGH;
+        thorough.settingsJson = settings.toJson();
+        assertTrue(EditorialApiPresenter.confirmation(thorough, s, "g", "p", "m", IN, OUT).modeLine.contains("kiểm lại nếu có sửa"));
+        EditorialApiRun run = run(EditorialApiContract.RunState.FINAL_OK);
+        run.mode = EditorialApiContract.Mode.QUICK;
+        assertTrue(EditorialApiPresenter.result(run, List.of()).detail.contains("không có bước kiểm riêng"));
+        run.mode = EditorialApiContract.Mode.THOROUGH;
+        assertTrue(EditorialApiPresenter.result(run, List.of()).detail.contains("đã qua bước kiểm"));
+    }
+
     @Test public void progressNamesTheStepAndMarksARetry() {
         assertEquals("Đang biên tập…", EditorialApiPresenter.progressLine(EditorialApiContract.Step.EDIT, 1));
         assertEquals("Đang kiểm…", EditorialApiPresenter.progressLine(EditorialApiContract.Step.CHECK, 1));

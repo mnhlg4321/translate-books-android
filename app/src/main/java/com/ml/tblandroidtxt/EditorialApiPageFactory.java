@@ -40,7 +40,7 @@ final class EditorialApiPageFactory {
 
     private void listScreen(LinearLayout root) {
         LinearLayout intro = a.sectionCard("✎", EditorialApiPresenter.TAB_TITLE);
-        intro.addView(wrapped("Chọn bản gốc (RAW) và bản dịch nháp (DRAFT), kèm Glossary và Pronoun nếu có. Ứng dụng nhờ model sửa bản nháp cho đúng và hay hơn, rồi kiểm lại một lần.", 14, a.TEXT));
+        intro.addView(wrapped("Chọn bản gốc (RAW) và bản dịch nháp (DRAFT), kèm Glossary và Pronoun nếu có. Ứng dụng nhờ model sửa bản nháp cho đúng và hay hơn; chế độ Kỹ kiểm thêm một lượt.", 14, a.TEXT));
         intro.addView(a.primaryButton("+ Tổ hợp mới", v -> c.newCombo()), a.marginLP(-1, a.dp(48), 0, 12, 0, 0));
         root.addView(intro);
 
@@ -123,7 +123,7 @@ final class EditorialApiPageFactory {
         modes.addView(quick);
         modes.addView(thorough);
         card.addView(modes);
-        card.addView(wrapped("Nhanh: biên tập rồi kiểm một lần. Kỹ: kiểm thêm một lần sau khi áp các sửa nhỏ.", 12, a.MUTED), a.marginLP(-1, -2, 0, 2, 0, 10));
+        card.addView(wrapped("Nhanh: chỉ biên tập (1 lượt gọi). Kỹ: biên tập, kiểm, và kiểm lại nếu có sửa.", 12, a.MUTED), a.marginLP(-1, -2, 0, 2, 0, 10));
 
         EditText model = a.input("Mặc định theo Cài đặt", settings.model);
         card.addView(a.fieldBlock("MODEL (không bắt buộc)", model));

@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-05 (+07:00): Editorial API V1 N4 in progress. N3 emulator run found that an unknown-price model with the default USD 0.10 cap is stopped by the cost cap (conservative price x 4096 output tokens); the confirmation screen now warns about it (app unit 385 PASS) and the device test uses a cap that fits. Builds 4.18-api.1/code238 (195406bb) archived; AndroidTest APK archived; clean-archive check: engine 484, app 384, Python 71, androidTest compile PASS. Store/migration androidTest 4/4 on emulator-5554. No provider call, pilot untouched.
+- Updated: 2026-10-05 (+07:00): Editorial API V1 N4 in progress. Emulator run of N3 found two things, both fixed: (1) an unknown-price model with the default USD 0.10 cap is stopped by the cost cap, so the confirmation screen now warns; (2) wording and the API_V1 verifier still treated QUICK as edit+check, but QUICK is the edit alone (1 call) and THOROUGH is edit+check(+re-check); UI text, cost estimate, verifier and tests corrected. App unit 386, Python 71 PASS. Store/migration androidTest 4/4 on emulator-5554. No provider call, pilot untouched.
 - Current version: active v4.18.
 - Current branch: `feature/v4.18-p5e-runner-repair-20260917`; continue the existing branch and release checklist.
-- Current commit: 195406bb — implementation baseline immediately before this snapshot update; confirm actual HEAD on resume.
+- Current commit: e3f8a784 — implementation baseline immediately before this snapshot update; confirm actual HEAD on resume.
 - Current build: `4.18-p6.24`/code237, event `build-20261005-191113`, source `3b570135`; production APK SHA-256 `8CE099A7AD5BBD78FA681C6C500412FB4B6F10C5C7E44607764F5ABEBF173193`, AndroidTest `DB313687AC2A9CC847CDDF4EE85975C2D9FDF396F6C7EA7905B0A1288715238F` (event `p6-z5b-3b570135-20261005-01`). Installed on `emulator-5554` only and archived in both payload roots.
 - Current phase: EDITORIAL_API_V1 N1-N3 complete; N4 (wrapper builds, clean-archive verification, emulator run, screenshots, dry-run, execution report) next; stop before N5.
 - Completed tasks: P6 W1-W5, Z1-Z5; D-N1..D-N3 recorded; N1 engine (484 tests); N2 app data/provider/service/export/runner/scorer; N3 Biên tập UI + presenter/string tests.
