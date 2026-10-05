@@ -188,7 +188,9 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-Z1–Z5 đã hoàn tất; G1 base 8/8 và hai vòng lặp 4/4 qua cấu trúc. Điều đó chưa chứng minh chất lượng phát hiện của L1. Review baseline `006434da` phát hiện và sửa lỗi verifier dùng response tương lai để bỏ qua rò đáp án; 12 output đã lưu vẫn qua phép kiểm sửa. Next action duy nhất: hoàn tất gói chấm nội dung offline và đề xuất G2 cụ thể tại `docs/P6_R6_DECISIVE_FIX_PLAN_20261005.md` mục 7. D-Z3 đã được duyệt; G2 chưa được duyệt/chạy. Không chạy lại G1, gọi provider hay đụng thiết bị trong gói này.
+Hướng P6 đổi (đề xuất 2026-10-05, chờ owner duyệt): `docs/EDITORIAL_API_V1_PLAN_20261005.md` — hợp đồng `EDITORIAL_API_V1` (Biên tập E + Kiểm C, đầu ra E là văn bản trong thẻ), UI tổ hợp RAW/DRAFT/Glossary/Pronoun dùng Library của luồng Dịch, đóng băng đường SAFE4 8-call và hủy G2 (preflight `aa565098` dừng vì mất predecessor, 0 call). Next action duy nhất: owner duyệt D-N1, D-N2, D-N3 (plan mục 9); sau đó Codex thực hiện `docs/EDITORIAL_API_V1_WORK_REQUEST_N1_N4_20261005.md` (offline, không provider), dừng trước N5.
+
+Lịch sử next action trước 2026-10-05 tối (giữ để tra cứu): Z1–Z5 đã hoàn tất; G1 base 8/8 và hai vòng lặp 4/4 qua cấu trúc. Điều đó chưa chứng minh chất lượng phát hiện của L1. Review baseline `006434da` phát hiện và sửa lỗi verifier dùng response tương lai để bỏ qua rò đáp án; 12 output đã lưu vẫn qua phép kiểm sửa. Next action duy nhất: hoàn tất gói chấm nội dung offline và đề xuất G2 cụ thể tại `docs/P6_R6_DECISIVE_FIX_PLAN_20261005.md` mục 7. D-Z3 đã được duyệt; G2 chưa được duyệt/chạy. Không chạy lại G1, gọi provider hay đụng thiết bị trong gói này.
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 
