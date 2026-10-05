@@ -80,4 +80,9 @@ Tạo `docs/EDITORIAL_API_V1_N1_N4_EXECUTION_20261005.md` gồm: commit từng g
 
 ## Quyết định
 
-(Codex ghi lại câu duyệt của owner cho D-N1, D-N2, D-N3 tại đây trước khi sửa mã.)
+Ghi nhận ngày 2026-10-05, từ tin nhắn của owner trong phiên làm việc: "Owner duyệt D-N1, D-N2, D-N3 trong docs/EDITORIAL_API_V1_PLAN_20261005.md (commit 87fcd875). Thực hiện docs/EDITORIAL_API_V1_WORK_REQUEST_N1_N4_20261005.md: ghi câu duyệt vào mục "Quyết định", làm N1→N4 offline trong một lượt, push sau mỗi gói, không gọi provider, không đụng pilot. Báo cáo theo mục "Bằng chứng phải giữ" rồi dừng trước N5."
+
+- D-N1 (đổi hướng sang `EDITORIAL_API_V1`, đóng băng đường SAFE4 8-call, hủy G2): **đã duyệt**.
+- D-N2 (thay tiêu chí nghiệm thu artifact L1–L3 bằng tiêu chí chất lượng mục 6 + owner đọc 3 chương): **đã duyệt**.
+- D-N3 (biên tập khi thiếu Glossary/Pronoun, cảnh báo không chặn): **đã duyệt**.
+- D-N4 (ngân sách N5, trần USD 1.00): **chưa duyệt**; N5 không nằm trong gói này, dừng sau N4.
