@@ -104,6 +104,16 @@ public final class EditorialApiPresenterTest {
         assertTrue(c.canRun());
     }
 
+    @Test public void aModelWithoutAKnownPriceWarnsThatTheCapMayStopTheRun() {
+        EditorialApiSources s = sources("原文です", "Văn bản", true, true);
+        EditorialApiPresenter.Confirmation known = EditorialApiPresenter.confirmation(combo(), s, "g", "p", "m", IN, OUT, true);
+        EditorialApiPresenter.Confirmation unknown = EditorialApiPresenter.confirmation(combo(), s, "g", "p", "m", IN, OUT, false);
+        assertTrue(known.warnings.isEmpty());
+        assertEquals(1, unknown.warnings.size());
+        assertTrue(unknown.warnings.get(0).contains("chạm trần"));
+        assertTrue(unknown.canRun());
+    }
+
     @Test public void anOddLengthRatioWarnsOnceAndDoesNotBlock() {
         EditorialApiSources s = sources("あ".repeat(400), "Ngắn", true, true);
         EditorialApiPresenter.Confirmation c = EditorialApiPresenter.confirmation(combo(), s, "g", "p", "fake-model", IN, OUT);

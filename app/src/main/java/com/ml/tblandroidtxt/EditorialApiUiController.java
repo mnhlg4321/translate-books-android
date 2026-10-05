@@ -234,9 +234,9 @@ final class EditorialApiUiController {
             try {
                 EditorialApiSources loaded = EditorialApiSourceLoader.load(appContext, snapshot, settings.targetLanguage);
                 String model = effectiveModel(snapshot, settings);
-                EditorialApiRunService.Pricing pricing = new EditorialApiModelPricing(settings.provider);
+                EditorialApiModelPricing pricing = new EditorialApiModelPricing(settings.provider);
                 EditorialApiPresenter.Confirmation view = EditorialApiPresenter.confirmation(snapshot, loaded, glossaryName(), pronounName(),
-                        model, pricing.inputPerToken(model), pricing.outputPerToken(model));
+                        model, pricing.inputPerToken(model), pricing.outputPerToken(model), pricing.known(model));
                 ui(() -> { sources = loaded; confirmation = view; screen = Screen.CONFIRM; error = ""; refresh(); });
             } catch (EditorialApiSourceLoader.SourceException unreadable) {
                 ui(() -> { screen = Screen.COMBO; error = unreadable.getMessage(); refresh(); });
@@ -289,6 +289,7 @@ final class EditorialApiUiController {
                     @Override public void onFinished(EditorialApiRun finished) { }
                 });
             } catch (RuntimeException failure) {
+                android.util.Log.w("EditorialApi", "run failed: " + failure);
                 error = "Không chạy được: " + failure.getClass().getSimpleName();
             } finally {
                 store.close();

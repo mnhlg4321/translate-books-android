@@ -9,6 +9,12 @@ public final class EditorialApiModelPricing implements EditorialApiRunService.Pr
 
     public EditorialApiModelPricing(String provider) { this.provider = provider == null ? "" : provider; }
 
+    /** Whether the catalog knows both prices of this model. */
+    public boolean known(String model) {
+        ModelCatalog.ModelInfo info = ModelCatalog.findModelInfo(provider, model);
+        return info != null && info.inputPriceKnown && info.outputPriceKnown && finite(info.inputPerMillion) && finite(info.outputPerMillion);
+    }
+
     @Override public BigDecimal inputPerToken(String model) {
         ModelCatalog.ModelInfo info = ModelCatalog.findModelInfo(provider, model);
         if (info == null || !info.inputPriceKnown || !finite(info.inputPerMillion)) return EditorialApiRunService.CONSERVATIVE.inputPerToken(model);

@@ -138,7 +138,7 @@ public final class EditorialApiBienTapFlowInstrumentedTest {
             c.combo.draftName = "draft001.txt";
             c.combo.glossaryId = glossary;
             c.combo.pronounId = pronoun;
-            c.saveAndContinue("", mode, "fake-model", "0.10");
+            c.saveAndContinue("", mode, "fake-model", "1.00");
             return c;
         });
         waitFor("confirmation", () -> controller.screen == EditorialApiUiController.Screen.CONFIRM);
@@ -149,14 +149,15 @@ public final class EditorialApiBienTapFlowInstrumentedTest {
         assertTrue(confirmText, confirmText.contains(withReferences ? "glossary-bientap-test" : "Không dùng Glossary"));
         assertTrue(confirmText, confirmText.contains(withReferences ? "pronoun-bientap-test" : "Không dùng Pronoun"));
         assertEquals(withReferences, confirmText.contains("— 1 mục"));
-        assertEquals(!withReferences, confirmText.contains("⚠"));
+        assertEquals(!withReferences, confirmText.contains("Không có Glossary:"));
+        assertEquals(!withReferences, confirmText.contains("Không có Pronoun:"));
         long comboId = controller.combo.id;
         comboIds.add(comboId);
         assertEquals("raw001+draft001" + (withReferences ? "+glossary-bientap-test+pronoun-bientap-test" : ""), controller.combo.name);
 
         onUi(scenario, activity -> { activity.editorialApi().startRun(); return null; });
         waitFor("result", () -> controller.screen == EditorialApiUiController.Screen.RESULT && !controller.running());
-        assertEquals(mode == EditorialApiContract.Mode.QUICK ? 2 : 2, provider.requests.size());
+        assertEquals("requests; error=[" + controller.error + "] progress=[" + controller.progress + "]", 2, provider.requests.size());
 
         String resultText = onUi(scenario, activity -> screenText(activity, activity));
         assertTrue(resultText, resultText.contains("Đã biên tập xong"));

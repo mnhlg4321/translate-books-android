@@ -103,6 +103,11 @@ final class EditorialApiPresenter {
 
     static Confirmation confirmation(EditorialApiCombo combo, EditorialApiSources sources, String glossaryName, String pronounName,
                                      String model, BigDecimal inputPerToken, BigDecimal outputPerToken) {
+        return confirmation(combo, sources, glossaryName, pronounName, model, inputPerToken, outputPerToken, true);
+    }
+
+    static Confirmation confirmation(EditorialApiCombo combo, EditorialApiSources sources, String glossaryName, String pronounName,
+                                     String model, BigDecimal inputPerToken, BigDecimal outputPerToken, boolean priceKnown) {
         Confirmation c = new Confirmation();
         EditorialApiCombo.Settings settings = combo.settings();
         c.comboName = combo.name;
@@ -138,6 +143,9 @@ final class EditorialApiPresenter {
         }
         if (model.isEmpty()) c.blockers.add("Chưa chọn model. Vào Cài đặt để chọn model và nhập khóa API.");
         c.costLine = costLine(sources, settings, inputPerToken, outputPerToken);
+        if (!priceKnown && !model.isEmpty()) {
+            c.warnings.add("Chưa có giá của model này trong danh mục: ước tính theo mức cao, và lần chạy có thể dừng sớm vì chạm trần chi phí. Nâng trần hoặc chọn model có giá.");
+        }
         return c;
     }
 
