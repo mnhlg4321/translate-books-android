@@ -1,8 +1,8 @@
 # Build State
 
-## Current offline G1 adjudication — 2026-10-05
+## Current G2 approval preflight stop — 2026-10-05
 
-Runtime/source baseline `270a27b9`; documentation and proposal package `0d9b5507` is pushed on the current branch. No APK, emulator/pilot operation or provider call occurred in this package. The 12 retained G1 outputs are all accounted for: 17 finding rows, 25 seeded-target opportunities, 10 semantic detections and 15 misses. Normalization audit: 17 duplicate references removed, 13 invalid speaker side records dropped, zero DRAFT anchor derivations, zero protected-span adjustment and no exercised truncation/default path. L1-only repair remains NOT_MEASURED. G1 ledger is verified at 41 settled calls, USD 0.28859445 / 1.00, pending 0. The concrete G2 proposal is `docs/P6_R6_G2_PROPOSAL_20261005.md`; G2 has not started. Next action: owner decision on that proposal; no live dispatch.
+Runtime/source baseline `270a27b9`; docs package `0d9b5507` and snapshot `84d10155` are pushed on the current branch. Owner approved the G2 proposal, but the first exact-predecessor preflight stopped before provider dispatch: `fx-a04` repeat-1 run `5d438ce3-1b6b-4fcd-8434-aa98deaa84a1` is not retained on the emulator, producing `P6_REUSED_L1_STATE_MISSING`. Fixture and prompt guards passed; actual provider calls and G2 spend are both 0. Do not substitute base `fx-a04`, whose report has a different hash and no finding. The preflight report is `docs/P6_R6_G2_PREFLIGHT_20261005.md`. G1 ledger remains 41 settled calls, USD 0.28859445 / 1.00, pending 0. Next action: owner decision on exact predecessor restoration or an explicit proposal change; no further G2 dispatch.
 
 ## Owner decision after U6 review — 2026-10-04
 
