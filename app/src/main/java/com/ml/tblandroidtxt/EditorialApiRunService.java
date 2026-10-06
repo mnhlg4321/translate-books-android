@@ -101,19 +101,26 @@ public final class EditorialApiRunService {
         try {
             EditorialApiFlow flow = new EditorialApiFlow(inputsOf(run, targetLanguage), EditorialApiFlow.Config.of(run.mode));
             try {
+                BigDecimal unknownReserve = BigDecimal.ZERO; // worst case of every call whose price never came back
+                boolean costBoundBroken = false; // a call billed more than its own worst case: stop sending, the price model is wrong
                 EditorialApiFlow.Request request;
                 while ((request = flow.nextRequest()) != null) {
                     if (cancelled) { flow.cancel(); break; }
-                    BigDecimal spent = BigDecimal.ZERO;
+                    BigDecimal spent = unknownReserve;
                     for (EditorialApiFlow.StepRecord s : flow.stepsSoFar()) spent = spent.add(s.cost());
                     int maxOut = request.step() == EditorialApiContract.Step.EDIT
                             ? OpenRouterEditorialApiProvider.editMaxOutputTokens(run.draftText.length()) : CHECK_MAX_OUTPUT_TOKENS;
-                    if (spent.add(worstCase(request, maxOut, run.model)).compareTo(capUsd) > 0) {
+                    BigDecimal worst = worstCase(request, maxOut, run.model);
+                    if (costBoundBroken) {
+                        flow.skipStep("COST_BOUND_EXCEEDED");
+                    } else if (spent.add(worst).compareTo(capUsd) > 0) {
                         flow.skipStep("COST_CAP");
                     } else {
                         if (listener != null) listener.onStep(run, request.step(), request.attempt());
                         EditorialApiFlow.StepResponse response = provider.call(request, run.model, maxOut, timeoutMillis);
-                        if (cancelled) { flow.cancel(); break; }
+                        if (!response.costKnown()) unknownReserve = unknownReserve.add(worst);
+                        if (response.costKnown() && response.cost().compareTo(worst) > 0) costBoundBroken = true;
+                        if (cancelled) { flow.cancel(response); break; }
                         flow.accept(response);
                     }
                     EditorialApiRunCodec.applyProgress(run, flow.stepsSoFar(), flow.editedSoFar());

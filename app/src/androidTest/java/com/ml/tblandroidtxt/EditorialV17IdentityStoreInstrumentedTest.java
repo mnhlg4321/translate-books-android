@@ -77,7 +77,7 @@ public final class EditorialV17IdentityStoreInstrumentedTest {
 
     @Test public void freshV17SchemaHasFiveStoresAndNoIdentityBackfill() {
         SQLiteDatabase db = repository.editorialWritableDatabase();
-        assertEquals(25, db.getVersion());
+        assertEquals(26, db.getVersion());
         for (String table : List.of("editorial_project_revisions", "editorial_input_scope_snapshots",
                 "editorial_input_scope_snapshot_entries", "editorial_closed_run_contexts",
                 "editorial_run_lineage_bindings")) assertEquals(1, scalarInt(db,
@@ -255,7 +255,7 @@ public final class EditorialV17IdentityStoreInstrumentedTest {
         old.close();
         repository = new TranslationRepository(context, databaseName);
         SQLiteDatabase upgraded = repository.editorialReadableDatabase();
-        assertEquals(25, upgraded.getVersion());
+        assertEquals(26, upgraded.getVersion());
         assertEquals(1, scalarInt(upgraded, "SELECT COUNT(*) FROM editorial_lineage_records"));
         assertEquals(0, scalarInt(upgraded, "SELECT COUNT(*) FROM editorial_project_revisions"));
         assertEquals(0, scalarInt(upgraded, "SELECT COUNT(*) FROM editorial_input_scope_snapshots"));

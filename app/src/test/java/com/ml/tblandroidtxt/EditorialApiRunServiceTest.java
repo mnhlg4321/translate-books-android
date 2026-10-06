@@ -127,6 +127,60 @@ public final class EditorialApiRunServiceTest {
         assertTrue(run.guardsJson.contains("\"checkUnavailable\":true"));
     }
 
+    @Test public void anUnknownOutcomeIsNotRepeatedAndTheRunSaysTheChargeIsUnknown() {
+        FakeEditorialApiProvider provider = FakeEditorialApiProvider.scripted(EditorialApiFlow.StepResponse.unknownOutcome("SocketTimeoutException: read timed out"),
+                FakeEditorialApiProvider.edited(EDITED.strip()));
+        EditorialApiRunService service = service(provider);
+        EditorialApiRun run = service.execute(service.prepare(combo(), sources(), "m", Mode.QUICK).id, CAP, "Vietnamese", null);
+        assertEquals(1, provider.requests.size());
+        assertEquals(RunState.RETRY_REQUIRED, run.state);
+        assertFalse(run.costKnown);
+        assertEquals(1, run.calls);
+        assertEquals(DRAFT, run.finalText);
+        assertTrue(run.error, run.error.startsWith("SocketTimeoutException"));
+        assertFalse(EditorialApiRunService.isInterrupted(run));
+        assertTrue(EditorialApiPresenter.result(run, List.of()).detail.contains("chưa rõ số tiền"));
+        // the stored row says the same after a reopen
+        assertFalse(store.getRun(run.id).costKnown);
+    }
+
+    @Test public void aDefiniteRejectionBeforeDispatchStillGetsItsOneRetryAndKeepsTheCostKnown() {
+        FakeEditorialApiProvider provider = FakeEditorialApiProvider.scripted(EditorialApiFlow.StepResponse.failure("ApiHttpException: 429"),
+                FakeEditorialApiProvider.edited(EDITED.strip()));
+        EditorialApiRunService service = service(provider);
+        EditorialApiRun run = service.execute(service.prepare(combo(), sources(), "m", Mode.QUICK).id, CAP, "Vietnamese", null);
+        assertEquals(2, provider.requests.size());
+        assertEquals(RunState.FINAL_OK, run.state);
+        assertTrue(run.costKnown);
+    }
+
+    @Test public void anAnswerWithoutAPriceStaysReservedAtItsWorstCaseWhenCheckingTheCap() {
+        EditorialApiFlow.StepResponse noPrice = new EditorialApiFlow.StepResponse("<EDITED>" + EDITED.strip() + "</EDITED>", "stop", 1500, 400,
+                BigDecimal.ZERO, false, "m", "r", "");
+        FakeEditorialApiProvider provider = FakeEditorialApiProvider.scripted(noPrice, FakeEditorialApiProvider.pass());
+        EditorialApiRunService service = service(provider);
+        // edit worst case is about USD 0.108 and the check about USD 0.113: 0.20 admits the edit, not the check on top of an unpriced edit
+        EditorialApiRun run = service.execute(service.prepare(combo(), sources(), "m", Mode.THOROUGH).id, new BigDecimal("0.20"), "Vietnamese", null);
+        assertEquals(1, provider.requests.size());
+        assertEquals(RunState.FINAL_NOTES, run.state);
+        assertFalse(run.costKnown);
+        assertTrue(run.guardsJson.contains("\"checkUnavailable\":true"));
+        assertTrue(run.stepsJson.contains("COST_CAP"));
+    }
+
+    @Test public void aCallBilledAboveItsOwnWorstCaseStopsFurtherDispatchAndKeepsTheRealCharge() {
+        EditorialApiFlow.StepResponse expensive = new EditorialApiFlow.StepResponse("<EDITED>" + EDITED.strip() + "</EDITED>", "stop", 1500, 400,
+                new BigDecimal("5.0"), true, "m", "r", "");
+        FakeEditorialApiProvider provider = FakeEditorialApiProvider.scripted(expensive, FakeEditorialApiProvider.pass());
+        EditorialApiRunService service = service(provider);
+        EditorialApiRun run = service.execute(service.prepare(combo(), sources(), "m", Mode.THOROUGH).id, new BigDecimal("100"), "Vietnamese", null);
+        assertEquals(1, provider.requests.size());
+        assertEquals(RunState.FINAL_NOTES, run.state);
+        assertEquals(0, new BigDecimal("5.0").compareTo(run.usd));
+        assertTrue(run.stepsJson.contains("COST_BOUND_EXCEEDED"));
+        assertEquals(EDITED.strip(), run.finalText);
+    }
+
     @Test public void cancelDuringACallEndsTheRunWithTheDraft() {
         FakeEditorialApiProvider provider = FakeEditorialApiProvider.editsAndPasses(EDITED.strip());
         EditorialApiRunService service = service(provider);
@@ -137,6 +191,11 @@ public final class EditorialApiRunServiceTest {
         assertEquals(DRAFT, run.finalText);
         assertTrue(provider.cancelled);
         assertEquals(1, provider.requests.size());
+        assertEquals(1, run.calls);
+        assertEquals(0, new BigDecimal("0.004").compareTo(run.usd));
+        assertTrue(run.inputTokens > 0);
+        assertTrue(run.stepsJson.contains("CANCELLED"));
+        assertEquals(run.usd, store.getRun(prepared.id).usd);
     }
 
     @Test public void aRunLeftRunningByARestartIsInterruptedAndNeverResentByOpeningIt() {

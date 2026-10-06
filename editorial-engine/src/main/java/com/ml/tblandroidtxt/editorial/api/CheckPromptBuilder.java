@@ -14,6 +14,16 @@ public final class CheckPromptBuilder {
 
     public static ApiPrompt build(EditorialApiContract.Step step, String raw, String draft, String edited,
                                   List<EditGuards.Flag> flags, String targetLanguage) {
+        return build(step, raw, draft, edited, flags, targetLanguage, List.of(), List.of());
+    }
+
+    /**
+     * @param glossary the glossary entries whose source occurs in RAW, as the edit received them
+     * @param pronounRows the pronoun rows in scope for RAW, as the edit received them
+     */
+    public static ApiPrompt build(EditorialApiContract.Step step, String raw, String draft, String edited,
+                                  List<EditGuards.Flag> flags, String targetLanguage,
+                                  List<EditInputs.GlossaryEntry> glossary, List<String> pronounRows) {
         StringBuilder system = new StringBuilder(QualityCore.checkPrompt(targetLanguage));
         system.append("\nCHECK RULES\n")
                 .append("Report a problem only when RAW and the EDITED text disagree, when something is missing, added or ")
@@ -21,6 +31,12 @@ public final class CheckPromptBuilder {
                 .append("edit broke a passage that was right in the draft (REGRESSION). Quote exactly; the app finds your quote ")
                 .append("by plain text matching. A suggested fix replaces exactly the edited_quote and nothing else.\n\n")
                 .append(CheckSpec.promptDescription());
+        if (!glossary.isEmpty() || !pronounRows.isEmpty()) {
+            system.append("\nAUTHORITATIVE REFERENCE\nThe glossary and pronoun rows below are the ones the editor was given for this chapter. ")
+                    .append("Report a term or form of address in the EDITED text that contradicts them (kind GLOSSARY or PRONOUN); ")
+                    .append("do not report a form they do not cover.\n");
+            EditPromptBuilder.appendReferences(system, glossary, pronounRows);
+        }
         StringBuilder user = new StringBuilder("# RAW\n").append(raw).append("\n\n# EDITED\n").append(edited).append("\n\n");
         user.append("# CHANGED PASSAGES (draft -> edited)\n");
         List<LineDiff.Segment> segments = LineDiff.segments(draft, edited);
@@ -38,7 +54,7 @@ public final class CheckPromptBuilder {
         user.append("\n# POINTS TO LOOK AT\n");
         if (flags.isEmpty()) user.append("(none)\n");
         for (EditGuards.Flag flag : flags) user.append("- ").append(flag.code().name()).append(": ").append(flag.detail()).append('\n');
-        return new ApiPrompt(step, system.toString(), user.toString(), 0, 0, QualityCore.checkSha256());
+        return new ApiPrompt(step, system.toString(), user.toString(), glossary.size(), pronounRows.size(), QualityCore.checkSha256());
     }
 
     private static String oneLine(String text) {

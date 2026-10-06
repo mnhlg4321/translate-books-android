@@ -62,6 +62,20 @@ public final class OpenRouterEditorialApiProviderTest {
         assertTrue(text, text.contains("[key]"));
     }
 
+    @Test public void onlyProvenPreDispatchFailuresAreDefinite() {
+        assertTrue(OpenRouterEditorialApiProvider.notDispatched(new IllegalArgumentException("API key is empty")));
+        assertTrue(OpenRouterEditorialApiProvider.notDispatched(new java.net.UnknownHostException("openrouter.ai")));
+        assertTrue(OpenRouterEditorialApiProvider.notDispatched(new java.net.ConnectException("refused")));
+        assertTrue(OpenRouterEditorialApiProvider.notDispatched(new ApiHttpException(401, 0, "unauthorized")));
+        assertTrue(OpenRouterEditorialApiProvider.notDispatched(new ApiHttpException(429, 1000, "rate limited")));
+        // after sending, the charge cannot be told
+        assertFalse(OpenRouterEditorialApiProvider.notDispatched(new java.net.SocketTimeoutException("read timed out")));
+        assertFalse(OpenRouterEditorialApiProvider.notDispatched(new java.io.IOException("connection reset")));
+        assertFalse(OpenRouterEditorialApiProvider.notDispatched(new ApiHttpException(503, 0, "unavailable")));
+        assertFalse(OpenRouterEditorialApiProvider.notDispatched(new ApiHttpException(408, 0, "timeout")));
+        assertFalse(OpenRouterEditorialApiProvider.notDispatched(new RuntimeException("No choices returned")));
+    }
+
     @Test public void theEditPromptStaysSeparateFromTheLegacyPromptPlan() {
         assertTrue(EditPromptBuilder.OUTPUT_CONTRACT.contains("<EDITED>"));
         assertFalse(EditPromptBuilder.OUTPUT_CONTRACT.contains("<TRANSLATION>"));

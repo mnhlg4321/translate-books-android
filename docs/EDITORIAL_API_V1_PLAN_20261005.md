@@ -1,6 +1,6 @@
 # Editorial API V1 — kế hoạch đổi hướng (2026-10-05)
 
-Trạng thái: ĐỀ XUẤT, chờ owner duyệt các quyết định ở mục 9. Tài liệu này thay hướng thực thi của P6 trong `EDITORIAL_RECOVERY_V4_18.md`; không mở branch, release hay checklist mới (vẫn `feature/v4.18-p5e-runner-repair-20260917`, checklist `release_checklists/v4.18-editorial-v5-safe-4-1-3.md`). Viết sau khi coordinator (Claude) đọc lại toàn bộ phiên điều phối, phiên đánh giá kiến trúc của Codex (`chatgpt.com/s/cx_6ac3bd82…`, chỉ phân tích, không sửa mã) và đối chiếu mã tại HEAD `aa565098`.
+Trạng thái 2026-10-06: D-N1..D-N3 đã được ghi nhận duyệt trong work request; D-N4 chưa duyệt. N1–N4 đã triển khai, nhưng independent review tại `5bea4c93` yêu cầu đóng thiếu sót offline trước khi trình N5; xem mục Independent review trong `EDITORIAL_API_V1_N1_N4_EXECUTION_20261005.md`. Tài liệu này thay hướng thực thi của P6 trong `EDITORIAL_RECOVERY_V4_18.md`; không mở branch, release hay checklist mới (vẫn `feature/v4.18-p5e-runner-repair-20260917`, checklist `release_checklists/v4.18-editorial-v5-safe-4-1-3.md`). Phần đề xuất gốc bên dưới được giữ để đối chiếu quyết định, không tự tạo quyền live.
 
 ## 1. Vì sao đổi hướng
 
@@ -149,7 +149,9 @@ Cổng quyết định (đề xuất, owner có thể chỉnh):
 | B hơn A ≥ 4 target hoặc ít lỗi mới hơn rõ | Mặc định Kỹ; ngược lại mặc định Nhanh (rẻ hơn), giữ Kỹ làm tùy chọn |
 | Cả hai < 15/25 | Không chạy chương thật; phân tích lỗi bị bỏ sót theo loại, sửa Quality Core/C prompt một lần, đo lại một lần (ngân sách riêng) |
 
-Ước tính chi phí (từ giá G1: ~USD 0.13/M input, ~USD 1.25/M output): E ≈ 25k in + 10k out ≈ USD 0.016; C ≈ 30k in + 1.5k out ≈ USD 0.006. A/B 10 run ≈ USD 0.45 thực tế; reservation worst-case cần trần nhóm mới **USD 1.00** (ledger mới, không kế thừa ledger G1/G2).
+Ma trận N5 đã chốt theo plan (24 run, 12 mỗi nhánh): 8 fixture cơ sở (`fx-a02`, `fx-a03`, `fx-a04`, `fx-a05`, `fx-a07`, `fx-a08`, `fx-a11`, `fx-a12`) + 2 lượt lặp `fx-a04` + 2 lượt lặp `fx-a11` (tổng 12 run mỗi nhánh). Target mỗi nhánh: a03 1 + a04 1 + a05 1 + a07 1 + a08 1 + a11 6 = 11 trong lượt cơ sở, cộng lặp 2×1 + 2×6 = 14, tổng **25**. `fx-a02` được đánh dấu là control danh nghĩa, **không** coi là sạch: phân xử G1 đã xác nhận 1 lỗi nội dung thêm (`E_L245_MEANING`), nên "lỗi mới" trên a02 chỉ tính sau khi trừ lỗi đã có sẵn trong DRAFT. Đây là lỗi đếm của bản đề xuất đầu ("10 run"); tiêu chí cổng ở trên **không** đổi.
+
+Ước tính chi phí (từ giá G1: ~USD 0.13/M input, ~USD 1.25/M output; đơn giá thật phải chốt trước khi duyệt D-N4, runner hiện đặt cơ sở reservation 0.25/1.20): E ≈ USD 0.016, C ≈ USD 0.006, C2 ≈ USD 0.006. Nhánh A 12 × 0.016 ≈ USD 0.19; nhánh B 12 × (0.016 + 0.006 + 0.006) ≈ USD 0.34 (C2 chỉ khi có sửa được áp). Tổng ước tính ≈ USD 0.53 thực tế; trần nhóm mới **USD 1.00** (ledger mới, không kế thừa ledger G1/G2) được thực thi bằng reservation worst-case từng call: nó bảo đảm không vượt 1.00, không bảo đảm đủ 24 run nếu giá thực tế cao hơn ước tính (khi đó nhóm dừng sạch ở trần và báo phần đã đo).
 
 ## 7. Lộ trình
 

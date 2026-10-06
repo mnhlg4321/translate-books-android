@@ -103,7 +103,8 @@ final class EditorialApiPageFactory {
         EditorialApiCombo.Settings settings = combo.settings();
         LinearLayout card = a.sectionCard("✎", combo.id > 0 ? "Sửa tổ hợp" : "Tổ hợp mới");
 
-        EditText name = a.input("Tên (để trống: tự đặt theo các file)", combo.name);
+        EditorialApiUiController.Form form = c.form;
+        EditText name = a.input("Tên (để trống: tự đặt theo các file)", form != null ? form.name : combo.name);
         card.addView(a.fieldBlock("TÊN", name));
 
         card.addView(fileRow("RAW — bản gốc", combo.rawName, true));
@@ -118,16 +119,20 @@ final class EditorialApiPageFactory {
         card.addView(modeLabel, a.marginLP(-1, -2, 0, 4, 0, 4));
         RadioGroup modes = new RadioGroup(a);
         modes.setOrientation(RadioGroup.HORIZONTAL);
-        RadioButton quick = radio("Nhanh", settings.mode == EditorialApiContract.Mode.QUICK);
-        RadioButton thorough = radio("Kỹ", settings.mode == EditorialApiContract.Mode.THOROUGH);
+        EditorialApiContract.Mode shownMode = form != null ? form.mode : settings.mode;
+        RadioButton quick = radio("Nhanh", shownMode == EditorialApiContract.Mode.QUICK);
+        RadioButton thorough = radio("Kỹ", shownMode == EditorialApiContract.Mode.THOROUGH);
         modes.addView(quick);
         modes.addView(thorough);
         card.addView(modes);
         card.addView(wrapped("Nhanh: chỉ biên tập (1 lượt gọi). Kỹ: biên tập, kiểm, và kiểm lại nếu có sửa.", 12, a.MUTED), a.marginLP(-1, -2, 0, 2, 0, 10));
 
-        EditText model = a.input("Mặc định theo Cài đặt", settings.model);
+        EditText model = a.input("Mặc định theo Cài đặt", form != null ? form.model : settings.model);
         card.addView(a.fieldBlock("MODEL (không bắt buộc)", model));
-        EditText cap = a.decimal("0.10", settings.maxUsdPerChapter.toPlainString());
+        EditText cap = a.decimal("0.10", form != null ? form.cap : settings.maxUsdPerChapter.toPlainString());
+        c.formReader = () -> new EditorialApiUiController.Form(name.getText().toString(),
+                thorough.isChecked() ? EditorialApiContract.Mode.THOROUGH : EditorialApiContract.Mode.QUICK,
+                model.getText().toString(), cap.getText().toString());
         card.addView(a.fieldBlock("TRẦN CHI PHÍ MỖI CHƯƠNG (USD)", cap));
 
         if (!c.error.isEmpty()) card.addView(wrapped(c.error, 13, a.RED), a.marginLP(-1, -2, 0, 0, 0, 8));
@@ -135,6 +140,8 @@ final class EditorialApiPageFactory {
         card.addView(a.primaryButton("Tiếp tục", v -> c.saveAndContinue(name.getText().toString(),
                 thorough.isChecked() ? EditorialApiContract.Mode.THOROUGH : EditorialApiContract.Mode.QUICK,
                 model.getText().toString(), cap.getText().toString())), new LinearLayout.LayoutParams(-1, a.dp(48)));
+        card.addView(a.secondaryButton("Lưu", v -> { EditorialApiUiController.Form typed = c.formReader.get();
+            c.saveOnly(typed.name, typed.mode, typed.model, typed.cap); }), a.marginLP(-1, a.dp(44), 0, 8, 0, 0));
         card.addView(a.secondaryButton("Quay lại", v -> c.showList()), a.marginLP(-1, a.dp(44), 0, 8, 0, 0));
         root.addView(card);
     }

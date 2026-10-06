@@ -33,8 +33,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * The Biên tập flow on the device with a fake provider and synthetic text: create a combo, confirm, run, read the result,
- * reopen after the process-level state is gone, and export TXT whose SHA-256 equals the final text. No network.
+ * Controller-level flow on the device with a fake provider and synthetic text: the test sets the combo fields and calls the
+ * controller (saveAndContinue, startRun, the export callback) and then reads the rendered screen and the stored row. It is NOT a
+ * traversal of the buttons, selectors or system pickers: that is {@link EditorialApiBienTapUiInstrumentedTest}. No network.
  */
 @RunWith(AndroidJUnit4.class)
 public final class EditorialApiBienTapFlowInstrumentedTest {

@@ -18,6 +18,17 @@ Nếu có khác biệt, Project/Workflow đã pin trong chain và recovery autho
 hiện hành có ưu tiên tương ứng; không tự suy ra chapter, ngân sách hay quyền
 thực thi còn thiếu.
 
+## 1A. Hướng hiện hành: EDITORIAL_API_V1 (D-N1..D-N3 đã duyệt 2026-10-05)
+
+Từ D-N2, tiêu chí **artifact** L1–L3 dưới đây (REPORT_L1, VI_L2, CHANGE_MAP_L2, ledger, Speaker Proof, Stop Receipt) chỉ còn áp dụng cho đường SAFE4 đóng băng và cho việc đọc lại bằng chứng lịch sử. Chúng **không** dùng để nghiệm thu `EDITORIAL_API_V1`. Tiêu chí **chất lượng** không bị hạ; mọi mục sau phải có bằng chứng, không suy từ fake provider:
+
+1. Sản phẩm là bản văn cuối đã lưu, mở lại được sau khi process bị tắt, và xuất TXT UTF-8 có SHA-256 đọc lại bằng `final_text`. Bản cuối chỉ chứa văn bản biên tập.
+2. Chất lượng đo trên A/B N5 (ma trận 24 run, 25 target mỗi nhánh, xem `EDITORIAL_API_V1_PLAN_20261005.md` mục 6): nhánh tốt nhất sửa đúng ≥ 15/25 target; 0 lỗi mới loại MEANING/OMISSION/NUMBER/NEGATION trên fixture sạch (control `fx-a02` không phải bằng chứng sạch: trừ lỗi đã có sẵn trong DRAFT đã phân xử); 0 truncation. Số đo "lỗi mới" là `NOT_MEASURED` cho đến khi phân xử độc lập xong.
+3. Chấp nhận cuối: **3 chương thật** đại diện do chế độ đã chọn tạo ra, owner đọc và chấp nhận từng chương. Hiện **0/3** đã được chứng minh; P7 chưa đạt. Chạy fake provider, dry-run runner hay điểm `score_run.py` trên fixture gieo lỗi không được tính vào 3 chương này.
+4. Mỗi run lưu model, route, contract revision, Quality Core SHA-256, source commit, APK version/code, call/token/USD và trạng thái chi phí (đã biết / chưa rõ). Một lượt gọi có kết quả không rõ (timeout sau khi gửi, 5xx) không được gửi lại tự động và không được ghi như chi phí 0.
+5. Quyền live (provider thật) chỉ có khi owner duyệt D-N4 với danh sách run, trần và đơn giá cụ thể; tài liệu này không tạo quyền đó.
+
+
 ## 2. Cái gì được giao và cái gì chỉ là trạng thái nội bộ
 
 Người dùng mặc định nhận bản văn cuối có thể dùng ngay; bản cuối chỉ chứa văn

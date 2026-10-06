@@ -38,6 +38,26 @@ final class EditorialApiUiController {
     String progress = "";
     long runId;
     boolean showDiff;
+    /** What the person typed on the combo screen and has not saved yet; kept while a file or reference is chosen. */
+    static final class Form {
+        final String name;
+        final EditorialApiContract.Mode mode;
+        final String model;
+        final String cap;
+
+        Form(String name, EditorialApiContract.Mode mode, String model, String cap) {
+            this.name = name == null ? "" : name;
+            this.mode = mode == null ? EditorialApiContract.Mode.QUICK : mode;
+            this.model = model == null ? "" : model;
+            this.cap = cap == null ? "" : cap;
+        }
+    }
+
+    /** The last dialog shown, so a device test can choose an item the way a finger would. */
+    volatile AlertDialog lastDialog;
+
+    Form form;
+    java.util.function.Supplier<Form> formReader;
     boolean technicalOpen;
     boolean legacyOpen;
     List<String> staleParts = new ArrayList<>();
@@ -83,10 +103,17 @@ final class EditorialApiUiController {
         if ("Editorial".equals(a.currentTab)) a.switchTab("Editorial");
     }
 
-    void showList() { screen = Screen.LIST; error = ""; refresh(); }
+    /** Keeps the combo form's unsaved values before an action rebuilds the screen. */
+    void captureForm() {
+        java.util.function.Supplier<Form> reader = formReader;
+        if (screen == Screen.COMBO && reader != null) form = reader.get();
+    }
+
+    void showList() { screen = Screen.LIST; error = ""; form = null; formReader = null; refresh(); }
 
     void newCombo() {
         combo = new EditorialApiCombo();
+        form = null;
         combo.settingsJson = new EditorialApiCombo.Settings().toJson();
         screen = Screen.COMBO;
         error = "";
@@ -98,6 +125,7 @@ final class EditorialApiUiController {
             EditorialApiCombo stored = store.getCombo(id);
             if (stored == null) { a.toast("Không còn tổ hợp này"); showList(); return; }
             combo = stored;
+            form = null;
         }
         screen = Screen.COMBO;
         error = "";
@@ -111,6 +139,7 @@ final class EditorialApiUiController {
             combo = stored.copy();
             combo.id = 0;
             combo.name = stored.name + " (bản sao)";
+            form = null;
         }
         screen = Screen.COMBO;
         error = "";
@@ -118,7 +147,7 @@ final class EditorialApiUiController {
     }
 
     void confirmDelete(long id, String name) {
-        new AlertDialog.Builder(a).setTitle("Xóa tổ hợp?")
+        lastDialog = new AlertDialog.Builder(a).setTitle("Xóa tổ hợp?")
                 .setMessage("“" + name + "” và các kết quả đã lưu của nó sẽ bị xóa. File RAW, DRAFT và thư viện không bị đụng tới.")
                 .setPositiveButton("Xóa", (d, w) -> {
                     try (SqliteEditorialApiStore store = new SqliteEditorialApiStore(appContext)) { store.deleteCombo(id); }
@@ -129,6 +158,7 @@ final class EditorialApiUiController {
     // ---- combo screen ----
 
     void pickFile(boolean raw) {
+        captureForm();
         Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         i.addCategory(Intent.CATEGORY_OPENABLE);
         i.setType("*/*");
@@ -139,6 +169,7 @@ final class EditorialApiUiController {
 
     /** Lets the person take the file from a recent translation: its source as RAW, its output as DRAFT. */
     void pickRecent(boolean raw) {
+        captureForm();
         List<TranslationRepository.JobSummary> jobs = new ArrayList<>();
         List<String> labels = new ArrayList<>();
         try (TranslationRepository repository = new TranslationRepository(a)) {
@@ -150,7 +181,7 @@ final class EditorialApiUiController {
             }
         }
         if (jobs.isEmpty()) { a.toast("Chưa có bản dịch gần đây"); return; }
-        new AlertDialog.Builder(a).setTitle(raw ? "RAW từ bản dịch gần đây" : "DRAFT từ bản dịch gần đây")
+        lastDialog = new AlertDialog.Builder(a).setTitle(raw ? "RAW từ bản dịch gần đây" : "DRAFT từ bản dịch gần đây")
                 .setItems(labels.toArray(new String[0]), (d, which) -> {
                     TranslationRepository.JobSummary job = jobs.get(which);
                     String uri = raw ? job.inputUri : job.outputUri;
@@ -165,22 +196,24 @@ final class EditorialApiUiController {
     }
 
     void chooseGlossary() {
+        captureForm();
         List<GlossaryStore.Glossary> all = GlossaryStore.loadAll(a);
         String[] items = new String[all.size() + 1];
         items[0] = "Không dùng";
         for (int i = 0; i < all.size(); i++) items[i + 1] = all.get(i).name + " (" + all.get(i).count() + " mục)";
-        new AlertDialog.Builder(a).setTitle("Glossary").setItems(items, (d, which) -> {
+        lastDialog = new AlertDialog.Builder(a).setTitle("Glossary").setItems(items, (d, which) -> {
             combo.glossaryId = which == 0 ? "" : all.get(which - 1).id;
             refresh();
         }).setNegativeButton("Đóng", null).show();
     }
 
     void choosePronoun() {
+        captureForm();
         List<PronounStore.Profile> all = PronounStore.loadAll(a);
         String[] items = new String[all.size() + 1];
         items[0] = "Không dùng";
         for (int i = 0; i < all.size(); i++) items[i + 1] = all.get(i).name;
-        new AlertDialog.Builder(a).setTitle("Pronoun").setItems(items, (d, which) -> {
+        lastDialog = new AlertDialog.Builder(a).setTitle("Pronoun").setItems(items, (d, which) -> {
             combo.pronounId = which == 0 ? "" : all.get(which - 1).id;
             refresh();
         }).setNegativeButton("Đóng", null).show();
@@ -200,8 +233,21 @@ final class EditorialApiUiController {
 
     /** Stores the edited combo (name, mode, model, cap are passed from the fields) and opens the confirmation. */
     void saveAndContinue(String name, EditorialApiContract.Mode mode, String model, String capText) {
+        if (persist(name, mode, model, capText)) prepareConfirmation();
+    }
+
+    /** Saves the combo as it stands without reading any source and without sending anything. */
+    void saveOnly(String name, EditorialApiContract.Mode mode, String model, String capText) {
+        if (!persist(name, mode, model, capText)) return;
+        ui(() -> { MainActivity activity = a; if (activity != null) activity.toast("Đã lưu tổ hợp"); });
+        showList();
+    }
+
+    /** Returns false (the message is in {@code error}) when the form is not complete; the typed values are kept. */
+    private boolean persist(String name, EditorialApiContract.Mode mode, String model, String capText) {
+        form = new Form(name, mode, model, capText);
         String missing = EditorialApiPresenter.missingForConfirmation(combo);
-        if (!missing.isEmpty()) { error = missing; refresh(); return; }
+        if (!missing.isEmpty()) { error = missing; refresh(); return false; }
         EditorialApiCombo.Settings settings = new EditorialApiCombo.Settings();
         settings.mode = mode;
         settings.model = model == null ? "" : model.trim();
@@ -212,7 +258,7 @@ final class EditorialApiUiController {
         } catch (NumberFormatException invalid) {
             error = "Trần chi phí phải là một số lớn hơn 0, ví dụ 0.10.";
             refresh();
-            return;
+            return false;
         }
         combo.settingsJson = settings.toJson();
         combo.name = name == null || name.trim().isEmpty()
@@ -221,7 +267,8 @@ final class EditorialApiUiController {
             if (combo.id > 0) store.updateCombo(combo); else store.insertCombo(combo);
         }
         error = "";
-        prepareConfirmation();
+        form = null;
+        return true;
     }
 
     // ---- confirmation ----

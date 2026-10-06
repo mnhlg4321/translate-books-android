@@ -27,13 +27,12 @@ public final class EditPromptBuilder {
 
     private EditPromptBuilder() { }
 
-    public static ApiPrompt build(EditInputs inputs) {
-        List<EditInputs.GlossaryEntry> glossary = ReferenceFilter.glossary(inputs.raw(), inputs.glossary());
-        List<String> pronouns = ReferenceFilter.pronounRows(inputs.raw(), inputs.pronounCsv());
-        StringBuilder system = new StringBuilder(QualityCore.editPrompt(inputs.targetLanguage()));
-        if (glossary.isEmpty() && pronouns.isEmpty()) {
-            system.append('\n').append(NO_REFERENCE).append('\n');
-        }
+
+    /**
+     * The glossary and pronoun sections, identical for the edit and the check so both see the same authoritative
+     * reference. The lists are the ones already filtered by RAW occurrence; nothing is added when both are empty.
+     */
+    static void appendReferences(StringBuilder system, List<EditInputs.GlossaryEntry> glossary, List<String> pronouns) {
         if (!glossary.isEmpty()) {
             system.append("\n# GLOSSARY (source | target | category | note)\n");
             for (EditInputs.GlossaryEntry entry : glossary) {
@@ -48,6 +47,16 @@ public final class EditPromptBuilder {
             system.append("\n# PRONOUNS (from, speaker, target, self, call, scope, note)\n");
             for (String row : pronouns) system.append(row).append('\n');
         }
+    }
+
+    public static ApiPrompt build(EditInputs inputs) {
+        List<EditInputs.GlossaryEntry> glossary = ReferenceFilter.glossary(inputs.raw(), inputs.glossary());
+        List<String> pronouns = ReferenceFilter.pronounRows(inputs.raw(), inputs.pronounCsv());
+        StringBuilder system = new StringBuilder(QualityCore.editPrompt(inputs.targetLanguage()));
+        if (glossary.isEmpty() && pronouns.isEmpty()) {
+            system.append('\n').append(NO_REFERENCE).append('\n');
+        }
+        appendReferences(system, glossary, pronouns);
         system.append('\n').append(OUTPUT_CONTRACT);
         String user = "# RAW\n" + inputs.raw() + "\n\n# DRAFT\n" + inputs.draft() + "\n";
         return new ApiPrompt(EditorialApiContract.Step.EDIT, system.toString(), user, glossary.size(), pronouns.size(),

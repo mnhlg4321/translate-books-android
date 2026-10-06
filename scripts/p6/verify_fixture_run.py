@@ -311,6 +311,8 @@ def check_api_fixture(fixture, output, fixtures_root, args, structural, metadata
         raise ValueError(fid + ": a non-fake provider ran or the fake call count differs")
     if args.mode == "API_V1_QUICK" and calls > 2:
         raise ValueError(fid + ": QUICK is one edit; only one technical retry may add a request")
+    if metadata.get("costOverrunCalls", 0) != 0 or os.path.exists(os.path.join(output, "cost-overrun.txt")):
+        raise ValueError(fid + ": a call was billed above its reservation (cost overrun evidence present)")
     final = read_bytes(os.path.join(output, "final.txt"))
     if sha(final) != metadata.get("finalSha256"):
         raise ValueError(fid + ": final hash mismatch")

@@ -1,5 +1,13 @@
 # Build State
 
+## Current independent API V1 review — 2026-10-06
+
+- Baseline HEAD/upstream ref `5bea4c93`; runtime APK source `18571c01`, code240. APK/test/source ZIP hashes verified in both archive roots; installed bytes not rechecked in this review.
+- Two uncommitted local fixes: cancellation keeps returned call/token/cost evidence; incomplete C/C2 results retain candidate as FINAL_NOTES rather than falsely clean FINAL_OK. Isolated git-archive baseline plus these patches: API engine 63/63, app 44/44; new regressions failed before and passed after. No new build or device/provider operation.
+- N4 readiness is narrowed: controller/render/callback tests do not prove real selector/SAF traversal or reopening the same combo after process death. Open source findings: missing glossary/pronoun in C/C2, unknown transport cost/retry handling, runner settlement clamps actual expense, view-local form values lost on refresh. N0 acceptance and N5 matrix/caps also need reconciliation.
+- Actual calls/spend this review: 0 / USD 0. Three accepted API_V1 chapters 0/3 established; P7 unmet. Historical test/build results below remain evidence of their exact scope, not N5 readiness.
+- Next action: close the remaining offline gaps in the existing N1–N4 package described in `docs/EDITORIAL_API_V1_N1_N4_EXECUTION_20261005.md`, then present corrected evidence and exact D-N4 proposal. No N5/provider/pilot action.
+
 ## Current Editorial API V1 N1–N4 checkpoint — 2026-10-06
 
 - Current version: active v4.18. Current branch: feature/v4.18-p5e-runner-repair-20260917. The implementation baseline immediately before this documentation commit is 18571c0138436a699bdcc67851b2afb42b60d60b.
@@ -1065,3 +1073,9 @@ FORBID_CURRENT_DB_MUTATION=true
 FORBID_UNINSTALL_CLEAR_RESET_DOWNGRADE=true
 FORBID_CONNECTED_ANDROID_TEST=true
 ~~~
+
+## Offline follow-up of the independent review — 2026-10-06 (uncommitted)
+
+- Source: HEAD `5bea4c93` plus 19 overlay files (SHA-256 manifest and logs in `D:\P5E-builds\followup-api-20261006`); no APK was built because a wrapper build needs a commit.
+- Verified on the clean archive + overlay: engine 492/492, app unit 397/397, Python 72/72, androidTest compile PASS. Review patches: before FAIL / after PASS reproduced (`before-two-patches-HEAD-main.log` / `baseline-two-patches.log`). C/C2 reference test failed before the fix (`before-check-references.log`).
+- Not proven: device runs of `EditorialApiBienTapUiInstrumentedTest` and the 10 updated old androidTests, SAF traversal, process-death reopen. Actual provider calls/spend 0 / USD 0.

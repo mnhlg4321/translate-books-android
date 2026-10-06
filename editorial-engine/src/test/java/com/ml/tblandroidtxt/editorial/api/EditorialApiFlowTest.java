@@ -31,6 +31,121 @@ public final class EditorialApiFlowTest {
 
     private static final String PASS = "{\"verdict\":\"PASS\",\"wrong_pair_evidence\":\"\",\"issues\":[]}";
 
+    @Test public void incompleteCheckCannotBecomeACleanFinalOrTriggerMoreCalls() {
+        for (String answer : List.of("{}", "{\"verdict\":\"ISSUES\",\"issues\":[]}",
+                "{\"verdict\":\"PASS\",\"issues\":[{\"edited_quote\":\"\",\"kind\":\"OMISSION\"}]}")) {
+            for (boolean recheck : List.of(false, true)) {
+                EditorialApiFlow flow = new EditorialApiFlow(inputs(), EditorialApiFlow.Config.of(Mode.THOROUGH));
+                List<EditorialApiFlow.StepResponse> answers = new ArrayList<>();
+                answers.add(ok(edited(DRAFT), "stop"));
+                if (recheck) answers.add(ok(issues("năm mươi", "năm trăm"), "stop"));
+                answers.add(ok(answer, "stop"));
+                drive(flow, answers);
+                assertEquals(answer, RunState.FINAL_NOTES, flow.outcome().state());
+                assertTrue(flow.outcome().checkUnavailable());
+                assertEquals(recheck ? 3 : 2, flow.outcome().calls());
+            }
+        }
+    }
+
+    @Test public void checkAndRecheckSeeTheSameFilteredReferenceAsTheEditButNeverItsNotes() {
+        EditInputs withReference = new EditInputs(RAW, DRAFT, "Vietnamese",
+                List.of(new EditInputs.GlossaryEntry("太郎", "Taro", "name", ""), new EditInputs.GlossaryEntry("無関係", "KHONGDUNG", "", "")),
+                "太郎,太郎,花子,tôi,cô,all,\n次郎,次郎,三郎,KHONGDUNGXH,b,c,d\n");
+        EditorialApiFlow flow = new EditorialApiFlow(withReference, EditorialApiFlow.Config.of(Mode.THOROUGH));
+        List<EditorialApiFlow.Request> requests = new ArrayList<>();
+        List<String> script = List.of("<EDITED>" + DRAFT + "</EDITED><NOTES>năm mươi | NUMBER | NOTEMARK</NOTES>",
+                issues("năm mươi", "năm trăm"), PASS);
+        EditorialApiFlow.Request request;
+        int next = 0;
+        while ((request = flow.nextRequest()) != null) {
+            requests.add(request);
+            flow.accept(ok(script.get(next++), "stop"));
+        }
+        assertEquals(List.of(Step.EDIT, Step.CHECK, Step.RECHECK), requests.stream().map(EditorialApiFlow.Request::step).toList());
+        ApiPrompt edit = requests.get(0).prompt();
+        assertEquals(1, edit.glossaryEntries());
+        assertEquals(1, edit.pronounRows());
+        for (int i = 1; i <= 2; i++) {
+            ApiPrompt check = requests.get(i).prompt();
+            assertEquals(requests.get(i).step().name(), 1, check.glossaryEntries());
+            assertEquals(1, check.pronounRows());
+            assertTrue(check.system().contains("# GLOSSARY"));
+            assertTrue(check.system().contains("太郎 | Taro | name"));
+            assertTrue(check.system().contains("# PRONOUNS"));
+            assertTrue(check.system().contains("太郎,太郎,花子,tôi,cô,all"));
+            assertFalse(check.system().contains("KHONGDUNG"));
+            assertFalse(check.user().contains("KHONGDUNG"));
+            assertFalse(check.system().contains("NOTEMARK") || check.user().contains("NOTEMARK"));
+        }
+    }
+
+    @Test public void anEditWhoseOutcomeIsUnknownIsNeverSentAgainOnItsOwn() {
+        EditorialApiFlow flow = new EditorialApiFlow(inputs(), EditorialApiFlow.Config.of(Mode.THOROUGH));
+        List<Step> asked = drive(flow, List.of(EditorialApiFlow.StepResponse.unknownOutcome("SocketTimeoutException")));
+        assertEquals(List.of(Step.EDIT), asked);
+        assertEquals(RunState.RETRY_REQUIRED, flow.outcome().state());
+        assertEquals(DRAFT, flow.outcome().finalText());
+        assertEquals(1, flow.outcome().calls());
+        assertFalse(flow.outcome().costKnown());
+    }
+
+    @Test public void aDefiniteFailureBeforeDispatchIsStillRetriedOnceAndCostsNothing() {
+        EditorialApiFlow flow = new EditorialApiFlow(inputs(), EditorialApiFlow.Config.of(Mode.QUICK));
+        List<Step> asked = drive(flow, List.of(EditorialApiFlow.StepResponse.failure("HTTP_429"), ok(edited(EDITED), "stop")));
+        assertEquals(List.of(Step.EDIT, Step.EDIT), asked);
+        assertEquals(RunState.FINAL_OK, flow.outcome().state());
+        assertTrue(flow.outcome().costKnown());
+    }
+
+    @Test public void aCheckOrRecheckWhoseOutcomeIsUnknownKeepsTheEditAndStops() {
+        EditorialApiFlow check = new EditorialApiFlow(inputs(), EditorialApiFlow.Config.of(Mode.THOROUGH));
+        List<Step> asked = drive(check, List.of(ok(edited(EDITED), "stop"), EditorialApiFlow.StepResponse.unknownOutcome("HTTP_503")));
+        assertEquals(List.of(Step.EDIT, Step.CHECK), asked);
+        assertEquals(RunState.FINAL_NOTES, check.outcome().state());
+        assertTrue(check.outcome().checkUnavailable());
+        assertEquals(EDITED, check.outcome().finalText());
+        assertFalse(check.outcome().costKnown());
+
+        EditorialApiFlow recheck = new EditorialApiFlow(inputs(), EditorialApiFlow.Config.of(Mode.THOROUGH));
+        asked = drive(recheck, List.of(ok(edited(DRAFT), "stop"), ok(issues("năm mươi", "năm trăm"), "stop"),
+                EditorialApiFlow.StepResponse.unknownOutcome("SocketTimeoutException")));
+        assertEquals(List.of(Step.EDIT, Step.CHECK, Step.RECHECK), asked);
+        assertEquals(RunState.FINAL_NOTES, recheck.outcome().state());
+        assertTrue(recheck.outcome().checkUnavailable());
+        assertTrue(recheck.outcome().finalText().contains("năm trăm"));
+    }
+
+    @Test public void aSuccessfulAnswerWithoutAPriceContinuesButTheRunIsMarkedAsCostUnknown() {
+        EditorialApiFlow.StepResponse noPrice = new EditorialApiFlow.StepResponse(edited(EDITED), "stop", 100, 50, BigDecimal.ZERO, false, "m", "r", "");
+        EditorialApiFlow flow = new EditorialApiFlow(inputs(), EditorialApiFlow.Config.of(Mode.THOROUGH));
+        List<Step> asked = drive(flow, List.of(noPrice, ok(PASS, "stop")));
+        assertEquals(List.of(Step.EDIT, Step.CHECK), asked);
+        assertEquals(RunState.FINAL_OK, flow.outcome().state());
+        assertFalse(flow.outcome().costKnown());
+    }
+
+    @Test public void checkWithoutReferenceCarriesNoReferenceSectionAndZeroCounts() {
+        EditorialApiFlow flow = new EditorialApiFlow(inputs(), EditorialApiFlow.Config.of(Mode.THOROUGH));
+        flow.nextRequest();
+        flow.accept(ok(edited(DRAFT), "stop"));
+        ApiPrompt check = flow.nextRequest().prompt();
+        assertEquals(0, check.glossaryEntries());
+        assertEquals(0, check.pronounRows());
+        assertFalse(check.system().contains("AUTHORITATIVE REFERENCE"));
+        assertFalse(check.system().contains("# GLOSSARY"));
+    }
+
+    @Test public void aReferenceThatMatchesNothingInRawIsNotShownToTheCheck() {
+        EditInputs unmatched = new EditInputs(RAW, DRAFT, "Vietnamese", List.of(new EditInputs.GlossaryEntry("無関係", "x", "", "")), "");
+        EditorialApiFlow flow = new EditorialApiFlow(unmatched, EditorialApiFlow.Config.of(Mode.THOROUGH));
+        flow.nextRequest();
+        flow.accept(ok(edited(DRAFT), "stop"));
+        ApiPrompt check = flow.nextRequest().prompt();
+        assertEquals(0, check.glossaryEntries());
+        assertFalse(check.system().contains("AUTHORITATIVE REFERENCE"));
+    }
+
     private static String issues(String quote, String fix) {
         return "{\"verdict\":\"ISSUES\",\"wrong_pair_evidence\":\"\",\"issues\":[{\"edited_quote\":\"" + quote
                 + "\",\"raw_quote\":\"\",\"kind\":\"NUMBER\",\"fix\":\"" + fix + "\"}]}";

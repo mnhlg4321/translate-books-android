@@ -40,7 +40,12 @@ public final class OpenRouterEditorialApiProvider implements EditorialApiProvide
             if (model != null && !model.trim().isEmpty()) s.model = model.trim();
             if (s.apiKey == null || s.apiKey.trim().isEmpty()) return EditorialApiFlow.StepResponse.failure("API_KEY_MISSING");
             PromptPair pair = new PromptPair(request.prompt().system(), request.prompt().user());
-            JSONObject responseFormat = request.json() ? checkResponseFormat() : null;
+            JSONObject responseFormat;
+            try {
+                responseFormat = request.json() ? checkResponseFormat() : null;
+            } catch (JSONException building) {
+                return EditorialApiFlow.StepResponse.failure(describe(building, s.apiKey)); // nothing was sent
+            }
             JSONObject preferences = EditorialP5EFreshRawRoutingPolicy.matches(s) ? EditorialP5EFreshRawRoutingPolicy.providerPreferences() : null;
             long deadline = timeoutMillis > 0 ? OpenAICompatibleClient.monotonicDeadlineNanosFromNowMillis(timeoutMillis) : 0L;
             OpenAICompatibleClient.ChatResult result = OpenAICompatibleClient.chatWithUsage(s, pair, maxOutputTokens,
@@ -60,8 +65,25 @@ public final class OpenRouterEditorialApiProvider implements EditorialApiProvide
             return new EditorialApiFlow.StepResponse(result.content, result.finishReason, result.promptTokens,
                     result.completionTokens, cost, known, servedModel, result.responseProvider, "");
         } catch (Exception failure) {
-            return EditorialApiFlow.StepResponse.failure(describe(failure, settings.apiKey));
+            String reason = describe(failure, settings.apiKey);
+            return notDispatched(failure) ? EditorialApiFlow.StepResponse.failure(reason) : EditorialApiFlow.StepResponse.unknownOutcome(reason);
         }
+    }
+
+    /**
+     * True only when the failure proves the request never reached the provider (bad local settings, no route, a 4xx rejection
+     * before any generation). Everything else after sending - timeouts, lost connections, 5xx, unreadable bodies, a cancel -
+     * may already have been billed, so its charge is unknown and the step is not repeated automatically.
+     */
+    static boolean notDispatched(Exception failure) {
+        if (failure instanceof IllegalArgumentException) return true;
+        if (failure instanceof java.net.UnknownHostException || failure instanceof java.net.ConnectException
+                || failure instanceof java.net.NoRouteToHostException || failure instanceof javax.net.ssl.SSLHandshakeException) return true;
+        if (failure instanceof ApiHttpException) {
+            int code = ((ApiHttpException) failure).statusCode;
+            return code >= 400 && code < 500 && code != 408;
+        }
+        return false;
     }
 
     static JSONObject checkResponseFormat() throws JSONException {

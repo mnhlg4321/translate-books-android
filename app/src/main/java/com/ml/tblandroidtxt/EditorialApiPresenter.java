@@ -259,6 +259,8 @@ final class EditorialApiPresenter {
             case RETRY_REQUIRED:
                 r.headline = "Chưa biên tập được";
                 r.detail = "Nhà cung cấp không trả về kết quả dùng được hoặc chi phí chạm trần. Bản DRAFT được giữ nguyên. Hãy chạy lại.";
+                if (!run.costKnown) r.detail += " Có thể một lượt gọi đã bị tính phí nhưng chưa rõ số tiền; hãy xem bảng giá của nhà cung cấp trước khi chạy lại.";
+                if ("COST_BOUND_EXCEEDED".equals(run.error)) r.detail += " Một lượt gọi tốn hơn mức dự tính nên không gửi thêm.";
                 break;
             case CANCELLED:
                 r.headline = "Đã hủy";

@@ -129,6 +129,19 @@ class ApiV1VerificationTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "live provider run"):
                 check(fixtures, output, structural, metadata, live=True)
 
+    def test_cost_overrun_evidence_is_rejected(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            fixtures, output, structural, metadata = build(temporary)
+            metadata["costOverrunCalls"] = 1
+            with self.assertRaisesRegex(ValueError, "billed above its reservation"):
+                check(fixtures, output, structural, metadata)
+        with tempfile.TemporaryDirectory() as temporary:
+            fixtures, output, structural, metadata = build(temporary)
+            with open(os.path.join(output, "cost-overrun.txt"), "w") as handle:
+                handle.write("c reserved=0.01 actual=5.0\n")
+            with self.assertRaisesRegex(ValueError, "billed above its reservation"):
+                check(fixtures, output, structural, metadata)
+
     def test_a_changed_final_text_is_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
             fixtures, output, structural, metadata = build(temporary)

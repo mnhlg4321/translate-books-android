@@ -113,7 +113,7 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         Capture capture = new Capture(outputRoot);
         String model = live ? settings.model : "fake-model";
         EditorialApiProvider delegate = live ? new OpenRouterEditorialApiProvider(settings) : fake(sources.draft);
-        LedgerProvider provider = new LedgerProvider(delegate, ledger, runId + "|" + fixtureId, model, capture);
+        EditorialApiLedgerProvider provider = new EditorialApiLedgerProvider(delegate, ledger, PINNED, runId + "|" + fixtureId, model, capture::record);
 
         List<SourceCheck.Problem> problems = SourceCheck.check(sources.raw, sources.draft, sources.hasGlossary(), sources.hasPronoun(),
                 sources.glossaryText.length() + sources.pronounText.length());
@@ -190,6 +190,7 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         metadata.put("usd", run.usd.toPlainString());
         metadata.put("knownCostCalls", BigDecimal.valueOf(run.costKnown ? run.calls : 0));
         metadata.put("unknownCostCalls", BigDecimal.valueOf(run.costKnown ? 0 : run.calls));
+        metadata.put("costOverrunCalls", BigDecimal.valueOf(provider.overruns().size()));
         metadata.put("finishReasons", new ArrayList<Object>(capture.finishReasons));
         metadata.put("finalSha256", EditorialCanonicalJson.sha256Hex(finalBytes));
         metadata.put("model", run.model);
@@ -211,6 +212,16 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         Files.write(outputRoot.resolve("api-run.json"), EditorialCanonicalJson.canonicalize(detail).getBytes(StandardCharsets.UTF_8));
         Files.copy(ledgerPath, outputRoot.resolve("spend-ledger.jsonl"));
         EditorialP6GroupSpendLedger.Snapshot snapshot = ledger.inspect();
+        if (!provider.overruns().isEmpty()) {
+            // never clamped into the ledger: the exact amounts are the evidence and the group stops
+            StringBuilder overrun = new StringBuilder();
+            for (EditorialApiLedgerProvider.Overrun o : provider.overruns()) {
+                overrun.append(o.callId()).append(" reserved=").append(o.reserved().toPlainString())
+                        .append(" actual=").append(o.actual().toPlainString()).append("\n");
+            }
+            Files.write(outputRoot.resolve("cost-overrun.txt"), overrun.toString().getBytes(StandardCharsets.UTF_8));
+        }
+        assertTrue("a call was billed above its reservation (see cost-overrun.txt)", provider.overruns().isEmpty());
         assertTrue("no spend reservation may stay UNKNOWN", snapshot.pendingCalls() == 0);
     }
 
@@ -257,37 +268,4 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         }
     }
 
-    /** Reserves the pinned worst case before each call and settles the real cost after it; an unknown cost stays reserved. */
-    private static final class LedgerProvider implements EditorialApiProvider {
-        private final EditorialApiProvider delegate;
-        private final EditorialP6GroupSpendLedger ledger;
-        private final String identity;
-        private final String model;
-        private final Capture capture;
-
-        LedgerProvider(EditorialApiProvider delegate, EditorialP6GroupSpendLedger ledger, String identity, String model, Capture capture) {
-            this.delegate = delegate;
-            this.ledger = ledger;
-            this.identity = identity;
-            this.model = model;
-            this.capture = capture;
-        }
-
-        @Override public void cancel() { delegate.cancel(); }
-
-        @Override public EditorialApiFlow.StepResponse call(EditorialApiFlow.Request request, String modelName, int maxOutput, long timeoutMillis) {
-            BigDecimal worst = PINNED.inputPerToken(model).multiply(BigDecimal.valueOf(request.prompt().estimatedInputTokens()))
-                    .add(PINNED.outputPerToken(model).multiply(BigDecimal.valueOf(maxOutput)));
-            String callId = EditorialCanonicalJson.sha256Hex((identity + "|" + request.step() + "|" + request.attempt()).getBytes(StandardCharsets.UTF_8));
-            ledger.reserve(callId, request.step().name(), worst);
-            EditorialApiFlow.StepResponse response = delegate.call(request, modelName, maxOutput, timeoutMillis);
-            try {
-                capture.record(request, response);
-            } catch (IOException e) {
-                throw new IllegalStateException("P6_RESPONSE_CAPTURE_INVALID", e);
-            }
-            if (response.costKnown()) ledger.settle(callId, response.cost().min(worst));
-            return response;
-        }
-    }
 }

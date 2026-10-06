@@ -80,7 +80,7 @@ public final class EditorialP5EFreshRawLineageInstrumentedTest {
     }
 
     @Test public void schemaV25EmptyFreshLineageIsUnusedAndAllReadsComplete() {
-        assertEquals(25, database.editorialReadableDatabase().getVersion());
+        assertEquals(26, database.editorialReadableDatabase().getVersion());
         EditorialP5EFreshRawLiveRunner.FreshRawLineageCheck check = inspectPrimary();
 
         assertEquals(EditorialP5EFreshRawLiveRunner.FreshRawLineageCheck.Status.UNUSED,

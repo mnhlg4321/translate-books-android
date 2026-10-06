@@ -36,6 +36,18 @@ public final class EditorialApiFlow {
         public static StepResponse failure(String error) {
             return new StepResponse("", "", 0, 0, BigDecimal.ZERO, true, "", "", error == null || error.isBlank() ? "ERROR" : error);
         }
+
+        /**
+         * The request may have reached the provider and may have been charged, but no usable answer or price came back
+         * (timeout or a lost connection after sending, a 5xx, an unreadable body). The charge is unknown and the step must
+         * not be repeated automatically.
+         */
+        public static StepResponse unknownOutcome(String error) {
+            return new StepResponse("", "", 0, 0, BigDecimal.ZERO, false, "", "", error == null || error.isBlank() ? "UNKNOWN_OUTCOME" : error);
+        }
+
+        /** An error with an unknown charge: whether the provider billed anything cannot be told. */
+        public boolean outcomeUnknown() { return !error.isEmpty() && !costKnown; }
     }
 
     public record StepRecord(Step step, int attempt, String finishReason, long inputTokens, long outputTokens, BigDecimal cost,
@@ -107,6 +119,13 @@ public final class EditorialApiFlow {
         if (outcome == null) finish(RunState.CANCELLED, inputs.draft(), "");
     }
 
+    /** A cancellation after dispatch still retains the returned usage; the content is not accepted. */
+    public void cancel(StepResponse response) {
+        if (outcome != null || pending == null) throw new IllegalStateException("no request is waiting for an answer");
+        record(pending, response, "CANCELLED");
+        cancel();
+    }
+
     /**
      * The app decided not to send the waiting request (for example the cost cap would be exceeded). No call is counted as
      * made: the step is recorded with {@code reason}, an edit that was not sent leaves the draft with RETRY_REQUIRED, and a
@@ -140,7 +159,8 @@ public final class EditorialApiFlow {
         return switch (step) {
             case EDIT -> new Request(Step.EDIT, attempt, EditPromptBuilder.build(inputs), false);
             case CHECK, RECHECK -> new Request(step, attempt, CheckPromptBuilder.build(step, inputs.raw(), inputs.draft(), edited,
-                    guards == null ? List.of() : guards.flags(), inputs.targetLanguage()), true);
+                    guards == null ? List.of() : guards.flags(), inputs.targetLanguage(),
+                    ReferenceFilter.glossary(inputs.raw(), inputs.glossary()), ReferenceFilter.pronounRows(inputs.raw(), inputs.pronounCsv())), true);
         };
     }
 
@@ -164,7 +184,8 @@ public final class EditorialApiFlow {
         }
         if (!technical.isEmpty()) {
             record(request, response, technical);
-            if (attempt <= EditorialApiContract.MAX_TECHNICAL_RETRIES_PER_STEP) { attempt++; return; }
+            // a request whose outcome is unknown may already be charged: never send it again on our own
+            if (!response.outcomeUnknown() && attempt <= EditorialApiContract.MAX_TECHNICAL_RETRIES_PER_STEP) { attempt++; return; }
             finish(RunState.RETRY_REQUIRED, inputs.draft(), "");
             return;
         }
@@ -187,7 +208,7 @@ public final class EditorialApiFlow {
         boolean truncated = "length".equalsIgnoreCase(response.finishReason());
         if (parsed == null || parsed.status() != CheckResponseParser.Status.OK || truncated) {
             record(request, response, parsed == null ? response.error() : truncated ? "TRUNCATED" : "UNREADABLE");
-            if (attempt <= EditorialApiContract.MAX_TECHNICAL_RETRIES_PER_STEP) { attempt++; return; }
+            if (!response.outcomeUnknown() && attempt <= EditorialApiContract.MAX_TECHNICAL_RETRIES_PER_STEP) { attempt++; return; }
             // the edit is intact; only the independent check is missing, which the person is told
             checkUnavailable = true;
             finish(RunState.FINAL_NOTES, edited, "");
@@ -195,6 +216,13 @@ public final class EditorialApiFlow {
         }
         record(request, response, parsed.verdict());
         checkCounters += parsed.counters().total();
+        // Tolerating malformed bookkeeping must not turn a lost finding or absent verdict into a clean check.
+        // Keep the candidate and surface a review flag; do not add a retry or invent missing semantic content.
+        if (parsed.counters().issuesDropped() > 0 || (parsed.issues().isEmpty()
+                && (parsed.counters().missingKeys() > 0 || parsed.counters().unknownKinds() > 0
+                || !"PASS".equals(parsed.verdict())))) {
+            checkUnavailable = true;
+        }
         if ("WRONG_PAIR".equals(parsed.verdict())) {
             wrongPair(parsed.wrongPairEvidence());
             return;
@@ -203,7 +231,7 @@ public final class EditorialApiFlow {
             for (CheckResponseParser.Issue issue : parsed.issues()) {
                 issues.add(new IssueRecord(Step.RECHECK, issue, IssueStatus.NEEDS_REVIEW, "REPORTED_AFTER_FIXES"));
             }
-            finish(issues.stream().anyMatch(i -> i.status() == IssueStatus.NEEDS_REVIEW) || !notes.isEmpty()
+            finish(checkUnavailable || issues.stream().anyMatch(i -> i.status() == IssueStatus.NEEDS_REVIEW) || !notes.isEmpty()
                     ? RunState.FINAL_NOTES : RunState.FINAL_OK, edited, "");
             return;
         }
@@ -219,7 +247,7 @@ public final class EditorialApiFlow {
             return;
         }
         boolean review = issues.stream().anyMatch(i -> i.status() == IssueStatus.NEEDS_REVIEW);
-        finish(review || !notes.isEmpty() ? RunState.FINAL_NOTES : RunState.FINAL_OK, edited, "");
+        finish(checkUnavailable || review || !notes.isEmpty() ? RunState.FINAL_NOTES : RunState.FINAL_OK, edited, "");
     }
 
     private void wrongPair(String evidence) {
