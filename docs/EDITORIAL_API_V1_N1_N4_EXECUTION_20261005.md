@@ -9,7 +9,7 @@ Ngày chốt: 2026-10-06 (+07:00). Phạm vi tiếp tục chuỗi Claude đã ho
 - N2 app/store/provider/service/export/runner: `afbd34ce`.
 - N3 tab Biên tập và presenter/UI tests: `195406bb`.
 - Sửa tiếp theo đã có trên remote: `e3f8a784`, `18571c01` (giá model không biết; QUICK là E một lượt).
-- N4: báo cáo, trạng thái và bằng chứng được commit/push ở commit của gói này.
+- N4: báo cáo, trạng thái và bằng chứng được commit/push tại `72b6178a`.
 
 ## Bằng chứng phải giữ
 
