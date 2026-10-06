@@ -63,6 +63,19 @@ public final class EditResponseParser {
         return new Parsed(Status.OK, edited, notes, dropped, "", before);
     }
 
+    /**
+     * The text between the first EDITED tags exactly as sent (not stripped), or {@code null} when there is no balanced pair.
+     * The chunk pair gate uses it to see whitespace the model put at the edges, which {@link #parse} removes.
+     */
+    public static String rawEditedBody(String content) {
+        String text = content == null ? "" : content;
+        int open = text.indexOf(EditPromptBuilder.EDITED_OPEN);
+        if (open < 0) return null;
+        int close = matchingClose(text, open);
+        if (close < 0) return null;
+        return text.substring(open + EditPromptBuilder.EDITED_OPEN.length(), close);
+    }
+
     /** The close tag that balances the first open tag; a nested open tag inside the text does not end it early. */
     private static int matchingClose(String text, int open) {
         int depth = 0;
