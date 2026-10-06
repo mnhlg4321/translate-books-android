@@ -150,3 +150,18 @@ Clean `git archive 5bea4c93` + the overlay (`clean-overlay`, logs `after-clean-o
 ### Exact D-N4 proposal to present after the device evidence (not requested yet, no authority created)
 
 Runs: arms `API_V1_QUICK` and `API_V1_THOROUGH`, each `fx-a02, a03, a04, a05, a07, a08, a11, a12` + `a04` ×2 repeats + `a11` ×2 repeats (24 runs); model `openai/gpt-5.6-luna`, same sources; new ledger group, cap USD 1.00, chapter cap USD 0.10; at most one technical retry per step and never after an UNKNOWN outcome; Z3 stop rule; pricing basis still to be frozen by the owner (plan estimate ~0.13/1.25 USD per M, runner reservation basis 0.25/1.20); response retention outside Git; "new errors" adjudicated independently after the run.
+
+### Device evidence for the follow-up source — 2026-10-06 (emulator-5554 only)
+
+Committed as `42b40fb1b07b83d327397054509810d7ed3a33cd` (not pushed). Built from a clean worktree through the wrappers: production `4.18-api.4` / code 241, APK SHA-256 `8AABFFA6628256BDECBDE8929E380D62D333EEF772DC5C7DE59FF66B488E87DA`, source ZIP SHA-256 `51F2471AA41A0295B0BE9CD2F92464123EAFDF0852EB5DF8946C2101B6E35474`, event `build-20261006-185450`; AndroidTest SHA-256 `5056AF42F8846ECCF12F2780D22B9EFF349DF37F9B44B9DD015C338F5EDE456C`, event `api-fu-42b40fb1-20261006-01`; certificate `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155`. APK hash equal in `artifacts/builds` and `backup/builds`. Both APKs were installed with `adb -s emulator-5554 install -r` (the phone was not attached); logs in `D:\P5E-builds\followup-api-20261006\device-*.txt`.
+
+| Run | Result |
+|---|---|
+| `EditorialApiStoreInstrumentedTest` | 4/4 PASS |
+| `EditorialApiBienTapFlowInstrumentedTest` (controller-level) | 3/3 PASS |
+| `EditorialApiBienTapUiInstrumentedTest` (real clicks on buttons/radio/dialog list; form kept after choosing a glossary; Save without any provider request; same combo reopened from the store; stored result opened with "Xem kết quả") | 2/2 PASS (+3 phase tests skipped without argument) |
+| Process death: `seed` → `am force-stop` (no pid) → `verify` → `cleanup` | 3/3 PASS: combo listed with its status after the process was gone and its stored result opened with a provider that fails if called |
+| Full instrumented suite | 234 run, 11 failures (was 20 on code240). The 9 "expected 25 but was 26" failures are gone; the remaining 11 are the same names as before (P5C ledger, VOL5 pilot ×4, fresh pilot ×4, fresh RAW boundary ×2) and were not re-baselined against an older APK |
+| G1 ledger on the device | SHA-256 unchanged (`fffd88b0…7d95b`), same 26 ledger files; actual provider calls 0 |
+
+Still not proven: the system file picker and save-as screens (their results were delivered to `onActivityResult`), semantic quality (NOT_MEASURED), three accepted chapters (0/3). N5 not started; D-N4 not requested.

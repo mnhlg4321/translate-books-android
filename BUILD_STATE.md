@@ -1079,3 +1079,5 @@ FORBID_CONNECTED_ANDROID_TEST=true
 - Source: HEAD `5bea4c93` plus 19 overlay files (SHA-256 manifest and logs in `D:\P5E-builds\followup-api-20261006`); no APK was built because a wrapper build needs a commit.
 - Verified on the clean archive + overlay: engine 492/492, app unit 397/397, Python 72/72, androidTest compile PASS. Review patches: before FAIL / after PASS reproduced (`before-two-patches-HEAD-main.log` / `baseline-two-patches.log`). C/C2 reference test failed before the fix (`before-check-references.log`).
 - Not proven: device runs of `EditorialApiBienTapUiInstrumentedTest` and the 10 updated old androidTests, SAF traversal, process-death reopen. Actual provider calls/spend 0 / USD 0.
+
+- Device evidence 2026-10-06: build 4.18-api.4/code241 from commit 42b40fb1 (APK 8AABFFA6…E87DA) installed on emulator-5554; store 4/4, flow 3/3, UI 2/2, force-stop reopen 3/3, full suite 234/11 failures (11 historical). Details in the execution report.
