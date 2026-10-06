@@ -16,7 +16,7 @@ import java.util.List;
  * closing the app never loses or resends anything.
  */
 final class EditorialApiUiController {
-    enum Screen { LIST, COMBO, CONFIRM, PROGRESS, RESULT }
+    enum Screen { LIST, COMBO, CONFIRM, PROGRESS, RESULT, PAIR_CONFIRM, PAIR_RUN, PAIR_RESULT }
 
     static final int REQ_RAW = 41;
     static final int REQ_DRAFT = 42;
@@ -65,6 +65,9 @@ final class EditorialApiUiController {
     private volatile EditorialApiRunService service;
     private Thread worker;
 
+    /** The chunk-pair half of the tab (rows of a translation job). */
+    final EditorialPairUiController pair = new EditorialPairUiController(this);
+
     EditorialApiUiController(MainActivity activity) {
         a = activity;
         appContext = activity.getApplicationContext();
@@ -73,6 +76,16 @@ final class EditorialApiUiController {
     void attach(MainActivity activity) { a = activity; }
 
     void detach(MainActivity activity) { if (a == activity) a = null; }
+
+    android.content.Context appContext() { return appContext; }
+
+    void postUi(Runnable action) { ui(action); }
+
+    void setScreen(Screen next) { screen = next; refresh(); }
+
+    void toast(String message) { MainActivity activity = a; if (activity != null) activity.toast(message); }
+
+    void startActivityForResult(Intent intent, int code) { MainActivity activity = a; if (activity != null) activity.startActivityForResult(intent, code); }
 
     private void ui(Runnable action) {
         MainActivity activity = a;
@@ -87,8 +100,8 @@ final class EditorialApiUiController {
     boolean handleBack() {
         switch (screen) {
             case LIST: return false;
-            case PROGRESS: return true; // leaving needs the cancel button
-            case CONFIRM: screen = Screen.COMBO; break;
+            case PROGRESS: case PAIR_RUN: return true; // leaving needs the cancel button
+            case CONFIRM: case PAIR_CONFIRM: screen = Screen.COMBO; break;
             default: screen = Screen.LIST;
         }
         error = "";
@@ -195,6 +208,45 @@ final class EditorialApiUiController {
         else { combo.draftUri = uri.toString(); combo.draftName = name; }
     }
 
+    /** Switches the combo to the rows of a translation job (the chunk-pair flow). */
+    void pickJob() {
+        captureForm();
+        final android.content.Context context = appContext;
+        new Thread(() -> {
+            final List<EditorialPairSourceLoader.JobChoice> jobs = EditorialPairSourceLoader.listJobs(context);
+            ui(() -> {
+                if (jobs.isEmpty()) { toast("Chưa có job Dịch nào"); return; }
+                String[] labels = new String[jobs.size()];
+                for (int i = 0; i < labels.length; i++) labels[i] = jobs.get(i).label();
+                MainActivity activity = a;
+                if (activity == null) return;
+                lastDialog = new AlertDialog.Builder(activity).setTitle("Chọn job Dịch").setItems(labels, (d, which) -> {
+                    EditorialPairSourceLoader.JobChoice job = jobs.get(which);
+                    combo.sourceKind = EditorialPairModels.SOURCE_JOB;
+                    combo.jobId = job.id;
+                    combo.rawName = job.fileName.isEmpty() ? "Job " + job.id : job.fileName;
+                    combo.draftName = "bản dịch của job " + job.id;
+                    combo.rawUri = "";
+                    combo.draftUri = "";
+                    refresh();
+                }).setNegativeButton("Đóng", null).show();
+            });
+        }, "editorial-pair-jobs").start();
+    }
+
+    /** Back to two independent files (the whole-chapter flow). */
+    void useFiles() {
+        captureForm();
+        combo.sourceKind = EditorialPairModels.SOURCE_FILES;
+        combo.jobId = 0;
+        refresh();
+    }
+
+    /** Explicitly "no glossary": an empty choice is a valid configuration. */
+    void clearGlossary() { captureForm(); combo.glossaryId = ""; refresh(); }
+
+    void clearPronoun() { captureForm(); combo.pronounId = ""; refresh(); }
+
     void chooseGlossary() {
         captureForm();
         List<GlossaryStore.Glossary> all = GlossaryStore.loadAll(a);
@@ -233,7 +285,8 @@ final class EditorialApiUiController {
 
     /** Stores the edited combo (name, mode, model, cap are passed from the fields) and opens the confirmation. */
     void saveAndContinue(String name, EditorialApiContract.Mode mode, String model, String capText) {
-        if (persist(name, mode, model, capText)) prepareConfirmation();
+        if (!persist(name, mode, model, capText)) return;
+        if (EditorialApiCombo.sourceIsJob(combo)) pair.openConfirm(); else prepareConfirmation();
     }
 
     /** Saves the combo as it stands without reading any source and without sending anything. */
@@ -358,6 +411,7 @@ final class EditorialApiUiController {
     void openResult(long comboId) {
         try (SqliteEditorialApiStore store = new SqliteEditorialApiStore(appContext)) {
             EditorialApiCombo stored = store.getCombo(comboId);
+            if (stored != null && EditorialApiCombo.sourceIsJob(stored)) { combo = stored; pair.openResult(comboId); return; }
             EditorialApiRun latest = store.latestRun(comboId);
             if (stored == null || latest == null) { a.toast("Chưa có kết quả"); return; }
             combo = stored;
@@ -384,7 +438,7 @@ final class EditorialApiUiController {
             combo = stored;
         }
         error = "";
-        prepareConfirmation();
+        if (EditorialApiCombo.sourceIsJob(combo)) pair.openConfirm(); else prepareConfirmation();
     }
 
     /** Re-run of the open result: the same combo, sources read again from disk and the library. */
@@ -421,6 +475,7 @@ final class EditorialApiUiController {
 
     /** @return true when the request belongs to this tab */
     boolean onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (pair.onActivityResult(requestCode, resultCode, data)) return true;
         if (requestCode != REQ_RAW && requestCode != REQ_DRAFT && requestCode != REQ_EXPORT) return false;
         if (resultCode != android.app.Activity.RESULT_OK || data == null || data.getData() == null) return true;
         Uri uri = data.getData();

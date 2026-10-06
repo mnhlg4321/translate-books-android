@@ -1,6 +1,7 @@
 package com.ml.tblandroidtxt;
 
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
@@ -31,6 +32,9 @@ final class EditorialApiPageFactory {
             case CONFIRM: confirmScreen(root); break;
             case PROGRESS: progressScreen(root); break;
             case RESULT: resultScreen(root); break;
+            case PAIR_CONFIRM: new EditorialPairPageFactory(a, c).confirm(root); break;
+            case PAIR_RUN: new EditorialPairPageFactory(a, c).run(root); break;
+            case PAIR_RESULT: new EditorialPairPageFactory(a, c).result(root); break;
             default: listScreen(root);
         }
         return scroll;
@@ -52,11 +56,23 @@ final class EditorialApiPageFactory {
                 root.addView(empty, new LinearLayout.LayoutParams(-1, a.dp(100)));
             }
             for (EditorialApiCombo combo : combos) {
-                EditorialApiPresenter.ComboRow row = EditorialApiPresenter.row(combo, store.latestRun(combo.id));
+                EditorialApiPresenter.ComboRow row = rowFor(combo, store);
                 root.addView(comboCard(row), a.marginLP(-1, -2, 0, 0, 0, 10));
             }
         }
         root.addView(legacySection(), a.marginLP(-1, -2, 0, 6, 0, 0));
+    }
+
+    /** A combo of a translation job is judged by its latest chunk-pair run, the others by their whole-chapter run. */
+    private EditorialApiPresenter.ComboRow rowFor(EditorialApiCombo combo, SqliteEditorialApiStore store) {
+        if (!EditorialApiCombo.sourceIsJob(combo)) return EditorialApiPresenter.row(combo, store.latestRun(combo.id));
+        try (SqliteEditorialPairRunStore pairs = new SqliteEditorialPairRunStore(a)) {
+            EditorialPairModels.PairRun latest = pairs.latestRun(combo.id);
+            String status = latest == null ? "Chưa chạy (theo cặp)"
+                    : EditorialPairPresenter.runHeadline(latest, EditorialPairRunService.isActive(latest.id),
+                    EditorialPairPresenter.interrupted(latest, pairs.items(latest.id)));
+            return new EditorialApiPresenter.ComboRow(combo.id, combo.name.isEmpty() ? "(chưa đặt tên)" : combo.name, status, latest != null);
+        }
     }
 
     private View comboCard(EditorialApiPresenter.ComboRow row) {
@@ -107,16 +123,31 @@ final class EditorialApiPageFactory {
         EditText name = a.input("Tên (để trống: tự đặt theo các file)", form != null ? form.name : combo.name);
         card.addView(a.fieldBlock("TÊN", name));
 
-        card.addView(fileRow("RAW — bản gốc", combo.rawName, true));
-        card.addView(fileRow("DRAFT — bản dịch nháp", combo.draftName, false));
+        boolean job = EditorialPairModels.SOURCE_JOB.equals(combo.sourceKind);
+        card.addView(a.text("NGUỒN", 11, a.MUTED, true), a.marginLP(-1, -2, 0, 0, 0, 4));
+        LinearLayout kinds = a.rowContainer();
+        Button files = job ? a.secondaryButton("Hai file", v -> c.useFiles()) : a.primaryButton("Hai file", v -> c.useFiles());
+        Button jobs = job ? a.primaryButton("Job Dịch (theo cặp)", v -> c.pickJob()) : a.secondaryButton("Job Dịch (theo cặp)", v -> c.pickJob());
+        kinds.addView(files, new LinearLayout.LayoutParams(0, a.dp(40), 1));
+        kinds.addView(a.space(8, 1));
+        kinds.addView(jobs, new LinearLayout.LayoutParams(0, a.dp(40), 1));
+        card.addView(kinds, a.marginLP(-1, -2, 0, 0, 0, 8));
+        if (job) {
+            card.addView(referenceRow("JOB DỊCH", combo.jobId > 0 ? combo.rawName + " (job " + combo.jobId + ")" : "Chưa chọn", "Chọn", v -> c.pickJob(), null));
+            card.addView(wrapped("Mỗi đoạn của job là một cặp RAW–bản dịch đã được liên kết. Job chỉ được đọc, không bị sửa.", 12, a.MUTED), a.marginLP(-1, -2, 0, 0, 0, 10));
+        } else {
+            card.addView(fileRow("RAW — bản gốc", combo.rawName, true));
+            card.addView(fileRow("DRAFT — bản dịch nháp", combo.draftName, false));
+            card.addView(wrapped("Hai file riêng không có liên kết cặp, nên chỉ chạy toàn chương. Muốn chạy theo từng cặp, hãy chọn một job Dịch.", 12, a.MUTED), a.marginLP(-1, -2, 0, 0, 0, 10));
+        }
 
         card.addView(referenceRow("GLOSSARY", combo.glossaryId.isEmpty() ? "Không dùng" : c.glossaryName().isEmpty() ? "Không còn trong thư viện" : c.glossaryName(),
-                v -> c.chooseGlossary()));
+                "Đổi", v -> c.chooseGlossary(), combo.glossaryId.isEmpty() ? null : v -> c.clearGlossary()));
         card.addView(referenceRow("PRONOUN", combo.pronounId.isEmpty() ? "Không dùng" : c.pronounName().isEmpty() ? "Không còn trong thư viện" : c.pronounName(),
-                v -> c.choosePronoun()));
+                "Đổi", v -> c.choosePronoun(), combo.pronounId.isEmpty() ? null : v -> c.clearPronoun()));
 
         TextView modeLabel = a.text("CHẾ ĐỘ", 11, a.MUTED, true);
-        card.addView(modeLabel, a.marginLP(-1, -2, 0, 4, 0, 4));
+        if (!job) card.addView(modeLabel, a.marginLP(-1, -2, 0, 4, 0, 4));
         RadioGroup modes = new RadioGroup(a);
         modes.setOrientation(RadioGroup.HORIZONTAL);
         EditorialApiContract.Mode shownMode = form != null ? form.mode : settings.mode;
@@ -124,8 +155,10 @@ final class EditorialApiPageFactory {
         RadioButton thorough = radio("Kỹ", shownMode == EditorialApiContract.Mode.THOROUGH);
         modes.addView(quick);
         modes.addView(thorough);
-        card.addView(modes);
-        card.addView(wrapped("Nhanh: chỉ biên tập (1 lượt gọi). Kỹ: biên tập, kiểm, và kiểm lại nếu có sửa.", 12, a.MUTED), a.marginLP(-1, -2, 0, 2, 0, 10));
+        if (!job) {
+            card.addView(modes);
+            card.addView(wrapped("Nhanh: chỉ biên tập (1 lượt gọi). Kỹ: biên tập, kiểm, và kiểm lại nếu có sửa.", 12, a.MUTED), a.marginLP(-1, -2, 0, 2, 0, 10));
+        }
 
         EditText model = a.input("Mặc định theo Cài đặt", form != null ? form.model : settings.model);
         card.addView(a.fieldBlock("MODEL (không bắt buộc)", model));
@@ -133,7 +166,7 @@ final class EditorialApiPageFactory {
         c.formReader = () -> new EditorialApiUiController.Form(name.getText().toString(),
                 thorough.isChecked() ? EditorialApiContract.Mode.THOROUGH : EditorialApiContract.Mode.QUICK,
                 model.getText().toString(), cap.getText().toString());
-        card.addView(a.fieldBlock("TRẦN CHI PHÍ MỖI CHƯƠNG (USD)", cap));
+        card.addView(a.fieldBlock(job ? "TRẦN CHI PHÍ MỖI LẦN CHẠY (USD)" : "TRẦN CHI PHÍ MỖI CHƯƠNG (USD)", cap));
 
         if (!c.error.isEmpty()) card.addView(wrapped(c.error, 13, a.RED), a.marginLP(-1, -2, 0, 0, 0, 8));
 
@@ -169,14 +202,18 @@ final class EditorialApiPageFactory {
         return box;
     }
 
-    private View referenceRow(String label, String value, View.OnClickListener change) {
+    private View referenceRow(String label, String value, String changeLabel, View.OnClickListener change, View.OnClickListener clear) {
         LinearLayout box = new LinearLayout(a);
         box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(0, 0, 0, a.dp(10));
         box.addView(a.text(label, 11, a.MUTED, true));
         LinearLayout row = a.rowContainer();
         row.addView(wrapped(value, 14, a.TEXT), new LinearLayout.LayoutParams(0, -2, 1));
-        row.addView(a.secondaryButton("Đổi", change), new LinearLayout.LayoutParams(a.dp(90), a.dp(40)));
+        if (clear != null) {
+            row.addView(a.secondaryButton("Bỏ", clear), new LinearLayout.LayoutParams(a.dp(64), a.dp(40)));
+            row.addView(a.space(6, 1));
+        }
+        row.addView(a.secondaryButton(changeLabel, change), new LinearLayout.LayoutParams(a.dp(90), a.dp(40)));
         box.addView(row, a.marginLP(-1, -2, 0, 3, 0, 0));
         return box;
     }

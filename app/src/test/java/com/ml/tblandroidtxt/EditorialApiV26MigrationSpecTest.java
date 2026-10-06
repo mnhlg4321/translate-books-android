@@ -46,11 +46,12 @@ public final class EditorialApiV26MigrationSpecTest {
         }
     }
 
-    @Test public void theRepositoryOpensAtVersion26() throws Exception {
+    @Test public void theRepositoryKeepsTheV26StepAndCreatesItOnAFreshDatabase() throws Exception {
         String source = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("src/main/java/com/ml/tblandroidtxt/TranslationRepository.java")),
                 java.nio.charset.StandardCharsets.UTF_8);
-        assertTrue(source.contains("VER = 26"));
+        assertTrue(source.contains("VER = 27")); // the v26 step below stays in the chain; v27 is covered by EditorialPairV27MigrationSpecTest
         assertTrue(source.contains("if (oldVersion < 26) createEditorialApiTables(db);"));
-        assertTrue(source.contains("createEditorialApiTables(db);\n    }") || source.contains("createEditorialApiTables(db);\r\n    }"));
+        String created = source.replace("\r\n", "\n");
+        assertTrue(created.contains("createEditorialApiTables(db);\n        createEditorialPairTables(db);\n    }"));
     }
 }

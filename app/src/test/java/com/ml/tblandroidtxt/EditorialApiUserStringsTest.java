@@ -19,7 +19,8 @@ import static org.junit.Assert.assertTrue;
  * path may appear in a string the person can see. The one allowed place is the collapsed developer section title.
  */
 public final class EditorialApiUserStringsTest {
-    private static final String[] FILES = {"EditorialApiPresenter", "EditorialApiPageFactory", "EditorialApiUiController"};
+    private static final String[] FILES = {"EditorialApiPresenter", "EditorialApiPageFactory", "EditorialApiUiController",
+            "EditorialPairPresenter", "EditorialPairPageFactory", "EditorialPairUiController"};
     private static final Pattern LITERAL = Pattern.compile("\"((?:[^\"\\\\\\n]|\\\\.)*)\"");
     private static final Pattern[] FORBIDDEN = {
             Pattern.compile("\\bpack\\b", Pattern.CASE_INSENSITIVE),

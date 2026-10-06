@@ -70,6 +70,8 @@ public final class SqliteEditorialApiStore implements EditorialApiStore, AutoClo
         v.put("glossary_id", combo.glossaryId.isEmpty() ? null : combo.glossaryId);
         v.put("pronoun_id", combo.pronounId.isEmpty() ? null : combo.pronounId);
         v.put("settings_json", combo.settingsJson);
+        v.put("source_kind", combo.sourceKind == null || combo.sourceKind.isEmpty() ? EditorialPairModels.SOURCE_FILES : combo.sourceKind);
+        v.put("job_id", combo.jobId);
         v.put("created_at", combo.createdAt);
         v.put("updated_at", combo.updatedAt);
         return v;
@@ -86,6 +88,8 @@ public final class SqliteEditorialApiStore implements EditorialApiStore, AutoClo
         combo.glossaryId = text(c, "glossary_id");
         combo.pronounId = text(c, "pronoun_id");
         combo.settingsJson = text(c, "settings_json");
+        combo.sourceKind = text(c, "source_kind").isEmpty() ? EditorialPairModels.SOURCE_FILES : text(c, "source_kind");
+        combo.jobId = c.getLong(c.getColumnIndexOrThrow("job_id"));
         combo.createdAt = c.getLong(c.getColumnIndexOrThrow("created_at"));
         combo.updatedAt = c.getLong(c.getColumnIndexOrThrow("updated_at"));
         return combo;

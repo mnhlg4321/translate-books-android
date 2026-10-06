@@ -71,7 +71,7 @@ public final class EditorialApiStoreInstrumentedTest {
     @Test public void freshDatabaseIsV26WithBothTables() {
         try (SqliteEditorialApiStore store = open()) {
             SQLiteDatabase db = store.databaseForTest();
-            assertEquals(26, db.getVersion());
+            assertEquals(27, db.getVersion());
             assertTrue(tableExists(db, "editorial_combos"));
             assertTrue(tableExists(db, "editorial_api_runs"));
         }
@@ -131,7 +131,7 @@ public final class EditorialApiStoreInstrumentedTest {
 
         try (SqliteEditorialApiStore store = open()) {
             SQLiteDatabase db = store.databaseForTest();
-            assertEquals(26, db.getVersion());
+            assertEquals(27, db.getVersion());
             assertTrue(tableExists(db, "editorial_combos"));
             assertTrue(tableExists(db, "editorial_api_runs"));
             try (Cursor c = db.rawQuery("SELECT title FROM jobs WHERE id=7", null)) {

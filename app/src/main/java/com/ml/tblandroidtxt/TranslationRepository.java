@@ -12,7 +12,7 @@ import java.util.List;
 
 public class TranslationRepository extends SQLiteOpenHelper {
     private static final String DB = "tbl_android_txt.db";
-    private static final int VER = 26;
+    private static final int VER = 27;
 
     public TranslationRepository(Context context) { this(context, DB); }
 
@@ -41,6 +41,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
         createEditorialP5DBodyProgress(db);
         createEditorialPhaseArtifacts(db);
         createEditorialApiTables(db);
+        createEditorialPairTables(db);
     }
 
     @Override public void onConfigure(SQLiteDatabase db) {
@@ -106,6 +107,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
         if (oldVersion < 24) createEditorialP5DBodyProgress(db);
         if (oldVersion < 25) createEditorialPhaseArtifacts(db);
         if (oldVersion < 26) createEditorialApiTables(db);
+        if (oldVersion < 27) createEditorialPairTables(db);
     }
 
     @Override public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -127,6 +129,8 @@ public class TranslationRepository extends SQLiteOpenHelper {
     }
 
     private static void createEditorialApiTables(SQLiteDatabase db) { for (String sql : EditorialApiMigrationSpec.from25To26()) db.execSQL(sql); }
+
+    private static void createEditorialPairTables(SQLiteDatabase db) { for (String sql : EditorialPairMigrationSpec.from26To27()) db.execSQL(sql); }
 
     private static void createEditorialTables(SQLiteDatabase db) {
         for (String sql : EditorialMigrationSpec.from10To11()) safeExec(db, sql);

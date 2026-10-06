@@ -74,6 +74,7 @@ final class EditorialApiPresenter {
 
     /** What stops "Tiếp tục": the two files are mandatory, the references are not. Empty = can continue. */
     static String missingForConfirmation(EditorialApiCombo combo) {
+        if (EditorialPairModels.SOURCE_JOB.equals(combo.sourceKind)) return combo.jobId > 0 ? "" : "Chọn một job Dịch.";
         if (combo.rawUri.isEmpty() && combo.draftUri.isEmpty()) return "Chọn file RAW và file DRAFT.";
         if (combo.rawUri.isEmpty()) return "Chọn file RAW.";
         if (combo.draftUri.isEmpty()) return "Chọn file DRAFT.";

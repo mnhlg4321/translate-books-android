@@ -64,7 +64,7 @@ public final class EditorialLineagePersistenceInstrumentedTest {
 
     @Test public void freshSchemaIsV25WithLineageAndP5DAttemptTablesIndexesAndTriggers() {
         SQLiteDatabase db = repository.editorialWritableDatabase();
-        assertEquals(26, db.getVersion());
+        assertEquals(27, db.getVersion());
         assertTable(db, "editorial_project_revisions");
         assertTable(db, "editorial_input_scope_snapshots");
         assertTable(db, "editorial_input_scope_snapshot_entries");
@@ -223,7 +223,7 @@ public final class EditorialLineagePersistenceInstrumentedTest {
 
         repository = new TranslationRepository(context, databaseName);
         SQLiteDatabase db = repository.editorialReadableDatabase();
-        assertEquals(26, db.getVersion());
+        assertEquals(27, db.getVersion());
         assertEquals(1, countRows("editorial_packs"));
         assertEquals(1, countRows("editorial_pack_compatibility_results"));
         assertEquals(1, countRows("editorial_pack_compatibility_evaluations"));

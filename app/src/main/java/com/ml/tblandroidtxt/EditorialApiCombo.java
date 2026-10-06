@@ -53,15 +53,23 @@ public final class EditorialApiCombo {
     public String glossaryId = "";
     public String pronounId = "";
     public String settingsJson = "{}";
+    /** FILES (two independent files, whole-chapter flow) or JOB (rows of a translation job, chunk-pair flow). */
+    public String sourceKind = EditorialPairModels.SOURCE_FILES;
+    /** The translation job when sourceKind is JOB. */
+    public long jobId;
     public long createdAt;
     public long updatedAt;
 
     public Settings settings() { return Settings.fromJson(settingsJson); }
 
+    public static boolean sourceIsJob(EditorialApiCombo combo) {
+        return combo != null && EditorialPairModels.SOURCE_JOB.equals(combo.sourceKind) && combo.jobId > 0;
+    }
+
     public EditorialApiCombo copy() {
         EditorialApiCombo c = new EditorialApiCombo();
         c.id = id; c.name = name; c.rawUri = rawUri; c.rawName = rawName; c.draftUri = draftUri; c.draftName = draftName;
-        c.glossaryId = glossaryId; c.pronounId = pronounId; c.settingsJson = settingsJson; c.createdAt = createdAt; c.updatedAt = updatedAt;
+        c.glossaryId = glossaryId; c.pronounId = pronounId; c.settingsJson = settingsJson; c.sourceKind = sourceKind; c.jobId = jobId; c.createdAt = createdAt; c.updatedAt = updatedAt;
         return c;
     }
 
