@@ -190,8 +190,8 @@ Sau bước B mỗi row giữ một **effective scope** = scope ∩ `[rawParagra
 - **Trong prompt.** Row full ghi như N5 (không thêm gì). Row partial ghi kèm `[áp dụng đoạn a–b, c–d]` (số đoạn toàn chương). Nếu prompt có **ít nhất một** row partial thì phần RAW của prompt được gắn nhãn đoạn `⟦Pnnn⟧` ở đầu mỗi đoạn (số đoạn toàn chương) để model đối chiếu; nhãn **chỉ nằm trong phần RAW**, không nằm trong DRAFT, và rò vào EDITED là lỗi META (§4.2). Prompt không có row partial thì giữ nguyên định dạng N5, không có nhãn. Model không nhìn thấy chuỗi `scope` thô, chỉ thấy phạm vi đã chuẩn hóa này.
 - **Khi dedupe (bước D).** Khóa gộp là `(from,speaker,target,self,call,note)` — `from` là cue nên thuộc khóa. Các row cùng khóa gộp thành một row với effective scope là **hợp** các khoảng (không bao giờ mất khoảng nào). Hai row khác khóa **không bao giờ gộp**, kể cả khi chỉ khác `from` hoặc cùng `(speaker,target)`. Scope không nằm trong khóa gộp nhưng luôn được cộng dồn vào kết quả gộp. Lý do cần `from` trong khóa: xem phản ví dụ W/C bên dưới.
 - **Xung đột (không tự suy ưu tiên).** Hai row đủ điều kiện có cùng `(speaker,target)` nhưng khác `(self,call)` mà effective scope chung ít nhất một đoạn là xung đột quy tắc, **bất kể quan hệ giữa hai scope** (bằng nhau, giao một phần hay một scope nằm trọn trong scope kia). App **không** chọn bên “cụ thể hơn”, không trừ đoạn khỏi row rộng và không suy ra ưu tiên nào: giữ cả hai row nguyên effective scope, kèm tag, và ghi `REFERENCE_CONFLICT` cùng khoảng đoạn chung (WARN của reference, chuyển semantic như điểm cần xem, không tính là lỗi nghĩa). Hai scope **rời nhau** không phải xung đột: mỗi row chỉ áp cho đoạn của mình. Quy tắc này áp giống hệt cho W và C.
-- **Bất biến W/C.** Với mọi đoạn RAW p, tập rule áp dụng cho p và tập xung đột chứa p ở arm W bằng ở arm C (qua các pair chứa p), tính theo effective scope không trừ. Vi phạm là lỗi provenance của filter, không phải lỗi nghĩa.
-- **Phản ví dụ W/C cho khóa dedupe thiếu `from`.** Hai row R1 và R2 giống hệt nhau ở `speaker,target,self,call,note` nhưng R1 có `from=A`, scope `p1–p10`, còn R2 có `from=B`, scope `p11–p20`; chương chỉ có A trong `p1–p10` và chỉ có B trong `p11–p20`. Nếu khóa không có `from`, hai row gộp thành một (cue giữ lại là A, scope `p1–p20`). Arm W thấy A trong chương nên áp rule cho cả `p1–p20`, kể cả `p11–p20` nơi cue thật là B; arm C với pair `p11–p20` có scope hợp lệ nhưng không thấy A trong main nên **loại** row, rule biến mất ở `p11–p20`. W và C khác nhau trên cùng đoạn: vi phạm bất biến. Khóa có `from` giữ R1 và R2 riêng: W áp R1 ở `p1–p10` và R2 ở `p11–p20`, C ở pair `p11–p20` chỉ có R2; hai arm trùng nhau từng đoạn (SCOPE-05).
+- **Bất biến W/C (đã chỉnh theo cách cue được xét).** Cue của một row được xét trong **đơn vị cue của arm**: ở W là cả chương, ở C là main + context có giới hạn của pair chứa đoạn. Vì vậy hai arm **không** áp đúng cùng một tập rule trên mọi đoạn: một rule có scope phủ đoạn p nhưng cue chỉ xuất hiện ở pair khác thì W áp cho p còn C không. Bất biến đúng là: với mọi đoạn RAW p, tập rule C áp cho p (qua pair chứa p) **là tập con** của tập rule W áp cho p; mỗi rule ở C có scope chứa p và cue có trong đơn vị của pair; và mọi xung đột mà một pair thấy trên p cũng là xung đột ở W trên p. Hiệu W∖C được báo là chênh lệch provenance của filter (rule chỉ có ở W vì cue ở xa), không phải lỗi nghĩa và không chọn arm nào. Dedupe không làm mất rule nào ngoài việc cộng khoảng của các row **cùng khóa**: mỗi row chưa gộp ánh xạ vào đúng một row đã chiếu.
+- **Phản ví dụ W/C cho khóa dedupe thiếu `from`.** Hai row legacy 3 cột `Mercedes,Basil,xưng ta` và `Cain,Basil,xưng ta` chỉ khác `from`, tức chỉ khác người mà rule nói tới; chương có cả hai người, một pair chỉ có Cain. Nếu khóa không có `from`, hai row gộp thành một và chỉ giữ row đầu (Mercedes): W mất rule của Cain trong prompt chương, còn pair chỉ có Cain vẫn giữ rule của Cain, nên rule C áp không còn nằm trong tập W áp, vi phạm bất biến. Khóa có `from` giữ hai row riêng, W áp cả hai và pair áp row của Cain (tập con của W). Biến thể Pronoun 7 cột: R1 `from=A` scope `p1–p10`, R2 `from=B` scope `p11–p20`, các trường khác bằng nhau; khóa không có `from` gộp thành một row giữ cue A trên `p1–p20`, W hiển thị rule gắn A trên `p11–p20` còn pair `p11–p20` hiển thị rule gắn B; khóa có `from` thì hai arm khớp nhau trên từng đoạn (SCOPE-05, test `ReferenceProjectorTest`).
 
 ### 5.3 Phân vùng MAIN/CONTEXT (bước C)
 
@@ -204,7 +204,7 @@ Sau bước B mỗi row giữ một **effective scope** = scope ∩ `[rawParagra
 
 ### 5.4 Test của reference
 
-SCOPE-01 (global/raw-main/raw-context/draft-only/legacy), SCOPE-02 (scope `*`, `pNNN`, `pNNN-pMMM`, `CHnnn:`, hỏng, chỉ giao context, giao main một phần, arm W), SCOPE-03 (cue fields pin; dedupe cộng dồn scope; không mất khoảng) SCOPE-04 (xung đột rule ở scope khác nhau cho W/C) và SCOPE-05 (phản ví dụ khóa dedupe thiếu `from`) phải chứng minh: glossary chỉ ở chunk khác không lọt vào pair hiện tại; pronoun chỉ ở context không thành target bắt buộc; row có scope ngoài main bị loại dù cue xuất hiện ở context; global row không bị loại; scope hỏng không bao giờ vào prompt; hai row cùng nội dung ở scope khác nhau gộp thành một row có hợp khoảng; hai row khác `(self,call)` ở scope rời nhau **không** gộp và mỗi pair thấy đúng row của mình, còn pair/arm W phủ cả hai thấy cả hai kèm tag và nhãn đoạn; mọi cặp scope chung ít nhất một đoạn (bằng nhau, giao một phần, lồng nhau) ra `REFERENCE_CONFLICT` với cả hai row giữ nguyên scope, không có ưu tiên nào được suy ra; hai row chỉ khác `from` không gộp; bất biến W/C đúng cho mọi đoạn. scope/context là provenance của filter, không phải semantic proof.
+SCOPE-01 (global/raw-main/raw-context/draft-only/legacy), SCOPE-02 (scope `*`, `pNNN`, `pNNN-pMMM`, `CHnnn:`, hỏng, chỉ giao context, giao main một phần, arm W), SCOPE-03 (cue fields pin; dedupe cộng dồn scope; không mất khoảng) SCOPE-04 (xung đột rule ở scope khác nhau cho W/C) và SCOPE-05 (phản ví dụ khóa dedupe thiếu `from`) phải chứng minh: glossary chỉ ở chunk khác không lọt vào pair hiện tại; pronoun chỉ ở context không thành target bắt buộc; row có scope ngoài main bị loại dù cue xuất hiện ở context; global row không bị loại; scope hỏng không bao giờ vào prompt; hai row cùng nội dung ở scope khác nhau gộp thành một row có hợp khoảng; hai row khác `(self,call)` ở scope rời nhau **không** gộp và mỗi pair thấy đúng row của mình, còn pair/arm W phủ cả hai thấy cả hai kèm tag và nhãn đoạn; mọi cặp scope chung ít nhất một đoạn (bằng nhau, giao một phần, lồng nhau) ra `REFERENCE_CONFLICT` với cả hai row giữ nguyên scope, không có ưu tiên nào được suy ra; hai row chỉ khác `from` không gộp; với mọi đoạn tập rule C là tập con của tập rule W và xung đột của pair là xung đột của W. scope/context là provenance của filter, không phải semantic proof.
 
 ## 6. Đối chứng chính: E toàn chương so với E/chunk
 
@@ -305,7 +305,7 @@ Run state: `PREPARED`, `RUNNING`, `PAUSED`, `INCOMPLETE`, `UNKNOWN`, `FINAL_BLOC
 Gói offline được gọi **PASS** chỉ khi tất cả điều kiện sau có evidence process thật hoặc fixture hash-bound:
 
 1. MAP-*, ID-*, SEP-* (gồm SEP-02 tách boundary khỏi layout nội bộ) đạt 100%; hai manifest phủ đúng riêng và PairMap explicit, không có zip/re-anchor ngầm.
-2. SCOPE-* (gồm scope pronoun xét trước MAIN/CONTEXT, bảo toàn phạm vi trong prompt/dedupe với `from` trong khóa, xung đột cùng phạm vi được giữ không suy ưu tiên, và phản ví dụ W/C ở SCOPE-04/05) đạt 100%; reference ngoài scope/context-only không leakage, global row được giữ đúng, prompt counts tái lập.
+2. SCOPE-* (gồm scope pronoun xét trước MAIN/CONTEXT, bảo toàn phạm vi trong prompt/dedupe với `from` trong khóa, xung đột cùng phạm vi được giữ không suy ưu tiên, và phản ví dụ W/C ở SCOPE-04/05) đạt 100% (bất biến W/C là C ⊆ W theo §5.2); reference ngoài scope/context-only không leakage, global row được giữ đúng, prompt counts tái lập.
 3. GATE-* đạt 100%, gồm sửa đoạn hợp lệ (GATE-04), chunk ngắn (GATE-05), đường WARN (GATE-06), gộp dòng giữ nguyên chữ (GATE-07) khôi phục đoạn thiếu (GATE-08) và dấu so sánh biên (GATE-09), với bảo đảm số dòng không bao giờ tự BLOCK, `REFLOW_ONLY` không sinh khi nguyên văn, và các ngưỡng chỉ là hàng rào nghi ngờ; structural BLOCK/WARN tách khỏi semantic result; N5 replay đúng STRUCTURE_BLOCK + semantic NOT_RUN + FINAL_BLOCKED.
 4. MERGE-* đạt 100% trên case hợp lệ và trả đúng typed failure trên gap/overlap/context; không ghi job Dịch.
 5. RES-*, SAVE-*, JOB-*, UNKNOWN-* chứng minh reservation trước dispatch, snapshot, tiến độ, no-resend và read-only provenance.
@@ -314,7 +314,7 @@ Gói offline được gọi **PASS** chỉ khi tất cả điều kiện sau có
 
 ### 8.3 Trạng thái bằng chứng hiện tại
 
-Đã có tiền đề từ Chunker.verifyCoverage/ReliabilityV43Test, EditorialApiRunServiceTest, TranslationRepository và báo cáo N5 structural-loss. Chưa có evidence runtime cho hai manifest, PairMap, separator receipt, scope/context filter per pair, W-vs-C comparator hoặc replay ở lớp mới. Vì vậy bản tài liệu này **chưa tự nhận PASS runtime**.
+Revision `CP-OFFLINE-2` được triển khai thành `CP-IMPL-1` (§10). Evidence host đã có cho MAP/ID/SEP/SCOPE/GATE/MERGE, trạng thái pair/run, reservation, UNKNOWN, snapshot, JOB read-only trên bộ nhớ và cửa sổ ngắt giả lập (xem bảng ở §10.6). Evidence runtime trên SQLite thật, thiết bị và process-death thật **chưa có** (NOT_RUN). Vì vậy gói này **không** tự nhận PASS toàn bộ: các cổng bắt buộc chạy trên thiết bị còn mở.
 
 ## 9. Đề xuất đo sau khi gói offline PASS
 
@@ -351,7 +351,27 @@ Ví dụ minh họa, không phải ngân sách được cấp: nếu N=3, manife
 
 Arm W và C chạy cùng N chapter, cùng snapshot, cùng stop rule, cùng reference policy (kể cả `pronounCueFields`, §5.1) và cùng cơ chế reservation trước dispatch (§7.1). Không chọn arm theo khoảng cách neo, một repeat tốt nhất hoặc structural warning bị bỏ qua. Báo cáo phải có bảng chapter/pair, structural status, semantic status, merge receipt, actual cost và lý do stop. Semantic score chỉ được tính sau adjudication độc lập; trước đó ghi NOT_MEASURED.
 
-Một bước tiếp theo duy nhất: owner review revision CP-OFFLINE-2, đặc biệt structural gate và công thức N + P_total, rồi quyết định có mở gói triển khai engine/app/QA offline hay tiếp tục giữ chunking sau N6. Không có quyền build/device/provider/live từ tài liệu này.
+Một bước tiếp theo duy nhất (của bản thiết kế offline): owner review revision CP-OFFLINE-2, đặc biệt structural gate và công thức N + P_total, rồi quyết định có mở gói triển khai engine/app/QA offline hay tiếp tục giữ chunking sau N6. Không có quyền build/device/provider/live từ tài liệu này.
+
+### 9.4 Đề xuất đo W/C (chuẩn bị, **chưa chạy, chưa được duyệt**)
+
+Đây là đề xuất để owner duyệt; không có provider call, không có chi tiêu và không dùng số dư N5. Mọi số dưới đây là công thức hoặc ví dụ minh họa, số thật chỉ có sau dry-run trên manifest đã khóa.
+
+| Mục | Nội dung đề xuất |
+|---|---|
+| Quy mô | N chapter đã khóa; `P_total = Σ P_i` lấy từ PairMap thật; `paidCalls = N + P_total` (W: N, C: P_total) |
+| Prompt estimate | `estimateWhole_i`, `estimateChunk_ij` tính từ prompt thật bằng `PairPromptBuilder`/prompt W, reference đã chiếu, model và prompt revision đã ghim |
+| Reservation | `worstCase_k` cho từng request theo giá đã ghim; reservation mở trước dispatch (§7.1) |
+| Cap | `reserveUsd = roundUpToCent(max(1.20 × baseUsd, peakExposureUsd))`, không vượt hard ceiling do owner duyệt; không nâng cap tại chỗ |
+| Stop rule | request chưa gửi mà `settled + open + worstCase_k` vượt cap → `RESERVE_FAILED`, run `INCOMPLETE`; UNKNOWN dừng nhóm, không resend; cost thật vượt worst-case được ghi nguyên và dừng; không paid retry sau khi đã gửi |
+| Thứ tự chạy | khai báo trong manifest trước khi chạy: mặc định W trước C, từng chapter theo thứ tự đã khóa; đổi thứ tự phải tính lại `peakExposureUsd` |
+| Đối chứng sạch | các chapter/đoạn không có lỗi đã biết, chạy cùng prompt, để đo collateral thay vì chỉ đo sửa đúng |
+| Lỗi đã biết | danh sách lỗi đã biết (target) khóa trước, không lộ nhãn cho model |
+| Holdout độc lập | tập đoạn do người đọc độc lập chọn và phân xử, tách khỏi tập dùng để chỉnh prompt/ngưỡng; semantic chỉ tính trên holdout sau adjudication |
+| Cấm trong prompt | không đưa bản FINAL, nhãn đáp án, lời giải hay kết quả đo trước vào prompt của bất kỳ arm nào |
+| Báo cáo | bảng chapter/pair: structural, semantic (NOT_MEASURED tới khi adjudicate), merge receipt, actual cost, lý do stop; W và C cùng snapshot, cùng reference policy (`pronounCueFields`) |
+
+Không có quyền chạy từ mục này; mở ledger mới cần owner duyệt cap tính từ manifest.
 
 ## 10. Triển khai (revision `CP-IMPL-1`, 2026-10-06)
 
@@ -389,3 +409,20 @@ Hash, ID nội bộ, đếm dòng/ký tự, journal, ledger, receipt, diff và n
 ### 10.5 Phạm vi chưa chạy
 
 Không thiết bị/emulator, không provider thật, không push. Các test androidTest và process-death thật chỉ được viết và compile (NOT_RUN). Tài liệu này không công nhận ba chương FINAL hay P7.
+
+### 10.6 Trạng thái triển khai và evidence (host, offline)
+
+Các hạng mục sau đã được viết và kiểm trên host (JVM, không thiết bị, không provider, 0 lượt gọi, USD 0). Ba câu hỏi được giữ riêng: **STRUCTURAL** (envelope/layout/coverage/merge), **SEMANTIC** (NOT_MEASURED, không có model thật) và **PERSISTENCE/EXPORT** (bộ nhớ + giả lập ngắt trên host; SQLite thật và thiết bị NOT_RUN). Merge thành công không được hiểu là "đã đạt".
+
+| Nhóm | Test | Trạng thái |
+|---|---|---|
+| MAP/ID/SEP/MERGE (engine) | `PairMapTest`, `PairMapsTest`, `PairPromptAndStatesTest` | PASS (host) |
+| SCOPE (engine) | `ReferenceProjectorTest` (gồm SCOPE-05 và bất biến C ⊆ W) | PASS (host) |
+| GATE (engine) | `StructuralGateTest` (GATE-01…09, replay cấu trúc N5) | PASS (host) |
+| RES/UNKNOWN/SAVE/JOB (app, host) | `EditorialPairRunServiceTest`, `EditorialPairPresenterTest`, `EditorialPairV27MigrationSpecTest` | PASS (host, bộ nhớ + `FaultyPairRunStore`) |
+| Chuỗi giao diện tiếng Việt | `EditorialApiUserStringsTest` (đã quét thêm ba file Pair) | PASS (host) |
+| Store SQLite thật, migration v26→v27, JOB read-only trên DB thật, cửa sổ ngắt trên SQLite | `EditorialPairStoreInstrumentedTest` | viết + compile, **NOT_RUN** |
+| Duyệt view, xuất file, mở lại sau process death | `EditorialPairUiInstrumentedTest` | viết + compile, **NOT_RUN** |
+| Provider thật, model quality, ba chương FINAL, P7 | — | NOT_RUN / NOT_MEASURED |
+
+Giới hạn đã biết: tính nguyên tử của `commitReceived` dựa vào một transaction SQLite trong cùng DB và mới được kiểm bằng fault-injection trên host; chưa có bằng chứng trên thiết bị. Không có đường import file ngoài chạy theo cặp (§10.2). Revision: `PairContract.REVISION` = `CP-IMPL-1`; SHA-256 của file này và commit nguồn được ghi trong báo cáo bàn giao (không tự tham chiếu trong chính file).

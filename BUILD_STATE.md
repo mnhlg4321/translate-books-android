@@ -1,6 +1,19 @@
 # Build State
 
-## Current independent API V1 review — 2026-10-06
+## Current state — 2026-10-07 (supersedes the two API V1 sections below)
+
+- Branch `feature/v4.18-p5e-runner-repair-20260917`; pushed HEAD `37889b05`; later local commits (not pushed): `04936430` engine core, `e2d54ef9` app/UI, then a documentation commit with the N5 report `docs/EDITORIAL_API_V1_N5_RESULT_20261006.md`, the chunk-pair package `docs/EDITORIAL_API_V1_CHUNK_PAIR_OFFLINE_PACKAGE_20261006.md`, the plan, canonical `EDITORIAL_RECOVERY_V4_18.md` section 10, this file and `WORKSPACE_SNAPSHOT.md`.
+- Current build: `4.18-api.4` / code 241 from commit `42b40fb1`; APK SHA-256 `8AABFFA6628256BDECBDE8929E380D62D333EEF772DC5C7DE59FF66B488E87DA`, AndroidTest `5056AF42F8846ECCF12F2780D22B9EFF349DF37F9B44B9DD015C338F5EDE456C`, source ZIP `51F2471AA41A0295B0BE9CD2F92464123EAFDF0852EB5DF8946C2101B6E35474`; archived in `artifacts/` and `backup/`; installed on `emulator-5554` only. Run metadata records source commit `37889b05` (documentation-only difference).
+- Tests: engine 492, app unit 397, Python `scripts/p6` 72, androidTest compile PASS. Device (code 241): store 4/4, controller flow 3/3, real-view UI 2/2, process-death reopen 3/3, full suite 234 run with 11 historical failures (P5C ledger, VOL5 pilot, fresh pilot, fresh RAW boundary), not re-baselined.
+- N5 (live, owner-approved cap USD 1.00): 24 runs, 41 provider calls, settled USD 0.26563504, 0 pending/UNKNOWN, 0 overruns; G1 ledger unchanged. Both arms fix 19/25 raw seeded targets; scorer machine verdict FAIL on every run (collateral edits), human adjudication and the new-error gate `NOT_MEASURED`; default mode not chosen; one Kỹ run returned 37 of 192 lines and was delivered as `FINAL_NOTES`. Three accepted real chapters: 0/3; N6 not started.
+- `CP-IMPL-1` (offline chunk-pair implementation, local commits `04936430` engine and `e2d54ef9` app/UI, not pushed): job import read-only, explicit PairMap, structural gate with integer thresholds (line-count change never blocks), reservation before dispatch with journal recovery and UNKNOWN never resent, SQLite DB v27 (additive), Vietnamese pair UI. Host tests: engine 551, app 431 green. androidTests (real SQLite store, v26→v27 migration, job read-only, crash windows, UI traversal, two-phase reopen) written and compiled, NOT_RUN; semantic NOT_MEASURED; provider calls 0 / USD 0; 0/3 chapters accepted; P7 unmet. W/C measurement proposal prepared in package section 9.4, not approved.
+- Next action: owner review of the `CP-IMPL-1` offline evidence and the archived development APK; no device install, provider run, N6, push or release before that decision.
+
+## Superseded — independent API V1 review and N1–N4 checkpoint (historical, 2026-10-06)
+
+The next two sections describe the review and checkpoint before the follow-up commits, N5 and `CP-OFFLINE-2`; keep them for history, do not read their next actions as current.
+
+### Independent API V1 review — 2026-10-06
 
 - Baseline HEAD/upstream ref `5bea4c93`; runtime APK source `18571c01`, code240. APK/test/source ZIP hashes verified in both archive roots; installed bytes not rechecked in this review.
 - Two uncommitted local fixes: cancellation keeps returned call/token/cost evidence; incomplete C/C2 results retain candidate as FINAL_NOTES rather than falsely clean FINAL_OK. Isolated git-archive baseline plus these patches: API engine 63/63, app 44/44; new regressions failed before and passed after. No new build or device/provider operation.
@@ -8,7 +21,7 @@
 - Actual calls/spend this review: 0 / USD 0. Three accepted API_V1 chapters 0/3 established; P7 unmet. Historical test/build results below remain evidence of their exact scope, not N5 readiness.
 - Next action: close the remaining offline gaps in the existing N1–N4 package described in `docs/EDITORIAL_API_V1_N1_N4_EXECUTION_20261005.md`, then present corrected evidence and exact D-N4 proposal. No N5/provider/pilot action.
 
-## Current Editorial API V1 N1–N4 checkpoint — 2026-10-06
+### Editorial API V1 N1–N4 checkpoint — 2026-10-06
 
 - Current version: active v4.18. Current branch: feature/v4.18-p5e-runner-repair-20260917. The implementation baseline immediately before this documentation commit is 18571c0138436a699bdcc67851b2afb42b60d60b.
 - Current build: 4.18-api.3/code240, source 18571c01; APK SHA-256 9F66F0C9D69F19728DD7EBB77138B946CDAF6672081F468A7B52638E5E4957C8; AndroidTest SHA-256 20CBCF3C69AE4E81C26B31FB73BB0C6B94FDC1282AB2F5AE38F6444D812A9381; mirrored production/test payloads are retained in the two archive roots.

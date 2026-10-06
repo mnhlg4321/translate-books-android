@@ -1,6 +1,6 @@
 # Editorial API V1 — kế hoạch đổi hướng (2026-10-05)
 
-Trạng thái 2026-10-06: D-N1..D-N3 đã được ghi nhận duyệt trong work request; D-N4 chưa duyệt. N1–N4 đã triển khai, nhưng independent review tại `5bea4c93` yêu cầu đóng thiếu sót offline trước khi trình N5; xem mục Independent review trong `EDITORIAL_API_V1_N1_N4_EXECUTION_20261005.md`. Tài liệu này thay hướng thực thi của P6 trong `EDITORIAL_RECOVERY_V4_18.md`; không mở branch, release hay checklist mới (vẫn `feature/v4.18-p5e-runner-repair-20260917`, checklist `release_checklists/v4.18-editorial-v5-safe-4-1-3.md`). Phần đề xuất gốc bên dưới được giữ để đối chiếu quyết định, không tự tạo quyền live.
+Trạng thái 2026-10-06: D-N1..D-N3 đã được ghi nhận duyệt trong work request; D-N4 đã có bằng chứng N5 nhưng quyết định mặc định và adjudication vẫn chưa hoàn tất. N1–N4 đã triển khai; independent review, N5 result và gói cặp chunk offline được giữ trong các tài liệu liên quan. Tài liệu này thay hướng thực thi của P6 trong `EDITORIAL_RECOVERY_V4_18.md`; không mở branch, release hay checklist mới (vẫn `feature/v4.18-p5e-runner-repair-20260917`, checklist `release_checklists/v4.18-editorial-v5-safe-4-1-3.md`). Phần đề xuất gốc bên dưới được giữ để đối chiếu quyết định, không tự tạo quyền live.
 
 ## 1. Vì sao đổi hướng
 
@@ -79,7 +79,7 @@ Chọn tổ hợp (RAW, DRAFT, Glossary?, Pronoun?, cài đặt) -> màn xác nh
 ### 3.2 Độ dài và chunking
 
 - Chương vừa ngân sách context (RAW + DRAFT + nguồn ≤ ~40k token ước tính) chạy nguyên chương.
-- Chương dài hơn: phiên bản đầu dừng với thông báo rõ "chương quá dài, chưa hỗ trợ". Chunking (ý tưởng của owner: RAW chunk + DRAFT chunk + glossary/pronoun của chunk) là bước N7, **chỉ** làm sau khi E/C đã đạt trên chương nguyên, vì cần căn RAW↔DRAFT theo cảnh (không cắt hai bản độc lập theo số thứ tự) và kiểm biên chunk. Không triển khai đồng thời để còn biết thay đổi nào có ích.
+- Chương dài hơn: phiên bản live đầu dừng với thông báo rõ "chương quá dài, chưa hỗ trợ". Gói chuẩn bị offline `CP-OFFLINE-2` được phép kiểm trước để tách lỗi mapping/structure khỏi chất lượng nghĩa; đối chứng chính là E toàn chương so với E/chunk trên cùng snapshot. Nếu sau này mở N7 live, RAW và DRAFT vẫn phải có manifest/tọa độ riêng, PairMap explicit, separator plan và merge receipt; không cắt hai bản độc lập rồi zip theo số thứ tự. N7 live vẫn chỉ xem xét sau khi cổng whole-vs-chunk và owner review hoàn tất.
 
 ## 4. Những thứ app chịu trách nhiệm
 
@@ -167,6 +167,16 @@ Ma trận N5 đã chốt theo plan (24 run, 12 mỗi nhánh): 8 fixture cơ sở
 | N7 | (Sau P7, tùy chọn) chunking theo cảnh cho chương dài | — | — |
 
 N1–N4 làm liền trong một phiên Codex, push sau mỗi gói. Dừng trước N5.
+
+### 7.1 Gói chuẩn bị chunk-pair offline (2026-10-06)
+
+Trước khi cân nhắc N7 live, gói [`EDITORIAL_API_V1_CHUNK_PAIR_OFFLINE_PACKAGE_20261006.md`](EDITORIAL_API_V1_CHUNK_PAIR_OFFLINE_PACKAGE_20261006.md), revision `CP-OFFLINE-2`, định nghĩa hai manifest RAW/DRAFT độc lập, PairMap explicit, identity, separator/coverage và merge receipt. Structural gate (`PASS/WARN/BLOCK`) tách khỏi semantic evaluation (`NOT_RUN/NOT_MEASURED/...`); response structural BLOCK không được tính là lỗi nghĩa. Đối chứng chính là **E toàn chương (W)** so với **E/chunk (C)**, không đưa C/C2 vào primary arm và không chọn ngầm lượt lặp tốt nhất.
+
+Ownership là ENGINE (manifest, mapping, scope/context filter, gate, merge), APP (read-only import từ job Dịch, snapshot, journal/recovery, merge/xuất), QA (fixture/process test, UNKNOWN, replay N5, evidence scan), COORDINATOR (đồng bộ tài liệu/stop rule) và OWNER (duyệt cap sau dry-run). PASS cần 100% MAP/ID/SEP/SCOPE/GATE/MERGE/SAVE/JOB/UNKNOWN/COMPARE/QA theo ma trận trong gói; structural PASS không suy ra semantic PASS, model quality vẫn `NOT_MEASURED`.
+
+Chỉnh trong cùng revision: separator **biên ghép** (do BoundaryPlan sở hữu, model không tạo/đổi) được tách khỏi **layout nội bộ** của candidate (`internalLayoutFingerprint`); ngưỡng SIZE theo bậc (chunk thường, chunk ngắn L ≤ 5, và tỷ lệ ký tự) kèm đối chứng sửa đoạn hợp lệ và chunk ngắn để gate không chặn nhầm; đường WARN chốt là `WARN_REVIEW` (giữ và ghép candidate, không gọi provider, chỉ ACCEPTED khi có quyết định riêng, run mang `warnings=N`); scope pronoun (`*`, `pNNN[-pMMM]`, `CHnnn:`) được xét trước phân vùng MAIN/CONTEXT và chỉ trên main range, hỏng thì fail-closed (runtime API V1 hiện chưa đọc cột scope); mọi request đi qua reservation ledger trước dispatch (RESERVE → `E_RESERVED` → `E_SENT` → settle), và cap nhóm tính theo `max(1.20 × baseUsd, peakExposureUsd)`. Lần chỉnh tiếp theo trong cùng revision: số dòng đổi **không bao giờ tự BLOCK** (chỉ WARN `LINE_DELTA`); BLOCK dựa trên chữ (`CHARS_LOSS`/`CHARS_GROWTH`, đếm bỏ whitespace, so sánh số nguyên: biên 0.50/2.00 là WARN, 0.80/1.25 không có mã) và marker biên, mọi ngưỡng chỉ là hàng rào nghi ngờ chứ không chứng minh lỗi nghĩa, `REFLOW_ONLY` không sinh khi candidate nguyên văn, có đối chứng gộp dòng giữ nguyên chữ (`REFLOW_ONLY`), khôi phục đoạn thiếu, chunk ngắn và replay N5 (192→37 vẫn BLOCK do chữ và marker, không do số dòng); phạm vi áp dụng pronoun được bảo toàn qua prompt (tag `[áp dụng đoạn a–b]` + nhãn đoạn trong RAW khi có row partial) và dedupe (khóa gộp `(from,speaker,target,self,call,note)`, cộng dồn khoảng, không gộp khác khóa), xung đột rule cùng phạm vi được giữ kèm `REFERENCE_CONFLICT` mà **không tự suy ưu tiên scope**, có đối chứng xung đột scope khác nhau và phản ví dụ khóa thiếu `from` cho W/C và bất biến "rule áp dụng cho từng đoạn RAW ở W = ở C". Đây là yêu cầu đặc tả cho gói triển khai sau, không phải thay đổi mã.
+
+Ngân sách đo không còn là số cặp cố định: với `N` chapter và `P_total = ΣP_i` pair hợp lệ thực tế, paid call cap cơ sở là `N + P_total`, `baseUsd = ΣestimateWhole_i + ΣestimateChunk_ij`, reserve cap làm tròn `1.20 × baseUsd`; retry sau dispatch/UNKNOWN không được phép. Nếu cap tính từ manifest vượt hard ceiling owner duyệt thì dừng trước provider. Gói hiện chỉ sửa tài liệu, không runtime/build/device/provider/commit/push.
 
 ## 8. Rủi ro và cách chặn
 
