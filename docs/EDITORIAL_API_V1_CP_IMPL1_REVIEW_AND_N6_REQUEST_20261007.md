@@ -72,3 +72,11 @@ Dừng và báo khi: cần gọi provider mà chưa có D-N6; cần đổi promp
 |---|---|---|
 | D-N6 | Cho phép 4C: 3 chương thật, toàn chương, chế độ mặc định theo 4B, ledger mới trần USD 0.30 (ước tính thực ≈ USD 0.03–0.06), chỉ emulator | Duyệt, kèm chọn 3 chương và đặt input vào `D:\P5E-private\n6-inputs\` |
 | D-CP | Đóng băng chunk-pair CP-IMPL-1 ở offline tới sau N6 | Duyệt |
+
+## 6. Quyết định đã nhận
+
+Owner (chat, 2026-10-07): "duyệt D-N6 và D-CP".
+
+- D-N6: được phép chạy 4C — 3 chương thật, luồng toàn chương, chế độ mặc định theo 4B (Nhanh nếu 4B chưa xong hoặc không loại Nhanh), model `openai/gpt-5.6-luna`, ledger mới `N6-<date>` trần USD 0.30, trần chương USD 0.10, chỉ `emulator-5554`, không pilot. Điều kiện bắt đầu 4C: 4A PASS (APK có bản sửa `277ffc79` đã cài và test thiết bị đạt) và input có trong `D:P5E-private
+6-inputs` (owner đặt). Thiếu input thì dừng và hỏi owner, không tự chọn chương.
+- D-CP: chunk-pair CP-IMPL-1 đóng băng offline tới sau N6; không đo W/C, không chi tiền cho luồng cặp.
