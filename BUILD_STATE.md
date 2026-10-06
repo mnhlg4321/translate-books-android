@@ -1,6 +1,16 @@
 # Build State
 
-## Current G2 approval preflight stop — 2026-10-05
+## Current Editorial API V1 N1–N4 checkpoint — 2026-10-06
+
+- Current version: active v4.18. Current branch: feature/v4.18-p5e-runner-repair-20260917. The implementation baseline immediately before this documentation commit is 18571c0138436a699bdcc67851b2afb42b60d60b.
+- Current build: 4.18-api.3/code240, source 18571c01; APK SHA-256 9F66F0C9D69F19728DD7EBB77138B946CDAF6672081F468A7B52638E5E4957C8; AndroidTest SHA-256 20CBCF3C69AE4E81C26B31FB73BB0C6B94FDC1282AB2F5AE38F6444D812A9381; mirrored production/test payloads are retained in the two archive roots.
+- Current phase: EDITORIAL_API_V1 N1–N4 offline complete; stop before N5. N1–N3 were already implemented and pushed by Claude, and N4 is documented in docs/EDITORIAL_API_V1_N1_N4_EXECUTION_20261005.md.
+- Completed tasks: engine 484/484, app 386/386, Python scripts/p6 71/71, AndroidTest compile PASS; emulator UI 3/3, force-stop/reopen 2/2, store/migration 4/4, fixture dry-run structural 1/1 with fake provider.
+- Known bugs/limits: the dry-run scorer correctly reports semantic FAIL for seeded fx-a01; it is not a semantic acceptance and was not repaired. No model-quality result was measured because no provider was called.
+- Regression status: all listed offline regressions PASS; actual provider calls and API spend are 0; pilot is untouched. Historical G1/G2 evidence and ledgers remain unchanged.
+- Next action: owner decides D-N4 scope and budget before N5; no live dispatch, provider call or pilot operation is authorized by this package.
+
+## Historical G2 approval preflight stop — 2026-10-05
 
 Runtime/source baseline `270a27b9`; docs package `0d9b5507` and snapshot `84d10155` are pushed on the current branch. Owner approved the G2 proposal, but the first exact-predecessor preflight stopped before provider dispatch: `fx-a04` repeat-1 run `5d438ce3-1b6b-4fcd-8434-aa98deaa84a1` is not retained on the emulator, producing `P6_REUSED_L1_STATE_MISSING`. Fixture and prompt guards passed; actual provider calls and G2 spend are both 0. Do not substitute base `fx-a04`, whose report has a different hash and no finding. The preflight report is `docs/P6_R6_G2_PREFLIGHT_20261005.md`. G1 ledger remains 41 settled calls, USD 0.28859445 / 1.00, pending 0. Next action: owner decision on exact predecessor restoration or an explicit proposal change; no further G2 dispatch.
 
