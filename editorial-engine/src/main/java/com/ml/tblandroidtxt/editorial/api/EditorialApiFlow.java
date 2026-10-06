@@ -178,6 +178,7 @@ public final class EditorialApiFlow {
             if (parsed.status() == EditResponseParser.Status.OK) {
                 report = EditGuards.check(inputs.raw(), inputs.draft(), parsed.edited(), inputs.glossary(), config.guards());
                 if (!report.separable()) technical = "META_UNSEPARABLE";
+                else technical = sizeBlock(inputs.draft(), parsed.edited(), response.finishReason());
             } else {
                 technical = parsed.status().name();
             }
@@ -201,6 +202,17 @@ public final class EditorialApiFlow {
         }
         step = Step.CHECK;
         attempt = 1;
+    }
+
+    /**
+     * N5 B/fx-a04: a well-formed EDITED with finish {@code stop} held 37 of 192 lines and became the final text. The
+     * letter thresholds of the pair gate (lost or doubled text) make such an answer a technical failure, never a final.
+     */
+    static String sizeBlock(String draft, String edited, String finishReason) {
+        StructuralGate.Result size = StructuralGate.check(new StructuralGate.Input(draft, edited, EditResponseParser.Status.OK,
+                finishReason, null, null, 0));
+        for (String code : List.of("CANDIDATE_EMPTY", "CHARS_LOSS", "CHARS_GROWTH")) if (size.has(code)) return code;
+        return "";
     }
 
     private void acceptCheck(StepResponse response, Request request) {

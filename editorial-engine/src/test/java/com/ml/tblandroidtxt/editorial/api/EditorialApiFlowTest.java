@@ -246,6 +246,32 @@ public final class EditorialApiFlowTest {
         assertEquals(2, flow.outcome().calls());
     }
 
+    private static final String LONG_RAW = "一。\n二。\n三。\n四。\n五。\n六。\n七。\n八。\n九。\n十。";
+    private static final String LONG_DRAFT = String.join("\n", java.util.Collections.nCopies(10, "Taro mở cánh cửa đỏ rồi bước vào phòng."));
+
+    private static EditInputs longInputs() { return new EditInputs(LONG_RAW, LONG_DRAFT, "Vietnamese", List.of(), ""); }
+
+    @Test public void aWellFormedEditThatLostMostOfTheTextIsNeverTheFinalText() {
+        String cut = "Taro mở cánh cửa đỏ rồi bước vào phòng.\nTaro mở cánh cửa đỏ rồi bước vào phòng.";
+        for (Mode mode : Mode.values()) {
+            EditorialApiFlow flow = new EditorialApiFlow(longInputs(), EditorialApiFlow.Config.of(mode));
+            List<Step> asked = drive(flow, List.of(ok(edited(cut), "stop"), ok(edited(cut), "stop")));
+            assertEquals(List.of(Step.EDIT, Step.EDIT), asked);
+            assertEquals(RunState.RETRY_REQUIRED, flow.outcome().state());
+            assertEquals(LONG_DRAFT, flow.outcome().finalText());
+            assertEquals("CHARS_LOSS", flow.outcome().steps().get(0).result());
+        }
+    }
+
+    @Test public void aDoubledEditIsRetriedAndARetryWithTheWholeTextSucceeds() {
+        String fixed = LONG_DRAFT.replaceFirst("bước vào", "đi vào");
+        EditorialApiFlow flow = new EditorialApiFlow(longInputs(), EditorialApiFlow.Config.of(Mode.QUICK));
+        drive(flow, List.of(ok(edited(LONG_DRAFT + "\n" + LONG_DRAFT + "\n" + LONG_DRAFT), "stop"), ok(edited(fixed), "stop")));
+        assertEquals("CHARS_GROWTH", flow.outcome().steps().get(0).result());
+        assertEquals(RunState.FINAL_OK, flow.outcome().state());
+        assertEquals(fixed, flow.outcome().finalText());
+    }
+
     @Test public void theRetryCanSucceed() {
         EditorialApiFlow flow = new EditorialApiFlow(inputs(), EditorialApiFlow.Config.of(Mode.QUICK));
         List<Step> asked = drive(flow, List.of(EditorialApiFlow.StepResponse.failure("HTTP_503"), ok(edited(EDITED), "stop")));
