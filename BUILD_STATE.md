@@ -1,12 +1,17 @@
 # Build State
 
-## Current state — 2026-10-07 (Q1.4 gate PASS; before Q1.5 dispatch)
+## Current state — 2026-10-07 (Q1.5 complete; stopped after holdout exports)
 
-- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before this Q1.4 gate record is `41edafa4`.
-- Wrapper build `4.18-q1.1` / code `244`, event `build-20261007-223121`, source `41edafa4`, and AndroidTest event `q1-androidtest-20261007` are mirrored in both archive roots and installed only on `emulator-5554`.
-- Q1.4 offline replay 2/2, app unit suite 431/431, lint PASS, selected Editorial API instrumentation 16/16 process result with 15 executed passes and one explicit opt-out skip; Q1.4 gate PASS.
-- Current phase: Q1.5 approved live dev/holdout dispatch. Provider calls and Q1 spend are still `0 / USD 0`; no pilot, chunk-pair or UI U1 file was touched.
-- Next action: create the new Q1 ledger, preflight it, and dispatch the fixed C0/C1/C2 dev matrix on `emulator-5554` under the USD 2.00 cap.
+- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before this Q1.5 report/state commit is `8294f13a`.
+- Wrapper build `4.18-q1.1` / code `244`, event `build-20261007-223121`, source `41edafa4`, and AndroidTest event `q1-androidtest-20261007` remain mirrored in both archive roots and installed only on `emulator-5554`.
+- Q1.1–Q1.4 offline gates passed. Q1.5 ran 33 settled provider calls in ledger `Q1-20261007`; verifier: 66 entries, 0 pending, 0 UNKNOWN, settled USD `0.2623298605`; no retry or repair calls. C1 was carried to holdout after the locked dev comparison; the holdout quality gate is NOT PASS (fix recall `0.383562`, positive similarity delta `1/6`, farther `19`, added kana/Han `0`).
+- Three private C1 holdout outputs were exported to `D:\P5E-private\q1-outputs\` for owner reading: chapters 010, 016 and 022. FINAL text stayed outside prompts and Git.
+- Current phase: Q1 complete and stopped before any additional provider/device/G2 work. Pilot, chunk-pair and UI U1 files were untouched.
+- Completed tasks: Q1 scorer, RAW-aligned normalizer, Quality Core/guards, offline replay, A/B manifest, wrapper/emulator gate, fixed C0/C1/C2 dev runs, fixed C0/C1 holdout runs, offline scoring, ledger verification and three private exports.
+- Pending tasks: owner review of the three private holdout outputs and the recorded NOT PASS quality gate.
+- Known bugs/limits: no configuration met every dev selection clause; C1 had the best zero-added-hard-error fix recall but more farther lines than C0. Semantic quality remains an owner-evaluation result, not validator acceptance.
+- Regression status: engine/app/Q1.4 regressions remain PASS; live structural outputs were valid with no UNKNOWN; approved spend ceiling USD 2.00 was not approached.
+- Next action: owner reads `D:\P5E-private\q1-outputs\` and decides whether any new quality/contract scope is warranted.
 
 ## Superseded — independent API V1 review and N1–N4 checkpoint (historical, 2026-10-06)
 
