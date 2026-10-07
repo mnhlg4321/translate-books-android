@@ -1,17 +1,17 @@
 # Build State
 
-## Current state — 2026-10-08 (Q2.2 complete; Q2.3 build gate pending)
+## Current state — 2026-10-08 (Q2.3 complete; Q2.4 live gate pending)
 
-- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before this state commit is `9c43b831`.
-- Current build remains `4.18-q1.1` / code `244`, source `41edafa4`, installed only on `emulator-5554`; the Q2.2 provider code has not been built into an APK.
-- Q2.1 and Q2.2 offline packages are complete. V5_CHAT now sends a three-turn same-history chain, extracts only `<FINAL>`, aggregates real usage/cost, stops on truncation/UNKNOWN, and reserves the aggregate worst case. The runner cap is USD 6.00 with model/reasoning overrides.
-- Q2 evidence is in `docs/EDITORIAL_API_V1_Q2_EXECUTION_20261008.md`; no provider call or device action has occurred in Q2.1–Q2.2.
-- Current phase: EDITORIAL_API_V1 Q2.3 wrapper build/emulator gate and price manifest; D-Q2 approved, U1 deferred.
-- Completed tasks: engine/app offline tests, exact FULL CHATGPT pack hash verification, V5 history/FINAL/truncation tests, cap-policy test and Python verifier tests 14/14.
-- Pending tasks: wrapper production and AndroidTest build code >244, install only emulator-5554, run Editorial API instrumentation, write Q2 manifest; then locked Q2.4 live matrix.
-- Known bugs/limits: semantic model quality remains NOT_MEASURED; V5 is not live yet and no cost estimate from real Q2 tokens exists.
-- Regression status: engine 566/566, app 77 test tasks PASS, AndroidTest Java compile PASS, Python fixture verifier 14/14 PASS.
-- Next action: build and archive the Q2 APK/test APK through the wrapper, install only emulator-5554 and run the permitted instrumentation.
+- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before this state commit is `eaa55574`.
+- Current build is `4.18-q2.1` / code `245`, source `45976adb`, installed only on `emulator-5554`; production and AndroidTest wrapper payloads are mirrored in `artifacts/` and `backup/`.
+- Q2.1 and Q2.2 offline packages are complete. Q2.3 passed the wrapper build, package verification, Editorial API store/flow/UI instrumentation and the explicit process-death sequence. V5_CHAT sends a three-turn same-history chain, extracts only `<FINAL>`, aggregates real usage/cost, stops on truncation/UNKNOWN, and reserves the aggregate worst case.
+- Q2 evidence is in `docs/EDITORIAL_API_V1_Q2_EXECUTION_20261008.md`; the price/build matrix is `docs/EDITORIAL_API_V1_Q2_AB_MANIFEST.json`.
+- Current phase: EDITORIAL_API_V1 Q2.4 live dev gate; D-Q2 approved, U1 deferred.
+- Completed tasks: engine/app offline tests, exact FULL CHATGPT pack hashes, V5 history/FINAL/truncation tests, cap policy, wrapper production/test archives and emulator gate.
+- Pending tasks: read the fresh ledger, run dev 004–008 on frozen E-strong/V5-strong settings, select once, run holdout 011/014/017 and export.
+- Known bugs/limits: semantic model quality remains NOT_MEASURED; live V5 quality and provider-returned token/cost values are pending.
+- Regression status: engine 566/566, app unit tasks PASS, AndroidTest compile and targeted emulator Editorial API tests PASS, Python verifier 14/14 PASS; Q2 live spend 0.
+- Next action: inspect/create `Q2-20261008` ledger and dispatch dev 004–008 on `emulator-5554` without changing the frozen matrix.
 ## Superseded — independent API V1 review and N1–N4 checkpoint (historical, 2026-10-06)
 
 The next two sections describe the review and checkpoint before the follow-up commits, N5 and `CP-OFFLINE-2`; keep them for history, do not read their next actions as current.
