@@ -1,13 +1,13 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-07 (+07:00), after N6 package 4C; owner approvals D-N6 and D-CP remain recorded in `docs/EDITORIAL_API_V1_CP_IMPL1_REVIEW_AND_N6_REQUEST_20261007.md` §6.
+- Updated: 2026-10-07 (+07:00) tối: coordinator review N6 (hash phân xử 24/24 khớp; 3 chương sạch cấu trúc, semantic chờ owner đọc) và thiết kế U1 (thư viện nguồn, màn chọn kiểu danh sách file, Cài đặt Biên tập): `docs/EDITORIAL_API_V1_UX_U1_DESIGN_AND_REQUEST_20261007.md`. Không đổi mã, 0 provider call.
 - Current version: active v4.18.
 - Current branch: `feature/v4.18-p5e-runner-repair-20260917`; existing release checklist unchanged.
-- Current commit: `57daa638` — implementation/documentation baseline immediately before this snapshot commit.
+- Current commit: e3b9d7bd — baseline ngay trước commit tài liệu này (confirm actual HEAD on resume).
 - Current build: `4.18-api.6`/code `243`, event `build-20261007-065128`, built by wrapper from `81e4d578`; APK SHA-256 `1158BF2C6A0B193C25524F12853E164D091EFD72435BCAD5112C797ED68DA590`, source ZIP `C7FFF310173FC171FDB61FE8B2756430F0D3B809E2D38CE7ACFD71A45F494ADD`, AndroidTest event `n6-api-20261007-065128` SHA-256 `65A2AC5A5BB9745C64926B55F0A372FE273D2E0C09ADE5BCD389931AA137B561`; mirrored in `artifacts/` and `backup/`, installed only on `emulator-5554`.
 - Current phase: N6 4A/4B PASS and 4C operational gates PASS; whole and pair API classes plus both process-death sequences pass; full instrumented package `246` tests with `11` known historical failures; N5 adjudication selected Nhanh (E), with one retained Kỹ base `fx-a04` `NEW_ERROR:OMISSION`. N6 4C ran 3 whole chapters on `emulator-5554`, 3 known-cost calls, USD `0.01967015`, ledger pending `0`; model quality remains `NOT_MEASURED`. CP-IMPL-1 remains offline-only; P7 unmet.
 - Completed tasks: production/test archive and install guard; `EditorialApiStore` `4/4`, `EditorialApiBienTapFlow` `3/3`, UI `2/2`, pair store `6/6`, pair UI `3/3`, whole/pair process-death `3/3` each; full suite historical-failure comparison; 24-run N5 line-ID-only semantic adjudication and default selection; 3 whole-flow N6 combos saved, force-stopped, reopened and exported; evidence in `docs/EDITORIAL_API_V1_N6_EXECUTION_20261007.md` and `docs/EDITORIAL_API_V1_N5_ADJUDICATION_20261007.md`.
-- Pending tasks: owner review of N6 4C evidence only; no further provider, device, pilot, chunk-pair or G2 action.
+- Pending tasks: U1.1–U1.6 (thư viện nguồn v28, SourcePickerSheet, danh sách/tổ hợp/xác nhận/đang chạy, kết quả + xuất mặc định, Cài đặt Biên tập, QA emulator); owner đọc và chấp nhận 3 chương N6; P7 sau 3/3 chấp nhận + U1 PASS.
 - Known bugs: the full suite still has the same 11 historical fixture/schema/pilot-baseline failures; one Kỹ N5 base run remains a model/content-loss example and is not accepted; whole-chapter structural guard was repaired in `277ffc79`; picker/save-as traversal remains unproven; semantic quality outside the seeded matrix remains `NOT_MEASURED`.
 - Regression status: 4A wrapper build/archive parity, targeted Editorial API instrumentation, full package run within the historical allowance, 4B offline adjudication, and 4C whole-flow save/force-stop/reopen/export gates PASS; 4C ledger verified 6 entries/3 settled calls/0 pending; pilot and chunk-pair live untouched.
-- Next action: owner reviews the N6 4C report; remain stopped before any further live/device/G2 work.
+- Next action: Codex thực hiện U1 theo `docs/EDITORIAL_API_V1_UX_U1_DESIGN_AND_REQUEST_20261007.md` mục 10; owner song song đọc 3 chương N6.
