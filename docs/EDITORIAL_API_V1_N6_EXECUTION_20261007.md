@@ -45,6 +45,14 @@ The instrumented run used no live-account argument and no provider test opt-in. 
 
 4A is **PASS**: the required whole and pair API classes, both process-death sequences, and the full suite completed within the historical failure allowance. Proceeding to 4B is allowed. 4C remains gated on the 4B adjudication and the presence of owner-selected inputs in `D:\P5E-private\n6-inputs\`.
 
+## 4B offline adjudication
+
+The complete 24-run adjudication is in `docs/EDITORIAL_API_V1_N5_ADJUDICATION_20261007.md`. Raw book evidence remains private at `D:\P5E-private\n5-adjudication\20261007\adjudication.json` (SHA-256 `B9C10626B123EB3E368AA854F870F4AA8FF0E2975A5556ED7D704417633249F1`). Git contains only response hashes, line IDs and classifications.
+
+The review found one new error: the base Kỹ `fx-a04` response (`7c8a177826b343cbfad72db379f60e491089509eb7e72b273d1f8cc193bc5e7d`) repaired `L71` but omitted `L74–L381` and returned 37/192 lines. It is `NEW_ERROR:OMISSION`; the response remains invalid and is not accepted. Nhanh had no gate-class new error or truncation. The Nhanh base `fx-a11` missing sentence was independently confirmed as an improvement at `L327` even though the mechanical scorer could not align the inserted line.
+
+Both arms scored 19/25 mechanically; Nhanh used 12 calls / USD `0.11166139`, Kỹ 29 calls / USD `0.15397365`. After subtracting the pre-existing `E_L245_MEANING` on `fx-a02`, no new MEANING/OMISSION/NUMBER/NEGATION error was confirmed on the control or ambiguous fixture. Per plan §6, the default is **Nhanh (E)**. This is an offline decision only: acceptance, prompt, thresholds and all stored responses are unchanged; semantic quality outside the seeded matrix remains `NOT_MEASURED`.
+
 ## Next package
 
-Perform 4B offline: adjudicate all 24 N5 runs using only private book evidence, choose the default mode under plan §6, and publish the line-ID-only report. Do not dispatch a provider call until that package is pushed and the 4C input gate is checked.
+Proceed to 4C only after checking that owner-selected files actually exist in `D:\P5E-private\n6-inputs\`. If present, use whole flow with Nhanh, the approved model and fresh N6 ledger/caps; otherwise stop and ask the owner. Do not run chunk-pair live or touch pilot.

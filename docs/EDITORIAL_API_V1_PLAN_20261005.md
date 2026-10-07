@@ -1,6 +1,6 @@
 # Editorial API V1 — kế hoạch đổi hướng (2026-10-05)
 
-Trạng thái 2026-10-06: D-N1..D-N3 đã được ghi nhận duyệt trong work request; D-N4 đã có bằng chứng N5 nhưng quyết định mặc định và adjudication vẫn chưa hoàn tất. N1–N4 đã triển khai; independent review, N5 result và gói cặp chunk offline được giữ trong các tài liệu liên quan. Tài liệu này thay hướng thực thi của P6 trong `EDITORIAL_RECOVERY_V4_18.md`; không mở branch, release hay checklist mới (vẫn `feature/v4.18-p5e-runner-repair-20260917`, checklist `release_checklists/v4.18-editorial-v5-safe-4-1-3.md`). Phần đề xuất gốc bên dưới được giữ để đối chiếu quyết định, không tự tạo quyền live.
+Trạng thái 2026-10-07: D-N1..D-N3 và D-N4 đã được ghi nhận duyệt; 24 run N5 đã được phân xử độc lập trong `docs/EDITORIAL_API_V1_N5_ADJUDICATION_20261007.md`, chọn **Nhanh (E)** làm mặc định theo mục 6. Một lỗi mới loại OMISSION do run Kỹ `fx-a04` bị cụt được giữ nguyên là lỗi model/luồng đo, không nới acceptance; Nhanh không có lỗi mới loại MEANING/OMISSION/NUMBER/NEGATION trên các fixture dùng làm cổng. N1–N4 đã triển khai; gói cặp chunk offline được giữ đóng băng. Tài liệu này thay hướng thực thi của P6 trong `EDITORIAL_RECOVERY_V4_18.md`; không mở branch, release hay checklist mới (vẫn `feature/v4.18-p5e-runner-repair-20260917`, checklist `release_checklists/v4.18-editorial-v5-safe-4-1-3.md`). Phần đề xuất gốc bên dưới được giữ để đối chiếu quyết định, không tự tạo quyền live.
 
 ## 1. Vì sao đổi hướng
 
@@ -148,6 +148,10 @@ Cổng quyết định (đề xuất, owner có thể chỉnh):
 | Nhánh tốt nhất sửa đúng ≥ 15/25 target, 0 lỗi mới loại MEANING/OMISSION/NUMBER/NEGATION trên fixture sạch, 0 truncation | Chọn nhánh đó làm mặc định → chạy 3 chương thật |
 | B hơn A ≥ 4 target hoặc ít lỗi mới hơn rõ | Mặc định Kỹ; ngược lại mặc định Nhanh (rẻ hơn), giữ Kỹ làm tùy chọn |
 | Cả hai < 15/25 | Không chạy chương thật; phân tích lỗi bị bỏ sót theo loại, sửa Quality Core/C prompt một lần, đo lại một lần (ngân sách riêng) |
+
+### Kết quả phân xử N5 (2026-10-07)
+
+`docs/EDITORIAL_API_V1_N5_ADJUDICATION_20261007.md` đọc đối chiếu RAW, DRAFT, glossary và Pronoun theo từng line ID của cả 24 run; không chọn lượt lặp tốt hơn để thay run cơ sở. Nhanh có 19/25 target theo máy, cộng một target `T-S3` của `fx-a11` được xác minh độc lập là sửa đúng dù scorer không ghép được line sau khi chèn; không có NEW_ERROR loại MEANING/OMISSION/NUMBER/NEGATION trên control/ambiguous fixture và không có truncation. Kỹ cũng có 19/25 theo máy, nhưng một run cơ sở `fx-a04` trả 37/192 dòng và là `NEW_ERROR:OMISSION` dù target role được sửa. Kỹ không thắng Nhanh về recall, đắt hơn, và có lỗi cụt duy nhất. Theo đúng cổng §6, chế độ mặc định là **Nhanh (E)**; Kỹ giữ làm tùy chọn sau khi owner chấp nhận rủi ro. Kết luận này không biến bất kỳ response sai thành acceptance và không thay đổi ngưỡng.
 
 Ma trận N5 đã chốt theo plan (24 run, 12 mỗi nhánh): 8 fixture cơ sở (`fx-a02`, `fx-a03`, `fx-a04`, `fx-a05`, `fx-a07`, `fx-a08`, `fx-a11`, `fx-a12`) + 2 lượt lặp `fx-a04` + 2 lượt lặp `fx-a11` (tổng 12 run mỗi nhánh). Target mỗi nhánh: a03 1 + a04 1 + a05 1 + a07 1 + a08 1 + a11 6 = 11 trong lượt cơ sở, cộng lặp 2×1 + 2×6 = 14, tổng **25**. `fx-a02` được đánh dấu là control danh nghĩa, **không** coi là sạch: phân xử G1 đã xác nhận 1 lỗi nội dung thêm (`E_L245_MEANING`), nên "lỗi mới" trên a02 chỉ tính sau khi trừ lỗi đã có sẵn trong DRAFT. Đây là lỗi đếm của bản đề xuất đầu ("10 run"); tiêu chí cổng ở trên **không** đổi.
 
