@@ -1,14 +1,15 @@
 # Build State
 
-## Current state — 2026-10-07 (supersedes the two API V1 sections below)
+## Current state — 2026-10-07 (Q1.1 offline package)
 
-- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline remains `81e4d5787793d0b93cbde7bc39e7d3f73aff43d7`; the documentation baseline immediately before this snapshot is `57daa638`.
-- Current build: `4.18-api.6` / code `243`, event `build-20261007-065128`, built through `scripts/build-and-save.ps1` from a clean temporary worktree at `81e4d578`; APK SHA-256 `1158BF2C6A0B193C25524F12853E164D091EFD72435BCAD5112C797ED68DA590`, source ZIP `C7FFF310173FC171FDB61FE8B2756430F0D3B809E2D38CE7ACFD71A45F494ADD`; AndroidTest event `n6-api-20261007-065128`, APK SHA-256 `65A2AC5A5BB9745C64926B55F0A372FE273D2E0C09ADE5BCD389931AA137B561`; payloads are identical in `artifacts/` and `backup/`, production and test APKs installed only on `emulator-5554`.
-- 4A device gate PASS: API whole Store `4/4`, Flow `3/3`, UI executable `2/2`; Pair Store `6/6`, Pair UI executable `3/3`; whole and pair process-death `seed → force-stop → verify → cleanup` each `3/3`. Full instrumented package ran `246` tests with `235` pass and `11` already-known historical failures; no new Editorial API failure. Raw logs are outside Git at `D:\P5E-private\n6-4a-*`.
-- Host/build checks remain PASS from the source line: engine `553`, app `431`, Python `72`, AndroidTest compile; 4A/4B provider calls and spend were `0 / USD 0`. N6 4C used exactly 3 whole-chapter calls, all known-cost and settled at USD `0.01967015` under ledger cap `0.30`, with `0` pending/UNKNOWN and `0.28032985` remaining. N5 remains 24 runs/41 calls/settled USD `0.26563504`; adjudication found one Kỹ base `fx-a04` `NEW_ERROR:OMISSION`, and selected **Nhanh (E)** by plan §6. CP-IMPL-1 remains offline-only and frozen.
-- Next action: owner reviews the N6 4C evidence; stop before any further provider/device/pilot/chunk-pair or G2 action.
+- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before the Q1.1 package commit is `1834294b`.
+- Current build remains `4.18-api.6` / code `243`, event `build-20261007-065128`, archived from `81e4d578` through the wrapper and installed only on `emulator-5554`; no new APK was needed for Q1.1.
+- Q1.1 scorer `scripts/p6/score_vs_final.py` and synthetic test pass; private 28-chapter/N6 measurements are at `D:\P5E-private\q1-runs\Q1.1-baseline\`, with manifest SHA-256 `7c06456e8be90547cfc5b10a18c2ba8c06b6b25db9d550f70857edc18e786894`.
+- Q1.1 result: 28 DRAFT owner-changed `898`, improved `343`, fix recall `0.38195991`, farther `0`, hard added `0`; N6 001–003 fix recall `0.52`, farther `8`, added kana/Han `1`. These are offline evaluation metrics only.
+- Current phase: Q1.1 complete; Q1.2–Q1.5 pending. Provider calls and Q1 spend are `0 / USD 0`; no pilot, chunk-pair or UI U1 work was touched.
+- Next action: implement and measure the pure JVM RAW-aligned normalizer in Q1.2.
 
-## Superseded — independent API V1 review and N1–N4 checkpoint (historical, 2026-10-06)
+# Superseded — independent API V1 review and N1–N4 checkpoint (historical, 2026-10-06)
 
 The next two sections describe the review and checkpoint before the follow-up commits, N5 and `CP-OFFLINE-2`; keep them for history, do not read their next actions as current.
 

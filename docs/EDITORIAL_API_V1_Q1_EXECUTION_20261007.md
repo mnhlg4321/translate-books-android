@@ -1,0 +1,46 @@
+# Editorial API V1 — Q1 execution
+
+This is the execution record for `EDITORIAL_API_V1_Q1_QUALITY_PLAN_AND_REQUEST_20261007.md`.  It keeps book text and owner FINALs outside Git; the repository records only counts, IDs, hashes and commands.
+
+## Authority and scope
+
+- Branch: `feature/v4.18-p5e-runner-repair-20260917`.
+- Starting HEAD: `1834294b` (owner approval D-Q1 in plan section 6).
+- Private inputs: `D:\P5E-private\q1-inputs\` (28 chapter directories, copied from the private ebook source); owner FINAL reference remains under `D:\Ebooks\JAKUAKU MONSTER\5.FINAL\`.
+- Dev IDs: 001–008. Holdout IDs: 010, 013, 016, 019, 022, 025. Other chapters are unused for live Q1.5.
+- FINAL is never copied into a prompt, provider request, response fixture, or runtime artifact. It is read only by the offline scorer.
+- UI U1 files, pilot, and chunk-pair work are outside this package.
+
+## Q1.1 — scorer against owner FINAL (offline)
+
+Implementation: `scripts/p6/score_vs_final.py`; synthetic regression: `scripts/p6/test_score_vs_final.py`.
+
+The scorer aligns non-blank lines with `difflib`, reports fix recall, regression, hard structural/content indicators, and whole-chapter similarity. It emits hashes and line IDs only; it does not print book text. Hard indicators include added kana/Han, remaining source script, copied ruby, fullwidth Latin, RAW symbol mismatch and line-count delta.
+
+Validation:
+
+```text
+py -3 -m unittest scripts/p6/test_score_vs_final.py       PASS (3 tests)
+```
+
+Private evidence: `D:\P5E-private\q1-runs\Q1.1-baseline\` (28 DRAFT baselines and N6 001–003 baselines). Input manifest SHA-256: `7c06456e8be90547cfc5b10a18c2ba8c06b6b25db9d550f70857edc18e786894`.
+
+Baseline counts (28 DRAFT chapters): owner-changed lines `898`, improved `343`, fix recall `0.38195991`; farther `0`; app-changed unchanged-owner lines `0`; remaining kana/Han `31`; copied ruby `12`; fullwidth Latin `67`; RAW symbol mismatches `1626`; average similarity DRAFT→FINAL `0.98044633`.
+
+N6 001–003 against the same scorer: owner-changed `50`, improved `26`, fix recall `0.52`; farther `8`; app-changed unchanged-owner lines `4`; added kana/Han `1`; remaining kana/Han `2`; copied ruby `3`; fullwidth Latin `6`; average similarity delta app−DRAFT `-0.00029053`. These are evaluation measurements, not acceptance.
+
+## Q1.2 — RAW-aligned normalization (pending)
+
+The pure JVM normalizer and 28-chapter measurement will be recorded here after its targeted regression passes. No provider call is part of Q1.2.
+
+## Q1.3 — Quality Core v2 and guards (pending)
+
+The contract revision, prompt detections and deterministic post-edit guard will be recorded here after engine/app regressions pass. FINAL remains absent from all prompt inputs.
+
+## Q1.4 — offline replay, manifest, build and emulator (pending)
+
+The saved N6 guard replay, A/B manifest, wrapper build and emulator-only regression will be recorded here. No provider call is allowed before this gate passes.
+
+## Q1.5 — live Q1 (pending Q1.4 PASS)
+
+Ledger: new `Q1-<date>`, cap USD 2.00; C0 current V1.1 luna, C1 V1.2 luna, C2 one Q1.4 candidate with worst-case estimate ≤ USD 0.15/chapter. Dev runs 001–008 (C0 skips 001–003 because N6 already exists), then fixed holdout 010/013/016/019/022/025 with selected best and C0. Prompt, law and thresholds stay byte-identical between dev and holdout. Stop on budget/reservation overflow, UNKNOWN cost, infrastructure error, or a required scope change. Three holdout outputs will be copied only to `D:\P5E-private\q1-outputs\`; owner FINAL is used solely for offline scoring and owner review.
