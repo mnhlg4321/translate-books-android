@@ -32,6 +32,7 @@ public final class EditorialApiLedgerProvider implements EditorialApiProvider {
     private final String model;
     private final Recorder recorder;
     private final List<Overrun> overruns = Collections.synchronizedList(new ArrayList<>());
+    private volatile int physicalCalls;
 
     public EditorialApiLedgerProvider(EditorialApiProvider delegate, EditorialP6GroupSpendLedger ledger,
                                       EditorialApiRunService.Pricing pricing, String identity, String model, Recorder recorder) {
@@ -44,15 +45,19 @@ public final class EditorialApiLedgerProvider implements EditorialApiProvider {
     }
 
     public List<Overrun> overruns() { return List.copyOf(overruns); }
+    public int physicalCalls() { return physicalCalls; }
 
     @Override public void cancel() { delegate.cancel(); }
 
     @Override public EditorialApiFlow.StepResponse call(EditorialApiFlow.Request request, String modelName, int maxOutput, long timeoutMillis) {
-        BigDecimal worst = pricing.inputPerToken(model).multiply(BigDecimal.valueOf(request.prompt().estimatedInputTokens()))
-                .add(pricing.outputPerToken(model).multiply(BigDecimal.valueOf(maxOutput)));
+        BigDecimal worst = delegate instanceof V5ChatEditorialApiProvider v5
+                ? v5.worstCase(pricing, model, maxOutput, request)
+                : pricing.inputPerToken(model).multiply(BigDecimal.valueOf(request.prompt().estimatedInputTokens()))
+                    .add(pricing.outputPerToken(model).multiply(BigDecimal.valueOf(maxOutput)));
         String callId = sha256(identity + "|" + request.step() + "|" + request.attempt());
         ledger.reserve(callId, request.step().name(), worst);
         EditorialApiFlow.StepResponse response = delegate.call(request, modelName, maxOutput, timeoutMillis);
+        physicalCalls += delegate instanceof V5ChatEditorialApiProvider v5 ? v5.physicalCalls() : 1;
         try {
             recorder.record(request, response);
         } catch (IOException failure) {

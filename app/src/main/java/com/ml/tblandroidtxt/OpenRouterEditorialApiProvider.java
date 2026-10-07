@@ -16,14 +16,21 @@ import java.math.BigDecimal;
  */
 public final class OpenRouterEditorialApiProvider implements EditorialApiProvider {
     public static final String CHECK_SCHEMA_NAME = "editorial_api_check_v1";
-    private static final String REASONING = "minimal";
+    private static final String DEFAULT_REASONING = "minimal";
 
     private final AppSettings settings;
+    private final String reasoningEffort;
     private final OpenAICompatibleClient.CallControl control = new OpenAICompatibleClient.CallControl();
 
     public OpenRouterEditorialApiProvider(AppSettings settings) {
+        this(settings, DEFAULT_REASONING);
+    }
+
+    public OpenRouterEditorialApiProvider(AppSettings settings, String reasoningEffort) {
         if (settings == null) throw new IllegalArgumentException("settings are required");
         this.settings = settings.copy();
+        this.reasoningEffort = reasoningEffort == null || reasoningEffort.isBlank()
+                ? DEFAULT_REASONING : reasoningEffort.trim();
     }
 
     @Override public void cancel() { control.cancel("EDITORIAL_API_USER_CANCEL"); }
@@ -50,7 +57,7 @@ public final class OpenRouterEditorialApiProvider implements EditorialApiProvide
             long deadline = timeoutMillis > 0 ? OpenAICompatibleClient.monotonicDeadlineNanosFromNowMillis(timeoutMillis) : 0L;
             OpenAICompatibleClient.ChatResult result = OpenAICompatibleClient.chatWithUsage(s, pair, maxOutputTokens,
                     "editorial-api-" + request.step().name().toLowerCase(java.util.Locale.ROOT) + "-" + request.attempt(), null,
-                    false, deadline, control, responseFormat, preferences, REASONING);
+                    false, deadline, control, responseFormat, preferences, reasoningEffort);
             BigDecimal cost = BigDecimal.ZERO;
             boolean known = false;
             if (result.providerCostReported && Double.isFinite(result.providerCost) && result.providerCost >= 0) {

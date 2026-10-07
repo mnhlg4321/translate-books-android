@@ -9,6 +9,7 @@ import org.json.JSONObject;
 import org.junit.Test;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -33,6 +34,22 @@ public final class EditorialP5COutputBudgetTest {
                 OpenAICompatibleClient.buildChatRequestBody(settings, prompt, 512)
                         .getInt("max_tokens"));
         assertFalse(body.getBoolean("stream"));
+    }
+
+    @Test public void multiTurnEnvelopeKeepsSystemAndHistoryOrder() throws Exception {
+        AppSettings settings = new AppSettings();
+        JSONObject body = OpenAICompatibleClient.buildChatRequestBody(settings,
+                List.of(new OpenAICompatibleClient.ChatMessage("system", "project"),
+                        new OpenAICompatibleClient.ChatMessage("user", "L1"),
+                        new OpenAICompatibleClient.ChatMessage("assistant", "REPORT"),
+                        new OpenAICompatibleClient.ChatMessage("user", "L2")),
+                512, null, null, "medium");
+        org.json.JSONArray messages = body.getJSONArray("messages");
+        assertEquals(4, messages.length());
+        assertEquals("system", messages.getJSONObject(0).getString("role"));
+        assertEquals("L1", messages.getJSONObject(1).getString("content"));
+        assertEquals("REPORT", messages.getJSONObject(2).getString("content"));
+        assertEquals("L2", messages.getJSONObject(3).getString("content"));
     }
 
     @Test public void rawStructuredRequestUsesStrictSchemaProviderRoutingAndMinimalReasoning()

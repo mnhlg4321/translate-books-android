@@ -190,7 +190,10 @@ public final class EditorialApiFlow {
         if (!technical.isEmpty()) {
             record(request, response, technical);
             // a request whose outcome is unknown may already be charged: never send it again on our own
-            if (!response.outcomeUnknown() && attempt <= EditorialApiContract.MAX_TECHNICAL_RETRIES_PER_STEP) { attempt++; return; }
+            // V5_CHAT has already dispatched its own three-turn chain.  A missing
+            // FINAL or truncated turn must never resend that chain implicitly.
+            if (config.mode() != Mode.V5_CHAT && !response.outcomeUnknown()
+                    && attempt <= EditorialApiContract.MAX_TECHNICAL_RETRIES_PER_STEP) { attempt++; return; }
             finish(RunState.RETRY_REQUIRED, baseDraft(), "");
             return;
         }
@@ -199,7 +202,7 @@ public final class EditorialApiFlow {
         guards = report;
         notes = parsed.notes();
         notesDropped = parsed.notesDropped();
-        if (config.mode() == Mode.QUICK) {
+        if (config.mode() == Mode.QUICK || config.mode() == Mode.V5_CHAT) {
             boolean clean = report.flags().isEmpty() && notes.isEmpty();
             finish(clean ? RunState.FINAL_OK : RunState.FINAL_NOTES, edited, "");
             return;

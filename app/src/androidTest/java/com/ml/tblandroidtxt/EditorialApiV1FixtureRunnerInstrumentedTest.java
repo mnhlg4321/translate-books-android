@@ -35,7 +35,7 @@ import java.util.Set;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Fixture runner for EDITORIAL_API_V1 (modes API_V1_QUICK and API_V1_THOROUGH). It reads the same private fixture payload
+ * Fixture runner for EDITORIAL_API_V1 (modes API_V1_QUICK, API_V1_THOROUGH and V5_CHAT). It reads the same private fixture payload
  * the P6 runner reads (RAW, DRAFT, GLOSSARY, PRONOUN pushed by scripts/p6/run_group.ps1), runs the real run service and
  * writes the same output layout (final.txt, structural.json, run-metadata.json, spend-ledger.jsonl, prompts, responses) so
  * score_run.py and verify_fixture_run.py judge it unchanged. Without p6_fixture_live=YES the provider is a local fake and
@@ -54,7 +54,7 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
     @Test public void runFixture() throws Exception {
         Bundle args = InstrumentationRegistry.getArguments();
         Assume.assumeTrue("API_V1 fixture runner is opt-in", "YES".equalsIgnoreCase(args.getString("p6_fixture_run", ""))
-                && args.getString("p6_mode", "").startsWith("API_V1_"));
+                && (args.getString("p6_mode", "").startsWith("API_V1_") || "V5_CHAT".equals(args.getString("p6_mode", ""))));
         String runId = uuid(args.getString("p6_run_id", ""));
         String fixtureId = args.getString("p6_fixture_id", "");
         String modeText = args.getString("p6_mode", "");
@@ -62,6 +62,7 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         EditorialApiContract.Mode mode;
         if ("API_V1_QUICK".equals(modeText)) mode = EditorialApiContract.Mode.QUICK;
         else if ("API_V1_THOROUGH".equals(modeText)) mode = EditorialApiContract.Mode.THOROUGH;
+        else if ("V5_CHAT".equals(modeText)) mode = EditorialApiContract.Mode.V5_CHAT;
         else throw new IllegalArgumentException("P6_FIXTURE_MODE_INVALID");
         boolean live = "YES".equalsIgnoreCase(args.getString("p6_fixture_live", ""));
         Context context = ApplicationProvider.getApplicationContext();
@@ -95,7 +96,7 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         String groupId = args.getString("p6_group_id", live ? "" : "P6-OFFLINE-" + runId);
         if (groupId == null || !groupId.matches("[A-Za-z0-9._-]{3,100}")) throw new IllegalArgumentException("P6_SPEND_GROUP_INVALID");
         BigDecimal groupMaximum = new BigDecimal(args.getString("p6_group_maximum_usd", "1.00"));
-        if (groupMaximum.signum() <= 0 || groupMaximum.compareTo(new BigDecimal("2.00")) > 0) throw new IllegalArgumentException("P6_SPEND_GROUP_CAP_INVALID");
+        if (!EditorialP6GroupSpendLedger.isValidRunnerGroupCap(groupMaximum)) throw new IllegalArgumentException("P6_SPEND_GROUP_CAP_INVALID");
         BigDecimal chapterCap = new BigDecimal(args.getString("p6_chapter_cap_usd", "0.10"));
         Path ledgerPath = externalRoot.resolve("p6-spend-ledger-groups").resolve(groupId + ".jsonl").normalize();
         if (!ledgerPath.startsWith(externalRoot)) throw new IllegalArgumentException("P6_SPEND_GROUP_PATH_REFUSED");
@@ -113,8 +114,24 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         Capture capture = new Capture(outputRoot);
         String modelOverride = args.getString("p6_model_override", "").trim();
         String model = live ? (modelOverride.isEmpty() ? settings.model : modelOverride) : "fake-model";
-        EditorialApiProvider delegate = live ? new OpenRouterEditorialApiProvider(settings) : fake(sources.draft);
-        EditorialApiLedgerProvider provider = new EditorialApiLedgerProvider(delegate, ledger, PINNED, runId + "|" + fixtureId, model, capture::record);
+        String reasoning = args.getString("p6_reasoning_effort", mode == EditorialApiContract.Mode.V5_CHAT ? "medium" : "minimal");
+        EditorialApiProvider delegate;
+        Map<String, String> packHashes = new LinkedHashMap<>();
+        if (live && mode == EditorialApiContract.Mode.V5_CHAT) {
+            String project = asset(context, "editorial/v5-safe4-full-chatgpt/PROJECT_INSTRUCTION_BIEN_TAP_V5_SAFE_4_1_3_FULL.txt");
+            String prompt = asset(context, "editorial/v5-safe4-full-chatgpt/PROMPT_DAU_CHAT_3_LUOT_V5_SAFE_4_1_3_FULL.txt");
+            String workflow = asset(context, "editorial/v5-safe4-full-chatgpt/WORKFLOW_BIEN_TAP_3_LUOT_V5_SAFE_4_1_3_FULL.txt");
+            packHashes.put("project", EditorialCanonicalJson.sha256Hex(project.getBytes(StandardCharsets.UTF_8)));
+            packHashes.put("prompt", EditorialCanonicalJson.sha256Hex(prompt.getBytes(StandardCharsets.UTF_8)));
+            packHashes.put("workflow", EditorialCanonicalJson.sha256Hex(workflow.getBytes(StandardCharsets.UTF_8)));
+            delegate = new V5ChatEditorialApiProvider(settings, project, prompt, workflow, reasoning, capture::recordV5);
+        } else if (live) {
+            delegate = new OpenRouterEditorialApiProvider(settings, reasoning);
+        } else {
+            delegate = fake(sources.draft);
+        }
+        EditorialApiRunService.Pricing pricing = live && "openai/gpt-5.6-sol".equalsIgnoreCase(model) ? SOL : PINNED;
+        EditorialApiLedgerProvider provider = new EditorialApiLedgerProvider(delegate, ledger, pricing, runId + "|" + fixtureId, model, capture::record);
 
         List<SourceCheck.Problem> problems = SourceCheck.check(sources.raw, sources.draft, sources.hasGlossary(), sources.hasPronoun(),
                 sources.glossaryText.length() + sources.pronounText.length());
@@ -122,7 +139,7 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         EditorialApiCombo combo = new EditorialApiCombo();
         combo.name = fixtureId;
         store.insertCombo(combo);
-        EditorialApiRunService service = new EditorialApiRunService(store, provider, PINNED, 900_000L);
+        EditorialApiRunService service = new EditorialApiRunService(store, provider, pricing, 900_000L);
         EditorialApiRun run;
         String blocked = "";
         if (SourceCheck.blocked(problems)) {
@@ -154,7 +171,7 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         structural.put("reasonCode", run.state.name());
         structural.put("stage", "API_V1");
         structural.put("providerCalls", BigDecimal.valueOf(run.calls));
-        structural.put("actualProviderCalls", BigDecimal.valueOf(live ? run.calls : 0));
+        structural.put("actualProviderCalls", BigDecimal.valueOf(live ? provider.physicalCalls() : 0));
         structural.put("inputTokens", BigDecimal.valueOf(run.inputTokens));
         structural.put("outputTokens", BigDecimal.valueOf(run.outputTokens));
         structural.put("usd", run.usd.toPlainString());
@@ -184,7 +201,7 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         metadata.put("groupId", groupId);
         metadata.put("groupMaximumUsd", groupMaximum.toPlainString());
         metadata.put("chapterCapUsd", chapterCap.toPlainString());
-        metadata.put("actualProviderCalls", BigDecimal.valueOf(live ? run.calls : 0));
+        metadata.put("actualProviderCalls", BigDecimal.valueOf(live ? provider.physicalCalls() : 0));
         metadata.put("fakeProviderCalls", BigDecimal.valueOf(live ? 0 : run.calls));
         metadata.put("inputTokens", BigDecimal.valueOf(run.inputTokens));
         metadata.put("outputTokens", BigDecimal.valueOf(run.outputTokens));
@@ -198,6 +215,8 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         metadata.put("route", route);
         metadata.put("contractRevision", run.contractRevision);
         metadata.put("qualityCoreSha256", run.qualityCoreSha256);
+        metadata.put("reasoningEffort", reasoning);
+        if (!packHashes.isEmpty()) metadata.put("v5PackSha256", new LinkedHashMap<>(packHashes));
         metadata.put("sourceCommit", args.getString("p6_source_commit", ""));
         metadata.put("apkVersionName", packageInfo.versionName == null ? "" : packageInfo.versionName);
         metadata.put("apkVersionCode", BigDecimal.valueOf(packageInfo.getLongVersionCode()));
@@ -230,6 +249,17 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
     private static EditorialApiProvider fake(String draft) {
         return new FakeEditorialApiProvider((request, index) -> request.step() == EditorialApiContract.Step.EDIT
                 ? FakeEditorialApiProvider.edited(draft) : FakeEditorialApiProvider.pass());
+    }
+
+    private static final EditorialApiRunService.Pricing SOL = new EditorialApiRunService.Pricing() {
+        @Override public BigDecimal inputPerToken(String model) { return new BigDecimal("0.000002"); }
+        @Override public BigDecimal outputPerToken(String model) { return new BigDecimal("0.000010"); }
+    };
+
+    private static String asset(Context context, String path) throws IOException {
+        try (java.io.InputStream input = context.getAssets().open(path)) {
+            return new String(input.readAllBytes(), StandardCharsets.UTF_8);
+        }
     }
 
     private static String firstRoute(EditorialApiRun run) throws Exception {
@@ -266,6 +296,28 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
             Files.write(root.resolve("responses").resolve(String.format(Locale.ROOT, "%03d-%s.json", number, step)),
                     response.content().getBytes(StandardCharsets.UTF_8));
             finishReasons.add(response.finishReason());
+        }
+
+        synchronized void recordV5(int turn, List<OpenAICompatibleClient.ChatMessage> messages,
+                                   OpenAICompatibleClient.ChatResult result, String error) throws IOException {
+            Path root = this.root.resolve("v5-chat");
+            Files.createDirectories(root);
+            StringBuilder prompt = new StringBuilder();
+            for (OpenAICompatibleClient.ChatMessage message : messages) {
+                prompt.append(message.role()).append("\n").append(message.content()).append("\n\n");
+            }
+            Files.write(root.resolve(String.format(Locale.ROOT, "%02d-request.txt", turn)), prompt.toString().getBytes(StandardCharsets.UTF_8));
+            String responseText = result == null ? "" : result.content;
+            Files.write(root.resolve(String.format(Locale.ROOT, "%02d-response.txt", turn)), responseText.getBytes(StandardCharsets.UTF_8));
+            Map<String, Object> meta = new LinkedHashMap<>();
+            meta.put("turn", BigDecimal.valueOf(turn));
+            meta.put("error", error == null ? "" : error);
+            meta.put("finishReason", result == null ? "" : result.finishReason);
+            meta.put("inputTokens", BigDecimal.valueOf(result == null ? 0 : result.promptTokens));
+            meta.put("outputTokens", BigDecimal.valueOf(result == null ? 0 : result.completionTokens));
+            meta.put("model", result == null ? "" : result.responseModel);
+            meta.put("route", result == null ? "" : result.responseProvider);
+            Files.write(root.resolve(String.format(Locale.ROOT, "%02d-metadata.json", turn)), EditorialCanonicalJson.canonicalize(meta).getBytes(StandardCharsets.UTF_8));
         }
     }
 

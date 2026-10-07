@@ -189,6 +189,16 @@ public final class EditorialApiFlowTest {
         assertTrue(flagged.outcome().guards().has(EditGuards.Code.SYMBOL_WARN));
     }
 
+    @Test public void v5ChatMissingFinalIsTerminalAndIsNotRetried() {
+        EditorialApiFlow flow = new EditorialApiFlow(inputs(), EditorialApiFlow.Config.of(Mode.V5_CHAT));
+        assertEquals(Step.EDIT, flow.nextRequest().step());
+        flow.accept(new EditorialApiFlow.StepResponse("", "stop", 3, 2, new BigDecimal("0.01"), true,
+                "model", "route", "V5_FINAL_MISSING"));
+        assertEquals(RunState.RETRY_REQUIRED, flow.outcome().state());
+        assertEquals(1, flow.outcome().calls());
+        assertNull(flow.nextRequest());
+    }
+
     @Test public void thoroughPassIsTwoCalls() {
         EditorialApiFlow flow = new EditorialApiFlow(inputs(), EditorialApiFlow.Config.of(Mode.THOROUGH));
         List<Step> asked = drive(flow, List.of(ok(edited(EDITED), "stop"), ok(PASS, "stop")));
@@ -253,7 +263,7 @@ public final class EditorialApiFlowTest {
 
     @Test public void aWellFormedEditThatLostMostOfTheTextIsNeverTheFinalText() {
         String cut = "Taro mở cánh cửa đỏ rồi bước vào phòng.\nTaro mở cánh cửa đỏ rồi bước vào phòng.";
-        for (Mode mode : Mode.values()) {
+        for (Mode mode : new Mode[] {Mode.QUICK, Mode.THOROUGH}) {
             EditorialApiFlow flow = new EditorialApiFlow(longInputs(), EditorialApiFlow.Config.of(mode));
             List<Step> asked = drive(flow, List.of(ok(edited(cut), "stop"), ok(edited(cut), "stop")));
             assertEquals(List.of(Step.EDIT, Step.EDIT), asked);

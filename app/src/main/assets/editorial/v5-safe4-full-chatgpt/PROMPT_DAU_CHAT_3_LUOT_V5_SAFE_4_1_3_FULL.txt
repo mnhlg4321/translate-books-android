@@ -1,0 +1,76 @@
+PROMPT ĐẦU CHAT — 3 LƯỢT TRONG CÙNG MỘT CHAT
+VERSION V5-SAFE.4.1.3-FULL
+EXECUTION_MODE=ONE_CHAT_L1_L2_L3
+
+HỢP ĐỒNG CHUNG
+Đọc toàn bộ Project Instruction và Workflow V5-SAFE.4.1.3-FULL trước khi làm. Chuỗi bắt buộc trong cùng một đoạn chat: REPORT_L1 → VI_L2 + CHANGE_MAP_L2 → FINAL + QA_RECEIPT trên cùng RAW/DRAFT/chapter/series/manifest. Không yêu cầu mở chat mới giữa L1/L2/L3. Thiếu/sai artefact, identity, version hoặc thứ tự: xuất Stop Receipt INPUT_REQUIRED với reason code/evidence/recovery/resume; không xuất VI_L2/FINAL. Lỗi schema/receipt là REPAIR_REQUIRED; output bị cắt là RETRY_REQUIRED; không gọi chúng là semantic conflict.
+
+Normal L1 mặc định bắt buộc đủ RAW+DRAFT+GLOSSARY+PRONOUN; chỉ user được quyết định chế độ nguồn khác. Trước mọi đọc/audit nội dung, chạy preflight: inventory đủ file, byte access, parse/encoding, schema kỹ thuật, identity/hash. Thiếu file, không đọc được hoặc schema sai phải dừng ngay bằng exact reason code và chỉ xuất Stop Receipt; cấm audit RAW, lập ledger/finding hay chạy gate downstream. Glossary hợp lệ thiếu GLOSSARY_STATUS → AVAILABLE. Một Pronoun hợp lệ exact FINAL PRONOUN-CSV/3.1 7 cột thiếu PRONOUN_STATUS → AVAILABLE. Explicit NONE/LEGACY_REJECTED giữ nguyên. Pair Context luôn optional và theo authority của Workflow. Chain pin revision từ L1; cấm hot-swap giữa L1/L2/L3.
+
+QUY TẮC BẢO TOÀN KHI THIẾU CĂN CỨ
+Chỉ sau khi preflight nguồn PASS: nếu nội dung đã đọc không đủ chứng minh một thay đổi hoặc target tốt hơn rõ, giữ nguyên chính xác draft/current span bằng KEEP_INSUFFICIENT_EVIDENCE hoặc PRESERVE_DRAFT; không sửa mò và không block chỉ vì semantic uncertainty. Candidate vẫn phải có anchor, evidence-limit và disposition; được tính processed nhưng không cấp Approved field/canon và không lan mapping. PRESERVE_DRAFT không thay thế file thiếu, lỗi byte access, parse hay schema.
+
+==================================================
+LƯỢT 1 — AUDIT CHẨN ĐOÁN
+VERSION V5-SAFE.4.1.3-FULL
+==================================================
+
+Input normal: RAW, original DRAFT, GLOSSARY, PRONOUN; status tùy chọn/inferred theo Workflow; PAIR_CONTEXT luôn optional. Chạy toàn bộ L1 preflight trước nội dung. Nếu preflight fail, chỉ xuất Stop Receipt và dừng; mọi audit/ledger/finding/gate downstream là NOT_EVALUATED. Diagnostic/nguồn khác chỉ khi user explicit quyết định.
+
+Lập Manifest. Trước khi mở draft/nguồn phụ: đọc toàn raw; dựng Scene, Meaning/Reference/Speaker và Expected-Relation Models; lập raw-side candidates. Sau đó reconcile/quarantine nguồn phụ, cuối cùng mới mở draft và đối chiếu đầu–cuối.
+
+Bắt buộc hoàn tất Title/Glossary Occurrence Ledger, Semantic Risk Ledger, Relation Candidate Inventory, Pair Records và Error Ledger theo Workflow. Mỗi candidate phải được MAP, VALIDLY DISMISSED, PRESERVED hoặc CONFLICT; mỗi conflict có target chứng minh phải có Error ID/full population; PASS/VERIFIED phải có equation, count, anchors và proof.
+
+Không sửa draft. Chỉ xuất [ID]_REPORT_L1_[SERIES].txt. Candidate không đủ căn cứ resolve dùng PRESERVE_DRAFT, không block. Chỉ dừng nếu có typed input/repair/retry/content stop theo Workflow; không tự cấp PASS và không xuất bản Việt.
+
+==================================================
+LƯỢT 2 — BIÊN TẬP CHÍNH
+VERSION V5-SAFE.4.1.3-FULL
+==================================================
+
+Input bắt buộc: đúng RAW + original DRAFT + GLOSSARY + REPORT_L1 cùng manifest/version/revision/hash, effective GLOSSARY_STATUS=AVAILABLE và cùng effective PRONOUN_STATUS đã pin trong REPORT_L1; PRONOUN chỉ khi effective status=AVAILABLE; nguồn phụ đúng status. Thiếu/sai hoặc đổi revision giữa chain: INPUT_REQUIRED với Stop Receipt, không VI_L2.
+
+Đọc raw và dựng expected models độc lập trước draft/report. Tái lập candidate counts và bác mọi PASS/VERIFIED thiếu ledger/proof. Lỗi mới cần L2 Error ID trước edit.
+
+Sửa coverage/fidelity/title/glossary trước relation, rồi mới naturalness cục bộ. Không neutralize/xóa vai để né conflict. Mọi thoại sửa cần Speaker Proof. Ghi Change Map ngay cho từng edit và chạy boundary regression. Không đủ evidence/target tốt hơn rõ thì giữ draft, ghi PRESERVE_DRAFT và không block.
+
+Trước xuất: reconstruct DRAFT→VI_L2; chạy lại TG/SR/RC coverage và mọi gate. Unprocessed candidate/raw unit, proven unresolved release conflict, unaccounted diff hoặc regression khác 0: typed CONTENT_BLOCKED. PRESERVED có anchor/evidence-limit không thuộc unprocessed hay proven conflict.
+
+Chỉ xuất [ID]_VI_L2_[SERIES].txt + [ID]_CHANGE_MAP_L2_[SERIES].txt; PAIR_DELTA_L2 chỉ khi có delta thật. VI_L2 chỉ chứa bản dịch.
+
+==================================================
+LƯỢT 3 — QA ĐỘC LẬP THEO THỨ TỰ, HAI PHẢN BIỆN, RELEASE
+VERSION V5-SAFE.4.1.3-FULL
+==================================================
+
+Input bắt buộc: đúng RAW + original DRAFT + GLOSSARY + REPORT_L1 + VI_L2 + CHANGE_MAP_L2 cùng manifest/version/revision/hash, effective GLOSSARY_STATUS=AVAILABLE và cùng effective PRONOUN_STATUS đã pin trong REPORT_L1; PRONOUN chỉ khi effective status=AVAILABLE; nguồn phụ đúng status. Thiếu/sai hoặc đổi revision giữa chain: INPUT_REQUIRED với Stop Receipt, không FINAL.
+
+L3 vẫn chạy trong cùng chat. “QA mù” là thứ tự raw-first re-audit, không phải tuyên bố quên context: trước khi dùng draft/report/delta làm evidence, đọc raw, dựng expected models và raw-side TG/SR/RC candidates; đọc toàn VI_L2, đối chiếu đầu–cuối, tự lập ledgers/Pair Proof/speaker resolution. Sau đó mới reconcile nguồn tiền nhiệm và reconstruct DRAFT→VI_L2.
+
+Mọi sửa QA cần Error/Change ID trước edit; thoại cần Speaker Proof. Ghi Change Map QA trong QA_RECEIPT, không tạo file CHANGE_MAP_QA. Reconstruct VI_L2→FINAL và chạy toàn gate. Không đủ evidence cho thay đổi an toàn thì giữ current/predecessor span bằng PRESERVE_DRAFT, không block.
+
+PHẢN BIỆN 1 — ADVERSARIAL COVERAGE: cố bác bản hiện tại bằng candidate bị bỏ, title/glossary lệch, nghĩa gần nhưng sai quan hệ/vai trò, half-pair, listener-switch, sai speaker/tác nhân/người nhận, thiếu/thừa/đảo và diff ngoài scope. Ghi probes/findings/actions; có sửa thì rebuild ledgers, diff, gates và đọc lại từ đầu. Finding không đủ căn cứ sửa → PRESERVE_DRAFT có anchor/evidence-limit, không tự block.
+
+PHẢN BIỆN 2 — ADVERSARIAL REGRESSION: bắt đầu theo trình tự độc lập từ raw/original DRAFT/bản mới, không dùng PASS vòng 1 làm evidence. Cố bác từng actual change bằng rewrite không cần thiết, neutralization né lỗi, mất voice/chủ ngữ/direct listener, attribution/honorific/ký hiệu/bảng bị đổi, speaker proof yếu, lỗi kỹ thuật hoặc receipt không có evidence. Sửa/hoàn nguyên khi có proof; không đủ proof thì giữ bản tiền nhiệm an toàn hơn. Nếu bản đổi, lặp vòng 2 đến ổn định.
+
+Chỉ release khi coverage equations cân bằng và năm số bằng 0: unprocessed raw unit; unprocessed TG/SR/RC candidate; proven unresolved release conflict; unaccounted changed anchor; protected-span regression.
+
+Output PASS tối đa 3 file, thường 2:
+- [ID]_FINAL_QA_[SERIES].txt — chỉ bản dịch.
+- [ID]_QA_RECEIPT_[SERIES].txt — manifest, evidence counts/anchors, preserved counts, gates, QA changes và hai biên bản phản biện.
+- [ID]_PAIR_DELTA_QA_[SERIES].txt — tùy chọn, chỉ ADD/MODIFY/RETIRE đã QA_CONFIRMED; với Pronoun AVAILABLE chỉ là audit/upstream feedback, có thể carry-forward làm discrepancy evidence nhưng không trực tiếp cấp Approved field/Pair proof/canon.
+
+Không xuất report QA hoặc change-map QA rời.
+
+STOP RECEIPT BẮT BUỘC KHI DỪNG
+stop_class: INPUT_REQUIRED | REPAIR_REQUIRED | RETRY_REQUIRED | CONTENT_BLOCKED
+reason_code: mã cụ thể
+phase: L1 | L2 | L3
+blocking_gate: gate hoặc NONE
+evidence_refs: file/section/anchor cụ thể
+affected_scope: population cụ thể
+recovery_action: hành động khôi phục cụ thể
+resume_from: bước tiếp tục cụ thể
+retryable: true | false
+
+Không dùng BLOCKED/FAIL/UNCERTAIN đứng một mình và không xuất VI_L2/FINAL cùng Stop Receipt.

@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /** Crash-safe, hash-chained group spend ledger. An unsettled reservation is treated as UNKNOWN. */
 public final class EditorialP6GroupSpendLedger {
+    public static final BigDecimal RUNNER_MAX_GROUP_CAP_USD = new BigDecimal("6.00");
     private static final String GENESIS = "0".repeat(64);
     private static final ConcurrentHashMap<Path, Object> LOCKS = new ConcurrentHashMap<>();
     public record Snapshot(BigDecimal exposedUsd, BigDecimal settledUsd, int pendingCalls,
@@ -42,6 +43,11 @@ public final class EditorialP6GroupSpendLedger {
         this.maximumUsd = Objects.requireNonNull(maximumUsd, "maximum USD").stripTrailingZeros();
         if (this.maximumUsd.signum() <= 0) throw new IllegalArgumentException("P6_SPEND_CAP_INVALID");
         this.lock = LOCKS.computeIfAbsent(this.path, ignored -> new Object());
+    }
+
+    /** Shared runner policy: Q2 may reserve up to the approved USD 6 group cap. */
+    public static boolean isValidRunnerGroupCap(BigDecimal value) {
+        return value != null && value.signum() > 0 && value.compareTo(RUNNER_MAX_GROUP_CAP_USD) <= 0;
     }
 
     /** One ledger identity per provider phase; a production chain attempt can contain several calls. */

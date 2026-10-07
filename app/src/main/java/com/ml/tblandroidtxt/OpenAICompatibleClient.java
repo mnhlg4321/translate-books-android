@@ -148,6 +148,14 @@ public class OpenAICompatibleClient {
         public String responseProvider = "";
     }
 
+    /** One message in a multi-turn OpenAI-compatible conversation. */
+    public record ChatMessage(String role, String content) {
+        public ChatMessage {
+            if (role == null || role.isBlank()) throw new IllegalArgumentException("message role is empty");
+            content = content == null ? "" : content;
+        }
+    }
+
     public static String chat(AppSettings s, PromptPair prompt) throws Exception {
         return chatWithUsage(s, prompt).content;
     }
@@ -222,6 +230,22 @@ public class OpenAICompatibleClient {
                                     JSONObject responseFormat,
                                     JSONObject providerPreferences,
                                     String reasoningEffort) throws Exception {
+        if (prompt == null) throw new IllegalArgumentException("Prompt is required");
+        return chatWithUsage(s,
+                java.util.List.of(new ChatMessage("system", prompt.system), new ChatMessage("user", prompt.user)),
+                maxOutputTokens, requestId, observer, registerForLegacyGlobalCancellation, deadlineNanos,
+                callControl, responseFormat, providerPreferences, reasoningEffort);
+    }
+
+    /** Multi-turn variant used by the V5 same-chat provider. */
+    static ChatResult chatWithUsage(AppSettings s, java.util.List<ChatMessage> messages, int maxOutputTokens,
+                                    String requestId, NetworkObserver observer,
+                                    boolean registerForLegacyGlobalCancellation,
+                                    long deadlineNanos, CallControl callControl,
+                                    JSONObject responseFormat,
+                                    JSONObject providerPreferences,
+                                    String reasoningEffort) throws Exception {
+        if (messages == null || messages.isEmpty()) throw new IllegalArgumentException("Messages are required");
         if (s.apiKey == null || s.apiKey.trim().isEmpty()) throw new IllegalArgumentException("API key is empty");
         if (s.model == null || s.model.trim().isEmpty()) throw new IllegalArgumentException("Model is empty");
         String endpoint = AppSettings.normalizeEndpoint(s.baseUrl);
@@ -238,7 +262,7 @@ public class OpenAICompatibleClient {
             int timeout = Math.max(10, s.timeoutSeconds);
             timeoutMillis = TimeUnit.SECONDS.toMillis(timeout);
         }
-        JSONObject body = buildChatRequestBody(s, prompt, maxOutputTokens, responseFormat,
+        JSONObject body = buildChatRequestBody(s, messages, maxOutputTokens, responseFormat,
                 providerPreferences, reasoningEffort);
 
         OkHttpClient client = BASE_CLIENT.newBuilder()
@@ -301,7 +325,11 @@ public class OpenAICompatibleClient {
             if (observer != null) observer.onResponseBodyComplete(bodyBytes,
                     safeHeader(r.providerResponseId),
                     Math.max(0L, (System.nanoTime() - startedNanos) / 1_000_000L));
-            if (r.promptTokens <= 0) r.promptTokens = Chunker.approxTokens(prompt.system) + Chunker.approxTokens(prompt.user);
+            if (r.promptTokens <= 0) {
+                int estimate = 0;
+                for (ChatMessage message : messages) estimate += Chunker.approxTokens(message.content());
+                r.promptTokens = estimate;
+            }
             if (r.completionTokens <= 0) {
                 // When the provider omits aggregate output usage, the visible
                 // completion estimate plus separately reported reasoning is
@@ -417,8 +445,19 @@ public class OpenAICompatibleClient {
                                            JSONObject responseFormat,
                                            JSONObject providerPreferences,
                                            String reasoningEffort) throws Exception {
-        if (s == null) throw new IllegalArgumentException("Settings are required");
         if (prompt == null) throw new IllegalArgumentException("Prompt is required");
+        return buildChatRequestBody(s,
+                java.util.List.of(new ChatMessage("system", prompt.system), new ChatMessage("user", prompt.user)),
+                maxOutputTokens, responseFormat, providerPreferences, reasoningEffort);
+    }
+
+    static JSONObject buildChatRequestBody(AppSettings s, java.util.List<ChatMessage> chatMessages,
+                                           int maxOutputTokens,
+                                           JSONObject responseFormat,
+                                           JSONObject providerPreferences,
+                                           String reasoningEffort) throws Exception {
+        if (s == null) throw new IllegalArgumentException("Settings are required");
+        if (chatMessages == null || chatMessages.isEmpty()) throw new IllegalArgumentException("Messages are required");
         if (maxOutputTokens <= 0) {
             throw new IllegalArgumentException("Output token cap is invalid");
         }
@@ -444,8 +483,9 @@ public class OpenAICompatibleClient {
             body.put("reasoning_effort", reasoningEffort);
         }
         JSONArray messages = new JSONArray();
-        messages.put(new JSONObject().put("role", "system").put("content", prompt.system));
-        messages.put(new JSONObject().put("role", "user").put("content", prompt.user));
+        for (ChatMessage message : chatMessages) {
+            messages.put(new JSONObject().put("role", message.role()).put("content", message.content()));
+        }
         body.put("messages", messages);
         return body;
     }

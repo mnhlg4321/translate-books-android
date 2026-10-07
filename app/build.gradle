@@ -94,6 +94,12 @@ def editorialSafe4Files = [
         'WORKFLOW_BIEN_TAP_3_LUOT_V5_SAFE_4.txt': '7A434ADE77239DB33AF5A677456D0310AC11DC8391565FC4888236536FF96B5E'
 ]
 def editorialSafe4Root = file('src/main/assets/editorial/v5-safe4')
+def editorialV5FullFiles = [
+        'PROJECT_INSTRUCTION_BIEN_TAP_V5_SAFE_4_1_3_FULL.txt': '1727AE173F2CFD530EB818CAE69E0D3FADC59C35E3B5B6D478704A02091A26AD',
+        'PROMPT_DAU_CHAT_3_LUOT_V5_SAFE_4_1_3_FULL.txt': 'D25757D1A6BDDD5962A3B178B9EF850727573AE0C34867EC8F4B8450C7CD754F',
+        'WORKFLOW_BIEN_TAP_3_LUOT_V5_SAFE_4_1_3_FULL.txt': '5DB6B4F6509313F106499113537D2880BC6D2FF663859239DAFB285557505730'
+]
+def editorialV5FullRoot = file('src/main/assets/editorial/v5-safe4-full-chatgpt')
 def editorialEngineProfileSourceRoot = rootProject.file('editorial-engine/src/main/resources/editorial/engine-profile')
 def editorialEngineProfileAssetRoot = layout.buildDirectory.dir('generated/editorial-engine-profile-assets')
 def editorialEngineProfileFiles = ['v1/profile.json', 'v2/profile.json']
@@ -145,6 +151,23 @@ def verifyEditorialSafe4Pack = tasks.register('verifyEditorialSafe4Pack') {
     }
 }
 
+def verifyEditorialV5FullPack = tasks.register('verifyEditorialV5FullPack') {
+    group = 'verification'
+    description = 'Requires the bundled V5-SAFE.4.1.3 FULL ChatGPT pack to match its immutable source hashes.'
+    inputs.files(editorialV5FullFiles.keySet().collect { new File(editorialV5FullRoot, it) })
+    doLast {
+        editorialV5FullFiles.each { name, expected ->
+            def source = new File(editorialV5FullRoot, name)
+            if (!source.isFile()) throw new GradleException("V5 FULL ChatGPT pack file is missing: ${source}")
+            def actual = java.security.MessageDigest.getInstance('SHA-256').digest(source.bytes)
+                    .collect { String.format('%02X', it & 0xff) }.join()
+            if (actual != expected) {
+                throw new GradleException("V5 FULL ChatGPT pack hash mismatch for ${name}. Expected ${expected}, found ${actual}.")
+            }
+        }
+    }
+}
+
 def verifyApprovedLogo = tasks.register('verifyApprovedLogo') {
     group = 'verification'
     description = 'Requires every app build to use the approved Translate Books logo.'
@@ -175,5 +198,6 @@ def verifyApprovedLogo = tasks.register('verifyApprovedLogo') {
 tasks.named('preBuild').configure {
     dependsOn verifyApprovedLogo
     dependsOn verifyEditorialSafe4Pack
+    dependsOn verifyEditorialV5FullPack
     dependsOn verifyEditorialEngineProfileAsset
 }

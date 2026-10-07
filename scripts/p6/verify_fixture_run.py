@@ -203,7 +203,7 @@ def check_oracle_probe(fixture, output, fixtures_root, mode, reused_l1=False):
                     raise ValueError(fixture["id"] + ": corrected label text reached a captured model input")
 
 
-API_MODES = ("API_V1_QUICK", "API_V1_THOROUGH")
+API_MODES = ("API_V1_QUICK", "API_V1_THOROUGH", "V5_CHAT")
 API_STEP_NAMES = ("EDIT", "CHECK", "RECHECK")
 API_MAX_CALLS = 6
 API_FINISHED_STATES = ("FINAL_OK", "FINAL_NOTES")
@@ -241,6 +241,33 @@ def check_api_prompt_captures(output, calls):
             raise ValueError("captured API_V1 prompt is empty")
         prompts.append(data)
     return prompts, names["prompts"]
+
+
+def check_v5_captures(output):
+    """Validate the three-turn capture without interpreting the model reports."""
+    root = os.path.join(output, "v5-chat")
+    if not os.path.isdir(root):
+        raise ValueError("V5_CHAT turn capture directory is missing")
+    prompts = []
+    turns = []
+    for turn in range(1, 4):
+        request = os.path.join(root, f"{turn:02d}-request.txt")
+        response = os.path.join(root, f"{turn:02d}-response.txt")
+        metadata = os.path.join(root, f"{turn:02d}-metadata.json")
+        if not all(os.path.isfile(path) for path in (request, response, metadata)):
+            raise ValueError(f"V5_CHAT turn {turn} capture is incomplete")
+        data = read_bytes(request)
+        if not data:
+            raise ValueError(f"V5_CHAT turn {turn} prompt is empty")
+        prompts.append(data)
+        turns.append(score_run.load_json(metadata))
+    if not prompts[0].startswith(b"system\n"):
+        raise ValueError("V5_CHAT history does not start with the project system message")
+    if b"assistant\n" not in prompts[1] or b"assistant\n" not in prompts[2]:
+        raise ValueError("V5_CHAT history omits the prior assistant answer")
+    if turns[0].get("turn") != 1 or turns[1].get("turn") != 2 or turns[2].get("turn") != 3:
+        raise ValueError("V5_CHAT turn metadata is out of order")
+    return prompts
 
 
 def check_api_oracle_probe(fixture, output, fixtures_root, prompts):
@@ -281,7 +308,7 @@ def check_api_fixture(fixture, output, fixtures_root, args, structural, metadata
     api = metadata.get("apiV1")
     if not isinstance(api, dict):
         raise ValueError(fid + ": API_V1 metadata block is missing")
-    expected_mode = "QUICK" if args.mode == "API_V1_QUICK" else "THOROUGH"
+    expected_mode = "QUICK" if args.mode == "API_V1_QUICK" else "THOROUGH" if args.mode == "API_V1_THOROUGH" else "V5_CHAT"
     if api.get("mode") != expected_mode:
         raise ValueError(fid + ": API_V1 mode differs from the requested mode")
     for key in ("model", "route", "contractRevision", "qualityCoreSha256", "sourceCommit", "apkVersionName"):
@@ -304,8 +331,14 @@ def check_api_fixture(fixture, output, fixtures_root, args, structural, metadata
     if finished and args.mode == "API_V1_THOROUGH" and calls < 2:
         raise ValueError(fid + ": a finished THOROUGH run needs at least an edit and a check")
     if args.live:
-        if metadata.get("providerKind") != "LIVE" or metadata.get("actualProviderCalls") != calls:
-            raise ValueError(fid + ": expected a live provider run with one actual call per request")
+        if metadata.get("providerKind") != "LIVE":
+            raise ValueError(fid + ": expected a live provider run")
+        actual = metadata.get("actualProviderCalls")
+        if args.mode == "V5_CHAT":
+            if actual != 3:
+                raise ValueError(fid + ": V5_CHAT must send exactly three physical turns")
+        elif actual != calls:
+            raise ValueError(fid + ": expected one actual call per API request")
     elif (metadata.get("providerKind") != "FAKE_OFFLINE" or metadata.get("actualProviderCalls") != 0
           or metadata.get("fakeProviderCalls") != calls):
         raise ValueError(fid + ": a non-fake provider ran or the fake call count differs")
@@ -316,9 +349,12 @@ def check_api_fixture(fixture, output, fixtures_root, args, structural, metadata
     final = read_bytes(os.path.join(output, "final.txt"))
     if sha(final) != metadata.get("finalSha256"):
         raise ValueError(fid + ": final hash mismatch")
-    prompts, steps = check_api_prompt_captures(output, calls)
-    if args.mode == "API_V1_QUICK" and any(step != "EDIT" for step in steps):
-        raise ValueError(fid + ": QUICK must not check or re-check")
+    if args.mode == "V5_CHAT":
+        prompts = check_v5_captures(output)
+    else:
+        prompts, steps = check_api_prompt_captures(output, calls)
+        if args.mode == "API_V1_QUICK" and any(step != "EDIT" for step in steps):
+            raise ValueError(fid + ": QUICK must not check or re-check")
     check_api_oracle_probe(fixture, output, fixtures_root, prompts)
     ledger = check_ledger(os.path.join(output, "spend-ledger.jsonl"))
     entry = {"fixture": fid, "providerCalls": calls, "ledger": ledger}

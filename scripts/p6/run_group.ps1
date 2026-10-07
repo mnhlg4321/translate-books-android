@@ -4,7 +4,7 @@ param(
     [string]$Serial = 'emulator-5554',
     [ValidatePattern('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')]
     [string]$RunId = ([guid]::NewGuid().ToString('D').ToLowerInvariant()),
-    [ValidateSet('L1_ONLY', 'L2_ONLY', 'L3_ONLY', 'L1_THEN_L2', 'CHAIN', 'API_V1_QUICK', 'API_V1_THOROUGH')]
+    [ValidateSet('L1_ONLY', 'L2_ONLY', 'L3_ONLY', 'L1_THEN_L2', 'CHAIN', 'API_V1_QUICK', 'API_V1_THOROUGH', 'V5_CHAT')]
     [string]$Mode = 'CHAIN',
     [string[]]$FixtureIds,
     [string[]]$RetainL1FixtureIds,
@@ -16,12 +16,15 @@ param(
     # this switch restores the older rule (stop the group after the first failed fixture).
     [switch]$StopOnFirstRefusal,
     [string]$ExpectedEndpointAccountFingerprint,
+    [string]$ModelOverride,
+    [ValidateSet('minimal', 'medium', 'high')]
+    [string]$ReasoningEffort = 'minimal',
     [ValidatePattern('^[A-Za-z0-9._-]{3,100}$')]
     [string]$GroupId,
-    [ValidateRange(0.01, 1.00)]
+    [ValidateRange(0.01, 6.00)]
     [decimal]$GroupMaximumUsd = 0.50,
     # EDITORIAL_API_V1: the cap of one chapter; the run service checks it before every request
-    [ValidateRange(0.01, 0.50)]
+    [ValidateRange(0.01, 1.00)]
     [decimal]$ChapterCapUsd = 0.10,
     [string]$FixturesRoot = 'D:\P5E-private\p6-fixtures'
 )
@@ -84,8 +87,8 @@ if ($NegativeGate -and ($Live -or $Mode -ne 'L1_ONLY' -or -not $FixtureIds -or $
 if ($Live -and ($ExpectedEndpointAccountFingerprint -notmatch '^[0-9a-fA-F]{64}$')) {
     throw 'Live fixture mode requires the owner-supplied endpoint/account fingerprint.'
 }
-if ($GroupMaximumUsd -le 0 -or $GroupMaximumUsd -gt 1.00) { throw 'The P6 group cap must be within the approved per-group limit.' }
-if ($Live -and $Mode -notin @('L1_ONLY', 'L3_ONLY', 'L1_THEN_L2', 'CHAIN', 'API_V1_QUICK', 'API_V1_THOROUGH')) {
+if ($GroupMaximumUsd -le 0 -or $GroupMaximumUsd -gt 6.00) { throw 'The P6 group cap must be within the approved per-group limit.' }
+if ($Live -and $Mode -notin @('L1_ONLY', 'L3_ONLY', 'L1_THEN_L2', 'CHAIN', 'API_V1_QUICK', 'API_V1_THOROUGH', 'V5_CHAT')) {
     throw 'Live fixture mode requires a supported single group mode.'
 }
 if ($Live -and $Mode -eq 'L2_ONLY') {
@@ -119,8 +122,9 @@ $WorstCaseByMode = @{
     CHAIN = [decimal]::Parse('0.298304', [Globalization.CultureInfo]::InvariantCulture)
     API_V1_QUICK = $ChapterCapUsd
     API_V1_THOROUGH = $ChapterCapUsd
+    V5_CHAT = $ChapterCapUsd
 }
-$IsApiMode = $Mode -in @('API_V1_QUICK', 'API_V1_THOROUGH')
+$IsApiMode = $Mode -in @('API_V1_QUICK', 'API_V1_THOROUGH', 'V5_CHAT')
 $RunnerClass = if ($IsApiMode) { 'EditorialApiV1FixtureRunnerInstrumentedTest' } else { 'EditorialP6FixtureRunnerInstrumentedTest' }
 $SourceCommit = (& git -C $RepoRoot rev-parse HEAD).Trim()
 
@@ -197,6 +201,12 @@ $LiveArguments = @('-e', 'p6_group_id', $GroupId, '-e', 'p6_group_maximum_usd', 
 if ($IsApiMode) {
     $ChapterCapText = $ChapterCapUsd.ToString('0.00####', [Globalization.CultureInfo]::InvariantCulture)
     $LiveArguments += @('-e', 'p6_chapter_cap_usd', $ChapterCapText, '-e', 'p6_source_commit', $SourceCommit)
+}
+if ($IsApiMode -and -not [string]::IsNullOrWhiteSpace($ModelOverride)) {
+    $LiveArguments += @('-e', 'p6_model_override', $ModelOverride)
+}
+if ($IsApiMode) {
+    $LiveArguments += @('-e', 'p6_reasoning_effort', $ReasoningEffort)
 }
 if ($NegativeGate) { $LiveArguments += @('-e', 'p6_fake_invalid_l1', 'YES') }
 if ($MeasureRefusals) { $LiveArguments += @('-e', 'p6_measure_refusals', 'YES') }
