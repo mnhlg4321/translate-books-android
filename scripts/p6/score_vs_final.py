@@ -102,9 +102,11 @@ def score(raw: str, draft: str, app: str, final: str, chapter: str = "") -> dict
         app_line = app_pair[2] if app_pair else ""
         app_score = similarity(app_line, final_line) if app_pair else 0.0
         if changed_by_owner:
-            if app_score >= draft_score + 0.02 or app_score >= 0.97:
+            # Credit only a move towards FINAL: a DRAFT line that was already >= 0.97 similar and left
+            # untouched is not a fix (the no-op DRAFT scored 0.38 "recall" before this rule).
+            if app_line == final_line or app_score >= draft_score + 0.02:
                 improved += 1
-            if app_score >= 0.97:
+            if app_score >= 0.97 and app_score > draft_score:
                 near_exact += 1
         elif app_pair and app_line != draft_line:
             app_changed_unchanged += 1

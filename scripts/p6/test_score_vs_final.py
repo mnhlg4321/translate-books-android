@@ -18,6 +18,16 @@ class ScoreVsFinalTest(unittest.TestCase):
         self.assertGreaterEqual(result["regression"]["farther"], 1)
         self.assertIn(3, result["hard"]["addedKanaHanLines"])
 
+    def test_an_untouched_draft_fixes_nothing_even_when_owner_edits_are_tiny(self):
+        raw = "一。\n二。\n三。"
+        draft = "Một câu khá dài ở đây.\nHai câu khá dài ở đây…\nBa."
+        final = "Một câu khá dài ở đây!\nHai câu khá dài ở đây……\nBa."
+        result = score(raw, draft, draft, final, "001")
+        self.assertEqual(result["fixRecall"]["ownerChanged"], 2)
+        self.assertEqual(result["fixRecall"]["improved"], 0)
+        exact = score(raw, draft, final, final, "001")
+        self.assertEqual(exact["fixRecall"]["improved"], 2)
+
     def test_hard_symbols_ruby_and_fullwidth(self):
         raw = "『一』：……"
         draft = "Opening"
