@@ -2,7 +2,7 @@
 
 ## Scope and guard
 
-This record covers N6 package 4A only. The owner-approved decisions D-N6 and D-CP are recorded in `docs/EDITORIAL_API_V1_CP_IMPL1_REVIEW_AND_N6_REQUEST_20261007.md` §6. No provider call, prompt/threshold edit, chunk-pair live run, or pilot-device operation was performed.
+This record covers N6 packages 4A–4C. The owner-approved decisions D-N6 and D-CP are recorded in `docs/EDITORIAL_API_V1_CP_IMPL1_REVIEW_AND_N6_REQUEST_20261007.md` §6. 4A was emulator-only; 4C used the approved whole-chapter flow on `emulator-5554`. No chunk-pair live run or pilot-device operation was performed, and no prompt or threshold was changed.
 
 The build was made from a clean temporary worktree at source `81e4d5787793d0b93cbde7bc39e7d3f73aff43d7`, while the main worktree's unrelated dirty files were preserved.
 
@@ -53,6 +53,22 @@ The review found one new error: the base Kỹ `fx-a04` response (`7c8a177826b343
 
 Both arms scored 19/25 mechanically; Nhanh used 12 calls / USD `0.11166139`, Kỹ 29 calls / USD `0.15397365`. After subtracting the pre-existing `E_L245_MEANING` on `fx-a02`, no new MEANING/OMISSION/NUMBER/NEGATION error was confirmed on the control or ambiguous fixture. Per plan §6, the default is **Nhanh (E)**. This is an offline decision only: acceptance, prompt, thresholds and all stored responses are unchanged; semantic quality outside the seeded matrix remains `NOT_MEASURED`.
 
-## Next package
+## 4C whole-chapter run
 
-Proceed to 4C only after checking that owner-selected files actually exist in `D:\P5E-private\n6-inputs\`. If present, use whole flow with Nhanh, the approved model and fresh N6 ledger/caps; otherwise stop and ask the owner. Do not run chunk-pair live or touch pilot.
+The input gate was satisfied with exactly twelve private files (three chapters, each with RAW, DRAFT, glossary and pronoun). A filename/size/SHA-256 manifest is retained at `D:\P5E-private\n6-runs\N6-20261007\input-manifest.json`; source text and exported text remain outside Git. The app imported three glossary profiles and three pronoun profiles, then stored three independent whole-chapter combos. Each combo was saved before dispatch, force-stopped, reopened, and run from the stored combo. After each result was reopened, TXT export was written under `D:\P5E-private\n6-outputs\`.
+
+| Chapter | App run / combo | Mode / model | Calls | Input / output tokens | Stored state | Actual USD | Export evidence |
+|---|---:|---|---:|---:|---|---:|---|
+| 001 | DB run `27`, combo `36` | Nhanh / `openai/gpt-5.6-luna` | 1 | 10,489 / 5,085 | `FINAL_NOTES` | `0.00872410` | `D:\P5E-private\n6-outputs\001-whole.txt`, 18,442 bytes, SHA-256 `AF7F25E6F4896D40D3044EEB5961B9F2DE15ECDF2DF9C613C92E7B091CCCEB95` |
+| 002 | DB run `28`, combo `37` | Nhanh / `openai/gpt-5.6-luna` | 1 | 6,788 / 3,151 | `FINAL_OK` | `0.00547805` | `D:\P5E-private\n6-outputs\002-whole.txt`, 12,459 bytes, SHA-256 `3361701A5A9ACAFADA014987091820D28BEEE78A4AAD809636B03A03AF2FB21B` |
+| 003 | DB run `29`, combo `38` | Nhanh / `openai/gpt-5.6-luna` | 1 | 7,055 / 3,087 | `FINAL_NOTES` | `0.00546800` | `D:\P5E-private\n6-outputs\003-whole.txt`, 12,004 bytes, SHA-256 `52467796F7EEF0C1F7A74BF8A26527A84024CAC7554694FCF85C31A305EE2001` |
+
+The persisted run records all use contract revision `EDITORIAL_API_V1.1`, `cost_known=1`, and no error text. `FINAL_NOTES` is the app's review-needed state; it is not a semantic acceptance claim. Model quality remains `NOT_MEASURED` by the approved scope, even though the app produced stored finals/notes and export artifacts.
+
+The fresh group ledger is `D:\P5E-private\n6-logs\N6-20261007.jsonl` with cap USD `0.30`; every chapter had a USD `0.10` reservation and a matching settlement. Final verification: 3 calls, 6 entries, 0 pending/UNKNOWN, settled/exposure USD `0.01967015`, remaining USD `0.28032985`, last entry hash `22bf715295e42fe689023a6751b51a017b61b6699bf4d1d4ed3d4b92c0d2c174`.
+
+4C is **PASS for the requested operational gates**: all three whole-flow runs completed on the emulator, combo and result data survived force-stop/reopen, and all three TXT exports were pulled and hashed. It is not a model-quality PASS. Provider usage for 4C was 3 calls / USD `0.01967015`; 4A/4B remained 0 provider calls. Pilot and chunk-pair live paths remain untouched.
+
+## Stop point
+
+The N6 request ends after these three chapters. No further provider, device, pilot, chunk-pair, prompt, threshold, or G2 action is authorized by this record.
