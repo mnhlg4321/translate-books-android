@@ -291,8 +291,8 @@ if ($Offline) { $gradleArguments += '--offline' }
 
 $wrapperPropertiesPath = Join-Path $repositoryRoot 'gradle\wrapper\gradle-wrapper.properties'
 $wrapperProperties = Get-Content -LiteralPath $wrapperPropertiesPath -Raw
-$distributionUrlMatch = [regex]::Match($wrapperProperties, '(?m)^distributionUrl=(.+)$')
-$distributionShaMatch = [regex]::Match($wrapperProperties, '(?m)^distributionSha256Sum=([0-9a-fA-F]{64})$')
+$distributionUrlMatch = [regex]::Match($wrapperProperties, '(?m)^distributionUrl=(.+?)(?:\r?$)')
+$distributionShaMatch = [regex]::Match($wrapperProperties, '(?m)^distributionSha256Sum=([0-9a-fA-F]{64})(?:\r?$)')
 if (-not $distributionUrlMatch.Success -or -not $distributionShaMatch.Success) {
     throw 'Gradle wrapper provenance is incomplete: distribution URL and SHA-256 are required.'
 }

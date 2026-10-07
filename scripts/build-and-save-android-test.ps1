@@ -147,8 +147,8 @@ if ([int]$toolchain.jdkMajor -lt 17) {
 
 $gradlePropertiesPath = Join-Path $repositoryRoot 'gradle\wrapper\gradle-wrapper.properties'
 $gradleProperties = Get-Content -LiteralPath $gradlePropertiesPath -Raw
-$distributionShaMatch = [regex]::Match($gradleProperties, '(?m)^distributionSha256Sum=([0-9a-fA-F]{64})$')
-$distributionUrlMatch = [regex]::Match($gradleProperties, '(?m)^distributionUrl=(.+)$')
+$distributionShaMatch = [regex]::Match($gradleProperties, '(?m)^distributionSha256Sum=([0-9a-fA-F]{64})(?:\r?$)')
+$distributionUrlMatch = [regex]::Match($gradleProperties, '(?m)^distributionUrl=(.+?)(?:\r?$)')
 if (-not $distributionShaMatch.Success -or -not $distributionUrlMatch.Success) {
     throw 'Gradle wrapper distribution URL/SHA-256 is not pinned.'
 }
