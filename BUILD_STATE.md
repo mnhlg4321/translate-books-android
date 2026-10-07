@@ -1,18 +1,17 @@
 # Build State
 
-## Current state — 2026-10-07 (Q1.5 complete; stopped after holdout exports)
+## Current state — 2026-10-08 (Q2.1 complete; Q2.2 in progress)
 
-- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before this Q1.5 report/state commit is `8294f13a`.
-- Wrapper build `4.18-q1.1` / code `244`, event `build-20261007-223121`, source `41edafa4`, and AndroidTest event `q1-androidtest-20261007` remain mirrored in both archive roots and installed only on `emulator-5554`.
-- Q1.1–Q1.4 offline gates passed. Q1.5 ran 33 settled provider calls in ledger `Q1-20261007`; verifier: 66 entries, 0 pending, 0 UNKNOWN, settled USD `0.2623298605`; no retry or repair calls. C1 was carried to holdout after the locked dev comparison; the holdout quality gate is NOT PASS (fix recall `0.383562`, positive similarity delta `1/6`, farther `19`, added kana/Han `0`).
-- Three private C1 holdout outputs were exported to `D:\P5E-private\q1-outputs\` for owner reading: chapters 010, 016 and 022. FINAL text stayed outside prompts and Git.
-- Current phase: Q1 complete and stopped before any additional provider/device/G2 work. Pilot, chunk-pair and UI U1 files were untouched.
-- Completed tasks: Q1 scorer, RAW-aligned normalizer, Quality Core/guards, offline replay, A/B manifest, wrapper/emulator gate, fixed C0/C1/C2 dev runs, fixed C0/C1 holdout runs, offline scoring, ledger verification and three private exports.
-- Pending tasks: owner review of the three private holdout outputs and the recorded NOT PASS quality gate.
-- Known bugs/limits: no configuration met every dev selection clause; C1 had the best zero-added-hard-error fix recall but more farther lines than C0. Semantic quality remains an owner-evaluation result, not validator acceptance.
-- Regression status: engine/app/Q1.4 regressions remain PASS; live structural outputs were valid with no UNKNOWN; approved spend ceiling USD 2.00 was not approached.
-- Next action: owner reads `D:\P5E-private\q1-outputs\` and decides whether any new quality/contract scope is warranted.
-
+- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before this state commit is `49f8a3d2`.
+- Current build remains `4.18-q1.1` / code `244`, source `41edafa4`, installed only on `emulator-5554`; Q2.2 code is not yet built or installed.
+- Q2.1 is complete offline: scorer rerun over Q1/N6, 28-chapter nonblank alignment measured, nonblank repairs disabled after the regression probe, and Quality Core v2 role wording updated.
+- Q2.1 evidence: `docs/EDITORIAL_API_V1_Q2_EXECUTION_20261008.md`; private measurements under `D:\P5E-private\q2-runs\Q2.1-normalization\` and `D:\P5E-private\q2-runs-q1-rescore.txt`.
+- Current phase: EDITORIAL_API_V1 Q2.2 V5_CHAT implementation; D-Q2 is approved, U1 remains deferred, no provider call in this package.
+- Completed tasks: Q2.1 scorer/normalizer/Quality Core package and engine 566/566 tests.
+- Pending tasks: Q2.2 provider/runner tests; Q2.3 wrapper build, emulator instrumentation and manifest; Q2.4 locked dev/holdout live measurement and exports.
+- Known bugs/limits: semantic model quality is not measured by Q2.1; nonblank alignment is diagnostic only and does not apply symbol repairs.
+- Regression status: `:editorial-engine:test` PASS; app unit tests and AndroidTest compile were PASS before Q2.1 push; no APK was rebuilt for Q2.1.
+- Next action: finish Q2.2 offline V5_CHAT history/cost/finish handling and group-cap tests.
 ## Superseded — independent API V1 review and N1–N4 checkpoint (historical, 2026-10-06)
 
 The next two sections describe the review and checkpoint before the follow-up commits, N5 and `CP-OFFLINE-2`; keep them for history, do not read their next actions as current.
@@ -1098,3 +1097,4 @@ FORBID_CONNECTED_ANDROID_TEST=true
 - Not proven: device runs of `EditorialApiBienTapUiInstrumentedTest` and the 10 updated old androidTests, SAF traversal, process-death reopen. Actual provider calls/spend 0 / USD 0.
 
 - Device evidence 2026-10-06: build 4.18-api.4/code241 from commit 42b40fb1 (APK 8AABFFA6…E87DA) installed on emulator-5554; store 4/4, flow 3/3, UI 2/2, force-stop reopen 3/3, full suite 234/11 failures (11 historical). Details in the execution report.
+
