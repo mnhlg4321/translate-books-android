@@ -1,12 +1,12 @@
 # Build State
 
-## Current state — 2026-10-07 (Q1.4 preparation package)
+## Current state — 2026-10-07 (Q1.4 gate PASS; before Q1.5 dispatch)
 
-- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before this Q1.4 package is `c67477c6`.
-- Current build remains `4.18-api.6` / code `243`, archived from `81e4d578` through the wrapper and installed only on `emulator-5554`; the Q1.4 preparation has not built a new APK yet.
-- Q1.4 offline replay test passes 2/2; `docs/EDITORIAL_API_V1_Q1_AB_MANIFEST.json` fixes C0/C1/C2, prices, per-chapter estimates and the USD 2.00 ledger gate.
-- Current phase: Q1.4 preparation complete; wrapper build, emulator-only Editorial API instrumentation, and Q1.5 live dev/holdout remain pending. Provider calls and Q1 spend are `0 / USD 0`; no pilot, chunk-pair or UI U1 file was touched.
-- Next action: build the Q1.4 source through `scripts/build-and-save.ps1` with a versionCode greater than 243, install only `emulator-5554`, and run the Editorial API gate.
+- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before this Q1.4 gate record is `41edafa4`.
+- Wrapper build `4.18-q1.1` / code `244`, event `build-20261007-223121`, source `41edafa4`, and AndroidTest event `q1-androidtest-20261007` are mirrored in both archive roots and installed only on `emulator-5554`.
+- Q1.4 offline replay 2/2, app unit suite 431/431, lint PASS, selected Editorial API instrumentation 16/16 process result with 15 executed passes and one explicit opt-out skip; Q1.4 gate PASS.
+- Current phase: Q1.5 approved live dev/holdout dispatch. Provider calls and Q1 spend are still `0 / USD 0`; no pilot, chunk-pair or UI U1 file was touched.
+- Next action: create the new Q1 ledger, preflight it, and dispatch the fixed C0/C1/C2 dev matrix on `emulator-5554` under the USD 2.00 cap.
 
 ## Superseded — independent API V1 review and N1–N4 checkpoint (historical, 2026-10-06)
 

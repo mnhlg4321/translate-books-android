@@ -54,12 +54,14 @@ Regression:
 
 The synthetic Q1 guard test proves a candidate containing `三` and fullwidth `？` is returned to the normalized DRAFT with `CONTENT_LEAK` and `NORMALIZATION_APPLIED`; the prompt test proves detections are present and FINAL is absent. This is a structural/app guard, not a semantic-quality result.
 
-## Q1.4 — offline replay and A/B preparation (build gate pending)
+## Q1.4 — offline replay, A/B preparation and emulator gate (PASS)
 
 The saved-N6-shaped replay is covered by `EditorialApiQ1ReplayTest`: the production guard returns the synthetic `三`/`？` candidate to the normalized DRAFT and reports `CONTENT_LEAK` plus `NORMALIZATION_APPLIED`; a clean saved candidate remains byte-identical. The replay does not change acceptance or create a semantic PASS. The A/B manifest is `docs/EDITORIAL_API_V1_Q1_AB_MANIFEST.json`; it fixes C0/C1/C2, current OpenRouter prices, per-chapter worst-case estimates and the USD 2.00 stop rules. C2 is `qwen/qwen3-235b-a22b-2507`, below the approved USD 0.15/chapter estimate.
 
-Targeted offline replay tests pass (2/2). The wrapper build, emulator install and Editorial API instrumentation are still required before Q1.5 may start. No provider call is allowed before that gate passes.
+Targeted offline replay tests pass (2/2). The wrapper build from source `41edafa47097e119225f3ab29518691e5430e984` passed the full app unit suite (431 tests), lint and assemble; production archive `4.18-q1.1`/code `244`, event `build-20261007-223121`, is mirrored under `artifacts/builds/` and `backup/builds/`. APK SHA-256 is `C0FC2FBA44C128162349A85EA67B072F6C4E11D2B6AA018C058FA76487B130BC`; source ZIP SHA-256 is `B27E59068323FB7B1749961A6F4494BDC4EBD804542C86A8FEE0E9FFC4315E46`. AndroidTest archive `q1-androidtest-20261007` is mirrored under `artifacts/test-builds/` and `backup/test-builds/`; test APK SHA-256 is `405C88CC05DC19DF2F67FA60DCE3C7F7EF15ADCCBB4E963415FEF59E377CB75A`.
 
-## Q1.5 — live Q1 (pending Q1.4 PASS)
+Validated installation was limited to `emulator-5554` (production code 244 and the AndroidTest package). Selected Editorial API instrumentation ran with no live flags/provider arguments: Store 4/4, whole-flow 3/3, pair-store 6/6, process-death 2/2; the opt-in API fixture runner was skipped by its explicit assumption. The process returned `OK (16 tests)` and exit 0. The repository's connected-test installer guard was respected; direct selected `adb am instrument` was used after validated APK installation. No pilot, UI U1 source, chunk-pair live run or provider call was used. Q1.4 is therefore PASS and Q1.5 is authorized by D-Q1.
+
+## Q1.5 — live Q1 (pending dispatch)
 
 Ledger: new `Q1-<date>`, cap USD 2.00; C0 current V1.1 luna, C1 V1.2 luna, C2 one Q1.4 candidate with worst-case estimate ≤ USD 0.15/chapter. Dev runs 001–008 (C0 skips 001–003 because N6 already exists), then fixed holdout 010/013/016/019/022/025 with selected best and C0. Prompt, law and thresholds stay byte-identical between dev and holdout. Stop on budget/reservation overflow, UNKNOWN cost, infrastructure error, or a required scope change. Three holdout outputs will be copied only to `D:\P5E-private\q1-outputs\`; owner FINAL is used solely for offline scoring and owner review.
