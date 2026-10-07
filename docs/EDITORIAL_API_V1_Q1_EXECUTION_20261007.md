@@ -54,9 +54,11 @@ Regression:
 
 The synthetic Q1 guard test proves a candidate containing `三` and fullwidth `？` is returned to the normalized DRAFT with `CONTENT_LEAK` and `NORMALIZATION_APPLIED`; the prompt test proves detections are present and FINAL is absent. This is a structural/app guard, not a semantic-quality result.
 
-## Q1.4 — offline replay, manifest, build and emulator (pending)
+## Q1.4 — offline replay and A/B preparation (build gate pending)
 
-The saved N6 guard replay, A/B manifest, wrapper build and emulator-only regression will be recorded here. No provider call is allowed before this gate passes.
+The saved-N6-shaped replay is covered by `EditorialApiQ1ReplayTest`: the production guard returns the synthetic `三`/`？` candidate to the normalized DRAFT and reports `CONTENT_LEAK` plus `NORMALIZATION_APPLIED`; a clean saved candidate remains byte-identical. The replay does not change acceptance or create a semantic PASS. The A/B manifest is `docs/EDITORIAL_API_V1_Q1_AB_MANIFEST.json`; it fixes C0/C1/C2, current OpenRouter prices, per-chapter worst-case estimates and the USD 2.00 stop rules. C2 is `qwen/qwen3-235b-a22b-2507`, below the approved USD 0.15/chapter estimate.
+
+Targeted offline replay tests pass (2/2). The wrapper build, emulator install and Editorial API instrumentation are still required before Q1.5 may start. No provider call is allowed before that gate passes.
 
 ## Q1.5 — live Q1 (pending Q1.4 PASS)
 

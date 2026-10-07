@@ -95,7 +95,7 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         String groupId = args.getString("p6_group_id", live ? "" : "P6-OFFLINE-" + runId);
         if (groupId == null || !groupId.matches("[A-Za-z0-9._-]{3,100}")) throw new IllegalArgumentException("P6_SPEND_GROUP_INVALID");
         BigDecimal groupMaximum = new BigDecimal(args.getString("p6_group_maximum_usd", "1.00"));
-        if (groupMaximum.signum() <= 0 || groupMaximum.compareTo(new BigDecimal("1.00")) > 0) throw new IllegalArgumentException("P6_SPEND_GROUP_CAP_INVALID");
+        if (groupMaximum.signum() <= 0 || groupMaximum.compareTo(new BigDecimal("2.00")) > 0) throw new IllegalArgumentException("P6_SPEND_GROUP_CAP_INVALID");
         BigDecimal chapterCap = new BigDecimal(args.getString("p6_chapter_cap_usd", "0.10"));
         Path ledgerPath = externalRoot.resolve("p6-spend-ledger-groups").resolve(groupId + ".jsonl").normalize();
         if (!ledgerPath.startsWith(externalRoot)) throw new IllegalArgumentException("P6_SPEND_GROUP_PATH_REFUSED");
@@ -111,7 +111,8 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
 
         Files.createDirectories(outputRoot);
         Capture capture = new Capture(outputRoot);
-        String model = live ? settings.model : "fake-model";
+        String modelOverride = args.getString("p6_model_override", "").trim();
+        String model = live ? (modelOverride.isEmpty() ? settings.model : modelOverride) : "fake-model";
         EditorialApiProvider delegate = live ? new OpenRouterEditorialApiProvider(settings) : fake(sources.draft);
         EditorialApiLedgerProvider provider = new EditorialApiLedgerProvider(delegate, ledger, PINNED, runId + "|" + fixtureId, model, capture::record);
 
