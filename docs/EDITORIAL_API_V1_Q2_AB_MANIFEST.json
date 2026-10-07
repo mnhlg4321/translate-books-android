@@ -1,0 +1,116 @@
+{
+  "schema": "EDITORIAL_API_V1_Q2_AB_V1",
+  "sourceCommit": "45976adbc6ecfb46210cb94d31e4c78861f337e1",
+  "contractRevision": "EDITORIAL_API_V1.3",
+  "provider": "OpenRouter",
+  "pricingCapturedUtc": "2026-10-08",
+  "pricingSources": [
+    "https://openrouter.ai/openai/gpt-5.6-sol-20260709",
+    "https://openrouter.ai/openai/gpt-5.6-luna-20260709"
+  ],
+  "device": "emulator-5554",
+  "productionBuild": {
+    "versionName": "4.18-q2.1",
+    "versionCode": 245,
+    "event": "build-20261008-064927",
+    "apkSha256": "0EC548E725E72FA7099096E38D69E6E0C5C65E680EFCE876727BD7A17E0F01CC",
+    "sourceZipSha256": "0EDED56114F15FE9EFCFE98795E5587C62A9D1F8511046C4A37C32427C40BA60"
+  },
+  "androidTestBuild": {
+    "event": "q2-androidtest-20261008",
+    "apkSha256": "1D9ADBE9013E01631D39A02E6147F4021AE8FC5EFD59501C4E4AB253D5B47B5C",
+    "sourceZipSha256": "CF8D1FE2B3E7E56DBE439269A5B8FE606740418A608033B1AA4B0E78657D7725"
+  },
+  "configurations": [
+    {
+      "id": "E-luna",
+      "mode": "API_V1_QUICK",
+      "model": "openai/gpt-5.6-luna",
+      "reasoningEffort": "medium",
+      "inputUsdPerMillion": "0.20",
+      "outputUsdPerMillion": "1.20",
+      "cacheReadUsdPerMillion": "0.02",
+      "role": "Q1-C1-reference"
+    },
+    {
+      "id": "E-strong",
+      "mode": "API_V1_QUICK",
+      "model": "openai/gpt-5.6-sol",
+      "reasoningEffort": "medium",
+      "inputUsdPerMillion": "2.00",
+      "outputUsdPerMillion": "10.00",
+      "cacheReadUsdPerMillion": "0.20",
+      "cacheWriteUsdPerMillion": "2.50",
+      "role": "owner-final-model-quality-core-v2"
+    },
+    {
+      "id": "V5-strong",
+      "mode": "V5_CHAT",
+      "model": "openai/gpt-5.6-sol",
+      "reasoningEffort": "medium",
+      "inputUsdPerMillion": "2.00",
+      "outputUsdPerMillion": "10.00",
+      "cacheReadUsdPerMillion": "0.20",
+      "cacheWriteUsdPerMillion": "2.50",
+      "role": "owner-final-model-three-turn-chat"
+    }
+  ],
+  "v5Pack": {
+    "name": "v5-safe4-full-chatgpt",
+    "projectSha256": "1727AE173F2CFD530EB818CAE69E0D3FADC59C35E3B5B6D478704A02091A26AD",
+    "promptSha256": "D25757D1A6BDDD5962A3B178B9EF850727573AE0C34867EC8F4B8450C7CD754F",
+    "workflowSha256": "5DB6B4F6509313F106499113537D2880BC6D2FF663859239DAFB285557505730",
+    "finalUse": "only the third-turn FINAL section is sent to production parsing; reports stay outside Git"
+  },
+  "worstCaseChapterEstimateUsd": {
+    "formula": "E uses request.prompt.estimatedInputTokens and editMaxOutputTokens at GPT-5.6 Sol standard rates; V5 uses the provider's three-history-turn reservation with the same output ceiling; no cache discount is assumed",
+    "E-strong": {
+      "004": "0.098074",
+      "005": "0.126136",
+      "006": "0.201922",
+      "007": "0.091124",
+      "008": "0.102866",
+      "011": "0.171686",
+      "014": "0.223842",
+      "017": "0.156182"
+    },
+    "V5-strong": {
+      "004": "0.445636",
+      "005": "0.544516",
+      "006": "0.812362",
+      "007": "0.420790",
+      "008": "0.462550",
+      "011": "0.705976",
+      "014": "0.890098",
+      "017": "0.651022"
+    }
+  },
+  "plannedWorstCaseUsd": {
+    "devBoth_004_008": "3.305976",
+    "holdoutIfEstrong_011_014_017": "0.551710",
+    "holdoutIfV5strong_011_014_017": "2.247096",
+    "maximumSelectedPath": "5.553072"
+  },
+  "selection": {
+    "dev": ["004", "005", "006", "007", "008"],
+    "holdout": ["011", "014", "017"],
+    "devArms": ["E-strong", "V5-strong"],
+    "rule": "select the arm with the highest improved-plus-exact rate, with appChangedOwnerUnchanged no higher than E-luna and added kana/Han zero; freeze the selected arm before holdout",
+    "finalUse": "owner FINAL is scorer input only and is never sent to provider"
+  },
+  "budget": {
+    "ledgerId": "Q2-20261008",
+    "groupCapUsd": "6.00",
+    "chapterCapUsd": "1.00",
+    "stopOn": ["reservation over cap", "unknown cost", "infrastructure error", "prompt/law/threshold or membership change"]
+  },
+  "instrumentation": {
+    "store": "4/4",
+    "wholeFlow": "3/3",
+    "uiFormAndStoredResult": "3/3 plus 2 explicit assumptions outside the normal phase",
+    "processDeath": "seed/force-stop/verify/cleanup 3/3",
+    "deviceOperations": "emulator-5554 only",
+    "providerCalls": 0,
+    "chunkPair": "not run; outside Q2 scope"
+  }
+}

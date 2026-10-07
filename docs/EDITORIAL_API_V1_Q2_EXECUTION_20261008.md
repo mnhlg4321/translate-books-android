@@ -30,11 +30,17 @@ Bundled pack: `v5-safe4-full-chatgpt/`; SHA-256: Project `1727AE173F2CFD530EB818
 
 Offline validation: `:editorial-engine:test` PASS (566 tests); `:app:test` PASS (77 test classes/tasks); AndroidTest Java compile PASS; Python fixture-verifier tests 14/14 PASS. No provider call, device operation or APK build occurred for Q2.2.
 
-## Q2.3
+## Q2.3 — wrapper build, emulator gate and A/B manifest
 
-Pending.
+The clean wrapper checkout was pinned to source `45976adbc6ecfb46210cb94d31e4c78861f337e1`, including the binary `.gitattributes` rule for the three FULL CHATGPT pack files. The production wrapper build passed offline with version `4.18-q2.1` / code `245`, event `build-20261008-064927`, APK SHA-256 `0EC548E725E72FA7099096E38D69E6E0C5C65E680EFCE876727BD7A17E0F01CC`, and source ZIP SHA-256 `0EDED56114F15FE9EFCFE98795E5587C62A9D1F8511046C4A37C32427C40BA60`. The AndroidTest wrapper archive passed with event `q2-androidtest-20261008`, test APK SHA-256 `1D9ADBE9013E01631D39A02E6147F4021AE8FC5EFD59501C4E4AB253D5B47B5C`, and source ZIP SHA-256 `CF8D1FE2B3E7E56DBE439269A5B8FE606740418A608033B1AA4B0E78657D7725`. Both payloads are mirrored in `artifacts/` and `backup/`; the wrapper installed only production and test packages on `emulator-5554`.
+
+The on-device gate used the installed code `245` and no provider arguments: `EditorialApiStoreInstrumentedTest` 4/4, `EditorialApiBienTapFlowInstrumentedTest` 3/3, the normal Editorial API UI path 3/3 with its two phase-assumption cases intentionally skipped, and the explicit process-death seed → force-stop → verify → cleanup sequence 3/3. Engine/app/full build checks and AndroidTest compilation were already part of the wrapper gate. No provider call, pilot action, U1 file, or chunk-pair test was run. Logs are retained privately under `D:\P5E-private\q2-runs\Q2.3-emulator\`.
+
+`docs/EDITORIAL_API_V1_Q2_AB_MANIFEST.json` records the exact build, contract `EDITORIAL_API_V1.3`, FULL CHATGPT pack hashes, model IDs, reasoning setting and current OpenRouter prices. GPT-5.6 Sol is pinned as `openai/gpt-5.6-sol` with reasoning `medium`, matching the owner's FINAL process. The public price basis captured on 2026-10-08 is USD 2.00/M input, USD 10.00/M output, USD 0.20/M cache-read and USD 2.50/M cache-write; the estimate assumes no cache discount. The provider's actual reservation calculation gives every planned chapter below the USD 1.00 chapter ceiling. Running both dev arms and then V5-strong on all three holdouts has a worst-case reservation of USD 5.553072, below the USD 6.00 group ceiling.
+
+Q2.3: PASS. Q2.4 is authorized by D-Q2 and the measured reservation is within both caps; no live Q2.4 call has been sent yet.
 
 ## Q2.4
 
-Pending; no live dispatch has occurred in this package yet.
+Pending; dispatch begins with the new `Q2-20261008` ledger and dev chapters 004–008 on the two frozen arms. No live dispatch has occurred in this package yet.
 
