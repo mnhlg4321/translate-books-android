@@ -13,11 +13,20 @@ import java.util.regex.Pattern;
 public final class RawAlignedNormalizer {
     public record Repair(int draftLine, String kind) { }
     public record Detection(int draftLine, String kind, String detail) { }
+    /** How the RAW and DRAFT sequences were proven to correspond. */
+    public enum AlignmentMode { NONE, PHYSICAL, NONBLANK }
     public record Result(String text, List<Repair> repairs, List<Detection> detections,
-                         boolean alignmentStrong, int rawNonBlankLines, int draftNonBlankLines) {
+                         boolean alignmentStrong, int rawNonBlankLines, int draftNonBlankLines,
+                         AlignmentMode alignmentMode) {
+        public Result(String text, List<Repair> repairs, List<Detection> detections,
+                      boolean alignmentStrong, int rawNonBlankLines, int draftNonBlankLines) {
+            this(text, repairs, detections, alignmentStrong, rawNonBlankLines, draftNonBlankLines,
+                    alignmentStrong ? AlignmentMode.NONBLANK : AlignmentMode.NONE);
+        }
         public Result {
             repairs = List.copyOf(repairs);
             detections = List.copyOf(detections);
+            alignmentMode = alignmentMode == null ? AlignmentMode.NONE : alignmentMode;
         }
     }
 
@@ -34,15 +43,18 @@ public final class RawAlignedNormalizer {
         String[] draftLines = lines(draft);
         int rawCount = nonBlank(rawLines);
         int draftCount = nonBlank(draftLines);
-        // A line-count tolerance alone is unsafe: Japanese RAW and translated
-        // DRAFT often insert a blank line at different places.  Require the
-        // complete blank-line layout to match before any text is changed.
-        boolean strong = rawCount > 0 && draftCount > 0 && rawLines.length == draftLines.length;
-        if (strong) {
+        // Physical alignment is strongest.  When only blank lines differ, the
+        // non-blank sequences are still a deterministic one-to-one mapping;
+        // blanks are formatting and are skipped by the pairing loop below.
+        boolean physical = rawCount > 0 && draftCount > 0 && rawLines.length == draftLines.length;
+        if (physical) {
             for (int i = 0; i < rawLines.length; i++) {
-                if (rawLines[i].isBlank() != draftLines[i].isBlank()) { strong = false; break; }
+                if (rawLines[i].isBlank() != draftLines[i].isBlank()) { physical = false; break; }
             }
         }
+        AlignmentMode alignmentMode = physical ? AlignmentMode.PHYSICAL
+                : (rawCount > 0 && rawCount == draftCount ? AlignmentMode.NONBLANK : AlignmentMode.NONE);
+        boolean strong = alignmentMode != AlignmentMode.NONE;
         List<Repair> repairs = new ArrayList<>();
         List<Detection> detections = new ArrayList<>();
         StringBuilder output = new StringBuilder();
@@ -55,7 +67,12 @@ public final class RawAlignedNormalizer {
             while (rawIndex < rawLines.length && rawLines[rawIndex].isBlank()) rawIndex++;
             String rawLine = rawIndex < rawLines.length ? rawLines[rawIndex++] : "";
             String current = draftLine;
-            if (strong && !rawLine.isBlank()) {
+            // Physical alignment has the same line/blank layout as the
+            // source.  Nonblank alignment is deliberately diagnostic only:
+            // the 28-chapter Q2.1 measurement found every attempted symbol
+            // repair could move a line farther from FINAL under shifted
+            // blanks, so it must not mutate text.
+            if (alignmentMode == AlignmentMode.PHYSICAL && !rawLine.isBlank()) {
                 String repaired = repairSymbols(rawLine, current, repairs, draftLineNumber);
                 current = repaired;
             }
@@ -73,7 +90,7 @@ public final class RawAlignedNormalizer {
         if (!strong && rawCount != draftCount) {
             detections.add(new Detection(0, "LINE_OFFSET", rawCount + "_raw_vs_" + draftCount + "_draft"));
         }
-        return new Result(output.toString(), repairs, detections, strong, rawCount, draftCount);
+        return new Result(output.toString(), repairs, detections, strong, rawCount, draftCount, alignmentMode);
     }
 
     private static String repairSymbols(String raw, String draft, List<Repair> repairs, int line) {

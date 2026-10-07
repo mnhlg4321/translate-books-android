@@ -22,6 +22,8 @@ public final class EditorialApiPromptTest {
         String text = QualityCore.editPrompt("Vietnamese") + QualityCore.checkPrompt("Vietnamese");
         for (int rule = 1; rule <= 8; rule++) assertTrue("rule " + rule, QualityCore.rules().contains(rule + ". "));
         String lower = text.toLowerCase(Locale.ROOT);
+        assertFalse(lower.contains("changing as little as possible"));
+        assertTrue(lower.contains("preserve lines that are already correct"));
         for (String banned : new String[] {"ledger", "sha-256", "sha256", "hash", "unit ref", "manifest", "receipt", "error id", "change id", "binding"}) {
             assertFalse("Quality Core mentions " + banned, lower.contains(banned));
         }

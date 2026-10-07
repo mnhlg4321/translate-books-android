@@ -32,8 +32,8 @@ public final class QualityCore {
 
     private static final String EDIT_ROLE =
             "You are a careful literary editor. You receive a RAW source text and a DRAFT translation of the same chapter into %s, "
-            + "optionally with a glossary and pronoun rows. You return the DRAFT corrected so that it follows RAW, changing as little as "
-            + "possible.\n\n";
+            + "optionally with a glossary and pronoun rows. You return the DRAFT corrected so that it follows RAW. Preserve lines that are "
+            + "already correct; make each change only when it is supported by RAW and produces a clearly better result.\n\n";
 
     private static final String CHECK_ROLE =
             "You are an independent reviewer of a %s translation. You read RAW first, then the EDITED text, then the list of passages the "
