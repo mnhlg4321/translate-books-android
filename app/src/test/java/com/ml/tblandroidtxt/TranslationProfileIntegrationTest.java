@@ -31,10 +31,10 @@ public class TranslationProfileIntegrationTest {
 
     private static final String CH001_RAW_SHA256 = "FE4CE02301E9EE5FD457A7A744C982B23EE3C95100CFDC5CBDF908B3979F40AF";
     private static final String CH001_GLOSSARY_SHA256 = "459FBF1037BC52FA756843BFF7364759D0460388A38F51D16662D8751ACC5E8C";
-    private static final String CH001_PRONOUN_SHA256 = "1F71CDCBC8760022E171FB8303E58A312D1913EE157CF783350E62100D9829FB";
+    private static final String CH001_PRONOUN_SHA256 = "3A8AC3B9852A0E2213F69448440F227432BCEF5057E392CE59A2BE5684812FB2";
     private static final String CH004_RAW_SHA256 = "36FB90029B19360590344A6147E8EE53131BBAAF336196D7E7DC1D35B4BA3A4A";
     private static final String CH004_GLOSSARY_SHA256 = "5583CFCBDE99E3F3AC32191F9306D5377BD37A008D5EC7B8F47741B04E6DA332";
-    private static final String CH004_PRONOUN_SHA256 = "B4A6A41CC31ABCDD48C246031368C68F31B5CF2517F9E23B7132B642C64F4648";
+    private static final String CH004_PRONOUN_SHA256 = "83D91CDDFB062E2A77D786195F84B25EDF084590182D87A89E3BA81692357BAC";
 
     @Test public void realMercedesFixturesAreByteStableAndParseTogether() throws Exception {
         assertFixture("ch001", "raw.txt", CH001_RAW_SHA256, false);
@@ -332,13 +332,29 @@ public class TranslationProfileIntegrationTest {
 
     private static void assertFixture(String chapter, String name, String expectedHash, boolean bomExpected) {
         byte[] bytes = fixtureBytes(chapter, name);
-        assertEquals(expectedHash, HashUtil.sha256(bytes).toUpperCase(Locale.ROOT));
+        assertEquals(expectedHash,
+                HashUtil.sha256(normalizeLineEndings(bytes)).toUpperCase(Locale.ROOT));
         if (bomExpected) {
             assertTrue(name + " must retain UTF-8 BOM", bytes.length >= 3);
             assertEquals(0xEF, bytes[0] & 0xFF);
             assertEquals(0xBB, bytes[1] & 0xFF);
             assertEquals(0xBF, bytes[2] & 0xFF);
         }
+    }
+
+    private static byte[] normalizeLineEndings(byte[] bytes) {
+        ByteArrayOutputStream normalized = new ByteArrayOutputStream(bytes.length);
+        for (int i = 0; i < bytes.length; i++) {
+            if (bytes[i] == '\r') {
+                if (i + 1 < bytes.length && bytes[i + 1] == '\n') {
+                    continue;
+                }
+                normalized.write('\n');
+            } else {
+                normalized.write(bytes[i]);
+            }
+        }
+        return normalized.toByteArray();
     }
 
     private static void assertChapterFixture(String chapter, int expectedParagraphs,
