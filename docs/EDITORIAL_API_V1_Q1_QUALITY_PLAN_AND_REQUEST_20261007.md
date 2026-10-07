@@ -125,3 +125,9 @@ Test: từng quy tắc có ca đúng, ca không áp (RAW không có ký hiệu �
 |---|---|---|
 | D-Q1 | Cho phép Q1.5 sau khi Q1.4 PASS: ledger mới `Q1-<date>` trần **USD 2.00**, dev 8 + holdout 6 chương như mục 4, model `C2` chọn trong danh sách Q1.4 với ước tính ≤ USD 0.15/chương; chỉ emulator | Duyệt trước để Codex chạy liền sau Q1.4; nếu ước tính vượt trần thì Codex dừng và hỏi |
 | — | Dùng 28 bản FINAL làm reference đánh giá (không đưa vào prompt) | Mặc định theo quy tắc hiện có, không cần duyệt thêm |
+
+## 6. Quyết định đã nhận
+
+Owner (chat, 2026-10-07): "duyệt D-Q1".
+
+Phạm vi được phép: Q1.5 chạy ngay sau khi Q1.4 PASS, không cần hỏi lại. Ledger mới `Q1-<date>`, trần **USD 2.00**; dev 001–008 (C0 bỏ 001–003 vì đã có N6, C1, C2) và holdout 010/013/016/019/022/025 (cấu hình tốt nhất + C0); `C2` là một model trong danh sách Q1.4 có ước tính ≤ USD 0.15/chương; trần chương theo ước tính worst-case của từng cấu hình; chỉ `emulator-5554`, không pilot, không chunk-pair. Dừng và hỏi owner nếu: tổng ước tính hoặc reservation vượt USD 2.00, không có model ứng viên ≤ USD 0.15/chương, UNKNOWN cost, lỗi hạ tầng, hoặc cần đổi tập dev/holdout. Không chỉnh luật/prompt/ngưỡng giữa dev và holdout. Sau holdout: xuất 3 chương sang `D:P5E-privateq1-outputs` cho owner đọc và dừng.
