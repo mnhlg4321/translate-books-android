@@ -98,3 +98,11 @@ Build qua wrapper (code > 244), cài chỉ `emulator-5554`, instrumented Editori
 | Thông tin | Bản FINAL 001–028 được tạo bằng **model nào** (vd GPT-5.x Thinking, Claude Opus/Sonnet) và **pack nào** (đường dẫn bản 4.1.3 FULL trong `D:\Ebooks\1. Prompt cac the loai\4.BIÊN TẬP\…`)? Có sửa tay thêm sau khi model xuất không? | Trả lời ngắn; đây là dữ kiện quyết định thiết kế Q2.2/Q2.3 |
 | D-Q2 | Cho phép Q2.4: ledger mới `Q2-<date>` trần **USD 6.00**, trần chương **USD 1.00**, dev 5 + holdout 3 chương, model mạnh theo câu trả lời trên, chỉ emulator; dừng và hỏi nếu ước tính vượt trần | Duyệt — chi phí dự kiến USD 2–4, thấp so với giá trị của việc biết model mạnh có đạt chuẩn không |
 | U1 | Giữ U1 chờ tới khi Q2 cho thấy hướng chất lượng đạt (UI chỉ có giá trị khi bản biên tập đạt) | Duyệt tạm hoãn U1 |
+
+## 7. Quyết định đã nhận
+
+Owner (chat, 2026-10-08): "duyệt D-Q2 và Tạm hoãn U1".
+
+- **D-Q2:** Q2.4 chạy ngay sau khi Q2.3 PASS, không hỏi lại. Ledger mới `Q2-<date>`, trần **USD 6.00**, trần chương **USD 1.00**; dev 004–008 (`E-strong`, `V5-strong`), holdout 011/014/017 (cấu hình đã chọn); chỉ `emulator-5554`, không pilot, không chunk-pair. Dừng và hỏi nếu ước tính worst-case vượt trần, UNKNOWN cost, lỗi hạ tầng, hoặc cần đổi tập chương. Runner chỉ nhận trần nhóm ≤ USD 1.00 thì nâng giới hạn đó trong Q2.2 (có test), không chia nhỏ ledger để lách.
+- **U1 tạm hoãn:** không làm U1 cho tới khi Q2 có chương được owner chấp nhận; thiết kế giữ nguyên.
+- **Model và pack (owner chưa trả lời câu hỏi mục 6):** mặc định pack `D:books. Prompt cac the loai.BIÊN TẬPBIEN_TAP_V5_SAFE_4_1_3_FULL_RELEASECHATGPT` (3 file: Project Instruction, Prompt đầu chat 3 lượt, Workflow — bản acceptance đã dẫn chiếu), ghi SHA-256 từng file. Model mạnh mặc định: model OpenAI lớp cao nhất (không phải luna/mini) có trên OpenRouter, reasoning cao, với ước tính ≤ USD 1.00/chương cho đường V5 3 lượt; nếu không có model nào đạt trần chương thì chọn model mạnh nhất trong trần và ghi lý do. Nếu owner trả lời khác trước khi Q2.4 bắt đầu, dùng theo câu trả lời của owner.
