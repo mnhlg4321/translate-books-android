@@ -182,7 +182,9 @@ public final class P5EPreflightEmitterContractTest {
         for (Path root = current; root != null; root = root.getParent()) {
             Path candidate = root.resolve(EMITTER_RELATIVE_PATH);
             if (Files.isRegularFile(candidate)) {
-                return new String(Files.readAllBytes(candidate), StandardCharsets.UTF_8);
+                return new String(Files.readAllBytes(candidate), StandardCharsets.UTF_8)
+                        .replace("\r\n", "\n")
+                        .replace('\r', '\n');
             }
         }
         throw new IOException("Emitter source not found from " + current);
