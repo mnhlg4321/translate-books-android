@@ -1,15 +1,15 @@
 # Build State
 
-## Current state — 2026-10-07 (Q1.1 offline package)
+## Current state — 2026-10-07 (Q1.2 offline package)
 
-- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before the Q1.1 package commit is `1834294b`.
-- Current build remains `4.18-api.6` / code `243`, event `build-20261007-065128`, archived from `81e4d578` through the wrapper and installed only on `emulator-5554`; no new APK was needed for Q1.1.
-- Q1.1 scorer `scripts/p6/score_vs_final.py` and synthetic test pass; private 28-chapter/N6 measurements are at `D:\P5E-private\q1-runs\Q1.1-baseline\`, with manifest SHA-256 `7c06456e8be90547cfc5b10a18c2ba8c06b6b25db9d550f70857edc18e786894`.
-- Q1.1 result: 28 DRAFT owner-changed `898`, improved `343`, fix recall `0.38195991`, farther `0`, hard added `0`; N6 001–003 fix recall `0.52`, farther `8`, added kana/Han `1`. These are offline evaluation metrics only.
-- Current phase: Q1.1 complete; Q1.2–Q1.5 pending. Provider calls and Q1 spend are `0 / USD 0`; no pilot, chunk-pair or UI U1 work was touched.
-- Next action: implement and measure the pure JVM RAW-aligned normalizer in Q1.2.
+- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before the Q1.2 package commit is `05a9a3a3`.
+- Current build remains `4.18-api.6` / code `243`, event `build-20261007-065128`, archived from `81e4d578` through the wrapper and installed only on `emulator-5554`; no APK was needed for Q1.2.
+- Q1.1 scorer and Q1.2 `RawAlignedNormalizer` targeted tests pass. Private Q1.2 evidence is `D:\P5E-private\q1-runs\Q1.2-normalizer\summary.json`: 28 chapters, 1 strong alignment, 0 real repairs, 72 detections, 0 farther lines.
+- Q1.2 keeps acceptance strict: a physical line/blank-layout mismatch prevents repair, avoiding unsafe re-anchoring. The synthetic repair/no-apply matrix passes.
+- Current phase: Q1.2 complete; Q1.3–Q1.5 pending. Provider calls and Q1 spend are `0 / USD 0`; no pilot, chunk-pair or UI U1 work was touched.
+- Next action: finish Q1.3 Quality Core v2 and deterministic guards offline.
 
-# Superseded — independent API V1 review and N1–N4 checkpoint (historical, 2026-10-06)
+## Superseded — independent API V1 review and N1–N4 checkpoint (historical, 2026-10-06)
 
 The next two sections describe the review and checkpoint before the follow-up commits, N5 and `CP-OFFLINE-2`; keep them for history, do not read their next actions as current.
 

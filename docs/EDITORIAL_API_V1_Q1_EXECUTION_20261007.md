@@ -29,9 +29,17 @@ Baseline counts (28 DRAFT chapters): owner-changed lines `898`, improved `343`, 
 
 N6 001–003 against the same scorer: owner-changed `50`, improved `26`, fix recall `0.52`; farther `8`; app-changed unchanged-owner lines `4`; added kana/Han `1`; remaining kana/Han `2`; copied ruby `3`; fullwidth Latin `6`; average similarity delta app−DRAFT `-0.00029053`. These are evaluation measurements, not acceptance.
 
-## Q1.2 — RAW-aligned normalization (pending)
+## Q1.2 — RAW-aligned normalization (offline PASS)
 
-The pure JVM normalizer and 28-chapter measurement will be recorded here after its targeted regression passes. No provider call is part of Q1.2.
+`editorial-engine/src/main/java/com/ml/tblandroidtxt/editorial/api/RawAlignedNormalizer.java` is a pure JVM transformation. It repairs only symbols proven by a strong RAW/DRAFT alignment and otherwise emits bounded detections (`UNTRANSLATED`, `GLOSSARY`, `LINE_OFFSET`). Strong alignment requires identical physical line count and blank-line layout; a line-count tolerance by itself was rejected because it changed the pairing in real chapters.
+
+Regression:
+
+```text
+./gradlew.bat :editorial-engine:test --tests com.ml.tblandroidtxt.editorial.api.RawAlignedNormalizerTest --no-daemon  PASS (4 tests)
+```
+
+The 28-chapter private measurement has 1/28 strong alignments, 0 real-chapter repairs, 72 detections, and 0 lines farther from FINAL than the original DRAFT. Fix recall remains `343/898 = 0.38195991`; no owner-line regression was introduced. The synthetic test matrix still proves frame, quote, ellipsis, width, copied-ruby, no-apply and uncertain-alignment behavior. Evidence: `D:\P5E-private\q1-runs\Q1.2-normalizer\summary.json`.
 
 ## Q1.3 — Quality Core v2 and guards (pending)
 
