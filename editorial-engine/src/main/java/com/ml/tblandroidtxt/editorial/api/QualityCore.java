@@ -6,8 +6,8 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * The quality standard of the 4.1.3 instructions reduced to the rules a model can follow in one reading (plan section
- * 2.1): RAW decides content, completeness, glossary and pronoun discipline, minimal edits, doubt keeps the draft,
- * symbols stay, the output is only the text. It never mentions ledgers, ids, hashes or unit references. The text is
+ * 2.1): RAW decides content, completeness, glossary and pronoun discipline; the editor corrects meaning and style while
+ * preserving already-correct work. It never mentions ledgers, ids, hashes or unit references. The text is
  * pinned by {@link #editSha256()} / {@link #checkSha256()}, which every run records.
  */
 public final class QualityCore {
@@ -22,12 +22,13 @@ public final class QualityCore {
             + "4. Pronoun rows are reference, valid inside their scope (from / speaker / target / self / call / scope). Do not translate a "
             + "first-person word the same way everywhere; keep the address between two characters consistent within a scene or phase and "
             + "do not change it unless RAW gives a reason.\n"
-            + "5. Edit minimally. Keep what is already correct. Do not rewrite to be different, do not dramatize, do not raise or lower the "
-            + "register or the intensity.\n"
-            + "6. When you are not sure, keep the draft and say so briefly in the notes.\n"
-            + "7. Keep every symbol and frame exactly (「」『』◇ ◆ ＊ ── …… 【】 and the like). Remove technical debris only: metadata lines, "
-            + "broken Markdown, U+FFFD, zero-width characters.\n"
-            + "8. The output contains only the text. Remarks go outside the text tags.\n";
+            + "5. Correct omissions, additions, wrong meaning, unnatural phrasing and register while preserving lines that are already correct. "
+            + "Do not dramatize or change intensity without support in RAW.\n"
+            + "6. Translate every remaining Japanese kana or Han phrase unless the glossary identifies it as a name or intentional source token. "
+            + "If evidence is insufficient, keep the draft and explain the uncertainty in notes.\n"
+            + "7. RAW controls symbols, punctuation, frames (「」『』◇ ◆ ＊ ── …… 【】) and line structure. Follow the app's detected structural points and do not invent "
+            + "fullwidth punctuation or source-script text. Remove technical debris only: metadata lines, broken Markdown, U+FFFD and zero-width characters.\n"
+            + "8. The output contains only the text between the tags. Remarks go outside the text tags.\n";
 
     private static final String EDIT_ROLE =
             "You are a careful literary editor. You receive a RAW source text and a DRAFT translation of the same chapter into %s, "

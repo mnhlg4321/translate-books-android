@@ -41,9 +41,18 @@ Regression:
 
 The 28-chapter private measurement has 1/28 strong alignments, 0 real-chapter repairs, 72 detections, and 0 lines farther from FINAL than the original DRAFT. Fix recall remains `343/898 = 0.38195991`; no owner-line regression was introduced. The synthetic test matrix still proves frame, quote, ellipsis, width, copied-ruby, no-apply and uncertain-alignment behavior. Evidence: `D:\P5E-private\q1-runs\Q1.2-normalizer\summary.json`.
 
-## Q1.3 — Quality Core v2 and guards (pending)
+## Q1.3 — Quality Core v2 and guards (offline PASS)
 
-The contract revision, prompt detections and deterministic post-edit guard will be recorded here after engine/app regressions pass. FINAL remains absent from all prompt inputs.
+The engine contract is now `EDITORIAL_API_V1.2`. Quality Core v2 makes RAW authoritative for meaning, structure and symbols, asks for remaining Japanese source text to be translated unless glossary-scoped, and removes the old minimal-edit/keep-DRAFT-symbol wording. `EditPromptBuilder` sends the normalized DRAFT plus line/kind detections; it has no FINAL section or FINAL text. `EditGuards` reapplies RAW-aligned normalization and reverts a line that introduces kana/Han absent from the DRAFT unless it is a glossary source, while flagging the intervention.
+
+Regression:
+
+```text
+./gradlew.bat :editorial-engine:test --no-daemon                         PASS (all engine tests)
+./gradlew.bat :app:testDebugUnitTest --no-daemon                         PASS (all app JVM tests, 29 tasks)
+```
+
+The synthetic Q1 guard test proves a candidate containing `三` and fullwidth `？` is returned to the normalized DRAFT with `CONTENT_LEAK` and `NORMALIZATION_APPLIED`; the prompt test proves detections are present and FINAL is absent. This is a structural/app guard, not a semantic-quality result.
 
 ## Q1.4 — offline replay, manifest, build and emulator (pending)
 

@@ -38,7 +38,7 @@ public final class EditorialApiPromptTest {
     }
 
     /** SHA-256 of the quality rules text (UTF-8). */
-    static final String EXPECTED_RULES_SHA256 = "ad38294839f7c234df40c986063bd8359bcad23b3571f0b02be6d82342a11bcd";
+    static final String EXPECTED_RULES_SHA256 = "6b399f83651f6c1ef48ff497e0bf4c4eee3087bd562f45668a637965f94e062f";
 
     @Test public void glossaryIsFilteredByRawOccurrenceWithoutALimit() {
         java.util.ArrayList<EditInputs.GlossaryEntry> many = new java.util.ArrayList<>();
@@ -102,5 +102,21 @@ public final class EditorialApiPromptTest {
         assertTrue(prompt.system().contains("ANSWER FORMAT"));
         assertTrue(CheckPromptBuilder.build(EditorialApiContract.Step.CHECK, RAW, DRAFT, DRAFT, List.of(), "Vietnamese").user()
                 .contains("(none: the edited text equals the draft)"));
+    }
+
+    @Test public void q1GuardRevertsAddedHanAndNormalizesFullwidthQuestion() {
+        String raw = "原文 ?";
+        String draft = "Bản dịch ?";
+        EditGuards.Report report = EditGuards.check(raw, draft, "Bản dịch？ 三", List.of(), EditGuards.Config.defaults());
+        assertEquals("Bản dịch ?", report.cleaned());
+        assertTrue(report.has(EditGuards.Code.CONTENT_LEAK));
+        assertTrue(report.has(EditGuards.Code.NORMALIZATION_APPLIED));
+    }
+
+    @Test public void q1EditPromptContainsDetectionsButNeverFinalReference() {
+        ApiPrompt prompt = EditPromptBuilder.build(new EditInputs("日本語 ?", "Bản dịch ? あ", "Vietnamese", List.of(), ""));
+        assertTrue(prompt.system().contains("APP DETECTIONS"));
+        assertTrue(prompt.system().contains("UNTRANSLATED"));
+        assertFalse(prompt.system().contains("FINAL"));
     }
 }

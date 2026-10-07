@@ -1,13 +1,13 @@
 # Build State
 
-## Current state — 2026-10-07 (Q1.2 offline package)
+## Current state — 2026-10-07 (Q1.3 offline package)
 
-- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before the Q1.2 package commit is `05a9a3a3`.
-- Current build remains `4.18-api.6` / code `243`, event `build-20261007-065128`, archived from `81e4d578` through the wrapper and installed only on `emulator-5554`; no APK was needed for Q1.2.
-- Q1.1 scorer and Q1.2 `RawAlignedNormalizer` targeted tests pass. Private Q1.2 evidence is `D:\P5E-private\q1-runs\Q1.2-normalizer\summary.json`: 28 chapters, 1 strong alignment, 0 real repairs, 72 detections, 0 farther lines.
-- Q1.2 keeps acceptance strict: a physical line/blank-layout mismatch prevents repair, avoiding unsafe re-anchoring. The synthetic repair/no-apply matrix passes.
-- Current phase: Q1.2 complete; Q1.3–Q1.5 pending. Provider calls and Q1 spend are `0 / USD 0`; no pilot, chunk-pair or UI U1 work was touched.
-- Next action: finish Q1.3 Quality Core v2 and deterministic guards offline.
+- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before the Q1.3 package commit is `92b3aec4`.
+- Current build remains `4.18-api.6` / code `243`, event `build-20261007-065128`, archived from `81e4d578` through the wrapper and installed only on `emulator-5554`; Q1.3 needed no new APK.
+- Engine suite and app `testDebugUnitTest` pass with `EDITORIAL_API_V1.2`, Q1 prompt detections and source-script/fullwidth guard regressions.
+- Q1.3 is offline only: provider calls and Q1 spend are `0 / USD 0`; no pilot, chunk-pair or UI U1 file was touched.
+- Current phase: Q1.3 complete; Q1.4 offline replay/manifest/build/emulator gate and Q1.5 live dev/holdout remain pending.
+- Next action: complete Q1.4 offline replay, model manifest and wrapper/emulator gate.
 
 ## Superseded — independent API V1 review and N1–N4 checkpoint (historical, 2026-10-06)
 

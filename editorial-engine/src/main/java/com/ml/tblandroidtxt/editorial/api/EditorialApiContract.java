@@ -6,7 +6,7 @@ package com.ml.tblandroidtxt.editorial.api;
  * counts) is the app's business; an irregularity in a model answer becomes a counter, never a refusal code.
  */
 public final class EditorialApiContract {
-    public static final String CONTRACT_REVISION = "EDITORIAL_API_V1.1";
+    public static final String CONTRACT_REVISION = "EDITORIAL_API_V1.2";
 
     /** QUICK = one edit call; THOROUGH = edit + check (+ one re-check after the app applied fixes). */
     public enum Mode { QUICK, THOROUGH }

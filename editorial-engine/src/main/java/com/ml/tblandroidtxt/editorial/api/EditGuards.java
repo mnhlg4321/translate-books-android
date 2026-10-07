@@ -10,7 +10,8 @@ import java.util.regex.Pattern;
  * into a content verdict by itself - the flags go to the check call as "points to look at" and to the person in the result.
  */
 public final class EditGuards {
-    public enum Code { STRUCTURE_WARN, REWRITE_WARN, SYMBOL_WARN, GLOSSARY_WARN, META_LEAK, META_UNSEPARABLE }
+    public enum Code { STRUCTURE_WARN, REWRITE_WARN, SYMBOL_WARN, GLOSSARY_WARN, META_LEAK, META_UNSEPARABLE,
+        NORMALIZATION_APPLIED, CONTENT_LEAK }
 
     public record Flag(Code code, String detail) { }
 
@@ -49,6 +50,12 @@ public final class EditGuards {
     public static Report check(String raw, String draft, String edited, List<EditInputs.GlossaryEntry> glossary, Config config) {
         List<Flag> flags = new ArrayList<>();
         String cleaned = stripMeta(edited, flags);
+        String normalized = RawAlignedNormalizer.normalize(raw, cleaned, glossary).text();
+        if (!normalized.equals(cleaned)) {
+            flags.add(new Flag(Code.NORMALIZATION_APPLIED, "RAW-aligned symbol normalization"));
+            cleaned = normalized;
+        }
+        cleaned = blockAddedSourceScript(draft, cleaned, glossary, flags);
 
         int draftLines = nonBlankLines(draft);
         int editedLines = nonBlankLines(cleaned);
@@ -78,6 +85,36 @@ public final class EditGuards {
             }
         }
         return new Report(cleaned, flags, delta, ratio, segments.size());
+    }
+
+    /** A model must not introduce Japanese/Han into a Vietnamese DRAFT line by accident. */
+    private static String blockAddedSourceScript(String draft, String edited,
+                                                 List<EditInputs.GlossaryEntry> glossary, List<Flag> flags) {
+        String[] before = LineDiff.lines(draft);
+        String[] after = LineDiff.lines(edited);
+        if (before.length != after.length) return edited;
+        StringBuilder out = new StringBuilder(edited.length());
+        int blocked = 0;
+        for (int i = 0; i < after.length; i++) {
+            String line = after[i];
+            if (RawAlignedNormalizer.containsKanaOrHan(line)
+                    && !RawAlignedNormalizer.containsKanaOrHan(before[i])
+                    && !allowedGlossarySource(line, glossary)) {
+                line = before[i];
+                blocked++;
+            }
+            if (i > 0) out.append('\n');
+            out.append(line);
+        }
+        if (blocked > 0) flags.add(new Flag(Code.CONTENT_LEAK, blocked + " line(s) introduced kana/Han; reverted to normalized draft"));
+        return blocked == 0 ? edited : out.toString();
+    }
+
+    private static boolean allowedGlossarySource(String line, List<EditInputs.GlossaryEntry> glossary) {
+        for (EditInputs.GlossaryEntry entry : glossary) {
+            if (!entry.source().isBlank() && line.contains(entry.source().trim())) return true;
+        }
+        return false;
     }
 
     /**

@@ -50,6 +50,10 @@ public final class EditPromptBuilder {
     }
 
     public static ApiPrompt build(EditInputs inputs) {
+        return build(inputs, RawAlignedNormalizer.normalize(inputs.raw(), inputs.draft(), inputs.glossary()));
+    }
+
+    static ApiPrompt build(EditInputs inputs, RawAlignedNormalizer.Result normalized) {
         List<EditInputs.GlossaryEntry> glossary = ReferenceFilter.glossary(inputs.raw(), inputs.glossary());
         List<String> pronouns = ReferenceFilter.pronounRows(inputs.raw(), inputs.pronounCsv());
         StringBuilder system = new StringBuilder(QualityCore.editPrompt(inputs.targetLanguage()));
@@ -57,8 +61,14 @@ public final class EditPromptBuilder {
             system.append('\n').append(NO_REFERENCE).append('\n');
         }
         appendReferences(system, glossary, pronouns);
+        system.append("\n# APP DETECTIONS\n");
+        if (normalized.detections().isEmpty()) system.append("(none)\n");
+        for (RawAlignedNormalizer.Detection detection : normalized.detections()) {
+            system.append("- line ").append(detection.draftLine()).append(": ")
+                    .append(detection.kind()).append(" (").append(detection.detail()).append(")\n");
+        }
         system.append('\n').append(OUTPUT_CONTRACT);
-        String user = "# RAW\n" + inputs.raw() + "\n\n# DRAFT\n" + inputs.draft() + "\n";
+        String user = "# RAW\n" + inputs.raw() + "\n\n# DRAFT\n" + normalized.text() + "\n";
         return new ApiPrompt(EditorialApiContract.Step.EDIT, system.toString(), user, glossary.size(), pronouns.size(),
                 QualityCore.editSha256());
     }

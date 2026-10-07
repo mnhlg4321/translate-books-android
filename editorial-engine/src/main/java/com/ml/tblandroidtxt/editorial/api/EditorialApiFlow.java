@@ -80,6 +80,7 @@ public final class EditorialApiFlow {
 
     private final EditInputs inputs;
     private final Config config;
+    private final RawAlignedNormalizer.Result draftNormalization;
     private final List<StepRecord> steps = new ArrayList<>();
     private final List<IssueRecord> issues = new ArrayList<>();
     private Step step = Step.EDIT;
@@ -96,7 +97,10 @@ public final class EditorialApiFlow {
     public EditorialApiFlow(EditInputs inputs, Config config) {
         this.inputs = inputs;
         this.config = config;
+        this.draftNormalization = RawAlignedNormalizer.normalize(inputs.raw(), inputs.draft(), inputs.glossary());
     }
+
+    private String baseDraft() { return draftNormalization.text(); }
 
     public boolean done() { return outcome != null; }
 
@@ -116,7 +120,7 @@ public final class EditorialApiFlow {
 
     /** Stops the run on the user's request; the draft stays the final text and nothing the model returned is kept as final. */
     public void cancel() {
-        if (outcome == null) finish(RunState.CANCELLED, inputs.draft(), "");
+        if (outcome == null) finish(RunState.CANCELLED, baseDraft(), "");
     }
 
     /** A cancellation after dispatch still retains the returned usage; the content is not accepted. */
@@ -137,7 +141,7 @@ public final class EditorialApiFlow {
         pending = null;
         steps.add(new StepRecord(request.step(), request.attempt(), "", 0, 0, BigDecimal.ZERO, true, "", "", reason));
         if (request.step() == Step.EDIT) {
-            finish(RunState.RETRY_REQUIRED, inputs.draft(), "");
+            finish(RunState.RETRY_REQUIRED, baseDraft(), "");
         } else {
             checkUnavailable = true;
             finish(RunState.FINAL_NOTES, edited, "");
@@ -157,8 +161,8 @@ public final class EditorialApiFlow {
 
     private Request build() {
         return switch (step) {
-            case EDIT -> new Request(Step.EDIT, attempt, EditPromptBuilder.build(inputs), false);
-            case CHECK, RECHECK -> new Request(step, attempt, CheckPromptBuilder.build(step, inputs.raw(), inputs.draft(), edited,
+            case EDIT -> new Request(Step.EDIT, attempt, EditPromptBuilder.build(inputs, draftNormalization), false);
+            case CHECK, RECHECK -> new Request(step, attempt, CheckPromptBuilder.build(step, inputs.raw(), baseDraft(), edited,
                     guards == null ? List.of() : guards.flags(), inputs.targetLanguage(),
                     ReferenceFilter.glossary(inputs.raw(), inputs.glossary()), ReferenceFilter.pronounRows(inputs.raw(), inputs.pronounCsv())), true);
         };
@@ -176,9 +180,9 @@ public final class EditorialApiFlow {
         String technical = response.error();
         if (parsed != null) {
             if (parsed.status() == EditResponseParser.Status.OK) {
-                report = EditGuards.check(inputs.raw(), inputs.draft(), parsed.edited(), inputs.glossary(), config.guards());
+                report = EditGuards.check(inputs.raw(), baseDraft(), parsed.edited(), inputs.glossary(), config.guards());
                 if (!report.separable()) technical = "META_UNSEPARABLE";
-                else technical = sizeBlock(inputs.draft(), parsed.edited(), response.finishReason());
+                else technical = sizeBlock(baseDraft(), report.cleaned(), response.finishReason());
             } else {
                 technical = parsed.status().name();
             }
@@ -187,7 +191,7 @@ public final class EditorialApiFlow {
             record(request, response, technical);
             // a request whose outcome is unknown may already be charged: never send it again on our own
             if (!response.outcomeUnknown() && attempt <= EditorialApiContract.MAX_TECHNICAL_RETRIES_PER_STEP) { attempt++; return; }
-            finish(RunState.RETRY_REQUIRED, inputs.draft(), "");
+            finish(RunState.RETRY_REQUIRED, baseDraft(), "");
             return;
         }
         record(request, response, "OK");
@@ -263,7 +267,7 @@ public final class EditorialApiFlow {
     }
 
     private void wrongPair(String evidence) {
-        finish(RunState.WRONG_PAIR, inputs.draft(), evidence);
+        finish(RunState.WRONG_PAIR, baseDraft(), evidence);
     }
 
     private void record(Request request, StepResponse response, String result) {
