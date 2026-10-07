@@ -188,7 +188,9 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
-**Hiện hành (2026-10-07 tối, review N6 + thiết kế U1):** coordinator xác minh N6: 24/24 hash phân xử N5 khớp `final.txt` riêng; 3 chương N6 sạch cấu trúc (số dòng = DRAFT, chữ 0.999–1.000, đổi 5/4/4 dòng), chất lượng NOT_MEASURED tới khi owner đọc (trang riêng `D:P5E-private
+**Hiện hành (2026-10-07 đêm, owner từ chối 3/3 chương N6):** so với 28 bản FINAL của owner, app gần như không thêm giá trị (owner sửa 9–19% dòng, app sửa ~3% và trùng 9/51; 4/13 sửa của app là lỗi mới, gồm chữ Hán `三` và `？` toàn khổ; sót tiếng Nhật 001 L91). Nguyên nhân chính: Quality Core giữ ký hiệu sai của DRAFT và ép sửa tối thiểu; fixture N5 không đại diện; việc tất định (ký hiệu theo RAW, sót kana, thuật ngữ) đang giao cho model nhỏ; năng lực model chưa đo. Next action duy nhất: Codex làm Q1.1–Q1.4 (offline) trong `docs/EDITORIAL_API_V1_Q1_QUALITY_PLAN_AND_REQUEST_20261007.md`; Q1.5 live cần D-Q1. U1 (UI) tiếp tục song song với ownership tách bạch. 0/3 chương đạt; P7 chưa bắt đầu.
+
+**Trước đó — Hiện hành (2026-10-07 tối, review N6 + thiết kế U1):** coordinator xác minh N6: 24/24 hash phân xử N5 khớp `final.txt` riêng; 3 chương N6 sạch cấu trúc (số dòng = DRAFT, chữ 0.999–1.000, đổi 5/4/4 dòng), chất lượng NOT_MEASURED tới khi owner đọc (trang riêng `D:P5E-private
 6-review
 6-review.html`). Owner yêu cầu thiết kế UX: thư viện nguồn lưu RAW/DRAFT, màn chọn kiểu danh sách file có chip lọc và chọn theo bộ chương, Cài đặt Biên tập. Next action duy nhất: Codex thực hiện U1 theo `docs/EDITORIAL_API_V1_UX_U1_DESIGN_AND_REQUEST_20261007.md` mục 10 (offline + emulator, 0 provider call); song song owner đọc và chấp nhận/không chấp nhận 3 chương N6. P7 chỉ sau 3/3 chương được chấp nhận và U1 PASS.
 
