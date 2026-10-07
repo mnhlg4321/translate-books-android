@@ -1,17 +1,17 @@
 # Build State
 
-## Current state — 2026-10-08 (Q2.1 complete; Q2.2 in progress)
+## Current state — 2026-10-08 (Q2.2 complete; Q2.3 build gate pending)
 
-- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before this state commit is `49f8a3d2`.
-- Current build remains `4.18-q1.1` / code `244`, source `41edafa4`, installed only on `emulator-5554`; Q2.2 code is not yet built or installed.
-- Q2.1 is complete offline: scorer rerun over Q1/N6, 28-chapter nonblank alignment measured, nonblank repairs disabled after the regression probe, and Quality Core v2 role wording updated.
-- Q2.1 evidence: `docs/EDITORIAL_API_V1_Q2_EXECUTION_20261008.md`; private measurements under `D:\P5E-private\q2-runs\Q2.1-normalization\` and `D:\P5E-private\q2-runs-q1-rescore.txt`.
-- Current phase: EDITORIAL_API_V1 Q2.2 V5_CHAT implementation; D-Q2 is approved, U1 remains deferred, no provider call in this package.
-- Completed tasks: Q2.1 scorer/normalizer/Quality Core package and engine 566/566 tests.
-- Pending tasks: Q2.2 provider/runner tests; Q2.3 wrapper build, emulator instrumentation and manifest; Q2.4 locked dev/holdout live measurement and exports.
-- Known bugs/limits: semantic model quality is not measured by Q2.1; nonblank alignment is diagnostic only and does not apply symbol repairs.
-- Regression status: `:editorial-engine:test` PASS; app unit tests and AndroidTest compile were PASS before Q2.1 push; no APK was rebuilt for Q2.1.
-- Next action: finish Q2.2 offline V5_CHAT history/cost/finish handling and group-cap tests.
+- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before this state commit is `9c43b831`.
+- Current build remains `4.18-q1.1` / code `244`, source `41edafa4`, installed only on `emulator-5554`; the Q2.2 provider code has not been built into an APK.
+- Q2.1 and Q2.2 offline packages are complete. V5_CHAT now sends a three-turn same-history chain, extracts only `<FINAL>`, aggregates real usage/cost, stops on truncation/UNKNOWN, and reserves the aggregate worst case. The runner cap is USD 6.00 with model/reasoning overrides.
+- Q2 evidence is in `docs/EDITORIAL_API_V1_Q2_EXECUTION_20261008.md`; no provider call or device action has occurred in Q2.1–Q2.2.
+- Current phase: EDITORIAL_API_V1 Q2.3 wrapper build/emulator gate and price manifest; D-Q2 approved, U1 deferred.
+- Completed tasks: engine/app offline tests, exact FULL CHATGPT pack hash verification, V5 history/FINAL/truncation tests, cap-policy test and Python verifier tests 14/14.
+- Pending tasks: wrapper production and AndroidTest build code >244, install only emulator-5554, run Editorial API instrumentation, write Q2 manifest; then locked Q2.4 live matrix.
+- Known bugs/limits: semantic model quality remains NOT_MEASURED; V5 is not live yet and no cost estimate from real Q2 tokens exists.
+- Regression status: engine 566/566, app 77 test tasks PASS, AndroidTest Java compile PASS, Python fixture verifier 14/14 PASS.
+- Next action: build and archive the Q2 APK/test APK through the wrapper, install only emulator-5554 and run the permitted instrumentation.
 ## Superseded — independent API V1 review and N1–N4 checkpoint (historical, 2026-10-06)
 
 The next two sections describe the review and checkpoint before the follow-up commits, N5 and `CP-OFFLINE-2`; keep them for history, do not read their next actions as current.
@@ -1097,4 +1097,5 @@ FORBID_CONNECTED_ANDROID_TEST=true
 - Not proven: device runs of `EditorialApiBienTapUiInstrumentedTest` and the 10 updated old androidTests, SAF traversal, process-death reopen. Actual provider calls/spend 0 / USD 0.
 
 - Device evidence 2026-10-06: build 4.18-api.4/code241 from commit 42b40fb1 (APK 8AABFFA6…E87DA) installed on emulator-5554; store 4/4, flow 3/3, UI 2/2, force-stop reopen 3/3, full suite 234/11 failures (11 historical). Details in the execution report.
+
 
