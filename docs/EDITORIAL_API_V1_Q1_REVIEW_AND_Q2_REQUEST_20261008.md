@@ -106,3 +106,12 @@ Owner (chat, 2026-10-08): "duyệt D-Q2 và Tạm hoãn U1".
 - **D-Q2:** Q2.4 chạy ngay sau khi Q2.3 PASS, không hỏi lại. Ledger mới `Q2-<date>`, trần **USD 6.00**, trần chương **USD 1.00**; dev 004–008 (`E-strong`, `V5-strong`), holdout 011/014/017 (cấu hình đã chọn); chỉ `emulator-5554`, không pilot, không chunk-pair. Dừng và hỏi nếu ước tính worst-case vượt trần, UNKNOWN cost, lỗi hạ tầng, hoặc cần đổi tập chương. Runner chỉ nhận trần nhóm ≤ USD 1.00 thì nâng giới hạn đó trong Q2.2 (có test), không chia nhỏ ledger để lách.
 - **U1 tạm hoãn:** không làm U1 cho tới khi Q2 có chương được owner chấp nhận; thiết kế giữ nguyên.
 - **Model và pack (owner chưa trả lời câu hỏi mục 6):** mặc định pack `D:books. Prompt cac the loai.BIÊN TẬPBIEN_TAP_V5_SAFE_4_1_3_FULL_RELEASECHATGPT` (3 file: Project Instruction, Prompt đầu chat 3 lượt, Workflow — bản acceptance đã dẫn chiếu), ghi SHA-256 từng file. Model mạnh mặc định: model OpenAI lớp cao nhất (không phải luna/mini) có trên OpenRouter, reasoning cao, với ước tính ≤ USD 1.00/chương cho đường V5 3 lượt; nếu không có model nào đạt trần chương thì chọn model mạnh nhất trong trần và ghi lý do. Nếu owner trả lời khác trước khi Q2.4 bắt đầu, dùng theo câu trả lời của owner.
+
+## 8. Owner xác nhận model (2026-10-08)
+
+Owner (chat): "final được làm bằng gpt 5.6 sol medium trên project chat của chat gpt".
+
+- Model mạnh của `E-strong` và `V5-strong` là **GPT-5.6 Sol, reasoning medium** (trên OpenRouter dự kiến `openai/gpt-5.6-sol`; Codex xác minh đúng id và giá hiện hành, ghi vào manifest). Không thay bằng model khác. Reasoning đặt `medium` cho cả hai đường để khớp cách owner tạo FINAL.
+- Môi trường gốc là ChatGPT Project: Project Instruction là chỉ dẫn của project, file nguồn được đính kèm, 3 lượt trong cùng một chat. Đường `V5_CHAT` mô phỏng: Project Instruction ở system, nội dung file nguồn đưa nguyên văn vào lượt 1, 3 lượt trong cùng lịch sử. Khác biệt không tránh được (ChatGPT có thể truy xuất file theo đoạn, có công cụ/bộ nhớ riêng) phải ghi trong báo cáo.
+- Pack: owner chưa nêu phiên bản; giữ mặc định 4.1.3 FULL CHATGPT (mục 7). Nếu owner nêu bản khác trước Q2.4 thì đổi theo.
+- Nếu ước tính worst-case của `V5-strong` với GPT-5.6 Sol vượt USD 1.00/chương hoặc tổng vượt USD 6.00: dừng trước Q2.4 và báo con số, không tự đổi model hay cắt tập chương.
