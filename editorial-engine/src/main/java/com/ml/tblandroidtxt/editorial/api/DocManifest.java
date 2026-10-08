@@ -131,6 +131,38 @@ public final class DocManifest {
         return text.substring(Math.min(text.length(), offset), Math.min(text.length(), offset + maxChars));
     }
 
+    /**
+     * Reference-only text before {@code offset} made of whole lines: lines are added from the nearest one backwards until at
+     * least {@code minChars} characters and {@code minLines} non-blank lines are included (or the start of the text).
+     */
+    public String contextBeforeLines(int offset, int minChars, int minLines) {
+        int end = Math.max(0, Math.min(text.length(), offset));
+        int start = end;
+        int lines = 0;
+        while (start > 0 && (end - start < minChars || lines < minLines)) {
+            int from = start - 1;
+            if (from > 0 && text.charAt(from) == '\n') from--;
+            int lineStart = text.lastIndexOf('\n', from) + 1;
+            if (!text.substring(lineStart, start).isBlank()) lines++;
+            start = lineStart;
+        }
+        return text.substring(start, end);
+    }
+
+    /** Reference-only text after {@code offset} made of whole lines, with the same minimums as {@link #contextBeforeLines}. */
+    public String contextAfterLines(int offset, int minChars, int minLines) {
+        int start = Math.max(0, Math.min(text.length(), offset));
+        int end = start;
+        int lines = 0;
+        while (end < text.length() && (end - start < minChars || lines < minLines)) {
+            int nl = text.indexOf('\n', end);
+            int lineEnd = nl < 0 ? text.length() : nl + 1;
+            if (!text.substring(end, lineEnd).isBlank()) lines++;
+            end = lineEnd;
+        }
+        return text.substring(start, end);
+    }
+
     private int paragraphAt(int offset, boolean preferPrevious) {
         if (paragraphs.length == 0) return 0;
         for (int i = 0; i < paragraphs.length; i++) {

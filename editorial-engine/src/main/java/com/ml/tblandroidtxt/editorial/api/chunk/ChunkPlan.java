@@ -24,7 +24,7 @@ public final class ChunkPlan {
 
     public record Reason(String level, String code, double value) { }
 
-    public record Limits(String mode, int soft, int hard, int maxOutputTokens) { }
+    public record Limits(String mode, int soft, int hard, int maxOutputTokens, int contextChars) { }
 
     public final String algorithm;
     public final String rawSha256;
@@ -137,6 +137,7 @@ public final class ChunkPlan {
         l.put("soft", BigDecimal.valueOf(limits.soft()));
         l.put("hard", BigDecimal.valueOf(limits.hard()));
         l.put("maxOutput", BigDecimal.valueOf(limits.maxOutputTokens()));
+        l.put("contextChars", BigDecimal.valueOf(limits.contextChars()));
         o.put("limits", l);
         o.put("seriesRatio", Double.toString(seriesRatio));
         o.put("rawUnits", BigDecimal.valueOf(rawUnits));
@@ -177,7 +178,8 @@ public final class ChunkPlan {
         Map<String, Object> o = EditorialCanonicalJson.parseObject(json.getBytes(StandardCharsets.UTF_8));
         if (!ALGORITHM.equals(o.get("algorithm"))) throw new IllegalArgumentException("PLAN_ALGORITHM_UNKNOWN");
         Map<String, Object> l = (Map<String, Object>) o.get("limits");
-        Limits limits = new Limits((String) l.get("mode"), num(l.get("soft")), num(l.get("hard")), num(l.get("maxOutput")));
+        Limits limits = new Limits((String) l.get("mode"), num(l.get("soft")), num(l.get("hard")), num(l.get("maxOutput")),
+                l.containsKey("contextChars") ? num(l.get("contextChars")) : 400);
         List<String> beads = new ArrayList<>();
         for (Object b : (List<Object>) o.get("beads")) beads.add((String) b);
         List<Chunk> chunks = new ArrayList<>();

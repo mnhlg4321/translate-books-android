@@ -20,7 +20,7 @@ public final class ChunkPlannerTest {
     private static final List<EditInputs.GlossaryEntry> GLOSSARY = List.of(new EditInputs.GlossaryEntry("魔王", "Ma Vương", "", ""));
 
     private static ChunkPlanner.Settings settings(int soft, int hard) {
-        return new ChunkPlanner.Settings("char", soft, hard, 0, 1.3, CHARS, CHARS, ChapterVerdict.DEFAULT_SERIES_RATIO);
+        return new ChunkPlanner.Settings("char", soft, hard, 0, 400, 1.3, CHARS, CHARS, ChapterVerdict.DEFAULT_SERIES_RATIO);
     }
 
     private static String raw(int lines, String eol) {

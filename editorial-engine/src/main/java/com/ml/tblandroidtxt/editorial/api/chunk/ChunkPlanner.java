@@ -15,7 +15,7 @@ import java.util.function.ToIntFunction;
  */
 public final class ChunkPlanner {
     /** Everything the plan depends on besides the four texts. */
-    public record Settings(String mode, int soft, int hard, int maxOutputTokens, double outputFactor,
+    public record Settings(String mode, int soft, int hard, int maxOutputTokens, int contextChars, double outputFactor,
                            ToIntFunction<String> measureRaw, ToIntFunction<String> measureDraft, double seriesRatio) { }
 
     public record Planned(ChunkPlan plan, LineUnits raw, LineUnits draft) {
@@ -41,7 +41,7 @@ public final class ChunkPlanner {
         String draftSha = PairText.sha256(draftText == null ? "" : draftText);
         String glossarySha = glossaryText == null || glossaryText.isEmpty() ? "" : PairText.sha256(glossaryText);
         String pronounSha = pronounText == null || pronounText.isBlank() ? "" : PairText.sha256(pronounText);
-        ChunkPlan.Limits limits = new ChunkPlan.Limits(s.mode(), s.soft(), s.hard(), s.maxOutputTokens());
+        ChunkPlan.Limits limits = new ChunkPlan.Limits(s.mode(), s.soft(), s.hard(), s.maxOutputTokens(), s.contextChars());
         if (raw.size() == 0 || draft.size() == 0) {
             ChapterVerdict.Result empty = ChapterVerdict.evaluate(raw.texts(), draft.texts(), emptyAlignment(), terms, s.seriesRatio());
             ChunkPlan plan = new ChunkPlan(rawSha, draftSha, glossarySha, pronounSha, limits, s.seriesRatio(), raw.size(), draft.size(), List.of(), List.of(),

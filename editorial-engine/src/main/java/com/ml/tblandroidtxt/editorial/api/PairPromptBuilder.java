@@ -23,18 +23,29 @@ public final class PairPromptBuilder {
 
     private PairPromptBuilder() { }
 
+    /** How much reference-only text surrounds a pair: at least {@code chars} characters and {@code minLines} non-blank lines, in whole lines. */
+    public record ContextPolicy(int chars, int minLines) {
+        public static final ContextPolicy DEFAULT = new ContextPolicy(PairContract.CONTEXT_CHARS, 2);
+    }
+
     public static ApiPrompt buildPair(PairMap map, PairMap.Entry entry, String targetLanguage, List<EditInputs.GlossaryEntry> glossary,
                                       String pronounCsv, Set<String> cueFields) {
+        return buildPair(map, entry, targetLanguage, glossary, pronounCsv, cueFields, ContextPolicy.DEFAULT);
+    }
+
+    public static ApiPrompt buildPair(PairMap map, PairMap.Entry entry, String targetLanguage, List<EditInputs.GlossaryEntry> glossary,
+                                      String pronounCsv, Set<String> cueFields, ContextPolicy context) {
         String draft = map.draftText(entry);
         if (draft == null) throw new PromptException("PAIR_MISSING_DRAFT", entry.pairId());
         int[] r = map.rawRange(entry);
         int[] d = map.draftRange(entry);
         String rawMain = map.raw.text.substring(r[0], r[1]);
         ReferenceProjector.Params params = new ReferenceProjector.Params(map.raw.chapterId, map.rawParagraphStart(entry), map.rawParagraphEnd(entry),
-                rawMain, map.raw.contextBefore(r[0], PairContract.CONTEXT_CHARS), map.raw.contextAfter(r[1], PairContract.CONTEXT_CHARS), cueFields);
+                rawMain, map.raw.contextBeforeLines(r[0], context.chars(), context.minLines()),
+                map.raw.contextAfterLines(r[1], context.chars(), context.minLines()), cueFields);
         return build(false, targetLanguage, params, glossary, pronounCsv, rawMain, draft,
-                params.contextBefore(), params.contextAfter(), map.draft.contextBefore(d[0], PairContract.CONTEXT_CHARS),
-                map.draft.contextAfter(d[1], PairContract.CONTEXT_CHARS));
+                params.contextBefore(), params.contextAfter(), map.draft.contextBeforeLines(d[0], context.chars(), context.minLines()),
+                map.draft.contextAfterLines(d[1], context.chars(), context.minLines()));
     }
 
     /** The whole chapter as one pseudo-pair: same projection policy, main = every paragraph, no context. */
