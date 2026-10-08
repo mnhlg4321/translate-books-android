@@ -1,6 +1,7 @@
 package com.ml.tblandroidtxt;
 
 import com.ml.tblandroidtxt.editorial.api.EditInputs;
+import com.ml.tblandroidtxt.editorial.api.V5SourceIdentity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,8 @@ public final class EditorialApiSources {
     public final String targetLanguage;
     /** Original four source attachments for V5; the E path continues to use the filtered fields above. */
     public final List<EditInputs.OriginalSourceFile> originalSourceFiles;
+    /** Chapter ID and series of the V5 chain; both are required before a V5 request is built. */
+    public final V5SourceIdentity identity;
 
     public EditorialApiSources(String raw, String draft, String glossaryText, List<EditInputs.GlossaryEntry> glossary,
                                String pronounText, String targetLanguage) {
@@ -25,6 +28,12 @@ public final class EditorialApiSources {
     public EditorialApiSources(String raw, String draft, String glossaryText, List<EditInputs.GlossaryEntry> glossary,
                                String pronounText, String targetLanguage,
                                List<EditInputs.OriginalSourceFile> originalSourceFiles) {
+        this(raw, draft, glossaryText, glossary, pronounText, targetLanguage, originalSourceFiles, V5SourceIdentity.NONE);
+    }
+
+    public EditorialApiSources(String raw, String draft, String glossaryText, List<EditInputs.GlossaryEntry> glossary,
+                               String pronounText, String targetLanguage,
+                               List<EditInputs.OriginalSourceFile> originalSourceFiles, V5SourceIdentity identity) {
         this.raw = raw == null ? "" : raw;
         this.draft = draft == null ? "" : draft;
         this.glossaryText = glossaryText == null ? "" : glossaryText;
@@ -32,9 +41,10 @@ public final class EditorialApiSources {
         this.pronounText = pronounText == null ? "" : pronounText;
         this.targetLanguage = targetLanguage == null || targetLanguage.isBlank() ? "Vietnamese" : targetLanguage;
         this.originalSourceFiles = originalSourceFiles == null ? List.of() : List.copyOf(originalSourceFiles);
+        this.identity = identity == null ? V5SourceIdentity.NONE : identity;
     }
 
-    public EditInputs inputs() { return new EditInputs(raw, draft, targetLanguage, glossary, pronounText, originalSourceFiles); }
+    public EditInputs inputs() { return new EditInputs(raw, draft, targetLanguage, glossary, pronounText, originalSourceFiles, identity); }
 
     public String rawSha256() { return HashUtil.sha256(raw); }
 

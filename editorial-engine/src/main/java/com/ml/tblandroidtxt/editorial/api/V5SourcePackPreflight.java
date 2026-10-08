@@ -9,9 +9,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Offline, fail-closed checks for the four original attachments required by the V5 4.1.3 full-chat pack. */
+/**
+ * Offline, fail-closed checks for the four original attachments required by the V5 4.1.3 full-chat pack. Files are judged by
+ * their ROLE (RAW, DRAFT, GLOSSARY, PRONOUN), each exactly once; the name is only required to be the owner's real file name,
+ * because the pack derives the chapter ID and series from it and names its outputs after them.
+ */
 public final class V5SourcePackPreflight {
-    public static final List<String> REQUIRED_NAMES = List.of("RAW.txt", "DRAFT.txt", "GLOSSARY.csv", "PRONOUN.csv");
+    public static final List<String> ROLES = List.of("RAW", "DRAFT", "GLOSSARY", "PRONOUN");
+    /** The placeholder names older runs used; they carry no chapter or series, so they are refused as original names. */
+    public static final List<String> GENERIC_NAMES = List.of("RAW.txt", "DRAFT.txt", "GLOSSARY.csv", "PRONOUN.csv");
     public static final String GLOSSARY_HEADER = "source,target,category,note,priority";
     public static final String PRONOUN_HEADER = "from,speaker,target,self,call,scope,note";
 
@@ -33,45 +39,75 @@ public final class V5SourcePackPreflight {
         }
     }
 
-    /** Empty code means every required role was supplied exactly once and passes the pack's source checks. */
+    /** The files in the pack's canonical role order; files with an unknown role keep their relative order at the end. */
+    public static List<EditInputs.OriginalSourceFile> inRoleOrder(List<EditInputs.OriginalSourceFile> files) {
+        List<EditInputs.OriginalSourceFile> out = new ArrayList<>();
+        if (files == null) return out;
+        for (String role : ROLES) for (EditInputs.OriginalSourceFile file : files) if (file != null && role.equals(file.role())) out.add(file);
+        for (EditInputs.OriginalSourceFile file : files) if (file != null && !ROLES.contains(file.role())) out.add(file);
+        return out;
+    }
+
+    /** Empty code means every role was supplied exactly once and passes the pack's source checks. */
     public static Result check(List<EditInputs.OriginalSourceFile> files) {
-        if (files == null || files.size() != REQUIRED_NAMES.size()) return result("V5_SOURCE_FILE_SET_INVALID", files);
-        Map<String, String> byName = new LinkedHashMap<>();
-        for (int i = 0; i < files.size(); i++) {
-            EditInputs.OriginalSourceFile file = files.get(i);
-            if (file == null || !REQUIRED_NAMES.get(i).equals(file.name()) || byName.put(file.name(), file.content()) != null) {
+        if (files == null || files.size() != ROLES.size()) return result("V5_SOURCE_FILE_SET_INVALID", files);
+        Map<String, EditInputs.OriginalSourceFile> byRole = new LinkedHashMap<>();
+        for (EditInputs.OriginalSourceFile file : files) {
+            if (file == null || !ROLES.contains(file.role()) || byRole.put(file.role(), file) != null) {
                 return result("V5_SOURCE_FILE_SET_INVALID", files);
             }
-            if (file.content().isBlank() || !validUtf8String(file.content())) return result("V5_SOURCE_EMPTY_OR_ENCODING_INVALID", files);
         }
-        if (!byName.keySet().containsAll(REQUIRED_NAMES)) return result("V5_SOURCE_FILE_SET_INVALID", files);
-        if (!validGlossary(byName.get("GLOSSARY.csv"))) {
-            return result("V5_GLOSSARY_SCHEMA_INVALID", files);
+        if (!byRole.keySet().containsAll(ROLES)) return result("V5_SOURCE_FILE_SET_INVALID", files);
+        for (EditInputs.OriginalSourceFile file : files) {
+            if (!originalName(file.name())) return result("V5_SOURCE_NAME_INVALID", files);
         }
-        if (!validPronoun(byName.get("PRONOUN.csv"))) return result("V5_PRONOUN_SCHEMA_INVALID", files);
+        for (String role : ROLES) {
+            String content = byRole.get(role).content();
+            if (content.isBlank() || !validUtf8String(content)) return result("V5_SOURCE_EMPTY_OR_ENCODING_INVALID", files);
+        }
+        if (!validGlossary(byRole.get("GLOSSARY").content())) return result("V5_GLOSSARY_SCHEMA_INVALID", files);
+        if (!validPronoun(byRole.get("PRONOUN").content())) return result("V5_PRONOUN_SCHEMA_INVALID", files);
         return result("", files);
+    }
+
+    /** Files and chain identity together: both must be present before a request is built. */
+    public static Result check(List<EditInputs.OriginalSourceFile> files, V5SourceIdentity identity) {
+        Result set = check(files);
+        if (!set.valid()) return set;
+        String problem = (identity == null ? V5SourceIdentity.NONE : identity).problem();
+        return problem.isEmpty() ? set : new Result(problem, set.fileNames());
     }
 
     public static Result check(EditInputs inputs) {
         if (inputs == null) return result("V5_SOURCE_FILE_SET_INVALID", List.of());
-        Result files = check(inputs.originalSourceFiles());
+        Result files = check(inputs.originalSourceFiles(), inputs.identity());
         if (!files.valid()) return files;
-        Map<String, String> byName = new LinkedHashMap<>();
-        for (EditInputs.OriginalSourceFile file : inputs.originalSourceFiles()) byName.put(file.name(), file.content());
-        if (!inputs.raw().equals(byName.get("RAW.txt")) || !inputs.draft().equals(byName.get("DRAFT.txt"))) {
+        Map<String, String> byRole = new LinkedHashMap<>();
+        for (EditInputs.OriginalSourceFile file : inputs.originalSourceFiles()) byRole.put(file.role(), file.content());
+        if (!inputs.raw().equals(byRole.get("RAW")) || !inputs.draft().equals(byRole.get("DRAFT"))) {
             return result("V5_SOURCE_TEXT_MISMATCH", inputs.originalSourceFiles());
         }
         return files;
     }
 
-    public static void requireValid(List<EditInputs.OriginalSourceFile> files) {
-        Result result = check(files);
+    public static void requireValid(List<EditInputs.OriginalSourceFile> files, V5SourceIdentity identity) {
+        Result result = check(files, identity);
         if (!result.valid()) throw new IllegalArgumentException(result.code());
     }
 
     public static void requireValid(EditInputs inputs) {
         Result result = check(inputs);
         if (!result.valid()) throw new IllegalArgumentException(result.code());
+    }
+
+    /** A real file name: not blank, no path or control characters, and not one of the generic placeholders. */
+    static boolean originalName(String name) {
+        if (name == null || name.isBlank() || !name.equals(name.trim()) || GENERIC_NAMES.contains(name)) return false;
+        for (int i = 0; i < name.length(); i++) {
+            char c = name.charAt(i);
+            if (c < 0x20 || c == 0x7F || c == '/' || c == '\\') return false;
+        }
+        return true;
     }
 
     private static boolean validGlossary(String csv) {
@@ -106,15 +142,8 @@ public final class V5SourcePackPreflight {
         return true;
     }
 
-    private static String firstCsvLine(String csv) {
-        int end = csv.indexOf('\n');
-        String line = end < 0 ? csv : csv.substring(0, end);
-        if (line.endsWith("\r")) line = line.substring(0, line.length() - 1);
-        return stripBom(line);
-    }
-
     private static String stripBom(String value) {
-        return value != null && value.startsWith("\uFEFF") ? value.substring(1) : value;
+        return value != null && value.startsWith("﻿") ? value.substring(1) : value;
     }
 
     private static boolean validUtf8String(String value) {

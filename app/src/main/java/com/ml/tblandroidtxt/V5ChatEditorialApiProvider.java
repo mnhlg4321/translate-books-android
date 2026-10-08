@@ -3,6 +3,7 @@ package com.ml.tblandroidtxt;
 import com.ml.tblandroidtxt.editorial.api.EditorialApiFlow;
 import com.ml.tblandroidtxt.editorial.api.EditInputs;
 import com.ml.tblandroidtxt.editorial.api.V5FinalExtractor;
+import com.ml.tblandroidtxt.editorial.api.V5HostSourceManifest;
 import com.ml.tblandroidtxt.editorial.api.V5SourcePackPreflight;
 
 import java.io.IOException;
@@ -139,6 +140,10 @@ public final class V5ChatEditorialApiProvider implements EditorialApiProvider {
             String wrapped = "<EDITED>" + finalText + "</EDITED>";
             return new EditorialApiFlow.StepResponse(wrapped, "stop", input, output, cost, known,
                     servedModel, route, "");
+        } catch (IllegalArgumentException failure) {
+            // a typed source or identity code from the preflight: nothing was sent
+            String code = failure.getMessage() == null ? "" : failure.getMessage();
+            return EditorialApiFlow.StepResponse.failure(code.startsWith("V5_") ? code : "V5_LOCAL_" + failure.getClass().getSimpleName());
         } catch (RuntimeException failure) {
             return EditorialApiFlow.StepResponse.failure("V5_LOCAL_" + failure.getClass().getSimpleName());
         }
@@ -160,17 +165,18 @@ public final class V5ChatEditorialApiProvider implements EditorialApiProvider {
     private List<String> turnTexts(EditorialApiFlow.Request request) {
         int l2 = promptFile.indexOf("LƯỢT 2");
         int l3 = promptFile.indexOf("LƯỢT 3");
-        V5SourcePackPreflight.requireValid(request.prompt().originalSourceFiles());
+        V5SourcePackPreflight.requireValid(request.prompt().originalSourceFiles(), request.prompt().identity());
+        String manifest = V5HostSourceManifest.render(request.prompt().identity(), request.prompt().originalSourceFiles());
         String first = promptFile.substring(0, l2);
         String second = promptFile.substring(l2, l3);
         String third = promptFile.substring(l3).strip() + "\n" + FINAL_INSTRUCTION;
         StringBuilder sourceFiles = new StringBuilder("\n\nSOURCE FILE ATTACHMENTS\n");
-        for (EditInputs.OriginalSourceFile file : request.prompt().originalSourceFiles()) {
+        for (EditInputs.OriginalSourceFile file : V5SourcePackPreflight.inRoleOrder(request.prompt().originalSourceFiles())) {
             sourceFiles.append("=== FILE: ").append(file.name()).append(" ===\n").append(file.content());
             if (!file.content().endsWith("\n") && !file.content().endsWith("\r")) sourceFiles.append('\n');
             sourceFiles.append("=== END FILE ===\n");
         }
-        return List.of(first + "\n\nWORKFLOW\n" + workflow + sourceFiles, second, third);
+        return List.of(manifest + "\n\n" + first + "\n\nWORKFLOW\n" + workflow + sourceFiles, second, third);
     }
 
     private static String stopCode(String response) {

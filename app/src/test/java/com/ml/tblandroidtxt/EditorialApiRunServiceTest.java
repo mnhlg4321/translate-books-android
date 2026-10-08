@@ -1,6 +1,8 @@
 package com.ml.tblandroidtxt;
 
 import com.ml.tblandroidtxt.editorial.api.EditInputs;
+import com.ml.tblandroidtxt.editorial.api.V5SourceIdentity;
+import com.ml.tblandroidtxt.editorial.api.V5SourcePackPreflight;
 import com.ml.tblandroidtxt.editorial.api.EditorialApiContract;
 import com.ml.tblandroidtxt.editorial.api.EditorialApiContract.Mode;
 import com.ml.tblandroidtxt.editorial.api.EditorialApiContract.RunState;
@@ -77,16 +79,44 @@ public final class EditorialApiRunServiceTest {
         assertTrue(provider.requests.isEmpty());
 
         List<EditInputs.OriginalSourceFile> original = List.of(
-                new EditInputs.OriginalSourceFile("RAW.txt", "original RAW\r\n"),
-                new EditInputs.OriginalSourceFile("DRAFT.txt", "original DRAFT\n"),
-                new EditInputs.OriginalSourceFile("GLOSSARY.csv", "source,target,category,note,priority\nterm,thuật ngữ,term,,1\n"),
-                new EditInputs.OriginalSourceFile("PRONOUN.csv", "from,speaker,target,self,call,scope,note\n花子,花子,太郎,em,anh,*,legacy\n"));
-        EditorialApiSources valid = new EditorialApiSources("original RAW\r\n", "original DRAFT\n", "filtered", List.of(), "filtered", "Vietnamese", original);
+                new EditInputs.OriginalSourceFile("RAW", "007_RAW_SAMPLE_SERIES_VOL1.txt", "original RAW\r\n"),
+                new EditInputs.OriginalSourceFile("DRAFT", "007_SAMPLE_SERIES_VOL1_DRAFT.txt", "original DRAFT\n"),
+                new EditInputs.OriginalSourceFile("GLOSSARY", "007_SAMPLE_SERIES_VOL1_chapter_glossary.csv", "source,target,category,note,priority\nterm,thuật ngữ,term,,1\n"),
+                new EditInputs.OriginalSourceFile("PRONOUN", "007_PRONOUN_SAMPLE_SERIES_VOL1.csv", "from,speaker,target,self,call,scope,note\n花子,花子,太郎,em,anh,*,legacy\n"));
+        V5SourceIdentity identity = new V5SourceIdentity("007", "SAMPLE_SERIES_VOL1");
+        // without a chain identity nothing is stored and nothing is sent
+        EditorialApiSources noIdentity = new EditorialApiSources("original RAW\r\n", "original DRAFT\n", "filtered", List.of(), "filtered", "Vietnamese", original);
+        try {
+            service.prepare(combo(), noIdentity, "model-a", Mode.V5_CHAT);
+            throw new AssertionError("V5 accepted a missing chain identity");
+        } catch (IllegalArgumentException expected) {
+            assertEquals("V5_IDENTITY_MISSING", expected.getMessage());
+        }
+        assertEquals(0, store.runWrites);
+        EditorialApiSources valid = new EditorialApiSources("original RAW\r\n", "original DRAFT\n", "filtered", List.of(), "filtered", "Vietnamese", original, identity);
         EditorialApiRun run = service.prepare(combo(), valid, "model-a", Mode.V5_CHAT);
         EditInputs restored = EditorialApiRunService.inputsOf(store.getRun(run.id), "Vietnamese");
         assertEquals(original, restored.originalSourceFiles());
+        assertEquals("roles and original names survive the stored snapshot", "007_RAW_SAMPLE_SERIES_VOL1.txt", restored.originalSourceFiles().get(0).name());
+        assertEquals("RAW", restored.originalSourceFiles().get(0).role());
+        assertEquals(identity, restored.identity());
         assertTrue(run.originalSourceFilesJson.contains("original RAW\\r\\n"));
+        assertTrue(V5SourcePackPreflight.check(restored).valid());
         assertTrue(provider.requests.isEmpty());
+    }
+
+    @Test public void aV5SnapshotStoredBeforeRolesAndIdentityStillReadsButIsRefusedAsV5Input() {
+        // the bare array older builds wrote: name and content only, placeholder names
+        String legacy = "[{\"name\":\"RAW.txt\",\"content\":\"r\"},{\"name\":\"DRAFT.txt\",\"content\":\"d\"},"
+                + "{\"name\":\"GLOSSARY.csv\",\"content\":\"source,target,category,note,priority\\n\"},{\"name\":\"PRONOUN.csv\",\"content\":\"from,speaker,target,self,call,scope,note\\n\"}]";
+        EditorialApiRun run = new EditorialApiRun();
+        run.rawText = "r";
+        run.draftText = "d";
+        run.originalSourceFilesJson = legacy;
+        EditInputs restored = EditorialApiRunService.inputsOf(run, "Vietnamese");
+        assertEquals(List.of("RAW", "DRAFT", "GLOSSARY", "PRONOUN"), restored.originalSourceFiles().stream().map(EditInputs.OriginalSourceFile::role).toList());
+        assertEquals(V5SourceIdentity.NONE, restored.identity());
+        assertEquals("a placeholder-named snapshot has no identity and is refused as V5 input", "V5_SOURCE_NAME_INVALID", V5SourcePackPreflight.check(restored).code());
     }
 
     @Test public void thoroughWithAFixIsThreeStoredCalls() {

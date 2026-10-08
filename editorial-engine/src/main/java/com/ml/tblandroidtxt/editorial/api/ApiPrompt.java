@@ -4,17 +4,25 @@ import java.util.List;
 
 /** One request the app sends: system and user text plus what the app records about it. */
 public record ApiPrompt(EditorialApiContract.Step step, String system, String user, int glossaryEntries, int pronounRows,
-                        String qualityCoreSha256, List<EditInputs.OriginalSourceFile> originalSourceFiles) {
+                        String qualityCoreSha256, List<EditInputs.OriginalSourceFile> originalSourceFiles,
+                        V5SourceIdentity identity) {
     public ApiPrompt {
         system = system == null ? "" : system;
         user = user == null ? "" : user;
         originalSourceFiles = originalSourceFiles == null ? List.of() : List.copyOf(originalSourceFiles);
+        identity = identity == null ? V5SourceIdentity.NONE : identity;
+    }
+
+    /** Constructor for callers that carry source files without a chain identity (the identity check then refuses V5). */
+    public ApiPrompt(EditorialApiContract.Step step, String system, String user, int glossaryEntries, int pronounRows,
+                     String qualityCoreSha256, List<EditInputs.OriginalSourceFile> originalSourceFiles) {
+        this(step, system, user, glossaryEntries, pronounRows, qualityCoreSha256, originalSourceFiles, V5SourceIdentity.NONE);
     }
 
     /** Backwards-compatible constructor for check/pair prompts and older callers. */
     public ApiPrompt(EditorialApiContract.Step step, String system, String user, int glossaryEntries, int pronounRows,
                      String qualityCoreSha256) {
-        this(step, system, user, glossaryEntries, pronounRows, qualityCoreSha256, List.of());
+        this(step, system, user, glossaryEntries, pronounRows, qualityCoreSha256, List.of(), V5SourceIdentity.NONE);
     }
 
     /** Rough input size for budget checks: one token per three characters is deliberately generous for Japanese and Vietnamese. */

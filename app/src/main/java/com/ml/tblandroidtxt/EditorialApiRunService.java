@@ -4,6 +4,7 @@ import com.ml.tblandroidtxt.editorial.api.EditInputs;
 import com.ml.tblandroidtxt.editorial.api.EditorialApiContract;
 import com.ml.tblandroidtxt.editorial.api.EditorialApiFlow;
 import com.ml.tblandroidtxt.editorial.api.QualityCore;
+import com.ml.tblandroidtxt.editorial.api.V5SourceIdentity;
 import com.ml.tblandroidtxt.editorial.api.V5SourcePackPreflight;
 
 import org.json.JSONArray;
@@ -85,7 +86,7 @@ public final class EditorialApiRunService {
         run.pronounText = sources.pronounText;
         run.pronounSha256 = sources.pronounSha256();
         run.originalSourceFilesJson = mode == EditorialApiContract.Mode.V5_CHAT
-                ? sourceFilesJson(sources.originalSourceFiles) : "[]";
+                ? sourceFilesJson(sources.originalSourceFiles, sources.identity) : "[]";
         run.finalText = sources.draft;
         run.glossaryEntries = com.ml.tblandroidtxt.editorial.api.ReferenceFilter.glossary(inputs.raw(), inputs.glossary()).size();
         run.pronounRows = com.ml.tblandroidtxt.editorial.api.ReferenceFilter.pronounRows(inputs.raw(), inputs.pronounCsv()).size();
@@ -171,28 +172,69 @@ public final class EditorialApiRunService {
             entries.add(new EditInputs.GlossaryEntry(parts.length > 0 ? parts[0] : "", parts.length > 1 ? parts[1] : "",
                     parts.length > 2 ? parts[2] : "", parts.length > 3 ? parts[3] : ""));
         }
-        return new EditInputs(run.rawText, run.draftText, targetLanguage, entries, run.pronounText, sourceFilesFromJson(run.originalSourceFilesJson));
+        SourceSnapshot snapshot = sourceSnapshotFromJson(run.originalSourceFilesJson);
+        return new EditInputs(run.rawText, run.draftText, targetLanguage, entries, run.pronounText, snapshot.files, snapshot.identity);
     }
 
-    private static String sourceFilesJson(List<EditInputs.OriginalSourceFile> files) {
+    /** The stored V5 attachments: every file with its role and original name, and the chain identity. */
+    private static String sourceFilesJson(List<EditInputs.OriginalSourceFile> files, V5SourceIdentity identity) {
         JSONArray array = new JSONArray();
         try {
             for (EditInputs.OriginalSourceFile file : files) {
-                array.put(new JSONObject().put("name", file.name()).put("content", file.content()));
+                array.put(new JSONObject().put("role", file.role()).put("name", file.name()).put("content", file.content()));
             }
-            return array.toString();
+            V5SourceIdentity id = identity == null ? V5SourceIdentity.NONE : identity;
+            return new JSONObject().put("chainId", id.chainId()).put("series", id.series()).put("files", array).toString();
         } catch (org.json.JSONException impossible) { throw new IllegalStateException("V5_SOURCE_SNAPSHOT_INVALID", impossible); }
     }
 
-    private static List<EditInputs.OriginalSourceFile> sourceFilesFromJson(String json) {
+    private static final class SourceSnapshot {
+        final List<EditInputs.OriginalSourceFile> files;
+        final V5SourceIdentity identity;
+
+        SourceSnapshot(List<EditInputs.OriginalSourceFile> files, V5SourceIdentity identity) {
+            this.files = files;
+            this.identity = identity;
+        }
+    }
+
+    /**
+     * Reads both stored shapes. The older shape is a bare array of {@code name}/{@code content} items written before roles and
+     * identity existed; its role is recovered from the placeholder name it used and its identity is empty, so it can still be
+     * shown but a V5 run on it is refused by the identity check.
+     */
+    private static SourceSnapshot sourceSnapshotFromJson(String json) {
         List<EditInputs.OriginalSourceFile> files = new ArrayList<>();
+        V5SourceIdentity identity = V5SourceIdentity.NONE;
         try {
-            JSONArray array = new JSONArray(json == null || json.isBlank() ? "[]" : json);
+            String text = json == null || json.isBlank() ? "[]" : json.trim();
+            JSONArray array;
+            if (text.startsWith("[")) {
+                array = new JSONArray(text);
+            } else {
+                JSONObject object = new JSONObject(text);
+                identity = new V5SourceIdentity(object.optString("chainId", ""), object.optString("series", ""));
+                array = object.optJSONArray("files");
+                if (array == null) array = new JSONArray();
+            }
             for (int i = 0; i < array.length(); i++) {
                 JSONObject item = array.getJSONObject(i);
-                files.add(new EditInputs.OriginalSourceFile(item.optString("name", ""), item.optString("content", "")));
+                String name = item.optString("name", "");
+                String role = item.optString("role", "");
+                if (role.isEmpty()) role = legacyRole(name);
+                files.add(new EditInputs.OriginalSourceFile(role, name, item.optString("content", "")));
             }
         } catch (org.json.JSONException invalid) { throw new IllegalStateException("V5_SOURCE_SNAPSHOT_INVALID", invalid); }
-        return List.copyOf(files);
+        return new SourceSnapshot(List.copyOf(files), identity);
+    }
+
+    private static String legacyRole(String name) {
+        switch (name) {
+            case "RAW.txt": return "RAW";
+            case "DRAFT.txt": return "DRAFT";
+            case "GLOSSARY.csv": return "GLOSSARY";
+            case "PRONOUN.csv": return "PRONOUN";
+            default: return "";
+        }
     }
 }

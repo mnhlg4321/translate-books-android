@@ -12,6 +12,8 @@ import com.ml.tblandroidtxt.editorial.api.EditInputs;
 import com.ml.tblandroidtxt.editorial.api.EditorialApiContract;
 import com.ml.tblandroidtxt.editorial.api.EditorialApiFlow;
 import com.ml.tblandroidtxt.editorial.api.SourceCheck;
+import com.ml.tblandroidtxt.editorial.api.V5HostSourceManifest;
+import com.ml.tblandroidtxt.editorial.api.V5SourceIdentity;
 import com.ml.tblandroidtxt.editorial.api.V5SourcePackPreflight;
 import com.ml.tblandroidtxt.editorial.pack.EditorialCanonicalJson;
 
@@ -44,7 +46,9 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(AndroidJUnit4.class)
 public final class EditorialApiV1FixtureRunnerInstrumentedTest {
-    private static final List<String> SOURCE_NAMES = List.of("RAW.txt", "DRAFT.txt", "GLOSSARY.csv", "PRONOUN.csv");
+    /** The placeholder names the E path has always used; V5 runs name their files after the owner's real files instead. */
+    private static final Map<String, String> GENERIC_ROLE_NAMES = Map.of("RAW", "RAW.txt", "DRAFT", "DRAFT.txt",
+            "GLOSSARY", "GLOSSARY.csv", "PRONOUN", "PRONOUN.csv");
     /** The reservation basis P6 pinned (USD per million tokens: 0.25 in, 1.20 out). */
     private static final EditorialApiRunService.Pricing PINNED = new EditorialApiRunService.Pricing() {
         @Override public BigDecimal inputPerToken(String model) { return new BigDecimal("0.00000025"); }
@@ -85,19 +89,38 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         }
         Map<String, Object> runtime = EditorialCanonicalJson.parseObject(Files.readAllBytes(runInput.resolve(fixtureId + ".runtime.json")));
         @SuppressWarnings("unchecked") Map<String, Object> files = (Map<String, Object>) runtime.get("files");
-        if (!files.keySet().equals(Set.copyOf(SOURCE_NAMES))) throw new IllegalStateException("P6_RUNTIME_FILE_SET_INVALID");
+        // V5 runs carry a role -> original file name map; without it the four placeholder names of the E path apply
+        @SuppressWarnings("unchecked") Map<String, Object> declaredRoles = (Map<String, Object>) runtime.get("roles");
+        Map<String, String> roleNames = new LinkedHashMap<>();
+        for (String role : V5SourcePackPreflight.ROLES) {
+            Object declared = declaredRoles == null ? GENERIC_ROLE_NAMES.get(role) : declaredRoles.get(role);
+            if (!(declared instanceof String) || ((String) declared).isEmpty()) throw new IllegalStateException("P6_RUNTIME_FILE_SET_INVALID");
+            roleNames.put(role, (String) declared);
+        }
+        if (declaredRoles != null && !declaredRoles.keySet().equals(Set.copyOf(V5SourcePackPreflight.ROLES))) {
+            throw new IllegalStateException("P6_RUNTIME_FILE_SET_INVALID");
+        }
+        if (!files.keySet().equals(Set.copyOf(roleNames.values()))) throw new IllegalStateException("P6_RUNTIME_FILE_SET_INVALID");
         Map<String, String> text = new LinkedHashMap<>();
-        for (String name : SOURCE_NAMES) {
+        for (Map.Entry<String, String> role : roleNames.entrySet()) {
+            String name = role.getValue();
             byte[] bytes = Files.readAllBytes(fixtureRoot.resolve(name).normalize());
             @SuppressWarnings("unchecked") Map<String, Object> meta = (Map<String, Object>) files.get(name);
             if (!EditorialCanonicalJson.sha256Hex(bytes).equals(meta.get("sha256"))) throw new IllegalStateException("P6_FIXTURE_SOURCE_HASH_MISMATCH");
-            text.put(name, V5SourcePackPreflight.decodeUtf8(bytes));
+            text.put(role.getKey(), V5SourcePackPreflight.decodeUtf8(bytes));
         }
         List<EditInputs.OriginalSourceFile> originalSourceFiles = new ArrayList<>();
-        for (String name : SOURCE_NAMES) originalSourceFiles.add(new EditInputs.OriginalSourceFile(name, text.get(name)));
-        V5SourcePackPreflight.Result sourcePreflight = V5SourcePackPreflight.check(originalSourceFiles);
-        if (mode == EditorialApiContract.Mode.V5_CHAT && !sourcePreflight.valid()) {
-            throw new IllegalStateException(sourcePreflight.code());
+        for (Map.Entry<String, String> role : roleNames.entrySet()) {
+            originalSourceFiles.add(new EditInputs.OriginalSourceFile(role.getKey(), role.getValue(), text.get(role.getKey())));
+        }
+        V5SourceIdentity identity = V5SourceIdentity.NONE;
+        if (mode == EditorialApiContract.Mode.V5_CHAT) {
+            // the chain ID and series come from the original names; a missing or disagreeing identity stops before any provider
+            V5SourceIdentity.Derivation derived = V5SourceIdentity.derive(originalSourceFiles);
+            if (!derived.valid()) throw new IllegalStateException(derived.code());
+            identity = derived.identity();
+            V5SourcePackPreflight.Result sourcePreflight = V5SourcePackPreflight.check(originalSourceFiles, identity);
+            if (!sourcePreflight.valid()) throw new IllegalStateException(sourcePreflight.code());
         }
 
         String groupId = args.getString("p6_group_id", live ? "" : "P6-OFFLINE-" + runId);
@@ -110,12 +133,12 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         EditorialP6GroupSpendLedger ledger = new EditorialP6GroupSpendLedger(ledgerPath, groupId, groupMaximum);
 
         List<EditInputs.GlossaryEntry> entries = new ArrayList<>();
-        for (GlossaryStore.Term term : GlossaryStore.parseTerms("GLOSSARY.csv", text.get("GLOSSARY.csv"))) {
+        for (GlossaryStore.Term term : GlossaryStore.parseTerms(roleNames.get("GLOSSARY"), text.get("GLOSSARY"))) {
             entries.add(new EditInputs.GlossaryEntry(term.source, term.target, term.category, term.note));
         }
         String targetLanguage = "Vietnamese";
-        EditorialApiSources sources = new EditorialApiSources(text.get("RAW.txt"), text.get("DRAFT.txt"),
-                EditorialApiSources.glossaryAsText(entries), entries, text.get("PRONOUN.csv"), targetLanguage, originalSourceFiles);
+        EditorialApiSources sources = new EditorialApiSources(text.get("RAW"), text.get("DRAFT"),
+                EditorialApiSources.glossaryAsText(entries), entries, text.get("PRONOUN"), targetLanguage, originalSourceFiles, identity);
 
         Files.createDirectories(outputRoot);
         Capture capture = new Capture(outputRoot);
@@ -229,16 +252,25 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         metadata.put("reasoningEffort", reasoning);
         if (mode == EditorialApiContract.Mode.V5_CHAT) {
             metadata.put("v5SourcePreflight", "PASS");
+            metadata.put("v5Id", identity.chainId());
+            metadata.put("v5Series", identity.series());
+            metadata.put("v5Version", V5HostSourceManifest.VERSION);
             List<Object> sourceManifest = new ArrayList<>();
-            for (EditInputs.OriginalSourceFile file : originalSourceFiles) {
-                byte[] bytes = file.content().getBytes(StandardCharsets.UTF_8);
+            for (V5HostSourceManifest.Entry entry : V5HostSourceManifest.entries(originalSourceFiles)) {
                 Map<String, Object> source = new LinkedHashMap<>();
-                source.put("name", file.name());
-                source.put("bytes", BigDecimal.valueOf(bytes.length));
-                source.put("sha256", EditorialCanonicalJson.sha256Hex(bytes));
+                source.put("role", entry.role());
+                source.put("name", entry.name());
+                source.put("bytes", BigDecimal.valueOf(entry.bytes()));
+                source.put("chars", BigDecimal.valueOf(entry.chars()));
+                source.put("lines", BigDecimal.valueOf(entry.lines()));
+                source.put("nonblankLines", BigDecimal.valueOf(entry.nonblankLines()));
+                source.put("sha256", entry.sha256());
                 sourceManifest.add(source);
             }
             metadata.put("v5SourceFiles", sourceManifest);
+            // the anchors are book text: only the hash of the whole block is kept in metadata
+            metadata.put("v5HostManifestSha256", EditorialCanonicalJson.sha256Hex(
+                    V5HostSourceManifest.render(identity, originalSourceFiles).getBytes(StandardCharsets.UTF_8)));
         }
         if (!packHashes.isEmpty()) metadata.put("v5PackSha256", new LinkedHashMap<>(packHashes));
         metadata.put("sourceCommit", args.getString("p6_source_commit", ""));
