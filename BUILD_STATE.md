@@ -1,5 +1,14 @@
 # Build State
 
+## Current independent review — 2026-10-09
+
+- Actual HEAD/branch: `011961f6`, `feature/v4.18-p5e-runner-repair-20260917`; uncommitted review changes only in the two scorer/test files and named Q2/state documents; unrelated dirt preserved.
+- APK/source remains code247 / `7cc4108b`; APK/source ZIP hashes verified in both archives, six Q2.6 output/read-page hashes verified. Installed emulator identity is from event evidence, not re-read in this review.
+- Ledger chain verified: 24 logical reservations / 48 entries, USD 1.17703995, pending 0. Q2.6 metadata totals: 13 logical, 29 physical calls, 756579 input / 201177 output tokens, USD 0.33147915. Review itself: 0 calls/USD 0.
+- Small repair: additive alignment and direct DRAFT→app diagnostics; no gate or historical metric changes. Archive `011961f6` plus exact scorer/test overlay: 8 scorer tests and 7 gate tests PASS; three new diagnostic tests fail on old code and pass after patch. Replay of all 13 Q2.6 runs preserves every old metric. Evidence: `D:/P5E-private/q26-review-clean-d94d0350/scorer-diagnostics-review.json`, SHA-256 `cb4789670b0885953d981184adb12db250d4fab00cbe85cdc2c363b4cfadb4ff`.
+- 017 was not unchanged: two replacement opcodes and one insertion; zero credited fixes is an alignment/threshold metric, not proof of no edits. V5 004 has no valid candidate; semantic NOT_MEASURED for that candidate. Overall independent semantic adjudication remains pending; 0/3 accepted, P7 unmet.
+- Next action: the bounded offline quality diagnosis and output-name UX work in Q2.6 request section 6; no new provider/device/build/commit/push in this review. Earlier sections below describe event evidence.
+
 ## Current state — 2026-10-09 (Q2.6 complete: V5 source identity fixed, dev and holdout run)
 
 - Branch `feature/v4.18-p5e-runner-repair-20260917`; Q2.6.1 `7cc4108b`, Q2.6.2 evidence `712227e1`, then the Q2.6.3 evidence commit (all pushed). Details in `docs/EDITORIAL_API_V1_Q2_EXECUTION_20261008.md`, section Q2.6.

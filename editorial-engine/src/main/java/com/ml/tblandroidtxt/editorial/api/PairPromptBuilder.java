@@ -54,7 +54,7 @@ public final class PairPromptBuilder {
                                    String pronounCsv, String rawMain, String draftMain, String rawBefore, String rawAfter,
                                    String draftBefore, String draftAfter) {
         ReferenceProjector.Projection projection = ReferenceProjector.project(params, glossary, pronounCsv);
-        StringBuilder system = new StringBuilder(QualityCore.editPrompt(targetLanguage));
+        StringBuilder system = new StringBuilder(QualityCore.chunkEditPrompt(targetLanguage));
         system.append('\n').append(whole ? WHOLE_CONTRACT : PART_CONTRACT);
         List<String> rows = ReferenceProjector.renderPronounRows(projection);
         if (projection.glossary().isEmpty() && rows.isEmpty()) {
@@ -80,7 +80,7 @@ public final class PairPromptBuilder {
                 }
             }
         }
-        system.append('\n').append(EditPromptBuilder.OUTPUT_CONTRACT);
+        system.append('\n').append(CHUNK_OUTPUT_CONTRACT);
 
         StringBuilder user = new StringBuilder();
         if (!whole && !rawBefore.isBlank()) user.append("# RAW CONTEXT BEFORE (REFERENCE ONLY - do not return, do not edit)\n").append(rawBefore).append("\n\n");
@@ -91,7 +91,7 @@ public final class PairPromptBuilder {
         user.append(whole ? "# DRAFT\n" : "# DRAFT (this part - return the edited version of exactly this text)\n").append(draftMain).append('\n');
         if (!whole && !draftAfter.isBlank()) user.append("\n# DRAFT CONTEXT AFTER (REFERENCE ONLY - do not return, do not edit)\n").append(draftAfter).append('\n');
         return new ApiPrompt(EditorialApiContract.Step.EDIT, system.toString(), user.toString(), projection.glossary().size(), rows.size(),
-                QualityCore.editSha256());
+                QualityCore.chunkEditSha256());
     }
 
     /** Puts the whole-chapter paragraph label in front of every paragraph of the main text; the count must match the manifest. */
@@ -122,4 +122,11 @@ public final class PairPromptBuilder {
     private static final String WHOLE_CONTRACT =
             "CHAPTER CONTRACT\n"
             + "You edit the whole chapter in one answer. Keep the line breaks and any marker line (such as a line with only a symbol) of the DRAFT where they are.\n";
+
+    private static final String CHUNK_OUTPUT_CONTRACT =
+            "OUTPUT CONTRACT\n"
+            + "Return only one of these forms. For a matching pair, return the complete corrected text of exactly the supplied DRAFT between "
+            + EditPromptBuilder.EDITED_OPEN + " and " + EditPromptBuilder.EDITED_CLOSE + ". Do not shorten it or include reports or commentary.\n"
+            + "If RAW and DRAFT clearly describe different chapters, return " + EditPromptBuilder.WRONG_PAIR_OPEN
+            + "brief evidence quoting each text" + EditPromptBuilder.WRONG_PAIR_CLOSE + " instead. A missing sentence or wrong number is a defect to fix, not a wrong pair.\n";
 }

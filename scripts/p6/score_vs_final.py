@@ -60,6 +60,22 @@ def align(left: list[tuple[int, str]], right: list[tuple[int, str]]) -> dict[int
     return result
 
 
+def line_diff_diagnostic(left: list[tuple[int, str]], right: list[tuple[int, str]]) -> dict:
+    """Describe DRAFT→APP line edits by physical line number, without line text."""
+    matcher = difflib.SequenceMatcher(None, [line for _, line in left],
+                                      [line for _, line in right], autojunk=False)
+    changed_opcodes = []
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag == "equal":
+            continue
+        changed_opcodes.append({
+            "tag": tag,
+            "draftLines": [left[i][0] for i in range(i1, i2)],
+            "appLines": [right[j][0] for j in range(j1, j2)],
+        })
+    return {"changedOpcodeCount": len(changed_opcodes), "changedOpcodes": changed_opcodes}
+
+
 def has_japanese_or_han(value: str) -> bool:
     return bool(KANA.search(value) or KANJI.search(value))
 
@@ -77,6 +93,14 @@ def score(raw: str, draft: str, app: str, final: str, chapter: str = "") -> dict
     app_final = align(app_lines, final_lines)
     draft_raw = align(draft_lines, raw_lines)
     final_to_app = {final_index: app_index for app_index, final_index in app_final.items()}
+    draft_final_indices = set(draft_final.values())
+    app_final_indices = set(app_final.values())
+    unmatched_draft_lines = [line_no for i, (line_no, _) in enumerate(draft_lines) if i not in draft_final]
+    unmatched_app_lines = [line_no for i, (line_no, _) in enumerate(app_lines) if i not in app_final]
+    unmatched_final_from_draft = [line_no for i, (line_no, _) in enumerate(final_lines)
+                                  if i not in draft_final_indices]
+    unmatched_final_from_app = [line_no for i, (line_no, _) in enumerate(final_lines)
+                                if i not in app_final_indices]
 
     owner_changed = 0
     improved = 0
@@ -157,6 +181,17 @@ def score(raw: str, draft: str, app: str, final: str, chapter: str = "") -> dict
             "finalSha256": hashlib.sha256(final.encode("utf-8")).hexdigest(),
         },
         "lines": {"raw": len(raw_lines), "draft": len(draft_lines), "app": len(app_lines), "final": len(final_lines)},
+        "alignment": {
+            "unmatchedDraftToFinalCount": len(unmatched_draft_lines),
+            "unmatchedDraftToFinalLines": unmatched_draft_lines,
+            "unmatchedAppToFinalCount": len(unmatched_app_lines),
+            "unmatchedAppToFinalLines": unmatched_app_lines,
+            "unmatchedFinalFromDraftCount": len(unmatched_final_from_draft),
+            "unmatchedFinalFromDraftLines": unmatched_final_from_draft,
+            "unmatchedFinalFromAppCount": len(unmatched_final_from_app),
+            "unmatchedFinalFromAppLines": unmatched_final_from_app,
+        },
+        "draftAppDiff": line_diff_diagnostic(draft_lines, app_lines),
         "fixRecall": {
             "ownerChanged": owner_changed,
             "improved": improved,

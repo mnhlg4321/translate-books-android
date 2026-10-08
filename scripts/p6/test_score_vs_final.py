@@ -44,6 +44,42 @@ class ScoreVsFinalTest(unittest.TestCase):
         result = score(raw, draft, draft, draft, "011")
         self.assertEqual(result["hard"]["rawSymbolMismatchLines"], [2])
 
+    def test_alignment_diagnostics_report_inserted_and_deleted_nonblank_lines(self):
+        final = "One.\nTwo.\nThree."
+        inserted = score("raw", final, "One.\nExtra.\nTwo.\nThree.", final, "012")
+        self.assertEqual(inserted["alignment"]["unmatchedAppToFinalCount"], 1)
+        self.assertEqual(inserted["alignment"]["unmatchedAppToFinalLines"], [2])
+        self.assertEqual(inserted["alignment"]["unmatchedFinalFromAppCount"], 0)
+        self.assertEqual(inserted["alignment"]["unmatchedFinalFromAppLines"], [])
+
+        deleted = score("raw", final, "One.\nThree.", final, "013")
+        self.assertEqual(deleted["alignment"]["unmatchedAppToFinalCount"], 0)
+        self.assertEqual(deleted["alignment"]["unmatchedFinalFromAppCount"], 1)
+        self.assertEqual(deleted["alignment"]["unmatchedFinalFromAppLines"], [2])
+
+        deleted_draft = score("raw", "One.\nThree.", final, final, "014")
+        self.assertEqual(deleted_draft["alignment"]["unmatchedDraftToFinalCount"], 0)
+        self.assertEqual(deleted_draft["alignment"]["unmatchedFinalFromDraftCount"], 1)
+        self.assertEqual(deleted_draft["alignment"]["unmatchedFinalFromDraftLines"], [2])
+
+    def test_alignment_diagnostics_are_empty_when_app_and_draft_match_final(self):
+        result = score("raw", "One.\nTwo.", "One.\nTwo.", "One.\nTwo.", "015")
+        for key, value in result["alignment"].items():
+            self.assertEqual(value, [] if key.endswith("Lines") else 0)
+        self.assertEqual(result["draftAppDiff"], {"changedOpcodeCount": 0, "changedOpcodes": []})
+
+    def test_draft_app_diff_diagnostic_reports_replacement_and_insertion_lines(self):
+        result = score("raw", "One.\nTwo.\nThree.",
+                       "One.\nTwo revised.\nThree.\nExtra.",
+                       "One.\nTwo.\nThree.", "016")
+        self.assertEqual(result["draftAppDiff"], {
+            "changedOpcodeCount": 2,
+            "changedOpcodes": [
+                {"tag": "replace", "draftLines": [2], "appLines": [2]},
+                {"tag": "insert", "draftLines": [], "appLines": [4]},
+            ],
+        })
+
     def test_aggregate_is_counts_only(self):
         one = score("一", "One", "One", "One", "001")
         two = score("二", "Two", "Deux", "Two", "002")

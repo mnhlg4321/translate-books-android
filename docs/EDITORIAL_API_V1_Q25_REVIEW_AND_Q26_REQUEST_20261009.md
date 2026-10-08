@@ -56,3 +56,30 @@ Cập nhật `docs/EDITORIAL_API_V1_Q2_EXECUTION_20261008.md` (mục Q2.6): bả
 Owner (chat, 2026-10-09): "duyệt D-Q2c".
 
 Q2.6.3 chạy ngay sau khi Q2.6.1–Q2.6.2 PASS, không hỏi lại: canary V5-luna 007 lại sau khi sửa danh tính nguồn; `E-luna-b` dev 004–008 độc lập với canary; V5-luna 004/005/006/008 chỉ khi canary đạt; chấm cổng tối thiểu 4.1.3; holdout 011/014/017 với arm đã chọn. Model `openai/gpt-5.6-luna` reasoning medium; ngân sách D-Q2b (trần Q2 USD 10.00, đã dùng USD 0.8455608; chương V5 USD 1.50, E USD 0.10); chỉ `emulator-5554`. Dừng và hỏi nếu: bảng điều kiện pack còn điều kiện app chưa cung cấp được, canary V5 dừng lần nữa (báo mã, vẫn hoàn tất E-luna-b dev), UNKNOWN cost, lỗi hạ tầng, hoặc ước tính vượt trần.
+
+## 6. Independent review và bước tiếp theo (2026-10-09)
+
+Baseline review `011961f6`; APK/source `7cc4108b` code247. Q2.6 dispatch đã kết thúc; mục 5 không tự cấp quyền chạy lại. Không đổi model, prompt, gate hay membership từ kết quả review.
+
+### Việc đã xác minh / sửa nhỏ
+
+- Ledger hash-chain hợp lệ: 24 logical reservations, 48 entries, USD 1.17703995, pending 0; riêng Q2.6 là 13 logical/29 physical calls, USD 0.33147915. Hash APK/source ZIP ở hai archive và sáu file đọc/xuất khớp báo cáo. Không đọc lại thiết bị trong review.
+- Chọn V5 và chạy holdout khi cả hai 0/5 đúng mục 7 của yêu cầu Q2.5 và D-Q2c; đây không phải tuyên bố chất lượng đạt.
+- V5 004 dừng QA với CONTENT_UNACCOUNTED_CHANGE, không phải lỗi tên. DRAFT fallback phải ghi chất lượng candidate NOT_MEASURED, không diễn giải các số 0 thành kết quả biên tập.
+- 017 có hai replacement và một insertion khi diff trực tiếp DRAFT→app; báo cáo "0 changed lines/no-change" đã sửa. Thêm diagnostic alignment/draftAppDiff chỉ chứa số dòng; không đổi điểm cũ hoặc acceptance. Test từ archive sạch `011961f6` cộng đúng hai file scorer/test: scorer 8/8, gate 7/7. Ba test mới lỗi trên baseline thiếu diagnostic, qua sau patch.
+
+### Một bước tiếp theo: gói offline chẩn đoán chất lượng và chốt UX tên đầu ra
+
+Không mở release/branch/checklist mới; cập nhật tiếp gói này. UI tổng thể U1 vẫn hoãn; thay đổi tên là phạm vi nhỏ được tách rõ, không được coi là cách sửa chất lượng.
+
+| Ownership / file | Việc và đầu ra | Test / PASS |
+|---|---|---|
+| QA: `scripts/p6/score_vs_final.py`, `test_score_vs_final.py`; báo cáo này | Báo riêng dòng không căn được và diff DRAFT→app; giữ nguyên score/gate lịch sử; invalid response tách khỏi semantic | Insert/delete/replace/no-op; mọi metric cũ không đổi; không ghi văn bản sách vào Git |
+| COORDINATOR: evidence riêng Q2.6 | Phân xử theo RAW các thay đổi 017; thiếu/sai/xưng hô trong 011/014; replay L2/L3 004 để tách thay đổi thật khỏi cáo buộc trong receipt | Có dòng nguồn/đầu ra và kết luận đúng/sai/hợp lệ khác reference/chưa chắc; không dùng similarity làm phán quyết nghĩa; không chỉnh prompt từ holdout mà vẫn gọi nó là holdout mới |
+| APP: `EditorialApiExport`, `EditorialApiCombo`, `EditorialApiUiController`, `EditorialApiPageFactory`, store/codec liên quan | Đề xuất trường "Tên file kết quả" trước chạy, cho sửa và lưu cùng tổ hợp; dùng đúng tên đã chốt khi export. Tên xuất là metadata độc lập với identity/hash nội dung | Tên trống thì đề xuất; tên lỗi thì giữ form và báo tại ô trước provider; Unicode, ký tự cấm, đuôi .txt, reopen, trùng tên không tự ghi đè; đổi tên không đổi content hash hoặc làm mất run |
+| ENGINE/APP source: `V5SourceIdentity`, `V5SourcePackPreflight`, `EditorialApiSourceLoader` | Chốt identity từ metadata/app hoặc người dùng xác nhận, không buộc suy từ cả bốn tên. Nguồn tên RAW.txt hợp lệ không bị cấm chỉ do generic khi identity rõ. Không đổi bytes/tên gốc trong provenance, không lấy tên FINAL làm bằng chứng RAW/DRAFT tương ứng | Bốn tên tùy ý + identity đầy đủ; nguồn khớp và nguồn lệch; hash/role thiếu vẫn chặn; ngăn path/control/injection; original names/identity/output name lưu riêng |
+| QA/UI | Kiểm đường app thực dùng loader/provider, không lấy fixture runner làm bằng chứng UI | Hiện app UI chỉ có QUICK/THOROUGH; SourceLoader chưa cấp original files/identity cho V5. Phải ghi NOT_REACHED cho V5 qua UI tới khi có wiring/test đúng đường; không tự mở rộng toàn U1 |
+
+Phụ thuộc: chẩn đoán và hợp đồng dữ liệu trước sửa UX/store; test host trước build; kiểm thiết bị và live theo quyền riêng. Scope/ID/SERIES trong pack là metadata host cung cấp, không yêu cầu model đặt tên hay tự hash. Tên đầu ra có chữ FINAL không tự cấp trạng thái chất lượng đạt.
+
+Điểm dừng: báo cáo phân xử + thiết kế/tác vụ tên có test rõ, không provider/build/device/commit/push từ review này. Không đề xuất chạy lại toàn ma trận chỉ vì tên đã sửa. Nếu sau đó cần live, phải có giả thuyết chưa giải được offline, bản contract/build cụ thể và ngân sách per-call/nhóm mới được owner chấp thuận; số dư ledger không phải quyền dispatch.

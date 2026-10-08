@@ -99,6 +99,23 @@ public final class EditorialPairRunServiceTest {
 
     // ---- a clean run
 
+    @Test public void changedContractNeverSilentlyResumesAnOldRun() throws Exception {
+        FakeEditorialApiProvider fake = provider((i, d) -> d);
+        EditorialPairRunService svc = service(memory, fake);
+        PairRun run = prepare(svc, source(2), "C");
+        run.contractRevision = "CP-IMPL-1";
+        memory.updateRun(run);
+        try {
+            svc.execute(run.id, null);
+            fail("old prompt cannot be resumed under new rules");
+        } catch (IllegalStateException expected) {
+            assertTrue(expected.getMessage().startsWith("PAIR_CONTRACT_CHANGED"));
+        }
+        assertEquals(0, fake.requests.size());
+        assertNotNull(svc.exportPlan(run.id));
+        assertEquals("CP-IMPL-1", svc.get(run.id).contractRevision);
+    }
+
     @Test public void aRunThatChangesNothingIsAcceptedPairByPairAndMergesBackToTheDraft() throws Exception {
         FakeEditorialApiProvider fake = provider((i, d) -> d);
         EditorialPairRunService svc = service(memory, fake);
@@ -108,6 +125,11 @@ public final class EditorialPairRunServiceTest {
         assertEquals(RunState.FINAL_ELIGIBLE, done.state);
         assertEquals(4, fake.requests.size());
         assertEquals(4, done.calls);
+        for (EditorialApiFlow.Request request : fake.requests) {
+            assertEquals(com.ml.tblandroidtxt.editorial.api.EditorialApiContract.Step.EDIT, request.step());
+            assertFalse(request.prompt().system().contains("<NOTES>"));
+            assertTrue(request.prompt().originalSourceFiles().isEmpty());
+        }
         assertEquals(0, done.warnings);
         for (PairItem i : svc.items(run.id)) {
             assertEquals(PairState.ACCEPTED, i.state);
@@ -225,6 +247,11 @@ public final class EditorialPairRunServiceTest {
         List<PairItem> items = svc.items(run.id);
         assertEquals(PairState.STRUCTURE_BLOCKED, items.get(0).state);
         assertTrue(items.get(0).gateJson.contains("FORMAT"));
+        assertEquals(1, fake.requests.size());
+        assertEquals(PairState.IMPORTED, items.get(1).state);
+        // Explicit continuation inspects the next pair; it never retries the malformed one.
+        done = svc.execute(run.id, null);
+        items = svc.items(run.id);
         assertEquals(PairState.STRUCTURE_BLOCKED, items.get(1).state);
         assertTrue(items.get(1).error.startsWith("WRONG_PAIR"));
         assertEquals("a wrong pair stops the run: the map may be wrong", PairState.IMPORTED, items.get(2).state);
@@ -232,7 +259,7 @@ public final class EditorialPairRunServiceTest {
         assertEquals(RunState.INCOMPLETE, done.state);
     }
 
-    @Test public void aDefiniteFailureIsRetriedOnceAtZeroCostThenTheNextPairContinues() throws Exception {
+    @Test public void aDefiniteFailureIsRetriedOnceAtZeroCostThenTheBatchStops() throws Exception {
         FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> index < 2
                 ? EditorialApiFlow.StepResponse.failure("ApiHttpException: 429")
                 : FakeEditorialApiProvider.text("<EDITED>" + draftPart(request) + "</EDITED>", "stop"));
@@ -243,12 +270,13 @@ public final class EditorialPairRunServiceTest {
         assertEquals(PairState.STRUCTURE_BLOCKED, items.get(0).state);
         assertTrue(items.get(0).gateJson.contains("PROVIDER_FAILURE"));
         assertEquals(2, items.get(0).calls);
-        assertEquals(PairState.ACCEPTED, items.get(1).state);
+        assertEquals(PairState.IMPORTED, items.get(1).state);
+        assertEquals(2, fake.requests.size());
         assertEquals(0, items.get(0).usd.signum());
         assertTrue(items.get(0).costKnown);
         int open = memory.openReservations(run.id).size();
         assertEquals("every reservation of a call that never billed is closed at zero", 0, open);
-        assertEquals(RunState.FINAL_BLOCKED, done.state);
+        assertEquals(RunState.INCOMPLETE, done.state);
     }
 
     // ---- unknown outcome, reservation refusal, overrun, price

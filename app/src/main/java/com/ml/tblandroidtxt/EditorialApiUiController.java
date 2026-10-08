@@ -126,6 +126,7 @@ final class EditorialApiUiController {
 
     void newCombo() {
         combo = new EditorialApiCombo();
+        combo.sourceKind = EditorialPairModels.SOURCE_JOB;
         form = null;
         combo.settingsJson = new EditorialApiCombo.Settings().toJson();
         screen = Screen.COMBO;

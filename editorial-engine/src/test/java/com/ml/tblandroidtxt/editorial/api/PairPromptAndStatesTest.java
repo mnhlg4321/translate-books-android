@@ -47,8 +47,12 @@ public final class PairPromptAndStatesTest {
         assertFalse(p.user().contains("# RAW (this part)\nMở đầu"));
         assertTrue(p.system().contains("ONE part of a longer chapter"));
         assertTrue(p.system().contains("<EDITED>"));
+        assertTrue(p.system().contains("<WRONG_PAIR>"));
+        assertFalse(p.system().contains("<NOTES>"));
+        assertFalse(p.system().contains("Remarks go outside"));
+        assertFalse(p.system().contains("explain the uncertainty in notes"));
         assertEquals(EditorialApiContract.Step.EDIT, p.step());
-        assertEquals(QualityCore.editSha256(), p.qualityCoreSha256());
+        assertEquals(QualityCore.chunkEditSha256(), p.qualityCoreSha256());
     }
 
     @Test public void theFirstAndLastPairHaveContextOnOneSideOnly() {
@@ -69,7 +73,23 @@ public final class PairPromptAndStatesTest {
         assertTrue(w.user().contains("# DRAFT\nBản nháp một."));
         assertFalse(w.user().contains("REFERENCE ONLY"));
         assertTrue(w.system().contains("whole chapter"));
+        assertFalse(w.system().contains("<NOTES>"));
+        assertEquals(QualityCore.chunkEditSha256(), w.qualityCoreSha256());
         assertEquals(2, w.glossaryEntries());
+    }
+
+    @Test public void chunkCoreIsContentOnlyWhileLegacyCoreAndHashContractRemainAvailable() {
+        String chunk = QualityCore.chunkEditPrompt("Vietnamese");
+        String legacy = QualityCore.editPrompt("Vietnamese");
+        assertTrue(chunk.contains("RAW is the authority"));
+        assertTrue(chunk.contains("Glossary entries lock proper names"));
+        assertTrue(chunk.contains("Pronoun rows are reference"));
+        assertFalse(chunk.contains("<NOTES>"));
+        assertFalse(chunk.contains("Remarks go outside the text tags"));
+        assertTrue(legacy.contains("explain the uncertainty in notes"));
+        assertTrue(legacy.contains("Remarks go outside the text tags"));
+        assertEquals("d8eefae7d6385bac3a2bc200de46ec3355110bd2935c2cd7a980accaaab3548e", QualityCore.editSha256());
+        assertFalse(QualityCore.chunkEditSha256().equals(QualityCore.editSha256()));
     }
 
     @Test public void glossaryComesFromTheMainTextOnlyAndNoReferenceIsAValidConfiguration() {

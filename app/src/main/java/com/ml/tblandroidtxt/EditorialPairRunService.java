@@ -14,7 +14,6 @@ import com.ml.tblandroidtxt.editorial.api.PairPromptBuilder;
 import com.ml.tblandroidtxt.editorial.api.PairStates;
 import com.ml.tblandroidtxt.editorial.api.PairStates.PairState;
 import com.ml.tblandroidtxt.editorial.api.PairText;
-import com.ml.tblandroidtxt.editorial.api.QualityCore;
 import com.ml.tblandroidtxt.editorial.api.StructuralGate;
 
 import org.json.JSONArray;
@@ -179,6 +178,11 @@ public final class EditorialPairRunService {
     public PairRun execute(long runId, Listener listener) {
         PairRun run = store.getRun(runId);
         if (run == null) throw new IllegalArgumentException("run " + runId);
+        // Never resume an old, partially sent run using a different prompt contract.
+        // Historical candidates remain readable/exportable through exportPlan.
+        if (!PairContract.REVISION.equals(run.contractRevision)) {
+            throw new IllegalStateException("PAIR_CONTRACT_CHANGED: tạo lượt chạy mới; kết quả cũ vẫn được giữ");
+        }
         if (!ACTIVE.add(runId)) throw new IllegalStateException("run " + runId + " is already executing");
         cancelled = false;
         try {
@@ -221,7 +225,7 @@ public final class EditorialPairRunService {
         long inTokens = 0;
         long outTokens = 0;
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-            String requestId = PairText.sha256(run.id + "|" + item.pairId + "|" + QualityCore.editSha256() + "|g" + item.generation + "|" + attempt).substring(0, 32);
+            String requestId = PairText.sha256(run.id + "|" + item.pairId + "|" + run.contractRevision + "|" + prompt.qualityCoreSha256() + "|g" + item.generation + "|" + attempt).substring(0, 32);
             PairReservation reservation = new PairReservation();
             reservation.callId = requestId;
             reservation.runId = run.id;
@@ -258,7 +262,7 @@ public final class EditorialPairRunService {
                 store.settleZero(requestId, "FAILED_BEFORE_DISPATCH");
                 if (attempt < MAX_ATTEMPTS) continue;
                 failNotBilled(run, item, calls, inTokens, outTokens, response.error(), requestId);
-                return false;
+                return true;
             }
             return receive(run, item, prompt, draftRange, response, requestId, worst, calls, inTokens, outTokens, attempt);
         }
@@ -308,7 +312,9 @@ public final class EditorialPairRunService {
             store.updateRun(r);
             return true;
         }
-        return parsed.status() == EditResponseParser.Status.WRONG_PAIR;
+        // Stop the batch at the first unusable candidate; do not spend on the remaining
+        // pairs before the caller has inspected this failure. No repair call is sent.
+        return done.state == PairState.STRUCTURE_BLOCKED;
     }
 
     private void failNotBilled(PairRun run, PairItem item, int calls, long inTokens, long outTokens, String error, String requestId) {

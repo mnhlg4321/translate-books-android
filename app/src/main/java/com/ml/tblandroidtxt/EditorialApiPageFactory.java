@@ -44,7 +44,7 @@ final class EditorialApiPageFactory {
 
     private void listScreen(LinearLayout root) {
         LinearLayout intro = a.sectionCard("✎", EditorialApiPresenter.TAB_TITLE);
-        intro.addView(wrapped("Chọn bản gốc (RAW) và bản dịch nháp (DRAFT), kèm Glossary và Pronoun nếu có. Ứng dụng nhờ model sửa bản nháp cho đúng và hay hơn; chế độ Kỹ kiểm thêm một lượt.", 14, a.TEXT));
+        intro.addView(wrapped("Biên tập từng chunk từ job Dịch: mỗi lượt gửi một cặp RAW–DRAFT cùng Glossary và Pronoun liên quan (nếu có). Model trả bản sửa; ứng dụng lưu tiến độ và ghép kết quả. Không có lượt viết báo cáo riêng.", 14, a.TEXT));
         intro.addView(a.primaryButton("+ Tổ hợp mới", v -> c.newCombo()), a.marginLP(-1, a.dp(48), 0, 12, 0, 0));
         root.addView(intro);
 
@@ -126,7 +126,7 @@ final class EditorialApiPageFactory {
         boolean job = EditorialPairModels.SOURCE_JOB.equals(combo.sourceKind);
         card.addView(a.text("NGUỒN", 11, a.MUTED, true), a.marginLP(-1, -2, 0, 0, 0, 4));
         LinearLayout kinds = a.rowContainer();
-        Button files = job ? a.secondaryButton("Hai file", v -> c.useFiles()) : a.primaryButton("Hai file", v -> c.useFiles());
+        Button files = job ? a.secondaryButton("Toàn chương (cũ)", v -> c.useFiles()) : a.primaryButton("Toàn chương (cũ)", v -> c.useFiles());
         Button jobs = job ? a.primaryButton("Job Dịch (theo cặp)", v -> c.pickJob()) : a.secondaryButton("Job Dịch (theo cặp)", v -> c.pickJob());
         kinds.addView(files, new LinearLayout.LayoutParams(0, a.dp(40), 1));
         kinds.addView(a.space(8, 1));

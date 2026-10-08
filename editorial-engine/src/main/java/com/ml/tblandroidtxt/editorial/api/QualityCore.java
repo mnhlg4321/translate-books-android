@@ -41,6 +41,18 @@ public final class QualityCore {
             + "editor changed (before -> after). You report only real problems, each with an exact quote, and you do not rewrite the "
             + "chapter. Differences of style are not problems.\n\n";
 
+    private static final String CHUNK_EDIT_ROLE =
+            "You are a careful literary editor. You receive a RAW source text and a DRAFT translation of the same chapter into %s, "
+            + "optionally with a glossary and pronoun rows. Correct only the supplied DRAFT text so that it follows RAW. Preserve lines "
+            + "that are already correct; make each change only when it is supported by RAW and produces a clearly better result.\n\n";
+
+    // The chunk editor has no notes channel. Keep the historic prompts above untouched; remove only their note/remark directions
+    // from the derived chunk rules so the same substantive quality standard applies without inviting a report.
+    private static final String CHUNK_RULES = RULES
+            .replace("If evidence is insufficient, keep the draft and explain the uncertainty in notes.",
+                    "If evidence is insufficient, keep the draft.")
+            .replace("8. The output contains only the text between the tags. Remarks go outside the text tags.\n", "");
+
     private QualityCore() { }
 
     /** Rules shared by both prompts, without any role sentence. */
@@ -54,9 +66,17 @@ public final class QualityCore {
         return String.format(CHECK_ROLE, language(targetLanguage)) + RULES;
     }
 
+    /** Quality core for pair/chunk edits; the output shape is supplied by PairPromptBuilder. */
+    public static String chunkEditPrompt(String targetLanguage) {
+        return String.format(CHUNK_EDIT_ROLE, language(targetLanguage)) + CHUNK_RULES;
+    }
+
     public static String editSha256() { return sha(editPrompt("TARGET")); }
 
     public static String checkSha256() { return sha(checkPrompt("TARGET")); }
+
+    /** Stable digest for pair/chunk edits, independent of the prompt's output tags and references. */
+    public static String chunkEditSha256() { return sha(chunkEditPrompt("TARGET")); }
 
     /** Digest of the rules alone: the identity of the quality standard whichever role sentence frames it. */
     public static String rulesSha256() { return sha(RULES); }
