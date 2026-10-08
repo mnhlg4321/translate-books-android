@@ -42,5 +42,24 @@ Q2.3: PASS. Q2.4 is authorized by D-Q2 and the measured reservation is within bo
 
 ## Q2.4
 
-Pending; dispatch begins with the new `Q2-20261008` ledger and dev chapters 004–008 on the two frozen arms. No live dispatch has occurred in this package yet.
+The new ledger `Q2-20261008` ran the complete dev matrix on `emulator-5554`: five E-strong logical calls and five V5-strong logical calls. E-strong used one physical call per chapter; V5-strong used exactly three physical turns per chapter. The ledger has 20 settled physical entries, 0 pending reservations, 0 UNKNOWN and 0 overrun entries; settled spend is `USD 0.8375159`, leaving `USD 5.1624841` of the USD 6.00 cap. No retry was sent after a V5 stop.
+
+The fixed scorer ran offline against the private FINAL files; the detailed private report is `D:\P5E-private\q2-runs\Q2.4\dev-score-summary.json`. `E-luna`'s comparable Q1 baseline for 004–008 had 37 app-changed owner-unchanged lines and zero added kana/Han. The dev results are:
+
+| Arm | Ch | State / structural | Owner changed | Improved | Near-exact | Farther | App changed unchanged | Added kana/Han | Δ similarity | USD | physical calls |
+|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| E-strong | 004 | FINAL_NOTES / valid | 60 | 33 | 30 | 39 | 19 | 0 | -0.03185791 | 0.0721335 | 1 |
+| E-strong | 005 | FINAL_NOTES / valid | 31 | 13 | 9 | 30 | 26 | 0 | -0.03209830 | 0.0872760 | 1 |
+| E-strong | 006 | FINAL_NOTES / valid | 38 | 12 | 9 | 70 | 57 | 0 | -0.02142038 | 0.1339335 | 1 |
+| E-strong | 007 | FINAL_NOTES / valid | 18 | 13 | 12 | 28 | 25 | 0 | -0.02428989 | 0.0740010 | 1 |
+| E-strong | 008 | FINAL_NOTES / valid | 20 | 13 | 12 | 45 | 38 | 2 | -0.07437167 | 0.0759960 | 1 |
+| V5-strong | 004 | RETRY_REQUIRED / invalid (`V5_FINAL_MISSING`) | 60 | 0 | 0 | 0 | 0 | 0 | 0.00000000 | 0.0751931 | 3 |
+| V5-strong | 005 | RETRY_REQUIRED / invalid (`V5_FINAL_MISSING`) | 31 | 0 | 0 | 0 | 0 | 0 | 0.00000000 | 0.0777438 | 3 |
+| V5-strong | 006 | RETRY_REQUIRED / invalid (`V5_FINAL_MISSING`) | 38 | 0 | 0 | 0 | 0 | 0 | 0.00000000 | 0.1007846 | 3 |
+| V5-strong | 007 | RETRY_REQUIRED / invalid (`V5_FINAL_MISSING`) | 18 | 0 | 0 | 0 | 0 | 0 | 0.00000000 | 0.0675287 | 3 |
+| V5-strong | 008 | RETRY_REQUIRED / invalid (`V5_FINAL_MISSING`) | 20 | 0 | 0 | 0 | 0 | 0 | 0.00000000 | 0.0729257 | 3 |
+
+E-strong aggregates to owner-changed `167`, improved `84`, near-exact `72`, farther `212`, app-changed owner-unchanged `165`, added kana/Han `2`, and mean similarity delta `-0.03680763`. V5-strong has no structurally valid candidate: every third turn returned a stop receipt without the required `<FINAL>` delimiters, so the production run correctly kept DRAFT and recorded `V5_FINAL_MISSING`. These are measurements, not a reason to relax extraction or acceptance.
+
+No arm satisfies the frozen selection rule: E-strong exceeds the E-luna unchanged-owner baseline and has added kana/Han; V5-strong is invalid in all five chapters. Therefore holdout 011/014/017 was not dispatched, and no files were written to `D:\P5E-private\q2-outputs\`. This is a deliberate stop before holdout, with no prompt, law, threshold or membership change and no U1, pilot or chunk-pair action.
 
