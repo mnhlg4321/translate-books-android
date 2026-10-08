@@ -184,6 +184,41 @@
       "settledUsd": "0.8375159",
       "lastEntryHash": "34bf1258b31e3ba9dab89010a470e211f351fb954a49758751efdce5f5c39c55",
       "q25ProviderCalls": 0
+    },
+    "liveCanary": {
+      "runId": "73771fb2-cb0f-4937-9e4f-1dbdacd0064c",
+      "chapter": "007",
+      "config": "V5-luna",
+      "model": "openai/gpt-5.6-luna",
+      "reasoningEffort": "medium",
+      "state": "RETRY_REQUIRED",
+      "structuralValid": false,
+      "stopCodes": ["P6_API_V1_RETRY_REQUIRED", "V5_STOP_INPUT_ARTIFACT_MISSING"],
+      "actualProviderCalls": 1,
+      "inputTokens": 18145,
+      "outputTokens": 2924,
+      "finishReasons": ["stop"],
+      "settledUsd": "0.0080449",
+      "unknownCostCalls": 0,
+      "costOverrunCalls": 0,
+      "draftPreserved": true,
+      "projectInstructionCount": 1,
+      "sourceFileBlockCounts": {"RAW.txt": 1, "DRAFT.txt": 1, "GLOSSARY.csv": 1, "PRONOUN.csv": 1},
+      "responseSha256": "DB1784E57347D857610F26AF6725203D4B6DE374CDB936B88DC1AF74652E0036",
+      "responsePathPrivate": "D:\\P5E-private\\q2-runs\\Q2.5\\V5-luna-007-73771fb2-cb0f-4937-9e4f-1dbdacd0064c\\results\\fx-a01\\v5-chat\\01-response.txt",
+      "devDispatched": false,
+      "holdoutDispatched": false,
+      "holdoutExportsWritten": false
+    },
+    "ledgerPostCanary": {
+      "groupId": "Q2-20261008",
+      "settledCalls": 11,
+      "entries": 22,
+      "pending": 0,
+      "unknown": 0,
+      "settledUsd": "0.8455608",
+      "remainingUsdOnExistingLedgerCap6": "5.1544392",
+      "lastEntryHash": "6dd040b7663a4e6244e391c21f00976c69286ae2326fa7fc383fb7d27f1ac940"
     }
   }
 }

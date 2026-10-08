@@ -1,17 +1,17 @@
 # Build State
 
-## Current state — 2026-10-08 (Q2.5.3 verification complete; continuing)
+## Current state — 2026-10-08 (Q2.5.4 stopped at V5-luna canary)
 
-- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before this Q2.5.3 evidence/snapshot commit is `abca34cd`.
+- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before this Q2.5.4 evidence/snapshot commit is `63e715de`.
 - Current build is `4.18-q2.2` / code `246`, source `abca34cd`, installed only on `emulator-5554`; production and AndroidTest wrapper payloads are mirrored in `artifacts/` and `backup/`.
 - Q2.1–Q2.4 are complete as recorded in `docs/EDITORIAL_API_V1_Q2_EXECUTION_20261008.md`; Q2.4 dev 004–008 failed the prior selection gate. Section 7 controls: only `openai/gpt-5.6-luna`, medium reasoning, USD 10.00 Q2 cap, canary 007 first.
 - Q2.5.1 implements the original four-file V5 input pack, one Project Instruction per chat, exact-byte attachment preservation, fail-closed pack checks, stop/truncation behavior, and FINAL extraction. Q2.5.2 adds the supported-evidence minimal-rewrite rule and same-line status-label capitalization guard; contract `EDITORIAL_API_V1.4`.
-- Current phase: EDITORIAL_API_V1 Q2.5.1–2.5.3 complete; canary not yet dispatched. U1 deferred, pilot and chunk-pair untouched.
-- Completed tasks: Q2.5.1–2.5.3; engine 572/572, each app unit variant 439/439, Python `scripts/p6` 80/80, private source preflight 8/8, AndroidTest compile PASS, wrapper build/lint/unit PASS, focused emulator Editorial API 14/14.
-- Pending tasks: re-read the Q2 ledger and account fingerprint, dispatch V5-luna canary 007, then proceed to frozen dev/holdout only if all canary turns pass their stop conditions.
-- Known bugs/limits: V5-luna quality is NOT_MEASURED. An accidental broad instrumentation attempt hit historical P4 assertion `expected 27, actual 28`; it was stopped before pair tests; focused Editorial API tests passed. Ledger last read: USD 0.8375159, 10 settled calls, 0 pending, 0 UNKNOWN; reread immediately before live dispatch.
-- Regression status: engine 572/572 PASS; app benchmark/debug/release each 439/439 PASS; Python `scripts/p6` 80/80 PASS; real-source preflight 8/8 PASS; wrapper unit/lint/build PASS; focused emulator Editorial API tests 14/14 PASS; Q2.5.3 provider calls 0.
-- Next action: re-read and verify the Q2 ledger and account fingerprint on `emulator-5554`, then dispatch only the V5-luna chapter-007 canary under the existing stop rule.
+- Current phase: EDITORIAL_API_V1 Q2.5.4 stopped at chapter 007 turn 1; no dev or holdout run. U1 deferred, pilot and chunk-pair untouched.
+- Completed tasks: Q2.5.1–2.5.3; engine 572/572, each app unit variant 439/439, Python `scripts/p6` 80/80, private source preflight 8/8, AndroidTest compile pass, wrapper build/lint/unit pass, focused emulator API 14/14; Q2.5.4 canary preflight and one stopped turn recorded.
+- Pending tasks: owner review of the private 007 response and decision whether a separate input-artifact contract investigation is warranted; no further Q2.5.4 dispatch.
+- Known bugs/limits: V5-luna turn 1 returned `V5_STOP_INPUT_ARTIFACT_MISSING` despite source-pack preflight PASS and four source blocks in the request; quality is NOT_MEASURED. No dev/holdout run. The accidental broad instrumentation attempt hit historical P4 `expected 27, actual 28`; focused API tests passed.
+- Regression status: engine 572/572 PASS; app benchmark/debug/release each 439/439 PASS; Python `scripts/p6` 80/80 PASS; real-source preflight 8/8 PASS; wrapper unit/lint/build PASS; focused emulator API tests 14/14 PASS; account check MATCH with 0 calls. Canary cost USD 0.0080449, 1 settled call, 0 UNKNOWN/pending; ledger USD 0.8455608.
+- Next action: owner reviews the private chapter-007 response and decides whether to authorize a separate input-artifact delivery investigation; the dev/holdout matrix remains stopped.
 
 ## Superseded — independent API V1 review and N1–N4 checkpoint (historical, 2026-10-06)
 
@@ -23,7 +23,7 @@ The next two sections describe the review and checkpoint before the follow-up co
 - Two uncommitted local fixes: cancellation keeps returned call/token/cost evidence; incomplete C/C2 results retain candidate as FINAL_NOTES rather than falsely clean FINAL_OK. Isolated git-archive baseline plus these patches: API engine 63/63, app 44/44; new regressions failed before and passed after. No new build or device/provider operation.
 - N4 readiness is narrowed: controller/render/callback tests do not prove real selector/SAF traversal or reopening the same combo after process death. Open source findings: missing glossary/pronoun in C/C2, unknown transport cost/retry handling, runner settlement clamps actual expense, view-local form values lost on refresh. N0 acceptance and N5 matrix/caps also need reconciliation.
 - Actual calls/spend this review: 0 / USD 0. Three accepted API_V1 chapters 0/3 established; P7 unmet. Historical test/build results below remain evidence of their exact scope, not N5 readiness.
-- Next action: close the remaining offline gaps in the existing N1–N4 package described in `docs/EDITORIAL_API_V1_N1_N4_EXECUTION_20261005.md`, then present corrected evidence and exact D-N4 proposal. No N5/provider/pilot action.
+- Next action: owner reviews the private chapter-007 response and decides whether to authorize a separate input-artifact delivery investigation; the dev/holdout matrix remains stopped.
 
 ### Editorial API V1 N1–N4 checkpoint — 2026-10-06
 
@@ -31,9 +31,9 @@ The next two sections describe the review and checkpoint before the follow-up co
 - Current build: 4.18-api.3/code240, source 18571c01; APK SHA-256 9F66F0C9D69F19728DD7EBB77138B946CDAF6672081F468A7B52638E5E4957C8; AndroidTest SHA-256 20CBCF3C69AE4E81C26B31FB73BB0C6B94FDC1282AB2F5AE38F6444D812A9381; mirrored production/test payloads are retained in the two archive roots.
 - Current phase: EDITORIAL_API_V1 N1–N4 offline complete; stop before N5. N1–N3 were already implemented and pushed by Claude, and N4 is documented in docs/EDITORIAL_API_V1_N1_N4_EXECUTION_20261005.md.
 - Completed tasks: engine 484/484, app 386/386, Python scripts/p6 71/71, AndroidTest compile PASS; emulator UI 3/3, force-stop/reopen 2/2, store/migration 4/4, fixture dry-run structural 1/1 with fake provider.
-- Known bugs/limits: the dry-run scorer correctly reports semantic FAIL for seeded fx-a01; it is not a semantic acceptance and was not repaired. No model-quality result was measured because no provider was called.
-- Regression status: all listed offline regressions PASS; actual provider calls and API spend are 0; pilot is untouched. Historical G1/G2 evidence and ledgers remain unchanged.
-- Next action: owner decides D-N4 scope and budget before N5; no live dispatch, provider call or pilot operation is authorized by this package.
+- Known bugs/limits: V5-luna turn 1 returned `V5_STOP_INPUT_ARTIFACT_MISSING` despite source-pack preflight PASS and four source blocks in the request; quality is NOT_MEASURED. No dev/holdout run. The accidental broad instrumentation attempt hit historical P4 `expected 27, actual 28`; focused API tests passed.
+- Regression status: engine 572/572 PASS; app benchmark/debug/release each 439/439 PASS; Python `scripts/p6` 80/80 PASS; real-source preflight 8/8 PASS; wrapper unit/lint/build PASS; focused emulator API tests 14/14 PASS; account check MATCH with 0 calls. Canary cost USD 0.0080449, 1 settled call, 0 UNKNOWN/pending; ledger USD 0.8455608.
+- Next action: owner reviews the private chapter-007 response and decides whether to authorize a separate input-artifact delivery investigation; the dev/holdout matrix remains stopped.
 
 ## Historical G2 approval preflight stop — 2026-10-05
 
@@ -51,14 +51,14 @@ D-G1c replay gate now distinguishes valid-response PASS from hash-bound EXPECTED
 - Offline evidence: engine `391/391`; process replay `6/6`; anchor regression `6/6`. Missing/bad JSON, unexpected validation, hash/code mismatch and expected rejection with actual PASS all exit nonzero. Exact U6 response remains `REJECTED` with `L1_DRAFT_QUOTE_NOT_IN_ANCHOR:findings.0.draftQuote`; hash-bound EXPECTED_REJECT test exits 0 without accepting REPORT_L1.
 - Report and replay evidence: `docs/P6_R6_REPLAY_REPAIR_20261004.md`, `D:\P5E-private\p6-item12-u7-replay-all-20261004.json`, and the exact response path recorded there. The second semantic finding is `UNRESOLVED_SUSPECTED_FALSE_POSITIVE`; no expected code was added.
 - G1 ledger remains 9 settled calls / 18 entries, USD `0.07381520` spent / `1.00`, USD `0.92618480` remaining, pending 0. This package cost USD `0`; no G2 or pilot access.
-- Next action: owner review of a concrete G1 proposal with hypothesis, source/prompt/schema revision, fixture, call/cost cap, stop conditions and scoring; no live dispatch from this offline package.
+- Next action: owner reviews the private chapter-007 response and decides whether to authorize a separate input-artifact delivery investigation; the dev/holdout matrix remains stopped.
 
 ## P6 R6 wire v3 V1–V3 checkpoint — 2026-10-04
 
 - V1/V2 PASS on implementation d1cc1452: engine 351/351, app 341/341, lint/AndroidTest compile PASS, Python 33/33. Offline wrapper 4.18-p6.16/code229, build-20261004-065614, APK SHA-256 98AAE03A23DD6D0573E2C5FFBCB46C6B18918D35D6A68B663143B0D5B6673141; AndroidTest event p6-unit-ref-d1cc1452-20261004-16 SHA-256 7A03D658CE7B83C59509791E6315976D943A67661D234B236F265E1777DF7AAF; source ZIP A7F543DBCC394C5295F61CF4FABF5FAE8750D827258D0E30430C3AFFFFEF2170. Mirrored payloads verified, installed emulator only. Preflight 5/5, coordinator 1/1, fake CHAIN 14/14 structural, typed negative L1_COVERAGE_GAP verifier/scorer PASS, 0 actual calls in V1–V2.
 - Approved D-G1b V3 ran fx-a03 on same G1-20261003-ecbf8c55 ledger. RAW passed; RECONCILE rejected: P6_L1_PREDECESSOR_FAILED:REPAIR_L1_LEDGER_INVALID, phase=L1_RECONCILE, detail L1_TEXT_REQUIRED. Group stopped immediately. Two complete provider-reported calls: 50,650 input / 5,497 output tokens, USD 0.01925860; 0 retry/repair/UNKNOWN. G1 cumulative 4 calls/8 entries, USD 0.03222845/1.00, remaining 0.96777155, pending 0; prior bytes retained exactly. No G2/pilot access.
 - Live partial STRUCTURAL_VALID 0/1; scorer semantic FAIL KNOWN_DEFECT_NOT_FIXED:T-S1 from fallback DRAFT, not model quality. No accepted REPORT_L1/final. Required text field name is unavailable in current safe diagnostic; response bodies were not retained. V1 d1cc1452 and V2 d9390733 pushed. Evidence: docs/P6_R6_UNIT_REF_EXECUTION_20261004.md; private run b4c0a9c2-118c-4d51-a172-955c6f95d999.
-- Next action: diagnose L1_TEXT_REQUIRED offline and add a safe field-name diagnostic before any proposed further live G1 attempt.
+- Next action: owner reviews the private chapter-007 response and decides whether to authorize a separate input-artifact delivery investigation; the dev/holdout matrix remains stopped.
 
 ## Current P6 G1-resume checkpoint — 2026-10-03
 
@@ -67,7 +67,7 @@ D-G1c replay gate now distinguishes valid-response PASS from hash-bound EXPECTED
 - W3 group `G1-20261003-ecbf8c55` tiếp tục từ USD `0.0081852`, run `f7f71d89-9cc2-47fb-a8c7-4fd9e6d9bc2e` dừng tại `fx-a03` sau một call `L1_RAW_DISCOVERY`: `P6_L1_PREDECESSOR_FAILED:REPAIR_L1_LEDGER_INVALID`, chi tiết `L1_UNIT_UNKNOWN`, USD `0.00478465`, 0 UNKNOWN. Ledger cộng dồn USD `0.01296985` / trần `1.00`, còn USD `0.98703015`.
 - Scorer live partial: `STRUCTURAL_VALID=0/1`; `SEMANTIC_EVAL=FAIL` vì final vẫn là DRAFT (`KNOWN_DEFECT_NOT_FIXED:T-S1`), không phải quality verdict. G2 chưa bắt đầu; không retry/repair call và không ghi API key/fingerprint.
 - Report: `docs/P6_R6_G1_RESUME_EXECUTION_20261003.md`; private run: `D:\P5E-private\p6-runs\f7f71d89-9cc2-47fb-a8c7-4fd9e6d9bc2e\`.
-- Next action: diagnose `L1_UNIT_UNKNOWN` offline and obtain owner authorization before any further live G1 call; do not start G2.
+- Next action: owner reviews the private chapter-007 response and decides whether to authorize a separate input-artifact delivery investigation; the dev/holdout matrix remains stopped.
 
 ## P6 R6/R7 offline checkpoint — 2026-10-03
 
