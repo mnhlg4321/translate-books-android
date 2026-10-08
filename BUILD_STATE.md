@@ -1,17 +1,17 @@
 # Build State
 
-## Current state — 2026-10-08 (Q2.3 complete; Q2.4 live gate pending)
+## Current state — 2026-10-08 (Q2.4 dev gate stopped; holdout not authorized)
 
-- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before this state commit is `eaa55574`.
+- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before this state commit is `bdea3ad8`.
 - Current build is `4.18-q2.1` / code `245`, source `45976adb`, installed only on `emulator-5554`; production and AndroidTest wrapper payloads are mirrored in `artifacts/` and `backup/`.
-- Q2.1 and Q2.2 offline packages are complete. Q2.3 passed the wrapper build, package verification, Editorial API store/flow/UI instrumentation and the explicit process-death sequence. V5_CHAT sends a three-turn same-history chain, extracts only `<FINAL>`, aggregates real usage/cost, stops on truncation/UNKNOWN, and reserves the aggregate worst case.
+- Q2.1–Q2.3 are complete. Q2.4 dev 004–008 ran on both frozen arms; E-strong was structurally valid but failed the fixed quality selection gate, and V5-strong was invalid in every chapter because the model omitted `<FINAL>`.
 - Q2 evidence is in `docs/EDITORIAL_API_V1_Q2_EXECUTION_20261008.md`; the price/build matrix is `docs/EDITORIAL_API_V1_Q2_AB_MANIFEST.json`.
-- Current phase: EDITORIAL_API_V1 Q2.4 live dev gate; D-Q2 approved, U1 deferred.
-- Completed tasks: engine/app offline tests, exact FULL CHATGPT pack hashes, V5 history/FINAL/truncation tests, cap policy, wrapper production/test archives and emulator gate.
-- Pending tasks: read the fresh ledger, run dev 004–008 on frozen E-strong/V5-strong settings, select once, run holdout 011/014/017 and export.
-- Known bugs/limits: semantic model quality remains NOT_MEASURED; live V5 quality and provider-returned token/cost values are pending.
-- Regression status: engine 566/566, app unit tasks PASS, AndroidTest compile and targeted emulator Editorial API tests PASS, Python verifier 14/14 PASS; Q2 live spend 0.
-- Next action: inspect/create `Q2-20261008` ledger and dispatch dev 004–008 on `emulator-5554` without changing the frozen matrix.
+- Current phase: EDITORIAL_API_V1 Q2.4 stopped before holdout; D-Q2 applied, U1 deferred.
+- Completed tasks: engine/app offline tests, exact FULL CHATGPT pack hashes, V5 history/FINAL/truncation tests, cap policy, wrapper production/test archives, emulator gate, manifest, dev dispatch and scorer report.
+- Pending tasks: owner decision on whether a contract/pack change is in scope; holdout 011/014/017 and `q2-outputs` were deliberately not run/created.
+- Known bugs/limits: E-strong has 165 changed owner-unchanged lines versus the E-luna baseline 37 and two added kana/Han lines; V5-strong has five `V5_FINAL_MISSING` stops. No selected holdout quality result exists.
+- Regression status: engine 566/566, app unit tasks PASS, AndroidTest compile and targeted emulator Editorial API tests PASS, Python verifier 14/14 PASS; Q2 ledger 20 settled physical calls, USD 0.8375159, pending 0, UNKNOWN 0.
+- Next action: owner decides whether to change the V5 input contract/pack or end Q2; no holdout dispatch until then.
 ## Superseded — independent API V1 review and N1–N4 checkpoint (historical, 2026-10-06)
 
 The next two sections describe the review and checkpoint before the follow-up commits, N5 and `CP-OFFLINE-2`; keep them for history, do not read their next actions as current.
