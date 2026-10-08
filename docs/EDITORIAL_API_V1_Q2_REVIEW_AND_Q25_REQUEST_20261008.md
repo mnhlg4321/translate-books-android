@@ -82,3 +82,24 @@ Cập nhật `docs/EDITORIAL_API_V1_Q2_EXECUTION_20261008.md` (mục Q2.5): comm
 |---|---|---|
 | Đọc | Mở `D:\P5E-private\q2-review\q2-sol-review.html`, xem các dòng viền cam (chỉ Sol sửa): phần lớn là diễn đạt khác chấp nhận được, hay làm xấu bản dịch? | Đọc 1 chương (007 hoặc 004) là đủ để định hướng; câu trả lời giúp quyết định có cần Q2.5.2 mạnh tay không |
 | D-Q2b | Chạy Q2.5.4 với trần Q2 nâng từ USD 6.00 lên **USD 10.00** (ledger hiện đã dùng USD 0.84). V5 đầy đủ ước tính ~USD 0.5–0.9/chương; dev 5 + E-strong-b 5 + holdout 3 ≈ USD 4–6. Trần chương nâng lên **USD 1.50** cho riêng V5. Canary dừng là dừng cả gói | Duyệt |
+
+## 7. Quyết định đã nhận (2026-10-08)
+
+Owner (chat): "duyệt D-Q2b nhưng chạy trên gpt 5.6 luna thôi, chạy api sol đắt lắm, cơ bản nếu nó đạt chất lượng tối thiểu của 4.1.3 là được".
+
+Mục này thay các chỗ nói về Sol ở mục 5:
+
+- **Model duy nhất cho Q2.5: `openai/gpt-5.6-luna`.** Không chạy Sol trong Q2.5. Reasoning **medium** (trước đây luna chạy `minimal`; medium là biến mới, rẻ, và khớp mức owner dùng). Hai arm:
+  - `V5-luna`: đường V5 sửa theo Q2.5.1 (4 file gốc, pack 4.1.3 FULL CHATGPT).
+  - `E-luna-b`: đường E với Quality Core + guard Q2.5.2.
+  - Mốc so sánh có sẵn, không chạy lại: C1 (luna minimal, Q1) và E-strong (Sol, Q2.4).
+- **Ngân sách D-Q2b:** trần Q2 USD 10.00 (đã dùng USD 0.8375159), trần chương V5 USD 1.50, E USD 0.10. Với luna, ước tính thực tế toàn Q2.5 dưới USD 1.
+- **Canary giữ nguyên:** `V5-luna` chương 007 trước; dừng ở bất kỳ lượt nào (stop_class, thiếu FINAL, truncation) → dừng cả gói và báo mã.
+- **Cổng "chất lượng tối thiểu 4.1.3"** (thay luật chọn ở mục 5, Q2.5.4.3). Một chương đạt mức tối thiểu khi đủ cả:
+  1. Cấu trúc: không truncation, không mất/gấp chữ, số dòng không rỗng không lệch RAW nhiều hơn DRAFT.
+  2. Không lỗi kỹ thuật mới: 0 dòng sinh thêm chữ Nhật; số dòng còn chữ Nhật ≤ của FINAL owner; số dòng lệch ký hiệu so với RAW ≤ của DRAFT.
+  3. Không làm hỏng: số dòng xa FINAL hơn trên các dòng owner sửa ≤ 10% số dòng owner sửa; độ giống cả chương với FINAL **không giảm** so với DRAFT.
+  4. Có sửa thật: improved ≥ 25% số dòng owner sửa.
+  5. **Owner đọc và chấp nhận** — đây là điều kiện quyết định; 1–4 chỉ là lọc tự động trước khi owner đọc.
+  Chọn arm có nhiều chương dev đạt 1–4 nhất (hòa thì improved cao hơn). Không arm nào có ≥ 3/5 chương dev đạt 1–4 → vẫn chạy holdout với arm tốt nhất, nhưng báo rõ "chưa đạt tối thiểu" để owner quyết hướng tiếp theo.
+- Holdout 011, 014, 017 với arm đã chọn; xuất bản app + trang đọc (RAW/DRAFT/app/FINAL như `q2-sol-review.html`) vào `D:\P5E-private\q2-outputs\`. Dừng.
