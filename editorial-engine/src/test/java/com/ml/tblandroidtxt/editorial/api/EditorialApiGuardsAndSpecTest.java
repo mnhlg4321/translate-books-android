@@ -52,6 +52,17 @@ public final class EditorialApiGuardsAndSpecTest {
         assertEquals(0.0, check(draft, draft, draft, List.of()).rewriteRatio(), 0.0);
     }
 
+    @Test public void statusLabelGuardRestoresOnlyCaseOnlyChangesOnTheSameAlignedLine() {
+        String raw = "status";
+        String draft = "【Cấp độ】 Tên riêng: LaTeX\n【ĐANG MỞ】";
+        String edited = "【cấp độ】 Tên riêng: LaTeX\n【đang mở】";
+        EditGuards.Report report = check(raw, draft, edited, List.of());
+        assertEquals(draft, report.cleaned());
+        assertTrue(report.has(EditGuards.Code.STATUS_LABEL_CASE_RESTORED));
+        assertEquals("【Cấp mới】", check(raw, "【Cấp độ】", "【Cấp mới】", List.of()).cleaned());
+        assertEquals("【Cấp độ】\nkhác dòng", check(raw, "【Cấp độ】\nkhác dòng", "【cấp độ】\nkhác dòng", List.of()).cleaned());
+    }
+
     @Test public void symbolGuardFlagsChangesRawDoesNotExplain() {
         String raw = "「あ」\n「い」";
         String draft = "「A」\n「B」";

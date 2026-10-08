@@ -24,6 +24,7 @@ public final class QualityCore {
             + "do not change it unless RAW gives a reason.\n"
             + "5. Correct omissions, additions, wrong meaning, unnatural phrasing and register while preserving lines that are already correct. "
             + "Do not dramatize or change intensity without support in RAW.\n"
+            + "   Do not change phrasing that is already correct in meaning, voice and naturalness. Fix only an identifiable issue supported by RAW, glossary or pronoun references. Preserve capitalization of status labels and terms as used in DRAFT/glossary. Keep DRAFT forms of address unless RAW or a pronoun rule proves them wrong.\n"
             + "6. Translate every remaining Japanese kana or Han phrase unless the glossary identifies it as a name or intentional source token. "
             + "If evidence is insufficient, keep the draft and explain the uncertainty in notes.\n"
             + "7. RAW controls symbols, punctuation, frames (「」『』◇ ◆ ＊ ── …… 【】) and line structure. Follow the app's detected structural points and do not invent "

@@ -24,6 +24,8 @@ public final class EditorialApiPromptTest {
         String lower = text.toLowerCase(Locale.ROOT);
         assertFalse(lower.contains("changing as little as possible"));
         assertTrue(lower.contains("preserve lines that are already correct"));
+        assertTrue(lower.contains("do not change phrasing that is already correct in meaning, voice and naturalness"));
+        assertTrue(lower.contains("preserve capitalization of status labels and terms"));
         for (String banned : new String[] {"ledger", "sha-256", "sha256", "hash", "unit ref", "manifest", "receipt", "error id", "change id", "binding"}) {
             assertFalse("Quality Core mentions " + banned, lower.contains(banned));
         }
@@ -40,7 +42,7 @@ public final class EditorialApiPromptTest {
     }
 
     /** SHA-256 of the quality rules text (UTF-8). */
-    static final String EXPECTED_RULES_SHA256 = "6b399f83651f6c1ef48ff497e0bf4c4eee3087bd562f45668a637965f94e062f";
+    static final String EXPECTED_RULES_SHA256 = "3b56e8c1794a29af3b7615d89cb678f66b5b96ca0c67d3ee6f9fade873bd4a53";
 
     @Test public void glossaryIsFilteredByRawOccurrenceWithoutALimit() {
         java.util.ArrayList<EditInputs.GlossaryEntry> many = new java.util.ArrayList<>();

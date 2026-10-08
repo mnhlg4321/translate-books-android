@@ -67,13 +67,19 @@ No arm satisfies the frozen selection rule: E-strong exceeds the E-luna unchange
 
 The owner revised the decision for this package: only `openai/gpt-5.6-luna`, reasoning `medium`; total Q2 ceiling USD 10.00. Keep the existing `Q2-20261008` ledger and its stricter stored USD 6.00 cap. Before any Q2.5 dispatch, read the current settled/pending ledger from `emulator-5554`; the last available report is USD 0.8375159 settled, 10 logical reservations, 0 pending, 0 UNKNOWN. Owner FINAL remains scoring-only.
 
-### Q2.5.1 — original V5 input pack (offline)
+### Q2.5.1 — original V5 input pack (offline; commit `c69eb0f8`, pushed)
 
 Implemented the V5 full-chat source contract. Each request now carries the exact original `RAW.txt`, `DRAFT.txt`, `GLOSSARY.csv`, and `PRONOUN.csv` names and text; V5 preflight requires exactly those four files, strict valid text, the pack's five-column glossary header, and the seven-column or supported legacy pronoun format. It verifies RAW/DRAFT match the original attachments, and executes before run persistence/provider dispatch. Original source attachments persist with V5 run state and survive rehydration. Prompt assembly sends Project Instruction only as the system message once, then the first-chat prompt section, Workflow, and each original file in a named block; it does not add the E Quality Core, filtered glossary, or app detections. V5 stops immediately on `stop_class`, maps `length` to a typed truncation code, reserves at least 32,768 output tokens per turn, and extracts only `<FINAL>` or the named FINAL_QA output file. Migration v28 preserves existing API runs while adding V5 contract data.
 
 Private-source pack preflight passed for the eight required live chapters (007; 004–008; 011, 014, 017), reporting only file roles, sizes, and hashes outside Git. Synthetic regressions cover attachment ordering/pack headers, bad or missing files, exact one-time system instruction, FINAL_QA extraction, first-turn stop, max output token floor, and SQLite migration/restart. No private book text, response, ledger, account value, or source hash is included in Git.
 
-Validation: `:editorial-engine:test` 572/572 PASS; app benchmark/debug/release unit test tasks each 439/439 PASS; `scripts/p6` 80/80 PASS; source pack preflight 8/8 PASS; `:app:compileDebugAndroidTestJavaWithJavac` PASS. Emulator/device validation remains pending. Q2.5 calls: 0; build/device actions for Q2.5: 0. Code/evidence commit and push: pending.
+Validation: `:editorial-engine:test` 572/572 PASS; app benchmark/debug/release unit test tasks each 439/439 PASS; `scripts/p6` 80/80 PASS; source pack preflight 8/8 PASS; `:app:compileDebugAndroidTestJavaWithJavac` PASS. Emulator/device validation remains pending. Q2.5 calls: 0; build/device actions for Q2.5: 0. Commit `c69eb0f8` pushed to the existing branch.
 
-Next: finish Q2.5.2 (minimal-rewrite rule and deterministic label-case guard), run the requested full regressions, commit and push it; then Q2.5.3 wrapper build and emulator tests. Q2.5.4 starts with V5-luna chapter 007 and stops the whole group on any stopped turn. Only after a valid canary may the frozen dev matrix and section-7 quality gate proceed to holdout.
+### Q2.5.2 — reduce unnecessary rewrites and preserve status-label capitalization (offline)
+
+Quality Core now asks the model to leave already-correct phrasing alone, repair only an identifiable issue supported by RAW/glossary/pronouns, preserve DRAFT/glossary term capitalization, and keep DRAFT forms of address absent contrary evidence. A deterministic guard restores case-only changes inside `【…】` labels only when the corresponding labels remain on the same aligned line; it does not restore semantic changes, unmatched labels, or moved lines. Contract revision increased from `EDITORIAL_API_V1.3` to `EDITORIAL_API_V1.4`; acceptance thresholds are unchanged.
+
+Full forced regressions against the edited source: engine 572/572 PASS; app benchmark/debug/release unit test tasks each 439/439 PASS; all `scripts/p6` tests 80/80 PASS; AndroidTest Java compile PASS. No provider call, build, or device operation occurred for Q2.5.2. Commit/push is pending.
+
+Next: commit and push Q2.5.2, then Q2.5.3 wrapper build and emulator tests. Q2.5.4 starts with V5-luna chapter 007 and stops the whole package on any stopped turn. Only after a valid canary may the frozen dev matrix and section-7 quality gate proceed to holdout.
 

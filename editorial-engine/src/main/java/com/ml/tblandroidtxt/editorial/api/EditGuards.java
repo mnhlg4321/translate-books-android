@@ -3,6 +3,7 @@ package com.ml.tblandroidtxt.editorial.api;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -11,7 +12,7 @@ import java.util.regex.Pattern;
  */
 public final class EditGuards {
     public enum Code { STRUCTURE_WARN, REWRITE_WARN, SYMBOL_WARN, GLOSSARY_WARN, META_LEAK, META_UNSEPARABLE,
-        NORMALIZATION_APPLIED, CONTENT_LEAK }
+        NORMALIZATION_APPLIED, CONTENT_LEAK, STATUS_LABEL_CASE_RESTORED }
 
     public record Flag(Code code, String detail) { }
 
@@ -56,6 +57,7 @@ public final class EditGuards {
             cleaned = normalized;
         }
         cleaned = blockAddedSourceScript(draft, cleaned, glossary, flags);
+        cleaned = restoreStatusLabelCapitalization(draft, cleaned, flags);
 
         int draftLines = nonBlankLines(draft);
         int editedLines = nonBlankLines(cleaned);
@@ -115,6 +117,43 @@ public final class EditGuards {
             if (!entry.source().isBlank() && line.contains(entry.source().trim())) return true;
         }
         return false;
+    }
+
+    /** Restores only case-only changes to corresponding 【…】 labels on the same aligned line. */
+    private static String restoreStatusLabelCapitalization(String draft, String edited, List<Flag> flags) {
+        String[] before = LineDiff.lines(draft);
+        String[] after = LineDiff.lines(edited);
+        if (before.length != after.length) return edited;
+        Pattern label = Pattern.compile("【([^】]*)】");
+        StringBuilder out = new StringBuilder(edited.length());
+        int restored = 0;
+        for (int i = 0; i < after.length; i++) {
+            Matcher draftMatcher = label.matcher(before[i]);
+            Matcher editMatcher = label.matcher(after[i]);
+            List<String> draftLabels = new ArrayList<>();
+            List<int[]> editRanges = new ArrayList<>();
+            List<String> editLabels = new ArrayList<>();
+            while (draftMatcher.find()) draftLabels.add(draftMatcher.group(1));
+            while (editMatcher.find()) { editLabels.add(editMatcher.group(1)); editRanges.add(new int[] {editMatcher.start(1), editMatcher.end(1)}); }
+            String line = after[i];
+            if (draftLabels.size() == editLabels.size() && !draftLabels.isEmpty()) {
+                StringBuilder fixed = new StringBuilder(line);
+                for (int j = editLabels.size() - 1; j >= 0; j--) {
+                    String original = draftLabels.get(j);
+                    String changed = editLabels.get(j);
+                    if (!original.equals(changed) && original.equalsIgnoreCase(changed)) {
+                        int[] range = editRanges.get(j);
+                        fixed.replace(range[0], range[1], original);
+                        restored++;
+                    }
+                }
+                line = fixed.toString();
+            }
+            if (i > 0) out.append('\n');
+            out.append(line);
+        }
+        if (restored > 0) flags.add(new Flag(Code.STATUS_LABEL_CASE_RESTORED, restored + " status label(s) restored to DRAFT capitalization"));
+        return restored == 0 ? edited : out.toString();
     }
 
     /**
