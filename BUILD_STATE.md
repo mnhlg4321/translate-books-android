@@ -1,6 +1,16 @@
 # Build State
 
-## Current state — 2026-10-08 (Q2.5.4 stopped at V5-luna canary)
+## Current state — 2026-10-09 (Q2.6 complete: V5 source identity fixed, dev and holdout run)
+
+- Branch `feature/v4.18-p5e-runner-repair-20260917`; Q2.6.1 `7cc4108b`, Q2.6.2 evidence `712227e1`, then the Q2.6.3 evidence commit (all pushed). Details in `docs/EDITORIAL_API_V1_Q2_EXECUTION_20261008.md`, section Q2.6.
+- Current build: `4.18-q2.3` / code `247`, event `build-20261009-034756`, source `7cc4108b`, APK SHA-256 `D21C64E5A08879E88B850C60E45515812A8902ABB30DFB1449F292434D20B4DE`, source ZIP `276F2769775229FC0AAB648654B37074FE9FA0F3C12DBD4E524015B65E422AB8`; AndroidTest archive `q26-editorial-api-20261009` SHA-256 `58ED4E1843F27E0C768053E22E432BCA8702056325CA9F451E741ABA2BC26D89`; mirrored in `artifacts/` and `backup/`; installed only on `emulator-5554`.
+- Q2.6.1: V5 files are judged by role and sent under their original names; chain ID/SERIES are required (`V5_IDENTITY_MISSING` before any provider call); the HOST SOURCE MANIFEST opens turn 1; pack-condition table recorded (one condition, artefact acceptance of the model's own earlier answers, is provided by construction and was confirmed live).
+- Q2.6.3 (owner D-Q2c, `openai/gpt-5.6-luna`, medium): V5-luna canary 007 passed (3 turns, USD 0.0324). E-luna-b dev 004–008: 0/5 pass the automatic 4.1.3 gate, improved 10/167. V5-luna dev: 0/5, improved 23/167 (004 stopped in turn 3 with `V5_STOP_CONTENT_UNACCOUNTED_CHANGE`). V5-luna chosen on the tie-break; holdout 011/014/017: 0/3 pass, improved 16/122. Result: **not at the 4.1.3 minimum**; semantic NOT_MEASURED; the owner's reading decides. Q2.6 spent USD 0.33147915 (29 physical calls); ledger `Q2-20261008` USD 1.17703995 settled, 0 pending, 0 UNKNOWN.
+- Tests: engine 582/582, app benchmark/debug/release 443/443 each, `scripts/p6` 90/90, AndroidTest compile PASS, focused emulator API tests PASS. Owner materials in `D:\P5E-private\q2-outputs\`.
+- Current phase: EDITORIAL_API_V1 — Q2.6 finished and stopped for owner reading; U1 deferred; pilot and chunk-pair untouched; 0/3 chapters accepted; P7 not started.
+- Next action: owner reads `q26-holdout-V5-luna-review.html` (and the dev pages) and decides whether the remaining gap (13 % of owner-changed lines fixed against the 25 % floor) calls for another prompt or model change; no further live run before that decision.
+
+## Superseded — Current state — 2026-10-08 (Q2.5.4 stopped at V5-luna canary)
 
 - Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before this Q2.5.4 evidence/snapshot commit is `63e715de`.
 - Current build is `4.18-q2.2` / code `246`, source `abca34cd`, installed only on `emulator-5554`; production and AndroidTest wrapper payloads are mirrored in `artifacts/` and `backup/`.

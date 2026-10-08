@@ -187,3 +187,66 @@ The `Q2-20261008` ledger was pulled before the install and after the tests: SHA-
 Offline V5 rehearsal on the emulator (fake provider, group `Q26-OFFLINE-REHEARSAL-1`, 0 provider calls, USD 0): the runner read the roles map, staged the four original files, derived `ID=007` / `SERIES=JAKUAKU_MONSTER_VOL1`, passed the preflight and wrote the manifest facts into `run-metadata.json`. Every per-file value written by the Java runner (role, name, bytes, characters, lines, non-blank lines, SHA-256) equals the independent Python cross-check for all four files of chapter 007 (table in Q2.6.1 above), which also confirms that the files on the device are byte-identical to the owner's originals. The whole-block SHA-256 of the rendered manifest for chapter 007 is `f6b11a5380cfd493aa47bd43df5b6933229082f90a3981306d3a52389ab4bc51`.
 
 Runner scripts (outside Git, `D:\P5E-private`): `run_q26_api.ps1` (V5 reads `q2-inputs` with original names and the roles map; `-Offline` is the rehearsal) and `run_q26_emulator_tests.ps1`, SHA-256 `A2B85B45D802E273F8EF0C278CE4D675F2EC764109320FFBE73EC2E54D2795D7` and `9B9B6F2F810E20C7244185C41E5C8BE2CE7E7A18AE313C0B15B2E9879387DDC2` at the time of Q2.6.2.
+
+### Q2.6.3 — live runs under D-Q2c
+
+Installed app `4.18-q2.3` / code 247 (source `7cc4108b`, contract `EDITORIAL_API_V1.4`), `emulator-5554` only, model `openai/gpt-5.6-luna`, reasoning `medium`, route OpenAI, group ledger `Q2-20261008` (stored cap USD 6.00; D-Q2b ceiling USD 10.00), V5 chapter cap USD 1.50, E chapter cap USD 0.10. Before every run the runner checked the endpoint/account fingerprint (MATCH, 0 calls) and verified the ledger (`verify_spend_ledger.py`). Owner FINAL files were used only by the scorer. Nothing in code, prompts, thresholds or acceptance rules changed between the canary, dev and holdout; U1, pilot and chunk-pair were not touched. Ledger before Q2.6.3: 11 settled calls, USD 0.8455608, 0 pending.
+
+**Canary, V5-luna chapter 007 (run `24bf28b7-b6fc-426e-9f07-7ab07b33691c`) — passed.** The request had one HOST SOURCE MANIFEST, then the unchanged prompt and Workflow, then four `=== FILE: <original name> ===` blocks (`007_RAW_JAKUAKU_MONSTER_VOL1.txt`, `007_JAKUAKU_MONSTER_VOL1_DRAFT.txt`, `007_JAKUAKU_MONSTER_VOL1_chapter_glossary.csv`, `007_PRONOUN_JAKUAKU_MONSTER_VOL1.csv`), one Project Instruction in each of the three requests, and none of the E-path text (no "APP DETECTIONS", no "QUALITY STANDARD"). Turn-1 request capture SHA-256 `efdc1001938d641754dc90ffc1afe6755184bdc6a1a372fb2e38dc933fbfd144`; SHA-256 of the manifest block `f6b11a5380cfd493aa47bd43df5b6933229082f90a3981306d3a52389ab4bc51` (identical to the offline rehearsal). The per-file values the runner wrote (role, name, bytes, characters, lines, non-blank lines, SHA-256) equal the Python cross-check for all four files. All three turns finished with `finish_reason=stop` and no `stop_class`; the model named its outputs with the chain identity (`007_REPORT_L1_…`, `007_VI_L2_…`, `007_QA_RECEIPT_…` for series `JAKUAKU_MONSTER_VOL1`), the second and third turns accepted the earlier answers in the history (so row 10 of the table above held), and the FINAL was extracted: app state `FINAL_NOTES`, structurally valid, 3 physical calls, 78,927 input and 19,513 output tokens, USD 0.03241211. The stop that ended the Q2.5 canary (`INPUT_ARTIFACT_MISSING`) did not recur.
+
+**Dev matrix.** E-luna-b (independent of the canary) on 004–008 and V5-luna on 004, 005, 006, 008 (007 is the canary). One run per arm and chapter, no repeats, no retry after dispatch. Columns follow the scorer; "Farther" is counted only on lines the owner changed, as the gate defines it; the gate columns are the automatic conditions 1–4 of the minimum gate (`scripts/p6/min_gate_413.py`, new in this package, with its own unit tests), and the owner's reading (condition 5) is not computed.
+
+| Arm | Ch | State | Owner changed | Improved | Near-exact | Farther (owner-changed lines) | App changed owner-unchanged | Added kana/Han | Delta similarity | Gate 1-4 | Failed checks | calls | in tok | out tok | USD |
+|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---|---|---:|---:|---:|---:|
+| E-luna-b | 004 | FINAL_NOTES | 60 | 2 | 0 | 3 | 5 | 0 | -0.00130236 | FAIL | c2_japanese_lines_not_above_final, c3_similarity_not_below_draft, c4_improved_at_least_25pct | 1 | 8104 | 4130 | 0.00698185 |
+| E-luna-b | 005 | FINAL_NOTES | 31 | 0 | 0 | 1 | 7 | 0 | -0.00497477 | FAIL | c3_similarity_not_below_draft, c4_improved_at_least_25pct | 1 | 10565 | 5544 | 0.0092939 |
+| E-luna-b | 006 | FINAL_NOTES | 38 | 5 | 5 | 9 | 16 | 0 | -0.00133459 | FAIL | c2_symbol_mismatch_not_above_draft, c3_farther_on_owner_changed_at_most_10pct, c3_similarity_not_below_draft, c4_improved_at_least_25pct | 1 | 16136 | 7653 | 0.01321745 |
+| E-luna-b | 007 | FINAL_NOTES | 18 | 3 | 3 | 2 | 10 | 0 | -0.00431065 | FAIL | c1_line_count_vs_raw, c3_farther_on_owner_changed_at_most_10pct, c3_similarity_not_below_draft, c4_improved_at_least_25pct | 1 | 7911 | 4693 | 0.0076092 |
+| E-luna-b | 008 | FINAL_NOTES | 20 | 0 | 0 | 0 | 7 | 0 | -0.01068225 | FAIL | c2_symbol_mismatch_not_above_draft, c3_similarity_not_below_draft, c4_improved_at_least_25pct | 1 | 8677 | 4501 | 0.0075703 |
+| V5-luna | 004 | RETRY_REQUIRED / invalid (V5_STOP_CONTENT_UNACCOUNTED_CHANGE) | 60 | 0 | 0 | 0 | 0 | 0 | +0.00000000 | FAIL | c1_valid_not_truncated, c2_japanese_lines_not_above_final, c4_improved_at_least_25pct | 3 | 71413 | 13868 | 0.02420742 |
+| V5-luna | 005 | FINAL_NOTES | 31 | 1 | 0 | 0 | 4 | 0 | -0.00300171 | FAIL | c3_similarity_not_below_draft, c4_improved_at_least_25pct | 3 | 82164 | 22022 | 0.03536322 |
+| V5-luna | 006 | FINAL_NOTES | 38 | 7 | 5 | 7 | 12 | 0 | +0.00060666 | FAIL | c3_farther_on_owner_changed_at_most_10pct, c4_improved_at_least_25pct | 3 | 101020 | 25334 | 0.04150276 |
+| V5-luna | 007 | FINAL_NOTES | 18 | 8 | 8 | 2 | 5 | 0 | -0.00324978 | FAIL | c1_line_count_vs_raw, c3_farther_on_owner_changed_at_most_10pct, c3_similarity_not_below_draft | 3 | 78927 | 19513 | 0.03241211 |
+| V5-luna | 008 | FINAL_NOTES | 20 | 7 | 8 | 0 | 7 | 0 | -0.01190111 | FAIL | c3_similarity_not_below_draft | 3 | 79795 | 21652 | 0.03458618 |
+
+
+Dev totals per arm (167 owner-changed lines each):
+
+| Arm | Chapters passing 1–4 | Improved | Near-exact | Farther (owner-changed) | App changed owner-unchanged | Added kana/Han | Physical calls | Input / output tokens | USD |
+|---|---:|---:|---:|---:|---:|---:|---:|---|---:|
+| E-luna-b | 0/5 | 10 (6.0 %) | 8 | 15 | 45 | 0 | 5 | 51,393 / 26,521 | 0.0446727 |
+| V5-luna | 0/5 | 23 (13.8 %) | 21 | 9 | 28 | 0 | 15 | 413,319 / 102,389 | 0.16807169 |
+
+V5-luna 004 stopped in turn 3 with the model's own typed stop `V5_STOP_CONTENT_UNACCOUNTED_CHANGE` (it found sentence-final `。` marks removed in dialogue without a change ID in the Change Map and refused to release); the app kept the DRAFT and recorded `RETRY_REQUIRED`. It is scored as invalid, was not resent, and did not repeat on the next chapters, so the V5 series continued. No run produced a truncation, a `length` finish, an UNKNOWN cost or an overrun.
+
+**Gate and choice.** No chapter of either arm satisfies conditions 1–4 (0/5 and 0/5), mostly on condition 4 (improved lines below 25 % of the owner-changed lines), then on condition 3 (similarity to FINAL below the DRAFT's, or more than 10 % of the owner-changed lines moved farther) and, in single cases, on condition 1 or 2 (line count against RAW; Japanese lines above FINAL; symbol mismatches above the DRAFT's). By the frozen rule the arm with the most passing chapters is chosen and a tie goes to the higher improved count: both have 0, V5-luna has 23 against 10, so **V5-luna** was chosen. Because fewer than 3 of 5 dev chapters pass, the result is recorded as **not reaching the 4.1.3 minimum** and the holdout was run only to give the owner something to read, as the request specified.
+
+**Holdout 011, 014, 017 — V5-luna, no change from dev.**
+
+| Arm | Ch | State | Owner changed | Improved | Near-exact | Farther (owner-changed lines) | App changed owner-unchanged | Added kana/Han | Delta similarity | Gate 1-4 | Failed checks | calls | in tok | out tok | USD |
+|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---|---|---:|---:|---:|---:|
+| V5-luna | 011 | FINAL_NOTES | 30 | 2 | 2 | 1 | 2 | 0 | +0.00018658 | FAIL | c4_improved_at_least_25pct | 3 | 98694 | 25276 | 0.04127555 |
+| V5-luna | 014 | FINAL_NOTES | 52 | 14 | 12 | 9 | 6 | 0 | +0.00084328 | FAIL | c3_farther_on_owner_changed_at_most_10pct | 3 | 106661 | 26054 | 0.04303549 |
+| V5-luna | 017 | FINAL_OK | 40 | 0 | 0 | 0 | 0 | 0 | +0.00127845 | FAIL | c4_improved_at_least_25pct | 3 | 86512 | 20937 | 0.03442372 |
+
+
+Holdout total: 122 owner-changed lines, improved 16 (13.1 %), near-exact 14, farther on owner-changed lines 10, app changed owner-unchanged 8, added kana/Han 0, 9 physical calls, 291,867 input and 72,267 output tokens, USD 0.11873476. 0/3 chapters pass conditions 1–4 (011 and 017 on the 25 % improvement condition, 014 on the 10 % farther condition). Chapter 017 returned `FINAL_OK` with the text essentially equal to the DRAFT (0 improved, 0 changed lines), which is a valid no-change answer, not a fix.
+
+**Spend and ledger.** Final ledger (pulled after the last run, `verify_spend_ledger.py` PASS): 24 settled logical calls, 48 entries, USD 1.17703995 settled, 0 pending, 0 UNKNOWN, 0 overruns, USD 4.82296005 left under the stored USD 6.00 cap (D-Q2b ceiling USD 10.00). Q2.6 spent USD 0.33147915 on 13 logical calls = 29 physical provider calls (5 E, 24 V5); canary USD 0.03241211, E-luna-b dev USD 0.0446727, V5-luna dev (without the canary) USD 0.13565958, holdout USD 0.11873476. Ledger file SHA-256 `86087576bcc1114e12cab76235e884674c330b5c8466ee1e35bfc67d1009efc2`; last entry hash `bd8d265059532ce6a2ed17eaa364161051efe3a371ce2d0a39127bd11da43401`. No stop condition of the approval was triggered (pack-table condition left open: none; UNKNOWN: 0; infrastructure error: 0; estimate above cap: none).
+
+**What this does and does not show.** STRUCTURAL: all V5 runs that completed produced a valid, untruncated candidate; the three-turn chain, the host manifest and the original names work end to end. SEMANTIC: NOT_MEASURED; the automatic numbers are a filter, and the owner's reading decides. PERSISTENCE/EXPORT: the app texts below were copied byte for byte from the run outputs (SHA-256 equals the recorded `finalSha256`). V5-luna fixes more owner-changed lines than E-luna-b (13.8 % against 6.0 % on dev, 13.1 % on holdout) and changes fewer lines the owner left alone (28 against 45 on dev), at about 3.8 times the dev cost; neither reaches the 25 % improvement floor of the minimum gate. 0/3 accepted chapters still stands; this package does not change it, P7 is not started, and no default mode is chosen by this result.
+
+**Owner materials (private, outside Git), `D:\P5E-private\q2-outputs\`:**
+
+| File | SHA-256 |
+|---|---|
+| `011_APP_V5-luna_JAKUAKU_MONSTER_VOL1.txt` | `de4935b0f215d727e0db062f67f2758a3dcbdd674c497d1993a9197ee21b52b5` |
+| `014_APP_V5-luna_JAKUAKU_MONSTER_VOL1.txt` | `4e0166c30849e1e6d350e12470f876dc9829f9465470b04e4e31b575bf085d6f` |
+| `017_APP_V5-luna_JAKUAKU_MONSTER_VOL1.txt` | `9090734fcdb0fef4658d0f73cb2b9794032eb2cc66ad350836b427e05e7809ce` |
+| `q26-holdout-V5-luna-review.html` (RAW / DRAFT / app / FINAL, lines either side changed) | `885acbe1edebd2c1f134bec4ceb8173e3966c7aee78adcf4ca6d0bfd8d7c4d56` |
+| `q26-dev-V5-luna-review.html` (dev 004–008, for comparison) | `34fc14ca7cf7e26d087e9c654a178a2bd49c34dc4fb0325a89ab24f78dabcc96` |
+| `q26-dev-E-luna-b-review.html` (dev 004–008, for comparison) | `f57dc1b833d5a5d1a17a5bfd8eed73e39b5ad8f9340cfd6318eb0121ccbcb485` |
+
+Raw run folders, request/response captures, per-run `score.json` and `gate.json`, the summaries `dev-gate-summary.json` and `holdout-gate-summary.json`, and the ledger copies are under `D:\P5E-private\q2-runs\Q2.6\`. Private scripts: `run_q26_api.ps1`, `run_q26_dev.ps1`, `run_q26_holdout.ps1`, `score_q26.py`, `make_q26_review_page.py`. Q2.6 is complete; the run stops here for the owner's reading.
+
+**Q2.6 validation (forced, final tree `HEAD` plus the gate tool):** `:editorial-engine:test` 582/582; `:app:testBenchmarkUnitTest`, `:app:testDebugUnitTest`, `:app:testReleaseUnitTest` 443/443 each; `:app:compileDebugAndroidTestJavaWithJavac` PASS; all of `scripts/p6` 90/90 (83 before plus 7 for `min_gate_413.py`); focused emulator API tests 6/6, 3/3, 2/2 and process death 3/3 on build `4.18-q2.3`; provider calls in Q2.6: 29, all within D-Q2c.
