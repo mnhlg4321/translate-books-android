@@ -62,3 +62,26 @@ if __name__ == "__main__":
         n = f"{i:03d}"
         r, d, beads, non, agree, tot = report(n)
         print(n, f"raw {len(r)} draft {len(d)}", "non-1:1 (rawLine,draftLine,r,d):", non[:6], f"anchor agreement {agree}/{tot}")
+
+
+def decode(data):
+    """Decode like the app's FileUtil: UTF-16 LE/BE and UTF-8 BOMs, strict UTF-8, then Windows-31J."""
+    if data.startswith(b"\xff\xfe"): return data[2:].decode("utf-16-le")
+    if data.startswith(b"\xfe\xff"): return data[2:].decode("utf-16-be")
+    if data.startswith(b"\xef\xbb\xbf"): return data[3:].decode("utf-8")
+    try: return data.decode("utf-8")
+    except UnicodeDecodeError: return data.decode("cp932")
+
+
+def cut_points(beads, raw, budget=900, guard=2):
+    """Chunk cuts: after >= budget RAW characters, only where `guard` consecutive 1-1 pairs stand on each side.
+    guard=2 gave 133/133 correct cuts on 18 chapters with a FINAL-derived answer (8 LN + 10 WN); guard=1 had one wrong
+    cut (WN 043, inside a run of DRAFT merges). Returns (raw_line_end, draft_line_end) pairs."""
+    def one(b): return (b[1] - b[0], b[3] - b[2]) == (1, 1)
+    out, chars = [], 0
+    for k, b in enumerate(beads):
+        chars += sum(len(x) for x in raw[b[0]:b[1]])
+        if chars < budget or k + guard >= len(beads): continue
+        if all(one(beads[j]) for j in range(max(0, k - guard + 1), k + 1)) and all(one(beads[j]) for j in range(k + 1, k + 1 + guard)):
+            out.append((b[1], b[3])); chars = 0
+    return out

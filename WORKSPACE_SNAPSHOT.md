@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-09 (+07:00): coordinator đo lệch dòng RAW/DRAFT trên 28 chương và prototype căn dòng (scripts/chunk/align_lines_reference.py): 42/42 điểm cắt đúng trên 8 chương có đáp án; ghép 1–1 thuần sai ở 016/027 (lệch bù trừ). Cập nhật mục 3.1 và C1.1 của `docs/EDITORIAL_CHUNK_PLAN.md`.
+- Updated: 2026-10-09 (+07:00): coordinator khảo sát bộ WN (85 chương): ghép file phải theo tiêu đề/thứ tự file, RAW UTF-16, quy tắc cắt chunk có vùng đệm 2 cặp 1–1 (133/133 điểm cắt đúng trên 18 chương có đáp án). Căn dòng vẫn là prototype Python, đưa vào app ở C1.1 (`docs/EDITORIAL_CHUNK_PLAN.md` mục 3.2–3.3).
 - Current version: active v4.18.
 - Current branch: `feature/v4.18-p5e-runner-repair-20260917`; existing release checklist unchanged.
-- Current commit: 1f360c19 — baseline ngay trước commit này (confirm actual HEAD on resume).
+- Current commit: df0154f2 — baseline ngay trước commit này (confirm actual HEAD on resume).
 - Current build: `4.18-q2.3`/code `247`, event `build-20261009-034756`, source `7cc4108b`, APK SHA-256 D21C64E5A08879E88B850C60E45515812A8902ABB30DFB1449F292434D20B4DE; AndroidTest archive `q26-editorial-api-20261009` (SHA-256 58ED4E1843F27E0C768053E22E432BCA8702056325CA9F451E741ABA2BC26D89); mirrored in `artifacts/` and `backup/`; installed only on `emulator-5554`.
 - Current phase: Biên tập theo chunk (C1): nối nguồn hai file + runner CHUNK + UI bỏ Kỹ/V5; live 1 chương 007 sau D-C1; U1 tạm hoãn; 0/3 chương đạt; P7 chưa bắt đầu.
 - Completed tasks: Q2.6.1 (role-based V5 preflight, ID/SERIES, HOST SOURCE MANIFEST, original names, pack-condition table), Q2.6.2 (build 4.18-q2.3, focused emulator tests), Q2.6.3 (canary, dev matrix, gate, holdout, exports).
