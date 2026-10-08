@@ -85,3 +85,34 @@ def cut_points(beads, raw, budget=900, guard=2):
         if all(one(beads[j]) for j in range(max(0, k - guard + 1), k + 1)) and all(one(beads[j]) for j in range(k + 1, k + 1 + guard)):
             out.append((b[1], b[3])); chars = 0
     return out
+
+
+SERIES_RATIO = 2.54  # VI/JP character ratio; the app learns it from the user's previously accepted pairs (default ja->vi)
+
+
+def verdict(raw, draft, gl, beads=None):
+    """Chapter verdict before any API call: 'OK' | 'WARN' | 'BLOCK', with the reasons.
+    Measured on LN 28 + WN 85 correct pairs, 55 wrong-chapter pairs (n vs n+1) and 11 other-edition pairs:
+    wrong chapter 55/55 BLOCK (with and without glossary); correct 0 BLOCK, 3-5 WARN; other edition 10-11/11 WARN/BLOCK."""
+    if beads is None:
+        beads, ar, ad = align(raw, draft, gl)
+    else:
+        ar = [anchors_raw(x, gl) for x in raw]; ad = [anchors_draft(x, gl) for x in draft]
+    one = [b for b in beads if (b[1] - b[0], b[3] - b[2]) == (1, 1)]
+    terms = {t for s, t in gl}
+    anch = [b for b in one if (ar[b[0]] | ad[b[2]]) & terms]          # glossary terms only; digits only help alignment
+    name = sum(1 for b in anch if ar[b[0]] & ad[b[2]] & terms) / len(anch) if len(anch) >= 15 else None
+    edge = sum(1 for b in one if sig(raw[b[0]]) == sig(draft[b[2]])) / max(1, len(one))
+    skips = sum(1 for b in beads if (b[1] - b[0]) == 0 or (b[3] - b[2]) == 0) / max(1, len(beads))
+    dev = abs(sum(map(len, draft)) / max(1, sum(map(len, raw))) / SERIES_RATIO - 1)
+    reasons = []
+    if name is not None and name < 0.35: reasons.append(("BLOCK", "NAME_MATCH", name))
+    elif name is not None and name < 0.6: reasons.append(("WARN", "NAME_MATCH", name))
+    if edge < 0.95: reasons.append(("BLOCK", "EDGE_SYMBOLS", edge))
+    elif edge < 0.97: reasons.append(("WARN", "EDGE_SYMBOLS", edge))
+    if skips > 0.05: reasons.append(("BLOCK", "UNPAIRED_LINES", skips))
+    elif skips > 0.015: reasons.append(("WARN", "UNPAIRED_LINES", skips))
+    if dev > 0.35: reasons.append(("BLOCK", "LENGTH_RATIO", dev))
+    elif dev > 0.2: reasons.append(("WARN", "LENGTH_RATIO", dev))
+    level = "BLOCK" if any(r[0] == "BLOCK" for r in reasons) else "WARN" if reasons else "OK"
+    return level, reasons
