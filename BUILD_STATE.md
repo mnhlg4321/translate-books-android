@@ -10,7 +10,7 @@
 - Completed tasks: engine/app offline tests, exact FULL CHATGPT pack hashes, V5 history/FINAL/truncation tests, cap policy, wrapper production/test archives, emulator gate, manifest, dev dispatch and scorer report.
 - Pending tasks: owner decision on whether a contract/pack change is in scope; holdout 011/014/017 and `q2-outputs` were deliberately not run/created.
 - Known bugs/limits: E-strong has 165 changed owner-unchanged lines versus the E-luna baseline 37 and two added kana/Han lines; V5-strong has five `V5_FINAL_MISSING` stops. No selected holdout quality result exists.
-- Regression status: engine 566/566, app unit tasks PASS, AndroidTest compile and targeted emulator Editorial API tests PASS, Python verifier 14/14 PASS; Q2 ledger 20 settled physical calls, USD 0.8375159, pending 0, UNKNOWN 0.
+- Regression status: engine 566/566, app unit tasks PASS, AndroidTest compile and targeted emulator Editorial API tests PASS, Python verifier 14/14 PASS; Q2 ledger 10 settled logical reservations (20 entries / physical calls), USD 0.8375159, pending 0, UNKNOWN 0.
 - Next action: owner decides whether to change the V5 input contract/pack or end Q2; no holdout dispatch until then.
 ## Superseded — independent API V1 review and N1–N4 checkpoint (historical, 2026-10-06)
 

@@ -42,7 +42,7 @@ Q2.3: PASS. Q2.4 is authorized by D-Q2 and the measured reservation is within bo
 
 ## Q2.4
 
-The new ledger `Q2-20261008` ran the complete dev matrix on `emulator-5554`: five E-strong logical calls and five V5-strong logical calls. E-strong used one physical call per chapter; V5-strong used exactly three physical turns per chapter. The ledger has 20 settled physical entries, 0 pending reservations, 0 UNKNOWN and 0 overrun entries; settled spend is `USD 0.8375159`, leaving `USD 5.1624841` of the USD 6.00 cap. No retry was sent after a V5 stop.
+The new ledger `Q2-20261008` ran the complete dev matrix on `emulator-5554`: five E-strong logical calls and five V5-strong logical calls. E-strong used one physical call per chapter; V5-strong used exactly three physical turns per chapter. The ledger has 10 settled logical reservations (20 ledger entries), representing 20 physical provider calls, with 0 pending reservations, 0 UNKNOWN and 0 overrun entries; settled spend is `USD 0.8375159`, leaving `USD 5.1624841` of the USD 6.00 cap. No retry was sent after a V5 stop.
 
 The fixed scorer ran offline against the private FINAL files; the detailed private report is `D:\P5E-private\q2-runs\Q2.4\dev-score-summary.json`. `E-luna`'s comparable Q1 baseline for 004–008 had 37 app-changed owner-unchanged lines and zero added kana/Han. The dev results are:
 
