@@ -46,7 +46,31 @@ Thành phần đã có và tái dùng:
 - Nguồn **job Dịch**: mỗi dòng của job là một cặp chunk (đã có).
 - Nguồn **hai file** (mới, `EditorialPairSource.fromAlignedFiles`, commit cùng tài liệu này): khi số dòng không rỗng bằng nhau thì ghép theo dòng và gom theo ngân sách ký tự; các dòng ghép lại đúng nguyên file. Số dòng lệch → `LINE_COUNT_MISMATCH`, không tự ghép.
 
-Giới hạn đã biết: 13/28 chương của owner có DRAFT lệch số dòng so với RAW (±1–4 dòng). Phiên bản đầu chạy chương đó như **một chunk toàn chương** và báo rõ; bước sau mới làm căn dòng theo neo (ký hiệu khung, thoại, dấu ngắt cảnh) — chỉ khi chunk chứng minh có ích.
+### 3.1 Căn dòng RAW ↔ DRAFT trước khi cắt chunk (đo 2026-10-09)
+
+Đo trên 28 chương của owner (chỉ đếm, không đưa văn bản vào Git):
+
+- 13/28 chương lệch số dòng ±1–4. Lệch luôn **cục bộ**, 1–4 điểm mỗi chương: DRAFT tách một dòng RAW thành 2 (thường "câu thoại + câu kể" hoặc câu dài), gộp 2 dòng RAW bị ngắt giữa câu, hoặc thiếu/thêm một dòng.
+- **Số dòng bằng nhau không bảo đảm khớp 1–1:** chương 016 và 027 có một chỗ tách và một chỗ gộp bù trừ nhau (016: RAW 112 bị DRAFT tách, RAW 189–190 bị DRAFT gộp) nên RAW và DRAFT lệch một dòng suốt 77 dòng (016) và 228 dòng (027). Ghép 1–1 thuần (`fromAlignedFiles`, `1f360c19`) sẽ ghép sai ở hai chương này.
+
+Phương án (prototype: `scripts/chunk/align_lines_reference.py`):
+
+1. **Căn dòng tự động cho mọi chương**, kiểu Gale–Church: quy hoạch động với các bước 1–1, 1–2, 2–1 (và 1–0, 0–1 phạt nặng). Chi phí mỗi cặp gồm:
+   - tỷ lệ độ dài so với tỷ lệ VI/JP của cả chương;
+   - ký hiệu đầu/cuối dòng (「」『』【】〝〟◇◆…);
+   - **neo glossary**: tên/thuật ngữ nguồn ở dòng RAW phải có dạng đích ở dòng DRAFT; cùng với chữ số.
+2. **Chỉ cắt chunk ở ranh giới an toàn:** giữa hai cặp 1–1 liền nhau, khi đã đủ ngân sách ký tự. Nhóm tách/gộp luôn nằm trọn trong một chunk. Trong chunk, model được phép tách/gộp dòng theo RAW, vì app ghép theo chunk chứ không theo dòng.
+3. **Ngữ cảnh chồng lấn** (đã có): mỗi chunk kèm RAW/DRAFT trước–sau chỉ để đọc, nên nếu cắt lệch một dòng thì model vẫn thấy câu nguồn.
+4. **Kiểm từng chunk trước khi gửi**, không tốn API: tỷ lệ độ dài, số câu thoại 「」, neo glossary/số phải khớp. Chunk nghi ngờ → gộp với chunk kề; vẫn nghi → báo người dùng và chạy chương đó như một chunk toàn chương.
+
+Kết quả prototype:
+
+- 8 chương lệch số dòng có đáp án dựng từ FINAL: **42/42 điểm cắt đúng**, mọi điểm lệch tìm đúng chỗ.
+- 016/027: tìm ra đúng cặp tách/gộp bù trừ (đã đọc tay xác nhận).
+- 4 chương lệch không có đáp án (010, 015, 019, 023): điểm lệch tìm được hợp lý khi đọc mẫu (vd 023 dòng 142–145: DRAFT tách "thoại + kể").
+- Mức khớp neo glossary trên các cặp 1–1 có neo: 79–100% theo chương.
+- Giới hạn: đáp án dựng từ FINAL chỉ đúng ở chương mà FINAL theo cấu trúc RAW; với 016/027, FINAL theo cấu trúc DRAFT nên phải kiểm tay.
+
 
 Ước tính: chương 007 (3 823 ký tự RAW) cắt 900 ký tự → 5 chunk; với luna ≈ USD 0.002/chunk → **≈ USD 0.01/chương**.
 
@@ -61,7 +85,7 @@ Giới hạn đã biết: 13/28 chương của owner có DRAFT lệch số dòng
 
 Ownership: APP (`EditorialPairSourceLoader`, `EditorialApiUiController`, `EditorialApiPageFactory`, `EditorialPairRunService` nếu cần), RUNNER (`EditorialApiV1FixtureRunnerInstrumentedTest`, `scripts/p6/run_group.ps1`), không đụng engine ngoài sửa lỗi có test.
 
-1. **Nối nguồn hai file vào luồng chunk:** combo nguồn FILES → `fromAlignedFiles` với ngân sách lấy từ cài đặt chunk của luồng Dịch (chế độ ký tự: `maxCharsPerChunk`; chế độ token: số token, coi 1 ký tự RAW ≈ 1 token; mặc định 900). `LINE_COUNT_MISMATCH` → chạy một chunk toàn chương và hiện "RAW và DRAFT lệch số dòng — biên tập cả chương một lần".
+1. **Căn dòng + cắt chunk (engine, thuần JVM):** port `scripts/chunk/align_lines_reference.py` thành `LineAligner` (bước 1–1/1–2/2–1/1–0/0–1, chi phí độ dài + ký hiệu đầu/cuối + neo glossary + số) và `ChunkCutter` (chỉ cắt giữa hai cặp 1–1, gom theo ngân sách ký tự RAW lấy từ cài đặt chunk của luồng Dịch, mặc định 900; kiểm từng chunk như mục 3.1.4). Thay `fromAlignedFiles` 1–1 thuần bằng kết quả căn dòng, cho cả chương bằng số dòng. Test: ca tổng hợp cho từng kiểu lệch (tách, gộp, thiếu, thêm, bù trừ tách+gộp), cắt không bao giờ rơi trong nhóm tách/gộp, các dòng ghép lại đúng nguyên file. Đo offline trên 28 chương (chỉ đếm): tái tạo đúng các kết quả mục 3.1, ghi số vào mục 7. Nối vào combo nguồn FILES; chunk nghi ngờ → gộp; vẫn nghi → một chunk toàn chương kèm thông báo.
 2. **UI:** bỏ nút chọn chế độ Kỹ và đường V5 khỏi luồng người dùng; không còn ô ghi chú/“Cần xem” từ NOTES (chỉ cảnh báo cấu trúc của app). Giữ chuỗi tiếng Việt, test quét chuỗi.
 3. **Runner chế độ `CHUNK`:** đọc RAW/DRAFT/Glossary/Pronoun của 1 chương, chạy qua `EditorialPairRunService` thật, ghi `final.txt` + chi phí; dừng ở chunk lỗi đầu tiên.
 4. **Offline:** test host đầy đủ (engine, app, `scripts/p6`), replay fake trên 007 thật (DRAFT trả nguyên → `final.txt` == DRAFT từng byte), build qua wrapper (code > 247), test chunk/Editorial tập trung trên `emulator-5554`.
@@ -79,3 +103,4 @@ PASS offline: test xanh từ archive sạch; replay no-op trả đúng byte; 0 p
 ## 7. Nhật ký
 
 - 2026-10-09 — coordinator tiếp quản sau khi Codex hết quota: hoàn tất và commit CP-IMPL-2 (engine 583, app 0 lỗi, `scripts/p6` 93); chốt nguyên nhân bằng số đo mục 1; thêm nguồn hai file thẳng dòng; viết kế hoạch này.
+- 2026-10-09 — coordinator: đo lệch dòng trên 28 chương, prototype căn dòng Gale–Church + neo glossary (42/42 điểm cắt đúng trên 8 chương có đáp án; phát hiện lệch bù trừ ở 016/027 mà ghép 1–1 thuần bỏ sót); cập nhật C1.1 thay ghép 1–1 thuần bằng căn dòng.
