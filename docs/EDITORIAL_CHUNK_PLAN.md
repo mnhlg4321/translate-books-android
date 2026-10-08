@@ -226,20 +226,105 @@ Các WARN trên cặp đúng đều có lý do thật: chương rất ngắn (LN
 3. Mỗi lần live có trần tiền cụ thể do owner duyệt; dừng ngay ở lỗi đầu tiên (đã có trong CP-IMPL-2: dừng tại chunk lỗi đầu tiên).
 4. Chương test: dev **007** (ngắn, thẳng dòng, đã có số liệu của mọi nhánh: luna 1 lượt 3/18, v5 8/18, Sol 13/18); holdout **011** (thẳng dòng, chưa dùng để chỉnh).
 
-## 5. Việc tiếp theo (C1) — cho phiên Codex
+## 5. Lộ trình và yêu cầu làm việc chi tiết
 
-Ownership: APP (`EditorialPairSourceLoader`, `EditorialApiUiController`, `EditorialApiPageFactory`, `EditorialPairRunService` nếu cần), RUNNER (`EditorialApiV1FixtureRunnerInstrumentedTest`, `scripts/p6/run_group.ps1`), không đụng engine ngoài sửa lỗi có test.
+### 5.1 Cài đặt dùng chung với luồng Dịch (Settings → Performance)
 
-1. **Khâu tách chunk CS-1 (mục 3.4) — engine thuần JVM + app:** làm đủ S0–S9 theo mục 3.4, đúng ngưỡng và thông báo đã ghi; nghiệm thu bằng các số ở cuối mục 3.4. Chi tiết cũ giữ để tra: port `scripts/chunk/align_lines_reference.py` thành `LineAligner` (bước 1–1/1–2/2–1/1–0/0–1, chi phí độ dài + ký hiệu đầu/cuối + neo glossary + số) và `ChunkCutter` (cắt khi đủ ngân sách ký tự RAW — lấy từ cài đặt chunk của luồng Dịch, mặc định 900 — và có ≥ 2 cặp 1–1 liền nhau ở mỗi bên; kiểm từng chunk như mục 3.1.4; báo "không cùng bản" khi mức khớp neo/tỷ lệ độ dài rớt diện rộng). Ghép file trong thư viện nguồn theo tiêu đề rồi thứ tự file (mục 3.2); đọc file qua `FileUtil.readText`. Đo offline thêm trên 85 chương WN: tái tạo 133/133 điểm cắt đúng và các số ở mục 3.2. Thay `fromAlignedFiles` 1–1 thuần bằng kết quả căn dòng, cho cả chương bằng số dòng. Test: ca tổng hợp cho từng kiểu lệch (tách, gộp, thiếu, thêm, bù trừ tách+gộp), cắt không bao giờ rơi trong nhóm tách/gộp, các dòng ghép lại đúng nguyên file. Đo offline trên 28 chương (chỉ đếm): tái tạo đúng các kết quả mục 3.1, ghi số vào mục 7. Nối vào combo nguồn FILES; chunk nghi ngờ → gộp; vẫn nghi → một chunk toàn chương kèm thông báo.
-2. **UI:** bỏ nút chọn chế độ Kỹ và đường V5 khỏi luồng người dùng; không còn ô ghi chú/“Cần xem” từ NOTES (chỉ cảnh báo cấu trúc của app). Giữ chuỗi tiếng Việt, test quét chuỗi.
-3. **Runner chế độ `CHUNK`:** đọc RAW/DRAFT/Glossary/Pronoun của 1 chương, chạy qua `EditorialPairRunService` thật, ghi `final.txt` + chi phí; dừng ở chunk lỗi đầu tiên.
-4. **Offline:** test host đầy đủ (engine, app, `scripts/p6`), replay fake trên 007 thật (DRAFT trả nguyên → `final.txt` == DRAFT từng byte), build qua wrapper (code > 247), test chunk/Editorial tập trung trên `emulator-5554`.
-5. **Live (khi có D-C1):** 1 chương **007**, luna reasoning medium. Chấm bằng `score_vs_final.py`; so với 3/18 · 8/18 · 13/18 đã có. Xuất bản app + trang đọc (RAW/DRAFT/app/FINAL) vào `D:\P5E-private\chunk-outputs\`. Dừng, báo cáo trong mục 7 tài liệu này.
+Khâu tách chunk của Biên tập **không có cài đặt riêng về kích thước**: nó đọc đúng các giá trị Performance mà luồng Dịch đang dùng, qua cùng các hàm.
 
-PASS offline: test xanh từ archive sạch; replay no-op trả đúng byte; 0 provider call. PASS live: không chunk nào bị chặn cấu trúc, 0 dòng sinh chữ Nhật, và tỷ lệ sửa trúng 007 cao hơn rõ mức luna toàn chương (3/18). Mức "đạt" cuối cùng vẫn là owner đọc.
+| Cài đặt Performance | Luồng Dịch | Biên tập theo chunk |
+|---|---|---|
+| CHUNK MODE (`token`/`char`) | `Chunker.measure` | Đo **RAW** của chunk bằng chính `Chunker.measure(raw, mode)`: CJK/kana 1 token mỗi ký tự, ASCII theo từ, ký hiệu 0.5 |
+| MAX TOKENS (450) / MAX CHARS (0 → 3 500) | `effectiveHardLimit()` | Giới hạn cứng = `Chunker.adaptiveLimit(s, s.effectiveHardLimit())` (đã tính preset economy ×2 / balanced ×1.5 và context của model) |
+| SOFT LIMIT (0.8) | `effectiveSoftLimit()` | Giới hạn mềm = `adaptiveLimit(s, s.effectiveSoftLimit())`. Chỉ bắt đầu tìm điểm cắt an toàn khi chunk ≥ giới hạn mềm; phải cắt trước giới hạn cứng nếu có điểm an toàn |
+| CONTEXT (400) + Context overlap | ngữ cảnh trước–sau | Luôn bật với Biên tập (cần để đọc câu kề). Lấy khoảng `contextChars` ký tự nhưng tròn theo **dòng nguyên**, tối thiểu 2 dòng mỗi bên |
+| MAX OUTPUT (4 096) | trần token đầu ra | Ước tính token của DRAFT chunk × 1.3 phải ≤ MAX OUTPUT; vượt thì cắt chunk nhỏ hơn (vẫn theo luật điểm cắt an toàn) |
+| GLOSSARY LIMIT (80) / PRONOUN LIMIT (40) | số mục mỗi chunk | Cùng giới hạn, áp **sau** khi lọc theo chunk; nếu phải bỏ bớt mục thì ghi số mục bị bỏ vào bản ghi chunk |
+| TIMEOUT, RETRY, Retry empty/truncation/validation | gọi API | Dùng chung. Một chunk đã gửi mà không rõ kết quả thì không tự gửi lại (giữ quy tắc UNKNOWN) |
+| TEMPERATURE | | Dùng chung |
+| COST LIMIT USD + Stop on cost limit, Stop if pricing unknown | | Dùng chung: dừng trước chunk kế tiếp khi chạm trần; cộng thêm trần mỗi chương của tổ hợp Biên tập |
+| Model, provider (tab Provider) | | Dùng chung; tổ hợp Biên tập có thể chọn model khác |
+
+Khác biệt duy nhất so với Dịch: Dịch cắt RAW theo ký tự rồi mới dịch, còn Biên tập phải cắt **cả RAW và DRAFT tại cùng một ranh giới đã căn** (mục 3.4 S3, S5). Vì vậy điểm cắt chỉ rơi giữa hai dòng đã căn chắc, không giữa câu.
+
+### 5.2 Lộ trình
+
+| Bước | Nội dung | Live | Điều kiện qua |
+|---|---|---|---|
+| C1 | Khâu tách chunk CS-1 trong app + nguồn hai file + UI gọn + runner `CHUNK` + live chương 007 | 1 chương (D-C1 đã duyệt) | Mục 5.3 PASS |
+| C2 | Nếu 007 tốt: holdout 1 chương (011), không chỉnh gì giữa 007 và 011 | 1 chương (cần duyệt) | Tỷ lệ sửa trúng và không làm hỏng giữ được trên 011 |
+| C3 | Owner đọc 3 chương do app biên tập theo chunk (dùng UI như người dùng thật) | 3 chương (cần duyệt) | Owner chấp nhận 3/3 |
+| P7 | Bàn giao theo checklist v4.18 | — | Sau C3 |
+
+U1 (thư viện nguồn đầy đủ, màn chọn kiểu danh sách file) vẫn hoãn; C1 chỉ làm phần thư viện tối thiểu cần cho ghép file (S1).
+
+### 5.3 Yêu cầu làm việc C1 (cho phiên Codex)
+
+**Quyền:** D-C1 đã duyệt (owner, chat 2026-10-09): live **chỉ chương 007**, `openai/gpt-5.6-luna` reasoning medium, ledger mới `C1-<date>` trần **USD 0.05**, chỉ `emulator-5554`. Không pilot, không V5, không chương nào khác.
+
+**Nguyên tắc:** mọi bước tách chunk chạy offline trong app; không gọi API để phát hiện lỗi đầu vào. Model chỉ trả `<EDITED>`. Không tạo file báo cáo mới: ghi kết quả vào mục 7 của tài liệu này. Bản FINAL của owner chỉ dùng để chấm.
+
+#### C1.1 — Engine: khâu tách chunk CS-1 (thuần JVM, `editorial-engine/.../api/chunk/`)
+
+| File mới | Trách nhiệm | Test bắt buộc |
+|---|---|---|
+| `LineUnits` | S2: tách dòng không rỗng + dòng trống theo sau; ghép lại đúng từng byte; CRLF→LF có bản đồ ngược | ghép lại == input cho LF, CRLF, lẫn lộn, BOM đã bỏ, dòng chỉ có `　` |
+| `Anchors` | neo glossary (nguồn RAW ↔ đích DRAFT, không phân biệt hoa/thường) + chữ số (toàn khổ → nửa khổ) | thuật ngữ trùng/không trùng; số Hán không bị coi là số |
+| `LineAligner` | S3: DP 1–1/1–2/2–1/1–0/0–1, chi phí như `align()` tham chiếu, dải chéo `|R−D|+50` | từng kiểu bước; lệch bù trừ (tách + gộp, số dòng bằng nhau); chuỗi gộp liên tiếp; RAW/DRAFT rỗng |
+| `ChapterVerdict` | S4: OK/WARN/BLOCK + lý do có số, ngưỡng như bảng mục 3.4 | mỗi ngưỡng có ca hai bên; "khớp tên" chỉ tính khi có glossary và ≥ 15 dòng |
+| `ChunkCutter` | S5: giới hạn mềm/cứng truyền vào (app lấy từ Performance), đo bằng hàm đo truyền vào (app truyền `Chunker::measure`), vùng đệm 2 cặp 1–1, nhóm không bị cắt, dòng dài = chunk riêng, không có điểm an toàn trong 3× cứng → cắt vùng đệm 1 + cờ, kiểm MAX OUTPUT | cắt không bao giờ rơi vào nhóm; ghép các chunk == file; đổi chế độ token/char thay đổi số chunk như Dịch |
+| `ChunkChecks` | S6: tỷ lệ độ dài ±35%, số dòng thoại ±1, khớp tên ≥ 0.35; gộp với chunk kề; > 20% chunk không đạt → WARN | ca đạt, ca gộp, ca nâng WARN |
+| `ChunkPlan` | S8: kết quả bất biến (hash nguồn, `CS-1`, cặp đã căn nén, điểm cắt, phán định, cờ) + mã hóa/giải mã JSON | khứ hồi JSON; hash đổi → không dùng lại |
+
+Chuyển `PairMaps` sang dựng từ `ChunkPlan` (mỗi chunk một cặp), giữ `fromJobRows` cho nguồn job Dịch. Bỏ `EditorialPairSource.fromAlignedFiles` (1–1 thuần) hoặc để nó gọi `ChunkPlan`.
+
+**Đo offline trên kho của owner** — script mới `scripts/chunk/measure_cs1.py` gọi engine qua một main JVM nhỏ (hoặc test JVM tắt mặc định, bật bằng biến môi trường trỏ tới `D:\Ebooks`), **chỉ in số đếm**. Phải tái tạo:
+
+- 133/133 điểm cắt đúng trên 18 chương có đáp án (cùng định nghĩa đáp án như `cut_rule.py`).
+- 55/55 cặp lệch chương → BLOCK, có và không có glossary.
+- 0/113 cặp đúng → BLOCK.
+- Cặp khác bản: không quá 1/11 OK.
+- Với cài đặt Performance mặc định (token 450, soft 0.8, preset hiện tại): số chunk mỗi chương; chương 059 WN (1 222 dòng) chạy < 1 giây trên emulator.
+
+#### C1.2 — App: nguồn hai file + màn xác nhận
+
+1. `EditorialPairSourceLoader`: tổ hợp nguồn FILES → đọc bằng `FileUtil.readText` → `ChunkPlan` với giới hạn từ `AppSettings` hiện hành (`Chunker.adaptiveLimit`, `effectiveSoftLimit/HardLimit`, `chunkMode`, `contextChars`, `maxOutputTokens`, glossary/pronoun limit).
+2. **S1 ghép file:** hàm thuần `SourceTitle.of(fileName)` rút tiêu đề (bỏ tiền tố số `0043-042　`/`043_`, hậu tố `_translated`/`_v2`/`(1)`/`_FINAL_QA_…`/series, đuôi file; NFKC). Ghép theo tiêu đề rồi thứ tự file; không dùng số chương trong truyện. Test trên tên thật của 28 LN + 85 WN (danh sách tên lưu trong test, không có nội dung sách): ghép đúng 28/28, 85/85.
+3. **Màn xác nhận** (trước khi gọi API, chạy nền, hiện vòng chờ "Đang chia đoạn…"):
+   - OK: "Chia N đoạn theo cài đặt Performance (token 450 · mềm 0.8). DRAFT tách/gộp dòng ở X chỗ; Y câu RAW chưa có trong DRAFT." + nút **Biên tập**.
+   - WARN: "RAW và DRAFT khớp chưa chắc chắn" + tối đa 2 lý do có số + 2 dòng đầu mỗi file; nút **Vẫn biên tập** · **Chọn lại** · **Hủy**.
+   - BLOCK: "RAW và DRAFT có vẻ không cùng chương" + tối đa 2 lý do có số + 2 dòng đầu mỗi file; nút **Chọn lại DRAFT** · **Chọn lại RAW** · **Hủy**. **Không có** nút chạy.
+   - Câu lý do (mã → chữ): `NAME_MATCH` "chỉ P% tên riêng trong RAW có mặt ở dòng DRAFT tương ứng"; `EDGE_SYMBOLS` "P% dòng có dấu thoại/ký hiệu khác nhau"; `UNPAIRED_LINES` "N dòng không ghép được"; `LENGTH_RATIO` "DRAFT dài/ngắn hơn mức thường P%".
+4. Lưu `ChunkPlan` cùng lượt chạy (store v27/v28, migration chỉ thêm cột/bảng). Mở lại không tính lại; nguồn đổi → tính lại và báo.
+
+#### C1.3 — UI gọn
+
+- Bỏ khỏi luồng người dùng: chế độ Kỹ, đường V5, "Cần xem" từ NOTES. Giữ cảnh báo cấu trúc của app và cờ "đoạn chưa chắc".
+- Màn kết quả: danh sách đoạn (trạng thái từng đoạn), Xem bản cuối, So sánh với DRAFT, Xuất TXT.
+- `EditorialApiUserStringsTest` quét thêm mọi chuỗi mới; không có "pack", "binding", "SAFE4", "cấp phép", tiếng Anh trong chuỗi người dùng.
+
+#### C1.4 — Runner `CHUNK` + offline + build
+
+1. Runner chế độ `CHUNK`: đọc RAW/DRAFT/Glossary/Pronoun **tên gốc** của 1 chương từ `D:\Ebooks\...`, chạy qua `EditorialPairRunService` thật với `AppSettings` mặc định của app, ghi `final.txt`, `chunk-plan.json` (không có văn bản sách: chỉ chỉ số dòng, hash, phán định), chi phí từng chunk. Dừng ở chunk lỗi đầu tiên.
+2. Test host đầy đủ từ archive sạch: engine, app, `scripts/p6`, `scripts/chunk`.
+3. Fake replay trên 007 thật: model trả nguyên DRAFT chunk → `final.txt` == DRAFT từng byte; số chunk khớp `measure_cs1.py`.
+4. Build qua wrapper (code > bản cao nhất đã archive), cài chỉ `emulator-5554`, test Editorial/chunk tập trung (danh sách lớp cụ thể, không chạy bộ instrumented rộng).
+
+#### C1.5 — Live chương 007 (D-C1)
+
+1. Kiểm trước: phán định 007 phải OK; ước tính worst-case ≤ USD 0.05 (nếu vượt: dừng, báo số).
+2. Chạy 1 lần. Dừng ở chunk lỗi đầu tiên; không gửi lại chunk đã gửi.
+3. Chấm `score_vs_final.py` (chỉ số mục 3 của Q1 review: khớp, gần hơn, xa hơn, sửa thừa, độ giống cả chương). So với mốc 007: luna toàn chương 3/18 · v5 8/18 · Sol 13/18.
+4. Xuất bản app + trang đọc (RAW/DRAFT/app/FINAL, giống `q2-sol-review.html`) vào `D:\P5E-private\chunk-outputs\007\`.
+5. Ghi 5–10 dòng kết quả vào mục 7; cập nhật mục 6, §10 canonical, snapshot, BUILD_STATE. Dừng.
+
+**PASS C1:** offline đạt mọi số ở C1.1; fake replay đúng từng byte; live không chunk nào bị chặn cấu trúc, 0 dòng sinh chữ Nhật, và 007 sửa trúng rõ hơn luna toàn chương (> 3/18). Đạt hay không về chất lượng vẫn do owner đọc.
+
+**Dừng và hỏi owner nếu:** phán định 007 không phải OK; ước tính vượt USD 0.05; UNKNOWN cost; lỗi hạ tầng; cần đổi ngưỡng CS-1 (ngưỡng chỉ được đổi khi số đo offline chứng minh, và phải ghi lý do).
 
 ## 6. Trạng thái
 
+- D-C1 đã duyệt (owner, chat 2026-10-09): live chỉ chương 007, luna reasoning medium, trần USD 0.05.
 - 0/3 chương được owner chấp nhận; P7 chưa bắt đầu; U1 tạm hoãn.
 - CP-IMPL-2 (chunk không ghi chú, dừng ở chunk lỗi đầu tiên) đã commit `90e9a6f7`.
 - `fromAlignedFiles` + 5 test: commit cùng tài liệu này.
@@ -251,3 +336,4 @@ PASS offline: test xanh từ archive sạch; replay no-op trả đúng byte; 0 p
 - 2026-10-09 — coordinator: đo lệch dòng trên 28 chương, prototype căn dòng Gale–Church + neo glossary (42/42 điểm cắt đúng trên 8 chương có đáp án; phát hiện lệch bù trừ ở 016/027 mà ghép 1–1 thuần bỏ sót); cập nhật C1.1 thay ghép 1–1 thuần bằng căn dòng.
 - 2026-10-09 — coordinator: khảo sát bộ WN 85 chương. Phát hiện ghép file theo số chương sai (thứ tự file ≠ số chương), RAW UTF-16, chuỗi gộp dòng, DRAFT thiếu câu, DRAFT không áp glossary. Thêm quy tắc cắt có vùng đệm 2 cặp: 133/133 điểm cắt đúng trên 18 chương có đáp án. Ghi rõ: căn dòng mới là prototype Python, chưa có trong app.
 - 2026-10-09 — coordinator: chốt thiết kế khâu tách chunk CS-1 (mục 3.4). Hiệu chỉnh luật phán định trên 113 cặp đúng, 55 cặp lệch chương, 11 cặp khác bản: lệch chương 55/55 BLOCK, cặp đúng 0 BLOCK. Thêm `verdict()` vào bộ căn mẫu.
+- 2026-10-09 — owner duyệt D-C1; coordinator xác nhận khâu tách chunk dùng chung cài đặt Performance của luồng Dịch (`Chunker.measure`, `adaptiveLimit`, soft/hard, context, max output, giới hạn glossary/pronoun) và viết lại mục 5 thành lộ trình + yêu cầu làm việc C1 chi tiết.
