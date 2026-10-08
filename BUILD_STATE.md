@@ -1,17 +1,18 @@
 # Build State
 
-## Current state — 2026-10-08 (Q2.5.1 offline complete; continuing)
+## Current state — 2026-10-08 (Q2.5.3 verification complete; continuing)
 
-- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before the Q2.5.2 source/evidence commit is `c69eb0f8`.
-- Current build is `4.18-q2.1` / code `245`, source `45976adb`, installed only on `emulator-5554`; production and AndroidTest wrapper payloads are mirrored in `artifacts/` and `backup/`.
-- Q2.1–Q2.4 are complete as recorded in `docs/EDITORIAL_API_V1_Q2_EXECUTION_20261008.md`; Q2.4 dev 004–008 failed the prior selection gate. Section 7 of the Q2.5 request now controls: only `openai/gpt-5.6-luna`, medium, USD 10.00 Q2 cap, canary 007 first.
-- Q2.5.1 implemented the original four-file V5 input pack, one Project Instruction per chat, exact-byte attachment preservation, fail-closed pack checks, V5 stop/truncation behavior, and `<FINAL>`/named-file extraction. Q2.5.2 adds the supported-evidence minimal-rewrite rule and deterministic same-line status-label case guard; contract revision is now `EDITORIAL_API_V1.4`. No provider or device call has been made for Q2.5.
-- Current phase: EDITORIAL_API_V1 Q2.5.1–2.5.2 offline packages complete; U1 deferred, pilot and chunk-pair untouched.
-- Completed tasks: Q2.5.1–2.5.2 offline implementation and regressions; engine 572/572, each app unit variant 439/439, Python `scripts/p6` 80/80, private real-source preflight 8/8, and AndroidTest Java compile pass.
-- Pending tasks: commit and push Q2.5.2; then Q2.5.3 wrapper build/device verification; then live canary/dev/holdout only under the accepted stopping and quality gates.
-- Known bugs/limits: V5-luna quality is NOT_MEASURED; current source has not been built or run on emulator. Last recorded Q2 ledger amount is USD 0.8375159; ledger state must be freshly read from emulator before dispatch.
-- Regression status: engine 572/572 PASS; app benchmark/debug/release each 439/439 PASS; Python 80/80 PASS; source-pack preflight 8/8 PASS; AndroidTest Java compile PASS; Q2.5 provider calls 0.
-- Next action: commit and push Q2.5.2, then run Q2.5.3 through the wrapper.
+- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before this Q2.5.3 evidence/snapshot commit is `abca34cd`.
+- Current build is `4.18-q2.2` / code `246`, source `abca34cd`, installed only on `emulator-5554`; production and AndroidTest wrapper payloads are mirrored in `artifacts/` and `backup/`.
+- Q2.1–Q2.4 are complete as recorded in `docs/EDITORIAL_API_V1_Q2_EXECUTION_20261008.md`; Q2.4 dev 004–008 failed the prior selection gate. Section 7 controls: only `openai/gpt-5.6-luna`, medium reasoning, USD 10.00 Q2 cap, canary 007 first.
+- Q2.5.1 implements the original four-file V5 input pack, one Project Instruction per chat, exact-byte attachment preservation, fail-closed pack checks, stop/truncation behavior, and FINAL extraction. Q2.5.2 adds the supported-evidence minimal-rewrite rule and same-line status-label capitalization guard; contract `EDITORIAL_API_V1.4`.
+- Current phase: EDITORIAL_API_V1 Q2.5.1–2.5.3 complete; canary not yet dispatched. U1 deferred, pilot and chunk-pair untouched.
+- Completed tasks: Q2.5.1–2.5.3; engine 572/572, each app unit variant 439/439, Python `scripts/p6` 80/80, private source preflight 8/8, AndroidTest compile PASS, wrapper build/lint/unit PASS, focused emulator Editorial API 14/14.
+- Pending tasks: re-read the Q2 ledger and account fingerprint, dispatch V5-luna canary 007, then proceed to frozen dev/holdout only if all canary turns pass their stop conditions.
+- Known bugs/limits: V5-luna quality is NOT_MEASURED. An accidental broad instrumentation attempt hit historical P4 assertion `expected 27, actual 28`; it was stopped before pair tests; focused Editorial API tests passed. Ledger last read: USD 0.8375159, 10 settled calls, 0 pending, 0 UNKNOWN; reread immediately before live dispatch.
+- Regression status: engine 572/572 PASS; app benchmark/debug/release each 439/439 PASS; Python `scripts/p6` 80/80 PASS; real-source preflight 8/8 PASS; wrapper unit/lint/build PASS; focused emulator Editorial API tests 14/14 PASS; Q2.5.3 provider calls 0.
+- Next action: re-read and verify the Q2 ledger and account fingerprint on `emulator-5554`, then dispatch only the V5-luna chapter-007 canary under the existing stop rule.
+
 ## Superseded — independent API V1 review and N1–N4 checkpoint (historical, 2026-10-06)
 
 The next two sections describe the review and checkpoint before the follow-up commits, N5 and `CP-OFFLINE-2`; keep them for history, do not read their next actions as current.

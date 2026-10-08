@@ -112,5 +112,78 @@
     "deviceOperations": "emulator-5554 only",
     "providerCalls": 0,
     "chunkPair": "not run; outside Q2 scope"
+  },
+  "q2_5": {
+    "sourceCommit": "abca34cd00bdbcf8989cd2370bacc2862806dd29",
+    "contractRevision": "EDITORIAL_API_V1.4",
+    "model": "openai/gpt-5.6-luna",
+    "reasoningEffort": "medium",
+    "priceSource": "https://openrouter.ai/openai/gpt-5.6-luna",
+    "pricingCapturedUtc": "2026-10-08",
+    "standardInputUsdPerMillion": "0.20",
+    "standardOutputUsdPerMillion": "1.20",
+    "cacheReadUsdPerMillion": "0.02",
+    "cacheWriteUsdPerMillion": "0.25",
+    "productionBuild": {
+      "versionName": "4.18-q2.2",
+      "versionCode": 246,
+      "event": "build-20261008-181534",
+      "apkSha256": "C3D32924F91EE3C1B2F8A460D5B8AF76D8AC0D7FB7962E2A39CB7450F6DF31E4",
+      "sourceZipSha256": "FBC2B3A2F16A8B8C4D9B35EBF955DA09035115475843B5B6D619D4142F55BFB2",
+      "installedOnlyOn": "emulator-5554"
+    },
+    "androidTestBuild": {
+      "event": "q25-editorial-api-20261008",
+      "apkSha256": "FDF1A5E930231AB61D7CD7269F304A41682C19BC4A8AC10661F980F7F74EA882",
+      "sourceZipSha256": "858A48603991EBD08536E8891480339E7EC53A5FCE25A4493B66BB44F2F8FC4D",
+      "installedTestPackageVersionCode": 0,
+      "installedOnlyOn": "emulator-5554"
+    },
+    "offlineSourcePreflight": {
+      "chapters": ["007", "004", "005", "006", "008", "011", "014", "017"],
+      "passed": 8,
+      "failed": 0,
+      "privateTextOrSourceHashesCommitted": false
+    },
+    "reservationEstimate": {
+      "method": "Exact selected pack/request strings and actual chapter inputs through the app's UTF-16 length/3+1 token proxy; V5 uses 32768 output tokens on each of 3 turns. Upper-bound input price uses cache-write rate 0.25 USD/M and output 1.20 USD/M; no cache-read discount.",
+      "chapterTokens": {
+        "004": {"EInput": 6779, "EOutputCap": 8473, "V5Input": 158765, "V5OutputCap": 98304},
+        "005": {"EInput": 8565, "EOutputCap": 10922, "V5Input": 163634, "V5OutputCap": 98304},
+        "006": {"EInput": 12717, "EOutputCap": 17671, "V5Input": 177464, "V5OutputCap": 98304},
+        "007": {"EInput": 6634, "EOutputCap": 7807, "V5Input": 158762, "V5OutputCap": 98304},
+        "008": {"EInput": 7060, "EOutputCap": 8896, "V5Input": 160457, "V5OutputCap": 98304},
+        "011": {"EInput": 10664, "EOutputCap": 15058, "V5Input": 171782, "V5OutputCap": 98304},
+        "014": {"EInput": 13698, "EOutputCap": 19666, "V5Input": 180440, "V5OutputCap": 98304},
+        "017": {"EInput": 9948, "EOutputCap": 13650, "V5Input": 169436, "V5OutputCap": 98304}
+      },
+      "dev004_008Usd": {"E-luna-b": "0.07496155", "V5-luna": "0.79459450"},
+      "holdout011_014_017Usd": {"E-luna-b": "0.06662630", "V5-luna": "0.48430890"},
+      "groupTotalIfEHoldoutUsd": "0.93618235",
+      "groupTotalIfV5HoldoutUsd": "1.35386495",
+      "highestV5ChapterUsd": "0.16307480",
+      "priorSettledGroupUsd": "0.83751590",
+      "existingLedgerCapUsd": "6.00",
+      "preDispatchRemainingLedgerUsd": "5.16248410",
+      "combinedQ2MaximumIfV5HoldoutUsd": "2.19138085",
+      "remainingExistingLedgerCapAfterMaximumPathUsd": "3.80861915"
+    },
+    "instrumentation": {
+      "apiStore": "6/6 PASS",
+      "wholeFlow": "3/3 PASS",
+      "wholeUi": "2/2 PASS",
+      "processDeath": "seed/force-stop/verify/cleanup 3/3 PASS",
+      "focusedTotal": "14/14 PASS",
+      "providerCalls": 0,
+      "chunkPair": "not run"
+    },
+    "ledgerPreflight": {
+      "groupId": "Q2-20261008",
+      "settledCalls": 10,
+      "pending": 0,
+      "settledUsd": "0.8375159",
+      "lastEntryHash": "34bf1258b31e3ba9dab89010a470e211f351fb954a49758751efdce5f5c39c55",
+      "q25ProviderCalls": 0
+    }
   }
 }
