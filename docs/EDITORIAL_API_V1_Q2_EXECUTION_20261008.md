@@ -164,3 +164,26 @@ FILE role=DRAFT name="007_JAKUAKU_MONSTER_VOL1_DRAFT.txt" bytes=13242 chars=9758
 FILE role=GLOSSARY name="007_JAKUAKU_MONSTER_VOL1_chapter_glossary.csv" bytes=2778 chars=2058 lines=36 nonblank_lines=36 sha256=f0299a55b334f45bdc1ab42edd97e3a757546699181a83ae60059a326b1caa81 bytes_readable=yes
 FILE role=PRONOUN name="007_PRONOUN_JAKUAKU_MONSTER_VOL1.csv" bytes=348 chars=285 lines=3 nonblank_lines=3 sha256=08b9afcb40772e456e29c3d90712ff8de3ad87403d1415fb6585f650516526cf bytes_readable=yes
 ```
+
+### Q2.6.2 — wrapper build and focused emulator tests (offline)
+
+Source commit `7cc4108b0eb41715c824f0fa65c55baec2269ec7` (Q2.6.1, pushed), contract `EDITORIAL_API_V1.4`. Built in the clean throwaway worktree through `scripts/build-and-save.ps1` (series `4.18-q2`, minimum version code 247, offline): `4.18-q2.3` / code `247`, event `build-20261009-034756`, APK SHA-256 `D21C64E5A08879E88B850C60E45515812A8902ABB30DFB1449F292434D20B4DE`, source ZIP SHA-256 `276F2769775229FC0AAB648654B37074FE9FA0F3C12DBD4E524015B65E422AB8` (contains `V5HostSourceManifest.java`, `V5SourceIdentity.java` and their tests). Wrapper unit and lint gates passed. The payload (APK, `BUILD_INFO.json`, README, `SHA256SUMS.txt`, source ZIP) is byte-identical in `artifacts/builds/v4.18-q2.3/` and `backup/builds/v4.18-q2.3/`. The previous build `4.18-q2.2` / code 246 stays archived.
+
+AndroidTest archive (not a production artifact), event `q26-editorial-api-20261009`: test APK SHA-256 `58ED4E1843F27E0C768053E22E432BCA8702056325CA9F451E741ABA2BC26D89`, signer `47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155`, payload mirrored in `artifacts/test-builds/` and `backup/test-builds/`.
+
+Both packages were installed on `emulator-5554` only (production by `adb install -r`, which keeps the app data and the external-storage spend ledger; test package with `-t`). The installed app reports `versionName=4.18-q2.3`, `versionCode=247`. The owner's phone was not touched.
+
+Focused on-device Editorial API tests (explicit classes only, no broad suite; all with fake providers, no live argument, logs at `D:\P5E-private\q2-runs\Q2.6\q2.6.2-emulator\`):
+
+| Class / phase | Result |
+|---|---|
+| `EditorialApiStoreInstrumentedTest` | 6/6 PASS |
+| `EditorialApiBienTapFlowInstrumentedTest` | 3/3 PASS |
+| `EditorialApiBienTapUiInstrumentedTest` (normal path; the three phase-gated cases are skipped by their own assumption) | 2/2 PASS |
+| process death: seed, `am force-stop`, verify, cleanup (`bientap_phase`) | 3/3 PASS |
+
+The `Q2-20261008` ledger was pulled before the install and after the tests: SHA-256 `28D87C2D2E48E01F37148C7B392521BC95D79F43506865B87EE36861C6156AE0` both times (11 settled calls, USD 0.8455608, 0 pending, stored cap USD 6.00), so the tests did not touch it.
+
+Offline V5 rehearsal on the emulator (fake provider, group `Q26-OFFLINE-REHEARSAL-1`, 0 provider calls, USD 0): the runner read the roles map, staged the four original files, derived `ID=007` / `SERIES=JAKUAKU_MONSTER_VOL1`, passed the preflight and wrote the manifest facts into `run-metadata.json`. Every per-file value written by the Java runner (role, name, bytes, characters, lines, non-blank lines, SHA-256) equals the independent Python cross-check for all four files of chapter 007 (table in Q2.6.1 above), which also confirms that the files on the device are byte-identical to the owner's originals. The whole-block SHA-256 of the rendered manifest for chapter 007 is `f6b11a5380cfd493aa47bd43df5b6933229082f90a3981306d3a52389ab4bc51`.
+
+Runner scripts (outside Git, `D:\P5E-private`): `run_q26_api.ps1` (V5 reads `q2-inputs` with original names and the roles map; `-Offline` is the rehearsal) and `run_q26_emulator_tests.ps1`, SHA-256 `A2B85B45D802E273F8EF0C278CE4D675F2EC764109320FFBE73EC2E54D2795D7` and `9B9B6F2F810E20C7244185C41E5C8BE2CE7E7A18AE313C0B15B2E9879387DDC2` at the time of Q2.6.2.
