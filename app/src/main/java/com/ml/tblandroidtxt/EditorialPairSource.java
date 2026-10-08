@@ -63,6 +63,65 @@ public final class EditorialPairSource {
         return new EditorialPairSource(EditorialPairModels.SOURCE_JOB, String.valueOf(jobId), fileName, "", raw, draft, issues);
     }
 
+    /**
+     * Two files whose non-blank lines correspond one to one (same count): line i of RAW is the source of line i of DRAFT, as
+     * in the owner's chapter files. Consecutive lines are grouped into chunks of at most {@code maxRawChars} RAW characters
+     * (a longer single line is a chunk of its own), and the same line ranges cut the DRAFT. Each row keeps its exact text
+     * including the blank lines after it, so the rows concatenate back to each file. Different counts give no rows and the
+     * issue {@code LINE_COUNT_MISMATCH:raw/draft}: the link is not proven, so the caller falls back to the whole chapter.
+     */
+    public static EditorialPairSource fromAlignedFiles(String label, String rawText, String draftText, int maxRawChars) {
+        List<String> raw = lineSegments(rawText);
+        List<String> draft = lineSegments(draftText);
+        if (raw.isEmpty() || raw.size() != draft.size()) {
+            return new EditorialPairSource(EditorialPairModels.SOURCE_FILES, "", label, "", List.of(), List.of(),
+                    List.of("LINE_COUNT_MISMATCH:" + raw.size() + "/" + draft.size()));
+        }
+        int budget = Math.max(1, maxRawChars);
+        List<String> rawRows = new ArrayList<>();
+        List<String> draftRows = new ArrayList<>();
+        StringBuilder r = new StringBuilder();
+        StringBuilder d = new StringBuilder();
+        int chars = 0;
+        for (int i = 0; i < raw.size(); i++) {
+            int size = raw.get(i).trim().length();
+            if (r.length() > 0 && chars + size > budget) {
+                rawRows.add(r.toString());
+                draftRows.add(d.toString());
+                r.setLength(0);
+                d.setLength(0);
+                chars = 0;
+            }
+            r.append(raw.get(i));
+            d.append(draft.get(i));
+            chars += size;
+        }
+        rawRows.add(r.toString());
+        draftRows.add(d.toString());
+        return new EditorialPairSource(EditorialPairModels.SOURCE_FILES, "", label, "", rawRows, draftRows, List.of());
+    }
+
+    /** One segment per non-blank line: the line plus the blank lines after it; leading blank lines go with the first. */
+    static List<String> lineSegments(String text) {
+        List<String> out = new ArrayList<>();
+        if (text == null || text.isEmpty()) return out;
+        StringBuilder lead = new StringBuilder();
+        int i = 0;
+        while (i < text.length()) {
+            int end = text.indexOf('\n', i);
+            end = end < 0 ? text.length() : end + 1;
+            String line = text.substring(i, end);
+            if (line.trim().isEmpty()) {
+                if (out.isEmpty()) lead.append(line);
+                else out.set(out.size() - 1, out.get(out.size() - 1) + line);
+            } else {
+                out.add(out.isEmpty() ? lead + line : line);
+            }
+            i = end;
+        }
+        return out;
+    }
+
     /** Two independent files: a source without any link between them. It can be saved and previewed, not run by chunk. */
     public static EditorialPairSource unmappedFiles(String label) {
         return new EditorialPairSource(EditorialPairModels.SOURCE_FILES, "", label, "", List.of(), List.of(), List.of("NO_EXPLICIT_MAPPING"));
