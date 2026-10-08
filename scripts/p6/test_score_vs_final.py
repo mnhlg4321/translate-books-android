@@ -38,6 +38,12 @@ class ScoreVsFinalTest(unittest.TestCase):
         self.assertEqual(result["hard"]["fullwidthLatinLines"], [1])
         self.assertEqual(result["hard"]["remainingKanaHanLines"], [1])
 
+    def test_raw_symbol_mismatch_uses_each_draft_lines_raw_pair(self):
+        raw = "plain\n『two』"
+        draft = "plain\nTwo"
+        result = score(raw, draft, draft, draft, "011")
+        self.assertEqual(result["hard"]["rawSymbolMismatchLines"], [2])
+
     def test_aggregate_is_counts_only(self):
         one = score("一", "One", "One", "One", "001")
         two = score("二", "Two", "Deux", "Two", "002")

@@ -338,7 +338,7 @@ def check_api_fixture(fixture, output, fixtures_root, args, structural, metadata
             if actual != 3:
                 raise ValueError(fid + ": V5_CHAT must send exactly three physical turns")
         elif actual != calls:
-            raise ValueError(fid + ": expected one actual call per API request")
+            raise ValueError(fid + ": expected a live provider run with one actual call per API request")
     elif (metadata.get("providerKind") != "FAKE_OFFLINE" or metadata.get("actualProviderCalls") != 0
           or metadata.get("fakeProviderCalls") != calls):
         raise ValueError(fid + ": a non-fake provider ran or the fake call count differs")

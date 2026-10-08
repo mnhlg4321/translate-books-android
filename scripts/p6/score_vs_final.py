@@ -84,6 +84,7 @@ def score(raw: str, draft: str, app: str, final: str, chapter: str = "") -> dict
     unchanged = 0
     app_changed_unchanged = 0
     farther = 0
+    hard_symbol = []
     app_line_metrics: list[dict] = []
     for i, (draft_no, draft_line) in enumerate(draft_lines):
         fj = draft_final.get(i)
@@ -112,6 +113,11 @@ def score(raw: str, draft: str, app: str, final: str, chapter: str = "") -> dict
             app_changed_unchanged += 1
         if app_pair and app_score + 1e-12 < draft_score:
             farther += 1
+        raw_no = draft_raw.get(i)
+        if app_pair and raw_no is not None:
+            raw_line = raw_lines[raw_no][1]
+            if symbol_counts(app_line) != symbol_counts(raw_line):
+                hard_symbol.append(app_pair[1])
         app_line_metrics.append({
             "draftLine": draft_no,
             "finalLine": final_no,
@@ -125,7 +131,6 @@ def score(raw: str, draft: str, app: str, final: str, chapter: str = "") -> dict
     hard_remaining = []
     hard_ruby = []
     hard_fullwidth = []
-    hard_symbol = []
     for metric in app_line_metrics:
         ai = metric["appLine"]
         if ai is None:
@@ -142,11 +147,6 @@ def score(raw: str, draft: str, app: str, final: str, chapter: str = "") -> dict
             hard_ruby.append(ai)
         if FULLWIDTH_LATIN.search(app_line):
             hard_fullwidth.append(ai)
-        raw_no = draft_raw.get(i)
-        if raw_no is not None:
-            raw_line = raw_lines[raw_no][1]
-            if symbol_counts(app_line) != symbol_counts(raw_line):
-                hard_symbol.append(ai)
 
     return {
         "chapter": chapter,
