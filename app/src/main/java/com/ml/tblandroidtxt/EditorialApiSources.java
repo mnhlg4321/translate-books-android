@@ -14,18 +14,27 @@ public final class EditorialApiSources {
     public final String pronounText;
     public final List<EditInputs.GlossaryEntry> glossary;
     public final String targetLanguage;
+    /** Original four source attachments for V5; the E path continues to use the filtered fields above. */
+    public final List<EditInputs.OriginalSourceFile> originalSourceFiles;
 
     public EditorialApiSources(String raw, String draft, String glossaryText, List<EditInputs.GlossaryEntry> glossary,
                                String pronounText, String targetLanguage) {
+        this(raw, draft, glossaryText, glossary, pronounText, targetLanguage, List.of());
+    }
+
+    public EditorialApiSources(String raw, String draft, String glossaryText, List<EditInputs.GlossaryEntry> glossary,
+                               String pronounText, String targetLanguage,
+                               List<EditInputs.OriginalSourceFile> originalSourceFiles) {
         this.raw = raw == null ? "" : raw;
         this.draft = draft == null ? "" : draft;
         this.glossaryText = glossaryText == null ? "" : glossaryText;
         this.glossary = glossary == null ? List.of() : List.copyOf(glossary);
         this.pronounText = pronounText == null ? "" : pronounText;
         this.targetLanguage = targetLanguage == null || targetLanguage.isBlank() ? "Vietnamese" : targetLanguage;
+        this.originalSourceFiles = originalSourceFiles == null ? List.of() : List.copyOf(originalSourceFiles);
     }
 
-    public EditInputs inputs() { return new EditInputs(raw, draft, targetLanguage, glossary, pronounText); }
+    public EditInputs inputs() { return new EditInputs(raw, draft, targetLanguage, glossary, pronounText, originalSourceFiles); }
 
     public String rawSha256() { return HashUtil.sha256(raw); }
 

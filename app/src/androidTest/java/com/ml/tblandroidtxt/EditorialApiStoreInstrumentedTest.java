@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-/** Real SQLite: the two version 26 tables, their store, restart readback and the upgrade from version 25 without losing old data. */
+/** Real SQLite: Editorial API persistence, V5 attachment snapshots and additive upgrades without losing old data. */
 @RunWith(AndroidJUnit4.class)
 public final class EditorialApiStoreInstrumentedTest {
     private Context context;
@@ -68,12 +68,31 @@ public final class EditorialApiStoreInstrumentedTest {
         return run;
     }
 
-    @Test public void freshDatabaseIsV26WithBothTables() {
+    @Test public void freshDatabaseIsV28WithV5SnapshotColumn() {
         try (SqliteEditorialApiStore store = open()) {
             SQLiteDatabase db = store.databaseForTest();
-            assertEquals(27, db.getVersion());
+            assertEquals(28, db.getVersion());
             assertTrue(tableExists(db, "editorial_combos"));
             assertTrue(tableExists(db, "editorial_api_runs"));
+            assertTrue(columnExists(db, "editorial_api_runs", "original_source_files_json"));
+        }
+    }
+
+    @Test public void v5ModeAndOriginalSourceSnapshotSurviveAStoreReopen() {
+        long comboId;
+        long runId;
+        String sourceSnapshot = "[{\"name\":\"RAW.txt\",\"content\":\"synthetic raw\"}]";
+        try (SqliteEditorialApiStore store = open()) {
+            comboId = store.insertCombo(combo());
+            EditorialApiRun run = run(comboId);
+            run.mode = EditorialApiContract.Mode.V5_CHAT;
+            run.originalSourceFilesJson = sourceSnapshot;
+            runId = store.insertRun(run);
+        }
+        try (SqliteEditorialApiStore store = open()) {
+            EditorialApiRun restored = store.getRun(runId);
+            assertEquals(EditorialApiContract.Mode.V5_CHAT, restored.mode);
+            assertEquals(sourceSnapshot, restored.originalSourceFilesJson);
         }
     }
 
@@ -131,7 +150,7 @@ public final class EditorialApiStoreInstrumentedTest {
 
         try (SqliteEditorialApiStore store = open()) {
             SQLiteDatabase db = store.databaseForTest();
-            assertEquals(27, db.getVersion());
+            assertEquals(28, db.getVersion());
             assertTrue(tableExists(db, "editorial_combos"));
             assertTrue(tableExists(db, "editorial_api_runs"));
             try (Cursor c = db.rawQuery("SELECT title FROM jobs WHERE id=7", null)) {
@@ -147,9 +166,39 @@ public final class EditorialApiStoreInstrumentedTest {
         }
     }
 
+    @Test public void upgradeFromVersion27PreservesApiRunDataAndAddsTheV5Mode() {
+        SQLiteDatabase old = SQLiteDatabase.openOrCreateDatabase(context.getDatabasePath(databaseName), null);
+        for (String sql : EditorialApiMigrationSpec.from25To26()) old.execSQL(sql);
+        for (String sql : EditorialPairMigrationSpec.from26To27()) old.execSQL(sql);
+        old.execSQL("INSERT INTO editorial_combos(name,created_at,updated_at) VALUES ('synthetic',1,1)");
+        old.execSQL("INSERT INTO editorial_api_runs(combo_id,contract_revision,mode,state,raw_sha256,raw_text,draft_sha256,draft_text,final_text,created_at,updated_at) "
+                + "VALUES (1,'EDITORIAL_API_V1.3','QUICK','FINAL_OK','raw-hash','raw','draft-hash','draft','kept-final',2,2)");
+        old.setVersion(27);
+        old.close();
+
+        try (SqliteEditorialApiStore store = open()) {
+            EditorialApiRun restored = store.getRun(1);
+            assertEquals(28, store.databaseForTest().getVersion());
+            assertNotNull(restored);
+            assertEquals("kept-final", restored.finalText);
+            assertEquals("raw-hash", restored.rawSha256);
+            assertEquals("[]", restored.originalSourceFilesJson);
+            restored.mode = EditorialApiContract.Mode.V5_CHAT;
+            store.updateRun(restored);
+            assertEquals(EditorialApiContract.Mode.V5_CHAT, store.getRun(1).mode);
+        }
+    }
+
     private static boolean tableExists(SQLiteDatabase db, String name) {
         try (Cursor c = db.rawQuery("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", new String[] {name})) {
             return c.moveToFirst();
+        }
+    }
+
+    private static boolean columnExists(SQLiteDatabase db, String table, String column) {
+        try (Cursor c = db.rawQuery("PRAGMA table_info(" + table + ")", null)) {
+            while (c.moveToNext()) if (column.equals(c.getString(c.getColumnIndexOrThrow("name")))) return true;
+            return false;
         }
     }
 }

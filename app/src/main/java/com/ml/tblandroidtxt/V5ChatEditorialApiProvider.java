@@ -1,7 +1,9 @@
 package com.ml.tblandroidtxt;
 
 import com.ml.tblandroidtxt.editorial.api.EditorialApiFlow;
+import com.ml.tblandroidtxt.editorial.api.EditInputs;
 import com.ml.tblandroidtxt.editorial.api.V5FinalExtractor;
+import com.ml.tblandroidtxt.editorial.api.V5SourcePackPreflight;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -15,6 +17,8 @@ import java.util.Locale;
  * are never parsed; only the final turn's &lt;FINAL&gt; section becomes EDITED.
  */
 public final class V5ChatEditorialApiProvider implements EditorialApiProvider {
+    /** Full-chat QA returns a report as well as a complete chapter; reserve this per turn. */
+    public static final int MIN_OUTPUT_TOKENS = 32_768;
     public interface TurnRecorder {
         void record(int turn, List<OpenAICompatibleClient.ChatMessage> messages,
                     OpenAICompatibleClient.ChatResult result, String error) throws IOException;
@@ -52,6 +56,7 @@ public final class V5ChatEditorialApiProvider implements EditorialApiProvider {
     /** Conservative aggregate reservation for all three requests in one chat. */
     public BigDecimal worstCase(EditorialApiRunService.Pricing pricing, String model,
                                 int maxOutputTokens, EditorialApiFlow.Request request) {
+        maxOutputTokens = Math.max(MIN_OUTPUT_TOKENS, maxOutputTokens);
         List<String> turns = turnTexts(request);
         long input = 0;
         long output = 0;
@@ -79,6 +84,7 @@ public final class V5ChatEditorialApiProvider implements EditorialApiProvider {
             if (model != null && !model.trim().isEmpty()) s.model = model.trim();
             if (s.apiKey == null || s.apiKey.trim().isEmpty()) return EditorialApiFlow.StepResponse.failure("API_KEY_MISSING");
             List<String> turns = turnTexts(request);
+            int turnOutputTokens = Math.max(MIN_OUTPUT_TOKENS, maxOutputTokens);
             List<OpenAICompatibleClient.ChatMessage> history = new ArrayList<>();
             history.add(new OpenAICompatibleClient.ChatMessage("system", projectInstruction));
             long input = 0, output = 0;
@@ -93,7 +99,7 @@ public final class V5ChatEditorialApiProvider implements EditorialApiProvider {
                         ? OpenAICompatibleClient.monotonicDeadlineNanosFromNowMillis(timeoutMillis) : 0L;
                 OpenAICompatibleClient.ChatResult result;
                 try {
-                    result = OpenAICompatibleClient.chatWithUsage(s, history, maxOutputTokens,
+                    result = OpenAICompatibleClient.chatWithUsage(s, history, turnOutputTokens,
                             "editorial-api-v5-chat-l" + turn, null, false, deadline, control,
                             null, null, reasoningEffort);
                 } catch (Exception failure) {
@@ -117,6 +123,11 @@ public final class V5ChatEditorialApiProvider implements EditorialApiProvider {
                 if ("length".equalsIgnoreCase(finish)) {
                     return new EditorialApiFlow.StepResponse("", finish, input, output, cost, known,
                             servedModel, route, "V5_TRUNCATED_L" + turn);
+                }
+                String stop = stopCode(result.content);
+                if (!stop.isEmpty()) {
+                    return new EditorialApiFlow.StepResponse("", finish, input, output, cost, known,
+                            servedModel, route, stop);
                 }
                 history.add(new OpenAICompatibleClient.ChatMessage("assistant", result.content));
             }
@@ -147,16 +158,26 @@ public final class V5ChatEditorialApiProvider implements EditorialApiProvider {
     }
 
     private List<String> turnTexts(EditorialApiFlow.Request request) {
-        int l1 = promptFile.indexOf("LƯỢT 1");
         int l2 = promptFile.indexOf("LƯỢT 2");
         int l3 = promptFile.indexOf("LƯỢT 3");
-        String first = promptFile.substring(Math.max(0, l1), l2);
+        V5SourcePackPreflight.requireValid(request.prompt().originalSourceFiles());
+        String first = promptFile.substring(0, l2);
         String second = promptFile.substring(l2, l3);
         String third = promptFile.substring(l3).strip() + "\n" + FINAL_INSTRUCTION;
-        String source = "WORKFLOW\n" + workflow + "\nSOURCE INPUTS\n"
-                + request.prompt().user() + "\nREFERENCE AND APP CONTEXT\n" + request.prompt().system();
-        return List.of("PROJECT INSTRUCTION\n" + projectInstruction + "\n\n" + first + "\n\n" + source,
-                second, third);
+        StringBuilder sourceFiles = new StringBuilder("\n\nSOURCE FILE ATTACHMENTS\n");
+        for (EditInputs.OriginalSourceFile file : request.prompt().originalSourceFiles()) {
+            sourceFiles.append("=== FILE: ").append(file.name()).append(" ===\n").append(file.content());
+            if (!file.content().endsWith("\n") && !file.content().endsWith("\r")) sourceFiles.append('\n');
+            sourceFiles.append("=== END FILE ===\n");
+        }
+        return List.of(first + "\n\nWORKFLOW\n" + workflow + sourceFiles, second, third);
+    }
+
+    private static String stopCode(String response) {
+        if (response == null || !java.util.regex.Pattern.compile("(?i)\\bstop_class\\s*:").matcher(response).find()) return "";
+        java.util.regex.Matcher reason = java.util.regex.Pattern.compile("(?i)\\breason_code\\s*[:=|]\\s*([A-Z][A-Z0-9_]*)")
+                .matcher(response);
+        return "V5_STOP_" + (reason.find() ? reason.group(1).toUpperCase(Locale.ROOT) : "REASON_CODE_MISSING");
     }
 
     private static void validatePromptSections(String prompt) {
@@ -176,9 +197,9 @@ public final class V5ChatEditorialApiProvider implements EditorialApiProvider {
         if (result.providerCostReported && Double.isFinite(result.providerCost) && result.providerCost >= 0) {
             return BigDecimal.valueOf(result.providerCost);
         }
-        if (model != null && model.equalsIgnoreCase("openai/gpt-5.6-sol")) {
-            return BigDecimal.valueOf(result.promptTokens).multiply(new BigDecimal("0.000002"))
-                    .add(BigDecimal.valueOf(result.completionTokens).multiply(new BigDecimal("0.000010")));
+        if (model != null && model.equalsIgnoreCase("openai/gpt-5.6-luna")) {
+            return BigDecimal.valueOf(result.promptTokens).multiply(new BigDecimal("0.0000002"))
+                    .add(BigDecimal.valueOf(result.completionTokens).multiply(new BigDecimal("0.0000012")));
         }
         return null;
     }

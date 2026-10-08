@@ -4,6 +4,10 @@ import com.ml.tblandroidtxt.editorial.api.EditInputs;
 import com.ml.tblandroidtxt.editorial.api.EditorialApiContract;
 import com.ml.tblandroidtxt.editorial.api.EditorialApiFlow;
 import com.ml.tblandroidtxt.editorial.api.QualityCore;
+import com.ml.tblandroidtxt.editorial.api.V5SourcePackPreflight;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -65,6 +69,7 @@ public final class EditorialApiRunService {
     public EditorialApiRun prepare(EditorialApiCombo combo, EditorialApiSources sources, String model,
                                    EditorialApiContract.Mode mode) {
         EditInputs inputs = sources.inputs();
+        if (mode == EditorialApiContract.Mode.V5_CHAT) V5SourcePackPreflight.requireValid(inputs);
         EditorialApiRun run = new EditorialApiRun();
         run.comboId = combo.id;
         run.model = model == null ? "" : model;
@@ -79,6 +84,8 @@ public final class EditorialApiRunService {
         run.glossarySha256 = sources.glossarySha256();
         run.pronounText = sources.pronounText;
         run.pronounSha256 = sources.pronounSha256();
+        run.originalSourceFilesJson = mode == EditorialApiContract.Mode.V5_CHAT
+                ? sourceFilesJson(sources.originalSourceFiles) : "[]";
         run.finalText = sources.draft;
         run.glossaryEntries = com.ml.tblandroidtxt.editorial.api.ReferenceFilter.glossary(inputs.raw(), inputs.glossary()).size();
         run.pronounRows = com.ml.tblandroidtxt.editorial.api.ReferenceFilter.pronounRows(inputs.raw(), inputs.pronounCsv()).size();
@@ -108,7 +115,8 @@ public final class EditorialApiRunService {
                     if (cancelled) { flow.cancel(); break; }
                     BigDecimal spent = unknownReserve;
                     for (EditorialApiFlow.StepRecord s : flow.stepsSoFar()) spent = spent.add(s.cost());
-                    int maxOut = request.step() == EditorialApiContract.Step.EDIT
+                    int maxOut = run.mode == EditorialApiContract.Mode.V5_CHAT ? V5ChatEditorialApiProvider.MIN_OUTPUT_TOKENS
+                            : request.step() == EditorialApiContract.Step.EDIT
                             ? OpenRouterEditorialApiProvider.editMaxOutputTokens(run.draftText.length()) : CHECK_MAX_OUTPUT_TOKENS;
                     BigDecimal worst = worstCase(request, maxOut, run.model);
                     if (costBoundBroken) {
@@ -163,6 +171,28 @@ public final class EditorialApiRunService {
             entries.add(new EditInputs.GlossaryEntry(parts.length > 0 ? parts[0] : "", parts.length > 1 ? parts[1] : "",
                     parts.length > 2 ? parts[2] : "", parts.length > 3 ? parts[3] : ""));
         }
-        return new EditInputs(run.rawText, run.draftText, targetLanguage, entries, run.pronounText);
+        return new EditInputs(run.rawText, run.draftText, targetLanguage, entries, run.pronounText, sourceFilesFromJson(run.originalSourceFilesJson));
+    }
+
+    private static String sourceFilesJson(List<EditInputs.OriginalSourceFile> files) {
+        JSONArray array = new JSONArray();
+        try {
+            for (EditInputs.OriginalSourceFile file : files) {
+                array.put(new JSONObject().put("name", file.name()).put("content", file.content()));
+            }
+            return array.toString();
+        } catch (org.json.JSONException impossible) { throw new IllegalStateException("V5_SOURCE_SNAPSHOT_INVALID", impossible); }
+    }
+
+    private static List<EditInputs.OriginalSourceFile> sourceFilesFromJson(String json) {
+        List<EditInputs.OriginalSourceFile> files = new ArrayList<>();
+        try {
+            JSONArray array = new JSONArray(json == null || json.isBlank() ? "[]" : json);
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject item = array.getJSONObject(i);
+                files.add(new EditInputs.OriginalSourceFile(item.optString("name", ""), item.optString("content", "")));
+            }
+        } catch (org.json.JSONException invalid) { throw new IllegalStateException("V5_SOURCE_SNAPSHOT_INVALID", invalid); }
+        return List.copyOf(files);
     }
 }

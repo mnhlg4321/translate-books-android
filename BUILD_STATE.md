@@ -1,17 +1,17 @@
 # Build State
 
-## Current state — 2026-10-08 (Q2.4 dev gate stopped; holdout not authorized)
+## Current state — 2026-10-08 (Q2.5.1 offline complete; continuing)
 
-- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before this state commit is `bdea3ad8`.
+- Branch `feature/v4.18-p5e-runner-repair-20260917`; implementation baseline immediately before the Q2.5.1 source/evidence commit is `d2cec720`.
 - Current build is `4.18-q2.1` / code `245`, source `45976adb`, installed only on `emulator-5554`; production and AndroidTest wrapper payloads are mirrored in `artifacts/` and `backup/`.
-- Q2.1–Q2.3 are complete. Q2.4 dev 004–008 ran on both frozen arms; E-strong was structurally valid but failed the fixed quality selection gate, and V5-strong was invalid in every chapter because the model omitted `<FINAL>`.
-- Q2 evidence is in `docs/EDITORIAL_API_V1_Q2_EXECUTION_20261008.md`; the price/build matrix is `docs/EDITORIAL_API_V1_Q2_AB_MANIFEST.json`.
-- Current phase: EDITORIAL_API_V1 Q2.4 stopped before holdout; D-Q2 applied, U1 deferred.
-- Completed tasks: engine/app offline tests, exact FULL CHATGPT pack hashes, V5 history/FINAL/truncation tests, cap policy, wrapper production/test archives, emulator gate, manifest, dev dispatch and scorer report.
-- Pending tasks: owner decision on whether a contract/pack change is in scope; holdout 011/014/017 and `q2-outputs` were deliberately not run/created.
-- Known bugs/limits: E-strong has 165 changed owner-unchanged lines versus the E-luna baseline 37 and two added kana/Han lines; V5-strong has five `V5_FINAL_MISSING` stops. No selected holdout quality result exists.
-- Regression status: engine 566/566, app unit tasks PASS, AndroidTest compile and targeted emulator Editorial API tests PASS, Python verifier 14/14 PASS; Q2 ledger 10 settled logical reservations (20 entries / physical calls), USD 0.8375159, pending 0, UNKNOWN 0.
-- Next action: owner decides whether to change the V5 input contract/pack or end Q2; no holdout dispatch until then.
+- Q2.1–Q2.4 are complete as recorded in `docs/EDITORIAL_API_V1_Q2_EXECUTION_20261008.md`; Q2.4 dev 004–008 failed the prior selection gate. Section 7 of the Q2.5 request now controls: only `openai/gpt-5.6-luna`, medium, USD 10.00 Q2 cap, canary 007 first.
+- Q2.5.1 implemented the original four-file V5 input pack, one Project Instruction per chat, exact-byte attachment preservation, fail-closed pack checks, V5 stop/truncation behavior, and `<FINAL>`/named-file extraction. No provider or device call has been made for Q2.5.
+- Current phase: EDITORIAL_API_V1 Q2.5 offline packages; U1 deferred, pilot and chunk-pair untouched.
+- Completed tasks: Q2.5.1 offline implementation and unit regressions; engine 572/572, each app unit variant 439/439, Python `scripts/p6` 80/80, private real-source preflight 8/8, and AndroidTest Java compile pass.
+- Pending tasks: complete Q2.5.2 and its tests, push; then Q2.5.3 wrapper build/device verification; then live canary/dev/holdout only under the accepted stopping and quality gates.
+- Known bugs/limits: V5-luna quality is NOT_MEASURED; current Q2.5.1 has not been built or run on emulator. Last recorded Q2 ledger amount is USD 0.8375159, but ledger state must be freshly read from emulator before dispatch.
+- Regression status: engine 572/572 PASS; app benchmark/debug/release each 439/439 PASS; Python 80/80 PASS; source-pack preflight 8/8 PASS; AndroidTest Java compile PASS; Q2.5 provider calls 0.
+- Next action: finish and verify Q2.5.2 offline, then commit and push that package.
 ## Superseded — independent API V1 review and N1–N4 checkpoint (historical, 2026-10-06)
 
 The next two sections describe the review and checkpoint before the follow-up commits, N5 and `CP-OFFLINE-2`; keep them for history, do not read their next actions as current.

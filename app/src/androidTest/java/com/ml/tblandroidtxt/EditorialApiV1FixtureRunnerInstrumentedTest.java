@@ -12,6 +12,7 @@ import com.ml.tblandroidtxt.editorial.api.EditInputs;
 import com.ml.tblandroidtxt.editorial.api.EditorialApiContract;
 import com.ml.tblandroidtxt.editorial.api.EditorialApiFlow;
 import com.ml.tblandroidtxt.editorial.api.SourceCheck;
+import com.ml.tblandroidtxt.editorial.api.V5SourcePackPreflight;
 import com.ml.tblandroidtxt.editorial.pack.EditorialCanonicalJson;
 
 import org.json.JSONArray;
@@ -90,7 +91,13 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
             byte[] bytes = Files.readAllBytes(fixtureRoot.resolve(name).normalize());
             @SuppressWarnings("unchecked") Map<String, Object> meta = (Map<String, Object>) files.get(name);
             if (!EditorialCanonicalJson.sha256Hex(bytes).equals(meta.get("sha256"))) throw new IllegalStateException("P6_FIXTURE_SOURCE_HASH_MISMATCH");
-            text.put(name, new String(bytes, StandardCharsets.UTF_8));
+            text.put(name, V5SourcePackPreflight.decodeUtf8(bytes));
+        }
+        List<EditInputs.OriginalSourceFile> originalSourceFiles = new ArrayList<>();
+        for (String name : SOURCE_NAMES) originalSourceFiles.add(new EditInputs.OriginalSourceFile(name, text.get(name)));
+        V5SourcePackPreflight.Result sourcePreflight = V5SourcePackPreflight.check(originalSourceFiles);
+        if (mode == EditorialApiContract.Mode.V5_CHAT && !sourcePreflight.valid()) {
+            throw new IllegalStateException(sourcePreflight.code());
         }
 
         String groupId = args.getString("p6_group_id", live ? "" : "P6-OFFLINE-" + runId);
@@ -108,13 +115,17 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         }
         String targetLanguage = "Vietnamese";
         EditorialApiSources sources = new EditorialApiSources(text.get("RAW.txt"), text.get("DRAFT.txt"),
-                EditorialApiSources.glossaryAsText(entries), entries, text.get("PRONOUN.csv"), targetLanguage);
+                EditorialApiSources.glossaryAsText(entries), entries, text.get("PRONOUN.csv"), targetLanguage, originalSourceFiles);
 
         Files.createDirectories(outputRoot);
         Capture capture = new Capture(outputRoot);
         String modelOverride = args.getString("p6_model_override", "").trim();
         String model = live ? (modelOverride.isEmpty() ? settings.model : modelOverride) : "fake-model";
         String reasoning = args.getString("p6_reasoning_effort", mode == EditorialApiContract.Mode.V5_CHAT ? "medium" : "minimal");
+        if (live && "YES".equalsIgnoreCase(args.getString("p6_q2_model_lock", ""))
+                && (!"openai/gpt-5.6-luna".equalsIgnoreCase(model) || !"medium".equalsIgnoreCase(reasoning))) {
+            throw new IllegalStateException("Q2_MODEL_OR_REASONING_MISMATCH");
+        }
         EditorialApiProvider delegate;
         Map<String, String> packHashes = new LinkedHashMap<>();
         if (live && mode == EditorialApiContract.Mode.V5_CHAT) {
@@ -130,7 +141,7 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         } else {
             delegate = fake(sources.draft);
         }
-        EditorialApiRunService.Pricing pricing = live && "openai/gpt-5.6-sol".equalsIgnoreCase(model) ? SOL : PINNED;
+        EditorialApiRunService.Pricing pricing = live && "openai/gpt-5.6-luna".equalsIgnoreCase(model) ? LUNA : PINNED;
         EditorialApiLedgerProvider provider = new EditorialApiLedgerProvider(delegate, ledger, pricing, runId + "|" + fixtureId, model, capture::record);
 
         List<SourceCheck.Problem> problems = SourceCheck.check(sources.raw, sources.draft, sources.hasGlossary(), sources.hasPronoun(),
@@ -216,6 +227,19 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         metadata.put("contractRevision", run.contractRevision);
         metadata.put("qualityCoreSha256", run.qualityCoreSha256);
         metadata.put("reasoningEffort", reasoning);
+        if (mode == EditorialApiContract.Mode.V5_CHAT) {
+            metadata.put("v5SourcePreflight", "PASS");
+            List<Object> sourceManifest = new ArrayList<>();
+            for (EditInputs.OriginalSourceFile file : originalSourceFiles) {
+                byte[] bytes = file.content().getBytes(StandardCharsets.UTF_8);
+                Map<String, Object> source = new LinkedHashMap<>();
+                source.put("name", file.name());
+                source.put("bytes", BigDecimal.valueOf(bytes.length));
+                source.put("sha256", EditorialCanonicalJson.sha256Hex(bytes));
+                sourceManifest.add(source);
+            }
+            metadata.put("v5SourceFiles", sourceManifest);
+        }
         if (!packHashes.isEmpty()) metadata.put("v5PackSha256", new LinkedHashMap<>(packHashes));
         metadata.put("sourceCommit", args.getString("p6_source_commit", ""));
         metadata.put("apkVersionName", packageInfo.versionName == null ? "" : packageInfo.versionName);
@@ -251,9 +275,9 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
                 ? FakeEditorialApiProvider.edited(draft) : FakeEditorialApiProvider.pass());
     }
 
-    private static final EditorialApiRunService.Pricing SOL = new EditorialApiRunService.Pricing() {
-        @Override public BigDecimal inputPerToken(String model) { return new BigDecimal("0.000002"); }
-        @Override public BigDecimal outputPerToken(String model) { return new BigDecimal("0.000010"); }
+    private static final EditorialApiRunService.Pricing LUNA = new EditorialApiRunService.Pricing() {
+        @Override public BigDecimal inputPerToken(String model) { return new BigDecimal("0.0000002"); }
+        @Override public BigDecimal outputPerToken(String model) { return new BigDecimal("0.0000012"); }
     };
 
     private static String asset(Context context, String path) throws IOException {

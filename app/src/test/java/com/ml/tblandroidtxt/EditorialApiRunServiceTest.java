@@ -63,6 +63,32 @@ public final class EditorialApiRunServiceTest {
         assertTrue(store.runWrites >= 3);
     }
 
+    @Test public void v5RequiresAndPersistsTheExactValidatedFourSourceAttachments() {
+        EditorialApiCombo combo = combo();
+        FakeEditorialApiProvider provider = FakeEditorialApiProvider.scripted(FakeEditorialApiProvider.edited(DRAFT));
+        EditorialApiRunService service = service(provider);
+        EditorialApiSources missing = sources();
+        try {
+            service.prepare(combo, missing, "model-a", Mode.V5_CHAT);
+            throw new AssertionError("V5 accepted missing original attachments");
+        } catch (IllegalArgumentException expected) {
+            assertEquals("V5_SOURCE_FILE_SET_INVALID", expected.getMessage());
+        }
+        assertTrue(provider.requests.isEmpty());
+
+        List<EditInputs.OriginalSourceFile> original = List.of(
+                new EditInputs.OriginalSourceFile("RAW.txt", "original RAW\r\n"),
+                new EditInputs.OriginalSourceFile("DRAFT.txt", "original DRAFT\n"),
+                new EditInputs.OriginalSourceFile("GLOSSARY.csv", "source,target,category,note,priority\nterm,thuật ngữ,term,,1\n"),
+                new EditInputs.OriginalSourceFile("PRONOUN.csv", "from,speaker,target,self,call,scope,note\n花子,花子,太郎,em,anh,*,legacy\n"));
+        EditorialApiSources valid = new EditorialApiSources("original RAW\r\n", "original DRAFT\n", "filtered", List.of(), "filtered", "Vietnamese", original);
+        EditorialApiRun run = service.prepare(combo(), valid, "model-a", Mode.V5_CHAT);
+        EditInputs restored = EditorialApiRunService.inputsOf(store.getRun(run.id), "Vietnamese");
+        assertEquals(original, restored.originalSourceFiles());
+        assertTrue(run.originalSourceFilesJson.contains("original RAW\\r\\n"));
+        assertTrue(provider.requests.isEmpty());
+    }
+
     @Test public void thoroughWithAFixIsThreeStoredCalls() {
         EditorialApiCombo combo = combo();
         FakeEditorialApiProvider provider = FakeEditorialApiProvider.scripted(FakeEditorialApiProvider.edited(DRAFT.strip()),

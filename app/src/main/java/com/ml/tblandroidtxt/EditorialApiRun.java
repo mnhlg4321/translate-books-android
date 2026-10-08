@@ -22,6 +22,8 @@ public final class EditorialApiRun {
     public String glossaryText = "";
     public String pronounSha256 = "";
     public String pronounText = "";
+    /** JSON snapshot of the original V5 source attachments; empty for the ordinary E path. */
+    public String originalSourceFilesJson = "[]";
 
     public String editedText = "";
     public String finalText = "";
@@ -49,6 +51,7 @@ public final class EditorialApiRun {
         r.model = model; r.mode = mode; r.state = state;
         r.rawSha256 = rawSha256; r.rawText = rawText; r.draftSha256 = draftSha256; r.draftText = draftText;
         r.glossarySha256 = glossarySha256; r.glossaryText = glossaryText; r.pronounSha256 = pronounSha256; r.pronounText = pronounText;
+        r.originalSourceFilesJson = originalSourceFilesJson;
         r.editedText = editedText; r.finalText = finalText; r.notesJson = notesJson; r.issuesJson = issuesJson;
         r.guardsJson = guardsJson; r.stepsJson = stepsJson; r.wrongPairEvidence = wrongPairEvidence; r.calls = calls;
         r.inputTokens = inputTokens; r.outputTokens = outputTokens; r.usd = usd; r.costKnown = costKnown;

@@ -149,6 +149,7 @@ public final class SqliteEditorialApiStore implements EditorialApiStore, AutoClo
         v.put("glossary_text", r.glossaryText);
         v.put("pronoun_sha256", r.pronounSha256);
         v.put("pronoun_text", r.pronounText);
+        v.put("original_source_files_json", r.originalSourceFilesJson);
         v.put("edited_text", r.editedText);
         v.put("final_text", r.finalText);
         v.put("notes_json", r.notesJson);
@@ -186,6 +187,7 @@ public final class SqliteEditorialApiStore implements EditorialApiStore, AutoClo
         r.glossaryText = text(c, "glossary_text");
         r.pronounSha256 = text(c, "pronoun_sha256");
         r.pronounText = text(c, "pronoun_text");
+        r.originalSourceFilesJson = text(c, "original_source_files_json");
         r.editedText = text(c, "edited_text");
         r.finalText = text(c, "final_text");
         r.notesJson = text(c, "notes_json");

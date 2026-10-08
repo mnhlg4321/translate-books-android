@@ -63,3 +63,17 @@ E-strong aggregates to owner-changed `167`, improved `84`, near-exact `72`, fart
 
 No arm satisfies the frozen selection rule: E-strong exceeds the E-luna unchanged-owner baseline and has added kana/Han; V5-strong is invalid in all five chapters. Therefore holdout 011/014/017 was not dispatched, and no files were written to `D:\P5E-private\q2-outputs\`. This is a deliberate stop before holdout, with no prompt, law, threshold or membership change and no U1, pilot or chunk-pair action.
 
+## Q2.5 — Luna-only follow-up (owner section 7)
+
+The owner revised the decision for this package: only `openai/gpt-5.6-luna`, reasoning `medium`; total Q2 ceiling USD 10.00. Keep the existing `Q2-20261008` ledger and its stricter stored USD 6.00 cap. Before any Q2.5 dispatch, read the current settled/pending ledger from `emulator-5554`; the last available report is USD 0.8375159 settled, 10 logical reservations, 0 pending, 0 UNKNOWN. Owner FINAL remains scoring-only.
+
+### Q2.5.1 — original V5 input pack (offline)
+
+Implemented the V5 full-chat source contract. Each request now carries the exact original `RAW.txt`, `DRAFT.txt`, `GLOSSARY.csv`, and `PRONOUN.csv` names and text; V5 preflight requires exactly those four files, strict valid text, the pack's five-column glossary header, and the seven-column or supported legacy pronoun format. It verifies RAW/DRAFT match the original attachments, and executes before run persistence/provider dispatch. Original source attachments persist with V5 run state and survive rehydration. Prompt assembly sends Project Instruction only as the system message once, then the first-chat prompt section, Workflow, and each original file in a named block; it does not add the E Quality Core, filtered glossary, or app detections. V5 stops immediately on `stop_class`, maps `length` to a typed truncation code, reserves at least 32,768 output tokens per turn, and extracts only `<FINAL>` or the named FINAL_QA output file. Migration v28 preserves existing API runs while adding V5 contract data.
+
+Private-source pack preflight passed for the eight required live chapters (007; 004–008; 011, 014, 017), reporting only file roles, sizes, and hashes outside Git. Synthetic regressions cover attachment ordering/pack headers, bad or missing files, exact one-time system instruction, FINAL_QA extraction, first-turn stop, max output token floor, and SQLite migration/restart. No private book text, response, ledger, account value, or source hash is included in Git.
+
+Validation: `:editorial-engine:test` 572/572 PASS; app benchmark/debug/release unit test tasks each 439/439 PASS; `scripts/p6` 80/80 PASS; source pack preflight 8/8 PASS; `:app:compileDebugAndroidTestJavaWithJavac` PASS. Emulator/device validation remains pending. Q2.5 calls: 0; build/device actions for Q2.5: 0. Code/evidence commit and push: pending.
+
+Next: finish Q2.5.2 (minimal-rewrite rule and deterministic label-case guard), run the requested full regressions, commit and push it; then Q2.5.3 wrapper build and emulator tests. Q2.5.4 starts with V5-luna chapter 007 and stops the whole group on any stopped turn. Only after a valid canary may the frozen dev matrix and section-7 quality gate proceed to holdout.
+

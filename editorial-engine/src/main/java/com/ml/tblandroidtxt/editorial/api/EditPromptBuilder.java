@@ -70,6 +70,6 @@ public final class EditPromptBuilder {
         system.append('\n').append(OUTPUT_CONTRACT);
         String user = "# RAW\n" + inputs.raw() + "\n\n# DRAFT\n" + normalized.text() + "\n";
         return new ApiPrompt(EditorialApiContract.Step.EDIT, system.toString(), user, glossary.size(), pronouns.size(),
-                QualityCore.editSha256());
+                QualityCore.editSha256(), inputs.originalSourceFiles());
     }
 }
