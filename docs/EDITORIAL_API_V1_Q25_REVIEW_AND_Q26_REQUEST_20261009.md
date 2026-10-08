@@ -50,3 +50,9 @@ Cập nhật `docs/EDITORIAL_API_V1_Q2_EXECUTION_20261008.md` (mục Q2.6): bả
 | ID | Nội dung | Khuyến nghị |
 |---|---|---|
 | D-Q2c | Cho phép Q2.6.3 trong ngân sách D-Q2b còn lại (trần Q2 USD 10.00, đã dùng USD 0.8455608): chạy lại canary V5 sau khi sửa danh tính nguồn, và chạy `E-luna-b` dev 004–008 không phụ thuộc canary | Duyệt — chi phí dự kiến < USD 1 với luna |
+
+## 5. Quyết định đã nhận
+
+Owner (chat, 2026-10-09): "duyệt D-Q2c".
+
+Q2.6.3 chạy ngay sau khi Q2.6.1–Q2.6.2 PASS, không hỏi lại: canary V5-luna 007 lại sau khi sửa danh tính nguồn; `E-luna-b` dev 004–008 độc lập với canary; V5-luna 004/005/006/008 chỉ khi canary đạt; chấm cổng tối thiểu 4.1.3; holdout 011/014/017 với arm đã chọn. Model `openai/gpt-5.6-luna` reasoning medium; ngân sách D-Q2b (trần Q2 USD 10.00, đã dùng USD 0.8455608; chương V5 USD 1.50, E USD 0.10); chỉ `emulator-5554`. Dừng và hỏi nếu: bảng điều kiện pack còn điều kiện app chưa cung cấp được, canary V5 dừng lần nữa (báo mã, vẫn hoàn tất E-luna-b dev), UNKNOWN cost, lỗi hạ tầng, hoặc ước tính vượt trần.
