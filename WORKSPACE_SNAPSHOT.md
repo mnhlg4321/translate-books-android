@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-09 (+07:00): C1.4 done: build 4.18-c1.4/code 251 (56399f1d) on emulator-5554, clean-archive host tests, focused device tests all PASS, byte-exact fake replay of 007 (7 chunks), WN 059 planned in 578 ms on the emulator. No provider call.
+- Updated: 2026-10-09 (+07:00): C1.5 live 007 run once under D-C1: chunks 1-4 accepted, chunk 5 blocked by the structural gate (RAW Japanese line copied), run stopped as designed; 5 calls, USD 0.0113526; C1 PASS not reached. Stopped for the owner.
 - Current version: active v4.18.
 - Current branch: `feature/v4.18-p5e-runner-repair-20260917`; existing release checklist unchanged.
-- Current commit: 56399f1d is the baseline immediately before this evidence commit (confirm actual HEAD on resume).
+- Current commit: 29df102e is the baseline immediately before this evidence commit (confirm actual HEAD on resume).
 - Current build: `4.18-c1.4`/code `251`, event `build-20261009-180414`, source `56399f1d049f100355c8918d1cb858b2e4f11cd3`, APK SHA-256 A9C3A65A0555582F982A676C1BB479DED795B30D7568DC80824564316CFBB28C; AndroidTest archive `c1-chunk-20261009d` (SHA-256 D5A18C406FEA8EC84C63069A26602A6A254173EA9494840434CB6FC61A690B9B); mirrored in `artifacts/` and `backup/`; installed only on `emulator-5554`.
 - Current phase: Biên tập theo chunk (C1): nối nguồn hai file + runner CHUNK + UI bỏ Kỹ/V5; live 1 chương 007 sau D-C1; U1 tạm hoãn; 0/3 chương đạt; P7 chưa bắt đầu.
 - Completed tasks: Q2.6.1 (role-based V5 preflight, ID/SERIES, HOST SOURCE MANIFEST, original names, pack-condition table), Q2.6.2 (build 4.18-q2.3, focused emulator tests), Q2.6.3 (canary, dev matrix, gate, holdout, exports).
@@ -11,4 +11,4 @@
 - Known bugs/limits: no arm reaches the 4.1.3 automatic minimum; V5-luna 004 stopped in turn 3 (CONTENT_UNACCOUNTED_CHANGE, DRAFT kept); one run per arm and chapter, no repeats; semantic quality NOT_MEASURED. Earlier unrelated limits unchanged (historical P4 instrumented failures).
 - Regression status: clean archive of 56399f1d: engine 641 (1 off), app 456 x3 (1 off), scripts/p6 93, androidTest compile PASS, corpus 133/133 cuts, 55/55 wrong-chapter BLOCK, 0/113 correct BLOCK, other edition <= 1/11 OK; emulator focused tests PASS (pair store 6, pair UI 6 + process death, API store 6, flow 3, UI 5 + process death); fake replay of 007 byte-exact; WN 059 planned in 578 ms. Provider calls 0 / USD 0 in C1.
 - Review completed 2026-10-09: ledger and archive/output hashes verified. Added scorer diagnostics only (working tree), 8 scorer + 7 gate tests PASS from clean HEAD archive plus overlay; all 13 Q2.6 replays preserve every existing metric. 017 report corrected: two replacements and one insertion, not a no-change answer. No build/device/provider/commit/push. Evidence: D:/P5E-private/q26-review-clean-d94d0350/scorer-diagnostics-review.json.
-- Next action: C1.5 — live chương 007 (D-C1): kiểm trước phán định OK và ước tính ≤ USD 0.05, chạy một lần, chấm, xuất vào D:\P5E-private\chunk-outputs\007\, ghi mục 7 rồi dừng.
+- Next action: Owner đọc D:\P5E-private\chunk-outputs\007\c1-007-review.html và quyết định: cho thêm một lần chạy 007 sau khi sửa (câu lệnh khi dòng RAW bị chép nguyên văn, ghi mã cổng chunk) hay đổi hướng; không chạy live thêm trước quyết định đó.

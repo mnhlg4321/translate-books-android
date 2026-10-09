@@ -1,6 +1,13 @@
 # Build State
 
-## Current independent review — 2026-10-09
+## Current state — 2026-10-09 (chunk editing C1: C1.1–C1.4 done, C1.5 live 007 run once and stopped)
+
+- Branch `feature/v4.18-p5e-runner-repair-20260917`; detail and evidence in `docs/EDITORIAL_CHUNK_PLAN.md` section 7. Build `4.18-c1.4` / code 251, event `build-20261009-180414`, source `56399f1d`, APK SHA-256 `A9C3A65A0555582F982A676C1BB479DED795B30D7568DC80824564316CFBB28C`; AndroidTest `c1-chunk-20261009d`; mirrored in `artifacts/` and `backup/`; installed only on `emulator-5554`.
+- C1.1 engine CS-1 (units, anchors, aligner, verdict, cutter, checks, plan) reproduces the corpus figures: 133/133 cuts, 55/55 wrong-chapter BLOCK, 0/113 correct BLOCK, other edition at most 1/11 OK. C1.2 two-file source with Performance-driven cuts, plan stored in DB v29, OK/WARN/BLOCK confirmation. C1.3 lean UI. C1.4 `CHUNK` runner, clean-archive tests (engine 641, app 456 x3, scripts/p6 93), focused device tests all PASS, byte-exact fake replay of 007 (7 chunks), WN 059 planned in 578 ms on the emulator.
+- C1.5 (owner D-C1): live chapter 007 once, `openai/gpt-5.6-luna` medium: chunks 1-4 accepted, chunk 5 blocked by the structural gate (the model returned the RAW Japanese line), stopped as designed; 5 calls, USD 0.0113526 in ledger `C1-20261009` (cap USD 0.05), 0 pending/UNKNOWN. Partial result improved 3/18 of owner-changed lines: **C1 PASS not reached**; semantic NOT_MEASURED; 0/3 chapters accepted; P7 not started.
+- Next action: owner reads `D:\P5E-private\chunk-outputs\c1-007-review.html` and decides between one more run of 007 after a fix (instruction for a RAW line copied verbatim; record the gate code per chunk) and another direction. No live run before that decision.
+
+## Superseded — Current independent review — 2026-10-09
 
 - Actual HEAD/branch: `011961f6`, `feature/v4.18-p5e-runner-repair-20260917`; uncommitted review changes only in the two scorer/test files and named Q2/state documents; unrelated dirt preserved.
 - APK/source remains code247 / `7cc4108b`; APK/source ZIP hashes verified in both archives, six Q2.6 output/read-page hashes verified. Installed emulator identity is from event evidence, not re-read in this review.
@@ -9,7 +16,7 @@
 - 017 was not unchanged: two replacement opcodes and one insertion; zero credited fixes is an alignment/threshold metric, not proof of no edits. V5 004 has no valid candidate; semantic NOT_MEASURED for that candidate. Overall independent semantic adjudication remains pending; 0/3 accepted, P7 unmet.
 - Next action: the bounded offline quality diagnosis and output-name UX work in Q2.6 request section 6; no new provider/device/build/commit/push in this review. Earlier sections below describe event evidence.
 
-## Current state — 2026-10-09 (Q2.6 complete: V5 source identity fixed, dev and holdout run)
+## Superseded — Q2.6 complete (2026-10-09): V5 source identity fixed, dev and holdout run
 
 - Branch `feature/v4.18-p5e-runner-repair-20260917`; Q2.6.1 `7cc4108b`, Q2.6.2 evidence `712227e1`, then the Q2.6.3 evidence commit (all pushed). Details in `docs/EDITORIAL_API_V1_Q2_EXECUTION_20261008.md`, section Q2.6.
 - Current build: `4.18-q2.3` / code `247`, event `build-20261009-034756`, source `7cc4108b`, APK SHA-256 `D21C64E5A08879E88B850C60E45515812A8902ABB30DFB1449F292434D20B4DE`, source ZIP `276F2769775229FC0AAB648654B37074FE9FA0F3C12DBD4E524015B65E422AB8`; AndroidTest archive `q26-editorial-api-20261009` SHA-256 `58ED4E1843F27E0C768053E22E432BCA8702056325CA9F451E741ABA2BC26D89`; mirrored in `artifacts/` and `backup/`; installed only on `emulator-5554`.
