@@ -121,4 +121,15 @@ public final class AddressChecklist {
         if (word.length() > 0) out.add(word.toString());
         return out;
     }
+
+    /** Address forms outside the supplied self/call pair, for deterministic repair-point detection. */
+    public static Set<String> unexpectedWords(String text, Set<String> allowed) {
+        Set<String> normalized = new java.util.HashSet<>();
+        if (allowed != null) for (String word : allowed) if (word != null) normalized.add(word.trim().toLowerCase(Locale.ROOT));
+        Set<String> out = new java.util.LinkedHashSet<>();
+        for (String token : tokens(text == null ? "" : text)) {
+            if (WORDS.contains(token) && !normalized.contains(token)) out.add(token);
+        }
+        return Set.copyOf(out);
+    }
 }

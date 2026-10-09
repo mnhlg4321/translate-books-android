@@ -161,7 +161,7 @@ public final class RawAlignedNormalizer {
         return out.toString();
     }
 
-    static boolean containsKanaOrHan(String value) {
+    public static boolean containsKanaOrHan(String value) {
         for (int i = 0; i < value.length(); ) {
             int cp = value.codePointAt(i);
             Character.UnicodeScript script = Character.UnicodeScript.of(cp);
