@@ -15,6 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 CORPUS = os.environ.get("CS1_CORPUS", r"D:\Ebooks")
 OUT = ROOT / "editorial-engine" / "build" / "cs1-measure.json"
+PERF_OUT = ROOT / "app" / "build" / "cs1-performance.json"
 
 
 def run_engine() -> None:
@@ -31,7 +32,39 @@ def run_engine() -> None:
         raise SystemExit("engine measurement failed")
 
 
+def run_performance() -> None:
+    """Chunk counts with the app's default Performance settings and the app's own Chunker (an opt-in app unit test)."""
+    env = dict(os.environ)
+    env["CS1_CORPUS"] = CORPUS
+    env["CS1_PERF_OUT"] = str(PERF_OUT)
+    env.setdefault("JAVA_HOME", r"C:\Program Files\Android\Android Studio\jbr")
+    PERF_OUT.unlink(missing_ok=True)
+    cmd = ["cmd", "/c", r".\gradlew.bat :app:cleanTestDebugUnitTest :app:testDebugUnitTest --tests "
+           "com.ml.tblandroidtxt.Cs1PerformanceCountTest --console=plain"]
+    done = subprocess.run(cmd, cwd=ROOT, env=env, capture_output=True, text=True)
+    if done.returncode != 0 or not PERF_OUT.exists():
+        print((done.stdout + done.stderr)[-1500:])
+        raise SystemExit("performance measurement failed")
+
+
+def performance() -> int:
+    if "--reuse" not in sys.argv:
+        run_performance()
+    data = json.loads(PERF_OUT.read_text(encoding="utf-8"))
+    print("settings used:", data["settings"])
+    rows = data["chapters"]
+    for name in ("LN007", "LN011", "WN059"):
+        print(" ", name, rows[name])
+    counts = [r["chunks"] for r in rows.values()]
+    print(f"  chapters {len(rows)}, chunks min {min(counts)} median {sorted(counts)[len(counts) // 2]} max {max(counts)}, "
+          f"verdicts {sorted({r['verdict'] for r in rows.values()})}")
+    print("  slowest plan on the JVM:", data["slowestChapter"], data["slowestMs"], "ms")
+    return 0
+
+
 def main() -> int:
+    if "--performance" in sys.argv:
+        return performance()
     if "--reuse" not in sys.argv:
         run_engine()
     data = json.loads(OUT.read_text(encoding="utf-8"))

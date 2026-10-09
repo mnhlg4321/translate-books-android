@@ -301,6 +301,228 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         assertTrue("no spend reservation may stay UNKNOWN", snapshot.pendingCalls() == 0);
     }
 
+    /**
+     * CHUNK mode (docs/EDITORIAL_CHUNK_PLAN.md, C1.4): the owner's four original files of one chapter are cut by CS-1 with the
+     * app's own Performance settings and edited chunk by chunk through the real pair run service. Without p6_fixture_live=YES a
+     * fake provider returns every DRAFT chunk unchanged (the replay that must give the DRAFT back byte for byte, 0 USD). Writes
+     * final.txt, chunk-plan.json (no book text), chunks.json (per-chunk state and cost), structural.json, run-metadata.json
+     * and the group spend ledger. Stops at the first failing chunk, as the service does.
+     */
+    @Test public void runChunkFixture() throws Exception {
+        Bundle args = InstrumentationRegistry.getArguments();
+        Assume.assumeTrue("CHUNK fixture runner is opt-in", "YES".equalsIgnoreCase(args.getString("p6_fixture_run", ""))
+                && "CHUNK".equals(args.getString("p6_mode", "")));
+        String runId = uuid(args.getString("p6_run_id", ""));
+        String fixtureId = args.getString("p6_fixture_id", "");
+        if (!fixtureId.matches("fx-[ah][0-9]{2}")) throw new IllegalArgumentException("P6_FIXTURE_ID_INVALID");
+        boolean live = "YES".equalsIgnoreCase(args.getString("p6_fixture_live", ""));
+        Context context = ApplicationProvider.getApplicationContext();
+        AppSettings settings = SettingsStore.load(context).copy();
+        if (live) {
+            String preflight = EditorialP6FixtureLivePreflight.check(settings, args.getString("p6_expected_endpoint_account_fingerprint", ""));
+            if (!EditorialP6FixtureLivePreflight.MATCH.equals(preflight)) throw new IllegalStateException(preflight);
+        }
+        Path externalRoot = context.getExternalFilesDir(null).toPath().toAbsolutePath().normalize();
+        Path inputRoot = context.getFilesDir().toPath().toAbsolutePath().normalize().resolve("p6-fixtures");
+        Path runInput = inputRoot.resolve(runId).normalize();
+        Path fixtureRoot = runInput.resolve(fixtureId).normalize();
+        Path outputRoot = externalRoot.resolve("p6-fixture-results").resolve(runId).resolve(fixtureId).normalize();
+        if (!fixtureRoot.startsWith(runInput) || !runInput.startsWith(inputRoot) || !outputRoot.startsWith(externalRoot)
+                || fixtureRoot.toString().contains("6.FINAL") || Files.exists(outputRoot)) {
+            throw new IllegalStateException("P6_FIXTURE_PATH_REFUSED");
+        }
+        Map<String, Object> runtime = EditorialCanonicalJson.parseObject(Files.readAllBytes(runInput.resolve(fixtureId + ".runtime.json")));
+        @SuppressWarnings("unchecked") Map<String, Object> files = (Map<String, Object>) runtime.get("files");
+        @SuppressWarnings("unchecked") Map<String, Object> roles = (Map<String, Object>) runtime.get("roles");
+        if (roles == null || !roles.keySet().equals(Set.copyOf(V5SourcePackPreflight.ROLES))) throw new IllegalStateException("P6_RUNTIME_FILE_SET_INVALID");
+        Map<String, String> text = new LinkedHashMap<>();
+        Map<String, String> names = new LinkedHashMap<>();
+        for (String role : V5SourcePackPreflight.ROLES) {
+            String name = (String) roles.get(role);
+            @SuppressWarnings("unchecked") Map<String, Object> meta = (Map<String, Object>) files.get(name);
+            Path file = fixtureRoot.resolve(name).normalize();
+            if (!EditorialCanonicalJson.sha256Hex(Files.readAllBytes(file)).equals(meta.get("sha256"))) throw new IllegalStateException("P6_FIXTURE_SOURCE_HASH_MISMATCH");
+            text.put(role, FileUtil.readText(context, android.net.Uri.fromFile(file.toFile())));
+            names.put(role, name);
+        }
+        String groupId = args.getString("p6_group_id", live ? "" : "P6-OFFLINE-" + runId);
+        if (groupId == null || !groupId.matches("[A-Za-z0-9._-]{3,100}")) throw new IllegalArgumentException("P6_SPEND_GROUP_INVALID");
+        BigDecimal groupMaximum = new BigDecimal(args.getString("p6_group_maximum_usd", "1.00"));
+        if (!EditorialP6GroupSpendLedger.isValidRunnerGroupCap(groupMaximum)) throw new IllegalArgumentException("P6_SPEND_GROUP_CAP_INVALID");
+        BigDecimal chapterCap = new BigDecimal(args.getString("p6_chapter_cap_usd", "0.05"));
+        Path ledgerPath = externalRoot.resolve("p6-spend-ledger-groups").resolve(groupId + ".jsonl").normalize();
+        if (!ledgerPath.startsWith(externalRoot)) throw new IllegalArgumentException("P6_SPEND_GROUP_PATH_REFUSED");
+        EditorialP6GroupSpendLedger ledger = new EditorialP6GroupSpendLedger(ledgerPath, groupId, groupMaximum);
+
+        List<EditInputs.GlossaryEntry> entries = new ArrayList<>();
+        for (GlossaryStore.Term term : GlossaryStore.parseTerms(names.get("GLOSSARY"), text.get("GLOSSARY"))) {
+            entries.add(new EditInputs.GlossaryEntry(term.source, term.target, term.category, term.note));
+        }
+        String glossaryText = EditorialApiSources.glossaryAsText(entries);
+        String pronounText = text.get("PRONOUN");
+        EditorialPairSourceLoader.References refs = new EditorialPairSourceLoader.References(glossaryText, names.get("GLOSSARY"), pronounText, names.get("PRONOUN"));
+
+        Files.createDirectories(outputRoot);
+        long planStart = System.nanoTime();
+        EditorialPairSourceLoader.FilesLoad load = EditorialPairSourceLoader.planFiles(names.get("RAW") + " + " + names.get("DRAFT"), text.get("RAW"), text.get("DRAFT"), refs, settings);
+        long planMillis = (System.nanoTime() - planStart) / 1_000_000L;
+        Files.write(outputRoot.resolve("chunk-plan.json"), load.plan.toJson().getBytes(StandardCharsets.UTF_8));
+
+        String modelOverride = args.getString("p6_model_override", "").trim();
+        String model = live ? (modelOverride.isEmpty() ? settings.model : modelOverride) : "fake-model";
+        String reasoning = args.getString("p6_reasoning_effort", "medium");
+        if (live && "YES".equalsIgnoreCase(args.getString("p6_q2_model_lock", ""))
+                && (!"openai/gpt-5.6-luna".equalsIgnoreCase(model) || !"medium".equalsIgnoreCase(reasoning))) {
+            throw new IllegalStateException("MODEL_OR_REASONING_MISMATCH");
+        }
+        EditorialApiRunService.Pricing pricing = live && "openai/gpt-5.6-luna".equalsIgnoreCase(model) ? LUNA : PINNED;
+        Capture capture = new Capture(outputRoot);
+        EditorialApiProvider delegate = live ? new OpenRouterEditorialApiProvider(settings, reasoning) : new FakeEditorialApiProvider((request, index) ->
+                FakeEditorialApiProvider.text("<EDITED>" + EditorialPairTestData.draftPart(request) + "</EDITED>", "stop"));
+        PerCallLedger provider = new PerCallLedger(delegate, ledger, pricing, runId + "|" + fixtureId, model, capture::record);
+
+        String final_;
+        String state;
+        List<Object> chunkRows = new ArrayList<>();
+        BigDecimal usd = BigDecimal.ZERO;
+        long inTokens = 0;
+        long outTokens = 0;
+        int logicalCalls = 0;
+        String error = "";
+        EditorialPairModels.PairRun run = null;
+        if (load.plan.blocked() || load.source.rawRows.isEmpty()) {
+            final_ = text.get("DRAFT");
+            state = "CHAPTER_BLOCKED";
+        } else {
+            InMemoryPairRunStore store = new InMemoryPairRunStore();
+            EditorialPairRunService service = new EditorialPairRunService(store, provider, pricing, 900_000L);
+            run = service.prepare(1, load.source, glossaryText, pronounText, null, model, "Vietnamese", chapterCap, EditorialPairModels.ARM_CHUNK);
+            run = service.execute(run.id, null);
+            EditorialPairRunService.ExportPlan plan = service.exportPlan(run.id);
+            final_ = plan == null ? text.get("DRAFT") : plan.text;
+            state = run.state.name();
+            usd = run.usd;
+            inTokens = run.inputTokens;
+            outTokens = run.outputTokens;
+            logicalCalls = run.calls;
+            error = run.error == null ? "" : run.error;
+            for (EditorialPairModels.PairItem item : service.items(run.id)) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("ordinal", BigDecimal.valueOf(item.ordinal));
+                row.put("state", item.state.name());
+                row.put("calls", BigDecimal.valueOf(item.calls));
+                row.put("inputTokens", BigDecimal.valueOf(item.inputTokens));
+                row.put("outputTokens", BigDecimal.valueOf(item.outputTokens));
+                row.put("usd", item.usd.toPlainString());
+                row.put("error", item.error == null ? "" : item.error);
+                chunkRows.add(row);
+            }
+        }
+        byte[] finalBytes = final_.getBytes(StandardCharsets.UTF_8);
+        Files.write(outputRoot.resolve("final.txt"), finalBytes);
+        Files.write(outputRoot.resolve("chunks.json"), EditorialCanonicalJson.canonicalize(new ArrayList<Object>(chunkRows)).getBytes(StandardCharsets.UTF_8));
+
+        boolean valid = "FINAL_ELIGIBLE".equals(state);
+        Map<String, Object> structural = new LinkedHashMap<>();
+        structural.put("valid", valid);
+        structural.put("providerKind", live ? "LIVE" : "FAKE_OFFLINE");
+        structural.put("reasonCode", state);
+        structural.put("stops", valid ? new ArrayList<Object>() : new ArrayList<Object>(List.of("CHUNK_" + state, error)));
+        Files.write(outputRoot.resolve("structural.json"), EditorialCanonicalJson.canonicalize(structural).getBytes(StandardCharsets.UTF_8));
+
+        PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+        Map<String, Object> performance = new LinkedHashMap<>();
+        performance.put("chunkMode", settings.chunkMode);
+        performance.put("maxTokensPerChunk", BigDecimal.valueOf(settings.maxTokensPerChunk));
+        performance.put("maxCharsPerChunk", BigDecimal.valueOf(settings.maxCharsPerChunk));
+        performance.put("softLimitRatio", Float.toString(settings.softLimitRatio));
+        performance.put("optimizationPreset", settings.optimizationPreset == null ? "" : settings.optimizationPreset);
+        performance.put("maxOutputTokens", BigDecimal.valueOf(settings.maxOutputTokens));
+        performance.put("contextChars", BigDecimal.valueOf(settings.contextChars));
+        performance.put("softLimitUsed", BigDecimal.valueOf(load.plan.limits.soft()));
+        performance.put("hardLimitUsed", BigDecimal.valueOf(load.plan.limits.hard()));
+        Map<String, Object> metadata = new LinkedHashMap<>();
+        metadata.put("fixtureId", fixtureId);
+        metadata.put("mode", "CHUNK");
+        metadata.put("providerKind", live ? "LIVE" : "FAKE_OFFLINE");
+        metadata.put("groupId", groupId);
+        metadata.put("groupMaximumUsd", groupMaximum.toPlainString());
+        metadata.put("chapterCapUsd", chapterCap.toPlainString());
+        metadata.put("verdict", load.plan.verdict);
+        metadata.put("chunks", BigDecimal.valueOf(load.plan.chunks.size()));
+        metadata.put("uncertainChunks", BigDecimal.valueOf(load.plan.uncertainChunks));
+        metadata.put("planMillis", BigDecimal.valueOf(planMillis));
+        metadata.put("performance", performance);
+        metadata.put("actualProviderCalls", BigDecimal.valueOf(live ? provider.physicalCalls() : 0));
+        metadata.put("fakeProviderCalls", BigDecimal.valueOf(live ? 0 : logicalCalls));
+        metadata.put("inputTokens", BigDecimal.valueOf(inTokens));
+        metadata.put("outputTokens", BigDecimal.valueOf(outTokens));
+        metadata.put("usd", usd.toPlainString());
+        metadata.put("costOverrunCalls", BigDecimal.valueOf(provider.overruns().size()));
+        metadata.put("finishReasons", new ArrayList<Object>(capture.finishReasons));
+        metadata.put("finalSha256", EditorialCanonicalJson.sha256Hex(finalBytes));
+        metadata.put("draftSha256", EditorialCanonicalJson.sha256Hex(text.get("DRAFT").getBytes(StandardCharsets.UTF_8)));
+        metadata.put("rawSha256", EditorialCanonicalJson.sha256Hex(text.get("RAW").getBytes(StandardCharsets.UTF_8)));
+        metadata.put("finalEqualsDraft", final_.equals(text.get("DRAFT")));
+        metadata.put("model", model);
+        metadata.put("reasoningEffort", reasoning);
+        metadata.put("contractRevision", run == null ? "" : run.contractRevision);
+        metadata.put("sourceCommit", args.getString("p6_source_commit", ""));
+        metadata.put("apkVersionName", packageInfo.versionName == null ? "" : packageInfo.versionName);
+        metadata.put("apkVersionCode", BigDecimal.valueOf(packageInfo.getLongVersionCode()));
+        Map<String, Object> apiV1 = new LinkedHashMap<>();
+        apiV1.put("state", state);
+        metadata.put("apiV1", apiV1);
+        Files.write(outputRoot.resolve("run-metadata.json"), EditorialCanonicalJson.canonicalize(metadata).getBytes(StandardCharsets.UTF_8));
+        if (Files.exists(ledgerPath)) Files.copy(ledgerPath, outputRoot.resolve("spend-ledger.jsonl"));
+        if (!provider.overruns().isEmpty()) {
+            StringBuilder overrun = new StringBuilder();
+            for (EditorialApiLedgerProvider.Overrun o : provider.overruns()) {
+                overrun.append(o.callId()).append(" reserved=").append(o.reserved().toPlainString()).append(" actual=").append(o.actual().toPlainString()).append("\n");
+            }
+            Files.write(outputRoot.resolve("cost-overrun.txt"), overrun.toString().getBytes(StandardCharsets.UTF_8));
+        }
+        assertTrue("a call was billed above its reservation (see cost-overrun.txt)", provider.overruns().isEmpty());
+        if (Files.exists(ledgerPath)) assertTrue("no spend reservation may stay UNKNOWN", ledger.inspect().pendingCalls() == 0);
+    }
+
+    /** One ledger identity per physical call, so every chunk reserves and settles on its own. */
+    private static final class PerCallLedger implements EditorialApiProvider {
+        private final EditorialApiProvider delegate;
+        private final EditorialP6GroupSpendLedger ledger;
+        private final EditorialApiRunService.Pricing pricing;
+        private final String identity;
+        private final String model;
+        private final EditorialApiLedgerProvider.Recorder recorder;
+        private final List<EditorialApiLedgerProvider.Overrun> overruns = new ArrayList<>();
+        private int calls;
+
+        PerCallLedger(EditorialApiProvider delegate, EditorialP6GroupSpendLedger ledger, EditorialApiRunService.Pricing pricing, String identity,
+                      String model, EditorialApiLedgerProvider.Recorder recorder) {
+            this.delegate = delegate;
+            this.ledger = ledger;
+            this.pricing = pricing;
+            this.identity = identity;
+            this.model = model;
+            this.recorder = recorder;
+        }
+
+        List<EditorialApiLedgerProvider.Overrun> overruns() { return overruns; }
+
+        int physicalCalls() { return calls; }
+
+        @Override public void cancel() { delegate.cancel(); }
+
+        @Override public EditorialApiFlow.StepResponse call(EditorialApiFlow.Request request, String modelName, int maxOutput, long timeoutMillis) {
+            EditorialApiLedgerProvider one = new EditorialApiLedgerProvider(delegate, ledger, pricing, identity + "|call" + (++calls), model, recorder);
+            try {
+                return one.call(request, modelName, maxOutput, timeoutMillis);
+            } finally {
+                overruns.addAll(one.overruns());
+            }
+        }
+    }
+
     /** Dry run: the edit returns the draft unchanged, the check passes; every answer costs a fixed fake amount. */
     private static EditorialApiProvider fake(String draft) {
         return new FakeEditorialApiProvider((request, index) -> request.step() == EditorialApiContract.Step.EDIT
