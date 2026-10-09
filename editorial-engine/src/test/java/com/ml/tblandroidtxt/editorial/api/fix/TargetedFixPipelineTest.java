@@ -154,13 +154,13 @@ public final class TargetedFixPipelineTest {
         }
     }
 
-    @Test public void outputReserveScalesWithTheTargetNotTheWholeChapterAndIsBounded() {
+    @Test public void outputCeilingLeavesRoomForReasoningAndGrowsOnlyForVeryLongPoints() {
         FixPoint small = point(1, Type.KANA, 0, "line", "RAW");
         int smallLimit = TargetedFixPrompt.maxOutputTokens(List.of(small));
         FixPoint large = point(2, Type.KANA, 0, "x".repeat(20_000), "RAW".repeat(5_000));
         int largeLimit = TargetedFixPrompt.maxOutputTokens(List.of(large));
-        assertEquals(128, smallLimit);
-        assertEquals(4096, largeLimit);
+        assertEquals("a short point still gets the shared 4096-token ceiling (reasoning tokens count as output)", 4096, smallLimit);
+        assertTrue(largeLimit > 4096 && largeLimit <= 32_000);
         try {
             TargetedFixPrompt.maxOutputTokens(List.of());
             fail("a no-point chunk has no output reserve");

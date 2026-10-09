@@ -572,3 +572,12 @@ Cùng một phép thử: chương 007, chunk 005 (RAW P061–P079), `openai/gpt-
   - **Số liệu cho quyết định (ước tính, 14 lời gọi, đầu vào +6%):** giữ 760 (hiện tại) ≈ USD 0.027 nhưng không đủ; 1536 mỗi lời gọi ≈ USD 0.040; **2048 ≈ USD 0.0486** (cần trần 0.05); 4096 ≈ USD 0.083. Mọi phương án đổi giới hạn cần build mới, kiểm offline và duyệt live mới.
   - **Thay đổi:** không có thay đổi mã trong lần này; không build; không chạy chương khác; không đụng pilot hay V5. Test dump cục bộ dùng để lập danh sách điểm không đưa vào repo.
   - **Next action duy nhất:** owner chọn một trong ba hướng cho C6 trước khi làm gì tiếp: (a) nâng giới hạn đầu ra mỗi lời gọi đích lên 2048 token và trần chương lên USD 0.05 (giữ chỗ tối đa ≈ USD 0.0486 cho 14 lời gọi, đã cộng 6% đầu vào), kèm build mới 4.18-c6.4, kiểm offline và duyệt live mới; (b) giữ 760 token nhưng đổi suy luận sang low (đổi một biến đã duyệt, không đảm bảo kết quả); (c) dừng C6 và quay lại hướng khác. Không chạy live thêm, không gửi lại đoạn 1; sổ `C6-20261010` còn một giữ chỗ pending USD 0.002066 cần đối chiếu tay.
+- 2026-10-10 — coordinator review C6.5 (HEAD `792030a5`):
+  - **Nguyên nhân dừng — lỗi triển khai lệch thiết kế mục 5.1, không phải lỗi model.** `TargetedFixPrompt.maxOutputTokens` tính trần đầu ra theo số ký tự của điểm, sàn 128 (chunk 1 được 760). Đường sửa cả chunk dùng sàn 4096 (`OpenRouterEditorialApiProvider.editMaxOutputTokens`), và mục 5.1 quy định MAX OUTPUT dùng chung Performance (4096). luna medium tiêu hết 760 token cho suy luận, `content` = null.
+  - **Đã sửa:** sàn = 4096 (như đường sửa cả chunk), trần 32 000 cho điểm rất dài; test `outputCeilingLeavesRoomForReasoningAndGrowsOnlyForVeryLongPoints`. Engine 665/0, app 0 lỗi (cây làm việc). Bản sửa cần build mới trước khi live.
+  - **Sổ `C6-20261010`:** khoản giữ chỗ 0.002066 `pending` là thiết kế fail-closed của `EditorialApiLedgerProvider` (chi phí vượt giữ chỗ không bị ép khớp; nhóm dừng; số thật nằm trong bằng chứng overrun). Chi phí thật USD 0.0024366 lấy từ phản hồi OpenRouter, nên owner không cần đối chiếu hóa đơn. Còn thiếu một bản ghi đóng sổ có kiểm (C6.6).
+  - **Ngân sách với trần đầu ra mới cho 006** (14 lời gọi, 67 069 token vào):
+    - tổng giữ chỗ xấu nhất nếu mọi lời gọi dùng đủ 4096 token ra: ≈ USD 0.082;
+    - chi tiêu dự kiến (~1 200 token ra mỗi lời gọi, theo C1.5): ≈ USD 0.034;
+    - đỉnh phơi nhiễm khi giữ chỗ tuần tự: ≈ đã chi + USD 0.006 mỗi lời gọi.
+    - Trần D-C6 USD 0.03 không đủ → cần D-C6b.

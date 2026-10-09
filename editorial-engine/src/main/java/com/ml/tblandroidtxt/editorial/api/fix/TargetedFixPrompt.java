@@ -8,8 +8,13 @@ import java.util.List;
 
 /** Minimal request for app-detected points. FINAL and whole-chunk rewriting are deliberately absent. */
 public final class TargetedFixPrompt {
-    private static final int MIN_OUTPUT_TOKENS = 128;
-    private static final int MAX_OUTPUT_TOKENS = 4096;
+    /**
+     * Floor of the output ceiling, the same as the whole-chunk edit and the Performance MAX OUTPUT default: a reasoning model
+     * spends output tokens on reasoning before the answer (C6.5: luna medium used all of a 760-token ceiling and returned no
+     * content). The answer estimate below only raises the ceiling for very long points.
+     */
+    private static final int MIN_OUTPUT_TOKENS = 4096;
+    private static final int MAX_OUTPUT_TOKENS = 32_000;
 
     private TargetedFixPrompt() { }
 
@@ -46,7 +51,7 @@ public final class TargetedFixPrompt {
         return new ApiPrompt(EditorialApiContract.Step.EDIT, system, user.toString(), glossary, pronouns, PairText.sha256(system));
     }
 
-    /** Bounded output reserve sized from the lines that may change, never from the entire chunk. */
+    /** Output ceiling (and reservation basis): at least {@link #MIN_OUTPUT_TOKENS}, more only when the flagged lines are very long. */
     public static int maxOutputTokens(List<FixPoint> points) {
         if (points == null || points.isEmpty()) throw new IllegalArgumentException("TARGETED_PROMPT_NO_POINTS");
         long characters = 0;
