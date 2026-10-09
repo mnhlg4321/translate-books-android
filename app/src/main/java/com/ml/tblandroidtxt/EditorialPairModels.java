@@ -42,6 +42,8 @@ public final class EditorialPairModels {
         public boolean costOverrun;
         public String mergedText = "";
         public String mergeReceiptJson = "";
+        /** The CS-1 chunk plan of a two-file source (JSON, no book text); empty for a job source. */
+        public String chunkPlanJson = "";
         public int warnings;
         public int calls;
         public long inputTokens;
@@ -59,7 +61,7 @@ public final class EditorialPairModels {
             r.rawRowsJson = rawRowsJson; r.draftRowsJson = draftRowsJson; r.glossaryText = glossaryText; r.glossarySha256 = glossarySha256;
             r.pronounText = pronounText; r.pronounSha256 = pronounSha256; r.cueFields = cueFields; r.mapRevision = mapRevision; r.mapHash = mapHash;
             r.capUsd = capUsd; r.started = started; r.paused = paused; r.costOverrun = costOverrun; r.mergedText = mergedText;
-            r.mergeReceiptJson = mergeReceiptJson; r.warnings = warnings; r.calls = calls; r.inputTokens = inputTokens; r.outputTokens = outputTokens;
+            r.mergeReceiptJson = mergeReceiptJson; r.chunkPlanJson = chunkPlanJson; r.warnings = warnings; r.calls = calls; r.inputTokens = inputTokens; r.outputTokens = outputTokens;
             r.usd = usd; r.costKnown = costKnown; r.error = error; r.createdAt = createdAt; r.updatedAt = updatedAt;
             return r;
         }

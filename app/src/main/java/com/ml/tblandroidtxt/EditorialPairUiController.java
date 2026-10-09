@@ -27,6 +27,12 @@ final class EditorialPairUiController {
     EditorialPairSource source;
     EditorialPairSourceLoader.References references;
     String sourceError = "";
+    /** True while the two files are being read and cut; the confirmation screen shows a wait message. */
+    volatile boolean planning;
+    /** First two lines of each file for the verdict screen; kept in memory only. */
+    java.util.List<String> rawHead = java.util.List.of();
+    java.util.List<String> draftHead = java.util.List.of();
+    String performanceLine = "";
     long runId;
     String progress = "";
     boolean detailsOpen;
@@ -43,24 +49,48 @@ final class EditorialPairUiController {
     /** Reads the job and the references off the UI thread, then shows the pairs and why the run can or cannot start. */
     void openConfirm() {
         final EditorialApiCombo snapshot = parent.combo.copy();
+        final AppSettings settings = SettingsStore.load(parent.appContext());
+        planning = true;
+        preview = null;
+        parent.setScreen(EditorialApiUiController.Screen.PAIR_CONFIRM);
         new Thread(() -> {
             try {
                 EditorialPairSourceLoader.References refs = EditorialPairSourceLoader.loadReferences(parent.appContext(), snapshot);
-                EditorialPairSource loaded = EditorialApiCombo.sourceIsJob(snapshot)
-                        ? EditorialPairSourceLoader.loadJob(parent.appContext(), snapshot.jobId)
-                        : EditorialPairSource.unmappedFiles(snapshot.rawName + " + " + snapshot.draftName);
+                EditorialPairSource loaded;
+                java.util.List<String> rawLines = java.util.List.of();
+                java.util.List<String> draftLines = java.util.List.of();
+                if (EditorialApiCombo.sourceIsJob(snapshot)) {
+                    loaded = EditorialPairSourceLoader.loadJob(parent.appContext(), snapshot.jobId);
+                } else {
+                    EditorialPairSourceLoader.FilesLoad files = EditorialPairSourceLoader.loadFiles(parent.appContext(), snapshot, refs, settings);
+                    loaded = files.source;
+                    rawLines = files.rawHead;
+                    draftLines = files.draftHead;
+                }
                 EditorialPairPreview view = EditorialPairPreview.of(loaded, EditorialPairSnapshot.glossaryFrom(refs.glossaryText), refs.pronounText, null);
+                final java.util.List<String> rawShown = rawLines;
+                final java.util.List<String> draftShown = draftLines;
                 parent.postUi(() -> {
                     source = loaded;
                     references = refs;
                     preview = view;
+                    rawHead = rawShown;
+                    draftHead = draftShown;
+                    performanceLine = EditorialPairPresenter.performanceLine(settings);
                     sourceError = "";
+                    planning = false;
                     parent.setScreen(EditorialApiUiController.Screen.PAIR_CONFIRM);
                 });
             } catch (EditorialApiSourceLoader.SourceException unreadable) {
-                parent.postUi(() -> { sourceError = unreadable.getMessage(); parent.setScreen(EditorialApiUiController.Screen.COMBO); parent.error = sourceError; parent.refresh(); });
+                parent.postUi(() -> { planning = false; sourceError = unreadable.getMessage(); parent.setScreen(EditorialApiUiController.Screen.COMBO); parent.error = sourceError; parent.refresh(); });
             }
         }, "editorial-pair-preview").start();
+    }
+
+    /** Back to the combo form and straight into the file picker for the file that has to be replaced. */
+    void rechoose(boolean raw) {
+        parent.setScreen(EditorialApiUiController.Screen.COMBO);
+        parent.pickFile(raw);
     }
 
     // ---- run

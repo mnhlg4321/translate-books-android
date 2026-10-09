@@ -56,7 +56,7 @@ public final class EditorialPairV27MigrationSpecTest {
     @Test public void theRepositoryRunsTheV27StepOnCreateAndFromEveryOlderVersion() throws Exception {
         String source = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("src/main/java/com/ml/tblandroidtxt/TranslationRepository.java")),
                 java.nio.charset.StandardCharsets.UTF_8).replace("\r\n", "\n");
-        assertTrue(source.contains("VER = 28"));
+        assertTrue(source.contains("VER = 29"));
         assertTrue(source.contains("if (oldVersion < 27) createEditorialPairTables(db);"));
         assertTrue(source.contains("if (oldVersion < 28) migrateEditorialApiRunsToV28(db);"));
         assertTrue(source.indexOf("if (oldVersion < 26) createEditorialApiTables(db);") < source.indexOf("if (oldVersion < 27) createEditorialPairTables(db);"));

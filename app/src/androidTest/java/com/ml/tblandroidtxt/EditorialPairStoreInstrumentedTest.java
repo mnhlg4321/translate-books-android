@@ -240,7 +240,7 @@ public final class EditorialPairStoreInstrumentedTest {
 
         try (SqliteEditorialPairRunStore store = store()) {
             SQLiteDatabase db = store.databaseForTest();
-            assertEquals(27, db.getVersion());
+            assertEquals(29, db.getVersion());
             for (String table : new String[] {"editorial_pair_runs", "editorial_pair_items", "editorial_pair_reservations", "editorial_pair_journal"}) {
                 try (Cursor c = db.rawQuery("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", new String[] {table})) { assertTrue(table, c.moveToFirst()); }
             }

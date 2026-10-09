@@ -6,6 +6,8 @@ import com.ml.tblandroidtxt.editorial.api.PairStates;
 import com.ml.tblandroidtxt.editorial.api.PairStates.PairState;
 import com.ml.tblandroidtxt.editorial.api.PairStates.RunState;
 
+import com.ml.tblandroidtxt.editorial.api.chunk.ChunkPlan;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -35,6 +37,8 @@ final class EditorialPairPresenter {
         switch (name) {
             case "SOURCE_NO_EXPLICIT_MAPPING":
                 return "Hai file riêng chưa có liên kết cặp RAW–DRAFT, nên chưa chạy theo từng cặp được. Hãy chọn một job Dịch, hoặc chạy toàn chương.";
+            case "SOURCE_CHAPTER_BLOCKED":
+                return "RAW và DRAFT có vẻ không cùng chương, nên chưa biên tập. Hãy chọn lại file.";
             case "SOURCE_NO_ROWS": case "SOURCE_NO_ROWS_":
                 return "Job chưa có đoạn nào để biên tập.";
             case "SOURCE_ROW_OFFSET_GAP":
@@ -62,6 +66,8 @@ final class EditorialPairPresenter {
         int colon = code.indexOf(':');
         if (colon > 0) { name = code.substring(0, colon); arg = code.substring(colon + 1); }
         switch (name) {
+            case "CHAPTER_WARN": return "RAW và DRAFT khớp chưa chắc chắn; hãy xem lý do ở trên trước khi chạy.";
+            case "UNCERTAIN_CHUNKS": return arg + " đoạn chưa chắc về cách ghép RAW–DRAFT (đánh dấu trong kết quả).";
             case "NO_GLOSSARY": return "Không dùng Glossary: tên riêng có thể không thống nhất giữa các cặp.";
             case "NO_PRONOUN": return "Không dùng Pronoun: cách xưng hô giữ như trong DRAFT.";
             case "REFERENCE_CONFLICT": return arg + " chỗ có quy tắc xưng hô mâu thuẫn trong cùng phạm vi. Ứng dụng không tự chọn; model được dặn giữ cách xưng hô của DRAFT ở đó.";
@@ -80,6 +86,61 @@ final class EditorialPairPresenter {
         List<String> out = new ArrayList<>();
         for (String w : preview.warnings) out.add(warning(w));
         return out;
+    }
+
+    // ---- the chunk plan of two files: verdict before anything is sent
+
+    /** What the person reads first: the verdict of the pair of files. Plain words, no engineering terms. */
+    static String verdictHeadline(ChunkPlan plan, String performanceLine) {
+        switch (plan.verdict) {
+            case "BLOCK": return "RAW và DRAFT có vẻ không cùng chương";
+            case "WARN": return "RAW và DRAFT khớp chưa chắc chắn";
+            default: return okSummary(plan, performanceLine);
+        }
+    }
+
+    static String okSummary(ChunkPlan plan, String performanceLine) {
+        StringBuilder sb = new StringBuilder("Chia " + plan.chunks.size() + " đoạn theo cài đặt Performance (" + performanceLine + ").");
+        int regrouped = plan.splitGroups + plan.mergeGroups;
+        List<String> parts = new ArrayList<>();
+        if (regrouped > 0) parts.add("DRAFT tách/gộp dòng ở " + regrouped + " chỗ");
+        if (plan.rawOnly > 0) parts.add(plan.rawOnly + " câu RAW chưa có trong DRAFT");
+        if (!parts.isEmpty()) sb.append(' ').append(String.join("; ", parts)).append('.');
+        if (plan.uncertainChunks > 0) sb.append(' ').append(plan.uncertainChunks).append(" đoạn chưa chắc, đã được đánh dấu.");
+        return sb.toString();
+    }
+
+    /** At most two reasons with their numbers, the blocking ones first. */
+    static List<String> verdictReasons(ChunkPlan plan) {
+        List<ChunkPlan.Reason> ordered = new ArrayList<>();
+        for (ChunkPlan.Reason r : plan.reasons) if ("BLOCK".equals(r.level())) ordered.add(r);
+        for (ChunkPlan.Reason r : plan.reasons) if (!"BLOCK".equals(r.level())) ordered.add(r);
+        List<String> out = new ArrayList<>();
+        for (ChunkPlan.Reason r : ordered) {
+            if (out.size() == 2) break;
+            out.add(reasonText(plan, r));
+        }
+        return out;
+    }
+
+    static String reasonText(ChunkPlan plan, ChunkPlan.Reason r) {
+        switch (r.code()) {
+            case "NAME_MATCH": return "chỉ " + percent(r.value()) + "% tên riêng trong RAW có mặt ở dòng DRAFT tương ứng";
+            case "EDGE_SYMBOLS": return percent(1 - r.value()) + "% dòng có dấu thoại/ký hiệu khác nhau";
+            case "UNPAIRED_LINES": return (plan.rawOnly + plan.draftOnly) + " dòng không ghép được";
+            case "LENGTH_RATIO": return "DRAFT " + (r.value() >= 0 ? "dài" : "ngắn") + " hơn mức thường " + percent(Math.abs(r.value())) + "%";
+            case "CHUNK_CHECKS": return percent(r.value()) + "% đoạn có độ dài hoặc số câu thoại lệch bất thường";
+            case "EMPTY_SOURCE": return "một trong hai file không có chữ nào";
+            default: return r.code();
+        }
+    }
+
+    private static long percent(double share) { return Math.round(share * 100); }
+
+    /** The Performance values the plan was cut with, as the person knows them from the settings screen. */
+    static String performanceLine(AppSettings s) {
+        String mode = "char".equalsIgnoreCase(s.chunkMode) ? "ký tự" : "token";
+        return mode + " " + s.effectiveHardLimit() + " · mềm " + String.format(Locale.ROOT, "%.1f", s.softLimitRatio);
     }
 
     // ---- preview rows and cost

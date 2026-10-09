@@ -71,7 +71,7 @@ public final class EditorialApiStoreInstrumentedTest {
     @Test public void freshDatabaseIsV28WithV5SnapshotColumn() {
         try (SqliteEditorialApiStore store = open()) {
             SQLiteDatabase db = store.databaseForTest();
-            assertEquals(28, db.getVersion());
+            assertEquals(29, db.getVersion());
             assertTrue(tableExists(db, "editorial_combos"));
             assertTrue(tableExists(db, "editorial_api_runs"));
             assertTrue(columnExists(db, "editorial_api_runs", "original_source_files_json"));
@@ -150,7 +150,7 @@ public final class EditorialApiStoreInstrumentedTest {
 
         try (SqliteEditorialApiStore store = open()) {
             SQLiteDatabase db = store.databaseForTest();
-            assertEquals(28, db.getVersion());
+            assertEquals(29, db.getVersion());
             assertTrue(tableExists(db, "editorial_combos"));
             assertTrue(tableExists(db, "editorial_api_runs"));
             try (Cursor c = db.rawQuery("SELECT title FROM jobs WHERE id=7", null)) {
@@ -178,7 +178,7 @@ public final class EditorialApiStoreInstrumentedTest {
 
         try (SqliteEditorialApiStore store = open()) {
             EditorialApiRun restored = store.getRun(1);
-            assertEquals(28, store.databaseForTest().getVersion());
+            assertEquals(29, store.databaseForTest().getVersion());
             assertNotNull(restored);
             assertEquals("kept-final", restored.finalText);
             assertEquals("raw-hash", restored.rawSha256);

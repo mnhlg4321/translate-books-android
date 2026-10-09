@@ -14,8 +14,8 @@ import java.util.Set;
  *     such pairs. OK from 0.6, WARN from 0.35, BLOCK below.</li>
  * <li>EDGE_SYMBOLS - share of 1-1 pairs with the same opening and closing mark. OK from 0.97, WARN from 0.95, BLOCK below.</li>
  * <li>UNPAIRED_LINES - share of beads that are 1-0 or 0-1. OK up to 1.5 %, WARN up to 5 %, BLOCK above.</li>
- * <li>LENGTH_RATIO - deviation of DRAFT/RAW characters from the series ratio (default 2.54 for Japanese to Vietnamese). OK up
- *     to 20 %, WARN up to 35 %, BLOCK above.</li>
+ * <li>LENGTH_RATIO - deviation of DRAFT/RAW characters from the series ratio (default 2.54 for Japanese to Vietnamese); the
+ *     reason keeps the sign (positive = DRAFT longer). OK up to 20 %, WARN up to 35 %, BLOCK above.</li>
  * </ul>
  */
 public final class ChapterVerdict {
@@ -88,9 +88,10 @@ public final class ChapterVerdict {
         long draftChars = 0;
         for (String s : raw) rawChars += s.codePointCount(0, s.length());
         for (String s : draft) draftChars += s.codePointCount(0, s.length());
-        double deviation = Math.abs((double) draftChars / Math.max(1L, rawChars) / seriesRatio - 1);
-        if (deviation > 0.35) reasons.add(new Reason(Level.BLOCK, "LENGTH_RATIO", deviation));
-        else if (deviation > 0.2) reasons.add(new Reason(Level.WARN, "LENGTH_RATIO", deviation));
+        double signed = (double) draftChars / Math.max(1L, rawChars) / seriesRatio - 1;
+        double deviation = Math.abs(signed);
+        if (deviation > 0.35) reasons.add(new Reason(Level.BLOCK, "LENGTH_RATIO", signed));
+        else if (deviation > 0.2) reasons.add(new Reason(Level.WARN, "LENGTH_RATIO", signed));
         Level level = Level.OK;
         for (Reason r : reasons) {
             if (r.level() == Level.BLOCK) level = Level.BLOCK;

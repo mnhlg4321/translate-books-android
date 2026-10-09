@@ -44,6 +44,8 @@ final class EditorialApiSourceLoader {
         return new EditorialApiSources(raw, draft, glossaryText, entries, pronounText, targetLanguage);
     }
 
+    static String readFile(Context context, String uri, String which) throws SourceException { return read(context, uri, which); }
+
     private static String read(Context context, String uri, String which) throws SourceException {
         if (uri == null || uri.isEmpty()) throw new SourceException(which, "Chưa chọn file " + which + ".");
         try {

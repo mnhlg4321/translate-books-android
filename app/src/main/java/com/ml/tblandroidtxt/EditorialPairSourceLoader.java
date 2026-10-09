@@ -72,6 +72,56 @@ final class EditorialPairSourceLoader {
         }
     }
 
+    /** The two files cut into chunks, with the first lines of each file for the confirmation screen (kept in memory only). */
+    static final class FilesLoad {
+        final EditorialPairSource source;
+        final com.ml.tblandroidtxt.editorial.api.chunk.ChunkPlan plan;
+        final List<String> rawHead;
+        final List<String> draftHead;
+
+        FilesLoad(EditorialPairSource source, com.ml.tblandroidtxt.editorial.api.chunk.ChunkPlan plan, List<String> rawHead, List<String> draftHead) {
+            this.source = source;
+            this.plan = plan;
+            this.rawHead = rawHead;
+            this.draftHead = draftHead;
+        }
+    }
+
+    /**
+     * Chunk-planner settings taken from Settings → Performance through the same functions the Translate flow uses: the mode
+     * and its measure ({@code Chunker.measure}), the adaptive hard and soft limits, MAX OUTPUT and the context size.
+     */
+    static com.ml.tblandroidtxt.editorial.api.chunk.ChunkPlanner.Settings plannerSettings(AppSettings s) {
+        final String mode = "char".equalsIgnoreCase(s.chunkMode) ? "char" : "token";
+        int hard = Chunker.adaptiveLimit(s, s.effectiveHardLimit());
+        int soft = Math.min(hard, Chunker.adaptiveLimit(s, s.effectiveSoftLimit()));
+        return new com.ml.tblandroidtxt.editorial.api.chunk.ChunkPlanner.Settings(mode, soft, hard, s.maxOutputTokens, s.contextChars, 1.3,
+                text -> Chunker.measure(text, mode), text -> Chunker.measure(text, "token"),
+                com.ml.tblandroidtxt.editorial.api.chunk.ChapterVerdict.DEFAULT_SERIES_RATIO);
+    }
+
+    /** Reads RAW and DRAFT with the app's own text reader (UTF-8, UTF-16, Windows-31J) and plans the chunks. Nothing is sent. */
+    static FilesLoad loadFiles(Context context, EditorialApiCombo combo, References refs, AppSettings settings) throws EditorialApiSourceLoader.SourceException {
+        String raw = EditorialApiSourceLoader.readFile(context, combo.rawUri, "RAW");
+        String draft = EditorialApiSourceLoader.readFile(context, combo.draftUri, "DRAFT");
+        return planFiles(combo.rawName + " + " + combo.draftName, raw, draft, refs, settings);
+    }
+
+    static FilesLoad planFiles(String label, String raw, String draft, References refs, AppSettings settings) {
+        com.ml.tblandroidtxt.editorial.api.chunk.ChunkPlanner.Planned planned = com.ml.tblandroidtxt.editorial.api.chunk.ChunkPlanner.plan(
+                raw, draft, EditorialPairSnapshot.glossaryFrom(refs.glossaryText), refs.glossaryText, refs.pronounText, plannerSettings(settings));
+        return new FilesLoad(EditorialPairSource.fromPlan(label, planned), planned.plan(), head(planned.raw()), head(planned.draft()));
+    }
+
+    private static List<String> head(com.ml.tblandroidtxt.editorial.api.chunk.LineUnits units) {
+        List<String> out = new ArrayList<>();
+        for (int i = 0; i < Math.min(2, units.size()); i++) {
+            String t = units.units().get(i).text();
+            out.add(t.length() > 60 ? t.substring(0, 60) + "…" : t);
+        }
+        return out;
+    }
+
     /** {@code null} problem = ok; a reference the combo names but the Library no longer has is reported, not silently dropped. */
     static References loadReferences(Context context, EditorialApiCombo combo) throws EditorialApiSourceLoader.SourceException {
         String glossaryText = "";

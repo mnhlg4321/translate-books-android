@@ -54,12 +54,18 @@ public final class EditorialPairPreview {
             empty.blockers.addAll(blockers);
             return empty;
         }
+        PairPromptBuilder.ContextPolicy context = source.plan == null ? PairPromptBuilder.ContextPolicy.DEFAULT
+                : new PairPromptBuilder.ContextPolicy(source.plan.limits.contextChars(), PairPromptBuilder.ContextPolicy.DEFAULT.minLines());
         PairMap map = PairMaps.fromJobRows(source.chapterId, "raw:" + source.ref, "draft:" + source.ref, source.rawRows, source.draftRows);
         EditorialPairPreview preview = new EditorialPairPreview(map);
         preview.blockers.addAll(blockers);
         for (DocManifest.Issue issue : map.verify()) {
             if (issue.code().equals("MISSING_DRAFT")) continue; // reported once, below, as the missing pairs
             preview.blockers.add("MAP_" + issue.code());
+        }
+        if (source.plan != null) {
+            if (source.plan.warned()) preview.warnings.add("CHAPTER_WARN");
+            if (source.plan.uncertainChunks > 0) preview.warnings.add("UNCERTAIN_CHUNKS:" + source.plan.uncertainChunks);
         }
         boolean hasGlossary = glossary != null && !glossary.isEmpty();
         boolean hasPronoun = pronounText != null && !PairText.isBlank(pronounText);
@@ -82,14 +88,15 @@ public final class EditorialPairPreview {
                 preview.missingCount++;
             } else {
                 try {
-                    ApiPrompt prompt = PairPromptBuilder.buildPair(map, e, "Vietnamese", glossary == null ? List.of() : glossary, pronounText, cueFields);
+                    ApiPrompt prompt = PairPromptBuilder.buildPair(map, e, "Vietnamese", glossary == null ? List.of() : glossary, pronounText, cueFields, context);
                     row.glossaryEntries = prompt.glossaryEntries();
                     row.pronounRows = prompt.pronounRows();
                     row.estimatedInputTokens = (int) Math.min(Integer.MAX_VALUE, prompt.estimatedInputTokens());
                     row.tooLong = prompt.estimatedInputTokens() > SourceCheck.MAX_ESTIMATED_TOKENS;
                     int[] r = map.rawRange(e);
                     ReferenceProjector.Projection pr = ReferenceProjector.project(new ReferenceProjector.Params(map.raw.chapterId,
-                            map.rawParagraphStart(e), map.rawParagraphEnd(e), rawText, map.raw.contextBefore(r[0], 400), map.raw.contextAfter(r[1], 400), cueFields),
+                            map.rawParagraphStart(e), map.rawParagraphEnd(e), rawText, map.raw.contextBeforeLines(r[0], context.chars(), context.minLines()),
+                            map.raw.contextAfterLines(r[1], context.chars(), context.minLines()), cueFields),
                             glossary == null ? List.of() : glossary, pronounText);
                     for (ReferenceProjector.Row p : pr.pronouns()) if (p.partial()) row.partialRows++;
                     row.conflicts = pr.conflicts().size();

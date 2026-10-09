@@ -114,6 +114,7 @@ public final class SqliteEditorialPairRunStore implements EditorialPairRunStore,
         v.put("cost_overrun", r.costOverrun ? 1 : 0);
         v.put("merged_text", r.mergedText);
         v.put("merge_receipt_json", r.mergeReceiptJson);
+        v.put("chunk_plan_json", r.chunkPlanJson);
         v.put("warnings", r.warnings);
         v.put("calls", r.calls);
         v.put("input_tokens", r.inputTokens);
@@ -154,6 +155,7 @@ public final class SqliteEditorialPairRunStore implements EditorialPairRunStore,
         r.costOverrun = c.getInt(c.getColumnIndexOrThrow("cost_overrun")) != 0;
         r.mergedText = text(c, "merged_text");
         r.mergeReceiptJson = text(c, "merge_receipt_json");
+        r.chunkPlanJson = text(c, "chunk_plan_json");
         r.warnings = c.getInt(c.getColumnIndexOrThrow("warnings"));
         r.calls = c.getInt(c.getColumnIndexOrThrow("calls"));
         r.inputTokens = c.getLong(c.getColumnIndexOrThrow("input_tokens"));

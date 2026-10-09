@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -32,7 +33,7 @@ public final class EditorialApiFormWiringTest {
         assertTrue(factory.contains("form != null ? form.name : combo.name"));
         assertTrue(factory.contains("form != null ? form.model : settings.model"));
         assertTrue(factory.contains("form != null ? form.cap : settings.maxUsdPerChapter.toPlainString()"));
-        assertTrue(factory.contains("shownMode = form != null ? form.mode : settings.mode"));
+        assertFalse("the Kỹ mode is no longer offered", factory.contains("\"Kỹ\""));
         assertTrue(factory.contains("c.saveOnly("));
     }
 }

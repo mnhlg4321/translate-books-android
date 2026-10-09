@@ -171,6 +171,12 @@ final class EditorialApiUiController {
 
     // ---- combo screen ----
 
+    private boolean hasPairRun(long comboId) {
+        try (SqliteEditorialPairRunStore pairs = new SqliteEditorialPairRunStore(appContext)) {
+            return pairs.latestRun(comboId) != null;
+        }
+    }
+
     void pickFile(boolean raw) {
         captureForm();
         Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
@@ -287,7 +293,7 @@ final class EditorialApiUiController {
     /** Stores the edited combo (name, mode, model, cap are passed from the fields) and opens the confirmation. */
     void saveAndContinue(String name, EditorialApiContract.Mode mode, String model, String capText) {
         if (!persist(name, mode, model, capText)) return;
-        if (EditorialApiCombo.sourceIsJob(combo)) pair.openConfirm(); else prepareConfirmation();
+        pair.openConfirm();
     }
 
     /** Saves the combo as it stands without reading any source and without sending anything. */
@@ -412,7 +418,7 @@ final class EditorialApiUiController {
     void openResult(long comboId) {
         try (SqliteEditorialApiStore store = new SqliteEditorialApiStore(appContext)) {
             EditorialApiCombo stored = store.getCombo(comboId);
-            if (stored != null && EditorialApiCombo.sourceIsJob(stored)) { combo = stored; pair.openResult(comboId); return; }
+            if (stored != null && (EditorialApiCombo.sourceIsJob(stored) || hasPairRun(comboId))) { combo = stored; pair.openResult(comboId); return; }
             EditorialApiRun latest = store.latestRun(comboId);
             if (stored == null || latest == null) { a.toast("Chưa có kết quả"); return; }
             combo = stored;
@@ -439,7 +445,7 @@ final class EditorialApiUiController {
             combo = stored;
         }
         error = "";
-        if (EditorialApiCombo.sourceIsJob(combo)) pair.openConfirm(); else prepareConfirmation();
+        pair.openConfirm();
     }
 
     /** Re-run of the open result: the same combo, sources read again from disk and the library. */

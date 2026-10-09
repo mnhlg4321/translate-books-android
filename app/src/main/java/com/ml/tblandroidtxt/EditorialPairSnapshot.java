@@ -4,6 +4,8 @@ import com.ml.tblandroidtxt.EditorialPairModels.PairRun;
 import com.ml.tblandroidtxt.editorial.api.EditInputs;
 import com.ml.tblandroidtxt.editorial.api.PairMap;
 import com.ml.tblandroidtxt.editorial.api.PairMaps;
+import com.ml.tblandroidtxt.editorial.api.PairPromptBuilder;
+import com.ml.tblandroidtxt.editorial.api.chunk.ChunkPlan;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -25,15 +27,18 @@ public final class EditorialPairSnapshot {
     public final String pronounText;
     public final Set<String> cueFields;
     public final PairMap map;
+    /** Reference-only context around each pair: from the chunk plan (Performance setting) or the default. */
+    public final PairPromptBuilder.ContextPolicy context;
 
     private EditorialPairSnapshot(List<String> rawRows, List<String> draftRows, List<EditInputs.GlossaryEntry> glossary, String pronounText,
-                                  Set<String> cueFields, PairMap map) {
+                                  Set<String> cueFields, PairMap map, PairPromptBuilder.ContextPolicy context) {
         this.rawRows = rawRows;
         this.draftRows = draftRows;
         this.glossary = glossary;
         this.pronounText = pronounText;
         this.cueFields = cueFields;
         this.map = map;
+        this.context = context;
     }
 
     public static EditorialPairSnapshot of(PairRun run) {
@@ -41,7 +46,11 @@ public final class EditorialPairSnapshot {
         List<String> draft = rows(run.draftRowsJson);
         PairMap map = PairMaps.fromJobRows(run.chapterId, "raw:" + run.sourceRef, "draft:" + run.sourceRef, raw, draft);
         if (!run.mapHash.isEmpty() && !run.mapHash.equals(map.mapHash())) throw new Mismatch("map hash differs from the stored run");
-        return new EditorialPairSnapshot(raw, draft, glossaryFrom(run.glossaryText), run.pronounText, cues(run.cueFields), map);
+        PairPromptBuilder.ContextPolicy context = PairPromptBuilder.ContextPolicy.DEFAULT;
+        if (run.chunkPlanJson != null && !run.chunkPlanJson.isEmpty()) {
+            context = new PairPromptBuilder.ContextPolicy(ChunkPlan.fromJson(run.chunkPlanJson).limits.contextChars(), context.minLines());
+        }
+        return new EditorialPairSnapshot(raw, draft, glossaryFrom(run.glossaryText), run.pronounText, cues(run.cueFields), map, context);
     }
 
     public static String rowsJson(List<String> rows) {

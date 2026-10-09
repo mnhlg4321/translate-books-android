@@ -109,6 +109,7 @@ public final class EditorialPairRunService {
         run.chapterId = source.chapterId;
         run.rawRowsJson = EditorialPairSnapshot.rowsJson(source.rawRows);
         run.draftRowsJson = EditorialPairSnapshot.rowsJson(source.draftRows);
+        run.chunkPlanJson = source.plan == null ? "" : source.plan.toJson();
         run.glossaryText = glossaryText == null ? "" : glossaryText;
         run.glossarySha256 = run.glossaryText.isEmpty() ? "" : HashUtil.sha256(run.glossaryText);
         run.pronounText = pronounText == null ? "" : pronounText;
@@ -216,7 +217,7 @@ public final class EditorialPairRunService {
         PairMap.Entry entry = whole ? null : snapshot.map.entry(item.pairId);
         ApiPrompt prompt = whole
                 ? PairPromptBuilder.buildWhole(snapshot.map, run.targetLanguage, snapshot.glossary, snapshot.pronounText, snapshot.cueFields)
-                : PairPromptBuilder.buildPair(snapshot.map, entry, run.targetLanguage, snapshot.glossary, snapshot.pronounText, snapshot.cueFields);
+                : PairPromptBuilder.buildPair(snapshot.map, entry, run.targetLanguage, snapshot.glossary, snapshot.pronounText, snapshot.cueFields, snapshot.context);
         String draftRange = whole ? wholeDraft(snapshot.map) : snapshot.map.draftText(entry);
         int maxOut = OpenRouterEditorialApiProvider.editMaxOutputTokens(draftRange.length());
         BigDecimal worst = pricing.inputPerToken(run.model).multiply(BigDecimal.valueOf(prompt.estimatedInputTokens()))

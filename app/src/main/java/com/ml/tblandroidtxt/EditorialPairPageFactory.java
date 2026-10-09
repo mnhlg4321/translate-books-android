@@ -29,10 +29,30 @@ final class EditorialPairPageFactory {
     void confirm(LinearLayout root) {
         LinearLayout card = a.sectionCard("✓", "Xem trước các cặp");
         EditorialPairPreview v = p.preview;
+        if (p.planning) {
+            card.addView(text("Đang chia đoạn…", 15, a.TEXT, true));
+            card.addView(text("Ứng dụng đọc hai file, căn dòng RAW với DRAFT và kiểm hai file có cùng chương không. Chưa gửi gì đi.", 13, a.MUTED, false),
+                    a.marginLP(-1, -2, 0, 4, 0, 6));
+            card.addView(new android.widget.ProgressBar(a));
+            root.addView(card);
+            return;
+        }
         if (v == null) { card.addView(text("Không còn gì để xem.", 14, a.MUTED, false)); root.addView(card); return; }
         card.addView(text(c.combo.name, 15, a.TEXT, true));
         card.addView(text("Nguồn: " + (EditorialApiCombo.sourceIsJob(c.combo) ? "job Dịch “" + c.combo.rawName + "”" : c.combo.rawName + " + " + c.combo.draftName), 13, a.MUTED, false),
                 a.marginLP(-1, -2, 0, 2, 0, 6));
+        com.ml.tblandroidtxt.editorial.api.chunk.ChunkPlan plan = p.source == null ? null : p.source.plan;
+        if (plan != null) {
+            int color = plan.blocked() ? a.RED : plan.warned() ? a.AMBER : a.TEXT;
+            card.addView(text(EditorialPairPresenter.verdictHeadline(plan, p.performanceLine), 14, color, true));
+            for (String reason : EditorialPairPresenter.verdictReasons(plan)) {
+                if (plan.blocked() || plan.warned()) card.addView(text("• " + reason, 13, color, false), a.marginLP(-1, -2, 8, 2, 0, 0));
+            }
+            if (plan.blocked() || plan.warned()) {
+                card.addView(text("RAW bắt đầu bằng: " + String.join(" / ", p.rawHead), 12, a.MUTED, false), a.marginLP(-1, -2, 0, 6, 0, 0));
+                card.addView(text("DRAFT bắt đầu bằng: " + String.join(" / ", p.draftHead), 12, a.MUTED, false), a.marginLP(-1, -2, 0, 2, 0, 0));
+            }
+        }
         card.addView(text(EditorialPairPresenter.previewTotals(v), 14, v.runnable() ? a.TEXT : a.AMBER, true));
         EditorialPairSourceLoader.References refs = p.references;
         String glossary = refs == null || refs.glossaryName.isEmpty() ? "Không dùng Glossary" : "Glossary: " + refs.glossaryName;
@@ -52,12 +72,30 @@ final class EditorialPairPageFactory {
         for (String warning : EditorialPairPresenter.warnings(v)) card.addView(text("⚠ " + warning, 13, a.AMBER, false), a.marginLP(-1, -2, 0, 2, 0, 2));
         if (!c.error.isEmpty()) card.addView(text(c.error, 13, a.RED, false), a.marginLP(-1, -2, 0, 4, 0, 4));
         LinearLayout buttons = a.rowContainer();
-        buttons.addView(a.secondaryButton("Đổi", x -> c.handleBack()), new LinearLayout.LayoutParams(0, a.dp(48), 1));
-        buttons.addView(a.space(8, 1));
-        Button run = a.primaryButton("Chạy", x -> p.startRun());
-        run.setEnabled(v.runnable());
-        run.setAlpha(v.runnable() ? 1f : 0.45f);
-        buttons.addView(run, new LinearLayout.LayoutParams(0, a.dp(48), 1));
+        if (plan != null && plan.blocked()) {
+            // no button runs a blocked pair: the person has to change a file or give up
+            buttons.addView(a.secondaryButton("Chọn lại DRAFT", x -> p.rechoose(false)), new LinearLayout.LayoutParams(0, a.dp(48), 1));
+            buttons.addView(a.space(8, 1));
+            buttons.addView(a.secondaryButton("Chọn lại RAW", x -> p.rechoose(true)), new LinearLayout.LayoutParams(0, a.dp(48), 1));
+            buttons.addView(a.space(8, 1));
+            buttons.addView(a.secondaryButton("Hủy", x -> c.showList()), new LinearLayout.LayoutParams(0, a.dp(48), 1));
+        } else if (plan != null && plan.warned()) {
+            Button go = a.primaryButton("Vẫn biên tập", x -> p.startRun());
+            go.setEnabled(v.runnable());
+            go.setAlpha(v.runnable() ? 1f : 0.45f);
+            buttons.addView(go, new LinearLayout.LayoutParams(0, a.dp(48), 1));
+            buttons.addView(a.space(8, 1));
+            buttons.addView(a.secondaryButton("Chọn lại", x -> c.handleBack()), new LinearLayout.LayoutParams(0, a.dp(48), 1));
+            buttons.addView(a.space(8, 1));
+            buttons.addView(a.secondaryButton("Hủy", x -> c.showList()), new LinearLayout.LayoutParams(0, a.dp(48), 1));
+        } else {
+            buttons.addView(a.secondaryButton("Đổi", x -> c.handleBack()), new LinearLayout.LayoutParams(0, a.dp(48), 1));
+            buttons.addView(a.space(8, 1));
+            Button run = a.primaryButton(plan != null ? "Biên tập" : "Chạy", x -> p.startRun());
+            run.setEnabled(v.runnable());
+            run.setAlpha(v.runnable() ? 1f : 0.45f);
+            buttons.addView(run, new LinearLayout.LayoutParams(0, a.dp(48), 1));
+        }
         card.addView(buttons, a.marginLP(-1, -2, 0, 12, 0, 0));
         root.addView(card, a.marginLP(-1, -2, 0, 0, 0, 10));
 
