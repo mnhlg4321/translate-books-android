@@ -11,6 +11,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.ml.tblandroidtxt.EditorialPairModels.PairItem;
 import com.ml.tblandroidtxt.EditorialPairModels.PairReservation;
 import com.ml.tblandroidtxt.EditorialPairModels.PairRun;
+import com.ml.tblandroidtxt.editorial.api.EditorialApiFlow;
 import com.ml.tblandroidtxt.editorial.api.PairStates.PairState;
 import com.ml.tblandroidtxt.editorial.api.PairStates.RunState;
 
@@ -85,8 +86,9 @@ public final class EditorialPairStoreInstrumentedTest {
     }
 
     private FakeEditorialApiProvider identity() {
-        return new FakeEditorialApiProvider((request, index) -> FakeEditorialApiProvider.text(
-                EditorialPairTestData.targetedAnswer(request, index, (callIndex, draft) -> "="), "stop"));
+        return new FakeEditorialApiProvider((request, index) -> new EditorialApiFlow.StepResponse(
+                EditorialPairTestData.targetedAnswer(request, index, (callIndex, draft) -> "="),
+                "stop", 1500, 400, new BigDecimal("0.0001"), true, "fake-model", "fake-route", ""));
     }
 
     // ---- the store and its transactions
@@ -115,7 +117,7 @@ public final class EditorialPairStoreInstrumentedTest {
                 assertFalse(i.responseText.isEmpty());
             }
             assertTrue(store.openReservations(runId).isEmpty());
-            assertEquals(0, new BigDecimal("0.012").compareTo(store.exposure(runId)));
+            assertEquals(0, new BigDecimal("0.0003").compareTo(store.exposure(runId)));
             assertEquals(stored.mergedText, EditorialPairSnapshot.of(stored).map.draft.text);
             assertEquals(runId, store.latestRun(comboId).id);
             // reopening reads and never sends
