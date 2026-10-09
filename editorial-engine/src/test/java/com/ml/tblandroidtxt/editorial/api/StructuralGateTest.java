@@ -260,4 +260,19 @@ public final class StructuralGateTest {
         assertTrue(r.has("BOUNDARY_WS_TRIMMED"));
         assertEquals("Nội dung đã sửa.", r.candidate());
     }
+
+    @Test public void aRepairedCloseTagIsAlwaysAWarning() {
+        String answer = "<EDITED>Nội dung đã sửa.</EDIT>";
+        String draft = "Nội dung nháp.";
+        EditResponseParser.Parsed parsed = EditResponseParser.parse(answer, "stop", true);
+        StructuralGate.Result raw = StructuralGate.check(new StructuralGate.Input(draft, EditResponseParser.rawEditedBody(answer, true),
+                parsed.status(), "stop", "r", "r", 0));
+        StructuralGate.Result r = StructuralGate.withRepairedClose(raw);
+        assertEquals(StructuralGate.Status.WARN, r.status());
+        assertTrue(r.has("CLOSE_TAG_REPAIRED"));
+        assertEquals("Nội dung đã sửa.", r.candidate());
+        // a blocked result stays blocked
+        StructuralGate.Result blocked = StructuralGate.withRepairedClose(StructuralGate.check(new StructuralGate.Input(draft, "", EditResponseParser.Status.OK, "stop", "r", "r", 0)));
+        assertEquals(StructuralGate.Status.BLOCK, blocked.status());
+    }
 }

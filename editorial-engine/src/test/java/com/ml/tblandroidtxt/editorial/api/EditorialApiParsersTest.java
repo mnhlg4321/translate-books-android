@@ -199,4 +199,23 @@ public final class EditorialApiParsersTest {
         FixApplier.Result r = FixApplier.apply("「Đi thôi.」", List.of(issue("Đi thôi", "Về thôi")));
         assertEquals("「Về thôi.」", r.text());
     }
+
+    @Test public void aTrailingMisclosedTagIsReadOnlyWhenTheCallerAsksForIt() {
+        String answer = "<EDITED>\n" + "Dòng một.\n" + "Dòng hai.\n" + "</EDIT>\n";
+        assertEquals(EditResponseParser.Status.FORMAT, EditResponseParser.parse(answer, "stop").status());
+        assertEquals(null, EditResponseParser.rawEditedBody(answer));
+        EditResponseParser.Parsed p = EditResponseParser.parse(answer, "stop", true);
+        assertEquals(EditResponseParser.Status.OK, p.status());
+        assertEquals("Dòng một.\nDòng hai.", p.edited());
+        assertEquals("\nDòng một.\nDòng hai.\n", EditResponseParser.rawEditedBody(answer, true));
+        assertTrue(EditResponseParser.closeRepaired(answer));
+    }
+
+    @Test public void theMiscloseRepairStaysNarrow() {
+        assertTrue(!EditResponseParser.closeRepaired("<EDITED>x</EDITED>"));
+        for (String bad : new String[] {"<EDITED>x</EDIT> và còn nữa", "<EDITED>x</EDIT>y</EDIT>", "<EDITED>a <EDITED>b</EDIT>", "x</EDIT>"}) {
+            assertEquals(bad, EditResponseParser.Status.FORMAT, EditResponseParser.parse(bad, "stop", true).status());
+        }
+        assertEquals(EditResponseParser.Status.TRUNCATED, EditResponseParser.parse("<EDITED>nửa chừng", "length", true).status());
+    }
 }

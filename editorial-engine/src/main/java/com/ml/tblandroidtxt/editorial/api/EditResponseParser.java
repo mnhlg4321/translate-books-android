@@ -24,7 +24,18 @@ public final class EditResponseParser {
 
     private EditResponseParser() { }
 
+    /** The wrong closing tag some models write at the very end of an answer in place of the EDITED close tag. */
+    static final String MISCLOSE = "</EDIT>";
+
     public static Parsed parse(String content, String finishReason) {
+        return parse(content, finishReason, false);
+    }
+
+    /**
+     * @param tolerateMisclose chunk runs only: a single {@code </EDIT>} that ends the answer (nothing but whitespace after it) closes
+     *                         an EDITED block that has no proper close tag; {@link #closeRepaired} reports that so the gate can warn
+     */
+    public static Parsed parse(String content, String finishReason, boolean tolerateMisclose) {
         String text = content == null ? "" : content;
         boolean length = "length".equalsIgnoreCase(finishReason == null ? "" : finishReason.trim());
         int open = text.indexOf(EditPromptBuilder.EDITED_OPEN);
@@ -39,13 +50,18 @@ public final class EditResponseParser {
             return new Parsed(length ? Status.TRUNCATED : Status.FORMAT, "", List.of(), 0, "", false);
         }
         int close = matchingClose(text, open);
+        int closeLength = EditPromptBuilder.EDITED_CLOSE.length();
+        if (close < 0 && tolerateMisclose) {
+            close = misclose(text, open);
+            closeLength = MISCLOSE.length();
+        }
         if (close < 0) {
             return new Parsed(length ? Status.TRUNCATED : Status.FORMAT, "", List.of(), 0, "", !text.substring(0, open).isBlank());
         }
         String edited = text.substring(open + EditPromptBuilder.EDITED_OPEN.length(), close).strip();
         if (edited.isEmpty()) return new Parsed(Status.FORMAT, "", List.of(), 0, "", !text.substring(0, open).isBlank());
         boolean before = !text.substring(0, open).isBlank();
-        String rest = text.substring(close + EditPromptBuilder.EDITED_CLOSE.length());
+        String rest = text.substring(close + closeLength);
         List<Note> notes = new ArrayList<>();
         int dropped = 0;
         int notesOpen = rest.indexOf(EditPromptBuilder.NOTES_OPEN);
@@ -68,12 +84,37 @@ public final class EditResponseParser {
      * The chunk pair gate uses it to see whitespace the model put at the edges, which {@link #parse} removes.
      */
     public static String rawEditedBody(String content) {
+        return rawEditedBody(content, false);
+    }
+
+    public static String rawEditedBody(String content, boolean tolerateMisclose) {
         String text = content == null ? "" : content;
         int open = text.indexOf(EditPromptBuilder.EDITED_OPEN);
         if (open < 0) return null;
         int close = matchingClose(text, open);
+        if (close < 0 && tolerateMisclose) close = misclose(text, open);
         if (close < 0) return null;
         return text.substring(open + EditPromptBuilder.EDITED_OPEN.length(), close);
+    }
+
+    /** True when the answer has no balanced EDITED close tag and only the trailing {@code </EDIT>} repair (see {@link #parse(String, String, boolean)}) closes it. */
+    public static boolean closeRepaired(String content) {
+        String text = content == null ? "" : content;
+        int open = text.indexOf(EditPromptBuilder.EDITED_OPEN);
+        return open >= 0 && matchingClose(text, open) < 0 && misclose(text, open) >= 0;
+    }
+
+    /**
+     * Start of the one {@code </EDIT>} that ends the answer, or -1. Narrow on purpose: no {@code </EDITED>} anywhere after the open
+     * tag, no nested open tag, exactly one {@code </EDIT>}, and nothing but whitespace after it.
+     */
+    private static int misclose(String text, int open) {
+        int from = open + EditPromptBuilder.EDITED_OPEN.length();
+        if (text.indexOf(EditPromptBuilder.EDITED_CLOSE, from) >= 0 || text.indexOf(EditPromptBuilder.EDITED_OPEN, from) >= 0) return -1;
+        int at = text.indexOf(MISCLOSE, from);
+        if (at < 0 || at != text.lastIndexOf(MISCLOSE)) return -1;
+        if (!text.substring(at + MISCLOSE.length()).isBlank()) return -1;
+        return at;
     }
 
     /** The close tag that balances the first open tag; a nested open tag inside the text does not end it early. */

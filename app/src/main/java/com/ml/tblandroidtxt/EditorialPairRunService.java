@@ -272,10 +272,11 @@ public final class EditorialPairRunService {
 
     private boolean receive(PairRun run, PairItem item, ApiPrompt prompt, String draftRange, EditorialApiFlow.StepResponse response, String requestId,
                             BigDecimal worst, int calls, long inTokens, long outTokens, int attempt) {
-        EditResponseParser.Parsed parsed = EditResponseParser.parse(response.content(), response.finishReason());
-        String body = EditResponseParser.rawEditedBody(response.content());
+        EditResponseParser.Parsed parsed = EditResponseParser.parse(response.content(), response.finishReason(), true);
+        String body = EditResponseParser.rawEditedBody(response.content(), true);
         StructuralGate.Result gate = StructuralGate.check(new StructuralGate.Input(draftRange, body, parsed.status(), response.finishReason(),
                 requestId, requestId, 0));
+        if (EditResponseParser.closeRepaired(response.content())) gate = StructuralGate.withRepairedClose(gate);
         PairItem done = new PairItem();
         done.pairId = item.pairId;
         done.state = PairStates.afterReceive(gate.status());

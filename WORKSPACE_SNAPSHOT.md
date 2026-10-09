@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-09 (+07:00): C1.5 live 007 chạy lại (owner duyệt) sau sửa CP-IMPL-3: đoạn 1–4 nhận, đoạn 5 lại bị chặn `ENVELOPE/FORMAT` (thẻ đóng `</EDIT>`), dừng đúng luật; lần 2 USD 0.01499330, sổ C1 USD 0.0263459/10 call; sửa trúng 4/18, C1 PASS chưa đạt. Dừng chờ owner.
+- Updated: 2026-10-09 (+07:00): owner duyệt lần chạy thứ ba của 007 sau sửa hẹp: bộ phân tích chunk chấp nhận một `</EDIT>` cuối câu trả lời làm thẻ đóng (chỉ khi không có `</EDITED>`), cổng ghi cảnh báo `CLOSE_TAG_REPAIRED`; test engine 644 / app 457 PASS. Chưa build, chưa chạy live.
 - Current version: active v4.18.
 - Current branch: `feature/v4.18-p5e-runner-repair-20260917`; existing release checklist unchanged.
-- Current commit: 4acc50fd is the baseline immediately before this evidence commit (confirm actual HEAD on resume).
+- Current commit: 4397c231 is the baseline immediately before this fix commit (confirm actual HEAD on resume).
 - Current build: `4.18-c1.5`/code `252`, event `build-20261009-181748`, source `4acc50fd556487bb16e7b0991536246d59513260`, APK SHA-256 5836DF2B9249D37BB980DB5663E2CBF1EF7A641F92A7D72C603F64F843C0D4D1; AndroidTest archive `c1-chunk-20261009d`; mirrored in `artifacts/` and `backup/`; installed only on `emulator-5554`.
 - Current phase: Biên tập theo chunk (C1): nối nguồn hai file + runner CHUNK + UI bỏ Kỹ/V5; live 1 chương 007 sau D-C1; U1 tạm hoãn; 0/3 chương đạt; P7 chưa bắt đầu.
 - Completed tasks: Q2.6.1 (role-based V5 preflight, ID/SERIES, HOST SOURCE MANIFEST, original names, pack-condition table), Q2.6.2 (build 4.18-q2.3, focused emulator tests), Q2.6.3 (canary, dev matrix, gate, holdout, exports).
@@ -11,4 +11,4 @@
 - Known bugs/limits: no arm reaches the 4.1.3 automatic minimum; V5-luna 004 stopped in turn 3 (CONTENT_UNACCOUNTED_CHANGE, DRAFT kept); one run per arm and chapter, no repeats; semantic quality NOT_MEASURED. Earlier unrelated limits unchanged (historical P4 instrumented failures).
 - Regression status: clean archive of 56399f1d: engine 641 (1 off), app 456 x3 (1 off), scripts/p6 93, androidTest compile PASS, corpus 133/133 cuts, 55/55 wrong-chapter BLOCK, 0/113 correct BLOCK, other edition <= 1/11 OK; emulator focused tests PASS (pair store 6, pair UI 6 + process death, API store 6, flow 3, UI 5 + process death); fake replay of 007 byte-exact; WN 059 planned in 578 ms. Provider calls 0 / USD 0 in C1.
 - Review completed 2026-10-09: ledger and archive/output hashes verified. Added scorer diagnostics only (working tree), 8 scorer + 7 gate tests PASS from clean HEAD archive plus overlay; all 13 Q2.6 replays preserve every existing metric. 017 report corrected: two replacements and one insertion, not a no-change answer. No build/device/provider/commit/push. Evidence: D:/P5E-private/q26-review-clean-d94d0350/scorer-diagnostics-review.json.
-- Next action: owner xem `D:\P5E-private\chunk-outputs\007\c1-007-rerun-review.html` và quyết định có cho một lần chạy 007 thứ ba sau khi sửa hẹp (bộ phân tích chấp nhận thẻ đóng sai kiểu `</EDIT>` ở cuối câu trả lời, vẫn ghi cảnh báo; ước tính ≈ USD 0.015, sổ còn USD 0.0236541) hay đổi hướng; không chạy live thêm trước quyết định đó.
+- Next action: build `4.18-c1.6` từ commit sửa hẹp, cài chỉ `emulator-5554`, chạy test thiết bị tập trung, rồi chạy live 007 đúng một lần (sổ `C1-20261009`, còn USD 0.0236541) và ghi kết quả vào mục 7.

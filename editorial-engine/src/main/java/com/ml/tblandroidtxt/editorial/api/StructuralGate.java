@@ -60,6 +60,15 @@ public final class StructuralGate {
 
     private StructuralGate() { }
 
+    /** A chunk answer that was accepted only because its trailing {@code </EDIT>} was read as the close tag: never PASS, always visible. */
+    public static Result withRepairedClose(Result r) {
+        List<Code> codes = new ArrayList<>(r.codes());
+        codes.add(new Code("ENVELOPE", "CLOSE_TAG_REPAIRED", Severity.WARN, "answer ended with </EDIT> instead of </EDITED>"));
+        Status status = r.status() == Status.BLOCK ? Status.BLOCK : Status.WARN;
+        return new Result(status, codes, r.candidate(), r.draftLetters(), r.candidateLetters(), r.draftLines(), r.candidateLines(),
+                r.verbatim(), r.reflowOnly(), r.internalLayoutFingerprint());
+    }
+
     public static Result check(Input in) {
         List<Code> codes = new ArrayList<>();
         String draft = PairText.normalize(in.draftRange());

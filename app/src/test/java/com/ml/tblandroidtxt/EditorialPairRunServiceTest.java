@@ -238,6 +238,27 @@ public final class EditorialPairRunServiceTest {
         assertTrue("the cut pair is replaced by its own DRAFT, not by the shortened answer", plan.text.contains("Dòng 191"));
     }
 
+    @Test public void anAnswerClosedWithTheWrongTagIsAVisibleWarningAndTheRunKeepsGoing() throws Exception {
+        FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> FakeEditorialApiProvider.text(
+                "<EDITED>" + draftPart(request) + (index == 1 ? "</EDIT>" : "</EDITED>"), "stop"));
+        EditorialPairRunService svc = service(memory, fake);
+        PairRun run = prepare(svc, source(3), "C");
+        PairRun done = svc.execute(run.id, null);
+        assertEquals(3, fake.requests.size());          // a warning does not stop the batch
+        List<PairItem> items = svc.items(run.id);
+        assertEquals(PairState.ACCEPTED, items.get(0).state);
+        assertEquals(PairState.WARN_REVIEW, items.get(1).state);
+        assertEquals("WARN", gate(items.get(1)).getString("status"));
+        assertTrue(items.get(1).gateJson.contains("CLOSE_TAG_REPAIRED"));
+        assertFalse(items.get(0).gateJson.contains("CLOSE_TAG_REPAIRED"));
+        assertEquals(PairState.ACCEPTED, items.get(2).state);
+        assertEquals(RunState.FINAL_ELIGIBLE, done.state);   // a warning is shown to the person, it does not hold the merge back
+        assertEquals(1, done.warnings);
+        EditorialPairRunService.ExportPlan plan = svc.exportPlan(run.id);
+        assertTrue(plan.complete);
+        assertTrue(plan.label, plan.label.contains("1 cảnh báo"));
+    }
+
     @Test public void answersWithoutTagsWrongPairAndProviderErrorsEndAsBlockedPairsWithTheirCodes() throws Exception {
         List<String> answers = List.of("không có thẻ nào", "<WRONG_PAIR>RAW và DRAFT khác chương: tên khác</WRONG_PAIR>");
         FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> FakeEditorialApiProvider.text(answers.get(index), "stop"));
