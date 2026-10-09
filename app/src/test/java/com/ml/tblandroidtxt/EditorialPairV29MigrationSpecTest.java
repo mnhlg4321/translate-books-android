@@ -19,7 +19,7 @@ public final class EditorialPairV29MigrationSpecTest {
 
     @Test public void theRepositoryRunsItOnCreateAndOnUpgradeFrom28() throws Exception {
         Path path = Paths.get("src/main/java/com/ml/tblandroidtxt/TranslationRepository.java");
-        String source = new String(Files.readAllBytes(path), java.nio.charset.StandardCharsets.UTF_8);
+        String source = new String(Files.readAllBytes(path), java.nio.charset.StandardCharsets.UTF_8).replace("\r\n", "\n");
         assertTrue(source.contains("VER = 29"));
         assertTrue(source.contains("if (oldVersion < 29) migrateEditorialPairRunsToV29(db);"));
         assertTrue(source.indexOf("if (oldVersion < 28) migrateEditorialApiRunsToV28(db);") < source.indexOf("if (oldVersion < 29) migrateEditorialPairRunsToV29(db);"));
