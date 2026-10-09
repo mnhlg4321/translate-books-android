@@ -137,7 +137,9 @@ public final class PairPromptBuilder {
     private static final String CHUNK_OUTPUT_CONTRACT =
             "OUTPUT CONTRACT\n"
             + "Return only one of these forms. For a matching pair, return the complete corrected text of exactly the supplied DRAFT between "
-            + EditPromptBuilder.EDITED_OPEN + " and " + EditPromptBuilder.EDITED_CLOSE + ". Do not shorten it or include reports or commentary.\n"
+            + EditPromptBuilder.EDITED_OPEN + " and " + EditPromptBuilder.EDITED_CLOSE + ". Do not shorten it or include reports or commentary. "
+            + "Write the closing tag exactly as " + EditPromptBuilder.EDITED_CLOSE + ". "
+            + "The answer is text in the target language only: never copy a RAW sentence into it; where a DRAFT line is wrong, rewrite that DRAFT line in the target language.\n"
             + "If RAW and DRAFT clearly describe different chapters, return " + EditPromptBuilder.WRONG_PAIR_OPEN
             + "brief evidence quoting each text" + EditPromptBuilder.WRONG_PAIR_CLOSE + " instead. A missing sentence or wrong number is a defect to fix, not a wrong pair.\n";
 }

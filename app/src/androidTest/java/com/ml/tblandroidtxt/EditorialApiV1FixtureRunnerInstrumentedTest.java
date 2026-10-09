@@ -415,6 +415,7 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
                 row.put("outputTokens", BigDecimal.valueOf(item.outputTokens));
                 row.put("usd", item.usd.toPlainString());
                 row.put("error", item.error == null ? "" : item.error);
+                row.put("gate", item.gateJson == null ? "" : item.gateJson);
                 chunkRows.add(row);
             }
         }
