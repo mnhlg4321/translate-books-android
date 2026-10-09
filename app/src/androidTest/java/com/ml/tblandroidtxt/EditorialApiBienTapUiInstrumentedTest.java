@@ -180,7 +180,7 @@ public final class EditorialApiBienTapUiInstrumentedTest {
             onUi(scenario, activity -> activity.editorialApi().onActivityResult(EditorialApiUiController.REQ_RAW, Activity.RESULT_OK, fileResult("raw.txt")));
             onUi(scenario, activity -> activity.editorialApi().onActivityResult(EditorialApiUiController.REQ_DRAFT, Activity.RESULT_OK, fileResult("draft.txt")));
 
-            // type into the fields and pick "Kỹ" with real views
+            // type into the fields with real views (the mode selector is gone: every pair of files is cut into chunks)
             onUi(scenario, activity -> {
                 List<EditText> fields = fields(activity);
                 assertEquals(3, fields.size());
@@ -217,7 +217,7 @@ public final class EditorialApiBienTapUiInstrumentedTest {
                 }
                 return values + "\n" + allText(activity);
             });
-            assertTrue(after, after.startsWith("tên gõ dở|vendor/model-gõ-dở|0.25|Kỹ\n"));
+            assertTrue(after, after.startsWith("tên gõ dở|vendor/model-gõ-dở|0.25|\n"));
             assertTrue(after, after.contains("glossary-bientap-ui"));
             assertTrue(after, after.contains("raw.txt") && after.contains("draft.txt"));
 
@@ -233,7 +233,7 @@ public final class EditorialApiBienTapUiInstrumentedTest {
             }
             assertEquals("tên gõ dở", stored.name);
             assertEquals(glossaryId, stored.glossaryId);
-            assertEquals(EditorialApiContract.Mode.THOROUGH, stored.settings().mode);
+            assertEquals(EditorialApiContract.Mode.QUICK, stored.settings().mode);
             assertEquals("vendor/model-gõ-dở", stored.settings().model);
             assertEquals("0.25", stored.settings().maxUsdPerChapter.toPlainString());
 
@@ -260,7 +260,7 @@ public final class EditorialApiBienTapUiInstrumentedTest {
                 c.combo.rawName = "raw.txt";
                 c.combo.draftUri = Uri.fromFile(new File(dir, "draft.txt")).toString();
                 c.combo.draftName = "draft.txt";
-                c.saveAndContinue("ui-result-combo", EditorialApiContract.Mode.QUICK, "fake-model", "1.00");
+                c.saveAndContinueWholeChapter("ui-result-combo", EditorialApiContract.Mode.QUICK, "fake-model", "1.00");
                 return c;
             });
             waitFor("confirmation", () -> controller.screen == EditorialApiUiController.Screen.CONFIRM);
@@ -294,7 +294,7 @@ public final class EditorialApiBienTapUiInstrumentedTest {
                 c.combo.rawName = "raw.txt";
                 c.combo.draftUri = Uri.fromFile(new File(dir, "draft.txt")).toString();
                 c.combo.draftName = "draft.txt";
-                c.saveAndContinue(REOPEN_NAME, EditorialApiContract.Mode.QUICK, "fake-model", "1.00");
+                c.saveAndContinueWholeChapter(REOPEN_NAME, EditorialApiContract.Mode.QUICK, "fake-model", "1.00");
                 return c;
             });
             waitFor("confirmation", () -> controller.screen == EditorialApiUiController.Screen.CONFIRM);

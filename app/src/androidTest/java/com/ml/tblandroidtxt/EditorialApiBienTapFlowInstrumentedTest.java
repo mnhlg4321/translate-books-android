@@ -139,7 +139,7 @@ public final class EditorialApiBienTapFlowInstrumentedTest {
             c.combo.draftName = "draft001.txt";
             c.combo.glossaryId = glossary;
             c.combo.pronounId = pronoun;
-            c.saveAndContinue("", mode, "fake-model", "1.00");
+            c.saveAndContinueWholeChapter("", mode, "fake-model", "1.00");
             return c;
         });
         waitFor("confirmation", () -> controller.screen == EditorialApiUiController.Screen.CONFIRM);

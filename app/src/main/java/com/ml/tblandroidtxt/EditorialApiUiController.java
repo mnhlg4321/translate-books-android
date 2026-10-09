@@ -292,6 +292,15 @@ final class EditorialApiUiController {
         return profile == null ? "" : profile.name;
     }
 
+    /**
+     * The one-call whole-chapter flow of the first Editorial API. The screens no longer offer it (Biên tập now cuts every pair of
+     * files into chunks); it stays so that stored whole-chapter results keep opening and so its tests keep covering that path.
+     */
+    void saveAndContinueWholeChapter(String name, EditorialApiContract.Mode mode, String model, String capText) {
+        if (!persist(name, mode, model, capText)) return;
+        prepareConfirmation();
+    }
+
     /** Stores the edited combo (name, mode, model, cap are passed from the fields) and opens the confirmation. */
     void saveAndContinue(String name, EditorialApiContract.Mode mode, String model, String capText) {
         if (!persist(name, mode, model, capText)) return;

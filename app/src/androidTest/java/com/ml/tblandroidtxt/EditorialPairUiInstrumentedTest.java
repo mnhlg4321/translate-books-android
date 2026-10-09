@@ -254,7 +254,7 @@ public final class EditorialPairUiInstrumentedTest {
         }
     }
 
-    @Test public void twoFilesAreSavedButNeverRunByChunkAndTheScreenSaysWhy() throws Exception {
+    @Test public void twoFilesAreCutIntoChunksAndTheFormSaysSo() throws Exception {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             openTab(scenario);
             onUi(scenario, activity -> {
@@ -264,7 +264,7 @@ public final class EditorialPairUiInstrumentedTest {
                 return null;
             });
             String shown = onUi(scenario, activity -> allText(activity));
-            assertTrue(shown, shown.contains("Hai file riêng không có liên kết đoạn"));
+            assertTrue(shown, shown.contains("Ứng dụng tự căn dòng RAW với DRAFT"));
         }
     }
 
