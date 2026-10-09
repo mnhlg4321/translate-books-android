@@ -128,11 +128,11 @@ public final class PairPromptBuilder {
             "CHUNK CONTRACT\n"
             + "You edit ONE part of a longer chapter. Return only the edited text of the part marked DRAFT (this part), between the tags below. "
             + "Text marked REFERENCE ONLY is neighbouring context: never return it, never edit it, never copy it into your answer. "
-            + "Keep the line breaks and any marker line (such as a line with only a symbol) of the DRAFT part where they are.\n";
+            + "Preserve scene markers and the DRAFT layout unless a RAW-supported content correction requires changing the layout.\n";
 
     private static final String WHOLE_CONTRACT =
             "CHAPTER CONTRACT\n"
-            + "You edit the whole chapter in one answer. Keep the line breaks and any marker line (such as a line with only a symbol) of the DRAFT where they are.\n";
+            + "You edit the whole chapter in one answer. Preserve scene markers and the DRAFT layout unless a RAW-supported content correction requires changing the layout.\n";
 
     private static final String CHUNK_OUTPUT_CONTRACT =
             "OUTPUT CONTRACT\n"

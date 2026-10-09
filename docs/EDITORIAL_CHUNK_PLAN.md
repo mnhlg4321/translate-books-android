@@ -12,11 +12,11 @@ Owner (chat 2026-10-09) yêu cầu: tiếp quản việc dở; xác định chí
 | luna, pack v5 3 lượt + báo cáo (V5-luna) | 13.8% | USD 0.168 | 1/5 chương bị chặn ở QA receipt (`CONTENT_UNACCOUNTED_CHANGE`) |
 | Sol, 1 lượt toàn chương (E-strong) | 50.3% | USD 0.443 | sửa thừa 165 dòng |
 
-Kết luận đã chứng minh bằng số:
+Kết luận đã hiệu chỉnh sau review 2026-10-09:
 
-1. **Model nhỏ xử lý cả chương trong một lần thì bỏ sót gần hết lỗi.** Cùng prompt, đổi luna → Sol tăng từ 6% lên 50%. Luật prompt không phải đòn bẩy (Q1: đổi luật trên luna không tăng).
-2. **Báo cáo/ledger/receipt của pack v5 làm tăng chi phí ~4 lần và tạo điểm chặn**, chỉ đổi lấy +8 điểm phần trăm. Ba lần chạy v5 gặp ba loại chặn do thủ tục (schema glossary, danh tính file, receipt QA), không lần nào do nội dung.
-3. Giả thuyết cần kiểm (chưa chứng minh): **chunk nhỏ như luồng Dịch giúp luna tập trung**, gần mức Sol với chi phí của luna.
+1. Các cấu hình trên có số điểm khác nhau; chưa cô lập ảnh hưởng của model, prompt và bộ chấm. Không suy ra model nhỏ hay context toàn chương là nguyên nhân duy nhất; không suy ra sửa prompt vô ích. Similarity với FINAL là tín hiệu, không phải phép chấm lỗi xưng hô hay nghĩa.
+2. Luồng V5 ba lượt tốn khoảng bốn lần E trong tập này và từng dừng vì schema, danh tính, Change Map. Chưa đo phần chi phí riêng của báo cáo, nên không gán toàn bộ chênh lệch cho receipt. Nhật ký chi tiêu do app ghi không tốn token provider.
+3. C1 đã chạy thật theo chunk: 007 lần 3 đủ 7/7, nhưng ca có rule xưng hô vẫn sửa sai và có 27 dòng khác ở vùng owner không sửa. Chunk giải quyết đơn vị xử lý, chưa chứng minh giải quyết chất lượng. Các dòng khác này cần phân xử, không mặc định đều là lỗi nghĩa.
 
 ## 2. Loại bỏ ngay
 
@@ -34,7 +34,7 @@ Luồng giống Dịch:
 
 ```text
 Chọn RAW + DRAFT (+ Glossary, Pronoun)
- → cắt chunk: dòng không rỗng i của RAW ↔ dòng i của DRAFT; gom dòng tới ~N ký tự RAW (theo cài đặt chunk như luồng Dịch)
+ → căn RAW–DRAFT bằng CS-1, kiểm OK/WARN/BLOCK rồi cắt ở biên an toàn theo Settings → Performance (không ghép i↔i chỉ vì bằng số dòng)
  → mỗi chunk một lần gọi: Quality Core (không có kênh ghi chú) + glossary/pronoun ứng viên của chính chunk + ngữ cảnh RAW/DRAFT trước–sau (chỉ đọc) + RAW chunk + DRAFT chunk
  → model trả <EDITED>bản sửa của đúng DRAFT chunk</EDITED>
  → app kiểm cấu trúc chunk (mất/gấp chữ, ký hiệu, rò meta), ghép lại theo thứ tự, lưu, xuất TXT
@@ -97,7 +97,7 @@ Kết quả prototype:
 
 ### 3.3 Trạng thái thực thi
 
-Toàn bộ mục 3.1–3.2 là tính toán tất định, không gọi API, chạy được trên điện thoại. Tuy nhiên **trong app hiện mới có**: luồng chunk theo dòng của job Dịch (CP-IMPL-2) và ghép 1–1 thuần `fromAlignedFiles`. Bộ căn dòng, quy tắc cắt có vùng đệm, ghép file theo tiêu đề/thứ tự **mới ở dạng prototype Python** trên máy tính (`scripts/chunk/align_lines_reference.py`). Đưa vào app là việc C1.1.
+**Ghi chú lịch sử trước C1.1, đã được thay thế:** mục 3.1–3.2 là tính toán tất định; C1.1–C1.4 hiện đã đưa CS-1 vào app (xem §6–7). Tại thời điểm prototype, trong app mới có: luồng chunk theo dòng của job Dịch (CP-IMPL-2) và ghép 1–1 thuần `fromAlignedFiles`. Bộ căn dòng, quy tắc cắt có vùng đệm, ghép file theo tiêu đề/thứ tự **mới ở dạng prototype Python** trên máy tính (`scripts/chunk/align_lines_reference.py`). Đưa vào app là việc C1.1.
 
 ### 3.4 Thiết kế hoàn chỉnh khâu tách chunk (CS-1)
 
@@ -324,6 +324,46 @@ Chuyển `PairMaps` sang dựng từ `ChunkPlan` (mỗi chunk một cặp), gi�
 
 ## 6. Trạng thái
 
+**Hiện hành — review ưu tiên xưng hô/đủ nội dung, 2026-10-09:** bộ đối chứng offline §6.1 đã hoàn tất. `a14272ab` là implementation baseline trước commit gói này; APK vẫn `4.18-c1.6`/253 từ `57978e83`. CP-IMPL-4 cùng QA scorer/tests được commit trong gói offline này nhưng chưa build/cài: core chunk ưu tiên xưng hô và completeness, bỏ quyền polishing; RAW xác nhận hướng speaker→target trước khi dùng self/call; kiểm mọi lần xuất hiện, giữ nguyên khi mơ hồ/xung đột; không thêm báo cáo hay lượt gọi. Core toàn chương lịch sử không đổi. **Next action duy nhất: owner xem kết quả §6.1 và quyết định có cấp quyền cho đúng một EDIT live ở 007/chunk 005 hay không.** Không chạy lại 007 trước quyết định; số dư cũ không phải quyền chi.
+
+| Claim cần kiểm | Evidence đã đọc độc lập | Kết luận |
+|---|---|---|
+| Đã chạy theo chunk | Run `f0d387b5-52bb-4eb0-98d0-f7717b828ef1`, metadata mode CHUNK, 7 chunks; chunks.json mỗi chunk 1 call, finish stop | Đã chứng minh; không còn là phép thử toàn chương Q2 |
+| Rule được gửi nhưng không tuân thủ | prompts/005-EDIT.txt có row call và phạm vi P064–P075; RAW xác định lượt thoại; responses/005-EDIT.json dòng 8 dùng dạng xưng hô khác rule | Một ca lỗi tuân thủ rule đã xác minh; không phải lỗi filter bỏ row |
+| 007 chỉ có một lỗi xưng hô trong 18 dòng | Báo cáo phân loại thô; chưa có annotation từng occurrence đã phân xử | Chưa chứng minh toàn bộ; không dùng 4/18 làm điểm xưng hô |
+| Văn phong gây 27 lỗi mới | Core cũ cho sửa phrasing/register; scorer đếm 27 dòng owner không sửa mà app đổi | Có quyền sửa rộng; quan hệ nhân quả và số lỗi nghĩa mới chưa đo |
+| Ba lần chạy hết USD 0.0404443 | verify_spend_ledger.py: 17 calls, 34 entries, pending 0, settled/exposure 0.04044430 | Ledger hash-chain PASS; không có call mới trong review |
+
+Evidence riêng: `D:/P5E-private/chunk-runs/C1/live/007-f0d387b5-52bb-4eb0-98d0-f7717b828ef1/results/fx-a01/`. Hash final đã tính lại: `59f4a4a083c76d287cd6b278086bb24958ef70af263dd53cd360175401d0ff43`. Source/build metadata trùng `57978e83`; BUILD_INFO ghi branch build tạm `tmp/api-n4-20261005`, không phải branch workspace. Không kiểm thiết bị trong review, chỉ xác minh evidence bản đã chạy. Không chép văn bản sách vào Git.
+
+Test patch CP-IMPL-4 từ archive sạch `a14272ab` + đúng 4 file overlay: API engine **221 PASS, 1 test corpus opt-in SKIP**; app pair **47 PASS**. Evidence/hashes/log: `D:/P5E-private/pronoun-priority-20261009-d9e29f6c/`. Kiểm prompt, scope, parser, gate, ghép, lưu/đọc bằng host test; không chứng minh model sẽ tuân thủ. Không APK/device/provider/commit/push. SEMANTIC_EVAL toàn tập vẫn NOT_MEASURED; 0/3 chương được chấp nhận, P7 chưa bắt đầu.
+
+### 6.1 Bộ đối chứng xưng hô/completeness offline
+
+- **Nguyên nhân cần xử lý:** core có mục tiêu sửa rộng; rule có mặt nhưng chưa được tuân thủ; bộ chấm tổng không đo đúng mục tiêu owner. Không sửa căn chunk hay nới structural gate khi chưa có lỗi tương ứng.
+- **ENGINE ownership:** QualityCore/PairPromptBuilder/ReferenceProjector và test cùng tên. Giữ CP-IMPL-4 content-only, một EDIT/chunk, không L1/L2/L3, không NOTES/Change Map. Không suy speaker từ substring tên; chỉ scope/cue là tất định. Nếu cần danh sách ứng viên, dùng projection đã có, không lặp cả lời thoại thành checklist dài hoặc đưa expected answer vào prompt.
+- **QA ownership:** scripts/chunk/ và test offline liên quan; annotation sách ở vùng riêng ngoài Git. Lập tối thiểu 10 tình huống: sai self, sai call, nhiều lần gọi trong cùng lượt, đảo chiều hai người, đổi người nói, vượt scope qua biên chunk, tên xuất hiện trong lời kể, mơ hồ/xung đột cần giữ, thiếu câu, ký tự hỏng/kana. Có bản sạch đối chứng. Giữ ca 007 đã thấy làm regression; chọn ví dụ 006 chỉ sau khi phân xử RAW, không dùng đếm từ để tự gán nhãn.
+- **Đầu ra:** mỗi occurrence ghi source/range/hash, speaker/target nếu xác định được, scope, loại lỗi, các dạng sửa chấp nhận được, lý do ngắn và trạng thái UNADJUDICATED nếu chưa chắc. FINAL owner chỉ là reference ngoài runtime. Giữ nguyên scorer và điểm lịch sử; thêm số correct/missed/wrong cho address, số omissions restored/remaining/new cho completeness, số sửa ngoài mục tiêu đã phân xử. Không có mẫu phù hợp thì NOT_MEASURED, không ghi 0%.
+- **Test/PASS:** mapping/scope/cue/conflict và unchanged round-trip PASS offline; scorer mới phân biệt sửa đúng, bỏ sót, sửa sai, xóa câu chứa lỗi (không được tính correct), no-op và negative control. Annotation chưa phân xử không vào mẫu số. Fake provider chỉ chứng minh kỹ thuật, không đạt semantic gate. App tiếp tục xuất TXT; host tự giữ diff/hash/cost, không bắt model tạo receipt.
+- **APP ownership:** chỉ tích hợp metadata ứng viên nếu thực sự cần sau QA; không auto-replace tên/xưng hô, không thêm mandatory user approval mỗi câu. Cấu hình thiếu glossary/pronoun vẫn hợp lệ.
+- **COORDINATOR:** review test từ source cô lập, bảo vệ old runs/holdout và pin đúng contract. OWNER chỉ cần phân xử ca RAW mơ hồ, không phải duyệt lại quyền offline đã có.
+- **Điểm dừng/phụ thuộc:** chưa có annotation đủ tin thì chưa tuyên bố prompt mới tốt hơn; không live hàng loạt. Chỉ sau offline PASS mới đề xuất **1 chunk đã có lỗi xưng hô xác minh**, 1 paid call, không retry sau dispatch, trần đề xuất **USD 0.01** với giá/estimate thực phải nằm trong trần. Đây chưa phải quyền chi; lý do live duy nhất là kiểm model có sửa đúng ca mà offline không chứng minh được. Không chạy cả 006, không đụng holdout để chỉnh prompt; gặp FORMAT/UNKNOWN hoặc lỗi nghĩa mới thì dừng và replay offline.
+
+#### Kết quả offline 2026-10-09
+
+- Bộ chấm mới ở `scripts/chunk/adjudicated_quality.py`; ma trận tổng hợp QA ở `scripts/chunk/test_adjudicated_quality.py`. **9/9 test PASS.** Các fixture chỉ dùng dữ liệu tổng hợp có RAW anchor/hash; không chứa sách, FINAL hay expected answer trong runtime. Có kiểm hash neo, scope, speaker/target, repeated call, đảo chiều, đổi speaker, ngoài scope ở biên chunk, tên trong lời kể (không phải address), ambiguity/conflict (giữ DRAFT), clean/no-op/negative, xóa câu chứa lỗi, omission và reference-only leak. Thử thêm `final_similarity` vào input không làm thay đổi điểm.
+- Đầu ra synthetic (đây là phép kiểm bộ chấm, không phải điểm model): address có 7 lỗi adjudicated — sửa đúng **4**, bỏ sót **2**, sửa sai **1**; 3 occurrence sạch giữ nguyên; 1 occurrence UNADJUDICATED bị loại. Completeness có 5 unit RAW-required — khôi phục **1**, còn thiếu **1**, lỗi thiếu mới **2**, giữ nguyên **1**; thêm 1 reference-only leak, 1 unsupported addition và bỏ 1 unit chưa adjudicated. Kiểm ngoài mục tiêu có 3 defect — sửa đúng **1**, bỏ sót **1**, sửa sai **1**; đồng thời phát hiện 1 lỗi mới và 1 thay đổi không có RAW support; clean control giữ nguyên. Các lỗi tổng hợp cố ý được cài để kiểm loại metric, không phải PASS chất lượng.
+- Phân xử response thật chỉ dùng RAW + hàng PRONOUN trong prompt, không dùng FINAL similarity: chapter 007, chunk 005, phạm vi P064–P075. Sidecar riêng `D:\P5E-private\chunk-quality-20261009\adjudication-007-chunk5-cp3.json`; RAW SHA-256 `cb750dab75a11518ed610ebdb19ef0df8270e9c98653aabb7a8bb0b805393231`; response SHA-256 `78f06780f37dc3c021e1d4785adbe0f43e63cfb488ac6c76f24b92824e5a0f95`. Trong 2 lần gọi lại thuộc cùng một lượt thoại, output lịch sử CP-IMPL-3 sửa sai cả **2/2**; **0** sửa đúng, **0** bỏ sót vì cả hai đều bị đổi; direct vocative sạch **1/1** được giữ. Đây là phân loại đúng một lỗi đã xác nhận, không đại diện toàn chương và không đo mức tuân thủ CP-IMPL-4. Completeness của response thật **NOT_MEASURED** vì chưa có annotation RAW theo unit; các 27 dòng đổi ngoài phạm vi trước đây vẫn UNADJUDICATED. Không có REPORT/semantic acceptance nào được tạo.
+- Regression từ archive sạch HEAD `a14272ab` + overlay chính xác 6 file (4 file CP-IMPL-4, scorer và tests): `:editorial-engine:test` **644 tests, 0 failures, 0 errors, 1 opt-in skip**; `:app:testDebugUnitTest` **457 tests, 0 failures, 0 errors, 1 opt-in skip**; Python **9/9**; `git diff --check` PASS. App pair-service regression xác nhận luồng vẫn một `EDIT` cho mỗi chunk. Archive, overlay manifest/hash và log ở `D:\P5E-private\chunk-quality-20261009\`; lần chạy đầu chỉ thiếu biến môi trường SDK, lần chạy lại với SDK cục bộ đặt tạm trong process đạt. Không build APK, không emulator/device, không provider, không phát sinh chi phí.
+
+#### Một đề xuất live — chưa được cấp quyền
+
+Chỉ đề xuất **chapter 007 / chunk 005 / RAW P064–P075**, vì đây là chunk có hai lần gọi xưng hô sai đã được RAW phân xử. Giả thuyết đo: CP-IMPL-4 sửa đủ cả hai occurrence sang dạng gọi được quy định, giữ direct vocative sạch và không làm mất/thêm nội dung. Gửi đúng **một** `EDIT`, không retry; chấm riêng correct/missed/wrong/new cho address, omission restored/remaining/new và các collateral change theo RAW. Dừng ngay nếu FORMAT, UNKNOWN, lỗi nghĩa mới, estimate không rõ hoặc vượt trần.
+
+Chi phí cùng chunk đã quyết toán ở lần CP-IMPL-3 là **USD 0.00310338** (mốc lịch sử, không phải báo giá chắc chắn cho prompt CP-IMPL-4). Đề xuất tạo sổ mới với **trần đúng một call USD 0.01**; dừng trước dispatch nếu preflight/estimate hiện hành không xác nhận được giá nằm trong trần. Số dư C1 cũ `USD 0.00955570` thấp hơn trần này và không được tái dùng làm quyền chi. Đề xuất này không phải cấp phép chạy; CP-IMPL-4 chưa build/cài và chưa được kiểm trên thiết bị.
+
+Các bullet dưới đây giữ số đo C1 trước review, không còn là next action hiện hành:
+
 - D-C1 đã duyệt (owner, chat 2026-10-09): live chỉ chương 007, luna reasoning medium, trần USD 0.05 — **đã dùng ba lần** (lần 2 và 3 do owner duyệt riêng): lần 1 và 2 dừng ở đoạn 5 (`ENVELOPE/FORMAT`, thẻ đóng `</EDIT>`); **lần 3 chạy đủ 7/7 đoạn**, không chunk nào bị chặn; sổ `C1-20261009` USD 0.0404443 / 17 call, còn USD 0.0095557. Không có quyền chạy thêm.
 - C1.1–C1.4 xong và có evidence ở mục 7 (engine CS-1, nguồn hai file, UI gọn, runner `CHUNK`, sửa hẹp thẻ đóng `57978e83`, build `4.18-c1.6`/253 trên `emulator-5554`). Điều kiện PASS C1 đạt về con số (không chặn, 0 chữ Nhật thêm, 4/18 > 3/18) nhưng chênh một dòng, sửa thừa 27 dòng và giống FINAL 0.9216 < DRAFT 0.9882: **chờ owner đọc trang đọc** `D:\P5E-private\chunk-outputs\007\c1-007-third-review.html`.
 - 0/3 chương được owner chấp nhận; P7 chưa bắt đầu; U1 tạm hoãn.
@@ -332,6 +372,7 @@ Chuyển `PairMaps` sang dựng từ `ChunkPlan` (mỗi chunk một cặp), gi�
 
 ## 7. Nhật ký
 
+- 2026-10-09 — QA/coordinator: hoàn tất §6.1 offline. Thêm scorer RAW-adjudicated + synthetic controls (9/9), phân xử riêng 007 chunk 005 (2 wrong fixes, direct vocative sạch được giữ; response CP-IMPL-3, completeness thật NOT_MEASURED), chạy từ archive sạch HEAD + overlay 6 file: engine 644/1 opt-in skip, app 457/1 opt-in skip. Ghi đúng một đề xuất live ở §6.1, chưa cấp quyền. Commit gói offline này; không push/build/device/provider; 0 call/USD 0 và giữ toàn bộ dirty work ngoài scope.
 - 2026-10-09 — coordinator tiếp quản sau khi Codex hết quota: hoàn tất và commit CP-IMPL-2 (engine 583, app 0 lỗi, `scripts/p6` 93); chốt nguyên nhân bằng số đo mục 1; thêm nguồn hai file thẳng dòng; viết kế hoạch này.
 - 2026-10-09 — coordinator: đo lệch dòng trên 28 chương, prototype căn dòng Gale–Church + neo glossary (42/42 điểm cắt đúng trên 8 chương có đáp án; phát hiện lệch bù trừ ở 016/027 mà ghép 1–1 thuần bỏ sót); cập nhật C1.1 thay ghép 1–1 thuần bằng căn dòng.
 - 2026-10-09 — coordinator: khảo sát bộ WN 85 chương. Phát hiện ghép file theo số chương sai (thứ tự file ≠ số chương), RAW UTF-16, chuỗi gộp dòng, DRAFT thiếu câu, DRAFT không áp glossary. Thêm quy tắc cắt có vùng đệm 2 cặp: 133/133 điểm cắt đúng trên 18 chương có đáp án. Ghi rõ: căn dòng mới là prototype Python, chưa có trong app.

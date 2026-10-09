@@ -188,6 +188,10 @@ Tiến độ offline G3/G4 (2026-10-01): adapter OpenRouter cho wire L2 `63b288f
 
 ## 10. Next action duy nhất
 
+**Hiện hành — 2026-10-09, owner ưu tiên xưng hô và đủ nội dung:** review tại implementation baseline `a14272ab`; C1 007 lần 3 là CHUNK 7/7 và có ca pronoun trong prompt nhưng output không theo call. CP-IMPL-4 cùng scorer/test §6.1 được commit trong gói offline này: bỏ polishing, kiểm self/call theo speaker→target/scope, ưu tiên completeness, giữ một EDIT/chunk, không thêm lượt/report. Bộ đối chứng §6.1: Python 9/9, engine 644 (1 opt-in skip), app 457 (1 opt-in skip), chạy từ archive sạch + overlay 6 file bằng source tương đương commit này. RAW sidecar riêng phân xử 2/2 lần gọi sai trong chunk 005, clean vocative 1/1 giữ nguyên; completeness của response thật NOT_MEASURED. Không dùng FINAL similarity làm điểm address. APK cũ `4.18-c1.6`/253 nguồn `57978e83` không đổi; không build/cài/device/provider. C1 ledger USD 0.04044430, 17 calls, phần dư USD 0.00955570; gói offline này 0 call/USD 0. 0/3 chương accepted, P7 chưa bắt đầu. **Next action duy nhất:** owner xem kết quả §6.1 và quyết định có cấp quyền cho đúng một EDIT live ở chapter 007/chunk 005, trần mới USD 0.01, không retry; chưa chạy live.
+
+Các đoạn bên dưới là lịch sử đã bị quyết định trên thay thế; không dùng câu next action cũ để chạy tiếp.
+
 **Hiện hành (2026-10-09, đổi sang biên tập theo chunk):** owner yêu cầu bỏ báo cáo/receipt, biên tập theo chunk một lần gọi như luồng Dịch, và không test nhiều chương. Nguyên nhân đã đo: luna toàn chương 6%, v5 3 lượt + báo cáo 13.8% (gấp 4 chi phí, bị chặn ở receipt), Sol toàn chương 50% → model nhỏ bỏ sót khi xử lý cả chương; báo cáo chỉ thêm chi phí và điểm chặn. CP-IMPL-2 hoàn tất `90e9a6f7`; thêm nguồn hai file thẳng dòng. Kế hoạch sống duy nhất: `docs/EDITORIAL_CHUNK_PLAN.md`. D-C1 đã duyệt (live chỉ 007, USD 0.05). Next action duy nhất: Codex làm C1.1–C1.5 theo mục 5.3 của `docs/EDITORIAL_CHUNK_PLAN.md`; khâu tách chunk dùng chung cài đặt Performance của luồng Dịch. 0/3 chương; P7 chưa bắt đầu.
 
 **Trước đó — Hiện hành (2026-10-09, independent review Q2.6 tại `011961f6`):** hash APK/source `7cc4108b` code247 ở hai archive, sáu output/read-page và ledger đã đối chiếu; Q2.6 29 physical calls/USD 0.33147915, tổng ledger USD 1.17703995, pending 0. Việc chọn V5 và chạy holdout đúng D-Q2c; 0/3 chương đạt, P7 chưa bắt đầu. Tên nguồn đã qua canary, không phải nguyên nhân chất lượng thấp hiện tại; V5 004 dừng QA ở CHANGE_COVERAGE. Báo cáo 017 "không đổi" đã sửa: diff trực tiếp có hai replacement và một insertion. Diagnostic scorer bổ sung tại working tree, không đổi metric/gate cũ; 13 run replay giữ nguyên các metric cũ, scorer 8/8 và gate 7/7 từ archive sạch + patch. Chưa commit/build/device/provider trong review. **Next action duy nhất:** thực hiện gói offline chẩn đoán chất lượng và chốt UX tên đầu ra trong `docs/EDITORIAL_API_V1_Q25_REVIEW_AND_Q26_REQUEST_20261009.md` mục 6; không chạy lại live hoặc dùng tên FINAL để suy chất lượng. Các đoạn dưới là lịch sử, không phải quyền dispatch mới.
@@ -218,7 +222,7 @@ Lịch sử next action trước 2026-10-05 tối (giữ để tra cứu): Z1–
 
 Lịch sử: M4 lần 1 (2026-10-02) dừng trước provider vì gate byte-vs-token (sửa `e2e1d3c5`); lần 2 đạt `RECONCILE_COMMITTED`.
 
-Lịch sử next action trước 2026-10-02 (giữ để tra cứu): M0 bị chặn vì máy chưa kết nối ADB; owner đã cắm máy và M4 chạy như trên. 
+Lịch sử next action trước 2026-10-02 (giữ để tra cứu): M0 bị chặn vì máy chưa kết nối ADB; owner đã cắm máy và M4 chạy như trên.
 
 Lịch sử next action trước (giữ để tra cứu): event 7 commit RAW + REPORT_L1-phase-RAW + receipt (verifier formal `RAW_NOT_ACCEPTED` do collector); collector đã sửa ở `3057919b`. Offline entry-boundary đã đóng 2/2 vòng; nguyên nhân owner-window lịch sử vẫn UNRESOLVED.
 

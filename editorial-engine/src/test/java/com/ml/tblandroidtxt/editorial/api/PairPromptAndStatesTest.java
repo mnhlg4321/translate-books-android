@@ -83,7 +83,13 @@ public final class PairPromptAndStatesTest {
         String legacy = QualityCore.editPrompt("Vietnamese");
         assertTrue(chunk.contains("RAW is the authority"));
         assertTrue(chunk.contains("Glossary entries lock proper names"));
-        assertTrue(chunk.contains("Pronoun rows are reference"));
+        assertTrue(chunk.contains("Pronoun rows are scoped candidates"));
+        assertTrue(chunk.contains("Check every occurrence"));
+        assertTrue(chunk.contains("Never apply the row in reverse"));
+        assertTrue(chunk.contains("If roles are ambiguous or rows conflict, preserve the DRAFT form"));
+        assertTrue(chunk.contains("Restore omitted content"));
+        assertTrue(chunk.contains("No stylistic polishing"));
+        assertFalse(chunk.contains("unnatural phrasing and register"));
         assertFalse(chunk.contains("<NOTES>"));
         assertFalse(chunk.contains("Remarks go outside the text tags"));
         assertTrue(legacy.contains("explain the uncertainty in notes"));
