@@ -341,11 +341,13 @@ public final class EditorialPairC6CorpusMeasurementTest {
         BigDecimal upperUsd = BigDecimal.valueOf(chapterCounts.inputTokens).multiply(new BigDecimal("0.000005"))
                 .add(BigDecimal.valueOf(chapterCounts.outputTokens).multiply(new BigDecimal("0.000025"))).setScale(6, RoundingMode.CEILING);
         System.out.printf(java.util.Locale.ROOT,
-                "C6 chapter=%s chunks=%d calls=%d points=%d address=%d glossary=%d kana=%d missing=%d in=%d out=%d conservativeUpperUsd=%s ownerChangedAmbiguous=%d missingRawBeads=%d%n",
+                "C6 chapter=%s chunks=%d calls=%d points=%d address=%d glossary=%d kana=%d missing=%d in=%d out=%d conservativeUpperUsd=%s lunaReserveUsd=%s ownerChangedAmbiguous=%d missingRawBeads=%d%n",
                 chapter, chapterCounts.chunks, chapterCounts.calledChunks, total(chapterCounts.points),
                 chapterCounts.points.get(FixPoint.Type.ADDRESS), chapterCounts.points.get(FixPoint.Type.GLOSSARY),
                 chapterCounts.points.get(FixPoint.Type.KANA), chapterCounts.points.get(FixPoint.Type.MISSING),
-                chapterCounts.inputTokens, chapterCounts.outputTokens, upperUsd.toPlainString(), chapterCounts.ownerEditAmbiguous, chapterCounts.missingRawBeads);
+                chapterCounts.inputTokens, chapterCounts.outputTokens, upperUsd.toPlainString(),
+                lunaReserveUsd(chapterCounts.inputTokens, chapterCounts.outputTokens).toPlainString(),
+                chapterCounts.ownerEditAmbiguous, chapterCounts.missingRawBeads);
     }
 
     private static Map<Integer, EnumSet<FixPoint.Type>> expectedKinds(String rawText, String draftText, ChunkPlan plan,
@@ -413,14 +415,23 @@ public final class EditorialPairC6CorpusMeasurementTest {
         total.missingRawBeads += row.missingRawBeads;
     }
 
+    /**
+     * The live C6 reservation for openai/gpt-5.6-luna, at the runner's pinned LUNA prices (USD 0.20 / 1.20 per M). The
+     * conservativeUpperUsd column is the app fallback for a model of unknown price (USD 5 / 25 per M), not a luna quote.
+     */
+    static BigDecimal lunaReserveUsd(long inputTokens, long outputTokens) {
+        return BigDecimal.valueOf(inputTokens).multiply(new BigDecimal("0.0000002"))
+                .add(BigDecimal.valueOf(outputTokens).multiply(new BigDecimal("0.0000012"))).setScale(6, RoundingMode.CEILING);
+    }
+
     private static void printSummary(Counts c) {
         BigDecimal estimateUsd = BigDecimal.valueOf(c.inputTokens).multiply(new BigDecimal("0.000005"))
                 .add(BigDecimal.valueOf(c.outputTokens).multiply(new BigDecimal("0.000025"))).setScale(6, RoundingMode.CEILING);
         System.out.printf(java.util.Locale.ROOT,
-                "C6 TOTAL chapters=%d chunks=%d calls=%d points=%d address=%d glossary=%d kana=%d missing=%d inputTokens=%d outputReserve=%d conservativeUpperUsd=%s%n",
+                "C6 TOTAL chapters=%d chunks=%d calls=%d points=%d address=%d glossary=%d kana=%d missing=%d inputTokens=%d outputReserve=%d conservativeUpperUsd=%s lunaReserveUsd=%s%n",
                 CHAPTERS.length, c.chunks, c.calledChunks, total(c.points), c.points.get(FixPoint.Type.ADDRESS),
                 c.points.get(FixPoint.Type.GLOSSARY), c.points.get(FixPoint.Type.KANA), c.points.get(FixPoint.Type.MISSING),
-                c.inputTokens, c.outputTokens, estimateUsd.toPlainString());
+                c.inputTokens, c.outputTokens, estimateUsd.toPlainString(), lunaReserveUsd(c.inputTokens, c.outputTokens).toPlainString());
         for (FixPoint.Type type : EDIT_TYPES) {
             int owner = c.ownerChanged.get(type);
             int covered = c.covered.get(type);
