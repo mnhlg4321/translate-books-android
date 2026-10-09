@@ -36,7 +36,7 @@ final class EditorialPairPresenter {
         if (colon > 0) { name = code.substring(0, colon); arg = code.substring(colon + 1); }
         switch (name) {
             case "SOURCE_NO_EXPLICIT_MAPPING":
-                return "Hai file riêng chưa có liên kết cặp RAW–DRAFT, nên chưa chạy theo từng cặp được. Hãy chọn một job Dịch, hoặc chạy toàn chương.";
+                return "Hai file riêng chưa có liên kết đoạn RAW–DRAFT, nên chưa chạy theo từng đoạn được. Hãy chọn một job Dịch, hoặc chạy toàn chương.";
             case "SOURCE_CHAPTER_BLOCKED":
                 return "RAW và DRAFT có vẻ không cùng chương, nên chưa biên tập. Hãy chọn lại file.";
             case "SOURCE_NO_ROWS": case "SOURCE_NO_ROWS_":
@@ -52,10 +52,10 @@ final class EditorialPairPresenter {
             case "MISSING_PAIRS":
                 return "Còn " + arg + " đoạn chưa có bản dịch hoàn tất. Hãy dịch xong job trước khi biên tập.";
             case "TOO_LONG":
-                return "Các cặp số " + arg.replace("[", "").replace("]", "") + " quá dài cho một lượt gọi. Hãy dịch lại job với đoạn nhỏ hơn.";
+                return "Các đoạn số " + arg.replace("[", "").replace("]", "") + " quá dài cho một lượt gọi. Hãy dịch lại job với đoạn nhỏ hơn.";
             default:
                 if (name.startsWith("MAP_")) return "Liên kết RAW–DRAFT không hợp lệ (" + name.substring(4) + ").";
-                if (name.startsWith("PAIR_")) return "Một cặp không thể tạo yêu cầu (" + name.substring(5) + ").";
+                if (name.startsWith("PAIR_")) return "Một đoạn không thể tạo yêu cầu (" + name.substring(5) + ").";
                 return "Chưa chạy được (" + code + ").";
         }
     }
@@ -68,7 +68,7 @@ final class EditorialPairPresenter {
         switch (name) {
             case "CHAPTER_WARN": return "RAW và DRAFT khớp chưa chắc chắn; hãy xem lý do ở trên trước khi chạy.";
             case "UNCERTAIN_CHUNKS": return arg + " đoạn chưa chắc về cách ghép RAW–DRAFT (đánh dấu trong kết quả).";
-            case "NO_GLOSSARY": return "Không dùng Glossary: tên riêng có thể không thống nhất giữa các cặp.";
+            case "NO_GLOSSARY": return "Không dùng Glossary: tên riêng có thể không thống nhất giữa các đoạn.";
             case "NO_PRONOUN": return "Không dùng Pronoun: cách xưng hô giữ như trong DRAFT.";
             case "REFERENCE_CONFLICT": return arg + " chỗ có quy tắc xưng hô mâu thuẫn trong cùng phạm vi. Ứng dụng không tự chọn; model được dặn giữ cách xưng hô của DRAFT ở đó.";
             case "SCOPE_INVALID": return arg + " dòng Pronoun có phạm vi áp dụng sai nên bị bỏ qua.";
@@ -137,6 +137,20 @@ final class EditorialPairPresenter {
 
     private static long percent(double share) { return Math.round(share * 100); }
 
+    /** 1-based ordinals of the chunks the plan marked uncertain; empty when the run has no plan or it does not match the chunk count. */
+    static java.util.Set<Integer> uncertainOrdinals(String planJson, int itemCount) {
+        java.util.Set<Integer> out = new java.util.HashSet<>();
+        if (planJson == null || planJson.isEmpty()) return out;
+        try {
+            ChunkPlan plan = ChunkPlan.fromJson(planJson);
+            if (plan.chunks.size() != itemCount) return out;
+            for (int i = 0; i < plan.chunks.size(); i++) if (plan.chunks.get(i).uncertain()) out.add(i + 1);
+        } catch (RuntimeException unreadable) {
+            return new java.util.HashSet<>();
+        }
+        return out;
+    }
+
     /** The Performance values the plan was cut with, as the person knows them from the settings screen. */
     static String performanceLine(AppSettings s) {
         String mode = "char".equalsIgnoreCase(s.chunkMode) ? "ký tự" : "token";
@@ -147,12 +161,12 @@ final class EditorialPairPresenter {
 
     static String previewRow(EditorialPairPreview.Row row) {
         String state = row.missing ? "Thiếu bản dịch" : row.tooLong ? "Quá dài" : "Sẵn sàng";
-        return "Cặp " + row.ordinal + " • RAW " + row.rawChars + " chữ • DRAFT " + row.draftChars + " chữ • " + state;
+        return "Đoạn " + row.ordinal + " • RAW " + row.rawChars + " chữ • DRAFT " + row.draftChars + " chữ • " + state;
     }
 
     static String previewTotals(EditorialPairPreview preview) {
         int total = preview.rows.size();
-        return total + " cặp" + (preview.missingCount > 0 ? ", " + preview.missingCount + " thiếu bản dịch" : "")
+        return total + " đoạn" + (preview.missingCount > 0 ? ", " + preview.missingCount + " thiếu bản dịch" : "")
                 + (preview.runnable() ? "" : " • chưa thể chạy");
     }
 
@@ -191,17 +205,17 @@ final class EditorialPairPresenter {
     }
 
     static String runHeadline(PairRun run, boolean executing, boolean interrupted) {
-        if (executing) return "Đang biên tập từng cặp…";
+        if (executing) return "Đang biên tập từng đoạn…";
         switch (run.state) {
             case PREPARED: return "Chưa chạy";
             case RUNNING: return interrupted ? "Lần chạy bị gián đoạn" : "Đang chạy…";
             case PAUSED: return "Đã tạm dừng";
-            case INCOMPLETE: return "Chưa xong: còn cặp chưa gửi";
-            case UNKNOWN: return "Có cặp không rõ kết quả";
-            case FINAL_BLOCKED: return "Có cặp bị chặn: chưa ghép được bản đủ";
+            case INCOMPLETE: return "Chưa xong: còn đoạn chưa gửi";
+            case UNKNOWN: return "Có đoạn không rõ kết quả";
+            case FINAL_BLOCKED: return "Có đoạn bị chặn: chưa ghép được bản đủ";
             case FINAL_ELIGIBLE: return run.warnings > 0
-                    ? "Đã ghép đủ các cặp, có " + run.warnings + " cảnh báo cấu trúc"
-                    : "Đã ghép đủ các cặp";
+                    ? "Đã ghép đủ các đoạn, có " + run.warnings + " cảnh báo cấu trúc"
+                    : "Đã ghép đủ các đoạn";
             default: return "";
         }
     }
@@ -219,7 +233,7 @@ final class EditorialPairPresenter {
             else if (i.state == PairState.STRUCTURE_BLOCKED || i.state == PairState.REJECTED) blocked++;
             else if (i.state == PairState.UNKNOWN) unknown++;
         }
-        out.add("Cấu trúc: " + accepted + " cặp đạt, " + warned + " có cảnh báo, " + blocked + " bị chặn, " + unknown + " không rõ, trên tổng " + items.size() + " cặp.");
+        out.add("Cấu trúc: " + accepted + " đoạn đạt, " + warned + " có cảnh báo, " + blocked + " bị chặn, " + unknown + " không rõ, trên tổng " + items.size() + " đoạn.");
         out.add("Nghĩa: chưa được chấm. Ghép thành công không có nghĩa là bản dịch đúng.");
         out.add(run.state == RunState.FINAL_ELIGIBLE
                 ? "Lưu và xuất: đã lưu, mở lại được; có thể xuất bản ghép."
@@ -300,7 +314,7 @@ final class EditorialPairPresenter {
                 .append(" • ").append(EditorialApiPresenter.usd(run.usd)).append(run.costKnown ? "" : " (chưa rõ giá)").append('\n');
         if (!run.mergeReceiptJson.isEmpty()) out.append("Biên nhận ghép: ").append(run.mergeReceiptJson).append('\n');
         for (PairItem i : items) {
-            out.append("Cặp ").append(i.ordinal).append(": ").append(i.state).append(" • ").append(i.calls).append(" lượt • ")
+            out.append("Đoạn ").append(i.ordinal).append(": ").append(i.state).append(" • ").append(i.calls).append(" lượt • ")
                     .append(EditorialApiPresenter.usd(i.usd)).append(i.costKnown ? "" : " (chưa rõ)").append(' ').append(i.responseHash.isEmpty() ? "" : i.responseHash.substring(0, 12)).append('\n');
         }
         return out.toString();

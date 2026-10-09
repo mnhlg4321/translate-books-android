@@ -191,7 +191,7 @@ public final class EditorialPairUiInstrumentedTest {
             waitFor("result", () -> controller.screen == EditorialApiUiController.Screen.PAIR_RESULT && !controller.pair.running());
             assertEquals(3, provider.requests.size());
             String shown = onUi(scenario, activity -> allText(activity));
-            assertTrue(shown, shown.contains("Đã ghép đủ các cặp"));
+            assertTrue(shown, shown.contains("Đã ghép đủ các đoạn"));
             // structural result only: the screen must not say the merge is a proof of good translation
             assertFalse(shown, shown.toLowerCase(java.util.Locale.ROOT).contains("đã đạt"));
 
@@ -264,7 +264,7 @@ public final class EditorialPairUiInstrumentedTest {
                 return null;
             });
             String shown = onUi(scenario, activity -> allText(activity));
-            assertTrue(shown, shown.contains("Hai file riêng không có liên kết cặp"));
+            assertTrue(shown, shown.contains("Hai file riêng không có liên kết đoạn"));
         }
     }
 
@@ -300,7 +300,7 @@ public final class EditorialPairUiInstrumentedTest {
             assertTrue(list, list.contains(REOPEN_NAME));
             click(scenario, "Xem kết quả", 0);
             String shown = onUi(scenario, activity -> allText(activity));
-            assertTrue(shown, shown.contains("Đã ghép đủ các cặp"));
+            assertTrue(shown, shown.contains("Đã ghép đủ các đoạn"));
             assertFalse(shown, shown.contains("gián đoạn"));
             assertEquals(0, mustNotBeCalled.requests.size());
         }

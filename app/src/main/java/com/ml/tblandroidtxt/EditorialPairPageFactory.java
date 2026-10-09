@@ -27,7 +27,7 @@ final class EditorialPairPageFactory {
     // ---- before the run
 
     void confirm(LinearLayout root) {
-        LinearLayout card = a.sectionCard("✓", "Xem trước các cặp");
+        LinearLayout card = a.sectionCard("✓", "Xem trước các đoạn");
         EditorialPairPreview v = p.preview;
         if (p.planning) {
             card.addView(text("Đang chia đoạn…", 15, a.TEXT, true));
@@ -60,7 +60,7 @@ final class EditorialPairPageFactory {
         card.addView(text(glossary, 14, a.TEXT, false), a.marginLP(-1, -2, 0, 6, 0, 0));
         card.addView(text(pronoun, 14, a.TEXT, false));
         EditorialApiCombo.Settings settings = c.combo.settings();
-        card.addView(text("Mỗi cặp một lượt gọi; không có bước kiểm riêng. Mô hình: " + EditorialApiUiController.effectiveModel(c.combo, SettingsStore.load(a)), 13, a.MUTED, false),
+        card.addView(text("Mỗi đoạn một lượt gọi; không có bước kiểm riêng. Mô hình: " + EditorialApiUiController.effectiveModel(c.combo, SettingsStore.load(a)), 13, a.MUTED, false),
                 a.marginLP(-1, -2, 0, 6, 0, 0));
         EditorialApiModelPricing pricing = new EditorialApiModelPricing(SettingsStore.load(a).provider);
         String model = EditorialApiUiController.effectiveModel(c.combo, SettingsStore.load(a));
@@ -100,10 +100,10 @@ final class EditorialPairPageFactory {
         root.addView(card, a.marginLP(-1, -2, 0, 0, 0, 10));
 
         if (!v.rows.isEmpty()) {
-            LinearLayout pairs = a.sectionCard("▦", "Các cặp (" + v.rows.size() + ")");
+            LinearLayout pairs = a.sectionCard("▦", "Các đoạn (" + v.rows.size() + ")");
             int shown = 0;
             for (EditorialPairPreview.Row row : v.rows) {
-                if (shown++ >= 200) { pairs.addView(text("… và " + (v.rows.size() - 200) + " cặp nữa", 12, a.MUTED, false)); break; }
+                if (shown++ >= 200) { pairs.addView(text("… và " + (v.rows.size() - 200) + " đoạn nữa", 12, a.MUTED, false)); break; }
                 pairs.addView(text(EditorialPairPresenter.previewRow(row), 13, row.missing || row.tooLong ? a.AMBER : a.TEXT, false), a.marginLP(-1, -2, 0, 0, 0, 2));
                 if (!row.rawHead.isEmpty()) pairs.addView(text("RAW: " + row.rawHead, 12, a.MUTED, false), a.marginLP(-1, -2, 8, 0, 0, 0));
                 if (!row.draftHead.isEmpty()) pairs.addView(text("DRAFT: " + row.draftHead, 12, a.MUTED, false), a.marginLP(-1, -2, 8, 0, 0, 4));
@@ -115,17 +115,17 @@ final class EditorialPairPageFactory {
     // ---- during the run
 
     void run(LinearLayout root) {
-        LinearLayout card = a.sectionCard("…", "Đang biên tập từng cặp");
+        LinearLayout card = a.sectionCard("…", "Đang biên tập từng đoạn");
         card.addView(text(p.progress.isEmpty() ? "Đang chạy…" : p.progress, 15, a.TEXT, false));
         PairRun run = readRun();
         if (run != null) {
             card.addView(text(EditorialApiPresenter.usd(run.usd) + " • " + run.calls + " lượt gọi", 13, a.MUTED, false), a.marginLP(-1, -2, 0, 6, 0, 0));
             for (PairItem item : readItems(run.id)) {
-                card.addView(text("Cặp " + item.ordinal + ": " + EditorialPairPresenter.pairState(item.state), 13, color(item.state), false), a.marginLP(-1, -2, 0, 0, 0, 2));
+                card.addView(text("Đoạn " + item.ordinal + ": " + EditorialPairPresenter.pairState(item.state), 13, color(item.state), false), a.marginLP(-1, -2, 0, 0, 0, 2));
             }
         }
-        card.addView(text("Có thể rời màn này; tiến độ được lưu sau từng cặp và không gửi lại cặp đã xong.", 12, a.MUTED, false), a.marginLP(-1, -2, 0, 8, 0, 0));
-        card.addView(a.dangerButton("Hủy sau cặp hiện tại", v -> p.cancelRun()), a.marginLP(-1, a.dp(46), 0, 12, 0, 0));
+        card.addView(text("Có thể rời màn này; tiến độ được lưu sau từng đoạn và không gửi lại đoạn đã xong.", 12, a.MUTED, false), a.marginLP(-1, -2, 0, 8, 0, 0));
+        card.addView(a.dangerButton("Hủy sau đoạn hiện tại", v -> p.cancelRun()), a.marginLP(-1, a.dp(46), 0, 12, 0, 0));
         root.addView(card);
     }
 
@@ -133,7 +133,7 @@ final class EditorialPairPageFactory {
 
     void result(LinearLayout root) {
         PairRun run = readRun();
-        LinearLayout card = a.sectionCard("✎", "Kết quả theo cặp");
+        LinearLayout card = a.sectionCard("✎", "Kết quả theo đoạn");
         if (run == null) {
             card.addView(text(c.error.isEmpty() ? "Không có kết quả để hiển thị." : c.error, 14, a.MUTED, false));
             card.addView(a.secondaryButton("Về danh sách", v -> c.showList()), a.marginLP(-1, a.dp(44), 0, 12, 0, 0));
@@ -144,7 +144,7 @@ final class EditorialPairPageFactory {
         boolean interrupted = EditorialPairPresenter.interrupted(run, items);
         card.addView(text(EditorialPairPresenter.runHeadline(run, EditorialPairRunService.isActive(run.id), interrupted), 17, a.TEXT, true));
         for (String line : EditorialPairPresenter.statusLines(run, items)) card.addView(text(line, 13, a.MUTED, false), a.marginLP(-1, -2, 0, 4, 0, 0));
-        if (interrupted) card.addView(text("⚠ Ứng dụng đã đóng giữa chừng. Không có gì được gửi lại tự động; cặp đang gửi dở được coi là không rõ kết quả.", 13, a.AMBER, false), a.marginLP(-1, -2, 0, 6, 0, 0));
+        if (interrupted) card.addView(text("⚠ Ứng dụng đã đóng giữa chừng. Không có gì được gửi lại tự động; đoạn đang gửi dở được coi là không rõ kết quả.", 13, a.AMBER, false), a.marginLP(-1, -2, 0, 6, 0, 0));
         if (!c.error.isEmpty()) card.addView(text(c.error, 13, a.RED, false), a.marginLP(-1, -2, 0, 4, 0, 0));
 
         EditorialPairRunService.ExportPlan plan = exportPlan(run.id);
@@ -161,12 +161,21 @@ final class EditorialPairPageFactory {
             actions.addView(a.secondaryButton("Chạy tiếp", v -> p.resumeRun()), new LinearLayout.LayoutParams(0, a.dp(44), 1));
         }
         card.addView(actions, a.marginLP(-1, -2, 0, 8, 0, 8));
+        LinearLayout reading = a.rowContainer();
+        Button finalText = a.secondaryButton("Xem bản cuối", v -> p.showFinalText());
+        finalText.setEnabled(plan != null);
+        finalText.setAlpha(plan != null ? 1f : 0.45f);
+        reading.addView(finalText, new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        reading.addView(a.space(8, 1));
+        reading.addView(a.secondaryButton(p.allCompared(items) ? "Ẩn so sánh" : "So sánh với DRAFT", v -> p.toggleAll(items)), new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        card.addView(reading, a.marginLP(-1, -2, 0, 0, 0, 8));
         card.addView(a.secondaryButton("Về danh sách", v -> c.showList()), new LinearLayout.LayoutParams(-1, a.dp(44)));
         root.addView(card, a.marginLP(-1, -2, 0, 0, 0, 10));
 
         EditorialPairSnapshot snapshot = snapshot(run);
-        LinearLayout pairs = a.sectionCard("▦", "Các cặp (" + items.size() + ")");
-        for (PairItem item : items) pairs.addView(pairCard(run, item, snapshot), a.marginLP(-1, -2, 0, 0, 0, 8));
+        java.util.Set<Integer> uncertain = EditorialPairPresenter.uncertainOrdinals(run.chunkPlanJson, items.size());
+        LinearLayout pairs = a.sectionCard("▦", "Các đoạn (" + items.size() + ")");
+        for (PairItem item : items) pairs.addView(pairCard(run, item, snapshot, uncertain.contains(item.ordinal)), a.marginLP(-1, -2, 0, 0, 0, 8));
         root.addView(pairs, a.marginLP(-1, -2, 0, 0, 0, 10));
 
         LinearLayout tech = new LinearLayout(a);
@@ -180,11 +189,12 @@ final class EditorialPairPageFactory {
         root.addView(tech);
     }
 
-    private View pairCard(PairRun run, PairItem item, EditorialPairSnapshot snapshot) {
+    private View pairCard(PairRun run, PairItem item, EditorialPairSnapshot snapshot, boolean uncertain) {
         LinearLayout box = a.card(12, a.FIELD, a.BORDER);
         box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(a.dp(10), a.dp(10), a.dp(10), a.dp(10));
-        box.addView(text("Cặp " + item.ordinal + ": " + EditorialPairPresenter.pairState(item.state), 13, color(item.state), true));
+        box.addView(text("Đoạn " + item.ordinal + ": " + EditorialPairPresenter.pairState(item.state), 13, color(item.state), true));
+        if (uncertain) box.addView(text("⚠ Đoạn chưa chắc: cách ghép RAW–DRAFT ở đây kém chắc hơn các đoạn khác.", 12, a.AMBER, false), a.marginLP(-1, -2, 0, 2, 0, 0));
         for (String line : EditorialPairPresenter.gateLines(item)) box.addView(text(line, 12, line.startsWith("Chặn") ? a.RED : a.AMBER, false), a.marginLP(-1, -2, 0, 2, 0, 0));
         if (item.state == PairState.WARN_REVIEW) {
             LinearLayout decide = a.rowContainer();

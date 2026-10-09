@@ -466,8 +466,8 @@ public final class EditorialPairRunService {
             ChunkMerge.Result merged = merge(run, false);
             if (merged.ok()) {
                 String label = run.warnings > 0
-                        ? "Bản ghép đủ các cặp, có " + run.warnings + " cảnh báo cấu trúc; chưa được chấm nghĩa"
-                        : "Bản ghép đủ các cặp; chưa được chấm nghĩa";
+                        ? "Bản ghép đủ các đoạn, có " + run.warnings + " cảnh báo cấu trúc; chưa được chấm nghĩa"
+                        : "Bản ghép đủ các đoạn; chưa được chấm nghĩa";
                 return new ExportPlan(merged.text(), label, true, run.warnings > 0 ? "_bien-tap-canh-bao" : "_bien-tap");
             }
         }
@@ -475,7 +475,7 @@ public final class EditorialPairRunService {
         if (!provisional.ok()) return null;
         int accepted = 0;
         for (PairItem i : items) if (PairStates.mergeable(i.state)) accepted++;
-        return new ExportPlan(provisional.text(), "Bản tạm: " + accepted + "/" + items.size() + " cặp đã biên tập, các cặp còn lại giữ nguyên DRAFT",
+        return new ExportPlan(provisional.text(), "Bản tạm: " + accepted + "/" + items.size() + " đoạn đã biên tập, các đoạn còn lại giữ nguyên DRAFT",
                 false, "_tam");
     }
 

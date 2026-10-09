@@ -83,6 +83,8 @@ final class EditorialApiUiController {
 
     void setScreen(Screen next) { screen = next; refresh(); }
 
+    android.app.Activity activity() { return a; }
+
     void toast(String message) { MainActivity activity = a; if (activity != null) activity.toast(message); }
 
     void startActivityForResult(Intent intent, int code) { MainActivity activity = a; if (activity != null) activity.startActivityForResult(intent, code); }

@@ -31,7 +31,7 @@ public final class EditorialPairPresenterTest {
         EditorialPairPreview files = preview(EditorialPairSource.unmappedFiles("a.txt + b.txt"), "", "");
         assertFalse(files.runnable());
         String text = EditorialPairPresenter.blockers(files).get(0);
-        assertTrue(text, text.contains("chưa có liên kết cặp"));
+        assertTrue(text, text.contains("chưa có liên kết đoạn"));
         assertTrue(text.contains("job Dịch"));
         assertEquals("Đoạn 3 của job không nối liền với đoạn trước (RAW bị hở hoặc trùng).", EditorialPairPresenter.blocker("SOURCE_ROW_OFFSET_GAP:3"));
         assertTrue(EditorialPairPresenter.blocker("MISSING_PAIRS:2").startsWith("Còn 2 đoạn chưa có bản dịch hoàn tất"));
@@ -47,8 +47,8 @@ public final class EditorialPairPresenterTest {
         draft.add(EditorialPairRunServiceTest.draftRow(3));
         EditorialPairPreview p = preview(job(draft), "", "");
         assertEquals(3, p.rows.size());
-        assertEquals("Cặp 2 • RAW " + p.rows.get(1).rawChars + " chữ • DRAFT 0 chữ • Thiếu bản dịch", EditorialPairPresenter.previewRow(p.rows.get(1)));
-        assertEquals("3 cặp, 1 thiếu bản dịch • chưa thể chạy", EditorialPairPresenter.previewTotals(p));
+        assertEquals("Đoạn 2 • RAW " + p.rows.get(1).rawChars + " chữ • DRAFT 0 chữ • Thiếu bản dịch", EditorialPairPresenter.previewRow(p.rows.get(1)));
+        assertEquals("3 đoạn, 1 thiếu bản dịch • chưa thể chạy", EditorialPairPresenter.previewTotals(p));
         assertTrue(EditorialPairPresenter.blockers(p).get(0).contains("Còn 1 đoạn chưa có bản dịch"));
     }
 
@@ -60,7 +60,7 @@ public final class EditorialPairPresenterTest {
         assertEquals(2, warnings.size());
         assertTrue(warnings.get(0).startsWith("Không dùng Glossary"));
         assertTrue(warnings.get(1).startsWith("Không dùng Pronoun"));
-        assertEquals("2 cặp", EditorialPairPresenter.previewTotals(none));
+        assertEquals("2 đoạn", EditorialPairPresenter.previewTotals(none));
         EditorialPairPreview with = preview(job(draft), "花子\tHanako\tname\t\n", "from,speaker,target,self,call,scope,note\n花子,花子,太郎,tôi,anh,*,\n");
         assertTrue(with.warnings.isEmpty());
         assertEquals(1, with.rows.get(0).glossaryEntries);
@@ -109,7 +109,7 @@ public final class EditorialPairPresenterTest {
         List<PairItem> items = List.of(item(1, PairState.ACCEPTED), item(2, PairState.WARN_REVIEW), item(3, PairState.STRUCTURE_BLOCKED), item(4, PairState.UNKNOWN));
         PairRun run = run(RunState.UNKNOWN);
         List<String> lines = EditorialPairPresenter.statusLines(run, items);
-        assertEquals("Cấu trúc: 1 cặp đạt, 1 có cảnh báo, 1 bị chặn, 1 không rõ, trên tổng 4 cặp.", lines.get(0));
+        assertEquals("Cấu trúc: 1 đoạn đạt, 1 có cảnh báo, 1 bị chặn, 1 không rõ, trên tổng 4 đoạn.", lines.get(0));
         assertEquals("Nghĩa: chưa được chấm. Ghép thành công không có nghĩa là bản dịch đúng.", lines.get(1));
         assertTrue(lines.get(2).startsWith("Lưu và xuất: tiến độ đã lưu"));
         run.costKnown = false;
@@ -122,10 +122,10 @@ public final class EditorialPairPresenterTest {
 
     @Test public void headlinesNeverPromiseAResultAndShowTheWarningCount() {
         PairRun ok = run(RunState.FINAL_ELIGIBLE);
-        assertEquals("Đã ghép đủ các cặp", EditorialPairPresenter.runHeadline(ok, false, false));
+        assertEquals("Đã ghép đủ các đoạn", EditorialPairPresenter.runHeadline(ok, false, false));
         ok.warnings = 3;
-        assertEquals("Đã ghép đủ các cặp, có 3 cảnh báo cấu trúc", EditorialPairPresenter.runHeadline(ok, false, false));
-        assertEquals("Đang biên tập từng cặp…", EditorialPairPresenter.runHeadline(ok, true, false));
+        assertEquals("Đã ghép đủ các đoạn, có 3 cảnh báo cấu trúc", EditorialPairPresenter.runHeadline(ok, false, false));
+        assertEquals("Đang biên tập từng đoạn…", EditorialPairPresenter.runHeadline(ok, true, false));
         assertEquals("Lần chạy bị gián đoạn", EditorialPairPresenter.runHeadline(run(RunState.RUNNING), false, true));
         assertTrue(EditorialPairPresenter.runHeadline(run(RunState.FINAL_BLOCKED), false, false).contains("chưa ghép được bản đủ"));
         assertTrue(EditorialPairPresenter.runHeadline(run(RunState.UNKNOWN), false, false).contains("không rõ kết quả"));

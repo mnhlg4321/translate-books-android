@@ -159,4 +159,14 @@ public final class EditorialPairFilesFlowTest {
         assertTrue(EditorialPairPresenter.performanceLine(s).startsWith("ký tự 3500"));
         assertNotNull(EditorialPairV29MigrationSpec.from28To29());
     }
+
+    @Test public void uncertainChunksAreReadBackFromTheStoredPlanAndOnlyWhenItMatchesTheChunkCount() {
+        ChunkPlan base = plan(raw(80), draft(80), new AppSettings()).plan;
+        List<ChunkPlan.Chunk> chunks = List.of(new ChunkPlan.Chunk(0, 5, 0, 5, List.of(), false), new ChunkPlan.Chunk(5, 9, 5, 9, List.of("CHECK_LENGTH"), true));
+        ChunkPlan p = new ChunkPlan("a", "b", "", "", base.limits, 2.54, 9, 9, List.of("11:9"), chunks, "OK", List.of(), 0, 0, 0, 0, 1);
+        assertEquals(java.util.Set.of(2), EditorialPairPresenter.uncertainOrdinals(p.toJson(), 2));
+        assertTrue(EditorialPairPresenter.uncertainOrdinals(p.toJson(), 3).isEmpty());
+        assertTrue(EditorialPairPresenter.uncertainOrdinals("", 2).isEmpty());
+        assertTrue(EditorialPairPresenter.uncertainOrdinals("not json", 2).isEmpty());
+    }
 }

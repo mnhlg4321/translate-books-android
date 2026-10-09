@@ -147,7 +147,7 @@ final class EditorialPairUiController {
                 runId = id;
                 runService.execute(id, new EditorialPairRunService.Listener() {
                     @Override public void onPair(PairRun run, PairItem item) {
-                        progress = "Cặp " + item.ordinal + ": đang gửi và chờ kết quả…";
+                        progress = "Đoạn " + item.ordinal + ": đang gửi và chờ kết quả…";
                         parent.postUi(() -> { if (parent.screen == EditorialApiUiController.Screen.PAIR_RUN) parent.refresh(); });
                     }
 
@@ -170,7 +170,7 @@ final class EditorialPairUiController {
     void cancelRun() {
         EditorialPairRunService active = service;
         if (active != null) active.cancel();
-        progress = "Đang dừng sau cặp hiện tại…";
+        progress = "Đang dừng sau đoạn hiện tại…";
     }
 
     // ---- result
@@ -194,6 +194,36 @@ final class EditorialPairUiController {
     }
 
     void toggleDetails() { detailsOpen = !detailsOpen; parent.refresh(); }
+
+    boolean allCompared(List<PairItem> items) {
+        if (items.isEmpty()) return false;
+        for (PairItem i : items) if (!i.candidateText.isEmpty() && !expanded.contains(i.pairId)) return false;
+        return true;
+    }
+
+    void toggleAll(List<PairItem> items) {
+        if (allCompared(items)) expanded.clear();
+        else for (PairItem i : items) if (!i.candidateText.isEmpty()) expanded.add(i.pairId);
+        parent.refresh();
+    }
+
+    /** Shows the merged text as it would be exported (the provisional text when some pairs are not done); read only. */
+    void showFinalText() {
+        final android.app.Activity activity = parent.activity();
+        if (activity == null) return;
+        String text;
+        try (SqliteEditorialPairRunStore store = new SqliteEditorialPairRunStore(parent.appContext())) {
+            EditorialPairRunService.ExportPlan plan = new EditorialPairRunService(store, new FailingProvider(), null, 1L).exportPlan(runId);
+            text = plan == null ? "" : plan.text;
+        }
+        android.widget.TextView view = new android.widget.TextView(activity);
+        view.setText(text.isEmpty() ? "Chưa có bản cuối." : text);
+        view.setTextIsSelectable(true);
+        view.setPadding(32, 24, 32, 24);
+        android.widget.ScrollView scroll = new android.widget.ScrollView(activity);
+        scroll.addView(view);
+        new android.app.AlertDialog.Builder(activity).setTitle("Bản cuối").setView(scroll).setPositiveButton("Đóng", null).show();
+    }
 
     void resolve(String pairId, boolean accept) {
         try (SqliteEditorialPairRunStore store = new SqliteEditorialPairRunStore(parent.appContext())) {
