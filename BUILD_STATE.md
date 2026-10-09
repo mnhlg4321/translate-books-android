@@ -1,5 +1,12 @@
 # Build State
 
+## Current state — 2026-10-09 (single-chunk 005 live run done)
+
+- Build `4.18-c1.7` / code 254, event `build-20261009-193025`, source `ff819dde`, APK SHA-256 `51BEC1455D9E2827AC8ED10336DC77D1AC703947423297450EBF2B8C65A77D40`, AndroidTest `c1-chunk-20261009g`; mirrored in `artifacts/` and `backup/`; installed only on `emulator-5554` (the emulator was restarted). Focused device tests 8 groups PASS; device fake run with the selector sent 1 request and its prompt is byte-identical to the host-built one.
+- Live (owner approved): chapter 007 chunk 005 only, CP-IMPL-4, `openai/gpt-5.6-luna` medium, 1 call, USD 0.00201225 in ledger `C1-SINGLE5-20261009` (cap USD 0.01), 0 pending/UNKNOWN. The answer ended with `</EDIT>` and was accepted as a warning by the narrow repair (first real use).
+- Result: the returned chunk is identical to the DRAFT (0 of 19 lines changed). Address: the 2 defective `cậu` occurrences were missed (0 correct, 2 missed, 0 wrong), the clean vocative was kept; completeness 19/19, 0 collateral edits. Hypothesis that CP-IMPL-4 fixes the pair is NOT confirmed (one trial, causes untested). 0/3 chapters accepted; P7 not started.
+- Next action: owner quyết định hướng sau kết quả chunk 005: cho phép thiết kế offline (không live) một khối ứng viên xưng hô tất định đưa vào request — liệt kê, trong lượt thoại thuộc phạm vi hàng pronoun, từng chỗ RAW/DRAFT mà hàng đó chi phối — rồi kiểm lại bằng cùng selector và bộ đối chứng; hoặc đổi hướng. Không chạy live thêm trước quyết định; sổ `C1-SINGLE5-20261009` còn USD 0.00798775 nhưng không phải quyền chi.
+
 ## Current state — 2026-10-09 (single-chunk 005 offline preparation done)
 
 - Baseline HEAD `0e0ebd8c`; this package adds `EditorialSingleChunkProbe` (7-field selector with typed refusals, one-call provider), `EditorialPairRunService.executeOnly` (no retry, refuses a non-unsent pair), runner `p6_only_*` args (mode `CHUNK_SINGLE`), and `scripts/chunk/chunk_completeness.py`. The product `execute` flow is unchanged.
