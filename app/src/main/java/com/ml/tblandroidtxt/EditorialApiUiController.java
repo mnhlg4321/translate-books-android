@@ -128,7 +128,7 @@ final class EditorialApiUiController {
 
     void newCombo() {
         combo = new EditorialApiCombo();
-        combo.sourceKind = EditorialPairModels.SOURCE_JOB;
+        combo.sourceKind = EditorialPairModels.SOURCE_FILES; // two files are the main source; a translation job is the other choice
         form = null;
         combo.settingsJson = new EditorialApiCombo.Settings().toJson();
         screen = Screen.COMBO;
