@@ -581,3 +581,7 @@ Cùng một phép thử: chương 007, chunk 005 (RAW P061–P079), `openai/gpt-
     - chi tiêu dự kiến (~1 200 token ra mỗi lời gọi, theo C1.5): ≈ USD 0.034;
     - đỉnh phơi nhiễm khi giữ chỗ tuần tự: ≈ đã chi + USD 0.006 mỗi lời gọi.
     - Trần D-C6 USD 0.03 không đủ → cần D-C6b.
+- 2026-10-10 — owner duyệt **D-C6b** (chat: "duyệt"):
+  - **Phạm vi:** live lại chỉ chương 006 bằng build `4.18-c6.4` từ `12143ce9` (sàn đầu ra 4096), `openai/gpt-5.6-luna` reasoning medium, sổ mới `C6B-<date>` trần **USD 0.06**, chỉ `emulator-5554`. Chạy một lượt mới từ đầu, không tiếp tục lượt cũ.
+  - **Điều kiện trước live:** C6.6 xong — đóng sổ `C6-20261010` bằng bản ghi append-only có kiểm (chi phí OpenRouter USD 0.0024366); build + test thiết bị tập trung PASS; fake 006 trên host xác nhận `max_tokens` ≥ 4096 cho mọi lời gọi.
+  - **Dừng và báo nếu:** ước tính vượt trần, UNKNOWN cost, lỗi hạ tầng, hoặc lời gọi đầu tiên lại không có câu trả lời.
