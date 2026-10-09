@@ -139,6 +139,7 @@ public final class EditorialPairC6CorpusMeasurementTest {
         assertTrue("no-op fake output must equal source DRAFT byte for byte", java.util.Arrays.equals(sourceBytes,
                 noOp.output.text.getBytes(StandardCharsets.UTF_8)));
         assertNoPointChunksWereDispatched(chapter.preview, noOp.provider.requests.size());
+        assertEachCallSendsTheOutputFloor(noOp.provider);
 
         FakeExecution oneEdit = executeFake(chapter, target);
         assertTrue("one-edit run must produce an exportable candidate", oneEdit.output != null && oneEdit.output.complete);
@@ -148,10 +149,19 @@ public final class EditorialPairC6CorpusMeasurementTest {
         assertTrue("only the selected fix-point line may change", java.util.Arrays.equals(expected.getBytes(StandardCharsets.UTF_8),
                 oneEdit.output.text.getBytes(StandardCharsets.UTF_8)));
         assertNoPointChunksWereDispatched(chapter.preview, oneEdit.provider.requests.size());
+        assertEachCallSendsTheOutputFloor(oneEdit.provider);
         System.out.printf(java.util.Locale.ROOT,
                 "C6 fake006 noOpCalls=%d oneEditCalls=%d points=%d noPointChunks=%d byteExact=true oneTargetLine=true usd=0%n",
                 noOp.provider.requests.size(), oneEdit.provider.requests.size(), chapter.preview.fixPointCount,
                 chapter.preview.rows.size() - chapter.preview.chunksWithFixPoints);
+    }
+
+    /** C6.6: a reasoning model must get at least the shared 4096-token output ceiling on every targeted call. */
+    private static void assertEachCallSendsTheOutputFloor(FakeEditorialApiProvider provider) {
+        assertEquals("one max_tokens value per call", provider.requests.size(), provider.maxOutputTokens.size());
+        for (int maxTokens : provider.maxOutputTokens) {
+            assertTrue("max_tokens " + maxTokens + " is below the 4096 floor", maxTokens >= 4096);
+        }
     }
 
     private static PrivateChapter006 loadPrivate006(Path inputRoot) throws Exception {

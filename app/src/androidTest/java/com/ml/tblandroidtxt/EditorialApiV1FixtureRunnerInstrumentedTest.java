@@ -317,6 +317,9 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         if (!fixtureId.matches("fx-[ah][0-9]{2}")) throw new IllegalArgumentException("P6_FIXTURE_ID_INVALID");
         boolean live = "YES".equalsIgnoreCase(args.getString("p6_fixture_live", ""));
         Context context = ApplicationProvider.getApplicationContext();
+        // C6.6: the provider writes one provider_usage line per call (input, output, reasoning, provider cost) to the runtime log,
+        // which the run evidence reads back; the activity that normally starts it is not part of the instrumented run.
+        ObservabilityLog.initialize(context);
         AppSettings settings = SettingsStore.load(context).copy();
         if (live) {
             String preflight = EditorialP6FixtureLivePreflight.check(settings, args.getString("p6_expected_endpoint_account_fingerprint", ""));
