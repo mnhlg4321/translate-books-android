@@ -148,4 +148,19 @@ public final class TargetedFixPipelineTest {
             assertEquals("FIX_POINT_WITHOUT_RULE", expected.getMessage());
         }
     }
+
+    @Test public void outputReserveScalesWithTheTargetNotTheWholeChapterAndIsBounded() {
+        FixPoint small = point(1, Type.KANA, 0, "line", "RAW");
+        int smallLimit = TargetedFixPrompt.maxOutputTokens(List.of(small));
+        FixPoint large = point(2, Type.KANA, 0, "x".repeat(20_000), "RAW".repeat(5_000));
+        int largeLimit = TargetedFixPrompt.maxOutputTokens(List.of(large));
+        assertEquals(128, smallLimit);
+        assertEquals(4096, largeLimit);
+        try {
+            TargetedFixPrompt.maxOutputTokens(List.of());
+            fail("a no-point chunk has no output reserve");
+        } catch (IllegalArgumentException expected) {
+            assertEquals("TARGETED_PROMPT_NO_POINTS", expected.getMessage());
+        }
+    }
 }

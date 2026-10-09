@@ -62,7 +62,8 @@ public final class EditorialPairPresenterTest {
         assertTrue(warnings.get(1).startsWith("Không dùng Pronoun"));
         assertEquals("2 đoạn", EditorialPairPresenter.previewTotals(none));
         EditorialPairPreview with = preview(job(draft), "花子\tHanako\tname\t\n", "from,speaker,target,self,call,scope,note\n花子,花子,太郎,tôi,anh,*,\n");
-        assertTrue(with.warnings.isEmpty());
+        assertFalse(with.warnings.contains("NO_GLOSSARY"));
+        assertFalse(with.warnings.contains("NO_PRONOUN"));
         assertEquals(1, with.rows.get(0).glossaryEntries);
         assertEquals(1, with.rows.get(0).pronounRows);
     }
@@ -80,10 +81,12 @@ public final class EditorialPairPresenterTest {
     }
 
     @Test public void theCostLineNamesThePairCountAndTheCapAndIsHonestThatTheCapIsPerCall() {
-        EditorialPairPreview p = preview(job(List.of(EditorialPairRunServiceTest.draftRow(1), EditorialPairRunServiceTest.draftRow(2))), "", "");
+        List<String> draft = List.of(EditorialPairRunServiceTest.draftRow(1).replace("dòng 3:", "dòng 3: かな"),
+                EditorialPairRunServiceTest.draftRow(2).replace("dòng 3:", "dòng 3: かな"));
+        EditorialPairPreview p = preview(job(draft), "", "");
         String line = EditorialPairPresenter.costLine(p, new BigDecimal("0.00000025"), new BigDecimal("0.0000012"), new BigDecimal("0.05"));
         assertTrue(line, line.startsWith("Ước tính chi phí: khoảng USD "));
-        assertTrue(line.contains("2 lượt gọi"));
+        assertTrue(line.contains("2 lượt gọi / 2 điểm sửa"));
         assertTrue(line.contains("trần USD 0.05"));
         assertTrue(line.contains("giữ chỗ chi phí trước khi gửi"));
     }
@@ -109,7 +112,7 @@ public final class EditorialPairPresenterTest {
         List<PairItem> items = List.of(item(1, PairState.ACCEPTED), item(2, PairState.WARN_REVIEW), item(3, PairState.STRUCTURE_BLOCKED), item(4, PairState.UNKNOWN));
         PairRun run = run(RunState.UNKNOWN);
         List<String> lines = EditorialPairPresenter.statusLines(run, items);
-        assertEquals("Cấu trúc: 1 đoạn đạt, 1 có cảnh báo, 1 bị chặn, 1 không rõ, trên tổng 4 đoạn.", lines.get(0));
+        assertEquals("Cấu trúc: 1 đoạn qua kiểm, 0 không có điểm sửa, 1 có cảnh báo, 1 bị chặn, 1 không rõ, trên tổng 4 đoạn.", lines.get(0));
         assertEquals("Nghĩa: chưa được chấm. Ghép thành công không có nghĩa là bản dịch đúng.", lines.get(1));
         assertTrue(lines.get(2).startsWith("Lưu và xuất: tiến độ đã lưu"));
         run.costKnown = false;

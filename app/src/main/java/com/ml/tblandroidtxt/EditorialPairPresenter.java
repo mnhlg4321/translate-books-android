@@ -72,6 +72,7 @@ final class EditorialPairPresenter {
             case "NO_PRONOUN": return "Không dùng Pronoun: cách xưng hô giữ như trong DRAFT.";
             case "REFERENCE_CONFLICT": return arg + " chỗ có quy tắc xưng hô mâu thuẫn trong cùng phạm vi. Ứng dụng không tự chọn; model được dặn giữ cách xưng hô của DRAFT ở đó.";
             case "SCOPE_INVALID": return arg + " dòng Pronoun có phạm vi áp dụng sai nên bị bỏ qua.";
+            case "AMBIGUOUS_GLOSSARY_SPLIT": return arg + " điểm Glossary nằm trong câu RAW ghép với nhiều dòng DRAFT; ứng dụng không tự gán vào một dòng.";
             default: return code;
         }
     }
@@ -161,7 +162,10 @@ final class EditorialPairPresenter {
 
     static String previewRow(EditorialPairPreview.Row row) {
         String state = row.missing ? "Thiếu bản dịch" : row.tooLong ? "Quá dài" : "Sẵn sàng";
-        return "Đoạn " + row.ordinal + " • RAW " + row.rawChars + " chữ • DRAFT " + row.draftChars + " chữ • " + state;
+        String points = row.missing ? "" : row.fixPointCount == 0 ? " • không có điểm sửa, không gọi API"
+                : " • " + row.fixPointCount + " điểm sửa (xưng hô " + row.addressPoints + ", glossary " + row.glossaryPoints
+                + ", kana " + row.kanaPoints + ", thiếu " + row.missingPoints + ") • 1 lượt gọi";
+        return "Đoạn " + row.ordinal + " • RAW " + row.rawChars + " chữ • DRAFT " + row.draftChars + " chữ • " + state + points;
     }
 
     static String previewTotals(EditorialPairPreview preview) {
@@ -170,17 +174,18 @@ final class EditorialPairPresenter {
                 + (preview.runnable() ? "" : " • chưa thể chạy");
     }
 
-    /** Rough estimate: every pair sends its prompt and gets back about its own text. The cap is enforced per call, not from this. */
+    /** Rough estimate: only pairs with app-detected points are sent; the cap is enforced per call, not from this. */
     static String costLine(EditorialPairPreview preview, BigDecimal inputPerToken, BigDecimal outputPerToken, BigDecimal capUsd) {
         long in = 0;
         long out = 0;
         for (EditorialPairPreview.Row r : preview.rows) {
-            if (r.missing) continue;
+            if (r.missing || r.fixPointCount == 0) continue;
             in += r.estimatedInputTokens;
-            out += Math.max(1, r.draftChars / 2);
+            out += r.estimatedOutputTokens;
         }
         BigDecimal usd = inputPerToken.multiply(BigDecimal.valueOf(in)).add(outputPerToken.multiply(BigDecimal.valueOf(out))).setScale(3, RoundingMode.UP);
-        return "Ước tính chi phí: khoảng " + EditorialApiPresenter.usd(usd) + " cho " + preview.rows.size() + " lượt gọi (trần " + EditorialApiPresenter.usd(capUsd)
+        return "Ước tính chi phí: khoảng " + EditorialApiPresenter.usd(usd) + " cho " + preview.chunksWithFixPoints + " lượt gọi / "
+                + preview.fixPointCount + " điểm sửa trên " + preview.rows.size() + " đoạn (trần " + EditorialApiPresenter.usd(capUsd)
                 + " cho cả lần chạy; mỗi lượt được giữ chỗ chi phí trước khi gửi)";
     }
 
@@ -227,13 +232,16 @@ final class EditorialPairPresenter {
         int warned = 0;
         int blocked = 0;
         int unknown = 0;
+        int noFixPoints = 0;
         for (PairItem i : items) {
-            if (i.state == PairState.ACCEPTED) accepted++;
+            if (i.state == PairState.ACCEPTED && isNoFixPoints(i)) noFixPoints++;
+            else if (i.state == PairState.ACCEPTED) accepted++;
             else if (i.state == PairState.WARN_REVIEW) warned++;
             else if (i.state == PairState.STRUCTURE_BLOCKED || i.state == PairState.REJECTED) blocked++;
             else if (i.state == PairState.UNKNOWN) unknown++;
         }
-        out.add("Cấu trúc: " + accepted + " đoạn đạt, " + warned + " có cảnh báo, " + blocked + " bị chặn, " + unknown + " không rõ, trên tổng " + items.size() + " đoạn.");
+        out.add("Cấu trúc: " + accepted + " đoạn qua kiểm, " + noFixPoints + " không có điểm sửa, " + warned + " có cảnh báo, "
+                + blocked + " bị chặn, " + unknown + " không rõ, trên tổng " + items.size() + " đoạn.");
         out.add("Nghĩa: chưa được chấm. Ghép thành công không có nghĩa là bản dịch đúng.");
         out.add(run.state == RunState.FINAL_ELIGIBLE
                 ? "Lưu và xuất: đã lưu, mở lại được; có thể xuất bản ghép."
@@ -247,6 +255,15 @@ final class EditorialPairPresenter {
         if (EditorialPairRunService.isActive(run.id)) return false;
         for (PairItem i : items) if (i.state == PairState.E_RESERVED || i.state == PairState.E_SENT) return true;
         return false;
+    }
+
+    static boolean isNoFixPoints(PairItem item) {
+        return item != null && item.state == PairState.ACCEPTED && item.gateJson != null && item.gateJson.contains("\"status\":\"NO_FIX_POINTS\"");
+    }
+
+    static String pairState(PairItem item) {
+        if (isNoFixPoints(item)) return "Không có điểm sửa; giữ nguyên DRAFT, không gọi API";
+        return item == null ? "" : pairState(item.state);
     }
 
     // ---- gate codes in plain words
@@ -293,6 +310,34 @@ final class EditorialPairPresenter {
             }
         } catch (Exception unreadable) {
             // a column that cannot be read shows no codes
+        }
+        return out;
+    }
+
+    /** Per-point evidence saved with the local run; not a semantic verdict. */
+    static List<String> fixPointLines(PairItem item) {
+        List<String> out = new ArrayList<>();
+        try {
+            JSONArray points = new JSONObject(item.gateJson).optJSONArray("fixPoints");
+            if (points == null) return out;
+            for (int i = 0; i < points.length(); i++) {
+                JSONObject point = points.getJSONObject(i);
+                JSONArray types = point.optJSONArray("types");
+                List<String> labels = new ArrayList<>();
+                if (types != null) for (int j = 0; j < types.length(); j++) labels.add(types.optString(j));
+                out.add("Điểm " + point.optInt("id") + " • " + String.join("/", labels) + " • " + point.optString("status")
+                        + " (" + point.optString("reason") + ")");
+                String raw = point.optString("raw");
+                if (!raw.isEmpty()) out.add("RAW: " + raw);
+                JSONArray rules = point.optJSONArray("rules");
+                if (rules != null) for (int j = 0; j < rules.length(); j++) out.add("Luật: " + rules.optString(j));
+                String before = point.optString("before");
+                if (!before.isEmpty()) out.add("DRAFT: " + before);
+                String after = point.optString("after");
+                if (!after.isEmpty() && !after.equals(before)) out.add("App: " + after);
+            }
+        } catch (Exception unreadable) {
+            // a malformed diagnostic is not a reason to hide the rest of the stored result
         }
         return out;
     }

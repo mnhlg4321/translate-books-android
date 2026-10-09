@@ -97,6 +97,20 @@ public final class InMemoryPairRunStore implements EditorialPairRunStore {
         writes++;
     }
 
+    @Override public synchronized void commitNoFixPoints(long runId, String pairId, String unchangedText, String detailsJson) {
+        PairItem i = live(runId, pairId);
+        if (i.state != PairState.IMPORTED) throw new IllegalStateException("NO_FIX_ONLY_WHEN_IMPORTED");
+        if (!PairStates.canMove(PairState.IMPORTED, PairState.ACCEPTED)) throw new IllegalStateException("NO_FIX_MOVE_NOT_ALLOWED");
+        i.state = PairState.ACCEPTED;
+        i.candidateText = unchangedText == null ? "" : unchangedText;
+        i.responseText = "";
+        i.gateJson = detailsJson == null ? "{}" : detailsJson;
+        i.responseHash = "";
+        i.calls = 0; i.inputTokens = 0; i.outputTokens = 0; i.usd = BigDecimal.ZERO; i.costKnown = true; i.error = "";
+        journal.add(runId + " " + pairId + " NO_FIX_POINTS");
+        writes++;
+    }
+
     @Override public synchronized void bumpAttempt(long runId, String pairId, int attempt, String requestId) {
         PairItem i = live(runId, pairId);
         if (i.state != PairState.E_SENT) throw new IllegalStateException("BUMP_ONLY_WHEN_SENT");

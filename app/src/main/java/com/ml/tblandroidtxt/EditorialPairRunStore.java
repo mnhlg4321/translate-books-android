@@ -39,6 +39,9 @@ public interface EditorialPairRunStore {
     /** Moves the item between two states the contract allows and writes the journal line. */
     void setItemState(long runId, String pairId, PairState from, PairState to, int attempt, String requestId, String journalEvent);
 
+    /** Commits a zero-call, unchanged DRAFT pair whose deterministic scan found no repair point. */
+    void commitNoFixPoints(long runId, String pairId, String unchangedText, String detailsJson);
+
     /** Another attempt of an item already in E_SENT after a call that provably never billed. */
     void bumpAttempt(long runId, String pairId, int attempt, String requestId);
 

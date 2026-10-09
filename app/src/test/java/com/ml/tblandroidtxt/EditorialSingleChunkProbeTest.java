@@ -39,8 +39,8 @@ public final class EditorialSingleChunkProbeTest {
         java.util.List<String> raw = new java.util.ArrayList<>();
         java.util.List<String> draft = new java.util.ArrayList<>();
         for (int i = 1; i <= ROWS; i++) {
-            raw.add("第" + i + "章の本文です。花子は太郎に言った。\n\n「今日は静かな夜だね。」と花子は笑った。\n\n");
-            draft.add("Hàng " + i + ", đoạn 1: nội dung bản nháp có đủ chữ để cổng cấu trúc đo.\n\nHàng " + i + ", đoạn 2: nội dung bản nháp có đủ chữ để cổng cấu trúc đo.\n\n");
+            raw.add("第" + i + "章の本文です。「花子は太郎に言った。」\n\n「今日は静かな夜だね。」と花子は笑った。\n\n");
+            draft.add("Hàng " + i + ", đoạn 1: 「cậu có đủ chữ かな để cổng cấu trúc đo。」\n\nHàng " + i + ", đoạn 2: nội dung bản nháp có đủ chữ để cổng cấu trúc đo.\n\n");
         }
         return new EditorialPairSource(EditorialPairModels.SOURCE_JOB, "7", "truyen.txt", "", raw, draft, java.util.List.of());
     }
@@ -81,7 +81,10 @@ public final class EditorialSingleChunkProbeTest {
     }
 
     private static FakeEditorialApiProvider echo() {
-        return new FakeEditorialApiProvider((request, index) -> FakeEditorialApiProvider.edited(EditorialPairTestData.draftPart(request)));
+        return new FakeEditorialApiProvider((request, index) -> request.prompt().user().contains("# NUMBERED FIX POINTS\n")
+                ? new EditorialApiFlow.StepResponse(EditorialPairTestData.targetedAnswer(request, index, (i, d) -> "="), "stop", 100, 100,
+                        new BigDecimal("0.0001"), true, "fake-model", "fake-route", "")
+                : FakeEditorialApiProvider.edited(EditorialPairTestData.draftPart(request)));
     }
 
     @Test public void onlyTheSelectedChunkIsSentAndTheOthersStayUnsent() throws Exception {
@@ -113,7 +116,7 @@ public final class EditorialSingleChunkProbeTest {
         assertFalse(svc.exportPlan(run.id).complete);
         // the request asked for exactly the draft of the selected chunk
         PairMap map = EditorialPairSnapshot.of(run).map;
-        assertEquals(PairText.trim(map.draftText(chunk(map, TARGET))), EditorialPairTestData.draftPart(fake.requests.get(0)));
+        assertTrue(fake.requests.get(0).prompt().user().contains(PairText.trim(map.draftText(chunk(map, TARGET)))));
     }
 
     @Test public void theSingleRequestIsTheOneTheFullRunBuildsForThatChunk() throws Exception {
@@ -135,10 +138,9 @@ public final class EditorialSingleChunkProbeTest {
         assertEquals("system (core, glossary, pronoun rows, labels, output contract)", expected.system(), actual.system());
         assertEquals("user (RAW part, RAW/DRAFT context, DRAFT part)", expected.user(), actual.user());
         assertEquals(full.maxOutputTokens.get(TARGET - 1), single.maxOutputTokens.get(0));
-        assertTrue("the partial pronoun row and its paragraph labels reach the chunk", actual.system().contains("[áp dụng đoạn P"));
-        assertTrue(actual.user().contains("⟦P"));
-        assertTrue("glossary reaches the chunk", actual.system().contains("Hanako"));
-        assertTrue("neighbouring text is reference only", actual.user().contains("REFERENCE ONLY"));
+        assertTrue("the deterministic point types reach the request", actual.user().contains("KANA"));
+        assertTrue(actual.user().contains("# NUMBERED FIX POINTS"));
+        assertTrue("neighbouring text is read-only", actual.user().contains("RAW CONTEXT BEFORE (read-only)"));
     }
 
     @Test public void aFailureOrUnknownOutcomeNeverTriggersASecondRequest() throws Exception {
@@ -235,7 +237,9 @@ public final class EditorialSingleChunkProbeTest {
 
     @Test public void theFullRunStillSendsEveryChunkAndRetriesAClearFailureOnce() throws Exception {
         FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> index == 0
-                ? EditorialApiFlow.StepResponse.failure("HTTP_500") : FakeEditorialApiProvider.edited(EditorialPairTestData.draftPart(request)));
+                ? EditorialApiFlow.StepResponse.failure("HTTP_500")
+                : new EditorialApiFlow.StepResponse(EditorialPairTestData.targetedAnswer(request, index, (i, d) -> "="), "stop", 100, 100,
+                        new BigDecimal("0.0001"), true, "fake-model", "fake-route", ""));
         EditorialPairRunService svc = service(fake);
         PairRun run = prepare(svc);
         PairRun done = svc.execute(run.id, null);

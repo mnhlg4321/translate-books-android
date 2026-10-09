@@ -1,6 +1,7 @@
 package com.ml.tblandroidtxt;
 
 import com.ml.tblandroidtxt.EditorialPairModels.PairRun;
+import com.ml.tblandroidtxt.editorial.api.EditorialApiFlow;
 import com.ml.tblandroidtxt.editorial.api.chunk.ChunkPlan;
 import com.ml.tblandroidtxt.editorial.api.PairStates.RunState;
 
@@ -37,7 +38,7 @@ public final class EditorialPairFilesFlowTest {
     private static String draft(int lines) {
         StringBuilder sb = new StringBuilder();
         for (int k = 1; k <= lines; k++) {
-            String body = "Đây là câu văn thứ " + k + ", phần giải thích ngắn tiếp theo trong đoạn.";
+            String body = "Đây là câu văn thứ " + k + ", phần giải thích ngắn かな tiếp theo trong đoạn.";
             sb.append(k % 4 == 0 ? "「" + body + "」" : body).append('\n');
             if (k % 5 == 0) sb.append('\n');
         }
@@ -84,8 +85,9 @@ public final class EditorialPairFilesFlowTest {
         String r = raw(80);
         String d = draft(80);
         EditorialPairSourceLoader.FilesLoad load = plan(r, d, new AppSettings());
-        FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> FakeEditorialApiProvider.text(
-                "<EDITED>" + EditorialPairTestData.draftPart(request) + "</EDITED>", "stop"));
+        FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> new EditorialApiFlow.StepResponse(
+                EditorialPairTestData.targetedAnswer(request, index, (i, draftLine) -> "="), "stop", 100, 100,
+                new BigDecimal("0.0001"), true, "fake-model", "fake-route", ""));
         InMemoryPairRunStore store = new InMemoryPairRunStore();
         EditorialPairRunService service = new EditorialPairRunService(store, fake, PRICING, 60_000L);
         PairRun prepared = service.prepare(1, load.source, "", "", null, "model-x", "Vietnamese", new BigDecimal("0.05"), "C");
@@ -99,8 +101,9 @@ public final class EditorialPairFilesFlowTest {
 
     @Test public void theContextAroundEachChunkComesFromThePlanAndIsWholeLines() throws Exception {
         EditorialPairSourceLoader.FilesLoad load = plan(raw(80), draft(80), new AppSettings());
-        FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> FakeEditorialApiProvider.text(
-                "<EDITED>" + EditorialPairTestData.draftPart(request) + "</EDITED>", "stop"));
+        FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> new EditorialApiFlow.StepResponse(
+                EditorialPairTestData.targetedAnswer(request, index, (i, draftLine) -> "="), "stop", 100, 100,
+                new BigDecimal("0.0001"), true, "fake-model", "fake-route", ""));
         EditorialPairRunService service = new EditorialPairRunService(new InMemoryPairRunStore(), fake, PRICING, 60_000L);
         service.execute(service.prepare(1, load.source, "", "", null, "m", "Vietnamese", new BigDecimal("0.05"), "C").id, null);
         String second = fake.requests.get(1).prompt().user();

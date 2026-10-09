@@ -23,7 +23,7 @@ public final class PairStates {
     private static final Map<PairState, Set<PairState>> MOVES = new EnumMap<>(PairState.class);
 
     static {
-        MOVES.put(PairState.IMPORTED, EnumSet.of(PairState.E_RESERVED, PairState.RESERVE_FAILED, PairState.UNKNOWN));
+        MOVES.put(PairState.IMPORTED, EnumSet.of(PairState.E_RESERVED, PairState.RESERVE_FAILED, PairState.UNKNOWN, PairState.ACCEPTED));
         MOVES.put(PairState.E_RESERVED, EnumSet.of(PairState.E_SENT, PairState.IMPORTED));
         MOVES.put(PairState.E_SENT, EnumSet.of(PairState.E_RECEIVED, PairState.UNKNOWN));
         MOVES.put(PairState.E_RECEIVED, EnumSet.of(PairState.STRUCTURE_BLOCKED, PairState.WARN_REVIEW, PairState.ACCEPTED));

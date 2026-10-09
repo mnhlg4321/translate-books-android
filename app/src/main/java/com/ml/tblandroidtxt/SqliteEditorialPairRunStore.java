@@ -291,6 +291,33 @@ public final class SqliteEditorialPairRunStore implements EditorialPairRunStore,
         }
     }
 
+    @Override public void commitNoFixPoints(long runId, String pairId, String unchangedText, String detailsJson) {
+        SQLiteDatabase db = db();
+        db.beginTransaction();
+        try {
+            if (stateOf(db, runId, pairId) != PairState.IMPORTED) throw new IllegalStateException("NO_FIX_ONLY_WHEN_IMPORTED");
+            if (!PairStates.canMove(PairState.IMPORTED, PairState.ACCEPTED)) throw new IllegalStateException("NO_FIX_MOVE_NOT_ALLOWED");
+            ContentValues v = new ContentValues();
+            v.put("state", PairState.ACCEPTED.name());
+            v.put("candidate_text", unchangedText == null ? "" : unchangedText);
+            v.put("response_text", "");
+            v.put("gate_json", detailsJson == null ? "{}" : detailsJson);
+            v.put("response_hash", "");
+            v.put("calls", 0);
+            v.put("input_tokens", 0);
+            v.put("output_tokens", 0);
+            v.put("usd", "0");
+            v.put("cost_known", 1);
+            v.put("error", "");
+            v.put("updated_at", System.currentTimeMillis());
+            db.update(EditorialPairMigrationSpec.ITEMS, v, "run_id=? AND pair_id=?", new String[] {String.valueOf(runId), pairId});
+            journal(db, runId, pairId, "NO_FIX_POINTS");
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
     @Override public void bumpAttempt(long runId, String pairId, int attempt, String requestId) {
         SQLiteDatabase db = db();
         db.beginTransaction();

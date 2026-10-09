@@ -29,9 +29,11 @@ public final class EditorialPairSnapshot {
     public final PairMap map;
     /** Reference-only context around each pair: from the chunk plan (Performance setting) or the default. */
     public final PairPromptBuilder.ContextPolicy context;
+    /** Persisted CS-1 alignment when the source was planned from paired files. */
+    public final ChunkPlan chunkPlan;
 
     private EditorialPairSnapshot(List<String> rawRows, List<String> draftRows, List<EditInputs.GlossaryEntry> glossary, String pronounText,
-                                  Set<String> cueFields, PairMap map, PairPromptBuilder.ContextPolicy context) {
+                                  Set<String> cueFields, PairMap map, PairPromptBuilder.ContextPolicy context, ChunkPlan chunkPlan) {
         this.rawRows = rawRows;
         this.draftRows = draftRows;
         this.glossary = glossary;
@@ -39,6 +41,7 @@ public final class EditorialPairSnapshot {
         this.cueFields = cueFields;
         this.map = map;
         this.context = context;
+        this.chunkPlan = chunkPlan;
     }
 
     public static EditorialPairSnapshot of(PairRun run) {
@@ -47,10 +50,12 @@ public final class EditorialPairSnapshot {
         PairMap map = PairMaps.fromJobRows(run.chapterId, "raw:" + run.sourceRef, "draft:" + run.sourceRef, raw, draft);
         if (!run.mapHash.isEmpty() && !run.mapHash.equals(map.mapHash())) throw new Mismatch("map hash differs from the stored run");
         PairPromptBuilder.ContextPolicy context = PairPromptBuilder.ContextPolicy.DEFAULT;
+        ChunkPlan chunkPlan = null;
         if (run.chunkPlanJson != null && !run.chunkPlanJson.isEmpty()) {
-            context = new PairPromptBuilder.ContextPolicy(ChunkPlan.fromJson(run.chunkPlanJson).limits.contextChars(), context.minLines());
+            chunkPlan = ChunkPlan.fromJson(run.chunkPlanJson);
+            context = new PairPromptBuilder.ContextPolicy(chunkPlan.limits.contextChars(), context.minLines());
         }
-        return new EditorialPairSnapshot(raw, draft, glossaryFrom(run.glossaryText), run.pronounText, cues(run.cueFields), map, context);
+        return new EditorialPairSnapshot(raw, draft, glossaryFrom(run.glossaryText), run.pronounText, cues(run.cueFields), map, context, chunkPlan);
     }
 
     public static String rowsJson(List<String> rows) {

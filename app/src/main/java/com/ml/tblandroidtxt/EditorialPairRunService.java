@@ -15,6 +15,11 @@ import com.ml.tblandroidtxt.editorial.api.PairStates;
 import com.ml.tblandroidtxt.editorial.api.PairStates.PairState;
 import com.ml.tblandroidtxt.editorial.api.PairText;
 import com.ml.tblandroidtxt.editorial.api.StructuralGate;
+import com.ml.tblandroidtxt.editorial.api.fix.FixPoint;
+import com.ml.tblandroidtxt.editorial.api.fix.FixPointFinder;
+import com.ml.tblandroidtxt.editorial.api.fix.TargetedFixApplier;
+import com.ml.tblandroidtxt.editorial.api.fix.TargetedFixParser;
+import com.ml.tblandroidtxt.editorial.api.fix.TargetedFixPrompt;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -29,7 +34,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Runs the chunk-pair edit on a frozen snapshot: one request per pair (arm C) or one for the whole chapter (arm W), each one
+ * Runs the chunk-pair edit on a frozen snapshot: at most one request per flagged pair (arm C) or one for the whole chapter (arm W), each one
  * reserved in the ledger before it is dispatched and journalled before it is sent. Nothing is sent twice: a pair that may have
  * reached the provider becomes UNKNOWN and stays so, a pair already received is never asked again, and a restart reads the
  * journal instead of guessing. The model only returns text; hashes, ids, counts, gates and receipts are the app's.
@@ -234,11 +239,21 @@ public final class EditorialPairRunService {
     private boolean dispatch(PairRun run, EditorialPairSnapshot snapshot, PairItem item, Listener listener, int maxAttempts) {
         boolean whole = WHOLE_PAIR_ID.equals(item.pairId);
         PairMap.Entry entry = whole ? null : snapshot.map.entry(item.pairId);
-        ApiPrompt prompt = whole
+        String draftRange = whole ? wholeDraft(snapshot.map) : snapshot.map.draftText(entry);
+        FixPointFinder.Result fixes = null;
+        boolean targeted = !whole && EditorialPairModels.ARM_CHUNK.equals(run.arm);
+        if (targeted) {
+            fixes = FixPointFinder.find(snapshot.map, entry, snapshot.glossary, snapshot.pronounText, snapshot.cueFields, snapshot.chunkPlan);
+            if (fixes.points().isEmpty()) {
+                store.commitNoFixPoints(run.id, item.pairId, draftRange, noFixPointsJson(fixes));
+                if (listener != null) listener.onPair(run, store.item(run.id, item.pairId));
+                return false;
+            }
+        }
+        ApiPrompt prompt = targeted ? targetedPrompt(snapshot, entry, fixes.points(), run.targetLanguage) : whole
                 ? PairPromptBuilder.buildWhole(snapshot.map, run.targetLanguage, snapshot.glossary, snapshot.pronounText, snapshot.cueFields)
                 : PairPromptBuilder.buildPair(snapshot.map, entry, run.targetLanguage, snapshot.glossary, snapshot.pronounText, snapshot.cueFields, snapshot.context);
-        String draftRange = whole ? wholeDraft(snapshot.map) : snapshot.map.draftText(entry);
-        int maxOut = OpenRouterEditorialApiProvider.editMaxOutputTokens(draftRange.length());
+        int maxOut = targeted ? TargetedFixPrompt.maxOutputTokens(fixes.points()) : OpenRouterEditorialApiProvider.editMaxOutputTokens(draftRange.length());
         BigDecimal worst = pricing.inputPerToken(run.model).multiply(BigDecimal.valueOf(prompt.estimatedInputTokens()))
                 .add(pricing.outputPerToken(run.model).multiply(BigDecimal.valueOf(maxOut)));
         int calls = 0;
@@ -284,9 +299,104 @@ public final class EditorialPairRunService {
                 failNotBilled(run, item, calls, inTokens, outTokens, response.error(), requestId);
                 return true;
             }
-            return receive(run, item, prompt, draftRange, response, requestId, worst, calls, inTokens, outTokens, attempt);
+            return targeted
+                    ? receiveTargeted(run, item, draftRange, fixes.points(), snapshot.glossary, response, requestId, worst, calls, inTokens, outTokens, attempt)
+                    : receive(run, item, prompt, draftRange, response, requestId, worst, calls, inTokens, outTokens, attempt);
         }
         return false;
+    }
+
+    private static ApiPrompt targetedPrompt(EditorialPairSnapshot snapshot, PairMap.Entry entry, List<FixPoint> points, String language) {
+        int[] r = snapshot.map.rawRange(entry);
+        int[] d = snapshot.map.draftRange(entry);
+        return TargetedFixPrompt.build(language,
+                snapshot.map.raw.contextBeforeLines(r[0], snapshot.context.chars(), snapshot.context.minLines()), snapshot.map.rawText(entry),
+                snapshot.map.raw.contextAfterLines(r[1], snapshot.context.chars(), snapshot.context.minLines()),
+                snapshot.map.draft.contextBeforeLines(d[0], snapshot.context.chars(), snapshot.context.minLines()), snapshot.map.draftText(entry),
+                snapshot.map.draft.contextAfterLines(d[1], snapshot.context.chars(), snapshot.context.minLines()), points);
+    }
+
+    private boolean receiveTargeted(PairRun run, PairItem item, String draftRange, List<FixPoint> points,
+                                    List<com.ml.tblandroidtxt.editorial.api.EditInputs.GlossaryEntry> glossary,
+                                    EditorialApiFlow.StepResponse response, String requestId, BigDecimal worst,
+                                    int calls, long inTokens, long outTokens, int attempt) {
+        TargetedFixParser.Parsed parsed = TargetedFixParser.parse(response.content(), points);
+        TargetedFixApplier.Result applied = TargetedFixApplier.apply(draftRange, points, parsed, glossary);
+        boolean complete = applied.outcomes().size() == points.size();
+        boolean missing = false;
+        boolean rejected = false;
+        List<String> invalid = new ArrayList<>();
+        for (TargetedFixApplier.Outcome outcome : applied.outcomes()) {
+            if (outcome.status() == TargetedFixApplier.Status.NO_ANSWER) missing = true;
+            if (outcome.status() == TargetedFixApplier.Status.REJECTED) {
+                rejected = true;
+                invalid.add("id=" + outcome.point().id() + ":" + outcome.reason());
+            }
+        }
+        EditResponseParser.Status parseStatus = complete && !missing && !rejected
+                ? EditResponseParser.Status.OK : EditResponseParser.Status.FORMAT;
+        StructuralGate.Result gate = StructuralGate.check(new StructuralGate.Input(draftRange, applied.text(), parseStatus,
+                response.finishReason(), requestId, requestId, 0));
+        if (missing) gate = withCode(gate, new StructuralGate.Code("TARGETED", "TARGETED_ANSWER_MISSING", StructuralGate.Severity.BLOCK,
+                "one or more expected point ids were not returned"));
+        if (rejected) gate = withCode(gate, new StructuralGate.Code("TARGETED", "TARGETED_LINE_REJECTED", StructuralGate.Severity.BLOCK,
+                String.join(",", invalid)));
+        if (parsed.ignoredLines() > 0) gate = withCode(gate, new StructuralGate.Code("TARGETED", "TARGETED_IGNORED_LINES", StructuralGate.Severity.WARN,
+                parsed.ignoredLines() + " unrecognized response lines"));
+
+        PairItem done = new PairItem();
+        done.pairId = item.pairId;
+        done.state = PairStates.afterReceive(gate.status());
+        done.attempt = attempt;
+        done.requestId = requestId;
+        done.candidateText = applied.text();
+        done.responseText = response.content();
+        done.responseHash = PairText.sha256(response.content());
+        done.gateJson = gateJson(gate, applied.outcomes(), parsed.ignoredLines());
+        done.calls = calls;
+        done.inputTokens = inTokens;
+        done.outputTokens = outTokens;
+        done.error = rejected ? "TARGETED_LINE_REJECTED" : missing ? "TARGETED_ANSWER_MISSING" : "";
+        BigDecimal settled;
+        String reason;
+        boolean overrun = false;
+        if (response.costKnown()) {
+            done.usd = response.cost();
+            done.costKnown = true;
+            settled = response.cost();
+            reason = "ACTUAL";
+            overrun = response.cost().compareTo(worst) > 0;
+        } else {
+            done.usd = BigDecimal.ZERO;
+            done.costKnown = false;
+            settled = worst;
+            reason = "PRICE_UNKNOWN_RESERVED_AT_WORST";
+        }
+        store.commitReceived(run.id, done, requestId, settled, reason);
+        if (overrun) {
+            PairRun r = store.getRun(run.id);
+            r.costOverrun = true;
+            r.error = "COST_BOUND_EXCEEDED";
+            store.updateRun(r);
+            return true;
+        }
+        return done.state == PairState.STRUCTURE_BLOCKED;
+    }
+
+    private static StructuralGate.Result withCode(StructuralGate.Result gate, StructuralGate.Code extra) {
+        List<StructuralGate.Code> codes = new ArrayList<>(gate.codes());
+        codes.add(extra);
+        StructuralGate.Status status = extra.severity() == StructuralGate.Severity.BLOCK ? StructuralGate.Status.BLOCK
+                : gate.status() == StructuralGate.Status.PASS ? StructuralGate.Status.WARN : gate.status();
+        return new StructuralGate.Result(status, codes, gate.candidate(), gate.draftLetters(), gate.candidateLetters(), gate.draftLines(),
+                gate.candidateLines(), gate.verbatim(), gate.reflowOnly(), gate.internalLayoutFingerprint());
+    }
+
+    private static String noFixPointsJson(FixPointFinder.Result result) {
+        try {
+            return new JSONObject().put("status", "NO_FIX_POINTS").put("contract", PairContract.REVISION)
+                    .put("ambiguousGlossarySplits", result.ambiguousGlossarySplits()).put("fixPoints", new JSONArray()).toString();
+        } catch (JSONException impossible) { throw new IllegalStateException(impossible); }
     }
 
     private boolean receive(PairRun run, PairItem item, ApiPrompt prompt, String draftRange, EditorialApiFlow.StepResponse response, String requestId,
@@ -372,6 +482,25 @@ public final class EditorialPairRunService {
         } catch (JSONException impossible) {
             throw new IllegalStateException(impossible);
         }
+    }
+
+    private static String gateJson(StructuralGate.Result gate, List<TargetedFixApplier.Outcome> outcomes, int ignoredLines) {
+        try {
+            JSONObject root = new JSONObject(gateJson(gate));
+            root.put("ignoredResponseLines", ignoredLines);
+            JSONArray points = new JSONArray();
+            for (TargetedFixApplier.Outcome outcome : outcomes) {
+                FixPoint point = outcome.point();
+                JSONArray types = new JSONArray();
+                for (FixPoint.Type type : FixPoint.Type.values()) if (point.types().contains(type)) types.put(type.name());
+                points.put(new JSONObject().put("id", point.id()).put("types", types).put("status", outcome.status().name())
+                        .put("reason", outcome.reason()).put("draftLineIndex", point.draftLineIndex())
+                        .put("raw", point.rawText()).put("before", outcome.before()).put("after", outcome.after())
+                        .put("rules", new JSONArray(point.rules())));
+            }
+            root.put("fixPoints", points);
+            return root.toString();
+        } catch (JSONException impossible) { throw new IllegalStateException(impossible); }
     }
 
     // ---- run totals, final state, merge

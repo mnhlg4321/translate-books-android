@@ -60,7 +60,7 @@ final class EditorialPairPageFactory {
         card.addView(text(glossary, 14, a.TEXT, false), a.marginLP(-1, -2, 0, 6, 0, 0));
         card.addView(text(pronoun, 14, a.TEXT, false));
         EditorialApiCombo.Settings settings = c.combo.settings();
-        card.addView(text("Mỗi đoạn một lượt gọi; không có bước kiểm riêng. Mô hình: " + EditorialApiUiController.effectiveModel(c.combo, SettingsStore.load(a)), 13, a.MUTED, false),
+        card.addView(text("Chỉ đoạn có điểm theo luật mới gọi API; phần còn lại giữ nguyên DRAFT. Mô hình: " + EditorialApiUiController.effectiveModel(c.combo, SettingsStore.load(a)), 13, a.MUTED, false),
                 a.marginLP(-1, -2, 0, 6, 0, 0));
         EditorialApiModelPricing pricing = new EditorialApiModelPricing(SettingsStore.load(a).provider);
         String model = EditorialApiUiController.effectiveModel(c.combo, SettingsStore.load(a));
@@ -121,7 +121,7 @@ final class EditorialPairPageFactory {
         if (run != null) {
             card.addView(text(EditorialApiPresenter.usd(run.usd) + " • " + run.calls + " lượt gọi", 13, a.MUTED, false), a.marginLP(-1, -2, 0, 6, 0, 0));
             for (PairItem item : readItems(run.id)) {
-                card.addView(text("Đoạn " + item.ordinal + ": " + EditorialPairPresenter.pairState(item.state), 13, color(item.state), false), a.marginLP(-1, -2, 0, 0, 0, 2));
+                card.addView(text("Đoạn " + item.ordinal + ": " + EditorialPairPresenter.pairState(item), 13, color(item.state), false), a.marginLP(-1, -2, 0, 0, 0, 2));
             }
         }
         card.addView(text("Có thể rời màn này; tiến độ được lưu sau từng đoạn và không gửi lại đoạn đã xong.", 12, a.MUTED, false), a.marginLP(-1, -2, 0, 8, 0, 0));
@@ -193,9 +193,10 @@ final class EditorialPairPageFactory {
         LinearLayout box = a.card(12, a.FIELD, a.BORDER);
         box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(a.dp(10), a.dp(10), a.dp(10), a.dp(10));
-        box.addView(text("Đoạn " + item.ordinal + ": " + EditorialPairPresenter.pairState(item.state), 13, color(item.state), true));
+        box.addView(text("Đoạn " + item.ordinal + ": " + EditorialPairPresenter.pairState(item), 13, color(item.state), true));
         if (uncertain) box.addView(text("⚠ Đoạn chưa chắc: cách ghép RAW–DRAFT ở đây kém chắc hơn các đoạn khác.", 12, a.AMBER, false), a.marginLP(-1, -2, 0, 2, 0, 0));
         for (String line : EditorialPairPresenter.gateLines(item)) box.addView(text(line, 12, line.startsWith("Chặn") ? a.RED : a.AMBER, false), a.marginLP(-1, -2, 0, 2, 0, 0));
+        for (String line : EditorialPairPresenter.fixPointLines(item)) box.addView(text(line, 11, a.MUTED, false), a.marginLP(-1, -2, 0, 2, 0, 0));
         if (item.state == PairState.WARN_REVIEW) {
             LinearLayout decide = a.rowContainer();
             decide.addView(a.primaryButton("Chấp nhận", v -> p.resolve(item.pairId, true)), new LinearLayout.LayoutParams(0, a.dp(40), 1));

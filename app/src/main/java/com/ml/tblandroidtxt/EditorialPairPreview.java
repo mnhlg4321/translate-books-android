@@ -9,6 +9,9 @@ import com.ml.tblandroidtxt.editorial.api.ReferenceProjector;
 import com.ml.tblandroidtxt.editorial.api.SourceCheck;
 import com.ml.tblandroidtxt.editorial.api.ApiPrompt;
 import com.ml.tblandroidtxt.editorial.api.DocManifest;
+import com.ml.tblandroidtxt.editorial.api.fix.FixPoint;
+import com.ml.tblandroidtxt.editorial.api.fix.FixPointFinder;
+import com.ml.tblandroidtxt.editorial.api.fix.TargetedFixPrompt;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +34,14 @@ public final class EditorialPairPreview {
         public int partialRows;
         public int conflicts;
         public int estimatedInputTokens;
+        public int estimatedOutputTokens;
+        public int fixPointCount;
+        public int addressPoints;
+        public int glossaryPoints;
+        public int kanaPoints;
+        public int missingPoints;
+        public int ambiguousGlossarySplits;
+        public List<FixPoint> fixPoints = List.of();
         public String rawHead = "";
         public String draftHead = "";
     }
@@ -40,6 +51,8 @@ public final class EditorialPairPreview {
     public final List<String> blockers = new ArrayList<>();
     public final List<String> warnings = new ArrayList<>();
     public int missingCount;
+    public int fixPointCount;
+    public int chunksWithFixPoints;
 
     private EditorialPairPreview(PairMap map) { this.map = map; }
 
@@ -88,11 +101,32 @@ public final class EditorialPairPreview {
                 preview.missingCount++;
             } else {
                 try {
-                    ApiPrompt prompt = PairPromptBuilder.buildPair(map, e, "Vietnamese", glossary == null ? List.of() : glossary, pronounText, cueFields, context);
-                    row.glossaryEntries = prompt.glossaryEntries();
-                    row.pronounRows = prompt.pronounRows();
-                    row.estimatedInputTokens = (int) Math.min(Integer.MAX_VALUE, prompt.estimatedInputTokens());
-                    row.tooLong = prompt.estimatedInputTokens() > SourceCheck.MAX_ESTIMATED_TOKENS;
+                    FixPointFinder.Result fixes = FixPointFinder.find(map, e, glossary == null ? List.of() : glossary, pronounText,
+                            cueFields, source.plan);
+                    row.fixPoints = fixes.points();
+                    row.fixPointCount = row.fixPoints.size();
+                    row.ambiguousGlossarySplits = fixes.ambiguousGlossarySplits();
+                    for (FixPoint point : row.fixPoints) {
+                        if (point.types().contains(FixPoint.Type.ADDRESS)) row.addressPoints++;
+                        if (point.types().contains(FixPoint.Type.GLOSSARY)) row.glossaryPoints++;
+                        if (point.types().contains(FixPoint.Type.KANA)) row.kanaPoints++;
+                        if (point.types().contains(FixPoint.Type.MISSING)) row.missingPoints++;
+                    }
+                    row.fixPointCount = row.fixPoints.size();
+                    preview.fixPointCount += row.fixPointCount;
+                    if (row.fixPointCount > 0) {
+                        preview.chunksWithFixPoints++;
+                        int[] r = map.rawRange(e);
+                        int[] d = map.draftRange(e);
+                        ApiPrompt prompt = TargetedFixPrompt.build("Vietnamese",
+                                map.raw.contextBeforeLines(r[0], context.chars(), context.minLines()), rawText,
+                                map.raw.contextAfterLines(r[1], context.chars(), context.minLines()),
+                                map.draft.contextBeforeLines(d[0], context.chars(), context.minLines()), draftText,
+                                map.draft.contextAfterLines(d[1], context.chars(), context.minLines()), row.fixPoints);
+                        row.estimatedInputTokens = (int) Math.min(Integer.MAX_VALUE, prompt.estimatedInputTokens());
+                        row.estimatedOutputTokens = TargetedFixPrompt.maxOutputTokens(row.fixPoints);
+                        row.tooLong = prompt.estimatedInputTokens() > SourceCheck.MAX_ESTIMATED_TOKENS;
+                    }
                     int[] r = map.rawRange(e);
                     ReferenceProjector.Projection pr = ReferenceProjector.project(new ReferenceProjector.Params(map.raw.chapterId,
                             map.rawParagraphStart(e), map.rawParagraphEnd(e), rawText, map.raw.contextBeforeLines(r[0], context.chars(), context.minLines()),
@@ -102,8 +136,11 @@ public final class EditorialPairPreview {
                     row.conflicts = pr.conflicts().size();
                     conflicts += row.conflicts;
                     dropped += pr.count("SCOPE_INVALID");
-                } catch (PairPromptBuilder.PromptException e2) {
-                    preview.blockers.add("PAIR_" + e2.code + ":" + row.ordinal);
+                    row.glossaryEntries = pr.glossary().size();
+                    row.pronounRows = pr.pronouns().size();
+                } catch (PairPromptBuilder.PromptException | IllegalArgumentException e2) {
+                    String code = e2 instanceof PairPromptBuilder.PromptException ? ((PairPromptBuilder.PromptException) e2).code : "FIX_ALIGNMENT_PLAN_MISMATCH";
+                    preview.blockers.add("PAIR_" + code + ":" + row.ordinal);
                 }
             }
             preview.rows.add(row);
@@ -114,6 +151,9 @@ public final class EditorialPairPreview {
         if (!long_.isEmpty()) preview.blockers.add("TOO_LONG:" + long_);
         if (conflicts > 0) preview.warnings.add("REFERENCE_CONFLICT:" + conflicts);
         if (dropped > 0) preview.warnings.add("SCOPE_INVALID:" + dropped);
+        int ambiguous = 0;
+        for (Row row : preview.rows) ambiguous += row.ambiguousGlossarySplits;
+        if (ambiguous > 0) preview.warnings.add("AMBIGUOUS_GLOSSARY_SPLIT:" + ambiguous);
         return preview;
     }
 

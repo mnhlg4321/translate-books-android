@@ -39,14 +39,30 @@ public final class EditorialPairRunServiceTest {
 
     static String draftRow(int i) { return EditorialPairTestData.draftRow(i); }
 
-    static EditorialPairSource source(int rows) { return EditorialPairTestData.source(rows); }
+    static EditorialPairSource source(int rows) {
+        EditorialPairSource base = EditorialPairTestData.source(rows);
+        List<String> flagged = new ArrayList<>();
+        for (String row : base.draftRows) flagged.add(row.replace("dòng 3:", "dòng 3: かな"));
+        return new EditorialPairSource(base.kind, base.ref, base.label, base.chapterId, base.rawRows, flagged, base.lineageIssues);
+    }
 
     static String draftPart(EditorialApiFlow.Request request) { return EditorialPairTestData.draftPart(request); }
 
     interface Edit { String apply(int callIndex, String draft); }
 
     private static FakeEditorialApiProvider provider(Edit edit) {
-        return new FakeEditorialApiProvider((request, index) -> FakeEditorialApiProvider.text("<EDITED>" + edit.apply(index, draftPart(request)) + "</EDITED>", "stop"));
+        return new FakeEditorialApiProvider((request, index) -> {
+            if (request.prompt().user().contains("# NUMBERED FIX POINTS\n")) {
+                return targetedText(request, index, edit::apply, "stop", new BigDecimal("0.0001"));
+            }
+            return FakeEditorialApiProvider.text("<EDITED>" + edit.apply(index, draftPart(request)) + "</EDITED>", "stop");
+        });
+    }
+
+    private static EditorialApiFlow.StepResponse targetedText(EditorialApiFlow.Request request, int index,
+            java.util.function.BiFunction<Integer, String, String> edit, String finish, BigDecimal cost) {
+        return new EditorialApiFlow.StepResponse(EditorialPairTestData.targetedAnswer(request, index, edit), finish,
+                1500, 400, cost, true, "fake-model", "fake-route", "");
     }
 
     private EditorialPairRunService service(EditorialPairRunStore store, EditorialApiProvider provider) {
@@ -142,7 +158,7 @@ public final class EditorialPairRunServiceTest {
         // the reservation was opened before every call and settled once with the real charge
         List<PairReservation> all = memory.allReservations(run.id);
         assertEquals(4, all.size());
-        for (PairReservation r : all) { assertEquals(PairReservation.SETTLED, r.state); assertEquals(0, new BigDecimal("0.004").compareTo(r.settledUsd)); }
+        for (PairReservation r : all) { assertEquals(PairReservation.SETTLED, r.state); assertEquals(0, new BigDecimal("0.0001").compareTo(r.settledUsd)); }
         List<String> journal = memory.journal(run.id);
         assertTrue(journal.get(0).endsWith("RESERVE"));
         assertTrue(journal.get(1).endsWith("RESERVED"));
@@ -155,6 +171,26 @@ public final class EditorialPairRunServiceTest {
         assertEquals(snapshot.map.draft.text, plan.text);
     }
 
+    @Test public void aChunkWithoutAnyDeterministicFixPointIsStoredUnchangedWithoutAProviderCall() throws Exception {
+        FakeEditorialApiProvider never = new FakeEditorialApiProvider((request, index) -> { throw new AssertionError("no-point chunk must not call a provider"); });
+        EditorialPairRunService svc = service(memory, never);
+        EditorialPairSource plain = EditorialPairTestData.source(2);
+        PairRun run = svc.prepare(1, plain, "", "", null, "model-x", "Vietnamese", CAP, "C");
+        PairRun done = svc.execute(run.id, null);
+        assertEquals(0, never.requests.size());
+        assertEquals(0, done.calls);
+        assertEquals(BigDecimal.ZERO, done.usd);
+        assertEquals(RunState.FINAL_ELIGIBLE, done.state);
+        for (PairItem item : svc.items(run.id)) {
+            assertEquals(PairState.ACCEPTED, item.state);
+            assertEquals(0, item.calls);
+            assertEquals(BigDecimal.ZERO, item.usd);
+            assertEquals("NO_FIX_POINTS", gate(item).getString("status"));
+        }
+        assertTrue(memory.allReservations(run.id).isEmpty());
+        assertEquals(EditorialPairSnapshot.of(run).map.draft.text, done.mergedText);
+    }
+
     @Test public void theRequestOfEachPairIsReservedAndJournalledBeforeTheProviderIsCalled() throws Exception {
         List<String> seenStates = new ArrayList<>();
         EditorialPairRunService[] holder = new EditorialPairRunService[1];
@@ -162,7 +198,7 @@ public final class EditorialPairRunServiceTest {
         FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> {
             PairItem item = memory.items(runHolder[0].id).get(index);
             seenStates.add(item.state + "/" + memory.openReservations(runHolder[0].id).size());
-            return FakeEditorialApiProvider.text("<EDITED>" + draftPart(request) + "</EDITED>", "stop");
+            return targetedText(request, index, (i, d) -> d, "stop", new BigDecimal("0.0001"));
         });
         holder[0] = service(memory, fake);
         runHolder[0] = prepare(holder[0], source(3), "C");
@@ -172,75 +208,51 @@ public final class EditorialPairRunServiceTest {
 
     // ---- inconvenient but valid answers (STRUCTURAL only)
 
-    @Test public void editedLayoutReflowCleanAndMetaAnswersAreJudgedByTheirOwnCodes() throws Exception {
-        EditorialPairRunService svc = service(memory, provider((i, d) -> {
-            switch (i) {
-                case 0: return d.replace("dòng 2", "dòng hai");                                  // a real edit: clean
-                case 1: return d.replace("\n", " ");                                              // same letters, one line: warning
-                case 2: return d + "\n\nGhi chú: đã sửa vài chỗ nhỏ.";                          // explanation glued on: warning, cut off
-                default: return d;                                                                // changes nothing
-            }
-        }));
+    @Test public void targetedFixesApplyOnlyToDeclaredLinesAndUnsafeAnswersStopTheRun() throws Exception {
+        FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> {
+            if (index == 2) return targetedText(request, index, (i, d) -> "<EDITED>unsafe</EDITED>", "stop", new BigDecimal("0.0001"));
+            return targetedText(request, index, (i, d) -> index == 1 ? d.replace("かな", "đã sửa") : "=",
+                    "stop", new BigDecimal("0.0001"));
+        });
+        EditorialPairRunService svc = service(memory, fake);
         PairRun run = prepare(svc, source(4), "C");
         PairRun done = svc.execute(run.id, null);
         List<PairItem> items = svc.items(run.id);
         assertEquals(PairState.ACCEPTED, items.get(0).state);
-        assertEquals(PairState.WARN_REVIEW, items.get(1).state);
-        assertTrue(items.get(1).gateJson.contains("REFLOW_ONLY"));
-        assertEquals(PairState.WARN_REVIEW, items.get(2).state);
-        assertTrue(items.get(2).gateJson.contains("META_LEAK"));
-        assertFalse(items.get(2).candidateText.contains("Ghi chú"));
-        assertEquals(PairState.ACCEPTED, items.get(3).state);
-        assertEquals(RunState.FINAL_ELIGIBLE, done.state);
-        assertEquals(2, done.warnings);
-        EditorialPairRunService.ExportPlan plan = svc.exportPlan(run.id);
-        assertTrue(plan.complete);
-        assertTrue(plan.label.contains("2 cảnh báo"));
-        assertTrue(plan.fileSuffix.contains("canh-bao"));
-        // a person decides one warning; the other stays; rejecting one makes the whole run blocked
-        svc.resolveWarning(run.id, items.get(1).pairId, true);
-        assertEquals(1, svc.get(run.id).warnings);
-        svc.resolveWarning(run.id, items.get(2).pairId, false);
-        assertEquals(RunState.FINAL_BLOCKED, svc.get(run.id).state);
-        assertFalse(svc.exportPlan(run.id).complete);
+        assertEquals(PairState.ACCEPTED, items.get(1).state);
+        assertTrue(items.get(1).candidateText.contains("dòng 3: đã sửa"));
+        assertEquals(PairState.STRUCTURE_BLOCKED, items.get(2).state);
+        assertTrue(items.get(2).gateJson.contains("TARGETED_LINE_REJECTED"));
+        assertEquals(PairState.IMPORTED, items.get(3).state);
+        assertEquals(3, fake.requests.size());
+        assertEquals(RunState.INCOMPLETE, done.state);
+        assertTrue(svc.exportPlan(run.id).text.contains("dòng 3: かな"));
     }
 
-    @Test public void aTruncatedAnswerThatSaysStopIsBlockedKeptForDiagnosisAndNeverDeliveredAsFinal() throws Exception {
-        // N5 shape: one long row, the model returns a fifth of it and ends with a marker, finish_reason stop
-        StringBuilder long192 = new StringBuilder();
-        for (int i = 1; i <= 192; i++) {
-            if (i > 1) long192.append('\n');
-            long192.append(i == 60 || i == 190 ? "◆" : "Dòng " + i + " của chương dài, có đủ chữ để chặn đúng khi bị cụt mất phần lớn.");
-        }
-        List<String> raw = List.of(rawRow(1), rawRow(2));
-        List<String> draft = List.of(draftRow(1), long192 + "\n\n");
-        FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> {
-            String d = draftPart(request);
-            if (!d.contains("Dòng 191")) return FakeEditorialApiProvider.text("<EDITED>" + d + "</EDITED>", "stop");
-            String[] lines = d.split("\n");
-            StringBuilder cut = new StringBuilder();
-            for (int i = 0; i < 36; i++) cut.append(lines[i]).append('\n');
-            return FakeEditorialApiProvider.text("<EDITED>" + cut + "◆</EDITED>", "stop");
-        });
+    @Test public void aShortTargetAnswerIsBlockedInsteadOfLosingTheRestOfItsLine() throws Exception {
+        String longLine = "Bản DRAFT có đủ nội dung để kiểm tra phần sửa theo điểm mục tiêu ".repeat(7) + "かな";
+        List<String> raw = List.of("「長い行の意味を保ってください。」\n\n");
+        List<String> draft = List.of(longLine + "\n\n");
+        FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> targetedText(request, index, (i, d) -> "短い", "stop", new BigDecimal("0.0001")));
         EditorialPairRunService svc = service(memory, fake);
         PairRun run = svc.prepare(1, new EditorialPairSource("JOB", "7", "x", "", raw, draft, List.of()), "", "", null, "m", "Vietnamese", CAP, "C");
         PairRun done = svc.execute(run.id, null);
-        PairItem cut = svc.items(run.id).get(1);
+        PairItem cut = svc.items(run.id).get(0);
         assertEquals(PairState.STRUCTURE_BLOCKED, cut.state);
-        assertTrue(cut.gateJson.contains("CHARS_LOSS") && cut.gateJson.contains("MARKER_MISMATCH"));
-        assertFalse(cut.candidateText.isEmpty());        // kept for diagnosis
-        assertTrue(cut.responseText.contains("<EDITED>")); // the response is kept too
+        assertTrue(cut.gateJson.contains("TARGETED_LINE_REJECTED") && cut.gateJson.contains("LINE_LENGTH_RATIO"));
+        assertEquals(longLine, cut.candidateText);
+        assertTrue(cut.responseText.contains("[1]"));
         assertEquals(RunState.FINAL_BLOCKED, done.state);
         assertEquals("", done.mergedText);
         EditorialPairRunService.ExportPlan plan = svc.exportPlan(run.id);
         assertFalse(plan.complete);
-        assertTrue(plan.label.startsWith("Bản tạm: 1/2"));
-        assertTrue("the cut pair is replaced by its own DRAFT, not by the shortened answer", plan.text.contains("Dòng 191"));
+        assertTrue(plan.label.startsWith("Bản tạm: 0/1"));
+        assertTrue("the rejected answer never replaces the source line", plan.text.contains(longLine));
     }
 
     @Test public void anAnswerClosedWithTheWrongTagIsAVisibleWarningAndTheRunKeepsGoing() throws Exception {
-        FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> FakeEditorialApiProvider.text(
-                "<EDITED>" + draftPart(request) + (index == 1 ? "</EDIT>" : "</EDITED>"), "stop"));
+        FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> targetedText(request, index,
+                (i, d) -> "=" + (index == 1 ? "\nunrecognized extra text" : ""), "stop", new BigDecimal("0.0001")));
         EditorialPairRunService svc = service(memory, fake);
         PairRun run = prepare(svc, source(3), "C");
         PairRun done = svc.execute(run.id, null);
@@ -249,8 +261,8 @@ public final class EditorialPairRunServiceTest {
         assertEquals(PairState.ACCEPTED, items.get(0).state);
         assertEquals(PairState.WARN_REVIEW, items.get(1).state);
         assertEquals("WARN", gate(items.get(1)).getString("status"));
-        assertTrue(items.get(1).gateJson.contains("CLOSE_TAG_REPAIRED"));
-        assertFalse(items.get(0).gateJson.contains("CLOSE_TAG_REPAIRED"));
+        assertTrue(items.get(1).gateJson.contains("TARGETED_IGNORED_LINES"));
+        assertFalse(items.get(0).gateJson.contains("TARGETED_IGNORED_LINES"));
         assertEquals(PairState.ACCEPTED, items.get(2).state);
         assertEquals(RunState.FINAL_ELIGIBLE, done.state);   // a warning is shown to the person, it does not hold the merge back
         assertEquals(1, done.warnings);
@@ -274,7 +286,7 @@ public final class EditorialPairRunServiceTest {
         done = svc.execute(run.id, null);
         items = svc.items(run.id);
         assertEquals(PairState.STRUCTURE_BLOCKED, items.get(1).state);
-        assertTrue(items.get(1).error.startsWith("WRONG_PAIR"));
+        assertTrue(items.get(1).error.startsWith("TARGETED_ANSWER_MISSING"));
         assertEquals("a wrong pair stops the run: the map may be wrong", PairState.IMPORTED, items.get(2).state);
         assertEquals(2, fake.requests.size());
         assertEquals(RunState.INCOMPLETE, done.state);
@@ -283,7 +295,7 @@ public final class EditorialPairRunServiceTest {
     @Test public void aDefiniteFailureIsRetriedOnceAtZeroCostThenTheBatchStops() throws Exception {
         FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> index < 2
                 ? EditorialApiFlow.StepResponse.failure("ApiHttpException: 429")
-                : FakeEditorialApiProvider.text("<EDITED>" + draftPart(request) + "</EDITED>", "stop"));
+                : targetedText(request, index, (i, d) -> "=", "stop", new BigDecimal("0.0001")));
         EditorialPairRunService svc = service(memory, fake);
         PairRun run = prepare(svc, source(2), "C");
         PairRun done = svc.execute(run.id, null);
@@ -305,7 +317,7 @@ public final class EditorialPairRunServiceTest {
     @Test public void anUnknownOutcomeStopsTheRunKeepsThePriorPairsAndNeverResends() throws Exception {
         FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> index == 1
                 ? EditorialApiFlow.StepResponse.unknownOutcome("SocketTimeoutException")
-                : FakeEditorialApiProvider.text("<EDITED>" + draftPart(request) + "</EDITED>", "stop"));
+                : targetedText(request, index, (i, d) -> "=", "stop", new BigDecimal("0.0001")));
         EditorialPairRunService svc = service(memory, fake);
         PairRun run = prepare(svc, source(4), "C");
         PairRun done = svc.execute(run.id, null);
@@ -329,7 +341,7 @@ public final class EditorialPairRunServiceTest {
     @Test public void aRefusedReservationSendsNothingAndLeavesTheRestUnstarted() throws Exception {
         FakeEditorialApiProvider fake = provider((i, d) -> d);
         EditorialPairRunService svc = service(memory, fake);
-        PairRun run = svc.prepare(1, source(3), "", "", null, "m", "Vietnamese", new BigDecimal("0.001"), "C");
+        PairRun run = svc.prepare(1, source(3), "", "", null, "m", "Vietnamese", new BigDecimal("0.00001"), "C");
         PairRun done = svc.execute(run.id, null);
         assertEquals(0, fake.requests.size());
         assertEquals(PairState.RESERVE_FAILED, svc.items(run.id).get(0).state);
@@ -341,7 +353,7 @@ public final class EditorialPairRunServiceTest {
 
     @Test public void aChargeAboveItsReservationIsRecordedExactlyAndStopsFurtherSending() throws Exception {
         FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> new EditorialApiFlow.StepResponse(
-                "<EDITED>" + draftPart(request) + "</EDITED>", "stop", 1500, 400, new BigDecimal("5.0"), true, "m", "r", ""));
+                EditorialPairTestData.targetedAnswer(request, index, (i, d) -> "="), "stop", 1500, 400, new BigDecimal("5.0"), true, "m", "r", ""));
         EditorialPairRunService svc = service(memory, fake);
         PairRun run = svc.prepare(1, source(3), "", "", null, "m", "Vietnamese", new BigDecimal("100"), "C");
         PairRun done = svc.execute(run.id, null);
@@ -355,7 +367,7 @@ public final class EditorialPairRunServiceTest {
 
     @Test public void anAnswerWithoutAPriceSettlesAtTheWorstCaseAndMarksTheRunCostUnknown() throws Exception {
         FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> new EditorialApiFlow.StepResponse(
-                "<EDITED>" + draftPart(request) + "</EDITED>", "stop", 1500, 400, BigDecimal.ZERO, false, "m", "r", ""));
+                EditorialPairTestData.targetedAnswer(request, index, (i, d) -> "="), "stop", 1500, 400, BigDecimal.ZERO, false, "m", "r", ""));
         EditorialPairRunService svc = service(memory, fake);
         PairRun run = prepare(svc, source(2), "C");
         PairRun done = svc.execute(run.id, null);
@@ -420,7 +432,7 @@ public final class EditorialPairRunServiceTest {
         FaultyPairRunStore faulty = new FaultyPairRunStore(memory);
         FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> {
             if (index == 1) faulty.crashBefore("commitReceived"); // the answer came back, the process died before it was stored
-            return FakeEditorialApiProvider.text("<EDITED>" + draftPart(request) + "</EDITED>", "stop");
+            return targetedText(request, index, (i, d) -> "=", "stop", new BigDecimal("0.0001"));
         });
         EditorialPairRunService svc = service(faulty, fake);
         PairRun run = prepare(svc, source(3), "C");

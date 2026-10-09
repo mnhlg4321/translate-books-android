@@ -110,7 +110,7 @@ final class EditorialPairUiController {
         final EditorialPairSource runSource = source;
         final EditorialPairSourceLoader.References refs = references;
         final EditorialApiProvider provider = EditorialApiUiController.providerOverride != null
-                ? EditorialApiUiController.providerOverride : new OpenRouterEditorialApiProvider(settings);
+                ? EditorialApiUiController.providerOverride : new OpenRouterEditorialApiProvider(settings, "medium");
         progress = "Đang chuẩn bị…";
         parent.error = "";
         parent.setScreen(EditorialApiUiController.Screen.PAIR_RUN);
@@ -122,7 +122,7 @@ final class EditorialPairUiController {
         if (running() || runId <= 0) return;
         final AppSettings settings = SettingsStore.load(parent.appContext());
         final EditorialApiProvider provider = EditorialApiUiController.providerOverride != null
-                ? EditorialApiUiController.providerOverride : new OpenRouterEditorialApiProvider(settings);
+                ? EditorialApiUiController.providerOverride : new OpenRouterEditorialApiProvider(settings, "medium");
         progress = "Đang chạy tiếp…";
         parent.setScreen(EditorialApiUiController.Screen.PAIR_RUN);
         launch(runId, null, null, null, provider, settings, null, null);
@@ -147,7 +147,9 @@ final class EditorialPairUiController {
                 runId = id;
                 runService.execute(id, new EditorialPairRunService.Listener() {
                     @Override public void onPair(PairRun run, PairItem item) {
-                        progress = "Đoạn " + item.ordinal + ": đang gửi và chờ kết quả…";
+                        progress = EditorialPairPresenter.isNoFixPoints(item)
+                                ? "Đoạn " + item.ordinal + ": không có điểm sửa, giữ nguyên DRAFT, không gửi API."
+                                : "Đoạn " + item.ordinal + ": đang gửi và chờ kết quả…";
                         parent.postUi(() -> { if (parent.screen == EditorialApiUiController.Screen.PAIR_RUN) parent.refresh(); });
                     }
 

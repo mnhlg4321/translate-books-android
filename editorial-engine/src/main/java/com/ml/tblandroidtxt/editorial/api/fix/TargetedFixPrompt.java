@@ -8,6 +8,9 @@ import java.util.List;
 
 /** Minimal request for app-detected points. FINAL and whole-chunk rewriting are deliberately absent. */
 public final class TargetedFixPrompt {
+    private static final int MIN_OUTPUT_TOKENS = 128;
+    private static final int MAX_OUTPUT_TOKENS = 4096;
+
     private TargetedFixPrompt() { }
 
     public static ApiPrompt build(String targetLanguage, String rawBefore, String rawMain, String rawAfter,
@@ -41,6 +44,15 @@ public final class TargetedFixPrompt {
         }
         user.append("Return one answer line for each id.\n");
         return new ApiPrompt(EditorialApiContract.Step.EDIT, system, user.toString(), glossary, pronouns, PairText.sha256(system));
+    }
+
+    /** Bounded output reserve sized from the lines that may change, never from the entire chunk. */
+    public static int maxOutputTokens(List<FixPoint> points) {
+        if (points == null || points.isEmpty()) throw new IllegalArgumentException("TARGETED_PROMPT_NO_POINTS");
+        long characters = 0;
+        for (FixPoint point : points) characters += Math.max(point.draftText().length(), point.rawText().length()) + 48L;
+        long tokens = (long) Math.ceil(characters / 2.0 * 1.6);
+        return (int) Math.max(MIN_OUTPUT_TOKENS, Math.min(MAX_OUTPUT_TOKENS, tokens));
     }
 
     private static void appendContext(StringBuilder out, String name, String text) {

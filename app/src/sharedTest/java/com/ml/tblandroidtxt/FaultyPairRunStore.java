@@ -66,6 +66,12 @@ public final class FaultyPairRunStore implements EditorialPairRunStore {
         post("state:" + to);
     }
 
+    @Override public void commitNoFixPoints(long runId, String pairId, String unchangedText, String detailsJson) {
+        pre("commitNoFixPoints");
+        inner.commitNoFixPoints(runId, pairId, unchangedText, detailsJson);
+        post("commitNoFixPoints");
+    }
+
     @Override public void bumpAttempt(long runId, String pairId, int attempt, String requestId) { inner.bumpAttempt(runId, pairId, attempt, requestId); }
 
     @Override public void commitReceived(long runId, PairItem received, String callId, BigDecimal settledUsd, String settleReason) {
