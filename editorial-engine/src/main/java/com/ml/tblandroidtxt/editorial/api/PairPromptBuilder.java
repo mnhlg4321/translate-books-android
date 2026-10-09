@@ -89,6 +89,16 @@ public final class PairPromptBuilder {
                             .append(String.join("; ", conflicts))
                             .append("). Do not choose between them: keep the form of address already used in the DRAFT there.\n");
                 }
+                if (!whole) {
+                    List<String> check = AddressChecklist.build(projection, rawMain, draftMain, params.mainParaStart());
+                    if (!check.isEmpty()) {
+                        system.append("\n# ADDRESS CHECK (computed by the app from the rows above; it says where to look, not what is correct)\n");
+                        for (String line : check) system.append(line).append('\n');
+                        system.append("For each listed word, read RAW to decide who speaks and who is addressed. Only when RAW shows that the speaker and the "
+                                + "addressee are the row's speaker and target, use the row's call for that address (and self for the speaker's own first person). "
+                                + "Keep the word where RAW shows another speaker or addressee, or where it is unclear.\n");
+                    }
+                }
             }
         }
         system.append('\n').append(CHUNK_OUTPUT_CONTRACT);

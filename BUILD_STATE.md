@@ -1,5 +1,13 @@
 # Build State
 
+## Current state — 2026-10-09 (CP-IMPL-5 address checklist, offline)
+
+- Baseline `12062ce0`. New `AddressChecklist` (engine) adds an `# ADDRESS CHECK` section to a chunk request when a pronoun row with a `call` covers quoted RAW paragraphs whose DRAFT uses an address word other than the row's self/call; labels and words only, matched by position, fail closed otherwise; whole-chapter requests unchanged. Contract revision `CP-IMPL-5`.
+- Real 007: only chunk 005 changes (one section; chunks 1-4, 6, 7 byte-identical to CP-IMPL-4); selector hashes unchanged; section lists P064 `cậu` x2 and not P065/P075/P076. Worst-case reservation USD 0.0055458.
+- Corpus proxy over 8 chapters: section in 63/85 chunks; 69% of owner-changed lines touching address words lie in listed paragraphs (84/89 = 94% in 006/011/014/017, 4/38 in 004). Not model behaviour.
+- Tests (working tree): engine 651 (1 skip), app 465 (3 opt-in skip), scripts/chunk 24, scripts/p6 93, androidTest compile PASS. No APK built (still `4.18-c1.7`/254 = CP-IMPL-4), nothing installed, no provider call, USD 0. 0/3 chapters accepted; P7 not started.
+- Next action: owner duyệt hoặc từ chối lần live thứ hai trên cùng chunk 005 với CP-IMPL-5 (đề xuất ở cuối §6.2: đúng 1 call, không retry, sổ mới `C1-SINGLE5B-20261009` trần USD 0.01); nếu duyệt thì build `4.18-c1.8` từ commit gói này, cài chỉ `emulator-5554`, chạy thử fake với selector rồi gọi 1 lần. Chưa có quyền chi nào.
+
 ## Current state — 2026-10-09 (single-chunk 005 live run done)
 
 - Build `4.18-c1.7` / code 254, event `build-20261009-193025`, source `ff819dde`, APK SHA-256 `51BEC1455D9E2827AC8ED10336DC77D1AC703947423297450EBF2B8C65A77D40`, AndroidTest `c1-chunk-20261009g`; mirrored in `artifacts/` and `backup/`; installed only on `emulator-5554` (the emulator was restarted). Focused device tests 8 groups PASS; device fake run with the selector sent 1 request and its prompt is byte-identical to the host-built one.

@@ -85,7 +85,16 @@ public final class EditorialSingleChunk007OfflineTest {
         }
         assertEquals(1, store.allReservations(run.id).size());
 
-        String system = fake.requests.get(0).prompt().system();
+        String fullSystem = fake.requests.get(0).prompt().system();
+        // the address checklist (CP-IMPL-5) is the one section the earlier baselines do not have: compare without it, check it apart
+        String system = fullSystem;
+        String checkSection = "";
+        int checkAt = fullSystem.indexOf("\n# ADDRESS CHECK");
+        if (checkAt >= 0) {
+            int checkEnd = fullSystem.indexOf("OUTPUT CONTRACT") - 1;
+            checkSection = fullSystem.substring(checkAt, checkEnd);
+            system = fullSystem.substring(0, checkAt) + fullSystem.substring(checkEnd);
+        }
         String user = fake.requests.get(0).prompt().user();
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("ordinal", BigDecimal.valueOf(ordinal));
@@ -99,7 +108,8 @@ public final class EditorialSingleChunk007OfflineTest {
         out.put("contractRevision", run.contractRevision);
         out.put("maxOutputTokens", BigDecimal.valueOf(fake.maxOutputTokens.get(0)));
         out.put("estimatedInputTokens", BigDecimal.valueOf(fake.requests.get(0).prompt().estimatedInputTokens()));
-        out.put("systemSha256", PairText.sha256(system));
+        out.put("systemSha256", PairText.sha256(fullSystem));
+        out.put("addressCheck", checkSection.trim());
         out.put("userSha256", PairText.sha256(user));
 
         String baselinePath = System.getenv("SC_BASELINE_PROMPT");
@@ -124,9 +134,24 @@ public final class EditorialSingleChunk007OfflineTest {
             assertEquals("the chunk contract differs by the layout sentence only", baseTail.replace(oldLayout, newLayout), newTail);
             out.put("promptComparison", "user identical; references and output contract identical; differs only in the core and one layout sentence");
         }
+        String dumpDir = System.getenv("SC_DUMP_DIR");
+        if (dumpDir != null) {
+            // every chunk's request of a full fake run, for diffing two builds of the prompt; request n is chunk n
+            FakeEditorialApiProvider all = new FakeEditorialApiProvider((request, index) -> FakeEditorialApiProvider.edited(EditorialPairTestData.draftPart(request)));
+            EditorialPairRunService fullSvc = new EditorialPairRunService(new InMemoryPairRunStore(), all, PRICING, 60_000L);
+            PairRun fullRun = fullSvc.prepare(1, load.source, glossaryText, pronounText, null, "openai/gpt-5.6-luna", "Vietnamese", new BigDecimal("0.50"), EditorialPairModels.ARM_CHUNK);
+            fullSvc.execute(fullRun.id, null);
+            assertEquals(load.plan.chunks.size(), all.requests.size());
+            File d = new File(dumpDir);
+            d.mkdirs();
+            for (int i = 0; i < all.requests.size(); i++) {
+                EditorialApiFlow.Request r = all.requests.get(i);
+                Files.write(new File(d, String.format("%03d.txt", i + 1)).toPath(), ("SYSTEM\n" + r.prompt().system() + "\nUSER\n" + r.prompt().user()).getBytes(StandardCharsets.UTF_8));
+            }
+        }
         File dir = new File(System.getenv("SC_OUT"));
         dir.mkdirs();
         Files.write(new File(dir, "selector-chunk" + ordinal + ".json").toPath(), EditorialCanonicalJson.canonicalize(out).getBytes(StandardCharsets.UTF_8));
-        Files.write(new File(dir, "prompt-cp-impl-4-chunk" + ordinal + ".txt").toPath(), ("SYSTEM\n" + system + "\nUSER\n" + user).getBytes(StandardCharsets.UTF_8));
+        Files.write(new File(dir, "prompt-current-chunk" + ordinal + ".txt").toPath(), ("SYSTEM\n" + fullSystem + "\nUSER\n" + user).getBytes(StandardCharsets.UTF_8));
     }
 }
