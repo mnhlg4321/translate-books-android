@@ -1,14 +1,14 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-10 (+07:00): coordinator review C6.3/C6.4 — ước tính 006 với giá luna USD 0.023975 (dưới trần 0.03; USD 0.555 là giá dự phòng ghi cứng trong test đo, đã sửa); độ phủ xưng hô 57.3% đổi mẫu số so với CP-IMPL-5 và chỉ là tham chiếu FINAL. C6.5 đủ điều kiện theo D-C6.
+- Updated: 2026-10-10 (+07:00): C6.5 live 006 dừng ở lời gọi đầu tiên (đầu ra 760 token hết cho suy luận, không có câu trả lời), USD 0.0024366, sổ C6-20261010 còn giữ chỗ pending 0.002066; chưa có ĐÚNG/SÓT/SAI; C6 PASS chưa đạt. Dừng chờ owner.
 - Current version: active v4.18; release/checklist unchanged.
 - Current branch: `feature/v4.18-p5e-runner-repair-20260917`.
-- Current commit: 60d5564b — baseline ngay trước commit review này (confirm actual HEAD on resume).
-- Current build: `4.18-c6.3` / code `257`, event `build-20261010-054638`, source `1cc8e346540201541f639ffe0be0c70a342f5512`, APK SHA-256 `245763A89A4AD7E70491C9A4D60D0020ECBF23A66323E4F75A8955076FEC477F`, source ZIP SHA-256 `D59CCE9E1572A058151EFA34000E7BCE862F7A3F7418D2D476B070C2438B37D4`; immutable payload mirrored in `artifacts/` and `backup/`, installed only on `emulator-5554` after guarded preflight.
-- Current phase: C6.4 offline/build/device complete. C6.3 ADDRESS coverage is below gate, so C6.5 is not eligible. U1 remains deferred; no pilot or V5 work.
+- Current commit: `4db92c35` is the baseline immediately before this evidence commit (confirm actual HEAD on resume).
+- Current build: `4.18-c6.3`/code `257` from source `1cc8e346540201541f639ffe0be0c70a342f5512`, APK SHA-256 245763A89A4AD7E70491C9A4D60D0020ECBF23A66323E4F75A8955076FEC477F; test APK `c6-pair-final-20261010`; installed only on `emulator-5554`.
+- Current phase: C6 (CP-IMPL-6 targeted fix points). C6.1–C6.4 offline PASS; C6.5 live 006 stopped at the first call (output reserve too small for luna medium reasoning). Owner decision required.
 - Completed tasks: C6.1 engine (`44dcfffe`), C6.2 app (`0d581055`), C6.3 measurement (`11cd0140`), C6.4 host fake (`9bdf2fed`), and AndroidTest fixture corrections (`9155f1d6`, `1cc8e346`) are pushed. Fake 006 no-op round-trip and isolated target-line change pass; the unflagged chunk makes no call. Engine/app host regressions and both Python suites pass. Emulator pair/API classes and process-death sequences pass; detailed evidence is in plan §7.
-- Pending tasks: owner review whether to continue offline work on address coverage and obtain a verified under-cap luna estimate before any later live request.
+- Pending tasks: owner decision on C6 (a: output reserve 2048 + cap USD 0.05 with build 4.18-c6.4 and a new live approval; b: reasoning low; c: stop C6). Reconcile ledger C6-20261010 (pending 0.002066 vs provider cost 0.0024366) by hand. C7 owner reading and P7 wait for C6.
 - Known bugs/limits: ADDRESS coverage is 57.3%, below required 69%. Conservative fallback estimate for 006 is USD 0.555370, above C6 cap USD 0.03; this is not a confirmed luna quote. Model quality NOT_MEASURED.
-- Regression status: clean-source engine 665 tests (0 failures/errors, 1 opt-in skip), app 468 (0 failures/errors, 3 opt-in skips), `scripts/p6` 93/93 and `scripts/chunk` 24/24 PASS. Emulator: Pair Store 6/6, Pair UI 6/6, API Store 6/6, API flow 3/3, API UI 5/5; pair and API process-death sequences each passed seed/force-stop/verify/cleanup.
+- Regression status: no code change since 4db92c35; host measurement 006 (estimate USD 0.023975, verdict OK) and fake replay (byte-exact, 14/14 calls) re-run PASS; device plan run matches host plan; live 1 call, provider cost USD 0.0024366, ledger pending 0.002066.
 - Spend: C6 provider calls 0 / USD 0; all existing ledgers unchanged.
-- Next action: Codex thực hiện C6.5: live chương 006 theo D-C6 (luna medium, sổ mới trần USD 0.03), chấm ĐÚNG/SÓT/SAI/CHƯA CHẮC theo RAW, xuất trang đọc.
+- Next action: owner chọn một trong ba hướng cho C6 trước khi làm gì tiếp: (a) nâng giới hạn đầu ra mỗi lời gọi đích lên 2048 token và trần chương lên USD 0.05 (giữ chỗ tối đa ≈ USD 0.0486 cho 14 lời gọi, đã cộng 6% đầu vào), kèm build mới 4.18-c6.4, kiểm offline và duyệt live mới; (b) giữ 760 token nhưng đổi suy luận sang low (đổi một biến đã duyệt, không đảm bảo kết quả); (c) dừng C6 và quay lại hướng khác. Không chạy live thêm, không gửi lại đoạn 1; sổ `C6-20261010` còn một giữ chỗ pending USD 0.002066 cần đối chiếu tay.

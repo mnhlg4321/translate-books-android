@@ -1,5 +1,12 @@
 # Build State
 
+## Current state — 2026-10-10 (C6.5 live 006: stopped at the first call, incomplete)
+
+- Build `4.18-c6.3` / code 257 from source `1cc8e346` (unchanged in HEAD `4db92c35`, which holds only test and documentation changes). APK SHA-256 `245763A89A4AD7E70491C9A4D60D0020ECBF23A66323E4F75A8955076FEC477F`; installed only on `emulator-5554`.
+- Live (owner D-C6, luna medium, ledger `C6-20261010` cap USD 0.03): run `887c0553-f930-40db-a635-aba56203d674`, one provider call on chunk 1 (7 points). Output 760 tokens, all used by reasoning, `content = null`, `finish_reason = length`; chunk blocked `TARGETED_ANSWER_MISSING`; run stopped as designed. Provider cost USD 0.0024366 exceeded the reservation USD 0.002066 (`COST_BOUND_EXCEEDED`); ledger keeps that reservation pending (settled 0). Reconcile by hand; the ledger file was not edited.
+- Result: app output = DRAFT (no point applied, 0 lines changed, 0 Japanese added). No ĐÚNG/SÓT/SAI labels: no model answer to judge. C6 PASS not reached. 0/3 chapters accepted; P7 not started.
+- Next action: owner chọn một trong ba hướng cho C6 trước khi làm gì tiếp: (a) nâng giới hạn đầu ra mỗi lời gọi đích lên 2048 token và trần chương lên USD 0.05 (giữ chỗ tối đa ≈ USD 0.0486 cho 14 lời gọi, đã cộng 6% đầu vào), kèm build mới 4.18-c6.4, kiểm offline và duyệt live mới; (b) giữ 760 token nhưng đổi suy luận sang low (đổi một biến đã duyệt, không đảm bảo kết quả); (c) dừng C6 và quay lại hướng khác. Không chạy live thêm, không gửi lại đoạn 1; sổ `C6-20261010` còn một giữ chỗ pending USD 0.002066 cần đối chiếu tay.
+
 ## Current state — 2026-10-09 (CP-IMPL-5 address checklist, offline)
 
 - Baseline `12062ce0`. New `AddressChecklist` (engine) adds an `# ADDRESS CHECK` section to a chunk request when a pronoun row with a `call` covers quoted RAW paragraphs whose DRAFT uses an address word other than the row's self/call; labels and words only, matched by position, fail closed otherwise; whole-chapter requests unchanged. Contract revision `CP-IMPL-5`.
