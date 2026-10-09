@@ -37,7 +37,7 @@ import static org.junit.Assert.assertTrue;
  * The chunk-pair flow of the Biên tập tab through real views: choosing a translation job, explicitly dropping the glossary and
  * pronoun lists, saving, reading the preview, running with a scripted provider, reading the result and exporting. As in the
  * whole-chapter UI test, the system "save as" result is delivered to {@code onActivityResult} directly, and nothing here reaches
- * a real provider. Written and compiled in the offline package; it has NOT been run on a device or emulator.
+ * a real provider.
  *
  * <p>The two-phase tests ({@code bientap_phase}=seed/verify/cleanup) reopen a stored pair run after the shell force-stops the
  * app; without that argument they are skipped.
@@ -89,9 +89,10 @@ public final class EditorialPairUiInstrumentedTest {
         try { repository.deleteJob(id); } finally { repository.close(); }
     }
 
-    private static FakeEditorialApiProvider identity() {
-        return new FakeEditorialApiProvider((request, index) -> FakeEditorialApiProvider.text(
-                "<EDITED>" + EditorialPairTestData.draftPart(request) + "</EDITED>", "stop"));
+    private static FakeEditorialApiProvider noPointProvider() {
+        return new FakeEditorialApiProvider((request, index) -> {
+            throw new AssertionError("a chunk without fix points must not call the provider");
+        });
     }
 
     // ---- view helpers
@@ -175,7 +176,7 @@ public final class EditorialPairUiInstrumentedTest {
     // ---- the flow
 
     @Test public void aJobComboIsSavedPreviewedRunAndReadBackWithoutTouchingTheJob() throws Exception {
-        FakeEditorialApiProvider provider = identity();
+        FakeEditorialApiProvider provider = noPointProvider();
         EditorialApiUiController.providerOverride = provider;
         String jobBefore = jobFingerprint();
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
@@ -189,7 +190,7 @@ public final class EditorialPairUiInstrumentedTest {
 
             click(scenario, "Chạy", 0);
             waitFor("result", () -> controller.screen == EditorialApiUiController.Screen.PAIR_RESULT && !controller.pair.running());
-            assertEquals(3, provider.requests.size());
+            assertEquals("the synthetic job has no deterministic fix points", 0, provider.requests.size());
             String shown = onUi(scenario, activity -> allText(activity));
             assertTrue(shown, shown.contains("Đã ghép đủ các đoạn"));
             // structural result only: the screen must not say the merge is a proof of good translation
@@ -276,7 +277,7 @@ public final class EditorialPairUiInstrumentedTest {
 
     @Test public void pairReopenPhaseSeed() throws Exception {
         Assume.assumeTrue("seed".equals(phase()));
-        EditorialApiUiController.providerOverride = identity();
+        EditorialApiUiController.providerOverride = noPointProvider();
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             openTab(scenario);
             EditorialApiUiController controller = configureJobCombo(scenario, REOPEN_NAME);

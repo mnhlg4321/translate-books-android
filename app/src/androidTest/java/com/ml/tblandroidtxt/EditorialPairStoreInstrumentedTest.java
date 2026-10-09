@@ -77,12 +77,16 @@ public final class EditorialPairStoreInstrumentedTest {
     }
 
     private EditorialPairSource source(int rows) {
-        return EditorialPairTestData.source(rows);
+        EditorialPairSource base = EditorialPairTestData.source(rows);
+        List<String> flagged = new ArrayList<>();
+        for (String row : base.draftRows) flagged.add(row.replace("dòng 3:", "dòng 3: かな"));
+        return new EditorialPairSource(base.kind, base.ref, base.label, base.chapterId,
+                base.rawRows, flagged, base.lineageIssues);
     }
 
     private FakeEditorialApiProvider identity() {
         return new FakeEditorialApiProvider((request, index) -> FakeEditorialApiProvider.text(
-                "<EDITED>" + EditorialPairTestData.draftPart(request) + "</EDITED>", "stop"));
+                EditorialPairTestData.targetedAnswer(request, index, (callIndex, draft) -> "="), "stop"));
     }
 
     // ---- the store and its transactions
