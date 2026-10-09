@@ -19,10 +19,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -35,6 +38,20 @@ public final class EditorialPairC6CorpusMeasurementTest {
     private static final FixPoint.Type[] EDIT_TYPES = {FixPoint.Type.ADDRESS, FixPoint.Type.GLOSSARY, FixPoint.Type.KANA};
 
     private enum FinalState { SAME, CHANGED, AMBIGUOUS }
+
+    private record PrivateChapter006(Path draftPath, String raw, String draft, String glossaryText, String pronoun,
+                                     List<EditInputs.GlossaryEntry> glossary, EditorialPairSourceLoader.FilesLoad load,
+                                     EditorialPairPreview preview) { }
+
+    private record CorrectionTarget(int rowIndex, int pointId, int physicalLine, String newLine) { }
+
+    private record FakeExecution(FakeEditorialApiProvider provider, EditorialPairModels.PairRun run,
+                                 EditorialPairRunService.ExportPlan output, EditorialPairPreview preview) { }
+
+    private static final EditorialApiRunService.Pricing FREE_FAKE_PRICING = new EditorialApiRunService.Pricing() {
+        @Override public BigDecimal inputPerToken(String model) { return BigDecimal.ZERO; }
+        @Override public BigDecimal outputPerToken(String model) { return BigDecimal.ZERO; }
+    };
 
     private static final class Counts {
         final EnumMap<FixPoint.Type, Integer> points = zeroes();
@@ -105,6 +122,153 @@ public final class EditorialPairC6CorpusMeasurementTest {
         printSummary(all);
         assertEquals("all eight requested chapters measured", 8, CHAPTERS.length);
         assertTrue("all planned chunks are counted", all.chunks > 0);
+    }
+
+    @Test public void fakeChapter006KeepsEveryPointByteExactAndEditsOnlyOneSelectedLineWhenConfigured() throws Exception {
+        String inputRoot = System.getenv("C6_INPUT_ROOT");
+        if (!"YES".equalsIgnoreCase(System.getenv("C6_FAKE_006")) || inputRoot == null || inputRoot.isBlank()) return;
+        PrivateChapter006 chapter = loadPrivate006(Path.of(inputRoot));
+        CorrectionTarget target = firstSafeTarget(chapter);
+        assertNotNull("006 needs one eligible non-insertion point for edit-isolation test", target);
+
+        FakeExecution noOp = executeFake(chapter, null);
+        assertTrue("no-op run must be complete", noOp.output != null && noOp.output.complete);
+        assertEquals("only flagged chunks may call the fake provider", chapter.preview.chunksWithFixPoints, noOp.provider.requests.size());
+        assertEquals("fake responses settle at zero", 0, noOp.run.usd.compareTo(BigDecimal.ZERO));
+        byte[] sourceBytes = Files.readAllBytes(chapter.draftPath);
+        assertTrue("no-op fake output must equal source DRAFT byte for byte", java.util.Arrays.equals(sourceBytes,
+                noOp.output.text.getBytes(StandardCharsets.UTF_8)));
+        assertNoPointChunksWereDispatched(chapter.preview, noOp.provider.requests.size());
+
+        FakeExecution oneEdit = executeFake(chapter, target);
+        assertTrue("one-edit run must produce an exportable candidate", oneEdit.output != null && oneEdit.output.complete);
+        assertEquals("one-edit run still calls only flagged chunks", chapter.preview.chunksWithFixPoints, oneEdit.provider.requests.size());
+        assertEquals("one-edit fake responses settle at zero", 0, oneEdit.run.usd.compareTo(BigDecimal.ZERO));
+        String expected = replacePhysicalLine(chapter.draft, target.physicalLine, target.newLine);
+        assertTrue("only the selected fix-point line may change", java.util.Arrays.equals(expected.getBytes(StandardCharsets.UTF_8),
+                oneEdit.output.text.getBytes(StandardCharsets.UTF_8)));
+        assertNoPointChunksWereDispatched(chapter.preview, oneEdit.provider.requests.size());
+        System.out.printf(java.util.Locale.ROOT,
+                "C6 fake006 noOpCalls=%d oneEditCalls=%d points=%d noPointChunks=%d byteExact=true oneTargetLine=true usd=0%n",
+                noOp.provider.requests.size(), oneEdit.provider.requests.size(), chapter.preview.fixPointCount,
+                chapter.preview.rows.size() - chapter.preview.chunksWithFixPoints);
+    }
+
+    private static PrivateChapter006 loadPrivate006(Path inputRoot) throws Exception {
+        Path inputDir = inputRoot.resolve("006");
+        String raw = readUtf8(required(inputDir, "006_RAW_JAKUAKU_MONSTER_VOL1.txt"));
+        Path draftPath = required(inputDir, "006_JAKUAKU_MONSTER_VOL1_DRAFT.txt");
+        String draft = readUtf8(draftPath);
+        Path glossaryPath = required(inputDir, "006_JAKUAKU_MONSTER_VOL1_chapter_glossary.csv");
+        List<GlossaryStore.Term> terms = GlossaryStore.parseTerms(glossaryPath.getFileName().toString(), readUtf8(glossaryPath));
+        List<EditInputs.GlossaryEntry> glossary = terms.stream()
+                .map(t -> new EditInputs.GlossaryEntry(t.source, t.target, t.category, t.note)).toList();
+        String glossaryText = EditorialApiSources.glossaryAsText(glossary);
+        Path pronounPath = required(inputDir, "006_PRONOUN_JAKUAKU_MONSTER_VOL1.csv");
+        String pronoun = readUtf8(pronounPath);
+        AppSettings settings = c6Settings();
+        EditorialPairSourceLoader.References refs = new EditorialPairSourceLoader.References(
+                glossaryText, glossaryPath.getFileName().toString(), pronoun, pronounPath.getFileName().toString());
+        EditorialPairSourceLoader.FilesLoad load = EditorialPairSourceLoader.planFiles(
+                "006 private fake fixture", raw, draft, refs, settings);
+        assertNotNull("006 plan missing", load.plan);
+        assertFalse("006 plan is blocked", load.plan.blocked());
+        EditorialPairPreview preview = EditorialPairPreview.of(load.source, glossary, pronoun,
+                EditorialPairSnapshot.cues("from,speaker,target"));
+        assertTrue("006 preview is blocked", preview.runnable());
+        return new PrivateChapter006(draftPath, raw, draft, glossaryText, pronoun, glossary, load, preview);
+    }
+
+    private static AppSettings c6Settings() {
+        AppSettings settings = new AppSettings();
+        settings.provider = "openrouter";
+        settings.model = "openai/gpt-5.6-luna";
+        settings.optimizationPreset = "balanced";
+        settings.chunkMode = "token";
+        settings.maxTokensPerChunk = 450;
+        settings.softLimitRatio = 0.8f;
+        settings.maxOutputTokens = 4096;
+        settings.contextChars = 400;
+        return settings;
+    }
+
+    private static FakeExecution executeFake(PrivateChapter006 chapter, CorrectionTarget target) throws Exception {
+        List<Integer> activeRows = new ArrayList<>();
+        for (int i = 0; i < chapter.preview.rows.size(); i++) {
+            if (chapter.preview.rows.get(i).fixPointCount > 0) activeRows.add(i);
+        }
+        FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, callIndex) -> {
+            if (callIndex < 0 || callIndex >= activeRows.size()) throw new IllegalStateException("C6_FAKE_CALL_INDEX_INVALID");
+            int rowIndex = activeRows.get(callIndex);
+            int selectedId = target != null && target.rowIndex == rowIndex ? target.pointId : -1;
+            String answer = target == null ? EditorialPairTestData.targetedAnswer(request, callIndex, (i, d) -> "=")
+                    : targetedAnswerForPoint(request, selectedId, target.newLine);
+            return new com.ml.tblandroidtxt.editorial.api.EditorialApiFlow.StepResponse(answer, "stop", 0, 0,
+                    BigDecimal.ZERO, true, "fake-model", "fake-route", "");
+        });
+        EditorialPairRunService service = new EditorialPairRunService(new InMemoryPairRunStore(), fake, FREE_FAKE_PRICING, 60_000L);
+        EditorialPairModels.PairRun prepared = service.prepare(1, chapter.load.source, chapter.glossaryText, chapter.pronoun,
+                null, "fake-model", "Vietnamese", new BigDecimal("1.00"), EditorialPairModels.ARM_CHUNK);
+        EditorialPairModels.PairRun run = service.execute(prepared.id, null);
+        return new FakeExecution(fake, run, service.exportPlan(run.id), chapter.preview);
+    }
+
+    private static String targetedAnswerForPoint(com.ml.tblandroidtxt.editorial.api.EditorialApiFlow.Request request,
+                                                  int selectedId, String replacement) {
+        String user = request.prompt().user();
+        int start = user.indexOf("# NUMBERED FIX POINTS\n");
+        if (start < 0) throw new IllegalStateException("C6_FAKE_TARGETED_PROMPT_MISSING");
+        String[] lines = user.substring(start).split("\n");
+        Pattern header = Pattern.compile("^\\[(\\d+)] TYPES: .*$");
+        StringBuilder answer = new StringBuilder();
+        int returned = 0;
+        for (int i = 1; i < lines.length; i++) {
+            Matcher id = header.matcher(lines[i]);
+            if (!id.matches()) continue;
+            int numericId = Integer.parseInt(id.group(1));
+            if (answer.length() > 0) answer.append('\n');
+            answer.append('[').append(numericId).append("] ").append(numericId == selectedId ? replacement : "=");
+            returned++;
+        }
+        if (returned == 0) throw new IllegalStateException("C6_FAKE_NO_TARGET_LINES");
+        return answer.toString();
+    }
+
+    private static CorrectionTarget firstSafeTarget(PrivateChapter006 chapter) {
+        LineUnits draft = LineUnits.parse(chapter.draft);
+        for (int rowIndex = 0; rowIndex < chapter.preview.rows.size(); rowIndex++) {
+            EditorialPairPreview.Row row = chapter.preview.rows.get(rowIndex);
+            int globalOffset = chapter.load.plan.chunks.get(rowIndex).draftFrom();
+            for (FixPoint point : row.fixPoints) {
+                if (point.insertion() || point.draftText().isBlank() || PairText.letters(point.draftText()) == 0) continue;
+                // A punctuation-only fake response proves target isolation without asserting semantic quality.
+                String replacement = point.draftText() + "!";
+                int globalUnit = globalOffset + point.draftLineIndex();
+                if (globalUnit < 0 || globalUnit >= draft.size()) continue;
+                return new CorrectionTarget(rowIndex, point.id(), draft.units().get(globalUnit).physicalLine(), replacement);
+            }
+        }
+        return null;
+    }
+
+    private static String replacePhysicalLine(String text, int physicalLine, String replacement) {
+        int line = 1;
+        int start = 0;
+        while (line < physicalLine && start < text.length()) {
+            char c = text.charAt(start++);
+            if (c == '\r') {
+                if (start < text.length() && text.charAt(start) == '\n') start++;
+                line++;
+            } else if (c == '\n') line++;
+        }
+        if (line != physicalLine) throw new IllegalStateException("C6_FAKE_TARGET_LINE_OUT_OF_RANGE");
+        int end = start;
+        while (end < text.length() && text.charAt(end) != '\r' && text.charAt(end) != '\n') end++;
+        return text.substring(0, start) + replacement + text.substring(end);
+    }
+
+    private static void assertNoPointChunksWereDispatched(EditorialPairPreview preview, int calls) {
+        assertEquals("fake dispatch count equals flagged chunk count", preview.chunksWithFixPoints, calls);
     }
 
     private static void measureChapter(String chapter, EditorialPairPreview preview, ChunkPlan plan, String rawText, String draftText,
