@@ -322,6 +322,92 @@ Chuyển `PairMaps` sang dựng từ `ChunkPlan` (mỗi chunk một cặp), gi�
 
 **Dừng và hỏi owner nếu:** phán định 007 không phải OK; ước tính vượt USD 0.05; UNKNOWN cost; lỗi hạ tầng; cần đổi ngưỡng CS-1 (ngưỡng chỉ được đổi khi số đo offline chứng minh, và phải ghi lý do).
 
+### 5.4 Hướng chốt để build hoàn thiện: sửa theo điểm app gắn cờ (CP-IMPL-6) — 2026-10-09
+
+Owner yêu cầu "chốt hạ hướng build hoàn thiện". Ưu tiên của owner: bắt lỗi xưng hô theo hàng pronoun, rồi thuật ngữ glossary; sửa văn phong tùy tiện là lỗi.
+
+**Bằng chứng (chương 007, luna medium):**
+
+| Cách giao việc cho model | Kết quả |
+|---|---|
+| Viết lại cả chunk, luật rộng (C1.5 lần 3) | Sửa trúng 4/18; **27 dòng owner không sửa bị đổi**; độ giống FINAL 0.9216 < DRAFT 0.9882 |
+| Viết lại cả chunk, luật hẹp (chunk 005, CP-IMPL-4) | Trả nguyên DRAFT; **bỏ sót cả 2 lỗi xưng hô** mục tiêu |
+| App tự phát hiện (khối xưng hô CP-IMPL-5, offline, 0 USD) | Chỉ ra 69% dòng xưng hô owner sửa trên 8 chương (94% ở 006/011/014/017) |
+
+Model nhỏ khi được giao "trả lại cả đoạn đã sửa" dao động giữa sửa linh tinh và không sửa gì. Còn việc tìm chỗ sai theo luật (xưng hô, thuật ngữ, kana sót, câu thiếu) thì app làm tất định, rẻ và đã đo được. Hai lần thử thêm luật vào prompt không đổi được hành vi; theo quy tắc "hai lần cùng họ lỗi thì đổi thiết kế", **dừng các phép thử viết lại cả chunk**.
+
+**Quyết định:**
+
+1. App tìm **điểm cần sửa** trong từng chunk (tất định, offline):
+   - xưng hô lệch hàng pronoun (từ khối CP-IMPL-5);
+   - thuật ngữ: dòng RAW có nguồn glossary mà dòng DRAFT tương ứng thiếu dạng đích;
+   - kana/Hán sót trong DRAFT;
+   - câu RAW không có trong DRAFT (bước 1–0 của bộ căn dòng).
+2. Model chỉ nhận **danh sách điểm đánh số** (kèm câu RAW, câu DRAFT và luật áp dụng, đoạn chunk làm ngữ cảnh chỉ đọc). Với mỗi điểm, model trả **một dòng**: `[n] <câu đã sửa>`, hoặc `[n] =` nếu câu đúng.
+3. App chỉ thay **đúng những câu được gắn cờ**. Câu khác **không thể** bị đổi, nên hết "sửa linh tinh" ngay từ cấu trúc, không phải nhờ prompt.
+4. Chunk không có điểm nào → **không gọi API** (rẻ hơn).
+5. Viết lại cả chunk (sửa văn phong) bị gỡ khỏi luồng người dùng. Mã giữ lại, không phát triển tiếp. Chỉ xem xét lại sau P7, nếu owner muốn, với model mạnh hơn.
+
+**Lộ trình chốt:**
+
+| Bước | Nội dung | Live |
+|---|---|---|
+| C6 | CP-IMPL-6 offline: điểm sửa, prompt mục tiêu, parser khoan dung, áp dụng có kiểm, giao diện "Đã sửa N chỗ"; đo độ phủ trên 8 chương | 0 USD |
+| C6-live | Chương **006** (nhiều hàng pronoun, dev): một lần chạy cả chương | cần D-C6 |
+| C7 | Owner đọc 3 chương do app sửa theo điểm, dùng app như người dùng thật | cần duyệt |
+| P7 | Bàn giao theo checklist v4.18 | — |
+
+#### Yêu cầu làm việc C6 (cho phiên Codex)
+
+Branch giữ nguyên. Không pilot, không V5, không U1 đầy đủ. Mọi thứ trong C6.1–C6.4 offline, 0 USD. Không tạo file báo cáo mới; ghi kết quả vào mục 7.
+
+**C6.1 — Engine (`editorial/api/fix/`, thuần JVM):**
+
+| File | Trách nhiệm | Test bắt buộc |
+|---|---|---|
+| `FixPoint` | 1 điểm: id, loại (`ADDRESS`, `GLOSSARY`, `KANA`, `MISSING`), chỉ số dòng DRAFT (hoặc vị trí chèn), câu DRAFT nguyên văn, câu RAW tương ứng, luật (hàng pronoun self/call/scope hoặc glossary nguồn→đích) | bất biến; không có điểm không có luật |
+| `FixPointFinder` | Từ `ChunkPlan` + cặp đã căn + glossary + pronoun: dùng lại `AddressChecklist` cho `ADDRESS` (ở mức dòng, không chỉ đoạn), `Anchors` cho `GLOSSARY`, bộ phát hiện kana đã có cho `KANA`, bước 1–0 cho `MISSING`. Một dòng nhiều lỗi → một điểm gộp các luật | mỗi loại; hàng đối xứng không nhân đôi điểm; dòng lời kể không thành điểm `ADDRESS`; dòng đã đúng dạng không thành điểm |
+| `TargetedFixPrompt` | System ngắn: chỉ sửa câu được liệt kê; mỗi mục đúng một dòng `[n] …` hoặc `[n] =`; xưng hô chỉ đổi theo hàng khi RAW cho thấy người nói/người nghe đúng là speaker/target của hàng, ngược lại `=`; không thêm gì khác. User: RAW + DRAFT của chunk (chỉ đọc), rồi danh sách điểm | không chứa FINAL; không chứa yêu cầu báo cáo; mỗi điểm có đủ câu RAW, câu DRAFT, luật |
+| `TargetedFixParser` | Khoan dung: nhận dòng `^\[(\d+)\]\s*(.*)$`; `=`, rỗng hoặc trùng nguyên văn → giữ; id lạ bỏ qua; id trùng lấy lần đầu; thiếu id → giữ; có thể có chữ thừa ngoài các dòng `[n]` → bỏ qua và đếm. **Không bao giờ dừng chạy vì định dạng** | các dạng lệch thường gặp: có `</EDIT>`, có markdown, có đánh số `1.`/`(1)`, có dấu ngoặc kép bao câu |
+| `TargetedFixApplier` | Thay đúng dòng của điểm trong phạm vi chunk; `MISSING` chèn sau dòng neo; kiểm từng dòng mới: không thêm kana/Hán (trừ nguồn glossary), không thẻ/meta, độ dài 0.5–2.0 lần dòng cũ (trừ `MISSING`). Vi phạm → giữ dòng cũ và ghi `REJECTED` | dòng ngoài điểm không bao giờ đổi (so từng byte); các trường hợp bị từ chối |
+
+Tăng contract lên `CP-IMPL-6`; lượt chạy cũ không được tiếp tục bằng contract mới (giữ luật CP-IMPL-2).
+
+**C6.2 — App:**
+
+- `EditorialPairRunService`: chunk 0 điểm → `ACCEPTED_NO_CHANGE`, không gọi API. Chunk có điểm → 1 lần gọi, parse, áp dụng, lưu kết quả từng điểm (`FIXED` / `KEPT` / `REJECTED` / `NO_ANSWER`). Giữ toàn bộ luật sổ chi tiêu, UNKNOWN và dừng ở lỗi đầu tiên (lỗi gọi API, không phải lỗi định dạng).
+- Màn xác nhận thêm: "Tìm thấy N điểm cần kiểm: X xưng hô, Y thuật ngữ, Z kana sót, W câu thiếu — sẽ gửi K/M đoạn."
+- Màn kết quả: "Đã sửa A chỗ, giữ nguyên B chỗ, từ chối C chỗ". Danh sách điểm có trước/sau và luật; Xem bản cuối; So sánh; Xuất TXT.
+- Ẩn đường viết lại cả chunk khỏi UI. Chuỗi mới qua `EditorialApiUserStringsTest`.
+
+**C6.3 — Đo offline trên 8 chương có sẵn (004–008, 011, 014, 017), chỉ in số đếm:**
+
+- Số điểm theo loại; số chunk cần gọi / tổng chunk; ước tính USD mỗi chương với luna.
+- Độ phủ: % dòng owner sửa có đụng xưng hô / thuật ngữ / kana nằm trong điểm.
+- Nhiễu: % điểm mà FINAL không đổi dòng đó.
+- Phải ≥ 69% với xưng hô như CP-IMPL-5; ghi số cho thuật ngữ, kana, câu thiếu.
+
+**C6.4 — Offline + build:**
+
+- Test host từ archive sạch: engine, app, `scripts/p6`, `scripts/chunk`.
+- Fake provider trên 006 thật: trả `=` cho mọi điểm → `final.txt` == DRAFT từng byte. Trả câu sửa giả cho một điểm → chỉ đúng dòng đó đổi.
+- Build qua wrapper (code > bản cao nhất đã archive), cài chỉ `emulator-5554`, test thiết bị tập trung như C1.4.
+
+**C6.5 — Live chương 006 (chỉ khi có D-C6):**
+
+- luna medium, sổ mới `C6-<date>`, trần USD 0.03.
+- Kiểm trước: phán định chương OK; ước tính ≤ trần.
+- Một lần chạy cả chương. Chấm theo **chỉ số xưng hô** (memory owner):
+  - với các dòng owner sửa có đụng xưng hô và nằm trong điểm: sửa đúng / bỏ sót / sửa sai;
+  - với các điểm mà FINAL không đổi: số dòng app đổi (sửa sai);
+  - tương tự cho thuật ngữ, kana, câu thiếu;
+  - dòng ngoài điểm bị đổi: phải = 0.
+- Xuất bản app + trang đọc vào `D:\P5E-private\chunk-outputs\006\`. Dừng, báo cáo trong mục 7.
+
+**PASS C6:** offline đạt mọi mục C6.4; live 0 dòng ngoài điểm bị đổi, 0 chữ Nhật mới. Xưng hô: sửa đúng ≥ 60% số dòng owner sửa nằm trong điểm, và sửa sai ≤ 10% số điểm. Nếu không đạt về xưng hô: thử lại **cùng chương** với reasoning `high` (một biến) trước khi xét model khác; cần owner duyệt.
+
+**Dừng và hỏi owner nếu:** phán định 006 không OK, ước tính vượt trần, UNKNOWN cost, lỗi hạ tầng, hoặc cần đổi ngưỡng phát hiện.
+
 ## 6. Trạng thái
 
 **Hiện hành — CP-IMPL-5 (khối ADDRESS CHECK) đã chuẩn bị offline, 2026-10-09:** app chỉ ra đoạn thoại nằm trong phạm vi hàng pronoun mà DRAFT dùng từ xưng hô khác `self`/`call` của hàng; chỉ chunk 005 của 007 đổi (một khối), 6 chunk còn lại trùng từng byte; test engine 651, app 465 PASS. Chưa build/cài/gọi provider, USD 0; hành vi model NOT_MEASURED. APK vẫn `4.18-c1.7` (CP-IMPL-4). 0/3 chương được chấp nhận; P7 chưa bắt đầu. **Next action duy nhất: owner duyệt hoặc từ chối lần live thứ hai trên cùng chunk 005 với CP-IMPL-5 (đề xuất ở cuối §6.2: đúng 1 call, không retry, sổ mới `C1-SINGLE5B-20261009` trần USD 0.01); nếu duyệt thì build `4.18-c1.8` từ commit gói này, cài chỉ `emulator-5554`, chạy thử fake với selector rồi gọi 1 lần. Chưa có quyền chi nào.**
@@ -435,3 +521,4 @@ Cùng một phép thử: chương 007, chunk 005 (RAW P061–P079), `openai/gpt-
 - 2026-10-09 — C1.5 live 007 chạy lại (owner duyệt "duyệt chạy lại"), **vẫn dừng ở đoạn 5/7; PASS C1 chưa đạt**. Sửa trước khi chạy: commit `4acc50fd` (CP-IMPL-3): hợp đồng đầu ra nêu đúng thẻ đóng `</EDITED>` và cấm chép câu RAW vào bản trả về; runner ghi mã cổng cấu trúc cho từng chunk. Build `4.18-c1.5`/252 nguồn `4acc50fd`, event `build-20261009-181748`, APK SHA-256 `5836DF2B…D4D1`, mirror `artifacts/` + `backup/`, chỉ cài `emulator-5554`; test thiết bị tập trung PASS. Chạy: run `ca731da4-aedc-4bf7-b50b-f47d2b15ed97`, cùng cấu hình (luna medium, Performance mặc định, sổ `C1-20261009` trần USD 0.05). Kết quả: đoạn 1–4 `ACCEPTED` (cổng PASS), **đoạn 5 `STRUCTURE_BLOCKED`, mã `ENVELOPE/FORMAT` ("not a usable EDITED answer")**: câu trả lời có `<EDITED>` nhưng đóng bằng `</EDIT>` thay vì `</EDITED>`; đoạn 6–7 không gửi, không gửi lại đoạn nào. 5 lượt gọi, 14 645 vào / 9 444 ra token, **USD 0.01499330**; sổ sau lần này: 10 call, **USD 0.0263459**, 0 pending, 0 UNKNOWN (`verify_spend_ledger.py` OK, hash cuối `5381680b…0336`), còn USD 0.0236541. **Đính chính chẩn đoán lần 1:** mục lần 1 nói đoạn 5 bị chặn vì bản trả về chép câu Nhật và chưa có mã cổng. Phát lại cổng ngoại tuyến (USD 0) trên câu trả lời đã lưu của lần 1 cho thấy mã chặn cũng là `ENVELOPE/FORMAT` với thẻ đóng `</EDIT>`; việc chép câu RAW không phải mã chặn. Lần 2 (hợp đồng mới) câu trả lời không còn mở đầu bằng câu RAW nhưng vẫn đóng sai thẻ cùng kiểu. **Phát lại ngoại tuyến (USD 0, `D:\P5E-private\chunk-runs\C1\gate-replay-closing-tag.txt`):** nếu thẻ đóng là `</EDITED>`, cổng cho cả hai câu trả lời đoạn 5 là WARN, không BLOCK (lần 1: `LAYOUT/BLANK_RUN_CHANGED`, 1212→1157 chữ; lần 2: `BOUNDARY/BOUNDARY_WS_TRIMMED`, 1212→1212 chữ; cả hai 19→19 dòng). Nội dung đoạn 5 dùng được; chỉ thẻ đóng sai làm chạy dừng cả hai lần. Chấm bản tạm (đoạn 1–4 đã sửa, đoạn 5–7 giữ DRAFT) bằng `score_vs_final.py`/`min_gate_413.py`: owner sửa 18 dòng, **app sửa trúng/gần hơn 4/18 (22.2%), gần đúng 3** (mốc luna toàn chương 3 · v5 8 · Sol 13), 14 dòng xa FINAL hơn (4 trong số dòng owner đã sửa), 10 dòng owner không sửa mà app đổi, 0 dòng thêm chữ Nhật, độ giống FINAL cả chương 0.9747 so với DRAFT 0.9882; 13 vùng đổi so với DRAFT, đều ở đoạn 1–4. Số dòng còn chữ Nhật 5 bằng DRAFT (đoạn 5–7 chưa sửa), FINAL 3. Cổng tối thiểu 4.1.3: chưa đạt (c2, c3, c4 sai) và chưa so được trực tiếp vì mới sửa 4/7 đoạn. Không chạy thêm (lần duyệt này đã dùng hết); không chạy chương nào khác. Bản app (tạm) và trang đọc: `D:\P5E-private\chunk-outputs\007\007_APP_chunk-luna_RERUN_PARTIAL_JAKUAKU_MONSTER_VOL1.txt` SHA-256 `1565aa85…22f8`, `c1-007-rerun-review.html` SHA-256 `1996e4ae…bc1f`. **Next action duy nhất:** owner xem `D:\P5E-private\chunk-outputs\007\c1-007-rerun-review.html` và quyết định có cho một lần chạy 007 thứ ba sau khi sửa hẹp (bộ phân tích chấp nhận thẻ đóng sai kiểu `</EDIT>` ở cuối câu trả lời, vẫn ghi cảnh báo; ước tính ≈ USD 0.015, sổ còn USD 0.0236541) hay đổi hướng; không chạy live thêm trước quyết định đó.
 - 2026-10-09 — C1.5 live 007 lần 3 (owner duyệt "duyệt" sau đề xuất sửa hẹp), **chạy đủ 7/7 đoạn, không đoạn nào bị chặn**. Sửa hẹp: commit `57978e83`: trong chạy chunk, đúng một `</EDIT>` ở cuối câu trả lời (không có `</EDITED>`, không có thẻ mở lồng, sau nó chỉ còn khoảng trắng) được đọc như thẻ đóng; cổng luôn thêm cảnh báo `CLOSE_TAG_REPAIRED` (không bao giờ PASS). Chỉ `EditorialPairRunService` bật chế độ này; luồng toàn chương và bộ phân tích mặc định không đổi. Test host trên cây làm việc: engine 644 (1 off), app 457 (1 off), mới: 2 test bộ phân tích, 1 test cổng, 1 test dịch vụ (chunk đóng sai thẻ thành WARN_REVIEW, chạy tiếp, bản ghép đủ kèm cảnh báo). Không chạy lại archive sạch cho commit này. Build `4.18-c1.6`/253 nguồn `57978e83`, event `build-20261009-183051`, APK SHA-256 `10E44370…88D7`, mirror `artifacts/` + `backup/`; AndroidTest `c1-chunk-20261009f`; chỉ cài `emulator-5554`; test thiết bị tập trung 8 nhóm PASS (pair store 6, pair UI 6, API store 6, flow 3, UI 5, process death 3), sổ Q2 không đổi; fake replay 007: 7 chunk, `final.txt` == DRAFT từng byte. Chạy: run `f0d387b5-52bb-4eb0-98d0-f7717b828ef1`, cùng cấu hình (luna medium, Performance mặc định, sổ `C1-20261009`). Kết quả: `FINAL_ELIGIBLE`, 7 lượt gọi (mỗi chunk 1 lần, 7 × finish `stop`), 19 227 vào / 10 548 ra token, **USD 0.01409840**. Cổng: đoạn 1, 2, 4, 6, 7 PASS; đoạn 3 và 5 `WARN_REVIEW` chỉ với `BOUNDARY_WS_TRIMMED` (khoảng trắng ở mép); **không có `CLOSE_TAG_REPAIRED`**: cả 7 câu trả lời đều đóng đúng `</EDITED>`, nên phần sửa hẹp không được dùng trong lần chạy này (lần 3 không tái hiện lỗi đóng sai thẻ ở đoạn 5; lỗi này gặp 2/2 lần trước). Sổ: 17 call, **USD 0.0404443** (trần 0.05), 0 pending, 0 UNKNOWN (`verify_spend_ledger.py` OK, hash cuối `42184ab9…b6e2`), còn USD 0.0095557. Chấm toàn chương (7/7 đoạn) bằng `score_vs_final.py`/`min_gate_413.py`: owner sửa 18 dòng, **app sửa trúng/gần hơn 4/18 (22.2%), gần đúng 3** (mốc luna toàn chương 3 · v5 8 · Sol 13); **27 dòng owner không sửa mà app đổi**, 34 dòng xa FINAL hơn (7 trong số dòng owner đã sửa), 0 dòng thêm chữ Nhật, chữ Nhật còn lại 4 dòng (DRAFT 5, FINAL 3), độ giống FINAL cả chương **0.9216 so với DRAFT 0.9882** (thấp hơn DRAFT). Cổng tối thiểu 4.1.3: chưa đạt (c2, c3, c4 sai). **Đối chiếu PASS C1 (mục 5.3):** không chunk nào bị chặn cấu trúc ✓; 0 dòng sinh chữ Nhật ✓; sửa trúng 4/18 > 3/18 ✓ về con số nhưng chênh một dòng nên "rõ hơn" không chắc; chất lượng (sửa thừa nhiều, giống FINAL kém DRAFT) do owner đọc quyết định. Semantic NOT_MEASURED; 0/3 chương được chấp nhận; P7 chưa bắt đầu. Không chạy thêm; không chạy chương nào khác. Bản app và trang đọc: `D:\P5E-private\chunk-outputs\007\007_APP_chunk-luna_THIRD_JAKUAKU_MONSTER_VOL1.txt` SHA-256 `59f4a4a0…ff43`, `c1-007-third-review.html` SHA-256 `327f41a5…`. **Next action duy nhất:** owner xem `D:\P5E-private\chunk-outputs\007\c1-007-third-review.html` và quyết định hướng tiếp theo (sổ C1 chỉ còn USD 0.0095557, không đủ cho một lần chạy 007 nữa; mọi lần chạy live thêm cần trần mới): bản 7/7 đoạn đã đủ chương nhưng sửa thừa nhiều (27 dòng owner không sửa) và giống FINAL kém DRAFT, nên cần owner đọc để quyết định có chấp nhận hướng chunk, siết lệnh để bớt sửa thừa, hay đổi hướng; không chạy live thêm trước quyết định đó.
 - 2026-10-09 — Phép thử live single-chunk (owner duyệt "duyệt, build và chạy thử"): chương 007, chunk 005 (RAW P061–P079), CP-IMPL-4, `openai/gpt-5.6-luna` medium, **1 call**. Build `4.18-c1.7`/254 nguồn `ff819dde`, event `build-20261009-193025`, APK SHA-256 `51BEC145…7D40`, AndroidTest `c1-chunk-20261009g`, mirror `artifacts/` + `backup/`; emulator phải khởi động lại, cài chỉ `emulator-5554`. Test thiết bị tập trung PASS (pair store 6, pair UI 6, API store 6, flow 3, UI 5, process death 3; sổ Q2 không đổi). Chạy fake trên thiết bị với `-SelectorFile`: 1 request, 6 chunk còn lại chưa gửi, prompt trên thiết bị **trùng từng byte** prompt dựng trên host (SHA-256 `13843db5…66cb`). Live: run `b7f48241-d2a1-491b-8374-b36132a9a673`, sổ mới `C1-SINGLE5-20261009` trần USD 0.01; 1 call, finish `stop`, 3 216 vào / 1 007 ra token, **USD 0.00201225**, 0 pending/UNKNOWN (`verify_spend_ledger.py` OK, còn USD 0.00798775 — không phải quyền chi); không retry, chunk khác không gửi. Cổng: `WARN` mã `CLOSE_TAG_REPAIRED` — câu trả lời lại kết thúc bằng `</EDIT>` và phần sửa hẹp `57978e83` đã dùng thật lần đầu (lần chạy này sẽ bị chặn nếu không có nó); trạng thái chunk `WARN_REVIEW`, chạy `INCOMPLETE` (single-chunk, không phải FINAL). **Kết quả: bản trả về chunk 005 giống DRAFT từng dòng (19/19 dòng, 0 dòng đổi).** Xưng hô (annotation đã phân xử `adjudication-007-chunk5-cp4.json`): 2 chỗ lỗi `cậu` ở P064 **bỏ sót cả 2** (0 sửa đúng, 0 sửa sai), lời gọi sạch `Yoshioka` ở P075 giữ nguyên. Completeness (`chunk_completeness.py`): 19/19 đơn vị RAW giữ, 0 thiếu mới, 0 dòng đổi chưa phân xử; sửa ngoài mục tiêu 0. **Giả thuyết CP-IMPL-4 làm model sửa đúng hai chỗ gọi: không được xác nhận trong một lần thử.** Core mới hết sửa văn phong thừa (27 dòng trước → 0 dòng đổi ở chunk này) nhưng cũng không bắt được lỗi xưng hô mục tiêu. Nguyên nhân chưa biết; các giả thuyết chưa kiểm: hàng pronoun có `from=吉岡さん` còn RAW dùng `あなた` trong lượt thoại; quy tắc "mơ hồ thì giữ DRAFT" bị áp dụng quá thận trọng; mức suy luận medium. Một lần thử không đủ kết luận về tỉ lệ; không dùng làm điểm toàn chương. Evidence riêng: `D:\P5E-private\chunk-runs\C1\live\007-b7f48241-d2a1-491b-8374-b36132a9a673\`, điểm `D:\P5E-private\chunk-quality-20261009\score-cp4-single-chunk5.json`. **Next action duy nhất:** owner quyết định hướng sau kết quả chunk 005: cho phép thiết kế offline (không live) một khối ứng viên xưng hô tất định đưa vào request — liệt kê, trong lượt thoại thuộc phạm vi hàng pronoun, từng chỗ RAW/DRAFT mà hàng đó chi phối — rồi kiểm lại bằng cùng selector và bộ đối chứng; hoặc đổi hướng. Không chạy live thêm trước quyết định; sổ `C1-SINGLE5-20261009` còn USD 0.00798775 nhưng không phải quyền chi.
+- 2026-10-09 — coordinator: kiểm archive sạch `e3f13f87` (engine 651, app 465, p6 93, chunk 24, androidTest compile PASS) và push 4 commit. Owner yêu cầu chốt hướng build hoàn thiện → chốt **sửa theo điểm app gắn cờ (CP-IMPL-6)**, mục 5.4: app tìm điểm xưng hô/thuật ngữ/kana/câu thiếu, model chỉ trả câu sửa cho từng điểm, app chỉ thay đúng các câu đó. Dừng các phép thử viết lại cả chunk; không chạy lần live thứ hai trên chunk 005.
