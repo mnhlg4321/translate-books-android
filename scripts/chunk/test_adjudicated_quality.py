@@ -179,6 +179,47 @@ def synthetic_controls() -> dict:
 
 
 class AdjudicatedQualityTest(unittest.TestCase):
+    def test_no_adjudication_never_looks_issue_free(self):
+        for rows in ([], [address("unknown", "BAD", "OTHER", adjudication="UNADJUDICATED")]):
+            result = evaluate({"schema": SCHEMA, "address_occurrences": rows})
+            self.assertEqual(result["measurement_status"], "NOT_MEASURED")
+            self.assertEqual(result["quality_outcome"], "NOT_MEASURED")
+
+    def test_clean_only_and_boundary_only_controls_are_measured(self):
+        result = evaluate({"schema": SCHEMA, "address_occurrences": [address("clean", "OK", "BAD", ["OK"])]})
+        self.assertEqual(result["address"]["status"], "MEASURED")
+        self.assertEqual(result["address"]["new_errors"], 1)
+        result = evaluate({"schema": SCHEMA, "content_units": [unit("leak", False, True, required=False, scope="REFERENCE")]})
+        self.assertEqual(result["completeness"]["status"], "MEASURED")
+        self.assertEqual(result["completeness"]["boundary_leaks"], 1)
+
+    def test_malformed_annotation_types_have_typed_errors(self):
+        for field in ("speaker_id", "target_id", "adjudication"):
+            for bad in ([], {"bad": True}, 7):
+                data = synthetic_controls()
+                data["address_occurrences"][0][field] = bad
+                with self.subTest(field=field, value=bad), self.assertRaises(AnnotationError):
+                    evaluate(data)
+        for collection in ("content_units", "other_edits"):
+            data = synthetic_controls()
+            data[collection][0]["adjudication"] = []
+            with self.assertRaises(AnnotationError):
+                evaluate(data)
+        data = synthetic_controls()
+        data["content_units"][0]["scope"] = []
+        with self.assertRaises(AnnotationError):
+            evaluate(data)
+        data = synthetic_controls()
+        data["address_occurrences"][0]["raw_anchor"]["synthetic_raw"] = []
+        with self.assertRaises(AnnotationError):
+            evaluate(data)
+
+    def test_unchanged_text_cannot_be_credited_as_a_repaired_character(self):
+        data = synthetic_controls()
+        data["other_edits"][0]["candidate_changed"] = False
+        with self.assertRaisesRegex(AnnotationError, "unchanged candidate"):
+            evaluate(data)
+
     def test_address_error_buckets_and_controls_are_distinct(self):
         result = evaluate(synthetic_controls())
         self.assertEqual(result["address"]["denominator"], 7)

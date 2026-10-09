@@ -37,6 +37,7 @@ def _anchor(item: dict[str, Any], path: str) -> None:
         raise AnnotationError(f"{path}: raw_anchor.sha256 must be 64 hex characters")
     excerpt = anchor.get("synthetic_raw")
     if excerpt is not None:
+        _require_text(excerpt, f"{path}.raw_anchor.synthetic_raw")
         observed = hashlib.sha256(excerpt.encode("utf-8")).hexdigest()
         if observed.lower() != digest.lower():
             raise AnnotationError(f"{path}: synthetic RAW anchor hash mismatch")
@@ -90,7 +91,7 @@ def evaluate(data: dict[str, Any]) -> dict[str, Any]:
         seen_ids.add(case_id)
         _anchor(item, path)
         state = item.get("adjudication")
-        if state not in ADDRESS_STATES:
+        if not isinstance(state, str) or state not in ADDRESS_STATES:
             raise AnnotationError(f"{path}.adjudication is invalid")
         _require_text(item.get("scope"), f"{path}.scope")
         _require_text(item.get("defect_type"), f"{path}.defect_type")
@@ -115,12 +116,14 @@ def evaluate(data: dict[str, Any]) -> dict[str, Any]:
 
         speaker = item.get("speaker_id")
         target = item.get("target_id")
-        if state == "ADJUDICATED" and (not speaker or not target):
-            raise AnnotationError(f"{path}: adjudicated role requires speaker_id and target_id")
+        if state == "ADJUDICATED":
+            _require_text(speaker, f"{path}.speaker_id")
+            _require_text(target, f"{path}.target_id")
         if state != "UNADJUDICATED":
             _require_text(item.get("adjudication_note"), f"{path}.adjudication_note")
 
         defective = draft not in acceptable
+        address["adjudicated_count"] += 1
         if defective:
             address["denominator"] += 1
             if candidate is None or candidate == draft:
@@ -149,7 +152,7 @@ def evaluate(data: dict[str, Any]) -> dict[str, Any]:
         seen_ids.add(case_id)
         _anchor(item, path)
         state = item.get("adjudication")
-        if state not in UNIT_STATES:
+        if not isinstance(state, str) or state not in UNIT_STATES:
             raise AnnotationError(f"{path}.adjudication is invalid")
         required = item.get("required_by_raw")
         draft_present = item.get("draft_present")
@@ -157,12 +160,13 @@ def evaluate(data: dict[str, Any]) -> dict[str, Any]:
         if not all(isinstance(value, bool) for value in (required, draft_present, candidate_present)):
             raise AnnotationError(f"{path}: required_by_raw/draft_present/candidate_present must be booleans")
         scope = item.get("scope", "MAIN")
-        if scope not in {"MAIN", "REFERENCE"}:
+        if not isinstance(scope, str) or scope not in {"MAIN", "REFERENCE"}:
             raise AnnotationError(f"{path}.scope must be MAIN or REFERENCE")
         if state == "UNADJUDICATED":
             completeness["unadjudicated_excluded"] += 1
             continue
         _require_text(item.get("adjudication_note"), f"{path}.adjudication_note")
+        completeness["adjudicated_count"] += 1
         if scope == "REFERENCE":
             if candidate_present:
                 completeness["boundary_leaks"] += 1
@@ -194,7 +198,7 @@ def evaluate(data: dict[str, Any]) -> dict[str, Any]:
         seen_ids.add(case_id)
         _anchor(item, path)
         state = item.get("adjudication")
-        if state not in UNIT_STATES:
+        if not isinstance(state, str) or state not in UNIT_STATES:
             raise AnnotationError(f"{path}.adjudication is invalid")
         _require_text(item.get("defect_type"), f"{path}.defect_type")
         if state == "UNADJUDICATED":
@@ -208,6 +212,9 @@ def evaluate(data: dict[str, Any]) -> dict[str, Any]:
         if not all(isinstance(value, bool) for value in (draft_defect, candidate_defect,
                                                          candidate_changed, supported)):
             raise AnnotationError(f"{path}: defect/change/support fields must be booleans")
+        if not candidate_changed and draft_defect != candidate_defect:
+            raise AnnotationError(f"{path}: unchanged candidate cannot change defect status")
+        other_edits["adjudicated_count"] += 1
         if draft_defect:
             other_edits["denominator"] += 1
             if candidate_defect:
@@ -247,19 +254,22 @@ def evaluate(data: dict[str, Any]) -> dict[str, Any]:
         or completeness["omissions_remaining"] or completeness["new_omissions"]
         or completeness["unsupported_additions"] or completeness["boundary_leaks"]
     )
-    def metric(counter: Counter, denominator: str) -> dict[str, int | str]:
+    def metric(counter: Counter) -> dict[str, int | str]:
         result: dict[str, int | str] = dict(sorted(counter.items()))
-        result["status"] = "MEASURED" if counter[denominator] else "NOT_MEASURED"
+        # A clean-only control still measures collateral errors. Its zero defect
+        # denominator means repair recall is unmeasured, not that the control is absent.
+        result["status"] = "MEASURED" if counter["adjudicated_count"] else "NOT_MEASURED"
         return result
 
+    measured = any(c["adjudicated_count"] for c in (address, completeness, other_edits)) or bool(controls)
     return {
         "schema": SCHEMA,
-        "address": metric(address, "denominator"),
-        "completeness": metric(completeness, "denominator"),
-        "other_edits": metric(other_edits, "denominator"),
+        "address": metric(address),
+        "completeness": metric(completeness),
+        "other_edits": metric(other_edits),
         "controls": dict(sorted(controls.items())),
-        "measurement_status": "SCORED",
-        "quality_outcome": "ISSUES_PRESENT" if has_issues else "NO_ADJUDICATED_ISSUES",
+        "measurement_status": "SCORED" if measured else "NOT_MEASURED",
+        "quality_outcome": ("ISSUES_PRESENT" if has_issues else "NO_ADJUDICATED_ISSUES") if measured else "NOT_MEASURED",
         "semantics": "Annotation measurement only; not app acceptance or model-quality certification",
     }
 

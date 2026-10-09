@@ -390,14 +390,41 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         int logicalCalls = 0;
         String error = "";
         EditorialPairModels.PairRun run = null;
+        Map<String, Object> singleChunk = null;
         if (load.plan.blocked() || load.source.rawRows.isEmpty()) {
             final_ = text.get("DRAFT");
             state = "CHAPTER_BLOCKED";
         } else {
             InMemoryPairRunStore store = new InMemoryPairRunStore();
-            EditorialPairRunService service = new EditorialPairRunService(store, provider, pricing, 900_000L);
+            // Single-chunk experiment (docs/EDITORIAL_CHUNK_PLAN.md 6.2): p6_only_ordinal names one chunk and every guard must match
+            // before anything is reserved; the provider then lets one request through, whatever happens to it.
+            boolean onlyOne = !args.getString("p6_only_ordinal", "").isEmpty();
+            EditorialSingleChunkProbe.OneCallProvider oneCall = onlyOne ? new EditorialSingleChunkProbe.OneCallProvider(provider) : null;
+            EditorialPairRunService service = new EditorialPairRunService(store, onlyOne ? oneCall : provider, pricing, 900_000L);
             run = service.prepare(1, load.source, glossaryText, pronounText, null, model, "Vietnamese", chapterCap, EditorialPairModels.ARM_CHUNK);
-            run = service.execute(run.id, null);
+            if (onlyOne) {
+                EditorialSingleChunkProbe.Selector selector = new EditorialSingleChunkProbe.Selector(
+                        Integer.parseInt(args.getString("p6_only_ordinal")), args.getString("p6_only_pair_id", ""), args.getString("p6_only_map_hash", ""),
+                        Integer.parseInt(args.getString("p6_only_first_paragraph", "0")), Integer.parseInt(args.getString("p6_only_last_paragraph", "0")),
+                        args.getString("p6_only_raw_sha256", ""), args.getString("p6_only_draft_sha256", ""));
+                String pairId = EditorialSingleChunkProbe.resolve(run, selector);
+                run = service.executeOnly(run.id, pairId, null);
+                singleChunk = new LinkedHashMap<>();
+                singleChunk.put("experiment", "SINGLE_CHUNK");
+                singleChunk.put("ordinal", BigDecimal.valueOf(selector.ordinal()));
+                singleChunk.put("pairId", pairId);
+                singleChunk.put("dispatched", BigDecimal.valueOf(oneCall.dispatched()));
+                singleChunk.put("refused", BigDecimal.valueOf(oneCall.refused()));
+                for (EditorialPairModels.PairItem item : service.items(run.id)) {
+                    if (!item.pairId.equals(pairId)) continue;
+                    singleChunk.put("state", item.state.name());
+                    singleChunk.put("gate", item.gateJson == null ? "" : item.gateJson);
+                    Files.write(outputRoot.resolve("chunk-candidate.txt"), (item.candidateText == null ? "" : item.candidateText).getBytes(StandardCharsets.UTF_8));
+                    Files.write(outputRoot.resolve("chunk-response.txt"), (item.responseText == null ? "" : item.responseText).getBytes(StandardCharsets.UTF_8));
+                }
+            } else {
+                run = service.execute(run.id, null);
+            }
             EditorialPairRunService.ExportPlan plan = service.exportPlan(run.id);
             final_ = plan == null ? text.get("DRAFT") : plan.text;
             state = run.state.name();
@@ -422,6 +449,7 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         byte[] finalBytes = final_.getBytes(StandardCharsets.UTF_8);
         Files.write(outputRoot.resolve("final.txt"), finalBytes);
         Files.write(outputRoot.resolve("chunks.json"), EditorialCanonicalJson.canonicalize(new ArrayList<Object>(chunkRows)).getBytes(StandardCharsets.UTF_8));
+        if (singleChunk != null) Files.write(outputRoot.resolve("single-chunk.json"), EditorialCanonicalJson.canonicalize(singleChunk).getBytes(StandardCharsets.UTF_8));
 
         boolean valid = "FINAL_ELIGIBLE".equals(state);
         Map<String, Object> structural = new LinkedHashMap<>();
@@ -444,7 +472,7 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         performance.put("hardLimitUsed", BigDecimal.valueOf(load.plan.limits.hard()));
         Map<String, Object> metadata = new LinkedHashMap<>();
         metadata.put("fixtureId", fixtureId);
-        metadata.put("mode", "CHUNK");
+        metadata.put("mode", singleChunk == null ? "CHUNK" : "CHUNK_SINGLE");
         metadata.put("providerKind", live ? "LIVE" : "FAKE_OFFLINE");
         metadata.put("groupId", groupId);
         metadata.put("groupMaximumUsd", groupMaximum.toPlainString());

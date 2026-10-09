@@ -1,5 +1,33 @@
 # Build State
 
+## Current state — 2026-10-09 (single-chunk 005 offline preparation done)
+
+- Baseline HEAD `0e0ebd8c`; this package adds `EditorialSingleChunkProbe` (7-field selector with typed refusals, one-call provider), `EditorialPairRunService.executeOnly` (no retry, refuses a non-unsent pair), runner `p6_only_*` args (mode `CHUNK_SINGLE`), and `scripts/chunk/chunk_completeness.py`. The product `execute` flow is unchanged.
+- Offline checks pass: host tests prove only the selected chunk is sent and its request equals the full run's request for that chunk; real 007 plan equals the device plan byte for byte, chunk 005 = RAW P061-P079 with the P064-P075 pronoun row partial; prompt vs the CP-IMPL-3 baseline differs only in the core and one layout sentence. Engine 644 (1 skip), app 464 (2 skip), Python chunk 24 and p6 93, androidTest compile PASS. Working-tree run, not a clean archive.
+- Whole-chunk completeness control: CP-IMPL-3 candidate keeps 19/19 RAW units (labels by the reviewer, owner may redo); negative controls detect a dropped paragraph and an added line only when adjudicated, otherwise PARTIAL.
+- No APK built (still `4.18-c1.6`/253 from `57978e83`), nothing installed, no provider call, USD 0. CP-IMPL-4 model adherence NOT_MEASURED; 0/3 chapters accepted; P7 not started.
+- Next action: owner duyệt hoặc từ chối đề xuất live ở cuối §6.2 (chương 007, chunk 005, P061–P079, đúng 1 call, sổ mới `C1-SINGLE5-20261009` trần USD 0.01); nếu duyệt thì mới build `4.18-c1.7` từ commit gói này, cài chỉ `emulator-5554`, chạy thử single-chunk bằng fake provider trên thiết bị, rồi mới gọi 1 lần. Chưa có quyền chi nào.
+
+## Current review — 2026-10-09 (0e0ebd8c independent QA review)
+
+- Actual HEAD `0e0ebd8cae5699402606c3db1a303e7c2748216c`; CP-IMPL-4 committed, not built/installed. The previously uncommitted BUILD_STATE section below was stale; retained as history.
+- Verified six source overlay hashes/HEAD equivalence, annotation and response/prompt hashes, XML engine 644 total/1 skip and app 457 total/1 skip. No Java changes or repeated Gradle build in this review.
+- Small QA-only fixes in working tree: empty/unadjudicated NOT_MEASURED; clean-only measurement; typed malformed-annotation rejection; reject unchanged text credited as repaired. Isolated 0e0ebd8c archive + scorer/test overlay 13/13 PASS. Historical real annotation still two wrong occurrences and one clean retained; completeness NOT_MEASURED.
+- Existing APK/source/device report unchanged: 4.18-c1.6/253 from 57978e83; current device not inspected. Mapping/cutting/merging unchanged. Review provider calls 0 / USD 0; no build/device/commit/push. 0/3 accepted; P7 not started.
+- Next action: prepare the single-chunk canary offline under living plan §6.2. Current runner executes the full pair list, so live approval request was premature.
+
+## Superseded review — 2026-10-09 (pronoun/completeness priority, offline only)
+
+- Baseline actual HEAD `a14272ab1eb4c74c154afa7493af1d432536d74d`; branch `feature/v4.18-p5e-runner-repair-20260917`. CP-IMPL-4 is uncommitted source, not installed.
+- Prior build remains `4.18-c1.6`/253, source `57978e83`; C1 event metadata verified, no device action in this review. BUILD_INFO branch is build checkout `tmp/api-n4-20261005`, distinct from working branch.
+- Verified C1 third run: 7 chunk calls, all finish stop, 5 PASS/2 boundary-WARN. A scoped pronoun row is present but its required call form is not followed in one RAW-confirmed turn. Full semantic evaluation NOT_MEASURED; 0/3 accepted, P7 not started.
+- Offline patch removes stylistic polishing from the chunk core, prioritizes scoped self/call and completeness; no reports/extra model calls. Legacy whole-chapter core, parser, structural thresholds unchanged.
+- Clean archive `a14272ab` + four-file hashed overlay: 221 API engine PASS, 1 corpus opt-in SKIP; 47 app pair PASS. Evidence `D:/P5E-private/pronoun-priority-20261009-d9e29f6c/`. These are patch tests, not PASS attributed to unmodified HEAD or semantic quality.
+- C1 ledger independently verified: 17 calls, USD 0.04044430, 0 pending; review uses 0 calls/USD 0. No build/install/commit/push.
+- Next action: complete the annotated offline pronoun/completeness controls in `docs/EDITORIAL_CHUNK_PLAN.md` §6.1. No new live authority.
+
+The earlier current-state headings below are historical evidence, superseded by this review.
+
 ## Current state — 2026-10-09 (chunk editing C1: C1.1–C1.4 done, C1.5 live 007 run three times: two stops at chunk 5, then a full 7/7 run)
 
 - Branch `feature/v4.18-p5e-runner-repair-20260917`; detail and evidence in `docs/EDITORIAL_CHUNK_PLAN.md` section 7. Build `4.18-c1.6` / code 253, event `build-20261009-183051`, source `57978e83`, APK SHA-256 `10E4437096306AFA6995A8DC9CDF50B57BB4E8E17C8BA355AC02EBC922A088D7` (contract CP-IMPL-3 plus the trailing `</EDIT>` repair); AndroidTest `c1-chunk-20261009f` (clean-archive tests ran on `56399f1d`; later changes covered by host tests on the working tree: engine 644, app 457, and focused device tests); mirrored in `artifacts/` and `backup/`; installed only on `emulator-5554`.

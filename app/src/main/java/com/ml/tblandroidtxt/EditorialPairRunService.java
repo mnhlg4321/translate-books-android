@@ -177,6 +177,24 @@ public final class EditorialPairRunService {
     // ---- execute
 
     public PairRun execute(long runId, Listener listener) {
+        return run(runId, listener, null, MAX_ATTEMPTS);
+    }
+
+    /**
+     * Single-chunk experiment: sends exactly one request for {@code pairId} (no retry after a failure) and leaves every other pair
+     * unsent. The frozen snapshot is the whole chapter, so the request is the one the full run would build for that pair. A pair
+     * that is not an unsent IMPORTED pair is refused before anything is reserved or sent. The product flow never calls this.
+     */
+    public PairRun executeOnly(long runId, String pairId, Listener listener) {
+        if (store.getRun(runId) == null) throw new IllegalArgumentException("run " + runId);
+        PairItem target = null;
+        for (PairItem i : store.items(runId)) if (i.pairId.equals(pairId)) target = i;
+        if (target == null) throw new IllegalArgumentException("PAIR_NOT_IN_RUN: " + pairId);
+        if (target.state != PairState.IMPORTED) throw new IllegalStateException("PAIR_NOT_UNSENT: " + pairId + " is " + target.state);
+        return run(runId, listener, pairId, 1);
+    }
+
+    private PairRun run(long runId, Listener listener, String only, int maxAttempts) {
         PairRun run = store.getRun(runId);
         if (run == null) throw new IllegalArgumentException("run " + runId);
         // Never resume an old, partially sent run using a different prompt contract.
@@ -201,7 +219,8 @@ public final class EditorialPairRunService {
                     break;
                 }
                 if (item.state != PairState.IMPORTED) continue;
-                boolean stop = dispatch(run, snapshot, item, listener);
+                if (only != null && !only.equals(item.pairId)) continue;
+                boolean stop = dispatch(run, snapshot, item, listener, maxAttempts);
                 run = refresh(runId);
                 if (stop) break;
             }
@@ -212,7 +231,7 @@ public final class EditorialPairRunService {
     }
 
     /** @return true when the run must stop (unknown outcome, reservation refused, overrun, wrong pair). */
-    private boolean dispatch(PairRun run, EditorialPairSnapshot snapshot, PairItem item, Listener listener) {
+    private boolean dispatch(PairRun run, EditorialPairSnapshot snapshot, PairItem item, Listener listener, int maxAttempts) {
         boolean whole = WHOLE_PAIR_ID.equals(item.pairId);
         PairMap.Entry entry = whole ? null : snapshot.map.entry(item.pairId);
         ApiPrompt prompt = whole
@@ -225,7 +244,7 @@ public final class EditorialPairRunService {
         int calls = 0;
         long inTokens = 0;
         long outTokens = 0;
-        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
             String requestId = PairText.sha256(run.id + "|" + item.pairId + "|" + run.contractRevision + "|" + prompt.qualityCoreSha256() + "|g" + item.generation + "|" + attempt).substring(0, 32);
             PairReservation reservation = new PairReservation();
             reservation.callId = requestId;
@@ -261,7 +280,7 @@ public final class EditorialPairRunService {
             if (!response.error().isEmpty()) {
                 // proven not billed (pre-dispatch failure): close the reservation at zero, one more attempt, then give up on the pair
                 store.settleZero(requestId, "FAILED_BEFORE_DISPATCH");
-                if (attempt < MAX_ATTEMPTS) continue;
+                if (attempt < maxAttempts) continue;
                 failNotBilled(run, item, calls, inTokens, outTokens, response.error(), requestId);
                 return true;
             }
