@@ -1,14 +1,14 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-10 (+07:00): owner duyệt D-C6b — live lại chương 006, build 4.18-c6.4 (sàn đầu ra 4096), luna medium, sổ mới trần USD 0.06, sau C6.6.
+- Updated: 2026-10-10 (+07:00): C6.6 (đóng sổ có ghi chép, build 4.18-c6.4 từ 12143ce9) và C6.5 lần hai đã chạy đủ 14/14 lời gọi; PASS C6 không đạt (SAI 12,2%); chờ owner đọc trang đọc.
 - Current version: active v4.18; release/checklist unchanged.
 - Current branch: `feature/v4.18-p5e-runner-repair-20260917`.
-- Current commit: 12143ce9 — baseline ngay trước commit ghi quyết định này (confirm actual HEAD on resume).
-- Current build: `4.18-c6.3`/code `257` from source `1cc8e346540201541f639ffe0be0c70a342f5512`, APK SHA-256 245763A89A4AD7E70491C9A4D60D0020ECBF23A66323E4F75A8955076FEC477F; test APK `c6-pair-final-20261010`; installed only on `emulator-5554`.
-- Current phase: C6 (CP-IMPL-6 targeted fix points). C6.1–C6.4 offline PASS; C6.5 live 006 stopped at the first call (output reserve too small for luna medium reasoning). Owner decision required.
+- Current commit: `31612b54` is the baseline immediately before this evidence commit (confirm actual HEAD on resume).
+- Current build: `4.18-c6.4`/code `258` from source `12143ce9ca785e90219f5d94ef00b78c5ce0e5c4`, APK SHA-256 657EB07E43FEB0B7C36C8FC0D0485CF01D51E60111E4EBD74429A8CF463BF281; test APK `c6-6-test-20261010` (source `31612b54`); installed only on `emulator-5554`.
+- Current phase: C6 live-measured (D-C6b): full chapter 006 run complete (14/14 calls); PASS C6 not reached on SAI (12,2% vs 10%). Owner reading pending.
 - Completed tasks: C6.1 engine (`44dcfffe`), C6.2 app (`0d581055`), C6.3 measurement (`11cd0140`), C6.4 host fake (`9bdf2fed`), and AndroidTest fixture corrections (`9155f1d6`, `1cc8e346`) are pushed. Fake 006 no-op round-trip and isolated target-line change pass; the unflagged chunk makes no call. Engine/app host regressions and both Python suites pass. Emulator pair/API classes and process-death sequences pass; detailed evidence is in plan §7.
-- Pending tasks: owner decision on C6 (a: output reserve 2048 + cap USD 0.05 with build 4.18-c6.4 and a new live approval; b: reasoning low; c: stop C6). Reconcile ledger C6-20261010 (pending 0.002066 vs provider cost 0.0024366) by hand. C7 owner reading and P7 wait for C6.
-- Known bugs/limits: ADDRESS coverage is 57.3%, below required 69%. Conservative fallback estimate for 006 is USD 0.555370, above C6 cap USD 0.03; this is not a confirmed luna quote. Model quality NOT_MEASURED.
-- Regression status: no code change since 4db92c35; host measurement 006 (estimate USD 0.023975, verdict OK) and fake replay (byte-exact, 14/14 calls) re-run PASS; device plan run matches host plan; live 1 call, provider cost USD 0.0024366, ledger pending 0.002066.
+- Pending tasks: owner reads the 006 reading page and decides on the 'cậu/tớ' rule, the five unfounded changes, and whether to change the LUNA input price. C7 owner reading of three chapters and P7 wait for C6 acceptance.
+- Known bugs/limits: LUNA input price in the runner is 0,20/M while provider charges 0,25/M (reservation under by ~20% on input; output floor covers it); one CJK full stop added in line 5:7; 13 of 14 misses are 'cậu/tớ' address forms; finder lists rows without checking the speaker and misses self-only rows (e.g. 会衣 self=Ai).
+- Regression status: app host 468 (0 failures, 3 opt-in skips), engine unchanged, p6 Python 106 OK, androidTest compile OK; device focused tests on 4.18-c6.4 PASS (pair store 6, pair UI 6, API store 6, flow 3, API UI 5, process death 3); live 006: 14 calls, ledger C6B pending 0, outside-point changes 0, lines equal to DRAFT.
 - Spend: C6 provider calls 0 / USD 0; all existing ledgers unchanged.
-- Next action: Codex làm C6.6 (đóng sổ C6-20261010 có kiểm, build 4.18-c6.4, kiểm thiết bị và host) rồi live lại 006 theo D-C6b.
+- Next action: owner đọc trang đọc `D:\P5E-private\chunk-outputs\006\c6b-006-live-review.html` và quyết định: (i) luật hàng cho 'cậu/tớ' (13 trên 14 SÓT là cậu thay vì tên Erika/Rea hoặc Fuyu, và tớ thay vì mình) là lỗi luật hay chấp nhận được; (ii) xếp lại 5 điểm SAI 'đổi không có căn cứ luật' (3:2, 4:5, 5:5, 11:2, 13:2); (iii) chấp nhận kết quả hay mở một thay đổi có duyệt (sửa hằng số giá LUNA đầu vào 0,20→0,25/M và/hoặc chỉ sửa khi có lỗi xác định). Không chạy live thêm trước quyết định đó; sổ `C6B-20261010` đã đóng hết (pending 0).

@@ -1,5 +1,12 @@
 # Build State
 
+## Current state — 2026-10-10 (C6.6 + C6.5 lần hai: chạy đủ, PASS C6 không đạt ở ngưỡng SAI)
+
+- Baseline `31612b54` (C6.6 code); build `4.18-c6.4` / code `258` từ `12143ce9`, event `build-20261010-063348`, APK SHA-256 `657EB07E43FEB0B7C36C8FC0D0485CF01D51E60111E4EBD74429A8CF463BF281`; test APK `c6-6-test-20261010` (từ `31612b54`); cài chỉ `emulator-5554`; test tập trung PASS.
+- Live D-C6b: 006 run `11a84d84-2784-4b7e-a6bb-6194706debf3`, sổ `C6B-20261010` trần 0,06: 14/14 lời gọi có trả lời, `FINAL_ELIGIBLE`, USD 0,02788237, pending 0. Sổ `C6-20261010` đã đóng ở bản host (`SETTLE_OVERRUN`, pending 0).
+- Kết quả 74 điểm: ĐÚNG 45, SÓT 14, SAI 9, CHƯA CHẮC 6. Cổng: ĐÚNG 66% ✓; SAI 12,2% ✗ (≤10% cần). Không có dòng ngoài điểm bị đổi; 0 kana/Hán mới, 1 dấu `。` CJK mới; không mất câu.
+- Next action: owner đọc trang đọc `D:\P5E-private\chunk-outputs\006\c6b-006-live-review.html` và quyết định: (i) luật hàng cho 'cậu/tớ' (13 trên 14 SÓT là cậu thay vì tên Erika/Rea hoặc Fuyu, và tớ thay vì mình) là lỗi luật hay chấp nhận được; (ii) xếp lại 5 điểm SAI 'đổi không có căn cứ luật' (3:2, 4:5, 5:5, 11:2, 13:2); (iii) chấp nhận kết quả hay mở một thay đổi có duyệt (sửa hằng số giá LUNA đầu vào 0,20→0,25/M và/hoặc chỉ sửa khi có lỗi xác định). Không chạy live thêm trước quyết định đó; sổ `C6B-20261010` đã đóng hết (pending 0).
+
 ## Current state — 2026-10-10 (C6.5 live 006: stopped at the first call, incomplete)
 
 - Build `4.18-c6.3` / code 257 from source `1cc8e346` (unchanged in HEAD `4db92c35`, which holds only test and documentation changes). APK SHA-256 `245763A89A4AD7E70491C9A4D60D0020ECBF23A66323E4F75A8955076FEC477F`; installed only on `emulator-5554`.
