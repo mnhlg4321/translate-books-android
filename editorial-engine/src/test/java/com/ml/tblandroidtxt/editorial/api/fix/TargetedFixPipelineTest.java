@@ -53,6 +53,11 @@ public final class TargetedFixPipelineTest {
         assertFalse(outOfScope.stream().anyMatch(p -> p.types().contains(Type.ADDRESS)));
     }
 
+    @Test public void alignedRawDialogueStillScopesAddressWhenDraftDropsQuoteMarks() {
+        List<FixPoint> points = find("「AはBに言った。」", "Cậu sẽ đi.", "A,A,B,tôi,em,*,address\n");
+        assertTrue(points.stream().anyMatch(p -> p.types().contains(Type.ADDRESS)));
+    }
+
     @Test public void conflictingPronounRowsPreserveTheDraftAddress() {
         List<FixPoint> points = find("「AはBに言った。」", "「Cậu sẽ đi。」",
                 "A,A,B,tôi,em,*,one\nA,A,B,mình,bạn,*,two\n");

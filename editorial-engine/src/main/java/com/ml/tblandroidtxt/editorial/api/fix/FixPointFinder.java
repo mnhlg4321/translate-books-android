@@ -120,7 +120,10 @@ public final class FixPointFinder {
                                         + term.target().trim() + "'; kiểm ngữ cảnh, không thay máy móc.");
                     }
                 }
-                if (hasAlignedRaw && isDialogue(draftLine)) {
+                // Scope comes from the aligned RAW quotation and pronoun row. Do not require
+                // the DRAFT to preserve Japanese quote marks: their omission must not hide
+                // a pronoun that is already outside the applicable row.
+                if (hasAlignedRaw) {
                     int[] candidateParagraphs = new int[rawCount];
                     for (int i = 0; i < rawCount; i++) candidateParagraphs[i] = rawParagraphs.get(bead.rawStart() + i);
                     for (ReferenceProjector.Row row : projection.pronouns()) {
@@ -205,10 +208,6 @@ public final class FixPointFinder {
     }
 
     private static boolean containsDialogue(String line) { return line.indexOf('「') >= 0 || line.indexOf('『') >= 0; }
-
-    private static boolean isDialogue(String line) {
-        return line.indexOf('「') >= 0 || line.indexOf('『') >= 0 || line.indexOf('」') >= 0 || line.indexOf('』') >= 0;
-    }
 
     private static boolean conflicted(ReferenceProjector.Projection projection, int paragraph) {
         for (ReferenceProjector.Conflict c : projection.conflicts()) for (int[] r : c.overlap()) if (paragraph >= r[0] && paragraph <= r[1]) return true;
