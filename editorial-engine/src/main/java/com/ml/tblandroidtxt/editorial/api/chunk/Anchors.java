@@ -7,8 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * CS-1 alignment anchors. A glossary term anchors a RAW line when its source form occurs in the line and a DRAFT line when its
@@ -18,7 +16,6 @@ import java.util.regex.Pattern;
 public final class Anchors {
     public record Term(String source, String targetLower) { }
 
-    private static final Pattern DIGITS = Pattern.compile("\\d+", Pattern.UNICODE_CHARACTER_CLASS);
 
     private Anchors() { }
 
@@ -61,9 +58,16 @@ public final class Anchors {
             char c = text.charAt(i);
             ascii.append(c >= '０' && c <= '９' ? (char) ('0' + (c - '０')) : c);
         }
+        // runs of decimal digits (Unicode Nd, like the reference tooling); plain code, because Android regex lacks UNICODE_CHARACTER_CLASS
         Set<String> out = new HashSet<>();
-        Matcher m = DIGITS.matcher(ascii);
-        while (m.find()) out.add(m.group());
+        StringBuilder run = new StringBuilder();
+        for (int i = 0; i < ascii.length(); ) {
+            int cp = ascii.codePointAt(i);
+            i += Character.charCount(cp);
+            if (Character.isDigit(cp)) run.appendCodePoint(cp);
+            else if (run.length() > 0) { out.add(run.toString()); run.setLength(0); }
+        }
+        if (run.length() > 0) out.add(run.toString());
         return out;
     }
 }
