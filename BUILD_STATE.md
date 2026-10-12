@@ -5,7 +5,9 @@
 - Owner opened release v4.19 from `main` `998da341`. One branch `feature/v4.19` (clean worktree `D:\P5E-builds\wt-v4.19`; the owner's workspace with 163 uncommitted entries is untouched), one checklist `release_checklists/v4.19.md` (steps 01-04 done with evidence), one canonical plan `EDITORIAL_PRONOUN_RECOVERY_V4_19.md`.
 - Shipped baseline unchanged: v4.18.0, APK 4.18.0/code 266 from `82626ac8`, logic CP-IMPL-15. No code, build, device or provider operation in this step.
 - Scope: build the known-error suite and a separate clean control set, diagnose the cause by layer (finder recall, model compliance, guard, wrong pass, label uncertainty), propose a fix; stop for the owner's choice before fixing. No provider call without a separate spend authority.
-- Next action: finish X1_SUITE and X2_DIAGNOSE offline, then present X3_PROPOSE.
+- X1_SUITE and X2_DIAGNOSE done (commit `56721e88`): known-error suite 36 + separate clean controls 122, per-line finder harness (re-derived rule = shipped finder on 1,447/1,447 lines), diagnosis report `docs/V419_PRONOUN_MISS_DIAGNOSIS_20261012.md`. Findings: finder flags 88 of 106 dialogue lines the owner changed with an address word (83.0%; 88/153 = 57.5% incl. narration); the recorded 13 (006) and 7 (008) misses were measured under CP-IMPL-9/11, before the call-name rule of CP-IMPL-14, and 13 of the 20 pure-pronoun misses are lines the owner's FINAL also left unchanged. The tested finder tweaks (add `mình`; resolve row conflicts by vocative; narrator-self detector) have low yield or high noise and are not recommended.
+- Tests: engine 712 (1 skip), app 473 (3 skip), `scripts/chunk` 48, 0 failures; replay of stored answers on the shipped rules 158/158 unchanged. No production code, build, device or provider operation; USD 0.
+- Next action: owner reads the reading page and chooses among proposals A-D (A: decide rule vs FINAL on 14 points; B: re-measure the shipped prompt on 008 then 006, needs a separate spend authority).
 
 ## Earlier — 2026-10-12 (D-R3: release v4.18.0 closed; checklist step 14 and Complete gate PASS; push of branch, tag and main authorized)
 

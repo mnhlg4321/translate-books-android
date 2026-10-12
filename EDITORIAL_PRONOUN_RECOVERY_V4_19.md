@@ -50,6 +50,14 @@ Ngoài phạm vi: căn/cắt/ghép chunk CS-1, StructuralGate, store/DB, đườ
 - Mọi bản sửa sau này phải: sửa được ít nhất một lỗi đã biết ở tầng đúng; không làm đổi kết quả của bản sạch; giữ các SAI cũ bị chặn; kết quả replay 006 (C6B, C6E), 008, 011 (C7B, C7D) được so từng điểm trước/sau.
 - Không có số nào được nâng thành "PASS chất lượng" từ fake provider hoặc replay; hành vi model chỉ đo được bằng lần chạy thật được cấp quyền.
 
-## 7. Next action
+## 7. Trạng thái (2026-10-12)
 
-Hoàn tất `X1_SUITE` và `X2_DIAGNOSE` offline, rồi trình `X3_PROPOSE`. Không provider.
+| Phase | Trạng thái | Bằng chứng |
+|---|---|---|
+| X0_DOCS | xong | commit `6d6b9294` |
+| X1_SUITE | xong | 36 mục lỗi đã biết, 122 mục bản sạch (hai phần tách riêng, kiểm tách rời trong công cụ); chỉ mục công khai `docs/V419_PRONOUN_KNOWN_MISS_INDEX.json`, `docs/V419_PRONOUN_CLEAN_CONTROL_INDEX.json`; sidecar riêng `D:\P5E-private419-pronoun\`; runner `scripts/chunk/run-pronoun-suite-replays.ps1` (mã hiện hành: 158/158 giữ nguyên, 0 hồi quy) |
+| X2_DIAGNOSE | xong | `docs/V419_PRONOUN_MISS_DIAGNOSIS_20261012.md`: finder phủ 83,0% dòng thoại owner sửa có từ xưng hô đổi (88/106; 57,5% nếu tính cả lời kể); số SÓT của 006/008 đo dưới prompt cũ; 13/20 điểm S2 FINAL cũng không sửa |
+| X3_PROPOSE | đã trình, chờ owner | mục 5 của báo cáo (A: owner đọc 23 điểm; B: đo lại prompt hiện hành trên 008 rồi 006, cần quyền chi riêng; C, D: mã, chỉ nếu A/B cho thấy cần) |
+| X4_FIX, X5_LIVE, X6_RELEASE | chưa bắt đầu | — |
+
+**Next action:** owner đọc `D:\P5E-private419-pronouneading-s2-s3.html` và chọn trong A–D; không provider trước khi có quyền chi riêng.
