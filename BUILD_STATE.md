@@ -1,11 +1,21 @@
 # Build State
 
-## Current state — 2026-10-12 (011 correct parts accepted; CP-IMPL-13 fixes the wrongly blocked 10:2, offline)
+## Current state — 2026-10-12 (C7C canary: 011 chunk 2 under CP-IMPL-14; glossary entry added)
+
+- Both owner-approved follow-ups done: the entry 全国レベル -> trình độ toàn quốc was added to the working copy of the 011 glossary (SHA-256 b3dafb4e... to e557b69a8388b06013acdaf127e4b7c1fdf224fb4ed8436707156c6d53cc898e, backup kept; 011 still 13 chunks/11 calls, points 58 to 57), and a prompt canary ran.
+- CP-IMPL-14 (`346cfdfdc512110ca1d193c5163953d5ac9039e9`) adds the call-name rule to the targeted system prompt. Clean archive (zip SHA-256 CEC3FAE8791A731B19633B0C820598598D4CCE8C5BF0B643890FC297DFD3C00F): engine 705, app host 472, androidTest compile, scripts/p6 106, scripts/chunk 24 PASS. Wrapper build `4.18-c6.9`/263 (APK SHA-256 237B8E6F1DEAD06AF9664D1F8D7FA97B93BA643E0D300B3DBB4B10949703A16F), installed only on `emulator-5554`; device store/SQLite tests and the fake selector run passed first.
+- One live call on 011 chunk 2 (luna medium, no retry, ledger C7C-20261012 cap USD 0.01): USD 0.0018466, 4843 in / 530 out, pending 0; chunk ACCEPTED/PASS, 14/14 lines. All 6 formerly missed points (`cậu` kept in C7B) were changed to the call name: 5 correct fixes applied, 0 wrong, 1 correct fix wrongly blocked by the third-person rule (2:2). No lines outside points, no new Japanese, marks kept.
+- A wider scene window (plus or minus 2 lines) would free 2:2 but reopen 3:2 of chapter 006, so it was not done. 011 is not counted accepted (2/3: 006, 008); P7 not started.
+- Next action: owner duyệt hoặc từ chối chạy lại cả chương 011 dưới CP-IMPL-14 bằng build `4.18-c6.9`/263 đã cài sẵn trên `emulator-5554` (11 lời gọi, luna medium, không retry, sổ mới `C7D-<ngày>`, trần USD 0.06; kỳ vọng USD 0.022–0.030 vì câu trả lời dài hơn khoảng 20–25% so với C7B), để đo prompt mới trên cả 56 điểm, gồm nguy cơ đổi nhầm, và để quyết định chấp nhận 011 (3/3 mở P7). Chưa chạy gì thêm trước quyết định đó.
+
+Earlier current-state sections below are historical.
+
+## Previous state — 2026-10-12 (011 correct parts accepted; CP-IMPL-13 fixes the wrongly blocked 10:2, offline)
 
 - The owner accepted the points of 011 labelled ĐÚNG (5 applied fixes, 37 correct keeps) and asked whether the wrong and missed ones can be fixed. 011 is not counted accepted (2/3 stays: 006, 008); P7 not started.
 - Code commit `4be07d0bd3d5077a5a80a94f09dfa9b5b1bee105` (CP-IMPL-13): the finder also reads the glossary; an entry whose target shares a name word with a row's speaker/target and whose source is in the RAW lines next to the aligned lines puts that entity in the scene (FixPoint.sceneEntities). Clean archive (zip SHA-256 4D8D4B6B7207D44BD908869ABE9E4284A6166AA4AD7223B79622D61924FABF80): engine 704, app host 472, androidTest compile, scripts/p6 106, scripts/chunk 24 PASS. Replays: 006 byte-identical, 008 differs only by 1:2 no longer created, 011 differs only at 10:2 (now applied: chị Kuragane to chị Erika). Replay, not live; not built or installed (installed APK is 4.18-c6.8/262).
 - 10:3 can be closed without code by adding the glossary entry 全国レベル -> trình độ toàn quốc (the CP-IMPL-12 longest-entry rule then covers レベル); a blanket katakana-after-kanji exemption was measured and rejected (it would drop 15 true skill-term occurrences). The 9 misses are model behaviour (`cậu` kept instead of the call name); options are a clearer prompt (CP-IMPL-14) tried on 011 chunk 2, or reasoning high on the same chapter.
-- Next action: owner chọn bước tiếp cho phần sai và sót của 011: (a) duyệt hoặc từ chối một canary prompt trên 011 đoạn 2 (1 lời gọi, luna medium, không retry, sổ mới `C7C-<ngày>`, trần USD 0.01; giữ chỗ quan sát khoảng USD 0.006, thật ở lần C7B USD 0.0015) để thử câu lệnh rõ hơn về việc đổi `cậu` thành tên call của hàng, cần code prompt CP-IMPL-14 và build `4.18-c6.9`; (b) cho phép thêm mục glossary `全国レベル → trình độ toàn quốc` vào glossary 011 (không cần code) để SAI 10:3 không tái diễn. Chưa build, cài hay chi trước quyết định đó; 011 chưa tính accepted.
+- Done: the owner approved both and the canary ran (section above).
 
 Earlier current-state sections below are historical.
 

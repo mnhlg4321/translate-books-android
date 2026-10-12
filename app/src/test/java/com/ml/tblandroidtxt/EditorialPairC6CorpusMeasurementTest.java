@@ -204,7 +204,8 @@ public final class EditorialPairC6CorpusMeasurementTest {
         String ordinal = System.getenv("C6_SELECTOR_ORDINAL");
         String out = System.getenv("C6_SELECTOR_OUT");
         if (inputRoot == null || inputRoot.isBlank() || ordinal == null || ordinal.isBlank() || out == null || out.isBlank()) return;
-        PrivateChapter006 chapter = loadPrivate006(Path.of(inputRoot));
+        String chapterId = System.getenv("C6_SELECTOR_CHAPTER") == null || System.getenv("C6_SELECTOR_CHAPTER").isBlank() ? "006" : System.getenv("C6_SELECTOR_CHAPTER");
+        PrivateChapter006 chapter = loadPrivateChapter(Path.of(inputRoot), chapterId);
         PairMap map = chapter.preview.map;
         PairMap.Entry entry = map.entries().get(Integer.parseInt(ordinal) - 1);
         assertEquals(Integer.parseInt(ordinal), entry.displayOrdinal());
