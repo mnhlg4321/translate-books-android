@@ -426,7 +426,29 @@ Tăng contract lên `CP-IMPL-6`; lượt chạy cũ không được tiếp tục
 
 ## 6. Trạng thái
 
-**Hiện hành — owner chấp nhận chương 006, 2026-10-12: PASS C6 đạt; 1/3 chương accepted; chưa có thêm live.** Owner đọc kết quả C6E và chấp nhận ("chấp nhận kết quả sửa đúng đạt yêu cầu"). Cổng PASS C6 (live) đủ: 0 dòng ngoài điểm, 0 chữ Nhật mới, không mất câu, ĐÚNG 52/68 = 76,5%, SAI 1/74 = 1,4%, owner chấp nhận. Chấp nhận này áp cho kết quả đã đo (CP-IMPL-9, bản app `006_APP_c6e_JAKUAKU_MONSTER_VOL1.txt`), gồm giới hạn đã nêu: 15 SÓT còn lại, 14:5 là một điểm sai, 7:3 là một sửa đúng một phần bị chặn. Không đổi nhãn, ngưỡng hay căn/cắt/ghép chunk. Hành vi CP-IMPL-10 (sửa 7:3 và 14:5) chưa được đo live.
+**Hiện hành — CP-IMPL-11, 2026-10-12, mã `9bf9cd74`: khóa số nhiều theo vị trí và ngôi; offline đạt; acceptance 006 giữ nguyên; dừng trước build/cài/provider.** Giữ nguyên căn/cắt/ghép chunk, nhãn, ngưỡng và kết luận đã chấp nhận (chương 006 theo CP-IMPL-9, 1/3, P7 chưa bắt đầu). 0 provider call, USD 0.
+
+| Việc | Kết quả |
+|---|---|
+| Lỗi của CP-IMPL-10 | Khóa `chúng/bọn/tụi` + đại từ so sánh theo mặt chữ, nên một `tôi` đơn lẻ cùng câu và cùng mặt chữ với `tôi` trong cụm `chúng tôi` bị đóng băng theo |
+| Sửa | Xét **vị trí** từng token đổi (trong dòng DRAFT và trong ứng viên, từ phép so LCS có chỉ số): chỉ chặn khi token đổi nằm ngay sau dấu số nhiều hoặc chính dấu số nhiều bị dời (`ADDRESS_PLURAL_PHRASE`). Cụm ngôi một (`chúng ta/em/tôi`) báo `ADDRESS_PLURAL_SELF`, cụm ngôi hai (`bọn mày`) báo `ADDRESS_PLURAL_ADDRESSEE`; ngôi ba (`chúng nó`, `họ`) không chứa đại từ trong từ điển nên không bị chạm. Kiểm trước nhánh "không đổi từ xưng hô" để điểm hỗn hợp cũng bị chặn khi dời dấu số nhiều |
+| Test mới (`AddressEditGuardTest`) | cụm số nhiều không đổi mà đại từ đơn lẻ cùng câu được sửa; cùng mặt chữ hai lần (chỉ bản bên trong cụm được giữ, cả hai thứ tự); đối chứng ngôi ba (`chúng nó`, `họ`) và ngôi hai (`bọn mày`); dời dấu số nhiều trong điểm hỗn hợp; test cũ `chúng ta → chúng em` và `bọn tôi → bọn em` vẫn đóng |
+
+**QA từ archive sạch** (`git archive 9bf9cd7452fdc3b1be70e1c9d78fb35c0589d6a9`, zip SHA-256 `F0291628B03235B928F5D4C6AEC35A7AFDBAFBB0E324625F6DAB81A809BFC592`, giải ở `D:/P5E-builds/verify-c6f-9bf9cd74`; lần chạy đầu tình cờ chạy ở thư mục làm việc vì archive chưa được tạo nên bị bỏ, số dưới đây là lần chạy lại có kiểm thư mục): engine 697 (1 opt-in SKIP), app host 472 (3 SKIP), `compileDebugAndroidTestJavaWithJavac`, `scripts/p6` 106, `scripts/chunk` 24 đều PASS. Phát lại trong archive bằng finder thật trên 006:
+
+- **C6B (9 SAI cũ, 11 sửa đúng):** 11 sửa đúng vẫn FIXED, 9 SAI vẫn bị chặn (lý do không đổi so với CP-IMPL-9/10).
+- **Trả lời C6E đã lưu (74 điểm):** 14:5 giữ DRAFT (`ADDRESS_PLURAL_SELF`), 7:3 được áp dụng; không điểm nào ngoài FIXED bị đổi chữ. Chấm theo nhãn không đổi: sửa đúng áp dụng 10 và sửa một phần 1 (7:3: call `Fuyu` đúng hàng, còn `cậu`), sửa sai lọt qua 0, sửa sai bị chặn đúng 6 (5 cũ + 14:5), sửa đúng bị chặn nhầm 0, bỏ sót 14, giữ đúng 37, CHƯA CHẮC 6 → ĐÚNG 54, SÓT 14, SAI 0, CHƯA CHẮC 6 (ĐÚNG 54/68 = 79,4%, SAI 0/74). **Đây là kết quả phát lại trên một mẫu model đã có, không phải kết quả live**; kết quả live được chấp nhận vẫn là SAI 1/74 và ĐÚNG 52/68.
+- **Dòng FINAL của owner làm ứng viên (chỉ tham chiếu):** không điểm nhãn ĐÚNG/SÓT nào bị khóa ADDRESS chặn (7:3 nay qua); trả lời C6C đoạn 5 đúng như đã ghi (5:3 áp dụng).
+
+**COORDINATOR:** bằng chứng đã đồng bộ ở đây, BUILD_STATE, EDITORIAL_RECOVERY và WORKSPACE_SNAPSHOT; evidence riêng ở `D:/P5E-private/c6-guard-20261012/` (`score_v11.py`, `v11-replay-*.tsv`). Căn/cắt/ghép, nhãn, ngưỡng, acceptance không đổi. Bằng chứng live vẫn là CP-IMPL-9; CP-IMPL-10 và 11 chưa được build hay chạy live.
+
+**Đề xuất chạy riêng chương 008 (chưa có quyền chi/build/cài):** 7 đoạn, 4 lời gọi (3 đoạn không có điểm không gọi API), 28 điểm (25 xưng hô, 2 thuật ngữ, 1 kana); không có nhãn cũ, nên cả 28 điểm được phân xử mới theo RAW + luật sau khi chạy. Phép đo host: ≈ 12 012 token vào (thực tế thường cao hơn khoảng 9%, tức ≈ 13 100), giữ chỗ mỗi lời gọi ≈ USD 0.0058 (≈ 3 270 vào × 0.25/M × 1.06 + 4 096 ra × 1.2/M), tổng giữ chỗ nếu cộng cả bốn ≈ USD 0.0227 (không bao giờ cùng lúc vì quyết toán từng lời gọi). Chi phí thật của các đoạn cỡ này ở 006 là USD 0.0011–0.0022 mỗi lời gọi, nên **kỳ vọng USD 0.005–0.009**, tối đa thực tế quan sát ≈ USD 0.013 (bốn lời gọi ở mức cao nhất 0.0032). **Trần USD 0.03** cho cả sổ và chương (`C7A-<ngày>`), vì phơi nhiễm xấu nhất theo thứ tự = 3 lời gọi quyết toán cao + 1 giữ chỗ ≈ USD 0.0154 vẫn dưới trần. Điều kiện: build `4.18-c6.7`/261 từ commit tài liệu kế tiếp `9bf9cd74` qua wrapper, cài chỉ `emulator-5554`, test thiết bị `EditorialPairStore`/`EditorialApiStore`/SQLite reopen và chạy giả cả chương (USD 0) đạt trước; một lần chạy cả chương, luna medium, không retry, dừng nếu đoạn đầu không có câu trả lời, UNKNOWN cost hoặc vượt trần; chấm riêng sửa đúng, sửa một phần, bỏ sót, sửa sai, chặn nhầm; kiểm 0 dòng ngoài điểm, 0 chữ Nhật mới, dấu thoại/ký hiệu; dừng sau 008, không chạy 011 hay chương khác.
+
+**Next action duy nhất:** owner duyệt, sửa hoặc từ chối đề xuất chạy riêng chương 008 trong khối này: build `4.18-c6.7` (code 261) từ commit tài liệu kế tiếp commit mã `9bf9cd74` (CP-IMPL-11), cài chỉ `emulator-5554`, chạy giả cả chương (USD 0) rồi một lần chạy cả chương 008 (4 lời gọi, luna medium, không retry), sổ mới `C7A-<ngày>`, trần USD 0.03; phân xử cả 28 điểm theo RAW + luật, dừng sau chương này để owner đọc. Chưa build, cài hay chi trước quyết định đó.
+
+Khối dưới là lịch sử.
+
+**Trước đó — owner chấp nhận chương 006, 2026-10-12: PASS C6 đạt; 1/3 chương accepted; chưa có thêm live.** Owner đọc kết quả C6E và chấp nhận ("chấp nhận kết quả sửa đúng đạt yêu cầu"). Cổng PASS C6 (live) đủ: 0 dòng ngoài điểm, 0 chữ Nhật mới, không mất câu, ĐÚNG 52/68 = 76,5%, SAI 1/74 = 1,4%, owner chấp nhận. Chấp nhận này áp cho kết quả đã đo (CP-IMPL-9, bản app `006_APP_c6e_JAKUAKU_MONSTER_VOL1.txt`), gồm giới hạn đã nêu: 15 SÓT còn lại, 14:5 là một điểm sai, 7:3 là một sửa đúng một phần bị chặn. Không đổi nhãn, ngưỡng hay căn/cắt/ghép chunk. Hành vi CP-IMPL-10 (sửa 7:3 và 14:5) chưa được đo live.
 
 **Đề xuất C7 (chưa có quyền chi/build/cài):** bước kế tiếp trong lộ trình là chương thứ hai và thứ ba để owner đọc (C7 → P7). Số đo offline, 0 USD, trên 8 chương của bộ đo C6 (ước tính bằng phép đo host; giữ chỗ tính theo giá 0.25/1.20 và sàn 4096; ước tính token vào thấp hơn thực tế khoảng 9%, vì 006 ước 69 813 và thật 76 151; chi phí thật của 006 bằng ≈ 0,37 giữ chỗ tổng):
 
@@ -442,7 +464,7 @@ Tăng contract lên `CP-IMPL-6`; lượt chạy cũ không được tiếp tục
 
 Đề xuất chọn **008** (nhỏ, nhiều xưng hô) rồi **011** (chương holdout đã định ở C2, 55 điểm xưng hô): chi phí kỳ vọng cộng lại ≈ USD 0.03 (006 tốn USD 0.0319 cho 74 điểm), mỗi chương trần USD 0.06 và sổ riêng như C6E; ngoài tập này owner có thể thay bằng chương khác trong bảng. Quy trình mỗi chương như C6E: chạy giả cả chương (USD 0) và kiểm SQLite/selector trước khi gọi, 1 lời gọi mỗi đoạn có điểm, không retry, dừng nếu đoạn đầu không có câu trả lời, UNKNOWN cost hoặc vượt trần; chấm riêng sửa đúng, sửa một phần, bỏ sót, sửa sai và chặn nhầm; dừng sau mỗi chương để owner đọc. Cần build `4.18-c6.7` từ CP-IMPL-10 (commit `9a72100f` hoặc sau đó) vì build đang cài là CP-IMPL-9; không chạy pilot hay V5.
 
-**Next action duy nhất:** owner duyệt, sửa hoặc từ chối đề xuất C7 trong khối này: build `4.18-c6.7` từ CP-IMPL-10 (đã đạt archive sạch, chưa chạy live), cài chỉ `emulator-5554`, chạy hai chương 008 rồi 011 (mỗi chương một lần chạy cả chương, luna medium, không retry, mỗi chương một sổ mới `C7A-<ngày>`/`C7B-<ngày>`, trần USD 0.06 mỗi chương), chấm riêng từng chương và dừng sau mỗi chương để owner đọc. Chưa build, cài hay chi trước quyết định đó.
+Đã thay bằng đề xuất riêng cho chương 008 ở khối CP-IMPL-11 phía trên.
 
 Khối dưới là lịch sử.
 

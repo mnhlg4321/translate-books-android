@@ -1,10 +1,19 @@
 # Build State
 
-## Current state — 2026-10-12 (chapter 006 accepted by the owner; PASS C6 reached)
+## Current state — 2026-10-12 (CP-IMPL-11: plural lock by position and person, offline)
+
+- Code commit `9bf9cd7452fdc3b1be70e1c9d78fb35c0589d6a9`. The plural-phrase lock now judges the position of each changed token (and of the marker), not its spelling, so a lone pronoun in the same sentence stays repairable; first-person phrases report ADDRESS_PLURAL_SELF, second-person ADDRESS_PLURAL_ADDRESSEE, third-person plurals are untouched. New tests cover the unchanged phrase with a repaired lone pronoun, the same spelling twice, third- and second-person controls and a moved marker.
+- Clean `git archive` of that commit (zip SHA-256 F0291628B03235B928F5D4C6AEC35A7AFDBAFBB0E324625F6DAB81A809BFC592): engine 697 (1 skip), app host 472 (3 skip), androidTest compile, scripts/p6 106, scripts/chunk 24 PASS. Replays inside the archive: the 11 correct C6B fixes kept and the 9 wrong ones blocked; stored C6E answers give 14:5 kept and 7:3 applied (sửa đúng 10, một phần 1, sai 0, ĐÚNG 54/68, SAI 0/74; replay, not live).
+- Coordinator: acceptance of chapter 006 (CP-IMPL-9 evidence, 1/3, P7 not started), chunk alignment, labels and thresholds unchanged. No provider call, build or install (spend 0).
+- Next action: owner duyệt, sửa hoặc từ chối đề xuất chạy riêng chương 008 trong khối này: build `4.18-c6.7` (code 261) từ commit tài liệu kế tiếp commit mã `9bf9cd74` (CP-IMPL-11), cài chỉ `emulator-5554`, chạy giả cả chương (USD 0) rồi một lần chạy cả chương 008 (4 lời gọi, luna medium, không retry), sổ mới `C7A-<ngày>`, trần USD 0.03; phân xử cả 28 điểm theo RAW + luật, dừng sau chương này để owner đọc. Chưa build, cài hay chi trước quyết định đó.
+
+Earlier current-state sections below are historical.
+
+## Previous state — 2026-10-12 (chapter 006 accepted by the owner; PASS C6 reached)
 
 - The owner read the C6E result and accepted it. PASS C6 is complete: 0 lines outside points, 0 new Japanese, no lost sentence, ĐÚNG 52/68 = 76.5%, SAI 1/74 = 1.4%, owner accepted. 1/3 chapters accepted; P7 not started. Accepted evidence is CP-IMPL-9 (build `4.18-c6.6`/260, source `74c712ca`); CP-IMPL-10 (`9a72100f`) is offline only.
 - No provider call, build or install in this step (spend 0). An offline corpus measurement priced a C7 proposal: chapters 008 then 011, one whole-chapter run each, expected total about USD 0.03, cap USD 0.06 per chapter and ledger; needs a new build `4.18-c6.7` from CP-IMPL-10.
-- Next action: owner duyệt, sửa hoặc từ chối đề xuất C7 trong khối này: build `4.18-c6.7` từ CP-IMPL-10 (đã đạt archive sạch, chưa chạy live), cài chỉ `emulator-5554`, chạy hai chương 008 rồi 011 (mỗi chương một lần chạy cả chương, luna medium, không retry, mỗi chương một sổ mới `C7A-<ngày>`/`C7B-<ngày>`, trần USD 0.06 mỗi chương), chấm riêng từng chương và dừng sau mỗi chương để owner đọc. Chưa build, cài hay chi trước quyết định đó.
+- Superseded by the CP-IMPL-11 section above.
 
 Earlier current-state sections below are historical.
 
