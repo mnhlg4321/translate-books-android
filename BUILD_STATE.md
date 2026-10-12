@@ -1,4 +1,14 @@
 # Build State
+## Current state — 2026-10-12 (R1.5: release candidate 4.18.0/266 built, installed on emulator, device QA, media recorded)
+
+- Release candidate `4.18.0` (versionCode 266) built with `scripts/build-and-save.ps1 -ExactReleaseVersion 4.18.0` from source `82626ac8fe68d88ddf9c97710d70d1d4f648517a` (event `build-20261012-152329`): APK SHA-256 5865F23A1EE15602C5C38B967E34AED22E63728078C7A792F92E8BECBD6AE91B, source ZIP SHA-256 4DEA9A12FFDF25265226D30FA641D01DD1C964E68B95056C6D410EFD09ECE0EB; payload in `artifacts/builds/v4.18.0/build-20261012-152329/` and `backup/builds/v4.18.0/build-20261012-152329/`. The exact-release build needs a branch named `feature/v4.18.0`, so it ran in a throw-away local worktree and branch at the same commit (never pushed, removed afterwards). Matching AndroidTest event `rc-test-20261012` (SHA-256 6CAC2ADA5DC59C1F522A4EC19C6C608DB2B6E22838B5EED5E2DF899848B59ED2).
+- Installed only on `emulator-5554` through `scripts/install-validated.ps1` (265 -> 266). Device tests on the RC: frozen allowlist 117/117, chunk classes PASS, product/Translation smoke 15/15, restart phases PASS, 0 provider calls. One first `EditorialApiBienTapUi` run failed (leftover fixture glossaries `glossary-bientap-ui` / `glossary-bientap-test` in the emulator's glossary store made the test pick a stale glossary id); after removing only those two fixture entries it passed 5/5. Both logs kept; the test's name-prefix matching is a known weakness, not fixed. Report: `artifacts/qa/v4.18-r1/r1.5-rc-device/QA_REPORT.md`.
+- Screenshots (6) and video of a synthetic walkthrough (`EditorialR1MediaWalkthroughInstrumentedTest`, `r1_media=run`) recorded on the RC in `artifacts/qa/v4.18-r1/r1.4-media/`. The app database on the emulator was set aside so the owner's own combo names do not appear; the real database was moved back with identical SHA-256. A first recording that showed those names was discarded (kept privately).
+- Performance evidence is the R1.3 emulator measurement on benchmark build 4.18-r13bench/265; app main sources are identical to the RC (`git diff a5169045 82626ac8` has no change in `app/src/main`, `editorial-engine/src/main`, Gradle files), so it was not re-run on the RC package.
+- Next: `scripts/archive-release.ps1` (event `build-*`, PreTag gate) into `artifacts/releases/v4.18.0/` and `backup/v4.18.0/`; no tag, no merge.
+
+Earlier current-state sections below are historical.
+
 ## Current state — 2026-10-12 (R1.4: release notes, changelog 4.18.0, media walkthrough test)
 
 - `CHANGELOG.md` `[4.18.0]` and `RELEASE_NOTES.md` `4.18.0` written (status RELEASE_CANDIDATE; no tag, no merge). Scope: chunk-based Editorial flow, OK/WARN/BLOCK plan verdict, point-based fixes behind a deterministic guard, SQLite persistence (DB v29), TXT export, spend control. Known limits of chapters 006/008/011 are quoted unchanged; performance numbers are labelled emulator numbers. The frozen V5 path is stated as out of scope.

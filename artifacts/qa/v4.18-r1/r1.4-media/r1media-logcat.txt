@@ -1,0 +1,7 @@
+--------- beginning of main
+10-12 15:29:23.089 I/R1MEDIA (15205): stage=01-list
+10-12 15:29:27.707 I/R1MEDIA (15205): stage=02-choose-source
+10-12 15:29:32.448 I/R1MEDIA (15205): stage=03-plan-verdict
+10-12 15:29:37.365 I/R1MEDIA (15205): stage=04-result-by-point
+10-12 15:29:42.022 I/R1MEDIA (15205): stage=05-exported-txt
+10-12 15:29:46.636 I/R1MEDIA (15205): stage=06-list-with-result
