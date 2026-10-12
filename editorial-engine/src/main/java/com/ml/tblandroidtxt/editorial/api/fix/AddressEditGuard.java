@@ -73,6 +73,8 @@ final class AddressEditGuard {
             List<String> addedNames = namesIn(lexicon, added);
             // a surname turned into the given name of the same person is a call repair; one person turned into another is not
             if (!removedNames.isEmpty() && !addedNames.isEmpty() && !lexicon.sameEntity(removedNames, addedNames)) return "ADDRESS_NAME_SWAPPED";
+            // "Em Kuragane" must not become "Erika Kuragane": two name words of one person side by side make a full name the RAW does not carry
+            if (combinesNames(afterTokens, delta.addedAt(), lexicon)) return "ADDRESS_NAME_COMBINED";
         }
 
         Evidence evidence = evidence(point);
@@ -245,6 +247,20 @@ final class AddressEditGuard {
         }
         if (word.length() > 0) out.add(word.toString());
         return out;
+    }
+
+    /** True when an added name word stands next to a different name word of the same entity. */
+    private static boolean combinesNames(List<String> tokens, List<Integer> addedAt, Lexicon lexicon) {
+        for (int at : addedAt) {
+            String token = tokens.get(at);
+            if (!lexicon.names.contains(token)) continue;
+            for (int neighbour : new int[] {at - 1, at + 1}) {
+                if (neighbour < 0 || neighbour >= tokens.size()) continue;
+                String other = tokens.get(neighbour);
+                if (!other.equals(token) && lexicon.names.contains(other) && lexicon.sameEntity(List.of(token), List.of(other))) return true;
+            }
+        }
+        return false;
     }
 
     private static List<String> namesIn(Lexicon lexicon, List<String> values) {

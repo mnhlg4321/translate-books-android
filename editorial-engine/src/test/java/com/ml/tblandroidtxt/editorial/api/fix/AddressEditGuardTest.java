@@ -136,6 +136,20 @@ public final class AddressEditGuardTest {
         assertEquals("ADDRESS_FORM_NOT_IN_APPLICABLE_ROW", AddressEditGuard.rejection(toSurname, "「Sao thế, Sora?」"));
     }
 
+    @Test public void aGivenNameIsNotAddedNextToTheSurnameOfTheSamePerson() {
+        List<AddressRow> rows = new java.util.ArrayList<>(ROWS);
+        rows.add(new AddressRow("空さん", "Aki", "Sora Yuki", "tôi", "Yuki"));
+        String raw = "「空さぁん、これお願い」";
+        FixPoint point = new FixPoint(1, Set.of(FixPoint.Type.ADDRESS), 0, "「Em Sora~ em giúp cô được không」", raw, List.of("rule"), rows);
+        // a full name that the RAW does not carry
+        assertEquals("ADDRESS_NAME_COMBINED", AddressEditGuard.rejection(point, "「Yuki Sora~ em giúp cô được không」"));
+        assertEquals("ADDRESS_NAME_COMBINED", AddressEditGuard.rejection(point, "「Em Sora Yuki~ em giúp cô được không」"));
+        // the surname turned into the call name, or a call name repeated away from the surname, is still a repair
+        assertNull(AddressEditGuard.rejection(point, "「Em Yuki~ em giúp cô được không」"));
+        FixPoint repeated = new FixPoint(1, Set.of(FixPoint.Type.ADDRESS), 0, "「Yuki giỏi, cậu cứu mình」", "「空さん、凄い、命を救ってくれた」", List.of("rule"), rows);
+        assertNull(AddressEditGuard.rejection(repeated, "「Yuki giỏi, Yuki cứu mình」"));
+    }
+
     @Test public void aFirstPersonPluralHasNoRowSoItsPronounStays() {
         assertEquals("ADDRESS_PLURAL_SELF", reason("「Chúng ta sẽ đi」", "「私たちが行く」", "「Chúng em sẽ đi」"));
         assertEquals("ADDRESS_PLURAL_SELF", reason("「Bọn tôi sẽ đi」", "「あたしたちが行く」", "「Bọn em sẽ đi」"));
