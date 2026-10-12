@@ -61,7 +61,13 @@ final class AddressEditGuard {
         if (pure && !skeleton(point.draftText(), allowed).equals(skeleton(candidate, allowed))) return "ADDRESS_SCOPE_EXCEEDED";
         if (removed.isEmpty() && added.isEmpty()) return null;
         if (PLURAL_AUDIENCE.matcher(Normalizer.normalize(point.rawText(), Normalizer.Form.NFC)).find()) return "ADDRESS_AMBIGUOUS_AUDIENCE";
-        if (pure && containsAny(lexicon.names, removed) && containsAny(lexicon.names, added)) return "ADDRESS_NAME_SWAPPED";
+        if (pure) {
+            List<String> removedNames = namesIn(lexicon, removed);
+            List<String> addedNames = namesIn(lexicon, added);
+            // a surname turned into the given name of the same person is a call repair; one person turned into another is not
+            if (!removedNames.isEmpty() && !addedNames.isEmpty() && !lexicon.sameEntity(removedNames, addedNames)) return "ADDRESS_NAME_SWAPPED";
+        }
+        if (touchesPluralSelf(beforeTokens, removed) || touchesPluralSelf(afterTokens, added)) return "ADDRESS_PLURAL_SELF";
 
         Evidence evidence = evidence(point);
         List<AddressRow> applicable = new ArrayList<>();
@@ -157,7 +163,15 @@ final class AddressEditGuard {
     }
 
     /** Pronoun-like words (the shared lexicon plus every lower-case self/call word of a row) and names (capitalised row words). */
-    private record Lexicon(Set<String> pronouns, Set<String> names) { }
+    private record Lexicon(Set<String> pronouns, Set<String> names, List<Set<String>> entities) {
+        /** True when one entity (for instance a surname and a given name of the same person) owns every listed name. */
+        boolean sameEntity(List<String> a, List<String> b) {
+            for (Set<String> entity : entities) {
+                if (entity.containsAll(a) && entity.containsAll(b)) return true;
+            }
+            return false;
+        }
+    }
 
     private static Lexicon lexicon(List<AddressRow> rows) {
         Set<String> pronouns = new HashSet<>(AddressChecklist.words());
@@ -171,8 +185,27 @@ final class AddressEditGuard {
                 }
             }
         }
+        // every name of a speaker or target belongs to that entity, together with the names the rows use to call it
+        java.util.Map<String, Set<String>> byEntity = new java.util.LinkedHashMap<>();
+        for (AddressRow row : rows) {
+            for (String entity : new String[] {row.speaker(), row.target()}) {
+                if (entity.isEmpty() || entity.startsWith("*") || entity.startsWith("@")) continue;
+                Set<String> group = byEntity.computeIfAbsent(key(entity), k -> new LinkedHashSet<>());
+                for (String word : caseWords(entity)) group.add(word.toLowerCase(Locale.ROOT));
+            }
+            if (!row.target().isEmpty() && !row.target().startsWith("*") && !row.target().startsWith("@")) {
+                Set<String> group = byEntity.get(key(row.target()));
+                for (String word : caseWords(row.call())) if (Character.isUpperCase(word.codePointAt(0))) group.add(word.toLowerCase(Locale.ROOT));
+            }
+        }
+        List<Set<String>> entities = new ArrayList<>();
+        for (Set<String> group : byEntity.values()) {
+            group.removeAll(pronouns);
+            names.addAll(group);
+            entities.add(group);
+        }
         names.removeAll(pronouns);
-        return new Lexicon(pronouns, names);
+        return new Lexicon(pronouns, names, entities);
     }
 
     private static Set<String> formsOf(List<AddressRow> rows) {
@@ -206,8 +239,18 @@ final class AddressEditGuard {
         return out;
     }
 
-    private static boolean containsAny(Set<String> set, List<String> values) {
-        for (String value : values) if (set.contains(value)) return true;
+    private static List<String> namesIn(Lexicon lexicon, List<String> values) {
+        List<String> out = new ArrayList<>();
+        for (String value : values) if (lexicon.names.contains(value)) out.add(value);
+        return out;
+    }
+
+    /** "chúng ta", "bọn tôi": a first-person plural. The pronoun rows give a singular self only, so no row can repair it. */
+    private static boolean touchesPluralSelf(List<String> tokens, List<String> changed) {
+        for (int i = 1; i < tokens.size(); i++) {
+            String before = tokens.get(i - 1);
+            if ((before.equals("chúng") || before.equals("bọn") || before.equals("tụi")) && changed.contains(tokens.get(i))) return true;
+        }
         return false;
     }
 

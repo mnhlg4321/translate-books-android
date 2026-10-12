@@ -124,6 +124,24 @@ public final class AddressEditGuardTest {
         assertNull(reason("Chuyện tiền bối có tin không, tôi không quan tâm", "「先輩が納得するかは関係ない」", "Chuyện anh Ken có tin không, tôi không quan tâm"));
     }
 
+    @Test public void aSurnameMayBecomeTheGivenNameOfTheSamePersonButNotAnotherPerson() {
+        List<AddressRow> rows = new java.util.ArrayList<>(ROWS);
+        rows.add(new AddressRow("空さん", "Aki", "Sora Yuki", "tôi", "Yuki"));
+        String raw = "「どうしたの、空さん」";
+        FixPoint same = new FixPoint(1, Set.of(FixPoint.Type.ADDRESS), 0, "「Sao thế, Sora?」", raw, List.of("rule"), rows);
+        assertNull(AddressEditGuard.rejection(same, "「Sao thế, Yuki?」"));
+        assertEquals("ADDRESS_NAME_SWAPPED", AddressEditGuard.rejection(same, "「Sao thế, Rina?」"));
+        // only a call form of the rows may be added: the surname is not one
+        FixPoint toSurname = new FixPoint(1, Set.of(FixPoint.Type.ADDRESS), 0, "「Sao thế, Yuki?」", raw, List.of("rule"), rows);
+        assertEquals("ADDRESS_FORM_NOT_IN_APPLICABLE_ROW", AddressEditGuard.rejection(toSurname, "「Sao thế, Sora?」"));
+    }
+
+    @Test public void aFirstPersonPluralHasNoRowSoItsPronounStays() {
+        assertEquals("ADDRESS_PLURAL_SELF", reason("「Chúng ta sẽ đi」", "「私たちが行く」", "「Chúng em sẽ đi」"));
+        assertEquals("ADDRESS_PLURAL_SELF", reason("「Bọn tôi sẽ đi」", "「あたしたちが行く」", "「Bọn em sẽ đi」"));
+        assertNull(reason("「Tôi sẽ đi」", "「私が行く」", "「Em sẽ đi」"));
+    }
+
     @Test public void aNameIsNeverSwappedForAnotherName() {
         assertEquals("ADDRESS_NAME_SWAPPED", reason("「Mio, em hơi sợ người đó」", "「ミオ、あの人が怖い」", "「Rina, em hơi sợ người đó」"));
     }
