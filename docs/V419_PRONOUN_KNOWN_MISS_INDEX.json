@@ -1,0 +1,1013 @@
+{
+ "schema": "pronoun-known-miss-suite-v1",
+ "part": "KNOWN",
+ "count": 36,
+ "byLayer": {
+  "S2B_WRONG_PROPOSAL_BLOCKED_DRAFT_STILL_WRONG": 1,
+  "S2_MODEL_KEPT": 21,
+  "S3_GUARD_FALSE_BLOCK": 2,
+  "S4_WRONG_PASSED": 3,
+  "S5_UNSURE": 9
+ },
+ "byLayerAddressOnly": {
+  "S2B_WRONG_PROPOSAL_BLOCKED_DRAFT_STILL_WRONG": 1,
+  "S2_MODEL_KEPT": 20,
+  "S3_GUARD_FALSE_BLOCK": 2,
+  "S4_WRONG_PASSED": 2,
+  "S5_UNSURE": 8
+ },
+ "finalReferenceByLayerAddressOnly": {
+  "S2B_WRONG_PROPOSAL_BLOCKED_DRAFT_STILL_WRONG": {
+   "SAME": 1
+  },
+  "S2_MODEL_KEPT": {
+   "CHANGED": 7,
+   "SAME": 13
+  },
+  "S3_GUARD_FALSE_BLOCK": {
+   "CHANGED": 2
+  },
+  "S4_WRONG_PASSED": {
+   "SAME": 2
+  },
+  "S5_UNSURE": {
+   "CHANGED": 4,
+   "SAME": 4
+  }
+ },
+ "records": [
+  {
+   "id": "006-C6E:1:1",
+   "finalReference": "SAME",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "1:1",
+   "chunk": 1,
+   "types": [
+    "KANA"
+   ],
+   "group": "UNSURE",
+   "layer": "S5_UNSURE",
+   "label": "CHƯA CHẮC",
+   "event": "giữ",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "df62d48b111ed28a72d6ec0c488a514e2fc9ae993000acc9f9914becf01b4f25"
+   },
+   "draftLine": 0,
+   "rawSha256": "c8c448526421db56a36345ca36331e5315cf127df8ddfeac7a9576bbd4a03655",
+   "draftSha256": "df62d48b111ed28a72d6ec0c488a514e2fc9ae993000acc9f9914becf01b4f25"
+  },
+  {
+   "id": "006-C6E:2:3",
+   "finalReference": "CHANGED",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "2:3",
+   "chunk": 2,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S2_MODEL_KEPT",
+   "label": "SÓT",
+   "event": "bỏ sót",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "44a82fd83dc78303d9ce82bca54e29c73ce954ddaa331043fcca7e1632d80ec8"
+   },
+   "draftLine": 30,
+   "rawSha256": "c4f36f35cef8516cab0185e09ce442914c28696c4eb638724d96d92beb7af444",
+   "draftSha256": "44a82fd83dc78303d9ce82bca54e29c73ce954ddaa331043fcca7e1632d80ec8"
+  },
+  {
+   "id": "006-C6E:2:4",
+   "finalReference": "CHANGED",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "2:4",
+   "chunk": 2,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S2_MODEL_KEPT",
+   "label": "SÓT",
+   "event": "bỏ sót",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "6d162af2da54fe0bba6eaf259a0042c81d746f27dfe5209cee54caa948163b7e"
+   },
+   "draftLine": 32,
+   "rawSha256": "af0edb1c570ec2cedf6fd497127b432281c85611d616835e9923a6059d3c2e21",
+   "draftSha256": "6d162af2da54fe0bba6eaf259a0042c81d746f27dfe5209cee54caa948163b7e"
+  },
+  {
+   "id": "006-C6E:3:5",
+   "finalReference": "CHANGED",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "3:5",
+   "chunk": 3,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "UNSURE",
+   "layer": "S5_UNSURE",
+   "label": "CHƯA CHẮC",
+   "event": "giữ",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "54f65f267da3becec4ee2330ea60dacdf42b068e5b8f5e5a688ab98deaa3d35d"
+   },
+   "draftLine": 42,
+   "rawSha256": "9f01e5c166803efda30174714f25b52697c4ac00bc483de74739ed003845ef76",
+   "draftSha256": "54f65f267da3becec4ee2330ea60dacdf42b068e5b8f5e5a688ab98deaa3d35d"
+  },
+  {
+   "id": "006-C6E:4:1",
+   "finalReference": "SAME",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "4:1",
+   "chunk": 4,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "UNSURE",
+   "layer": "S5_UNSURE",
+   "label": "CHƯA CHẮC",
+   "event": "giữ",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "b765ab0f725602d470bec7b59050cd2613a2ed6ec641a2b74f274a0f50fe27b2"
+   },
+   "draftLine": 46,
+   "rawSha256": "0282d934f56bf719d6a968abbf936ebd00ee2de428e5a052519343b2f479f2ad",
+   "draftSha256": "b765ab0f725602d470bec7b59050cd2613a2ed6ec641a2b74f274a0f50fe27b2"
+  },
+  {
+   "id": "006-C6E:4:3",
+   "finalReference": "CHANGED",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "4:3",
+   "chunk": 4,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S2_MODEL_KEPT",
+   "label": "SÓT",
+   "event": "bỏ sót (C6B model sửa đúng, lần này giữ)",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "2af473db05b7496b686eaadbe1db74690a52a9d1a8ab43316a7096a688128755"
+   },
+   "draftLine": 52,
+   "rawSha256": "ca69a41dd72e431b6999c8488ed19864d62f1bd24c0064a2e78fdf5cf7865766",
+   "draftSha256": "2af473db05b7496b686eaadbe1db74690a52a9d1a8ab43316a7096a688128755"
+  },
+  {
+   "id": "006-C6E:5:2",
+   "finalReference": "CHANGED",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "5:2",
+   "chunk": 5,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S2_MODEL_KEPT",
+   "label": "SÓT",
+   "event": "bỏ sót",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "7ffe71dc843daedc9acf13497a03146a2757646ff586c1a34af9abc6c3c34019"
+   },
+   "draftLine": 70,
+   "rawSha256": "8da7b1213e990831ac6799ca49251417ce67fd2d9a259533ef5eef7d4b540839",
+   "draftSha256": "7ffe71dc843daedc9acf13497a03146a2757646ff586c1a34af9abc6c3c34019"
+  },
+  {
+   "id": "006-C6E:5:4",
+   "finalReference": "CHANGED",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "5:4",
+   "chunk": 5,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S2_MODEL_KEPT",
+   "label": "SÓT",
+   "event": "bỏ sót",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "50f7216ede23eaa6594317f0144da499337ff9e825d7cd05423139ca734e8c4c"
+   },
+   "draftLine": 75,
+   "rawSha256": "d7c7e0838df7231f2451314e439c89620a5f1b1cfe67079723f1a527e59e01b1",
+   "draftSha256": "50f7216ede23eaa6594317f0144da499337ff9e825d7cd05423139ca734e8c4c"
+  },
+  {
+   "id": "006-C6E:5:6",
+   "finalReference": "CHANGED",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "5:6",
+   "chunk": 5,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S2_MODEL_KEPT",
+   "label": "SÓT",
+   "event": "bỏ sót",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "915f5cc9c11adbe6eeba8b3f28b9f9f7dd8264845b1f22919cf9ff4bb3030e92"
+   },
+   "draftLine": 77,
+   "rawSha256": "e6c15983171aa6a4902b5999051305b67c35818652e3179b5d0bfbd0321e089f",
+   "draftSha256": "915f5cc9c11adbe6eeba8b3f28b9f9f7dd8264845b1f22919cf9ff4bb3030e92"
+  },
+  {
+   "id": "006-C6E:6:2",
+   "finalReference": "CHANGED",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "6:2",
+   "chunk": 6,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "UNSURE",
+   "layer": "S5_UNSURE",
+   "label": "CHƯA CHẮC",
+   "event": "giữ",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "22ab24f8388ebeae358bfbed77d7328b5f2c34e6087a9ae45bdb11b86e2c77e7"
+   },
+   "draftLine": 89,
+   "rawSha256": "246a067e6dfb6cc97936f630f92f59402df10176520f799d62f6f2a530a2cf41",
+   "draftSha256": "22ab24f8388ebeae358bfbed77d7328b5f2c34e6087a9ae45bdb11b86e2c77e7"
+  },
+  {
+   "id": "006-C6E:7:3",
+   "finalReference": "CHANGED",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "7:3",
+   "chunk": 7,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S3_GUARD_FALSE_BLOCK",
+   "label": "SÓT",
+   "event": "sửa đúng bị chặn nhầm",
+   "live": {
+    "status": "KEPT",
+    "reason": "ADDRESS_SCOPE_EXCEEDED"
+   },
+   "current": {
+    "status": "FIXED",
+    "reason": "REPLACED",
+    "afterSha256": "4cb1de054a8eb9f5db7affd6f923b7ad045da65e97c5d9a681aa1fef2575cdb0"
+   },
+   "draftLine": 102,
+   "rawSha256": "379096340d95efe760d0f1c27709d6dc04a1588ceaa01665df402e47523149e9",
+   "draftSha256": "51264d3203864975a02459adbb589e3df934a6425884d63f1d0b648c20436ea6"
+  },
+  {
+   "id": "006-C6E:7:4",
+   "finalReference": "SAME",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "7:4",
+   "chunk": 7,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "UNSURE",
+   "layer": "S5_UNSURE",
+   "label": "CHƯA CHẮC",
+   "event": "giữ",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "011e107a618819476c67d8fd51e326f3eadad01c0479d53b52dc084b6d24a83e"
+   },
+   "draftLine": 107,
+   "rawSha256": "fc0225044937ce5fc8930c49aef6228dd5753741e353cb05bc5fb978e7a33f24",
+   "draftSha256": "011e107a618819476c67d8fd51e326f3eadad01c0479d53b52dc084b6d24a83e"
+  },
+  {
+   "id": "006-C6E:8:4",
+   "finalReference": "SAME",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "8:4",
+   "chunk": 8,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S2_MODEL_KEPT",
+   "label": "SÓT",
+   "event": "bỏ sót",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "dedb0128054e391d1e4a00d757bd486d56d55a90ae0755c2bdf2c081a3be57f6"
+   },
+   "draftLine": 126,
+   "rawSha256": "cda521ad4d48f13005d8beea45e947ffc5423a9568e2bbb64976b9d5bcb621ae",
+   "draftSha256": "dedb0128054e391d1e4a00d757bd486d56d55a90ae0755c2bdf2c081a3be57f6"
+  },
+  {
+   "id": "006-C6E:9:1",
+   "finalReference": "SAME",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "9:1",
+   "chunk": 9,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S2_MODEL_KEPT",
+   "label": "SÓT",
+   "event": "bỏ sót",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "c3888927b7556e943b31d8ae3431c50b8acedebf1468b00d59574922fa0d0df7"
+   },
+   "draftLine": 137,
+   "rawSha256": "5e59b9e53434bb7b05f9462275392a9a37f269e2439bfb8da0a6c6e14cfa2cea",
+   "draftSha256": "c3888927b7556e943b31d8ae3431c50b8acedebf1468b00d59574922fa0d0df7"
+  },
+  {
+   "id": "006-C6E:10:7",
+   "finalReference": "CHANGED",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "10:7",
+   "chunk": 10,
+   "types": [
+    "KANA"
+   ],
+   "group": "KNOWN",
+   "layer": "S2_MODEL_KEPT",
+   "label": "SÓT",
+   "event": "bỏ sót",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "aaf654712dbe6c4bee938d2b4dbc07df51ce1265c8b5b58a279a885f23733ff0"
+   },
+   "draftLine": 167,
+   "rawSha256": "e7d6caecd6a094ff7a5c715463753e289200be61d943cd5aca575f411e823923",
+   "draftSha256": "aaf654712dbe6c4bee938d2b4dbc07df51ce1265c8b5b58a279a885f23733ff0"
+  },
+  {
+   "id": "006-C6E:11:4",
+   "finalReference": "SAME",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "11:4",
+   "chunk": 11,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S2_MODEL_KEPT",
+   "label": "SÓT",
+   "event": "bỏ sót",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "ad2d700a8cb7eb3980c8ac5959d804b26df5cc328eb96b803ad1db5b144c685c"
+   },
+   "draftLine": 183,
+   "rawSha256": "581643af20417d0bb91e9ee92f59445a520ed3acc7086f79f4064a497364124e",
+   "draftSha256": "ad2d700a8cb7eb3980c8ac5959d804b26df5cc328eb96b803ad1db5b144c685c"
+  },
+  {
+   "id": "006-C6E:11:5",
+   "finalReference": "SAME",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "11:5",
+   "chunk": 11,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S2_MODEL_KEPT",
+   "label": "SÓT",
+   "event": "bỏ sót",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "b16b835c6e0cbab7aeb84de51efb35b7039c54dba38f6a3a9164007c4c1fcc92"
+   },
+   "draftLine": 185,
+   "rawSha256": "1d7eff5de712027aa577ab671d6676e1d0eb345b355b4a4396c008abd037c4af",
+   "draftSha256": "b16b835c6e0cbab7aeb84de51efb35b7039c54dba38f6a3a9164007c4c1fcc92"
+  },
+  {
+   "id": "006-C6E:13:1",
+   "finalReference": "SAME",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "13:1",
+   "chunk": 13,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S2_MODEL_KEPT",
+   "label": "SÓT",
+   "event": "bỏ sót (C6B model sửa đúng, lần này giữ)",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "2f720c130ee0fa1bd94ec992b6c5e18ec4cbb8fc5a31d69ce2d020a115744543"
+   },
+   "draftLine": 214,
+   "rawSha256": "7d2fd46d6315a9efb7f5524eee460779c91bf9070318d09d9c6185deacc8c4f5",
+   "draftSha256": "2f720c130ee0fa1bd94ec992b6c5e18ec4cbb8fc5a31d69ce2d020a115744543"
+  },
+  {
+   "id": "006-C6E:13:3",
+   "finalReference": "SAME",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "13:3",
+   "chunk": 13,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "UNSURE",
+   "layer": "S5_UNSURE",
+   "label": "CHƯA CHẮC",
+   "event": "giữ",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "c33c86525836180044a160699a495bd9e0d120efc8433a1c2260673d8987b7d5"
+   },
+   "draftLine": 223,
+   "rawSha256": "5bf1697e1037ba5b145179af7971b34231315e89d7b7f75d9bc5d53f76fbc86d",
+   "draftSha256": "c33c86525836180044a160699a495bd9e0d120efc8433a1c2260673d8987b7d5"
+  },
+  {
+   "id": "006-C6E:13:4",
+   "finalReference": "SAME",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "13:4",
+   "chunk": 13,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S2_MODEL_KEPT",
+   "label": "SÓT",
+   "event": "bỏ sót",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "df7ef75c3c2ead82322dca9d0aed5ccb55094c2d18f10b7e0b73f37d9dfeb2b2"
+   },
+   "draftLine": 224,
+   "rawSha256": "b6f75621eb1a598b86febbde3e395d23c3f921f5d8d10839b0353204dbbc1d6d",
+   "draftSha256": "df7ef75c3c2ead82322dca9d0aed5ccb55094c2d18f10b7e0b73f37d9dfeb2b2"
+  },
+  {
+   "id": "006-C6E:14:2",
+   "finalReference": "SAME",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "14:2",
+   "chunk": 14,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S2_MODEL_KEPT",
+   "label": "SÓT",
+   "event": "bỏ sót",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "1941721a0b261a5b4f2a0c43861418ae21ae400cc0f76bc63eb418c464f48d6c"
+   },
+   "draftLine": 228,
+   "rawSha256": "5c1a7f73019e33b625e004ca35c20c71c186065a3b5c71e90cca82f6d68dc822",
+   "draftSha256": "1941721a0b261a5b4f2a0c43861418ae21ae400cc0f76bc63eb418c464f48d6c"
+  },
+  {
+   "id": "006-C6E:14:5",
+   "finalReference": "SAME",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "14:5",
+   "chunk": 14,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S4_WRONG_PASSED",
+   "label": "SAI",
+   "event": "sửa sai lọt qua",
+   "live": {
+    "status": "FIXED",
+    "reason": "REPLACED"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "ADDRESS_PLURAL_SELF",
+    "afterSha256": "f167c3b1c8d2ae47aedbb8c169ca8436ebdd24f900fe6091bd5f073c42dd8467"
+   },
+   "draftLine": 234,
+   "rawSha256": "fad528f26b1c8f624624f6b5d14f2fa252060bb508f054b8fd9ddc2b1d0a5251",
+   "draftSha256": "f167c3b1c8d2ae47aedbb8c169ca8436ebdd24f900fe6091bd5f073c42dd8467"
+  },
+  {
+   "id": "008-C7A:1:2",
+   "finalReference": "SAME",
+   "run": "008-C7A",
+   "chapter": "008",
+   "key": "1:2",
+   "chunk": 1,
+   "types": [
+    "GLOSSARY"
+   ],
+   "group": "KNOWN",
+   "layer": "S4_WRONG_PASSED",
+   "label": "SAI",
+   "event": "sửa sai lọt qua",
+   "live": {
+    "status": "FIXED",
+    "reason": "REPLACED"
+   },
+   "current": {
+    "status": "NO_POINT",
+    "reason": "",
+    "afterSha256": ""
+   },
+   "draftLine": 4,
+   "rawSha256": "8334e59e9a9403473dd1923d4961bd64024069ad1923b259aef41c9050bf2ae3",
+   "draftSha256": "dc1ccdab8a553fb25c550f1967c808f0474123422c55131a1de469229b9ae550"
+  },
+  {
+   "id": "008-C7A:5:8",
+   "finalReference": "SAME",
+   "run": "008-C7A",
+   "chapter": "008",
+   "key": "5:8",
+   "chunk": 5,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S2_MODEL_KEPT",
+   "label": "SÓT",
+   "event": "bỏ sót",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "9480b378bd7a3540b125c1d3e3d8924636ee73ea1ca76f31b0bae8635267fc8c"
+   },
+   "draftLine": 90,
+   "rawSha256": "8da68851d9356a5e6ea8f4b96b68c0560e9267202b6f0427471229ec897fb6e3",
+   "draftSha256": "9480b378bd7a3540b125c1d3e3d8924636ee73ea1ca76f31b0bae8635267fc8c"
+  },
+  {
+   "id": "008-C7A:6:1",
+   "finalReference": "SAME",
+   "run": "008-C7A",
+   "chapter": "008",
+   "key": "6:1",
+   "chunk": 6,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S2B_WRONG_PROPOSAL_BLOCKED_DRAFT_STILL_WRONG",
+   "label": "SÓT",
+   "event": "sửa sai bị chặn đúng",
+   "live": {
+    "status": "KEPT",
+    "reason": "ADDRESS_FORM_NOT_IN_APPLICABLE_ROW"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "ADDRESS_FORM_NOT_IN_APPLICABLE_ROW",
+    "afterSha256": "c269d079fc2af58ff77c275f6bb529735880e43441c73086a142a1e669e79bb1"
+   },
+   "draftLine": 92,
+   "rawSha256": "bc1dfeb476f58cfed7ccf7a0237730db96757a818c8b4a570794a306ddd5945a",
+   "draftSha256": "c269d079fc2af58ff77c275f6bb529735880e43441c73086a142a1e669e79bb1"
+  },
+  {
+   "id": "008-C7A:6:3",
+   "finalReference": "SAME",
+   "run": "008-C7A",
+   "chapter": "008",
+   "key": "6:3",
+   "chunk": 6,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S2_MODEL_KEPT",
+   "label": "SÓT",
+   "event": "bỏ sót",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "2ecf56bfe99a11ae02e8c7a73dcbe71bc82073f62ed2200c9e4c478e39ca03fc"
+   },
+   "draftLine": 95,
+   "rawSha256": "1e9b5335cc4556e4f949bf04fef80ecbd2d3053cc56d2335352a32d86e4f33c7",
+   "draftSha256": "2ecf56bfe99a11ae02e8c7a73dcbe71bc82073f62ed2200c9e4c478e39ca03fc"
+  },
+  {
+   "id": "008-C7A:6:5",
+   "finalReference": "SAME",
+   "run": "008-C7A",
+   "chapter": "008",
+   "key": "6:5",
+   "chunk": 6,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S2_MODEL_KEPT",
+   "label": "SÓT",
+   "event": "bỏ sót",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "eb4a1fc3d8c076991eac1c4749fc0faf63cc40a31c96d07c39cd8e2cefd1ba08"
+   },
+   "draftLine": 97,
+   "rawSha256": "c261ec6359d0796b8fce6cd49fe263ac8c5527dd3329074041134514371333a9",
+   "draftSha256": "eb4a1fc3d8c076991eac1c4749fc0faf63cc40a31c96d07c39cd8e2cefd1ba08"
+  },
+  {
+   "id": "008-C7A:7:2",
+   "finalReference": "SAME",
+   "run": "008-C7A",
+   "chapter": "008",
+   "key": "7:2",
+   "chunk": 7,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S2_MODEL_KEPT",
+   "label": "SÓT",
+   "event": "bỏ sót",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "5b81616243250c136443d8c83c0195dd1f4c320561290ae8b8803bbea1253cdf"
+   },
+   "draftLine": 115,
+   "rawSha256": "47852a17d6f63e1c04cdf60f465b42c2afb39be811450e48dcd3a338c1bcc50e",
+   "draftSha256": "5b81616243250c136443d8c83c0195dd1f4c320561290ae8b8803bbea1253cdf"
+  },
+  {
+   "id": "008-C7A:7:4",
+   "finalReference": "SAME",
+   "run": "008-C7A",
+   "chapter": "008",
+   "key": "7:4",
+   "chunk": 7,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S2_MODEL_KEPT",
+   "label": "SÓT",
+   "event": "bỏ sót",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "cedf0d381c03c7d2227b850991cbc8794ee3f8f123d0849a2531026ee754e5a9"
+   },
+   "draftLine": 117,
+   "rawSha256": "a30e7d75d2c2ba8377afb67ddb23f2f59073e9cdcec8ebcf9314cbdaf846131f",
+   "draftSha256": "cedf0d381c03c7d2227b850991cbc8794ee3f8f123d0849a2531026ee754e5a9"
+  },
+  {
+   "id": "008-C7A:7:5",
+   "finalReference": "SAME",
+   "run": "008-C7A",
+   "chapter": "008",
+   "key": "7:5",
+   "chunk": 7,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S2_MODEL_KEPT",
+   "label": "SÓT",
+   "event": "bỏ sót",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "90791e8b1507d6bd7f1d3df793f2fce9db970ec89da4b950d5a1641f2e588bcb"
+   },
+   "draftLine": 119,
+   "rawSha256": "d638b735c237d8d1736c7e4be6312485dbb8e0559468b94f1f33cf36eaa4ef8e",
+   "draftSha256": "90791e8b1507d6bd7f1d3df793f2fce9db970ec89da4b950d5a1641f2e588bcb"
+  },
+  {
+   "id": "011-C7D:2:2",
+   "finalReference": "CHANGED",
+   "run": "011-C7D",
+   "chapter": "011",
+   "key": "2:2",
+   "chunk": 2,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S3_GUARD_FALSE_BLOCK",
+   "label": "SÓT",
+   "event": "sửa đúng bị chặn nhầm",
+   "live": {
+    "status": "KEPT",
+    "reason": "ADDRESS_FORM_NOT_IN_APPLICABLE_ROW"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "ADDRESS_FORM_NOT_IN_APPLICABLE_ROW",
+    "afterSha256": "e579c06228af0f07d5fac570fc05ff58585623f2690b0f734d1498886fbd5f86"
+   },
+   "draftLine": 20,
+   "rawSha256": "cc177a2adf2ff1c37f06e9062bf537f88fcec006ee0d31b04c79154e75390acc",
+   "draftSha256": "e579c06228af0f07d5fac570fc05ff58585623f2690b0f734d1498886fbd5f86"
+  },
+  {
+   "id": "011-C7D:10:4",
+   "finalReference": "SAME",
+   "run": "011-C7D",
+   "chapter": "011",
+   "key": "10:4",
+   "chunk": 10,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "UNSURE",
+   "layer": "S5_UNSURE",
+   "label": "CHƯA CHẮC",
+   "event": "giữ",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "43eff1207e347f023dfa4c3a00a4723ca67bda926eed7eb1ef3225d0a312f818"
+   },
+   "draftLine": 155,
+   "rawSha256": "df9a7dca92a121cfd517be20c7933c290b95060cf0f1c7c97000851c2e32e17d",
+   "draftSha256": "43eff1207e347f023dfa4c3a00a4723ca67bda926eed7eb1ef3225d0a312f818"
+  },
+  {
+   "id": "011-C7D:10:6",
+   "finalReference": "CHANGED",
+   "run": "011-C7D",
+   "chapter": "011",
+   "key": "10:6",
+   "chunk": 10,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S2_MODEL_KEPT",
+   "label": "SÓT",
+   "event": "bỏ sót",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "d1e59ae8cbc7a2b5a5f155c3135dd3d1b5b2cdc1da8c42fa06db5c24ac73cba0"
+   },
+   "draftLine": 159,
+   "rawSha256": "af84c8c6d86a0caa94c11cba5c5231d807c2ca21d2b8a8756e01410fa81d448a",
+   "draftSha256": "d1e59ae8cbc7a2b5a5f155c3135dd3d1b5b2cdc1da8c42fa06db5c24ac73cba0"
+  },
+  {
+   "id": "011-C7D:10:7",
+   "finalReference": "CHANGED",
+   "run": "011-C7D",
+   "chapter": "011",
+   "key": "10:7",
+   "chunk": 10,
+   "types": [
+    "ADDRESS",
+    "GLOSSARY"
+   ],
+   "group": "UNSURE",
+   "layer": "S5_UNSURE",
+   "label": "CHƯA CHẮC",
+   "event": "bị chặn (chưa chắc)",
+   "live": {
+    "status": "KEPT",
+    "reason": "ADDRESS_PLURAL_PHRASE"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "ADDRESS_PLURAL_PHRASE",
+    "afterSha256": "c6753db3305855a5c4cb6d92020b5d32153caba86cd21dbbb4471a786936e3a7"
+   },
+   "draftLine": 161,
+   "rawSha256": "2f38ae5a14c9e12df6a878253ac4dca98335e9e99001d07872f1632ab8801168",
+   "draftSha256": "c6753db3305855a5c4cb6d92020b5d32153caba86cd21dbbb4471a786936e3a7"
+  },
+  {
+   "id": "011-C7D:12:2",
+   "finalReference": "CHANGED",
+   "run": "011-C7D",
+   "chapter": "011",
+   "key": "12:2",
+   "chunk": 12,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "UNSURE",
+   "layer": "S5_UNSURE",
+   "label": "CHƯA CHẮC",
+   "event": "sửa chưa chắc (áp dụng)",
+   "live": {
+    "status": "FIXED",
+    "reason": "REPLACED"
+   },
+   "current": {
+    "status": "FIXED",
+    "reason": "REPLACED",
+    "afterSha256": "06a15ede62818c1dde3896c67b3d63f1b34832520de042f0b8a57ad4d0d441e7"
+   },
+   "draftLine": 190,
+   "rawSha256": "dd0093cd530935ddb53cc127b11c9cab5ce4771dc903f444a136865fc10613de",
+   "draftSha256": "f8075c072ff16df41a32f907a698ad2b1bb5e8d97d841afa18079be8e5f0d4e2"
+  },
+  {
+   "id": "011-C7D:12:8",
+   "finalReference": "SAME",
+   "run": "011-C7D",
+   "chapter": "011",
+   "key": "12:8",
+   "chunk": 12,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "KNOWN",
+   "layer": "S4_WRONG_PASSED",
+   "label": "SAI",
+   "event": "sửa sai lọt qua",
+   "live": {
+    "status": "FIXED",
+    "reason": "REPLACED"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "ADDRESS_NAME_COMBINED",
+    "afterSha256": "345a4538adde71e4ddd15dd1d0d402f4aee38b826ad9e64fd3d2ff39dbab2dc9"
+   },
+   "draftLine": 200,
+   "rawSha256": "f4b5040c404d243fe3ab33ee39c8382a406baf3a9966ab7e650b8cab868651db",
+   "draftSha256": "345a4538adde71e4ddd15dd1d0d402f4aee38b826ad9e64fd3d2ff39dbab2dc9"
+  }
+ ]
+}
