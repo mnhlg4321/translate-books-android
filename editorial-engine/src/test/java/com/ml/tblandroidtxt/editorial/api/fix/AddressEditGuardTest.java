@@ -142,6 +142,34 @@ public final class AddressEditGuardTest {
         assertNull(reason("「Tôi sẽ đi」", "「私が行く」", "「Em sẽ đi」"));
     }
 
+    @Test public void anUnchangedPluralPhraseDoesNotFreezeALonePronounOfTheSameSentence() {
+        String raw = "「私たちは行くけど、私は残る」";
+        // the phrase "chúng ta" stays as it is; the lone "tôi" is repaired to the row form
+        assertNull(reason("「Chúng ta sẽ đi, nhưng tôi ở lại」", raw, "「Chúng ta sẽ đi, nhưng em ở lại」"));
+        // the same spelling twice: judged by position, only the copy inside the phrase is protected
+        assertNull(reason("「Chúng tôi sẽ đi, nhưng tôi ở lại」", raw, "「Chúng tôi sẽ đi, nhưng em ở lại」"));
+        assertNull(reason("「Tôi ở lại, nhưng chúng tôi sẽ đi」", raw, "「Em ở lại, nhưng chúng tôi sẽ đi」"));
+        assertEquals("ADDRESS_PLURAL_SELF", reason("「Chúng tôi sẽ đi, nhưng tôi ở lại」", raw, "「Chúng em sẽ đi, nhưng tôi ở lại」"));
+        assertEquals("ADDRESS_PLURAL_SELF", reason("「Chúng tôi sẽ đi, nhưng tôi ở lại」", raw, "「Chúng em sẽ đi, nhưng em ở lại」"));
+    }
+
+    @Test public void aThirdPersonPluralIsNotAPluralAddressPhraseAndASecondPersonOneIsNamedAsSuch() {
+        String raw = "「あいつらは行くけど、私は残る」";
+        // "chúng nó" and "họ" hold no lexicon pronoun: the lone "tôi" is repaired normally
+        assertNull(reason("「Chúng nó sẽ đi, nhưng tôi ở lại」", raw, "「Chúng nó sẽ đi, nhưng em ở lại」"));
+        assertNull(reason("「Họ sẽ đi, nhưng tôi ở lại」", raw, "「Họ sẽ đi, nhưng em ở lại」"));
+        // "bọn mày" is a second-person plural: no row either, so the pronoun after the marker is refused for what it is
+        assertEquals("ADDRESS_PLURAL_ADDRESSEE", reason("「Bọn mày im đi, tôi nói」", "「お前らは黙れ、私が言う」", "「Bọn cậu im đi, tôi nói」"));
+        assertNull(reason("「Bọn mày im đi, tôi nói」", "「お前らは黙れ、私が言う」", "「Bọn mày im đi, em nói」"));
+    }
+
+    @Test public void theMarkerOfAPluralPhraseIsNotMovedEvenInAMixedPoint() {
+        FixPoint mixed = new FixPoint(1, Set.of(FixPoint.Type.ADDRESS, FixPoint.Type.GLOSSARY), 0, "「Chúng ta thấy Rồng vương」", "「私たちは竜王を見た」",
+                List.of("ADDRESS rule", "GLOSSARY rule"), ROWS);
+        assertEquals("ADDRESS_PLURAL_PHRASE", AddressEditGuard.rejection(mixed, "「Ta thấy Long Vương」"));
+        assertNull(AddressEditGuard.rejection(mixed, "「Chúng ta thấy Long Vương」"));
+    }
+
     @Test public void aNameIsNeverSwappedForAnotherName() {
         assertEquals("ADDRESS_NAME_SWAPPED", reason("「Mio, em hơi sợ người đó」", "「ミオ、あの人が怖い」", "「Rina, em hơi sợ người đó」"));
     }

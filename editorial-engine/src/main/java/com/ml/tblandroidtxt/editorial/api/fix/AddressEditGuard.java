@@ -34,6 +34,9 @@ final class AddressEditGuard {
     /** A {@code from} term followed by one of these Japanese characters is the subject, topic or object of the sentence, not a call. */
     private static final String THIRD_PERSON_FOLLOWERS = "がはをにのもとへでやっ";
     private static final Pattern PLURAL_AUDIENCE = Pattern.compile("(先輩|先生|さん|くん|君|ちゃん|様|殿)(たち|達|方)|みんな|皆さん|皆様|全員");
+    private static final Set<String> PLURAL_MARKERS = Set.of("chúng", "bọn", "tụi");
+    /** Pronouns that, after a plural marker, are first person ("chúng em"); the others are second person ("chúng mày"). */
+    private static final Set<String> FIRST_PERSON = Set.of("ta", "tôi", "tớ", "tao", "tui", "mình", "em", "anh", "chị", "cháu", "con");
     private static final long MAX_DIFF_CELLS = 6_000_000L;
 
     /** Every rejection reason of this guard starts with this prefix. */
@@ -59,6 +62,10 @@ final class AddressEditGuard {
         for (String token : delta.added) if (lexicon.pronouns.contains(token) || (pure && lexicon.names.contains(token))) added.add(token);
 
         if (pure && !skeleton(point.draftText(), allowed).equals(skeleton(candidate, allowed))) return "ADDRESS_SCOPE_EXCEEDED";
+        // a plural phrase (chúng ta, bọn tôi, chúng mày) has no row: only a change inside that phrase is refused, a lone pronoun elsewhere is not
+        String plural = pluralPhraseChange(beforeTokens, delta.removedAt(), lexicon);
+        if (plural == null) plural = pluralPhraseChange(afterTokens, delta.addedAt(), lexicon);
+        if (plural != null) return plural;
         if (removed.isEmpty() && added.isEmpty()) return null;
         if (PLURAL_AUDIENCE.matcher(Normalizer.normalize(point.rawText(), Normalizer.Form.NFC)).find()) return "ADDRESS_AMBIGUOUS_AUDIENCE";
         if (pure) {
@@ -67,7 +74,6 @@ final class AddressEditGuard {
             // a surname turned into the given name of the same person is a call repair; one person turned into another is not
             if (!removedNames.isEmpty() && !addedNames.isEmpty() && !lexicon.sameEntity(removedNames, addedNames)) return "ADDRESS_NAME_SWAPPED";
         }
-        if (touchesPluralSelf(beforeTokens, removed) || touchesPluralSelf(afterTokens, added)) return "ADDRESS_PLURAL_SELF";
 
         Evidence evidence = evidence(point);
         List<AddressRow> applicable = new ArrayList<>();
@@ -88,7 +94,8 @@ final class AddressEditGuard {
         return null;
     }
 
-    private record Delta(List<String> removed, List<String> added) { }
+    /** The tokens that differ, with their positions in the DRAFT line (removedAt) and in the candidate (addedAt). */
+    private record Delta(List<String> removed, List<String> added, List<Integer> removedAt, List<Integer> addedAt) { }
 
     private static final class Evidence {
         final Set<String> vocativeFrom = new HashSet<>();
@@ -245,14 +252,22 @@ final class AddressEditGuard {
         return out;
     }
 
-    /** "chúng ta", "bọn tôi": a first-person plural. The pronoun rows give a singular self only, so no row can repair it. */
-    private static boolean touchesPluralSelf(List<String> tokens, List<String> changed) {
-        for (int i = 1; i < tokens.size(); i++) {
-            String before = tokens.get(i - 1);
-            if ((before.equals("chúng") || before.equals("bọn") || before.equals("tụi")) && changed.contains(tokens.get(i))) return true;
+    /**
+     * "chúng ta", "bọn tôi", "chúng mày": a marker followed by a pronoun is one plural phrase, and the pronoun rows give singular forms
+     * only. Judged by the position of each changed token, not by its spelling, so a lone "tôi" in the same sentence stays repairable.
+     * Third-person plurals ("chúng nó", "họ") hold no address word of the lexicon and are never touched by this rule.
+     */
+    private static String pluralPhraseChange(List<String> tokens, List<Integer> changedAt, Lexicon lexicon) {
+        for (int at : changedAt) {
+            String token = tokens.get(at);
+            if (PLURAL_MARKERS.contains(token)) return "ADDRESS_PLURAL_PHRASE";
+            if (at > 0 && PLURAL_MARKERS.contains(tokens.get(at - 1)) && lexicon.pronouns.contains(token)) {
+                return FIRST_PERSON.contains(token) ? "ADDRESS_PLURAL_SELF" : "ADDRESS_PLURAL_ADDRESSEE";
+            }
         }
-        return false;
+        return null;
     }
+
 
     private static String key(String entity) { return entity.trim().toLowerCase(Locale.ROOT); }
 
@@ -303,15 +318,17 @@ final class AddressEditGuard {
         }
         List<String> removed = new ArrayList<>();
         List<String> added = new ArrayList<>();
+        List<Integer> removedAt = new ArrayList<>();
+        List<Integer> addedAt = new ArrayList<>();
         int i = 0;
         int j = 0;
         while (i < a.size() && j < b.size()) {
             if (a.get(i).equals(b.get(j))) { i++; j++; }
-            else if (lcs[i + 1][j] >= lcs[i][j + 1]) removed.add(a.get(i++));
-            else added.add(b.get(j++));
+            else if (lcs[i + 1][j] >= lcs[i][j + 1]) { removedAt.add(i); removed.add(a.get(i++)); }
+            else { addedAt.add(j); added.add(b.get(j++)); }
         }
-        while (i < a.size()) removed.add(a.get(i++));
-        while (j < b.size()) added.add(b.get(j++));
-        return new Delta(removed, added);
+        while (i < a.size()) { removedAt.add(i); removed.add(a.get(i++)); }
+        while (j < b.size()) { addedAt.add(j); added.add(b.get(j++)); }
+        return new Delta(removed, added, removedAt, addedAt);
     }
 }
