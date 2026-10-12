@@ -1,5 +1,12 @@
 # Build State
 
+## Current state — 2026-10-12 (D-R3: release v4.18.0 closed; checklist step 14 and Complete gate PASS; push of branch, tag and main authorized)
+
+- Independent review of D-R2 confirmed: merge `d1fd354a` has parents `104fffdc` + `3add7278` and the same tree as the branch; event `tag-v4.18.0` has 55 files in each root, identical, SHA256SUMS 54/54 OK; `project_source_v4.18.0.zip` equals `git archive v4.18.0` (1,333 entries); APK 4.18.0/266 `5865F23A…AE91B` from `82626ac8` (only 4 androidTest files differ up to `9d02976e`). The earlier "720 commits ahead" count was 721.
+- Owner decision D-R3: checklist step 14 closed with that export evidence; `Workflow status: COMPLETE` for the v4.18 release lifecycle (Editorial chunk scope); the historical V5-SAFE.4.1.3 flags (NOT_CERTIFIED, P6_NOT_READY, EXECUTION_DISABLED, PILOT_DATA_PRESERVATION_GATE_FAILED…) moved verbatim to their own line, not cleared and not waived. Errata under steps 06/08 (116 PASS / 1 SKIP; BienTapUi 2 PASS / 3 SKIP); release-branch note in the checklist header. `verify-release-workflow.ps1 -Gate Complete` PASS (`artifacts/qa/v4.18-r1/r1.7-complete-gate/`, mirrored in `backup/qa/...`).
+- This closure commit is merged `--no-ff` into `main` again; the owner authorized pushing the feature branch, tag `v4.18.0` (not moved, stays on `9d02976e`) and `main` (fast-forward, no force). No build, device or provider operation; USD 0.
+- Earlier sections are historical.
+
 ## Current state — 2026-10-12 (D-R2 done: tag v4.18.0, event tag-v4.18.0, merge --no-ff into main; push of main/tag and step 14 pending owner)
 
 - Owner authorized the push of the local range (done, remote `9d02976e`) and D-R2. Annotated tag `v4.18.0` (object `061e02a6e11e492695947405e23586784bb9b9a8`) points at `9d02976e2ec88598e66d03551bf7fd1c59ed40fe`; PreBackup gate passes. The APK is the RC 4.18.0/266 built from `82626ac8` (production inputs identical to the tag commit); not rebuilt.
