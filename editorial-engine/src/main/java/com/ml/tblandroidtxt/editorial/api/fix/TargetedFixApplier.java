@@ -42,6 +42,9 @@ public final class TargetedFixApplier {
                 continue;
             }
             String candidate = PairText.trim(answer.text());
+            String normalized = preserveDraftTerminator(before, candidate);
+            boolean restoredTerminator = !normalized.equals(candidate);
+            candidate = normalized;
             String reject = rejection(point, candidate, glossary);
             if (reject != null) {
                 outcomes.add(new Outcome(point, Status.REJECTED, before, before, reject));
@@ -80,7 +83,8 @@ public final class TargetedFixApplier {
                 int physical = units.units().get(point.draftLineIndex()).physicalLine() - 1;
                 Span target = spans.get(physical);
                 edits.add(new Edit(target.start(), target.contentEnd(), candidate, point.id(), false));
-                outcomes.add(new Outcome(point, Status.FIXED, before, candidate, "REPLACED"));
+                outcomes.add(new Outcome(point, Status.FIXED, before, candidate,
+                        restoredTerminator ? "REPLACED_WITH_DRAFT_TERMINATOR" : "REPLACED"));
             }
         }
         edits.sort(Comparator.comparingInt(Edit::start).reversed()
@@ -100,11 +104,39 @@ public final class TargetedFixApplier {
         String before = point.draftText();
         if (sourceScript && !RawAlignedNormalizer.containsKanaOrHan(before) && !authorizedGlossarySource(candidate, glossary)) return "NEW_KANA_OR_HAN";
         if (!point.insertion()) {
+            if (!protectedSymbols(before, point).equals(protectedSymbols(candidate, point))) return "PROTECTED_SYMBOL_CHANGE";
+            String address = AddressEditGuard.rejection(point, candidate);
+            if (address != null) return address;
             int oldLetters = PairText.letters(before);
             int newLetters = PairText.letters(candidate);
             if (oldLetters == 0 || 2L * newLetters < oldLetters || (long) newLetters > 2L * oldLetters) return "LINE_LENGTH_RATIO";
         }
         return null;
+    }
+
+    /** A generated Japanese full stop must not replace the existing target-language
+     * full stop immediately before the same dialogue close. No words are changed. */
+    private static String preserveDraftTerminator(String before, String candidate) {
+        for (char close : new char[] {'」', '』', '”', '’', '"', '\''}) {
+            if (before.endsWith("." + close) && candidate.endsWith("。" + close) && before.indexOf('。') < 0
+                    && candidate.indexOf('。') == candidate.length() - 2) {
+                return candidate.substring(0, candidate.length() - 2) + "." + close;
+            }
+        }
+        return candidate;
+    }
+
+    /** Preserve dialogue, frames and special punctuation without inventing replacements.
+     * Kana-only ruby brackets may disappear with a KANA repair; ordinary brackets stay protected. */
+    private static String protectedSymbols(String text, FixPoint point) {
+        if (point.types().contains(FixPoint.Type.KANA)) text = text.replaceAll("《[\\p{IsHiragana}\\p{IsKatakana}ー]+》", "");
+        String protectedSet = "\"'「」『』“”‘’«»【】〔〕〈〉《》［］｛｝（）[]{}()◆◇＊…—─!?！？。";
+        StringBuilder out = new StringBuilder();
+        text.codePoints().filter(c -> protectedSet.indexOf(c) >= 0
+                || Character.getType(c) == Character.OTHER_SYMBOL
+                || Character.getType(c) == Character.MATH_SYMBOL
+                || Character.getType(c) == Character.CURRENCY_SYMBOL).forEach(out::appendCodePoint);
+        return out.toString();
     }
 
     private static boolean authorizedGlossarySource(String candidate, List<EditInputs.GlossaryEntry> glossary) {

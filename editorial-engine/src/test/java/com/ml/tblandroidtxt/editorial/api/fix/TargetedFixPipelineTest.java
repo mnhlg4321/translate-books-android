@@ -16,6 +16,52 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public final class TargetedFixPipelineTest {
+    @Test public void restoredDraftTerminatorKeepsTheCorrectAddressRepair() {
+        String before = "「Cậu đã đến rồi.」";
+        FixPoint p = point(1, Type.ADDRESS, 0, before, "「原文。」");
+        var result = TargetedFixApplier.apply(before, List.of(p), TargetedFixParser.parse("[1] 「Lan đã đến rồi。」", List.of(p)), List.of());
+        assertEquals("「Lan đã đến rồi.」", result.text());
+        assertEquals("REPLACED_WITH_DRAFT_TERMINATOR", result.outcomes().get(0).reason());
+    }
+    @Test public void dialogueMarksAreContentAcrossAllPreviouslyUnquotedForms() {
+        for (String pair : List.of("「」", "『』", "“”", "‘’", "\"\"", "''")) {
+            String before = pair.charAt(0) + "Cậu đã đến rồi." + pair.charAt(1);
+            String after = pair.charAt(0) + "Lan đã đến rồi." + pair.charAt(1);
+            FixPoint p = point(1, Type.ADDRESS, 0, before, "「Lanが来た。」");
+            var parsed = TargetedFixParser.parse("[1] " + after, List.of(p));
+            assertEquals(after, parsed.answers().get(1).text());
+            assertEquals(after, TargetedFixApplier.apply(before, List.of(p), parsed, List.of()).text());
+        }
+    }
+
+    @Test public void deletingReplacingAddingOrReorderingProtectedSymbolsRejectsOnlyThatPoint() {
+        String before = "「Cậu… đã đến?!」";
+        for (String after : List.of("Lan… đã đến?!", "『Lan… đã đến?!』", "「Lan… đã đến?!。」", "「Lan… đã đến!?」", "「Lan đã đến?!」")) {
+            FixPoint p = point(1, Type.ADDRESS, 0, before, "「原文」");
+            var result = TargetedFixApplier.apply(before, List.of(p), TargetedFixParser.parse("[1] " + after, List.of(p)), List.of());
+            assertEquals(before, result.text());
+            assertEquals("PROTECTED_SYMBOL_CHANGE", result.outcomes().get(0).reason());
+        }
+    }
+
+    @Test public void kanaRubyRepairDoesNotUnlockOrdinaryQuotationOrSceneSymbols() {
+        String before = "「Đây là đồ ăn《しょくりょう》 của chúng ta…」";
+        FixPoint p = point(1, Type.KANA, 0, before, "「これは食糧。」");
+        String after = "「Đây là đồ ăn của chúng ta…」";
+        assertEquals(after, TargetedFixApplier.apply(before, List.of(p), TargetedFixParser.parse("[1] " + after, List.of(p)), List.of()).text());
+        String bad = "Đây là đồ ăn của chúng ta…";
+        assertEquals("PROTECTED_SYMBOL_CHANGE", TargetedFixApplier.apply(before, List.of(p), TargetedFixParser.parse("[1] " + bad, List.of(p)), List.of()).outcomes().get(0).reason());
+    }
+
+    @Test public void unsafePointDoesNotDiscardAnIndependentCorrectTermRepair() {
+        String before = "「Cậu đã đến.」\nRồng vương đã về.";
+        var points = List.of(point(1, Type.ADDRESS, 0, "「Cậu đã đến.」", "「原文」"), point(2, Type.GLOSSARY, 1, "Rồng vương đã về.", "竜王"));
+        var result = TargetedFixApplier.apply(before, points, TargetedFixParser.parse("[1] Lan đã đến.\n[2] Long Vương đã về.", points), glossary());
+        assertEquals("「Cậu đã đến.」\nLong Vương đã về.", result.text());
+        assertEquals(TargetedFixApplier.Status.REJECTED, result.outcomes().get(0).status());
+        assertEquals(TargetedFixApplier.Status.FIXED, result.outcomes().get(1).status());
+    }
+
     private static final String PRONOUN_HEADER = "from,speaker,target,self,call,scope,note\n";
 
     private static PairMap map(String raw, String draft) {
@@ -103,7 +149,7 @@ public final class TargetedFixPipelineTest {
         String fence = String.valueOf((char) 96).repeat(3);
         String response = fence + "text\n</EDIT>\n**1. \"new one\"**\n(2) =\n[2] duplicate\n[9] unknown\n" + fence;
         TargetedFixParser.Parsed parsed = TargetedFixParser.parse(response, points);
-        assertEquals("new one", parsed.answers().get(1).text());
+        assertEquals("\"new one\"", parsed.answers().get(1).text());
         assertTrue(parsed.answers().get(2).keep());
         assertTrue(parsed.ignoredLines() >= 2);
     }

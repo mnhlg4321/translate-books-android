@@ -33,6 +33,7 @@ public final class FixPointFinder {
         final StringBuilder raw = new StringBuilder();
         final Set<FixPoint.Type> types = new LinkedHashSet<>();
         final LinkedHashSet<String> rules = new LinkedHashSet<>();
+        final LinkedHashSet<AddressRow> addressRows = new LinkedHashSet<>();
 
         Target(int draftIndex, int rawOrder, String draft) {
             this.draftIndex = draftIndex;
@@ -67,6 +68,10 @@ public final class FixPointFinder {
                 rawMain, map.raw.contextBeforeLines(rr[0], PairContract.CONTEXT_CHARS, 2),
                 map.raw.contextAfterLines(rr[1], PairContract.CONTEXT_CHARS, 2), cueFields);
         ReferenceProjector.Projection projection = ReferenceProjector.project(params, glossary, pronounCsv);
+        // The edit lock reads every row of the chapter table in scope, not only the rows whose cue is in this chunk: a speaker whose
+        // row is not shown to the model can still be the one who speaks. A cue field that names no column keeps every row (GLOBAL).
+        ReferenceProjector.Projection tableRows = ReferenceProjector.project(new ReferenceProjector.Params(map.raw.chapterId,
+                map.rawParagraphStart(entry), map.rawParagraphEnd(entry), rawMain, "", "", Set.of("none")), glossary, pronounCsv);
         List<LineAligner.Bead> beads = beads(raw, draft, glossary, entry, plan);
         List<Integer> rawParagraphs = paragraphs(rawMain, map.rawParagraphStart(entry));
         TreeMap<Integer, Target> targets = new TreeMap<>();
@@ -134,13 +139,21 @@ public final class FixPointFinder {
                             if (row.covers(para) && containsDialogue(rawLines.get(i)) && !conflicted(projection, para)) scopedDialogue = true;
                         }
                         if (!scopedDialogue) continue;
-                        Set<String> expected = Set.of(row.call().trim().toLowerCase(Locale.ROOT), row.self().trim().toLowerCase(Locale.ROOT));
+                        Set<String> expected = new LinkedHashSet<>(List.of(row.call().trim().toLowerCase(Locale.ROOT), row.self().trim().toLowerCase(Locale.ROOT)));
                         for (String token : AddressChecklist.unexpectedWords(draftLine, expected)) {
                             target.add(FixPoint.Type.ADDRESS, rawGroup,
                                     "ADDRESS: Pronoun row " + row.from() + " | " + row.speaker() + " → " + row.target()
                                             + " | self=" + row.self() + " | call=" + row.call() + " | " + row.note()
                                             + "; dạng xưng hô ngoài self/call: " + token
                                             + "; áp dụng trong scope của hàng; chỉ sửa nếu RAW xác nhận đúng speaker/target, nếu mơ hồ dùng [n] =.");
+                        }
+                    }
+                    if (target.types.contains(FixPoint.Type.ADDRESS)) {
+                        // the rows of the table in scope for this line are what the edit lock later checks the model's answer against
+                        for (ReferenceProjector.Row row : tableRows.pronouns()) {
+                            for (int p : candidateParagraphs) {
+                                if (row.covers(p)) { target.addressRows.add(AddressRow.of(row)); break; }
+                            }
                         }
                     }
                 }
@@ -157,7 +170,7 @@ public final class FixPointFinder {
         for (Object value : ordered) {
             if (value instanceof Target t) {
                 if (t.types.isEmpty()) continue;
-                points.add(new FixPoint(id++, t.types, t.draftIndex, t.draft, t.raw.toString(), new ArrayList<>(t.rules)));
+                points.add(new FixPoint(id++, t.types, t.draftIndex, t.draft, t.raw.toString(), new ArrayList<>(t.rules), new ArrayList<>(t.addressRows)));
             } else {
                 Missing m = (Missing) value;
                 points.add(new FixPoint(id++, Set.of(FixPoint.Type.MISSING), m.afterDraftIndex, "", m.raw, List.of(m.rule)));

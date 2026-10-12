@@ -27,7 +27,12 @@ public final class TargetedFixPrompt {
                 + "For every listed id return exactly one line: [id] <replacement DRAFT line>, or [id] = to keep the original. "
                 + "For a MISSING point, return one translated line for its insertion position. Do not add explanation, markdown, tags, "
                 + "or any unlisted id. A point with ambiguous speaker/addressee or conflicting rules must be [id] =. "
-                + "Do not edit any other line.\n";
+                + "Do not edit any other line. Preserve the DRAFT dialogue quotes, frames and special punctuation exactly; they are book content. "
+                + "Never import a source-language full stop into a DRAFT that does not have it. "
+                + "ADDRESS rules are candidates, not proof of who speaks. Apply self only to the identified speaker's own references, "
+                + "and call only to that speaker addressing the row's target; never reverse the direction or borrow another speaker's row. "
+                + "For ADDRESS-only points change only the evidenced address forms, preserving all other wording and order. "
+                + "If RAW does not establish the roles or a concrete error, return [id] =.\n";
         StringBuilder user = new StringBuilder();
         appendContext(user, "RAW CONTEXT BEFORE", rawBefore);
         user.append("# RAW CHUNK (read-only; use as evidence)\n").append(value(rawMain)).append("\n\n");

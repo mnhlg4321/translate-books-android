@@ -5,10 +5,17 @@ import java.util.List;
 import java.util.Set;
 
 /** One app-detected, RAW-anchored target. Line indices count non-blank DRAFT lines from zero. */
-public record FixPoint(int id, Set<Type> types, int draftLineIndex, String draftText, String rawText, List<String> rules) {
+public record FixPoint(int id, Set<Type> types, int draftLineIndex, String draftText, String rawText, List<String> rules,
+                       List<AddressRow> addressRows) {
     public enum Type { ADDRESS, GLOSSARY, KANA, MISSING }
 
+    /** A point without pronoun-row context: its ADDRESS answers cannot be checked against rows and are applied as before. */
+    public FixPoint(int id, Set<Type> types, int draftLineIndex, String draftText, String rawText, List<String> rules) {
+        this(id, types, draftLineIndex, draftText, rawText, rules, List.of());
+    }
+
     public FixPoint {
+        addressRows = addressRows == null ? List.of() : List.copyOf(addressRows);
         if (id < 1) throw new IllegalArgumentException("FIX_POINT_ID_INVALID");
         types = types == null ? Set.of() : Set.copyOf(new LinkedHashSet<>(types));
         draftText = draftText == null ? "" : draftText;

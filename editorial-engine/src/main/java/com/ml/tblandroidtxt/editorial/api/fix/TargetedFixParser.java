@@ -44,20 +44,12 @@ public final class TargetedFixParser {
             try { id = Integer.parseInt(matcher.group(1)); }
             catch (NumberFormatException invalid) { ignored++; continue; }
             if (!expected.contains(id) || answers.containsKey(id)) { ignored++; continue; }
-            String value = unquote(matcher.group(2).trim());
+            // Everything after the id is book content. Quote marks are not an envelope.
+            String value = matcher.group(2).trim();
             boolean keep = "=".equals(value);
             answers.put(id, new Answer(keep ? "" : value, keep));
         }
         return new Parsed(answers, ignored);
     }
 
-    private static String unquote(String value) {
-        if (value.length() < 2) return value;
-        char first = value.charAt(0);
-        char last = value.charAt(value.length() - 1);
-        boolean pair = (first == '"' && last == '"') || (first == '“' && last == '”')
-                || (first == '「' && last == '」') || (first == '『' && last == '』')
-                || (first == '‘' && last == '’') || (first == '\'' && last == '\'');
-        return pair ? value.substring(1, value.length() - 1).trim() : value;
-    }
 }

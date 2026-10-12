@@ -1,5 +1,25 @@
 # Build State
 
+## Current state — 2026-10-12 (CP-IMPL-8 ADDRESS edit lock, offline)
+
+- Baseline `3b938bd6`; uncommitted engine work becomes one commit with the CP-IMPL-7 parser/applier/prompt patch. `AddressEditGuard` (scope, name, plural audience, speaker-to-target direction from the full pronoun table, row consistency), `AddressRow` and `FixPoint.addressRows`; finder no longer throws on a row with self equal to call; contract revision CP-IMPL-8.
+- Faithful replay of the stored C6B answers through the real finder (74 points, no provider call): 9 wrong edits rejected, 11 correct edits still FIXED with identical text (dialogue marks and symbols kept), 54 KEPT unchanged, no other text changed. Evidence D:/P5E-private/c6-guard-20261012/.
+- Tests on the working tree: engine 686 (1 opt-in skip) PASS incl. 16 new synthetic tests, app 1381 (5 skip) PASS, androidTest sources compile. Runner LUNA input price corrected to 0.25/M in androidTest and the host reserve helper; V5 provider and host fixtures still 0.20/M.
+- Limit: owner FINAL edits to 5:1 and 5:2 (SÓT) would be blocked (name plus case particle reads as third person); only 006/C6B replayed; model behaviour under the new prompt unmeasured. No build, install or spend. 0/3 accepted; P7 not started.
+- Next action: owner duyệt hoặc từ chối một live nhỏ để đo hành vi model dưới khóa CP-IMPL-8: chương 006 chỉ đoạn 5 (7 điểm), luna medium, 1 lời gọi, không retry, sổ mới, trần USD 0.01 (worst-case ước ≈ USD 0.0069 theo giá 0.25/1.20 và sàn 4096), build mới từ commit này qua wrapper, cài chỉ emulator-5554. Chưa build, cài hay chi; không chạy gì trước quyết định đó.
+
+Earlier current-state sections below are historical.
+
+## Previous review — 2026-10-10 (C6 wrong edits and lost dialogue marks)
+
+- Actual HEAD 3b938bd6; uncommitted CP-IMPL-7 patch in parser/applier/prompt + tests. Previous APK 4.18-c6.4/258 source12143ce9 and test APK source31612b54 unchanged; no device action.
+- Root cause proven: parser stripped dialogue quotes returned by model. Offline point replay preserves 15 frames and all 11 previously correct FIXED edits; a generated trailing Japanese period is restored to the existing DRAFT period with a diagnostic. 9 semantic wrong edits still remain; tightening prompt is not quality evidence.
+- Clean HEAD archive + five-file overlay: 247 API engine PASS, 1 opt-in SKIP; 50 app pair PASS. Evidence D:/P5E-private/c6-symbol-review-20261010/. CS-1 and chunk merge unchanged. Equal line count is not a completeness proof.
+- C6B ledger independently verified USD0.02788237/14 calls/pending0. This review 0 calls/USD0, no build/install/commit/push. 0/3 accepted; P7 not started.
+- Done in the 2026-10-12 section above.
+
+Earlier current-state sections below are historical.
+
 ## Current state — 2026-10-10 (C6.6 + C6.5 lần hai: chạy đủ, PASS C6 không đạt ở ngưỡng SAI)
 
 - Baseline `31612b54` (C6.6 code); build `4.18-c6.4` / code `258` từ `12143ce9`, event `build-20261010-063348`, APK SHA-256 `657EB07E43FEB0B7C36C8FC0D0485CF01D51E60111E4EBD74429A8CF463BF281`; test APK `c6-6-test-20261010` (từ `31612b54`); cài chỉ `emulator-5554`; test tập trung PASS.

@@ -562,7 +562,7 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
     }
 
     private static final EditorialApiRunService.Pricing LUNA = new EditorialApiRunService.Pricing() {
-        @Override public BigDecimal inputPerToken(String model) { return new BigDecimal("0.0000002"); }
+        @Override public BigDecimal inputPerToken(String model) { return new BigDecimal("0.00000025"); }
         @Override public BigDecimal outputPerToken(String model) { return new BigDecimal("0.0000012"); }
     };
 

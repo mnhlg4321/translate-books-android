@@ -21,6 +21,9 @@ public final class AddressChecklist {
 
     private AddressChecklist() { }
 
+    /** The address-word lexicon, for callers that must tell an address word from any other word. */
+    public static Set<String> words() { return WORDS; }
+
     /** @return the checklist lines for the system prompt, or an empty list when there is nothing to check */
     public static List<String> build(ReferenceProjector.Projection projection, String rawMain, String draftMain, int firstParagraph) {
         List<String> rawBlocks = paragraphs(rawMain);
@@ -36,7 +39,7 @@ public final class AddressChecklist {
         }
         for (ReferenceProjector.Row row : projection.pronouns()) {
             if (row.call().isBlank()) continue;
-            Set<String> own = Set.of(row.call().trim().toLowerCase(Locale.ROOT), row.self().trim().toLowerCase(Locale.ROOT));
+            Set<String> own = new java.util.HashSet<>(List.of(row.call().trim().toLowerCase(Locale.ROOT), row.self().trim().toLowerCase(Locale.ROOT)));
             List<String> quoted = new ArrayList<>();
             Map<String, Map<String, Integer>> found = new LinkedHashMap<>();
             for (int i = 0; i < rawBlocks.size(); i++) {
@@ -104,7 +107,7 @@ public final class AddressChecklist {
     }
 
     /** Lower-cased words of letters; no regex class, so it behaves the same on Android. */
-    static List<String> tokens(String text) {
+    public static List<String> tokens(String text) {
         List<String> out = new ArrayList<>();
         StringBuilder word = new StringBuilder();
         String nfc = java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFC);

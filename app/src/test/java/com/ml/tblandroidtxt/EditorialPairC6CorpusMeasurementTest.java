@@ -156,6 +156,41 @@ public final class EditorialPairC6CorpusMeasurementTest {
                 chapter.preview.rows.size() - chapter.preview.chunksWithFixPoints);
     }
 
+    /**
+     * Offline replay of stored model answers through the current finder and applier, with no provider call. Set C6_INPUT_ROOT,
+     * C6_REPLAY_RESPONSES (a folder of NNN-EDIT.json answers, one per chunk) and C6_REPLAY_OUT (a TSV to write: chunk:id, types,
+     * status, reason, base64 of before and after). Private book text stays outside the repository.
+     */
+    @Test public void replayStoredAnswersThroughTheCurrentRulesWhenConfigured() throws Exception {
+        String inputRoot = System.getenv("C6_INPUT_ROOT");
+        String responses = System.getenv("C6_REPLAY_RESPONSES");
+        String out = System.getenv("C6_REPLAY_OUT");
+        if (inputRoot == null || inputRoot.isBlank() || responses == null || responses.isBlank() || out == null || out.isBlank()) return;
+        PrivateChapter006 chapter = loadPrivate006(Path.of(inputRoot));
+        StringBuilder tsv = new StringBuilder();
+        int points = 0;
+        for (int i = 0; i < chapter.preview.rows.size(); i++) {
+            EditorialPairPreview.Row row = chapter.preview.rows.get(i);
+            if (row.fixPoints.isEmpty()) continue;
+            Path answer = Path.of(responses).resolve(String.format(java.util.Locale.ROOT, "%03d-EDIT.json", i + 1));
+            com.ml.tblandroidtxt.editorial.api.fix.TargetedFixParser.Parsed parsed =
+                    com.ml.tblandroidtxt.editorial.api.fix.TargetedFixParser.parse(readUtf8(answer), row.fixPoints);
+            String before = chapter.preview.map.draftText(chapter.preview.map.entries().get(i));
+            com.ml.tblandroidtxt.editorial.api.fix.TargetedFixApplier.Result result =
+                    com.ml.tblandroidtxt.editorial.api.fix.TargetedFixApplier.apply(before, row.fixPoints, parsed, chapter.glossary);
+            for (com.ml.tblandroidtxt.editorial.api.fix.TargetedFixApplier.Outcome o : result.outcomes()) {
+                points++;
+                tsv.append(i + 1).append(':').append(o.point().id()).append('\t').append(o.point().typesText()).append('\t')
+                        .append(o.status()).append('\t').append(o.reason()).append('\t').append(o.point().addressRows().size()).append('\t')
+                        .append(java.util.Base64.getEncoder().encodeToString(o.before().getBytes(StandardCharsets.UTF_8))).append('\t')
+                        .append(java.util.Base64.getEncoder().encodeToString(o.after().getBytes(StandardCharsets.UTF_8))).append('\n');
+            }
+        }
+        Files.write(Path.of(out), tsv.toString().getBytes(StandardCharsets.UTF_8));
+        System.out.println("C6 replay points=" + points + " out=" + out);
+        assertTrue("replay must cover points", points > 0);
+    }
+
     /** C6.6: a reasoning model must get at least the shared 4096-token output ceiling on every targeted call. */
     private static void assertEachCallSendsTheOutputFloor(FakeEditorialApiProvider provider) {
         assertEquals("one max_tokens value per call", provider.requests.size(), provider.maxOutputTokens.size());
@@ -426,11 +461,11 @@ public final class EditorialPairC6CorpusMeasurementTest {
     }
 
     /**
-     * The live C6 reservation for openai/gpt-5.6-luna, at the runner's pinned LUNA prices (USD 0.20 / 1.20 per M). The
+     * The live C6 reservation for openai/gpt-5.6-luna, at the provider's luna prices (USD 0.25 / 1.20 per M; C6.5 reserved at 0.20 and the provider charged more). The
      * conservativeUpperUsd column is the app fallback for a model of unknown price (USD 5 / 25 per M), not a luna quote.
      */
     static BigDecimal lunaReserveUsd(long inputTokens, long outputTokens) {
-        return BigDecimal.valueOf(inputTokens).multiply(new BigDecimal("0.0000002"))
+        return BigDecimal.valueOf(inputTokens).multiply(new BigDecimal("0.00000025"))
                 .add(BigDecimal.valueOf(outputTokens).multiply(new BigDecimal("0.0000012"))).setScale(6, RoundingMode.CEILING);
     }
 
