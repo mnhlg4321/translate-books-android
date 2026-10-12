@@ -80,9 +80,21 @@ if ([version]$Version -ge [version]'4.8') {
     }
 
     $workflowVerifier = Join-Path $repositoryRoot 'scripts\verify-release-workflow.ps1'
-    # A tag event follows the tag, so steps 1-10 must be complete (PreBackup). A build event archives a release candidate before the tag
-    # and needs steps 1-9 (PreTag); it can never be satisfied by marking the Tag step early.
-    $workflowGate = if ($EventId -like 'tag-*') { 'PreBackup' } else { 'PreTag' }
+    # Exactly two event forms exist for v4.8 and later; anything else is refused before any gate or copy:
+    #   tag-v<Version>         archived after the tag, so steps 01-10 must be complete (PreBackup)
+    #   build-YYYYMMDD-HHMMSS  a release candidate archived before the tag, so steps 01-09 are enough (PreTag); it can never be
+    #                          satisfied by ticking the Tag step early
+    $buildEventTime = [datetime]::MinValue
+    $workflowGate = if ($EventId -ceq "tag-v$Version") {
+        'PreBackup'
+    }
+    elseif ($EventId -cmatch '^build-\d{8}-\d{6}$' -and
+        [datetime]::TryParseExact($EventId.Substring(6), 'yyyyMMdd-HHmmss', [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None, [ref]$buildEventTime)) {
+        'PreTag'
+    }
+    else {
+        throw "EventId '$EventId' is not allowed for v$Version. Use 'build-YYYYMMDD-HHMMSS' (release candidate) or 'tag-v$Version' (after the tag)."
+    }
     & $workflowVerifier -ChecklistPath $ChecklistPath -Gate $workflowGate -ExpectedVersion $Version
 }
 
