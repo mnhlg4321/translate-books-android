@@ -1,6 +1,17 @@
 # Build State
+## Current state — 2026-10-12 (P7 development build/device QA complete for current chunk scope)
 
-## Current state — 2026-10-12 (P7 offline on clean source 12824cee: ready for wrapper build and device QA)
+- Same branch/checklist; implementation source `12824cee6c6f4e9f9482efaf6fe398799d5732c0`; implementation baseline immediately before the local QA-record commit was `6063655ed96613dd386c23a79d68afcc765987ca`, and the record commit contains documentation/QA evidence only. Shared working tree remains dirty with pre-existing work. Local upstream comparison was ahead 24 / behind 0 before the record commit; no push was made.
+- Owner disposition is recorded: historical FAIL, including code196 pilot-data preservation, remains FAIL with no retroactive PASS or waiver; current chunk evidence is separate.
+- P7 production build `4.18-p7.1`/code264 was built by wrapper from isolated source, APK SHA-256 `64A9439D42E3979BA4404E847610F25CEBEE74B34279542D318B6CD77CEC661D`, source ZIP SHA-256 `F0D553C6481DFE90DE95C7359168E2D6688FBC5600D3A7D5526799250179EB84`; AndroidTest event `p7-test-20261012-143800`, APK SHA-256 `286A1B2F2DECA676C57B3242D412A19D9EB1CDF7E97B14CA226BAAD36699AFD1`. Production/test payloads are byte-verified in both artifacts and backup roots.
+- Build host gates passed: production wrapper `testDebugUnitTest`, `lintDebug`, `assembleDebug`; AndroidTest wrapper `:app:assembleDebugAndroidTest`. Production and test were installed/read back only on `emulator-5554`; production code264 and signature token `abebea4b` verified. No `pm clear`, provider, pilot, tag, merge, release or push.
+- P7 QA report: `artifacts/qa/v4.18-p7-device-12824cee/QA_REPORT.md`, mirrored in `backup/qa/v4.18-p7-device-12824cee/`, SHA-256 `8C759795DA57DE43FA39732C4837207FFAD4CE104B21EE70ACBDEEDB3E28E435`. Current chunk, UI restart, TXT UTF-8/hash readback, and product/Translation fake smoke passed. Frozen V5/pack remeasurement is `106/117` PASS with `11` historical schema-27-vs-29 FAILs; not repaired or waived.
+- Corrected policy: real performance evidence and archive-release payload are required for each release candidate AND tag; this is a development QA build only. No checkbox/acceptance change.
+- Next action: owner review the current P7 development QA evidence; keep provider/tag/merge/release/push closed, and open a separate owner-scoped repair only if the frozen schema failures need work.
+
+Earlier sections are historical; the review above resolves conflicting provenance and archive timing.
+
+## Previous state — 2026-10-12 (P7 offline on clean source 12824cee: ready for wrapper build and device QA)
 
 - Same branch `feature/v4.18-p5e-runner-repair-20260917` and same checklist; no checkbox changed; labels, 3/3 acceptance and limits of chapters 006, 008, 011 unchanged. Source under test: code commit `12824cee6c6f4e9f9482efaf6fe398799d5732c0` (CP-IMPL-15; later commits are documentation only), clean `git archive` zip SHA-256 F0D553C6481DFE90DE95C7359168E2D6688FBC5600D3A7D5526799250179EB84, every command run inside the archive folder.
 - Regression completed offline: `app:lintDebug` 0 errors / 57 warnings; `app:test` debug 472, release 472, benchmark 472 (3 skips each) PASS. Already evidenced and not repeated: engine 706 (1 skip), androidTest compile, scripts/p6 106, scripts/chunk 24 (logs captured once); the 28 PowerShell suites of the frozen A4.3 track (scripts unchanged since 2026-10-02). PreTag gate run read-only: exit 1, "Step 05 is not complete".
