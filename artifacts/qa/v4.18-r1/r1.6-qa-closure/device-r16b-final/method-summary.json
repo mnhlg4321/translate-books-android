@@ -1,0 +1,149 @@
+{
+ "logs": {
+  "D:\\App Translate Books\\artifacts\\qa\\v4.18-r1\\r1.6-qa-closure\\device-r16b-final\\flow-run-original-residue.txt": {
+   "overall": "PASS",
+   "discovered": 3,
+   "pass": 3,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 3,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapFlowInstrumentedTest",
+     "test": "comboWithAllFourSourcesRunsQuickAndExports",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapFlowInstrumentedTest",
+     "test": "theListAndTheCollapsedDeveloperSectionUseOnlyThePlannedWords",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapFlowInstrumentedTest",
+     "test": "comboWithoutGlossaryAndPronounRunsThoroughAndExports",
+     "result": "PASS"
+    }
+   ]
+  },
+  "D:\\App Translate Books\\artifacts\\qa\\v4.18-r1\\r1.6-qa-closure\\device-r16b-final\\ui-run1-cleaned-store.txt": {
+   "overall": "PASS",
+   "discovered": 5,
+   "pass": 2,
+   "skip": 3,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 5,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "reopenPhaseCleanup",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "typedFormValuesSurviveChoosingAGlossaryAndSavingKeepsThemForTheSameCombo",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "reopenPhaseSeed",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "reopenPhaseVerify",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "aFinishedRunIsOpenedFromTheListWithItsStoredResult",
+     "result": "PASS"
+    }
+   ]
+  },
+  "D:\\App Translate Books\\artifacts\\qa\\v4.18-r1\\r1.6-qa-closure\\device-r16b-final\\ui-run2-cleaned-store.txt": {
+   "overall": "PASS",
+   "discovered": 5,
+   "pass": 2,
+   "skip": 3,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 5,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "reopenPhaseCleanup",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "typedFormValuesSurviveChoosingAGlossaryAndSavingKeepsThemForTheSameCombo",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "reopenPhaseSeed",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "reopenPhaseVerify",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "aFinishedRunIsOpenedFromTheListWithItsStoredResult",
+     "result": "PASS"
+    }
+   ]
+  },
+  "D:\\App Translate Books\\artifacts\\qa\\v4.18-r1\\r1.6-qa-closure\\device-r16b-final\\ui-run3-original-residue.txt": {
+   "overall": "PASS",
+   "discovered": 5,
+   "pass": 2,
+   "skip": 3,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 5,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "reopenPhaseCleanup",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "typedFormValuesSurviveChoosingAGlossaryAndSavingKeepsThemForTheSameCombo",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "reopenPhaseSeed",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "reopenPhaseVerify",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "aFinishedRunIsOpenedFromTheListWithItsStoredResult",
+     "result": "PASS"
+    }
+   ]
+  }
+ },
+ "total": {
+  "discovered": 18,
+  "pass": 9,
+  "skip": 9,
+  "fail": 0,
+  "incomplete": 0
+ }
+}

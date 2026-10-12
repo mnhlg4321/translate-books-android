@@ -1,0 +1,41 @@
+# R1 QA addendum — 2026-10-12
+
+Scope: closes the QA, collector and archive-script findings of the independent review of the 4.18.0 release candidate (plan `docs/EDITORIAL_CHUNK_PLAN.md` section 6, block "review độc lập RC"). This is an addendum. The RC package, the R1.1–R1.5 evidence and their reports are immutable and were not edited; where this addendum disagrees with them, this addendum is the correction. No tag, no merge, no push, no provider call (USD 0), no pilot, no new full build, regression or benchmark.
+
+## Identities
+
+| Item | Value |
+|---|---|
+| RC (unchanged) | `4.18.0` / code 266, source `82626ac8fe68d88ddf9c97710d70d1d4f648517a`, APK SHA-256 `5865F23A1EE15602C5C38B967E34AED22E63728078C7A792F92E8BECBD6AE91B`, package `artifacts/releases/v4.18.0/build-20261012-153252/` (+ `backup/v4.18.0/...`) |
+| Fix commits (local, not pushed) | `25426773` UI test collision fix; `810972bd` scripts and their tests; `2d060aa0` flushed fixture cleanup |
+| Application sources | `git diff 82626ac8 2d060aa0 -- app/src/main editorial-engine/src/main app/build.gradle build.gradle settings.gradle gradle macrobenchmark` is empty, so the RC production APK is still the code under test; no production rebuild, no new Macrobenchmark/Perfetto |
+| Isolated source | throw-away worktree `D:/P5E-builds/wt-r1-fix-20261012` on local branch `tmp/r1-fix-20261012` (removed after the work, never pushed) |
+| Test APK 1 | event `r1fix-test-20261012`, SHA-256 `A1974442C83BF8A2E19CBC7AC93C71CC287633E94231D48F10E5B7993DF410B2`, source `810972bd` (collision fix only) |
+| Test APK 2 | event `r1fix2-test-20261012`, SHA-256 `10FB8FE0F2267D93E958F78EDA1D640CD76DF196F3744B8C102701836605E4BE`, source `2d060aa0` (collision fix + flushed cleanup); both pinned to the RC production APK/ZIP/certificate by `build-and-save-android-test.ps1`, mirrored by the wrapper in `artifacts/test-builds/v4.18.0/` and `backup/test-builds/v4.18.0/` |
+| Device | `emulator-5554` only; production on the device read back as `versionCode=266`, `versionName=4.18.0` |
+
+## Corrections to what was reported before
+
+1. **"117/117" and "5/5" counted skipped methods.** Per-method status codes of the saved RC logs (`scripts/qa/instrumentation_summary.py`, output in `original-rc-method-summary/`): the frozen allowlist is **117 discovered / 116 PASS / 1 SKIP / 0 FAIL** (the skip is `EditorialChapterFinalCoordinator#seedMainDatabaseForEmulatorUiSmoke`, an opt-in seed that writes the main database and was deliberately not run); the final chunk run is 21 PASS + 6 phase SKIP; `EditorialApiBienTapUi` after cleanup is 2 PASS + 3 SKIP, not 5 executed passes; product/Translation 15 PASS; the six restart phase runs were separate invocations, 6 PASS. The first `EditorialApiBienTapUi` run (1 PASS, 3 SKIP, 1 FAIL) stays in the evidence.
+2. **The glossary failure had two causes, not one.** (a) The test chose the last dialog item whose label started with a fixed name, so any leftover glossary with that prefix won. (b) The leftover itself came from `GlossaryStore.saveAll`, which persists with `apply()`: when an instrumentation run ends right after a test the target process is killed and the pending write can be lost, so the fixture a test had just "removed" stayed in the device store. My own media walkthrough did the same: it left two `synthetic-glossary` entries in the emulator store after the R1.5 recordings, which I only noticed while comparing store contents in this work. Manual cleanup in R1.5 made the rerun pass but did not fix either cause.
+3. **The WAL/SHM lines in the R1.4 database evidence were never hashes.** `emulator-real-db-hashes-*.json` hold the string `sha256sum:` for WAL and SHM, a tool error text. Only the main database and the (empty) journal are proven identical before and after the swap. Historical WAL/SHM presence is UNKNOWN: nothing is inferred about it, and the swap is not repeated to prove the past.
+
+## Fixes and their evidence
+
+| Finding | Change | Proof |
+|---|---|---|
+| Test selects the glossary by name prefix | `EditorialApiBienTapUiInstrumentedTest`: unique per-run names; decoys (same prefix listed after and before the fixture, and one with identical name and term count but another id); item chosen by the fixture's own id after asserting the whole label `name (1 mục)`; the saved combo found by unique name, not list position; only ids the test created are removed | Both test APKs: 3 runs each (cleaned store twice, then with the original `glossary-bientap-ui` / `glossary-bientap-test` residue restored in the store) all PASS; owner glossaries and combos untouched (`device-r16b-final/`, `device-r16-collision-only/`) |
+| Fixture removal lost with the killed process | `GlossaryTestSupport` saves, then waits with an empty `commit()` queued behind the pending write; used by the Bien tap UI, Bien tap flow and media walkthrough tests | `device-r16b-final/`: after each run the store holds no fixture glossary, and the restored original residue stays exactly as it was; after a media walkthrough run on an empty database the store holds 0 `synthetic-glossary` entries; the two earlier leaked entries were removed by hand (they were this session's test artefacts) |
+| Reports must separate PASS/SKIP/FAIL | `scripts/qa/instrumentation_summary.py` + `test_instrumentation_summary.py` (8 synthetic cases): 0 PASS; -3/-4 SKIP; -1/-2 FAIL; started without result INCOMPLETE; a log with no methods or a count mismatch is INCOMPLETE; `OK (N tests)` is never read as N passes | `offline/python-instrumentation-summary-tests.txt` |
+| Collector wrote stderr as a hash | `scripts/collect-app-db-state.ps1`: PRESENT only with existence + exit 0 + a 64-hex digest; ABSENT only from the existence test; everything else ERROR; `scripts/test-collect-app-db-state.ps1` covers present, absent, 12 error shapes (including the literal `sha256sum:`) | `offline/collector-state-tests.txt`; a real read-only run: `collector/` |
+| Archive script accepted any event | `scripts/archive-release.ps1` for v4.8 and later: only `build-YYYYMMDD-HHMMSS` (valid date, PreTag) and `tag-v<Version>` (PreBackup); anything else is refused before any gate or copy. `scripts/test-archive-release.ps1` runs in a throw-away repository: build with steps 01–09 and 01–08, tag with 01–09 and 01–10, wrong version, 12 invalid events, wrong-version checklist, existing destination | `offline/archive-routing-tests.txt` passes; run against the previous script it fails with 10 wrongly accepted cases (`offline/archive-routing-tests-against-previous-script-MUST-FAIL.txt`); no real package was touched |
+
+Totals of the device runs with the final test APK (`device-r16b-final/method-summary.json`): 18 methods discovered, 9 PASS, 9 SKIP (the phase and opt-in tests that are skipped without their argument), 0 FAIL.
+
+## Limits that remain
+
+- Ones the review named and this addendum does not change: media shows controller callbacks, not the system picker; fake-provider media is not semantic evidence; benchmark APKs were retained late (the original wrapper/retention-before-install compliance is not proven); PreTag checks structure and evidence presence only; the three accepted chapters keep their recorded limits.
+- The emulator's main database hash is no longer the one recorded before the R1.4 swap (`3fea3afd…` became `313d502e…`): running the UI and flow test classes writes and deletes combos and runs. Combos 36–38 and the glossaries are present; the new hash is evidence of those runs, not of data loss.
+- Other tests (`V415LibraryScroll`, `V48ImportNavigation`) also write the glossary store through `saveAll`/`upsert` and restore it; they were not changed or re-run here, so the same lost-write risk is possible there and is a follow-up, not a finding.
+- No new immutable archive event was created. The production APK is unchanged, but the fixes live in git after the RC source ZIP; whether a new `build-*` event with a fresh source ZIP and this addendum is wanted before D-R2 is an owner decision. The old package stays as it is.
+- Authority: commits are local; nothing was pushed in this work.

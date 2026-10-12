@@ -1,0 +1,24 @@
+﻿py : test_a_restarted_method_keeps_its_last_status 
+(test_instrumentation_summary.SummaryTest.test_a_restarted_method_keeps_its_last_status) ... ok
+At line:3 char:1
++ py -X utf8 -m unittest discover -s scripts\qa -p "test_*.py" -v 2>&1  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (test_a_restarte..._status) ... ok:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+test_all_skipped_is_skip_not_pass (test_instrumentation_summary.SummaryTest.test_all_skipped_is_skip_not_pass) ... ok
+test_bom_and_crlf_logs (test_instrumentation_summary.SummaryTest.test_bom_and_crlf_logs) ... ok
+test_empty_log_and_missing_methods_are_incomplete 
+(test_instrumentation_summary.SummaryTest.test_empty_log_and_missing_methods_are_incomplete) ... ok
+test_error_code_is_fail_and_unknown_code_is_never_pass 
+(test_instrumentation_summary.SummaryTest.test_error_code_is_fail_and_unknown_code_is_never_pass) ... ok
+test_ok_line_does_not_turn_skips_into_passes 
+(test_instrumentation_summary.SummaryTest.test_ok_line_does_not_turn_skips_into_passes) ... ok
+test_pass_skip_fail_are_separated (test_instrumentation_summary.SummaryTest.test_pass_skip_fail_are_separated) ... ok
+test_started_without_result_is_incomplete 
+(test_instrumentation_summary.SummaryTest.test_started_without_result_is_incomplete) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.001s
+
+OK

@@ -1,0 +1,1 @@
+﻿test-collect-app-db-state: all cases passed (present, absent, 12 error cases, command shape, report)

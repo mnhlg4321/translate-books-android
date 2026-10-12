@@ -1,0 +1,30 @@
+{
+    "schema":  1,
+    "overall":  "COMPLETE",
+    "files":  [
+                  {
+                      "name":  "tbl_android_txt.db",
+                      "state":  "PRESENT",
+                      "sha256":  "3fea3afd582d165ef196204469f881fa3af21e5fc3b3fff0733c9380d6122fc3",
+                      "detail":  "sha256sum exit 0"
+                  },
+                  {
+                      "name":  "tbl_android_txt.db-journal",
+                      "state":  "PRESENT",
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "detail":  "sha256sum exit 0"
+                  },
+                  {
+                      "name":  "tbl_android_txt.db-wal",
+                      "state":  "ABSENT",
+                      "sha256":  null,
+                      "detail":  "existence test: not present"
+                  },
+                  {
+                      "name":  "tbl_android_txt.db-shm",
+                      "state":  "ABSENT",
+                      "sha256":  null,
+                      "detail":  "existence test: not present"
+                  }
+              ]
+}

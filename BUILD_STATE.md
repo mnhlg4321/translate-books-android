@@ -1,4 +1,26 @@
 # Build State
+## Current state — 2026-10-12 (R1 QA closure: glossary test fix, PASS/SKIP/FAIL reporting, typed DB collector, strict archive events; local commits)
+
+- Addendum `docs/EDITORIAL_R1_QA_ADDENDUM_20261012.md`; evidence `artifacts/qa/v4.18-r1/r1.6-qa-closure/` (mirrored in `backup/qa/...`). RC package and R1.1-R1.5 evidence untouched. Application sources unchanged since RC `82626ac8` (empty diff on app/engine main, Gradle, macrobenchmark), so no production rebuild or benchmark rerun.
+- Reporting corrected: frozen allowlist is 117 discovered / 116 PASS / 1 intentional SKIP; BienTapUi after cleanup 2 PASS + 3 SKIP. The earlier 117/117 and 5/5 counted skips.
+- Glossary failure had two causes: name-prefix selection (last match) and `GlossaryStore.saveAll` using async `apply()` so a killed process lost fixture removal. Fixed in tests only: commits `25426773` (unique fixtures, decoys, id selection) and `2d060aa0` (`GlossaryTestSupport` flushed save/remove). Verified on emulator-5554 with test APKs `r1fix-test-20261012` (A1974442…) and `r1fix2-test-20261012` (10FB8FE0…), built from isolated source and pinned to RC 266: 18 methods = 9 PASS / 9 SKIP / 0 FAIL, including runs with the original residue restored.
+- `810972bd`: `scripts/qa/instrumentation_summary.py`, `scripts/collect-app-db-state.ps1` (PRESENT/ABSENT/ERROR), strict `scripts/archive-release.ps1` events (`build-YYYYMMDD-HHMMSS` -> PreTag, `tag-v<Version>` -> PreBackup, else refused) with offline tests; the archive test fails against the previous script.
+- Limits: historical WAL/SHM UNKNOWN; emulator main DB hash changed because test classes wrote/deleted combos (combos 36-38 present); `V415LibraryScroll`/`V48ImportNavigation` may share the apply() risk; media does not exercise the system picker; no new archive event; nothing pushed; no provider call (USD 0), no tag, no merge.
+- Next action: owner xem `docs/EDITORIAL_R1_QA_ADDENDUM_20261012.md` và quyết định (1) có cho phép push 3 commit sửa cục bộ (`25426773`, `810972bd`, `2d060aa0`) cùng commit tài liệu này hay không, (2) có cần event archive `build-*` mới chứa nguồn đã sửa + addendum trước D-R2 hay giữ nguyên gói RC cũ; chỉ sau đó mới trình D-R2 (tag `v4.18.0`, merge `main`). Codex chưa push, chưa tag, chưa merge.
+
+Earlier current-state sections below are historical.
+
+## Current state — 2026-10-12 (independent RC review at 0d6502bc; QA corrections pending)
+
+- Branch unchanged; HEAD and queried origin both `0d6502bceb4e9e2062afd3f3ac841c0ecaa31821`. RC source `82626ac8fe68d88ddf9c97710d70d1d4f648517a`; no application/test/script changes between RC and HEAD. No tag v4.18.0. Existing dirty work preserved.
+- Independently verified release payload: 29 files in each root, 28 checksums plus identical manifest; 1,246 source ZIP entries match Git blobs, no extras. APK SHA-256 `5865F23A1EE15602C5C38B967E34AED22E63728078C7A792F92E8BECBD6AE91B`. Read-only emulator package query reports 4.18.0/code266; no install in review.
+- Raw instrumentation statuses correct the earlier totals: frozen 116 PASS + 1 intentional seed SKIP; final chunk 21 PASS + 6 phase SKIP; product 15 PASS; separate restart 6 PASS. First glossary failure retained; cleanup rerun is 2 PASS + 3 SKIP, not 5 executed PASS. Root cause remains test name-prefix selection; corrective scope is in chunk plan section 6.
+- Performance JSON/traces are real emulator measurements of benchmark265; application main/Gradle source equals RC, but build variants differ. Both measured APK hashes were recovered from temporary build outputs and preserved with source ZIP/metadata/checksums in `artifacts/builds/v4.18-r13bench/retained-20261012-review-0d6502bc/` and identical backup (7 files). Late retention does not prove original wrapper/retention-before-install compliance.
+- DB evidence proves matching main DB and empty journal; WAL/SHM values are invalid `sha256sum:` strings, historical presence unknown. Six screenshots inspected; export success toast corresponds to real app hash readback, but tests inject file URI and do not traverse SAF. Fake UI evidence is not semantic acceptance.
+- PreTag rerun PASS; this does not settle QA facts or authorize tag. Three accepted chapters and their limits stay unchanged. No new model measurement.
+- Next action: finish the existing R1 QA/collector/archive corrections and addendum in chunk plan section 6, then present D-R2. This review made documentation corrections and late artifact retention only; no code edit, commit, push, build, install or provider call (USD 0).
+
+Earlier current-state sections are historical and their conflicting counts/pending actions are superseded by this review.
 ## Current state — 2026-10-12 (R1 complete: release candidate 4.18.0 archived; stop before tag and merge)
 
 - RC package: `artifacts/releases/v4.18.0/build-20261012-153252/` and `backup/v4.18.0/build-20261012-153252/` (event `build-20261012-153252`, ref `82626ac8`): APK `TranslateBooks-v4.18.0-code266.apk` (SHA-256 5865F23A1EE15602C5C38B967E34AED22E63728078C7A792F92E8BECBD6AE91B), QA report, CHANGELOG, BUILD_STATE, RELEASE_NOTES, 11 Perfetto traces, 3 Macrobenchmark files, 6 screenshots, 1 video, `project_source_v4.18.0.zip` (SHA-256 4DEA9A12FFDF25265226D30FA641D01DD1C964E68B95056C6D410EFD09ECE0EB), SHA256SUMS.txt, ARCHIVE_MANIFEST.md; 29 files byte-identical in both directories.

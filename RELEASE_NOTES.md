@@ -30,15 +30,25 @@ part of this release.
   006 keeps 13 pronoun misses and the `cau` misses (CP-IMPL-9); 008 keeps 7 `cau`
   misses; 011 keeps 2:2 (correct fix blocked by the third-person rule), 12:2
   (uncertain) and 10:6 (missed). Details: `docs/EDITORIAL_CHUNK_PLAN.md` section 6.
-- The call-name prompt (CP-IMPL-14) was measured on chapter 011 only; fixes
-  CP-IMPL-10 to 13 and 15 are verified by tests and replays, not by a live run.
+- The call-name prompt (CP-IMPL-14) was measured on chapter 011 only. CP-IMPL-10
+  to 13 were included in later live builds, but not every original case on 006/008
+  was re-measured. CP-IMPL-15 is in the RC and device QA; its semantic effect is
+  supported by stored-response replay, not a new live model evaluation.
 - Performance numbers come from the emulator, not a physical device.
 - The V5 three-pass gates in section C of the v4.18 checklist are out of this
   release's scope; they stay unchecked and are not waived.
 
 ## Verification
 
-- Frozen allowlist: 117/117 on `emulator-5554` after R1.1.
+Independent review at `0d6502bc`: RC artifacts are valid, but QA corrections remain
+open before D-R2; see `docs/EDITORIAL_CHUNK_PLAN.md` section 6. The archived RC
+notes remain immutable. UI media exercises controller callbacks; it does not prove
+system-picker interaction or semantic quality. Benchmark APKs were retained late
+during review; original wrapper/archive-before-install compliance is not proven.
+
+QA closure after the review: see `docs/EDITORIAL_R1_QA_ADDENDUM_20261012.md` (method-level PASS/SKIP/FAIL, glossary test fix, typed collector, strict archive events); the 4.18.0 package itself is unchanged.
+
+- Frozen allowlist on `emulator-5554`: 117 discovered, 116 PASS, 1 opt-in UI seed SKIP, 0 failures (R1.1 and RC logs).
 - Offline on a clean archive of `12824cee`: engine 706, app 472 per variant, lint
   0 errors / 57 warnings, `scripts/p6` 106, `scripts/chunk` 24.
 - Device QA of the chunk scope: `artifacts/qa/v4.18-p7-device-12824cee/QA_REPORT.md`.
