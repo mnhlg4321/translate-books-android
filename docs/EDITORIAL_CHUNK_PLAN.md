@@ -444,7 +444,7 @@ Tăng contract lên `CP-IMPL-6`; lượt chạy cũ không được tiếp tục
 | Gói phát hành | Chưa có | `scripts/build-and-save.ps1` bản RC `4.18.0` + `scripts/archive-release.ps1` event `build-YYYYMMDD-HHMMSS` ở cả `artifacts/releases/v4.18.0/` và `backup/v4.18.0/`, có `project_source_v4.18.0.zip` từ đúng ref |
 | Tag `v4.18.0`, merge `main` | Chưa | Chỉ sau khi owner xem gói RC (D-R2) |
 
-#### Yêu cầu làm việc R1 (cho phiên Codex) — sau khi có D-R1
+#### Yêu cầu làm việc R1 (cho phiên Codex) — D-R1 đã duyệt (owner, chat 2026-10-12)
 
 1. **R1.1** — sửa 11 assertion phiên bản DB như bảng trên; chạy đúng 5 lớp đó trên `emulator-5554` (117/117 cho bộ đóng băng). Commit riêng `test(frozen): …`.
 2. **R1.2** — cập nhật checklist v4.18:
@@ -932,3 +932,4 @@ Cùng một phép thử: chương 007, chunk 005 (RAW P061–P079), `openai/gpt-
   - **Phát hiện kỹ thuật:** giá luna thực khớp đầu vào 0,25/M và đầu ra 1,20/M (suy từ hai lời gọi, khớp chi phí báo về); hằng số LUNA đầu vào của runner đang là 0,20/M, nên giữ chỗ đầu vào thấp hơn thực khoảng 20%. Chưa sửa trong lần này. Lời gọi đầu có cache 6 096 token, nên chi phí thấp hơn lần C6.5. Chi phí thực (0,0279) thấp hơn kịch bản 800 token/lời gọi (0,030).
   - **Next action duy nhất:** owner đọc trang đọc `D:\P5E-private\chunk-outputs\006\c6b-006-live-review.html` và quyết định: (i) luật hàng cho 'cậu/tớ' (13 trên 14 SÓT là cậu thay vì tên Erika/Rea hoặc Fuyu, và tớ thay vì mình) là lỗi luật hay chấp nhận được; (ii) xếp lại 5 điểm SAI 'đổi không có căn cứ luật' (3:2, 4:5, 5:5, 11:2, 13:2); (iii) chấp nhận kết quả hay mở một thay đổi có duyệt (sửa hằng số giá LUNA đầu vào 0,20→0,25/M và/hoặc chỉ sửa khi có lỗi xác định). Không chạy live thêm trước quyết định đó; sổ `C6B-20261010` đã đóng hết (pending 0).
 - 2026-10-12 — coordinator review P7: archive sạch `49919855` PASS (engine 706, app 472, p6 106, chunk 24); push 25 commit đã quét. 11 FAIL đóng băng chỉ là assertion phiên bản DB ghi cứng 27. Viết gói phát hành R1 (mục 5.5), chờ D-R1.
+- 2026-10-12 — owner duyệt **D-R1**: phạm vi phát hành v4.18 = luồng Biên tập theo chunk; checklist 05–09 đánh dấu bằng bằng chứng phạm vi chunk, mục C giữ chưa đạt/không miễn trừ và ghi ngoài phạm vi; được sửa 11 assertion phiên bản DB (27 → `TranslationRepository.VER`) trong 5 lớp test đóng băng, không đổi mã V5/schema. Tag `v4.18.0` và merge `main` vẫn chờ owner xem gói RC.
