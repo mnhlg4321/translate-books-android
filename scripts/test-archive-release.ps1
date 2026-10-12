@@ -30,15 +30,24 @@ function New-Checklist {
     $path
 }
 
+function Get-GitOutput {
+    param([string[]]$GitArgs)
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try { $text = (& git -C $work @GitArgs 2>$null | Out-String).Trim() } finally { $ErrorActionPreference = $previous }
+    if ($LASTEXITCODE -ne 0) { throw "git $($GitArgs -join ' ') failed" }
+    $text
+}
+
 function Invoke-Archive {
-    param([string]$EventId, [string]$Checklist, [string]$Ver = $version)
+    param([string]$EventId, [string]$Checklist, [string]$Ver = $version, [string]$Ref = 'HEAD', [string[]]$Extra = @())
     $args = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $work 'scripts\archive-release.ps1'),
-        '-Version', $Ver, '-EventId', $EventId, '-GitRef', 'HEAD',
+        '-Version', $Ver, '-EventId', $EventId, '-GitRef', $Ref,
         '-ApkPath', (Join-Path $work 'in\app.apk'), '-QaReportPath', (Join-Path $work 'in\QA.md'),
         '-ChangelogPath', (Join-Path $work 'in\CHANGELOG.md'), '-BuildStatePath', (Join-Path $work 'in\BUILD_STATE.md'),
         '-ReleaseNotesPath', (Join-Path $work 'in\RELEASE_NOTES.md'), '-PerfettoPaths', (Join-Path $work 'in\p.trace'),
         '-MacrobenchmarkPaths', (Join-Path $work 'in\m.json'), '-ScreenshotPaths', (Join-Path $work 'in\s.png'),
-        '-VideoPaths', (Join-Path $work 'in\v.mp4'), '-ChecklistPath', $Checklist)
+        '-VideoPaths', (Join-Path $work 'in\v.mp4'), '-ChecklistPath', $Checklist) + $Extra
     Push-Location $work
     $previous = $ErrorActionPreference
     $ErrorActionPreference = 'Continue' # the child's refusal text arrives on stderr; its exit code and text are what is asserted
@@ -75,7 +84,10 @@ try {
     Run-Git @('config', 'user.email', 'test@example.invalid')
     Run-Git @('config', 'user.name', 'archive test')
     Run-Git @('config', 'core.autocrlf', 'false')
-    Run-Git @('add', 'scripts')
+    New-Item -ItemType Directory -Force (Join-Path $work 'app\src\main'), (Join-Path $work 'docs') | Out-Null
+    [IO.File]::WriteAllText((Join-Path $work 'app\src\main\Main.kt'), 'production v1', (New-Object Text.UTF8Encoding $false))
+    [IO.File]::WriteAllText((Join-Path $work 'in\extra.txt'), 'supplemental evidence', (New-Object Text.UTF8Encoding $false))
+    Run-Git @('add', 'scripts', 'app')
     Run-Git @('commit', '-q', '-m', 'synthetic')
 
     $upTo9 = New-Checklist -CheckedThrough 9
@@ -104,6 +116,58 @@ try {
     # the checklist must name the same version
     Expect-Refused 'checklist for another version' (Invoke-Archive 'build-20261012-160000' (New-Checklist -CheckedThrough 9 -ChecklistVersion 'v9.9.8')) 'does not match expected version'
     if (Test-Path (Join-Path $work "artifacts\releases\v$version\build-20261012-160000")) { $failures.Add('wrong-version checklist left a payload') }
+
+    # reused APK: production commit is c1, the archived QA source is a later commit that only touches docs
+    $production = Get-GitOutput @('rev-parse', 'HEAD')
+    $productionShort = $production.Substring(0, 12)
+    [IO.File]::WriteAllText((Join-Path $work 'docs\note.txt'), 'qa note', (New-Object Text.UTF8Encoding $false))
+    Run-Git @('add', 'docs')
+    Run-Git @('commit', '-q', '-m', 'docs only')
+    $qaSource = Get-GitOutput @('rev-parse', 'HEAD')
+    $reuse = @('-ProductionGitRef', $production, '-SupplementalPaths', (Join-Path $work 'in\extra.txt'))
+
+    $reuseEvent = 'build-20261012-170000'
+    Expect-Archived 'reused APK, docs-only QA commit' (Invoke-Archive $reuseEvent $upTo9 -Extra $reuse) $reuseEvent
+    $artifactDir = Join-Path $work "artifacts\releases\v$version\$reuseEvent"
+    $backupDir = Join-Path $work "backup\v$version\$reuseEvent"
+    $prodZip = Join-Path $artifactDir "supplemental\production_apk_source_$productionShort.zip"
+    $qaZip = Join-Path $artifactDir 'project_source_v9.9.9.zip'
+    $refZip = Join-Path $work 'ref-production.zip'
+    & git -C $work archive --format=zip "--output=$refZip" $production
+    if (-not (Test-Path $prodZip)) { $failures.Add('reused APK: production source ZIP missing') }
+    elseif ((Get-FileHash $prodZip).Hash -ne (Get-FileHash $refZip).Hash) { $failures.Add('reused APK: production ZIP is not the exact archive of the production commit') }
+    & git -C $work archive --format=zip "--output=$refZip.qa" $qaSource
+    if (-not (Test-Path $qaZip)) { $failures.Add('reused APK: QA source ZIP missing') }
+    elseif ((Get-FileHash $qaZip).Hash -ne (Get-FileHash "$refZip.qa").Hash) { $failures.Add('reused APK: QA ZIP is not the exact archive of the QA commit') }
+    if ((Get-FileHash $prodZip).Hash -eq (Get-FileHash $qaZip).Hash) { $failures.Add('reused APK: production and QA ZIP are identical, the two identities are not separate') }
+    if (-not (Test-Path (Join-Path $artifactDir 'supplemental\extra.txt'))) { $failures.Add('reused APK: supplemental file missing') }
+    $manifestText = Get-Content -Raw (Join-Path $artifactDir 'ARCHIVE_MANIFEST.md')
+    if ($manifestText -notmatch [regex]::Escape("Production APK source commit: ``$production``")) { $failures.Add('reused APK: manifest does not name the production commit') }
+    if ($manifestText -notmatch [regex]::Escape("Git commit: ``$qaSource``")) { $failures.Add('reused APK: manifest does not name the QA commit') }
+    if ((Get-Content -Raw (Join-Path $artifactDir 'SHA256SUMS.txt')) -ne (Get-Content -Raw (Join-Path $backupDir 'SHA256SUMS.txt'))) { $failures.Add('reused APK: artifact and backup checksums differ') }
+    if ((Get-Content -Raw (Join-Path $artifactDir 'SHA256SUMS.txt')) -notmatch 'supplemental/production_apk_source_') { $failures.Add('reused APK: production ZIP not covered by the checksum manifest') }
+
+    # a production commit that is not an ancestor, an unknown ref, and a supplemental name that collides are refused with no payload
+    Expect-Refused 'production commit newer than the archived ref' (Invoke-Archive 'build-20261012-170100' $upTo9 -Ref 'HEAD~1' -Extra @('-ProductionGitRef', 'HEAD')) 'is not an ancestor'
+    Expect-Refused 'unknown production ref' (Invoke-Archive 'build-20261012-170200' $upTo9 -Extra @('-ProductionGitRef', 'no-such-ref')) 'does not resolve'
+    $colliding = Join-Path $work "in\production_apk_source_$productionShort.zip"
+    [IO.File]::WriteAllText($colliding, 'not a zip', (New-Object Text.UTF8Encoding $false))
+    Expect-Refused 'supplemental colliding with the production ZIP' (Invoke-Archive 'build-20261012-170300' $upTo9 -Extra @('-ProductionGitRef', $production, '-SupplementalPaths', $colliding)) 'Duplicate archive filename'
+    Expect-Refused 'missing supplemental file' (Invoke-Archive 'build-20261012-170400' $upTo9 -Extra @('-SupplementalPaths', (Join-Path $work 'in\absent.txt'))) 'Missing required supplemental'
+
+    # production inputs changed after the production commit: the APK cannot be reused
+    [IO.File]::WriteAllText((Join-Path $work 'app\src\main\Main.kt'), 'production v2', (New-Object Text.UTF8Encoding $false))
+    Run-Git @('add', 'app')
+    Run-Git @('commit', '-q', '-m', 'production change')
+    Expect-Refused 'production inputs differ' (Invoke-Archive 'build-20261012-170500' $upTo9 -Extra @('-ProductionGitRef', $production)) 'Production inputs differ'
+    foreach ($left in 'build-20261012-170100', 'build-20261012-170200', 'build-20261012-170300', 'build-20261012-170400', 'build-20261012-170500') {
+        foreach ($root in 'artifacts\releases', 'backup') {
+            if (Test-Path (Join-Path $work "$root\v$version\$left")) { $failures.Add("refused event $left left a payload in $root") }
+        }
+    }
+    if (Test-Path (Join-Path $work '.archive-staging')) {
+        if (@(Get-ChildItem (Join-Path $work '.archive-staging')).Count -gt 0) { $failures.Add('archive staging was not cleaned') }
+    }
 }
 finally {
     if ((Test-Path $work) -and $work.StartsWith([IO.Path]::GetTempPath(), [StringComparison]::OrdinalIgnoreCase)) {
