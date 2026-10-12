@@ -134,6 +134,17 @@ public final class TargetedFixPipelineTest {
         assertEquals(1, result.ambiguousGlossarySplits());
     }
 
+    @Test public void theSystemPromptNamesTheCallNameRuleAndStillKeepsAmbiguousPointsAndTheDraftMarks() {
+        FixPoint p = point(1, Type.ADDRESS, 0, "DRAFT sentence", "RAW sentence");
+        String system = TargetedFixPrompt.build("Vietnamese", "", "RAW chunk", "", "", "DRAFT chunk", "", List.of(p)).system();
+        assertTrue(system.contains("Call names:"));
+        assertTrue(system.contains("replace that word with the row's call name"));
+        assertTrue(system.contains("Keep [id] = only when the person spoken to is really not established"));
+        assertTrue(system.contains("A point with ambiguous speaker/addressee or conflicting rules must be [id] ="));
+        assertTrue(system.contains("Preserve the DRAFT dialogue quotes, frames and special punctuation exactly"));
+        assertFalse(system.contains("FINAL"));
+    }
+
     @Test public void promptIncludesEachPointRuleAndNeverAnOwnerFinal() {
         FixPoint p = point(1, Type.ADDRESS, 0, "DRAFT sentence", "RAW sentence");
         var prompt = TargetedFixPrompt.build("Vietnamese", "", "RAW chunk", "", "", "DRAFT chunk", "", List.of(p));
