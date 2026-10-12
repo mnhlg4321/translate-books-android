@@ -36,6 +36,7 @@ def parse(text):
     finished = {}  # (class, test) -> result of the last final status
     order = []
     numtests = None
+    protocol_errors = []
     for line in text.split("\n"):
         m = _STATUS.match(line)
         if m:
@@ -53,10 +54,15 @@ def parse(text):
                 if key not in started and key not in finished:
                     order.append(key)
                 if code == 1:
+                    if key in started or key in finished:
+                        protocol_errors.append("repeated start for %s#%s; separate runs into separate logs" % key)
                     if key not in finished:
                         started[key] = True
                 elif code in CODE_TO_RESULT:
-                    finished[key] = CODE_TO_RESULT[code]
+                    if key in finished:
+                        protocol_errors.append("duplicate result for %s#%s" % key)
+                    result = CODE_TO_RESULT[code]
+                    finished[key] = FAIL if finished.get(key) == FAIL else result
                     started.pop(key, None)
                 else:
                     finished[key] = FAIL  # an unknown status code is never a pass
@@ -69,7 +75,7 @@ def parse(text):
         methods.append((key[0], key[1], result))
     ok = re.search(r"^OK \((\d+) tests?\)", text, re.M)
     return {"methods": methods, "numtests": numtests, "ok_line": int(ok.group(1)) if ok else None,
-            "failures_line": bool(re.search(r"^FAILURES!!!", text, re.M))}
+            "failures_line": bool(re.search(r"^FAILURES!!!", text, re.M)), "protocol_errors": protocol_errors}
 
 
 def summarize(text):
@@ -78,7 +84,7 @@ def summarize(text):
     for _, _, result in parsed["methods"]:
         counts[result] += 1
     discovered = len(parsed["methods"])
-    notes = []
+    notes = list(parsed["protocol_errors"])
     if discovered == 0:
         notes.append("no method status found")
     if parsed["numtests"] is not None and parsed["numtests"] != discovered:
@@ -88,9 +94,10 @@ def summarize(text):
     if parsed["failures_line"] and counts[FAIL] == 0:
         notes.append("FAILURES!!! line without a failed method status")
     count_mismatch = parsed["numtests"] is not None and parsed["numtests"] != discovered
-    if discovered == 0 or counts[INCOMPLETE] or count_mismatch:
+    ok_mismatch = parsed["ok_line"] is not None and parsed["ok_line"] != discovered
+    if discovered == 0 or counts[INCOMPLETE] or count_mismatch or ok_mismatch or parsed["protocol_errors"]:
         overall = INCOMPLETE
-    elif counts[FAIL]:
+    elif counts[FAIL] or parsed["failures_line"]:
         overall = FAIL
     elif counts[PASS] == 0:
         overall = SKIP
@@ -102,7 +109,8 @@ def summarize(text):
 
 
 def read_log(path):
-    raw = open(path, "rb").read()
+    with open(path, "rb") as stream:
+        raw = stream.read()
     for enc in ("utf-8-sig", "utf-16"):
         try:
             return raw.decode(enc)
@@ -118,9 +126,11 @@ def main(argv):
     args = ap.parse_args(argv)
     out = {}
     total = {"discovered": 0, "pass": 0, "skip": 0, "fail": 0, "incomplete": 0}
+    run_failed = False
     for path in args.logs:
         s = summarize(read_log(path))
         out[path] = s
+        run_failed = run_failed or s["overall"] in (FAIL, INCOMPLETE)
         for k in total:
             total[k] += s[k]
         print("%-12s discovered=%d pass=%d skip=%d fail=%d incomplete=%d  %s" % (
@@ -131,7 +141,7 @@ def main(argv):
     if args.json:
         with open(args.json, "w", encoding="utf-8") as fh:
             json.dump({"logs": out, "total": total}, fh, indent=1, ensure_ascii=False)
-    return 1 if total["fail"] or total["incomplete"] else 0
+    return 1 if run_failed else 0
 
 
 if __name__ == "__main__":
