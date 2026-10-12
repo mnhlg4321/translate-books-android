@@ -173,6 +173,7 @@ public final class EditorialPairC6CorpusMeasurementTest {
             EditorialPairPreview.Row row = chapter.preview.rows.get(i);
             if (row.fixPoints.isEmpty()) continue;
             Path answer = Path.of(responses).resolve(String.format(java.util.Locale.ROOT, "%03d-EDIT.json", i + 1));
+            if (!Files.exists(answer)) continue; // a single-chunk run stores one answer only
             com.ml.tblandroidtxt.editorial.api.fix.TargetedFixParser.Parsed parsed =
                     com.ml.tblandroidtxt.editorial.api.fix.TargetedFixParser.parse(readUtf8(answer), row.fixPoints);
             String before = chapter.preview.map.draftText(chapter.preview.map.entries().get(i));

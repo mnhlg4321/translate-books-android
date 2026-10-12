@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
  * <li>direction: a row's {@code from} term used as a third person (followed by a case particle) removes that person as speaker
  * and addressee; a vocative {@code from} term pins the rows to that term. A new address word must belong to a row that is still
  * applicable, and a word that already belongs to the pinned row must not be changed;</li>
- * <li>consistency: a line whose address words already fit one row must still fit one row after the edit.</li>
+ * <li>consistency: a line whose two or more address words already fit one row must still fit one row after the edit.</li>
  * </ul>
  */
 final class AddressEditGuard {
@@ -34,6 +34,9 @@ final class AddressEditGuard {
     private static final String THIRD_PERSON_FOLLOWERS = "がはをにのもとへでやっ";
     private static final Pattern PLURAL_AUDIENCE = Pattern.compile("(先輩|先生|さん|くん|君|ちゃん|様|殿)(たち|達|方)|みんな|皆さん|皆様|全員");
     private static final long MAX_DIFF_CELLS = 6_000_000L;
+
+    /** Every rejection reason of this guard starts with this prefix. */
+    static final String PREFIX = "ADDRESS_";
 
     private AddressEditGuard() { }
 
@@ -73,7 +76,8 @@ final class AddressEditGuard {
 
         Set<String> wordsBefore = addressWords(beforeTokens, lexicon);
         Set<String> wordsAfter = addressWords(afterTokens, lexicon);
-        if (!wordsBefore.isEmpty() && fitsOneRow(wordsBefore, applicable) && !fitsOneRow(wordsAfter, applicable)) return "ADDRESS_BREAKS_CONSISTENT_ROW";
+        // one address word fits several rows by itself; only two or more words show that the line already follows one row
+        if (wordsBefore.size() >= 2 && fitsOneRow(wordsBefore, applicable) && !fitsOneRow(wordsAfter, applicable)) return "ADDRESS_BREAKS_CONSISTENT_ROW";
         return null;
     }
 

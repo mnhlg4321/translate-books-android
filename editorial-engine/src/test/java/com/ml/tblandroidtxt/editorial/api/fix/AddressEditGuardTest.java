@@ -82,6 +82,11 @@ public final class AddressEditGuardTest {
         assertNull(reason(draft, raw, "「Chính cô là người đề nghị, đừng trách em」"));
     }
 
+    @Test public void aSingleAddressWordIsNotEnoughToCallTheLineConsistent() {
+        // "tôi" alone fits several rows, so the partial repair of the call word (tiền bối -> anh Ken) is not undone by the lock
+        assertNull(reason("Chuyện tiền bối có tin không, tôi không quan tâm", "「先輩が納得するかは関係ない」", "Chuyện anh Ken có tin không, tôi không quan tâm"));
+    }
+
     @Test public void aNameIsNeverSwappedForAnotherName() {
         assertEquals("ADDRESS_NAME_SWAPPED", reason("「Mio, em hơi sợ người đó」", "「ミオ、あの人が怖い」", "「Rina, em hơi sợ người đó」"));
     }
@@ -124,7 +129,7 @@ public final class AddressEditGuardTest {
                 TargetedFixParser.parse("[1] 「Mình đồng ý với cậu ấy」\n[2] Long Vương đã về.", points),
                 List.of(new EditInputs.GlossaryEntry("竜王", "Long Vương", "name", "")));
         assertEquals("「Tớ nghĩ giống cậu ấy」\nLong Vương đã về.", result.text());
-        assertEquals(TargetedFixApplier.Status.REJECTED, result.outcomes().get(0).status());
+        assertEquals(TargetedFixApplier.Status.KEPT, result.outcomes().get(0).status());
         assertEquals("ADDRESS_SCOPE_EXCEEDED", result.outcomes().get(0).reason());
         assertEquals(TargetedFixApplier.Status.FIXED, result.outcomes().get(1).status());
     }

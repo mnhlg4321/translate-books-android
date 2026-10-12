@@ -47,7 +47,10 @@ public final class TargetedFixApplier {
             candidate = normalized;
             String reject = rejection(point, candidate, glossary);
             if (reject != null) {
-                outcomes.add(new Outcome(point, Status.REJECTED, before, before, reject));
+                // The ADDRESS lock only says the rows cannot justify this answer: the line stays as the DRAFT and the other points
+                // of the chunk still apply. A malformed answer (symbols, Japanese, length) is still a rejection that blocks the chunk.
+                Status status = reject.startsWith(AddressEditGuard.PREFIX) ? Status.KEPT : Status.REJECTED;
+                outcomes.add(new Outcome(point, status, before, before, reject));
                 continue;
             }
             if (candidate.equals(before)) {
