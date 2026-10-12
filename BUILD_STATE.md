@@ -1,12 +1,21 @@
 # Build State
 
-## Current state — 2026-10-12 (C7C canary: 011 chunk 2 under CP-IMPL-14; glossary entry added)
+## Current state — 2026-10-12 (C7D: chapter 011 under CP-IMPL-14, 11 live calls)
+
+- Same installed build `4.18-c6.9`/263 (source `346cfdfdc512110ca1d193c5163953d5ac9039e9`), emulator-5554 only, 011 glossary with the 全国レベル entry. Fake whole-chapter run first. One whole-chapter run, luna medium, no retry, ledger C7D-20261012 cap USD 0.06: 11 calls, all `stop`, every chunk accepted, FINAL_ELIGIBLE, 49004 in / 7017 out, USD 0.01955655, pending 0, no overrun.
+- 56 points (same points as C7B): final ĐÚNG 50, SÓT 2, SAI 1, CHƯA CHẮC 3 (C7B: 43/9/1/3). Events: correct fixes applied 13, wrong fix through 1 (12:8, `Em Kuragane` turned into `Erika Kuragane`), correct fix wrongly blocked 1 (2:2), wrong fix blocked 1 (3:2), uncertain applied 1 (12:2), miss 1 (10:6, model variance). All 8 `cậu` misses of C7B were handled (7 applied, 1 blocked); 10:2 now applied thanks to CP-IMPL-13. The C7B label of 12:3 was wrong (should have been a miss): C7B corrected to ĐÚNG 42, SÓT 10.
+- Numeric gates: 0 lines outside points, 0 new Japanese, marks kept, 214/214 lines, ĐÚNG 50/53 = 94.3%, SAI 1/56 = 1.8%. Owner reading pending; 006 and 008 accepted (2/3); 011 not accepted yet; P7 not started. No code changed in this step.
+- Next action: owner đọc `D:\P5E-private\chunk-outputs\011\c7d-011-live-review.html` (và bản app `011_APP_c7d_JAKUAKU_MONSTER_VOL1.txt` cùng thư mục) rồi quyết định có chấp nhận chương 011 hay không (cổng số đạt: SAI 1/56, ĐÚNG 50/53; chấp nhận sẽ làm 3/3 chương accepted và mở P7); các điểm còn lại 12:8 (SAI), 2:2 (chặn nhầm), 12:2 (chưa chắc) và 10:6 (sót) được ghi là giới hạn đã biết hoặc owner yêu cầu sửa tiếp. Chưa chạy chương khác, pilot hay V5.
+
+Earlier current-state sections below are historical.
+
+## Previous state — 2026-10-12 (C7C canary: 011 chunk 2 under CP-IMPL-14; glossary entry added)
 
 - Both owner-approved follow-ups done: the entry 全国レベル -> trình độ toàn quốc was added to the working copy of the 011 glossary (SHA-256 b3dafb4e... to e557b69a8388b06013acdaf127e4b7c1fdf224fb4ed8436707156c6d53cc898e, backup kept; 011 still 13 chunks/11 calls, points 58 to 57), and a prompt canary ran.
 - CP-IMPL-14 (`346cfdfdc512110ca1d193c5163953d5ac9039e9`) adds the call-name rule to the targeted system prompt. Clean archive (zip SHA-256 CEC3FAE8791A731B19633B0C820598598D4CCE8C5BF0B643890FC297DFD3C00F): engine 705, app host 472, androidTest compile, scripts/p6 106, scripts/chunk 24 PASS. Wrapper build `4.18-c6.9`/263 (APK SHA-256 237B8E6F1DEAD06AF9664D1F8D7FA97B93BA643E0D300B3DBB4B10949703A16F), installed only on `emulator-5554`; device store/SQLite tests and the fake selector run passed first.
 - One live call on 011 chunk 2 (luna medium, no retry, ledger C7C-20261012 cap USD 0.01): USD 0.0018466, 4843 in / 530 out, pending 0; chunk ACCEPTED/PASS, 14/14 lines. All 6 formerly missed points (`cậu` kept in C7B) were changed to the call name: 5 correct fixes applied, 0 wrong, 1 correct fix wrongly blocked by the third-person rule (2:2). No lines outside points, no new Japanese, marks kept.
 - A wider scene window (plus or minus 2 lines) would free 2:2 but reopen 3:2 of chapter 006, so it was not done. 011 is not counted accepted (2/3: 006, 008); P7 not started.
-- Next action: owner duyệt hoặc từ chối chạy lại cả chương 011 dưới CP-IMPL-14 bằng build `4.18-c6.9`/263 đã cài sẵn trên `emulator-5554` (11 lời gọi, luna medium, không retry, sổ mới `C7D-<ngày>`, trần USD 0.06; kỳ vọng USD 0.022–0.030 vì câu trả lời dài hơn khoảng 20–25% so với C7B), để đo prompt mới trên cả 56 điểm, gồm nguy cơ đổi nhầm, và để quyết định chấp nhận 011 (3/3 mở P7). Chưa chạy gì thêm trước quyết định đó.
+- Done: the owner approved and chapter 011 was rerun (section above).
 
 Earlier current-state sections below are historical.
 

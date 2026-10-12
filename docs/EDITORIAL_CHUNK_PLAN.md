@@ -426,7 +426,23 @@ Tăng contract lên `CP-IMPL-6`; lượt chạy cũ không được tiếp tục
 
 ## 6. Trạng thái
 
-**Hiện hành — owner duyệt cả hai: glossary `全国レベル` và canary prompt C7C, 2026-10-12, 011 đoạn 2: prompt mới đổi đúng 5/6 điểm SÓT, 1 điểm đúng bị khóa chặn nhầm; chưa tính accepted.**
+**Hiện hành — C7D, 2026-10-12, cả chương 011 dưới CP-IMPL-14: chạy đủ, cổng số đạt, SÓT từ 9 xuống 2, chờ owner đọc.** Owner duyệt đề xuất. Dùng đúng build `4.18-c6.9`/263 đã cài sẵn (source ghim `346cfdfdc512110ca1d193c5163953d5ac9039e9`, APK SHA-256 `237B8E6F…A16F`), chỉ `emulator-5554`, luna medium, không retry, sổ mới `C7D-20261012` trần USD 0.06, glossary 011 có mục `全国レベル`; chạy giả cả chương (USD 0) trước.
+
+- **Live:** 11 lời gọi (đoạn 7 và 13 không điểm), mọi lời gọi `stop`, mọi đoạn accepted, `FINAL_ELIGIBLE`. 49 004 vào, 7 017 ra, **USD 0.0195566** (dưới dải kỳ vọng 0.022–0.030; C7B tốn USD 0.0201). Sổ: 22 bản ghi, 11 call, pending 0, không overrun, `costOverrunCalls 0`. Log thiết bị không có `provider_usage`.
+- **Chấm 56 điểm (cùng bộ điểm và cùng DRAFT/RAW như C7B; RAW + hàng pronoun + glossary):** kết quả cuối ĐÚNG 50, SÓT 2, SAI 1, CHƯA CHẮC 3. So với C7B (ĐÚNG 43, SÓT 9, SAI 1, CHƯA CHẮC 3): SÓT 9 → 2, sửa đúng áp dụng 5 → 13.
+- **Sự kiện riêng:** sửa đúng áp dụng 13 (2:1, 2:3–2:6, 3:3, 4:2, 9:10, 10:2, 11:3, 11:4, 11:6, 12:3); sửa một phần 0; **sửa sai lọt qua 1 (12:8)**; **sửa đúng bị chặn nhầm 1 (2:2)**; sửa sai bị chặn đúng 1 (3:2: model đổi `Mình` thành `Ta`); sửa chưa chắc áp dụng 1 (12:2); bị chặn chưa chắc 1 (10:7); bỏ sót 1 (10:6: C7B model sửa đúng `tôi → mình`, lần này giữ `=`, phương sai); giữ đúng 36; giữ chưa chắc 1 (10:4).
+- **Cả 8 điểm `cậu` SÓT của C7B được xử lý:** 7 điểm được áp dụng (2:1, 2:3, 2:4, 2:5, 2:6, 3:3, 4:2) và 1 điểm bị khóa chặn nhầm (2:2). 10:2, chặn nhầm của C7B, được áp dụng nhờ CP-IMPL-13. Glossary mới làm 10:3 không còn là điểm thuật ngữ, nên SAI cũ biến mất.
+- **SAI mới 12:8 (do prompt mới, khóa không thấy):** Meiji gọi `倉金さぁん`; DRAFT `Em Kuragane` đúng (glossary `倉金 → Kuragane`); model đổi thành `Erika Kuragane` (thêm tên riêng không có trong RAW). Khóa cho qua vì `Erika` là call của hàng Rea→Erika và không hàng nào của Meiji với Erika để loại. Chặn bằng quy tắc "tên phải có nguồn trong RAW" sẽ chặn cả sửa đúng 2:5 (RAW không nêu `依里花`), nên chưa làm; cần một bằng chứng khác (ví dụ đối tượng nói của đoạn).
+- **Sửa chưa chắc 12:2:** Tatsuoka nói với Meiji, DRAFT `Bọn em… tôi`; model đổi `tôi` thành `em` (mượn hàng của Erika/Rea). 011 không có hàng cho Tatsuoka nên RAW không đủ căn cứ; owner nên đọc.
+- **Chính xác hóa nhãn C7B:** điểm 12:3 (Meiji nói với Tatsuoka, hàng 龍岡くん call=Tatsuoka, DRAFT `em`) bị tôi gán nhầm ĐÚNG ở C7B, đúng ra là SÓT; C7B sửa lại là ĐÚNG 42, SÓT 10 (SAI 1, CHƯA CHẮC 3). Không dùng để hạ cổng, chỉ ghi nhận.
+- **Cổng số:** dòng ngoài điểm đổi 0 ✓ (15 dòng đổi = 15 điểm FIXED); chữ Nhật mới 0 ✓; dấu 「」, `……` và ký hiệu không đổi ✓; không mất câu ✓ (214/214 dòng); ĐÚNG 50/53 = 94,3% ✓ (≥60%); SAI 1/56 = 1,8% ✓ (≤10%); owner đọc: **chưa**. Số so với FINAL không dùng làm cổng.
+- **Giới hạn:** một chương, một mẫu, phương sai model vẫn đáng kể (10:6); prompt mới làm model tích cực hơn, kéo theo 12:8 và 3:2 là đề xuất sai (một lọt, một bị khóa chặn) và 12:2 chưa chắc; chỉ đo trên 011 nên chưa biết tác động lên 006 và 008. 006 (CP-IMPL-9) và 008 (CP-IMPL-11) vẫn accepted (2/3), 011 chưa accepted, P7 chưa mở. Bằng chứng: `D:/P5E-private/c6-guard-20261012/` (`score_c7d.py`, `c7d-points.json`) và `D:/P5E-private/chunk-runs/C1/live/011-25ce0f9a-0d79-4b5e-8de4-5c2a17c92463/`.
+
+**Next action duy nhất:** owner đọc `D:\P5E-private\chunk-outputs\011\c7d-011-live-review.html` (và bản app `011_APP_c7d_JAKUAKU_MONSTER_VOL1.txt` cùng thư mục) rồi quyết định có chấp nhận chương 011 hay không (cổng số đạt: SAI 1/56, ĐÚNG 50/53; chấp nhận sẽ làm 3/3 chương accepted và mở P7); các điểm còn lại 12:8 (SAI), 2:2 (chặn nhầm), 12:2 (chưa chắc) và 10:6 (sót) được ghi là giới hạn đã biết hoặc owner yêu cầu sửa tiếp. Chưa chạy chương khác, pilot hay V5.
+
+Khối dưới là lịch sử.
+
+**Trước đó — owner duyệt cả hai: glossary `全国レベル` và canary prompt C7C, 2026-10-12, 011 đoạn 2: prompt mới đổi đúng 5/6 điểm SÓT, 1 điểm đúng bị khóa chặn nhầm; chưa tính accepted.**
 
 - **(b) Glossary:** thêm mục `全国レベル,trình độ toàn quốc,system,…,high` vào bản glossary 011 dùng để chạy (`D:/P5E-private/q2-inputs/011/`, SHA-256 `b3dafb4e…9a11` → `e557b69a8388b06013acdaf127e4b7c1fdf224fb4ed8436707156c6d53cc898e`; bản gốc sao lưu ở `D:/P5E-private/c6-guard-20261012/011_glossary_before_c7c.csv`). File gốc của owner trong `D:/Ebooks/…/1.GLOSSARIES` không bị sửa; owner thêm cùng dòng vào đó nếu muốn dùng lâu dài. Đo lại bằng 0 USD: 011 vẫn 13 đoạn, 11 lời gọi; điểm 58 → 57 (điểm thuật ngữ 10:3 không còn); DRAFT SHA-256 không đổi.
 - **(a) Prompt CP-IMPL-14** (mã `346cfdfdc512110ca1d193c5163953d5ac9039e9`): thêm vào system prompt quy tắc tên call: khi từ nói với người nghe (cậu, bạn, mày, anh, chị, em) đứng ở chỗ hàng ghi tên riêng làm `call`, và hội thoại RAW quanh dòng cho thấy đối tượng của hàng là người đang được nói tới, thì thay bằng tên call; chỉ giữ `=` khi người nghe thật sự chưa rõ. Câu cũ về mơ hồ, bảo toàn dấu thoại/ký hiệu và khóa ADDRESS giữ nguyên. Archive sạch (`git archive 346cfdfd`, zip SHA-256 `CEC3FAE8791A731B19633B0C820598598D4CCE8C5BF0B643890FC297DFD3C00F`): engine 705 (1 SKIP), app host 472 (3 SKIP), androidTest compile, scripts/p6 106, scripts/chunk 24 PASS; source zip của wrapper trùng hash với archive.
@@ -436,7 +452,7 @@ Tăng contract lên `CP-IMPL-6`; lượt chạy cũ không được tiếp tục
 - **Phát hiện mới cần quyết định:** 2:2 là lần chặn nhầm thứ hai do luật ngôi ba. Mở rộng cửa sổ "trong cảnh" sang ±2 dòng sẽ cứu 2:2 nhưng cũng làm 3:2 của 006 (SAI đã đóng) mở lại vì dòng 34 nêu `令愛`, nên **không làm**; cần một bằng chứng khác (ví dụ danh sách người nói ở đoạn) trước khi sửa.
 - **Giới hạn:** một đoạn, 6 điểm, đều cùng một kiểu (`cậu` → tên) nên chưa cho thấy prompt có làm model đổi nhầm ở các điểm khác không; chưa đo tỉ lệ trên cả chương. 011 chưa accepted (006, 008 accepted, 2/3); P7 chưa mở.
 
-**Next action duy nhất:** owner duyệt hoặc từ chối chạy lại cả chương 011 dưới CP-IMPL-14 bằng build `4.18-c6.9`/263 đã cài sẵn trên `emulator-5554` (11 lời gọi, luna medium, không retry, sổ mới `C7D-<ngày>`, trần USD 0.06; kỳ vọng USD 0.022–0.030 vì câu trả lời dài hơn khoảng 20–25% so với C7B), để đo prompt mới trên cả 56 điểm, gồm nguy cơ đổi nhầm, và để quyết định chấp nhận 011 (3/3 mở P7). Chưa chạy gì thêm trước quyết định đó.
+Owner đã duyệt; kết quả ở khối C7D phía trên.
 
 Khối dưới là lịch sử.
 
