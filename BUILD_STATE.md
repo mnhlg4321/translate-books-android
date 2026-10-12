@@ -1,12 +1,22 @@
 # Build State
 
-## Current state — 2026-10-12 (C6D canary: 006 chunk 5, CP-IMPL-9, one live call)
+## Current state — 2026-10-12 (C6E: whole chapter 006 under CP-IMPL-9, 14 live calls)
+
+- Build `4.18-c6.6`/260 from `74c712ca2eee94f2ae14165f8a7e06f2c8176348` (already installed on `emulator-5554` only), luna medium, no retry, ledger C6E-20261012 cap USD 0.06: 14/14 calls, all `stop`, every chunk ACCEPTED/PASS, FINAL_ELIGIBLE, 76151 in / 12089 out, USD 0.0318669, pending 0, no overrun. Fake whole-chapter run (USD 0) first.
+- Scored on the 74 points (labels unchanged): correct applied 10, partial applied 0, wrong let through 1 (14:5 chúng ta→chúng em), correct partial repair wrongly blocked 1 (7:3), wrong repairs blocked correctly 5, missed 15, kept correctly 37 (plus the 5 blocked wrong repairs), unsure 6. ĐÚNG 47, SÓT 15, SAI 1, CHƯA CHẮC 6.
+- Numeric C6 gates: 0 lines outside points, 0 new Japanese, marks and symbols kept, 247/247 lines, ĐÚNG 52/68 = 76.5% (>=60%), SAI 1/74 = 1.4% (<=10%). Owner reading pending. 0/3 accepted; P7 not started.
+- After the run, offline only: CP-IMPL-10 (commit `9a72100f`) fixes the two findings (same-person name repair, first-person plural). Replay of the stored C6E answers: 14:5 kept, 7:3 applied; C6B replay unchanged. Clean archive of `9a72100f`: engine 694, app host 472, androidTest compile, p6 106, chunk 24 PASS. Not built, not installed; the live evidence is CP-IMPL-9.
+- Next action: owner đọc `D:\P5E-private\chunk-outputs\006\c6e-006-live-review.html` (và bản app `006_APP_c6e_JAKUAKU_MONSTER_VOL1.txt` cùng thư mục) rồi quyết định có chấp nhận chương 006 cho cổng C6 hay không (cổng số đạt: SAI 1/74, ĐÚNG 52/68 điểm rõ luật, 0 dòng ngoài điểm, 0 chữ Nhật mới, 247/247 dòng). Chưa chạy chương khác, pilot hay V5, và chưa build CP-IMPL-10.
+
+Earlier current-state sections below are historical.
+
+## Previous state — 2026-10-12 (C6D canary: 006 chunk 5, CP-IMPL-9, one live call)
 
 - Pinned source `74c712ca2eee94f2ae14165f8a7e06f2c8176348`; wrapper build `4.18-c6.6`/260 (event build-20261012-105000, APK SHA-256 CE0AD974ED19F045B7898F886FF4C1A1D571D0BB66B2F39DF410928873F8CF6A) and test APK `c6-8-test-20261012` (286A1B2F2DECA676C57B3242D412A19D9EB1CDF7E97B14CA226BAAD36699AFD1); installed only on `emulator-5554`.
 - Before the call: SQLite reopen test on the device OK (kept ADDRESS point does not block the chunk's other repairs), EditorialPairStore 6 and EditorialApiStore 6 OK, selector proved with the fake provider (USD 0).
 - One live call, luna medium, ledger C6D-20261012 (cap USD 0.01): reserve 0.0066287, settled USD 0.00325825, 7288 in / 1197 out, pending 0. Chunk ACCEPTED, gate PASS, 18/18 lines. Scored separately: correct 3 (5:1, 5:3, 5:7), partial 0, missed 3 (5:2, 5:4, 5:6), wrong 0, correct fix wrongly blocked 0, wrong fix blocked correctly 1 (5:5, plural audience). Only the 3 point lines changed; dialogue marks, symbols and content kept; no new Japanese.
 - One chunk, not a PASS C6 sample. Stopped after this chunk; no other chapter, pilot or V5. 0/3 accepted; P7 not started.
-- Next action: owner đọc `D:\P5E-private\chunk-outputs\006\c6d-chunk5-canary-review.html` và quyết định có duyệt lần chạy cả chương 006 (14 lời gọi, luna medium, sổ mới, trần USD 0.06) bằng build `4.18-c6.6`/260 đã cài sẵn trên `emulator-5554` để đo cổng C6 dưới CP-IMPL-9. Chưa chạy gì thêm trước quyết định đó.
+- Done in the C6E section above.
 
 Earlier current-state sections below are historical.
 
