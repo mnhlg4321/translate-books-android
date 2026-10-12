@@ -1,5 +1,11 @@
 # Build State
 
+## Current state — 2026-10-12 (D-R2: tag v4.18.0 created; tag archive and merge to main in progress)
+
+- Owner authorized the push of the local range (done, remote `9d02976e`) and D-R2. Annotated tag `v4.18.0` (object `061e02a6e11e492695947405e23586784bb9b9a8`) points at `9d02976e2ec88598e66d03551bf7fd1c59ed40fe`; PreBackup gate passes. The APK is the RC 4.18.0/266 built from `82626ac8` (production inputs identical to the tag commit); not rebuilt.
+- Next: tag event `tag-v4.18.0` (artifacts + backup, source ZIP = `git archive v4.18.0`, production source `82626ac8` kept separate), then merge `--no-ff` into `main` in a temporary worktree (the workspace has unrelated uncommitted owner changes and is not switched). Pushing `main` and the tag is not part of this step and needs its own confirmation.
+- Earlier sections are historical.
+
 ## Current state — 2026-10-12 (new archive event build-20261012-161228 created; publication authority pending)
 
 - Integration: `ee7ea78a` summarizer repair (13 tests; retained logs 9 PASS/9 SKIP/0 FAIL); `d6b6224a` archive helper `-ProductionGitRef`/`-SupplementalPaths` with offline cases that the previous helper fails. Six local commits ahead of origin before this docs commit; nothing pushed. The new event is archived from the commit recording this section, with production APK source `82626ac8` (inputs proven identical) kept separate from the final QA source. Old RC event untouched. Section below is the earlier review state.
