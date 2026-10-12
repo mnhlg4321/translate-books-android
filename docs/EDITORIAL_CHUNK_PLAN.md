@@ -467,6 +467,12 @@ Tăng contract lên `CP-IMPL-6`; lượt chạy cũ không được tiếp tục
 
 ## 6. Trạng thái
 
+**Hiện hành — R1.1 xong, 2026-10-12: bộ đóng băng 117/117 trên emulator-5554.** Commit `bbcbc4a900502a4b939e0ee22ed87a57dc705bd4` (`test(frozen)`): 12 assertion `assertEquals(27, db.getVersion())` trong 5 lớp đóng băng (`EditorialLineagePersistence` 2, `EditorialP4BindingCharacterization` 1, `EditorialPackCompatibilityEvaluation` 4, `EditorialV17IdentityStore` 2, `EditorialV18RunDeclarationEvent` 3; tương ứng 11 method FAIL cũ) nay so với `TranslationRepository.VER`. Thay đổi không phải test duy nhất: hằng `VER` từ `private` thành package-private, cùng giá trị 29; không đổi schema, migration hay mã V5. Còn một chữ 27 nữa trong `EditorialP5EFreshRawLineageInstrumentedTest` (lớp live ngoài allowlist), chưa đụng. Test APK `r11-test-20261012` (SHA-256 `62DCF86411EA8B08D84B9F835860327500F5B92832A89E1F5219D44240E25443`, mirror artifacts+backup bởi wrapper) cài chỉ `emulator-5554` trên production `4.18-p7.1`/264 nguyên trạng: năm lớp 42/42; cả allowlist 19 lớp **117/117 PASS**, trước đó 106/117. Bằng chứng: `artifacts/qa/v4.18-r1/r1.1-frozen-117/` (summary, log từng lớp, SHA256SUMS; mirror byte-giống ở `backup/qa/...`). 0 provider call, không đụng pilot. Nhãn, acceptance và giới hạn của ba chương không đổi.
+
+**Next action duy nhất:** Codex thực hiện R1.2 (checklist 05–09 và PreTag), rồi R1.3–R1.5 theo mục 5.5 của `docs/EDITORIAL_CHUNK_PLAN.md`; dừng trước tag/merge.
+
+Khối dưới là lịch sử.
+
 **Hiện hành — P7 development QA 2026-10-12 tại implementation baseline `6063655ed96613dd386c23a79d68afcc765987ca`:** owner đã duyệt section C (historical FAIL giữ nguyên, không hồi tố PASS) và cho phép gói P7 development + QA chỉ `emulator-5554`. Build/device QA đã chạy từ source cô lập `12824cee`; current chunk scope PASS, frozen V5/pack có 11 FAIL lịch sử schema 27→29 được ghi riêng. Cùng branch/checklist; working tree có việc cũ, giữ nguyên. So với upstream local trước QA-record commit: ahead 24, behind 0; record commit chỉ chứa tài liệu/evidence; không provider/tag/merge/release/push.
 
 | Claim | Evidence đã đối chiếu độc lập | Kết luận |

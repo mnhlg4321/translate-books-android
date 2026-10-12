@@ -1,4 +1,13 @@
 # Build State
+## Current state — 2026-10-12 (R1.1: frozen database-version assertions fixed, 117/117)
+
+- Commit `bbcbc4a9`: 12 assertions in 5 frozen instrumented classes now compare `db.getVersion()` with `TranslationRepository.VER` (constant made package-private, value 29 unchanged). No schema, migration or V5 code change.
+- Test APK `r11-test-20261012` (SHA-256 62DCF86411EA8B08D84B9F835860327500F5B92832A89E1F5219D44240E25443) installed on emulator-5554 only over production 4.18-p7.1/264; the five classes pass 42/42 and the whole frozen allowlist (19 classes) passes 117/117 (was 106/117). One more literal 27 remains in a live-lineage class outside the allowlist (EditorialP5EFreshRawLineage), untouched.
+- Evidence: `artifacts/qa/v4.18-r1/r1.1-frozen-117/` mirrored byte-identically in `backup/qa/...`. 0 provider calls.
+- Next action: Codex thực hiện R1.2 (checklist 05–09 và PreTag), rồi R1.3–R1.5 theo mục 5.5 của `docs/EDITORIAL_CHUNK_PLAN.md`; dừng trước tag/merge.
+
+Earlier current-state sections below are historical.
+
 ## Current state — 2026-10-12 (P7 development build/device QA complete for current chunk scope)
 
 - Same branch/checklist; implementation source `12824cee6c6f4e9f9482efaf6fe398799d5732c0`; implementation baseline immediately before the local QA-record commit was `6063655ed96613dd386c23a79d68afcc765987ca`, and the record commit contains documentation/QA evidence only. Shared working tree remains dirty with pre-existing work. Local upstream comparison was ahead 24 / behind 0 before the record commit; no push was made.

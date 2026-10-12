@@ -1,0 +1,46 @@
+{
+ "source": "12824cee6c6f4e9f9482efaf6fe398799d5732c0",
+ "sourceZipSha256": "F0D553C6481DFE90DE95C7359168E2D6688FBC5600D3A7D5526799250179EB84",
+ "archive": "D:\\P5E-builds\\verify-c6j-12824cee",
+ "gradle": {
+  "editorial-engine:test": {
+   "tests": 706,
+   "skipped": 1,
+   "failures": 0,
+   "errors": 0
+  },
+  "app:testDebugUnitTest": {
+   "tests": 472,
+   "skipped": 3,
+   "failures": 0,
+   "errors": 0
+  },
+  "app:testReleaseUnitTest": {
+   "tests": 472,
+   "skipped": 3,
+   "failures": 0,
+   "errors": 0
+  },
+  "app:testBenchmarkUnitTest": {
+   "tests": 472,
+   "skipped": 3,
+   "failures": 0,
+   "errors": 0
+  }
+ },
+ "python": {
+  "scripts/p6": {
+   "ran": 106,
+   "ok": true
+  },
+  "scripts/chunk": {
+   "ran": 24,
+   "ok": true
+  }
+ },
+ "lint": {
+  "task": "app:lintDebug",
+  "errors": 0,
+  "warnings": 57
+ }
+}
