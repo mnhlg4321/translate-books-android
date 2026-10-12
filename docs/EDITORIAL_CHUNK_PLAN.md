@@ -426,7 +426,27 @@ Tăng contract lên `CP-IMPL-6`; lượt chạy cũ không được tiếp tục
 
 ## 6. Trạng thái
 
-**Hiện hành — C6E, 2026-10-12, cả chương 006 dưới CP-IMPL-9: chạy đủ 14/14, cổng số PASS C6 đạt, chờ owner đọc.** Owner duyệt ("duyệt cả"). Build `4.18-c6.6`/260 đã cài sẵn (source ghim `74c712ca2eee94f2ae14165f8a7e06f2c8176348`), chỉ `emulator-5554`, luna medium, không retry, sổ mới `C6E-20261012` trần USD 0.06; chạy giả cả chương (USD 0) trước. Mọi lời gọi `finish_reason = stop`, 15 đoạn (14 có điểm), đoạn nào cũng `ACCEPTED`/cổng PASS, `FINAL_ELIGIBLE`, không đoạn bị chặn. 76 151 vào, 12 089 ra, **USD 0.0318669** (giữ chỗ tối đa mỗi lời gọi ≈ 0.0066, không overrun); sổ: 28 bản ghi, 14 call, pending 0, `costOverrunCalls 0`. Log thiết bị không có `provider_usage` nên không tách token suy luận.
+**Hiện hành — owner chấp nhận chương 006, 2026-10-12: PASS C6 đạt; 1/3 chương accepted; chưa có thêm live.** Owner đọc kết quả C6E và chấp nhận ("chấp nhận kết quả sửa đúng đạt yêu cầu"). Cổng PASS C6 (live) đủ: 0 dòng ngoài điểm, 0 chữ Nhật mới, không mất câu, ĐÚNG 52/68 = 76,5%, SAI 1/74 = 1,4%, owner chấp nhận. Chấp nhận này áp cho kết quả đã đo (CP-IMPL-9, bản app `006_APP_c6e_JAKUAKU_MONSTER_VOL1.txt`), gồm giới hạn đã nêu: 15 SÓT còn lại, 14:5 là một điểm sai, 7:3 là một sửa đúng một phần bị chặn. Không đổi nhãn, ngưỡng hay căn/cắt/ghép chunk. Hành vi CP-IMPL-10 (sửa 7:3 và 14:5) chưa được đo live.
+
+**Đề xuất C7 (chưa có quyền chi/build/cài):** bước kế tiếp trong lộ trình là chương thứ hai và thứ ba để owner đọc (C7 → P7). Số đo offline, 0 USD, trên 8 chương của bộ đo C6 (ước tính bằng phép đo host; giữ chỗ tính theo giá 0.25/1.20 và sàn 4096; ước tính token vào thấp hơn thực tế khoảng 9%, vì 006 ước 69 813 và thật 76 151; chi phí thật của 006 bằng ≈ 0,37 giữ chỗ tổng):
+
+| Chương | Số đoạn / lời gọi | Điểm (xưng hô/thuật ngữ/kana) | Giữ chỗ tổng theo phép đo (USD) |
+|---|---|---|---|
+| 004 | 7 / 5 | 16 (14/0/2) | 0.0276 |
+| 005 | 9 / 7 | 15 (12/2/1) | 0.0383 |
+| 007 | 7 / 3 | 7 (1/4/2) | 0.0162 |
+| **008** | 7 / 4 | 28 (25/2/1) | 0.0227 |
+| **011** | 13 / 11 | 58 (55/2/1) | 0.0647 |
+| 014 | 16 / 10 | 68 (58/9/1) | 0.0611 |
+| 017 | 11 / 10 | 80 (75/1/4) | 0.0665 |
+
+Đề xuất chọn **008** (nhỏ, nhiều xưng hô) rồi **011** (chương holdout đã định ở C2, 55 điểm xưng hô): chi phí kỳ vọng cộng lại ≈ USD 0.03 (006 tốn USD 0.0319 cho 74 điểm), mỗi chương trần USD 0.06 và sổ riêng như C6E; ngoài tập này owner có thể thay bằng chương khác trong bảng. Quy trình mỗi chương như C6E: chạy giả cả chương (USD 0) và kiểm SQLite/selector trước khi gọi, 1 lời gọi mỗi đoạn có điểm, không retry, dừng nếu đoạn đầu không có câu trả lời, UNKNOWN cost hoặc vượt trần; chấm riêng sửa đúng, sửa một phần, bỏ sót, sửa sai và chặn nhầm; dừng sau mỗi chương để owner đọc. Cần build `4.18-c6.7` từ CP-IMPL-10 (commit `9a72100f` hoặc sau đó) vì build đang cài là CP-IMPL-9; không chạy pilot hay V5.
+
+**Next action duy nhất:** owner duyệt, sửa hoặc từ chối đề xuất C7 trong khối này: build `4.18-c6.7` từ CP-IMPL-10 (đã đạt archive sạch, chưa chạy live), cài chỉ `emulator-5554`, chạy hai chương 008 rồi 011 (mỗi chương một lần chạy cả chương, luna medium, không retry, mỗi chương một sổ mới `C7A-<ngày>`/`C7B-<ngày>`, trần USD 0.06 mỗi chương), chấm riêng từng chương và dừng sau mỗi chương để owner đọc. Chưa build, cài hay chi trước quyết định đó.
+
+Khối dưới là lịch sử.
+
+**Trước đó — C6E, 2026-10-12, cả chương 006 dưới CP-IMPL-9: chạy đủ 14/14, cổng số PASS C6 đạt, chờ owner đọc.** Owner duyệt ("duyệt cả"). Build `4.18-c6.6`/260 đã cài sẵn (source ghim `74c712ca2eee94f2ae14165f8a7e06f2c8176348`), chỉ `emulator-5554`, luna medium, không retry, sổ mới `C6E-20261012` trần USD 0.06; chạy giả cả chương (USD 0) trước. Mọi lời gọi `finish_reason = stop`, 15 đoạn (14 có điểm), đoạn nào cũng `ACCEPTED`/cổng PASS, `FINAL_ELIGIBLE`, không đoạn bị chặn. 76 151 vào, 12 089 ra, **USD 0.0318669** (giữ chỗ tối đa mỗi lời gọi ≈ 0.0066, không overrun); sổ: 28 bản ghi, 14 call, pending 0, `costOverrunCalls 0`. Log thiết bị không có `provider_usage` nên không tách token suy luận.
 
 **Chấm 74 điểm (cùng bộ điểm C6B; RAW + luật; không đổi nhãn):** sửa đúng đã áp dụng 10 (5:1 mới; 5:3, 5:7; thuật ngữ 8:3, 9:2, 9:3, 11:6, 12:1; kana 9:4, 14:4); sửa một phần đã áp dụng 0; **sửa sai lọt qua 1** (14:5 `chúng ta → chúng em`: không có hàng cho ngôi số nhiều, DRAFT đúng); **sửa đúng một phần bị chặn nhầm 1** (7:3 `Mitsurugi → Fuyu` là call của hàng 巳剣さん, bị `ADDRESS_SCOPE_EXCEEDED`); sửa sai bị chặn đúng 5 (5:5 và 10:4 số nhiều, 6:3 đổi tên, 12:2 phạm vi, 2:2 nhất quán); bỏ sót 15 (14 SÓT cũ trừ 5:1 được sửa và 7:3 bị chặn, cộng 4:3 và 13:1 mà C6B model từng sửa đúng, lần này giữ `=`); giữ đúng 37 (trong đó 6 điểm C6B từng bị sửa sai nay model không sửa sai lại); CHƯA CHẮC 6. DRAFT đúng mà bản app giữ DRAFT tính ĐÚNG, kể cả 5 điểm do khóa giữ lại. Tổng: ĐÚNG 52 (10 sửa + 37 giữ + 5 khóa giữ), SÓT 15, SAI 1, CHƯA CHẮC 6. Theo loại: xưng hô ĐÚNG 45/SÓT 14/SAI 1/CHƯA CHẮC 5; thuật ngữ 5/5 ĐÚNG; kana ĐÚNG 2/SÓT 1/CHƯA CHẮC 1.
 
@@ -436,7 +456,7 @@ Tăng contract lên `CP-IMPL-6`; lượt chạy cũ không được tiếp tục
 
 **Giới hạn:** một chương, một mẫu; phương sai model lớn (5:2 bỏ sót cả bốn lần, 4:3 và 13:1 lúc sửa lúc giữ); 15 SÓT còn lại là bỏ sót của model chứ không do khóa; biến thể thuần xưng hô của 4:5 vẫn không bị chặn; hàng self-only/call-only vẫn không sinh điểm. 0/3 chương accepted cho tới khi owner đọc; P7 chưa bắt đầu. Bằng chứng riêng ở `D:/P5E-private/c6-guard-20261012/` (`score_c6e.py`, `c6e-points.json`) và thư mục chạy `D:/P5E-private/chunk-runs/C1/live/006-fb219146-9ca9-45c0-8735-5286fcc58946/`.
 
-**Next action duy nhất:** owner đọc `D:\P5E-private\chunk-outputs\006\c6e-006-live-review.html` (và bản app `006_APP_c6e_JAKUAKU_MONSTER_VOL1.txt` cùng thư mục) rồi quyết định có chấp nhận chương 006 cho cổng C6 hay không (cổng số đạt: SAI 1/74, ĐÚNG 52/68 điểm rõ luật, 0 dòng ngoài điểm, 0 chữ Nhật mới, 247/247 dòng). Chưa chạy chương khác, pilot hay V5, và chưa build CP-IMPL-10.
+Owner đã chấp nhận; xem khối phía trên.
 
 Khối dưới là lịch sử.
 

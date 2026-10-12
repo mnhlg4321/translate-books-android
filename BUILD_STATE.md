@@ -1,12 +1,20 @@
 # Build State
 
-## Current state — 2026-10-12 (C6E: whole chapter 006 under CP-IMPL-9, 14 live calls)
+## Current state — 2026-10-12 (chapter 006 accepted by the owner; PASS C6 reached)
+
+- The owner read the C6E result and accepted it. PASS C6 is complete: 0 lines outside points, 0 new Japanese, no lost sentence, ĐÚNG 52/68 = 76.5%, SAI 1/74 = 1.4%, owner accepted. 1/3 chapters accepted; P7 not started. Accepted evidence is CP-IMPL-9 (build `4.18-c6.6`/260, source `74c712ca`); CP-IMPL-10 (`9a72100f`) is offline only.
+- No provider call, build or install in this step (spend 0). An offline corpus measurement priced a C7 proposal: chapters 008 then 011, one whole-chapter run each, expected total about USD 0.03, cap USD 0.06 per chapter and ledger; needs a new build `4.18-c6.7` from CP-IMPL-10.
+- Next action: owner duyệt, sửa hoặc từ chối đề xuất C7 trong khối này: build `4.18-c6.7` từ CP-IMPL-10 (đã đạt archive sạch, chưa chạy live), cài chỉ `emulator-5554`, chạy hai chương 008 rồi 011 (mỗi chương một lần chạy cả chương, luna medium, không retry, mỗi chương một sổ mới `C7A-<ngày>`/`C7B-<ngày>`, trần USD 0.06 mỗi chương), chấm riêng từng chương và dừng sau mỗi chương để owner đọc. Chưa build, cài hay chi trước quyết định đó.
+
+Earlier current-state sections below are historical.
+
+## Previous state — 2026-10-12 (C6E: whole chapter 006 under CP-IMPL-9, 14 live calls)
 
 - Build `4.18-c6.6`/260 from `74c712ca2eee94f2ae14165f8a7e06f2c8176348` (already installed on `emulator-5554` only), luna medium, no retry, ledger C6E-20261012 cap USD 0.06: 14/14 calls, all `stop`, every chunk ACCEPTED/PASS, FINAL_ELIGIBLE, 76151 in / 12089 out, USD 0.0318669, pending 0, no overrun. Fake whole-chapter run (USD 0) first.
 - Scored on the 74 points (labels unchanged): correct applied 10, partial applied 0, wrong let through 1 (14:5 chúng ta→chúng em), correct partial repair wrongly blocked 1 (7:3), wrong repairs blocked correctly 5, missed 15, kept correctly 37 (plus the 5 blocked wrong repairs), unsure 6. ĐÚNG 47, SÓT 15, SAI 1, CHƯA CHẮC 6.
 - Numeric C6 gates: 0 lines outside points, 0 new Japanese, marks and symbols kept, 247/247 lines, ĐÚNG 52/68 = 76.5% (>=60%), SAI 1/74 = 1.4% (<=10%). Owner reading pending. 0/3 accepted; P7 not started.
 - After the run, offline only: CP-IMPL-10 (commit `9a72100f`) fixes the two findings (same-person name repair, first-person plural). Replay of the stored C6E answers: 14:5 kept, 7:3 applied; C6B replay unchanged. Clean archive of `9a72100f`: engine 694, app host 472, androidTest compile, p6 106, chunk 24 PASS. Not built, not installed; the live evidence is CP-IMPL-9.
-- Next action: owner đọc `D:\P5E-private\chunk-outputs\006\c6e-006-live-review.html` (và bản app `006_APP_c6e_JAKUAKU_MONSTER_VOL1.txt` cùng thư mục) rồi quyết định có chấp nhận chương 006 cho cổng C6 hay không (cổng số đạt: SAI 1/74, ĐÚNG 52/68 điểm rõ luật, 0 dòng ngoài điểm, 0 chữ Nhật mới, 247/247 dòng). Chưa chạy chương khác, pilot hay V5, và chưa build CP-IMPL-10.
+- Done: the owner accepted chapter 006 (see the section above).
 
 Earlier current-state sections below are historical.
 
