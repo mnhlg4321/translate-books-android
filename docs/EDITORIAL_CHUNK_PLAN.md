@@ -467,6 +467,12 @@ Tăng contract lên `CP-IMPL-6`; lượt chạy cũ không được tiếp tục
 
 ## 6. Trạng thái
 
+**Hiện hành — R1.2 xong, 2026-10-12: `verify-release-workflow.ps1 -Gate PreTag` PASS.** Checklist `release_checklists/v4.18-editorial-v5-safe-4-1-3.md` (cùng branch, cùng file): bước 05–09 được đánh dấu `[x]` với Evidence cụ thể của phạm vi chunk (đường dẫn, hash, số test; đoạn Evidence cũ giữ lại thành dòng "Historical (retained)"); sáu ô lịch sử (P5D exit gate, P5E.8, P5E.9, A2, A3.2, A3.2C) **giữ `[ ]`**, mỗi ô thêm dòng "out of the v4.18 release scope (D-N1/D-R1); not satisfied, not waived" — P5E.8 vẫn là FAIL lịch sử, không PASS hồi tố. Thêm mục E vào khối P7 của checklist. Kết quả cổng: `Release workflow gate passed: PreTag for v4.18`, exit 0 (`artifacts/qa/v4.18-r1/r1.2-pretag/`, hash checklist ghi kèm). Bước 07 và 08 sẽ được R1.3–R1.5 bổ sung (hiệu năng, ảnh/video, build RC); bước 10–14 còn mở, chờ D-R2. 0 provider call. Nhãn, acceptance và giới hạn ba chương không đổi.
+
+**Next action duy nhất:** Codex thực hiện R1.3 (Macrobenchmark và Perfetto thật trên emulator-5554), rồi R1.4–R1.5 theo mục 5.5 của `docs/EDITORIAL_CHUNK_PLAN.md`; dừng trước tag/merge.
+
+Khối dưới là lịch sử.
+
 **Hiện hành — R1.1 xong, 2026-10-12: bộ đóng băng 117/117 trên emulator-5554.** Commit `bbcbc4a900502a4b939e0ee22ed87a57dc705bd4` (`test(frozen)`): 12 assertion `assertEquals(27, db.getVersion())` trong 5 lớp đóng băng (`EditorialLineagePersistence` 2, `EditorialP4BindingCharacterization` 1, `EditorialPackCompatibilityEvaluation` 4, `EditorialV17IdentityStore` 2, `EditorialV18RunDeclarationEvent` 3; tương ứng 11 method FAIL cũ) nay so với `TranslationRepository.VER`. Thay đổi không phải test duy nhất: hằng `VER` từ `private` thành package-private, cùng giá trị 29; không đổi schema, migration hay mã V5. Còn một chữ 27 nữa trong `EditorialP5EFreshRawLineageInstrumentedTest` (lớp live ngoài allowlist), chưa đụng. Test APK `r11-test-20261012` (SHA-256 `62DCF86411EA8B08D84B9F835860327500F5B92832A89E1F5219D44240E25443`, mirror artifacts+backup bởi wrapper) cài chỉ `emulator-5554` trên production `4.18-p7.1`/264 nguyên trạng: năm lớp 42/42; cả allowlist 19 lớp **117/117 PASS**, trước đó 106/117. Bằng chứng: `artifacts/qa/v4.18-r1/r1.1-frozen-117/` (summary, log từng lớp, SHA256SUMS; mirror byte-giống ở `backup/qa/...`). 0 provider call, không đụng pilot. Nhãn, acceptance và giới hạn của ba chương không đổi.
 
 **Next action duy nhất:** Codex thực hiện R1.2 (checklist 05–09 và PreTag), rồi R1.3–R1.5 theo mục 5.5 của `docs/EDITORIAL_CHUNK_PLAN.md`; dừng trước tag/merge.

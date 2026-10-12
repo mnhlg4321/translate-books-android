@@ -1,0 +1,2 @@
+Release workflow gate passed: PreTag for v4.18
+exit=0

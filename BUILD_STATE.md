@@ -1,4 +1,12 @@
 # Build State
+## Current state — 2026-10-12 (R1.2: checklist steps 05-09 marked, PreTag PASS)
+
+- Steps 05-09 of `release_checklists/v4.18-editorial-v5-safe-4-1-3.md` are `[x]` with concrete chunk-scope Evidence (old text kept as Historical). The six historical boxes (P5D exit, P5E.8, P5E.9, A2, A3.2, A3.2C) stay `[ ]`, each marked out of the v4.18 release scope (D-N1/D-R1), not satisfied, not waived; P5E.8 remains a historical FAIL.
+- `verify-release-workflow.ps1 -Gate PreTag`: `Release workflow gate passed: PreTag for v4.18`, exit 0 (`artifacts/qa/v4.18-r1/r1.2-pretag/`). Steps 10-14 open until D-R2. Steps 07/08 evidence is extended by R1.3-R1.5. 0 provider calls.
+- Next action: Codex thực hiện R1.3 (Macrobenchmark và Perfetto thật trên emulator-5554), rồi R1.4–R1.5 theo mục 5.5 của `docs/EDITORIAL_CHUNK_PLAN.md`; dừng trước tag/merge.
+
+Earlier current-state sections below are historical.
+
 ## Current state — 2026-10-12 (R1.1: frozen database-version assertions fixed, 117/117)
 
 - Commit `bbcbc4a9`: 12 assertions in 5 frozen instrumented classes now compare `db.getVersion()` with `TranslationRepository.VER` (constant made package-private, value 29 unchanged). No schema, migration or V5 code change.
