@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "p5e.a43.pm-path-capture-stop-provenance.v1",
+  "generatedDate": "2026-09-28",
+  "state": "OWNER_DECISION_CONSUMED / A4_3_PRE_DISPATCH_COLLECTOR_STOP / PM_PATH_PRODUCTION_EXIT_1 / OUTER_CAPTURE_STATUS_125 / RAW_NOT_DISPATCHED / P6_NOT_READY",
+  "eventId": "raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc",
+  "eventFiles": {
+    "eventPlanSha256": "1C163DC499D934F25B5E4C5EAB911543773D01D333CF7990D0D57DF4D4E9CBE4",
+    "collectorOutcomeSha256": "7674858E7D3164EED7873A492AB88742F2AB90A162E71E5210F60CCEAF84A5BC",
+    "collectorCommandLogSha256": "B90CEAB274D510B37D09910313E18E35F4F39AC6FE7F76B0019ABF1B8020826C"
+  },
+  "sourcePins": {
+    "manifestSha256": "23AF3DFAA81F50484187AFD183EA56454EBE38022C67DA2B963245A42D230053",
+    "commandAndLauncherSha256": "C84355B912DCF3BB59D52004EC80E06CE8B37FC75B5ABE083ECCA95D64C89BA3",
+    "helperSha256": "17CC1C19BF4F6B1B71A77100D710375BDBCFDA7AC82D4508634B68E857DEFD2E",
+    "exporterSha256": "D8783B31F9141458CA397915664CA79B07D3161A5E0F0D3B4365C5C65EA41D06",
+    "sqliteBridgeSha256": "4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111"
+  },
+  "provenFacts": [
+    "PrepareEvent created one fresh event",
+    "the pinned ADB executable launched once",
+    "pm-path-production-before exited 1 without timeout",
+    "collector emitted P5E_COLLECTOR_ADB_NONZERO",
+    "outer command returned capture status 125",
+    "provider, credential, device mutation, database write and RAW counters remained zero"
+  ],
+  "notProven": [
+    "production package is absent",
+    "device or USB is faulty",
+    "ADB authorization state caused the failure",
+    "which helper output stream failed to drain",
+    "A4.3 acceptance, P5 exit or P6 readiness"
+  ],
+  "eventReusable": false,
+  "decisionReusable": false,
+  "liveActionAuthorized": false,
+  "nextAction": "DIAGNOSE_AND_REPAIR_PM_PATH_SAFE_CLASSIFICATION_AND_OUTER_CAPTURE_OFFLINE_WITH_SYNTHETIC_FIXTURES"
+}

@@ -1,0 +1,124 @@
+{
+    "schemaVersion":  "p5e.raw.a43-final-executable-packet-qa.v1",
+    "generatedDate":  "2026-09-26",
+    "workPackage":  "P5E_A43_FINAL_EXECUTABLE_PACKET_REPIN",
+    "status":  "PASS",
+    "packetState":  "FINAL_EXECUTABLE_PACKET_READY / OWNER_DECISION_PENDING / NOT_DISPATCHED / P6_NOT_READY",
+    "syntheticOnly":  true,
+    "finalPins":  {
+                      "manifestPath":  "D:\\App Translate Books\\docs\\P5E_A43_FINAL_EXECUTABLE_APPROVAL_MANIFEST_20260926.md",
+                      "manifestSha256":  "23AF3DFAA81F50484187AFD183EA56454EBE38022C67DA2B963245A42D230053",
+                      "commandPath":  "D:\\App Translate Books\\docs\\P5E_A43_FINAL_EXECUTABLE_COMMAND_20260926.txt",
+                      "commandSha256":  "C84355B912DCF3BB59D52004EC80E06CE8B37FC75B5ABE083ECCA95D64C89BA3",
+                      "helperPath":  "D:\\App Translate Books\\scripts\\p5e-raw-live-supervisor.ps1",
+                      "helperSha256":  "17CC1C19BF4F6B1B71A77100D710375BDBCFDA7AC82D4508634B68E857DEFD2E",
+                      "exporterPath":  "D:\\App Translate Books\\scripts\\p5e-db-binary-export.ps1",
+                      "exporterSha256":  "D8783B31F9141458CA397915664CA79B07D3161A5E0F0D3B4365C5C65EA41D06",
+                      "bridgePath":  "D:\\App Translate Books\\docs\\P5E_SQLITE_BRIDGE.py",
+                      "bridgeSha256":  "4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111",
+                      "certificateSha256":  "47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155",
+                      "serial":  "15e84958",
+                      "productionApkSha256":  "2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD",
+                      "productionSourceSha256":  "B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348",
+                      "productionBuildInfoSha256":  "DB20DA0CF708410AAAB65E5AF69ADF89A769ED62240B577A89CA4E2007FB7F06",
+                      "testApkSha256":  "058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8",
+                      "testSourceSha256":  "5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F",
+                      "testBuildInfoSha256":  "772F32E23AEF3537FEF00DACE8E4B9B994448BFEE2071150CF0E0540DDCCC5A9"
+                  },
+    "testCount":  14,
+    "passedTestCount":  14,
+    "failureCount":  0,
+    "failures":  [
+
+                 ],
+    "tests":  [
+                  {
+                      "name":  "final-source-hashes-match-disk",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "dependency-and-hash-order-before-dot-source-account-device",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "command-manifest-helper-exporter-bridge-artifact-certificate-serial-binding",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "all-five-helper-invocations-carry-the-same-dependency-pins",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "captured-export-control-and-262-175-offline-regression",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "db-host-readback-56-of-56-offline",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "helper-self-test-offline",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "prepare-event-simulation-binds-final-plan-without-device",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "dependency-negative-path-hash-and-expected-value-stops",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "path-reparse-guards-covered",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "expected-value-isolation-and-redaction-secret-scan",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "timeout-no-retry-no-redispatch-and-consumed-event-rejection",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "powershell-5.1-parse-final-sources",
+                      "passed":  true,
+                      "detail":  ""
+                  },
+                  {
+                      "name":  "git-diff-check",
+                      "passed":  true,
+                      "detail":  ""
+                  }
+              ],
+    "counters":  {
+                     "adbLaunches":  0,
+                     "deviceReads":  0,
+                     "deviceWrites":  0,
+                     "providerCalls":  0,
+                     "credentialReads":  0,
+                     "databaseWrites":  0,
+                     "builds":  0,
+                     "installs":  0,
+                     "rawDispatches":  0,
+                     "redispatches":  0
+                 },
+    "consumedEventsPreserved":  true,
+    "ownerDecision":  "PENDING",
+    "liveEventOpened":  false,
+    "p5ExitClaimed":  false,
+    "p6Ready":  false,
+    "nextAction":  "Luna reviews these exact final bytes; after 0 BLOCKER / 0 HIGH, owner reviews one authorization request. Do not dispatch in this work package."
+}

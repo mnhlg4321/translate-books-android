@@ -1,0 +1,103 @@
+{
+  "schema": "p5e.a43.pre-reservation.repair-provenance.v1",
+  "observedAtUtc": "2026-09-30T01:42:56.4174346Z",
+  "branch": "feature/v4.18-p5e-runner-repair-20260917",
+  "headBeforeThisWorkPackage": "fb0ebaf110c3bb87aed9bcfe8767b48b4d5ea310",
+  "status": "OFFLINE_PRE_RESERVATION_REPAIR_PASS / HISTORICAL_FIRST_STOP_UNRESOLVED / A4_3_NOT_RUN / P6_NOT_READY",
+  "trackedSource": {
+    "parentTemplate": {
+      "path": "scripts/p5e-a43-pre-reservation-launcher.ps1",
+      "sha256": "9183619AD9C3BA5E5C0AF2701968F1F2121894472A8FD136C0DC6B54898F9A8D",
+      "candidateRole": "EXACT_TRACKED_PARENT_TEMPLATE_HASH",
+      "executed": false
+    },
+    "behavioralTest": {
+      "path": "scripts/test-p5e-a43-pre-reservation-launcher.ps1",
+      "sha256": "2F320FBB617249A8E7202B71D68C366C23ECF9C15289C7AAEDCD6D2749668131",
+      "executedOn": "Windows PowerShell 5.1.26100.9168"
+    },
+    "resolver": {
+      "path": "scripts/p5e-raw-toolchain.ps1",
+      "sha256": "C0AE7D431474F37597228A7AFA6F9382C63E26EB5A54CFB72604620D9DD5C3C8",
+      "changed": false
+    }
+  },
+  "qa": {
+    "reportPath": "evidence/p5e-a43-pre-reservation-repair-20260930/P5E_A43_PRE_RESERVATION_REPAIR_QA_20260930_02.json",
+    "reportSha256": "DBBBCAB4E545E8B1779A2E01A2D7A562F7FB6F27DA1B8014E8F7E455525A2565",
+    "result": "PASS",
+    "cases": 26,
+    "passed": 26,
+    "failed": 0,
+    "liveActions": 0,
+    "liveBoundary": "NOT_EVALUATED",
+    "candidateExecuted": false,
+    "ownerDecisionCreated": false,
+    "receiptOrEventCreated": false,
+    "sentinelLeak": false,
+    "actualProcessExitFixture": "PASS / outerExitCode=1 for synthetic CHILD_EXIT_NONZERO",
+    "diffCheck": "PASS",
+    "ps51Parse": "PASS"
+  },
+  "behavioralCoverage": [
+    "SDK directory accepted with Container check; SDK file rejected by the real resolver and by the parent shape guard",
+    "ADB, Java and apksigner are checked separately as Leaf paths",
+    "missing, target reparse and ancestor reparse cases stop before approval/reservation",
+    "approval exact literal, wrong, empty, EOF and cancel cases are fail-closed without key prompt",
+    "launcher hash mismatch and CreateNew reservation collision do not overwrite or continue",
+    "owner-root, receipt, receipt-validation and key failures retain stage/code and stop before child",
+    "unknown exception maps to UNKNOWN_STOP with class/stage only",
+    "cleanup failure is secondary and cannot replace the originating child code",
+    "diagnostic write failure reports EVIDENCE_INCOMPLETE without replacing an existing primary code",
+    "synthetic success reaches the child stub once; child start failure and nonzero exit remain terminal"
+  ],
+  "childRegression": {
+    "contractPath": "scripts/p5e-child-invocation-contract.ps1",
+    "contractSha256": "2A1474494E2760D851DC9378AF8252968A65A4779E2E1786434AB70918E6D2EB",
+    "testPath": "scripts/test-p5e-child-invocation-contract.ps1",
+    "testSha256": "BE34225D547CEA82A2B629693FBEA55BEEC49B6A45134583ACBFA8504097D1D9",
+    "result": "27/27 PASS",
+    "launcherStaticQa": "16/16 PASS",
+    "staticQaScriptSha256": "2ABCAAE353BB87D31F545F3445A098C1A857366724E1BAC1E762D40666644EE9"
+  },
+  "immutableHistoricalInputs": {
+    "stopEvidencePath": "docs/P5E_A43_LAUNCHER_PRE_RESERVATION_STOP_20260930.json",
+    "stopEvidenceSha256": "971452D9222D58243875E60AE9702E90BFCD8094314093BA47DA92BB3F44C328",
+    "probePath": "docs/P5E_A43_PRE_RESERVATION_PROBE_20260930.json",
+    "probeSha256": "EF8A2FB2E339A1B33A145CB06F5184F25F4EA18803C8AB7ADCE2957584978E5F",
+    "auditProvenancePath": "docs/P5E_A43_PRE_RESERVATION_AUDIT_PROVENANCE_20260930.json",
+    "auditProvenanceSha256": "9DF84F0D39D428CCF7466F8BEDDD1DD29FCED3E62D5DF677F1332FF8BBBA1C48",
+    "historicalCandidateSha256": "569F8437A0630D52E8F26D5631AF2D9CBC089947BFD337E7FEC510B831D98A41",
+    "historicalCandidateExecutedByThisPackage": false,
+    "historicalFirstCause": "UNRESOLVED"
+  },
+  "safetyDisposition": {
+    "adbCalled": false,
+    "providerCalled": false,
+    "credentialRead": false,
+    "databaseWritten": false,
+    "rawDispatched": false,
+    "newAuthorityCreated": false,
+    "historicalLiveCounters": "NOT_INFERRED",
+    "oldLauncherRenamedOrReused": false,
+    "releaseSteps05to09": "UNCHANGED_UNCHECKED",
+    "a43": "NOT_RUN",
+    "p5Exit": "NOT_CLAIMED",
+    "p6": "NOT_READY"
+  },
+  "independentReview": {
+    "path": "docs/P5E_A43_PRE_RESERVATION_REPAIR_REVIEW_20260930.md",
+    "sha256": "B8ADDA789449E903F60A5CE3BBAEC355696AFE5DA66F8665698DF16CB0E40BDE",
+    "verdict": "OFFLINE_ACCEPTANCE_PASS",
+    "blocker": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 0
+  },
+  "proposal": {
+    "path": "docs/P5E_A43_PRE_RESERVATION_REPAIR_PROPOSAL_20260930.md",
+    "sha256": "15084779F315E23D942AF674C1D70CDC141F935720959DAE6032C516898ADC6D",
+    "executed": false
+  },
+  "nextAction": "Owner may review the exact tracked-template hash for a separate future decision; no approval, key entry or live launcher run is requested by this work package."
+}

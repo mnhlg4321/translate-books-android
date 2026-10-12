@@ -1,0 +1,17 @@
+{
+ "version": "p6.r5.thresholds.v1",
+ "note": "frozen before any new model output is seen; changing a number after a run invalidates that run",
+ "limits": {
+  "cleanControlSemanticEditsMax": 0,
+  "multiDefectRecallMin": 0.83,
+  "holdoutRecallMin": 0.83,
+  "collateralMax": {"seeded": 2, "holdout": 2, "real": 3}
+ },
+ "humanRubric": {"scale": "0 wrong or unchanged, 1 changed but meaning or naturalness off, 2 correct and natural", "itemMin": 1, "meanMin": 1.5},
+ "fixtureConfig": {
+  "fx-a01": {
+   "ruleLines": {"I-002": [107, 148, 176, 216]},
+   "allowedExtraDraftLines": [87, 89, 125, 305, 307]
+  }
+ }
+}

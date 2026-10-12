@@ -1,0 +1,67 @@
+{
+  "schema": "p5e.a43.parent-integration-delivery.v1",
+  "date": "2026-09-30",
+  "branch": "feature/v4.18-p5e-runner-repair-20260917",
+  "headObserved": "fb0ebaf110c3bb87aed9bcfe8767b48b4d5ea310",
+  "deliveryStatus": "OFFLINE_READY_FOR_SEPARATE_OWNER_DECISION",
+  "notAuthorized": true,
+  "candidate": {
+    "path": "scripts/p5e-a43-pre-reservation-launcher-entrypoint.ps1",
+    "sha256": "CC01C33F056F86F4ACC4E3BD45AAAA2910CCEE9719AC5830EDAE99987A7C8E23",
+    "executed": false
+  },
+  "test": {
+    "path": "scripts/test-p5e-a43-pre-reservation-integration.ps1",
+    "sha256": "4353DE8FC2F60B7BCCA9FF5EB13A817F8FB22E1475CE2D614371B0FD38B5C423"
+  },
+  "report": {
+    "path": "evidence/p5e-a43-parent-integration-20260930/P5E_A43_PARENT_INTEGRATION_QA_20260930_03.json",
+    "sha256": "DC54F9788BDAA2D5D0FB50BC65B07B69485CA9235107FECD9DB4C63B1DD3E457",
+    "cases": 21,
+    "passed": 21,
+    "failed": 0,
+    "candidateExecuted": false,
+    "liveActions": 0,
+    "processExitProbe": "success=0; synthetic child failure=1"
+  },
+  "review": {
+    "path": "docs/P5E_A43_PARENT_INTEGRATION_FINAL_REVIEW_20260930.md",
+    "sha256": "B353BA62DB0089A69EE08F03328737DAF743535AEFF11127E643A92731D8863B"
+  },
+  "provenance": {
+    "path": "docs/P5E_A43_PARENT_INTEGRATION_FINAL_PROVENANCE_20260930.json",
+    "sha256": "81F6CFE7668DEC864E2E7FC12E06789C6DBC069308DCC761BA27D7D5FC1DF785"
+  },
+  "regression": {
+    "parent": "26/26 PASS",
+    "child": "27/27 PASS",
+    "powershell51Parse": "PASS",
+    "diffCheck": "PASS"
+  },
+  "pinnedManifest": {
+    "path": "docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_MANIFEST_20260928.md",
+    "sha256": "FCDC4747D54075B0518A92D837FC74C67D7F3804F9BAA4EFFC3CB34C7764A01D"
+  },
+  "ownerWindow": {
+    "purpose": "Review the exact candidate for a separate future A4.3 decision.",
+    "required": [
+      "Use the candidate path and SHA-256 above without substitution.",
+      "Reconfirm the manifest and all packet/helper/toolchain pins before any live action.",
+      "Use fresh authorization and the one-event, one-provider-call, USD0.05, allowlisted-DB constraints from the pinned manifest.",
+      "Capture Before/After read-only and verifier evidence in the same window."
+    ],
+    "prohibitedByThisPackage": [
+      "Do not execute the candidate now.",
+      "Do not enter a key or create approval/receipt/event now.",
+      "Do not retry, fallback, reconcile, build, install, dispatch RAW or open P6."
+    ]
+  },
+  "historical": {
+    "firstStop": "UNRESOLVED",
+    "oldLauncherRerun": false,
+    "oldEvidenceRenamed": false,
+    "releaseSteps05To09": "UNCHECKED",
+    "p5ExitClaimed": false,
+    "p6Ready": false
+  }
+}

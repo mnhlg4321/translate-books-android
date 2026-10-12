@@ -16,7 +16,7 @@ public class PromptBuilder {
                     + "These instructions override all other guidelines.\n\n"
                     + s.translationInstructions.trim() + "\n\n";
         }
-        String contextualRules = buildContextualRules(chunk.mainContent, s);
+        String contextualRules = buildContextualRules(chunk, s);
         String system = "You are a professional " + s.targetLanguage + " translator and writer.\n\n"
                 + custom
                 + contextualRules
@@ -73,10 +73,47 @@ public class PromptBuilder {
         return new PromptPair(system.trim(), user.trim());
     }
 
+    /** Full-preset refinement compiler that preserves the real chunk paragraph range. */
+    public static PromptPair refinementPrompt(Chunk chunk, String draft, AppSettings s) {
+        if (chunk == null) return refinementPrompt("", draft, s);
+        AppSettings settings = s == null ? new AppSettings() : s;
+        if (!"full".equalsIgnoreCase(settings.optimizationPreset)) {
+            return PromptPlan.refinement(chunk, draft, settings).prompt;
+        }
+        String custom = "";
+        if (settings.refinementInstructions != null && !settings.refinementInstructions.trim().isEmpty()) {
+            custom = "# MANDATORY REFINEMENT INSTRUCTIONS\n\n" + settings.refinementInstructions.trim() + "\n\n";
+        }
+        String contextualRules = buildContextualRules(chunk, settings);
+        String source = chunk.mainContent == null ? "" : chunk.mainContent;
+        String system = "You are a professional literary editor for " + settings.targetLanguage + " translations.\n\n"
+                + custom
+                + contextualRules
+                + "Edit the draft translation by checking it against the source. Fix mistranslations, omissions, wrong speaker/subject, unnatural phrasing, inconsistent terms, and broken formatting. Do not add new plot details. Output only the final edited translation.\n\n"
+                + outputFormat();
+        String user = "# SOURCE TEXT\n" + INPUT_IN + "\n" + source + "\n" + INPUT_OUT + "\n\n"
+                + "# DRAFT TRANSLATION\n" + (draft == null ? "" : draft) + "\n\n"
+                + "Return the edited translation only:\n" + TRANS_IN + "\nfinal edited translation here\n" + TRANS_OUT;
+        return new PromptPair(system.trim(), user.trim());
+    }
+
 
     private static String buildContextualRules(String sourceText, AppSettings s) {
         if (s == null) return "";
         PromptContextBuilder.ContextBlock block = PromptContextBuilder.build(s.glossaryText, s.pronounText, sourceText, s);
+        String body = block.asPromptText();
+        if (body.trim().isEmpty()) return "";
+        return "# CONTEXTUAL TERM AND PRONOUN LOCKS\n\n"
+                + "Only the glossary/pronoun entries relevant to this chunk are injected below. Treat them as mandatory locks.\n\n"
+                + body;
+    }
+
+    private static String buildContextualRules(Chunk chunk, AppSettings s) {
+        if (s == null || chunk == null) return "";
+        PromptContextBuilder.ContextBlock block = PromptContextBuilder.buildWithRuleContext(
+                s.glossaryText, s.pronounText, chunk.mainContent,
+                chunk.contextBefore + "\n" + chunk.mainContent,
+                chunk.paragraphStart, chunk.paragraphEnd, s);
         String body = block.asPromptText();
         if (body.trim().isEmpty()) return "";
         return "# CONTEXTUAL TERM AND PRONOUN LOCKS\n\n"

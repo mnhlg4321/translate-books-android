@@ -1,0 +1,95 @@
+{
+ "label": "test APK r1fix2-test-20261012, source 2d060aa0, on production RC 266",
+ "glossary_store_states (names of non-fixture glossaries withheld; the xml files stay private)": {
+  "glossary-after-flow.xml": {
+   "count": 5,
+   "fixture_like": [
+    {
+     "name": "glossary-bientap-ui",
+     "id8": "69e65ff0"
+    },
+    {
+     "name": "glossary-bientap-test",
+     "id8": "00c20d0c"
+    }
+   ],
+   "other_ids8": [
+    "7241c5ff",
+    "64fbbb80",
+    "d9f27f7e"
+   ]
+  },
+  "glossary-after-run2.xml": {
+   "count": 3,
+   "fixture_like": [],
+   "other_ids8": [
+    "7241c5ff",
+    "64fbbb80",
+    "d9f27f7e"
+   ]
+  },
+  "glossary-after-walkthrough.xml": {
+   "count": 3,
+   "fixture_like": [],
+   "other_ids8": [
+    "7241c5ff",
+    "64fbbb80",
+    "d9f27f7e"
+   ]
+  },
+  "glossary-before-cleaned.xml": {
+   "count": 3,
+   "fixture_like": [],
+   "other_ids8": [
+    "7241c5ff",
+    "64fbbb80",
+    "d9f27f7e"
+   ]
+  },
+  "glossary-restored-cleaned.xml": {
+   "count": 3,
+   "fixture_like": [],
+   "other_ids8": [
+    "7241c5ff",
+    "64fbbb80",
+    "d9f27f7e"
+   ]
+  },
+  "glossary-with-original-residue-after.xml": {
+   "count": 5,
+   "fixture_like": [
+    {
+     "name": "glossary-bientap-ui",
+     "id8": "69e65ff0"
+    },
+    {
+     "name": "glossary-bientap-test",
+     "id8": "00c20d0c"
+    }
+   ],
+   "other_ids8": [
+    "7241c5ff",
+    "64fbbb80",
+    "d9f27f7e"
+   ]
+  },
+  "glossary-with-original-residue-before.xml": {
+   "count": 5,
+   "fixture_like": [
+    {
+     "name": "glossary-bientap-ui",
+     "id8": "69e65ff0"
+    },
+    {
+     "name": "glossary-bientap-test",
+     "id8": "00c20d0c"
+    }
+   ],
+   "other_ids8": [
+    "7241c5ff",
+    "64fbbb80",
+    "d9f27f7e"
+   ]
+  }
+ }
+}

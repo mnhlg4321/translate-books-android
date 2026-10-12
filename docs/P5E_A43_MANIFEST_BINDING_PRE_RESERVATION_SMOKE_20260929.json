@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "p5e.a43.manifest-binding-pre-reservation-smoke.v1",
+  "generatedDate": "2026-09-29",
+  "status": "PASS",
+  "commandSha256": "FDF60C2478275160654EFD548FE59340CC0E58826929DACD072B9C3AD872147F",
+  "manifestSha256": "DF239F267245B9636C0A30367DCF07AFA0D5FCBAC1229163C87CA2FE3932236C",
+  "expectedTerminal": "P5E_OWNER_RECEIPT_PATH_MISSING_STOP",
+  "expectedTerminalObserved": true,
+  "manifestBindingStopObserved": false,
+  "receiptReadOrConsumed": false,
+  "reservationCreated": false,
+  "eventOpened": false,
+  "adbCalls": 0,
+  "deviceActions": 0,
+  "providerCalls": 0,
+  "credentialReads": 0,
+  "databaseWrites": 0,
+  "rawDispatches": 0,
+  "processExitCode": 1,
+  "privateSmokeRoot": "D:\\P5E-private\\p5e-a43-manifest-binding-smoke-20260929-074136439-c1b6197623414e96b4d7874deff53578"
+}

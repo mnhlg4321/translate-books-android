@@ -1,0 +1,63 @@
+{
+    "schemaVersion":  "p5e.account-check.device-preflight.qa.v2",
+    "status":  "PASS",
+    "totalAssertions":  189,
+    "passedAssertions":  189,
+    "failures":  [
+
+                 ],
+    "source":  {
+                   "preflightSha256":  "09A33DC74820A1AA18B3EE47AA96862DC0AFA03067D5B46B433B74E4EB1AFA22",
+                   "qaScriptSha256":  "165DEAE1F4865EF9387A29CB068DDFAC556B46ABC9A11319950236738E155FA1"
+               },
+    "host":  {
+                 "expectedHost":  "Windows PowerShell 5.1",
+                 "actualHost":  "5.1.26100.9168",
+                 "actualHostProcess":  "5.1.26100.9168"
+             },
+    "cases":  {
+                  "pass_full_identity_read_only":  "PASS",
+                  "aosp_source_derived_current_vs_past_layout_pass":  "PASS",
+                  "source_derived_positive_red_to_green":  "PASS",
+                  "real_dumpsys_spacing_layout":  "PASS",
+                  "metadata_package_absent":  "PASS",
+                  "metadata_empty_output":  "PASS",
+                  "metadata_package_duplicate":  "PASS",
+                  "metadata_version_missing":  "PASS",
+                  "metadata_version_duplicate":  "PASS",
+                  "metadata_version_invalid":  "PASS",
+                  "metadata_signature_missing":  "PASS",
+                  "metadata_signature_duplicate":  "PASS",
+                  "metadata_signature_invalid":  "PASS",
+                  "metadata_inline_wrapper_unsupported":  "PASS",
+                  "aosp_current_multiple_signers":  "PASS",
+                  "aosp_current_missing_past_present":  "PASS",
+                  "aosp_wrapper_identity_not_signer":  "PASS",
+                  "aosp_duplicate_wrapper":  "PASS",
+                  "aosp_legacy_wrapper_conflict":  "PASS",
+                  "aosp_truncated_wrapper":  "PASS",
+                  "aosp_current_nonhex":  "PASS",
+                  "aosp_past_malformed":  "PASS",
+                  "metadata_stdout_valid_stderr_error":  "PASS",
+                  "wrong_production_hash":  "PASS",
+                  "wrong_production_certificate":  "PASS",
+                  "wrong_test_hash":  "PASS",
+                  "wrong_production_version":  "PASS",
+                  "wrong_test_signature_pin":  "PASS",
+                  "split_apk_path":  "PASS",
+                  "device_offline":  "PASS",
+                  "native_nonzero":  "PASS",
+                  "timeout_bounded":  "PASS",
+                  "capture_overflow":  "PASS",
+                  "reference_certificate_pin":  "PASS",
+                  "script_pin":  "PASS",
+                  "stale_evidence_stop_preserves_existing_files":  "PASS",
+                  "static_source_boundary_and_bounded_ops":  "PASS"
+              },
+    "syntheticOnly":  true,
+    "adbInvocations":  0,
+    "deviceActions":  0,
+    "providerCalls":  0,
+    "dbWrites":  0,
+    "rawDispatches":  0
+}

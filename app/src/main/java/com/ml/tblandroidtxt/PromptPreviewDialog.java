@@ -58,7 +58,9 @@ public class PromptPreviewDialog {
                                            int textColor, LogSink log, ToastSink toast) {
         try {
             PromptPair p = PromptBuilder.translationPrompt(chunk, "", s);
-            String matched = PromptContextBuilder.preview(s.glossaryText, s.pronounText, chunk.mainContent, s);
+            String matched = PromptContextBuilder.preview(s.glossaryText, s.pronounText, chunk.mainContent,
+                    chunk.contextBefore + "\n" + chunk.mainContent,
+                    chunk.paragraphStart, chunk.paragraphEnd, s);
             String body = "[SOURCE]\n" + label + "\n\n[CHUNK]\n" + oneBased + "/" + total
                     + "\n\n[MATCHED GLOSSARY / PRONOUN RULES]\n" + matched
                     + "\n\n[SYSTEM]\n" + p.system + "\n\n[USER]\n" + p.user;

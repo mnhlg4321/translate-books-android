@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "p5e.signature-layout-adapter.provenance.v1",
+  "date": "2026-09-24",
+  "status": "SOURCE_DERIVED_OFFLINE_COMPATIBILITY_ONLY",
+  "branch": "feature/v4.18-p5e-runner-repair-20260917",
+  "baselineHeadBeforeAdapter": "bf97cd410ea63fe7f6d978b58324584249995e60",
+  "implementationCommit": "3d8ab021a8acea3f769e0a2d1695286f4618f29a",
+  "deviceCompatibility": "UNKNOWN_NO_RAW_CAPTURE",
+  "closedEvent": {
+    "directory": "D:\\P5E-private\\p5e-account-check-device-event-20260924-post-stop-proposed-01",
+    "status": "CLOSED_STOP",
+    "stop": "ACCOUNT_CHECK_PREFLIGHT_PACKAGE_METADATA_UNSUPPORTED_LAYOUT_STOP",
+    "preflightReceiptSha256": "739E6FBA5B13467F26BD5FFC3542EFA40DA4318C6AA39EBA148410D3615E1C9F",
+    "commandReceiptSha256": "B63B83170823414E993888A5D2AF61C71B392949EC831DC61BC408B65C1ED36E",
+    "accountLaunchCount": null,
+    "runnerProcessLaunchCount": 0,
+    "newAdbInvocationsInThisWorkPackage": 0
+  },
+  "aospSource": {
+    "repository": "https://android.googlesource.com/platform/frameworks/base",
+    "ref": "8551ec363dcd7c2d7c82c45e89db4922156766ab",
+    "refKind": "android11-release branch head resolved before review",
+    "packageSignatures": {
+      "path": "services/core/java/com/android/server/pm/PackageSignatures.java",
+      "method": "PackageSignatures.toString",
+      "sourceLines": "311-343",
+      "sourceSha256": "35FBAE118C70BF66C62B9D41DF17A68FB49108D3A71E9D2D2F6443E624B63220",
+      "url": "https://android.googlesource.com/platform/frameworks/base/+/8551ec363dcd7c2d7c82c45e89db4922156766ab/services/core/java/com/android/server/pm/PackageSignatures.java"
+    },
+    "settingsEmitter": {
+      "path": "services/core/java/com/android/server/pm/Settings.java",
+      "method": "dumpPackageLPr",
+      "sourceLines": "4659,4817",
+      "sourceSha256": "34DB27F9A508509921B4F5C55DE0D2A0FAEAF53ADD6BA964A566DFDCF3038849",
+      "url": "https://android.googlesource.com/platform/frameworks/base/+/8551ec363dcd7c2d7c82c45e89db4922156766ab/services/core/java/com/android/server/pm/Settings.java"
+    }
+  },
+  "supportedGrammar": {
+    "sectionBoundary": "Exactly one Package [<package>] section is selected; another package header terminates the section.",
+    "version": "Exactly one versionCode=<decimal> candidate is required.",
+    "legacy": "signatures:[<hex>] remains supported as LEGACY_STANDALONE.",
+    "aospWrapper": "signatures=PackageSignatures{<identity> version:<scheme>, signatures:[<current>], past signatures:[<past>]} is accepted as AOSP_PACKAGE_SIGNATURES_WRAPPER.",
+    "currentSigner": "Exactly one current signer token is required; it is the only candidate compared with the pinned short token.",
+    "pastSigner": "Past entries are parsed only for diagnostics as <hex> flags: <hex>; they cannot substitute for currentSigner.",
+    "nonCandidates": "Wrapper identity and scheme version are diagnostics only, not signer candidates.",
+    "rejections": "Multiple current signers, duplicate wrappers, current/past ambiguity, malformed or truncated wrappers, conflicting legacy/wrapper formats and unsupported layouts STOP fail-closed.",
+    "fullIdentityGate": "The parser change does not remove the subsequent full pulled-APK SHA-256 and certificate checks for production and test packages."
+  },
+  "syntheticFixture": {
+    "sourceCase": "source_derived_positive_red_to_green",
+    "testScript": "scripts/test-p5e-account-check-device-preflight.ps1",
+    "testScriptSha256": "165DEAE1F4865EF9387A29CB068DDFAC556B46ABC9A11319950236738E155FA1",
+    "oldParserResult": "UNSUPPORTED_LAYOUT",
+    "newParserResult": "PASS",
+    "rawDeviceLayoutConfirmed": false,
+    "fixtureIsSynthetic": true
+  },
+  "latestOfflineQa": {
+    "preflightSource": "scripts/p5e-account-check-device-preflight.ps1",
+    "preflightSourceSha256": "09A33DC74820A1AA18B3EE47AA96862DC0AFA03067D5B46B433B74E4EB1AFA22",
+    "preflightQa": "docs/P5E_ACCOUNT_CHECK_DEVICE_PREFLIGHT_QA_20260924_LAYOUT.json",
+    "preflightQaSha256": "86A13ADBB27AABAC3D409DCBE65B47FDCDB8DF00CCD10DE992DB4B14ECC67E50",
+    "preflightAssertions": "189/189",
+    "commandSource": "scripts/p5e-account-check-device-command.ps1",
+    "commandSourceSha256": "B79A6C7AD05DE30249DEBAA6C3E1E4FFBD0326754CFD3F14AFC0B69E265F1298",
+    "commandQa": "docs/P5E_ACCOUNT_CHECK_DEVICE_COMMAND_QA_20260924_LAYOUT.json",
+    "commandQaSha256": "EB8A9BBA81F1F08419810B52C9BFBDACE4AE2669E0C52C1AA5B963A100597895",
+    "commandAssertions": "28/28",
+    "host": "Windows PowerShell 5.1.26100.9168",
+    "adbInvocations": 0,
+    "deviceActions": 0,
+    "providerCalls": 0,
+    "dbWrites": 0,
+    "rawDispatches": 0,
+    "builds": 0,
+    "installs": 0
+  },
+  "decision": "LOCAL_SIGNATURE_LAYOUT_ADAPTER_PASS_OWNER_EVENT_DECISION_PENDING",
+  "scopeLimit": "This record qualifies an AOSP-derived parser compatibility path and synthetic chain only; it does not establish the device OS layout, account validity, provider validity, A4.3 authorization, RAW authorization, P5 exit or P6 readiness."
+}

@@ -1,0 +1,41 @@
+diff --git a/build.gradle b/build.gradle
+index ab2a336..33cb6a4 100644
+--- a/build.gradle
++++ b/build.gradle
+@@ -1,4 +1,4 @@
+ plugins {
+-    id 'com.android.application' version '8.7.3' apply false
+-    id 'com.android.test' version '8.7.3' apply false
++    id 'com.android.application' version '9.2.1' apply false
++    id 'com.android.test' version '9.2.1' apply false
+ }
+diff --git a/gradle.properties b/gradle.properties
+index 6f70eb1..5f5be2d 100644
+--- a/gradle.properties
++++ b/gradle.properties
+@@ -5,2 +5,12 @@ android.nonTransitiveRClass=true
+ # Keep Gradle memory reasonable on typical Windows laptops.
+ org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
++android.defaults.buildfeatures.resvalues=true
++android.sdk.defaultTargetSdkToCompileSdkIfUnset=false
++android.enableAppCompileTimeRClass=false
++android.usesSdkInManifest.disallowed=false
++android.uniquePackageNames=false
++android.dependency.useConstraints=true
++android.r8.strictFullModeForKeepRules=false
++android.r8.optimizedResourceShrinking=false
++android.builtInKotlin=false
++android.newDsl=false
+diff --git a/gradle/wrapper/gradle-wrapper.properties b/gradle/wrapper/gradle-wrapper.properties
+index 19a6bde..c61a118 100644
+--- a/gradle/wrapper/gradle-wrapper.properties
++++ b/gradle/wrapper/gradle-wrapper.properties
+@@ -1,6 +1,6 @@
+ distributionBase=GRADLE_USER_HOME
+ distributionPath=wrapper/dists
+-distributionUrl=https\://services.gradle.org/distributions/gradle-9.3.0-bin.zip
++distributionUrl=https\://services.gradle.org/distributions/gradle-9.4.1-bin.zip
+ networkTimeout=10000
+ validateDistributionUrl=true
+ zipStoreBase=GRADLE_USER_HOME
+ zipStorePath=wrapper/dists

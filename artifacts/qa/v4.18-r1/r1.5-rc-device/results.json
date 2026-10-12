@@ -1,0 +1,261 @@
+﻿[
+    {
+        "group":  "frozen",
+        "class":  "EditorialAuthoritativeCreatorResolver",
+        "result":  "PASS",
+        "tests":  5,
+        "log":  "frozen-EditorialAuthoritativeCreatorResolver.txt"
+    },
+    {
+        "group":  "frozen",
+        "class":  "EditorialChapterFinalCoordinator",
+        "result":  "PASS",
+        "tests":  12,
+        "log":  "frozen-EditorialChapterFinalCoordinator.txt"
+    },
+    {
+        "group":  "frozen",
+        "class":  "EditorialLineagePersistence",
+        "result":  "PASS",
+        "tests":  11,
+        "log":  "frozen-EditorialLineagePersistence.txt"
+    },
+    {
+        "group":  "frozen",
+        "class":  "EditorialP1PackImportCharacterization",
+        "result":  "PASS",
+        "tests":  7,
+        "log":  "frozen-EditorialP1PackImportCharacterization.txt"
+    },
+    {
+        "group":  "frozen",
+        "class":  "EditorialP2ReferencePackImport",
+        "result":  "PASS",
+        "tests":  3,
+        "log":  "frozen-EditorialP2ReferencePackImport.txt"
+    },
+    {
+        "group":  "frozen",
+        "class":  "EditorialP3BTrustedProfile",
+        "result":  "PASS",
+        "tests":  1,
+        "log":  "frozen-EditorialP3BTrustedProfile.txt"
+    },
+    {
+        "group":  "frozen",
+        "class":  "EditorialP4Binding",
+        "result":  "PASS",
+        "tests":  4,
+        "log":  "frozen-EditorialP4Binding.txt"
+    },
+    {
+        "group":  "frozen",
+        "class":  "EditorialP4BindingCharacterization",
+        "result":  "PASS",
+        "tests":  2,
+        "log":  "frozen-EditorialP4BindingCharacterization.txt"
+    },
+    {
+        "group":  "frozen",
+        "class":  "EditorialP4ProcessDeath",
+        "result":  "PASS",
+        "tests":  2,
+        "log":  "frozen-EditorialP4ProcessDeath.txt"
+    },
+    {
+        "group":  "frozen",
+        "class":  "EditorialPackCompatibilityEvaluation",
+        "result":  "PASS",
+        "tests":  10,
+        "log":  "frozen-EditorialPackCompatibilityEvaluation.txt"
+    },
+    {
+        "group":  "frozen",
+        "class":  "EditorialPackImportService",
+        "result":  "PASS",
+        "tests":  13,
+        "log":  "frozen-EditorialPackImportService.txt"
+    },
+    {
+        "group":  "frozen",
+        "class":  "EditorialPackManagementPage",
+        "result":  "PASS",
+        "tests":  3,
+        "log":  "frozen-EditorialPackManagementPage.txt"
+    },
+    {
+        "group":  "frozen",
+        "class":  "EditorialPackRuntimeWiring",
+        "result":  "PASS",
+        "tests":  5,
+        "log":  "frozen-EditorialPackRuntimeWiring.txt"
+    },
+    {
+        "group":  "frozen",
+        "class":  "EditorialPackZipImport",
+        "result":  "PASS",
+        "tests":  4,
+        "log":  "frozen-EditorialPackZipImport.txt"
+    },
+    {
+        "group":  "frozen",
+        "class":  "EditorialPhaseArtifactStore",
+        "result":  "PASS",
+        "tests":  8,
+        "log":  "frozen-EditorialPhaseArtifactStore.txt"
+    },
+    {
+        "group":  "frozen",
+        "class":  "EditorialRunContextCoordinator",
+        "result":  "PASS",
+        "tests":  7,
+        "log":  "frozen-EditorialRunContextCoordinator.txt"
+    },
+    {
+        "group":  "frozen",
+        "class":  "EditorialSafe4Repository",
+        "result":  "PASS",
+        "tests":  1,
+        "log":  "frozen-EditorialSafe4Repository.txt"
+    },
+    {
+        "group":  "frozen",
+        "class":  "EditorialV17IdentityStore",
+        "result":  "PASS",
+        "tests":  8,
+        "log":  "frozen-EditorialV17IdentityStore.txt"
+    },
+    {
+        "group":  "frozen",
+        "class":  "EditorialV18RunDeclarationEvent",
+        "result":  "PASS",
+        "tests":  11,
+        "log":  "frozen-EditorialV18RunDeclarationEvent.txt"
+    },
+    {
+        "group":  "chunk",
+        "class":  "EditorialPairStore",
+        "result":  "PASS",
+        "tests":  6,
+        "log":  "chunk-EditorialPairStore.txt"
+    },
+    {
+        "group":  "chunk",
+        "class":  "EditorialPairUi",
+        "result":  "PASS",
+        "tests":  6,
+        "log":  "chunk-EditorialPairUi.txt"
+    },
+    {
+        "group":  "chunk",
+        "class":  "EditorialPairAddressKeepSqlite",
+        "result":  "PASS",
+        "tests":  1,
+        "log":  "chunk-EditorialPairAddressKeepSqlite.txt"
+    },
+    {
+        "group":  "chunk",
+        "class":  "EditorialApiStore",
+        "result":  "PASS",
+        "tests":  6,
+        "log":  "chunk-EditorialApiStore.txt"
+    },
+    {
+        "group":  "chunk",
+        "class":  "EditorialApiBienTapFlow",
+        "result":  "PASS",
+        "tests":  3,
+        "log":  "chunk-EditorialApiBienTapFlow.txt"
+    },
+    {
+        "group":  "chunk",
+        "class":  "EditorialApiBienTapUi",
+        "result":  "FAIL",
+        "tests":  0,
+        "log":  "chunk-EditorialApiBienTapUi.txt"
+    },
+    {
+        "group":  "product",
+        "class":  "V415LibraryScroll",
+        "result":  "PASS",
+        "tests":  1,
+        "log":  "product-V415LibraryScroll.txt"
+    },
+    {
+        "group":  "product",
+        "class":  "V415MultiProfileImport",
+        "result":  "PASS",
+        "tests":  2,
+        "log":  "product-V415MultiProfileImport.txt"
+    },
+    {
+        "group":  "product",
+        "class":  "V415SettingsPersistence",
+        "result":  "PASS",
+        "tests":  1,
+        "log":  "product-V415SettingsPersistence.txt"
+    },
+    {
+        "group":  "product",
+        "class":  "V46Dashboard",
+        "result":  "PASS",
+        "tests":  3,
+        "log":  "product-V46Dashboard.txt"
+    },
+    {
+        "group":  "product",
+        "class":  "V48ImportNavigation",
+        "result":  "PASS",
+        "tests":  4,
+        "log":  "product-V48ImportNavigation.txt"
+    },
+    {
+        "group":  "product",
+        "class":  "Hotfix441",
+        "result":  "PASS",
+        "tests":  4,
+        "log":  "product-Hotfix441.txt"
+    },
+    {
+        "group":  "restart",
+        "class":  "EditorialApiBienTapUi-seed",
+        "result":  "PASS",
+        "tests":  1,
+        "log":  "restart-EditorialApiBienTapUi-seed.txt"
+    },
+    {
+        "group":  "restart",
+        "class":  "EditorialApiBienTapUi-verify",
+        "result":  "PASS",
+        "tests":  1,
+        "log":  "restart-EditorialApiBienTapUi-verify.txt"
+    },
+    {
+        "group":  "restart",
+        "class":  "EditorialApiBienTapUi-cleanup",
+        "result":  "PASS",
+        "tests":  1,
+        "log":  "restart-EditorialApiBienTapUi-cleanup.txt"
+    },
+    {
+        "group":  "restart",
+        "class":  "EditorialPairUi-seed",
+        "result":  "PASS",
+        "tests":  1,
+        "log":  "restart-EditorialPairUi-seed.txt"
+    },
+    {
+        "group":  "restart",
+        "class":  "EditorialPairUi-verify",
+        "result":  "PASS",
+        "tests":  1,
+        "log":  "restart-EditorialPairUi-verify.txt"
+    },
+    {
+        "group":  "restart",
+        "class":  "EditorialPairUi-cleanup",
+        "result":  "PASS",
+        "tests":  1,
+        "log":  "restart-EditorialPairUi-cleanup.txt"
+    }
+]

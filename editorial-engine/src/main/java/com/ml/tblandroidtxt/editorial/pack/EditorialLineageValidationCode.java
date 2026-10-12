@@ -1,0 +1,29 @@
+package com.ml.tblandroidtxt.editorial.pack;
+
+/** Stable machine failure codes for exact-parent lineage validation. */
+public enum EditorialLineageValidationCode {
+    VALID,
+    INPUT_NULL,
+    CONTEXT_NULL,
+    INVALID_IDENTITY_ENCODING,
+    INVALID_HASH,
+    INVALID_MANIFEST,
+    ROOT_HAS_PARENT,
+    MISSING_PARENT,
+    PARENT_MISMATCH,
+    MANIFEST_MISMATCH,
+    DUPLICATE_LINEAGE,
+    ORPHAN_LINEAGE,
+    AMBIGUOUS_PARENT,
+    CROSS_PACK,
+    CROSS_PROFILE,
+    CROSS_PROJECT,
+    CROSS_INPUT_SCOPE,
+    REPARENT_ATTEMPT,
+    FORK_NOT_ALLOWED,
+    CYCLE_DETECTED,
+    SELF_PARENT,
+    STALE_PROFILE,
+    IDENTITY_FINGERPRINT_MISMATCH,
+    LINEAGE_IDENTITY_REVIEW_REQUIRED
+}

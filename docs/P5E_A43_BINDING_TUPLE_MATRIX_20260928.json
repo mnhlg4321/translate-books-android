@@ -1,0 +1,1779 @@
+{
+    "schemaVersion":  "p5e.a43.binding-tuple-matrix.v1",
+    "generatedDate":  "2026-09-28",
+    "status":  "PASS",
+    "testCount":  262,
+    "passedTestCount":  262,
+    "regressionMatrix":  {
+                             "status":  "PASS",
+                             "caseCount":  175,
+                             "passedCaseCount":  175,
+                             "failureCount":  0,
+                             "cases":  {
+                                           "regression-pm-present-000":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-001":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-002":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-003":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-004":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-005":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-006":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-007":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-008":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-009":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-010":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-011":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-012":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-013":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-014":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-015":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-016":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-017":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-018":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-019":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-020":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-021":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-022":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-023":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-024":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-025":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-026":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-027":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-028":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-029":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-030":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-031":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-032":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-033":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-034":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-035":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-036":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-037":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-038":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-039":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-040":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-041":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-042":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-043":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-044":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-045":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-046":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-047":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-048":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-pm-present-049":  {
+                                                                             "passed":  true,
+                                                                             "detail":  "PASS"
+                                                                         },
+                                           "regression-remote-roundtrip-000":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-001":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-002":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-003":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-004":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-005":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-006":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-007":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-008":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-009":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-010":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-011":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-012":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-013":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-014":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-015":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-016":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-017":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-018":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-019":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-020":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-021":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-022":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-023":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-024":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-025":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-026":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-027":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-028":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-029":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-030":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-031":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-032":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-033":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-034":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-035":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-036":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-037":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-038":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-039":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-040":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-041":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-042":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-043":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-044":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-045":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-046":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-047":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-048":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-remote-roundtrip-049":  {
+                                                                                   "passed":  true,
+                                                                                   "detail":  "PASS"
+                                                                               },
+                                           "regression-pm-fail-closed-000":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-001":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-002":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-003":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-004":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-005":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-006":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-007":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-008":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-009":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-010":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-011":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-012":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-013":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-014":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-015":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-016":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-017":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-018":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-019":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-020":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-021":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-022":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-023":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-024":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-025":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-026":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-027":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-028":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-029":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-030":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-031":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-032":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-033":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-034":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-035":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-036":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-037":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-038":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-039":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-040":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-041":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-042":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-043":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-044":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-045":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-046":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-047":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-048":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-049":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-050":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-051":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-052":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-053":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-054":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-055":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-056":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-057":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-058":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-059":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-060":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-061":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-062":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-063":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-064":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-065":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-066":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-067":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-068":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-069":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-070":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-071":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-072":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-073":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             },
+                                           "regression-pm-fail-closed-074":  {
+                                                                                 "passed":  true,
+                                                                                 "detail":  "PASS"
+                                                                             }
+                                       }
+                         },
+    "failures":  [
+
+                 ],
+    "tests":  {
+                  "binding-canonical-000":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-001":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-002":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-003":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-004":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-005":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-006":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-007":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-008":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-009":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-010":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-011":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-012":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-013":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-014":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-015":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-016":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-017":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-018":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-019":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-020":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-021":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-022":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-023":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-024":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-025":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-026":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-027":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-028":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-029":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-030":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-031":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-032":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-033":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-034":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-035":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-036":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-037":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-038":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-039":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-040":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-041":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-042":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-043":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-044":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-045":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-046":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-047":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-048":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-049":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-050":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-051":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-052":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-053":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-054":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-055":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-056":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-057":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-058":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-059":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-060":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-061":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-062":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-063":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-064":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-065":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-066":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-067":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-068":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-069":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-070":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-071":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-072":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-073":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-074":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-075":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-076":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-077":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-078":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-079":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-080":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-081":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-082":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-083":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-084":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-085":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-086":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-087":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-088":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-089":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-090":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-091":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-092":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-093":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-094":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-095":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-096":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-097":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-098":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-canonical-099":  {
+                                                "passed":  true,
+                                                "detail":  "PASS"
+                                            },
+                  "binding-instrumentation-000":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-001":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-002":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-003":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-004":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-005":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-006":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-007":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-008":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-009":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-010":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-011":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-012":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-013":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-014":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-015":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-016":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-017":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-018":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-019":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-020":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-021":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-022":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-023":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-024":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-025":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-026":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-027":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-028":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-029":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-030":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-031":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-032":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-033":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-034":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-035":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-036":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-037":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-038":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-039":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-040":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-041":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-042":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-043":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-044":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-045":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-046":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-047":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-048":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-049":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-050":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-051":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-052":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-053":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-054":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-055":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-056":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-057":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-058":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-059":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-060":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-061":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-062":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-063":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-064":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-065":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-066":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-067":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-068":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-069":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-070":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-071":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-072":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-073":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-074":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-075":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-076":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-077":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-078":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-079":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-080":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-081":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-082":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-083":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-084":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-085":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-086":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-087":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-088":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-089":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-090":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-091":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-092":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-093":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-094":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-095":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-096":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-097":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-098":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-instrumentation-099":  {
+                                                      "passed":  true,
+                                                      "detail":  "PASS"
+                                                  },
+                  "binding-redacted-hash-000":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-001":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-002":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-003":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-004":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-005":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-006":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-007":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-008":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-009":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-010":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-011":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-012":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-013":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-014":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-015":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-016":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-017":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-018":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-019":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-020":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-021":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-022":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-023":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-024":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-025":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-026":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-027":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-028":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-029":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-030":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-031":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-032":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-033":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-034":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-035":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-036":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-037":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-038":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-039":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-040":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-041":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-042":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-043":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-044":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-045":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-046":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-047":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-048":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-049":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-050":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-051":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-052":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-053":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-054":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-055":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-056":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-057":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-058":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-059":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-060":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                },
+                  "binding-redacted-hash-061":  {
+                                                    "passed":  true,
+                                                    "detail":  "PASS"
+                                                }
+              },
+    "liveCounters":  {
+                         "adb":  0,
+                         "device":  0,
+                         "provider":  0,
+                         "credential":  0,
+                         "databaseWrites":  0,
+                         "buildInstall":  0,
+                         "raw":  0,
+                         "redispatch":  0
+                     },
+    "source":  "clean-archive-self-contained-synthetic-matrix"
+}

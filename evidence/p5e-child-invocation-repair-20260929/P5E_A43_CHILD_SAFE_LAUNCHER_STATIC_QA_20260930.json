@@ -1,0 +1,93 @@
+{
+    "schema":  "p5e.a43.child-safe-launcher-static-qa.v1",
+    "result":  "PASS",
+    "failureCount":  0,
+    "launcherPath":  "D:\\P5E-private\\P5E_A43_FINAL_OWNER_SINGLE_USE_LAUNCHER_20260930_CHILD_SAFE.ps1",
+    "launcherSha256":  "569F8437A0630D52E8F26D5631AF2D9CBC089947BFD337E7FEC510B831D98A41",
+    "contractPath":  "scripts/p5e-child-invocation-contract.ps1",
+    "contractSha256":  "2A1474494E2760D851DC9378AF8252968A65A4779E2E1786434AB70918E6D2EB",
+    "executed":  false,
+    "liveBoundariesCalled":  false,
+    "checks":  [
+                   {
+                       "Name":  "powershell-5.1-parse",
+                       "Passed":  true,
+                       "Evidence":  "errors=0"
+                   },
+                   {
+                       "Name":  "exact-contract-hash",
+                       "Passed":  true,
+                       "Evidence":  "2A1474494E2760D851DC9378AF8252968A65A4779E2E1786434AB70918E6D2EB"
+                   },
+                   {
+                       "Name":  "approval-prompt-visible",
+                       "Passed":  true,
+                       "Evidence":  "visible approval prompt literal present"
+                   },
+                   {
+                       "Name":  "key-prompt-hidden",
+                       "Passed":  true,
+                       "Evidence":  "secure key prompt literal present"
+                   },
+                   {
+                       "Name":  "tracked-invocation-source-used",
+                       "Passed":  true,
+                       "Evidence":  "ProcessStartInfo contract call present"
+                   },
+                   {
+                       "Name":  "expiry-checked-before-child",
+                       "Passed":  true,
+                       "Evidence":  "expiry gate precedes child invocation"
+                   },
+                   {
+                       "Name":  "raw-command-copy",
+                       "Passed":  true,
+                       "Evidence":  "command bytes copied without text round-trip"
+                   },
+                   {
+                       "Name":  "receipt-current-schema-only",
+                       "Passed":  true,
+                       "Evidence":  "receipt contains only fields accepted by the current strict validator"
+                   },
+                   {
+                       "Name":  "certificate-build-info-bound",
+                       "Passed":  true,
+                       "Evidence":  "certificate is checked against current BUILD_INFO before prompt"
+                   },
+                   {
+                       "Name":  "single-use-create-new",
+                       "Passed":  true,
+                       "Evidence":  "CreateNew marker and monotonic consumed state present"
+                   },
+                   {
+                       "Name":  "outer-nonzero-propagation",
+                       "Passed":  true,
+                       "Evidence":  "exception/child nonzero reaches launcher nonzero exit"
+                   },
+                   {
+                       "Name":  "bindings-cleared-finally",
+                       "Passed":  true,
+                       "Evidence":  "Process bindings clear in finally"
+                   },
+                   {
+                       "Name":  "exception-message-not-retained",
+                       "Passed":  true,
+                       "Evidence":  "fake-secret-sentinel exception messages are not copied to stopCode, output, or metadata"
+                   },
+                   {
+                       "Name":  "safe-counter-classification",
+                       "Passed":  true,
+                       "Evidence":  "outer metadata does not claim unobserved live outcomes"
+                   },
+                   {
+                       "Name":  "no-native-operator-wrapper",
+                       "Passed":  true,
+                       "Evidence":  "no stderr-promoting operator or unbounded read or uncontrolled fallback"
+                   },
+                   {
+                       "Name":  "old-authority-not-reused",
+                       "Passed":  true,
+                       "Evidence":  "old launcher/receipt identifiers absent"
+                   }
+               ]
+}

@@ -1,0 +1,132 @@
+{
+ "package": "R1.1",
+ "sourceCommit": "bbcbc4a900502a4b939e0ee22ed87a57dc705bd4",
+ "productionUnderTest": "4.18-p7.1/code264 APK SHA-256 64A9439D42E3979BA4404E847610F25CEBEE74B34279542D318B6CD77CEC661D (source 12824cee, unchanged)",
+ "testApkEvent": "r11-test-20261012",
+ "testApkSha256": "62DCF86411EA8B08D84B9F835860327500F5B92832A89E1F5219D44240E25443",
+ "device": "emulator-5554 only",
+ "assertionsChanged": 12,
+ "assertionsNote": "12 assertions in 5 classes (11 failing methods); one more literal 27 in EditorialP5EFreshRawLineageInstrumentedTest (a live-lineage class outside the allowlist) is not touched",
+ "fiveClassesTests": 42,
+ "allowlistClasses": 19,
+ "allowlistTests": 117,
+ "allowlistPassed": 117,
+ "previousP7Result": "106/117 with 11 failures expected:<27> but was:<29>",
+ "classes": [
+  {
+   "class": "EditorialAuthoritativeCreatorResolverInstrumentedTest",
+   "result": "PASS",
+   "tests": 5,
+   "log": "r11-all-EditorialAuthoritativeCreatorResolver.txt"
+  },
+  {
+   "class": "EditorialChapterFinalCoordinatorInstrumentedTest",
+   "result": "PASS",
+   "tests": 12,
+   "log": "r11-all-EditorialChapterFinalCoordinator.txt"
+  },
+  {
+   "class": "EditorialLineagePersistenceInstrumentedTest",
+   "result": "PASS",
+   "tests": 11,
+   "log": "r11-all-EditorialLineagePersistence.txt"
+  },
+  {
+   "class": "EditorialP1PackImportCharacterizationInstrumentedTest",
+   "result": "PASS",
+   "tests": 7,
+   "log": "r11-all-EditorialP1PackImportCharacterization.txt"
+  },
+  {
+   "class": "EditorialP2ReferencePackImportInstrumentedTest",
+   "result": "PASS",
+   "tests": 3,
+   "log": "r11-all-EditorialP2ReferencePackImport.txt"
+  },
+  {
+   "class": "EditorialP3BTrustedProfileInstrumentedTest",
+   "result": "PASS",
+   "tests": 1,
+   "log": "r11-all-EditorialP3BTrustedProfile.txt"
+  },
+  {
+   "class": "EditorialP4BindingInstrumentedTest",
+   "result": "PASS",
+   "tests": 4,
+   "log": "r11-all-EditorialP4Binding.txt"
+  },
+  {
+   "class": "EditorialP4BindingCharacterizationInstrumentedTest",
+   "result": "PASS",
+   "tests": 2,
+   "log": "r11-all-EditorialP4BindingCharacterization.txt"
+  },
+  {
+   "class": "EditorialP4ProcessDeathInstrumentedTest",
+   "result": "PASS",
+   "tests": 2,
+   "log": "r11-all-EditorialP4ProcessDeath.txt"
+  },
+  {
+   "class": "EditorialPackCompatibilityEvaluationInstrumentedTest",
+   "result": "PASS",
+   "tests": 10,
+   "log": "r11-all-EditorialPackCompatibilityEvaluation.txt"
+  },
+  {
+   "class": "EditorialPackImportServiceInstrumentedTest",
+   "result": "PASS",
+   "tests": 13,
+   "log": "r11-all-EditorialPackImportService.txt"
+  },
+  {
+   "class": "EditorialPackManagementPageInstrumentedTest",
+   "result": "PASS",
+   "tests": 3,
+   "log": "r11-all-EditorialPackManagementPage.txt"
+  },
+  {
+   "class": "EditorialPackRuntimeWiringInstrumentedTest",
+   "result": "PASS",
+   "tests": 5,
+   "log": "r11-all-EditorialPackRuntimeWiring.txt"
+  },
+  {
+   "class": "EditorialPackZipImportInstrumentedTest",
+   "result": "PASS",
+   "tests": 4,
+   "log": "r11-all-EditorialPackZipImport.txt"
+  },
+  {
+   "class": "EditorialPhaseArtifactStoreInstrumentedTest",
+   "result": "PASS",
+   "tests": 8,
+   "log": "r11-all-EditorialPhaseArtifactStore.txt"
+  },
+  {
+   "class": "EditorialRunContextCoordinatorInstrumentedTest",
+   "result": "PASS",
+   "tests": 7,
+   "log": "r11-all-EditorialRunContextCoordinator.txt"
+  },
+  {
+   "class": "EditorialSafe4RepositoryInstrumentedTest",
+   "result": "PASS",
+   "tests": 1,
+   "log": "r11-all-EditorialSafe4Repository.txt"
+  },
+  {
+   "class": "EditorialV17IdentityStoreInstrumentedTest",
+   "result": "PASS",
+   "tests": 8,
+   "log": "r11-all-EditorialV17IdentityStore.txt"
+  },
+  {
+   "class": "EditorialV18RunDeclarationEventInstrumentedTest",
+   "result": "PASS",
+   "tests": 11,
+   "log": "r11-all-EditorialV18RunDeclarationEvent.txt"
+  }
+ ],
+ "providerCalls": 0
+}

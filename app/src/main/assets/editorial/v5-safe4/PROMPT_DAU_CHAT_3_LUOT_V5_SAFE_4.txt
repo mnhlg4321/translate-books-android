@@ -1,0 +1,57 @@
+PROMPT ĐẦU CHAT — 3 LƯỢT
+VERSION V5-SAFE.4
+
+HỢP ĐỒNG CHUNG
+Đọc toàn bộ Project Instruction và Workflow V5-SAFE.4 trước khi làm. Chuỗi bắt buộc: REPORT_L1 → VI_L2 + CHANGE_MAP_L2 → FINAL + QA_RECEIPT trên cùng RAW/DRAFT/chapter/series/manifest. Thiếu/sai artefact, identity, version hoặc thứ tự: trả BLOCKED ngoài bản dịch; không xuất VI_L2/FINAL. PRONOUN_STATUS=NONE/LEGACY_REJECTED không cần và không được tìm Pronoun thay thế. PAIR_DELTA_QA chương trước chỉ làm PAIR_CONTEXT chương sau.
+
+==================================================
+LƯỢT 1 — AUDIT CHẨN ĐOÁN
+VERSION V5-SAFE.4
+==================================================
+
+Input: RAW, original DRAFT, GLOSSARY, PRONOUN_STATUS; PRONOUN chỉ khi AVAILABLE; PAIR_CONTEXT nếu có.
+
+Lập Manifest. Trước khi mở draft/nguồn phụ: đọc toàn raw; dựng Scene, Meaning/Reference/Speaker và Expected-Relation Models; lập raw-side candidates. Sau đó reconcile/quarantine nguồn phụ, cuối cùng mới mở draft và đối chiếu đầu–cuối.
+
+Bắt buộc hoàn tất Title/Glossary Occurrence Ledger, Semantic Risk Ledger, Relation Candidate Inventory, Pair Records và Error Ledger theo Workflow. Mỗi candidate phải được xử lý; mỗi conflict phải có Error ID/full population; PASS/VERIFIED phải có equation, count, anchors và proof.
+
+Không sửa draft. Chỉ xuất [ID]_REPORT_L1_[SERIES].txt. Nếu coverage/evidence chưa đủ, ghi BLOCKED L1 trong report; không tự cấp PASS và không xuất bản Việt.
+
+==================================================
+LƯỢT 2 — BIÊN TẬP CHÍNH
+VERSION V5-SAFE.4
+==================================================
+
+Input bắt buộc: đúng RAW + original DRAFT + GLOSSARY + REPORT_L1 cùng manifest/version; nguồn phụ đúng status. Thiếu/sai: BLOCKED, không VI_L2.
+
+Đọc raw và dựng expected models độc lập trước draft/report. Tái lập candidate counts và bác mọi PASS/VERIFIED thiếu ledger/proof. Lỗi mới cần L2 Error ID trước edit.
+
+Sửa coverage/fidelity/title/glossary trước relation, rồi mới naturalness cục bộ. Không neutralize/xóa vai để né conflict. Mọi thoại sửa cần Speaker Proof. Ghi Change Map ngay cho từng edit và chạy boundary regression.
+
+Trước xuất: reconstruct DRAFT→VI_L2; chạy lại TG/SR/RC coverage và mọi gate. Unprocessed candidate/raw unit, conflict, unaccounted diff hoặc regression khác 0: BLOCKED.
+
+Chỉ xuất [ID]_VI_L2_[SERIES].txt + [ID]_CHANGE_MAP_L2_[SERIES].txt; PAIR_DELTA_L2 chỉ khi có delta thật. VI_L2 chỉ chứa bản dịch.
+
+==================================================
+LƯỢT 3 — QA ĐỘC LẬP, HAI PHẢN BIỆN, RELEASE
+VERSION V5-SAFE.4
+==================================================
+
+Input bắt buộc: đúng RAW + original DRAFT + GLOSSARY + REPORT_L1 + VI_L2 + CHANGE_MAP_L2; nguồn phụ đúng status. Thiếu/sai: BLOCKED, không FINAL.
+
+QA mù: trước khi mở draft/report/delta, đọc raw, dựng expected models và raw-side TG/SR/RC candidates; đọc toàn VI_L2, đối chiếu đầu–cuối, tự lập ledgers/Pair Proof/speaker resolution. Sau đó mới reconcile nguồn tiền nhiệm và reconstruct DRAFT→VI_L2.
+
+Mọi sửa QA cần Error/Change ID trước edit; thoại cần Speaker Proof. Ghi Change Map QA trong QA_RECEIPT, không tạo file CHANGE_MAP_QA. Reconstruct VI_L2→FINAL và chạy toàn gate.
+
+PHẢN BIỆN 1 — ADVERSARIAL COVERAGE: cố bác bản hiện tại bằng candidate bị bỏ, title/glossary lệch, nghĩa gần nhưng sai quan hệ/vai trò, half-pair, listener-switch, sai speaker/tác nhân/người nhận, thiếu/thừa/đảo và diff ngoài scope. Ghi probes/findings/actions; có sửa thì rebuild ledgers, diff, gates và đọc lại từ đầu.
+
+PHẢN BIỆN 2 — ADVERSARIAL REGRESSION: bắt đầu độc lập từ raw/original DRAFT/bản mới, không dùng PASS vòng 1 làm evidence. Cố bác từng actual change bằng rewrite không cần thiết, neutralization né lỗi, mất voice/chủ ngữ/direct listener, attribution/honorific/ký hiệu/bảng bị đổi, speaker proof yếu, lỗi kỹ thuật hoặc receipt không có evidence. Sửa/hoàn nguyên rồi chạy lại; nếu bản đổi, lặp vòng 2 đến ổn định.
+
+Chỉ release khi coverage equations cân bằng và năm số bằng 0: unprocessed raw unit; uncovered TG/SR occurrence; unresolved LOCAL CONFLICT; unaccounted changed anchor; protected-span regression.
+
+Output PASS tối đa 3 file, thường 2:
+- [ID]_FINAL_QA_[SERIES].txt — chỉ bản dịch.
+- [ID]_QA_RECEIPT_[SERIES].txt — manifest, evidence counts/anchors, gates, QA changes và hai biên bản phản biện.
+- [ID]_PAIR_DELTA_QA_[SERIES].txt — tùy chọn, chỉ ADD/MODIFY/RETIRE đã QA_CONFIRMED.
+
+Không xuất report QA hoặc change-map QA rời.

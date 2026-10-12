@@ -48,7 +48,7 @@ public class CostEstimator {
 
         if (s.refineAfter) {
             for (Chunk chunk : chunks) {
-                PromptPlan plan = PromptPlan.forRefinement(chunk.mainContent, chunk.mainContent, s);
+                PromptPlan plan = PromptPlan.forRefinement(chunk, chunk.mainContent, s);
                 plans.add(plan);
                 addBreakdown(e, plan);
             }

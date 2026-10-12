@@ -6,6 +6,9 @@ public class Chunk {
     public String stableId;
     public int startOffset;
     public int endOffset;
+    /** 1-based inclusive paragraph range; -1 means the legacy range is unknown. */
+    public int paragraphStart = -1;
+    public int paragraphEnd = -1;
     public int contextStartOffset;
     public int contextEndOffset;
     public String sourceHash;

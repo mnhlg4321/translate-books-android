@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "p5e.raw.a43-authorized-single-event-provenance.v1",
+  "recordedDate": "2026-09-26",
+  "state": "OWNER_DECISION_RECEIVED / SINGLE_EVENT_AUTHORIZED_NOT_YET_CONSUMED / NOT_DISPATCHED / P6_NOT_READY",
+  "authority": {
+    "source": "project owner message in current Codex session",
+    "decisionKind": "EXACT_COPYABLE_SENTENCE_APPROVED",
+    "requestPath": "docs/P5E_A43_FINAL_EXECUTABLE_OWNER_AUTHORIZATION_REQUEST_20260926.md",
+    "scope": "one fresh A4.3 event only",
+    "serial": "15e84958",
+    "received": true,
+    "consumed": false
+  },
+  "git": {
+    "branch": "feature/v4.18-p5e-runner-repair-20260917",
+    "implementationBaselineRecordedInFrozenPacket": "2b34266eb60e3439864c80aae5d30ae141cfe8aa",
+    "packetCommitAtDecisionRecord": "cbe820deea077ffd3ef920959bfbccb396f2455a",
+    "worktree": "DIRTY_OWNER_CHANGES_PRESERVED"
+  },
+  "authorizedPins": {
+    "manifest": "23AF3DFAA81F50484187AFD183EA56454EBE38022C67DA2B963245A42D230053",
+    "command": "C84355B912DCF3BB59D52004EC80E06CE8B37FC75B5ABE083ECCA95D64C89BA3",
+    "helper": "17CC1C19BF4F6B1B71A77100D710375BDBCFDA7AC82D4508634B68E857DEFD2E",
+    "exporter": "D8783B31F9141458CA397915664CA79B07D3161A5E0F0D3B4365C5C65EA41D06",
+    "sqliteBridge": "4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111"
+  },
+  "authorizedOperations": [
+    "pinned read-only Before collection",
+    "memory-only account comparison",
+    "one fresh authorization",
+    "at most one allowlisted RAW/GLOSSARY provider call",
+    "exact allowlisted database writes",
+    "pinned read-only After collection",
+    "one terminal verification"
+  ],
+  "prohibitedOperations": [
+    "retry",
+    "repair during event",
+    "fallback",
+    "RECONCILE",
+    "cleanup",
+    "restore",
+    "redispatch",
+    "build",
+    "install",
+    "P6 action",
+    "closed event or decision reuse"
+  ],
+  "secretBoundary": {
+    "additionalOwnerInputRequired": false,
+    "expectedDigest": "PROCESS_ONLY_OWNER_CONTROLLED_PRESENT_AND_SHAPE_CHECK_ONLY",
+    "agentMayReadOrStore": false
+  },
+  "readiness": {
+    "offlinePacket": "PASS",
+    "a43SingleEvent": "READY_AND_AUTHORIZED_NOT_YET_CONSUMED",
+    "p5Exit": "NOT_YET_PROVEN",
+    "p6": "NOT_READY"
+  },
+  "previousEvents": "CLOSED_CONSUMED_NON_REUSABLE",
+  "liveCountersAtRecordCreation": {
+    "adb": 0,
+    "device": 0,
+    "provider": 0,
+    "credential": 0,
+    "databaseWrites": 0,
+    "buildInstall": 0,
+    "rawDispatch": 0,
+    "redispatch": 0
+  },
+  "nextAction": "EXECUTE_EXACTLY_ONE_AUTHORIZED_EVENT_USING_THE_FROZEN_COMMAND; DO_NOT_REQUEST_OWNER_APPROVAL_AGAIN"
+}

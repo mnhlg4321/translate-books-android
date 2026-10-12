@@ -1,0 +1,144 @@
+{
+    "schemaVersion":  "p5e.account.identity-lifecycle.qa.v1",
+    "date":  "2026-09-24",
+    "status":  "PASS",
+    "scope":  "OFFLINE_SYNTHETIC_INSTRUMENTATION_STREAM_ONLY",
+    "helperSha256":  "B491DD4D26444ACA1234A1A03D8A932A2525FB7CD112F6B6F1520A735C631897",
+    "expectedClassMethod":  "com.ml.tblandroidtxt.EditorialP5EAccountCheckOnlyInstrumentedTest#ownerApprovedAccountCheckOnlyReturnsMatchOrMismatch",
+    "normalLifecycle":  "class/test start status 1; separate result status 0; class/test completion status 0; summary and terminal code -1",
+    "cases":  [
+                  "abbreviated-single-identity-rejected",
+                  "conflicting-class-rejected",
+                  "conflicting-method-rejected",
+                  "duplicate-start-identity-rejected",
+                  "missing-start-class-rejected",
+                  "missing-start-method-rejected",
+                  "missing-result-rejected",
+                  "duplicate-result-rejected",
+                  "result-before-start-rejected",
+                  "completion-before-result-rejected",
+                  "missing-completion-status-rejected",
+                  "wrong-start-status-code-rejected",
+                  "status-failure-rejected",
+                  "missing-terminal-code-rejected",
+                  "terminal-before-summary-rejected",
+                  "result-after-terminal-rejected",
+                  "nonterminal-code-rejected",
+                  "failure-marker-rejected",
+                  "truncated-after-result-rejected",
+                  "result-suffix-rejected",
+                  "result-conflict-rejected"
+              ],
+    "assertions":  25,
+    "assertionCount":  25,
+    "results":  [
+                    {
+                        "name":  "normal-match-full-lifecycle-accepted",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "normal-mismatch-full-lifecycle-accepted",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "rejects-abbreviated-single-identity-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "rejects-conflicting-class-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "rejects-conflicting-method-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "rejects-duplicate-start-identity-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "rejects-missing-start-class-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "rejects-missing-start-method-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "rejects-missing-result-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "rejects-duplicate-result-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "rejects-result-before-start-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "rejects-completion-before-result-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "rejects-missing-completion-status-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "rejects-wrong-start-status-code-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "rejects-status-failure-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "rejects-missing-terminal-code-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "rejects-terminal-before-summary-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "rejects-result-after-terminal-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "rejects-nonterminal-code-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "rejects-failure-marker-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "rejects-truncated-after-result-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "rejects-result-suffix-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "rejects-result-conflict-rejected",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "old-parser-function-found-from-committed-ast",
+                        "passed":  true
+                    },
+                    {
+                        "name":  "old-parser-red-on-real-lifecycle",
+                        "passed":  true
+                    }
+                ],
+    "adbCalls":  0,
+    "deviceActions":  0,
+    "providerCalls":  0,
+    "dbWrites":  0,
+    "rawDispatches":  0,
+    "installAttempts":  0,
+    "launchCount":  0,
+    "retryCount":  0
+}

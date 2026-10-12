@@ -1,0 +1,129 @@
+{
+  "schemaVersion": "p5e.production-artifact-contract.v1",
+  "source": {
+    "path": "editorial-engine/src/main/java/com/ml/tblandroidtxt/editorial/pack/EditorialP5PilotExecution.java",
+    "serializer": "EditorialP5PilotExecution",
+    "serializerMethod": "reportBytes/receiptBytes",
+    "sourceSha256": "1222b8ac9b79dafc659dd364f50849dfba4782c181606a92da47ebd8c6164e3c",
+    "jsonImplementation": "EditorialCanonicalJson.canonicalize",
+    "encoding": "UTF-8",
+    "bom": "FORBIDDEN",
+    "byteRule": "validate_exact_persisted_bytes_then_parse",
+    "canonicalRule": "stored bytes equal UTF-8(canonicalize(parsed JSON))"
+  },
+  "report": {
+    "schemaVersion": "safe4.full.report-l1.v1",
+    "artifactType": "REPORT_L1",
+    "requiredFields": [
+      "schemaVersion",
+      "artifactType",
+      "bindingIdentity",
+      "manifestFingerprint",
+      "canonicalPackHash",
+      "canonicalProfileHash",
+      "compatibilityEvaluationId",
+      "chapterKey",
+      "phase",
+      "bundleIdentity",
+      "predecessorIdentity",
+      "stableAnchors",
+      "populationTotal",
+      "accountedTotal",
+      "actualChangedSpans",
+      "gates",
+      "evidenceRefs",
+      "preservedInventory",
+      "disposition",
+      "modelDeclaredPassRecordedOnly"
+    ],
+    "identityFields": {
+      "bindingIdentity": "bindingIdentity",
+      "manifestFingerprint": "manifestFingerprint",
+      "canonicalPackHash": "canonicalPackHash",
+      "canonicalProfileHash": "canonicalProfileHash",
+      "compatibilityEvaluationId": "evaluationId",
+      "chapterKey": "chapterKey",
+      "phase": "phase",
+      "bundleIdentity": "bundleIdentity",
+      "predecessorIdentity": "predecessorIdentity"
+    },
+    "semanticFields": [
+      "stableAnchors",
+      "populationTotal",
+      "accountedTotal",
+      "actualChangedSpans",
+      "gates",
+      "evidenceRefs",
+      "preservedInventory",
+      "disposition",
+      "modelDeclaredPassRecordedOnly"
+    ]
+  },
+  "receipt": {
+    "schemaVersion": "safe4.full.receipt.v1",
+    "artifactType": "REPORT_L1",
+    "requiredFields": [
+      "schemaVersion",
+      "artifactType",
+      "manifestRef",
+      "packRef",
+      "profileRef",
+      "bindingRef",
+      "phase",
+      "bundleIdentity",
+      "predecessorIdentity",
+      "populationTotal",
+      "accountedTotal",
+      "changedSpanTotal",
+      "gates",
+      "evidenceRefs",
+      "canonAllowed",
+      "propagationAllowed",
+      "disposition",
+      "preservedInventory",
+      "releaseAttemptCount"
+    ],
+    "identityFields": {
+      "manifestRef": "manifestFingerprint",
+      "packRef": "canonicalPackHash",
+      "profileRef": "canonicalProfileHash",
+      "bindingRef": "bindingIdentity",
+      "phase": "phase",
+      "bundleIdentity": "bundleIdentity",
+      "predecessorIdentity": "predecessorIdentity"
+    },
+    "semanticFields": [
+      "populationTotal",
+      "accountedTotal",
+      "changedSpanTotal",
+      "gates",
+      "evidenceRefs",
+      "canonAllowed",
+      "propagationAllowed",
+      "disposition",
+      "preservedInventory",
+      "releaseAttemptCount"
+    ]
+  },
+  "pair": {
+    "sameRequestIdentity": [
+      "phase",
+      "bundleIdentity",
+      "predecessorIdentity",
+      "populationTotal",
+      "accountedTotal",
+      "gates",
+      "evidenceRefs",
+      "disposition",
+      "preservedInventory"
+    ],
+    "reportToReceiptMapping": {
+      "manifestFingerprint": "manifestRef",
+      "canonicalPackHash": "packRef",
+      "canonicalProfileHash": "profileRef",
+      "bindingIdentity": "bindingRef",
+      "actualChangedSpans": "changedSpanTotal"
+    },
+    "artifactPairRule": "both blobs are required for COMMITTED and must be absent together for non-COMMITTED"
+  }
+}

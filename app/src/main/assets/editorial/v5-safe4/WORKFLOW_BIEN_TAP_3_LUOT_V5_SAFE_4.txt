@@ -1,0 +1,268 @@
+WORKFLOW BIÊN TẬP & QA JP→VI — 3 LƯỢT
+VERSION V5-SAFE.4 — EXHAUSTIVE CANDIDATE / EVIDENCE RECEIPT / COMPACT RELEASE
+Dùng chung với Project Instruction V5-SAFE.4. V5 là baseline bảo toàn; V5.1.x/V5-SAFE.1–3 chỉ là bài học, không phải authority.
+
+==================================================
+I. HỢP ĐỒNG THỰC THI VÀ ARTEFACT
+==================================================
+
+1. L1 — AUDIT: RAW + DRAFT + GLOSSARY → REPORT_L1.
+2. L2 — EDIT: đúng RAW + original DRAFT + REPORT_L1 → VI_L2 + CHANGE_MAP_L2; PAIR_DELTA_L2 nếu có.
+3. L3 — QA: đúng RAW + original DRAFT + REPORT_L1 + VI_L2 + CHANGE_MAP_L2 → FINAL + QA_RECEIPT; PAIR_DELTA_QA nếu có.
+
+Không có artefact tiền nhiệm thì không chạy lượt sau. Không tạo file rỗng/giả tên để đóng gate. Mỗi lượt ghi Source Manifest: ID/series/version, tên file, character/line count, first/last anchors và SHA-256 nếu môi trường hỗ trợ. Identity không khớp: BLOCKED.
+
+PRONOUN_STATUS bắt buộc. NONE/LEGACY_REJECTED là trạng thái hợp lệ và không yêu cầu Pronoun. PAIR_CONTEXT là continuity hẹp, không thay raw.
+
+Output L3 tối đa ba file: FINAL, QA_RECEIPT, PAIR_DELTA_QA tùy chọn. QA_RECEIPT gộp Change Map QA; không sinh CHANGE_MAP_QA/REPORT_QA rời.
+
+==================================================
+II. MÔ HÌNH VÀ LEDGER BẮT BUỘC
+==================================================
+
+A. SCENE LEDGER
+Scene ID | raw anchor đầu–cuối | POV/narrator | cast | event | vùng speaker/listener khó | semantic/relation risk | protected spans | OPEN/CLOSED.
+
+B. RAW–VI UNIT STATUS
+- ALIGNED: đúng đơn vị/vị trí/nội dung.
+- MISSING: raw có, Việt thiếu.
+- EXTRA: Việt thêm không có căn cứ.
+- MISALIGNED: đảo/ghép/lệch phạm vi.
+- AMBIGUOUS: raw thật sự cho nhiều cách; bản Việt phải bảo toàn.
+- UNCERTAIN/CONFLICTING: thiếu hoặc xung đột evidence; không được tự cấp PASS.
+
+C. TITLE/GLOSSARY OCCURRENCE LEDGER
+Row: TG ID | raw term | raw anchor | glossary expected | observed Việt | exact/allowed variant | evidence nếu variant | PASS/CONFLICT.
+
+Quy tắc:
+- Tiêu đề luôn là TG candidate, kể cả glossary không có row riêng cho toàn tiêu đề.
+- Quét từng term glossary trên raw, không chỉ quét draft. Một term xuất hiện N lần phải có N occurrence anchors hoặc population có thể kiểm đếm.
+- Exact form được ưu tiên. Variant chỉ khi ngữ pháp/ngữ cảnh bắt buộc và không đổi khái niệm; phải có reason.
+- TG coverage: Raw Glossary Occurrences + Title = PASS rows + CONFLICT rows. Không được có uncovered row.
+
+D. SEMANTIC RISK LEDGER
+Row: SR ID | category | raw lexeme/phrase | raw anchor | contextual sense | observed Việt | verdict | Error ID nếu conflict.
+
+Candidate bắt buộc gồm mọi occurrence thuộc:
+1. quan hệ gia đình, thân thuộc, nội/ngoại nhóm, đồng minh/kẻ thù;
+2. chức danh, địa vị, nghề/vai trò và honorific có nghĩa;
+3. tác nhân/người nhận, cho–nhận, bị động/sai khiến và chuỗi hành động khó;
+4. phủ định, lượng, phạm vi, so sánh, điều kiện, nguyên nhân–kết quả;
+5. thời gian, mức độ, xác suất, nguồn tin và độ chắc chắn;
+6. từ đa nghĩa quyết định sự kiện/quan hệ.
+
+Không cần ghi mọi hư từ. Phải ghi mọi occurrence thuộc sáu nhóm, không lấy mẫu. Sense phải được xác định theo câu trước–sau; nghĩa từ điển gần nhưng sai loại quan hệ là CONFLICT. SR coverage: Detected Candidates = PASS + CONFLICT; Uncovered = 0.
+
+E. RELATION CANDIDATE INVENTORY
+Row: RC ID | raw/VI anchor | speaker | direct listener | audience | token/register clue | candidate reason | MAP Pair ID hoặc DISMISS | dismissal evidence.
+
+Quét toàn chương để lấy candidate từ:
+- self-form, listener-form, direct address trong tiếng Việt;
+- tên gọi, biệt danh, honorific, chức danh dùng như cách gọi;
+- zero-pronoun raw được Việt hóa thành đại từ/chủ ngữ;
+- raw register hoặc quan hệ đáng chú ý dù câu Việt đã lược đại từ;
+- mọi occurrence của cặp đã trigger ở bất kỳ chiều nào trong cùng phase.
+
+Không được DISMISS nếu có một trong các dấu hiệu: chiều đối ứng; cặp lặp; form dao động; một bên tự xưng vai quan hệ; rough/polite register xung đột rõ với form Việt; listener/phase/persona đổi; continuity mâu thuẫn. Dismissal phải cục bộ, không dùng “có vẻ ổn”.
+
+RELATION COVERAGE INVARIANT:
+Total RC = Mapped RC + Validly Dismissed RC.
+Unprocessed RC = 0.
+Trigger Pair Count được suy từ các MAP duy nhất; không được nhập tay rồi dùng để chứng minh coverage.
+
+F. PAIR RECORD — OBSERVED/APPROVED
+Pair ID | Direction | Listener/Audience | Context/Phase | exact occurrence anchors/count | Observed Self | Observed Listener | Approved Self | Approved Listener | evidence per field | Mode | Asymmetry reason | Scope/Boundary | result từng occurrence | Status.
+
+Mode:
+- ROLE_LOCKED: vai đối ứng được khóa; chạy invariant.
+- ASYMMETRIC: bề mặt hai chiều khác có reason + raw/context anchor + scope + boundary.
+- UNLOCKED: evidence chưa khóa vai cụ thể; bảo toàn mơ hồ, không canon hóa.
+
+ROLE_LOCKED INVARIANT:
+- A.Self = B.Listener-ref.
+- A.Listener-ref = B.Self.
+- Kiểm từng equality khi hai field tương ứng đã hiện/được Approved. Field không cần hiện ghi UNREALIZED + reason.
+- Không biến form đang có thành UNREALIZED để né mismatch.
+- Hai anchor độc lập xác lập vai duy nhất và không bị raw/context phản bác thì bắt buộc ROLE_LOCKED.
+- Partial check bắt buộc: nếu A tự xưng “em”, mọi B.Listener-ref hướng tới A trong cùng phase phải được kiểm với “em”, kể cả B.Self chưa hiện. Nếu A gọi B “anh/chị” và B gọi A “em”, B.Observed Self “tôi” phải bị kiểm với Approved “anh/chị”; không được dismiss vì chỉ một dòng lộ self-form.
+
+Status:
+- LOCAL VERIFIED: Relation Coverage đủ; evidence từng Approved field đủ; mỗi occurrence ALIGNED/BOUNDARY; invariant/asymmetry proof PASS.
+- LOCAL AMBIGUOUS: raw thật sự đa nghĩa và bản Việt giữ mơ hồ tự nhiên.
+- LOCAL CONFLICT: occurrence lệch, proof/evidence thiếu hoặc dismissal không hợp lệ. Mọi conflict sinh REL Error ID và full population.
+
+G. SPEAKER PROOF
+Mọi thoại được EDIT/REDO ở L2/L3 cần: dialogue anchor | proposed speaker | direct listener | raw style/lexical clue | previous/next action or attribution anchors | confidence | conflict handling.
+
+Không suy speaker chỉ từ bản dịch hay Pair Context. Nếu speaker chưa chắc và sửa sẽ đổi voice/relation/fidelity: không sửa mò; ghi UNCERTAIN và BLOCKED khi là lỗi bắt buộc.
+
+H. ERROR LEDGER
+Error ID | severity/domain | raw + VI anchor | before | evidence | defect/impact | approved target/constraint | exact population | boundary | protected spans | OPEN/CLOSED.
+
+CRITICAL: đổi người/sự kiện/POV/kết quả, thiếu/thừa trọng yếu, sai phủ định/số liệu.
+MAJOR: sai nghĩa, tác nhân/người nhận, speaker/listener, logic, relation/voice/continuity đáng kể.
+MINOR: lỗi cục bộ cần sửa nhưng không đổi nội dung chính.
+NOTE: chưa đủ căn cứ sửa và không đổi nghĩa.
+
+I. CHANGE MAP
+Change ID | Error ID | anchor | before | after | reason/evidence | declared population | Speaker Proof ID nếu thoại | protected span touched | regression result | CLOSED/REVERTED.
+
+CHANGE COVERAGE:
+Actual Changed Anchors ⊆ Union(Declared Population).
+Mọi actual diff map tới Change ID. Diff không ID, ngoài population hoặc chạm protected span trái phép phải hoàn nguyên; không xác định được bản trước chính xác thì BLOCKED.
+
+J. PROTECTED SPANS
+Tiêu đề, narration, attribution, bảng, số liệu, dấu thoại, ngắt cảnh, ký hiệu, raw ambiguity và vùng ngoài population được bảo vệ, trừ Error ID độc lập. Relation migration không cấp quyền sửa protected span.
+
+==================================================
+III. GATE KIỂM SOÁT CÓ EVIDENCE
+==================================================
+
+1. ARTIFACT/IDENTITY: đúng chain, manifest, chapter, series, version và input hash/count.
+2. COVERAGE: mọi raw unit có đối ứng; đầu/cuối, scene, bảng và phần cuối đủ.
+3. TITLE/GLOSSARY: TG equation cân bằng; uncovered=0; conflict=0.
+4. SEMANTIC FIDELITY: SR equation cân bằng; uncovered=0; conflict=0; raw–VI unit conflicts=0.
+5. RELATION COVERAGE/PAIR PROOF: RC equation cân bằng; mọi trigger có Pair Record; invariant/asymmetry proof đạt; conflict=0.
+6. SPEAKER: mọi changed dialogue có Speaker Proof; unresolved speaker ảnh hưởng nghĩa=0.
+7. CHANGE COVERAGE: reconstruct actual diff; unaccounted/out-of-population change=0.
+8. NO-REGRESSION: không mất/thêm nghĩa, đổi speaker/listener/POV/voice/mức độ, tạo câu cụt, lặp tên/đại từ, thêm attribution hoặc đổi ký hiệu vô căn cứ.
+9. CONTINUITY/STRUCTURE/TECHNICAL: cast, thời gian, địa điểm, vật, cảm xúc, bảng, số, ký hiệu, encoding và cuối file đạt.
+
+Nhãn PASS chỉ hợp lệ khi Receipt dẫn tới ledger, equation và count tương ứng. “Đã rà toàn bộ”, “không phát hiện” hoặc status thừa kế không phải evidence.
+
+==================================================
+IV. LƯỢT 1 — AUDIT CHẨN ĐOÁN
+==================================================
+
+INPUT
+RAW + original DRAFT + GLOSSARY + PRONOUN_STATUS; PRONOUN chỉ khi AVAILABLE; PAIR_CONTEXT nếu có.
+
+THỨ TỰ
+1. Đọc Project/Workflow/Glossary và ghi status nguồn; chưa mở draft/nguồn phụ.
+2. Đọc toàn raw; chia scene; dựng Meaning/Reference/Speaker/Expected-Relation Model.
+3. Lập raw-side candidate cho TG, SR và RC trước khi nhìn draft.
+4. Mở Pair Context/Pronoun để reconcile/quarantine.
+5. Cuối cùng mở draft; ghép raw–VI đầu–cuối; hoàn tất observed rendering, ledgers, pair proof và error population.
+
+EXIT L1
+- Mọi scene audit CLOSED; raw unit đầu–cuối có status.
+- TG/SR/RC equations cân bằng, uncovered=0.
+- Mọi conflict có Error ID; mọi Pair status có proof chứ không chỉ nhãn.
+- Không sửa draft, không tạo bản Việt mới.
+
+OUTPUT
+[ID]_REPORT_L1_[SERIES].txt gồm Source Manifest; Scene/Raw-unit summary; TG, SR, RC ledgers; Pair Records; Speaker uncertainties; Error Ledger; Protected spans; Evidence Receipt L1.
+
+==================================================
+V. LƯỢT 2 — BIÊN TẬP CHÍNH
+==================================================
+
+INPUT
+Đúng RAW + original DRAFT + GLOSSARY + REPORT_L1 cùng manifest/version; nguồn phụ theo status.
+
+THỨ TỰ VÀ EDIT
+1. Artifact Gate. Thiếu/sai: BLOCKED.
+2. Đọc raw độc lập, dựng expected models trước draft/report.
+3. Tái lập candidate counts; kiểm report không bỏ TG/SR/RC và không tự cấp VERIFIED.
+4. Đọc draft theo scene. Sửa Coverage/Semantic/Title/Glossary trước Relation, rồi mới naturalness cục bộ.
+5. Mỗi lỗi mới có Error ID trước edit. Mỗi edit ghi Change Map ngay; thoại có Speaker Proof.
+6. Pair conflict chỉ sửa exact full population. Không tìm–thay toàn chương; listener-switch tách population.
+7. Không neutralize/xóa self/listener/subject/voice token để né. Không thêm attribution trừ Error ID độc lập chứng minh speaker không thể rõ bằng cách ít xâm lấn hơn.
+8. Sau mỗi change set, đọc boundary và chạy regression; fail thì hoàn nguyên set.
+
+ĐÓNG L2
+- Reconstruct DRAFT→VI_L2 và đối chiếu Change Map.
+- Chạy lại TG/SR/RC ledgers trên VI_L2, mọi gate và đọc liền toàn bản.
+- Sửa sau final read thì phải mở Change ID, chạy lại diff/gates và đọc lại từ đầu.
+
+OUTPUT
+[ID]_VI_L2_[SERIES].txt; [ID]_CHANGE_MAP_L2_[SERIES].txt; PAIR_DELTA_L2 chỉ khi có delta thật.
+
+==================================================
+VI. LƯỢT 3 — QA ĐỘC LẬP VÀ RELEASE
+==================================================
+
+INPUT
+Đúng RAW + original DRAFT + GLOSSARY + REPORT_L1 + VI_L2 + CHANGE_MAP_L2; nguồn phụ theo status.
+
+QA MÙ TRƯỚC
+1. Artifact Gate; thiếu/sai thì BLOCKED, không FINAL.
+2. Chưa mở report/draft/delta: đọc raw, dựng expected model và raw-side TG/SR/RC candidates.
+3. Đọc toàn VI_L2; ghép raw–VI; tự hoàn tất TG/SR/RC ledgers, Pair Records và speaker resolution.
+4. Sau đó mới mở original DRAFT/report/change/pair data để reconcile.
+5. Reconstruct DRAFT→VI_L2. Mọi L3 edit có QA Error/Change ID trước edit; Change Map QA ghi trong QA_RECEIPT; thoại có Speaker Proof.
+
+PHẢN BIỆN 1 — ADVERSARIAL COVERAGE
+Mục tiêu là bác bỏ bản hiện tại, không xác nhận nó. Bắt buộc thử tìm:
+- raw unit, title hoặc glossary occurrence chưa phủ;
+- semantic candidate bị bỏ, đặc biệt nghĩa quan hệ/gia đình/nội–ngoại nhóm;
+- nghĩa Việt gần từ điển nhưng sai sense trong cảnh;
+- RC bị dismiss sai, half-pair, listener-switch, register conflict;
+- sai speaker/tác nhân/người nhận;
+- changed anchor không có ID hoặc population.
+
+Ghi biên bản: probes đã chạy, anchors phát hiện, verdict, Error/Change IDs. Nếu sửa: rebuild ledgers, diff và mọi gate; đọc lại từ đầu.
+
+PHẢN BIỆN 2 — ADVERSARIAL REGRESSION
+Bắt đầu từ raw/original DRAFT/FINAL mới, không dùng PASS vòng 1 làm evidence. Coi từng actual change là nghi vấn và thử chứng minh:
+- thay đổi không cần thiết hoặc không tốt hơn rõ;
+- relation fix làm mất chủ ngữ/direct listener/voice hay tạo câu cụt;
+- honorific/tên gọi/attribution bị xóa hoặc thêm vô căn cứ;
+- title, narration, bảng, số, scene break, 「」/『』/〝〟/──/… bị đổi;
+- speaker proof sai vì dựa vào bản Việt;
+- Receipt claim PASS nhưng không dẫn ledger/equation/anchor;
+- encoding, typo, lặp/mất dòng hoặc lỗi cuối file.
+
+Ghi biên bản riêng. Lỗi mới phải có ID; sửa hoặc hoàn nguyên rồi chạy lại toàn bộ gate và hai phương trình coverage. Nếu sửa sau vòng 2, lặp chính vòng 2 trên bản mới cho tới ổn định.
+
+RELEASE NUMBERS
+Chỉ release khi:
+1. unprocessed raw unit = 0;
+2. uncovered TG/SR occurrence = 0;
+3. unresolved LOCAL CONFLICT = 0;
+4. unaccounted changed anchor = 0;
+5. protected-span regression = 0.
+
+QA_RECEIPT BẮT BUỘC
+A. Manifest và artifact order/identity.
+B. Gate Evidence Table: Gate | ledger/section | candidate/pass/conflict/uncovered counts | verdict.
+C. TG/SR/RC equations và năm Release Numbers.
+D. Pair status counts + Pair IDs; không cần chép toàn Pair Records nếu report đã có anchor và L3 không đổi, nhưng phải ghi reverified.
+E. DRAFT→VI_L2 và VI_L2→FINAL actual diff counts; từng QA change row nếu có.
+F. Phản biện 1 và 2: probes, findings, action, rerun verdict.
+G. Final read timestamp/order marker và final hash/count nếu hỗ trợ.
+
+OUTPUT PASS
+- [ID]_FINAL_QA_[SERIES].txt — chỉ bản dịch.
+- [ID]_QA_RECEIPT_[SERIES].txt — receipt + QA changes.
+- [ID]_PAIR_DELTA_QA_[SERIES].txt — chỉ nếu có ADD/MODIFY/RETIRE QA_CONFIRMED.
+
+Tối đa 3 file, thường 2. Nếu không có pair delta, ghi PAIR_DELTA_QA=NONE trong Receipt.
+
+==================================================
+VII. GOLDEN REPLAY — PHẢI PASS TRƯỚC KHI DÙNG
+==================================================
+
+Ca kiểm cơ chế, không phải mapping chung:
+
+G1. Sera→Neigas em–chị; Neigas→Sera tôi–em; ≥2 anchor, không asymmetry proof → ROLE_LOCKED CONFLICT, target chị–em; cấm VERIFIED/UNLOCKED/neutralize.
+G2. Sera tự xưng em với Tsaion; Tsaion gọi cô nhiều lần; raw gần gũi/thô, không boundary proof → mọi “cô” phải MAP; partial invariant buộc chứng minh hoặc sửa “em”.
+G3. Maria→Linus em–anh; Linus→Maria tôi–em, cùng intimate phase → CONFLICT; approved anh–em nếu raw/context không phản bác.
+G4. Glossary 魔王城=Thành Ma Vương; title Việt “Ma Vương Thành” → TG CONFLICT, không Fidelity PASS.
+G5. 身内 mang nghĩa gia đình/người nhà; Việt “người thân cận” → SR CONFLICT do đổi loại quan hệ.
+G6. PRONOUN_STATUS=NONE → chain vẫn chạy, không tìm nguồn thay; suy từ raw/context/reciprocity.
+G7. Edit thoại chỉ có speaker guess từ bản Việt, thiếu raw style/anchor trước–sau → BLOCKED/hoàn nguyên.
+G8. L3 có QA edits + pair delta → đúng FINAL + QA_RECEIPT gộp QA changes + PAIR_DELTA_QA; không delta → 2 file.
+G9. Relation fix xóa subject/direct listener để né comparison → No-Regression FAIL, hoàn nguyên.
+G10. Receipt ghi Fidelity PASS thiếu SR evidence hoặc Pair PASS khi RC equation lệch → Receipt Evidence FAIL, không FINAL.
+
+==================================================
+VIII. FAIL-CLOSED VÀ VẬN HÀNH LIÊN CHƯƠNG
+==================================================
+
+- PAIR_DELTA_QA chương trước chỉ thành PAIR_CONTEXT chương sau với row QA_CONFIRMED đúng scope/boundary.
+- Cặp mới dùng raw/context và reciprocity; không default “tôi”, cũng không ép anh/chị/em khi evidence chưa đủ.
+- Raw thật sự mơ hồ: giữ AMBIGUOUS tự nhiên; không bịa certainty để đóng gate.
+- Không thể chứng minh PASS nghĩa là FAIL/BLOCKED, không phải “tạm đạt”.
+- Khi change set hồi quy, hoàn nguyên toàn set về bản tiền nhiệm rồi xử lý lại với scope hẹp hơn.
+- Không được tối ưu riêng một gate làm hỏng sản phẩm tổng thể; Fidelity/No-Regression có quyền phủ quyết Relation/Polish.

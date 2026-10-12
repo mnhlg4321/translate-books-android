@@ -1,0 +1,356 @@
+# P5E A4.3 offline PM-path and outer-capture repair command — REVIEW ONLY / NOT DISPATCHED
+#
+# This repaired command is not an authorization and is not executed by the
+# offline repair. It never invokes the consumed command or manifest, never
+# reads a credential itself, and never retries or redispatches. A future live
+# use requires a new owner decision after review.
+
+$commandPath = [IO.Path]::GetFullPath($MyInvocation.MyCommand.Path)
+$expectedCommandSha256 = [Environment]::GetEnvironmentVariable('P5E_A43_COMMAND_SHA256', 'Process')
+
+$repoRoot = 'D:\App Translate Books'
+$helperPath = Join-Path $repoRoot 'scripts\p5e-raw-live-supervisor.ps1'
+$exporterPath = Join-Path $repoRoot 'scripts\p5e-db-binary-export.ps1'
+$bridgePath = Join-Path $repoRoot 'docs\P5E_SQLITE_BRIDGE.py'
+$toolchainLibraryPath = Join-Path $repoRoot 'scripts\p5e-raw-toolchain.ps1'
+$manifestPath = Join-Path $repoRoot 'docs\P5E_A43_PM_PATH_CAPTURE_REPAIR_MANIFEST_20260928.md'
+$localPropertiesPath = Join-Path $repoRoot 'local.properties'
+$powershellPath = 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe'
+$javaPath = 'C:\Program Files\Android\Android Studio\jbr\bin\java.exe'
+$buildToolsVersion = '35.0.0'
+$serial = '15e84958'
+$evidenceRoot = 'D:\P5E-private'
+
+$expectedManifestSha256 = 'C08C3F6D8EE1B802B0D68AB1FF0302E82655D17C72B06619752B65396C11ADC3'
+$expectedHelperSha256 = '959F2BBDC2EF163F00F3A56900B903DF529FDCDD9024AD6CEE906A01E080A8F0'
+$expectedExporterSha256 = 'D8783B31F9141458CA397915664CA79B07D3161A5E0F0D3B4365C5C65EA41D06'
+$expectedBridgeSha256 = '4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111'
+$expectedToolchainSha256 = 'C0AE7D431474F37597228A7AFA6F9382C63E26EB5A54CFB72604620D9DD5C3C8'
+$expectedLocalPropertiesSha256 = '71EB9D8E8E0179D863D919E329B56A1F3251126C15C2295E1F8E132B745770C2'
+$expectedCertificateSha256 = '47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155'
+
+$productionArtifactRoot = Join-Path $repoRoot 'App Translate Books-translation-profile\artifacts\builds\v4.17-p5e.11\build-20260911-201725'
+$productionBackupRoot = Join-Path $repoRoot 'App Translate Books-translation-profile\backup\builds\v4.17-p5e.11\build-20260911-201725'
+$testArtifactRoot = Join-Path $repoRoot 'App Translate Books-translation-profile\artifacts\test-builds\v4.17-p5e.11\p5e-account-check-20260916-01'
+$testBackupRoot = Join-Path $repoRoot 'App Translate Books-translation-profile\backup\test-builds\v4.17-p5e.11\p5e-account-check-20260916-01'
+
+$productionApkPath = Join-Path $productionArtifactRoot 'TranslateBooks-v4.17-p5e.11-code207.apk'
+$productionBackupApkPath = Join-Path $productionBackupRoot 'TranslateBooks-v4.17-p5e.11-code207.apk'
+$productionSourceArchivePath = Join-Path $productionArtifactRoot 'project_source_build-20260911-201725.zip'
+$productionBackupSourceArchivePath = Join-Path $productionBackupRoot 'project_source_build-20260911-201725.zip'
+$productionBuildInfoPath = Join-Path $productionArtifactRoot 'BUILD_INFO.json'
+$productionBackupBuildInfoPath = Join-Path $productionBackupRoot 'BUILD_INFO.json'
+$testApkPath = Join-Path $testArtifactRoot 'app-debug-androidTest.apk'
+$testBackupApkPath = Join-Path $testBackupRoot 'app-debug-androidTest.apk'
+$testSourceArchivePath = Join-Path $testArtifactRoot 'project_source_p5e-account-check-20260916-01.zip'
+$testBackupSourceArchivePath = Join-Path $testBackupRoot 'project_source_p5e-account-check-20260916-01.zip'
+$testBuildInfoPath = Join-Path $testArtifactRoot 'BUILD_INFO.json'
+$testBackupBuildInfoPath = Join-Path $testBackupRoot 'BUILD_INFO.json'
+
+$expectedProductionApkSha256 = '2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD'
+$expectedProductionSourceArchiveSha256 = 'B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348'
+$expectedProductionBuildInfoSha256 = 'DB20DA0CF708410AAAB65E5AF69ADF89A769ED62240B577A89CA4E2007FB7F06'
+$expectedTestApkSha256 = '058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8'
+$expectedTestSourceArchiveSha256 = '5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F'
+$expectedTestBuildInfoSha256 = '772F32E23AEF3537FEF00DACE8E4B9B994448BFEE2071150CF0E0540DDCCC5A9'
+
+function Assert-PinnedFile {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][AllowEmptyString()][string]$ExpectedSha256,
+        [Parameter(Mandatory = $true)][string]$Label
+    )
+    if ([string]::IsNullOrWhiteSpace($ExpectedSha256)) { throw ($Label + '_EXPECTED_HASH_MISSING_STOP') }
+    if ($ExpectedSha256 -notmatch '^[0-9a-fA-F]{64}$') { throw ($Label + '_EXPECTED_HASH_INVALID_STOP') }
+    $literalPath = [IO.Path]::GetFullPath($Path)
+    if (-not (Test-Path -LiteralPath $literalPath -PathType Leaf)) { throw ($Label + '_MISSING_STOP') }
+    $item = Get-Item -LiteralPath $literalPath -Force
+    if ($item.PSIsContainer) { throw ($Label + '_NOT_REGULAR_STOP') }
+    if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw ($Label + '_LEAF_REPARSE_STOP') }
+    $resolvedPath = [IO.Path]::GetFullPath((Resolve-Path -LiteralPath $literalPath).Path)
+    if (-not [StringComparer]::OrdinalIgnoreCase.Equals($literalPath, $resolvedPath)) { throw ($Label + '_PATH_SWAP_STOP') }
+    $cursor = [IO.Directory]::GetParent($literalPath)
+    while ($null -ne $cursor) {
+        if (-not (Test-Path -LiteralPath $cursor.FullName -PathType Container)) { throw ($Label + '_ANCESTOR_MISSING_STOP') }
+        $cursorItem = Get-Item -LiteralPath $cursor.FullName -Force
+        if (($cursorItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw ($Label + '_ANCESTOR_REPARSE_STOP') }
+        $parent = $cursor.Parent
+        if ($null -eq $parent -or $parent.FullName -ceq $cursor.FullName) { break }
+        $cursor = $parent
+    }
+    $actual = (Get-FileHash -LiteralPath $literalPath -Algorithm SHA256).Hash.ToUpperInvariant()
+    if ($actual -cne $ExpectedSha256.ToUpperInvariant()) { throw ($Label + '_HASH_MISMATCH_STOP') }
+    return [pscustomobject]@{ Path = $literalPath; Hash = $actual; Length = [long]$item.Length }
+}
+
+function Assert-ArtifactPair {
+    param(
+        [Parameter(Mandatory = $true)][string]$PrimaryPath,
+        [Parameter(Mandatory = $true)][string]$BackupPath,
+        [Parameter(Mandatory = $true)][string]$ExpectedSha256,
+        [Parameter(Mandatory = $true)][string]$Label
+    )
+    $primary = Assert-PinnedFile -Path $PrimaryPath -ExpectedSha256 $ExpectedSha256 -Label ($Label + '_ARTIFACT')
+    $backup = Assert-PinnedFile -Path $BackupPath -ExpectedSha256 $ExpectedSha256 -Label ($Label + '_BACKUP')
+    if ($primary.Length -ne $backup.Length) { throw ($Label + '_BYTE_LENGTH_MISMATCH_STOP') }
+}
+
+function Assert-SafeDirectory {
+    param([Parameter(Mandatory = $true)][string]$Path, [Parameter(Mandatory = $true)][string]$Label)
+    $literalPath = [IO.Path]::GetFullPath($Path)
+    if (-not (Test-Path -LiteralPath $literalPath -PathType Container)) { throw ($Label + '_MISSING_STOP') }
+    $item = Get-Item -LiteralPath $literalPath -Force
+    if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw ($Label + '_REPARSE_STOP') }
+    $resolvedPath = [IO.Path]::GetFullPath((Resolve-Path -LiteralPath $literalPath).Path)
+    if (-not [StringComparer]::OrdinalIgnoreCase.Equals($literalPath, $resolvedPath)) { throw ($Label + '_PATH_SWAP_STOP') }
+    return $resolvedPath
+}
+
+function Assert-ManifestBinding {
+    $text = Get-Content -Raw -LiteralPath $manifestPath
+    foreach ($needle in @(
+            'P5E_A43_PM_PATH_CAPTURE_AND_OUTER_CAPTURE_REPAIR',
+            'P5E_A43_OFFLINE_REPAIR_PACKET_READY',
+            '15e84958',
+            '959F2BBDC2EF163F00F3A56900B903DF529FDCDD9024AD6CEE906A01E080A8F0',
+            'D8783B31F9141458CA397915664CA79B07D3161A5E0F0D3B4365C5C65EA41D06',
+            '4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111',
+            $expectedCertificateSha256,
+            'NOT_DISPATCHED',
+            'P6_NOT_READY')) {
+        if ($text.IndexOf($needle, [StringComparison]::OrdinalIgnoreCase) -lt 0) { throw ('REPAIR_MANIFEST_BINDING_LITERAL_MISSING_STOP:' + $needle) }
+    }
+}
+
+Assert-PinnedFile -Path $commandPath -ExpectedSha256 $expectedCommandSha256 -Label 'COMMAND_SELF' | Out-Null
+Assert-PinnedFile -Path $manifestPath -ExpectedSha256 $expectedManifestSha256 -Label 'MANIFEST' | Out-Null
+Assert-PinnedFile -Path $helperPath -ExpectedSha256 $expectedHelperSha256 -Label 'HELPER' | Out-Null
+Assert-PinnedFile -Path $exporterPath -ExpectedSha256 $expectedExporterSha256 -Label 'DATABASE_EXPORTER' | Out-Null
+Assert-PinnedFile -Path $bridgePath -ExpectedSha256 $expectedBridgeSha256 -Label 'SQLITE_BRIDGE' | Out-Null
+Assert-PinnedFile -Path $toolchainLibraryPath -ExpectedSha256 $expectedToolchainSha256 -Label 'TOOLCHAIN_LIBRARY' | Out-Null
+Assert-PinnedFile -Path $localPropertiesPath -ExpectedSha256 $expectedLocalPropertiesSha256 -Label 'LOCAL_PROPERTIES' | Out-Null
+Assert-ManifestBinding
+
+Assert-ArtifactPair -PrimaryPath $productionApkPath -BackupPath $productionBackupApkPath -ExpectedSha256 $expectedProductionApkSha256 -Label 'PRODUCTION_APK'
+Assert-ArtifactPair -PrimaryPath $productionSourceArchivePath -BackupPath $productionBackupSourceArchivePath -ExpectedSha256 $expectedProductionSourceArchiveSha256 -Label 'PRODUCTION_SOURCE'
+Assert-ArtifactPair -PrimaryPath $productionBuildInfoPath -BackupPath $productionBackupBuildInfoPath -ExpectedSha256 $expectedProductionBuildInfoSha256 -Label 'PRODUCTION_BUILD_INFO'
+Assert-ArtifactPair -PrimaryPath $testApkPath -BackupPath $testBackupApkPath -ExpectedSha256 $expectedTestApkSha256 -Label 'TEST_APK'
+Assert-ArtifactPair -PrimaryPath $testSourceArchivePath -BackupPath $testBackupSourceArchivePath -ExpectedSha256 $expectedTestSourceArchiveSha256 -Label 'TEST_SOURCE'
+Assert-ArtifactPair -PrimaryPath $testBuildInfoPath -BackupPath $testBackupBuildInfoPath -ExpectedSha256 $expectedTestBuildInfoSha256 -Label 'TEST_BUILD_INFO'
+
+if (-not (Test-Path -LiteralPath $powershellPath -PathType Leaf)) { throw 'POWERSHELL_HOST_EXECUTABLE_MISSING_STOP' }
+. $toolchainLibraryPath -LibraryOnly
+$toolchain = Resolve-P5ERawToolchain -LocalPropertiesPath $localPropertiesPath -BuildToolsVersion $buildToolsVersion -JavaPath $javaPath
+$toolchainArguments = @(
+    '-AndroidSdkPath', [string]$toolchain.sdkPath,
+    '-LocalPropertiesPath', $localPropertiesPath,
+    '-BuildToolsVersion', [string]$toolchain.buildToolsVersion,
+    '-AdbPath', [string]$toolchain.adbPath,
+    '-JavaPath', [string]$toolchain.javaPath,
+    '-ApkSignerJarPath', [string]$toolchain.apksignerJarPath)
+
+Assert-SafeDirectory -Path $evidenceRoot -Label 'EVIDENCE_ROOT' | Out-Null
+$eventId = 'raw-live-a43-final-' + [DateTimeOffset]::UtcNow.ToString('yyyyMMdd-HHmmssfff') + '-' + [Guid]::NewGuid().ToString('N')
+$eventDirectory = Join-Path $evidenceRoot $eventId
+if (Test-Path -LiteralPath $eventDirectory) { throw 'NEW_EVENT_DIRECTORY_ALREADY_EXISTS_STOP' }
+[void](New-Item -ItemType Directory -Path $eventDirectory -ErrorAction Stop)
+Assert-SafeDirectory -Path $eventDirectory -Label 'EVENT_DIRECTORY' | Out-Null
+
+function ConvertTo-WindowsProcessArgument {
+    param([Parameter(Mandatory = $true)][AllowEmptyString()][string]$Value)
+    if ($Value.Length -gt 0 -and $Value -notmatch '[\s"]') { return $Value }
+    $builder = [Text.StringBuilder]::new()
+    [void]$builder.Append('"')
+    $backslashes = 0
+    foreach ($character in $Value.ToCharArray()) {
+        if ($character -eq '\') { $backslashes++; continue }
+        if ($character -eq '"') {
+            [void]$builder.Append(('\' * (2 * $backslashes + 1))); [void]$builder.Append('"'); $backslashes = 0; continue
+        }
+        if ($backslashes -gt 0) { [void]$builder.Append(('\' * $backslashes)); $backslashes = 0 }
+        [void]$builder.Append($character)
+    }
+    if ($backslashes -gt 0) { [void]$builder.Append(('\' * (2 * $backslashes))) }
+    [void]$builder.Append('"')
+    return $builder.ToString()
+}
+
+function Get-BoundedHelperCapture {
+    param([Parameter(Mandatory = $true)][System.Threading.Tasks.Task]$Task)
+    try {
+        if (-not $Task.Wait(5000)) {
+            return [pscustomobject]@{ DrainStatus = 'TIMEOUT'; ByteCount = -1L; Bounded = $false }
+        }
+        $text = [string]$Task.GetAwaiter().GetResult()
+        return [pscustomobject]@{
+            DrainStatus = 'DRAINED'
+            ByteCount = [long][Text.Encoding]::UTF8.GetByteCount($text)
+            Bounded = $true
+        }
+    } catch {
+        return [pscustomobject]@{ DrainStatus = 'DRAIN_FAILED'; ByteCount = -1L; Bounded = $false }
+    }
+}
+
+function Get-HelperOutcomeToken {
+    param([Parameter(Mandatory = $true)]$Result)
+    $processCode = if ($null -eq $Result.ProcessExitCode) { 'UNKNOWN' } else { [string]$Result.ProcessExitCode }
+    return ('WRAPPER_' + [string]$Result.WrapperExitCode + '_PROCESS_' + $processCode + '_' + [string]$Result.WrapperStatus)
+}
+
+function Invoke-CheckedHelper {
+    param(
+        [Parameter(Mandatory = $true)][string[]]$Arguments,
+        [switch]$ClearExpectedEnvironment,
+        [int]$TimeoutMilliseconds = 300000
+    )
+    [void](Assert-PinnedFile -Path $helperPath -ExpectedSha256 $expectedHelperSha256 -Label 'HELPER_RUNTIME')
+    [void](Assert-PinnedFile -Path $exporterPath -ExpectedSha256 $expectedExporterSha256 -Label 'DATABASE_EXPORTER_RUNTIME')
+    [void](Assert-PinnedFile -Path $bridgePath -ExpectedSha256 $expectedBridgeSha256 -Label 'SQLITE_BRIDGE_RUNTIME')
+    $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
+    $startInfo.FileName = $powershellPath
+    $startInfo.UseShellExecute = $false
+    $startInfo.CreateNoWindow = $true
+    $startInfo.RedirectStandardOutput = $true
+    $startInfo.RedirectStandardError = $true
+    if ($ClearExpectedEnvironment) {
+        $environmentProperty = $startInfo.PSObject.Properties['Environment']
+        if ($null -ne $environmentProperty) { [void]$startInfo.Environment.Remove('P5E_OWNER_ENDPOINT_ACCOUNT_FINGERPRINT') }
+        else { [void]$startInfo.EnvironmentVariables.Remove('P5E_OWNER_ENDPOINT_ACCOUNT_FINGERPRINT') }
+    }
+    $childCommand = 'Import-Module Microsoft.PowerShell.Utility; & ' + (ConvertTo-WindowsProcessArgument -Value $helperPath)
+    foreach ($argument in $Arguments) {
+        $childCommand += ' ' + (ConvertTo-WindowsProcessArgument -Value ([string]$argument))
+    }
+    $childArguments = @('-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', $childCommand)
+    $startInfo.Arguments = [string]::Join(' ', @($childArguments | ForEach-Object { ConvertTo-WindowsProcessArgument -Value ([string]$_) }))
+    $process = [System.Diagnostics.Process]::new()
+    $process.StartInfo = $startInfo
+    $launchCount = 0L
+    $timedOut = $false
+    $processExitCode = $null
+    $stdoutTask = $null
+    $stderrTask = $null
+    $stdoutCapture = [pscustomobject]@{ DrainStatus = 'NOT_STARTED'; ByteCount = -1L; Bounded = $false }
+    $stderrCapture = [pscustomobject]@{ DrainStatus = 'NOT_STARTED'; ByteCount = -1L; Bounded = $false }
+    $captureException = ''
+    try {
+        try {
+            if (-not $process.Start()) { throw 'HELPER_PROCESS_START_RETURNED_FALSE_STOP' }
+            $launchCount = 1L
+            $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+            $stderrTask = $process.StandardError.ReadToEndAsync()
+            if (-not $process.WaitForExit($TimeoutMilliseconds)) {
+                $timedOut = $true
+                try { $process.Kill($true) } catch { try { $process.Kill() } catch { } }
+                try { $process.WaitForExit(5000) | Out-Null } catch { }
+            }
+            if ($process.HasExited) { $processExitCode = [int]$process.ExitCode }
+        } catch {
+            if ($launchCount -eq 0L) { throw }
+            $captureException = $_.Exception.GetType().Name
+        }
+        if ($null -ne $stdoutTask) { $stdoutCapture = Get-BoundedHelperCapture -Task $stdoutTask }
+        if ($null -ne $stderrTask) { $stderrCapture = Get-BoundedHelperCapture -Task $stderrTask }
+    } catch {
+        if ($launchCount -eq 0L) { throw 'HELPER_PROCESS_START_FAILED_STOP' }
+        $captureException = $_.Exception.GetType().Name
+    } finally {
+        $process.Dispose()
+    }
+    $captureBounded = [bool]($stdoutCapture.Bounded -and $stderrCapture.Bounded)
+    $wrapperStatus = if ($launchCount -eq 0L) { 'PROCESS_START_FAILED' }
+        elseif ($timedOut) { 'TIMEOUT' }
+        elseif (-not [string]::IsNullOrWhiteSpace($captureException)) { 'PROCESS_CAPTURE_EXCEPTION' }
+        elseif ($null -eq $processExitCode) { 'PROCESS_EXIT_UNKNOWN' }
+        elseif (-not $captureBounded) { 'STREAM_CAPTURE_NOT_BOUNDED' }
+        else { 'PROCESS_COMPLETED' }
+    $wrapperExitCode = switch ($wrapperStatus) {
+        'PROCESS_START_FAILED' { 126; break }
+        'TIMEOUT' { 124; break }
+        'PROCESS_CAPTURE_EXCEPTION' { 125; break }
+        'PROCESS_EXIT_UNKNOWN' { 126; break }
+        'STREAM_CAPTURE_NOT_BOUNDED' { 125; break }
+        default { [int]$processExitCode; break }
+    }
+    Write-Output ('P5E_HELPER_WRAPPER_STATUS=' + $wrapperStatus)
+    Write-Output ('P5E_HELPER_PROCESS_EXIT_CODE=' + $(if ($null -eq $processExitCode) { 'UNKNOWN' } else { [string]$processExitCode }))
+    Write-Output ('P5E_HELPER_STDOUT_DRAIN_STATUS=' + [string]$stdoutCapture.DrainStatus)
+    Write-Output ('P5E_HELPER_STDERR_DRAIN_STATUS=' + [string]$stderrCapture.DrainStatus)
+    Write-Output ('P5E_HELPER_STDOUT_BYTE_COUNT=' + [string]$stdoutCapture.ByteCount)
+    Write-Output ('P5E_HELPER_STDERR_BYTE_COUNT=' + [string]$stderrCapture.ByteCount)
+    Write-Output ('P5E_HELPER_TIMED_OUT=' + [string]$timedOut)
+    Write-Output ('P5E_HELPER_CAPTURE_BOUNDED=' + [string]$captureBounded)
+    return [pscustomobject]@{
+        WrapperExitCode = [int]$wrapperExitCode
+        WrapperStatus = $wrapperStatus
+        ProcessExitCode = $processExitCode
+        StdoutDrainStatus = [string]$stdoutCapture.DrainStatus
+        StderrDrainStatus = [string]$stderrCapture.DrainStatus
+        StdoutByteCount = [long]$stdoutCapture.ByteCount
+        StderrByteCount = [long]$stderrCapture.ByteCount
+        TimedOut = [bool]$timedOut
+        CaptureBounded = $captureBounded
+        LaunchCount = [long]$launchCount
+    }
+}
+
+$commonPinArguments = @(
+    '-ExpectedHelperSha256', $expectedHelperSha256,
+    '-ExpectedDatabaseExporterSha256', $expectedExporterSha256,
+    '-ExpectedSqliteBridgeSha256', $expectedBridgeSha256)
+
+$prepareArguments = @(
+    '-PrepareEvent', '-ManifestPath', $manifestPath, '-ExpectedManifestSha256', $expectedManifestSha256,
+    '-ProductionApkPath', $productionApkPath, '-ExpectedProductionApkSha256', $expectedProductionApkSha256,
+    '-TestApkPath', $testApkPath, '-ExpectedTestApkSha256', $expectedTestApkSha256,
+    '-ProductionSourceArchivePath', $productionSourceArchivePath, '-ExpectedProductionSourceArchiveSha256', $expectedProductionSourceArchiveSha256,
+    '-ProductionBuildInfoPath', $productionBuildInfoPath, '-ExpectedProductionBuildInfoSha256', $expectedProductionBuildInfoSha256,
+    '-TestSourceArchivePath', $testSourceArchivePath, '-ExpectedTestSourceArchiveSha256', $expectedTestSourceArchiveSha256,
+    '-TestBuildInfoPath', $testBuildInfoPath, '-ExpectedTestBuildInfoSha256', $expectedTestBuildInfoSha256,
+    '-EvidenceDirectory', $eventDirectory) + $commonPinArguments + $toolchainArguments
+
+$prepareResult = Invoke-CheckedHelper -ClearExpectedEnvironment -Arguments $prepareArguments
+if ($prepareResult.WrapperExitCode -ne 0) { throw ('RAW_LIVE_PREPARE_FAILED_NO_DISPATCH_' + (Get-HelperOutcomeToken -Result $prepareResult)) }
+
+$beforeResult = Invoke-CheckedHelper -ClearExpectedEnvironment -Arguments (@(
+    '-CollectReadback', '-EvidenceDirectory', $eventDirectory, '-CollectionPhase', 'Before', '-Serial', $serial) +
+    $commonPinArguments + $toolchainArguments)
+if ($beforeResult.WrapperExitCode -ne 0) { throw ('RAW_LIVE_BEFORE_COLLECTION_FAILED_NO_DISPATCH_' + (Get-HelperOutcomeToken -Result $beforeResult)) }
+
+$dispatchResult = $null
+$dispatchError = $null
+$afterResult = $null
+$afterError = $null
+$dispatchStarted = $false
+try {
+    try {
+        $dispatchStarted = $true
+        $dispatchResult = Invoke-CheckedHelper -Arguments ($prepareArguments -replace '^-PrepareEvent$', '-Dispatch')
+    } catch { $dispatchError = 'PROCESS_EXCEPTION_' + $_.Exception.GetType().Name }
+} finally {
+    if ($dispatchStarted) {
+        try {
+            $afterResult = Invoke-CheckedHelper -ClearExpectedEnvironment -Arguments (@(
+                '-CollectReadback', '-EvidenceDirectory', $eventDirectory, '-CollectionPhase', 'After', '-Serial', $serial) +
+                $commonPinArguments + $toolchainArguments)
+        } catch { $afterError = 'PROCESS_EXCEPTION_' + $_.Exception.GetType().Name }
+    }
+}
+
+$verifyResult = Invoke-CheckedHelper -ClearExpectedEnvironment -Arguments (@(
+    '-VerifyOutcome', '-EvidenceDirectory', $eventDirectory,
+    '-MetadataPath', (Join-Path $eventDirectory 'HOST_RUN_METADATA.json'),
+    '-PostReadbackPath', (Join-Path $eventDirectory 'post-readback.json')) + $commonPinArguments)
+
+if ($dispatchError) { throw ('RAW_LIVE_DISPATCH_EXCEPTION_AFTER_POSSIBLE_START_NO_REDISPATCH_' + $dispatchError) }
+if ($afterError) { throw ('RAW_LIVE_AFTER_COLLECTION_EXCEPTION_NO_REDISPATCH_' + $afterError) }
+if ($null -eq $dispatchResult -or $dispatchResult.WrapperExitCode -ne 0) { throw ('RAW_LIVE_DISPATCH_OBSERVED_NONZERO_NO_REDISPATCH_' + $(if ($null -eq $dispatchResult) { 'UNKNOWN' } else { Get-HelperOutcomeToken -Result $dispatchResult })) }
+if ($null -eq $afterResult -or $afterResult.WrapperExitCode -ne 0) { throw ('RAW_LIVE_AFTER_COLLECTION_NOT_PROVEN_NO_REDISPATCH_' + $(if ($null -eq $afterResult) { 'UNKNOWN' } else { Get-HelperOutcomeToken -Result $afterResult })) }
+if ($verifyResult.WrapperExitCode -ne 0) { throw ('RAW_LIVE_ACCEPTANCE_NOT_PROVEN_NO_REDISPATCH_' + (Get-HelperOutcomeToken -Result $verifyResult)) }
+
+Write-Output ('RAW_LIVE_EVENT_DIRECTORY=' + $eventDirectory)
+Write-Output 'RAW_LIVE_DISPATCHES=1'
+Write-Output 'RAW_LIVE_REPAIRS=0'
+Write-Output 'RAW_LIVE_RETRIES=0'
+Write-Output 'RAW_LIVE_P6_READY=FALSE'

@@ -1,0 +1,115 @@
+{
+ "source": "12824cee6c6f4e9f9482efaf6fe398799d5732c0",
+ "note": "replay of stored model answers through the current finder and applier, no provider call; TSV files hold book text and stay private",
+ "files": {
+  "v15-replay-006-c6b.tsv": "8337512214DA3CBA3F1E120B7AEA3525F19771D4E8A9C1BB3D6BC0591F013985",
+  "v15-replay-006-c6e.tsv": "56D4E69E8C8D529A80995AD04A8DCCD7D6B4026E4CF3301FD11928B249804387",
+  "v15-replay-008.tsv": "9CDFDB3A93EA594730C638B39DD00FA8384349BE37A7ABA268526E0E39EC4000",
+  "v15-replay-011-c7b.tsv": "591E50E9240BB69EF57EBAFC9EC66F63F7D8FEA690BAAAD36FC76188FE1492A0",
+  "v15-replay-011-c7d.tsv": "772B7C3B923BA9B6DA078404CEFB543B088FF1C9B9A7EAB7C15E55CEBBED29F5"
+ },
+ "sources": {
+  "006-C6E": {
+   "points_live": 74,
+   "points_replayed": 74,
+   "fixed_replayed": 11,
+   "guard_kept_replayed": 6,
+   "differences_vs_live": [
+    {
+     "point": "7:3",
+     "live": [
+      "KEPT",
+      "ADDRESS_SCOPE_EXCEEDED"
+     ],
+     "replay": [
+      "FIXED",
+      "REPLACED"
+     ]
+    },
+    {
+     "point": "14:5",
+     "live": [
+      "FIXED",
+      "REPLACED"
+     ],
+     "replay": [
+      "KEPT",
+      "ADDRESS_PLURAL_SELF"
+     ]
+    }
+   ]
+  },
+  "008-C7A": {
+   "points_live": 28,
+   "points_replayed": 27,
+   "fixed_replayed": 1,
+   "guard_kept_replayed": 3,
+   "differences_vs_live": [
+    {
+     "point": "1:2",
+     "live": [
+      "FIXED",
+      "REPLACED"
+     ],
+     "replay": null
+    }
+   ]
+  },
+  "011-C7B": {
+   "points_live": 56,
+   "points_replayed": 56,
+   "fixed_replayed": 6,
+   "guard_kept_replayed": 3,
+   "differences_vs_live": [
+    {
+     "point": "10:2",
+     "live": [
+      "KEPT",
+      "ADDRESS_FORM_NOT_IN_APPLICABLE_ROW"
+     ],
+     "replay": [
+      "FIXED",
+      "REPLACED"
+     ]
+    },
+    {
+     "point": "10:3",
+     "live": [
+      "FIXED",
+      "REPLACED"
+     ],
+     "replay": [
+      "KEPT",
+      "ADDRESS_SCOPE_EXCEEDED"
+     ]
+    }
+   ]
+  },
+  "011-C7D": {
+   "points_live": 56,
+   "points_replayed": 56,
+   "fixed_replayed": 14,
+   "guard_kept_replayed": 4,
+   "differences_vs_live": [
+    {
+     "point": "12:8",
+     "live": [
+      "FIXED",
+      "REPLACED"
+     ],
+     "replay": [
+      "KEPT",
+      "ADDRESS_NAME_COMBINED"
+     ]
+    }
+   ]
+  },
+  "006-C6B": {
+   "points_replayed": 74,
+   "correct_fixes_kept": 11,
+   "correct_fixes_expected": 11,
+   "wrong_fixes_blocked": 9,
+   "wrong_fixes_expected": 9
+  }
+ }
+}

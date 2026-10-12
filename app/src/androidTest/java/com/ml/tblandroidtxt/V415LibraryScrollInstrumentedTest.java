@@ -107,7 +107,7 @@ public class V415LibraryScrollInstrumentedTest {
 
     private static List<GlossaryStore.Glossary> glossaryFixtures() {
         ArrayList<GlossaryStore.Glossary> fixtures = new ArrayList<>();
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < 40; i++) {
             GlossaryStore.Glossary glossary = new GlossaryStore.Glossary();
             glossary.name = String.format("G%02d", i);
             glossary.terms.add(new GlossaryStore.Term("source" + i, "target" + i, "term"));
@@ -118,7 +118,7 @@ public class V415LibraryScrollInstrumentedTest {
 
     private static List<PronounStore.Profile> pronounFixtures() {
         ArrayList<PronounStore.Profile> fixtures = new ArrayList<>();
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < 40; i++) {
             PronounStore.Profile profile = new PronounStore.Profile();
             profile.name = String.format("P%02d", i);
             profile.text = "from,to,pronoun\nAlice,Bob,she/he";

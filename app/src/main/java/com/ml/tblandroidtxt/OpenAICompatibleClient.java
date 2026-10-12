@@ -3,6 +3,15 @@ package com.ml.tblandroidtxt;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InterruptedIOException;
+import java.net.ConnectException;
+import java.net.UnknownHostException;
+import java.net.SocketTimeoutException;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -17,26 +26,116 @@ import okhttp3.EventListener;
 
 public class OpenAICompatibleClient {
     public interface NetworkObserver {
+        default void onCallCreated() {}
+        default void onCallCreated(long elapsedMillis) { onCallCreated(); }
         default void onRequestBodyStarted() {}
+        default void onRequestBodyStarted(long elapsedMillis) { onRequestBodyStarted(); }
         default void onRequestBodySent(long byteCount) {}
+        default void onRequestBodySent(long byteCount, long elapsedMillis) {
+            onRequestBodySent(byteCount);
+        }
         default void onResponseHeaders(int code) {}
+        default void onResponseHeaders(int code, String generationId) { onResponseHeaders(code); }
+        default void onResponseHeaders(int code, String generationId, String contentType) {
+            onResponseHeaders(code, generationId);
+        }
+        default void onResponseHeaders(int code, String generationId, String contentType,
+                                       long elapsedMillis) {
+            onResponseHeaders(code, generationId, contentType);
+        }
+        default void onResponseBodyProgress(long byteCount, long elapsedMillis) {}
+        default void onResponseBodyComplete(long byteCount, String providerResponseId) {}
+        default void onResponseBodyComplete(long byteCount, String providerResponseId,
+                                            long elapsedMillis) {
+            onResponseBodyComplete(byteCount, providerResponseId);
+        }
+        default void onCallCancelled(long elapsedMillis) {}
+        default void onCallCancelled(long elapsedMillis, String cancellationSource) {
+            onCallCancelled(elapsedMillis);
+        }
+        default void onCallFailed(String exceptionClass, long elapsedMillis) {}
     }
 
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private static final OkHttpClient BASE_CLIENT = new OkHttpClient.Builder().build();
-    private static final AtomicReference<Call> ACTIVE_CALL = new AtomicReference<>();
+    private static final AtomicReference<ActiveCall> ACTIVE_CALL = new AtomicReference<>();
+    private static final long MAX_RESPONSE_BODY_BYTES = 8L * 1024L * 1024L;
+    private static final long BODY_PROGRESS_BYTES = 32L * 1024L;
+    private static final long BODY_PROGRESS_INTERVAL_NANOS =
+            TimeUnit.MILLISECONDS.toNanos(250L);
+
+    private static final class ActiveCall {
+        private final Call call;
+        private final AtomicReference<String> cancellationSource;
+
+        private ActiveCall(Call call, AtomicReference<String> cancellationSource) {
+            this.call = call;
+            this.cancellationSource = cancellationSource;
+        }
+    }
+
+    /**
+     * Scoped cancellation owner for a pilot call. It is intentionally not
+     * connected to the legacy translation-service cancellation slot.
+     */
+    static final class CallControl {
+        private final AtomicReference<Call> call = new AtomicReference<>();
+        private final AtomicReference<String> cancellationSource = new AtomicReference<>("");
+
+        void bind(Call value) {
+            call.set(value);
+            String source = cancellationSource.get();
+            if (!source.isEmpty()) value.cancel();
+        }
+
+        void cancel(String source) {
+            String value = source == null || source.isBlank()
+                    ? "PILOT_REQUESTED_CANCEL" : source;
+            cancellationSource.compareAndSet("", value);
+            Call current = call.get();
+            if (current != null) current.cancel();
+        }
+
+        void clear(Call value) { call.compareAndSet(value, null); }
+
+        AtomicReference<String> cancellationSource() { return cancellationSource; }
+
+        void reset() {
+            call.set(null);
+            cancellationSource.set("");
+        }
+    }
+
+    static long monotonicDeadlineNanosFromNowMillis(long durationMillis) {
+        if (durationMillis <= 0) throw new IllegalArgumentException("deadline must be positive");
+        long now = System.nanoTime();
+        long durationNanos = TimeUnit.MILLISECONDS.toNanos(durationMillis);
+        long deadline = now + durationNanos;
+        return deadline < now ? Long.MAX_VALUE : deadline;
+    }
+
+    static long remainingMillis(long deadlineNanos) {
+        if (deadlineNanos <= 0) return Long.MAX_VALUE;
+        long remainingNanos = deadlineNanos - System.nanoTime();
+        if (remainingNanos <= 0) return 0L;
+        long millis = TimeUnit.NANOSECONDS.toMillis(remainingNanos);
+        return Math.max(1L, millis);
+    }
 
     public static void cancelActiveRequests() {
-        Call call = ACTIVE_CALL.getAndSet(null);
-        if (call != null) {
-            try { call.cancel(); } catch (Exception ignored) {}
+        ActiveCall active = ACTIVE_CALL.getAndSet(null);
+        if (active != null) {
+            active.cancellationSource.compareAndSet("", "LEGACY_GLOBAL_CANCEL");
+            try { active.call.cancel(); } catch (Exception ignored) {}
         }
     }
 
     public static class ChatResult {
         public String content = "";
         public int promptTokens = 0;
+        /** Provider-reported aggregate output tokens; reasoning is a subset. */
         public int completionTokens = 0;
+        public int reasoningTokens = 0;
         public int totalTokens = 0;
         public int cachedPromptTokens = 0;
         public boolean usageReported = false;
@@ -44,6 +143,17 @@ public class OpenAICompatibleClient {
         public boolean providerCostReported = false;
         public String finishReason = "";
         public String providerResponseId = "";
+        /** Model and upstream provider the response says served the call (route evidence); empty when absent. */
+        public String responseModel = "";
+        public String responseProvider = "";
+    }
+
+    /** One message in a multi-turn OpenAI-compatible conversation. */
+    public record ChatMessage(String role, String content) {
+        public ChatMessage {
+            if (role == null || role.isBlank()) throw new IllegalArgumentException("message role is empty");
+            content = content == null ? "" : content;
+        }
     }
 
     public static String chat(AppSettings s, PromptPair prompt) throws Exception {
@@ -63,31 +173,118 @@ public class OpenAICompatibleClient {
     }
 
     public static ChatResult chatWithUsage(AppSettings s, PromptPair prompt, int maxOutputTokens, String requestId, NetworkObserver observer) throws Exception {
+        return chatWithUsage(s, prompt, maxOutputTokens, requestId, observer, true);
+    }
+
+    /**
+     * P5D callers opt out of the legacy translation-service cancellation slot.
+     * A legacy global cancel must never claim or cancel a separately authorized
+     * editorial pilot call.
+     */
+    public static ChatResult chatWithUsage(AppSettings s, PromptPair prompt, int maxOutputTokens,
+                                           String requestId, NetworkObserver observer,
+                                           boolean registerForLegacyGlobalCancellation) throws Exception {
+        return chatWithUsage(s, prompt, maxOutputTokens, requestId, observer,
+                registerForLegacyGlobalCancellation, 0L, null);
+    }
+
+    /**
+     * Executes one call against an absolute monotonic deadline. A zero
+     * deadline preserves the legacy settings-based behavior; pilot callers
+     * must provide a deadline so OkHttp cannot add an unowned grace period.
+     */
+    static ChatResult chatWithUsage(AppSettings s, PromptPair prompt, int maxOutputTokens,
+                                    String requestId, NetworkObserver observer,
+                                    boolean registerForLegacyGlobalCancellation,
+                                    long deadlineNanos, CallControl callControl) throws Exception {
+        return chatWithUsage(s, prompt, maxOutputTokens, requestId, observer,
+                registerForLegacyGlobalCancellation, deadlineNanos, callControl,
+                null, false, "");
+    }
+
+    /** Structured-output/reasoning options used only by the P5E RAW adapter. */
+    static ChatResult chatWithUsage(AppSettings s, PromptPair prompt, int maxOutputTokens,
+                                    String requestId, NetworkObserver observer,
+                                    boolean registerForLegacyGlobalCancellation,
+                                    long deadlineNanos, CallControl callControl,
+                                    JSONObject responseFormat,
+                                    boolean requireProviderParameters,
+                                    String reasoningEffort) throws Exception {
+        JSONObject providerPreferences = null;
+        if (requireProviderParameters) {
+            providerPreferences = new JSONObject().put("require_parameters", true);
+        }
+        return chatWithUsage(s, prompt, maxOutputTokens, requestId, observer,
+                registerForLegacyGlobalCancellation, deadlineNanos, callControl,
+                responseFormat, providerPreferences, reasoningEffort);
+    }
+
+    /**
+     * Explicit provider preferences used by a scoped route policy. The legacy
+     * boolean overload above remains unchanged for translation/P5D callers.
+     */
+    static ChatResult chatWithUsage(AppSettings s, PromptPair prompt, int maxOutputTokens,
+                                    String requestId, NetworkObserver observer,
+                                    boolean registerForLegacyGlobalCancellation,
+                                    long deadlineNanos, CallControl callControl,
+                                    JSONObject responseFormat,
+                                    JSONObject providerPreferences,
+                                    String reasoningEffort) throws Exception {
+        if (prompt == null) throw new IllegalArgumentException("Prompt is required");
+        return chatWithUsage(s,
+                java.util.List.of(new ChatMessage("system", prompt.system), new ChatMessage("user", prompt.user)),
+                maxOutputTokens, requestId, observer, registerForLegacyGlobalCancellation, deadlineNanos,
+                callControl, responseFormat, providerPreferences, reasoningEffort);
+    }
+
+    /** Multi-turn variant used by the V5 same-chat provider. */
+    static ChatResult chatWithUsage(AppSettings s, java.util.List<ChatMessage> messages, int maxOutputTokens,
+                                    String requestId, NetworkObserver observer,
+                                    boolean registerForLegacyGlobalCancellation,
+                                    long deadlineNanos, CallControl callControl,
+                                    JSONObject responseFormat,
+                                    JSONObject providerPreferences,
+                                    String reasoningEffort) throws Exception {
+        if (messages == null || messages.isEmpty()) throw new IllegalArgumentException("Messages are required");
         if (s.apiKey == null || s.apiKey.trim().isEmpty()) throw new IllegalArgumentException("API key is empty");
         if (s.model == null || s.model.trim().isEmpty()) throw new IllegalArgumentException("Model is empty");
         String endpoint = AppSettings.normalizeEndpoint(s.baseUrl);
         if (endpoint == null || endpoint.trim().isEmpty()) throw new IllegalArgumentException("Base URL is empty");
         if (endpoint.contains("/api/generate")) throw new IllegalArgumentException("Ollama /api/generate is not implemented in this Android TXT MVP. Use an OpenAI-compatible /v1/chat/completions endpoint.");
 
-        JSONObject body = new JSONObject();
-        body.put("model", s.model);
-        body.put("temperature", s.temperature);
-        body.put("max_tokens", Math.max(128, maxOutputTokens));
-        JSONArray messages = new JSONArray();
-        messages.put(new JSONObject().put("role", "system").put("content", prompt.system));
-        messages.put(new JSONObject().put("role", "user").put("content", prompt.user));
-        body.put("messages", messages);
+        long startedNanos = System.nanoTime();
+        boolean boundedDeadline = deadlineNanos > 0;
+        long timeoutMillis;
+        if (boundedDeadline) {
+            timeoutMillis = remainingMillis(deadlineNanos);
+            if (timeoutMillis <= 0) throw new SocketTimeoutException("P5D attempt deadline expired");
+        } else {
+            int timeout = Math.max(10, s.timeoutSeconds);
+            timeoutMillis = TimeUnit.SECONDS.toMillis(timeout);
+        }
+        JSONObject body = buildChatRequestBody(s, messages, maxOutputTokens, responseFormat,
+                providerPreferences, reasoningEffort);
 
-        int timeout = Math.max(10, s.timeoutSeconds);
         OkHttpClient client = BASE_CLIENT.newBuilder()
-                .connectTimeout(timeout, TimeUnit.SECONDS)
-                .readTimeout(timeout, TimeUnit.SECONDS)
-                .writeTimeout(timeout, TimeUnit.SECONDS)
-                .callTimeout(timeout + 30L, TimeUnit.SECONDS)
+                .connectTimeout(timeoutMillis, TimeUnit.MILLISECONDS)
+                .readTimeout(timeoutMillis, TimeUnit.MILLISECONDS)
+                .writeTimeout(timeoutMillis, TimeUnit.MILLISECONDS)
+                .callTimeout(boundedDeadline ? timeoutMillis : timeoutMillis + 30_000L,
+                        TimeUnit.MILLISECONDS)
                 .eventListener(new EventListener(){
-                    @Override public void requestBodyStart(Call call){if(observer!=null)observer.onRequestBodyStarted();}
-                    @Override public void requestBodyEnd(Call call,long byteCount){if(observer!=null)observer.onRequestBodySent(byteCount);}
-                    @Override public void responseHeadersEnd(Call call,Response response){if(observer!=null)observer.onResponseHeaders(response.code());}
+                    @Override public void requestBodyStart(Call call){
+                        if(observer!=null)observer.onRequestBodyStarted(elapsedMillis(startedNanos));
+                    }
+                    @Override public void requestBodyEnd(Call call,long byteCount){
+                        if(observer!=null)observer.onRequestBodySent(byteCount,
+                                elapsedMillis(startedNanos));
+                    }
+                    @Override public void responseHeadersEnd(Call call,Response response){
+                        if(observer!=null)observer.onResponseHeaders(response.code(),
+                                safeHeader(response.header("X-Generation-Id")),
+                                safeContentType(response.header("Content-Type")),
+                                elapsedMillis(startedNanos));
+                    }
                 })
                 .build();
 
@@ -103,26 +300,194 @@ public class OpenAICompatibleClient {
         if (requestId != null && !requestId.trim().isEmpty()) rb.addHeader("X-TBL-Request-ID", requestId.trim());
 
         Call call = client.newCall(rb.build());
-        ACTIVE_CALL.set(call);
+        AtomicReference<String> cancellationSource = callControl == null
+                ? new AtomicReference<>("") : callControl.cancellationSource();
+        ActiveCall active = registerForLegacyGlobalCancellation
+                ? new ActiveCall(call, cancellationSource) : null;
+        if (active != null) ACTIVE_CALL.set(active);
+        if (callControl != null) callControl.bind(call);
+        if (observer != null) observer.onCallCreated(elapsedMillis(startedNanos));
         try (Response response = call.execute()) {
             ResponseBody responseBody = response.body();
-            String responseText = responseBody == null ? "" : responseBody.string();
+            ReadBody readBody = readResponseBody(responseBody, observer, startedNanos,
+                    deadlineNanos);
+            String responseText = readBody.text();
+            long bodyBytes = readBody.byteCount();
+            long bodyElapsed = elapsedMillis(startedNanos);
+            if (observer != null) observer.onResponseBodyComplete(bodyBytes, "", bodyElapsed);
+            if (boundedDeadline && System.nanoTime() > deadlineNanos) {
+                throw new SocketTimeoutException("P5D attempt deadline expired before validation");
+            }
             int code = response.code();
             if (!response.isSuccessful()) throw new ApiHttpException(code, parseRetryAfterMs(response.header("Retry-After")), ApiErrorParser.fromHttp(code, responseText));
 
             ChatResult r = parseChatResponse(responseText);
-            if (r.promptTokens <= 0) r.promptTokens = Chunker.approxTokens(prompt.system) + Chunker.approxTokens(prompt.user);
-            if (r.completionTokens <= 0) r.completionTokens = Chunker.approxTokens(r.content);
-            if (r.totalTokens <= 0) r.totalTokens = r.promptTokens + r.completionTokens;
+            if (observer != null) observer.onResponseBodyComplete(bodyBytes,
+                    safeHeader(r.providerResponseId),
+                    Math.max(0L, (System.nanoTime() - startedNanos) / 1_000_000L));
+            if (r.promptTokens <= 0) {
+                int estimate = 0;
+                for (ChatMessage message : messages) estimate += Chunker.approxTokens(message.content());
+                r.promptTokens = estimate;
+            }
+            if (r.completionTokens <= 0) {
+                // When the provider omits aggregate output usage, the visible
+                // completion estimate plus separately reported reasoning is
+                // the conservative aggregate output estimate.
+                r.completionTokens = Chunker.approxTokens(r.content) + r.reasoningTokens;
+            }
+            // OpenRouter's completion_tokens already includes reasoning_tokens;
+            // reasoning is retained as a separately audited subset and must
+            // not be added a second time to total usage.
+            long normalizedTotal = (long) r.promptTokens + r.completionTokens;
+            if (r.totalTokens < normalizedTotal) {
+                r.totalTokens = normalizedTotal > Integer.MAX_VALUE
+                        ? Integer.MAX_VALUE : (int) normalizedTotal;
+            }
             ObservabilityLog.event("provider_usage", "provider", s.provider, "model", s.model,
                     "source", r.usageReported ? "PROVIDER" : "ESTIMATED",
                     "input", r.promptTokens, "cached", r.cachedPromptTokens,
-                    "output", r.completionTokens, "total", r.totalTokens,
+                    "output", r.completionTokens, "reasoning", r.reasoningTokens,
+                    "total", r.totalTokens,
                     "providerCost", r.providerCost);
             return r;
+        } catch (Exception error) {
+            if (observer != null) {
+                long elapsed = elapsedMillis(startedNanos);
+                if (!cancellationSource.get().isBlank() || error instanceof CancellationException) {
+                    observer.onCallCancelled(elapsed, cancellationSource.get());
+                } else {
+                    observer.onCallFailed(safeExceptionClass(error), elapsed);
+                }
+            }
+            throw error;
         } finally {
-            ACTIVE_CALL.compareAndSet(call, null);
+            if (active != null) ACTIVE_CALL.compareAndSet(active, null);
+            if (callControl != null) callControl.clear(call);
         }
+    }
+
+    private record ReadBody(String text, long byteCount) { }
+
+    private static ReadBody readResponseBody(ResponseBody responseBody, NetworkObserver observer,
+                                             long startedNanos, long deadlineNanos)
+            throws IOException {
+        if (responseBody == null) return new ReadBody("", 0L);
+        long declaredLength = responseBody.contentLength();
+        if (declaredLength > MAX_RESPONSE_BODY_BYTES) {
+            throw new ResponseBodyTooLargeException();
+        }
+        ByteArrayOutputStream output = new ByteArrayOutputStream(
+                (int) Math.min(Math.max(0L, declaredLength), 64L * 1024L));
+        long count = 0L;
+        long reportedBytes = 0L;
+        long lastReportNanos = startedNanos;
+        byte[] buffer = new byte[8 * 1024];
+        try (InputStream input = responseBody.byteStream()) {
+            int read;
+            while ((read = input.read(buffer)) != -1) {
+                if (read == 0) continue;
+                if (count > MAX_RESPONSE_BODY_BYTES - read) {
+                    throw new ResponseBodyTooLargeException();
+                }
+                output.write(buffer, 0, read);
+                count += read;
+                long now = System.nanoTime();
+                if (observer != null && (reportedBytes == 0L
+                        || count - reportedBytes >= BODY_PROGRESS_BYTES
+                        || now - lastReportNanos >= BODY_PROGRESS_INTERVAL_NANOS)) {
+                    observer.onResponseBodyProgress(count, elapsedMillis(startedNanos));
+                    reportedBytes = count;
+                    lastReportNanos = now;
+                }
+                if (deadlineNanos > 0 && now > deadlineNanos) {
+                    throw new SocketTimeoutException("P5D attempt deadline expired while reading body");
+                }
+            }
+        }
+        if (deadlineNanos > 0 && System.nanoTime() > deadlineNanos) {
+            throw new SocketTimeoutException("P5D attempt deadline expired after body read");
+        }
+        return new ReadBody(new String(output.toByteArray(), StandardCharsets.UTF_8), count);
+    }
+
+    private static long elapsedMillis(long startedNanos) {
+        return Math.max(0L, (System.nanoTime() - startedNanos) / 1_000_000L);
+    }
+
+    static final class ResponseBodyTooLargeException extends IOException { }
+
+    /**
+     * Builds the OpenAI-compatible envelope without silently changing the
+     * caller's authorized output cap. Pilot callers validate the cap before
+     * dispatch; this boundary rejects an unusable value instead of clamping it.
+     */
+    static JSONObject buildChatRequestBody(AppSettings s, PromptPair prompt,
+                                           int maxOutputTokens) throws Exception {
+        return buildChatRequestBody(s, prompt, maxOutputTokens, null, false, "");
+    }
+
+    static JSONObject buildChatRequestBody(AppSettings s, PromptPair prompt,
+                                           int maxOutputTokens,
+                                           JSONObject responseFormat,
+                                           boolean requireProviderParameters,
+                                           String reasoningEffort) throws Exception {
+        JSONObject providerPreferences = null;
+        if (requireProviderParameters) {
+            providerPreferences = new JSONObject().put("require_parameters", true);
+        }
+        return buildChatRequestBody(s, prompt, maxOutputTokens, responseFormat,
+                providerPreferences, reasoningEffort);
+    }
+
+    static JSONObject buildChatRequestBody(AppSettings s, PromptPair prompt,
+                                           int maxOutputTokens,
+                                           JSONObject responseFormat,
+                                           JSONObject providerPreferences,
+                                           String reasoningEffort) throws Exception {
+        if (prompt == null) throw new IllegalArgumentException("Prompt is required");
+        return buildChatRequestBody(s,
+                java.util.List.of(new ChatMessage("system", prompt.system), new ChatMessage("user", prompt.user)),
+                maxOutputTokens, responseFormat, providerPreferences, reasoningEffort);
+    }
+
+    static JSONObject buildChatRequestBody(AppSettings s, java.util.List<ChatMessage> chatMessages,
+                                           int maxOutputTokens,
+                                           JSONObject responseFormat,
+                                           JSONObject providerPreferences,
+                                           String reasoningEffort) throws Exception {
+        if (s == null) throw new IllegalArgumentException("Settings are required");
+        if (chatMessages == null || chatMessages.isEmpty()) throw new IllegalArgumentException("Messages are required");
+        if (maxOutputTokens <= 0) {
+            throw new IllegalArgumentException("Output token cap is invalid");
+        }
+        JSONObject body = new JSONObject();
+        body.put("model", s.model);
+        // With provider.require_parameters the provider keeps only endpoints that support every
+        // request parameter. The P5E RAW route (reasoning model, reasoning_effort set) has no
+        // endpoint that lists temperature, so sending it there yields HTTP 404 "no endpoints"
+        // before any completion. Requests without that combination keep sending temperature.
+        boolean requireParameters = providerPreferences != null
+                && providerPreferences.optBoolean("require_parameters", false);
+        boolean reasoningRequest = reasoningEffort != null && !reasoningEffort.isBlank();
+        if (!(requireParameters && reasoningRequest)) body.put("temperature", s.temperature);
+        body.put("max_tokens", maxOutputTokens);
+        body.put("stream", false);
+        if (responseFormat != null) body.put("response_format", responseFormat);
+        if (providerPreferences != null) {
+            // Copy through JSON text so callers cannot mutate the request
+            // route after this boundary has constructed its body.
+            body.put("provider", new JSONObject(providerPreferences.toString()));
+        }
+        if (reasoningEffort != null && !reasoningEffort.isBlank()) {
+            body.put("reasoning_effort", reasoningEffort);
+        }
+        JSONArray messages = new JSONArray();
+        for (ChatMessage message : chatMessages) {
+            messages.put(new JSONObject().put("role", message.role()).put("content", message.content()));
+        }
+        body.put("messages", messages);
+        return body;
     }
 
     static ChatResult parseChatResponse(String responseText) throws Exception {
@@ -136,6 +501,8 @@ public class OpenAICompatibleClient {
         String content = message != null ? message.optString("content", "") : first.optString("text", "");
         ChatResult result = new ChatResult();
         result.providerResponseId=json.optString("id","");
+        result.responseModel=json.optString("model","");
+        result.responseProvider=json.optString("provider","");
         result.content = content == null ? "" : content;
         result.finishReason = first.optString("finish_reason", "");
         JSONObject usage = json.optJSONObject("usage");
@@ -147,8 +514,23 @@ public class OpenAICompatibleClient {
             result.promptTokens = nonNegativeInt(firstValue(usage, "prompt_tokens", "input_tokens"));
             result.completionTokens = nonNegativeInt(firstValue(usage, "completion_tokens", "output_tokens"));
             result.totalTokens = nonNegativeInt(firstValue(usage, "total_tokens"));
-            if (result.totalTokens <= 0 && promptPresent && completionPresent) {
-                result.totalTokens = result.promptTokens + result.completionTokens;
+            Object reasoning = firstValue(usage, "reasoning_tokens");
+            JSONObject completionDetails = usage.optJSONObject("completion_tokens_details");
+            if (reasoning == null && completionDetails != null) {
+                reasoning = firstValue(completionDetails, "reasoning_tokens");
+            }
+            JSONObject outputDetails = usage.optJSONObject("output_tokens_details");
+            if (reasoning == null && outputDetails != null) {
+                reasoning = firstValue(outputDetails, "reasoning_tokens");
+            }
+            result.reasoningTokens = nonNegativeInt(reasoning);
+            // OpenRouter documents completion_tokens as the aggregate output
+            // count, with completion_tokens_details.reasoning_tokens as a
+            // subset. Do not double-count the subset here.
+            long normalizedTotal = (long) result.promptTokens + result.completionTokens;
+            if (result.totalTokens < normalizedTotal) {
+                result.totalTokens = normalizedTotal > Integer.MAX_VALUE
+                        ? Integer.MAX_VALUE : (int) normalizedTotal;
             }
             JSONObject details = usage.optJSONObject("prompt_tokens_details");
             if (details == null) details = usage.optJSONObject("input_tokens_details");
@@ -203,5 +585,39 @@ public class OpenAICompatibleClient {
     private static long parseRetryAfterMs(String raw) {
         if (raw == null || raw.trim().isEmpty()) return 0;
         try { return Math.max(0, Long.parseLong(raw.trim()) * 1000L); } catch (Exception ignored) { return 0; }
+    }
+
+    private static String safeHeader(String value) {
+        if (value == null || value.isBlank() || value.indexOf('\n') >= 0 || value.indexOf('\r') >= 0) return "";
+        return value.length() > 256 ? value.substring(0, 256) : value;
+    }
+
+    private static String safeContentType(String value) {
+        if (value == null || value.isBlank() || value.indexOf('\n') >= 0 || value.indexOf('\r') >= 0) {
+            return "";
+        }
+        String normalized = value.split(";", 2)[0].trim().toLowerCase(java.util.Locale.ROOT);
+        return switch (normalized) {
+            case "application/json", "application/problem+json", "text/event-stream" -> normalized;
+            default -> "";
+        };
+    }
+
+    private static String safeExceptionClass(Throwable error) {
+        if (error == null) return "RuntimeException";
+        if (error instanceof ResponseBodyTooLargeException) return "ResponseBodyTooLargeException";
+        if (error instanceof UnknownHostException) return "UnknownHostException";
+        if (error instanceof ConnectException) return "ConnectException";
+        if (error instanceof java.io.IOException && error instanceof javax.net.ssl.SSLException) {
+            return error instanceof javax.net.ssl.SSLHandshakeException
+                    ? "SSLHandshakeException" : "SSLException";
+        }
+        if (error instanceof SocketTimeoutException) return "SocketTimeoutException";
+        if (error instanceof InterruptedIOException) return "InterruptedIOException";
+        if (error instanceof ApiHttpException) return "ApiHttpException";
+        if (error instanceof org.json.JSONException) return "JSONException";
+        if (error instanceof java.io.IOException) return "IOException";
+        if (error instanceof CancellationException) return "CancellationException";
+        return "RuntimeException";
     }
 }

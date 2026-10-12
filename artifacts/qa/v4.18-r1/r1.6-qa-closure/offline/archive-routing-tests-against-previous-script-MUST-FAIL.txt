@@ -1,0 +1,142 @@
+﻿powershell.exe : D:\App Translate Books\scripts\test-archive-release.ps1 : tag event for another version : expected a 
+refusal, the 
+At line:10 char:7
++ $o = (& powershell -NoProfile -File .\scripts\test-archive-release.ps ...
++       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (D:\App Translat...a refusal, the :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+archive succeeded
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'qa-20261012-153252' : expected a refusal, the archive 
+succeeded
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'qa-20261012-153252' left a payload
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'dev-1' : expected a refusal, the archive succeeded
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'dev-1' left a payload
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'build-20261012' : expected a refusal, the archive 
+succeeded
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'build-20261012' left a payload
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'build-20261012-15325' : expected a refusal, the 
+archive succeeded
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'build-20261012-15325' left a payload
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'build-20261012-153252-extra' : expected a refusal, 
+the archive succeeded
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'build-20261012-153252-extra' left a payload
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'Build-20261012-153252' : refused for another reason: 
+Release workflow gate passed: PreTag for v9.9.9
+powershell.exe : Artifact archive already exists; refusing to overwrite: 
+C:\Users\ADMIN\AppData\Local\Temp\archive-release-test-b017e159
+At D:\App Translate Books\scripts\test-archive-release.ps1:46 char:19
++         $output = & powershell.exe @args 2>&1 | Out-String
++                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Artifact archiv...e-test-b017e159:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+35e34f20b1b5fc58db7e07cd\artifacts\releases\v9.9.9\Build-20261012-153252
+At C:\Users\ADMIN\AppData\Local\Temp\archive-release-test-b017e15935e34f20b1b5fc58db7e07cd\scripts\archive-release.ps1:
+112 char:5
++     throw "Artifact archive already exists; refusing to overwrite: $a ...
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : OperationStopped: (Artifact archiv...20261012-153252:String) [], RuntimeException
+    + FullyQualifiedErrorId : Artifact archive already exists; refusing to overwrite: C:\Users\ADMIN\AppData\Local\Tem 
+   p\archive-release-test-b017e15935e34f20b1b5fc58db7e07cd\artifacts\releases\v9.9.9\Build-20261012-153252
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'build-20261301-153252' : expected a refusal, the 
+archive succeeded
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'build-20261301-153252' left a payload
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'build-20261012-256161' : expected a refusal, the 
+archive succeeded
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'build-20261012-256161' left a payload
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'tag-9.9.9' : expected a refusal, the archive succeeded
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'tag-9.9.9' left a payload
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'tag-v9.9.9-rc1' : expected a refusal, the archive 
+succeeded
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'tag-v9.9.9-rc1' left a payload
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'TAG-v9.9.9' : refused for another reason: Release 
+workflow gate passed: PreBackup for v9.9.9
+powershell.exe : Artifact archive already exists; refusing to overwrite: 
+C:\Users\ADMIN\AppData\Local\Temp\archive-release-test-b017e159
+At D:\App Translate Books\scripts\test-archive-release.ps1:46 char:19
++         $output = & powershell.exe @args 2>&1 | Out-String
++                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Artifact archiv...e-test-b017e159:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+35e34f20b1b5fc58db7e07cd\artifacts\releases\v9.9.9\TAG-v9.9.9
+At C:\Users\ADMIN\AppData\Local\Temp\archive-release-test-b017e15935e34f20b1b5fc58db7e07cd\scripts\archive-release.ps1:
+112 char:5
++     throw "Artifact archive already exists; refusing to overwrite: $a ...
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : OperationStopped: (Artifact archiv....9.9\TAG-v9.9.9:String) [], RuntimeException
+    + FullyQualifiedErrorId : Artifact archive already exists; refusing to overwrite: C:\Users\ADMIN\AppData\Local\Tem 
+   p\archive-release-test-b017e15935e34f20b1b5fc58db7e07cd\artifacts\releases\v9.9.9\TAG-v9.9.9
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'release' : expected a refusal, the archive succeeded
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+D:\App Translate Books\scripts\test-archive-release.ps1 : event 'release' left a payload
+    + CategoryInfo          : NotSpecified: (:) [Write-Error], WriteErrorException
+    + FullyQualifiedErrorId : Microsoft.PowerShell.Commands.WriteErrorException,test-archive-release.ps1
+ 
+

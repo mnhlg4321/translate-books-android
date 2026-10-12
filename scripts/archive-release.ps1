@@ -38,7 +38,15 @@ param(
     [Parameter(Mandatory = $true)]
     [string[]]$VideoPaths,
 
-    [string]$ChecklistPath
+    [string]$ChecklistPath,
+
+    # Optional: the commit the APK was really built from, when GitRef is a later QA-only source. The helper then proves that
+    # commit is an ancestor of GitRef and that the production inputs are identical, and stores its own exact source ZIP
+    # under supplemental/ beside the ZIP of GitRef.
+    [string]$ProductionGitRef,
+
+    # Optional extra evidence (QA test APK identity, review patches, ...), stored flat under supplemental/.
+    [string[]]$SupplementalPaths = @()
 )
 
 $ErrorActionPreference = 'Stop'
@@ -80,12 +88,49 @@ if ([version]$Version -ge [version]'4.8') {
     }
 
     $workflowVerifier = Join-Path $repositoryRoot 'scripts\verify-release-workflow.ps1'
-    & $workflowVerifier -ChecklistPath $ChecklistPath -Gate PreBackup -ExpectedVersion $Version
+    # Exactly two event forms exist for v4.8 and later; anything else is refused before any gate or copy:
+    #   tag-v<Version>         archived after the tag, so steps 01-10 must be complete (PreBackup)
+    #   build-YYYYMMDD-HHMMSS  a release candidate archived before the tag, so steps 01-09 are enough (PreTag); it can never be
+    #                          satisfied by ticking the Tag step early
+    $buildEventTime = [datetime]::MinValue
+    $workflowGate = if ($EventId -ceq "tag-v$Version") {
+        'PreBackup'
+    }
+    elseif ($EventId -cmatch '^build-\d{8}-\d{6}$' -and
+        [datetime]::TryParseExact($EventId.Substring(6), 'yyyyMMdd-HHmmss', [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None, [ref]$buildEventTime)) {
+        'PreTag'
+    }
+    else {
+        throw "EventId '$EventId' is not allowed for v$Version. Use 'build-YYYYMMDD-HHMMSS' (release candidate) or 'tag-v$Version' (after the tag)."
+    }
+    & $workflowVerifier -ChecklistPath $ChecklistPath -Gate $workflowGate -ExpectedVersion $Version
 }
 
 $resolvedCommit = (& git rev-parse "$GitRef^{}").Trim()
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($resolvedCommit)) {
     throw "Git ref does not resolve: $GitRef"
+}
+
+# Everything that decides the production APK. If any of it differs between the two commits the APK cannot be reused.
+$productionInputPaths = @('app/src/main', 'editorial-engine/src/main', 'app/build.gradle', 'build.gradle', 'settings.gradle', 'gradle', 'macrobenchmark')
+$productionCommit = $null
+if (-not [string]::IsNullOrWhiteSpace($ProductionGitRef)) {
+    $productionResolved = & git rev-parse --verify "$ProductionGitRef^{commit}"
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace([string]$productionResolved)) {
+        throw "Production git ref does not resolve: $ProductionGitRef"
+    }
+    $productionCommit = ([string]$productionResolved).Trim()
+    & git merge-base --is-ancestor $productionCommit $resolvedCommit
+    if ($LASTEXITCODE -ne 0) {
+        throw "Production commit $productionCommit is not an ancestor of $resolvedCommit"
+    }
+    & git diff --quiet $productionCommit $resolvedCommit -- @productionInputPaths
+    if ($LASTEXITCODE -eq 1) {
+        throw "Production inputs differ between $productionCommit and $resolvedCommit; the APK cannot be reused, build it from the new source"
+    }
+    if ($LASTEXITCODE -ne 0) {
+        throw "Could not compare production inputs between $productionCommit and $resolvedCommit"
+    }
 }
 
 $apk = Resolve-RequiredFile $ApkPath 'APK'
@@ -97,6 +142,7 @@ $perfetto = @($PerfettoPaths | ForEach-Object { Resolve-RequiredFile $_ 'Perfett
 $macrobenchmark = @($MacrobenchmarkPaths | ForEach-Object { Resolve-RequiredFile $_ 'Macrobenchmark' })
 $screenshots = @($ScreenshotPaths | ForEach-Object { Resolve-RequiredFile $_ 'screenshot' })
 $videos = @($VideoPaths | ForEach-Object { Resolve-RequiredFile $_ 'video' })
+$supplemental = @($SupplementalPaths | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | ForEach-Object { Resolve-RequiredFile $_ 'supplemental' })
 
 if ($perfetto.Count -eq 0 -or $macrobenchmark.Count -eq 0 -or $screenshots.Count -eq 0 -or $videos.Count -eq 0) {
     throw 'Perfetto, Macrobenchmark, screenshots, and video must each contain at least one file.'
@@ -138,11 +184,32 @@ try {
         Copy-RequiredFile $path (Join-Path $artifactStaging 'video')
     }
 
+    foreach ($path in $supplemental) {
+        Copy-RequiredFile $path (Join-Path $artifactStaging 'supplemental')
+    }
+
     $sourceZipName = "project_source_v$Version.zip"
     $sourceZip = Join-Path $artifactStaging $sourceZipName
     & git archive --format=zip "--output=$sourceZip" $GitRef
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $sourceZip -PathType Leaf)) {
         throw "Failed to create source snapshot from $GitRef"
+    }
+
+    $productionZipName = $null
+    if ($productionCommit) {
+        $productionZipName = "production_apk_source_$($productionCommit.Substring(0, 12)).zip"
+        $productionZipDirectory = Join-Path $artifactStaging 'supplemental'
+        if (-not (Test-Path -LiteralPath $productionZipDirectory -PathType Container)) {
+            New-Item -ItemType Directory -Path $productionZipDirectory | Out-Null
+        }
+        $productionZip = Join-Path $productionZipDirectory $productionZipName
+        if (Test-Path -LiteralPath $productionZip) {
+            throw "Duplicate archive filename: $productionZip"
+        }
+        & git archive --format=zip "--output=$productionZip" $productionCommit
+        if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $productionZip -PathType Leaf)) {
+            throw "Failed to create production source snapshot from $productionCommit"
+        }
     }
 
     $manifest = @(
@@ -155,6 +222,15 @@ try {
         "- Created: ``$([DateTimeOffset]::Now.ToString('yyyy-MM-dd HH:mm:ss zzz'))``",
         '- Overwrite policy: `FORBIDDEN`'
     )
+    if ($productionCommit) {
+        $manifest += @(
+            '',
+            "- Source snapshot of this event (``$sourceZipName``): final QA source ``$resolvedCommit``; it is NOT the commit the APK was built from.",
+            "- Production APK source commit: ``$productionCommit`` (``supplemental/$productionZipName``, generated by this script).",
+            "- Production inputs identical between the two commits: ``$($productionInputPaths -join ' ')``.",
+            '- The APK was reused, not rebuilt.'
+        )
+    }
     [IO.File]::WriteAllLines((Join-Path $artifactStaging 'ARCHIVE_MANIFEST.md'), $manifest, [Text.UTF8Encoding]::new($false))
 
     $checksumLines = Get-ChildItem -LiteralPath $artifactStaging -Recurse -File |

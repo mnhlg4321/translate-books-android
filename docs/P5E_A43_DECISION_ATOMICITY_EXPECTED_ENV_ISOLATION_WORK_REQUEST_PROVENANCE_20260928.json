@@ -1,0 +1,199 @@
+{
+  "schemaVersion": "p5e.a43.decision-atomicity-expected-env-isolation-work-request-provenance.v1",
+  "generatedDate": "2026-09-28",
+  "artifactType": "OFFLINE_WORK_REQUEST_PROVENANCE",
+  "status": "DRAFT_REVIEWED_SCOPE / IMPLEMENTATION_NOT_STARTED / QA_NOT_RUN / NOT_AUTHORIZED / NOT_DISPATCHED / P6_NOT_READY",
+  "workPackage": {
+    "identifier": "P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_REPAIR_20260928",
+    "requestPath": "docs/P5E_A43_DECISION_ATOMICITY_EXPECTED_ENV_ISOLATION_NEXT_WORK_REQUEST_20260928.md",
+    "objective": "Atomically enforce one decision ID to one immutable receipt binding and one event regardless of receipt hash or crash, and expose the expected account digest only to Dispatch/account phase.",
+    "singleNextAction": "Execute the bounded offline RED-to-GREEN repair and archive-clean independent review; do not request owner authorization or open a live event."
+  },
+  "workspaceAtDraft": {
+    "branch": "feature/v4.18-p5e-runner-repair-20260917",
+    "head": "0730110a261edbab8f07f7db9e5831f567976fd3",
+    "dependencyArchiveCommit": "6faebf0ad82ec6f0efba3ef42f50fec9e7bf3a74",
+    "worktreePolicy": "PRESERVE_OWNER_CHANGES_NO_RESET_NO_CLEAN_NO_UNRELATED_STAGE",
+    "canonicalStateFilesModifiedByThisDraft": false
+  },
+  "findingSource": {
+    "path": "docs/P5E_A43_FINAL_EXECUTABLE_INDEPENDENT_LUNA_REVIEW_20260928.md",
+    "length": 6094,
+    "sha256": "FACBDF6B54216C5D389804636DC177C66ACD01E2103453B5F57636DF045198F1",
+    "verdict": "STOP_NOT_READY_FOR_OWNER_AUTHORIZATION",
+    "severity": {
+      "BLOCKER": 0,
+      "HIGH": 1,
+      "MEDIUM": 1,
+      "LOW": 0
+    },
+    "high": "Same decisionId with a different receipt hash can obtain a second reservation before EVENT_PLAN exists.",
+    "medium": "Expected account digest is inherited by PrepareEvent, Before, After and Verify helper processes although only Dispatch/account needs it."
+  },
+  "supersededLiveEligibilityInputs": [
+    {
+      "role": "manifest",
+      "path": "docs/P5E_A43_PREAUTH_RUNTIME_GUARD_CLOSURE_MANIFEST_20260928.md",
+      "length": 8302,
+      "sha256": "B093AB871072D78A9A935914AEC9FF56835606BB344F034AA5EE2F38EA83FF4F"
+    },
+    {
+      "role": "command",
+      "path": "docs/P5E_A43_PREAUTH_RUNTIME_GUARD_CLOSURE_COMMAND_20260928.txt",
+      "length": 22236,
+      "sha256": "FA63C5D2498AA345C6AC426AD253B466D6BD3206D525BAE4E0E8E6158BA78F80"
+    },
+    {
+      "role": "runtimeGuard",
+      "path": "scripts/p5e-a43-runtime-guards.ps1",
+      "length": 13940,
+      "sha256": "F332954FB8AA2048EDF18630C5D1EF7B2039D57458C85CD6BB5CB07F59D96DBA"
+    },
+    {
+      "role": "mainQaScript",
+      "path": "scripts/test-p5e-a43-preauth-runtime-guard-closure.ps1",
+      "length": 35665,
+      "sha256": "393196B7DC9C7BBA98A319DE1828E3CD6641A091946232C420B63556CF48B9EB"
+    },
+    {
+      "role": "qaReport",
+      "path": "docs/P5E_A43_PREAUTH_RUNTIME_GUARD_CLOSURE_QA_20260928.json",
+      "length": 10621,
+      "sha256": "9E461ADF9471B9B836B506079BCD34F9D01805E66FD07E29DD37E776F929F393"
+    },
+    {
+      "role": "packetProvenance",
+      "path": "docs/P5E_A43_PREAUTH_RUNTIME_GUARD_CLOSURE_PROVENANCE_20260928.json",
+      "length": 5971,
+      "sha256": "4F607DFC3180E697AAE889C3A44B7ADCACD41396C203E4939F0E7D9ACC96FA8A"
+    }
+  ],
+  "untrackedQaDependenciesAtDraft": [
+    {
+      "path": "scripts/test-p5e-binding-tuple-host-contract-repair.ps1",
+      "length": 34183,
+      "sha256": "118DCA80D318EA71C07A171EEA0D5994EE59AFD306F5E79748F80969CB4A8697",
+      "gitTracked": false,
+      "requiredResolution": "TRACK_AND_PIN_IN_FINAL_ARCHIVE_OR_ELIMINATE_RUNTIME_DEPENDENCY"
+    },
+    {
+      "path": "scripts/test-p5e-db-host-readback-repair.ps1",
+      "length": 36733,
+      "sha256": "12B27AE04AA230F065BFE4CC20C1AB0560991494EDBC4B241C2233CF6B3B8FFC",
+      "gitTracked": false,
+      "requiredResolution": "TRACK_AND_PIN_IN_FINAL_ARCHIVE_OR_ELIMINATE_RUNTIME_DEPENDENCY"
+    }
+  ],
+  "requiredAtomicContract": {
+    "decisionUniquenessKey": "FULL_SHA256_OF_CANONICAL_DECISION_ID_INDEPENDENT_OF_RECEIPT_HASH",
+    "decisionMarkerCreate": "ATOMIC_CREATE_NEW",
+    "receiptBinding": "FULL_RECEIPT_SHA256_IMMUTABLY_BOUND_TO_WINNING_DECISION_KEY",
+    "preReservationLedgerScan": "BOUNDED_ALL_MARKERS_SCAN_REJECTS_RECEIPT_HASH_ALREADY_PRESENT_IN_ANY_DECISION_MARKER",
+    "receiptReuseAcrossDecisionIds": "REJECT_AND_KEEP_NEW_DECISION_CONSUMED",
+    "partialOrMalformedMarker": "GLOBAL_RESERVATION_LEDGER_UNKNOWN_STOP_NO_NEW_RESERVATION",
+    "eventPlanMissingAfterReservation": "DECISION_AND_RECEIPT_REMAIN_CONSUMED",
+    "rollbackOrMarkerDeletion": "FORBIDDEN",
+    "eventDirectoryIdentity": "DETERMINISTIC_FROM_DECISION_KEY_NOT_RECEIPT_HASH_PREFIX"
+  },
+  "requiredExpectedEnvironmentContract": {
+    "gateBeforeReservationEventHelperAdb": true,
+    "PrepareEvent": "ABSENT",
+    "Before": "ABSENT",
+    "DispatchAccount": "PRESENT_PROCESS_ONLY",
+    "After": "ABSENT",
+    "Verify": "ABSENT",
+    "argvDisclosure": false,
+    "consoleOrArtifactDisclosure": false,
+    "testObservation": "BOOLEAN_PRESENCE_AND_VALIDATION_CLASS_ONLY"
+  },
+  "mandatoryTestMatrix": {
+    "red": [
+      "sequential_same_decision_different_receipt_hash",
+      "concurrent_same_decision_different_receipt_hash",
+      "same_decision_same_receipt_control",
+      "crash_after_decision_marker_before_receipt_marker",
+      "crash_after_receipt_marker_before_event_or_plan",
+      "expected_environment_inherited_by_non_dispatch_phases_in_old_packet"
+    ],
+    "green": [
+      "sequential_same_decision_same_hash_exactly_one_winner",
+      "sequential_same_decision_cross_hash_exactly_one_winner",
+      "concurrent_same_decision_same_hash_exactly_one_winner",
+      "concurrent_same_decision_cross_hash_exactly_one_winner",
+      "sequential_different_decision_same_hash_one_receipt_binding",
+      "concurrent_different_decision_same_hash_one_event_maximum",
+      "crash_before_marker_leaves_unused",
+      "crash_after_decision_marker_consumes_decision",
+      "crash_after_receipt_marker_consumes_decision_and_receipt",
+      "crash_after_event_create_consumes_without_plan",
+      "partial_marker_consumed_fail_closed",
+      "PrepareEvent_expected_absent",
+      "Before_expected_absent",
+      "DispatchAccount_expected_present",
+      "After_expected_absent",
+      "Verify_expected_absent",
+      "phase_environment_no_cross_contamination"
+    ]
+  },
+  "requiredQa": {
+    "legacyPacketAssertions": "21/21_PASS",
+    "newAtomicityCrashAndEnvironmentAssertions": "ALL_PASS_AND_INDIVIDUALLY_REPORTED",
+    "binding": "262/262_PASS",
+    "regression": "175/175_PASS",
+    "dbHostReadback": "56/56_PASS",
+    "windowsPowerShell51Parse": "PASS",
+    "jobObjectAndCaptureRegressionIfSharedPathTouched": "PASS",
+    "jsonAndSchema": "PASS",
+    "pathAndReparse": "PASS",
+    "secretAndForbiddenPatternScan": "PASS",
+    "gitDiffCheck": "PASS",
+    "archiveCleanReconstruction": "PASS_FROM_EXACT_COMMIT_WITH_NO_UNTRACKED_OR_WORKSPACE_FALLBACK",
+    "independentReviewMaximumSeverity": "0_BLOCKER_0_HIGH_AND_0_MEDIUM_FOR_SCOPED_CONTROLS"
+  },
+  "prohibitedActions": [
+    "ADB",
+    "DEVICE_READ_OR_WRITE",
+    "PROVIDER_CALL",
+    "CREDENTIAL_READ",
+    "DATABASE_WRITE",
+    "BUILD",
+    "INSTALL",
+    "RAW_OR_GLOSSARY_DISPATCH",
+    "RETRY_OR_REDISPATCH",
+    "LIVE_EVENT_CREATION",
+    "OWNER_AUTHORIZATION_REQUEST",
+    "P6_ACTION",
+    "CLOSED_EVENT_OR_DECISION_REUSE",
+    "OWNER_WORKTREE_RESET_CLEAN_OR_UNRELATED_STAGE"
+  ],
+  "countersAtDraft": {
+    "adbLaunches": 0,
+    "deviceReads": 0,
+    "deviceWrites": 0,
+    "providerCalls": 0,
+    "credentialReads": 0,
+    "databaseWrites": 0,
+    "builds": 0,
+    "installs": 0,
+    "rawDispatches": 0,
+    "redispatches": 0,
+    "liveEventsOpened": 0
+  },
+  "qaExecution": {
+    "implementationStarted": false,
+    "testsRunForThisWorkRequest": false,
+    "result": "NOT_RUN_WORK_REQUEST_ONLY",
+    "claimOfReadiness": false
+  },
+  "planSelfReview": {
+    "verdict": "PASS_AS_BOUNDED_OFFLINE_WORK_REQUEST",
+    "blocker": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 1,
+    "lowFinding": "A fail-closed two-index transaction may consume a decision without producing an event when the receipt index or later step fails; this is intentional and must be documented, tested and never repaired by rollback.",
+    "scopeDriftCheck": "PASS",
+    "liveBoundaryCheck": "PASS",
+    "falseProgressRisk": "Mitigated by requiring new tests to be reported individually and all legacy 21/262/175/56 suites to execute from a clean archive rather than reusing old output."
+  }
+}

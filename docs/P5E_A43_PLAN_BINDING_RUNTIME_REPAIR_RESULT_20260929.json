@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "p5e.a43.plan-binding-runtime-repair-result.v1",
+  "generatedDate": "2026-09-29",
+  "status": "OFFLINE_PLAN_BINDING_RUNTIME_REPAIR_PASS / LIVE_DECISION_CONSUMED / LIVE_EVENT_EMPTY_NO_PLAN / NOT_DISPATCHED / P6_NOT_READY",
+  "liveStop": {
+    "ownerRoot": "D:\\P5E-private\\p5e-a43-owner-live-20260929-010454009-c645b67bbe804f3f821b8fbb92613059",
+    "receiptSha256": "0BDAD3992453ADABCBA0EEF5EBA716F5206112F0911E0031F0AE4772956AB5CF",
+    "decisionKey": "45f2bd217f5e299173323958d0f44fc780faeff818e6f345a41ef8c20461b19e",
+    "eventDirectory": "D:\\P5E-private\\raw-live-a43-preauth-45f2bd217f5e299173323958d0f44fc780faeff818e6f345a41ef8c20461b19e",
+    "outerStop": "P5E_A43_PREPARE_STOP_NO_DISPATCH_WRAPPER_1_PROCESS_1_PROCESS_COMPLETED",
+    "helperLaunchCount": 1,
+    "helperExitCode": 1,
+    "eventItemCount": 0,
+    "eventPlanExists": false,
+    "decisionConsumed": true,
+    "receiptConsumed": true,
+    "reusable": false
+  },
+  "diagnosis": {
+    "typedStop": "P5E_OWNER_DECISION_PLAN_BINDING_MISSING_STOP",
+    "redProbeDirectory": "D:\\P5E-private\\offline-prepare-diagnosis-20260929-010759231",
+    "redProbeStderrSha256": "7818A8A084CE13F1ED134BD6C05ED3F749C6218617FAB09EA18AA7A4AE843664",
+    "rootCause": "New-P5EEventPlan returns an OrderedDictionary, while Assert-P5EA43OwnerPlanBinding used PSObject.Properties to test owner keys. Dictionary keys were therefore reported missing before EVENT_PLAN serialization.",
+    "qaGap": "The prior positive fixture wrote and reread EVENT_PLAN before validation, converting the plan to PSCustomObject and bypassing the in-memory OrderedDictionary path used by live PrepareEvent."
+  },
+  "repair": {
+    "dictionaryAndObjectAware": true,
+    "allElevenOwnerBindingFieldsRequired": true,
+    "inMemoryOrderedDictionaryRegressionAdded": true,
+    "postSerializationRegressionRetained": true
+  },
+  "redToGreen": {
+    "status": "PASS",
+    "greenProbeDirectory": "D:\\P5E-private\\offline-prepare-green-20260929-011129361",
+    "exitCode": 0,
+    "eventPlanExists": true,
+    "eventPlanSha256": "B4AAD6E4BF8BCFB6454B6DDDC207758E607C22637A9057840D413A6B306F20E0",
+    "stderrBytes": 0
+  },
+  "qa": {
+    "report": "docs/P5E_A43_PLAN_BINDING_RUNTIME_REPAIR_QA_20260929.json",
+    "reportSha256": "C365CB227A3D6A25D4B2EB4DCD805B128C824B2AC25AC6343F3CA92EB5F11091",
+    "main": "21/21 PASS",
+    "atomicityExpectedEnvironment": "28/28 PASS",
+    "binding": "262/262 PASS",
+    "regression": "175/175 PASS",
+    "databaseHostReadback": "56/56 PASS",
+    "powershell51Parse": "PASS",
+    "gitDiffCheck": "PASS"
+  },
+  "finalPins": {
+    "manifestSha256": "FCDC4747D54075B0518A92D837FC74C67D7F3804F9BAA4EFFC3CB34C7764A01D",
+    "commandSha256": "510F2A9A93CD9B566F9BC153B2745750840B0CEE78768788CB98EB7817E0D0D4",
+    "helperSha256": "998A5E45F13F61A5F2B53B46E1F6CF57D97EF1C3A6690FC0854530F57A53C7BF",
+    "runtimeGuardSha256": "5F78F59FCFE5FD7BB904C8D0B4815CA7C714E03999DB97CDCA2737E5F4C3DC3E",
+    "exporterSha256": "813F6ED0ABD110EBF32550990940E975971988FBCF806DC26464EE311021CF99",
+    "sqliteBridgeSha256": "4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111",
+    "toolchainSha256": "C0AE7D431474F37597228A7AFA6F9382C63E26EB5A54CFB72604620D9DD5C3C8",
+    "serial": "15e84958"
+  },
+  "counters": {
+    "ownerInteractiveKeyLoadsInClosedAttempt": 1,
+    "adbLaunches": 0,
+    "deviceReads": 0,
+    "deviceWrites": 0,
+    "providerCalls": 0,
+    "databaseWrites": 0,
+    "rawDispatches": 0,
+    "redispatches": 0,
+    "builds": 0,
+    "installs": 0
+  },
+  "nextAction": "Owner reviews the repaired exact hashes. The consumed decision, receipt, owner launcher and empty event directory remain closed and must not be reused. Any future live event requires one new exact-hash owner decision."
+}

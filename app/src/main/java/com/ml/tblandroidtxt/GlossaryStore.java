@@ -25,9 +25,16 @@ public class GlossaryStore {
         public String source = "";
         public String target = "";
         public String category = "term";
+        public String note = "";
 
         public Term() {}
-        public Term(String s, String t, String c) { source = safe(s); target = safe(t); category = safe(c).isEmpty() ? "term" : safe(c); }
+        public Term(String s, String t, String c) { this(s, t, c, ""); }
+        public Term(String s, String t, String c, String n) {
+            source = safe(s);
+            target = safe(t);
+            category = safe(c).isEmpty() ? "term" : safe(c);
+            note = safe(n);
+        }
     }
 
     public static class Glossary {
@@ -113,6 +120,8 @@ public class GlossaryStore {
             if (safe(t.source).isEmpty() || safe(t.target).isEmpty()) continue;
             sb.append(t.source.trim()).append(" => ").append(t.target.trim());
             if (!safe(t.category).isEmpty()) sb.append(" [").append(t.category.trim()).append("]");
+            String note = normalizePromptNote(t.note);
+            if (!note.isEmpty()) sb.append(" | ").append(note);
             sb.append('\n');
         }
         return sb.toString();
@@ -124,7 +133,7 @@ public class GlossaryStore {
         for (PromptContextBuilder.TermEntry e : report.glossaryTerms) {
             if (safe(e.source).isEmpty() || safe(e.target).isEmpty()) continue;
             String category = safe(e.category).isEmpty() ? guessCategory(fileName) : e.category;
-            terms.add(new Term(e.source, e.target, category));
+            terms.add(new Term(e.source, e.target, category, e.note));
         }
         return dedupe(terms);
     }
@@ -202,6 +211,7 @@ public class GlossaryStore {
         for (Term t : g.terms) {
             JSONObject x = new JSONObject();
             x.put("source", t.source); x.put("target", t.target); x.put("category", t.category);
+            x.put("note", t.note);
             arr.put(x);
         }
         o.put("terms", arr);
@@ -216,11 +226,13 @@ public class GlossaryStore {
         JSONArray arr = o.optJSONArray("terms");
         if (arr != null) for (int i = 0; i < arr.length(); i++) {
             JSONObject x = arr.getJSONObject(i);
-            g.terms.add(new Term(x.optString("source"), x.optString("target"), x.optString("category", "term")));
+            g.terms.add(new Term(x.optString("source"), x.optString("target"),
+                    x.optString("category", "term"), x.optString("note", "")));
         }
         return g;
     }
 
     private static String safe(String s) { return s == null ? "" : s; }
+    private static String normalizePromptNote(String s) { return safe(s).replace('\r', ' ').replace('\n', ' ').trim(); }
     private static String firstNonEmpty(String... vals) { for (String v : vals) if (!safe(v).trim().isEmpty()) return v.trim(); return ""; }
 }

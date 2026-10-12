@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "p5e.raw.a43-final-executable-packet-provenance.v1",
+  "generatedDate": "2026-09-26",
+  "workPackage": "P5E_A43_FINAL_EXECUTABLE_PACKET_REPIN",
+  "packetState": "FINAL_EXECUTABLE_PACKET_READY / OWNER_DECISION_PENDING / NOT_DISPATCHED / P6_NOT_READY",
+  "branch": "feature/v4.18-p5e-runner-repair-20260917",
+  "head": "2b34266eb60e3439864c80aae5d30ae141cfe8aa",
+  "worktree": "DIRTY_OWNER_CHANGES_PRESERVED",
+  "serial": "15e84958",
+  "liveEventOpened": false,
+  "ownerDecisionRequested": true,
+  "ownerDecisionReceived": false,
+  "p6Ready": false,
+  "oldEvents": "CLOSED_CONSUMED_NON_REUSABLE",
+  "oldManifestSha256": "669C54049920C49344D2FB55533EFA9FA9F87E933A6A18DE5FA7215F1146D147",
+  "oldCommandSha256": "A2EF2BA90F07D3F4D2517E7F1541EA752615F6BCF61E304E579E301A8D5D3D08",
+  "finalPins": {
+    "manifest": {
+      "path": "docs/P5E_A43_FINAL_EXECUTABLE_APPROVAL_MANIFEST_20260926.md",
+      "sha256": "23AF3DFAA81F50484187AFD183EA56454EBE38022C67DA2B963245A42D230053"
+    },
+    "command": {
+      "path": "docs/P5E_A43_FINAL_EXECUTABLE_COMMAND_20260926.txt",
+      "sha256": "C84355B912DCF3BB59D52004EC80E06CE8B37FC75B5ABE083ECCA95D64C89BA3"
+    },
+    "helper": {
+      "path": "scripts/p5e-raw-live-supervisor.ps1",
+      "sha256": "17CC1C19BF4F6B1B71A77100D710375BDBCFDA7AC82D4508634B68E857DEFD2E"
+    },
+    "exporter": {
+      "path": "scripts/p5e-db-binary-export.ps1",
+      "sha256": "D8783B31F9141458CA397915664CA79B07D3161A5E0F0D3B4365C5C65EA41D06"
+    },
+    "sqliteBridge": {
+      "path": "docs/P5E_SQLITE_BRIDGE.py",
+      "sha256": "4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111"
+    },
+    "toolchain": {
+      "path": "scripts/p5e-raw-toolchain.ps1",
+      "sha256": "C0AE7D431474F37597228A7AFA6F9382C63E26EB5A54CFB72604620D9DD5C3C8"
+    },
+    "localProperties": {
+      "path": "local.properties",
+      "sha256": "71EB9D8E8E0179D863D919E329B56A1F3251126C15C2295E1F8E132B745770C2"
+    },
+    "productionApk": "2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD",
+    "productionSourceZip": "B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348",
+    "productionBuildInfo": "DB20DA0CF708410AAAB65E5AF69ADF89A769ED62240B577A89CA4E2007FB7F06",
+    "testApk": "058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8",
+    "testSourceZip": "5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F",
+    "testBuildInfo": "772F32E23AEF3537FEF00DACE8E4B9B994448BFEE2071150CF0E0540DDCCC5A9",
+    "certificate": "47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155"
+  },
+  "qa": {
+    "script": {
+      "path": "scripts/test-p5e-a43-final-executable-packet-repin.ps1",
+      "sha256": "BACC1F7676DF394822BAAAD135826CA1B38CD55EC222368EE661D7E50AE46BDE"
+    },
+    "report": {
+      "path": "docs/P5E_A43_FINAL_EXECUTABLE_PACKET_QA_20260926.json",
+      "sha256": "F967E73CB8FC6939E6ED8C9D13584150A65AF013F8D1BF0B43EC21B0852A76BF"
+    },
+    "status": "PASS",
+    "tests": 14,
+    "failures": 0,
+    "bindingTuple": "262/262 PASS",
+    "bindingRegression": "175/175 PASS",
+    "dbHostReadback": "56/56 PASS",
+    "syntheticOnly": true,
+    "liveCounters": {
+      "adb": 0,
+      "device": 0,
+      "provider": 0,
+      "credential": 0,
+      "databaseWrites": 0,
+      "buildInstall": 0,
+      "rawDispatch": 0,
+      "redispatch": 0
+    }
+  },
+  "lunaReview": {
+    "path": "docs/P5E_A43_FINAL_EXECUTABLE_PACKET_LUNA_REVIEW_20260926.md",
+    "sha256": "05B11BB5C174D4DB24C9E5E7472396AFFCEC8AFB83A7D75B9F34E2E3601C24D7",
+    "verdict": "PASS",
+    "blocker": 0,
+    "high": 0,
+    "medium": 1,
+    "low": 2
+  },
+  "ownerAuthorizationRequest": {
+    "path": "docs/P5E_A43_FINAL_EXECUTABLE_OWNER_AUTHORIZATION_REQUEST_20260926.md",
+    "status": "SINGLE_CURRENT_REQUEST / PENDING"
+  },
+  "provenanceSelfHash": "NOT_EMBEDDED_TO_AVOID_CIRCULAR_HASH",
+  "nextAction": "OWNER_REVIEWS_AND_EXPLICITLY_APPROVES_THE_SINGLE_FINAL_REQUEST; DO_NOT_DISPATCH"
+}

@@ -25,6 +25,32 @@ The command:
 
 No existing event directory is overwritten or reused.
 
+## AndroidTest-only archive
+
+Host-only AndroidTest artifacts use the sibling archive path below. This path
+builds only `:app:assembleDebugAndroidTest`; it never builds or installs the
+production APK, never selects a device, and retains the same immutable payload
+contract (README, `BUILD_INFO.json`, SHA-256 manifests, and tracked-source ZIP)
+in both `artifacts/test-builds/` and `backup/test-builds/`.
+
+```powershell
+.\scripts\build-and-save-android-test.ps1 `
+  -TargetProductionVersion 'v4.17-p5e.11' `
+  -TargetProductionVersionCode 207 `
+  -TargetProductionApkSha256 '2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD' `
+  -TargetProductionSourceZipSha256 'B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348' `
+  -TargetProductionCertificateSha256 '47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155' `
+  -EventId 'a4-1-test-YYYYMMDD-HHMMSS' `
+  -ExpectedSourceCommit '<full-clean-HEAD>' `
+  -JavaHome 'C:\Program Files\Android\Android Studio\jbr' `
+  -AndroidSdkPath 'C:\Users\ADMIN\AppData\Local\Android\Sdk'
+```
+
+The event ID must be new and the worktree must be clean. The script performs
+JDK/SDK, package, target-package, runner, certificate, source-commit, and
+artifact/backup byte checks. It does not use ADB and does not provide an
+installation switch.
+
 ## Normal development build
 
 ```powershell
@@ -44,7 +70,11 @@ Each build also receives an increasing Android `versionCode`.
 ## Build and then install
 
 ```powershell
-.\scripts\build-and-save.ps1 -Install
+.\scripts\build-and-save.ps1 `
+  -Install `
+  -DeviceSerial '15e84958' `
+  -ExpectedDeviceSignatureToken 'abebea4b' `
+  -ExpectedApkCertificateSha256 '47f313893a5d68120b075c25825c1c66f1334ac47afb2ef3741084e22ef3c155'
 ```
 
 Archiving always finishes before installation begins. If installation fails, the APK and its records remain safely stored.
@@ -52,7 +82,7 @@ Archiving always finishes before installation begins. If installation fails, the
 ## Custom series and notes
 
 ```powershell
-.\scripts\build-and-save.ps1 -Series 4.15-dev -Notes "Output picker regression fix" -Install
+.\scripts\build-and-save.ps1 -Series 4.15-dev -Notes "Output picker regression fix"
 ```
 
 Use a new series when starting the next development line. Never rename or overwrite an existing build directory.
@@ -62,7 +92,7 @@ Use a new series when starting the next development line. Never rename or overwr
 After the release metadata is committed and the release checklist is ready for final regression, build the exact public version from its matching clean feature branch:
 
 ```powershell
-.\scripts\build-and-save.ps1 -ExactReleaseVersion 4.14 -Notes "Translate Books 4.14 release build." -Install
+.\scripts\build-and-save.ps1 -ExactReleaseVersion 4.14 -Notes "Translate Books 4.14 release build."
 ```
 
 Exact release mode:

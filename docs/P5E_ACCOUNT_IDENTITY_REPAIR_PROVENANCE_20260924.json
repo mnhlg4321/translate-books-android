@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "p5e.account.identity-repair.provenance.v1",
+  "date": "2026-09-24",
+  "baseline": "55061312f40f367b933d0c2db4866335cd36a8ed",
+  "status": "OFFLINE_REPAIRED_NOT_DEVICE_VERIFIED",
+  "pins": [
+    {
+      "path": "scripts/p5e-raw-live-supervisor.ps1",
+      "sha256": "B491DD4D26444ACA1234A1A03D8A932A2525FB7CD112F6B6F1520A735C631897"
+    },
+    {
+      "path": "scripts/p5e-account-check-device-command.ps1",
+      "sha256": "9B64078D5A2A6EA2C3A9618C4B1F8CDBB01D3CCF6C3120A2D7D4AFFF3F5E6331"
+    },
+    {
+      "path": "scripts/test-p5e-account-runner-repair.ps1",
+      "sha256": "1FD4DBBFB9ED88DF6E4A94AC2CC958A7200A1E8BCD49F8E90F57901B0379B0DE"
+    },
+    {
+      "path": "scripts/test-p5e-account-check-device-command.ps1",
+      "sha256": "F455DFBA7EE6D342B1DAFED5C0FA8BA03794E1BF5DB600E49A8FE715ADDE1D69"
+    },
+    {
+      "path": "scripts/test-p5e-account-identity-lifecycle.ps1",
+      "sha256": "097DC41801B2F432450A44BB2D592445A753561D63367BB82FC83E8A92E00DF5"
+    },
+    {
+      "path": "docs/P5E_ACCOUNT_RUNNER_LIFECYCLE_QA_20260924.json",
+      "sha256": "80F3A36756340C901C2B9A5F69B92C23AD5BF71C527514A8A4633755F528ABE1"
+    },
+    {
+      "path": "docs/P5E_ACCOUNT_COMMAND_LIFECYCLE_QA_20260924.json",
+      "sha256": "0257068F1F6B1489042DDA0073EF256BB49296F00A578CCFFBCDB325606D406E"
+    },
+    {
+      "path": "docs/P5E_ACCOUNT_IDENTITY_LIFECYCLE_QA_20260924.json",
+      "sha256": "DF811E03AB8C1B352743D5D57D15B56494272FD753D86778D8B7C55A0BAD6CDF"
+    },
+    {
+      "path": "docs/P5E_ACCOUNT_IDENTITY_REPAIR_20260924.md",
+      "sha256": "7B06BDC79ABF6EBC73CF77F7F8A32F056E666D345B6032116F925C05F7D604B9"
+    }
+  ],
+  "qa": {
+    "identityLifecycle": "25/25 PASS",
+    "commandChain": "38/38 PASS",
+    "runnerRegression": "37/37 PASS",
+    "helperSelfTest": "PASS",
+    "independentReviewer": "Luna",
+    "challengeFound": "nonblank data after terminal accepted",
+    "challengeResolution": "rejected and matrix rerun PASS"
+  },
+  "deviceActions": 0,
+  "providerCalls": 0,
+  "dbWrites": 0,
+  "rawDispatches": 0,
+  "builds": 0,
+  "installs": 0,
+  "androidSourceChanged": false,
+  "closedEventReinterpreted": false,
+  "closedEventStatus": "NOT_PROVEN",
+  "newEventAuthorized": false,
+  "p6Ready": false,
+  "nextAction": "Owner decision for a separate account-only event bound to these repaired pins; no repeat of closed event."
+}

@@ -1,0 +1,32 @@
+{
+    "schemaVersion":  "p5e.account-check.device-path-guard.qa.v1",
+    "status":  "PASS",
+    "totalAssertions":  12,
+    "passedAssertions":  12,
+    "failures":  [
+
+                 ],
+    "source":  {
+                   "preflightSha256":  "A82FAE2232C9F5C579CBC2D012B03EB55CCFEB567DAA399A89DEBC661BD235D5",
+                   "commandSha256":  "C09D66D8C576EF8EAD9C8EE86E87F7CB1A22B591A8BF01D207FCA8228190B4C0",
+                   "qaScriptSha256":  "A52886FE154ACC1D1905CE916A813B5F0F03F96ECB1F3D24AF475CEC83395772"
+               },
+    "host":  {
+                 "expectedHost":  "Windows PowerShell 5.1",
+                 "actualHost":  "5.1.26100.9168",
+                 "actualHostProcess":  "5.1.26100.9168"
+             },
+    "cases":  {
+                  "preflight_ancestor_walk":  "PASS",
+                  "command_ancestor_walk":  "PASS"
+              },
+    "syntheticOnly":  true,
+    "sourceFunctionExecuted":  true,
+    "projectFilesystemMutations":  0,
+    "sandboxFilesystemMutations":  true,
+    "adbInvocations":  0,
+    "expectedReads":  0,
+    "providerCalls":  0,
+    "dbWrites":  0,
+    "rawDispatches":  0
+}

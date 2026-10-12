@@ -1,0 +1,131 @@
+{
+  "schemaVersion": "p5e.a43.pm-path-capture-repair-provenance.v1",
+  "generatedDate": "2026-09-28",
+  "workPackage": "P5E_A43_PM_PATH_CAPTURE_AND_OUTER_CAPTURE_REPAIR",
+  "status": "OFFLINE_PM_PATH_CLASSIFICATION_AND_OUTER_CAPTURE_REPAIR_PASS",
+  "branch": "feature/v4.18-p5e-runner-repair-20260917",
+  "repairBaselineCommit": "b8326f5b8c9649c741e4c2124efb35a6a1045919",
+  "workingTreePolicy": "PRESERVE_EXISTING_DIRTY_TREE_NO_RESET_NO_CLEAN_NO_CHECKOUT_NO_UNRELATED_STAGE",
+  "executionPolicy": {
+    "syntheticOnly": true,
+    "adb": false,
+    "device": false,
+    "provider": false,
+    "credential": false,
+    "databaseWrite": false,
+    "build": false,
+    "install": false,
+    "raw": false,
+    "retry": false,
+    "fallback": false,
+    "reconcile": false,
+    "redispatch": false
+  },
+  "closedEvent": {
+    "eventId": "raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc",
+    "path": "D:\\P5E-private\\raw-live-a43-final-20260928-023533942-f78284fe37d44dfab09493458dc7f9cc",
+    "status": "CLOSED_CONSUMED_NOT_REUSABLE",
+    "reused": false,
+    "renamed": false,
+    "modified": false,
+    "allowedReadFiles": ["EVENT_PLAN.json", "COLLECTOR_OUTCOME.json", "COLLECTOR_COMMAND_LOG.jsonl"],
+    "eventPlanSha256": "1C163DC499D934F25B5E4C5EAB911543773D01D333CF7990D0D57DF4D4E9CBE4",
+    "collectorOutcomeSha256": "7674858E7D3164EED7873A492AB88742F2AB90A162E71E5210F60CCEAF84A5BC",
+    "collectorCommandLogSha256": "B90CEAB274D510B37D09910313E18E35F4F39AC6FE7F76B0019ABF1B8020826C",
+    "instrumentationStdoutStderrRead": false,
+    "providerPayloadRead": false,
+    "credentialRead": false,
+    "nativeAdbStderrRead": false
+  },
+  "pinOrder": ["exporter", "sqliteBridge", "manifest", "helper", "command", "artifactAndCertificate", "serial"],
+  "sourcePins": {
+    "exporter": {
+      "path": "scripts/p5e-db-binary-export.ps1",
+      "sha256": "D8783B31F9141458CA397915664CA79B07D3161A5E0F0D3B4365C5C65EA41D06"
+    },
+    "sqliteBridge": {
+      "path": "docs/P5E_SQLITE_BRIDGE.py",
+      "sha256": "4598BFDFCC4A9BE08DCED9F66A010A47A72CF2ED049C770404A924C44BEA2111"
+    },
+    "manifest": {
+      "path": "docs/P5E_A43_PM_PATH_CAPTURE_REPAIR_MANIFEST_20260928.md",
+      "sha256": "C08C3F6D8EE1B802B0D68AB1FF0302E82655D17C72B06619752B65396C11ADC3"
+    },
+    "helper": {
+      "path": "scripts/p5e-raw-live-supervisor.ps1",
+      "sha256": "959F2BBDC2EF163F00F3A56900B903DF529FDCDD9024AD6CEE906A01E080A8F0",
+      "byteLength": 405223
+    },
+    "command": {
+      "path": "docs/P5E_A43_PM_PATH_CAPTURE_REPAIR_COMMAND_20260928.txt",
+      "sha256": "C641F6A01C01209AD08FB820871E575895DC998A4CB6AD15769F1D2222BA4CD5",
+      "byteLength": 22127
+    },
+    "toolchain": {
+      "path": "scripts/p5e-raw-toolchain.ps1",
+      "sha256": "C0AE7D431474F37597228A7AFA6F9382C63E26EB5A54CFB72604620D9DD5C3C8"
+    },
+    "localPropertiesSha256": "71EB9D8E8E0179D863D919E329B56A1F3251126C15C2295E1F8E132B745770C2",
+    "certificateSha256": "47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155",
+    "serial": "15e84958"
+  },
+  "artifactPins": {
+    "productionApkSha256": "2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD",
+    "productionSourceSha256": "B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348",
+    "productionBuildInfoSha256": "DB20DA0CF708410AAAB65E5AF69ADF89A769ED62240B577A89CA4E2007FB7F06",
+    "testApkSha256": "058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8",
+    "testSourceSha256": "5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F",
+    "testBuildInfoSha256": "772F32E23AEF3537FEF00DACE8E4B9B994448BFEE2071150CF0E0540DDCCC5A9"
+  },
+  "offlineEvidence": {
+    "qaPath": "docs/P5E_A43_PM_PATH_CAPTURE_REPAIR_QA_20260928.json",
+    "qaSha256": "92C3539069A8F285250F7F18AC154C2E85643A229BA449813C1D830099D0CEE7",
+    "qaStatus": "PASS",
+    "qaTests": "36/36",
+    "bindingTuple": "262/262",
+    "regressionMatrix": "175/175",
+    "dbHostReadback": "56/56",
+    "helperSelfTest": "PASS",
+    "pmPathMutationMatrix": "PASS",
+    "outerCaptureRedGreen": "PASS",
+    "powershell51Parse": "PASS",
+    "secretScan": "PASS",
+    "gitDiffCheck": "PASS",
+    "blockerCount": 0,
+    "highCount": 0,
+    "mediumLowFindingsRecorded": true
+  },
+  "lunaReview": {
+    "path": "docs/P5E_A43_PM_PATH_CAPTURE_REPAIR_LUNA_REVIEW_20260928.md",
+    "sha256": "CD5447A8053EB96DB5EC38D3E0952795F61EE4B15E106757E72EA6413EBEF9EA",
+    "reviewer": "Luna",
+    "verdict": "CONDITIONAL_PASS_OFFLINE_ONLY",
+    "blockerCount": 0,
+    "highCount": 0,
+    "mediumCount": 2,
+    "lowCount": 2
+  },
+  "counters": {
+    "adbLaunches": 0,
+    "deviceReads": 0,
+    "deviceWrites": 0,
+    "providerCalls": 0,
+    "credentialReads": 0,
+    "databaseWrites": 0,
+    "buildActions": 0,
+    "installActions": 0,
+    "rawDispatches": 0,
+    "redispatchActions": 0
+  },
+  "phaseReadiness": {
+    "offlineRepair": true,
+    "packetReviewable": true,
+    "ownerDecisionRequested": false,
+    "futureLiveEventRequiresNewOwnerDecision": true,
+    "a43Live": false,
+    "rawAcceptance": false,
+    "p5Exit": false,
+    "p6": false
+  },
+  "nextAction": "Owner reviews the repaired offline packet; no command or live event execution."
+}

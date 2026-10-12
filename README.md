@@ -1,5 +1,8 @@
 # Translate Books
 
+> Current audit 2026-09-16, baseline `31a09d02`: `LOCAL_VALIDATION_FAILED_REPAIR_REQUIRED / OWNER_PACKET_NOT_READY / A4.3_NOT_ISSUED / RAW_NOT_RUN / P6_NOT_READY`. F2 and H1 improvements are retained; collector SQL has three reproduced defects (schema lookup, LINEAGE width, NULL recovery row). Golden JVM→host evidence remains missing. Current next action: bounded local repair/test in `docs/P5E_NEXT_WORK_REQUEST.md`. Earlier GREEN/owner-only conclusions below are historical and superseded. Evidence: `docs/P5E_READINESS_AUDIT_20260916.md`.
+
+
 Translate Books is an Android app for translating long TXT books with OpenAI-compatible language-model APIs. It is designed for resumable, glossary-aware translation rather than one-shot chat: the app prepares stable chunks, injects only relevant terminology and pronoun rules, validates responses, persists progress, and writes partial output safely.
 
 The project targets Android 8.0 and later (`minSdk 26`) and currently builds against Android SDK 35.
@@ -8,10 +11,13 @@ The project targets Android 8.0 and later (`minSdk 26`) and currently builds aga
 
 | Track | Version | Status |
 |---|---|---|
-| Released baseline | `v4.14` / code 57 | Tagged, regression-tested, and immutably archived |
-| Next development | `v4.15` | Not started |
+| Released baseline | `v4.15` / code 62 | Tagged, regression-tested, and immutably archived |
+| Frozen later development | `v4.16-dev.104` / code168 | RSC/Relation-Speaker and Editorial activation track preserved as historical; no longer the active next action |
+| Recovery source baseline | `v4.16-dev.51` / code113 | Verified chapter-translation baseline at commit `a9409ffa`; not reused as the next build number |
+| Verified development baseline | `v4.17-dev.1` / code169 | Glossary4/Pronoun7 recovery and device QA complete at `921af92`; public release gates remain separate |
+| Active development | `v4.18` | Integrate `V5-SAFE.4.1.3-FULL` through the existing data-only Editorial Pack v1 platform, with future compatible pack import and no automatic project rebind |
 
-See [BUILD_STATE.md](BUILD_STATE.md) for the exact current build, checksums, regression results and known limitations. See [WORKSPACE_SNAPSHOT.md](WORKSPACE_SNAPSHOT.md) for active work and the next development step.
+See [EDITORIAL_RECOVERY_V4_18.md](EDITORIAL_RECOVERY_V4_18.md) for the single active scope and fixed implementation order. The pack/runtime boundary is frozen in [docs/EDITORIAL_PACK_V1_4_1_3_INTEGRATION.md](docs/EDITORIAL_PACK_V1_4_1_3_INTEGRATION.md), and file/test ownership is mapped in [docs/EDITORIAL_V4_18_IMPLEMENTATION_MAP.md](docs/EDITORIAL_V4_18_IMPLEMENTATION_MAP.md). See [BUILD_STATE.md](BUILD_STATE.md) and [WORKSPACE_SNAPSHOT.md](WORKSPACE_SNAPSHOT.md) for current facts and the exact next action. V4.17 remains the verified product baseline; later v4.16 RSC/Editorial/IPC activation documents are historical reference only.
 
 ## Highlights
 
@@ -43,6 +49,29 @@ TXT source
 
 Each job keeps an immutable settings snapshot. Changes to the active glossary, pronoun profile, instruction file, model, or chunk settings apply to new jobs rather than silently changing a running job.
 
+The v4.17 recovery targets the existing chapter-by-chapter workflow: the user selects one RAW chapter and its matching chapter Glossary and Pronoun files. Automatic `CHxxx` checking and whole-volume profile dispatch are intentionally deferred.
+
+## Editorial v4.18 direction
+
+V4.18 is planned to add a separate three-pass Editorial workflow based on `V5-SAFE.4.1.3-FULL`. It will not replace or reinterpret the v4.17 Translation profile workflow.
+
+The Editorial platform remains data-driven:
+
+```text
+editorial-pack.json + Project + Prompt + Workflow
+  → byte/hash and compatibility validation
+  → immutable side-by-side storage
+  → explicit project/run binding
+  → deterministic source preflight
+  → L1 REPORT_L1
+  → L2 VI_L2 + CHANGE_MAP_L2
+  → L3 FINAL_QA + QA_RECEIPT
+```
+
+The current CODE169 app already contains the manifest parser, ZIP safety boundary, immutable pack storage and compatibility evaluator, but its trusted engine profile supports only pack integrity and Editorial execution remains disabled. V4.18 first characterizes and reuses that platform, then implements only the 4.1.3 behaviors that tests prove are missing.
+
+Future Editorial versions can be imported without rebuilding the APK when they stay within the installed manifest, three-pass contract, schemas and required capabilities. A pack that requires a new parser, phase, execution protocol or other unknown required capability is retained as incompatible and reports `ENGINE_UPGRADE_REQUIRED`; it is never silently downgraded, auto-activated or applied to an existing run.
+
 ## Configuration files
 
 ### Instruction YAML
@@ -58,28 +87,27 @@ An optional `refinement` block can be present when the additional refinement pas
 
 ### Glossary
 
-CSV and compatible text mappings can define names, terminology, aliases, categories and character notes:
+CSV and compatible text mappings define names, terminology, categories and optional matched-row notes:
 
 ```csv
-source,target,category
-フラム,Flum,character
-魂の茨,Gai Hồn,skill
-魔王,Ma Vương,title
+source,target,category,note,priority
+フラム,Flum,character,Tên nhân vật chính,high
+魂の茨,Gai Hồn,skill,,medium
+魔王,Ma Vương,title,Danh hiệu,high
 ```
 
-Only matching, global, or otherwise mandatory entries are injected into a chunk prompt, subject to the configured glossary limit.
+The runtime consumes only `source,target,category,note`. A fifth `priority` column is tolerated but remains user-review metadata: the app does not store, rank, filter or send it to the model. Only matched rows are injected; a non-empty note is included only with its matched row. Legacy three-column and four-column files remain supported.
 
 ### Pronoun profile
 
-Relationship rules can be imported separately:
+The v4.17 Pronoun format is:
 
 ```csv
-from,to,pronoun
-Flum,Milkit,chị/em
-Milkit,Flum,em/chị
+from,speaker,target,self,call,scope,note
+私,Mercedes,Basil,ta,ngươi,CH004:p052-p153,Quan hệ áp dụng trong phạm vi này
 ```
 
-Equivalent TXT rules such as `Flum → Milkit: chị/em` are also supported. An active pronoun profile takes priority over pronoun notes embedded in glossary rows.
+The app must preserve and use all seven fields, compile the actual `speaker → target` relation and Vietnamese `self/call`, and constrain rules by `scope` without semantic speaker discovery. The legacy `from,to,pronoun` CSV and equivalent TXT rules such as `Flum → Milkit: chị/em` remain supported through a separate mapping. An active Pronoun profile takes priority over Pronoun notes embedded in glossary rows.
 
 ### Environment settings
 
@@ -148,6 +176,7 @@ Release and development evidence is recorded in versioned QA reports, [BUILD_STA
 | `scripts/` | Build, workflow, archive and verification tools |
 | `sample_configs/` | Safe example configuration files |
 | `release_checklists/` | Evidence-backed release workflow checklists |
+| `TRANSLATION_PROFILE_RECOVERY_V4_17.md` | Single active product scope, phase order and acceptance contract |
 | `BUILD_STATE.md` | Current build and released baseline |
 | `WORKSPACE_SNAPSHOT.md` | Current branch handoff and next action |
 | `CHANGELOG.md` | Version history |
@@ -158,8 +187,8 @@ Release and development evidence is recorded in versioned QA reports, [BUILD_STA
 Development follows:
 
 ```text
-main
-  → feature/vX.Y
+approved baseline (`main` normally; exact historical commit only when the canonical plan authorizes recovery)
+  → one feature/vX.Y branch for the whole release
   → small focused commits
   → regression
   → numbered retained build
@@ -168,7 +197,7 @@ main
   → merge --no-ff to main
 ```
 
-Read [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md) and [GIT_WORKFLOW.md](GIT_WORKFLOW.md) before modifying the project. Do not commit directly to `main`, overwrite release tags, or treat `app/build/` as durable artifact storage.
+Read [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md) and [GIT_WORKFLOW.md](GIT_WORKFLOW.md) before modifying the project. A later work session resumes the same release branch/checklist instead of creating a new one. Do not commit directly to `main`, overwrite release tags, or treat `app/build/` as durable artifact storage.
 
 ## Version history
 

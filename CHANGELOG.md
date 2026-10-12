@@ -2,6 +2,59 @@
 
 All notable changes to Translate Books are recorded in this file. The repository was normalized to Git on 2026-07-17 without feature changes or rollback. The v4.7 source baseline is commit `da8c6d9a9001296c3f3c17817ea3d6372fd59ae3` on branch `main`.
 
+## [4.18.0] - 2026-10-12 (release candidate, not tagged)
+
+- Add the chunk-based Editorial (Bien tap) flow: a chapter's RAW and DRAFT are aligned
+  line by line, cut into chunks, and the plan is shown with an OK / WARN / BLOCK
+  verdict before anything is sent to a provider.
+- Review chunk by chunk and apply fixes only at the points the app flags
+  (address, glossary and kana points); each fix is checked by a deterministic guard
+  (`AddressEditGuard`, contract `CP-IMPL-15`) and a rejected fix keeps the DRAFT line.
+- Persist every run in SQLite (database version 29) so a run survives restart and
+  process death; export the result as TXT.
+- Control spend with a ledger and a per-run cap; nothing is sent without an explicit
+  confirmation of the plan.
+- Keep the V5 three-pass Editorial path (REPORT_L1, CHANGE_MAP, QA_RECEIPT) in the
+  code as a frozen path: not in the UI, not part of this release's scope.
+- Test-only change: the frozen tests compare the database version with
+  `TranslationRepository.VER` instead of the literal 27 (`TranslationRepository.VER`
+  became package-private, same value); the frozen allowlist passes 117/117 on the
+  emulator.
+- `scripts/archive-release.ps1` checks the PreTag gate for a `build-*` event (a
+  release candidate before the tag) and the PreBackup gate only for a `tag-*` event.
+- Measure real Macrobenchmark and Perfetto on `emulator-5554` (cold start median
+  727.6 ms; opening the Bien tap tab frame CPU P50 10.1 ms; a 1,222-line synthetic
+  chapter is planned into 53 chunks in 468 ms). These are emulator numbers, not
+  physical-device results.
+
+Known limits: the three owner-accepted chapters (006, 008, 011) keep the misses
+recorded in `docs/EDITORIAL_CHUNK_PLAN.md` section 6; the call-name prompt was
+measured on chapter 011 only. This entry records a release candidate. It does not
+claim a tag, a merge, a physical-device result or any provider/pilot run beyond the
+recorded measurements.
+
+## [4.17-dev.1] - 2026-08-29 (local development artifact)
+
+- Restore the code113 chapter-by-chapter translation workflow on the historical
+  recovery branch.
+- Support Glossary `source,target,category,note` at runtime and tolerate but ignore
+  `priority` in five-column files.
+- Support Pronoun `from,speaker,target,self,call,scope,note` while retaining legacy
+  three-column compatibility.
+- Preserve matched-only compact locks through translation, refinement, settings
+  snapshot, resume and retry; preview and estimator use the same selected rules.
+- Keep RSC, Editorial and IPC inactive.
+- Record the existing limitation that multiline quoted CSV fields are unsupported;
+  malformed P3 scopes fail closed.
+- Build `4.17-dev.1` / versionCode `169` through the archive-first build script;
+  retain the APK and exact source ZIP in matching artifact and backup payloads.
+- Verify 205 JVM tests, Lint at 0 errors/53 warnings, and static package/SDK/build
+  metadata. Device QA and public release/tag evidence remain pending.
+
+This entry records a local development artifact. It does not claim a public release,
+tag, device QA, real provider/API request, instrumentation, benchmark or media
+evidence.
+
 ## [4.15] - 2026-07-29
 
 - Preserve the exact Glossary and Pronoun list position when activating another

@@ -225,13 +225,38 @@ public class TranslationEngine {
 
     public String refineWithRetry(long jobId, int chunkIndex, String source, String draft, AppSettings settings,
                                   CancelChecker cancelChecker, UsageSink usageSink, EventSink eventSink) throws Exception {
+        Chunk legacyChunk = new Chunk(chunkIndex, "", source, "");
+        legacyChunk.stableId = HashUtil.sha256(source);
+        return refineWithRetryInternal(jobId, chunkIndex, legacyChunk, draft, settings,
+                cancelChecker, usageSink, eventSink);
+    }
+
+    /** Range-aware refinement entry point for runtime translation and retry. */
+    public String refineWithRetry(Chunk chunk, String draft, AppSettings settings,
+                                  CancelChecker cancelChecker, UsageSink usageSink, EventSink eventSink) throws Exception {
+        return refineWithRetry(-1, chunk, draft, settings, cancelChecker, usageSink, eventSink);
+    }
+
+    /** Range-aware refinement entry point that keeps the persisted chunk identity. */
+    public String refineWithRetry(long jobId, Chunk chunk, String draft, AppSettings settings,
+                                  CancelChecker cancelChecker, UsageSink usageSink, EventSink eventSink) throws Exception {
+        if (chunk == null) {
+            return refineWithRetry(jobId, -1, "", draft, settings, cancelChecker, usageSink, eventSink);
+        }
+        return refineWithRetryInternal(jobId, chunk.index, chunk, draft, settings,
+                cancelChecker, usageSink, eventSink);
+    }
+
+    private String refineWithRetryInternal(long jobId, int chunkIndex, Chunk chunk, String draft, AppSettings settings,
+                                           CancelChecker cancelChecker, UsageSink usageSink, EventSink eventSink) throws Exception {
+        String source = chunk == null || chunk.mainContent == null ? "" : chunk.mainContent;
         AppSettings s = AppValidator.normalize(settings);
         Exception last = null;
         for (int attempt = 1; attempt <= Math.max(1, s.maxAttempts); attempt++) {
             throwIfCancelled(cancelChecker);
-            PromptPlan plan = PromptPlan.forRefinement(source, draft, s);
+            PromptPlan plan = PromptPlan.forRefinement(chunk, draft, s);
             AppSettings baselineSettings = s.copy(); baselineSettings.optimizationPreset = "full";
-            PromptPlan baselinePlan = PromptPlan.forRefinement(source, draft, baselineSettings);
+            PromptPlan baselinePlan = PromptPlan.forRefinement(chunk, draft, baselineSettings);
             String logicalRequestId = jobId + ":" + chunkIndex + ":refine";
             int outputLimit = "full".equalsIgnoreCase(s.optimizationPreset) ? s.maxOutputTokens : plan.adaptiveMaxOutputTokens(s);
             long started = System.currentTimeMillis();
@@ -247,7 +272,7 @@ public class TranslationEngine {
                             + plan.glossaryLockCount + ", pronoun=" + plan.pronounLockCount);
                 }
                 PromptPair prompt = plan.prompt;
-                Chunk durableChunk=new Chunk(chunkIndex,"",source,"");durableChunk.stableId=HashUtil.sha256(source);
+                Chunk durableChunk = chunk;
                 String requestHash=HashUtil.sha256(prompt.system+"\n"+prompt.user+"\n"+s.provider+"\n"+s.model);
                 if(metricsRepository!=null&&jobId>0)metricsRepository.beginChunkAttempt(jobId,durableChunk,attempt,"refine",requestHash,logicalRequestId+":"+attempt,s);
                 DebugTraceStore.request(appContext, "refinement attempt " + attempt, 0, prompt, s);

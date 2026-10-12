@@ -1,0 +1,168 @@
+{
+  "schemaVersion": "p5e.a43.offline-qa.v1",
+  "date": "2026-09-24",
+  "scope": "OFFLINE_PACKET_INTEGRATION_ONLY",
+  "workspace": "D:\\App Translate Books",
+  "branch": "feature/v4.18-p5e-runner-repair-20260917",
+  "requestedBaseline": "356508d28bc7ff7b04a886335a67f7124859cf9f",
+  "headBeforePacketIntegration": "98eba3c9bb97ea7cd7a01ce9321781fc74392147",
+  "externalActions": {
+    "device": 0,
+    "adb": 0,
+    "providerCalls": 0,
+    "credentialReads": 0,
+    "dbReadsLive": 0,
+    "dbWrites": 0,
+    "builds": 0,
+    "installs": 0,
+    "uninstalls": 0,
+    "retries": 0,
+    "redispatches": 0
+  },
+  "finalPins": {
+    "manifestPath": "docs/P5E_RAW_AUTHORIZATION_APPROVAL_MANIFEST.md",
+    "manifestSha256": "412790E2E55A8289FF170D3EE93B683553468ADE252EF5C565D833599E5F5EA3",
+    "commandPath": "docs/P5E_RAW_AUTHORIZATION_COMMAND.txt",
+    "commandSha256": "51A71D47BBFC91DE19658FEEA120CF419ECD0F2FFD77562D74B83C73F9A98AB5",
+    "helperPath": "scripts/p5e-raw-live-supervisor.ps1",
+    "helperSha256": "CB9C07312E025DA94D8DB4840B7600CE9A3613DB75CC0E0E4F28EB059E00901F",
+    "artifactContractPath": "docs/P5E_PRODUCTION_ARTIFACT_CONTRACT_20260915.json",
+    "artifactContractSha256": "FFE70A70E622706FABFA49D5843310ECD5A283B1CA114E32C636EA26B9FAE4BF",
+    "rawSourceContractCommit": "d51b7f3c16bdc482513b9904db07b97daed592d1",
+    "selectedTestBundleSourceCommit": "9e5ffb7819bfb91dcb8ed9e25c901ab10aa48390"
+  },
+  "selectedArtifactBundle": {
+    "production": {
+      "apkSha256": "2CCBB844C629132BB534B0D6ABA516055C410BF96D20B14B3F80F91B962800FD",
+      "apkBytes": 2945979,
+      "sourceArchiveSha256": "B60624FC043BB3852D6B1A6E3AC409C9B66CA3C1BAB9FF4A512CCBF85984E348",
+      "sourceArchiveBytes": 81073702,
+      "buildInfoSha256": "DB20DA0CF708410AAAB65E5AF69ADF89A769ED62240B577A89CA4E2007FB7F06",
+      "artifactRoot": "D:\\App Translate Books\\App Translate Books-translation-profile\\artifacts\\builds\\v4.17-p5e.11\\build-20260911-201725",
+      "backupRoot": "D:\\App Translate Books\\App Translate Books-translation-profile\\backup\\builds\\v4.17-p5e.11\\build-20260911-201725",
+      "artifactBackupByteParity": "PASS"
+    },
+    "test": {
+      "apkSha256": "058BE8511FE733D02C0564FD434DEEC0E19B99025E098E58C838E3B36FC158E8",
+      "apkBytes": 1155788,
+      "sourceArchiveSha256": "5029E2AE955E980CEB1246D3ACA19F6B4E008EAA2E5E71360C5BAE305D820C8F",
+      "sourceArchiveBytes": 81323735,
+      "buildInfoSha256": "772F32E23AEF3537FEF00DACE8E4B9B994448BFEE2071150CF0E0540DDCCC5A9",
+      "artifactRoot": "D:\\App Translate Books\\App Translate Books-translation-profile\\artifacts\\test-builds\\v4.17-p5e.11\\p5e-account-check-20260916-01",
+      "backupRoot": "D:\\App Translate Books\\App Translate Books-translation-profile\\backup\\test-builds\\v4.17-p5e.11\\p5e-account-check-20260916-01",
+      "artifactBackupByteParity": "PASS",
+      "package": "com.ml.tblandroidtxt.test",
+      "targetPackage": "com.ml.tblandroidtxt",
+      "runner": "androidx.test.runner.AndroidJUnitRunner",
+      "certificateSha256": "47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155",
+      "buildInfoSourceCommit": "9e5ffb7819bfb91dcb8ed9e25c901ab10aa48390"
+    }
+  },
+  "sourceZipParity": {
+    "selectedZipContainsAndMatchesCurrentRoot": {
+      "EditorialP5EAccountCheckOnlyInstrumentedTest.java": "2F4BF9AD27CF5DF93D89456767423271907598EA209A0AD6E4C27599BC20063C",
+      "EditorialP5EFreshRawLiveInstrumentedTest.java": "B3F974A185F8B2590424471F3A1317EC436CFBEF3D92244EFAE1674F935AC04A",
+      "EditorialP5EFreshRawLiveRunner.java": "2D83CA6E37CD45F2AC220C87A6923D6AFC2B8C05CCDAAEB5D22ECC5A1A2B5020",
+      "SettingsStore.java": "AC7AA8AC221AD14DE9AAF0779C6159DF3E8FD93BB77376D5E001E4349CF0EAE9",
+      "EditorialP5CAttemptStore.java": "AED6DF109016EF56B20A9F2A292F7BF3C09EF92537C52F50300D6191A7FE992D",
+      "EditorialP5CExactBindingFakeE2EInstrumentedTest.java": "0E475CB866C3A12080C46F80C13FE56969CD76BAB9A25F8B998F51D6F5399084"
+    },
+    "gitDiffFromSelectedBundleCommit": 0,
+    "rawSourceDiffFromSeparateContractCommit": 0,
+    "hostHelperInBundle": "HISTORICAL_NESTED_REVISION_NOT_RUNTIME_AUTHORITY",
+    "hostRuntimeAuthority": "ROOT_HELPER_CB9C07312E025DA94D8DB4840B7600CE9A3613DB75CC0E0E4F28EB059E00901F"
+  },
+  "reusedAccountEvidence": {
+    "resultDocument": "docs/P5E_ACCOUNT_IDENTITY_ROUTE_CORRECTED_EVENT_RESULT_20260924.json",
+    "resultDocumentSha256": "E46624D5C0C5E99EB85F6AC2800B5D0F65C1239CD2D30CBF6AC44D99439B7D57",
+    "commandReceiptSha256": "C00F41164A3AC8AA50D5A025729D72606703E445088EA435FE8B6820296BCE81",
+    "preflightReceiptSha256": "C0604F6AAA3E9BBF6BC978C97FDE667402C6F572CB368A4B4A8248023D4779C7",
+    "runnerReceiptSha256": "529B082D6255AEFE1323CAAFB6B29200BB4256F81A29DA0C7C597EDA549702C9",
+    "accountResult": "MATCH",
+    "preflightReadAttempts": 7,
+    "runnerLaunches": 1,
+    "providerCalls": 0,
+    "dbWrites": 0,
+    "rawDispatches": 0
+  },
+  "targetedQa": {
+    "helperParse": "PASS",
+    "helperSelfTest": {
+      "status": "PASS",
+      "hostSelfTest": "PASS",
+      "requiredArgumentFixtures": 8,
+      "fakeProcessOutcomes": 4,
+      "outcomeFixtures": 8,
+      "collectorCommandLogContract": "PASS",
+      "fingerprintRedaction": "PASS",
+      "externalActions": 0
+    },
+    "provenanceProbe": {
+      "path": "D:\\P5E-private\\p5e-a43-offline-provenance-qa-20260924-04\\RESULT.json",
+      "sha256": "5C327F8265567734A744F5A43E770A76C5C52B51B6D4378E45CE2E4B1C0E5A3D",
+      "scope": "SYNTHETIC_ONLY_NO_DEVICE_NO_PROVIDER_NO_ENVIRONMENT_CREDENTIAL_READ",
+      "positiveControlsAccepted": 3,
+      "expiryAndIdentityNegativesRejected": 7,
+      "producerNegativesRejected": 6,
+      "verifierNegativesRejected": 12,
+      "artifactMutationNegativesRejected": 11,
+      "collectorOutcomeFixtures": 3,
+      "deviceActions": 0,
+      "providerCalls": 0,
+      "p6Ready": false
+    },
+    "prepareEventPinAndPath": {
+      "status": "PASS",
+      "path": "D:\\P5E-private\\p5e-a43-offline-prepare-qa-20260924-04\\EVENT_PLAN.json",
+      "sha256": "9A87EAEB728994A281143DF068ABDBCB5D8F373B40E2EF56798A8DADCABFCAD6",
+      "deviceActions": 0,
+      "providerCalls": 0,
+      "credentialReads": 0,
+      "selectedTestApkSha256": "058be8511fe733d02c0564fd434deec0e19b99025e098e58c838e3b36fc158e8",
+      "phase": "L1_RAW_DISCOVERY",
+      "serial": "15e84958",
+      "budget": {
+        "authorizationValidityMillis": 180000,
+        "executionDeadlineMillis": 120000,
+        "hostObservationTimeoutMillis": 240000
+      }
+    },
+    "wrongSelectedTestPin": {
+      "status": "PASS_REJECTED_BEFORE_EVENT_PLAN",
+      "path": "D:\\P5E-private\\p5e-a43-offline-pin-reject-20260924-02",
+      "stopCode": "SELECTED_TEST_APK_HASH_MISMATCH_STOP",
+      "eventPlanPresent": false,
+      "deviceActions": 0
+    },
+    "commandStaticContract": {
+      "parse": "PASS",
+      "selfHashGuard": "PASS",
+      "selfHash": "51A71D47BBFC91DE19658FEEA120CF419ECD0F2FFD77562D74B83C73F9A98AB5",
+      "rootHelperAndManifestPaths": "PASS",
+      "artifactBackupPairChecks": "PASS",
+      "oldNestedHelperPinAbsent": "PASS",
+      "oldRawTestApkPinAbsent": "PASS",
+      "sameEventAfterFinally": "PASS",
+      "retryOrRedispatch": 0
+    }
+  },
+  "gates": {
+    "accountMatchClosed": "PASS_REUSED_EVIDENCE",
+    "productionArtifactSourceParity": "PASS",
+    "replacementTestArtifactSourceParity": "PASS",
+    "manifestCommandRootHelperConsistency": "PASS",
+    "collectorVerifierOfflineFixtures": "PASS_SYNTHETIC_ONLY",
+    "liveBeforeAfterReadback": "PENDING_OWNER_DECISION",
+    "freshRuntimeAuthorization": "PENDING_OWNER_DECISION",
+    "allowlistedDbWrites": "PENDING_OWNER_DECISION",
+    "rawProviderEgress": "NOT_ISSUED",
+    "p5Exit": "NOT_CLAIMED",
+    "p6": "NOT_READY"
+  },
+  "ownerDecisionPrepared": {
+    "status": "PENDING",
+    "scope": "SERIAL_15e84958; read-only before/after collector; memory-only account check inside selected live method; at most one RAW/GLOSSARY call; runtime authorization; exact attempt and authorization receipt atomic claim; allowlisted lifecycle/recovery/COMMITTED report-receipt-metrics only; no fallback, repair, retry, RECONCILE, cleanup, restore or redispatch",
+    "notExecutedByThisTask": true
+  },
+  "nextAction": "Owner decides the exact live scope against the final manifest, command, root helper and artifact/source hashes; do not execute it in this task."
+}

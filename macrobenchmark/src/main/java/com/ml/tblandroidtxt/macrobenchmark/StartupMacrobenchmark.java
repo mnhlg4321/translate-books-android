@@ -6,13 +6,17 @@ import android.os.PowerManager;
 import android.os.RemoteException;
 
 import androidx.benchmark.macro.CompilationMode;
+import androidx.benchmark.macro.FrameTimingMetric;
 import androidx.benchmark.macro.StartupMode;
 import androidx.benchmark.macro.StartupTimingMetric;
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiObject2;
+import androidx.test.uiautomator.Until;
 
 import org.junit.After;
 import org.junit.Before;
@@ -21,6 +25,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.Collections;
+import java.util.List;
 
 import kotlin.Unit;
 
@@ -78,6 +83,34 @@ public final class StartupMacrobenchmark {
                             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     scope.startActivityAndWait(intent);
                     startBenchmarkHost();
+                    return Unit.INSTANCE;
+                }
+        );
+    }
+
+    /** Opens the Biên tập tab of the already running app and records the frame timing of the switch (five iterations, warm start). */
+    @Test
+    public void openEditorialTab() {
+        benchmarkRule.measureRepeated(
+                TARGET_PACKAGE,
+                List.of(new FrameTimingMetric()),
+                CompilationMode.DEFAULT,
+                StartupMode.WARM,
+                5,
+                scope -> {
+                    wakeScreen();
+                    Intent intent = new Intent(Intent.ACTION_MAIN)
+                            .setClassName(TARGET_PACKAGE, TARGET_ACTIVITY)
+                            .addCategory(Intent.CATEGORY_LAUNCHER)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    scope.startActivityAndWait(intent);
+                    return Unit.INSTANCE;
+                },
+                scope -> {
+                    UiObject2 tab = scope.getDevice().wait(Until.findObject(By.textContains("Biên tập")), 10_000L);
+                    if (tab == null) throw new IllegalStateException("The Biên tập tab was not found on the main screen.");
+                    tab.click();
+                    scope.getDevice().waitForIdle();
                     return Unit.INSTANCE;
                 }
         );

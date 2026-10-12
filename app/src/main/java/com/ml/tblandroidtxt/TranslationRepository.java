@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import java.util.ArrayList;
@@ -11,9 +12,12 @@ import java.util.List;
 
 public class TranslationRepository extends SQLiteOpenHelper {
     private static final String DB = "tbl_android_txt.db";
-    private static final int VER = 10;
+    static final int VER = 29;
 
-    public TranslationRepository(Context context) { super(context, DB, null, VER); }
+    public TranslationRepository(Context context) { this(context, DB); }
+
+    /** Package-private database-name seam used by isolated migration/import tests. */
+    TranslationRepository(Context context, String databaseName) { super(context, databaseName, null, VER); }
 
     @Override public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE jobs (id INTEGER PRIMARY KEY AUTOINCREMENT, input_uri TEXT, output_uri TEXT, file_name TEXT, source_language TEXT, target_language TEXT, status TEXT, created_at INTEGER, updated_at INTEGER, settings TEXT, input_hash TEXT, settings_hash TEXT, integrity_status TEXT, output_hash TEXT, config_revision INTEGER, app_version TEXT, completed_at INTEGER, prepared_batch_id TEXT DEFAULT '', prepared_input_ordinal INTEGER DEFAULT -1, start_session_id TEXT DEFAULT '')");
@@ -23,6 +27,28 @@ public class TranslationRepository extends SQLiteOpenHelper {
         createMetricsTable(db);
         createBenchmarkTables(db);
         createPreparedPlanTables(db);
+        createEditorialTables(db);
+        createEditorialPackTables(db);
+        createEditorialPackCompatibilityEvaluationTables(db);
+        createEditorialLineageTables(db);
+        createEditorialIdentityTables(db);
+        createEditorialRunDeclarationEventTables(db);
+        createEditorialP4BindingTables(db);
+        createEditorialP5CTables(db);
+        createEditorialP5DTables(db);
+        createEditorialP5DTransportFields(db);
+        createEditorialP5DRecoveryHistory(db);
+        createEditorialP5DBodyProgress(db);
+        createEditorialPhaseArtifacts(db);
+        createEditorialApiTables(db);
+        createEditorialPairTables(db);
+        migrateEditorialApiRunsToV28(db);
+        migrateEditorialPairRunsToV29(db);
+    }
+
+    @Override public void onConfigure(SQLiteDatabase db) {
+        super.onConfigure(db);
+        db.setForeignKeyConstraintsEnabled(true);
     }
 
     @Override public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -67,6 +93,29 @@ public class TranslationRepository extends SQLiteOpenHelper {
             safeExec(db, "ALTER TABLE jobs ADD COLUMN start_session_id TEXT DEFAULT ''");
             safeExec(db, "CREATE UNIQUE INDEX IF NOT EXISTS idx_jobs_start_session ON jobs(start_session_id,prepared_input_ordinal) WHERE start_session_id<>''");
         }
+        if (oldVersion < 11) createEditorialTables(db);
+        if (oldVersion < 12) createEditorialProjectAssets(db);
+        if (oldVersion < 13) createEditorialReferenceProfiles(db);
+        if (oldVersion < 14) createEditorialPackTables(db);
+        if (oldVersion < 15) createEditorialPackCompatibilityEvaluationTables(db);
+        if (oldVersion < 16) createEditorialLineageTables(db);
+        if (oldVersion < 17) createEditorialIdentityTables(db);
+        if (oldVersion < 18) createEditorialRunDeclarationEventTables(db);
+        if (oldVersion < 19) createEditorialP4BindingTables(db);
+        if (oldVersion < 20) createEditorialP5CTables(db);
+        if (oldVersion < 21) createEditorialP5DTables(db);
+        if (oldVersion < 22) createEditorialP5DTransportFields(db);
+        if (oldVersion < 23) createEditorialP5DRecoveryHistory(db);
+        if (oldVersion < 24) createEditorialP5DBodyProgress(db);
+        if (oldVersion < 25) createEditorialPhaseArtifacts(db);
+        if (oldVersion < 26) createEditorialApiTables(db);
+        if (oldVersion < 27) createEditorialPairTables(db);
+        if (oldVersion < 28) migrateEditorialApiRunsToV28(db);
+        if (oldVersion < 29) migrateEditorialPairRunsToV29(db);
+    }
+
+    @Override public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        throw new SQLiteException("Editorial database downgrade is not supported");
     }
 
     private static void safeExec(SQLiteDatabase db, String sql) { try { db.execSQL(sql); } catch (Exception ignored) {} }
@@ -82,6 +131,37 @@ public class TranslationRepository extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE IF NOT EXISTS prepared_chunks (batch_id TEXT, input_ordinal INTEGER, idx INTEGER, stable_id TEXT, start_offset INTEGER, end_offset INTEGER, context_start_offset INTEGER, context_end_offset INTEGER, context_before TEXT, source TEXT, context_after TEXT, source_hash TEXT, normalized_source_hash TEXT, parent_stable_id TEXT, PRIMARY KEY(batch_id,input_ordinal,idx))");
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_prepared_selection ON prepared_batches(selection_key,status)");
     }
+
+    private static void createEditorialApiTables(SQLiteDatabase db) { for (String sql : EditorialApiMigrationSpec.from25To26()) db.execSQL(sql); }
+
+    private static void createEditorialPairTables(SQLiteDatabase db) { for (String sql : EditorialPairMigrationSpec.from26To27()) db.execSQL(sql); }
+
+    private static void migrateEditorialApiRunsToV28(SQLiteDatabase db) { for (String sql : EditorialApiV28MigrationSpec.from27To28()) db.execSQL(sql); }
+
+    private static void migrateEditorialPairRunsToV29(SQLiteDatabase db) { for (String sql : EditorialPairV29MigrationSpec.from28To29()) db.execSQL(sql); }
+
+    private static void createEditorialTables(SQLiteDatabase db) {
+        for (String sql : EditorialMigrationSpec.from10To11()) safeExec(db, sql);
+        createEditorialProjectAssets(db);
+        createEditorialReferenceProfiles(db);
+    }
+    private static void createEditorialProjectAssets(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from11To12())safeExec(db,sql);}
+    private static void createEditorialReferenceProfiles(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from12To13())safeExec(db,sql);}
+    private static void createEditorialPackTables(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from13To14())db.execSQL(sql);}
+    private static void createEditorialPackCompatibilityEvaluationTables(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from14To15())db.execSQL(sql);}
+    private static void createEditorialLineageTables(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from15To16())db.execSQL(sql);}
+    private static void createEditorialIdentityTables(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from16To17())db.execSQL(sql);}
+    private static void createEditorialRunDeclarationEventTables(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from17To18())db.execSQL(sql);}
+    private static void createEditorialP4BindingTables(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from18To19())db.execSQL(sql);}
+    private static void createEditorialP5CTables(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from19To20())db.execSQL(sql);}
+    private static void createEditorialP5DTables(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from20To21())db.execSQL(sql);}
+    private static void createEditorialP5DTransportFields(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from21To22())safeExec(db,sql);}
+    private static void createEditorialP5DRecoveryHistory(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from22To23())db.execSQL(sql);}
+    private static void createEditorialP5DBodyProgress(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from23To24())safeExec(db,sql);}
+    private static void createEditorialPhaseArtifacts(SQLiteDatabase db){for(String sql:EditorialMigrationSpec.from24To25())db.execSQL(sql);}
+
+    SQLiteDatabase editorialWritableDatabase() { return getWritableDatabase(); }
+    SQLiteDatabase editorialReadableDatabase() { return getReadableDatabase(); }
 
     private static void recoverInterruptedChunks(SQLiteDatabase db) {
         ContentValues unknown=new ContentValues();unknown.put("status","DELIVERY_UNKNOWN");unknown.put("error","Process died after request sending began; review before retrying to avoid duplicate billing");unknown.put("updated_at",System.currentTimeMillis());
@@ -142,7 +222,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
         return b;
     }
 
-    public List<Chunk> getPreparedChunks(String batchId,int ordinal){ArrayList<Chunk> out=new ArrayList<>();String sql="SELECT idx,start_offset,end_offset,context_before,source,context_after,parent_stable_id,stable_id FROM prepared_chunks WHERE batch_id=? AND input_ordinal=? ORDER BY idx";try(Cursor c=getReadableDatabase().rawQuery(sql,new String[]{batchId,String.valueOf(ordinal)})){while(c.moveToNext()){Chunk ch=new Chunk(c.getInt(0),c.getInt(1),c.getInt(2),safe(c.getString(3)),safe(c.getString(4)),safe(c.getString(5)),safe(c.getString(6)));String stable=safe(c.getString(7));if(!stable.isEmpty())ch.stableId=stable;out.add(ch);}}return out;}
+    public List<Chunk> getPreparedChunks(String batchId,int ordinal){ArrayList<Chunk> out=new ArrayList<>();String sql="SELECT idx,start_offset,end_offset,context_before,source,context_after,parent_stable_id,stable_id FROM prepared_chunks WHERE batch_id=? AND input_ordinal=? ORDER BY idx";try(Cursor c=getReadableDatabase().rawQuery(sql,new String[]{batchId,String.valueOf(ordinal)})){while(c.moveToNext()){Chunk ch=new Chunk(c.getInt(0),c.getInt(1),c.getInt(2),safe(c.getString(3)),safe(c.getString(4)),safe(c.getString(5)),safe(c.getString(6)));String stable=safe(c.getString(7));if(!stable.isEmpty())ch.stableId=stable;out.add(ch);}}Chunker.assignParagraphRanges(out);return out;}
 
     private static void deletePreparedBatch(SQLiteDatabase db,String id){db.delete("prepared_chunks","batch_id=?",new String[]{id});db.delete("prepared_inputs","batch_id=?",new String[]{id});db.delete("prepared_batches","id=?",new String[]{id});}
 

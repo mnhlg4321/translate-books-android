@@ -61,9 +61,19 @@ gradle.taskGraph.whenReady { graph ->
             'Unarchived debug builds are disabled. Run .\\scripts\\build-and-save.ps1 so the APK, README, checksum, and source snapshot are retained before optional installation.'
         )
     }
+    def runsConnectedAndroidTest = graph.allTasks.any { task ->
+        def taskName = task.name.toLowerCase(Locale.ROOT)
+        taskName.startsWith('connected') && taskName.contains('androidtest')
+    }
+    if (runsConnectedAndroidTest) {
+        throw new GradleException(
+            'Connected Android test installers are disabled for pilot-bearing packages. Use scripts\\install-validated.ps1, then run a selected am instrument target.'
+        )
+    }
 }
 
 dependencies {
+    implementation project(':editorial-engine')
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     benchmarkImplementation 'androidx.profileinstaller:profileinstaller:1.4.1'
     testImplementation 'junit:junit:4.13.2'
@@ -77,6 +87,86 @@ def approvedLogoSha256 = '104D17792425810F4E7419BFEA268505DECA6148D04C7AC852D646
 def approvedLogoFile = file('src/main/res/drawable-nodpi/translate_books_logo.png')
 def approvedManifestFile = file('src/main/AndroidManifest.xml')
 def approvedHeaderFile = file('src/main/java/com/ml/tblandroidtxt/MainActivity.java')
+
+def editorialSafe4Files = [
+        'PROJECT_INSTRUCTION_BIEN_TAP_V5_SAFE_4.txt': 'C57100C45F16FC5A27E56AE17ABE919BE89DA55082A66D060DB504746ED8B717',
+        'PROMPT_DAU_CHAT_3_LUOT_V5_SAFE_4.txt': '0B4C02573F46A91528A63262D3E52C655A5C7E31F2ABBBFB01759D38E94F8E81',
+        'WORKFLOW_BIEN_TAP_3_LUOT_V5_SAFE_4.txt': '7A434ADE77239DB33AF5A677456D0310AC11DC8391565FC4888236536FF96B5E'
+]
+def editorialSafe4Root = file('src/main/assets/editorial/v5-safe4')
+def editorialV5FullFiles = [
+        'PROJECT_INSTRUCTION_BIEN_TAP_V5_SAFE_4_1_3_FULL.txt': '1727AE173F2CFD530EB818CAE69E0D3FADC59C35E3B5B6D478704A02091A26AD',
+        'PROMPT_DAU_CHAT_3_LUOT_V5_SAFE_4_1_3_FULL.txt': 'D25757D1A6BDDD5962A3B178B9EF850727573AE0C34867EC8F4B8450C7CD754F',
+        'WORKFLOW_BIEN_TAP_3_LUOT_V5_SAFE_4_1_3_FULL.txt': '5DB6B4F6509313F106499113537D2880BC6D2FF663859239DAFB285557505730'
+]
+def editorialV5FullRoot = file('src/main/assets/editorial/v5-safe4-full-chatgpt')
+def editorialEngineProfileSourceRoot = rootProject.file('editorial-engine/src/main/resources/editorial/engine-profile')
+def editorialEngineProfileAssetRoot = layout.buildDirectory.dir('generated/editorial-engine-profile-assets')
+def editorialEngineProfileFiles = ['v1/profile.json', 'v2/profile.json']
+
+def syncEditorialEngineProfileAsset = tasks.register('syncEditorialEngineProfileAsset', Sync) {
+    group = 'verification'
+    description = 'Copies engine-owned trusted profile resources into the APK asset set.'
+    from(editorialEngineProfileSourceRoot)
+    into(editorialEngineProfileAssetRoot)
+    inputs.files(editorialEngineProfileFiles.collect { new File(editorialEngineProfileSourceRoot, it) })
+    outputs.dir(editorialEngineProfileAssetRoot)
+}
+
+def verifyEditorialEngineProfileAsset = tasks.register('verifyEditorialEngineProfileAsset') {
+    group = 'verification'
+    description = 'Requires every APK asset copy of a trusted profile to match its engine-owned source bytes.'
+    dependsOn syncEditorialEngineProfileAsset
+    doLast {
+        editorialEngineProfileFiles.each { relativePath ->
+            def source = new File(editorialEngineProfileSourceRoot, relativePath)
+            def bundled = editorialEngineProfileAssetRoot.get().file(relativePath).asFile
+            if (!source.isFile() || !bundled.isFile()
+                    || !java.util.Arrays.equals(source.bytes, bundled.bytes)) {
+                throw new GradleException("Bundled trusted engine profile bytes differ for ${relativePath}.")
+            }
+        }
+    }
+}
+
+android.sourceSets.main.assets.srcDir(editorialEngineProfileAssetRoot)
+// test doubles shared by the JVM tests and the instrumented tests (never part of the app)
+android.sourceSets.test.java.srcDir("src/sharedTest/java")
+android.sourceSets.androidTest.java.srcDir("src/sharedTest/java")
+
+def verifyEditorialSafe4Pack = tasks.register('verifyEditorialSafe4Pack') {
+    group = 'verification'
+    description = 'Requires the bundled V5-SAFE.4 workflow pack to match its immutable source hashes.'
+    inputs.files(editorialSafe4Files.keySet().collect { new File(editorialSafe4Root, it) })
+    doLast {
+        editorialSafe4Files.each { name, expected ->
+            def source = new File(editorialSafe4Root, name)
+            if (!source.isFile()) throw new GradleException("SAFE 4 workflow source is missing: ${source}")
+            def actual = java.security.MessageDigest.getInstance('SHA-256').digest(source.bytes)
+                    .collect { String.format('%02X', it & 0xff) }.join()
+            if (actual != expected) {
+                throw new GradleException("SAFE 4 workflow hash mismatch for ${name}. Expected ${expected}, found ${actual}.")
+            }
+        }
+    }
+}
+
+def verifyEditorialV5FullPack = tasks.register('verifyEditorialV5FullPack') {
+    group = 'verification'
+    description = 'Requires the bundled V5-SAFE.4.1.3 FULL ChatGPT pack to match its immutable source hashes.'
+    inputs.files(editorialV5FullFiles.keySet().collect { new File(editorialV5FullRoot, it) })
+    doLast {
+        editorialV5FullFiles.each { name, expected ->
+            def source = new File(editorialV5FullRoot, name)
+            if (!source.isFile()) throw new GradleException("V5 FULL ChatGPT pack file is missing: ${source}")
+            def actual = java.security.MessageDigest.getInstance('SHA-256').digest(source.bytes)
+                    .collect { String.format('%02X', it & 0xff) }.join()
+            if (actual != expected) {
+                throw new GradleException("V5 FULL ChatGPT pack hash mismatch for ${name}. Expected ${expected}, found ${actual}.")
+            }
+        }
+    }
+}
 
 def verifyApprovedLogo = tasks.register('verifyApprovedLogo') {
     group = 'verification'
@@ -107,4 +197,7 @@ def verifyApprovedLogo = tasks.register('verifyApprovedLogo') {
 
 tasks.named('preBuild').configure {
     dependsOn verifyApprovedLogo
+    dependsOn verifyEditorialSafe4Pack
+    dependsOn verifyEditorialV5FullPack
+    dependsOn verifyEditorialEngineProfileAsset
 }

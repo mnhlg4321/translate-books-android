@@ -1,0 +1,95 @@
+{
+  "date": "2026-09-14",
+  "baseline": "f8fe433ef454772a1b55dea496a2c4bfd679766f",
+  "auditBranch": "feature/v4.18-p5e-audit-20260914",
+  "baselineDocumentInventory": {
+    "files": 155,
+    "scope": "tracked Markdown/TXT metadata and text scan; deep semantic review limited to active workflow/P5E and relevant incidents",
+    "lines": 27735
+  },
+  "verifiedEvidencePins": 7,
+  "payloadParity": {
+    "mismatch": 0,
+    "testFiles": 8,
+    "productionFiles": 5
+  },
+  "shellReproducer": {
+    "input": "capture OWNER_CONTROLLED|RAW_ONLY",
+    "observed": "CAPTURED_FIRST_ARGUMENT=OWNER_CONTROLLED",
+    "scope": "harmless local Git Bash, no adb",
+    "finding": "remote-shell pipe must be quoted; actual device command not run"
+  },
+  "checks": [
+    {
+      "name": "manifest_unchanged",
+      "passed": true,
+      "detail": "Original A4.3 pin"
+    },
+    {
+      "name": "command_unchanged",
+      "passed": true,
+      "detail": "Original A4.3 command preserved; not dispatched"
+    },
+    {
+      "name": "required_argument_names_present",
+      "passed": true,
+      "detail": "required=39; missing="
+    },
+    {
+      "name": "no_duplicate_extra_keys",
+      "passed": true,
+      "detail": "extra key count=41"
+    },
+    {
+      "name": "powershell_syntax",
+      "passed": true,
+      "detail": "errors=0; transport correctness assessed separately"
+    },
+    {
+      "name": "no_application_or_script_changes",
+      "passed": true,
+      "detail": "Audit changes only documentation"
+    },
+    {
+      "name": "50_steps_sequential",
+      "passed": true,
+      "detail": "Each numbered step is present once"
+    },
+    {
+      "name": "snapshot_one_next_action",
+      "passed": true,
+      "detail": "Current handoff has one next action"
+    },
+    {
+      "name": "request_no_P6_activation",
+      "passed": true,
+      "detail": "Offline request and conditional live runbook separated"
+    },
+    {
+      "name": "diff_check",
+      "passed": true,
+      "detail": "git diff --check"
+    }
+  ],
+  "passed": 10,
+  "failed": 0,
+  "openFindings": [
+    "F1 trusted expected fingerprint provisioning unproven",
+    "F2 command remote-shell pipe quoting defect",
+    "F3 durable live acceptance verifier preparation"
+  ],
+  "runtime": {
+    "providerCalls": 0,
+    "deviceOperations": 0,
+    "credentialOperations": 0,
+    "instrumentationInvocations": 0,
+    "runtimeAuthorizationCreated": 0,
+    "apkBuilds": 0
+  },
+  "release": "P5_P5E_INCOMPLETE_P6_NOT_READY",
+  "limitations": [
+    "No fresh device state or provider billing verification",
+    "No JVM/Android regression rerun for documentation-only audit",
+    "Shell reproduction is local, not a device experiment"
+  ]
+}

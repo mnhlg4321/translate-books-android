@@ -1,0 +1,13 @@
+{
+    "status":  "PASS_DIAGNOSTIC_NOT_REPAIR",
+    "scope":  "SYNTHETIC_EXECUTABLE_ONLY",
+    "missingExecutableOutcome":  "FAILED_BEFORE_LAUNCH",
+    "missingExecutableLaunchCount":  0,
+    "missingExecutableErrorClass":  "MethodInvocationException",
+    "absoluteExecutableOutcome":  "PROCESS_EXITED_ZERO",
+    "absoluteExecutableLaunchCount":  1,
+    "realAdbLaunches":  0,
+    "deviceActions":  0,
+    "providerCalls":  0,
+    "historicalRootCauseProven":  false
+}
