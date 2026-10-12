@@ -101,7 +101,7 @@ public final class FixPointFinder {
 
             List<EditInputs.GlossaryEntry> missingTerms = new ArrayList<>();
             for (EditInputs.GlossaryEntry term : projection.glossary()) {
-                if (containsSource(rawLines, term.source()) && !draftGroup.toLowerCase(Locale.ROOT).contains(term.target().trim().toLowerCase(Locale.ROOT))) {
+                if (containsUncoveredSource(rawLines, term.source(), projection.glossary()) && !draftGroup.toLowerCase(Locale.ROOT).contains(term.target().trim().toLowerCase(Locale.ROOT))) {
                     missingTerms.add(term);
                 }
             }
@@ -214,10 +214,29 @@ public final class FixPointFinder {
         return out;
     }
 
-    private static boolean containsSource(List<String> lines, String source) {
+    /**
+     * True when the source stands on its own in some RAW line. An occurrence inside a longer glossary source (リーダー in ゾンビリーダー)
+     * belongs to that longer entry, whose own target is checked separately, so it never makes the shorter entry's target "missing".
+     */
+    private static boolean containsUncoveredSource(List<String> lines, String source, List<EditInputs.GlossaryEntry> glossary) {
         String needle = source == null ? "" : source.trim();
         if (needle.isEmpty()) return false;
-        for (String line : lines) if (line.contains(needle)) return true;
+        for (String line : lines) {
+            for (int at = line.indexOf(needle); at >= 0; at = line.indexOf(needle, at + 1)) {
+                if (!coveredByLongerSource(line, at, needle, glossary)) return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean coveredByLongerSource(String line, int at, String needle, List<EditInputs.GlossaryEntry> glossary) {
+        for (EditInputs.GlossaryEntry other : glossary) {
+            String longer = other.source().trim();
+            if (longer.length() <= needle.length() || !longer.contains(needle)) continue;
+            for (int from = Math.max(0, at - longer.length() + needle.length()); from <= at; from++) {
+                if (line.startsWith(longer, from) && from + longer.length() >= at + needle.length()) return true;
+            }
+        }
         return false;
     }
 
