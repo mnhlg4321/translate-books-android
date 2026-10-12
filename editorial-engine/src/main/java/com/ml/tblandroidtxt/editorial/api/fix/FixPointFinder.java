@@ -35,6 +35,7 @@ public final class FixPointFinder {
         final LinkedHashSet<String> rules = new LinkedHashSet<>();
         final LinkedHashSet<AddressRow> addressRows = new LinkedHashSet<>();
         String rawContext = "";
+        List<String> sceneEntities = List.of();
 
         Target(int draftIndex, int rawOrder, String draft) {
             this.draftIndex = draftIndex;
@@ -164,6 +165,7 @@ public final class FixPointFinder {
                                 if (row.covers(p)) { target.addressRows.add(AddressRow.of(row)); break; }
                             }
                         }
+                        target.sceneEntities = sceneEntities(target.addressRows, glossary, target.rawContext);
                     }
                 }
             }
@@ -179,7 +181,7 @@ public final class FixPointFinder {
         for (Object value : ordered) {
             if (value instanceof Target t) {
                 if (t.types.isEmpty()) continue;
-                points.add(new FixPoint(id++, t.types, t.draftIndex, t.draft, t.raw.toString(), new ArrayList<>(t.rules), new ArrayList<>(t.addressRows), t.rawContext));
+                points.add(new FixPoint(id++, t.types, t.draftIndex, t.draft, t.raw.toString(), new ArrayList<>(t.rules), new ArrayList<>(t.addressRows), t.rawContext, t.sceneEntities));
             } else {
                 Missing m = (Missing) value;
                 points.add(new FixPoint(id++, Set.of(FixPoint.Type.MISSING), m.afterDraftIndex, "", m.raw, List.of(m.rule)));
@@ -238,6 +240,30 @@ public final class FixPointFinder {
             }
         }
         return false;
+    }
+
+    /**
+     * Entities of the pronoun rows that the glossary names in the RAW lines next to the aligned lines: a glossary entry whose target
+     * shares a name word with the entity (島川 → Shimakawa for the speaker Shimakawa) and whose source is in those lines puts that
+     * entity in the scene, even when no pronoun row is aimed at it.
+     */
+    private static List<String> sceneEntities(Set<AddressRow> rows, List<EditInputs.GlossaryEntry> glossary, String neighbours) {
+        LinkedHashSet<String> out = new LinkedHashSet<>();
+        if (neighbours.isEmpty() || glossary == null) return List.of();
+        for (EditInputs.GlossaryEntry entry : glossary) {
+            String source = entry.source() == null ? "" : entry.source().trim();
+            if (source.isEmpty() || !neighbours.contains(source)) continue;
+            Set<String> targetWords = new LinkedHashSet<>(AddressChecklist.tokens(entry.target()));
+            for (AddressRow row : rows) {
+                for (String entity : new String[] {row.speaker(), row.target()}) {
+                    if (entity.isEmpty() || entity.startsWith("*") || entity.startsWith("@")) continue;
+                    for (String word : AddressChecklist.tokens(entity)) {
+                        if (targetWords.contains(word)) out.add(entity.trim().toLowerCase(Locale.ROOT));
+                    }
+                }
+            }
+        }
+        return new ArrayList<>(out);
     }
 
     private static boolean authorizedSourceToken(String line, List<EditInputs.GlossaryEntry> glossary) {

@@ -166,13 +166,16 @@ public final class EditorialPairC6CorpusMeasurementTest {
         String responses = System.getenv("C6_REPLAY_RESPONSES");
         String out = System.getenv("C6_REPLAY_OUT");
         if (inputRoot == null || inputRoot.isBlank() || responses == null || responses.isBlank() || out == null || out.isBlank()) return;
-        PrivateChapter006 chapter = loadPrivate006(Path.of(inputRoot));
+        String chapterId = System.getenv("C6_REPLAY_CHAPTER") == null || System.getenv("C6_REPLAY_CHAPTER").isBlank() ? "006" : System.getenv("C6_REPLAY_CHAPTER");
+        PrivateChapter006 chapter = loadPrivateChapter(Path.of(inputRoot), chapterId);
         StringBuilder tsv = new StringBuilder();
         int points = 0;
+        int callIndex = 0; // answers are stored per call: a chunk without points makes none
         for (int i = 0; i < chapter.preview.rows.size(); i++) {
             EditorialPairPreview.Row row = chapter.preview.rows.get(i);
             if (row.fixPoints.isEmpty()) continue;
-            Path answer = Path.of(responses).resolve(String.format(java.util.Locale.ROOT, "%03d-EDIT.json", i + 1));
+            callIndex++;
+            Path answer = Path.of(responses).resolve(String.format(java.util.Locale.ROOT, "%03d-EDIT.json", callIndex));
             if (!Files.exists(answer)) continue; // a single-chunk run stores one answer only
             com.ml.tblandroidtxt.editorial.api.fix.TargetedFixParser.Parsed parsed =
                     com.ml.tblandroidtxt.editorial.api.fix.TargetedFixParser.parse(readUtf8(answer), row.fixPoints);
@@ -226,27 +229,31 @@ public final class EditorialPairC6CorpusMeasurementTest {
     }
 
     private static PrivateChapter006 loadPrivate006(Path inputRoot) throws Exception {
-        Path inputDir = inputRoot.resolve("006");
-        String raw = readUtf8(required(inputDir, "006_RAW_JAKUAKU_MONSTER_VOL1.txt"));
-        Path draftPath = required(inputDir, "006_JAKUAKU_MONSTER_VOL1_DRAFT.txt");
+        return loadPrivateChapter(inputRoot, "006");
+    }
+
+    private static PrivateChapter006 loadPrivateChapter(Path inputRoot, String chapter) throws Exception {
+        Path inputDir = inputRoot.resolve(chapter);
+        String raw = readUtf8(required(inputDir, chapter + "_RAW_JAKUAKU_MONSTER_VOL1.txt"));
+        Path draftPath = required(inputDir, chapter + "_JAKUAKU_MONSTER_VOL1_DRAFT.txt");
         String draft = readUtf8(draftPath);
-        Path glossaryPath = required(inputDir, "006_JAKUAKU_MONSTER_VOL1_chapter_glossary.csv");
+        Path glossaryPath = required(inputDir, chapter + "_JAKUAKU_MONSTER_VOL1_chapter_glossary.csv");
         List<GlossaryStore.Term> terms = GlossaryStore.parseTerms(glossaryPath.getFileName().toString(), readUtf8(glossaryPath));
         List<EditInputs.GlossaryEntry> glossary = terms.stream()
                 .map(t -> new EditInputs.GlossaryEntry(t.source, t.target, t.category, t.note)).toList();
         String glossaryText = EditorialApiSources.glossaryAsText(glossary);
-        Path pronounPath = required(inputDir, "006_PRONOUN_JAKUAKU_MONSTER_VOL1.csv");
+        Path pronounPath = required(inputDir, chapter + "_PRONOUN_JAKUAKU_MONSTER_VOL1.csv");
         String pronoun = readUtf8(pronounPath);
         AppSettings settings = c6Settings();
         EditorialPairSourceLoader.References refs = new EditorialPairSourceLoader.References(
                 glossaryText, glossaryPath.getFileName().toString(), pronoun, pronounPath.getFileName().toString());
         EditorialPairSourceLoader.FilesLoad load = EditorialPairSourceLoader.planFiles(
-                "006 private fake fixture", raw, draft, refs, settings);
-        assertNotNull("006 plan missing", load.plan);
-        assertFalse("006 plan is blocked", load.plan.blocked());
+                chapter + " private fake fixture", raw, draft, refs, settings);
+        assertNotNull(chapter + " plan missing", load.plan);
+        assertFalse(chapter + " plan is blocked", load.plan.blocked());
         EditorialPairPreview preview = EditorialPairPreview.of(load.source, glossary, pronoun,
                 EditorialPairSnapshot.cues("from,speaker,target"));
-        assertTrue("006 preview is blocked", preview.runnable());
+        assertTrue(chapter + " preview is blocked", preview.runnable());
         return new PrivateChapter006(draftPath, raw, draft, glossaryText, pronoun, glossary, load, preview);
     }
 

@@ -151,6 +151,7 @@ final class AddressEditGuard {
         }
         for (Hit hit : kept) if (hit.third && !addressedEntities.contains(key(hit.row.target()))) out.thirdEntities.add(key(hit.row.target()));
         out.onStage.addAll(addressedEntities);
+        for (String entity : point.sceneEntities()) out.onStage.add(key(entity));
         String context = Normalizer.normalize(point.rawContext(), Normalizer.Form.NFC);
         for (AddressRow row : point.addressRows()) {
             if (row.pair() && context.contains(Normalizer.normalize(row.from(), Normalizer.Form.NFC))) out.onStage.add(key(row.target()));

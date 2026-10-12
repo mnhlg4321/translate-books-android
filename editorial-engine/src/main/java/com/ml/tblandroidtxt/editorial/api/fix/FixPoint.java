@@ -6,12 +6,18 @@ import java.util.Set;
 
 /** One app-detected, RAW-anchored target. Line indices count non-blank DRAFT lines from zero. */
 public record FixPoint(int id, Set<Type> types, int draftLineIndex, String draftText, String rawText, List<String> rules,
-                       List<AddressRow> addressRows, String rawContext) {
+                       List<AddressRow> addressRows, String rawContext, List<String> sceneEntities) {
     public enum Type { ADDRESS, GLOSSARY, KANA, MISSING }
 
     /** A point without pronoun-row context: its ADDRESS answers cannot be checked against rows and are applied as before. */
     public FixPoint(int id, Set<Type> types, int draftLineIndex, String draftText, String rawText, List<String> rules) {
         this(id, types, draftLineIndex, draftText, rawText, rules, List.of(), "");
+    }
+
+    /** Pronoun-row context and the neighbouring RAW lines, without glossary-derived scene entities. */
+    public FixPoint(int id, Set<Type> types, int draftLineIndex, String draftText, String rawText, List<String> rules,
+                    List<AddressRow> addressRows, String rawContext) {
+        this(id, types, draftLineIndex, draftText, rawText, rules, addressRows, rawContext, List.of());
     }
 
     /** Pronoun-row context without neighbouring RAW lines. */
@@ -22,6 +28,7 @@ public record FixPoint(int id, Set<Type> types, int draftLineIndex, String draft
     public FixPoint {
         addressRows = addressRows == null ? List.of() : List.copyOf(addressRows);
         rawContext = rawContext == null ? "" : rawContext;
+        sceneEntities = sceneEntities == null ? List.of() : List.copyOf(sceneEntities);
         if (id < 1) throw new IllegalArgumentException("FIX_POINT_ID_INVALID");
         types = types == null ? Set.of() : Set.copyOf(new LinkedHashSet<>(types));
         draftText = draftText == null ? "" : draftText;

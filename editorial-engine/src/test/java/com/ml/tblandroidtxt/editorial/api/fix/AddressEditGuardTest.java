@@ -170,6 +170,34 @@ public final class AddressEditGuardTest {
         assertNull(AddressEditGuard.rejection(mixed, "「Chúng ta thấy Long Vương」"));
     }
 
+    @Test public void aGlossaryNameInTheNeighbouringLinePutsTheOtherEndOfARowInTheScene() {
+        String raw = "「アキさんって凄いな」";
+        String draft = "「Cậu giỏi thật đấy」";
+        String fixed = "「Cô giỏi thật đấy」";
+        // the third-person use of アキさん removes both rows aimed at Aki, so the call word cô has no applicable row
+        assertEquals("ADDRESS_FORM_NOT_IN_APPLICABLE_ROW", reason(draft, raw, fixed));
+        // the glossary says ケン is in the next line: Ken, the speaker of the アキさん row, is in the scene and the repair is allowed
+        FixPoint inScene = new FixPoint(1, Set.of(FixPoint.Type.ADDRESS), 0, draft, raw, List.of("rule"), ROWS, "", List.of("ken"));
+        assertNull(AddressEditGuard.rejection(inScene, fixed));
+        FixPoint elsewhere = new FixPoint(1, Set.of(FixPoint.Type.ADDRESS), 0, draft, raw, List.of("rule"), ROWS, "", List.of("sora"));
+        assertEquals("ADDRESS_FORM_NOT_IN_APPLICABLE_ROW", AddressEditGuard.rejection(elsewhere, fixed));
+    }
+
+    @Test public void theFinderTakesSceneEntitiesFromTheGlossaryNamesInTheAdjacentRawLines() {
+        String header = "from,speaker,target,self,call,scope,note\n";
+        List<EditInputs.GlossaryEntry> glossary = List.of(new EditInputs.GlossaryEntry("島川", "Shimakawa", "character", ""),
+                new EditInputs.GlossaryEntry("倉金", "Kuragane", "character", ""));
+        PairMap map = PairMaps.fromJobRows("CH001", "raw", "draft", List.of("「倉金先輩って姉貴やったんか」\n島川くんが反応した。\n次の行です。"),
+                List.of("「Chị Kuragane là chị gái hả」\nShimakawa phản ứng.\nDòng sau."));
+        List<FixPoint> points = FixPointFinder.find(map, map.entries().get(0), glossary, header + "倉金先輩,Shimakawa,Kuragane Erika,em,chị Erika,*,x\n", null, null).points();
+        FixPoint address = points.stream().filter(p -> p.types().contains(FixPoint.Type.ADDRESS)).findFirst().orElseThrow();
+        assertTrue(address.sceneEntities().contains("shimakawa"));
+        // 倉金先輩 is followed by って, yet the call repair to the row's own call word passes once Shimakawa is in the scene
+        var result = TargetedFixApplier.apply("「Chị Kuragane là chị gái hả」", List.of(address),
+                TargetedFixParser.parse("[1] 「Chị Erika là chị gái hả」", List.of(address)), glossary);
+        assertEquals("「Chị Erika là chị gái hả」", result.text());
+    }
+
     @Test public void aNameIsNeverSwappedForAnotherName() {
         assertEquals("ADDRESS_NAME_SWAPPED", reason("「Mio, em hơi sợ người đó」", "「ミオ、あの人が怖い」", "「Rina, em hơi sợ người đó」"));
     }
