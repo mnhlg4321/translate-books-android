@@ -12,7 +12,7 @@ import java.util.List;
 
 public class TranslationRepository extends SQLiteOpenHelper {
     private static final String DB = "tbl_android_txt.db";
-    private static final int VER = 29;
+    static final int VER = 29;
 
     public TranslationRepository(Context context) { this(context, DB); }
 
