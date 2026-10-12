@@ -1,4 +1,14 @@
 # Build State
+## Current state — 2026-10-12 (R1 complete: release candidate 4.18.0 archived; stop before tag and merge)
+
+- RC package: `artifacts/releases/v4.18.0/build-20261012-153252/` and `backup/v4.18.0/build-20261012-153252/` (event `build-20261012-153252`, ref `82626ac8`): APK `TranslateBooks-v4.18.0-code266.apk` (SHA-256 5865F23A1EE15602C5C38B967E34AED22E63728078C7A792F92E8BECBD6AE91B), QA report, CHANGELOG, BUILD_STATE, RELEASE_NOTES, 11 Perfetto traces, 3 Macrobenchmark files, 6 screenshots, 1 video, `project_source_v4.18.0.zip` (SHA-256 4DEA9A12FFDF25265226D30FA641D01DD1C964E68B95056C6D410EFD09ECE0EB), SHA256SUMS.txt, ARCHIVE_MANIFEST.md; 29 files byte-identical in both directories.
+- `scripts/archive-release.ps1` now gates a `build-*` event with PreTag and a `tag-*` event with PreBackup; the checklist version line is `v4.18.0` so `verify-release-workflow.ps1` accepts the exact version. Steps 10-14 stay unchecked.
+- The throw-away worktree and local branch `feature/v4.18.0` used for the exact-release wrapper build were removed; the branch was never pushed.
+- No tag, no merge, no provider call, no pilot.
+- Next action: owner xem gói RC `artifacts/releases/v4.18.0/build-20261012-153252/` (APK `TranslateBooks-v4.18.0-code266.apk`, ảnh/video, QA report) và quyết định D-R2: tag `v4.18.0` và merge vào `main`, hoặc yêu cầu sửa. Chỉ sau quyết định đó mới làm bước 10–14 của checklist; Codex chưa tag, chưa merge.
+
+Earlier current-state sections below are historical.
+
 ## Current state — 2026-10-12 (R1.5: release candidate 4.18.0/266 built, installed on emulator, device QA, media recorded)
 
 - Release candidate `4.18.0` (versionCode 266) built with `scripts/build-and-save.ps1 -ExactReleaseVersion 4.18.0` from source `82626ac8fe68d88ddf9c97710d70d1d4f648517a` (event `build-20261012-152329`): APK SHA-256 5865F23A1EE15602C5C38B967E34AED22E63728078C7A792F92E8BECBD6AE91B, source ZIP SHA-256 4DEA9A12FFDF25265226D30FA641D01DD1C964E68B95056C6D410EFD09ECE0EB; payload in `artifacts/builds/v4.18.0/build-20261012-152329/` and `backup/builds/v4.18.0/build-20261012-152329/`. The exact-release build needs a branch named `feature/v4.18.0`, so it ran in a throw-away local worktree and branch at the same commit (never pushed, removed afterwards). Matching AndroidTest event `rc-test-20261012` (SHA-256 6CAC2ADA5DC59C1F522A4EC19C6C608DB2B6E22838B5EED5E2DF899848B59ED2).
