@@ -52,6 +52,43 @@ public final class AddressEditGuardTest {
         assertNull(reason(draft, "「リナ、助けてくれたから、あたしは生きてる」", "「Rina đã cứu mình nên mình còn sống」"));
     }
 
+    @Test public void aNameWithACaseParticleDoesNotExcludeARowWhenTheOtherEndIsInTheScene() {
+        String raw = "「リナが死んじゃったら、あたし、どうしていいか」";
+        String draft = "「Nếu Rina chết thì tớ, tớ biết làm sao」";
+        String fixed = "「Nếu Rina chết thì mình, mình biết làm sao」";
+        // without the neighbouring lines this is the third-person case and stays closed
+        assertEquals("ADDRESS_FORM_NOT_IN_APPLICABLE_ROW", reason(draft, raw, fixed));
+        // the narration next to it names Aki, the other end of both Rina rows
+        FixPoint inScene = new FixPoint(1, Set.of(FixPoint.Type.ADDRESS), 0, draft, raw, List.of("rule"), ROWS, "アキは抱きついてきた。");
+        assertNull(AddressEditGuard.rejection(inScene, fixed));
+        // naming only Rina next to it does not help: Rina is the person who was mentioned
+        FixPoint sameName = new FixPoint(1, Set.of(FixPoint.Type.ADDRESS), 0, draft, raw, List.of("rule"), ROWS, "リナは泣いていた。");
+        assertEquals("ADDRESS_FORM_NOT_IN_APPLICABLE_ROW", AddressEditGuard.rejection(sameName, fixed));
+    }
+
+    @Test public void twoMentionedPeopleExcludeTheirRowEvenWithSceneContact() {
+        String raw = "「リナがアキを助けたから、あたしは生きてる」";
+        FixPoint both = new FixPoint(1, Set.of(FixPoint.Type.ADDRESS), 0, "「Rina đã cứu Aki nên tớ còn sống」", raw, List.of("rule"), ROWS, "ケン先輩が見ていた。");
+        assertEquals("ADDRESS_FORM_NOT_IN_APPLICABLE_ROW", AddressEditGuard.rejection(both, "「Rina đã cứu Aki nên mình còn sống」"));
+    }
+
+    @Test public void aSelfOnlyRowNeverPinsOrExcludesAndACallOnlyRowDoes() {
+        // ミオ has no call word: naming her next to a particle or as a vocative neither excludes nor pins a row
+        assertNull(reason("「Tớ đến rồi」", "「ミオが来たから、あたしも行く」", "「Mình đến rồi」"));
+        assertNull(reason("「Tớ đến rồi」", "「ミオ、あたしも行く」", "「Mình đến rồi」"));
+        // a row with only a call word is still a pair row: its vocative pins it, so a form from another row is refused
+        List<AddressRow> rows = new java.util.ArrayList<>(ROWS);
+        rows.add(new AddressRow("ユウ", "Aki", "Yu", "", "bạn"));
+        FixPoint callOnly = new FixPoint(1, Set.of(FixPoint.Type.ADDRESS), 0, "「Yu, tớ ở đây」", "「ユウ、あたしはここ」", List.of("rule"), rows);
+        assertEquals("ADDRESS_FORM_NOT_IN_APPLICABLE_ROW", AddressEditGuard.rejection(callOnly, "「Yu, mình ở đây」"));
+    }
+
+    @Test public void aReversedRowIsNotAPairThatTheLineSupports() {
+        // アキ is called, so only the Rina to Aki row (mình / Aki) fits; em belongs to the Aki to Mori row, i.e. the other direction
+        assertEquals("ADDRESS_FORM_NOT_IN_APPLICABLE_ROW", reason("「Aki, tôi ở đây」", "「アキ、あたしはここ」", "「Aki, em ở đây」"));
+        assertNull(reason("「Aki, tớ ở đây」", "「アキ、あたしはここ」", "「Aki, mình ở đây」"));
+    }
+
     @Test public void aTopicParticleIsAlsoAThirdPersonUse() {
         assertEquals("ADDRESS_FORM_NOT_IN_APPLICABLE_ROW",
                 reason("「Tớ nói rồi, Rina giỏi lắm」", "「だからリナは凄いって言ったのに」", "「Mình nói rồi, Rina giỏi lắm」"));
@@ -140,6 +177,17 @@ public final class AddressEditGuardTest {
         var result = TargetedFixApplier.apply(before, List.of(p), TargetedFixParser.parse("[1] 「Rina…… làm ơn, giúp mình nhé?!」", List.of(p)), List.of());
         assertEquals("「Rina…… làm ơn, giúp mình nhé?!」", result.text());
         assertEquals(TargetedFixApplier.Status.FIXED, result.outcomes().get(0).status());
+    }
+
+    @Test public void theFinderAttachesTheRawLinesNextToTheAlignedLines() {
+        String header = "from,speaker,target,self,call,scope,note\n";
+        PairMap map = PairMaps.fromJobRows("CH001", "raw", "draft", List.of("前の行です。\n「AはEに言った。」\n次の行です。"),
+                List.of("Dòng trước.\nCậu sẽ đi.\nDòng sau."));
+        List<FixPoint> points = FixPointFinder.find(map, map.entries().get(0), List.of(), header + "A,A,B,tôi,em,*,x\n", null, null).points();
+        assertEquals(1, points.size());
+        assertTrue(points.get(0).rawContext().contains("前の行です。"));
+        assertTrue(points.get(0).rawContext().contains("次の行です。"));
+        assertFalse(points.get(0).rawContext().contains("AはE"));
     }
 
     @Test public void theFinderAttachesEveryTableRowInScopeAndSurvivesARowWhoseSelfEqualsItsCall() {

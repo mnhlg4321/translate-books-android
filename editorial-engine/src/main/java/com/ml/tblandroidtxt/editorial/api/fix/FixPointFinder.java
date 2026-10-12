@@ -34,6 +34,7 @@ public final class FixPointFinder {
         final Set<FixPoint.Type> types = new LinkedHashSet<>();
         final LinkedHashSet<String> rules = new LinkedHashSet<>();
         final LinkedHashSet<AddressRow> addressRows = new LinkedHashSet<>();
+        String rawContext = "";
 
         Target(int draftIndex, int rawOrder, String draft) {
             this.draftIndex = draftIndex;
@@ -150,6 +151,14 @@ public final class FixPointFinder {
                     }
                     if (target.types.contains(FixPoint.Type.ADDRESS)) {
                         // the rows of the table in scope for this line are what the edit lock later checks the model's answer against
+                        // the RAW lines right before and after the aligned lines show who is in the scene
+                        StringBuilder neighbours = new StringBuilder();
+                        if (bead.rawStart() > 0) neighbours.append(raw.units().get(bead.rawStart() - 1).text());
+                        if (bead.rawEnd() < raw.size()) {
+                            if (neighbours.length() > 0) neighbours.append('\n');
+                            neighbours.append(raw.units().get(bead.rawEnd()).text());
+                        }
+                        target.rawContext = neighbours.toString();
                         for (ReferenceProjector.Row row : tableRows.pronouns()) {
                             for (int p : candidateParagraphs) {
                                 if (row.covers(p)) { target.addressRows.add(AddressRow.of(row)); break; }
@@ -170,7 +179,7 @@ public final class FixPointFinder {
         for (Object value : ordered) {
             if (value instanceof Target t) {
                 if (t.types.isEmpty()) continue;
-                points.add(new FixPoint(id++, t.types, t.draftIndex, t.draft, t.raw.toString(), new ArrayList<>(t.rules), new ArrayList<>(t.addressRows)));
+                points.add(new FixPoint(id++, t.types, t.draftIndex, t.draft, t.raw.toString(), new ArrayList<>(t.rules), new ArrayList<>(t.addressRows), t.rawContext));
             } else {
                 Missing m = (Missing) value;
                 points.add(new FixPoint(id++, Set.of(FixPoint.Type.MISSING), m.afterDraftIndex, "", m.raw, List.of(m.rule)));

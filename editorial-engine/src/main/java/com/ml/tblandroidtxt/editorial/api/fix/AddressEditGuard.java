@@ -21,8 +21,9 @@ import java.util.regex.Pattern;
  * <li>scope: for an ADDRESS-only point, everything except address words, titles and row names must stay the same;</li>
  * <li>names: one name must not be swapped for another;</li>
  * <li>audience: a plural audience in RAW (先輩たち, みんな) has no row, so address words are kept;</li>
- * <li>direction: a row's {@code from} term used as a third person (followed by a case particle) removes that person as speaker
- * and addressee; a vocative {@code from} term pins the rows to that term. A new address word must belong to a row that is still
+ * <li>direction: a row's {@code from} term followed by a case particle may be said about the person or to them, so it excludes the
+ * rows of that person only when the other end of the row is not named in the RAW lines next to this one (no scene contact); a
+ * vocative {@code from} term pins the rows to that term. A new address word must belong to a row that is still
  * applicable, and a word that already belongs to the pinned row must not be changed;</li>
  * <li>consistency: a line whose two or more address words already fit one row must still fit one row after the edit.</li>
  * </ul>
@@ -86,9 +87,22 @@ final class AddressEditGuard {
     private static final class Evidence {
         final Set<String> vocativeFrom = new HashSet<>();
         final Set<String> thirdEntities = new HashSet<>();
+        /** Entities that a {@code from} term names in the lines next to this one or as a call in it: they are in the scene. */
+        final Set<String> onStage = new HashSet<>();
 
+        /**
+         * A name followed by a case particle may be said about the person or to them, so it does not exclude a row by itself.
+         * A row stays excluded only when it involves such a person and its other end shows no sign of being in the scene.
+         */
         boolean excludes(AddressRow row) {
-            return thirdEntities.contains(key(row.speaker())) || thirdEntities.contains(key(row.target()));
+            String speaker = key(row.speaker());
+            String target = key(row.target());
+            boolean speakerMentioned = thirdEntities.contains(speaker);
+            boolean targetMentioned = thirdEntities.contains(target);
+            if (speakerMentioned && targetMentioned) return true;
+            if (targetMentioned) return !onStage.contains(speaker);
+            if (speakerMentioned) return !onStage.contains(target);
+            return false;
         }
     }
 
@@ -123,6 +137,11 @@ final class AddressEditGuard {
             }
         }
         for (Hit hit : kept) if (hit.third && !addressedEntities.contains(key(hit.row.target()))) out.thirdEntities.add(key(hit.row.target()));
+        out.onStage.addAll(addressedEntities);
+        String context = Normalizer.normalize(point.rawContext(), Normalizer.Form.NFC);
+        for (AddressRow row : point.addressRows()) {
+            if (row.pair() && context.contains(Normalizer.normalize(row.from(), Normalizer.Form.NFC))) out.onStage.add(key(row.target()));
+        }
         return out;
     }
 
