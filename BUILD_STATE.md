@@ -1,9 +1,10 @@
 # Build State
 
-## Current state — 2026-10-12 (D-R2: tag v4.18.0 created; tag archive and merge to main in progress)
+## Current state — 2026-10-12 (D-R2 done: tag v4.18.0, event tag-v4.18.0, merge --no-ff into main; push of main/tag and step 14 pending owner)
 
 - Owner authorized the push of the local range (done, remote `9d02976e`) and D-R2. Annotated tag `v4.18.0` (object `061e02a6e11e492695947405e23586784bb9b9a8`) points at `9d02976e2ec88598e66d03551bf7fd1c59ed40fe`; PreBackup gate passes. The APK is the RC 4.18.0/266 built from `82626ac8` (production inputs identical to the tag commit); not rebuilt.
-- Next: tag event `tag-v4.18.0` (artifacts + backup, source ZIP = `git archive v4.18.0`, production source `82626ac8` kept separate), then merge `--no-ff` into `main` in a temporary worktree (the workspace has unrelated uncommitted owner changes and is not switched). Pushing `main` and the tag is not part of this step and needs its own confirmation.
+- Event `tag-v4.18.0` created and verified (`artifacts/releases/v4.18.0/tag-v4.18.0`, `backup/v4.18.0/tag-v4.18.0`; 55 files each, identical, 54/54 checksums; source ZIP = `git archive v4.18.0`, production source `82626ac8` separate; older events untouched). Checklist steps 10-13 closed; step 14 stays open because the Complete gate needs `Workflow status: COMPLETE`, replacing the retained historical flags (NOT_CERTIFIED, P6_NOT_READY, ...) is an owner decision.
+- Merge: this branch is merged `--no-ff` into local `main` in a temporary worktree (the workspace has unrelated uncommitted owner changes and is not switched); the merge commit is the record. `main` and tag `v4.18.0` are NOT pushed; that needs the owner's confirmation.
 - Earlier sections are historical.
 
 ## Current state — 2026-10-12 (new archive event build-20261012-161228 created; publication authority pending)
