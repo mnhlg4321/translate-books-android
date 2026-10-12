@@ -1,12 +1,21 @@
 # Build State
 
-## Current state — 2026-10-12 (C7A: chapter 008 under CP-IMPL-11, 4 live calls)
+## Current state — 2026-10-12 (chapter 008 accepted, 2/3; CP-IMPL-12 finder fix, offline)
+
+- The owner accepted the C7A result for chapter 008 (CP-IMPL-11 evidence; gates: 0 lines outside points, 0 new Japanese, 132/132, ĐÚNG 20/28, SAI 1/28) and approved the offline finder fix. 2/3 chapters accepted (006, 008); P7 not started.
+- Code commit `866d1cce1ebc95cb5cff0f8591c587b6ce44e66b` (CP-IMPL-12): a glossary source inside a longer source creates a point only for an occurrence the longer entry does not cover. Corpus glossary points 25 to 19 (chapters 005, 007, 008), other chapters unchanged. Clean archive (zip SHA-256 4BF44014D29A834BCDCDB2B746FC6430C5A14B834A062E5219689F5892DDF49D): engine 702, app host 472, androidTest compile, scripts/p6 106, scripts/chunk 24 PASS; 006 replays byte-identical to CP-IMPL-11. Not built, not installed (installed APK is 4.18-c6.7/261).
+- Priced proposal for chapter 011: 11 calls, expected USD 0.022-0.030, cap USD 0.06, needs build `4.18-c6.8`. No provider call this step (spend 0).
+- Next action: owner duyệt, sửa hoặc từ chối đề xuất chạy chương thứ ba là 011 trong khối này: build `4.18-c6.8` từ commit tài liệu kế tiếp commit mã `866d1cce` (CP-IMPL-12), cài chỉ `emulator-5554`, chạy giả cả chương (USD 0) rồi một lần chạy cả chương 011 (11 lời gọi, luna medium, không retry), sổ mới `C7B-<ngày>`, trần USD 0.06; phân xử cả 58 điểm theo RAW + luật và dừng để owner đọc. Chưa build, cài hay chi trước quyết định đó.
+
+Earlier current-state sections below are historical.
+
+## Previous state — 2026-10-12 (C7A: chapter 008 under CP-IMPL-11, 4 live calls)
 
 - Pinned source `e9aa4e1b70f4071133791ae65db937f10bda8913`; wrapper build `4.18-c6.7`/261 (event build-20261012-112807, APK SHA-256 239F253D4A2D9F8FBFA647900DE2338F6386908E05DC93FE8F609EC933E8F8D8), test APK `c7a-test-20261012`; installed only on `emulator-5554`. Device SQLite reopen, EditorialPairStore and EditorialApiStore tests and a fake whole-chapter run passed first.
 - One whole-chapter run, luna medium, no retry, ledger C7A-20261012 cap USD 0.03: 4 calls (chunks 1, 5, 6, 7; chunks 2-4 have no points), all `stop`, every chunk accepted, FINAL_ELIGIBLE, 14122 in / 3230 out, USD 0.0074059, pending 0, no overrun.
 - 28 points adjudicated by RAW + rows + glossary: final ĐÚNG 20, SÓT 7, SAI 1. Events: correct fix applied 1, partial 0, wrong fix through 1 (1:2), correct fix wrongly blocked 0, wrong fixes blocked 3, misses 6 (+1 residual in 6:1). Cause of the SAI: the finder flags the short glossary entry リーダー inside the longer ゾンビリーダー whose target the DRAFT already has; not the lock.
 - Numeric gates: 0 lines outside points, 0 new Japanese, marks kept, 132/132 lines, ĐÚNG 71.4%, SAI 3.6%. Owner reading pending; 006 stays accepted (CP-IMPL-9); 008 not accepted yet; P7 not started.
-- Next action: owner đọc `D:\P5E-private\chunk-outputs\008\c7a-008-live-review.html` (và bản app `008_APP_c7a_JAKUAKU_MONSTER_VOL1.txt` cùng thư mục) rồi quyết định có chấp nhận chương 008 hay không (cổng số đạt: SAI 1/28, ĐÚNG 20/28); kèm đó duyệt hay không một sửa offline cho finder thuật ngữ (mục dài thắng, nguyên nhân SAI 1:2) trước khi chạy chương nào khác. Chưa chạy chương khác (011 hay chương nào), pilot hay V5.
+- Done: the owner accepted chapter 008 and approved the finder fix (section above).
 
 Earlier current-state sections below are historical.
 
