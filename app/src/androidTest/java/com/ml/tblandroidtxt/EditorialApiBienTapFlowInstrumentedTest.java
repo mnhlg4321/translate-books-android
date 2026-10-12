@@ -62,9 +62,7 @@ public final class EditorialApiBienTapFlowInstrumentedTest {
         try (SqliteEditorialApiStore store = new SqliteEditorialApiStore(context)) {
             for (long id : comboIds) store.deleteCombo(id);
         }
-        List<GlossaryStore.Glossary> all = new ArrayList<>(GlossaryStore.loadAll(context));
-        all.removeIf(g -> glossaryIds.contains(g.id));
-        GlossaryStore.saveAll(context, all);
+        GlossaryTestSupport.removeAndFlush(context, glossaryIds);
         for (String id : pronounIds) PronounStore.delete(context, id);
     }
 
@@ -119,7 +117,7 @@ public final class EditorialApiBienTapFlowInstrumentedTest {
             glossary.terms.add(term);
             List<GlossaryStore.Glossary> all = new ArrayList<>(GlossaryStore.loadAll(context));
             all.add(0, glossary);
-            GlossaryStore.saveAll(context, all);
+            GlossaryTestSupport.saveAndFlush(context, all);
             glossaryIds.add(glossary.id);
             glossaryId = glossary.id;
             PronounStore.Profile profile = PronounStore.importProfile(context, "pronoun-bientap-test",

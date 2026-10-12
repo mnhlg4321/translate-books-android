@@ -78,11 +78,7 @@ public final class EditorialApiBienTapUiInstrumentedTest {
 
     @After public void tearDown() {
         EditorialApiUiController.providerOverride = null;
-        if (!createdGlossaryIds.isEmpty()) {
-            List<GlossaryStore.Glossary> all = new ArrayList<>(GlossaryStore.loadAll(context));
-            all.removeIf(g -> createdGlossaryIds.contains(g.id));
-            GlossaryStore.saveAll(context, all);
-        }
+        GlossaryTestSupport.removeAndFlush(context, createdGlossaryIds);
         try (SqliteEditorialApiStore store = new SqliteEditorialApiStore(context)) {
             for (long id : comboIds) store.deleteCombo(id);
             for (EditorialApiCombo combo : store.listCombos()) {
@@ -187,7 +183,7 @@ public final class EditorialApiBienTapUiInstrumentedTest {
         all.add(1, decoySameName);
         all.add(2, glossary);
         all.add(3, decoyAfter);
-        GlossaryStore.saveAll(context, all);
+        GlossaryTestSupport.saveAndFlush(context, all);
         glossaryId = glossary.id;
         createdGlossaryIds.add(glossary.id);
         createdGlossaryIds.add(decoyAfter.id);

@@ -78,7 +78,7 @@ public final class EditorialR1MediaWalkthroughInstrumentedTest {
         glossary.terms.add(taro);
         List<GlossaryStore.Glossary> all = new ArrayList<>(GlossaryStore.loadAll(context));
         all.add(0, glossary);
-        GlossaryStore.saveAll(context, all);
+        GlossaryTestSupport.saveAndFlush(context, all);
         glossaryId = glossary.id;
     }
 
@@ -92,12 +92,7 @@ public final class EditorialR1MediaWalkthroughInstrumentedTest {
             TranslationRepository repository = new TranslationRepository(context);
             try { repository.deleteJob(jobId); } finally { repository.close(); }
         }
-        if (!glossaryId.isEmpty()) {
-            List<GlossaryStore.Glossary> all = new ArrayList<>(GlossaryStore.loadAll(context));
-            final String id = glossaryId;
-            all.removeIf(g -> g.id.equals(id));
-            GlossaryStore.saveAll(context, all);
-        }
+        if (!glossaryId.isEmpty()) GlossaryTestSupport.removeAndFlush(context, java.util.Collections.singletonList(glossaryId));
         //noinspection ResultOfMethodCallIgnored
         exportFile.delete();
     }
