@@ -1,6 +1,13 @@
 # Build State
 
-## Current state — 2026-10-12 (D-R3: release v4.18.0 closed; checklist step 14 and Complete gate PASS; push of branch, tag and main authorized)
+## Current state — 2026-10-12 (v4.19 opened: pronoun misses of the chunk flow; offline first, USD 0)
+
+- Owner opened release v4.19 from `main` `998da341`. One branch `feature/v4.19` (clean worktree `D:\P5E-builds\wt-v4.19`; the owner's workspace with 163 uncommitted entries is untouched), one checklist `release_checklists/v4.19.md` (steps 01-04 done with evidence), one canonical plan `EDITORIAL_PRONOUN_RECOVERY_V4_19.md`.
+- Shipped baseline unchanged: v4.18.0, APK 4.18.0/code 266 from `82626ac8`, logic CP-IMPL-15. No code, build, device or provider operation in this step.
+- Scope: build the known-error suite and a separate clean control set, diagnose the cause by layer (finder recall, model compliance, guard, wrong pass, label uncertainty), propose a fix; stop for the owner's choice before fixing. No provider call without a separate spend authority.
+- Next action: finish X1_SUITE and X2_DIAGNOSE offline, then present X3_PROPOSE.
+
+## Earlier — 2026-10-12 (D-R3: release v4.18.0 closed; checklist step 14 and Complete gate PASS; push of branch, tag and main authorized)
 
 - Independent review of D-R2 confirmed: merge `d1fd354a` has parents `104fffdc` + `3add7278` and the same tree as the branch; event `tag-v4.18.0` has 55 files in each root, identical, SHA256SUMS 54/54 OK; `project_source_v4.18.0.zip` equals `git archive v4.18.0` (1,333 entries); APK 4.18.0/266 `5865F23A…AE91B` from `82626ac8` (only 4 androidTest files differ up to `9d02976e`). The earlier "720 commits ahead" count was 721.
 - Owner decision D-R3: checklist step 14 closed with that export evidence; `Workflow status: COMPLETE` for the v4.18 release lifecycle (Editorial chunk scope); the historical V5-SAFE.4.1.3 flags (NOT_CERTIFIED, P6_NOT_READY, EXECUTION_DISABLED, PILOT_DATA_PRESERVATION_GATE_FAILED…) moved verbatim to their own line, not cleared and not waived. Errata under steps 06/08 (116 PASS / 1 SKIP; BienTapUi 2 PASS / 3 SKIP); release-branch note in the checklist header. `verify-release-workflow.ps1 -Gate Complete` PASS (`artifacts/qa/v4.18-r1/r1.7-complete-gate/`, mirrored in `backup/qa/...`).
