@@ -426,7 +426,19 @@ Tăng contract lên `CP-IMPL-6`; lượt chạy cũ không được tiếp tục
 
 ## 6. Trạng thái
 
-**Hiện hành — C7D, 2026-10-12, cả chương 011 dưới CP-IMPL-14: chạy đủ, cổng số đạt, SÓT từ 9 xuống 2, chờ owner đọc.** Owner duyệt đề xuất. Dùng đúng build `4.18-c6.9`/263 đã cài sẵn (source ghim `346cfdfdc512110ca1d193c5163953d5ac9039e9`, APK SHA-256 `237B8E6F…A16F`), chỉ `emulator-5554`, luna medium, không retry, sổ mới `C7D-20261012` trần USD 0.06, glossary 011 có mục `全国レベル`; chạy giả cả chương (USD 0) trước.
+**Hiện hành — owner chấp nhận chương 011: 3/3 chương accepted, C7 hoàn tất; CP-IMPL-15 sửa 12:8 offline, 2026-10-12.** Owner đọc kết quả C7D và chấp nhận chương 011 (CP-IMPL-14, bản app `011_APP_c7d_JAKUAKU_MONSTER_VOL1.txt`), kèm yêu cầu sửa tiếp 12:8. Ba chương accepted: 006 (CP-IMPL-9), 008 (CP-IMPL-11), 011 (CP-IMPL-14). Điều kiện P7 ("sau C3, owner chấp nhận 3/3") đủ. Chấp nhận này áp cho kết quả đã đo, kèm giới hạn đã nêu: 2:2 (sửa đúng bị chặn), 12:2 (chưa chắc), 10:6 (sót), 13 SÓT xưng hô còn lại của 006, 7 SÓT `cậu` của 008. Không đổi nhãn, ngưỡng, căn/cắt/ghép chunk.
+
+**Sửa 12:8 (CP-IMPL-15, mã `12824cee6c6f4e9f9482efaf6fe398799d5732c0`):** `Em Kuragane` bị model đổi thành `Erika Kuragane` (RAW `倉金さぁん`, glossary `倉金 → Kuragane`): tên đầy đủ mà RAW không mang. Khóa thêm điều kiện: một từ tên thêm vào cạnh một từ tên khác của cùng thực thể (chuỗi speaker/target cùng tên call của các hàng) bị `ADDRESS_NAME_COMBINED`. Họ đổi thành tên call (10:2 `chị Kuragane → chị Erika`) và tên call lặp lại cách xa họ (2:5, 4:2) vẫn qua. Cách "tên phải có nguồn trong RAW" bị loại vì sẽ chặn cả sửa đúng 2:5. Test mới `aGivenNameIsNotAddedNextToTheSurnameOfTheSamePerson` (cả hai thứ tự, họ được thay, tên lặp).
+
+**QA từ archive sạch** (`git archive 12824cee`, zip SHA-256 `F0D553C6481DFE90DE95C7359168E2D6688FBC5600D3A7D5526799250179EB84`, giải ở `D:/P5E-builds/verify-c6j-12824cee`, chạy trong thư mục archive): engine 706 (1 SKIP), app host 472 (3 SKIP), `compileDebugAndroidTestJavaWithJavac`, `scripts/p6` 106, `scripts/chunk` 24 đều PASS. Phát lại trong archive: 006 (C6B, C6E) và 008 giống từng byte với CP-IMPL-13; trả lời C7D đã lưu của 011 chỉ khác ở 12:8, từ `FIXED` thành `KEPT ADDRESS_NAME_COMBINED`, 55 điểm còn lại giữ nguyên kết quả live; trả lời C7B của 011 khác ở 10:2 (nay áp dụng, CP-IMPL-13) và 10:3 (nay `KEPT ADDRESS_SCOPE_EXCEEDED` vì mục glossary `全国レベル` làm điểm này chỉ còn xưng hô, nên việc model đổi `trình độ` thành `cấp độ` bị chặn). Dự kiến cho 011 dưới CP-IMPL-15 nếu model trả lời như C7D (replay, không phải live): sửa sai lọt 0, sửa sai bị chặn đúng 2 (3:2, 12:8), ĐÚNG 51, SÓT 2, SAI 0, CHƯA CHẮC 3 (ĐÚNG 51/53 = 96,2%, SAI 0/56). Chưa build, cài hay provider; APK cài là `4.18-c6.9`/263 (CP-IMPL-14), bản sửa 12:8 chỉ ở mã nguồn.
+
+**P7 mở:** theo checklist v4.18 và kế hoạch phục hồi: hồi quy đầy đủ có mục tiêu, wrapper build kèm hai archive, QA thiết bị (import, restart, recovery, stale input, export, Translation), APK và mẫu cuối cùng cùng bằng chứng checklist; tag/release chỉ sau các cổng. C7 không còn live nào cần chạy.
+
+**Next action duy nhất:** owner duyệt bắt đầu P7 theo `release_checklists/v4.18-editorial-v5-safe-4-1-3.md`: bước đầu là hồi quy đầy đủ offline (0 USD) trên commit mã `12824cee` (CP-IMPL-15) rồi lập danh sách bằng chứng còn thiếu của checklist; sau đó mới build wrapper `4.18-c6.10` với hai archive và QA thiết bị (import, restart, recovery, stale input, export, Translation). Chưa tag, merge hay release, và không có provider call nào mới.
+
+Khối dưới là lịch sử.
+
+**Trước đó — C7D, 2026-10-12, cả chương 011 dưới CP-IMPL-14: chạy đủ, cổng số đạt, SÓT từ 9 xuống 2, chờ owner đọc.** Owner duyệt đề xuất. Dùng đúng build `4.18-c6.9`/263 đã cài sẵn (source ghim `346cfdfdc512110ca1d193c5163953d5ac9039e9`, APK SHA-256 `237B8E6F…A16F`), chỉ `emulator-5554`, luna medium, không retry, sổ mới `C7D-20261012` trần USD 0.06, glossary 011 có mục `全国レベル`; chạy giả cả chương (USD 0) trước.
 
 - **Live:** 11 lời gọi (đoạn 7 và 13 không điểm), mọi lời gọi `stop`, mọi đoạn accepted, `FINAL_ELIGIBLE`. 49 004 vào, 7 017 ra, **USD 0.0195566** (dưới dải kỳ vọng 0.022–0.030; C7B tốn USD 0.0201). Sổ: 22 bản ghi, 11 call, pending 0, không overrun, `costOverrunCalls 0`. Log thiết bị không có `provider_usage`.
 - **Chấm 56 điểm (cùng bộ điểm và cùng DRAFT/RAW như C7B; RAW + hàng pronoun + glossary):** kết quả cuối ĐÚNG 50, SÓT 2, SAI 1, CHƯA CHẮC 3. So với C7B (ĐÚNG 43, SÓT 9, SAI 1, CHƯA CHẮC 3): SÓT 9 → 2, sửa đúng áp dụng 5 → 13.
@@ -438,7 +450,7 @@ Tăng contract lên `CP-IMPL-6`; lượt chạy cũ không được tiếp tục
 - **Cổng số:** dòng ngoài điểm đổi 0 ✓ (15 dòng đổi = 15 điểm FIXED); chữ Nhật mới 0 ✓; dấu 「」, `……` và ký hiệu không đổi ✓; không mất câu ✓ (214/214 dòng); ĐÚNG 50/53 = 94,3% ✓ (≥60%); SAI 1/56 = 1,8% ✓ (≤10%); owner đọc: **chưa**. Số so với FINAL không dùng làm cổng.
 - **Giới hạn:** một chương, một mẫu, phương sai model vẫn đáng kể (10:6); prompt mới làm model tích cực hơn, kéo theo 12:8 và 3:2 là đề xuất sai (một lọt, một bị khóa chặn) và 12:2 chưa chắc; chỉ đo trên 011 nên chưa biết tác động lên 006 và 008. 006 (CP-IMPL-9) và 008 (CP-IMPL-11) vẫn accepted (2/3), 011 chưa accepted, P7 chưa mở. Bằng chứng: `D:/P5E-private/c6-guard-20261012/` (`score_c7d.py`, `c7d-points.json`) và `D:/P5E-private/chunk-runs/C1/live/011-25ce0f9a-0d79-4b5e-8de4-5c2a17c92463/`.
 
-**Next action duy nhất:** owner đọc `D:\P5E-private\chunk-outputs\011\c7d-011-live-review.html` (và bản app `011_APP_c7d_JAKUAKU_MONSTER_VOL1.txt` cùng thư mục) rồi quyết định có chấp nhận chương 011 hay không (cổng số đạt: SAI 1/56, ĐÚNG 50/53; chấp nhận sẽ làm 3/3 chương accepted và mở P7); các điểm còn lại 12:8 (SAI), 2:2 (chặn nhầm), 12:2 (chưa chắc) và 10:6 (sót) được ghi là giới hạn đã biết hoặc owner yêu cầu sửa tiếp. Chưa chạy chương khác, pilot hay V5.
+Owner đã chấp nhận; xem khối phía trên.
 
 Khối dưới là lịch sử.
 

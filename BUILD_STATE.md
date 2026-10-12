@@ -1,11 +1,20 @@
 # Build State
 
-## Current state — 2026-10-12 (C7D: chapter 011 under CP-IMPL-14, 11 live calls)
+## Current state — 2026-10-12 (chapter 011 accepted: 3/3, C7 done; CP-IMPL-15 fixes 12:8, offline; P7 opens)
+
+- The owner accepted chapter 011 (CP-IMPL-14 evidence: final ĐÚNG 50, SÓT 2, SAI 1, CHƯA CHẮC 3; gates met) and asked for 12:8 to be fixed. Accepted chapters: 006 (CP-IMPL-9), 008 (CP-IMPL-11), 011 (CP-IMPL-14): 3/3. The known limits stay recorded (2:2 blocked, 12:2 uncertain, 10:6 missed, the remaining misses of 006 and 008).
+- Code commit `12824cee6c6f4e9f9482efaf6fe398799d5732c0` (CP-IMPL-15): a name word added next to a different name word of the same entity is refused (ADDRESS_NAME_COMBINED); surname-to-call-name and repeated call names still pass. Clean archive (zip SHA-256 F0D553C6481DFE90DE95C7359168E2D6688FBC5600D3A7D5526799250179EB84): engine 706, app host 472, androidTest compile, scripts/p6 106, scripts/chunk 24 PASS. Replays: 006 and 008 byte-identical; the stored C7D answers differ only at 12:8 (now kept); projected 011 outcome ĐÚNG 51/53, SAI 0/56 (replay, not live). Not built or installed (installed APK is 4.18-c6.9/263).
+- No provider call, build or install in this step (spend 0). P7 now opens; no tag, merge or release.
+- Next action: owner duyệt bắt đầu P7 theo `release_checklists/v4.18-editorial-v5-safe-4-1-3.md`: bước đầu là hồi quy đầy đủ offline (0 USD) trên commit mã `12824cee` (CP-IMPL-15) rồi lập danh sách bằng chứng còn thiếu của checklist; sau đó mới build wrapper `4.18-c6.10` với hai archive và QA thiết bị (import, restart, recovery, stale input, export, Translation). Chưa tag, merge hay release, và không có provider call nào mới.
+
+Earlier current-state sections below are historical.
+
+## Previous state — 2026-10-12 (C7D: chapter 011 under CP-IMPL-14, 11 live calls)
 
 - Same installed build `4.18-c6.9`/263 (source `346cfdfdc512110ca1d193c5163953d5ac9039e9`), emulator-5554 only, 011 glossary with the 全国レベル entry. Fake whole-chapter run first. One whole-chapter run, luna medium, no retry, ledger C7D-20261012 cap USD 0.06: 11 calls, all `stop`, every chunk accepted, FINAL_ELIGIBLE, 49004 in / 7017 out, USD 0.01955655, pending 0, no overrun.
 - 56 points (same points as C7B): final ĐÚNG 50, SÓT 2, SAI 1, CHƯA CHẮC 3 (C7B: 43/9/1/3). Events: correct fixes applied 13, wrong fix through 1 (12:8, `Em Kuragane` turned into `Erika Kuragane`), correct fix wrongly blocked 1 (2:2), wrong fix blocked 1 (3:2), uncertain applied 1 (12:2), miss 1 (10:6, model variance). All 8 `cậu` misses of C7B were handled (7 applied, 1 blocked); 10:2 now applied thanks to CP-IMPL-13. The C7B label of 12:3 was wrong (should have been a miss): C7B corrected to ĐÚNG 42, SÓT 10.
 - Numeric gates: 0 lines outside points, 0 new Japanese, marks kept, 214/214 lines, ĐÚNG 50/53 = 94.3%, SAI 1/56 = 1.8%. Owner reading pending; 006 and 008 accepted (2/3); 011 not accepted yet; P7 not started. No code changed in this step.
-- Next action: owner đọc `D:\P5E-private\chunk-outputs\011\c7d-011-live-review.html` (và bản app `011_APP_c7d_JAKUAKU_MONSTER_VOL1.txt` cùng thư mục) rồi quyết định có chấp nhận chương 011 hay không (cổng số đạt: SAI 1/56, ĐÚNG 50/53; chấp nhận sẽ làm 3/3 chương accepted và mở P7); các điểm còn lại 12:8 (SAI), 2:2 (chặn nhầm), 12:2 (chưa chắc) và 10:6 (sót) được ghi là giới hạn đã biết hoặc owner yêu cầu sửa tiếp. Chưa chạy chương khác, pilot hay V5.
+- Done: the owner accepted chapter 011 (section above).
 
 Earlier current-state sections below are historical.
 
