@@ -426,7 +426,37 @@ Tăng contract lên `CP-IMPL-6`; lượt chạy cũ không được tiếp tục
 
 ## 6. Trạng thái
 
-**Hiện hành — khóa ADDRESS offline CP-IMPL-8, 2026-10-12, nền `3b938bd6`: 9 SAI đã đóng ở replay, 11 sửa đúng và 54 KEPT giữ nguyên; chưa live.** Triển khai `fix/AddressEditGuard` trong applier và `AddressRow` + `FixPoint.addressRows` từ finder; gộp patch CP-IMPL-7 của coordinator (parser giữ dấu thoại, bảo vệ ký hiệu) vào cùng commit. Không đổi căn/cắt/ghép chunk, nhãn, ngưỡng C6, prompt; 0 call/USD 0.
+**Hiện hành — CP-IMPL-9, 2026-10-12, code `e5112442`: hết chặn nhầm 5:1–5:2, 9 SAI vẫn đóng, 11 sửa đúng còn nguyên; offline đạt, chưa canary.** Giữ nguyên căn/cắt/ghép chunk, nhãn, ngưỡng C6 và prompt; 0 provider call, USD 0, không build/cài.
+
+| Việc | Kết quả |
+|---|---|
+| Ngôi thứ ba | Tên + trợ từ (依里花が, 令愛の) không còn tự loại speaker/target: nó có thể nói về hoặc nói với người đó. Hàng của người được nhắc chỉ bị loại khi đầu còn lại của hàng không xuất hiện trong dòng RAW liền trước/sau (`FixPoint.rawContext`, finder điền) hoặc khi cả hai đầu cùng bị nhắc. Gọi trực tiếp vẫn ghim hàng |
+| Hàng self-only (私, 会衣, わたし, 僕) | Không ghim, không loại; dạng của chúng vẫn tính khi biện minh dạng mới và khi kiểm nhất quán. Finder vẫn không sinh điểm từ hàng thiếu self hoặc call: không có bằng chứng RAW cho biết ai nói, thêm điểm sẽ tăng SAI. Với 006: 4/13 hàng self-only, 0 call-only. Nguyên nhân SÓT cậu/tớ ngoài cặp-hàng vẫn còn |
+| Hàng call-only | Coi là hàng cặp (vocative ghim, loại như hàng khác); có test |
+| Kiểm nhất quán | Chỉ áp dụng khi dòng DRAFT có từ hai từ xưng hô; chỉ so tập từ (không đếm, không thứ tự), chỉ để chặn, không bao giờ thêm sửa; dòng trộn hai người nói không bị coi là nhất quán. 6:1 (cô+tôi) vẫn đóng, một từ `tôi` đơn lẻ không còn chặn |
+| Service | Điểm ADDRESS bị khóa giữ `KEPT` + lý do, không `STRUCTURE_BLOCKED`; sửa ký hiệu/kana/độ dài vẫn chặn đoạn |
+
+**QA từ archive sạch** (`git archive e5112442a03ed36cd0741cc8d69ca4ca851fea2a`, zip SHA-256 `8676C71B853FF0AA8811E50B01755B7E86B6B1BEDCC7C91F917A4BBB3C336123`, giải ở `D:/P5E-builds/verify-c6d-e5112442`): engine 692 test (1 opt-in SKIP) PASS; app host 472 (3 SKIP) PASS; `compileDebugAndroidTestJavaWithJavac` PASS; Python `scripts/p6` 106 OK, `scripts/chunk` 24 OK. Số app 1381 ghi ở khối CP-IMPL-8 là đếm cả báo cáo cũ còn trong `build/`; số đúng là 472. Test mới xuyên service: `EditorialPairAddressKeepServiceTest` chạy prepare → execute → lưu → mở lại bằng service mới (provider ném lỗi nếu bị gọi): điểm ADDRESS bị khóa giữ DRAFT, glossary và sửa xưng hô hợp lệ cùng đoạn được áp dụng, lưu trong gate JSON và còn nguyên sau khi mở lại, `exportPlan` đúng; đối chứng: lỗi ký hiệu vẫn chặn đoạn. Store là bản bộ nhớ dùng chung giao diện; vòng SQLite thật thuộc test thiết bị, chưa chạy (không cài).
+
+**Chấm riêng** (nhãn phân xử theo RAW + luật, không đổi; phát lại trong archive sạch, finder thật trên 006, `D:/P5E-private/c6-guard-20261012/score_guard.py`):
+
+| Nguồn ứng viên | Sửa đúng được áp dụng | Sửa sai lọt qua | Sửa đúng bị chặn nhầm | Sửa sai bị chặn | Bỏ sót |
+|---|---|---|---|---|---|
+| 74 điểm trả lời C6B đã lưu | 11/11, mỗi dòng bằng dòng model trả (dấu 「」/ký hiệu giữ; 5:7 chỉ lấy lại `.` của DRAFT) | 0 | 0 | 9/9 (5 phạm vi, 2 hàng, 1 số nhiều, 1 nhất quán) | 14 (model không đề xuất, không do khóa) |
+| Trả lời live C6C đoạn 5 | 1 (5:3 một phần) | 0 | 0 | 0 | 5 |
+| Dòng FINAL của owner làm ứng viên (chỉ tham chiếu, 19 điểm ADDRESS có đổi) | 10 điểm nhãn ĐÚNG/SÓT qua, gồm 5:1 và 5:2 | — | 0 sửa thuần xưng hô bị chặn; 3 dòng bị chặn có chủ ý (7:3 đổi cả từ khác; 7:6 và 8:1 đổi ký hiệu) | 3:2 và 5:5 bị chặn | — |
+
+KEPT giữ nguyên 63/74 (54 của model + 9 khóa). Không dòng nào ngoài điểm đổi.
+
+**Phơi nhiễm còn lại, nêu rõ:** (1) biến thể thuần xưng hô `tớ → mình` của 4:5 (nhãn SAI vì Rea nói với nhóm; dòng FINAL của owner chính là biến thể đó) không còn bị chặn, vì dòng RAW kế bên có 令愛. Model C6B không sinh biến thể ấy (nó đổi cả văn phong, nên bị phạm vi chặn). 3:2 vẫn đóng vì không có tiếp xúc cảnh. (2) Bằng chứng tiếp xúc cảnh chỉ là tên xuất hiện ở dòng kế bên, một suy luận có thể sai cả hai chiều; mẫu kiểm chỉ là 006. (3) Một mẫu live (C6C) không đo được phương sai model. (4) 13 SÓT xưng hô vẫn là SÓT.
+
+**Canary đề xuất (chưa có quyền chi/build/cài):** lặp chương 006 đoạn 5, vì đoạn này chứa đúng cặp 5:1/5:2 từng bị chặn nhầm, hai sửa đúng đã biết (5:3, 5:7) và một điểm số nhiều (5:5). Ngân sách: tối đa một lời gọi; giữ chỗ quan sát USD 0.0066287 (giá 0.25/1.20, sàn 4096), thật ≈ USD 0.0028, trần USD 0.01 (dư ≈ USD 0.0034 sau giữ chỗ). Dừng ngay nếu selector bị từ chối, ước tính vượt trần hoặc lời gọi không có câu trả lời.
+
+**Next action duy nhất:** owner duyệt hoặc từ chối một canary hành vi: build `4.18-c6.6` (code 260) từ commit kế tiếp commit tài liệu này (nguồn code `e5112442`), cài chỉ `emulator-5554`, chạy selector đoạn 5 bằng provider giả (USD 0), rồi đúng 1 lời gọi live trên chương 006 đoạn 5 (luna medium, không retry, sổ mới `C6D-<ngày>`, trần USD 0.01; giữ chỗ quan sát ở C6C USD 0.0066287, quyết toán thật USD 0.00281905). Gate: dòng ngoài điểm không đổi, 0 chữ Nhật mới, không điểm đúng nào bị khóa chặn (5:1/5:2 nếu model sửa phải qua), 5:5 được giữ; đây là canary hành vi, không phải mẫu PASS C6. Chưa build, cài hay chi trước quyết định đó.
+
+Khối dưới là lịch sử.
+
+**Trước đó — khóa ADDRESS offline CP-IMPL-8, 2026-10-12, nền `3b938bd6`: 9 SAI đã đóng ở replay, 11 sửa đúng và 54 KEPT giữ nguyên; chưa live.** Triển khai `fix/AddressEditGuard` trong applier và `AddressRow` + `FixPoint.addressRows` từ finder; gộp patch CP-IMPL-7 của coordinator (parser giữ dấu thoại, bảo vệ ký hiệu) vào cùng commit. Không đổi căn/cắt/ghép chunk, nhãn, ngưỡng C6, prompt; 0 call/USD 0.
 
 | Khóa (chỉ từ chối khi có bằng chứng ngược, không từ chối vì lạ) | Điều kiện | Điểm bị chặn ở replay C6B |
 |---|---|---|
@@ -448,7 +478,7 @@ Tăng contract lên `CP-IMPL-6`; lượt chạy cũ không được tiếp tục
 - **Chấm 7 điểm theo RAW + luật:** 5:3 ĐÚNG một phần (call `anh Tatsuoka` đúng hàng 龍岡先輩, self `tôi` còn sót); 5:5 KEPT (model giữ, không lặp SAI C6B); SÓT: 5:1, 5:2, 5:4, 5:6 và 5:7 (C6B model sửa 5:7 đúng, lần này giữ `=`; khác biệt giữa hai lần là phương sai của model, không đo được từ một mẫu). **SAI 0/7**, dòng ngoài điểm đổi 0, chữ Nhật mới 0. Lỗi `STRUCTURE_BLOCKED` ở trên làm app text của lần chạy đúng bằng DRAFT, nên đây không phải chứng cứ chất lượng toàn chương, và 7 điểm không đủ để kết luận PASS C6.
 - APK 4.18-c6.5 trên emulator vẫn mang trạng thái cũ (chặn cả đoạn khi khóa từ chối); bản sửa chỉ có trong mã nguồn, cần build 4.18-c6.6 trước mọi lần live tiếp.
 
-**Next action duy nhất:** owner đọc `D:\P5E-private\chunk-outputs\006\c6c-chunk5-live-review.html` và quyết định có duyệt lần chạy lại cả chương 006 (14 lời gọi, luna medium, sổ mới, trần USD 0.06) bằng build mới 4.18-c6.6 mang sửa trạng thái KEPT của khóa ADDRESS, để đo cổng C6 dưới khóa. Chưa build, cài hay chi trước quyết định đó.
+Đã xử lý ở khối CP-IMPL-9 phía trên.
 
 Khối dưới là lịch sử.
 

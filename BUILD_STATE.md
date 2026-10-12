@@ -1,13 +1,23 @@
 # Build State
 
-## Current state — 2026-10-12 (CP-IMPL-8 ADDRESS edit lock, offline)
+## Current state — 2026-10-12 (CP-IMPL-9 ADDRESS lock, offline QA from a clean archive)
+
+- Code commit `e5112442` (contract CP-IMPL-9). A name plus case particle no longer excludes a speaker/target row by itself: a row of the mentioned person stays excluded only when its other end is absent from the adjacent RAW lines, or both ends are mentioned. 5:1/5:2 are no longer blocked; 3:2 stays closed. Self-only rows never pin or exclude, call-only rows are pair rows, row consistency needs two address words. ADDRESS-lock rejections are KEPT (chunk not blocked).
+- Clean `git archive` of `e5112442` (zip SHA-256 8676C71B853FF0AA8811E50B01755B7E86B6B1BEDCC7C91F917A4BBB3C336123): engine 692 PASS (1 skip), app host 472 PASS (3 skip; the earlier 1381 counted stale reports), androidTest compile PASS, scripts/p6 106 OK, scripts/chunk 24 OK. New service test EditorialPairAddressKeepServiceTest (prepare, execute, store, reopen).
+- Scored separately on the stored C6B answers: 11/11 correct fixes applied unchanged, 0 wrong fixes through, 0 correct fixes wrongly blocked, 9/9 wrong fixes blocked, 14 misses not caused by the lock. Live C6C answer: 1 correct, 0 wrong, 5 misses. Exposure: the pure `tớ`→`mình` variant of 4:5 is no longer blocked.
+- No provider call, build or install in this step; installed APK is still 4.18-c6.5 (old status mapping). 0/3 accepted; P7 not started.
+- Next action: owner duyệt hoặc từ chối một canary hành vi: build `4.18-c6.6` (code 260) từ commit kế tiếp commit tài liệu này (nguồn code `e5112442`), cài chỉ `emulator-5554`, chạy selector đoạn 5 bằng provider giả (USD 0), rồi đúng 1 lời gọi live trên chương 006 đoạn 5 (luna medium, không retry, sổ mới `C6D-<ngày>`, trần USD 0.01; giữ chỗ quan sát ở C6C USD 0.0066287, quyết toán thật USD 0.00281905). Gate: dòng ngoài điểm không đổi, 0 chữ Nhật mới, không điểm đúng nào bị khóa chặn (5:1/5:2 nếu model sửa phải qua), 5:5 được giữ; đây là canary hành vi, không phải mẫu PASS C6. Chưa build, cài hay chi trước quyết định đó.
+
+Earlier current-state sections below are historical.
+
+## Previous state — 2026-10-12 (CP-IMPL-8 ADDRESS edit lock, offline)
 
 - Baseline `3b938bd6`; uncommitted engine work becomes one commit with the CP-IMPL-7 parser/applier/prompt patch. `AddressEditGuard` (scope, name, plural audience, speaker-to-target direction from the full pronoun table, row consistency), `AddressRow` and `FixPoint.addressRows`; finder no longer throws on a row with self equal to call; contract revision CP-IMPL-8.
 - Faithful replay of the stored C6B answers through the real finder (74 points, no provider call): 9 wrong edits rejected, 11 correct edits still FIXED with identical text (dialogue marks and symbols kept), 54 KEPT unchanged, no other text changed. Evidence D:/P5E-private/c6-guard-20261012/.
 - Tests on the working tree: engine 686 (1 opt-in skip) PASS incl. 16 new synthetic tests, app 1381 (5 skip) PASS, androidTest sources compile. Runner LUNA input price corrected to 0.25/M in androidTest and the host reserve helper; V5 provider and host fixtures still 0.20/M.
 - Live C6C (owner-approved, 006 chunk 5, build 4.18-c6.5/259 from 09010102, emulator-5554 only): 1 call, USD 0.00281905 (reserve 0.0066287), ledger C6C-20261012 verified pending 0. Model kept 6 points and edited 5:3 (call fixed, self left); the lock rejected it (single `tôi` counted as a consistent row) and the service blocked the chunk (STRUCTURE_BLOCKED, app = DRAFT). Fixed offline afterwards: ADDRESS-lock rejections become KEPT, row consistency needs two address words. SAI 0/7; not a PASS C6 sample.
 - Limit: owner FINAL edits to 5:1 and 5:2 (SÓT) would be blocked (name plus case particle reads as third person); only 006/C6B replayed; model behaviour under the new prompt unmeasured. No build, install or spend. 0/3 accepted; P7 not started.
-- Next action: owner đọc `D:\P5E-private\chunk-outputs\006\c6c-chunk5-live-review.html` và quyết định có duyệt lần chạy lại cả chương 006 (14 lời gọi, luna medium, sổ mới, trần USD 0.06) bằng build mới 4.18-c6.6 mang sửa trạng thái KEPT của khóa ADDRESS, để đo cổng C6 dưới khóa. Chưa build, cài hay chi trước quyết định đó.
+- Done in the CP-IMPL-9 section above.
 
 Earlier current-state sections below are historical.
 
