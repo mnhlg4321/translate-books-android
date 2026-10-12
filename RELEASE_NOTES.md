@@ -1,3 +1,61 @@
+# Translate Books 4.18.0 Release Notes
+
+Status: `RELEASE_CANDIDATE` (not tagged, not merged to `main`)
+
+Branch: `feature/v4.18-p5e-runner-repair-20260917`
+
+## Summary
+
+Version 4.18.0 releases the chunk-based Editorial (Bien tap) flow. The app aligns a
+chapter's RAW and DRAFT, cuts the chapter into chunks, shows the plan with a verdict,
+and, after confirmation, reviews each chunk and applies fixes only at the points it
+flags. The earlier V5 three-pass path stays in the code as a frozen path and is not
+part of this release.
+
+## Scope
+
+- Source selection and plan: RAW/DRAFT alignment, chunk plan, OK / WARN / BLOCK
+  verdict shown before any provider request.
+- Point-based fixes: address, glossary and kana points are flagged; a model proposal
+  is accepted only when the deterministic guard passes, otherwise the DRAFT line is
+  kept.
+- Persistence: runs are stored in SQLite (database version 29) and survive restart and
+  process death; the result is exported as TXT.
+- Spend control: ledger and per-run cap; a plan must be confirmed first.
+- Translation, Glossary, Pronoun and Settings are unchanged by this work.
+
+## Known limitations
+
+- Three chapters were measured and accepted by the owner. Their recorded misses stay:
+  006 keeps 13 pronoun misses and the `cau` misses (CP-IMPL-9); 008 keeps 7 `cau`
+  misses; 011 keeps 2:2 (correct fix blocked by the third-person rule), 12:2
+  (uncertain) and 10:6 (missed). Details: `docs/EDITORIAL_CHUNK_PLAN.md` section 6.
+- The call-name prompt (CP-IMPL-14) was measured on chapter 011 only; fixes
+  CP-IMPL-10 to 13 and 15 are verified by tests and replays, not by a live run.
+- Performance numbers come from the emulator, not a physical device.
+- The V5 three-pass gates in section C of the v4.18 checklist are out of this
+  release's scope; they stay unchecked and are not waived.
+
+## Verification
+
+- Frozen allowlist: 117/117 on `emulator-5554` after R1.1.
+- Offline on a clean archive of `12824cee`: engine 706, app 472 per variant, lint
+  0 errors / 57 warnings, `scripts/p6` 106, `scripts/chunk` 24.
+- Device QA of the chunk scope: `artifacts/qa/v4.18-p7-device-12824cee/QA_REPORT.md`.
+- Macrobenchmark and Perfetto: `artifacts/qa/v4.18-r1/r1.3-performance/`.
+- Release-candidate device QA and the release payload: see the R1.5 entry in
+  `docs/EDITORIAL_CHUNK_PLAN.md` section 6.
+- Screenshots and video use synthetic data only; they contain no book text.
+
+## Local artifact
+
+The release-candidate APK, source ZIP and checksums are recorded in
+`artifacts/releases/v4.18.0/<event>/` and `backup/v4.18.0/<event>/` by
+`scripts/archive-release.ps1` (R1.5). Tag `v4.18.0` and the merge to `main` need the
+owner's decision (D-R2).
+
+---
+
 # Translate Books 4.17 Development Artifact
 
 Status: `D5_LOCAL_BUILD_QA_COMPLETE / V4.17_DEV_ARTIFACT_READY`

@@ -80,7 +80,10 @@ if ([version]$Version -ge [version]'4.8') {
     }
 
     $workflowVerifier = Join-Path $repositoryRoot 'scripts\verify-release-workflow.ps1'
-    & $workflowVerifier -ChecklistPath $ChecklistPath -Gate PreBackup -ExpectedVersion $Version
+    # A tag event follows the tag, so steps 1-10 must be complete (PreBackup). A build event archives a release candidate before the tag
+    # and needs steps 1-9 (PreTag); it can never be satisfied by marking the Tag step early.
+    $workflowGate = if ($EventId -like 'tag-*') { 'PreBackup' } else { 'PreTag' }
+    & $workflowVerifier -ChecklistPath $ChecklistPath -Gate $workflowGate -ExpectedVersion $Version
 }
 
 $resolvedCommit = (& git rev-parse "$GitRef^{}").Trim()

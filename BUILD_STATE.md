@@ -1,4 +1,14 @@
 # Build State
+## Current state — 2026-10-12 (R1.4: release notes, changelog 4.18.0, media walkthrough test)
+
+- `CHANGELOG.md` `[4.18.0]` and `RELEASE_NOTES.md` `4.18.0` written (status RELEASE_CANDIDATE; no tag, no merge). Scope: chunk-based Editorial flow, OK/WARN/BLOCK plan verdict, point-based fixes behind a deterministic guard, SQLite persistence (DB v29), TXT export, spend control. Known limits of chapters 006/008/011 are quoted unchanged; performance numbers are labelled emulator numbers. The frozen V5 path is stated as out of scope.
+- New opt-in instrumented class `EditorialR1MediaWalkthroughInstrumentedTest` (argument `r1_media=run`, synthetic rows only, fake provider) holds each stage 4 s and logs `R1MEDIA stage=…`; screenshots and video are recorded once on the RC in R1.5, not before.
+- `scripts/archive-release.ps1`: a `build-*` event now checks the PreTag gate (steps 01–09), a `tag-*` event still checks PreBackup (steps 01–10). Step 10 stays unchecked.
+- No provider call, pilot, install or tag in this package (spend 0).
+- Next action: Codex thực hiện R1.5: build RC `4.18.0` qua wrapper từ commit R1.4, cài chỉ emulator-5554, chạy lại test thiết bị tập trung, quay ảnh chụp và video bằng `EditorialR1MediaWalkthroughInstrumentedTest` trên chính bản RC, rồi `archive-release.ps1` (event `build-YYYYMMDD-HHMMSS`) vào `artifacts/releases/v4.18.0/` và `backup/v4.18.0/`; dừng trước tag/merge (D-R2 của owner).
+
+Earlier current-state sections below are historical.
+
 ## Current state — 2026-10-12 (R1.3: real Macrobenchmark and Perfetto on emulator-5554)
 
 - Macrobenchmark module gains `openEditorialTab` (commit `a5169045`). The Gradle connected task is disabled for pilot-bearing packages, so the benchmark variant `4.18-r13bench`/265 (APK SHA-256 C507061C44AD945EA3F2998F239420463E4F4545225CF0CC478A47E5D969A938) was installed with `install-validated.ps1` and `StartupMacrobenchmark` ran via `am instrument`: OK (2 tests). Cold start timeToInitialDisplay min 708.3 / median 727.6 / max 792.6 ms; Biên tập tab open: frameDurationCpu P50 10.1 ms / P99 11.0 ms, frameOverrun P50 -2.7 / P99 2.2 ms. Emulator numbers (API 35), not a physical-device result.
