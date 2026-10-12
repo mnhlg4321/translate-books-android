@@ -1,0 +1,102 @@
+{
+ "package": "R1.3",
+ "date": "2026-10-12",
+ "device": "emulator-5554 (sdk_gphone64_x86_64, API 35); emulator numbers, not a physical-device result; suppressErrors EMULATOR,LOW-BATTERY as configured in macrobenchmark/build.gradle",
+ "sourceCommit": "a5169045742cd1108fa16b62b36fe438b38959f4 (macrobenchmark module change); app code identical to bbcbc4a9",
+ "benchmarkApp": {
+  "versionName": "4.18-r13bench",
+  "versionCode": 265,
+  "sha256": "C507061C44AD945EA3F2998F239420463E4F4545225CF0CC478A47E5D969A938",
+  "installedWith": "scripts/install-validated.ps1 (device signature token abebea4b, certificate 47F313893A5D68120B075C25825C1C66F1334AC47AFB2EF3741084E22EF3C155)"
+ },
+ "macrobenchmarkApk": {
+  "sha256": "15A9E5A49740E81CCB70184780E9B03BCD31313A7BFBD9277AB85D3946328533",
+  "run": "am instrument -w -r -e class com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark ... (the Gradle connected task is disabled for pilot-bearing packages; see app/build.gradle)"
+ },
+ "coldStartup": {
+  "iterations": 5,
+  "timeToInitialDisplayMs": {
+   "minimum": 708.2794,
+   "median": 727.5667,
+   "maximum": 792.5565
+  }
+ },
+ "openEditorialTab": {
+  "iterations": 5,
+  "frameCount": {
+   "minimum": 1.0,
+   "median": 2.0,
+   "maximum": 2.0
+  },
+  "frameDurationCpuMs": {
+   "P50": 10.085149999999999,
+   "P90": 10.57862,
+   "P95": 10.82621,
+   "P99": 11.024282,
+   "runs": [
+    [
+     9.3779,
+     10.3664
+    ],
+    [
+     10.1171
+    ],
+    [
+     9.5516
+    ],
+    [
+     8.2749,
+     11.0738
+    ],
+    [
+     10.1037,
+     10.0666
+    ]
+   ]
+  },
+  "frameOverrunMs": {
+   "P50": -2.71482,
+   "P90": 1.8632815999999999,
+   "P95": 2.0484568,
+   "P99": 2.19659696,
+   "runs": [
+    [
+     -6.709402,
+     -1.769714
+    ],
+    [
+     1.70456
+    ],
+    [
+     1.569272
+    ],
+    [
+     -6.825112,
+     2.233632
+    ],
+    [
+     -4.264272,
+     -3.659926
+    ]
+   ]
+  }
+ },
+ "chunkPlanSynthetic": {
+  "dataset": "synthetic 1222-line chapter (no book text), files in plan-performance/synthetic-chapter",
+  "result": {
+   "bestOfThreeMillis": 468,
+   "chunks": 53,
+   "draftUnits": 1222,
+   "hardUsed": 675,
+   "name": "synth",
+   "rawUnits": 1222,
+   "softUsed": 540,
+   "verdict": "OK"
+  },
+  "assertion": "best of three planning runs under 1000 ms",
+  "perfettoTrace": "perfetto/plan-synthetic.pftrace (Perfetto v46.0, sched freq idle am wm gfx view binder_driver dalvik, 14 s)"
+ },
+ "perfettoTraces": "10 macrobenchmark iteration traces (5 coldStartup, 5 openEditorialTab) plus plan-synthetic.pftrace",
+ "providerCalls": 0,
+ "fabricated": false
+}

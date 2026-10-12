@@ -1,4 +1,13 @@
 # Build State
+## Current state — 2026-10-12 (R1.3: real Macrobenchmark and Perfetto on emulator-5554)
+
+- Macrobenchmark module gains `openEditorialTab` (commit `a5169045`). The Gradle connected task is disabled for pilot-bearing packages, so the benchmark variant `4.18-r13bench`/265 (APK SHA-256 C507061C44AD945EA3F2998F239420463E4F4545225CF0CC478A47E5D969A938) was installed with `install-validated.ps1` and `StartupMacrobenchmark` ran via `am instrument`: OK (2 tests). Cold start timeToInitialDisplay min 708.3 / median 727.6 / max 792.6 ms; Biên tập tab open: frameDurationCpu P50 10.1 ms / P99 11.0 ms, frameOverrun P50 -2.7 / P99 2.2 ms. Emulator numbers (API 35), not a physical-device result.
+- Chunk plan of a synthetic 1222-line chapter (no book text): 53 chunks, verdict OK, best of three 468 ms (< 1000 ms), plus its own Perfetto trace. Correction: the P7 QA line for the plan-performance class was an Assume-skipped opt-in, not a measurement; this run is the first real one.
+- Evidence `artifacts/qa/v4.18-r1/r1.3-performance/` (JSON, logs, 11 Perfetto traces about 42 MB, plan result, synthetic chapter, summary, SHA256SUMS), byte-mirrored in `backup/qa/...`; only the small files are in git. 0 provider calls. Emulator currently holds the benchmark build until R1.5.
+- Next action: Codex thực hiện R1.4 (RELEASE_NOTES, CHANGELOG, ảnh chụp và video bằng dữ liệu tổng hợp), rồi R1.5 (build RC 4.18.0, cài emulator, test thiết bị tập trung, archive-release) theo mục 5.5 của `docs/EDITORIAL_CHUNK_PLAN.md`; dừng trước tag/merge.
+
+Earlier current-state sections below are historical.
+
 ## Current state — 2026-10-12 (R1.2: checklist steps 05-09 marked, PreTag PASS)
 
 - Steps 05-09 of `release_checklists/v4.18-editorial-v5-safe-4-1-3.md` are `[x]` with concrete chunk-scope Evidence (old text kept as Historical). The six historical boxes (P5D exit, P5E.8, P5E.9, A2, A3.2, A3.2C) stay `[ ]`, each marked out of the v4.18 release scope (D-N1/D-R1), not satisfied, not waived; P5E.8 remains a historical FAIL.

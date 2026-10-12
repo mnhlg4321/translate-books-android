@@ -1,0 +1,116 @@
+> Task :editorial-engine:compileJava UP-TO-DATE
+> Task :editorial-engine:processResources UP-TO-DATE
+> Task :editorial-engine:classes UP-TO-DATE
+> Task :editorial-engine:jar UP-TO-DATE
+> Task :app:verifyApprovedLogo
+> Task :app:syncEditorialEngineProfileAsset UP-TO-DATE
+> Task :app:verifyEditorialEngineProfileAsset
+> Task :app:verifyEditorialSafe4Pack
+> Task :app:verifyEditorialV5FullPack
+> Task :app:preBuild
+> Task :app:preBenchmarkBuild
+> Task :app:generateBenchmarkBuildConfig
+> Task :app:javaPreCompileBenchmark
+> Task :app:checkBenchmarkAarMetadata
+> Task :app:generateBenchmarkResValues
+> Task :app:mapBenchmarkSourceSetPaths
+> Task :app:generateBenchmarkResources
+> Task :app:packageBenchmarkResources
+> Task :app:createBenchmarkCompatibleScreenManifests
+> Task :app:parseBenchmarkLocalResources
+> Task :app:extractDeepLinksBenchmark
+> Task :app:processBenchmarkMainManifest
+> Task :app:processBenchmarkManifest
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :app:mergeBenchmarkJniLibFolders
+> Task :app:mergeBenchmarkNativeLibs NO-SOURCE
+> Task :app:stripBenchmarkDebugSymbols NO-SOURCE
+> Task :app:extractBenchmarkNativeSymbolTables NO-SOURCE
+> Task :app:mergeBenchmarkNativeDebugMetadata NO-SOURCE
+> Task :app:desugarBenchmarkFileDependencies
+> Task :app:mergeBenchmarkArtProfile
+> Task :app:mergeBenchmarkStartupProfile
+> Task :app:checkBenchmarkDuplicateClasses
+> Task :app:mergeBenchmarkShaders
+> Task :app:mergeBenchmarkResources
+> Task :app:compileBenchmarkShaders NO-SOURCE
+> Task :app:generateBenchmarkAssets UP-TO-DATE
+> Task :app:mergeBenchmarkAssets
+> Task :app:compressBenchmarkAssets
+> Task :app:extractBenchmarkVersionControlInfo
+> Task :app:processBenchmarkJavaRes NO-SOURCE
+> Task :app:collectBenchmarkDependencies
+> Task :app:mergeBenchmarkJavaResource
+> Task :app:sdkBenchmarkDependencyData
+> Task :app:validateSigningBenchmark
+> Task :app:writeBenchmarkAppMetadata
+> Task :app:writeBenchmarkSigningConfigVersions
+> Task :macrobenchmark:preBuild UP-TO-DATE
+> Task :macrobenchmark:preBenchmarkBuild UP-TO-DATE
+> Task :macrobenchmark:checkTestedAppObfuscationBenchmark
+> Task :macrobenchmark:javaPreCompileBenchmark
+> Task :app:processBenchmarkManifestForPackage
+> Task :macrobenchmark:checkBenchmarkAarMetadata
+> Task :macrobenchmark:generateBenchmarkResValues
+> Task :macrobenchmark:mapBenchmarkSourceSetPaths
+> Task :macrobenchmark:generateBenchmarkResources
+> Task :app:mergeExtDexBenchmark
+> Task :app:processBenchmarkResources
+> Task :macrobenchmark:mergeBenchmarkResources
+
+> Task :app:compileBenchmarkJavaWithJavac
+Note: D:\P5E-builds\wt-api-n4-20261005\app\src\main\java\com\ml\tblandroidtxt\MainActivity.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :app:generateBenchmarkLintVitalReportModel
+> Task :app:dexBuilderBenchmark
+> Task :app:mergeBenchmarkGlobalSynthetics
+> Task :macrobenchmark:processBenchmarkManifest
+> Task :macrobenchmark:mergeBenchmarkShaders
+> Task :macrobenchmark:compileBenchmarkShaders NO-SOURCE
+> Task :macrobenchmark:generateBenchmarkAssets UP-TO-DATE
+> Task :macrobenchmark:mergeBenchmarkAssets
+> Task :app:optimizeBenchmarkResources
+> Task :macrobenchmark:desugarBenchmarkFileDependencies
+> Task :macrobenchmark:processBenchmarkJavaRes NO-SOURCE
+> Task :macrobenchmark:processBenchmarkResources
+> Task :macrobenchmark:checkBenchmarkDuplicateClasses
+> Task :macrobenchmark:compressBenchmarkAssets
+> Task :macrobenchmark:mergeBenchmarkJavaResource
+> Task :macrobenchmark:compileBenchmarkJavaWithJavac
+> Task :macrobenchmark:dexBuilderBenchmark
+> Task :app:mergeDexBenchmark
+> Task :app:lintVitalAnalyzeBenchmark
+> Task :macrobenchmark:mergeBenchmarkGlobalSynthetics
+> Task :macrobenchmark:mergeLibDexBenchmark
+> Task :macrobenchmark:mergeBenchmarkJniLibFolders
+> Task :macrobenchmark:mergeProjectDexBenchmark
+> Task :app:lintVitalReportBenchmark
+> Task :app:lintVitalBenchmark
+> Task :macrobenchmark:validateSigningBenchmark
+> Task :macrobenchmark:writeBenchmarkSigningConfigVersions
+> Task :macrobenchmark:mergeBenchmarkNativeLibs
+> Task :app:compileBenchmarkArtProfile
+
+> Task :macrobenchmark:stripBenchmarkDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libbenchmarkNative.so, libtracing_perfetto.so.
+
+> Task :app:packageBenchmark
+> Task :app:createBenchmarkApkListingFileRedirect
+> Task :app:assembleBenchmark
+> Task :macrobenchmark:mergeExtDexBenchmark
+> Task :macrobenchmark:packageBenchmark
+> Task :macrobenchmark:createBenchmarkApkListingFileRedirect
+> Task :macrobenchmark:assembleBenchmark
+
+[Incubating] Problems report is available at: file:///D:/P5E-builds/wt-api-n4-20261005/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.3.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 14s
+80 actionable tasks: 75 executed, 5 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.3.0/userguide/configuration_cache_enabling.html
