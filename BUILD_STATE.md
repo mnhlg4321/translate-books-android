@@ -1,9 +1,10 @@
 # Build State
 
-## Current state — 2026-10-12 (summarizer repair ee7ea78a and archive-helper extension d6b6224a integrated; new archive event next)
+## Current state — 2026-10-12 (new archive event build-20261012-161228 created; publication authority pending)
 
 - Integration: `ee7ea78a` summarizer repair (13 tests; retained logs 9 PASS/9 SKIP/0 FAIL); `d6b6224a` archive helper `-ProductionGitRef`/`-SupplementalPaths` with offline cases that the previous helper fails. Six local commits ahead of origin before this docs commit; nothing pushed. The new event is archived from the commit recording this section, with production APK source `82626ac8` (inputs proven identical) kept separate from the final QA source. Old RC event untouched. Section below is the earlier review state.
-- Next action: archive the new event, verify mirrors and identities, record it in a following commit, then present the exact commit range and payload for publication authority and D-R2. No push/tag/merge/provider.
+- Event `build-20261012-161228` created at `artifacts/releases/v4.18.0/` and `backup/v4.18.0/` (git-ignored, local only): 53 files each, SHA256SUMS 52/52 valid in both, trees byte-identical. Final QA source `03cf02cf` (`project_source_v4.18.0.zip` equals `git archive 03cf02cf`); production APK source `82626ac8` (`supplemental/production_apk_source_82626ac8fe68.zip` equals the RC source ZIP, `4DEA9A12…ECE0EB`); APK reused (`5865F23A…AE91B`, same as RC); Perfetto/Macrobenchmark/screenshots/video are the RC files. `supplemental/PROVENANCE.md` separates the two identities and lists test APKs 1 and 2, review patch and offline evidence (`artifacts/qa/v4.18-r1/r1.6-qa-closure/integration-03cf02cf`, mirrored). Old RC event `build-20261012-153252` re-verified untouched (28/28 in both). Offline suites rerun on a clean `git archive 03cf02cf scripts`: Python 13, collector, archive-helper PASS. No device run, no production/benchmark rebuild, 0 provider/USD 0.
+- Next action: owner decides publication authority for the exact local commit range `origin/feature/v4.18-p5e-runner-repair-20260917..HEAD` (this docs commit last) and D-R2 (tag `v4.18.0`, merge `main`). No push/tag/merge/provider before that.
 
 ## Earlier today — independent review 1d41d2fc (summarizer repair was then uncommitted)
 
