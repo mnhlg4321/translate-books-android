@@ -1,4 +1,20 @@
 # Build State
+
+## Current state — 2026-10-12 (summarizer repair ee7ea78a and archive-helper extension d6b6224a integrated; new archive event next)
+
+- Integration: `ee7ea78a` summarizer repair (13 tests; retained logs 9 PASS/9 SKIP/0 FAIL); `d6b6224a` archive helper `-ProductionGitRef`/`-SupplementalPaths` with offline cases that the previous helper fails. Six local commits ahead of origin before this docs commit; nothing pushed. The new event is archived from the commit recording this section, with production APK source `82626ac8` (inputs proven identical) kept separate from the final QA source. Old RC event untouched. Section below is the earlier review state.
+- Next action: archive the new event, verify mirrors and identities, record it in a following commit, then present the exact commit range and payload for publication authority and D-R2. No push/tag/merge/provider.
+
+## Earlier today — independent review 1d41d2fc (summarizer repair was then uncommitted)
+
+- Baseline HEAD 1d41d2fc90562bd4a4df1997f80ab87d45feefe9; four local commits, no push/tag/merge. RC/source remains 4.18.0/266 at 82626ac8; app main/build inputs unchanged. Both QA APK mirrors and 25 original QA manifest entries verified.
+- Clean baseline archive: Python8, collector and archive routing PASS. Additional regression exposed empty/mismatched logs and repeated-method/failure-banner false success. Two-file uncommitted summarizer repair passes13 on exact baseline archive plus recorded patch; retained final logs still9 PASS/9 SKIP/0 FAIL. No test/device operation claimed on unmodified HEAD beyond the baseline suites.
+- V415/V48 normal restoration already commits synchronously; no proven new regression. Historical WAL/SHM UNKNOWN and media/benchmark limits retained. No new semantic evaluation,0 provider/USD0.
+- Details/evidence: docs/EDITORIAL_R1_QA_ADDENDUM_20261012.md independent review section; artifacts/qa/v4.18-r1/r1.6-qa-closure/review-1d41d2fc and mirror.
+- Next action: Tích hợp bản sửa summarizer đã kiểm và chuẩn bị event archive mới trong R1, giữ riêng source APK 82626ac8 và source QA cuối; sau đó mới trình phạm vi commit/payload để xin quyền xuất bản và D-R2. Không provider/tag/merge.
+
+Earlier sections are historical.
+
 ## Current state — 2026-10-12 (R1 QA closure: glossary test fix, PASS/SKIP/FAIL reporting, typed DB collector, strict archive events; local commits)
 
 - Addendum `docs/EDITORIAL_R1_QA_ADDENDUM_20261012.md`; evidence `artifacts/qa/v4.18-r1/r1.6-qa-closure/` (mirrored in `backup/qa/...`). RC package and R1.1-R1.5 evidence untouched. Application sources unchanged since RC `82626ac8` (empty diff on app/engine main, Gradle, macrobenchmark), so no production rebuild or benchmark rerun.
