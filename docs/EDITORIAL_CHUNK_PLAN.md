@@ -424,6 +424,47 @@ Tăng contract lên `CP-IMPL-6`; lượt chạy cũ không được tiếp tục
 
 **Dừng và hỏi owner nếu:** phán định 006 không OK, ước tính vượt trần, UNKNOWN cost, lỗi hạ tầng, hoặc cần đổi ngưỡng phát hiện.
 
+### 5.5 Phát hành v4.18 (R1) — coordinator, 2026-10-12
+
+**Trạng thái đã kiểm:**
+
+- C7: owner chấp nhận 3/3 chương (006 CP-IMPL-9, 008 CP-IMPL-11, 011 CP-IMPL-14).
+- P7 bản phát triển: `4.18-p7.1`/code264 từ `12824cee`, QA thiết bị PASS cho phạm vi chunk hiện tại (`artifacts/qa/v4.18-p7-device-12824cee/QA_REPORT.md`).
+- Archive sạch `49919855`: engine 706, app 472, `scripts/p6` 106, `scripts/chunk` 24, androidTest compile — PASS (coordinator chạy lại).
+- 25 commit đã push sau khi quét: không có khóa, không có văn bản sách.
+
+**Còn thiếu để gắn tag:**
+
+| Việc | Hiện trạng | Cách làm |
+|---|---|---|
+| 11 test của nhánh V5 đóng băng FAIL `expected:<27> but was:<29>` | Test ghi cứng `assertEquals(27, db.getVersion())`. v28/v29 là migration chỉ thêm bảng cho luồng chunk; phần V5 không đổi | Đổi thành `assertEquals(TranslationRepository.VER, …)` ở đúng 11 chỗ của 5 lớp (`EditorialLineagePersistence`, `EditorialP4BindingCharacterization`, `EditorialPackCompatibilityEvaluation`, `EditorialV17IdentityStore`, `EditorialV18RunDeclarationEvent`). Chỉ sửa test, không đổi mã V5 hay schema. Chạy lại bộ đóng băng: phải 117/117 |
+| Bước 05 "Develop" của checklist còn mở; `verify-release-workflow.ps1 -Gate PreTag` fail đúng luật | Phạm vi v4.18 đã đổi sang luồng chunk theo quyết định owner (D-N1, mục 2) | Cần D-R1: đánh dấu 05–09 bằng bằng chứng phạm vi chunk. Các ô lịch sử mục C giữ **chưa đạt, không miễn trừ**, ghi là ngoài phạm vi phát hành |
+| Macrobenchmark + Perfetto thật | Chưa có (chỉ có thời gian dựng plan ~0.35–0.4 s/chương) | Chạy Macrobenchmark (khởi động app, mở tab Biên tập, dựng plan chương mẫu tổng hợp) và một trace Perfetto trên `emulator-5554`; lưu đầu ra thật, không dựng số |
+| RELEASE_NOTES, CHANGELOG, ảnh chụp, video | Chưa có | Ảnh và video dùng dữ liệu tổng hợp (không văn bản sách): chọn nguồn → xác nhận OK/WARN/BLOCK → kết quả theo điểm → xuất TXT |
+| Gói phát hành | Chưa có | `scripts/build-and-save.ps1` bản RC `4.18.0` + `scripts/archive-release.ps1` event `build-YYYYMMDD-HHMMSS` ở cả `artifacts/releases/v4.18.0/` và `backup/v4.18.0/`, có `project_source_v4.18.0.zip` từ đúng ref |
+| Tag `v4.18.0`, merge `main` | Chưa | Chỉ sau khi owner xem gói RC (D-R2) |
+
+#### Yêu cầu làm việc R1 (cho phiên Codex) — sau khi có D-R1
+
+1. **R1.1** — sửa 11 assertion phiên bản DB như bảng trên; chạy đúng 5 lớp đó trên `emulator-5554` (117/117 cho bộ đóng băng). Commit riêng `test(frozen): …`.
+2. **R1.2** — cập nhật checklist v4.18:
+   - đánh dấu 05–09 kèm đường dẫn bằng chứng phạm vi chunk;
+   - mục C giữ nguyên trạng thái chưa đạt và ghi "ngoài phạm vi phát hành v4.18 theo D-N1/D-R1";
+   - chạy `verify-release-workflow.ps1 -Gate PreTag` và ghi kết quả.
+3. **R1.3** — Macrobenchmark + Perfetto thật trên emulator; lưu nguyên đầu ra.
+4. **R1.4** — RELEASE_NOTES.md và CHANGELOG.md:
+   - nội dung: luồng Biên tập theo chunk, phán định RAW/DRAFT, sửa theo điểm gắn cờ, giới hạn đã biết của 3 chương;
+   - kèm ảnh chụp và video tổng hợp.
+5. **R1.5** — build RC `4.18.0` qua wrapper từ commit sau R1.1–R1.4, cài chỉ emulator, chạy lại test thiết bị tập trung của P7, rồi `archive-release.ps1` (event build).
+6. **Dừng trước tag/merge**, báo đường dẫn gói RC. Không gọi provider, không đụng pilot.
+
+**PASS R1:**
+
+- bộ đóng băng 117/117;
+- `verify-release-workflow.ps1 -Gate PreTag` PASS;
+- gói RC đủ thành phần theo AGENTS.md, ở cả hai thư mục archive;
+- test thiết bị tập trung PASS trên bản RC.
+
 ## 6. Trạng thái
 
 **Hiện hành — P7 development QA 2026-10-12 tại implementation baseline `6063655ed96613dd386c23a79d68afcc765987ca`:** owner đã duyệt section C (historical FAIL giữ nguyên, không hồi tố PASS) và cho phép gói P7 development + QA chỉ `emulator-5554`. Build/device QA đã chạy từ source cô lập `12824cee`; current chunk scope PASS, frozen V5/pack có 11 FAIL lịch sử schema 27→29 được ghi riêng. Cùng branch/checklist; working tree có việc cũ, giữ nguyên. So với upstream local trước QA-record commit: ahead 24, behind 0; record commit chỉ chứa tài liệu/evidence; không provider/tag/merge/release/push.
@@ -890,3 +931,4 @@ Cùng một phép thử: chương 007, chunk 005 (RAW P061–P079), `openai/gpt-
   - **Xuất:** `D:\P5E-private\chunk-outputs\006\006_APP_c6b-live_JAKUAKU_MONSTER_VOL1.txt` (SHA-256 `deec80d2…97c6`, đúng bằng `final.txt`) và `D:\P5E-private\chunk-outputs\006\c6b-006-live-review.html` (74 điểm: RAW, DRAFT, app, luật, FINAL ghi 'tham chiếu', nhãn và lý do; bảng số token từng lời gọi).
   - **Phát hiện kỹ thuật:** giá luna thực khớp đầu vào 0,25/M và đầu ra 1,20/M (suy từ hai lời gọi, khớp chi phí báo về); hằng số LUNA đầu vào của runner đang là 0,20/M, nên giữ chỗ đầu vào thấp hơn thực khoảng 20%. Chưa sửa trong lần này. Lời gọi đầu có cache 6 096 token, nên chi phí thấp hơn lần C6.5. Chi phí thực (0,0279) thấp hơn kịch bản 800 token/lời gọi (0,030).
   - **Next action duy nhất:** owner đọc trang đọc `D:\P5E-private\chunk-outputs\006\c6b-006-live-review.html` và quyết định: (i) luật hàng cho 'cậu/tớ' (13 trên 14 SÓT là cậu thay vì tên Erika/Rea hoặc Fuyu, và tớ thay vì mình) là lỗi luật hay chấp nhận được; (ii) xếp lại 5 điểm SAI 'đổi không có căn cứ luật' (3:2, 4:5, 5:5, 11:2, 13:2); (iii) chấp nhận kết quả hay mở một thay đổi có duyệt (sửa hằng số giá LUNA đầu vào 0,20→0,25/M và/hoặc chỉ sửa khi có lỗi xác định). Không chạy live thêm trước quyết định đó; sổ `C6B-20261010` đã đóng hết (pending 0).
+- 2026-10-12 — coordinator review P7: archive sạch `49919855` PASS (engine 706, app 472, p6 106, chunk 24); push 25 commit đã quét. 11 FAIL đóng băng chỉ là assertion phiên bản DB ghi cứng 27. Viết gói phát hành R1 (mục 5.5), chờ D-R1.
