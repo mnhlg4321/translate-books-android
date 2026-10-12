@@ -1,11 +1,21 @@
 # Build State
 
-## Current state — 2026-10-12 (CP-IMPL-11: plural lock by position and person, offline)
+## Current state — 2026-10-12 (C7A: chapter 008 under CP-IMPL-11, 4 live calls)
+
+- Pinned source `e9aa4e1b70f4071133791ae65db937f10bda8913`; wrapper build `4.18-c6.7`/261 (event build-20261012-112807, APK SHA-256 239F253D4A2D9F8FBFA647900DE2338F6386908E05DC93FE8F609EC933E8F8D8), test APK `c7a-test-20261012`; installed only on `emulator-5554`. Device SQLite reopen, EditorialPairStore and EditorialApiStore tests and a fake whole-chapter run passed first.
+- One whole-chapter run, luna medium, no retry, ledger C7A-20261012 cap USD 0.03: 4 calls (chunks 1, 5, 6, 7; chunks 2-4 have no points), all `stop`, every chunk accepted, FINAL_ELIGIBLE, 14122 in / 3230 out, USD 0.0074059, pending 0, no overrun.
+- 28 points adjudicated by RAW + rows + glossary: final ĐÚNG 20, SÓT 7, SAI 1. Events: correct fix applied 1, partial 0, wrong fix through 1 (1:2), correct fix wrongly blocked 0, wrong fixes blocked 3, misses 6 (+1 residual in 6:1). Cause of the SAI: the finder flags the short glossary entry リーダー inside the longer ゾンビリーダー whose target the DRAFT already has; not the lock.
+- Numeric gates: 0 lines outside points, 0 new Japanese, marks kept, 132/132 lines, ĐÚNG 71.4%, SAI 3.6%. Owner reading pending; 006 stays accepted (CP-IMPL-9); 008 not accepted yet; P7 not started.
+- Next action: owner đọc `D:\P5E-private\chunk-outputs\008\c7a-008-live-review.html` (và bản app `008_APP_c7a_JAKUAKU_MONSTER_VOL1.txt` cùng thư mục) rồi quyết định có chấp nhận chương 008 hay không (cổng số đạt: SAI 1/28, ĐÚNG 20/28); kèm đó duyệt hay không một sửa offline cho finder thuật ngữ (mục dài thắng, nguyên nhân SAI 1:2) trước khi chạy chương nào khác. Chưa chạy chương khác (011 hay chương nào), pilot hay V5.
+
+Earlier current-state sections below are historical.
+
+## Previous state — 2026-10-12 (CP-IMPL-11: plural lock by position and person, offline)
 
 - Code commit `9bf9cd7452fdc3b1be70e1c9d78fb35c0589d6a9`. The plural-phrase lock now judges the position of each changed token (and of the marker), not its spelling, so a lone pronoun in the same sentence stays repairable; first-person phrases report ADDRESS_PLURAL_SELF, second-person ADDRESS_PLURAL_ADDRESSEE, third-person plurals are untouched. New tests cover the unchanged phrase with a repaired lone pronoun, the same spelling twice, third- and second-person controls and a moved marker.
 - Clean `git archive` of that commit (zip SHA-256 F0291628B03235B928F5D4C6AEC35A7AFDBAFBB0E324625F6DAB81A809BFC592): engine 697 (1 skip), app host 472 (3 skip), androidTest compile, scripts/p6 106, scripts/chunk 24 PASS. Replays inside the archive: the 11 correct C6B fixes kept and the 9 wrong ones blocked; stored C6E answers give 14:5 kept and 7:3 applied (sửa đúng 10, một phần 1, sai 0, ĐÚNG 54/68, SAI 0/74; replay, not live).
 - Coordinator: acceptance of chapter 006 (CP-IMPL-9 evidence, 1/3, P7 not started), chunk alignment, labels and thresholds unchanged. No provider call, build or install (spend 0).
-- Next action: owner duyệt, sửa hoặc từ chối đề xuất chạy riêng chương 008 trong khối này: build `4.18-c6.7` (code 261) từ commit tài liệu kế tiếp commit mã `9bf9cd74` (CP-IMPL-11), cài chỉ `emulator-5554`, chạy giả cả chương (USD 0) rồi một lần chạy cả chương 008 (4 lời gọi, luna medium, không retry), sổ mới `C7A-<ngày>`, trần USD 0.03; phân xử cả 28 điểm theo RAW + luật, dừng sau chương này để owner đọc. Chưa build, cài hay chi trước quyết định đó.
+- Done: the owner approved and chapter 008 was run (section above).
 
 Earlier current-state sections below are historical.
 

@@ -426,7 +426,21 @@ Tăng contract lên `CP-IMPL-6`; lượt chạy cũ không được tiếp tục
 
 ## 6. Trạng thái
 
-**Hiện hành — CP-IMPL-11, 2026-10-12, mã `9bf9cd74`: khóa số nhiều theo vị trí và ngôi; offline đạt; acceptance 006 giữ nguyên; dừng trước build/cài/provider.** Giữ nguyên căn/cắt/ghép chunk, nhãn, ngưỡng và kết luận đã chấp nhận (chương 006 theo CP-IMPL-9, 1/3, P7 chưa bắt đầu). 0 provider call, USD 0.
+**Hiện hành — C7A, 2026-10-12, chương 008 dưới CP-IMPL-11: chạy đủ, cổng số đạt, chờ owner đọc; có một SAI do finder thuật ngữ.** Owner duyệt đề xuất. Source ghim `e9aa4e1b70f4071133791ae65db937f10bda8913`; wrapper `4.18-c6.7`/261 (event `build-20261012-112807`, APK SHA-256 `239F253D4A2D9F8FBFA647900DE2338F6386908E05DC93FE8F609EC933E8F8D8`, source zip `061C6B74A8B5AF5C2E0CE6272FAFB39A2C1634E9C43C174A758540D6802F574B`), test APK `c7a-test-20261012` (`286A1B2F2DECA676C57B3242D412A19D9EB1CDF7E97B14CA226BAAD36699AFD1`, trùng hash với bản trước vì mã test không đổi); hash trên đĩa khớp lúc cài; cài chỉ `emulator-5554`.
+
+- **Trước khi gọi (đạt):** test thiết bị SQLite reopen 1, `EditorialPairStore` 6, `EditorialApiStore` 6 OK; chạy giả cả chương (USD 0) verdict OK, 7 đoạn.
+- **Live:** một lần chạy cả chương, luna medium, không retry; sổ `C7A-20261012` trần USD 0.03. 4 lời gọi (đoạn 1, 5, 6, 7), 3 đoạn không điểm không gọi (2, 3, 4); mọi lời gọi `stop`; mọi đoạn `ACCEPTED`/PASS hoặc `NO_FIX_POINTS`, `FINAL_ELIGIBLE`. 14 122 vào, 3 230 ra, **USD 0.0074059** (đúng dải kỳ vọng 0.005–0.009; dưới ước tính tối đa 0.013). Sổ: 8 bản ghi, 4 call, pending 0, không overrun, `costOverrunCalls 0`. Log thiết bị không có `provider_usage`.
+- **Chấm 28 điểm (RAW + hàng pronoun + glossary, mục dài thắng; chương chưa có nhãn cũ, phân xử mới):** kết quả cuối ĐÚNG 20, SÓT 7, SAI 1, CHƯA CHẮC 0. Sự kiện riêng: sửa đúng áp dụng 1 (6:7: thêm tên `Asanuma` bị thiếu), sửa một phần 0, **sửa sai lọt qua 1 (1:2)**, sửa đúng bị chặn nhầm 0, sửa sai bị chặn đúng 3 (6:1, 6:6, 6:9: model đổi `Asanuma` thành `cậu`, ngược call của hàng 浅沼くん; khóa `ADDRESS_FORM_NOT_IN_APPLICABLE_ROW` giữ DRAFT), bỏ sót 6 (5:8, 6:3, 6:5, 7:2, 7:4, 7:5: `cậu` trái call `Asanuma`; 6:1 còn `cứu cậu` nên cũng là SÓT, tổng SÓT cuối 7), giữ đúng 17 (gồm tiêu đề 1:1).
+- **SAI 1:2 là lỗi finder, không phải khóa:** glossary có `ゾンビリーダー → Zombie Leader` (mục dài) và `リーダー → trưởng nhóm` (mục ngắn). DRAFT đã đúng `Zombie Leader`, nhưng `リーダー` nằm trong chuỗi RAW `ゾンビリーダー` nên finder tạo điểm GLOSSARY, và model đổi thành `Zombie trưởng nhóm`. Cần finder bỏ điểm của mục ngắn khi mọi lần xuất hiện nó trong RAW đều nằm trong một mục dài hơn đã có dạng đích ở DRAFT. Chưa sửa (dừng sau chương này, chờ owner).
+- **Cổng số:** dòng ngoài điểm đổi 0 ✓ (2 dòng đổi = 2 điểm FIXED); chữ Nhật mới 0 ✓; dấu 「」, `……`, `!` và ký hiệu không đổi ✓; không mất câu ✓ (132/132 dòng); ĐÚNG 20/28 = 71,4% ✓ (≥60%); SAI 1/28 = 3,6% ✓ (≤10%); owner đọc: **chưa**. Số so với FINAL không dùng làm cổng.
+- **Nhận xét:** 6 SÓT cuối đều là `cậu` thay vì tên `Asanuma`, cùng kiểu với 006: model hiếm khi tự đổi `cậu` thành tên; khóa chỉ chặn 3 lần model đổi ngược. Khóa không chặn nhầm điểm đúng nào. Bằng chứng riêng: `D:/P5E-private/c6-guard-20261012/` (`score_c7a.py`, `c7a-points.json`) và `D:/P5E-private/chunk-runs/C1/live/008-38b8be8b-1c23-48c7-9896-9672ded7578c/`.
+- **Giới hạn:** một chương, một mẫu; không chạy 011, chương khác, pilot hay V5. Chương 006 vẫn accepted theo CP-IMPL-9; 008 chưa accepted (1/3 → chờ owner đọc), P7 chưa bắt đầu.
+
+**Next action duy nhất:** owner đọc `D:\P5E-private\chunk-outputs\008\c7a-008-live-review.html` (và bản app `008_APP_c7a_JAKUAKU_MONSTER_VOL1.txt` cùng thư mục) rồi quyết định có chấp nhận chương 008 hay không (cổng số đạt: SAI 1/28, ĐÚNG 20/28); kèm đó duyệt hay không một sửa offline cho finder thuật ngữ (mục dài thắng, nguyên nhân SAI 1:2) trước khi chạy chương nào khác. Chưa chạy chương khác (011 hay chương nào), pilot hay V5.
+
+Khối dưới là lịch sử.
+
+**Trước đó — CP-IMPL-11, 2026-10-12, mã `9bf9cd74`: khóa số nhiều theo vị trí và ngôi; offline đạt; acceptance 006 giữ nguyên; dừng trước build/cài/provider.** Giữ nguyên căn/cắt/ghép chunk, nhãn, ngưỡng và kết luận đã chấp nhận (chương 006 theo CP-IMPL-9, 1/3, P7 chưa bắt đầu). 0 provider call, USD 0.
 
 | Việc | Kết quả |
 |---|---|
@@ -444,7 +458,7 @@ Tăng contract lên `CP-IMPL-6`; lượt chạy cũ không được tiếp tục
 
 **Đề xuất chạy riêng chương 008 (chưa có quyền chi/build/cài):** 7 đoạn, 4 lời gọi (3 đoạn không có điểm không gọi API), 28 điểm (25 xưng hô, 2 thuật ngữ, 1 kana); không có nhãn cũ, nên cả 28 điểm được phân xử mới theo RAW + luật sau khi chạy. Phép đo host: ≈ 12 012 token vào (thực tế thường cao hơn khoảng 9%, tức ≈ 13 100), giữ chỗ mỗi lời gọi ≈ USD 0.0058 (≈ 3 270 vào × 0.25/M × 1.06 + 4 096 ra × 1.2/M), tổng giữ chỗ nếu cộng cả bốn ≈ USD 0.0227 (không bao giờ cùng lúc vì quyết toán từng lời gọi). Chi phí thật của các đoạn cỡ này ở 006 là USD 0.0011–0.0022 mỗi lời gọi, nên **kỳ vọng USD 0.005–0.009**, tối đa thực tế quan sát ≈ USD 0.013 (bốn lời gọi ở mức cao nhất 0.0032). **Trần USD 0.03** cho cả sổ và chương (`C7A-<ngày>`), vì phơi nhiễm xấu nhất theo thứ tự = 3 lời gọi quyết toán cao + 1 giữ chỗ ≈ USD 0.0154 vẫn dưới trần. Điều kiện: build `4.18-c6.7`/261 từ commit tài liệu kế tiếp `9bf9cd74` qua wrapper, cài chỉ `emulator-5554`, test thiết bị `EditorialPairStore`/`EditorialApiStore`/SQLite reopen và chạy giả cả chương (USD 0) đạt trước; một lần chạy cả chương, luna medium, không retry, dừng nếu đoạn đầu không có câu trả lời, UNKNOWN cost hoặc vượt trần; chấm riêng sửa đúng, sửa một phần, bỏ sót, sửa sai, chặn nhầm; kiểm 0 dòng ngoài điểm, 0 chữ Nhật mới, dấu thoại/ký hiệu; dừng sau 008, không chạy 011 hay chương khác.
 
-**Next action duy nhất:** owner duyệt, sửa hoặc từ chối đề xuất chạy riêng chương 008 trong khối này: build `4.18-c6.7` (code 261) từ commit tài liệu kế tiếp commit mã `9bf9cd74` (CP-IMPL-11), cài chỉ `emulator-5554`, chạy giả cả chương (USD 0) rồi một lần chạy cả chương 008 (4 lời gọi, luna medium, không retry), sổ mới `C7A-<ngày>`, trần USD 0.03; phân xử cả 28 điểm theo RAW + luật, dừng sau chương này để owner đọc. Chưa build, cài hay chi trước quyết định đó.
+Owner đã duyệt; kết quả ở khối C7A phía trên.
 
 Khối dưới là lịch sử.
 
