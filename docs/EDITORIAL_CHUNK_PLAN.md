@@ -426,7 +426,20 @@ Tăng contract lên `CP-IMPL-6`; lượt chạy cũ không được tiếp tục
 
 ## 6. Trạng thái
 
-**Hiện hành — CP-IMPL-9, 2026-10-12, code `e5112442`: hết chặn nhầm 5:1–5:2, 9 SAI vẫn đóng, 11 sửa đúng còn nguyên; offline đạt, chưa canary.** Giữ nguyên căn/cắt/ghép chunk, nhãn, ngưỡng C6 và prompt; 0 provider call, USD 0, không build/cài.
+**Hiện hành — canary C6D, 2026-10-12, 006 đoạn 5, CP-IMPL-9: đạt gate canary; SAI 0/7; dừng sau đoạn này.** Owner duyệt build và đúng một lời gọi. Source ghim `74c712ca2eee94f2ae14165f8a7e06f2c8176348` (= code `e5112442` + test SQLite thiết bị); wrapper trong worktree sạch ở đúng commit này: production `4.18-c6.6`/260 (event `build-20261012-105000`, APK SHA-256 `CE0AD974ED19F045B7898F886FF4C1A1D571D0BB66B2F39DF410928873F8CF6A`, source zip `EA9C0407A39375F32F6562AB3DEA777631BA016D702C67B0C62D722E376C6869`), test APK `c6-8-test-20261012` (`286A1B2F2DECA676C57B3242D412A19D9EB1CDF7E97B14CA226BAAD36699AFD1`); hash APK trên đĩa khớp lúc cài; cài chỉ `emulator-5554`.
+
+- **Kiểm trước khi gọi (đều đạt):** test thiết bị mới `EditorialPairAddressKeepSqliteInstrumentedTest` (điểm ADDRESS bị giữ DRAFT, các sửa hợp lệ cùng đoạn được lưu, kết nối mới trên cùng file SQLite đọc lại đúng candidate/gate/export, provider không bị gọi) OK, `EditorialPairStore` 6 và `EditorialApiStore` 6 OK; selector đoạn 5 với provider giả (USD 0): pairId đúng, dispatched 1, refused 0, revision CP-IMPL-9, `max_tokens` 4096.
+- **Live:** đúng 1 lời gọi, luna medium, không retry; sổ `C6D-20261012` trần USD 0.01: giữ chỗ USD 0.0066287, quyết toán **USD 0.00325825** (7 288 vào, 1 197 ra; log thiết bị không có `provider_usage` nên không tách token suy luận). Verifier sổ: 2 bản ghi, 1 call, pending 0, không overrun. Đoạn `ACCEPTED`, cổng PASS, 18/18 dòng.
+- **Chấm riêng 7 điểm (RAW + luật, không đổi nhãn):** sửa đúng 3 (5:1 `tớ→mình`; 5:3 `tiền bối→anh Tatsuoka` và `tôi→em`; 5:7 `tôi→em`); sửa một phần 0; bỏ sót 3 (5:2, 5:4, 5:6, model giữ `=`); sửa sai lọt qua 0; sửa đúng bị chặn nhầm 0; sửa sai bị chặn đúng 1 (5:5: model lại đổi `tôi→em` cả đoạn như ở C6B, khóa số nhiều `ADDRESS_AMBIGUOUS_AUDIENCE` giữ DRAFT, đoạn không bị chặn). SAI 0/7.
+- **Nội dung và ký hiệu:** đúng 3 dòng đổi (dòng không trống 70, 75, 79 của chương), đều là dòng điểm; dòng ngoài điểm đổi 0; 247/247 dòng; dấu 「」, `……`, `!` và dấu `.` cuối giữ nguyên (5:7 model trả `。`, lấy lại `.` của DRAFT); chữ Nhật mới 0.
+- **So với C6B/C6C cùng đoạn:** 5:1 hết bị chặn nhầm (ở C6C model giữ `=`, lần này sửa đúng); 5:7 sửa đúng lại (C6C giữ); 5:5 model vẫn đề xuất sửa sai nhưng không còn vào bản app. Một mẫu cho thấy phương sai model vẫn lớn: 5:2 chưa được sửa ở cả ba lần, 5:3 lần này sửa đủ cả hai chỗ.
+- **Giới hạn:** một đoạn, 7 điểm, không phải mẫu PASS C6 và không đo ngưỡng 60% ĐÚNG; biến thể thuần xưng hô của 4:5 vẫn không bị khóa chặn (chưa gặp); 13 SÓT xưng hô còn nguyên. Không chạy đoạn khác, cả chương, pilot hay V5.
+
+**Next action duy nhất:** owner đọc `D:\P5E-private\chunk-outputs\006\c6d-chunk5-canary-review.html` và quyết định có duyệt lần chạy cả chương 006 (14 lời gọi, luna medium, sổ mới, trần USD 0.06) bằng build `4.18-c6.6`/260 đã cài sẵn trên `emulator-5554` để đo cổng C6 dưới CP-IMPL-9. Chưa chạy gì thêm trước quyết định đó.
+
+Khối dưới là lịch sử.
+
+**Trước đó — CP-IMPL-9 offline, 2026-10-12, code `e5112442`: hết chặn nhầm 5:1–5:2, 9 SAI vẫn đóng, 11 sửa đúng còn nguyên; offline đạt, chưa canary.** Giữ nguyên căn/cắt/ghép chunk, nhãn, ngưỡng C6 và prompt; 0 provider call, USD 0, không build/cài.
 
 | Việc | Kết quả |
 |---|---|
@@ -452,7 +465,7 @@ KEPT giữ nguyên 63/74 (54 của model + 9 khóa). Không dòng nào ngoài đ
 
 **Canary đề xuất (chưa có quyền chi/build/cài):** lặp chương 006 đoạn 5, vì đoạn này chứa đúng cặp 5:1/5:2 từng bị chặn nhầm, hai sửa đúng đã biết (5:3, 5:7) và một điểm số nhiều (5:5). Ngân sách: tối đa một lời gọi; giữ chỗ quan sát USD 0.0066287 (giá 0.25/1.20, sàn 4096), thật ≈ USD 0.0028, trần USD 0.01 (dư ≈ USD 0.0034 sau giữ chỗ). Dừng ngay nếu selector bị từ chối, ước tính vượt trần hoặc lời gọi không có câu trả lời.
 
-**Next action duy nhất:** owner duyệt hoặc từ chối một canary hành vi: build `4.18-c6.6` (code 260) từ commit kế tiếp commit tài liệu này (nguồn code `e5112442`), cài chỉ `emulator-5554`, chạy selector đoạn 5 bằng provider giả (USD 0), rồi đúng 1 lời gọi live trên chương 006 đoạn 5 (luna medium, không retry, sổ mới `C6D-<ngày>`, trần USD 0.01; giữ chỗ quan sát ở C6C USD 0.0066287, quyết toán thật USD 0.00281905). Gate: dòng ngoài điểm không đổi, 0 chữ Nhật mới, không điểm đúng nào bị khóa chặn (5:1/5:2 nếu model sửa phải qua), 5:5 được giữ; đây là canary hành vi, không phải mẫu PASS C6. Chưa build, cài hay chi trước quyết định đó.
+Đã xử lý ở khối canary C6D phía trên.
 
 Khối dưới là lịch sử.
 

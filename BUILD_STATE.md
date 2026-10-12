@@ -1,12 +1,22 @@
 # Build State
 
-## Current state — 2026-10-12 (CP-IMPL-9 ADDRESS lock, offline QA from a clean archive)
+## Current state — 2026-10-12 (C6D canary: 006 chunk 5, CP-IMPL-9, one live call)
+
+- Pinned source `74c712ca2eee94f2ae14165f8a7e06f2c8176348`; wrapper build `4.18-c6.6`/260 (event build-20261012-105000, APK SHA-256 CE0AD974ED19F045B7898F886FF4C1A1D571D0BB66B2F39DF410928873F8CF6A) and test APK `c6-8-test-20261012` (286A1B2F2DECA676C57B3242D412A19D9EB1CDF7E97B14CA226BAAD36699AFD1); installed only on `emulator-5554`.
+- Before the call: SQLite reopen test on the device OK (kept ADDRESS point does not block the chunk's other repairs), EditorialPairStore 6 and EditorialApiStore 6 OK, selector proved with the fake provider (USD 0).
+- One live call, luna medium, ledger C6D-20261012 (cap USD 0.01): reserve 0.0066287, settled USD 0.00325825, 7288 in / 1197 out, pending 0. Chunk ACCEPTED, gate PASS, 18/18 lines. Scored separately: correct 3 (5:1, 5:3, 5:7), partial 0, missed 3 (5:2, 5:4, 5:6), wrong 0, correct fix wrongly blocked 0, wrong fix blocked correctly 1 (5:5, plural audience). Only the 3 point lines changed; dialogue marks, symbols and content kept; no new Japanese.
+- One chunk, not a PASS C6 sample. Stopped after this chunk; no other chapter, pilot or V5. 0/3 accepted; P7 not started.
+- Next action: owner đọc `D:\P5E-private\chunk-outputs\006\c6d-chunk5-canary-review.html` và quyết định có duyệt lần chạy cả chương 006 (14 lời gọi, luna medium, sổ mới, trần USD 0.06) bằng build `4.18-c6.6`/260 đã cài sẵn trên `emulator-5554` để đo cổng C6 dưới CP-IMPL-9. Chưa chạy gì thêm trước quyết định đó.
+
+Earlier current-state sections below are historical.
+
+## Previous state — 2026-10-12 (CP-IMPL-9 ADDRESS lock, offline QA from a clean archive)
 
 - Code commit `e5112442` (contract CP-IMPL-9). A name plus case particle no longer excludes a speaker/target row by itself: a row of the mentioned person stays excluded only when its other end is absent from the adjacent RAW lines, or both ends are mentioned. 5:1/5:2 are no longer blocked; 3:2 stays closed. Self-only rows never pin or exclude, call-only rows are pair rows, row consistency needs two address words. ADDRESS-lock rejections are KEPT (chunk not blocked).
 - Clean `git archive` of `e5112442` (zip SHA-256 8676C71B853FF0AA8811E50B01755B7E86B6B1BEDCC7C91F917A4BBB3C336123): engine 692 PASS (1 skip), app host 472 PASS (3 skip; the earlier 1381 counted stale reports), androidTest compile PASS, scripts/p6 106 OK, scripts/chunk 24 OK. New service test EditorialPairAddressKeepServiceTest (prepare, execute, store, reopen).
 - Scored separately on the stored C6B answers: 11/11 correct fixes applied unchanged, 0 wrong fixes through, 0 correct fixes wrongly blocked, 9/9 wrong fixes blocked, 14 misses not caused by the lock. Live C6C answer: 1 correct, 0 wrong, 5 misses. Exposure: the pure `tớ`→`mình` variant of 4:5 is no longer blocked.
 - No provider call, build or install in this step; installed APK is still 4.18-c6.5 (old status mapping). 0/3 accepted; P7 not started.
-- Next action: owner duyệt hoặc từ chối một canary hành vi: build `4.18-c6.6` (code 260) từ commit kế tiếp commit tài liệu này (nguồn code `e5112442`), cài chỉ `emulator-5554`, chạy selector đoạn 5 bằng provider giả (USD 0), rồi đúng 1 lời gọi live trên chương 006 đoạn 5 (luna medium, không retry, sổ mới `C6D-<ngày>`, trần USD 0.01; giữ chỗ quan sát ở C6C USD 0.0066287, quyết toán thật USD 0.00281905). Gate: dòng ngoài điểm không đổi, 0 chữ Nhật mới, không điểm đúng nào bị khóa chặn (5:1/5:2 nếu model sửa phải qua), 5:5 được giữ; đây là canary hành vi, không phải mẫu PASS C6. Chưa build, cài hay chi trước quyết định đó.
+- Done in the C6D canary section above.
 
 Earlier current-state sections below are historical.
 
