@@ -58,7 +58,14 @@ public final class EditorialApiBienTapUiInstrumentedTest {
 
     private Context context;
     private File dir;
+    /** Unique per run: the fixture never shares a name, or a name prefix, with a glossary or combo that already exists. */
+    private final String runTag = UUID.randomUUID().toString().substring(0, 8);
+    private final String glossaryName = "glossary-bientap-ui-" + runTag;
+    private final String typedComboName = "tên gõ dở " + runTag;
+    private final String resultComboName = "ui-result-combo-" + runTag;
     private String glossaryId = "";
+    /** Only the glossaries this test created (the fixture and its decoys); nothing else is ever removed. */
+    private final List<String> createdGlossaryIds = new ArrayList<>();
     private final List<Long> comboIds = new ArrayList<>();
 
     @Before public void setUp() throws Exception {
@@ -71,16 +78,15 @@ public final class EditorialApiBienTapUiInstrumentedTest {
 
     @After public void tearDown() {
         EditorialApiUiController.providerOverride = null;
-        if (!glossaryId.isEmpty()) {
+        if (!createdGlossaryIds.isEmpty()) {
             List<GlossaryStore.Glossary> all = new ArrayList<>(GlossaryStore.loadAll(context));
-            final String id = glossaryId;
-            all.removeIf(g -> g.id.equals(id));
+            all.removeIf(g -> createdGlossaryIds.contains(g.id));
             GlossaryStore.saveAll(context, all);
         }
         try (SqliteEditorialApiStore store = new SqliteEditorialApiStore(context)) {
             for (long id : comboIds) store.deleteCombo(id);
             for (EditorialApiCombo combo : store.listCombos()) {
-                if (combo.name.equals("tên gõ dở") || combo.name.equals("ui-result-combo")) store.deleteCombo(combo.id);
+                if (combo.name.equals(typedComboName) || combo.name.equals(resultComboName)) store.deleteCombo(combo.id);
             }
         }
     }
@@ -147,6 +153,16 @@ public final class EditorialApiBienTapUiInstrumentedTest {
         throw new AssertionError("timed out waiting for " + what);
     }
 
+    private static GlossaryStore.Glossary glossaryWithOneTerm(String name) {
+        GlossaryStore.Glossary glossary = new GlossaryStore.Glossary();
+        glossary.name = name;
+        GlossaryStore.Term term = new GlossaryStore.Term();
+        term.source = "勇者";
+        term.target = "Dũng giả";
+        glossary.terms.add(term);
+        return glossary;
+    }
+
     private Intent fileResult(String name) { return new Intent().setData(Uri.fromFile(new File(dir, name))); }
 
     private void openTab(ActivityScenario<MainActivity> scenario) {
@@ -160,16 +176,23 @@ public final class EditorialApiBienTapUiInstrumentedTest {
     // ---- unsaved form survives choosing sources; save without dispatch; reopen the same combo ----
 
     @Test public void typedFormValuesSurviveChoosingAGlossaryAndSavingKeepsThemForTheSameCombo() throws Exception {
-        GlossaryStore.Glossary glossary = new GlossaryStore.Glossary();
-        glossary.name = "glossary-bientap-ui";
-        GlossaryStore.Term term = new GlossaryStore.Term();
-        term.source = "勇者";
-        term.target = "Dũng giả";
-        glossary.terms.add(term);
+        GlossaryStore.Glossary glossary = glossaryWithOneTerm(glossaryName);
+        // collision decoys: a glossary whose name starts with the fixture name, listed AFTER it (the old "last prefix match"
+        // picked this one), another listed BEFORE it, and one with exactly the same name and term count but another id
+        GlossaryStore.Glossary decoyAfter = glossaryWithOneTerm(glossaryName + "-older");
+        GlossaryStore.Glossary decoyBefore = glossaryWithOneTerm(glossaryName + "-newer");
+        GlossaryStore.Glossary decoySameName = glossaryWithOneTerm(glossaryName);
         List<GlossaryStore.Glossary> all = new ArrayList<>(GlossaryStore.loadAll(context));
-        all.add(0, glossary);
+        all.add(0, decoyBefore);
+        all.add(1, decoySameName);
+        all.add(2, glossary);
+        all.add(3, decoyAfter);
         GlossaryStore.saveAll(context, all);
         glossaryId = glossary.id;
+        createdGlossaryIds.add(glossary.id);
+        createdGlossaryIds.add(decoyAfter.id);
+        createdGlossaryIds.add(decoyBefore.id);
+        createdGlossaryIds.add(decoySameName.id);
         FakeEditorialApiProvider provider = FakeEditorialApiProvider.editsAndPasses(EDITED);
         EditorialApiUiController.providerOverride = provider;
 
@@ -184,7 +207,7 @@ public final class EditorialApiBienTapUiInstrumentedTest {
             onUi(scenario, activity -> {
                 List<EditText> fields = fields(activity);
                 assertEquals(3, fields.size());
-                fields.get(0).setText("tên gõ dở");
+                fields.get(0).setText(typedComboName);
                 fields.get(1).setText("vendor/model-gõ-dở");
                 fields.get(2).setText("0.25");
                 for (View view : views(activity)) {
@@ -199,11 +222,13 @@ public final class EditorialApiBienTapUiInstrumentedTest {
                     && activity.editorialApi().lastDialog.isShowing()));
             onUi(scenario, activity -> {
                 android.app.AlertDialog dialog = activity.editorialApi().lastDialog;
+                List<GlossaryStore.Glossary> stored = GlossaryStore.loadAll(context);
                 int index = -1;
-                for (int i = 0; i < dialog.getListView().getCount(); i++) {
-                    if (String.valueOf(dialog.getListView().getItemAtPosition(i)).startsWith("glossary-bientap-ui")) index = i;
-                }
-                assertTrue("glossary item present", index >= 0);
+                for (int i = 0; i < stored.size(); i++) if (stored.get(i).id.equals(glossaryId)) index = i + 1; // item 0 is "Không dùng"
+                assertTrue("fixture glossary is in the stored list", index >= 1);
+                // the whole label is "name (N mục)"; a prefix or a bare name would also match the decoys
+                String label = String.valueOf(dialog.getListView().getItemAtPosition(index));
+                assertEquals(glossaryName + " (1 mục)", label);
                 assertTrue(dialog.getListView().performItemClick(null, index, dialog.getListView().getItemIdAtPosition(index)));
                 return null;
             });
@@ -217,21 +242,22 @@ public final class EditorialApiBienTapUiInstrumentedTest {
                 }
                 return values + "\n" + allText(activity);
             });
-            assertTrue(after, after.startsWith("tên gõ dở|vendor/model-gõ-dở|0.25|\n"));
-            assertTrue(after, after.contains("glossary-bientap-ui"));
+            assertTrue(after, after.startsWith(typedComboName + "|vendor/model-gõ-dở|0.25|\n"));
+            assertTrue(after, after.contains(glossaryName));
             assertTrue(after, after.contains("raw.txt") && after.contains("draft.txt"));
 
             // save without sending anything, back to the list
             click(scenario, "Lưu", 0);
             String list = onUi(scenario, MainActivity -> allText(MainActivity));
-            assertTrue(list, list.contains("tên gõ dở"));
+            assertTrue(list, list.contains(typedComboName));
             assertEquals("saving never reaches the provider", 0, provider.requests.size());
-            EditorialApiCombo stored;
+            EditorialApiCombo stored = null;
             try (SqliteEditorialApiStore store = new SqliteEditorialApiStore(context)) {
-                stored = store.listCombos().get(0);
+                for (EditorialApiCombo candidate : store.listCombos()) if (candidate.name.equals(typedComboName)) stored = candidate;
+                assertNotNull("the combo saved by this run is in the store", stored);
                 comboIds.add(stored.id);
             }
-            assertEquals("tên gõ dở", stored.name);
+            assertEquals(typedComboName, stored.name);
             assertEquals(glossaryId, stored.glossaryId);
             assertEquals(EditorialApiContract.Mode.QUICK, stored.settings().mode);
             assertEquals("vendor/model-gõ-dở", stored.settings().model);
@@ -243,7 +269,7 @@ public final class EditorialApiBienTapUiInstrumentedTest {
                 List<EditText> fields = fields(activity);
                 return fields.get(0).getText() + "|" + fields.get(1).getText() + "|" + fields.get(2).getText();
             });
-            assertEquals("tên gõ dở|vendor/model-gõ-dở|0.25", reopened);
+            assertEquals(typedComboName + "|vendor/model-gõ-dở|0.25", reopened);
             assertEquals(stored.id, onUi(scenario, activity -> activity.editorialApi().combo.id).longValue());
         }
     }
@@ -260,7 +286,7 @@ public final class EditorialApiBienTapUiInstrumentedTest {
                 c.combo.rawName = "raw.txt";
                 c.combo.draftUri = Uri.fromFile(new File(dir, "draft.txt")).toString();
                 c.combo.draftName = "draft.txt";
-                c.saveAndContinueWholeChapter("ui-result-combo", EditorialApiContract.Mode.QUICK, "fake-model", "1.00");
+                c.saveAndContinueWholeChapter(resultComboName, EditorialApiContract.Mode.QUICK, "fake-model", "1.00");
                 return c;
             });
             waitFor("confirmation", () -> controller.screen == EditorialApiUiController.Screen.CONFIRM);
