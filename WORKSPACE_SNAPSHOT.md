@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-12 (+07:00): R1.5 một phần — RC 4.18.0/266 build, cài emulator, test thiết bị, ảnh/video; chưa archive.
+- Updated: 2026-10-12 (+07:00): R1.5 một phần — RC 4.18.0/266 build, cài emulator, test thiết bị, ảnh/video; checklist ghi version cụ thể v4.18.0 để archive-release kiểm đúng version; chưa archive.
 - Current version: active v4.18; same release/checklist `release_checklists/v4.18-editorial-v5-safe-4-1-3.md`; no checkbox changed.
 - Current branch: `feature/v4.18-p5e-runner-repair-20260917`.
 - Current commit: `82626ac8` (R1.4, nguồn của RC) là baseline ngay trước commit tài liệu R1.5 này; confirm actual HEAD when resuming.
