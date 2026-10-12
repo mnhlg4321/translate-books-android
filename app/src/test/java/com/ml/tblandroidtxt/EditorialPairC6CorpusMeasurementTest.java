@@ -191,6 +191,31 @@ public final class EditorialPairC6CorpusMeasurementTest {
         assertTrue("replay must cover points", points > 0);
     }
 
+    /**
+     * Writes the single-chunk selector (EditorialSingleChunkProbe guards) of one chunk of private chapter 006 when
+     * C6_INPUT_ROOT, C6_SELECTOR_ORDINAL and C6_SELECTOR_OUT are set. The device refuses the run on any mismatch.
+     */
+    @Test public void emitSingleChunkSelectorWhenConfigured() throws Exception {
+        String inputRoot = System.getenv("C6_INPUT_ROOT");
+        String ordinal = System.getenv("C6_SELECTOR_ORDINAL");
+        String out = System.getenv("C6_SELECTOR_OUT");
+        if (inputRoot == null || inputRoot.isBlank() || ordinal == null || ordinal.isBlank() || out == null || out.isBlank()) return;
+        PrivateChapter006 chapter = loadPrivate006(Path.of(inputRoot));
+        PairMap map = chapter.preview.map;
+        PairMap.Entry entry = map.entries().get(Integer.parseInt(ordinal) - 1);
+        assertEquals(Integer.parseInt(ordinal), entry.displayOrdinal());
+        EditorialPairPreview.Row row = chapter.preview.rows.get(Integer.parseInt(ordinal) - 1);
+        String json = "{" + q("ordinal") + ":" + ordinal + "," + q("pairId") + ":" + q(entry.pairId()) + "," + q("mapHash") + ":" + q(map.mapHash())
+                + "," + q("firstParagraph") + ":" + map.rawParagraphStart(entry) + "," + q("lastParagraph") + ":" + map.rawParagraphEnd(entry)
+                + "," + q("rawRangeSha256") + ":" + q(PairText.sha256(map.rawText(entry))) + "," + q("draftRangeSha256") + ":" + q(PairText.sha256(map.draftText(entry)))
+                + "," + q("fixPoints") + ":" + row.fixPointCount + "," + q("estimatedInputTokens") + ":" + row.estimatedInputTokens
+                + "," + q("estimatedOutputTokens") + ":" + row.estimatedOutputTokens + "," + q("contractRevision") + ":" + q(com.ml.tblandroidtxt.editorial.api.PairContract.REVISION) + "}";
+        Files.write(Path.of(out), json.getBytes(StandardCharsets.UTF_8));
+        System.out.println("C6 selector written " + out);
+    }
+
+    private static String q(String value) { return '"' + value + '"'; }
+
     /** C6.6: a reasoning model must get at least the shared 4096-token output ceiling on every targeted call. */
     private static void assertEachCallSendsTheOutputFloor(FakeEditorialApiProvider provider) {
         assertEquals("one max_tokens value per call", provider.requests.size(), provider.maxOutputTokens.size());
