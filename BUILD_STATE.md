@@ -1,11 +1,22 @@
 # Build State
 
-## Current state — 2026-10-12 (chapter 011 accepted: 3/3, C7 done; CP-IMPL-15 fixes 12:8, offline; P7 opens)
+## Current state — 2026-10-12 (P7 offline on clean source 12824cee: ready for wrapper build and device QA)
+
+- Same branch `feature/v4.18-p5e-runner-repair-20260917` and same checklist; no checkbox changed; labels, 3/3 acceptance and limits of chapters 006, 008, 011 unchanged. Source under test: code commit `12824cee6c6f4e9f9482efaf6fe398799d5732c0` (CP-IMPL-15; later commits are documentation only), clean `git archive` zip SHA-256 F0D553C6481DFE90DE95C7359168E2D6688FBC5600D3A7D5526799250179EB84, every command run inside the archive folder.
+- Regression completed offline: `app:lintDebug` 0 errors / 57 warnings; `app:test` debug 472, release 472, benchmark 472 (3 skips each) PASS. Already evidenced and not repeated: engine 706 (1 skip), androidTest compile, scripts/p6 106, scripts/chunk 24 (logs captured once); the 28 PowerShell suites of the frozen A4.3 track (scripts unchanged since 2026-10-02). PreTag gate run read-only: exit 1, "Step 05 is not complete".
+- Reports preserved separately: test report in `artifacts/qa/v4.18-p7-offline-12824cee/test-report/` (byte-identical mirror in `backup/qa/...`, SHA256SUMS, no book text) and replay report (hash-only summary in the same folder, private TSVs in `D:/P5E-private/p7-offline-12824cee/replay-report/`). Replays: 006 C6B 11/11 correct kept, 9/9 wrong blocked; other runs differ from live only at the points fixed later.
+- Checklist gate mapping added (sections A-D): historical open gates (P5D exit, P5E.8, P5E.9, A2, A3.2, A3.2C, three-chapter row) belong to the frozen V5 path, are not satisfied and not waived; proposed disposition awaits the owner. Missing for P7: the P7 build and test APK from the final commit, device QA on it, performance evidence and the release payload (tag only).
+- No provider call, build or install in this step (spend 0).
+- Next action: owner xác nhận (hoặc đổi) cách xử lý các cổng lịch sử ở mục C của khối "P7 gate mapping" trong `release_checklists/v4.18-editorial-v5-safe-4-1-3.md` và duyệt build P7: `scripts/build-and-save.ps1 -Series 4.18-p7` từ commit tài liệu kế tiếp commit mã `12824cee` cùng test APK, cài chỉ `emulator-5554`, rồi chạy các nhóm QA thiết bị ở mục B (không có provider call). Chưa tag, merge hay release.
+
+Earlier current-state sections below are historical.
+
+## Previous state — 2026-10-12 (chapter 011 accepted: 3/3, C7 done; CP-IMPL-15 fixes 12:8, offline; P7 opens)
 
 - The owner accepted chapter 011 (CP-IMPL-14 evidence: final ĐÚNG 50, SÓT 2, SAI 1, CHƯA CHẮC 3; gates met) and asked for 12:8 to be fixed. Accepted chapters: 006 (CP-IMPL-9), 008 (CP-IMPL-11), 011 (CP-IMPL-14): 3/3. The known limits stay recorded (2:2 blocked, 12:2 uncertain, 10:6 missed, the remaining misses of 006 and 008).
 - Code commit `12824cee6c6f4e9f9482efaf6fe398799d5732c0` (CP-IMPL-15): a name word added next to a different name word of the same entity is refused (ADDRESS_NAME_COMBINED); surname-to-call-name and repeated call names still pass. Clean archive (zip SHA-256 F0D553C6481DFE90DE95C7359168E2D6688FBC5600D3A7D5526799250179EB84): engine 706, app host 472, androidTest compile, scripts/p6 106, scripts/chunk 24 PASS. Replays: 006 and 008 byte-identical; the stored C7D answers differ only at 12:8 (now kept); projected 011 outcome ĐÚNG 51/53, SAI 0/56 (replay, not live). Not built or installed (installed APK is 4.18-c6.9/263).
 - No provider call, build or install in this step (spend 0). P7 now opens; no tag, merge or release.
-- Next action: owner duyệt bắt đầu P7 theo `release_checklists/v4.18-editorial-v5-safe-4-1-3.md`: bước đầu là hồi quy đầy đủ offline (0 USD) trên commit mã `12824cee` (CP-IMPL-15) rồi lập danh sách bằng chứng còn thiếu của checklist; sau đó mới build wrapper `4.18-c6.10` với hai archive và QA thiết bị (import, restart, recovery, stale input, export, Translation). Chưa tag, merge hay release, và không có provider call nào mới.
+- Done: P7 offline readiness recorded (section above).
 
 Earlier current-state sections below are historical.
 
