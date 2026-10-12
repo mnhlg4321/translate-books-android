@@ -1,12 +1,21 @@
 # Build State
 
-## Current state — 2026-10-12 (C7B: chapter 011 under CP-IMPL-12, 11 live calls)
+## Current state — 2026-10-12 (011 correct parts accepted; CP-IMPL-13 fixes the wrongly blocked 10:2, offline)
+
+- The owner accepted the points of 011 labelled ĐÚNG (5 applied fixes, 37 correct keeps) and asked whether the wrong and missed ones can be fixed. 011 is not counted accepted (2/3 stays: 006, 008); P7 not started.
+- Code commit `4be07d0bd3d5077a5a80a94f09dfa9b5b1bee105` (CP-IMPL-13): the finder also reads the glossary; an entry whose target shares a name word with a row's speaker/target and whose source is in the RAW lines next to the aligned lines puts that entity in the scene (FixPoint.sceneEntities). Clean archive (zip SHA-256 4D8D4B6B7207D44BD908869ABE9E4284A6166AA4AD7223B79622D61924FABF80): engine 704, app host 472, androidTest compile, scripts/p6 106, scripts/chunk 24 PASS. Replays: 006 byte-identical, 008 differs only by 1:2 no longer created, 011 differs only at 10:2 (now applied: chị Kuragane to chị Erika). Replay, not live; not built or installed (installed APK is 4.18-c6.8/262).
+- 10:3 can be closed without code by adding the glossary entry 全国レベル -> trình độ toàn quốc (the CP-IMPL-12 longest-entry rule then covers レベル); a blanket katakana-after-kanji exemption was measured and rejected (it would drop 15 true skill-term occurrences). The 9 misses are model behaviour (`cậu` kept instead of the call name); options are a clearer prompt (CP-IMPL-14) tried on 011 chunk 2, or reasoning high on the same chapter.
+- Next action: owner chọn bước tiếp cho phần sai và sót của 011: (a) duyệt hoặc từ chối một canary prompt trên 011 đoạn 2 (1 lời gọi, luna medium, không retry, sổ mới `C7C-<ngày>`, trần USD 0.01; giữ chỗ quan sát khoảng USD 0.006, thật ở lần C7B USD 0.0015) để thử câu lệnh rõ hơn về việc đổi `cậu` thành tên call của hàng, cần code prompt CP-IMPL-14 và build `4.18-c6.9`; (b) cho phép thêm mục glossary `全国レベル → trình độ toàn quốc` vào glossary 011 (không cần code) để SAI 10:3 không tái diễn. Chưa build, cài hay chi trước quyết định đó; 011 chưa tính accepted.
+
+Earlier current-state sections below are historical.
+
+## Previous state — 2026-10-12 (C7B: chapter 011 under CP-IMPL-12, 11 live calls)
 
 - Pinned source `30aabfe371e199bddf5b2a568c9ac47a69a2d744`; wrapper build `4.18-c6.8`/262 (event build-20261012-115252, APK SHA-256 ECB8C30DF68BEA54E0C1FE7315A628A91515C970A611044413535731563F445C), test APK `c7b-test-20261012`; installed only on `emulator-5554`. Device SQLite reopen, EditorialPairStore, EditorialApiStore and a fake whole-chapter run passed first.
 - One whole-chapter run, luna medium, no retry, ledger C7B-20261012 cap USD 0.06: 11 calls, all `stop`, every chunk accepted, FINAL_ELIGIBLE, 47820 in / 6794 out, USD 0.0201062, pending 0, no overrun.
 - 56 points adjudicated by RAW + rows + glossary: final ĐÚNG 43, SÓT 9, SAI 1, CHƯA CHẮC 3. Events: correct fix applied 5, partial 0, wrong fix through 1 (10:3, glossary レベル applied to ordinary 全国レベル), correct fix wrongly blocked 1 (10:2, 倉金先輩って with no row targeting Shimakawa), wrong fix blocked correctly 1 (10:5), misses 8 (`cậu` kept instead of the call name).
 - Numeric gates: 0 lines outside points, 0 new Japanese, marks kept, 214/214 lines, ĐÚNG 43/53 = 81.1%, SAI 1/56 = 1.8%. Owner reading pending; 006 and 008 stay accepted (2/3); 011 not accepted yet; P7 not started. No code changed in this step.
-- Next action: owner đọc `D:\P5E-private\chunk-outputs\011\c7b-011-live-review.html` (và bản app `011_APP_c7b_JAKUAKU_MONSTER_VOL1.txt` cùng thư mục) rồi quyết định có chấp nhận chương 011 hay không (cổng số đạt: SAI 1/56, ĐÚNG 43/53; chấp nhận sẽ làm 3/3 chương accepted và mở P7); kèm đó duyệt hay không hai sửa offline nêu trong khối này (bằng chứng "trong cảnh" lấy từ glossary cho điểm 10:2; điểm thuật ngữ trong từ ghép cho 10:3) trước khi bàn giao. Chưa chạy chương khác, pilot hay V5.
+- Done: the owner answered (section above).
 
 Earlier current-state sections below are historical.
 
