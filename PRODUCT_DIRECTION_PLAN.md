@@ -41,11 +41,14 @@ Dừng và đóng việc, không mở thêm đo, khi: A cho thấy vấn đề l
 | B | xong 2026-10-13 | 122 lần sửa tự xưng ở 8 chương có dữ kiện từng dòng. **Dữ liệu pronoun đúng** (122/122 từ đúng là `self` của một hàng phủ đoạn). Lỗi phát sinh ở **khâu dịch**: hàng đúng gần như chắc có trong prompt dịch (3–13 hàng/chương, giới hạn 40), model chọn sai: 50 ca lấy `self` của nhân vật khác (014: 31), 26 ca dùng từ không thuộc hàng nào, 8 ca đúng người nói nhưng nhầm người nghe, 38 ca lời kể (chỉ chương 004). Biên tập gắn cờ 70/84 dòng thoại nhưng không sửa vì nhiều hàng có `self` khác nhau và prompt bảo "mơ hồ thì giữ". Gốc chung: không ai xác định người nói/người nghe cho từng dòng. Loại: dò lời kể (mọi chương có hàng người kể, chỉ 004 cần sửa), thay thế tất định (26 ca đều có 2–5 `self` khả dĩ) |
 | C | xong offline 2026-10-13 (`feature/v4.20`) | Owner chọn C1. Điểm ADDRESS liệt kê các hàng một lần, đánh số `R1…` kèm ghi chú của owner; luật ADDRESS lặp gom thành một dòng "từ cần kiểm". Model đổi xưng hô phải trả `[id] R<n> <dòng>`; app chỉ nhận dạng của đúng hàng đó, không cho xóa dạng hợp lệ của hàng, từ chối hàng bị RAW loại trừ hoặc trái lời gọi trực tiếp; đổi xưng hô không trích hàng thì giữ DRAFT. Bỏ mặc định "mơ hồ thì giữ" khi RAW cho biết ai nói với ai. Test tổng hợp (Aki/Mori/Ken/Rina) ghim đúng kiểu lỗi bước B. Response đã lưu của các lần chạy cũ không trích hàng nên không dùng để replay đánh giá được. Hợp đồng nâng `CP-IMPL-15` → `CP-IMPL-16` (lượt chuẩn bị bằng hợp đồng cũ không được chạy tiếp). Archive sạch `739e5c49`: engine 714, app 472, lint 0 lỗi, androidTest compile OK |
 | D | S0–S9 xong 2026-10-13, chờ owner đọc | Một lượt 014 trên 4.20-d.1/code268 (CP-IMPL-16); S4 fake10/real0, TXT trùng DRAFT. Live7 calls/no retry, USD0.01801660, pending0/overrun0; dừng ở chunk13 vì điểm glossary PROTECTED_SYMBOL_CHANGE, chunk14–16 NOT_REACHED, chương INCOMPLETE. Trang S7 D:/P5E-private/chunk-runs/V420-D/READING_014.html có37 dòng. S8: 21 dòng B (34 lần thay từ): 7 khớp từ FINAL tham chiếu,13 không đổi,1 đổi khác;16 dòng app đổi ngoài nhóm B,1 cậu↔tên. Chưa kết luận chất lượng/phát hành/bỏ |
-| E | chưa bắt đầu | Chờ quyết định owner sau trang S7; không tag/merge |
+| C2' | xong offline 2026-10-13 | Owner duyệt lộ trình C2' → E và ngưỡng. Lỗi định dạng của **một** điểm (dấu, chữ Nhật, độ dài, thẻ, nhiều dòng, rỗng) chỉ giữ DRAFT của dòng đó (KEPT, giữ lý do); chunk bị chặn khi **từ 2 điểm** trở lên của cùng câu trả lời lỗi định dạng; lỗi neo dòng vẫn chặn. Hợp đồng `CP-IMPL-17`. Lý do: app chỉ thử lại lỗi trước khi gửi (`EditorialPairRunService` 295–300), một dòng sai dấu đã dừng cả chương 014 ở chunk 13. Replay response thật đã lưu của lượt `7bc2b3e2` (không gọi model): chunk 13 không còn REJECTED (13:3 giữ DRAFT; 13:1, 13:2, 13:5 được áp), chunk 1–12 cho 24 dòng FIXED như lượt thật. Trang đọc 3 dòng mới: `D:\P5E-private\chunk-runs\V420-D\replay-c2-CP-IMPL-17\READING_014_CHUNK13_C2.html` |
+| E | chưa bắt đầu | Phát hành v4.20 (C1 + C2') theo 14 bước, gồm một lượt thật trọn chương 017 trên đúng bản RC (owner đã duyệt: tối đa 10 lời gọi, không retry, sổ mới, trần USD 0,08) và owner đọc trang 017 trước tag/merge |
 
 Dữ liệu bước A/B (có văn bản sách) ở `D:\P5E-private\product-plan-A\`, ngoài Git.
 
-**Next action:** owner đọc `D:/P5E-private/chunk-runs/V420-D/READING_014.html` và quyết định phát hành hay bỏ C1 theo mục7; dừng sau S9, không lượt trả phí tiếp theo.
+**Next action:** owner đọc 3 dòng 13:1, 13:2, 13:5 ở trang đọc C2'; sau đó bước E (phát hành v4.20).
+
+Review độc lập 2026-10-13 tại `71781fd2`: HEAD sạch trước review và remote khớp; 20/20 hash evidence cùng hash trang đọc khớp; ledger 7 calls/USD0.01801660/pending0 được kiểm lại. Chunk13 điểm3 bị chặn đúng vì response thêm U+300C/U+3002/U+300D vào DRAFT không có các dấu đó; không có bằng chứng lỗi guard để vá. STRUCTURAL_VALID toàn chương chưa đạt, SEMANTIC_EVAL chờ owner; SQLite/reopen/SAF của lượt này NOT_MEASURED vì runner dùng InMemoryPairRunStore. S0–S9 hoàn thành công việc thu evidence, không đồng nghĩa nghiệm thu sản phẩm. Không đổi acceptance, checklist hay evidence cũ.
 
 ## 6. Phương án sửa P1 (chờ owner)
 
@@ -62,3 +65,29 @@ Dữ liệu bước A/B (có văn bản sách) ở `D:\P5E-private\product-plan-
 - Tiêu chí: phát hành nếu số lỗi tự xưng sửa đúng lớn hơn rõ rệt số sửa sai mới theo owner đọc; bỏ C1 (hoàn tác) nếu sửa đúng không lớn hơn sửa sai.
 
 - Kết quả thực thi S0–S9 (2026-10-13): báo cáo `artifacts/qa/v4.20-d-014-20261013/QA_REPORT.md` + `SUMMARY.json`, hai bản hash khớp. Production/test wrapper events đã lưu và so byte ở đúng D:/App Translate Books/artifacts/builds|test-builds và backup/builds|test-builds trước cài. Chỉ emulator-5554; không sửa production C1, owner files, script gốc, không cổng/bộ kiểm v4.19. Run014 7bc2b3e2-9795-4299-98f4-5ebfdcca6bfe, sổ V420-D-014-20261013-7bc2b3e2:7 RESERVE/7 SETTLE, USD0.01801660, pending0. Dừng theo service ở chunk13, không retry; phần trần chưa dùng không cấp quyền lượt mới. Trang37 dòng và số S8 chỉ chuẩn bị cho owner đọc, không dùng để tự kết luận C1 đạt hay không.
+
+### Phân xử owner và quyết định giá trị C1 — 2026-10-13
+
+Owner xác nhận trực tiếp trong hội thoại: toàn bộ 37 dòng S7 đúng, đạt kết quả đề ra (bao gồm dòng giữ nguyên). Đây là nguồn phân xử mới; JSON xuất trước đó rỗng không được dùng để phủ nhận xác nhận này. Không sửa nhãn/evidence S8 lịch sử, không đưa phân xử hoặc FINAL vào runtime.
+
+- Đã đối chiếu đủ37 dòng:24 dòng đổi,13 giữ nguyên;21 dòng B/34 lần thay từ, giao với nhóm đổi8 dòng. 20/20 hash evidence khớp SUMMARY tại baseline71781fd2.
+- Tự xưng sửa đúng trong nhóm B:8 dòng/10 lần thay từ thực tế, gồm7 dòng khớp từ tham chiếu và1 dòng đổi khác nhưng owner xác nhận đúng. Còn sót/sửa sai mới/chưa chắc trên37 dòng theo owner:0/0/0; không suy rộng tới chunk14–16 chưa chạy. 13 dòng B giữ nguyên chứa24 lần thay từ tham chiếu chưa thực hiện, không tự gọi là24 lỗi còn sót sau phân xử này.
+- Ngoài B:16 dòng đổi đúng theo owner, gồm10 dòng ADDRESS (1 dòng cậu↔tên) và6 dòng GLOSSARY; không cộng chúng thành lợi ích sửa tự xưng. Đúng về nội dung không tự chứng minh mọi thay đổi đều cần thiết; lợi ích bổ sung chưa định lượng riêng.
+- Khuyến nghị duy nhất: **tiếp tục hướng C1**, vì8 dòng tự xưng sửa đúng so với0 sửa sai mới theo owner. Không phải đủ điều kiện phát hành: chương INCOMPLETE, SQLite/reopen/SAF vẫn NOT_MEASURED. Không có phép đo đối chứng để quy toàn bộ lợi ích riêng cho cơ chế trích hàng.
+
+| chunk/point; dòng DRAFT (1-based) | Ban đầu → thay đổi thực tế | Owner / evidence / kết luận |
+|---|---|---|
+| 1/6;18 | tự xưng đổi1 lần | ĐÚNG; response001 R7, gate FIXED, output có; lợi ích C1 |
+| 2/8;31 | tự xưng đổi2 lần | ĐÚNG; response002 R8, gate FIXED, output có; lợi ích C1 |
+| 8/2;132 và8/4;134 | tự xưng đổi1 lần mỗi dòng | ĐÚNG; response003 R3, gate FIXED, output có; lợi ích C1 |
+| 8/5;136 và8/6;138 | tự xưng đổi1 lần mỗi dòng | ĐÚNG; response003 R2, gate FIXED, output có; dòng138 khác từ FINAL vẫn đúng |
+| 8/9;143 | tự xưng đổi2 lần | ĐÚNG; response003 R2, gate FIXED, output có; lợi ích C1 |
+| 9/5;149 | tự xưng đổi1 lần | ĐÚNG; response004 R2, gate FIXED, output có; lợi ích C1 |
+| 5/—;95,97;6/—;103;7/—;121,128;10/—;160;11/—;184,189 | B nhưng không có điểm; giữ nguyên8 dòng | ĐÚNG; chunks không có điểm tương ứng, output giữ; không chấm sót theo FINAL |
+| 9/8;158 | model giữ nguyên1 dòng | ĐÚNG; response004 =, MODEL_KEEP; không phải lỗi sót theo owner |
+| 13/1;214;13/2;216;13/5;222 | đề xuất FIXED nhưng output giữ3 dòng | ĐÚNG với output; chunk STRUCTURE_BLOCKED; không tính đề xuất là sửa thành công |
+| 13/4;219 | guard giữ1 dòng | ĐÚNG; ADDRESS_VALID_FORM_CHANGED; output không đổi |
+| 1/2;4;1/3;5;2/1;23;2/2;24;2/4;26;2/5;27;2/6;28;2/10;34;2/11;35;8/3;133 | đổi ADDRESS ngoài B10 dòng | ĐÚNG; gate FIXED/output có; dòng133 cậu↔tên tách riêng, không cộng vào tự xưng |
+| 1/7;20;11/1;183;11/2;188;12/4;203;12/5;206;12/6;210 | đổi glossary ngoài B6 dòng | ĐÚNG; gate FIXED/output có; lợi ích khác, không quy cho C1 |
+
+Không có ca sai/sót theo phân xử mới cần truy vết thêm. Điều đã chứng minh: các sửa tự xưng được finder chọn, prompt có hàng được trích, model trích R phù hợp với dạng được giữ trong gate, và output của chunk ACCEPTED chứa sửa; chặn chunk13 do glossary thêm dấu là đúng. Chưa chứng minh: chất lượng phần chưa tới, hiệu quả SQLite/SAF, hay mức tăng so với cùng model không dùng C1. Báo cáo S0–S9 và SUMMARY giữ nguyên như evidence lịch sử.

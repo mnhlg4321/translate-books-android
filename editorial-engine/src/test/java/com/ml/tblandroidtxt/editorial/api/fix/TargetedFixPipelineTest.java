@@ -58,8 +58,22 @@ public final class TargetedFixPipelineTest {
         var points = List.of(point(1, Type.ADDRESS, 0, "「Cậu đã đến.」", "「原文」"), point(2, Type.GLOSSARY, 1, "Rồng vương đã về.", "竜王"));
         var result = TargetedFixApplier.apply(before, points, TargetedFixParser.parse("[1] Lan đã đến.\n[2] Long Vương đã về.", points), glossary());
         assertEquals("「Cậu đã đến.」\nLong Vương đã về.", result.text());
-        assertEquals(TargetedFixApplier.Status.REJECTED, result.outcomes().get(0).status());
+        // one malformed answer keeps its own DRAFT line only (C2')
+        assertEquals(TargetedFixApplier.Status.KEPT, result.outcomes().get(0).status());
+        assertEquals("PROTECTED_SYMBOL_CHANGE", result.outcomes().get(0).reason());
         assertEquals(TargetedFixApplier.Status.FIXED, result.outcomes().get(1).status());
+    }
+
+    @Test public void twoMalformedAnswersInOneResponseRejectBothSoTheChunkIsBlocked() {
+        String before = "「Cậu đã đến.」\n「Tớ về đây.」\nRồng vương đã về.";
+        var points = List.of(point(1, Type.ADDRESS, 0, "「Cậu đã đến.」", "「原文」"), point(2, Type.ADDRESS, 1, "「Tớ về đây.」", "「原文」"),
+                point(3, Type.GLOSSARY, 2, "Rồng vương đã về.", "竜王"));
+        var result = TargetedFixApplier.apply(before, points,
+                TargetedFixParser.parse("[1] Lan đã đến.\n[2] Mình về đây.\n[3] Long Vương đã về.", points), glossary());
+        assertEquals(TargetedFixApplier.Status.REJECTED, result.outcomes().get(0).status());
+        assertEquals(TargetedFixApplier.Status.REJECTED, result.outcomes().get(1).status());
+        assertEquals("the independent repair is still computed; the service blocks the chunk", TargetedFixApplier.Status.FIXED,
+                result.outcomes().get(2).status());
     }
 
     private static final String PRONOUN_HEADER = "from,speaker,target,self,call,scope,note\n";
@@ -186,13 +200,14 @@ public final class TargetedFixPipelineTest {
         assertEquals(TargetedFixApplier.Status.FIXED, result.outcomes().get(0).status());
     }
 
-    @Test public void applierRejectsMetaScriptGrowthAndMultilineAnswersWithoutChangingSource() {
+    @Test public void applierKeepsTheSourceLineForMetaScriptGrowthAndMultilineAnswers() {
         String source = "normal line";
         for (String answer : List.of("日本語", "<EDITED>x</EDITED>", "x\ny", "x".repeat(30))) {
             FixPoint p = point(1, Type.GLOSSARY, 0, source, "RAW");
             var result = TargetedFixApplier.apply(source, List.of(p), TargetedFixParser.parse("[1] " + answer, List.of(p)), List.of());
             assertEquals(source, result.text());
-            assertEquals(TargetedFixApplier.Status.REJECTED, result.outcomes().get(0).status());
+            assertEquals(answer, TargetedFixApplier.Status.KEPT, result.outcomes().get(0).status());
+            assertFalse(answer, List.of("MODEL_KEEP", "UNCHANGED").contains(result.outcomes().get(0).reason()));
         }
     }
 

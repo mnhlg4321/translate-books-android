@@ -1,6 +1,25 @@
 # Build State
 
-## Current state — 2026-10-13 (v4.20 D, S0–S9 complete; owner reading pending)
+## Current state — 2026-10-13 (C2': one malformed point answer no longer blocks the chunk; CP-IMPL-17)
+
+- Owner approved the roadmap C2' -> E (E includes one full-chapter live run on 017 on the RC build, max 10 calls, no retry, new ledger, cap USD 0.08) and the threshold: a chunk is blocked only when two or more points of one response fail the format checks.
+- Cause: the run service retries only failures before dispatch (`EditorialPairRunService` lines 295-300); a STRUCTURE_BLOCKED chunk stops the chapter (lines 302, 383). In the D014 run one glossary answer added `「` and `。」` (RAW, DRAFT and FINAL have none) and stopped the chapter at chunk 13 of 16.
+- Fix in `TargetedFixApplier`: a single format rejection becomes KEPT with its reason (no text changes); two or more stay REJECTED; anchoring errors unchanged. `PairContract.REVISION` CP-IMPL-17. Tests: engine 715 (1 skip), app 473 (3 skip), 0 failures on the working tree; new engine test for the two-answer block, service tests for one and two malformed answers; three tests updated from the old one-answer-blocks rule.
+- Offline replay of the stored D014 responses through the new code: 48 points, 27 FIXED, 21 KEPT, 0 REJECTED; chunk 13: 13:3 KEPT PROTECTED_SYMBOL_CHANGE, 13:1/13:2/13:5 FIXED, 13:4 KEPT ADDRESS_VALID_FORM_CHANGED; chunks 1-12 give the same 24 FIXED lines as the live run. TSV SHA-256 `e50b3e8c4abe3ead23c9ec0a326bb4e94db1e9812226ead52cf9678aa193c0cc` (private).
+- No build, device or provider operation; USD 0 in this step (v4.20 total USD 0.0180166).
+- Next action: owner reads the three newly applied lines; then step E.
+
+## Current independent review — 2026-10-13, baseline 71781fd2 (documentation only, uncommitted)
+
+- Local HEAD and origin match 71781fd2; production main source unchanged from APK source9bcbabf4. Evidence20/20 and reading-page hashes match; production payload mirrors5/5 and APK hash match. Ledger verified:7 calls/USD0.01801660/pending0. No new test/build/device/provider action.
+- Chunk13 point3: model added U+300C/U+3002/U+300D absent from DRAFT. PROTECTED_SYMBOL_CHANGE is correct preservation enforcement, not a proven guard bug; no production patch warranted. Existing protected-symbol tests cover this family.
+- S0–S9 execution is complete; full product acceptance is not. Owner subsequently confirmed all37 S7 rows correct in the conversation, including unchanged rows. Actual self fixes in B:8 lines/10 occurrences; owner-reported misses/new wrong edits/uncertain on reviewed rows:0/0/0. All16 changed lines outside B approved (10 ADDRESS, including1 cậu↔name;6 GLOSSARY). Recommend continue C1, not release. The original S8 counts/SUMMARY remain historical reference matching, not adjudication.
+- Chapter INCOMPLETE;14–16 NOT_REACHED. The runner uses InMemoryPairRunStore, so SQLite persistence/reopen/SAF remain unmeasured. No controlled comparison proves the incremental gain of citation alone. Detailed identifier-only assessment is in PRODUCT_DIRECTION_PLAN section7; private book text/adjudication details are not copied into Git.
+- Next action: owner approves a scope to address the glossary response adding protected symbols at chunk13 point3 while retaining the guard; no fix or additional run performed.
+
+The following S9 report is retained as the execution baseline.
+
+## Earlier — 2026-10-13 (v4.20 D, S0–S9 complete; owner reading pending)
 
 - Product decision: ship or drop C1 after owner reads S7. Worktree feature/v4.20 resumed clean at f7e39015=origin; S1 no-retry/max-call runner9bcbabf4, test-only fake keep formattingabffa518. Production C1 main sources unchanged from starting f7e39015, CP-IMPL-16; no v4.19 gates/relabel/scaffolding.
 - Build production 4.20-d.1/code268, event build-20261013-095132 from9bcbabf4, APK BB603C680AC5EE17CA8874AE078FCEC7BA91559382118CC358F248B51465184E, source ZIP C7EC11C46530ABBBD0C5CFBAF36B026EDB83442C25337ADB8F4CECAF7A7F92B9. Test event v420-d-test-20261013-095400 fromabffa518, APK 3C61FA67B236B98FE0A738966DB085A8B02A11859DA72BA03A73E686F7DBB2E8, source ZIP 284D058AEF21F450CB1FA6587E337FF82AEFE60B6552F059348DEF1F4DCA6689. Only fake response formatting differs between sources; production identical.

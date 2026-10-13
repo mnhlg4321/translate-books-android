@@ -20,6 +20,13 @@ public final class TargetedFixApplier {
     private record Span(int start, int contentEnd, int end, String ending) { }
     private record Edit(int start, int end, String replacement, int id, boolean insertion) { }
 
+    /**
+     * A malformed answer (symbols, Japanese, length, tags, several lines) for one point keeps that DRAFT line and lets the other
+     * points of the chunk apply; only more than this many malformed answers in one response block the chunk, because the response
+     * as a whole is then suspect (owner decision 2026-10-13, plan C2'). Anchoring errors always block.
+     */
+    private static final int MAX_POINT_LOCAL_FORMAT_REJECTIONS = 1;
+
     private TargetedFixApplier() { }
 
     public static Result apply(String draft, List<FixPoint> points, TargetedFixParser.Parsed parsed,
@@ -29,6 +36,7 @@ public final class TargetedFixApplier {
         LineUnits units = LineUnits.parse(source);
         List<Outcome> outcomes = new ArrayList<>();
         List<Edit> edits = new ArrayList<>();
+        List<Integer> formatRejections = new ArrayList<>();
         for (FixPoint point : points == null ? List.<FixPoint>of() : points) {
             TargetedFixParser.Answer answer = parsed == null ? null : parsed.answers().get(point.id());
             String before = point.draftText();
@@ -48,8 +56,9 @@ public final class TargetedFixApplier {
             String reject = rejection(point, candidate, answer.row(), glossary);
             if (reject != null) {
                 // The ADDRESS lock only says the rows cannot justify this answer: the line stays as the DRAFT and the other points
-                // of the chunk still apply. A malformed answer (symbols, Japanese, length) is still a rejection that blocks the chunk.
+                // of the chunk still apply. A malformed answer is decided after the loop (MAX_POINT_LOCAL_FORMAT_REJECTIONS).
                 Status status = reject.startsWith(AddressEditGuard.PREFIX) ? Status.KEPT : Status.REJECTED;
+                if (status == Status.REJECTED) formatRejections.add(outcomes.size());
                 outcomes.add(new Outcome(point, status, before, before, reject));
                 continue;
             }
@@ -88,6 +97,13 @@ public final class TargetedFixApplier {
                 edits.add(new Edit(target.start(), target.contentEnd(), candidate, point.id(), false));
                 outcomes.add(new Outcome(point, Status.FIXED, before, candidate,
                         restoredTerminator ? "REPLACED_WITH_DRAFT_TERMINATOR" : "REPLACED"));
+            }
+        }
+        // a rejected point added no edit, so turning it into KEPT changes no text
+        if (!formatRejections.isEmpty() && formatRejections.size() <= MAX_POINT_LOCAL_FORMAT_REJECTIONS) {
+            for (int at : formatRejections) {
+                Outcome rejected = outcomes.get(at);
+                outcomes.set(at, new Outcome(rejected.point(), Status.KEPT, rejected.before(), rejected.after(), rejected.reason()));
             }
         }
         edits.sort(Comparator.comparingInt(Edit::start).reversed()

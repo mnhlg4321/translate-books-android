@@ -41,13 +41,14 @@ public final class EditorialPairAddressKeepServiceTest {
 
     /**
      * Returns an answer per point from the point's own DRAFT line: the first cites Aki → Rina (R1) yet uses a form of another row,
-     * the others are valid repairs (the ADDRESS one cites R1).
+     * the others are valid repairs (the ADDRESS one cites R1). {@code brokenAnswers} drops a protected symbol from that many
+     * answers: 1 = the first, 2 = the first and the glossary repair.
      */
-    private static FakeEditorialApiProvider provider(boolean breakSymbols) {
+    private static FakeEditorialApiProvider provider(int brokenAnswers) {
         return new FakeEditorialApiProvider((request, index) -> new EditorialApiFlow.StepResponse(
                 EditorialPairTestData.targetedAnswer(request, index, (i, d) -> {
-                    if (d.contains("Rina")) return "R1 " + (breakSymbols ? d.replace("tớ", "em").replace("「", "") : d.replace("tớ", "em"));
-                    if (d.contains("Rồng vương")) return d.replace("Rồng vương", "Long Vương");
+                    if (d.contains("Rina")) return "R1 " + (brokenAnswers >= 1 ? d.replace("tớ", "em").replace("「", "") : d.replace("tớ", "em"));
+                    if (d.contains("Rồng vương")) return d.replace("Rồng vương", "Long Vương") + (brokenAnswers >= 2 ? "!" : "");
                     return "R1 " + d.replace("Tớ", "Mình");
                 }), "stop", 1500, 400, new BigDecimal("0.0001"), true, "fake-model", "fake-route", ""));
     }
@@ -68,7 +69,7 @@ public final class EditorialPairAddressKeepServiceTest {
     }
 
     @Test public void anAddressPointKeptAsDraftDoesNotBlockTheValidRepairsAndSurvivesReopening() throws Exception {
-        FakeEditorialApiProvider fake = provider(false);
+        FakeEditorialApiProvider fake = provider(0);
         EditorialPairRunService svc = service(fake);
         PairRun done = run(svc);
 
@@ -102,8 +103,23 @@ public final class EditorialPairAddressKeepServiceTest {
         assertEquals(0, silent.requests.size());
     }
 
-    @Test public void aMalformedAnswerStillBlocksTheChunkSoOnlyTheAddressLockIsSoft() throws Exception {
-        EditorialPairRunService svc = service(provider(true));
+    @Test public void oneMalformedAnswerKeepsItsDraftLineWhileTheOtherRepairsApply() throws Exception {
+        EditorialPairRunService svc = service(provider(1));
+        PairRun done = run(svc);
+        PairItem item = svc.items(done.id).get(0);
+        assertEquals(PairState.ACCEPTED, item.state);
+        assertFalse(item.gateJson.contains("TARGETED_LINE_REJECTED"));
+        assertEquals("KEPT", point(item, 1).getString("status"));
+        assertEquals("PROTECTED_SYMBOL_CHANGE", point(item, 1).getString("reason"));
+        assertEquals("FIXED", point(item, 2).getString("status"));
+        assertEquals("FIXED", point(item, 3).getString("status"));
+        assertEquals(RunState.FINAL_ELIGIBLE, done.state);
+        assertEquals("「Rina…… làm ơn, hãy cho tớ học cái đó nhé」\nLong Vương đã lặng lẽ xuất hiện trước mặt.\n「Mình muốn học thật kỹ cái đó」",
+                svc.exportPlan(done.id).text.trim());
+    }
+
+    @Test public void twoMalformedAnswersStillBlockTheChunk() throws Exception {
+        EditorialPairRunService svc = service(provider(2));
         PairRun done = run(svc);
         PairItem item = svc.items(done.id).get(0);
         assertEquals(PairState.STRUCTURE_BLOCKED, item.state);
