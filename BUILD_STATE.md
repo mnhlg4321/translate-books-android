@@ -1,6 +1,13 @@
 # Build State
 
-## Current state — 2026-10-13 (C2': one malformed point answer no longer blocks the chunk; CP-IMPL-17)
+## Current state — 2026-10-13 (C2' accepted by the owner; step E work request written)
+
+- Owner read the three replayed lines of 014 chunk 13 (13:1, 13:2, 13:5): 3/3 correct. C2' is accepted.
+- Work request `docs/V420_E_RELEASE_WORK_REQUEST.md` (E1-E9): clean-archive regression, release notes, RC 4.20.0 via the exact-release wrapper (throw-away local branch `feature/v4.20.0`), device QA with the fake provider (same groups as the 4.18.0 RC, incl. SQLite store/reopen/export), new real Macrobenchmark/Perfetto, media on the RC, one live run on 017 on the RC (max 10 calls, no retry, cap USD 0.08), owner reading page, PreTag and `build-*` archive; stop before tag/merge.
+- No code, build, device or provider operation in this step; v4.20 spend so far USD 0.0180166.
+- Next action: execute the E work request.
+
+## Earlier — 2026-10-13 (C2': one malformed point answer no longer blocks the chunk; CP-IMPL-17)
 
 - Owner approved the roadmap C2' -> E (E includes one full-chapter live run on 017 on the RC build, max 10 calls, no retry, new ledger, cap USD 0.08) and the threshold: a chunk is blocked only when two or more points of one response fail the format checks.
 - Cause: the run service retries only failures before dispatch (`EditorialPairRunService` lines 295-300); a STRUCTURE_BLOCKED chunk stops the chapter (lines 302, 383). In the D014 run one glossary answer added `「` and `。」` (RAW, DRAFT and FINAL have none) and stopped the chapter at chunk 13 of 16.
