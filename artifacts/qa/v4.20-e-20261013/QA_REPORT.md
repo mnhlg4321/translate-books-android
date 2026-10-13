@@ -76,6 +76,6 @@ Private runner copy run_v420_e_chunk.ps1, only017, V420-E group, noRetry YES, ma
 
 ## E9 — handoff before tag/merge
 
-Checklist05–09 prepared with concrete evidence; PreTag gate and immutable build-event archive verified in the final handoff. Archive GitRef is exact RC e989653b; repaired test-source ZIP is supplemental. Release tag/merge and semantic acceptance remain owner-only after reading017. No production changes after observing017, no v4.19 work, no additional run.
+QA/checklist commit678f69dc; PreTag PASS. Immutable release event build-20261013-171650: all29 SHA256SUMS entries verified in worktree artifacts/releases/v4.20.0 and backup/v4.20.0, then byte-verified copies at D:/App Translate Books/artifacts/releases/v4.20.0 and backup/v4.20.0. Manifest SHA49329AD3FD2D70466B9F2217CD26BAA95449A9D2B827E3F215E37801013308B6. Archive GitRef exact RC e989653b; sourceZIP833F0D7C88C710FFCA6EAABEF7262D716E31B720BFB689D400999C3431F72096 equals production build ZIP. Repaired test-source ZIP supplemental. Archive's QA report/summary are the immutable pre-archive-verification copies; this current report adds verified archive facts without overwriting that event. Temporary build worktrees and unpushed local branches removed after retained copies were verified. Current QA/report mirror refreshed for final handoff. Release tag/merge and semantic acceptance remain owner-only after reading017. No production changes after observing017, no v4.19 work, no additional run.
 
 Next action: owner reads READING_017.html and decides tag/merge4.20.0.

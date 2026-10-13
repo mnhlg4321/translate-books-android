@@ -191,7 +191,7 @@
     "finalByteEqualDraft": true
   },
   "qaEvidenceHashes": {
-    "QA_REPORT.md": "fdb4b80b9401e1e95d986e71f95d23e3c36d87b71bd081e19d1c287a7adc6fef",
+    "QA_REPORT.md": "9851463e052f1a52bfa40f27b46a20dabf0f7241464782128dae12c51db4284e",
     "device/method-summary.json": "9c80488bc2e6c85cae6b13c42e63fb6f4a1b7364d1d3efdd49def8e77d96a071",
     "device/raw/chunk-EditorialApiBienTapFlow.txt": "7e4d69ddf62f4ee945f16f7650ee66ad75438b55a2764aac9c5546a409e4be0c",
     "device/raw/chunk-EditorialApiBienTapUi.txt": "38052030727bb52e532249e7dc931ad9e9aab1dd36ec7d1379eea0a812cf565b",
@@ -597,5 +597,22 @@
     "editorial-engine-test-results/test/binary/output-events.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "editorial-engine-test-results/test/binary/results-generic.bin": "9b8b9796fd7186c94c1df408496a64efdc907a641f04eb9ef6e10ec75c5e5b2d"
   },
-  "privateHostEvidenceRoot": "D:/P5E-private/v420-e-host-evidence"
+  "privateHostEvidenceRoot": "D:/P5E-private/v420-e-host-evidence",
+  "E9": {
+    "preTag": "PASS",
+    "qaCommit": "678f69dc5cda409b726d1bf1458469d9928cfa00",
+    "archiveEvent": "build-20261013-171650",
+    "archiveGitRef": "e989653bf645c46e5e6a155b2e3f5049c1c40702",
+    "manifestEntriesVerified": 29,
+    "manifestSha256": "49329AD3FD2D70466B9F2217CD26BAA95449A9D2B827E3F215E37801013308B6",
+    "sourceZipSha256": "833F0D7C88C710FFCA6EAABEF7262D716E31B720BFB689D400999C3431F72096",
+    "mirrorsVerified": 4,
+    "temporaryBuildWorktreesAndBranchesRemoved": true,
+    "tag": false,
+    "merge": false,
+    "ownerReading": "PENDING",
+    "secretScanHits": 0,
+    "bookTextScanHits": 0,
+    "privateRawHostReportsExcludedFromGit": true
+  }
 }

@@ -1,6 +1,6 @@
 # Build State
 
-## Current state — 2026-10-13 (E1–E8 complete; E9 packaging; stop for owner017 reading)
+## Current state — 2026-10-13 (E1–E9 complete; stop before tag/merge for owner017 reading)
 
 - RC4.20.0/code269, CP-IMPL-17, production source e989653bf645c46e5e6a155b2e3f5049c1c40702; event build-20261013-165726, APK7008057CCC10F33A889FCF58C1A8C9DFFCCCA50A27F564C7A575D7E8594858DA. Production/source/test payloads verified at main workspace artifacts+backup before emulator-only validated installs. Shipped4.18.0 unchanged.
 - Clean exact-source archive: engine714 PASS/1 SKIP; app debug/release/benchmark each470 PASS/3 SKIP; p6 106 PASS, chunk24 PASS; lint0 errors/57 warnings, AndroidTest compile PASS. Initial Java8 environment repaired by selecting installed JDK21.
@@ -8,6 +8,7 @@
 - New emulator Macrobenchmark cold-start median1015.4787 ms, editorial-frame CPU P50 15.33755 ms; synthetic1222-unit/53-chunk planning458 ms;10 iteration traces+planning Perfetto retained.6 synthetic screenshots and video on RC; owner database+journal hashes restored unchanged. UI export checks use callbacks/file URI, not system-picker interaction.
 - Sole017 live3aaa5f6b-8dff-43ad-a7dd-35d7612debd3:11/11 ACCEPTED,FINAL_ELIGIBLE,10 calls,0retry/refused,USD0.02387255;10 RESERVE/10 SETTLE,hash chain valid,pending0/overrun0. All finish stop, luna medium. Live store is in-memory; SQLite evidence comes from fake device QA, not this live run.
 - E8 reading17 rows:13 changed +8 B lines/12 reference substitutions (overlap4),9 changed outside B,3 cậu↔name,0 C2 format keeps/NOT_REACHED. B3 reference-matched/4 unchanged/1 other is preliminary only; owner semantic decision pending. Report artifacts/qa/v4.20-e-20261013/QA_REPORT.md and SUMMARY.json; private book evidence stays outside Git.
+- E9: QA/checklist commit678f69dc; PreTag PASS, release archive build-20261013-171650 at worktree artifacts/releases/v4.20.0 and backup/v4.20.0, also mirrored at D:/App Translate Books artifact+backup release roots. All29 manifest entries/hash checks and byte mirrors PASS; SHA256SUMS49329AD3FD2D70466B9F2217CD26BAA95449A9D2B827E3F215E37801013308B6. Archive source ZIP equals RC source833F0D7C88C710FFCA6EAABEF7262D716E31B720BFB689D400999C3431F72096; repaired test source supplemental. Temporary build worktrees/branches removed after payload retention. Authorized scan/push of feature/v4.20 only; no tag/merge.
 - Next action: owner reads D:/P5E-private/chunk-runs/V420-E/READING_017.html and decides tag/merge4.20.0. No second run or production change authorized.
 
 ## Earlier — 2026-10-13 (C2' accepted by the owner; step E work request written)
