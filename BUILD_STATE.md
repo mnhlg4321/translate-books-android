@@ -1,6 +1,14 @@
 # Build State
 
-## Current state — 2026-10-13 (owner decision D-A recorded; feature/v4.19 pushed; AGENTS.md points to v4.19)
+## Current state — 2026-10-13 (X3 done and reviewed; B for 008 not recommended; owner chooses the `cậu` rule scope)
+
+- X3 (`c57edd22`, pushed by the X3 session): D-A relabel table `docs/V419_PRONOUN_DA_RELABEL.json` moves 7 points to the clean controls; suite 29 known / 129 clean; `NameCallRuleDaContradictionTest` pins prompt, finder and guard behaviour against D-A; proposal: change only the prompt; B package for 008 drafted.
+- Review on a clean `git archive c57edd22`: `scripts/chunk` 53, engine 718 (1 skip), 0 failures; app unchanged since `dc612fb3` (465 PASS / 8 SKIP); private sidecars equal the public indexes; replay 158/158 unchanged.
+- Finding (report section 10): with a name in `call` the owner FINAL does not follow `self` (006 7:3 Erika to Fuyu changed to the name; 008 Erika to Asanuma kept `cậu` 7/7; both `self=tôi`), so running B on 008 would measure an edit the FINAL rejects. Owner to choose (a) extend D-A to every `self` (recommended) or (b) per-row `call=Name/cậu`.
+- No production code, build, device or provider operation; USD 0.
+- Next action: owner chooses (a) or (b); then X4 prompt change offline.
+
+## Earlier — 2026-10-13 (owner decision D-A recorded; feature/v4.19 pushed; AGENTS.md points to v4.19)
 
 - D-A: khi `call` của hàng là **tên**, `cậu` được giữ làm đại từ ngôi hai nếu `self` của hàng là `mình` hoặc `tớ`; tên chỉ bắt buộc ở lời gọi trực tiếp (vocative). Với `self` khác (`tôi`, `em`, …) luật cũ giữ nguyên cho tới khi owner quyết thêm.
 - Owner approved pushing `feature/v4.19` and a v4.19 continuation note at the top of `AGENTS.md`. No code, build, device or provider operation; USD 0.

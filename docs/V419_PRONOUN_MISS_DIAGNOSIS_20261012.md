@@ -192,3 +192,17 @@ Còn lỗi bỏ sót thật theo luật hiện hành: 7 điểm 008 (Erika → A
 | Chấm | 7 điểm `cậu` của 008 (ĐÚNG / SÓT / SAI theo RAW + hàng); bản sạch 008 phải giữ nguyên; 0 dòng ngoài điểm bị đổi; S2B 6:1 không được thành sửa sai lọt |
 | Dừng | ước tính vượt trần, finish `length` hay lời gọi không có câu trả lời, UNKNOWN cost, lỗi hạ tầng |
 | Lưu ý cho owner | FINAL của owner giữ `cậu` ở cả 6/6 điểm `cậu` này. Nếu owner định mở rộng D-A cho self `tôi`, nên quyết trước khi chi tiền, vì khi đó các điểm 008 chuyển thành bản sạch và B mất mục đích |
+
+## 10. Review độc lập X3 — 2026-10-13 (offline, USD 0)
+
+**Đã kiểm trên archive sạch `c57edd22`** (zip SHA-256 `9FB9B727…FEE2`): `scripts/chunk` 53, engine 718 (1 skip; `NameCallRuleDaContradictionTest` 6/6), 0 lỗi; app không đổi từ `dc612fb3` (465 PASS / 8 SKIP). Sidecar riêng sau X3 khớp chỉ mục công khai (29 và 129 mục, cùng id/nhãn/tầng/hash), hai phần không giao nhau, tổng 158. Replay trên archive sạch với bộ kiểm mới: 158/158 không đổi, exit 0 (ghi vào thư mục review riêng). Bảng `V419_PRONOUN_DA_RELABEL.json` chỉ chuyển điểm sang ĐÚNG khi đúng điều kiện D-A; các điểm giữ lại có lý do đúng (self sai, hoặc `call=cô` là đại từ chứ không phải tên). Mã sản xuất không đổi.
+
+**Phát hiện làm đổi khuyến nghị về gói B.** Với hàng có `call` là tên và `self=tôi`, FINAL của owner **không theo `self`**: 006 7:3 (Erika → Fuyu, `self=tôi`, `call=Fuyu`) FINAL đổi `cậu` thành tên; 008 cả 7 điểm (Erika → Asanuma, `self=tôi`, `call=Asanuma`) FINAL giữ `cậu`. Với `self=mình`, FINAL cũng không nhất quán: 006 giữ `cậu` ở 6 điểm Erika ↔ Rea, 011 đổi sang tên ở 7 điểm cùng cặp. Như vậy không luật nào dựa trên `self` khớp được FINAL; giữa `cậu` và tên phần lớn là lựa chọn văn phong, chỉ một số quan hệ (hàng) owner muốn dùng tên. Hệ quả:
+
+- Gói B 008 như soạn ở 9.4 sẽ đo việc model đổi `cậu` → `Asanuma`, điều FINAL bác 7/7. Chi tiền cho B không giúp đóng lỗi thật mà owner muốn; **không khuyến nghị chạy B**.
+- Hai hướng hợp lý, cần owner chọn:
+  - **(a) Mở rộng D-A cho mọi `self`:** khi `call` là tên, `cậu` là đại từ ngôi hai hợp lệ; tên chỉ bắt buộc ở lời gọi trực tiếp. Cả giữ `cậu` lẫn đổi thành tên đều ĐÚNG. 008 (7 điểm) và 006 7:3 chuyển sang bản sạch “tùy chọn”; X4 chỉ sửa prompt và điều kiện đơn giản hơn (không cần xét `self`). Mất khả năng ép dùng tên ở các hàng như Fuyu (1 điểm đã biết; mã hiện hành đã sửa điểm này nhờ khóa ngôi ba).
+  - **(b) Khai theo từng hàng:** hàng muốn cho phép `cậu` ghi `call` dạng `Asanuma/cậu`. Finder và guard đã tách `call` thành token (`AddressChecklist.tokens`, `AddressEditGuard.forms`) nên coi cả hai dạng là hợp lệ mà không cần sửa mã; chỉ prompt phải hiểu dấu `/`. Chính xác hơn nhưng owner phải sửa file pronoun của từng chương.
+- Cả hai hướng đều có thể kiểm offline trước (fixture tên giả + replay 158 điểm). Lần chạy trả phí tiếp theo, nếu có, nên đo prompt đã sửa trên 006 (có điểm tùy chọn, lỗi self `tớ`/`tôi` và lỗi `cậu` → `cô` của Tatsuoka), không phải prompt cũ trên 008.
+
+Tài liệu đồng bộ trong commit review: BUILD_STATE và checklist bước 05 chưa ghi X3 ở `c57edd22`, nay đã ghi.
