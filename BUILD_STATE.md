@@ -1,6 +1,16 @@
 # Build State
 
-## Current state — 2026-10-13 (C2' accepted by the owner; step E work request written)
+## Current state — 2026-10-13 (E1–E8 complete; E9 packaging; stop for owner017 reading)
+
+- RC4.20.0/code269, CP-IMPL-17, production source e989653bf645c46e5e6a155b2e3f5049c1c40702; event build-20261013-165726, APK7008057CCC10F33A889FCF58C1A8C9DFFCCCA50A27F564C7A575D7E8594858DA. Production/source/test payloads verified at main workspace artifacts+backup before emulator-only validated installs. Shipped4.18.0 unchanged.
+- Clean exact-source archive: engine714 PASS/1 SKIP; app debug/release/benchmark each470 PASS/3 SKIP; p6 106 PASS, chunk24 PASS; lint0 errors/57 warnings, AndroidTest compile PASS. Initial Java8 environment repaired by selecting installed JDK21.
+- Device fake QA158 PASS/7 SKIP/0 FAIL effective, including SQLite/reopen/export and6 process-death phases. Original failed SQLite fixture log retained; test-only74706f8d adds row citations/updates old reason, no production diff. Repaired AndroidTest APKCC7EFF9FDD165B24C81C2DD6806E9D8103FD33A920CA696BC18BFD5DF1ABA644 pinned to RC.
+- New emulator Macrobenchmark cold-start median1015.4787 ms, editorial-frame CPU P50 15.33755 ms; synthetic1222-unit/53-chunk planning458 ms;10 iteration traces+planning Perfetto retained.6 synthetic screenshots and video on RC; owner database+journal hashes restored unchanged. UI export checks use callbacks/file URI, not system-picker interaction.
+- Sole017 live3aaa5f6b-8dff-43ad-a7dd-35d7612debd3:11/11 ACCEPTED,FINAL_ELIGIBLE,10 calls,0retry/refused,USD0.02387255;10 RESERVE/10 SETTLE,hash chain valid,pending0/overrun0. All finish stop, luna medium. Live store is in-memory; SQLite evidence comes from fake device QA, not this live run.
+- E8 reading17 rows:13 changed +8 B lines/12 reference substitutions (overlap4),9 changed outside B,3 cậu↔name,0 C2 format keeps/NOT_REACHED. B3 reference-matched/4 unchanged/1 other is preliminary only; owner semantic decision pending. Report artifacts/qa/v4.20-e-20261013/QA_REPORT.md and SUMMARY.json; private book evidence stays outside Git.
+- Next action: owner reads D:/P5E-private/chunk-runs/V420-E/READING_017.html and decides tag/merge4.20.0. No second run or production change authorized.
+
+## Earlier — 2026-10-13 (C2' accepted by the owner; step E work request written)
 
 - Owner read the three replayed lines of 014 chunk 13 (13:1, 13:2, 13:5): 3/3 correct. C2' is accepted.
 - Work request `docs/V420_E_RELEASE_WORK_REQUEST.md` (E1-E9): clean-archive regression, release notes, RC 4.20.0 via the exact-release wrapper (throw-away local branch `feature/v4.20.0`), device QA with the fake provider (same groups as the 4.18.0 RC, incl. SQLite store/reopen/export), new real Macrobenchmark/Perfetto, media on the RC, one live run on 017 on the RC (max 10 calls, no retry, cap USD 0.08), owner reading page, PreTag and `build-*` archive; stop before tag/merge.
