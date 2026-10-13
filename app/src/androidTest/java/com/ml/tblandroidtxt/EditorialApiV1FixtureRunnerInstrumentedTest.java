@@ -381,7 +381,9 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         EditorialApiRunService.Pricing pricing = live && "openai/gpt-5.6-luna".equalsIgnoreCase(model) ? LUNA : PINNED;
         Capture capture = new Capture(outputRoot);
         EditorialApiProvider delegate = live ? new OpenRouterEditorialApiProvider(settings, reasoning) : new FakeEditorialApiProvider((request, index) ->
-                FakeEditorialApiProvider.text("<EDITED>" + EditorialPairTestData.draftPart(request) + "</EDITED>", "stop"));
+                FakeEditorialApiProvider.text("YES".equalsIgnoreCase(args.getString("p6_no_retry", ""))
+                        ? EditorialPairTestData.targetedAnswer(request, index, (ignored, draft) -> "=")
+                        : "<EDITED>" + EditorialPairTestData.draftPart(request) + "</EDITED>", "stop"));
         PerCallLedger provider = new PerCallLedger(delegate, ledger, pricing, runId + "|" + fixtureId, model, capture::record);
         boolean noRetry = "YES".equalsIgnoreCase(args.getString("p6_no_retry", ""));
         int maxCalls = Integer.parseInt(args.getString("p6_max_calls", "0"));
