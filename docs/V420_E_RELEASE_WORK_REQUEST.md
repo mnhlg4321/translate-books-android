@@ -53,3 +53,15 @@ Quyết định cần có: **tag và merge 4.20.0 hay không.** Nội dung phát
 ## 7. Không làm
 
 Không tag/merge, không chạy chương khác hay lượt thứ hai, không đổi prompt/finder/guard sau khi thấy kết quả 017, không dùng phần trần còn lại, không đụng điện thoại, không thêm bộ kiểm/cổng/chỉ mục mới, không sửa file của owner.
+
+## 8. E-bis — build lại RC với bản sửa tiêu đề/khóa glossary, rồi tag và merge (owner duyệt 2026-10-13)
+
+Lý do: owner đọc 017 được 16/17 dòng đúng; dòng sai là tiêu đề chương (số chương chữ Hán chép từ RAW bị coi là KANA, câu trả lời làm mất thuật ngữ glossary đúng). Bản sửa `13e12a65` (`CP-IMPL-18`) đã vào `feature/v4.20`, kèm RELEASE_NOTES/CHANGELOG. Bằng chứng offline: replay response đã lưu của 014 và 017, mọi chunk không chứa tiêu đề trùng RC (6/6, 9/9); điểm KANA giảm đúng điểm tiêu đề ở 7/8 chương, ADDRESS/GLOSSARY không đổi; archive sạch `13e12a65`: engine 721, app 473, 0 lỗi, lint 0 lỗi.
+
+Quyền: owner chọn phương án B và **cho tag/merge không cần hỏi lại** khi mọi điều kiện ở dưới đạt. **Không có lượt trả phí mới** (bản sửa tất định, đã kiểm bằng replay); quyền 017 đã dùng.
+
+1. Làm lại E1 (archive sạch của commit sẽ build), E3 (RC `4.20.0`, versionCode > 269, nhánh tạm cục bộ `feature/v4.20.0` trỏ đúng commit, gỡ sau khi xong), E4 (QA thiết bị, provider giả, cùng các nhóm), E5 (hiệu năng thật trên source mới), E6 (ảnh, video trên RC mới), E9 (checklist 05–09, PreTag, event `build-*` mới, mirror, báo cáo `artifacts/qa/v4.20-ebis-<date>/`). Bằng chứng 014/017 và trang đọc giữ nguyên, dẫn chiếu trong báo cáo.
+2. Điều kiện để tag/merge: E1 và E4 không có FAIL chưa giải thích; RC và test APK lưu đủ hai nơi; E5/E6 thật; PreTag PASS; mã sản xuất của RC đúng bằng commit đã kiểm. Thiếu bất kỳ điều kiện nào thì dừng và báo owner.
+3. Tag và merge (như D-R2 của 4.18.0): tag annotated `v4.20.0` trên commit ghi trong event `build-*`; điền bước 10; PreBackup PASS; `scripts/archive-release.ps1` event `tag-v4.20.0` (GitRef = tag, `-ProductionGitRef` = commit build RC); kiểm mirror; điền bước 11–14; đặt `Workflow status: COMPLETE`; Complete gate PASS; merge `--no-ff` vào `main` trong worktree tạm (tiêu đề commit `Merge feature/v4.20 ...` theo hook), kiểm tree `main` = tree nhánh.
+4. Xuất bản: quét dải sẽ đẩy (không secret, không văn bản sách, không fingerprint), push `feature/v4.20`, tag `v4.20.0`, `main` (fast-forward từ origin, không force); xác nhận bằng `git ls-remote`. Cập nhật plan mục 5, BUILD_STATE, snapshot.
+

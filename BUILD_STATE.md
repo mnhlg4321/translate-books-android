@@ -1,6 +1,13 @@
 # Build State
 
-## Current state — 2026-10-13 (017 owner reading 16/17 correct; KANA heading / glossary lock fix on branch `fix/v4.20-kana-glossary`, not in the RC)
+## Current state — 2026-10-13 (owner chose B: fix merged, RC to be rebuilt; tag/merge pre-approved on all checks)
+
+- `fix/v4.20-kana-glossary` (`13e12a65`, CP-IMPL-18) fast-forwarded into `feature/v4.20`; RELEASE_NOTES and CHANGELOG 4.20.0 updated (heading fix, glossary lock, CP-IMPL-18, owner readings, row-number omissions as a limit).
+- RC 4.20.0 / code 269 (`e989653b`) is superseded: it lacks the fix. E-bis (`docs/V420_E_RELEASE_WORK_REQUEST.md` section 8) rebuilds the RC, repeats QA, performance, media and archive, with no new paid run; the owner approved tag `v4.20.0` and the merge to `main` without a further question when every condition there holds.
+- No build, device or provider operation in this step; v4.20 spend USD 0.04188915 (014: 0.0180166, 017: 0.02387255).
+- Next action: execute E-bis.
+
+## Earlier — 2026-10-13 (017 owner reading 16/17 correct; KANA heading / glossary lock fix on branch `fix/v4.20-kana-glossary`, not in the RC)
 
 - Owner read 017: 16 correct, 1 wrong (chunk 1 point 1, KANA): the heading kept its Han chapter number from RAW, the finder flagged it as untranslated, and the answer replaced the correct glossary term. Not a C1 (row citation) error. Pre-existing since `44dcfffe` (in v4.18.0 too); same family as 008 "Zombie Leader" (second occurrence).
 - Fix on `fix/v4.20-kana-glossary` (from RC docs head `d482fdce`): finder ignores a Han-numeral run (〇一二三四五六七八九十百千) that stands verbatim in the aligned RAW; KANA rule text rewritten (it contained Russian); new content lock `GLOSSARY_TARGET_REMOVED` keeps the DRAFT line (KEPT, never blocks the chunk) when a non-ADDRESS answer drops a glossary target the DRAFT already uses for a RAW source; contract `CP-IMPL-18`.

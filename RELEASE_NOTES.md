@@ -1,6 +1,6 @@
 # Translate Books 4.20.0 Release Notes
 
-Status: RELEASE_CANDIDATE preparation; owner reading of chapter 017 required before tag/merge.
+Status: RELEASE_CANDIDATE preparation (rebuild with the heading/glossary fix); owner approved tag/merge once every check of the rebuilt RC passes.
 Branch: feature/v4.20. Shipped version remains 4.18.0.
 
 ## 4.20.0 changes
@@ -11,17 +11,25 @@ Branch: feature/v4.20. Shipped version remains 4.18.0.
 - C2': one malformed point answer keeps its DRAFT line and rejection reason;
   two or more malformed point answers block the chunk. Anchoring errors still
   block; protected-symbol checks are unchanged.
-- Contract CP-IMPL-17: old Editorial runs cannot continue under the new contract;
+- Chapter headings: a Han chapter number copied from RAW (for example `○一七`)
+  is no longer treated as untranslated Japanese, so the heading is not sent to
+  the model; the KANA rule text is now Vietnamese.
+- Glossary lock: an answer for a non-ADDRESS point that drops a glossary term
+  the DRAFT already uses correctly keeps the DRAFT line (`GLOSSARY_TARGET_REMOVED`);
+  it never blocks the chunk.
+- Contract CP-IMPL-18: old Editorial runs cannot continue under the new contract;
   create a new run. Existing results remain viewable and exportable.
 
 ## 4.20.0 known limitations
 
 - Self-address errors not flagged by the finder can remain. Translation-stage
   pronoun selection is not fixed, nor are chapter 004 narration errors.
-- Owner accepted the reviewed chapter 014 output and three additional chunk13
-  replay lines. This is not acceptance of chapter 017 or permission to tag.
-- New device, performance and chapter 017 evidence are required by
-  docs/V420_E_RELEASE_WORK_REQUEST.md. Emulator measurements are not physical-device results.
+- The model sometimes omits the row number; such ADDRESS changes are discarded
+  (5 times in chapter 017).
+- Owner readings: chapter 014 accepted (8 first-person fixes, 0 wrong), three
+  chunk-13 replay lines correct, chapter 017 16/17 correct; the wrong line was the
+  heading case fixed above (verified by replaying the stored 014 and 017 answers).
+- Device, performance and media evidence come from the emulator, not a physical device.
 
 ---
 

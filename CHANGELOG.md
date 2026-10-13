@@ -9,11 +9,14 @@ All notable changes to Translate Books are recorded in this file. The repository
 - C2': keep DRAFT for one malformed point answer with its original reason;
   block a chunk for two or more malformed answers. Anchoring and protected-symbol
   checks remain enforced.
-- Raise the Editorial contract to CP-IMPL-17: create a new run instead of resuming
+- Do not flag a Han chapter number copied from RAW as untranslated KANA; write
+  the KANA rule in Vietnamese.
+- Keep DRAFT when a non-ADDRESS answer drops a correct glossary term
+  (`GLOSSARY_TARGET_REMOVED`, never blocks the chunk).
+- Raise the Editorial contract to CP-IMPL-18: create a new run instead of resuming
   an old-contract run; existing results remain viewable/exportable.
 - Known limits: unflagged self-address errors, translation-stage pronoun errors,
-  and chapter 004 narration are not resolved. Chapter 017 owner reading is required
-  before tag/merge; device/performance evidence is pending.
+  chapter 004 narration, and ADDRESS answers without a row number (discarded).
 
 ## [4.18.0] - 2026-10-12 (release candidate, not tagged)
 
