@@ -1,6 +1,15 @@
 # Build State
 
-## Current state — 2026-10-13 (v4.20 opened; plan step C (C1) done offline; step D waits for a spend authority)
+## Current state — 2026-10-13 (D package approved; contract revision CP-IMPL-16; work request written)
+
+- Owner approved the D spend (chapter 014, one run, luna medium, max 10 calls, no retry, cap USD 0.08) and the push of `feature/v4.20`.
+- Clean `git archive 739e5c49` (zip SHA-256 `2C3ABA5558C4D8D07A5A1565CADC73FC8B5919DA5DEC0B85CF05E1686504AAF4`): engine 714 (1 skip), app debug 472 (3 skip), 0 failures; `:app:lintDebug` 0 errors / 57 warnings; androidTest compile OK.
+- Review fix: C1 changed the prompt and answer format without raising `PairContract.REVISION`; raised `CP-IMPL-15` -> `CP-IMPL-16` so a run prepared under the old contract is never resumed with the new one. Working tree after the fix: engine 714 / app 472, 0 failures.
+- Work request `docs/V420_D_014_WORK_REQUEST.md` (S0-S9): runner no-retry mode in androidTest only, wrapper build stored in the workspace `artifacts/` and `backup/`, emulator-5554 only, fake run then one live run, private reading page, preliminary counts; the owner decides ship or drop.
+- No build, device or provider operation yet; USD 0.
+- Next action: execute the work request.
+
+## Earlier — 2026-10-13 (v4.20 opened; plan step C (C1) done offline; step D waits for a spend authority)
 
 - Branch `feature/v4.20` from `main` `be2056d8`, checklist `release_checklists/v4.20.md`, canonical plan `PRODUCT_DIRECTION_PLAN.md`.
 - C1 in `editorial-engine` only: `TargetedFixPrompt` (numbered ROWS with the owner note, folded ADDRESS rules, answer format `[id] R<n> <line>`, no keep-by-default when RAW shows who speaks to whom), `TargetedFixParser` (row citation, only for points with rows), `AddressEditGuard` (cited-row checks on top of the existing ones), `TargetedFixApplier` (passes the citation), `AddressRow` (carries the note), `FixPointFinder` (shared rule marker constant). Translation flow unchanged.
