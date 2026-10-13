@@ -1,6 +1,14 @@
 # Build State
 
-## Current state — 2026-10-13 (E1–E9 complete; stop before tag/merge for owner017 reading)
+## Current state — 2026-10-13 (017 owner reading 16/17 correct; KANA heading / glossary lock fix on branch `fix/v4.20-kana-glossary`, not in the RC)
+
+- Owner read 017: 16 correct, 1 wrong (chunk 1 point 1, KANA): the heading kept its Han chapter number from RAW, the finder flagged it as untranslated, and the answer replaced the correct glossary term. Not a C1 (row citation) error. Pre-existing since `44dcfffe` (in v4.18.0 too); same family as 008 "Zombie Leader" (second occurrence).
+- Fix on `fix/v4.20-kana-glossary` (from RC docs head `d482fdce`): finder ignores a Han-numeral run (〇一二三四五六七八九十百千) that stands verbatim in the aligned RAW; KANA rule text rewritten (it contained Russian); new content lock `GLOSSARY_TARGET_REMOVED` keeps the DRAFT line (KEPT, never blocks the chunk) when a non-ADDRESS answer drops a glossary target the DRAFT already uses for a RAW source; contract `CP-IMPL-18`.
+- Evidence: 28 chapters have 21 numeral-only heading lines, 19 kept in the owner FINAL. Finder on 8 chapters: KANA points -1 in 7 chapters, ADDRESS and GLOSSARY unchanged, calls -1 in 004 and 008. Replay of the stored 014 and 017 responses: every chunk without the heading identical to the RC (6/6 and 9/9); chunk 1 not comparable (point ids shift). Tests: engine 721 (1 skip), app 473 (3 skip), 0 failures; new `KanaHeadingAndGlossaryLockTest` (6).
+- RC 4.20.0 / code 269 (`e989653b`) is unchanged and does not contain this fix. No build, device or provider operation; USD 0.
+- Next action: owner chooses: tag the RC now and ship the fix in the next release, or merge the fix and rebuild the RC before tagging.
+
+## Earlier — 2026-10-13 (E1–E9 complete; stop before tag/merge for owner017 reading)
 
 - RC4.20.0/code269, CP-IMPL-17, production source e989653bf645c46e5e6a155b2e3f5049c1c40702; event build-20261013-165726, APK7008057CCC10F33A889FCF58C1A8C9DFFCCCA50A27F564C7A575D7E8594858DA. Production/source/test payloads verified at main workspace artifacts+backup before emulator-only validated installs. Shipped4.18.0 unchanged.
 - Clean exact-source archive: engine714 PASS/1 SKIP; app debug/release/benchmark each470 PASS/3 SKIP; p6 106 PASS, chunk24 PASS; lint0 errors/57 warnings, AndroidTest compile PASS. Initial Java8 environment repaired by selecting installed JDK21.

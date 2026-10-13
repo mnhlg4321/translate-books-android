@@ -119,9 +119,9 @@ public final class FixPointFinder {
                 boolean hasAlignedRaw = rawCount > 0;
                 if (hasAlignedRaw) target = targets.computeIfAbsent(di, k -> new Target(k, bead.rawStart(), draftLine));
 
-                if (hasAlignedRaw && RawAlignedNormalizer.containsKanaOrHan(draftLine) && !authorizedSourceToken(draftLine, projection.glossary())) {
+                if (hasAlignedRaw && untranslatedScript(draftLine, rawGroup) && !authorizedSourceToken(draftLine, projection.glossary())) {
                     target.add(FixPoint.Type.KANA, rawGroup,
-                            "KANA: перевод должен быть на целевом языке; сопоставить с RAW и сохранить имена/тừ nguồn được cho phép trong Glossary.");
+                            "KANA: DRAFT còn chữ Nhật chưa dịch; chỉ dịch phần đó sang ngôn ngữ đích theo RAW, giữ tên và từ nguồn mà Glossary cho phép, không đổi phần đã dịch.");
                 }
                 if (hasAlignedRaw && !missingTerms.isEmpty() && draftCount == 1) {
                     for (EditInputs.GlossaryEntry term : missingTerms) {
@@ -267,6 +267,30 @@ public final class FixPointFinder {
             }
         }
         return new ArrayList<>(out);
+    }
+
+    /** Han numerals the book keeps in its chapter headings (○一七); see {@link #untranslatedScript}. */
+    private static final String HAN_NUMERALS = "〇一二三四五六七八九十百千";
+
+    /**
+     * Kana or Han left in the DRAFT line, except a run of Han numerals that stands verbatim in the aligned RAW: the chapter heading
+     * "○一七" is copied on purpose, and flagging it made the model rewrite the whole heading (v4.20 E, chapter 017).
+     */
+    private static boolean untranslatedScript(String draftLine, String rawGroup) {
+        StringBuilder rest = new StringBuilder();
+        for (int i = 0; i < draftLine.length(); ) {
+            int cp = draftLine.codePointAt(i);
+            if (HAN_NUMERALS.indexOf(cp) < 0) {
+                rest.appendCodePoint(cp);
+                i += Character.charCount(cp);
+                continue;
+            }
+            int start = i;
+            while (i < draftLine.length() && HAN_NUMERALS.indexOf(draftLine.codePointAt(i)) >= 0) i += Character.charCount(draftLine.codePointAt(i));
+            String run = draftLine.substring(start, i);
+            if (!rawGroup.contains(run)) rest.append(run);
+        }
+        return RawAlignedNormalizer.containsKanaOrHan(rest.toString());
     }
 
     private static boolean authorizedSourceToken(String line, List<EditInputs.GlossaryEntry> glossary) {

@@ -27,6 +27,12 @@ public final class TargetedFixApplier {
      */
     private static final int MAX_POINT_LOCAL_FORMAT_REJECTIONS = 1;
 
+    /**
+     * A content lock like the ADDRESS lock: the answer removes a glossary target that the DRAFT line already uses for a source term
+     * of its RAW. The line stays as the DRAFT and the chunk is not blocked (chapter 017 heading "Guardian", chapter 008 "Zombie Leader").
+     */
+    static final String GLOSSARY_TARGET_REMOVED = "GLOSSARY_TARGET_REMOVED";
+
     private TargetedFixApplier() { }
 
     public static Result apply(String draft, List<FixPoint> points, TargetedFixParser.Parsed parsed,
@@ -57,7 +63,7 @@ public final class TargetedFixApplier {
             if (reject != null) {
                 // The ADDRESS lock only says the rows cannot justify this answer: the line stays as the DRAFT and the other points
                 // of the chunk still apply. A malformed answer is decided after the loop (MAX_POINT_LOCAL_FORMAT_REJECTIONS).
-                Status status = reject.startsWith(AddressEditGuard.PREFIX) ? Status.KEPT : Status.REJECTED;
+                Status status = reject.startsWith(AddressEditGuard.PREFIX) || reject.equals(GLOSSARY_TARGET_REMOVED) ? Status.KEPT : Status.REJECTED;
                 if (status == Status.REJECTED) formatRejections.add(outcomes.size());
                 outcomes.add(new Outcome(point, status, before, before, reject));
                 continue;
@@ -124,6 +130,7 @@ public final class TargetedFixApplier {
         if (sourceScript && !RawAlignedNormalizer.containsKanaOrHan(before) && !authorizedGlossarySource(candidate, glossary)) return "NEW_KANA_OR_HAN";
         if (!point.insertion()) {
             if (!protectedSymbols(before, point).equals(protectedSymbols(candidate, point))) return "PROTECTED_SYMBOL_CHANGE";
+            if (removesGlossaryTarget(point, before, candidate, glossary)) return GLOSSARY_TARGET_REMOVED;
             String address = AddressEditGuard.rejection(point, candidate, citedRow);
             if (address != null) return address;
             int oldLetters = PairText.letters(before);
@@ -156,6 +163,24 @@ public final class TargetedFixApplier {
                 || Character.getType(c) == Character.MATH_SYMBOL
                 || Character.getType(c) == Character.CURRENCY_SYMBOL).forEach(out::appendCodePoint);
         return out.toString();
+    }
+
+    /**
+     * True when the DRAFT line uses a glossary target whose source is in the point's RAW and the answer drops that target. Not for
+     * ADDRESS points: a pronoun row may turn a surname into its call name, and the ADDRESS lock already limits what may change there.
+     */
+    private static boolean removesGlossaryTarget(FixPoint point, String before, String candidate, List<EditInputs.GlossaryEntry> glossary) {
+        if (glossary == null || point.types().contains(FixPoint.Type.ADDRESS)) return false;
+        String raw = java.text.Normalizer.normalize(point.rawText(), java.text.Normalizer.Form.NFC);
+        String draft = java.text.Normalizer.normalize(before, java.text.Normalizer.Form.NFC).toLowerCase(java.util.Locale.ROOT);
+        String answer = java.text.Normalizer.normalize(candidate, java.text.Normalizer.Form.NFC).toLowerCase(java.util.Locale.ROOT);
+        for (EditInputs.GlossaryEntry term : glossary) {
+            String source = java.text.Normalizer.normalize(term.source().trim(), java.text.Normalizer.Form.NFC);
+            String target = java.text.Normalizer.normalize(term.target().trim(), java.text.Normalizer.Form.NFC).toLowerCase(java.util.Locale.ROOT);
+            if (source.isEmpty() || target.isEmpty() || !raw.contains(source)) continue;
+            if (draft.contains(target) && !answer.contains(target)) return true;
+        }
+        return false;
     }
 
     private static boolean authorizedGlossarySource(String candidate, List<EditInputs.GlossaryEntry> glossary) {
