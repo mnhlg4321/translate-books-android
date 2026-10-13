@@ -1,15 +1,16 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-13 (+07:00): D work request S0 complete, S1 no-retry/call-bound runner compiled.
-- Current version: v4.20.0 in development; shipped v4.18.0 (tag `v4.18.0` on `9d02976e`).
-- Current branch: `feature/v4.20` in worktree `D:\P5E-builds\wt-v4.20` (from `main` `be2056d8`).
-- Current commit: `f7e39015f77fe7eb734925cff4d4ff4619069f53` is the implementation baseline immediately before this S1 snapshot commit; confirm actual HEAD on resume.
-- Current build: none for v4.20. Shipped 4.18.0 / code 266 from `82626ac8`, APK SHA-256 `5865F23A1EE15602C5C38B967E34AED22E63728078C7A792F92E8BECBD6AE91B`.
-- Current phase: plan D, S1 completed (androidTest compile PASS), S2 build/retention next; C1 production remains exact 739e5c49.
-- Completed tasks: plan A/B/C1; S0 clean HEAD=origin=f7e39015; S1 opt-in p6_no_retry and p6_max_calls, metadata noRetry/maxCalls/dispatched/refused, no content gate, AndroidTest compile PASS.
-- Pending tasks: S2-S9, wrapper production/test retained in D:\App Translate Books artifact+backup roots, emulator only, fake then one live014 <=10 calls/no retry/cap0.08; reading page/counts; stop for owner reading.
-- Known bugs/limits: response logs of earlier runs are not in the cited format, so stored-response replay cannot evaluate C1; the call-name rule of v4.18 (cậu to name) is unchanged; narration errors of chapter 004 are not addressed; translation still produces wrong first-person forms (C2 not chosen).
-- Regression status: clean archive `739e5c49`: engine 714 (1 skip), app 472 (3 skip), lint 0 errors / 57 warnings, androidTest compile OK; after the CP-IMPL-16 bump the working tree gives the same counts; clean-archive check of this commit recorded at the next state change.
-- Semantic progress: 3/3 historically accepted chapters unchanged; C1 quality NOT_MEASURED.
-- Spend: USD 0 for v4.20.
-- Next action: perform S2 wrapper builds and byte-verified retention in the workspace archive roots, then S3-S9 per the approved work request.
+- Updated: 2026-10-13 (+07:00), v4.20 D S0–S9 complete; stopped for owner S7 reading.
+- Current version: v4.20.0 in development; shipped v4.18.0 remains.
+- Current branch: `feature/v4.20`, clean worktree `D:\P5E-builds\wt-v4.20`; start HEAD=origin `f7e39015`.
+- Current commit: `abffa518dd335ea58337ef3e11e1f3af9b9c89bc` is the implementation baseline immediately before this S9 snapshot/result commit (not a self-reference); confirm actual HEAD when resuming.
+- Current build: development `4.20-d.1`/code268 from `9bcbabf4`, event `build-20261013-095132`, APK SHA-256 `BB603C680AC5EE17CA8874AE078FCEC7BA91559382118CC358F248B51465184E`; AndroidTest from `abffa518`, event `v420-d-test-20261013-095400`, APK `3C61FA67B236B98FE0A738966DB085A8B02A11859DA72BA03A73E686F7DBB2E8`. Both exact source ZIPs/payloads byte-verified at D:\App Translate Books artifact+backup builds/test-builds roots and retained in worktree mirrors before install.
+- Current phase: plan D execution S0–S9 complete; owner decision on ship/drop C1 pending at S7; release step05 stays open, E not started.
+- Completed tasks: C1 unchanged production CP-IMPL-16; S1 test runner no retry/call max10; wrapper build/test retention, only emulator-5554 install/signature/version268 readback; S4 10fake/0real/0refused with byte-equal DRAFT; one live014 run stopped per service; ledger validated;20 evidence files hashed; S7 page37 rows/owner controls; S8 preliminary counts; S9 summary/report mirrored and prepared for authorized scan/push.
+- Pending tasks: owner reads `D:/P5E-private/chunk-runs/V420-D/READING_014.html` and decides ship/drop C1 by PRODUCT_DIRECTION_PLAN section7; no further paid run or production change in this work request.
+- Known bugs/limits: live stopped at chunk13 due glossary PROTECTED_SYMBOL_CHANGE/TARGETED_LINE_REJECTED;14–16 NOT_REACHED, chapter INCOMPLETE, output provisional. S8 is word/reference matching, not semantic correctness; FINAL is reference only. No v4.19 gate/optionalDa/suite relabel, no phone/clear/reset/pilot, no merge/tag.
+- Regression status: wrapper debug472 total/3skip/0fail, lint0errors/57warnings; AndroidTest compile/assemble PASS. Unchanged C1 engine clean-archive evidence714/1skip retained, not redundantly rerun. S4 all16 chunks PASS/no-op. S5 seven calls finish stop, no retry/refusal/overrun; structural stop retained without editing production after results.
+- Preliminary S8:34 self-word occurrences on21 step-B DRAFT lines:7 changed to all reference words,13 unchanged,1 changedOther;24 app-changed lines total,16 outside B;1 cậu↔name line, reading union37 rows. Owner adjudication still blank.
+- Evidence: `artifacts/qa/v4.20-d-014-20261013/QA_REPORT.md` and `SUMMARY.json`, matching backup. Raw outputs/prompts/responses and S7 page at D:/P5E-private/chunk-runs/V420-D outside Git. Original run_c1_chunk.ps1 and owner four input files unchanged.
+- Spend: exactly one014 run,7 real calls, luna medium, 36973 input/7312 output, settled USD0.01801660 under group/chapter cap0.08;7 RESERVE/7 SETTLE, pending0/overrun0, no retry. Ledger V420-D-014-20261013-7bc2b3e2; unused cap grants no new run.
+- Next action: owner reads S7 and decides ship/drop C1; stop after S9.

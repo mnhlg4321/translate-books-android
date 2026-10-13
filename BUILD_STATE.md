@@ -1,5 +1,17 @@
 # Build State
 
+## Current state — 2026-10-13 (v4.20 D, S0–S9 complete; owner reading pending)
+
+- Product decision: ship or drop C1 after owner reads S7. Worktree feature/v4.20 resumed clean at f7e39015=origin; S1 no-retry/max-call runner9bcbabf4, test-only fake keep formattingabffa518. Production C1 main sources unchanged from starting f7e39015, CP-IMPL-16; no v4.19 gates/relabel/scaffolding.
+- Build production 4.20-d.1/code268, event build-20261013-095132 from9bcbabf4, APK BB603C680AC5EE17CA8874AE078FCEC7BA91559382118CC358F248B51465184E, source ZIP C7EC11C46530ABBBD0C5CFBAF36B026EDB83442C25337ADB8F4CECAF7A7F92B9. Test event v420-d-test-20261013-095400 fromabffa518, APK 3C61FA67B236B98FE0A738966DB085A8B02A11859DA72BA03A73E686F7DBB2E8, source ZIP 284D058AEF21F450CB1FA6587E337FF82AEFE60B6552F059348DEF1F4DCA6689. Only fake response formatting differs between sources; production identical.
+- Both payloads retained in D:/App Translate Books/artifacts/builds|test-builds/v4.20-d.1/<event> and backup/builds|test-builds, byte-verified before install. Worktree mirrors retained. Only emulator-5554 installed/read back268/name4.20-d.1, matching signer; no phone/clear/reset/pilot.
+- Wrapper tests debug472/3skip/0fail; lint0errors/57warnings; AndroidTest compile/assemble PASS. S4 16 chunks/10 fake/0real/0refused, noRetry=true, TXT equal DRAFT bytes. Local private script-copy quoting issue repaired before S4/S5; original script unchanged.
+- Exactly one live014:7 calls, no retry/refusal, all finish stop, USD0.01801660, 7 RESERVE/7 SETTLE, hash chain valid/pending0/overrun0. Chunk13 stopped on glossary PROTECTED_SYMBOL_CHANGE/TARGETED_LINE_REJECTED;14–16 NOT_REACHED, state INCOMPLETE. No accepted full FINAL; no quality conclusion and no further run authorized.
+- S7 D:/P5E-private/chunk-runs/V420-D/READING_014.html has37 rows (all24 changed lines plus21 step-B lines, with8 intersecting), actual R citations/guard reasons and blank owner adjudication. Preliminary S8:7 reference-word-matched/13 unchanged/1 other among21 B lines (34 occurrences);16 changed outside B;1 cậu↔name. Summary/report artifacts/qa/v4.20-d-014-20261013 mirrored to backup; raw20-file evidence private with hashes in SUMMARY.json.
+- Next action: owner reads S7 and decides ship/drop C1 under PRODUCT_DIRECTION_PLAN section7; stop after S9.
+
+Earlier sections are historical.
+
 ## Current state — 2026-10-13 (D package approved; contract revision CP-IMPL-16; work request written)
 
 - Owner approved the D spend (chapter 014, one run, luna medium, max 10 calls, no retry, cap USD 0.08) and the push of `feature/v4.20`.
