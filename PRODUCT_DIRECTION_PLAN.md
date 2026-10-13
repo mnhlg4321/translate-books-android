@@ -35,9 +35,18 @@ Dừng và đóng việc, không mở thêm đo, khi: A cho thấy vấn đề l
 
 ## 5. Trạng thái
 
-| Bước | Trạng thái |
-|---|---|
-| A | đang làm |
-| B–E | chưa bắt đầu |
+| Bước | Trạng thái | Kết quả |
+|---|---|---|
+| A | xong 2026-10-13 | 28 chương, 4.956 dòng DRAFT, owner sửa 895 dòng: xưng hô 370 (254 chỉ xưng hô; phần lớn là **tự xưng**: `tôi`→`em` 61, `mình`→`tôi` 43, `tớ`→`mình` 31, `tôi`→`tao` 28), câu chữ nhỏ 233, chỉ dấu câu/ngoặc 186 (ngoặc gốc 〝〟『』「」 bị đổi thành “ ”), tên/thuật ngữ 184, viết lại 67. DRAFT 001–028 tạo 05–08/09, sau bộ pronoun và bản `v4.17-dev.13` có khóa pronoun trong prompt dịch (suy luận mạnh). Owner chọn **P1: tự xưng sai** |
+| B | xong 2026-10-13 | 122 lần sửa tự xưng ở 8 chương có dữ kiện từng dòng. **Dữ liệu pronoun đúng** (122/122 từ đúng là `self` của một hàng phủ đoạn). Lỗi phát sinh ở **khâu dịch**: hàng đúng gần như chắc có trong prompt dịch (3–13 hàng/chương, giới hạn 40), model chọn sai: 50 ca lấy `self` của nhân vật khác (014: 31), 26 ca dùng từ không thuộc hàng nào, 8 ca đúng người nói nhưng nhầm người nghe, 38 ca lời kể (chỉ chương 004). Biên tập gắn cờ 70/84 dòng thoại nhưng không sửa vì nhiều hàng có `self` khác nhau và prompt bảo "mơ hồ thì giữ". Gốc chung: không ai xác định người nói/người nghe cho từng dòng. Loại: dò lời kể (mọi chương có hàng người kể, chỉ 004 cần sửa), thay thế tất định (26 ca đều có 2–5 `self` khả dĩ) |
+| C–E | chưa bắt đầu | — |
 
-**Next action:** bước A — bảng phân loại chỗ owner sửa trên 8 chương và kiểm nguồn gốc DRAFT; dừng để owner chọn 1 vấn đề.
+Dữ liệu bước A/B (có văn bản sách) ở `D:\P5E-private\product-plan-A\`, ngoài Git.
+
+**Next action:** owner chọn cách sửa cho P1 (mục 6) hoặc chuyển sang P2 dấu câu.
+
+## 6. Phương án sửa P1 (chờ owner)
+
+- **C1 — Biên tập trích hàng:** với điểm ADDRESS, model trả `[id] R<k> <dòng>` (số hàng nó áp dụng) hoặc `[id] =`; app chỉ nhận thay đổi xưng hô thuộc đúng hàng `R<k>`, từ chối trộn dạng của nhiều hàng; bỏ quy tắc "mơ hồ thì giữ" cho trường hợp RAW xác định được người nói. Model làm phần phán đoán (ai nói với ai), app làm phần kiểm. Kiểm offline: parser/guard với ca tổng hợp; hiệu quả thật cần một lượt D. Rủi ro: model trích sai hàng sẽ thành sửa sai hợp lệ về hình thức. Tiêu chí bỏ: ở D, số lỗi tự xưng sửa đúng không lớn hơn số sửa sai mới.
+- **C2 — Khâu dịch trình bày hàng theo người nói:** gom hàng theo nhân vật (một nhân vật xưng gì với từng người nghe) trong prompt dịch. Thay đổi nhỏ, phòng lỗi từ gốc, nhưng ảnh hưởng mọi bản dịch và đo phải dịch lại chương (đắt hơn Biên tập).
+- Không làm: dò lời kể, thêm từ vựng, cổng cue, thêm câu nhắc chung vào prompt.
