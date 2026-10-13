@@ -9,7 +9,7 @@
 - No build, device or provider operation; USD 0 in this step (v4.20 total USD 0.0180166).
 - Next action: owner reads the three newly applied lines; then step E.
 
-## Current independent review — 2026-10-13, baseline 71781fd2 (documentation only, uncommitted)
+## Earlier — independent review 2026-10-13, baseline 71781fd2 (documentation only; committed with d33c9371)
 
 - Local HEAD and origin match 71781fd2; production main source unchanged from APK source9bcbabf4. Evidence20/20 and reading-page hashes match; production payload mirrors5/5 and APK hash match. Ledger verified:7 calls/USD0.01801660/pending0. No new test/build/device/provider action.
 - Chunk13 point3: model added U+300C/U+3002/U+300D absent from DRAFT. PROTECTED_SYMBOL_CHANGE is correct preservation enforcement, not a proven guard bug; no production patch warranted. Existing protected-symbol tests cover this family.
@@ -31,7 +31,7 @@ The following S9 report is retained as the execution baseline.
 
 Earlier sections are historical.
 
-## Current state — 2026-10-13 (D package approved; contract revision CP-IMPL-16; work request written)
+## Earlier — 2026-10-13 (D package approved; contract revision CP-IMPL-16; work request written)
 
 - Owner approved the D spend (chapter 014, one run, luna medium, max 10 calls, no retry, cap USD 0.08) and the push of `feature/v4.20`.
 - Clean `git archive 739e5c49` (zip SHA-256 `2C3ABA5558C4D8D07A5A1565CADC73FC8B5919DA5DEC0B85CF05E1686504AAF4`): engine 714 (1 skip), app debug 472 (3 skip), 0 failures; `:app:lintDebug` 0 errors / 57 warnings; androidTest compile OK.
