@@ -1,5 +1,7 @@
 # Workspace Instructions
 
+> Active continuation note (2026-10-13): the governing plan is `PRODUCT_DIRECTION_PLAN.md` on `main` (steps A-E, anti-waste rule in section 2). Every task must name the product decision it serves; no suite relabelling, new gates or measurement scaffolding. The shipped app is v4.18.0; v4.19 (`feature/v4.19`) is FROZEN and its work packages are cancelled. No provider call without a separate owner spend authority. The workspace `D:\App Translate Books` stays on the closed v4.18 branch with the owner's uncommitted entries: do not switch, merge or commit there; work in a clean worktree under `D:\P5E-builds\`. Older notes below are historical.
+
 > Active continuation note (2026-09-14): v4.18 uses EDITORIAL_RECOVERY_V4_18.md and release_checklists/v4.18-editorial-v5-safe-4-1-3.md. The v4.17 scope section below applies to that historical recovery only. Current audit work is on feature/v4.18-p5e-audit-20260914 from exact f8fe433e; it does not authorize provider/device work. Explicit owner session instructions take precedence over repository startup/resume defaults.
 
 
