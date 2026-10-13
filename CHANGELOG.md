@@ -2,6 +2,19 @@
 
 All notable changes to Translate Books are recorded in this file. The repository was normalized to Git on 2026-07-17 without feature changes or rollback. The v4.7 source baseline is commit `da8c6d9a9001296c3f3c17817ea3d6372fd59ae3` on branch `main`.
 
+## [4.20.0] - 2026-10-13 (release candidate preparation, not tagged)
+
+- C1: require an ADDRESS answer to cite a numbered pronoun row; validate edits
+  against only that row, preserving DRAFT for missing/incompatible citations.
+- C2': keep DRAFT for one malformed point answer with its original reason;
+  block a chunk for two or more malformed answers. Anchoring and protected-symbol
+  checks remain enforced.
+- Raise the Editorial contract to CP-IMPL-17: create a new run instead of resuming
+  an old-contract run; existing results remain viewable/exportable.
+- Known limits: unflagged self-address errors, translation-stage pronoun errors,
+  and chapter 004 narration are not resolved. Chapter 017 owner reading is required
+  before tag/merge; device/performance evidence is pending.
+
 ## [4.18.0] - 2026-10-12 (release candidate, not tagged)
 
 - Add the chunk-based Editorial (Bien tap) flow: a chapter's RAW and DRAFT are aligned

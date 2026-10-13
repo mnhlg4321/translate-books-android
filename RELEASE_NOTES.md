@@ -1,4 +1,31 @@
-# Translate Books 4.18.0 Release Notes
+# Translate Books 4.20.0 Release Notes
+
+Status: RELEASE_CANDIDATE preparation; owner reading of chapter 017 required before tag/merge.
+Branch: feature/v4.20. Shipped version remains 4.18.0.
+
+## 4.20.0 changes
+
+- C1: an ADDRESS edit must cite its numbered pronoun row as `[id] R<n> <line>`.
+  The app checks the change against that row; missing or incompatible citations
+  keep the original DRAFT line.
+- C2': one malformed point answer keeps its DRAFT line and rejection reason;
+  two or more malformed point answers block the chunk. Anchoring errors still
+  block; protected-symbol checks are unchanged.
+- Contract CP-IMPL-17: old Editorial runs cannot continue under the new contract;
+  create a new run. Existing results remain viewable and exportable.
+
+## 4.20.0 known limitations
+
+- Self-address errors not flagged by the finder can remain. Translation-stage
+  pronoun selection is not fixed, nor are chapter 004 narration errors.
+- Owner accepted the reviewed chapter 014 output and three additional chunk13
+  replay lines. This is not acceptance of chapter 017 or permission to tag.
+- New device, performance and chapter 017 evidence are required by
+  docs/V420_E_RELEASE_WORK_REQUEST.md. Emulator measurements are not physical-device results.
+
+---
+
+# Historical Translate Books 4.18.0 Release Notes
 
 Status: `RELEASE_CANDIDATE` (not tagged, not merged to `main`)
 
