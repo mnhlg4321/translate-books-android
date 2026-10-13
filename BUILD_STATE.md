@@ -1,6 +1,14 @@
 # Build State
 
-## Current state — 2026-10-12 (v4.19 opened: pronoun misses of the chunk flow; offline first, USD 0)
+## Current state — 2026-10-13 (coordinator review of X1/X2; opt-in test skip fix; question A reframed)
+
+- Verified on a clean `git archive 2e7900d0`: engine 712 (1 skip), app 473 (3 skip), `scripts/chunk` 48, 0 failures; suite replay 158/158 unchanged (exit 0); private sidecar hashes match; public indexes hold no book text; main sources unchanged since `998da341`.
+- Fixed: five env-gated host tests (`EditorialPairPronounMissDiagnosisTest`, four methods of `EditorialPairC6CorpusMeasurementTest`) returned silently and counted as PASS; they now use `Assume.assumeTrue`. App on the clean archive plus these two files: 473 tests, 465 PASS, 8 SKIP, 0 failures; replay still 158/158. Corrupted private paths in plan section 7 repaired.
+- Reading corrected (report section 8): finder covers 18/37 in 014 and 1/40 in 004; S2 outside 006/008/011 NOT_MEASURED; the `mình` lexicon gap and the 014 row conflicts are one family (finder cannot attribute a line to a row); question A is the meaning of a name in `call` (may `cậu` stay as second person?), not "row vs FINAL".
+- No production code, build, device or provider operation; USD 0. Branch not pushed.
+- Next action: owner answers question A on the reading page.
+
+## Earlier — 2026-10-12 (v4.19 opened: pronoun misses of the chunk flow; offline first, USD 0)
 
 - Owner opened release v4.19 from `main` `998da341`. One branch `feature/v4.19` (clean worktree `D:\P5E-builds\wt-v4.19`; the owner's workspace with 163 uncommitted entries is untouched), one checklist `release_checklists/v4.19.md` (steps 01-04 done with evidence), one canonical plan `EDITORIAL_PRONOUN_RECOVERY_V4_19.md`.
 - Shipped baseline unchanged: v4.18.0, APK 4.18.0/code 266 from `82626ac8`, logic CP-IMPL-15. No code, build, device or provider operation in this step.

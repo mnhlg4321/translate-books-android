@@ -10,6 +10,7 @@ import com.ml.tblandroidtxt.editorial.api.chunk.LineAligner;
 import com.ml.tblandroidtxt.editorial.api.chunk.LineUnits;
 import com.ml.tblandroidtxt.editorial.api.fix.FixPoint;
 
+import org.junit.Assume;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -71,7 +72,7 @@ public final class EditorialPairC6CorpusMeasurementTest {
     @Test public void measurePrivateCorpusWhenConfigured() throws Exception {
         String inputRoot = System.getenv("C6_INPUT_ROOT");
         String finalRoot = System.getenv("C6_FINAL_ROOT");
-        if (inputRoot == null || inputRoot.isBlank() || finalRoot == null || finalRoot.isBlank()) return;
+        Assume.assumeTrue("set C6_INPUT_ROOT and C6_FINAL_ROOT", !(inputRoot == null || inputRoot.isBlank() || finalRoot == null || finalRoot.isBlank()));
 
         Path inputs = Path.of(inputRoot);
         Path finals = Path.of(finalRoot);
@@ -126,7 +127,7 @@ public final class EditorialPairC6CorpusMeasurementTest {
 
     @Test public void fakeChapter006KeepsEveryPointByteExactAndEditsOnlyOneSelectedLineWhenConfigured() throws Exception {
         String inputRoot = System.getenv("C6_INPUT_ROOT");
-        if (!"YES".equalsIgnoreCase(System.getenv("C6_FAKE_006")) || inputRoot == null || inputRoot.isBlank()) return;
+        Assume.assumeTrue("set C6_FAKE_006=YES and C6_INPUT_ROOT", !(!"YES".equalsIgnoreCase(System.getenv("C6_FAKE_006")) || inputRoot == null || inputRoot.isBlank()));
         PrivateChapter006 chapter = loadPrivate006(Path.of(inputRoot));
         CorrectionTarget target = firstSafeTarget(chapter);
         assertNotNull("006 needs one eligible non-insertion point for edit-isolation test", target);
@@ -165,7 +166,7 @@ public final class EditorialPairC6CorpusMeasurementTest {
         String inputRoot = System.getenv("C6_INPUT_ROOT");
         String responses = System.getenv("C6_REPLAY_RESPONSES");
         String out = System.getenv("C6_REPLAY_OUT");
-        if (inputRoot == null || inputRoot.isBlank() || responses == null || responses.isBlank() || out == null || out.isBlank()) return;
+        Assume.assumeTrue("set C6_INPUT_ROOT, C6_REPLAY_RESPONSES and C6_REPLAY_OUT", !(inputRoot == null || inputRoot.isBlank() || responses == null || responses.isBlank() || out == null || out.isBlank()));
         String chapterId = System.getenv("C6_REPLAY_CHAPTER") == null || System.getenv("C6_REPLAY_CHAPTER").isBlank() ? "006" : System.getenv("C6_REPLAY_CHAPTER");
         PrivateChapter006 chapter = loadPrivateChapter(Path.of(inputRoot), chapterId);
         StringBuilder tsv = new StringBuilder();
@@ -203,7 +204,7 @@ public final class EditorialPairC6CorpusMeasurementTest {
         String inputRoot = System.getenv("C6_INPUT_ROOT");
         String ordinal = System.getenv("C6_SELECTOR_ORDINAL");
         String out = System.getenv("C6_SELECTOR_OUT");
-        if (inputRoot == null || inputRoot.isBlank() || ordinal == null || ordinal.isBlank() || out == null || out.isBlank()) return;
+        Assume.assumeTrue("set C6_INPUT_ROOT, C6_SELECTOR_ORDINAL and C6_SELECTOR_OUT", !(inputRoot == null || inputRoot.isBlank() || ordinal == null || ordinal.isBlank() || out == null || out.isBlank()));
         String chapterId = System.getenv("C6_SELECTOR_CHAPTER") == null || System.getenv("C6_SELECTOR_CHAPTER").isBlank() ? "006" : System.getenv("C6_SELECTOR_CHAPTER");
         PrivateChapter006 chapter = loadPrivateChapter(Path.of(inputRoot), chapterId);
         PairMap map = chapter.preview.map;

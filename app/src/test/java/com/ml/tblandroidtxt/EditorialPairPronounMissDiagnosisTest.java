@@ -10,6 +10,7 @@ import com.ml.tblandroidtxt.editorial.api.chunk.LineAligner;
 import com.ml.tblandroidtxt.editorial.api.chunk.LineUnits;
 import com.ml.tblandroidtxt.editorial.api.fix.FixPoint;
 
+import org.junit.Assume;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -44,7 +45,7 @@ public final class EditorialPairPronounMissDiagnosisTest {
     @Test public void dumpFinderFactsPerDraftLineWhenConfigured() throws Exception {
         String inputRoot = System.getenv("DIAG_INPUT_ROOT");
         String outPath = System.getenv("DIAG_OUT");
-        if (inputRoot == null || inputRoot.isBlank() || outPath == null || outPath.isBlank()) return;
+        Assume.assumeTrue("set DIAG_INPUT_ROOT and DIAG_OUT", !(inputRoot == null || inputRoot.isBlank() || outPath == null || outPath.isBlank()));
         String[] chapters = System.getenv("DIAG_CHAPTERS") == null || System.getenv("DIAG_CHAPTERS").isBlank()
                 ? ALL : System.getenv("DIAG_CHAPTERS").split(",");
         StringBuilder out = new StringBuilder();

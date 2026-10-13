@@ -110,3 +110,19 @@ py -3 scripts/chunk/pronoun_miss_diagnosis.py suite --guard-dir D:\P5E-private\c
 # 3) hồi quy sau mỗi thay đổi finder/guard/prompt
 powershell -File scripts/chunk/run-pronoun-suite-replays.ps1
 ```
+
+## 8. Review độc lập của coordinator — 2026-10-13 (offline, USD 0)
+
+**Đã kiểm trên archive sạch `2e7900d0`** (zip SHA-256 `4D601317…4501`): engine 712 (1 skip), app 473 (3 skip), `scripts/chunk` 48, 0 lỗi; `run-pronoun-suite-replays.ps1` 158/158 giữ nguyên, exit 0 (ghi vào thư mục riêng, không đè `replay-current` của phiên trước). Hash bốn sidecar riêng khớp mục 2. `app/src/main` và `editorial-engine/src/main` không đổi so với `998da341`. Chỉ mục công khai chỉ có id, hash, nhãn và số đếm (0 ký tự Nhật trong JSON; 5 ký tự trong báo cáo này là token cue). Các con số S1 ở mục 3.1 khớp `s1-analysis.json`.
+
+**Sửa trong review (commit này):**
+
+1. **Test opt-in im lặng được đếm là PASS.** `EditorialPairPronounMissDiagnosisTest` và 4 method của `EditorialPairC6CorpusMeasurementTest` (`return` khi thiếu biến môi trường) báo PASS dù không chạy gì; repo đã có quy ước `Assume.assumeTrue` (`Cs1PerformanceCountTest`, `EditorialAddressCheckCorpusTest`). Đã đổi cả họ năm method sang `Assume`. Kết quả mới của app trên archive sạch cộng đúng hai file này: 473 test, **465 PASS, 8 SKIP**, 0 lỗi (trước đây "473, 3 skip" đã tính 5 method rỗng là PASS). Replay chạy lại sau sửa: 158/158, exit 0.
+2. Đường dẫn riêng ở mục 7 của plan bị hỏng do ký tự điều khiển (`\v`, `\r` trong chuỗi), đã sửa.
+
+**Điều chỉnh cách đọc chẩn đoán:**
+
+- **Tổng 83% che chênh lệch theo chương.** Finder phủ 18/37 dòng ở 014 (48,6%; 11 dòng mất do xung đột hàng) và 1/40 ở 004. 014 là chương nhiều hàng pronoun nhất nhưng chưa có lần chạy model nào được lưu, nên S2 của 014 (và 004, 005, 007, 017) là `NOT_MEASURED`. Kết luận "finder không phải nguyên nhân chính" chỉ đúng cho 006/008/011.
+- **Ca `mình` ngoài từ vựng và ca xung đột hàng cùng một họ.** Kiểm lại từ `line-facts.jsonl`: ở 4/7 dòng ngoài từ vựng mà owner sửa (004 ×3, 011 ×1), ít nhất một hàng phủ dòng có `mình` ở self/call của nhân vật khác, nên phép thử "mọi hàng đều không cho `mình`" loại chúng (vì vậy 0 trúng). Cùng với 11 dòng xung đột ở 014, đây là hai biểu hiện của một thiếu sót thiết kế: finder không biết dòng thoại thuộc hàng nào (người nói → người nghe). Không mở rộng từ vựng; nếu sửa finder thì sửa ở việc gán hàng cho dòng, và phải đo trên bản sạch trước.
+- **Đề xuất A cần đặt câu hỏi đúng.** FINAL là tham chiếu, không phải luật. Trong 14 điểm FINAL không sửa, 13 điểm có `cậu` trong DRAFT (đếm từ `known-misses.json`); dạng chung: hàng có `call` là **tên** (ví dụ `self=mình`, `call=<tên>`), DRAFT dùng đại từ ngôi hai `cậu`. Ở 008, model còn tự đổi tên → `cậu` 3 lần (khóa chặn), và FINAL giữ `cậu` ở cả 6 điểm. Như vậy câu hỏi thật là **ngữ nghĩa của `call` khi nó là tên**: tên chỉ dùng khi gọi (vocative) và `cậu` được phép làm đại từ ngôi hai, hay mọi `cậu` phải đổi thành tên. Hàng pronoun hiện không có chỗ ghi đại từ ngôi hai được phép kèm tên. Câu trả lời quyết định ba thứ: nhãn của 14 điểm, quy tắc tên-call của CP-IMPL-14 (nếu `cậu` được phép thì quy tắc này có thể sinh SAI ở 008/006), và việc có cần chạy B hay không.
+- Vì vậy thứ tự A → B giữ nguyên, nhưng A là quyết định về luật/hợp đồng hàng pronoun, không phải chọn "hàng hay FINAL".
