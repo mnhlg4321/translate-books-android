@@ -383,8 +383,8 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         EditorialApiProvider delegate = live ? new OpenRouterEditorialApiProvider(settings, reasoning) : new FakeEditorialApiProvider((request, index) -> {
             if ("YES".equals(args.getString("p6_x5_006", ""))) {
                 try {
-                    return FakeEditorialApiProvider.text(Files.readString(runInput.resolve("replay-responses")
-                            .resolve(String.format(Locale.ROOT, "%03d-EDIT.json", index + 1)), StandardCharsets.UTF_8), "stop");
+                    return FakeEditorialApiProvider.text(new String(Files.readAllBytes(runInput.resolve("replay-responses")
+                            .resolve(String.format(Locale.ROOT, "%03d-EDIT.json", index + 1))), StandardCharsets.UTF_8), "stop");
                 } catch (IOException missing) { throw new IllegalStateException("X5_FAKE_REPLAY_MISSING"); }
             }
             return FakeEditorialApiProvider.text("<EDITED>" + EditorialPairTestData.draftPart(request) + "</EDITED>", "stop");
