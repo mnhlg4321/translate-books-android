@@ -383,6 +383,10 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         EditorialApiProvider delegate = live ? new OpenRouterEditorialApiProvider(settings, reasoning) : new FakeEditorialApiProvider((request, index) ->
                 FakeEditorialApiProvider.text("<EDITED>" + EditorialPairTestData.draftPart(request) + "</EDITED>", "stop"));
         PerCallLedger provider = new PerCallLedger(delegate, ledger, pricing, runId + "|" + fixtureId, model, capture::record);
+        boolean noRetry = "YES".equalsIgnoreCase(args.getString("p6_no_retry", ""));
+        int maxCalls = Integer.parseInt(args.getString("p6_max_calls", "0"));
+        if (maxCalls < 0) throw new IllegalArgumentException("P6_MAX_CALLS_INVALID");
+        CallLimitProvider limited = new CallLimitProvider(provider, maxCalls);
 
         String final_;
         String state;
@@ -402,8 +406,8 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
             // Single-chunk experiment (docs/EDITORIAL_CHUNK_PLAN.md 6.2): p6_only_ordinal names one chunk and every guard must match
             // before anything is reserved; the provider then lets one request through, whatever happens to it.
             boolean onlyOne = !args.getString("p6_only_ordinal", "").isEmpty();
-            EditorialSingleChunkProbe.OneCallProvider oneCall = onlyOne ? new EditorialSingleChunkProbe.OneCallProvider(provider) : null;
-            EditorialPairRunService service = new EditorialPairRunService(store, onlyOne ? oneCall : provider, pricing, 900_000L);
+            EditorialSingleChunkProbe.OneCallProvider oneCall = onlyOne ? new EditorialSingleChunkProbe.OneCallProvider(limited) : null;
+            EditorialPairRunService service = new EditorialPairRunService(store, onlyOne ? oneCall : limited, pricing, 900_000L);
             run = service.prepare(1, load.source, glossaryText, pronounText, null, model, "Vietnamese", chapterCap, EditorialPairModels.ARM_CHUNK);
             if (onlyOne) {
                 EditorialSingleChunkProbe.Selector selector = new EditorialSingleChunkProbe.Selector(
@@ -424,6 +428,13 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
                     singleChunk.put("gate", item.gateJson == null ? "" : item.gateJson);
                     Files.write(outputRoot.resolve("chunk-candidate.txt"), (item.candidateText == null ? "" : item.candidateText).getBytes(StandardCharsets.UTF_8));
                     Files.write(outputRoot.resolve("chunk-response.txt"), (item.responseText == null ? "" : item.responseText).getBytes(StandardCharsets.UTF_8));
+                }
+            } else if (noRetry) {
+                for (EditorialPairModels.PairItem pending : service.items(run.id)) {
+                    run = service.executeOnly(run.id, pending.pairId, null);
+                    EditorialPairModels.PairItem done = service.items(run.id).stream()
+                            .filter(item -> item.pairId.equals(pending.pairId)).findFirst().orElseThrow();
+                    if (!"ACCEPTED".equals(done.state.name())) break;
                 }
             } else {
                 run = service.execute(run.id, null);
@@ -476,6 +487,10 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         Map<String, Object> metadata = new LinkedHashMap<>();
         metadata.put("fixtureId", fixtureId);
         metadata.put("mode", singleChunk == null ? "CHUNK" : "CHUNK_SINGLE");
+        metadata.put("noRetry", noRetry);
+        metadata.put("maxCalls", BigDecimal.valueOf(maxCalls));
+        metadata.put("dispatched", BigDecimal.valueOf(limited.dispatched));
+        metadata.put("refused", BigDecimal.valueOf(limited.refused));
         metadata.put("providerKind", live ? "LIVE" : "FAKE_OFFLINE");
         metadata.put("groupId", groupId);
         metadata.put("groupMaximumUsd", groupMaximum.toPlainString());
@@ -516,6 +531,30 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         }
         assertTrue("a call was billed above its reservation (see cost-overrun.txt)", provider.overruns().isEmpty());
         if (Files.exists(ledgerPath)) assertTrue("no spend reservation may stay UNKNOWN", ledger.inspect().pendingCalls() == 0);
+    }
+
+    /** Test-runner call bound; zero is the existing unlimited mode. No content checks. */
+    private static final class CallLimitProvider implements EditorialApiProvider {
+        private final EditorialApiProvider delegate;
+        private final int maximum;
+        private int dispatched;
+        private int refused;
+
+        CallLimitProvider(EditorialApiProvider delegate, int maximum) {
+            this.delegate = delegate;
+            this.maximum = maximum;
+        }
+
+        @Override public void cancel() { delegate.cancel(); }
+
+        @Override public EditorialApiFlow.StepResponse call(EditorialApiFlow.Request request, String model, int maxOutput, long timeoutMillis) {
+            if (maximum > 0 && dispatched >= maximum) {
+                refused++;
+                return EditorialApiFlow.StepResponse.failure("P6_MAX_CALLS_REACHED");
+            }
+            dispatched++;
+            return delegate.call(request, model, maxOutput, timeoutMillis);
+        }
     }
 
     /** One ledger identity per physical call, so every chunk reserves and settles on its own. */
