@@ -87,9 +87,9 @@ public final class EditorialPairAddressKeepSqliteInstrumentedTest {
     @Test public void aKeptAddressPointDoesNotBlockTheValidRepairsAndSurvivesClosingTheDatabase() throws Exception {
         FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> new EditorialApiFlow.StepResponse(
                 EditorialPairTestData.targetedAnswer(request, index, (i, d) -> {
-                    if (d.contains("Rina")) return d.replace("tớ", "em");
+                    if (d.contains("Rina")) return "R1 " + d.replace("tớ", "em");
                     if (d.contains("Rồng vương")) return d.replace("Rồng vương", "Long Vương");
-                    return d.replace("Tớ", "Mình");
+                    return "R1 " + d.replace("Tớ", "Mình");
                 }), "stop", 1500, 400, new BigDecimal("0.0001"), true, "fake-model", "fake-route", ""));
         long runId;
         try (SqliteEditorialPairRunStore store = store()) {
@@ -111,7 +111,7 @@ public final class EditorialPairAddressKeepSqliteInstrumentedTest {
             assertEquals(PairState.ACCEPTED, item.state);
             assertFalse(item.gateJson.contains("TARGETED_LINE_REJECTED"));
             assertEquals("KEPT", point(item, 1).getString("status"));
-            assertEquals("ADDRESS_FORM_NOT_IN_APPLICABLE_ROW", point(item, 1).getString("reason"));
+            assertEquals("ADDRESS_FORM_NOT_IN_CITED_ROW", point(item, 1).getString("reason"));
             assertEquals("FIXED", point(item, 2).getString("status"));
             assertEquals("FIXED", point(item, 3).getString("status"));
             assertEquals(EXPECTED, item.candidateText.trim());
