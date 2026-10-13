@@ -1,5 +1,7 @@
 # Workspace Instructions
 
+> Active continuation note (2026-10-13): the current release is v4.19 (pronoun misses of the Editorial chunk flow). Work only in the clean worktree `D:\P5E-builds\wt-v4.19` on branch `feature/v4.19`; canonical plan `EDITORIAL_PRONOUN_RECOVERY_V4_19.md`, checklist `release_checklists/v4.19.md`, and the BUILD_STATE.md / WORKSPACE_SNAPSHOT.md of that worktree. The workspace `D:\App Translate Books` stays on the closed v4.18 branch with the owner's uncommitted entries: do not switch, merge or commit there. No provider call without a separate owner spend authority. The 2026-09-14 note and the v4.17 scope guard below are historical.
+
 > Active continuation note (2026-09-14): v4.18 uses EDITORIAL_RECOVERY_V4_18.md and release_checklists/v4.18-editorial-v5-safe-4-1-3.md. The v4.17 scope section below applies to that historical recovery only. Current audit work is on feature/v4.18-p5e-audit-20260914 from exact f8fe433e; it does not authorize provider/device work. Explicit owner session instructions take precedence over repository startup/resume defaults.
 
 

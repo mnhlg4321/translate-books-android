@@ -1,6 +1,12 @@
 # Build State
 
-## Current state — 2026-10-13 (coordinator review of X1/X2; opt-in test skip fix; question A reframed)
+## Current state — 2026-10-13 (owner decision D-A recorded; feature/v4.19 pushed; AGENTS.md points to v4.19)
+
+- D-A: khi `call` của hàng là **tên**, `cậu` được giữ làm đại từ ngôi hai nếu `self` của hàng là `mình` hoặc `tớ`; tên chỉ bắt buộc ở lời gọi trực tiếp (vocative). Với `self` khác (`tôi`, `em`, …) luật cũ giữ nguyên cho tới khi owner quyết thêm.
+- Owner approved pushing `feature/v4.19` and a v4.19 continuation note at the top of `AGENTS.md`. No code, build, device or provider operation; USD 0.
+- Next action: apply D-A to the suite (X3): relabel the 23 points, move lawful `cậu` points to the clean controls, rerun `suite` and the replay runner, add an offline test showing where the CP-IMPL-14 name-call rule contradicts D-A; prepare a B package for 008 only if real misses remain.
+
+## Earlier — 2026-10-13 (coordinator review of X1/X2; opt-in test skip fix; question A reframed)
 
 - Verified on a clean `git archive 2e7900d0`: engine 712 (1 skip), app 473 (3 skip), `scripts/chunk` 48, 0 failures; suite replay 158/158 unchanged (exit 0); private sidecar hashes match; public indexes hold no book text; main sources unchanged since `998da341`.
 - Fixed: five env-gated host tests (`EditorialPairPronounMissDiagnosisTest`, four methods of `EditorialPairC6CorpusMeasurementTest`) returned silently and counted as PASS; they now use `Assume.assumeTrue`. App on the clean archive plus these two files: 473 tests, 465 PASS, 8 SKIP, 0 failures; replay still 158/158. Corrupted private paths in plan section 7 repaired.
