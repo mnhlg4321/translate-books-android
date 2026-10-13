@@ -1,6 +1,6 @@
 # v4.19 X4 — gói đo 006 với prompt D-A mọi self
 
-Trạng thái: AUTHORIZED — owner 2026-10-13 “duyệt quyền” cho gói đã trình: một lượt 006, luna medium, tối đa 14 calls/no retry, trần USD 0.10. Nguồn X4 đã kiểm: `ca59f275c1ba97c980848329eba3379b0b7b10ad`; production change duy nhất là luật tên-call trong `TargetedFixPrompt.java`. Development build/test/QA emulator-5554 chuẩn bị cho phép đo đúng prompt mới; chưa dispatch. Gói B 008 cũ không chạy.
+Trạng thái: EXECUTED — FAIL/STOPPED, quyền một lượt đã dùng. Owner 2026-10-13 “duyệt quyền”: một lượt 006, luna medium, tối đa 14 calls/no retry, trần USD 0.10. Development 4.19-x5.1/267 đo đúng prompt X4; test-only per-chunk gate dừng sau **1 call** ở clean 006 1:7. Settled USD **0.0029583**, pending 0, no retry. Kết quả `artifacts/qa/v4.19-x5-006-20261013/QA_REPORT.md`; phần trần chưa dùng không cấp quyền chạy lại. Gói B 008 cũ không chạy.
 
 ## Phạm vi đề nghị
 
@@ -37,4 +37,4 @@ Trước lần chạy được cấp quyền, kiểm giá đã cấu hình và r
 - Bộ chấm lần đo mới dùng `verify-replay --allow-da-choices` với TSV đã map point id/chunk vào run baseline `006-C6E`; đây là chế độ explicit riêng cho lựa chọn D-A. Default replay vẫn nghiêm. Mọi thay đổi ngoài danh sách hash, kể cả thêm đại từ khác/đổi chữ/dấu câu, là hồi quy bản sạch. Những điểm known thay đổi vẫn phải được đọc/chấm, không tự nâng thành PASS.
 - Dừng ngay nếu bản sạch đổi ngoài lựa chọn D-A, sửa sai cũ lọt lại, vượt trần, thiếu giá/cost, finish `length`, response rỗng hoặc lỗi hạ tầng. Không retry, không đổi prompt/model/input sau một failure trong cùng lượt.
 
-**Next action:** hoàn tất preflight/build/test/QA rồi thực thi đúng một lượt 006 theo quyền đã duyệt; chưa đủ cổng thì provider calls vẫn bằng 0.
+**Next action:** owner review điểm 1:7 và quyết định phạm vi sửa offline; phép đo đã dừng, không retry hoặc dùng phần trần còn lại cho lượt mới.

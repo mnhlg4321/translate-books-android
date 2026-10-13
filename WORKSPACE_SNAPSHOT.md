@@ -1,16 +1,15 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-13 (+07:00), X5 spend approved; preparing a controlled 006 measurement.
-- Current version: v4.19.0 in development; shipped baseline v4.18.0.
-- Current branch: `feature/v4.19` in `D:\P5E-builds\wt-v4.19`; owner authorized scan/push including `701470e5`.
-- Current commit: `e4460771107628ee83f3abbc9c9b8b15d0c7f8ea` is the implementation baseline immediately before this X5 preparation/snapshot commit; confirm actual HEAD on resume.
-- Current build: none for v4.19. Shipped 4.18.0/code266 from `82626ac8`, APK SHA-256 `5865F23A1EE15602C5C38B967E34AED22E63728078C7A792F92E8BECBD6AE91B`. No APK or device operation during X4.
-- Current phase: X5_LIVE preparation; owner approved one 006 run, max 14 calls, luna medium/no retry, cap USD 0.10. Test-only controlled execution added; X6_RELEASE pending.
-- Completed tasks: X0-X3; D-A decision in plan section 7; prompt contradiction test flipped; three controls and two finder/guard tests unchanged byte-for-byte. Eight points relabelled; suite 21 known / 137 clean. 23 true optional D-A points pinned with allowed output hashes, five prior false candidates remain strict. Clean archive engine/app/Python/replay PASS; 006 measurement package prepared; QA payload mirrored.
-- Pending tasks: wrapper production/test archive, emulator-5554 install/QA and fake replay, then one authorized live measurement and owner reading.
-- Known bugs/limits: model behaviour under the new prompt is unmeasured; finder/guard limitations retained; self errors and call=cô errors still require correction. Optional D-A never permits a wrong self, wrong vocative, third-person edit or other wording change. Owner workspace D:\App Translate Books untouched.
-- Regression status: archive source `ca59f275`, ZIP SHA-256 `27469E09885EA27C47F76FD2CD294D8939D8EAFEDDC84C0892C736F0642C709F`; engine 718 total/1 skip, app 473 total/8 skip each debug/release/benchmark, Python 58 PASS, 0 fail/error. Strict replay 158/158 unchanged, 0 regressions/improvements; wrong fixes remain blocked. First obsolete pipeline assertion and SDK env issue repaired. Evidence `artifacts/qa/v4.19-x4-ca59f275/QA_REPORT.md` and matching backup.
-- Measurement package: `docs/V419_X4_006_MEASUREMENT_PACKAGE.md`; only 006, one run, luna medium, no retry, at most 14 calls. Proposed new ledger cap USD 0.10; offline worst-output estimate USD 0.087118 at historical assumed prices, verify actual pricing before any authorized run.
-- Semantic progress: existing owner acceptance remains event-specific; no new model quality measurement.
-- Spend: 0 provider calls / USD 0 so far. Owner grant covers only one 006 run, <=14 calls, cap USD 0.10, no retry, a new ledger.
-- Next action: finish wrapper/build/test/device preflight and fake replay, then execute the one approved 006 measurement and retain/chấm its outcome.
+- Updated: 2026-10-13 (+07:00), X5 one-run 006 measurement stopped at a strict clean regression.
+- Current version: v4.19.0 in development; shipped baseline v4.18.0 remains.
+- Current branch: `feature/v4.19`, worktree `D:\P5E-builds\wt-v4.19`; owner's D:\App Translate Books unchanged.
+- Current commit: `5dbf320dcb757caa6d59ac6688374f7d12219a5d` is the implementation baseline immediately before this measurement-result/snapshot commit; confirm actual HEAD on resume.
+- Current build: production `4.19-x5.1`/code267 from `548594e7`, APK SHA-256 `841CFC6BED8CCFB72711510F8E9296F2BA94FE4DB70C555F45CB07A56C36D488`, event `build-20261013-082743`; AndroidTest `x5-test-20261013-082900` from `5dbf320d`, APK `E81F5200CFD6F86DEFA0DC021D163001AF769D7CB126087A11A28AEDD9F5038E`; artifact/backup byte-mirrored, installed/verified only emulator-5554.
+- Current phase: X5 live measurement executed, QUALITY_FAIL / STOPPED at `X5_CLEAN_REGRESSION:1:7` after 1 call; X6_RELEASE pending. One-run authority consumed; no retry/additional paid dispatch.
+- Completed tasks: X0-X4 offline; X5 owner authority recorded; test-only single-attempt/per-chunk stop gate; wrapper production/test retention; host regression and device store/fake QA; one authorized live dispatch and evidence readback; ledger hash chain verified closed; private RAW/DRAFT/candidate reading page retained; aggregate QA report and hash summary mirrored.
+- Pending tasks: owner review and scope of an offline repair for strict clean 006 1:7; later-chunk genuine errors/old wrong-pass cases remain NOT_MEASURED on this live run. Release workflow remains open.
+- Known bugs/limits: model dropped a title and changed a third-person address form at clean1:7, guard accepted it; outside D-A. Candidate rows for other speakers do not establish Ai's roles. One response does not prove the new prompt alone caused it. Five other clean outputs at chunk1 unchanged; no eligible accepted FINAL. Finder/guard production unchanged, no new relabel waiver.
+- Regression status: host engine718 total/1skip; app478 total/8skip each debug/release/benchmark, 0 failures; five X5 gate tests PASS. Device store6+6+1 PASS, fake stored-response14 fake/0real PASS. Local Android file-read compile error and fake hash-case failure repaired before live. X4 strict replay158/158 retained. Measurement quality FAIL; no active compile/test failure.
+- Evidence: `artifacts/qa/v4.19-x5-006-20261013/QA_REPORT.md` and `SUMMARY.json`, matching backup. Raw/reading page outside Git in `D:/P5E-private/v419-pronoun/X5-20261013/`, mirrored private backup.
+- Spend: 1 provider call, `openai/gpt-5.6-luna` medium; 6381 input/1136 output, finish stop; settled USD0.0029583 under cap0.10, 1 RESERVE/1 SETTLE, pending0/overrun0. Ledger `V419-X5-006-20261013-f8a6ecf7`. No retry; unused cap grants no new run.
+- Next action: owner reviews private 1:7 and scopes an offline repair against strict clean controls; the one-run grant is consumed, no additional paid dispatch.

@@ -1,5 +1,16 @@
 # Build State
 
+## Current state — 2026-10-13 (X5 006 measured, quality FAIL; stopped after one call)
+
+- Owner approved the one-run 006 package (luna medium, max14/no retry/cap0.10). Test-only per-chunk gate stopped at X5_CLEAN_REGRESSION:1:7 before the second call. Run INCOMPLETE; no accepted FINAL/quality PASS. No retry/new run authorized; unused cap does not extend the one-run grant.
+- Exact spend USD 0.0029583, 1 RESERVE + 1 SETTLE, pending0/overrun0, 6381 input/1136 output, finish stop. The changed clean point loses a title and changes a third-person address form, outside D-A. Five other clean outputs in chunk1 unchanged; later genuine errors/old wrong-pass cases NOT_MEASURED in this live run.
+- Production wrapper 4.19-x5.1/code267, source548594e7, APK 841CFC6BED8CCFB72711510F8E9296F2BA94FE4DB70C555F45CB07A56C36D488, event build-20261013-082743; AndroidTest source5dbf320d, event x5-test-20261013-082900, APK E81F5200CFD6F86DEFA0DC021D163001AF769D7CB126087A11A28AEDD9F5038E. Both archives byte-mirrored and only emulator-5554 installed/verified. Test repair does not change production inputs.
+- Engine718/1skip; app478/8skip each debug/release/benchmark, failures0. Device store tests6+6+1 PASS; fake stored replay14 fake/0 real PASS. Local Android Files.readString compile failure repaired to readAllBytes before dispatch; fake hash case fixed before live. No active compile/test failure.
+- Aggregate report and summary: artifacts/qa/v4.19-x5-006-20261013 (mirrored in backup); book text/raw captures and reading page remain private in D:/P5E-private/v419-pronoun/X5-20261013. Source finder/guard unchanged; no release/tag/merge/pilot/reset.
+- Next action: owner reviews private 1:7 and scopes an offline repair against strict clean controls; the one-run authority is consumed, no additional paid dispatch.
+
+Earlier sections are historical.
+
 ## Current state — 2026-10-13 (X5 authority granted; controlled measurement preparation)
 
 - Owner approved the 006 package: one run luna medium, max 14 calls, no retry, new ledger, cap USD 0.10. Preparing wrapper production/test build and emulator-5554 QA as prerequisites to measure the new prompt. No release/tag/merge.
