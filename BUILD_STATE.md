@@ -1,6 +1,14 @@
 # Build State
 
-## Current state — 2026-10-13 (product direction plan approved; v4.19 frozen)
+## Current state — 2026-10-13 (v4.20 opened; plan step C (C1) done offline; step D waits for a spend authority)
+
+- Branch `feature/v4.20` from `main` `be2056d8`, checklist `release_checklists/v4.20.md`, canonical plan `PRODUCT_DIRECTION_PLAN.md`.
+- C1 in `editorial-engine` only: `TargetedFixPrompt` (numbered ROWS with the owner note, folded ADDRESS rules, answer format `[id] R<n> <line>`, no keep-by-default when RAW shows who speaks to whom), `TargetedFixParser` (row citation, only for points with rows), `AddressEditGuard` (cited-row checks on top of the existing ones), `TargetedFixApplier` (passes the citation), `AddressRow` (carries the note), `FixPointFinder` (shared rule marker constant). Translation flow unchanged.
+- Tests: new `AddressRowCitationTest` (8); four existing tests updated to the cited format. Working tree: engine 714 (1 skip), app 472 (3 skip), 0 failures; androidTest compiles. Offline prompt estimate: 014 = 10 calls, 46,046 input tokens, luna reserve USD 0.060664; 006 input 70,013 (was 73,220).
+- No build, device or provider operation; USD 0.
+- Next action: owner grants the D package (014, one run, max 10 calls, cap USD 0.08) or not.
+
+## Earlier — 2026-10-13 (product direction plan approved; v4.19 frozen)
 
 - Owner approved `PRODUCT_DIRECTION_PLAN.md` (steps A-E, one product metric: owner-counted fixes, misses and wrong edits per chapter; anti-waste rule). Shipped app stays v4.18.0 / code 266 from `82626ac8`.
 - v4.19 (`feature/v4.19` at `3098a059`) is frozen and unreleased; its X5 run cost 1 call / USD 0.0029583. Its work packages are cancelled.

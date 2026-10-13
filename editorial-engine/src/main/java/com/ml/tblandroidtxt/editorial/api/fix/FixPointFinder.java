@@ -26,6 +26,9 @@ public final class FixPointFinder {
         public Result { points = List.copyOf(points); }
     }
 
+    /** Precedes the DRAFT address word that an ADDRESS rule found outside a row's self/call; the prompt reads it back. */
+    static final String ADDRESS_OUTSIDE_MARKER = "; dạng xưng hô ngoài self/call: ";
+
     private static final class Target {
         final int draftIndex;
         final int rawOrder;
@@ -146,7 +149,7 @@ public final class FixPointFinder {
                             target.add(FixPoint.Type.ADDRESS, rawGroup,
                                     "ADDRESS: Pronoun row " + row.from() + " | " + row.speaker() + " → " + row.target()
                                             + " | self=" + row.self() + " | call=" + row.call() + " | " + row.note()
-                                            + "; dạng xưng hô ngoài self/call: " + token
+                                            + ADDRESS_OUTSIDE_MARKER + token
                                             + "; áp dụng trong scope của hàng; chỉ sửa nếu RAW xác nhận đúng speaker/target, nếu mơ hồ dùng [n] =.");
                         }
                     }

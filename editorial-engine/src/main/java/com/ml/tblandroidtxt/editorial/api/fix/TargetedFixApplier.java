@@ -45,7 +45,7 @@ public final class TargetedFixApplier {
             String normalized = preserveDraftTerminator(before, candidate);
             boolean restoredTerminator = !normalized.equals(candidate);
             candidate = normalized;
-            String reject = rejection(point, candidate, glossary);
+            String reject = rejection(point, candidate, answer.row(), glossary);
             if (reject != null) {
                 // The ADDRESS lock only says the rows cannot justify this answer: the line stays as the DRAFT and the other points
                 // of the chunk still apply. A malformed answer (symbols, Japanese, length) is still a rejection that blocks the chunk.
@@ -98,7 +98,7 @@ public final class TargetedFixApplier {
         return new Result(output.toString(), outcomes);
     }
 
-    private static String rejection(FixPoint point, String candidate, List<EditInputs.GlossaryEntry> glossary) {
+    private static String rejection(FixPoint point, String candidate, int citedRow, List<EditInputs.GlossaryEntry> glossary) {
         if (candidate.isEmpty()) return "EMPTY_CANDIDATE";
         if (candidate.indexOf('\n') >= 0 || candidate.indexOf('\r') >= 0) return "MULTILINE_CANDIDATE";
         if (candidate.indexOf('<') >= 0 || candidate.indexOf('>') >= 0 || candidate.contains("```")
@@ -108,7 +108,7 @@ public final class TargetedFixApplier {
         if (sourceScript && !RawAlignedNormalizer.containsKanaOrHan(before) && !authorizedGlossarySource(candidate, glossary)) return "NEW_KANA_OR_HAN";
         if (!point.insertion()) {
             if (!protectedSymbols(before, point).equals(protectedSymbols(candidate, point))) return "PROTECTED_SYMBOL_CHANGE";
-            String address = AddressEditGuard.rejection(point, candidate);
+            String address = AddressEditGuard.rejection(point, candidate, citedRow);
             if (address != null) return address;
             int oldLetters = PairText.letters(before);
             int newLetters = PairText.letters(candidate);

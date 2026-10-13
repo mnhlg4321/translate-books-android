@@ -1,15 +1,15 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-13 (+07:00): plan steps A and B done; owner chose P1 (wrong first-person self); fix option C1/C2 pending.
-- Current version: v4.18.0 shipped (tag `v4.18.0` on `9d02976e`); no release lifecycle open.
-- Current branch: `fix/v4.18-product-plan` (plan-only branch, merged into `main`); work happens in clean worktrees under `D:\P5E-builds\`.
-- Current commit: `9252c183` (`main`) is the implementation baseline immediately before this snapshot commit (not a self-reference).
-- Current build: production 4.18.0 / code 266 from `82626ac8`, APK SHA-256 `5865F23A1EE15602C5C38B967E34AED22E63728078C7A792F92E8BECBD6AE91B`. Frozen v4.19 dev build 4.19-x5.1 / code 267 archived in `artifacts/` and `backup/` of the workspace, not a release.
-- Current phase: plan step B done; waiting for the owner to choose fix option C1 (Editorial row citation) or C2 (translation prompt grouped by speaker), or to switch to P2.
-- Completed tasks: v4.18.0 released; v4.19 frozen with its evidence preserved; plan approved.
-- Pending tasks: owner choice C1/C2/P2; then step C offline, step D one acceptance run with a separate spend authority.
-- Known bugs/limits: wrong first-person self arises in translation although the right row is in the prompt (122/122 correct words are a covering row self; 50 from another speaker row, 26 outside all rows, 8 other listener, 38 narration in 004 only); Editorial flags 70/84 dialogue cases but keeps them because several rows apply and the prompt says keep when ambiguous; no component attributes speaker/listener per line.
-- Regression status: no code change on `main` since v4.18.0; no test or build run for this plan commit.
-- Semantic progress: 3/3 historically accepted chapters (006, 008, 011) with recorded limits; no new measurement.
-- Spend: USD 0 since the frozen v4.19 run (USD 0.0029583).
-- Next action: owner chooses C1, C2 or P2 (`PRODUCT_DIRECTION_PLAN.md` section 6).
+- Updated: 2026-10-13 (+07:00): v4.20 opened; plan step C (C1 row citation) done offline; step D waits for a spend authority.
+- Current version: v4.20.0 in development; shipped v4.18.0 (tag `v4.18.0` on `9d02976e`).
+- Current branch: `feature/v4.20` in worktree `D:\P5E-builds\wt-v4.20` (from `main` `be2056d8`).
+- Current commit: `be2056d8` is the implementation baseline immediately before this snapshot commit (not a self-reference).
+- Current build: none for v4.20. Shipped 4.18.0 / code 266 from `82626ac8`, APK SHA-256 `5865F23A1EE15602C5C38B967E34AED22E63728078C7A792F92E8BECBD6AE91B`.
+- Current phase: checklist step 05 (develop); plan step C done offline, D pending.
+- Completed tasks: plan steps A and B; C1 implemented in `editorial-engine` with `AddressRowCitationTest` and updated tests.
+- Pending tasks: owner spend authority for the D package (014, one run, max 10 calls, cap USD 0.08); then wrapper build, emulator fake run, one live run, owner reading page; ship or revert C1.
+- Known bugs/limits: response logs of earlier runs are not in the cited format, so stored-response replay cannot evaluate C1; the call-name rule of v4.18 (cậu to name) is unchanged; narration errors of chapter 004 are not addressed; translation still produces wrong first-person forms (C2 not chosen).
+- Regression status: working tree engine 714 (1 skip), app 472 (3 skip), 0 failures, androidTest compile OK; clean-archive rerun of the committed source recorded in BUILD_STATE after this commit.
+- Semantic progress: 3/3 historically accepted chapters unchanged; C1 quality NOT_MEASURED.
+- Spend: USD 0 for v4.20.
+- Next action: owner grants or refuses the D package (`PRODUCT_DIRECTION_PLAN.md` section 7).

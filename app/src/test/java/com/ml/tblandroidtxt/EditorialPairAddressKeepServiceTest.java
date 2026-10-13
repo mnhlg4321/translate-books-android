@@ -39,13 +39,16 @@ public final class EditorialPairAddressKeepServiceTest {
         return new EditorialPairSource(EditorialPairModels.SOURCE_JOB, "7", "truyen.txt", "", List.of(RAW), List.of(DRAFT), List.of());
     }
 
-    /** Returns an answer per point from the point's own DRAFT line: the first is a form no row allows, the others are valid repairs. */
+    /**
+     * Returns an answer per point from the point's own DRAFT line: the first cites Aki → Rina (R1) yet uses a form of another row,
+     * the others are valid repairs (the ADDRESS one cites R1).
+     */
     private static FakeEditorialApiProvider provider(boolean breakSymbols) {
         return new FakeEditorialApiProvider((request, index) -> new EditorialApiFlow.StepResponse(
                 EditorialPairTestData.targetedAnswer(request, index, (i, d) -> {
-                    if (d.contains("Rina")) return breakSymbols ? d.replace("tớ", "em").replace("「", "") : d.replace("tớ", "em");
+                    if (d.contains("Rina")) return "R1 " + (breakSymbols ? d.replace("tớ", "em").replace("「", "") : d.replace("tớ", "em"));
                     if (d.contains("Rồng vương")) return d.replace("Rồng vương", "Long Vương");
-                    return d.replace("Tớ", "Mình");
+                    return "R1 " + d.replace("Tớ", "Mình");
                 }), "stop", 1500, 400, new BigDecimal("0.0001"), true, "fake-model", "fake-route", ""));
     }
 
@@ -76,7 +79,7 @@ public final class EditorialPairAddressKeepServiceTest {
         assertFalse(item.gateJson.contains("TARGETED_LINE_REJECTED"));
         JSONObject address = point(item, 1);
         assertEquals("KEPT", address.getString("status"));
-        assertEquals("ADDRESS_FORM_NOT_IN_APPLICABLE_ROW", address.getString("reason"));
+        assertEquals("ADDRESS_FORM_NOT_IN_CITED_ROW", address.getString("reason"));
         assertEquals("FIXED", point(item, 2).getString("status"));
         assertEquals("FIXED", point(item, 3).getString("status"));
 
@@ -93,7 +96,7 @@ public final class EditorialPairAddressKeepServiceTest {
         PairItem again = reopened.items(done.id).get(0);
         assertEquals(PairState.ACCEPTED, again.state);
         assertEquals(expected.trim(), again.candidateText.trim());
-        assertEquals("ADDRESS_FORM_NOT_IN_APPLICABLE_ROW", point(again, 1).getString("reason"));
+        assertEquals("ADDRESS_FORM_NOT_IN_CITED_ROW", point(again, 1).getString("reason"));
         assertEquals("FIXED", point(again, 2).getString("status"));
         assertEquals(expected.trim(), reopened.exportPlan(done.id).text.trim());
         assertEquals(0, silent.requests.size());

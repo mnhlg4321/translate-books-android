@@ -39,14 +39,23 @@ Dừng và đóng việc, không mở thêm đo, khi: A cho thấy vấn đề l
 |---|---|---|
 | A | xong 2026-10-13 | 28 chương, 4.956 dòng DRAFT, owner sửa 895 dòng: xưng hô 370 (254 chỉ xưng hô; phần lớn là **tự xưng**: `tôi`→`em` 61, `mình`→`tôi` 43, `tớ`→`mình` 31, `tôi`→`tao` 28), câu chữ nhỏ 233, chỉ dấu câu/ngoặc 186 (ngoặc gốc 〝〟『』「」 bị đổi thành “ ”), tên/thuật ngữ 184, viết lại 67. DRAFT 001–028 tạo 05–08/09, sau bộ pronoun và bản `v4.17-dev.13` có khóa pronoun trong prompt dịch (suy luận mạnh). Owner chọn **P1: tự xưng sai** |
 | B | xong 2026-10-13 | 122 lần sửa tự xưng ở 8 chương có dữ kiện từng dòng. **Dữ liệu pronoun đúng** (122/122 từ đúng là `self` của một hàng phủ đoạn). Lỗi phát sinh ở **khâu dịch**: hàng đúng gần như chắc có trong prompt dịch (3–13 hàng/chương, giới hạn 40), model chọn sai: 50 ca lấy `self` của nhân vật khác (014: 31), 26 ca dùng từ không thuộc hàng nào, 8 ca đúng người nói nhưng nhầm người nghe, 38 ca lời kể (chỉ chương 004). Biên tập gắn cờ 70/84 dòng thoại nhưng không sửa vì nhiều hàng có `self` khác nhau và prompt bảo "mơ hồ thì giữ". Gốc chung: không ai xác định người nói/người nghe cho từng dòng. Loại: dò lời kể (mọi chương có hàng người kể, chỉ 004 cần sửa), thay thế tất định (26 ca đều có 2–5 `self` khả dĩ) |
-| C–E | chưa bắt đầu | — |
+| C | xong offline 2026-10-13 (`feature/v4.20`) | Owner chọn C1. Điểm ADDRESS liệt kê các hàng một lần, đánh số `R1…` kèm ghi chú của owner; luật ADDRESS lặp gom thành một dòng "từ cần kiểm". Model đổi xưng hô phải trả `[id] R<n> <dòng>`; app chỉ nhận dạng của đúng hàng đó, không cho xóa dạng hợp lệ của hàng, từ chối hàng bị RAW loại trừ hoặc trái lời gọi trực tiếp; đổi xưng hô không trích hàng thì giữ DRAFT. Bỏ mặc định "mơ hồ thì giữ" khi RAW cho biết ai nói với ai. Test tổng hợp (Aki/Mori/Ken/Rina) ghim đúng kiểu lỗi bước B. Response đã lưu của các lần chạy cũ không trích hàng nên không dùng để replay đánh giá được |
+| D–E | chưa bắt đầu | — |
 
 Dữ liệu bước A/B (có văn bản sách) ở `D:\P5E-private\product-plan-A\`, ngoài Git.
 
-**Next action:** owner chọn cách sửa cho P1 (mục 6) hoặc chuyển sang P2 dấu câu.
+**Next action:** owner duyệt quyền chi cho gói D (mục 7).
 
 ## 6. Phương án sửa P1 (chờ owner)
 
 - **C1 — Biên tập trích hàng:** với điểm ADDRESS, model trả `[id] R<k> <dòng>` (số hàng nó áp dụng) hoặc `[id] =`; app chỉ nhận thay đổi xưng hô thuộc đúng hàng `R<k>`, từ chối trộn dạng của nhiều hàng; bỏ quy tắc "mơ hồ thì giữ" cho trường hợp RAW xác định được người nói. Model làm phần phán đoán (ai nói với ai), app làm phần kiểm. Kiểm offline: parser/guard với ca tổng hợp; hiệu quả thật cần một lượt D. Rủi ro: model trích sai hàng sẽ thành sửa sai hợp lệ về hình thức. Tiêu chí bỏ: ở D, số lỗi tự xưng sửa đúng không lớn hơn số sửa sai mới.
 - **C2 — Khâu dịch trình bày hàng theo người nói:** gom hàng theo nhân vật (một nhân vật xưng gì với từng người nghe) trong prompt dịch. Thay đổi nhỏ, phòng lỗi từ gốc, nhưng ảnh hưởng mọi bản dịch và đo phải dịch lại chương (đắt hơn Biên tập).
 - Không làm: dò lời kể, thêm từ vựng, cổng cue, thêm câu nhắc chung vào prompt.
+
+## 7. Gói D — một lượt nghiệm thu C1 trên chương 014 (chờ quyền chi)
+
+- Giả thuyết: khi phải trích hàng, model sửa được lỗi tự xưng lấy nhầm hàng của nhân vật khác (bước B: 014 có 31 ca loại này, 34 lỗi tự xưng) mà không sinh sửa sai mới. Không đo offline được vì là hành vi model; response cũ không theo định dạng mới.
+- Phạm vi: chương 014 (chưa từng dùng để chỉnh Biên tập), một lượt, `openai/gpt-5.6-luna` medium, tối đa 10 lời gọi (đo offline: 16 chunk, 10 có điểm, 68 điểm), không retry, sổ chi mới. Giữ chỗ ước tính USD 0,061; đề nghị trần **USD 0,08**.
+- Cách chạy: APK sản xuất build bằng wrapper từ commit C, chỉ cài `emulator-5554`; luồng chạy bình thường của app với store SQLite thật; không cổng dừng theo bộ kiểm; trước lượt thật chạy giả (USD 0) để kiểm cơ chế.
+- Đầu ra: trang đọc riêng RAW / DRAFT / bản app (FINAL tham chiếu) cho mọi dòng app đổi và mọi dòng có lỗi tự xưng của bước B; số đếm: lỗi tự xưng sửa đúng, còn sót, sửa sai mới, đổi khác. Owner đọc là cổng.
+- Tiêu chí: phát hành nếu số lỗi tự xưng sửa đúng lớn hơn rõ rệt số sửa sai mới theo owner đọc; bỏ C1 (hoàn tác) nếu sửa đúng không lớn hơn sửa sai.
