@@ -1,11 +1,14 @@
 # Build State
 
-## Current state — 2026-10-13 (X4, owner chose D-A for every self)
+## Current state — 2026-10-13 (X4 offline complete; 006 measurement package awaits spend authority)
 
 - Baseline `701470e5`; owner chose (a). Only production change is the personal-name call rule in TargetedFixPrompt. Finder and guard are unchanged; prompt test flipped, control/finder/guard tests retained.
 - Relabel adds eight points (008 ×7, 006 7:3): suite 21 known / 137 clean. 23 optional D-A controls carry exact allowed output hashes; five false candidates from the previous 20-point list remain strict controls.
-- Working-tree targeted tests passed; full engine/app/scripts/chunk and strict replay on the X4 commit archive are pending. No APK, device or provider operation; USD 0.
-- Next action: complete clean-archive verification, prepare the one-run 006 measurement package, scan and push feature/v4.19 including 701470e5; then wait for spend authority.
+- Clean archive source `ca59f275` (ZIP SHA-256 `27469E09885EA27C47F76FD2CD294D8939D8EAFEDDC84C0892C736F0642C709F`): engine 718 total / 1 skip; app 473 total / 8 skip each debug/release/benchmark; Python 58 PASS; 0 failures/errors. Strict replay 158/158 unchanged, 0 regressions/improvements. Local obsolete pipeline assertions repaired; SDK env set before successful replay. QA in `artifacts/qa/v4.19-x4-ca59f275/` and matching backup.
+- Five preserved control/finder/guard test methods match baseline byte-for-byte. Production diff only TargetedFixPrompt; no APK/device/provider operation, USD 0. X5/X6 have not run.
+- Prepared `docs/V419_X4_006_MEASUREMENT_PACKAGE.md`: one 006 run, luna medium, no retry, at most 14 calls, new ledger after authorization; suggested cap USD 0.10, offline reservation estimate USD 0.087118 using historical price assumptions. The released APK uses the old prompt and is unsuitable for this measurement.
+- Owner authorized scan/push of feature/v4.19 including 701470e5; all X4 commits and evidence are included in the publication range. No main/tag/release changes.
+- Next action: owner grants separate spend authority for the prepared 006 measurement package; until then provider calls remain 0.
 
 Earlier sections are historical.
 

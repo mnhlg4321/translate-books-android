@@ -206,3 +206,13 @@ Còn lỗi bỏ sót thật theo luật hiện hành: 7 điểm 008 (Erika → A
 - Cả hai hướng đều có thể kiểm offline trước (fixture tên giả + replay 158 điểm). Lần chạy trả phí tiếp theo, nếu có, nên đo prompt đã sửa trên 006 (có điểm tùy chọn, lỗi self `tớ`/`tôi` và lỗi `cậu` → `cô` của Tatsuoka), không phải prompt cũ trên 008.
 
 Tài liệu đồng bộ trong commit review: BUILD_STATE và checklist bước 05 chưa ghi X3 ở `c57edd22`, nay đã ghi.
+
+## 11. X4 — owner chọn (a), D-A mọi self, 2026-10-13
+
+Quyết định trong plan mục 7. Luật tên-call sửa duy nhất tại `TargetedFixPrompt.java`: cậu ngôi hai được giữ với mọi self khi call là tên, tên vẫn bắt buộc ở lời gọi trực tiếp; lỗi self/call đại từ phải theo hàng. Test prompt lật đúng, ba control và hai finder/guard tests giữ nguyên từng byte; finder/guard production không đổi.
+
+Bảng relabel cập nhật thêm 008 5:8, 6:1, 6:3, 6:5, 7:2, 7:4, 7:5 và 006 7:3, có lý do RAW + hàng. Suite nay **21 known / 137 clean**; 23 true optional D-A dùng allowed complete-line hashes. Sửa erratum ở mục 9.3: năm điểm 006 1:2, 1:4, 1:7, 2:1, 8:2 không thuộc lựa chọn tên-call (ngôi ba, danh xưng/vocative, call=cậu), nên giữ strict control. 7:3 tùy chọn chữ cậu nhưng giữ sửa lời gọi Mitsurugi → Fuyu bằng nền currentAfter. Không nới kiểm replay: chế độ `--allow-da-choices` chỉ dành cho chấm lần đo mới; mặc định vẫn nghiêm.
+
+Archive sạch `ca59f275`: engine 718 (1 skip), app 473 (8 skip) mỗi biến thể debug/release/benchmark, Python 58, 0 lỗi; suite public khớp byte, **replay 158/158 không đổi**, 0 hồi quy/cải thiện/sửa sai lọt. Báo cáo `artifacts/qa/v4.19-x4-ca59f275/QA_REPORT.md` và mirror. Local assertion cũ đã sửa, không còn fail.
+
+Gói 006: `docs/V419_X4_006_MEASUREMENT_PACKAGE.md`, một lượt luna medium/no retry, tối đa 14 calls. Offline estimate 73,220 input / 57,344 output reserve, USD 0.087118 theo giá lịch sử giả định; đề nghị cap USD 0.10, sổ mới chỉ tạo sau quyền chi. Chưa provider/build/device; chất lượng model dưới prompt mới chưa đo.

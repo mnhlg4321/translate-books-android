@@ -29,3 +29,8 @@ credentials*.json
 /artifacts/device-extracts/
 /artifacts/device-qa/
 /.archive-staging/
+
+# X4 raw test evidence stays local in the artifact/backup mirrors; publish only summary and hashes.
+/artifacts/qa/v4.19-x4-ca59f275/*
+!/artifacts/qa/v4.19-x4-ca59f275/QA_REPORT.md
+!/artifacts/qa/v4.19-x4-ca59f275/SHA256SUMS.txt
