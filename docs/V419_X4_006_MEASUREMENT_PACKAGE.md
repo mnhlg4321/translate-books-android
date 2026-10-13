@@ -1,6 +1,6 @@
 # v4.19 X4 — gói đo 006 với prompt D-A mọi self
 
-Trạng thái: PREPARED, chờ quyền chi riêng. Nguồn đã kiểm: `ca59f275c1ba97c980848329eba3379b0b7b10ad`; production change duy nhất là luật tên-call trong `TargetedFixPrompt.java`. Chưa có lời gọi provider, APK hoặc thao tác thiết bị. Gói B 008 cũ không chạy.
+Trạng thái: AUTHORIZED — owner 2026-10-13 “duyệt quyền” cho gói đã trình: một lượt 006, luna medium, tối đa 14 calls/no retry, trần USD 0.10. Nguồn X4 đã kiểm: `ca59f275c1ba97c980848329eba3379b0b7b10ad`; production change duy nhất là luật tên-call trong `TargetedFixPrompt.java`. Development build/test/QA emulator-5554 chuẩn bị cho phép đo đúng prompt mới; chưa dispatch. Gói B 008 cũ không chạy.
 
 ## Phạm vi đề nghị
 
@@ -37,4 +37,4 @@ Trước lần chạy được cấp quyền, kiểm giá đã cấu hình và r
 - Bộ chấm lần đo mới dùng `verify-replay --allow-da-choices` với TSV đã map point id/chunk vào run baseline `006-C6E`; đây là chế độ explicit riêng cho lựa chọn D-A. Default replay vẫn nghiêm. Mọi thay đổi ngoài danh sách hash, kể cả thêm đại từ khác/đổi chữ/dấu câu, là hồi quy bản sạch. Những điểm known thay đổi vẫn phải được đọc/chấm, không tự nâng thành PASS.
 - Dừng ngay nếu bản sạch đổi ngoài lựa chọn D-A, sửa sai cũ lọt lại, vượt trần, thiếu giá/cost, finish `length`, response rỗng hoặc lỗi hạ tầng. Không retry, không đổi prompt/model/input sau một failure trong cùng lượt.
 
-**Next action:** owner cấp quyền chi riêng cho một lượt 006 theo gói này; cho tới đó mọi provider call vẫn bằng 0.
+**Next action:** hoàn tất preflight/build/test/QA rồi thực thi đúng một lượt 006 theo quyền đã duyệt; chưa đủ cổng thì provider calls vẫn bằng 0.

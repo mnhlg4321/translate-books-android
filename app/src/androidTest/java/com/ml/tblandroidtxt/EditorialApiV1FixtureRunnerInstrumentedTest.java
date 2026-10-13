@@ -380,8 +380,15 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         }
         EditorialApiRunService.Pricing pricing = live && "openai/gpt-5.6-luna".equalsIgnoreCase(model) ? LUNA : PINNED;
         Capture capture = new Capture(outputRoot);
-        EditorialApiProvider delegate = live ? new OpenRouterEditorialApiProvider(settings, reasoning) : new FakeEditorialApiProvider((request, index) ->
-                FakeEditorialApiProvider.text("<EDITED>" + EditorialPairTestData.draftPart(request) + "</EDITED>", "stop"));
+        EditorialApiProvider delegate = live ? new OpenRouterEditorialApiProvider(settings, reasoning) : new FakeEditorialApiProvider((request, index) -> {
+            if ("YES".equals(args.getString("p6_x5_006", ""))) {
+                try {
+                    return FakeEditorialApiProvider.text(Files.readString(runInput.resolve("replay-responses")
+                            .resolve(String.format(Locale.ROOT, "%03d-EDIT.json", index + 1)), StandardCharsets.UTF_8), "stop");
+                } catch (IOException missing) { throw new IllegalStateException("X5_FAKE_REPLAY_MISSING"); }
+            }
+            return FakeEditorialApiProvider.text("<EDITED>" + EditorialPairTestData.draftPart(request) + "</EDITED>", "stop");
+        });
         PerCallLedger provider = new PerCallLedger(delegate, ledger, pricing, runId + "|" + fixtureId, model, capture::record);
 
         String final_;
@@ -394,6 +401,19 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         String error = "";
         EditorialPairModels.PairRun run = null;
         Map<String, Object> singleChunk = null;
+        boolean x5 = "YES".equals(args.getString("p6_x5_006", ""));
+        String x5Stop = "";
+        EditorialX5MeasurementGate x5Gate = null;
+        if (x5) {
+            if (!"openai/gpt-5.6-luna".equals(model) && live || !"medium".equals(reasoning)
+                    || groupMaximum.compareTo(new BigDecimal("0.10")) != 0 || chapterCap.compareTo(new BigDecimal("0.10")) != 0
+                    || load.plan.chunks.size() != 15 || !names.get("RAW").startsWith("006_")) throw new IllegalArgumentException("X5_SCOPE_MISMATCH");
+            byte[] suiteBytes = Files.readAllBytes(runInput.resolve("x5-suite.json"));
+            if (!EditorialCanonicalJson.sha256Hex(suiteBytes).equals(args.getString("p6_x5_suite_sha256", "")))
+                throw new IllegalArgumentException("X5_SUITE_HASH_MISMATCH");
+            x5Gate = new EditorialX5MeasurementGate(new String(suiteBytes, StandardCharsets.UTF_8));
+            provider.maximumCalls = 14;
+        }
         if (load.plan.blocked() || load.source.rawRows.isEmpty()) {
             final_ = text.get("DRAFT");
             state = "CHAPTER_BLOCKED";
@@ -425,6 +445,19 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
                     Files.write(outputRoot.resolve("chunk-candidate.txt"), (item.candidateText == null ? "" : item.candidateText).getBytes(StandardCharsets.UTF_8));
                     Files.write(outputRoot.resolve("chunk-response.txt"), (item.responseText == null ? "" : item.responseText).getBytes(StandardCharsets.UTF_8));
                 }
+            } else if (x5) {
+                for (EditorialPairModels.PairItem pending : service.items(run.id)) {
+                    // executeOnly sets maxAttempts=1, even for a proven pre-dispatch failure.
+                    run = service.executeOnly(run.id, pending.pairId, null);
+                    EditorialPairModels.PairItem done = service.items(run.id).stream().filter(i -> i.pairId.equals(pending.pairId)).findFirst().orElseThrow();
+                    if (!done.costKnown || !done.error.isEmpty() || !"ACCEPTED".equals(done.state.name())) {
+                        x5Stop = "X5_CHUNK_STOP:" + done.ordinal + ":" + done.state.name();
+                        break;
+                    }
+                    x5Stop = x5Gate.check(done.ordinal, done.gateJson);
+                    if (!x5Stop.isEmpty()) break;
+                }
+                Files.write(outputRoot.resolve("x5-measurement-stop.txt"), x5Stop.getBytes(StandardCharsets.UTF_8));
             } else {
                 run = service.execute(run.id, null);
             }
@@ -454,7 +487,7 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         Files.write(outputRoot.resolve("chunks.json"), EditorialCanonicalJson.canonicalize(new ArrayList<Object>(chunkRows)).getBytes(StandardCharsets.UTF_8));
         if (singleChunk != null) Files.write(outputRoot.resolve("single-chunk.json"), EditorialCanonicalJson.canonicalize(singleChunk).getBytes(StandardCharsets.UTF_8));
 
-        boolean valid = "FINAL_ELIGIBLE".equals(state);
+        boolean valid = "FINAL_ELIGIBLE".equals(state) && x5Stop.isEmpty();
         Map<String, Object> structural = new LinkedHashMap<>();
         structural.put("valid", valid);
         structural.put("providerKind", live ? "LIVE" : "FAKE_OFFLINE");
@@ -476,6 +509,7 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         Map<String, Object> metadata = new LinkedHashMap<>();
         metadata.put("fixtureId", fixtureId);
         metadata.put("mode", singleChunk == null ? "CHUNK" : "CHUNK_SINGLE");
+        if (x5) metadata.put("x5MeasurementStop", x5Stop);
         metadata.put("providerKind", live ? "LIVE" : "FAKE_OFFLINE");
         metadata.put("groupId", groupId);
         metadata.put("groupMaximumUsd", groupMaximum.toPlainString());
@@ -528,6 +562,7 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         private final EditorialApiLedgerProvider.Recorder recorder;
         private final List<EditorialApiLedgerProvider.Overrun> overruns = new ArrayList<>();
         private int calls;
+        private int maximumCalls;
 
         PerCallLedger(EditorialApiProvider delegate, EditorialP6GroupSpendLedger ledger, EditorialApiRunService.Pricing pricing, String identity,
                       String model, EditorialApiLedgerProvider.Recorder recorder) {
@@ -546,6 +581,8 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         @Override public void cancel() { delegate.cancel(); }
 
         @Override public EditorialApiFlow.StepResponse call(EditorialApiFlow.Request request, String modelName, int maxOutput, long timeoutMillis) {
+            if (maximumCalls > 0 && (calls >= maximumCalls || request.attempt() != 1))
+                return EditorialApiFlow.StepResponse.failure("X5_CALL_LIMIT_OR_RETRY_REFUSED");
             EditorialApiLedgerProvider one = new EditorialApiLedgerProvider(delegate, ledger, pricing, identity + "|call" + (++calls), model, recorder);
             try {
                 return one.call(request, modelName, maxOutput, timeoutMillis);

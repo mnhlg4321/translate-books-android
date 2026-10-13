@@ -22,7 +22,7 @@ Trong phạm vi: bộ kiểm lỗi đã biết, bản sạch đối chứng, ch�
 
 Ngoài phạm vi: căn/cắt/ghép chunk CS-1, StructuralGate, store/DB, đường V5 ba lượt, Translation/Glossary/Pronoun UI, pilot, thay đổi acceptance 3/3. Không auto-replace tên/xưng hô không qua model + guard; không thêm bước duyệt bắt buộc cho mỗi câu. Văn bản sách và nhãn có văn bản ở lại ngoài Git (`D:\P5E-private\...`); trong Git chỉ có dữ liệu tổng hợp, hash, đếm và mã.
 
-**Provider: không gọi.** Ngân sách chi tiêu hiện tại **USD 0**. Bất kỳ lời gọi trả phí nào cần quyền chi riêng của owner (phạm vi, chương/đoạn, trần, số lời gọi, sổ mới); quyền cũ của v4.18 không chuyển sang.
+**Quyền X5, owner 2026-10-13 (“duyệt quyền” cho gói 006 đã trình):** chỉ một lượt mới chương 006, `openai/gpt-5.6-luna` medium, tối đa 14 calls, không retry, sổ mới riêng, trần USD 0.10. Thực thi đúng prompt X4 bằng development wrapper build + test/QA trên `emulator-5554` như bước chuẩn bị cần thiết cho phép đo; không release/tag/merge. Dừng khi vượt trần, UNKNOWN cost, response length/rỗng, lỗi hạ tầng, bản sạch hồi quy ngoài D-A hoặc sửa sai cũ lọt lại. Quyền v4.18 không chuyển sang; chương/lượt khác chưa được cấp quyền.
 
 ## 4. Các tầng có thể gây sót (giả thuyết cần phân biệt bằng số đo)
 
@@ -64,6 +64,7 @@ Ngoài phạm vi: căn/cắt/ghép chunk CS-1, StructuralGate, store/DB, đườ
 | Review X3 (2026-10-13) | xong | báo cáo mục 10: kiểm lại trên archive sạch `c57edd22` (Python 53, engine 718, replay 158/158, sidecar khớp chỉ mục); FINAL không theo `self` (006 7:3 đổi sang tên, 008 giữ `cậu` 7/7, cùng `self=tôi`), nên không khuyến nghị chạy gói B 008; owner chọn (a) mở rộng D-A cho mọi `self` hoặc (b) khai `call` dạng `Tên/cậu` theo hàng |
 | Quyết định owner X4 hướng (a), 2026-10-13 | đã duyệt | Mở rộng D-A cho mọi `self`: `call` là tên thì `cậu` ngôi hai hợp lệ ngoài lời gọi trực tiếp; giữ `cậu` hoặc dùng đúng tên đều ĐÚNG. Tên vẫn bắt buộc ở lời gọi trực tiếp; call là đại từ và lỗi self không đổi. Cho phép commit/snapshot/quét/push `feature/v4.19` gồm `701470e5`; không provider/build/device |
 | X4_FIX | xong offline | Source `2ad2e623` + assertion repair `ca59f275`; chỉ production diff ở luật tên-call `TargetedFixPrompt.java`. Archive sạch `ca59f275`: engine 718/1 skip, app 473/8 skip mỗi biến thể, Python 58, 0 lỗi; strict replay **158/158 không đổi**, 0 hồi quy/sửa sai lọt. Suite 21 known / 137 clean; 23 optional D-A, năm false candidates vẫn strict. Báo cáo `artifacts/qa/v4.19-x4-ca59f275/QA_REPORT.md`; gói 006 `docs/V419_X4_006_MEASUREMENT_PACKAGE.md`, tối đa 14 calls, một lượt luna medium/no retry, trần đề nghị USD 0.10 (estimate lịch sử 0.087118). Chờ quyền chi riêng |
-| X5_LIVE, X6_RELEASE | chưa bắt đầu | USD 0; chưa có quyền chi |
+| X5_LIVE | quyền đã duyệt, đang chuẩn bị | Gói 006 được owner cấp quyền riêng; một lượt, ≤14 calls luna medium/no retry, cap USD 0.10; cần build đúng prompt mới, QA trước dispatch. Chưa provider call |
+| X6_RELEASE | chưa bắt đầu | Không release/tag/merge |
 
-**Next action:** owner cấp quyền chi riêng cho một lượt đo 006 theo gói đã soạn (tối đa 14 calls luna medium, không retry, trần USD 0.10); tới đó provider calls = 0.
+**Next action:** chuẩn bị và kiểm build/test đúng source X4 trên emulator-5554, rồi thực thi một lượt 006 trong quyền X5 đã duyệt và lưu/chấm bằng chứng.

@@ -1,5 +1,15 @@
 # Build State
 
+## Current state — 2026-10-13 (X5 authority granted; controlled measurement preparation)
+
+- Owner approved the 006 package: one run luna medium, max 14 calls, no retry, new ledger, cap USD 0.10. Preparing wrapper production/test build and emulator-5554 QA as prerequisites to measure the new prompt. No release/tag/merge.
+- Added a test-only X5 mode: executeOnly gives one attempt per chunk, checks clean allowed hashes/old wrong-pass records after each chunk, stops before the next call on a regression; suite hash and 006/15-chunk/model/reasoning/cap scope pinned. Production source remains the X4 prompt only.
+- Five synthetic gate tests and AndroidTest compile PASS. Full regression/wrapper archives/device fake replay still pending; provider calls 0/USD 0.
+- Emulator AVD tbl-code113-dqa-api35 booted without wipe; installed baseline 4.18.0/code266, signer token abebea4b. Public OpenRouter model catalog lists base input 0.20/M/output 1.20/M; runner reserves conservatively at 0.25/M/1.20/M, matching package upper estimate 0.087118 under cap 0.10.
+- Next action: verify and archive production/test wrappers, install/QA on emulator-5554, then dispatch one authorized 006 run with a fresh ledger and record its outcome.
+
+Earlier sections are historical.
+
 ## Current state — 2026-10-13 (X4 offline complete; 006 measurement package awaits spend authority)
 
 - Baseline `701470e5`; owner chose (a). Only production change is the personal-name call rule in TargetedFixPrompt. Finder and guard are unchanged; prompt test flipped, control/finder/guard tests retained.
