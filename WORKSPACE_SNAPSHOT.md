@@ -1,15 +1,15 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-13 (+07:00): owner decision D-A recorded (name in `call`); `feature/v4.19` pushed; AGENTS.md continuation note points to v4.19.
+- Updated: 2026-10-13 (+07:00): X3 xong offline — áp D-A vào bộ kiểm (7 điểm sang bản sạch; 29 lỗi đã biết / 129 bản sạch; replay 158/158 không đổi), test chỉ ra prompt CP-IMPL-14/15 trái D-A, đề xuất chỉ sửa prompt, gói đo B 008 soạn sẵn chờ quyền chi.
 - Current version: v4.19.0 in development; shipped baseline v4.18.0 (tag `v4.18.0` on `9d02976e`), not changed.
 - Current branch: `feature/v4.19` in worktree `D:\P5E-builds\wt-v4.19` (cut from `main` `998da341`); pushed to `origin/feature/v4.19`.
-- Current commit: `dc612fb3` is the implementation baseline immediately before this snapshot commit (not a self-reference). Confirm actual HEAD when resuming.
+- Current commit: `132479dd` là baseline ngay trước commit X3 này (không tự tham chiếu); xác nhận HEAD khi resume.
 - Current build: none for v4.19. Last production build 4.18.0 / code 266 from `82626ac8`, APK SHA-256 `5865F23A1EE15602C5C38B967E34AED22E63728078C7A792F92E8BECBD6AE91B`; events `build-20261012-153252`, `build-20261012-161228`, `tag-v4.18.0` in `artifacts/releases/v4.18.0/` and `backup/v4.18.0/`.
-- Current phase: X1_SUITE and X2_DIAGNOSE complete and reviewed; owner decision D-A taken; X3 relabelling under D-A is next. No production code changed.
-- Completed tasks: known-error suite (36) and separate clean controls (122) with public hash indexes and private sidecars in `D:\P5E-private\v419-pronoun\`; per-line finder harness (1,447/1,447 agreement); `scripts/chunk/pronoun_miss_diagnosis.py` (24 tests); replay runner; 6 finder-gap characterization tests; diagnosis report with review section 8. Review: clean `git archive 2e7900d0` engine 712 (1 skip), app 473 (3 skip), `scripts/chunk` 48, replay 158/158; five env-gated host tests that returned silently (counted PASS) now skip via `Assume`; corrupted private paths in the plan repaired.
-- Pending tasks: apply D-A (khi `call` của hàng là **tên**, `cậu` được giữ làm đại từ ngôi hai nếu `self` của hàng là `mình` hoặc `tớ`; tên chỉ bắt buộc ở lời gọi trực tiếp (vocative). Với `self` khác (`tôi`, `em`, …) luật cũ giữ nguyên cho tới khi owner quyết thêm) to the suite: relabel the 23 points, move lawful `cậu` points to the clean controls, rerun `suite` + `verify-replay`; offline test for where the CP-IMPL-14 name-call rule contradicts D-A; B package for 008 only if real misses remain and only with a separate spend authority; checklist steps 05-14 open.
+- Current phase: X3 xong (relabel D-A, test mâu thuẫn, đề xuất); chờ owner chọn X4 sửa prompt và/hoặc quyền chi cho gói đo B 008. Không mã sản xuất nào đổi.
+- Completed tasks: X0 docs; X1 bộ kiểm (nay 29 lỗi đã biết + 129 bản sạch sau D-A); X2 chẩn đoán; review 2026-10-13; D-A; X3 relabel + replay + test mâu thuẫn + đề xuất + gói B soạn sẵn.
+- Pending tasks: quyết định owner cho X4 (sửa prompt D-A) và gói đo B 008; X5/X6 chưa bắt đầu.
 - Known bugs/limits: 006 keeps 13 and 008 keeps 7 pronoun misses measured under CP-IMPL-9/11 (13 of the 14 FINAL-unchanged points have `cậu` in the DRAFT); 011 keeps 2:2, 12:2, 10:6; finder covers 18/37 address lines in 014 (11 lost to row conflicts) and 1/40 in 004 (narrator `mình`); the `mình` lexicon gap and row conflicts are one family (no line-to-row attribution); S2 for 004, 005, 007, 014, 017 NOT_MEASURED. Owner's workspace `D:\App Translate Books` keeps 163 uncommitted entries, untouched.
-- Regression status: no change in `app/src/main` or `editorial-engine/src/main`. Clean archive `2e7900d0` plus the two test files of this commit: app 473 tests = 465 PASS / 8 SKIP / 0 FAIL; engine 712 (1 skip) unchanged; `scripts/chunk` 48; suite replay 158/158 unchanged.
+- Regression status: X3 trên cây làm việc: Python `scripts/chunk` 53/53; engine full (xem commit); replay bộ kiểm 158/158 không đổi, exit 0. `app/src/main`, `editorial-engine/src/main` không đổi so với `998da341`.
 - Semantic progress: unchanged 3/3 owner-accepted chapters (006, 008, 011) with recorded limits; no new model measurement.
 - Spend: 0 provider calls / USD 0; no spend authority exists for v4.19.
-- Next action: apply D-A to the suite (X3 relabel + replay + CP-IMPL-14 contradiction test), offline; no provider before a separate spend authority.
+- Next action: Owner chọn: duyệt sửa prompt D-A (X4 offline) và/hoặc cấp quyền chi gói đo B 008 (mục 9.4 báo cáo chẩn đoán), hoặc quyết mở rộng D-A cho self `tôi` trước; không provider trước khi có quyền chi.

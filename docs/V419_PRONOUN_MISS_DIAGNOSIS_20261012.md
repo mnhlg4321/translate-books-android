@@ -128,3 +128,67 @@ powershell -File scripts/chunk/run-pronoun-suite-replays.ps1
 - Vì vậy thứ tự A → B giữ nguyên, nhưng A là quyết định về luật/hợp đồng hàng pronoun, không phải chọn "hàng hay FINAL".
 
 **Quyết định owner D-A (2026-10-13):** khi `call` của hàng là **tên**, `cậu` được giữ làm đại từ ngôi hai nếu `self` của hàng là `mình` hoặc `tớ`; tên chỉ bắt buộc ở lời gọi trực tiếp (vocative). Với `self` khác (`tôi`, `em`, …) luật cũ giữ nguyên cho tới khi owner quyết thêm. Hệ quả cần kiểm ở X3: nhãn SÓT của các điểm `cậu` có `self=mình/tớ` không ở lời gọi trực tiếp đổi thành ĐÚNG (chuyển sang bản sạch); quy tắc tên-call của CP-IMPL-14 phải không đổi các `cậu` đó.
+
+
+## 9. X3 — áp D-A vào bộ kiểm (2026-10-13, offline, USD 0)
+
+Baseline `132479dd`. Không gọi provider, không build, không đụng thiết bị; `app/src/main` và `editorial-engine/src/main` không đổi.
+
+### 9.1 Gắn lại nhãn 23 điểm
+
+Bảng luật công khai `docs/V419_PRONOUN_DA_RELABEL.json` (chỉ id + lý do, không câu sách). Công cụ `pronoun_miss_diagnosis.py suite --relabel` từ chối nếu id không có trong bộ kiểm, nhãn gốc không khớp, thiếu lý do, hoặc luật định gán nhãn khác ĐÚNG (luật chỉ chuyển điểm sang bản sạch, không tạo lỗi). Phán xử theo RAW + hàng pronoun; người nói/người nghe đọc từ RAW và các dòng RAW kề; FINAL chỉ tham chiếu.
+
+| Kết quả | Điểm | Lý do |
+|---|---|---|
+| **SÓT → ĐÚNG, chuyển sang bản sạch (7)** | 006: 8:4, 9:1, 11:4, 11:5, 13:4, 14:2; 011: 2:2 | Erika ↔ Rea (self `mình`, call là tên). `cậu` ở vị trí đại từ ngôi hai; chỗ RAW gọi tên thì DRAFT đã có tên |
+| Giữ SÓT, lỗi self (5) | 006: 2:3, 2:4, 4:3, 5:2, 13:1 | DRAFT tự xưng `tớ`/`tôi`, hàng ghi self `mình`. Ở 2:3, 5:2 chữ `cậu` đã hợp D-A, chỉ còn lỗi self |
+| Giữ nhãn cũ, self khác `mình/tớ` (11) | 006: 5:4, 5:6 (Tatsuoka → Erika, self `tôi`, call `cô`), 7:3 (Erika → Mitsurugi, self `tôi`); 008: cả 7 điểm (Erika → Asanuma, self `tôi`); 011: 10:6 (`tôi`/`em`) | D-A không áp dụng |
+
+Bộ kiểm sau X3: **29 lỗi đã biết** (trước 36): S2 15, S2B 1, S3 1, S4 3, S5 9. **129 điểm bản sạch** (trước 122): CLEAN_KEPT 97, CLEAN_FIXED_OK 24, CLEAN_WRONG_PROPOSAL_BLOCKED 8. Tổng vẫn 158. Sidecar cũ giữ ở `D:\P5E-private\v419-pronoun\pre-X3\`.
+
+**Replay** (`run-pronoun-suite-replays.ps1`, mã hiện hành, phản hồi đã lưu của 006 C6E, 008 C7A, 011 C7D): **158/158 giữ nguyên, 0 hồi quy, 0 cải thiện**, exit 0. Không mục bản sạch nào đổi kết quả và không sửa sai cũ nào lọt lại.
+
+Python `scripts/chunk` 53 test (thêm 5 test cho `--relabel`), 0 lỗi.
+
+### 9.2 Chỗ CP-IMPL-14/15 trái D-A (test offline)
+
+`editorial-engine/.../fix/NameCallRuleDaContradictionTest.java`, 6 test, tên giả (Aki, Rina, Ken), 6/6 PASS. Ba test `knownDaContradiction…` ghim hành vi hiện tại, commit thực hiện D-A phải lật chúng:
+
+1. **Prompt** (`TargetedFixPrompt.java:35-37`): luật tên-call bảo thay mọi `cậu/bạn/mày/anh/chị/em` hướng tới người nghe bằng tên call khi người nghe là target của hàng. Không có ngoại lệ self `mình/tớ`, không giới hạn ở lời gọi trực tiếp. Đây là chỗ **đòi đổi `cậu` trái D-A**.
+2. **Finder**: dòng thoại có `cậu` của hàng self `mình` + call là tên vẫn thành điểm dù không có lời gọi tên (model bị hỏi, prompt bảo đổi).
+3. **Guard** (`AddressEditGuard`): dạng hợp lệ của hàng chỉ là self/call, nên câu trả lời đưa `cậu` vào cho hàng self `mình` (vd thay `bạn`) bị từ chối `ADDRESS_FORM_NOT_IN_APPLICABLE_ROW` dù hợp D-A. Guard **không** buộc đổi `cậu`; đổi `cậu` → tên vẫn được nhận (đúng với D-A: tên luôn hợp lệ).
+
+Ba test `control…` phải giữ: lời gọi tên bị thay bằng `cậu` vẫn là điểm; đổi `cậu` → tên được nhận; sửa self giữ `cậu` được nhận.
+
+### 9.3 Đề xuất bản sửa nhỏ nhất (chưa sửa mã sản xuất)
+
+**Chỉ sửa prompt**, không sửa finder hay guard:
+
+- Thêm vào luật tên-call: *"If the row's self is mình or tớ, cậu is a valid second-person pronoun for that row: use the call name only where the RAW calls the person by name (a direct vocative); otherwise return [id] = for that word."*
+
+Lý do không sửa finder/guard: finder không biết dòng thuộc hàng nào (người nói → người nghe), nên một luật kiểu "có hàng `mình/tớ` phủ dòng thì bỏ qua `cậu`" sẽ xóa luôn điểm của lỗi thật. Đếm trên bộ kiểm: 006 5:4, 5:6 (Tatsuoka → Erika, `cậu` phải là `cô`) và 7:3 đều bị phủ bởi hàng `mình` của Erika ↔ Rea; chúng sẽ mất điểm. Nới guard cho `cậu` cũng mở đường cho đổi sai `cô` → `cậu` ở chính các dòng đó. Việc phân biệt người nói thuộc về model (đọc RAW), đúng thiết kế hiện tại.
+
+**Cách đo trên bản sạch:**
+
+1. Lật `knownDaContradictionPromptReplacesEveryAddressedCauWithTheCallName`; hai test `knownDa…` của finder và guard giữ nguyên (không sửa hai tầng đó).
+2. Replay bộ kiểm: prompt không nằm trong đường replay (replay dùng phản hồi đã lưu), nên phải ra 158/158 không đổi. Đây là kiểm không hồi quy của finder/parser/applier/guard.
+3. Trong bộ kiểm, đánh dấu **20 điểm bản sạch "tùy chọn theo D-A"**:
+   - 13 điểm `CLEAN_KEPT` có `cậu` (006: 1:2, 1:4, 1:7, 2:1, 8:2, 8:4, 9:1, 11:4, 11:5, 13:4, 14:2, 14:3; 011: 2:2);
+   - 7 điểm `CLEAN_FIXED_OK` `cậu` → tên của 011 (2:1, 2:3, 2:4, 2:5, 2:6, 3:3, 4:2).
+   Với các điểm này, ở lần chạy thật sau, cả "giữ `cậu`" lẫn "đổi thành tên call" đều ĐÚNG; mọi dạng khác là hồi quy.
+4. Hành vi model của prompt mới chỉ đo được bằng lần chạy thật (cần quyền chi riêng). Chương phù hợp: 006 (có cả điểm D-A tùy chọn, lỗi self `tớ`, và lỗi `cậu` → `cô` của Tatsuoka).
+
+### 9.4 Gói đo B cho 008 (soạn sẵn, **chưa có quyền chi** — dừng ở đây)
+
+Còn lỗi bỏ sót thật theo luật hiện hành: 7 điểm 008 (Erika → Asanuma, self `tôi`, call `Asanuma`; DRAFT dùng `cậu`) và 5 lỗi self `tớ/tôi` của 006. Riêng 008 đo được ngay: D-A không áp dụng cho self `tôi`, nên prompt hiện hành (CP-IMPL-15, có luật tên-call) là đúng luật cho 008 và chưa từng được đo trên 008 (C7A chạy CP-IMPL-11).
+
+| Mục | Nội dung |
+|---|---|
+| Giả thuyết | Luật tên-call của CP-IMPL-14/15 làm model sửa `cậu` → `Asanuma` ở các điểm 008 mà CP-IMPL-11 bỏ sót (0/7 sửa ở C7A), không thêm sửa sai |
+| Vì sao không đo offline | Hành vi model; replay chỉ phát lại phản hồi cũ |
+| Phạm vi | Chỉ chương 008, cả chương một lần, `openai/gpt-5.6-luna` medium, **không retry**, tối đa **4 lời gọi** (C7A: chunk 1, 5, 6, 7 có điểm; chunk 2–4 không gọi), sổ mới `B008-<date>` trần **USD 0.03**, chỉ `emulator-5554` |
+| Build | APK đang phát hành 4.18.0 / code 266 (logic CP-IMPL-15, khớp `main` mà `feature/v4.19` chưa đổi mã sản xuất) cùng AndroidTest runner tương ứng; không build mới |
+| Ước tính | C7A thực tế USD 0.0074 (4 lời gọi, 14 122 vào / 3 230 ra); giữ chỗ xấu nhất với sàn 4 096 token ≈ USD 0.0228 |
+| Chấm | 7 điểm `cậu` của 008 (ĐÚNG / SÓT / SAI theo RAW + hàng); bản sạch 008 phải giữ nguyên; 0 dòng ngoài điểm bị đổi; S2B 6:1 không được thành sửa sai lọt |
+| Dừng | ước tính vượt trần, finish `length` hay lời gọi không có câu trả lời, UNKNOWN cost, lỗi hạ tầng |
+| Lưu ý cho owner | FINAL của owner giữ `cậu` ở cả 6/6 điểm `cậu` này. Nếu owner định mở rộng D-A cho self `tôi`, nên quyết trước khi chi tiền, vì khi đó các điểm 008 chuyển thành bản sạch và B mất mục đích |

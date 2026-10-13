@@ -318,5 +318,75 @@ class AnalyzeTest(unittest.TestCase):
                 P.analyze(facts_path, None)
 
 
+class RelabelTest(unittest.TestCase):
+    """An owner rule (D-A) moves adjudicated points into the clean part; it can never invent an error or touch a missing id."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        make_guard_dir(self.root)
+        self.suite = P.build_suite(self.root, None)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def rel(self, *entries):
+        return {"schema": P.RELABEL_SCHEMA, "rule": "D-A", "entries": list(entries)}
+
+    def rec(self, rid):
+        return next(r for r in self.suite["records"] if r["id"] == rid)
+
+    def test_a_model_kept_miss_becomes_a_clean_kept_point_with_its_previous_label(self):
+        self.assertEqual(P.apply_relabel(self.suite, self.rel({"id": "006-C6E:1:2", "from": "SÓT", "to": "ĐÚNG", "reason": "r"})), [])
+        r = self.rec("006-C6E:1:2")
+        self.assertEqual((r["group"], r["layer"], r["label"]), ("CLEAN", "CLEAN_KEPT", "ĐÚNG"))
+        self.assertEqual(r["relabel"]["previous"]["layer"], "S2_MODEL_KEPT")
+        known, clean = P.split_suite(self.suite)
+        self.assertEqual(P.check_separation(known, clean), [])
+        self.assertIn("006-C6E:1:2", {x["id"] for x in clean["records"]})
+
+    def test_a_guard_false_block_that_the_rule_accepts_keeps_its_current_outcome(self):
+        self.assertEqual(P.apply_relabel(self.suite, self.rel({"id": "011-C7D:1:2", "from": "SÓT", "to": "ĐÚNG", "reason": "r"})), [])
+        r = self.rec("011-C7D:1:2")
+        self.assertEqual(r["layer"], "CLEAN_KEPT")
+        self.assertEqual(P.expectation(r), "KEEP_OUTCOME")
+
+    def test_a_keep_entry_only_annotates(self):
+        self.assertEqual(P.apply_relabel(self.suite, self.rel({"id": "006-C6E:1:2", "from": "SÓT", "keep": "SÓT", "reason": "self"})), [])
+        r = self.rec("006-C6E:1:2")
+        self.assertEqual(r["layer"], "S2_MODEL_KEPT")
+        self.assertEqual(r["ruleNote"]["keep"], "SÓT")
+
+    def test_bad_entries_are_refused_and_nothing_is_applied(self):
+        cases = [
+            {"id": "006-C6E:9:9", "from": "SÓT", "to": "ĐÚNG", "reason": "r"},       # unknown id
+            {"id": "006-C6E:1:1", "from": "SÓT", "to": "ĐÚNG", "reason": "r"},       # label is ĐÚNG, not SÓT
+            {"id": "006-C6E:1:2", "from": "SÓT", "to": "SAI", "reason": "r"},        # a rule never creates an error
+            {"id": "006-C6E:1:2", "from": "SÓT", "to": "ĐÚNG", "reason": ""},        # no reason
+        ]
+        for bad in cases:
+            suite = P.build_suite(self.root, None)
+            good = {"id": "011-C7D:1:2", "from": "SÓT", "to": "ĐÚNG", "reason": "r"}
+            self.assertTrue(P.apply_relabel(suite, self.rel(good, bad)), bad)
+            self.assertEqual(next(r for r in suite["records"] if r["id"] == "011-C7D:1:2")["layer"], "S3_GUARD_FALSE_BLOCK")
+        self.assertTrue(P.apply_relabel(self.suite, {"schema": "other", "entries": []}))
+
+    def test_cli_applies_the_relabel_and_writes_the_reason_but_no_text(self):
+        path = self.root / "relabel.json"
+        path.write_text(json.dumps(self.rel({"id": "006-C6E:1:2", "from": "SÓT", "to": "ĐÚNG", "reason": "D-A reason"}), ensure_ascii=False),
+                        encoding="utf-8")
+        out_private, out_public = self.root / "private", self.root / "public"
+        self.assertEqual(run_main(["suite", "--guard-dir", str(self.root), "--out-private-dir", str(out_private),
+                                   "--out-public-dir", str(out_public), "--relabel", str(path)]), 0)
+        clean = (out_public / "V419_PRONOUN_CLEAN_CONTROL_INDEX.json").read_text(encoding="utf-8")
+        self.assertIn("D-A reason", clean)
+        self.assertNotIn("SENTINEL", clean)
+        bad = self.root / "bad.json"
+        bad.write_text(json.dumps(self.rel({"id": "006-C6E:9:9", "from": "SÓT", "to": "ĐÚNG", "reason": "r"})), encoding="utf-8")
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(run_main(["suite", "--guard-dir", str(self.root), "--out-private-dir", str(out_private),
+                                       "--out-public-dir", str(out_public), "--relabel", str(bad)]), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

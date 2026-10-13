@@ -1,15 +1,15 @@
 {
  "schema": "pronoun-known-miss-suite-v1",
  "part": "CLEAN",
- "count": 122,
+ "count": 129,
  "byLayer": {
   "CLEAN_FIXED_OK": 24,
-  "CLEAN_KEPT": 90,
+  "CLEAN_KEPT": 97,
   "CLEAN_WRONG_PROPOSAL_BLOCKED": 8
  },
  "byLayerAddressOnly": {
   "CLEAN_FIXED_OK": 16,
-  "CLEAN_KEPT": 88,
+  "CLEAN_KEPT": 95,
   "CLEAN_WRONG_PROPOSAL_BLOCKED": 8
  },
  "finalReferenceByLayerAddressOnly": {
@@ -18,8 +18,8 @@
    "SAME": 1
   },
   "CLEAN_KEPT": {
-   "CHANGED": 11,
-   "SAME": 77
+   "CHANGED": 12,
+   "SAME": 83
   },
   "CLEAN_WRONG_PROPOSAL_BLOCKED": {
    "CHANGED": 1,
@@ -892,6 +892,78 @@
    "draftSha256": "423161f4419d2b05d201f8d6437355ca0e55b94c63d335b755facb4f25c91d93"
   },
   {
+   "id": "006-C6E:8:4",
+   "finalReference": "SAME",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "8:4",
+   "chunk": 8,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "CLEAN",
+   "layer": "CLEAN_KEPT",
+   "label": "ĐÚNG",
+   "event": "giữ đúng (D-A)",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "dedb0128054e391d1e4a00d757bd486d56d55a90ae0755c2bdf2c081a3be57f6"
+   },
+   "draftLine": 126,
+   "rawSha256": "cda521ad4d48f13005d8beea45e947ffc5423a9568e2bbb64976b9d5bcb621ae",
+   "draftSha256": "dedb0128054e391d1e4a00d757bd486d56d55a90ae0755c2bdf2c081a3be57f6",
+   "relabel": {
+    "rule": "D-A",
+    "reason": "Erika nói với Rea (hàng self=mình, call=Rea). Tên Rea có ở lời gọi trực tiếp như RAW; cậu chỉ ở vị trí đại từ ngôi hai.",
+    "previous": {
+     "label": "SÓT",
+     "layer": "S2_MODEL_KEPT",
+     "event": "bỏ sót"
+    }
+   }
+  },
+  {
+   "id": "006-C6E:9:1",
+   "finalReference": "SAME",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "9:1",
+   "chunk": 9,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "CLEAN",
+   "layer": "CLEAN_KEPT",
+   "label": "ĐÚNG",
+   "event": "giữ đúng (D-A)",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "c3888927b7556e943b31d8ae3431c50b8acedebf1468b00d59574922fa0d0df7"
+   },
+   "draftLine": 137,
+   "rawSha256": "5e59b9e53434bb7b05f9462275392a9a37f269e2439bfb8da0a6c6e14cfa2cea",
+   "draftSha256": "c3888927b7556e943b31d8ae3431c50b8acedebf1468b00d59574922fa0d0df7",
+   "relabel": {
+    "rule": "D-A",
+    "reason": "Erika nói với Rea (dòng RAW trước: Rea ghé nhìn màn hình). RAW không có lời gọi tên; cậu là đại từ ngôi hai, self=mình.",
+    "previous": {
+     "label": "SÓT",
+     "layer": "S2_MODEL_KEPT",
+     "event": "bỏ sót"
+    }
+   }
+  },
+  {
    "id": "006-C6E:9:2",
    "finalReference": "CHANGED",
    "run": "006-C6E",
@@ -1216,6 +1288,78 @@
    "draftSha256": "910c91d5b33f2085de032c8d77c8e07747cf6cc38ea90bf3d69fe8e69b60ddbb"
   },
   {
+   "id": "006-C6E:11:4",
+   "finalReference": "SAME",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "11:4",
+   "chunk": 11,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "CLEAN",
+   "layer": "CLEAN_KEPT",
+   "label": "ĐÚNG",
+   "event": "giữ đúng (D-A)",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "ad2d700a8cb7eb3980c8ac5959d804b26df5cc328eb96b803ad1db5b144c685c"
+   },
+   "draftLine": 183,
+   "rawSha256": "581643af20417d0bb91e9ee92f59445a520ed3acc7086f79f4064a497364124e",
+   "draftSha256": "ad2d700a8cb7eb3980c8ac5959d804b26df5cc328eb96b803ad1db5b144c685c",
+   "relabel": {
+    "rule": "D-A",
+    "reason": "Rea nói với Erika (hàng self=mình, call=Erika). RAW không có lời gọi tên; cậu là đại từ ngôi hai, self mình đúng.",
+    "previous": {
+     "label": "SÓT",
+     "layer": "S2_MODEL_KEPT",
+     "event": "bỏ sót"
+    }
+   }
+  },
+  {
+   "id": "006-C6E:11:5",
+   "finalReference": "SAME",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "11:5",
+   "chunk": 11,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "CLEAN",
+   "layer": "CLEAN_KEPT",
+   "label": "ĐÚNG",
+   "event": "giữ đúng (D-A)",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "b16b835c6e0cbab7aeb84de51efb35b7039c54dba38f6a3a9164007c4c1fcc92"
+   },
+   "draftLine": 185,
+   "rawSha256": "1d7eff5de712027aa577ab671d6676e1d0eb345b355b4a4396c008abd037c4af",
+   "draftSha256": "b16b835c6e0cbab7aeb84de51efb35b7039c54dba38f6a3a9164007c4c1fcc92",
+   "relabel": {
+    "rule": "D-A",
+    "reason": "Rea nói với Erika. Chỗ RAW gọi bằng tên, DRAFT giữ Erika; cậu ở chỗ RAW không có tên, self mình đúng.",
+    "previous": {
+     "label": "SÓT",
+     "layer": "S2_MODEL_KEPT",
+     "event": "bỏ sót"
+    }
+   }
+  },
+  {
    "id": "006-C6E:11:6",
    "finalReference": "CHANGED",
    "run": "006-C6E",
@@ -1351,6 +1495,42 @@
    "draftSha256": "97f67453af82b66005b12e484f3d8be3412f1545fd7d20b6f8ed225c527406dd"
   },
   {
+   "id": "006-C6E:13:4",
+   "finalReference": "SAME",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "13:4",
+   "chunk": 13,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "CLEAN",
+   "layer": "CLEAN_KEPT",
+   "label": "ĐÚNG",
+   "event": "giữ đúng (D-A)",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "df7ef75c3c2ead82322dca9d0aed5ccb55094c2d18f10b7e0b73f37d9dfeb2b2"
+   },
+   "draftLine": 224,
+   "rawSha256": "b6f75621eb1a598b86febbde3e395d23c3f921f5d8d10839b0353204dbbc1d6d",
+   "draftSha256": "df7ef75c3c2ead82322dca9d0aed5ccb55094c2d18f10b7e0b73f37d9dfeb2b2",
+   "relabel": {
+    "rule": "D-A",
+    "reason": "Rea nói với Erika. RAW không có lời gọi tên; cậu là đại từ ngôi hai, không có từ tự xưng sai.",
+    "previous": {
+     "label": "SÓT",
+     "layer": "S2_MODEL_KEPT",
+     "event": "bỏ sót"
+    }
+   }
+  },
+  {
    "id": "006-C6E:14:1",
    "finalReference": "SAME",
    "run": "006-C6E",
@@ -1376,6 +1556,42 @@
    "draftLine": 227,
    "rawSha256": "ae00ad7a94851b42e2cfba97297554a077dda1a2214db5792d2de830564b09aa",
    "draftSha256": "c8e7756cf110386e2858851edff2ce59856d3e5cc34cb19346dd3809b5f33b07"
+  },
+  {
+   "id": "006-C6E:14:2",
+   "finalReference": "SAME",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "14:2",
+   "chunk": 14,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "CLEAN",
+   "layer": "CLEAN_KEPT",
+   "label": "ĐÚNG",
+   "event": "giữ đúng (D-A)",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "1941721a0b261a5b4f2a0c43861418ae21ae400cc0f76bc63eb418c464f48d6c"
+   },
+   "draftLine": 228,
+   "rawSha256": "5c1a7f73019e33b625e004ca35c20c71c186065a3b5c71e90cca82f6d68dc822",
+   "draftSha256": "1941721a0b261a5b4f2a0c43861418ae21ae400cc0f76bc63eb418c464f48d6c",
+   "relabel": {
+    "rule": "D-A",
+    "reason": "Erika nói với Rea. RAW không có lời gọi tên; mình/cậu khớp self=mình của hàng.",
+    "previous": {
+     "label": "SÓT",
+     "layer": "S2_MODEL_KEPT",
+     "event": "bỏ sót"
+    }
+   }
   },
   {
    "id": "006-C6E:14:3",
@@ -2051,6 +2267,42 @@
    "draftLine": 19,
    "rawSha256": "df0268dab0cd0c74e9655eebac9f26f3ec107511a5bf697fe9e7098fb1f5a881",
    "draftSha256": "84b01b5a8f2fda989a3bd6666e84605f3c53659f60808f9e82bef9c19b6e47f0"
+  },
+  {
+   "id": "011-C7D:2:2",
+   "finalReference": "CHANGED",
+   "run": "011-C7D",
+   "chapter": "011",
+   "key": "2:2",
+   "chunk": 2,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "CLEAN",
+   "layer": "CLEAN_KEPT",
+   "label": "ĐÚNG",
+   "event": "giữ đúng (D-A)",
+   "live": {
+    "status": "KEPT",
+    "reason": "ADDRESS_FORM_NOT_IN_APPLICABLE_ROW"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "ADDRESS_FORM_NOT_IN_APPLICABLE_ROW",
+    "afterSha256": "e579c06228af0f07d5fac570fc05ff58585623f2690b0f734d1498886fbd5f86"
+   },
+   "draftLine": 20,
+   "rawSha256": "cc177a2adf2ff1c37f06e9062bf537f88fcec006ee0d31b04c79154e75390acc",
+   "draftSha256": "e579c06228af0f07d5fac570fc05ff58585623f2690b0f734d1498886fbd5f86",
+   "relabel": {
+    "rule": "D-A",
+    "reason": "Rea nói với Erika. Tên Erika có ở chỗ RAW gọi tên; cậu ở chỗ RAW không có tên, self mình đúng. Bản model đổi cậu thành tên cũng hợp luật nhưng giữ DRAFT đã đúng.",
+    "previous": {
+     "label": "SÓT",
+     "layer": "S3_GUARD_FALSE_BLOCK",
+     "event": "sửa đúng bị chặn nhầm"
+    }
+   }
   },
   {
    "id": "011-C7D:2:3",

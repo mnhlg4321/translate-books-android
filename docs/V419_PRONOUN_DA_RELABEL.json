@@ -1,0 +1,32 @@
+{
+ "schema": "pronoun-suite-relabel-v1",
+ "rule": "D-A",
+ "ruleText": "Khi call của hàng là tên, cậu được giữ làm đại từ ngôi hai nếu self của hàng là mình hoặc tớ; tên chỉ bắt buộc ở lời gọi trực tiếp. Self khác (tôi, em, …) giữ luật cũ.",
+ "decidedBy": "owner 2026-10-13",
+ "adjudication": "RAW + hàng pronoun; FINAL chỉ tham chiếu. Người nói/người nghe đọc từ RAW và các dòng RAW kề.",
+ "entries": [
+  {"id": "006-C6E:8:4", "from": "SÓT", "to": "ĐÚNG", "reason": "Erika nói với Rea (hàng self=mình, call=Rea). Tên Rea có ở lời gọi trực tiếp như RAW; cậu chỉ ở vị trí đại từ ngôi hai."},
+  {"id": "006-C6E:9:1", "from": "SÓT", "to": "ĐÚNG", "reason": "Erika nói với Rea (dòng RAW trước: Rea ghé nhìn màn hình). RAW không có lời gọi tên; cậu là đại từ ngôi hai, self=mình."},
+  {"id": "006-C6E:11:4", "from": "SÓT", "to": "ĐÚNG", "reason": "Rea nói với Erika (hàng self=mình, call=Erika). RAW không có lời gọi tên; cậu là đại từ ngôi hai, self mình đúng."},
+  {"id": "006-C6E:11:5", "from": "SÓT", "to": "ĐÚNG", "reason": "Rea nói với Erika. Chỗ RAW gọi bằng tên, DRAFT giữ Erika; cậu ở chỗ RAW không có tên, self mình đúng."},
+  {"id": "006-C6E:13:4", "from": "SÓT", "to": "ĐÚNG", "reason": "Rea nói với Erika. RAW không có lời gọi tên; cậu là đại từ ngôi hai, không có từ tự xưng sai."},
+  {"id": "006-C6E:14:2", "from": "SÓT", "to": "ĐÚNG", "reason": "Erika nói với Rea. RAW không có lời gọi tên; mình/cậu khớp self=mình của hàng."},
+  {"id": "011-C7D:2:2", "from": "SÓT", "to": "ĐÚNG", "reason": "Rea nói với Erika. Tên Erika có ở chỗ RAW gọi tên; cậu ở chỗ RAW không có tên, self mình đúng. Bản model đổi cậu thành tên cũng hợp luật nhưng giữ DRAFT đã đúng."},
+  {"id": "006-C6E:2:3", "from": "SÓT", "keep": "SÓT", "reason": "Rea nói với Erika: cậu hợp D-A và tên có ở lời gọi, nhưng DRAFT tự xưng tớ trong khi self của hàng là mình."},
+  {"id": "006-C6E:2:4", "from": "SÓT", "keep": "SÓT", "reason": "Rea tự xưng tớ ba lần, self của hàng là mình; D-A không nói về self."},
+  {"id": "006-C6E:4:3", "from": "SÓT", "keep": "SÓT", "reason": "Erika nói với Rea, tự xưng tớ trong khi self=mình."},
+  {"id": "006-C6E:5:2", "from": "SÓT", "keep": "SÓT", "reason": "Erika nói với Rea: cậu hợp D-A, nhưng tự xưng tớ trong khi self=mình."},
+  {"id": "006-C6E:5:4", "from": "SÓT", "keep": "SÓT", "reason": "Tatsuoka nói với Erika (hàng self=tôi, call=cô); self khác mình/tớ nên luật cũ: cậu phải là cô."},
+  {"id": "006-C6E:5:6", "from": "SÓT", "keep": "SÓT", "reason": "Tatsuoka nói với Erika (self=tôi, call=cô); luật cũ."},
+  {"id": "006-C6E:7:3", "from": "SÓT", "keep": "SÓT", "reason": "Erika nói với Mitsurugi (self=tôi, call=Fuyu); self khác mình/tớ nên luật cũ. Mã hiện hành đã sửa điểm này."},
+  {"id": "006-C6E:13:1", "from": "SÓT", "keep": "SÓT", "reason": "Erika nói với Rea, tự xưng tôi trong khi self=mình; không liên quan cậu."},
+  {"id": "008-C7A:5:8", "from": "SÓT", "keep": "SÓT", "reason": "Erika nói với Asanuma (self=tôi, call=Asanuma); self tôi nên luật cũ."},
+  {"id": "008-C7A:6:1", "from": "SÓT", "keep": "SÓT", "reason": "Erika nói với Asanuma (self=tôi); luật cũ."},
+  {"id": "008-C7A:6:3", "from": "SÓT", "keep": "SÓT", "reason": "Erika nói với Asanuma (self=tôi); luật cũ."},
+  {"id": "008-C7A:6:5", "from": "SÓT", "keep": "SÓT", "reason": "Erika nói với Asanuma (self=tôi); luật cũ."},
+  {"id": "008-C7A:7:2", "from": "SÓT", "keep": "SÓT", "reason": "Erika nói với Asanuma (self=tôi); luật cũ."},
+  {"id": "008-C7A:7:4", "from": "SÓT", "keep": "SÓT", "reason": "Erika nói với Asanuma (self=tôi); luật cũ."},
+  {"id": "008-C7A:7:5", "from": "SÓT", "keep": "SÓT", "reason": "Erika nói với Asanuma (self=tôi); luật cũ."},
+  {"id": "011-C7D:10:6", "from": "SÓT", "keep": "SÓT", "reason": "Lỗi tự xưng/ngôi ba (tôi, em), không liên quan cậu; luật cũ."}
+ ]
+}

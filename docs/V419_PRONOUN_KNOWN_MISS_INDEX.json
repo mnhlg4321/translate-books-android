@@ -1,18 +1,18 @@
 {
  "schema": "pronoun-known-miss-suite-v1",
  "part": "KNOWN",
- "count": 36,
+ "count": 29,
  "byLayer": {
   "S2B_WRONG_PROPOSAL_BLOCKED_DRAFT_STILL_WRONG": 1,
-  "S2_MODEL_KEPT": 21,
-  "S3_GUARD_FALSE_BLOCK": 2,
+  "S2_MODEL_KEPT": 15,
+  "S3_GUARD_FALSE_BLOCK": 1,
   "S4_WRONG_PASSED": 3,
   "S5_UNSURE": 9
  },
  "byLayerAddressOnly": {
   "S2B_WRONG_PROPOSAL_BLOCKED_DRAFT_STILL_WRONG": 1,
-  "S2_MODEL_KEPT": 20,
-  "S3_GUARD_FALSE_BLOCK": 2,
+  "S2_MODEL_KEPT": 14,
+  "S3_GUARD_FALSE_BLOCK": 1,
   "S4_WRONG_PASSED": 2,
   "S5_UNSURE": 8
  },
@@ -22,10 +22,10 @@
   },
   "S2_MODEL_KEPT": {
    "CHANGED": 7,
-   "SAME": 13
+   "SAME": 7
   },
   "S3_GUARD_FALSE_BLOCK": {
-   "CHANGED": 2
+   "CHANGED": 1
   },
   "S4_WRONG_PASSED": {
    "SAME": 2
@@ -88,7 +88,12 @@
    },
    "draftLine": 30,
    "rawSha256": "c4f36f35cef8516cab0185e09ce442914c28696c4eb638724d96d92beb7af444",
-   "draftSha256": "44a82fd83dc78303d9ce82bca54e29c73ce954ddaa331043fcca7e1632d80ec8"
+   "draftSha256": "44a82fd83dc78303d9ce82bca54e29c73ce954ddaa331043fcca7e1632d80ec8",
+   "ruleNote": {
+    "rule": "D-A",
+    "keep": "SÓT",
+    "reason": "Rea nói với Erika: cậu hợp D-A và tên có ở lời gọi, nhưng DRAFT tự xưng tớ trong khi self của hàng là mình."
+   }
   },
   {
    "id": "006-C6E:2:4",
@@ -115,7 +120,12 @@
    },
    "draftLine": 32,
    "rawSha256": "af0edb1c570ec2cedf6fd497127b432281c85611d616835e9923a6059d3c2e21",
-   "draftSha256": "6d162af2da54fe0bba6eaf259a0042c81d746f27dfe5209cee54caa948163b7e"
+   "draftSha256": "6d162af2da54fe0bba6eaf259a0042c81d746f27dfe5209cee54caa948163b7e",
+   "ruleNote": {
+    "rule": "D-A",
+    "keep": "SÓT",
+    "reason": "Rea tự xưng tớ ba lần, self của hàng là mình; D-A không nói về self."
+   }
   },
   {
    "id": "006-C6E:3:5",
@@ -196,7 +206,12 @@
    },
    "draftLine": 52,
    "rawSha256": "ca69a41dd72e431b6999c8488ed19864d62f1bd24c0064a2e78fdf5cf7865766",
-   "draftSha256": "2af473db05b7496b686eaadbe1db74690a52a9d1a8ab43316a7096a688128755"
+   "draftSha256": "2af473db05b7496b686eaadbe1db74690a52a9d1a8ab43316a7096a688128755",
+   "ruleNote": {
+    "rule": "D-A",
+    "keep": "SÓT",
+    "reason": "Erika nói với Rea, tự xưng tớ trong khi self=mình."
+   }
   },
   {
    "id": "006-C6E:5:2",
@@ -223,7 +238,12 @@
    },
    "draftLine": 70,
    "rawSha256": "8da7b1213e990831ac6799ca49251417ce67fd2d9a259533ef5eef7d4b540839",
-   "draftSha256": "7ffe71dc843daedc9acf13497a03146a2757646ff586c1a34af9abc6c3c34019"
+   "draftSha256": "7ffe71dc843daedc9acf13497a03146a2757646ff586c1a34af9abc6c3c34019",
+   "ruleNote": {
+    "rule": "D-A",
+    "keep": "SÓT",
+    "reason": "Erika nói với Rea: cậu hợp D-A, nhưng tự xưng tớ trong khi self=mình."
+   }
   },
   {
    "id": "006-C6E:5:4",
@@ -250,7 +270,12 @@
    },
    "draftLine": 75,
    "rawSha256": "d7c7e0838df7231f2451314e439c89620a5f1b1cfe67079723f1a527e59e01b1",
-   "draftSha256": "50f7216ede23eaa6594317f0144da499337ff9e825d7cd05423139ca734e8c4c"
+   "draftSha256": "50f7216ede23eaa6594317f0144da499337ff9e825d7cd05423139ca734e8c4c",
+   "ruleNote": {
+    "rule": "D-A",
+    "keep": "SÓT",
+    "reason": "Tatsuoka nói với Erika (hàng self=tôi, call=cô); self khác mình/tớ nên luật cũ: cậu phải là cô."
+   }
   },
   {
    "id": "006-C6E:5:6",
@@ -277,7 +302,12 @@
    },
    "draftLine": 77,
    "rawSha256": "e6c15983171aa6a4902b5999051305b67c35818652e3179b5d0bfbd0321e089f",
-   "draftSha256": "915f5cc9c11adbe6eeba8b3f28b9f9f7dd8264845b1f22919cf9ff4bb3030e92"
+   "draftSha256": "915f5cc9c11adbe6eeba8b3f28b9f9f7dd8264845b1f22919cf9ff4bb3030e92",
+   "ruleNote": {
+    "rule": "D-A",
+    "keep": "SÓT",
+    "reason": "Tatsuoka nói với Erika (self=tôi, call=cô); luật cũ."
+   }
   },
   {
    "id": "006-C6E:6:2",
@@ -331,7 +361,12 @@
    },
    "draftLine": 102,
    "rawSha256": "379096340d95efe760d0f1c27709d6dc04a1588ceaa01665df402e47523149e9",
-   "draftSha256": "51264d3203864975a02459adbb589e3df934a6425884d63f1d0b648c20436ea6"
+   "draftSha256": "51264d3203864975a02459adbb589e3df934a6425884d63f1d0b648c20436ea6",
+   "ruleNote": {
+    "rule": "D-A",
+    "keep": "SÓT",
+    "reason": "Erika nói với Mitsurugi (self=tôi, call=Fuyu); self khác mình/tớ nên luật cũ. Mã hiện hành đã sửa điểm này."
+   }
   },
   {
    "id": "006-C6E:7:4",
@@ -361,60 +396,6 @@
    "draftSha256": "011e107a618819476c67d8fd51e326f3eadad01c0479d53b52dc084b6d24a83e"
   },
   {
-   "id": "006-C6E:8:4",
-   "finalReference": "SAME",
-   "run": "006-C6E",
-   "chapter": "006",
-   "key": "8:4",
-   "chunk": 8,
-   "types": [
-    "ADDRESS"
-   ],
-   "group": "KNOWN",
-   "layer": "S2_MODEL_KEPT",
-   "label": "SÓT",
-   "event": "bỏ sót",
-   "live": {
-    "status": "KEPT",
-    "reason": "MODEL_KEEP"
-   },
-   "current": {
-    "status": "KEPT",
-    "reason": "MODEL_KEEP",
-    "afterSha256": "dedb0128054e391d1e4a00d757bd486d56d55a90ae0755c2bdf2c081a3be57f6"
-   },
-   "draftLine": 126,
-   "rawSha256": "cda521ad4d48f13005d8beea45e947ffc5423a9568e2bbb64976b9d5bcb621ae",
-   "draftSha256": "dedb0128054e391d1e4a00d757bd486d56d55a90ae0755c2bdf2c081a3be57f6"
-  },
-  {
-   "id": "006-C6E:9:1",
-   "finalReference": "SAME",
-   "run": "006-C6E",
-   "chapter": "006",
-   "key": "9:1",
-   "chunk": 9,
-   "types": [
-    "ADDRESS"
-   ],
-   "group": "KNOWN",
-   "layer": "S2_MODEL_KEPT",
-   "label": "SÓT",
-   "event": "bỏ sót",
-   "live": {
-    "status": "KEPT",
-    "reason": "MODEL_KEEP"
-   },
-   "current": {
-    "status": "KEPT",
-    "reason": "MODEL_KEEP",
-    "afterSha256": "c3888927b7556e943b31d8ae3431c50b8acedebf1468b00d59574922fa0d0df7"
-   },
-   "draftLine": 137,
-   "rawSha256": "5e59b9e53434bb7b05f9462275392a9a37f269e2439bfb8da0a6c6e14cfa2cea",
-   "draftSha256": "c3888927b7556e943b31d8ae3431c50b8acedebf1468b00d59574922fa0d0df7"
-  },
-  {
    "id": "006-C6E:10:7",
    "finalReference": "CHANGED",
    "run": "006-C6E",
@@ -442,60 +423,6 @@
    "draftSha256": "aaf654712dbe6c4bee938d2b4dbc07df51ce1265c8b5b58a279a885f23733ff0"
   },
   {
-   "id": "006-C6E:11:4",
-   "finalReference": "SAME",
-   "run": "006-C6E",
-   "chapter": "006",
-   "key": "11:4",
-   "chunk": 11,
-   "types": [
-    "ADDRESS"
-   ],
-   "group": "KNOWN",
-   "layer": "S2_MODEL_KEPT",
-   "label": "SÓT",
-   "event": "bỏ sót",
-   "live": {
-    "status": "KEPT",
-    "reason": "MODEL_KEEP"
-   },
-   "current": {
-    "status": "KEPT",
-    "reason": "MODEL_KEEP",
-    "afterSha256": "ad2d700a8cb7eb3980c8ac5959d804b26df5cc328eb96b803ad1db5b144c685c"
-   },
-   "draftLine": 183,
-   "rawSha256": "581643af20417d0bb91e9ee92f59445a520ed3acc7086f79f4064a497364124e",
-   "draftSha256": "ad2d700a8cb7eb3980c8ac5959d804b26df5cc328eb96b803ad1db5b144c685c"
-  },
-  {
-   "id": "006-C6E:11:5",
-   "finalReference": "SAME",
-   "run": "006-C6E",
-   "chapter": "006",
-   "key": "11:5",
-   "chunk": 11,
-   "types": [
-    "ADDRESS"
-   ],
-   "group": "KNOWN",
-   "layer": "S2_MODEL_KEPT",
-   "label": "SÓT",
-   "event": "bỏ sót",
-   "live": {
-    "status": "KEPT",
-    "reason": "MODEL_KEEP"
-   },
-   "current": {
-    "status": "KEPT",
-    "reason": "MODEL_KEEP",
-    "afterSha256": "b16b835c6e0cbab7aeb84de51efb35b7039c54dba38f6a3a9164007c4c1fcc92"
-   },
-   "draftLine": 185,
-   "rawSha256": "1d7eff5de712027aa577ab671d6676e1d0eb345b355b4a4396c008abd037c4af",
-   "draftSha256": "b16b835c6e0cbab7aeb84de51efb35b7039c54dba38f6a3a9164007c4c1fcc92"
-  },
-  {
    "id": "006-C6E:13:1",
    "finalReference": "SAME",
    "run": "006-C6E",
@@ -520,7 +447,12 @@
    },
    "draftLine": 214,
    "rawSha256": "7d2fd46d6315a9efb7f5524eee460779c91bf9070318d09d9c6185deacc8c4f5",
-   "draftSha256": "2f720c130ee0fa1bd94ec992b6c5e18ec4cbb8fc5a31d69ce2d020a115744543"
+   "draftSha256": "2f720c130ee0fa1bd94ec992b6c5e18ec4cbb8fc5a31d69ce2d020a115744543",
+   "ruleNote": {
+    "rule": "D-A",
+    "keep": "SÓT",
+    "reason": "Erika nói với Rea, tự xưng tôi trong khi self=mình; không liên quan cậu."
+   }
   },
   {
    "id": "006-C6E:13:3",
@@ -548,60 +480,6 @@
    "draftLine": 223,
    "rawSha256": "5bf1697e1037ba5b145179af7971b34231315e89d7b7f75d9bc5d53f76fbc86d",
    "draftSha256": "c33c86525836180044a160699a495bd9e0d120efc8433a1c2260673d8987b7d5"
-  },
-  {
-   "id": "006-C6E:13:4",
-   "finalReference": "SAME",
-   "run": "006-C6E",
-   "chapter": "006",
-   "key": "13:4",
-   "chunk": 13,
-   "types": [
-    "ADDRESS"
-   ],
-   "group": "KNOWN",
-   "layer": "S2_MODEL_KEPT",
-   "label": "SÓT",
-   "event": "bỏ sót",
-   "live": {
-    "status": "KEPT",
-    "reason": "MODEL_KEEP"
-   },
-   "current": {
-    "status": "KEPT",
-    "reason": "MODEL_KEEP",
-    "afterSha256": "df7ef75c3c2ead82322dca9d0aed5ccb55094c2d18f10b7e0b73f37d9dfeb2b2"
-   },
-   "draftLine": 224,
-   "rawSha256": "b6f75621eb1a598b86febbde3e395d23c3f921f5d8d10839b0353204dbbc1d6d",
-   "draftSha256": "df7ef75c3c2ead82322dca9d0aed5ccb55094c2d18f10b7e0b73f37d9dfeb2b2"
-  },
-  {
-   "id": "006-C6E:14:2",
-   "finalReference": "SAME",
-   "run": "006-C6E",
-   "chapter": "006",
-   "key": "14:2",
-   "chunk": 14,
-   "types": [
-    "ADDRESS"
-   ],
-   "group": "KNOWN",
-   "layer": "S2_MODEL_KEPT",
-   "label": "SÓT",
-   "event": "bỏ sót",
-   "live": {
-    "status": "KEPT",
-    "reason": "MODEL_KEEP"
-   },
-   "current": {
-    "status": "KEPT",
-    "reason": "MODEL_KEEP",
-    "afterSha256": "1941721a0b261a5b4f2a0c43861418ae21ae400cc0f76bc63eb418c464f48d6c"
-   },
-   "draftLine": 228,
-   "rawSha256": "5c1a7f73019e33b625e004ca35c20c71c186065a3b5c71e90cca82f6d68dc822",
-   "draftSha256": "1941721a0b261a5b4f2a0c43861418ae21ae400cc0f76bc63eb418c464f48d6c"
   },
   {
    "id": "006-C6E:14:5",
@@ -682,7 +560,12 @@
    },
    "draftLine": 90,
    "rawSha256": "8da68851d9356a5e6ea8f4b96b68c0560e9267202b6f0427471229ec897fb6e3",
-   "draftSha256": "9480b378bd7a3540b125c1d3e3d8924636ee73ea1ca76f31b0bae8635267fc8c"
+   "draftSha256": "9480b378bd7a3540b125c1d3e3d8924636ee73ea1ca76f31b0bae8635267fc8c",
+   "ruleNote": {
+    "rule": "D-A",
+    "keep": "SÓT",
+    "reason": "Erika nói với Asanuma (self=tôi, call=Asanuma); self tôi nên luật cũ."
+   }
   },
   {
    "id": "008-C7A:6:1",
@@ -709,7 +592,12 @@
    },
    "draftLine": 92,
    "rawSha256": "bc1dfeb476f58cfed7ccf7a0237730db96757a818c8b4a570794a306ddd5945a",
-   "draftSha256": "c269d079fc2af58ff77c275f6bb529735880e43441c73086a142a1e669e79bb1"
+   "draftSha256": "c269d079fc2af58ff77c275f6bb529735880e43441c73086a142a1e669e79bb1",
+   "ruleNote": {
+    "rule": "D-A",
+    "keep": "SÓT",
+    "reason": "Erika nói với Asanuma (self=tôi); luật cũ."
+   }
   },
   {
    "id": "008-C7A:6:3",
@@ -736,7 +624,12 @@
    },
    "draftLine": 95,
    "rawSha256": "1e9b5335cc4556e4f949bf04fef80ecbd2d3053cc56d2335352a32d86e4f33c7",
-   "draftSha256": "2ecf56bfe99a11ae02e8c7a73dcbe71bc82073f62ed2200c9e4c478e39ca03fc"
+   "draftSha256": "2ecf56bfe99a11ae02e8c7a73dcbe71bc82073f62ed2200c9e4c478e39ca03fc",
+   "ruleNote": {
+    "rule": "D-A",
+    "keep": "SÓT",
+    "reason": "Erika nói với Asanuma (self=tôi); luật cũ."
+   }
   },
   {
    "id": "008-C7A:6:5",
@@ -763,7 +656,12 @@
    },
    "draftLine": 97,
    "rawSha256": "c261ec6359d0796b8fce6cd49fe263ac8c5527dd3329074041134514371333a9",
-   "draftSha256": "eb4a1fc3d8c076991eac1c4749fc0faf63cc40a31c96d07c39cd8e2cefd1ba08"
+   "draftSha256": "eb4a1fc3d8c076991eac1c4749fc0faf63cc40a31c96d07c39cd8e2cefd1ba08",
+   "ruleNote": {
+    "rule": "D-A",
+    "keep": "SÓT",
+    "reason": "Erika nói với Asanuma (self=tôi); luật cũ."
+   }
   },
   {
    "id": "008-C7A:7:2",
@@ -790,7 +688,12 @@
    },
    "draftLine": 115,
    "rawSha256": "47852a17d6f63e1c04cdf60f465b42c2afb39be811450e48dcd3a338c1bcc50e",
-   "draftSha256": "5b81616243250c136443d8c83c0195dd1f4c320561290ae8b8803bbea1253cdf"
+   "draftSha256": "5b81616243250c136443d8c83c0195dd1f4c320561290ae8b8803bbea1253cdf",
+   "ruleNote": {
+    "rule": "D-A",
+    "keep": "SÓT",
+    "reason": "Erika nói với Asanuma (self=tôi); luật cũ."
+   }
   },
   {
    "id": "008-C7A:7:4",
@@ -817,7 +720,12 @@
    },
    "draftLine": 117,
    "rawSha256": "a30e7d75d2c2ba8377afb67ddb23f2f59073e9cdcec8ebcf9314cbdaf846131f",
-   "draftSha256": "cedf0d381c03c7d2227b850991cbc8794ee3f8f123d0849a2531026ee754e5a9"
+   "draftSha256": "cedf0d381c03c7d2227b850991cbc8794ee3f8f123d0849a2531026ee754e5a9",
+   "ruleNote": {
+    "rule": "D-A",
+    "keep": "SÓT",
+    "reason": "Erika nói với Asanuma (self=tôi); luật cũ."
+   }
   },
   {
    "id": "008-C7A:7:5",
@@ -844,34 +752,12 @@
    },
    "draftLine": 119,
    "rawSha256": "d638b735c237d8d1736c7e4be6312485dbb8e0559468b94f1f33cf36eaa4ef8e",
-   "draftSha256": "90791e8b1507d6bd7f1d3df793f2fce9db970ec89da4b950d5a1641f2e588bcb"
-  },
-  {
-   "id": "011-C7D:2:2",
-   "finalReference": "CHANGED",
-   "run": "011-C7D",
-   "chapter": "011",
-   "key": "2:2",
-   "chunk": 2,
-   "types": [
-    "ADDRESS"
-   ],
-   "group": "KNOWN",
-   "layer": "S3_GUARD_FALSE_BLOCK",
-   "label": "SÓT",
-   "event": "sửa đúng bị chặn nhầm",
-   "live": {
-    "status": "KEPT",
-    "reason": "ADDRESS_FORM_NOT_IN_APPLICABLE_ROW"
-   },
-   "current": {
-    "status": "KEPT",
-    "reason": "ADDRESS_FORM_NOT_IN_APPLICABLE_ROW",
-    "afterSha256": "e579c06228af0f07d5fac570fc05ff58585623f2690b0f734d1498886fbd5f86"
-   },
-   "draftLine": 20,
-   "rawSha256": "cc177a2adf2ff1c37f06e9062bf537f88fcec006ee0d31b04c79154e75390acc",
-   "draftSha256": "e579c06228af0f07d5fac570fc05ff58585623f2690b0f734d1498886fbd5f86"
+   "draftSha256": "90791e8b1507d6bd7f1d3df793f2fce9db970ec89da4b950d5a1641f2e588bcb",
+   "ruleNote": {
+    "rule": "D-A",
+    "keep": "SÓT",
+    "reason": "Erika nói với Asanuma (self=tôi); luật cũ."
+   }
   },
   {
    "id": "011-C7D:10:4",
@@ -925,7 +811,12 @@
    },
    "draftLine": 159,
    "rawSha256": "af84c8c6d86a0caa94c11cba5c5231d807c2ca21d2b8a8756e01410fa81d448a",
-   "draftSha256": "d1e59ae8cbc7a2b5a5f155c3135dd3d1b5b2cdc1da8c42fa06db5c24ac73cba0"
+   "draftSha256": "d1e59ae8cbc7a2b5a5f155c3135dd3d1b5b2cdc1da8c42fa06db5c24ac73cba0",
+   "ruleNote": {
+    "rule": "D-A",
+    "keep": "SÓT",
+    "reason": "Lỗi tự xưng/ngôi ba (tôi, em), không liên quan cậu; luật cũ."
+   }
   },
   {
    "id": "011-C7D:10:7",

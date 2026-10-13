@@ -375,6 +375,56 @@ def build_suite(guard_dir: Path, facts_path: Path | None, final_root: Path | Non
     return {"schema": SUITE_SCHEMA, "records": records}
 
 
+RELABEL_SCHEMA = "pronoun-suite-relabel-v1"
+
+
+def apply_relabel(suite: dict[str, Any], relabel: dict[str, Any]) -> list[str]:
+    """Apply an owner rule (for example D-A) to adjudicated records, in place. Returns problems; nothing is applied then.
+
+    Each entry names one record id, the label it must have now ("from"), the new label ("to", only ĐÚNG is allowed: a rule may
+    move a point into the clean part, never invent an error) and the reason read from RAW plus the pronoun row. Entries with
+    "keep" document a point the rule does not move. The file holds ids and reasons only, never book text.
+    """
+    problems: list[str] = []
+    if relabel.get("schema") != RELABEL_SCHEMA:
+        return [f"relabel schema must be {RELABEL_SCHEMA}"]
+    rule = relabel.get("rule", "")
+    by_id = {r["id"]: r for r in suite["records"]}
+    planned: list[tuple[dict[str, Any], dict[str, Any]]] = []
+    seen: set[str] = set()
+    for entry in relabel.get("entries", []):
+        rid = entry.get("id", "")
+        if rid in seen:
+            problems.append(f"{rid}: listed twice")
+            continue
+        seen.add(rid)
+        rec = by_id.get(rid)
+        if rec is None:
+            problems.append(f"{rid}: not in the suite")
+            continue
+        if not entry.get("reason"):
+            problems.append(f"{rid}: no reason")
+        if entry.get("from") != rec["label"]:
+            problems.append(f"{rid}: label is {rec['label']}, the relabel expects {entry.get('from')}")
+        if "keep" in entry:
+            continue
+        if entry.get("to") != "ĐÚNG":
+            problems.append(f"{rid}: a relabel may only move a point to ĐÚNG")
+            continue
+        planned.append((rec, entry))
+    if problems:
+        return problems
+    for rec, entry in planned:
+        previous = {"label": rec["label"], "layer": rec["layer"], "event": rec["event"]}
+        rec["label"], rec["event"] = "ĐÚNG", f"giữ đúng ({rule})"
+        rec["group"], rec["layer"] = layer_and_group(rec["label"], rec["event"], rec["live"]["status"], rec["live"]["reason"])
+        rec["relabel"] = {"rule": rule, "reason": entry["reason"], "previous": previous}
+    for entry in relabel.get("entries", []):
+        if "keep" in entry:
+            by_id[entry["id"]]["ruleNote"] = {"rule": rule, "keep": entry["keep"], "reason": entry["reason"]}
+    return []
+
+
 def split_suite(suite: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
     known = [r for r in suite["records"] if r["group"] in ("KNOWN", "UNSURE")]
     clean = [r for r in suite["records"] if r["group"] == "CLEAN"]
@@ -499,6 +549,7 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--final-root", type=Path)
     s.add_argument("--out-private-dir", required=True, type=Path)
     s.add_argument("--out-public-dir", required=True, type=Path)
+    s.add_argument("--relabel", type=Path, help="owner rule applied to adjudicated records (ids and reasons only)")
     v = sub.add_parser("verify-replay", help="compare replays of the stored answers with the recorded outcomes")
     v.add_argument("--known", required=True, type=Path)
     v.add_argument("--clean", required=True, type=Path)
@@ -516,6 +567,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.cmd == "suite":
         suite = build_suite(args.guard_dir, args.facts, args.final_root)
+        if args.relabel:
+            bad = apply_relabel(suite, json.loads(args.relabel.read_text(encoding="utf-8")))
+            if bad:
+                print("\n".join(bad), file=sys.stderr)
+                return 1
         known, clean = split_suite(suite)
         problems = check_separation(known, clean)
         idx_known, idx_clean = public_index(known), public_index(clean)
