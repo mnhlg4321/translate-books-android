@@ -50,7 +50,7 @@ Ngoài phạm vi: căn/cắt/ghép chunk CS-1, StructuralGate, store/DB, đườ
 - Mọi bản sửa sau này phải: sửa được ít nhất một lỗi đã biết ở tầng đúng; không làm đổi kết quả của bản sạch; giữ các SAI cũ bị chặn; kết quả replay 006 (C6B, C6E), 008, 011 (C7B, C7D) được so từng điểm trước/sau.
 - Không có số nào được nâng thành "PASS chất lượng" từ fake provider hoặc replay; hành vi model chỉ đo được bằng lần chạy thật được cấp quyền.
 
-## 7. Trạng thái (2026-10-12)
+## 7. Trạng thái (2026-10-13)
 
 | Phase | Trạng thái | Bằng chứng |
 |---|---|---|
@@ -62,6 +62,8 @@ Ngoài phạm vi: căn/cắt/ghép chunk CS-1, StructuralGate, store/DB, đườ
 | Quyết định owner D-A (2026-10-13) | đã duyệt | khi `call` của hàng là **tên**, `cậu` được giữ làm đại từ ngôi hai nếu `self` của hàng là `mình` hoặc `tớ`; tên chỉ bắt buộc ở lời gọi trực tiếp (vocative). Với `self` khác (`tôi`, `em`, …) luật cũ giữ nguyên cho tới khi owner quyết thêm. Owner cũng duyệt push `feature/v4.19` và dòng trỏ v4.19 trong `AGENTS.md` |
 | X3 áp D-A (2026-10-13) | xong (offline) | `docs/V419_PRONOUN_MISS_DIAGNOSIS_20261012.md` mục 9: 7 điểm chuyển sang bản sạch theo bảng `docs/V419_PRONOUN_DA_RELABEL.json`; bộ kiểm 29 lỗi đã biết / 129 bản sạch; replay 158/158 không đổi; test `NameCallRuleDaContradictionTest` chỉ ra prompt trái D-A; đề xuất chỉ sửa prompt; gói đo B 008 soạn sẵn, chờ quyền chi |
 | Review X3 (2026-10-13) | xong | báo cáo mục 10: kiểm lại trên archive sạch `c57edd22` (Python 53, engine 718, replay 158/158, sidecar khớp chỉ mục); FINAL không theo `self` (006 7:3 đổi sang tên, 008 giữ `cậu` 7/7, cùng `self=tôi`), nên không khuyến nghị chạy gói B 008; owner chọn (a) mở rộng D-A cho mọi `self` hoặc (b) khai `call` dạng `Tên/cậu` theo hàng |
-| X4_FIX, X5_LIVE, X6_RELEASE | chưa bắt đầu | — |
+| Quyết định owner X4 hướng (a), 2026-10-13 | đã duyệt | Mở rộng D-A cho mọi `self`: `call` là tên thì `cậu` ngôi hai hợp lệ ngoài lời gọi trực tiếp; giữ `cậu` hoặc dùng đúng tên đều ĐÚNG. Tên vẫn bắt buộc ở lời gọi trực tiếp; call là đại từ và lỗi self không đổi. Cho phép commit/snapshot/quét/push `feature/v4.19` gồm `701470e5`; không provider/build/device |
+| X4_FIX | đang kiểm offline | Chỉ sửa luật tên-call `TargetedFixPrompt.java`; lật đúng test prompt, giữ các control/finder/guard. Bảng relabel thêm 008 ×7 và 006 7:3; suite 21 known / 137 clean. 23 điểm D-A có hash lựa chọn hợp lệ; năm điểm của danh sách 20 cũ là ngôi ba/vocative/call đại từ nên vẫn là control bất biến. Replay mặc định vẫn kiểm nghiêm từng byte; lựa chọn D-A chỉ dùng chấm lần đo mới |
+| X5_LIVE, X6_RELEASE | chưa bắt đầu | USD 0; chưa có quyền chi |
 
-**Next action:** owner chọn hướng cho `cậu` khi `call` là tên: (a) mở rộng D-A cho mọi `self` (khuyến nghị) hoặc (b) khai theo hàng `call=Tên/cậu`; sau đó X4 sửa prompt offline theo hướng đã chọn. Không chạy gói B 008; không provider trước khi có quyền chi riêng.
+**Next action:** kiểm engine/app/scripts/chunk và replay 158/158 từ archive sạch commit X4, soạn gói đo 006 rồi quét/push; dừng trước lời gọi provider để chờ quyền chi riêng.

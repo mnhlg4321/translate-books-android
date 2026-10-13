@@ -1,5 +1,14 @@
 # Build State
 
+## Current state — 2026-10-13 (X4, owner chose D-A for every self)
+
+- Baseline `701470e5`; owner chose (a). Only production change is the personal-name call rule in TargetedFixPrompt. Finder and guard are unchanged; prompt test flipped, control/finder/guard tests retained.
+- Relabel adds eight points (008 ×7, 006 7:3): suite 21 known / 137 clean. 23 optional D-A controls carry exact allowed output hashes; five false candidates from the previous 20-point list remain strict controls.
+- Working-tree targeted tests passed; full engine/app/scripts/chunk and strict replay on the X4 commit archive are pending. No APK, device or provider operation; USD 0.
+- Next action: complete clean-archive verification, prepare the one-run 006 measurement package, scan and push feature/v4.19 including 701470e5; then wait for spend authority.
+
+Earlier sections are historical.
+
 ## Current state — 2026-10-13 (X3 done and reviewed; B for 008 not recommended; owner chooses the `cậu` rule scope)
 
 - X3 (`c57edd22`, pushed by the X3 session): D-A relabel table `docs/V419_PRONOUN_DA_RELABEL.json` moves 7 points to the clean controls; suite 29 known / 129 clean; `NameCallRuleDaContradictionTest` pins prompt, finder and guard behaviour against D-A; proposal: change only the prompt; B package for 008 drafted.

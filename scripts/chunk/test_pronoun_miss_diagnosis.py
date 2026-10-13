@@ -284,6 +284,56 @@ class VerifyReplayTest(unittest.TestCase):
         self.assertEqual(run_main(args), 1)
 
 
+class OptionalDaTest(unittest.TestCase):
+    def setUp(self):
+        draft = "「Cậu giúp cậu nhé」"
+        self.rec = {"id": "900:1:1", "run": "900", "key": "1:1", "group": "CLEAN", "layer": "CLEAN_KEPT",
+                    "text": {"draft": draft}, "current": {"status": "KEPT", "reason": "MODEL_KEEP", "afterSha256": P.sha256(draft)}}
+        self.suite = {"records": [self.rec]}
+        self.entry = {"id": "900:1:1", "callName": "Rina", "reason": "RAW identifies the listener; no vocative"}
+
+    def test_keep_name_and_mixed_choices_are_correct_but_other_words_are_regressions(self):
+        self.assertEqual(P.apply_optional_choices(self.suite, [self.entry]), [])
+        for after in ("「Cậu giúp cậu nhé」", "「Rina giúp Rina nhé」", "「Cậu giúp Rina nhé」", "「Rina giúp cậu nhé」"):
+            self.assertTrue(P.valid_da_choice(self.rec, after))
+        for after in ("「Bạn giúp Rina nhé」", "「Rina giúp cậu đi」", "「Rina giúp Ken nhé」", "「Rina giúp cậu nhé!」"):
+            self.assertFalse(P.valid_da_choice(self.rec, after))
+
+    def test_replay_remains_strict_and_live_choice_mode_is_explicit(self):
+        P.apply_optional_choices(self.suite, [self.entry])
+        replay = {"900": {"1:1": {"status": "FIXED", "reason": "REPLACED", "after": "「Rina giúp cậu nhé」"}}}
+        self.assertTrue(P.verify_replay([self.rec], replay)["regressions"])
+        live = P.verify_replay([self.rec], replay, allow_da_choices=True)
+        self.assertEqual(live["regressions"], [])
+        self.assertEqual(live["optionalDaAccepted"], 1)
+        replay["900"]["1:1"]["after"] = "「Bạn giúp cậu nhé」"
+        self.assertTrue(P.verify_replay([self.rec], replay, allow_da_choices=True)["regressions"])
+
+    def test_bad_optional_entries_do_not_change_the_suite(self):
+        for change in ({"id": "absent"}, {"callName": "cô"}, {"reason": ""}):
+            bad = dict(self.entry, **change)
+            self.assertTrue(P.apply_optional_choices(self.suite, [self.entry, bad]))
+            self.assertNotIn("optionalDa", self.rec)
+
+    def test_unclean_or_unadjudicated_outcome_cannot_become_optional(self):
+        self.rec["group"] = "KNOWN"
+        self.assertTrue(P.apply_optional_choices(self.suite, [self.entry]))
+        self.rec["group"] = "CLEAN"
+        self.rec["current"]["afterSha256"] = P.sha256("other text")
+        self.assertTrue(P.apply_optional_choices(self.suite, [self.entry]))
+        self.assertNotIn("optionalDa", self.rec)
+
+    def test_optional_cau_does_not_undo_a_required_vocative_repair(self):
+        self.rec["text"]["draft"] = "「Cậu đi nhé, Ken」"
+        self.rec["text"]["currentAfter"] = "「Cậu đi nhé, Rina」"
+        self.rec["current"]["afterSha256"] = P.sha256(self.rec["text"]["currentAfter"])
+        self.entry["basis"] = "currentAfter"
+        self.assertEqual(P.apply_optional_choices(self.suite, [self.entry]), [])
+        self.assertTrue(P.valid_da_choice(self.rec, "「Cậu đi nhé, Rina」"))
+        self.assertTrue(P.valid_da_choice(self.rec, "「Rina đi nhé, Rina」"))
+        self.assertFalse(P.valid_da_choice(self.rec, "「Cậu đi nhé, Ken」"))
+
+
 class AnalyzeTest(unittest.TestCase):
     def test_analyze_counts_owner_changed_address_lines_by_reason(self):
         with tempfile.TemporaryDirectory() as tmp:

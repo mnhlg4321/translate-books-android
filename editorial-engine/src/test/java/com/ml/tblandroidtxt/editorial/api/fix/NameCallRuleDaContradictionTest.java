@@ -14,16 +14,15 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * v4.19 X3: where the CP-IMPL-14 name-call rule contradicts owner decision D-A (2026-10-13). D-A: when a row's call is a name,
- * "cậu" stays a valid second-person pronoun if the row's self is "mình" or "tớ"; the name is required only at a direct vocative.
- * Rows with another self (tôi, em, ...) keep the old rule.
+ * v4.19 X4: D-A allows second-person "cậu" with a personal-name call for every self (owner, 2026-10-13).
+ * The name remains required at a direct vocative. Only the prompt assertion flips; finder/guard are unchanged.
  *
- * <p>Tests named {@code knownDaContradiction...} pin what the shipped code (CP-IMPL-15) does today; the commit that implements
- * D-A must flip them. {@code control...} tests must keep passing. Invented names (Aki, Rina, Ken) only; no book text, no provider.
+ * <p>The finder/guard {@code knownDaContradiction...} tests still pin shipped behaviour; {@code control...} tests stay unchanged.
+ * Invented names (Aki, Rina, Ken) only; no book text, no provider.
  */
 public final class NameCallRuleDaContradictionTest {
     private static final String HEADER = "from,speaker,target,self,call,scope,note\n";
-    /** Aki and Rina are friends (mình / name); Ken is addressed by Aki with tôi / Ken, a self outside D-A. */
+    /** Aki uses different self forms for Rina and Ken; D-A covers both name-call rows. */
     private static final String ROWS = "リナ,Aki,Rina,mình,Rina,*,x\nアキ,Rina,Aki,mình,Aki,*,x\nケン,Aki,Ken,tôi,Ken,*,x\n";
     private static final List<AddressRow> GUARD_ROWS = List.of(
             new AddressRow("リナ", "Aki", "Rina", "mình", "Rina"),
@@ -58,17 +57,21 @@ public final class NameCallRuleDaContradictionTest {
         assertTrue(flagsAddress(find("「リナ、疲れてない？」", "「Cậu không mệt à?」")));
     }
 
-    // ---- prompt: the call-name rule has no self or vocative condition ----
+    // ---- prompt: every self allows cậu outside a direct vocative ----
 
     @Test public void knownDaContradictionPromptReplacesEveryAddressedCauWithTheCallName() {
         FixPoint point = new FixPoint(1, Set.of(Type.ADDRESS), 0, "「Cậu không mệt à?」", "「疲れてない？」",
                 List.of("ADDRESS Rina -> Aki: self mình, call Aki"), GUARD_ROWS);
         String system = TargetedFixPrompt.build("Vietnamese", "", "「疲れてない？」", "", "", "「Cậu không mệt à?」", "", List.of(point)).system();
-        assertTrue(system.contains("replace that word with the row's call name; do not keep the generic word the row replaces"));
-        // D-A: no exception for self mình/tớ and no restriction to a direct vocative exists in the shipped rule
+        assertFalse(system.contains("replace that word with the row's call name; do not keep the generic word the row replaces"));
+        assertTrue(system.contains("cậu is a valid second-person pronoun regardless of the row's self"));
+        assertTrue(system.contains("keeping cậu or using the row's call name are both correct"));
+        assertTrue(system.contains("still repair a wrong self"));
+        assertTrue(system.contains("not to other generic address words"));
+        assertTrue(system.contains("rows whose call is an address pronoun such as cô"));
         assertFalse(system.contains("mình"));
         assertFalse(system.contains("tớ"));
-        assertFalse(system.contains("only at a direct vocative"));
+        assertTrue(system.contains("only at a direct vocative"));
     }
 
     // ---- guard: "cậu" is not a form of a mình row, so a D-A-valid answer is refused ----

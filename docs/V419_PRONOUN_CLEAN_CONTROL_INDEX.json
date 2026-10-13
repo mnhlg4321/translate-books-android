@@ -1,15 +1,15 @@
 {
  "schema": "pronoun-known-miss-suite-v1",
  "part": "CLEAN",
- "count": 129,
+ "count": 137,
  "byLayer": {
   "CLEAN_FIXED_OK": 24,
-  "CLEAN_KEPT": 97,
+  "CLEAN_KEPT": 105,
   "CLEAN_WRONG_PROPOSAL_BLOCKED": 8
  },
  "byLayerAddressOnly": {
   "CLEAN_FIXED_OK": 16,
-  "CLEAN_KEPT": 95,
+  "CLEAN_KEPT": 103,
   "CLEAN_WRONG_PROPOSAL_BLOCKED": 8
  },
  "finalReferenceByLayerAddressOnly": {
@@ -18,8 +18,8 @@
    "SAME": 1
   },
   "CLEAN_KEPT": {
-   "CHANGED": 12,
-   "SAME": 83
+   "CHANGED": 13,
+   "SAME": 90
   },
   "CLEAN_WRONG_PROPOSAL_BLOCKED": {
    "CHANGED": 1,
@@ -730,6 +730,52 @@
    "draftSha256": "26b3134fd5233d6ce83a67d328f4c08a883f9879b29aba5388f8191344ebc4fd"
   },
   {
+   "id": "006-C6E:7:3",
+   "finalReference": "CHANGED",
+   "run": "006-C6E",
+   "chapter": "006",
+   "key": "7:3",
+   "chunk": 7,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "CLEAN",
+   "layer": "CLEAN_KEPT",
+   "label": "ĐÚNG",
+   "event": "giữ đúng (D-A)",
+   "live": {
+    "status": "KEPT",
+    "reason": "ADDRESS_SCOPE_EXCEEDED"
+   },
+   "current": {
+    "status": "FIXED",
+    "reason": "REPLACED",
+    "afterSha256": "4cb1de054a8eb9f5db7affd6f923b7ad045da65e97c5d9a681aa1fef2575cdb0"
+   },
+   "draftLine": 102,
+   "rawSha256": "379096340d95efe760d0f1c27709d6dc04a1588ceaa01665df402e47523149e9",
+   "draftSha256": "51264d3203864975a02459adbb589e3df934a6425884d63f1d0b648c20436ea6",
+   "relabel": {
+    "rule": "D-A",
+    "reason": "Erika nói với Mitsurugi (self=tôi, call=Fuyu). D-A mọi self cho phép cậu ngôi hai; lời gọi trực tiếp vẫn phải dùng Fuyu. Current sửa Mitsurugi thành Fuyu và giữ cậu, nên lấy currentAfter làm nền tùy chọn để bảo toàn sửa lời gọi.",
+    "previous": {
+     "label": "SÓT",
+     "layer": "S3_GUARD_FALSE_BLOCK",
+     "event": "sửa đúng bị chặn nhầm"
+    }
+   },
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Fuyu",
+    "basis": "currentAfter",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "4cb1de054a8eb9f5db7affd6f923b7ad045da65e97c5d9a681aa1fef2575cdb0",
+     "bc2dee0ac433c897d8126b18c9039390d84446d717298f98dc822172acf22dde"
+    ]
+   }
+  },
+  {
    "id": "006-C6E:7:5",
    "finalReference": "SAME",
    "run": "006-C6E",
@@ -925,6 +971,16 @@
      "layer": "S2_MODEL_KEPT",
      "event": "bỏ sót"
     }
+   },
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Rea",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "ded38a6c2f0a61366234c5a2a11f8ac36dc77a6cf57075097b2d555c17cdcc10",
+     "dedb0128054e391d1e4a00d757bd486d56d55a90ae0755c2bdf2c081a3be57f6"
+    ]
    }
   },
   {
@@ -961,6 +1017,16 @@
      "layer": "S2_MODEL_KEPT",
      "event": "bỏ sót"
     }
+   },
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Rea",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "c3888927b7556e943b31d8ae3431c50b8acedebf1468b00d59574922fa0d0df7",
+     "e1ae290a0d51932b297b635fbfde97563884684d40cf549d665dd486c96e7156"
+    ]
    }
   },
   {
@@ -1321,6 +1387,16 @@
      "layer": "S2_MODEL_KEPT",
      "event": "bỏ sót"
     }
+   },
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Erika",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "93f1b4411b738edd242c0672a17e8edc4277b96b590fbdd80e01dc529d3537ae",
+     "ad2d700a8cb7eb3980c8ac5959d804b26df5cc328eb96b803ad1db5b144c685c"
+    ]
    }
   },
   {
@@ -1357,6 +1433,16 @@
      "layer": "S2_MODEL_KEPT",
      "event": "bỏ sót"
     }
+   },
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Erika",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "b16b835c6e0cbab7aeb84de51efb35b7039c54dba38f6a3a9164007c4c1fcc92",
+     "e72b4c00193aaec7f406bc211b29088f38ad3f05988868b09c45065d76f58552"
+    ]
    }
   },
   {
@@ -1528,6 +1614,16 @@
      "layer": "S2_MODEL_KEPT",
      "event": "bỏ sót"
     }
+   },
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Erika",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "ae8336478fb65d9b0c3c8e5abd2c4c235838b5641b618b5c7f57051c0a56330a",
+     "df7ef75c3c2ead82322dca9d0aed5ccb55094c2d18f10b7e0b73f37d9dfeb2b2"
+    ]
    }
   },
   {
@@ -1591,6 +1687,16 @@
      "layer": "S2_MODEL_KEPT",
      "event": "bỏ sót"
     }
+   },
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Rea",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "1941721a0b261a5b4f2a0c43861418ae21ae400cc0f76bc63eb418c464f48d6c",
+     "3c42d99aadb39e882b5f40f7e208d5dbb928c162f3d6c9ee53a7f0082768479b"
+    ]
    }
   },
   {
@@ -1618,7 +1724,17 @@
    },
    "draftLine": 232,
    "rawSha256": "52e986167c122d91ba8538d7780dcf9ed2b9ded529fcf2125c0ea651e249b955",
-   "draftSha256": "d40fef95dcde95771d409694fc01c2a333d4136644e9239dc9e32fdeea42c237"
+   "draftSha256": "d40fef95dcde95771d409694fc01c2a333d4136644e9239dc9e32fdeea42c237",
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Erika",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "d40fef95dcde95771d409694fc01c2a333d4136644e9239dc9e32fdeea42c237",
+     "eff5ee804db301c480ac61937d1f4f7bc49c904db6169e6d0e24ebd12f69e475"
+    ]
+   }
   },
   {
    "id": "006-C6E:14:4",
@@ -1864,6 +1980,52 @@
    "draftSha256": "a152231120a37be4abca99fbb05ac48149a2a8bf37d859b9d489a27fda181c30"
   },
   {
+   "id": "008-C7A:5:8",
+   "finalReference": "SAME",
+   "run": "008-C7A",
+   "chapter": "008",
+   "key": "5:8",
+   "chunk": 5,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "CLEAN",
+   "layer": "CLEAN_KEPT",
+   "label": "ĐÚNG",
+   "event": "giữ đúng (D-A)",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "9480b378bd7a3540b125c1d3e3d8924636ee73ea1ca76f31b0bae8635267fc8c"
+   },
+   "draftLine": 90,
+   "rawSha256": "8da68851d9356a5e6ea8f4b96b68c0560e9267202b6f0427471229ec897fb6e3",
+   "draftSha256": "9480b378bd7a3540b125c1d3e3d8924636ee73ea1ca76f31b0bae8635267fc8c",
+   "relabel": {
+    "rule": "D-A",
+    "reason": "Erika nói với Asanuma (self=tôi, call=Asanuma). Owner mở rộng D-A cho mọi self: cậu ở vị trí ngôi hai ngoài lời gọi trực tiếp hoặc tên Asanuma đều hợp lệ.",
+    "previous": {
+     "label": "SÓT",
+     "layer": "S2_MODEL_KEPT",
+     "event": "bỏ sót"
+    }
+   },
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Asanuma",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "9480b378bd7a3540b125c1d3e3d8924636ee73ea1ca76f31b0bae8635267fc8c",
+     "f56ae99658c53a2c767a998049af33e5bac131f35d786d7d0687d4b02f2fb404"
+    ]
+   }
+  },
+  {
    "id": "008-C7A:5:9",
    "finalReference": "SAME",
    "run": "008-C7A",
@@ -1889,6 +2051,52 @@
    "draftLine": 91,
    "rawSha256": "68bf829f3afeca454ac62941b30e5a6b51c6575950a980f74ac93dc19e4be906",
    "draftSha256": "27a63b44275f6bc197806aa5414c1597a4a142e3ebcfe8569b0b9bb08e10b989"
+  },
+  {
+   "id": "008-C7A:6:1",
+   "finalReference": "SAME",
+   "run": "008-C7A",
+   "chapter": "008",
+   "key": "6:1",
+   "chunk": 6,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "CLEAN",
+   "layer": "CLEAN_KEPT",
+   "label": "ĐÚNG",
+   "event": "giữ đúng (D-A)",
+   "live": {
+    "status": "KEPT",
+    "reason": "ADDRESS_FORM_NOT_IN_APPLICABLE_ROW"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "ADDRESS_FORM_NOT_IN_APPLICABLE_ROW",
+    "afterSha256": "c269d079fc2af58ff77c275f6bb529735880e43441c73086a142a1e669e79bb1"
+   },
+   "draftLine": 92,
+   "rawSha256": "bc1dfeb476f58cfed7ccf7a0237730db96757a818c8b4a570794a306ddd5945a",
+   "draftSha256": "c269d079fc2af58ff77c275f6bb529735880e43441c73086a142a1e669e79bb1",
+   "relabel": {
+    "rule": "D-A",
+    "reason": "Erika nói với Asanuma (self=tôi, call=Asanuma). Owner mở rộng D-A cho mọi self: cậu ở vị trí ngôi hai ngoài lời gọi trực tiếp hoặc tên Asanuma đều hợp lệ.",
+    "previous": {
+     "label": "SÓT",
+     "layer": "S2B_WRONG_PROPOSAL_BLOCKED_DRAFT_STILL_WRONG",
+     "event": "sửa sai bị chặn đúng"
+    }
+   },
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Asanuma",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "a918448fec0cccc24fbba11fb7b1ea7a5d2ebeabea0373f66a03cb5f5f86d812",
+     "c269d079fc2af58ff77c275f6bb529735880e43441c73086a142a1e669e79bb1"
+    ]
+   }
   },
   {
    "id": "008-C7A:6:2",
@@ -1918,6 +2126,54 @@
    "draftSha256": "f99ade07c9ad246b05bd5b2d9718041f61d6a1035c165d214217712d1ffc09fa"
   },
   {
+   "id": "008-C7A:6:3",
+   "finalReference": "SAME",
+   "run": "008-C7A",
+   "chapter": "008",
+   "key": "6:3",
+   "chunk": 6,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "CLEAN",
+   "layer": "CLEAN_KEPT",
+   "label": "ĐÚNG",
+   "event": "giữ đúng (D-A)",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "2ecf56bfe99a11ae02e8c7a73dcbe71bc82073f62ed2200c9e4c478e39ca03fc"
+   },
+   "draftLine": 95,
+   "rawSha256": "1e9b5335cc4556e4f949bf04fef80ecbd2d3053cc56d2335352a32d86e4f33c7",
+   "draftSha256": "2ecf56bfe99a11ae02e8c7a73dcbe71bc82073f62ed2200c9e4c478e39ca03fc",
+   "relabel": {
+    "rule": "D-A",
+    "reason": "Erika nói với Asanuma (self=tôi, call=Asanuma). Owner mở rộng D-A cho mọi self: cậu ở vị trí ngôi hai ngoài lời gọi trực tiếp hoặc tên Asanuma đều hợp lệ.",
+    "previous": {
+     "label": "SÓT",
+     "layer": "S2_MODEL_KEPT",
+     "event": "bỏ sót"
+    }
+   },
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Asanuma",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "2ecf56bfe99a11ae02e8c7a73dcbe71bc82073f62ed2200c9e4c478e39ca03fc",
+     "98abe70960f76ccfc7c87802523c781c379742158c203d7bff4c1c8945b1c026",
+     "e3b0be5052c64cd50c97e47a0c438824933ab952e71470c8709835ea181a9449",
+     "f6ef133eabfa0fce9c77e339b9003851709eac7bfc92a86f0b3064a0fdd5f813"
+    ]
+   }
+  },
+  {
    "id": "008-C7A:6:4",
    "finalReference": "SAME",
    "run": "008-C7A",
@@ -1943,6 +2199,52 @@
    "draftLine": 96,
    "rawSha256": "b181a6066e080f6b55e6414ed384def1ea4f7f3fdf09facc46ea22f71f46e4cd",
    "draftSha256": "fac0e5028480dfd4c91cb9d5a37eea71a819794026b6e188119f051597a86a02"
+  },
+  {
+   "id": "008-C7A:6:5",
+   "finalReference": "SAME",
+   "run": "008-C7A",
+   "chapter": "008",
+   "key": "6:5",
+   "chunk": 6,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "CLEAN",
+   "layer": "CLEAN_KEPT",
+   "label": "ĐÚNG",
+   "event": "giữ đúng (D-A)",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "eb4a1fc3d8c076991eac1c4749fc0faf63cc40a31c96d07c39cd8e2cefd1ba08"
+   },
+   "draftLine": 97,
+   "rawSha256": "c261ec6359d0796b8fce6cd49fe263ac8c5527dd3329074041134514371333a9",
+   "draftSha256": "eb4a1fc3d8c076991eac1c4749fc0faf63cc40a31c96d07c39cd8e2cefd1ba08",
+   "relabel": {
+    "rule": "D-A",
+    "reason": "Erika nói với Asanuma (self=tôi, call=Asanuma). Owner mở rộng D-A cho mọi self: cậu ở vị trí ngôi hai ngoài lời gọi trực tiếp hoặc tên Asanuma đều hợp lệ.",
+    "previous": {
+     "label": "SÓT",
+     "layer": "S2_MODEL_KEPT",
+     "event": "bỏ sót"
+    }
+   },
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Asanuma",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "b9f8df3b73add6a1d49ee60be113e6106a46c2a0390bd8a3eb911b26388a85c2",
+     "eb4a1fc3d8c076991eac1c4749fc0faf63cc40a31c96d07c39cd8e2cefd1ba08"
+    ]
+   }
   },
   {
    "id": "008-C7A:6:6",
@@ -2107,6 +2409,52 @@
    "draftSha256": "f405aa3131e2ce849f3f434a3806bb16baba747fb3d8e3730c76a5d6c9e20baa"
   },
   {
+   "id": "008-C7A:7:2",
+   "finalReference": "SAME",
+   "run": "008-C7A",
+   "chapter": "008",
+   "key": "7:2",
+   "chunk": 7,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "CLEAN",
+   "layer": "CLEAN_KEPT",
+   "label": "ĐÚNG",
+   "event": "giữ đúng (D-A)",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "5b81616243250c136443d8c83c0195dd1f4c320561290ae8b8803bbea1253cdf"
+   },
+   "draftLine": 115,
+   "rawSha256": "47852a17d6f63e1c04cdf60f465b42c2afb39be811450e48dcd3a338c1bcc50e",
+   "draftSha256": "5b81616243250c136443d8c83c0195dd1f4c320561290ae8b8803bbea1253cdf",
+   "relabel": {
+    "rule": "D-A",
+    "reason": "Erika nói với Asanuma (self=tôi, call=Asanuma). Owner mở rộng D-A cho mọi self: cậu ở vị trí ngôi hai ngoài lời gọi trực tiếp hoặc tên Asanuma đều hợp lệ.",
+    "previous": {
+     "label": "SÓT",
+     "layer": "S2_MODEL_KEPT",
+     "event": "bỏ sót"
+    }
+   },
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Asanuma",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "0eee5dc1e035c730f7b3a6db51a971523ffddc521c52726fc85437b9fc1b29e4",
+     "5b81616243250c136443d8c83c0195dd1f4c320561290ae8b8803bbea1253cdf"
+    ]
+   }
+  },
+  {
    "id": "008-C7A:7:3",
    "finalReference": "SAME",
    "run": "008-C7A",
@@ -2132,6 +2480,100 @@
    "draftLine": 116,
    "rawSha256": "6167e5f9aa759453dc40779443d4687c4af4ef64aff35e92ed32622a6a81579d",
    "draftSha256": "2532c98f4290f8cd4a16c24e9c3b634e121c9d9e9707eecf3236ed8fdf8988ae"
+  },
+  {
+   "id": "008-C7A:7:4",
+   "finalReference": "SAME",
+   "run": "008-C7A",
+   "chapter": "008",
+   "key": "7:4",
+   "chunk": 7,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "CLEAN",
+   "layer": "CLEAN_KEPT",
+   "label": "ĐÚNG",
+   "event": "giữ đúng (D-A)",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "cedf0d381c03c7d2227b850991cbc8794ee3f8f123d0849a2531026ee754e5a9"
+   },
+   "draftLine": 117,
+   "rawSha256": "a30e7d75d2c2ba8377afb67ddb23f2f59073e9cdcec8ebcf9314cbdaf846131f",
+   "draftSha256": "cedf0d381c03c7d2227b850991cbc8794ee3f8f123d0849a2531026ee754e5a9",
+   "relabel": {
+    "rule": "D-A",
+    "reason": "Erika nói với Asanuma (self=tôi, call=Asanuma). Owner mở rộng D-A cho mọi self: cậu ở vị trí ngôi hai ngoài lời gọi trực tiếp hoặc tên Asanuma đều hợp lệ.",
+    "previous": {
+     "label": "SÓT",
+     "layer": "S2_MODEL_KEPT",
+     "event": "bỏ sót"
+    }
+   },
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Asanuma",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "1475e5800de51c9c549f51f2123376335f43fd687d48641ecd8bdbd332c4e404",
+     "b7c74d8ff2638cd3e9fc2cd44d699a74049cea182882990e99161f9acdd583ed",
+     "cedf0d381c03c7d2227b850991cbc8794ee3f8f123d0849a2531026ee754e5a9",
+     "ea9dc20abb8786c5a270556cedad820abe96ab3e68d1c3b14284febab9793a7f"
+    ]
+   }
+  },
+  {
+   "id": "008-C7A:7:5",
+   "finalReference": "SAME",
+   "run": "008-C7A",
+   "chapter": "008",
+   "key": "7:5",
+   "chunk": 7,
+   "types": [
+    "ADDRESS"
+   ],
+   "group": "CLEAN",
+   "layer": "CLEAN_KEPT",
+   "label": "ĐÚNG",
+   "event": "giữ đúng (D-A)",
+   "live": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP"
+   },
+   "current": {
+    "status": "KEPT",
+    "reason": "MODEL_KEEP",
+    "afterSha256": "90791e8b1507d6bd7f1d3df793f2fce9db970ec89da4b950d5a1641f2e588bcb"
+   },
+   "draftLine": 119,
+   "rawSha256": "d638b735c237d8d1736c7e4be6312485dbb8e0559468b94f1f33cf36eaa4ef8e",
+   "draftSha256": "90791e8b1507d6bd7f1d3df793f2fce9db970ec89da4b950d5a1641f2e588bcb",
+   "relabel": {
+    "rule": "D-A",
+    "reason": "Erika nói với Asanuma (self=tôi, call=Asanuma). Owner mở rộng D-A cho mọi self: cậu ở vị trí ngôi hai ngoài lời gọi trực tiếp hoặc tên Asanuma đều hợp lệ.",
+    "previous": {
+     "label": "SÓT",
+     "layer": "S2_MODEL_KEPT",
+     "event": "bỏ sót"
+    }
+   },
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Asanuma",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "5b116439313aeadab4770c53bc6bf2e44fd350c0079a63c2337d6a4f5349f615",
+     "90791e8b1507d6bd7f1d3df793f2fce9db970ec89da4b950d5a1641f2e588bcb"
+    ]
+   }
   },
   {
    "id": "008-C7A:7:6",
@@ -2266,7 +2708,17 @@
    },
    "draftLine": 19,
    "rawSha256": "df0268dab0cd0c74e9655eebac9f26f3ec107511a5bf697fe9e7098fb1f5a881",
-   "draftSha256": "84b01b5a8f2fda989a3bd6666e84605f3c53659f60808f9e82bef9c19b6e47f0"
+   "draftSha256": "84b01b5a8f2fda989a3bd6666e84605f3c53659f60808f9e82bef9c19b6e47f0",
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Rea",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "70f0e52fb706919dcfe4a83807163eb6fa9708b67f089c697a21e1517ba8047a",
+     "84b01b5a8f2fda989a3bd6666e84605f3c53659f60808f9e82bef9c19b6e47f0"
+    ]
+   }
   },
   {
    "id": "011-C7D:2:2",
@@ -2302,6 +2754,16 @@
      "layer": "S3_GUARD_FALSE_BLOCK",
      "event": "sửa đúng bị chặn nhầm"
     }
+   },
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Erika",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "c8bd29b2ba32427f8da0ab080c595f24df6596882257494e9e53214d59f28fc6",
+     "e579c06228af0f07d5fac570fc05ff58585623f2690b0f734d1498886fbd5f86"
+    ]
    }
   },
   {
@@ -2329,7 +2791,17 @@
    },
    "draftLine": 21,
    "rawSha256": "baad5c9a2ed9685d9458fd44b63a2e13a100a6c2d485de9cadfab0c0aeffa86c",
-   "draftSha256": "6c3eaf36db9cff80b41a0eb43d3e55260dcdad693c3c4ce0bf779462fc181dcc"
+   "draftSha256": "6c3eaf36db9cff80b41a0eb43d3e55260dcdad693c3c4ce0bf779462fc181dcc",
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Rea",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "6c3eaf36db9cff80b41a0eb43d3e55260dcdad693c3c4ce0bf779462fc181dcc",
+     "f033dde75b52c556bae95ae82109f42c2530214f0fd4461ae124fb0d49df5837"
+    ]
+   }
   },
   {
    "id": "011-C7D:2:4",
@@ -2356,7 +2828,17 @@
    },
    "draftLine": 25,
    "rawSha256": "03e6cad28cd9b34bd275c89c597ec2f6197686a485c53a9515b9421cfcfb7d57",
-   "draftSha256": "3bcf57cc3e1893cd7fe205684d0625d40b44242546c15bae5c3fb655ee44a2a4"
+   "draftSha256": "3bcf57cc3e1893cd7fe205684d0625d40b44242546c15bae5c3fb655ee44a2a4",
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Rea",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "0169767d2232e6bc9b4dc4befe4bf76bae1d6ccc61e423e17a998da5c9a7fe20",
+     "3bcf57cc3e1893cd7fe205684d0625d40b44242546c15bae5c3fb655ee44a2a4"
+    ]
+   }
   },
   {
    "id": "011-C7D:2:5",
@@ -2383,7 +2865,17 @@
    },
    "draftLine": 26,
    "rawSha256": "52fd02af25e2ed823d6dcc4c037dbe8108c50290aba3f3d2b5063788b2bdacc1",
-   "draftSha256": "ad705fd02b35b4cd7121634c953cd5ab9a6f7d5daf723e617db45c05b77d7ed4"
+   "draftSha256": "ad705fd02b35b4cd7121634c953cd5ab9a6f7d5daf723e617db45c05b77d7ed4",
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Erika",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "630f87841eafbe1acee614984ea5e33cdee5049ff240a7ff5793522685c045fd",
+     "ad705fd02b35b4cd7121634c953cd5ab9a6f7d5daf723e617db45c05b77d7ed4"
+    ]
+   }
   },
   {
    "id": "011-C7D:2:6",
@@ -2410,7 +2902,17 @@
    },
    "draftLine": 29,
    "rawSha256": "f46b806ed2c5e5bfd585e3a3503ca47f74d9f51cfa1d80fdd7e6694ee7070f05",
-   "draftSha256": "c2ab9a7121da646be028bbd3285ddd54c0a35c31aa4cb9a0125d9f2c8a409f4f"
+   "draftSha256": "c2ab9a7121da646be028bbd3285ddd54c0a35c31aa4cb9a0125d9f2c8a409f4f",
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Rea",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "a9e1301df69ae8f0029b72b0351fbe20b7d536e2ec839fbca541a92e66fa7118",
+     "c2ab9a7121da646be028bbd3285ddd54c0a35c31aa4cb9a0125d9f2c8a409f4f"
+    ]
+   }
   },
   {
    "id": "011-C7D:3:1",
@@ -2491,7 +2993,17 @@
    },
    "draftLine": 55,
    "rawSha256": "1a70a1b6c9e0e8029c651521677c7d10369703c7fa2e8e37e18545cfb23a1505",
-   "draftSha256": "95609119c11414c6383e66e9d1b638d5924ca048e183dee1e436410bedab14f1"
+   "draftSha256": "95609119c11414c6383e66e9d1b638d5924ca048e183dee1e436410bedab14f1",
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Rea",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "7224bcdbf27350400557689958efb7ab2ccd9a1f92672e16e44386c69e3cb89f",
+     "95609119c11414c6383e66e9d1b638d5924ca048e183dee1e436410bedab14f1"
+    ]
+   }
   },
   {
    "id": "011-C7D:4:1",
@@ -2545,7 +3057,19 @@
    },
    "draftLine": 65,
    "rawSha256": "2a5e54f2c29d33cdcd6be27b955ce6a6529c3d58c08222877670f1ce1529e0c8",
-   "draftSha256": "d84739b0d062d4db17f7476fc9031019725ae7bc7ea5add2cdac910d622e16dd"
+   "draftSha256": "d84739b0d062d4db17f7476fc9031019725ae7bc7ea5add2cdac910d622e16dd",
+   "optionalDa": {
+    "rule": "D-A",
+    "callName": "Erika",
+    "basis": "draft",
+    "reason": "D-A mọi self: chỉ cậu ngôi hai ngoài lời gọi trực tiếp được tùy chọn; giữ toàn bộ chữ khác.",
+    "allowedAfterSha256": [
+     "08f338d0a882b7012a42c9c9c290fc77f1579b2286490521f6d063c8602bc72f",
+     "214967d19f3456684b0cee4c9339b83d791134a69a7ba6b3cd8e51dba3d96469",
+     "96bcefa8d012779ee8ad50845f25465c7de7df6ca4059db19738cc3407be3e94",
+     "d84739b0d062d4db17f7476fc9031019725ae7bc7ea5add2cdac910d622e16dd"
+    ]
+   }
   },
   {
    "id": "011-C7D:5:1",

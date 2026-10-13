@@ -17,6 +17,7 @@ import ast
 import base64
 import difflib
 import hashlib
+import itertools
 import json
 import re  # noqa: F401
 import sys
@@ -425,6 +426,53 @@ def apply_relabel(suite: dict[str, Any], relabel: dict[str, Any]) -> list[str]:
     return []
 
 
+def apply_optional_choices(suite: dict[str, Any], entries: list[dict[str, Any]]) -> list[str]:
+    """Pin complete allowed lines as hashes: only adjudicated second-person cậu spans may become the call name.
+
+    RAW adjudication and the row's call are supplied by the owner-reviewed table, not inferred from FINAL.
+    Replay stays strict; this extra contract is for grading a future live measurement.
+    """
+    by_id = {r["id"]: r for r in suite["records"]}
+    problems, planned, seen = [], [], set()
+    for entry in entries:
+        rid, name = entry.get("id", ""), entry.get("callName", "")
+        rec = by_id.get(rid)
+        if rid in seen or rec is None or rec["group"] != "CLEAN" or not name or not entry.get("reason"):
+            problems.append(f"{rid}: invalid or duplicate D-A optional clean entry")
+            continue
+        seen.add(rid)
+        basis = entry.get("basis", "draft")
+        if basis not in ("draft", "currentAfter"):
+            problems.append(f"{rid}: invalid optional basis")
+            continue
+        draft = rec["text"][basis]
+        spans = list(re.finditer(r"\bcậu\b", draft, re.IGNORECASE))
+        if not spans or len(spans) > 8 or any(t in WORDS or t == "mình" for t in tokens(name)):
+            problems.append(f"{rid}: D-A needs second-person cậu spans and a personal-name call")
+            continue
+        allowed = set()
+        for choices in itertools.product((False, True), repeat=len(spans)):
+            parts, offset = [], 0
+            for match, replace in zip(spans, choices):
+                parts.extend((draft[offset:match.start()], name if replace else match.group()))
+                offset = match.end()
+            parts.append(draft[offset:])
+            allowed.add(sha256("".join(parts)))
+        if rec["current"]["afterSha256"] not in allowed:
+            problems.append(f"{rid}: current clean outcome is outside the D-A alternatives")
+        planned.append((rec, {"rule": "D-A", "callName": name, "basis": basis, "reason": entry["reason"],
+                              "allowedAfterSha256": sorted(allowed)}))
+    if not problems:
+        for rec, choice in planned:
+            rec["optionalDa"] = choice
+    return problems
+
+
+def valid_da_choice(rec: dict[str, Any], after: str) -> bool:
+    """Future measurement accepts exactly the adjudicated complete-line hashes, never a new pronoun or other edit."""
+    return rec.get("group") == "CLEAN" and sha256(after) in rec.get("optionalDa", {}).get("allowedAfterSha256", [])
+
+
 def split_suite(suite: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
     known = [r for r in suite["records"] if r["group"] in ("KNOWN", "UNSURE")]
     clean = [r for r in suite["records"] if r["group"] == "CLEAN"]
@@ -494,11 +542,12 @@ def expectation(rec: dict[str, Any]) -> str:
     return "NO_REPLAY_CHANGE_EXPECTED"  # S2/S2B/S2P/S5: the model decided; only a new live run can move them
 
 
-def verify_replay(records: list[dict[str, Any]], replays: dict[str, dict[str, dict[str, str]]]) -> dict[str, Any]:
+def verify_replay(records: list[dict[str, Any]], replays: dict[str, dict[str, dict[str, str]]], allow_da_choices: bool = False) -> dict[str, Any]:
     """Compare a fresh replay with the recorded current outcome of every suite record."""
     regressions: list[str] = []
     improvements: list[str] = []
     unchanged = 0
+    optional_accepted = 0
     for rec in records:
         replay = replays.get(rec["run"])
         if replay is None:
@@ -511,6 +560,9 @@ def verify_replay(records: list[dict[str, Any]], replays: dict[str, dict[str, di
         same = (o_status, o_reason, o_after) == (exp["status"], exp["reason"], exp.get("afterSha256", ""))
         if same:
             unchanged += 1
+            continue
+        if allow_da_choices and o_status in ("FIXED", "KEPT") and obs and valid_da_choice(rec, obs["after"]):
+            optional_accepted += 1
             continue
         want = expectation(rec)
         if rec["group"] == "CLEAN":
@@ -525,7 +577,10 @@ def verify_replay(records: list[dict[str, Any]], replays: dict[str, dict[str, di
             unchanged += 1  # still not applied, reason text may differ
         else:
             improvements.append(f"{rec['id']}: {exp['status']}/{exp['reason']} -> {o_status}/{o_reason} (review)")
-    return {"unchanged": unchanged, "regressions": regressions, "improvements": improvements}
+    result = {"unchanged": unchanged, "regressions": regressions, "improvements": improvements}
+    if allow_da_choices:
+        result["optionalDaAccepted"] = optional_accepted
+    return result
 
 
 # ---------------------------------------------------------------------------------------------------------- CLI
@@ -554,6 +609,7 @@ def main(argv: list[str] | None = None) -> int:
     v.add_argument("--known", required=True, type=Path)
     v.add_argument("--clean", required=True, type=Path)
     v.add_argument("--replay", action="append", required=True, metavar="RUN=TSV")
+    v.add_argument("--allow-da-choices", action="store_true", help="future measurement only; strict replay must omit this flag")
     args = ap.parse_args(argv)
 
     if args.cmd == "analyze":
@@ -569,6 +625,8 @@ def main(argv: list[str] | None = None) -> int:
         suite = build_suite(args.guard_dir, args.facts, args.final_root)
         if args.relabel:
             bad = apply_relabel(suite, json.loads(args.relabel.read_text(encoding="utf-8")))
+            if not bad:
+                bad = apply_optional_choices(suite, json.loads(args.relabel.read_text(encoding="utf-8")).get("optionalChoices", []))
             if bad:
                 print("\n".join(bad), file=sys.stderr)
                 return 1
@@ -591,7 +649,7 @@ def main(argv: list[str] | None = None) -> int:
     for item in args.replay:
         run, _, path = item.partition("=")
         replays[run] = read_replay(Path(path))
-    result = verify_replay(known + clean, replays)
+    result = verify_replay(known + clean, replays, args.allow_da_choices)
     print(json.dumps(result, ensure_ascii=False, indent=1))
     return 1 if result["regressions"] else 0
 

@@ -32,10 +32,12 @@ public final class TargetedFixPrompt {
                 + "ADDRESS rules are candidates, not proof of who speaks. Apply self only to the identified speaker's own references, "
                 + "and call only to that speaker addressing the row's target; never reverse the direction or borrow another speaker's row. "
                 + "For ADDRESS-only points change only the evidenced address forms, preserving all other wording and order. "
-                + "Call names: when a DRAFT word addressed to the listener (cậu, bạn, mày, anh, chị, em) stands where a row lists a personal name as call, "
-                + "and the RAW dialogue around the line shows that the row's target is the person spoken to (a reply to that person, a vocative, or the person "
-                + "named in the same exchange), replace that word with the row's call name; do not keep the generic word the row replaces. "
-                + "Keep [id] = only when the person spoken to is really not established. "
+                + "Call names: when a row lists a personal name as call, cậu is a valid second-person pronoun regardless of the row's self. "
+                + "The call name is required only at a direct vocative where RAW calls the listener by name. "
+                + "Outside that vocative, keeping cậu or using the row's call name are both correct; do not replace a valid cậu just because the listener is identified. "
+                + "Keep [id] = if there is no other evidenced error in the line; still repair a wrong self using the identified speaker's row. "
+                + "This exception applies only to cậu with a personal-name call, not to other generic address words (bạn, mày, anh, chị, em) "
+                + "or rows whose call is an address pronoun such as cô; those must follow the applicable call when RAW establishes the roles. "
                 + "If RAW does not establish the roles or a concrete error, return [id] =.\n";
         StringBuilder user = new StringBuilder();
         appendContext(user, "RAW CONTEXT BEFORE", rawBefore);
