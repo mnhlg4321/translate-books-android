@@ -1,15 +1,15 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-13 (+07:00), X5 one-run 006 measurement stopped at a strict clean regression.
+- Updated: 2026-10-13 (+07:00): v4.19 FROZEN by the owner after the X5 review.
 - Current version: v4.19.0 in development; shipped baseline v4.18.0 remains.
 - Current branch: `feature/v4.19`, worktree `D:\P5E-builds\wt-v4.19`; owner's D:\App Translate Books unchanged.
-- Current commit: `5dbf320dcb757caa6d59ac6688374f7d12219a5d` is the implementation baseline immediately before this measurement-result/snapshot commit; confirm actual HEAD on resume.
+- Current commit: `d9b5821d` is the implementation baseline immediately before this snapshot commit (not a self-reference).
 - Current build: production `4.19-x5.1`/code267 from `548594e7`, APK SHA-256 `841CFC6BED8CCFB72711510F8E9296F2BA94FE4DB70C555F45CB07A56C36D488`, event `build-20261013-082743`; AndroidTest `x5-test-20261013-082900` from `5dbf320d`, APK `E81F5200CFD6F86DEFA0DC021D163001AF769D7CB126087A11A28AEDD9F5038E`; artifact/backup byte-mirrored, installed/verified only emulator-5554.
-- Current phase: X5 live measurement executed, QUALITY_FAIL / STOPPED at `X5_CLEAN_REGRESSION:1:7` after 1 call; X6_RELEASE pending. One-run authority consumed; no retry/additional paid dispatch.
+- Current phase: FROZEN_BY_OWNER. Checklist steps 05-14 open; no tag/release for v4.19; shipped app remains v4.18.0.
 - Completed tasks: X0-X4 offline; X5 owner authority recorded; test-only single-attempt/per-chunk stop gate; wrapper production/test retention; host regression and device store/fake QA; one authorized live dispatch and evidence readback; ledger hash chain verified closed; private RAW/DRAFT/candidate reading page retained; aggregate QA report and hash summary mirrored.
-- Pending tasks: owner review and scope of an offline repair for strict clean 006 1:7; later-chunk genuine errors/old wrong-pass cases remain NOT_MEASURED on this live run. Release workflow remains open.
+- Pending tasks: none while frozen. Work packages X4b, DISPUTED relabelling, X5 gates and the B packages are cancelled, not deferred.
 - Known bugs/limits: model dropped a title and changed a third-person address form at clean1:7, guard accepted it; outside D-A. Candidate rows for other speakers do not establish Ai's roles. One response does not prove the new prompt alone caused it. Five other clean outputs at chunk1 unchanged; no eligible accepted FINAL. Finder/guard production unchanged, no new relabel waiver.
 - Regression status: host engine718 total/1skip; app478 total/8skip each debug/release/benchmark, 0 failures; five X5 gate tests PASS. Device store6+6+1 PASS, fake stored-response14 fake/0real PASS. Local Android file-read compile error and fake hash-case failure repaired before live. X4 strict replay158/158 retained. Measurement quality FAIL; no active compile/test failure.
 - Evidence: `artifacts/qa/v4.19-x5-006-20261013/QA_REPORT.md` and `SUMMARY.json`, matching backup. Raw/reading page outside Git in `D:/P5E-private/v419-pronoun/X5-20261013/`, mirrored private backup.
 - Spend: 1 provider call, `openai/gpt-5.6-luna` medium; 6381 input/1136 output, finish stop; settled USD0.0029583 under cap0.10, 1 RESERVE/1 SETTLE, pending0/overrun0. Ledger `V419-X5-006-20261013-f8a6ecf7`. No retry; unused cap grants no new run.
-- Next action: owner reviews private 1:7 and scopes an offline repair against strict clean controls; the one-run grant is consumed, no additional paid dispatch.
+- Next action: none; unfreeze only on a new owner decision tied to a concrete problem observed in app output, not to suite numbers.

@@ -1,6 +1,14 @@
 # Build State
 
-## Current state — 2026-10-13 (X5 006 measured, quality FAIL; stopped after one call)
+## Current state — 2026-10-13 (v4.19 FROZEN by the owner)
+
+- Owner froze v4.19 after review of X5. The only product change on the branch is the D-A wording of the name-call rule in `TargetedFixPrompt` (low value); remaining real misses (wrong self `tớ`/`tôi`, `cậu` that must be `cô`, speakers without a pronoun row) have no fix; recent rounds mostly built measurement scaffolding for a 3-chapter, 158-point suite.
+- X5 review: the stop at clean 006 1:7 is most likely a clean-label error (the owner FINAL also removes the title `chị` and changes `Chị ấy`; RAW says both are second-years; speaker Ai has no pronoun row). Model also proposed `chúng tôi` -> `bọn em` at 1:2 (borrowed from the teacher rows); the guard blocked it. Measured and rejected offline: a cue-in-RAW-line gate (keeps 1:7, drops 5/14 real misses) and a third-person guard (would block the FINAL-confirmed edit).
+- Durability: X5 production event `build-20261013-082743` and test event `x5-test-20261013-082900` copied from the worktree into `D:\App Translate Books\artifacts\...` and `backup\...` (5 + 8 files each, hashes identical).
+- Spend for v4.19: one call, USD 0.0029583. No further provider call, build, device or measurement work. Shipped app remains v4.18.0.
+- Next action: none; unfreeze only on a new owner decision tied to a concrete problem observed in app output.
+
+## Earlier — 2026-10-13 (X5 006 measured, quality FAIL; stopped after one call)
 
 - Owner approved the one-run 006 package (luna medium, max14/no retry/cap0.10). Test-only per-chunk gate stopped at X5_CLEAN_REGRESSION:1:7 before the second call. Run INCOMPLETE; no accepted FINAL/quality PASS. No retry/new run authorized; unused cap does not extend the one-run grant.
 - Exact spend USD 0.0029583, 1 RESERVE + 1 SETTLE, pending0/overrun0, 6381 input/1136 output, finish stop. The changed clean point loses a title and changes a third-person address form, outside D-A. Five other clean outputs in chunk1 unchanged; later genuine errors/old wrong-pass cases NOT_MEASURED in this live run.
