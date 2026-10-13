@@ -208,7 +208,7 @@ public final class AddressEditGuardTest {
         assertTrue(address.sceneEntities().contains("shimakawa"));
         // 倉金先輩 is followed by って, yet the call repair to the row's own call word passes once Shimakawa is in the scene
         var result = TargetedFixApplier.apply("「Chị Kuragane là chị gái hả」", List.of(address),
-                TargetedFixParser.parse("[1] 「Chị Erika là chị gái hả」", List.of(address)), glossary);
+                TargetedFixParser.parse("[1] R1 「Chị Erika là chị gái hả」", List.of(address)), glossary);
         assertEquals("「Chị Erika là chị gái hả」", result.text());
     }
 
@@ -262,7 +262,8 @@ public final class AddressEditGuardTest {
     @Test public void theApplierKeepsAnAddressOnlyRepairByteForByteWithItsQuotesAndSymbols() {
         String before = "「Rina…… làm ơn, giúp tớ nhé?!」";
         FixPoint p = address(before, "「リナ……お願い、覚えさせて？！」");
-        var result = TargetedFixApplier.apply(before, List.of(p), TargetedFixParser.parse("[1] 「Rina…… làm ơn, giúp mình nhé?!」", List.of(p)), List.of());
+        // R3 is Aki → Rina, the row the vocative リナ pins
+        var result = TargetedFixApplier.apply(before, List.of(p), TargetedFixParser.parse("[1] R3 「Rina…… làm ơn, giúp mình nhé?!」", List.of(p)), List.of());
         assertEquals("「Rina…… làm ơn, giúp mình nhé?!」", result.text());
         assertEquals(TargetedFixApplier.Status.FIXED, result.outcomes().get(0).status());
     }
@@ -285,8 +286,8 @@ public final class AddressEditGuardTest {
                 header + "A,A,B,tôi,em,*,in scope\nC,C,D,mình,bạn,p9,out of scope\nE,E,F,em,em,*,same word\n", null, null).points();
         assertEquals(1, points.size());
         List<AddressRow> rows = points.get(0).addressRows();
-        assertTrue(rows.contains(new AddressRow("A", "A", "B", "tôi", "em")));
-        assertTrue("a row whose cue is not in the chunk still counts as evidence", rows.contains(new AddressRow("E", "E", "F", "em", "em")));
+        assertTrue("the owner's note travels with the row to the prompt", rows.contains(new AddressRow("A", "A", "B", "tôi", "em", "in scope")));
+        assertTrue("a row whose cue is not in the chunk still counts as evidence", rows.contains(new AddressRow("E", "E", "F", "em", "em", "same word")));
         assertFalse(rows.stream().anyMatch(r -> r.from().equals("C")));
     }
 }

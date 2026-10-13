@@ -25,7 +25,9 @@ import java.util.regex.Pattern;
  * rows of that person only when the other end of the row is not named in the RAW lines next to this one (no scene contact); a
  * vocative {@code from} term pins the rows to that term. A new address word must belong to a row that is still
  * applicable, and a word that already belongs to the pinned row must not be changed;</li>
- * <li>consistency: a line whose two or more address words already fit one row must still fit one row after the edit.</li>
+ * <li>consistency: a line whose two or more address words already fit one row must still fit one row after the edit;</li>
+ * <li>citation: an answer that changes address words names the one row it applies; only that row's forms may be added, none of them
+ * removed, and the row must be one the RAW does not exclude.</li>
  * </ul>
  */
 final class AddressEditGuard {
@@ -44,8 +46,23 @@ final class AddressEditGuard {
 
     private AddressEditGuard() { }
 
-    /** @return a rejection reason, or null when the answer is not contradicted */
+    /** Row-free checks only: the answer may draw its forms from any row the RAW does not exclude. */
     static String rejection(FixPoint point, String candidate) {
+        return rejection(point, candidate, null);
+    }
+
+    /**
+     * Checks an answer that cites a pronoun row ({@code [id] R<n> <line>}). An address change must name the row it applies; the added
+     * forms must belong to that row, a form of that row must not be removed, and the row must not be ruled out by the RAW.
+     *
+     * @param citedRow 1-based row index, {@link TargetedFixParser.Answer#NOT_CITED} or {@link TargetedFixParser.Answer#INVALID_ROW}
+     * @return a rejection reason, or null when the answer is not contradicted
+     */
+    static String rejection(FixPoint point, String candidate, int citedRow) {
+        return rejection(point, candidate, Integer.valueOf(citedRow));
+    }
+
+    private static String rejection(FixPoint point, String candidate, Integer citedRow) {
         if (!point.types().contains(FixPoint.Type.ADDRESS) || point.addressRows().isEmpty() || point.insertion()) return null;
         boolean pure = point.types().size() == 1;
         List<String> beforeTokens = AddressChecklist.tokens(point.draftText());
@@ -67,6 +84,12 @@ final class AddressEditGuard {
         if (plural == null) plural = pluralPhraseChange(afterTokens, delta.addedAt(), lexicon);
         if (plural != null) return plural;
         if (removed.isEmpty() && added.isEmpty()) return null;
+        AddressRow cited = null;
+        if (citedRow != null) {
+            if (citedRow == TargetedFixParser.Answer.NOT_CITED) return "ADDRESS_ROW_NOT_CITED";
+            if (citedRow < 1 || citedRow > point.addressRows().size()) return "ADDRESS_ROW_CITATION_INVALID";
+            cited = point.addressRows().get(citedRow - 1);
+        }
         if (PLURAL_AUDIENCE.matcher(Normalizer.normalize(point.rawText(), Normalizer.Form.NFC)).find()) return "ADDRESS_AMBIGUOUS_AUDIENCE";
         if (pure) {
             List<String> removedNames = namesIn(lexicon, removed);
@@ -82,6 +105,14 @@ final class AddressEditGuard {
         for (AddressRow row : point.addressRows()) if (!evidence.excludes(row)) applicable.add(row);
         List<AddressRow> pinned = new ArrayList<>();
         for (AddressRow row : applicable) if (row.pair() && evidence.vocativeFrom.contains(row.from())) pinned.add(row);
+        if (cited != null) {
+            if (!applicable.contains(cited)) return "ADDRESS_CITED_ROW_EXCLUDED";
+            // a vocative in RAW names the listener: a pair row for another listener contradicts it
+            if (cited.pair() && !pinned.isEmpty() && !pinned.contains(cited)) return "ADDRESS_CITED_ROW_NOT_ADDRESSED";
+            Set<String> citedForms = forms(cited);
+            for (String token : added) if (!citedForms.contains(token)) return "ADDRESS_FORM_NOT_IN_CITED_ROW";
+            for (String token : removed) if (citedForms.contains(token)) return "ADDRESS_VALID_FORM_CHANGED";
+        }
         List<AddressRow> justifying = new ArrayList<>();
         for (AddressRow row : applicable) if (!row.pair() || pinned.isEmpty() || pinned.contains(row)) justifying.add(row);
         Set<String> justified = formsOf(justifying);

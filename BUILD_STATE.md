@@ -1,6 +1,99 @@
 # Build State
 
-## Current state — 2026-10-13 (product direction plan approved; v4.19 frozen)
+## Current state — 2026-10-13 (v4.20.0 release closure; E-bis conditions satisfied)
+
+- Release4.20.0/code270, CP-IMPL-18, production261d3b8bc28ad2f8f22c4b6ffd326601b4abc8d7; wrapperbuild-20261013-181401, APK58C1B11FA8DEA27D57BD9830A47007A7757F9F04147A0C3EAAB43F3FD199AFA8, sourceZIPAED3CC03FF574126D5AFC0DDB0B833224C66EDA2E3C562B0FACFDE11632359C9. Testeventv420-ebis-test-20261013-1815, same261d3b8b, APKCC7EFF9FDD165B24C81C2DD6806E9D8103FD33A920CA696BC18BFD5DF1ABA644. Allpayloadsmirroredbeforevalidatedemulator-onlyinstall; temporarybuildworktree/branch removed.
+- Annotatedv4.20.0 atQA source2bc2384f9459143093eaf3403b2e83f1c9822372; productioninputsequalchecked261d3b8b. PreTag/PreBackup PASS; releasebuild-20261013-182812 andtag-v4.20.0 each30checksums/4mirrors PASS, atworktree andmainworkspaceartifact/backup. QA/tagZIPAA946E23EAE195BB2E88E46C32E6C3503539E2CE7D86910908E6E3AA39B423BA, separateproductionZIPequalsactualwrapperAED3CC03FF574126D5AFC0DDB0B833224C66EDA2E3C562B0FACFDE11632359C9.
+- Fresh exactarchive:engine720PASS/1SKIP; app eachdebug/release/benchmark470PASS/3SKIP; p6 106PASS/chunk24PASS;0FAIL,lint0errors/57warnings,AndroidTestcompilePASS. Device158PASS/7SKIP/0FAIL/0INCOMPLETE,SQLite/reopen/export/restart6PASS. No code/test repair or failed attempt/rerun.
+- New emulator Macrobenchmark2PASS,cold-startmedian1087.8085ms/EditorialCPU P50 12.10205ms; synthetic1222units/53chunks465ms/1PASS;11realtraces. Media1PASS/6visuallyinspectedimages/video onRC270;originalDB+journalrestoredhashesmatch. System-pickerinteraction not measured; live014/017SQLitepersistence notclaimed.
+- Owner01437rows+3replaylinesaccepted;01716correct/1headingwrong, deterministicfix13e12a65 verifiedoffline, conditionalreleaseapproved. Earlier014/017evidence/readingsunchanged; no new paid semantic evaluation underCP-IMPL-18, expressly no new provider run persection8.
+- E-bis0realcalls/USD0; totalv4.20USD0.04188915 unchanged. Knownlimits:unflaggedself-address/translation-stagepronoun/004narration/missingrowcitationsdiscarded; newdiscoveriesdeferredexceptregressions;v4.19frozen; ownerworkspacecheckout untouched.
+- Checklist14stepsdocumented COMPLETE; Completegate runswithclosurecommit. Main --no-ff integration and non-force feature/tag/main publication are finalauthorizedoperations independently checked at handoff, without productionchange.
+- Evidence: artifacts/qa/v4.20-ebis-20261013/QA_REPORT.md + SUMMARY.json/backup; rawhostprivateD:/P5E-private/v420-ebis-host-evidence. BuildmanifestCF6E6A843BD6C7E960F86467A89485FD131253ED180F1C8CC5AF26A4FDDB546E;tagmanifestDAEFD0A03EF86765AFAA755AB166ABA960D209BE78F94104344C838A72BFDFAF.
+- Next action: owner uses release4.20.0; any new product work belongs to a separately approved later version.
+
+## Earlier — 2026-10-13 (owner chose B: fix merged, RC to be rebuilt; tag/merge pre-approved on all checks)
+
+- `fix/v4.20-kana-glossary` (`13e12a65`, CP-IMPL-18) fast-forwarded into `feature/v4.20`; RELEASE_NOTES and CHANGELOG 4.20.0 updated (heading fix, glossary lock, CP-IMPL-18, owner readings, row-number omissions as a limit).
+- RC 4.20.0 / code 269 (`e989653b`) is superseded: it lacks the fix. E-bis (`docs/V420_E_RELEASE_WORK_REQUEST.md` section 8) rebuilds the RC, repeats QA, performance, media and archive, with no new paid run; the owner approved tag `v4.20.0` and the merge to `main` without a further question when every condition there holds.
+- No build, device or provider operation in this step; v4.20 spend USD 0.04188915 (014: 0.0180166, 017: 0.02387255).
+- Next action: execute E-bis.
+
+## Earlier — 2026-10-13 (017 owner reading 16/17 correct; KANA heading / glossary lock fix on branch `fix/v4.20-kana-glossary`, not in the RC)
+
+- Owner read 017: 16 correct, 1 wrong (chunk 1 point 1, KANA): the heading kept its Han chapter number from RAW, the finder flagged it as untranslated, and the answer replaced the correct glossary term. Not a C1 (row citation) error. Pre-existing since `44dcfffe` (in v4.18.0 too); same family as 008 "Zombie Leader" (second occurrence).
+- Fix on `fix/v4.20-kana-glossary` (from RC docs head `d482fdce`): finder ignores a Han-numeral run (〇一二三四五六七八九十百千) that stands verbatim in the aligned RAW; KANA rule text rewritten (it contained Russian); new content lock `GLOSSARY_TARGET_REMOVED` keeps the DRAFT line (KEPT, never blocks the chunk) when a non-ADDRESS answer drops a glossary target the DRAFT already uses for a RAW source; contract `CP-IMPL-18`.
+- Evidence: 28 chapters have 21 numeral-only heading lines, 19 kept in the owner FINAL. Finder on 8 chapters: KANA points -1 in 7 chapters, ADDRESS and GLOSSARY unchanged, calls -1 in 004 and 008. Replay of the stored 014 and 017 responses: every chunk without the heading identical to the RC (6/6 and 9/9); chunk 1 not comparable (point ids shift). Tests: engine 721 (1 skip), app 473 (3 skip), 0 failures; new `KanaHeadingAndGlossaryLockTest` (6).
+- RC 4.20.0 / code 269 (`e989653b`) is unchanged and does not contain this fix. No build, device or provider operation; USD 0.
+- Next action: owner chooses: tag the RC now and ship the fix in the next release, or merge the fix and rebuild the RC before tagging.
+
+## Earlier — 2026-10-13 (E1–E9 complete; stop before tag/merge for owner017 reading)
+
+- RC4.20.0/code269, CP-IMPL-17, production source e989653bf645c46e5e6a155b2e3f5049c1c40702; event build-20261013-165726, APK7008057CCC10F33A889FCF58C1A8C9DFFCCCA50A27F564C7A575D7E8594858DA. Production/source/test payloads verified at main workspace artifacts+backup before emulator-only validated installs. Shipped4.18.0 unchanged.
+- Clean exact-source archive: engine714 PASS/1 SKIP; app debug/release/benchmark each470 PASS/3 SKIP; p6 106 PASS, chunk24 PASS; lint0 errors/57 warnings, AndroidTest compile PASS. Initial Java8 environment repaired by selecting installed JDK21.
+- Device fake QA158 PASS/7 SKIP/0 FAIL effective, including SQLite/reopen/export and6 process-death phases. Original failed SQLite fixture log retained; test-only74706f8d adds row citations/updates old reason, no production diff. Repaired AndroidTest APKCC7EFF9FDD165B24C81C2DD6806E9D8103FD33A920CA696BC18BFD5DF1ABA644 pinned to RC.
+- New emulator Macrobenchmark cold-start median1015.4787 ms, editorial-frame CPU P50 15.33755 ms; synthetic1222-unit/53-chunk planning458 ms;10 iteration traces+planning Perfetto retained.6 synthetic screenshots and video on RC; owner database+journal hashes restored unchanged. UI export checks use callbacks/file URI, not system-picker interaction.
+- Sole017 live3aaa5f6b-8dff-43ad-a7dd-35d7612debd3:11/11 ACCEPTED,FINAL_ELIGIBLE,10 calls,0retry/refused,USD0.02387255;10 RESERVE/10 SETTLE,hash chain valid,pending0/overrun0. All finish stop, luna medium. Live store is in-memory; SQLite evidence comes from fake device QA, not this live run.
+- E8 reading17 rows:13 changed +8 B lines/12 reference substitutions (overlap4),9 changed outside B,3 cậu↔name,0 C2 format keeps/NOT_REACHED. B3 reference-matched/4 unchanged/1 other is preliminary only; owner semantic decision pending. Report artifacts/qa/v4.20-e-20261013/QA_REPORT.md and SUMMARY.json; private book evidence stays outside Git.
+- E9: QA/checklist commit678f69dc; PreTag PASS, release archive build-20261013-171650 at worktree artifacts/releases/v4.20.0 and backup/v4.20.0, also mirrored at D:/App Translate Books artifact+backup release roots. All29 manifest entries/hash checks and byte mirrors PASS; SHA256SUMS49329AD3FD2D70466B9F2217CD26BAA95449A9D2B827E3F215E37801013308B6. Archive source ZIP equals RC source833F0D7C88C710FFCA6EAABEF7262D716E31B720BFB689D400999C3431F72096; repaired test source supplemental. Temporary build worktrees/branches removed after payload retention. Authorized scan/push of feature/v4.20 only; no tag/merge.
+- Next action: owner reads D:/P5E-private/chunk-runs/V420-E/READING_017.html and decides tag/merge4.20.0. No second run or production change authorized.
+
+## Earlier — 2026-10-13 (C2' accepted by the owner; step E work request written)
+
+- Owner read the three replayed lines of 014 chunk 13 (13:1, 13:2, 13:5): 3/3 correct. C2' is accepted.
+- Work request `docs/V420_E_RELEASE_WORK_REQUEST.md` (E1-E9): clean-archive regression, release notes, RC 4.20.0 via the exact-release wrapper (throw-away local branch `feature/v4.20.0`), device QA with the fake provider (same groups as the 4.18.0 RC, incl. SQLite store/reopen/export), new real Macrobenchmark/Perfetto, media on the RC, one live run on 017 on the RC (max 10 calls, no retry, cap USD 0.08), owner reading page, PreTag and `build-*` archive; stop before tag/merge.
+- No code, build, device or provider operation in this step; v4.20 spend so far USD 0.0180166.
+- Next action: execute the E work request.
+
+## Earlier — 2026-10-13 (C2': one malformed point answer no longer blocks the chunk; CP-IMPL-17)
+
+- Owner approved the roadmap C2' -> E (E includes one full-chapter live run on 017 on the RC build, max 10 calls, no retry, new ledger, cap USD 0.08) and the threshold: a chunk is blocked only when two or more points of one response fail the format checks.
+- Cause: the run service retries only failures before dispatch (`EditorialPairRunService` lines 295-300); a STRUCTURE_BLOCKED chunk stops the chapter (lines 302, 383). In the D014 run one glossary answer added `「` and `。」` (RAW, DRAFT and FINAL have none) and stopped the chapter at chunk 13 of 16.
+- Fix in `TargetedFixApplier`: a single format rejection becomes KEPT with its reason (no text changes); two or more stay REJECTED; anchoring errors unchanged. `PairContract.REVISION` CP-IMPL-17. Tests: engine 715 (1 skip), app 473 (3 skip), 0 failures on the working tree; new engine test for the two-answer block, service tests for one and two malformed answers; three tests updated from the old one-answer-blocks rule.
+- Offline replay of the stored D014 responses through the new code: 48 points, 27 FIXED, 21 KEPT, 0 REJECTED; chunk 13: 13:3 KEPT PROTECTED_SYMBOL_CHANGE, 13:1/13:2/13:5 FIXED, 13:4 KEPT ADDRESS_VALID_FORM_CHANGED; chunks 1-12 give the same 24 FIXED lines as the live run. TSV SHA-256 `e50b3e8c4abe3ead23c9ec0a326bb4e94db1e9812226ead52cf9678aa193c0cc` (private).
+- No build, device or provider operation; USD 0 in this step (v4.20 total USD 0.0180166).
+- Next action: owner reads the three newly applied lines; then step E.
+
+## Earlier — independent review 2026-10-13, baseline 71781fd2 (documentation only; committed with d33c9371)
+
+- Local HEAD and origin match 71781fd2; production main source unchanged from APK source9bcbabf4. Evidence20/20 and reading-page hashes match; production payload mirrors5/5 and APK hash match. Ledger verified:7 calls/USD0.01801660/pending0. No new test/build/device/provider action.
+- Chunk13 point3: model added U+300C/U+3002/U+300D absent from DRAFT. PROTECTED_SYMBOL_CHANGE is correct preservation enforcement, not a proven guard bug; no production patch warranted. Existing protected-symbol tests cover this family.
+- S0–S9 execution is complete; full product acceptance is not. Owner subsequently confirmed all37 S7 rows correct in the conversation, including unchanged rows. Actual self fixes in B:8 lines/10 occurrences; owner-reported misses/new wrong edits/uncertain on reviewed rows:0/0/0. All16 changed lines outside B approved (10 ADDRESS, including1 cậu↔name;6 GLOSSARY). Recommend continue C1, not release. The original S8 counts/SUMMARY remain historical reference matching, not adjudication.
+- Chapter INCOMPLETE;14–16 NOT_REACHED. The runner uses InMemoryPairRunStore, so SQLite persistence/reopen/SAF remain unmeasured. No controlled comparison proves the incremental gain of citation alone. Detailed identifier-only assessment is in PRODUCT_DIRECTION_PLAN section7; private book text/adjudication details are not copied into Git.
+- Next action: owner approves a scope to address the glossary response adding protected symbols at chunk13 point3 while retaining the guard; no fix or additional run performed.
+
+The following S9 report is retained as the execution baseline.
+
+## Earlier — 2026-10-13 (v4.20 D, S0–S9 complete; owner reading pending)
+
+- Product decision: ship or drop C1 after owner reads S7. Worktree feature/v4.20 resumed clean at f7e39015=origin; S1 no-retry/max-call runner9bcbabf4, test-only fake keep formattingabffa518. Production C1 main sources unchanged from starting f7e39015, CP-IMPL-16; no v4.19 gates/relabel/scaffolding.
+- Build production 4.20-d.1/code268, event build-20261013-095132 from9bcbabf4, APK BB603C680AC5EE17CA8874AE078FCEC7BA91559382118CC358F248B51465184E, source ZIP C7EC11C46530ABBBD0C5CFBAF36B026EDB83442C25337ADB8F4CECAF7A7F92B9. Test event v420-d-test-20261013-095400 fromabffa518, APK 3C61FA67B236B98FE0A738966DB085A8B02A11859DA72BA03A73E686F7DBB2E8, source ZIP 284D058AEF21F450CB1FA6587E337FF82AEFE60B6552F059348DEF1F4DCA6689. Only fake response formatting differs between sources; production identical.
+- Both payloads retained in D:/App Translate Books/artifacts/builds|test-builds/v4.20-d.1/<event> and backup/builds|test-builds, byte-verified before install. Worktree mirrors retained. Only emulator-5554 installed/read back268/name4.20-d.1, matching signer; no phone/clear/reset/pilot.
+- Wrapper tests debug472/3skip/0fail; lint0errors/57warnings; AndroidTest compile/assemble PASS. S4 16 chunks/10 fake/0real/0refused, noRetry=true, TXT equal DRAFT bytes. Local private script-copy quoting issue repaired before S4/S5; original script unchanged.
+- Exactly one live014:7 calls, no retry/refusal, all finish stop, USD0.01801660, 7 RESERVE/7 SETTLE, hash chain valid/pending0/overrun0. Chunk13 stopped on glossary PROTECTED_SYMBOL_CHANGE/TARGETED_LINE_REJECTED;14–16 NOT_REACHED, state INCOMPLETE. No accepted full FINAL; no quality conclusion and no further run authorized.
+- S7 D:/P5E-private/chunk-runs/V420-D/READING_014.html has37 rows (all24 changed lines plus21 step-B lines, with8 intersecting), actual R citations/guard reasons and blank owner adjudication. Preliminary S8:7 reference-word-matched/13 unchanged/1 other among21 B lines (34 occurrences);16 changed outside B;1 cậu↔name. Summary/report artifacts/qa/v4.20-d-014-20261013 mirrored to backup; raw20-file evidence private with hashes in SUMMARY.json.
+- Next action: owner reads S7 and decides ship/drop C1 under PRODUCT_DIRECTION_PLAN section7; stop after S9.
+
+Earlier sections are historical.
+
+## Earlier — 2026-10-13 (D package approved; contract revision CP-IMPL-16; work request written)
+
+- Owner approved the D spend (chapter 014, one run, luna medium, max 10 calls, no retry, cap USD 0.08) and the push of `feature/v4.20`.
+- Clean `git archive 739e5c49` (zip SHA-256 `2C3ABA5558C4D8D07A5A1565CADC73FC8B5919DA5DEC0B85CF05E1686504AAF4`): engine 714 (1 skip), app debug 472 (3 skip), 0 failures; `:app:lintDebug` 0 errors / 57 warnings; androidTest compile OK.
+- Review fix: C1 changed the prompt and answer format without raising `PairContract.REVISION`; raised `CP-IMPL-15` -> `CP-IMPL-16` so a run prepared under the old contract is never resumed with the new one. Working tree after the fix: engine 714 / app 472, 0 failures.
+- Work request `docs/V420_D_014_WORK_REQUEST.md` (S0-S9): runner no-retry mode in androidTest only, wrapper build stored in the workspace `artifacts/` and `backup/`, emulator-5554 only, fake run then one live run, private reading page, preliminary counts; the owner decides ship or drop.
+- No build, device or provider operation yet; USD 0.
+- Next action: execute the work request.
+
+## Earlier — 2026-10-13 (v4.20 opened; plan step C (C1) done offline; step D waits for a spend authority)
+
+- Branch `feature/v4.20` from `main` `be2056d8`, checklist `release_checklists/v4.20.md`, canonical plan `PRODUCT_DIRECTION_PLAN.md`.
+- C1 in `editorial-engine` only: `TargetedFixPrompt` (numbered ROWS with the owner note, folded ADDRESS rules, answer format `[id] R<n> <line>`, no keep-by-default when RAW shows who speaks to whom), `TargetedFixParser` (row citation, only for points with rows), `AddressEditGuard` (cited-row checks on top of the existing ones), `TargetedFixApplier` (passes the citation), `AddressRow` (carries the note), `FixPointFinder` (shared rule marker constant). Translation flow unchanged.
+- Tests: new `AddressRowCitationTest` (8); four existing tests updated to the cited format. Working tree: engine 714 (1 skip), app 472 (3 skip), 0 failures; androidTest compiles. Offline prompt estimate: 014 = 10 calls, 46,046 input tokens, luna reserve USD 0.060664; 006 input 70,013 (was 73,220).
+- No build, device or provider operation; USD 0.
+- Next action: owner grants the D package (014, one run, max 10 calls, cap USD 0.08) or not.
+
+## Earlier — 2026-10-13 (product direction plan approved; v4.19 frozen)
 
 - Owner approved `PRODUCT_DIRECTION_PLAN.md` (steps A-E, one product metric: owner-counted fixes, misses and wrong edits per chapter; anti-waste rule). Shipped app stays v4.18.0 / code 266 from `82626ac8`.
 - v4.19 (`feature/v4.19` at `3098a059`) is frozen and unreleased; its X5 run cost 1 call / USD 0.0029583. Its work packages are cancelled.

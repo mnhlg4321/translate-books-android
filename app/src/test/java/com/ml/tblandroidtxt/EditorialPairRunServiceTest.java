@@ -208,7 +208,7 @@ public final class EditorialPairRunServiceTest {
 
     // ---- inconvenient but valid answers (STRUCTURAL only)
 
-    @Test public void targetedFixesApplyOnlyToDeclaredLinesAndUnsafeAnswersStopTheRun() throws Exception {
+    @Test public void targetedFixesApplyOnlyToDeclaredLinesAndOneUnsafeAnswerKeepsOnlyItsLine() throws Exception {
         FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> {
             if (index == 2) return targetedText(request, index, (i, d) -> "<EDITED>unsafe</EDITED>", "stop", new BigDecimal("0.0001"));
             return targetedText(request, index, (i, d) -> index == 1 ? d.replace("かな", "đã sửa") : "=",
@@ -221,15 +221,17 @@ public final class EditorialPairRunServiceTest {
         assertEquals(PairState.ACCEPTED, items.get(0).state);
         assertEquals(PairState.ACCEPTED, items.get(1).state);
         assertTrue(items.get(1).candidateText.contains("dòng 3: đã sửa"));
-        assertEquals(PairState.STRUCTURE_BLOCKED, items.get(2).state);
-        assertTrue(items.get(2).gateJson.contains("TARGETED_LINE_REJECTED"));
-        assertEquals(PairState.IMPORTED, items.get(3).state);
-        assertEquals(3, fake.requests.size());
-        assertEquals(RunState.INCOMPLETE, done.state);
+        // C2': the single malformed answer keeps its DRAFT line, the chunk and the chapter go on
+        assertEquals(PairState.ACCEPTED, items.get(2).state);
+        assertFalse(items.get(2).gateJson.contains("TARGETED_LINE_REJECTED"));
+        assertTrue(items.get(2).candidateText.contains("dòng 3: かな"));
+        assertEquals(PairState.ACCEPTED, items.get(3).state);
+        assertEquals(4, fake.requests.size());
+        assertEquals(RunState.FINAL_ELIGIBLE, done.state);
         assertTrue(svc.exportPlan(run.id).text.contains("dòng 3: かな"));
     }
 
-    @Test public void aShortTargetAnswerIsBlockedInsteadOfLosingTheRestOfItsLine() throws Exception {
+    @Test public void aShortTargetAnswerKeepsTheWholeDraftLineInsteadOfLosingTheRestOfIt() throws Exception {
         String longLine = "Bản DRAFT có đủ nội dung để kiểm tra phần sửa theo điểm mục tiêu ".repeat(7) + "かな";
         List<String> raw = List.of("「長い行の意味を保ってください。」\n\n");
         List<String> draft = List.of(longLine + "\n\n");
@@ -238,16 +240,15 @@ public final class EditorialPairRunServiceTest {
         PairRun run = svc.prepare(1, new EditorialPairSource("JOB", "7", "x", "", raw, draft, List.of()), "", "", null, "m", "Vietnamese", CAP, "C");
         PairRun done = svc.execute(run.id, null);
         PairItem cut = svc.items(run.id).get(0);
-        assertEquals(PairState.STRUCTURE_BLOCKED, cut.state);
-        assertTrue(cut.gateJson.contains("TARGETED_LINE_REJECTED") && cut.gateJson.contains("LINE_LENGTH_RATIO"));
-        assertEquals(longLine, cut.candidateText);
+        // C2': one malformed answer keeps its DRAFT line; the chunk is not blocked
+        assertEquals(PairState.ACCEPTED, cut.state);
+        assertTrue(cut.gateJson.contains("LINE_LENGTH_RATIO"));
+        assertFalse(cut.gateJson.contains("TARGETED_LINE_REJECTED"));
+        assertEquals(longLine, cut.candidateText.trim());
         assertTrue(cut.responseText.contains("[1]"));
-        assertEquals(RunState.FINAL_BLOCKED, done.state);
-        assertEquals("", done.mergedText);
+        assertEquals(RunState.FINAL_ELIGIBLE, done.state);
         EditorialPairRunService.ExportPlan plan = svc.exportPlan(run.id);
-        assertFalse(plan.complete);
-        assertTrue(plan.label.startsWith("Bản tạm: 0/1"));
-        assertTrue("the rejected answer never replaces the source line", plan.text.contains(longLine));
+        assertTrue("the short answer never replaces the source line", plan.text.contains(longLine));
     }
 
     @Test public void anAnswerClosedWithTheWrongTagIsAVisibleWarningAndTheRunKeepsGoing() throws Exception {

@@ -20,6 +20,19 @@ public final class TargetedFixApplier {
     private record Span(int start, int contentEnd, int end, String ending) { }
     private record Edit(int start, int end, String replacement, int id, boolean insertion) { }
 
+    /**
+     * A malformed answer (symbols, Japanese, length, tags, several lines) for one point keeps that DRAFT line and lets the other
+     * points of the chunk apply; only more than this many malformed answers in one response block the chunk, because the response
+     * as a whole is then suspect (owner decision 2026-10-13, plan C2'). Anchoring errors always block.
+     */
+    private static final int MAX_POINT_LOCAL_FORMAT_REJECTIONS = 1;
+
+    /**
+     * A content lock like the ADDRESS lock: the answer removes a glossary target that the DRAFT line already uses for a source term
+     * of its RAW. The line stays as the DRAFT and the chunk is not blocked (chapter 017 heading "Guardian", chapter 008 "Zombie Leader").
+     */
+    static final String GLOSSARY_TARGET_REMOVED = "GLOSSARY_TARGET_REMOVED";
+
     private TargetedFixApplier() { }
 
     public static Result apply(String draft, List<FixPoint> points, TargetedFixParser.Parsed parsed,
@@ -29,6 +42,7 @@ public final class TargetedFixApplier {
         LineUnits units = LineUnits.parse(source);
         List<Outcome> outcomes = new ArrayList<>();
         List<Edit> edits = new ArrayList<>();
+        List<Integer> formatRejections = new ArrayList<>();
         for (FixPoint point : points == null ? List.<FixPoint>of() : points) {
             TargetedFixParser.Answer answer = parsed == null ? null : parsed.answers().get(point.id());
             String before = point.draftText();
@@ -45,11 +59,12 @@ public final class TargetedFixApplier {
             String normalized = preserveDraftTerminator(before, candidate);
             boolean restoredTerminator = !normalized.equals(candidate);
             candidate = normalized;
-            String reject = rejection(point, candidate, glossary);
+            String reject = rejection(point, candidate, answer.row(), glossary);
             if (reject != null) {
                 // The ADDRESS lock only says the rows cannot justify this answer: the line stays as the DRAFT and the other points
-                // of the chunk still apply. A malformed answer (symbols, Japanese, length) is still a rejection that blocks the chunk.
-                Status status = reject.startsWith(AddressEditGuard.PREFIX) ? Status.KEPT : Status.REJECTED;
+                // of the chunk still apply. A malformed answer is decided after the loop (MAX_POINT_LOCAL_FORMAT_REJECTIONS).
+                Status status = reject.startsWith(AddressEditGuard.PREFIX) || reject.equals(GLOSSARY_TARGET_REMOVED) ? Status.KEPT : Status.REJECTED;
+                if (status == Status.REJECTED) formatRejections.add(outcomes.size());
                 outcomes.add(new Outcome(point, status, before, before, reject));
                 continue;
             }
@@ -90,6 +105,13 @@ public final class TargetedFixApplier {
                         restoredTerminator ? "REPLACED_WITH_DRAFT_TERMINATOR" : "REPLACED"));
             }
         }
+        // a rejected point added no edit, so turning it into KEPT changes no text
+        if (!formatRejections.isEmpty() && formatRejections.size() <= MAX_POINT_LOCAL_FORMAT_REJECTIONS) {
+            for (int at : formatRejections) {
+                Outcome rejected = outcomes.get(at);
+                outcomes.set(at, new Outcome(rejected.point(), Status.KEPT, rejected.before(), rejected.after(), rejected.reason()));
+            }
+        }
         edits.sort(Comparator.comparingInt(Edit::start).reversed()
                 .thenComparing(Edit::insertion) // replacements first at a shared boundary
                 .thenComparing(Comparator.comparingInt(Edit::id).reversed()));
@@ -98,7 +120,7 @@ public final class TargetedFixApplier {
         return new Result(output.toString(), outcomes);
     }
 
-    private static String rejection(FixPoint point, String candidate, List<EditInputs.GlossaryEntry> glossary) {
+    private static String rejection(FixPoint point, String candidate, int citedRow, List<EditInputs.GlossaryEntry> glossary) {
         if (candidate.isEmpty()) return "EMPTY_CANDIDATE";
         if (candidate.indexOf('\n') >= 0 || candidate.indexOf('\r') >= 0) return "MULTILINE_CANDIDATE";
         if (candidate.indexOf('<') >= 0 || candidate.indexOf('>') >= 0 || candidate.contains("```")
@@ -108,7 +130,8 @@ public final class TargetedFixApplier {
         if (sourceScript && !RawAlignedNormalizer.containsKanaOrHan(before) && !authorizedGlossarySource(candidate, glossary)) return "NEW_KANA_OR_HAN";
         if (!point.insertion()) {
             if (!protectedSymbols(before, point).equals(protectedSymbols(candidate, point))) return "PROTECTED_SYMBOL_CHANGE";
-            String address = AddressEditGuard.rejection(point, candidate);
+            if (removesGlossaryTarget(point, before, candidate, glossary)) return GLOSSARY_TARGET_REMOVED;
+            String address = AddressEditGuard.rejection(point, candidate, citedRow);
             if (address != null) return address;
             int oldLetters = PairText.letters(before);
             int newLetters = PairText.letters(candidate);
@@ -140,6 +163,24 @@ public final class TargetedFixApplier {
                 || Character.getType(c) == Character.MATH_SYMBOL
                 || Character.getType(c) == Character.CURRENCY_SYMBOL).forEach(out::appendCodePoint);
         return out.toString();
+    }
+
+    /**
+     * True when the DRAFT line uses a glossary target whose source is in the point's RAW and the answer drops that target. Not for
+     * ADDRESS points: a pronoun row may turn a surname into its call name, and the ADDRESS lock already limits what may change there.
+     */
+    private static boolean removesGlossaryTarget(FixPoint point, String before, String candidate, List<EditInputs.GlossaryEntry> glossary) {
+        if (glossary == null || point.types().contains(FixPoint.Type.ADDRESS)) return false;
+        String raw = java.text.Normalizer.normalize(point.rawText(), java.text.Normalizer.Form.NFC);
+        String draft = java.text.Normalizer.normalize(before, java.text.Normalizer.Form.NFC).toLowerCase(java.util.Locale.ROOT);
+        String answer = java.text.Normalizer.normalize(candidate, java.text.Normalizer.Form.NFC).toLowerCase(java.util.Locale.ROOT);
+        for (EditInputs.GlossaryEntry term : glossary) {
+            String source = java.text.Normalizer.normalize(term.source().trim(), java.text.Normalizer.Form.NFC);
+            String target = java.text.Normalizer.normalize(term.target().trim(), java.text.Normalizer.Form.NFC).toLowerCase(java.util.Locale.ROOT);
+            if (source.isEmpty() || target.isEmpty() || !raw.contains(source)) continue;
+            if (draft.contains(target) && !answer.contains(target)) return true;
+        }
+        return false;
     }
 
     private static boolean authorizedGlossarySource(String candidate, List<EditInputs.GlossaryEntry> glossary) {

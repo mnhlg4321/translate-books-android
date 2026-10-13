@@ -1,0 +1,156 @@
+{
+  "chapter": "014",
+  "runId": "7bc2b3e2-9795-4299-98f4-5ebfdcca6bfe",
+  "groupId": "V420-D-014-20261013-7bc2b3e2",
+  "state": "INCOMPLETE",
+  "calls": 7,
+  "noRetry": true,
+  "maxCalls": 10,
+  "dispatched": 7,
+  "refused": 0,
+  "usd": "0.01801660",
+  "inputTokens": 36973,
+  "outputTokens": 7312,
+  "finishReasons": [
+    "stop",
+    "stop",
+    "stop",
+    "stop",
+    "stop",
+    "stop",
+    "stop"
+  ],
+  "overruns": 0,
+  "S8": {
+    "preliminaryOnly": true,
+    "stepBOccurrences": 34,
+    "stepBDraftLines": 21,
+    "stepBLines": {
+      "changedToReferenceWords": 7,
+      "unchanged": 13,
+      "changedOther": 1
+    },
+    "partialReferenceWordMatches": [],
+    "appChangedLines": 24,
+    "changedOutsideStepB": 16,
+    "cauNameChangedLines": 1,
+    "guardKeptByReason": {
+      "ADDRESS_SCOPE_EXCEEDED": 1,
+      "ADDRESS_CITED_ROW_EXCLUDED": 3,
+      "ADDRESS_PLURAL_SELF": 1,
+      "ADDRESS_VALID_FORM_CHANGED": 1,
+      "ADDRESS_ROW_NOT_CITED": 0,
+      "ADDRESS_FORM_NOT_IN_CITED_ROW": 0,
+      "ADDRESS_CITED_ROW_NOT_ADDRESSED": 0
+    },
+    "NOT_REACHED_chunks": [
+      14,
+      15,
+      16
+    ],
+    "readingRows": 37,
+    "referenceCountingRule": "All step-B old→new word substitutions on a line matched against app token edits; partial matches are changedOther. This is not semantic adjudication."
+  },
+  "ownerDecision": "PENDING_S7_READING",
+  "readingSha256": "8375ea3eb1557c76354aaa2680a6c3f68f3caadf90ad0015ea4c845ed3580bd0",
+  "inputHashes": {
+    "014_JAKUAKU_MONSTER_VOL1_DRAFT.txt": "6546cec1b4be245b9f518be42b7a413e86c2817c4196c58f624a582ef08fb115",
+    "014_JAKUAKU_MONSTER_VOL1_chapter_glossary.csv": "257bcd6d6f0ae28bd2338a3cb92106e743ddf155a4691d3381bbf2e2f7982183",
+    "014_PRONOUN_JAKUAKU_MONSTER_VOL1.csv": "a73f3f723bb3c1312ef654757b4127c323870ce80c49ccef437546e0ad83cd37",
+    "014_RAW_JAKUAKU_MONSTER_VOL1.txt": "fad64d9b2e32eb635ab6203fc7fa436f568d8098757389d304639d69020ff02d"
+  },
+  "evidenceHashes": {
+    "chunk-plan.json": "b608f70c2060d8f052a23e15326bad90177e97c1d182cf97d2dae12edee13582",
+    "chunks.json": "e9ee01667f2f5d159362612920a4c655e36a5c9a1105882b06e0a9a88f0bacb6",
+    "final.txt": "dfe0bcc2bd847d031f8d28c443449509c6492ef59886bc737fe96df0273594e5",
+    "prompts/001-EDIT.txt": "d1fe81da35c946449c437d01e026eecbe373f518962d07f75ad78e8e575ef52a",
+    "prompts/002-EDIT.txt": "fd07aa0aa189be6e16f117fff619154f34f03edcb240d76adfc19763aa6c1d99",
+    "prompts/003-EDIT.txt": "ef8b035e81b126ae278fd9c55cf370bd54e54cbaba34b59dd7ff095aba2a792f",
+    "prompts/004-EDIT.txt": "56dabaff7c218aaf3c12fde25518ccc6f2e2fd7db12d4e7c78ddc6088124effc",
+    "prompts/005-EDIT.txt": "664a0d63cd410c889ee64693629563c7b64f424b65b52c2213653de713e751c1",
+    "prompts/006-EDIT.txt": "346fa269a87b78bcebbdf547bc3dfab6e239383c4c430f133bb0d5190381da1a",
+    "prompts/007-EDIT.txt": "5e1868b69c60a2da653d92e55ed08be74dd13cac4731e2822b93087f10af58e4",
+    "responses/001-EDIT.json": "b1bc7c7111f6c7dc8aaf94c7a0ccf22e32c08f8c7bb7dca9e69b219afe10cfcd",
+    "responses/002-EDIT.json": "da11af74ff2252feb86b90cc0a49c278c8be3032f30ffaf931b8f4093af593f6",
+    "responses/003-EDIT.json": "73ff6fb7f6457b61feb2eed9f0f62dc73873f1bbbc033ff43d79b730cf34cc2a",
+    "responses/004-EDIT.json": "6f20fb4ba874be589cebd4b4b01c5a0b50e3433dc63cb9e37febb56fbbb6f545",
+    "responses/005-EDIT.json": "711effad536c7578646bad3200dca5eec7ccaa765761e9278064b04a8fabecc4",
+    "responses/006-EDIT.json": "a1094c1c25ccd40b2b582d8d7bab55781452ec1af09b48b3a99aaf2b1ae18e39",
+    "responses/007-EDIT.json": "2cb5a9402b7f780891b95d91b261365181c7fb94212e4a9c2faa1e5151cb1036",
+    "run-metadata.json": "add80500590057b687d1cf9f3fe8a92121f80d40303aeeeeb25e4e4b79d65101",
+    "spend-ledger.jsonl": "5b443990f15876db790c7dd50c69f786347a1843b3975019dbd1943379c432f4",
+    "structural.json": "68a682d5a01567cb1fbc598e1dd7460a4952748e25747e33afa229824abc0977"
+  },
+  "S0": {
+    "baseline": "f7e39015f77fe7eb734925cff4d4ff4619069f53",
+    "branch": "feature/v4.20",
+    "clean": true,
+    "originMatched": true
+  },
+  "S1": {
+    "implementation": "9bcbabf419bc85083fb3fa4ac971341d1cd4bef9",
+    "fakeNoop": "abffa518dd335ea58337ef3e11e1f3af9b9c89bc",
+    "androidTestCompile": "PASS",
+    "productionChange": false
+  },
+  "S2": {
+    "version": "4.20-d.1",
+    "versionCode": 268,
+    "productionEvent": "build-20261013-095132",
+    "productionApkSha256": "BB603C680AC5EE17CA8874AE078FCEC7BA91559382118CC358F248B51465184E",
+    "productionSourceZipSha256": "C7EC11C46530ABBBD0C5CFBAF36B026EDB83442C25337ADB8F4CECAF7A7F92B9",
+    "testEvent": "v420-d-test-20261013-095400",
+    "testApkSha256": "3C61FA67B236B98FE0A738966DB085A8B02A11859DA72BA03A73E686F7DBB2E8",
+    "testSourceZipSha256": "284D058AEF21F450CB1FA6587E337FF82AEFE60B6552F059348DEF1F4DCA6689",
+    "workspaceArtifactsAndBackupByteMatched": true
+  },
+  "S3": {
+    "device": "emulator-5554",
+    "versionCode": 268,
+    "versionName": "4.20-d.1",
+    "signerToken": "abebea4b",
+    "clearOrReset": false
+  },
+  "S4": {
+    "runId": "6f74eee3-bc0c-4df9-85d4-27500b3be9e2",
+    "chunks": 16,
+    "fakeCalls": 10,
+    "realCalls": 0,
+    "refused": 0,
+    "finalMatchesDraftBytes": true,
+    "draftAndFinalSha256": "6546cec1b4be245b9f518be42b7a413e86c2817c4196c58f624a582ef08fb115"
+  },
+  "S5": {
+    "authorizedRuns": 1,
+    "runs": 1,
+    "capUsd": "0.08",
+    "model": "openai/gpt-5.6-luna",
+    "reasoning": "medium",
+    "maxCalls": 10,
+    "calls": 7,
+    "retries": 0,
+    "refused": 0,
+    "finishReasons": [
+      "stop",
+      "stop",
+      "stop",
+      "stop",
+      "stop",
+      "stop",
+      "stop"
+    ],
+    "stopChunk": 13,
+    "stopReason": "TARGETED_LINE_REJECTED",
+    "pointReason": "PROTECTED_SYMBOL_CHANGE",
+    "pointType": "GLOSSARY"
+  },
+  "S6": {
+    "ledgerHashChain": "VALID",
+    "reserves": 7,
+    "settles": 7,
+    "pending": 0,
+    "overruns": 0,
+    "settledUsd": "0.01801660"
+  },
+  "privateOriginalRunnerSha256": "9C42650452A66970CB0E305D1FBF9A89F1F369EEEFFFD71DAE026C9B3A6028A0"
+}
