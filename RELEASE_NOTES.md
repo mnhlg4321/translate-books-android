@@ -1,7 +1,7 @@
 # Translate Books 4.20.0 Release Notes
 
-Status: RELEASE_CANDIDATE preparation (rebuild with the heading/glossary fix); owner approved tag/merge once every check of the rebuilt RC passes.
-Branch: feature/v4.20. Shipped version remains 4.18.0.
+Status: tagged v4.20.0 after all E-bis release conditions passed; main integration/publication is the authorized final step.
+Branch: feature/v4.20. Release APK4.20.0/code270, CP-IMPL-18, source261d3b8b; annotated tag atQA source2bc2384f (production inputs identical).
 
 ## 4.20.0 changes
 

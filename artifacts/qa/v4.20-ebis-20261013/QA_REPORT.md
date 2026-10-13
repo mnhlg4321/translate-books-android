@@ -30,7 +30,7 @@ python -m unittest discover -s scripts/chunk -p test_*.py
 | scripts/p6 |106|0|0|
 | scripts/chunk |24|0|0|
 
-Lint0errors/57warnings; AndroidTest compile PASS. Raw host XML/binary/stdout retained privately at D:/P5E-private/v420-ebis-host-evidence because integration-test stdout includes existing book fixtures; only counts/hashes public. New wrapper tests/lint/build also PASS. No local repair or regression failure during E-bis.
+Lint0errors/57warnings; AndroidTest compile PASS. Raw host XML/binary/stdout retained privately at D:/P5E-private/v420-ebis-host-evidence because integration-test stdout includes existing book fixtures; only counts/hashes public. New wrapper tests/lint/build also PASS. No code/test repair or regression/build failure during E-bis.
 
 ## E4 — fresh QA on the new RC, fake provider only
 
@@ -68,3 +68,11 @@ EditorialR1MediaWalkthroughInstrumentedTest r1_media=run PASS. Six screenshots v
 ## Section8 step2 release conditions
 
 E1/E4: no FAIL/unexplained failure; RC/test retained and mirrored before install; E5/E6 real evidence retained; exact production source261d3b8b checked and unchanged. PreTag/build-event archive verification is recorded in the subsequent release closure; tag/merge occurs only after these final checks PASS. QA-only tag source may include these reports, but archive helper must prove all production inputs identical to261d3b8b and retain its exact source ZIP separately via ProductionGitRef.
+
+## Release closure — conditional authority exercised
+
+- QAcommit2bc2384f9459143093eaf3403b2e83f1c9822372; PreTag PASS, clean status and production-input diff empty vs261d3b8b. Allsection8step2conditions met before tag.
+- Releaseeventbuild-20261013-182812, GitRef2bc2384f, ProductionGitRef261d3b8b:30/30checksums verified in worktree and4byte-identicalmirrors including main-workspace artifact+backup. Manifest SHA CF6E6A843BD6C7E960F86467A89485FD131253ED180F1C8CC5AF26A4FDDB546E.
+- Annotatedv4.20.0 created on2bc2384f (same GitRef asbuildevent), never overwritten/moved. One unquoted PowerShell ref-read command was parsed incorrectly; quoted refs/tags/v4.20.0^{commit} and git show independently confirm2bc2384f. This was a read-only diagnostic issue, not a test/product failure or tag modification.
+- PreBackup PASS; eventtag-v4.20.0, GitRefv4.20.0, ProductionGitRef261d3b8b:30/30checksums and4mirrors verified. Manifest SHA DAEFD0A03EF86765AFAA755AB166ABA960D209BE78F94104344C838A72BFDFAF. Both eventQA-source ZIPs equalSHA AA946E23EAE195BB2E88E46C32E6C3503539E2CE7D86910908E6E3AA39B423BA; supplemental production source equals actualwrapperZIP AED3CC03FF574126D5AFC0DDB0B833224C66EDA2E3C562B0FACFDE11632359C9.
+- Archive reports/summaries are immutable pre-closure copies; this current report records verified closure facts without replacing those payloads. Temporaryfeature/v4.20.0 build worktree/branch removed afterretention. Full14-stepCOMPLETE gate PASS after checklist/status/currentstate completion, repeated on the closurecommit; main --no-ff integration and non-force branch/tag/main publication follow undersection8, tree/ref equality verified at handoff. No new provider call.

@@ -84,7 +84,7 @@
     "headingFix": "13e12a65"
   },
   "section8Conditions": {
-    "PreTag": "PENDING",
+    "PreTag": "PASS",
     "productionMatchesCheckedCommit": "PASS",
     "E5": "PASS",
     "E4": "PASS",
@@ -93,7 +93,7 @@
     "E6": "PASS"
   },
   "qaEvidenceHashes": {
-    "QA_REPORT.md": "18fc5ffe822ee42dd9a44a38c6059b13d4aefe5de8d96c6f8f9e818a0212169e",
+    "QA_REPORT.md": "3816e9f96f78420f2515ce004851c57bd21253810fc84790b185d00e1eebc5d6",
     "device/method-summary.json": "9be5dece45d40d629f7e00fc08af367768809a986b2ff577f0d9eb50d19a98f9",
     "device/raw/chunk-EditorialApiBienTapFlow.txt": "bf8427c1169936080f143782330c8699b63d653b41c651f07af4e14d1a440184",
     "device/raw/chunk-EditorialApiBienTapUi.txt": "93c3af9e66e62d26c63eba9b8b364db0901aafb02e639e543bd912f00937caf5",
@@ -163,5 +163,25 @@
   "privateHostEvidenceRoot": "D:/P5E-private/v420-ebis-host-evidence",
   "privateHostEvidenceFileCount": 339,
   "privateHostEvidenceSetSha256": "8ce363b8610c20e6ff9f4372f9e31c20922f8046d183b1bb81405858feb5a608",
-  "privateHostSetHashRule": "UTF8 of sorted relativePath + space + lowercaseSHA256 lines joined by LF, no trailing LF"
+  "privateHostSetHashRule": "UTF8 of sorted relativePath + space + lowercaseSHA256 lines joined by LF, no trailing LF",
+  "releaseClosure": {
+    "workflowStatus": "COMPLETE",
+    "PreTag": "PASS",
+    "PreBackup": "PASS",
+    "Complete": "PASS",
+    "tag": "v4.20.0",
+    "annotatedTagTarget": "2bc2384f9459143093eaf3403b2e83f1c9822372",
+    "productionGitRef": "261d3b8bc28ad2f8f22c4b6ffd326601b4abc8d7",
+    "buildReleaseEvent": "build-20261013-182812",
+    "buildManifestSha256": "CF6E6A843BD6C7E960F86467A89485FD131253ED180F1C8CC5AF26A4FDDB546E",
+    "tagReleaseEvent": "tag-v4.20.0",
+    "tagManifestSha256": "DAEFD0A03EF86765AFAA755AB166ABA960D209BE78F94104344C838A72BFDFAF",
+    "buildChecksumEntries": 30,
+    "tagChecksumEntries": 30,
+    "mirrorsPerReleaseEvent": 4,
+    "qaTagSourceZipSha256": "AA946E23EAE195BB2E88E46C32E6C3503539E2CE7D86910908E6E3AA39B423BA",
+    "productionSourceZipSha256": "AED3CC03FF574126D5AFC0DDB0B833224C66EDA2E3C562B0FACFDE11632359C9",
+    "temporaryBuildWorktreeAndBranchRemoved": true,
+    "publicationProtocol": "Authorized main --no-ff merge, tree equality and non-force refs publication independently verified at handoff"
+  }
 }
