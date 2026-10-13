@@ -1,6 +1,14 @@
 # Build State
 
-## Current state — 2026-10-13 (owner chose B: fix merged, RC to be rebuilt; tag/merge pre-approved on all checks)
+## Current state — 2026-10-13 (E-bis new RC270, QA/performance/media complete; final release gates next)
+
+- RC4.20.0/code270, CP-IMPL-18, exact source261d3b8bc28ad2f8f22c4b6ffd326601b4abc8d7; eventbuild-20261013-181401, APK58C1B11FA8DEA27D57BD9830A47007A7757F9F04147A0C3EAAB43F3FD199AFA8, sourceZIPAED3CC03FF574126D5AFC0DDB0B833224C66EDA2E3C562B0FACFDE11632359C9. Production/test payloads verified in main-workspace artifact+backup roots and worktree mirrors before validatedemulator-only install. Testeventv420-ebis-test-20261013-1815, same261d3b8b, APKCC7EFF9FDD165B24C81C2DD6806E9D8103FD33A920CA696BC18BFD5DF1ABA644.
+- New clean archive regression: engine720PASS/1SKIP, app eachdebug/release/benchmark470PASS/3SKIP, p6 106PASS/chunk24PASS;0FAIL; lint0errors/57warnings;AndroidTestcompilePASS. Fresh RCdeviceQA158PASS/7SKIP/0FAIL/0INCOMPLETE, SQLite/reopen/export/restart6/6PASS; no test repair or rerun needed.
+- No new paid run or provider call. E-bis spendUSD0; totalv4.20USD0.04188915 unchanged. Old014/017evidence/reading hashes unchanged. Shipped4.18.0 remains until conditionalreleasechecks finish.
+- New emulator Macrobenchmark2PASS: cold-startmedian1087.8085ms,EditorialCPU P50 12.10205ms; synthetic1222units/53chunks planned465ms,1PASS;10newiterationtraces+planningPerfetto retained. Media1PASS,6screenshots visually inspected/video onRC270,originalDB+journal restoredhashesmatch. No failed attempt/rerun or code/test change during E-bis. Report artifacts/qa/v4.20-ebis-20261013/QA_REPORT.md + SUMMARY.json, rawhostprivate.
+- Next action: verify PreTag/newbuild-event archive, then exercise conditionaltag/tagarchive/Complete/mainmerge/push undersection8 only if allconditionsPASS.
+
+## Earlier — 2026-10-13 (owner chose B: fix merged, RC to be rebuilt; tag/merge pre-approved on all checks)
 
 - `fix/v4.20-kana-glossary` (`13e12a65`, CP-IMPL-18) fast-forwarded into `feature/v4.20`; RELEASE_NOTES and CHANGELOG 4.20.0 updated (heading fix, glossary lock, CP-IMPL-18, owner readings, row-number omissions as a limit).
 - RC 4.20.0 / code 269 (`e989653b`) is superseded: it lacks the fix. E-bis (`docs/V420_E_RELEASE_WORK_REQUEST.md` section 8) rebuilds the RC, repeats QA, performance, media and archive, with no new paid run; the owner approved tag `v4.20.0` and the merge to `main` without a further question when every condition there holds.

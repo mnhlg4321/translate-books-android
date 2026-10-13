@@ -1,0 +1,188 @@
+{
+    "context": {
+        "build": {
+            "brand": "google",
+            "device": "emu64xa",
+            "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:15/AE3A.240806.043/12960925:userdebug/dev-keys",
+            "id": "AE3A.240806.043",
+            "model": "sdk_gphone64_x86_64",
+            "type": "userdebug",
+            "version": {
+                "codename": "REL",
+                "sdk": 35
+            }
+        },
+        "cpuCoreCount": 4,
+        "cpuLocked": false,
+        "cpuMaxFreqHz": 2000,
+        "memTotalBytes": 2592722944,
+        "sustainedPerformanceModeEnabled": false,
+        "artMainlineVersion": 350820300,
+        "osCodenameAbbreviated": "REL",
+        "compilationMode": "run-from-apk",
+        "payload": {}
+    },
+    "benchmarks": [
+        {
+            "name": "coldStartup",
+            "params": {},
+            "className": "com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark",
+            "totalRunTimeNs": 51888542100,
+            "metrics": {
+                "timeToInitialDisplayMs": {
+                    "minimum": 1001.0218,
+                    "maximum": 1225.8055,
+                    "median": 1087.8085,
+                    "coefficientOfVariation": 0.08091152640195626,
+                    "runs": [
+                        1225.8055,
+                        1114.9209,
+                        1087.8085,
+                        1001.0218,
+                        1025.2971
+                    ]
+                }
+            },
+            "sampledMetrics": {},
+            "warmupIterations": 0,
+            "repeatIterations": 5,
+            "thermalThrottleSleepSeconds": 0,
+            "profilerOutputs": [
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 0",
+                    "filename": "StartupMacrobenchmark_coldStartup_iter000_2026-10-13-11-18-24.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 1",
+                    "filename": "StartupMacrobenchmark_coldStartup_iter001_2026-10-13-11-18-28.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 2",
+                    "filename": "StartupMacrobenchmark_coldStartup_iter002_2026-10-13-11-19-02.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 3",
+                    "filename": "StartupMacrobenchmark_coldStartup_iter003_2026-10-13-11-19-05.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 4",
+                    "filename": "StartupMacrobenchmark_coldStartup_iter004_2026-10-13-11-19-09.perfetto-trace"
+                }
+            ]
+        },
+        {
+            "name": "openEditorialTab",
+            "params": {},
+            "className": "com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark",
+            "totalRunTimeNs": 15766406800,
+            "metrics": {
+                "frameCount": {
+                    "minimum": 2.0,
+                    "maximum": 2.0,
+                    "median": 2.0,
+                    "coefficientOfVariation": 0.0,
+                    "runs": [
+                        2.0,
+                        2.0,
+                        2.0,
+                        2.0,
+                        2.0
+                    ]
+                }
+            },
+            "sampledMetrics": {
+                "frameDurationCpuMs": {
+                    "P50": 12.102049999999998,
+                    "P90": 16.077019999999997,
+                    "P95": 18.835159999999995,
+                    "P99": 21.041672,
+                    "runs": [
+                        [
+                            10.1513,
+                            13.3875
+                        ],
+                        [
+                            8.8218,
+                            21.5933
+                        ],
+                        [
+                            8.4395,
+                            14.0659
+                        ],
+                        [
+                            7.1687,
+                            13.8592
+                        ],
+                        [
+                            10.8166,
+                            15.4641
+                        ]
+                    ]
+                },
+                "frameOverrunMs": {
+                    "P50": -0.016010999999999997,
+                    "P90": 22.012546999999998,
+                    "P95": 23.0035685,
+                    "P99": 23.7963857,
+                    "runs": [
+                        [
+                            -4.76069,
+                            3.445924
+                        ],
+                        [
+                            -4.854916,
+                            18.394162
+                        ],
+                        [
+                            -7.219724,
+                            21.517212
+                        ],
+                        [
+                            -8.393152,
+                            21.79232
+                        ],
+                        [
+                            -3.477946,
+                            23.99459
+                        ]
+                    ]
+                }
+            },
+            "warmupIterations": 0,
+            "repeatIterations": 5,
+            "thermalThrottleSleepSeconds": 0,
+            "profilerOutputs": [
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 0",
+                    "filename": "StartupMacrobenchmark_openEditorialTab_iter000_2026-10-13-11-19-17.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 1",
+                    "filename": "StartupMacrobenchmark_openEditorialTab_iter001_2026-10-13-11-19-19.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 2",
+                    "filename": "StartupMacrobenchmark_openEditorialTab_iter002_2026-10-13-11-19-21.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 3",
+                    "filename": "StartupMacrobenchmark_openEditorialTab_iter003_2026-10-13-11-19-24.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 4",
+                    "filename": "StartupMacrobenchmark_openEditorialTab_iter004_2026-10-13-11-19-27.perfetto-trace"
+                }
+            ]
+        }
+    ]
+}
