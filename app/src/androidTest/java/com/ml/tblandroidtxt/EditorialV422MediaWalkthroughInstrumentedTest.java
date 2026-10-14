@@ -205,8 +205,7 @@ public final class EditorialV422MediaWalkthroughInstrumentedTest {
 
             onUi(scenario, activity -> {
                 activity.switchTab("Jobs");
-                Log.i(TAG, "jobs-page-text=" + allText(activity, "Jobs").replace('
-', '|'));
+                Log.i(TAG, "jobs-page-text=" + allText(activity, "Jobs").replace('\n', '|'));
                 return null;
             });
             stage("08-jobs-tab-card");
