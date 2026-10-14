@@ -3,7 +3,7 @@
   "versionCode": 271,
   "contract": "CP-IMPL-19",
   "workflowStatus": "COMPLETE",
-  "phase": "E8_CLOSED_E9_PUBLICATION",
+  "phase": "E1_E9_COMPLETE",
   "productionSource": "cb288c9a5bd574cd85fcde329a2f9d6d1e4514c7",
   "productionEvent": "build-20261014-082641",
   "testEvent": "test-20261014-0828",
@@ -127,11 +127,26 @@
     "object": "5786a029f8de774614dd3d0cd2262df262074110",
     "peeledCommit": "54936850cee9adf4a8251f90744fbf69d67b9612"
   },
-  "merge": "Final authorized --no-ff integration; exact tree/parents verified at handoff",
-  "push": "Final authorized non-force publication; exact remote refs verified at handoff",
+  "merge": {
+    "mode": "--no-ff",
+    "verifiedInitialMergeCommit": "251a4c03121f8f84410c8c37dffa0acd6bec7d4c",
+    "verifiedInitialFeatureCommit": "306028b4f75300fc27b228786571f97822b22cee",
+    "treeMatchesFeature": true,
+    "parentsVerified": true
+  },
+  "push": {
+    "atomic": true,
+    "force": false,
+    "remoteRefsVerified": true,
+    "initialVerifiedFeature": "306028b4f75300fc27b228786571f97822b22cee",
+    "initialVerifiedMain": "251a4c03121f8f84410c8c37dffa0acd6bec7d4c",
+    "verifiedTagObject": "5786a029f8de774614dd3d0cd2262df262074110",
+    "verifiedPeeledTag": "54936850cee9adf4a8251f90744fbf69d67b9612",
+    "metadataConfirmationFinalRefs": "verified separately at handoff; same production/tag/archive"
+  },
   "providerCalls": 0,
   "spendUsd": 0,
-  "nextAction": "Owner uses 4.21.0 after E9 reference verification.",
+  "nextAction": "Owner uses 4.21.0.",
   "qaFileHashes": {
     "device/method-summary.json": "BE8C6D53A8DDB2F8696C2E23E3AF03DD7A27F4FA23D7374DF87A4029FB718D36",
     "device/raw/chunk-EditorialApiBienTapFlow.txt": "8529C902F35F498E000D64DED4A4F101131BAE4DA18FC734499B23ACA52FA57B",
@@ -231,5 +246,11 @@
     "manifestSha256": "C91A83CB2F33255D6E3D8ADEDF829274406E42684914090B0B0F1D10BF0C2F9D",
     "qaSourceZipSha256": "A9811BF27568539A5DAE9DD9308BE1AD86211090ACF39985E8B310907F5C7555"
   },
-  "temporaryRcGitWorktreeAndBranchRemoved": true
+  "temporaryRcGitWorktreeAndBranchRemoved": true,
+  "publicationScan": {
+    "commits": 6,
+    "uniqueHistoricalBlobs": 113,
+    "secretOrFingerprintHits": 0,
+    "bookTextHits": 0
+  }
 }
