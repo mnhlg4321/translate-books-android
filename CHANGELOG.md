@@ -2,6 +2,17 @@
 
 All notable changes to Translate Books are recorded in this file. The repository was normalized to Git on 2026-07-17 without feature changes or rollback. The v4.7 source baseline is commit `da8c6d9a9001296c3f3c17817ea3d6372fd59ae3` on branch `main`.
 
+## [4.21.0] - 2026-10-14 (release candidate preparation)
+
+- Restore RAW quotation pairs `〝〟`, `「」`, `『』`, full-width colon `：` and
+  ellipsis `……` deterministically during Editorial. Change punctuation only,
+  preserve letters/numbers and avoid a model call for mark-only chunks.
+- Raise the Editorial contract to CP-IMPL-19: create a new run for old-contract
+  work; existing results remain viewable/exportable.
+- Limits: matching one-to-one alignments only; nested or omitted quotes,
+  `《・　・　・》` and multi-line RAW/DRAFT mappings remain manual.
+  Restoration applies only when a chapter goes through Editorial.
+
 ## [4.20.0] - 2026-10-13
 
 - C1: require an ADDRESS answer to cite a numbered pronoun row; validate edits

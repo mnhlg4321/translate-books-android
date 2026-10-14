@@ -1,4 +1,31 @@
-# Translate Books 4.20.0 Release Notes
+# Translate Books 4.21.0 Release Notes
+
+Status: release candidate preparation; owner approved tag/merge when every condition in docs/V421_E_RELEASE_WORK_REQUEST.md section4 passes.
+Branch: feature/v4.21. Shipped version remains4.20.0/code270 until release closure.
+
+## 4.21.0 changes
+
+- Editorial restores DRAFT punctuation from the aligned RAW for quotation pairs
+  `〝〟`, `「」`, `『』`, full-width colon `：` and ellipsis `……`.
+- Restoration is deterministic: punctuation only, never letters or numbers.
+  It does not call a model; chunks requiring only mark restoration consume no
+  provider request. Model edits remain subject to the existing protection checks.
+- Contract CP-IMPL-19: old-contract Editorial runs must be replaced by a new run;
+  existing results remain viewable and exportable.
+
+## 4.21.0 known limitations
+
+- Only unambiguous one-to-one alignments with matching mark counts are restored.
+  Nested or omitted quotes, `《・　・　・》` and RAW aligned across multiple DRAFT
+  lines still need manual correction; ambiguous mappings keep the DRAFT.
+- Restoration takes effect only when the chapter passes through Editorial;
+  this does not change the translation-stage prompt or automatically process old results.
+- Earlier pronoun/finder limitations remain. Performance and QA are measured
+  on the emulator, not a physical device. No paid run is authorized for this release.
+
+---
+
+# Historical Translate Books 4.20.0 Release Notes
 
 Status: tagged v4.20.0 after all E-bis release conditions passed; main integration/publication is the authorized final step.
 Branch: feature/v4.20. Release APK4.20.0/code270, CP-IMPL-18, source261d3b8b; annotated tag atQA source2bc2384f (production inputs identical).
