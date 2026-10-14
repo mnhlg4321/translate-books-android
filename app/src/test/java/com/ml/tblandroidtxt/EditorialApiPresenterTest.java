@@ -229,6 +229,14 @@ public final class EditorialApiPresenterTest {
         assertEquals("1 chỗ khác DRAFT.", EditorialApiPresenter.diffSummary("a\nb", "a\nc"));
     }
 
+    @Test public void theChangedLineIsLabelledWithItsOwnLineNumber() {
+        String draft = "Dòng một\nDòng hai\nDòng ba";
+        List<String[]> first = EditorialApiPresenter.diffRows(draft, "Dòng một đã sửa\nDòng hai\nDòng ba");
+        assertEquals("Dòng 1", first.get(0)[0]);
+        List<String[]> third = EditorialApiPresenter.diffRows(draft, "Dòng một\nDòng hai\nDòng ba đã sửa");
+        assertEquals("Dòng 3", third.get(0)[0]);
+    }
+
     @Test public void theTabIsCalledBienTap() {
         assertEquals("Biên tập", EditorialApiPresenter.TAB_TITLE);
     }

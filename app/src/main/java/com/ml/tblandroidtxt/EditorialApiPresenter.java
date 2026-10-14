@@ -348,7 +348,7 @@ final class EditorialApiPresenter {
         List<String[]> rows = new ArrayList<>();
         for (LineDiff.Segment segment : LineDiff.segments(draft, finalText)) {
             if (rows.size() == MAX_DIFF_ROWS) break;
-            rows.add(new String[] {"Dòng " + (segment.draftStartLine() + 1), segment.before(), segment.after()});
+            rows.add(new String[] {"Dòng " + segment.draftStartLine(), segment.before(), segment.after()}); // already 1-based in LineDiff
         }
         return rows;
     }
