@@ -10,7 +10,7 @@ import static org.junit.Assert.*;
 public class EditorialResultPresentationTest {
     @Test public void everyAddressAndApplierReasonHasVietnameseText() throws Exception {
         for(String file:List.of("AddressEditGuard", "TargetedFixApplier")) {
-            String source=Files.readString(Paths.get("../editorial-engine/src/main/java/com/ml/tblandroidtxt/editorial/api/fix/"+file+".java"));
+            String source=new String(Files.readAllBytes(Paths.get("../editorial-engine/src/main/java/com/ml/tblandroidtxt/editorial/api/fix/"+file+".java")), java.nio.charset.StandardCharsets.UTF_8);
             Matcher matcher=Pattern.compile("\\\"([A-Z][A-Z_]+)\\\"").matcher(source);
             while(matcher.find()) {String code=matcher.group(1);if(code.equals("ADDRESS_")||code.equals("BLOCK"))continue;
                 assertNotEquals(code,"Lý do khác",EditorialResultPresentation.reason(code));}
