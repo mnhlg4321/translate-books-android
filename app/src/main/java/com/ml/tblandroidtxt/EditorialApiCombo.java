@@ -15,11 +15,13 @@ public final class EditorialApiCombo {
         public EditorialApiContract.Mode mode = EditorialApiContract.Mode.QUICK;
         /** Empty = the model of the app settings. */
         public String model = "";
+        /** Four-file setup by default; explicit two-file choice is stored in the existing JSON. */
+        public boolean twoFiles;
         public BigDecimal maxUsdPerChapter = DEFAULT_MAX_USD;
 
         public String toJson() {
             try {
-                return new JSONObject().put("mode", mode.name()).put("model", model == null ? "" : model)
+                return new JSONObject().put("mode", mode.name()).put("twoFiles", twoFiles).put("model", model == null ? "" : model)
                         .put("maxUsd", maxUsdPerChapter.toPlainString()).toString();
             } catch (Exception impossible) {
                 throw new IllegalStateException(impossible);
@@ -32,6 +34,7 @@ public final class EditorialApiCombo {
                 JSONObject o = new JSONObject(json == null || json.isEmpty() ? "{}" : json);
                 try { settings.mode = EditorialApiContract.Mode.valueOf(o.optString("mode", "QUICK")); } catch (IllegalArgumentException ignored) { }
                 settings.model = o.optString("model", "");
+                settings.twoFiles = o.optBoolean("twoFiles", false);
                 try {
                     BigDecimal cap = new BigDecimal(o.optString("maxUsd", DEFAULT_MAX_USD.toPlainString()));
                     if (cap.signum() > 0) settings.maxUsdPerChapter = cap;
@@ -61,6 +64,11 @@ public final class EditorialApiCombo {
     public long updatedAt;
 
     public Settings settings() { return Settings.fromJson(settingsJson); }
+
+    public static boolean missingReferences(Settings settings, String glossaryId, String pronounId) {
+        return !settings.twoFiles && (glossaryId == null || glossaryId.isEmpty()
+                || pronounId == null || pronounId.isEmpty());
+    }
 
     public static boolean sourceIsJob(EditorialApiCombo combo) {
         return combo != null && EditorialPairModels.SOURCE_JOB.equals(combo.sourceKind) && combo.jobId > 0;

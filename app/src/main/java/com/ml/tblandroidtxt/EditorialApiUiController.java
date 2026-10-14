@@ -21,6 +21,8 @@ final class EditorialApiUiController {
     static final int REQ_RAW = 41;
     static final int REQ_DRAFT = 42;
     static final int REQ_EXPORT = 43;
+    static final int REQ_SETUP_GLOSSARY = 1441;
+    static final int REQ_SETUP_PRONOUN = 1442;
     static final long REQUEST_TIMEOUT_MILLIS = 900_000L;
 
     /** Test hook: a provider that never reaches the network. */
@@ -130,7 +132,9 @@ final class EditorialApiUiController {
         combo = new EditorialApiCombo();
         combo.sourceKind = EditorialPairModels.SOURCE_FILES; // two files are the main source; a translation job is the other choice
         form = null;
-        combo.settingsJson = new EditorialApiCombo.Settings().toJson();
+        EditorialApiCombo.Settings choices = new EditorialApiCombo.Settings();
+        choices.twoFiles = appContext.getSharedPreferences("editorial_setup", 0).getBoolean("twoFiles", false);
+        combo.settingsJson = choices.toJson();
         screen = Screen.COMBO;
         error = "";
         refresh();
@@ -251,6 +255,23 @@ final class EditorialApiUiController {
         refresh();
     }
 
+    void useTwoFiles(boolean enabled) {
+        captureForm();
+        EditorialApiCombo.Settings choices = combo.settings();
+        choices.twoFiles = enabled;
+        combo.settingsJson = choices.toJson();
+        if (enabled) { combo.glossaryId = ""; combo.pronounId = ""; }
+        appContext.getSharedPreferences("editorial_setup", 0).edit().putBoolean("twoFiles", enabled).apply();
+        refresh();
+    }
+
+    void pickReferenceFile(boolean glossary) {
+        captureForm();
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE)
+                .setType("*/*").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        startActivityForResult(intent, glossary ? REQ_SETUP_GLOSSARY : REQ_SETUP_PRONOUN);
+    }
+
     /** Explicitly "no glossary": an empty choice is a valid configuration. */
     void clearGlossary() { captureForm(); combo.glossaryId = ""; refresh(); }
 
@@ -303,6 +324,17 @@ final class EditorialApiUiController {
 
     /** Stores the edited combo (name, mode, model, cap are passed from the fields) and opens the confirmation. */
     void saveAndContinue(String name, EditorialApiContract.Mode mode, String model, String capText) {
+        if (EditorialApiCombo.missingReferences(combo.settings(), combo.glossaryId, combo.pronounId)) {
+            captureForm();
+            lastDialog = new AlertDialog.Builder(a).setTitle("Chưa đủ 4 file")
+                    .setMessage("Chưa chọn Glossary hoặc Pronoun. Chọn file còn thiếu hoặc xác nhận chỉ chạy RAW và DRAFT.")
+                    .setPositiveButton("Chọn file", (d, w) -> pickReferenceFile(combo.glossaryId.isEmpty()))
+                    .setNegativeButton("Chạy 2 file", (d, w) -> {
+                        useTwoFiles(true);
+                        if (persist(name, mode, model, capText)) pair.openConfirm();
+                    }).show();
+            return;
+        }
         if (!persist(name, mode, model, capText)) return;
         pair.openConfirm();
     }
@@ -319,7 +351,7 @@ final class EditorialApiUiController {
         form = new Form(name, mode, model, capText);
         String missing = EditorialApiPresenter.missingForConfirmation(combo);
         if (!missing.isEmpty()) { error = missing; refresh(); return false; }
-        EditorialApiCombo.Settings settings = new EditorialApiCombo.Settings();
+        EditorialApiCombo.Settings settings = combo.settings();
         settings.mode = mode;
         settings.model = model == null ? "" : model.trim();
         try {
@@ -494,7 +526,8 @@ final class EditorialApiUiController {
     /** @return true when the request belongs to this tab */
     boolean onActivityResult(int requestCode, int resultCode, Intent data) {
         if (pair.onActivityResult(requestCode, resultCode, data)) return true;
-        if (requestCode != REQ_RAW && requestCode != REQ_DRAFT && requestCode != REQ_EXPORT) return false;
+        if (requestCode != REQ_RAW && requestCode != REQ_DRAFT && requestCode != REQ_EXPORT
+                && requestCode != REQ_SETUP_GLOSSARY && requestCode != REQ_SETUP_PRONOUN) return false;
         if (resultCode != android.app.Activity.RESULT_OK || data == null || data.getData() == null) return true;
         Uri uri = data.getData();
         if (requestCode == REQ_EXPORT) {
@@ -514,6 +547,27 @@ final class EditorialApiUiController {
         }
         int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
         FileUtil.takePersistable(a, uri, takeFlags, true, false);
+        if (requestCode == REQ_SETUP_GLOSSARY || requestCode == REQ_SETUP_PRONOUN) {
+            try {
+                LibraryImportPlanner.Source file = new LibraryImportPlanner.Source(FileUtil.displayName(a, uri), FileUtil.readText(a, uri));
+                if (requestCode == REQ_SETUP_GLOSSARY) {
+                    LibraryImportPlanner.Result<GlossaryStore.Glossary> imported = LibraryImportPlanner.glossaries(java.util.Collections.singletonList(file));
+                    if (imported.imported.isEmpty()) throw new IllegalArgumentException();
+                    List<GlossaryStore.Glossary> all = new ArrayList<>(GlossaryStore.loadAll(a));
+                    all.add(0, imported.imported.get(0)); GlossaryStore.saveAll(a, all);
+                    combo.glossaryId = imported.imported.get(0).id;
+                } else {
+                    LibraryImportPlanner.Result<PronounStore.Profile> imported = LibraryImportPlanner.pronouns(java.util.Collections.singletonList(file));
+                    if (imported.imported.isEmpty()) throw new IllegalArgumentException();
+                    List<PronounStore.Profile> all = new ArrayList<>(PronounStore.loadAll(a));
+                    all.add(0, imported.imported.get(0)); PronounStore.saveAll(a, all);
+                    combo.pronounId = imported.imported.get(0).id;
+                }
+                error = "";
+            } catch (Exception invalid) { error = "File tham chiếu không hợp lệ. Hãy chọn đúng file Glossary hoặc Pronoun."; }
+            refresh();
+            return true;
+        }
         setFile(requestCode == REQ_RAW, uri, FileUtil.displayName(a, uri));
         refresh();
         return true;

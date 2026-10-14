@@ -126,8 +126,8 @@ final class EditorialApiPageFactory {
         boolean job = EditorialPairModels.SOURCE_JOB.equals(combo.sourceKind);
         card.addView(a.text("NGUỒN", 11, a.MUTED, true), a.marginLP(-1, -2, 0, 0, 0, 4));
         LinearLayout kinds = a.rowContainer();
-        Button files = job ? a.secondaryButton("Hai file", v -> c.useFiles()) : a.primaryButton("Hai file", v -> c.useFiles());
-        Button jobs = job ? a.primaryButton("Job Dịch", v -> c.pickJob()) : a.secondaryButton("Job Dịch", v -> c.pickJob());
+        Button files = job ? a.secondaryButton("Chọn file", v -> c.useFiles()) : a.primaryButton("Chọn file", v -> c.useFiles());
+        Button jobs = job ? a.primaryButton("Từ job dịch", v -> c.pickJob()) : a.secondaryButton("Từ job dịch", v -> c.pickJob());
         kinds.addView(files, new LinearLayout.LayoutParams(0, a.dp(40), 1));
         kinds.addView(a.space(8, 1));
         kinds.addView(jobs, new LinearLayout.LayoutParams(0, a.dp(40), 1));
@@ -141,10 +141,19 @@ final class EditorialApiPageFactory {
             card.addView(wrapped("Ứng dụng tự căn dòng RAW với DRAFT, chia đoạn theo Cài đặt → Performance và biên tập từng đoạn bằng một lượt gọi. Trước khi gửi, nó kiểm hai file có cùng chương không.", 12, a.MUTED), a.marginLP(-1, -2, 0, 0, 0, 10));
         }
 
-        card.addView(referenceRow("GLOSSARY", combo.glossaryId.isEmpty() ? "Không dùng" : c.glossaryName().isEmpty() ? "Không còn trong thư viện" : c.glossaryName(),
-                "Đổi", v -> c.chooseGlossary(), combo.glossaryId.isEmpty() ? null : v -> c.clearGlossary()));
-        card.addView(referenceRow("PRONOUN", combo.pronounId.isEmpty() ? "Không dùng" : c.pronounName().isEmpty() ? "Không còn trong thư viện" : c.pronounName(),
-                "Đổi", v -> c.choosePronoun(), combo.pronounId.isEmpty() ? null : v -> c.clearPronoun()));
+        android.widget.CheckBox two = new android.widget.CheckBox(a);
+        two.setText("Chỉ dùng 2 file (không Glossary/Pronoun)"); two.setTextColor(a.TEXT);
+        two.setChecked(settings.twoFiles);
+        two.setOnCheckedChangeListener((button, checked) -> c.useTwoFiles(checked));
+        card.addView(two);
+        if (!settings.twoFiles) {
+            card.addView(referenceRow("GLOSSARY", combo.glossaryId.isEmpty() ? "Chưa chọn" : c.glossaryName(),
+                    "Chọn file", v -> c.pickReferenceFile(true), null));
+            card.addView(a.secondaryButton("Chọn Glossary từ thư viện", v -> c.chooseGlossary()), a.marginLP(-1, a.dp(40), 0, 0, 0, 8));
+            card.addView(referenceRow("PRONOUN", combo.pronounId.isEmpty() ? "Chưa chọn" : c.pronounName(),
+                    "Chọn file", v -> c.pickReferenceFile(false), null));
+            card.addView(a.secondaryButton("Chọn Pronoun từ thư viện", v -> c.choosePronoun()), a.marginLP(-1, a.dp(40), 0, 0, 0, 8));
+        }
 
         EditText model = a.input("Mặc định theo Cài đặt", form != null ? form.model : settings.model);
         card.addView(a.fieldBlock("MODEL (không bắt buộc)", model));
