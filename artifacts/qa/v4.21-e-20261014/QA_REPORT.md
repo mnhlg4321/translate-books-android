@@ -62,4 +62,10 @@ E1/E4 không có FAIL; lỗi đầu E5 đã giải thích và chạy lại đạ
 - Archive là bản bất biến trước closure; báo cáo/SUMMARY hiện hành cập nhật facts đã kiểm mà không ghi đè payload cũ. Local temporary RC Git worktree/branch đã gỡ sau retention; chỉ metadata đổi sau tag, không APK/model/test/production.
 - Checklist14 bước Workflow COMPLETE; Complete gate kiểm ngay sau cập nhật và kiểm lại trên closurecommit. Main--no-ff integration và quét/non-force push là thao tác cuối được owner duyệt, tree/ref equality xác nhận tại handoff; không tự khẳng định remote trước khi có ls-remote.
 
-Next action: owner dùng4.21.0 sau E9 xác nhận refs; không thêm việc sản phẩm hoặc lượt trả phí.
+## E9 — xuất bản đã xác nhận
+
+Atomic push không force thành công; ls-remote xác nhận feature306028b4f75300fc27b228786571f97822b22cee,main251a4c03121f8f84410c8c37dffa0acd6bec7d4c,tagobject5786a029f8de774614dd3d0cd2262df262074110,peeled54936850cee9adf4a8251f90744fbf69d67b9612. Main merge--no-ff có đúng2parents và tree bằng feature. Quét toàn dải6commit/113blob:0secret/fingerprint/booktext hits.86/86hash QA evidence không đổi; RC271/signerabebea4b đọc lại đúng; checkout owner vẫn nhánh cũ, không thao tác điện thoại.
+
+Commit xác nhận này chỉ cập nhật tài liệu/báo cáo sau ls-remote; production/tag/archive không đổi. Metadata tiếp tục tích hợp--no-ff, quét/push không force và đối chiếu refs cuối tại handoff. RC Git worktree/branch đã gỡ; còn thư mục rỗng bị process đang chạy khóa, không xóa/kill process để ép dọn.
+
+Next action: owner dùng4.21.0; không thêm việc sản phẩm hoặc lượt trả phí.
