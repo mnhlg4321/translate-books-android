@@ -46,7 +46,7 @@ Dừng và đóng việc, không mở thêm đo, khi: A cho thấy vấn đề l
 
 Dữ liệu bước A/B (có văn bản sách) ở `D:\P5E-private\product-plan-A\`, ngoài Git.
 
-**Next action:** thực hiện `docs/V421_E_RELEASE_WORK_REQUEST.md` (E1–E9).
+**Next action:** hoàn tất E7–E9 với đủ gate/checksum/mirror trước tag/merge/push theo quyền đã duyệt.
 
 ### v4.21 — P2 dấu câu theo RAW (2026-10-14)
 
@@ -56,7 +56,7 @@ Dữ liệu bước A/B (có văn bản sách) ở `D:\P5E-private\product-plan-
 | Quyết định owner | 2026-10-14 | **Luôn theo RAW** cho `〝〟 「」 『』`, `：` và `……` |
 | C | xong offline (`feature/v4.21`) | `RawPunctuation` tất định, không model: cặp `“ ”`/`" "` lấy ngoặc RAW theo thứ tự khi số cặp bằng nhau; `:`→`：`, `...`→`……` khi số lần bằng RAW; chữ và số không bao giờ đổi; ngoặc lồng hoặc số lượng lệch thì giữ nguyên. Finder ghi dòng cần khôi phục (dòng DRAFT ghép một nhóm RAW); applier khôi phục trên câu trả lời đã được nhận và trên dòng không có sửa; chunk không có điểm cho model thì app khôi phục **không gọi model**. Model vẫn không được tự đổi ngoặc. Hợp đồng `CP-IMPL-19`. Đo bằng mã app trên 8 chương: 47 dòng khôi phục, 40 khớp FINAL, 7 là chỗ FINAL giữ dạng DRAFT, 0 lệch khác. Trang đọc `D:\P5E-private\v421-p2\READING_P2_8CH.html` |
 | D | không cần lượt trả phí | Thay đổi tất định, đã đo trên mã thật |
-| E | sẵn sàng thực hiện; yêu cầu `docs/V421_E_RELEASE_WORK_REQUEST.md` | Owner duyệt 2026-10-14: push `feature/v4.21`, phát hành 4.21.0 không lượt trả phí, **tag/merge không hỏi lại khi mọi điều kiện đạt** |
+| E | E1-E6 đạt; E7-E9 đang đóng release | RC4.21.0/code271/sourcecb288c9a/CP-IMPL-19; engine726PASS/1SKIP, app mỗi variant471PASS/4SKIP,Python106+24PASS, device158PASS/7SKIP/0FAIL,restart6PASS. E5 initialFAIL thiếu dữ liệu khung hình SurfaceFlinger giữ nguyên; targeted/full rerunPASS trên đúng APK lưu, không sửa mã/tiêu chí; planning432ms,11trace nghiệm thu mới/22trace tổng. E6media1PASS/6ảnh/video, DB+journal khôi phục hashkhớp; RC271 restored. PreTag/buildarchive/tag/Complete/main/push chỉ khi điều kiện đủ; USD0. Evidence artifacts/qa/v4.21-e-20261014/QA_REPORT.md |
 
 
 Review độc lập 2026-10-13 tại `71781fd2`: HEAD sạch trước review và remote khớp; 20/20 hash evidence cùng hash trang đọc khớp; ledger 7 calls/USD0.01801660/pending0 được kiểm lại. Chunk13 điểm3 bị chặn đúng vì response thêm U+300C/U+3002/U+300D vào DRAFT không có các dấu đó; không có bằng chứng lỗi guard để vá. STRUCTURAL_VALID toàn chương chưa đạt, SEMANTIC_EVAL chờ owner; SQLite/reopen/SAF của lượt này NOT_MEASURED vì runner dùng InMemoryPairRunStore. S0–S9 hoàn thành công việc thu evidence, không đồng nghĩa nghiệm thu sản phẩm. Không đổi acceptance, checklist hay evidence cũ.

@@ -1,11 +1,15 @@
 # Build State
 
-## Current state — 2026-10-14 (v4.21 step E approved; work request written)
+## Current state — 2026-10-14 (v4.21 RC271; E5/E6 PASS, ready for E7-E9)
 
-- Clean `git archive 4e9d4cd0`: engine 727 (1 skip), app 475 (4 skip), 0 failures; lint 0 errors / 57 warnings; androidTest compile OK.
-- Owner approved: push `feature/v4.21`, release 4.21.0 without a paid run, tag/merge without a further question when every condition holds. Work request `docs/V421_E_RELEASE_WORK_REQUEST.md` (E1-E9).
-- No build, device or provider operation in this step; USD 0.
-- Next action: execute the work request.
+- Product decision: release P2 deterministic RAW marks/CP-IMPL-19, no paid run. Production/build source cb288c9a5bd574cd85fcde329a2f9d6d1e4514c7; E2 release notes committed separately before exact clean E1.
+- Clean-source E1: engine726PASS/1SKIP; app each debug/release/benchmark471PASS/4SKIP; Python106+24PASS;0FAIL,lint0errors/57warnings,AndroidTestcompilePASS. Private host method evidence and backup retained; SKIP not PASS.
+- Production wrapper eventbuild-20261014-082641:4.21.0/code271, APK66B9E2E3B5D32854893A279147693925C56AD75561E86B8A219683367F8A088F; sourceZIP57F9DABC5C9EF704133DBEB7BB668DEA7BD65402501468F0EE83D82E0E6AAAAA. Test eventtest-20261014-0828 pinned production/sourceZIP/cert; all payloads owner artifacts+backup/worktree mirrors verified before install. Production unchanged after RC.
+- E4 fake device158PASS/7SKIP/0FAIL/0INCOMPLETE, restart6PASS; SQLite/reopen/export synthetic QA, system picker NOT_MEASURED.
+- E5 initial1PASS/1FAIL retained: missing SurfaceFlinger frame data (owner trace diagnosis); unchanged saved benchmark DB3CB809...6819. Targeted tab rerun1PASS/5iterations, full rerun2PASS/5iterations each, cold-startmedian861.66ms/CPUframeP50 12.4882ms. Planning1222units/53chunks432ms/1PASS, fresh Perfetto;11acceptance traces,22total including old failure and targeted rerun. No production/benchmark edit or threshold reduction.
+- E6 media1PASS/6visually inspected images/video3832003bytes, synthetic only; originalDB+journal restored hashmatch. After all measurements validated install/readback restored RC271/signerabebea4b. Provider0/USD0, onlyemulator-5554; no phone, wipe/clear/uninstall.
+- Evidence: artifacts/qa/v4.21-e-20261014/QA_REPORT.md + SUMMARY.json; mirrored backup. E7 QA commit/PreTag/build release event and E8-E9 conditional tag/archive/Complete/main/push remain; published4.20.0/code270 unchanged until confirmed publication. Owner workspace untouched, v4.19 frozen.
+- Next action: complete E7-E9 under section4 conditional authority, with verified gates and immutable mirrored release events.
 
 ## Earlier — 2026-10-14 (v4.21 opened: P2 marks follow the RAW; step C done offline)
 

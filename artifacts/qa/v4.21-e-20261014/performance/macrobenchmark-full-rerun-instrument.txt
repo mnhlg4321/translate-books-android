@@ -1,0 +1,143 @@
+INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=2
+INSTRUMENTATION_STATUS: stream=
+com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark:
+INSTRUMENTATION_STATUS: test=coldStartup
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupMacrobenchmark_coldStartup_iter000_2026-10-14-02-07-15.perfetto-trace=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark/StartupMacrobenchmark_coldStartup_iter000_2026-10-14-02-07-15.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupMacrobenchmark_coldStartup_iter001_2026-10-14-02-07-18.perfetto-trace=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark/StartupMacrobenchmark_coldStartup_iter001_2026-10-14-02-07-18.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupMacrobenchmark_coldStartup_iter002_2026-10-14-02-07-21.perfetto-trace=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark/StartupMacrobenchmark_coldStartup_iter002_2026-10-14-02-07-21.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupMacrobenchmark_coldStartup_iter003_2026-10-14-02-07-24.perfetto-trace=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark/StartupMacrobenchmark_coldStartup_iter003_2026-10-14-02-07-24.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupMacrobenchmark_coldStartup_iter004_2026-10-14-02-07-28.perfetto-trace=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark/StartupMacrobenchmark_coldStartup_iter004_2026-10-14-02-07-28.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: EMULATOR_time_to_initial_display_millis_median=861.66
+INSTRUMENTATION_STATUS: EMULATOR_time_to_initial_display_millis_min=849.8913
+INSTRUMENTATION_STATUS: EMULATOR_time_to_initial_display_millis_stddev=32.28957812107495
+INSTRUMENTATION_STATUS: android.studio.display.benchmark=WARNING: Running on Emulator
+    Benchmark is running on an emulator, which is not representative of
+    real user devices. Use a physical device to benchmark. Emulator
+    benchmark improvements might not carry over to a real user's
+    experience (or even regress real device performance).
+
+StartupMacrobenchmark_coldStartup
+  timeToInitialDisplayMs   [min 849.9](file://StartupMacrobenchmark_coldStartup_iter001_2026-10-14-02-07-18.perfetto-trace),   [median 861.7](file://StartupMacrobenchmark_coldStartup_iter002_2026-10-14-02-07-21.perfetto-trace),   [max 928.7](file://StartupMacrobenchmark_coldStartup_iter002_2026-10-14-02-07-21.perfetto-trace)
+    Traces: Iteration [0](file://StartupMacrobenchmark_coldStartup_iter000_2026-10-14-02-07-15.perfetto-trace) [1](file://StartupMacrobenchmark_coldStartup_iter001_2026-10-14-02-07-18.perfetto-trace) [2](file://StartupMacrobenchmark_coldStartup_iter002_2026-10-14-02-07-21.perfetto-trace) [3](file://StartupMacrobenchmark_coldStartup_iter003_2026-10-14-02-07-24.perfetto-trace) [4](file://StartupMacrobenchmark_coldStartup_iter004_2026-10-14-02-07-28.perfetto-trace)
+
+INSTRUMENTATION_STATUS: android.studio.v2display.benchmark=WARNING: Running on Emulator
+    Benchmark is running on an emulator, which is not representative of
+    real user devices. Use a physical device to benchmark. Emulator
+    benchmark improvements might not carry over to a real user's
+    experience (or even regress real device performance).
+
+StartupMacrobenchmark_coldStartup
+  timeToInitialDisplayMs   [min 849.9](file://StartupMacrobenchmark_coldStartup_iter001_2026-10-14-02-07-18.perfetto-trace),   [median 861.7](file://StartupMacrobenchmark_coldStartup_iter002_2026-10-14-02-07-21.perfetto-trace),   [max 928.7](file://StartupMacrobenchmark_coldStartup_iter002_2026-10-14-02-07-21.perfetto-trace)
+    Traces: Iteration [0](file://StartupMacrobenchmark_coldStartup_iter000_2026-10-14-02-07-15.perfetto-trace) [1](file://StartupMacrobenchmark_coldStartup_iter001_2026-10-14-02-07-18.perfetto-trace) [2](file://StartupMacrobenchmark_coldStartup_iter002_2026-10-14-02-07-21.perfetto-trace) [3](file://StartupMacrobenchmark_coldStartup_iter003_2026-10-14-02-07-24.perfetto-trace) [4](file://StartupMacrobenchmark_coldStartup_iter004_2026-10-14-02-07-28.perfetto-trace)
+
+INSTRUMENTATION_STATUS: android.studio.v2display.benchmark.outputDirPath=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark
+INSTRUMENTATION_STATUS: android.studio.v3display.benchmark=WARNING: Running on Emulator
+    Benchmark is running on an emulator, which is not representative of
+    real user devices. Use a physical device to benchmark. Emulator
+    benchmark improvements might not carry over to a real user's
+    experience (or even regress real device performance).
+
+StartupMacrobenchmark_coldStartup
+  timeToInitialDisplayMs   [min 849.9](file://StartupMacrobenchmark_coldStartup_iter001_2026-10-14-02-07-18.perfetto-trace),   [median 861.7](file://StartupMacrobenchmark_coldStartup_iter002_2026-10-14-02-07-21.perfetto-trace),   [max 928.7](file://StartupMacrobenchmark_coldStartup_iter002_2026-10-14-02-07-21.perfetto-trace)
+    Traces: Iteration [0](file://StartupMacrobenchmark_coldStartup_iter000_2026-10-14-02-07-15.perfetto-trace) [1](file://StartupMacrobenchmark_coldStartup_iter001_2026-10-14-02-07-18.perfetto-trace) [2](file://StartupMacrobenchmark_coldStartup_iter002_2026-10-14-02-07-21.perfetto-trace) [3](file://StartupMacrobenchmark_coldStartup_iter003_2026-10-14-02-07-24.perfetto-trace) [4](file://StartupMacrobenchmark_coldStartup_iter004_2026-10-14-02-07-28.perfetto-trace)
+
+INSTRUMENTATION_STATUS: android.studio.v3display.benchmark.outputDirPath=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=2
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=coldStartup
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=2
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=openEditorialTab
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupMacrobenchmark_openEditorialTab_iter000_2026-10-14-02-07-35.perfetto-trace=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark/StartupMacrobenchmark_openEditorialTab_iter000_2026-10-14-02-07-35.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupMacrobenchmark_openEditorialTab_iter001_2026-10-14-02-07-37.perfetto-trace=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark/StartupMacrobenchmark_openEditorialTab_iter001_2026-10-14-02-07-37.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupMacrobenchmark_openEditorialTab_iter002_2026-10-14-02-07-39.perfetto-trace=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark/StartupMacrobenchmark_openEditorialTab_iter002_2026-10-14-02-07-39.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupMacrobenchmark_openEditorialTab_iter003_2026-10-14-02-07-41.perfetto-trace=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark/StartupMacrobenchmark_openEditorialTab_iter003_2026-10-14-02-07-41.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupMacrobenchmark_openEditorialTab_iter004_2026-10-14-02-07-44.perfetto-trace=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark/StartupMacrobenchmark_openEditorialTab_iter004_2026-10-14-02-07-44.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: EMULATOR_frame_count_median=1.0
+INSTRUMENTATION_STATUS: EMULATOR_frame_count_min=1.0
+INSTRUMENTATION_STATUS: EMULATOR_frame_count_stddev=0.5477225575051661
+INSTRUMENTATION_STATUS: EMULATOR_frame_duration_cpu_millis_p50=12.4882
+INSTRUMENTATION_STATUS: EMULATOR_frame_duration_cpu_millis_p90=15.00676
+INSTRUMENTATION_STATUS: EMULATOR_frame_duration_cpu_millis_p95=15.30448
+INSTRUMENTATION_STATUS: EMULATOR_frame_duration_cpu_millis_p99=15.542656
+INSTRUMENTATION_STATUS: EMULATOR_frame_overrun_millis_p50=18.723586
+INSTRUMENTATION_STATUS: EMULATOR_frame_overrun_millis_p90=27.125919600000007
+INSTRUMENTATION_STATUS: EMULATOR_frame_overrun_millis_p95=31.063579799999992
+INSTRUMENTATION_STATUS: EMULATOR_frame_overrun_millis_p99=34.213707959999994
+INSTRUMENTATION_STATUS: android.studio.display.benchmark=WARNING: Running on Emulator
+    Benchmark is running on an emulator, which is not representative of
+    real user devices. Use a physical device to benchmark. Emulator
+    benchmark improvements might not carry over to a real user's
+    experience (or even regress real device performance).
+
+StartupMacrobenchmark_openEditorialTab
+  frameCount           [min  1.0](file://StartupMacrobenchmark_openEditorialTab_iter000_2026-10-14-02-07-35.perfetto-trace),   [median  1.0](file://StartupMacrobenchmark_openEditorialTab_iter002_2026-10-14-02-07-39.perfetto-trace),   [max  2.0](file://StartupMacrobenchmark_openEditorialTab_iter001_2026-10-14-02-07-37.perfetto-trace)
+  frameDurationCpuMs   P50  12.5,   P90  15.0,   P95  15.3,   P99  15.5
+  frameOverrunMs       P50  18.7,   P90  27.1,   P95  31.1,   P99  34.2
+    Traces: Iteration [0](file://StartupMacrobenchmark_openEditorialTab_iter000_2026-10-14-02-07-35.perfetto-trace) [1](file://StartupMacrobenchmark_openEditorialTab_iter001_2026-10-14-02-07-37.perfetto-trace) [2](file://StartupMacrobenchmark_openEditorialTab_iter002_2026-10-14-02-07-39.perfetto-trace) [3](file://StartupMacrobenchmark_openEditorialTab_iter003_2026-10-14-02-07-41.perfetto-trace) [4](file://StartupMacrobenchmark_openEditorialTab_iter004_2026-10-14-02-07-44.perfetto-trace)
+
+INSTRUMENTATION_STATUS: android.studio.v2display.benchmark=WARNING: Running on Emulator
+    Benchmark is running on an emulator, which is not representative of
+    real user devices. Use a physical device to benchmark. Emulator
+    benchmark improvements might not carry over to a real user's
+    experience (or even regress real device performance).
+
+StartupMacrobenchmark_openEditorialTab
+  frameCount           [min  1.0](file://StartupMacrobenchmark_openEditorialTab_iter000_2026-10-14-02-07-35.perfetto-trace),   [median  1.0](file://StartupMacrobenchmark_openEditorialTab_iter002_2026-10-14-02-07-39.perfetto-trace),   [max  2.0](file://StartupMacrobenchmark_openEditorialTab_iter001_2026-10-14-02-07-37.perfetto-trace)
+  frameDurationCpuMs   P50  12.5,   P90  15.0,   P95  15.3,   P99  15.5
+  frameOverrunMs       P50  18.7,   P90  27.1,   P95  31.1,   P99  34.2
+    Traces: Iteration [0](file://StartupMacrobenchmark_openEditorialTab_iter000_2026-10-14-02-07-35.perfetto-trace) [1](file://StartupMacrobenchmark_openEditorialTab_iter001_2026-10-14-02-07-37.perfetto-trace) [2](file://StartupMacrobenchmark_openEditorialTab_iter002_2026-10-14-02-07-39.perfetto-trace) [3](file://StartupMacrobenchmark_openEditorialTab_iter003_2026-10-14-02-07-41.perfetto-trace) [4](file://StartupMacrobenchmark_openEditorialTab_iter004_2026-10-14-02-07-44.perfetto-trace)
+
+INSTRUMENTATION_STATUS: android.studio.v2display.benchmark.outputDirPath=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark
+INSTRUMENTATION_STATUS: android.studio.v3display.benchmark=WARNING: Running on Emulator
+    Benchmark is running on an emulator, which is not representative of
+    real user devices. Use a physical device to benchmark. Emulator
+    benchmark improvements might not carry over to a real user's
+    experience (or even regress real device performance).
+
+StartupMacrobenchmark_openEditorialTab
+  frameCount           [min  1.0](file://StartupMacrobenchmark_openEditorialTab_iter000_2026-10-14-02-07-35.perfetto-trace),   [median  1.0](file://StartupMacrobenchmark_openEditorialTab_iter002_2026-10-14-02-07-39.perfetto-trace),   [max  2.0](file://StartupMacrobenchmark_openEditorialTab_iter001_2026-10-14-02-07-37.perfetto-trace)
+  frameDurationCpuMs   P50  12.5,   P90  15.0,   P95  15.3,   P99  15.5
+  frameOverrunMs       P50  18.7,   P90  27.1,   P95  31.1,   P99  34.2
+    Traces: Iteration [0](file://StartupMacrobenchmark_openEditorialTab_iter000_2026-10-14-02-07-35.perfetto-trace) [1](file://StartupMacrobenchmark_openEditorialTab_iter001_2026-10-14-02-07-37.perfetto-trace) [2](file://StartupMacrobenchmark_openEditorialTab_iter002_2026-10-14-02-07-39.perfetto-trace) [3](file://StartupMacrobenchmark_openEditorialTab_iter003_2026-10-14-02-07-41.perfetto-trace) [4](file://StartupMacrobenchmark_openEditorialTab_iter004_2026-10-14-02-07-44.perfetto-trace)
+
+INSTRUMENTATION_STATUS: android.studio.v3display.benchmark.outputDirPath=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=2
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=openEditorialTab
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+
+Time: 34.614
+
+OK (2 tests)
+
+
+INSTRUMENTATION_CODE: -1
