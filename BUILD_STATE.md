@@ -1,6 +1,13 @@
 # Build State
 
-## Current state — 2026-10-14 (v4.21 opened: P2 marks follow the RAW; step C done offline)
+## Current state — 2026-10-14 (v4.21 step E approved; work request written)
+
+- Clean `git archive 4e9d4cd0`: engine 727 (1 skip), app 475 (4 skip), 0 failures; lint 0 errors / 57 warnings; androidTest compile OK.
+- Owner approved: push `feature/v4.21`, release 4.21.0 without a paid run, tag/merge without a further question when every condition holds. Work request `docs/V421_E_RELEASE_WORK_REQUEST.md` (E1-E9).
+- No build, device or provider operation in this step; USD 0.
+- Next action: execute the work request.
+
+## Earlier — 2026-10-14 (v4.21 opened: P2 marks follow the RAW; step C done offline)
 
 - Branch `feature/v4.21` from `main` `f037f437` (4.20.0 / code 270 released). Owner convention: DRAFT marks follow the RAW for 〝〟 「」 『』, ： and …….
 - C: `RawPunctuation` (engine), finder `Result.punctuation`, applier overload restoring marks on accepted answers and untouched lines, service restores marks without a provider call when no point needs the model, gate JSON `punctuationLines`; contract `CP-IMPL-19`. Model answers are still checked against the DRAFT marks.
