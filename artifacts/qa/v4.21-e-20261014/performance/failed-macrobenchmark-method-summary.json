@@ -1,0 +1,33 @@
+{
+ "logs": {
+  "artifacts/qa/v4.21-e-20261014/performance/macrobenchmark-instrument.txt": {
+   "overall": "FAIL",
+   "discovered": 2,
+   "pass": 1,
+   "skip": 0,
+   "fail": 1,
+   "incomplete": 0,
+   "ok_line_tests": null,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark",
+     "test": "coldStartup",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark",
+     "test": "openEditorialTab",
+     "result": "FAIL"
+    }
+   ]
+  }
+ },
+ "total": {
+  "discovered": 2,
+  "pass": 1,
+  "skip": 0,
+  "fail": 1,
+  "incomplete": 0
+ }
+}

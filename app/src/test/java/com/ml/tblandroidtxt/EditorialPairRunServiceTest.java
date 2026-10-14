@@ -231,6 +231,22 @@ public final class EditorialPairRunServiceTest {
         assertTrue(svc.exportPlan(run.id).text.contains("dòng 3: かな"));
     }
 
+    @Test public void aChunkThatOnlyNeedsTheRawMarksIsRestoredWithoutAProviderCall() throws Exception {
+        List<String> raw = List.of("「行こう」と彼は言った。\nレベル：5\n\n");
+        List<String> draft = List.of("“Đi thôi”, anh nói.\nCấp độ: 5\n\n");
+        FakeEditorialApiProvider fake = new FakeEditorialApiProvider((request, index) -> { throw new AssertionError("no call for marks only"); });
+        EditorialPairRunService svc = service(memory, fake);
+        PairRun run = svc.prepare(1, new EditorialPairSource("JOB", "7", "x", "", raw, draft, List.of()), "", "", null, "m", "Vietnamese", CAP, "C");
+        PairRun done = svc.execute(run.id, null);
+        PairItem item = svc.items(run.id).get(0);
+        assertEquals(0, fake.requests.size());
+        assertEquals(PairState.ACCEPTED, item.state);
+        assertTrue(item.gateJson.contains("\"punctuationLines\":2"));
+        assertEquals("「Đi thôi」, anh nói.\nCấp độ：5", item.candidateText.trim());
+        assertEquals(RunState.FINAL_ELIGIBLE, done.state);
+        assertTrue(svc.exportPlan(run.id).text.contains("「Đi thôi」, anh nói."));
+    }
+
     @Test public void aShortTargetAnswerKeepsTheWholeDraftLineInsteadOfLosingTheRestOfIt() throws Exception {
         String longLine = "Bản DRAFT có đủ nội dung để kiểm tra phần sửa theo điểm mục tiêu ".repeat(7) + "かな";
         List<String> raw = List.of("「長い行の意味を保ってください。」\n\n");

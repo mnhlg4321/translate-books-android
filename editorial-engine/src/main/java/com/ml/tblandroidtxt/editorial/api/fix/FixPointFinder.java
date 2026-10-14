@@ -22,9 +22,20 @@ import java.util.TreeMap;
 
 /** Detects only deterministic repair candidates whose RAW/DRAFT relationship is supplied by the pair or CS-1 plan. */
 public final class FixPointFinder {
-    public record Result(List<FixPoint> points, int ambiguousGlossarySplits, int alignedRawLines, int alignedDraftLines) {
-        public Result { points = List.copyOf(points); }
+    public record Result(List<FixPoint> points, int ambiguousGlossarySplits, int alignedRawLines, int alignedDraftLines,
+                         List<PunctuationRepair> punctuation) {
+        public Result {
+            points = List.copyOf(points);
+            punctuation = punctuation == null ? List.of() : List.copyOf(punctuation);
+        }
+
+        public Result(List<FixPoint> points, int ambiguousGlossarySplits, int alignedRawLines, int alignedDraftLines) {
+            this(points, ambiguousGlossarySplits, alignedRawLines, alignedDraftLines, List.of());
+        }
     }
+
+    /** A DRAFT line (index among the chunk's non-blank lines) whose marks {@link RawPunctuation} restores from its aligned RAW lines. */
+    public record PunctuationRepair(int draftLineIndex, String rawGroup) { }
 
     /** Precedes the DRAFT address word that an ADDRESS rule found outside a row's self/call; the prompt reads it back. */
     static final String ADDRESS_OUTSIDE_MARKER = "; dạng xưng hô ngoài self/call: ";
@@ -81,6 +92,7 @@ public final class FixPointFinder {
         List<Integer> rawParagraphs = paragraphs(rawMain, map.rawParagraphStart(entry));
         TreeMap<Integer, Target> targets = new TreeMap<>();
         List<Missing> missing = new ArrayList<>();
+        List<PunctuationRepair> punctuation = new ArrayList<>();
         int ambiguousSplits = 0;
 
         for (LineAligner.Bead bead : beads) {
@@ -118,6 +130,10 @@ public final class FixPointFinder {
                 Target target = null;
                 boolean hasAlignedRaw = rawCount > 0;
                 if (hasAlignedRaw) target = targets.computeIfAbsent(di, k -> new Target(k, bead.rawStart(), draftLine));
+                // one DRAFT line for its RAW group: the marks can be matched position by position (P2)
+                if (hasAlignedRaw && draftCount == 1 && !RawPunctuation.restore(draftLine, rawGroup).equals(draftLine)) {
+                    punctuation.add(new PunctuationRepair(di, rawGroup));
+                }
 
                 if (hasAlignedRaw && untranslatedScript(draftLine, rawGroup) && !authorizedSourceToken(draftLine, projection.glossary())) {
                     target.add(FixPoint.Type.KANA, rawGroup,
@@ -190,7 +206,7 @@ public final class FixPointFinder {
                 points.add(new FixPoint(id++, Set.of(FixPoint.Type.MISSING), m.afterDraftIndex, "", m.raw, List.of(m.rule)));
             }
         }
-        return new Result(points, ambiguousSplits, raw.size(), draft.size());
+        return new Result(points, ambiguousSplits, raw.size(), draft.size(), punctuation);
     }
 
     private static List<LineAligner.Bead> beads(LineUnits raw, LineUnits draft, List<EditInputs.GlossaryEntry> glossary,

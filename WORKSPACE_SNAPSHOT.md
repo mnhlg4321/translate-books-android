@@ -1,16 +1,16 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-13 (+07:00), E-bis releaseclosure, annotatedtag and bothreleasearchives verified.
-- Current version: release4.20.0/code270, CP-IMPL-18; v4.19 frozen.
-- Current branch: feature/v4.20 in D:\P5E-builds\wt-v4.20; ownercheckout untouched. Main integration uses a temporaryworktree.
-- Current commit: 2bc2384f9459143093eaf3403b2e83f1c9822372 is the baseline immediately before this closure snapshot commit, not a self-reference; also the annotatedv4.20.0 tag target and exactQA-source ref in build/tag releaseevents. Productionbuildsource261d3b8b.
-- Current build:4.20.0/code270, wrapperbuild-20261013-181401, APK58C1B11FA8DEA27D57BD9830A47007A7757F9F04147A0C3EAAB43F3FD199AFA8, productionZIPAED3CC03FF574126D5AFC0DDB0B833224C66EDA2E3C562B0FACFDE11632359C9. Testeventv420-ebis-test-20261013-1815, same261d3b8b, APKCC7EFF9FDD165B24C81C2DD6806E9D8103FD33A920CA696BC18BFD5DF1ABA644. Bothpayloadsverifiedatmainworkspaceartifact+backup/worktreemirrorsbeforeinstall;temporarybuildworktree/branch removed.
-- Current phase:14-stepWorkflowCOMPLETE metadata; tag/archive verified. Authorizedmain --no-ff integration/refpublication is the finaloperation checked at handoff.
-- Completed tasks:C1+C2'/CP-IMPL-18heading/glossaryfix; owner014acceptance/01716correct+1headingwrongfixedoffline; freshE1/E3/E4/E5/E6; PreTag/PreBackupPASS; annotatedtagv4.20.0at2bc2384f; releasebuild-20261013-182812 andtag-v4.20.0 each30checksums/4mirrorsPASS; currentstate/notes/checklist/snapshotupdated.
-- Pending tasks:no further ownerdecision or productchange in4.20.0; finalauthorizedmainmerge/refpublication verified at handoff, not a new release scope.
-- Known bugs/limits:unflaggedself-address,translation-stagepronounerrors,004narration,missingrowcitationsdiscarded; no new paid semantic test underCP-IMPL-18. Live014/017storein-memory; separatefakeQAprovesSQLite/reopen/export, notlivepersistence/system-pickerinteraction. Emulatorperformanceonly; newdiscoveriesdeferredexceptregressions.
-- Regression status:engine720PASS/1SKIP; app debug/release/benchmark each470PASS/3SKIP; p6 106PASS/chunk24PASS;0FAIL,lint0errors/57warnings,AndroidTestcompilePASS. Freshdevice158PASS/7SKIP/0FAIL/0INCOMPLETE,restart6PASS; Macrobenchmark2PASS/planning1PASS/media1PASS. Planning1222units/53chunks465ms;cold-startmedian1087.8085ms/EditorialCPU P50 12.10205ms;11traces/6images/video,originalDB+journalhashesrestored.
-- Evidence:artifacts/qa/v4.20-ebis-20261013/QA_REPORT.md+SUMMARY.json/backup; rawhostprivateD:/P5E-private/v420-ebis-host-evidence. QA/tagZIPAA946E23EAE195BB2E88E46C32E6C3503539E2CE7D86910908E6E3AA39B423BA; buildmanifestCF6E6A843BD6C7E960F86467A89485FD131253ED180F1C8CC5AF26A4FDDB546E;tagmanifestDAEFD0A03EF86765AFAA755AB166ABA960D209BE78F94104344C838A72BFDFAF. MainworkspacemirrorsD:/App Translate Books/artifacts/releases/v4.20.0 andbackup/v4.20.0.
-- Spend:E-bis0realcalls/USD0; totalv4.20USD0.04188915 unchanged (0140.01801660,0170.02387255); no remainingcap grantsauthority.
-- Reading status:owner01437rows+3replaycorrect;01716correct/1headingwrong,fixedoffline13e12a65; readingpages/evidence unchanged. NoFINAL/adjudication inruntime.
-- Next action: owner uses release4.20.0; any new product work belongs to a separately approved later version.
+- Updated: 2026-10-14 (+07:00): 4.21.0 release lifecycle COMPLETE; E9 final main/ref verification at handoff.
+- Current version: 4.21.0/code271,CP-IMPL-19; annotatedtagv4.21.0.
+- Current branch: feature/v4.21 in D:/P5E-builds/wt-v4.21.
+- Current commit: 54936850cee9adf4a8251f90744fbf69d67b9612 is the QA baseline immediately before this metadata/snapshot closure commit (not a self-reference); actual HEAD must be checked on resume. Production/build baselinecb288c9a5bd574cd85fcde329a2f9d6d1e4514c7.
+- Current build: RC4.21.0/code271 eventbuild-20261014-082641, APK66B9E2E3B5D32854893A279147693925C56AD75561E86B8A219683367F8A088F. Release eventsbuild-20261014-091247 andtag-v4.21.0,52checksums/fourmirrors each; QA/tagZIPA9811BF2...7555 and actualproductionZIP57F9DABC...AAAAA kept separately.
+- Current phase: WorkflowCOMPLETE; authorized main--no-ff/scan/non-force refs publication checked at handoff, no further production work.
+- Completed tasks: P2B/C/offline47restored/40FINAL matches/7FINAL kept DRAFT/0other; E2notes/E1cleanregression/E3wrapperretention/E4fakeSQLite/reopen/export/restart; E5savedAPK targeted/full reruns+planning/Perfetto; E6sixinspectedimages/video/originalDB+journalrestored; PreTag/buildarchive/tag/PreBackup/tagarchive/CompletePASS; RC271 restored/readback.
+- Pending tasks: final E9 main-tree/parent/scan/remote-ref checks before handoff; no new product work authorized. Temporary RC Git worktree/branch removed, durable mirrors retained; main temporary worktree removed after integration/publication.
+- Known bugs/limits: initial E5SurfaceFlinger frame data missing; historicalFAIL/log/6traces remain, targeted5+full10iterationsPASS on exact savedAPK, no code/acceptance change. Punctuation one-to-one only, nested/missing quotes/《・　・　・》/multiline alignment manual; earlier4.20 limits unchanged; system picker NOT_MEASURED.
+- Regression status: engine726PASS/1SKIP,app each variant471PASS/4SKIP,Python106+24PASS,0FAIL,lint0errors/57warnings,AndroidTestcompilePASS;device158PASS/7SKIP/0FAIL/0INCOMPLETE,restart6PASS;E5full2PASS/planning1PASS432ms;E6media1PASS;PreTag/PreBackup/CompletePASS. SKIP not PASS.
+- Semantic progress: unchanged; deterministic P2, no paid model evaluation.
+- Spend: provider0/USD0; onlyemulator-5554, no phone/wipe/clear/uninstall; owner checkout untouched, v4.19 frozen.
+- Evidence: artifacts/qa/v4.21-e-20261014/QA_REPORT.md + SUMMARY.json/backup;22realtraces incl11acceptance,6screenshots/video. Release52checksums/fourmirrors each; initialFAIL retained unchanged; host method evidence private/backed up.
+- Next action: owner uses4.21.0 after E9 reference verification.

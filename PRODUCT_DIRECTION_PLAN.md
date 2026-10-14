@@ -28,7 +28,7 @@ Dừng và đóng việc, không mở thêm đo, khi: A cho thấy vấn đề l
 
 ## 4. Baseline
 
-- App phát hành: v4.20.0 / code270, production source `261d3b8b`, hợp đồng `CP-IMPL-18`, annotated tag `v4.20.0` trên QA source `2bc2384f` (mã sản xuất giống commit đã kiểm). Main tích hợp `--no-ff` và xuất bản refs theo mục8, xác nhận tại handoff; không đổi checkout của owner.
+- App phát hành: v4.21.0/code271, production source `cb288c9a`, hợp đồng `CP-IMPL-19`, annotatedtag `v4.21.0` trên QA source `54936850` (production bằng source đã kiểm). Main tích hợp `--no-ff` và xuất bản refs E9 xác nhận tại handoff; không đổi checkout owner. v4.20.0/code270 giữ nguyên trong archive lịch sử.
 - v4.19 (`feature/v4.19` `3098a059`): đóng băng, không phát hành; thay đổi prompt D-A không vào bản nào trừ khi vấn đề được chọn cần đến nó. Các gói X4b, B 008, cổng X5 và gắn lại nhãn đã hủy.
 - Sự thật đã kiểm 2026-10-13: luồng dịch đưa hàng pronoun vào prompt như "mandatory locks" (`PromptBuilder.java:103-120`); finder Biên tập bỏ qua hàng thiếu `self` hoặc `call` (`FixPointFinder.java`, vòng hàng pronoun).
 - Dữ liệu cho bước A: `D:\P5E-private\q2-inputs\` (RAW/DRAFT/glossary/pronoun), FINAL của owner, dữ kiện từng dòng `D:\P5E-private\v419-pronoun\line-facts.jsonl` (1.447 dòng, 289 dòng owner sửa, 153 có từ xưng hô đổi). Văn bản sách ở ngoài Git.
@@ -46,7 +46,18 @@ Dừng và đóng việc, không mở thêm đo, khi: A cho thấy vấn đề l
 
 Dữ liệu bước A/B (có văn bản sách) ở `D:\P5E-private\product-plan-A\`, ngoài Git.
 
-**Next action:** owner dùng bản4.20.0; việc sản phẩm mới thuộc phiên bản sau với phạm vi duyệt riêng.
+**Next action:** owner dùng4.21.0 sau E9 xác nhận refs.
+
+### v4.21 — P2 dấu câu theo RAW (2026-10-14)
+
+| Bước | Trạng thái | Kết quả |
+|---|---|---|
+| B | xong offline | 28 chương: mô phỏng "theo RAW" khớp FINAL 114 dòng, khác FINAL 59 dòng (owner lúc đổi lúc không: `〝〟` đổi 50 / giữ `“ ”` 22; `：` đổi 29 / giữ `:` 19; `……` 17/0). App không tự đổi ngoặc; prompt dịch không yêu cầu giữ ngoặc gốc |
+| Quyết định owner | 2026-10-14 | **Luôn theo RAW** cho `〝〟 「」 『』`, `：` và `……` |
+| C | xong offline (`feature/v4.21`) | `RawPunctuation` tất định, không model: cặp `“ ”`/`" "` lấy ngoặc RAW theo thứ tự khi số cặp bằng nhau; `:`→`：`, `...`→`……` khi số lần bằng RAW; chữ và số không bao giờ đổi; ngoặc lồng hoặc số lượng lệch thì giữ nguyên. Finder ghi dòng cần khôi phục (dòng DRAFT ghép một nhóm RAW); applier khôi phục trên câu trả lời đã được nhận và trên dòng không có sửa; chunk không có điểm cho model thì app khôi phục **không gọi model**. Model vẫn không được tự đổi ngoặc. Hợp đồng `CP-IMPL-19`. Đo bằng mã app trên 8 chương: 47 dòng khôi phục, 40 khớp FINAL, 7 là chỗ FINAL giữ dạng DRAFT, 0 lệch khác. Trang đọc `D:\P5E-private\v421-p2\READING_P2_8CH.html` |
+| D | không cần lượt trả phí | Thay đổi tất định, đã đo trên mã thật |
+| E | Workflow COMPLETE, tagv4.21.0; E9 refs xác nhận tại handoff | RC4.21.0/code271/sourcecb288c9a/CP-IMPL-19; engine726PASS/1SKIP,app mỗi variant471PASS/4SKIP,Python106+24PASS;device158PASS/7SKIP/0FAIL,restart6PASS. E5initialFAIL thiếu SurfaceFlinger frame data giữ nguyên, targeted/full rerunPASS trên đúng APK lưu, không sửa mã/tiêu chí;planning432ms,11trace nghiệm thu/22trace tổng. E6media1PASS/6ảnh/video, DB+journal hashkhớp,RC271 restored. PreTag/PreBackup/CompletePASS; build-20261014-091247/tag-v4.21.0 mỗi52checksum/fourmirrors, annotatedtagQA54936850, APKsourcecb288c9a riêng/hashkhớp. Main--no-ff/quét/non-forcepush là bước cuối được duyệt, tree/ref kiểm tại handoff; USD0 |
+
 
 Review độc lập 2026-10-13 tại `71781fd2`: HEAD sạch trước review và remote khớp; 20/20 hash evidence cùng hash trang đọc khớp; ledger 7 calls/USD0.01801660/pending0 được kiểm lại. Chunk13 điểm3 bị chặn đúng vì response thêm U+300C/U+3002/U+300D vào DRAFT không có các dấu đó; không có bằng chứng lỗi guard để vá. STRUCTURAL_VALID toàn chương chưa đạt, SEMANTIC_EVAL chờ owner; SQLite/reopen/SAF của lượt này NOT_MEASURED vì runner dùng InMemoryPairRunStore. S0–S9 hoàn thành công việc thu evidence, không đồng nghĩa nghiệm thu sản phẩm. Không đổi acceptance, checklist hay evidence cũ.
 

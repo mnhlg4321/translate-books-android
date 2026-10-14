@@ -161,6 +161,40 @@ public final class EditorialPairC6CorpusMeasurementTest {
      * C6_REPLAY_RESPONSES (a folder of NNN-EDIT.json answers, one per chunk) and C6_REPLAY_OUT (a TSV to write: chunk:id, types,
      * status, reason, base64 of before and after). Private book text stays outside the repository.
      */
+    /**
+     * P2 (owner 2026-10-13): writes every DRAFT line whose marks the app restores from its RAW, for the eight private chapters, as
+     * a TSV (chapter, base64 before, base64 after) to C6_P2_OUT; no provider call, book text stays outside the repository.
+     */
+    @Test public void writeRawMarkRepairsWhenConfigured() throws Exception {
+        String inputRoot = System.getenv("C6_INPUT_ROOT");
+        String out = System.getenv("C6_P2_OUT");
+        org.junit.Assume.assumeTrue("set C6_INPUT_ROOT and C6_P2_OUT", inputRoot != null && !inputRoot.isBlank() && out != null && !out.isBlank());
+        StringBuilder tsv = new StringBuilder();
+        int lines = 0;
+        for (String chapter : CHAPTERS) {
+            PrivateChapter006 c = loadPrivateChapter(Path.of(inputRoot), chapter);
+            for (PairMap.Entry e : c.preview.map.entries()) {
+                String before = c.preview.map.draftText(e);
+                if (before == null || before.isEmpty()) continue;
+                com.ml.tblandroidtxt.editorial.api.fix.FixPointFinder.Result fixes = com.ml.tblandroidtxt.editorial.api.fix.FixPointFinder.find(
+                        c.preview.map, e, c.glossary, c.pronoun, EditorialPairSnapshot.cues("from,speaker,target"), c.load.source.plan);
+                String after = com.ml.tblandroidtxt.editorial.api.fix.TargetedFixApplier.apply(before, List.of(), null, c.glossary, fixes.punctuation()).text();
+                String[] b = before.split("\n", -1);
+                String[] a = after.split("\n", -1);
+                assertEquals("a mark repair never changes the line count", b.length, a.length);
+                for (int i = 0; i < b.length; i++) {
+                    if (b[i].equals(a[i])) continue;
+                    lines++;
+                    tsv.append(chapter).append('\t')
+                            .append(java.util.Base64.getEncoder().encodeToString(b[i].getBytes(StandardCharsets.UTF_8))).append('\t')
+                            .append(java.util.Base64.getEncoder().encodeToString(a[i].getBytes(StandardCharsets.UTF_8))).append('\n');
+                }
+            }
+        }
+        Files.write(Path.of(out), tsv.toString().getBytes(StandardCharsets.UTF_8));
+        System.out.println("C6 P2 restored lines=" + lines + " out=" + out);
+    }
+
     @Test public void replayStoredAnswersThroughTheCurrentRulesWhenConfigured() throws Exception {
         String inputRoot = System.getenv("C6_INPUT_ROOT");
         String responses = System.getenv("C6_REPLAY_RESPONSES");

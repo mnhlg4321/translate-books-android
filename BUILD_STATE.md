@@ -1,6 +1,28 @@
 # Build State
 
-## Current state — 2026-10-13 (v4.20.0 release closure; E-bis conditions satisfied)
+## Current state — 2026-10-14 (4.21.0/code271, CP-IMPL-19; release workflow COMPLETE)
+
+- Product decision achieved: deterministic RAW marks P2 for 〝〟「」『』/：/……; no model calls for marks-only chunks. Limits in release notes preserved; CP-IMPL-19 requires a new Editorial run, old outputs view/export unchanged.
+- APK/build/E1 source cb288c9a5bd574cd85fcde329a2f9d6d1e4514c7, production inputs identical through QA/tag source54936850cee9adf4a8251f90744fbf69d67b9612. Only evidence/docs changed after RC.
+- Production eventbuild-20261014-082641, RC4.21.0/code271; APK66B9E2E3B5D32854893A279147693925C56AD75561E86B8A219683367F8A088F; exactsourceZIP57F9DABC5C9EF704133DBEB7BB668DEA7BD65402501468F0EE83D82E0E6AAAAA. Test eventtest-20261014-0828 pins productionAPK/sourceZIP/cert47F31389...EF3C155; testAPKSHA CC7EFF9FDD165B24C81C2DD6806E9D8103FD33A920CA696BC18BFD5DF1ABA644. Owner artifacts+backup/worktree mirrors verified before install.
+- Clean archive E1 engine726PASS/1SKIP; app each variant471PASS/4SKIP; Python106+24PASS;0FAIL,lint0errors/57warnings,AndroidTestcompilePASS. E4 device158PASS/7SKIP/0FAIL/0INCOMPLETE,SQLite/reopen/export/restart6PASS, synthetic fake-provider only; SKIP not PASS.
+- E5 initial FAIL retained and explained: missing SurfaceFlinger frame data, owner diagnosis10Choreographer#doFrame/no permission dialog, benchmark/UI/Gradle unchanged. Same saved benchmark APKDB3CB809...6819: targeted tab5iterations1PASS; full two methods5iterations each2PASS, cold-startmedian861.66ms/tabCPUframeP50 12.4882ms. Planning1222units/53chunks432ms/1PASS, fresh Perfetto. 11new acceptance traces,22total incl originalFAIL/targetedrerun. No code/threshold change, no4.20 fallback or restart needed.
+- E6 media1PASS/6visually inspected images/video3832003bytes; originalDB+journal restored hashmatch; final RC271 validated install/readback/signerabebea4b. System picker NOT_MEASURED; emulator-only performance not physical-device claims.
+- PreTag/PreBackup/CompletePASS; annotatedv4.21.0 object5786a029f8de774614dd3d0cd2262df262074110 atQA54936850, exactly build-event commit. Release build-20261014-091247 andtag-v4.21.0 each52checksums/4mirrors verified. BuildmanifestA838E50596B609989DA013109179BBFEAD15164B18825C01A44DBE45F3DC94E4;tagmanifestC91A83CB2F33255D6E3D8ADEDF829274406E42684914090B0B0F1D10BF0C2F9D;QA/tagZIPA9811BF27568539A5DAE9DD9308BE1AD86211090ACF39985E8B310907F5C7555; separate actualAPKsourceZIP matches wrapper.
+- Workflow COMPLETE,14steps documented. Main--no-ff integration and non-force branch/tag/main publication are final authorized operations verified independently at handoff by tree/parent/remote-ref checks, without production change or owner checkout mutation.
+- Evidence artifacts/qa/v4.21-e-20261014/QA_REPORT.md + SUMMARY.json/mirroredbackup; immutableevent payloads unchanged; raw host evidence private/backed up. Temporary RC Git worktree/branch removed after retention; v4.19 frozen.
+- Known limits: one-to-one punctuation only; nested/missing quotes, 《・　・　・》 and multiline alignment manual; earlier translation pronoun/narration/finder limits unchanged. No new paid semantic evaluation; provider0/USD0, onlyemulator-5554, no phone or wipe/clear/uninstall.
+- Next action: owner uses4.21.0 after final E9 reference verification.
+
+## Earlier — 2026-10-14 (v4.21 opened: P2 marks follow the RAW; step C done offline)
+
+- Branch `feature/v4.21` from `main` `f037f437` (4.20.0 / code 270 released). Owner convention: DRAFT marks follow the RAW for 〝〟 「」 『』, ： and …….
+- C: `RawPunctuation` (engine), finder `Result.punctuation`, applier overload restoring marks on accepted answers and untouched lines, service restores marks without a provider call when no point needs the model, gate JSON `punctuationLines`; contract `CP-IMPL-19`. Model answers are still checked against the DRAFT marks.
+- Tests: `RawPunctuationTest` (6), service test for a marks-only chunk with 0 provider calls; working tree engine 727 (1 skip), app 475 (4 skip), 0 failures. Real-code measurement (`writeRawMarkRepairsWhenConfigured`, private inputs): 47 lines restored on 8 chapters, 40 match the owner FINAL, 7 FINAL kept the DRAFT form, 0 other. `AGENTS.md` note now names 4.20.0 as shipped.
+- No build, device or provider operation; USD 0.
+- Next action: owner approves step E (release 4.21.0).
+
+## Earlier — 2026-10-13 (v4.20.0 release closure; E-bis conditions satisfied)
 
 - Release4.20.0/code270, CP-IMPL-18, production261d3b8bc28ad2f8f22c4b6ffd326601b4abc8d7; wrapperbuild-20261013-181401, APK58C1B11FA8DEA27D57BD9830A47007A7757F9F04147A0C3EAAB43F3FD199AFA8, sourceZIPAED3CC03FF574126D5AFC0DDB0B833224C66EDA2E3C562B0FACFDE11632359C9. Testeventv420-ebis-test-20261013-1815, same261d3b8b, APKCC7EFF9FDD165B24C81C2DD6806E9D8103FD33A920CA696BC18BFD5DF1ABA644. Allpayloadsmirroredbeforevalidatedemulator-onlyinstall; temporarybuildworktree/branch removed.
 - Annotatedv4.20.0 atQA source2bc2384f9459143093eaf3403b2e83f1c9822372; productioninputsequalchecked261d3b8b. PreTag/PreBackup PASS; releasebuild-20261013-182812 andtag-v4.20.0 each30checksums/4mirrors PASS, atworktree andmainworkspaceartifact/backup. QA/tagZIPAA946E23EAE195BB2E88E46C32E6C3503539E2CE7D86910908E6E3AA39B423BA, separateproductionZIPequalsactualwrapperAED3CC03FF574126D5AFC0DDB0B833224C66EDA2E3C562B0FACFDE11632359C9.

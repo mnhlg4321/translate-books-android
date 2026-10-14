@@ -1,0 +1,28 @@
+{
+ "logs": {
+  "artifacts/qa/v4.21-e-20261014/media/instrument.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialR1MediaWalkthroughInstrumentedTest",
+     "test": "synthetic_walkthrough_of_the_chunk_flow",
+     "result": "PASS"
+    }
+   ]
+  }
+ },
+ "total": {
+  "discovered": 1,
+  "pass": 1,
+  "skip": 0,
+  "fail": 0,
+  "incomplete": 0
+ }
+}
