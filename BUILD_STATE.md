@@ -1,6 +1,14 @@
 # Build State
 
-## Current state — 2026-10-14 (4.21.0/code271, CP-IMPL-19; release workflow COMPLETE)
+## Current state — 2026-10-14 (v4.22 opened from owner feedback on 4.21.0)
+
+- 4.21.0 / code 271 installed on the owner phone `15e84958` (OPPO CPH2691, Android 15) on 2026-10-14 by `scripts/install-validated.ps1` over 4.18-p6.2 / code 215 (same signer `abebea4b`); backup before install in `D:\App Translate Books\App Translate Books-device-backups\v4.18-p6.2-code215\20261014-145916\` (DB sha256 `df6cb42e...b464` matched on phone and in the archive); first launch without crash.
+- Owner feedback and Q0 diagnosis recorded in `PRODUCT_DIRECTION_PLAN.md` (v4.22 block): finder flagged 19 points on Kumo vol 7 ch 013, 17 false; 2 real pronoun errors, 1 missed by the model, 1 not flagged; output changed 1 line unnecessarily.
+- Branch `feature/v4.22` from `main` `7c44f3a2`; checklist `release_checklists/v4.22.md`; work requests `docs/V422_WORK_REQUEST.md` (U1, U2, U3, P, G, dev build, release) and `docs/V422_Q1_SPEAKER_DESIGN_REQUEST.md` (offline design).
+- No code, build or provider operation; USD 0.
+- Next action: execute the two work requests.
+
+## Earlier — 2026-10-14 (4.21.0/code271, CP-IMPL-19; release workflow COMPLETE)
 
 - Product decision achieved: deterministic RAW marks P2 for 〝〟「」『』/：/……; no model calls for marks-only chunks. Limits in release notes preserved; CP-IMPL-19 requires a new Editorial run, old outputs view/export unchanged.
 - APK/build/E1 source cb288c9a5bd574cd85fcde329a2f9d6d1e4514c7, production inputs identical through QA/tag source54936850cee9adf4a8251f90744fbf69d67b9612. Only evidence/docs changed after RC.

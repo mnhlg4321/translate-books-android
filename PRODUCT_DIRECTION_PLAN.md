@@ -46,7 +46,15 @@ Dừng và đóng việc, không mở thêm đo, khi: A cho thấy vấn đề l
 
 Dữ liệu bước A/B (có văn bản sách) ở `D:\P5E-private\product-plan-A\`, ngoài Git.
 
-**Next action:** owner dùng4.21.0.
+**Next action:** thực hiện `docs/V422_WORK_REQUEST.md` (bước 1–6, dừng ở bản dev cho owner bấm thử) và `docs/V422_Q1_SPEAKER_DESIGN_REQUEST.md` (offline, dừng ở đề xuất lượt đo).
+
+### v4.22 — Biên tập dùng được (owner dùng 4.21.0 trên điện thoại, 2026-10-14)
+
+- Phản hồi owner: màn tạo lượt rối, Glossary/Pronoun mặc định "Không dùng" (muốn 4 file mặc định + ô tick 2 file); kết quả là "một mớ chữ"; cài đặt Biên tập thiếu so với luồng dịch; tiến trình không dùng lại hệ Jobs của luồng dịch; bản cuối gần như không đổi.
+- Q0 (offline, chương 013 Kumo tập 7, file owner gửi): DRAFT tốt (2 lỗi xưng hô thật trên 220 dòng: Ariel → Shiro "tôi/cô" thay vì `chị`; Potimas → Ariel "lão"); finder tạo 19 điểm, 15 điểm xưng hô giả (không biết người nói), 2 glossary giả (`白` trong `白い悪魔`; `白いの` đã có hàng pronoun); model giữ đúng các điểm giả, sót lỗi Ariel → Shiro; lỗi "lão" không có điểm; bản cuối đổi đúng 1 dòng, không cần thiết ("Hắn" → "Potimas"). Đính chính: điểm "ngươi" trong ảnh owner là lời Potimas, giữ nguyên là đúng.
+- Quyết định owner: duyệt 4.22 = U1 (4 file mặc định, ô tick 2 file, giữ "Job Dịch") + U2 (kết quả dễ đọc) + U3 (mục Biên tập trong Settings) + P (Biên tập chạy như job, dịch vụ nền, tab Jobs) + G (glossary nhận nhầm), không lượt trả phí; duyệt Q1 (phát hiện xưng hô theo người nói) ở dạng thiết kế + test offline, lượt trả phí xin riêng.
+- Yêu cầu: `docs/V422_WORK_REQUEST.md`, `docs/V422_Q1_SPEAKER_DESIGN_REQUEST.md`.
+
 
 ### v4.21 — P2 dấu câu theo RAW (2026-10-14)
 
