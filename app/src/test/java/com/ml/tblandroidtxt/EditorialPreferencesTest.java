@@ -15,7 +15,8 @@ public class EditorialPreferencesTest {
         InMemoryPairRunStore store=new InMemoryPairRunStore();EditorialPairRunService service=new EditorialPairRunService(store,provider,null,1000L);
         EditorialPairModels.PairRun run=service.prepare(1,source,"","",p.freeze(null),"fake-model","Vietnamese",new BigDecimal("0.5"),EditorialPairModels.ARM_CHUNK);
         service.execute(run.id,null);assertEquals(0,store.getRun(run.id).calls);
-        assertEquals(source.draftRows.get(0),store.items(run.id).get(0).candidateText);
+        EditorialPairSnapshot snapshot=EditorialPairSnapshot.of(run);
+        assertEquals(snapshot.map.draftText(snapshot.map.entries().get(0)),store.items(run.id).get(0).candidateText);
         assertEquals(0,EditorialPairPreview.of(source,List.of(),"",null,p).fixPointCount);
     }
     @Test public void defaultsAndSettingsExportRoundTripPreserveExistingBehavior() {
