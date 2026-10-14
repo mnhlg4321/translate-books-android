@@ -88,6 +88,10 @@ public final class FixPointFinder {
         // row is not shown to the model can still be the one who speaks. A cue field that names no column keeps every row (GLOBAL).
         ReferenceProjector.Projection tableRows = ReferenceProjector.project(new ReferenceProjector.Params(map.raw.chapterId,
                 map.rawParagraphStart(entry), map.rawParagraphEnd(entry), rawMain, "", "", Set.of("none")), glossary, pronounCsv);
+        // a pronoun row names how a speaker addresses someone in the RAW ("白いの"); where that wording contains a glossary source, the row
+        // decides that stretch and the glossary does not ask for the term
+        List<String> rowFroms = new ArrayList<>();
+        for (ReferenceProjector.Row row : tableRows.pronouns()) if (!row.from().isBlank()) rowFroms.add(row.from().trim());
         List<LineAligner.Bead> beads = beads(raw, draft, glossary, entry, plan);
         List<Integer> rawParagraphs = paragraphs(rawMain, map.rawParagraphStart(entry));
         TreeMap<Integer, Target> targets = new TreeMap<>();
@@ -117,7 +121,9 @@ public final class FixPointFinder {
 
             List<EditInputs.GlossaryEntry> missingTerms = new ArrayList<>();
             for (EditInputs.GlossaryEntry term : projection.glossary()) {
-                if (containsUncoveredSource(rawLines, term.source(), projection.glossary()) && !draftGroup.toLowerCase(Locale.ROOT).contains(term.target().trim().toLowerCase(Locale.ROOT))) {
+                if (containsUncoveredSource(rawLines, term.source(), projection.glossary(), rowFroms)
+                        && !draftGroup.toLowerCase(Locale.ROOT).contains(term.target().trim().toLowerCase(Locale.ROOT))
+                        && !namedByThirdPersonPronoun(term, draftGroup)) {
                     missingTerms.add(term);
                 }
             }
@@ -239,13 +245,104 @@ public final class FixPointFinder {
      * True when the source stands on its own in some RAW line. An occurrence inside a longer glossary source (リーダー in ゾンビリーダー)
      * belongs to that longer entry, whose own target is checked separately, so it never makes the shorter entry's target "missing".
      */
-    private static boolean containsUncoveredSource(List<String> lines, String source, List<EditInputs.GlossaryEntry> glossary) {
+    private static boolean containsUncoveredSource(List<String> lines, String source, List<EditInputs.GlossaryEntry> glossary,
+                                                   List<String> rowFroms) {
         String needle = source == null ? "" : source.trim();
         if (needle.isEmpty()) return false;
         for (String line : lines) {
             for (int at = line.indexOf(needle); at >= 0; at = line.indexOf(needle, at + 1)) {
-                if (!coveredByLongerSource(line, at, needle, glossary)) return true;
+                if (!coveredByLongerSource(line, at, needle, glossary) && !coveredByRowFrom(line, at, needle, rowFroms)
+                        && !partOfLongerWord(line, at, needle)) return true;
             }
+        }
+        return false;
+    }
+
+    /**
+     * The occurrence lies inside a pronoun row's RAW address wording that is longer than the glossary source (白 in 白いの) and inside
+     * a quotation: a row only describes how someone speaks, so the same wording in narration (日屋見さん in a sentence about her) is
+     * still checked against the glossary.
+     */
+    private static boolean coveredByRowFrom(String line, int at, String needle, List<String> rowFroms) {
+        if (!insideQuotation(line, at)) return false;
+        for (String longer : rowFroms) {
+            if (longer.length() <= needle.length() || !longer.contains(needle)) continue;
+            for (int from = Math.max(0, at - longer.length() + needle.length()); from <= at; from++) {
+                if (line.startsWith(longer, from) && from + longer.length() >= at + needle.length()) return true;
+            }
+        }
+        return false;
+    }
+
+    /** True when the position lies between an opening 「/『 and its closing mark on the same line. */
+    private static boolean insideQuotation(String line, int at) {
+        int depth = 0;
+        for (int i = 0; i < at && i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (c == '「' || c == '『') depth++;
+            else if ((c == '」' || c == '』') && depth > 0) depth--;
+        }
+        return depth > 0;
+    }
+
+    private static final String[] NAME_ENDINGS = {"ちゃん", "くん", "さん", "さま", "様", "殿", "君", "先輩", "先生"};
+    private static final String NAME_PARTICLES = "はがをにのへともでやかねよなわぞぜ";
+
+    /**
+     * A one-character Han source (白) is ambiguous: as a name it stands alone, followed by a particle, an honorific or punctuation;
+     * inside 白い悪魔, 純白 or 白魔法 it is part of a longer word (a colour, an adjective stem, a compound) and not the name.
+     * Longer sources are unaffected.
+     */
+    private static boolean partOfLongerWord(String line, int at, String needle) {
+        if (needle.codePointCount(0, needle.length()) != 1 || !isHan(needle.codePointAt(0))) return false;
+        int end = at + needle.length();
+        if (at > 0 && isHan(line.codePointBefore(at))) return true;
+        if (end >= line.length()) return false;
+        for (String ending : NAME_ENDINGS) if (line.startsWith(ending, end)) return false;
+        int after = line.codePointAt(end);
+        if (isHan(after) || Character.UnicodeScript.of(after) == Character.UnicodeScript.KATAKANA) return true;
+        if (Character.UnicodeScript.of(after) == Character.UnicodeScript.HIRAGANA) return NAME_PARTICLES.indexOf(after) < 0;
+        return false;
+    }
+
+    private static boolean isHan(int codePoint) { return Character.UnicodeScript.of(codePoint) == Character.UnicodeScript.HAN; }
+
+    /** A capitalised word that does not start a sentence or a quotation (Fuyu in "Khi đó, Fuyu sẽ nói"). */
+    private static boolean hasMidSentenceProperName(String text) {
+        String starters = ".!?。！？…「『“\"‘'—:";
+        int lastNonSpace = -1;
+        boolean atWordStart = true;
+        for (int i = 0; i < text.length(); ) {
+            int cp = text.codePointAt(i);
+            i += Character.charCount(cp);
+            if (Character.isLetter(cp)) {
+                if (atWordStart && Character.isUpperCase(cp) && lastNonSpace >= 0 && starters.indexOf(lastNonSpace) < 0) return true;
+                atWordStart = false;
+            } else {
+                atWordStart = true;
+            }
+            if (!Character.isWhitespace(cp)) lastNonSpace = cp;
+        }
+        return false;
+    }
+
+    private static final Set<String> THIRD_PERSON_WORDS = Set.of("hắn", "gã", "lão", "ả", "nàng", "chàng");
+    private static final Set<String> THIRD_PERSON_HEADS = Set.of("anh", "cô", "chị", "ông", "bà", "ngài", "em", "cậu", "bác", "chú");
+    private static final Set<String> THIRD_PERSON_TAILS = Set.of("ta", "ấy", "kia");
+
+    /**
+     * A character entry asks for the name, but a DRAFT line that already refers to that person with a third-person pronoun (hắn,
+     * anh ta, cô ấy, lão) is correct as it is; forcing the name would only change a pronoun into a name. When the line also carries
+     * another proper name in mid-sentence, the pronoun may refer to that other person and the name is still checked.
+     */
+    private static boolean namedByThirdPersonPronoun(EditInputs.GlossaryEntry term, String draftGroup) {
+        String category = term.category() == null ? "" : term.category().trim();
+        if (!"character".equalsIgnoreCase(category)) return false;
+        if (hasMidSentenceProperName(draftGroup)) return false;
+        List<String> tokens = AddressChecklist.tokens(draftGroup);
+        for (int i = 0; i < tokens.size(); i++) {
+            if (THIRD_PERSON_WORDS.contains(tokens.get(i))) return true;
+            if (i + 1 < tokens.size() && THIRD_PERSON_HEADS.contains(tokens.get(i)) && THIRD_PERSON_TAILS.contains(tokens.get(i + 1))) return true;
         }
         return false;
     }
