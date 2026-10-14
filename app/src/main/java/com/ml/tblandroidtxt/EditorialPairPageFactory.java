@@ -141,6 +141,14 @@ final class EditorialPairPageFactory {
             return;
         }
         List<PairItem> items = readItems(run.id);
+        EditorialPairSnapshot resultSnapshot = snapshot(run);
+        int changedLines = 0;
+        for (PairItem item : items) {
+            String before = resultSnapshot == null ? null : draftOf(resultSnapshot, item);
+            if (before != null && item.state == PairState.ACCEPTED && !item.candidateText.isEmpty())
+                changedLines += EditorialApiPresenter.diffRows(before, item.candidateText).size();
+        }
+        card.addView(text(EditorialResultPresentation.summary(run, items, changedLines), 15, a.TEXT, true));
         boolean interrupted = EditorialPairPresenter.interrupted(run, items);
         card.addView(text(EditorialPairPresenter.runHeadline(run, EditorialPairRunService.isActive(run.id), interrupted), 17, a.TEXT, true));
         for (String line : EditorialPairPresenter.statusLines(run, items)) card.addView(text(line, 13, a.MUTED, false), a.marginLP(-1, -2, 0, 4, 0, 0));
@@ -172,7 +180,27 @@ final class EditorialPairPageFactory {
         card.addView(a.secondaryButton("Về danh sách", v -> c.showList()), new LinearLayout.LayoutParams(-1, a.dp(44)));
         root.addView(card, a.marginLP(-1, -2, 0, 0, 0, 10));
 
-        EditorialPairSnapshot snapshot = snapshot(run);
+        LinearLayout changed = a.sectionCard("✎", "Dòng đã sửa");
+        if (changedLines == 0) changed.addView(text("Chưa có dòng nào được sửa trong đầu ra.", 13, a.MUTED, false));
+        for (PairItem item : items) {
+            String before = resultSnapshot == null ? null : draftOf(resultSnapshot, item);
+            if (before == null || item.state != PairState.ACCEPTED || item.candidateText.isEmpty()) continue;
+            for (String[] row : EditorialApiPresenter.diffRows(before, item.candidateText)) {
+                changed.addView(text("Đoạn " + item.ordinal + " · " + row[0], 12, a.MUTED, true));
+                changed.addView(highlight("Trước: ", row[1], row[2], a.RED));
+                changed.addView(highlight("Sau: ", row[2], row[1], a.GREEN));
+            }
+        }
+        root.addView(changed, a.marginLP(-1, -2, 0, 0, 0, 10));
+        LinearLayout filters = a.rowContainer();
+        String[] names = {"Đã sửa", "Giữ nguyên", "Bị chặn"};
+        for (int i = 0; i < names.length; i++) {
+            final int chosen = i;
+            filters.addView(p.resultFilter == i ? a.primaryButton(names[i], v -> p.filterResults(chosen))
+                    : a.secondaryButton(names[i], v -> p.filterResults(chosen)), new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        }
+        root.addView(filters);
+        EditorialPairSnapshot snapshot = resultSnapshot;
         java.util.Set<Integer> uncertain = EditorialPairPresenter.uncertainOrdinals(run.chunkPlanJson, items.size());
         LinearLayout pairs = a.sectionCard("▦", "Các đoạn (" + items.size() + ")");
         for (PairItem item : items) pairs.addView(pairCard(run, item, snapshot, uncertain.contains(item.ordinal)), a.marginLP(-1, -2, 0, 0, 0, 8));
@@ -196,7 +224,10 @@ final class EditorialPairPageFactory {
         box.addView(text("Đoạn " + item.ordinal + ": " + EditorialPairPresenter.pairState(item), 13, color(item.state), true));
         if (uncertain) box.addView(text("⚠ Đoạn chưa chắc: cách ghép RAW–DRAFT ở đây kém chắc hơn các đoạn khác.", 12, a.AMBER, false), a.marginLP(-1, -2, 0, 2, 0, 0));
         for (String line : EditorialPairPresenter.gateLines(item)) box.addView(text(line, 12, line.startsWith("Chặn") ? a.RED : a.AMBER, false), a.marginLP(-1, -2, 0, 2, 0, 0));
-        for (String line : EditorialPairPresenter.fixPointLines(item)) box.addView(text(line, 11, a.MUTED, false), a.marginLP(-1, -2, 0, 2, 0, 0));
+        for (String line : EditorialResultPresentation.readablePoints(item, p.resultFilter))
+            box.addView(text(line, 13, a.TEXT, false), a.marginLP(-1, -2, 0, 2, 0, 0));
+        if (p.detailsOpen) for (String line : EditorialPairPresenter.fixPointLines(item))
+            box.addView(text(line, 11, a.MUTED, false), a.marginLP(-1, -2, 0, 2, 0, 0));
         if (item.state == PairState.WARN_REVIEW) {
             LinearLayout decide = a.rowContainer();
             decide.addView(a.primaryButton("Chấp nhận", v -> p.resolve(item.pairId, true)), new LinearLayout.LayoutParams(0, a.dp(40), 1));
@@ -263,6 +294,15 @@ final class EditorialPairPageFactory {
     }
 
     private TextView text(String value, int sp, int color) { return text(value, sp, color, false); }
+
+    private TextView highlight(String prefix, String value, String other, int color) {
+        int start=0, end=value.length(), otherEnd=other.length();
+        while(start<end && start<otherEnd && value.charAt(start)==other.charAt(start)) start++;
+        while(end>start && otherEnd>start && value.charAt(end-1)==other.charAt(otherEnd-1)) {end--;otherEnd--;}
+        android.text.SpannableString shown=new android.text.SpannableString(prefix+value);
+        if(end>start) shown.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),prefix.length()+start,prefix.length()+end,0);
+        TextView view=text("",13,color,false); view.setText(shown);view.setTextIsSelectable(true);return view;
+    }
 
     private TextView text(String value, int sp, int color, boolean bold) {
         TextView view = a.text(value, sp, color, bold);

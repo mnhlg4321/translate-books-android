@@ -34,6 +34,9 @@ final class EditorialPairUiController {
     java.util.List<String> draftHead = java.util.List.of();
     String performanceLine = "";
     long runId;
+    int resultFilter;
+
+    void filterResults(int filter) { resultFilter = filter; parent.refresh(); }
     String progress = "";
     boolean detailsOpen;
     final Set<String> expanded = new HashSet<>();
