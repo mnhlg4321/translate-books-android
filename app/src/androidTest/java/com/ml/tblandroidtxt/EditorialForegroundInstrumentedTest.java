@@ -54,6 +54,17 @@ public class EditorialForegroundInstrumentedTest {
         try(SqliteEditorialPairRunStore store=new SqliteEditorialPairRunStore(context)){assertTrue(EditorialJobPresentation.canResume(store.getRun(id),store.items(id),false));}
         FakeEditorialApiProvider resumed=keep();EditorialApiUiController.providerOverride=resumed;EditorialPairForegroundService.start(context,id);awaitStopped(id);assertEquals(2,resumed.requests.size());
     }
+    private static void collectText(android.view.View view,StringBuilder out){
+        if(view instanceof android.widget.TextView)out.append(((android.widget.TextView)view).getText()).append('\n');
+        if(view instanceof android.view.ViewGroup){android.view.ViewGroup group=(android.view.ViewGroup)view;for(int i=0;i<group.getChildCount();i++)collectText(group.getChildAt(i),out);}
+    }
+    @Test public void jobsTabShowsTheEditorialRunCard() throws Exception {
+        long id=prepare(3);String name;
+        try(SqliteEditorialApiStore store=new SqliteEditorialApiStore(context)){name=store.listCombos().stream().filter(c->c.id==combos.get(0)).findFirst().get().name;}
+        StringBuilder text=new StringBuilder();
+        activity.onActivity(a->{a.invalidatePage("Jobs");a.switchTab("Jobs");collectText(a.pageCache.get("Jobs"),text);});
+        assertTrue("the Jobs tab lists the Editorial run of "+name+" (run "+id+"):\n"+text,text.toString().contains(name)&&text.toString().contains("Mở kết quả"));
+    }
     private String phase(){return InstrumentationRegistry.getArguments().getString("v422_phase","");}
     @Test public void processReopenSeed() throws Exception {
         Assume.assumeTrue("seed".equals(phase()));long id=prepare(3);CountDownLatch secondSent=new CountDownLatch(1);

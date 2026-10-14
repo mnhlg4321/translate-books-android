@@ -24,6 +24,7 @@ final class JobsMainPageFactory {
         ScrollView scroll = a.scroll();
         LinearLayout root = a.pageRoot();
         scroll.addView(root);
+        EditorialJobCard.addJobs(a, root); // Editorial runs next to the translation jobs (4.22)
         List<TranslationRepository.JobSummary> jobs = a.jobSummariesSnapshot();
         TranslationRepository.JobSummary current = current(jobs);
 
