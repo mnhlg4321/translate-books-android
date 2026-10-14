@@ -213,7 +213,7 @@ public final class EditorialApiBienTapUiInstrumentedTest {
             });
 
             // choose the glossary through the dialog list; this rebuilds the screen
-            click(scenario, "Đổi", 0);
+            click(scenario, "Chọn Glossary từ thư viện", 0); // 4.22: the library choice sits beside the per-file choice
             waitFor("glossary dialog", () -> onUi(scenario, activity -> activity.editorialApi().lastDialog != null
                     && activity.editorialApi().lastDialog.isShowing()));
             onUi(scenario, activity -> {

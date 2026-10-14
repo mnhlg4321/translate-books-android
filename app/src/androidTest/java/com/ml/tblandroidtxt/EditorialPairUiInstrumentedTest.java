@@ -58,6 +58,7 @@ public final class EditorialPairUiInstrumentedTest {
 
     @After public void tearDown() {
         EditorialApiUiController.providerOverride = null;
+        context.getSharedPreferences("editorial_setup", 0).edit().remove("twoFiles").commit(); // the two-file choice is remembered by the app
         try (SqliteEditorialApiStore store = new SqliteEditorialApiStore(context)) {
             for (long id : comboIds) store.deleteCombo(id);
         }
@@ -168,6 +169,7 @@ public final class EditorialPairUiInstrumentedTest {
             c.combo.draftName = "bản dịch của job " + jobId;
             c.combo.glossaryId = "";
             c.combo.pronounId = "";
+            c.useTwoFiles(true); // 4.22: running without Glossary/Pronoun is the explicit two-file mode
             c.saveAndContinue(name, EditorialApiContract.Mode.QUICK, "fake-model", "1.00");
             return c;
         });
@@ -227,6 +229,7 @@ public final class EditorialPairUiInstrumentedTest {
     }
 
     @Test public void droppingTheGlossaryAndPronounIsAnExplicitSavedChoice() throws Exception {
+        context.getSharedPreferences("editorial_setup", 0).edit().remove("twoFiles").commit();
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             openTab(scenario);
             onUi(scenario, activity -> {
@@ -240,8 +243,7 @@ public final class EditorialPairUiInstrumentedTest {
                 c.refresh();
                 return null;
             });
-            click(scenario, "Bỏ", 0);
-            click(scenario, "Bỏ", 0);
+            click(scenario, "Chỉ dùng 2 file (không Glossary/Pronoun)", 0); // 4.22: one tick replaces the two "Bỏ" buttons
             click(scenario, "Lưu", 0);
             EditorialApiCombo stored;
             try (SqliteEditorialApiStore store = new SqliteEditorialApiStore(context)) {
@@ -250,6 +252,7 @@ public final class EditorialPairUiInstrumentedTest {
             }
             assertEquals("", stored.glossaryId);
             assertEquals("", stored.pronounId);
+            assertTrue("the choice is saved as the explicit two-file mode", stored.settings().twoFiles);
             assertEquals(EditorialPairModels.SOURCE_JOB, stored.sourceKind);
             assertEquals(jobId, stored.jobId);
         }
