@@ -44,6 +44,7 @@ public final class EditorialV422MediaWalkthroughInstrumentedTest {
     private Context context;
     private long jobId;
     private String glossaryId = "";
+    private String pronounId = "";
     private final List<Long> comboIds = new ArrayList<>();
     private final List<Long> runIds = new ArrayList<>();
 
@@ -75,6 +76,9 @@ public final class EditorialV422MediaWalkthroughInstrumentedTest {
         all.add(0, glossary);
         GlossaryTestSupport.saveAndFlush(context, all);
         glossaryId = glossary.id;
+        PronounStore.Profile pronoun = PronounStore.importProfile(context, "synthetic-pronoun-v422", "",
+                "from,speaker,target,self,call,scope,note\n花子,Hanako,Taro,tôi,anh,all,\n");
+        pronounId = pronoun.id;
     }
 
     @After public void tearDown() throws Exception {
@@ -94,6 +98,7 @@ public final class EditorialV422MediaWalkthroughInstrumentedTest {
             try { repository.deleteJob(jobId); } finally { repository.close(); }
         }
         if (!glossaryId.isEmpty()) GlossaryTestSupport.removeAndFlush(context, java.util.Collections.singletonList(glossaryId));
+        if (!pronounId.isEmpty()) PronounStore.delete(context, pronounId);
         context.getSharedPreferences("editorial_setup", 0).edit().remove("twoFiles").commit();
     }
 
@@ -183,28 +188,37 @@ public final class EditorialV422MediaWalkthroughInstrumentedTest {
             waitFor("warning dialog", () -> controller.lastDialog != null && controller.lastDialog.isShowing());
             stage("04-warning-missing-pronoun");
 
-            onUi(scenario, activity -> { controller.lastDialog.getButton(AlertDialog.BUTTON_NEGATIVE).performClick(); return null; });
+            // the owner would press "Chọn file"; the system picker is not driven here, so the missing Pronoun is chosen from the library
+            onUi(scenario, activity -> { controller.lastDialog.dismiss(); controller.combo.pronounId = pronounId; controller.refresh(); return null; });
+            stage("05-setup-four-files-complete");
+
+            onUi(scenario, activity -> { controller.saveAndContinue("v422-walkthrough", EditorialApiContract.Mode.QUICK, "fake-model", "1.00"); return null; });
             waitFor("plan", () -> controller.screen == EditorialApiUiController.Screen.PAIR_CONFIRM && controller.pair.preview != null);
             comboIds.add(controller.combo.id);
-            stage("05-plan-verdict");
+            stage("06-plan-verdict");
 
             click(scenario, "Editorial", "Chạy");
             waitFor("progress card", () -> controller.screen == EditorialApiUiController.Screen.PAIR_RUN && controller.pair.runId > 0
                     && EditorialPairForegroundService.isActive(controller.pair.runId));
             runIds.add(controller.pair.runId);
-            stage("06-progress-card-on-the-editorial-screen");
+            stage("07-progress-card-on-the-editorial-screen");
 
-            onUi(scenario, activity -> { activity.switchTab("Jobs"); return null; });
-            stage("07-jobs-tab-card");
+            onUi(scenario, activity -> {
+                activity.switchTab("Jobs");
+                Log.i(TAG, "jobs-page-text=" + allText(activity, "Jobs").replace('
+', '|'));
+                return null;
+            });
+            stage("08-jobs-tab-card");
             onUi(scenario, activity -> { activity.switchTab("Editorial"); return null; });
 
             release.countDown();
             waitFor("result", () -> controller.screen == EditorialApiUiController.Screen.PAIR_RESULT && !controller.pair.running());
-            stage("08-result-summary");
-            stage("09-result-changed-lines"); // the shell scrolls the page before this picture
+            stage("09-result-summary");
+            stage("10-result-changed-lines"); // the shell scrolls the page before this picture
 
             onUi(scenario, activity -> { activity.switchTab("Settings"); activity.switchSettingsCategory("Biên tập"); return null; });
-            stage("10-settings-editorial");
+            stage("11-settings-editorial");
         }
     }
 }
