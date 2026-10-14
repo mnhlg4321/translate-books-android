@@ -2,8 +2,8 @@
   "version": "4.21.0",
   "versionCode": 271,
   "contract": "CP-IMPL-19",
-  "workflowStatus": "IN_PROGRESS",
-  "phase": "E7_READY_FOR_PRETAG",
+  "workflowStatus": "COMPLETE",
+  "phase": "E8_CLOSED_E9_PUBLICATION",
   "productionSource": "cb288c9a5bd574cd85fcde329a2f9d6d1e4514c7",
   "productionEvent": "build-20261014-082641",
   "testEvent": "test-20261014-0828",
@@ -112,14 +112,26 @@
     "originalDatabaseAndJournalHashesMatched": true,
     "syntheticOnly": true
   },
-  "preTag": "PENDING",
-  "releaseBuildArchive": "PENDING",
-  "tag": "PENDING",
-  "merge": "PENDING",
-  "push": "PENDING",
+  "preTag": "PASS",
+  "releaseBuildArchive": {
+    "event": "build-20261014-091247",
+    "gitCommit": "54936850cee9adf4a8251f90744fbf69d67b9612",
+    "checksums": 52,
+    "fourMirrorsVerified": true,
+    "manifestSha256": "A838E50596B609989DA013109179BBFEAD15164B18825C01A44DBE45F3DC94E4",
+    "qaSourceZipSha256": "A9811BF27568539A5DAE9DD9308BE1AD86211090ACF39985E8B310907F5C7555"
+  },
+  "tag": {
+    "name": "v4.21.0",
+    "annotated": true,
+    "object": "5786a029f8de774614dd3d0cd2262df262074110",
+    "peeledCommit": "54936850cee9adf4a8251f90744fbf69d67b9612"
+  },
+  "merge": "Final authorized --no-ff integration; exact tree/parents verified at handoff",
+  "push": "Final authorized non-force publication; exact remote refs verified at handoff",
   "providerCalls": 0,
   "spendUsd": 0,
-  "nextAction": "Complete E7-E9 under conditional release authority; no provider or production change.",
+  "nextAction": "Owner uses 4.21.0 after E9 reference verification.",
   "qaFileHashes": {
     "device/method-summary.json": "BE8C6D53A8DDB2F8696C2E23E3AF03DD7A27F4FA23D7374DF87A4029FB718D36",
     "device/raw/chunk-EditorialApiBienTapFlow.txt": "8529C902F35F498E000D64DED4A4F101131BAE4DA18FC734499B23ACA52FA57B",
@@ -207,5 +219,17 @@
     "performance/open-tab-rerun/StartupMacrobenchmark_openEditorialTab_iter004_2026-10-14-02-06-48.perfetto-trace": "BACC161B0FB2CC60A5F2EB861A15C960F270BD9377EABE542597395679292FFA",
     "performance/planning-instrument.txt": "E0CD5C5B4DAE67FCE8CEF4FB78CD56F5242C7819EC2AB491C69227930E550E66",
     "performance/v421-e-plan.pftrace": "80DF84B8FA65F57AE256833DCCF1C7AF91AFB390D51962B623131724A950C420"
-  }
+  },
+  "preBackup": "PASS",
+  "completeGate": "PASS",
+  "qaCommit": "54936850cee9adf4a8251f90744fbf69d67b9612",
+  "tagArchive": {
+    "event": "tag-v4.21.0",
+    "gitCommit": "54936850cee9adf4a8251f90744fbf69d67b9612",
+    "checksums": 52,
+    "fourMirrorsVerified": true,
+    "manifestSha256": "C91A83CB2F33255D6E3D8ADEDF829274406E42684914090B0B0F1D10BF0C2F9D",
+    "qaSourceZipSha256": "A9811BF27568539A5DAE9DD9308BE1AD86211090ACF39985E8B310907F5C7555"
+  },
+  "temporaryRcGitWorktreeAndBranchRemoved": true
 }

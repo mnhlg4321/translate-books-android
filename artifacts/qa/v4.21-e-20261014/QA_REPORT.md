@@ -51,4 +51,15 @@ EditorialR1MediaWalkthroughInstrumentedTest r1_media=run:1PASS/0SKIP/0FAIL. Sáu
 
 E1/E4 không có FAIL; lỗi đầu E5 đã giải thích và chạy lại đạt, giữ nguyên lịch sử FAIL. Production/test payload đủ và hashkhớp; E5/E6 có đầu ra thật; production bằng đúng commit đã E1 cb288c9a. Checklist05–09 được ghi cùng commit QA này; PreTag và archive chỉ thực hiện sau khi commit sạch. Chưa tuyên bố tag/main/push hoàn tất trước xác nhận.
 
-Next action: hoàn tất E7–E9 đúng quyền, giữ nguyên giới hạn và evidence lịch sử; USD0.
+
+## Đóng gói/tag — bằng chứng đã xác minh
+
+- QA commit54936850cee9adf4a8251f90744fbf69d67b9612 sạch trước tag; production inputs giống E1/buildcb288c9a. PreTag PASS.
+- Release eventbuild-20261014-091247:52/52checksums,4mirror worktree artifacts/backup và owner artifacts/backup khớp. ManifestSHA A838E50596B609989DA013109179BBFEAD15164B18825C01A44DBE45F3DC94E4.
+- Annotatedtagv4.21.0 object5786a029f8de774614dd3d0cd2262df262074110, peeled54936850 đúng commit ghi trong build event. PreBackup PASS.
+- Eventtag-v4.21.0:52/52checksums,4mirrors khớp, ManifestSHA C91A83CB2F33255D6E3D8ADEDF829274406E42684914090B0B0F1D10BF0C2F9D.
+- Hai event sourceZIP QA/tag SHA A9811BF27568539A5DAE9DD9308BE1AD86211090ACF39985E8B310907F5C7555; production sourceZIP riêng57F9DABC5C9EF704133DBEB7BB668DEA7BD65402501468F0EE83D82E0E6AAAAA bằng đúng wrapperZIP. Source QA không đánh tráo source build APK.
+- Archive là bản bất biến trước closure; báo cáo/SUMMARY hiện hành cập nhật facts đã kiểm mà không ghi đè payload cũ. Local temporary RC Git worktree/branch đã gỡ sau retention; chỉ metadata đổi sau tag, không APK/model/test/production.
+- Checklist14 bước Workflow COMPLETE; Complete gate kiểm ngay sau cập nhật và kiểm lại trên closurecommit. Main--no-ff integration và quét/non-force push là thao tác cuối được owner duyệt, tree/ref equality xác nhận tại handoff; không tự khẳng định remote trước khi có ls-remote.
+
+Next action: owner dùng4.21.0 sau E9 xác nhận refs; không thêm việc sản phẩm hoặc lượt trả phí.
