@@ -115,6 +115,11 @@ final class EditorialPairPageFactory {
     // ---- during the run
 
     void run(LinearLayout root) {
+        PairRun current = readRun();
+        if (current != null) {
+            root.addView(EditorialJobCard.build(a, c.combo, current, readItems(current.id)));
+            return;
+        }
         LinearLayout card = a.sectionCard("…", "Đang biên tập từng đoạn");
         card.addView(text(p.progress.isEmpty() ? "Đang chạy…" : p.progress, 15, a.TEXT, false));
         PairRun run = readRun();

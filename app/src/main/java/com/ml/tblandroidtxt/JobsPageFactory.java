@@ -57,6 +57,7 @@ public class JobsPageFactory {
         ScrollView scroll = scroll();
         LinearLayout root = pageRoot();
         scroll.addView(root);
+        if(a instanceof MainActivity)EditorialJobCard.addJobs((MainActivity)a,root);
 
         List<TranslationRepository.JobSummary> all = a instanceof MainActivity
                 ? ((MainActivity)a).jobSummariesSnapshot() : java.util.Collections.emptyList();

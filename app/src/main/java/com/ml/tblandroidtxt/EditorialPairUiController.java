@@ -45,7 +45,13 @@ final class EditorialPairUiController {
 
     EditorialPairUiController(EditorialApiUiController parent) { this.parent = parent; }
 
-    boolean running() { return worker != null && worker.isAlive(); }
+    boolean running() { return (worker != null && worker.isAlive()) || EditorialPairForegroundService.isActive(runId); }
+
+    void observeForeground(long id, boolean finished) {
+        if(id!=runId)return;
+        if(finished&&parent.screen==EditorialApiUiController.Screen.PAIR_RUN)parent.setScreen(EditorialApiUiController.Screen.PAIR_RESULT);
+        else parent.refresh();
+    }
 
     // ---- preview
 
@@ -135,47 +141,31 @@ final class EditorialPairUiController {
                         final EditorialPairSourceLoader.References refs, final EditorialApiProvider provider, final AppSettings settings,
                         final String model, final BigDecimal cap) {
         worker = new Thread(() -> {
-            SqliteEditorialPairRunStore store = new SqliteEditorialPairRunStore(parent.appContext());
-            try {
-                EditorialPairRunService runService = new EditorialPairRunService(store, provider, new EditorialApiModelPricing(settings.provider), REQUEST_TIMEOUT_MILLIS);
-                service = runService;
-                long id;
-                if (existingRunId != null) {
-                    id = existingRunId;
-                } else {
-                    PairRun run = runService.prepare(combo.id, runSource, refs.glossaryText, refs.pronounText, settings.editorial.freeze(null), model, settings.targetLanguage, cap,
-                            EditorialPairModels.ARM_CHUNK);
-                    id = run.id;
+            try (SqliteEditorialPairRunStore store = new SqliteEditorialPairRunStore(parent.appContext())) {
+                if (existingRunId != null) runId = existingRunId;
+                else {
+                    EditorialPairRunService preparation = new EditorialPairRunService(store, provider,
+                            new EditorialApiModelPricing(settings.provider), REQUEST_TIMEOUT_MILLIS);
+                    runId = preparation.prepare(combo.id, runSource, refs.glossaryText, refs.pronounText,
+                            settings.editorial.freeze(null), model, settings.targetLanguage, cap, EditorialPairModels.ARM_CHUNK).id;
                 }
-                runId = id;
-                runService.execute(id, new EditorialPairRunService.Listener() {
-                    @Override public void onPair(PairRun run, PairItem item) {
-                        progress = EditorialPairPresenter.isNoFixPoints(item)
-                                ? "Đoạn " + item.ordinal + ": không có điểm sửa, giữ nguyên DRAFT, không gửi API."
-                                : "Đoạn " + item.ordinal + ": đang gửi và chờ kết quả…";
-                        parent.postUi(() -> { if (parent.screen == EditorialApiUiController.Screen.PAIR_RUN) parent.refresh(); });
-                    }
-
-                    @Override public void onFinished(PairRun run) { }
-                });
+                EditorialPairForegroundService.start(parent.appContext(), runId);
             } catch (EditorialPairRunService.PrepareException blocked) {
                 parent.error = "Chưa chạy được: " + EditorialPairPresenter.blocker(blocked.blockers.get(0));
             } catch (RuntimeException failure) {
-                android.util.Log.w("EditorialPair", "run failed: " + failure);
-                parent.error = "Không chạy được: " + failure.getClass().getSimpleName();
+                parent.error = "Không khởi động được lượt Biên tập. Hãy mở lại kết quả và chạy tiếp.";
             } finally {
-                store.close();
-                service = null;
-                parent.postUi(() -> { parent.setScreen(runId > 0 ? EditorialApiUiController.Screen.PAIR_RESULT : EditorialApiUiController.Screen.PAIR_CONFIRM); });
+                parent.postUi(() -> parent.setScreen(runId <= 0 ? EditorialApiUiController.Screen.PAIR_CONFIRM
+                        : EditorialPairForegroundService.isActive(runId) ? EditorialApiUiController.Screen.PAIR_RUN : EditorialApiUiController.Screen.PAIR_RESULT));
             }
-        }, "editorial-pair-run");
+        }, "editorial-pair-prepare");
         worker.start();
     }
 
     void cancelRun() {
-        EditorialPairRunService active = service;
-        if (active != null) active.cancel();
+        EditorialPairForegroundService.cancelRun(runId);
         progress = "Đang dừng sau đoạn hiện tại…";
+        parent.refresh();
     }
 
     // ---- result

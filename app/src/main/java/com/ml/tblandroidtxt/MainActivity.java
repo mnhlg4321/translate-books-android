@@ -178,6 +178,8 @@ public class MainActivity extends Activity {
     final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) {
             if (!TranslatorService.ACTION_PROGRESS.equals(intent.getAction())) return;
+            long editorialRun=intent.getLongExtra(EditorialPairForegroundService.EXTRA_RUN,0);
+            if(editorialRun>0){editorialApi().pair.observeForeground(editorialRun,intent.getBooleanExtra(EditorialPairForegroundService.EXTRA_FINISHED,false));invalidatePage("Jobs");if("Jobs".equals(currentTab))switchTab("Jobs");return;}
             String log = intent.getStringExtra(TranslatorService.EXTRA_LOG);
             int p = intent.getIntExtra(TranslatorService.EXTRA_PROGRESS, -1);
             String status = intent.getStringExtra(TranslatorService.EXTRA_STATUS);
