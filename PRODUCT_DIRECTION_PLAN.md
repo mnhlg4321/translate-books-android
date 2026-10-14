@@ -46,7 +46,18 @@ Dừng và đóng việc, không mở thêm đo, khi: A cho thấy vấn đề l
 
 Dữ liệu bước A/B (có văn bản sách) ở `D:\P5E-private\product-plan-A\`, ngoài Git.
 
-**Next action:** owner dùng bản4.20.0; việc sản phẩm mới thuộc phiên bản sau với phạm vi duyệt riêng.
+**Next action:** owner xem nhanh trang đọc P2 (tùy chọn) rồi duyệt bước E phát hành 4.21.0.
+
+### v4.21 — P2 dấu câu theo RAW (2026-10-14)
+
+| Bước | Trạng thái | Kết quả |
+|---|---|---|
+| B | xong offline | 28 chương: mô phỏng "theo RAW" khớp FINAL 114 dòng, khác FINAL 59 dòng (owner lúc đổi lúc không: `〝〟` đổi 50 / giữ `“ ”` 22; `：` đổi 29 / giữ `:` 19; `……` 17/0). App không tự đổi ngoặc; prompt dịch không yêu cầu giữ ngoặc gốc |
+| Quyết định owner | 2026-10-14 | **Luôn theo RAW** cho `〝〟 「」 『』`, `：` và `……` |
+| C | xong offline (`feature/v4.21`) | `RawPunctuation` tất định, không model: cặp `“ ”`/`" "` lấy ngoặc RAW theo thứ tự khi số cặp bằng nhau; `:`→`：`, `...`→`……` khi số lần bằng RAW; chữ và số không bao giờ đổi; ngoặc lồng hoặc số lượng lệch thì giữ nguyên. Finder ghi dòng cần khôi phục (dòng DRAFT ghép một nhóm RAW); applier khôi phục trên câu trả lời đã được nhận và trên dòng không có sửa; chunk không có điểm cho model thì app khôi phục **không gọi model**. Model vẫn không được tự đổi ngoặc. Hợp đồng `CP-IMPL-19`. Đo bằng mã app trên 8 chương: 47 dòng khôi phục, 40 khớp FINAL, 7 là chỗ FINAL giữ dạng DRAFT, 0 lệch khác. Trang đọc `D:\P5E-private\v421-p2\READING_P2_8CH.html` |
+| D | không cần lượt trả phí | Thay đổi tất định, đã đo trên mã thật |
+| E | chưa bắt đầu | Phát hành 4.21.0 theo 14 bước |
+
 
 Review độc lập 2026-10-13 tại `71781fd2`: HEAD sạch trước review và remote khớp; 20/20 hash evidence cùng hash trang đọc khớp; ledger 7 calls/USD0.01801660/pending0 được kiểm lại. Chunk13 điểm3 bị chặn đúng vì response thêm U+300C/U+3002/U+300D vào DRAFT không có các dấu đó; không có bằng chứng lỗi guard để vá. STRUCTURAL_VALID toàn chương chưa đạt, SEMANTIC_EVAL chờ owner; SQLite/reopen/SAF của lượt này NOT_MEASURED vì runner dùng InMemoryPairRunStore. S0–S9 hoàn thành công việc thu evidence, không đồng nghĩa nghiệm thu sản phẩm. Không đổi acceptance, checklist hay evidence cũ.
 

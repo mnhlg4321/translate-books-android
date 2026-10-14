@@ -245,7 +245,9 @@ public final class EditorialPairRunService {
         if (targeted) {
             fixes = FixPointFinder.find(snapshot.map, entry, snapshot.glossary, snapshot.pronounText, snapshot.cueFields, snapshot.chunkPlan);
             if (fixes.points().isEmpty()) {
-                store.commitNoFixPoints(run.id, item.pairId, draftRange, noFixPointsJson(fixes));
+                // nothing for the model; the RAW's marks (P2) are restored by the app without a call
+                TargetedFixApplier.Result marks = TargetedFixApplier.apply(draftRange, List.of(), null, snapshot.glossary, fixes.punctuation());
+                store.commitNoFixPoints(run.id, item.pairId, marks.text(), noFixPointsJson(fixes, marks.punctuationLines()));
                 if (listener != null) listener.onPair(run, store.item(run.id, item.pairId));
                 return false;
             }
@@ -300,7 +302,7 @@ public final class EditorialPairRunService {
                 return true;
             }
             return targeted
-                    ? receiveTargeted(run, item, draftRange, fixes.points(), snapshot.glossary, response, requestId, worst, calls, inTokens, outTokens, attempt)
+                    ? receiveTargeted(run, item, draftRange, fixes, snapshot.glossary, response, requestId, worst, calls, inTokens, outTokens, attempt)
                     : receive(run, item, prompt, draftRange, response, requestId, worst, calls, inTokens, outTokens, attempt);
         }
         return false;
@@ -316,12 +318,13 @@ public final class EditorialPairRunService {
                 snapshot.map.draft.contextAfterLines(d[1], snapshot.context.chars(), snapshot.context.minLines()), points);
     }
 
-    private boolean receiveTargeted(PairRun run, PairItem item, String draftRange, List<FixPoint> points,
+    private boolean receiveTargeted(PairRun run, PairItem item, String draftRange, FixPointFinder.Result fixes,
                                     List<com.ml.tblandroidtxt.editorial.api.EditInputs.GlossaryEntry> glossary,
                                     EditorialApiFlow.StepResponse response, String requestId, BigDecimal worst,
                                     int calls, long inTokens, long outTokens, int attempt) {
+        List<FixPoint> points = fixes.points();
         TargetedFixParser.Parsed parsed = TargetedFixParser.parse(response.content(), points);
-        TargetedFixApplier.Result applied = TargetedFixApplier.apply(draftRange, points, parsed, glossary);
+        TargetedFixApplier.Result applied = TargetedFixApplier.apply(draftRange, points, parsed, glossary, fixes.punctuation());
         boolean complete = applied.outcomes().size() == points.size();
         boolean missing = false;
         boolean rejected = false;
@@ -352,7 +355,7 @@ public final class EditorialPairRunService {
         done.candidateText = applied.text();
         done.responseText = response.content();
         done.responseHash = PairText.sha256(response.content());
-        done.gateJson = gateJson(gate, applied.outcomes(), parsed.ignoredLines());
+        done.gateJson = gateJson(gate, applied.outcomes(), parsed.ignoredLines(), applied.punctuationLines());
         done.calls = calls;
         done.inputTokens = inTokens;
         done.outputTokens = outTokens;
@@ -392,10 +395,11 @@ public final class EditorialPairRunService {
                 gate.candidateLines(), gate.verbatim(), gate.reflowOnly(), gate.internalLayoutFingerprint());
     }
 
-    private static String noFixPointsJson(FixPointFinder.Result result) {
+    private static String noFixPointsJson(FixPointFinder.Result result, int punctuationLines) {
         try {
             return new JSONObject().put("status", "NO_FIX_POINTS").put("contract", PairContract.REVISION)
-                    .put("ambiguousGlossarySplits", result.ambiguousGlossarySplits()).put("fixPoints", new JSONArray()).toString();
+                    .put("ambiguousGlossarySplits", result.ambiguousGlossarySplits()).put("punctuationLines", punctuationLines)
+                    .put("fixPoints", new JSONArray()).toString();
         } catch (JSONException impossible) { throw new IllegalStateException(impossible); }
     }
 
@@ -484,10 +488,11 @@ public final class EditorialPairRunService {
         }
     }
 
-    private static String gateJson(StructuralGate.Result gate, List<TargetedFixApplier.Outcome> outcomes, int ignoredLines) {
+    private static String gateJson(StructuralGate.Result gate, List<TargetedFixApplier.Outcome> outcomes, int ignoredLines, int punctuationLines) {
         try {
             JSONObject root = new JSONObject(gateJson(gate));
             root.put("ignoredResponseLines", ignoredLines);
+            root.put("punctuationLines", punctuationLines);
             JSONArray points = new JSONArray();
             for (TargetedFixApplier.Outcome outcome : outcomes) {
                 FixPoint point = outcome.point();

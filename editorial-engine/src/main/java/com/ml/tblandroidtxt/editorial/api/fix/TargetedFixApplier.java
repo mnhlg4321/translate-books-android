@@ -13,8 +13,11 @@ import java.util.List;
 public final class TargetedFixApplier {
     public enum Status { FIXED, KEPT, REJECTED, NO_ANSWER }
     public record Outcome(FixPoint point, Status status, String before, String after, String reason) { }
-    public record Result(String text, List<Outcome> outcomes) {
+    /** {@code punctuationLines}: lines whose marks were restored from the RAW ({@link RawPunctuation}). */
+    public record Result(String text, List<Outcome> outcomes, int punctuationLines) {
         public Result { outcomes = List.copyOf(outcomes); }
+
+        public Result(String text, List<Outcome> outcomes) { this(text, outcomes, 0); }
     }
 
     private record Span(int start, int contentEnd, int end, String ending) { }
@@ -37,12 +40,28 @@ public final class TargetedFixApplier {
 
     public static Result apply(String draft, List<FixPoint> points, TargetedFixParser.Parsed parsed,
                                List<EditInputs.GlossaryEntry> glossary) {
+        return apply(draft, points, parsed, glossary, List.of());
+    }
+
+    /**
+     * As {@link #apply(String, List, TargetedFixParser.Parsed, List)}, then restores the RAW's marks on the listed lines: on the
+     * accepted answer where a point changed the line, on the DRAFT line otherwise. The model's answer is still checked against
+     * the DRAFT's own marks first, so a model never decides the brackets.
+     */
+    public static Result apply(String draft, List<FixPoint> points, TargetedFixParser.Parsed parsed,
+                               List<EditInputs.GlossaryEntry> glossary, List<FixPointFinder.PunctuationRepair> punctuation) {
         String source = draft == null ? "" : draft;
         List<Span> spans = spans(source);
         LineUnits units = LineUnits.parse(source);
         List<Outcome> outcomes = new ArrayList<>();
         List<Edit> edits = new ArrayList<>();
         List<Integer> formatRejections = new ArrayList<>();
+        java.util.Map<Integer, String> marks = new java.util.HashMap<>();
+        for (FixPointFinder.PunctuationRepair repair : punctuation == null ? List.<FixPointFinder.PunctuationRepair>of() : punctuation) {
+            marks.put(repair.draftLineIndex(), repair.rawGroup());
+        }
+        java.util.Set<Integer> replacedLines = new java.util.HashSet<>();
+        int punctuationLines = 0;
         for (FixPoint point : points == null ? List.<FixPoint>of() : points) {
             TargetedFixParser.Answer answer = parsed == null ? null : parsed.answers().get(point.id());
             String before = point.draftText();
@@ -100,6 +119,13 @@ public final class TargetedFixApplier {
                 }
                 int physical = units.units().get(point.draftLineIndex()).physicalLine() - 1;
                 Span target = spans.get(physical);
+                String raw = marks.get(point.draftLineIndex());
+                if (raw != null) {
+                    String restored = RawPunctuation.restore(candidate, raw);
+                    if (!restored.equals(candidate)) punctuationLines++;
+                    candidate = restored;
+                }
+                replacedLines.add(point.draftLineIndex());
                 edits.add(new Edit(target.start(), target.contentEnd(), candidate, point.id(), false));
                 outcomes.add(new Outcome(point, Status.FIXED, before, candidate,
                         restoredTerminator ? "REPLACED_WITH_DRAFT_TERMINATOR" : "REPLACED"));
@@ -112,12 +138,23 @@ public final class TargetedFixApplier {
                 outcomes.set(at, new Outcome(rejected.point(), Status.KEPT, rejected.before(), rejected.after(), rejected.reason()));
             }
         }
+        // lines no answer replaced keep their DRAFT words and only take the RAW's marks
+        for (java.util.Map.Entry<Integer, String> mark : marks.entrySet()) {
+            int line = mark.getKey();
+            if (replacedLines.contains(line) || line < 0 || line >= units.size()) continue;
+            Span target = spans.get(units.units().get(line).physicalLine() - 1);
+            String original = source.substring(target.start(), target.contentEnd());
+            String restored = RawPunctuation.restore(original, mark.getValue());
+            if (restored.equals(original)) continue;
+            edits.add(new Edit(target.start(), target.contentEnd(), restored, 0, false));
+            punctuationLines++;
+        }
         edits.sort(Comparator.comparingInt(Edit::start).reversed()
                 .thenComparing(Edit::insertion) // replacements first at a shared boundary
                 .thenComparing(Comparator.comparingInt(Edit::id).reversed()));
         StringBuilder output = new StringBuilder(source);
         for (Edit edit : edits) output.replace(edit.start(), edit.end(), edit.replacement());
-        return new Result(output.toString(), outcomes);
+        return new Result(output.toString(), outcomes, punctuationLines);
     }
 
     private static String rejection(FixPoint point, String candidate, int citedRow, List<EditInputs.GlossaryEntry> glossary) {

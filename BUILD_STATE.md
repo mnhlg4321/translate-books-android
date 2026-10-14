@@ -1,6 +1,14 @@
 # Build State
 
-## Current state — 2026-10-13 (v4.20.0 release closure; E-bis conditions satisfied)
+## Current state — 2026-10-14 (v4.21 opened: P2 marks follow the RAW; step C done offline)
+
+- Branch `feature/v4.21` from `main` `f037f437` (4.20.0 / code 270 released). Owner convention: DRAFT marks follow the RAW for 〝〟 「」 『』, ： and …….
+- C: `RawPunctuation` (engine), finder `Result.punctuation`, applier overload restoring marks on accepted answers and untouched lines, service restores marks without a provider call when no point needs the model, gate JSON `punctuationLines`; contract `CP-IMPL-19`. Model answers are still checked against the DRAFT marks.
+- Tests: `RawPunctuationTest` (6), service test for a marks-only chunk with 0 provider calls; working tree engine 727 (1 skip), app 475 (4 skip), 0 failures. Real-code measurement (`writeRawMarkRepairsWhenConfigured`, private inputs): 47 lines restored on 8 chapters, 40 match the owner FINAL, 7 FINAL kept the DRAFT form, 0 other. `AGENTS.md` note now names 4.20.0 as shipped.
+- No build, device or provider operation; USD 0.
+- Next action: owner approves step E (release 4.21.0).
+
+## Earlier — 2026-10-13 (v4.20.0 release closure; E-bis conditions satisfied)
 
 - Release4.20.0/code270, CP-IMPL-18, production261d3b8bc28ad2f8f22c4b6ffd326601b4abc8d7; wrapperbuild-20261013-181401, APK58C1B11FA8DEA27D57BD9830A47007A7757F9F04147A0C3EAAB43F3FD199AFA8, sourceZIPAED3CC03FF574126D5AFC0DDB0B833224C66EDA2E3C562B0FACFDE11632359C9. Testeventv420-ebis-test-20261013-1815, same261d3b8b, APKCC7EFF9FDD165B24C81C2DD6806E9D8103FD33A920CA696BC18BFD5DF1ABA644. Allpayloadsmirroredbeforevalidatedemulator-onlyinstall; temporarybuildworktree/branch removed.
 - Annotatedv4.20.0 atQA source2bc2384f9459143093eaf3403b2e83f1c9822372; productioninputsequalchecked261d3b8b. PreTag/PreBackup PASS; releasebuild-20261013-182812 andtag-v4.20.0 each30checksums/4mirrors PASS, atworktree andmainworkspaceartifact/backup. QA/tagZIPAA946E23EAE195BB2E88E46C32E6C3503539E2CE7D86910908E6E3AA39B423BA, separateproductionZIPequalsactualwrapperAED3CC03FF574126D5AFC0DDB0B833224C66EDA2E3C562B0FACFDE11632359C9.
