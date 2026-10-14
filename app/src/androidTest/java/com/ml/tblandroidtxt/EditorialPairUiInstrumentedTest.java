@@ -132,7 +132,9 @@ public final class EditorialPairUiInstrumentedTest {
         scenario.onActivity(activity -> {
             List<TextView> matches = texts(activity, label);
             assertTrue("no visible control labelled '" + label + "' in:\n" + allText(activity), matches.size() > index);
-            assertTrue(label, matches.get(index).performClick());
+            TextView target = matches.get(index);
+            boolean handled = target.performClick();
+            assertTrue(label, handled || target instanceof android.widget.CompoundButton); // a tick toggles without a click listener
         });
     }
 
