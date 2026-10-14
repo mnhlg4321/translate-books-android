@@ -17,11 +17,12 @@ public final class EditorialApiCombo {
         public String model = "";
         /** Four-file setup by default; explicit two-file choice is stored in the existing JSON. */
         public boolean twoFiles;
+        public boolean capOverride;
         public BigDecimal maxUsdPerChapter = DEFAULT_MAX_USD;
 
         public String toJson() {
             try {
-                return new JSONObject().put("mode", mode.name()).put("twoFiles", twoFiles).put("model", model == null ? "" : model)
+                return new JSONObject().put("mode", mode.name()).put("twoFiles", twoFiles).put("capOverride", capOverride).put("model", model == null ? "" : model)
                         .put("maxUsd", maxUsdPerChapter.toPlainString()).toString();
             } catch (Exception impossible) {
                 throw new IllegalStateException(impossible);
@@ -35,6 +36,7 @@ public final class EditorialApiCombo {
                 try { settings.mode = EditorialApiContract.Mode.valueOf(o.optString("mode", "QUICK")); } catch (IllegalArgumentException ignored) { }
                 settings.model = o.optString("model", "");
                 settings.twoFiles = o.optBoolean("twoFiles", false);
+                settings.capOverride = o.optBoolean("capOverride", o.has("maxUsd"));
                 try {
                     BigDecimal cap = new BigDecimal(o.optString("maxUsd", DEFAULT_MAX_USD.toPlainString()));
                     if (cap.signum() > 0) settings.maxUsdPerChapter = cap;

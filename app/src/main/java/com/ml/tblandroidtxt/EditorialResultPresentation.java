@@ -71,7 +71,8 @@ final class EditorialResultPresentation {
             JSONObject p=points.optJSONObject(i); if(p==null) continue;
             boolean changed=applied(item,p),blocked=item.state==PairState.STRUCTURE_BLOCKED||item.state==PairState.REJECTED||"REJECTED".equals(p.optString("status"));
             if((filter==0&&!changed)||(filter==1&&(changed||blocked))||(filter==2&&!blocked)) continue;
-            out.add("Điểm "+p.optInt("id")+": "+(changed?"Đã sửa":blocked?"Bị chặn":"Giữ nguyên")+" — "+reason(p.optString("reason")));
+            String why=blocked&&"FIXED".equals(p.optString("status"))?"Đề xuất chưa vào đầu ra vì đoạn bị chặn":reason(p.optString("reason"));
+            out.add("Điểm "+p.optInt("id")+": "+(changed?"Đã sửa":blocked?"Bị chặn":"Giữ nguyên")+" — "+why);
         }
         return out;
     }

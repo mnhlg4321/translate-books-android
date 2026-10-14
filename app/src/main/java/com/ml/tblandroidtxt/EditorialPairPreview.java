@@ -59,6 +59,10 @@ public final class EditorialPairPreview {
     public boolean runnable() { return blockers.isEmpty() && map != null; }
 
     public static EditorialPairPreview of(EditorialPairSource source, List<EditInputs.GlossaryEntry> glossary, String pronounText, Set<String> cueFields) {
+        return of(source, glossary, pronounText, cueFields, new EditorialPreferences());
+    }
+
+    public static EditorialPairPreview of(EditorialPairSource source, List<EditInputs.GlossaryEntry> glossary, String pronounText, Set<String> cueFields, EditorialPreferences choices) {
         List<String> blockers = new ArrayList<>();
         for (String issue : source.lineageIssues) blockers.add("SOURCE_" + issue);
         if (source.rawRows.isEmpty() || source.draftRows.size() != source.rawRows.size()) {
@@ -101,8 +105,8 @@ public final class EditorialPairPreview {
                 preview.missingCount++;
             } else {
                 try {
-                    FixPointFinder.Result fixes = FixPointFinder.find(map, e, glossary == null ? List.of() : glossary, pronounText,
-                            cueFields, source.plan);
+                    FixPointFinder.Result fixes = choices.filter(FixPointFinder.find(map, e, glossary == null ? List.of() : glossary, pronounText,
+                            cueFields, source.plan));
                     row.fixPoints = fixes.points();
                     row.fixPointCount = row.fixPoints.size();
                     row.ambiguousGlossarySplits = fixes.ambiguousGlossarySplits();

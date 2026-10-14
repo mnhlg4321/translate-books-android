@@ -4,6 +4,7 @@ import java.util.Locale;
 import java.util.Map;
 
 public class AppSettings {
+    public EditorialPreferences editorial = new EditorialPreferences();
     public String provider = "openrouter";
     public String baseUrl = "https://openrouter.ai/api/v1/chat/completions";
     public String apiKey = "";
@@ -103,6 +104,7 @@ public class AppSettings {
 
     public AppSettings copy() {
         AppSettings s = new AppSettings();
+        s.editorial = editorial.copy();
         s.provider = provider; s.baseUrl = baseUrl; s.apiKey = apiKey; s.model = model;
         s.sourceLanguage = sourceLanguage; s.targetLanguage = targetLanguage; s.outputFilenamePattern = outputFilenamePattern;
         s.chunkMode = chunkMode; s.maxTokensPerChunk = maxTokensPerChunk; s.maxCharsPerChunk = maxCharsPerChunk;

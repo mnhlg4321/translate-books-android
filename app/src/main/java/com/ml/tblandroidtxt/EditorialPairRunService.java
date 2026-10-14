@@ -101,7 +101,7 @@ public final class EditorialPairRunService {
     public PairRun prepare(long comboId, EditorialPairSource source, String glossaryText, String pronounText, String cueFields, String model,
                            String targetLanguage, BigDecimal capUsd, String arm) throws PrepareException {
         Set<String> cues = EditorialPairSnapshot.cues(cueFields);
-        EditorialPairPreview preview = EditorialPairPreview.of(source, EditorialPairSnapshot.glossaryFrom(glossaryText), pronounText, cues);
+        EditorialPairPreview preview = EditorialPairPreview.of(source, EditorialPairSnapshot.glossaryFrom(glossaryText), pronounText, cues, EditorialPreferences.frozen(cueFields));
         if (!preview.runnable()) throw new PrepareException(preview.blockers);
         PairRun run = new PairRun();
         run.comboId = comboId;
@@ -243,7 +243,7 @@ public final class EditorialPairRunService {
         FixPointFinder.Result fixes = null;
         boolean targeted = !whole && EditorialPairModels.ARM_CHUNK.equals(run.arm);
         if (targeted) {
-            fixes = FixPointFinder.find(snapshot.map, entry, snapshot.glossary, snapshot.pronounText, snapshot.cueFields, snapshot.chunkPlan);
+            fixes = EditorialPreferences.frozen(run.cueFields).filter(FixPointFinder.find(snapshot.map, entry, snapshot.glossary, snapshot.pronounText, snapshot.cueFields, snapshot.chunkPlan));
             if (fixes.points().isEmpty()) {
                 // nothing for the model; the RAW's marks (P2) are restored by the app without a call
                 TargetedFixApplier.Result marks = TargetedFixApplier.apply(draftRange, List.of(), null, snapshot.glossary, fixes.punctuation());
@@ -308,7 +308,7 @@ public final class EditorialPairRunService {
         return false;
     }
 
-    private static ApiPrompt targetedPrompt(EditorialPairSnapshot snapshot, PairMap.Entry entry, List<FixPoint> points, String language) {
+    static ApiPrompt targetedPrompt(EditorialPairSnapshot snapshot, PairMap.Entry entry, List<FixPoint> points, String language) {
         int[] r = snapshot.map.rawRange(entry);
         int[] d = snapshot.map.draftRange(entry);
         return TargetedFixPrompt.build(language,

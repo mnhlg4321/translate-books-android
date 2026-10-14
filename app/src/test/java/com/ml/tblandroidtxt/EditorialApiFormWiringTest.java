@@ -32,7 +32,7 @@ public final class EditorialApiFormWiringTest {
         String factory = source("EditorialApiPageFactory");
         assertTrue(factory.contains("form != null ? form.name : combo.name"));
         assertTrue(factory.contains("form != null ? form.model : settings.model"));
-        assertTrue(factory.contains("form != null ? form.cap : settings.maxUsdPerChapter.toPlainString()"));
+        assertTrue(factory.contains("form != null ? form.cap : settings.capOverride ? settings.maxUsdPerChapter.toPlainString() : \"\""));
         assertFalse("the Kỹ mode is no longer offered", factory.contains("\"Kỹ\""));
         assertTrue(factory.contains("c.saveOnly("));
     }

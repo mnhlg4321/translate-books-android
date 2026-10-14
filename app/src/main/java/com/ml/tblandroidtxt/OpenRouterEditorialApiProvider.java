@@ -27,10 +27,14 @@ public final class OpenRouterEditorialApiProvider implements EditorialApiProvide
     }
 
     public OpenRouterEditorialApiProvider(AppSettings settings, String reasoningEffort) {
+        this(settings, reasoningEffort, false);
+    }
+
+    public OpenRouterEditorialApiProvider(AppSettings settings, String reasoningEffort, boolean inheritModelDefault) {
         if (settings == null) throw new IllegalArgumentException("settings are required");
         this.settings = settings.copy();
         this.reasoningEffort = reasoningEffort == null || reasoningEffort.isBlank()
-                ? DEFAULT_REASONING : reasoningEffort.trim();
+                ? (inheritModelDefault ? "" : DEFAULT_REASONING) : reasoningEffort.trim();
     }
 
     @Override public void cancel() { control.cancel("EDITORIAL_API_USER_CANCEL"); }

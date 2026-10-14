@@ -70,7 +70,7 @@ final class EditorialPairUiController {
                     rawLines = files.rawHead;
                     draftLines = files.draftHead;
                 }
-                EditorialPairPreview view = EditorialPairPreview.of(loaded, EditorialPairSnapshot.glossaryFrom(refs.glossaryText), refs.pronounText, null);
+                EditorialPairPreview view = EditorialPairPreview.of(loaded, EditorialPairSnapshot.glossaryFrom(refs.glossaryText), refs.pronounText, null, settings.editorial);
                 final java.util.List<String> rawShown = rawLines;
                 final java.util.List<String> draftShown = draftLines;
                 parent.postUi(() -> {
@@ -109,11 +109,11 @@ final class EditorialPairUiController {
         final EditorialApiCombo combo = parent.combo.copy();
         final String model = EditorialApiUiController.effectiveModel(combo, settings);
         if (model.isEmpty()) { parent.error = "Chưa chọn model. Vào Cài đặt để chọn model."; parent.refresh(); return; }
-        final BigDecimal cap = combo.settings().maxUsdPerChapter;
+        final BigDecimal cap = EditorialApiUiController.effectiveCap(combo, settings);
         final EditorialPairSource runSource = source;
         final EditorialPairSourceLoader.References refs = references;
         final EditorialApiProvider provider = EditorialApiUiController.providerOverride != null
-                ? EditorialApiUiController.providerOverride : new OpenRouterEditorialApiProvider(settings, "medium");
+                ? EditorialApiUiController.providerOverride : new OpenRouterEditorialApiProvider(settings, settings.editorial.reasoning, true);
         progress = "Đang chuẩn bị…";
         parent.error = "";
         parent.setScreen(EditorialApiUiController.Screen.PAIR_RUN);
@@ -125,7 +125,7 @@ final class EditorialPairUiController {
         if (running() || runId <= 0) return;
         final AppSettings settings = SettingsStore.load(parent.appContext());
         final EditorialApiProvider provider = EditorialApiUiController.providerOverride != null
-                ? EditorialApiUiController.providerOverride : new OpenRouterEditorialApiProvider(settings, "medium");
+                ? EditorialApiUiController.providerOverride : new OpenRouterEditorialApiProvider(settings, settings.editorial.reasoning, true);
         progress = "Đang chạy tiếp…";
         parent.setScreen(EditorialApiUiController.Screen.PAIR_RUN);
         launch(runId, null, null, null, provider, settings, null, null);
@@ -143,7 +143,7 @@ final class EditorialPairUiController {
                 if (existingRunId != null) {
                     id = existingRunId;
                 } else {
-                    PairRun run = runService.prepare(combo.id, runSource, refs.glossaryText, refs.pronounText, null, model, settings.targetLanguage, cap,
+                    PairRun run = runService.prepare(combo.id, runSource, refs.glossaryText, refs.pronounText, settings.editorial.freeze(null), model, settings.targetLanguage, cap,
                             EditorialPairModels.ARM_CHUNK);
                     id = run.id;
                 }

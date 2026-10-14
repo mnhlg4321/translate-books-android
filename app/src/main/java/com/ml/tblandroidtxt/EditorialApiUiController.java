@@ -355,7 +355,9 @@ final class EditorialApiUiController {
         settings.mode = mode;
         settings.model = model == null ? "" : model.trim();
         try {
-            java.math.BigDecimal cap = new java.math.BigDecimal(capText == null ? "" : capText.trim().replace(',', '.'));
+            settings.capOverride = capText != null && !capText.trim().isEmpty();
+            java.math.BigDecimal cap = settings.capOverride ? new java.math.BigDecimal(capText.trim().replace(',', '.'))
+                    : SettingsStore.load(appContext).editorial.cap;
             if (cap.signum() <= 0) throw new NumberFormatException();
             settings.maxUsdPerChapter = cap;
         } catch (NumberFormatException invalid) {
@@ -396,8 +398,12 @@ final class EditorialApiUiController {
 
     static String effectiveModel(EditorialApiCombo combo, AppSettings settings) {
         String own = combo.settings().model;
-        String model = own.isEmpty() ? settings.model : own;
+        String model = own.isEmpty() ? (settings.editorial.model.isEmpty() ? settings.model : settings.editorial.model) : own;
         return model == null ? "" : model.trim();
+    }
+
+    static java.math.BigDecimal effectiveCap(EditorialApiCombo combo, AppSettings settings) {
+        return combo.settings().capOverride ? combo.settings().maxUsdPerChapter : settings.editorial.cap;
     }
 
     // ---- run ----

@@ -10,6 +10,7 @@ public class SettingsStore {
 
     public static void save(Context c, AppSettings s) {
         c.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
+                .putString("editorial", s.editorial.toJson())
                 .putString("provider", s.provider)
                 .putString("baseUrl", s.baseUrl)
                 .putString("apiKey", s.apiKey)
@@ -63,6 +64,7 @@ public class SettingsStore {
     public static AppSettings load(Context c) {
         SharedPreferences p = c.getSharedPreferences(PREF, Context.MODE_PRIVATE);
         AppSettings s = new AppSettings();
+        s.editorial = EditorialPreferences.fromJson(p.getString("editorial", "{}"));
         s.provider = p.getString("provider", s.provider);
         s.baseUrl = p.getString("baseUrl", s.baseUrl);
         s.apiKey = p.getString("apiKey", s.apiKey);
@@ -114,6 +116,7 @@ public class SettingsStore {
     public static String toJson(AppSettings s) {
         try {
             JSONObject o = new JSONObject();
+            o.put("editorial", new JSONObject(s.editorial.toJson()));
             o.put("provider", s.provider); o.put("baseUrl", s.baseUrl); o.put("apiKey", s.apiKey); o.put("model", s.model);
             o.put("sourceLanguage", s.sourceLanguage); o.put("targetLanguage", s.targetLanguage); o.put("outputFilenamePattern", s.outputFilenamePattern);
             o.put("chunkMode", s.chunkMode); o.put("maxTokensPerChunk", s.maxTokensPerChunk); o.put("maxCharsPerChunk", s.maxCharsPerChunk);
@@ -141,6 +144,7 @@ public class SettingsStore {
         AppSettings s = new AppSettings();
         try {
             JSONObject o = new JSONObject(json == null ? "{}" : json);
+            s.editorial = EditorialPreferences.fromJson(o.optJSONObject("editorial") == null ? "{}" : o.getJSONObject("editorial").toString());
             s.provider = o.optString("provider", s.provider); s.baseUrl = o.optString("baseUrl", s.baseUrl); s.apiKey = o.optString("apiKey", s.apiKey); s.model = o.optString("model", s.model);
             s.sourceLanguage = o.optString("sourceLanguage", s.sourceLanguage); s.targetLanguage = o.optString("targetLanguage", s.targetLanguage); s.outputFilenamePattern = o.optString("outputFilenamePattern", s.outputFilenamePattern);
             s.chunkMode = o.optString("chunkMode", s.chunkMode); s.maxTokensPerChunk = o.optInt("maxTokensPerChunk", s.maxTokensPerChunk); s.maxCharsPerChunk = o.optInt("maxCharsPerChunk", s.maxCharsPerChunk);

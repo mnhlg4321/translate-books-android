@@ -157,7 +157,7 @@ final class EditorialApiPageFactory {
 
         EditText model = a.input("Mặc định theo Cài đặt", form != null ? form.model : settings.model);
         card.addView(a.fieldBlock("MODEL (không bắt buộc)", model));
-        EditText cap = a.decimal("0.10", form != null ? form.cap : settings.maxUsdPerChapter.toPlainString());
+        EditText cap = a.decimal("Mặc định theo Cài đặt", form != null ? form.cap : settings.capOverride ? settings.maxUsdPerChapter.toPlainString() : "");
         c.formReader = () -> new EditorialApiUiController.Form(name.getText().toString(),
                 EditorialApiContract.Mode.QUICK, model.getText().toString(), cap.getText().toString());
         card.addView(a.fieldBlock("TRẦN CHI PHÍ MỖI LẦN CHẠY (USD)", cap));

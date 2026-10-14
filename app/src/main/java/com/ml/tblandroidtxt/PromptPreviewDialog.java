@@ -72,7 +72,7 @@ public class PromptPreviewDialog {
         }
     }
 
-    private static void showTextDialog(Activity a, String title, String body, int textColor) {
+    static void showTextDialog(Activity a, String title, String body, int textColor) {
         TextView tv = new TextView(a);
         tv.setText(body == null ? "" : body);
         tv.setTextSize(11);

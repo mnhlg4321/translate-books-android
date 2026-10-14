@@ -88,7 +88,7 @@ public final class EditorialPairSnapshot {
 
     static Set<String> cues(String csv) {
         Set<String> out = new LinkedHashSet<>();
-        for (String c : (csv == null ? "" : csv).split(",")) if (!c.trim().isEmpty()) out.add(c.trim());
+        for (String c : (csv == null ? "" : csv).split(",")) if (!c.trim().isEmpty() && !c.startsWith("v422=")) out.add(c.trim());
         return out.isEmpty() ? null : out;
     }
 }
