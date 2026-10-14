@@ -5,8 +5,9 @@
 - 4.21.0 / code 271 installed on the owner phone `15e84958` (OPPO CPH2691, Android 15) on 2026-10-14 by `scripts/install-validated.ps1` over 4.18-p6.2 / code 215 (same signer `abebea4b`); backup before install in `D:\App Translate Books\App Translate Books-device-backups\v4.18-p6.2-code215\20261014-145916\` (DB sha256 `df6cb42e...b464` matched on phone and in the archive); first launch without crash.
 - Owner feedback and Q0 diagnosis recorded in `PRODUCT_DIRECTION_PLAN.md` (v4.22 block): finder flagged 19 points on Kumo vol 7 ch 013, 17 false; 2 real pronoun errors, 1 missed by the model, 1 not flagged; output changed 1 line unnecessarily.
 - Branch `feature/v4.22` from `main` `7c44f3a2`; checklist `release_checklists/v4.22.md`; work requests `docs/V422_WORK_REQUEST.md` (U1, U2, U3, P, G, dev build, release) and `docs/V422_Q1_SPEAKER_DESIGN_REQUEST.md` (offline design).
-- No code, build or provider operation; USD 0.
-- Next action: execute the two work requests.
+- U1, U2, U3, P, G implemented; Q1 offline design done (no paid measurement proposed). Dev build `4.22-dev.2`/code 273 (event `build-20261014-164611`, source `1ba67d1b`, APK SHA-256 `5BA07CD91021FF8B1CED45877B6910CC70AAF618305DAF47E20FD0F8004F00D6`) retained in artifacts and backup, installed on emulator-5554 only; `4.22-dev.1`/code 272 superseded.
+- Clean-archive regression of `1ba67d1b`: engine 737 / 1 skip; app 489 / 5 skip per variant; lint 0 errors / 58 warnings; AndroidTest compile PASS. Device QA (fake provider) 164 PASS / 10 SKIP / 0 FAIL / 0 INCOMPLETE; 11 screenshots. The screenshots exposed a production defect (Editorial card missing on the Jobs tab), fixed in `1ba67d1b` with a device test; 3 old UI tests were repaired in test code (retained failed logs). Glossary points 21 -> 18 on 9 chapters (the 3 known Kumo false points), 0 owner-fixed points lost. USD 0, owner phone not touched.
+- Next action: owner tries the dev build (screenshots and APK path sent); phone install and release only on separate owner approval.
 
 ## Earlier — 2026-10-14 (4.21.0/code271, CP-IMPL-19; release workflow COMPLETE)
 
