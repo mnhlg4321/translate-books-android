@@ -502,6 +502,15 @@ public final class EditorialPairRunService {
                         .put("reason", outcome.reason()).put("draftLineIndex", point.draftLineIndex())
                         .put("raw", point.rawText()).put("before", outcome.before()).put("after", outcome.after())
                         .put("rules", new JSONArray(point.rules())));
+                if (!outcome.proposed().isEmpty()) {
+                    JSONObject stored = points.getJSONObject(points.length() - 1);
+                    stored.put("proposed", outcome.proposed()).put("citedRow", outcome.citedRow());
+                    if (outcome.citedRow() >= 1 && outcome.citedRow() <= point.addressRows().size()) {
+                        com.ml.tblandroidtxt.editorial.api.fix.AddressRow row = point.addressRows().get(outcome.citedRow() - 1);
+                        stored.put("citedRowText", "R" + outcome.citedRow() + " " + row.from() + " · " + row.speaker() + " → " + row.target()
+                                + " · self=" + row.self() + " · call=" + row.call());
+                    }
+                }
             }
             root.put("fixPoints", points);
             return root.toString();
@@ -606,6 +615,44 @@ public final class EditorialPairRunService {
         if (item == null || item.state != PairState.WARN_REVIEW) throw new IllegalStateException("NOT_A_WARNING");
         store.resolveWarning(runId, pairId, accept ? PairState.ACCEPTED : PairState.REJECTED, PairText.sha256(item.candidateText));
         finish(runId);
+    }
+
+    /** Status of a refused proposal that a person applied; the original refusal stays in {@code blockedReason}. */
+    static final String OWNER_APPLIED = "OWNER_APPLIED";
+
+    /**
+     * A person applies the model's refused line for one point: the chunk result gets that line, the point is recorded as applied by
+     * the person with the refusal kept, and the chapter is merged again. Only for a finished run and a chunk already in the output.
+     *
+     * @return null when applied, otherwise a short Vietnamese reason why nothing changed
+     */
+    public String applyProposal(long runId, String pairId, int pointId) {
+        if (isActive(runId)) return "Lượt đang chạy; chờ chạy xong rồi áp dụng.";
+        PairItem item = store.item(runId, pairId);
+        if (item == null || !PairStates.mergeable(item.state)) return "Đoạn này không nằm trong bản ghép.";
+        try {
+            JSONObject root = new JSONObject(item.gateJson);
+            JSONArray points = root.optJSONArray("fixPoints");
+            if (points == null) return "Không có đề xuất để áp dụng.";
+            JSONObject target = null;
+            for (int i = 0; i < points.length(); i++) if (points.getJSONObject(i).optInt("id") == pointId) target = points.getJSONObject(i);
+            String proposed = target == null ? "" : target.optString("proposed");
+            if (proposed.isEmpty() || OWNER_APPLIED.equals(target.optString("status"))) return "Không có đề xuất để áp dụng.";
+            int line = target.optInt("draftLineIndex", -1);
+            int insertionsBefore = 0;
+            for (int i = 0; i < points.length(); i++) {
+                JSONObject p = points.getJSONObject(i);
+                if ("FIXED".equals(p.optString("status")) && "INSERTED".equals(p.optString("reason")) && p.optInt("draftLineIndex", -1) < line) insertionsBefore++;
+            }
+            String text = TargetedFixApplier.applyProposal(item.candidateText, line, insertionsBefore, target.optString("before"), proposed);
+            if (text == null) return "Dòng trong kết quả đã khác bản nháp; không áp dụng.";
+            target.put("blockedReason", target.optString("reason")).put("status", OWNER_APPLIED).put("reason", OWNER_APPLIED).put("after", proposed);
+            store.applyProposal(runId, pairId, PairText.sha256(item.candidateText), text, root.toString(), "PROPOSAL_APPLIED id=" + pointId);
+        } catch (JSONException broken) {
+            return "Không đọc được kết quả của đoạn.";
+        }
+        finish(runId);
+        return null;
     }
 
     /**

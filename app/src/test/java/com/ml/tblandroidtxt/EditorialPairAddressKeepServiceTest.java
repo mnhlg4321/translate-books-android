@@ -103,6 +103,43 @@ public final class EditorialPairAddressKeepServiceTest {
         assertEquals(0, silent.requests.size());
     }
 
+    /** v4.22: the refused answer is shown as a proposal and a person can apply it; the export then carries it (Kumo ch 013 line 151). */
+    @Test public void aRefusedProposalIsShownAndAppliedByThePersonIntoTheExport() throws Exception {
+        EditorialPairRunService svc = service(provider(0));
+        PairRun done = run(svc);
+        PairItem item = svc.items(done.id).get(0);
+        JSONObject refused = point(item, 1);
+        assertEquals("「Rina…… làm ơn, hãy cho em học cái đó nhé」", refused.getString("proposed"));
+        assertEquals(1, refused.getInt("citedRow"));
+        assertTrue(refused.getString("citedRowText").startsWith("R1 リナ · Aki → Rina"));
+        assertTrue(EditorialResultPresentation.awaiting(item, refused));
+        assertTrue(EditorialResultPresentation.summary(done, List.of(item), 2).contains("1 bị chặn"));
+        assertTrue(EditorialResultPresentation.proposalHint(refused).contains("Yuki-chan/em"));
+
+        assertEquals(null, svc.applyProposal(done.id, item.pairId, 1));
+        String expected = "「Rina…… làm ơn, hãy cho em học cái đó nhé」\nLong Vương đã lặng lẽ xuất hiện trước mặt.\n「Mình muốn học thật kỹ cái đó」";
+        assertEquals(expected, svc.exportPlan(done.id).text.trim());
+        assertEquals(RunState.FINAL_ELIGIBLE, svc.get(done.id).state);
+        assertTrue(svc.get(done.id).mergedText.trim().equals(expected));
+        PairItem applied = svc.items(done.id).get(0);
+        JSONObject owner = point(applied, 1);
+        assertEquals("OWNER_APPLIED", owner.getString("status"));
+        assertEquals("ADDRESS_FORM_NOT_IN_CITED_ROW", owner.getString("blockedReason"));
+        assertTrue(EditorialResultPresentation.applied(applied, owner));
+        assertFalse(EditorialResultPresentation.awaiting(applied, owner));
+        assertTrue(store.journal(done.id).stream().anyMatch(e -> e.endsWith("PROPOSAL_APPLIED id=1")));
+        assertEquals("Không có đề xuất để áp dụng.", svc.applyProposal(done.id, item.pairId, 1));
+        assertEquals("Không có đề xuất để áp dụng.", svc.applyProposal(done.id, item.pairId, 2));
+    }
+
+    @Test public void aProposalOfABlockedChunkCannotBeApplied() throws Exception {
+        EditorialPairRunService svc = service(provider(2));
+        PairRun done = run(svc);
+        PairItem item = svc.items(done.id).get(0);
+        assertEquals("Đoạn này không nằm trong bản ghép.", svc.applyProposal(done.id, item.pairId, 1));
+        assertEquals(DRAFT.trim(), svc.exportPlan(done.id).text.trim());
+    }
+
     @Test public void oneMalformedAnswerKeepsItsDraftLineWhileTheOtherRepairsApply() throws Exception {
         EditorialPairRunService svc = service(provider(1));
         PairRun done = run(svc);

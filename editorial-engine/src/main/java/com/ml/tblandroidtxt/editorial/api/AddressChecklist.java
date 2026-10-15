@@ -39,7 +39,7 @@ public final class AddressChecklist {
         }
         for (ReferenceProjector.Row row : projection.pronouns()) {
             if (row.call().isBlank()) continue;
-            Set<String> own = new java.util.HashSet<>(List.of(row.call().trim().toLowerCase(Locale.ROOT), row.self().trim().toLowerCase(Locale.ROOT)));
+            Set<String> own = cellForms(row.self(), row.call());
             List<String> quoted = new ArrayList<>();
             Map<String, Map<String, Integer>> found = new LinkedHashMap<>();
             for (int i = 0; i < rawBlocks.size(); i++) {
@@ -122,6 +122,30 @@ public final class AddressChecklist {
             }
         }
         if (word.length() > 0) out.add(word.toString());
+        return out;
+    }
+
+    /**
+     * Every word of a row's self and call cells. A cell may hold a name with a pronoun ("chị Erika") or several forms separated by
+     * "/" ("Shiro-chan/em"); each word is a form of the row, the same set the edit lock checks an answer against.
+     */
+    public static Set<String> rowForms(String self, String call) {
+        Set<String> out = new java.util.HashSet<>(tokens(self == null ? "" : self));
+        out.addAll(tokens(call == null ? "" : call));
+        return out;
+    }
+
+    /**
+     * The forms a DRAFT word is compared with to find a repair point: each "/"-separated alternative of the self and call cells as a
+     * whole. A cell "chị Erika" stays one form on purpose, so a lone "chị" in the DRAFT still raises the point that lets the model
+     * turn a surname into the row's call name; the edit lock then checks the answer word by word ({@link #rowForms}).
+     */
+    public static Set<String> cellForms(String self, String call) {
+        Set<String> out = new java.util.HashSet<>();
+        for (String cell : new String[] {self, call}) {
+            if (cell == null) continue;
+            for (String form : cell.split("/")) if (!form.isBlank()) out.add(form.trim().toLowerCase(Locale.ROOT));
+        }
         return out;
     }
 

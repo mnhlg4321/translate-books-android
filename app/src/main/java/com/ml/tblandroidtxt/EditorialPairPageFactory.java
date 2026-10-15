@@ -8,6 +8,7 @@ import android.widget.TextView;
 import com.ml.tblandroidtxt.EditorialPairModels.PairItem;
 import com.ml.tblandroidtxt.EditorialPairModels.PairRun;
 import com.ml.tblandroidtxt.editorial.api.PairMap;
+import com.ml.tblandroidtxt.editorial.api.PairStates;
 import com.ml.tblandroidtxt.editorial.api.PairStates.PairState;
 
 import java.util.List;
@@ -197,6 +198,29 @@ final class EditorialPairPageFactory {
             }
         }
         root.addView(changed, a.marginLP(-1, -2, 0, 0, 0, 10));
+        LinearLayout proposals = a.sectionCard("⚑", "Đề xuất bị chặn — chờ bạn quyết");
+        int waiting = 0;
+        boolean running = EditorialPairRunService.isActive(run.id);
+        for (PairItem item : items) {
+            org.json.JSONArray points = EditorialResultPresentation.points(item);
+            for (int i = 0; i < points.length(); i++) {
+                org.json.JSONObject point = points.optJSONObject(i);
+                if (point == null || !EditorialResultPresentation.awaiting(item, point)) continue;
+                waiting++;
+                String before = point.optString("before"), proposed = point.optString("proposed");
+                proposals.addView(text("Đoạn " + item.ordinal + " · Điểm " + point.optInt("id"), 12, a.MUTED, true));
+                proposals.addView(highlight("Bản nháp: ", before, proposed, a.RED));
+                proposals.addView(highlight("Model đề xuất: ", proposed, before, a.GREEN));
+                proposals.addView(text(EditorialResultPresentation.proposalHint(point), 12, a.MUTED, false), a.marginLP(-1, -2, 0, 2, 0, 0));
+                if (PairStates.mergeable(item.state) && !running) {
+                    final int pointId = point.optInt("id");
+                    proposals.addView(a.primaryButton("Áp dụng đề xuất", v -> p.applyProposal(item.pairId, pointId)), a.marginLP(-1, a.dp(40), 0, 4, 0, 10));
+                } else {
+                    proposals.addView(text(running ? "Chờ lượt chạy xong để áp dụng." : "Đoạn này chưa vào bản ghép nên chưa áp dụng được.", 12, a.AMBER, false), a.marginLP(-1, -2, 0, 2, 0, 10));
+                }
+            }
+        }
+        if (waiting > 0) root.addView(proposals, a.marginLP(-1, -2, 0, 0, 0, 10));
         LinearLayout filters = a.rowContainer();
         String[] names = {"Đã sửa", "Giữ nguyên", "Bị chặn"};
         for (int i = 0; i < names.length; i++) {

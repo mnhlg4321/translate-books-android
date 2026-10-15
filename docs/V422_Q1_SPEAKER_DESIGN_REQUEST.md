@@ -6,7 +6,7 @@ Canonical plan: `PRODUCT_DIRECTION_PLAN.md` (mục 5, khối v4.22, Q1). Nhánh:
 
 App không biết dòng thoại nào do ai nói với ai, nên:
 
-- Chương 013 Kumo tập 7 (`D:\P5E-private\v422-q0\finder-points.txt`): finder tạo 19 điểm; 15 điểm xưng hô giả (lời Potimas bị so với hàng Hyuban và ngược lại), 2 glossary giả; lỗi thật dòng 151 (Ariel → Shiro dùng "tôi/cô", hàng ghi `chị`) có điểm nhưng model giữ; lỗi thật dòng 346 (Potimas → Ariel dùng "lão", từ của hàng Ariel → Potimas) không có điểm. Bản cuối chỉ đổi 1 dòng, không cần thiết.
+- Chương 013 Kumo tập 7 (`D:\P5E-private\v422-q0\finder-points.txt`): finder tạo 19 điểm; 15 điểm xưng hô giả (lời Potimas bị so với hàng Hyuban và ngược lại), 2 glossary giả; lỗi thật dòng 151 (Ariel → Shiro dùng "tôi/cô", hàng ghi `chị`) có điểm, model đề xuất đúng nhưng guard chặn vì cột `call` của hàng thiếu `em` (đính chính 2026-10-15; xử lý ở R của `docs/V422_WORK_REQUEST.md`); lỗi thật dòng 346 (Potimas → Ariel dùng "lão", từ của hàng Ariel → Potimas) không có điểm. Bản cuối chỉ đổi 1 dòng, không cần thiết.
 - JAKUAKU bước B: 50/122 lỗi tự xưng là lấy `self` của nhân vật khác; finder không phát hiện vì từ sai thuộc một hàng khác.
 - Các hướng vá bằng luật chữ đã đo và loại (cổng cue trong dòng RAW, dò ngôi ba, mở rộng từ vựng, thay thế tất định).
 

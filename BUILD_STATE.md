@@ -1,6 +1,16 @@
 # Build State
 
-## Current state — 2026-10-14 (v4.22 opened from owner feedback on 4.21.0)
+## Current state — 2026-10-15 (v4.22 R: refused proposals no longer lost)
+
+- Owner order 2026-10-15: the model proposed the right repair for Kumo ch 013 line 151 and the app refused it, so the output stayed unchanged; fix the family.
+- Cause: the prompt shows the row note, the edit lock checks only the self/call cells, and a refused answer was discarded. Notes are not trusted by the lock: 22 of 44 real notes with extra address words are negations.
+- Fix (CP-IMPL-21): refused answers of content/length/symbol checks are kept (`proposed`, `citedRow`) and shown with an "Áp dụng đề xuất" button that writes the line into the chunk result and re-merges the chapter (journal `PROPOSAL_APPLIED`, no schema change); pronoun self/call cells accept several forms separated by `/` in finder, checklist and prompt (a cell such as "chị Erika" stays one form so a lone "chị" still raises the surname-to-call-name point; the clean-archive regression caught a first attempt that split it); no current data uses `/`, so points are unchanged on 9 chapters.
+- Offline replay of the stored 4.21.0 model answer for line 151: original row refused with the proposal kept, applying it changes exactly that line; row `Shiro-chan/em` applies it automatically.
+- `scripts/build-and-save.ps1` now stops a numbered build that sees no archived build (code 274 reused `4.22-dev.1`).
+- No build, device or provider operation; USD 0.
+- Next action: new 4.22 dev build with R, emulator QA with a screenshot of the refused-proposal section, then owner install approval.
+
+## Earlier — 2026-10-14 (v4.22 opened from owner feedback on 4.21.0)
 
 - 4.21.0 / code 271 installed on the owner phone `15e84958` (OPPO CPH2691, Android 15) on 2026-10-14 by `scripts/install-validated.ps1` over 4.18-p6.2 / code 215 (same signer `abebea4b`); backup before install in `D:\App Translate Books\App Translate Books-device-backups\v4.18-p6.2-code215\20261014-145916\` (DB sha256 `df6cb42e...b464` matched on phone and in the archive); first launch without crash.
 - Owner feedback and Q0 diagnosis recorded in `PRODUCT_DIRECTION_PLAN.md` (v4.22 block): finder flagged 19 points on Kumo vol 7 ch 013, 17 false; 2 real pronoun errors, 1 missed by the model, 1 not flagged; output changed 1 line unnecessarily.

@@ -186,6 +186,16 @@ public final class InMemoryPairRunStore implements EditorialPairRunStore {
         writes++;
     }
 
+    @Override public synchronized void applyProposal(long runId, String pairId, String expectedCandidateSha256, String candidateText, String gateJson, String journalEvent) {
+        PairItem i = live(runId, pairId);
+        if (!PairStates.mergeable(i.state)) throw new IllegalStateException("NOT_MERGED");
+        if (!com.ml.tblandroidtxt.editorial.api.PairText.sha256(i.candidateText).equals(expectedCandidateSha256)) throw new IllegalStateException("CANDIDATE_CHANGED");
+        i.candidateText = candidateText;
+        i.gateJson = gateJson;
+        journal.add(runId + " " + pairId + " " + journalEvent);
+        writes++;
+    }
+
     @Override public synchronized List<PairReservation> openReservations(long runId) {
         List<PairReservation> out = new ArrayList<>();
         for (PairReservation r : reservations.values()) if (r.runId == runId && r.open()) out.add(r);

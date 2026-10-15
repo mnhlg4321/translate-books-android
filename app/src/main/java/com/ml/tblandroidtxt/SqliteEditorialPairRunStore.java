@@ -451,6 +451,25 @@ public final class SqliteEditorialPairRunStore implements EditorialPairRunStore,
         }
     }
 
+    @Override public void applyProposal(long runId, String pairId, String expectedCandidateSha256, String candidateText, String gateJson, String journalEvent) {
+        SQLiteDatabase db = db();
+        db.beginTransaction();
+        try {
+            PairItem current = item(runId, pairId);
+            if (current == null || !PairStates.mergeable(current.state)) throw new IllegalStateException("NOT_MERGED");
+            if (!com.ml.tblandroidtxt.editorial.api.PairText.sha256(current.candidateText).equals(expectedCandidateSha256)) throw new IllegalStateException("CANDIDATE_CHANGED");
+            ContentValues v = new ContentValues();
+            v.put("candidate_text", candidateText);
+            v.put("gate_json", gateJson);
+            v.put("updated_at", System.currentTimeMillis());
+            db.update(EditorialPairMigrationSpec.ITEMS, v, "run_id=? AND pair_id=?", new String[] {String.valueOf(runId), pairId});
+            journal(db, runId, pairId, journalEvent);
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
     @Override public List<PairReservation> openReservations(long runId) {
         List<PairReservation> out = new ArrayList<>();
         try (Cursor c = db().rawQuery("SELECT call_id,pair_id,worst_usd FROM editorial_pair_reservations WHERE run_id=? AND state=?",

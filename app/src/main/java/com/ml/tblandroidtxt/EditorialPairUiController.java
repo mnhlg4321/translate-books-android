@@ -227,6 +227,17 @@ final class EditorialPairUiController {
         parent.refresh();
     }
 
+    void applyProposal(String pairId, int pointId) {
+        String refused;
+        try (SqliteEditorialPairRunStore store = new SqliteEditorialPairRunStore(parent.appContext())) {
+            refused = new EditorialPairRunService(store, new FailingProvider(), null, 1L).applyProposal(runId, pairId, pointId);
+        } catch (RuntimeException failed) {
+            refused = "Không áp dụng được: " + failed.getMessage();
+        }
+        if (refused != null) android.widget.Toast.makeText(parent.appContext(), refused, android.widget.Toast.LENGTH_LONG).show();
+        parent.refresh();
+    }
+
     // ---- export
 
     void exportNow() {

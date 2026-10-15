@@ -12,7 +12,33 @@ import java.util.List;
 /** Applies a parsed answer only to its declared line or insertion point; every other source character is copied unchanged. */
 public final class TargetedFixApplier {
     public enum Status { FIXED, KEPT, REJECTED, NO_ANSWER }
-    public record Outcome(FixPoint point, Status status, String before, String after, String reason) { }
+    /**
+     * {@code proposed}: the model's line when a check refused it ({@link #offerable}), with the RAW's marks restored as an accepted
+     * answer would get them; empty otherwise. It is kept so that a person can still apply it: a check without the speaker cannot
+     * tell every right answer from a wrong one (Kumo ch 013 line 151, 2026-10-15). {@code citedRow}: the row the answer named.
+     */
+    public record Outcome(FixPoint point, Status status, String before, String after, String reason, String proposed, int citedRow) {
+        public Outcome {
+            proposed = proposed == null ? "" : proposed;
+        }
+
+        public Outcome(FixPoint point, Status status, String before, String after, String reason) {
+            this(point, status, before, after, reason, "", TargetedFixParser.Answer.NOT_CITED);
+        }
+    }
+
+    /**
+     * A refused answer a person may still apply: a content lock or a length/symbol check. A malformed answer (several lines, a tag or
+     * an explanation, new Japanese, nothing) is never offered.
+     */
+    public static boolean offerable(String reason) {
+        if (reason == null) return false;
+        if (reason.startsWith(AddressEditGuard.PREFIX)) return true;
+        switch (reason) {
+            case GLOSSARY_TARGET_REMOVED: case "PROTECTED_SYMBOL_CHANGE": case "LINE_LENGTH_RATIO": return true;
+            default: return false;
+        }
+    }
     /** {@code punctuationLines}: lines whose marks were restored from the RAW ({@link RawPunctuation}). */
     public record Result(String text, List<Outcome> outcomes, int punctuationLines) {
         public Result { outcomes = List.copyOf(outcomes); }
@@ -84,7 +110,12 @@ public final class TargetedFixApplier {
                 // of the chunk still apply. A malformed answer is decided after the loop (MAX_POINT_LOCAL_FORMAT_REJECTIONS).
                 Status status = reject.startsWith(AddressEditGuard.PREFIX) || reject.equals(GLOSSARY_TARGET_REMOVED) ? Status.KEPT : Status.REJECTED;
                 if (status == Status.REJECTED) formatRejections.add(outcomes.size());
-                outcomes.add(new Outcome(point, status, before, before, reject));
+                String proposed = "";
+                if (!point.insertion() && offerable(reject)) {
+                    String raw = marks.get(point.draftLineIndex());
+                    proposed = raw == null ? candidate : RawPunctuation.restore(candidate, raw);
+                }
+                outcomes.add(new Outcome(point, status, before, before, reject, proposed, answer.row()));
                 continue;
             }
             if (candidate.equals(before)) {
@@ -135,7 +166,8 @@ public final class TargetedFixApplier {
         if (!formatRejections.isEmpty() && formatRejections.size() <= MAX_POINT_LOCAL_FORMAT_REJECTIONS) {
             for (int at : formatRejections) {
                 Outcome rejected = outcomes.get(at);
-                outcomes.set(at, new Outcome(rejected.point(), Status.KEPT, rejected.before(), rejected.after(), rejected.reason()));
+                outcomes.set(at, new Outcome(rejected.point(), Status.KEPT, rejected.before(), rejected.after(), rejected.reason(),
+                        rejected.proposed(), rejected.citedRow()));
             }
         }
         // lines no answer replaced keep their DRAFT words and only take the RAW's marks
@@ -155,6 +187,35 @@ public final class TargetedFixApplier {
         StringBuilder output = new StringBuilder(source);
         for (Edit edit : edits) output.replace(edit.start(), edit.end(), edit.replacement());
         return new Result(output.toString(), outcomes, punctuationLines);
+    }
+
+    /**
+     * A person applies a refused proposal to a stored chunk result: the line at {@code draftLineIndex}, moved down by the insertions
+     * placed before it, is replaced by {@code proposed}. Every other character is kept.
+     *
+     * @param insertionsBefore applied MISSING insertions whose anchor is before this line (anchor index lower than this line)
+     * @param draftLine the DRAFT line the point was found on; the result line must still carry the same words, so a result that
+     *                  changed (another edit, a different chunk text) is refused rather than overwritten
+     * @return the new chunk text, or null when the line is not where it should be
+     */
+    public static String applyProposal(String chunkText, int draftLineIndex, int insertionsBefore, String draftLine, String proposed) {
+        if (chunkText == null || proposed == null || proposed.isBlank() || draftLineIndex < 0 || insertionsBefore < 0) return null;
+        if (proposed.indexOf('\n') >= 0 || proposed.indexOf('\r') >= 0) return null;
+        LineUnits units = LineUnits.parse(chunkText);
+        int at = draftLineIndex + insertionsBefore;
+        if (at >= units.size()) return null;
+        Span span = spans(chunkText).get(units.units().get(at).physicalLine() - 1);
+        String current = chunkText.substring(span.start(), span.contentEnd());
+        if (!wording(current).equals(wording(draftLine))) return null;
+        return chunkText.substring(0, span.start()) + PairText.trim(proposed) + chunkText.substring(span.contentEnd());
+    }
+
+    /** Letters and digits only: marks restored from the RAW change punctuation, never the words. */
+    private static String wording(String text) {
+        StringBuilder out = new StringBuilder();
+        String nfc = java.text.Normalizer.normalize(text == null ? "" : text, java.text.Normalizer.Form.NFC);
+        nfc.codePoints().filter(Character::isLetterOrDigit).forEach(out::appendCodePoint);
+        return out.toString();
     }
 
     private static String rejection(FixPoint point, String candidate, int citedRow, List<EditInputs.GlossaryEntry> glossary) {

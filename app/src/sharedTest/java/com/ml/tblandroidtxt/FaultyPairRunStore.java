@@ -98,6 +98,10 @@ public final class FaultyPairRunStore implements EditorialPairRunStore {
 
     @Override public void resolveWarning(long runId, String pairId, PairState to, String note) { inner.resolveWarning(runId, pairId, to, note); }
 
+    @Override public void applyProposal(long runId, String pairId, String expectedCandidateSha256, String candidateText, String gateJson, String journalEvent) {
+        inner.applyProposal(runId, pairId, expectedCandidateSha256, candidateText, gateJson, journalEvent);
+    }
+
     @Override public List<PairReservation> openReservations(long runId) { return inner.openReservations(runId); }
 
     @Override public BigDecimal exposure(long runId) { return inner.exposure(runId); }

@@ -63,6 +63,12 @@ public interface EditorialPairRunStore {
     /** Resolution of a warning by a person: WARN_REVIEW to ACCEPTED or REJECTED. */
     void resolveWarning(long runId, String pairId, PairState to, String note);
 
+    /**
+     * A person applied a refused proposal: replaces the candidate and its point record of a merged pair, only when the stored candidate
+     * still has {@code expectedCandidateSha256}. The state, cost and reservations are unchanged.
+     */
+    void applyProposal(long runId, String pairId, String expectedCandidateSha256, String candidateText, String gateJson, String journalEvent);
+
     List<PairReservation> openReservations(long runId);
 
     /** Settled amounts plus the worst case of every open reservation of the run. */

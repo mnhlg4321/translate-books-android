@@ -166,7 +166,7 @@ public final class FixPointFinder {
                             if (row.covers(para) && containsDialogue(rawLines.get(i)) && !conflicted(projection, para)) scopedDialogue = true;
                         }
                         if (!scopedDialogue) continue;
-                        Set<String> expected = new LinkedHashSet<>(List.of(row.call().trim().toLowerCase(Locale.ROOT), row.self().trim().toLowerCase(Locale.ROOT)));
+                        Set<String> expected = AddressChecklist.cellForms(row.self(), row.call());
                         for (String token : AddressChecklist.unexpectedWords(draftLine, expected)) {
                             target.add(FixPoint.Type.ADDRESS, rawGroup,
                                     "ADDRESS: Pronoun row " + row.from() + " | " + row.speaker() + " → " + row.target()

@@ -256,9 +256,7 @@ final class AddressEditGuard {
     }
 
     private static Set<String> forms(AddressRow row) {
-        Set<String> out = new HashSet<>(AddressChecklist.tokens(row.self()));
-        out.addAll(AddressChecklist.tokens(row.call()));
-        return out;
+        return AddressChecklist.rowForms(row.self(), row.call());
     }
 
     /** Letter runs with their case kept; no regex class, so it behaves the same on Android. */

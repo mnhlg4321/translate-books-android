@@ -24,7 +24,10 @@ param(
 
     [switch]$Install,
 
-    [switch]$Offline
+    [switch]$Offline,
+
+    # A numbered build reads the archive to pick the next unique number; without it the number restarts at 1.
+    [switch]$AllowEmptyArchive
 )
 
 $ErrorActionPreference = 'Stop'
@@ -224,6 +227,9 @@ if (-not [string]::IsNullOrWhiteSpace($ExactReleaseVersion)) {
     $versionPolicy = 'exact-release'
 }
 else {
+    if ($archivedBuilds.Count -eq 0 -and -not $AllowEmptyArchive) {
+        throw "No archived build under $artifactBuildRoot or $backupBuildRoot. Link them to the owner archive before a numbered build, or the series number restarts and repeats an earlier versionName (4.22-dev.1 was reused by code 274). Pass -AllowEmptyArchive only for the first build of a new archive."
+    }
     $escapedSeries = [regex]::Escape($Series)
     $highestSequence = 0
     foreach ($build in $archivedBuilds) {
