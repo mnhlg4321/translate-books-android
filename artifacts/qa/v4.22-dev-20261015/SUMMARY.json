@@ -1,0 +1,12 @@
+{
+  "release": "NOT_RELEASED_DEV_BUILD",
+  "sourceCommit": "e8083883ee11e9f3c31e59d15a916854f67fffec",
+  "versionName": "4.22-dev.1",
+  "versionCode": 274,
+  "productionApkSha256": "4E0B6AACF21A295458DFA459059F0FE5D628358A295C375B0AADC0B3A3ABD7D9",
+  "testApkSha256": "AFA78D0AAF72AFF145090756ED91B0754F6F3B8FB2DA11FEE48EF2E136C4FF35",
+  "cleanArchive": { "tests": 2207, "skip": 16, "fail": 0, "lint": "PASS", "androidTestCompile": "PASS" },
+  "device": { "serial": "emulator-5554", "mediaWalkthroughPass": 1, "mediaWalkthroughFail": 0, "screenshots": 11 },
+  "providerCalls": 0,
+  "usd": 0
+}
