@@ -71,6 +71,7 @@ class FilesPageFactory {
         files.addView(fileActions, a.marginLP(-1, -2, 0, 4, 0, 10));
         files.addView(a.text("Naming Convention nằm trong Settings. Với batch, app tạo từng output theo tên input + target language.", 12, a.MUTED, false));
         files.addView(outputFolderFilesCard(), a.marginLP(-1, -2, 0, 12, 0, 0));
+        files.addView(libraryBackupCard(), a.marginLP(-1, -2, 0, 12, 0, 0));
 
         LinearLayout history = a.card(14, a.FIELD, a.BORDER);
         history.setOrientation(LinearLayout.VERTICAL);
@@ -88,6 +89,26 @@ class FilesPageFactory {
         return scroll;
     }
 
+
+    /** Backup of Glossary/Pronoun profiles; after a release build is installed this is the only way to keep a copy. */
+    View libraryBackupCard() {
+        LinearLayout box = a.card(14, a.FIELD, a.BORDER);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(a.dp(12), a.dp(12), a.dp(12), a.dp(12));
+        box.addView(a.text("Sao lưu thư viện", 15, a.TEXT, true));
+        TextView help = a.text("Xuất tất cả Glossary và Pronoun ra một tệp ZIP (không chứa API key, cài đặt, job hay dữ liệu Biên tập). Nhập lại chỉ thêm mục mới, không ghi đè.", 12, a.MUTED, false);
+        help.setSingleLine(false);
+        box.addView(help, a.marginLP(-1, -2, 0, 4, 0, 8));
+        LinearLayout actions = a.rowContainer();
+        actions.addView(a.primaryButton("Xuất thư viện", v -> a.exportLibrary()), new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        actions.addView(a.space(8, 1));
+        actions.addView(a.secondaryButton("Nhập thư viện", v -> a.importLibrary()), new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        box.addView(actions);
+        TextView last = a.text(a.lastLibraryExportLine(), 12, a.MUTED, false);
+        last.setSingleLine(false);
+        box.addView(last, a.marginLP(-1, -2, 0, 8, 0, 0));
+        return box;
+    }
 
     View outputFolderFilesCard() {
         LinearLayout box = a.card(14, a.FIELD, a.BORDER);

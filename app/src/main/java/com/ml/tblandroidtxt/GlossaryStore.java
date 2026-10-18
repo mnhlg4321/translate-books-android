@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -20,6 +21,7 @@ public class GlossaryStore {
     private static final String KEY_SELECTED = "selected_glossary_id";
     private static volatile String cachedJson;
     private static volatile List<Glossary> cachedGlossaries;
+    private static volatile String corruptJson;
 
     public static class Term {
         public String source = "";
@@ -49,36 +51,73 @@ public class GlossaryStore {
         public int count() { return terms == null ? 0 : terms.size(); }
     }
 
-    public static synchronized List<Glossary> loadAll(Context c) {
-        ArrayList<Glossary> list = new ArrayList<>();
-        SharedPreferences p = c.getSharedPreferences(PREF, Context.MODE_PRIVATE);
+    static SharedPreferences prefs(Context c) { return c.getSharedPreferences(PREF, Context.MODE_PRIVATE); }
+
+    public static List<Glossary> loadAll(Context c) { return loadAll(prefs(c)); }
+
+    /** An unreadable store is preserved under a new key and locked for writes; it never reads as an empty library. */
+    static synchronized List<Glossary> loadAll(SharedPreferences p) {
         String json = p.getString(KEY_GLOSSARIES, "[]");
-        if (cachedGlossaries != null && TextUtils.equals(cachedJson, json)) return new ArrayList<>(cachedGlossaries);
+        if (cachedGlossaries != null && Objects.equals(cachedJson, json)) return new ArrayList<>(cachedGlossaries);
+        List<Glossary> parsed = parse(json);
+        if (parsed == null) {
+            LibraryPrefs.preserveCorrupt(p, KEY_GLOSSARIES, json);
+            corruptJson = json;
+            cachedJson = null; cachedGlossaries = null;
+            return new ArrayList<>();
+        }
+        corruptJson = null;
+        cachedJson = json; cachedGlossaries = new ArrayList<>(parsed);
+        return new ArrayList<>(parsed);
+    }
+
+    /** The stored list, or null when any part of it cannot be read. */
+    static List<Glossary> parse(String json) {
+        ArrayList<Glossary> list = new ArrayList<>();
         try {
             JSONArray arr = new JSONArray(json == null ? "[]" : json);
             for (int i = 0; i < arr.length(); i++) list.add(fromJson(arr.getJSONObject(i)));
-        } catch (Exception ignored) {}
-        cachedJson=json;cachedGlossaries=new ArrayList<>(list);return list;
+            return list;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
-    public static synchronized void saveAll(Context c, List<Glossary> list) {
+    static String serialize(List<Glossary> list) throws Exception {
         JSONArray arr = new JSONArray();
-        try { for (Glossary g : list) arr.put(toJson(g)); } catch (Exception ignored) {}
-        String json=arr.toString();cachedJson=json;cachedGlossaries=new ArrayList<>(list);
-        c.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit().putString(KEY_GLOSSARIES, json).apply();
+        for (Glossary g : list) arr.put(toJson(g));
+        return arr.toString();
     }
 
+    public static boolean isCorrupt(Context c) { loadAll(c); return corruptJson != null; }
+
+    /** The unreadable stored text while the store is locked, else null. */
+    public static String corruptText(Context c) { loadAll(c); return corruptJson; }
+
+    public static boolean saveAll(Context c, List<Glossary> list) { return saveAll(prefs(c), list); }
+
+    /** Writes synchronously; refuses while the store is unreadable or when any glossary cannot be serialized. */
+    static synchronized boolean saveAll(SharedPreferences p, List<Glossary> list) {
+        loadAll(p);
+        if (corruptJson != null || list == null) return false;
+        String json;
+        try { json = serialize(list); } catch (Exception e) { return false; }
+        if (!p.edit().putString(KEY_GLOSSARIES, json).commit()) return false;
+        cachedJson = json; cachedGlossaries = new ArrayList<>(list);
+        return true;
+    }
+
+    /** The new glossary, or null when the store refused the write. */
     public static Glossary create(Context c, String name) {
         Glossary g = new Glossary();
         if (!safe(name).isEmpty()) g.name = name.trim();
         ArrayList<Glossary> list = new ArrayList<>(loadAll(c));
         list.add(0, g);
-        saveAll(c, list);
-        return g;
+        return saveAll(c, list) ? g : null;
     }
 
-    public static void upsert(Context c, Glossary g) {
-        if (g == null) return;
+    public static boolean upsert(Context c, Glossary g) {
+        if (g == null) return false;
         g.updatedAt = System.currentTimeMillis();
         ArrayList<Glossary> list = new ArrayList<>(loadAll(c));
         boolean found = false;
@@ -86,14 +125,15 @@ public class GlossaryStore {
             if (TextUtils.equals(list.get(i).id, g.id)) { list.set(i, g); found = true; break; }
         }
         if (!found) list.add(0, g);
-        saveAll(c, list);
+        return saveAll(c, list);
     }
 
-    public static void delete(Context c, String id) {
+    public static boolean delete(Context c, String id) {
         ArrayList<Glossary> list = new ArrayList<>(loadAll(c));
         for (int i = list.size() - 1; i >= 0; i--) if (TextUtils.equals(list.get(i).id, id)) list.remove(i);
-        saveAll(c, list);
+        if (!saveAll(c, list)) return false;
         if (TextUtils.equals(getSelectedId(c), id)) setSelectedId(c, "");
+        return true;
     }
 
     public static Glossary find(Context c, String id) {
@@ -102,8 +142,8 @@ public class GlossaryStore {
         return null;
     }
 
-    public static String getSelectedId(Context c) { return c.getSharedPreferences(PREF, Context.MODE_PRIVATE).getString(KEY_SELECTED, ""); }
-    public static void setSelectedId(Context c, String id) { c.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit().putString(KEY_SELECTED, safe(id)).apply(); }
+    public static String getSelectedId(Context c) { return prefs(c).getString(KEY_SELECTED, ""); }
+    public static boolean setSelectedId(Context c, String id) { return prefs(c).edit().putString(KEY_SELECTED, safe(id)).commit(); }
     public static Glossary selected(Context c) { return find(c, getSelectedId(c)); }
 
     public static String selectedPromptText(Context c) {
@@ -203,7 +243,7 @@ public class GlossaryStore {
         return out.toArray(new String[0]);
     }
 
-    private static JSONObject toJson(Glossary g) throws Exception {
+    static JSONObject toJson(Glossary g) throws Exception {
         JSONObject o = new JSONObject();
         o.put("id", g.id); o.put("name", g.name); o.put("sourceLang", g.sourceLang); o.put("targetLang", g.targetLang);
         o.put("createdAt", g.createdAt); o.put("updatedAt", g.updatedAt);
@@ -218,7 +258,7 @@ public class GlossaryStore {
         return o;
     }
 
-    private static Glossary fromJson(JSONObject o) throws Exception {
+    static Glossary fromJson(JSONObject o) throws Exception {
         Glossary g = new Glossary();
         g.id = o.optString("id", g.id); g.name = o.optString("name", g.name);
         g.sourceLang = o.optString("sourceLang", g.sourceLang); g.targetLang = o.optString("targetLang", g.targetLang);

@@ -1,6 +1,16 @@
 # Build State
 
-## Current state — 2026-10-15 (v4.22 R: refused proposals no longer lost)
+## Current state — 2026-10-18 (v4.22 S0: library data safety and library export/import)
+
+- Owner decision 2026-10-18: S0 of `docs/V423_LIBRARY_BATCH_PROPOSAL.md` (reviewed by a critic agent against the code) joins 4.22.0; RAW tab, multi-select, chapter sets and per-chapter translation (S1-S5) move to 4.23. Work requests: `docs/V422_S0_LIBRARY_SAFETY_WORK_REQUEST.md`, `docs/V422_DEVICE_TRIAL_RELEASE_WORK_REQUEST.md`.
+- F1: the worktree build archive is now a junction to the owner archive (`artifacts\builds`, `artifacts\test-builds`, `backup`); the previous local copies were byte-identical and are kept in `D:\P5E-builds\wt-v4.22-archive-copy-20261015`. The next numbered build is `4.22-dev.3`, code 275.
+- S0: `GlossaryStore` writes with `commit()` and reports failure; an unreadable Glossary or Pronoun store is copied to `<key>_corrupt_<ms>`, never read as empty and refuses every write, and the Library page shows a red card with "Xuất dữ liệu gốc"; bulk import no longer changes the Active profile; Library > Files has "Xuất thư viện" / "Nhập thư viện" (`LibraryArchive`: `library.json` with per-item SHA-256 plus readable CSV/TXT copies, no settings or API key; import only adds, keeps ids, previews counts); "Export profile" drops the API key and a keyless import keeps the saved key; the glossary card shows counts by category instead of `— → —`; dead `glossaryRow` removed. No schema or preference-key change.
+- Tests: new host tests `LibraryStoreGuardTest` (10), `LibraryArchiveTest` (9), `ProfileExportKeyTest` (3), `GlossaryCardMetaTest` (2); working tree engine 742 / 1 SKIP, app 516 / 5 SKIP, 0 FAIL, lint 0 errors / 58 warnings, AndroidTest compile PASS. `V415MultiProfileImportInstrumentedTest` now expects the Active selection unchanged. Device test `LibraryS0InstrumentedTest` (+ restart seed/verify phases) written, not run. Clean-archive regression (F2) not run yet.
+- Known limit kept for 4.23: a job report prints the raw settings JSON (possibly with the key) when it cannot parse it.
+- No build, device or provider operation; USD 0.
+- Next action: F2 clean-archive regression, F3 device test for R, F4 `4.22-dev.3` build and emulator QA (including `LibraryS0InstrumentedTest` and its restart phases).
+
+## Earlier — 2026-10-15 (v4.22 R: refused proposals no longer lost)
 
 - Owner order 2026-10-15: the model proposed the right repair for Kumo ch 013 line 151 and the app refused it, so the output stayed unchanged; fix the family.
 - Cause: the prompt shows the row note, the edit lock checks only the self/call cells, and a refused answer was discarded. Notes are not trusted by the lock: 22 of 44 real notes with extra address words are negations.

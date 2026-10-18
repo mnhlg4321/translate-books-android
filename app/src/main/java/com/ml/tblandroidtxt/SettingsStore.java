@@ -140,6 +140,21 @@ public class SettingsStore {
         } catch (Exception e) { return "{}"; }
     }
 
+    /** The profile file the person exports: every setting except the API key. */
+    public static String toExportJson(AppSettings s) throws Exception {
+        JSONObject o = new JSONObject(toJson(s));
+        o.remove("apiKey");
+        return o.toString(2);
+    }
+
+    /** Reads an exported profile; a file without {@code apiKey} keeps the key already saved on this device. */
+    public static AppSettings fromImportedProfile(String json, AppSettings current) throws Exception {
+        JSONObject o = new JSONObject(json == null ? "{}" : json);
+        AppSettings imported = fromJson(json);
+        if (!o.has("apiKey") && current != null) imported.apiKey = current.apiKey;
+        return imported;
+    }
+
     public static AppSettings fromJson(String json) {
         AppSettings s = new AppSettings();
         try {

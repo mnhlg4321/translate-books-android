@@ -18,6 +18,9 @@ import java.util.List;
 final class EditorialApiUiController {
     enum Screen { LIST, COMBO, CONFIRM, PROGRESS, RESULT, PAIR_CONFIRM, PAIR_RUN, PAIR_RESULT }
 
+    /** The glossary or pronoun store refused the write (unreadable store or a failed commit). */
+    private static final class LibraryWriteRefused extends Exception { }
+
     static final int REQ_RAW = 41;
     static final int REQ_DRAFT = 42;
     static final int REQ_EXPORT = 43;
@@ -560,16 +563,19 @@ final class EditorialApiUiController {
                     LibraryImportPlanner.Result<GlossaryStore.Glossary> imported = LibraryImportPlanner.glossaries(java.util.Collections.singletonList(file));
                     if (imported.imported.isEmpty()) throw new IllegalArgumentException();
                     List<GlossaryStore.Glossary> all = new ArrayList<>(GlossaryStore.loadAll(a));
-                    all.add(0, imported.imported.get(0)); GlossaryStore.saveAll(a, all);
+                    all.add(0, imported.imported.get(0));
+                    if (!GlossaryStore.saveAll(a, all)) throw new LibraryWriteRefused();
                     combo.glossaryId = imported.imported.get(0).id;
                 } else {
                     LibraryImportPlanner.Result<PronounStore.Profile> imported = LibraryImportPlanner.pronouns(java.util.Collections.singletonList(file));
                     if (imported.imported.isEmpty()) throw new IllegalArgumentException();
                     List<PronounStore.Profile> all = new ArrayList<>(PronounStore.loadAll(a));
-                    all.add(0, imported.imported.get(0)); PronounStore.saveAll(a, all);
+                    all.add(0, imported.imported.get(0));
+                    if (!PronounStore.saveAll(a, all)) throw new LibraryWriteRefused();
                     combo.pronounId = imported.imported.get(0).id;
                 }
                 error = "";
+            } catch (LibraryWriteRefused refused) { error = MainActivity.LIBRARY_WRITE_REFUSED;
             } catch (Exception invalid) { error = "File tham chiếu không hợp lệ. Hãy chọn đúng file Glossary hoặc Pronoun."; }
             refresh();
             return true;

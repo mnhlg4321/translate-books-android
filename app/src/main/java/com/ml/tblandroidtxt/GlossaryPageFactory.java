@@ -55,7 +55,8 @@ class GlossaryPageFactory {
         ScrollView scroll = a.scroll();
         LinearLayout root = a.pageRoot();
         scroll.addView(root);
-        if (a.editingGlossary == null) root.addView(glossaryListPage());
+        if (GlossaryStore.isCorrupt(a)) { a.editingGlossary = null; root.addView(a.libraryLockedCard("Glossary")); }
+        else if (a.editingGlossary == null) root.addView(glossaryListPage());
         else root.addView(glossaryEditorPage());
         return scroll;
     }
@@ -69,7 +70,7 @@ class GlossaryPageFactory {
         LinearLayout importActions = a.rowContainer();
         importActions.addView(a.primaryButton("+ Import glossary", v -> a.chooseGlossary()), new LinearLayout.LayoutParams(0, a.dp(48), 1));
         importActions.addView(a.space(8, 1));
-        importActions.addView(a.secondaryButton("+ New blank", v -> { if (!a.ensureConfigMutable()) return; a.editingGlossary = GlossaryStore.create(a, "New glossary"); a.invalidatePage("Glossaries"); a.switchTab("Glossaries"); }), new LinearLayout.LayoutParams(0, a.dp(48), 1));
+        importActions.addView(a.secondaryButton("+ New blank", v -> { if (!a.ensureConfigMutable()) return; a.editingGlossary = GlossaryStore.create(a, "New glossary"); if (a.editingGlossary == null) a.toast(MainActivity.LIBRARY_WRITE_REFUSED); a.invalidatePage("Glossaries"); a.switchTab("Glossaries"); }), new LinearLayout.LayoutParams(0, a.dp(48), 1));
         panel.addView(importActions);
         panel.addView(a.secondaryButton("Health check", v -> a.showGlossaryPronounHealth()), a.marginLP(-1, a.dp(44), 0, 8, 0, 0));
 
@@ -106,7 +107,7 @@ class GlossaryPageFactory {
         if (active) titleRow.addView(a.chip("ACTIVE", a.GREEN, true));
         box.addView(titleRow);
 
-        String meta = a.nonEmpty(g.sourceLang, "—") + " → " + a.nonEmpty(g.targetLang, "—") + " • " + g.count() + " terms";
+        String meta = cardMeta(g);
         TextView m = a.text(meta, 12, a.MUTED, false);
         m.setSingleLine(false);
         box.addView(m, a.marginLP(-1, -2, 0, 4, 0, 10));
@@ -130,7 +131,7 @@ class GlossaryPageFactory {
                 .setMessage("Xóa glossary: " + a.nonEmpty(g.name, "Unnamed glossary") + "\nKhông xóa file gốc trong máy.")
                 .setPositiveButton("Delete", (d, w) -> {
                     boolean selected = g.id != null && g.id.equals(GlossaryStore.getSelectedId(a));
-                    GlossaryStore.delete(a, g.id);
+                    if (!GlossaryStore.delete(a, g.id)) { a.toast(MainActivity.LIBRARY_WRITE_REFUSED); return; }
                     if (selected) a.clearGlossarySelection();
                     a.toast("Đã xóa glossary: " + a.nonEmpty(g.name, "Unnamed"));
                     a.invalidatePage("Glossaries"); a.switchTab("Glossaries");
@@ -140,28 +141,18 @@ class GlossaryPageFactory {
     }
 
 
-    LinearLayout glossaryRow(String name, String src, String tgt, String terms, String actions, boolean header, boolean active, GlossaryStore.Glossary g) {
-        LinearLayout row = a.rowContainer();
-        row.setPadding(a.dp(8), a.dp(6), a.dp(8), a.dp(6));
-        int col = header ? a.MUTED : a.TEXT;
-        TextView n = a.text(name, header ? 11 : 13, active ? a.GREEN : (header ? a.MUTED : a.BLUE), true);
-        TextView s = a.text(src == null || src.isEmpty() ? "—" : src, header ? 11 : 13, col, header);
-        TextView t = a.text(tgt == null || tgt.isEmpty() ? "—" : tgt, header ? 11 : 13, col, header);
-        TextView c = a.text(terms, header ? 11 : 13, col, true);
-        row.addView(n, new LinearLayout.LayoutParams(0, -2, 2.2f));
-        row.addView(s, new LinearLayout.LayoutParams(0, -2, 1f));
-        row.addView(t, new LinearLayout.LayoutParams(0, -2, 1f));
-        row.addView(c, new LinearLayout.LayoutParams(0, -2, .75f));
-        if (header) row.addView(a.text(actions, 11, a.MUTED, true), new LinearLayout.LayoutParams(0, -2, 1.8f));
-        else {
-            LinearLayout buttons = a.rowContainer();
-            buttons.addView(a.tinyButton(active ? "✓" : "Use", active ? a.GREEN : a.BLUE, v -> a.selectGlossary(g)));
-            buttons.addView(a.tinyButton("Edit", a.BLUE, v -> { if (!a.ensureConfigMutable()) return; a.editingGlossary = g; a.switchTab("Glossaries"); }));
-            buttons.addView(a.tinyButton("Del", a.RED, v -> { if (!a.ensureConfigMutable()) return; GlossaryStore.delete(a, g.id); a.toast("Đã xóa glossary"); a.switchTab("Glossaries"); }));
-            row.addView(buttons, new LinearLayout.LayoutParams(0, -2, 1.8f));
-        }
-        return row;
+    /** Counts by category; languages only when someone filled them in. */
+    static String cardMeta(GlossaryStore.Glossary g) {
+        int characters = 0;
+        if (g.terms != null) for (GlossaryStore.Term t : g.terms) if ("character".equalsIgnoreCase(t.category == null ? "" : t.category.trim())) characters++;
+        String meta = g.count() + " mục · " + characters + " nhân vật · " + (g.count() - characters) + " thuật ngữ";
+        boolean hasLanguages = !isBlankLanguage(g.sourceLang) || !isBlankLanguage(g.targetLang);
+        return hasLanguages ? meta + " • " + label(g.sourceLang) + " → " + label(g.targetLang) : meta;
     }
+
+    private static boolean isBlankLanguage(String value) { return value == null || value.trim().isEmpty() || "—".equals(value.trim()); }
+
+    private static String label(String value) { return isBlankLanguage(value) ? "—" : value.trim(); }
 
 
     View glossaryEditorPage() {

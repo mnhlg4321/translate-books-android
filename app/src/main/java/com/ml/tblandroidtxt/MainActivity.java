@@ -79,6 +79,11 @@ public class MainActivity extends Activity {
     static final int REQ_EDITORIAL_DRAFT = 29;
     static final int REQ_EDITORIAL_BUNDLE = 30;
     static final int REQ_EDITORIAL_FINAL_EXPORT = 31;
+    static final int REQ_EXPORT_LIBRARY = 32;
+    static final int REQ_IMPORT_LIBRARY = 33;
+    static final int REQ_EXPORT_LIBRARY_RAW = 34;
+    static final String LIBRARY_BACKUP_PREF = "library_backup";
+    static final String LIBRARY_WRITE_REFUSED = "Không lưu được: dữ liệu Glossary/Pronoun đang bị khóa ghi hoặc lưu thất bại. Xem thẻ đỏ trong Library.";
 
     int BG, PANEL, CARD, FIELD, BORDER, TEXT, MUTED, BLUE, CYAN;
     final int GREEN = Color.rgb(43, 207, 126); // semantic success/running
@@ -800,6 +805,132 @@ public class MainActivity extends Activity {
         startActivityForResult(i, REQ_EXPORT_PROFILE);
     }
 
+    void exportLibrary() {
+        if (GlossaryStore.isCorrupt(this) || PronounStore.isCorrupt(this)) { toast("Dữ liệu thư viện đang bị khóa ghi; dùng Xuất dữ liệu gốc ở thẻ đỏ."); return; }
+        Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("application/zip");
+        i.putExtra(Intent.EXTRA_TITLE, LibraryArchive.suggestedFileName(new SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ROOT).format(new Date())));
+        startActivityForResult(i, REQ_EXPORT_LIBRARY);
+    }
+
+    void importLibrary() {
+        if (!ensureConfigMutable()) return;
+        if (GlossaryStore.isCorrupt(this) || PronounStore.isCorrupt(this)) { toast(LIBRARY_WRITE_REFUSED); return; }
+        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("*/*");
+        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        startActivityForResult(i, REQ_IMPORT_LIBRARY);
+    }
+
+    void exportCorruptLibraryRaw() {
+        Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("text/plain");
+        i.putExtra(Intent.EXTRA_TITLE, "TranslateBooks-library-unreadable-" + new SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ROOT).format(new Date()) + ".txt");
+        startActivityForResult(i, REQ_EXPORT_LIBRARY_RAW);
+    }
+
+    String lastLibraryExportLine() {
+        android.content.SharedPreferences p = getSharedPreferences(LIBRARY_BACKUP_PREF, MODE_PRIVATE);
+        long at = p.getLong("last_export_at", 0L);
+        if (at <= 0L) return "Chưa xuất lần nào.";
+        return "Lần xuất gần nhất: " + new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.ROOT).format(new Date(at)) + " · " + p.getString("last_export_summary", "");
+    }
+
+    void writeLibraryExport(Uri uri) {
+        try {
+            List<GlossaryStore.Glossary> glossaries = GlossaryStore.loadAll(this);
+            List<PronounStore.Profile> pronouns = PronounStore.loadAll(this);
+            if (GlossaryStore.isCorrupt(this) || PronounStore.isCorrupt(this)) throw new IllegalStateException("store locked");
+            byte[] zip = LibraryArchive.build(glossaries, pronouns, GlossaryStore.getSelectedId(this), PronounStore.getSelectedId(this), AppBuildInfo.VERSION_NAME, System.currentTimeMillis());
+            try (java.io.OutputStream out = getContentResolver().openOutputStream(uri, "wt")) {
+                if (out == null) throw new IllegalStateException("Không mở được tệp để ghi");
+                out.write(zip);
+            }
+            LibraryArchive.Contents check;
+            try (java.io.InputStream in = getContentResolver().openInputStream(uri)) {
+                if (in == null) throw new IllegalStateException("Không đọc lại được tệp vừa ghi");
+                check = LibraryArchive.read(in);
+            }
+            if (check.glossaries.size() != glossaries.size() || check.pronouns.size() != pronouns.size() || !check.bad.isEmpty()) throw new IllegalStateException("Tệp đọc lại không khớp");
+            String summary = glossaries.size() + " glossary, " + pronouns.size() + " pronoun (" + Math.max(1, zip.length / 1024) + " KB)";
+            getSharedPreferences(LIBRARY_BACKUP_PREF, MODE_PRIVATE).edit().putLong("last_export_at", System.currentTimeMillis()).putString("last_export_summary", summary).commit();
+            toast("Đã xuất " + summary);
+            appendLog("Library export: " + summary + " -> " + FileUtil.displayName(this, uri));
+            showResult("Đã xuất thư viện", "Đã xuất " + summary + ".\nTệp không chứa API key, cài đặt, job hay dữ liệu Biên tập. Hãy giữ một bản ngoài điện thoại.");
+            invalidatePage("Files");
+            if ("Files".equals(currentTab)) switchTab("Files");
+        } catch (Exception e) {
+            toast("Lỗi xuất thư viện");
+            appendLog("Library export failed: " + e.getMessage());
+            showResult("Xuất thư viện thất bại", AppValidator.readableError(e));
+        }
+    }
+
+    void previewLibraryImport(Uri uri) {
+        LibraryArchive.Contents contents;
+        try (java.io.InputStream in = getContentResolver().openInputStream(uri)) {
+            if (in == null) throw new IllegalArgumentException("Không mở được tệp");
+            contents = LibraryArchive.read(in);
+        } catch (IllegalArgumentException e) {
+            showResult("Không nhập được thư viện", e.getMessage());
+            return;
+        } catch (Exception e) {
+            showResult("Không nhập được thư viện", AppValidator.readableError(e));
+            return;
+        }
+        List<GlossaryStore.Glossary> currentGlossaries = GlossaryStore.loadAll(this);
+        List<PronounStore.Profile> currentPronouns = PronounStore.loadAll(this);
+        LibraryArchive.MergePlan plan = LibraryArchive.plan(contents, currentGlossaries, currentPronouns, new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).format(new Date()));
+        StringBuilder message = new StringBuilder();
+        message.append("Sẽ thêm ").append(plan.addGlossaries.size()).append(" glossary, ").append(plan.addPronouns.size()).append(" pronoun.\n");
+        message.append("Bỏ qua ").append(plan.existing).append(" đã có, ").append(plan.duplicate).append(" trùng nội dung, ").append(plan.bad.size()).append(" lỗi.\n");
+        if (plan.renamed > 0) message.append(plan.renamed).append(" mục trùng id nhưng khác nội dung sẽ được thêm thành bản sao có ghi ngày nhập.\n");
+        for (String bad : plan.bad) message.append("• ").append(bad).append('\n');
+        message.append("\nKhông ghi đè, không xóa mục nào; Glossary/Pronoun đang dùng giữ nguyên.");
+        if (!contents.activeGlossaryId.isEmpty() || !contents.activePronounId.isEmpty()) message.append("\n(Bản sao lưu ghi lại profile đang dùng lúc xuất; app không tự chọn lại.)");
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this).setTitle("Nhập thư viện").setMessage(message.toString()).setNegativeButton("Hủy", null);
+        if (plan.addedCount() > 0) dialog.setPositiveButton("Nhập", (d, w) -> applyLibraryImport(plan));
+        dialog.show();
+    }
+
+    void applyLibraryImport(LibraryArchive.MergePlan plan) {
+        if (!ensureConfigMutable()) return;
+        boolean ok = true;
+        if (!plan.addGlossaries.isEmpty()) {
+            ArrayList<GlossaryStore.Glossary> all = new ArrayList<>(plan.addGlossaries);
+            all.addAll(GlossaryStore.loadAll(this));
+            ok = GlossaryStore.saveAll(this, all);
+        }
+        if (ok && !plan.addPronouns.isEmpty()) {
+            ArrayList<PronounStore.Profile> all = new ArrayList<>(plan.addPronouns);
+            all.addAll(PronounStore.loadAll(this));
+            ok = PronounStore.saveAll(this, all);
+        }
+        if (!ok) { showResult("Nhập thư viện thất bại", LIBRARY_WRITE_REFUSED); return; }
+        String summary = "Đã thêm " + plan.addGlossaries.size() + " glossary, " + plan.addPronouns.size() + " pronoun";
+        toast(summary);
+        appendLog("Library import: added glossaries=" + plan.addGlossaries.size() + ", pronouns=" + plan.addPronouns.size() + ", existing=" + plan.existing + ", duplicate=" + plan.duplicate + ", bad=" + plan.bad.size());
+        showResult("Đã nhập thư viện", summary + ". Bấm Use trong Glossaries/Pronouns để dùng cho bản dịch.");
+        invalidatePage("Glossaries"); invalidatePage("Pronouns");
+    }
+
+    /** Shown instead of a library list while its store is unreadable: the original text is kept and writes are refused. */
+    View libraryLockedCard(String kind) {
+        LinearLayout box = card(14, FIELD, RED);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(12), dp(12), dp(12), dp(12));
+        TextView title = text("Dữ liệu " + kind + " đọc lỗi", 15, RED, true);
+        box.addView(title);
+        TextView body = text("App đã giữ nguyên bản gốc và tạm khóa ghi để không mất dữ liệu. Hãy xuất dữ liệu gốc và gửi để kiểm tra; đừng xóa dữ liệu app.", 13, TEXT, false);
+        body.setSingleLine(false);
+        box.addView(body, marginLP(-1, -2, 0, 6, 0, 10));
+        box.addView(primaryButton("Xuất dữ liệu gốc", v -> exportCorruptLibraryRaw()), new LinearLayout.LayoutParams(-1, dp(44)));
+        return box;
+    }
+
     void importProfile() {
         Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         i.addCategory(Intent.CATEGORY_OPENABLE);
@@ -1128,21 +1259,22 @@ public class MainActivity extends Activity {
         }
         ArrayList<GlossaryStore.Glossary> all = new ArrayList<>(planned.imported);
         all.addAll(GlossaryStore.loadAll(this));
-        GlossaryStore.saveAll(this, all);
-        GlossaryStore.Glossary active = planned.imported.get(0);
-        lastGlossaryName = active.name;
-        lastGlossaryText = GlossaryStore.toPromptText(active);
-        glossaryUri = null;
-        setLabel(glossaryFileLabel, "Glossary: " + active.name);
+        if (!GlossaryStore.saveAll(this, all)) {
+            toast(LIBRARY_WRITE_REFUSED);
+            appendLog("Glossary multi-import refused: store not writable");
+            showResult("Glossary import failed", LIBRARY_WRITE_REFUSED);
+            return;
+        }
+        // Importing only adds profiles; the Active glossary stays what the person chose.
         editingGlossary = null;
-        selectGlossary(active, false);
         String skipped = files.failed.isEmpty() ? "" : "\nBỏ qua "
                 + files.failed.size() + " file: " + namesSummary(files.failed);
-        toast("Đã tạo " + planned.imported.size() + " glossary");
+        toast("Đã thêm " + planned.imported.size() + " glossary");
         appendLog("Glossary multi-import: created=" + planned.imported.size()
                 + ", skipped=" + files.failed.size());
         showResult("Glossaries imported",
-                planned.imported.size() + " profile(s), mỗi file là một glossary." + skipped);
+                "Đã thêm " + planned.imported.size() + " glossary, mỗi file là một glossary. Bấm Use để dùng cho bản dịch." + skipped);
+        if ("Glossaries".equals(currentTab)) switchTab("Glossaries");
     }
 
     void importPronounProfiles(Intent data, int takeFlags) {
@@ -1158,20 +1290,23 @@ public class MainActivity extends Activity {
         }
         ArrayList<PronounStore.Profile> all = new ArrayList<>(planned.imported);
         all.addAll(PronounStore.loadAll(this));
-        PronounStore.saveAll(this, all);
-        PronounStore.Profile active = planned.imported.get(0);
-        pronounUri = null;
-        setLabel(pronounFileLabel, "Pronoun: " + active.name);
-        editingPronoun = null;
         pendingPronounReplaceId = "";
-        selectPronoun(active, false);
+        if (!PronounStore.saveAll(this, all)) {
+            toast(LIBRARY_WRITE_REFUSED);
+            appendLog("Pronoun multi-import refused: store not writable");
+            showResult("Pronoun import failed", LIBRARY_WRITE_REFUSED);
+            return;
+        }
+        // Importing only adds profiles; the Active pronoun stays what the person chose.
+        editingPronoun = null;
         String skipped = files.failed.isEmpty() ? "" : "\nBỏ qua "
                 + files.failed.size() + " file: " + namesSummary(files.failed);
-        toast("Đã tạo " + planned.imported.size() + " pronoun profile");
+        toast("Đã thêm " + planned.imported.size() + " pronoun profile");
         appendLog("Pronoun multi-import: created=" + planned.imported.size()
                 + ", skipped=" + files.failed.size());
         showResult("Pronouns imported",
-                planned.imported.size() + " profile(s), mỗi file là một pronoun." + skipped);
+                "Đã thêm " + planned.imported.size() + " pronoun profile, mỗi file là một profile. Bấm Use để dùng cho bản dịch." + skipped);
+        if ("Pronouns".equals(currentTab)) switchTab("Pronouns");
     }
 
     void replacePronounFromUri(Uri uri, int takeFlags) {
@@ -1401,11 +1536,21 @@ public class MainActivity extends Activity {
             } catch (Exception e) { toast("Lỗi export .env"); appendLog("Lỗi export .env: " + e.getMessage()); }
         } else if (requestCode == REQ_EXPORT_PROFILE) {
             try {
-                JSONObject o = new JSONObject(SettingsStore.toJson(collectSettings()));
-                FileUtil.writeText(this, uri, o.toString(2));
-                toast("Đã export profile JSON");
+                FileUtil.writeText(this, uri, SettingsStore.toExportJson(collectSettings()));
+                toast("Đã export profile JSON (không chứa API key)");
                 appendLog("Export profile: " + FileUtil.displayName(this, uri));
             } catch (Exception e) { toast("Lỗi export profile"); appendLog("Lỗi export profile: " + e.getMessage()); }
+        } else if (requestCode == REQ_EXPORT_LIBRARY) {
+            writeLibraryExport(uri);
+        } else if (requestCode == REQ_IMPORT_LIBRARY) {
+            previewLibraryImport(uri);
+        } else if (requestCode == REQ_EXPORT_LIBRARY_RAW) {
+            try {
+                String glossaryRaw = GlossaryStore.corruptText(this), pronounRaw = PronounStore.corruptText(this);
+                FileUtil.writeText(this, uri, "== glossary_store/glossaries_json ==\n" + (glossaryRaw == null ? "(đọc được)" : glossaryRaw)
+                        + "\n\n== pronoun_store/profiles_json ==\n" + (pronounRaw == null ? "(đọc được)" : pronounRaw) + "\n");
+                toast("Đã xuất dữ liệu gốc");
+            } catch (Exception e) { toast("Lỗi xuất dữ liệu gốc"); appendLog("Library raw export failed: " + e.getMessage()); }
         } else if (requestCode == REQ_EXPORT_LOG) {
             try {
                 FileUtil.writeText(this, uri, LogStore.exportBundle(this));
@@ -1426,7 +1571,7 @@ public class MainActivity extends Activity {
             try {
                 FileUtil.takePersistable(this, uri, takeFlags, true, false);
                 String profileText = FileUtil.readText(this, uri);
-                AppSettings imported = SettingsStore.fromJson(profileText);
+                AppSettings imported = SettingsStore.fromImportedProfile(profileText, SettingsStore.load(this));
                 SettingsStore.save(this, imported);
                 fillSettings(imported);
                 updateInputEstimate();
@@ -2089,6 +2234,7 @@ public class MainActivity extends Activity {
         String cat = manualGlossaryCategory == null ? "" : manualGlossaryCategory.getText().toString().trim();
         if (src.isEmpty() || tgt.isEmpty()) { toast("Cần nhập Source và Target"); return; }
         if (editingGlossary == null) editingGlossary = GlossaryStore.create(this, "New glossary");
+        if (editingGlossary == null) { toast(LIBRARY_WRITE_REFUSED); return; }
         editingGlossary.terms.add(new GlossaryStore.Term(src, tgt, cat.isEmpty() ? "term" : cat));
         saveEditingGlossary();
         updateGlossaryPreview();
@@ -2110,6 +2256,7 @@ public class MainActivity extends Activity {
 
     void importTermsIntoEditingGlossary(Intent data) {
         if (editingGlossary == null) editingGlossary = GlossaryStore.create(this, "New glossary");
+        if (editingGlossary == null) { toast(LIBRARY_WRITE_REFUSED); return; }
         int totalTerms = 0;
         ArrayList<Uri> selectedUris = new ArrayList<>();
         ArrayList<String> successfulNames = new ArrayList<>();
@@ -2191,7 +2338,7 @@ public class MainActivity extends Activity {
         if (glossarySourceField != null) editingGlossary.sourceLang = glossarySourceField.getText().toString().trim();
         if (glossaryTargetField != null) editingGlossary.targetLang = glossaryTargetField.getText().toString().trim();
         if (editingGlossary.name == null || editingGlossary.name.trim().isEmpty()) editingGlossary.name = "New glossary";
-        GlossaryStore.upsert(this, editingGlossary);
+        if (!GlossaryStore.upsert(this, editingGlossary)) toast(LIBRARY_WRITE_REFUSED);
     }
 
     void updateGlossaryPreview() {

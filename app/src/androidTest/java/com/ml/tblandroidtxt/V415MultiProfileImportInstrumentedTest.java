@@ -95,7 +95,8 @@ public class V415MultiProfileImportInstrumentedTest {
                     assertEquals(1, glossaries.get(0).count());
                     assertEquals(1, glossaries.get(1).count());
                     assertNotEquals(glossaries.get(0).id, glossaries.get(1).id);
-                    assertEquals(glossaries.get(0).id, GlossaryStore.getSelectedId(activity));
+                    // v4.22 S0.3: importing adds profiles and leaves the (empty) Active selection unchanged.
+                    assertEquals("", GlossaryStore.getSelectedId(activity));
 
                     activity.importPronounProfiles(
                             selectionIntent(Uri.fromFile(pronounOne), Uri.fromFile(pronounTwo)), 0);
@@ -103,7 +104,7 @@ public class V415MultiProfileImportInstrumentedTest {
                     assertEquals(2, pronouns.size());
                     assertNotEquals(pronouns.get(0).id, pronouns.get(1).id);
                     assertNotEquals(pronouns.get(0).text, pronouns.get(1).text);
-                    assertEquals(pronouns.get(0).id, PronounStore.getSelectedId(activity));
+                    assertEquals("", PronounStore.getSelectedId(activity));
                 });
             }
         } finally {
