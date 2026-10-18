@@ -11,5 +11,5 @@
 - Known bugs/limits: as v4.22 (`feature/v4.22` snapshot); a job report prints raw settings JSON when it cannot parse it.
 - Regression status: clean archive `79fbc979`: engine 742 / 1 SKIP, app debug, release, benchmark 547 each / 5 SKIP, 0 FAIL, lint 0 errors / 64 warnings, AndroidTest compile PASS; device 196 / 180 PASS / 16 SKIP / 0 FAIL. Editorial boundary diff empty; five Editorial-named tests changed by one number.
 - Semantic progress: unchanged.
-- Spend: USD 0; no provider call. Phone `15e84958` not touched.
-- Next action: ask the owner to approve installing 4.23-dev.2 on phone 15e84958 and to run trial D1-D7.
+- Spend: USD 0; no provider call. Phone 15e84958: owner approved the install in chat 2026-10-18; backup before install in D:/App Translate Books/App Translate Books-device-backups/v4.22-dev2-code273/20261018-204430 (DB sha256 1ee29b9f...44fd52 matches phone and archive); 4.23-dev.2 / code 277 installed with install-validated.ps1, first launch without crash.
+- Next action: owner runs trial D1-D7 on the phone and reports; byte-level check of glossary/pronoun prefs after the upgrade is UNKNOWN.
