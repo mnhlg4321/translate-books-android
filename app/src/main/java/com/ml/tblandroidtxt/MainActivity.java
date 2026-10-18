@@ -86,7 +86,7 @@ public class MainActivity extends Activity {
     static final int REQ_REPLACE_RAW = 36;
     static final int REQ_EXPORT_LIBRARY_SELECTED = 37;
     /** Chapter sets (v4.23 L3) are switched on when their pages are built. */
-    static final boolean CHAPTER_SETS_ENABLED = false;
+    static final boolean CHAPTER_SETS_ENABLED = true;
     static final String LIBRARY_BACKUP_PREF = "library_backup";
     static final String LIBRARY_WRITE_REFUSED = "Không lưu được: dữ liệu Glossary/Pronoun đang bị khóa ghi hoặc lưu thất bại. Xem thẻ đỏ trong Library.";
 
@@ -167,6 +167,7 @@ public class MainActivity extends Activity {
     String pendingExportKind = "";
     final LibraryBulkUi bulkUi = new LibraryBulkUi(this);
     String rawFilter = "";
+    ChapterSetPageFactory.Draft chapterSetDraft;
     String pendingRawReplaceId = "";
     byte[] pendingLibraryExportZip;
     String pendingLibraryExportSummary = "";
@@ -511,6 +512,7 @@ public class MainActivity extends Activity {
     @Override public void onBackPressed() {
         if ("Editorial".equals(currentTab) && editorialApiShared != null && editorialApiShared.handleBack()) return;
         if (bulkUi.selecting(currentTab)) { bulkUi.exitSelection(currentTab); return; }
+        if ("ChapterSets".equals(currentTab) && chapterSetDraft != null) { closeChapterSetDraft(false); return; }
         AppBackNavigationPolicy.Action action = AppBackNavigationPolicy.resolve(
                 currentTab, editingGlossary != null, editingPronoun != null, settingsCategory);
         if (action == AppBackNavigationPolicy.Action.SAVE_AND_CLOSE_GLOSSARY) {
@@ -748,10 +750,26 @@ public class MainActivity extends Activity {
 
     View buildSamplePage() { return new SamplePageFactory(this).buildSamplePage(); }
 
-    /** Chapter sets page; replaced by the real page in v4.23 L3. */
-    View buildChapterSetsPage() { return pageRoot(); }
+    View buildChapterSetsPage() { return new ChapterSetPageFactory(this).buildPage(); }
 
-    void createChapterSetFromSelection() { toast("Bộ chương sẽ có ở bước sau"); }
+    /** RAW tab > ticked chapters > "Tạo bộ chương": opens the confirmation table with the app's suggestions. */
+    void createChapterSetFromSelection() {
+        java.util.List<String> ids = bulkUi.controller(LibraryBulkUi.TAB_RAW).ids();
+        if (ids.isEmpty()) { toast("Hãy tick ít nhất một RAW"); return; }
+        chapterSetDraft = ChapterSetPageFactory.newDraft(this, ids);
+        bulkUi.controller(LibraryBulkUi.TAB_RAW).exit();
+        invalidatePage("RAW");
+        invalidatePage("ChapterSets");
+        switchTab("ChapterSets");
+    }
+
+    /** Leaves the confirmation table; an unsaved table asks first. */
+    void closeChapterSetDraft(boolean saved) {
+        Runnable close = () -> { chapterSetDraft = null; invalidatePage("ChapterSets"); switchTab("ChapterSets"); };
+        if (saved || chapterSetDraft == null) { close.run(); return; }
+        new AlertDialog.Builder(this).setTitle("Bỏ thay đổi?").setMessage("Bộ chương chưa được lưu.")
+                .setNegativeButton("Tiếp tục sửa", null).setPositiveButton("Bỏ", (d, w) -> close.run()).show();
+    }
 
     /** Drops the cached Library list pages so the next visit rebuilds them from the stores. */
     void invalidateLibraryPages() {

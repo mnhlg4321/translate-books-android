@@ -18,6 +18,9 @@ public final class PreparedBatch {
         public List<Chunk> chunks = new ArrayList<>();
     }
 
+    /** Chapter-set runs only (not stored): the Glossary / Pronoun each input is prepared and estimated with, in input order. */
+    public List<ChapterBinding> bindings;
+
     public String id = "";
     public String selectionKey = "";
     public String constructionKey = "";

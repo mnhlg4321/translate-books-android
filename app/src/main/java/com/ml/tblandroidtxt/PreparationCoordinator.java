@@ -52,6 +52,15 @@ public final class PreparationCoordinator {
     }
 
     public synchronized void request(List<Uri> uris, AppSettings settings, Listener listener) {
+        request(uris, settings, null, listener);
+    }
+
+    /**
+     * {@code bindings} (chapter-set runs) gives each input its own Glossary / Pronoun: it is part of the plan key, so two sets that share a
+     * RAW never share a plan, and each input is estimated with its own texts. Null keeps the one-profile behaviour.
+     */
+    public synchronized void request(List<Uri> uris, AppSettings settings, List<ChapterBinding> bindings, Listener listener) {
+        final ArrayList<ChapterBinding> chapterBindings = bindings == null ? null : new ArrayList<>(bindings);
         final ArrayList<Uri> files = new ArrayList<>();
         if (uris != null) for (Uri uri : uris) if (uri != null) files.add(uri);
         final AppSettings snapshot = AppValidator.normalize(settings == null ? new AppSettings() : settings.copy());
@@ -60,30 +69,33 @@ public final class PreparationCoordinator {
         final int run = generation.incrementAndGet();
         PreparedBatch preparing = new PreparedBatch();
         preparing.constructionKey = constructionKey(snapshot);
-        preparing.estimateKey = estimateKey(snapshot, preparing.constructionKey);
+        preparing.estimateKey = estimateKey(snapshot, preparing.constructionKey, chapterBindings);
         preparing.settingsJson = SettingsStore.toJson(snapshot);
+        preparing.bindings = chapterBindings;
         preparing.status = PreparedBatch.Status.PREPARING;
         current = preparing;
         deliver(listener, preparing);
         pending = worker.schedule(() -> {
-            active = worker.submit(() -> resolveOrPrepare(run, files, snapshot, existing, listener));
+            active = worker.submit(() -> resolveOrPrepare(run, files, snapshot, chapterBindings, existing, listener));
         }, 300, TimeUnit.MILLISECONDS);
     }
 
-    private void resolveOrPrepare(int run,List<Uri> files,AppSettings settings,PreparedBatch existing,Listener listener){
+    private void resolveOrPrepare(int run,List<Uri> files,AppSettings settings,List<ChapterBinding> bindings,PreparedBatch existing,Listener listener){
         try{
             check(run);
-            String selectionKey=selectionKey(appContext,files,settings);
+            String selectionKey=selectionKey(appContext,files,settings,bindings);
             if(existing!=null&&existing.ready()&&selectionKey.equals(existing.selectionKey)){
-                existing.settingsJson=SettingsStore.toJson(settings);existing.estimateKey=estimateKey(settings,existing.constructionKey);reprice(existing,settings);current=existing;deliver(listener,existing);return;
+                existing.settingsJson=SettingsStore.toJson(settings);existing.estimateKey=estimateKey(settings,existing.constructionKey,bindings);existing.bindings=bindings;reprice(existing,settings);current=existing;deliver(listener,existing);return;
             }
             TranslationRepository repo=new TranslationRepository(appContext);PreparedBatch cached;
             try{cached=repo.getPreparedBatchBySelectionKey(selectionKey);}finally{repo.close();}
             check(run);
             if(cached!=null&&cached.ready()){
-                cached.settingsJson=SettingsStore.toJson(settings);cached.estimateKey=estimateKey(settings,cached.constructionKey);reprice(cached,settings);current=cached;deliver(listener,cached);return;
+                cached.settingsJson=SettingsStore.toJson(settings);cached.estimateKey=estimateKey(settings,cached.constructionKey,bindings);cached.bindings=bindings;
+                if(bindings!=null)recomputeEstimate(cached,settings);else reprice(cached,settings);
+                current=cached;deliver(listener,cached);return;
             }
-            prepare(run,files,settings,selectionKey,listener);
+            prepare(run,files,settings,bindings,selectionKey,listener);
         }catch(InterruptedException e){Thread.currentThread().interrupt();}
         catch(Exception e){if(run==generation.get()){PreparedBatch failed=new PreparedBatch();failed.status=PreparedBatch.Status.ERROR;failed.error=AppValidator.readableError(e);current=failed;deliver(listener,failed);}}
     }
@@ -100,14 +112,15 @@ public final class PreparationCoordinator {
         active=worker.submit(()->{try{CostEstimator.Estimate total=new CostEstimator.Estimate();for(PreparedBatch.Input input:batch.inputs){check(run);CostEstimator.addInto(total,CostEstimator.estimatePreparedChunksLightweight(input.chunks,settings));}batch.estimate=total;batch.estimateKey=nextKey;batch.settingsJson=SettingsStore.toJson(settings);batch.status=PreparedBatch.Status.READY;batch.progress=100;TranslationRepository repo=new TranslationRepository(appContext);repo.savePreparedBatch(batch);repo.close();current=batch;deliver(listener,batch);}catch(InterruptedException e){Thread.currentThread().interrupt();}catch(Exception e){if(run==generation.get()){batch.status=PreparedBatch.Status.ERROR;batch.error=AppValidator.readableError(e);current=batch;deliver(listener,batch);}}});
     }
 
-    private void prepare(int run, List<Uri> files, AppSettings settings, String selectionKey, Listener listener) {
+    private void prepare(int run, List<Uri> files, AppSettings settings, List<ChapterBinding> bindings, String selectionKey, Listener listener) {
         long started = System.currentTimeMillis();
         PreparedBatch batch = new PreparedBatch();
         batch.id = HashUtil.sha256(selectionKey + ":" + started).substring(0, 24);
         batch.selectionKey = selectionKey;
         batch.constructionKey = constructionKey(settings);
-        batch.estimateKey = estimateKey(settings, batch.constructionKey);
+        batch.estimateKey = estimateKey(settings, batch.constructionKey, bindings);
         batch.settingsJson = SettingsStore.toJson(settings);
+        batch.bindings = bindings;
         batch.createdAt = started;
         batch.status = PreparedBatch.Status.PREPARING;
         try {
@@ -131,7 +144,7 @@ public final class PreparationCoordinator {
                 input.inputHash = HashUtil.sha256(normalized);
                 input.chunks = Chunker.chunkText(normalized, settings);
                 check(run);
-                CostEstimator.Estimate estimate = CostEstimator.estimatePreparedChunksLightweight(input.chunks, settings);
+                CostEstimator.Estimate estimate = CostEstimator.estimatePreparedChunksLightweight(input.chunks, settingsFor(settings, bindings, i));
                 CostEstimator.addInto(aggregate, estimate);
                 batch.inputs.add(input);
             }
@@ -174,13 +187,43 @@ public final class PreparationCoordinator {
         if (batch.estimate != null) CostEstimator.applyPricing(batch.estimate, settings);
     }
 
+    /** The settings an input is estimated with: the run's settings, or in a chapter-set run the chapter's own Glossary / Pronoun. */
+    static AppSettings settingsFor(AppSettings settings, List<ChapterBinding> bindings, int index) {
+        if (bindings == null || index < 0 || index >= bindings.size()) return settings;
+        return bindings.get(index).applyTo(settings);
+    }
+
+    /** Chapter-set plans read from the database carry no per-chapter estimate; rebuild it from the chunks with each chapter's texts. */
+    private void recomputeEstimate(PreparedBatch batch, AppSettings settings) {
+        CostEstimator.Estimate total = new CostEstimator.Estimate();
+        for (int i = 0; i < batch.inputs.size(); i++) {
+            CostEstimator.addInto(total, CostEstimator.estimatePreparedChunksLightweight(batch.inputs.get(i).chunks, settingsFor(settings, batch.bindings, i)));
+        }
+        batch.estimate = total;
+        CostEstimator.applyPricing(batch.estimate, settings);
+    }
+
     private void deliver(Listener listener, PreparedBatch batch) {
         if (listener != null) main.post(() -> listener.onChanged(batch));
     }
 
     static String selectionKey(Context context, List<Uri> uris, AppSettings settings) {
-        StringBuilder key = new StringBuilder(constructionKey(settings));
-        if (uris != null) for (Uri uri : uris) key.append('\n').append(FileUtil.identityOf(context,uri));
+        return selectionKey(context, uris, settings, null);
+    }
+
+    static String selectionKey(Context context, List<Uri> uris, AppSettings settings, List<ChapterBinding> bindings) {
+        ArrayList<String> identities = new ArrayList<>();
+        if (uris != null) for (Uri uri : uris) identities.add(FileUtil.identityOf(context, uri));
+        return selectionKeyOf(constructionKey(settings), identities, bindings);
+    }
+
+    /** Pure form of the plan key: without bindings it is exactly the one-profile key; with bindings every input adds its Glossary / Pronoun hashes. */
+    static String selectionKeyOf(String construction, List<String> identities, List<ChapterBinding> bindings) {
+        StringBuilder key = new StringBuilder(construction);
+        for (int i = 0; i < identities.size(); i++) {
+            key.append('\n').append(identities.get(i));
+            if (bindings != null && i < bindings.size()) key.append("\n#chapter ").append(bindings.get(i).keyPart());
+        }
         return HashUtil.sha256(key.toString());
     }
 
@@ -194,9 +237,13 @@ public final class PreparationCoordinator {
                 x.optimizationPreset, x.maxOutputTokens, x.provider, x.contextOverlapEnabled, x.contextChars, context));
     }
 
-    static String estimateKey(AppSettings s, String construction) {
+    static String estimateKey(AppSettings s, String construction) { return estimateKey(s, construction, null); }
+
+    static String estimateKey(AppSettings s, String construction, List<ChapterBinding> bindings) {
         AppSettings x = s == null ? new AppSettings() : s;
-        return HashUtil.sha256(construction + '\n' + x.sourceLanguage + '\n' + x.targetLanguage + '\n'
+        StringBuilder chapters = new StringBuilder();
+        if (bindings != null) for (ChapterBinding b : bindings) chapters.append(b.keyPart()).append(';');
+        return HashUtil.sha256(construction + '\n' + chapters + '\n' + x.sourceLanguage + '\n' + x.targetLanguage + '\n'
                 + x.translationInstructions + '\n' + x.refinementInstructions + '\n' + x.glossaryText + '\n'
                 + x.pronounText + '\n' + x.glossaryInjectLimit + '\n' + x.pronounInjectLimit + '\n' + x.refineAfter);
     }
