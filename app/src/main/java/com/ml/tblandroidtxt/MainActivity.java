@@ -82,6 +82,11 @@ public class MainActivity extends Activity {
     static final int REQ_EXPORT_LIBRARY = 32;
     static final int REQ_IMPORT_LIBRARY = 33;
     static final int REQ_EXPORT_LIBRARY_RAW = 34;
+    static final int REQ_IMPORT_RAW = 35;
+    static final int REQ_REPLACE_RAW = 36;
+    static final int REQ_EXPORT_LIBRARY_SELECTED = 37;
+    /** Chapter sets (v4.23 L3) are switched on when their pages are built. */
+    static final boolean CHAPTER_SETS_ENABLED = false;
     static final String LIBRARY_BACKUP_PREF = "library_backup";
     static final String LIBRARY_WRITE_REFUSED = "Không lưu được: dữ liệu Glossary/Pronoun đang bị khóa ghi hoặc lưu thất bại. Xem thẻ đỏ trong Library.";
 
@@ -160,6 +165,11 @@ public class MainActivity extends Activity {
     boolean settingsSectionExpanded = true;
     boolean hydratingSettings = false;
     String pendingExportKind = "";
+    final LibraryBulkUi bulkUi = new LibraryBulkUi(this);
+    String rawFilter = "";
+    String pendingRawReplaceId = "";
+    byte[] pendingLibraryExportZip;
+    String pendingLibraryExportSummary = "";
     long pendingExportJobId = -1L;
     boolean pendingExportJobJson = false;
     String lastGlossaryText = "";
@@ -242,6 +252,7 @@ public class MainActivity extends Activity {
         refreshJobCacheAsync(false);
         requestNotificationPermission();
         switchTab(currentTab);
+        new Thread(() -> LibraryRawStore.sweepOrphans(getApplicationContext()), "library-raw-sweep").start();
     }
 
     @Override protected void onSaveInstanceState(Bundle outState) {
@@ -438,10 +449,11 @@ public class MainActivity extends Activity {
     String tabLabel(String name) { return "Editorial".equals(name) ? EditorialApiPresenter.TAB_TITLE : name; }
 
     String primaryIcon(String name){if("Translate".equals(name))return "↗";if("Jobs".equals(name))return "◷";if("Editorial".equals(name))return "✎";if("Library".equals(name))return "▤";return "⚙";}
-    boolean primaryActive(String name){if("Library".equals(name))return "Files".equals(currentTab)||"Glossaries".equals(currentTab)||"Pronouns".equals(currentTab)||"Sample".equals(currentTab);return name.equals(currentTab);}
+    boolean primaryActive(String name){if("Library".equals(name))return "Files".equals(currentTab)||"RAW".equals(currentTab)||"Glossaries".equals(currentTab)||"Pronouns".equals(currentTab)||"ChapterSets".equals(currentTab)||"Sample".equals(currentTab);return name.equals(currentTab);}
 
     void switchTab(String name) {
         if("Library".equals(name))name="Files";
+        bulkUi.exitOthers(name);
         if (name.equals(currentTab) && ("Glossaries".equals(name) || "Pronouns".equals(name))) invalidatePage(name);
         currentTab = name;
         refreshTabs();
@@ -498,6 +510,7 @@ public class MainActivity extends Activity {
 
     @Override public void onBackPressed() {
         if ("Editorial".equals(currentTab) && editorialApiShared != null && editorialApiShared.handleBack()) return;
+        if (bulkUi.selecting(currentTab)) { bulkUi.exitSelection(currentTab); return; }
         AppBackNavigationPolicy.Action action = AppBackNavigationPolicy.resolve(
                 currentTab, editingGlossary != null, editingPronoun != null, settingsCategory);
         if (action == AppBackNavigationPolicy.Action.SAVE_AND_CLOSE_GLOSSARY) {
@@ -519,7 +532,7 @@ public class MainActivity extends Activity {
         if ("Translate".equals(name)) return buildTranslatePage();
         if ("Settings".equals(name)) return buildSettingsPage();
         if ("Editorial".equals(name)) return buildEditorialPage();
-        if ("Glossaries".equals(name)||"Pronouns".equals(name)||"Files".equals(name)||"Sample".equals(name)) return buildLibraryDestination(name);
+        if ("Glossaries".equals(name)||"Pronouns".equals(name)||"Files".equals(name)||"Sample".equals(name)||"RAW".equals(name)||"ChapterSets".equals(name)) return buildLibraryDestination(name);
         if ("Jobs".equals(name)) return buildJobsPage();
         return buildSamplePage();
     }
@@ -528,10 +541,13 @@ public class MainActivity extends Activity {
         LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setBackgroundColor(BG);
         HorizontalScrollView scroll=new HorizontalScrollView(this);scroll.setHorizontalScrollBarEnabled(false);
         LinearLayout nav=new LinearLayout(this);nav.setOrientation(LinearLayout.HORIZONTAL);nav.setPadding(0,dp(4),0,dp(6));
-        String[] pages={"Files","Glossaries","Pronouns","Sample"};for(String page:pages){Button b=button(page,selected.equals(page)?CARD:FIELD,selected.equals(page)?TEXT:MUTED,v->switchTab(page));b.setTextSize(12);b.setMinWidth(0);b.setMinimumWidth(0);tint(b,selected.equals(page)?CARD:FIELD,selected.equals(page)?BLUE:BORDER,1,9);nav.addView(b,new LinearLayout.LayoutParams(-2,dp(38)));}
+        String[] pages=CHAPTER_SETS_ENABLED?new String[]{"Files","RAW","Glossaries","Pronouns","ChapterSets","Sample"}:new String[]{"Files","RAW","Glossaries","Pronouns","Sample"};for(String page:pages){Button b=button("ChapterSets".equals(page)?"Bộ chương":page,selected.equals(page)?CARD:FIELD,selected.equals(page)?TEXT:MUTED,v->switchTab(page));b.setTextSize(12);b.setMinWidth(0);b.setMinimumWidth(0);tint(b,selected.equals(page)?CARD:FIELD,selected.equals(page)?BLUE:BORDER,1,9);nav.addView(b,new LinearLayout.LayoutParams(-2,dp(38)));}
         scroll.addView(nav);root.addView(scroll,new LinearLayout.LayoutParams(-1,dp(48)));
-        View page="Files".equals(selected)?buildFilesPage():"Glossaries".equals(selected)?buildGlossariesPage():"Pronouns".equals(selected)?buildPronounsPage():buildSamplePage();
-        root.addView(page,new LinearLayout.LayoutParams(-1,0,1));return root;
+        View page="Files".equals(selected)?buildFilesPage():"RAW".equals(selected)?new RawPageFactory(this).buildRawPage():"Glossaries".equals(selected)?buildGlossariesPage():"Pronouns".equals(selected)?buildPronounsPage():"ChapterSets".equals(selected)?buildChapterSetsPage():buildSamplePage();
+        root.addView(page,new LinearLayout.LayoutParams(-1,0,1));
+        View undoBar=bulkUi.undoBar();if(undoBar!=null)root.addView(undoBar);
+        View selectionBar=bulkUi.bottomBar(selected);if(selectionBar!=null)root.addView(selectionBar);
+        return root;
     }
 
 
@@ -732,6 +748,134 @@ public class MainActivity extends Activity {
 
     View buildSamplePage() { return new SamplePageFactory(this).buildSamplePage(); }
 
+    /** Chapter sets page; replaced by the real page in v4.23 L3. */
+    View buildChapterSetsPage() { return pageRoot(); }
+
+    void createChapterSetFromSelection() { toast("Bộ chương sẽ có ở bước sau"); }
+
+    /** Drops the cached Library list pages so the next visit rebuilds them from the stores. */
+    void invalidateLibraryPages() {
+        invalidatePage("RAW"); invalidatePage("Glossaries"); invalidatePage("Pronouns"); invalidatePage("ChapterSets");
+        if (AppBackNavigationPolicy.isLibraryList(currentTab)) switchTab(currentTab);
+    }
+
+    void chooseRawFiles() {
+        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("text/*");
+        i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        startActivityForResult(i, REQ_IMPORT_RAW);
+    }
+
+    void chooseRawReplacement(String id) {
+        pendingRawReplaceId = id;
+        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("text/*");
+        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        startActivityForResult(i, REQ_REPLACE_RAW);
+    }
+
+    /** Copies every picked TXT into the app (no persisted grant is kept), skipping empty, non-text and duplicate files. */
+    void importRawFiles(Intent data) {
+        final ArrayList<Uri> picked = selectedDocumentUris(data);
+        if (picked.isEmpty()) return;
+        toast("Đang nhập " + picked.size() + " tệp…");
+        new Thread(() -> {
+            ArrayList<RawImportPlanner.Candidate> candidates = new ArrayList<>();
+            ArrayList<String> unreadable = new ArrayList<>();
+            for (Uri u : picked) {
+                String name = FileUtil.displayName(this, u);
+                try {
+                    FileUtil.TextReadResult read = FileUtil.readTextDetailed(this, u);
+                    candidates.add(new RawImportPlanner.Candidate(name, read.text, read.encoding));
+                } catch (Exception e) {
+                    unreadable.add(name + ": " + AppValidator.readableError(e));
+                }
+            }
+            RawImportPlanner.Plan plan = RawImportPlanner.plan(candidates, LibraryRawStore.hashes(this));
+            String summary;
+            try {
+                LibraryRawStore.add(this, plan);
+                summary = plan.summary();
+                int skippedUnreadable = unreadable.size();
+                if (skippedUnreadable > 0) summary += " + " + skippedUnreadable + " không đọc được";
+            } catch (Exception e) {
+                summary = "Nhập RAW thất bại: " + AppValidator.readableError(e);
+            }
+            final String result = summary;
+            StringBuilder detail = new StringBuilder(result);
+            for (RawImportPlanner.Entry e : plan.entries) if (e.verdict != RawImportPlanner.Verdict.ADD) detail.append("\n• ").append(e.reason);
+            for (String u : unreadable) detail.append("\n• ").append(u);
+            runOnUiThread(() -> {
+                toast(result);
+                appendLog("RAW import: " + detail.toString().replace('\n', ' '));
+                if (plan.skipped() > 0 || !unreadable.isEmpty()) showResult("Nhập RAW", detail.toString());
+                invalidatePage("RAW");
+                if ("RAW".equals(currentTab)) switchTab("RAW");
+            });
+        }, "raw-import").start();
+    }
+
+    /** Replaces one RAW's text, keeping its id so chapter sets stay valid; refuses text that equals another RAW. */
+    void replaceRawFile(Uri uri) {
+        final String id = pendingRawReplaceId;
+        pendingRawReplaceId = "";
+        if (id.isEmpty() || uri == null) return;
+        try {
+            FileUtil.TextReadResult read = FileUtil.readTextDetailed(this, uri);
+            RawImportPlanner.Candidate candidate = new RawImportPlanner.Candidate(FileUtil.displayName(this, uri), read.text, read.encoding);
+            java.util.Set<String> others = LibraryRawStore.hashes(this);
+            LibraryRawStore.Item current = LibraryRawStore.find(this, id);
+            if (current != null) others.remove(current.inputHash);
+            RawImportPlanner.Plan plan = RawImportPlanner.plan(java.util.Collections.singletonList(candidate), others);
+            RawImportPlanner.Entry entry = plan.entries.get(0);
+            if (entry.verdict != RawImportPlanner.Verdict.ADD) { showResult("Không thay được RAW", entry.reason); return; }
+            LibraryRawStore.replace(this, id, entry);
+            toast("Đã thay tệp RAW");
+            invalidatePage("RAW");
+            if ("RAW".equals(currentTab)) switchTab("RAW");
+        } catch (Exception e) {
+            toast("Không thay được RAW");
+            showResult("Không thay được RAW", AppValidator.readableError(e));
+        }
+    }
+
+    /** Asks where to save the ZIP of the ticked items (already built in memory). */
+    void startSelectedLibraryExport(byte[] zip, String summary) {
+        pendingLibraryExportZip = zip;
+        pendingLibraryExportSummary = summary;
+        Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("application/zip");
+        i.putExtra(Intent.EXTRA_TITLE, LibraryArchive.suggestedFileName(new SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ROOT).format(new Date())));
+        startActivityForResult(i, REQ_EXPORT_LIBRARY_SELECTED);
+    }
+
+    void writeSelectedLibraryExport(Uri uri) {
+        byte[] zip = pendingLibraryExportZip;
+        String summary = pendingLibraryExportSummary;
+        pendingLibraryExportZip = null;
+        pendingLibraryExportSummary = "";
+        if (zip == null || uri == null) return;
+        try {
+            FileUtil.writeBytes(this, uri, zip);
+            try (java.io.InputStream in = getContentResolver().openInputStream(uri)) {
+                if (in == null) throw new IllegalStateException("Không đọc lại được tệp vừa ghi");
+                LibraryArchive.Contents check = LibraryArchive.read(in);
+                if (!check.bad.isEmpty()) throw new IllegalStateException("Tệp đọc lại không khớp");
+            }
+            toast("Đã xuất " + summary);
+            appendLog("Library export (selection): " + summary + " -> " + FileUtil.displayName(this, uri));
+            showResult("Đã xuất mục đã chọn", "Đã xuất " + summary + ".\nTệp không chứa API key, cài đặt hay job.");
+        } catch (Exception e) {
+            toast("Lỗi xuất mục đã chọn");
+            appendLog("Library export (selection) failed: " + e.getMessage());
+            showResult("Xuất mục đã chọn thất bại", AppValidator.readableError(e));
+        }
+    }
+
 
     void chooseInput() {
         Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
@@ -844,7 +988,8 @@ public class MainActivity extends Activity {
             List<GlossaryStore.Glossary> glossaries = GlossaryStore.loadAll(this);
             List<PronounStore.Profile> pronouns = PronounStore.loadAll(this);
             if (GlossaryStore.isCorrupt(this) || PronounStore.isCorrupt(this)) throw new IllegalStateException("store locked");
-            byte[] zip = LibraryArchive.build(glossaries, pronouns, GlossaryStore.getSelectedId(this), PronounStore.getSelectedId(this), AppBuildInfo.VERSION_NAME, System.currentTimeMillis());
+            List<LibraryArchive.RawEntry> raws = LibraryRawStore.entries(this, LibraryRawStore.list(this));
+            byte[] zip = LibraryArchive.build(glossaries, pronouns, raws, GlossaryStore.getSelectedId(this), PronounStore.getSelectedId(this), AppBuildInfo.VERSION_NAME, System.currentTimeMillis());
             try (java.io.OutputStream out = getContentResolver().openOutputStream(uri, "wt")) {
                 if (out == null) throw new IllegalStateException("Không mở được tệp để ghi");
                 out.write(zip);
@@ -854,8 +999,8 @@ public class MainActivity extends Activity {
                 if (in == null) throw new IllegalStateException("Không đọc lại được tệp vừa ghi");
                 check = LibraryArchive.read(in);
             }
-            if (check.glossaries.size() != glossaries.size() || check.pronouns.size() != pronouns.size() || !check.bad.isEmpty()) throw new IllegalStateException("Tệp đọc lại không khớp");
-            String summary = glossaries.size() + " glossary, " + pronouns.size() + " pronoun (" + Math.max(1, zip.length / 1024) + " KB)";
+            if (check.glossaries.size() != glossaries.size() || check.pronouns.size() != pronouns.size() || check.raws.size() != raws.size() || !check.bad.isEmpty()) throw new IllegalStateException("Tệp đọc lại không khớp");
+            String summary = glossaries.size() + " glossary, " + pronouns.size() + " pronoun" + (raws.isEmpty() ? "" : ", " + raws.size() + " RAW") + " (" + Math.max(1, zip.length / 1024) + " KB)";
             getSharedPreferences(LIBRARY_BACKUP_PREF, MODE_PRIVATE).edit().putLong("last_export_at", System.currentTimeMillis()).putString("last_export_summary", summary).commit();
             toast("Đã xuất " + summary);
             appendLog("Library export: " + summary + " -> " + FileUtil.displayName(this, uri));
@@ -883,9 +1028,12 @@ public class MainActivity extends Activity {
         }
         List<GlossaryStore.Glossary> currentGlossaries = GlossaryStore.loadAll(this);
         List<PronounStore.Profile> currentPronouns = PronounStore.loadAll(this);
-        LibraryArchive.MergePlan plan = LibraryArchive.plan(contents, currentGlossaries, currentPronouns, new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).format(new Date()));
+        ArrayList<LibraryArchive.RawEntry> currentRaws = new ArrayList<>();
+        for (LibraryRawStore.Item item : LibraryRawStore.list(this)) { LibraryArchive.RawEntry e = new LibraryArchive.RawEntry(); e.id = item.id; e.inputHash = item.inputHash; currentRaws.add(e); }
+        LibraryArchive.MergePlan plan = LibraryArchive.plan(contents, currentGlossaries, currentPronouns, currentRaws, new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).format(new Date()));
         StringBuilder message = new StringBuilder();
         message.append("Sẽ thêm ").append(plan.addGlossaries.size()).append(" glossary, ").append(plan.addPronouns.size()).append(" pronoun.\n");
+        if (!plan.addRaws.isEmpty()) message.append("Sẽ thêm ").append(plan.addRaws.size()).append(" RAW.\n");
         message.append("Bỏ qua ").append(plan.existing).append(" đã có, ").append(plan.duplicate).append(" trùng nội dung, ").append(plan.bad.size()).append(" lỗi.\n");
         if (plan.renamed > 0) message.append(plan.renamed).append(" mục trùng id nhưng khác nội dung sẽ được thêm thành bản sao có ghi ngày nhập.\n");
         for (String bad : plan.bad) message.append("• ").append(bad).append('\n');
@@ -909,12 +1057,15 @@ public class MainActivity extends Activity {
             all.addAll(PronounStore.loadAll(this));
             ok = PronounStore.saveAll(this, all);
         }
+        if (ok && !plan.addRaws.isEmpty()) {
+            try { LibraryRawStore.addEntries(this, plan.addRaws); } catch (Exception e) { ok = false; appendLog("Library import RAW failed: " + e.getMessage()); }
+        }
         if (!ok) { showResult("Nhập thư viện thất bại", LIBRARY_WRITE_REFUSED); return; }
-        String summary = "Đã thêm " + plan.addGlossaries.size() + " glossary, " + plan.addPronouns.size() + " pronoun";
+        String summary = "Đã thêm " + plan.addGlossaries.size() + " glossary, " + plan.addPronouns.size() + " pronoun" + (plan.addRaws.isEmpty() ? "" : ", " + plan.addRaws.size() + " RAW");
         toast(summary);
         appendLog("Library import: added glossaries=" + plan.addGlossaries.size() + ", pronouns=" + plan.addPronouns.size() + ", existing=" + plan.existing + ", duplicate=" + plan.duplicate + ", bad=" + plan.bad.size());
         showResult("Đã nhập thư viện", summary + ". Bấm Use trong Glossaries/Pronouns để dùng cho bản dịch.");
-        invalidatePage("Glossaries"); invalidatePage("Pronouns");
+        invalidatePage("Glossaries"); invalidatePage("Pronouns"); invalidatePage("RAW");
     }
 
     /** Shown instead of a library list while its store is unreadable: the original text is kept and writes are refused. */
@@ -1423,6 +1574,8 @@ public class MainActivity extends Activity {
         }
         if (resultCode != RESULT_OK || data == null) {
             if (requestCode == REQ_PRONOUN) pendingPronounReplaceId = "";
+            if (requestCode == REQ_REPLACE_RAW) pendingRawReplaceId = "";
+            if (requestCode == REQ_EXPORT_LIBRARY_SELECTED) { pendingLibraryExportZip = null; pendingLibraryExportSummary = ""; }
             if (requestCode == REQ_EDITORIAL_REFERENCE) { pendingEditorialReferenceProjectId=-1L; pendingEditorialReferenceRole=null; }
             if(requestCode==REQ_EDITORIAL_BATCH||requestCode==REQ_EDITORIAL_DRAFT||requestCode==REQ_EDITORIAL_BUNDLE)pendingEditorialProjectId=-1L;
             if(requestCode==REQ_EDITORIAL_FINAL_EXPORT){pendingFinalProjectId=-1L;pendingFinalBindingIdentity="";pendingFinalChapterKey="";}
@@ -1551,6 +1704,12 @@ public class MainActivity extends Activity {
                         + "\n\n== pronoun_store/profiles_json ==\n" + (pronounRaw == null ? "(đọc được)" : pronounRaw) + "\n");
                 toast("Đã xuất dữ liệu gốc");
             } catch (Exception e) { toast("Lỗi xuất dữ liệu gốc"); appendLog("Library raw export failed: " + e.getMessage()); }
+        } else if (requestCode == REQ_IMPORT_RAW) {
+            importRawFiles(data);
+        } else if (requestCode == REQ_REPLACE_RAW) {
+            replaceRawFile(uri);
+        } else if (requestCode == REQ_EXPORT_LIBRARY_SELECTED) {
+            writeSelectedLibraryExport(uri);
         } else if (requestCode == REQ_EXPORT_LOG) {
             try {
                 FileUtil.writeText(this, uri, LogStore.exportBundle(this));

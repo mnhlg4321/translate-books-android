@@ -209,7 +209,7 @@ public class TranslatorService extends Service {
         return START_NOT_STICKY;
     }
 
-    private synchronized boolean ensureRuntime(){if(repo!=null&&engine!=null)return true;try{ModelCatalog.initialize(this);repo=new TranslationRepository(this);repo.recoverInterruptedState();engine=new TranslationEngine(this,repo);return true;}catch(Exception e){setState(TranslationJobState.State.FAILED,"Initialization failure");logFailure("runtime initialization",e);broadcast("error",-1,"Translation could not initialize: "+AppValidator.readableError(e));stopForeground(STOP_FOREGROUND_REMOVE);stopSelf();return false;}}
+    private synchronized boolean ensureRuntime(){if(repo!=null&&engine!=null)return true;try{ModelCatalog.initialize(this);repo=new TranslationRepository(this);repo.recoverInterruptedState();engine=new TranslationEngine(this,repo,TranslateTestSeam.provider());return true;}catch(Exception e){setState(TranslationJobState.State.FAILED,"Initialization failure");logFailure("runtime initialization",e);broadcast("error",-1,"Translation could not initialize: "+AppValidator.readableError(e));stopForeground(STOP_FOREGROUND_REMOVE);stopSelf();return false;}}
 
     private boolean promote(String text,int done,int total){try{startForeground(NOTIFY_ID,buildNotification(text,done,total));return true;}catch(RuntimeException e){setState(TranslationJobState.State.FAILED,"Foreground service error");logFailure("foreground service promotion",e);broadcast("error",-1,"Android could not start the translation service: "+AppValidator.readableError(e));stopSelf();return false;}}
 
@@ -753,13 +753,17 @@ public class TranslatorService extends Service {
         String name=output.getQueryParameter("name");
         if(treeValue==null||treeValue.trim().isEmpty())throw new IllegalArgumentException("Deferred output destination is invalid");
         Uri tree=Uri.parse(treeValue);
-        Uri actual=FileUtil.createOutputInTree(this,tree,name==null?"translation.txt":name);
+        java.io.File testDir=TranslateTestSeam.outputDir();
+        Uri actual;
+        if(testDir!=null){testDir.mkdirs();java.io.File target=new java.io.File(testDir,FileUtil.sanitizeOutputName(name));int n=2;while(target.exists()){String base=FileUtil.sanitizeOutputName(name);target=new java.io.File(testDir,base.substring(0,base.length()-4)+"_v"+(n++)+".txt");}actual=Uri.fromFile(target);}
+        else actual=FileUtil.createOutputInTree(this,tree,name==null?"translation.txt":name);
         LogStore.append(this,"OUTPUT_MATERIALIZED tree="+tree+", file="+actual);
         if(jobId>0)repo.updateJobOutputUri(jobId,actual.toString());
         return actual;
     }
 
     private void validateOutputAccess(int inputCount, Uri fixedOutput, Uri outputTree) {
+        if (TranslateTestSeam.outputDir() != null) return;
         String error;
         if (inputCount > 1 || fixedOutput == null) error = FileUtil.validateTreeWritable(this, outputTree, "Output folder");
         else error = FileUtil.validateWritable(this, fixedOutput, "Single output TXT");

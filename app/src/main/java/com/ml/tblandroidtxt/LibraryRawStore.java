@@ -176,6 +176,39 @@ final class LibraryRawStore {
         return out;
     }
 
+    /** The item with its text, for the library ZIP. */
+    static LibraryArchive.RawEntry toEntry(Context c, Item item) throws IOException {
+        LibraryArchive.RawEntry e = new LibraryArchive.RawEntry();
+        e.id = item.id; e.name = item.name; e.originalName = item.originalName; e.encoding = item.encoding;
+        e.inputHash = item.inputHash; e.chapterNo = item.chapterNo; e.createdAt = item.createdAt; e.updatedAt = item.updatedAt;
+        e.text = files(c).read(item.id);
+        e.chars = e.text.length();
+        return e;
+    }
+
+    static List<LibraryArchive.RawEntry> entries(Context c, List<Item> items) throws IOException {
+        ArrayList<LibraryArchive.RawEntry> out = new ArrayList<>();
+        for (Item item : items) out.add(toEntry(c, item));
+        return out;
+    }
+
+    /** Adds RAW chapters read from a library ZIP (ids and metadata kept); the caller has already removed duplicates. */
+    static void addEntries(Context c, List<LibraryArchive.RawEntry> entries) throws IOException {
+        RawFileStore store = files(c);
+        TranslationRepository repo = new TranslationRepository(c);
+        try {
+            SQLiteDatabase db = repo.getWritableDatabase();
+            for (LibraryArchive.RawEntry e : entries) {
+                Item item = new Item();
+                item.id = e.id; item.name = e.name; item.originalName = e.originalName; item.chapterNo = e.chapterNo;
+                item.chars = e.text.length(); item.inputHash = e.inputHash; item.encoding = e.encoding;
+                item.createdAt = e.createdAt > 0 ? e.createdAt : item.createdAt; item.updatedAt = e.updatedAt > 0 ? e.updatedAt : item.updatedAt;
+                store.write(item.id, e.text);
+                db.insertWithOnConflict("library_raw", null, values(item), SQLiteDatabase.CONFLICT_REPLACE);
+            }
+        } finally { repo.close(); }
+    }
+
     /** Text and name for {@link FileUtil}; null when the RAW is unknown. */
     static String displayNameOf(Context c, String id) {
         Item item = find(c, id);

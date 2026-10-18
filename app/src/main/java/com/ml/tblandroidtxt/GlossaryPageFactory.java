@@ -80,6 +80,14 @@ class GlossaryPageFactory {
         panel.addView(active, a.marginLP(-1, -2, 0, 10, 0, 12));
 
         List<GlossaryStore.Glossary> list = GlossaryStore.loadAll(a);
+        LibrarySelectionController selection = a.bulkUi.controller(LibraryBulkUi.TAB_GLOSSARIES);
+        if (selection.isActive()) {
+            List<String> ids = new ArrayList<>();
+            for (GlossaryStore.Glossary g : list) ids.add(g.id);
+            panel.addView(a.bulkUi.selectionHeader(LibraryBulkUi.TAB_GLOSSARIES, ids), a.marginLP(-1, -2, 0, 0, 0, 10));
+        } else if (!list.isEmpty()) {
+            panel.addView(a.bulkUi.selectButton(LibraryBulkUi.TAB_GLOSSARIES), a.marginLP(-2, a.dp(40), 0, 0, 0, 10));
+        }
         if (list.isEmpty()) {
             TextView empty = a.text("Chưa có glossary. Bấm Import glossary để tạo profile mang đúng tên file, hoặc New blank để nhập thủ công / ghép nhiều file.", 14, a.MUTED, false);
             empty.setGravity(Gravity.CENTER);
@@ -88,7 +96,11 @@ class GlossaryPageFactory {
         } else {
             String selectedId = GlossaryStore.getSelectedId(a);
             for (GlossaryStore.Glossary g : list) {
-                panel.addView(glossaryItemCard(g, TextUtils.equals(g.id, selectedId)), a.marginLP(-1, -2, 0, 0, 0, 10));
+                boolean isActive = TextUtils.equals(g.id, selectedId);
+                View card = selection.isActive()
+                        ? a.bulkUi.selectableCard(LibraryBulkUi.TAB_GLOSSARIES, g.id, (isActive ? "✓ " : "📘 ") + a.nonEmpty(g.name, "Unnamed glossary"), cardMeta(g) + (isActive ? " • ACTIVE" : ""), isActive ? a.GREEN : a.BORDER)
+                        : glossaryItemCard(g, isActive);
+                panel.addView(card, a.marginLP(-1, -2, 0, 0, 0, 10));
             }
         }
         return panel;
@@ -119,6 +131,7 @@ class GlossaryPageFactory {
         buttons.addView(a.space(6, 1));
         buttons.addView(a.tinyButton("Del", a.RED, v -> confirmDeleteGlossary(g)), new LinearLayout.LayoutParams(0, a.dp(42), 1));
         box.addView(buttons);
+        a.bulkUi.attachLongPress(box, LibraryBulkUi.TAB_GLOSSARIES, g.id);
         return box;
     }
 

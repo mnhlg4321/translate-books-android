@@ -1,0 +1,330 @@
+package com.ml.tblandroidtxt;
+
+import android.app.AlertDialog;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.Gravity;
+import android.view.View;
+import android.widget.CheckBox;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Multi-select for the Library lists (RAW, Glossaries, Pronouns, chapter sets): selection header, selectable cards,
+ * bottom action bar, bulk delete with a second confirmation and a 10 second undo, and export of the ticked items.
+ */
+final class LibraryBulkUi {
+    static final long UNDO_MS = 10_000L;
+    static final String TAB_RAW = "RAW", TAB_GLOSSARIES = "Glossaries", TAB_PRONOUNS = "Pronouns", TAB_SETS = "ChapterSets";
+
+    private final MainActivity a;
+    private final Map<String, LibrarySelectionController> controllers = new HashMap<>();
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private Undo undo;
+
+    private static final class Undo {
+        final String tab;
+        final String message;
+        final Runnable restore;
+        final Runnable expire;
+        Runnable timer;
+        Undo(String tab, String message, Runnable restore, Runnable expire) { this.tab = tab; this.message = message; this.restore = restore; this.expire = expire; }
+    }
+
+    LibraryBulkUi(MainActivity activity) { a = activity; }
+
+    LibrarySelectionController controller(String tab) {
+        LibrarySelectionController c = controllers.get(tab);
+        if (c == null) { c = new LibrarySelectionController(); controllers.put(tab, c); }
+        return c;
+    }
+
+    boolean selecting(String tab) { return AppBackNavigationPolicy.isLibraryList(tab) && controller(tab).isActive(); }
+
+    void exitSelection(String tab) {
+        controller(tab).exit();
+        refresh(tab);
+    }
+
+    /** Leaves selection mode on every list except {@code keepTab}; called when the tab changes. */
+    void exitOthers(String keepTab) {
+        for (Map.Entry<String, LibrarySelectionController> e : controllers.entrySet()) if (!e.getKey().equals(keepTab)) e.getValue().exit();
+    }
+
+    void refresh(String tab) { a.refreshPagePreservingScroll(tab); }
+
+    // ---- list header, cards, bottom bar ----
+
+    View selectButton(String tab) {
+        return a.secondaryButton("Chọn", v -> { controller(tab).enter(null); refresh(tab); });
+    }
+
+    /** "n đã chọn · Chọn tất cả · Hủy" at the top of a list in selection mode. */
+    View selectionHeader(String tab, Collection<String> visibleIds) {
+        LibrarySelectionController c = controller(tab);
+        c.retainOnly(visibleIds);
+        LinearLayout row = a.rowContainer();
+        TextView count = a.text(c.headline(), 14, a.TEXT, true);
+        count.setContentDescription("selection-count");
+        row.addView(count, new LinearLayout.LayoutParams(0, -2, 1));
+        row.addView(a.secondaryButton("Chọn tất cả", v -> { c.selectAll(visibleIds); refresh(tab); }), new LinearLayout.LayoutParams(-2, a.dp(40)));
+        row.addView(a.space(6, 1));
+        row.addView(a.secondaryButton("Hủy", v -> exitSelection(tab)), new LinearLayout.LayoutParams(-2, a.dp(40)));
+        return row;
+    }
+
+    /** A card with a tick box; tapping anywhere on it toggles the selection. */
+    View selectableCard(String tab, String id, String title, String meta, int borderColor) {
+        LibrarySelectionController c = controller(tab);
+        boolean on = c.isSelected(id);
+        LinearLayout box = a.card(14, a.FIELD, on ? a.BLUE : borderColor);
+        box.setOrientation(LinearLayout.HORIZONTAL);
+        box.setGravity(Gravity.CENTER_VERTICAL);
+        box.setPadding(a.dp(12), a.dp(12), a.dp(12), a.dp(12));
+        CheckBox check = new CheckBox(a);
+        check.setChecked(on);
+        check.setClickable(false);
+        check.setFocusable(false);
+        box.addView(check, new LinearLayout.LayoutParams(-2, -2));
+        LinearLayout texts = new LinearLayout(a);
+        texts.setOrientation(LinearLayout.VERTICAL);
+        TextView t = a.text(title, 15, a.TEXT, true);
+        t.setSingleLine(false);
+        texts.addView(t);
+        TextView m = a.text(meta, 12, a.MUTED, false);
+        m.setSingleLine(false);
+        texts.addView(m, a.marginLP(-1, -2, 0, 3, 0, 0));
+        box.addView(texts, new LinearLayout.LayoutParams(0, -2, 1));
+        box.setContentDescription((on ? "selected:" : "unselected:") + title);
+        box.setOnClickListener(v -> { c.toggle(id); refresh(tab); });
+        return box;
+    }
+
+    /** Long-press on a normal card starts selection with that card ticked. */
+    void attachLongPress(View card, String tab, String id) {
+        card.setOnLongClickListener(v -> { controller(tab).enter(id); refresh(tab); return true; });
+    }
+
+    /** Bottom action bar, or null outside selection mode. */
+    View bottomBar(String tab) {
+        LibrarySelectionController c = controller(tab);
+        if (!selecting(tab)) return null;
+        int n = c.count();
+        LinearLayout bar = a.card(14, a.PANEL, a.BORDER);
+        bar.setOrientation(LinearLayout.HORIZONTAL);
+        bar.setGravity(Gravity.CENTER_VERTICAL);
+        bar.setPadding(a.dp(8), a.dp(8), a.dp(8), a.dp(8));
+        android.widget.Button delete = a.dangerButton("Xóa (" + n + ")", v -> deleteSelected(tab));
+        delete.setEnabled(n > 0);
+        bar.addView(delete, new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        if (!TAB_SETS.equals(tab)) {
+            bar.addView(a.space(6, 1));
+            android.widget.Button export = a.secondaryButton("Xuất", v -> exportSelected(tab));
+            export.setEnabled(n > 0);
+            bar.addView(export, new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        }
+        if (TAB_GLOSSARIES.equals(tab) || TAB_PRONOUNS.equals(tab)) {
+            bar.addView(a.space(6, 1));
+            android.widget.Button use = a.primaryButton("Dùng", v -> useSelected(tab));
+            use.setEnabled(n == 1);
+            bar.addView(use, new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        }
+        if (TAB_RAW.equals(tab)) {
+            bar.addView(a.space(6, 1));
+            android.widget.Button sets = a.primaryButton("Tạo bộ chương", v -> a.createChapterSetFromSelection());
+            sets.setEnabled(n > 0);
+            bar.addView(sets, new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        }
+        bar.setLayoutParams(a.marginLP(-1, -2, 0, 6, 0, 0));
+        return bar;
+    }
+
+    // ---- delete with undo ----
+
+    View undoBar() {
+        if (undo == null) return null;
+        Undo u = undo;
+        LinearLayout bar = a.card(14, a.PANEL, a.GREEN);
+        bar.setOrientation(LinearLayout.HORIZONTAL);
+        bar.setGravity(Gravity.CENTER_VERTICAL);
+        bar.setPadding(a.dp(12), a.dp(8), a.dp(8), a.dp(8));
+        TextView msg = a.text(u.message, 14, a.TEXT, true);
+        msg.setSingleLine(false);
+        msg.setContentDescription("undo-message");
+        bar.addView(msg, new LinearLayout.LayoutParams(0, -2, 1));
+        bar.addView(a.primaryButton("Hoàn tác", v -> undoNow()), new LinearLayout.LayoutParams(-2, a.dp(44)));
+        bar.setLayoutParams(a.marginLP(-1, -2, 0, 6, 0, 0));
+        return bar;
+    }
+
+    private void startUndo(Undo next) {
+        finishUndo(true);
+        undo = next;
+        next.timer = () -> { if (undo == next) { finishUndo(true); a.invalidateLibraryPages(); } };
+        handler.postDelayed(next.timer, UNDO_MS);
+        refresh(next.tab);
+    }
+
+    /** Ends a pending undo window; {@code expire} true makes the delete final (RAW files are removed). */
+    void finishUndo(boolean expire) {
+        Undo u = undo;
+        if (u == null) return;
+        undo = null;
+        if (u.timer != null) handler.removeCallbacks(u.timer);
+        if (expire) u.expire.run();
+    }
+
+    void undoNow() {
+        Undo u = undo;
+        if (u == null) return;
+        undo = null;
+        if (u.timer != null) handler.removeCallbacks(u.timer);
+        u.restore.run();
+        a.invalidateLibraryPages();
+        refresh(u.tab);
+    }
+
+    void deleteSelected(String tab) { deleteIds(tab, controller(tab).ids()); }
+
+    /** Bulk or single delete of the given ids (a card's own Del button passes one id without entering selection mode). */
+    void deleteIds(String tab, List<String> ids) {
+        if (ids.isEmpty()) return;
+        if (!a.ensureConfigMutable()) return;
+        if ((TAB_GLOSSARIES.equals(tab) && GlossaryStore.isCorrupt(a)) || (TAB_PRONOUNS.equals(tab) && PronounStore.isCorrupt(a))) { a.toast(MainActivity.LIBRARY_WRITE_REFUSED); return; }
+        List<LibraryDeletePlan.Target> targets = targetsFor(tab, ids);
+        LibraryDeletePlan plan = LibraryDeletePlan.plan(targets);
+        AlertDialog.Builder first = new AlertDialog.Builder(a).setTitle("Xóa " + ids.size() + " mục?").setMessage(plan.firstMessage()).setNegativeButton("Hủy", null);
+        if (!plan.deletable.isEmpty()) {
+            first.setPositiveButton("Xóa", (d, w) -> {
+                if (!plan.needsSecondConfirm()) { executePlan(tab, plan); return; }
+                new AlertDialog.Builder(a).setTitle("Xác nhận lần hai").setMessage(plan.secondMessage())
+                        .setNegativeButton("Hủy", null).setPositiveButton("Vẫn xóa", (d2, w2) -> executePlan(tab, plan)).show();
+            });
+        }
+        first.show();
+    }
+
+    private List<LibraryDeletePlan.Target> targetsFor(String tab, List<String> ids) {
+        ArrayList<LibraryDeletePlan.Target> out = new ArrayList<>();
+        if (TAB_RAW.equals(tab)) {
+            Map<String, LibraryRawStore.Item> byId = new HashMap<>();
+            for (LibraryRawStore.Item i : LibraryRawStore.list(a)) byId.put(i.id, i);
+            for (String id : ids) {
+                LibraryRawStore.Item item = byId.get(id);
+                if (item == null) continue;
+                LibraryDeletePlan.Target t = new LibraryDeletePlan.Target(id, item.originalName);
+                for (LibraryRawStore.Usage u : LibraryRawStore.unfinishedJobs(a, id)) t.unfinishedJobs.add("#" + u.jobId + " " + u.fileName);
+                t.chapterSets.addAll(LibraryUsage.chapterSets(a, LibraryUsage.Kind.RAW, id));
+                out.add(t);
+            }
+        } else if (TAB_GLOSSARIES.equals(tab)) {
+            String active = GlossaryStore.getSelectedId(a);
+            for (GlossaryStore.Glossary g : GlossaryStore.loadAll(a)) if (ids.contains(g.id)) {
+                LibraryDeletePlan.Target t = new LibraryDeletePlan.Target(g.id, g.name);
+                t.active = g.id.equals(active);
+                t.chapterSets.addAll(LibraryUsage.chapterSets(a, LibraryUsage.Kind.GLOSSARY, g.id));
+                t.editorialCombos.addAll(LibraryUsage.editorialCombos(a, LibraryUsage.Kind.GLOSSARY, g.id));
+                out.add(t);
+            }
+        } else if (TAB_PRONOUNS.equals(tab)) {
+            String active = PronounStore.getSelectedId(a);
+            for (PronounStore.Profile p : PronounStore.loadAll(a)) if (ids.contains(p.id)) {
+                LibraryDeletePlan.Target t = new LibraryDeletePlan.Target(p.id, p.name);
+                t.active = p.id.equals(active);
+                t.chapterSets.addAll(LibraryUsage.chapterSets(a, LibraryUsage.Kind.PRONOUN, p.id));
+                t.editorialCombos.addAll(LibraryUsage.editorialCombos(a, LibraryUsage.Kind.PRONOUN, p.id));
+                out.add(t);
+            }
+        } else if (TAB_SETS.equals(tab)) {
+            for (ChapterSetStore.SetInfo s : ChapterSetStore.listSets(a)) if (ids.contains(s.id)) out.add(new LibraryDeletePlan.Target(s.id, s.name));
+        }
+        return out;
+    }
+
+    void executePlan(String tab, LibraryDeletePlan plan) {
+        if (!a.ensureConfigMutable()) return;
+        Set<String> ids = new HashSet<>(plan.deletableIds());
+        int n = ids.size();
+        String message = "Đã xóa " + n + " mục · Hoàn tác";
+        controller(tab).exit();
+        if (TAB_GLOSSARIES.equals(tab)) {
+            List<GlossaryStore.Glossary> all = GlossaryStore.loadAll(a);
+            LibraryBulk.Result<GlossaryStore.Glossary> r = LibraryBulk.remove(all, ids, g -> g.id);
+            if (!GlossaryStore.saveAll(a, r.remaining)) { a.toast(MainActivity.LIBRARY_WRITE_REFUSED); refresh(tab); return; }
+            String active = GlossaryStore.getSelectedId(a);
+            final boolean wasActive = ids.contains(active);
+            if (wasActive) a.clearGlossarySelection();
+            startUndo(new Undo(tab, message, () -> {
+                List<GlossaryStore.Glossary> back = LibraryBulk.reinsert(GlossaryStore.loadAll(a), r.removed, g -> g.id);
+                if (!GlossaryStore.saveAll(a, back)) { a.toast(MainActivity.LIBRARY_WRITE_REFUSED); return; }
+                if (wasActive && GlossaryStore.getSelectedId(a).isEmpty()) a.selectGlossary(GlossaryStore.find(a, active), false);
+                a.toast("Đã hoàn tác " + n + " mục");
+            }, () -> { }));
+        } else if (TAB_PRONOUNS.equals(tab)) {
+            List<PronounStore.Profile> all = PronounStore.loadAll(a);
+            LibraryBulk.Result<PronounStore.Profile> r = LibraryBulk.remove(all, ids, p -> p.id);
+            if (!PronounStore.saveAll(a, r.remaining)) { a.toast(MainActivity.LIBRARY_WRITE_REFUSED); refresh(tab); return; }
+            String active = PronounStore.getSelectedId(a);
+            final boolean wasActive = ids.contains(active);
+            if (wasActive) { PronounStore.setSelectedId(a, ""); a.applyActivePronoun(null); }
+            startUndo(new Undo(tab, message, () -> {
+                List<PronounStore.Profile> back = LibraryBulk.reinsert(PronounStore.loadAll(a), r.removed, p -> p.id);
+                if (!PronounStore.saveAll(a, back)) { a.toast(MainActivity.LIBRARY_WRITE_REFUSED); return; }
+                if (wasActive && PronounStore.getSelectedId(a).isEmpty()) a.selectPronoun(PronounStore.find(a, active), false);
+                a.toast("Đã hoàn tác " + n + " mục");
+            }, () -> { }));
+        } else if (TAB_RAW.equals(tab)) {
+            List<LibraryRawStore.Item> removed = new ArrayList<>();
+            for (LibraryRawStore.Item i : LibraryRawStore.list(a)) if (ids.contains(i.id)) removed.add(i);
+            List<String> removedIds = new ArrayList<>(ids);
+            LibraryRawStore.removeRows(a, removedIds);
+            startUndo(new Undo(tab, message, () -> { LibraryRawStore.restore(a, removed); a.toast("Đã hoàn tác " + n + " mục"); },
+                    () -> LibraryRawStore.purgeFiles(a, removedIds)));
+        } else if (TAB_SETS.equals(tab)) {
+            List<ChapterSetStore.SetData> removed = ChapterSetStore.snapshot(a, new ArrayList<>(ids));
+            ChapterSetStore.delete(a, new ArrayList<>(ids));
+            startUndo(new Undo(tab, message, () -> { ChapterSetStore.restore(a, removed); a.toast("Đã hoàn tác " + n + " mục"); }, () -> { }));
+        }
+    }
+
+    // ---- export / use ----
+
+    void exportSelected(String tab) {
+        LibrarySelectionController c = controller(tab);
+        if (c.count() == 0) return;
+        try {
+            Set<String> ids = new HashSet<>(c.ids());
+            List<GlossaryStore.Glossary> glossaries = new ArrayList<>();
+            List<PronounStore.Profile> pronouns = new ArrayList<>();
+            List<LibraryArchive.RawEntry> raws = new ArrayList<>();
+            if (TAB_GLOSSARIES.equals(tab)) { for (GlossaryStore.Glossary g : GlossaryStore.loadAll(a)) if (ids.contains(g.id)) glossaries.add(g); }
+            else if (TAB_PRONOUNS.equals(tab)) { for (PronounStore.Profile p : PronounStore.loadAll(a)) if (ids.contains(p.id)) pronouns.add(p); }
+            else if (TAB_RAW.equals(tab)) {
+                List<LibraryRawStore.Item> items = new ArrayList<>();
+                for (LibraryRawStore.Item i : LibraryRawStore.list(a)) if (ids.contains(i.id)) items.add(i);
+                raws = LibraryRawStore.entries(a, items);
+            }
+            byte[] zip = LibraryArchive.build(glossaries, pronouns, raws, "", "", AppBuildInfo.VERSION_NAME, System.currentTimeMillis());
+            a.startSelectedLibraryExport(zip, glossaries.size() + " glossary, " + pronouns.size() + " pronoun, " + raws.size() + " RAW");
+        } catch (Exception e) {
+            a.toast("Không xuất được: " + AppValidator.readableError(e));
+        }
+    }
+
+    void useSelected(String tab) {
+        LibrarySelectionController c = controller(tab);
+        if (c.count() != 1) return;
+        String id = c.ids().get(0);
+        c.exit();
+        if (TAB_GLOSSARIES.equals(tab)) a.selectGlossary(GlossaryStore.find(a, id), false);
+        else if (TAB_PRONOUNS.equals(tab)) a.selectPronoun(PronounStore.find(a, id), false);
+    }
+}
