@@ -1,5 +1,13 @@
 # Build State
 
+## Current state — 2026-10-18 (v4.23 dev build `4.23-dev.2`: L3 chapter sets + L4 translate by chapter set; emulator QA PASS; waiting for the owner)
+
+- L3: chapter sets (`chapter_sets`, `chapter_set_rows`), Library > Bộ chương, confirmation table (green / yellow / red, owner confirms every row, saved sets never re-paired, deleted profiles show as missing). L4: Translate source switch "Tệp TXT | Bộ chương", per-chapter Glossary/Pronoun from a per-Start snapshot file (`translate_sessions/<startSessionId>.json`), plan key with per-input hashes, shared settings and Active profile never overwritten, chapter-local failures (integrity, unsplittable chunk) continue, all other failures stop, closing line "x xong · y lỗi · z chưa chạy".
+- Build `4.23-dev.2` / code 277, event `build-20261018-175553`, source `79fbc979`, APK SHA-256 `D2BEE90BE88432411C98FB877EC15558A455EEB6924734993F1BCFED43914D9B`; test APK `v423-dev2-test5-20261018` (`C39680BC…`, commit `106a2159`). Emulator-5554 only.
+- Clean-archive regression `79fbc979`: engine 742 / 1 SKIP; app 547 per variant / 5 SKIP; 0 FAIL; lint 0 errors / 64 warnings; AndroidTest compile PASS. Device QA 196 / 180 PASS / 16 SKIP / 0 FAIL; screenshots 23-30. Report `artifacts/qa/v4.23-dev2-20261018/QA_REPORT.md`.
+- Limits: resume of a stopped chapter run continues only that chapter's job; the rest is started again from the Translate screen (finished chapters are unticked by default). Phone install and trial D1-D7 wait for the owner. No provider call; USD 0.
+
+
 ## Current state — 2026-10-18 (v4.23 dev build `4.23-dev.1`: L1 RAW tab + L2 multi-select; emulator QA PASS; waiting for the owner)
 
 - Branch `feature/v4.23` from `feature/v4.22` `c8408207` (worktree `D:\P5E-builds\wt-v4.23`, checklist `release_checklists/v4.23.md`, work request `docs/V423_TRANSLATE_LIBRARY_WORK_REQUEST.md`). Contains the unreleased v4.22 code (Editorial, R, S0); Editorial itself is untouched.
