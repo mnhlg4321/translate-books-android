@@ -40,7 +40,7 @@ final class SelectedFilesSlot {
         head.addView(chip, new LinearLayout.LayoutParams(0, -2, 1));
         Button act = a.secondaryButton(actionLabel, v -> action.run());
         act.setContentDescription("slot-action:" + label);
-        head.addView(act, new LinearLayout.LayoutParams(-2, a.dp(40)));
+        head.addView(act, new LinearLayout.LayoutParams(-2, -2));
         box.addView(head);
 
         LinearLayout lines = new LinearLayout(a);

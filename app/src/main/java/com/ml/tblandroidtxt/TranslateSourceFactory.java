@@ -192,7 +192,7 @@ final class TranslateSourceFactory {
                 none ? "Chọn tổ hợp" : "Đổi", () -> pickSet(sets)));
         if (!none) {
             LinearLayout edit = a.rowContainer();
-            edit.addView(a.secondaryButton("Sửa tổ hợp", v -> openInLibrary()), new LinearLayout.LayoutParams(0, a.dp(42), 1));
+            edit.addView(a.secondaryButton("Sửa tổ hợp", v -> openInLibrary()), new LinearLayout.LayoutParams(0, -2, 1));
             chapterBox.addView(edit, a.marginLP(-1, -2, 0, 6, 0, 0));
         }
         if (rows.isEmpty()) return;
@@ -202,11 +202,11 @@ final class TranslateSourceFactory {
         hint.setSingleLine(false);
         chapterBox.addView(hint, a.marginLP(-1, -2, 0, 8, 0, 4));
         LinearLayout bulk = a.rowContainer();
-        bulk.addView(a.secondaryButton("Chọn tất cả", v -> tickWhere(0)), new LinearLayout.LayoutParams(0, a.dp(40), 1));
+        bulk.addView(a.secondaryButton("Chọn tất cả", v -> tickWhere(0)), new LinearLayout.LayoutParams(0, -2, 1));
         bulk.addView(a.space(4, 1));
-        bulk.addView(a.secondaryButton("Bỏ chọn", v -> tickWhere(1)), new LinearLayout.LayoutParams(0, a.dp(40), 1));
+        bulk.addView(a.secondaryButton("Bỏ chọn", v -> tickWhere(1)), new LinearLayout.LayoutParams(0, -2, 1));
         bulk.addView(a.space(4, 1));
-        bulk.addView(a.secondaryButton("Chưa dịch", v -> tickWhere(2)), new LinearLayout.LayoutParams(0, a.dp(40), 1));
+        bulk.addView(a.secondaryButton("Chưa dịch", v -> tickWhere(2)), new LinearLayout.LayoutParams(0, -2, 1));
         chapterBox.addView(bulk, a.marginLP(-1, -2, 0, 0, 0, 4));
         for (Row x : rows) chapterBox.addView(rowView(x), a.marginLP(-1, -2, 0, 4, 0, 0));
         TextView total = a.text(ticked.size() + "/" + rows.size() + " chương được tick", 13, a.GREEN, true);

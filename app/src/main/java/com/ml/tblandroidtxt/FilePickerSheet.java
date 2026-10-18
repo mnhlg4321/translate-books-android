@@ -99,17 +99,17 @@ final class FilePickerSheet {
         root.addView(search, a.marginLP(-1, a.dp(44), 0, 8, 0, 0));
 
         LinearLayout filters = a.rowContainer();
-        filters.addView(filterButton("Tất cả", FilePickerModel.Filter.ALL), new LinearLayout.LayoutParams(0, a.dp(40), 1));
-        if (model.hasSuggestions()) { filters.addView(a.space(6, 1)); filters.addView(filterButton("Gợi ý", FilePickerModel.Filter.SUGGESTED), new LinearLayout.LayoutParams(0, a.dp(40), 1)); }
+        filters.addView(filterButton("Tất cả", FilePickerModel.Filter.ALL), new LinearLayout.LayoutParams(0, -2, 1));
+        if (model.hasSuggestions()) { filters.addView(a.space(6, 1)); filters.addView(filterButton("Gợi ý", FilePickerModel.Filter.SUGGESTED), new LinearLayout.LayoutParams(0, -2, 1)); }
         filters.addView(a.space(6, 1));
-        filters.addView(filterButton("Đã chọn", FilePickerModel.Filter.SELECTED), new LinearLayout.LayoutParams(0, a.dp(40), 1));
+        filters.addView(filterButton("Đã chọn", FilePickerModel.Filter.SELECTED), new LinearLayout.LayoutParams(0, -2, 1));
         root.addView(filters, a.marginLP(-1, -2, 0, 6, 0, 0));
 
         if (model.isMultiple()) {
             LinearLayout bulk = a.rowContainer();
-            bulk.addView(a.secondaryButton("Chọn tất cả (đang lọc)", v -> { model.selectAllVisible(); renderList(); }), new LinearLayout.LayoutParams(0, a.dp(40), 1));
+            bulk.addView(a.secondaryButton("Chọn tất cả (đang lọc)", v -> { model.selectAllVisible(); renderList(); }), new LinearLayout.LayoutParams(0, -2, 1));
             bulk.addView(a.space(6, 1));
-            bulk.addView(a.secondaryButton("Bỏ chọn hết", v -> { model.clearAll(); renderList(); }), new LinearLayout.LayoutParams(0, a.dp(40), 1));
+            bulk.addView(a.secondaryButton("Bỏ chọn hết", v -> { model.clearAll(); renderList(); }), new LinearLayout.LayoutParams(0, -2, 1));
             root.addView(bulk, a.marginLP(-1, -2, 0, 6, 0, 0));
         }
 
@@ -121,7 +121,7 @@ final class FilePickerSheet {
         ((LinearLayout.LayoutParams) scroll.getLayoutParams()).weight = 1;
 
         LinearLayout bar = a.rowContainer();
-        bar.addView(a.secondaryButton("Hủy", v -> dialog.cancel()), new LinearLayout.LayoutParams(0, a.dp(46), 1));
+        bar.addView(a.secondaryButton("Hủy", v -> dialog.cancel()), new LinearLayout.LayoutParams(0, -2, 1));
         bar.addView(a.space(8, 1));
         confirm = a.primaryButton(confirmLabel, v -> {
             List<String> ids = model.selectedIds();
@@ -129,7 +129,7 @@ final class FilePickerSheet {
             callback.onConfirm(ids);
         });
         confirm.setContentDescription("picker-confirm");
-        bar.addView(confirm, new LinearLayout.LayoutParams(0, a.dp(46), 1));
+        bar.addView(confirm, new LinearLayout.LayoutParams(0, -2, 1));
         root.addView(bar, a.marginLP(-1, -2, 0, 8, 0, 0));
 
         dialog.setContentView(root);

@@ -185,9 +185,9 @@ class ChapterSetPageFactory {
                 m.setSingleLine(false);
                 box.addView(m, a.marginLP(-1, -2, 0, 4, 0, 6));
                 LinearLayout buttons = a.rowContainer();
-                buttons.addView(a.tinyButton("Mở", a.BLUE, v -> openCombo(info.id)), new LinearLayout.LayoutParams(0, a.dp(42), 1));
+                buttons.addView(a.tinyButton("Mở", a.BLUE, v -> openCombo(info.id)), new LinearLayout.LayoutParams(0, -2, 1));
                 buttons.addView(a.space(6, 1));
-                buttons.addView(a.tinyButton("Xóa", a.RED, v -> a.bulkUi.deleteIds(LibraryBulkUi.TAB_SETS, Collections.singletonList(info.id))), new LinearLayout.LayoutParams(0, a.dp(42), 1));
+                buttons.addView(a.tinyButton("Xóa", a.RED, v -> a.bulkUi.deleteIds(LibraryBulkUi.TAB_SETS, Collections.singletonList(info.id))), new LinearLayout.LayoutParams(0, -2, 1));
                 box.addView(buttons);
                 box.setOnClickListener(v -> openCombo(info.id));
                 a.bulkUi.attachLongPress(box, LibraryBulkUi.TAB_SETS, info.id);
@@ -255,7 +255,7 @@ class ChapterSetPageFactory {
             List<ChapterSetMatcher.Named> all = glossary ? glossaryNames(a) : pronounNames(a);
             for (ChapterSetMatcher.Named n : all) if (unusedNames.contains(n.name)) (glossary ? d.glossaryIds : d.pronounIds).remove(n.id);
             change();
-        }), new LinearLayout.LayoutParams(-2, a.dp(40)));
+        }), new LinearLayout.LayoutParams(-2, -2));
         return box;
     }
 
@@ -389,7 +389,7 @@ class ChapterSetPageFactory {
         android.widget.Button change = a.secondaryButton("Đổi", v -> chooseForRow(d, row, glossary));
         change.setEnabled(!row.excluded);
         change.setContentDescription((glossary ? "change-glossary:" : "change-pronoun:") + row.rawName);
-        line.addView(change, new LinearLayout.LayoutParams(-2, a.dp(40)));
+        line.addView(change, new LinearLayout.LayoutParams(-2, -2));
         return line;
     }
 
@@ -432,11 +432,11 @@ class ChapterSetPageFactory {
         bar.setOrientation(LinearLayout.HORIZONTAL);
         bar.setGravity(Gravity.CENTER_VERTICAL);
         bar.setPadding(a.dp(8), a.dp(8), a.dp(8), a.dp(8));
-        bar.addView(a.secondaryButton("Hủy", v -> a.closeChapterSetDraft(false)), new LinearLayout.LayoutParams(0, a.dp(46), 1));
+        bar.addView(a.secondaryButton("Hủy", v -> a.closeChapterSetDraft(false)), new LinearLayout.LayoutParams(0, -2, 1));
         bar.addView(a.space(8, 1));
         android.widget.Button save = a.primaryButton("Lưu tổ hợp (" + d.included() + " chương)", v -> save());
         save.setContentDescription("combo-save");
-        bar.addView(save, new LinearLayout.LayoutParams(0, a.dp(46), 2));
+        bar.addView(save, new LinearLayout.LayoutParams(0, -2, 2));
         bar.setLayoutParams(a.marginLP(-1, -2, 0, 6, 0, 0));
         return bar;
     }
