@@ -95,7 +95,21 @@ public class FileUtil {
         return readTextDetailed(c, uri).text;
     }
 
+    /** Internal RAW chapters ({@code tblraw://<id>}) are plain app files: no SAF grant is needed or checked. */
+    private static boolean isInternalRaw(Uri uri) { return uri != null && RawUri.isRaw(uri.toString()); }
+
+    private static TextReadResult readInternalRaw(Context c, Uri uri) throws Exception {
+        String id = RawUri.idOf(uri.toString());
+        if (id.isEmpty()) throw new FileAccessException("Địa chỉ RAW nội bộ không hợp lệ");
+        try {
+            return decodeText(LibraryRawStore.files(c).readBytes(id));
+        } catch (java.io.IOException e) {
+            throw new FileAccessException("RAW trong thư viện không còn: hãy nhập lại RAW này ở Library > RAW.", e);
+        }
+    }
+
     public static TextReadResult readTextDetailed(Context c, Uri uri) throws Exception {
+        if (isInternalRaw(uri)) return readInternalRaw(c, uri);
         long declared=sizeOf(c,uri);
         if(declared>1024L*1024L)return readLargeText(c,uri,declared);
         if (uri == null) throw new FileAccessException("Input URI rỗng");
@@ -127,9 +141,9 @@ public class FileUtil {
         }catch(SecurityException e){throw new FileAccessException("Android no longer has permission to read this file",e);}
     }
 
-    public static long sizeOf(Context c,Uri uri){if(uri==null)return -1;try(Cursor cursor=c.getContentResolver().query(uri,new String[]{OpenableColumns.SIZE},null,null,null)){if(cursor!=null&&cursor.moveToFirst()&&!cursor.isNull(0))return cursor.getLong(0);}catch(Exception ignored){}return -1;}
+    public static long sizeOf(Context c,Uri uri){if(uri==null)return -1;if(isInternalRaw(uri)){try{return LibraryRawStore.files(c).fileFor(RawUri.idOf(uri.toString())).length();}catch(Exception e){return -1;}}try(Cursor cursor=c.getContentResolver().query(uri,new String[]{OpenableColumns.SIZE},null,null,null)){if(cursor!=null&&cursor.moveToFirst()&&!cursor.isNull(0))return cursor.getLong(0);}catch(Exception ignored){}return -1;}
 
-    public static String identityOf(Context c,Uri uri){if(uri==null)return "";long size=-1,modified=-1;String name="";String[] columns={OpenableColumns.DISPLAY_NAME,OpenableColumns.SIZE,Document.COLUMN_LAST_MODIFIED};try(Cursor cursor=c.getContentResolver().query(uri,columns,null,null,null)){if(cursor!=null&&cursor.moveToFirst()){if(!cursor.isNull(0))name=cursor.getString(0);if(!cursor.isNull(1))size=cursor.getLong(1);if(!cursor.isNull(2))modified=cursor.getLong(2);}}catch(Exception ignored){size=sizeOf(c,uri);name=displayName(c,uri);}return uri+":"+name+":"+size+":"+modified;}
+    public static String identityOf(Context c,Uri uri){if(uri==null)return "";if(isInternalRaw(uri)){LibraryRawStore.Item raw=LibraryRawStore.find(c,RawUri.idOf(uri.toString()));return uri+":"+(raw==null?"missing":raw.inputHash+":"+raw.chars);}long size=-1,modified=-1;String name="";String[] columns={OpenableColumns.DISPLAY_NAME,OpenableColumns.SIZE,Document.COLUMN_LAST_MODIFIED};try(Cursor cursor=c.getContentResolver().query(uri,columns,null,null,null)){if(cursor!=null&&cursor.moveToFirst()){if(!cursor.isNull(0))name=cursor.getString(0);if(!cursor.isNull(1))size=cursor.getLong(1);if(!cursor.isNull(2))modified=cursor.getLong(2);}}catch(Exception ignored){size=sizeOf(c,uri);name=displayName(c,uri);}return uri+":"+name+":"+size+":"+modified;}
 
     private static TextReadResult decodeText(byte[] data) throws Exception {
         if (data == null) data = new byte[0];
@@ -264,6 +278,10 @@ public class FileUtil {
 
     public static String displayName(Context c, Uri uri) {
         if (uri == null) return "";
+        if (isInternalRaw(uri)) {
+            String raw = LibraryRawStore.displayNameOf(c, RawUri.idOf(uri.toString()));
+            return raw == null || raw.isEmpty() ? "raw.txt" : raw;
+        }
         try (Cursor cursor = c.getContentResolver().query(uri, null, null, null, null)) {
             if (cursor != null && cursor.moveToFirst()) {
                 int idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
@@ -321,6 +339,10 @@ public class FileUtil {
 
     public static String validateReadable(Context c, Uri uri, String label) {
         if (uri == null) return label + ": chưa chọn file";
+        if (isInternalRaw(uri)) {
+            String id = RawUri.idOf(uri.toString());
+            return !id.isEmpty() && LibraryRawStore.files(c).exists(id) ? null : label + ": RAW trong thư viện không còn. Hãy nhập lại ở Library > RAW.";
+        }
         if (!hasPersistedRead(c, uri)) return label + ": chưa có quyền đọc lâu dài. Hãy chọn lại file bằng nút Browse/Import.";
         try (InputStream is = c.getContentResolver().openInputStream(uri)) {
             if (is == null) return label + ": không mở được file";

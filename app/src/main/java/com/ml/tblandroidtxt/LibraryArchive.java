@@ -21,18 +21,36 @@ import java.util.zip.ZipOutputStream;
 
 /**
  * Library backup as one ZIP: {@code library.json} is the only part read back; the CSV/TXT copies and README are for people.
- * It holds Glossary and Pronoun profiles only, never settings, API keys, jobs or Editorial data. Import only adds.
+ * It holds Glossary and Pronoun profiles and (format 2) RAW chapters, never settings, API keys, jobs or Editorial data. Import only adds.
+ * Format 1 files (no RAW) are still read.
  */
 final class LibraryArchive {
     static final String FORMAT = "tbl-library";
-    static final int FORMAT_VERSION = 1;
+    static final int FORMAT_VERSION = 2;
+    static final long MAX_RAW_BYTES = 20L * 1024 * 1024;
+    static final long MAX_RAW_TOTAL_BYTES = 400L * 1024 * 1024;
     static final String MANIFEST = "library.json";
     static final long MAX_MANIFEST_BYTES = 50L * 1024 * 1024;
     static final int MAX_ENTRIES = 20000;
     static final int MAX_ITEMS = 10000;
 
+    /** One RAW chapter with its text (normalised, so {@code inputHash} is the hash of {@code text}). */
+    static final class RawEntry {
+        String id = UUID.randomUUID().toString();
+        String name = "";
+        String originalName = "";
+        String encoding = "";
+        String inputHash = "";
+        String text = "";
+        int chapterNo = ChapterNumber.NONE;
+        int chars;
+        long createdAt;
+        long updatedAt;
+    }
+
     /** What a backup holds after its checks; items that failed their hash are counted in {@link #bad}. */
     static final class Contents {
+        final List<RawEntry> raws = new ArrayList<>();
         final List<GlossaryStore.Glossary> glossaries = new ArrayList<>();
         final List<PronounStore.Profile> pronouns = new ArrayList<>();
         String activeGlossaryId = "";
@@ -46,15 +64,21 @@ final class LibraryArchive {
     static final class MergePlan {
         final List<GlossaryStore.Glossary> addGlossaries = new ArrayList<>();
         final List<PronounStore.Profile> addPronouns = new ArrayList<>();
+        final List<RawEntry> addRaws = new ArrayList<>();
         int existing;
         int duplicate;
         int renamed;
         final List<String> bad = new ArrayList<>();
 
-        int addedCount() { return addGlossaries.size() + addPronouns.size(); }
+        int addedCount() { return addGlossaries.size() + addPronouns.size() + addRaws.size(); }
     }
 
     static byte[] build(List<GlossaryStore.Glossary> glossaries, List<PronounStore.Profile> pronouns,
+                        String activeGlossaryId, String activePronounId, String appVersion, long createdAt) throws Exception {
+        return build(glossaries, pronouns, new ArrayList<RawEntry>(), activeGlossaryId, activePronounId, appVersion, createdAt);
+    }
+
+    static byte[] build(List<GlossaryStore.Glossary> glossaries, List<PronounStore.Profile> pronouns, List<RawEntry> raws,
                         String activeGlossaryId, String activePronounId, String appVersion, long createdAt) throws Exception {
         JSONObject root = new JSONObject();
         root.put("format", FORMAT);
@@ -65,14 +89,18 @@ final class LibraryArchive {
         for (GlossaryStore.Glossary item : glossaries) g.put(new JSONObject().put("sha256", integrity(item)).put("item", GlossaryStore.toJson(item)));
         JSONArray p = new JSONArray();
         for (PronounStore.Profile item : pronouns) p.put(new JSONObject().put("sha256", integrity(item)).put("item", PronounStore.toJson(item)));
+        JSONArray r = new JSONArray();
+        for (int i = 0; i < raws.size(); i++) r.put(rawJson(raws.get(i), rawPath(i, raws.get(i))));
         root.put("glossaries", g);
         root.put("pronouns", p);
+        root.put("raws", r);
         root.put("active", new JSONObject().put("glossaryId", safe(activeGlossaryId)).put("pronounId", safe(activePronounId)));
 
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         try (ZipOutputStream zip = new ZipOutputStream(bytes, StandardCharsets.UTF_8)) {
             put(zip, MANIFEST, root.toString(2));
-            put(zip, "README.txt", readme(glossaries.size(), pronouns.size()));
+            put(zip, "README.txt", readme(glossaries.size(), pronouns.size(), raws.size()));
+            for (int i = 0; i < raws.size(); i++) put(zip, rawPath(i, raws.get(i)), raws.get(i).text);
             for (int i = 0; i < glossaries.size(); i++) {
                 GlossaryStore.Glossary item = glossaries.get(i);
                 put(zip, "glossaries/" + number(i) + "_" + safeFileName(item.name) + ".csv", csv(item));
@@ -88,6 +116,8 @@ final class LibraryArchive {
     /** Reads only {@code library.json}; a missing or foreign manifest is an {@link IllegalArgumentException} with a readable reason. */
     static Contents read(InputStream in) throws IOException {
         String manifest = null;
+        Map<String, String> rawFiles = new HashMap<>();
+        long rawTotal = 0;
         int entries = 0;
         try (ZipInputStream zip = new ZipInputStream(in, StandardCharsets.UTF_8)) {
             ZipEntry entry;
@@ -96,14 +126,21 @@ final class LibraryArchive {
                 if (!entry.isDirectory() && MANIFEST.equals(entry.getName())) {
                     if (manifest != null) throw new IllegalArgumentException("Tệp có hai library.json.");
                     manifest = readLimited(zip);
+                } else if (!entry.isDirectory() && entry.getName().startsWith("raw/") && entry.getName().endsWith(".txt")) {
+                    String text = readLimited(zip, MAX_RAW_BYTES);
+                    rawTotal += text.length();
+                    if (rawTotal > MAX_RAW_TOTAL_BYTES) throw new IllegalArgumentException("Các tệp RAW trong bản sao lưu quá lớn.");
+                    rawFiles.put(entry.getName(), text);
                 }
             }
         }
         if (manifest == null) throw new IllegalArgumentException("Tệp không có library.json: không phải bản sao lưu thư viện của app.");
-        return parseManifest(manifest);
+        return parseManifest(manifest, rawFiles);
     }
 
-    static Contents parseManifest(String manifest) {
+    static Contents parseManifest(String manifest) { return parseManifest(manifest, new HashMap<String, String>()); }
+
+    static Contents parseManifest(String manifest, Map<String, String> rawFiles) {
         JSONObject root;
         try {
             root = new JSONObject(manifest);
@@ -124,7 +161,8 @@ final class LibraryArchive {
         }
         JSONArray g = root.optJSONArray("glossaries");
         JSONArray p = root.optJSONArray("pronouns");
-        int total = (g == null ? 0 : g.length()) + (p == null ? 0 : p.length());
+        JSONArray r = root.optJSONArray("raws");
+        int total = (g == null ? 0 : g.length()) + (p == null ? 0 : p.length()) + (r == null ? 0 : r.length());
         if (total > MAX_ITEMS) throw new IllegalArgumentException("Bản sao lưu có quá nhiều mục (" + total + ").");
         if (g != null) for (int i = 0; i < g.length(); i++) {
             try {
@@ -146,6 +184,30 @@ final class LibraryArchive {
                 out.bad.add("Pronoun #" + (i + 1) + ": không đọc được");
             }
         }
+        if (r != null) for (int i = 0; i < r.length(); i++) {
+            String label = "RAW #" + (i + 1);
+            try {
+                JSONObject o = r.getJSONObject(i);
+                RawEntry e = new RawEntry();
+                e.id = o.getString("id");
+                e.name = o.optString("name", "");
+                e.originalName = o.optString("originalName", e.name);
+                label = "RAW " + e.originalName;
+                e.encoding = o.optString("encoding", "");
+                e.chapterNo = o.has("chapterNo") && !o.isNull("chapterNo") ? o.getInt("chapterNo") : ChapterNumber.NONE;
+                e.createdAt = o.optLong("createdAt", 0L);
+                e.updatedAt = o.optLong("updatedAt", 0L);
+                String text = rawFiles.get(o.getString("file"));
+                if (text == null) { out.bad.add(label + ": thiếu tệp " + o.optString("file")); continue; }
+                e.text = text;
+                e.chars = text.length();
+                e.inputHash = HashUtil.sha256(text);
+                if (!e.inputHash.equals(o.optString("inputHash")) || !integrity(e).equals(o.optString("sha256"))) { out.bad.add(label + ": sai mã kiểm"); continue; }
+                out.raws.add(e);
+            } catch (Exception e) {
+                out.bad.add(label + ": không đọc được");
+            }
+        }
         return out;
     }
 
@@ -155,6 +217,11 @@ final class LibraryArchive {
      * another profile is a duplicate. Nothing in the current library is changed or removed.
      */
     static MergePlan plan(Contents in, List<GlossaryStore.Glossary> currentGlossaries, List<PronounStore.Profile> currentPronouns, String dateLabel) {
+        return plan(in, currentGlossaries, currentPronouns, new ArrayList<RawEntry>(), dateLabel);
+    }
+
+    /** {@code currentRaws} need only id and inputHash. */
+    static MergePlan plan(Contents in, List<GlossaryStore.Glossary> currentGlossaries, List<PronounStore.Profile> currentPronouns, List<RawEntry> currentRaws, String dateLabel) {
         MergePlan plan = new MergePlan();
         plan.bad.addAll(in.bad);
         Map<String, String> glossaryContentById = new HashMap<>();
@@ -191,6 +258,21 @@ final class LibraryArchive {
             pronounContentById.put(p.id, key);
             pronounContents.add(key);
         }
+        Map<String, String> rawHashById = new HashMap<>();
+        Set<String> rawHashes = new HashSet<>();
+        for (RawEntry e : currentRaws) { rawHashById.put(e.id, e.inputHash); rawHashes.add(e.inputHash); }
+        for (RawEntry e : in.raws) {
+            String sameId = rawHashById.get(e.id);
+            if (sameId != null && sameId.equals(e.inputHash)) { plan.existing++; continue; }
+            if (rawHashes.contains(e.inputHash)) { plan.duplicate++; continue; }
+            if (sameId != null) {
+                e.id = UUID.randomUUID().toString();
+                plan.renamed++;
+            }
+            plan.addRaws.add(e);
+            rawHashById.put(e.id, e.inputHash);
+            rawHashes.add(e.inputHash);
+        }
         return plan;
     }
 
@@ -221,6 +303,28 @@ final class LibraryArchive {
         return HashUtil.sha256(sb.toString());
     }
 
+    static String integrity(RawEntry e) {
+        StringBuilder sb = new StringBuilder("raw");
+        field(sb, e.id); field(sb, e.name); field(sb, e.originalName); field(sb, e.encoding); field(sb, e.inputHash);
+        field(sb, String.valueOf(e.chapterNo)); field(sb, String.valueOf(e.createdAt)); field(sb, String.valueOf(e.updatedAt));
+        return HashUtil.sha256(sb.toString());
+    }
+
+    static String rawPath(int index, RawEntry e) {
+        String base = e.originalName.isEmpty() ? e.name : e.originalName.replaceAll("(?i)\\.txt$", "");
+        return "raw/" + number(index) + "_" + safeFileName(base) + ".txt";
+    }
+
+    private static JSONObject rawJson(RawEntry e, String file) throws Exception {
+        JSONObject o = new JSONObject();
+        o.put("id", e.id); o.put("name", e.name); o.put("originalName", e.originalName); o.put("encoding", e.encoding);
+        o.put("inputHash", e.inputHash); o.put("chars", e.text.length());
+        o.put("chapterNo", e.chapterNo >= 0 ? (Object) e.chapterNo : JSONObject.NULL);
+        o.put("createdAt", e.createdAt); o.put("updatedAt", e.updatedAt);
+        o.put("file", file); o.put("sha256", integrity(e));
+        return o;
+    }
+
     static String csv(GlossaryStore.Glossary g) {
         StringBuilder sb = new StringBuilder("source,target,category,note\n");
         if (g.terms != null) for (GlossaryStore.Term t : g.terms) {
@@ -246,9 +350,10 @@ final class LibraryArchive {
         return "TranslateBooks-library-" + timestamp + ".zip";
     }
 
-    private static String readme(int glossaries, int pronouns) {
+    private static String readme(int glossaries, int pronouns, int raws) {
         return "Translate Books - sao lưu thư viện\n\n"
-                + "Tệp này có " + glossaries + " glossary và " + pronouns + " pronoun profile.\n"
+                + "Tệp này có " + glossaries + " glossary, " + pronouns + " pronoun profile và " + raws + " RAW.\n"
+                + "Thư mục raw/ giữ nội dung từng RAW (app đọc lại khi nhập).\n"
                 + "library.json là phần app đọc khi nhập lại (Library > Files > Nhập thư viện).\n"
                 + "Thư mục glossaries/ (CSV: source,target,category,note) và pronouns/ (TXT) chỉ để xem; sửa chúng không đổi nội dung khi nhập.\n"
                 + "Tệp không chứa API key, cài đặt, job dịch hay dữ liệu Biên tập.\n"
@@ -261,14 +366,16 @@ final class LibraryArchive {
         zip.closeEntry();
     }
 
-    private static String readLimited(InputStream in) throws IOException {
+    private static String readLimited(InputStream in) throws IOException { return readLimited(in, MAX_MANIFEST_BYTES); }
+
+    private static String readLimited(InputStream in, long limit) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         byte[] buffer = new byte[8192];
         long total = 0;
         int n;
         while ((n = in.read(buffer)) > 0) {
             total += n;
-            if (total > MAX_MANIFEST_BYTES) throw new IllegalArgumentException("library.json quá lớn.");
+            if (total > limit) throw new IllegalArgumentException("library.json quá lớn.");
             out.write(buffer, 0, n);
         }
         return new String(out.toByteArray(), StandardCharsets.UTF_8);

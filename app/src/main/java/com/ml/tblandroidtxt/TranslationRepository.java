@@ -12,7 +12,7 @@ import java.util.List;
 
 public class TranslationRepository extends SQLiteOpenHelper {
     private static final String DB = "tbl_android_txt.db";
-    static final int VER = 29;
+    static final int VER = 30;
 
     public TranslationRepository(Context context) { this(context, DB); }
 
@@ -27,6 +27,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
         createMetricsTable(db);
         createBenchmarkTables(db);
         createPreparedPlanTables(db);
+        createLibraryTables(db);
         createEditorialTables(db);
         createEditorialPackTables(db);
         createEditorialPackCompatibilityEvaluationTables(db);
@@ -112,6 +113,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
         if (oldVersion < 27) createEditorialPairTables(db);
         if (oldVersion < 28) migrateEditorialApiRunsToV28(db);
         if (oldVersion < 29) migrateEditorialPairRunsToV29(db);
+        if (oldVersion < 30) createLibraryTables(db);
     }
 
     @Override public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -137,6 +139,8 @@ public class TranslationRepository extends SQLiteOpenHelper {
     private static void createEditorialPairTables(SQLiteDatabase db) { for (String sql : EditorialPairMigrationSpec.from26To27()) db.execSQL(sql); }
 
     private static void migrateEditorialApiRunsToV28(SQLiteDatabase db) { for (String sql : EditorialApiV28MigrationSpec.from27To28()) db.execSQL(sql); }
+
+    private static void createLibraryTables(SQLiteDatabase db) { for (String sql : LibraryMigrationSpec.from29To30()) db.execSQL(sql); }
 
     private static void migrateEditorialPairRunsToV29(SQLiteDatabase db) { for (String sql : EditorialPairV29MigrationSpec.from28To29()) db.execSQL(sql); }
 

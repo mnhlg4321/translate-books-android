@@ -120,7 +120,7 @@ public class LibraryArchiveTest {
         expectRefusal(zipOf("other.json", "{}"), "không có library.json");
         expectRefusal(zipOf("library.json", "not json"), "không đọc được");
         expectRefusal(zipOf("library.json", new JSONObject().put("format", "x").put("formatVersion", 1).toString()), "định dạng");
-        expectRefusal(zipOf("library.json", new JSONObject().put("format", LibraryArchive.FORMAT).put("formatVersion", 2).toString()), "mới hơn");
+        expectRefusal(zipOf("library.json", new JSONObject().put("format", LibraryArchive.FORMAT).put("formatVersion", LibraryArchive.FORMAT_VERSION + 1).toString()), "mới hơn");
         expectRefusal("plain text".getBytes(StandardCharsets.UTF_8), "không có library.json");
     }
 
