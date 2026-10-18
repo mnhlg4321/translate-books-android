@@ -75,7 +75,9 @@ public class LibraryS0InstrumentedTest {
                     activity.writeLibraryExport(Uri.fromFile(zip));
                     assertTrue(zip.length() > 0);
                     assertTrue(activity.lastLibraryExportLine().contains("4 glossary, 2 pronoun"));
+                    activity.switchTab("Files");
                 });
+                media("14-library-backup-card");
 
                 GlossaryStore.Glossary removed = GlossaryStore.loadAll(target).get(0);
                 assertTrue(GlossaryStore.delete(target, removed.id));
@@ -85,6 +87,9 @@ public class LibraryS0InstrumentedTest {
                 assertEquals(1, plan.addGlossaries.size());
                 assertEquals(removed.id, plan.addGlossaries.get(0).id);
                 assertEquals(5, plan.existing);
+                scenario.onActivity(activity -> activity.previewLibraryImport(Uri.fromFile(zip)));
+                media("15-library-import-preview");
+                dismissDialogs();
                 scenario.onActivity(activity -> activity.applyLibraryImport(plan));
                 assertNotNull(GlossaryStore.find(target, removed.id));
                 assertEquals(4, GlossaryStore.loadAll(target).size());
@@ -103,6 +108,7 @@ public class LibraryS0InstrumentedTest {
                     activity.switchTab("Glossaries");
                     assertTrue("locked card shown", containsText(activity.getWindow().getDecorView(), "Dữ liệu Glossary đọc lỗi"));
                 });
+                media("16-library-locked-card");
             }
         } finally {
             restoreAll(target, original);
@@ -141,6 +147,21 @@ public class LibraryS0InstrumentedTest {
         assertNotNull("imported glossary survived the kill", GlossaryStore.find(target, id));
         assertTrue(GlossaryStore.delete(target, id));
         assertTrue(marker.delete());
+    }
+
+    /** With {@code -e v422_media run} the screen is held so the shell can take a picture. */
+    private static void media(String stage) throws InterruptedException {
+        if (!"run".equals(InstrumentationRegistry.getArguments().getString("v422_media", ""))) return;
+        Thread.sleep(700L);
+        android.util.Log.i("V422MEDIA", "stage=" + stage);
+        Thread.sleep(5_000L);
+    }
+
+    /** Closes the import preview dialog the activity just showed. */
+    private static void dismissDialogs() {
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+        InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK);
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
     }
 
     private static Intent selection(Uri... uris) {
