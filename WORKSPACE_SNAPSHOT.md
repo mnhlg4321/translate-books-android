@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-18 (+07:00): 4.23-dev.7 (card fix) built, regression and emulator QA PASS (204 / 188 PASS / 16 SKIP / 0 FAIL); waiting for the owner to approve the phone install.
+- Updated: 2026-10-18 (+07:00): owner reported the Retry failed chunks button label clipped; fixing action button heights (dev.8), build and QA pending.
 - Current version: v4.23.0 in development (not released); contains unreleased v4.22 code; shipped 4.21.0 / code 271 (tag `v4.21.0`).
 - Current branch: `feature/v4.23` in worktree `D:\P5E-builds\wt-v4.23` (BASE `c8408207` on `feature/v4.22`).
 - Current commit: `e8cd9c37` is the baseline before this snapshot commit (docs only). Confirm actual HEAD when resuming.
@@ -12,4 +12,4 @@
 - Regression status: clean archive `79fbc979`: engine 742 / 1 SKIP, app debug, release, benchmark 547 each / 5 SKIP, 0 FAIL, lint 0 errors / 64 warnings, AndroidTest compile PASS; device 196 / 180 PASS / 16 SKIP / 0 FAIL. Editorial boundary diff empty; five Editorial-named tests changed by one number.
 - Semantic progress: unchanged.
 - Spend: USD 0; no provider call. Phone 15e84958: owner approved the install in chat 2026-10-18; backup before install in D:/App Translate Books/App Translate Books-device-backups/v4.23-dev2-code277/20261018-213422 (DB sha256 e3820252...107134 matches phone and archive); 4.23-dev.5 / code 280 installed with install-validated.ps1, first launch without crash.
-- Next action: ask the owner to approve installing 4.23-dev.7 on phone 15e84958 (back up with run-as from 4.23-dev.6 first).
+- Next action: build 4.23-dev.8, run regression and emulator QA, then ask the owner to approve the phone install.

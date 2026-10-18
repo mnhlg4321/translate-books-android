@@ -67,9 +67,9 @@ class TranslatePageFactory {
         root.addView(lang);
         lang.setVisibility(View.GONE);
         LinearLayout profileTools = a.rowContainer();
-        profileTools.addView(a.secondaryButton("Language profile", v -> a.showLanguageProfilePicker()), new LinearLayout.LayoutParams(0, a.dp(42), 1));
+        profileTools.addView(a.secondaryButton("Language profile", v -> a.showLanguageProfilePicker()), new LinearLayout.LayoutParams(0, -2, 1));
         profileTools.addView(a.space(8, 1));
-        profileTools.addView(a.secondaryButton("Prompt preview", v -> a.showPromptPreview()), new LinearLayout.LayoutParams(0, a.dp(42), 1));
+        profileTools.addView(a.secondaryButton("Prompt preview", v -> a.showPromptPreview()), new LinearLayout.LayoutParams(0, -2, 1));
         root.addView(profileTools, a.marginLP(-1, -2, 0, 0, 0, 12));
         profileTools.setVisibility(View.GONE);
 
@@ -124,19 +124,19 @@ class TranslatePageFactory {
         a.pauseButton = a.secondaryButton("⏸ Pause", v -> a.sendSvc(TranslatorService.ACTION_PAUSE));
         a.resumeButton = a.secondaryButton("↻ Resume", v -> a.sendSvc(TranslatorService.ACTION_RESUME));
         a.cancelButton = a.dangerButton("✕ Cancel", v -> a.sendSvc(TranslatorService.ACTION_CANCEL));
-        actionTop.addView(a.startButton, new LinearLayout.LayoutParams(0, a.dp(48), 1));
+        actionTop.addView(a.startButton, new LinearLayout.LayoutParams(0, -2, 1));
         actionTop.addView(a.space(8, 1));
-        actionTop.addView(a.pauseButton, new LinearLayout.LayoutParams(0, a.dp(48), 1));
-        actionBottom.addView(a.resumeButton, new LinearLayout.LayoutParams(0, a.dp(48), 1));
+        actionTop.addView(a.pauseButton, new LinearLayout.LayoutParams(0, -2, 1));
+        actionBottom.addView(a.resumeButton, new LinearLayout.LayoutParams(0, -2, 1));
         actionBottom.addView(a.space(8, 1));
-        actionBottom.addView(a.cancelButton, new LinearLayout.LayoutParams(0, a.dp(48), 1));
+        actionBottom.addView(a.cancelButton, new LinearLayout.LayoutParams(0, -2, 1));
         actionGrid.addView(actionTop);
         actionGrid.addView(actionBottom, a.marginLP(-1, -2, 0, 8, 0, 0));
         LinearLayout quickRow = a.rowContainer();
-        quickRow.addView(a.secondaryButton("👁 Prompt preview", v -> a.showPromptPreview()), new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        quickRow.addView(a.secondaryButton("👁 Prompt preview", v -> a.showPromptPreview()), new LinearLayout.LayoutParams(0, -2, 1));
         quickRow.addView(a.space(8, 1));
         a.retryButton = a.secondaryButton("↻ Retry failed chunks", v -> a.retryFailedChunks());
-        quickRow.addView(a.retryButton, new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        quickRow.addView(a.retryButton, new LinearLayout.LayoutParams(0, -2, 1));
         actionGrid.addView(quickRow, a.marginLP(-1, -2, 0, 8, 0, 0));
         a.pendingJobCard = a.card(18, a.CARD, a.AMBER);
         a.pendingJobCard.setOrientation(LinearLayout.VERTICAL);
@@ -190,10 +190,10 @@ class TranslatePageFactory {
         a.outputFileLabel = a.text(a.outputUri == null ? "File riêng: chưa chọn" : "File riêng: " + FileUtil.displayName(a, a.outputUri), 12, a.MUTED, false);
         a.outputFolderLabel = a.text(a.outputTreeUri == null ? "Thư mục: chưa chọn" : "Thư mục: " + FileUtil.treeName(a.outputTreeUri), 12, a.MUTED, false);
         LinearLayout buttons = a.rowContainer();
-        buttons.addView(a.secondaryButton("Chọn file output", v -> a.chooseOutput()), new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        buttons.addView(a.secondaryButton("Chọn file output", v -> a.chooseOutput()), new LinearLayout.LayoutParams(0, -2, 1));
         buttons.addView(a.space(8, 1));
         a.outputFolderButton = a.secondaryButton("Chọn thư mục", v -> a.chooseOutputFolder());
-        buttons.addView(a.outputFolderButton, new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        buttons.addView(a.outputFolderButton, new LinearLayout.LayoutParams(0, -2, 1));
         card.addView(buttons);
         card.addView(a.outputFileLabel, a.marginLP(-1, -2, 0, 8, 0, 0));
         card.addView(a.outputFolderLabel, a.marginLP(-1, -2, 0, 4, 0, 0));
@@ -237,14 +237,14 @@ class TranslatePageFactory {
         else a.translateInstructionChip = current;
         card.addView(current, a.marginLP(-1, -2, 0, 4, 0, 7));
         LinearLayout actions = a.rowContainer();
-        actions.addView(a.secondaryButton("Xem", viewAction), new LinearLayout.LayoutParams(0, a.dp(40), 1));
+        actions.addView(a.secondaryButton("Xem", viewAction), new LinearLayout.LayoutParams(0, -2, 1));
         actions.addView(a.space(6, 1));
-        actions.addView(a.secondaryButton(item.isSelected() ? "Thay đổi" : "Chọn", changeAction), new LinearLayout.LayoutParams(0, a.dp(40), 1));
+        actions.addView(a.secondaryButton(item.isSelected() ? "Thay đổi" : "Chọn", changeAction), new LinearLayout.LayoutParams(0, -2, 1));
         actions.addView(a.space(6, 1));
         Button clear = a.dangerButton("Bỏ chọn", clearAction);
         clear.setEnabled(item.isSelected());
         clear.setAlpha(item.isSelected() ? 1f : 0.45f);
-        actions.addView(clear, new LinearLayout.LayoutParams(0, a.dp(40), 1));
+        actions.addView(clear, new LinearLayout.LayoutParams(0, -2, 1));
         card.addView(actions);
         return card;
     }
@@ -417,9 +417,9 @@ class TranslatePageFactory {
             if (a.logView != null) a.logView.setText("");
             a.toast("Đã xóa log");
         });
-        actions.addView(clear, new LinearLayout.LayoutParams(0, a.dp(42), 1));
+        actions.addView(clear, new LinearLayout.LayoutParams(0, -2, 1));
         actions.addView(a.space(8, 1));
-        actions.addView(a.secondaryButton("Export Log", v -> a.exportLog()), new LinearLayout.LayoutParams(0, a.dp(42), 1));
+        actions.addView(a.secondaryButton("Export Log", v -> a.exportLog()), new LinearLayout.LayoutParams(0, -2, 1));
         logCard.addView(actions, a.marginLP(-1, -2, 0, 0, 0, 8));
 
         a.logView = a.text(a.tail(LogStore.read(a), 12000), 12, a.TEXT, false);

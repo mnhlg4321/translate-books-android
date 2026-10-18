@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
+import android.widget.Button;
 import android.view.View;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -522,6 +523,19 @@ public class V423ResumeInstrumentedTest {
             TranslationRepository del = new TranslationRepository(c);
             try { for (TranslationRepository.JobProgress s2 : del.getIncompleteJobs(null, 200)) if ("stale-unknown.txt".equals(s2.fileName)) del.deleteJob(s2.id); } finally { del.close(); }
             cleanup(c, raw);
+        }
+    }
+
+    /** The action buttons wrap their label instead of clipping it: a fixed height cut "Retry failed chunks" on a phone with a large font. */
+    @Test
+    public void v_actionButtonsGrowWithTheirLabel() throws Exception {
+        try (androidx.test.core.app.ActivityScenario<MainActivity> scenario = androidx.test.core.app.ActivityScenario.launch(MainActivity.class)) {
+            scenario.onActivity(a -> {
+                a.switchTab("Translate");
+                for (Button b : new Button[]{a.startButton, a.pauseButton, a.resumeButton, a.cancelButton, a.retryButton}) {
+                    assertEquals(b.getText().toString(), android.view.ViewGroup.LayoutParams.WRAP_CONTENT, b.getLayoutParams().height);
+                }
+            });
         }
     }
 
