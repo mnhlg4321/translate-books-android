@@ -1,6 +1,15 @@
 # Build State
 
-## Current state — 2026-10-18 (v4.22 S0: library data safety and library export/import)
+## Current state — 2026-10-18 (v4.22 dev build `4.22-dev.3` with R and S0: emulator QA PASS; phone install waits for the owner)
+
+- F3: `EditorialRefusedProposalInstrumentedTest` (real SQLite and the real result screen: proposal shown, "Áp dụng đề xuất" changes exactly that line, journal `PROPOSAL_APPLIED`, second apply refused, `mình/em` cell passes the answer, survives force-stop) `4032ff39`; screenshot hold points for S0 `2317fb5b` (androidTest only).
+- F2: clean `git archive` of `4032ff39` (ZIP `209E1985…99AF2AF`): engine 742 / 1 SKIP, app debug, release, benchmark 516 each / 5 SKIP, 0 FAIL, lint 0 errors / 58 warnings, AndroidTest compile PASS.
+- F4: `4.22-dev.3` / code 275, event `build-20261018-161433`, source `4032ff39`, APK SHA-256 `CC7F669076058D8AAA4843FDADE9D1F3C1021B4C793D67DC42DEEE8B7DC195CB`, source ZIP equals the regression archive; test APKs `v422-dev3-test-20261018` (`C8185337…`) and `v422-dev3-test2-20261018` (`3FDDEB11…`); all in the owner archive and backup. Installed on emulator-5554 only (`install-validated`, signer `abebea4b`). Device QA 185 discovered / 171 PASS / 14 SKIP / 0 FAIL / 0 INCOMPLETE, including S0 and R restart phases; 16 screenshots inspected (12-16 new: refused proposal before/after, library backup card, import preview, locked card). Report `artifacts/qa/v4.22-dev3-20261018/QA_REPORT.md`.
+- Observations for the owner: the backup card is at the bottom of Library > Files; export/import results show as toasts; emulator `glossary_store.xml` changed hash after the S0 restart cleanup re-saved the list (only the 3 pre-existing glossaries remain; byte-level UNKNOWN).
+- Phone `15e84958` read only: still `4.22-dev.2` / code 273. No provider call; USD 0.
+- Next action: owner approval for F5 (run-as backup from dev.2, then install `4.22-dev.3` on the phone), then the owner trial F6 (T1-T13).
+
+## Earlier — 2026-10-18 (v4.22 S0: library data safety and library export/import)
 
 - Owner decision 2026-10-18: S0 of `docs/V423_LIBRARY_BATCH_PROPOSAL.md` (reviewed by a critic agent against the code) joins 4.22.0; RAW tab, multi-select, chapter sets and per-chapter translation (S1-S5) move to 4.23. Work requests: `docs/V422_S0_LIBRARY_SAFETY_WORK_REQUEST.md`, `docs/V422_DEVICE_TRIAL_RELEASE_WORK_REQUEST.md`.
 - F1: the worktree build archive is now a junction to the owner archive (`artifacts\builds`, `artifacts\test-builds`, `backup`); the previous local copies were byte-identical and are kept in `D:\P5E-builds\wt-v4.22-archive-copy-20261015`. The next numbered build is `4.22-dev.3`, code 275.

@@ -1,0 +1,16 @@
+{
+  "build": {"versionName": "4.22-dev.3", "versionCode": 275, "event": "build-20261018-161433", "sourceCommit": "4032ff3971686e3227ab31c12d1d7267e5e0502a",
+            "apkSha256": "CC7F669076058D8AAA4843FDADE9D1F3C1021B4C793D67DC42DEEE8B7DC195CB", "sourceZipSha256": "209E198553BDB36DEDA556A32D783368176FB61EA5B66460B2395297199AF2AF"},
+  "testApks": [
+    {"event": "v422-dev3-test-20261018", "sha256": "C81853370604A5C4AB3CA065BE8086DC6D05E87A8B60C8D3F147F9C4EAD276C0", "use": "device QA"},
+    {"event": "v422-dev3-test2-20261018", "sha256": "3FDDEB11656233F2B0E2563ECD10AEA310457C9BBC78BAC87376000DEA7579E1", "sourceCommit": "2317fb5b", "use": "screenshots"}
+  ],
+  "cleanArchiveRegression": {"commit": "4032ff39", "engine": {"tests": 742, "skip": 1, "fail": 0},
+    "app": {"debug": {"tests": 516, "skip": 5, "fail": 0}, "release": {"tests": 516, "skip": 5, "fail": 0}, "benchmark": {"tests": 516, "skip": 5, "fail": 0}},
+    "lint": {"errors": 0, "warnings": 58}, "androidTestCompile": "PASS"},
+  "device": {"serial": "emulator-5554", "discovered": 185, "pass": 171, "skip": 14, "fail": 0, "incomplete": 0},
+  "screenshots": 16,
+  "providerCalls": 0,
+  "usd": 0,
+  "ownerPhone": {"serial": "15e84958", "touched": "read-only dumpsys", "installed": "4.22-dev.2 / 273"}
+}
