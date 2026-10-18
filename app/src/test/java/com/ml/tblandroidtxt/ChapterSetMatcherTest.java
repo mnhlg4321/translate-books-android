@@ -128,7 +128,7 @@ public class ChapterSetMatcherTest {
         assertEquals("Kumo7_RAW", ChapterSetMatcher.defaultName(Arrays.asList("025_Kumo7_RAW.txt", "026_Kumo7_RAW.txt")));
         assertEquals("Kumo7", ChapterSetMatcher.defaultName(Arrays.asList("025_Kumo7_a.txt", "026_Kumo7_b.txt")));
         assertEquals("only", ChapterSetMatcher.defaultName(Collections.singletonList("9-only.txt")));
-        assertEquals("Bộ chương", ChapterSetMatcher.defaultName(new ArrayList<String>()));
+        assertEquals("Tổ hợp", ChapterSetMatcher.defaultName(new ArrayList<String>()));
         assertEquals("names with nothing in common fall back to the first one", "a", ChapterSetMatcher.defaultName(Arrays.asList("1_a.txt", "2_b.txt")));
     }
 }

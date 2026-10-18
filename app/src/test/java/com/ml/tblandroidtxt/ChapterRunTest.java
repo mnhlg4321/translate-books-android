@@ -137,9 +137,9 @@ public class ChapterRunTest {
         assertEquals(2, o.doneCount());
         assertEquals(1, o.failedCount());
         assertEquals(2, o.notRun());
-        assertEquals("Bộ chương: 2 xong · 1 lỗi (002.txt: Final integrity audit failed: line count) · 2 chưa chạy", o.summary());
+        assertEquals("Tổ hợp: 2 xong · 1 lỗi (002.txt: Final integrity audit failed: line count) · 2 chưa chạy", o.summary());
         ChapterRunOutcome all = new ChapterRunOutcome(2);
         all.done("a"); all.done("b");
-        assertEquals("Bộ chương: 2 xong · 0 lỗi · 0 chưa chạy", all.summary());
+        assertEquals("Tổ hợp: 2 xong · 0 lỗi · 0 chưa chạy", all.summary());
     }
 }

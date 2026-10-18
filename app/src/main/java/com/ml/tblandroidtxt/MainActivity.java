@@ -167,7 +167,9 @@ public class MainActivity extends Activity {
     String pendingExportKind = "";
     final LibraryBulkUi bulkUi = new LibraryBulkUi(this);
     String rawFilter = "";
-    ChapterSetPageFactory.Draft chapterSetDraft;
+    ComboDraft chapterSetDraft;
+    /** Tag of the row or card the Tổ hợp page scrolls to after the next rebuild. */
+    String comboScrollTarget = "";
     final TranslateSourceFactory sourceUi = new TranslateSourceFactory(this);
     /** Chapter-set runs: the Glossary/Pronoun of each input in {@link #inputUris}; null when the source is TXT files. */
     java.util.List<ChapterBinding> chapterBindings;
@@ -548,12 +550,13 @@ public class MainActivity extends Activity {
         LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setBackgroundColor(BG);
         HorizontalScrollView scroll=new HorizontalScrollView(this);scroll.setHorizontalScrollBarEnabled(false);
         LinearLayout nav=new LinearLayout(this);nav.setOrientation(LinearLayout.HORIZONTAL);nav.setPadding(0,dp(4),0,dp(6));
-        String[] pages=CHAPTER_SETS_ENABLED?new String[]{"Files","RAW","Glossaries","Pronouns","ChapterSets","Sample"}:new String[]{"Files","RAW","Glossaries","Pronouns","Sample"};for(String page:pages){Button b=button("ChapterSets".equals(page)?"Bộ chương":page,selected.equals(page)?CARD:FIELD,selected.equals(page)?TEXT:MUTED,v->switchTab(page));b.setTextSize(12);b.setMinWidth(0);b.setMinimumWidth(0);tint(b,selected.equals(page)?CARD:FIELD,selected.equals(page)?BLUE:BORDER,1,9);nav.addView(b,new LinearLayout.LayoutParams(-2,dp(38)));}
+        String[] pages=CHAPTER_SETS_ENABLED?new String[]{"Files","RAW","Glossaries","Pronouns","ChapterSets","Sample"}:new String[]{"Files","RAW","Glossaries","Pronouns","Sample"};for(String page:pages){Button b=button("ChapterSets".equals(page)?"Tổ hợp":page,selected.equals(page)?CARD:FIELD,selected.equals(page)?TEXT:MUTED,v->switchTab(page));b.setTextSize(12);b.setMinWidth(0);b.setMinimumWidth(0);tint(b,selected.equals(page)?CARD:FIELD,selected.equals(page)?BLUE:BORDER,1,9);nav.addView(b,new LinearLayout.LayoutParams(-2,dp(38)));}
         scroll.addView(nav);root.addView(scroll,new LinearLayout.LayoutParams(-1,dp(48)));
         View page="Files".equals(selected)?buildFilesPage():"RAW".equals(selected)?new RawPageFactory(this).buildRawPage():"Glossaries".equals(selected)?buildGlossariesPage():"Pronouns".equals(selected)?buildPronounsPage():"ChapterSets".equals(selected)?buildChapterSetsPage():buildSamplePage();
         root.addView(page,new LinearLayout.LayoutParams(-1,0,1));
         View undoBar=bulkUi.undoBar();if(undoBar!=null)root.addView(undoBar);
         View selectionBar=bulkUi.bottomBar(selected);if(selectionBar!=null)root.addView(selectionBar);
+        if("ChapterSets".equals(selected)){View comboBar=new ChapterSetPageFactory(this).bottomBar();if(comboBar!=null)root.addView(comboBar);}
         return root;
     }
 
@@ -757,7 +760,7 @@ public class MainActivity extends Activity {
 
     View buildChapterSetsPage() { return new ChapterSetPageFactory(this).buildPage(); }
 
-    /** RAW tab > ticked chapters > "Tạo bộ chương": opens the confirmation table with the app's suggestions. */
+    /** RAW tab > ticked chapters > "Tạo tổ hợp": opens the new-combination screen with the RAW slot filled in. */
     void createChapterSetFromSelection() {
         java.util.List<String> ids = bulkUi.controller(LibraryBulkUi.TAB_RAW).ids();
         if (ids.isEmpty()) { toast("Hãy tick ít nhất một RAW"); return; }
@@ -771,8 +774,8 @@ public class MainActivity extends Activity {
     /** Leaves the confirmation table; an unsaved table asks first. */
     void closeChapterSetDraft(boolean saved) {
         Runnable close = () -> { chapterSetDraft = null; invalidatePage("ChapterSets"); switchTab("ChapterSets"); };
-        if (saved || chapterSetDraft == null) { close.run(); return; }
-        new AlertDialog.Builder(this).setTitle("Bỏ thay đổi?").setMessage("Bộ chương chưa được lưu.")
+        if (saved || chapterSetDraft == null || !chapterSetDraft.dirty) { close.run(); return; }
+        new AlertDialog.Builder(this).setTitle("Bỏ thay đổi?").setMessage("Tổ hợp chưa được lưu.")
                 .setNegativeButton("Tiếp tục sửa", null).setPositiveButton("Bỏ", (d, w) -> close.run()).show();
     }
 
@@ -1842,7 +1845,7 @@ public class MainActivity extends Activity {
             i.putExtra("chapterMode", true);
             return null;
         } catch (Exception e) {
-            return "Không ghi được ảnh chụp bộ chương: " + AppValidator.readableError(e);
+            return "Không ghi được ảnh chụp tổ hợp: " + AppValidator.readableError(e);
         }
     }
 
@@ -1866,7 +1869,7 @@ public class MainActivity extends Activity {
             StringBuilder planned = new StringBuilder(), current = new StringBuilder();
             if (readyPlan.bindings != null) for (ChapterBinding b : readyPlan.bindings) planned.append(b.keyPart()).append(';');
             for (ChapterBinding b : now) current.append(b.keyPart()).append(';');
-            if (!planned.toString().equals(current.toString())) { chapterBindings = now; updateInputEstimate(); toast("Glossary/Pronoun hoặc bộ chương đã đổi; đang chuẩn bị lại kế hoạch"); return; }
+            if (!planned.toString().equals(current.toString())) { chapterBindings = now; updateInputEstimate(); toast("Glossary/Pronoun hoặc tổ hợp đã đổi; đang chuẩn bị lại kế hoạch"); return; }
         }
         String finalReadiness=startReadinessError();
         if(finalReadiness!=null){appendLog("START_DISPATCH_BLOCKED resource="+finalReadiness);showResult("Start blocked",finalReadiness);updateActionButtons();return;}

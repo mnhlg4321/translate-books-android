@@ -139,7 +139,7 @@ final class LibraryBulkUi {
         }
         if (TAB_RAW.equals(tab)) {
             bar.addView(a.space(6, 1));
-            android.widget.Button sets = a.primaryButton("Tạo bộ chương", v -> a.createChapterSetFromSelection());
+            android.widget.Button sets = a.primaryButton("Tạo tổ hợp", v -> a.createChapterSetFromSelection());
             sets.setEnabled(n > 0);
             bar.addView(sets, new LinearLayout.LayoutParams(0, a.dp(44), 1));
         }

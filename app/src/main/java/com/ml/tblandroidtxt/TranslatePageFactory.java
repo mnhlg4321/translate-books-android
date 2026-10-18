@@ -273,7 +273,7 @@ class TranslatePageFactory {
 
         LinearLayout steps = a.rowContainer();
         boolean setMode = a.sourceUi.isSetMode();
-        steps.addView(stepBox("1", setMode ? "Bộ chương" : "TXT", a.inputUris.isEmpty() ? "chưa chọn" : (a.inputUris.size() == 1 ? "1 file" : a.inputUris.size() + " files"), a.inputUris.isEmpty() ? a.MUTED : a.GREEN), new LinearLayout.LayoutParams(0, -2, 1));
+        steps.addView(stepBox("1", setMode ? "Tổ hợp" : "TXT", a.inputUris.isEmpty() ? "chưa chọn" : (a.inputUris.size() == 1 ? "1 file" : a.inputUris.size() + " files"), a.inputUris.isEmpty() ? a.MUTED : a.GREEN), new LinearLayout.LayoutParams(0, -2, 1));
         steps.addView(a.space(6, 1));
         steps.addView(stepBox("2", "Output", a.outputTreeUri != null ? "folder" : (a.outputUri != null ? "file" : "chưa chọn"), (a.outputTreeUri != null || a.outputUri != null) ? a.GREEN : a.MUTED), new LinearLayout.LayoutParams(0, -2, 1));
         steps.addView(a.space(6, 1));

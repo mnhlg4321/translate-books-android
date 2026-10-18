@@ -29,7 +29,7 @@ final class ChapterRunOutcome {
 
     /** {@code stoppedAt}: the chapter that was running when the queue stopped, counted as failed by the caller, or null. */
     String summary() {
-        StringBuilder sb = new StringBuilder("Bộ chương: ").append(done.size()).append(" xong · ").append(failed.size()).append(" lỗi");
+        StringBuilder sb = new StringBuilder("Tổ hợp: ").append(done.size()).append(" xong · ").append(failed.size()).append(" lỗi");
         if (!failed.isEmpty()) {
             sb.append(" (");
             for (int i = 0; i < failed.size(); i++) {

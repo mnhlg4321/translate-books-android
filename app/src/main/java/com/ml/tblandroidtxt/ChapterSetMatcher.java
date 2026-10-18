@@ -37,6 +37,11 @@ final class ChapterSetMatcher {
         boolean pronounChosen;
         boolean excluded;
         /** Set when an opened set points at a RAW / profile that no longer exists; the row shows it as missing instead of breaking. */
+        /** The whole slot (Glossary or Pronoun) is empty, so the row uses none on purpose and is not a warning. */
+        boolean glossaryOff;
+        /** A lone RAW may go without a chapter number (its pairing does not need one). */
+        boolean numberOptional;
+        boolean pronounOff;
         boolean rawMissing;
         boolean glossaryMissing;
         boolean pronounMissing;
@@ -84,12 +89,12 @@ final class ChapterSetMatcher {
         for (Row r : rows) {
             if (r.excluded) { r.status = Status.GREEN; r.reason = "Bỏ khỏi bộ"; continue; }
             if (r.rawMissing) { r.status = Status.RED; r.reason = "RAW đã bị xóa khỏi thư viện: bỏ dòng hoặc nhập lại RAW"; continue; }
-            if (r.chapterNo < 0) { r.status = Status.RED; r.reason = "RAW không có số chương: nhập số chương hoặc bỏ dòng"; continue; }
-            if (perNumber.get(r.chapterNo) > 1) { r.status = Status.RED; r.reason = "Hai RAW cùng số chương " + r.chapterNo + ": đổi số hoặc bỏ một dòng"; continue; }
-            if (!r.glossaryChosen && r.glossaryCandidates.size() > 1) { r.status = Status.RED; r.reason = r.glossaryCandidates.size() + " Glossary cùng số chương: chọn một"; continue; }
-            if (!r.pronounChosen && r.pronounCandidates.size() > 1) { r.status = Status.RED; r.reason = r.pronounCandidates.size() + " Pronoun cùng số chương: chọn một"; continue; }
-            boolean noGlossary = (r.glossaryId.isEmpty() && !r.glossaryChosen) || r.glossaryMissing;
-            boolean noPronoun = (r.pronounId.isEmpty() && !r.pronounChosen) || r.pronounMissing;
+            if (r.chapterNo < 0 && !r.numberOptional) { r.status = Status.RED; r.reason = "RAW không có số chương: nhập số chương hoặc bỏ dòng"; continue; }
+            if (r.chapterNo >= 0 && perNumber.get(r.chapterNo) > 1) { r.status = Status.RED; r.reason = "Hai RAW cùng số chương " + r.chapterNo + ": đổi số hoặc bỏ một dòng"; continue; }
+            if (!r.glossaryChosen && r.glossaryCandidates.size() > 1) { r.status = Status.RED; r.reason = r.glossaryCandidates.size() + " Glossary cùng chương " + r.chapterNo + " — chọn một"; continue; }
+            if (!r.pronounChosen && r.pronounCandidates.size() > 1) { r.status = Status.RED; r.reason = r.pronounCandidates.size() + " Pronoun cùng chương " + r.chapterNo + " — chọn một"; continue; }
+            boolean noGlossary = (r.glossaryId.isEmpty() && !r.glossaryChosen && !r.glossaryOff) || r.glossaryMissing;
+            boolean noPronoun = (r.pronounId.isEmpty() && !r.pronounChosen && !r.pronounOff) || r.pronounMissing;
             if (noGlossary || noPronoun) {
                 r.status = Status.YELLOW;
                 String g = r.glossaryMissing ? "Glossary đã bị xóa" : "Thiếu Glossary";
@@ -116,7 +121,7 @@ final class ChapterSetMatcher {
 
     /** Default set name: the part of the RAW file names that all of them share after the chapter number ("025_Kumo7_RAW.txt" and "026_Kumo7_RAW.txt" give "Kumo7_RAW"). */
     static String defaultName(List<String> rawNames) {
-        if (rawNames.isEmpty()) return "Bộ chương";
+        if (rawNames.isEmpty()) return "Tổ hợp";
         ArrayList<String> stems = new ArrayList<>();
         for (String n : rawNames) {
             String s = n == null ? "" : n.trim();
@@ -130,7 +135,7 @@ final class ChapterSetMatcher {
             prefix = prefix.substring(0, k);
         }
         String trimmed = prefix.replaceAll("[_\\-\\s.]+$", "").trim();
-        if (trimmed.isEmpty()) trimmed = stems.get(0).isEmpty() ? "Bộ chương" : stems.get(0);
+        if (trimmed.isEmpty()) trimmed = stems.get(0).isEmpty() ? "Tổ hợp" : stems.get(0);
         return trimmed;
     }
 }

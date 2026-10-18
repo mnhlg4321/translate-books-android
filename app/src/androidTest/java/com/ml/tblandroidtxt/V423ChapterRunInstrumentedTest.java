@@ -216,7 +216,7 @@ public class V423ChapterRunInstrumentedTest {
             assertFalse(plan.bindings.get(1).glossaryText.contains(ACTIVE_TARGET));
             scenario.onActivity(activity -> {
                 assertTrue(containsText(activity.getWindow().getDecorView(), "3/3 chương được tick"));
-                assertTrue(containsText(activity.getWindow().getDecorView(), "Glossary: 002_" + TAG + "Glossary.csv"));
+                assertTrue(containsText(activity.getWindow().getDecorView(), "Glossary   002_" + TAG + "Glossary.csv"));
             });
 
             waitFor(() -> status(c, f.raws.get(0).uri()).startsWith("COMPLETED") && status(c, f.raws.get(1).uri()).startsWith("COMPLETED") && status(c, f.raws.get(2).uri()).startsWith("COMPLETED"), 120_000L, "three chapters completed");

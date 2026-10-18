@@ -1,6 +1,5 @@
 package com.ml.tblandroidtxt;
 
-import android.app.AlertDialog;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.view.View;
@@ -78,7 +77,7 @@ final class TranslateSourceFactory {
         box.addView(a.text("Nguồn", 15, a.TEXT, true));
         LinearLayout modeRow = a.rowContainer();
         filesButton = a.secondaryButton("Tệp TXT", v -> setMode(MODE_FILES));
-        setButton = a.secondaryButton("Bộ chương", v -> setMode(MODE_SET));
+        setButton = a.secondaryButton("Tổ hợp", v -> setMode(MODE_SET));
         filesButton.setContentDescription("source-files");
         setButton.setContentDescription("source-set");
         modeRow.addView(filesButton, new LinearLayout.LayoutParams(0, a.dp(44), 1));
@@ -171,7 +170,7 @@ final class TranslateSourceFactory {
         for (ChapterBinding b : bindings) a.inputUris.add(Uri.parse(b.rawUri()));
         a.inputUri = a.inputUris.isEmpty() ? null : a.inputUris.get(0);
         UiSessionStore.saveInputUris(a, a.inputUris);
-        a.setLabel(a.inputFileLabel, bindings.isEmpty() ? "Bộ chương: chưa tick chương nào" : "📚 " + setName + " · " + bindings.size() + " chương");
+        a.setLabel(a.inputFileLabel, bindings.isEmpty() ? "Tổ hợp: chưa tick chương nào" : "📚 " + setName + " · " + bindings.size() + " chương");
         a.updateInputEstimate();
     }
 
@@ -186,19 +185,29 @@ final class TranslateSourceFactory {
         estimateViews.clear();
         if (!set) return;
         List<ChapterSetStore.SetInfo> sets = ChapterSetStore.listSets(a);
-        String pickerText = sets.isEmpty() ? "Chưa có bộ chương — tạo ở Library > RAW"
-                : setName.isEmpty() ? "Chọn bộ chương…  ▾" : "Bộ chương: " + setName + "  ▾";
-        Button picker = a.secondaryButton(pickerText, v -> pickSet(sets));
-        picker.setAllCaps(false);
-        picker.setEnabled(!sets.isEmpty());
-        picker.setContentDescription("set-picker");
-        chapterBox.addView(picker, new LinearLayout.LayoutParams(-1, a.dp(46)));
+        boolean none = setName.isEmpty();
+        List<String> names = new ArrayList<>(), metas = new ArrayList<>();
+        if (!none) { names.add(setName); metas.add(rows.size() + " chương"); }
+        chapterBox.addView(SelectedFilesSlot.build(a, "Tổ hợp", "📚", names, metas, none ? SelectedFilesSlot.Status.NOT_CHOSEN : SelectedFilesSlot.Status.CHOSEN, "",
+                none ? "Chọn tổ hợp" : "Đổi", () -> pickSet(sets)));
+        if (!none) {
+            LinearLayout edit = a.rowContainer();
+            edit.addView(a.secondaryButton("Sửa tổ hợp", v -> openInLibrary()), new LinearLayout.LayoutParams(0, a.dp(42), 1));
+            chapterBox.addView(edit, a.marginLP(-1, -2, 0, 6, 0, 0));
+        }
         if (rows.isEmpty()) return;
         int translatedCount = 0;
         for (Row x : rows) if (x.translated) translatedCount++;
-        TextView hint = a.text("Tick các chương cần dịch" + (translatedCount > 0 ? " (" + translatedCount + " chương đã có bản dịch xong, mặc định không tick)" : "") + ". Mỗi chương dùng đúng Glossary/Pronoun ghi trong bộ, không dùng bản Active.", 12, a.MUTED, false);
+        TextView hint = a.text("Tick các chương cần dịch" + (translatedCount > 0 ? " (" + translatedCount + " chương đã có bản dịch xong, mặc định không tick)" : "") + ". Mỗi chương dùng đúng Glossary/Pronoun ghi trong tổ hợp, không dùng bản Active.", 12, a.MUTED, false);
         hint.setSingleLine(false);
         chapterBox.addView(hint, a.marginLP(-1, -2, 0, 8, 0, 4));
+        LinearLayout bulk = a.rowContainer();
+        bulk.addView(a.secondaryButton("Chọn tất cả", v -> tickWhere(0)), new LinearLayout.LayoutParams(0, a.dp(40), 1));
+        bulk.addView(a.space(4, 1));
+        bulk.addView(a.secondaryButton("Bỏ chọn", v -> tickWhere(1)), new LinearLayout.LayoutParams(0, a.dp(40), 1));
+        bulk.addView(a.space(4, 1));
+        bulk.addView(a.secondaryButton("Chưa dịch", v -> tickWhere(2)), new LinearLayout.LayoutParams(0, a.dp(40), 1));
+        chapterBox.addView(bulk, a.marginLP(-1, -2, 0, 0, 0, 4));
         for (Row x : rows) chapterBox.addView(rowView(x), a.marginLP(-1, -2, 0, 4, 0, 0));
         TextView total = a.text(ticked.size() + "/" + rows.size() + " chương được tick", 13, a.GREEN, true);
         total.setContentDescription("chapter-total");
@@ -208,8 +217,25 @@ final class TranslateSourceFactory {
         if (current != null) updateEstimates(current);
     }
 
+    /** 0 = all usable chapters, 1 = none, 2 = only chapters without a finished translation. */
+    private void tickWhere(int mode) {
+        ticked.clear();
+        for (Row x : rows) if (x.usable() && (mode == 0 || (mode == 2 && !x.translated))) ticked.add(x.raw.id);
+        save();
+        applySelection();
+        render();
+    }
+
+    private void openInLibrary() {
+        if (setId.isEmpty()) return;
+        a.chapterSetDraft = ChapterSetPageFactory.openDraft(a, setId);
+        a.invalidatePage("ChapterSets");
+        a.switchTab("ChapterSets");
+    }
+
     private View rowView(Row x) {
-        LinearLayout row = a.card(12, a.FIELD, x.usable() ? a.BORDER : a.RED);
+        boolean on = x.usable() && ticked.contains(x.raw.id);
+        LinearLayout row = a.card(12, on ? a.CARD : a.FIELD, !x.usable() ? a.RED : on ? a.BLUE : a.BORDER);
         row.setOrientation(LinearLayout.VERTICAL);
         row.setPadding(a.dp(10), a.dp(6), a.dp(10), a.dp(8));
         String number = x.stored.chapterNo >= 0 ? "Chương " + x.stored.chapterNo : "Chương ?";
@@ -219,7 +245,7 @@ final class TranslateSourceFactory {
         check.setTextColor(a.TEXT);
         check.setTextSize(14);
         check.setEnabled(x.usable());
-        check.setChecked(x.usable() && ticked.contains(x.raw.id));
+        check.setChecked(on);
         check.setContentDescription("chapter:" + name);
         check.setOnClickListener(v -> {
             if (check.isChecked()) ticked.add(x.raw.id); else ticked.remove(x.raw.id);
@@ -230,10 +256,11 @@ final class TranslateSourceFactory {
         row.addView(check);
         String g = x.stored.glossaryId.isEmpty() ? "Không dùng" : x.glossary == null ? "(đã bị xóa)" : x.glossary.name;
         String p = x.stored.pronounId.isEmpty() ? "Không dùng" : x.pronoun == null ? "(đã bị xóa)" : x.pronoun.name;
-        TextView meta = a.text("Glossary: " + g + "\nPronoun: " + p, 12, (g.startsWith("(") || p.startsWith("(")) ? a.AMBER : a.MUTED, false);
+        TextView meta = a.text("📄 RAW   " + name + "\n📘 Glossary   " + g + "\n↔ Pronoun   " + p, 12, (g.startsWith("(") || p.startsWith("(")) ? a.AMBER : a.MUTED, false);
         meta.setSingleLine(false);
+        meta.setContentDescription("chapter-files:" + name);
         row.addView(meta, a.marginLP(-1, -2, 32, 0, 0, 0));
-        if (x.translated) row.addView(a.text("✓ đã có bản dịch xong", 12, a.GREEN, true), a.marginLP(-1, -2, 32, 2, 0, 0));
+        if (x.translated) row.addView(a.text("✓ đã dịch xong", 12, a.GREEN, true), a.marginLP(-1, -2, 32, 2, 0, 0));
         if (x.usable()) {
             TextView est = a.text("", 12, a.MUTED, false);
             estimateViews.put(x.raw.id, est);
@@ -242,7 +269,7 @@ final class TranslateSourceFactory {
         return row;
     }
 
-    /** Opens a saved set as the source (the picker dialog calls this). */
+    /** Opens a saved set as the source (the picker sheet calls this). */
     void selectSet(String id) {
         load();
         mode = MODE_SET;
@@ -251,11 +278,24 @@ final class TranslateSourceFactory {
     }
 
     private void pickSet(List<ChapterSetStore.SetInfo> sets) {
-        String[] names = new String[sets.size()];
-        for (int i = 0; i < names.length; i++) names[i] = sets.get(i).name + " (" + sets.get(i).chapters + " chương)";
-        new AlertDialog.Builder(a).setTitle("Chọn bộ chương").setItems(names, (d, which) -> {
-            selectSet(sets.get(which).id);
-        }).setNegativeButton("Hủy", null).show();
+        List<FilePickerModel.Item> items = new ArrayList<>();
+        for (ChapterSetStore.SetInfo s : sets) {
+            ComboDraft d = ChapterSetPageFactory.openDraft(a, s.id);
+            int green = 0, yellow = 0, red = 0;
+            List<Integer> chapters = new ArrayList<>();
+            if (d != null) for (ChapterSetMatcher.Row r : d.rows) {
+                chapters.add(r.chapterNo);
+                if (r.status == ChapterSetMatcher.Status.GREEN) green++; else if (r.status == ChapterSetMatcher.Status.YELLOW) yellow++; else red++;
+            }
+            items.add(new FilePickerModel.Item(s.id, s.name, ComboDraft.summaryOf(s.chapters, green, yellow, red) + " · " + ComboDraft.chapterRange(chapters), ChapterNumber.NONE, false, ""));
+        }
+        FilePickerModel model = new FilePickerModel(false, false, items, setId.isEmpty() ? new ArrayList<String>() : java.util.Collections.singletonList(setId));
+        FilePickerSheet.show(a, "Chọn tổ hợp", sets.isEmpty() ? "Chưa có tổ hợp: tạo ở Library > Tổ hợp." : null, model, "Chọn", ids -> {
+            if (ids.isEmpty()) return;
+            a.toast("Đã chọn: " + model.nameOf(ids.get(0)));
+            selectSet(ids.get(0));
+        });
+        if (sets.isEmpty()) return;
     }
 
     /** Fills each chapter row with its own chunk count and cost range once the plan is ready. */
@@ -275,19 +315,24 @@ final class TranslateSourceFactory {
     void previewChapter() {
         List<ChapterBinding> bindings = freshBindings();
         if (bindings.isEmpty()) { a.toast("Chưa tick chương nào"); return; }
-        String[] names = new String[bindings.size()];
-        for (int i = 0; i < names.length; i++) names[i] = (bindings.get(i).chapterNo >= 0 ? "Chương " + bindings.get(i).chapterNo + " · " : "") + bindings.get(i).rawName;
-        new AlertDialog.Builder(a).setTitle("Xem prompt của chương nào?").setItems(names, (d, which) -> {
-            ChapterBinding b = bindings.get(which);
-            PromptPreviewDialog.showForInput(a, Uri.parse(b.rawUri()), b.applyTo(a.collectSettings()), a.TEXT, a.MUTED, a.FIELD, a.BORDER, a::appendLog, a::toast);
-        }).setNegativeButton("Hủy", null).show();
+        List<FilePickerModel.Item> items = new ArrayList<>();
+        for (ChapterBinding c : bindings) {
+            String g = c.glossaryName.isEmpty() ? "Không dùng" : c.glossaryName, pr = c.pronounName.isEmpty() ? "Không dùng" : c.pronounName;
+            items.add(new FilePickerModel.Item(c.rawId, c.rawName, "Glossary: " + g + " · Pronoun: " + pr, c.chapterNo, false, ""));
+        }
+        FilePickerModel model = new FilePickerModel(false, false, items, new ArrayList<String>());
+        FilePickerSheet.show(a, "Xem prompt của chương nào?", null, model, "Xem", ids -> {
+            for (ChapterBinding c : bindings) if (c.rawId.equals(ids.get(0))) {
+                PromptPreviewDialog.showForInput(a, Uri.parse(c.rawUri()), c.applyTo(a.collectSettings()), a.TEXT, a.MUTED, a.FIELD, a.BORDER, a::appendLog, a::toast);
+            }
+        });
     }
 
     /** Problems that block Start in set mode, or null. */
     String readinessError() {
         List<ChapterBinding> bindings = freshBindings();
-        if (setId.isEmpty()) return "Bộ chương: chưa chọn bộ";
-        if (bindings.isEmpty()) return "Bộ chương: chưa tick chương nào";
+        if (setId.isEmpty()) return "Tổ hợp: chưa chọn tổ hợp";
+        if (bindings.isEmpty()) return "Tổ hợp: chưa tick chương nào";
         for (ChapterBinding b : bindings) {
             PromptContextBuilder.ParseReport r = PromptContextBuilder.validate(b.glossaryText, b.pronounText);
             if (!r.malformedGlossaryRows.isEmpty()) return "Chương " + b.chapterNo + ": Glossary có " + r.malformedGlossaryRows.size() + " dòng lỗi";
