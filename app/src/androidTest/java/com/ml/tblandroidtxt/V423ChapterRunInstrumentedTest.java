@@ -47,7 +47,11 @@ public class V423ChapterRunInstrumentedTest {
     private static final String[] TARGETS = {"Hanako-MOT", "Taro-HAI", "Jiro-BA"};
     private static final String ACTIVE_TARGET = "Active-ONLY-XYZ";
 
+    /** The chapter-local test makes chapter 2 one short line that cannot be split when the provider says the context is too large. */
+    private static boolean tinyChapterTwo;
+
     private static String rawText(int chapter) {
+        if (chapter == 2 && tinyChapterTwo) return "【章2】" + TERMS[1] + "です。" + System.nanoTime();
         StringBuilder sb = new StringBuilder();
         for (int i = 1; i <= 30; i++) sb.append("【章").append(chapter).append("】第").append(i).append("段。登場人物は").append(TERMS[chapter - 1])
                 .append("で、これは翻訳試験のための十分に長い日本語の段落であり、境界を越えて分割されることを確認します。\n\n");
@@ -271,20 +275,23 @@ public class V423ChapterRunInstrumentedTest {
         Context c = InstrumentationRegistry.getInstrumentation().getTargetContext();
         Map<String, Map<String, ?>> original = snapshot(c);
         clearAll(c);
+        tinyChapterTwo = true;
         Fixture f = seed(c);
+        tinyChapterTwo = false;
         TranslateTestSeam.setOutputDir(outDir(c));
         AtomicInteger calls = new AtomicInteger();
         TranslateTestSeam.setProvider((settings, prompt, limit, id, observer) -> {
-            observe(observer);
             String all = prompt.system + "\n" + prompt.user;
-            if (all.contains("【章2】")) return response("Lỗi: invalid api key xuất hiện trong bản dịch của chương hai và kiểm toàn vẹn phải từ chối nó.");
+            if (all.contains("【章2】")) throw new ApiHttpException(413, 0, "Request too large for this model: context length exceeded");
+            observe(observer);
             return response("Bản dịch thử nghiệm số " + calls.incrementAndGet() + " với đủ độ dài để vượt qua kiểm định của ứng dụng.");
         });
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             runSet(scenario, c, f, baseSettings());
             waitFor(() -> !status(c, f.raws.get(2).uri()).equals("NONE") && !TranslatorService.isActive(), 120_000L, "queue finished");
             assertTrue(status(c, f.raws.get(0).uri()), status(c, f.raws.get(0).uri()).startsWith("COMPLETED"));
-            assertEquals("FAILED_INTEGRITY_CHECK", status(c, f.raws.get(1).uri()));
+            String second = status(c, f.raws.get(1).uri());
+            assertTrue("chapter 2 failed on its own: " + second, !second.startsWith("COMPLETED") && !second.equals("NONE"));
             assertTrue("chapter 3 still ran", status(c, f.raws.get(2).uri()).startsWith("COMPLETED"));
             media("29-chapter-run-summary", scenario);
         } finally {
