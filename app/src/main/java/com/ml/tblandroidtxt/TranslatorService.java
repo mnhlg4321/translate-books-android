@@ -67,6 +67,8 @@ public class TranslatorService extends Service {
     private volatile boolean cancelled = false;
     private TranslationRepository repo;
     private TranslationEngine engine;
+    /** Chapter-set runs only: what happened to each chapter so far; null otherwise. */
+    private volatile ChapterRunOutcome chapterOutcome;
 
     private long jobStartMs = 0;
     private int metricTotal = 0;
@@ -300,7 +302,7 @@ public class TranslatorService extends Service {
         } catch (CostLimitReachedException e) {
             setState(TranslationJobState.State.PAUSED,"Paused");
             if (activeJobId > 0) repo.touchJob(activeJobId, "paused");
-            broadcast("paused", -1, AppValidator.readableError(e));
+            broadcast("paused", -1, AppValidator.readableError(e) + chapterSummarySuffix());
             releaseRun();
             stopForeground(STOP_FOREGROUND_REMOVE);
             NotificationManager nm = getSystemService(NotificationManager.class);
@@ -311,7 +313,7 @@ public class TranslatorService extends Service {
             setState(TranslationJobState.State.FAILED, activeJobId > 0 ? "Translation failed" : "Initialization failure");
             if (activeJobId > 0) repo.touchJob(activeJobId, "error");
             logFailure(metricPhase, e);
-            broadcast("error", -1, "Lỗi khởi tạo: " + AppValidator.readableError(e));
+            broadcast("error", -1, "Lỗi khởi tạo: " + AppValidator.readableError(e) + chapterSummarySuffix());
             releaseRun();
             stopForeground(STOP_FOREGROUND_REMOVE);
             NotificationManager nm = getSystemService(NotificationManager.class);
@@ -319,6 +321,9 @@ public class TranslatorService extends Service {
             stopSelf();
         }
     }
+
+    /** " — x xong · y lỗi (…) · z chưa chạy" after a chapter-set run stopped; empty for every other run. */
+    private String chapterSummarySuffix(){ChapterRunOutcome o=chapterOutcome;return o==null?"":"\n"+o.summary();}
 
     private void runPreparedJobs(Intent intent,String batchId) throws Exception {
         PreparedBatch batch=repo.getPreparedBatch(batchId);
@@ -334,23 +339,50 @@ public class TranslatorService extends Service {
         if(batch.inputs.size()==1&&fixed==null&&tree==null)throw new IllegalArgumentException("Choose an output TXT or folder");
         for(PreparedBatch.Input input:batch.inputs){String error=FileUtil.validateReadable(this,input.uri,"Input "+(input.ordinal+1));if(error!=null)throw new IllegalStateException(error);}
         validateOutputAccess(batch.inputs.size(),fixed,tree);
+        chapterOutcome=null;
+        final boolean chapterMode=intent.getBooleanExtra("chapterMode",false);
+        ChapterSession session=null;
+        if(chapterMode){
+            session=ChapterSession.read(new java.io.File(getFilesDir(),ChapterSession.DIR),startSessionId);
+            ArrayList<String> preparedUris=new ArrayList<>();for(PreparedBatch.Input in:batch.inputs)preparedUris.add(in.uri.toString());
+            session.requireMatches(preparedUris);
+            chapterOutcome=new ChapterRunOutcome(batch.inputs.size());
+        }
+        // The shared settings (and the Active Glossary/Pronoun) are saved once and never replaced by a chapter's own copy.
         SettingsStore.save(this,s);setState(TranslationJobState.State.READY,"Ready");broadcast("ready",0,"Validated prepared plan "+batch.id+" with "+batch.exactChunkCount()+" chunks");setState(TranslationJobState.State.RUNNING,"Running");
         for(int i=0;i<batch.inputs.size();i++){
             waitIfPaused();if(cancelled){finishCancelled("Cancelled before the next prepared file");return;}
             PreparedBatch.Input input=batch.inputs.get(i);Uri out=fixed;
             if(out==null||batch.inputs.size()>1)out=deferredOutput(tree,s.buildOutputName(input.displayName));
-            runSinglePreparedJob(batch,startSessionId,input,out,s,i+1,batch.inputs.size());
+            ChapterRunOutcome outcome=chapterOutcome;
+            if(outcome==null){runSinglePreparedJob(batch,startSessionId,input,out,s,i+1,batch.inputs.size(),input.displayName);continue;}
+            ChapterBinding binding=session.chapters.get(i);
+            String label="Chương "+(binding.chapterNo>=0?binding.chapterNo:i+1)+" ("+(i+1)+"/"+batch.inputs.size()+") · "+input.displayName;
+            try{
+                runSinglePreparedJob(batch,startSessionId,input,out,binding.applyTo(s),i+1,batch.inputs.size(),label);
+                if(!cancelled)outcome.done(input.displayName);
+            }catch(Exception e){
+                if(cancelled)throw e;
+                outcome.failed(input.displayName,AppValidator.readableError(e));
+                if(ChapterRunOutcome.continuesQueue(e)){
+                    broadcast("running",percent(i+1,batch.inputs.size()),label+" lỗi riêng của chương, chạy tiếp chương sau: "+AppValidator.readableError(e));
+                    continue;
+                }
+                if(e instanceof CostLimitReachedException)throw e;
+                throw e;
+            }
         }
-        setState(TranslationJobState.State.COMPLETED,"Completed");broadcast("done",100,"Prepared batch translation completed");releaseRun();stopForeground(STOP_FOREGROUND_REMOVE);NotificationManager nm=getSystemService(NotificationManager.class);if(nm!=null)nm.cancel(NOTIFY_ID);stopSelf();
+        ChapterRunOutcome finished=chapterOutcome;
+        setState(TranslationJobState.State.COMPLETED,"Completed");broadcast("done",100,finished==null?"Prepared batch translation completed":finished.summary());releaseRun();stopForeground(STOP_FOREGROUND_REMOVE);NotificationManager nm=getSystemService(NotificationManager.class);if(nm!=null)nm.cancel(NOTIFY_ID);stopSelf();
     }
 
-    private void runSinglePreparedJob(PreparedBatch batch,String startSessionId,PreparedBatch.Input input,Uri outputUri,AppSettings s,int fileNo,int fileTotal)throws Exception{
+    private void runSinglePreparedJob(PreparedBatch batch,String startSessionId,PreparedBatch.Input input,Uri outputUri,AppSettings s,int fileNo,int fileTotal,String label)throws Exception{
         List<Chunk> chunks=input.chunks;if(chunks==null||chunks.isEmpty())throw new IllegalStateException("Prepared plan has no chunks for "+input.displayName);
         Chunker.assignParagraphRanges(chunks);
         resetMetrics(input.displayName,chunks.size());setExpectedMetrics(batch.estimate);String settingsHash=HashUtil.settingsHash(s);
         long jobId=repo.createJobFromPrepared(batch.id,startSessionId,input.ordinal,input.uri.toString(),outputUri.toString(),input.displayName,s,chunks,input.inputHash,settingsHash);activeJobId=jobId;repo.touchJob(jobId,"RUNNING");metricPhase="Translating";
         ObservabilityLog.event("prepared_plan_claimed","batch",batch.id,"job",jobId,"inputOrdinal",input.ordinal,"chunks",chunks.size());
-        broadcast("running",percent(fileNo-1,fileTotal),"Starting exact prepared plan: "+chunks.size()+" chunks");translateJob(jobId,outputUri,s,chunks,fileNo,fileTotal,input.displayName);
+        broadcast("running",percent(fileNo-1,fileTotal),"Starting exact prepared plan: "+chunks.size()+" chunks");translateJob(jobId,outputUri,s,chunks,fileNo,fileTotal,label);
     }
 
     private void resetMetrics(String fileName, int total) {
@@ -666,7 +698,7 @@ public class TranslatorService extends Service {
                 if (cancelled) return;
                 if(RetryPolicy.classify(e)==RetryPolicy.Kind.CONTEXT_LENGTH){
                     List<Chunk> children=Chunker.splitForContextOverflow(chunk,s);
-                    if(children.size()<2){repo.markChunkPermanentError(jobId,i,"Context length exceeded and source cannot be split further");throw e;}
+                    if(children.size()<2){repo.markChunkPermanentError(jobId,i,"Context length exceeded and source cannot be split further");throw new ChapterLocalException("Context length exceeded and source cannot be split further",e);}
                     repo.supersedeAndInsertSubchunks(jobId,chunk,children);
                     broadcast("running",global,"Context limit: chunk "+(i+1)+" split into "+children.size()+" ordered subchunks; instructions and locks preserved");
                     List<TranslationRepository.ChunkRow> replacementRows=repo.getChunkRows(jobId);List<Chunk> replacementChunks=new ArrayList<>();for(TranslationRepository.ChunkRow row:replacementRows)replacementChunks.add(chunkFromRow(row));Chunker.assignParagraphRanges(replacementChunks);
@@ -681,7 +713,7 @@ public class TranslatorService extends Service {
         }
         updatePartialOutput(jobId, outputUri, s);
         OutputIntegrityAudit.Result audit=repo.finishJobWithAudit(jobId);
-        if(!audit.passed())throw new IllegalStateException("Final integrity audit failed: "+audit.errors);
+        if(!audit.passed())throw new ChapterLocalException("Final integrity audit failed: "+audit.errors);
         metricPhase = "Completed";
         broadcast("running", percent(fileNo, fileTotal), "Translation completed: " + fileName);
         updateNotification("Hoàn tất " + fileName, total, total);

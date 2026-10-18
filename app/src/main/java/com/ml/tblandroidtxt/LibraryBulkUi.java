@@ -201,7 +201,7 @@ final class LibraryBulkUi {
         if ((TAB_GLOSSARIES.equals(tab) && GlossaryStore.isCorrupt(a)) || (TAB_PRONOUNS.equals(tab) && PronounStore.isCorrupt(a))) { a.toast(MainActivity.LIBRARY_WRITE_REFUSED); return; }
         List<LibraryDeletePlan.Target> targets = targetsFor(tab, ids);
         LibraryDeletePlan plan = LibraryDeletePlan.plan(targets);
-        AlertDialog.Builder first = new AlertDialog.Builder(a).setTitle("Xóa " + ids.size() + " mục?").setMessage(plan.firstMessage()).setNegativeButton("Hủy", null);
+        AlertDialog.Builder first = new AlertDialog.Builder(a).setTitle(plan.deletable.isEmpty() ? "Không xóa được" : "Xóa " + plan.deletable.size() + " mục?").setMessage(plan.firstMessage()).setNegativeButton("Hủy", null);
         if (!plan.deletable.isEmpty()) {
             first.setPositiveButton("Xóa", (d, w) -> {
                 if (!plan.needsSecondConfirm()) { executePlan(tab, plan); return; }

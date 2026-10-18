@@ -166,6 +166,16 @@ final class LibraryRawStore {
         finally { repo.close(); }
     }
 
+    /** Input hashes that already have a finished translation job (a chapter with such a RAW is not ticked by default). */
+    static Set<String> completedHashes(Context c) {
+        HashSet<String> out = new HashSet<>();
+        TranslationRepository repo = new TranslationRepository(c);
+        try (Cursor cur = repo.getReadableDatabase().rawQuery("SELECT DISTINCT input_hash FROM jobs WHERE input_hash<>'' AND UPPER(COALESCE(status,'')) IN ('DONE','COMPLETED','COMPLETED_WITH_WARNINGS')", null)) {
+            while (cur.moveToNext()) out.add(cur.getString(0));
+        } finally { repo.close(); }
+        return out;
+    }
+
     /** Jobs that still need this RAW (resume reads it again), i.e. not finished. */
     static List<Usage> unfinishedJobs(Context c, String id) {
         ArrayList<Usage> out = new ArrayList<>();

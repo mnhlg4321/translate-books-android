@@ -168,6 +168,10 @@ public class MainActivity extends Activity {
     final LibraryBulkUi bulkUi = new LibraryBulkUi(this);
     String rawFilter = "";
     ChapterSetPageFactory.Draft chapterSetDraft;
+    final TranslateSourceFactory sourceUi = new TranslateSourceFactory(this);
+    /** Chapter-set runs: the Glossary/Pronoun of each input in {@link #inputUris}; null when the source is TXT files. */
+    java.util.List<ChapterBinding> chapterBindings;
+    View filesSourceCard;
     String pendingRawReplaceId = "";
     byte[] pendingLibraryExportZip;
     String pendingLibraryExportSummary = "";
@@ -473,6 +477,7 @@ public class MainActivity extends Activity {
             child.setVisibility(child == page ? View.VISIBLE : View.GONE);
         }
         if (created && ("Translate".equals(name) || "Settings".equals(name))) fillSettings(SettingsStore.load(this));
+        if (!created && "Translate".equals(name) && sourceUi.isSetMode()) sourceUi.refresh();
         updateRuntimeTimer();
     }
 
@@ -1800,7 +1805,7 @@ public class MainActivity extends Activity {
         String construction=PreparationCoordinator.constructionKey(s);
         if(!construction.equals(readyPlan.constructionKey)){appendLog("Start blocked: chunk settings changed after preparation");updateInputEstimate();toast("Chunk settings changed; rebuilding the chunk plan");return;}
         final int generation=preflightGeneration.incrementAndGet();setButtonEnabled(startButton,false);
-        preflightExecutor.submit(()->{String readiness=startReadinessError();PromptContextBuilder.ParseReport locks=readiness==null?PromptContextBuilder.validate(s.glossaryText,s.pronounText):null;runOnUiThread(()->{if(generation!=preflightGeneration.get()||isFinishing()||isDestroyed())return;if(readiness!=null){appendLog("START_BLOCKED resource="+readiness);updateActionButtons();showResult("Start blocked",readiness);return;}validatedPlanId=readyPlan.id;validatedPlanAt=System.currentTimeMillis();appendLog("START_PREFLIGHT_OK preparedPlan="+readyPlan.id);showPreparedPreflight(s,locks);});});
+        preflightExecutor.submit(()->{String readiness=startReadinessError();PromptContextBuilder.ParseReport locks=readiness==null?(sourceUi.isSetMode()?sourceUi.locksReport():PromptContextBuilder.validate(s.glossaryText,s.pronounText)):null;runOnUiThread(()->{if(generation!=preflightGeneration.get()||isFinishing()||isDestroyed())return;if(readiness!=null){appendLog("START_BLOCKED resource="+readiness);updateActionButtons();showResult("Start blocked",readiness);return;}validatedPlanId=readyPlan.id;validatedPlanAt=System.currentTimeMillis();appendLog("START_PREFLIGHT_OK preparedPlan="+readyPlan.id);showPreparedPreflight(s,locks);});});
     }
 
     private void showPreparedPreflight(AppSettings s,PromptContextBuilder.ParseReport locks){CostEstimator.Estimate e=estimateCurrentBatch(s);boolean warning=e==null||!e.pricingAvailable||(locks!=null&&(!locks.conflicts.isEmpty()||!locks.malformedGlossaryRows.isEmpty()||!locks.malformedPronounRows.isEmpty()))||(e!=null&&s.stopOnCostLimit&&s.costLimitUsd>0&&e.noCacheCostHigh>s.costLimitUsd);StringBuilder message=new StringBuilder(TranslationDashboardFormatter.prepared(e,preparedBatch.exactChunkCount()));if(warning)message.append("\n\nSome optional pricing or configuration checks have warnings. Translation can still start when blocking checks pass.");new AlertDialog.Builder(this).setTitle("Ready to translate").setMessage(message.toString()).setPositiveButton("Start",(d,w)->startTranslationNow()).setNegativeButton("Cancel",(d,w)->updateActionButtons()).setOnCancelListener(d->updateActionButtons()).show();}
@@ -1813,7 +1818,7 @@ public class MainActivity extends Activity {
         CostEstimator.Estimate e=estimateCurrentBatch(s);StringBuilder pre=new StringBuilder("BLOCKING ERRORS\nNone\n\nWARNINGS\n");boolean warning=false;
         if(e==null||!e.pricingAvailable){pre.append("• Pricing unavailable; token estimate remains valid\n");warning=true;}
         if(e!=null&&s.stopOnCostLimit&&s.costLimitUsd>0&&e.noCacheCostHigh>s.costLimitUsd){pre.append("• Estimated high cost exceeds hard budget\n");warning=true;}
-        PromptContextBuilder.ParseReport locks=PromptContextBuilder.validate(s.glossaryText,s.pronounText);
+        PromptContextBuilder.ParseReport locks=sourceUi.isSetMode()?sourceUi.locksReport():PromptContextBuilder.validate(s.glossaryText,s.pronounText);
         if(!locks.conflicts.isEmpty()||!locks.malformedGlossaryRows.isEmpty()||!locks.malformedPronounRows.isEmpty()){pre.append("• Glossary/pronoun validation warnings\n");warning=true;}
         if(!warning)pre.append("None\n");
         pre.append("\nINFORMATION\nProvider/model: ").append(s.provider).append(" / ").append(s.model)
@@ -1825,6 +1830,20 @@ public class MainActivity extends Activity {
         final boolean hasWarnings=warning;
         new AlertDialog.Builder(this).setTitle("Translation pre-flight").setMessage(pre.toString()).setPositiveButton(hasWarnings?"Proceed with warnings":"Start",(d,w)->startTranslationNow()).setNegativeButton("Cancel",null).show();
         return true;
+    }
+
+    /** Writes the per-Start snapshot of a chapter-set run and marks the intent; returns an error text or null. */
+    String putChapterSession(Intent i, String startSessionId, PreparedBatch readyPlan) {
+        try {
+            ChapterSession session = new ChapterSession(startSessionId);
+            session.setId = sourceUi.currentSetId(); session.setName = sourceUi.currentSetName();
+            session.chapters.addAll(readyPlan.bindings == null ? sourceUi.freshBindings() : readyPlan.bindings);
+            session.write(new java.io.File(getFilesDir(), ChapterSession.DIR));
+            i.putExtra("chapterMode", true);
+            return null;
+        } catch (Exception e) {
+            return "Không ghi được ảnh chụp bộ chương: " + AppValidator.readableError(e);
+        }
     }
 
     void startTranslationNow() {
@@ -1841,6 +1860,14 @@ public class MainActivity extends Activity {
         boolean batch = inputUris.size() > 1;
         if (batch && outputTreeUri == null) { toast("Batch nhiều file cần chọn output folder ở tab Files"); return; }
         if (!batch && outputUri == null && outputTreeUri == null) { toast("Chưa chọn output TXT hoặc output folder"); return; }
+        if (sourceUi.isSetMode()) {
+            // The plan must have been prepared with the Glossary/Pronoun texts that are in the Library right now.
+            java.util.List<ChapterBinding> now = sourceUi.freshBindings();
+            StringBuilder planned = new StringBuilder(), current = new StringBuilder();
+            if (readyPlan.bindings != null) for (ChapterBinding b : readyPlan.bindings) planned.append(b.keyPart()).append(';');
+            for (ChapterBinding b : now) current.append(b.keyPart()).append(';');
+            if (!planned.toString().equals(current.toString())) { chapterBindings = now; updateInputEstimate(); toast("Glossary/Pronoun hoặc bộ chương đã đổi; đang chuẩn bị lại kế hoạch"); return; }
+        }
         String finalReadiness=startReadinessError();
         if(finalReadiness!=null){appendLog("START_DISPATCH_BLOCKED resource="+finalReadiness);showResult("Start blocked",finalReadiness);updateActionButtons();return;}
         saveRuntimeUris();
@@ -1859,6 +1886,10 @@ public class MainActivity extends Activity {
         i.putExtra("preparedBatchId",readyPlan.id);
         String startSessionId = UUID.randomUUID().toString();
         i.putExtra("startSessionId", startSessionId);
+        if (sourceUi.isSetMode()) {
+            String snapshotError = putChapterSession(i, startSessionId, readyPlan);
+            if (snapshotError != null) { appendLog(snapshotError); showResult("Start blocked", snapshotError); updateActionButtons(); return; }
+        }
         CostEstimator.Estimate expected = readyPlan.estimate;
         i.putExtra(TranslatorService.EXTRA_ESTIMATED_TOTAL_TOKENS, expected == null ? 0 : Math.max(0, expected.totalTokensHigh));
         i.putExtra(TranslatorService.EXTRA_ESTIMATED_TOTAL_COST, expected != null && expected.pricingAvailable && !Double.isNaN(expected.costHigh) ? Math.max(0, expected.costHigh) : 0d);
@@ -2032,6 +2063,7 @@ public class MainActivity extends Activity {
 
     /** Returns the exact blocking resource, never a generic YAML error. */
     String startReadinessError() {
+        if(sourceUi.isSetMode()){String setError=sourceUi.readinessError();if(setError!=null)return setError;}
         if(inputUris.isEmpty()) return "TXT input: choose TXT again";
         AppSettings settings=collectSettings();
         String provider=AppValidator.validateForTranslation(settings);
@@ -2043,6 +2075,7 @@ public class MainActivity extends Activity {
         String output=outputTreeUri!=null?FileUtil.validateTreeWritable(this,outputTreeUri,"Output folder")
                 : (batch?FileUtil.validateTreeWritable(this,null,"Output folder"):FileUtil.validateWritable(this,outputUri,"Output TXT"));
         if(output!=null)return output;
+        if(sourceUi.isSetMode())return null;
         PromptContextBuilder.ParseReport locks=PromptContextBuilder.validate(settings.glossaryText,settings.pronounText);
         if(!locks.malformedGlossaryRows.isEmpty())return "Glossary: malformed entries="+locks.malformedGlossaryRows.size();
         if(!locks.malformedPronounRows.isEmpty())return "Pronoun: malformed rules="+locks.malformedPronounRows.size();
@@ -2695,6 +2728,7 @@ public class MainActivity extends Activity {
     }
 
     void showPromptPreview() {
+        if (sourceUi.isSetMode()) { sourceUi.previewChapter(); return; }
         if (inputUris.isEmpty()) { toast("Chưa chọn TXT để preview prompt"); return; }
         PromptPreviewDialog.showForInput(
                 this,
@@ -2720,7 +2754,7 @@ public class MainActivity extends Activity {
             AppSettings settings=collectSettings();
             estimateText.setText("Preparing chunks…");
             estimatePanel.setVisibility(View.VISIBLE);
-            PreparationCoordinator.get(this).request(inputUris,settings,this::renderPreparedBatch);
+            PreparationCoordinator.get(this).request(inputUris,settings,sourceUi.isSetMode()?chapterBindings:null,this::renderPreparedBatch);
             updateActionButtons(); return;
         }
         if (inputUris.isEmpty()) {
@@ -2860,6 +2894,7 @@ public class MainActivity extends Activity {
             estimateText.setText(TranslationDashboardFormatter.prepared(e, batch.exactChunkCount()));
             if(pricingRetryButton!=null)pricingRetryButton.setVisibility(View.GONE);
             updateModelDiagnostics();
+            sourceUi.updateEstimates(batch);
         }
         updateActionButtons();
     }

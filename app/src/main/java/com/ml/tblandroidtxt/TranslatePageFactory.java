@@ -106,7 +106,10 @@ class TranslatePageFactory {
         a.pricingRetryButton.setVisibility(View.GONE);
         a.estimatePanel.setVisibility(View.VISIBLE);
         uploadCard.addView(a.estimatePanel, a.marginLP(-1, -2, 0, 10, 0, 0));
+        a.filesSourceCard = uploadCard;
+        root.addView(a.sourceUi.build(), a.marginLP(-1, -2, 0, 8, 0, 0));
         root.addView(uploadCard, a.marginLP(-1, -2, 0, 8, 0, 14));
+        if (a.sourceUi.isSetMode()) uploadCard.setVisibility(View.GONE);
 
         // Core readiness must remain visible on Translate; do not hide it behind Settings.
         root.addView(translationSupportCard(), a.marginLP(-1, -2, 0, 0, 0, 10));
@@ -269,12 +272,13 @@ class TranslatePageFactory {
         card.addView(head);
 
         LinearLayout steps = a.rowContainer();
-        steps.addView(stepBox("1", "TXT", a.inputUris.isEmpty() ? "chưa chọn" : (a.inputUris.size() == 1 ? "1 file" : a.inputUris.size() + " files"), a.inputUris.isEmpty() ? a.MUTED : a.GREEN), new LinearLayout.LayoutParams(0, -2, 1));
+        boolean setMode = a.sourceUi.isSetMode();
+        steps.addView(stepBox("1", setMode ? "Bộ chương" : "TXT", a.inputUris.isEmpty() ? "chưa chọn" : (a.inputUris.size() == 1 ? "1 file" : a.inputUris.size() + " files"), a.inputUris.isEmpty() ? a.MUTED : a.GREEN), new LinearLayout.LayoutParams(0, -2, 1));
         steps.addView(a.space(6, 1));
         steps.addView(stepBox("2", "Output", a.outputTreeUri != null ? "folder" : (a.outputUri != null ? "file" : "chưa chọn"), (a.outputTreeUri != null || a.outputUri != null) ? a.GREEN : a.MUTED), new LinearLayout.LayoutParams(0, -2, 1));
         steps.addView(a.space(6, 1));
         GlossaryStore.Glossary g = GlossaryStore.selected(a);
-        steps.addView(stepBox("3", "Locks", g == null ? "optional" : g.count() + " terms", g == null ? a.MUTED : a.GREEN), new LinearLayout.LayoutParams(0, -2, 1));
+        steps.addView(stepBox("3", "Locks", setMode ? a.sourceUi.locksSummary() : g == null ? "optional" : g.count() + " terms", setMode ? a.GREEN : g == null ? a.MUTED : a.GREEN), new LinearLayout.LayoutParams(0, -2, 1));
         card.addView(steps, a.marginLP(-1, -2, 0, 10, 0, 10));
 
         TextView hint = a.text("Gợi ý: chọn TXT + output trước, kiểm Prompt preview nếu có glossary/pronoun, rồi Start. UI 2.9 giữ navigation cũ để tránh mất state dịch.", 12, a.MUTED, false);
