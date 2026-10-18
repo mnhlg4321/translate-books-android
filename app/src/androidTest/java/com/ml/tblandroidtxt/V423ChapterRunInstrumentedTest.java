@@ -333,7 +333,12 @@ public class V423ChapterRunInstrumentedTest {
 
     private static void media(String stage, ActivityScenario<MainActivity> scenario) throws InterruptedException {
         if (!"run".equals(InstrumentationRegistry.getArguments().getString("v423_media", ""))) return;
-        scenario.onActivity(activity -> activity.switchTab(stage.startsWith("28") ? "Translate" : "Jobs"));
+        scenario.onActivity(activity -> activity.switchTab("Translate"));
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+        if (!stage.startsWith("28")) {
+            // Bring the progress card with the closing line into view.
+            scenario.onActivity(activity -> { android.widget.ScrollView sv = activity.findScrollView(activity.getWindow().getDecorView()); if (sv != null) sv.post(() -> sv.fullScroll(View.FOCUS_DOWN)); });
+        }
         Thread.sleep(700L);
         android.util.Log.i("V423MEDIA", "stage=" + stage);
         Thread.sleep(5_000L);
