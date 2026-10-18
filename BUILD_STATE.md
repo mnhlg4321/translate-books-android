@@ -1,6 +1,12 @@
 # Build State
 
-## Current state — 2026-10-18 (v4.23 dev build `4.23-dev.7`: Resume-after-Retry fix R1-R4 plus the pending-job card fix found in the phone trial; emulator QA PASS; waiting for the owner)
+## Current state — 2026-10-18 (v4.23 dev build `4.23-dev.8`: action buttons wrap their label; emulator QA PASS; waiting for the owner)
+
+- `4.23-dev.7` (code 282, `a5facba8`, pending-job card prefers a job that can continue) is installed on the owner phone `15e84958` (backup `v4.23-dev6-code281`). The owner then reported the clipped "Retry failed chunks" label.
+- `4.23-dev.8` / code 283, event `build-20261018-230733`, source `c69fa011`, APK SHA-256 `5B2C46497FAE1AE98EE63757CD548A29E294D36986310B2E2F77BD9D92C932D6`; test APK `v423-dev8-test-20261018` (`29FDD18E…`). Fixed-height button rows on the Translate screen now wrap. Emulator-5554 only.
+- Clean-archive regression `c69fa011`: engine 742 / 1 SKIP; app 570 per variant / 5 SKIP; 0 FAIL; lint 0 errors / 65 warnings. Device QA 205 / 189 PASS / 16 SKIP / 0 FAIL. Report `artifacts/qa/v4.23-dev8-20261018/QA_REPORT.md`.
+
+## Previous state — 2026-10-18 (v4.23 dev build `4.23-dev.7`: Resume-after-Retry fix R1-R4 plus the pending-job card fix found in the phone trial; emulator QA PASS; waiting for the owner)
 
 - `4.23-dev.6` (code 281, `f8de53a7`) fixed Resume after Retry (Retry continues the remaining chunks, "Job đang dở" card, Start asks Tiếp tục / Dịch lại, visible outcome messages). The owner approved it for the phone; it was installed on `15e84958` (backup `v4.23-dev5-code280/20261018-223019`) and tried on a real 4-chunk file with the network cut after chunk 0: Retry/"Tiếp tục job cũ" finished the same job 4/4, Start asked correctly (F1, F3 OK); the card showed an old `NEEDS_REVIEW` job (touched on every start) instead (F2 defect).
 - `4.23-dev.7` / code 282, event `build-20261018-224505`, source `a5facba8`, APK SHA-256 `C088BDCED5C5A37338341EE6CF7F3750E6C53037F6056DBCDFB218CB3A8CA59C`; test APK `v423-dev7-test-20261018` (`FBFA4E57…`). The card shows the newest job that can continue; a job with a request of unknown delivery is shown only when nothing else is left. Emulator-5554 only; the phone is still on dev.6 until the owner approves.
