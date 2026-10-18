@@ -1,15 +1,15 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-18 (+07:00): dev.1 (L1+L2) built, clean-archive regression PASS, device QA found 4 schema-version assertions (29 -> 30) in two Editorial device tests; fixed in test code; L3/L4 code in progress.
+- Updated: 2026-10-18 (+07:00): 4.23-dev.1 (L1 RAW tab + L2 multi-select) built, regression and emulator QA PASS (192 / 176 PASS / 16 SKIP / 0 FAIL), 6 screenshots inspected; waiting for the owner before L3/L4.
 - Current version: v4.23.0 in development (not released); contains unreleased v4.22 code; shipped 4.21.0 / code 271 (tag `v4.21.0`).
 - Current branch: `feature/v4.23` in worktree `D:\P5E-builds\wt-v4.23` (BASE `c8408207` on `feature/v4.22`).
-- Current commit: `d2cc1a93` (L1 storage) is the last commit before the L1 UI + L2 commit; this snapshot describes the working tree of that commit. Confirm actual HEAD when resuming.
+- Current commit: `c028569b` (test fix on top of the dev.1 source `3848ebeb`) is the implementation baseline immediately before this snapshot commit; the dev.1 APK is built from `3848ebeb`. Confirm actual HEAD when resuming.
 - Current build: `4.23-dev.1` / code 276 (event `build-20261018-164751`, source `3848ebeb`, APK SHA-256 `22B24F0C6BC8CF32258DF7D9CA70B3AFA796EFD0BE564F41D3EB53114753799E`), emulator-5554 only; test APK event `v423-dev1-test-20261018`.
-- Current phase: step 05 develop: L1 and L2 done on host; building `4.23-dev.1`, clean-archive regression and emulator QA, then stop for the owner.
-- Completed tasks: steps 01-04; L1 storage (schema 30 `library_raw`/`chapter_sets`/`chapter_set_rows`, `tblraw://` in `FileUtil`, `RawFileStore`, `RawImportPlanner`, library ZIP format 2 with RAW); L1 RAW tab (import, search, view, rename, replace, delete); L2 selection (`LibrarySelectionController`, `LibraryBulkUi`, delete plan with second confirm, 10 s undo, export, Use); `TranslateTestSeam` (test-only provider and output folder).
-- Pending tasks: `4.23-dev.1` build, clean-archive regression, emulator QA and screenshots, owner report; L3 chapter sets; L4 per-chapter translation; `4.23-dev.2`; L5 owner trial D1-D7.
+- Current phase: step 05 develop: L1 and L2 complete and QA'd; stopped for the owner's approval; L3 and L4 groundwork is committed separately as WIP (not in any build).
+- Completed tasks: steps 01-04; L1 RAW tab; L2 multi-select; dev.1 build, clean-archive regression, device QA and QA report (`artifacts/qa/v4.23-dev1-20261018/QA_REPORT.md`).
+- Pending tasks: owner approval to continue; L3 chapter sets (matcher, confirmation table, list; code written, device test written, not built); L4 per-chapter translation (binding, session snapshot, plan key, error policy, Translate screen); `4.23-dev.2` + QA + owner report; L5 owner trial D1-D7.
 - Known bugs/limits: as v4.22 (`feature/v4.22` snapshot); a job report prints raw settings JSON when it cannot parse it.
-- Regression status: working tree: app host 533 tests / 5 SKIP / 0 FAIL; androidTest compile PASS; engine, lint, release and benchmark variants not rerun yet. Three Editorial schema-version assertions (`VER = 29` -> `VER = 30`) were bumped in `EditorialApiV26MigrationSpecTest`, `EditorialPairV27MigrationSpecTest`, `EditorialPairV29MigrationSpecTest`; `git diff c8408207 -- editorial-engine app/.../Editorial*` is empty.
+- Regression status: clean archive `3848ebeb`: engine 742 / 1 SKIP, app debug, release, benchmark 533 each / 5 SKIP, 0 FAIL, lint 0 errors / 60 warnings, AndroidTest compile PASS; device 192 discovered / 176 PASS / 16 SKIP / 0 FAIL. Editorial boundary diff empty; five Editorial-named tests changed by one number (VER 29 -> 30).
 - Semantic progress: unchanged.
 - Spend: USD 0; no provider call. Phone `15e84958` not touched.
-- Next action: rebuild the dev.1 test APK from a clean worktree after the test fix, rerun the failed device groups and restart phases by method, take screenshots, write the dev.1 QA report and stop for the owner.
+- Next action: wait for the owner's answer on the dev.1 report; if approved, finish L3 (compile, host tests, device test) and L4, then build `4.23-dev.2`.

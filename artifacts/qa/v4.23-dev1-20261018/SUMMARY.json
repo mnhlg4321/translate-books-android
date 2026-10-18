@@ -1,0 +1,20 @@
+{
+  "build": {"versionName": "4.23-dev.1", "versionCode": 276, "event": "build-20261018-164751", "sourceCommit": "3848ebeb8c31ece4fe6248286f78f500d0b26bfe",
+            "apkSha256": "22B24F0C6BC8CF32258DF7D9CA70B3AFA796EFD0BE564F41D3EB53114753799E", "sourceZipSha256": "56CA207C170E6A464C02C3B952DDB1B77F1077283B14A0F87C263A08D24D4D67"},
+  "testApks": [
+    {"event": "v423-dev1-test-20261018", "sha256": "6E06A1C337E61FA44CD5A7C5A73CACFCF338EF8CD61337A6BDC6F00822D91DBE", "sourceCommit": "3848ebeb", "use": "first QA run (4 Editorial store version assertions failed)"},
+    {"event": "v423-dev1-test2-20261018", "sha256": "37552DE35DB65810AF7985F2F55D443FAD811AD945E8595A77E5B6002D127928", "sourceCommit": "c028569b", "use": "device QA, restart phases and screenshots"}
+  ],
+  "cleanArchiveRegression": {"commit": "3848ebeb", "archiveZipSha256": "56CA207C170E6A464C02C3B952DDB1B77F1077283B14A0F87C263A08D24D4D67",
+    "engine": {"tests": 742, "skip": 1, "fail": 0},
+    "app": {"debug": {"tests": 533, "skip": 5, "fail": 0}, "release": {"tests": 533, "skip": 5, "fail": 0}, "benchmark": {"tests": 533, "skip": 5, "fail": 0}},
+    "lint": {"errors": 0, "warnings": 60}, "androidTestCompile": "PASS"},
+  "device": {"serial": "emulator-5554", "discovered": 192, "pass": 176, "skip": 16, "fail": 0, "incomplete": 0,
+            "groups": {"frozen": [117, 116, 1, 0], "chunk": [27, 21, 6, 0], "product": [15, 15, 0, 0], "v422": [13, 6, 7, 0], "v423": [5, 3, 2, 0], "restart": [15, 15, 0, 0]},
+            "groupColumns": ["discovered", "pass", "skip", "fail"]},
+  "screenshots": 6,
+  "editorialBoundary": "git diff c8408207 -- editorial-engine app/src/main/java/com/ml/tblandroidtxt/Editorial* is empty; five test files changed only by a version number or a format-version expectation",
+  "providerCalls": 0,
+  "usd": 0,
+  "ownerPhone": {"serial": "15e84958", "touched": false, "note": "not attached during this work"}
+}

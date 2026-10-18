@@ -1,5 +1,19 @@
 # Build State
 
+## Current state — 2026-10-18 (v4.23 dev build `4.23-dev.1`: L1 RAW tab + L2 multi-select; emulator QA PASS; waiting for the owner)
+
+- Branch `feature/v4.23` from `feature/v4.22` `c8408207` (worktree `D:\P5E-builds\wt-v4.23`, checklist `release_checklists/v4.23.md`, work request `docs/V423_TRANSLATE_LIBRARY_WORK_REQUEST.md`). Contains the unreleased v4.22 code (Editorial, R, S0); Editorial itself is untouched.
+- L1: schema 30 (`library_raw`, `chapter_sets`, `chapter_set_rows`), RAW kept as files under `filesDir/library_raw`, internal address `tblraw://<id>` read by `FileUtil` (no SAF grant), Library > RAW tab (bulk import with duplicate / empty / non-text skipped, chapter order, search, view / rename / replace / delete), library ZIP format 2 with RAW (format 1 still imports).
+- L2: multi-select on RAW, Glossaries and Pronouns: delete (second confirmation for Active / chapter-set / Editorial-combo items, items with unfinished jobs left out), 10 s undo with original ids and positions, export of the ticked items, Use for one Glossary or Pronoun. Test-only `TranslateTestSeam` (fake provider and output folder).
+- Build: `4.23-dev.1` / code 276, event `build-20261018-164751`, source `3848ebeb`, APK SHA-256 `22B24F0C6BC8CF32258DF7D9CA70B3AFA796EFD0BE564F41D3EB53114753799E`, in `D:\App Translate Booksrtifactsuilds` and `backupuilds`; installed on emulator-5554 only. Test APKs `v423-dev1-test-20261018` (`6E06A1C3…`, from `3848ebeb`) and `v423-dev1-test2-20261018` (`37552DE3…`, from `c028569b`, androidTest-only difference).
+- Clean-archive regression of `3848ebeb` (ZIP `56CA207C…`): engine 742 / 1 SKIP; app debug, release, benchmark 533 each / 5 SKIP, 0 FAIL; lint 0 errors / 60 warnings; AndroidTest compile PASS. Device QA (emulator-5554, fake provider): 192 discovered / 176 PASS / 16 SKIP / 0 FAIL / 0 INCOMPLETE, including the new `V423LibraryInstrumentedTest`, `V423TranslateRawInstrumentedTest` (full run and force-stop restart of a job whose input is an internal RAW). 6 screenshots inspected. Report `artifacts/qa/v4.23-dev1-20261018/QA_REPORT.md`.
+- Repaired during QA: four device assertions of database version 29 in two Editorial store tests (now 30) and a runner mistake with whole-class restart runs. Editorial boundary: `git diff c8408207 -- editorial-engine app/.../Editorial*` is empty; five Editorial-named test files changed by one number.
+- Known limits of this build: the "Tạo bộ chương" button in the RAW selection bar only shows a toast (L3 not built); the delete dialog title counts ticked items even when some are left out.
+- No provider call; USD 0. Owner phone `15e84958` not touched.
+- Next action: owner decision to continue with L3 (chapter sets) and L4 (translate by chapter set), then `4.23-dev.2`.
+
+## Earlier — v4.22 (unchanged below)
+
 ## Current state — 2026-10-18 (v4.22 dev build `4.22-dev.3` with R and S0: emulator QA PASS; phone install waits for the owner)
 
 - F3: `EditorialRefusedProposalInstrumentedTest` (real SQLite and the real result screen: proposal shown, "Áp dụng đề xuất" changes exactly that line, journal `PROPOSAL_APPLIED`, second apply refused, `mình/em` cell passes the answer, survives force-stop) `4032ff39`; screenshot hold points for S0 `2317fb5b` (androidTest only).

@@ -1,0 +1,155 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.3.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :editorial-engine:compileJava
+> Task :editorial-engine:processResources
+> Task :editorial-engine:classes
+> Task :editorial-engine:jar
+
+> Task :editorial-engine:compileTestJava
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :editorial-engine:processTestResources
+> Task :editorial-engine:testClasses
+> Task :editorial-engine:test
+> Task :app:verifyApprovedLogo
+> Task :app:syncEditorialEngineProfileAsset
+> Task :app:verifyEditorialEngineProfileAsset
+> Task :app:verifyEditorialSafe4Pack
+> Task :app:verifyEditorialV5FullPack
+> Task :app:preBuild
+> Task :app:preDebugBuild
+> Task :app:generateDebugBuildConfig
+> Task :app:javaPreCompileDebug
+> Task :app:checkDebugAarMetadata
+> Task :app:generateDebugResValues
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:mergeDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :app:parseDebugLocalResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:preDebugUnitTestBuild
+> Task :app:javaPreCompileDebugUnitTest
+> Task :app:processDebugJavaRes NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes
+> Task :app:preReleaseBuild
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:parseReleaseLocalResources
+> Task :app:extractDeepLinksRelease
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:preReleaseUnitTestBuild
+> Task :app:javaPreCompileReleaseUnitTest
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:processReleaseUnitTestJavaRes
+> Task :app:preBenchmarkBuild
+> Task :app:generateBenchmarkBuildConfig
+> Task :app:javaPreCompileBenchmark
+> Task :app:generateBenchmarkResValues
+> Task :app:checkBenchmarkAarMetadata
+> Task :app:mapBenchmarkSourceSetPaths
+> Task :app:generateBenchmarkResources
+> Task :app:packageBenchmarkResources
+> Task :app:createBenchmarkCompatibleScreenManifests
+> Task :app:processReleaseManifestForPackage
+> Task :app:parseBenchmarkLocalResources
+> Task :app:extractDeepLinksBenchmark
+> Task :app:processBenchmarkMainManifest
+> Task :app:processBenchmarkManifest
+> Task :app:preBenchmarkUnitTestBuild
+> Task :app:javaPreCompileBenchmarkUnitTest
+> Task :app:processBenchmarkJavaRes NO-SOURCE
+> Task :app:processBenchmarkUnitTestJavaRes
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:generateDebugAndroidTestResValues
+> Task :app:extractProguardFiles
+> Task :app:processDebugAndroidTestManifest
+> Task :app:generateDebugAndroidTestBuildConfig
+> Task :app:javaPreCompileDebugAndroidTest
+> Task :app:checkDebugAndroidTestAarMetadata
+> Task :app:mapDebugAndroidTestSourceSetPaths
+> Task :app:generateDebugAndroidTestResources
+> Task :app:processBenchmarkManifestForPackage
+> Task :app:processDebugManifestForPackage
+> Task :app:mergeDebugAndroidTestResources
+> Task :app:processDebugAndroidTestResources
+> Task :app:processDebugResources
+
+> Task :app:compileDebugJavaWithJavac
+Note: D:\P5E-builds\arch-v423-3848ebeb\app\src\main\java\com\ml\tblandroidtxt\MainActivity.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:generateDebugLintReportModel
+
+> Task :app:compileDebugUnitTestJavaWithJavac
+Note: D:\P5E-builds\arch-v423-3848ebeb\app\src\test\java\com\ml\tblandroidtxt\Patch312Test.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :app:mergeReleaseResources
+> Task :app:mergeBenchmarkResources
+> Task :app:testDebugUnitTest
+> Task :app:generateDebugAndroidTestLintModel
+> Task :app:generateDebugUnitTestLintModel
+> Task :app:processReleaseResources
+> Task :app:processBenchmarkResources
+
+> Task :app:compileDebugAndroidTestJavaWithJavac
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :app:compileReleaseJavaWithJavac
+Note: D:\P5E-builds\arch-v423-3848ebeb\app\src\main\java\com\ml\tblandroidtxt\MainActivity.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :app:bundleReleaseClassesToRuntimeJar
+> Task :app:bundleReleaseClassesToCompileJar
+
+> Task :app:compileBenchmarkJavaWithJavac
+Note: D:\P5E-builds\arch-v423-3848ebeb\app\src\main\java\com\ml\tblandroidtxt\MainActivity.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :app:compileReleaseUnitTestJavaWithJavac
+Note: D:\P5E-builds\arch-v423-3848ebeb\app\src\test\java\com\ml\tblandroidtxt\Patch312Test.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :app:lintAnalyzeDebugUnitTest
+> Task :app:lintAnalyzeDebugAndroidTest
+> Task :app:lintAnalyzeDebug
+> Task :app:testReleaseUnitTest
+> Task :app:bundleBenchmarkClassesToRuntimeJar
+> Task :app:bundleBenchmarkClassesToCompileJar
+
+> Task :app:lintReportDebug
+Wrote HTML report to file:///D:/P5E-builds/arch-v423-3848ebeb/app/build/reports/lint-results-debug.html
+
+> Task :app:compileBenchmarkUnitTestJavaWithJavac
+Note: D:\P5E-builds\arch-v423-3848ebeb\app\src\test\java\com\ml\tblandroidtxt\Patch312Test.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :app:testBenchmarkUnitTest
+> Task :app:lintDebug
+
+[Incubating] Problems report is available at: file:///D:/P5E-builds/arch-v423-3848ebeb/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.3.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 48s
+96 actionable tasks: 96 executed
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.3.0/userguide/configuration_cache_enabling.html
