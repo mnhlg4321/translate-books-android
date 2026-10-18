@@ -15,7 +15,7 @@ INSTRUMENTATION_STATUS: test=u_screens_pendingCardStartQuestionAndStateAfterRetr
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 36.29
+Time: 38.721
 
 OK (1 test)
 
