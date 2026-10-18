@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-18 (+07:00): 4.23-dev.5 (UX request U1-U3) built, regression and emulator QA PASS (197 / 181 PASS / 16 SKIP / 0 FAIL); waiting for the owner to approve the phone install.
+- Updated: 2026-10-18 (+07:00): owner reports E1-E5 OK on phone 15e84958 with 4.23-dev.5 / code 280; D1-D2 and D4-D7 not reported yet (NOT_MEASURED).
 - Current version: v4.23.0 in development (not released); contains unreleased v4.22 code; shipped 4.21.0 / code 271 (tag `v4.21.0`).
 - Current branch: `feature/v4.23` in worktree `D:\P5E-builds\wt-v4.23` (BASE `c8408207` on `feature/v4.22`).
 - Current commit: `dcde3320` is the baseline before this snapshot commit (docs only in this commit); dev.2 APK built from `79fbc979`. Confirm actual HEAD when resuming.
@@ -12,4 +12,4 @@
 - Regression status: clean archive `79fbc979`: engine 742 / 1 SKIP, app debug, release, benchmark 547 each / 5 SKIP, 0 FAIL, lint 0 errors / 64 warnings, AndroidTest compile PASS; device 196 / 180 PASS / 16 SKIP / 0 FAIL. Editorial boundary diff empty; five Editorial-named tests changed by one number.
 - Semantic progress: unchanged.
 - Spend: USD 0; no provider call. Phone 15e84958: owner approved the install in chat 2026-10-18; backup before install in D:/App Translate Books/App Translate Books-device-backups/v4.23-dev2-code277/20261018-213422 (DB sha256 e3820252...107134 matches phone and archive); 4.23-dev.5 / code 280 installed with install-validated.ps1, first launch without crash.
-- Next action: owner tries E1-E5 on the phone and reports; D1-D7 items not yet tried stay NOT_MEASURED.
+- Next action: owner decides on the rest of D1-D7 (D4/D5 call the real provider) and on the release order of v4.22 and v4.23; no tag, merge or push before that.
