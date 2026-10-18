@@ -102,7 +102,7 @@ Khuyến nghị: **(b) phát hành 4.22.0 trước, rồi tạo `feature/v4.23` 
 
 ## 7. Owner cần quyết
 
-**Đã quyết 2026-10-18:** S0 vào 4.22.0 (yêu cầu `docs/V422_S0_LIBRARY_SAFETY_WORK_REQUEST.md`); S1–S5 sang 4.23, S1 + S2 trước. Câu 3–4 dưới đây còn mở, quyết khi viết yêu cầu 4.23.
+**Đã quyết 2026-10-18:** S0 vào 4.22.0 (`docs/V422_S0_LIBRARY_SAFETY_WORK_REQUEST.md`). Owner sau đó yêu cầu làm tab RAW, chọn hàng loạt và bộ chương cho luồng Dịch, không động vào Biên tập: yêu cầu làm việc `docs/V423_TRANSLATE_LIBRARY_WORK_REQUEST.md` (thứ tự L1 RAW, L2 chọn hàng loạt, L3 bộ chương, L4 dịch theo bộ chương; câu 3–4 dùng mặc định trong đó).
 
 1. Đưa S0 (an toàn dữ liệu + xuất/nhập thư viện) vào 4.22.0, hay để 4.23?
 2. Thứ tự 4.23: S1 + S2 trước (dịch nhiều chương ngay với "Browse TXT(s)"), rồi S3, S4? Hay owner muốn tab RAW (S4) sớm hơn dù giá trị Y3 đến chậm?
