@@ -48,6 +48,16 @@ public class ResumePromptTest {
         assertFalse("a job with a request of unknown delivery is not resumed automatically", m.containsKey(2));
     }
 
+    @Test public void theCardShowsTheNewestJobThatCanContinueAndNotAStaleUnknownDeliveryOne() {
+        TranslationRepository.JobProgress stale = job(2, "old.txt", "H0", 3, 0, 0, 1, 2);
+        TranslationRepository.JobProgress fresh = job(186, "new.txt", "H1", 4, 1, 1, 0, 2);
+        TranslationRepository.JobProgress older = job(150, "mid.txt", "H2", 4, 2, 0, 0, 2);
+        assertEquals("a stale unknown-delivery job sorted first must not hide the job that can continue", 186L, ResumePrompt.pickCardJob(Arrays.asList(stale, fresh, older)).id);
+        assertEquals(150L, ResumePrompt.pickCardJob(Arrays.asList(stale, older)).id);
+        assertEquals("only unknown-delivery jobs left: the newest is shown", 2L, ResumePrompt.pickCardJob(Arrays.asList(stale)).id);
+        assertEquals(null, ResumePrompt.pickCardJob(new ArrayList<TranslationRepository.JobProgress>()));
+    }
+
     @Test public void resumeMapRoundTripsThroughJson() throws Exception {
         Map<Integer, Long> m = new java.util.HashMap<>();
         m.put(0, 5L); m.put(2, 9L);

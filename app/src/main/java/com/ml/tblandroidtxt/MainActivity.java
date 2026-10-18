@@ -250,9 +250,9 @@ public class MainActivity extends Activity {
         if (TranslatorService.isActive() || translationActive) { pendingJobCard.setVisibility(View.GONE); return; }
         java.util.List<TranslationRepository.JobProgress> jobs;
         TranslationRepository repo = new TranslationRepository(this);
-        try { jobs = repo.getIncompleteJobs(null, 1); } catch (Exception e) { jobs = new ArrayList<>(); } finally { repo.close(); }
-        if (jobs.isEmpty()) { pendingJobCard.setVisibility(View.GONE); return; }
-        final TranslationRepository.JobProgress p = jobs.get(0);
+        try { jobs = repo.getIncompleteJobs(null, 20); } catch (Exception e) { jobs = new ArrayList<>(); } finally { repo.close(); }
+        final TranslationRepository.JobProgress p = ResumePrompt.pickCardJob(jobs);
+        if (p == null) { pendingJobCard.setVisibility(View.GONE); return; }
         pendingJobCard.setVisibility(View.VISIBLE);
         pendingJobCard.addView(text("⏸ Job đang dở", 16, TEXT, true));
         TextView name = text(p.fileName, 14, TEXT, false);

@@ -40,6 +40,16 @@ final class ResumePrompt {
         return out;
     }
 
+    /**
+     * The job the card shows: the newest one that can be continued. A job with a request of unknown delivery cannot be continued from the
+     * card, so it must not hide a newer job that can; it is shown only when nothing else is left. {@code jobs} is newest first.
+     */
+    static TranslationRepository.JobProgress pickCardJob(List<TranslationRepository.JobProgress> jobs) {
+        if (jobs == null || jobs.isEmpty()) return null;
+        for (TranslationRepository.JobProgress p : jobs) if (p.unknown == 0) return p;
+        return jobs.get(0);
+    }
+
     static String toJson(Map<Integer, Long> map) {
         JSONObject o = new JSONObject();
         try { for (Map.Entry<Integer, Long> e : map.entrySet()) o.put(String.valueOf(e.getKey()), e.getValue()); } catch (Exception ignored) { }

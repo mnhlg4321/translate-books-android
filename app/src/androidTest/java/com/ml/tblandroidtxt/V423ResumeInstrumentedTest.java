@@ -481,18 +481,29 @@ public class V423ResumeInstrumentedTest {
             startNew(c, batch, s, new File(outDir(c), "screens-out.txt"));
             waitFor(() -> job(c, raw.uri()) != null && idle() && counts(c, job(c, raw.uri()).id)[1] >= 1, 90_000L, "stopped on a failed chunk");
             long jobId = job(c, raw.uri()).id;
+            // A stale job whose request has unknown delivery and whose updated_at is the newest must not hide this job in the card.
+            TranslationRepository seed = new TranslationRepository(c);
+            long staleId;
+            try {
+                staleId = seed.createJob("content://fake/stale-unknown", "content://fake/stale-out", "stale-unknown.txt", settings(),
+                        Collections.singletonList(new Chunk(0, 0, 10, "", "古い未確定の原文です。", "", "")), "stale-unknown-input", "stale-unknown-settings");
+                seed.markDeliveryUnknown(staleId, 0, 1, "SENT", "simulated loss");
+                seed.touchJob(staleId, "NEEDS_REVIEW");
+            } finally { seed.close(); }
             scenario.onActivity(a -> { a.translationActive = false; a.switchTab("Translate"); a.refreshPendingJobCard(); });
             InstrumentationRegistry.getInstrumentation().waitForIdleSync();
             scenario.onActivity(a -> {
                 assertTrue(containsText(a.getWindow().getDecorView(), "Job đang dở"));
                 assertTrue(containsText(a.getWindow().getDecorView(), "chunk xong"));
                 assertTrue(containsText(a.getWindow().getDecorView(), "Tiếp tục dịch"));
+                assertTrue("the card shows the job that can continue", containsText(a.pendingJobCard, raw.originalName));
+                assertFalse("not the stale unknown-delivery job", containsText(a.pendingJobCard, "stale-unknown.txt"));
                 a.findScrollView(a.getWindow().getDecorView()).post(() -> { View card = a.pendingJobCard; a.findScrollView(a.getWindow().getDecorView()).scrollTo(0, Math.max(0, card.getTop() - 200)); });
             });
             media("38-pending-job-card");
             TranslationRepository repo = new TranslationRepository(c);
             List<TranslationRepository.JobProgress> partial;
-            try { partial = repo.getIncompleteJobs(null, 1); } finally { repo.close(); }
+            try { partial = repo.getIncompleteJobs(Collections.singletonList(batch.inputs.get(0).inputHash), 1); } finally { repo.close(); }
             scenario.onActivity(a -> a.askResumeOrRestart(partial, () -> { }, () -> { }));
             InstrumentationRegistry.getInstrumentation().waitForIdleSync();
             media("39-start-question");
@@ -507,7 +518,11 @@ public class V423ResumeInstrumentedTest {
             scenario.onActivity(a -> { a.switchTab("Translate"); a.refreshPendingJobCard(); });
             media("40-state-after-retry");
             scenario.onActivity(a -> assertFalse("the card no longer shows the finished job", containsText(a.pendingJobCard, raw.originalName)));
-        } finally { cleanup(c, raw); }
+        } finally {
+            TranslationRepository del = new TranslationRepository(c);
+            try { for (TranslationRepository.JobProgress s2 : del.getIncompleteJobs(null, 200)) if ("stale-unknown.txt".equals(s2.fileName)) del.deleteJob(s2.id); } finally { del.close(); }
+            cleanup(c, raw);
+        }
     }
 
     private static final class TranslatorServiceIdle {
