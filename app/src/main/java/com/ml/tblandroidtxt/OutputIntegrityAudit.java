@@ -26,6 +26,6 @@ public final class OutputIntegrityAudit {
         if(!offsetsKnown)r.warnings.add("SOURCE_OFFSETS_UNKNOWN_FOR_MIGRATED_JOB");
         return r;
     }
-    public static class Result { public final List<String>errors=new ArrayList<>(),warnings=new ArrayList<>();public boolean passed(){return errors.isEmpty();}public String status(){return !passed()?"FAILED_INTEGRITY_CHECK":warnings.isEmpty()?"COMPLETED":"COMPLETED_WITH_WARNINGS";} }
+    public static class Result { public final List<String>errors=new ArrayList<>(),warnings=new ArrayList<>();public boolean passed(){return errors.isEmpty();}/** True when the only problem is chunks that are not translated yet (INCOMPLETE_CHUNK): the job can simply be continued. */public boolean onlyIncomplete(){if(errors.isEmpty())return false;java.util.HashSet<String> idx=new java.util.HashSet<>();for(String e:errors)if(e.startsWith("INCOMPLETE_CHUNK:"))idx.add(e.substring(17));if(idx.isEmpty())return false;for(String e:errors){if(e.startsWith("INCOMPLETE_CHUNK:"))continue;if(e.startsWith("BLANK_OUTPUT:")&&idx.contains(e.substring(13)))continue;return false;}return true;}public int incompleteCount(){int n=0;for(String e:errors)if(e.startsWith("INCOMPLETE_CHUNK:"))n++;return n;}public String status(){return !passed()?(onlyIncomplete()?"PAUSED":"FAILED_INTEGRITY_CHECK"):warnings.isEmpty()?"COMPLETED":"COMPLETED_WITH_WARNINGS";} }
     private static String normalize(String s){return s==null?"":s.replaceAll("\\s+"," ").trim();} private OutputIntegrityAudit(){}
 }

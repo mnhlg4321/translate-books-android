@@ -222,13 +222,90 @@ public class MainActivity extends Activity {
             }
             if ("done".equals(status)) {
                 showResult("Output ready", "Saved and verified");
-                toast("Dịch hoàn tất");
-            } else if ("error".equals(status)) toast("Có lỗi khi dịch");
+                toast(clipForToast(log, "Dịch hoàn tất"));
+            } else if ("error".equals(status)) toast(clipForToast(log, "Có lỗi khi dịch"));
             else if ("stopping".equals(status)) toast("Đang dừng dịch");
-            else if ("paused".equals(status)) toast("Đã tạm dừng");
+            else if ("paused".equals(status)) toast(clipForToast(log, "Đã tạm dừng"));
+            else if ("info".equals(status)) toast(clipForToast(log, "Không có gì để làm"));
             else if ("cancelled".equals(status)) toast("Đã hủy");
+            if ("done".equals(status) || "error".equals(status) || "paused".equals(status) || "cancelled".equals(status) || "info".equals(status)) {
+                if (appRoot != null) appRoot.postDelayed(MainActivity.this::refreshPendingJobCard, 700);
+            }
         }
     };
+
+    /** The service's own sentence for the outcome, shortened for a toast; {@code fallback} when it sent none. */
+    static String clipForToast(String log, String fallback) {
+        if (log == null || log.trim().isEmpty()) return fallback;
+        String one = log.replace('\n', ' ').trim();
+        return one.length() > 160 ? one.substring(0, 157) + "…" : one;
+    }
+
+    /** Card above the Start buttons: the newest unfinished job, with buttons that continue it. */
+    LinearLayout pendingJobCard;
+
+    void refreshPendingJobCard() {
+        if (pendingJobCard == null) return;
+        pendingJobCard.removeAllViews();
+        if (TranslatorService.isActive() || translationActive) { pendingJobCard.setVisibility(View.GONE); return; }
+        java.util.List<TranslationRepository.JobProgress> jobs;
+        TranslationRepository repo = new TranslationRepository(this);
+        try { jobs = repo.getIncompleteJobs(null, 1); } catch (Exception e) { jobs = new ArrayList<>(); } finally { repo.close(); }
+        if (jobs.isEmpty()) { pendingJobCard.setVisibility(View.GONE); return; }
+        final TranslationRepository.JobProgress p = jobs.get(0);
+        pendingJobCard.setVisibility(View.VISIBLE);
+        pendingJobCard.addView(text("⏸ Job đang dở", 16, TEXT, true));
+        TextView name = text(p.fileName, 14, TEXT, false);
+        name.setSingleLine(false);
+        name.setContentDescription("pending-job-name");
+        pendingJobCard.addView(name, marginLP(-1, -2, 0, 2, 0, 0));
+        TextView line = text(ResumePrompt.progressLine(p), 13, p.error > 0 || p.unknown > 0 ? AMBER : MUTED, true);
+        line.setSingleLine(false);
+        line.setContentDescription("pending-job-progress");
+        pendingJobCard.addView(line, marginLP(-1, -2, 0, 2, 0, 8));
+        LinearLayout row = rowContainer();
+        Button go = primaryButton("Tiếp tục dịch", v -> resumeJob(p.id));
+        go.setEnabled(p.unknown == 0);
+        go.setContentDescription("pending-job-continue");
+        row.addView(go, new LinearLayout.LayoutParams(0, -2, 1));
+        if (p.error > 0) {
+            row.addView(space(6, 1));
+            row.addView(secondaryButton("Retry chunk lỗi", v -> retryJobFailedChunks(p.id)), new LinearLayout.LayoutParams(0, -2, 1));
+        }
+        row.addView(space(6, 1));
+        row.addView(secondaryButton("Xem trong Jobs", v -> switchTab("Jobs")), new LinearLayout.LayoutParams(0, -2, 1));
+        pendingJobCard.addView(row);
+        if (p.unknown > 0) pendingJobCard.addView(text("Có request không rõ đã gửi hay chưa: xem ở tab Jobs trước khi chạy tiếp.", 12, AMBER, false), marginLP(-1, -2, 0, 6, 0, 0));
+    }
+
+    /** Start on files that already have an unfinished job: ask before creating a new one. */
+    void startTranslationNow() {
+        PreparedBatch plan = currentPreparedBatch();
+        if (plan != null && plan.ready() && !TranslatorService.isActive()) {
+            java.util.List<Integer> ordinals = new ArrayList<>();
+            java.util.List<String> hashes = new ArrayList<>();
+            for (PreparedBatch.Input in : plan.inputs) { ordinals.add(in.ordinal); hashes.add(in.inputHash); }
+            java.util.List<TranslationRepository.JobProgress> partial;
+            TranslationRepository repo = new TranslationRepository(this);
+            try { partial = repo.getIncompleteJobs(hashes, 50); } catch (Exception e) { partial = new ArrayList<>(); } finally { repo.close(); }
+            final java.util.Map<Integer, Long> choice = ResumePrompt.chooseJobs(ordinals, hashes, partial);
+            if (!choice.isEmpty()) {
+                java.util.List<TranslationRepository.JobProgress> shown = new ArrayList<>();
+                for (TranslationRepository.JobProgress p : partial) if (choice.containsValue(p.id)) shown.add(p);
+                askResumeOrRestart(shown, () -> dispatchTranslation(choice), () -> dispatchTranslation(null));
+                return;
+            }
+        }
+        dispatchTranslation(null);
+    }
+
+    void askResumeOrRestart(java.util.List<TranslationRepository.JobProgress> shown, Runnable onContinue, Runnable onRestart) {
+        new AlertDialog.Builder(this).setTitle("Đã có job dở").setMessage(ResumePrompt.message(shown))
+                .setPositiveButton("Tiếp tục job cũ", (d, w) -> onContinue.run())
+                .setNeutralButton("Dịch lại từ đầu", (d, w) -> onRestart.run())
+                .setNegativeButton("Hủy", (d, w) -> updateActionButtons())
+                .setOnCancelListener(d -> updateActionButtons()).show();
+    }
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
@@ -1849,7 +1926,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    void startTranslationNow() {
+    void dispatchTranslation(java.util.Map<Integer, Long> resume) {
         PreparedBatch readyPlan=currentPreparedBatch();
         if(readyPlan==null||!readyPlan.ready()){
             toast("Exact chunk plan is not ready");appendLog("Start blocked: missing/stale prepared plan");return;
@@ -1889,6 +1966,7 @@ public class MainActivity extends Activity {
         i.putExtra("preparedBatchId",readyPlan.id);
         String startSessionId = UUID.randomUUID().toString();
         i.putExtra("startSessionId", startSessionId);
+        if (resume != null && !resume.isEmpty()) i.putExtra("resumeJobs", ResumePrompt.toJson(resume));
         if (sourceUi.isSetMode()) {
             String snapshotError = putChapterSession(i, startSessionId, readyPlan);
             if (snapshotError != null) { appendLog(snapshotError); showResult("Start blocked", snapshotError); updateActionButtons(); return; }
@@ -2036,6 +2114,7 @@ public class MainActivity extends Activity {
     }
 
     void updateActionButtons() {
+        refreshPendingJobCard();
         boolean active = TranslatorService.isActive() || translationActive;
         PreparedBatch plan=currentPreparedBatch();
         boolean failed=false;if(!active){JobStore store=new JobStore(this);try{failed=store.hasFailedChunks();}finally{store.close();}}

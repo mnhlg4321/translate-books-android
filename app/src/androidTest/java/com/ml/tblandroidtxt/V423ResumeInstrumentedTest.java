@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
+import android.view.View;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -14,6 +15,7 @@ import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -34,9 +36,9 @@ import static org.junit.Assert.assertTrue;
 public class V423ResumeInstrumentedTest {
     private static final String TAG = "v423x-";
 
-    private static String rawText() {
+    private static String rawText(String marker) {
         StringBuilder sb = new StringBuilder();
-        for (int i = 1; i <= 30; i++) sb.append("第").append(i).append("段。再開試験のための十分に長い日本語の段落であり、境界を越えて分割されることを確認します。登場人物は花子です。\n\n");
+        for (int i = 1; i <= 30; i++) sb.append("【").append(marker).append("】第").append(i).append("段。再開試験のための十分に長い日本語の段落であり、境界を越えて分割されることを確認します。登場人物は花子です。\n\n");
         return sb.append(System.nanoTime()).toString();
     }
 
@@ -58,7 +60,7 @@ public class V423ResumeInstrumentedTest {
     private static File outDir(Context c) { File d = new File(c.getCacheDir(), "v423-resume-out"); d.mkdirs(); return d; }
 
     private static LibraryRawStore.Item importRaw(Context c, String name) throws Exception {
-        RawImportPlanner.Plan plan = RawImportPlanner.plan(Collections.singletonList(new RawImportPlanner.Candidate(name, rawText(), "UTF-8")), LibraryRawStore.hashes(c));
+        RawImportPlanner.Plan plan = RawImportPlanner.plan(Collections.singletonList(new RawImportPlanner.Candidate(name, rawText(name), "UTF-8")), LibraryRawStore.hashes(c));
         return LibraryRawStore.add(c, plan).get(0);
     }
 
@@ -179,5 +181,333 @@ public class V423ResumeInstrumentedTest {
             c.unregisterReceiver(receiver);
             cleanup(c, raw);
         }
+    }
+
+    private static OpenAICompatibleClient.ChatResult costed(int n) {
+        OpenAICompatibleClient.ChatResult r = response(n);
+        r.providerCostReported = true; r.providerCost = 0.01;
+        return r;
+    }
+
+    private static void sendResume(Context c, long jobId) {
+        Intent i = new Intent(c, TranslatorService.class);
+        i.setAction(TranslatorService.ACTION_RESUME_JOB);
+        i.putExtra("jobId", jobId);
+        c.startForegroundService(i);
+    }
+
+    /** T2: the cost limit stops the job part-way (paused, chunks left); "Tiếp tục dịch" keeps going until everything is translated. */
+    @Test
+    public void t2_costLimitPausesAndContinueFinishesTheJob() throws Exception {
+        Context c = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        LibraryRawStore.Item raw = importRaw(c, "008_" + TAG + "cost.txt");
+        AtomicInteger calls = new AtomicInteger();
+        TranslateTestSeam.setOutputDir(outDir(c));
+        TranslateTestSeam.setProvider((settings, prompt, limit, id, observer) -> { observe(observer); return costed(calls.incrementAndGet()); });
+        try {
+            AppSettings s = settings();
+            s.stopOnCostLimit = true; s.costLimitUsd = 0.035;
+            s = AppValidator.normalize(s);
+            PreparedBatch batch = prepare(c, Uri.parse(raw.uri()), s);
+            int total = batch.exactChunkCount();
+            startNew(c, batch, s, new File(outDir(c), "cost-out.txt"));
+            waitFor(() -> job(c, raw.uri()) != null && idle(), 90_000L, "first run stopped at the cost limit");
+            long jobId = job(c, raw.uri()).id;
+            int[] first = counts(c, jobId);
+            assertTrue("some chunks are done, some are left (" + first[0] + "/" + first[1] + "/" + first[2] + ")", first[0] >= 3 && first[0] < total);
+            assertEquals("paused", String.valueOf(job(c, raw.uri()).status).toLowerCase());
+            int previous = first[0];
+            for (int round = 0; round < 12; round++) {
+                sendResume(c, jobId);
+                int prev = previous;
+                waitFor(() -> idle() && counts(c, jobId)[0] > prev || counts(c, jobId)[0] == total, 90_000L, "resume round " + round);
+                waitFor(TranslatorServiceIdle::now, 30_000L, "idle");
+                previous = counts(c, jobId)[0];
+                if (previous == total) break;
+            }
+            assertEquals(total, counts(c, jobId)[0]);
+            assertTrue(String.valueOf(job(c, raw.uri()).status).toUpperCase().startsWith("COMPLETED"));
+        } finally { cleanup(c, raw); }
+    }
+
+    /** T3: an unfinished job is found by its input hash; continuing it creates no new job and sends only the missing chunks; "Dịch lại" starts a new job. */
+    @Test
+    public void t3_startWithAnUnfinishedJobContinuesItOrRestarts() throws Exception {
+        Context c = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        LibraryRawStore.Item raw = importRaw(c, "009_" + TAG + "start.txt");
+        AtomicInteger calls = new AtomicInteger();
+        AtomicInteger failAt = new AtomicInteger(2);
+        TranslateTestSeam.setOutputDir(outDir(c));
+        TranslateTestSeam.setProvider((settings, prompt, limit, id, observer) -> {
+            int n = calls.incrementAndGet();
+            if (n == failAt.get()) throw new ApiHttpException(401, 0, "Unauthorized: invalid credentials");
+            observe(observer);
+            return response(n);
+        });
+        try {
+            AppSettings s = settings();
+            PreparedBatch batch = prepare(c, Uri.parse(raw.uri()), s);
+            int total = batch.exactChunkCount();
+            startNew(c, batch, s, new File(outDir(c), "start-out.txt"));
+            waitFor(() -> job(c, raw.uri()) != null && idle() && counts(c, job(c, raw.uri()).id)[1] >= 1, 90_000L, "first run stopped");
+            long jobId = job(c, raw.uri()).id;
+
+            TranslationRepository repo = new TranslationRepository(c);
+            List<TranslationRepository.JobProgress> partial;
+            try { partial = repo.getIncompleteJobs(Collections.singletonList(batch.inputs.get(0).inputHash), 10); } finally { repo.close(); }
+            assertEquals(1, partial.size());
+            assertEquals(jobId, partial.get(0).id);
+            assertEquals(total, partial.get(0).total);
+            assertEquals(1, partial.get(0).done);
+            assertEquals(1, partial.get(0).error);
+            assertEquals(total - 2, partial.get(0).pending);
+            assertEquals(Collections.singletonMap(0, jobId), ResumePrompt.chooseJobs(Collections.singletonList(0), Collections.singletonList(batch.inputs.get(0).inputHash), partial));
+
+            // "Tiếp tục job cũ": same job, only chunks 2.. are sent.
+            calls.set(0); failAt.set(-1);
+            Intent cont = startIntent(c, batch, s, new File(outDir(c), "start-out.txt"));
+            cont.putExtra("resumeJobs", ResumePrompt.toJson(Collections.singletonMap(0, jobId)));
+            c.startForegroundService(cont);
+            waitFor(() -> idle() && calls.get() > 0, 120_000L, "continued run finished");
+            Thread.sleep(500L);
+            assertEquals("no new job was created", jobId, job(c, raw.uri()).id);
+            assertEquals(1, jobsFor(c, raw.uri()));
+            assertEquals("only the missing chunks were sent", total - 1, calls.get());
+            assertEquals(total, counts(c, jobId)[0]);
+            assertTrue(String.valueOf(job(c, raw.uri()).status).toUpperCase().startsWith("COMPLETED"));
+
+            // "Dịch lại từ đầu": the old behaviour, a second job.
+            calls.set(0);
+            c.startForegroundService(startIntent(c, batch, s, new File(outDir(c), "start-out2.txt")));
+            waitFor(() -> idle() && calls.get() > 0 && jobsFor(c, raw.uri()) == 2, 120_000L, "restart created a new job");
+            assertEquals(total, calls.get());
+        } finally { cleanup(c, raw); }
+    }
+
+    private static Intent startIntent(Context c, PreparedBatch batch, AppSettings s, File output) {
+        Intent i = new Intent(c, TranslatorService.class);
+        i.setAction(TranslatorService.ACTION_START);
+        i.putExtra("outputUri", Uri.fromFile(output).toString());
+        i.putExtra("outputTreeUri", "");
+        i.putExtra("settings", SettingsStore.toJson(s));
+        i.putExtra("preparedBatchId", batch.id);
+        i.putExtra("startSessionId", java.util.UUID.randomUUID().toString());
+        return i;
+    }
+
+    private static int jobsFor(Context c, String rawUri) {
+        TranslationRepository repo = new TranslationRepository(c);
+        try { int n = 0; for (TranslationRepository.JobSummary j : repo.getJobSummaries(200)) if (rawUri.equals(j.inputUri)) n++; return n; }
+        finally { repo.close(); }
+    }
+
+    /** T4: a combination run stopped inside chapter 2; starting again continues that job, chapter 3 is new, chapter 1 stays as it was. */
+    @Test
+    public void t4_combinationContinuesTheStoppedChapterAndStartsTheNext() throws Exception {
+        Context c = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        LibraryRawStore.Item r1 = importRaw(c, "001_" + TAG + "c1.txt"), r2 = importRaw(c, "002_" + TAG + "c2.txt"), r3 = importRaw(c, "003_" + TAG + "c3.txt");
+        AtomicInteger calls = new AtomicInteger();
+        java.util.concurrent.atomic.AtomicBoolean failTwo = new java.util.concurrent.atomic.AtomicBoolean(true);
+        AtomicInteger twoCalls = new AtomicInteger();
+        TranslateTestSeam.setOutputDir(outDir(c));
+        TranslateTestSeam.setProvider((settings, prompt, limit, id, observer) -> {
+            String all = prompt.system + "\n" + prompt.user;
+            boolean chapterTwo = all.contains("【" + r2.originalName + "】");
+            calls.incrementAndGet();
+            if (chapterTwo && failTwo.get() && twoCalls.incrementAndGet() == 2) throw new ApiHttpException(401, 0, "Unauthorized: invalid credentials");
+            observe(observer);
+            return response(calls.get());
+        });
+        try {
+            AppSettings s = settings();
+            // Run 1: chapters 1-3 as one combination; chapter 2 stops after its first chunk and the queue stops with it.
+            runChapters(c, s, Arrays.asList(r1, r2, r3), null, () -> { });
+            long j1 = job(c, r1.uri()).id;
+            assertTrue(String.valueOf(job(c, r1.uri()).status).toUpperCase().startsWith("COMPLETED"));
+            assertEquals("chapter 3 never started", null, job(c, r3.uri()));
+            long j2 = job(c, r2.uri()).id;
+            int[] two = counts(c, j2);
+            assertEquals(1, two[0]);
+            failTwo.set(false);
+            calls.set(0);
+
+            // Run 2: the owner starts the combination again with chapters 2 and 3 ticked (chapter 1 is finished); chapter 2 continues.
+            runChapters(c, s, Arrays.asList(r2, r3), Collections.singletonMap(0, j2), () -> { });
+            assertEquals("chapter 1 was not translated again", j1, job(c, r1.uri()).id);
+            assertEquals(1, jobsFor(c, r1.uri()));
+            assertEquals("chapter 2 continued its own job", 1, jobsFor(c, r2.uri()));
+            assertEquals(j2, job(c, r2.uri()).id);
+            assertTrue(String.valueOf(job(c, r2.uri()).status).toUpperCase().startsWith("COMPLETED"));
+            assertTrue("chapter 3 ran as a new job", String.valueOf(job(c, r3.uri()).status).toUpperCase().startsWith("COMPLETED"));
+        } finally {
+            cleanup(c, r1); cleanup(c, r2); cleanup(c, r3);
+        }
+    }
+
+    /** Runs the chosen RAWs as a chapter-set run (no Glossary/Pronoun) and waits until the service is idle. */
+    private static void runChapters(Context c, AppSettings s, List<LibraryRawStore.Item> raws, java.util.Map<Integer, Long> resume, Runnable after) throws Exception {
+        ArrayList<Uri> uris = new ArrayList<>();
+        ArrayList<ChapterBinding> bindings = new ArrayList<>();
+        for (LibraryRawStore.Item r : raws) { uris.add(Uri.parse(r.uri())); bindings.add(ChapterBinding.of(r.id, r.originalName, r.chapterNo, null, null)); }
+        CountDownLatch ready = new CountDownLatch(1);
+        AtomicReference<PreparedBatch> out = new AtomicReference<>();
+        PreparationCoordinator.get(c).request(uris, s, bindings, batch -> { if (batch.ready() || batch.status == PreparedBatch.Status.ERROR) { out.set(batch); ready.countDown(); } });
+        assertTrue(ready.await(60, TimeUnit.SECONDS));
+        PreparedBatch batch = out.get();
+        assertTrue(String.valueOf(batch.error), batch.ready());
+        String sid = java.util.UUID.randomUUID().toString();
+        ChapterSession session = new ChapterSession(sid);
+        session.chapters.addAll(bindings);
+        session.write(new File(c.getFilesDir(), ChapterSession.DIR));
+        Intent i = new Intent(c, TranslatorService.class);
+        i.setAction(TranslatorService.ACTION_START);
+        i.putExtra("outputUri", "");
+        i.putExtra("outputTreeUri", "content://tbl.test/tree/v423x");
+        i.putExtra("settings", SettingsStore.toJson(s));
+        i.putExtra("preparedBatchId", batch.id);
+        i.putExtra("startSessionId", sid);
+        i.putExtra("chapterMode", true);
+        if (resume != null && !resume.isEmpty()) i.putExtra("resumeJobs", ResumePrompt.toJson(resume));
+        c.startForegroundService(i);
+        Thread.sleep(1500L);
+        waitFor(() -> !TranslatorService.isActive(), 180_000L, "chapter run finished");
+        Thread.sleep(500L);
+        after.run();
+    }
+
+    /** T5: a chunk is split after a context error and the first piece then fails; Retry and the rest of the job complete with every chunk in order. */
+    @Test
+    public void t5_splitChunkThenRetryCompletesInOrder() throws Exception {
+        Context c = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        LibraryRawStore.Item raw = importRaw(c, "010_" + TAG + "split.txt");
+        AtomicInteger calls = new AtomicInteger();
+        TranslateTestSeam.setOutputDir(outDir(c));
+        TranslateTestSeam.setProvider((settings, prompt, limit, id, observer) -> {
+            int n = calls.incrementAndGet();
+            if (n == 2) throw new ApiHttpException(413, 0, "Request too large for this model: context length exceeded");
+            if (n == 3) throw new ApiHttpException(401, 0, "Unauthorized: invalid credentials");
+            observe(observer);
+            return response(n);
+        });
+        try {
+            AppSettings s = settings();
+            PreparedBatch batch = prepare(c, Uri.parse(raw.uri()), s);
+            int total = batch.exactChunkCount();
+            startNew(c, batch, s, new File(outDir(c), "split-out.txt"));
+            waitFor(() -> job(c, raw.uri()) != null && idle() && counts(c, job(c, raw.uri()).id)[1] >= 1, 90_000L, "stopped on the split chunk");
+            long jobId = job(c, raw.uri()).id;
+            int[] before = counts(c, jobId);
+            assertEquals("chunk 2 was replaced by more chunks", total + 1, before[0] + before[1] + before[2]);
+
+            Intent retry = new Intent(c, TranslatorService.class);
+            retry.setAction(TranslatorService.ACTION_RETRY_JOB_FAILED);
+            retry.putExtra("jobId", jobId);
+            c.startForegroundService(retry);
+            waitFor(() -> idle() && calls.get() > 3, 120_000L, "retry finished");
+            Thread.sleep(500L);
+            int[] after = counts(c, jobId);
+            assertEquals(total + 1, after[0]);
+            assertTrue(String.valueOf(job(c, raw.uri()).status).toUpperCase().startsWith("COMPLETED"));
+            TranslationRepository repo = new TranslationRepository(c);
+            try {
+                List<TranslationRepository.ChunkRow> rows = repo.getChunkRows(jobId);
+                for (int k = 0; k < rows.size(); k++) assertEquals("chunk order", k, rows.get(k).index);
+            } finally { repo.close(); }
+        } finally { cleanup(c, raw); }
+    }
+
+    /** T6: "Resume" while nothing runs says so (status info) and never looks like a pause or a running job. */
+    @Test
+    public void t6_resumeWithoutARunningJobAnnouncesIt() throws Exception {
+        Context c = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        List<String> statuses = Collections.synchronizedList(new ArrayList<String>());
+        List<String> logs = Collections.synchronizedList(new ArrayList<String>());
+        BroadcastReceiver receiver = new BroadcastReceiver() {
+            @Override public void onReceive(Context context, Intent intent) {
+                statuses.add(String.valueOf(intent.getStringExtra(TranslatorService.EXTRA_STATUS)));
+                logs.add(String.valueOf(intent.getStringExtra(TranslatorService.EXTRA_LOG)));
+            }
+        };
+        c.registerReceiver(receiver, new IntentFilter(TranslatorService.ACTION_PROGRESS), Context.RECEIVER_NOT_EXPORTED);
+        try {
+            Intent i = new Intent(c, TranslatorService.class);
+            i.setAction(TranslatorService.ACTION_RESUME);
+            c.startService(i);
+            waitFor(() -> !statuses.isEmpty(), 10_000L, "a message is announced");
+            assertEquals("info", statuses.get(0));
+            assertFalse(statuses.contains("paused"));
+            assertFalse(statuses.contains("running"));
+            assertTrue(logs.get(0), logs.get(0).contains("Không có job nào đang tạm dừng"));
+            assertFalse(TranslatorService.isActive());
+        } finally { c.unregisterReceiver(receiver); }
+    }
+
+    private static void media(String stage) throws InterruptedException {
+        if (!"run".equals(InstrumentationRegistry.getArguments().getString("v423_media", ""))) return;
+        Thread.sleep(700L);
+        android.util.Log.i("V423MEDIA", "stage=" + stage);
+        Thread.sleep(5_000L);
+    }
+
+    private static boolean containsText(android.view.View view, String text) {
+        if (view instanceof android.widget.TextView && ((android.widget.TextView) view).getText().toString().contains(text)) return true;
+        if (view instanceof android.view.ViewGroup) {
+            android.view.ViewGroup g = (android.view.ViewGroup) view;
+            for (int k = 0; k < g.getChildCount(); k++) if (containsText(g.getChildAt(k), text)) return true;
+        }
+        return false;
+    }
+
+    /** Screens: the "Job đang dở" card after a stop, the question on Start, and the Translate screen after Retry has finished the job. */
+    @Test
+    public void u_screens_pendingCardStartQuestionAndStateAfterRetry() throws Exception {
+        Context c = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        LibraryRawStore.Item raw = importRaw(c, "011_" + TAG + "screens.txt");
+        AtomicInteger calls = new AtomicInteger();
+        TranslateTestSeam.setOutputDir(outDir(c));
+        TranslateTestSeam.setProvider((settings, prompt, limit, id, observer) -> {
+            int n = calls.incrementAndGet();
+            if (n == 3) throw new ApiHttpException(401, 0, "Unauthorized: invalid credentials");
+            observe(observer);
+            return response(n);
+        });
+        try (androidx.test.core.app.ActivityScenario<MainActivity> scenario = androidx.test.core.app.ActivityScenario.launch(MainActivity.class)) {
+            AppSettings s = settings();
+            PreparedBatch batch = prepare(c, Uri.parse(raw.uri()), s);
+            int total = batch.exactChunkCount();
+            startNew(c, batch, s, new File(outDir(c), "screens-out.txt"));
+            waitFor(() -> job(c, raw.uri()) != null && idle() && counts(c, job(c, raw.uri()).id)[1] >= 1, 90_000L, "stopped on a failed chunk");
+            long jobId = job(c, raw.uri()).id;
+            scenario.onActivity(a -> { a.translationActive = false; a.switchTab("Translate"); a.refreshPendingJobCard(); });
+            InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+            scenario.onActivity(a -> {
+                assertTrue(containsText(a.getWindow().getDecorView(), "Job đang dở"));
+                assertTrue(containsText(a.getWindow().getDecorView(), "chunk xong"));
+                assertTrue(containsText(a.getWindow().getDecorView(), "Tiếp tục dịch"));
+                a.findScrollView(a.getWindow().getDecorView()).post(() -> { View card = a.pendingJobCard; a.findScrollView(a.getWindow().getDecorView()).scrollTo(0, Math.max(0, card.getTop() - 200)); });
+            });
+            media("38-pending-job-card");
+            TranslationRepository repo = new TranslationRepository(c);
+            List<TranslationRepository.JobProgress> partial;
+            try { partial = repo.getIncompleteJobs(null, 1); } finally { repo.close(); }
+            scenario.onActivity(a -> a.askResumeOrRestart(partial, () -> { }, () -> { }));
+            InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+            media("39-start-question");
+            InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK);
+
+            Intent retry = new Intent(c, TranslatorService.class);
+            retry.setAction(TranslatorService.ACTION_RETRY_JOB_FAILED);
+            retry.putExtra("jobId", jobId);
+            c.startForegroundService(retry);
+            waitFor(() -> idle() && counts(c, jobId)[0] == total, 120_000L, "retry continued to the end");
+            Thread.sleep(1500L);
+            scenario.onActivity(a -> { a.switchTab("Translate"); a.refreshPendingJobCard(); });
+            media("40-state-after-retry");
+            scenario.onActivity(a -> assertFalse("no unfinished job card after the job is complete", a.pendingJobCard.getVisibility() == View.VISIBLE));
+        } finally { cleanup(c, raw); }
+    }
+
+    private static final class TranslatorServiceIdle {
+        static boolean now() { return !TranslatorService.isActive(); }
     }
 }

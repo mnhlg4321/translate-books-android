@@ -1,0 +1,44 @@
+INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.V423ResumeInstrumentedTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=
+com.ml.tblandroidtxt.V423ResumeInstrumentedTest:
+INSTRUMENTATION_STATUS: test=t1_retryAfterAFailedChunkTranslatesTheRestOfTheJob
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.V423ResumeInstrumentedTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: every chunk is translated after the retry (done/error/pending=2/0/13) expected:<15> but was:<2>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:647)
+	at com.ml.tblandroidtxt.V423ResumeInstrumentedTest.t1_retryAfterAFailedChunkTranslatesTheRestOfTheJob(V423ResumeInstrumentedTest.java:172)
+
+INSTRUMENTATION_STATUS: stream=
+Error in t1_retryAfterAFailedChunkTranslatesTheRestOfTheJob(com.ml.tblandroidtxt.V423ResumeInstrumentedTest):
+java.lang.AssertionError: every chunk is translated after the retry (done/error/pending=2/0/13) expected:<15> but was:<2>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:647)
+	at com.ml.tblandroidtxt.V423ResumeInstrumentedTest.t1_retryAfterAFailedChunkTranslatesTheRestOfTheJob(V423ResumeInstrumentedTest.java:172)
+
+INSTRUMENTATION_STATUS: test=t1_retryAfterAFailedChunkTranslatesTheRestOfTheJob
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_RESULT: stream=
+
+Time: 1.796
+There was 1 failure:
+1) t1_retryAfterAFailedChunkTranslatesTheRestOfTheJob(com.ml.tblandroidtxt.V423ResumeInstrumentedTest)
+java.lang.AssertionError: every chunk is translated after the retry (done/error/pending=2/0/13) expected:<15> but was:<2>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:647)
+	at com.ml.tblandroidtxt.V423ResumeInstrumentedTest.t1_retryAfterAFailedChunkTranslatesTheRestOfTheJob(V423ResumeInstrumentedTest.java:172)
+
+FAILURES!!!
+Tests run: 1,  Failures: 1
+
+
+INSTRUMENTATION_CODE: -1

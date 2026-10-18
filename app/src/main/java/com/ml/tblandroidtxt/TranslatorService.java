@@ -129,7 +129,8 @@ public class TranslatorService extends Service {
         }
         if (ACTION_RESUME.equals(action)) {
             if (!ACTIVE.get()) {
-                broadcast("paused", -1, "Không có job đang tạm dừng. Nếu muốn chạy tiếp checkpoint, dùng Resume last checkpoint.");
+                ObservabilityLog.event("resume_decision", "action", "RESUME", "branch", "no_running_job");
+                broadcast("info", -1, "Không có job nào đang tạm dừng. Job đang dở (nếu có) nằm ở thẻ \"Job đang dở\" trên màn Dịch hoặc ở tab Jobs: bấm \"Tiếp tục dịch\".");
                 return START_NOT_STICKY;
             }
             paused = false;
@@ -313,7 +314,7 @@ public class TranslatorService extends Service {
             setState(TranslationJobState.State.FAILED, activeJobId > 0 ? "Translation failed" : "Initialization failure");
             if (activeJobId > 0) repo.touchJob(activeJobId, "error");
             logFailure(metricPhase, e);
-            broadcast("error", -1, "Lỗi khởi tạo: " + AppValidator.readableError(e) + chapterSummarySuffix());
+            broadcast("error", -1, "Lỗi khởi tạo: " + AppValidator.readableError(e) + remainingSuffix() + chapterSummarySuffix());
             releaseRun();
             stopForeground(STOP_FOREGROUND_REMOVE);
             NotificationManager nm = getSystemService(NotificationManager.class);
@@ -350,16 +351,24 @@ public class TranslatorService extends Service {
         }
         // The shared settings (and the Active Glossary/Pronoun) are saved once and never replaced by a chapter's own copy.
         SettingsStore.save(this,s);setState(TranslationJobState.State.READY,"Ready");broadcast("ready",0,"Validated prepared plan "+batch.id+" with "+batch.exactChunkCount()+" chunks");setState(TranslationJobState.State.RUNNING,"Running");
+        final java.util.Map<Integer,Long> resumeJobs=parseResumeJobs(intent.getStringExtra("resumeJobs"));
         for(int i=0;i<batch.inputs.size();i++){
             waitIfPaused();if(cancelled){finishCancelled("Cancelled before the next prepared file");return;}
             PreparedBatch.Input input=batch.inputs.get(i);Uri out=fixed;
             if(out==null||batch.inputs.size()>1)out=deferredOutput(tree,s.buildOutputName(input.displayName));
             ChapterRunOutcome outcome=chapterOutcome;
-            if(outcome==null){runSinglePreparedJob(batch,startSessionId,input,out,s,i+1,batch.inputs.size(),input.displayName);continue;}
+            final Long resumeId=resumeJobs.get(input.ordinal);
+            final int fileNo=i+1,fileTotal=batch.inputs.size();
+            if(outcome==null){
+                if(resumeId!=null)continueExistingJob(resumeId,fileNo,fileTotal,input.displayName);
+                else runSinglePreparedJob(batch,startSessionId,input,out,s,fileNo,fileTotal,input.displayName);
+                continue;
+            }
             ChapterBinding binding=session.chapters.get(i);
             String label="Chương "+(binding.chapterNo>=0?binding.chapterNo:i+1)+" ("+(i+1)+"/"+batch.inputs.size()+") · "+input.displayName;
             try{
-                runSinglePreparedJob(batch,startSessionId,input,out,binding.applyTo(s),i+1,batch.inputs.size(),label);
+                if(resumeId!=null)continueExistingJob(resumeId,fileNo,fileTotal,label);
+                else runSinglePreparedJob(batch,startSessionId,input,out,binding.applyTo(s),fileNo,fileTotal,label);
                 if(!cancelled)outcome.done(input.displayName);
             }catch(Exception e){
                 if(cancelled)throw e;
@@ -374,6 +383,37 @@ public class TranslatorService extends Service {
         }
         ChapterRunOutcome finished=chapterOutcome;
         setState(TranslationJobState.State.COMPLETED,"Completed");broadcast("done",100,finished==null?"Prepared batch translation completed":finished.summary());releaseRun();stopForeground(STOP_FOREGROUND_REMOVE);NotificationManager nm=getSystemService(NotificationManager.class);if(nm!=null)nm.cancel(NOTIFY_ID);stopSelf();
+    }
+
+    /** {"<input ordinal>": <job id>}: inputs that continue an unfinished job (its own settings and output) instead of starting a new one. */
+    private static java.util.Map<Integer,Long> parseResumeJobs(String json){
+        java.util.HashMap<Integer,Long> out=new java.util.HashMap<>();
+        if(json==null||json.trim().isEmpty())return out;
+        try{org.json.JSONObject o=new org.json.JSONObject(json);java.util.Iterator<String> keys=o.keys();while(keys.hasNext()){String k=keys.next();out.put(Integer.parseInt(k),o.getLong(k));}}catch(Exception ignored){}
+        return out;
+    }
+
+    /** Continues an unfinished job inside a prepared run: translated chunks are kept, the rest (including failed ones) is translated with the job's own settings. */
+    private void continueExistingJob(long jobId,int fileNo,int fileTotal,String label)throws Exception{
+        TranslationRepository.Job job=repo.getJob(jobId);
+        if(job==null)throw new IllegalStateException("Không thấy job #"+jobId+" để tiếp tục");
+        AppSettings s=AppValidator.normalize(SettingsStore.fromJson(job.settingsJson));
+        String validation=AppValidator.validateForTranslation(s);if(validation!=null)throw new IllegalArgumentException(validation);
+        activeJobId=job.id;
+        String expectedInputHash=repo.getInputHash(job.id);
+        if(expectedInputHash!=null&&!expectedInputHash.isEmpty()&&!expectedInputHash.equals(HashUtil.sha256(FileUtil.readText(this,Uri.parse(job.inputUri))))){repo.touchJob(job.id,"INPUT_CONFLICT");throw new IllegalStateException("Input file changed since checkpoint; job #"+job.id+" cannot continue");}
+        List<TranslationRepository.ChunkRow> rows=repo.getChunkRows(job.id);
+        for(TranslationRepository.ChunkRow row:rows)if("DELIVERY_UNKNOWN".equalsIgnoreCase(row.status)){repo.touchJob(job.id,"NEEDS_REVIEW");throw new IllegalStateException("Job #"+job.id+" có request không rõ đã gửi hay chưa; xem ở tab Jobs rồi chọn retry");}
+        List<Chunk> chunks=new ArrayList<>();int completed=0,failed=0,pending=0;
+        for(TranslationRepository.ChunkRow r:rows){chunks.add(chunkFromRow(r));if(isCompletedStatus(r.status))completed++;else if(isFailedStatus(r.status))failed++;else pending++;}
+        if(rows.isEmpty())throw new IllegalArgumentException("Job #"+job.id+" không có chunk checkpoint");
+        Chunker.assignParagraphRanges(chunks);
+        ObservabilityLog.event("resume_decision","job",job.id,"action","START_CONTINUE","branch",completed>=rows.size()?"already_translated":"continue","done",completed,"error",failed,"pending",pending);
+        if(completed>=rows.size()){updatePartialOutput(job.id,Uri.parse(job.outputUri),s);repo.finishJob(job.id);return;}
+        repo.touchJob(job.id,"running");
+        resetMetrics(label,rows.size());metricCompleted=completed;metricFailed=failed;metricPhase="Translating";
+        broadcast("running",percent(fileNo-1,fileTotal),"Tiếp tục job #"+job.id+": "+label+" (xong "+completed+", lỗi "+failed+", chưa dịch "+pending+")");
+        translateJob(job.id,Uri.parse(job.outputUri),s,chunks,fileNo,fileTotal,label);
     }
 
     private void runSinglePreparedJob(PreparedBatch batch,String startSessionId,PreparedBatch.Input input,Uri outputUri,AppSettings s,int fileNo,int fileTotal,String label)throws Exception{
@@ -458,6 +498,7 @@ public class TranslatorService extends Service {
                 return;
             }
             if (isCompletedStatus(job.status)) {
+                ObservabilityLog.event("resume_decision", "job", job.id, "action", "RESUME", "branch", "already_completed");
                 broadcast("done", 100, "Job #" + job.id + " đã hoàn tất, không cần resume: " + job.fileName);
                 releaseRun();
                 stopForeground(STOP_FOREGROUND_REMOVE);
@@ -495,6 +536,7 @@ public class TranslatorService extends Service {
                 stopSelf();
                 return;
             }
+            ObservabilityLog.event("resume_decision", "job", job.id, "action", "RESUME", "branch", "continue", "done", completed, "error", failed, "pending", pending);
             repo.touchJob(job.id, "running");
             resetMetrics(job.fileName, rows.size());
             metricCompleted = completed;
@@ -525,7 +567,7 @@ public class TranslatorService extends Service {
             setState(TranslationJobState.State.FAILED,"Resume error");
             if (activeJobId > 0) repo.touchJob(activeJobId, "error");
             logFailure(metricPhase,e);
-            broadcast("error", -1, "Lỗi resume: " + AppValidator.readableError(e));
+            broadcast("error", -1, "Lỗi resume: " + AppValidator.readableError(e) + remainingSuffix());
             releaseRun();
             stopForeground(STOP_FOREGROUND_REMOVE);
             NotificationManager nm = getSystemService(NotificationManager.class);
@@ -563,8 +605,9 @@ public class TranslatorService extends Service {
                 if (isCompletedStatus(r.status)) completed++;
                 if ((targetChunk>=0&&r.index==targetChunk)||(targetChunk<0&&isFailedStatus(r.status))) failedTargets++;
             }
-            if (failedTargets <= 0) {
-                broadcast("done", percent(completed, Math.max(1, rows.size())), "Job #" + job.id + " không có chunk lỗi để retry");
+            if (failedTargets <= 0 && (targetChunk >= 0 || unfinishedCount(rows) == 0)) {
+                ObservabilityLog.event("resume_decision", "job", job.id, "action", "RETRY", "branch", "nothing_to_retry", "done", completed, "total", rows.size());
+                broadcast("done", percent(completed, Math.max(1, rows.size())), "Job #" + job.id + " không có chunk lỗi để retry, mọi chunk đã dịch xong");
                 releaseRun();
                 stopForeground(STOP_FOREGROUND_REMOVE);
                 stopSelf();
@@ -578,8 +621,34 @@ public class TranslatorService extends Service {
             broadcast("running", percent(completed, Math.max(1, rows.size())), "Retry " + failedTargets + " failed chunk(s) for job #" + job.id + ": " + job.fileName);
             retryFailedRows(job.id, Uri.parse(job.outputUri), s, rows, job.fileName,targetChunk);
             updatePartialOutput(job.id, Uri.parse(job.outputUri), s);
-            if (!hasFailedRows(repo.getChunkRows(job.id))) repo.finishJob(job.id);
             if (cancelled) { finishCancelled("Đã hủy retry failed chunks"); return; }
+            List<TranslationRepository.ChunkRow> afterRetry = repo.getChunkRows(job.id);
+            int remaining = unfinishedCount(afterRetry);
+            ObservabilityLog.event("resume_decision", "job", job.id, "action", targetChunk >= 0 ? "RETRY_CHUNK" : "RETRY_FAILED", "branch", remaining > 0 ? (targetChunk >= 0 ? "paused_with_remaining" : "continue_remaining") : "finish", "remaining", remaining);
+            if (remaining > 0 && targetChunk >= 0) {
+                // One chunk was retried on request: do not mark the job finished while chunks are still untranslated.
+                repo.touchJob(job.id, "paused");
+                setState(TranslationJobState.State.PAUSED, "Paused");
+                broadcast("paused", -1, "Đã retry chunk " + (targetChunk + 1) + " của job #" + job.id + ". Còn " + remaining + " chunk chưa dịch: bấm \"Tiếp tục dịch\" để dịch nốt.");
+                releaseRun();
+                stopForeground(STOP_FOREGROUND_REMOVE);
+                NotificationManager nmPaused = getSystemService(NotificationManager.class);
+                if (nmPaused != null) nmPaused.cancel(NOTIFY_ID);
+                stopSelf();
+                return;
+            }
+            if (remaining > 0) {
+                // The failed chunks are fixed; the original run would have translated the rest, so do it now in the same run.
+                List<Chunk> restChunks = new ArrayList<>();
+                for (TranslationRepository.ChunkRow row : afterRetry) restChunks.add(chunkFromRow(row));
+                Chunker.assignParagraphRanges(restChunks);
+                broadcast("running", percent(metricCompleted, Math.max(1, afterRetry.size())), "Retry xong; dịch tiếp " + remaining + " chunk còn lại của job #" + job.id);
+                metricPhase = "Translating";
+                translateJob(job.id, Uri.parse(job.outputUri), s, restChunks, 1, 1, job.fileName);
+                if (cancelled) { finishCancelled("Đã hủy khi dịch tiếp sau retry"); return; }
+            } else {
+                repo.finishJob(job.id);
+            }
             setState(TranslationJobState.State.COMPLETED,"Completed");
             broadcast("done", 100, "Retry failed chunks completed: " + job.fileName);
             releaseRun();
@@ -601,7 +670,7 @@ public class TranslatorService extends Service {
             setState(TranslationJobState.State.FAILED,"Retry error");
             if (activeJobId > 0) repo.touchJob(activeJobId, "error");
             logFailure(metricPhase,e);
-            broadcast("error", -1, "Lỗi retry failed chunks: " + AppValidator.readableError(e));
+            broadcast("error", -1, "Lỗi retry failed chunks: " + AppValidator.readableError(e) + remainingSuffix());
             releaseRun();
             stopForeground(STOP_FOREGROUND_REMOVE);
             NotificationManager nm = getSystemService(NotificationManager.class);
@@ -713,7 +782,10 @@ public class TranslatorService extends Service {
         }
         updatePartialOutput(jobId, outputUri, s);
         OutputIntegrityAudit.Result audit=repo.finishJobWithAudit(jobId);
-        if(!audit.passed())throw new ChapterLocalException("Final integrity audit failed: "+audit.errors);
+        if(!audit.passed()){
+            if(audit.onlyIncomplete())throw new IllegalStateException("Còn "+audit.incompleteCount()+" chunk chưa dịch");
+            throw new ChapterLocalException("Final integrity audit failed: "+audit.errors);
+        }
         metricPhase = "Completed";
         broadcast("running", percent(fileNo, fileTotal), "Translation completed: " + fileName);
         updateNotification("Hoàn tất " + fileName, total, total);
@@ -827,6 +899,24 @@ public class TranslatorService extends Service {
             broadcast("paused", -1, "Đã đạt cost limit " + CostEstimator.money(s.costLimitUsd) + "; dừng trước chunk tiếp theo");
             if (activeJobId > 0) repo.touchJob(activeJobId, "paused");
             throw new CostLimitReachedException("Cost limit reached: " + CostEstimator.money(s.costLimitUsd));
+        }
+    }
+
+    /** Chunks that are not translated yet (anything but completed). */
+    private int unfinishedCount(List<TranslationRepository.ChunkRow> rows) {
+        int n = 0;
+        for (TranslationRepository.ChunkRow r : rows) if (!isCompletedStatus(r.status)) n++;
+        return n;
+    }
+
+    /** " — còn m chunk chưa dịch" for the job being worked on, or "" when nothing is left or there is no job. */
+    private String remainingSuffix() {
+        try {
+            if (activeJobId <= 0 || repo == null) return "";
+            int n = unfinishedCount(repo.getChunkRows(activeJobId));
+            return n > 0 ? " — còn " + n + " chunk chưa dịch (bấm \"Tiếp tục dịch\" ở màn Dịch hoặc tab Jobs)" : "";
+        } catch (Exception e) {
+            return "";
         }
     }
 

@@ -138,6 +138,11 @@ class TranslatePageFactory {
         a.retryButton = a.secondaryButton("↻ Retry failed chunks", v -> a.retryFailedChunks());
         quickRow.addView(a.retryButton, new LinearLayout.LayoutParams(0, a.dp(44), 1));
         actionGrid.addView(quickRow, a.marginLP(-1, -2, 0, 8, 0, 0));
+        a.pendingJobCard = a.card(18, a.CARD, a.AMBER);
+        a.pendingJobCard.setOrientation(LinearLayout.VERTICAL);
+        a.pendingJobCard.setPadding(a.dp(14), a.dp(12), a.dp(14), a.dp(12));
+        a.pendingJobCard.setVisibility(View.GONE);
+        root.addView(a.pendingJobCard, a.marginLP(-1, -2, 0, 0, 0, 8));
         root.addView(actionGrid, a.marginLP(-1, -2, 0, 0, 0, 8));
 
         a.translateMeta = a.text("OpenRouter · Model chưa nạp · Japanese → Vietnamese", 12, a.MUTED, false);
