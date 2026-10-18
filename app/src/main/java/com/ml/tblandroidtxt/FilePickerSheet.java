@@ -169,7 +169,7 @@ final class FilePickerSheet {
         texts.setOrientation(LinearLayout.VERTICAL);
         TextView n = a.text(name, 15, a.TEXT, on);
         n.setSingleLine(false);
-        n.setMaxLines(3);
+        n.setMaxLines(6);
         n.setEllipsize(TextUtils.TruncateAt.END);
         n.setContentDescription("name:" + name);
         texts.addView(n);

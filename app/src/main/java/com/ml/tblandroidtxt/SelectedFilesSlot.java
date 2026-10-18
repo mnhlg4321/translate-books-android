@@ -1,6 +1,5 @@
 package com.ml.tblandroidtxt;
 
-import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -56,8 +55,8 @@ final class SelectedFilesSlot {
                     String meta = i < metas.size() && !metas.get(i).isEmpty() ? "  · " + metas.get(i) : "";
                     TextView t = a.text(icon + " " + names.get(i) + meta, 13, a.TEXT, false);
                     t.setSingleLine(false);
-                    t.setMaxLines(3);
-                    t.setEllipsize(TextUtils.TruncateAt.END);
+                    t.setMaxLines(Integer.MAX_VALUE);
+                    
                     t.setContentDescription("slot-name:" + names.get(i));
                     lines.addView(t, a.marginLP(-1, -2, 8, 2, 0, 0));
                 }

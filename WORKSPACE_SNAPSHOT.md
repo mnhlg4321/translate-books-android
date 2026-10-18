@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-18 (+07:00): v4.23 UX work request (U1-U3) implemented: shared FilePickerSheet/SelectedFilesSlot, combination screen from 3 slots (Tổ hợp), Translate source Tổ hợp; host tests pass; building 4.23-dev.3.
+- Updated: 2026-10-18 (+07:00): dev.3 device test at font 1.3 showed 3-line cap clips 90+ character names; cap removed in slots and raised in the sheet; rebuilding as the next numbered dev build.
 - Current version: v4.23.0 in development (not released); contains unreleased v4.22 code; shipped 4.21.0 / code 271 (tag `v4.21.0`).
 - Current branch: `feature/v4.23` in worktree `D:\P5E-builds\wt-v4.23` (BASE `c8408207` on `feature/v4.22`).
 - Current commit: `dcde3320` is the baseline before this snapshot commit (docs only in this commit); dev.2 APK built from `79fbc979`. Confirm actual HEAD when resuming.
@@ -12,4 +12,4 @@
 - Regression status: clean archive `79fbc979`: engine 742 / 1 SKIP, app debug, release, benchmark 547 each / 5 SKIP, 0 FAIL, lint 0 errors / 64 warnings, AndroidTest compile PASS; device 196 / 180 PASS / 16 SKIP / 0 FAIL. Editorial boundary diff empty; five Editorial-named tests changed by one number.
 - Semantic progress: unchanged.
 - Spend: USD 0; no provider call. Phone 15e84958: owner approved the install in chat 2026-10-18; backup before install in D:/App Translate Books/App Translate Books-device-backups/v4.22-dev2-code273/20261018-204430 (DB sha256 1ee29b9f...44fd52 matches phone and archive); 4.23-dev.2 / code 277 installed with install-validated.ps1, first launch without crash.
-- Next action: build 4.23-dev.3 (code 278), clean-archive regression, device QA with new tests, screenshots, then ask the owner to approve the phone install.
+- Next action: build the next 4.23-dev (code 279), clean-archive regression, device QA, 8 screenshots, owner question.

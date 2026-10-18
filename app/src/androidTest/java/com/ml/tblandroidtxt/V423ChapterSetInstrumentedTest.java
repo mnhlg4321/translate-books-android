@@ -78,6 +78,7 @@ public class V423ChapterSetInstrumentedTest {
         for (ChapterSetStore.SetInfo i : ChapterSetStore.listSets(c)) if (i.name.contains(TAG)) ChapterSetStore.delete(c, Collections.singletonList(i.id));
         LibraryRawStore.removeRows(c, s.rawIds);
         LibraryRawStore.purgeFiles(c, s.rawIds);
+        for (LibraryRawStore.Item i : LibraryRawStore.list(c)) if (i.originalName.contains("v423")) { LibraryRawStore.removeRows(c, Collections.singletonList(i.id)); LibraryRawStore.purgeFiles(c, Collections.singletonList(i.id)); }
         restoreAll(c, original);
     }
 
