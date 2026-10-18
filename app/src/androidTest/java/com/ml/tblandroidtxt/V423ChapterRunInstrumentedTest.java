@@ -282,7 +282,8 @@ public class V423ChapterRunInstrumentedTest {
         AtomicInteger calls = new AtomicInteger();
         TranslateTestSeam.setProvider((settings, prompt, limit, id, observer) -> {
             String all = prompt.system + "\n" + prompt.user;
-            if (all.contains("【章2】")) throw new ApiHttpException(413, 0, "Request too large for this model: context length exceeded");
+            // Chapter 2 is split into halves after the first 413, so recognise the halves too.
+            if (all.contains("【章2】") || all.contains(TERMS[1]) || all.contains("です。")) throw new ApiHttpException(413, 0, "Request too large for this model: context length exceeded");
             observe(observer);
             return response("Bản dịch thử nghiệm số " + calls.incrementAndGet() + " với đủ độ dài để vượt qua kiểm định của ứng dụng.");
         });
