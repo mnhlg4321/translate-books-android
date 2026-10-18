@@ -462,6 +462,9 @@ public class V423ResumeInstrumentedTest {
     @Test
     public void u_screens_pendingCardStartQuestionAndStateAfterRetry() throws Exception {
         Context c = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        // Emulator data only: older unfinished jobs left by other test classes would hide this job in the card.
+        TranslationRepository cleaner = new TranslationRepository(c);
+        try { for (TranslationRepository.JobProgress stale : cleaner.getIncompleteJobs(null, 200)) cleaner.deleteJob(stale.id); } finally { cleaner.close(); }
         LibraryRawStore.Item raw = importRaw(c, "011_" + TAG + "screens.txt");
         AtomicInteger calls = new AtomicInteger();
         TranslateTestSeam.setOutputDir(outDir(c));
