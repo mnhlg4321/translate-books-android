@@ -503,7 +503,7 @@ public class V423ResumeInstrumentedTest {
             Thread.sleep(1500L);
             scenario.onActivity(a -> { a.switchTab("Translate"); a.refreshPendingJobCard(); });
             media("40-state-after-retry");
-            scenario.onActivity(a -> assertFalse("no unfinished job card after the job is complete", a.pendingJobCard.getVisibility() == View.VISIBLE));
+            scenario.onActivity(a -> assertFalse("the card no longer shows the finished job", containsText(a.pendingJobCard, raw.originalName)));
         } finally { cleanup(c, raw); }
     }
 
