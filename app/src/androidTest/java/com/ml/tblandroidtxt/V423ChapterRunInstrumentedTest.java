@@ -278,12 +278,15 @@ public class V423ChapterRunInstrumentedTest {
         tinyChapterTwo = true;
         Fixture f = seed(c);
         tinyChapterTwo = false;
+        final java.util.concurrent.atomic.AtomicBoolean inChapterTwo = new java.util.concurrent.atomic.AtomicBoolean();
         TranslateTestSeam.setOutputDir(outDir(c));
         AtomicInteger calls = new AtomicInteger();
         TranslateTestSeam.setProvider((settings, prompt, limit, id, observer) -> {
             String all = prompt.system + "\n" + prompt.user;
-            // Chapter 2 is split into halves after the first 413, so recognise the halves too.
-            if (all.contains("【章2】") || all.contains(TERMS[1]) || all.contains("です。")) throw new ApiHttpException(413, 0, "Request too large for this model: context length exceeded");
+            // Chapter 2 is split into halves after the first 413, and a half may carry no marker: stay in chapter 2 until chapter 3 starts.
+            if (all.contains("【章2】")) inChapterTwo.set(true);
+            else if (all.contains("【章1】") || all.contains("【章3】")) inChapterTwo.set(false);
+            if (inChapterTwo.get()) throw new ApiHttpException(413, 0, "Request too large for this model: context length exceeded");
             observe(observer);
             return response("Bản dịch thử nghiệm số " + calls.incrementAndGet() + " với đủ độ dài để vượt qua kiểm định của ứng dụng.");
         });
