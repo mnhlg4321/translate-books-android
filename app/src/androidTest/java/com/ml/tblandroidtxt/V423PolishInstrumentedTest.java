@@ -377,7 +377,9 @@ public class V423PolishInstrumentedTest {
             if (v == null) return;
             int[] at = new int[2];
             v.getLocationInWindow(at);
-            a.findScrollView(a.getWindow().getDecorView()).scrollBy(0, at[1] - offsetPx);
+            ScrollView outer = null;   // the page's own ScrollView: the outermost one above the target
+            for (android.view.ViewParent p = v.getParent(); p instanceof View; p = p.getParent()) if (p instanceof ScrollView) outer = (ScrollView) p;
+            if (outer != null) outer.scrollBy(0, at[1] - offsetPx);
         });
         InstrumentationRegistry.getInstrumentation().waitForIdleSync();
         Thread.sleep(400L);
