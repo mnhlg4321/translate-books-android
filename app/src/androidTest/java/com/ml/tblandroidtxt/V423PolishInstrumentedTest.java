@@ -448,7 +448,10 @@ public class V423PolishInstrumentedTest {
             scenario.onActivity(a -> {
                 logRef.set(a.logScroll);
                 assertTrue("nested scrolling is on for the log", a.logScroll.isNestedScrollingEnabled());
-                a.logScroll.requestRectangleOnScreen(new Rect(0, 0, a.logScroll.getWidth(), a.logScroll.getHeight()), true);
+                int[] at = new int[2];
+                a.logScroll.getLocationInWindow(at);
+                ScrollView page = a.findScrollView(a.getWindow().getDecorView());
+                page.scrollBy(0, at[1] - 400);   // bring the log frame into the visible part of the page
             });
             Thread.sleep(800L);
             AtomicInteger before = new AtomicInteger(), after = new AtomicInteger();
