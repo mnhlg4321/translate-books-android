@@ -340,6 +340,7 @@ public class V423PolishInstrumentedTest {
                 scenario.onActivity(a -> ok.set(V423ResumeInstrumentedTest.containsText(a.getWindow().getDecorView(), setName)));
                 return ok.get();
             }, 20_000L, "the run card is on the Jobs tab");
+            V423ResumeInstrumentedTest.media("44a-jobs-top-totals-and-current");
             scenario.onActivity(a -> {
                 View root = a.getWindow().getDecorView();
                 assertTrue(V423ResumeInstrumentedTest.containsText(root, "Token và chi phí"));
@@ -407,6 +408,11 @@ public class V423PolishInstrumentedTest {
                 assertEquals(View.GONE, a.translatePronounRow.getVisibility());
                 assertEquals(View.VISIBLE, a.translateComboNote.getVisibility());
                 assertTrue(a.translateComboNote.getText().toString().contains("theo từng chương"));
+            });
+            scenario.onActivity(a -> {
+                int[] at = new int[2];
+                a.translateComboNote.getLocationInWindow(at);
+                a.findScrollView(a.getWindow().getDecorView()).scrollBy(0, at[1] - 700);
             });
             V423ResumeInstrumentedTest.media("46-combo-mode-compact");
             scenario.onActivity(a -> {
@@ -490,6 +496,11 @@ public class V423PolishInstrumentedTest {
                 scenario.onActivity(a -> ok.set(V423ResumeInstrumentedTest.containsText(a.getWindow().getDecorView(), " mục")));
                 return ok.get();
             }, 10_000L, "Pronouns shows N mục");
+            scenario.onActivity(a -> a.switchTab("RAW"));
+            V423ResumeInstrumentedTest.media("48a-library-raw-count");
+            scenario.onActivity(a -> a.switchTab("Glossaries"));
+            V423ResumeInstrumentedTest.media("48b-library-glossaries-count");
+            scenario.onActivity(a -> a.switchTab("Pronouns"));
             scenario.onActivity(a -> a.bulkUi.notice(LibraryBulkUi.TAB_PRONOUNS, "Đã thêm 2 · bỏ qua 1 (trùng/lỗi)", "• x.csv: trùng nội dung"));
             V423ResumeInstrumentedTest.waitFor(() -> {
                 AtomicReference<Boolean> ok = new AtomicReference<>(false);
