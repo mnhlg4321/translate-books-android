@@ -35,37 +35,37 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(AndroidJUnit4.class)
 public class V423ResumeInstrumentedTest {
-    private static final String TAG = "v423x-";
+    static final String TAG = "v423x-";
 
-    private static String rawText(String marker) {
+    static String rawText(String marker) {
         StringBuilder sb = new StringBuilder();
         for (int i = 1; i <= 30; i++) sb.append("【").append(marker).append("】第").append(i).append("段。再開試験のための十分に長い日本語の段落であり、境界を越えて分割されることを確認します。登場人物は花子です。\n\n");
         return sb.append(System.nanoTime()).toString();
     }
 
-    private static OpenAICompatibleClient.ChatResult response(int n) {
+    static OpenAICompatibleClient.ChatResult response(int n) {
         OpenAICompatibleClient.ChatResult r = new OpenAICompatibleClient.ChatResult();
         r.content = "<TRANSLATION>Bản dịch thử nghiệm số " + n + " với đủ độ dài để vượt qua kiểm định của ứng dụng.</TRANSLATION>";
         r.promptTokens = 110; r.completionTokens = 30; r.totalTokens = 140; r.usageReported = true; r.providerResponseId = "fx"; r.finishReason = "stop";
         return r;
     }
 
-    private static void observe(OpenAICompatibleClient.NetworkObserver o) { o.onRequestBodyStarted(); o.onRequestBodySent(100); o.onResponseHeaders(200); }
+    static void observe(OpenAICompatibleClient.NetworkObserver o) { o.onRequestBodyStarted(); o.onRequestBodySent(100); o.onResponseHeaders(200); }
 
-    private static AppSettings settings() {
+    static AppSettings settings() {
         AppSettings s = new AppSettings();
         s.apiKey = "fixture-key"; s.provider = "fake"; s.model = "fake/model"; s.maxTokensPerChunk = 80; s.maxAttempts = 1; s.refineAfter = false; s.stopOnCostLimit = false;
         return AppValidator.normalize(s);
     }
 
-    private static File outDir(Context c) { File d = new File(c.getCacheDir(), "v423-resume-out"); d.mkdirs(); return d; }
+    static File outDir(Context c) { File d = new File(c.getCacheDir(), "v423-resume-out"); d.mkdirs(); return d; }
 
-    private static LibraryRawStore.Item importRaw(Context c, String name) throws Exception {
+    static LibraryRawStore.Item importRaw(Context c, String name) throws Exception {
         RawImportPlanner.Plan plan = RawImportPlanner.plan(Collections.singletonList(new RawImportPlanner.Candidate(name, rawText(name), "UTF-8")), LibraryRawStore.hashes(c));
         return LibraryRawStore.add(c, plan).get(0);
     }
 
-    private static PreparedBatch prepare(Context c, Uri raw, AppSettings s) throws Exception {
+    static PreparedBatch prepare(Context c, Uri raw, AppSettings s) throws Exception {
         CountDownLatch ready = new CountDownLatch(1);
         AtomicReference<PreparedBatch> out = new AtomicReference<>();
         ArrayList<Uri> uris = new ArrayList<>();
@@ -76,7 +76,7 @@ public class V423ResumeInstrumentedTest {
         return out.get();
     }
 
-    private static void startNew(Context c, PreparedBatch batch, AppSettings s, File output) {
+    static void startNew(Context c, PreparedBatch batch, AppSettings s, File output) {
         Intent i = new Intent(c, TranslatorService.class);
         i.setAction(TranslatorService.ACTION_START);
         i.putExtra("outputUri", Uri.fromFile(output).toString());
@@ -87,22 +87,22 @@ public class V423ResumeInstrumentedTest {
         c.startForegroundService(i);
     }
 
-    private static TranslationRepository.JobSummary job(Context c, String rawUri) {
+    static TranslationRepository.JobSummary job(Context c, String rawUri) {
         TranslationRepository repo = new TranslationRepository(c);
         try { for (TranslationRepository.JobSummary j : repo.getJobSummaries(100)) if (rawUri.equals(j.inputUri)) return j; }
         finally { repo.close(); }
         return null;
     }
 
-    private static void waitFor(java.util.concurrent.Callable<Boolean> cond, long ms, String what) throws Exception {
+    static void waitFor(java.util.concurrent.Callable<Boolean> cond, long ms, String what) throws Exception {
         long end = System.currentTimeMillis() + ms;
         while (System.currentTimeMillis() < end) { if (cond.call()) return; Thread.sleep(250L); }
         throw new AssertionError("timed out: " + what);
     }
 
-    private static boolean idle() { return !TranslatorService.isActive(); }
+    static boolean idle() { return !TranslatorService.isActive(); }
 
-    private static int[] counts(Context c, long jobId) {
+    static int[] counts(Context c, long jobId) {
         TranslationRepository repo = new TranslationRepository(c);
         try {
             int done = 0, error = 0, pending = 0;
@@ -114,7 +114,7 @@ public class V423ResumeInstrumentedTest {
         } finally { repo.close(); }
     }
 
-    private static void cleanup(Context c, LibraryRawStore.Item raw) {
+    static void cleanup(Context c, LibraryRawStore.Item raw) {
         TranslateTestSeam.clear();
         TranslationRepository repo = new TranslationRepository(c);
         try { TranslationRepository.JobSummary j; while ((j = job(c, raw.uri())) != null) repo.deleteJob(j.id); } finally { repo.close(); }
@@ -190,7 +190,7 @@ public class V423ResumeInstrumentedTest {
         return r;
     }
 
-    private static void sendResume(Context c, long jobId) {
+    static void sendResume(Context c, long jobId) {
         Intent i = new Intent(c, TranslatorService.class);
         i.setAction(TranslatorService.ACTION_RESUME_JOB);
         i.putExtra("jobId", jobId);
@@ -443,14 +443,14 @@ public class V423ResumeInstrumentedTest {
         } finally { c.unregisterReceiver(receiver); }
     }
 
-    private static void media(String stage) throws InterruptedException {
+    static void media(String stage) throws InterruptedException {
         if (!"run".equals(InstrumentationRegistry.getArguments().getString("v423_media", ""))) return;
         Thread.sleep(700L);
         android.util.Log.i("V423MEDIA", "stage=" + stage);
         Thread.sleep(5_000L);
     }
 
-    private static boolean containsText(android.view.View view, String text) {
+    static boolean containsText(android.view.View view, String text) {
         if (view instanceof android.widget.TextView && ((android.widget.TextView) view).getText().toString().contains(text)) return true;
         if (view instanceof android.view.ViewGroup) {
             android.view.ViewGroup g = (android.view.ViewGroup) view;
