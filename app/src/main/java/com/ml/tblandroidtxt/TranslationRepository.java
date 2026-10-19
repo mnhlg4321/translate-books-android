@@ -172,7 +172,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
         db.update("chunks",unknown,"UPPER(status) IN ('PREPARING','REQUESTING') AND EXISTS (SELECT 1 FROM chunk_attempts a WHERE a.job_id=chunks.job_id AND a.chunk_idx=chunks.idx AND UPPER(a.status) IN ('SEND_STARTED','REQUEST_BODY_SENT','RESPONSE_HEADERS'))",null);
         ContentValues v=new ContentValues();v.put("status","RETRYABLE_ERROR");v.put("error","Interrupted before network send; safe to retry");v.put("updated_at",System.currentTimeMillis());
         db.update("chunks",v,"UPPER(status) IN ('PREPARING','REQUESTING')",null);
-        ContentValues jobs=new ContentValues();jobs.put("status","NEEDS_REVIEW");jobs.put("updated_at",System.currentTimeMillis());db.update("jobs",jobs,"EXISTS (SELECT 1 FROM chunks c WHERE c.job_id=jobs.id AND UPPER(c.status)='DELIVERY_UNKNOWN')",null);
+        ContentValues jobs=new ContentValues();jobs.put("status","NEEDS_REVIEW");jobs.put("updated_at",System.currentTimeMillis());db.update("jobs",jobs,"UPPER(COALESCE(status,'')) IN ("+JobStatus.sqlIn(JobStatus.Kind.ACTIVE,JobStatus.Kind.CONTINUABLE)+") AND EXISTS (SELECT 1 FROM chunks c WHERE c.job_id=jobs.id AND UPPER(c.status)='DELIVERY_UNKNOWN')",null);
         ContentValues validating=new ContentValues();validating.put("status","RESPONSE_RECEIVED");validating.put("error","Validation interrupted; persisted response requires revalidation");validating.put("updated_at",System.currentTimeMillis());
         db.update("chunks",validating,"UPPER(status)='VALIDATING' AND persisted_response<>''",null);
     }
@@ -372,7 +372,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
     public Job findDoneJobByHashes(String inputHash, String settingsHash) {
         if (inputHash == null || inputHash.isEmpty() || settingsHash == null || settingsHash.isEmpty()) return null;
         SQLiteDatabase db = getReadableDatabase();
-        try (Cursor c = db.rawQuery("SELECT id,input_uri,output_uri,file_name,settings,status FROM jobs WHERE input_hash=? AND settings_hash=? AND UPPER(status) IN ('DONE','COMPLETED','COMPLETED_WITH_WARNINGS') ORDER BY updated_at DESC LIMIT 1", new String[]{inputHash, settingsHash})) {
+        try (Cursor c = db.rawQuery("SELECT id,input_uri,output_uri,file_name,settings,status FROM jobs WHERE input_hash=? AND settings_hash=? AND UPPER(status) IN (" + JobStatus.sqlFinished() + ") ORDER BY updated_at DESC LIMIT 1", new String[]{inputHash, settingsHash})) {
             if (c.moveToFirst()) return readJob(c);
         }
         return null;
@@ -394,7 +394,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
 
     public Job getLastIncompleteJob() {
         SQLiteDatabase db = getReadableDatabase();
-        try (Cursor c = db.rawQuery("SELECT id,input_uri,output_uri,file_name,settings,status FROM jobs WHERE UPPER(status) IN ('RUNNING','PAUSED','ERROR','RETRYABLE_ERROR','NEEDS_REVIEW','FAILED_INTEGRITY_CHECK') ORDER BY updated_at DESC LIMIT 1", null)) {
+        try (Cursor c = db.rawQuery("SELECT id,input_uri,output_uri,file_name,settings,status FROM jobs WHERE UPPER(status) IN (" + JobStatus.sqlUnfinishedShown() + ") ORDER BY updated_at DESC LIMIT 1", null)) {
             if (c.moveToFirst()) {
                 return readJob(c);
             }
@@ -570,13 +570,46 @@ public class TranslationRepository extends SQLiteOpenHelper {
                 "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)<>'SUPERSEDED') AS total," +
                 "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status) IN ('DONE','COMPLETED')) AS done," +
                 "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status) IN ('ERROR','RETRYABLE_ERROR','PERMANENT_ERROR')) AS failed," +
-                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='PENDING') AS pending " +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='PENDING') AS pending," +
+                "COALESCE(j.input_hash,''),COALESCE(j.start_session_id,''),COALESCE(j.prepared_batch_id,''),COALESCE(j.prepared_input_ordinal,0) " +
                 "FROM jobs j ORDER BY j.updated_at DESC LIMIT ?";
         try (Cursor c = db.rawQuery(sql, new String[]{String.valueOf(Math.max(1, limit))})) {
             while (c.moveToNext()) list.add(readJobSummary(c));
         }
+        attachUsage(db, list);
         return list;
     }
+
+    private static void attachUsage(SQLiteDatabase db, List<JobSummary> jobs) {
+        if (jobs.isEmpty()) return;
+        java.util.HashMap<Long, JobSummary> byId = new java.util.HashMap<>();
+        StringBuilder ids = new StringBuilder();
+        for (JobSummary j : jobs) { byId.put(j.id, j); if (ids.length() > 0) ids.append(','); ids.append(j.id); }
+        try (Cursor c = db.rawQuery("SELECT job_id,cost_status,COALESCE(usage_cost,0),COALESCE(actual_input_tokens,0),COALESCE(cached_input_tokens,0),COALESCE(output_tokens,0) FROM chunk_metrics WHERE job_id IN (" + ids + ")", null)) {
+            while (c.moveToNext()) {
+                JobSummary j = byId.get(c.getLong(0));
+                if (j == null) continue;
+                if (j.usage == null) j.usage = new UsageTotals();
+                j.usage.add(c.getString(1), c.getDouble(2), c.getLong(3), c.getLong(4), c.getLong(5));
+            }
+        }
+    }
+
+    /** Spend since {@code sinceMillis}: every provider call counted once, plus the chapters (jobs) finished in that window. */
+    public UsageTotals getUsageTotals(long sinceMillis) {
+        UsageTotals t = new UsageTotals();
+        SQLiteDatabase db = getReadableDatabase();
+        try (Cursor c = db.rawQuery("SELECT cost_status,COALESCE(usage_cost,0),COALESCE(actual_input_tokens,0),COALESCE(cached_input_tokens,0),COALESCE(output_tokens,0) FROM chunk_metrics WHERE created_at>=?", new String[]{String.valueOf(sinceMillis)})) {
+            while (c.moveToNext()) t.add(c.getString(0), c.getDouble(1), c.getLong(2), c.getLong(3), c.getLong(4));
+        }
+        try (Cursor c = db.rawQuery("SELECT COUNT(*) FROM jobs WHERE UPPER(COALESCE(status,'')) IN (" + JobStatus.sqlFinished() + ") AND COALESCE(NULLIF(completed_at,0),updated_at)>=?", new String[]{String.valueOf(sinceMillis)})) {
+            if (c.moveToFirst()) t.chaptersDone = c.getInt(0);
+        }
+        return t;
+    }
+
+    /** Takes the job off the unfinished-job card without deleting anything (chunks, tokens and cost stay). */
+    public void dismissJob(long jobId) { touchJob(jobId, JobStatus.DISMISSED_VALUE); }
 
     public JobSummary getJobSummary(long jobId) {
         SQLiteDatabase db = getReadableDatabase();
@@ -636,7 +669,24 @@ public class TranslationRepository extends SQLiteOpenHelper {
         r.doneChunks = c.getInt(10);
         r.failedChunks = c.getInt(11);
         r.pendingChunks = c.getInt(12);
+        if (c.getColumnCount() > 16) {
+            r.inputHash = c.getString(13);
+            r.startSessionId = c.getString(14);
+            r.preparedBatchId = c.getString(15);
+            r.preparedOrdinal = c.getInt(16);
+        }
         return r;
+    }
+
+    public static class ConflictJob { public long id; public String inputUri; public String inputHash; }
+
+    /** Jobs marked INPUT_CONFLICT that a prepared run created; the one-time line-ending repair looks at these only. */
+    public List<ConflictJob> getRepairableInputConflicts() {
+        ArrayList<ConflictJob> out = new ArrayList<>();
+        try (Cursor c = getReadableDatabase().rawQuery("SELECT id,input_uri,input_hash FROM jobs WHERE UPPER(COALESCE(status,''))='INPUT_CONFLICT' AND COALESCE(prepared_batch_id,'')<>'' AND COALESCE(input_hash,'')<>''", null)) {
+            while (c.moveToNext()) { ConflictJob j = new ConflictJob(); j.id = c.getLong(0); j.inputUri = safe(c.getString(1)); j.inputHash = safe(c.getString(2)); out.add(j); }
+        }
+        return out;
     }
 
     public static class JobSummary {
@@ -653,6 +703,12 @@ public class TranslationRepository extends SQLiteOpenHelper {
         public int doneChunks;
         public int failedChunks;
         public int pendingChunks;
+        public String inputHash = "";
+        public String startSessionId = "";
+        public String preparedBatchId = "";
+        public int preparedOrdinal;
+        /** Tokens and money from chunk_metrics; null when the job has no metric rows. */
+        public UsageTotals usage;
     }
 
     /** A job that still has chunks to translate, with the chunk counts the Translate screen shows. */
@@ -666,7 +722,8 @@ public class TranslationRepository extends SQLiteOpenHelper {
     /** Unfinished jobs (not completed / cancelled / input conflict, with at least one chunk not done), newest first; {@code inputHashes} null = any. */
     public List<JobProgress> getIncompleteJobs(java.util.Collection<String> inputHashes, int limit) {
         ArrayList<JobProgress> out = new ArrayList<>();
-        StringBuilder where = new StringBuilder("UPPER(COALESCE(j.status,'')) NOT IN ('DONE','COMPLETED','COMPLETED_WITH_WARNINGS','CANCELLED','INPUT_CONFLICT') AND EXISTS (SELECT 1 FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)<>'SUPERSEDED' AND UPPER(c.status) NOT IN ('DONE','COMPLETED'))");
+        StringBuilder where = new StringBuilder("UPPER(COALESCE(j.status,'')) IN (" + JobStatus.sqlUnfinishedShown() + ") AND EXISTS (SELECT 1 FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)<>'SUPERSEDED' AND UPPER(c.status) NOT IN ('DONE','COMPLETED'))"
+                + " AND NOT EXISTS (SELECT 1 FROM jobs f WHERE f.id>j.id AND COALESCE(j.input_hash,'')<>'' AND f.input_hash=j.input_hash AND UPPER(COALESCE(f.status,'')) IN (" + JobStatus.sqlFinished() + "))");
         ArrayList<String> args = new ArrayList<>();
         if (inputHashes != null) {
             if (inputHashes.isEmpty()) return out;

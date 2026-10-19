@@ -86,7 +86,7 @@ class GlossaryPageFactory {
             for (GlossaryStore.Glossary g : list) ids.add(g.id);
             panel.addView(a.bulkUi.selectionHeader(LibraryBulkUi.TAB_GLOSSARIES, ids), a.marginLP(-1, -2, 0, 0, 0, 10));
         } else if (!list.isEmpty()) {
-            panel.addView(a.bulkUi.selectButton(LibraryBulkUi.TAB_GLOSSARIES), a.marginLP(-2, a.dp(40), 0, 0, 0, 10));
+            panel.addView(a.bulkUi.headerRow(LibraryBulkUi.TAB_GLOSSARIES, list.size()), a.marginLP(-1, -2, 0, 0, 0, 10));
         }
         if (list.isEmpty()) {
             TextView empty = a.text("Chưa có glossary. Bấm Import glossary để tạo profile mang đúng tên file, hoặc New blank để nhập thủ công / ghép nhiều file.", 14, a.MUTED, false);
@@ -129,7 +129,7 @@ class GlossaryPageFactory {
         buttons.addView(a.space(6, 1));
         buttons.addView(a.tinyButton("Edit", a.BLUE, v -> { if (!a.ensureConfigMutable()) return; a.editingGlossary = g; a.invalidatePage("Glossaries"); a.switchTab("Glossaries"); }), new LinearLayout.LayoutParams(0, a.dp(42), 1));
         buttons.addView(a.space(6, 1));
-        buttons.addView(a.tinyButton("Del", a.RED, v -> confirmDeleteGlossary(g)), new LinearLayout.LayoutParams(0, a.dp(42), 1));
+        buttons.addView(a.tinyButton("Del", a.RED, v -> a.bulkUi.deleteIds(LibraryBulkUi.TAB_GLOSSARIES, java.util.Collections.singletonList(g.id))), new LinearLayout.LayoutParams(0, a.dp(42), 1));
         box.addView(buttons);
         a.bulkUi.attachLongPress(box, LibraryBulkUi.TAB_GLOSSARIES, g.id);
         return box;

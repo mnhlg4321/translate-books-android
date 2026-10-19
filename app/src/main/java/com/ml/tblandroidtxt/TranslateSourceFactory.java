@@ -174,9 +174,21 @@ final class TranslateSourceFactory {
         a.updateInputEstimate();
     }
 
+    /**
+     * In chapter-set mode each chapter brings its own Glossary and Pronoun (they replace the shared ones), so the two rows are hidden and
+     * one line says so; the Instruction row stays. Changing the mode does not rebuild the page, so this runs from render() too.
+     */
+    void applyConfigRows() {
+        boolean set = MODE_SET.equals(mode);
+        if (a.translateGlossaryRow != null) a.translateGlossaryRow.setVisibility(set ? View.GONE : View.VISIBLE);
+        if (a.translatePronounRow != null) a.translatePronounRow.setVisibility(set ? View.GONE : View.VISIBLE);
+        if (a.translateComboNote != null) a.translateComboNote.setVisibility(set ? View.VISIBLE : View.GONE);
+    }
+
     private void render() {
         if (box == null) return;
         boolean set = MODE_SET.equals(mode);
+        applyConfigRows();
         a.tint(filesButton, set ? a.FIELD : a.BLUE, set ? a.BORDER : a.BLUE, 1, 12);
         a.tint(setButton, set ? a.BLUE : a.FIELD, set ? a.BLUE : a.BORDER, 1, 12);
         if (a.filesSourceCard != null) a.filesSourceCard.setVisibility(set ? View.GONE : View.VISIBLE);

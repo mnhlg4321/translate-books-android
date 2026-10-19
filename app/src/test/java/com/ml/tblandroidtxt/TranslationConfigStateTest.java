@@ -64,4 +64,10 @@ public class TranslationConfigStateTest {
         assertFalse(invalid.hasTranslation());
         assertFalse(invalid.hasRefinement());
     }
+
+    @Test public void nothingChosenSaysNotUsedOnlyOnce() {
+        assertEquals("Không sử dụng", TranslationConfigState.glossary("", 0, 0).displayText());
+        assertEquals("Không sử dụng", TranslationConfigState.pronoun("", 0, 0).displayText());
+        assertTrue(TranslationConfigState.glossary("x.csv", 3, 0).displayText().contains("\n"));
+    }
 }

@@ -147,6 +147,64 @@ final class LibraryBulkUi {
         return bar;
     }
 
+    // ---- first row of a list and the shared notice bar ----
+
+    /** First row of every Library list: how many items there are, and the "Chọn" button that enters selection. */
+    View headerRow(String tab, int count) {
+        LinearLayout row = new LinearLayout(a);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        TextView n = a.text(count + " mục", 13, a.GREEN, true);
+        n.setContentDescription("library-count");
+        row.addView(n, new LinearLayout.LayoutParams(0, -2, 1));
+        if (count > 0) row.addView(selectButton(tab), new LinearLayout.LayoutParams(-2, -2));
+        return row;
+    }
+
+    private String noticeSummary = "";
+    private String noticeDetail = "";
+    private Runnable noticeTimer;
+
+    /**
+     * One message for every Library import, in the same bar above the list as the undo bar: "Đã thêm n · bỏ qua m (trùng/lỗi)", with the
+     * detail behind "Xem chi tiết". It stays for the same ten seconds as an undo and replaces the older message.
+     */
+    void notice(String tab, String summary, String detail) {
+        noticeSummary = summary == null ? "" : summary;
+        noticeDetail = detail == null ? "" : detail;
+        if (noticeTimer != null) handler.removeCallbacks(noticeTimer);
+        noticeTimer = () -> { noticeSummary = ""; noticeDetail = ""; a.invalidateLibraryPages(); refresh(tab); };
+        handler.postDelayed(noticeTimer, UNDO_MS + 2_000L);
+        refresh(tab);
+    }
+
+    void clearNotice() {
+        if (noticeTimer != null) handler.removeCallbacks(noticeTimer);
+        noticeSummary = ""; noticeDetail = "";
+    }
+
+    View noticeBar() {
+        if (noticeSummary.isEmpty()) return null;
+        LinearLayout bar = a.card(14, a.PANEL, a.BLUE);
+        bar.setOrientation(LinearLayout.VERTICAL);
+        bar.setPadding(a.dp(12), a.dp(8), a.dp(8), a.dp(8));
+        TextView msg = a.text(noticeSummary, 14, a.TEXT, true);
+        msg.setSingleLine(false);
+        msg.setContentDescription("library-notice");
+        bar.addView(msg);
+        LinearLayout actions = new LinearLayout(a);
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        if (!noticeDetail.isEmpty()) {
+            final String detail = noticeDetail;
+            actions.addView(a.secondaryButton("Xem chi tiết", v -> new AlertDialog.Builder(a).setTitle("Chi tiết").setMessage(detail).setPositiveButton("Đóng", null).show()), new LinearLayout.LayoutParams(0, -2, 1));
+            actions.addView(a.space(6, 1));
+        }
+        actions.addView(a.secondaryButton("Đóng", v -> { clearNotice(); a.invalidateLibraryPages(); a.refreshPagePreservingScroll(a.currentTab); }), new LinearLayout.LayoutParams(0, -2, 1));
+        bar.addView(actions, a.marginLP(-1, -2, 0, 6, 0, 0));
+        bar.setLayoutParams(a.marginLP(-1, -2, 0, 6, 0, 0));
+        return bar;
+    }
+
     // ---- delete with undo ----
 
     View undoBar() {

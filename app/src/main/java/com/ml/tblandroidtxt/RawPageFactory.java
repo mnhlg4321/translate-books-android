@@ -53,7 +53,7 @@ class RawPageFactory {
             headerSlot.removeAllViews();
             List<String> ids = new ArrayList<>();
             for (LibraryRawStore.Item i : shown) ids.add(i.id);
-            summary.setText(all.size() + " RAW" + (shown.size() != all.size() ? " · hiện " + shown.size() : ""));
+            summary.setText(all.size() + " mục" + (shown.size() != all.size() ? " · hiện " + shown.size() : ""));
             if (selection.isActive()) headerSlot.addView(a.bulkUi.selectionHeader(LibraryBulkUi.TAB_RAW, ids));
             else if (!all.isEmpty()) headerSlot.addView(a.bulkUi.selectButton(LibraryBulkUi.TAB_RAW), new LinearLayout.LayoutParams(-2, a.dp(40)));
             if (shown.isEmpty()) {

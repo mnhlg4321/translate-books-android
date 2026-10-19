@@ -170,7 +170,7 @@ final class LibraryRawStore {
     static Set<String> completedHashes(Context c) {
         HashSet<String> out = new HashSet<>();
         TranslationRepository repo = new TranslationRepository(c);
-        try (Cursor cur = repo.getReadableDatabase().rawQuery("SELECT DISTINCT input_hash FROM jobs WHERE input_hash<>'' AND UPPER(COALESCE(status,'')) IN ('DONE','COMPLETED','COMPLETED_WITH_WARNINGS')", null)) {
+        try (Cursor cur = repo.getReadableDatabase().rawQuery("SELECT DISTINCT input_hash FROM jobs WHERE input_hash<>'' AND UPPER(COALESCE(status,'')) IN (" + JobStatus.sqlFinished() + ")", null)) {
             while (cur.moveToNext()) out.add(cur.getString(0));
         } finally { repo.close(); }
         return out;
@@ -180,7 +180,7 @@ final class LibraryRawStore {
     static List<Usage> unfinishedJobs(Context c, String id) {
         ArrayList<Usage> out = new ArrayList<>();
         TranslationRepository repo = new TranslationRepository(c);
-        try (Cursor cur = repo.getReadableDatabase().rawQuery("SELECT id,file_name,status FROM jobs WHERE input_uri=? AND UPPER(COALESCE(status,'')) NOT IN ('DONE','COMPLETED','COMPLETED_WITH_WARNINGS','PASSED','CANCELLED')", new String[]{RawUri.of(id)})) {
+        try (Cursor cur = repo.getReadableDatabase().rawQuery("SELECT id,file_name,status FROM jobs WHERE input_uri=? AND UPPER(COALESCE(status,'')) NOT IN (" + JobStatus.sqlIn(JobStatus.Kind.FINISHED, JobStatus.Kind.CANCELLED, JobStatus.Kind.DISMISSED) + ")", new String[]{RawUri.of(id)})) {
             while (cur.moveToNext()) out.add(new Usage(cur.getLong(0), cur.getString(1), cur.getString(2)));
         } finally { repo.close(); }
         return out;

@@ -116,6 +116,9 @@ public class MainActivity extends Activity {
     TextView metricCurrentChunk, metricGlossaryLocks, metricPronounLocks, lockUsageMeta, previewMeta, previewText;
     LinearLayout trackingCard, estimatePanel, outputFolderFilesList, actionControlRow;
     TextView translateGlossaryChip, translatePronounChip, translateInstructionChip;
+    /** The Glossaries and Pronoun rows and the one-line note that replaces them in chapter-set mode. */
+    View translateGlossaryRow, translatePronounRow;
+    TextView translateComboNote;
     LinearLayout resultCard;
     ProgressBar progress;
     Button startButton, pauseButton, resumeButton, cancelButton, retryButton, pricingRetryButton, outputFolderButton;
@@ -127,6 +130,9 @@ public class MainActivity extends Activity {
     final ExecutorService preflightExecutor=Executors.newSingleThreadExecutor();
     final Map<String,View> pageCache=new HashMap<>();
     volatile List<TranslationRepository.JobSummary> cachedJobSummaries=java.util.Collections.emptyList();
+    volatile List<RunGroups.SessionInfo> cachedSessions=java.util.Collections.emptyList();
+    volatile UsageTotals cachedUsageToday=new UsageTotals();
+    volatile UsageTotals cachedUsageWeek=new UsageTotals();
     volatile String cachedRuntimeLog="";
     final AtomicInteger preflightGeneration=new AtomicInteger();
     volatile String validatedPlanId="";
@@ -230,6 +236,7 @@ public class MainActivity extends Activity {
             else if ("cancelled".equals(status)) toast("Đã hủy");
             if ("done".equals(status) || "error".equals(status) || "paused".equals(status) || "cancelled".equals(status) || "info".equals(status)) {
                 if (appRoot != null) appRoot.postDelayed(MainActivity.this::refreshPendingJobCard, 700);
+                if (!"info".equals(status)) refreshJobCacheAsync(false);
             }
         }
     };
@@ -244,13 +251,27 @@ public class MainActivity extends Activity {
     /** Card above the Start buttons: the newest unfinished job, with buttons that continue it. */
     LinearLayout pendingJobCard;
 
+    private final java.util.concurrent.ExecutorService cardExecutor = java.util.concurrent.Executors.newSingleThreadExecutor();
+    private int pendingCardGeneration;
+
+    /** Reads the unfinished jobs off the UI thread, then draws the card; a newer refresh makes an older answer stale. */
     void refreshPendingJobCard() {
+        if (pendingJobCard == null) return;
+        if (TranslatorService.isActive() || translationActive) { pendingJobCard.setVisibility(View.GONE); return; }
+        final int generation = ++pendingCardGeneration;
+        cardExecutor.submit(() -> {
+            java.util.List<TranslationRepository.JobProgress> jobs;
+            TranslationRepository repo = new TranslationRepository(this);
+            try { jobs = repo.getIncompleteJobs(null, 20); } catch (Exception e) { jobs = new ArrayList<>(); } finally { repo.close(); }
+            final java.util.List<TranslationRepository.JobProgress> found = jobs;
+            runOnUiThread(() -> { if (generation == pendingCardGeneration && !isFinishing()) renderPendingJobCard(found); });
+        });
+    }
+
+    private void renderPendingJobCard(java.util.List<TranslationRepository.JobProgress> jobs) {
         if (pendingJobCard == null) return;
         pendingJobCard.removeAllViews();
         if (TranslatorService.isActive() || translationActive) { pendingJobCard.setVisibility(View.GONE); return; }
-        java.util.List<TranslationRepository.JobProgress> jobs;
-        TranslationRepository repo = new TranslationRepository(this);
-        try { jobs = repo.getIncompleteJobs(null, 20); } catch (Exception e) { jobs = new ArrayList<>(); } finally { repo.close(); }
         final TranslationRepository.JobProgress p = ResumePrompt.pickCardJob(jobs);
         if (p == null) { pendingJobCard.setVisibility(View.GONE); return; }
         pendingJobCard.setVisibility(View.VISIBLE);
@@ -264,18 +285,62 @@ public class MainActivity extends Activity {
         line.setContentDescription("pending-job-progress");
         pendingJobCard.addView(line, marginLP(-1, -2, 0, 2, 0, 8));
         LinearLayout row = rowContainer();
-        Button go = primaryButton("Tiếp tục dịch", v -> resumeJob(p.id));
-        go.setEnabled(p.unknown == 0);
+        boolean unknownDelivery = p.unknown > 0;
+        Button view = unknownDelivery ? primaryButton("Xem trong Jobs", v -> switchTab("Jobs")) : secondaryButton("Xem trong Jobs", v -> switchTab("Jobs"));
+        Button go = unknownDelivery ? secondaryButton("Tiếp tục dịch", v -> resumeJob(p.id)) : primaryButton("Tiếp tục dịch", v -> resumeJob(p.id));
+        go.setEnabled(!unknownDelivery);
         go.setContentDescription("pending-job-continue");
-        row.addView(go, new LinearLayout.LayoutParams(0, -2, 1));
-        if (p.error > 0) {
+        if (unknownDelivery) {
+            row.addView(view, new LinearLayout.LayoutParams(0, -2, 1));
             row.addView(space(6, 1));
-            row.addView(secondaryButton("Retry chunk lỗi", v -> retryJobFailedChunks(p.id)), new LinearLayout.LayoutParams(0, -2, 1));
+            row.addView(go, new LinearLayout.LayoutParams(0, -2, 1));
+        } else {
+            row.addView(go, new LinearLayout.LayoutParams(0, -2, 1));
+            if (p.error > 0) {
+                row.addView(space(6, 1));
+                row.addView(secondaryButton("Retry chunk lỗi", v -> retryJobFailedChunks(p.id)), new LinearLayout.LayoutParams(0, -2, 1));
+            }
+            row.addView(space(6, 1));
+            row.addView(view, new LinearLayout.LayoutParams(0, -2, 1));
         }
-        row.addView(space(6, 1));
-        row.addView(secondaryButton("Xem trong Jobs", v -> switchTab("Jobs")), new LinearLayout.LayoutParams(0, -2, 1));
         pendingJobCard.addView(row);
-        if (p.unknown > 0) pendingJobCard.addView(text("Có request không rõ đã gửi hay chưa: xem ở tab Jobs trước khi chạy tiếp.", 12, AMBER, false), marginLP(-1, -2, 0, 6, 0, 0));
+        if (unknownDelivery) pendingJobCard.addView(text("Tiếp tục đang tắt: có request không rõ đã gửi hay chưa. Xem ở tab Jobs trước khi chạy tiếp, vì gửi lại có thể bị tính tiền hai lần.", 12, AMBER, false), marginLP(-1, -2, 0, 6, 0, 0));
+        Button dismiss = secondaryButton("Bỏ job này", v -> confirmDismissJob(p));
+        dismiss.setContentDescription("pending-job-dismiss");
+        pendingJobCard.addView(dismiss, marginLP(-1, -2, 0, 8, 0, 0));
+        int others = jobs.size() - 1;
+        if (others > 0) {
+            TextView more = text("và " + others + " job dở khác · Xem tất cả", 12, BLUE, true);
+            more.setPadding(0, dp(10), 0, dp(4));
+            more.setContentDescription("pending-job-more");
+            more.setOnClickListener(v -> switchTab("Jobs"));
+            pendingJobCard.addView(more);
+        }
+    }
+
+    /** "Bỏ job này": hides the job from the card by marking it dismissed; chunks, tokens and cost stay in Jobs. */
+    void confirmDismissJob(TranslationRepository.JobProgress p) {
+        new AlertDialog.Builder(this).setTitle("Bỏ job này?")
+                .setMessage("Job sẽ không hiện ở đây nữa; chunk đã dịch, token và chi phí vẫn giữ trong Jobs.\n\n" + p.fileName)
+                .setPositiveButton("Bỏ job", (d, w) -> dismissJobs(java.util.Collections.singletonList(p.id)))
+                .setNegativeButton("Hủy", null).show();
+    }
+
+    void dismissJobs(final java.util.List<Long> ids) {
+        cardExecutor.submit(() -> {
+            TranslationRepository repo = new TranslationRepository(this);
+            try { for (long id : ids) repo.dismissJob(id); } finally { repo.close(); }
+            runOnUiThread(() -> { refreshPendingJobCard(); refreshJobCacheAsync(false); toast("Đã bỏ job"); });
+        });
+    }
+
+    /** "Xóa" in the Jobs tab: removes the jobs with their chunks and token/cost history (the owner was warned). */
+    void deleteJobs(final java.util.List<Long> ids) {
+        cardExecutor.submit(() -> {
+            TranslationRepository repo = new TranslationRepository(this);
+            try { for (long id : ids) repo.deleteJob(id); } finally { repo.close(); }
+            runOnUiThread(() -> { refreshPendingJobCard(); refreshJobCacheAsync(false); toast("Đã xóa job"); });
+        });
     }
 
     /** Start on files that already have an unfinished job: ask before creating a new one. */
@@ -310,6 +375,8 @@ public class MainActivity extends Activity {
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
         ObservabilityLog.initialize(this);
+        final android.content.Context repairContext = getApplicationContext();
+        new Thread(() -> { try { InputConflictRepair.runOnce(repairContext); } catch (Exception ignored) { } }, "input-conflict-repair").start();
         ModelCatalog.addListener(catalogListener);
         ModelCatalog.initialize(this);
         applyAppearance(UiAppearance.load(this));
@@ -369,7 +436,7 @@ public class MainActivity extends Activity {
         if (editorialApiShared != null) editorialApiShared.detach(this);
         ModelCatalog.removeListener(catalogListener);
         preflightGeneration.incrementAndGet();
-        preflightExecutor.shutdownNow();
+        preflightExecutor.shutdownNow();cardExecutor.shutdownNow();
         if (editorialPackImportCoordinator != null) {
             editorialPackImportCoordinator.close();
             editorialPackImportCoordinator = null;
@@ -631,6 +698,7 @@ public class MainActivity extends Activity {
         scroll.addView(nav);root.addView(scroll,new LinearLayout.LayoutParams(-1,dp(48)));
         View page="Files".equals(selected)?buildFilesPage():"RAW".equals(selected)?new RawPageFactory(this).buildRawPage():"Glossaries".equals(selected)?buildGlossariesPage():"Pronouns".equals(selected)?buildPronounsPage():"ChapterSets".equals(selected)?buildChapterSetsPage():buildSamplePage();
         root.addView(page,new LinearLayout.LayoutParams(-1,0,1));
+        View noticeBar=bulkUi.noticeBar();if(noticeBar!=null)root.addView(noticeBar);
         View undoBar=bulkUi.undoBar();if(undoBar!=null)root.addView(undoBar);
         View selectionBar=bulkUi.bottomBar(selected);if(selectionBar!=null)root.addView(selectionBar);
         if("ChapterSets".equals(selected)){View comboBar=new ChapterSetPageFactory(this).bottomBar();if(comboBar!=null)root.addView(comboBar);}
@@ -823,11 +891,25 @@ public class MainActivity extends Activity {
     void openDeveloperTools() { developerToolsFactory().showDeveloperTools(); }
 
     List<TranslationRepository.JobSummary> jobSummariesSnapshot(){return new ArrayList<>(cachedJobSummaries);}
+    List<RunGroups.SessionInfo> sessionInfosSnapshot(){return new ArrayList<>(cachedSessions);}
+
+    /** Opens a finished job's output with whatever app handles text; a message when the file is gone or nothing can open it. */
+    void openJobOutput(String outputUri){
+        if(outputUri==null||outputUri.trim().isEmpty()){toast("Job này chưa có file kết quả");return;}
+        Intent open=new Intent(Intent.ACTION_VIEW);
+        open.setDataAndType(Uri.parse(outputUri),"text/plain");
+        open.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        try{startActivity(open);}catch(Exception e){toast("Không mở được file kết quả (đã bị xóa hoặc không có app mở TXT)");}
+    }
     String runtimeLogSnapshot(){return cachedRuntimeLog==null?"":cachedRuntimeLog;}
     void refreshJobCacheAsync(boolean showFeedback){
         preflightExecutor.submit(()->{
             JobStore store=new JobStore(this);List<TranslationRepository.JobSummary> jobs;
-            try{jobs=store.recentSummaries(80);}finally{store.close();}
+            UsageTotals today=new UsageTotals(),week=new UsageTotals();
+            TranslationRepository totalsRepo=new TranslationRepository(this);
+            try{jobs=store.recentSummaries(150);long now=System.currentTimeMillis();java.util.Calendar cal=java.util.Calendar.getInstance();cal.set(java.util.Calendar.HOUR_OF_DAY,0);cal.set(java.util.Calendar.MINUTE,0);cal.set(java.util.Calendar.SECOND,0);cal.set(java.util.Calendar.MILLISECOND,0);today=totalsRepo.getUsageTotals(cal.getTimeInMillis());week=totalsRepo.getUsageTotals(now-7L*24*60*60*1000);}finally{store.close();totalsRepo.close();}
+            cachedUsageToday=today;cachedUsageWeek=week;
+            cachedSessions=ChapterSession.readInfos(new java.io.File(getFilesDir(),ChapterSession.DIR));
             String logs=LogStore.read(this);cachedJobSummaries=jobs;cachedRuntimeLog=logs;
             runOnUiThread(()->{invalidatePage("Jobs");if("Jobs".equals(currentTab))switchTab("Jobs");if(showFeedback)toast("Jobs refreshed");});
         });
@@ -914,7 +996,7 @@ public class MainActivity extends Activity {
             runOnUiThread(() -> {
                 toast(result);
                 appendLog("RAW import: " + detail.toString().replace('\n', ' '));
-                if (plan.skipped() > 0 || !unreadable.isEmpty()) showResult("Nhập RAW", detail.toString());
+                bulkUi.notice(LibraryBulkUi.TAB_RAW, "Đã thêm " + plan.added() + " · bỏ qua " + (plan.skipped() + unreadable.size()) + " (trùng/lỗi)", plan.skipped() + unreadable.size() > 0 ? detail.toString() : "");
                 invalidatePage("RAW");
                 if ("RAW".equals(currentTab)) switchTab("RAW");
             });
@@ -1508,7 +1590,7 @@ public class MainActivity extends Activity {
         if (planned.imported.isEmpty()) {
             toast("Không có glossary hợp lệ");
             appendLog("Glossary multi-import failed: " + namesSummary(files.failed));
-            showResult("Glossary import failed", namesSummary(files.failed));
+            bulkUi.notice(LibraryBulkUi.TAB_GLOSSARIES, "Không nhập được glossary nào", namesSummary(files.failed));
             return;
         }
         ArrayList<GlossaryStore.Glossary> all = new ArrayList<>(planned.imported);
@@ -1516,7 +1598,7 @@ public class MainActivity extends Activity {
         if (!GlossaryStore.saveAll(this, all)) {
             toast(LIBRARY_WRITE_REFUSED);
             appendLog("Glossary multi-import refused: store not writable");
-            showResult("Glossary import failed", LIBRARY_WRITE_REFUSED);
+            bulkUi.notice(LibraryBulkUi.TAB_GLOSSARIES, "Không nhập được glossary", LIBRARY_WRITE_REFUSED);
             return;
         }
         // Importing only adds profiles; the Active glossary stays what the person chose.
@@ -1526,8 +1608,7 @@ public class MainActivity extends Activity {
         toast("Đã thêm " + planned.imported.size() + " glossary");
         appendLog("Glossary multi-import: created=" + planned.imported.size()
                 + ", skipped=" + files.failed.size());
-        showResult("Glossaries imported",
-                "Đã thêm " + planned.imported.size() + " glossary, mỗi file là một glossary. Bấm Use để dùng cho bản dịch." + skipped);
+        bulkUi.notice(LibraryBulkUi.TAB_GLOSSARIES, "Đã thêm " + planned.imported.size() + " · bỏ qua " + files.failed.size() + " (trùng/lỗi)", files.failed.isEmpty() ? "" : namesSummary(files.failed));
         if ("Glossaries".equals(currentTab)) switchTab("Glossaries");
     }
 
@@ -1539,7 +1620,7 @@ public class MainActivity extends Activity {
         if (planned.imported.isEmpty()) {
             toast("Không có pronoun hợp lệ");
             appendLog("Pronoun multi-import failed: " + namesSummary(files.failed));
-            showResult("Pronoun import failed", namesSummary(files.failed));
+            bulkUi.notice(LibraryBulkUi.TAB_PRONOUNS, "Không nhập được pronoun nào", namesSummary(files.failed));
             return;
         }
         ArrayList<PronounStore.Profile> all = new ArrayList<>(planned.imported);
@@ -1548,7 +1629,7 @@ public class MainActivity extends Activity {
         if (!PronounStore.saveAll(this, all)) {
             toast(LIBRARY_WRITE_REFUSED);
             appendLog("Pronoun multi-import refused: store not writable");
-            showResult("Pronoun import failed", LIBRARY_WRITE_REFUSED);
+            bulkUi.notice(LibraryBulkUi.TAB_PRONOUNS, "Không nhập được pronoun", LIBRARY_WRITE_REFUSED);
             return;
         }
         // Importing only adds profiles; the Active pronoun stays what the person chose.
@@ -1558,8 +1639,7 @@ public class MainActivity extends Activity {
         toast("Đã thêm " + planned.imported.size() + " pronoun profile");
         appendLog("Pronoun multi-import: created=" + planned.imported.size()
                 + ", skipped=" + files.failed.size());
-        showResult("Pronouns imported",
-                "Đã thêm " + planned.imported.size() + " pronoun profile, mỗi file là một profile. Bấm Use để dùng cho bản dịch." + skipped);
+        bulkUi.notice(LibraryBulkUi.TAB_PRONOUNS, "Đã thêm " + planned.imported.size() + " · bỏ qua " + files.failed.size() + " (trùng/lỗi)", files.failed.isEmpty() ? "" : namesSummary(files.failed));
         if ("Pronouns".equals(currentTab)) switchTab("Pronouns");
     }
 
@@ -3201,9 +3281,16 @@ public class MainActivity extends Activity {
         return Color.rgb(31, 61, 94);
     }
 
+    /** A failure title gets a warning sign, never the tick. */
+    static String resultTitlePrefix(String title) {
+        String t = title == null ? "" : title.toLowerCase(java.util.Locale.ROOT);
+        boolean failure = t.contains("fail") || t.contains("thất bại") || t.contains("không ") || t.contains("lỗi") || t.contains("error") || t.contains("blocked") || t.contains("not ready");
+        return failure ? "⚠ " : "✅ ";
+    }
+
     void showResult(String title, String meta) {
         if (resultCard == null) return;
-        resultTitle.setText("✅ " + title);
+        resultTitle.setText(resultTitlePrefix(title) + title);
         resultMeta.setText(meta);
         resultCard.setVisibility(View.VISIBLE);
     }

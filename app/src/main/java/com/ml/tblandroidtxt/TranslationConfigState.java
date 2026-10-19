@@ -26,8 +26,11 @@ public final class TranslationConfigState {
             return "Không sử dụng";
         }
         public String displayText() {
-            String shownName = name == null || name.trim().isEmpty() ? "Không sử dụng" : name.trim();
+            boolean unnamed = name == null || name.trim().isEmpty();
             String suffix = detail == null || detail.trim().isEmpty() ? "" : " • " + detail.trim();
+            // Nothing chosen: "Không sử dụng" once (the name and the status label would both say it).
+            if (unnamed && status == Status.NOT_USED) return "Không sử dụng" + suffix;
+            String shownName = unnamed ? "Không sử dụng" : name.trim();
             return shownName + "\n" + statusLabel() + suffix;
         }
     }

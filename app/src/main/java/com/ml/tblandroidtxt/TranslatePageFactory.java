@@ -204,14 +204,20 @@ class TranslatePageFactory {
         TranslationConfigState state = a.translationConfigState();
         LinearLayout section = a.sectionCard("◇", state.fromActiveJob
                 ? "Cấu hình đang dùng • Job #" + state.jobId : "Cấu hình bản dịch");
-        section.addView(supportRow(state.glossary, a.BLUE,
+        a.translateGlossaryRow = supportRow(state.glossary, a.BLUE,
                 v -> a.showTranslationConfig("glossary"),
                 v -> { if (a.ensureConfigMutable()) a.switchTab("Glossaries"); },
-                v -> a.clearGlossarySelection()));
-        section.addView(supportRow(state.pronoun, a.CYAN,
+                v -> a.clearGlossarySelection());
+        section.addView(a.translateGlossaryRow);
+        a.translatePronounRow = supportRow(state.pronoun, a.CYAN,
                 v -> a.showTranslationConfig("pronoun"),
                 v -> a.switchTab("Pronouns"),
-                v -> a.clearPronoun()), a.marginLP(-1, -2, 0, 8, 0, 0));
+                v -> a.clearPronoun());
+        section.addView(a.translatePronounRow, a.marginLP(-1, -2, 0, 8, 0, 0));
+        a.translateComboNote = a.text("Glossary/Pronoun: theo từng chương của tổ hợp (xem danh sách chương ở trên).", 13, a.MUTED, false);
+        a.translateComboNote.setSingleLine(false);
+        section.addView(a.translateComboNote, a.marginLP(-1, -2, 0, 8, 0, 0));
+        a.sourceUi.applyConfigRows();
         section.addView(supportRow(state.instruction, a.AMBER,
                 v -> a.showTranslationConfig("instruction"),
                 v -> a.chooseYaml(),
@@ -375,7 +381,7 @@ class TranslatePageFactory {
         previewScroll.setFillViewport(false);
         previewScroll.setVerticalScrollBarEnabled(true);
         previewScroll.setScrollbarFadingEnabled(false);
-        previewScroll.setNestedScrollingEnabled(false);
+        previewScroll.setNestedScrollingEnabled(true);
         previewScroll.addView(a.previewText, new ScrollView.LayoutParams(-1, -2));
         previewCard.addView(previewScroll, new LinearLayout.LayoutParams(-1, a.dp(150)));
         a.trackingCard.addView(previewCard);
@@ -433,7 +439,7 @@ class TranslatePageFactory {
         a.logScroll.setScrollbarFadingEnabled(false);
         a.logScroll.setScrollBarStyle(View.SCROLLBARS_INSIDE_INSET);
         a.logScroll.setVerticalScrollbarPosition(View.SCROLLBAR_POSITION_RIGHT);
-        a.logScroll.setNestedScrollingEnabled(false);
+        a.logScroll.setNestedScrollingEnabled(true);
         a.logScroll.addView(a.logView, new ScrollView.LayoutParams(-1, -2));
 
         LinearLayout inner = a.card(16, a.FIELD, a.BORDER);

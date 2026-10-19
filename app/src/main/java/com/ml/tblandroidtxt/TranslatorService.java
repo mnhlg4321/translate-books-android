@@ -352,6 +352,11 @@ public class TranslatorService extends Service {
         // The shared settings (and the Active Glossary/Pronoun) are saved once and never replaced by a chapter's own copy.
         SettingsStore.save(this,s);setState(TranslationJobState.State.READY,"Ready");broadcast("ready",0,"Validated prepared plan "+batch.id+" with "+batch.exactChunkCount()+" chunks");setState(TranslationJobState.State.RUNNING,"Running");
         final java.util.Map<Integer,Long> resumeJobs=parseResumeJobs(intent.getStringExtra("resumeJobs"));
+        if(session!=null&&!resumeJobs.isEmpty()){
+            // The Jobs tab groups a run's chapters from this snapshot: remember which earlier jobs this run continues.
+            for(Long id:resumeJobs.values())if(!session.resumedJobs.contains(id))session.resumedJobs.add(id);
+            try{session.write(new java.io.File(getFilesDir(),ChapterSession.DIR));}catch(Exception ignored){}
+        }
         for(int i=0;i<batch.inputs.size();i++){
             waitIfPaused();if(cancelled){finishCancelled("Cancelled before the next prepared file");return;}
             PreparedBatch.Input input=batch.inputs.get(i);Uri out=fixed;
@@ -393,6 +398,13 @@ public class TranslatorService extends Service {
         return out;
     }
 
+    /** Resume compares the stored hash with the file as written (raw) or as the plan normalized it; the matching branch is logged. */
+    private boolean inputStillMatches(long jobId,String expectedHash,Uri inputUri)throws Exception{
+        InputIdentity.Match m=InputIdentity.match(expectedHash,FileUtil.readText(this,inputUri));
+        ObservabilityLog.event("input_identity","job",jobId,"match",m.name());
+        return m!=InputIdentity.Match.NONE;
+    }
+
     /** Continues an unfinished job inside a prepared run: translated chunks are kept, the rest (including failed ones) is translated with the job's own settings. */
     private void continueExistingJob(long jobId,int fileNo,int fileTotal,String label)throws Exception{
         TranslationRepository.Job job=repo.getJob(jobId);
@@ -401,7 +413,7 @@ public class TranslatorService extends Service {
         String validation=AppValidator.validateForTranslation(s);if(validation!=null)throw new IllegalArgumentException(validation);
         activeJobId=job.id;
         String expectedInputHash=repo.getInputHash(job.id);
-        if(expectedInputHash!=null&&!expectedInputHash.isEmpty()&&!expectedInputHash.equals(HashUtil.sha256(FileUtil.readText(this,Uri.parse(job.inputUri))))){repo.touchJob(job.id,"INPUT_CONFLICT");throw new IllegalStateException("Input file changed since checkpoint; job #"+job.id+" cannot continue");}
+        if(expectedInputHash!=null&&!expectedInputHash.isEmpty()&&!inputStillMatches(job.id,expectedInputHash,Uri.parse(job.inputUri))){repo.touchJob(job.id,"INPUT_CONFLICT");throw new IllegalStateException("Input file changed since checkpoint; job #"+job.id+" cannot continue");}
         List<TranslationRepository.ChunkRow> rows=repo.getChunkRows(job.id);
         for(TranslationRepository.ChunkRow row:rows)if("DELIVERY_UNKNOWN".equalsIgnoreCase(row.status)){repo.touchJob(job.id,"NEEDS_REVIEW");throw new IllegalStateException("Job #"+job.id+" có request không rõ đã gửi hay chưa; xem ở tab Jobs rồi chọn retry");}
         List<Chunk> chunks=new ArrayList<>();int completed=0,failed=0,pending=0;
@@ -511,8 +523,7 @@ public class TranslatorService extends Service {
             activeJobId = job.id;
             String expectedInputHash=repo.getInputHash(job.id);
             if(expectedInputHash!=null&&!expectedInputHash.isEmpty()){
-                String currentInputHash=HashUtil.sha256(FileUtil.readText(this,Uri.parse(job.inputUri)));
-                if(!expectedInputHash.equals(currentInputHash)){repo.touchJob(job.id,"INPUT_CONFLICT");throw new IllegalStateException("Input file changed since checkpoint; resume blocked");}
+                if(!inputStillMatches(job.id,expectedInputHash,Uri.parse(job.inputUri))){repo.touchJob(job.id,"INPUT_CONFLICT");throw new IllegalStateException("Input file changed since checkpoint; resume blocked");}
             }
             List<TranslationRepository.ChunkRow> rows = repo.getChunkRows(job.id);
             for(TranslationRepository.ChunkRow row:rows)if("DELIVERY_UNKNOWN".equalsIgnoreCase(row.status)){repo.touchJob(job.id,"NEEDS_REVIEW");broadcast("paused",-1,"Job #"+job.id+" has a request with unknown delivery. Review it before choosing retry anyway; it will not be resent automatically.");releaseRun();stopForeground(STOP_FOREGROUND_REMOVE);stopSelf();return;}

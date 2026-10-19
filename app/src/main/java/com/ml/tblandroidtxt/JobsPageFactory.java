@@ -105,6 +105,7 @@ public class JobsPageFactory {
         logText.setSingleLine(false);
         ScrollView logScroll = new ScrollView(a);
         logScroll.setFillViewport(false);
+        logScroll.setNestedScrollingEnabled(true);
         logScroll.addView(logText, new ScrollView.LayoutParams(-1, -2));
         LinearLayout logInner = card(14, FIELD, BORDER);
         logInner.setOrientation(LinearLayout.VERTICAL);
@@ -383,7 +384,7 @@ public class JobsPageFactory {
 
     private void continueIncomplete(long jobId){JobStore store=new JobStore(a);int idx=store.firstRunnableChunk(jobId);if(idx<0){toast.show("All chunks are complete");return;}retryOneChunk(jobId,idx);}
     private void applyCurrentConfig(long jobId){JobStore store=new JobStore(a);int idx=store.firstRunnableChunk(jobId);if(idx<0){toast.show("No remaining chunks");return;}AppSettings current=SettingsStore.load(a);new AlertDialog.Builder(a).setTitle("Apply current configuration?").setMessage("Revision starts at chunk "+(idx+1)+". Completed chunks and their attempt history are not changed.\n\nModel: "+current.model).setPositiveButton("Apply",(d,w)->{int revision=store.applyRevision(jobId,idx,current);toast.show("Configuration revision "+revision+" saved for remaining chunks");}).setNegativeButton("Cancel",null).show();}
-    private boolean matchesFilter(TranslationRepository.JobSummary j){if("ALL".equals(statusFilter))return true;String s=nonEmpty(j.status,"").toUpperCase(Locale.US);if("INCOMPLETE".equals(statusFilter))return !"DONE".equals(s)&&!"INTEGRITY_PASSED".equals(s);if("FAILED".equals(statusFilter))return j.failedChunks>0||"ERROR".equals(s)||"NEEDS_REVIEW".equals(s);return statusFilter.equals(s);}
+    private boolean matchesFilter(TranslationRepository.JobSummary j){if("ALL".equals(statusFilter))return true;String s=nonEmpty(j.status,"").toUpperCase(Locale.US);JobStatus.Kind kind=JobStatus.classify(j.status);if("INCOMPLETE".equals(statusFilter))return kind!=JobStatus.Kind.FINISHED&&kind!=JobStatus.Kind.CANCELLED&&kind!=JobStatus.Kind.DISMISSED;if("FAILED".equals(statusFilter))return j.failedChunks>0||"ERROR".equals(s)||kind==JobStatus.Kind.NEEDS_REVIEW;if("DONE".equals(statusFilter))return kind==JobStatus.Kind.FINISHED;return statusFilter.equals(s);}
     private void showFilters(){String[] values={"ALL","INCOMPLETE","FAILED","PAUSED","DONE"};int selected=0;for(int i=0;i<values.length;i++)if(values[i].equals(statusFilter))selected=i;new AlertDialog.Builder(a).setTitle("Job Manager filter").setSingleChoiceItems(values,selected,(d,w)->{statusFilter=values[w];d.dismiss();onRefresh.run();}).setNegativeButton("Cancel",null).show();}
 
     private void showDryBenchmark(long jobId) {
@@ -506,18 +507,20 @@ public class JobsPageFactory {
     }
 
     private int jobStatusColor(String status) {
-        if ("done".equals(status)) return GREEN;
-        if ("error".equals(status)) return RED;
-        if ("paused".equals(status)) return AMBER;
-        if ("cancelled".equals(status)) return MUTED;
+        JobStatus.Kind kind = JobStatus.classify(status);
+        if (kind == JobStatus.Kind.FINISHED) return GREEN;
+        if ("error".equalsIgnoreCase(status) || kind == JobStatus.Kind.CONFLICT) return RED;
+        if (kind == JobStatus.Kind.CONTINUABLE || kind == JobStatus.Kind.NEEDS_REVIEW) return AMBER;
+        if (kind == JobStatus.Kind.CANCELLED || kind == JobStatus.Kind.DISMISSED) return MUTED;
         return BLUE;
     }
 
     private String jobStatusIcon(String status) {
-        if ("done".equals(status)) return "✅";
-        if ("error".equals(status)) return "⚠";
-        if ("paused".equals(status)) return "⏸";
-        if ("cancelled".equals(status)) return "✕";
+        JobStatus.Kind kind = JobStatus.classify(status);
+        if (kind == JobStatus.Kind.FINISHED) return "✅";
+        if ("error".equalsIgnoreCase(status) || kind == JobStatus.Kind.CONFLICT || kind == JobStatus.Kind.NEEDS_REVIEW) return "⚠";
+        if (kind == JobStatus.Kind.CONTINUABLE) return "⏸";
+        if (kind == JobStatus.Kind.CANCELLED || kind == JobStatus.Kind.DISMISSED) return "✕";
         return "▶";
     }
 

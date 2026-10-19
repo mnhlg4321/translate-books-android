@@ -154,7 +154,7 @@ class ChapterSetPageFactory {
             for (ChapterSetStore.SetInfo s : sets) ids.add(s.id);
             panel.addView(a.bulkUi.selectionHeader(LibraryBulkUi.TAB_SETS, ids), a.marginLP(-1, -2, 0, 0, 0, 10));
         } else if (!sets.isEmpty()) {
-            panel.addView(a.bulkUi.selectButton(LibraryBulkUi.TAB_SETS), a.marginLP(-2, a.dp(40), 0, 0, 0, 10));
+            panel.addView(a.bulkUi.headerRow(LibraryBulkUi.TAB_SETS, sets.size()), a.marginLP(-1, -2, 0, 0, 0, 10));
         }
         if (sets.isEmpty()) {
             TextView empty = a.text("Chưa có tổ hợp. Bấm \"+ Tạo tổ hợp mới\".", 14, a.MUTED, false);

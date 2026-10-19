@@ -23,6 +23,8 @@ final class ChapterSession {
     String setName = "";
     long createdAt = System.currentTimeMillis();
     final List<ChapterBinding> chapters = new ArrayList<>();
+    /** Ids of earlier unfinished jobs this run continued instead of starting new ones (read by the Jobs tab to group runs). */
+    final List<Long> resumedJobs = new ArrayList<>();
 
     ChapterSession(String sessionId) { this.sessionId = sessionId == null ? "" : sessionId; }
 
@@ -34,7 +36,9 @@ final class ChapterSession {
     void write(File dir) throws Exception {
         JSONArray rows = new JSONArray();
         for (ChapterBinding b : chapters) rows.put(b.toJson());
-        JSONObject root = new JSONObject().put("sessionId", sessionId).put("setId", setId).put("setName", setName).put("createdAt", createdAt).put("chapters", rows);
+        JSONArray resumed = new JSONArray();
+        for (Long id : resumedJobs) resumed.put(id.longValue());
+        JSONObject root = new JSONObject().put("sessionId", sessionId).put("setId", setId).put("setName", setName).put("createdAt", createdAt).put("chapters", rows).put("resumedJobs", resumed);
         AtomicFileCommit.write(file(dir, sessionId).toPath(), root.toString());
     }
 
@@ -48,6 +52,8 @@ final class ChapterSession {
         s.setId = root.optString("setId");
         s.setName = root.optString("setName");
         s.createdAt = root.optLong("createdAt");
+        JSONArray resumed = root.optJSONArray("resumedJobs");
+        if (resumed != null) for (int i = 0; i < resumed.length(); i++) s.resumedJobs.add(resumed.optLong(i));
         JSONArray rows = root.getJSONArray("chapters");
         for (int i = 0; i < rows.length(); i++) {
             ChapterBinding b = ChapterBinding.fromJson(rows.getJSONObject(i));
@@ -55,6 +61,30 @@ final class ChapterSession {
             s.chapters.add(b);
         }
         return s;
+    }
+
+    /** Name, time, chapter count and continued jobs of every snapshot in {@code dir}; a damaged file is skipped. Read only. */
+    static List<RunGroups.SessionInfo> readInfos(File dir) {
+        ArrayList<RunGroups.SessionInfo> out = new ArrayList<>();
+        File[] files = dir.listFiles();
+        if (files == null) return out;
+        for (File f : files) {
+            if (!f.getName().endsWith(".json")) continue;
+            try {
+                JSONObject root = new JSONObject(new String(Files.readAllBytes(f.toPath()), StandardCharsets.UTF_8));
+                RunGroups.SessionInfo info = new RunGroups.SessionInfo();
+                info.sessionId = root.optString("sessionId");
+                if (info.sessionId.isEmpty()) continue;
+                info.setName = root.optString("setName");
+                info.createdAt = root.optLong("createdAt");
+                JSONArray rows = root.optJSONArray("chapters");
+                info.chapterCount = rows == null ? 0 : rows.length();
+                JSONArray resumed = root.optJSONArray("resumedJobs");
+                if (resumed != null) for (int i = 0; i < resumed.length(); i++) info.resumedJobs.add(resumed.optLong(i));
+                out.add(info);
+            } catch (Exception skip) { }
+        }
+        return out;
     }
 
     /** The snapshot must describe exactly the prepared inputs, in the same order. */
