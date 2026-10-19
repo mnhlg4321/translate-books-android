@@ -492,6 +492,12 @@ public class V423ResumeInstrumentedTest {
                 seed.touchJob(staleId, "NEEDS_REVIEW");
             } finally { seed.close(); }
             scenario.onActivity(a -> { a.translationActive = false; a.switchTab("Translate"); a.refreshPendingJobCard(); });
+            // the card is read off the UI thread now: wait until it shows this job
+            waitFor(() -> {
+                AtomicReference<Boolean> shown = new AtomicReference<>(false);
+                scenario.onActivity(a -> shown.set(a.pendingJobCard.getVisibility() == View.VISIBLE && containsText(a.pendingJobCard, raw.originalName)));
+                return shown.get();
+            }, 15_000L, "the card shows the unfinished job");
             InstrumentationRegistry.getInstrumentation().waitForIdleSync();
             scenario.onActivity(a -> {
                 assertTrue(containsText(a.getWindow().getDecorView(), "Job đang dở"));
@@ -517,6 +523,7 @@ public class V423ResumeInstrumentedTest {
             waitFor(() -> idle() && counts(c, jobId)[0] == total, 120_000L, "retry continued to the end");
             Thread.sleep(1500L);
             scenario.onActivity(a -> { a.switchTab("Translate"); a.refreshPendingJobCard(); });
+            Thread.sleep(2000L);   // the refresh runs in the background
             media("40-state-after-retry");
             scenario.onActivity(a -> assertFalse("the card no longer shows the finished job", containsText(a.pendingJobCard, raw.originalName)));
         } finally {
