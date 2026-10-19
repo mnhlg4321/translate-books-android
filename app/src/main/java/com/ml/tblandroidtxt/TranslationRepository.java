@@ -599,10 +599,10 @@ public class TranslationRepository extends SQLiteOpenHelper {
     public UsageTotals getUsageTotals(long sinceMillis) {
         UsageTotals t = new UsageTotals();
         SQLiteDatabase db = getReadableDatabase();
-        try (Cursor c = db.rawQuery("SELECT cost_status,COALESCE(usage_cost,0),COALESCE(actual_input_tokens,0),COALESCE(cached_input_tokens,0),COALESCE(output_tokens,0) FROM chunk_metrics WHERE created_at>=?", new String[]{String.valueOf(sinceMillis)})) {
+        try (Cursor c = db.rawQuery("SELECT cost_status,COALESCE(usage_cost,0),COALESCE(actual_input_tokens,0),COALESCE(cached_input_tokens,0),COALESCE(output_tokens,0) FROM chunk_metrics WHERE created_at>=CAST(? AS INTEGER)", new String[]{String.valueOf(sinceMillis)})) {
             while (c.moveToNext()) t.add(c.getString(0), c.getDouble(1), c.getLong(2), c.getLong(3), c.getLong(4));
         }
-        try (Cursor c = db.rawQuery("SELECT COUNT(*) FROM jobs WHERE UPPER(COALESCE(status,'')) IN (" + JobStatus.sqlFinished() + ") AND COALESCE(NULLIF(completed_at,0),updated_at)>=?", new String[]{String.valueOf(sinceMillis)})) {
+        try (Cursor c = db.rawQuery("SELECT COUNT(*) FROM jobs WHERE UPPER(COALESCE(status,'')) IN (" + JobStatus.sqlFinished() + ") AND COALESCE(NULLIF(completed_at,0),updated_at)>=CAST(? AS INTEGER)", new String[]{String.valueOf(sinceMillis)})) {
             if (c.moveToFirst()) t.chaptersDone = c.getInt(0);
         }
         return t;

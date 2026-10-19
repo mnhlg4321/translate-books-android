@@ -348,6 +348,8 @@ public class V423PolishInstrumentedTest {
                 assertTrue(V423ResumeInstrumentedTest.containsText(root, "Token và chi phí"));
                 assertTrue(V423ResumeInstrumentedTest.containsText(root, "Hôm nay"));
                 assertTrue(V423ResumeInstrumentedTest.containsText(root, "7 ngày"));
+                assertFalse("a chapter finished today is counted (the since value was compared as text and always lost)", V423ResumeInstrumentedTest.containsText(root, "Hôm nay: 0 chương xong"));
+                assertFalse(V423ResumeInstrumentedTest.containsText(root, "7 ngày: 0 chương xong"));
                 assertTrue("1 of 3 chapters done, 1 failed, 1 not run", V423ResumeInstrumentedTest.containsText(root, "1/3 chương xong · 1 lỗi · 1 chưa chạy"));
                 assertTrue("the run's cost is the sum of its chapters (0.0150)", V423ResumeInstrumentedTest.containsText(root, "USD 0.0150"));
                 assertTrue("a call without a known price is counted apart", V423ResumeInstrumentedTest.containsText(root, "1 lượt chưa rõ giá"));
