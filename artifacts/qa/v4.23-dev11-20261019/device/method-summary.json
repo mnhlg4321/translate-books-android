@@ -1,0 +1,1751 @@
+{
+ "logs": {
+  "raw/chunk-EditorialApiBienTapFlow.txt": {
+   "overall": "PASS",
+   "discovered": 3,
+   "pass": 3,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 3,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapFlowInstrumentedTest",
+     "test": "comboWithAllFourSourcesRunsQuickAndExports",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapFlowInstrumentedTest",
+     "test": "theListAndTheCollapsedDeveloperSectionUseOnlyThePlannedWords",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapFlowInstrumentedTest",
+     "test": "comboWithoutGlossaryAndPronounRunsThoroughAndExports",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/chunk-EditorialApiBienTapUi.txt": {
+   "overall": "PASS",
+   "discovered": 5,
+   "pass": 2,
+   "skip": 3,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 5,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "reopenPhaseCleanup",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "typedFormValuesSurviveChoosingAGlossaryAndSavingKeepsThemForTheSameCombo",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "reopenPhaseSeed",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "reopenPhaseVerify",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "aFinishedRunIsOpenedFromTheListWithItsStoredResult",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/chunk-EditorialApiStore.txt": {
+   "overall": "PASS",
+   "discovered": 6,
+   "pass": 6,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 6,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiStoreInstrumentedTest",
+     "test": "v5ModeAndOriginalSourceSnapshotSurviveAStoreReopen",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiStoreInstrumentedTest",
+     "test": "comboAndRunSurviveClosingAndReopeningTheDatabase",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiStoreInstrumentedTest",
+     "test": "updateRunReplacesTheRowAndDeletingTheComboCascadesToItsRuns",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiStoreInstrumentedTest",
+     "test": "freshDatabaseIsV28WithV5SnapshotColumn",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiStoreInstrumentedTest",
+     "test": "upgradeFromVersion25KeepsEveryOldTableAndRowAndAddsOnlyTheTwoNewTables",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiStoreInstrumentedTest",
+     "test": "upgradeFromVersion27PreservesApiRunDataAndAddsTheV5Mode",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/chunk-EditorialPairAddressKeepSqlite.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPairAddressKeepSqliteInstrumentedTest",
+     "test": "aKeptAddressPointDoesNotBlockTheValidRepairsAndSurvivesClosingTheDatabase",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/chunk-EditorialPairStore.txt": {
+   "overall": "PASS",
+   "discovered": 6,
+   "pass": 6,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 6,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPairStoreInstrumentedTest",
+     "test": "deathBetweenLedgerJournalAnswerAndCommitIsReadFromTheDatabaseOnTheNextOpen",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPairStoreInstrumentedTest",
+     "test": "upgradeFromVersion26KeepsEveryOldRowAndAddsOnlyThePairTablesAndTheTwoComboColumns",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPairStoreInstrumentedTest",
+     "test": "aJobIsReadWithoutChangingARowAStatusOrAnOutputAndTheRunStaysInItsOwnTables",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPairStoreInstrumentedTest",
+     "test": "deletingTheComboRemovesItsPairRunsItemsReservationsAndJournal",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPairStoreInstrumentedTest",
+     "test": "aReservationIsSettledOnceAndAMoveThatTheContractForbidsIsRefusedByTheStore",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPairStoreInstrumentedTest",
+     "test": "aRunSurvivesClosingTheDatabaseWithEveryPairItsCandidateAndItsGate",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/chunk-EditorialPairUi.txt": {
+   "overall": "PASS",
+   "discovered": 6,
+   "pass": 3,
+   "skip": 3,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 6,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPairUiInstrumentedTest",
+     "test": "twoFilesAreCutIntoChunksAndTheFormSaysSo",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPairUiInstrumentedTest",
+     "test": "aJobComboIsSavedPreviewedRunAndReadBackWithoutTouchingTheJob",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPairUiInstrumentedTest",
+     "test": "pairReopenPhaseSeed",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPairUiInstrumentedTest",
+     "test": "droppingTheGlossaryAndPronounIsAnExplicitSavedChoice",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPairUiInstrumentedTest",
+     "test": "pairReopenPhaseVerify",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPairUiInstrumentedTest",
+     "test": "pairReopenPhaseCleanup",
+     "result": "SKIP"
+    }
+   ]
+  },
+  "raw/frozen-EditorialAuthoritativeCreatorResolver.txt": {
+   "overall": "PASS",
+   "discovered": 5,
+   "pass": 5,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 5,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialAuthoritativeCreatorResolverInstrumentedTest",
+     "test": "closeRunUsesOnlyTestTrustedFactsAndDaoOwnsOrdinal",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialAuthoritativeCreatorResolverInstrumentedTest",
+     "test": "retentionPreflightDetectsAuthoritativeProjectAndRunReferences",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialAuthoritativeCreatorResolverInstrumentedTest",
+     "test": "resolverReadsOnlyStoredFactsAndSurvivesReopen",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialAuthoritativeCreatorResolverInstrumentedTest",
+     "test": "creatorIsDeterministicIdempotentAndNeverAcceptsPartialScope",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialAuthoritativeCreatorResolverInstrumentedTest",
+     "test": "resolverFailsClosedForMismatchesAndResolvesExactParentOnly",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/frozen-EditorialChapterFinalCoordinator.txt": {
+   "overall": "PASS",
+   "discovered": 12,
+   "pass": 11,
+   "skip": 1,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 12,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialChapterFinalCoordinatorInstrumentedTest",
+     "test": "fullLedgerChainStartsAtL1AndReopensWithoutRepeatingAnyStage",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialChapterFinalCoordinatorInstrumentedTest",
+     "test": "interruptedReconcileClaimIsUnknownAfterReopenAndNeverRedispatches",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialChapterFinalCoordinatorInstrumentedTest",
+     "test": "ledgerChainWithoutAFinalReadBudgetStopsBeforeAnyCall",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialChapterFinalCoordinatorInstrumentedTest",
+     "test": "runToFinalBeforeL1StopsWithoutProviderCalls",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialChapterFinalCoordinatorInstrumentedTest",
+     "test": "l1ThroughFinalExportsAndResumesIdempotently",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialChapterFinalCoordinatorInstrumentedTest",
+     "test": "failedExportKeepsTheStoredFinalUntouched",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialChapterFinalCoordinatorInstrumentedTest",
+     "test": "interruptedL3IsUnknownStateAndResumeNeverRedispatches",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialChapterFinalCoordinatorInstrumentedTest",
+     "test": "inspectReportsEachStageFromDurableRowsWithoutDispatching",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialChapterFinalCoordinatorInstrumentedTest",
+     "test": "ledgerChainRunsFromTheCoordinatorWithProtectedSpansStructureAndRestart",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialChapterFinalCoordinatorInstrumentedTest",
+     "test": "interruptedRawClaimIsUnknownAfterReopenAndNeverRedispatches",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialChapterFinalCoordinatorInstrumentedTest",
+     "test": "failedProviderCallLeavesRecoveryRequiredWithTheTypedReason",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialChapterFinalCoordinatorInstrumentedTest",
+     "test": "seedMainDatabaseForEmulatorUiSmoke",
+     "result": "SKIP"
+    }
+   ]
+  },
+  "raw/frozen-EditorialLineagePersistence.txt": {
+   "overall": "PASS",
+   "discovered": 11,
+   "pass": 11,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 11,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialLineagePersistenceInstrumentedTest",
+     "test": "validRootAndChildAppendReadbackAndRestartExactly",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialLineagePersistenceInstrumentedTest",
+     "test": "sameRecordIsAlreadyExistsAndAuditTimestampIsNotRewritten",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialLineagePersistenceInstrumentedTest",
+     "test": "v15ToV17PreservesRowsAndCreatesNoIdentityBackfill",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialLineagePersistenceInstrumentedTest",
+     "test": "racingDuplicateAppendLeavesExactlyOneImmutableRecord",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialLineagePersistenceInstrumentedTest",
+     "test": "missingParentAndWrongParentFingerprintFailClosed",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialLineagePersistenceInstrumentedTest",
+     "test": "partialInputFailureRollsBackRecordAndEntries",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialLineagePersistenceInstrumentedTest",
+     "test": "freshSchemaIsV25WithLineageAndP5DAttemptTablesIndexesAndTriggers",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialLineagePersistenceInstrumentedTest",
+     "test": "failedV15ToV17MigrationRollsBackAndKeepsVersion15",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialLineagePersistenceInstrumentedTest",
+     "test": "duplicateFingerprintContentAndReparentFailWithStableCodes",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialLineagePersistenceInstrumentedTest",
+     "test": "crossContextAndDuplicateManifestAreRejectedBeforeInsert",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialLineagePersistenceInstrumentedTest",
+     "test": "updateDeleteAndParentDeleteAreBlockedByDatabase",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/frozen-EditorialP1PackImportCharacterization.txt": {
+   "overall": "PASS",
+   "discovered": 7,
+   "pass": 7,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 7,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP1PackImportCharacterizationInstrumentedTest",
+     "test": "integrityAndZipBoundariesRejectRequiredNegativeFixtures",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP1PackImportCharacterizationInstrumentedTest",
+     "test": "fixtureHasExactlyFourRootEntriesAndExactAuthorityBytes",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP1PackImportCharacterizationInstrumentedTest",
+     "test": "synthetic414IsSideBySideAndDoesNotRebindOrActivateCurrentProject",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP1PackImportCharacterizationInstrumentedTest",
+     "test": "interruptedSnapshotIsRecoverableWithoutPackRow",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP1PackImportCharacterizationInstrumentedTest",
+     "test": "valid413ImportIsIdempotentAndImmutableReadbackIsExact",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP1PackImportCharacterizationInstrumentedTest",
+     "test": "sizeCompressionAndTruncatedStreamFailuresAreTyped",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP1PackImportCharacterizationInstrumentedTest",
+     "test": "unknownRequiredCapabilityIsRejectedAsEngineUpgradeWithCapabilityEvidence",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/frozen-EditorialP2ReferencePackImport.txt": {
+   "overall": "PASS",
+   "discovered": 3,
+   "pass": 3,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 3,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP2ReferencePackImportInstrumentedTest",
+     "test": "canonicalAndJavaControlShareIdentityButHaveDifferentTransport",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP2ReferencePackImportInstrumentedTest",
+     "test": "independentNegativeFixturesRemainTypedAndFailClosed",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP2ReferencePackImportInstrumentedTest",
+     "test": "canonicalAndJavaControlImportReadbackAndIdempotencyPass",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/frozen-EditorialP3BTrustedProfile.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP3BTrustedProfileInstrumentedTest",
+     "test": "canonicalSafe4UsesBundledTrustedProfileButExecutionRemainsDisabled",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/frozen-EditorialP4Binding.txt": {
+   "overall": "PASS",
+   "discovered": 4,
+   "pass": 4,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 4,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP4BindingInstrumentedTest",
+     "test": "sourceAndPackDriftAreStaleAndProjectCannotCreateExecutionChapter",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP4BindingInstrumentedTest",
+     "test": "persistenceFailureRollsBackEveryP4BindingRow",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP4BindingInstrumentedTest",
+     "test": "blockedPackCannotBeSelectedAndCollisionDoesNotCreatePartialBinding",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP4BindingInstrumentedTest",
+     "test": "canonicalAndSyntheticPackBindSideBySideAndResumeExactly",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/frozen-EditorialP4BindingCharacterization.txt": {
+   "overall": "PASS",
+   "discovered": 2,
+   "pass": 2,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 2,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP4BindingCharacterizationInstrumentedTest",
+     "test": "v18ScopeEntryStoreMustRetainP4SourceIdentityFacts",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP4BindingCharacterizationInstrumentedTest",
+     "test": "legacyRepositoryDoesNotAcceptImportedPackWithoutP4Service",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/frozen-EditorialP4ProcessDeath.txt": {
+   "overall": "PASS",
+   "discovered": 2,
+   "pass": 2,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 2,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP4ProcessDeathInstrumentedTest",
+     "test": "a_prepareExactBindingForHostProcessStop",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP4ProcessDeathInstrumentedTest",
+     "test": "b_resumeExactBindingAfterHostProcessStop",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/frozen-EditorialPackCompatibilityEvaluation.txt": {
+   "overall": "PASS",
+   "discovered": 10,
+   "pass": 10,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 10,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackCompatibilityEvaluationInstrumentedTest",
+     "test": "appendDoesNotChangePackStorageState",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackCompatibilityEvaluationInstrumentedTest",
+     "test": "trustedEvaluationRoundTripsAndCollectionsAreImmutable",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackCompatibilityEvaluationInstrumentedTest",
+     "test": "duplicateEvaluationIdentityIsRejectedWithoutReplacingEvidence",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackCompatibilityEvaluationInstrumentedTest",
+     "test": "migrationV14ToV17PreservesRowsAndDoesNotBackfillProvenance",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackCompatibilityEvaluationInstrumentedTest",
+     "test": "migrationChainV13ToV14ToV15ToV17AndReopenIsIdempotent",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackCompatibilityEvaluationInstrumentedTest",
+     "test": "legacyV14RowsAreVisibleOnlyAsUnattested",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackCompatibilityEvaluationInstrumentedTest",
+     "test": "sameContextDoesNotMakeEvaluationIdsInterchangeable",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackCompatibilityEvaluationInstrumentedTest",
+     "test": "failedV14ToV15MigrationRollsBackSchemaVersionAndLegacyRows",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackCompatibilityEvaluationInstrumentedTest",
+     "test": "differentContextsForOnePackRemainAppendOnly",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackCompatibilityEvaluationInstrumentedTest",
+     "test": "freshSchemaIsV25WithImmutableV15EvaluationHistory",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/frozen-EditorialPackImportService.txt": {
+   "overall": "PASS",
+   "discovered": 13,
+   "pass": 13,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 13,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackImportServiceInstrumentedTest",
+     "test": "validEmptyZipIsEntryCountFailureButTruncatedCentralDirectoryIsTruncated",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackImportServiceInstrumentedTest",
+     "test": "databaseFailureLeavesNoAvailablePack",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackImportServiceInstrumentedTest",
+     "test": "orphanedStagingIsCleanedWithoutCreatingPack",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackImportServiceInstrumentedTest",
+     "test": "freshDatabaseCreatesPackTablesAndImmutableConstraints",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackImportServiceInstrumentedTest",
+     "test": "upgradeFromVersion13RetainsLegacyRows",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackImportServiceInstrumentedTest",
+     "test": "zipPathVariantsAreRejectedBeforeReadingOrRegistryAvailability",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackImportServiceInstrumentedTest",
+     "test": "selectedZipStreamIsConsumedOnceAndStoredThroughHeadlessImporter",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackImportServiceInstrumentedTest",
+     "test": "zipTraversalAndExtraEntriesAreRejectedBeforeRegistryAvailability",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackImportServiceInstrumentedTest",
+     "test": "truncatedZipDoesNotCreatePackRow",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackImportServiceInstrumentedTest",
+     "test": "securityAndFilesystemFailuresNeverCreateAvailablePack",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackImportServiceInstrumentedTest",
+     "test": "validPackIsSnapshottedStoredAndRepeatIsIdempotent",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackImportServiceInstrumentedTest",
+     "test": "sourceMutationAfterSnapshotCannotChangeStoredBytes",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackImportServiceInstrumentedTest",
+     "test": "sameIdentityWithChangedPromptIsBlockedAndGetsNewHash",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/frozen-EditorialPackManagementPage.txt": {
+   "overall": "PASS",
+   "discovered": 3,
+   "pass": 3,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 3,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackManagementPageInstrumentedTest",
+     "test": "openingAndRefreshingPageDoesNotChangePackRowCount",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackManagementPageInstrumentedTest",
+     "test": "pageBuildsReadOnlySurfaceWithoutMutationActions",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackManagementPageInstrumentedTest",
+     "test": "detailRebuildAndActivityRecreationDoNotExposeMutationControls",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/frozen-EditorialPackRuntimeWiring.txt": {
+   "overall": "PASS",
+   "discovered": 5,
+   "pass": 5,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 5,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackRuntimeWiringInstrumentedTest",
+     "test": "testOnlyUnsupportedContractIsBlockedWithoutFallback",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackRuntimeWiringInstrumentedTest",
+     "test": "v15PersistenceFailureCannotCreatePackOrReadyState",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackRuntimeWiringInstrumentedTest",
+     "test": "productionProfileIsNonExecutableAndPersistsTrustedProvenance",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackRuntimeWiringInstrumentedTest",
+     "test": "duplicateImportDoesNotResolveOrAppendEvaluation",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackRuntimeWiringInstrumentedTest",
+     "test": "restartReadsPersistedEvidenceWithoutReevaluation",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/frozen-EditorialPackZipImport.txt": {
+   "overall": "PASS",
+   "discovered": 4,
+   "pass": 4,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 4,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackZipImportInstrumentedTest",
+     "test": "cancelledSafResultDoesNotChangePackRowCount",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackZipImportInstrumentedTest",
+     "test": "editorialTabExposesOnlyZipImportActionAndReadOnlyManagement",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackZipImportInstrumentedTest",
+     "test": "safPickerIsSingleReadOnlyZipWithGenericFallback",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPackZipImportInstrumentedTest",
+     "test": "multiSelectionAndCancelNeverBecomeASelectedZip",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/frozen-EditorialPhaseArtifactStore.txt": {
+   "overall": "PASS",
+   "discovered": 8,
+   "pass": 8,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 8,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPhaseArtifactStoreInstrumentedTest",
+     "test": "directCommittedRowWithNullBlobIsRejectedByCheckConstraint",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPhaseArtifactStoreInstrumentedTest",
+     "test": "claimedRowCannotBeUpdatedToCommittedWithNullTextBytes",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPhaseArtifactStoreInstrumentedTest",
+     "test": "recoveryRequiredIsReportedAndCommitIsRejected",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPhaseArtifactStoreInstrumentedTest",
+     "test": "committedPairSurvivesReopeningTheDatabase",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPhaseArtifactStoreInstrumentedTest",
+     "test": "commitWithMismatchedHashThrowsAndLeavesNoCommittedRow",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPhaseArtifactStoreInstrumentedTest",
+     "test": "claimIsAcquiredOnceThenInFlight",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPhaseArtifactStoreInstrumentedTest",
+     "test": "commitThenFindCommittedReturnsIdenticalPairAndClaimIsAlreadyCommitted",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPhaseArtifactStoreInstrumentedTest",
+     "test": "claimWithDifferentPredecessorForSameAttemptThrows",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/frozen-EditorialRunContextCoordinator.txt": {
+   "overall": "PASS",
+   "discovered": 7,
+   "pass": 7,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 7,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialRunContextCoordinatorInstrumentedTest",
+     "test": "statusIdentifiesLineageWithoutBindingWithoutWriting",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialRunContextCoordinatorInstrumentedTest",
+     "test": "eventCollisionCannotChangeRootChildOrParentAndWritesNothing",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialRunContextCoordinatorInstrumentedTest",
+     "test": "commandAndEventContractRejectInvalidRootParent",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialRunContextCoordinatorInstrumentedTest",
+     "test": "childUsesOnlyExactParentAndConflictingBindingFailsClosed",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialRunContextCoordinatorInstrumentedTest",
+     "test": "rootHappyPathIsIdempotentAcrossCoordinatorRestart",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialRunContextCoordinatorInstrumentedTest",
+     "test": "productionResolverFailsClosedAndPerformsZeroWrites",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialRunContextCoordinatorInstrumentedTest",
+     "test": "invalidChildLeavesClosedUnboundWithoutLineageOrBinding",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/frozen-EditorialSafe4Repository.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialSafe4RepositoryInstrumentedTest",
+     "test": "newChapterBindsSafe4AndAcceptsPronounNoneWhileExecutionIsBlocked",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/frozen-EditorialV17IdentityStore.txt": {
+   "overall": "PASS",
+   "discovered": 8,
+   "pass": 8,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 8,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialV17IdentityStoreInstrumentedTest",
+     "test": "everyV17TableRejectsUpdateAndDelete",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialV17IdentityStoreInstrumentedTest",
+     "test": "v16ToV17IsAdditiveAndDoesNotBackfillIdentityRows",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialV17IdentityStoreInstrumentedTest",
+     "test": "sharedTransactionCommitsAndRollsBackLineageAndBindingAtomically",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialV17IdentityStoreInstrumentedTest",
+     "test": "closedRunGateRejectsBlockedLegacyAndMismatchedTrustedContext",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialV17IdentityStoreInstrumentedTest",
+     "test": "freshV17SchemaHasFiveStoresAndNoIdentityBackfill",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialV17IdentityStoreInstrumentedTest",
+     "test": "failedV16ToV17MigrationRollsBackToReadableV16",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialV17IdentityStoreInstrumentedTest",
+     "test": "serializedRacingAppendAllocatesOneOrdinalAndOneRow",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialV17IdentityStoreInstrumentedTest",
+     "test": "projectSnapshotClosedRunAreAppendOnlyAndRestartReadable",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/frozen-EditorialV18RunDeclarationEvent.txt": {
+   "overall": "PASS",
+   "discovered": 11,
+   "pass": 11,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 11,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialV18RunDeclarationEventInstrumentedTest",
+     "test": "v17ToV18IsAdditiveZeroBackfillAndPreservesRows",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialV18RunDeclarationEventInstrumentedTest",
+     "test": "exactEventAppendReplayCrossChecksAndRestartReadback",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialV18RunDeclarationEventInstrumentedTest",
+     "test": "declarationAppendRetryCollisionDistinctOrdinalsAndRestartReadback",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialV18RunDeclarationEventInstrumentedTest",
+     "test": "eventTrustIntentParentManifestAndOrdinalFailuresWriteNothing",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialV18RunDeclarationEventInstrumentedTest",
+     "test": "concurrentSameSelectorCreatesOneRowAndConcurrentDistinctSelectorsGetDistinctOrdinals",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialV18RunDeclarationEventInstrumentedTest",
+     "test": "malformedV18MigrationRollsBackToReadableV17",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialV18RunDeclarationEventInstrumentedTest",
+     "test": "fullV13ToV18ChainCreatesEmptyV18Stores",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialV18RunDeclarationEventInstrumentedTest",
+     "test": "declarationAndEventUpdateDeleteAreRejectedAndForeignRetentionIsRestrictive",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialV18RunDeclarationEventInstrumentedTest",
+     "test": "missingReferenceFailsWithoutConsumingOrdinalOrWritingPartialRow",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialV18RunDeclarationEventInstrumentedTest",
+     "test": "freshV18HasExactlyTwoNewStoresZeroRowsAndNoLegacyForeignKey",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialV18RunDeclarationEventInstrumentedTest",
+     "test": "childExactParentSucceedsAndParentChangeCollides",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/product-Hotfix441.txt": {
+   "overall": "PASS",
+   "discovered": 4,
+   "pass": 4,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 4,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.Hotfix441InstrumentedTest",
+     "test": "freshStartSessionNeverResumesAnOlderPreparedJob",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.Hotfix441InstrumentedTest",
+     "test": "sentWithoutDurableResponsePausesForReview",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.Hotfix441InstrumentedTest",
+     "test": "responseSurvivesDeathBeforeCommitForRevalidation",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.Hotfix441InstrumentedTest",
+     "test": "fakeProviderCompletesOrderedMultiChunkPlan",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/product-V415LibraryScroll.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V415LibraryScrollInstrumentedTest",
+     "test": "usePreservesListScrollForGlossaryAndPronoun",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/product-V415MultiProfileImport.txt": {
+   "overall": "PASS",
+   "discovered": 2,
+   "pass": 2,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 2,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V415MultiProfileImportInstrumentedTest",
+     "test": "libraryPickerAllowsMultipleAndCollectsEveryUniqueFile",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V415MultiProfileImportInstrumentedTest",
+     "test": "importingTwoFilesPersistsTwoIndependentProfilesPerLibrary",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/product-V415SettingsPersistence.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V415SettingsPersistenceInstrumentedTest",
+     "test": "lazyPhoneSectionsHydrateBeforeTheyCanPersistDefaults",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/product-V46Dashboard.txt": {
+   "overall": "PASS",
+   "discovered": 3,
+   "pass": 3,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 3,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V46DashboardInstrumentedTest",
+     "test": "seedPreparedDashboardForScreenshot",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V46DashboardInstrumentedTest",
+     "test": "seedRunningFakeProviderMultiChunkDashboard",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V46DashboardInstrumentedTest",
+     "test": "seedCompletedFakeProviderMultiChunkDashboard",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/product-V48ImportNavigation.txt": {
+   "overall": "PASS",
+   "discovered": 4,
+   "pass": 4,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 4,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V48ImportNavigationInstrumentedTest",
+     "test": "glossarySelectionSurvivesStoreReload",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V48ImportNavigationInstrumentedTest",
+     "test": "BackWalksThroughLibraryAndSettingsWithoutFinishingActivity",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V48ImportNavigationInstrumentedTest",
+     "test": "verticalGesturesStayInsideAllFourPrimaryTabs",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V48ImportNavigationInstrumentedTest",
+     "test": "pronounImportAndActivationSurviveColdStoreReload",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/restart-api-cleanup.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "reopenPhaseCleanup",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/restart-api-seed.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "reopenPhaseSeed",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/restart-api-verify.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
+     "test": "reopenPhaseVerify",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/restart-pair-cleanup.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPairUiInstrumentedTest",
+     "test": "pairReopenPhaseCleanup",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/restart-pair-seed.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPairUiInstrumentedTest",
+     "test": "pairReopenPhaseSeed",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/restart-pair-verify.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialPairUiInstrumentedTest",
+     "test": "pairReopenPhaseVerify",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/restart-r-seed.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialRefusedProposalInstrumentedTest",
+     "test": "restartSeed",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/restart-r-verify.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialRefusedProposalInstrumentedTest",
+     "test": "restartVerify",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/restart-s0-seed.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.LibraryS0InstrumentedTest",
+     "test": "restartSeed",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/restart-s0-verify.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.LibraryS0InstrumentedTest",
+     "test": "restartVerify",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/restart-v422-cleanup.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialForegroundInstrumentedTest",
+     "test": "processReopenCleanup",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/restart-v422-seed.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialForegroundInstrumentedTest",
+     "test": "processReopenSeed",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/restart-v422-verify.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialForegroundInstrumentedTest",
+     "test": "processReopenVerify",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/restart-v423raw-seed.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423TranslateRawInstrumentedTest",
+     "test": "restartSeed",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/restart-v423raw-verify.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423TranslateRawInstrumentedTest",
+     "test": "restartVerify",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/v422-EditorialForeground.txt": {
+   "overall": "PASS",
+   "discovered": 6,
+   "pass": 3,
+   "skip": 3,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 6,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialForegroundInstrumentedTest",
+     "test": "jobsTabShowsTheEditorialRunCard",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialForegroundInstrumentedTest",
+     "test": "cancelAfterCurrentChunkAndResumeOnlyPendingChunks",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialForegroundInstrumentedTest",
+     "test": "processReopenCleanup",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialForegroundInstrumentedTest",
+     "test": "serviceCompletesAndDuplicateStartDoesNotResend",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialForegroundInstrumentedTest",
+     "test": "processReopenVerify",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialForegroundInstrumentedTest",
+     "test": "processReopenSeed",
+     "result": "SKIP"
+    }
+   ]
+  },
+  "raw/v422-EditorialRefusedProposal.txt": {
+   "overall": "PASS",
+   "discovered": 4,
+   "pass": 2,
+   "skip": 2,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 4,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialRefusedProposalInstrumentedTest",
+     "test": "theResultScreenShowsTheRefusedProposalAndItsButtonAppliesExactlyThatLine",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialRefusedProposalInstrumentedTest",
+     "test": "restartVerify",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialRefusedProposalInstrumentedTest",
+     "test": "aSlashCellLetsTheSameAnswerThroughWithoutAProposal",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialRefusedProposalInstrumentedTest",
+     "test": "restartSeed",
+     "result": "SKIP"
+    }
+   ]
+  },
+  "raw/v422-LibraryS0.txt": {
+   "overall": "PASS",
+   "discovered": 3,
+   "pass": 1,
+   "skip": 2,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 3,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.LibraryS0InstrumentedTest",
+     "test": "restartVerify",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.LibraryS0InstrumentedTest",
+     "test": "importKeepsActive_libraryRoundTrip_corruptStoreLocked",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.LibraryS0InstrumentedTest",
+     "test": "restartSeed",
+     "result": "SKIP"
+    }
+   ]
+  },
+  "raw/v423-TranslateRaw-full.txt": {
+   "overall": "PASS",
+   "discovered": 3,
+   "pass": 1,
+   "skip": 2,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 3,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423TranslateRawInstrumentedTest",
+     "test": "restartVerify",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423TranslateRawInstrumentedTest",
+     "test": "internalRawTranslatesEndToEnd",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423TranslateRawInstrumentedTest",
+     "test": "restartSeed",
+     "result": "SKIP"
+    }
+   ]
+  },
+  "raw/v423-V423ChapterRun.txt": {
+   "overall": "PASS",
+   "discovered": 3,
+   "pass": 3,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 3,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "authenticationFailureInChapterTwoStopsTheQueue",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "threeChaptersTranslateWithTheirOwnGlossaries_activeAndSharedSettingsUntouched",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "integrityFailureInChapterTwoContinuesWithChapterThree",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/v423-V423ChapterSet.txt": {
+   "overall": "PASS",
+   "discovered": 2,
+   "pass": 2,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 2,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterSetInstrumentedTest",
+     "test": "comboFromThreeSlots_sheetStaysOpen_noClippedNames_saveAndTranslateScreen",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterSetInstrumentedTest",
+     "test": "noNameIsClippedAtFontScale130",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/v423-V423Library.txt": {
+   "overall": "PASS",
+   "discovered": 2,
+   "pass": 2,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 2,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423LibraryInstrumentedTest",
+     "test": "rawTab_importOrderReadDeleteUndoAndBlockedByJob",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423LibraryInstrumentedTest",
+     "test": "glossaryAndPronounSelection_deleteUndoAndActiveCleared",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/v423-V423Polish.txt": {
+   "overall": "PASS",
+   "discovered": 11,
+   "pass": 11,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 11,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "a_crlfFileResumesOnBothPaths",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "f_jobsTabShowsTotalsAndGroupsARunByCombo",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "e_dismissingAJobHidesItForGood",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "d_aNewerFinishedJobHidesTheLeftover",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "i_libraryShowsCountsNoticeAndUndoForAPronounDelete",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "j_totalsCountChaptersFinishedToday",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "h_fingerDragScrollsTheActivityLog",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "c_recoveryDoesNotTouchDismissedFinishedOrCancelledJobs",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "k_currentJobPrefersAJobThatCanContinue",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "b_oneTimeRepairRestoresOnlyLineEndingConflicts",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "g_comboModeHidesTheGlossaryAndPronounRows",
+     "result": "PASS"
+    }
+   ]
+  },
+  "raw/v423-V423Resume.txt": {
+   "overall": "PASS",
+   "discovered": 8,
+   "pass": 8,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 8,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423ResumeInstrumentedTest",
+     "test": "t4_combinationContinuesTheStoppedChapterAndStartsTheNext",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ResumeInstrumentedTest",
+     "test": "t2_costLimitPausesAndContinueFinishesTheJob",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ResumeInstrumentedTest",
+     "test": "t6_resumeWithoutARunningJobAnnouncesIt",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ResumeInstrumentedTest",
+     "test": "t1_retryAfterAFailedChunkTranslatesTheRestOfTheJob",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ResumeInstrumentedTest",
+     "test": "u_screens_pendingCardStartQuestionAndStateAfterRetry",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ResumeInstrumentedTest",
+     "test": "t3_startWithAnUnfinishedJobContinuesItOrRestarts",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ResumeInstrumentedTest",
+     "test": "t5_splitChunkThenRetryCompletesInOrder",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ResumeInstrumentedTest",
+     "test": "v_actionButtonsGrowWithTheirLabel",
+     "result": "PASS"
+    }
+   ]
+  }
+ },
+ "total": {
+  "discovered": 216,
+  "pass": 200,
+  "skip": 16,
+  "fail": 0,
+  "incomplete": 0
+ }
+}

@@ -1,6 +1,11 @@
 # Build State
 
-## Current state — 2026-10-19 (v4.23 dev build `4.23-dev.10`: polish group S A G B+C+H F E D1 D2 I; emulator QA PASS; waiting for the owner)
+## Current state — 2026-10-19 (v4.23 dev build `4.23-dev.11`: chapter totals fix and Current job prefers a continuable job; emulator QA PASS; waiting for the owner)
+
+- Found on the owner phone with `4.23-dev.10`: the Jobs totals counted 0 finished chapters (the `since` value was bound as text and compared with an expression that has no column type; the token and USD sums still worked because `created_at` is a typed column). Fixed with `CAST(? AS INTEGER)` (`2fca9809`); Current job now skips a job with a request of unknown delivery when another can continue (`344338c4`).
+- `4.23-dev.11` / code 286, event `build-20261019-222201`, source `344338c4`, APK SHA-256 `8ACA53D94572798E558C341D970B3C538A4CFBD670F08FE117ADABA605FF110A`. Clean-archive regression: engine 742 / 1 SKIP; app 598 per variant / 5 SKIP; 0 FAIL; lint 0 errors / 64 warnings. Device QA 216 / 200 PASS / 16 SKIP / 0 FAIL. Report `artifacts/qa/v4.23-dev11-20261019/QA_REPORT.md`. Phone still on `4.23-dev.10`.
+
+## Previous state — 2026-10-19 (v4.23 dev build `4.23-dev.10`: polish group S A G B+C+H F E D1 D2 I; emulator QA PASS; waiting for the owner)
 
 - Work request `docs/V423_POLISH_WORK_REQUEST.md` (reviewed before work): one job-status table (`JobStatus`), CRLF-safe resume (`InputIdentity`, one-time `InputConflictRepair`), "Bỏ job này" with a recovery that leaves finished/cancelled/dismissed jobs alone, Current job never a finished job, Jobs tab with token/cost per job, Hôm nay / 7 ngày totals and run cards grouped from the session snapshot (`RunGroups`, `resumedJobs`), compact chapter-set mode, Library "N mục" and notice bar, nested scrolling for the logs.
 - `4.23-dev.10` / code 285, event `build-20261019-212611`, source `b3a7a7ba`, APK SHA-256 `F2EFB6950E886B3C897775B667CF875B31BB56B0D15E40C27625E855D16D773E`; final test APK `v423-dev10-test8-20261019` (`54E82B6F…`, commit `1032812a`). `4.23-dev.9` (code 284) was built first and superseded by dev.10 after the first device run found a test-seam gap (a one-line production change). Emulator-5554 only; phone `15e84958` still `4.23-dev.8`.
