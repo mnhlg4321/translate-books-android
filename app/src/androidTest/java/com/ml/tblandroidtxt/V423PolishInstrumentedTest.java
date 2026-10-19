@@ -99,8 +99,8 @@ public class V423PolishInstrumentedTest {
     @Test
     public void a_crlfFileResumesOnBothPaths() throws Exception {
         Context c = ctx();
-        File one = writeFile(c, TAG + "crlf-resume-button.txt", crlfText("A" + System.nanoTime()));
-        File two = writeFile(c, TAG + "crlf-start-continue.txt", crlfText("B" + System.nanoTime()));
+        File one = writeFile(c, TAG + "crlf-resume-button-" + System.nanoTime() + ".txt", crlfText("A" + System.nanoTime()));
+        File two = writeFile(c, TAG + "crlf-start-continue-" + System.nanoTime() + ".txt", crlfText("B" + System.nanoTime()));
         Uri u1 = Uri.fromFile(one), u2 = Uri.fromFile(two);
         try {
             // path 2: the Resume button (ACTION_RESUME_JOB)
@@ -138,8 +138,8 @@ public class V423PolishInstrumentedTest {
     @Test
     public void b_oneTimeRepairRestoresOnlyLineEndingConflicts() throws Exception {
         Context c = ctx();
-        File same = writeFile(c, TAG + "repair-same.txt", crlfText("C" + System.nanoTime()));
-        File changed = writeFile(c, TAG + "repair-changed.txt", crlfText("D" + System.nanoTime()));
+        File same = writeFile(c, TAG + "repair-same-" + System.nanoTime() + ".txt", crlfText("C" + System.nanoTime()));
+        File changed = writeFile(c, TAG + "repair-changed-" + System.nanoTime() + ".txt", crlfText("D" + System.nanoTime()));
         Uri us = Uri.fromFile(same), uc = Uri.fromFile(changed);
         android.content.SharedPreferences prefs = c.getSharedPreferences("input_conflict_repair", Context.MODE_PRIVATE);
         try {
