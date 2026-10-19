@@ -292,7 +292,10 @@ public class V423PolishInstrumentedTest {
             assertNotNull(picked);
             assertEquals("the job that can continue is the Current job", good, picked.id);
             repo.dismissJob(good);
-            assertEquals("with nothing else left the review job shows", stale, JobPicker.current(repo.getJobSummaries(50), false, -1).id);
+            // leave only these two jobs in play: the emulator keeps old "running" rows from other test classes
+            ArrayList<TranslationRepository.JobSummary> mine = new ArrayList<>();
+            for (TranslationRepository.JobSummary j : repo.getJobSummaries(500)) if (j.id == stale || j.id == good) mine.add(j);
+            assertEquals("with nothing else left the review job shows", stale, JobPicker.current(mine, false, -1).id);
         } finally {
             repo.deleteJob(stale); repo.deleteJob(good);
             repo.close();
