@@ -571,7 +571,8 @@ public class TranslationRepository extends SQLiteOpenHelper {
                 "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status) IN ('DONE','COMPLETED')) AS done," +
                 "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status) IN ('ERROR','RETRYABLE_ERROR','PERMANENT_ERROR')) AS failed," +
                 "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='PENDING') AS pending," +
-                "COALESCE(j.input_hash,''),COALESCE(j.start_session_id,''),COALESCE(j.prepared_batch_id,''),COALESCE(j.prepared_input_ordinal,0) " +
+                "COALESCE(j.input_hash,''),COALESCE(j.start_session_id,''),COALESCE(j.prepared_batch_id,''),COALESCE(j.prepared_input_ordinal,0)," +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='DELIVERY_UNKNOWN') AS unknown " +
                 "FROM jobs j ORDER BY j.updated_at DESC LIMIT ?";
         try (Cursor c = db.rawQuery(sql, new String[]{String.valueOf(Math.max(1, limit))})) {
             while (c.moveToNext()) list.add(readJobSummary(c));
@@ -675,6 +676,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
             r.preparedBatchId = c.getString(15);
             r.preparedOrdinal = c.getInt(16);
         }
+        if (c.getColumnCount() > 17) r.unknownChunks = c.getInt(17);
         return r;
     }
 
@@ -703,6 +705,8 @@ public class TranslationRepository extends SQLiteOpenHelper {
         public int doneChunks;
         public int failedChunks;
         public int pendingChunks;
+        /** Chunks whose request has unknown delivery: such a job cannot be continued without a look first. */
+        public int unknownChunks;
         public String inputHash = "";
         public String startSessionId = "";
         public String preparedBatchId = "";

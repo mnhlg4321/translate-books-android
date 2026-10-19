@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-19 (+07:00): owner asked for a real-phone test of G1-G6 on 4.23-dev.10: G2-G5 checked, a Hom nay chuong xong count bug found and fixed in code (not built); G1 and G6 need a provider run.
+- Updated: 2026-10-19 (+07:00): dev.11 code: Current job prefers a continuable job (unknownChunks) and the totals fix has device tests; build, regression and QA in progress.
 - Current version: v4.23.0 in development (not released); contains unreleased v4.22 code; shipped 4.21.0 / code 271 (tag `v4.21.0`).
 - Current branch: `feature/v4.23` in worktree `D:\P5E-builds\wt-v4.23` (BASE `c8408207` on `feature/v4.22`).
 - Current commit: `846b7b11` is the baseline before this snapshot commit (docs only). Confirm actual HEAD when resuming.
@@ -12,4 +12,4 @@
 - Regression status: clean archive `79fbc979`: engine 742 / 1 SKIP, app debug, release, benchmark 547 each / 5 SKIP, 0 FAIL, lint 0 errors / 64 warnings, AndroidTest compile PASS; device 196 / 180 PASS / 16 SKIP / 0 FAIL. Editorial boundary diff empty; five Editorial-named tests changed by one number.
 - Semantic progress: unchanged.
 - Spend: USD 0; no provider call. Phone 15e84958: owner approved the install in chat 2026-10-18; backup before install in D:/App Translate Books/App Translate Books-device-backups/v4.23-dev2-code277/20261018-213422 (DB sha256 e3820252...107134 matches phone and archive); 4.23-dev.5 / code 280 installed with install-validated.ps1, first launch without crash.
-- Next action: owner decides: allow a small provider spend for G1 and G6, and approve building 4.23-dev.11 (totals fix) and installing it.
+- Next action: finish dev.11 regression and emulator QA, then ask the owner in chat to approve the phone install and the deletion of two test output files.

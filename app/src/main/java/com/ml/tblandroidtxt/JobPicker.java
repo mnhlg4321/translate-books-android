@@ -40,7 +40,10 @@ final class JobPicker {
             for (TranslationRepository.JobSummary j : open) if (j.id == activeJobId) return j;
             for (TranslationRepository.JobSummary j : open) if (JobStatus.classify(j.status) == JobStatus.Kind.ACTIVE) return j;
         }
-        // A row still marked running while no service works (the process died) is shown like any other unfinished job.
+        // Same rule as the card on the Translate screen: the newest job that can continue; a job with a request of unknown delivery
+        // (which cannot be continued without a look) is shown only when nothing else is left. A row still marked running while no
+        // service works (the process died) is shown like any other unfinished job.
+        for (TranslationRepository.JobSummary j : open) if (j.unknownChunks == 0) return j;
         return open.isEmpty() ? null : open.get(0);
     }
 }

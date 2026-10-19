@@ -250,6 +250,55 @@ public class V423PolishInstrumentedTest {
         }
     }
 
+    /**
+     * The "Hôm nay / 7 ngày" chapter count: a job finished today is counted whether its time is in completed_at or only in updated_at.
+     * The count compares the time with an expression (no column type), so the since value must be bound as a number: as text it
+     * always lost the comparison and the card said "0 chương xong".
+     */
+    @Test
+    public void j_totalsCountChaptersFinishedToday() throws Exception {
+        Context c = ctx();
+        TranslationRepository repo = new TranslationRepository(c);
+        ArrayList<Long> made = new ArrayList<>();
+        try {
+            long since = System.currentTimeMillis() - 60_000L;
+            int before = repo.getUsageTotals(since).chaptersDone;
+            long viaUpdated = makeJob(repo, TAG + "totals-updated", "h-tot-1-" + System.nanoTime(), 2, 2, "COMPLETED");
+            long viaCompleted = makeJob(repo, TAG + "totals-completed", "h-tot-2-" + System.nanoTime(), 2, 2, "COMPLETED_WITH_WARNINGS");
+            long unfinished = makeJob(repo, TAG + "totals-open", "h-tot-3-" + System.nanoTime(), 2, 1, "paused");
+            made.addAll(Arrays.asList(viaUpdated, viaCompleted, unfinished));
+            repo.getWritableDatabase().execSQL("UPDATE jobs SET completed_at=? WHERE id=?", new Object[]{System.currentTimeMillis(), viaCompleted});
+            repo.getWritableDatabase().execSQL("UPDATE jobs SET completed_at=0 WHERE id=?", new Object[]{viaUpdated});
+            assertEquals("two finished chapters are counted, the paused one is not", before + 2, repo.getUsageTotals(since).chaptersDone);
+            assertEquals("a window that starts in the future counts none of them", 0, repo.getUsageTotals(System.currentTimeMillis() + 3_600_000L).chaptersDone);
+        } finally {
+            for (long id : made) repo.deleteJob(id);
+            repo.close();
+        }
+    }
+
+    /** The Current job in the Jobs tab skips a stale job with an unknown delivery in favour of one that can continue. */
+    @Test
+    public void k_currentJobPrefersAJobThatCanContinue() throws Exception {
+        Context c = ctx();
+        staleCleanup(c);
+        TranslationRepository repo = new TranslationRepository(c);
+        long stale = makeJob(repo, TAG + "cur-stale", "h-cur-1-" + System.nanoTime(), 3, 0, "x");
+        long good = makeJob(repo, TAG + "cur-good", "h-cur-2-" + System.nanoTime(), 3, 1, "paused");
+        try {
+            repo.markDeliveryUnknown(stale, 0, 1, "SEND_STARTED", "simulated loss");
+            repo.touchJob(stale, "NEEDS_REVIEW");     // newest updated_at, like the owner's 0023 job
+            TranslationRepository.JobSummary picked = JobPicker.current(repo.getJobSummaries(50), false, -1);
+            assertNotNull(picked);
+            assertEquals("the job that can continue is the Current job", good, picked.id);
+            repo.dismissJob(good);
+            assertEquals("with nothing else left the review job shows", stale, JobPicker.current(repo.getJobSummaries(50), false, -1).id);
+        } finally {
+            repo.deleteJob(stale); repo.deleteJob(good);
+            repo.close();
+        }
+    }
+
     private static void staleCleanup(Context c) {
         TranslationRepository cleaner = new TranslationRepository(c);
         try { for (TranslationRepository.JobProgress stale : cleaner.getIncompleteJobs(null, 200)) cleaner.deleteJob(stale.id); } finally { cleaner.close(); }

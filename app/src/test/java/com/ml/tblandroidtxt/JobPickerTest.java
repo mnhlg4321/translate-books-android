@@ -55,6 +55,30 @@ public class JobPickerTest {
         assertEquals(Arrays.asList(4L), ids(JobPicker.unfinished(jobs)));
     }
 
+    private static TranslationRepository.JobSummary jobWithUnknown(long id, String status, String hash, int unknown) {
+        TranslationRepository.JobSummary j = job(id, status, hash);
+        j.unknownChunks = unknown;
+        return j;
+    }
+
+    @Test public void currentPrefersAJobThatCanContinueOverANewerOneWithAnUnknownDelivery() {
+        // newest first: the stale NEEDS_REVIEW job is touched on every start, so it always sorts first
+        List<TranslationRepository.JobSummary> jobs = Arrays.asList(
+                jobWithUnknown(2, "NEEDS_REVIEW", "a", 1), jobWithUnknown(261, "paused", "b", 0), jobWithUnknown(150, "error", "c", 0));
+        assertEquals(261L, JobPicker.current(jobs, false, -1).id);
+    }
+
+    @Test public void onlyUnknownDeliveryJobsLeftThenTheNewestIsShown() {
+        List<TranslationRepository.JobSummary> jobs = Arrays.asList(jobWithUnknown(9, "NEEDS_REVIEW", "a", 2), jobWithUnknown(3, "NEEDS_REVIEW", "b", 1));
+        assertEquals(9L, JobPicker.current(jobs, false, -1).id);
+    }
+
+    @Test public void aReviewJobWithoutAnyUnknownChunkCanStillBeCurrent() {
+        // a permanent error also marks a job NEEDS_REVIEW; with no request of unknown delivery it can be continued
+        List<TranslationRepository.JobSummary> jobs = Arrays.asList(jobWithUnknown(9, "NEEDS_REVIEW", "a", 0), jobWithUnknown(3, "paused", "b", 0));
+        assertEquals(9L, JobPicker.current(jobs, false, -1).id);
+    }
+
     @Test public void aRowLeftRunningAfterACrashStillShows() {
         List<TranslationRepository.JobSummary> jobs = Arrays.asList(job(5, "RUNNING", "a"));
         assertEquals(5L, JobPicker.current(jobs, false, -1).id);
