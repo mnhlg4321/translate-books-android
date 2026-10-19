@@ -270,6 +270,7 @@ public class V423PolishInstrumentedTest {
                 scenario.onActivity(a -> shown.set(a.pendingJobCard.getVisibility() == View.VISIBLE && V423ResumeInstrumentedTest.containsText(a.pendingJobCard, TAG + "dismiss-card.txt") && V423ResumeInstrumentedTest.containsText(a.pendingJobCard, "Bỏ job này")));
                 return shown.get();
             }, 15_000L, "the card shows the job with a dismiss button");
+            scrollPageTo(scenario, a -> a.pendingJobCard, 300);
             V423ResumeInstrumentedTest.media("43-pending-card-dismiss");
 
             scenario.onActivity(a -> a.dismissJobs(Collections.singletonList(job)));
@@ -340,6 +341,7 @@ public class V423PolishInstrumentedTest {
                 scenario.onActivity(a -> ok.set(V423ResumeInstrumentedTest.containsText(a.getWindow().getDecorView(), setName)));
                 return ok.get();
             }, 20_000L, "the run card is on the Jobs tab");
+            scrollPageTo(scenario, a -> findByText(a.getWindow().getDecorView(), "Token và chi phí"), 250);
             V423ResumeInstrumentedTest.media("44a-jobs-top-totals-and-current");
             scenario.onActivity(a -> {
                 View root = a.getWindow().getDecorView();
@@ -350,8 +352,8 @@ public class V423PolishInstrumentedTest {
                 assertTrue("the run's cost is the sum of its chapters (0.0150)", V423ResumeInstrumentedTest.containsText(root, "USD 0.0150"));
                 assertTrue("a call without a known price is counted apart", V423ResumeInstrumentedTest.containsText(root, "1 lượt chưa rõ giá"));
                 assertFalse("the finished chapter is not the Current job", containsInCurrentCard(root, TAG + "run-ch0.txt"));
-                a.findScrollView(root).post(() -> { View card = findByDescription(root, "run-card"); if (card != null) a.findScrollView(root).scrollTo(0, Math.max(0, card.getTop() - 400)); });
             });
+            scrollPageTo(scenario, a -> findByDescription(a.getWindow().getDecorView(), "run-card"), 300);
             V423ResumeInstrumentedTest.media("44-jobs-run-card");
             scenario.onActivity(a -> { View card = findByDescription(a.getWindow().getDecorView(), "run-card"); assertNotNull(card); card.performClick(); });
             V423ResumeInstrumentedTest.waitFor(() -> {
@@ -359,12 +361,26 @@ public class V423PolishInstrumentedTest {
                 scenario.onActivity(a -> ok.set(V423ResumeInstrumentedTest.containsText(a.getWindow().getDecorView(), "Mở kết quả")));
                 return ok.get();
             }, 10_000L, "opening the run lists its chapters with Mở kết quả");
+            scrollPageTo(scenario, a -> findByDescription(a.getWindow().getDecorView(), "run-card"), 250);
             V423ResumeInstrumentedTest.media("45-jobs-run-expanded");
         } finally {
             TranslationRepository r2 = new TranslationRepository(c);
             try { r2.deleteJob(j0); r2.deleteJob(j1); } finally { r2.close(); }
             snapshot.delete();
         }
+    }
+
+    /** Scrolls the page so {@code target} sits {@code offsetPx} below the top of the window (for the screenshots). */
+    private static void scrollPageTo(ActivityScenario<MainActivity> scenario, java.util.function.Function<MainActivity, View> target, int offsetPx) throws Exception {
+        scenario.onActivity(a -> {
+            View v = target.apply(a);
+            if (v == null) return;
+            int[] at = new int[2];
+            v.getLocationInWindow(at);
+            a.findScrollView(a.getWindow().getDecorView()).scrollBy(0, at[1] - offsetPx);
+        });
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+        Thread.sleep(400L);
     }
 
     private static boolean containsInCurrentCard(View root, String text) {
