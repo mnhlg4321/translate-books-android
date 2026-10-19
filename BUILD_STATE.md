@@ -1,6 +1,12 @@
 # Build State
 
-## Current state — 2026-10-18 (v4.23 dev build `4.23-dev.8`: action buttons wrap their label; emulator QA PASS; waiting for the owner)
+## Current state — 2026-10-19 (v4.23 dev build `4.23-dev.10`: polish group S A G B+C+H F E D1 D2 I; emulator QA PASS; waiting for the owner)
+
+- Work request `docs/V423_POLISH_WORK_REQUEST.md` (reviewed before work): one job-status table (`JobStatus`), CRLF-safe resume (`InputIdentity`, one-time `InputConflictRepair`), "Bỏ job này" with a recovery that leaves finished/cancelled/dismissed jobs alone, Current job never a finished job, Jobs tab with token/cost per job, Hôm nay / 7 ngày totals and run cards grouped from the session snapshot (`RunGroups`, `resumedJobs`), compact chapter-set mode, Library "N mục" and notice bar, nested scrolling for the logs.
+- `4.23-dev.10` / code 285, event `build-20261019-212611`, source `b3a7a7ba`, APK SHA-256 `F2EFB6950E886B3C897775B667CF875B31BB56B0D15E40C27625E855D16D773E`; final test APK `v423-dev10-test8-20261019` (`54E82B6F…`, commit `1032812a`). `4.23-dev.9` (code 284) was built first and superseded by dev.10 after the first device run found a test-seam gap (a one-line production change). Emulator-5554 only; phone `15e84958` still `4.23-dev.8`.
+- Clean-archive regression `b3a7a7ba`: engine 742 / 1 SKIP; app 595 per variant / 5 SKIP; 0 FAIL; lint 0 errors / 64 warnings. Device QA 214 / 198 PASS / 16 SKIP / 0 FAIL; the new nested-scroll test shows the old behaviour (no scroll) with nested scrolling off and the fix with it on. Report `artifacts/qa/v4.23-dev10-20261019/QA_REPORT.md`.
+
+## Previous state — 2026-10-18 (v4.23 dev build `4.23-dev.8`: action buttons wrap their label; emulator QA PASS; waiting for the owner)
 
 - `4.23-dev.7` (code 282, `a5facba8`, pending-job card prefers a job that can continue) is installed on the owner phone `15e84958` (backup `v4.23-dev6-code281`). The owner then reported the clipped "Retry failed chunks" label.
 - `4.23-dev.8` / code 283, event `build-20261018-230733`, source `c69fa011`, APK SHA-256 `5B2C46497FAE1AE98EE63757CD548A29E294D36986310B2E2F77BD9D92C932D6`; test APK `v423-dev8-test-20261018` (`29FDD18E…`). Fixed-height button rows on the Translate screen now wrap. Emulator-5554 only.
