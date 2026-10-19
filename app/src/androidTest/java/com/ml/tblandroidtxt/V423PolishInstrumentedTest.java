@@ -107,6 +107,13 @@ public class V423PolishInstrumentedTest {
             AtomicInteger calls = new AtomicInteger(), failAt = new AtomicInteger(2);
             long job1 = stopAtFailedChunk(c, u1, new File(V423ResumeInstrumentedTest.outDir(c), "crlf1-out.txt"), calls, failAt);
             failAt.set(-1);
+            {
+                TranslationRepository probe = new TranslationRepository(c);
+                try {
+                    String stored = probe.getInputHash(job1), text = FileUtil.readText(c, u1);
+                    assertTrue("stored=" + stored + " raw=" + HashUtil.sha256(text) + " normalized=" + HashUtil.sha256(Chunker.normalizeSource(text)) + " chars=" + text.length() + " cr=" + text.indexOf('\r') + " status=" + probe.getJob(job1).status + " uri=" + probe.getJob(job1).inputUri + " expected=" + u1, InputIdentity.matches(stored, text));
+                } finally { probe.close(); }
+            }
             V423ResumeInstrumentedTest.sendResume(c, job1);
             V423ResumeInstrumentedTest.waitFor(() -> V423ResumeInstrumentedTest.idle() && String.valueOf(jobByUri(c, u1).status).toUpperCase().startsWith("COMPLETED"), 120_000L, "resume button finished the CRLF job");
             assertFalse("not marked as a conflict", "INPUT_CONFLICT".equalsIgnoreCase(jobByUri(c, u1).status));
@@ -458,6 +465,7 @@ public class V423PolishInstrumentedTest {
             scenario.onActivity(a -> control.set(a.logScroll.getScrollY()));
             android.util.Log.i("V423POLISH", "control (nested off): scrollY " + before.get() + " -> " + control.get());
             scenario.onActivity(a -> { a.logScroll.setNestedScrollingEnabled(true); a.logScroll.scrollTo(0, a.logScroll.getChildAt(0).getHeight()); before.set(a.logScroll.getScrollY()); });
+            scenario.onActivity(a -> { int[] w = new int[2]; a.logScroll.getLocationInWindow(w); int[] sc = new int[2]; a.logScroll.getLocationOnScreen(sc); android.util.Log.i("V423POLISH", "log view window=" + w[0] + "," + w[1] + " screen=" + sc[0] + "," + sc[1] + " size=" + a.logScroll.getWidth() + "x" + a.logScroll.getHeight() + " shown=" + a.logScroll.isShown() + " decor=" + a.getWindow().getDecorView().getHeight()); });
             swipe(scenario, view.get(), -100, 160);   // finger moves down: the content moves down, scrollY gets smaller
             Thread.sleep(500L);
             scenario.onActivity(a -> after.set(a.logScroll.getScrollY()));
