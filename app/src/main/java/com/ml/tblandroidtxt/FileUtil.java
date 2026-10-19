@@ -343,7 +343,9 @@ public class FileUtil {
             String id = RawUri.idOf(uri.toString());
             return !id.isEmpty() && LibraryRawStore.files(c).exists(id) ? null : label + ": RAW trong thư viện không còn. Hãy nhập lại ở Library > RAW.";
         }
-        if (!hasPersistedRead(c, uri)) return label + ": chưa có quyền đọc lâu dài. Hãy chọn lại file bằng nút Browse/Import.";
+        // Device tests (seam active) read plain files; a normal run never has the seam and always needs the persisted grant.
+        boolean seamFile = "file".equals(uri.getScheme()) && TranslateTestSeam.outputDir() != null;
+        if (!seamFile && !hasPersistedRead(c, uri)) return label + ": chưa có quyền đọc lâu dài. Hãy chọn lại file bằng nút Browse/Import.";
         try (InputStream is = c.getContentResolver().openInputStream(uri)) {
             if (is == null) return label + ": không mở được file";
             return null;

@@ -411,20 +411,20 @@ public class V423PolishInstrumentedTest {
         }
     }
 
-    private static void swipe(View v, int fromDy, int toDy) {
+    /** A finger drag delivered through the activity's touch dispatch, exactly where the finger would be (window coordinates). */
+    private static void swipe(ActivityScenario<MainActivity> scenario, View v, int fromDy, int toDy) {
         int[] xy = new int[2];
-        v.getLocationOnScreen(xy);
-        float x = xy[0] + v.getWidth() / 2f, y0 = xy[1] + v.getHeight() / 2f + fromDy, y1 = xy[1] + v.getHeight() / 2f + toDy;
-        android.app.Instrumentation in = InstrumentationRegistry.getInstrumentation();
-        long t = SystemClock.uptimeMillis();
-        in.sendPointerSync(MotionEvent.obtain(t, t, MotionEvent.ACTION_DOWN, x, y0, 0));
-        int steps = 12;
+        v.getLocationInWindow(xy);
+        final float x = xy[0] + v.getWidth() / 2f, y0 = xy[1] + v.getHeight() / 2f + fromDy, y1 = xy[1] + v.getHeight() / 2f + toDy;
+        final long t = SystemClock.uptimeMillis();
+        scenario.onActivity(a -> a.dispatchTouchEvent(MotionEvent.obtain(t, t, MotionEvent.ACTION_DOWN, x, y0, 0)));
+        int steps = 14;
         for (int i = 1; i <= steps; i++) {
-            float y = y0 + (y1 - y0) * i / steps;
-            in.sendPointerSync(MotionEvent.obtain(t, SystemClock.uptimeMillis(), MotionEvent.ACTION_MOVE, x, y, 0));
+            final float y = y0 + (y1 - y0) * i / steps;
+            scenario.onActivity(a -> a.dispatchTouchEvent(MotionEvent.obtain(t, SystemClock.uptimeMillis(), MotionEvent.ACTION_MOVE, x, y, 0)));
             SystemClock.sleep(16L);
         }
-        in.sendPointerSync(MotionEvent.obtain(t, SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, x, y1, 0));
+        scenario.onActivity(a -> a.dispatchTouchEvent(MotionEvent.obtain(t, SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, x, y1, 0)));
     }
 
     /** A finger drag inside the Activity Log scrolls the log itself (it used to scroll only with a mouse wheel). */
@@ -450,9 +450,18 @@ public class V423PolishInstrumentedTest {
             V423ResumeInstrumentedTest.media("47-activity-log-scrolled");
             AtomicReference<View> view = new AtomicReference<>();
             scenario.onActivity(a -> view.set(a.logScroll));
-            swipe(view.get(), -100, 160);   // finger moves down: the content moves down, scrollY gets smaller
+            // control: with nested scrolling off (the old behaviour) the same drag is recorded, not asserted
+            scenario.onActivity(a -> a.logScroll.setNestedScrollingEnabled(false));
+            swipe(scenario, view.get(), -100, 160);
+            Thread.sleep(500L);
+            AtomicInteger control = new AtomicInteger();
+            scenario.onActivity(a -> control.set(a.logScroll.getScrollY()));
+            android.util.Log.i("V423POLISH", "control (nested off): scrollY " + before.get() + " -> " + control.get());
+            scenario.onActivity(a -> { a.logScroll.setNestedScrollingEnabled(true); a.logScroll.scrollTo(0, a.logScroll.getChildAt(0).getHeight()); before.set(a.logScroll.getScrollY()); });
+            swipe(scenario, view.get(), -100, 160);   // finger moves down: the content moves down, scrollY gets smaller
             Thread.sleep(500L);
             scenario.onActivity(a -> after.set(a.logScroll.getScrollY()));
+            android.util.Log.i("V423POLISH", "nested on: scrollY " + before.get() + " -> " + after.get());
             assertTrue("scrollY " + before.get() + " -> " + after.get(), after.get() < before.get());
         }
     }
