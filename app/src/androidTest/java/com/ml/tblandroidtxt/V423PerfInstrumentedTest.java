@@ -139,7 +139,7 @@ public class V423PerfInstrumentedTest {
             probesBefore = probeCount();
             int expected = CHAPTERS;
             for (int round = 0; round < 24; round++) {
-                final String description = "chapter:" + names.get(round % CHAPTERS);
+                final String description = "chapter:" + names.get(round % 12);
                 final CountDownLatch frame = new CountDownLatch(1);
                 final long[] elapsed = new long[1];
                 scenario.onActivity(a -> {
@@ -151,7 +151,7 @@ public class V423PerfInstrumentedTest {
                 });
                 assertTrue(frame.await(30, TimeUnit.SECONDS));
                 ticks.add(elapsed[0] / 1_000_000L);
-                expected += round < CHAPTERS ? -1 : 1;
+                expected += round < 12 ? -1 : 1;
                 final int want = expected;
                 waitFor(() -> {
                     AtomicReference<PreparedBatch> ref = new AtomicReference<>();
