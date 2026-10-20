@@ -124,6 +124,16 @@ public class V423ScreenshotsInstrumentedTest {
             a.statusBanner.setVisibility(android.view.View.VISIBLE);
             a.refreshTopStatusChip();
         });
+        s.onActivity(a -> {
+            final android.widget.ScrollView sv = a.findScrollView(a.getWindow().getDecorView());
+            if (sv == null) return;
+            sv.post(() -> {
+                int y = 0;
+                android.view.View v = a.statusBanner;
+                while (v != null && v != sv) { y += v.getTop(); v = v.getParent() instanceof android.view.View ? (android.view.View) v.getParent() : null; }
+                sv.scrollTo(0, Math.max(0, y - 30));
+            });
+        });
         stage(prefix + "-panel-stopped-after-two");
         s.onActivity(a -> a.statusBanner.setVisibility(android.view.View.GONE));
     }
