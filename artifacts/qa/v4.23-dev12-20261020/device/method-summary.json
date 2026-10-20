@@ -1551,19 +1551,19 @@
    ]
   },
   "artifacts/qa/v4.23-dev12-20261020/device/raw/v423-V423Appearance.txt": {
-   "overall": "FAIL",
+   "overall": "PASS",
    "discovered": 4,
-   "pass": 3,
+   "pass": 4,
    "skip": 0,
-   "fail": 1,
+   "fail": 0,
    "incomplete": 0,
-   "ok_line_tests": null,
+   "ok_line_tests": 4,
    "notes": [],
    "methods": [
     {
      "class": "com.ml.tblandroidtxt.V423AppearanceInstrumentedTest",
      "test": "lightPaletteRebuildsTheActivityOnTheSameTabWithTheSameSelection",
-     "result": "FAIL"
+     "result": "PASS"
     },
     {
      "class": "com.ml.tblandroidtxt.V423AppearanceInstrumentedTest",
@@ -1822,9 +1822,9 @@
  },
  "total": {
   "discovered": 227,
-  "pass": 210,
+  "pass": 211,
   "skip": 16,
-  "fail": 1,
+  "fail": 0,
   "incomplete": 0
  }
 }

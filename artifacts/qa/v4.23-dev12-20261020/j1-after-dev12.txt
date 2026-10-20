@@ -1,0 +1,2 @@
+﻿--------- beginning of main
+10-20 22:21:16.850 14679 14693 I V423PERF: grant=true ticks_ms=[14, 16, 52, 14, 5, 14, 13, 15, 13, 12, 12, 11] p50=14 p95=52 max=52 probeCalls=0 (-1 means this build has no counter; 12 ticks, 14 chapters)

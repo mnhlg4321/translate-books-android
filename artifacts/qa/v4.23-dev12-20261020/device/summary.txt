@@ -48,11 +48,11 @@ PASS         discovered=6 pass=3 skip=3 fail=0 incomplete=0  artifacts/qa/v4.23-
 PASS         discovered=4 pass=2 skip=2 fail=0 incomplete=0  artifacts/qa/v4.23-dev12-20261020/device/raw/v422-EditorialRefusedProposal.txt
 PASS         discovered=3 pass=1 skip=2 fail=0 incomplete=0  artifacts/qa/v4.23-dev12-20261020/device/raw/v422-LibraryS0.txt
 PASS         discovered=3 pass=1 skip=2 fail=0 incomplete=0  artifacts/qa/v4.23-dev12-20261020/device/raw/v423-TranslateRaw-full.txt
-FAIL         discovered=4 pass=3 skip=0 fail=1 incomplete=0  artifacts/qa/v4.23-dev12-20261020/device/raw/v423-V423Appearance.txt
+PASS         discovered=4 pass=4 skip=0 fail=0 incomplete=0  artifacts/qa/v4.23-dev12-20261020/device/raw/v423-V423Appearance.txt
 PASS         discovered=9 pass=9 skip=0 fail=0 incomplete=0  artifacts/qa/v4.23-dev12-20261020/device/raw/v423-V423ChapterRun.txt
 PASS         discovered=2 pass=2 skip=0 fail=0 incomplete=0  artifacts/qa/v4.23-dev12-20261020/device/raw/v423-V423ChapterSet.txt
 PASS         discovered=2 pass=2 skip=0 fail=0 incomplete=0  artifacts/qa/v4.23-dev12-20261020/device/raw/v423-V423Library.txt
 PASS         discovered=1 pass=1 skip=0 fail=0 incomplete=0  artifacts/qa/v4.23-dev12-20261020/device/raw/v423-V423Perf.txt
 PASS         discovered=11 pass=11 skip=0 fail=0 incomplete=0  artifacts/qa/v4.23-dev12-20261020/device/raw/v423-V423Polish.txt
 PASS         discovered=8 pass=8 skip=0 fail=0 incomplete=0  artifacts/qa/v4.23-dev12-20261020/device/raw/v423-V423Resume.txt
-TOTAL discovered=227 pass=210 skip=16 fail=1 incomplete=0
+TOTAL discovered=227 pass=211 skip=16 fail=0 incomplete=0

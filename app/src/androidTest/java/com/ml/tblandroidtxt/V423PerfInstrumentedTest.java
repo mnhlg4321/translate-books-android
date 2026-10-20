@@ -138,7 +138,7 @@ public class V423PerfInstrumentedTest {
             Thread.sleep(500L);
             probesBefore = probeCount();
             int expected = CHAPTERS;
-            for (int round = 0; round < 12; round++) {
+            for (int round = 0; round < 24; round++) {
                 final String description = "chapter:" + names.get(round % CHAPTERS);
                 final CountDownLatch frame = new CountDownLatch(1);
                 final long[] elapsed = new long[1];
