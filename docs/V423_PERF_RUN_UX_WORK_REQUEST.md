@@ -189,9 +189,57 @@ Chương  █████████░░░░  chunk 5/6 · 004_ATE_JP_VOL6.
 - Chụp ảnh cả các màn Biên tập ở palette sáng (không sửa mã Biên tập). Chỗ nào khó đọc thì ghi lại.
 - **Lát B (yêu cầu sau):** chọn màu nhấn, cỡ chữ app, mật độ, bo góc, "Theo hệ thống".
 
+### J6 — `UNCLOSED_BRACKET_OR_DIALOGUE` xảy ra nhiều dù RAW đủ ngoặc (owner 2026-10-20)
+
+**Đo trên bản sao DB của điện thoại** (ngoài Git, chỉ đếm, không in chữ sách; script `bracket_survey.py`, `bracket_rejects.py`, `bracket_lines.py`, `bracket_ctx.py`, `bracket_tokens.py`, `coverage.py` trong scratchpad của phiên chính):
+
+- **Cách chia chunk không phải nguyên nhân.**
+  - Có 307 job; 306 job có toàn văn RAW cân bằng 「」『』.
+  - Trong 1.231 chunk chỉ 1 chunk lệch, và chunk đó không thuộc job cân bằng nào.
+  - Cả **58/58** lượt bị từ chối vì ngoặc đều rơi vào chunk RAW cân bằng.
+  - Chỉ 1,6% chunk có thoại kéo dài nhiều dòng; 0 chunk như vậy trong nhóm lỗi.
+- **Lỗi nằm ở bản dịch của model** (`openai/gpt-5.6-luna`, `maxOutputTokens = 4096`, `maxTokensPerChunk` 1650–1800):
+  - **19/58 bị cắt vì hết token:** `finish_reason = length`; 13 lượt có output ≥ 4000 token. Model suy luận cũng tiêu token đầu ra (log thấy `reasoning` 145–544). Bản bị cắt dừng giữa câu thoại nên báo lỗi ngoặc.
+  - Nhóm thiếu đúng một `」` (20 lượt): **17/20 có dấu mở bị bỏ dở nằm ở 3 dòng cuối**, và bản dịch **ngắn hơn RAW 75–92 dòng** ở phần lớn các ca. Đây là bản bị cắt hoặc dừng sớm, không phải lỗi ngoặc.
+  - **7 lượt mở bằng `「` nhưng đóng bằng `”`**: lẫn kiểu ngoặc, sửa được theo luật cố định; khoảng 13 lượt lệch lớn khác cùng dạng.
+  - 11 lượt thừa `(` ASCII (RAW không có); 2 lượt lệch `『』`; 1 lượt thừa `[`.
+- **Thiệt hại:**
+  - 31 chunk bị dính; 26 chunk qua ở lượt retry sau, 5 chunk vẫn lỗi.
+  - Khoảng **0,20 USD** đã trả cho các lượt bị từ chối.
+  - Retry gửi lại **đúng cùng request** (cùng `requestHash`, cache vào), nên với lỗi cắt do hết token thì gần như chắc chắn lại bị cắt.
+- **Bản đã được nhận vẫn ổn:** 1.169/1.178 chunk có ≥ 95% số dòng của RAW; 0 chunk dưới 80%. Bộ kiểm hiện đang chặn được bản cụt.
+
+**Sửa:**
+1. **Báo đúng nguyên nhân.** `ResponseValidator` xếp `FINISH_REASON_LENGTH` / `OUTPUT_TOKEN_LIMIT_REACHED` / `LIKELY_TRUNCATED_END` **trước** lỗi ngoặc, và thông báo ghi "Bản dịch bị cắt (hết token đầu ra)".
+   - Thêm kiểm **thiếu dòng**: bản dịch có < 80% số dòng không trống của RAW thì báo `OUTPUT_MISSING_LINES`.
+   - Sự kiện `chunk_attempt_failed` ghi loại ngoặc, độ lệch, `finish`, `output_tokens`, tỉ lệ dòng (không ghi chữ).
+2. **Bị cắt thì không gửi lại y hệt.** Lần retry sau chọn một trong hai:
+   - (a) tăng giới hạn đầu ra lên mức model cho phép (mặc định đề xuất 8192 cho model suy luận; chỉ trả tiền cho token thực dùng);
+   - (b) nếu đã ở mức tối đa thì chia chunk làm đôi bằng `Chunker.splitForContextOverflow` (đã có cho lỗi vượt context).
+
+   Ghi lý do vào log.
+3. **Mức suy luận cho bản dịch.** Thêm tùy chọn `reasoningEffort` cho luồng dịch (đã có tham số trong `OpenAICompatibleClient` nhưng chỉ adapter P5E dùng). Mặc định "low" cho model có suy luận, để giảm token suy luận và nguy cơ bị cắt. Hiện trong Settings > Performance.
+4. **Sửa ngoặc theo luật cố định trước khi kiểm.** Nếu bản dịch mở `「` và đóng `”` (số `「` = số `”`, không có `」`) trong khi RAW dùng `「」`, thì đổi các `”` đóng thành `」`. Làm tương tự cho `『』` / `‘’`. Chỉ đổi dấu, không đổi chữ; ghi `QUOTE_STYLE_REPAIRED` vào cảnh báo.
+5. **Ngoặc `(` ASCII:** thuộc họ "so với RAW" ở J2-5. RAW không có `(` mà bản dịch thừa `(` chưa đóng thì vẫn từ chối, nhưng thông báo ghi rõ loại ngoặc.
+6. **Mặc định khuyến nghị cho owner:** `maxOutputTokens` 8192 với gpt-5.6-luna. Hiện trong Settings dưới dạng gợi ý, không tự đổi cài đặt của owner.
+
+**Test:**
+- Host:
+  - bản `finish = length` → lần sau dùng giới hạn lớn hơn hoặc chia đôi, không gửi request giống hệt;
+  - sửa `「…”` → `「…」`;
+  - bản thiếu > 20% dòng → `OUTPUT_MISSING_LINES`;
+  - thứ tự thông báo lỗi.
+- Thiết bị (provider giả):
+  - lượt trả `length` rồi tự chia đôi và hoàn tất;
+  - lượt trả ngoặc lẫn kiểu được nhận kèm cảnh báo.
+- Offline replay: chạy validator mới trên 58 response đã lưu trong bản sao DB (chỉ đếm). Kỳ vọng:
+  - 7+ ca lẫn kiểu được nhận sau sửa;
+  - các ca cụt báo "bị cắt";
+  - không ca nào hiện bị từ chối lại thành được nhận nếu thiếu dòng.
+
 ## 3. Thứ tự, test, điểm dừng
 
-**Thứ tự:** J1 lợi nhanh → J2 → J1 phần còn lại → J4 → J3 → J5 lát A.
+**Thứ tự:** J1 lợi nhanh → J2 + J6 (cùng chạm `ResponseValidator` và đường retry) → J1 phần còn lại → J4 → J3 → J5 lát A.
 
 **Test host:**
 - so ngoặc / lặp / cụt câu với RAW (kể cả ca bản dịch đóng ngoặc dở);
