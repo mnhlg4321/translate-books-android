@@ -31,6 +31,7 @@ public class SettingsStore {
                 .putInt("contextChars", s.contextChars)
                 .putBoolean("contextOverlapEnabled",s.contextOverlapEnabled)
                 .putString("optimizationPreset", s.optimizationPreset)
+                .putString("reasoningEffort", s.reasoningEffort)
                 .putBoolean("refineAfter", s.refineAfter)
                 .putBoolean("bilingualOutput", s.bilingualOutput)
                 .putBoolean("savePartialOutput", s.savePartialOutput)
@@ -84,6 +85,7 @@ public class SettingsStore {
         s.contextChars = p.getInt("contextChars", s.contextChars);
         s.contextOverlapEnabled=p.getBoolean("contextOverlapEnabled",s.contextOverlapEnabled);
         s.optimizationPreset = p.getString("optimizationPreset", s.optimizationPreset);
+        s.reasoningEffort = p.getString("reasoningEffort", s.reasoningEffort);
         s.refineAfter = p.getBoolean("refineAfter", s.refineAfter);
         s.bilingualOutput = p.getBoolean("bilingualOutput", s.bilingualOutput);
         s.savePartialOutput = p.getBoolean("savePartialOutput", s.savePartialOutput);
@@ -125,6 +127,7 @@ public class SettingsStore {
             o.put("temperature", s.temperature); o.put("maxOutputTokens", s.maxOutputTokens); o.put("contextChars", s.contextChars);
             o.put("contextOverlapEnabled",s.contextOverlapEnabled);
             o.put("optimizationPreset", s.optimizationPreset);
+            o.put("reasoningEffort", s.reasoningEffort);
             o.put("refineAfter", s.refineAfter); o.put("bilingualOutput", s.bilingualOutput); o.put("savePartialOutput", s.savePartialOutput);
             o.put("stopOnCostLimit", s.stopOnCostLimit); o.put("costLimitUsd", s.costLimitUsd);
             o.put("costWarningUsd",s.costWarningUsd);o.put("maxRetryCostUsd",s.maxRetryCostUsd);o.put("maxPaidRetries",s.maxPaidRetries);o.put("stopWhenPricingUnknown",s.stopWhenPricingUnknown);
@@ -168,6 +171,7 @@ public class SettingsStore {
             s.temperature = (float)o.optDouble("temperature", s.temperature); s.maxOutputTokens = o.optInt("maxOutputTokens", s.maxOutputTokens); s.contextChars = o.optInt("contextChars", s.contextChars);
             s.contextOverlapEnabled=o.optBoolean("contextOverlapEnabled",s.contextOverlapEnabled);
             s.optimizationPreset = o.optString("optimizationPreset", s.optimizationPreset);
+            s.reasoningEffort = o.optString("reasoningEffort", s.reasoningEffort);
             s.refineAfter = o.optBoolean("refineAfter", s.refineAfter); s.bilingualOutput = o.optBoolean("bilingualOutput", s.bilingualOutput); s.savePartialOutput = o.optBoolean("savePartialOutput", s.savePartialOutput);
             s.stopOnCostLimit = o.optBoolean("stopOnCostLimit", s.stopOnCostLimit); s.costLimitUsd = o.optDouble("costLimitUsd", s.costLimitUsd);
             s.costWarningUsd=o.optDouble("costWarningUsd",s.costWarningUsd);s.maxRetryCostUsd=o.optDouble("maxRetryCostUsd",s.maxRetryCostUsd);s.maxPaidRetries=o.optInt("maxPaidRetries",s.maxPaidRetries);s.stopWhenPricingUnknown=o.optBoolean("stopWhenPricingUnknown",s.stopWhenPricingUnknown);

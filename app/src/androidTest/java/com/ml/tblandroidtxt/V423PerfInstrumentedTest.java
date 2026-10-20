@@ -159,7 +159,7 @@ public class V423PerfInstrumentedTest {
                     return ref.get() != null && ref.get().ready() && ref.get().bindings != null && ref.get().bindings.size() == want;
                 }, 120_000L, "plan after tick " + round);
             }
-            probes = probeCount() - probesBefore;
+            probes = probesBefore < 0 ? -1 : probeCount() - probesBefore;
         } finally {
             ChapterSetStore.delete(c, Collections.singletonList(set.id));
             LibraryRawStore.removeRows(c, rawIds);

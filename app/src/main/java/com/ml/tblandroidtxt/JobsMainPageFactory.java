@@ -149,6 +149,11 @@ final class JobsMainPageFactory {
             if (run.chapters.isEmpty()) list.addView(a.text("Chưa có chương nào chạy trong lượt này.", 12, a.MUTED, false));
             card.addView(list);
         }
+        if (run.unfinished() > 0 && run.setId != null && !run.setId.isEmpty()) {
+            Button go = a.primaryButton("Tiếp tục tổ hợp (" + run.unfinished() + " chương)", v -> a.continueChapterSet(run.setId));
+            go.setContentDescription("run-continue-set");
+            card.addView(go, a.marginLP(-1, -2, 0, 8, 0, 0));
+        }
         return card;
     }
 

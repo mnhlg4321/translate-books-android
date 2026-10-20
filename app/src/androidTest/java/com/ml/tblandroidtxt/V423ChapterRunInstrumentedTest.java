@@ -50,7 +50,15 @@ public class V423ChapterRunInstrumentedTest {
     /** The chapter-local test makes chapter 2 one short line that cannot be split when the provider says the context is too large. */
     private static boolean tinyChapterTwo;
 
+    /** J6 tests: the RAW has quoted dialogue, so the bracket rule compares the translation with a RAW that uses corner brackets. */
+    private static boolean bracketRaw;
+
     private static String rawText(int chapter) {
+        if (bracketRaw) {
+            StringBuilder b = new StringBuilder();
+            for (int i = 1; i <= 30; i++) b.append("【章").append(chapter).append("】第").append(i).append("段。\u300c").append(TERMS[chapter - 1]).append("です。\u300d\n\n");
+            return b.append(System.nanoTime()).toString();
+        }
         if (chapter == 2 && tinyChapterTwo) return "【章2】" + TERMS[1] + "です。" + System.nanoTime();
         StringBuilder sb = new StringBuilder();
         for (int i = 1; i <= 30; i++) sb.append("【章").append(chapter).append("】第").append(i).append("段。登場人物は").append(TERMS[chapter - 1])
@@ -324,6 +332,274 @@ public class V423ChapterRunInstrumentedTest {
             assertFalse("chapter 2 did not complete", status(c, f.raws.get(1).uri()).startsWith("COMPLETED"));
             assertEquals("chapter 3 was never started", "NONE", status(c, f.raws.get(2).uri()));
             media("30-chapter-run-stopped", scenario);
+        } finally {
+            cleanup(c, f, original);
+        }
+    }
+
+    // ---- v4.23 J2 / J6: chapter-local validation failures, the stop after two, "Tiếp tục tổ hợp", truncation and quote repair ----
+
+    private static String badBrackets() { return "<TRANSLATION>Xin ch\u00e0o \u300cc\u00e2u n\u00f3i kh\u00f4ng \u0111\u00f3ng, ph\u1ea7n d\u1ecbch b\u1ecb h\u1ecfng v\u1ec1 ng\u1eb7c k\u00e9p.</TRANSLATION>"; }
+
+    private static OpenAICompatibleClient.ChatResult raw(String content, String finish, int completion) {
+        OpenAICompatibleClient.ChatResult r = new OpenAICompatibleClient.ChatResult();
+        r.content = content; r.finishReason = finish; r.promptTokens = 110; r.completionTokens = completion; r.totalTokens = 110 + completion; r.usageReported = true; r.providerResponseId = "fixture";
+        return r;
+    }
+
+    /** Collects every progress broadcast of the service while a test runs. */
+    private static final class Broadcasts extends android.content.BroadcastReceiver {
+        final List<String> statuses = java.util.Collections.synchronizedList(new ArrayList<String>());
+        final List<String> logs = java.util.Collections.synchronizedList(new ArrayList<String>());
+        @Override public void onReceive(Context context, Intent intent) {
+            statuses.add(String.valueOf(intent.getStringExtra(TranslatorService.EXTRA_STATUS)));
+            String log = intent.getStringExtra(TranslatorService.EXTRA_LOG);
+            if (log != null) logs.add(log);
+        }
+        int count(String status) { int n = 0; synchronized (statuses) { for (String s : statuses) if (status.equals(s)) n++; } return n; }
+        boolean logContains(String text) { synchronized (logs) { for (String l : logs) if (l.contains(text)) return true; } return false; }
+    }
+
+    private static Broadcasts listen(Context c) {
+        Broadcasts b = new Broadcasts();
+        c.registerReceiver(b, new android.content.IntentFilter(TranslatorService.ACTION_PROGRESS), Context.RECEIVER_NOT_EXPORTED);
+        return b;
+    }
+
+    @Test
+    public void rejectedAnswerInChapterTwoDoesNotStopTheRunAndNoErrorIsBroadcast() throws Exception {
+        Context c = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Map<String, Map<String, ?>> original = snapshot(c);
+        clearAll(c);
+        Fixture f = seed(c);
+        TranslateTestSeam.setOutputDir(outDir(c));
+        AtomicInteger calls = new AtomicInteger();
+        TranslateTestSeam.setProvider((settings, prompt, limit, id, observer) -> {
+            observe(observer);
+            String all = prompt.system + "\n" + prompt.user;
+            if (all.contains("\u3010\u7ae02\u3011")) return raw(badBrackets(), "stop", 30);
+            return response("B\u1ea3n d\u1ecbch th\u1eed nghi\u1ec7m s\u1ed1 " + calls.incrementAndGet() + " v\u1edbi \u0111\u1ee7 \u0111\u1ed9 d\u00e0i \u0111\u1ec3 v\u01b0\u1ee3t qua ki\u1ec3m \u0111\u1ecbnh c\u1ee7a \u1ee9ng d\u1ee5ng.");
+        });
+        Broadcasts rx = listen(c);
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            runSet(scenario, c, f, baseSettings());
+            waitFor(() -> status(c, f.raws.get(2).uri()).startsWith("COMPLETED") && !TranslatorService.isActive(), 120_000L, "queue finished");
+            assertTrue(status(c, f.raws.get(0).uri()).startsWith("COMPLETED"));
+            assertFalse("chapter 2 did not complete", status(c, f.raws.get(1).uri()).startsWith("COMPLETED"));
+            Thread.sleep(500L);
+            assertEquals("no error is broadcast while the queue goes on", 0, rx.count("error"));
+            assertTrue("the run ends as done with the summary", rx.count("done") >= 1);
+            assertTrue(rx.logs.toString(), rx.logContains("2 xong \u00b7 1 l\u1ed7i"));
+            assertTrue("the message names the chapters", rx.logContains("Ch\u01b0\u01a1ng 2 l\u1ed7i, chuy\u1ec3n ch\u01b0\u01a1ng 3"));
+            media("31-chapter-run-rejected-continues", scenario);
+        } finally {
+            c.unregisterReceiver(rx);
+            cleanup(c, f, original);
+        }
+    }
+
+    @Test
+    public void twoRejectedChaptersInARowStopTheRun() throws Exception {
+        Context c = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Map<String, Map<String, ?>> original = snapshot(c);
+        clearAll(c);
+        Fixture f = seed(c);
+        TranslateTestSeam.setOutputDir(outDir(c));
+        TranslateTestSeam.setProvider((settings, prompt, limit, id, observer) -> {
+            observe(observer);
+            String all = prompt.system + "\n" + prompt.user;
+            if (all.contains("\u3010\u7ae01\u3011") || all.contains("\u3010\u7ae02\u3011")) return raw(badBrackets(), "stop", 30);
+            return response("B\u1ea3n d\u1ecbch th\u1eed nghi\u1ec7m v\u1edbi \u0111\u1ee7 \u0111\u1ed9 d\u00e0i \u0111\u1ec3 v\u01b0\u1ee3t qua ki\u1ec3m \u0111\u1ecbnh c\u1ee7a \u1ee9ng d\u1ee5ng.");
+        });
+        Broadcasts rx = listen(c);
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            runSet(scenario, c, f, baseSettings());
+            waitFor(() -> rx.count("error") > 0 && !TranslatorService.isActive(), 120_000L, "queue stopped");
+            assertEquals("chapter 3 was never started", "NONE", status(c, f.raws.get(2).uri()));
+            assertTrue(rx.logs.toString(), rx.logContains("D\u1eebng t\u1ed5 h\u1ee3p: 2 ch\u01b0\u01a1ng li\u00ean ti\u1ebfp l\u1ed7i"));
+            assertTrue("the label is not the initialisation one", !rx.logContains("L\u1ed7i kh\u1edfi t\u1ea1o") && rx.logContains("L\u1ed7i: "));
+            media("32-chapter-run-stopped-after-two", scenario);
+        } finally {
+            c.unregisterReceiver(rx);
+            cleanup(c, f, original);
+        }
+    }
+
+    @Test
+    public void continueSetTicksTheUnfinishedChaptersAndTheFailedJobGoesOn() throws Exception {
+        Context c = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Map<String, Map<String, ?>> original = snapshot(c);
+        clearAll(c);
+        Fixture f = seed(c);
+        TranslateTestSeam.setOutputDir(outDir(c));
+        final java.util.concurrent.atomic.AtomicBoolean chapterTwoBroken = new java.util.concurrent.atomic.AtomicBoolean(true);
+        TranslateTestSeam.setProvider((settings, prompt, limit, id, observer) -> {
+            observe(observer);
+            String all = prompt.system + "\n" + prompt.user;
+            if (chapterTwoBroken.get() && all.contains("\u3010\u7ae02\u3011")) return raw(badBrackets(), "stop", 30);
+            return response("B\u1ea3n d\u1ecbch th\u1eed nghi\u1ec7m v\u1edbi \u0111\u1ee7 \u0111\u1ed9 d\u00e0i \u0111\u1ec3 v\u01b0\u1ee3t qua ki\u1ec3m \u0111\u1ecbnh c\u1ee7a \u1ee9ng d\u1ee5ng.");
+        });
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            runSet(scenario, c, f, baseSettings());
+            waitFor(() -> status(c, f.raws.get(2).uri()).startsWith("COMPLETED") && !TranslatorService.isActive(), 120_000L, "first run finished");
+            TranslationRepository.JobSummary stopped = job(c, f.raws.get(1).uri());
+            assertNotNull(stopped);
+            final long stoppedId = stopped.id;
+            chapterTwoBroken.set(false);
+            // "Tiếp tục tổ hợp": the set is reopened with only the chapter that has no finished translation ticked.
+            AtomicReference<Boolean> opened = new AtomicReference<>();
+            scenario.onActivity(activity -> { activity.switchTab("Translate"); opened.set(activity.sourceUi.continueSet(f.setId)); });
+            assertTrue(opened.get());
+            waitFor(() -> {
+                AtomicReference<PreparedBatch> ref = new AtomicReference<>();
+                scenario.onActivity(activity -> ref.set(activity.currentPreparedBatch()));
+                return ref.get() != null && ref.get().ready() && ref.get().bindings != null && ref.get().bindings.size() == 1;
+            }, 60_000L, "plan for the one unfinished chapter");
+            AtomicReference<PreparedBatch> plan = new AtomicReference<>();
+            scenario.onActivity(activity -> plan.set(activity.currentPreparedBatch()));
+            assertEquals(f.raws.get(1).uri(), plan.get().inputs.get(0).uri.toString());
+            // The normal Start way: the unfinished job of that chapter is the one that continues.
+            List<Integer> ordinals = new ArrayList<>();
+            List<String> hashes = new ArrayList<>();
+            for (PreparedBatch.Input in : plan.get().inputs) { ordinals.add(in.ordinal); hashes.add(in.inputHash); }
+            TranslationRepository repo = new TranslationRepository(c);
+            Map<Integer, Long> choice;
+            try { choice = ResumePrompt.chooseJobs(ordinals, hashes, repo.getIncompleteJobs(hashes, 50)); } finally { repo.close(); }
+            assertEquals("the failed chapter's job is offered", Long.valueOf(stoppedId), choice.get(plan.get().inputs.get(0).ordinal));
+            Intent i = new Intent(c, TranslatorService.class);
+            i.setAction(TranslatorService.ACTION_START);
+            i.putExtra("outputUri", "");
+            i.putExtra("outputTreeUri", "content://tbl.test/tree/v423");
+            i.putExtra("settings", SettingsStore.toJson(baseSettings()));
+            i.putExtra("resumeJobs", ResumePrompt.toJson(choice));
+            String sid = java.util.UUID.randomUUID().toString();
+            i.putExtra("startSessionId", sid);
+            AtomicReference<String> error = new AtomicReference<>();
+            scenario.onActivity(activity -> { i.putExtra("preparedBatchId", plan.get().id); error.set(activity.putChapterSession(i, sid, plan.get())); });
+            assertNull(error.get());
+            c.startForegroundService(i);
+            waitFor(() -> status(c, f.raws.get(1).uri()).startsWith("COMPLETED") && !TranslatorService.isActive(), 120_000L, "chapter 2 completed");
+            TranslationRepository.JobSummary after = job(c, f.raws.get(1).uri());
+            assertEquals("the same job went on, no second job was created", stoppedId, after.id);
+            media("33-continue-set-done", scenario);
+        } finally {
+            cleanup(c, f, original);
+        }
+    }
+
+    private static String lineRichResponse(String userPrompt, String closing) {
+        // One translated line per source paragraph that appears in this request, so the missing-lines check sees a faithful answer.
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("\u3010\u7ae0\\d\u3011\u7b2c(\\d+)\u6bb5").matcher(userPrompt);
+        StringBuilder sb = new StringBuilder();
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        while (m.find()) if (seen.add(m.group(1))) sb.append("D\u00f2ng d\u1ecbch s\u1ed1 ").append(m.group(1)).append(closing).append("\n\n");
+        return "<TRANSLATION>" + sb.toString().trim() + "</TRANSLATION>";
+    }
+
+    @Test
+    public void aCutAnswerIsRetriedWithALargerLimitAndNeverSentIdenticallyTwice() throws Exception {
+        Context c = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Map<String, Map<String, ?>> original = snapshot(c);
+        clearAll(c);
+        Fixture f = seed(c);
+        TranslateTestSeam.setOutputDir(outDir(c));
+        final List<String> requests = Collections.synchronizedList(new ArrayList<String>());
+        final List<Integer> limits = Collections.synchronizedList(new ArrayList<Integer>());
+        TranslateTestSeam.setProvider((settings, prompt, limit, id, observer) -> {
+            observe(observer);
+            String all = prompt.system + "\n" + prompt.user;
+            requests.add(HashUtil.sha256(all) + ":" + limit);
+            if (!all.contains("\u3010\u7ae01\u3011")) return response("B\u1ea3n d\u1ecbch th\u1eed nghi\u1ec7m v\u1edbi \u0111\u1ee7 \u0111\u1ed9 d\u00e0i \u0111\u1ec3 v\u01b0\u1ee3t qua ki\u1ec3m \u0111\u1ecbnh c\u1ee7a \u1ee9ng d\u1ee5ng.");
+            limits.add(limit);
+            // Chapter 1: cut while the limit is below 8192, whole once it is raised.
+            if (limit < 8192) return raw(lineRichResponse(all, "."), "length", limit);
+            return raw(lineRichResponse(all, "."), "stop", 900);
+        });
+        Broadcasts rx = listen(c);
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            AppSettings s = baseSettings();
+            s.maxAttempts = 3; s.maxTokensPerChunk = 2000; s.initialRetryDelayMs = 100; s.maxRetryDelayMs = 200;
+            runSet(scenario, c, f, AppValidator.normalize(s));
+            waitFor(() -> status(c, f.raws.get(0).uri()).startsWith("COMPLETED") && !TranslatorService.isActive(), 180_000L, "chapter 1 completed");
+            assertTrue("the second request used a larger limit: " + limits, limits.size() >= 2 && limits.get(1) >= 8192 && limits.get(1) > limits.get(0));
+            assertEquals("no request was sent twice as it was", requests.size(), new java.util.HashSet<>(requests).size());
+            assertTrue(rx.logs.toString(), rx.logContains("b\u1ecb c\u1eaft"));
+        } finally {
+            c.unregisterReceiver(rx);
+            cleanup(c, f, original);
+        }
+    }
+
+    @Test
+    public void aChunkCutAtEveryLimitIsSplitInHalvesAndTheChapterCompletes() throws Exception {
+        Context c = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Map<String, Map<String, ?>> original = snapshot(c);
+        clearAll(c);
+        Fixture f = seed(c);
+        TranslateTestSeam.setOutputDir(outDir(c));
+        final List<String> requests = Collections.synchronizedList(new ArrayList<String>());
+        TranslateTestSeam.setProvider((settings, prompt, limit, id, observer) -> {
+            observe(observer);
+            String all = prompt.system + "\n" + prompt.user;
+            requests.add(HashUtil.sha256(all) + ":" + limit);
+            if (!all.contains("\u3010\u7ae01\u3011")) return response("B\u1ea3n d\u1ecbch th\u1eed nghi\u1ec7m v\u1edbi \u0111\u1ee7 \u0111\u1ed9 d\u00e0i \u0111\u1ec3 v\u01b0\u1ee3t qua ki\u1ec3m \u0111\u1ecbnh c\u1ee7a \u1ee9ng d\u1ee5ng.");
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("\u3010\u7ae01\u3011\u7b2c(\\d+)\u6bb5").matcher(all);
+            java.util.Set<String> seen = new java.util.HashSet<>();
+            while (m.find()) seen.add(m.group(1));
+            // More than 8 paragraphs in one request is "too long to finish": cut at any limit.
+            if (seen.size() > 8) return raw(lineRichResponse(all, "."), "length", limit);
+            return raw(lineRichResponse(all, "."), "stop", 400);
+        });
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            AppSettings s = baseSettings();
+            s.maxAttempts = 2; s.maxTokensPerChunk = 2000; s.initialRetryDelayMs = 100; s.maxRetryDelayMs = 200;
+            runSet(scenario, c, f, AppValidator.normalize(s));
+            waitFor(() -> status(c, f.raws.get(0).uri()).startsWith("COMPLETED") && !TranslatorService.isActive(), 240_000L, "chapter 1 completed after splitting");
+            assertEquals("no request was sent twice as it was", requests.size(), new java.util.HashSet<>(requests).size());
+            TranslationRepository repo = new TranslationRepository(c);
+            try {
+                TranslationRepository.JobSummary j = job(c, f.raws.get(0).uri());
+                int done = 0;
+                for (TranslationRepository.ChunkRow row : repo.getChunkRows(j.id)) if ("done".equalsIgnoreCase(row.status) || "COMPLETED".equalsIgnoreCase(row.status)) done++;
+                assertTrue("the chapter finished in more than one chunk: " + done, done >= 3);
+            } finally { repo.close(); }
+        } finally {
+            cleanup(c, f, original);
+        }
+    }
+
+    @Test
+    public void mixedQuoteStylesAreRepairedAcceptedAndRecordedAsAWarning() throws Exception {
+        Context c = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Map<String, Map<String, ?>> original = snapshot(c);
+        clearAll(c);
+        bracketRaw = true;
+        Fixture f = seed(c);
+        bracketRaw = false;
+        TranslateTestSeam.setOutputDir(outDir(c));
+        TranslateTestSeam.setProvider((settings, prompt, limit, id, observer) -> {
+            observe(observer);
+            String all = prompt.system + "\n" + prompt.user;
+            // Opens with the corner bracket like the RAW and closes with a curly quote.
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("\u3010\u7ae0(\\d)\u3011\u7b2c(\\d+)\u6bb5").matcher(all);
+            java.util.Set<String> seen = new java.util.LinkedHashSet<>();
+            while (m.find()) seen.add(m.group(1) + "-" + m.group(2));
+            StringBuilder sb = new StringBuilder();
+            for (String k : seen) sb.append("Ph\u1ea7n ").append(k).append(" \u300cc\u00e2u tho\u1ea1i n\u00e0y d\u00f9ng d\u1ea5u ngo\u1eb7c l\u1eabn\u201d\n\n");
+            return raw("<TRANSLATION>" + sb.toString().trim() + "</TRANSLATION>", "stop", 60);
+        });
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            runSet(scenario, c, f, baseSettings());
+            waitFor(() -> status(c, f.raws.get(2).uri()).startsWith("COMPLETED") && !TranslatorService.isActive(), 120_000L, "all chapters completed");
+            TranslationRepository repo = new TranslationRepository(c);
+            try {
+                boolean warned = false;
+                for (TranslationRepository.ChunkRow row : repo.getChunkRows(job(c, f.raws.get(0).uri()).id)) {
+                    assertFalse("the curly closer was replaced", row.translated != null && row.translated.indexOf('\u201d') >= 0);
+                    warned |= row.validationWarnings != null && row.validationWarnings.contains("QUOTE_STYLE_REPAIRED");
+                }
+                assertTrue("the repair is recorded as a warning", warned);
+            } finally { repo.close(); }
         } finally {
             cleanup(c, f, original);
         }

@@ -30,6 +30,20 @@ public class RuntimeStateStore {
         save(c, s);
     }
 
+    /** The run-wide numbers and the chapter-set position, saved beside the per-job snapshot so a reopened screen shows the same panel. */
+    public static void saveSession(Context c, long sessionTokens, double sessionCost, long sessionStartMs, int setTotal, int setDone, int setFailed, int setIndex) {
+        if (c == null) return;
+        c.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
+                .putLong(TranslatorService.EXTRA_SESSION_TOKENS, sessionTokens)
+                .putFloat(TranslatorService.EXTRA_SESSION_COST, (float) sessionCost)
+                .putLong(TranslatorService.EXTRA_SESSION_START_MS, sessionStartMs)
+                .putInt(TranslatorService.EXTRA_SET_TOTAL, setTotal)
+                .putInt(TranslatorService.EXTRA_SET_DONE, setDone)
+                .putInt(TranslatorService.EXTRA_SET_FAILED, setFailed)
+                .putInt(TranslatorService.EXTRA_SET_INDEX, setIndex)
+                .apply();
+    }
+
     public static void save(Context c, RuntimeStateSnapshot s) {
         if (c == null || s == null) return;
         c.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
@@ -93,6 +107,13 @@ public class RuntimeStateStore {
         i.putExtra(TranslatorService.EXTRA_LOCK_PHASE, p.getString(TranslatorService.EXTRA_LOCK_PHASE, ""));
         i.putExtra(TranslatorService.EXTRA_PREVIEW_CHUNK, p.getInt(TranslatorService.EXTRA_PREVIEW_CHUNK, 0));
         i.putExtra(TranslatorService.EXTRA_ACTIVE_JOB_ID, p.getLong(TranslatorService.EXTRA_ACTIVE_JOB_ID, -1L));
+        i.putExtra(TranslatorService.EXTRA_SESSION_TOKENS, p.getLong(TranslatorService.EXTRA_SESSION_TOKENS, 0L));
+        i.putExtra(TranslatorService.EXTRA_SESSION_COST, (double) p.getFloat(TranslatorService.EXTRA_SESSION_COST, 0f));
+        i.putExtra(TranslatorService.EXTRA_SESSION_START_MS, p.getLong(TranslatorService.EXTRA_SESSION_START_MS, 0L));
+        i.putExtra(TranslatorService.EXTRA_SET_TOTAL, p.getInt(TranslatorService.EXTRA_SET_TOTAL, 0));
+        i.putExtra(TranslatorService.EXTRA_SET_DONE, p.getInt(TranslatorService.EXTRA_SET_DONE, 0));
+        i.putExtra(TranslatorService.EXTRA_SET_FAILED, p.getInt(TranslatorService.EXTRA_SET_FAILED, 0));
+        i.putExtra(TranslatorService.EXTRA_SET_INDEX, p.getInt(TranslatorService.EXTRA_SET_INDEX, 0));
         return i;
     }
 

@@ -9,6 +9,10 @@ public final class RetryPolicy {
     public static Kind classify(Throwable error) {
         Throwable root = error;
         while (root != null && root.getCause() != null && root.getCause() != root) root = root.getCause();
+        // A rejected answer is classified from its verdict, never from the digits in its message (token counts can contain "401").
+        if (root instanceof ResponseValidator.RejectedResponseException) {
+            return ((ResponseValidator.RejectedResponseException) root).validation.truncated ? Kind.TRUNCATION : Kind.VALIDATION;
+        }
         if (root instanceof SocketTimeoutException) return Kind.TIMEOUT;
         if (root instanceof UnknownHostException) return Kind.NETWORK;
         if (root instanceof ApiHttpException) {

@@ -8,12 +8,23 @@ final class ChapterRunOutcome {
     private final int total;
     private final List<String> done = new ArrayList<>();
     private final List<String> failed = new ArrayList<>();
+    private int failedInARow;
+
+    /** The run stops after this many chapters in a row fail (retrying the next one would most likely cost money for the same failure). */
+    static final int MAX_FAILED_IN_A_ROW = 2;
 
     ChapterRunOutcome(int total) { this.total = total; }
 
-    void done(String name) { done.add(name); }
+    void done(String name) { done.add(name); failedInARow = 0; }
 
-    void failed(String name, String reason) { failed.add(reason == null || reason.trim().isEmpty() ? name : name + ": " + reason.trim()); }
+    void failed(String name, String reason) { failed.add(reason == null || reason.trim().isEmpty() ? name : name + ": " + reason.trim()); failedInARow++; }
+
+    int failedInARow() { return failedInARow; }
+
+    /** True once {@link #MAX_FAILED_IN_A_ROW} chapters failed one after the other. */
+    boolean shouldStopQueue() { return failedInARow >= MAX_FAILED_IN_A_ROW; }
+
+    int total() { return total; }
 
     int doneCount() { return done.size(); }
 
@@ -24,7 +35,10 @@ final class ChapterRunOutcome {
 
     /** Only a failure that belongs to one chapter lets the queue go on. */
     static boolean continuesQueue(Throwable error) {
-        return error instanceof ChapterLocalException;
+        if (error instanceof ChapterLocalException) return true;
+        // A rejected answer that reached here unwrapped is the same kind of failure: it belongs to the chapter, not to the run.
+        for (Throwable t = error; t != null; t = t.getCause() == t ? null : t.getCause()) if (t instanceof ResponseValidator.RejectedResponseException) return true;
+        return false;
     }
 
     /** {@code stoppedAt}: the chapter that was running when the queue stopped, counted as failed by the caller, or null. */

@@ -29,7 +29,8 @@ public class JobStore {
     public TranslationRepository.MetricsSummary metrics(long jobId) { return repo.getMetricsSummary(jobId); }
     public TranslationRepository.TokenCalibration calibration(long jobId){return repo.getTokenCalibration(jobId);}
     public List<TranslationRepository.AttemptRow> attempts(long jobId,int idx){return repo.getAttemptRows(jobId,idx);}
-    public void manualReplace(long jobId,TranslationRepository.ChunkRow row,String text) throws Exception {
+    public void manualReplace(long jobId,TranslationRepository.ChunkRow row,String typed) throws Exception {
+        String text=ResponseValidator.repairQuoteStyle(typed,row.source).text;
         ResponseValidator.Result validation=ResponseValidator.validate(text,text,row.source,"","stop",0,0,false);
         if(!validation.accepted)throw new IllegalArgumentException("Manual text failed structural validation: "+validation.summary());
         ChunkQa.Metrics qa=ChunkQa.inspect(row.source,text,"");repo.commitManualReplacement(jobId,row.index,text,String.join(",",qa.warnings));

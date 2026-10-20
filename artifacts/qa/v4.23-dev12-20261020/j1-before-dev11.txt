@@ -1,0 +1,3 @@
+J1 BEFORE (dev.11 / code 286 on emulator-5554, SAF grant = primary:Documents present, 14-chapter set, 19 RAW / 19 Glossary / 18 Pronoun synthetic)
+V423PerfInstrumentedTest, 12 ticks, tick -> next frame (ms): [66, 68, 65, 62, 117, 101, 65, 91, 99, 109, 83, 48]
+p50=83 p95=117 max=117; probe counter not present in dev.11 (-1)

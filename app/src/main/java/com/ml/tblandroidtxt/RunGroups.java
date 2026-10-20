@@ -19,6 +19,7 @@ final class RunGroups {
 
     static final class SessionInfo {
         String sessionId = "";
+        String setId = "";
         String setName = "";
         long createdAt;
         int chapterCount;
@@ -34,6 +35,7 @@ final class RunGroups {
 
     static final class Run {
         String sessionId = "";
+        String setId = "";
         String setName = "";
         long createdAt;
         long lastUpdated;
@@ -44,6 +46,8 @@ final class RunGroups {
         final UsageTotals usage = new UsageTotals();
 
         int notRun() { return Math.max(0, chapterCount - chapters.size()); }
+        /** Chapters of this run that still need work: not finished (failed, paused or never started). */
+        int unfinished() { return Math.max(0, chapterCount - done); }
         long durationMs() { return Math.max(0, lastUpdated - createdAt); }
     }
 
@@ -59,6 +63,17 @@ final class RunGroups {
         JobStatus.Kind k = JobStatus.classify(j.status);
         if (k == JobStatus.Kind.FINISHED) return false;
         return j.failedChunks > 0 || "error".equalsIgnoreCase(j.status) || k == JobStatus.Kind.NEEDS_REVIEW || k == JobStatus.Kind.CONFLICT;
+    }
+
+    /** The run (Start press) a job belongs to: the newest run that continued it, else the run that created it; null when it has none. */
+    static SessionInfo sessionOf(long jobId, String startSessionId, List<SessionInfo> sessions) {
+        List<SessionInfo> newestFirst = new ArrayList<>(sessions);
+        Collections.sort(newestFirst, new Comparator<SessionInfo>() {
+            @Override public int compare(SessionInfo a, SessionInfo b) { return Long.compare(b.createdAt, a.createdAt); }
+        });
+        for (SessionInfo s : newestFirst) if (s.resumedJobs.contains(jobId)) return s;
+        if (startSessionId != null) for (SessionInfo s : newestFirst) if (s.sessionId.equals(startSessionId)) return s;
+        return null;
     }
 
     /** {@code jobs} newest first. Result is newest first by last activity. */
@@ -80,7 +95,7 @@ final class RunGroups {
             if (run == null) {
                 SessionInfo s = byId.get(owner);
                 run = new Run();
-                run.sessionId = owner; run.setName = s.setName; run.createdAt = s.createdAt; run.chapterCount = s.chapterCount; run.lastUpdated = s.createdAt;
+                run.sessionId = owner; run.setId = s.setId; run.setName = s.setName; run.createdAt = s.createdAt; run.chapterCount = s.chapterCount; run.lastUpdated = s.createdAt;
                 runs.put(owner, run);
             }
             boolean continued = j.startSessionId != null && !j.startSessionId.isEmpty() && !owner.equals(j.startSessionId);

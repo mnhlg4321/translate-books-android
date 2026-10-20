@@ -24,6 +24,7 @@ public class AppValidator {
         s.temperature = clamp(s.temperature, 0f, 2f, 0.3f);
         s.maxOutputTokens = clamp(s.maxOutputTokens, 128, 32000, 4096);
         s.contextChars = s.contextChars <= 0 ? 0 : clamp(s.contextChars, 1, 5000, 400);
+        s.reasoningEffort = ReasoningEffort.normalize(s.reasoningEffort);
         s.optimizationPreset = clean(s.optimizationPreset, "balanced").toLowerCase(Locale.ROOT);
         if (!s.optimizationPreset.equals("quality") && !s.optimizationPreset.equals("balanced")
                 && !s.optimizationPreset.equals("economy") && !s.optimizationPreset.equals("full")) {

@@ -161,7 +161,7 @@ public class MainActivity extends Activity {
         updateModelDiagnostics();
     });
 
-    EditText providerField, baseUrlField, apiKeyField, modelField, sourceField, targetField, outputPatternField, chunkModeField, optimizationPresetField;
+    EditText providerField, baseUrlField, apiKeyField, modelField, sourceField, targetField, outputPatternField, chunkModeField, optimizationPresetField, reasoningEffortField;
     EditText maxTokensField, maxCharsField, softRatioField, timeoutField, attemptsField, tempField, maxOutputField, contextField, costLimitField, glossaryLimitField, pronounLimitField, initialRetryDelayField, maxRetryDelayField, costWarningField, maxRetryCostField, maxPaidRetriesField;
     EditText manualGlossarySource, manualGlossaryTarget, manualGlossaryCategory, glossaryNameField, glossarySourceField, glossaryTargetField;
     CheckBox refineBox, bilingualBox, partialBox, costLimitBox, overlapBox, retryEmptyBox, retryTruncationBox, retryValidationBox, stopUnknownPricingBox;
@@ -235,6 +235,11 @@ public class MainActivity extends Activity {
             else if ("paused".equals(status)) toast(clipForToast(log, "Đã tạm dừng"));
             else if ("info".equals(status)) toast(clipForToast(log, "Không có gì để làm"));
             else if ("cancelled".equals(status)) toast("Đã hủy");
+            if ("done".equals(status) && lastRetriedJobId > 0) {
+                final long retried = lastRetriedJobId;
+                lastRetriedJobId = -1L;
+                if (appRoot != null) appRoot.postDelayed(() -> offerContinueAfterRetry(retried), 900);
+            } else if ("error".equals(status) || "cancelled".equals(status)) lastRetriedJobId = -1L;
             if ("done".equals(status) || "error".equals(status) || "paused".equals(status) || "cancelled".equals(status) || "info".equals(status)) {
                 if (appRoot != null) appRoot.postDelayed(MainActivity.this::refreshPendingJobCard, 700);
                 if (!"info".equals(status)) refreshJobCacheAsync(false);
@@ -305,6 +310,12 @@ public class MainActivity extends Activity {
             row.addView(view, new LinearLayout.LayoutParams(0, -2, 1));
         }
         pendingJobCard.addView(row);
+        final String cardSetId = setIdOfJob(p.id);
+        if (!cardSetId.isEmpty() && !unknownDelivery) {
+            Button comboGo = secondaryButton("Tiếp tục tổ hợp", v -> continueChapterSet(cardSetId));
+            comboGo.setContentDescription("pending-job-continue-set");
+            pendingJobCard.addView(comboGo, marginLP(-1, -2, 0, 8, 0, 0));
+        }
         if (unknownDelivery) pendingJobCard.addView(text("Tiếp tục đang tắt: có request không rõ đã gửi hay chưa. Xem ở tab Jobs trước khi chạy tiếp, vì gửi lại có thể bị tính tiền hai lần.", 12, AMBER, false), marginLP(-1, -2, 0, 6, 0, 0));
         Button dismiss = secondaryButton("Bỏ job này", v -> confirmDismissJob(p));
         dismiss.setContentDescription("pending-job-dismiss");
@@ -317,6 +328,69 @@ public class MainActivity extends Activity {
             more.setOnClickListener(v -> switchTab("Jobs"));
             pendingJobCard.addView(more);
         }
+    }
+
+    /** True once the chosen set's plan is ready: Start is then pressed once, through its normal preflight dialog. */
+    private volatile boolean autoStartWhenReady;
+    private volatile long autoStartUntilMs;
+
+    /**
+     * "Tiếp tục tổ hợp": no new runner. Opens the set of a finished or stopped run on the Translate screen with only the unfinished chapters
+     * ticked and goes the normal Start way (the plan, the confirmation dialog, "Tiếp tục job cũ" for chapters with an unfinished job).
+     */
+    void continueChapterSet(String setId) {
+        if (!TranslationUiStatePolicy.mayStartNewJob(TranslatorService.isActive(), translationActive)) { toast("Đang có job dịch chạy; chờ chạy xong rồi tiếp tục tổ hợp"); return; }
+        switchTab("Translate");
+        if (!sourceUi.continueSet(setId)) { toast("Không còn tổ hợp này trong Library; hãy chọn lại tổ hợp ở màn Dịch"); return; }
+        autoStartWhenReady = true;
+        autoStartUntilMs = System.currentTimeMillis() + 120_000L;
+        appendLog("CONTINUE_SET set=" + setId);
+        toast("Đã chọn các chương chưa xong; đang chuẩn bị kế hoạch");
+    }
+
+    private void maybeAutoStartContinuedSet() {
+        if (!autoStartWhenReady) return;
+        if (System.currentTimeMillis() > autoStartUntilMs) { autoStartWhenReady = false; return; }
+        PreparedBatch plan = currentPreparedBatch();
+        if (plan == null || !plan.ready() || plan.bindings == null || plan.bindings.isEmpty()) return;
+        autoStartWhenReady = false;
+        runtimeTimerHandler.post(this::startTranslation);
+    }
+
+    /** The saved set of the run a job belongs to, or "" (jobs started from files have none). */
+    String setIdOfJob(long jobId) {
+        String start = "";
+        for (TranslationRepository.JobSummary j : cachedJobSummaries) if (j.id == jobId) { start = j.startSessionId; break; }
+        RunGroups.SessionInfo s = RunGroups.sessionOf(jobId, start, cachedSessions);
+        return s == null || s.setId == null ? "" : s.setId;
+    }
+
+    /** After "Retry chunk lỗi" finished a chapter job of a set: asks whether to go on with the chapters that are still unfinished. */
+    private void offerContinueAfterRetry(final long jobId) {
+        cardExecutor.submit(() -> {
+            try {
+                TranslationRepository repo = new TranslationRepository(this);
+                java.util.List<TranslationRepository.JobSummary> jobs;
+                try { jobs = repo.getJobSummaries(150); } finally { repo.close(); }
+                java.util.List<RunGroups.SessionInfo> sessions = ChapterSession.readInfos(new java.io.File(getFilesDir(), ChapterSession.DIR));
+                String start = "";
+                for (TranslationRepository.JobSummary j : jobs) if (j.id == jobId) { start = j.startSessionId; break; }
+                RunGroups.SessionInfo s = RunGroups.sessionOf(jobId, start, sessions);
+                if (s == null || s.setId == null || s.setId.isEmpty()) return;
+                RunGroups.Run found = null;
+                for (RunGroups.Item item : RunGroups.build(jobs, sessions)) if (item.run != null && item.run.sessionId.equals(s.sessionId)) found = item.run;
+                if (found == null || found.unfinished() <= 0) return;
+                final int left = found.unfinished();
+                final String setId = s.setId;
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) return;
+                    new AlertDialog.Builder(this).setTitle("Tiếp tục tổ hợp?")
+                            .setMessage("Còn " + left + " chương chưa chạy. Chạy tiếp?")
+                            .setPositiveButton("Tiếp tục tổ hợp", (d, w) -> continueChapterSet(setId))
+                            .setNegativeButton("Để sau", null).show();
+                });
+            } catch (Exception ignored) { }
+        });
     }
 
     /** "Bỏ job này": hides the job from the card by marking it dismissed; chunks, tokens and cost stay in Jobs. */
@@ -2011,7 +2085,7 @@ public class MainActivity extends Activity {
                 .append("\nTokens: ").append(e==null?"not calculated":CostEstimator.tokenRange(e.totalTokensLow,e.totalTokensHigh))
                 .append("\nEstimated normal cost: ").append(e==null||!e.pricingAvailable?"Pricing unavailable":CostEstimator.money(e.costLow)+"–"+CostEstimator.money(e.costHigh))
                 .append("\nWorst case with retries: ").append(e==null||!e.pricingAvailable?"Pricing unavailable":CostEstimator.money(e.noCacheCostHigh*Math.max(1,s.maxAttempts)))
-                .append("\nHard budget: ").append(s.stopOnCostLimit?CostEstimator.money(s.costLimitUsd):"disabled")
+                .append("\nHard budget (cap for the whole run, all chapters together): ").append(s.stopOnCostLimit?CostEstimator.money(s.costLimitUsd):"disabled")
                 .append("\nOutput: writable and permission retained");
         final boolean hasWarnings=warning;
         new AlertDialog.Builder(this).setTitle("Translation pre-flight").setMessage(pre.toString()).setPositiveButton(hasWarnings?"Proceed with warnings":"Start",(d,w)->startTranslationNow()).setNegativeButton("Cancel",null).show();
@@ -2190,6 +2264,8 @@ public class MainActivity extends Activity {
         toast("Đang resume job #" + jobId); appendLog("Resume selected job #" + jobId);
     }
 
+    private volatile long lastRetriedJobId = -1L;
+
     void retryJobFailedChunks(long jobId) {
         if (!TranslationUiStatePolicy.mayStartNewJob(TranslatorService.isActive(), translationActive)) {
             toast("Đang có job dịch chạy; không retry job khác để tránh chạy trùng");
@@ -2199,6 +2275,7 @@ public class MainActivity extends Activity {
         Intent i = new Intent(this, TranslatorService.class);
         i.setAction(TranslatorService.ACTION_RETRY_JOB_FAILED);
         i.putExtra("jobId", jobId);
+        lastRetriedJobId = jobId;
         startForegroundService(i);
         translationActive = true;
         updateActionButtons();
@@ -2341,6 +2418,7 @@ public class MainActivity extends Activity {
         if(initialRetryDelayField!=null)s.initialRetryDelayMs=intVal(initialRetryDelayField,s.initialRetryDelayMs);if(maxRetryDelayField!=null)s.maxRetryDelayMs=intVal(maxRetryDelayField,s.maxRetryDelayMs);
         if (tempField != null) s.temperature = floatVal(tempField, s.temperature);
         if (maxOutputField != null) s.maxOutputTokens = intVal(maxOutputField, s.maxOutputTokens);
+        if (reasoningEffortField != null) s.reasoningEffort = ReasoningEffort.normalize(reasoningEffortField.getText().toString());
         if (costLimitField != null) s.costLimitUsd = doubleVal(costLimitField, s.costLimitUsd);
         if(costWarningField!=null)s.costWarningUsd=doubleVal(costWarningField,s.costWarningUsd);if(maxRetryCostField!=null)s.maxRetryCostUsd=doubleVal(maxRetryCostField,s.maxRetryCostUsd);if(maxPaidRetriesField!=null)s.maxPaidRetries=intVal(maxPaidRetriesField,s.maxPaidRetries);
         if (glossaryLimitField != null) s.glossaryInjectLimit = intVal(glossaryLimitField, s.glossaryInjectLimit);
@@ -2404,6 +2482,7 @@ public class MainActivity extends Activity {
             if(initialRetryDelayField!=null)initialRetryDelayField.setText(String.valueOf(s.initialRetryDelayMs));if(maxRetryDelayField!=null)maxRetryDelayField.setText(String.valueOf(s.maxRetryDelayMs));
             if (tempField != null) tempField.setText(String.valueOf(s.temperature));
             if (maxOutputField != null) maxOutputField.setText(String.valueOf(s.maxOutputTokens));
+            if (reasoningEffortField != null) reasoningEffortField.setText(ReasoningEffort.normalize(s.reasoningEffort));
             if (costLimitField != null) costLimitField.setText(s.costLimitUsd <= 0 ? "0" : String.valueOf(s.costLimitUsd));
             if(costWarningField!=null)costWarningField.setText(String.valueOf(s.costWarningUsd));if(maxRetryCostField!=null)maxRetryCostField.setText(String.valueOf(s.maxRetryCostUsd));if(maxPaidRetriesField!=null)maxPaidRetriesField.setText(String.valueOf(s.maxPaidRetries));
             if (glossaryLimitField != null) glossaryLimitField.setText(String.valueOf(s.glossaryInjectLimit));
@@ -3098,7 +3177,7 @@ public class MainActivity extends Activity {
         return current != null ? current : preparedBatch;
     }
 
-    void renderPreparedBatch(PreparedBatch batch) { android.os.Trace.beginSection("tbl.renderPreparedBatch"); try { renderPreparedBatchImpl(batch); } finally { android.os.Trace.endSection(); } }
+    void renderPreparedBatch(PreparedBatch batch) { android.os.Trace.beginSection("tbl.renderPreparedBatch"); try { renderPreparedBatchImpl(batch); } finally { android.os.Trace.endSection(); } maybeAutoStartContinuedSet(); }
     void renderPreparedBatchImpl(PreparedBatch batch) {
         if(estimateText==null||estimatePanel==null||batch==null)return;
         // A cancelled preparation can still post a callback after a newer preparation.

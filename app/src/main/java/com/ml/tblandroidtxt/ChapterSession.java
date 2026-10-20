@@ -75,6 +75,7 @@ final class ChapterSession {
                 RunGroups.SessionInfo info = new RunGroups.SessionInfo();
                 info.sessionId = root.optString("sessionId");
                 if (info.sessionId.isEmpty()) continue;
+                info.setId = root.optString("setId");
                 info.setName = root.optString("setName");
                 info.createdAt = root.optLong("createdAt");
                 JSONArray rows = root.optJSONArray("chapters");

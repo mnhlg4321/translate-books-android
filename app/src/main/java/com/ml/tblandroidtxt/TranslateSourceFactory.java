@@ -231,6 +231,17 @@ final class TranslateSourceFactory {
         if (current != null) updateEstimates(current);
     }
 
+    /** "Tiếp tục tổ hợp": opens the saved set and ticks only the chapters that have no finished translation; false when the set no longer exists. */
+    boolean continueSet(String id) {
+        if (id == null || id.isEmpty()) return false;
+        boolean exists = false;
+        for (ChapterSetStore.SetInfo s : ChapterSetStore.listSets(a)) if (id.equals(s.id)) exists = true;
+        if (!exists) return false;
+        selectSet(id);
+        tickWhere(2);
+        return true;
+    }
+
     /** 0 = all usable chapters, 1 = none, 2 = only chapters without a finished translation. */
     private void tickWhere(int mode) {
         ticked.clear();

@@ -55,6 +55,15 @@ public class TranslatorService extends Service {
     public static final String EXTRA_LOCK_CHUNK = "lockChunk";
     public static final String EXTRA_LOCK_PHASE = "lockPhase";
     public static final String EXTRA_PREVIEW_CHUNK = "previewChunk";
+    /** Totals of the whole run (every chapter, retries included), not of the job being worked on. */
+    public static final String EXTRA_SESSION_TOKENS = "sessionTokens";
+    public static final String EXTRA_SESSION_COST = "sessionCost";
+    public static final String EXTRA_SESSION_START_MS = "sessionStartMs";
+    /** Chapter-set runs only: chapters in the run, finished, failed, and the 1-based chapter being worked on (all 0 otherwise). */
+    public static final String EXTRA_SET_TOTAL = "setTotal";
+    public static final String EXTRA_SET_DONE = "setDone";
+    public static final String EXTRA_SET_FAILED = "setFailed";
+    public static final String EXTRA_SET_INDEX = "setIndex";
     public static final String EXTRA_ACTIVE_JOB_ID = "activeJobId";
     public static final String EXTRA_STATE = "jobState";
 
@@ -69,6 +78,12 @@ public class TranslatorService extends Service {
     private TranslationEngine engine;
     /** Chapter-set runs only: what happened to each chapter so far; null otherwise. */
     private volatile ChapterRunOutcome chapterOutcome;
+    private final RunCostMeter runCost = new RunCostMeter();
+    private volatile long sessionStartMs;
+    private volatile int setIndex;
+
+    /** A new run starts counting tokens, cost and time from zero. */
+    private void resetSession() { runCost.reset(); sessionStartMs = System.currentTimeMillis(); setIndex = 0; }
 
     private long jobStartMs = 0;
     private int metricTotal = 0;
@@ -156,7 +171,7 @@ public class TranslatorService extends Service {
         }
         if (ACTION_START.equals(action)) {
             if (!acquireRun("Start")) return START_NOT_STICKY;
-            cancelled = false; paused = false; activeJobId = -1L;
+            cancelled = false; paused = false; activeJobId = -1L; resetSession();
             resetMetrics("", 0);
             metricEstimatedTokens = Math.max(0, intent.getIntExtra(EXTRA_ESTIMATED_TOTAL_TOKENS, 0));
             metricEstimatedCost = Math.max(0, intent.getDoubleExtra(EXTRA_ESTIMATED_TOTAL_COST, 0));
@@ -168,7 +183,7 @@ public class TranslatorService extends Service {
         }
         if (ACTION_RESUME_LAST.equals(action)) {
             if (!acquireRun("Resume checkpoint")) return START_NOT_STICKY;
-            cancelled = false; paused = false; activeJobId = -1L;
+            cancelled = false; paused = false; activeJobId = -1L; resetSession();
             resetMetrics("",0);setState(TranslationJobState.State.VALIDATING,"Validating resume");
             if(!promote("Resuming checkpoint",0,0)){releaseRun();return START_NOT_STICKY;}
             executor.submit(() -> { try { if(ensureRuntime())resumeLastJob(); } finally { releaseRun(); } });
@@ -177,7 +192,7 @@ public class TranslatorService extends Service {
         if (ACTION_RESUME_JOB.equals(action)) {
             final long jobId = intent.getLongExtra("jobId", -1L);
             if (!acquireRun("Resume selected job")) return START_NOT_STICKY;
-            cancelled = false; paused = false; activeJobId = -1L;
+            cancelled = false; paused = false; activeJobId = -1L; resetSession();
             resetMetrics("",0);setState(TranslationJobState.State.VALIDATING,"Validating resume");
             if(!promote("Resuming job #"+jobId,0,0)){releaseRun();return START_NOT_STICKY;}
             executor.submit(() -> { try { if(ensureRuntime())resumeJobById(jobId); } finally { releaseRun(); } });
@@ -185,7 +200,7 @@ public class TranslatorService extends Service {
         }
         if (ACTION_RETRY_FAILED.equals(action)) {
             if (!acquireRun("Retry failed chunks")) return START_NOT_STICKY;
-            cancelled = false; paused = false; activeJobId = -1L;
+            cancelled = false; paused = false; activeJobId = -1L; resetSession();
             resetMetrics("",0);setState(TranslationJobState.State.VALIDATING,"Validating retry");
             if(!promote("Retrying failed chunks",0,0)){releaseRun();return START_NOT_STICKY;}
             executor.submit(() -> { try { if(ensureRuntime())retryFailedChunksOnly(); } finally { releaseRun(); } });
@@ -194,7 +209,7 @@ public class TranslatorService extends Service {
         if (ACTION_RETRY_JOB_FAILED.equals(action)) {
             final long jobId = intent.getLongExtra("jobId", -1L);
             if (!acquireRun("Retry selected job")) return START_NOT_STICKY;
-            cancelled = false; paused = false; activeJobId = -1L;
+            cancelled = false; paused = false; activeJobId = -1L; resetSession();
             resetMetrics("",0);setState(TranslationJobState.State.VALIDATING,"Validating retry");
             if(!promote("Retrying job #"+jobId,0,0)){releaseRun();return START_NOT_STICKY;}
             executor.submit(() -> { try { if(ensureRuntime())retryFailedChunksForJob(jobId); } finally { releaseRun(); } });
@@ -212,7 +227,7 @@ public class TranslatorService extends Service {
         return START_NOT_STICKY;
     }
 
-    private synchronized boolean ensureRuntime(){if(repo!=null&&engine!=null)return true;try{ModelCatalog.initialize(this);repo=new TranslationRepository(this);repo.recoverInterruptedState();engine=new TranslationEngine(this,repo,TranslateTestSeam.provider());return true;}catch(Exception e){setState(TranslationJobState.State.FAILED,"Initialization failure");logFailure("runtime initialization",e);broadcast("error",-1,"Translation could not initialize: "+AppValidator.readableError(e));stopForeground(STOP_FOREGROUND_REMOVE);stopSelf();return false;}}
+    private synchronized boolean ensureRuntime(){if(repo!=null&&engine!=null)return true;try{ModelCatalog.initialize(this);repo=new TranslationRepository(this);repo.recoverInterruptedState();engine=new TranslationEngine(this,repo,TranslateTestSeam.provider());engine.setSessionCostSupplier(runCost::cost);return true;}catch(Exception e){setState(TranslationJobState.State.FAILED,"Initialization failure");logFailure("runtime initialization",e);broadcast("error",-1,"Translation could not initialize: "+AppValidator.readableError(e));stopForeground(STOP_FOREGROUND_REMOVE);stopSelf();return false;}}
 
     private boolean promote(String text,int done,int total){try{startForeground(NOTIFY_ID,buildNotification(text,done,total));return true;}catch(RuntimeException e){setState(TranslationJobState.State.FAILED,"Foreground service error");logFailure("foreground service promotion",e);broadcast("error",-1,"Android could not start the translation service: "+AppValidator.readableError(e));stopSelf();return false;}}
 
@@ -314,7 +329,7 @@ public class TranslatorService extends Service {
             setState(TranslationJobState.State.FAILED, activeJobId > 0 ? "Translation failed" : "Initialization failure");
             if (activeJobId > 0) repo.touchJob(activeJobId, "error");
             logFailure(metricPhase, e);
-            broadcast("error", -1, "Lỗi khởi tạo: " + AppValidator.readableError(e) + remainingSuffix() + chapterSummarySuffix());
+            broadcast("error", -1, (activeJobId > 0 ? "Lỗi: " : "Lỗi khởi tạo: ") + AppValidator.readableError(e) + remainingSuffix() + chapterSummarySuffix());
             releaseRun();
             stopForeground(STOP_FOREGROUND_REMOVE);
             NotificationManager nm = getSystemService(NotificationManager.class);
@@ -370,6 +385,7 @@ public class TranslatorService extends Service {
                 continue;
             }
             ChapterBinding binding=session.chapters.get(i);
+            setIndex=i+1;
             String label="Chương "+(binding.chapterNo>=0?binding.chapterNo:i+1)+" ("+(i+1)+"/"+batch.inputs.size()+") · "+input.displayName;
             try{
                 if(resumeId!=null)continueExistingJob(resumeId,fileNo,fileTotal,label);
@@ -379,10 +395,13 @@ public class TranslatorService extends Service {
                 if(cancelled)throw e;
                 outcome.failed(input.displayName,AppValidator.readableError(e));
                 if(ChapterRunOutcome.continuesQueue(e)){
-                    broadcast("running",percent(i+1,batch.inputs.size()),label+" lỗi riêng của chương, chạy tiếp chương sau: "+AppValidator.readableError(e));
+                    if(activeJobId>0)repo.touchJob(activeJobId,"error");
+                    if(outcome.shouldStopQueue())throw new IllegalStateException("Dừng tổ hợp: "+outcome.failedInARow()+" chương liên tiếp lỗi ("+AppValidator.readableError(e)+")",e);
+                    String here="Chương "+(binding.chapterNo>=0?binding.chapterNo:i+1);
+                    String next=i+1<session.chapters.size()?"chuyển chương "+(session.chapters.get(i+1).chapterNo>=0?session.chapters.get(i+1).chapterNo:i+2):"hết tổ hợp";
+                    broadcast("running",percent(i+1,batch.inputs.size()),here+" lỗi, "+next+": "+AppValidator.readableError(e));
                     continue;
                 }
-                if(e instanceof CostLimitReachedException)throw e;
                 throw e;
             }
         }
@@ -423,6 +442,7 @@ public class TranslatorService extends Service {
         ObservabilityLog.event("resume_decision","job",job.id,"action","START_CONTINUE","branch",completed>=rows.size()?"already_translated":"continue","done",completed,"error",failed,"pending",pending);
         if(completed>=rows.size()){updatePartialOutput(job.id,Uri.parse(job.outputUri),s);repo.finishJob(job.id);return;}
         repo.touchJob(job.id,"running");
+        try{runCost.preloadContinuedJob(job.id,repo.getMetricsSummary(job.id).totalCost);}catch(Exception ignored){}
         resetMetrics(label,rows.size());metricCompleted=completed;metricFailed=failed;metricPhase="Translating";
         broadcast("running",percent(fileNo-1,fileTotal),"Tiếp tục job #"+job.id+": "+label+" (xong "+completed+", lỗi "+failed+", chưa dịch "+pending+")");
         translateJob(job.id,Uri.parse(job.outputUri),s,chunks,fileNo,fileTotal,label);
@@ -776,17 +796,24 @@ public class TranslatorService extends Service {
                 broadcast("running", global, "Chunk " + (i + 1) + " hoàn tất");
             } catch (Exception e) {
                 if (cancelled) return;
-                if(RetryPolicy.classify(e)==RetryPolicy.Kind.CONTEXT_LENGTH){
+                boolean cut=TranslationEngine.isTruncation(e);
+                if(cut||RetryPolicy.classify(e)==RetryPolicy.Kind.CONTEXT_LENGTH){
+                    // A cut answer would be cut again if sent as it is: split the chunk instead (an answer too long for the context is split the same way).
                     List<Chunk> children=Chunker.splitForContextOverflow(chunk,s);
-                    if(children.size()<2){repo.markChunkPermanentError(jobId,i,"Context length exceeded and source cannot be split further");throw new ChapterLocalException("Context length exceeded and source cannot be split further",e);}
+                    if(children.size()<2){
+                        if(cut){repo.markChunkError(jobId,i,AppValidator.readableError(e));metricFailed++;throw new ChapterLocalException("Bản dịch bị cắt và chunk "+(i+1)+" không chia nhỏ được nữa",e);}
+                        repo.markChunkPermanentError(jobId,i,"Context length exceeded and source cannot be split further");throw new ChapterLocalException("Context length exceeded and source cannot be split further",e);
+                    }
                     repo.supersedeAndInsertSubchunks(jobId,chunk,children);
-                    broadcast("running",global,"Context limit: chunk "+(i+1)+" split into "+children.size()+" ordered subchunks; instructions and locks preserved");
+                    broadcast("running",global,(cut?"Bản dịch bị cắt: chunk ":"Context limit: chunk ")+(i+1)+" split into "+children.size()+" ordered subchunks; instructions and locks preserved");
                     List<TranslationRepository.ChunkRow> replacementRows=repo.getChunkRows(jobId);List<Chunk> replacementChunks=new ArrayList<>();for(TranslationRepository.ChunkRow row:replacementRows)replacementChunks.add(chunkFromRow(row));Chunker.assignParagraphRanges(replacementChunks);
                     translateJob(jobId,outputUri,s,replacementChunks,fileNo,fileTotal,fileName);return;
                 }
                 repo.markChunkError(jobId, i, AppValidator.readableError(e));
                 metricFailed++;
                 if (s.savePartialOutput) updatePartialOutput(jobId, outputUri, s);
+                // In a chapter set a rejected answer belongs to this chapter: the queue goes on, so no "error" is broadcast.
+                if (chapterOutcome != null && isRejection(e)) throw new ChapterLocalException(AppValidator.readableError(e), e);
                 broadcast("error", global, "Chunk " + (i + 1) + " lỗi: " + AppValidator.readableError(e));
                 throw e;
             }
@@ -800,6 +827,12 @@ public class TranslatorService extends Service {
         metricPhase = "Completed";
         broadcast("running", percent(fileNo, fileTotal), "Translation completed: " + fileName);
         updateNotification("Hoàn tất " + fileName, total, total);
+    }
+
+    /** True when the failure is a validation verdict on a received answer (not a network, authentication, quota or cost problem). */
+    private static boolean isRejection(Throwable e) {
+        for (Throwable t = e; t != null; t = t.getCause() == t ? null : t.getCause()) if (t instanceof ResponseValidator.RejectedResponseException) return true;
+        return false;
     }
 
     private String translateWithRetry(Chunk chunk, String previous, AppSettings s) throws Exception {
@@ -841,6 +874,7 @@ public class TranslatorService extends Service {
                 ModelCatalog.findModelInfo(s.provider, s.model), Math.max(0, r.promptTokens),
                 Math.max(0, r.cachedPromptTokens), Math.max(0, r.completionTokens));
         if (!Double.isNaN(actual)) metricCost += actual;
+        runCost.addUsage(Math.max(0, r.totalTokens), actual);
     }
 
     private void updatePartialOutput(long jobId, Uri outputUri, AppSettings s) throws Exception {
@@ -905,9 +939,9 @@ public class TranslatorService extends Service {
 
 
     private void enforceCostLimit(AppSettings s) {
-        if (s != null && s.stopOnCostLimit && s.costLimitUsd > 0 && metricCost >= s.costLimitUsd) {
+        if (s != null && s.stopOnCostLimit && s.costLimitUsd > 0 && runCost.limitReached(true, s.costLimitUsd)) {
             metricPhase = "Cost limit reached";
-            broadcast("paused", -1, "Đã đạt cost limit " + CostEstimator.money(s.costLimitUsd) + "; dừng trước chunk tiếp theo");
+            broadcast("paused", -1, "Đã đạt cost limit " + CostEstimator.money(s.costLimitUsd) + " cho cả lượt (" + CostEstimator.money(runCost.cost()) + " đã chi); dừng trước chunk tiếp theo");
             if (activeJobId > 0) repo.touchJob(activeJobId, "paused");
             throw new CostLimitReachedException("Cost limit reached: " + CostEstimator.money(s.costLimitUsd));
         }
@@ -970,7 +1004,9 @@ public class TranslatorService extends Service {
 
     private void commitAccepted(long jobId, Chunk chunk, String translated, String previous) {
         ChunkQa.Metrics qa=ChunkQa.inspect(chunk.mainContent,translated,previous);
-        repo.commitValidatedChunk(jobId,chunk.index,translated,String.join(",",qa.warnings),"PROVIDER");
+        java.util.ArrayList<String> warnings=new java.util.ArrayList<>(qa.warnings);
+        if(engine.takeQuoteRepaired())warnings.add("QUOTE_STYLE_REPAIRED");
+        repo.commitValidatedChunk(jobId,chunk.index,translated,String.join(",",warnings),"PROVIDER");
     }
 
     private static Chunk chunkFromRow(TranslationRepository.ChunkRow r) {
@@ -1008,6 +1044,9 @@ public class TranslatorService extends Service {
                 metricUsageResponses > 0 && metricAllUsageReported, elapsed, remaining, metricPreview,
                 metricCurrentChunk, metricGlossaryLocks, metricPronounLocks, metricLockChunk, metricLockPhase,
                 metricPreviewChunk, activeJobId);
+        ChapterRunOutcome setOutcome = chapterOutcome;
+        int setTotal = setOutcome == null ? 0 : setOutcome.total(), setDone = setOutcome == null ? 0 : setOutcome.doneCount(), setFailed = setOutcome == null ? 0 : setOutcome.failedCount();
+        RuntimeStateStore.saveSession(this, runCost.tokens(), runCost.cost(), sessionStartMs, setTotal, setDone, setFailed, setIndex);
         if (log != null && !log.trim().isEmpty()) LogStore.append(this, log);
 
         Intent i = new Intent(ACTION_PROGRESS);
@@ -1037,6 +1076,13 @@ public class TranslatorService extends Service {
         i.putExtra(EXTRA_PREVIEW_CHUNK, metricPreviewChunk);
         i.putExtra(EXTRA_ACTIVE_JOB_ID, activeJobId);
         i.putExtra(EXTRA_STATE, jobState.name());
+        i.putExtra(EXTRA_SESSION_TOKENS, runCost.tokens());
+        i.putExtra(EXTRA_SESSION_COST, runCost.cost());
+        i.putExtra(EXTRA_SESSION_START_MS, sessionStartMs);
+        i.putExtra(EXTRA_SET_TOTAL, setTotal);
+        i.putExtra(EXTRA_SET_DONE, setDone);
+        i.putExtra(EXTRA_SET_FAILED, setFailed);
+        i.putExtra(EXTRA_SET_INDEX, setIndex);
         sendBroadcast(i);
     }
 

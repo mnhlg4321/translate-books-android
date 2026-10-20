@@ -27,6 +27,8 @@ public class AppSettings {
     public int maxOutputTokens = 4096;
     public int contextChars = 400;
     public boolean contextOverlapEnabled = false;
+    /** auto | off | low | medium | high: reasoning effort sent with translation requests (see ReasoningEffort). */
+    public String reasoningEffort = "auto";
     public String optimizationPreset = "balanced"; // quality | balanced | economy | full baseline
     public boolean refineAfter = false;
     public boolean bilingualOutput = false;
@@ -113,6 +115,7 @@ public class AppSettings {
         s.temperature = temperature; s.maxOutputTokens = maxOutputTokens; s.contextChars = contextChars;
         s.contextOverlapEnabled=contextOverlapEnabled;
         s.optimizationPreset = optimizationPreset;
+        s.reasoningEffort = reasoningEffort;
         s.refineAfter = refineAfter; s.bilingualOutput = bilingualOutput; s.savePartialOutput = savePartialOutput;
         s.stopOnCostLimit = stopOnCostLimit; s.costLimitUsd = costLimitUsd;
         s.costWarningUsd=costWarningUsd;s.maxRetryCostUsd=maxRetryCostUsd;s.maxPaidRetries=maxPaidRetries;s.stopWhenPricingUnknown=stopWhenPricingUnknown;
