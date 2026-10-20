@@ -46,7 +46,7 @@ final class FilePickerSheet {
         this.model = model;
         this.confirmLabel = confirmLabel;
         this.callback = callback;
-        this.dialog = new Dialog(activity, android.R.style.Theme_DeviceDefault_Dialog_NoActionBar);
+        this.dialog = new Dialog(activity, activity.appearance != null && activity.appearance.light ? android.R.style.Theme_DeviceDefault_Light_Dialog_NoActionBar : android.R.style.Theme_DeviceDefault_Dialog_NoActionBar);
     }
 
     /** Opens the sheet; {@code callback} runs only when the owner confirms. */

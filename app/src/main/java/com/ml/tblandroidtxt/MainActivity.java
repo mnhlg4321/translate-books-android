@@ -91,10 +91,14 @@ public class MainActivity extends Activity {
     static final String LIBRARY_WRITE_REFUSED = "Không lưu được: dữ liệu Glossary/Pronoun đang bị khóa ghi hoặc lưu thất bại. Xem thẻ đỏ trong Library.";
 
     int BG, PANEL, CARD, FIELD, BORDER, TEXT, MUTED, BLUE, CYAN;
-    final int GREEN = Color.rgb(43, 207, 126); // semantic success/running
-    final int RED = Color.rgb(238, 70, 70);    // semantic error/destructive
-    final int AMBER = Color.rgb(245, 180, 67); // semantic warning/paused
+    // Status colours and the text on the accent are tokens of the palette (the light palettes use darker, readable ones).
+    int GREEN = Color.rgb(43, 207, 126); // semantic success/running
+    int RED = Color.rgb(238, 70, 70);    // semantic error/destructive
+    int AMBER = Color.rgb(245, 180, 67); // semantic warning/paused
+    int ONACCENT = Color.WHITE;          // text on a filled accent (primary button)
     UiAppearance.Palette appearance;
+    AppearanceSettings appearanceSettings = AppearanceSettings.defaults();
+    float fontScale = 1f, densityScale = 1f, cornerFactor = 1f;
 
     Uri inputUri;
     final ArrayList<Uri> inputUris = new ArrayList<>();
@@ -523,6 +527,8 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onCreate(Bundle b) {
+        loadAppearance();
+        setTheme(appearance.light ? R.style.AppThemeLight : R.style.AppTheme);
         super.onCreate(b);
         if (BuildConfig.DEBUG) {
             android.os.StrictMode.setThreadPolicy(new android.os.StrictMode.ThreadPolicy.Builder().detectDiskReads().detectDiskWrites().detectNetwork().penaltyLog().build());
@@ -532,7 +538,6 @@ public class MainActivity extends Activity {
         new Thread(() -> { try { InputConflictRepair.runOnce(repairContext); } catch (Exception ignored) { } }, "input-conflict-repair").start();
         ModelCatalog.addListener(catalogListener);
         ModelCatalog.initialize(this);
-        applyAppearance(UiAppearance.load(this));
         AppSettings saved = SettingsStore.load(this);
         cachedProviderMeta = providerMeta(saved);
         PronounStore.migrateLegacy(this,saved);
@@ -550,6 +555,7 @@ public class MainActivity extends Activity {
             if (raw != null && !raw.trim().isEmpty()) inputUris.add(Uri.parse(raw));
         }
         inputUri = inputUris.isEmpty() ? null : inputUris.get(0);
+        if (b != null) bulkUi.restoreState(b);
         if (b != null) { currentTab = b.getString("currentTab", currentTab); settingsCategory=b.getString("settingsCategory",settingsCategory); settingsSectionExpanded=b.getBoolean("settingsSectionExpanded",true); }
         translationActive = TranslatorService.isActive();
         buildUi();
@@ -562,6 +568,8 @@ public class MainActivity extends Activity {
     @Override protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString("currentTab", currentTab);
+        bulkUi.saveState(outState);
+        outState.putBoolean("settingsScrollKept", true);
         outState.putString("settingsCategory",settingsCategory);
         outState.putBoolean("settingsSectionExpanded",settingsSectionExpanded);
         UiSessionStore.saveInputUris(this, inputUris);
@@ -643,11 +651,32 @@ public class MainActivity extends Activity {
         applySystemInsetPadding();
     }
 
-    void applyAppearance(UiAppearance.Palette p){appearance=p;BG=p.bg;PANEL=p.panel;CARD=p.card;FIELD=p.field;BORDER=p.border;TEXT=p.text;MUTED=p.muted;BLUE=p.accent;CYAN=p.accentAlt;}
+    void applyAppearance(UiAppearance.Palette p){appearance=p;BG=p.bg;PANEL=p.panel;CARD=p.card;FIELD=p.field;BORDER=p.border;TEXT=p.text;MUTED=p.muted;BLUE=p.accent;CYAN=p.accentAlt;GREEN=p.ok;RED=p.bad;AMBER=p.warn;ONACCENT=p.onAccent;}
+
+    boolean systemIsNight() { return (getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES; }
+
+    /** Reads Settings > Appearance, picks the palette (following the system mode when asked) and the sizes. Runs before any view is built. */
+    void loadAppearance() {
+        appearanceSettings = AppearanceSettings.load(getSharedPreferences("appearance", MODE_PRIVATE));
+        UiAppearance.Palette p = appearanceSettings.resolve(systemIsNight());
+        applyAppearance(p);
+        fontScale = appearanceSettings.fontScale();
+        densityScale = appearanceSettings.densityScale();
+        cornerFactor = appearanceSettings.cornerFactor();
+    }
+
+    /** Saves the choices and rebuilds the Activity with the matching theme; the tab and the selections come back from the saved state. */
+    void commitAppearance(AppearanceSettings next) {
+        silentPersistCurrentUi();
+        next.save(getSharedPreferences("appearance", MODE_PRIVATE));
+        recreate();
+    }
     boolean isWideLayout(){return getResources().getConfiguration().screenWidthDp>=720;}
     void selectAppearance(String id){
-        silentPersistCurrentUi();UiAppearance.save(this,id);applyAppearance(UiAppearance.find(id));String tab=currentTab;
-        buildUi();currentTab=tab;switchTab(tab);
+        AppearanceSettings next = AppearanceSettings.load(getSharedPreferences("appearance", MODE_PRIVATE));
+        if (UiAppearance.find(id).light) next.paletteLight = id; else next.palette = id;
+        if (AppearanceSettings.MODE_FIXED.equals(next.mode)) next.palette = id;
+        commitAppearance(next);
     }
     void switchSettingsCategory(String category){
         if(!SettingsNavigationPolicy.shouldSwitch(settingsCategory,category)){if(!settingsSectionExpanded)toggleSettingsSection(category);return;}silentPersistCurrentUi();settingsCategory=category;settingsSectionExpanded=true;
@@ -673,6 +702,11 @@ public class MainActivity extends Activity {
     void configureSystemBars() {
         getWindow().setStatusBarColor(BG);
         getWindow().setNavigationBarColor(BG);
+        // Dark icons on a light palette, light icons on a dark one.
+        View decor = getWindow().getDecorView();
+        int flags = decor.getSystemUiVisibility();
+        int lightBits = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+        decor.setSystemUiVisibility(appearance != null && appearance.light ? (flags | lightBits) : (flags & ~lightBits));
         if (Build.VERSION.SDK_INT >= 30) {
             getWindow().setDecorFitsSystemWindows(false);
         }
@@ -1032,7 +1066,7 @@ public class MainActivity extends Activity {
         boolean healthy = "RUNNING".equals(state) || "COMPLETED".equals(state) || "READY".equals(state);
         boolean problem = "FAILED".equals(state);
         int foreground = healthy ? GREEN : (problem ? RED : MUTED);
-        int background = healthy ? Color.rgb(12, 42, 29) : (problem ? Color.rgb(48, 20, 20) : FIELD);
+        int background = healthy ? ColorMath.mix(GREEN, BG, 0.82f) : (problem ? ColorMath.mix(RED, BG, 0.82f) : FIELD);
         int border = healthy ? GREEN : (problem ? RED : BORDER);
         topStatusChip.setText(state);
         topStatusChip.setTextColor(foreground);
@@ -3562,11 +3596,11 @@ public class MainActivity extends Activity {
     }
 
     int statusColor(String status) {
-        if ("done".equals(status)) return Color.rgb(16, 74, 48);
-        if ("error".equals(status)) return Color.rgb(95, 40, 42);
-        if ("paused".equals(status)) return Color.rgb(91, 68, 29);
-        if ("stopping".equals(status)) return Color.rgb(91, 68, 29);
-        return Color.rgb(31, 61, 94);
+        if ("done".equals(status)) return ColorMath.mix(GREEN, BG, 0.75f);
+        if ("error".equals(status)) return ColorMath.mix(RED, BG, 0.72f);
+        if ("paused".equals(status)) return ColorMath.mix(AMBER, BG, 0.74f);
+        if ("stopping".equals(status)) return ColorMath.mix(AMBER, BG, 0.74f);
+        return ColorMath.mix(BLUE, BG, 0.75f);
     }
 
     /** A failure title gets a warning sign, never the tick. */
@@ -3616,7 +3650,7 @@ public class MainActivity extends Activity {
     void showLongText(String title, String body) {
         TextView tv = new TextView(this);
         tv.setText(body == null ? "" : body);
-        tv.setTextSize(12);
+        tv.setTextSize(12 * fontScale);
         tv.setTextColor(TEXT);
         tv.setTypeface(Typeface.MONOSPACE);
         tv.setTextIsSelectable(true);
@@ -3662,7 +3696,7 @@ public class MainActivity extends Activity {
         s.setScrollBarStyle(View.SCROLLBARS_INSIDE_INSET);
         return s;
     }
-    LinearLayout pageRoot() { LinearLayout r = new LinearLayout(this); r.setOrientation(LinearLayout.VERTICAL); r.setPadding(0, dp(10), 0, dp(24)); return r; }
+    LinearLayout pageRoot() { LinearLayout r = new LinearLayout(this); r.setOrientation(LinearLayout.VERTICAL); r.setPadding(0, Math.round(dp(10) * densityScale), 0, dp(24)); return r; }
     LinearLayout rowContainer() { LinearLayout r = new LinearLayout(this); r.setOrientation(LinearLayout.HORIZONTAL); r.setGravity(Gravity.CENTER_VERTICAL); return r; }
     View space(int w, int h) { View v = new View(this); v.setLayoutParams(new LinearLayout.LayoutParams(dp(w), dp(h))); return v; }
 
@@ -3688,7 +3722,7 @@ public class MainActivity extends Activity {
     void tint(View v, int fill, int stroke, int strokeWidth, int radius) {
         GradientDrawable g = new GradientDrawable();
         g.setColor(fill);
-        g.setCornerRadius(dp(radius));
+        g.setCornerRadius(dp(radius) * cornerFactor);
         g.setStroke(dp(strokeWidth), stroke);
         v.setBackground(g);
     }
@@ -3697,7 +3731,7 @@ public class MainActivity extends Activity {
     TextView text(String s, int sp, int color, boolean bold) {
         TextView v = new TextView(this);
         v.setText(s);
-        v.setTextSize(sp);
+        v.setTextSize(sp * fontScale);
         v.setTextColor(color);
         v.setIncludeFontPadding(true);
         if (bold) v.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
@@ -3721,7 +3755,7 @@ public class MainActivity extends Activity {
         e.setText(value);
         e.setTextColor(TEXT);
         e.setHintTextColor(MUTED);
-        e.setTextSize(14);
+        e.setTextSize(14 * fontScale);
         e.setSingleLine(false);
         e.setMinLines(1);
         e.setMaxLines(3);
@@ -3766,7 +3800,7 @@ public class MainActivity extends Activity {
         CheckBox b = new CheckBox(this);
         b.setText(text + "\n" + desc);
         b.setTextColor(TEXT);
-        b.setTextSize(13);
+        b.setTextSize(13 * fontScale);
         b.setChecked(checked);
         b.setPadding(0, dp(4), 0, dp(4));
         return b;
@@ -3775,7 +3809,7 @@ public class MainActivity extends Activity {
     Button tinyButton(String s, int color, View.OnClickListener l) {
         Button b = button(s, FIELD, TEXT, l);
         b.setTextColor(color == RED ? RED : (color == GREEN ? GREEN : BLUE));
-        b.setTextSize(11);
+        b.setTextSize(11 * fontScale);
         b.setPadding(dp(6), dp(4), dp(6), dp(4));
         b.setMinWidth(dp(44));
         b.setMinimumWidth(dp(44));
@@ -3785,14 +3819,14 @@ public class MainActivity extends Activity {
         return b;
     }
 
-    Button primaryButton(String s, View.OnClickListener l) { return button(s, BLUE, TEXT, l); }
+    Button primaryButton(String s, View.OnClickListener l) { return button(s, BLUE, ONACCENT, l); }
     Button secondaryButton(String s, View.OnClickListener l) { return button(s, FIELD, TEXT, l); }
     Button dangerButton(String s, View.OnClickListener l) { return button(s, RED, Color.WHITE, l); }
 
     Button button(String s, int bg, int fg, View.OnClickListener l) {
         Button b = new WrapButton(this);
         b.setText(s);
-        b.setTextSize(13);
+        b.setTextSize(13 * fontScale);
         b.setAllCaps(false);
         b.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         b.setTextColor(fg);
@@ -3803,7 +3837,7 @@ public class MainActivity extends Activity {
 
     LinearLayout.LayoutParams marginLP(int w, int h, int l, int t, int r, int b) {
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(w, h);
-        lp.setMargins(dp(l), dp(t), dp(r), dp(b));
+        lp.setMargins(dp(l), Math.round(dp(t) * densityScale), dp(r), Math.round(dp(b) * densityScale));
         return lp;
     }
 

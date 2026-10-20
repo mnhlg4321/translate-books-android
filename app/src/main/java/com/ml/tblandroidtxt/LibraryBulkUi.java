@@ -61,6 +61,28 @@ final class LibraryBulkUi {
 
     void refresh(String tab) { a.refreshPagePreservingScroll(tab); }
 
+    // ---- selection survives a rebuild of the Activity (a theme change) ----
+
+    private static final String STATE_PREFIX = "libsel:";
+
+    void saveState(android.os.Bundle out) {
+        for (Map.Entry<String, LibrarySelectionController> e : controllers.entrySet()) {
+            if (!e.getValue().isActive()) continue;
+            out.putStringArrayList(STATE_PREFIX + e.getKey(), new java.util.ArrayList<>(e.getValue().ids()));
+        }
+    }
+
+    void restoreState(android.os.Bundle in) {
+        if (in == null) return;
+        for (String key : in.keySet()) {
+            if (!key.startsWith(STATE_PREFIX)) continue;
+            LibrarySelectionController c = controller(key.substring(STATE_PREFIX.length()));
+            c.enter(null);
+            java.util.ArrayList<String> ids = in.getStringArrayList(key);
+            if (ids != null) for (String id : ids) c.toggle(id);
+        }
+    }
+
     /** Parts of the open list that show the selection count (header, bottom bar), updated in place when one card is ticked. */
     private final Map<String, Runnable> headerUpdater = new java.util.HashMap<>();
     private final Map<String, java.util.List<Runnable>> barUpdaters = new java.util.HashMap<>();
