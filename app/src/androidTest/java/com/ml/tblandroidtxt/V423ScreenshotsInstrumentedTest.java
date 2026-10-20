@@ -23,6 +23,29 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 @RunWith(AndroidJUnit4.class)
 public class V423ScreenshotsInstrumentedTest {
+    /** Scrolls the page so that the section header with this title is at the top (the open section is drawn below its header). */
+    private static void scrollToText(MainActivity a, String title) {
+        final android.widget.ScrollView sv = a.findScrollView(a.getWindow().getDecorView());
+        if (sv == null) return;
+        sv.post(() -> {
+            android.view.View found = findText(sv, title);
+            if (found == null) return;
+            int y = 0;
+            android.view.View v = found;
+            while (v != null && v != sv) { y += v.getTop(); v = v.getParent() instanceof android.view.View ? (android.view.View) v.getParent() : null; }
+            sv.scrollTo(0, Math.max(0, y - 20));
+        });
+    }
+
+    private static android.view.View findText(android.view.View v, String title) {
+        if (v instanceof android.widget.TextView && ((android.widget.TextView) v).getText().toString().trim().equals(title)) return v;
+        if (v instanceof android.view.ViewGroup) {
+            android.view.ViewGroup g = (android.view.ViewGroup) v;
+            for (int i = 0; i < g.getChildCount(); i++) { android.view.View f = findText(g.getChildAt(i), title); if (f != null) return f; }
+        }
+        return null;
+    }
+
     private static void stage(String name) throws InterruptedException {
         InstrumentationRegistry.getInstrumentation().waitForIdleSync();
         Thread.sleep(900L);
@@ -95,7 +118,7 @@ public class V423ScreenshotsInstrumentedTest {
             stage("04-dark-jobs");
             s.onActivity(a -> a.switchTab("Settings"));
             stage("05-dark-settings");
-            s.onActivity(a -> { a.switchTab("Settings"); a.settingsCategory = "Appearance"; a.settingsSectionExpanded = true; a.invalidatePage("Settings"); a.switchTab("Settings"); android.widget.ScrollView sv0 = a.findScrollView(a.getWindow().getDecorView()); if (sv0 != null) sv0.post(() -> sv0.scrollTo(0, 0)); });
+            s.onActivity(a -> { a.switchTab("Settings"); a.settingsCategory = "Appearance"; a.settingsSectionExpanded = true; a.invalidatePage("Settings"); a.switchTab("Settings"); scrollToText(a, "Appearance"); });
             stage("06-dark-appearance");
             s.onActivity(a -> new AlertDialog.Builder(a).setTitle("Hộp thoại mẫu").setMessage("Nội dung hộp thoại, chữ phụ và nút.").setPositiveButton("Đồng ý", null).setNegativeButton("Hủy", null).show());
             stage("07-dark-dialog");
@@ -118,7 +141,7 @@ public class V423ScreenshotsInstrumentedTest {
             stage("13-light-jobs");
             s.onActivity(a -> a.switchTab("Editorial"));
             stage("14-light-editorial");
-            s.onActivity(a -> { a.switchTab("Settings"); a.settingsCategory = "Appearance"; a.settingsSectionExpanded = true; a.invalidatePage("Settings"); a.switchTab("Settings"); android.widget.ScrollView sv0 = a.findScrollView(a.getWindow().getDecorView()); if (sv0 != null) sv0.post(() -> sv0.scrollTo(0, 0)); });
+            s.onActivity(a -> { a.switchTab("Settings"); a.settingsCategory = "Appearance"; a.settingsSectionExpanded = true; a.invalidatePage("Settings"); a.switchTab("Settings"); scrollToText(a, "Appearance"); });
             stage("15-light-appearance");
             s.onActivity(a -> new AlertDialog.Builder(a).setTitle("Hộp thoại mẫu").setMessage("Nội dung hộp thoại, chữ phụ và nút.").setPositiveButton("Đồng ý", null).setNegativeButton("Hủy", null).show());
             stage("16-light-dialog");
@@ -144,7 +167,7 @@ public class V423ScreenshotsInstrumentedTest {
             stage("31-130-compact-running-set");
             s.onActivity(a -> { a.switchTab("Library"); });
             stage("32-130-compact-library");
-            s.onActivity(a -> { a.switchTab("Settings"); a.settingsCategory = "Appearance"; a.settingsSectionExpanded = true; a.invalidatePage("Settings"); a.switchTab("Settings"); android.widget.ScrollView sv0 = a.findScrollView(a.getWindow().getDecorView()); if (sv0 != null) sv0.post(() -> sv0.scrollTo(0, 0)); });
+            s.onActivity(a -> { a.switchTab("Settings"); a.settingsCategory = "Appearance"; a.settingsSectionExpanded = true; a.invalidatePage("Settings"); a.switchTab("Settings"); scrollToText(a, "Appearance"); });
             stage("33-130-compact-appearance");
             s.onActivity(a -> a.switchTab("Library"));
             s.onActivity(a -> { android.widget.ScrollView sv = a.findScrollView(a.getWindow().getDecorView()); if (sv != null) sv.post(() -> sv.fullScroll(android.view.View.FOCUS_DOWN)); });
