@@ -1,2 +1,5 @@
-﻿--------- beginning of main
-10-20 22:21:16.850 14679 14693 I V423PERF: grant=true ticks_ms=[14, 16, 52, 14, 5, 14, 13, 15, 13, 12, 12, 11] p50=14 p95=52 max=52 probeCalls=0 (-1 means this build has no counter; 12 ticks, 14 chapters)
+J1 AFTER (dev.12 / code 290 on emulator-5554, same SAF grant, same 14-chapter synthetic set, 24 ticks per run, 3 runs; V423PerfInstrumentedTest PASS x3)
+run1 p50=15 p95=17 max=33 probeCalls=0
+run2 p50=13 p95=16 max=17 probeCalls=0
+run3 p50=14 p95=16 max=16 probeCalls=0
+BEFORE (dev.11): p50=83 p95=117 max=117 (12 ticks); probes not counted by that build
