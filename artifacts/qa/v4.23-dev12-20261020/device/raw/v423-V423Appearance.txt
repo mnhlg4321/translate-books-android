@@ -1,0 +1,86 @@
+INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.V423AppearanceInstrumentedTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=
+com.ml.tblandroidtxt.V423AppearanceInstrumentedTest:
+INSTRUMENTATION_STATUS: test=lightPaletteRebuildsTheActivityOnTheSameTabWithTheSameSelection
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.V423AppearanceInstrumentedTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: the ticked cards came back expected:<2> but was:<0>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:647)
+	at com.ml.tblandroidtxt.V423AppearanceInstrumentedTest.lightPaletteRebuildsTheActivityOnTheSameTabWithTheSameSelection(V423AppearanceInstrumentedTest.java:105)
+
+INSTRUMENTATION_STATUS: stream=
+Error in lightPaletteRebuildsTheActivityOnTheSameTabWithTheSameSelection(com.ml.tblandroidtxt.V423AppearanceInstrumentedTest):
+java.lang.AssertionError: the ticked cards came back expected:<2> but was:<0>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:647)
+	at com.ml.tblandroidtxt.V423AppearanceInstrumentedTest.lightPaletteRebuildsTheActivityOnTheSameTabWithTheSameSelection(V423AppearanceInstrumentedTest.java:105)
+
+INSTRUMENTATION_STATUS: test=lightPaletteRebuildsTheActivityOnTheSameTabWithTheSameSelection
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.V423AppearanceInstrumentedTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=everySettingIsAppliedAfterTheRebuild
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.V423AppearanceInstrumentedTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=everySettingIsAppliedAfterTheRebuild
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.V423AppearanceInstrumentedTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=followingTheSystemSwitchesWithNightMode
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.V423AppearanceInstrumentedTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=followingTheSystemSwitchesWithNightMode
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.V423AppearanceInstrumentedTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=theProgressPanelKeepsItsSizeWhileItsNumbersChange
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.V423AppearanceInstrumentedTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=theProgressPanelKeepsItsSizeWhileItsNumbersChange
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+
+Time: 13.563
+There was 1 failure:
+1) lightPaletteRebuildsTheActivityOnTheSameTabWithTheSameSelection(com.ml.tblandroidtxt.V423AppearanceInstrumentedTest)
+java.lang.AssertionError: the ticked cards came back expected:<2> but was:<0>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:647)
+	at com.ml.tblandroidtxt.V423AppearanceInstrumentedTest.lightPaletteRebuildsTheActivityOnTheSameTabWithTheSameSelection(V423AppearanceInstrumentedTest.java:105)
+
+FAILURES!!!
+Tests run: 4,  Failures: 1
+
+
+INSTRUMENTATION_CODE: -1

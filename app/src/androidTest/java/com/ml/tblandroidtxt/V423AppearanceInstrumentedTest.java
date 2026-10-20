@@ -88,10 +88,16 @@ public class V423AppearanceInstrumentedTest {
     @Test
     public void lightPaletteRebuildsTheActivityOnTheSameTabWithTheSameSelection() throws Exception {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            final java.util.List<String> ids = new ArrayList<>();
+            for (int i = 1; i <= 2; i++) {
+                String name = "v423a-" + i + "-RAW.txt";
+                RawImportPlanner.Plan plan = RawImportPlanner.plan(java.util.Collections.singletonList(new RawImportPlanner.Candidate(name, name + " body " + System.nanoTime(), "UTF-8")), LibraryRawStore.hashes(InstrumentationRegistry.getInstrumentation().getTargetContext()));
+                ids.add(LibraryRawStore.add(InstrumentationRegistry.getInstrumentation().getTargetContext(), plan).get(0).id);
+            }
             scenario.onActivity(a -> {
                 a.switchTab("Library");
-                a.bulkUi.controller(LibraryBulkUi.TAB_RAW).enter("kept-id-1");
-                a.bulkUi.controller(LibraryBulkUi.TAB_RAW).toggle("kept-id-2");
+                a.bulkUi.controller(LibraryBulkUi.TAB_RAW).enter(ids.get(0));
+                a.bulkUi.controller(LibraryBulkUi.TAB_RAW).toggle(ids.get(1));
             });
             assertFalse(onMain(scenario, a -> a.appearance.light));
             final String tabBefore = onMain(scenario, a -> a.currentTab);
@@ -103,11 +109,14 @@ public class V423AppearanceInstrumentedTest {
             waitFor(() -> onMain(scenario, a -> a.appearance.light), 20_000L, "light palette applied after recreate");
             assertEquals(tabBefore, onMain(scenario, a -> a.currentTab));
             assertEquals("the ticked cards came back", 2, (int) onMain(scenario, a -> a.bulkUi.controller(LibraryBulkUi.TAB_RAW).count()));
-            assertTrue(onMain(scenario, a -> a.bulkUi.controller(LibraryBulkUi.TAB_RAW).isSelected("kept-id-2")));
+            assertTrue(onMain(scenario, a -> a.bulkUi.controller(LibraryBulkUi.TAB_RAW).isSelected(ids.get(1))));
             assertEquals("light surfaces", ColorMath.luminance(onMain(scenario, a -> a.BG)) > 0.5, true);
             assertTrue("status colours are the light palette's", onMain(scenario, a -> a.GREEN == UiAppearance.find("light").ok));
             assertEquals(UiAppearance.find("light").onAccent, (int) onMain(scenario, a -> a.ONACCENT));
             scenario.onActivity(a -> a.bulkUi.controller(LibraryBulkUi.TAB_RAW).exit());
+            Context cc = InstrumentationRegistry.getInstrumentation().getTargetContext();
+            LibraryRawStore.removeRows(cc, ids);
+            LibraryRawStore.purgeFiles(cc, ids);
         }
     }
 
