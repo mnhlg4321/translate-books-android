@@ -141,7 +141,7 @@ INSTRUMENTATION_STATUS: test=freshSchemaIsV25WithImmutableV15EvaluationHistory
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 1.643
+Time: 1.569
 
 OK (10 tests)
 

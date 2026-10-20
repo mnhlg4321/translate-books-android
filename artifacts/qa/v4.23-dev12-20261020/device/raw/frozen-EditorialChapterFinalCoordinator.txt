@@ -209,7 +209,7 @@ INSTRUMENTATION_STATUS: test=seedMainDatabaseForEmulatorUiSmoke
 INSTRUMENTATION_STATUS_CODE: -4
 INSTRUMENTATION_RESULT: stream=
 
-Time: 13.715
+Time: 11.459
 
 OK (12 tests)
 

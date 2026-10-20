@@ -85,7 +85,7 @@ INSTRUMENTATION_STATUS: test=upgradeFromVersion27PreservesApiRunDataAndAddsTheV5
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 1.035
+Time: 0.867
 
 OK (6 tests)
 

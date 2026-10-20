@@ -1168,10 +1168,10 @@
    ]
   },
   "artifacts/qa/v4.23-dev12-20261020/device/raw/restart-api-cleanup.txt": {
-   "overall": "SKIP",
+   "overall": "PASS",
    "discovered": 1,
-   "pass": 0,
-   "skip": 1,
+   "pass": 1,
+   "skip": 0,
    "fail": 0,
    "incomplete": 0,
    "ok_line_tests": 1,
@@ -1180,15 +1180,15 @@
     {
      "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
      "test": "reopenPhaseCleanup",
-     "result": "SKIP"
+     "result": "PASS"
     }
    ]
   },
   "artifacts/qa/v4.23-dev12-20261020/device/raw/restart-api-seed.txt": {
-   "overall": "SKIP",
+   "overall": "PASS",
    "discovered": 1,
-   "pass": 0,
-   "skip": 1,
+   "pass": 1,
+   "skip": 0,
    "fail": 0,
    "incomplete": 0,
    "ok_line_tests": 1,
@@ -1197,15 +1197,15 @@
     {
      "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
      "test": "reopenPhaseSeed",
-     "result": "SKIP"
+     "result": "PASS"
     }
    ]
   },
   "artifacts/qa/v4.23-dev12-20261020/device/raw/restart-api-verify.txt": {
-   "overall": "SKIP",
+   "overall": "PASS",
    "discovered": 1,
-   "pass": 0,
-   "skip": 1,
+   "pass": 1,
+   "skip": 0,
    "fail": 0,
    "incomplete": 0,
    "ok_line_tests": 1,
@@ -1214,15 +1214,15 @@
     {
      "class": "com.ml.tblandroidtxt.EditorialApiBienTapUiInstrumentedTest",
      "test": "reopenPhaseVerify",
-     "result": "SKIP"
+     "result": "PASS"
     }
    ]
   },
   "artifacts/qa/v4.23-dev12-20261020/device/raw/restart-pair-cleanup.txt": {
-   "overall": "SKIP",
+   "overall": "PASS",
    "discovered": 1,
-   "pass": 0,
-   "skip": 1,
+   "pass": 1,
+   "skip": 0,
    "fail": 0,
    "incomplete": 0,
    "ok_line_tests": 1,
@@ -1231,15 +1231,15 @@
     {
      "class": "com.ml.tblandroidtxt.EditorialPairUiInstrumentedTest",
      "test": "pairReopenPhaseCleanup",
-     "result": "SKIP"
+     "result": "PASS"
     }
    ]
   },
   "artifacts/qa/v4.23-dev12-20261020/device/raw/restart-pair-seed.txt": {
-   "overall": "SKIP",
+   "overall": "PASS",
    "discovered": 1,
-   "pass": 0,
-   "skip": 1,
+   "pass": 1,
+   "skip": 0,
    "fail": 0,
    "incomplete": 0,
    "ok_line_tests": 1,
@@ -1248,15 +1248,15 @@
     {
      "class": "com.ml.tblandroidtxt.EditorialPairUiInstrumentedTest",
      "test": "pairReopenPhaseSeed",
-     "result": "SKIP"
+     "result": "PASS"
     }
    ]
   },
   "artifacts/qa/v4.23-dev12-20261020/device/raw/restart-pair-verify.txt": {
-   "overall": "SKIP",
+   "overall": "PASS",
    "discovered": 1,
-   "pass": 0,
-   "skip": 1,
+   "pass": 1,
+   "skip": 0,
    "fail": 0,
    "incomplete": 0,
    "ok_line_tests": 1,
@@ -1265,15 +1265,15 @@
     {
      "class": "com.ml.tblandroidtxt.EditorialPairUiInstrumentedTest",
      "test": "pairReopenPhaseVerify",
-     "result": "SKIP"
+     "result": "PASS"
     }
    ]
   },
   "artifacts/qa/v4.23-dev12-20261020/device/raw/restart-r-seed.txt": {
-   "overall": "SKIP",
+   "overall": "PASS",
    "discovered": 1,
-   "pass": 0,
-   "skip": 1,
+   "pass": 1,
+   "skip": 0,
    "fail": 0,
    "incomplete": 0,
    "ok_line_tests": 1,
@@ -1282,15 +1282,15 @@
     {
      "class": "com.ml.tblandroidtxt.EditorialRefusedProposalInstrumentedTest",
      "test": "restartSeed",
-     "result": "SKIP"
+     "result": "PASS"
     }
    ]
   },
   "artifacts/qa/v4.23-dev12-20261020/device/raw/restart-r-verify.txt": {
-   "overall": "SKIP",
+   "overall": "PASS",
    "discovered": 1,
-   "pass": 0,
-   "skip": 1,
+   "pass": 1,
+   "skip": 0,
    "fail": 0,
    "incomplete": 0,
    "ok_line_tests": 1,
@@ -1299,15 +1299,15 @@
     {
      "class": "com.ml.tblandroidtxt.EditorialRefusedProposalInstrumentedTest",
      "test": "restartVerify",
-     "result": "SKIP"
+     "result": "PASS"
     }
    ]
   },
   "artifacts/qa/v4.23-dev12-20261020/device/raw/restart-s0-seed.txt": {
-   "overall": "SKIP",
+   "overall": "PASS",
    "discovered": 1,
-   "pass": 0,
-   "skip": 1,
+   "pass": 1,
+   "skip": 0,
    "fail": 0,
    "incomplete": 0,
    "ok_line_tests": 1,
@@ -1316,15 +1316,15 @@
     {
      "class": "com.ml.tblandroidtxt.LibraryS0InstrumentedTest",
      "test": "restartSeed",
-     "result": "SKIP"
+     "result": "PASS"
     }
    ]
   },
   "artifacts/qa/v4.23-dev12-20261020/device/raw/restart-s0-verify.txt": {
-   "overall": "SKIP",
+   "overall": "PASS",
    "discovered": 1,
-   "pass": 0,
-   "skip": 1,
+   "pass": 1,
+   "skip": 0,
    "fail": 0,
    "incomplete": 0,
    "ok_line_tests": 1,
@@ -1333,15 +1333,15 @@
     {
      "class": "com.ml.tblandroidtxt.LibraryS0InstrumentedTest",
      "test": "restartVerify",
-     "result": "SKIP"
+     "result": "PASS"
     }
    ]
   },
   "artifacts/qa/v4.23-dev12-20261020/device/raw/restart-v422-cleanup.txt": {
-   "overall": "SKIP",
+   "overall": "PASS",
    "discovered": 1,
-   "pass": 0,
-   "skip": 1,
+   "pass": 1,
+   "skip": 0,
    "fail": 0,
    "incomplete": 0,
    "ok_line_tests": 1,
@@ -1350,15 +1350,15 @@
     {
      "class": "com.ml.tblandroidtxt.EditorialForegroundInstrumentedTest",
      "test": "processReopenCleanup",
-     "result": "SKIP"
+     "result": "PASS"
     }
    ]
   },
   "artifacts/qa/v4.23-dev12-20261020/device/raw/restart-v422-seed.txt": {
-   "overall": "SKIP",
+   "overall": "PASS",
    "discovered": 1,
-   "pass": 0,
-   "skip": 1,
+   "pass": 1,
+   "skip": 0,
    "fail": 0,
    "incomplete": 0,
    "ok_line_tests": 1,
@@ -1367,15 +1367,15 @@
     {
      "class": "com.ml.tblandroidtxt.EditorialForegroundInstrumentedTest",
      "test": "processReopenSeed",
-     "result": "SKIP"
+     "result": "PASS"
     }
    ]
   },
   "artifacts/qa/v4.23-dev12-20261020/device/raw/restart-v422-verify.txt": {
-   "overall": "SKIP",
+   "overall": "PASS",
    "discovered": 1,
-   "pass": 0,
-   "skip": 1,
+   "pass": 1,
+   "skip": 0,
    "fail": 0,
    "incomplete": 0,
    "ok_line_tests": 1,
@@ -1384,15 +1384,15 @@
     {
      "class": "com.ml.tblandroidtxt.EditorialForegroundInstrumentedTest",
      "test": "processReopenVerify",
-     "result": "SKIP"
+     "result": "PASS"
     }
    ]
   },
   "artifacts/qa/v4.23-dev12-20261020/device/raw/restart-v423raw-seed.txt": {
-   "overall": "SKIP",
+   "overall": "PASS",
    "discovered": 1,
-   "pass": 0,
-   "skip": 1,
+   "pass": 1,
+   "skip": 0,
    "fail": 0,
    "incomplete": 0,
    "ok_line_tests": 1,
@@ -1401,15 +1401,15 @@
     {
      "class": "com.ml.tblandroidtxt.V423TranslateRawInstrumentedTest",
      "test": "restartSeed",
-     "result": "SKIP"
+     "result": "PASS"
     }
    ]
   },
   "artifacts/qa/v4.23-dev12-20261020/device/raw/restart-v423raw-verify.txt": {
-   "overall": "SKIP",
+   "overall": "PASS",
    "discovered": 1,
-   "pass": 0,
-   "skip": 1,
+   "pass": 1,
+   "skip": 0,
    "fail": 0,
    "incomplete": 0,
    "ok_line_tests": 1,
@@ -1418,7 +1418,7 @@
     {
      "class": "com.ml.tblandroidtxt.V423TranslateRawInstrumentedTest",
      "test": "restartVerify",
-     "result": "SKIP"
+     "result": "PASS"
     }
    ]
   },
@@ -1583,19 +1583,19 @@
    ]
   },
   "artifacts/qa/v4.23-dev12-20261020/device/raw/v423-V423ChapterRun.txt": {
-   "overall": "FAIL",
+   "overall": "PASS",
    "discovered": 9,
-   "pass": 7,
+   "pass": 9,
    "skip": 0,
-   "fail": 2,
+   "fail": 0,
    "incomplete": 0,
-   "ok_line_tests": null,
+   "ok_line_tests": 9,
    "notes": [],
    "methods": [
     {
      "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
      "test": "aCutAnswerIsRetriedWithALargerLimitAndNeverSentIdenticallyTwice",
-     "result": "FAIL"
+     "result": "PASS"
     },
     {
      "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
@@ -1625,7 +1625,7 @@
     {
      "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
      "test": "twoRejectedChaptersInARowStopTheRun",
-     "result": "FAIL"
+     "result": "PASS"
     },
     {
      "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
@@ -1822,9 +1822,9 @@
  },
  "total": {
   "discovered": 227,
-  "pass": 193,
-  "skip": 31,
-  "fail": 3,
+  "pass": 210,
+  "skip": 16,
+  "fail": 1,
   "incomplete": 0
  }
 }

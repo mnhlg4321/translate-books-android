@@ -15,7 +15,7 @@ INSTRUMENTATION_STATUS: test=tickingChaptersAsksForNoSafProbeAndReachesTheNextFr
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 23.189
+Time: 25.004
 
 OK (1 test)
 

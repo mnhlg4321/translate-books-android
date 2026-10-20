@@ -29,7 +29,7 @@ INSTRUMENTATION_STATUS: test=b_resumeExactBindingAfterHostProcessStop
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 0.879
+Time: 0.843
 
 OK (2 tests)
 

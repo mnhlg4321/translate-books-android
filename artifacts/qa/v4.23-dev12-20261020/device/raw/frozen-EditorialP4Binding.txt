@@ -57,7 +57,7 @@ INSTRUMENTATION_STATUS: test=canonicalAndSyntheticPackBindSideBySideAndResumeExa
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 2.85
+Time: 2.562
 
 OK (4 tests)
 

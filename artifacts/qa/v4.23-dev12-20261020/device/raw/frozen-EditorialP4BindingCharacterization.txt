@@ -29,7 +29,7 @@ INSTRUMENTATION_STATUS: test=legacyRepositoryDoesNotAcceptImportedPackWithoutP4S
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 0.192
+Time: 0.176
 
 OK (2 tests)
 

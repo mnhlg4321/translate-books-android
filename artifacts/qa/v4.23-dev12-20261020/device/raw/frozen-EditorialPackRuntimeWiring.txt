@@ -71,7 +71,7 @@ INSTRUMENTATION_STATUS: test=restartReadsPersistedEvidenceWithoutReevaluation
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 1.621
+Time: 1.502
 
 OK (5 tests)
 

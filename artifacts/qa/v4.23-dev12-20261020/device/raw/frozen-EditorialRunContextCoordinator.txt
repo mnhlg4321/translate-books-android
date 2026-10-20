@@ -99,7 +99,7 @@ INSTRUMENTATION_STATUS: test=invalidChildLeavesClosedUnboundWithoutLineageOrBind
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 1.739
+Time: 1.59
 
 OK (7 tests)
 

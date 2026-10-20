@@ -113,7 +113,7 @@ INSTRUMENTATION_STATUS: test=v_actionButtonsGrowWithTheirLabel
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 51.56
+Time: 55.915
 
 OK (8 tests)
 

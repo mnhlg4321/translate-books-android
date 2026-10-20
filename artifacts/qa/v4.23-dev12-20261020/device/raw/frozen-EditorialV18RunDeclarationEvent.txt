@@ -155,7 +155,7 @@ INSTRUMENTATION_STATUS: test=childExactParentSucceedsAndParentChangeCollides
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 3.841
+Time: 3.6
 
 OK (11 tests)
 

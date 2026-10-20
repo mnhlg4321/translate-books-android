@@ -99,7 +99,7 @@ INSTRUMENTATION_STATUS: test=unknownRequiredCapabilityIsRejectedAsEngineUpgradeW
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 1.91
+Time: 1.725
 
 OK (7 tests)
 

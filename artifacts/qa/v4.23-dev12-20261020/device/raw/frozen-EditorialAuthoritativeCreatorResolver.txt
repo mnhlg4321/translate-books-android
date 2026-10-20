@@ -71,7 +71,7 @@ INSTRUMENTATION_STATUS: test=resolverFailsClosedForMismatchesAndResolvesExactPar
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 1.346
+Time: 1.144
 
 OK (5 tests)
 

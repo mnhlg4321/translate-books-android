@@ -15,7 +15,7 @@ INSTRUMENTATION_STATUS: test=aKeptAddressPointDoesNotBlockTheValidRepairsAndSurv
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 0.56
+Time: 0.442
 
 OK (1 test)
 

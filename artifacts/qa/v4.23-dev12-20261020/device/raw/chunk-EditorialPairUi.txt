@@ -205,7 +205,7 @@ INSTRUMENTATION_STATUS: test=pairReopenPhaseCleanup
 INSTRUMENTATION_STATUS_CODE: -4
 INSTRUMENTATION_RESULT: stream=
 
-Time: 11.54
+Time: 9.952
 
 OK (6 tests)
 

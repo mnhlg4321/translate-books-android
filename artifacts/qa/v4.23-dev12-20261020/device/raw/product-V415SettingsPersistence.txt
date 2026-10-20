@@ -15,7 +15,7 @@ INSTRUMENTATION_STATUS: test=lazyPhoneSectionsHydrateBeforeTheyCanPersistDefault
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 3.896
+Time: 5.686
 
 OK (1 test)
 

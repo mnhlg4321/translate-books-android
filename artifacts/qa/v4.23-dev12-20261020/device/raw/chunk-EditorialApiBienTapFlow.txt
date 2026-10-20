@@ -43,7 +43,7 @@ INSTRUMENTATION_STATUS: test=comboWithoutGlossaryAndPronounRunsThoroughAndExport
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 8.643
+Time: 9.528
 
 OK (3 tests)
 

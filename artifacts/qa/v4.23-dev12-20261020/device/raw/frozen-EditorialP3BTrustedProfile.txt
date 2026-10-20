@@ -15,7 +15,7 @@ INSTRUMENTATION_STATUS: test=canonicalSafe4UsesBundledTrustedProfileButExecution
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 0.546
+Time: 0.533
 
 OK (1 test)
 

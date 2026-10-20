@@ -43,7 +43,7 @@ INSTRUMENTATION_STATUS: test=detailRebuildAndActivityRecreationDoNotExposeMutati
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 5.65
+Time: 25.739
 
 OK (3 tests)
 

@@ -57,7 +57,7 @@ INSTRUMENTATION_STATUS: test=pronounImportAndActivationSurviveColdStoreReload
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 4.753
+Time: 9.412
 
 OK (4 tests)
 

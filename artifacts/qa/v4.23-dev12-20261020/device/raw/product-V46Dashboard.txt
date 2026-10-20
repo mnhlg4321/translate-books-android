@@ -43,7 +43,7 @@ INSTRUMENTATION_STATUS: test=seedCompletedFakeProviderMultiChunkDashboard
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 11.314
+Time: 13.543
 
 OK (3 tests)
 

@@ -192,7 +192,7 @@ INSTRUMENTATION_STATUS: test=aFinishedRunIsOpenedFromTheListWithItsStoredResult
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 6.602
+Time: 8.418
 
 OK (5 tests)
 

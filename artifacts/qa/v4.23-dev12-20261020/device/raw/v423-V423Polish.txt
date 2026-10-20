@@ -155,7 +155,7 @@ INSTRUMENTATION_STATUS: test=g_comboModeHidesTheGlossaryAndPronounRows
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 32.698
+Time: 44.534
 
 OK (11 tests)
 

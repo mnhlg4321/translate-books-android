@@ -43,7 +43,7 @@ INSTRUMENTATION_STATUS: test=canonicalAndJavaControlImportReadbackAndIdempotency
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 3.134
+Time: 2.867
 
 OK (3 tests)
 

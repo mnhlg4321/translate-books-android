@@ -155,7 +155,7 @@ INSTRUMENTATION_STATUS: test=updateDeleteAndParentDeleteAreBlockedByDatabase
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 1.978
+Time: 1.965
 
 OK (11 tests)
 

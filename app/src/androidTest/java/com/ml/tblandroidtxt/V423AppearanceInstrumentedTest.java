@@ -95,7 +95,7 @@ public class V423AppearanceInstrumentedTest {
                 ids.add(LibraryRawStore.add(InstrumentationRegistry.getInstrumentation().getTargetContext(), plan).get(0).id);
             }
             scenario.onActivity(a -> {
-                a.switchTab("Library");
+                a.switchTab("RAW");
                 a.bulkUi.controller(LibraryBulkUi.TAB_RAW).enter(ids.get(0));
                 a.bulkUi.controller(LibraryBulkUi.TAB_RAW).toggle(ids.get(1));
             });

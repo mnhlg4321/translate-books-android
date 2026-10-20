@@ -29,7 +29,7 @@ INSTRUMENTATION_STATUS: test=importingTwoFilesPersistsTwoIndependentProfilesPerL
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 5.626
+Time: 9.818
 
 OK (2 tests)
 

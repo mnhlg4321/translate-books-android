@@ -15,7 +15,7 @@ INSTRUMENTATION_STATUS: test=newChapterBindsSafe4AndAcceptsPronounNoneWhileExecu
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 0.131
+Time: 0.092
 
 OK (1 test)
 

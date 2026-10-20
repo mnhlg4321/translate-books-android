@@ -113,7 +113,7 @@ INSTRUMENTATION_STATUS: test=projectSnapshotClosedRunAreAppendOnlyAndRestartRead
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 1.99
+Time: 1.808
 
 OK (8 tests)
 

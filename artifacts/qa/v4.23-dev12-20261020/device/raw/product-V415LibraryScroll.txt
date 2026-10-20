@@ -15,7 +15,7 @@ INSTRUMENTATION_STATUS: test=usePreservesListScrollForGlossaryAndPronoun
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 3.732
+Time: 6.033
 
 OK (1 test)
 

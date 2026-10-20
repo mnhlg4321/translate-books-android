@@ -113,7 +113,7 @@ INSTRUMENTATION_STATUS: test=claimWithDifferentPredecessorForSameAttemptThrows
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 1
+Time: 0.987
 
 OK (8 tests)
 
