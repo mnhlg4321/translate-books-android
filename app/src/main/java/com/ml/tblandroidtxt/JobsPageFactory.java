@@ -570,7 +570,7 @@ public class JobsPageFactory {
     private Button dangerButton(String s, View.OnClickListener l) { return button(s, RED, Color.WHITE, l); }
 
     private Button button(String s, int fill, int txt, View.OnClickListener l) {
-        Button b = new Button(a);
+        Button b = new WrapButton(a);
         b.setText(s);
         b.setTextColor(txt);
         b.setTextSize(12);

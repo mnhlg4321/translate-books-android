@@ -3687,11 +3687,11 @@ public class MainActivity extends Activity {
     Button tinyButton(String s, int color, View.OnClickListener l) {
         Button b = button(s, FIELD, TEXT, l);
         b.setTextColor(color == RED ? RED : (color == GREEN ? GREEN : BLUE));
-        b.setTextSize(10);
-        b.setPadding(dp(2), 0, dp(2), 0);
-        b.setMinWidth(0);
-        b.setMinimumWidth(0);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(46), dp(36));
+        b.setTextSize(11);
+        b.setPadding(dp(6), dp(4), dp(6), dp(4));
+        b.setMinWidth(dp(44));
+        b.setMinimumWidth(dp(44));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2, -2);
         lp.setMargins(0, 0, dp(4), 0);
         b.setLayoutParams(lp);
         return b;
@@ -3702,7 +3702,7 @@ public class MainActivity extends Activity {
     Button dangerButton(String s, View.OnClickListener l) { return button(s, RED, Color.WHITE, l); }
 
     Button button(String s, int bg, int fg, View.OnClickListener l) {
-        Button b = new Button(this);
+        Button b = new WrapButton(this);
         b.setText(s);
         b.setTextSize(13);
         b.setAllCaps(false);
