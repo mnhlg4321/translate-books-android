@@ -425,11 +425,11 @@ class TranslatePageFactory {
         row.setOrientation(LinearLayout.VERTICAL);
         LinearLayout top = a.rowContainer();
         TextView l = a.text(label, 11, a.MUTED, true);
-        l.setMinWidth(a.dp(52));
+        l.setMinWidth(Math.round(a.dp(52) * Math.max(1f, a.fontScale)));
         top.addView(l, new LinearLayout.LayoutParams(-2, -2));
         top.addView(bar, new LinearLayout.LayoutParams(0, a.dp(10), 1));
         row.addView(top);
-        row.addView(line, a.marginLP(-1, -2, 52, 2, 0, 0));
+        row.addView(line, a.marginLP(-1, -2, Math.round(52 * Math.max(1f, a.fontScale)), 2, 0, 0));
         line.setSingleLine(true);
         line.setEllipsize(android.text.TextUtils.TruncateAt.END);
         return row;

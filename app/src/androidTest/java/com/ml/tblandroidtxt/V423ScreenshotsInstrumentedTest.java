@@ -95,7 +95,7 @@ public class V423ScreenshotsInstrumentedTest {
             stage("04-dark-jobs");
             s.onActivity(a -> a.switchTab("Settings"));
             stage("05-dark-settings");
-            s.onActivity(a -> { a.settingsCategory = "Appearance"; a.invalidatePage("Settings"); a.switchTab("Settings"); });
+            s.onActivity(a -> { a.switchTab("Settings"); a.switchSettingsCategory("Appearance"); });
             stage("06-dark-appearance");
             s.onActivity(a -> new AlertDialog.Builder(a).setTitle("Hộp thoại mẫu").setMessage("Nội dung hộp thoại, chữ phụ và nút.").setPositiveButton("Đồng ý", null).setNegativeButton("Hủy", null).show());
             stage("07-dark-dialog");
@@ -118,7 +118,7 @@ public class V423ScreenshotsInstrumentedTest {
             stage("13-light-jobs");
             s.onActivity(a -> a.switchTab("Editorial"));
             stage("14-light-editorial");
-            s.onActivity(a -> { a.settingsCategory = "Appearance"; a.invalidatePage("Settings"); a.switchTab("Settings"); });
+            s.onActivity(a -> { a.switchTab("Settings"); a.switchSettingsCategory("Appearance"); });
             stage("15-light-appearance");
             s.onActivity(a -> new AlertDialog.Builder(a).setTitle("Hộp thoại mẫu").setMessage("Nội dung hộp thoại, chữ phụ và nút.").setPositiveButton("Đồng ý", null).setNegativeButton("Hủy", null).show());
             stage("16-light-dialog");
@@ -144,8 +144,11 @@ public class V423ScreenshotsInstrumentedTest {
             stage("31-130-compact-running-set");
             s.onActivity(a -> { a.switchTab("Library"); });
             stage("32-130-compact-library");
-            s.onActivity(a -> { a.settingsCategory = "Appearance"; a.invalidatePage("Settings"); a.switchTab("Settings"); });
+            s.onActivity(a -> { a.switchTab("Settings"); a.switchSettingsCategory("Appearance"); });
             stage("33-130-compact-appearance");
+            s.onActivity(a -> a.switchTab("Library"));
+            s.onActivity(a -> { android.widget.ScrollView sv = a.findScrollView(a.getWindow().getDecorView()); if (sv != null) sv.post(() -> sv.fullScroll(android.view.View.FOCUS_DOWN)); });
+            stage("35-130-files-bottom");
 
             // 5. light + 130 + compact
             AppearanceSettings lightBig = new AppearanceSettings();

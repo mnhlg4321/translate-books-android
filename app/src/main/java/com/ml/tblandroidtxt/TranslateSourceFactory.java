@@ -204,6 +204,9 @@ final class TranslateSourceFactory {
         applyConfigRows();
         a.tint(filesButton, set ? a.FIELD : a.BLUE, set ? a.BORDER : a.BLUE, 1, 12);
         a.tint(setButton, set ? a.BLUE : a.FIELD, set ? a.BLUE : a.BORDER, 1, 12);
+        // The chosen one is a filled accent button: its text is the accent's own text colour, never the page text colour.
+        filesButton.setTextColor(set ? a.TEXT : a.ONACCENT);
+        setButton.setTextColor(set ? a.ONACCENT : a.TEXT);
         if (a.filesSourceCard != null) a.filesSourceCard.setVisibility(set ? View.GONE : View.VISIBLE);
         chapterBox.setVisibility(set ? View.VISIBLE : View.GONE);
         chapterBox.removeAllViews();
