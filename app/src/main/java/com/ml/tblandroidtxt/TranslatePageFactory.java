@@ -339,7 +339,7 @@ class TranslatePageFactory {
         a.setBarRow = barRow("T\u1ed5 h\u1ee3p", a.setBar = bar(), a.setLine = a.text("", 12, a.TEXT, true));
         a.trackingCard.addView(a.setBarRow, a.marginLP(-1, -2, 0, 0, 0, 6));
         LinearLayout chapterRow = barRow("Ch\u01b0\u01a1ng", a.chapterBar = bar(), a.metricCompleted = a.text("", 12, a.TEXT, true));
-        a.chapterRowLabel = (TextView) chapterRow.getChildAt(0);
+        a.chapterRowLabel = (TextView) ((LinearLayout) chapterRow.getChildAt(0)).getChildAt(0);
         a.trackingCard.addView(chapterRow, a.marginLP(-1, -2, 0, 0, 0, 10));
 
         a.metricTokens = cellValue();
