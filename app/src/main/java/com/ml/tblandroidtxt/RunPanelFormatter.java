@@ -1,0 +1,78 @@
+package com.ml.tblandroidtxt;
+
+import java.util.Locale;
+
+/** Pure text and numbers of the one-screen progress panel (a run of one file or of a whole chapter set). */
+public final class RunPanelFormatter {
+    private RunPanelFormatter() {}
+
+    /** "Chương 4/14 · 3 xong · 0 lỗi". {@code index} is the 1-based chapter being worked on. */
+    public static String setLine(int index, int total, int done, int failed, int chapterNo) {
+        String which = chapterNo >= 0 ? "Chương " + chapterNo + " (" + Math.min(Math.max(index, 0), total) + "/" + total + ")" : "Chương " + Math.min(Math.max(index, 0), total) + "/" + total;
+        return which + " · " + done + " xong · " + failed + " lỗi";
+    }
+
+    /** "chunk 5/6 · 004_ATE_JP_VOL6.txt". */
+    public static String chapterLine(int chunk, int totalChunks, String file) {
+        String where = totalChunks <= 0 ? "chunk —" : "chunk " + Math.min(Math.max(chunk, 1), totalChunks) + "/" + totalChunks;
+        return file == null || file.trim().isEmpty() ? where : where + " · " + file.trim();
+    }
+
+    /** Share of the whole run done, in thousandths: finished (or failed) chapters plus the finished part of the current one. */
+    public static int setPermille(int total, int done, int failed, int chunksDone, int chunksTotal) {
+        if (total <= 0) return 0;
+        double current = chunksTotal <= 0 ? 0 : Math.min(1d, Math.max(0d, chunksDone / (double) chunksTotal));
+        int finished = Math.max(0, done) + Math.max(0, failed);
+        double value = (Math.min(finished, total) + (finished >= total ? 0 : current)) / total;
+        return (int) Math.round(Math.min(1d, Math.max(0d, value)) * 1000);
+    }
+
+    public static int chunkPermille(int chunksDone, int chunksTotal) {
+        if (chunksTotal <= 0) return 0;
+        return (int) Math.round(Math.min(1d, Math.max(0d, chunksDone / (double) chunksTotal)) * 1000);
+    }
+
+    /** Time left from the elapsed time and the share done; -1 until enough has been done to say. */
+    public static long remainingMs(long elapsedMs, int permille) {
+        if (permille < 20 || elapsedMs <= 0) return -1L;
+        if (permille >= 1000) return 0L;
+        return Math.round(elapsedMs * (1000 - permille) / (double) permille);
+    }
+
+    /** "26:11", or "1:02:03" past an hour. */
+    public static String clock(long ms) {
+        long s = Math.max(0, ms) / 1000;
+        long h = s / 3600, m = (s % 3600) / 60, sec = s % 60;
+        return h > 0 ? String.format(Locale.US, "%d:%02d:%02d", h, m, sec) : String.format(Locale.US, "%02d:%02d", m, sec);
+    }
+
+    public static String remaining(long ms) { return ms < 0 ? "…" : "~" + clock(ms); }
+
+    public static String tokens(long value) { return TranslationDashboardFormatter.compactTokens(value) + " tok"; }
+
+    public static String money(double value) { return String.format(Locale.US, "$%.4f", Math.max(0d, value)); }
+
+    /** "0 · 0": failed chunks and fallbacks. */
+    public static String failures(int failedChunks, int fallbacks) { return Math.max(0, failedChunks) + " · " + Math.max(0, fallbacks); }
+
+    /** "G10 · P4": Glossary and Pronoun rules in the current request; "—" before the first request. */
+    public static String rules(int glossary, int pronoun) {
+        if (glossary < 0 && pronoun < 0) return "—";
+        return "G" + Math.max(0, glossary) + " · P" + Math.max(0, pronoun);
+    }
+
+    /** "~$0.43 dự kiến cả tổ hợp · chương này 11.6k tok · $0.006". */
+    public static String estimateLine(boolean set, double estimatedCost, long chapterTokens, double chapterCost) {
+        StringBuilder sb = new StringBuilder();
+        if (estimatedCost > 0) sb.append("~").append(String.format(Locale.US, "$%.2f", estimatedCost)).append(set ? " dự kiến cả tổ hợp" : " dự kiến");
+        String chapter = (set ? "chương này " : "") + TranslationDashboardFormatter.compactTokens(chapterTokens) + " tok · " + String.format(Locale.US, "$%.3f", Math.max(0d, chapterCost));
+        if (sb.length() > 0) sb.append(" · ");
+        return sb.append(chapter).toString();
+    }
+
+    /** One line for the collapsed source and settings while a run is going. */
+    public static String collapsedSource(String setName, int chapters, boolean set, String fileName, int files) {
+        if (set) return "Tổ hợp " + (setName == null || setName.isEmpty() ? "" : setName + " · ") + chapters + " chương · ▸";
+        return (files > 1 ? files + " tệp" : fileName == null || fileName.isEmpty() ? "1 tệp" : fileName) + " · ▸";
+    }
+}

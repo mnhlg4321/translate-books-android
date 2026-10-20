@@ -171,6 +171,8 @@ final class TranslateSourceFactory {
 
     String currentSetId() { return setId; }
 
+    View box() { return box; }
+
     String currentSetName() { return setName; }
 
     private void applySelection() {

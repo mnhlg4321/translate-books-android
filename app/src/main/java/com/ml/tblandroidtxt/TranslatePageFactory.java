@@ -112,8 +112,10 @@ class TranslatePageFactory {
         if (a.sourceUi.isSetMode()) uploadCard.setVisibility(View.GONE);
 
         // Core readiness must remain visible on Translate; do not hide it behind Settings.
-        root.addView(translationSupportCard(), a.marginLP(-1, -2, 0, 0, 0, 10));
-        root.addView(outputCard(), a.marginLP(-1, -2, 0, 0, 0, 10));
+        a.translateSupportCard = translationSupportCard();
+        a.translateOutputCard = outputCard();
+        root.addView(a.translateSupportCard, a.marginLP(-1, -2, 0, 0, 0, 10));
+        root.addView(a.translateOutputCard, a.marginLP(-1, -2, 0, 0, 0, 10));
 
         LinearLayout actionGrid = a.card(18, a.CARD, a.BORDER);
         actionGrid.setPadding(a.dp(12), a.dp(12), a.dp(12), a.dp(12));
@@ -316,63 +318,68 @@ class TranslatePageFactory {
     }
 
 
+    /**
+     * The progress panel: two bars (the whole run, the chapter) and six cells of one fixed height whose text shrinks to fit, so the panel never
+     * changes size while numbers change. The chapter-set bar and cell label appear only for a chapter-set run.
+     */
     View buildTrackingCard() {
         a.trackingCard = a.card(18, a.CARD, a.BORDER);
         a.trackingCard.setOrientation(LinearLayout.VERTICAL);
-        a.trackingCard.setPadding(a.dp(16), a.dp(16), a.dp(16), a.dp(16));
+        a.trackingCard.setPadding(a.dp(14), a.dp(12), a.dp(14), a.dp(12));
         a.trackingCard.setVisibility(View.VISIBLE);
-        a.trackingTitle = a.text("Running", 18, a.TEXT, true);
-        a.trackingFile = a.text("—", 13, a.MUTED, false);
+        a.trackingTitle = a.text("Running", 17, a.TEXT, true);
+        a.trackingTitle.setSingleLine(true);
+        a.trackingTitle.setEllipsize(android.text.TextUtils.TruncateAt.END);
         a.trackingCard.addView(a.trackingTitle);
-        a.trackingCard.addView(a.trackingFile, a.marginLP(-1, -2, 0, 2, 0, 12));
+        a.trackingFile = a.text("\u2014", 12, a.MUTED, false);
+        a.trackingFile.setSingleLine(true);
+        a.trackingFile.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        a.trackingCard.addView(a.trackingFile, a.marginLP(-1, -2, 0, 2, 0, 8));
 
+        a.setBarRow = barRow("T\u1ed5 h\u1ee3p", a.setBar = bar(), a.setLine = a.text("", 12, a.TEXT, true));
+        a.trackingCard.addView(a.setBarRow, a.marginLP(-1, -2, 0, 0, 0, 6));
+        LinearLayout chapterRow = barRow("Ch\u01b0\u01a1ng", a.chapterBar = bar(), a.metricCompleted = a.text("", 12, a.TEXT, true));
+        a.chapterRowLabel = (TextView) chapterRow.getChildAt(0);
+        a.trackingCard.addView(chapterRow, a.marginLP(-1, -2, 0, 0, 0, 10));
+
+        a.metricTokens = cellValue();
+        a.metricCost = cellValue();
+        a.metricElapsed = cellValue();
+        a.metricRemaining = cellValue();
+        a.metricFailed = cellValue();
+        a.metricGlossaryLocks = cellValue();
+        a.tokensCellLabel = cellLabel("T\u1ed5 h\u1ee3p");
         LinearLayout row1 = a.rowContainer();
-        a.metricChunks = a.text("0", 16, a.BLUE, true);
-        a.metricCompleted = a.text("0/0 chunks", 15, a.BLUE, true);
-        a.metricElapsed = a.text("0s", 15, a.BLUE, true);
-        a.metricRemaining = a.text("Calculating…", 14, a.BLUE, true);
-        row1.addView(statBox("PROGRESS", a.metricCompleted), new LinearLayout.LayoutParams(0, -2, 1));
+        row1.addView(cell(a.metricTokens, a.tokensCellLabel), new LinearLayout.LayoutParams(0, a.dp(CELL_DP), 1));
         row1.addView(a.space(6, 1));
-        row1.addView(statBox("ELAPSED", a.metricElapsed), new LinearLayout.LayoutParams(0, -2, 1));
+        row1.addView(cell(a.metricCost, cellLabel("Chi ph\u00ed")), new LinearLayout.LayoutParams(0, a.dp(CELL_DP), 1));
         row1.addView(a.space(6, 1));
-        row1.addView(statBox("EST. REMAINING", a.metricRemaining), new LinearLayout.LayoutParams(0, -2, 1));
+        row1.addView(cell(a.metricElapsed, cellLabel("\u0110\u00e3 ch\u1ea1y")), new LinearLayout.LayoutParams(0, a.dp(CELL_DP), 1));
         a.trackingCard.addView(row1);
+        LinearLayout row2 = a.rowContainer();
+        row2.addView(cell(a.metricRemaining, cellLabel("C\u00f2n l\u1ea1i")), new LinearLayout.LayoutParams(0, a.dp(CELL_DP), 1));
+        row2.addView(a.space(6, 1));
+        row2.addView(cell(a.metricFailed, cellLabel("L\u1ed7i \u00b7 fb")), new LinearLayout.LayoutParams(0, a.dp(CELL_DP), 1));
+        row2.addView(a.space(6, 1));
+        row2.addView(cell(a.metricGlossaryLocks, cellLabel("Lu\u1eadt")), new LinearLayout.LayoutParams(0, a.dp(CELL_DP), 1));
+        a.trackingCard.addView(row2, a.marginLP(-1, -2, 0, 6, 0, 0));
 
-        LinearLayout health = a.rowContainer();
-        a.metricFailed = a.text("0 failed", 16, a.BLUE, true);
-        a.metricFallbacks = a.text("0 fallbacks", 16, a.BLUE, true);
-        health.addView(statBox("FAILED", a.metricFailed), new LinearLayout.LayoutParams(0, -2, 1));
-        health.addView(a.space(6, 1));
-        health.addView(statBox("FALLBACK", a.metricFallbacks), new LinearLayout.LayoutParams(0, -2, 1));
-        a.trackingCard.addView(health, a.marginLP(-1, -2, 0, 6, 0, 0));
+        // Fields other code still writes to; not shown.
+        a.metricChunks = a.text("0", 1, a.BLUE, true);
+        a.metricFallbacks = a.text("0", 1, a.BLUE, true);
+        a.metricCurrentChunk = a.text("\u2014", 1, a.CYAN, true);
+        a.metricPronounLocks = a.text("\u2014", 1, a.CYAN, true);
+        a.lockUsageMeta = a.text("", 1, a.MUTED, false);
 
-        LinearLayout money = a.rowContainer();
-        a.metricCost = a.text("$0.000 spent", 17, Color.rgb(172, 96, 0), true);
-        a.metricTokens = a.text("0 tokens used", 17, a.BLUE, true);
-        money.addView(wideStat("TOKENS", a.metricTokens, Color.rgb(206, 225, 255)), new LinearLayout.LayoutParams(0, -2, 1));
-        money.addView(a.space(8, 1));
-        money.addView(wideStat("COST", a.metricCost, Color.rgb(255, 238, 176)), new LinearLayout.LayoutParams(0, -2, 1));
-        a.trackingCard.addView(money, a.marginLP(-1, -2, 0, 6, 0, 0));
-
-        LinearLayout rules = a.rowContainer();
-        a.metricCurrentChunk = a.text("—", 15, a.CYAN, true);
-        a.metricGlossaryLocks = a.text("—", 14, a.CYAN, true);
-        a.metricPronounLocks = a.text("—", 14, a.CYAN, true);
-        rules.addView(statBox("CURRENT CHUNK", a.metricCurrentChunk), new LinearLayout.LayoutParams(0, -2, 1));
-        rules.addView(a.space(6, 1));
-        rules.addView(statBox("GLOSSARY", a.metricGlossaryLocks), new LinearLayout.LayoutParams(0, -2, 1));
-        rules.addView(a.space(6, 1));
-        rules.addView(statBox("PRONOUN", a.metricPronounLocks), new LinearLayout.LayoutParams(0, -2, 1));
-        a.trackingCard.addView(rules, a.marginLP(-1, -2, 0, 8, 0, 0));
-        a.lockUsageMeta = a.text("Rule usage appears when a chunk request is prepared.", 11, a.MUTED, false);
-        a.trackingCard.addView(a.lockUsageMeta, a.marginLP(-1, -2, 0, 0, 0, 12));
+        a.estimateLine = a.text("", 11, a.MUTED, false);
+        a.estimateLine.setSingleLine(true);
+        a.estimateLine.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        a.trackingCard.addView(a.estimateLine, a.marginLP(-1, -2, 0, 8, 0, 4));
 
         LinearLayout previewCard = a.card(14, a.FIELD, a.BORDER);
         previewCard.setOrientation(LinearLayout.VERTICAL);
-        previewCard.setPadding(a.dp(12), a.dp(12), a.dp(8), a.dp(10));
-        previewCard.addView(a.text("LAST TRANSLATION PREVIEW", 11, a.CYAN, true));
+        previewCard.setPadding(a.dp(12), a.dp(8), a.dp(8), a.dp(8));
         a.previewMeta = a.text("Waiting for the first accepted chunk.", 11, a.MUTED, false);
-        previewCard.addView(a.previewMeta, a.marginLP(-1, -2, 0, 2, 0, 8));
         a.previewText = a.text("The latest accepted translation will appear here.", 13, a.TEXT, false);
         a.previewText.setSingleLine(false);
         a.previewText.setTextIsSelectable(true);
@@ -383,37 +390,77 @@ class TranslatePageFactory {
         previewScroll.setScrollbarFadingEnabled(false);
         previewScroll.setNestedScrollingEnabled(true);
         previewScroll.addView(a.previewText, new ScrollView.LayoutParams(-1, -2));
-        previewCard.addView(previewScroll, new LinearLayout.LayoutParams(-1, a.dp(150)));
+        LinearLayout previewBody = new LinearLayout(a);
+        previewBody.setOrientation(LinearLayout.VERTICAL);
+        previewBody.addView(a.previewMeta, a.marginLP(-1, -2, 0, 4, 0, 6));
+        previewBody.addView(previewScroll, new LinearLayout.LayoutParams(-1, a.dp(150)));
+        previewBody.setVisibility(View.GONE);
+        TextView previewToggle = a.text("\u25b8 B\u1ea3n d\u1ecbch g\u1ea7n nh\u1ea5t (thu g\u1ecdn)", 12, a.CYAN, true);
+        previewToggle.setPadding(0, a.dp(8), 0, a.dp(8));
+        previewToggle.setMinHeight(a.dp(44));
+        previewToggle.setGravity(Gravity.CENTER_VERTICAL);
+        previewToggle.setOnClickListener(v -> {
+            boolean open = previewBody.getVisibility() != View.VISIBLE;
+            previewBody.setVisibility(open ? View.VISIBLE : View.GONE);
+            previewToggle.setText(open ? "\u25be B\u1ea3n d\u1ecbch g\u1ea7n nh\u1ea5t" : "\u25b8 B\u1ea3n d\u1ecbch g\u1ea7n nh\u1ea5t (thu g\u1ecdn)");
+        });
+        previewCard.addView(previewToggle);
+        previewCard.addView(previewBody);
         a.trackingCard.addView(previewCard);
         return a.trackingCard;
     }
 
+    /** Height of every cell: fixed, so a longer number shrinks its text instead of growing the panel. */
+    static final int CELL_DP = 56;
 
-    LinearLayout statBox(String label, TextView value) {
+    private ProgressBar bar() {
+        ProgressBar p = new ProgressBar(a, null, android.R.attr.progressBarStyleHorizontal);
+        p.setMax(1000);
+        return p;
+    }
+
+    /** [label] [bar] and a text line under the bar. */
+    private LinearLayout barRow(String label, ProgressBar bar, TextView line) {
+        LinearLayout row = new LinearLayout(a);
+        row.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout top = a.rowContainer();
+        TextView l = a.text(label, 11, a.MUTED, true);
+        l.setMinWidth(a.dp(52));
+        top.addView(l, new LinearLayout.LayoutParams(-2, -2));
+        top.addView(bar, new LinearLayout.LayoutParams(0, a.dp(10), 1));
+        row.addView(top);
+        row.addView(line, a.marginLP(-1, -2, 52, 2, 0, 0));
+        line.setSingleLine(true);
+        line.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        return row;
+    }
+
+    private TextView cellValue() {
+        TextView v = a.text("\u2014", 16, a.TEXT, true);
+        v.setGravity(Gravity.CENTER);
+        v.setSingleLine(true);
+        v.setMaxLines(1);
+        android.widget.TextView t = v;
+        t.setAutoSizeTextTypeUniformWithConfiguration(10, 16, 1, android.util.TypedValue.COMPLEX_UNIT_SP);
+        return v;
+    }
+
+    private TextView cellLabel(String text) {
+        TextView l = a.text(text, 10, a.MUTED, true);
+        l.setGravity(Gravity.CENTER);
+        l.setSingleLine(true);
+        return l;
+    }
+
+    private LinearLayout cell(TextView value, TextView label) {
         LinearLayout box = a.card(10, a.FIELD, a.BORDER);
         box.setOrientation(LinearLayout.VERTICAL);
         box.setGravity(Gravity.CENTER);
-        box.setPadding(a.dp(4), a.dp(8), a.dp(4), a.dp(8));
-        box.addView(value);
-        TextView l = a.text(label, 9, a.MUTED, true);
-        l.setGravity(Gravity.CENTER);
-        box.addView(l);
+        box.setPadding(a.dp(4), a.dp(4), a.dp(4), a.dp(4));
+        box.addView(value, new LinearLayout.LayoutParams(-1, 0, 1));
+        box.addView(label, new LinearLayout.LayoutParams(-1, -2));
         return box;
     }
-
-
-    LinearLayout wideStat(String label, TextView value, int fill) {
-        LinearLayout box = a.card(10, fill, fill);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setGravity(Gravity.CENTER);
-        box.setPadding(a.dp(8), a.dp(8), a.dp(8), a.dp(8));
-        box.addView(value);
-        TextView l = a.text(label, 9, Color.rgb(50, 50, 50), true);
-        l.setGravity(Gravity.CENTER);
-        box.addView(l);
-        return box;
-    }
-
 
     View activityLogCard() {
         LinearLayout logCard = a.sectionCard("▣", "Activity Log");

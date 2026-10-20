@@ -112,6 +112,10 @@ public class MainActivity extends Activity {
     TextView topTitle, topSubtitle, topStatusChip;
     ScrollView logScroll;
     TextView estimateText, modelPriceLabel, modelDiagnosticsText;
+    ProgressBar setBar, chapterBar;
+    LinearLayout setBarRow;
+    TextView setLine, chapterRowLabel, tokensCellLabel, estimateLine;
+    View translateSupportCard, translateOutputCard;
     TextView trackingTitle, trackingFile, metricChunks, metricCompleted, metricFailed, metricFallbacks, metricElapsed, metricRemaining, metricCost, metricTokens;
     TextView metricCurrentChunk, metricGlossaryLocks, metricPronounLocks, lockUsageMeta, previewMeta, previewText;
     LinearLayout trackingCard, estimatePanel, outputFolderFilesList, actionControlRow;
@@ -145,12 +149,83 @@ public class MainActivity extends Activity {
     long timedElapsedMs;
     long timedRemainingMs = -1L;
     long timedAtRealtime;
+    long timedRunElapsedBaseMs;
+    int timedPermille;
+
+    /** Elapsed and remaining of the whole run, advanced between broadcasts by the timer. */
+    void refreshRunClock() {
+        long delta = Math.max(0L, SystemClock.elapsedRealtime() - timedAtRealtime);
+        long elapsedNow = timedRunElapsedBaseMs + ("RUNNING".equalsIgnoreCase(timedRuntimeState) ? delta : 0L);
+        if (metricElapsed != null) metricElapsed.setText(RunPanelFormatter.clock(elapsedNow));
+        long left = RunPanelFormatter.remainingMs(elapsedNow, timedPermille);
+        if (metricRemaining != null) metricRemaining.setText(RunPanelFormatter.remaining(left));
+    }
+
+    String currentSetNameForPanel() { return sourceUi != null && sourceUi.isSetMode() ? sourceUi.currentSetName() : ""; }
+
+    /** Views collapsed while a run is going; the panel sits at the top. */
+    java.util.List<View> collapsedWhileRunning = new ArrayList<>();
+    TextView collapsedSummary;
+    boolean runLayoutOn, runDetailsOpen;
+    int trackingOriginalIndex = -1;
+
+    /**
+     * While a run is going the progress panel is the first thing on the Translate screen and the source and settings cards shrink to one line
+     * (tap it to open them); when the run stops everything returns to its place.
+     */
+    void applyRunLayout(boolean running) {
+        if (trackingCard == null || !(trackingCard.getParent() instanceof LinearLayout)) return;
+        LinearLayout root = (LinearLayout) trackingCard.getParent();
+        if (running == runLayoutOn) { if (running) updateCollapsedSummary(); return; }
+        runLayoutOn = running;
+        if (running) {
+            trackingOriginalIndex = root.indexOfChild(trackingCard);
+            root.removeView(trackingCard);
+            root.addView(trackingCard, 0, marginLP(-1, -2, 0, 0, 0, 8));
+            if (collapsedSummary == null) {
+                collapsedSummary = text("", 13, BLUE, true);
+                collapsedSummary.setMinHeight(dp(44));
+                collapsedSummary.setGravity(Gravity.CENTER_VERTICAL);
+                collapsedSummary.setPadding(dp(12), 0, dp(12), 0);
+                tint(collapsedSummary, FIELD, BORDER, 1, 12);
+                collapsedSummary.setContentDescription("run-source-summary");
+                collapsedSummary.setOnClickListener(v -> { runDetailsOpen = !runDetailsOpen; applyCollapse(); });
+            }
+            if (collapsedSummary.getParent() != null) ((ViewGroup) collapsedSummary.getParent()).removeView(collapsedSummary);
+            root.addView(collapsedSummary, 1, marginLP(-1, -2, 0, 0, 0, 8));
+            collapsedWhileRunning.clear();
+            for (View v : new View[]{sourceUi.box(), filesSourceCard, translateSupportCard, translateOutputCard}) if (v != null) collapsedWhileRunning.add(v);
+            runDetailsOpen = false;
+            updateCollapsedSummary();
+            applyCollapse();
+        } else {
+            if (collapsedSummary != null && collapsedSummary.getParent() != null) ((ViewGroup) collapsedSummary.getParent()).removeView(collapsedSummary);
+            root.removeView(trackingCard);
+            root.addView(trackingCard, Math.min(Math.max(trackingOriginalIndex, 0), root.getChildCount()), marginLP(-1, -2, 0, 8, 0, 16));
+            for (View v : collapsedWhileRunning) v.setVisibility(View.VISIBLE);
+            collapsedWhileRunning.clear();
+            sourceUi.applyConfigRows();
+            if (sourceUi.isSetMode() && filesSourceCard != null) filesSourceCard.setVisibility(View.GONE);
+        }
+    }
+
+    private void applyCollapse() {
+        for (View v : collapsedWhileRunning) v.setVisibility(runDetailsOpen ? View.VISIBLE : View.GONE);
+        if (sourceUi.isSetMode() && filesSourceCard != null) filesSourceCard.setVisibility(View.GONE);
+        updateCollapsedSummary();
+    }
+
+    private void updateCollapsedSummary() {
+        if (collapsedSummary == null) return;
+        String text = RunPanelFormatter.collapsedSource(sourceUi.currentSetName(), chapterBindings == null ? 0 : chapterBindings.size(), sourceUi.isSetMode(), inputUris.isEmpty() ? "" : FileUtil.displayName(this, inputUris.get(0)), inputUris.size());
+        collapsedSummary.setText(runDetailsOpen ? text.replace("\u25b8", "\u25be") : text);
+    }
+
     final Runnable runtimeTimerTick = new Runnable() {
         @Override public void run() {
             if (!shouldRunRuntimeTimer()) return;
             long delta = Math.max(0L, SystemClock.elapsedRealtime() - timedAtRealtime);
-            if (metricElapsed != null) metricElapsed.setText("Elapsed " + CostEstimator.duration(timedElapsedMs + delta));
-            if (metricRemaining != null) metricRemaining.setText(TranslationDashboardFormatter.remaining(timedRemainingMs < 0 ? -1L : Math.max(0L, timedRemainingMs - delta)));
+            refreshRunClock();
             runtimeTimerHandler.postDelayed(this, 3000L);
         }
     };
@@ -3427,23 +3502,36 @@ public class MainActivity extends Activity {
         timedElapsedMs = Math.max(0L, elapsed);
         timedRemainingMs = remain;
         timedAtRealtime = SystemClock.elapsedRealtime();
-        if (trackingTitle != null) trackingTitle.setText(dashboardTitle(state));
+        int setTotal = intent.getIntExtra(TranslatorService.EXTRA_SET_TOTAL, 0);
+        int setDone = intent.getIntExtra(TranslatorService.EXTRA_SET_DONE, 0);
+        int setFailed = intent.getIntExtra(TranslatorService.EXTRA_SET_FAILED, 0);
+        int setIndex = intent.getIntExtra(TranslatorService.EXTRA_SET_INDEX, 0);
+        long runTokens = intent.getLongExtra(TranslatorService.EXTRA_SESSION_TOKENS, 0L);
+        double runCost = intent.getDoubleExtra(TranslatorService.EXTRA_SESSION_COST, 0d);
+        long runStart = intent.getLongExtra(TranslatorService.EXTRA_SESSION_START_MS, 0L);
+        boolean setRun = setTotal > 0;
+        // The run clock is the whole run's, not the current chapter's; it keeps counting from its start time.
+        timedRunElapsedBaseMs = runStart > 0 ? Math.max(0L, System.currentTimeMillis() - runStart) : Math.max(0L, elapsed);
+        timedPermille = setRun ? RunPanelFormatter.setPermille(setTotal, setDone, setFailed, completed, total) : RunPanelFormatter.chunkPermille(completed, total);
+        String set = currentSetNameForPanel();
+        if (trackingTitle != null) trackingTitle.setText(dashboardTitle(state) + (setRun ? " \u00b7 T\u1ed5 h\u1ee3p" + (set.isEmpty() ? "" : " " + set) : ""));
         if (trackingFile != null) trackingFile.setText(nonEmpty(file, "Translation session"));
-        if (metricChunks != null) metricChunks.setText(String.valueOf(total));
-        if (metricCompleted != null) metricCompleted.setText(TranslationDashboardFormatter.progress(completed, total));
-        if (metricFailed != null) metricFailed.setText(failed + " failed");
-        if (metricFallbacks != null) metricFallbacks.setText(fallbacks + " fallbacks");
-        if (metricElapsed != null) metricElapsed.setText("Elapsed " + CostEstimator.duration(elapsed));
-        if (metricRemaining != null) metricRemaining.setText(TranslationDashboardFormatter.remaining(remain));
-        if (metricCost != null) metricCost.setText(TranslationDashboardFormatter.cost(state, cost, estimatedCost, providerUsageComplete));
-        if (metricTokens != null) metricTokens.setText(TranslationDashboardFormatter.tokens(state, tokens, estimatedTokens, providerUsageComplete));
-        if (metricCurrentChunk != null) metricCurrentChunk.setText(TranslationDashboardFormatter.currentChunk(currentChunk, total));
-        if (metricGlossaryLocks != null) metricGlossaryLocks.setText(TranslationDashboardFormatter.lockCount(glossaryLocks));
-        if (metricPronounLocks != null) metricPronounLocks.setText(TranslationDashboardFormatter.lockCount(pronounLocks));
-        if (lockUsageMeta != null) lockUsageMeta.setText(TranslationDashboardFormatter.lockMeta(lockPhase, lockChunk, total));
+        if (setBarRow != null) setBarRow.setVisibility(setRun ? View.VISIBLE : View.GONE);
+        if (setBar != null) setBar.setProgress(RunPanelFormatter.setPermille(setTotal, setDone, setFailed, completed, total));
+        if (setLine != null) setLine.setText(RunPanelFormatter.setLine(setIndex, setTotal, setDone, setFailed, -1));
+        if (chapterBar != null) chapterBar.setProgress(RunPanelFormatter.chunkPermille(completed, total));
+        if (metricCompleted != null) metricCompleted.setText(RunPanelFormatter.chapterLine(Math.max(currentChunk, completed), total, file));
+        if (tokensCellLabel != null) tokensCellLabel.setText(setRun ? "T\u1ed5 h\u1ee3p" : "Token");
+        if (metricTokens != null) metricTokens.setText(RunPanelFormatter.tokens(setRun || runTokens > 0 ? Math.max(runTokens, tokens) : tokens));
+        if (metricCost != null) metricCost.setText(RunPanelFormatter.money(setRun || runCost > 0 ? Math.max(runCost, cost) : cost));
+        if (metricFailed != null) metricFailed.setText(RunPanelFormatter.failures(failed, fallbacks));
+        if (metricGlossaryLocks != null) metricGlossaryLocks.setText(RunPanelFormatter.rules(glossaryLocks, pronounLocks));
+        if (estimateLine != null) estimateLine.setText(RunPanelFormatter.estimateLine(setRun, estimatedCost, tokens, cost));
         if (previewMeta != null) previewMeta.setText(TranslationDashboardFormatter.previewMeta(previewChunk, total, preview));
         if (previewText != null) previewText.setText(preview == null || preview.trim().isEmpty()
                 ? "The latest accepted translation will appear here." : preview);
+        refreshRunClock();
+        applyRunLayout("RUNNING".equalsIgnoreCase(state) || "PAUSED".equalsIgnoreCase(state) || "VALIDATING".equalsIgnoreCase(state) || "READY".equalsIgnoreCase(state));
         updateRuntimeTimer();
     }
 
