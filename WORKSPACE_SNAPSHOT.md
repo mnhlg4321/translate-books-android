@@ -5,7 +5,7 @@
 - Current branch: `feature/v4.23` in worktree `D:\P5E-builds\wt-v4.23` (BASE `c8408207` on `feature/v4.22`).
 - Current commit: `d4d0ad54` is the implementation baseline before this snapshot commit (test-only commits may follow). Confirm actual HEAD when resuming.
 - Current build: 4.23-dev.12 / code 290 (event build-20261020-215555, source d4d0ad54, APK SHA-256 CD1FE14368A35A6737F64040683879DB6C65FE0C48D263A2503F006C6ECCF589); installed on emulator-5554 only; owner phone 15e84958 still runs 4.23-dev.11 / code 286 (not touched).
-- Current phase: stop point after J5 slice B reached: regression, dev.12 build and emulator QA done; waiting for the owner decision to install on the phone (needs a run-as backup from dev.11 first).
+- Current phase: dev.12 QA done; a cosmetic fix (palette picker names on light palettes) found in the last screenshot review is committed after dev.12, so a dev.13 build is needed before the phone install; waiting for the owner decision.
 - Completed tasks: steps 01-04; L1-L4; U-series; J1 (SAF probe off the UI thread, async log writer, caches, in-place ticks), J2 + J6 (chapter-local validation failures, run cost cap, stop after 2, continue set, bracket rule against RAW, cut-answer retry or split, quote repair, missing lines, reasoning effort), J3 progress panel, J4 wrap buttons, J5 slices A and B.
 - Pending tasks: owner approval to install dev.12 on the phone; trial K1-K8; release decision (v4.22 and v4.23 order).
 - Known bugs/limits: Xem tat ca opens Jobs without a filter; no search box in Glossaries/Pronouns; 66 old test jobs left on the emulator by older test classes; every phone behaviour NOT_MEASURED until the owner tries G1-G6.

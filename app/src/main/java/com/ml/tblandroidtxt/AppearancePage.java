@@ -185,7 +185,8 @@ final class AppearancePage {
         TextView swatch = label("", 1, p.accent, false);
         swatch.setBackground(box(p.card, p.accent, a.dp(8) * a.cornerFactor));
         cell.addView(swatch, new LinearLayout.LayoutParams(-1, a.dp(34)));
-        TextView name = label((selected ? "✓  " : "") + p.name, 12 * a.fontScale, selected ? a.TEXT : a.MUTED, selected);
+        // The cell is drawn on the palette's own panel, so its name uses that palette's text colours, not the current theme's.
+        TextView name = label((selected ? "✓  " : "") + p.name, 12 * a.fontScale, selected ? p.text : p.muted, selected);
         name.setGravity(Gravity.CENTER);
         cell.addView(name, new LinearLayout.LayoutParams(-1, a.dp(34)));
         a.tint(cell, p.panel, selected ? a.BLUE : a.BORDER, selected ? 2 : 1, 10);
