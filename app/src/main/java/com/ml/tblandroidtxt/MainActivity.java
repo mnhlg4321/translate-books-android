@@ -153,6 +153,8 @@ public class MainActivity extends Activity {
     long timedElapsedMs;
     long timedRemainingMs = -1L;
     long timedAtRealtime;
+    /** State of the last progress broadcast: the panel title and the top chip are both drawn from it. */
+    volatile String trackedState = "";
     long timedRunElapsedBaseMs;
     int timedPermille;
 
@@ -188,7 +190,7 @@ public class MainActivity extends Activity {
             root.addView(trackingCard, 0, marginLP(-1, -2, 0, 0, 0, 8));
             if (collapsedSummary == null) {
                 collapsedSummary = text("", 13, BLUE, true);
-                collapsedSummary.setMinHeight(dp(44));
+                collapsedSummary.setMinHeight(dp(48));
                 collapsedSummary.setGravity(Gravity.CENTER_VERTICAL);
                 collapsedSummary.setPadding(dp(12), 0, dp(12), 0);
                 tint(collapsedSummary, FIELD, BORDER, 1, 12);
@@ -1053,14 +1055,12 @@ public class MainActivity extends Activity {
     void refreshTopStatusChip() {
         if (topStatusChip == null) return;
         boolean active = TranslatorService.isActive() || translationActive;
-        String state = active ? "RUNNING" : "IDLE";
+        String durable = "";
         if (!active) {
             Intent saved = RuntimeStateStore.toIntent(this);
-            if (saved != null) {
-                String durable = saved.getStringExtra(TranslatorService.EXTRA_STATE);
-                if (durable != null && !durable.trim().isEmpty()) state = durable.trim().toUpperCase(java.util.Locale.ROOT);
-            }
+            if (saved != null) durable = saved.getStringExtra(TranslatorService.EXTRA_STATE);
         }
+        String state = RunPanelFormatter.chipState(active, trackedState, durable);
         if (state.equals(renderedTopState)) return;
         renderedTopState = state;
         boolean healthy = "RUNNING".equals(state) || "COMPLETED".equals(state) || "READY".equals(state);
@@ -3548,7 +3548,8 @@ public class MainActivity extends Activity {
         timedRunElapsedBaseMs = runStart > 0 ? Math.max(0L, System.currentTimeMillis() - runStart) : Math.max(0L, elapsed);
         timedPermille = setRun ? RunPanelFormatter.setPermille(setTotal, setDone, setFailed, completed, total) : RunPanelFormatter.chunkPermille(completed, total);
         String set = currentSetNameForPanel();
-        if (trackingTitle != null) trackingTitle.setText(dashboardTitle(state) + (setRun ? " \u00b7 T\u1ed5 h\u1ee3p" + (set.isEmpty() ? "" : " " + set) : ""));
+        trackedState = state;
+        if (trackingTitle != null) trackingTitle.setText(RunPanelFormatter.title(state, setRun, set, file));
         if (trackingFile != null) trackingFile.setText(nonEmpty(file, "Translation session"));
         if (setBarRow != null) setBarRow.setVisibility(setRun ? View.VISIBLE : View.GONE);
         if (setBar != null) setBar.setProgress(RunPanelFormatter.setPermille(setTotal, setDone, setFailed, completed, total));
@@ -3565,6 +3566,7 @@ public class MainActivity extends Activity {
         if (previewText != null) previewText.setText(preview == null || preview.trim().isEmpty()
                 ? "The latest accepted translation will appear here." : preview);
         refreshRunClock();
+        refreshTopStatusChip();
         applyRunLayout("RUNNING".equalsIgnoreCase(state) || "PAUSED".equalsIgnoreCase(state) || "VALIDATING".equalsIgnoreCase(state) || "READY".equalsIgnoreCase(state));
         updateRuntimeTimer();
     }
@@ -3811,8 +3813,8 @@ public class MainActivity extends Activity {
         b.setTextColor(color == RED ? RED : (color == GREEN ? GREEN : BLUE));
         b.setTextSize(11 * fontScale);
         b.setPadding(dp(6), dp(4), dp(6), dp(4));
-        b.setMinWidth(dp(44));
-        b.setMinimumWidth(dp(44));
+        b.setMinWidth(dp(48));
+        b.setMinimumWidth(dp(48));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2, -2);
         lp.setMargins(0, 0, dp(4), 0);
         b.setLayoutParams(lp);

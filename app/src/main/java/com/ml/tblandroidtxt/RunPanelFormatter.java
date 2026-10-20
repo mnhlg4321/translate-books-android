@@ -6,6 +6,35 @@ import java.util.Locale;
 public final class RunPanelFormatter {
     private RunPanelFormatter() {}
 
+    /** Vietnamese name of a run state for the panel title. */
+    public static String stateLabel(String state) {
+        String s = state == null ? "" : state.trim().toUpperCase(Locale.ROOT);
+        switch (s) {
+            case "PAUSED": return "T\u1ea1m d\u1eebng";
+            case "COMPLETED": return "Xong";
+            case "FAILED": return "L\u1ed7i";
+            case "IDLE": return "\u0110\u00e3 d\u1eebng";
+            case "VALIDATING": case "READY": return "\u0110ang chu\u1ea9n b\u1ecb";
+            default: return "\u0110ang d\u1ecbch";
+        }
+    }
+
+    /** "Đang dịch · Tổ hợp ATE_JP_VOL6" for a chapter-set run, "Đang dịch · 004.txt" for one file. */
+    public static String title(String state, boolean set, String setName, String file) {
+        String what;
+        if (set) what = "T\u1ed5 h\u1ee3p" + (setName == null || setName.trim().isEmpty() ? "" : " " + setName.trim());
+        else what = file == null || file.trim().isEmpty() ? "" : file.trim();
+        return stateLabel(state) + (what.isEmpty() ? "" : " \u00b7 " + what);
+    }
+
+    /** What the status chip at the top shows: the state of the run in progress when there is one, else the last saved state. */
+    public static String chipState(boolean serviceActive, String tracked, String durable) {
+        String t = tracked == null ? "" : tracked.trim().toUpperCase(Locale.ROOT);
+        String d = durable == null ? "" : durable.trim().toUpperCase(Locale.ROOT);
+        if (serviceActive) return t.equals("PAUSED") || t.equals("VALIDATING") || t.equals("READY") ? t : "RUNNING";
+        return d.isEmpty() ? "IDLE" : d;
+    }
+
     /** "Chương 4/14 · 3 xong · 0 lỗi". {@code index} is the 1-based chapter being worked on. */
     public static String setLine(int index, int total, int done, int failed, int chapterNo) {
         String which = chapterNo >= 0 ? "Chương " + chapterNo + " (" + Math.min(Math.max(index, 0), total) + "/" + total + ")" : "Chương " + Math.min(Math.max(index, 0), total) + "/" + total;

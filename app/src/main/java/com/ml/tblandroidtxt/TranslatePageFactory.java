@@ -329,7 +329,7 @@ class TranslatePageFactory {
         a.trackingCard.setVisibility(View.VISIBLE);
         a.trackingTitle = a.text("Running", 17, a.TEXT, true);
         a.trackingTitle.setSingleLine(true);
-        a.trackingTitle.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        a.trackingTitle.setEllipsize(android.text.TextUtils.TruncateAt.MIDDLE);
         a.trackingCard.addView(a.trackingTitle);
         a.trackingFile = a.text("\u2014", 12, a.MUTED, false);
         a.trackingFile.setSingleLine(true);
@@ -397,7 +397,7 @@ class TranslatePageFactory {
         previewBody.setVisibility(View.GONE);
         TextView previewToggle = a.text("\u25b8 B\u1ea3n d\u1ecbch g\u1ea7n nh\u1ea5t (thu g\u1ecdn)", 12, a.CYAN, true);
         previewToggle.setPadding(0, a.dp(8), 0, a.dp(8));
-        previewToggle.setMinHeight(a.dp(44));
+        previewToggle.setMinHeight(a.dp(48));
         previewToggle.setGravity(Gravity.CENTER_VERTICAL);
         previewToggle.setOnClickListener(v -> {
             boolean open = previewBody.getVisibility() != View.VISIBLE;

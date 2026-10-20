@@ -104,11 +104,11 @@ final class AppearancePage {
         buttons.setOrientation(LinearLayout.HORIZONTAL);
         TextView primary = label("Nút chính", 13 * font, p.onAccent, true);
         primary.setGravity(Gravity.CENTER);
-        primary.setMinHeight(a.dp(44));
+        primary.setMinHeight(a.dp(48));
         primary.setBackground(box(p.accent, p.accent, a.dp(12) * corner));
         TextView secondary = label("Nút phụ", 13 * font, p.text, true);
         secondary.setGravity(Gravity.CENTER);
-        secondary.setMinHeight(a.dp(44));
+        secondary.setMinHeight(a.dp(48));
         secondary.setBackground(box(p.field, p.border, a.dp(12) * corner));
         buttons.addView(primary, new LinearLayout.LayoutParams(0, -2, 1));
         buttons.addView(a.space(8, 1));
@@ -212,7 +212,7 @@ final class AppearancePage {
             sw.setBackground(box(color, selected ? a.TEXT : a.BORDER, a.dp(22) * a.cornerFactor));
             sw.setContentDescription("accent:" + hex);
             sw.setOnClickListener(v -> tryAccent(hex));
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, a.dp(44), 1);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, a.dp(48), 1);
             lp.setMargins(a.dp(2), 0, a.dp(2), 0);
             swatches.addView(sw, lp);
         }

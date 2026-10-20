@@ -11,6 +11,6 @@ public class V423WrapButtonTest {
         assertEquals(-1, WrapButton.heightFor(-1));
         assertEquals(-2, WrapButton.heightFor(-2));
         assertEquals(0, WrapButton.heightFor(0));
-        assertEquals(44, WrapButton.MIN_HEIGHT_DP);
+        assertEquals(48, WrapButton.MIN_HEIGHT_DP);
     }
 }

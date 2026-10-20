@@ -17,6 +17,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TranslatorService extends Service {
+    /** The run stopped because too many chapters in a row failed their validation; the message is the sentence shown to the person. */
+    private static class QueueStoppedException extends IllegalStateException {
+        QueueStoppedException(String message) { super(message); }
+    }
+
     private static class CostLimitReachedException extends RuntimeException {
         CostLimitReachedException(String message) { super(message); }
     }
@@ -329,7 +334,8 @@ public class TranslatorService extends Service {
             setState(TranslationJobState.State.FAILED, activeJobId > 0 ? "Translation failed" : "Initialization failure");
             if (activeJobId > 0) repo.touchJob(activeJobId, "error");
             logFailure(metricPhase, e);
-            broadcast("error", -1, (activeJobId > 0 ? "Lỗi: " : "Lỗi khởi tạo: ") + AppValidator.readableError(e) + remainingSuffix() + chapterSummarySuffix());
+            if (e instanceof QueueStoppedException) broadcast("error", -1, e.getMessage() + chapterSummarySuffix());
+            else broadcast("error", -1, (activeJobId > 0 ? "Lỗi: " : "Lỗi khởi tạo: ") + AppValidator.readableError(e) + remainingSuffix() + chapterSummarySuffix());
             releaseRun();
             stopForeground(STOP_FOREGROUND_REMOVE);
             NotificationManager nm = getSystemService(NotificationManager.class);
@@ -393,11 +399,11 @@ public class TranslatorService extends Service {
                 if(!cancelled)outcome.done(input.displayName);
             }catch(Exception e){
                 if(cancelled)throw e;
-                outcome.failed(input.displayName,AppValidator.readableError(e));
+                String here="Chương "+(binding.chapterNo>=0?binding.chapterNo:i+1);
+                outcome.failed(input.displayName,AppValidator.readableError(e),here);
                 if(ChapterRunOutcome.continuesQueue(e)){
                     if(activeJobId>0)repo.touchJob(activeJobId,"error");
-                    if(outcome.shouldStopQueue())throw new IllegalStateException("Dừng tổ hợp: "+outcome.failedInARow()+" chương liên tiếp lỗi ("+AppValidator.readableError(e)+")",e);
-                    String here="Chương "+(binding.chapterNo>=0?binding.chapterNo:i+1);
+                    if(outcome.shouldStopQueue())throw new QueueStoppedException(outcome.stopSentence());
                     String next=i+1<session.chapters.size()?"chuyển chương "+(session.chapters.get(i+1).chapterNo>=0?session.chapters.get(i+1).chapterNo:i+2):"hết tổ hợp";
                     broadcast("running",percent(i+1,batch.inputs.size()),here+" lỗi, "+next+": "+AppValidator.readableError(e));
                     continue;

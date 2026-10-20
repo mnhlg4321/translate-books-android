@@ -7,6 +7,32 @@ import org.junit.Test;
 
 /** v4.23 J3: the numbers and lines of the one-screen progress panel. */
 public class V423RunPanelTest {
+    @Test public void titleIsVietnameseAndNamesTheSetOrTheFile() {
+        assertEquals("\u0110ang d\u1ecbch \u00b7 T\u1ed5 h\u1ee3p ATE_JP_VOL6", RunPanelFormatter.title("RUNNING", true, "ATE_JP_VOL6", "004.txt"));
+        assertEquals("\u0110ang d\u1ecbch \u00b7 004.txt", RunPanelFormatter.title("RUNNING", false, "", "004.txt"));
+        assertEquals("T\u1ea1m d\u1eebng \u00b7 T\u1ed5 h\u1ee3p X", RunPanelFormatter.title("PAUSED", true, "X", ""));
+        assertEquals("\u0110\u00e3 d\u1eebng \u00b7 T\u1ed5 h\u1ee3p", RunPanelFormatter.title("IDLE", true, "", ""));
+        assertEquals("Xong \u00b7 T\u1ed5 h\u1ee3p X", RunPanelFormatter.title("COMPLETED", true, "X", "a"));
+        assertEquals("L\u1ed7i \u00b7 T\u1ed5 h\u1ee3p X", RunPanelFormatter.title("FAILED", true, "X", "a"));
+        assertEquals("\u0110ang chu\u1ea9n b\u1ecb", RunPanelFormatter.title("VALIDATING", false, "", ""));
+    }
+
+    @Test public void chipAndTitleAreDrawnFromTheSameState() {
+        // A run in progress: the chip follows the broadcast state, never a stale saved COMPLETED.
+        assertEquals("RUNNING", RunPanelFormatter.chipState(true, "RUNNING", "COMPLETED"));
+        assertEquals("PAUSED", RunPanelFormatter.chipState(true, "PAUSED", "RUNNING"));
+        assertEquals("RUNNING", RunPanelFormatter.chipState(true, "", "COMPLETED"));
+        assertEquals("RUNNING", RunPanelFormatter.chipState(true, "COMPLETED", ""));
+        // Nothing running: the last saved state.
+        assertEquals("COMPLETED", RunPanelFormatter.chipState(false, "RUNNING", "COMPLETED"));
+        assertEquals("FAILED", RunPanelFormatter.chipState(false, "", "failed"));
+        assertEquals("IDLE", RunPanelFormatter.chipState(false, "", ""));
+        for (String st : new String[]{"RUNNING", "PAUSED", "VALIDATING"}) {
+            String chip = RunPanelFormatter.chipState(true, st, "COMPLETED");
+            assertEquals(RunPanelFormatter.stateLabel(chip.equals("RUNNING") ? "RUNNING" : chip), RunPanelFormatter.stateLabel(st));
+        }
+    }
+
     @Test public void setAndChapterLines() {
         assertEquals("Chương 4 (4/14) · 3 xong · 0 lỗi", RunPanelFormatter.setLine(4, 14, 3, 0, 4));
         assertEquals("Chương 2/3 · 1 xong · 1 lỗi", RunPanelFormatter.setLine(2, 3, 1, 1, -1));

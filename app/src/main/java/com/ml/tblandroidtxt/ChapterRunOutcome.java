@@ -9,6 +9,7 @@ final class ChapterRunOutcome {
     private final List<String> done = new ArrayList<>();
     private final List<String> failed = new ArrayList<>();
     private int failedInARow;
+    private final List<String> failedLabels = new ArrayList<>();
 
     /** The run stops after this many chapters in a row fail (retrying the next one would most likely cost money for the same failure). */
     static final int MAX_FAILED_IN_A_ROW = 2;
@@ -20,6 +21,20 @@ final class ChapterRunOutcome {
     void failed(String name, String reason) { failed.add(reason == null || reason.trim().isEmpty() ? name : name + ": " + reason.trim()); failedInARow++; }
 
     int failedInARow() { return failedInARow; }
+
+    /** A chapter failed; {@code label} ("Chương 4") is what the stop sentence names. */
+    void failed(String name, String reason, String label) {
+        failed(name, reason);
+        failedLabels.add(label == null || label.isEmpty() ? name : label);
+    }
+
+    /** The sentence shown when the run stops after {@link #MAX_FAILED_IN_A_ROW} failed chapters in a row. */
+    String stopSentence() {
+        int n = Math.min(failedInARow, failedLabels.size());
+        List<String> last = failedLabels.subList(failedLabels.size() - n, failedLabels.size());
+        return "Dừng tổ hợp: " + failedInARow + " chương liên tiếp lỗi kiểm định (" + String.join(", ", last)
+                + "). Bấm Tiếp tục tổ hợp để chạy tiếp hoặc sửa cài đặt.";
+    }
 
     /** True once {@link #MAX_FAILED_IN_A_ROW} chapters failed one after the other. */
     boolean shouldStopQueue() { return failedInARow >= MAX_FAILED_IN_A_ROW; }

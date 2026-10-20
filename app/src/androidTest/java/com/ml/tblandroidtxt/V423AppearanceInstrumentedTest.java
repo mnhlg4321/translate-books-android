@@ -138,7 +138,7 @@ public class V423AppearanceInstrumentedTest {
             assertEquals(ColorMath.onColor(0xFF2F8FD8), (int) onMain(scenario, a -> a.ONACCENT));
             // A button never drops below 44 dp or gets a fixed height, even at 130 percent and compact density.
             float density = InstrumentationRegistry.getInstrumentation().getTargetContext().getResources().getDisplayMetrics().density;
-            assertTrue(onMain(scenario, a -> { android.widget.Button b = a.secondaryButton("Một nhãn nút khá dài để thử việc xuống dòng", v -> { }); return b.getMinimumHeight() >= Math.round(44 * density) - 1; }));
+            assertTrue(onMain(scenario, a -> { android.widget.Button b = a.secondaryButton("Một nhãn nút khá dài để thử việc xuống dòng", v -> { }); return b.getMinimumHeight() >= Math.round(48 * density) - 1; }));
             // Reset puts everything back.
             scenario.onActivity(a -> a.commitAppearance(AppearanceSettings.defaults()));
             waitFor(() -> onMain(scenario, a -> a.fontScale) == 1f && !onMain(scenario, a -> a.appearance.light), 20_000L, "defaults back");
@@ -160,6 +160,29 @@ public class V423AppearanceInstrumentedTest {
             shell("cmd uimode night no");
             waitFor(() -> "paper".equals(onMain(scenario, a -> a.appearance.id)), 30_000L, "light palette by day");
             assertTrue(onMain(scenario, a -> a.appearance.light));
+        }
+    }
+
+    @Test
+    public void theTopChipAndThePanelTitleNeverDisagree() throws Exception {
+        Context c = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            scenario.onActivity(a -> a.switchTab("Translate"));
+            String[][] cases = {{"RUNNING", "%s", "RUNNING"}, {"PAUSED", "%s", "PAUSED"}};
+            for (String[] k : cases) {
+                scenario.onActivity(a -> { a.translationActive = true; a.updateTrackingFromIntent(progress(k[0], 14, 3, 0, 4, 6, 5, 1000, 0.01, "004.txt")); });
+                InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+                String chip = onMain(scenario, a -> a.topStatusChip.getText().toString());
+                String title = onMain(scenario, a -> a.trackingTitle.getText().toString());
+                assertEquals(k[2], chip);
+                assertTrue(title, title.startsWith(RunPanelFormatter.stateLabel(k[0])));
+            }
+            // The run ended: the broadcast and the saved state agree on COMPLETED.
+            RuntimeStateStore.save(c, "COMPLETED", "done", 100, "", "Completed", "a.txt", 1, 1, 0, 0, 0, 0, 0, 0, false, 0, 0, "", 0, 0, 0, 0, "", 0, 1);
+            scenario.onActivity(a -> { a.translationActive = false; a.updateTrackingFromIntent(progress("COMPLETED", 14, 14, 0, 14, 6, 6, 1000, 0.01, "014.txt")); });
+            InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+            assertEquals("COMPLETED", onMain(scenario, a -> a.topStatusChip.getText().toString()));
+            assertTrue(onMain(scenario, a -> a.trackingTitle.getText().toString()).startsWith("Xong"));
         }
     }
 

@@ -6,10 +6,10 @@ import android.widget.Button;
 
 /**
  * A text button that never has a fixed height: a layout asked to give it 36, 40 or 48 dp gets "wrap content" instead, with a minimum of
- * 44 dp, so a long label on a narrow button or a larger system font grows the button instead of cutting the text.
+ * 48 dp, so a long label on a narrow button or a larger system font grows the button instead of cutting the text.
  */
 final class WrapButton extends Button {
-    static final int MIN_HEIGHT_DP = 44;
+    static final int MIN_HEIGHT_DP = 48;
 
     WrapButton(Context context) {
         super(context);
