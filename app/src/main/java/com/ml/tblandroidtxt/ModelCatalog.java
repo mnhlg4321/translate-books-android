@@ -25,6 +25,7 @@ import okhttp3.ResponseBody;
 
 /** Dynamic model catalog with a small exact-match fallback for offline defaults. */
 public class ModelCatalog {
+    private static final java.util.HashMap<String, String> LOOKUP_LOGGED = new java.util.HashMap<>();
     private static final String CACHE_FILE = "openrouter_model_catalog_v42.json";
     public static final long CACHE_EXPIRY_MS = 24L * 60L * 60L * 1000L;
 
@@ -350,8 +351,16 @@ public class ModelCatalog {
             }
         }
         if (found == null) found = ModelInfo.unavailable(needle, provider);
-        ObservabilityLog.event("catalog_lookup", "provider", provider, "model", needle,
-                "result", found.hasPricing() ? "priced" : "unavailable", "source", found.pricingSource);
+        // The lookup runs several times per tap (chunk keys, estimates): log it when its answer changes, not on every call.
+        String outcome = (found.hasPricing() ? "priced" : "unavailable") + "|" + found.pricingSource;
+        String lookupKey = provider + "|" + needle;
+        synchronized (LOOKUP_LOGGED) {
+            if (!outcome.equals(LOOKUP_LOGGED.get(lookupKey))) {
+                LOOKUP_LOGGED.put(lookupKey, outcome);
+                ObservabilityLog.event("catalog_lookup", "provider", provider, "model", needle,
+                        "result", found.hasPricing() ? "priced" : "unavailable", "source", found.pricingSource);
+            }
+        }
         return found;
     }
 

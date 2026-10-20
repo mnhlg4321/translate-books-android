@@ -151,8 +151,35 @@ public class GlossaryStore {
         return g == null ? "" : toPromptText(g);
     }
 
+    private static final java.util.LinkedHashMap<String, String> PROMPT_TEXT_CACHE = new java.util.LinkedHashMap<String, String>(16, 0.75f, true) {
+        @Override protected boolean removeEldestEntry(java.util.Map.Entry<String, String> eldest) { return size() > 24; }
+    };
+
+    /** Cheap identity of a glossary's content (no allocation per term); a prompt text is rebuilt only when this changes. */
+    static String contentKey(Glossary g) {
+        long h = 17;
+        for (Term t : g.terms) {
+            h = h * 31 + (t.source == null ? 0 : t.source.hashCode());
+            h = h * 31 + (t.target == null ? 0 : t.target.hashCode());
+            h = h * 31 + (t.category == null ? 0 : t.category.hashCode());
+            h = h * 31 + (t.note == null ? 0 : t.note.hashCode());
+        }
+        return g.id + "|" + g.name + "|" + g.terms.size() + "|" + h;
+    }
+
     public static String toPromptText(Glossary g) {
         if (g == null || g.terms == null || g.terms.isEmpty()) return "";
+        String key = contentKey(g);
+        synchronized (PROMPT_TEXT_CACHE) {
+            String known = PROMPT_TEXT_CACHE.get(key);
+            if (known != null) return known;
+        }
+        String built = buildPromptText(g);
+        synchronized (PROMPT_TEXT_CACHE) { PROMPT_TEXT_CACHE.put(key, built); }
+        return built;
+    }
+
+    private static String buildPromptText(Glossary g) {
         StringBuilder sb = new StringBuilder();
         sb.append("# Glossary: ").append(g.name).append('\n');
         sb.append("Source, Target, Category\n");

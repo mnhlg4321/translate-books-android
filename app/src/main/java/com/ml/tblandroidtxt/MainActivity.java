@@ -810,10 +810,50 @@ public class MainActivity extends Activity {
         if (hydratingSettings) return;
         try {
             if (providerField != null || sourceField != null || refineBox != null) {
-                SettingsStore.save(this, collectSettings());
-            }
-            saveRuntimeUris();
+                // One write: the screen's values and the runtime URIs are saved together.
+                AppSettings s = collectSettings();
+                applyRuntimeUrisTo(s);
+                SettingsStore.save(this, s);
+            } else saveRuntimeUris();
         } catch (Exception ignored) {}
+    }
+
+    private final java.util.concurrent.ExecutorService persistExecutor = java.util.concurrent.Executors.newSingleThreadExecutor();
+
+    /** Same as {@link #silentPersistCurrentUi} for a typed edit: the values are read here, the file is written on a background thread. */
+    void persistUiSettingsAsync() {
+        if (hydratingSettings) return;
+        try {
+            if (providerField == null && sourceField == null && refineBox == null) return;
+            final AppSettings s = collectSettings();
+            applyRuntimeUrisTo(s);
+            persistExecutor.submit(() -> { try { SettingsStore.save(this, s); } catch (Exception ignored) { } });
+        } catch (Exception ignored) { }
+    }
+
+    /** Estimate inputs seen by the last updateInputEstimate: an edit that changes none of them (timeout, retries, temperature…) needs no new plan. */
+    private volatile String lastEstimateSignature = "";
+
+    private String estimateSignature(AppSettings s) {
+        return PreparationCoordinator.estimateKey(s, PreparationCoordinator.constructionKey(s), sourceUi.isSetMode() ? chapterBindings : null) + "|" + inputUris;
+    }
+
+    void refreshEstimateIfInputsChanged() {
+        if (estimateSignature(collectSettings()).equals(lastEstimateSignature)) return;
+        updateInputEstimate();
+    }
+
+    private final java.util.HashMap<String, String> displayNameCache = new java.util.HashMap<>();
+
+    /** The file's display name: asked from the provider once per address (a ContentResolver query on every collectSettings was slow). */
+    String displayNameCached(Uri uri) {
+        if (uri == null) return "";
+        String key = uri.toString();
+        String known = displayNameCache.get(key);
+        if (known != null) return known;
+        String name = FileUtil.displayName(this, uri);
+        displayNameCache.put(key, name);
+        return name;
     }
 
     void bindEstimateInput(EditText field) {
@@ -824,9 +864,9 @@ public class MainActivity extends Activity {
                 if (hydratingSettings) return;
                 if (field.getTag() instanceof Runnable) field.removeCallbacks((Runnable)field.getTag());
                 Runnable update = () -> {
-                    silentPersistCurrentUi();
+                    persistUiSettingsAsync();
                     updateMetaLine();
-                    updateInputEstimate();
+                    refreshEstimateIfInputsChanged();
                 };
                 field.setTag(update);
                 field.postDelayed(update, 250);
@@ -839,16 +879,22 @@ public class MainActivity extends Activity {
         if (box == null) return;
         box.setOnCheckedChangeListener((button, checked) -> {
             if (hydratingSettings) return;
-            silentPersistCurrentUi();
-            updateInputEstimate();
+            persistUiSettingsAsync();
+            refreshEstimateIfInputsChanged();
         });
     }
 
     void saveRuntimeUris() {
         AppSettings s = SettingsStore.load(this);
+        applyRuntimeUrisTo(s);
+        SettingsStore.save(this, s);
+    }
+
+    /** The output, folder and Pronoun addresses (and their display names) as they are now, written into {@code s}. */
+    void applyRuntimeUrisTo(AppSettings s) {
         if (outputUri != null) {
             s.outputUri = outputUri.toString();
-            s.outputName = FileUtil.displayName(this, outputUri);
+            s.outputName = displayNameCached(outputUri);
         }
         if (outputTreeUri != null) {
             s.outputTreeUri = outputTreeUri.toString();
@@ -858,9 +904,8 @@ public class MainActivity extends Activity {
         if (outputTreeUri == null) { s.outputTreeUri = ""; s.outputTreeName = ""; }
         if (pronounUri != null) {
             s.pronounUri = pronounUri.toString();
-            s.pronounName = FileUtil.displayName(this, pronounUri);
+            s.pronounName = displayNameCached(pronounUri);
         }
-        SettingsStore.save(this, s);
     }
 
     void refreshCurrentPage() {
@@ -2438,12 +2483,12 @@ public class MainActivity extends Activity {
         }
         if (pronounUri != null) {
             s.pronounUri = pronounUri.toString();
-            s.pronounName = FileUtil.displayName(this, pronounUri);
+            s.pronounName = displayNameCached(pronounUri);
             if (s.pronounText == null || s.pronounText.trim().isEmpty()) {
                 try { s.pronounText = FileUtil.readText(this, pronounUri); } catch (Exception ignored) {}
             }
         }
-        if (outputUri != null) { s.outputUri = outputUri.toString(); s.outputName = FileUtil.displayName(this, outputUri); }
+        if (outputUri != null) { s.outputUri = outputUri.toString(); s.outputName = displayNameCached(outputUri); }
         if (outputTreeUri != null) { s.outputTreeUri = outputTreeUri.toString(); s.outputTreeName = FileUtil.treeName(outputTreeUri); }
         GlossaryStore.Glossary selected = GlossaryStore.selected(this);
         if (selected != null) {
@@ -3042,6 +3087,19 @@ public class MainActivity extends Activity {
         );
     }
 
+    /** The selection of a chapter set was applied: a plan already made (or being made) for it is shown again instead of being restarted. */
+    void refreshEstimateForSelection() {
+        if (sourceUi.isSetMode() && chapterBindings != null && !chapterBindings.isEmpty() && estimateText != null) {
+            PreparedBatch current = PreparationCoordinator.get(this).current();
+            if (current != null && PreparationCoordinator.get(this).isCurrentFor(collectSettings(), chapterBindings)) {
+                preparedBatch = current;
+                renderPreparedBatch(current);
+                return;
+            }
+        }
+        updateInputEstimate();
+    }
+
     void updateInputEstimate() {
         if (estimateText == null || estimatePanel == null) return;
         boolean usePreparedPipeline = true;
@@ -3054,6 +3112,7 @@ public class MainActivity extends Activity {
                 updateActionButtons(); return;
             }
             AppSettings settings=collectSettings();
+            lastEstimateSignature=estimateSignature(settings);
             estimateText.setText("Preparing chunks…");
             estimatePanel.setVisibility(View.VISIBLE);
             PreparationCoordinator.get(this).request(inputUris,settings,sourceUi.isSetMode()?chapterBindings:null,this::renderPreparedBatch);
@@ -3449,7 +3508,9 @@ public class MainActivity extends Activity {
         if (logView == null) return;
         String time = new SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(new Date());
         String line = "[" + time + "] " + msg + "\n";
-        logView.setText(tail(logView.getText().toString() + line, 12000));
+        // Append; only when the text has grown well past the limit is it cut back (re-setting 12,000 characters per broadcast re-measured the view every time).
+        if (logView.length() > 16000) logView.setText(tail(logView.getText().toString() + line, 12000));
+        else logView.append(line);
         if (logScroll != null) logScroll.post(() -> logScroll.fullScroll(View.FOCUS_DOWN));
     }
 

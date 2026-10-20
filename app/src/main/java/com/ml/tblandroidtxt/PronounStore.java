@@ -19,7 +19,22 @@ public final class PronounStore {
     public static class Profile {
         public String id=UUID.randomUUID().toString(),name="New pronoun",uri="",text="";
         public long createdAt=System.currentTimeMillis(),updatedAt=System.currentTimeMillis();
-        public int count(){return PromptContextBuilder.validate("",text).explicitPronouns.size();}
+        public int count(){return RuleCounts.of(text);}
+    }
+    /** The rule count of a Pronoun text, analysed once per text (a Library page asks for it for every card, twice). */
+    static final class RuleCounts {
+        private static final java.util.LinkedHashMap<String,Integer> CACHE=new java.util.LinkedHashMap<String,Integer>(64,0.75f,true){@Override protected boolean removeEldestEntry(java.util.Map.Entry<String,Integer> e){return size()>128;}};
+        static int calls;
+        static synchronized int of(String text){
+            String t=text==null?"":text;
+            String key=t.length()+":"+t.hashCode();
+            Integer known=CACHE.get(key);
+            if(known!=null)return known;
+            calls++;
+            int n=PromptContextBuilder.validate("",t).explicitPronouns.size();
+            CACHE.put(key,n);
+            return n;
+        }
     }
     static SharedPreferences prefs(Context c){return c.getSharedPreferences(PREF,Context.MODE_PRIVATE);}
     public static List<Profile> loadAll(Context c){return loadAll(prefs(c));}

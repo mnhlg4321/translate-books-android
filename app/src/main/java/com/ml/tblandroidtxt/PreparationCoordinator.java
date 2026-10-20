@@ -43,6 +43,19 @@ public final class PreparationCoordinator {
 
     public PreparedBatch current() { return current; }
 
+    /**
+     * True when the current plan (ready or being prepared) was requested for exactly these chapters, texts and chunking settings, so asking
+     * again would only restart the same work. Chapter-set plans only: their RAW comes from the Library by id and never changes in place.
+     */
+    public synchronized boolean isCurrentFor(AppSettings settings, List<ChapterBinding> bindings) {
+        PreparedBatch c = current;
+        if (c == null || bindings == null || bindings.isEmpty() || c.bindings == null || c.estimateKey == null) return false;
+        if (c.status == PreparedBatch.Status.ERROR) return false;
+        AppSettings snapshot = AppValidator.normalize(settings == null ? new AppSettings() : settings.copy());
+        String construction = constructionKey(snapshot);
+        return construction.equals(c.constructionKey) && estimateKey(snapshot, construction, bindings).equals(c.estimateKey);
+    }
+
     public synchronized void cancel() {
         generation.incrementAndGet();
         if (pending != null) pending.cancel(false);

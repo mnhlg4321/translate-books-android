@@ -18,19 +18,46 @@ public class LogStore {
         return "[" + time + "] " + (msg == null ? "" : msg) + "\n";
     }
 
+    /**
+     * Lines are written by one background thread, in the order they were appended: a caller on the UI thread (every catalog lookup, every
+     * progress broadcast) no longer waits for a file open, a write and, past the size limit, a full read and rewrite of the log.
+     * {@link #read}, {@link #clear} and {@link #flush} wait for the lines queued before them.
+     */
+    private static final java.util.concurrent.ExecutorService WRITER = java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "log-writer");
+        t.setDaemon(true);
+        return t;
+    });
+    private static volatile File logFile;
+
+    private static File file(Context ctx) {
+        File f = logFile;
+        if (f == null) { f = new File(ctx.getFilesDir(), FILE_NAME); logFile = f; }
+        return f;
+    }
+
     public static void append(Context ctx, String msg) {
         if (ctx == null) return;
         try {
-            File f = new File(ctx.getFilesDir(), FILE_NAME);
-            try (FileOutputStream out = new FileOutputStream(f, true)) {
-                out.write(formatLine(msg).getBytes(StandardCharsets.UTF_8));
-            }
-            trimIfNeeded(f);
+            final File f = file(ctx);
+            final byte[] line = formatLine(msg).getBytes(StandardCharsets.UTF_8);
+            WRITER.execute(() -> {
+                try {
+                    try (FileOutputStream out = new FileOutputStream(f, true)) { out.write(line); }
+                    trimIfNeeded(f);
+                } catch (Exception ignored) {}
+            });
         } catch (Exception ignored) {}
+    }
+
+    /** Waits (at most two seconds) until every line appended so far is on disk. */
+    public static void flush() {
+        try { WRITER.submit(() -> { }).get(2, java.util.concurrent.TimeUnit.SECONDS); } catch (Exception ignored) {}
     }
 
     public static String read(Context ctx) {
         if (ctx == null) return "";
+        flush();
         try {
             File f = new File(ctx.getFilesDir(), FILE_NAME);
             if (!f.exists()) return "";
@@ -68,6 +95,7 @@ public class LogStore {
 
     public static void clear(Context ctx) {
         if (ctx == null) return;
+        flush();
         try {
             File f = new File(ctx.getFilesDir(), FILE_NAME);
             if (f.exists()) f.delete();

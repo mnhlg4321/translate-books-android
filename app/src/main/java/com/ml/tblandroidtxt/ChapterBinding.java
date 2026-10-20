@@ -19,6 +19,30 @@ final class ChapterBinding {
     String pronounText = "";
     String pronounHash = "";
 
+    /**
+     * A cheap identity of one chapter's inputs, used to reuse a binding without reading the texts again: ids, names and the content-derived
+     * hash codes of the strings (cached by String), never a SHA-256. Two different texts with the same length and hash code are astronomically
+     * unlikely; the plan key still uses the real SHA-256 hashes.
+     */
+    static String fingerprint(String rawId, String rawName, int chapterNo, GlossaryStore.Glossary glossary, PronounStore.Profile pronoun) {
+        StringBuilder sb = new StringBuilder().append(rawId).append('|').append(rawName).append('|').append(chapterNo).append("|g:");
+        if (glossary == null) sb.append('-');
+        else {
+            long h = 17;
+            if (glossary.terms != null) for (GlossaryStore.Term t : glossary.terms) {
+                h = h * 31 + (t.source == null ? 0 : t.source.hashCode());
+                h = h * 31 + (t.target == null ? 0 : t.target.hashCode());
+                h = h * 31 + (t.category == null ? 0 : t.category.hashCode());
+                h = h * 31 + (t.note == null ? 0 : t.note.hashCode());
+            }
+            sb.append(glossary.id).append(':').append(glossary.name).append(':').append(glossary.count()).append(':').append(h);
+        }
+        sb.append("|p:");
+        if (pronoun == null) sb.append('-');
+        else sb.append(pronoun.id).append(':').append(pronoun.name).append(':').append(pronoun.text == null ? -1 : pronoun.text.length()).append(':').append(pronoun.text == null ? 0 : pronoun.text.hashCode());
+        return sb.toString();
+    }
+
     /** Binding for a RAW with the chosen profiles; a null profile means "Không dùng" (no glossary / no pronoun text for this chapter). */
     static ChapterBinding of(String rawId, String rawName, int chapterNo, GlossaryStore.Glossary glossary, PronounStore.Profile pronoun) {
         ChapterBinding b = new ChapterBinding();

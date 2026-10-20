@@ -35,6 +35,15 @@ final class TranslateSourceFactory {
     private final ArrayList<Uri> filesUris = new ArrayList<>();
     private final Map<String, TextView> estimateViews = new HashMap<>();
     private String setName = "";
+    /** Bindings already built, by cheap fingerprint; building one reads the Glossary text and hashes it twice. */
+    private final BindingCache bindingCache = new BindingCache(96);
+    private final Map<String, LinearLayout> rowViews = new HashMap<>();
+    private TextView totalView;
+    private final android.os.Handler applyHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable applyLater = this::applySelection;
+    /** Tick-to-plan delay: several ticks in a row prepare the plan once. */
+    private static final long APPLY_DELAY_MS = 400L;
+    int bindingsBuilt() { return bindingCache.built; }
 
     private LinearLayout box, chapterBox;
     private Button filesButton, setButton;
@@ -155,7 +164,7 @@ final class TranslateSourceFactory {
         ArrayList<ChapterBinding> out = new ArrayList<>();
         for (Row x : rows) {
             if (!x.usable() || !ticked.contains(x.raw.id)) continue;
-            out.add(ChapterBinding.of(x.raw.id, x.raw.originalName, x.stored.chapterNo, x.glossary, x.pronoun));
+            out.add(bindingCache.get(x.raw.id, x.raw.originalName, x.stored.chapterNo, x.glossary, x.pronoun));
         }
         return out;
     }
@@ -172,7 +181,7 @@ final class TranslateSourceFactory {
         a.inputUri = a.inputUris.isEmpty() ? null : a.inputUris.get(0);
         UiSessionStore.saveInputUris(a, a.inputUris);
         a.setLabel(a.inputFileLabel, bindings.isEmpty() ? "Tổ hợp: chưa tick chương nào" : "📚 " + setName + " · " + bindings.size() + " chương");
-        a.updateInputEstimate();
+        a.refreshEstimateForSelection();
     }
 
     /**
@@ -197,6 +206,8 @@ final class TranslateSourceFactory {
         chapterBox.setVisibility(set ? View.VISIBLE : View.GONE);
         chapterBox.removeAllViews();
         estimateViews.clear();
+        rowViews.clear();
+        totalView = null;
         if (!set) return;
         List<ChapterSetStore.SetInfo> sets = ChapterSetStore.listSets(a);
         boolean none = setName.isEmpty();
@@ -225,10 +236,22 @@ final class TranslateSourceFactory {
         for (Row x : rows) chapterBox.addView(rowView(x), a.marginLP(-1, -2, 0, 4, 0, 0));
         TextView total = a.text(ticked.size() + "/" + rows.size() + " chương được tick", 13, a.GREEN, true);
         total.setContentDescription("chapter-total");
+        totalView = total;
         chapterBox.addView(total, a.marginLP(-1, -2, 0, 8, 0, 0));
         chapterBox.addView(a.secondaryButton("Prompt preview (chọn chương)", v -> previewChapter()), a.marginLP(-1, a.dp(44), 0, 8, 0, 0));
         PreparedBatch current = a.currentPreparedBatch();
         if (current != null) updateEstimates(current);
+    }
+
+    private void retintRow(Row x) {
+        LinearLayout row = x.usable() ? rowViews.get(x.raw.id) : null;
+        if (row == null) return;
+        boolean on = ticked.contains(x.raw.id);
+        a.tint(row, on ? a.CARD : a.FIELD, on ? a.BLUE : a.BORDER, 1, 12);
+    }
+
+    private void updateTotal() {
+        if (totalView != null) totalView.setText(ticked.size() + "/" + rows.size() + " chương được tick");
     }
 
     /** "Tiếp tục tổ hợp": opens the saved set and ticks only the chapters that have no finished translation; false when the set no longer exists. */
@@ -261,6 +284,7 @@ final class TranslateSourceFactory {
     private View rowView(Row x) {
         boolean on = x.usable() && ticked.contains(x.raw.id);
         LinearLayout row = a.card(12, on ? a.CARD : a.FIELD, !x.usable() ? a.RED : on ? a.BLUE : a.BORDER);
+        if (x.usable()) rowViews.put(x.raw.id, row);
         row.setOrientation(LinearLayout.VERTICAL);
         row.setPadding(a.dp(10), a.dp(6), a.dp(10), a.dp(8));
         String number = x.stored.chapterNo >= 0 ? "Chương " + x.stored.chapterNo : "Chương ?";
@@ -275,8 +299,11 @@ final class TranslateSourceFactory {
         check.setOnClickListener(v -> {
             if (check.isChecked()) ticked.add(x.raw.id); else ticked.remove(x.raw.id);
             save();
-            applySelection();
-            render();
+            // Only this card and the count line change; the plan for the new selection is prepared once, a moment after the last tick.
+            retintRow(x);
+            updateTotal();
+            applyHandler.removeCallbacks(applyLater);
+            applyHandler.postDelayed(applyLater, APPLY_DELAY_MS);
         });
         row.addView(check);
         String g = x.stored.glossaryId.isEmpty() ? "Không dùng" : x.glossary == null ? "(đã bị xóa)" : x.glossary.name;

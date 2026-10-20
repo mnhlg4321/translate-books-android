@@ -61,6 +61,17 @@ final class LibraryBulkUi {
 
     void refresh(String tab) { a.refreshPagePreservingScroll(tab); }
 
+    /** Parts of the open list that show the selection count (header, bottom bar), updated in place when one card is ticked. */
+    private final Map<String, Runnable> headerUpdater = new java.util.HashMap<>();
+    private final Map<String, java.util.List<Runnable>> barUpdaters = new java.util.HashMap<>();
+
+    private void updateCounts(String tab) {
+        Runnable header = headerUpdater.get(tab);
+        if (header != null) header.run();
+        java.util.List<Runnable> list = barUpdaters.get(tab);
+        if (list != null) for (Runnable r : list) r.run();
+    }
+
     // ---- list header, cards, bottom bar ----
 
     View selectButton(String tab) {
@@ -74,6 +85,7 @@ final class LibraryBulkUi {
         LinearLayout row = a.rowContainer();
         TextView count = a.text(c.headline(), 14, a.TEXT, true);
         count.setContentDescription("selection-count");
+        headerUpdater.put(tab, () -> count.setText(c.headline()));
         row.addView(count, new LinearLayout.LayoutParams(0, -2, 1));
         row.addView(a.secondaryButton("Chọn tất cả", v -> { c.selectAll(visibleIds); refresh(tab); }), new LinearLayout.LayoutParams(-2, a.dp(40)));
         row.addView(a.space(6, 1));
@@ -104,7 +116,15 @@ final class LibraryBulkUi {
         texts.addView(m, a.marginLP(-1, -2, 0, 3, 0, 0));
         box.addView(texts, new LinearLayout.LayoutParams(0, -2, 1));
         box.setContentDescription((on ? "selected:" : "unselected:") + title);
-        box.setOnClickListener(v -> { c.toggle(id); refresh(tab); });
+        // Only this card and the counts change: rebuilding the page for every tick made long lists stutter.
+        box.setOnClickListener(v -> {
+            c.toggle(id);
+            boolean now = c.isSelected(id);
+            check.setChecked(now);
+            a.tint(box, a.FIELD, now ? a.BLUE : borderColor, 1, 14);
+            box.setContentDescription((now ? "selected:" : "unselected:") + title);
+            updateCounts(tab);
+        });
         return box;
     }
 
@@ -125,23 +145,29 @@ final class LibraryBulkUi {
         android.widget.Button delete = a.dangerButton("Xóa (" + n + ")", v -> deleteSelected(tab));
         delete.setEnabled(n > 0);
         bar.addView(delete, new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        final java.util.List<Runnable> barList = new java.util.ArrayList<>();
+        barUpdaters.put(tab, barList);
+        barList.add(() -> { int k = c.count(); delete.setText("Xóa (" + k + ")"); a.setButtonEnabled(delete, k > 0); });
         if (!TAB_SETS.equals(tab)) {
             bar.addView(a.space(6, 1));
             android.widget.Button export = a.secondaryButton("Xuất", v -> exportSelected(tab));
             export.setEnabled(n > 0);
             bar.addView(export, new LinearLayout.LayoutParams(0, a.dp(44), 1));
+            barList.add(() -> a.setButtonEnabled(export, c.count() > 0));
         }
         if (TAB_GLOSSARIES.equals(tab) || TAB_PRONOUNS.equals(tab)) {
             bar.addView(a.space(6, 1));
             android.widget.Button use = a.primaryButton("Dùng", v -> useSelected(tab));
             use.setEnabled(n == 1);
             bar.addView(use, new LinearLayout.LayoutParams(0, a.dp(44), 1));
+            barList.add(() -> a.setButtonEnabled(use, c.count() == 1));
         }
         if (TAB_RAW.equals(tab)) {
             bar.addView(a.space(6, 1));
             android.widget.Button sets = a.primaryButton("Tạo tổ hợp", v -> a.createChapterSetFromSelection());
             sets.setEnabled(n > 0);
             bar.addView(sets, new LinearLayout.LayoutParams(0, a.dp(44), 1));
+            barList.add(() -> a.setButtonEnabled(sets, c.count() > 0));
         }
         bar.setLayoutParams(a.marginLP(-1, -2, 0, 6, 0, 0));
         return bar;
