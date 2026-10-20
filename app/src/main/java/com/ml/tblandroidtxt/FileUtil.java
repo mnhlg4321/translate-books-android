@@ -355,13 +355,36 @@ public class FileUtil {
     }
 
     public static String validateWritable(Context c, Uri uri, String label) {
+        WRITE_PROBE_COUNT.incrementAndGet();
         if (uri != null && hasPersistedWrite(c, uri)) return verifyDocumentWritable(c, uri, label);
         if (uri == null) return label + ": chưa chọn output";
         if (!hasPersistedWrite(c, uri)) return label + ": chưa có quyền ghi lâu dài. Hãy chọn lại output bằng Create/choose output TXT.";
         return null;
     }
 
+    /** Number of times a caller asked for the probing validators (which create, write and delete a real SAF file when a grant exists); used by the J1 device test. */
+    public static final java.util.concurrent.atomic.AtomicInteger WRITE_PROBE_COUNT = new java.util.concurrent.atomic.AtomicInteger();
+
+    /** Same checks as {@link #validateTreeWritable} but never touches the provider: only the persisted-grant list is read. */
+    public static String validateTreeGrantOnly(Context c, Uri treeUri, String label) {
+        if (treeUri == null) return label + ": chưa chọn output folder";
+        if (!hasPersistedWrite(c, treeUri)) return label + ": chưa có quyền ghi lâu dài. Hãy chọn lại output folder.";
+        try {
+            DocumentsContract.getTreeDocumentId(treeUri);
+            return null;
+        } catch (Exception e) {
+            return label + ": URI folder không hợp lệ. Hãy chọn lại output folder.";
+        }
+    }
+
+    public static String validateWritableGrantOnly(Context c, Uri uri, String label) {
+        if (uri == null) return label + ": chưa chọn output";
+        if (!hasPersistedWrite(c, uri)) return label + ": chưa có quyền ghi lâu dài. Hãy chọn lại output bằng Create/choose output TXT.";
+        return null;
+    }
+
     public static String validateTreeWritable(Context c, Uri treeUri, String label) {
+        WRITE_PROBE_COUNT.incrementAndGet();
         if (treeUri != null && hasPersistedWrite(c, treeUri)) return verifyTreeWritable(c, treeUri, label);
         if (treeUri == null) return label + ": chưa chọn output folder";
         if (!hasPersistedWrite(c, treeUri)) return label + ": chưa có quyền ghi lâu dài. Hãy chọn lại output folder.";

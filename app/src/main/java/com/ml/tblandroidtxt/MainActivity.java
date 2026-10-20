@@ -217,7 +217,8 @@ public class MainActivity extends Activity {
             if ("running".equals(status) || "paused".equals(status) || "stopping".equals(status)) translationActive = true;
             if ("done".equals(status) || "error".equals(status) || "cancelled".equals(status)) translationActive = false;
             updateActionButtons();
-            if (appRoot != null) appRoot.postDelayed(() -> {
+            boolean terminal = !"running".equals(status);
+            if (terminal && appRoot != null) appRoot.postDelayed(() -> {
                 translationActive = TranslationUiStatePolicy.isTranslationActive(TranslatorService.isActive(), status);
                 updateActionButtons();
             }, 350);
@@ -374,6 +375,9 @@ public class MainActivity extends Activity {
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
+        if (BuildConfig.DEBUG) {
+            android.os.StrictMode.setThreadPolicy(new android.os.StrictMode.ThreadPolicy.Builder().detectDiskReads().detectDiskWrites().detectNetwork().penaltyLog().build());
+        }
         ObservabilityLog.initialize(this);
         final android.content.Context repairContext = getApplicationContext();
         new Thread(() -> { try { InputConflictRepair.runOnce(repairContext); } catch (Exception ignored) { } }, "input-conflict-repair").start();
@@ -422,6 +426,26 @@ public class MainActivity extends Activity {
         else registerReceiver(receiver, new IntentFilter(TranslatorService.ACTION_PROGRESS));
         if (trackingCard != null) restoreRuntimeStateToUi();
         updateRuntimeTimer();
+        probeOutputFolderInBackground();
+        refreshFailedChunksAsync();
+    }
+
+    /** The real SAF write probe belongs here (and at folder pick / Start), never in updateActionButtons on the UI thread. */
+    private void probeOutputFolderInBackground() {
+        final Uri tree = outputTreeUri;
+        if (tree == null) return;
+        try {
+            cardExecutor.submit(() -> {
+                String error = FileUtil.validateTreeWritable(this, tree, "Output folder");
+                if (error == null) return;
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed() || !tree.equals(outputTreeUri)) return;
+                    setLabel(outputFolderLabel, "Output folder permission lost");
+                    if (outputFolderButton != null) outputFolderButton.setText("Choose output folder again");
+                    appendLog("OUTPUT_PROBE_FAILED " + error);
+                });
+            });
+        } catch (java.util.concurrent.RejectedExecutionException ignored) { }
     }
 
     @Override protected void onStop() {
@@ -633,7 +657,8 @@ public class MainActivity extends Activity {
         if (removed != null && removed.getParent() == contentFrame) contentFrame.removeView(removed);
     }
 
-    void refreshPagePreservingScroll(String name) {
+    void refreshPagePreservingScroll(String name) { android.os.Trace.beginSection("tbl.refreshPagePreservingScroll"); try { refreshPagePreservingScrollImpl(name); } finally { android.os.Trace.endSection(); } }
+    void refreshPagePreservingScrollImpl(String name) {
         ScrollView previousScroll = findScrollView(pageCache.get(name));
         int previousY = previousScroll == null ? 0 : previousScroll.getScrollY();
         invalidatePage(name);
@@ -903,6 +928,7 @@ public class MainActivity extends Activity {
     }
     String runtimeLogSnapshot(){return cachedRuntimeLog==null?"":cachedRuntimeLog;}
     void refreshJobCacheAsync(boolean showFeedback){
+        refreshFailedChunksAsync();
         preflightExecutor.submit(()->{
             JobStore store=new JobStore(this);List<TranslationRepository.JobSummary> jobs;
             UsageTotals today=new UsageTotals(),week=new UsageTotals();
@@ -1965,7 +1991,7 @@ public class MainActivity extends Activity {
         String construction=PreparationCoordinator.constructionKey(s);
         if(!construction.equals(readyPlan.constructionKey)){appendLog("Start blocked: chunk settings changed after preparation");updateInputEstimate();toast("Chunk settings changed; rebuilding the chunk plan");return;}
         final int generation=preflightGeneration.incrementAndGet();setButtonEnabled(startButton,false);
-        preflightExecutor.submit(()->{String readiness=startReadinessError();PromptContextBuilder.ParseReport locks=readiness==null?(sourceUi.isSetMode()?sourceUi.locksReport():PromptContextBuilder.validate(s.glossaryText,s.pronounText)):null;runOnUiThread(()->{if(generation!=preflightGeneration.get()||isFinishing()||isDestroyed())return;if(readiness!=null){appendLog("START_BLOCKED resource="+readiness);updateActionButtons();showResult("Start blocked",readiness);return;}validatedPlanId=readyPlan.id;validatedPlanAt=System.currentTimeMillis();appendLog("START_PREFLIGHT_OK preparedPlan="+readyPlan.id);showPreparedPreflight(s,locks);});});
+        preflightExecutor.submit(()->{String readiness=startReadinessError(true);PromptContextBuilder.ParseReport locks=readiness==null?(sourceUi.isSetMode()?sourceUi.locksReport():PromptContextBuilder.validate(s.glossaryText,s.pronounText)):null;runOnUiThread(()->{if(generation!=preflightGeneration.get()||isFinishing()||isDestroyed())return;if(readiness!=null){appendLog("START_BLOCKED resource="+readiness);updateActionButtons();showResult("Start blocked",readiness);return;}validatedPlanId=readyPlan.id;validatedPlanAt=System.currentTimeMillis();appendLog("START_PREFLIGHT_OK preparedPlan="+readyPlan.id);showPreparedPreflight(s,locks);});});
     }
 
     private void showPreparedPreflight(AppSettings s,PromptContextBuilder.ParseReport locks){CostEstimator.Estimate e=estimateCurrentBatch(s);boolean warning=e==null||!e.pricingAvailable||(locks!=null&&(!locks.conflicts.isEmpty()||!locks.malformedGlossaryRows.isEmpty()||!locks.malformedPronounRows.isEmpty()))||(e!=null&&s.stopOnCostLimit&&s.costLimitUsd>0&&e.noCacheCostHigh>s.costLimitUsd);StringBuilder message=new StringBuilder(TranslationDashboardFormatter.prepared(e,preparedBatch.exactChunkCount()));if(warning)message.append("\n\nSome optional pricing or configuration checks have warnings. Translation can still start when blocking checks pass.");new AlertDialog.Builder(this).setTitle("Ready to translate").setMessage(message.toString()).setPositiveButton("Start",(d,w)->startTranslationNow()).setNegativeButton("Cancel",(d,w)->updateActionButtons()).setOnCancelListener(d->updateActionButtons()).show();}
@@ -2028,7 +2054,7 @@ public class MainActivity extends Activity {
             for (ChapterBinding b : now) current.append(b.keyPart()).append(';');
             if (!planned.toString().equals(current.toString())) { chapterBindings = now; updateInputEstimate(); toast("Glossary/Pronoun hoặc tổ hợp đã đổi; đang chuẩn bị lại kế hoạch"); return; }
         }
-        String finalReadiness=startReadinessError();
+        String finalReadiness=startReadinessError(true);
         if(finalReadiness!=null){appendLog("START_DISPATCH_BLOCKED resource="+finalReadiness);showResult("Start blocked",finalReadiness);updateActionButtons();return;}
         saveRuntimeUris();
         AppSettings s = collectSettings();
@@ -2193,15 +2219,45 @@ public class MainActivity extends Activity {
         else if (TranslatorService.ACTION_CANCEL.equals(action)) toast("Đã gửi lệnh Cancel");
     }
 
+    /** Coalesced: any number of calls in one event-loop turn run the work once, on the next turn. */
+    private boolean actionButtonsQueued;
+    private volatile boolean failedChunksCache;
+    final java.util.concurrent.atomic.AtomicInteger actionButtonRuns = new java.util.concurrent.atomic.AtomicInteger();
     void updateActionButtons() {
+        if (Looper.myLooper() != Looper.getMainLooper()) { runOnUiThread(this::updateActionButtons); return; }
+        if (actionButtonsQueued) return;
+        actionButtonsQueued = true;
+        runtimeTimerHandler.post(() -> {
+            actionButtonsQueued = false;
+            if (isFinishing() || isDestroyed()) return;
+            actionButtonRuns.incrementAndGet();
+            android.os.Trace.beginSection("tbl.updateActionButtons");
+            try { updateActionButtonsImpl(); } finally { android.os.Trace.endSection(); }
+        });
+    }
+
+    /** hasFailedChunks opens the database: keep it off the UI thread and read the cached answer. */
+    void refreshFailedChunksAsync() {
+        try {
+            cardExecutor.submit(() -> {
+                JobStore store = new JobStore(this);
+                boolean failed;
+                try { failed = store.hasFailedChunks(); } finally { store.close(); }
+                if (failed == failedChunksCache) return;
+                failedChunksCache = failed;
+                runOnUiThread(this::updateActionButtons);
+            });
+        } catch (java.util.concurrent.RejectedExecutionException ignored) { }
+    }
+    void updateActionButtonsImpl() {
         refreshPendingJobCard();
         boolean active = TranslatorService.isActive() || translationActive;
         PreparedBatch plan=currentPreparedBatch();
-        boolean failed=false;if(!active){JobStore store=new JobStore(this);try{failed=store.hasFailedChunks();}finally{store.close();}}
+        boolean failed=!active&&failedChunksCache;
         String blocker=!active&&plan!=null&&plan.ready()?startReadinessError():"Preparing TXT chunk plan";
         setButtonEnabled(startButton, !active&&plan!=null&&plan.ready()&&blocker==null);
         if (!active && outputTreeUri != null) {
-            String outputError = FileUtil.validateTreeWritable(this, outputTreeUri, "Output folder");
+            String outputError = FileUtil.validateTreeGrantOnly(this, outputTreeUri, "Output folder");
             if (outputError != null) {
                 setLabel(outputFolderLabel, "Output folder permission lost");
                 if (outputFolderButton != null) outputFolderButton.setText("Choose output folder again");
@@ -2224,7 +2280,11 @@ public class MainActivity extends Activity {
     }
 
     /** Returns the exact blocking resource, never a generic YAML error. */
-    String startReadinessError() {
+    String startReadinessError() { return startReadinessError(false); }
+
+    /** probeWrite=true creates and deletes a real SAF test file: only Start, folder pick and onResume (background) may do that. */
+    String startReadinessError(boolean probeWrite) { android.os.Trace.beginSection("tbl.startReadinessError"); try { return startReadinessErrorImpl(probeWrite); } finally { android.os.Trace.endSection(); } }
+    String startReadinessErrorImpl(boolean probeWrite) {
         if(sourceUi.isSetMode()){String setError=sourceUi.readinessError();if(setError!=null)return setError;}
         if(inputUris.isEmpty()) return "TXT input: choose TXT again";
         AppSettings settings=collectSettings();
@@ -2234,8 +2294,8 @@ public class MainActivity extends Activity {
         if(instruction!=null) return instruction;
         for(Uri input:inputUris){String error=FileUtil.validateReadable(this,input,"TXT input");if(error!=null)return error;}
         boolean batch=inputUris.size()>1;
-        String output=outputTreeUri!=null?FileUtil.validateTreeWritable(this,outputTreeUri,"Output folder")
-                : (batch?FileUtil.validateTreeWritable(this,null,"Output folder"):FileUtil.validateWritable(this,outputUri,"Output TXT"));
+        String output=outputTreeUri!=null?(probeWrite?FileUtil.validateTreeWritable(this,outputTreeUri,"Output folder"):FileUtil.validateTreeGrantOnly(this,outputTreeUri,"Output folder"))
+                : (batch?FileUtil.validateTreeGrantOnly(this,null,"Output folder"):(probeWrite?FileUtil.validateWritable(this,outputUri,"Output TXT"):FileUtil.validateWritableGrantOnly(this,outputUri,"Output TXT")));
         if(output!=null)return output;
         if(sourceUi.isSetMode())return null;
         PromptContextBuilder.ParseReport locks=PromptContextBuilder.validate(settings.glossaryText,settings.pronounText);
@@ -2260,7 +2320,8 @@ public class MainActivity extends Activity {
         updateInputEstimate();
     }
 
-    AppSettings collectSettings() {
+    AppSettings collectSettings() { android.os.Trace.beginSection("tbl.collectSettings"); try { return collectSettingsImpl(); } finally { android.os.Trace.endSection(); } }
+    AppSettings collectSettingsImpl() {
         AppSettings s = SettingsStore.load(this);
         if (providerField != null) s.provider = providerField.getText().toString().trim();
         if (baseUrlField != null) s.baseUrl = AppSettings.normalizeEndpoint(baseUrlField.getText().toString().trim());
@@ -3037,7 +3098,8 @@ public class MainActivity extends Activity {
         return current != null ? current : preparedBatch;
     }
 
-    void renderPreparedBatch(PreparedBatch batch) {
+    void renderPreparedBatch(PreparedBatch batch) { android.os.Trace.beginSection("tbl.renderPreparedBatch"); try { renderPreparedBatchImpl(batch); } finally { android.os.Trace.endSection(); } }
+    void renderPreparedBatchImpl(PreparedBatch batch) {
         if(estimateText==null||estimatePanel==null||batch==null)return;
         // A cancelled preparation can still post a callback after a newer preparation.
         // Always render the coordinator's current batch; otherwise a stale PREPARING

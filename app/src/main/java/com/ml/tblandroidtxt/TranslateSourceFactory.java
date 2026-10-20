@@ -150,7 +150,8 @@ final class TranslateSourceFactory {
     }
 
     /** Bindings for the ticked chapters, in set order, read from the stores now. */
-    List<ChapterBinding> freshBindings() {
+    List<ChapterBinding> freshBindings() { android.os.Trace.beginSection("tbl.freshBindings"); try { return freshBindingsImpl(); } finally { android.os.Trace.endSection(); } }
+    List<ChapterBinding> freshBindingsImpl() {
         ArrayList<ChapterBinding> out = new ArrayList<>();
         for (Row x : rows) {
             if (!x.usable() || !ticked.contains(x.raw.id)) continue;
@@ -185,7 +186,8 @@ final class TranslateSourceFactory {
         if (a.translateComboNote != null) a.translateComboNote.setVisibility(set ? View.VISIBLE : View.GONE);
     }
 
-    private void render() {
+    private void render() { android.os.Trace.beginSection("tbl.render"); try { renderImpl(); } finally { android.os.Trace.endSection(); } }
+    private void renderImpl() {
         if (box == null) return;
         boolean set = MODE_SET.equals(mode);
         applyConfigRows();
