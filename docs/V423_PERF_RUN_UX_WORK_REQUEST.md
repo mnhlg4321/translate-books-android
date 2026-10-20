@@ -176,7 +176,7 @@ Chương  █████████░░░░  chunk 5/6 · 004_ATE_JP_VOL6.
 - Số liệu lấy từ broadcast (bộ đếm theo lượt ở J2). Không truy vấn DB trên luồng UI.
 - Bỏ nền pastel cố định, dùng token.
 
-### J5 — Lát A (làm đợt này); lát B để sau
+### J5 — Lát A rồi lát B, cùng đợt này (owner 2026-10-20: "đưa hết vào 1")
 
 - **Lát A:**
   - màu trạng thái thành token, có bộ tối và bộ sáng đạt tương phản AA;
@@ -187,7 +187,22 @@ Chương  █████████░░░░  chunk 5/6 · 004_ATE_JP_VOL6.
   - `FilePickerSheet` lấy theme theo palette;
   - chuyển 15 màu cố định sang token.
 - Chụp ảnh cả các màn Biên tập ở palette sáng (không sửa mã Biên tập). Chỗ nào khó đọc thì ghi lại.
-- **Lát B (yêu cầu sau):** chọn màu nhấn, cỡ chữ app, mật độ, bo góc, "Theo hệ thống".
+- **Lát B** (làm sau khi lát A xong và có ảnh kiểm; vẫn chung đợt và chung bản dev.12):
+  - **Theo hệ thống:** tự chọn palette sáng hoặc tối theo chế độ Android. Owner chọn được palette nào dùng cho sáng và cho tối. Khi hệ thống đổi chế độ thì `recreate()`.
+  - **Màu nhấn:** 8 màu đặt sẵn và ô nhập mã hex. App tự tính `onAccent` (đen hoặc trắng) theo độ tương phản. Từ chối màu nhấn không đạt tương phản AA với nền của palette đang dùng, và giải thích lý do.
+  - **Cỡ chữ app:** 90 / 100 / 115 / 130%, nhân thêm trên cỡ chữ hệ thống. Áp ở các helper `a.text(...)` và nút. Ô tiến trình (J3) vẫn cố định chiều cao và tự co chữ.
+  - **Mật độ:** "Thoải mái" / "Gọn". Đổi padding, khoảng cách và chiều cao tối thiểu của nút, nhưng không xuống dưới 44 dp (J4).
+  - **Bo góc:** vuông / vừa / tròn, áp ở `a.card(...)` và nút.
+  - **Xem trước trực tiếp** trong Settings > Appearance: một thẻ mẫu có nút chính, nút phụ, chip trạng thái và chữ phụ. Có nút "Khôi phục mặc định".
+  - Lưu trong prefs `appearance` (khóa mới; không đổi khóa `palette` cũ). Mặc định giữ đúng giao diện hiện tại.
+  - Màn Biên tập tự đổi theo vì chỉ dùng token và helper; không sửa mã Biên tập.
+- **Kiểm J5 bằng skill `ui-ux-pro-max`:** tương phản (`color-accessible-pairs`, `color-dark-mode`), kích thước vùng chạm, checklist `references/pro-rules.md`.
+- **Ảnh cần chụp:**
+  - mỗi palette sáng và tối;
+  - cỡ chữ 130% kết hợp mật độ "Gọn";
+  - một màu nhấn tùy chọn;
+  - hộp thoại;
+  - màn Biên tập ở palette sáng.
 
 ### J6 — `UNCLOSED_BRACKET_OR_DIALOGUE` xảy ra nhiều dù RAW đủ ngoặc (owner 2026-10-20)
 
@@ -260,7 +275,7 @@ Lưu ý:
 
 ## 3. Thứ tự, test, điểm dừng
 
-**Thứ tự:** J1 lợi nhanh → J2 + J6 (cùng chạm `ResponseValidator` và đường retry) → J1 phần còn lại → J4 → J3 → J5 lát A.
+**Thứ tự:** J1 lợi nhanh → J2 + J6 (cùng chạm `ResponseValidator` và đường retry) → J1 phần còn lại → J4 → J3 → J5 lát A → J5 lát B.
 
 **Test host:**
 - so ngoặc / lặp / cụt câu với RAW (kể cả ca bản dịch đóng ngoặc dở);
@@ -268,7 +283,9 @@ Lưu ý:
 - dừng khi 2 chương liên tiếp lỗi;
 - cộng dồn chi phí lượt qua job được tiếp tục;
 - trần chi phí theo lượt;
-- `ChapterBinding` dùng lại bản đã lưu tạm.
+- `ChapterBinding` dùng lại bản đã lưu tạm;
+- J6: bị cắt (`length`) thì retry với giới hạn lớn hơn hoặc chia đôi; sửa `「…”`; `OUTPUT_MISSING_LINES`; offline replay 58 response đã lưu;
+- J5: tính `onAccent` và từ chối màu nhấn không đạt AA; hệ số cỡ chữ và mật độ (không xuống dưới 44 dp); đọc/ghi prefs `appearance` và giữ mặc định cũ.
 
 **Test thiết bị (provider giả):**
 - tổ hợp 3 chương, chương 2 hỏng ngoặc 3 lần → chương 3 vẫn chạy, không có `"error"` giữa lượt, tóm tắt "2 xong · 1 lỗi";
@@ -276,7 +293,10 @@ Lưu ý:
 - "Tiếp tục tổ hợp" sau force-stop;
 - đếm lần kiểm SAF mỗi lần tick = 0;
 - StrictMode sạch;
-- ảnh 360 dp, font 100% và 130%, palette tối và sáng, có cả hộp thoại.
+- ảnh 360 dp, font 100% và 130%, palette tối và sáng, có cả hộp thoại;
+- J5:
+  - đổi palette, màu nhấn, cỡ chữ, mật độ, bo góc → `recreate()` giữ nguyên tab và trạng thái đang chọn;
+  - "Theo hệ thống" đổi đúng khi đặt emulator sang `night yes`/`no` (`adb -s emulator-5554 shell cmd uimode night yes|no`, khôi phục sau).
 
 **Điểm dừng:**
 1. hồi quy archive sạch;
@@ -295,6 +315,9 @@ Lưu ý:
 | K3 | Một chương lỗi trong tổ hợp (nếu gặp) | các chương sau vẫn chạy; "Tiếp tục tổ hợp" chạy nốt phần còn lại |
 | K4 | Library > Files | "Resume last checkpoint" không bị cắt chữ |
 | K5 | Settings > Appearance > Light / Paper | toàn app sáng, đọc rõ, hộp thoại cũng sáng |
+| K6 | Appearance: bật "Theo hệ thống", đổi chế độ tối của điện thoại | app tự đổi sáng/tối |
+| K7 | Appearance: đổi màu nhấn, cỡ chữ 130%, mật độ "Gọn", bo góc | xem trước đổi ngay; toàn app áp dụng; không nút nào bị cắt chữ; "Khôi phục mặc định" trả về như cũ |
+| K8 | Chạy một tổ hợp có chương dài | không còn lỗi ngoặc do bị cắt; nếu bị cắt thì app tự chia đôi hoặc tăng giới hạn, thông báo đúng "bị cắt" |
 
 Mục nào owner không thử thì ghi NOT_MEASURED.
 
