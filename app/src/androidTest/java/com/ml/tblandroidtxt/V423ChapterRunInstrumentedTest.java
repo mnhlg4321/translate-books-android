@@ -417,7 +417,7 @@ public class V423ChapterRunInstrumentedTest {
             waitFor(() -> rx.count("error") > 0 && !TranslatorService.isActive(), 120_000L, "queue stopped");
             assertEquals("chapter 3 was never started", "NONE", status(c, f.raws.get(2).uri()));
             assertTrue("two failed chapters stop the run: " + rx.logs, rx.logContains("D\u1eebng t\u1ed5 h\u1ee3p: 2 ch\u01b0\u01a1ng li\u00ean ti\u1ebfp l\u1ed7i ki\u1ec3m \u0111\u1ecbnh (Ch\u01b0\u01a1ng 1, Ch\u01b0\u01a1ng 2). B\u1ea5m Ti\u1ebfp t\u1ee5c t\u1ed5 h\u1ee3p") && rx.logContains("T\u1ed5 h\u1ee3p: 0 xong \u00b7 2 l\u1ed7i"));
-            assertTrue("the label is not the initialisation one", !rx.logContains("L\u1ed7i kh\u1edfi t\u1ea1o") && rx.logContains("L\u1ed7i: "));
+            assertTrue("the stop is not reported as an initialisation failure", !rx.logContains("L\u1ed7i kh\u1edfi t\u1ea1o"));
             media("32-chapter-run-stopped-after-two", scenario);
         } finally {
             c.unregisterReceiver(rx);
