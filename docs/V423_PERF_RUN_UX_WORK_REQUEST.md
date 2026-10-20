@@ -237,6 +237,27 @@ Chương  █████████░░░░  chunk 5/6 · 004_ATE_JP_VOL6.
   - các ca cụt báo "bị cắt";
   - không ca nào hiện bị từ chối lại thành được nhận nếu thiếu dòng.
 
+### Công cụ thiết kế cho J3, J4, J5
+
+Skill `ui-ux-pro-max` (MIT, nguồn `nextlevelbuilder/ui-ux-pro-max-skill`, commit `56ea9cf1`) đã được cài cho tài khoản tại `C:\Users\ADMIN\.claude\skills\ui-ux-pro-max` (owner duyệt 2026-10-20).
+- Script đã được soát: chỉ dùng thư viện chuẩn, không gọi mạng, chỉ ghi tệp khi có `--persist`.
+- Skill chỉ nạp ở phiên mở mới.
+- Dùng để soát:
+  - độ tương phản palette tối và sáng (`color-accessible-pairs`);
+  - vùng chạm tối thiểu 44 dp;
+  - bố cục không nhảy, bảng tiến trình;
+  - checklist trong `references/pro-rules.md`.
+
+Lệnh gọi trên máy này:
+
+```
+py -3 "C:\Users\ADMIN\.claude\skills\ui-ux-pro-max\scripts\search.py" "<truy vấn>" --domain ux
+```
+
+Lưu ý:
+- App dùng Android View viết bằng Java; skill không có stack này. Chỉ dùng phần `--domain ux`, `color`, `web` (hướng dẫn app gốc). Không dùng `--stack jetpack-compose` làm mã mẫu.
+- Không dùng `--persist` trong repo.
+
 ## 3. Thứ tự, test, điểm dừng
 
 **Thứ tự:** J1 lợi nhanh → J2 + J6 (cùng chạm `ResponseValidator` và đường retry) → J1 phần còn lại → J4 → J3 → J5 lát A.
