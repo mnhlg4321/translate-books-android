@@ -94,13 +94,14 @@ public class V423AppearanceInstrumentedTest {
                 a.bulkUi.controller(LibraryBulkUi.TAB_RAW).toggle("kept-id-2");
             });
             assertFalse(onMain(scenario, a -> a.appearance.light));
+            final String tabBefore = onMain(scenario, a -> a.currentTab);
             scenario.onActivity(a -> {
                 AppearanceSettings next = AppearanceSettings.load(a.getSharedPreferences("appearance", Context.MODE_PRIVATE));
                 next.palette = "light";
                 a.commitAppearance(next);
             });
             waitFor(() -> onMain(scenario, a -> a.appearance.light), 20_000L, "light palette applied after recreate");
-            assertEquals("Library", onMain(scenario, a -> a.currentTab));
+            assertEquals(tabBefore, onMain(scenario, a -> a.currentTab));
             assertEquals("the ticked cards came back", 2, (int) onMain(scenario, a -> a.bulkUi.controller(LibraryBulkUi.TAB_RAW).count()));
             assertTrue(onMain(scenario, a -> a.bulkUi.controller(LibraryBulkUi.TAB_RAW).isSelected("kept-id-2")));
             assertEquals("light surfaces", ColorMath.luminance(onMain(scenario, a -> a.BG)) > 0.5, true);
