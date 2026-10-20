@@ -100,6 +100,34 @@ public class V423ScreenshotsInstrumentedTest {
         return i;
     }
 
+    /** Panel scenes: a set running, the same set paused, a single file running and a run stopped after two failed chapters; chip and title together. */
+    private static void panelScenes(ActivityScenario<MainActivity> s, String prefix, Context c) throws Exception {
+        s.onActivity(a -> a.switchTab("Translate"));
+        s.onActivity(a -> { a.translationActive = true; a.updateTrackingFromIntent(running(true)); });
+        stage(prefix + "-panel-set-running");
+        s.onActivity(a -> { Intent i = running(true); i.putExtra(TranslatorService.EXTRA_STATE, "PAUSED"); a.updateTrackingFromIntent(i); });
+        stage(prefix + "-panel-set-paused");
+        s.onActivity(a -> { Intent i = running(false); a.updateTrackingFromIntent(i); });
+        stage(prefix + "-panel-single-running");
+        RuntimeStateStore.save(c, "FAILED", "error", -1, "", "Failed", "005.txt", 6, 2, 0, 0, 0, 0, 0, 0, false, 0, 0, "", 0, 0, 0, 0, "", 0, 1);
+        s.onActivity(a -> {
+            a.translationActive = false;
+            Intent i = running(true);
+            i.putExtra(TranslatorService.EXTRA_STATE, "FAILED");
+            i.putExtra(TranslatorService.EXTRA_SET_DONE, 3);
+            i.putExtra(TranslatorService.EXTRA_SET_FAILED, 2);
+            i.putExtra(TranslatorService.EXTRA_SET_INDEX, 5);
+            a.updateTrackingFromIntent(i);
+            ChapterRunOutcome o = new ChapterRunOutcome(14);
+            o.done("1"); o.done("2"); o.done("3"); o.failed("4", "x", "Ch\u01b0\u01a1ng 4"); o.failed("5", "x", "Ch\u01b0\u01a1ng 5");
+            a.statusBanner.setText("⚠ " + o.stopSentence() + (char) 10 + o.summary());
+            a.statusBanner.setVisibility(android.view.View.VISIBLE);
+            a.refreshTopStatusChip();
+        });
+        stage(prefix + "-panel-stopped-after-two");
+        s.onActivity(a -> a.statusBanner.setVisibility(android.view.View.GONE));
+    }
+
     @Test
     public void walkThroughTheScreens() throws Exception {
         Context c = InstrumentationRegistry.getInstrumentation().getTargetContext();
@@ -112,6 +140,7 @@ public class V423ScreenshotsInstrumentedTest {
             stage("01-dark-translate");
             s.onActivity(a -> { a.updateTrackingFromIntent(running(true)); a.trackingCard.setVisibility(android.view.View.VISIBLE); });
             stage("02-dark-translate-running-set");
+            panelScenes(s, "d", c);
             s.onActivity(a -> a.switchTab("Library"));
             stage("03-dark-library");
             s.onActivity(a -> a.switchTab("Jobs"));
@@ -135,6 +164,7 @@ public class V423ScreenshotsInstrumentedTest {
             stage("10-light-translate");
             s.onActivity(a -> { a.updateTrackingFromIntent(running(true)); });
             stage("11-light-translate-running-set");
+            panelScenes(s, "l", c);
             s.onActivity(a -> a.switchTab("Library"));
             stage("12-light-library");
             s.onActivity(a -> a.switchTab("Jobs"));
@@ -165,6 +195,7 @@ public class V423ScreenshotsInstrumentedTest {
             stage("30-130-compact-translate");
             s.onActivity(a -> { a.updateTrackingFromIntent(running(true)); });
             stage("31-130-compact-running-set");
+            panelScenes(s, "b", c);
             s.onActivity(a -> { a.switchTab("Library"); });
             stage("32-130-compact-library");
             s.onActivity(a -> { a.switchTab("Settings"); a.settingsCategory = "Appearance"; a.settingsSectionExpanded = true; a.invalidatePage("Settings"); a.switchTab("Settings"); scrollToText(a, "Appearance"); });
