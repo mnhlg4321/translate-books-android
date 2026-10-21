@@ -404,7 +404,7 @@ public class TranslatorService extends Service {
                 if(ChapterRunOutcome.continuesQueue(e)){
                     if(activeJobId>0)repo.touchJob(activeJobId,"error");
                     if(outcome.shouldStopQueue())throw new QueueStoppedException(outcome.stopSentence());
-                    String next=i+1<session.chapters.size()?"chuyển chương "+(session.chapters.get(i+1).chapterNo>=0?session.chapters.get(i+1).chapterNo:i+2):"hết tổ hợp";
+                    String next=i+1<session.chapters.size()?"chuyển chương "+(session.chapters.get(i+1).chapterNo>=0?session.chapters.get(i+1).chapterNo:i+2):"hết tập";
                     broadcast("running",percent(i+1,batch.inputs.size()),here+" lỗi, "+next+": "+AppValidator.readableError(e));
                     continue;
                 }

@@ -373,7 +373,7 @@ public class V423PolishInstrumentedTest {
         Context c = ctx();
         staleCleanup(c);
         String sessionId = "polish-" + Long.toHexString(System.nanoTime());
-        String setName = "Tổ hợp thử v423 " + (System.nanoTime() % 1000);
+        String setName = "QA_Tap_thu_v423_" + (System.nanoTime() % 1000);
         File snapshot = sessionFile(c, sessionId, setName, 3);
         TranslationRepository repo = new TranslationRepository(c);
         long j0 = makeJob(repo, TAG + "run-ch0.txt", "h-run-0-" + System.nanoTime(), 2, 2, "COMPLETED");

@@ -243,7 +243,7 @@ public class V423AppearanceInstrumentedTest {
                 assertTrue("set totals are shown", a.setLine.getText().toString().contains("xong") && a.setBarRow.getVisibility() == View.VISIBLE);
                 assertEquals("12.3456 is the whole run's cost", "$12.3456", a.metricCost.getText().toString());
                 assertEquals("G10 · P4", a.metricGlossaryLocks.getText().toString());
-                assertEquals("Tổ hợp", a.tokensCellLabel.getText().toString());
+                assertEquals("Tập", a.tokensCellLabel.getText().toString());
             });
         }
     }

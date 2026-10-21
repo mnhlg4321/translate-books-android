@@ -32,8 +32,8 @@ final class ChapterRunOutcome {
     String stopSentence() {
         int n = Math.min(failedInARow, failedLabels.size());
         List<String> last = failedLabels.subList(failedLabels.size() - n, failedLabels.size());
-        return "Dừng tổ hợp: " + failedInARow + " chương liên tiếp lỗi kiểm định (" + String.join(", ", last)
-                + "). Bấm Tiếp tục tổ hợp để chạy tiếp hoặc sửa cài đặt.";
+        return "Dừng tập: " + failedInARow + " chương liên tiếp lỗi kiểm định (" + String.join(", ", last)
+                + "). Bấm Tiếp tục tập để chạy tiếp hoặc sửa cài đặt.";
     }
 
     /** True once {@link #MAX_FAILED_IN_A_ROW} chapters failed one after the other. */
@@ -58,7 +58,7 @@ final class ChapterRunOutcome {
 
     /** {@code stoppedAt}: the chapter that was running when the queue stopped, counted as failed by the caller, or null. */
     String summary() {
-        StringBuilder sb = new StringBuilder("Tổ hợp: ").append(done.size()).append(" xong · ").append(failed.size()).append(" lỗi");
+        StringBuilder sb = new StringBuilder("Tập: ").append(done.size()).append(" xong · ").append(failed.size()).append(" lỗi");
         if (!failed.isEmpty()) {
             sb.append(" (");
             for (int i = 0; i < failed.size(); i++) {

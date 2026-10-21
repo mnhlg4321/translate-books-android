@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Library > Tổ hợp: the list of saved combinations and the screen that creates or edits one from three slots (RAW, Glossary, Pronoun).
+ * Library > Tập: the list of saved workspaces and the screen that creates or edits one from three slots (RAW, Glossary, Pronoun).
  * The app only suggests the pairing by chapter number inside the files chosen in the slots; every row names all three files, the owner
  * can change any row, and a saved combination is never paired again.
  */
@@ -137,14 +137,14 @@ class ChapterSetPageFactory {
         a.refreshPagePreservingScroll(LibraryBulkUi.TAB_SETS);
     }
 
-    // ---- list of saved combinations ----
+    // ---- list of saved workspaces ----
 
     private View listPanel() {
-        LinearLayout panel = a.sectionCard("📚", "Tổ hợp");
-        TextView desc = a.text("Một tổ hợp gồm một hoặc nhiều chương; mỗi chương là một bộ RAW – Glossary – Pronoun. Ở màn Dịch chọn nguồn \"Tổ hợp\" để dịch nhiều chương, mỗi chương dùng đúng Glossary/Pronoun của nó.", 13, a.MUTED, false);
+        LinearLayout panel = a.sectionCard("▣", "Tập");
+        TextView desc = a.text("Một tập gồm một hoặc nhiều chương; mỗi chương là một bộ RAW – Glossary – Pronoun. Ở màn Dịch chọn nguồn \"Tập\" để dịch nhiều chương, mỗi chương dùng đúng Glossary/Pronoun của nó.", 13, a.MUTED, false);
         desc.setSingleLine(false);
         panel.addView(desc, a.marginLP(-1, -2, 0, 0, 0, 10));
-        android.widget.Button create = a.primaryButton("+ Tạo tổ hợp mới", v -> { a.chapterSetDraft = newDraft(a, Collections.<String>emptyList()); a.refreshPagePreservingScroll(LibraryBulkUi.TAB_SETS); });
+        android.widget.Button create = a.primaryButton("+ Tạo tập mới", v -> { a.chapterSetDraft = newDraft(a, Collections.<String>emptyList()); a.refreshPagePreservingScroll(LibraryBulkUi.TAB_SETS); });
         create.setContentDescription("combo-create");
         panel.addView(create, a.marginLP(-1, a.dp(48), 0, 0, 0, 8));
         List<ChapterSetStore.SetInfo> sets = ChapterSetStore.listSets(a);
@@ -157,7 +157,7 @@ class ChapterSetPageFactory {
             panel.addView(a.bulkUi.headerRow(LibraryBulkUi.TAB_SETS, sets.size()), a.marginLP(-1, -2, 0, 0, 0, 10));
         }
         if (sets.isEmpty()) {
-            TextView empty = a.text("Chưa có tổ hợp. Bấm \"+ Tạo tổ hợp mới\".", 14, a.MUTED, false);
+            TextView empty = a.text("Chưa có tập. Bấm \"+ Tạo tập mới\".", 14, a.MUTED, false);
             empty.setGravity(Gravity.CENTER);
             empty.setSingleLine(false);
             panel.addView(empty, new LinearLayout.LayoutParams(-1, -2));
@@ -208,12 +208,12 @@ class ChapterSetPageFactory {
 
     private View editorPanel() {
         ComboDraft d = a.chapterSetDraft;
-        LinearLayout panel = a.sectionCard("📚", d.existing ? "Sửa tổ hợp" : "Tổ hợp mới");
+        LinearLayout panel = a.sectionCard("▣", d.existing ? "Sửa tập" : "Tập mới");
         TextView desc = a.text("Chọn tệp ở ba ô; app gợi ý ghép theo số chương ở đầu tên, chỉ trong các tệp bạn đã chọn. Bạn xem từng dòng và đổi chỗ sai.", 13, a.MUTED, false);
         desc.setSingleLine(false);
         panel.addView(desc, a.marginLP(-1, -2, 0, 0, 0, 10));
 
-        EditText name = a.input("Tên tổ hợp", d.name);
+        EditText name = a.input("Tên tập", d.name);
         name.setSingleLine(true);
         name.setContentDescription("combo-name");
         name.addTextChangedListener(new android.text.TextWatcher() {
@@ -226,7 +226,7 @@ class ChapterSetPageFactory {
                 d.dirty = true;
             }
         });
-        panel.addView(a.fieldBlock("TÊN TỔ HỢP", name));
+        panel.addView(a.fieldBlock("TÊN TẬP", name));
 
         panel.addView(rawSlot(d), a.marginLP(-1, -2, 0, 4, 0, 8));
         panel.addView(profileSlot(d, true), a.marginLP(-1, -2, 0, 0, 0, 8));
@@ -329,7 +329,7 @@ class ChapterSetPageFactory {
         box.setTag("row:" + row.rawId);
         String number = row.chapterNo >= 0 ? "Chương " + row.chapterNo : "Chương ?";
         String icon = row.excluded ? "—" : row.status == ChapterSetMatcher.Status.RED ? "✕" : row.status == ChapterSetMatcher.Status.YELLOW ? "⚠" : "✓";
-        String word = row.excluded ? "Bỏ khỏi tổ hợp" : row.status == ChapterSetMatcher.Status.GREEN ? "Đủ" : row.reason;
+        String word = row.excluded ? "Bỏ khỏi tập" : row.status == ChapterSetMatcher.Status.GREEN ? "Đủ" : row.reason;
         TextView title = a.text(number + "   " + icon + " " + word, 15, color, true);
         title.setSingleLine(false);
         title.setContentDescription("row-status:" + row.rawName);
@@ -359,7 +359,7 @@ class ChapterSetPageFactory {
         box.addView(numberRow, a.marginLP(-1, -2, 0, 6, 0, 4));
 
         CheckBox skip = new CheckBox(a);
-        skip.setText("Bỏ dòng này khỏi tổ hợp");
+        skip.setText("Bỏ dòng này khỏi tập");
         skip.setTextColor(a.TEXT);
         skip.setTextSize(13);
         skip.setChecked(row.excluded);
@@ -424,7 +424,7 @@ class ChapterSetPageFactory {
 
     // ---- fixed bottom bar and saving ----
 
-    /** "Hủy" and "Lưu tổ hợp (n chương)", outside the scrolling page; null when no combination is open. */
+    /** "Hủy" and "Lưu tập (n chương)", outside the scrolling page; null when no workspace is open. */
     View bottomBar() {
         ComboDraft d = a.chapterSetDraft;
         if (d == null) return null;
@@ -434,7 +434,7 @@ class ChapterSetPageFactory {
         bar.setPadding(a.dp(8), a.dp(8), a.dp(8), a.dp(8));
         bar.addView(a.secondaryButton("Hủy", v -> a.closeChapterSetDraft(false)), new LinearLayout.LayoutParams(0, -2, 1));
         bar.addView(a.space(8, 1));
-        android.widget.Button save = a.primaryButton("Lưu tổ hợp (" + d.included() + " chương)", v -> save());
+        android.widget.Button save = a.primaryButton("Lưu tập (" + d.included() + " chương)", v -> save());
         save.setContentDescription("combo-save");
         bar.addView(save, new LinearLayout.LayoutParams(0, -2, 2));
         bar.setLayoutParams(a.marginLP(-1, -2, 0, 6, 0, 0));
@@ -462,7 +462,7 @@ class ChapterSetPageFactory {
         Collections.sort(kept, (x, y) -> ChapterNumber.compare(x.chapterNo, x.rawName, y.chapterNo, y.rawName));
         for (ChapterSetMatcher.Row r : kept) data.rows.add(new ChapterSetStore.Row(r.chapterNo, r.rawId, r.glossaryMissing ? "" : r.glossaryId, r.pronounMissing ? "" : r.pronounId));
         ChapterSetStore.save(a, data);
-        a.toast("Đã lưu tổ hợp \"" + name + "\" (" + data.rows.size() + " chương)");
+        a.toast("Đã lưu tập \"" + name + "\" (" + data.rows.size() + " chương)");
         a.comboScrollTarget = "combo:" + data.id;
         a.closeChapterSetDraft(true);
     }

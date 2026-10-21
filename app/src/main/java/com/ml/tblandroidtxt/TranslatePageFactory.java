@@ -216,7 +216,7 @@ class TranslatePageFactory {
                 v -> a.switchTab("Pronouns"),
                 v -> a.clearPronoun());
         section.addView(a.translatePronounRow, a.marginLP(-1, -2, 0, 8, 0, 0));
-        a.translateComboNote = a.text("Glossary/Pronoun: theo từng chương của tổ hợp (xem danh sách chương ở trên).", 13, a.MUTED, false);
+        a.translateComboNote = a.text("Glossary/Pronoun: theo từng chương của tập (xem danh sách chương ở trên).", 13, a.MUTED, false);
         a.translateComboNote.setSingleLine(false);
         section.addView(a.translateComboNote, a.marginLP(-1, -2, 0, 8, 0, 0));
         a.sourceUi.applyConfigRows();
@@ -286,7 +286,7 @@ class TranslatePageFactory {
 
         LinearLayout steps = a.rowContainer();
         boolean setMode = a.sourceUi.isSetMode();
-        steps.addView(stepBox("1", setMode ? "Tổ hợp" : "TXT", a.inputUris.isEmpty() ? "chưa chọn" : (a.inputUris.size() == 1 ? "1 file" : a.inputUris.size() + " files"), a.inputUris.isEmpty() ? a.MUTED : a.GREEN), new LinearLayout.LayoutParams(0, -2, 1));
+        steps.addView(stepBox("1", setMode ? "Tập" : "TXT", a.inputUris.isEmpty() ? "chưa chọn" : (a.inputUris.size() == 1 ? "1 file" : a.inputUris.size() + " files"), a.inputUris.isEmpty() ? a.MUTED : a.GREEN), new LinearLayout.LayoutParams(0, -2, 1));
         steps.addView(a.space(6, 1));
         steps.addView(stepBox("2", "Output", a.outputTreeUri != null ? "folder" : (a.outputUri != null ? "file" : "chưa chọn"), (a.outputTreeUri != null || a.outputUri != null) ? a.GREEN : a.MUTED), new LinearLayout.LayoutParams(0, -2, 1));
         steps.addView(a.space(6, 1));
@@ -336,7 +336,7 @@ class TranslatePageFactory {
         a.trackingFile.setEllipsize(android.text.TextUtils.TruncateAt.END);
         a.trackingCard.addView(a.trackingFile, a.marginLP(-1, -2, 0, 2, 0, 8));
 
-        a.setBarRow = barRow("T\u1ed5 h\u1ee3p", a.setBar = bar(), a.setLine = a.text("", 12, a.TEXT, true));
+        a.setBarRow = barRow("T\u1eadp", a.setBar = bar(), a.setLine = a.text("", 12, a.TEXT, true));
         a.trackingCard.addView(a.setBarRow, a.marginLP(-1, -2, 0, 0, 0, 6));
         LinearLayout chapterRow = barRow("Ch\u01b0\u01a1ng", a.chapterBar = bar(), a.metricCompleted = a.text("", 12, a.TEXT, true));
         a.chapterRowLabel = (TextView) ((LinearLayout) chapterRow.getChildAt(0)).getChildAt(0);
@@ -348,7 +348,7 @@ class TranslatePageFactory {
         a.metricRemaining = cellValue();
         a.metricFailed = cellValue();
         a.metricGlossaryLocks = cellValue();
-        a.tokensCellLabel = cellLabel("T\u1ed5 h\u1ee3p");
+        a.tokensCellLabel = cellLabel("T\u1eadp");
         LinearLayout row1 = a.rowContainer();
         row1.addView(cell(a.metricTokens, a.tokensCellLabel), new LinearLayout.LayoutParams(0, a.dp(CELL_DP), 1));
         row1.addView(a.space(6, 1));

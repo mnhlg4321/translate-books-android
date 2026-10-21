@@ -19,10 +19,10 @@ public final class RunPanelFormatter {
         }
     }
 
-    /** "Đang dịch · Tổ hợp ATE_JP_VOL6" for a chapter-set run, "Đang dịch · 004.txt" for one file. */
+    /** "Đang dịch · Tập ATE_JP_VOL6" for a chapter-set run, "Đang dịch · 004.txt" for one file. */
     public static String title(String state, boolean set, String setName, String file) {
         String what;
-        if (set) what = "T\u1ed5 h\u1ee3p" + (setName == null || setName.trim().isEmpty() ? "" : " " + setName.trim());
+        if (set) what = "T\u1eadp" + (setName == null || setName.trim().isEmpty() ? "" : " " + setName.trim());
         else what = file == null || file.trim().isEmpty() ? "" : file.trim();
         return stateLabel(state) + (what.isEmpty() ? "" : " \u00b7 " + what);
     }
@@ -90,10 +90,10 @@ public final class RunPanelFormatter {
         return "G" + Math.max(0, glossary) + " · P" + Math.max(0, pronoun);
     }
 
-    /** "~$0.43 dự kiến cả tổ hợp · chương này 11.6k tok · $0.006". */
+    /** "~$0.43 dự kiến cả tập · chương này 11.6k tok · $0.006". */
     public static String estimateLine(boolean set, double estimatedCost, long chapterTokens, double chapterCost) {
         StringBuilder sb = new StringBuilder();
-        if (estimatedCost > 0) sb.append("~").append(String.format(Locale.US, "$%.2f", estimatedCost)).append(set ? " dự kiến cả tổ hợp" : " dự kiến");
+        if (estimatedCost > 0) sb.append("~").append(String.format(Locale.US, "$%.2f", estimatedCost)).append(set ? " dự kiến cả tập" : " dự kiến");
         String chapter = (set ? "chương này " : "") + TranslationDashboardFormatter.compactTokens(chapterTokens) + " tok · " + String.format(Locale.US, "$%.3f", Math.max(0d, chapterCost));
         if (sb.length() > 0) sb.append(" · ");
         return sb.append(chapter).toString();
@@ -101,7 +101,7 @@ public final class RunPanelFormatter {
 
     /** One line for the collapsed source and settings while a run is going. */
     public static String collapsedSource(String setName, int chapters, boolean set, String fileName, int files) {
-        if (set) return "Tổ hợp " + (setName == null || setName.isEmpty() ? "" : setName + " · ") + chapters + " chương · ▸";
+        if (set) return "Tập " + (setName == null || setName.isEmpty() ? "" : setName + " · ") + chapters + " chương · ▸";
         return (files > 1 ? files + " tệp" : fileName == null || fileName.isEmpty() ? "1 tệp" : fileName) + " · ▸";
     }
 }

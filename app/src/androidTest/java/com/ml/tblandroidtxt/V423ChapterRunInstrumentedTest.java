@@ -337,7 +337,7 @@ public class V423ChapterRunInstrumentedTest {
         }
     }
 
-    // ---- v4.23 J2 / J6: chapter-local validation failures, the stop after two, "Tiếp tục tổ hợp", truncation and quote repair ----
+    // ---- v4.23 J2 / J6: chapter-local validation failures, the stop after two, "Tiếp tục tập", truncation and quote repair ----
 
     private static String badBrackets() { return "<TRANSLATION>Xin ch\u00e0o \u300cc\u00e2u n\u00f3i kh\u00f4ng \u0111\u00f3ng, ph\u1ea7n d\u1ecbch b\u1ecb h\u1ecfng v\u1ec1 ng\u1eb7c k\u00e9p.</TRANSLATION>"; }
 
@@ -416,7 +416,7 @@ public class V423ChapterRunInstrumentedTest {
             runSet(scenario, c, f, baseSettings());
             waitFor(() -> rx.count("error") > 0 && !TranslatorService.isActive(), 120_000L, "queue stopped");
             assertEquals("chapter 3 was never started", "NONE", status(c, f.raws.get(2).uri()));
-            assertTrue("two failed chapters stop the run: " + rx.logs, rx.logContains("D\u1eebng t\u1ed5 h\u1ee3p: 2 ch\u01b0\u01a1ng li\u00ean ti\u1ebfp l\u1ed7i ki\u1ec3m \u0111\u1ecbnh (Ch\u01b0\u01a1ng 1, Ch\u01b0\u01a1ng 2). B\u1ea5m Ti\u1ebfp t\u1ee5c t\u1ed5 h\u1ee3p") && rx.logContains("T\u1ed5 h\u1ee3p: 0 xong \u00b7 2 l\u1ed7i"));
+            assertTrue("two failed chapters stop the run: " + rx.logs, rx.logContains("D\u1eebng t\u1eadp: 2 ch\u01b0\u01a1ng li\u00ean ti\u1ebfp l\u1ed7i ki\u1ec3m \u0111\u1ecbnh (Ch\u01b0\u01a1ng 1, Ch\u01b0\u01a1ng 2). B\u1ea5m Ti\u1ebfp t\u1ee5c t\u1eadp") && rx.logContains("T\u1eadp: 0 xong \u00b7 2 l\u1ed7i"));
             assertTrue("the stop is not reported as an initialisation failure", !rx.logContains("L\u1ed7i kh\u1edfi t\u1ea1o"));
             media("32-chapter-run-stopped-after-two", scenario);
         } finally {
@@ -446,7 +446,7 @@ public class V423ChapterRunInstrumentedTest {
             assertNotNull(stopped);
             final long stoppedId = stopped.id;
             chapterTwoBroken.set(false);
-            // "Tiếp tục tổ hợp": the set is reopened with only the chapter that has no finished translation ticked.
+            // "Tiếp tục tập": the set is reopened with only the chapter that has no finished translation ticked.
             AtomicReference<Boolean> opened = new AtomicReference<>();
             scenario.onActivity(activity -> { activity.switchTab("Translate"); opened.set(activity.sourceUi.continueSet(f.setId)); });
             assertTrue(opened.get());

@@ -8,12 +8,12 @@ import org.junit.Test;
 /** v4.23 J3: the numbers and lines of the one-screen progress panel. */
 public class V423RunPanelTest {
     @Test public void titleIsVietnameseAndNamesTheSetOrTheFile() {
-        assertEquals("\u0110ang d\u1ecbch \u00b7 T\u1ed5 h\u1ee3p ATE_JP_VOL6", RunPanelFormatter.title("RUNNING", true, "ATE_JP_VOL6", "004.txt"));
+        assertEquals("\u0110ang d\u1ecbch \u00b7 T\u1eadp ATE_JP_VOL6", RunPanelFormatter.title("RUNNING", true, "ATE_JP_VOL6", "004.txt"));
         assertEquals("\u0110ang d\u1ecbch \u00b7 004.txt", RunPanelFormatter.title("RUNNING", false, "", "004.txt"));
-        assertEquals("T\u1ea1m d\u1eebng \u00b7 T\u1ed5 h\u1ee3p X", RunPanelFormatter.title("PAUSED", true, "X", ""));
-        assertEquals("\u0110\u00e3 d\u1eebng \u00b7 T\u1ed5 h\u1ee3p", RunPanelFormatter.title("IDLE", true, "", ""));
-        assertEquals("Xong \u00b7 T\u1ed5 h\u1ee3p X", RunPanelFormatter.title("COMPLETED", true, "X", "a"));
-        assertEquals("L\u1ed7i \u00b7 T\u1ed5 h\u1ee3p X", RunPanelFormatter.title("FAILED", true, "X", "a"));
+        assertEquals("T\u1ea1m d\u1eebng \u00b7 T\u1eadp X", RunPanelFormatter.title("PAUSED", true, "X", ""));
+        assertEquals("\u0110\u00e3 d\u1eebng \u00b7 T\u1eadp", RunPanelFormatter.title("IDLE", true, "", ""));
+        assertEquals("Xong \u00b7 T\u1eadp X", RunPanelFormatter.title("COMPLETED", true, "X", "a"));
+        assertEquals("L\u1ed7i \u00b7 T\u1eadp X", RunPanelFormatter.title("FAILED", true, "X", "a"));
         assertEquals("\u0110ang chu\u1ea9n b\u1ecb", RunPanelFormatter.title("VALIDATING", false, "", ""));
     }
 
@@ -70,9 +70,9 @@ public class V423RunPanelTest {
     }
 
     @Test public void estimateAndCollapsedLines() {
-        assertEquals("~$0.43 dự kiến cả tổ hợp · chương này 11.6k tok · $0.006", RunPanelFormatter.estimateLine(true, 0.43, 11_600, 0.006));
+        assertEquals("~$0.43 dự kiến cả tập · chương này 11.6k tok · $0.006", RunPanelFormatter.estimateLine(true, 0.43, 11_600, 0.006));
         assertEquals("1.0k tok · $0.001", RunPanelFormatter.estimateLine(false, 0, 1000, 0.0014));
-        assertTrue(RunPanelFormatter.collapsedSource("ATE_JP_VOL6", 14, true, "", 0).startsWith("Tổ hợp ATE_JP_VOL6 · 14 chương"));
+        assertTrue(RunPanelFormatter.collapsedSource("ATE_JP_VOL6", 14, true, "", 0).startsWith("Tập ATE_JP_VOL6 · 14 chương"));
         assertEquals("a.txt · ▸", RunPanelFormatter.collapsedSource("", 0, false, "a.txt", 1));
     }
 }

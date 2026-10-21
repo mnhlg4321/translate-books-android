@@ -148,7 +148,7 @@ final class JobsMainPageFactory {
         card.setOrientation(LinearLayout.VERTICAL);
         card.setPadding(a.dp(12), a.dp(10), a.dp(12), a.dp(10));
         boolean open = EXPANDED.contains(run.sessionId);
-        TextView title = a.text((open ? "▾ " : "▸ ") + "📚 " + (run.setName == null || run.setName.isEmpty() ? "Lượt chạy tổ hợp" : run.setName), 14, a.TEXT, true);
+        TextView title = a.text((open ? "▾ " : "▸ ") + "▣ " + (run.setName == null || run.setName.isEmpty() ? "Lượt chạy tập" : run.setName), 14, a.TEXT, true);
         title.setSingleLine(false);
         card.addView(title);
         StringBuilder meta = new StringBuilder(dateTime(run.createdAt)).append(" · ").append(run.done).append("/").append(run.chapterCount).append(" chương xong");
@@ -176,7 +176,7 @@ final class JobsMainPageFactory {
             card.addView(list);
         }
         if (run.unfinished() > 0 && run.setId != null && !run.setId.isEmpty() && !a.isDeletedWorkspaceSet(run.setId)) {
-            Button go = a.primaryButton("Tiếp tục tổ hợp (" + run.unfinished() + " chương)", v -> a.continueChapterSet(run.setId));
+            Button go = a.primaryButton("Tiếp tục tập (" + run.unfinished() + " chương)", v -> a.continueChapterSet(run.setId));
             go.setContentDescription("run-continue-set");
             card.addView(go, a.marginLP(-1, -2, 0, 8, 0, 0));
         }

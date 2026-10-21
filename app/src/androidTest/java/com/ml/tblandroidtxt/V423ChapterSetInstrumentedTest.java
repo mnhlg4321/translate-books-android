@@ -91,7 +91,7 @@ public class V423ChapterSetInstrumentedTest {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             scenario.onActivity(a -> { a.chapterSetDraft = ChapterSetPageFactory.newDraft(a, Collections.<String>emptyList()); a.invalidatePage("ChapterSets"); a.switchTab("ChapterSets"); });
             idle();
-            scenario.onActivity(a -> assertTrue(containsText(a.getWindow().getDecorView(), "Tổ hợp mới")));
+            scenario.onActivity(a -> assertTrue(containsText(a.getWindow().getDecorView(), "Tập mới")));
             media("31-combo-new-empty", scenario);
 
             // RAW sheet: tapping a row keeps the sheet open and marks the row; Hủy leaves the slot as it was.

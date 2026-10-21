@@ -11,7 +11,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-/** v4.23 J2: the cost limit and the totals belong to the whole run; "Tiếp tục tổ hợp" finds the run a job belongs to. */
+/** v4.23 J2: the cost limit and the totals belong to the whole run; "Tiếp tục tập" finds the run a job belongs to. */
 public class V423RunMeterTest {
     @Test public void costAddsUpAcrossChaptersSoTheLimitStopsTheRunNotTheChapter() {
         RunCostMeter m = new RunCostMeter();

@@ -8,6 +8,7 @@ final class AppBackNavigationPolicy {
         EXIT_SELECTION,
         OPEN_SETTINGS_GENERAL,
         OPEN_TRANSLATE,
+        OPEN_ORIGIN,
         SYSTEM
     }
 
@@ -20,6 +21,7 @@ final class AppBackNavigationPolicy {
         if (selecting && isLibraryList(tab)) return Action.EXIT_SELECTION;
         if ("Glossaries".equals(tab) && editingGlossary) return Action.SAVE_AND_CLOSE_GLOSSARY;
         if ("Pronouns".equals(tab) && editingPronoun) return Action.CLOSE_PRONOUN;
+        if ("Volume".equals(tab) || "AllSets".equals(tab)) return Action.OPEN_ORIGIN;
         if ("Glossaries".equals(tab) || "Pronouns".equals(tab) || "Sample".equals(tab) || "RAW".equals(tab) || "ChapterSets".equals(tab)) return Action.OPEN_LIBRARY_HOME;
         if ("Files".equals(tab)) return Action.OPEN_TRANSLATE;
         if ("Settings".equals(tab) && !"General".equals(settingsCategory)) return Action.OPEN_SETTINGS_GENERAL;

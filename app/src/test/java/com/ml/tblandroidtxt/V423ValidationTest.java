@@ -196,15 +196,15 @@ public class V423ValidationTest {
         o.failed("4", "x");
         assertTrue(o.shouldStopQueue());
         assertEquals(2, o.failedInARow());
-        assertEquals("Tổ hợp: 1 xong · 3 lỗi (1: x; 3: x; 4: x) · 2 chưa chạy", o.summary());
+        assertEquals("Tập: 1 xong · 3 lỗi (1: x; 3: x; 4: x) · 2 chưa chạy", o.summary());
     }
 
     @Test public void stopSentenceNamesTheLastFailedChaptersAndTheWayOn() {
         ChapterRunOutcome o = new ChapterRunOutcome(14);
         o.done("1"); o.failed("3.txt", "x", "Ch\u01b0\u01a1ng 3"); o.done("4"); o.failed("5.txt", "x", "Ch\u01b0\u01a1ng 5"); o.failed("6.txt", "x", "Ch\u01b0\u01a1ng 6");
         assertTrue(o.shouldStopQueue());
-        assertEquals("D\u1eebng t\u1ed5 h\u1ee3p: 2 ch\u01b0\u01a1ng li\u00ean ti\u1ebfp l\u1ed7i ki\u1ec3m \u0111\u1ecbnh (Ch\u01b0\u01a1ng 5, Ch\u01b0\u01a1ng 6). B\u1ea5m Ti\u1ebfp t\u1ee5c t\u1ed5 h\u1ee3p \u0111\u1ec3 ch\u1ea1y ti\u1ebfp ho\u1eb7c s\u1eeda c\u00e0i \u0111\u1eb7t.", o.stopSentence());
-        assertFalse("the summary line stays separate", o.summary().contains("D\u1eebng t\u1ed5 h\u1ee3p"));
+        assertEquals("D\u1eebng t\u1eadp: 2 ch\u01b0\u01a1ng li\u00ean ti\u1ebfp l\u1ed7i ki\u1ec3m \u0111\u1ecbnh (Ch\u01b0\u01a1ng 5, Ch\u01b0\u01a1ng 6). B\u1ea5m Ti\u1ebfp t\u1ee5c t\u1eadp \u0111\u1ec3 ch\u1ea1y ti\u1ebfp ho\u1eb7c s\u1eeda c\u00e0i \u0111\u1eb7t.", o.stopSentence());
+        assertFalse("the summary line stays separate", o.summary().contains("D\u1eebng t\u1eadp"));
     }
 
     // ---- truncation handling ----
