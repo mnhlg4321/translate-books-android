@@ -813,8 +813,9 @@ public class MainActivity extends Activity {
 
         topStatusChip = text("Đã dừng", 13, MUTED, true);
         topStatusChip.setSingleLine(false);
-        topStatusChip.setMaxWidth(dp(statusOnOwnRow ? getResources().getConfiguration().screenWidthDp - 24
-                : Math.max(112, Math.min(160, getResources().getConfiguration().screenWidthDp * 0.42f))));
+        int statusWidthDp = statusOnOwnRow ? getResources().getConfiguration().screenWidthDp - 24
+                : Math.round(Math.max(112, Math.min(160, getResources().getConfiguration().screenWidthDp * 0.42f)));
+        topStatusChip.setMaxWidth(dp(statusWidthDp));
         renderedTopState = "";
         topStatusChip.setGravity(Gravity.CENTER);
         topStatusChip.setClickable(true);
