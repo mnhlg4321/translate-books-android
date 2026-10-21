@@ -8,7 +8,11 @@ public class NavStateTest {
     @Test public void missingStateUsesSafeDefaults() {
         NavState state = NavState.from(null);
         assertEquals("Translate", state.page);
-        assertEquals("", state.setId);
-        assertEquals("Translate", state.originTab);
+    }
+
+    @Test public void removedVolumePagesNormalizeToTranslate() {
+        assertEquals("Translate", NavState.normalizePage("Volume"));
+        assertEquals("Translate", NavState.normalizePage("AllSets"));
+        assertEquals("Jobs", NavState.normalizePage("Jobs"));
     }
 }

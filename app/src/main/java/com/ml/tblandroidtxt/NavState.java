@@ -2,31 +2,34 @@ package com.ml.tblandroidtxt;
 
 import android.os.Bundle;
 
-/** Navigation state that must survive Activity recreation for the Volume page. */
+/** Navigation state that must survive Activity recreation for the current page. */
 final class NavState {
     private static final String PAGE = "nav.page";
-    private static final String SET_ID = "nav.setId";
-    private static final String ORIGIN = "nav.origin";
 
     String page = "Translate";
-    String setId = "";
-    String originTab = "Translate";
 
     static NavState from(Bundle state) {
         NavState out = new NavState();
         if (state == null) return out;
         out.page = safe(state.getString(PAGE, state.getString("currentTab", out.page)));
-        out.setId = safe(state.getString(SET_ID, ""));
-        out.originTab = safe(state.getString(ORIGIN, out.originTab));
-        if (out.page.isEmpty()) out.page = "Translate";
-        if (out.originTab.isEmpty()) out.originTab = "Translate";
+        out.page = normalizePage(out.page);
         return out;
     }
 
     void save(Bundle state) {
         state.putString(PAGE, safe(page));
-        state.putString(SET_ID, safe(setId));
-        state.putString(ORIGIN, safe(originTab));
+    }
+
+    static String normalizePage(String page) {
+        if (!isValidPage(page)) return "Translate";
+        return page;
+    }
+
+    private static boolean isValidPage(String page) {
+        return "Translate".equals(page) || "Jobs".equals(page) || "Editorial".equals(page)
+                || "Settings".equals(page) || "Files".equals(page) || "RAW".equals(page)
+                || "Glossaries".equals(page) || "Pronouns".equals(page)
+                || "ChapterSets".equals(page) || "Sample".equals(page);
     }
 
     private static String safe(String value) { return value == null ? "" : value; }

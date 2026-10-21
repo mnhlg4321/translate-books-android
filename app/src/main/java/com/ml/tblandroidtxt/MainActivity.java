@@ -259,10 +259,8 @@ public class MainActivity extends Activity {
     boolean drawerOpen;
     View drawerScrim;
     LinearLayout drawerPanel, drawerList;
-    EditText allSetsSearch;
     TextView drawerRunningProgress;
     final ArrayList<TextView> drawerProgressLabels = new ArrayList<>();
-    LinearLayout allSetsList;
     int drawerInsetLeft, drawerInsetTop, drawerInsetRight, drawerInsetBottom;
     String settingsCategory = "General";
     boolean settingsSectionExpanded = true;
@@ -579,8 +577,6 @@ public class MainActivity extends Activity {
         if (b != null) bulkUi.restoreState(b);
         NavState restoredNav = NavState.from(b);
         navState.page = restoredNav.page;
-        navState.setId = restoredNav.setId;
-        navState.originTab = restoredNav.originTab;
         if (b != null) { currentTab = restoredNav.page; jobsSetFilterId=b.getString("jobsSetFilterId",jobsSetFilterId); settingsCategory=b.getString("settingsCategory",settingsCategory); settingsSectionExpanded=b.getBoolean("settingsSectionExpanded",true); }
         translationActive = TranslatorService.isActive();
         buildUi();
@@ -829,14 +825,12 @@ public class MainActivity extends Activity {
     String tabLabel(String name) {
         if ("Editorial".equals(name)) return EditorialApiPresenter.TAB_TITLE;
         if ("ChapterSets".equals(name)) return "Tập";
-        if ("AllSets".equals(name)) return "Tất cả tập";
-        if ("Volume".equals(name)) return "Volume";
         return name;
     }
 
     String pageTitle() { return NavigationPageTitles.title(currentTab); }
 
-    boolean primaryActive(String name){if("Library".equals(name))return "Files".equals(currentTab)||"RAW".equals(currentTab)||"Glossaries".equals(currentTab)||"Pronouns".equals(currentTab)||"ChapterSets".equals(currentTab)||"Sample".equals(currentTab)||"AllSets".equals(currentTab)||"Volume".equals(currentTab);return name.equals(currentTab);}
+    boolean primaryActive(String name){if("Library".equals(name))return "Files".equals(currentTab)||"RAW".equals(currentTab)||"Glossaries".equals(currentTab)||"Pronouns".equals(currentTab)||"ChapterSets".equals(currentTab)||"Sample".equals(currentTab);return name.equals(currentTab);}
 
     void switchTab(String name) {
         if("Library".equals(name))name="Files";
@@ -864,10 +858,10 @@ public class MainActivity extends Activity {
         updateRuntimeTimer();
     }
 
-    /** One navigation gate for drawer, Jobs and Volume links. */
-    void navigateTo(String target) { navigateTo(target, "", currentTab); }
+    /** One navigation gate for drawer and Jobs-filter links. */
+    void navigateTo(String target) { navigateTo(target, ""); }
 
-    void navigateTo(String target, String setId, String origin) {
+    void navigateTo(String target, String setId) {
         if (target == null || target.trim().isEmpty()) return;
         silentPersistCurrentUi();
         if (editingGlossary != null) {
@@ -881,7 +875,6 @@ public class MainActivity extends Activity {
         }
         final String nextTarget = target;
         final String nextSetId = setId == null ? "" : setId;
-        final String nextOrigin = origin == null || origin.trim().isEmpty() ? currentTab : origin;
         closeWorkspaceDrawer();
         if (chapterSetDraft != null && chapterSetDraft.dirty) {
             new AlertDialog.Builder(this).setTitle("Bỏ thay đổi?").setMessage("Tập chưa được lưu.")
@@ -889,20 +882,16 @@ public class MainActivity extends Activity {
                     .setPositiveButton("Bỏ", (d, w) -> {
                         chapterSetDraft = null;
                         invalidatePage("ChapterSets");
-                        performNavigation(nextTarget, nextSetId, nextOrigin);
+                        performNavigation(nextTarget, nextSetId);
                     }).show();
             return;
         }
-        performNavigation(nextTarget, nextSetId, nextOrigin);
+        performNavigation(nextTarget, nextSetId);
     }
 
-    private void performNavigation(String target, String setId, String origin) {
-        if ("Volume".equals(target)) invalidatePage("Volume");
+    private void performNavigation(String target, String setId) {
         navState.page = target;
-        navState.setId = setId == null ? "" : setId;
-        navState.originTab = origin == null || origin.trim().isEmpty() ? "Translate" : origin;
-        if ("Volume".equals(target) && !navState.setId.isEmpty()) WorkspaceSetModel.recordOpened(this, navState.setId);
-        if ("Jobs".equals(target) && !navState.setId.isEmpty()) jobsSetFilterId = navState.setId;
+        if ("Jobs".equals(target) && setId != null && !setId.trim().isEmpty()) jobsSetFilterId = setId;
         switchTab(target);
     }
 
@@ -958,13 +947,6 @@ public class MainActivity extends Activity {
             silentPersistCurrentUi(); settingsCategory = "General"; settingsSectionExpanded = true;
             invalidatePage("Settings"); switchTab("Settings"); return;
         }
-        if (action == AppBackNavigationPolicy.Action.OPEN_ORIGIN) {
-            String origin = navState.originTab;
-            if (origin == null || origin.trim().isEmpty() || "Volume".equals(origin) || "AllSets".equals(origin)) origin = "Files";
-            if ("Jobs".equals(origin) && navState.setId != null && !navState.setId.isEmpty()) jobsSetFilterId = navState.setId;
-            navigateTo(origin);
-            return;
-        }
         if (action == AppBackNavigationPolicy.Action.OPEN_TRANSLATE) { switchTab("Translate"); return; }
         super.onBackPressed();
     }
@@ -974,8 +956,6 @@ public class MainActivity extends Activity {
         if ("Settings".equals(name)) return buildSettingsPage();
         if ("Editorial".equals(name)) return buildEditorialPage();
         if ("Glossaries".equals(name)||"Pronouns".equals(name)||"Files".equals(name)||"Sample".equals(name)||"RAW".equals(name)||"ChapterSets".equals(name)) return buildLibraryDestination(name);
-        if ("AllSets".equals(name)) return buildAllSetsPage();
-        if ("Volume".equals(name)) return new VolumePageFactory(this).build(navState.setId);
         if ("Jobs".equals(name)) return buildJobsPage();
         return buildSamplePage();
     }
@@ -1267,10 +1247,8 @@ public class MainActivity extends Activity {
             String logs=LogStore.read(this);cachedJobSummaries=jobs;cachedRuntimeLog=logs;
             runOnUiThread(()->{
                 invalidatePage("Jobs");
-                invalidatePage("AllSets");
-                invalidatePage("Volume");
                 if (drawerOpen) renderWorkspaceDrawer();
-                if ("Jobs".equals(currentTab) || "AllSets".equals(currentTab) || "Volume".equals(currentTab)) switchTab(currentTab);
+                if ("Jobs".equals(currentTab)) switchTab(currentTab);
                 if(showFeedback)toast("Jobs refreshed");
             });
         });
@@ -1314,54 +1292,6 @@ public class MainActivity extends Activity {
     View buildSamplePage() { return new SamplePageFactory(this).buildSamplePage(); }
 
     View buildChapterSetsPage() { return new ChapterSetPageFactory(this).buildPage(); }
-
-    View buildAllSetsPage() {
-        ScrollView scroll = scroll();
-        LinearLayout root = pageRoot();
-        scroll.addView(root);
-        LinearLayout head = sectionCard("▤", "Tất cả tập");
-        head.addView(text("Tập còn sống và tập đã xóa sau khi chạy.", 13, MUTED, false), marginLP(-1, -2, 0, 0, 0, 10));
-        allSetsSearch = input("Tìm tập", "");
-        allSetsSearch.setSingleLine(true);
-        allSetsSearch.setContentDescription("Tìm tập");
-        allSetsSearch.addTextChangedListener(new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { renderAllSetsPage(); }
-            @Override public void afterTextChanged(Editable s) { }
-        });
-        head.addView(allSetsSearch, new LinearLayout.LayoutParams(-1, dp(52)));
-        root.addView(head);
-        allSetsList = new LinearLayout(this);
-        allSetsList.setOrientation(LinearLayout.VERTICAL);
-        root.addView(allSetsList, marginLP(-1, -2, 0, 0, 0, 20));
-        renderAllSetsPage();
-        if (cachedWorkspace == null) refreshJobCacheAsync(false);
-        return scroll;
-    }
-
-    void renderAllSetsPage() {
-        if (allSetsList == null) return;
-        allSetsList.removeAllViews();
-        String query = allSetsSearch == null ? "" : allSetsSearch.getText().toString().trim().toLowerCase(Locale.ROOT);
-        List<WorkspaceSetModel.Entry> entries = workspaceSetsSnapshot();
-        int shown = 0;
-        for (WorkspaceSetModel.Entry entry : entries) {
-            if (!query.isEmpty() && !entry.label().toLowerCase(Locale.ROOT).contains(query)) continue;
-            allSetsList.addView(workspaceSetButton(entry, true), marginLP(-1, -2, 0, 0, 0, 8));
-            shown++;
-        }
-        if (shown == 0) allSetsList.addView(text(entries.isEmpty() ? "Đang tải danh sách tập…" : "Không có tập khớp tìm kiếm.", 14, MUTED, false));
-    }
-
-    private Button workspaceSetButton(final WorkspaceSetModel.Entry entry, boolean includeDeletedLabel) {
-        String title = includeDeletedLabel ? entry.label() : entry.displayName();
-        Button row = secondaryButton(title + "\n" + workspaceSetSummary(entry), v -> navigateTo("Volume", entry.id, currentTab));
-        row.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
-        row.setTextSize(13 * fontScale);
-        row.setPadding(dp(12), dp(8), dp(12), dp(8));
-        row.setContentDescription("Mở tập " + title);
-        return row;
-    }
 
     private String workspaceSetSummary(WorkspaceSetModel.Entry entry) {
         String total = entry.chapterCount > 0 ? entry.done + "/" + entry.chapterCount + " chương" : "Chưa có ảnh chụp chương";
@@ -1494,7 +1424,7 @@ public class MainActivity extends Activity {
     private View drawerEntry(final WorkspaceSetModel.Entry entry, boolean running) {
         String title = entry.label();
         Button row = secondaryButton(title + "\n" + workspaceSetSummary(entry),
-                v -> navigateTo("Jobs", entry.id, currentTab));
+                v -> navigateTo("Jobs", entry.id));
         row.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
         row.setTextSize(13 * fontScale);
         row.setPadding(dp(12), dp(8), dp(12), dp(8));

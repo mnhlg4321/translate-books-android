@@ -6,7 +6,6 @@ import static com.ml.tblandroidtxt.AppBackNavigationPolicy.Action.CLOSE_PRONOUN;
 import static com.ml.tblandroidtxt.AppBackNavigationPolicy.Action.OPEN_LIBRARY_HOME;
 import static com.ml.tblandroidtxt.AppBackNavigationPolicy.Action.OPEN_SETTINGS_GENERAL;
 import static com.ml.tblandroidtxt.AppBackNavigationPolicy.Action.OPEN_TRANSLATE;
-import static com.ml.tblandroidtxt.AppBackNavigationPolicy.Action.OPEN_ORIGIN;
 import static com.ml.tblandroidtxt.AppBackNavigationPolicy.Action.SAVE_AND_CLOSE_GLOSSARY;
 import static com.ml.tblandroidtxt.AppBackNavigationPolicy.Action.SYSTEM;
 import static org.junit.Assert.assertEquals;
@@ -31,11 +30,7 @@ public class AppBackNavigationPolicyTest {
 
     @Test public void unrelatedTabsRetainSystemBack() {
         assertEquals(SYSTEM, AppBackNavigationPolicy.resolve("Translate", false, false, "General"));
-        assertEquals(SYSTEM, AppBackNavigationPolicy.resolve("Jobs", false, false, "General"));
-    }
-
-    @Test public void volumeAndAllSetsReturnToTheirOrigin() {
-        assertEquals(OPEN_ORIGIN, AppBackNavigationPolicy.resolve("Volume", false, false, "General"));
-        assertEquals(OPEN_ORIGIN, AppBackNavigationPolicy.resolve("AllSets", false, false, "General"));
+        assertEquals(OPEN_TRANSLATE, AppBackNavigationPolicy.resolve("Jobs", false, false, "General"));
+        assertEquals(OPEN_TRANSLATE, AppBackNavigationPolicy.resolve("Editorial", false, false, "General"));
     }
 }
