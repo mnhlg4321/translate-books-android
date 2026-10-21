@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-20 (+07:00): J1-J6 implemented; regression passed; 4.23-dev.12 built and run on emulator-5554 (device 227 / 211 PASS / 16 SKIP / 0 FAIL); stopped for the owner install approval.
+- Updated: 2026-10-21 (+07:00): review fixes for dev.13 (Vietnamese run title, status chip, stop sentence, 48 dp buttons) committed up to `c216a486`; the fix session stopped on an API connection error during dev.14 device QA (dev.14 media under `artifacts/qa/v4.23-dev14-20261021/media` not yet committed); refined-minimalism design spec `docs/V423_REFINED_UI_DESIGN.md` added by the main session (docs only).
 - Current version: v4.23.0 in development (not released); contains unreleased v4.22 code; shipped 4.21.0 / code 271 (tag `v4.21.0`).
 - Current branch: `feature/v4.23` in worktree `D:\P5E-builds\wt-v4.23` (BASE `c8408207` on `feature/v4.22`).
 - Current commit: `d4d0ad54` is the implementation baseline before this snapshot commit (test-only commits may follow). Confirm actual HEAD when resuming.
