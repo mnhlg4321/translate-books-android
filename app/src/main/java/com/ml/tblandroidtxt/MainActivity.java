@@ -996,8 +996,7 @@ public class MainActivity extends Activity {
         if ("Editorial".equals(name)) return buildEditorialPage();
         if ("Glossaries".equals(name)||"Pronouns".equals(name)||"Files".equals(name)||"Sample".equals(name)||"RAW".equals(name)||"ChapterSets".equals(name)) return buildLibraryDestination(name);
         if ("AllSets".equals(name)) return buildAllSetsPage();
-        // W1 keeps the existing Library destination until the Volume page lands in W2.
-        if ("Volume".equals(name)) return buildLibraryDestination("ChapterSets");
+        if ("Volume".equals(name)) return new VolumePageFactory(this).build(navState.setId);
         if ("Jobs".equals(name)) return buildJobsPage();
         return buildSamplePage();
     }
@@ -1371,7 +1370,7 @@ public class MainActivity extends Activity {
 
     private Button workspaceSetButton(final WorkspaceSetModel.Entry entry, boolean includeDeletedLabel) {
         String title = includeDeletedLabel ? entry.label() : entry.displayName();
-        Button row = secondaryButton(title + "\n" + workspaceSetSummary(entry), v -> navigateTo("ChapterSets", "", currentTab));
+        Button row = secondaryButton(title + "\n" + workspaceSetSummary(entry), v -> navigateTo("Volume", entry.id, currentTab));
         row.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
         row.setTextSize(13 * fontScale);
         row.setPadding(dp(12), dp(8), dp(12), dp(8));

@@ -23,19 +23,22 @@ final class ChapterSetWorkspaceStore {
         final List<RunGroups.SessionInfo> sessionInfos;
         final List<TranslationRepository.JobSummary> jobs;
         final List<WorkspaceSetModel.Entry> sets;
+        final Map<String, String> rawNames;
 
         Snapshot(List<ChapterSetStore.SetInfo> liveSets,
                  Map<String, ChapterSetStore.SetData> liveData,
                  List<ChapterSession> sessions,
                  List<RunGroups.SessionInfo> sessionInfos,
                  List<TranslationRepository.JobSummary> jobs,
-                 List<WorkspaceSetModel.Entry> sets) {
+                 List<WorkspaceSetModel.Entry> sets,
+                 Map<String, String> rawNames) {
             this.liveSets = Collections.unmodifiableList(new ArrayList<>(liveSets));
             this.liveData = Collections.unmodifiableMap(new HashMap<>(liveData));
             this.sessions = Collections.unmodifiableList(new ArrayList<>(sessions));
             this.sessionInfos = Collections.unmodifiableList(new ArrayList<>(sessionInfos));
             this.jobs = Collections.unmodifiableList(new ArrayList<>(jobs));
             this.sets = Collections.unmodifiableList(new ArrayList<>(sets));
+            this.rawNames = Collections.unmodifiableMap(new HashMap<>(rawNames));
         }
 
         List<TranslationRepository.JobSummary> jobsForSet(String setId) {
@@ -89,8 +92,13 @@ final class ChapterSetWorkspaceStore {
             repo.close();
         }
         List<WorkspaceSetModel.Entry> sets = WorkspaceSetModel.merge(live, infos, WorkspaceSetModel.readLastOpened(context));
-        applyBasicJobStats(sets, jobs, infos);
-        return new Snapshot(live, liveData, sessions, infos, jobs, sets);
+        Map<String, String> rawNames = new HashMap<>();
+        for (LibraryRawStore.Item item : LibraryRawStore.list(context)) {
+            if (item == null || blank(item.id)) continue;
+            rawNames.put(item.id, blank(item.name) ? item.originalName : item.name);
+        }
+        applyVolumeStats(sets, liveData, sessions, infos, jobs, rawNames);
+        return new Snapshot(live, liveData, sessions, infos, jobs, sets, rawNames);
     }
 
     private static List<ChapterSession> readValidSessions(File dir) {
@@ -106,19 +114,19 @@ final class ChapterSetWorkspaceStore {
         return out;
     }
 
-    private static void applyBasicJobStats(List<WorkspaceSetModel.Entry> sets,
-                                            List<TranslationRepository.JobSummary> jobs,
-                                            List<RunGroups.SessionInfo> infos) {
-        Map<String, WorkspaceSetModel.Entry> byId = new HashMap<>();
-        for (WorkspaceSetModel.Entry e : sets) { e.done = 0; e.failed = 0; byId.put(e.id, e); }
-        if (jobs == null) return;
-        for (TranslationRepository.JobSummary job : jobs) {
-            RunGroups.SessionInfo owner = RunGroups.sessionOf(job.id, job.startSessionId, infos);
-            WorkspaceSetModel.Entry e = owner == null ? null : byId.get(owner.setId);
-            if (e == null) continue;
-            if (JobStatus.classify(job.status) == JobStatus.Kind.FINISHED) e.done++;
-            if (job.failedChunks > 0 || JobStatus.is(job.status, JobStatus.Kind.NEEDS_REVIEW, JobStatus.Kind.CONFLICT)
-                    || "error".equalsIgnoreCase(job.status)) e.failed++;
+    private static void applyVolumeStats(List<WorkspaceSetModel.Entry> sets,
+                                          Map<String, ChapterSetStore.SetData> liveData,
+                                          List<ChapterSession> sessions,
+                                          List<RunGroups.SessionInfo> infos,
+                                          List<TranslationRepository.JobSummary> jobs,
+                                          Map<String, String> rawNames) {
+        for (WorkspaceSetModel.Entry entry : sets) {
+            List<TranslationRepository.JobSummary> owned = WorkspaceSetModel.jobsForSet(jobs, infos, entry.id);
+            ChapterSetVolumeModel.Volume volume = ChapterSetVolumeModel.build(
+                    entry.id, liveData.get(entry.id), sessions, infos, owned, rawNames);
+            entry.chapterCount = volume.chapters.size();
+            entry.done = volume.doneCount();
+            entry.failed = volume.errorCount();
         }
     }
 
