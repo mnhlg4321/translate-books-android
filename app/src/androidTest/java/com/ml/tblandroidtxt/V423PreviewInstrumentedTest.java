@@ -95,4 +95,22 @@ public class V423PreviewInstrumentedTest {
         }
         return false;
     }
+
+    @Test public void lateRefreshAfterActivityDestroyDoesNotCrashOrStartWork() {
+        java.util.concurrent.atomic.AtomicReference<MainActivity> old = new java.util.concurrent.atomic.AtomicReference<>();
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            scenario.onActivity(a -> { a.switchTab("Translate"); old.set(a); });
+        }
+        InstrumentationRegistry.getInstrumentation().runOnMainSync(() -> {
+            MainActivity a = old.get();
+            assertTrue(a.isDestroyed());
+            a.translationActive = false;
+            a.refreshPendingJobCard();
+            a.refreshJobCacheAsync(false);
+            a.refreshFailedChunksAsync();
+            a.dismissJobs(java.util.Collections.emptyList());
+            a.deleteJobs(java.util.Collections.emptyList());
+        });
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+    }
 }

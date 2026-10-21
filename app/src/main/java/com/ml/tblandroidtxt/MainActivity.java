@@ -356,17 +356,24 @@ public class MainActivity extends Activity {
     private final java.util.concurrent.ExecutorService cardExecutor = java.util.concurrent.Executors.newSingleThreadExecutor();
     private int pendingCardGeneration;
 
+    /** A delayed callback may outlive this Activity; never submit to its closed queues. */
+    private void submitActivityWork(java.util.concurrent.ExecutorService executor, Runnable task) {
+        if (isFinishing() || isDestroyed() || executor.isShutdown()) return;
+        try { executor.submit(task); }
+        catch (java.util.concurrent.RejectedExecutionException ignored) { /* onDestroy won the race */ }
+    }
+
     /** Reads the unfinished jobs off the UI thread, then draws the card; a newer refresh makes an older answer stale. */
     void refreshPendingJobCard() {
         if (pendingJobCard == null) return;
         if (TranslatorService.isActive() || translationActive) { pendingJobCard.setVisibility(View.GONE); return; }
         final int generation = ++pendingCardGeneration;
-        cardExecutor.submit(() -> {
+        submitActivityWork(cardExecutor, () -> {
             java.util.List<TranslationRepository.JobProgress> jobs;
             TranslationRepository repo = new TranslationRepository(this);
             try { jobs = repo.getIncompleteJobs(null, 20); } catch (Exception e) { jobs = new ArrayList<>(); } finally { repo.close(); }
             final java.util.List<TranslationRepository.JobProgress> found = jobs;
-            runOnUiThread(() -> { if (generation == pendingCardGeneration && !isFinishing()) renderPendingJobCard(found); });
+            runOnUiThread(() -> { if (generation == pendingCardGeneration && !isFinishing() && !isDestroyed()) renderPendingJobCard(found); });
         });
     }
 
@@ -465,7 +472,7 @@ public class MainActivity extends Activity {
 
     /** After "Retry chunk lỗi" finished a chapter job of a set: asks whether to go on with the chapters that are still unfinished. */
     private void offerContinueAfterRetry(final long jobId) {
-        cardExecutor.submit(() -> {
+        submitActivityWork(cardExecutor, () -> {
             try {
                 TranslationRepository repo = new TranslationRepository(this);
                 java.util.List<TranslationRepository.JobSummary> jobs;
@@ -500,19 +507,19 @@ public class MainActivity extends Activity {
     }
 
     void dismissJobs(final java.util.List<Long> ids) {
-        cardExecutor.submit(() -> {
+        submitActivityWork(cardExecutor, () -> {
             TranslationRepository repo = new TranslationRepository(this);
             try { for (long id : ids) repo.dismissJob(id); } finally { repo.close(); }
-            runOnUiThread(() -> { refreshPendingJobCard(); refreshJobCacheAsync(false); toast("Đã bỏ job"); });
+            runOnUiThread(() -> { if (isFinishing() || isDestroyed()) return; refreshPendingJobCard(); refreshJobCacheAsync(false); toast("Đã bỏ job"); });
         });
     }
 
     /** "Xóa" in the Jobs tab: removes the jobs with their chunks and token/cost history (the owner was warned). */
     void deleteJobs(final java.util.List<Long> ids) {
-        cardExecutor.submit(() -> {
+        submitActivityWork(cardExecutor, () -> {
             TranslationRepository repo = new TranslationRepository(this);
             try { for (long id : ids) repo.deleteJob(id); } finally { repo.close(); }
-            runOnUiThread(() -> { refreshPendingJobCard(); refreshJobCacheAsync(false); toast("Đã xóa job"); });
+            runOnUiThread(() -> { if (isFinishing() || isDestroyed()) return; refreshPendingJobCard(); refreshJobCacheAsync(false); toast("Đã xóa job"); });
         });
     }
 
@@ -616,7 +623,7 @@ public class MainActivity extends Activity {
         final Uri tree = outputTreeUri;
         if (tree == null) return;
         try {
-            cardExecutor.submit(() -> {
+            submitActivityWork(cardExecutor, () -> {
                 String error = FileUtil.validateTreeWritable(this, tree, "Output folder");
                 if (error == null) return;
                 runOnUiThread(() -> {
@@ -1239,7 +1246,7 @@ public class MainActivity extends Activity {
     String runtimeLogSnapshot(){return cachedRuntimeLog==null?"":cachedRuntimeLog;}
     void refreshJobCacheAsync(boolean showFeedback){
         refreshFailedChunksAsync();
-        preflightExecutor.submit(()->{
+        submitActivityWork(preflightExecutor, ()->{
             JobStore store=new JobStore(this);List<TranslationRepository.JobSummary> jobs;
             UsageTotals today=new UsageTotals(),week=new UsageTotals();
             TranslationRepository totalsRepo=new TranslationRepository(this);
@@ -1250,6 +1257,7 @@ public class MainActivity extends Activity {
             cachedSessions=workspace.sessionInfos;
             String logs=LogStore.read(this);cachedJobSummaries=jobs;cachedRuntimeLog=logs;
             runOnUiThread(()->{
+                if (isFinishing() || isDestroyed()) return;
                 invalidatePage("Jobs");
                 if (drawerOpen) renderWorkspaceDrawer();
                 if ("Jobs".equals(currentTab)) switchTab(currentTab);
@@ -2562,7 +2570,7 @@ public class MainActivity extends Activity {
         String construction=PreparationCoordinator.constructionKey(s);
         if(!construction.equals(readyPlan.constructionKey)){appendLog("Start blocked: chunk settings changed after preparation");updateInputEstimate();toast("Chunk settings changed; rebuilding the chunk plan");return;}
         final int generation=preflightGeneration.incrementAndGet();setButtonEnabled(startButton,false);
-        preflightExecutor.submit(()->{String readiness=startReadinessError(true);PromptContextBuilder.ParseReport locks=readiness==null?(sourceUi.isSetMode()?sourceUi.locksReport():PromptContextBuilder.validate(s.glossaryText,s.pronounText)):null;runOnUiThread(()->{if(generation!=preflightGeneration.get()||isFinishing()||isDestroyed())return;if(readiness!=null){appendLog("START_BLOCKED resource="+readiness);updateActionButtons();showResult("Start blocked",readiness);return;}validatedPlanId=readyPlan.id;validatedPlanAt=System.currentTimeMillis();appendLog("START_PREFLIGHT_OK preparedPlan="+readyPlan.id);showPreparedPreflight(s,locks);});});
+        submitActivityWork(preflightExecutor, ()->{String readiness=startReadinessError(true);PromptContextBuilder.ParseReport locks=readiness==null?(sourceUi.isSetMode()?sourceUi.locksReport():PromptContextBuilder.validate(s.glossaryText,s.pronounText)):null;runOnUiThread(()->{if(generation!=preflightGeneration.get()||isFinishing()||isDestroyed())return;if(readiness!=null){appendLog("START_BLOCKED resource="+readiness);updateActionButtons();showResult("Start blocked",readiness);return;}validatedPlanId=readyPlan.id;validatedPlanAt=System.currentTimeMillis();appendLog("START_PREFLIGHT_OK preparedPlan="+readyPlan.id);showPreparedPreflight(s,locks);});});
     }
 
     private void showPreparedPreflight(AppSettings s,PromptContextBuilder.ParseReport locks){CostEstimator.Estimate e=estimateCurrentBatch(s);boolean warning=e==null||!e.pricingAvailable||(locks!=null&&(!locks.conflicts.isEmpty()||!locks.malformedGlossaryRows.isEmpty()||!locks.malformedPronounRows.isEmpty()))||(e!=null&&s.stopOnCostLimit&&s.costLimitUsd>0&&e.noCacheCostHigh>s.costLimitUsd);StringBuilder message=new StringBuilder(TranslationDashboardFormatter.prepared(e,preparedBatch.exactChunkCount()));if(warning)message.append("\n\nSome optional pricing or configuration checks have warnings. Translation can still start when blocking checks pass.");new AlertDialog.Builder(this).setTitle("Ready to translate").setMessage(message.toString()).setPositiveButton("Start",(d,w)->startTranslationNow()).setNegativeButton("Cancel",(d,w)->updateActionButtons()).setOnCancelListener(d->updateActionButtons()).show();}
@@ -2813,7 +2821,7 @@ public class MainActivity extends Activity {
     /** hasFailedChunks opens the database: keep it off the UI thread and read the cached answer. */
     void refreshFailedChunksAsync() {
         try {
-            cardExecutor.submit(() -> {
+            submitActivityWork(cardExecutor, () -> {
                 JobStore store = new JobStore(this);
                 boolean failed;
                 try { failed = store.hasFailedChunks(); } finally { store.close(); }
@@ -3788,7 +3796,7 @@ public class MainActivity extends Activity {
         if (tree == null || target == null) return;
         target.removeAllViews();
         target.addView(text("Đang kiểm tra quyền và quét file…", 13, MUTED, false));
-        preflightExecutor.submit(() -> {
+        submitActivityWork(preflightExecutor, () -> {
             String permission = FileUtil.validateTreeWritable(this, tree, "Output folder");
             List<FileUtil.TreeEntry> files = permission == null ? FileUtil.listFilesInTree(this, tree, 50) : java.util.Collections.emptyList();
             runOnUiThread(() -> {
