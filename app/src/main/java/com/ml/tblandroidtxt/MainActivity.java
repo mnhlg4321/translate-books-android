@@ -1299,7 +1299,8 @@ public class MainActivity extends Activity {
 
     List<TranslationRepository.JobSummary> workspaceJobsSnapshot() {
         ChapterSetWorkspaceStore.Snapshot s = cachedWorkspace;
-        return s == null ? new ArrayList<TranslationRepository.JobSummary>() : new ArrayList<>(s.jobs);
+        return JobListMerge.all(cachedJobSummaries,
+                s == null ? java.util.Collections.<TranslationRepository.JobSummary>emptyList() : s.jobs);
     }
 
     List<TranslationRepository.JobSummary> filteredWorkspaceJobsSnapshot() {

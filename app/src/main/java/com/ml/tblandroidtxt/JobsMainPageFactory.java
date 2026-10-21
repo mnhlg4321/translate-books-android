@@ -32,6 +32,7 @@ final class JobsMainPageFactory {
         EditorialJobCard.addJobs(a, root); // Editorial runs next to the translation jobs (4.22)
         root.addView(workspaceFilter(), a.marginLP(-1, -2, 0, 0, 0, 12));
         List<TranslationRepository.JobSummary> jobs = a.filteredWorkspaceJobsSnapshot();
+        List<TranslationRepository.JobSummary> allJobs = a.workspaceJobsSnapshot();
 
         root.addView(totalsCard());
 
@@ -41,7 +42,7 @@ final class JobsMainPageFactory {
             Intent runtime = RuntimeStateStore.toIntent(a);
             if (runtime != null) activeJobId = runtime.getLongExtra(TranslatorService.EXTRA_ACTIVE_JOB_ID, -1L);
         }
-        TranslationRepository.JobSummary current = JobPicker.current(jobs, serviceActive, activeJobId);
+        TranslationRepository.JobSummary current = JobPicker.current(allJobs, serviceActive, activeJobId);
 
         LinearLayout currentSection = a.sectionCard("▶", "Current job");
         if (current == null) currentSection.addView(a.text("Không có job đang chạy hay đang dở.", 13, a.MUTED, false));
