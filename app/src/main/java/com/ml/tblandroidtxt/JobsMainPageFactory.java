@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.ArrayList;
 
 /** Lightweight user-facing Jobs page. Developer and QA tools live in Settings. */
 final class JobsMainPageFactory {
@@ -29,7 +30,8 @@ final class JobsMainPageFactory {
         LinearLayout root = a.pageRoot();
         scroll.addView(root);
         EditorialJobCard.addJobs(a, root); // Editorial runs next to the translation jobs (4.22)
-        List<TranslationRepository.JobSummary> jobs = a.jobSummariesSnapshot();
+        root.addView(workspaceFilter(), a.marginLP(-1, -2, 0, 0, 0, 12));
+        List<TranslationRepository.JobSummary> jobs = a.filteredWorkspaceJobsSnapshot();
 
         root.addView(totalsCard());
 
@@ -61,6 +63,30 @@ final class JobsMainPageFactory {
         if (count == 0) recent.addView(a.text("No recent jobs.", 13, a.MUTED, false));
         root.addView(recent);
         return scroll;
+    }
+
+    private View workspaceFilter() {
+        LinearLayout box = a.card(14, a.FIELD, a.BORDER);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(a.dp(12), a.dp(10), a.dp(12), a.dp(10));
+        TextView label = a.text("Lọc Công việc theo Tập", 13, a.TEXT, true);
+        box.addView(label, a.marginLP(-1, -2, 0, 0, 0, 6));
+        Button pick = a.secondaryButton("Tập: " + a.workspaceFilterLabel(), v -> chooseWorkspaceFilter());
+        pick.setContentDescription("Lọc Công việc theo Tập");
+        box.addView(pick, new LinearLayout.LayoutParams(-1, -2));
+        return box;
+    }
+
+    private void chooseWorkspaceFilter() {
+        List<WorkspaceSetModel.Entry> sets = a.workspaceSetsSnapshot();
+        ArrayList<String> labels = new ArrayList<>();
+        labels.add("Tất cả");
+        for (WorkspaceSetModel.Entry e : sets) labels.add(e.label());
+        new AlertDialog.Builder(a).setTitle("Lọc Công việc theo Tập")
+                .setItems(labels.toArray(new String[0]), (d, which) -> {
+                    if (which == 0) a.setJobsSetFilter("");
+                    else if (which - 1 < sets.size()) a.setJobsSetFilter(sets.get(which - 1).id);
+                }).setNegativeButton("Hủy", null).show();
     }
 
     /** "Hôm nay / 7 ngày": chapters finished, tokens and money, every provider call (retries too) counted once. */
@@ -149,7 +175,7 @@ final class JobsMainPageFactory {
             if (run.chapters.isEmpty()) list.addView(a.text("Chưa có chương nào chạy trong lượt này.", 12, a.MUTED, false));
             card.addView(list);
         }
-        if (run.unfinished() > 0 && run.setId != null && !run.setId.isEmpty()) {
+        if (run.unfinished() > 0 && run.setId != null && !run.setId.isEmpty() && !a.isDeletedWorkspaceSet(run.setId)) {
             Button go = a.primaryButton("Tiếp tục tổ hợp (" + run.unfinished() + " chương)", v -> a.continueChapterSet(run.setId));
             go.setContentDescription("run-continue-set");
             card.addView(go, a.marginLP(-1, -2, 0, 8, 0, 0));

@@ -581,6 +581,50 @@ public class TranslationRepository extends SQLiteOpenHelper {
         return list;
     }
 
+    /**
+     * Full read-only job lookup for one or more chapter-set runs. This has no
+     * LIMIT: the ordinary Jobs cache intentionally remains capped at 150, while
+     * the workspace navigator must also see older runs and resumed job ids.
+     */
+    public List<JobSummary> getJobSummariesForSessions(List<String> sessionIds, List<Long> resumedJobIds) {
+        ArrayList<JobSummary> list = new ArrayList<>();
+        StringBuilder where = new StringBuilder();
+        ArrayList<String> args = new ArrayList<>();
+        if (sessionIds != null) for (String id : sessionIds) {
+            if (id == null || id.trim().isEmpty()) continue;
+            if (where.length() > 0) where.append(',');
+            where.append('?'); args.add(id);
+        }
+        StringBuilder ids = new StringBuilder();
+        if (resumedJobIds != null) for (Long id : resumedJobIds) {
+            if (id == null || id.longValue() <= 0) continue;
+            if (ids.length() > 0) ids.append(',');
+            ids.append('?'); args.add(String.valueOf(id.longValue()));
+        }
+        if (where.length() == 0 && ids.length() == 0) return list;
+        StringBuilder predicate = new StringBuilder("(");
+        if (where.length() > 0) predicate.append("j.start_session_id IN (").append(where).append(')');
+        if (ids.length() > 0) {
+            if (where.length() > 0) predicate.append(" OR ");
+            predicate.append("j.id IN (").append(ids).append(')');
+        }
+        predicate.append(')');
+        String sql = "SELECT j.id,j.file_name,j.status,j.source_language,j.target_language,j.created_at,j.updated_at,j.input_uri,j.output_uri," +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)<>'SUPERSEDED') AS total," +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status) IN ('DONE','COMPLETED')) AS done," +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status) IN ('ERROR','RETRYABLE_ERROR','PERMANENT_ERROR')) AS failed," +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='PENDING') AS pending," +
+                "COALESCE(j.input_hash,''),COALESCE(j.start_session_id,''),COALESCE(j.prepared_batch_id,''),COALESCE(j.prepared_input_ordinal,0)," +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='DELIVERY_UNKNOWN') AS unknown " +
+                "FROM jobs j WHERE " + predicate + " ORDER BY j.updated_at DESC, j.id DESC";
+        SQLiteDatabase db = getReadableDatabase();
+        try (Cursor c = db.rawQuery(sql, args.toArray(new String[0]))) {
+            while (c.moveToNext()) list.add(readJobSummary(c));
+        }
+        attachUsage(db, list);
+        return list;
+    }
+
     private static void attachUsage(SQLiteDatabase db, List<JobSummary> jobs) {
         if (jobs.isEmpty()) return;
         java.util.HashMap<Long, JobSummary> byId = new java.util.HashMap<>();

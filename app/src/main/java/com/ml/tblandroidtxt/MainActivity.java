@@ -139,6 +139,7 @@ public class MainActivity extends Activity {
     final Map<String,View> pageCache=new HashMap<>();
     volatile List<TranslationRepository.JobSummary> cachedJobSummaries=java.util.Collections.emptyList();
     volatile List<RunGroups.SessionInfo> cachedSessions=java.util.Collections.emptyList();
+    volatile ChapterSetWorkspaceStore.Snapshot cachedWorkspace;
     volatile UsageTotals cachedUsageToday=new UsageTotals();
     volatile UsageTotals cachedUsageWeek=new UsageTotals();
     volatile String cachedRuntimeLog="";
@@ -248,6 +249,7 @@ public class MainActivity extends Activity {
     CheckBox refineBox, bilingualBox, partialBox, costLimitBox, overlapBox, retryEmptyBox, retryTruncationBox, retryValidationBox, stopUnknownPricingBox;
 
     String currentTab = "Translate";
+    String jobsSetFilterId = "";
     String settingsCategory = "General";
     boolean settingsSectionExpanded = true;
     boolean hydratingSettings = false;
@@ -558,7 +560,7 @@ public class MainActivity extends Activity {
         }
         inputUri = inputUris.isEmpty() ? null : inputUris.get(0);
         if (b != null) bulkUi.restoreState(b);
-        if (b != null) { currentTab = b.getString("currentTab", currentTab); settingsCategory=b.getString("settingsCategory",settingsCategory); settingsSectionExpanded=b.getBoolean("settingsSectionExpanded",true); }
+        if (b != null) { currentTab = b.getString("currentTab", currentTab); jobsSetFilterId=b.getString("jobsSetFilterId",jobsSetFilterId); settingsCategory=b.getString("settingsCategory",settingsCategory); settingsSectionExpanded=b.getBoolean("settingsSectionExpanded",true); }
         translationActive = TranslatorService.isActive();
         buildUi();
         refreshJobCacheAsync(false);
@@ -570,6 +572,7 @@ public class MainActivity extends Activity {
     @Override protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString("currentTab", currentTab);
+        outState.putString("jobsSetFilterId", jobsSetFilterId);
         bulkUi.saveState(outState);
         outState.putBoolean("settingsScrollKept", true);
         outState.putString("settingsCategory",settingsCategory);
@@ -1161,12 +1164,48 @@ public class MainActivity extends Activity {
             JobStore store=new JobStore(this);List<TranslationRepository.JobSummary> jobs;
             UsageTotals today=new UsageTotals(),week=new UsageTotals();
             TranslationRepository totalsRepo=new TranslationRepository(this);
-            try{jobs=store.recentSummaries(150);long now=System.currentTimeMillis();java.util.Calendar cal=java.util.Calendar.getInstance();cal.set(java.util.Calendar.HOUR_OF_DAY,0);cal.set(java.util.Calendar.MINUTE,0);cal.set(java.util.Calendar.SECOND,0);cal.set(java.util.Calendar.MILLISECOND,0);today=totalsRepo.getUsageTotals(cal.getTimeInMillis());week=totalsRepo.getUsageTotals(now-7L*24*60*60*1000);}finally{store.close();totalsRepo.close();}
+            ChapterSetWorkspaceStore.Snapshot workspace;
+            try{jobs=store.recentSummaries(150);long now=System.currentTimeMillis();java.util.Calendar cal=java.util.Calendar.getInstance();cal.set(java.util.Calendar.HOUR_OF_DAY,0);cal.set(java.util.Calendar.MINUTE,0);cal.set(java.util.Calendar.SECOND,0);cal.set(java.util.Calendar.MILLISECOND,0);today=totalsRepo.getUsageTotals(cal.getTimeInMillis());week=totalsRepo.getUsageTotals(now-7L*24*60*60*1000);workspace=ChapterSetWorkspaceStore.read(this);}finally{store.close();totalsRepo.close();}
             cachedUsageToday=today;cachedUsageWeek=week;
-            cachedSessions=ChapterSession.readInfos(new java.io.File(getFilesDir(),ChapterSession.DIR));
+            cachedWorkspace=workspace;
+            cachedSessions=workspace.sessionInfos;
             String logs=LogStore.read(this);cachedJobSummaries=jobs;cachedRuntimeLog=logs;
             runOnUiThread(()->{invalidatePage("Jobs");if("Jobs".equals(currentTab))switchTab("Jobs");if(showFeedback)toast("Jobs refreshed");});
         });
+    }
+
+    List<WorkspaceSetModel.Entry> workspaceSetsSnapshot() {
+        ChapterSetWorkspaceStore.Snapshot s = cachedWorkspace;
+        return s == null ? new ArrayList<WorkspaceSetModel.Entry>() : new ArrayList<>(s.sets);
+    }
+
+    List<TranslationRepository.JobSummary> workspaceJobsSnapshot() {
+        ChapterSetWorkspaceStore.Snapshot s = cachedWorkspace;
+        return s == null ? new ArrayList<TranslationRepository.JobSummary>() : new ArrayList<>(s.jobs);
+    }
+
+    List<TranslationRepository.JobSummary> filteredWorkspaceJobsSnapshot() {
+        if (jobsSetFilterId == null || jobsSetFilterId.trim().isEmpty()) return workspaceJobsSnapshot();
+        ChapterSetWorkspaceStore.Snapshot s = cachedWorkspace;
+        return s == null ? new ArrayList<TranslationRepository.JobSummary>() : s.jobsForSet(jobsSetFilterId);
+    }
+
+    String workspaceFilterLabel() {
+        if (jobsSetFilterId == null || jobsSetFilterId.trim().isEmpty()) return "Tất cả";
+        for (WorkspaceSetModel.Entry e : workspaceSetsSnapshot()) if (jobsSetFilterId.equals(e.id)) return e.label();
+        return "Tất cả";
+    }
+
+    boolean isDeletedWorkspaceSet(String setId) {
+        ChapterSetWorkspaceStore.Snapshot s = cachedWorkspace;
+        WorkspaceSetModel.Entry e = s == null ? null : s.set(setId);
+        return e != null && e.deleted;
+    }
+
+    void setJobsSetFilter(String setId) {
+        jobsSetFilterId = setId == null ? "" : setId;
+        invalidatePage("Jobs");
+        switchTab("Jobs");
     }
 
     View buildSamplePage() { return new SamplePageFactory(this).buildSamplePage(); }
