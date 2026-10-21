@@ -792,10 +792,10 @@ public class MainActivity extends Activity {
         LinearLayout titleBox = new LinearLayout(this);
         titleBox.setOrientation(LinearLayout.VERTICAL);
         titleBox.setGravity(Gravity.CENTER_VERTICAL);
-        topTitle = text(AppBuildInfo.APP_TITLE, 17, TEXT, true);
+        topTitle = text(pageTitle(), 17, TEXT, true);
         topTitle.setSingleLine(true);
         topTitle.setEllipsize(TextUtils.TruncateAt.END);
-        topSubtitle = text(tabLabel(currentTab) + " • " + compactProviderMeta(), 12, MUTED, false);
+        topSubtitle = text(compactProviderMeta(), 12, MUTED, false);
         topSubtitle.setSingleLine(true);
         topSubtitle.setEllipsize(TextUtils.TruncateAt.END);
         titleBox.addView(topTitle, new LinearLayout.LayoutParams(-1, -2));
@@ -805,9 +805,16 @@ public class MainActivity extends Activity {
         topStatusChip = text("IDLE", 11, MUTED, true);
         renderedTopState = "";
         topStatusChip.setGravity(Gravity.CENTER);
+        topStatusChip.setClickable(true);
+        topStatusChip.setFocusable(true);
+        topStatusChip.setMinWidth(dp(48));
+        topStatusChip.setMinimumWidth(dp(48));
+        topStatusChip.setMinHeight(dp(48));
+        topStatusChip.setMinimumHeight(dp(48));
+        topStatusChip.setOnClickListener(v -> navigateTo("Jobs"));
         topStatusChip.setPadding(dp(10), dp(5), dp(10), dp(5));
         tint(topStatusChip, FIELD, BORDER, 1, 14);
-        bar.addView(topStatusChip, new LinearLayout.LayoutParams(-2, dp(34)));
+        bar.addView(topStatusChip, new LinearLayout.LayoutParams(-2, dp(48)));
         bar.addView(space(8, 1));
 
         Button refresh = button("↻", FIELD, TEXT, v -> refreshCurrentPage());
@@ -826,6 +833,8 @@ public class MainActivity extends Activity {
         if ("Volume".equals(name)) return "Volume";
         return name;
     }
+
+    String pageTitle() { return NavigationPageTitles.title(currentTab); }
 
     boolean primaryActive(String name){if("Library".equals(name))return "Files".equals(currentTab)||"RAW".equals(currentTab)||"Glossaries".equals(currentTab)||"Pronouns".equals(currentTab)||"ChapterSets".equals(currentTab)||"Sample".equals(currentTab)||"AllSets".equals(currentTab)||"Volume".equals(currentTab);return name.equals(currentTab);}
 
@@ -1108,7 +1117,8 @@ public class MainActivity extends Activity {
     }
 
     void refreshTabs() {
-        if (topSubtitle != null) topSubtitle.setText(tabLabel(currentTab) + " • " + compactProviderMeta());
+        if (topTitle != null) topTitle.setText(pageTitle());
+        if (topSubtitle != null) topSubtitle.setText(compactProviderMeta());
         refreshTopStatusChip();
         refreshDrawerMenuState();
     }
@@ -1127,7 +1137,7 @@ public class MainActivity extends Activity {
         drawerMenuButton.setContentDescription(failed ? "Mở menu · có job lỗi" : running ? "Mở menu · đang chạy" : "Mở menu");
     }
     void refreshTopStatusChip() {
-        if (topStatusChip == null) return;
+        if (topStatusChip == null) { refreshDrawerMenuState(); return; }
         boolean active = TranslatorService.isActive() || translationActive;
         String durable = "";
         if (!active) {
@@ -1136,7 +1146,7 @@ public class MainActivity extends Activity {
         }
         String state = RunPanelFormatter.chipState(active, trackedState, durable);
         boolean compact = shouldCompactTopStatus();
-        if (state.equals(renderedTopState) && compact == topStatusCompact) return;
+        if (state.equals(renderedTopState) && compact == topStatusCompact) { refreshDrawerMenuState(); return; }
         renderedTopState = state;
         topStatusCompact = compact;
         boolean healthy = "RUNNING".equals(state) || "COMPLETED".equals(state) || "READY".equals(state);
@@ -1145,12 +1155,13 @@ public class MainActivity extends Activity {
         int background = healthy ? ColorMath.mix(GREEN, BG, 0.82f) : (problem ? ColorMath.mix(RED, BG, 0.82f) : FIELD);
         int border = healthy ? GREEN : (problem ? RED : BORDER);
         topStatusChip.setText(compact ? "●" : state);
-        topStatusChip.setContentDescription("Trạng thái: " + RunPanelFormatter.stateLabel(state));
+        topStatusChip.setContentDescription("Trạng thái: " + RunPanelFormatter.stateLabel(state) + " · Mở Công việc");
         topStatusChip.setTextColor(foreground);
         topStatusChip.setPadding(compact ? dp(6) : dp(10), dp(5), compact ? dp(6) : dp(10), dp(5));
         ViewGroup.LayoutParams chipParams = topStatusChip.getLayoutParams();
-        if (chipParams != null) { chipParams.width = compact ? dp(32) : -2; chipParams.height = dp(34); topStatusChip.setLayoutParams(chipParams); }
+        if (chipParams != null) { chipParams.width = compact ? dp(48) : -2; chipParams.height = dp(48); topStatusChip.setLayoutParams(chipParams); }
         tint(topStatusChip, background, border, 1, 14);
+        refreshDrawerMenuState();
     }
 
     boolean shouldCompactTopStatus() {
