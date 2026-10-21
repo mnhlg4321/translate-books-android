@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-21 (+07:00): W2 implementation, clean archive regression, install, and real-phone QA are complete. The existing archive `4.23-dev.14` / code 292 predates this session, so W1 remains the immutable `4.23-dev.15` / code 293 build; W2 is the immutable `4.23-dev.16` / code 294 build. No archive was overwritten or reused.
+- Updated: 2026-10-21 (+07:00): main session reviewed Codex W0-W2 (dev.16 on phone; 659 unit tests pass on a clean archive; backups valid; QA screenshots corrupted by PowerShell redirection) and found that Jobs "Tất cả" drops single-file jobs; owner chose option A (all destinations in the ☰ drawer, no bottom bar, 3 recent sets, no Volume/All-sets pages); added `docs/V423_DRAWER_NAV_A_WORK_REQUEST.md` (critic-reviewed) for the owner to hand to Codex.
 - Current version: v4.23.0 in development (not released); contains unreleased v4.22 code; shipped 4.21.0 / code 271 (tag `v4.21.0`).
 - Current branch: `feature/v4.23` in worktree `D:\P5E-builds\wt-v4.23` (BASE `c8408207` on `feature/v4.22`).
 - Current commit: `bab51c4f` is the implementation baseline immediately before this snapshot commit. Confirm actual HEAD when resuming.
@@ -11,4 +11,4 @@
 - Known bugs/limits: requested dev.14 was already archived before this session, so W1 uses dev.15 and W2 uses dev.16; 130% font-scale QA is NOT_MEASURED because Android 15 denied shell `WRITE_SETTINGS` and the value remained 1.0; TalkBack reading QA is NOT_MEASURED because enabling the installed service would require changing the owner's accessibility state; the prior emulator media directory remains untracked.
 - Regression status: clean wrapper PASS (`clean testDebugUnitTest lintDebug assembleDebug`) for W2 at tracked HEAD `c4715931`; W2 targeted model tests, full unit tests, lint and androidTest compilation PASS. W1/W2 phone checks PASS except the explicitly NOT_MEASURED owner-cost/accessibility items. Editorial boundary: no `editorial-engine/` or `Editorial*` file edited.
 - Semantic progress: unchanged; spend USD 0 and no provider call.
-- Next action: report owner checklist N1–N6 and stop; no further W0–W2 action is pending.
+- Next action: Codex executes `docs/V423_DRAWER_NAV_A_WORK_REQUEST.md` (Jobs merge fix, drawer-only navigation, remove Volume/All-sets), builds 4.23-dev.17 and tests on phone 15e84958 after backup and owner approval.

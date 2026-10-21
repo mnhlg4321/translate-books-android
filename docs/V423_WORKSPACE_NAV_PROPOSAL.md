@@ -1,5 +1,7 @@
 # Translate Books — Đề xuất cách làm việc theo "Tập" với ngăn trái ☰
 
+> **Cập nhật 2026-10-21 (owner, phương án A):** cả 5 đích chuyển vào ngăn ☰, bỏ thanh dưới và thanh dọc; ngăn chỉ giữ 3 tập gần đây (bấm vào mở Công việc đã lọc); bỏ trang Volume và "Tất cả tập". Phần điều hướng ở các mục 4.2–4.3 và W2 dưới đây được thay bằng `docs/V423_DRAWER_NAV_A_WORK_REQUEST.md`.
+
 **Trạng thái:** bản 2.1, ĐÃ PHẢN BIỆN (2026-10-21; hai lượt phản biện đối chiếu với mã, đã sửa theo cả hai). Lịch sử các bản:
 - Bản 1 (`51192dbb`): thêm tab "Tập".
 - Bản 2 (`fb3938c5`): ngăn trái kiểu ChatGPT, mở bằng nút; giữ 5 tab; không thêm tab Tập; Cài đặt ở đáy ngăn.
