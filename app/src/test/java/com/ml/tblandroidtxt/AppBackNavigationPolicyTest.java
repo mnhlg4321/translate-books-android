@@ -33,4 +33,11 @@ public class AppBackNavigationPolicyTest {
         assertEquals(OPEN_TRANSLATE, AppBackNavigationPolicy.resolve("Jobs", false, false, "General"));
         assertEquals(OPEN_TRANSLATE, AppBackNavigationPolicy.resolve("Editorial", false, false, "General"));
     }
+
+    @Test public void everyTopLevelPageReturnsToTranslateBeforeExit() {
+        assertEquals(OPEN_TRANSLATE, AppBackNavigationPolicy.resolve("Jobs", false, false, "General"));
+        assertEquals(OPEN_TRANSLATE, AppBackNavigationPolicy.resolve("Editorial", false, false, "General"));
+        assertEquals(OPEN_TRANSLATE, AppBackNavigationPolicy.resolve("Files", false, false, "General"));
+        assertEquals(SYSTEM, AppBackNavigationPolicy.resolve("Translate", false, false, "General"));
+    }
 }
