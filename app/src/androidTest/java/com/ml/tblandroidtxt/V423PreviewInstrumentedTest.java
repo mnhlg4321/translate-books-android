@@ -69,9 +69,30 @@ public class V423PreviewInstrumentedTest {
                 a.switchTab("Translate");
                 assertEquals(s.preview, a.previewText.getText().toString());
                 assertEquals("Đã nhận chunk 5/5 · 001.txt", a.previewMeta.getText().toString());
+                openPreview(a.trackingCard);
             });
+            InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+            android.graphics.Bitmap screenshot = InstrumentationRegistry.getInstrumentation().getUiAutomation().takeScreenshot();
+            assertNotNull(screenshot);
+            try (java.io.FileOutputStream output = new java.io.FileOutputStream(
+                    new java.io.File(c.getExternalFilesDir(null), "preview-recreated.png"))) {
+                assertTrue(screenshot.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, output));
+            } catch (java.io.IOException e) { throw new AssertionError(e); }
+            finally { screenshot.recycle(); }
         } finally {
             RuntimeStateStore.clear(c);
         }
+    }
+
+    private static boolean openPreview(android.view.View view) {
+        if (view instanceof android.widget.TextView && ((android.widget.TextView) view).getText().toString().contains("(thu gọn)")) {
+            view.performClick();
+            return true;
+        }
+        if (view instanceof android.view.ViewGroup) {
+            android.view.ViewGroup group = (android.view.ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) if (openPreview(group.getChildAt(i))) return true;
+        }
+        return false;
     }
 }

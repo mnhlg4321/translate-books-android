@@ -66,9 +66,9 @@ public class V423ChapterRunInstrumentedTest {
         return sb.append(System.nanoTime()).toString();
     }
 
-    private static OpenAICompatibleClient.ChatResult response(String text) {
+    private static OpenAICompatibleClient.ChatResult response(String userPrompt) {
         OpenAICompatibleClient.ChatResult r = new OpenAICompatibleClient.ChatResult();
-        r.content = "<TRANSLATION>" + text + "</TRANSLATION>";
+        r.content = lineRichResponse(userPrompt, ".");
         r.promptTokens = 110; r.completionTokens = 30; r.totalTokens = 140; r.usageReported = true;
         r.providerResponseId = "fixture"; r.finishReason = "stop";
         return r;
@@ -212,7 +212,8 @@ public class V423ChapterRunInstrumentedTest {
             String all = prompt.system + "\n" + prompt.user;
             int chapter = all.contains("【章1】") ? 1 : all.contains("【章2】") ? 2 : 3;
             prompts.add(new String[]{String.valueOf(chapter), all});
-            return response("Bản dịch thử nghiệm số " + calls.incrementAndGet() + " với đủ độ dài để vượt qua kiểm định của ứng dụng.");
+            calls.incrementAndGet();
+            return response(all);
         });
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             AppSettings base = baseSettings();
@@ -317,7 +318,8 @@ public class V423ChapterRunInstrumentedTest {
             else if (all.contains("【章1】") || all.contains("【章3】")) inChapterTwo.set(false);
             if (inChapterTwo.get()) throw new ApiHttpException(413, 0, "Request too large for this model: context length exceeded");
             observe(observer);
-            return response("Bản dịch thử nghiệm số " + calls.incrementAndGet() + " với đủ độ dài để vượt qua kiểm định của ứng dụng.");
+            calls.incrementAndGet();
+            return response(all);
         });
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             runSet(scenario, c, f, baseSettings());
@@ -344,7 +346,8 @@ public class V423ChapterRunInstrumentedTest {
             String all = prompt.system + "\n" + prompt.user;
             if (all.contains("【章2】")) throw new ApiHttpException(401, 0, "Unauthorized: invalid credentials");
             observe(observer);
-            return response("Bản dịch thử nghiệm số " + calls.incrementAndGet() + " với đủ độ dài để vượt qua kiểm định của ứng dụng.");
+            calls.incrementAndGet();
+            return response(all);
         });
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             runSet(scenario, c, f, baseSettings());
@@ -401,7 +404,8 @@ public class V423ChapterRunInstrumentedTest {
             observe(observer);
             String all = prompt.system + "\n" + prompt.user;
             if (all.contains("\u3010\u7ae02\u3011")) return raw(badBrackets(), "stop", 30);
-            return response("B\u1ea3n d\u1ecbch th\u1eed nghi\u1ec7m s\u1ed1 " + calls.incrementAndGet() + " v\u1edbi \u0111\u1ee7 \u0111\u1ed9 d\u00e0i \u0111\u1ec3 v\u01b0\u1ee3t qua ki\u1ec3m \u0111\u1ecbnh c\u1ee7a \u1ee9ng d\u1ee5ng.");
+            calls.incrementAndGet();
+            return response(all);
         });
         Broadcasts rx = listen(c);
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
@@ -432,7 +436,7 @@ public class V423ChapterRunInstrumentedTest {
             observe(observer);
             String all = prompt.system + "\n" + prompt.user;
             if (all.contains("\u3010\u7ae01\u3011") || all.contains("\u3010\u7ae02\u3011")) return raw(badBrackets(), "stop", 30);
-            return response("B\u1ea3n d\u1ecbch th\u1eed nghi\u1ec7m v\u1edbi \u0111\u1ee7 \u0111\u1ed9 d\u00e0i \u0111\u1ec3 v\u01b0\u1ee3t qua ki\u1ec3m \u0111\u1ecbnh c\u1ee7a \u1ee9ng d\u1ee5ng.");
+            return response(all);
         });
         Broadcasts rx = listen(c);
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
@@ -460,7 +464,7 @@ public class V423ChapterRunInstrumentedTest {
             observe(observer);
             String all = prompt.system + "\n" + prompt.user;
             if (chapterTwoBroken.get() && all.contains("\u3010\u7ae02\u3011")) return raw(badBrackets(), "stop", 30);
-            return response("B\u1ea3n d\u1ecbch th\u1eed nghi\u1ec7m v\u1edbi \u0111\u1ee7 \u0111\u1ed9 d\u00e0i \u0111\u1ec3 v\u01b0\u1ee3t qua ki\u1ec3m \u0111\u1ecbnh c\u1ee7a \u1ee9ng d\u1ee5ng.");
+            return response(all);
         });
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             runSet(scenario, c, f, baseSettings());
@@ -532,7 +536,7 @@ public class V423ChapterRunInstrumentedTest {
             observe(observer);
             String all = prompt.system + "\n" + prompt.user;
             requests.add(HashUtil.sha256(all) + ":" + limit);
-            if (!all.contains("\u3010\u7ae01\u3011")) return response("B\u1ea3n d\u1ecbch th\u1eed nghi\u1ec7m v\u1edbi \u0111\u1ee7 \u0111\u1ed9 d\u00e0i \u0111\u1ec3 v\u01b0\u1ee3t qua ki\u1ec3m \u0111\u1ecbnh c\u1ee7a \u1ee9ng d\u1ee5ng.");
+            if (!all.contains("\u3010\u7ae01\u3011")) return response(all);
             limits.add(limit);
             // Chapter 1: cut while the limit is below 8192, whole once it is raised.
             if (limit < 8192) return raw(lineRichResponse(all, "."), "length", limit);
@@ -566,7 +570,7 @@ public class V423ChapterRunInstrumentedTest {
             observe(observer);
             String all = prompt.system + "\n" + prompt.user;
             requests.add(HashUtil.sha256(all) + ":" + limit);
-            if (!all.contains("\u3010\u7ae01\u3011")) return response("B\u1ea3n d\u1ecbch th\u1eed nghi\u1ec7m v\u1edbi \u0111\u1ee7 \u0111\u1ed9 d\u00e0i \u0111\u1ec3 v\u01b0\u1ee3t qua ki\u1ec3m \u0111\u1ecbnh c\u1ee7a \u1ee9ng d\u1ee5ng.");
+            if (!all.contains("\u3010\u7ae01\u3011")) return response(all);
             java.util.regex.Matcher m = java.util.regex.Pattern.compile("\u3010\u7ae01\u3011\u7b2c(\\d+)\u6bb5").matcher(all);
             java.util.Set<String> seen = new java.util.HashSet<>();
             while (m.find()) seen.add(m.group(1));
