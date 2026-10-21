@@ -206,6 +206,7 @@ public class V423ChapterRunInstrumentedTest {
         List<String[]> prompts = Collections.synchronizedList(new ArrayList<String[]>());
         TranslateTestSeam.setOutputDir(outDir(c));
         AtomicInteger calls = new AtomicInteger();
+        Broadcasts previewEvents = listen(c);
         TranslateTestSeam.setProvider((settings, prompt, limit, id, observer) -> {
             observe(observer);
             String all = prompt.system + "\n" + prompt.user;
@@ -229,6 +230,25 @@ public class V423ChapterRunInstrumentedTest {
 
             waitFor(() -> status(c, f.raws.get(0).uri()).startsWith("COMPLETED") && status(c, f.raws.get(1).uri()).startsWith("COMPLETED") && status(c, f.raws.get(2).uri()).startsWith("COMPLETED"), 120_000L, "three chapters completed");
             waitFor(() -> !TranslatorService.isActive(), 30_000L, "service idle");
+
+            InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+            boolean transitionSeen = false;
+            synchronized (previewEvents.events) {
+                for (Intent event : previewEvents.events) {
+                    String file = event.getStringExtra(TranslatorService.EXTRA_FILE_NAME);
+                    if (!f.raws.get(1).originalName.equals(file) && !f.raws.get(2).originalName.equals(file)) continue;
+                    String preview = event.getStringExtra(TranslatorService.EXTRA_PREVIEW);
+                    assertNotNull(preview);
+                    assertFalse("accepted preview must survive the next chapter's preparation", preview.isEmpty());
+                    String source = event.getStringExtra(TranslatorService.EXTRA_PREVIEW_FILE);
+                    if (!file.equals(source)) {
+                        transitionSeen = true;
+                        assertTrue("preview identifies the preceding chapter", f.raws.get(0).originalName.equals(source)
+                                || f.raws.get(1).originalName.equals(source));
+                    }
+                }
+            }
+            assertTrue("observed a real service chapter transition", transitionSeen);
 
             // Every request carried only its own chapter's Glossary target.
             assertTrue(prompts.size() >= 3);
@@ -274,6 +294,7 @@ public class V423ChapterRunInstrumentedTest {
             scenario.onActivity(activity -> activity.switchTab("Translate"));
             InstrumentationRegistry.getInstrumentation().waitForIdleSync();
         } finally {
+            c.unregisterReceiver(previewEvents);
             cleanup(c, f, original);
         }
     }
@@ -349,9 +370,11 @@ public class V423ChapterRunInstrumentedTest {
 
     /** Collects every progress broadcast of the service while a test runs. */
     private static final class Broadcasts extends android.content.BroadcastReceiver {
+        final List<Intent> events = java.util.Collections.synchronizedList(new ArrayList<Intent>());
         final List<String> statuses = java.util.Collections.synchronizedList(new ArrayList<String>());
         final List<String> logs = java.util.Collections.synchronizedList(new ArrayList<String>());
         @Override public void onReceive(Context context, Intent intent) {
+            events.add(new Intent(intent));
             statuses.add(String.valueOf(intent.getStringExtra(TranslatorService.EXTRA_STATUS)));
             String log = intent.getStringExtra(TranslatorService.EXTRA_LOG);
             if (log != null) logs.add(log);
