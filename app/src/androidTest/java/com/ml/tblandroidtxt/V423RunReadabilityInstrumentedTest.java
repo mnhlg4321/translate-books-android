@@ -101,11 +101,18 @@ public class V423RunReadabilityInstrumentedTest {
             }); idle();
             capture("run-panel");
             scenario.onActivity(a -> {
-                android.widget.ScrollView outer = a.findScrollView(a.getWindow().getDecorView());
+                android.view.ViewParent parent = a.previewScroll.getParent();
+                while (parent != null && !(parent instanceof android.widget.ScrollView)) parent = parent.getParent();
+                assertNotNull("Preview has an outer scroll container", parent);
+                android.widget.ScrollView outer = (android.widget.ScrollView) parent;
                 int[] heading = new int[2], viewport = new int[2];
                 a.previewMeta.getLocationOnScreen(heading); outer.getLocationOnScreen(viewport);
                 outer.scrollBy(0, Math.max(0, heading[1] - viewport[1]));
+                assertTrue("The outer page can bring the preview into view", outer.getScrollY() > 0);
             }); idle();
+            final java.util.concurrent.CountDownLatch frame = new java.util.concurrent.CountDownLatch(1);
+            scenario.onActivity(a -> a.previewMeta.postOnAnimation(frame::countDown));
+            assertTrue(frame.await(3, java.util.concurrent.TimeUnit.SECONDS)); idle();
             capture("preview-area");
         }
     }
