@@ -13,6 +13,7 @@ public class RuntimeStateSnapshotTest {
         before.lockChunk = 7; before.lockPhase = "Refining"; before.previewChunk = 6;
         before.completed = 6; before.failed = 1; before.fallbacks = 2;
         before.log = "Paused by user"; before.preview = "Bản dịch gần nhất";
+        before.previewFile = "previous-chapter.txt"; before.previewTotal = 9;
         before.totalTokens = 12345; before.totalCost = 0.4321;
         before.estimatedTotalTokens = 20000; before.estimatedTotalCost = 0.7; before.providerUsageComplete = true;
         before.elapsedMs = 90000; before.remainingMs = 120000; before.activeJobId = 99;
@@ -25,6 +26,8 @@ public class RuntimeStateSnapshotTest {
         assertEquals(before.glossaryLocks, after.glossaryLocks); assertEquals(before.pronounLocks, after.pronounLocks);
         assertEquals(before.lockChunk, after.lockChunk); assertEquals(before.lockPhase, after.lockPhase);
         assertEquals(before.previewChunk, after.previewChunk);
+        assertEquals(before.previewFile, after.previewFile);
+        assertEquals(before.previewTotal, after.previewTotal);
         assertEquals(before.completed, after.completed); assertEquals(before.failed, after.failed);
         assertEquals(before.fallbacks, after.fallbacks); assertEquals(before.log, after.log);
         assertEquals(before.preview, after.preview); assertEquals(before.totalTokens, after.totalTokens);

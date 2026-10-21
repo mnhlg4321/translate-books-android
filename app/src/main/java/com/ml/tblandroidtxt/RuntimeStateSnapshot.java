@@ -5,9 +5,9 @@ import java.util.Map;
 
 /** Immutable, Android-free runtime snapshot schema shared by service, store and tests. */
 public final class RuntimeStateSnapshot {
-    public String jobState = "IDLE", status = "", log = "", phase = "", fileName = "", preview = "", lockPhase = "";
+    public String jobState = "IDLE", status = "", log = "", phase = "", fileName = "", preview = "", previewFile = "", lockPhase = "";
     public int progress = -1, totalChunks, completed, failed, fallbacks, totalTokens, estimatedTotalTokens, currentChunk;
-    public int glossaryLocks = -1, pronounLocks = -1, lockChunk, previewChunk;
+    public int glossaryLocks = -1, pronounLocks = -1, lockChunk, previewChunk, previewTotal;
     public double totalCost, estimatedTotalCost;
     public boolean providerUsageComplete;
     public long elapsedMs, remainingMs, activeJobId = -1L;
@@ -15,6 +15,7 @@ public final class RuntimeStateSnapshot {
     public Map<String, Object> toMap() {
         HashMap<String, Object> m = new HashMap<>();
         m.put("jobState",jobState);m.put("status", status); m.put("log", log); m.put("phase", phase); m.put("fileName", fileName);
+        m.put("previewFile", previewFile); m.put("previewTotal", previewTotal);
         m.put("preview", preview); m.put("progress", progress); m.put("totalChunks", totalChunks);
         m.put("completed", completed); m.put("failed", failed); m.put("fallbacks", fallbacks);
         m.put("totalTokens", totalTokens); m.put("estimatedTotalTokens", estimatedTotalTokens); m.put("currentChunk", currentChunk); m.put("totalCost", totalCost);
@@ -42,6 +43,7 @@ public final class RuntimeStateSnapshot {
         s.lockChunk = integer(m.get("lockChunk"), 0);
         s.lockPhase = string(m.get("lockPhase"));
         s.previewChunk = integer(m.get("previewChunk"), 0);
+        s.previewFile = string(m.get("previewFile")); s.previewTotal = integer(m.get("previewTotal"), 0);
         s.elapsedMs = longValue(m.get("elapsedMs"), 0); s.remainingMs = longValue(m.get("remainingMs"), 0);
         s.activeJobId = longValue(m.get("activeJobId"), -1);
         return s;

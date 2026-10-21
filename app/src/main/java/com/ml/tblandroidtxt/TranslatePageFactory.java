@@ -379,10 +379,11 @@ class TranslatePageFactory {
         LinearLayout previewCard = a.card(14, a.FIELD, a.BORDER);
         previewCard.setOrientation(LinearLayout.VERTICAL);
         previewCard.setPadding(a.dp(12), a.dp(8), a.dp(8), a.dp(8));
-        a.previewMeta = a.text("Waiting for the first accepted chunk.", 11, a.MUTED, false);
-        a.previewText = a.text("The latest accepted translation will appear here.", 13, a.TEXT, false);
+        a.previewMeta = a.text("Chưa có chunk được chấp nhận trong lượt này.", 14, a.MUTED, false);
+        a.previewText = a.text("Bản dịch sẽ xuất hiện sau khi một chunk được chấp nhận.", 16, a.TEXT, false);
         a.previewText.setSingleLine(false);
         a.previewText.setTextIsSelectable(true);
+        a.previewText.setLineSpacing(0, 1.4f);
         a.previewText.setPadding(0, 0, a.dp(8), 0);
         ScrollView previewScroll = new ScrollView(a);
         previewScroll.setFillViewport(false);
@@ -395,7 +396,7 @@ class TranslatePageFactory {
         previewBody.addView(a.previewMeta, a.marginLP(-1, -2, 0, 4, 0, 6));
         previewBody.addView(previewScroll, new LinearLayout.LayoutParams(-1, a.dp(150)));
         previewBody.setVisibility(View.GONE);
-        TextView previewToggle = a.text("\u25b8 B\u1ea3n d\u1ecbch g\u1ea7n nh\u1ea5t (thu g\u1ecdn)", 12, a.CYAN, true);
+        TextView previewToggle = a.text("\u25b8 B\u1ea3n d\u1ecbch g\u1ea7n nh\u1ea5t (thu g\u1ecdn)", 14, a.CYAN, true);
         previewToggle.setPadding(0, a.dp(8), 0, a.dp(8));
         previewToggle.setMinHeight(a.dp(48));
         previewToggle.setGravity(Gravity.CENTER_VERTICAL);

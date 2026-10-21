@@ -855,6 +855,7 @@ public class MainActivity extends Activity {
         }
         if (created && ("Translate".equals(name) || "Settings".equals(name))) fillSettings(SettingsStore.load(this));
         if (!created && "Translate".equals(name) && sourceUi.isSetMode()) sourceUi.refresh();
+        if ("Translate".equals(name)) restoreRuntimeStateToUi();
         updateRuntimeTimer();
     }
 
@@ -3904,9 +3905,11 @@ public class MainActivity extends Activity {
         if (metricFailed != null) metricFailed.setText(RunPanelFormatter.failures(failed, fallbacks));
         if (metricGlossaryLocks != null) metricGlossaryLocks.setText(RunPanelFormatter.rules(glossaryLocks, pronounLocks));
         if (estimateLine != null) estimateLine.setText(RunPanelFormatter.estimateLine(setRun, estimatedCost, tokens, cost));
-        if (previewMeta != null) previewMeta.setText(TranslationDashboardFormatter.previewMeta(previewChunk, total, preview));
+        if (previewMeta != null) previewMeta.setText(TranslationDashboardFormatter.previewMeta(previewChunk,
+                intent.getIntExtra(TranslatorService.EXTRA_PREVIEW_TOTAL, 0), preview,
+                intent.getStringExtra(TranslatorService.EXTRA_PREVIEW_FILE)));
         if (previewText != null) previewText.setText(preview == null || preview.trim().isEmpty()
-                ? "The latest accepted translation will appear here." : preview);
+                ? "Bản dịch sẽ xuất hiện sau khi một chunk được chấp nhận." : preview);
         refreshRunClock();
         refreshTopStatusChip();
         applyRunLayout("RUNNING".equalsIgnoreCase(state) || "PAUSED".equalsIgnoreCase(state) || "VALIDATING".equalsIgnoreCase(state) || "READY".equalsIgnoreCase(state));

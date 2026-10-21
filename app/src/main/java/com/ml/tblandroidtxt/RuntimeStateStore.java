@@ -17,6 +17,18 @@ public class RuntimeStateStore {
                             boolean providerUsageComplete, long elapsedMs, long remainingMs, String preview,
                             int currentChunk, int glossaryLocks, int pronounLocks, int lockChunk, String lockPhase,
                             int previewChunk, long activeJobId) {
+        save(c, jobState, status, progress, log, phase, fileName, totalChunks, completed, failed, fallbacks,
+                totalTokens, totalCost, estimatedTotalTokens, estimatedTotalCost, providerUsageComplete,
+                elapsedMs, remainingMs, preview, currentChunk, glossaryLocks, pronounLocks, lockChunk,
+                lockPhase, previewChunk, activeJobId, fileName, totalChunks);
+    }
+
+    public static void save(Context c, String jobState, String status, int progress, String log, String phase, String fileName,
+                            int totalChunks, int completed, int failed, int fallbacks,
+                            int totalTokens, double totalCost, int estimatedTotalTokens, double estimatedTotalCost,
+                            boolean providerUsageComplete, long elapsedMs, long remainingMs, String preview,
+                            int currentChunk, int glossaryLocks, int pronounLocks, int lockChunk, String lockPhase,
+                            int previewChunk, long activeJobId, String previewFile, int previewTotal) {
         RuntimeStateSnapshot s = new RuntimeStateSnapshot();
         s.jobState=nz(jobState);s.status = nz(status); s.progress = progress; s.log = nz(log); s.phase = nz(phase); s.fileName = nz(fileName);
         s.totalChunks = totalChunks; s.completed = completed; s.failed = failed; s.fallbacks = fallbacks;
@@ -27,6 +39,7 @@ public class RuntimeStateStore {
         s.glossaryLocks = glossaryLocks; s.pronounLocks = pronounLocks;
         s.lockChunk = lockChunk; s.lockPhase = nz(lockPhase); s.previewChunk = previewChunk;
         s.activeJobId = activeJobId;
+        s.previewFile = nz(previewFile); s.previewTotal = previewTotal;
         save(c, s);
     }
 
@@ -72,6 +85,8 @@ public class RuntimeStateStore {
                 .putInt(TranslatorService.EXTRA_LOCK_CHUNK, s.lockChunk)
                 .putString(TranslatorService.EXTRA_LOCK_PHASE, nz(s.lockPhase))
                 .putInt(TranslatorService.EXTRA_PREVIEW_CHUNK, s.previewChunk)
+                .putString(TranslatorService.EXTRA_PREVIEW_FILE, nz(s.previewFile))
+                .putInt(TranslatorService.EXTRA_PREVIEW_TOTAL, s.previewTotal)
                 .putLong(TranslatorService.EXTRA_ACTIVE_JOB_ID, s.activeJobId)
                 .putLong("updatedAt", System.currentTimeMillis())
                 .apply();
@@ -106,6 +121,8 @@ public class RuntimeStateStore {
         i.putExtra(TranslatorService.EXTRA_LOCK_CHUNK, p.getInt(TranslatorService.EXTRA_LOCK_CHUNK, 0));
         i.putExtra(TranslatorService.EXTRA_LOCK_PHASE, p.getString(TranslatorService.EXTRA_LOCK_PHASE, ""));
         i.putExtra(TranslatorService.EXTRA_PREVIEW_CHUNK, p.getInt(TranslatorService.EXTRA_PREVIEW_CHUNK, 0));
+        i.putExtra(TranslatorService.EXTRA_PREVIEW_FILE, p.getString(TranslatorService.EXTRA_PREVIEW_FILE, ""));
+        i.putExtra(TranslatorService.EXTRA_PREVIEW_TOTAL, p.getInt(TranslatorService.EXTRA_PREVIEW_TOTAL, 0));
         i.putExtra(TranslatorService.EXTRA_ACTIVE_JOB_ID, p.getLong(TranslatorService.EXTRA_ACTIVE_JOB_ID, -1L));
         i.putExtra(TranslatorService.EXTRA_SESSION_TOKENS, p.getLong(TranslatorService.EXTRA_SESSION_TOKENS, 0L));
         i.putExtra(TranslatorService.EXTRA_SESSION_COST, (double) p.getFloat(TranslatorService.EXTRA_SESSION_COST, 0f));
