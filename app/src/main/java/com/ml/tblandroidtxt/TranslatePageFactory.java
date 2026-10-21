@@ -122,10 +122,10 @@ class TranslatePageFactory {
         actionGrid.setOrientation(LinearLayout.VERTICAL);
         LinearLayout actionTop = a.rowContainer();
         LinearLayout actionBottom = a.rowContainer();
-        a.startButton = a.primaryButton("▶ Start", v -> a.startTranslation());
-        a.pauseButton = a.secondaryButton("⏸ Pause", v -> a.sendSvc(TranslatorService.ACTION_PAUSE));
-        a.resumeButton = a.secondaryButton("↻ Resume", v -> a.sendSvc(TranslatorService.ACTION_RESUME));
-        a.cancelButton = a.dangerButton("✕ Cancel", v -> a.sendSvc(TranslatorService.ACTION_CANCEL));
+        a.startButton = a.primaryButton("Bắt đầu", v -> a.startTranslation());
+        a.pauseButton = a.secondaryButton("Tạm dừng", v -> a.sendSvc(TranslatorService.ACTION_PAUSE));
+        a.resumeButton = a.secondaryButton("Tiếp tục", v -> a.sendSvc(TranslatorService.ACTION_RESUME));
+        a.cancelButton = a.dangerButton("Dừng dịch", v -> a.sendSvc(TranslatorService.ACTION_CANCEL));
         actionTop.addView(a.startButton, new LinearLayout.LayoutParams(0, -2, 1));
         actionTop.addView(a.space(8, 1));
         actionTop.addView(a.pauseButton, new LinearLayout.LayoutParams(0, -2, 1));
@@ -137,7 +137,7 @@ class TranslatePageFactory {
         LinearLayout quickRow = a.rowContainer();
         quickRow.addView(a.secondaryButton("👁 Prompt preview", v -> a.showPromptPreview()), new LinearLayout.LayoutParams(0, -2, 1));
         quickRow.addView(a.space(8, 1));
-        a.retryButton = a.secondaryButton("↻ Retry failed chunks", v -> a.retryFailedChunks());
+        a.retryButton = a.secondaryButton("Dịch lại chunk lỗi", v -> a.retryFailedChunks());
         quickRow.addView(a.retryButton, new LinearLayout.LayoutParams(0, -2, 1));
         actionGrid.addView(quickRow, a.marginLP(-1, -2, 0, 8, 0, 0));
         a.pendingJobCard = a.card(18, a.CARD, a.AMBER);
@@ -318,101 +318,97 @@ class TranslatePageFactory {
     }
 
 
-    /**
-     * The progress panel: two bars (the whole run, the chapter) and six cells of one fixed height whose text shrinks to fit, so the panel never
-     * changes size while numbers change. The chapter-set bar and cell label appear only for a chapter-set run.
-     */
+    /** Readable progress, named metrics and an adaptive preview, without six nested statistic cards. */
     View buildTrackingCard() {
         a.trackingCard = a.card(18, a.CARD, a.BORDER);
         a.trackingCard.setOrientation(LinearLayout.VERTICAL);
-        a.trackingCard.setPadding(a.dp(14), a.dp(12), a.dp(14), a.dp(12));
-        a.trackingCard.setVisibility(View.VISIBLE);
-        a.trackingTitle = a.text("Running", 17, a.TEXT, true);
-        a.trackingTitle.setSingleLine(true);
-        a.trackingTitle.setEllipsize(android.text.TextUtils.TruncateAt.MIDDLE);
+        a.trackingCard.setPadding(a.dp(12), a.dp(10), a.dp(12), a.dp(10));
+        a.trackingTitle = a.text("Đã dừng", 17, a.TEXT, true);
+        a.trackingTitle.setSingleLine(false);
         a.trackingCard.addView(a.trackingTitle);
-        a.trackingFile = a.text("\u2014", 12, a.MUTED, false);
-        a.trackingFile.setSingleLine(true);
-        a.trackingFile.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        a.trackingCard.addView(a.trackingFile, a.marginLP(-1, -2, 0, 2, 0, 8));
-
-        a.setBarRow = barRow("T\u1eadp", a.setBar = bar(), a.setLine = a.text("", 12, a.TEXT, true));
-        a.trackingCard.addView(a.setBarRow, a.marginLP(-1, -2, 0, 0, 0, 6));
-        LinearLayout chapterRow = barRow("Ch\u01b0\u01a1ng", a.chapterBar = bar(), a.metricCompleted = a.text("", 12, a.TEXT, true));
+        a.trackingFile = a.text("—", 14, a.MUTED, false);
+        a.trackingFile.setSingleLine(false);
+        a.trackingCard.addView(a.trackingFile, a.marginLP(-1, -2, 0, 2, 0, 6));
+        a.setBarRow = barRow("Tập", a.setBar = bar(), a.setLine = a.text("", 14, a.TEXT, true));
+        a.trackingCard.addView(a.setBarRow, a.marginLP(-1, -2, 0, 0, 0, 4));
+        LinearLayout chapterRow = barRow("Chương", a.chapterBar = bar(), a.metricCompleted = a.text("", 14, a.TEXT, true));
         a.chapterRowLabel = (TextView) ((LinearLayout) chapterRow.getChildAt(0)).getChildAt(0);
-        a.trackingCard.addView(chapterRow, a.marginLP(-1, -2, 0, 0, 0, 10));
+        a.trackingCard.addView(chapterRow, a.marginLP(-1, -2, 0, 0, 0, 8));
 
-        a.metricTokens = cellValue();
-        a.metricCost = cellValue();
-        a.metricElapsed = cellValue();
-        a.metricRemaining = cellValue();
-        a.metricFailed = cellValue();
-        a.metricGlossaryLocks = cellValue();
-        a.tokensCellLabel = cellLabel("T\u1eadp");
-        LinearLayout row1 = a.rowContainer();
-        row1.addView(cell(a.metricTokens, a.tokensCellLabel), new LinearLayout.LayoutParams(0, a.dp(CELL_DP), 1));
-        row1.addView(a.space(6, 1));
-        row1.addView(cell(a.metricCost, cellLabel("Chi ph\u00ed")), new LinearLayout.LayoutParams(0, a.dp(CELL_DP), 1));
-        row1.addView(a.space(6, 1));
-        row1.addView(cell(a.metricElapsed, cellLabel("\u0110\u00e3 ch\u1ea1y")), new LinearLayout.LayoutParams(0, a.dp(CELL_DP), 1));
-        a.trackingCard.addView(row1);
-        LinearLayout row2 = a.rowContainer();
-        row2.addView(cell(a.metricRemaining, cellLabel("C\u00f2n l\u1ea1i")), new LinearLayout.LayoutParams(0, a.dp(CELL_DP), 1));
-        row2.addView(a.space(6, 1));
-        row2.addView(cell(a.metricFailed, cellLabel("L\u1ed7i \u00b7 fb")), new LinearLayout.LayoutParams(0, a.dp(CELL_DP), 1));
-        row2.addView(a.space(6, 1));
-        row2.addView(cell(a.metricGlossaryLocks, cellLabel("Lu\u1eadt")), new LinearLayout.LayoutParams(0, a.dp(CELL_DP), 1));
-        a.trackingCard.addView(row2, a.marginLP(-1, -2, 0, 6, 0, 0));
+        a.metricTokens = metricValue(); a.metricCost = metricValue();
+        a.metricElapsed = metricValue(); a.metricRemaining = metricValue();
+        a.tokensCellLabel = metricLabel("Token cả lượt");
+        addMetricPair(metric(a.metricTokens, a.tokensCellLabel), metric(a.metricCost, metricLabel("Chi phí cả lượt")));
+        addMetricPair(metric(a.metricElapsed, metricLabel("Đã chạy")), metric(a.metricRemaining, metricLabel("Còn lại (ước tính)")));
+        a.metricFailed = a.text("0 chunk lỗi", 14, a.TEXT, false);
+        a.metricGlossaryLocks = a.text("Glossaries: chưa đo · Pronoun: chưa đo", 14, a.MUTED, false);
+        a.trackingCard.addView(a.metricFailed, a.marginLP(-1, -2, 0, 4, 0, 2));
+        a.trackingCard.addView(a.metricGlossaryLocks);
 
-        // Fields other code still writes to; not shown.
+        // Legacy dashboard references are kept off-screen; no invented fallback measurement is shown.
         a.metricChunks = a.text("0", 1, a.BLUE, true);
         a.metricFallbacks = a.text("0", 1, a.BLUE, true);
-        a.metricCurrentChunk = a.text("\u2014", 1, a.CYAN, true);
-        a.metricPronounLocks = a.text("\u2014", 1, a.CYAN, true);
+        a.metricCurrentChunk = a.text("—", 1, a.CYAN, true);
+        a.metricPronounLocks = a.text("—", 1, a.CYAN, true);
         a.lockUsageMeta = a.text("", 1, a.MUTED, false);
+        a.estimateLine = a.text("", 13, a.MUTED, false);
+        a.estimateLine.setSingleLine(false);
+        a.trackingCard.addView(a.estimateLine, a.marginLP(-1, -2, 0, 6, 0, 6));
 
-        a.estimateLine = a.text("", 11, a.MUTED, false);
-        a.estimateLine.setSingleLine(true);
-        a.estimateLine.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        a.trackingCard.addView(a.estimateLine, a.marginLP(-1, -2, 0, 8, 0, 4));
-
-        LinearLayout previewCard = a.card(14, a.FIELD, a.BORDER);
+        LinearLayout previewCard = new LinearLayout(a);
         previewCard.setOrientation(LinearLayout.VERTICAL);
-        previewCard.setPadding(a.dp(12), a.dp(8), a.dp(8), a.dp(8));
-        a.previewMeta = a.text("Chưa có chunk được chấp nhận trong lượt này.", 14, a.MUTED, false);
+        // A single compact header carries the title, accepted chunk and original source.
+        LinearLayout previewHeader = a.rowContainer();
+        a.previewMeta = a.text("Bản dịch gần nhất\nChưa có chunk được chấp nhận", 14, a.CYAN, true);
+        previewHeader.addView(a.previewMeta, new LinearLayout.LayoutParams(0, -2, 1));
+        a.previewToggle = a.secondaryButton("Ẩn", null);
+        a.previewToggle.setMinHeight(a.dp(48));
+        a.previewToggle.setContentDescription("Ẩn bản dịch gần nhất");
+        previewHeader.addView(a.previewToggle, a.marginLP(-2, -2, 8, 0, 0, 0));
+        previewCard.addView(previewHeader);
         a.previewText = a.text("Bản dịch sẽ xuất hiện sau khi một chunk được chấp nhận.", 16, a.TEXT, false);
-        a.previewText.setSingleLine(false);
         a.previewText.setTextIsSelectable(true);
         a.previewText.setLineSpacing(0, 1.4f);
         a.previewText.setPadding(0, 0, a.dp(8), 0);
-        ScrollView previewScroll = new ScrollView(a);
-        previewScroll.setFillViewport(false);
-        previewScroll.setVerticalScrollBarEnabled(true);
-        previewScroll.setScrollbarFadingEnabled(false);
-        previewScroll.setNestedScrollingEnabled(true);
-        previewScroll.addView(a.previewText, new ScrollView.LayoutParams(-1, -2));
-        LinearLayout previewBody = new LinearLayout(a);
-        previewBody.setOrientation(LinearLayout.VERTICAL);
-        previewBody.addView(a.previewMeta, a.marginLP(-1, -2, 0, 4, 0, 6));
-        previewBody.addView(previewScroll, new LinearLayout.LayoutParams(-1, a.dp(150)));
-        previewBody.setVisibility(View.GONE);
-        TextView previewToggle = a.text("\u25b8 B\u1ea3n d\u1ecbch g\u1ea7n nh\u1ea5t (thu g\u1ecdn)", 14, a.CYAN, true);
-        previewToggle.setPadding(0, a.dp(8), 0, a.dp(8));
-        previewToggle.setMinHeight(a.dp(48));
-        previewToggle.setGravity(Gravity.CENTER_VERTICAL);
-        previewToggle.setOnClickListener(v -> {
-            boolean open = previewBody.getVisibility() != View.VISIBLE;
-            previewBody.setVisibility(open ? View.VISIBLE : View.GONE);
-            previewToggle.setText(open ? "\u25be B\u1ea3n d\u1ecbch g\u1ea7n nh\u1ea5t" : "\u25b8 B\u1ea3n d\u1ecbch g\u1ea7n nh\u1ea5t (thu g\u1ecdn)");
+        a.previewScroll = new TranslationPreviewScrollView(a);
+        a.previewScroll.setFillViewport(false);
+        a.previewScroll.setVerticalScrollBarEnabled(true);
+        a.previewScroll.setScrollbarFadingEnabled(false);
+        a.previewScroll.setNestedScrollingEnabled(true);
+        a.previewScroll.addView(a.previewText, new ScrollView.LayoutParams(-1, -2));
+        previewCard.addView(a.previewScroll, new LinearLayout.LayoutParams(-1, -2));
+        a.previewToggle.setOnClickListener(v -> {
+            boolean open = a.previewScroll.getVisibility() != View.VISIBLE;
+            a.previewScroll.setVisibility(open ? View.VISIBLE : View.GONE);
+            a.previewToggle.setText(open ? "Ẩn" : "Xem");
+            a.previewToggle.setContentDescription(open ? "Ẩn bản dịch gần nhất" : "Xem bản dịch gần nhất");
         });
-        previewCard.addView(previewToggle);
-        previewCard.addView(previewBody);
         a.trackingCard.addView(previewCard);
         return a.trackingCard;
     }
 
-    /** Height of every cell: fixed, so a longer number shrinks its text instead of growing the panel. */
-    static final int CELL_DP = 56;
+    private void addMetricPair(View left, View right) {
+        LinearLayout row = a.rowContainer();
+        // Text can wrap at any scale. A narrow enlarged layout uses one column instead of shrinking it.
+        boolean stacked = a.fontScale >= 1.15f || a.getResources().getConfiguration().screenWidthDp < 340
+                || a.getResources().getConfiguration().fontScale >= 1.5f;
+        row.setOrientation(stacked ? LinearLayout.VERTICAL : LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.TOP);
+        row.addView(left, new LinearLayout.LayoutParams(stacked ? -1 : 0, -2, stacked ? 0 : 1));
+        if (stacked) row.addView(a.space(1, 4)); else row.addView(a.space(12, 1));
+        row.addView(right, new LinearLayout.LayoutParams(stacked ? -1 : 0, -2, stacked ? 0 : 1));
+        a.trackingCard.addView(row, a.marginLP(-1, -2, 0, 0, 0, 6));
+    }
+
+    private TextView metricValue() { return a.text("—", 16, a.TEXT, true); }
+    private TextView metricLabel(String label) { return a.text(label, 14, a.MUTED, false); }
+    private LinearLayout metric(TextView value, TextView label) {
+        LinearLayout box = new LinearLayout(a);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.addView(label);
+        box.addView(value, a.marginLP(-1, -2, 0, 2, 0, 0));
+        return box;
+    }
 
     private ProgressBar bar() {
         ProgressBar p = new ProgressBar(a, null, android.R.attr.progressBarStyleHorizontal);
@@ -425,42 +421,14 @@ class TranslatePageFactory {
         LinearLayout row = new LinearLayout(a);
         row.setOrientation(LinearLayout.VERTICAL);
         LinearLayout top = a.rowContainer();
-        TextView l = a.text(label, 11, a.MUTED, true);
+        TextView l = a.text(label, 14, a.MUTED, true);
         l.setMinWidth(Math.round(a.dp(52) * Math.max(1f, a.fontScale)));
         top.addView(l, new LinearLayout.LayoutParams(-2, -2));
         top.addView(bar, new LinearLayout.LayoutParams(0, a.dp(10), 1));
         row.addView(top);
         row.addView(line, a.marginLP(-1, -2, Math.round(52 * Math.max(1f, a.fontScale)), 2, 0, 0));
-        line.setSingleLine(true);
-        line.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        line.setSingleLine(false);
         return row;
-    }
-
-    private TextView cellValue() {
-        TextView v = a.text("\u2014", 16, a.TEXT, true);
-        v.setGravity(Gravity.CENTER);
-        v.setSingleLine(true);
-        v.setMaxLines(1);
-        android.widget.TextView t = v;
-        t.setAutoSizeTextTypeUniformWithConfiguration(10, 16, 1, android.util.TypedValue.COMPLEX_UNIT_SP);
-        return v;
-    }
-
-    private TextView cellLabel(String text) {
-        TextView l = a.text(text, 10, a.MUTED, true);
-        l.setGravity(Gravity.CENTER);
-        l.setSingleLine(true);
-        return l;
-    }
-
-    private LinearLayout cell(TextView value, TextView label) {
-        LinearLayout box = a.card(10, a.FIELD, a.BORDER);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setGravity(Gravity.CENTER);
-        box.setPadding(a.dp(4), a.dp(4), a.dp(4), a.dp(4));
-        box.addView(value, new LinearLayout.LayoutParams(-1, 0, 1));
-        box.addView(label, new LinearLayout.LayoutParams(-1, -2));
-        return box;
     }
 
     View activityLogCard() {

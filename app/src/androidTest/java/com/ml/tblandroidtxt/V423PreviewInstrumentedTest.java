@@ -68,8 +68,8 @@ public class V423PreviewInstrumentedTest {
                 assertEquals("Jobs", a.currentTab);
                 a.switchTab("Translate");
                 assertEquals(s.preview, a.previewText.getText().toString());
-                assertEquals("Đã nhận chunk 5/5 · 001.txt", a.previewMeta.getText().toString());
-                openPreview(a.trackingCard);
+                assertEquals("Bản dịch gần nhất · Chunk 5/5\n001.txt", a.previewMeta.getText().toString());
+                assertEquals(android.view.View.VISIBLE, a.previewScroll.getVisibility());
             });
             InstrumentationRegistry.getInstrumentation().waitForIdleSync();
             android.graphics.Bitmap screenshot = InstrumentationRegistry.getInstrumentation().getUiAutomation().takeScreenshot();
@@ -82,18 +82,6 @@ public class V423PreviewInstrumentedTest {
         } finally {
             RuntimeStateStore.clear(c);
         }
-    }
-
-    private static boolean openPreview(android.view.View view) {
-        if (view instanceof android.widget.TextView && ((android.widget.TextView) view).getText().toString().contains("(thu gọn)")) {
-            view.performClick();
-            return true;
-        }
-        if (view instanceof android.view.ViewGroup) {
-            android.view.ViewGroup group = (android.view.ViewGroup) view;
-            for (int i = 0; i < group.getChildCount(); i++) if (openPreview(group.getChildAt(i))) return true;
-        }
-        return false;
     }
 
     @Test public void lateRefreshAfterActivityDestroyDoesNotCrashOrStartWork() {

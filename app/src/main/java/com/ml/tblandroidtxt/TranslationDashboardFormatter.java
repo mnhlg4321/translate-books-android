@@ -39,10 +39,9 @@ public final class TranslationDashboardFormatter {
     }
 
     public static String previewMeta(int previewChunk, int total, String preview, String file) {
-        if (preview == null || preview.trim().isEmpty()) return "Chưa có chunk được chấp nhận trong lượt này.";
-        String source = file == null || file.trim().isEmpty() ? "" : " · " + file;
-        if (previewChunk <= 0) return "Bản dịch được chấp nhận gần nhất" + source;
-        return "Đã nhận chunk " + previewChunk + (total > 0 ? "/" + total : "") + source;
+        if (preview == null || preview.trim().isEmpty()) return "Bản dịch gần nhất\nChưa có chunk được chấp nhận";
+        String source = file == null || file.trim().isEmpty() ? "" : "\n" + file;
+        return "Bản dịch gần nhất" + (previewChunk > 0 ? " · Chunk " + previewChunk + (total > 0 ? "/" + total : "") : "") + source;
     }
 
     public static String remaining(long remainingMs) {

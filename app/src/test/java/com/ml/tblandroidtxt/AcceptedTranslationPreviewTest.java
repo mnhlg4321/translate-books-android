@@ -14,7 +14,7 @@ public class AcceptedTranslationPreviewTest {
         assertEquals("001.txt", p.file);
         assertEquals(5, p.chunk);
         assertEquals(5, p.total);
-        assertEquals("Đã nhận chunk 5/5 · 001.txt",
+        assertEquals("Bản dịch gần nhất · Chunk 5/5\n001.txt",
                 TranslationDashboardFormatter.previewMeta(p.chunk, p.total, p.text, p.file));
         p.accept("Bản dịch chương hai", 1, 2);
         assertEquals("002.txt", p.file);
@@ -61,9 +61,9 @@ public class AcceptedTranslationPreviewTest {
     }
 
     @Test public void missingLegacyIdentityDoesNotClaimCurrentChapter() {
-        assertEquals("Đã nhận chunk 5",
+        assertEquals("Bản dịch gần nhất · Chunk 5",
                 TranslationDashboardFormatter.previewMeta(5, 0, "text", null));
-        assertEquals("Chưa có chunk được chấp nhận trong lượt này.",
+        assertEquals("Bản dịch gần nhất\nChưa có chunk được chấp nhận",
                 TranslationDashboardFormatter.previewMeta(0, 0, "", ""));
     }
 }

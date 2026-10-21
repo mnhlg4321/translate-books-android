@@ -36,9 +36,9 @@ public class V423RunPanelTest {
     @Test public void setAndChapterLines() {
         assertEquals("Chương 4 (4/14) · 3 xong · 0 lỗi", RunPanelFormatter.setLine(4, 14, 3, 0, 4));
         assertEquals("Chương 2/3 · 1 xong · 1 lỗi", RunPanelFormatter.setLine(2, 3, 1, 1, -1));
-        assertEquals("chunk 5/6 · 004.txt", RunPanelFormatter.chapterLine(5, 6, "004.txt"));
-        assertEquals("chunk —", RunPanelFormatter.chapterLine(0, 0, ""));
-        assertEquals("chunk 6/6", RunPanelFormatter.chapterLine(9, 6, null));
+        assertEquals("Chunk 5/6", RunPanelFormatter.chapterLine(5, 6, "004.txt"));
+        assertEquals("Chưa có chunk", RunPanelFormatter.chapterLine(0, 0, ""));
+        assertEquals("Chunk 6/6", RunPanelFormatter.chapterLine(9, 6, null));
     }
 
     @Test public void setProgressCountsFinishedAndFailedChaptersPlusTheCurrentOne() {
@@ -54,25 +54,38 @@ public class V423RunPanelTest {
         assertEquals(-1L, RunPanelFormatter.remainingMs(60_000, 10));
         assertEquals(60_000L, RunPanelFormatter.remainingMs(60_000, 500));
         assertEquals(0L, RunPanelFormatter.remainingMs(60_000, 1000));
-        assertEquals("…", RunPanelFormatter.remaining(-1));
-        assertEquals("~31:00", RunPanelFormatter.remaining(31 * 60_000L));
+        assertEquals("Đang ước tính", RunPanelFormatter.remaining(-1));
+        assertEquals("31 phút 0 s", RunPanelFormatter.remaining(31 * 60_000L));
     }
 
     @Test public void clockAndNumbers() {
-        assertEquals("26:11", RunPanelFormatter.clock((26 * 60 + 11) * 1000L));
-        assertEquals("1:02:03", RunPanelFormatter.clock(3723_000L));
-        assertEquals("00:00", RunPanelFormatter.clock(-5));
-        assertEquals("308.0k tok", RunPanelFormatter.tokens(308_000));
+        assertEquals("26 phút 11 s", RunPanelFormatter.clock((26 * 60 + 11) * 1000L));
+        assertEquals("1 giờ 2 phút 3 s", RunPanelFormatter.clock(3723_000L));
+        assertEquals("0 s", RunPanelFormatter.clock(-5));
+        assertEquals("308.000 token", RunPanelFormatter.tokens(308_000));
         assertEquals("$0.2602", RunPanelFormatter.money(0.2602));
-        assertEquals("0 · 0", RunPanelFormatter.failures(0, 0));
-        assertEquals("G10 · P4", RunPanelFormatter.rules(10, 4));
-        assertEquals("—", RunPanelFormatter.rules(-1, -1));
+        assertEquals("0 chunk lỗi", RunPanelFormatter.errors(0));
+        assertEquals("Glossaries: 10 luật · Pronoun: 4 luật", RunPanelFormatter.rules(10, 4));
+        assertEquals("Glossaries: chưa đo · Pronoun: chưa đo", RunPanelFormatter.rules(-1, -1));
     }
 
     @Test public void estimateAndCollapsedLines() {
-        assertEquals("~$0.43 dự kiến cả tập · chương này 11.6k tok · $0.006", RunPanelFormatter.estimateLine(true, 0.43, 11_600, 0.006));
-        assertEquals("1.0k tok · $0.001", RunPanelFormatter.estimateLine(false, 0, 1000, 0.0014));
+        assertEquals("Dự kiến cả lượt: $0.43\nChương này: 11.600 token · Chi phí $0.006", RunPanelFormatter.estimateLine(true, 0.43, 11_600, 0.006));
+        assertEquals("Dự kiến: chưa có ước tính\nĐã dùng: 1.000 token · Chi phí $0.001", RunPanelFormatter.estimateLine(false, 0, 1000, 0.0014));
         assertTrue(RunPanelFormatter.collapsedSource("ATE_JP_VOL6", 14, true, "", 0).startsWith("Tập ATE_JP_VOL6 · 14 chương"));
         assertEquals("a.txt · ▸", RunPanelFormatter.collapsedSource("", 0, false, "a.txt", 1));
+    }
+
+    @Test public void timeRulesAndStatesStayUnambiguousAtBoundaries() {
+        assertEquals("59 s", RunPanelFormatter.clock(59_999));
+        assertEquals("1 phút 0 s", RunPanelFormatter.clock(60_000));
+        assertEquals("1 giờ 0 phút 0 s", RunPanelFormatter.clock(3_600_000));
+        assertEquals("0 s", RunPanelFormatter.remaining(0));
+        assertEquals("Glossaries: chưa đo · Pronoun: 0 luật", RunPanelFormatter.rules(-1, 0));
+        assertEquals("Glossaries: 2 luật · Pronoun: chưa đo", RunPanelFormatter.rules(2, -1));
+        assertEquals("Đang dịch", RunPanelFormatter.chipLabel("RUNNING"));
+        assertEquals("Tạm dừng", RunPanelFormatter.chipLabel("PAUSED"));
+        assertEquals("Hoàn tất", RunPanelFormatter.chipLabel("COMPLETED"));
+        assertEquals("Đã dừng", RunPanelFormatter.chipLabel("IDLE"));
     }
 }

@@ -41,9 +41,9 @@ public class V46DashboardTest {
         assertEquals("1 rule", TranslationDashboardFormatter.lockCount(1));
         assertEquals("Translating • chunk 2/11 • exact prompt usage",
                 TranslationDashboardFormatter.lockMeta("Translating", 2, 11));
-        assertEquals("Chưa có chunk được chấp nhận trong lượt này.",
+        assertEquals("Bản dịch gần nhất\nChưa có chunk được chấp nhận",
                 TranslationDashboardFormatter.previewMeta(0, 11, ""));
-        assertEquals("Đã nhận chunk 1/11",
+        assertEquals("Bản dịch gần nhất · Chunk 1/11",
                 TranslationDashboardFormatter.previewMeta(1, 11, "Translated paragraph"));
     }
 }

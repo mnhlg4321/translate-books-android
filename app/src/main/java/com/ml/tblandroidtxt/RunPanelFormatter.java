@@ -43,8 +43,7 @@ public final class RunPanelFormatter {
 
     /** "chunk 5/6 · 004_ATE_JP_VOL6.txt". */
     public static String chapterLine(int chunk, int totalChunks, String file) {
-        String where = totalChunks <= 0 ? "chunk —" : "chunk " + Math.min(Math.max(chunk, 1), totalChunks) + "/" + totalChunks;
-        return file == null || file.trim().isEmpty() ? where : where + " · " + file.trim();
+        return totalChunks <= 0 ? "Chưa có chunk" : "Chunk " + Math.min(Math.max(chunk, 1), totalChunks) + "/" + totalChunks;
     }
 
     /** Share of the whole run done, in thousandths: finished (or failed) chapters plus the finished part of the current one. */
@@ -68,35 +67,44 @@ public final class RunPanelFormatter {
         return Math.round(elapsedMs * (1000 - permille) / (double) permille);
     }
 
-    /** "26:11", or "1:02:03" past an hour. */
+    /** Explicit units, including seconds; never an unexplained MM:SS value. */
     public static String clock(long ms) {
-        long s = Math.max(0, ms) / 1000;
-        long h = s / 3600, m = (s % 3600) / 60, sec = s % 60;
-        return h > 0 ? String.format(Locale.US, "%d:%02d:%02d", h, m, sec) : String.format(Locale.US, "%02d:%02d", m, sec);
+        long seconds = Math.max(0L, ms) / 1000;
+        long hours = seconds / 3600, minutes = (seconds % 3600) / 60, rest = seconds % 60;
+        return hours > 0 ? hours + " giờ " + minutes + " phút " + rest + " s"
+                : minutes > 0 ? minutes + " phút " + rest + " s" : rest + " s";
     }
 
-    public static String remaining(long ms) { return ms < 0 ? "…" : "~" + clock(ms); }
+    public static String remaining(long ms) { return ms < 0 ? "Đang ước tính" : clock(ms); }
 
-    public static String tokens(long value) { return TranslationDashboardFormatter.compactTokens(value) + " tok"; }
+    public static String tokens(long value) {
+        return java.text.NumberFormat.getIntegerInstance(Locale.forLanguageTag("vi-VN")).format(Math.max(0L, value)) + " token";
+    }
 
     public static String money(double value) { return String.format(Locale.US, "$%.4f", Math.max(0d, value)); }
 
-    /** "0 · 0": failed chunks and fallbacks. */
-    public static String failures(int failedChunks, int fallbacks) { return Math.max(0, failedChunks) + " · " + Math.max(0, fallbacks); }
+    public static String errors(int failedChunks) { return Math.max(0, failedChunks) + " chunk lỗi"; }
 
-    /** "G10 · P4": Glossary and Pronoun rules in the current request; "—" before the first request. */
+    /** Counts belong to the current request. A missing measurement is not a zero. */
     public static String rules(int glossary, int pronoun) {
-        if (glossary < 0 && pronoun < 0) return "—";
-        return "G" + Math.max(0, glossary) + " · P" + Math.max(0, pronoun);
+        return "Glossaries: " + ruleCount(glossary) + " · Pronoun: " + ruleCount(pronoun);
     }
 
-    /** "~$0.43 dự kiến cả tập · chương này 11.6k tok · $0.006". */
+    private static String ruleCount(int count) { return count < 0 ? "chưa đo" : count + " luật"; }
+
+    public static String chipLabel(String state) {
+        if ("VALIDATING".equals(state) || "READY".equals(state)) return "Chuẩn bị";
+        if ("COMPLETED".equals(state)) return "Hoàn tất";
+        if ("FAILED".equals(state)) return "Có lỗi";
+        return stateLabel(state);
+    }
+
+    /** Planned cost and chapter-local usage are explicitly distinguished. */
     public static String estimateLine(boolean set, double estimatedCost, long chapterTokens, double chapterCost) {
-        StringBuilder sb = new StringBuilder();
-        if (estimatedCost > 0) sb.append("~").append(String.format(Locale.US, "$%.2f", estimatedCost)).append(set ? " dự kiến cả tập" : " dự kiến");
-        String chapter = (set ? "chương này " : "") + TranslationDashboardFormatter.compactTokens(chapterTokens) + " tok · " + String.format(Locale.US, "$%.3f", Math.max(0d, chapterCost));
-        if (sb.length() > 0) sb.append(" · ");
-        return sb.append(chapter).toString();
+        String planned = estimatedCost > 0 ? String.format(Locale.US, "$%.2f", estimatedCost) : "chưa có ước tính";
+        return (set ? "Dự kiến cả lượt: " : "Dự kiến: ") + planned + "\n"
+                + (set ? "Chương này: " : "Đã dùng: ") + tokens(chapterTokens) + " · Chi phí "
+                + String.format(Locale.US, "$%.3f", Math.max(0d, chapterCost));
     }
 
     /** One line for the collapsed source and settings while a run is going. */

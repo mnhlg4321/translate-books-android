@@ -118,12 +118,13 @@ public class MainActivity extends Activity {
     TextView topTitle, topSubtitle, topStatusChip, drawerStatusDot;
     Button drawerMenuButton;
     LinearLayout topBar;
-    boolean topStatusCompact;
     ScrollView logScroll;
     TextView estimateText, modelPriceLabel, modelDiagnosticsText;
     ProgressBar setBar, chapterBar;
     LinearLayout setBarRow;
     TextView setLine, chapterRowLabel, tokensCellLabel, estimateLine;
+    ScrollView previewScroll;
+    Button previewToggle;
     View translateSupportCard, translateOutputCard;
     TextView trackingTitle, trackingFile, metricChunks, metricCompleted, metricFailed, metricFallbacks, metricElapsed, metricRemaining, metricCost, metricTokens;
     TextView metricCurrentChunk, metricGlossaryLocks, metricPronounLocks, lockUsageMeta, previewMeta, previewText;
@@ -770,7 +771,12 @@ public class MainActivity extends Activity {
     }
 
     View buildTopBar() {
+        LinearLayout header = new LinearLayout(this);
+        header.setOrientation(LinearLayout.VERTICAL);
+        boolean statusOnOwnRow = fontScale >= 1.15f || getResources().getConfiguration().fontScale >= 1.5f
+                || getResources().getConfiguration().screenWidthDp < 340;
         LinearLayout bar = new LinearLayout(this);
+        header.addView(bar, new LinearLayout.LayoutParams(-1, -2));
         topBar = bar;
         bar.setOrientation(LinearLayout.HORIZONTAL);
         bar.setGravity(Gravity.CENTER_VERTICAL);
@@ -805,11 +811,16 @@ public class MainActivity extends Activity {
         titleBox.addView(topSubtitle, new LinearLayout.LayoutParams(-1, -2));
         bar.addView(titleBox, new LinearLayout.LayoutParams(0, -2, 1));
 
-        topStatusChip = text("IDLE", 11, MUTED, true);
+        topStatusChip = text("Đã dừng", 13, MUTED, true);
+        topStatusChip.setSingleLine(false);
+        topStatusChip.setMaxWidth(dp(statusOnOwnRow ? getResources().getConfiguration().screenWidthDp - 24
+                : Math.max(112, Math.min(160, getResources().getConfiguration().screenWidthDp * 0.42f))));
         renderedTopState = "";
         topStatusChip.setGravity(Gravity.CENTER);
         topStatusChip.setClickable(true);
         topStatusChip.setFocusable(true);
+        topStatusChip.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
+        topStatusChip.setTooltipText("Mở Công việc");
         topStatusChip.setMinWidth(dp(48));
         topStatusChip.setMinimumWidth(dp(48));
         topStatusChip.setMinHeight(dp(48));
@@ -817,16 +828,21 @@ public class MainActivity extends Activity {
         topStatusChip.setOnClickListener(v -> navigateTo("Jobs"));
         topStatusChip.setPadding(dp(10), dp(5), dp(10), dp(5));
         tint(topStatusChip, FIELD, BORDER, 1, 14);
-        bar.addView(topStatusChip, new LinearLayout.LayoutParams(-2, dp(48)));
+        if (statusOnOwnRow) {
+            LinearLayout.LayoutParams statusParams = new LinearLayout.LayoutParams(-2, -2);
+            statusParams.gravity = Gravity.END;
+            header.addView(topStatusChip, statusParams);
+        } else bar.addView(topStatusChip, new LinearLayout.LayoutParams(-2, -2));
         bar.addView(space(8, 1));
 
         Button refresh = button("↻", FIELD, TEXT, v -> refreshCurrentPage());
         refresh.setTextSize(18);
         refresh.setMinWidth(0);
         refresh.setMinimumWidth(0);
+        refresh.setContentDescription("Làm mới trang");
         bar.addView(refresh, new LinearLayout.LayoutParams(dp(48), dp(48)));
         bar.post(this::updateTopBarDensity);
-        return bar;
+        return header;
     }
 
     String tabLabel(String name) {
@@ -1136,28 +1152,21 @@ public class MainActivity extends Activity {
             if (saved != null) durable = saved.getStringExtra(TranslatorService.EXTRA_STATE);
         }
         String state = RunPanelFormatter.chipState(active, trackedState, durable);
-        boolean compact = shouldCompactTopStatus();
-        if (state.equals(renderedTopState) && compact == topStatusCompact) { refreshDrawerMenuState(); return; }
+        if (state.equals(renderedTopState)) { refreshDrawerMenuState(); return; }
         renderedTopState = state;
-        topStatusCompact = compact;
         boolean healthy = "RUNNING".equals(state) || "COMPLETED".equals(state) || "READY".equals(state);
         boolean problem = "FAILED".equals(state);
         int foreground = healthy ? GREEN : (problem ? RED : MUTED);
         int background = healthy ? ColorMath.mix(GREEN, BG, 0.82f) : (problem ? ColorMath.mix(RED, BG, 0.82f) : FIELD);
         int border = healthy ? GREEN : (problem ? RED : BORDER);
-        topStatusChip.setText(compact ? "●" : state);
+        topStatusChip.setText(RunPanelFormatter.chipLabel(state));
         topStatusChip.setContentDescription("Trạng thái: " + RunPanelFormatter.stateLabel(state) + " · Mở Công việc");
         topStatusChip.setTextColor(foreground);
-        topStatusChip.setPadding(compact ? dp(6) : dp(10), dp(5), compact ? dp(6) : dp(10), dp(5));
+        topStatusChip.setPadding(dp(10), dp(5), dp(10), dp(5));
         ViewGroup.LayoutParams chipParams = topStatusChip.getLayoutParams();
-        if (chipParams != null) { chipParams.width = compact ? dp(48) : -2; chipParams.height = dp(48); topStatusChip.setLayoutParams(chipParams); }
+        if (chipParams != null) { chipParams.width = -2; chipParams.height = -2; topStatusChip.setLayoutParams(chipParams); }
         tint(topStatusChip, background, border, 1, 14);
         refreshDrawerMenuState();
-    }
-
-    boolean shouldCompactTopStatus() {
-        int widthDp = getResources().getConfiguration().screenWidthDp;
-        return widthDp <= 380 || fontScale >= 1.25f || (topBar != null && topBar.getWidth() > 0 && topBar.getWidth() / getResources().getDisplayMetrics().density < 390f);
     }
 
     void updateTopBarDensity() { refreshTopStatusChip(); }
@@ -3901,16 +3910,17 @@ public class MainActivity extends Activity {
         String set = currentSetNameForPanel();
         trackedState = state;
         if (trackingTitle != null) trackingTitle.setText(RunPanelFormatter.title(state, setRun, set, file));
-        if (trackingFile != null) trackingFile.setText(nonEmpty(file, "Translation session"));
+        if (trackingFile != null) trackingFile.setText(nonEmpty(file, "Lượt dịch"));
+        if (trackingFile != null) trackingFile.setVisibility(setRun ? View.VISIBLE : View.GONE);
         if (setBarRow != null) setBarRow.setVisibility(setRun ? View.VISIBLE : View.GONE);
         if (setBar != null) setBar.setProgress(RunPanelFormatter.setPermille(setTotal, setDone, setFailed, completed, total));
         if (setLine != null) setLine.setText(RunPanelFormatter.setLine(setIndex, setTotal, setDone, setFailed, -1));
         if (chapterBar != null) chapterBar.setProgress(RunPanelFormatter.chunkPermille(completed, total));
         if (metricCompleted != null) metricCompleted.setText(RunPanelFormatter.chapterLine(Math.max(currentChunk, completed), total, file));
-        if (tokensCellLabel != null) tokensCellLabel.setText(setRun ? "T\u1eadp" : "Token");
+        if (tokensCellLabel != null) tokensCellLabel.setText(setRun ? "Token cả lượt" : "Token đã dùng");
         if (metricTokens != null) metricTokens.setText(RunPanelFormatter.tokens(setRun || runTokens > 0 ? Math.max(runTokens, tokens) : tokens));
         if (metricCost != null) metricCost.setText(RunPanelFormatter.money(setRun || runCost > 0 ? Math.max(runCost, cost) : cost));
-        if (metricFailed != null) metricFailed.setText(RunPanelFormatter.failures(failed, fallbacks));
+        if (metricFailed != null) metricFailed.setText(RunPanelFormatter.errors(failed));
         if (metricGlossaryLocks != null) metricGlossaryLocks.setText(RunPanelFormatter.rules(glossaryLocks, pronounLocks));
         if (estimateLine != null) estimateLine.setText(RunPanelFormatter.estimateLine(setRun, estimatedCost, tokens, cost));
         if (previewMeta != null) previewMeta.setText(TranslationDashboardFormatter.previewMeta(previewChunk,

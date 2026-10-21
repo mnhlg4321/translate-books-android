@@ -168,7 +168,7 @@ public class V423AppearanceInstrumentedTest {
         Context c = InstrumentationRegistry.getInstrumentation().getTargetContext();
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             scenario.onActivity(a -> a.switchTab("Translate"));
-            String[][] cases = {{"RUNNING", "%s", "RUNNING"}, {"PAUSED", "%s", "PAUSED"}};
+            String[][] cases = {{"RUNNING", "%s", "Đang dịch"}, {"PAUSED", "%s", "Tạm dừng"}};
             for (String[] k : cases) {
                 scenario.onActivity(a -> { a.translationActive = true; a.updateTrackingFromIntent(progress(k[0], 14, 3, 0, 4, 6, 5, 1000, 0.01, "004.txt")); });
                 InstrumentationRegistry.getInstrumentation().waitForIdleSync();
@@ -181,7 +181,7 @@ public class V423AppearanceInstrumentedTest {
             RuntimeStateStore.save(c, "COMPLETED", "done", 100, "", "Completed", "a.txt", 1, 1, 0, 0, 0, 0, 0, 0, false, 0, 0, "", 0, 0, 0, 0, "", 0, 1);
             scenario.onActivity(a -> { a.translationActive = false; a.updateTrackingFromIntent(progress("COMPLETED", 14, 14, 0, 14, 6, 6, 1000, 0.01, "014.txt")); });
             InstrumentationRegistry.getInstrumentation().waitForIdleSync();
-            assertEquals("COMPLETED", onMain(scenario, a -> a.topStatusChip.getText().toString()));
+            assertEquals("Hoàn tất", onMain(scenario, a -> a.topStatusChip.getText().toString()));
             assertTrue(onMain(scenario, a -> a.trackingTitle.getText().toString()).startsWith("Xong"));
         }
     }
@@ -211,7 +211,7 @@ public class V423AppearanceInstrumentedTest {
     }
 
     @Test
-    public void theProgressPanelKeepsItsSizeWhileItsNumbersChange() throws Exception {
+    public void theProgressPanelWrapsNamedMetricsWithoutShrinkingText() throws Exception {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             scenario.onActivity(a -> a.switchTab("Translate"));
             InstrumentationRegistry.getInstrumentation().waitForIdleSync();
@@ -220,30 +220,25 @@ public class V423AppearanceInstrumentedTest {
                     progress("RUNNING", 14, 3, 0, 4, 6, 5, 308_123, 0.2602, "004_ATE_JP_VOL6.txt"),
                     progress("RUNNING", 14, 9, 2, 12, 120, 99, 12_345_678, 12.3456, "012_a_very_long_chapter_file_name_that_would_not_fit_in_one_line.txt"),
             };
-            int[][] cellSizes = new int[samples.length][];
-            int[][] panelSizes = new int[samples.length][];
             for (int k = 0; k < samples.length; k++) {
                 final Intent sample = samples[k];
                 scenario.onActivity(a -> a.updateTrackingFromIntent(sample));
                 InstrumentationRegistry.getInstrumentation().waitForIdleSync();
                 Thread.sleep(300L);
-                final int idx = k;
                 scenario.onActivity(a -> {
-                    View cost = (View) a.metricCost.getParent();
-                    View tokens = (View) a.metricTokens.getParent();
-                    cellSizes[idx] = new int[]{sizeOf(cost)[1], sizeOf(tokens)[1], sizeOf((View) a.metricRemaining.getParent())[1], sizeOf((View) a.metricGlossaryLocks.getParent())[1]};
-                    panelSizes[idx] = sizeOf(a.trackingCard);
+                    for (TextView value : new TextView[]{a.metricTokens, a.metricCost, a.metricElapsed, a.metricRemaining, a.metricGlossaryLocks}) {
+                        assertEquals("Never shrink meaningful text to fit", TextView.AUTO_SIZE_TEXT_TYPE_NONE, value.getAutoSizeTextType());
+                        assertTrue(value.getText().toString(), value.getWidth() > 0 && value.getHeight() > 0);
+                        assertNotNull(value.getLayout());
+                        for (int line = 0; line < value.getLayout().getLineCount(); line++) assertEquals(0, value.getLayout().getEllipsisCount(line));
+                    }
                 });
-            }
-            for (int k = 1; k < samples.length; k++) {
-                assertEquals("cell heights are fixed", java.util.Arrays.toString(cellSizes[0]), java.util.Arrays.toString(cellSizes[k]));
-                assertEquals("panel height does not move", panelSizes[0][1], panelSizes[k][1]);
             }
             scenario.onActivity(a -> {
                 assertTrue("set totals are shown", a.setLine.getText().toString().contains("xong") && a.setBarRow.getVisibility() == View.VISIBLE);
                 assertEquals("12.3456 is the whole run's cost", "$12.3456", a.metricCost.getText().toString());
-                assertEquals("G10 · P4", a.metricGlossaryLocks.getText().toString());
-                assertEquals("Tập", a.tokensCellLabel.getText().toString());
+                assertEquals("Glossaries: 10 luật · Pronoun: 4 luật", a.metricGlossaryLocks.getText().toString());
+                assertEquals("Token cả lượt", a.tokensCellLabel.getText().toString());
             });
         }
     }
