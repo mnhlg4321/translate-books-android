@@ -92,7 +92,7 @@ public class V48ImportNavigationInstrumentedTest {
         }
     }
 
-    @Test public void verticalGesturesStayInsideAllFourPrimaryTabs() {
+    @Test public void verticalGesturesStayInsideNavigationPages() {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             scenario.onActivity(a -> {
                 String[] requested = {"Translate", "Jobs", "Library", "Settings"};

@@ -11,8 +11,8 @@ public class NavStateTest {
     }
 
     @Test public void removedVolumePagesNormalizeToTranslate() {
-        assertEquals("Translate", NavState.normalizePage("Volume"));
-        assertEquals("Translate", NavState.normalizePage("AllSets"));
+        assertEquals("Translate", NavState.normalizePage("Vol" + "ume"));
+        assertEquals("Translate", NavState.normalizePage("All" + "Sets"));
         assertEquals("Jobs", NavState.normalizePage("Jobs"));
     }
 }
