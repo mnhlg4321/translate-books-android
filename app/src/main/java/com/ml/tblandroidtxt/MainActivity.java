@@ -891,7 +891,10 @@ public class MainActivity extends Activity {
 
     private void performNavigation(String target, String setId) {
         navState.page = target;
-        if ("Jobs".equals(target) && setId != null && !setId.trim().isEmpty()) jobsSetFilterId = setId;
+        if ("Jobs".equals(target) && setId != null && !setId.trim().isEmpty()) {
+            jobsSetFilterId = setId;
+            invalidatePage("Jobs");
+        }
         switchTab(target);
     }
 

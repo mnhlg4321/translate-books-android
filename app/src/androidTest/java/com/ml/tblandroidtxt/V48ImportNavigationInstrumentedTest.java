@@ -21,6 +21,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
@@ -105,6 +106,18 @@ public class V48ImportNavigationInstrumentedTest {
                     dispatchVerticalSwipe(scroll);
                     assertEquals(expected[i], a.currentTab);
                 }
+            });
+        }
+    }
+
+    @Test public void recentJobsNavigationRebuildsAnAlreadyOpenJobsPage() {
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            scenario.onActivity(a -> {
+                a.switchTab("Jobs");
+                View first = a.pageCache.get("Jobs");
+                a.navigateTo("Jobs", "QA_filter_route");
+                assertEquals("QA_filter_route", a.jobsSetFilterId);
+                assertNotSame(first, a.pageCache.get("Jobs"));
             });
         }
     }
