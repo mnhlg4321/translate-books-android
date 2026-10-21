@@ -1,5 +1,14 @@
 # Build State
 
+## Current state — 2026-10-21 (v4.23 dev build `4.23-dev.18`: drawer navigation repair; real-phone QA complete)
+
+- Product decision served: owner option A in `docs/V423_DRAWER_NAV_A_WORK_REQUEST.md` — all destinations are in the ☰ drawer, the bottom/wide navigation is removed, three recent sets remain visible, and single-file jobs remain in the all-jobs view.
+- `4.23-dev.18` / code 296, event `build-20261021-200931`, source `a4243e1f`, APK SHA-256 `3B7BD4B5A421306EDAA65C07AA6B81D25D579788CA1FBBDD3FCC6CA34DF30F51`; source ZIP SHA-256 `3E7AB75443850F51B1C7674C631C20D41C3CFF62436E6CE0C95691A435E36CF5`. Artifact and backup mirrors are under `artifacts/builds/v4.23-dev.18/build-20261021-200931/` and `backup/builds/v4.23-dev.18/build-20261021-200931/`.
+- Clean archive regression of `a4243e1f`: engine 742 / 1 SKIP; app debug, release and benchmark 667 / 5 SKIP each; 0 FAIL; lint 0 errors / 58 warnings; AndroidTest compile PASS. Wrapper artifact parity PASS.
+- Dev.17 phone QA found and rejected a same-page Jobs filter refresh defect. Dev.18 was installed over dev.17 on the real phone `15e84958` only after the validated outside-Git backup and owner approval. The repaired filter shows both a live recent set and a deleted recent set; drawer/title/status-chip/Back/landscape/appearance checks PASS; screenshots are outside Git at `D:\P5E-builds\phone-qa-v423-dev18-20261021\`; logcat has no fatal app exception and no translation/editorial service is active.
+- No provider/API call, no uninstall, no schema change, no merge/tag/push, and no `editorial-engine/` or `Editorial*` edit. TalkBack and live provider/job-running behavior are `NOT_MEASURED`.
+- Next action: stop and report the final dev.18 phone evidence; another install requires a fresh backup and owner approval.
+
 ## Current state — 2026-10-19 (v4.23 dev build `4.23-dev.11`: chapter totals fix and Current job prefers a continuable job; emulator QA PASS; waiting for the owner)
 
 - Found on the owner phone with `4.23-dev.10`: the Jobs totals counted 0 finished chapters (the `since` value was bound as text and compared with an expression that has no column type; the token and USD sums still worked because `created_at` is a typed column). Fixed with `CAST(? AS INTEGER)` (`2fca9809`); Current job now skips a job with a request of unknown delivery when another can continue (`344338c4`).
