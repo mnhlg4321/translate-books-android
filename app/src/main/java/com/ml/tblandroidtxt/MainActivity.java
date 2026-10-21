@@ -112,10 +112,11 @@ public class MainActivity extends Activity {
     Uri pronounUri;
 
     FrameLayout rootFrame, contentFrame;
-    LinearLayout appRoot, tabBar;
+    LinearLayout appRoot;
     TextView inputFileLabel, outputFileLabel, outputFolderLabel, yamlFileLabel, envFileLabel, glossaryFileLabel, pronounFileLabel, activeGlossaryLabel;
     TextView translateMeta, statusBanner, resultTitle, resultMeta, logView, glossaryPreview, filesSummary, sampleText;
-    TextView topTitle, topSubtitle, topStatusChip;
+    TextView topTitle, topSubtitle, topStatusChip, drawerStatusDot;
+    Button drawerMenuButton;
     LinearLayout topBar;
     boolean topStatusCompact;
     ScrollView logScroll;
@@ -256,12 +257,11 @@ public class MainActivity extends Activity {
     String jobsSetFilterId = "";
     final NavState navState = new NavState();
     boolean drawerOpen;
-    String drawerOriginTab = "Translate";
-    String drawerSearchText = "";
     View drawerScrim;
     LinearLayout drawerPanel, drawerList;
-    EditText drawerSearch, allSetsSearch;
+    EditText allSetsSearch;
     TextView drawerRunningProgress;
+    final ArrayList<TextView> drawerProgressLabels = new ArrayList<>();
     LinearLayout allSetsList;
     int drawerInsetLeft, drawerInsetTop, drawerInsetRight, drawerInsetBottom;
     String settingsCategory = "General";
@@ -659,7 +659,6 @@ public class MainActivity extends Activity {
         drawerScrim = null;
         drawerPanel = null;
         drawerList = null;
-        drawerSearch = null;
         drawerRunningProgress = null;
         configureSystemBars();
         appRoot = new LinearLayout(this);
@@ -667,20 +666,12 @@ public class MainActivity extends Activity {
         appRoot.setBackgroundColor(BG);
         appRoot.setPadding(dp(10), dp(8), dp(10), dp(8));
 
-        // The primary five destinations stay visible; the drawer is a button-opened
-        // overlay containing only translation workspaces and a Settings shortcut.
+        // v2.6.7 hid destinations in a drawer and made the owner feel that features disappeared.
+        // v4.23 follows the owner's 2026-10-21 decision: all destinations live in a button-opened
+        // drawer, with the title, status chip and menu dot as orientation cues. No DrawerLayout or edge swipe.
         appRoot.addView(buildTopBar());
         contentFrame = new FrameLayout(this);
-        boolean wide=isWideLayout();
-        if(wide){
-            LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.HORIZONTAL);
-            body.addView(buildPrimaryNavigation(true),new LinearLayout.LayoutParams(dp(112),-1));
-            body.addView(contentFrame,new LinearLayout.LayoutParams(0,-1,1));
-            appRoot.addView(body,new LinearLayout.LayoutParams(-1,0,1));
-        }else{
-            appRoot.addView(contentFrame,new LinearLayout.LayoutParams(-1,0,1));
-            appRoot.addView(buildPrimaryNavigation(false),new LinearLayout.LayoutParams(-1,dp(58)));
-        }
+        appRoot.addView(contentFrame,new LinearLayout.LayoutParams(-1,0,1));
         rootFrame = new FrameLayout(this);
         rootFrame.setBackgroundColor(BG);
         rootFrame.addView(appRoot, new FrameLayout.LayoutParams(-1, -1));
@@ -782,12 +773,20 @@ public class MainActivity extends Activity {
         bar.setGravity(Gravity.CENTER_VERTICAL);
         bar.setPadding(0, 0, 0, dp(8));
 
-        Button menu = button("☰", FIELD, TEXT, v -> openWorkspaceDrawer());
-        menu.setTextSize(20 * fontScale);
-        menu.setMinWidth(0);
-        menu.setMinimumWidth(0);
-        menu.setContentDescription("Mở ngăn Tập");
-        bar.addView(menu, new LinearLayout.LayoutParams(dp(48), dp(48)));
+        FrameLayout menuBox = new FrameLayout(this);
+        drawerMenuButton = button("☰", FIELD, TEXT, v -> openWorkspaceDrawer());
+        drawerMenuButton.setTextSize(20 * fontScale);
+        drawerMenuButton.setMinWidth(0);
+        drawerMenuButton.setMinimumWidth(0);
+        drawerMenuButton.setContentDescription("Mở menu");
+        menuBox.addView(drawerMenuButton, new FrameLayout.LayoutParams(dp(48), dp(48)));
+        drawerStatusDot = text("●", 8, RED, true);
+        drawerStatusDot.setGravity(Gravity.CENTER);
+        drawerStatusDot.setVisibility(View.GONE);
+        FrameLayout.LayoutParams dotParams = new FrameLayout.LayoutParams(dp(14), dp(14), Gravity.TOP | Gravity.END);
+        dotParams.setMargins(0, dp(1), dp(1), 0);
+        menuBox.addView(drawerStatusDot, dotParams);
+        bar.addView(menuBox, new LinearLayout.LayoutParams(dp(48), dp(48)));
         bar.addView(space(10, 1));
 
         LinearLayout titleBox = new LinearLayout(this);
@@ -820,34 +819,6 @@ public class MainActivity extends Activity {
         return bar;
     }
 
-    View buildPrimaryNavigation(boolean vertical) {
-        tabBar = new LinearLayout(this);
-        tabBar.setOrientation(vertical?LinearLayout.VERTICAL:LinearLayout.HORIZONTAL);
-        tabBar.setGravity(vertical?Gravity.TOP:Gravity.CENTER);
-        tabBar.setPadding(vertical?dp(4):0,vertical?dp(8):dp(4),vertical?dp(8):0,vertical?0:dp(4));
-        String[] tabs={"Translate","Jobs","Editorial","Library","Settings"};
-        for(String t:tabs){Button b=tabButton(t);tabBar.addView(b,vertical?new LinearLayout.LayoutParams(-1,dp(58)):new LinearLayout.LayoutParams(0,-1,1));}
-        tint(tabBar,PANEL,BORDER,1,vertical?0:14);
-        return tabBar;
-    }
-
-    Button tabButton(String name) {
-        Button b = new Button(this);
-        b.setText(primaryIcon(name) + "\n" + tabLabel(name));
-        b.setTextSize(isWideLayout()?11:10);
-        b.setAllCaps(false);
-        b.setSingleLine(false);
-        b.setMaxLines(2);
-        b.setTextColor(TEXT);
-        b.setPadding(dp(2), dp(2), dp(2), dp(2));
-        b.setOnClickListener(v -> switchTab(name));
-        b.setGravity(Gravity.CENTER);b.setMinWidth(0);b.setMinimumWidth(0);
-        boolean active = primaryActive(name);
-        b.setTag(active);
-        tint(b, active ? CARD : PANEL, active ? BLUE : PANEL, 1, 10);
-        return b;
-    }
-
     String tabLabel(String name) {
         if ("Editorial".equals(name)) return EditorialApiPresenter.TAB_TITLE;
         if ("ChapterSets".equals(name)) return "Tập";
@@ -856,7 +827,6 @@ public class MainActivity extends Activity {
         return name;
     }
 
-    String primaryIcon(String name){if("Translate".equals(name))return "↗";if("Jobs".equals(name))return "◷";if("Editorial".equals(name))return "✎";if("Library".equals(name))return "▤";return "⚙";}
     boolean primaryActive(String name){if("Library".equals(name))return "Files".equals(currentTab)||"RAW".equals(currentTab)||"Glossaries".equals(currentTab)||"Pronouns".equals(currentTab)||"ChapterSets".equals(currentTab)||"Sample".equals(currentTab)||"AllSets".equals(currentTab)||"Volume".equals(currentTab);return name.equals(currentTab);}
 
     void switchTab(String name) {
@@ -886,7 +856,7 @@ public class MainActivity extends Activity {
     }
 
     /** One navigation gate for drawer, Jobs and Volume links. */
-    void navigateTo(String target) { navigateTo(target, "", drawerOriginTab); }
+    void navigateTo(String target) { navigateTo(target, "", currentTab); }
 
     void navigateTo(String target, String setId, String origin) {
         if (target == null || target.trim().isEmpty()) return;
@@ -1140,18 +1110,21 @@ public class MainActivity extends Activity {
     void refreshTabs() {
         if (topSubtitle != null) topSubtitle.setText(tabLabel(currentTab) + " • " + compactProviderMeta());
         refreshTopStatusChip();
-        if (tabBar == null) return;
-        for (int i = 0; i < tabBar.getChildCount(); i++) {
-            View v = tabBar.getChildAt(i);
-            if (v instanceof Button) {
-                Button b = (Button) v;
-                String label=b.getText().toString();boolean active=(label.contains("Library")&&primaryActive("Library"))||label.contains(tabLabel(currentTab));
-                if (b.getTag() instanceof Boolean && ((Boolean) b.getTag()) == active) continue;
-                b.setTag(active);
-                b.setTextColor(active ? TEXT : MUTED);
-                tint(b, active ? CARD : FIELD, active ? BLUE : BORDER, 1, 9);
-            }
+        refreshDrawerMenuState();
+    }
+
+    void refreshDrawerMenuState() {
+        if (drawerMenuButton == null) return;
+        boolean running = TranslatorService.isActive();
+        boolean failed = false;
+        for (TranslationRepository.JobSummary job : JobPicker.unfinished(workspaceJobsSnapshot())) {
+            if (job.failedChunks > 0) { failed = true; break; }
         }
+        if (drawerStatusDot != null) {
+            drawerStatusDot.setVisibility(running || failed ? View.VISIBLE : View.GONE);
+            drawerStatusDot.setTextColor(failed ? RED : BLUE);
+        }
+        drawerMenuButton.setContentDescription(failed ? "Mở menu · có job lỗi" : running ? "Mở menu · đang chạy" : "Mở menu");
     }
     void refreshTopStatusChip() {
         if (topStatusChip == null) return;
@@ -1388,8 +1361,7 @@ public class MainActivity extends Activity {
         if (drawerOpen || rootFrame == null) return;
         hideKeyboardForDrawer();
         drawerOpen = true;
-        drawerOriginTab = currentTab;
-        drawerSearchText = "";
+        drawerProgressLabels.clear();
 
         drawerScrim = new View(this);
         drawerScrim.setBackgroundColor(Color.argb(115, 0, 0, 0));
@@ -1412,19 +1384,8 @@ public class MainActivity extends Activity {
         logo.setContentDescription("Translate Books logo");
         heading.addView(logo, new LinearLayout.LayoutParams(dp(44), dp(44)));
         heading.addView(space(10, 1));
-        heading.addView(text("Tập", 20, TEXT, true), new LinearLayout.LayoutParams(0, -2, 1));
+        heading.addView(text("Translate Books", 20, TEXT, true), new LinearLayout.LayoutParams(0, -2, 1));
         drawerPanel.addView(heading, marginLP(-1, -2, 0, 0, 0, 12));
-
-        drawerPanel.addView(text("Tìm tập", 12, MUTED, true), marginLP(-1, -2, 0, 0, 0, 5));
-        drawerSearch = input("Tên tập", "");
-        drawerSearch.setSingleLine(true);
-        drawerSearch.setContentDescription("Tìm tập");
-        drawerSearch.addTextChangedListener(new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { drawerSearchText = s.toString(); renderWorkspaceDrawer(); }
-            @Override public void afterTextChanged(Editable s) { }
-        });
-        drawerPanel.addView(drawerSearch, new LinearLayout.LayoutParams(-1, dp(52)));
 
         ScrollView listScroll = scroll();
         drawerList = new LinearLayout(this);
@@ -1432,15 +1393,13 @@ public class MainActivity extends Activity {
         listScroll.addView(drawerList);
         drawerPanel.addView(listScroll, new LinearLayout.LayoutParams(-1, 0, 1));
 
-        LinearLayout footer = rowContainer();
-        Button newSet = secondaryButton("+ Tập mới", v -> navigateTo("ChapterSets", "", drawerOriginTab));
-        newSet.setContentDescription("Tạo tập mới");
-        Button settings = secondaryButton("⚙ Cài đặt", v -> navigateTo("Settings", "", drawerOriginTab));
+        Button settings = secondaryButton("Cài đặt", v -> navigateTo("Settings"));
         settings.setContentDescription("Mở Cài đặt");
-        footer.addView(newSet, new LinearLayout.LayoutParams(0, -2, 1));
-        footer.addView(space(8, 1));
-        footer.addView(settings, new LinearLayout.LayoutParams(0, -2, 1));
-        drawerPanel.addView(footer, marginLP(-1, -2, 0, 10, 0, 0));
+        settings.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+        settings.setMinHeight(dp(48));
+        settings.setMinimumHeight(dp(48));
+        settings.setPadding(dp(14), 0, dp(12), 0);
+        drawerPanel.addView(settings, marginLP(-1, dp(48), 0, 10, 0, 0));
 
         rootFrame.addView(drawerScrim, new FrameLayout.LayoutParams(-1, -1));
         int width = Math.min(dp(360), Math.round(getResources().getDisplayMetrics().widthPixels * 0.80f));
@@ -1459,44 +1418,85 @@ public class MainActivity extends Activity {
     void renderWorkspaceDrawer() {
         if (!drawerOpen || drawerList == null) return;
         drawerList.removeAllViews();
+        drawerProgressLabels.clear();
         drawerRunningProgress = null;
+
+        for (DrawerNavigationModel.Entry destination : DrawerNavigationModel.destinations()) {
+            View row = "Jobs".equals(destination.target)
+                    ? drawerJobsDestination(destination)
+                    : drawerDestination(destination);
+            drawerList.addView(row, marginLP(-1, -2, 0, 0, 0, 8));
+        }
+
+        drawerList.addView(text("Gần đây", 13, BLUE, true), marginLP(-1, -2, 0, 8, 0, 4));
         ChapterSetWorkspaceStore.Snapshot snapshot = cachedWorkspace;
         if (snapshot == null) {
             drawerList.addView(text("Đang tải danh sách tập…", 14, MUTED, false));
             return;
         }
-        String query = drawerSearchText == null ? "" : drawerSearchText.trim().toLowerCase(Locale.ROOT);
         String activeId = activeWorkspaceSetId(snapshot);
+        ArrayList<WorkspaceSetModel.Entry> recent = new ArrayList<>(WorkspaceSetModel.recent(snapshot.sets, 3));
         WorkspaceSetModel.Entry active = snapshot.set(activeId);
-        if (active != null && matchesWorkspace(active, query)) {
-            drawerList.addView(text("Đang chạy", 13, BLUE, true), marginLP(-1, -2, 0, 8, 0, 4));
-            drawerList.addView(drawerEntry(active, true), marginLP(-1, -2, 0, 0, 0, 12));
+        if (active != null) {
+            for (int i = recent.size() - 1; i >= 0; i--) {
+                if (active.id.equals(recent.get(i).id)) recent.remove(i);
+            }
+            recent.add(0, active);
+            while (recent.size() > 3) recent.remove(recent.size() - 1);
         }
-        drawerList.addView(text("Gần đây", 13, BLUE, true), marginLP(-1, -2, 0, 0, 0, 8));
-        int shown = 0;
-        for (WorkspaceSetModel.Entry entry : WorkspaceSetModel.recent(snapshot.sets, 6)) {
-            if (entry.id.equals(activeId) || !matchesWorkspace(entry, query)) continue;
-            drawerList.addView(drawerEntry(entry, false), marginLP(-1, -2, 0, 0, 0, 8));
-            shown++;
-        }
-        if (shown == 0 && active == null) drawerList.addView(text(snapshot.sets.isEmpty() ? "Chưa có tập." : "Không có tập khớp tìm kiếm.", 14, MUTED, false));
-        Button all = secondaryButton("Tất cả tập…", v -> navigateTo("AllSets", "", drawerOriginTab));
-        all.setContentDescription("Xem tất cả tập");
-        drawerList.addView(all, marginLP(-1, -2, 0, 8, 0, 0));
-        if (snapshot.sets.isEmpty() && query.isEmpty()) {
-            drawerList.addView(primaryButton("Tạo tập từ RAW", v -> navigateTo("ChapterSets", "", drawerOriginTab)), marginLP(-1, -2, 0, 8, 0, 0));
-            drawerList.addView(secondaryButton("Dịch tệp lẻ", v -> navigateTo("Translate", "", drawerOriginTab)), marginLP(-1, -2, 0, 0, 0, 0));
+        if (recent.isEmpty()) {
+            drawerList.addView(text("Chưa có tập.", 14, MUTED, false));
+        } else {
+            for (WorkspaceSetModel.Entry entry : recent) {
+                drawerList.addView(drawerEntry(entry, entry.id.equals(activeId)), marginLP(-1, -2, 0, 0, 0, 8));
+            }
         }
     }
 
+    private View drawerDestination(DrawerNavigationModel.Entry entry) {
+        boolean selected = DrawerNavigationModel.isSelected(entry.target, currentTab);
+        Button row = button(entry.icon + "  " + entry.label, selected ? CARD : PANEL, selected ? TEXT : MUTED,
+                v -> navigateTo(entry.target));
+        row.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+        row.setMinHeight(dp(48));
+        row.setMinimumHeight(dp(48));
+        row.setPadding(dp(14), 0, dp(12), 0);
+        row.setSelected(selected);
+        row.setContentDescription(entry.label + (selected ? " · đang mở" : ""));
+        tint(row, selected ? CARD : PANEL, selected ? BLUE : BORDER, 1, 10);
+        return row;
+    }
+
+    private View drawerJobsDestination(DrawerNavigationModel.Entry entry) {
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.addView(drawerDestination(entry), new LinearLayout.LayoutParams(-1, dp(48)));
+        String status = drawerJobStatusLine();
+        if (!status.isEmpty()) {
+            drawerRunningProgress = text(status, 12, MUTED, false);
+            drawerProgressLabels.add(drawerRunningProgress);
+            box.addView(drawerRunningProgress, marginLP(-1, -2, dp(14), 2, dp(12), 0));
+        }
+        return box;
+    }
+
     private View drawerEntry(final WorkspaceSetModel.Entry entry, boolean running) {
-        Button row = workspaceSetButton(entry, true);
+        String title = entry.label();
+        Button row = secondaryButton(title + "\n" + workspaceSetSummary(entry),
+                v -> navigateTo("Jobs", entry.id, currentTab));
+        row.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+        row.setTextSize(13 * fontScale);
+        row.setPadding(dp(12), dp(8), dp(12), dp(8));
+        row.setMinHeight(dp(48));
+        row.setMinimumHeight(dp(48));
+        row.setContentDescription("Mở Công việc của " + title);
         if (running) {
-            drawerRunningProgress = text(drawerProgressLine(entry), 12, MUTED, false);
             LinearLayout box = new LinearLayout(this);
             box.setOrientation(LinearLayout.VERTICAL);
+            TextView progressLabel = text(drawerProgressLine(entry), 12, MUTED, false);
+            drawerProgressLabels.add(progressLabel);
             box.addView(row, new LinearLayout.LayoutParams(-1, -2));
-            box.addView(drawerRunningProgress, marginLP(-1, -2, dp(12), 0, dp(12), 8));
+            box.addView(progressLabel, marginLP(-1, -2, dp(12), 0, dp(12), 8));
             return box;
         }
         return row;
@@ -1508,6 +1508,19 @@ public class MainActivity extends Activity {
         return progressValue >= 0 ? "Đang chạy · " + progressValue + "% · " + workspaceSetSummary(entry) : "Đang chạy · " + workspaceSetSummary(entry);
     }
 
+    private String drawerJobStatusLine() {
+        if (TranslatorService.isActive()) {
+            Intent runtime = RuntimeStateStore.toIntent(this);
+            int progressValue = runtime == null ? -1 : runtime.getIntExtra(TranslatorService.EXTRA_PROGRESS, -1);
+            return progressValue >= 0 ? "đang chạy · " + progressValue + "%" : "đang chạy";
+        }
+        int failedJobs = 0;
+        for (TranslationRepository.JobSummary job : JobPicker.unfinished(workspaceJobsSnapshot())) {
+            if (job.failedChunks > 0) failedJobs++;
+        }
+        return failedJobs > 0 ? failedJobs + " job lỗi" : "";
+    }
+
     private String activeWorkspaceSetId(ChapterSetWorkspaceStore.Snapshot snapshot) {
         if (!TranslatorService.isActive()) return "";
         Intent runtime = RuntimeStateStore.toIntent(this);
@@ -1515,14 +1528,14 @@ public class MainActivity extends Activity {
         return jobId <= 0 ? "" : snapshot.setIdOfJob(jobId);
     }
 
-    private boolean matchesWorkspace(WorkspaceSetModel.Entry entry, String query) {
-        return query == null || query.isEmpty() || entry.label().toLowerCase(Locale.ROOT).contains(query);
-    }
-
     void updateDrawerProgressFromIntent(Intent intent) {
-        if (!drawerOpen || drawerRunningProgress == null || intent == null) return;
+        if (!drawerOpen || intent == null) return;
         int p = intent.getIntExtra(TranslatorService.EXTRA_PROGRESS, -1);
-        if (p >= 0) drawerRunningProgress.setText("Đang chạy · " + p + "%");
+        if (p >= 0) {
+            for (TextView label : new ArrayList<>(drawerProgressLabels)) {
+                label.setText(label == drawerRunningProgress ? "đang chạy · " + p + "%" : "Đang chạy · " + p + "%");
+            }
+        }
     }
 
     void applyDrawerInsets() {
@@ -1540,8 +1553,8 @@ public class MainActivity extends Activity {
         drawerPanel = null;
         drawerScrim = null;
         drawerList = null;
-        drawerSearch = null;
         drawerRunningProgress = null;
+        drawerProgressLabels.clear();
         if (appRoot != null) {
             appRoot.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_AUTO);
             appRoot.requestFocus();
