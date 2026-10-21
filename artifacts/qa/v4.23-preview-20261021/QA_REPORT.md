@@ -1,4 +1,4 @@
-# v4.23 — review dev.18 và sửa preview (2026-10-21, +07)
+# v4.23 — dev.20 preview/lifecycle và cổng cài điện thoại (2026-10-21, +07)
 
 Quyết định sản phẩm: khi dịch một tập, owner luôn đọc được chunk được chấp nhận gần nhất, biết nó thuộc chương nào và không mất trạng thái khi đổi màn. Tiếp tục thiết kế màn tiến trình bằng skill UI/UX đã tải. Không mở release/branch/checklist mới.
 
@@ -10,6 +10,7 @@ Quyết định sản phẩm: khi dịch một tập, owner luôn đọc đượ
 | Dev.18/code296 | BUILD_INFO: nguồn `a4243e1f`; APK SHA `3B7BD4B5A421306EDAA65C07AA6B81D25D579788CA1FBBDD3FCC6CA34DF30F51`; 4/4 checksum hợp lệ, mirrors giống byte; ZIP = git archive `a4243e1f` (3001 entries) | VERIFIED; HEAD tài liệu khác nguồn APK |
 | Hồi quy dev.18 | XML tại `D:/P5E-builds/v423-clean-archive-a4243e1f`: engine 742 tổng = 741 PASS/1 SKIP; mỗi biến thể app 667 tổng = 662 PASS/5 SKIP; lint 58 Warning/0 Error | VERIFIED số liệu lưu; không chạy lại baseline |
 | Dev.18 cài điện thoại và QA 3.1–3.6 PASS | Hồ sơ phiên trước + 6 PNG hợp lệ ở `D:/P5E-builds/phone-qa-v423-dev18-20261021` | Không kiểm lại trực tiếp điện thoại; chưa chứng minh job đang chạy/TalkBack |
+| Dev.20 cài điện thoại `15e84958` | Không có service dịch đang chạy; backup đầy đủ ngoài Git; cài duy nhất qua `scripts/install-validated.ps1` với `-r` sau owner approval; package đọc lại code298/SHA đúng; tar dữ liệu trước/sau cùng SHA, 1380 entries | VERIFIED; không uninstall, không provider/API |
 | Ảnh owner cho thấy không có preview dù 2 chương xong | Ảnh hiển thị chương 3/23, chunk1/2, placeholder; mã xóa preview mỗi chương | Nguyên nhân phù hợp và tái hiện offline; không suy ra chưa lưu/mất bản dịch |
 | Provider/model/prompt/schema của event trong ảnh | Chỉ thấy nhãn openrouter, ngôn ngữ và các số tổng trên UI; không thu response/ledger hay dữ liệu pilot | UNKNOWN; không gán config hiện tại cho event, không xác nhận USD0.0042 là ledger đã đối soát |
 
@@ -31,13 +32,14 @@ Ownership: coordinator sửa/tích hợp/test; Luna đọc độc lập chẩn �
 - **13/13 PASS, 0 SKIP/FAIL/incomplete**: 3 ca preview/lifecycle; 9 ca chapter service (chuyển 3 chương, context/auth/validation stop/continue, resume, truncation/split, quote repair); 1 ca kích thước panel. Service/provider giả, SQLite và output thật của fixture. Assertion preview quan sát broadcast từ service trong lượt ba chương, không chỉ bơm text vào UI.
 - Ảnh `D:/P5E-builds/v423-preview-qa-20261021/preview-dev20-recreated.png`: coordinator đã xem; chương hiện tại 002/chunk1/2, preview ghi đúng 001/chunk5/5; nội dung tổng hợp, không phải sách owner. Chữ preview 16sp, metadata/toggle14sp, giãn dòng1.4, thông báo tiếng Việt; giữ cuộn/chọn chữ/thu gọn.
 - Logs/XML/checksum/ảnh/JSON đầy đủ: **`D:/P5E-builds/v423-preview-qa-20261021/`**. `instrumentation.txt` là lượt fixture FAIL bị dừng; `instrumentation-final.txt` là crash dev.19; `instrumentation-dev20.txt` và `device-summary-dev20.json` là lượt cuối PASS. Log install guard lần đầu từ chối token không khớp được giữ; cài lại đúng token máy ảo đọc được qua preflight, không bypass guard.
+- Phone QA dev.20: backup trước cài `D:/App Translate Books/App Translate Books-device-backups/v4.23-dev.18-code296/20261021-211152/`; QA files và ảnh `D:/P5E-builds/phone-qa-v423-dev20-20261021/`; base trước SHA `3B7BD4B5A421306EDAA65C07AA6B81D25D579788CA1FBBDD3FCC6CA34DF30F51`; private-data tar SHA `168E77F8E489CCEDA5239F89409C6FBAEDC705A7C034891F2595686346580788`; post-install tar SHA identical; `postinstall-top.png` bắt đầu `89 50 4E 47`.
 
 ## Giới hạn và hướng đi
 
-- STRUCTURAL_VALID: chỉ các fixture offline ở trên; app save/reopen/output đã đi qua các ca tổng hợp. **Event sách trong ảnh, SEMANTIC_EVAL mới, provider thật, TalkBack và nghiệm thu trên điện thoại: NOT_MEASURED**. Không dùng synthetic FINAL để kết luận chất lượng dịch.
+- STRUCTURAL_VALID: chỉ các fixture offline ở trên; app save/reopen/output đã đi qua các ca tổng hợp. **Event sách trong ảnh, SEMANTIC_EVAL mới, provider thật và TalkBack: NOT_MEASURED**. Dev.20 phone install/data-preservation/UI-open gate đã VERIFIED; accepted-chunk continuity trên phone là `NOT_MEASURED` vì không có lượt dịch/accepted chunk đang chạy và provider bị cấm. Không dùng synthetic FINAL để kết luận chất lượng dịch.
 - Không thay kiến trúc Editorial, schema DB, prompt, model, giá, hoặc sổ chi; không cần model làm thêm ghi sổ. Ba chương FINAL 006/008/011 owner đã nhận và giới hạn từng chương giữ nguyên; P7 current chunk scope PASS lịch sử, không đo/nâng nhãn lại.
 - Thiết kế tiếp theo được cụ thể hóa trong `docs/V423_REFINED_UI_DESIGN.md` mục8; ưu tiên bảng tiến trình phẳng và phân biệt chương đang chạy với nguồn preview. Chưa triển khai toàn bộ R0a–R5; phương án drawer A mới nhất thay cho nav dưới trong bản thiết kế cũ.
-- 0 translation/editorial provider calls, USD0. Không thao tác điện thoại/pilot, không push/merge/tag. Media untracked cũ giữ nguyên.
-- **Next action:** owner duyệt cài dev.20 sau khi lượt dịch hiện tại kết thúc; sau đó sao lưu mới, cài bằng runbook và xác nhận preview trên điện thoại, không tự chạy provider.
+- 0 translation/editorial provider calls, USD0 trong cổng cài/QA này. Không uninstall, không schema/editorial change, không push/merge/tag. Media untracked cũ giữ nguyên.
+- **Next action:** owner xem bằng chứng dev.20 trên điện thoại; lần cài sau cần backup đầy đủ mới và owner approval mới, không tự chạy provider.
 
-Câu giao việc: “Duyệt cài 4.23-dev.20/code298 sau khi lượt dịch hiện tại kết thúc; sao lưu đầy đủ trước cài, giữ dữ liệu, xác nhận preview và điều hướng; không tự gọi provider.”
+Câu giao việc: “Duyệt cài 4.23-dev.20/code298 sau khi lượt dịch hiện tại kết thúc; sao lưu đầy đủ trước cài, giữ dữ liệu, xác nhận preview và điều hướng; không tự gọi provider.” Đã hoàn tất cổng cài; preview continuity trên phone được ghi `NOT_MEASURED` vì không được tạo lượt dịch mới.
