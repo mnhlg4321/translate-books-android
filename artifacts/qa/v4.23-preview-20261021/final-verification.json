@@ -1,0 +1,40 @@
+{
+  "production": {
+    "mirrors_identical": true,
+    "manifest_valid": true,
+    "files": 5,
+    "source_zip_matches": "98a2e15e",
+    "source_entries": 3004
+  },
+  "test": {
+    "mirrors_identical": true,
+    "manifest_valid": true,
+    "files": 8,
+    "source_zip_matches": "98a2e15e",
+    "source_entries": 3004
+  },
+  "testDebugUnitTest": {
+    "tests": 672,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 5,
+    "pass": 667
+  },
+  "testReleaseUnitTest": {
+    "tests": 672,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 5,
+    "pass": 667
+  },
+  "testBenchmarkUnitTest": {
+    "tests": 672,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 5,
+    "pass": 667
+  },
+  "lint": {
+    "Warning": 58
+  }
+}

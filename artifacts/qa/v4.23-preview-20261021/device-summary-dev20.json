@@ -1,0 +1,88 @@
+{
+ "logs": {
+  "D:/P5E-builds/v423-preview-qa-20261021/instrumentation-dev20.txt": {
+   "overall": "PASS",
+   "discovered": 13,
+   "pass": 13,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 13,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423PreviewInstrumentedTest",
+     "test": "lateRefreshAfterActivityDestroyDoesNotCrashOrStartWork",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PreviewInstrumentedTest",
+     "test": "lazyTranslatePageRestoresPreviewAfterRecreateOnJobs",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PreviewInstrumentedTest",
+     "test": "chapterResetBroadcastAndStoreKeepOriginalAcceptedIdentity",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "aCutAnswerIsRetriedWithALargerLimitAndNeverSentIdenticallyTwice",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "rejectedAnswerInChapterTwoDoesNotStopTheRunAndNoErrorIsBroadcast",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "mixedQuoteStylesAreRepairedAcceptedAndRecordedAsAWarning",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "authenticationFailureInChapterTwoStopsTheQueue",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "aChunkCutAtEveryLimitIsSplitInHalvesAndTheChapterCompletes",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "continueSetTicksTheUnfinishedChaptersAndTheFailedJobGoesOn",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "twoRejectedChaptersInARowStopTheRun",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "threeChaptersTranslateWithTheirOwnGlossaries_activeAndSharedSettingsUntouched",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "integrityFailureInChapterTwoContinuesWithChapterThree",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423AppearanceInstrumentedTest",
+     "test": "theProgressPanelKeepsItsSizeWhileItsNumbersChange",
+     "result": "PASS"
+    }
+   ]
+  }
+ },
+ "total": {
+  "discovered": 13,
+  "pass": 13,
+  "skip": 0,
+  "fail": 0,
+  "incomplete": 0
+ }
+}

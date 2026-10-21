@@ -46,7 +46,7 @@ Dừng và đóng việc, không mở thêm đo, khi: A cho thấy vấn đề l
 
 Dữ liệu bước A/B (có văn bản sách) ở `D:\P5E-private\product-plan-A\`, ngoài Git.
 
-**Next action:** build bản dev 4.22 mới từ commit có R (đề xuất bị chặn + `/`), QA emulator có ảnh mục "Đề xuất bị chặn", rồi xin owner duyệt cài điện thoại.
+**Trạng thái điều hành mới nhất:** xem mục10 (v4.23, 2026-10-21); các next action v4.22 bên dưới là lịch sử.
 
 ### v4.22 — Biên tập dùng được (owner dùng 4.21.0 trên điện thoại, 2026-10-14)
 
@@ -112,3 +112,14 @@ Owner xác nhận trực tiếp trong hội thoại: toàn bộ 37 dòng S7 đú
 | 1/7;20;11/1;183;11/2;188;12/4;203;12/5;206;12/6;210 | đổi glossary ngoài B6 dòng | ĐÚNG; gate FIXED/output có; lợi ích khác, không quy cho C1 |
 
 Không có ca sai/sót theo phân xử mới cần truy vết thêm. Điều đã chứng minh: các sửa tự xưng được finder chọn, prompt có hàng được trích, model trích R phù hợp với dạng được giữ trong gate, và output của chunk ACCEPTED chứa sửa; chặn chunk13 do glossary thêm dấu là đúng. Chưa chứng minh: chất lượng phần chưa tới, hiệu quả SQLite/SAF, hay mức tăng so với cùng model không dùng C1. Báo cáo S0–S9 và SUMMARY giữ nguyên như evidence lịch sử.
+
+
+## 10. Trạng thái điều hành hiện tại — 2026-10-21, v4.23
+
+- Yêu cầu owner mới nhất: sửa preview khi đang dịch, rà lỗi liên quan và tiếp tục thiết kế giao diện bằng skill đã tải. Quyết định sản phẩm: owner luôn theo dõi được chunk được chấp nhận gần nhất khi dịch cả tập; không mất trạng thái khi đổi màn.
+- Phân xử mâu thuẫn: tên dự án v4.18 trong tin nhắn và AGENTS continuation note là lịch sử; report/HEAD/build/work requests chứng minh nhánh đang làm là `feature/v4.23` tại `D:/P5E-builds/wt-v4.23`. Không mở release mới, không sửa checkout v4.18, không quay lại next action v4.22. Drawer A mới nhất thay phương án nav dưới của thiết kế Refined cũ.
+- Baseline xác minh: HEAD419bd52c, APKdev.18/code296 nguồna4243e1f; bản cài điện thoại theo handoff trước, không query/mutate điện thoại lần này. Báo cáo trước không đo job đang chạy, vì thế không chứng minh preview live PASS.
+- Đã đóng offline: reset preview mỗi chương, không restore trang Dịch dựng muộn sau recreate, và crash callback vào executor đã hủy. Candidate dev.20/code298 source98a2e15e, APK46C608AC…BFA6991; 13/13 ca thiết bị tổng hợp PASS trên AVD mới ngoài pilot; app667PASS/5SKIP mỗi biến thể, lint0Error/58Warning. Bảng claim/evidence/nguyên nhân/giới hạn và logs: `artifacts/qa/v4.23-preview-20261021/QA_REPORT.md`.
+- Thiết kế: đã dùng skill UI/UX trong thư mục Claude; chữ/giãn dòng/nhãn preview đã triển khai, nguồn preview và chương đang chạy tách rõ. Màn tiến trình phẳng tiếp theo được cụ thể hóa trong `docs/V423_REFINED_UI_DESIGN.md` mục8; chưa coi toàn bộ R0a–R5 hoàn tất.
+- Giới hạn: real-provider/SEMANTIC_EVAL của event ảnh owner, TalkBack và nghiệm thu điện thoại NOT_MEASURED; exact prompt/schema/model/response/ledger event UNKNOWN. FINAL006/008/011 và P7 giữ trạng thái/lỗi lịch sử, không đo hoặc gắn nhãn lại. Provider0/USD0, không push/merge/tag.
+- **Next action:** owner duyệt cài dev.20 sau khi lượt dịch trên điện thoại kết thúc; sau đó sao lưu mới và kiểm preview trên điện thoại, không tự gọi provider.

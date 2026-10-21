@@ -1,5 +1,14 @@
 # Build State
 
+## Current state — 2026-10-21 (dev.20: preview and Activity lifecycle repair; isolated emulator QA PASS)
+
+- Product decision: keep the last accepted chunk visible across chapters and recreated screens. Baseline handoff HEAD419bd52c, dev.18 sourcea4243e1f independently verified; v4.18 checkout untouched.
+- Candidate `4.23-dev.20`/code298, source `98a2e15e8487c4141a3ecabd711830c98acb9232`, event `build-20261021-205039`, APK SHA `46C608AC8E90DBCE25409AB9EA5F21CF57B7C5A5025810E50C0354210BFA6991`, source ZIP SHA `08F6801AC018A08B53CA861E1EBADC4FD58A8EE56C57437D74CBD13C0F98AD31`; immutable artifact/backup payloads verified. AndroidTest event `v423-preview-dev20-test-20261021`, same source/ZIP. Dev.19 retained as an intermediate candidate with a proven post-destroy executor crash; superseded by dev.20.
+- Fixed: chapter reset wiping preview; missing runtime restoration on lazy Translate-page construction; stale callbacks submitting to closed Activity executors. Readable Vietnamese preview with original file/chunk/total identity. Old synthetic success fixtures corrected to cover source lines; deliberate invalid cases and validator unchanged.
+- Clean archive98a2e15e: app each variant672 total /667PASS/5SKIP/0FAIL, lint0Error/58Warning. New isolated emulator-5580 only:13/13PASS (preview/lifecycle3, chapter-service9, panel stability1). Source engine unchanged, reuse earlier eadfc2bb741PASS/1SKIP with explicit provenance. No real model quality inference.
+- Report `artifacts/qa/v4.23-preview-20261021/QA_REPORT.md`; raw logs/failures/actual synthetic screenshot `D:/P5E-builds/v423-preview-qa-20261021/`. Phone remains dev.18 per preceding handoff; no phone/pilot operation this session. Provider0/USD0; no push/merge/tag. Historical state below is superseded for the current candidate, not rewritten.
+- Next action: owner approves dev.20 phone install after the active translation finishes; then fresh backup and targeted phone verification, no automatic provider run.
+
 ## Current state — 2026-10-21 (v4.23 dev build `4.23-dev.18`: drawer navigation repair; real-phone QA complete)
 
 - Product decision served: owner option A in `docs/V423_DRAWER_NAV_A_WORK_REQUEST.md` — all destinations are in the ☰ drawer, the bottom/wide navigation is removed, three recent sets remain visible, and single-file jobs remain in the all-jobs view.

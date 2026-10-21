@@ -1,5 +1,7 @@
 # v4.23 — Yêu cầu làm việc: hết giật lag, tổ hợp không dừng vì lỗi một chương, bảng tiến trình theo tổ hợp, nút bị cắt chữ, giao diện sáng
 
+> Tiếp tục J3 theo owner ngày2026-10-21: preview trống ở đầu chương tiếp theo. Đã sửa trong06b542ce; kiểm rộng phát hiện callback sau hủy Activity làm văng, sửa98a2e15e. Candidate4.23-dev.20/code298, source98a2e15e; report `artifacts/qa/v4.23-preview-20261021/QA_REPORT.md`. Ownership: coordinator service/runtime/UI/test; Luna review độc lập, không edit. Đầu ra: preview xuyên chương với identity đúng + restore khi dựng trang Dịch muộn + callback lifecycle an toàn. Offline13/13 ca thiết bị và app667PASS/5SKIP mỗi biến thể; trượt fixture và crash giữ riêng. Không sửa prompt/schema/provider/engine; không lượt trả phí. Dừng trước cài điện thoại (quyền riêng mỗi lần); screenshot event sách chưa được đo live. Thiết kế phần tiếp theo ở Refined mục8, không mở gói mới.
+
 Trạng thái: ĐÃ PHẢN BIỆN (agent phản biện đọc mã tại `63f83840`, 2026-10-20; khẳng định chính đã kiểm lại).
 
 Nhánh và thiết bị:

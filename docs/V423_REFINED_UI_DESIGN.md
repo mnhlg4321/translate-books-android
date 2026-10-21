@@ -132,7 +132,7 @@ Tỉ lệ ghi là giá trị thấp nhất trên `bg`, `surface` và `raised`. M
   - Nhấn giữ để chọn nhiều vẫn giữ nguyên.
 - **Biên tập:** không sửa mã. Chỉ nhận thay đổi an toàn qua helper và token; có ảnh trước/sau ở mọi palette. Nhu cầu chữ đọc lớn hơn của Biên tập ghi lại để làm riêng.
 - **Settings:** giữ accordion một mục, bỏ lồng thẻ, nhãn 14sp dạng câu. Mỗi trường là một hàng "nhãn + giá trị"; trường ít dùng nằm trong "Nâng cao". Không làm trang con, để không đụng điều hướng Back và predictive back.
-- **Nav dưới:** icon vector + nhãn tiếng Việt một dòng, `caption` 13sp, theo cỡ chữ app (Dịch · Công việc · Biên tập · Thư viện · Cài đặt).
+- **Điều hướng (cập nhật 2026-10-21):** quyết định drawer A mới nhất thay phương án nav dưới của bản thiết kế ban đầu. Giữ ☰, tối đa ba tập gần đây, tiêu đề trang hiện tại và shortcut trạng thái; không dựng lại thanh dưới/dọc trong các bước Refined.
 
 ## 5. Thứ tự triển khai
 
@@ -149,7 +149,7 @@ Tỉ lệ ghi là giá trị thấp nhất trên `bg`, `surface` và `raised`. M
 ## 6. Kiểm thử
 
 - Cỡ chữ app 90 / 130% × cỡ chữ hệ thống 1.3 / 2.0.
-- Bề rộng 320 / 360 dp, tablet, nav dọc.
+- Bề rộng 320 / 360 dp, tablet, drawer ở màn ngang; không có nav dọc.
 - Đủ 17 palette, màu nhấn tự chọn, chế độ theo hệ thống.
 - Ảnh trước/sau của Biên tập ở cùng cài đặt.
 - Trạng thái trống, đang tải, lỗi (không có RAW, lỗi provider, 0 job).
@@ -163,3 +163,39 @@ Tỉ lệ ghi là giá trị thấp nhất trên `bg`, `surface` và `raised`. M
 - Thay đổi helper dùng chung lan sang Biên tập, mà Biên tập không sửa được trong đợt này.
 - Thêm theme "Trung tính" có thể khiến owner bất ngờ nếu mặc định đổi. Vì vậy chỉ đặt làm mặc định cho cài đặt mới; máy owner giữ palette đang dùng.
 - Đưa thao tác vào ⋮ làm giảm khả năng phát hiện. Cách giảm: luôn hiện thao tác hay dùng nhất.
+
+## 8. Tiếp tục thiết kế — màn Dịch đang chạy (2026-10-21)
+
+Quyết định phục vụ: đọc được tiến bộ dịch thật, biết rõ chương đang chạy và nguồn của đoạn đang xem; giảm vùng trống và các khung thống kê chiếm diện tích. Áp dụng skill `C:/Users/ADMIN/.claude/skills/ui-ux-pro-max/SKILL.md`; query UX `progress feedback loading state` trả đúng nhóm Feedback/Progress Indicators và Loading Indicators. Dùng kết quả cho tiến trình có bước rõ ràng, bố cục ổn định và thông báo chờ có nghĩa; native Java Views hiện có, không đổi stack.
+
+**Đã triển khai trong dev.20:** preview giữ qua chương; dòng nguồn riêng “Đã nhận chunk 5/5 · 001.txt” khi chương hiện tại là002/chunk1/2; chữ16sp, metadata/toggle14sp, giãn dòng1.4; thông báo chờ tiếng Việt; giữ chọn chữ/cuộn/thu gọn. Ảnh tổng hợp thật và giới hạn ở báo cáo QA preview. Không đổi màu/theme owner đang dùng.
+
+**Bố cục tiếp theo đã cụ thể hóa, chưa triển khai:**
+
+```text
+☰  Dịch                           [Đang dịch]
+
+Tập KUMO_JP_VOL12
+Chương 3/23 · 2 xong · 0 lỗi
+────────────── thanh tiến độ tập ──────────────
+003_KUMO_JP_VOL12.txt
+Đang dịch chunk 1/2
+────────────── thanh tiến độ chương ───────────
+
+8.4k token       $0.0042       00:51 đã chạy
+~08:57 còn lại   G14 · P9      Chi tiết ▸
+
+Bản dịch gần nhất                       [Thu gọn]
+Đã nhận chunk 2/2 · 002_KUMO_JP_VOL12.txt
+Nội dung đọc được, có thể cuộn và chọn chữ…
+
+[Tạm dừng]                 [Dừng…]
+```
+
+- Một bề mặt tiến trình, dùng khoảng cách và divider giữa nhóm; không thêm viền riêng cho từng số. Token/chi phí/thời gian theo lượt, tên tệp/chunk theo chương; nguồn preview thuộc chính chunk được nhận. Không suy ra “xong chương3” từ việc đang gọi chunk1.
+- “Chi tiết” chứa lỗi/fallback và số liệu kỹ thuật; cảnh báo chặn, không rõ đã gửi và chạm trần chi phí luôn hiện, không giấu trong accordion. Không đưa nội dung chẩn đoán lập trình vào luồng người dùng.
+- Chỉ hiện hành động có tác dụng: đang chạy → Tạm dừng; đã tạm dừng → Tiếp tục; Dừng cần xác nhận vì ảnh hưởng job. Không để Start vô hiệu chiếm hàng hành động lúc đang chạy. Giữ entry/ủy quyền và hành vi hiện tại, không thay service khi làm nhóm giao diện này.
+- Preview lần đầu: thông báo rõ chưa có chunk được chấp nhận trong **lượt này**. Giữa hai chương: giữ nội dung trước với đúng tên nguồn. Lỗi chunk: giữ nội dung tốt trước đó và cảnh báo riêng. Lượt mới: xóa preview cũ, không để dữ liệu lượt trước trông như tiến bộ mới.
+- Cỡ chữ lớn/màn hẹp: thống kê từ ba xuống hai cột, tên tệp được xuống dòng, nút cao tối thiểu48dp; không ép cỡ chữ để nhét. Dùng token Paper/Light/Dark hiện có, kiểm ảnh riêng ở130%; TalkBack vẫn cần đo thực tế.
+
+Triển khai tiếp trong nhóm R0b/R3 hiện có sau nghiệm thu bản sửa, không tạo nhánh/gói/cổng mới. Tiêu chí: vẫn đọc được nguồn preview, hành động và cảnh báo ở màn hẹp/cỡ chữ lớn; không thêm lần chạm để tạm dừng/tiếp tục, không mất thao tác hoặc thay đổi nội dung đầu ra.
