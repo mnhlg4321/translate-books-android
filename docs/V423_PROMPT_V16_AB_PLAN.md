@@ -9,8 +9,15 @@
 | | v14 (đang dùng) | v16 (nháp) |
 |---|---|---|
 | Tệp | `D:\Ebooks\1. Prompt cac the loai\14.lightnovel_general_qc_translation_only_v14.yaml` | `D:\Ebooks\1. Prompt cac the loai\16.lightnovel_general_qc_translation_only_v16_DRAFT.yaml` |
-| Độ dài | 6.336 ký tự (~2.200 token) | 7.736 ký tự (~2.700 token, +22%) |
-| Chi phí thêm | — | khoảng +3% mỗi lượt gọi |
+| Độ dài | 6.336 ký tự (~2.200 token) | 10.758 ký tự (~3.800 token, +70%) |
+| Chi phí thêm | — | khoảng +9% mỗi lượt gọi (khoảng +1.600 token đầu vào) |
+
+**Nguyên tắc dựng v16 (sửa ngày 2026-10-22, sau khi owner phát hiện bản trước làm mất mục văn phong và QC):**
+- v16 = **nguyên văn v14** cộng phần chèn thêm. Không bỏ quy tắc nào của v14.
+- Đã kiểm bằng script: cả 94 câu quy tắc của v14 đều còn trong v16, độ trùng từ ≥ 90%.
+- Chỉ có hai chỗ câu của v14 được mở rộng chứ không bị thay:
+  - quy tắc `「」` thêm "kể cả trích dẫn nằm giữa câu kể";
+  - mục ký hiệu thêm các loại ngoặc khác, `!?` và `・・・`.
 
 - Chi phí thêm tính từ dữ liệu điện thoại: đầu vào ~$0,24 / 1M token, trung vị một lượt gọi $0,0041.
 - Các tệp prompt nằm ngoài Git, trong thư mục prompt của owner.
@@ -27,7 +34,11 @@
 | Chỗ cho thẻ văn phong từng bộ | Dương Tường: hiểu phong cách tác giả trước khi dịch |
 | Đọc đúng lock `(omit)` (ô bỏ trống = không quy định), `@NARRATOR`; ruby; không để sót kana; giữ đúng loại ngoặc | Định dạng lock thật của app (`PromptContextBuilder.formatP3Rule`); lỗi đo trên 1.254 chunk điện thoại |
 
-**Giữ nguyên từ v14:** thứ tự ưu tiên nghĩa trước văn phong, đủ dòng, đầu ra một cặp `<TRANSLATION>`.
+**Giữ nguyên từ v14:** toàn bộ, gồm cả mục "VĂN PHONG TIẾNG VIỆT", "XƯNG HÔ, SPEAKER VÀ GIỌNG NHÂN VẬT", "PHÂN TÍCH NHẬT → VIỆT", "HỢP ĐỒNG ĐẦU RA" và "QC NỘI BỘ TRƯỚC KHI TRẢ". Danh sách QC có thêm 4 ý mới, gắn vào các dòng cũ:
+- xưng hô từng cặp đúng lock;
+- nhịp của tác giả;
+- không còn câu bê nguyên cấu trúc Nhật;
+- loại ngoặc, kana kéo dài, ruby.
 
 **Đã bỏ sau phản biện:** bước "nghĩ trước khi viết". Bước này làm tăng token reasoning trong khi lỗi cắt cụt F1 chưa sửa, và Wu et al. 2025 cho thấy việc chia bước không phải nguồn lợi ích chính.
 
@@ -134,5 +145,8 @@
 ## 7. Rủi ro và giới hạn
 
 - **Mẫu nhỏ:** 3 chương, mỗi bên một lượt (cộng một lượt đo nhiễu). Đủ để chọn hướng, không đủ để kết luận thống kê.
-- **v16 dài hơn 22%:** có thể làm model kém chú ý tới quy tắc cũ. Phần đo tự động có mục số dòng và ngoặc để bắt điều này.
+- **v16 dài hơn 70%:**
+  - có thể làm model kém chú ý tới quy tắc cũ; phần đo tự động có mục số dòng và ngoặc để bắt điều này;
+  - chi phí ước tính +9%, sát ngưỡng 10% ở tiêu chí 4. Nếu đo thật vượt 10%, tiêu chí 4 không đạt, dù chất lượng tốt hơn. Khi đó owner quyết riêng là chấp nhận chi phí hay rút gọn phần thêm;
+  - nếu sửa được F3 (cache prompt), phần instruction lặp lại sẽ rẻ hơn nhiều.
 - **Dữ liệu:** không đưa văn bản sách vào Git. Ví dụ trong v16 là câu tự viết, không lấy từ sách hay từ FINAL.
