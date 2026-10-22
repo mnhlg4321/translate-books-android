@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-22 (+07:00). Coordinator analysed prompt v14 on 1,254 real phone chunks (draft v15 kept outside Git next to v14) and added `docs/V423_TRANSLATION_RUNTIME_FIX_WORK_REQUEST.md` (F1 output cap ignores reasoning, F2 untranslated Japanese lines accepted, F3 prompt cache ~5%, F4 API key in SQLite settings snapshots; critic-reviewed).
+- Updated: 2026-10-22 (+07:00). Coordinator wrote prompt v16 draft (outside Git, next to v14; critic-reviewed, fixes the (omit) misreading that v15 also had) and `docs/V423_PROMPT_V16_AB_PLAN.md` (blind A/B v14 vs v16, 3 chapters + 1 noise run, ~$0.13 estimate, $0.30 cap watched manually). Runtime fix package F1-F4 still pending.
 - Current version: v4.23.0 in development; verified candidate **4.23-dev.22/code300**. Shipped release remains v4.21.0/code271.
 - Current branch: `feature/v4.23`, `D:/P5E-builds/wt-v4.23`; protected v4.18 checkout and owner media remain untouched. No merge, tag, push, or provider call.
 - Current commit: **488cb3756b82787d1f33b333db851927855af68b** is the implementation/state baseline immediately before this snapshot update commit; it contains the R3a/R2 implementation and dev22 preflight state. Confirm actual HEAD on resume.
