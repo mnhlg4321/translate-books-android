@@ -1,0 +1,121 @@
+{
+ "logs": {
+  "D:\\P5E-builds\\v423-readability-qa-20261021\\device-clean-320-paper-large.txt": {
+   "overall": "PASS",
+   "discovered": 2,
+   "pass": 2,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 2,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423RunReadabilityInstrumentedTest",
+     "test": "readableMetricsAndAdaptiveScrollablePreview",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423RunReadabilityInstrumentedTest",
+     "test": "visibleStateLabelsKeepJobsShortcutAndEmptyPreviewMeaning",
+     "result": "PASS"
+    }
+   ]
+  },
+  "D:\\P5E-builds\\v423-readability-qa-20261021\\device-clean-360-dark-largest.txt": {
+   "overall": "PASS",
+   "discovered": 2,
+   "pass": 2,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 2,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423RunReadabilityInstrumentedTest",
+     "test": "readableMetricsAndAdaptiveScrollablePreview",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423RunReadabilityInstrumentedTest",
+     "test": "visibleStateLabelsKeepJobsShortcutAndEmptyPreviewMeaning",
+     "result": "PASS"
+    }
+   ]
+  },
+  "D:\\P5E-builds\\v423-readability-qa-20261021\\device-clean-360-paper.txt": {
+   "overall": "PASS",
+   "discovered": 2,
+   "pass": 2,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 2,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423RunReadabilityInstrumentedTest",
+     "test": "readableMetricsAndAdaptiveScrollablePreview",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423RunReadabilityInstrumentedTest",
+     "test": "visibleStateLabelsKeepJobsShortcutAndEmptyPreviewMeaning",
+     "result": "PASS"
+    }
+   ]
+  },
+  "D:\\P5E-builds\\v423-readability-qa-20261021\\device-clean-800-landscape-light.txt": {
+   "overall": "PASS",
+   "discovered": 2,
+   "pass": 2,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 2,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423RunReadabilityInstrumentedTest",
+     "test": "readableMetricsAndAdaptiveScrollablePreview",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423RunReadabilityInstrumentedTest",
+     "test": "visibleStateLabelsKeepJobsShortcutAndEmptyPreviewMeaning",
+     "result": "PASS"
+    }
+   ]
+  },
+  "D:\\P5E-builds\\v423-readability-qa-20261021\\device-clean-800-tablet-dark.txt": {
+   "overall": "PASS",
+   "discovered": 2,
+   "pass": 2,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 2,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423RunReadabilityInstrumentedTest",
+     "test": "readableMetricsAndAdaptiveScrollablePreview",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423RunReadabilityInstrumentedTest",
+     "test": "visibleStateLabelsKeepJobsShortcutAndEmptyPreviewMeaning",
+     "result": "PASS"
+    }
+   ]
+  }
+ },
+ "total": {
+  "discovered": 10,
+  "pass": 10,
+  "skip": 0,
+  "fail": 0,
+  "incomplete": 0
+ }
+}

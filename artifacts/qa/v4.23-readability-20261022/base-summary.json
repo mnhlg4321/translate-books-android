@@ -1,0 +1,118 @@
+{
+ "logs": {
+  "D:/P5E-builds/v423-readability-qa-20261021/device-base-360-paper.txt": {
+   "overall": "PASS",
+   "discovered": 19,
+   "pass": 19,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 19,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423RunReadabilityInstrumentedTest",
+     "test": "readableMetricsAndAdaptiveScrollablePreview",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423RunReadabilityInstrumentedTest",
+     "test": "visibleStateLabelsKeepJobsShortcutAndEmptyPreviewMeaning",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PreviewInstrumentedTest",
+     "test": "lateRefreshAfterActivityDestroyDoesNotCrashOrStartWork",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PreviewInstrumentedTest",
+     "test": "lazyTranslatePageRestoresPreviewAfterRecreateOnJobs",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PreviewInstrumentedTest",
+     "test": "chapterResetBroadcastAndStoreKeepOriginalAcceptedIdentity",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "aCutAnswerIsRetriedWithALargerLimitAndNeverSentIdenticallyTwice",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "rejectedAnswerInChapterTwoDoesNotStopTheRunAndNoErrorIsBroadcast",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "mixedQuoteStylesAreRepairedAcceptedAndRecordedAsAWarning",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "authenticationFailureInChapterTwoStopsTheQueue",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "aChunkCutAtEveryLimitIsSplitInHalvesAndTheChapterCompletes",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "continueSetTicksTheUnfinishedChaptersAndTheFailedJobGoesOn",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "twoRejectedChaptersInARowStopTheRun",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "threeChaptersTranslateWithTheirOwnGlossaries_activeAndSharedSettingsUntouched",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "integrityFailureInChapterTwoContinuesWithChapterThree",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423AppearanceInstrumentedTest",
+     "test": "lightPaletteRebuildsTheActivityOnTheSameTabWithTheSameSelection",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423AppearanceInstrumentedTest",
+     "test": "everySettingIsAppliedAfterTheRebuild",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423AppearanceInstrumentedTest",
+     "test": "theProgressPanelWrapsNamedMetricsWithoutShrinkingText",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423AppearanceInstrumentedTest",
+     "test": "followingTheSystemSwitchesWithNightMode",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423AppearanceInstrumentedTest",
+     "test": "theTopChipAndThePanelTitleNeverDisagree",
+     "result": "PASS"
+    }
+   ]
+  }
+ },
+ "total": {
+  "discovered": 19,
+  "pass": 19,
+  "skip": 0,
+  "fail": 0,
+  "incomplete": 0
+ }
+}

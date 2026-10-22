@@ -1,0 +1,235 @@
+{
+  "artifacts": [
+    {
+      "event": "build-20261021-223903",
+      "source": "4849de1968b6287e99f407837761d13028ad6cc9",
+      "mirrorFiles": 5,
+      "manifest": "PASS",
+      "sourceArchiveEqualsGitArchive": true,
+      "files": [
+        {
+          "name": "BUILD_INFO.json",
+          "sha256": "3D90D126EA007106DCCFC2889967D82E4083B535AA108161A417279498CF8D16"
+        },
+        {
+          "name": "project_source_build-20261021-223903.zip",
+          "sha256": "BCB49F630EB73E1CE5FE9E686BC05D012323A0C1F1EFD759D1E55495253428FC"
+        },
+        {
+          "name": "README.md",
+          "sha256": "473A38872E6A3CDBEBA4112CD20A76B87C6D8AB6C8ABD74FDA1AC55EBF968A4A"
+        },
+        {
+          "name": "SHA256SUMS.txt",
+          "sha256": "168478C1096472374DBC32435848EDF60AB4FE4527A9321AAF1738A073DC8A4E"
+        },
+        {
+          "name": "TranslateBooks-v4.23-dev.21-code299.apk",
+          "sha256": "2421F66B216492F234D8348EDEFFCAB5587CA79EC77E28F93BB410ED10877806"
+        }
+      ]
+    },
+    {
+      "event": "v423-readability-dev21-test2-20261021",
+      "source": "d97c020abd567820401d1f81cbd03d143c016c84",
+      "mirrorFiles": 8,
+      "manifest": "PASS",
+      "sourceArchiveEqualsGitArchive": true,
+      "files": [
+        {
+          "name": "app-debug-androidTest.apk",
+          "sha256": "B33D0E25D6C468421207877783A600492D72882BCC6B6809C1261F7171BE8B16"
+        },
+        {
+          "name": "artifact-inspection.txt",
+          "sha256": "4F6534C51DD2E01BDE73F276EED46D4C4846F13650B088B763F5FE4872E76DBD"
+        },
+        {
+          "name": "assemble-output.txt",
+          "sha256": "0FAA87E15F50D922661E0CEBF819DD410333E10C56A5BD59A8867957B70030B0"
+        },
+        {
+          "name": "BUILD_INFO.json",
+          "sha256": "21A07DF7673CD7A81697B1EC7D4BA3F566D680C02C5DB87839DFEF6635E964FE"
+        },
+        {
+          "name": "project_source_v423-readability-dev21-test2-20261021.zip",
+          "sha256": "50D9677B30BEC19B4E4512D3BCEBDCE806BD3B8F79F20E0C4BDC4EF98BE4BABF"
+        },
+        {
+          "name": "README.md",
+          "sha256": "FA4E76317E493463659585A4D3A990185CFC53BF29B5DC96132CF14E17B8F93D"
+        },
+        {
+          "name": "SHA256SUMS.sha256",
+          "sha256": "155738859E8E19C4EFA53688F654F675D972BCC66AFE10DB9E54164473A4330F"
+        },
+        {
+          "name": "SHA256SUMS.txt",
+          "sha256": "08BCF82620794277A840375E753C9F1A8B11224CDA9F0E14BB62AFDD4776DDD2"
+        }
+      ]
+    }
+  ],
+  "unit": {
+    "testBenchmarkUnitTest": {
+      "total": 673,
+      "fail": 0,
+      "error": 0,
+      "skip": 5,
+      "pass": 668
+    },
+    "testDebugUnitTest": {
+      "total": 673,
+      "fail": 0,
+      "error": 0,
+      "skip": 5,
+      "pass": 668
+    },
+    "testReleaseUnitTest": {
+      "total": 673,
+      "fail": 0,
+      "error": 0,
+      "skip": 5,
+      "pass": 668
+    }
+  },
+  "screenshots": [
+    {
+      "name": "preview-area-default-100-800x1180.png",
+      "width": 2100,
+      "height": 3098,
+      "sha256": "7314084E8888848AD4E8206831AA350154E2A48AAFFE2958E76173F289D3C1D9"
+    },
+    {
+      "name": "preview-area-default-130-360x800.png",
+      "width": 945,
+      "height": 2100,
+      "sha256": "298E27A879C25639BD4B9D936C973F98D3B854633DAF8B99B84173649B1A1AF0"
+    },
+    {
+      "name": "preview-area-light-100-800x360.png",
+      "width": 2100,
+      "height": 945,
+      "sha256": "4CC9DEEFBB94898D8A523CBB3FE1827D535CCF0C7A0142D3A15D0CBE59E19C43"
+    },
+    {
+      "name": "preview-area-paper-100-360x800.png",
+      "width": 945,
+      "height": 2100,
+      "sha256": "624BCE808D0A8F1A9A8196F90E342B978B1445128D4379B4BEAF1319272B2B77"
+    },
+    {
+      "name": "preview-area-paper-130-320x800.png",
+      "width": 840,
+      "height": 2100,
+      "sha256": "5B991FAE6AFEB4DC8D1AC23C1750076915F670AF595DEC7DB0C96920EF921B99"
+    },
+    {
+      "name": "run-panel-default-100-800x1180.png",
+      "width": 2100,
+      "height": 3098,
+      "sha256": "7314084E8888848AD4E8206831AA350154E2A48AAFFE2958E76173F289D3C1D9"
+    },
+    {
+      "name": "run-panel-default-130-360x800.png",
+      "width": 945,
+      "height": 2100,
+      "sha256": "298E27A879C25639BD4B9D936C973F98D3B854633DAF8B99B84173649B1A1AF0"
+    },
+    {
+      "name": "run-panel-light-100-800x360.png",
+      "width": 2100,
+      "height": 945,
+      "sha256": "4CC9DEEFBB94898D8A523CBB3FE1827D535CCF0C7A0142D3A15D0CBE59E19C43"
+    },
+    {
+      "name": "run-panel-paper-100-360x800.png",
+      "width": 945,
+      "height": 2100,
+      "sha256": "624BCE808D0A8F1A9A8196F90E342B978B1445128D4379B4BEAF1319272B2B77"
+    },
+    {
+      "name": "run-panel-paper-130-320x800.png",
+      "width": 840,
+      "height": 2100,
+      "sha256": "5B991FAE6AFEB4DC8D1AC23C1750076915F670AF595DEC7DB0C96920EF921B99"
+    }
+  ],
+  "lint": {
+    "Error": 0,
+    "Warning": 58,
+    "Fatal": 0
+  },
+  "finalTestArtifact": {
+    "event": "v423-readability-dev21-test4-20261022",
+    "source": "deb5846a0f4891320328be2a217ca6168f1b1125",
+    "apkSha256": "A9022F28423C6E7FB140A2739DF8634413F71E87F2547A76444C1FB8E43E23A0",
+    "sourceZipSha256": "29E80D52D7D5301327730A9D190C28D33A9E953BC12D3AD1A39A546C3142F1EC",
+    "mirrorsAndManifest": "PASS",
+    "sourceArchiveEqualsGitArchive": true
+  },
+  "cleanScreenshots": [
+    {
+      "name": "preview-area-default-100-800x1180.png",
+      "width": 2100,
+      "height": 3098,
+      "sha256": "CAC9031468D05124C23E1BFBF7AF85709AE37C7086DC6E998E8566393CE173F3"
+    },
+    {
+      "name": "preview-area-default-130-360x800.png",
+      "width": 945,
+      "height": 2100,
+      "sha256": "10E7109FC6FAF8A1474299F97409CBA82D3455046D1F43E7F80DC7C7A3515F48"
+    },
+    {
+      "name": "preview-area-light-100-800x360.png",
+      "width": 2100,
+      "height": 945,
+      "sha256": "68141906E66F4D1E20A7D3DE98F057CECA7F1FD42464D4CA5311CECD0B571104"
+    },
+    {
+      "name": "preview-area-paper-100-360x800.png",
+      "width": 945,
+      "height": 2100,
+      "sha256": "72B4A74B891D25D88043DF597C3EAAC59EDF904FDEA37B72CA5A8DB28918561D"
+    },
+    {
+      "name": "preview-area-paper-130-320x800.png",
+      "width": 840,
+      "height": 2100,
+      "sha256": "C78384D2645AB6B1BEC5BC965AC717BF1FB9AA79BA0E1BC6BEA45FD8CC894F0E"
+    },
+    {
+      "name": "run-panel-default-100-800x1180.png",
+      "width": 2100,
+      "height": 3098,
+      "sha256": "00EDD51FD251E91F519BBDA32822587293C27170D768C8936A510C6AB5CB1A0A"
+    },
+    {
+      "name": "run-panel-default-130-360x800.png",
+      "width": 945,
+      "height": 2100,
+      "sha256": "F61FAC1B819C62F692DD479DE2EAFE0662C267E47C220A0149E7E378CEBD07F0"
+    },
+    {
+      "name": "run-panel-light-100-800x360.png",
+      "width": 2100,
+      "height": 945,
+      "sha256": "019975C5796BB927D2D83CB25051BA1C240E756D0ECC32D50D76971F51F58A42"
+    },
+    {
+      "name": "run-panel-paper-100-360x800.png",
+      "width": 945,
+      "height": 2100,
+      "sha256": "D412CA254E40B43D5825F32A674A5874FAE5181B74CA1DB028CA149A54C4A229"
+    },
+    {
+      "name": "run-panel-paper-130-320x800.png",
+      "width": 840,
+      "height": 2100,
+      "sha256": "CD5042A7070C2E622CFA06A4B8527C7B2CE115AA98BA4888ACC6488FD7483CDC"
+    }
+  ],
+  "productionUnchangedSinceApkSource": true
+}

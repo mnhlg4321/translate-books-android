@@ -170,7 +170,7 @@ Quyết định phục vụ: đọc được tiến bộ dịch thật, biết r
 
 **Đã triển khai trong dev.20:** preview giữ qua chương; dòng nguồn riêng “Đã nhận chunk 5/5 · 001.txt” khi chương hiện tại là002/chunk1/2; chữ16sp, metadata/toggle14sp, giãn dòng1.4; thông báo chờ tiếng Việt; giữ chọn chữ/cuộn/thu gọn. Ảnh tổng hợp thật và giới hạn ở báo cáo QA preview. Không đổi màu/theme owner đang dùng.
 
-**Bố cục tiếp theo đã cụ thể hóa, chưa triển khai:**
+**Bố cục lịch sử trước yêu cầu owner về tên đầy đủ/đơn vị (được thay bởi mục9 dưới đây):**
 
 ```text
 ☰  Dịch                           [Đang dịch]
@@ -199,3 +199,29 @@ Nội dung đọc được, có thể cuộn và chọn chữ…
 - Cỡ chữ lớn/màn hẹp: thống kê từ ba xuống hai cột, tên tệp được xuống dòng, nút cao tối thiểu48dp; không ép cỡ chữ để nhét. Dùng token Paper/Light/Dark hiện có, kiểm ảnh riêng ở130%; TalkBack vẫn cần đo thực tế.
 
 Triển khai tiếp trong nhóm R0b/R3 hiện có sau nghiệm thu bản sửa, không tạo nhánh/gói/cổng mới. Tiêu chí: vẫn đọc được nguồn preview, hành động và cảnh báo ở màn hẹp/cỡ chữ lớn; không thêm lần chạm để tạm dừng/tiếp tục, không mất thao tác hoặc thay đổi nội dung đầu ra.
+
+## 9. Owner yêu cầu dễ hiểu và ưu tiên vùng đọc — cập nhật 2026-10-22
+
+Phục vụ quyết định: theo dõi dịch mà không phải giải mã nhãn. Đã dùng skill Claude `C:/Users/ADMIN/.claude/skills/ui-ux-pro-max/SKILL.md`, quy tắc Color Only, Chip Collection Reflow, đọc trên mobile và vùng chạm. Luna làm audit/diff review độc lập; coordinator kiểm lại mã và ảnh thật. Native Java Views, giữ palette và cỡ chữ owner.
+
+Đã triển khai trong **dev.21/code299, production source4849de19**:
+
+- Thay sáu ô thống kê lồng thẻ bằng hai cột nhãn/giá trị phẳng; dưới340dp, app font từ115% hoặc system font từ150% chuyển một cột. Chữ số16sp, nhãn14sp, wrap theo nội dung, không tự thu nhỏ.
+- `91.100 token`, `5 phút 38 s`, `Còn lại (ước tính)`, `0 chunk lỗi`, `Glossaries: 9 luật · Pronoun: 5 luật`. `s` giữ theo yêu cầu owner. Thiếu phép đo luật hiện “chưa đo”. `fb` trước là fallback; service chỉ reset/persist/broadcast mà không tăng, nên bỏ khỏi phần hiển thị thay vì đổi tên một số chưa được đo.
+- Chi phí/token cả lượt và chi phí/token chương đang dịch có nhãn riêng. File hiện tại không lặp trên dòng chunk. Không thay cách tính hoặc dữ liệu dịch.
+- Shortcut trên cùng luôn có chữ trạng thái, không chỉ chấm màu; vẫn mở Công việc. Màn hẹp/chữ lớn cho trạng thái một hàng riêng. Nút từ48dp và có mô tả truy cập.
+- Preview mặc định mở; gộp tên vùng và chunk thành một dòng có thể wrap, nguồn tệp dòng sau; bỏ tiêu đề/accepted metadata lặp. Chữ nội dung16sp, chọn chữ và cuộn được. Nội dung ngắn co theo nội dung; nội dung dài có viewport45% chiều cao màn, chặn trong160–480dp thay150dp cố định. Có nút Ẩn/Xem. Không mở rộng giới hạn nội dung preview1200 ký tự hiện có.
+- Bắt đầu/Tạm dừng/Tiếp tục/Dừng dịch/Dịch lại chunk lỗi dùng tiếng Việt; giữ handler, xác nhận và quyền chi hiện có.
+
+Kết quả và ảnh thật: `artifacts/qa/v4.23-readability-20261022/QA_REPORT.md`. Chưa coi R0a–R5 hoàn tất: các đề xuất đưa log vào Chi tiết kỹ thuật, bớt nút vô hiệu và đổi toàn bộ icon vẫn còn. Mục4/5 là định hướng rộng; bố cục đang chạy ở mục9 thay các thông số cột/nhãn cũ trong mục4/8.
+
+### Phản biện các màn còn lại, theo bằng chứng mã
+
+| Ưu tiên / màn | Vấn đề và nguyên nhân | Hướng xử lý trong nhóm hiện có | Ownership / kiểm / điểm dừng |
+|---|---|---|---|
+| R3 Dịch cấu hình | `TranslatePageFactory:62,64,72,104,138` trộn SOURCE/TARGET LANGUAGE, Prompt preview, Refresh model pricing; `:297` còn hướng dẫn UI2.9 đã cũ. Log kỹ thuật chiếm vùng luồng chính (`:435`). | Nhãn tiếng Việt theo tác vụ, tóm tắt cấu hình, gom chẩn đoán vào Chi tiết kỹ thuật; cảnh báo chặn luôn hiện. Không đổi prompt/model/service. | UI factory + test; kiểm cùng lựa chọn trước/sau, refresh giá không tự gọi model, Start/Pause/Resume giữ số lần chạm. Dừng nếu cần thay preparation hoặc engine. |
+| R2 Glossaries/Pronoun | `GlossaryPageFactory:128–132` Using/Use/Edit/Del, cao42dp; editor`:176–197` nút44dp và nhãn Anh. Tên khó hiểu và cắt chữ cùng gốc ép chiều cao. | Dùng/Đang dùng/Sửa/Xóa; hàng tự cao, min48dp; thao tác hay dùng luôn hiện, nguy hiểm có xác nhận. RAW là mẫu ngôn ngữ dễ hiểu hơn. | Glossary/Pronoun factory, không schema/store; kiểm active selection, sửa/lưu/xóa/undo,320dp và font130%. Không giấu thao tác chỉ để giảm nút. |
+| R4 Công việc | Nhiều hành động và dữ liệu chẩn đoán cạnh nội dung người dùng; còn nhãn nội bộ. | Hàng tên–tiến độ–trạng thái bằng chữ, Tiếp tục hiện sẵn; lỗi rõ nguyên nhân và hành động; chi tiết kỹ thuật mở riêng. | Jobs UI; giữ lọc hai tập/job tệp lẻ, route/back và resume; provider thật chỉ khi có spend riêng. |
+| R5 Cài đặt | Các nhóm có nhiều thông số/chữ kỹ thuật và thẻ lồng; chưa audit bằng ảnh mọi trường. | Giữ accordion hiện có, nhãn+giá trị, giải thích ngắn và Nâng cao. | Settings UI; kiểm lưu/mở lại và chế độ theo hệ thống; không đổi giá trị mặc định owner. |
+
+Không mở rộng sang Biên tập trong nhóm này. Không chuyển sang trả toàn văn hoặc đổi schema: lỗi hiện tại ở trình bày, không phải transport/prompt/parser/ngữ nghĩa. Hash, số đếm, trạng thái vẫn do app quản lý. Các fixture tổng hợp chỉ chứng minh trình bày/lifecycle, không chứng minh chất lượng dịch. TalkBack, tất cả17 palette và luồng bàn phím toàn app chưa đo đầy đủ.

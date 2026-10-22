@@ -1,5 +1,16 @@
 # v4.23 — Yêu cầu làm việc: hết giật lag, tổ hợp không dừng vì lỗi một chương, bảng tiến trình theo tổ hợp, nút bị cắt chữ, giao diện sáng
 
+> J3/J4 owner bổ sung, chốt offline2026-10-22: bỏ viết tắt khó hiểu, có đơn vị giây, ưu tiên diện tích preview và trạng thái có chữ. Đã triển khai dev.21/code299/source4849de19; báo cáo `artifacts/qa/v4.23-readability-20261022/QA_REPORT.md`, thiết kế/audit mở rộng trong `docs/V423_REFINED_UI_DESIGN.md` mục9. Thay next action cũ về xin spend bằng nghiệm thu UI dev.21. Không cấp quyền provider hoặc cài điện thoại mới.
+
+### Phạm vi tiếp tục J3/J4 đã kiểm
+
+- Nguyên nhân: formatter rút token/G/P/fb và MM:SS; sáu stat card ép không gian; preview tiêu đề/metadata/padding lặp + viewport150dp; top status chủ động đổi chữ thành chấm. Fallback chưa có phép đo tăng ở service.
+- Ownership: coordinator `RunPanelFormatter`, `TranslationDashboardFormatter`, `TranslatePageFactory`, `TranslationPreviewScrollView`, phần header/refresh UI của `MainActivity`, test trình bày tương ứng. Luna chỉ audit/review; không chỉnh engine, provider, runtime store hoặc Editorial.
+- Đầu ra: nhãn đủ, thời gian có s, lỗi/luật có tên, trạng thái có chữ và shortcut Công việc; preview ngắn không có khung rỗng, dài cuộn được và viewport thích nghi; giữ nguồn accepted chunk. APK/nguồn/checksum và hai mirror bất biến.
+- PASS/FAIL: nhãn không auto shrink/ellipsis ở ma trận320/360dp, ngang/tablet và font lớn; preview chọn chữ/cuộn/ẩn/mở, gap đầu nội dung≤10dp; viewport dài≥160dp, ngắn<120dp ở fixture; sáu trạng thái có chữ, shortcut giữ route; preview qua chương/recreate và service hồi quy không lỗi. Mất nguồn preview, mất thao tác, đổi output hoặc chỉ chấm màu là FAIL. Không hạ acceptance cũ của service; assertion chiều cao stat cố định được thay bằng wrap theo quyết định owner mới.
+- Phụ thuộc/điểm dừng: không có provider cần chạy để kiểm UI. Nghiệm thu điện thoại mới/TalkBack chưa đo; cài cần duyệt từng lần. R3/R2 rộng hơn theo mục9 thiết kế, không tự coi toàn app hoàn tất. Giữ failed build/capture và bản sạch; không mở gói hay release mới.
+- Evidence: source production4849de19, test-only deb5846a;19/19 core UI/preview/service trên AVD riêng và ma trận đọc2ca×5cấu hình, unit668PASS/5SKIP mỗi biến thể, lint0lỗi/58warning. Chi tiết provenance/capture rerun trong QA report; không cộng các lần lặp thành số test độc lập. Provider0/USD0; không live mới được đề xuất.
+
 > Tiếp tục J3 theo owner ngày2026-10-21: preview trống ở đầu chương tiếp theo. Đã sửa trong06b542ce; kiểm rộng phát hiện callback sau hủy Activity làm văng, sửa98a2e15e. Candidate4.23-dev.20/code298, source98a2e15e; report `artifacts/qa/v4.23-preview-20261021/QA_REPORT.md`. Ownership: coordinator service/runtime/UI/test; Luna review độc lập, không edit. Đầu ra: preview xuyên chương với identity đúng + restore khi dựng trang Dịch muộn + callback lifecycle an toàn. Offline13/13 ca thiết bị và app667PASS/5SKIP mỗi biến thể; trượt fixture và crash giữ riêng. Không sửa prompt/schema/provider/engine; không lượt trả phí. Dừng trước cài điện thoại (quyền riêng mỗi lần); screenshot event sách chưa được đo live. Thiết kế phần tiếp theo ở Refined mục8, không mở gói mới.
 
 Trạng thái: ĐÃ PHẢN BIỆN (agent phản biện đọc mã tại `63f83840`, 2026-10-20; khẳng định chính đã kiểm lại).
