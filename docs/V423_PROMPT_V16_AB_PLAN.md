@@ -9,8 +9,8 @@
 | | v14 (đang dùng) | v16 (nháp) |
 |---|---|---|
 | Tệp | `D:\Ebooks\1. Prompt cac the loai\14.lightnovel_general_qc_translation_only_v14.yaml` | `D:\Ebooks\1. Prompt cac the loai\16.lightnovel_general_qc_translation_only_v16_DRAFT.yaml` |
-| Độ dài | 6.336 ký tự (~2.200 token) | 8.134 ký tự (~2.850 token, +28%) |
-| Chi phí thêm | — | khoảng +4% mỗi lượt gọi |
+| Độ dài | 6.336 ký tự (~2.200 token) | 7.736 ký tự (~2.700 token, +22%) |
+| Chi phí thêm | — | khoảng +3% mỗi lượt gọi |
 
 - Chi phí thêm tính từ dữ liệu điện thoại: đầu vào ~$0,24 / 1M token, trung vị một lượt gọi $0,0041.
 - Các tệp prompt nằm ngoài Git, trong thư mục prompt của owner.
@@ -21,7 +21,7 @@
 |---|---|
 | Danh sách mẫu câu Nhật hay bị bê nguyên, kèm cách viết Việt và giới hạn (không thêm từ láy, hình ảnh mà raw không có) | Zhang et al. 2024; Li et al. ACL 2025: lỗi lớn nhất của LLM dịch văn học là dịch sát chữ, từ vựng nghèo. VnExpress 2025: câu văn không thuần Việt là lỗi phổ biến (Vũ Thế Khôi, Bùi Trần Ca Dao) |
 | Giữ nhịp, dấu câu, nét lạ của tác giả; giọng nhân vật khác nhau | Trần Quốc Tân (Marginalia): AI "cào bằng" giọng, mất nhịp. Nguyễn Xuân Minh (Nhã Nam): phải hình dung giọng điệu nhân vật |
-| Quy tắc hậu tố: mặc định bỏ, chuyển vào xưng hô | J-Novel Club, nhân viên trên diễn đàn. **Cần owner duyệt, xem mục 2** |
+| Hậu tố: **giữ quy ước của v14** (không tự thêm hoặc xóa), chỉ nói rõ nguồn của quy ước là lock và bản dịch trước | Owner chốt 2026-10-22: không đổi quy ước hậu tố. Đề xuất "mặc định bỏ" (dựa trên J-Novel Club) không được dùng |
 | Tượng thanh → từ tượng thanh Việt; tượng hình → động từ/từ láy | Kubo 1997; Hayase 1978; Sell & Pasfield-Neofitou 2016 |
 | Lược chủ ngữ có kiểm soát, không lặp tên | Jay Rubin, *Making Sense of Japanese* |
 | Chỗ cho thẻ văn phong từng bộ | Dương Tường: hiểu phong cách tác giả trước khi dịch |
@@ -35,12 +35,9 @@
 
 **Giới hạn của nguồn:** không tìm được dịch giả Nhật–Việt hay NXB light novel Việt Nam nào công bố quy tắc riêng về hậu tố và xưng hô.
 
-## 2. Hai việc owner chốt trước khi chạy
+## 2. Quyết định của owner và phần tùy chọn
 
-1. **Hậu tố:** v14 ghi "không tự thêm hoặc xóa honorific trái quy ước"; v16 đổi thành mặc định bỏ.
-   - Đây là đổi quy ước, không chỉ đổi câu chữ.
-   - Khuyến nghị: duyệt "mặc định bỏ", vì đây là điều owner đã tự làm 227 lần khi sửa DRAFT JAKUAKU MONSTER thành FINAL.
-   - Nếu owner không duyệt, sửa v16 lại theo v14 trước khi thử. Khi đó chỉ số "hậu tố còn lại" không được dùng để chấm.
+1. **Hậu tố** (owner chốt 2026-10-22): không đổi quy ước. v16 đã được sửa về cách của v14: không tự thêm hoặc xóa honorific trái quy ước. Chỉ số "hậu tố còn lại" vì vậy không dùng để chấm A/B.
 2. **Thẻ văn phong từng bộ:** tùy chọn. Nếu dùng, dán vào **cuối** tệp instruction của bộ đó, dạng:
    ```
    THẺ VĂN PHONG TÁC PHẨM
@@ -73,7 +70,7 @@
 
 | # | Loại | Phải có trong chương | Gợi ý |
 |---|---|---|---|
-| C1 | Học đường, nhiều thoại | ≥ 10 hậu tố trong raw; nhân vật thô lỗ | một chương JAKUAKU MONSTER vol 1 không thuộc 006/008/011 |
+| C1 | Học đường, nhiều thoại | nhiều cặp xưng hô bạn bè/tiền bối; nhân vật thô lỗ | một chương JAKUAKU MONSTER vol 1 không thuộc 006/008/011 |
 | C2 | Fantasy, câu kể dài | `@NARRATOR` có lock; thuật ngữ hệ thống; `男`/`女` lặp | một chương KUMO vol 12 |
 | C3 | Tình cảm, đối thoại hai người | lock chỉ khóa một phía (`(omit)`); từ tượng hình | một chương ATE_JP_VOL6 |
 
@@ -96,7 +93,7 @@
 
 **A. Đo tự động.** Chạy offline trên bản sao DB sau lượt thử, chỉ in số đếm, theo từng chương và từng bản:
 - số dòng còn kana/kanji;
-- số hậu tố còn lại (chỉ dùng nếu owner duyệt "mặc định bỏ");
+- hậu tố: chỉ kiểm tính nhất quán (cùng một nhân vật không lúc có hậu tố, lúc không trong cùng chương), không chấm theo số lượng;
 - số chỗ đổi loại ngoặc so với raw;
 - chênh lệch số dòng;
 - mẫu dịch sát trên 1.000 dòng: mở câu bằng "Việc", "người đàn ông"/"người phụ nữ" lặp, "một cách", "vừa… vừa", "rồi" thay `ながら`;
@@ -137,5 +134,5 @@
 ## 7. Rủi ro và giới hạn
 
 - **Mẫu nhỏ:** 3 chương, mỗi bên một lượt (cộng một lượt đo nhiễu). Đủ để chọn hướng, không đủ để kết luận thống kê.
-- **v16 dài hơn 28%:** có thể làm model kém chú ý tới quy tắc cũ. Phần đo tự động có mục số dòng và ngoặc để bắt điều này.
+- **v16 dài hơn 22%:** có thể làm model kém chú ý tới quy tắc cũ. Phần đo tự động có mục số dòng và ngoặc để bắt điều này.
 - **Dữ liệu:** không đưa văn bản sách vào Git. Ví dụ trong v16 là câu tự viết, không lấy từ sách hay từ FINAL.
