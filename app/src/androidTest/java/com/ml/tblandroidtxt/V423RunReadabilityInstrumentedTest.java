@@ -135,6 +135,8 @@ public class V423RunReadabilityInstrumentedTest {
     }
 
     private void capture(String name) throws Exception {
+        // Idle main-thread work does not guarantee that SurfaceFlinger has presented the scroll.
+        InstrumentationRegistry.getInstrumentation().getUiAutomation().waitForIdle(200, 5000);
         Bitmap bitmap = InstrumentationRegistry.getInstrumentation().getUiAutomation().takeScreenshot();
         assertNotNull(bitmap);
         android.content.res.Configuration cfg = context.getResources().getConfiguration();
