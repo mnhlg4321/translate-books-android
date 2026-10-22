@@ -44,6 +44,20 @@ import java.util.Locale;
 
 
 class GlossaryPageFactory {
+    static final String IMPORT_LABEL = "+ Nhập Glossary";
+    static final String NEW_BLANK_LABEL = "+ Tạo Glossary trống";
+    static final String HEALTH_CHECK_LABEL = "Kiểm tra dữ liệu";
+    static final String USING_LABEL = "Đang dùng";
+    static final String USE_LABEL = "Dùng";
+    static final String EDIT_LABEL = "Sửa";
+    static final String DELETE_LABEL = "Xóa";
+    static final String BACK_LABEL = "← Quay lại";
+    static final String USE_FOR_TRANSLATION_LABEL = "Dùng cho bản dịch";
+    static final String MERGE_FILES_LABEL = "Gộp file";
+    static final String SAVE_LABEL = "Lưu";
+    static final String PREVIEW_LABEL = "Xem trước";
+    static final String ADD_TERM_LABEL = "+ Thêm thuật ngữ";
+
     private final MainActivity a;
 
     GlossaryPageFactory(MainActivity activity) {
@@ -64,18 +78,18 @@ class GlossaryPageFactory {
 
     View glossaryListPage() {
         LinearLayout panel = a.sectionCard("📖", "Glossaries");
-        TextView desc = a.text("Quản lý nhiều glossary giống TBL PC: có thể chọn nhiều file cùng lúc, mỗi file tạo một glossary riêng.", 13, a.MUTED, false);
+        TextView desc = a.text("Quản lý nhiều Glossary giống TBL PC: có thể chọn nhiều file cùng lúc, mỗi file tạo một Glossary riêng.", 13, a.MUTED, false);
         desc.setSingleLine(false);
         panel.addView(desc, a.marginLP(-1, -2, 0, 0, 0, 10));
         LinearLayout importActions = a.rowContainer();
-        importActions.addView(a.primaryButton("+ Import glossary", v -> a.chooseGlossary()), new LinearLayout.LayoutParams(0, a.dp(48), 1));
+        importActions.addView(a.primaryButton(IMPORT_LABEL, v -> a.chooseGlossary()), new LinearLayout.LayoutParams(0, -2, 1));
         importActions.addView(a.space(8, 1));
-        importActions.addView(a.secondaryButton("+ New blank", v -> { if (!a.ensureConfigMutable()) return; a.editingGlossary = GlossaryStore.create(a, "New glossary"); if (a.editingGlossary == null) a.toast(MainActivity.LIBRARY_WRITE_REFUSED); a.invalidatePage("Glossaries"); a.switchTab("Glossaries"); }), new LinearLayout.LayoutParams(0, a.dp(48), 1));
+        importActions.addView(a.secondaryButton(NEW_BLANK_LABEL, v -> { if (!a.ensureConfigMutable()) return; a.editingGlossary = GlossaryStore.create(a, "New glossary"); if (a.editingGlossary == null) a.toast(MainActivity.LIBRARY_WRITE_REFUSED); a.invalidatePage("Glossaries"); a.switchTab("Glossaries"); }), new LinearLayout.LayoutParams(0, -2, 1));
         panel.addView(importActions);
-        panel.addView(a.secondaryButton("Health check", v -> a.showGlossaryPronounHealth()), a.marginLP(-1, a.dp(44), 0, 8, 0, 0));
+        panel.addView(a.secondaryButton(HEALTH_CHECK_LABEL, v -> a.showGlossaryPronounHealth()), a.marginLP(-1, -2, 0, 8, 0, 0));
 
         GlossaryStore.Glossary activeGlossary = GlossaryStore.selected(a);
-        TextView active = a.text(activeGlossary == null ? "Active glossary: —" : "Active glossary: " + activeGlossary.name + " • " + activeGlossary.count() + " terms", 13, activeGlossary == null ? a.MUTED : a.GREEN, true);
+        TextView active = a.text(activeGlossary == null ? "Glossary đang dùng: —" : "Glossary đang dùng: " + activeGlossary.name + " • " + activeGlossary.count() + " mục", 13, activeGlossary == null ? a.MUTED : a.GREEN, true);
         active.setSingleLine(false);
         panel.addView(active, a.marginLP(-1, -2, 0, 10, 0, 12));
 
@@ -89,7 +103,7 @@ class GlossaryPageFactory {
             panel.addView(a.bulkUi.headerRow(LibraryBulkUi.TAB_GLOSSARIES, list.size()), a.marginLP(-1, -2, 0, 0, 0, 10));
         }
         if (list.isEmpty()) {
-            TextView empty = a.text("Chưa có glossary. Bấm Import glossary để tạo profile mang đúng tên file, hoặc New blank để nhập thủ công / ghép nhiều file.", 14, a.MUTED, false);
+            TextView empty = a.text("Chưa có Glossary. Bấm Nhập Glossary để tạo profile mang đúng tên file, hoặc Tạo Glossary trống để nhập thủ công / ghép nhiều file.", 14, a.MUTED, false);
             empty.setGravity(Gravity.CENTER);
             empty.setSingleLine(false);
             panel.addView(empty, new LinearLayout.LayoutParams(-1, a.dp(110)));
@@ -98,7 +112,7 @@ class GlossaryPageFactory {
             for (GlossaryStore.Glossary g : list) {
                 boolean isActive = TextUtils.equals(g.id, selectedId);
                 View card = selection.isActive()
-                        ? a.bulkUi.selectableCard(LibraryBulkUi.TAB_GLOSSARIES, g.id, (isActive ? "✓ " : "📘 ") + a.nonEmpty(g.name, "Unnamed glossary"), cardMeta(g) + (isActive ? " • ACTIVE" : ""), isActive ? a.GREEN : a.BORDER)
+                        ? a.bulkUi.selectableCard(LibraryBulkUi.TAB_GLOSSARIES, g.id, (isActive ? "✓ " : "📘 ") + a.nonEmpty(g.name, "Glossary chưa đặt tên"), cardMeta(g) + (isActive ? " • Đang dùng" : ""), isActive ? a.GREEN : a.BORDER)
                         : glossaryItemCard(g, isActive);
                 panel.addView(card, a.marginLP(-1, -2, 0, 0, 0, 10));
             }
@@ -113,10 +127,10 @@ class GlossaryPageFactory {
         box.setPadding(a.dp(12), a.dp(12), a.dp(12), a.dp(12));
 
         LinearLayout titleRow = a.rowContainer();
-        TextView title = a.text((active ? "✓ " : "📘 ") + a.nonEmpty(g.name, "Unnamed glossary"), 15, active ? a.GREEN : a.TEXT, true);
+        TextView title = a.text((active ? "✓ " : "📘 ") + a.nonEmpty(g.name, "Glossary chưa đặt tên"), 15, active ? a.GREEN : a.TEXT, true);
         title.setSingleLine(false);
         titleRow.addView(title, new LinearLayout.LayoutParams(0, -2, 1));
-        if (active) titleRow.addView(a.chip("ACTIVE", a.GREEN, true));
+        if (active) titleRow.addView(a.chip(USING_LABEL, a.GREEN, true));
         box.addView(titleRow);
 
         String meta = cardMeta(g);
@@ -125,11 +139,11 @@ class GlossaryPageFactory {
         box.addView(m, a.marginLP(-1, -2, 0, 4, 0, 10));
 
         LinearLayout buttons = a.rowContainer();
-        buttons.addView(a.tinyButton(active ? "Using" : "Use", active ? a.GREEN : a.BLUE, v -> a.selectGlossary(g)), new LinearLayout.LayoutParams(0, a.dp(42), 1));
+        buttons.addView(a.tinyButton(active ? USING_LABEL : USE_LABEL, active ? a.GREEN : a.BLUE, v -> a.selectGlossary(g)), new LinearLayout.LayoutParams(0, -2, 1));
         buttons.addView(a.space(6, 1));
-        buttons.addView(a.tinyButton("Edit", a.BLUE, v -> { if (!a.ensureConfigMutable()) return; a.editingGlossary = g; a.invalidatePage("Glossaries"); a.switchTab("Glossaries"); }), new LinearLayout.LayoutParams(0, a.dp(42), 1));
+        buttons.addView(a.tinyButton(EDIT_LABEL, a.BLUE, v -> { if (!a.ensureConfigMutable()) return; a.editingGlossary = g; a.invalidatePage("Glossaries"); a.switchTab("Glossaries"); }), new LinearLayout.LayoutParams(0, -2, 1));
         buttons.addView(a.space(6, 1));
-        buttons.addView(a.tinyButton("Del", a.RED, v -> a.bulkUi.deleteIds(LibraryBulkUi.TAB_GLOSSARIES, java.util.Collections.singletonList(g.id))), new LinearLayout.LayoutParams(0, a.dp(42), 1));
+        buttons.addView(a.tinyButton(DELETE_LABEL, a.RED, v -> a.bulkUi.deleteIds(LibraryBulkUi.TAB_GLOSSARIES, java.util.Collections.singletonList(g.id))), new LinearLayout.LayoutParams(0, -2, 1));
         box.addView(buttons);
         a.bulkUi.attachLongPress(box, LibraryBulkUi.TAB_GLOSSARIES, g.id);
         return box;
@@ -140,16 +154,16 @@ class GlossaryPageFactory {
         if (!a.ensureConfigMutable()) return;
         if (g == null) return;
         new AlertDialog.Builder(a)
-                .setTitle("Delete glossary?")
-                .setMessage("Xóa glossary: " + a.nonEmpty(g.name, "Unnamed glossary") + "\nKhông xóa file gốc trong máy.")
-                .setPositiveButton("Delete", (d, w) -> {
+                .setTitle("Xóa Glossary?")
+                .setMessage("Xóa Glossary: " + a.nonEmpty(g.name, "Glossary chưa đặt tên") + "\nKhông xóa file gốc trong máy.")
+                .setPositiveButton(DELETE_LABEL, (d, w) -> {
                     boolean selected = g.id != null && g.id.equals(GlossaryStore.getSelectedId(a));
                     if (!GlossaryStore.delete(a, g.id)) { a.toast(MainActivity.LIBRARY_WRITE_REFUSED); return; }
                     if (selected) a.clearGlossarySelection();
-                    a.toast("Đã xóa glossary: " + a.nonEmpty(g.name, "Unnamed"));
+                    a.toast("Đã xóa Glossary: " + a.nonEmpty(g.name, "Glossary chưa đặt tên"));
                     a.invalidatePage("Glossaries"); a.switchTab("Glossaries");
                 })
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton("Hủy", null)
                 .show();
     }
 
@@ -173,41 +187,41 @@ class GlossaryPageFactory {
         LinearLayout toolbar = new LinearLayout(a);
         toolbar.setOrientation(LinearLayout.VERTICAL);
         LinearLayout toolbarTop = a.rowContainer();
-        toolbarTop.addView(a.secondaryButton("← Back", v -> { a.saveEditingGlossary(); a.editingGlossary = null; a.switchTab("Glossaries"); }), new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        toolbarTop.addView(a.secondaryButton(BACK_LABEL, v -> { a.saveEditingGlossary(); a.editingGlossary = null; a.switchTab("Glossaries"); }), new LinearLayout.LayoutParams(0, -2, 1));
         toolbarTop.addView(a.space(8, 1));
-        toolbarTop.addView(a.primaryButton("Use for translation", v -> { a.saveEditingGlossary(); a.selectGlossary(a.editingGlossary); }), new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        toolbarTop.addView(a.primaryButton(USE_FOR_TRANSLATION_LABEL, v -> { a.saveEditingGlossary(); a.selectGlossary(a.editingGlossary); }), new LinearLayout.LayoutParams(0, -2, 1));
         toolbar.addView(toolbarTop);
-        toolbar.addView(a.dangerButton("Delete glossary", v -> confirmDeleteGlossary(a.editingGlossary)), a.marginLP(-1, a.dp(44), 0, 8, 0, 0));
+        toolbar.addView(a.dangerButton("Xóa Glossary", v -> confirmDeleteGlossary(a.editingGlossary)), a.marginLP(-1, -2, 0, 8, 0, 0));
         panel.addView(toolbar, a.marginLP(-1, -2, 0, 0, 0, 12));
 
-        a.glossaryNameField = a.input("Name", a.editingGlossary.name);
-        a.glossarySourceField = a.input("Source", a.editingGlossary.sourceLang);
-        a.glossaryTargetField = a.input("Target", a.editingGlossary.targetLang);
-        panel.addView(a.fieldBlock("NAME", a.glossaryNameField));
-        panel.addView(a.twoFields(a.fieldBlock("SOURCE", a.glossarySourceField), a.fieldBlock("TARGET", a.glossaryTargetField)));
+        a.glossaryNameField = a.input("Tên", a.editingGlossary.name);
+        a.glossarySourceField = a.input("Ngôn ngữ nguồn", a.editingGlossary.sourceLang);
+        a.glossaryTargetField = a.input("Ngôn ngữ đích", a.editingGlossary.targetLang);
+        panel.addView(a.fieldBlock("Tên", a.glossaryNameField));
+        panel.addView(a.twoFields(a.fieldBlock("Ngôn ngữ nguồn", a.glossarySourceField), a.fieldBlock("Ngôn ngữ đích", a.glossaryTargetField)));
 
         LinearLayout tools = new LinearLayout(a);
         tools.setOrientation(LinearLayout.VERTICAL);
-        tools.addView(a.primaryButton("Merge files", v -> a.chooseGlossaryMulti()), new LinearLayout.LayoutParams(-1, a.dp(44)));
+        tools.addView(a.primaryButton(MERGE_FILES_LABEL, v -> a.chooseGlossaryMulti()), new LinearLayout.LayoutParams(-1, -2));
         LinearLayout toolsBottom = a.rowContainer();
-        toolsBottom.addView(a.secondaryButton("Save", v -> { a.saveEditingGlossary(); a.toast("Đã lưu glossary: " + a.editingGlossary.name); a.switchTab("Glossaries"); }), new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        toolsBottom.addView(a.secondaryButton(SAVE_LABEL, v -> { a.saveEditingGlossary(); a.toast("Đã lưu Glossary: " + a.editingGlossary.name); a.switchTab("Glossaries"); }), new LinearLayout.LayoutParams(0, -2, 1));
         toolsBottom.addView(a.space(8, 1));
-        toolsBottom.addView(a.secondaryButton("Preview", v -> { a.saveEditingGlossary(); a.updateGlossaryPreview(); }), new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        toolsBottom.addView(a.secondaryButton(PREVIEW_LABEL, v -> { a.saveEditingGlossary(); a.updateGlossaryPreview(); }), new LinearLayout.LayoutParams(0, -2, 1));
         toolsBottom.addView(a.space(8, 1));
-        toolsBottom.addView(a.secondaryButton("Health", v -> { a.saveEditingGlossary(); a.showGlossaryPronounHealth(); }), new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        toolsBottom.addView(a.secondaryButton(HEALTH_CHECK_LABEL, v -> { a.saveEditingGlossary(); a.showGlossaryPronounHealth(); }), new LinearLayout.LayoutParams(0, -2, 1));
         tools.addView(toolsBottom, a.marginLP(-1, -2, 0, 8, 0, 0));
         panel.addView(tools, a.marginLP(-1, -2, 0, 0, 0, 12));
 
         LinearLayout add = a.card(14, a.FIELD, a.BORDER);
         add.setOrientation(LinearLayout.VERTICAL);
         add.setPadding(a.dp(12), a.dp(12), a.dp(12), a.dp(12));
-        add.addView(a.text("Add a term", 15, a.TEXT, true));
-        a.manualGlossarySource = a.input("Source term", "");
-        a.manualGlossaryTarget = a.input("Target term", "");
-        a.manualGlossaryCategory = a.input("Category", "character");
-        add.addView(a.twoFields(a.fieldBlock("SOURCE", a.manualGlossarySource), a.fieldBlock("TARGET", a.manualGlossaryTarget)));
-        add.addView(a.fieldBlock("CATEGORY", a.manualGlossaryCategory));
-        add.addView(a.secondaryButton("+ Add term", v -> a.addManualTerm()), new LinearLayout.LayoutParams(-1, a.dp(44)));
+        add.addView(a.text("Thêm thuật ngữ", 15, a.TEXT, true));
+        a.manualGlossarySource = a.input("Thuật ngữ nguồn", "");
+        a.manualGlossaryTarget = a.input("Thuật ngữ đích", "");
+        a.manualGlossaryCategory = a.input("Loại", "character");
+        add.addView(a.twoFields(a.fieldBlock("Thuật ngữ nguồn", a.manualGlossarySource), a.fieldBlock("Thuật ngữ đích", a.manualGlossaryTarget)));
+        add.addView(a.fieldBlock("Loại", a.manualGlossaryCategory));
+        add.addView(a.secondaryButton(ADD_TERM_LABEL, v -> a.addManualTerm()), new LinearLayout.LayoutParams(-1, -2));
         panel.addView(add, a.marginLP(-1, -2, 0, 12, 0, 12));
 
         a.glossaryPreview = a.text("", 12, a.MUTED, false);
@@ -215,7 +229,7 @@ class GlossaryPageFactory {
         LinearLayout previewCard = a.card(14, a.FIELD, a.BORDER);
         previewCard.setOrientation(LinearLayout.VERTICAL);
         previewCard.setPadding(a.dp(12), a.dp(12), a.dp(12), a.dp(12));
-        previewCard.addView(a.text("Terms preview • " + a.editingGlossary.count() + " terms", 15, a.TEXT, true));
+        previewCard.addView(a.text("Xem trước Glossary • " + a.editingGlossary.count() + " mục", 15, a.TEXT, true));
         previewCard.addView(a.glossaryPreview);
         panel.addView(previewCard);
         a.updateGlossaryPreview();

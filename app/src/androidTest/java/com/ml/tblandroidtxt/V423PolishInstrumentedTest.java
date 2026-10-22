@@ -519,6 +519,9 @@ public class V423PolishInstrumentedTest {
             scenario.onActivity(a -> {
                 a.switchTab("Translate");
                 for (int i = 0; i < 120; i++) a.appendLog("polish scroll line " + i + " – một dòng log đủ dài để cuộn thử", false);
+                View toggle = findByDescription(a.getWindow().getDecorView(), TranslatePageFactory.OPEN_TECHNICAL_DETAILS_LABEL + " — " + TranslatePageFactory.TECHNICAL_DETAILS_LABEL);
+                assertNotNull("technical details toggle is present", toggle);
+                toggle.performClick();
             });
             InstrumentationRegistry.getInstrumentation().waitForIdleSync();
             Thread.sleep(600L);

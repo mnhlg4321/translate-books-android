@@ -44,6 +44,17 @@ import java.util.Locale;
 
 
 class TranslatePageFactory {
+    static final String SOURCE_LANGUAGE_LABEL = "Ngôn ngữ nguồn";
+    static final String TARGET_LANGUAGE_LABEL = "Ngôn ngữ đích";
+    static final String PROMPT_PREVIEW_LABEL = "Xem prompt";
+    static final String MODEL_PRICING_LABEL = "Cập nhật giá model";
+    static final String TECHNICAL_DETAILS_LABEL = "Chi tiết kỹ thuật";
+    static final String OPEN_TECHNICAL_DETAILS_LABEL = "Mở chi tiết";
+    static final String CLOSE_TECHNICAL_DETAILS_LABEL = "Thu gọn chi tiết";
+    static final String ACTIVITY_LOG_LABEL = "Log hoạt động";
+    static final String CLEAR_LOG_LABEL = "Xóa log";
+    static final String EXPORT_LOG_LABEL = "Xuất log";
+
     private final MainActivity a;
 
     TranslatePageFactory(MainActivity activity) {
@@ -59,17 +70,17 @@ class TranslatePageFactory {
         // Keep the primary workflow above the fold; detailed configuration remains in Settings.
 
         LinearLayout lang = a.rowContainer();
-        lang.addView(a.fieldBlock("SOURCE LANGUAGE", a.sourceField = a.input("Japanese", "Japanese")), new LinearLayout.LayoutParams(0, -2, 1));
+        lang.addView(a.fieldBlock(SOURCE_LANGUAGE_LABEL, a.sourceField = a.input("Japanese", "Japanese")), new LinearLayout.LayoutParams(0, -2, 1));
         lang.addView(a.space(12, 1));
-        lang.addView(a.fieldBlock("TARGET LANGUAGE", a.targetField = a.input("Vietnamese", "Vietnamese")), new LinearLayout.LayoutParams(0, -2, 1));
+        lang.addView(a.fieldBlock(TARGET_LANGUAGE_LABEL, a.targetField = a.input("Vietnamese", "Vietnamese")), new LinearLayout.LayoutParams(0, -2, 1));
         a.bindEstimateInput(a.sourceField);
         a.bindEstimateInput(a.targetField);
         root.addView(lang);
         lang.setVisibility(View.GONE);
         LinearLayout profileTools = a.rowContainer();
-        profileTools.addView(a.secondaryButton("Language profile", v -> a.showLanguageProfilePicker()), new LinearLayout.LayoutParams(0, -2, 1));
+        profileTools.addView(a.secondaryButton("Chọn profile ngôn ngữ", v -> a.showLanguageProfilePicker()), new LinearLayout.LayoutParams(0, -2, 1));
         profileTools.addView(a.space(8, 1));
-        profileTools.addView(a.secondaryButton("Prompt preview", v -> a.showPromptPreview()), new LinearLayout.LayoutParams(0, -2, 1));
+        profileTools.addView(a.secondaryButton(PROMPT_PREVIEW_LABEL, v -> a.showPromptPreview()), new LinearLayout.LayoutParams(0, -2, 1));
         root.addView(profileTools, a.marginLP(-1, -2, 0, 0, 0, 12));
         profileTools.setVisibility(View.GONE);
 
@@ -79,14 +90,14 @@ class TranslatePageFactory {
         uploadCard.setPadding(a.dp(12), a.dp(10), a.dp(12), a.dp(10));
         TextView cloud = a.text("📄", 42, a.BLUE, false);
         cloud.setGravity(Gravity.CENTER);
-        TextView h = a.text("Input TXT", 21, a.TEXT, true);
+        TextView h = a.text("Tệp TXT", 21, a.TEXT, true);
         h.setGravity(Gravity.CENTER);
         TextView sub = a.text("Chọn 1 hoặc nhiều file .txt qua Android file picker", 13, a.MUTED, false);
         sub.setGravity(Gravity.CENTER);
         cloud.setVisibility(View.GONE);
         h.setVisibility(View.GONE);
         sub.setVisibility(View.GONE);
-        Button browse = a.primaryButton("Browse TXT(s)", v -> a.chooseInput());
+        Button browse = a.primaryButton("Chọn TXT", v -> a.chooseInput());
         a.inputFileLabel = a.text(a.currentInputLabel(), 13, a.MUTED, false);
         a.inputFileLabel.setGravity(Gravity.CENTER);
         uploadCard.addView(cloud);
@@ -101,7 +112,7 @@ class TranslatePageFactory {
         a.estimateText = a.text("0 chunks\nEstimated tokens unavailable\nEstimated cost unavailable", 14, a.TEXT, true);
         a.estimateText.setGravity(Gravity.CENTER);
         a.estimatePanel.addView(a.estimateText);
-        a.pricingRetryButton = a.secondaryButton("Refresh model pricing", v -> a.refreshModelCatalog());
+        a.pricingRetryButton = a.secondaryButton(MODEL_PRICING_LABEL, v -> a.refreshModelCatalog());
         a.estimatePanel.addView(a.pricingRetryButton, a.marginLP(-1, a.dp(42), 0, 8, 0, 0));
         a.pricingRetryButton.setVisibility(View.GONE);
         a.estimatePanel.setVisibility(View.VISIBLE);
@@ -135,7 +146,7 @@ class TranslatePageFactory {
         actionGrid.addView(actionTop);
         actionGrid.addView(actionBottom, a.marginLP(-1, -2, 0, 8, 0, 0));
         LinearLayout quickRow = a.rowContainer();
-        quickRow.addView(a.secondaryButton("👁 Prompt preview", v -> a.showPromptPreview()), new LinearLayout.LayoutParams(0, -2, 1));
+        quickRow.addView(a.secondaryButton(PROMPT_PREVIEW_LABEL, v -> a.showPromptPreview()), new LinearLayout.LayoutParams(0, -2, 1));
         quickRow.addView(a.space(8, 1));
         a.retryButton = a.secondaryButton("Dịch lại chunk lỗi", v -> a.retryFailedChunks());
         quickRow.addView(a.retryButton, new LinearLayout.LayoutParams(0, -2, 1));
@@ -170,11 +181,11 @@ class TranslatePageFactory {
         a.resultCard.addView(doc, new LinearLayout.LayoutParams(a.dp(48), a.dp(48)));
         LinearLayout rt = new LinearLayout(a);
         rt.setOrientation(LinearLayout.VERTICAL);
-        a.resultTitle = a.text("Translation result", 16, a.TEXT, true);
+        a.resultTitle = a.text("Kết quả bản dịch", 16, a.TEXT, true);
         a.resultMeta = a.text("Chưa có output", 12, a.MUTED, false);
         rt.addView(a.resultTitle); rt.addView(a.resultMeta);
         a.resultCard.addView(rt, new LinearLayout.LayoutParams(0, -2, 1));
-        a.resultCard.addView(a.secondaryButton("Open output", v -> a.toast("Output đã được lưu vào file anh chọn")), new LinearLayout.LayoutParams(a.dp(140), a.dp(42)));
+        a.resultCard.addView(a.secondaryButton("Mở output", v -> a.toast("Output đã được lưu vào file anh chọn")), new LinearLayout.LayoutParams(a.dp(140), a.dp(42)));
         a.resultCard.setVisibility(View.GONE);
         root.addView(a.resultCard, a.marginLP(-1, -2, 0, 8, 0, 16));
 
@@ -294,9 +305,6 @@ class TranslatePageFactory {
         steps.addView(stepBox("3", "Locks", setMode ? a.sourceUi.locksSummary() : g == null ? "optional" : g.count() + " terms", setMode ? a.GREEN : g == null ? a.MUTED : a.GREEN), new LinearLayout.LayoutParams(0, -2, 1));
         card.addView(steps, a.marginLP(-1, -2, 0, 10, 0, 10));
 
-        TextView hint = a.text("Gợi ý: chọn TXT + output trước, kiểm Prompt preview nếu có glossary/pronoun, rồi Start. UI 2.9 giữ navigation cũ để tránh mất state dịch.", 12, a.MUTED, false);
-        hint.setSingleLine(false);
-        card.addView(hint);
         return card;
     }
 
@@ -443,17 +451,25 @@ class TranslatePageFactory {
     }
 
     View activityLogCard() {
-        LinearLayout logCard = a.sectionCard("▣", "Activity Log");
+        LinearLayout logCard = a.sectionCard("▣", TECHNICAL_DETAILS_LABEL);
+        Button toggle = a.secondaryButton(OPEN_TECHNICAL_DETAILS_LABEL, null);
+        toggle.setContentDescription(OPEN_TECHNICAL_DETAILS_LABEL + " — " + TECHNICAL_DETAILS_LABEL);
+        logCard.addView(toggle, new LinearLayout.LayoutParams(-1, -2));
+
+        LinearLayout details = new LinearLayout(a);
+        details.setOrientation(LinearLayout.VERTICAL);
+        details.setVisibility(View.GONE);
+        details.addView(a.text(ACTIVITY_LOG_LABEL, 15, a.TEXT, true), a.marginLP(-1, -2, 0, 0, 0, 8));
         LinearLayout actions = a.rowContainer();
-        Button clear = a.secondaryButton("Clear Log", v -> {
+        Button clear = a.secondaryButton(CLEAR_LOG_LABEL, v -> {
             LogStore.clear(a);
             if (a.logView != null) a.logView.setText("");
             a.toast("Đã xóa log");
         });
         actions.addView(clear, new LinearLayout.LayoutParams(0, -2, 1));
         actions.addView(a.space(8, 1));
-        actions.addView(a.secondaryButton("Export Log", v -> a.exportLog()), new LinearLayout.LayoutParams(0, -2, 1));
-        logCard.addView(actions, a.marginLP(-1, -2, 0, 0, 0, 8));
+        actions.addView(a.secondaryButton(EXPORT_LOG_LABEL, v -> a.exportLog()), new LinearLayout.LayoutParams(0, -2, 1));
+        details.addView(actions, a.marginLP(-1, -2, 0, 0, 0, 8));
 
         a.logView = a.text(a.tail(LogStore.read(a), 12000), 12, a.TEXT, false);
         a.logView.setTypeface(Typeface.MONOSPACE);
@@ -475,7 +491,15 @@ class TranslatePageFactory {
         TextView hint = a.text("Kéo trong khung này để xem log cũ/mới. Thanh cuộn luôn hiện ở mép phải.", 11, a.MUTED, false);
         inner.addView(hint, a.marginLP(-1, -2, 0, 0, 0, 6));
         inner.addView(a.logScroll, new LinearLayout.LayoutParams(-1, a.dp(210)));
-        logCard.addView(inner, new LinearLayout.LayoutParams(-1, -2));
+        details.addView(inner, new LinearLayout.LayoutParams(-1, -2));
+        logCard.addView(details, a.marginLP(-1, -2, 0, 8, 0, 0));
+        toggle.setOnClickListener(v -> {
+            boolean open = details.getVisibility() != View.VISIBLE;
+            details.setVisibility(open ? View.VISIBLE : View.GONE);
+            toggle.setText(open ? CLOSE_TECHNICAL_DETAILS_LABEL : OPEN_TECHNICAL_DETAILS_LABEL);
+            toggle.setContentDescription((open ? "Thu gọn " : "Mở ") + TECHNICAL_DETAILS_LABEL);
+            if (open) a.logScroll.post(() -> a.logScroll.fullScroll(View.FOCUS_DOWN));
+        });
         a.logScroll.post(() -> a.logScroll.fullScroll(View.FOCUS_DOWN));
         return logCard;
     }

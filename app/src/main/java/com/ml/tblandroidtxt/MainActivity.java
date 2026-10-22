@@ -1870,7 +1870,7 @@ public class MainActivity extends Activity {
         String summary = "Đã thêm " + plan.addGlossaries.size() + " glossary, " + plan.addPronouns.size() + " pronoun" + (plan.addRaws.isEmpty() ? "" : ", " + plan.addRaws.size() + " RAW");
         toast(summary);
         appendLog("Library import: added glossaries=" + plan.addGlossaries.size() + ", pronouns=" + plan.addPronouns.size() + ", existing=" + plan.existing + ", duplicate=" + plan.duplicate + ", bad=" + plan.bad.size());
-        showResult("Đã nhập thư viện", summary + ". Bấm Use trong Glossaries/Pronouns để dùng cho bản dịch.");
+        showResult("Đã nhập thư viện", summary + ". Bấm Dùng trong Glossaries/Pronouns để dùng cho bản dịch.");
         invalidatePage("Glossaries"); invalidatePage("Pronouns"); invalidatePage("RAW");
     }
 
@@ -2302,7 +2302,7 @@ public class MainActivity extends Activity {
 
     void selectPronoun(PronounStore.Profile profile, boolean preserveListScroll){
         boolean preserveScroll=preserveListScroll&&editingPronoun==null&&"Pronouns".equals(currentTab);
-        if(!ensureConfigMutable()||profile==null)return;if(!PronounStore.saveAndSelect(this,profile)){toast("Could not save pronoun");return;}applyActivePronoun(profile);toast("Active pronoun: "+profile.name);
+        if(!ensureConfigMutable()||profile==null)return;if(!PronounStore.saveAndSelect(this,profile)){toast("Không lưu được Pronoun");return;}applyActivePronoun(profile);toast("Pronoun đang dùng: "+profile.name);
         if(preserveScroll)refreshPagePreservingScroll("Pronouns");else refreshPronounsPage();
     }
 
@@ -3084,10 +3084,10 @@ public class MainActivity extends Activity {
                 "Chinese → Vietnamese Web Novel",
                 "Korean → Vietnamese",
                 "Vietnamese → English",
-                "Custom"
+                "Tùy chỉnh"
         };
         new AlertDialog.Builder(this)
-                .setTitle("Language profile")
+                .setTitle("Chọn profile ngôn ngữ")
                 .setItems(labels, (dialog, which) -> {
                     String label = labels[which];
                     if (sourceField != null && targetField != null) {
@@ -3151,7 +3151,7 @@ public class MainActivity extends Activity {
         box.setOrientation(LinearLayout.VERTICAL);
         int pad = dp(14);
         box.setPadding(pad, dp(4), pad, 0);
-        EditText search = input("Search model name or exact ID", "");
+        EditText search = input("Tìm tên model hoặc ID chính xác", "");
         search.setSingleLine(true);
         box.addView(search, new LinearLayout.LayoutParams(-1, dp(50)));
         TextView catalogStatus = text(modelCatalogStatusLine(), 11, MUTED, false);
@@ -3162,9 +3162,9 @@ public class MainActivity extends Activity {
         list.setAdapter(adapter);
         box.addView(list, new LinearLayout.LayoutParams(-1, dp(520)));
         final AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle(fromOpenRouter ? "Select OpenRouter model" : "Select model")
-                .setView(box).setPositiveButton("Refresh pricing", null)
-                .setNeutralButton("Custom model", null).setNegativeButton("Close", null).create();
+                .setTitle(fromOpenRouter ? "Chọn model OpenRouter" : "Chọn model")
+                .setView(box).setPositiveButton("Cập nhật giá model", null)
+                .setNeutralButton("Model tùy chỉnh", null).setNegativeButton("Đóng", null).create();
 
         Runnable refreshRows = () -> filterModelRows(all, shown, adapter, search.getText().toString(), selected);
         search.addTextChangedListener(new TextWatcher() {
@@ -3181,7 +3181,7 @@ public class MainActivity extends Activity {
             if (position < 0 || position >= shown.size()) return false;
             ModelCatalog.ModelInfo model = shown.get(position);
             boolean favorite = ModelPreferences.toggleFavorite(this, model.id);
-            toast(favorite ? "Added to favorites" : "Removed from favorites");
+            toast(favorite ? "Đã thêm vào mục yêu thích" : "Đã bỏ khỏi mục yêu thích");
             sortModels(all); refreshRows.run(); return true;
         });
         dialog.setOnShowListener(ignored -> {
@@ -3240,23 +3240,23 @@ public class MainActivity extends Activity {
     }
 
     void promptCustomModel() {
-        final EditText e = input("Nhập model id", modelField == null ? "" : modelField.getText().toString());
+        final EditText e = input("Nhập ID model", modelField == null ? "" : modelField.getText().toString());
         e.setSingleLine(true);
         int pad = dp(20);
         FrameLayout box = new FrameLayout(this);
         box.setPadding(pad, pad / 2, pad, 0);
         box.addView(e, new FrameLayout.LayoutParams(-1, dp(52)));
         new AlertDialog.Builder(this)
-                .setTitle("Custom model")
+                .setTitle("Model tùy chỉnh")
                 .setView(box)
-                .setPositiveButton("Save", (d, w) -> {
+                .setPositiveButton("Lưu", (d, w) -> {
                     String v = e.getText().toString().trim();
                     if (!v.isEmpty() && modelField != null) {
                         selectModel(v);
-                        toast("Đã lưu custom model");
+                        toast("Đã lưu model tùy chỉnh");
                     }
                 })
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton("Hủy", null)
                 .show();
     }
 
@@ -3265,7 +3265,7 @@ public class MainActivity extends Activity {
         String src = manualGlossarySource == null ? "" : manualGlossarySource.getText().toString().trim();
         String tgt = manualGlossaryTarget == null ? "" : manualGlossaryTarget.getText().toString().trim();
         String cat = manualGlossaryCategory == null ? "" : manualGlossaryCategory.getText().toString().trim();
-        if (src.isEmpty() || tgt.isEmpty()) { toast("Cần nhập Source và Target"); return; }
+        if (src.isEmpty() || tgt.isEmpty()) { toast("Cần nhập thuật ngữ nguồn và thuật ngữ đích"); return; }
         if (editingGlossary == null) editingGlossary = GlossaryStore.create(this, "New glossary");
         if (editingGlossary == null) { toast(LIBRARY_WRITE_REFUSED); return; }
         editingGlossary.terms.add(new GlossaryStore.Term(src, tgt, cat.isEmpty() ? "term" : cat));
@@ -3331,10 +3331,10 @@ public class MainActivity extends Activity {
             String validation = PromptContextBuilder.validateText(GlossaryStore.toPromptText(editingGlossary), currentPronounText());
             GlossaryStore.Glossary importedGlossary = editingGlossary;
             selectGlossary(importedGlossary);
-            toast("Đã import " + totalTerms + " terms từ: " + imported);
+            toast("Đã nhập " + totalTerms + " thuật ngữ từ: " + imported);
             String skipped = failedNames.isEmpty() ? "" : "\nBỏ qua " + failedNames.size() + " file: " + namesSummary(failedNames);
             appendLog("Glossary import: " + successfulNames.size() + " file(s), " + totalTerms + " term(s): " + imported + (failedNames.isEmpty() ? "" : " • skipped=" + failedNames.size()) + " • " + oneLine(validation));
-            showResult("Glossary import validated", totalTerms + " term(s) từ " + imported + skipped + "\n" + validation);
+            showResult("Đã kiểm tra Glossary nhập vào", totalTerms + " thuật ngữ từ " + imported + skipped + "\n" + validation);
         } catch (Exception e) {
             toast("Lỗi import glossary");
             appendLog("Lỗi import glossary: " + e.getMessage());
@@ -3358,7 +3358,7 @@ public class MainActivity extends Activity {
         lastGlossaryName = g.name;
         lastGlossaryText = s.glossaryText;
         if (activeGlossaryLabel != null) activeGlossaryLabel.setText(activeGlossaryText());
-        toast("Đã chọn glossary: " + g.name);
+        toast("Đã chọn Glossary: " + g.name);
         editingGlossary = null;
         if (preserveScroll) refreshPagePreservingScroll("Glossaries");
         else switchTab("Glossaries");
@@ -3420,14 +3420,14 @@ public class MainActivity extends Activity {
         sb.append("- File Pronoun riêng ưu tiên hơn ghi chú xưng hô trong glossary.\n");
         sb.append("- Ghi chú xưng hô trong glossary vẫn được giữ làm name/character lock nếu có file Pronoun riêng.\n");
         sb.append("- Prompt chỉ inject rule match với chunk, không nhét toàn bộ glossary/pronoun.\n");
-        showLongText("Glossary / Pronoun health", sb.toString());
+        showLongText("Kiểm tra Glossary / Pronoun", sb.toString());
         appendLog("Glossary/pronoun health checked • " + oneLine(r.summaryText()));
     }
 
     String activeGlossaryText() {
         GlossaryStore.Glossary g = GlossaryStore.selected(this);
-        if (g == null) return "Active glossary: —";
-        return "Active glossary: " + g.name + " • " + g.count() + " terms";
+        if (g == null) return "Glossary đang dùng: —";
+        return "Glossary đang dùng: " + g.name + " • " + g.count() + " mục";
     }
 
     AppSettings settingsForTranslationDisplay() {
@@ -3552,7 +3552,7 @@ public class MainActivity extends Activity {
 
     void showPromptPreview() {
         if (sourceUi.isSetMode()) { sourceUi.previewChapter(); return; }
-        if (inputUris.isEmpty()) { toast("Chưa chọn TXT để preview prompt"); return; }
+        if (inputUris.isEmpty()) { toast("Chưa chọn TXT để xem prompt"); return; }
         PromptPreviewDialog.showForInput(
                 this,
                 inputUris.get(0),
@@ -3745,7 +3745,7 @@ public class MainActivity extends Activity {
     void updateMetaLine() {
         AppSettings s = collectSettings();
         cachedProviderMeta = providerMeta(s);
-        if (translateMeta != null) translateMeta.setText(nonEmpty(s.provider, "Provider") + " · " + nonEmpty(s.model, "Model chưa chọn") + " · " + nonEmpty(s.sourceLanguage, "Source") + " → " + nonEmpty(s.targetLanguage, "Target"));
+        if (translateMeta != null) translateMeta.setText(nonEmpty(s.provider, "provider") + " · " + nonEmpty(s.model, "model chưa chọn") + " · " + nonEmpty(s.sourceLanguage, "Ngôn ngữ nguồn") + " → " + nonEmpty(s.targetLanguage, "Ngôn ngữ đích"));
         refreshTranslationConfigViews();
         if (modelPriceLabel != null) {
             ModelCatalog.ModelInfo mi = ModelCatalog.findModelInfo(s.provider, s.model);
@@ -3756,14 +3756,14 @@ public class MainActivity extends Activity {
 
     String modelCatalogStatusLine() {
         ModelCatalog.CatalogState state = ModelCatalog.state();
-        if (state.loadingState == ModelCatalog.LoadingState.LOADING) return "Loading model pricing…";
-        if (state.loadingState == ModelCatalog.LoadingState.ERROR) return "Pricing refresh failed; cached catalog retained";
-        if (state.models.isEmpty()) return "Offline fallback catalog";
-        return state.models.size() + " models • " + (state.fromCache ? (state.cacheExpired(System.currentTimeMillis()) ? "stale cached catalog" : "cached catalog") : "live catalog");
+        if (state.loadingState == ModelCatalog.LoadingState.LOADING) return "Đang tải giá model…";
+        if (state.loadingState == ModelCatalog.LoadingState.ERROR) return "Cập nhật giá thất bại; giữ cached catalog";
+        if (state.models.isEmpty()) return "Catalog offline";
+        return state.models.size() + " model • " + (state.fromCache ? (state.cacheExpired(System.currentTimeMillis()) ? "cached catalog cũ" : "cached catalog") : "catalog live");
     }
 
     void refreshModelCatalog() {
-        toast("Refreshing model catalog…");
+        toast("Đang cập nhật giá model…");
         ModelCatalog.refreshAsync(this);
         updateInputEstimate();
     }
