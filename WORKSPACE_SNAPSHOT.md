@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-22 22:02 (+07:00). Product decision served: section 10 R3a/R2 uses Vietnamese action labels while retaining technical English terms; the owner accepted the real-phone UI check on `15e84958`. TalkBack was allowed briefly for D6 and restored.
+- Updated: 2026-10-22 (+07:00). Coordinator analysed prompt v14 on 1,254 real phone chunks (draft v15 kept outside Git next to v14) and added `docs/V423_TRANSLATION_RUNTIME_FIX_WORK_REQUEST.md` (F1 output cap ignores reasoning, F2 untranslated Japanese lines accepted, F3 prompt cache ~5%, F4 API key in SQLite settings snapshots; critic-reviewed).
 - Current version: v4.23.0 in development; verified candidate **4.23-dev.22/code300**. Shipped release remains v4.21.0/code271.
 - Current branch: `feature/v4.23`, `D:/P5E-builds/wt-v4.23`; protected v4.18 checkout and owner media remain untouched. No merge, tag, push, or provider call.
 - Current commit: **488cb3756b82787d1f33b333db851927855af68b** is the implementation/state baseline immediately before this snapshot update commit; it contains the R3a/R2 implementation and dev22 preflight state. Confirm actual HEAD on resume.
@@ -13,4 +13,4 @@
 - Installed build provenance: device backup `D:/App Translate Books/App Translate Books-device-backups/v4.23-dev.22-code300/20261022-213700/`; pre-install dev20 base APK SHA `46C608AC8E90DBCE25409AB9EA5F21CF57B7C5A5025810E50C0354210BFA6991`; private-data tar SHA `60A403F37B3E71DB52CE4BD9DEC3C85367B36D651A56E9A4D14EC08D0E96BA1`, listing count 1,380.
 - Evidence: `artifacts/qa/v4.23-nav-20261022/QA_REPORT.md` and `SCREENSHOT_MANIFEST.csv`; nine local PNGs have valid `89 50 4E 47` headers and distinct SHA-256 values. PNGs are locally excluded and not committed.
 - Spend: translation/editorial provider 0 calls / USD 0; no owner data was deleted; only `QA_V423_Glossary` was created and deleted.
-- Next action: owner reviews `artifacts/qa/v4.23-nav-20261022/QA_REPORT.md`; do not rebuild or reinstall this candidate without a new request and the required pre-install approval flow.
+- Next action: implement `docs/V423_TRANSLATION_RUNTIME_FIX_WORK_REQUEST.md` (F4, F1, F2, F3), build 4.23-dev.23, back up the phone and wait for owner install approval; the live check in its section 6 needs a separate owner spend approval.

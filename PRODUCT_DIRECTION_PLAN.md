@@ -135,3 +135,13 @@ Không có ca sai/sót theo phân xử mới cần truy vết thêm. Điều đ�
   - owner chốt 2026-10-22: thuật ngữ chuyên môn (chunk, prompt, token, model, provider, log, Glossary, Pronoun, RAW/DRAFT/FINAL) giữ tiếng Anh, nhãn thao tác Việt hóa; cho phép bật TalkBack ngắn trên điện thoại cho D6;
   - gói tiếp theo: `docs/V423_REFINED_UI_DESIGN.md` mục 10 (R3a + R2 + dev.22 trên điện thoại).
 - **Next action:** thực hiện `docs/V423_REFINED_UI_DESIGN.md` mục 10: R3a + R2, build dev.22, sao lưu và chờ owner duyệt cài, rồi thử D1–D6 trên điện thoại 15e84958.
+
+- **2026-10-22, phân tích prompt v14 trên 1.254 chunk thật:**
+  - prompt dịch ổn;
+  - 4 lỗi phía app có nguyên nhân chứng minh:
+    - F1: giới hạn output không chừa chỗ cho reasoning, nên chunk ngắn bị cắt;
+    - F2: chunk còn dòng tiếng Nhật vẫn được chấp nhận;
+    - F3: cache prompt chỉ trúng ~5%;
+    - F4: API key nằm trong snapshot SQLite;
+  - gói việc: `docs/V423_TRANSLATION_RUNTIME_FIX_WORK_REQUEST.md`;
+  - bản nháp prompt v15 nằm ngoài Git, chưa dùng trên app.
