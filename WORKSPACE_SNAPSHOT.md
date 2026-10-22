@@ -1,9 +1,9 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-22 (+07:00). Product decision: understand translation progress without decoding abbreviations, and give accepted preview useful reading space.
+- Updated: 2026-10-22 (+07:00). Coordinator review of the dev.21 acceptance: fixed narrow-screen language-pair truncation and label/progress overlap at large font (not built yet); next package is design doc section 10 (R3a + R2 + dev.22 on the phone).
 - Current version: v4.23.0 in development, not released; candidate **4.23-dev.21/code299**. Phone last verified **4.23-dev.20/code298**. Shipped release remains4.21.0/code271.
 - Current branch: feature/v4.23, D:/P5E-builds/wt-v4.23. Protected v4.18 checkout and owner edits untouched; prior untracked dev.14 media preserved.
-- Current commit: **deb5846a0f4891320328be2a217ca6168f1b1125**, implementation/QA baseline immediately before this documentation snapshot commit, not a self-reference. Confirm actual HEAD on resume. Main/engine/scripts identical to APK source4849de19.
+- Current commit: **8df8aed2946887368e1abbe4fd3ff25005a98a5b** is the baseline immediately before the coordinator fix and docs commits; the dev.21 APK source remains 4849de19. Confirm actual HEAD on resume.
 - Current build: dev.21, eventbuild-20261021-223903, source4849de1968b6287e99f407837761d13028ad6cc9; APK SHA2421F66B216492F234D8348EDEFFCAB5587CA79EC77E28F93BB410ED10877806; source ZIP BCB49F630EB73E1CE5FE9E686BC05D012323A0C1F1EFD759D1E55495253428FC. Both immutable artifact/backup payloads/manifests/Git archive equality verified. Test eventv423-readability-dev21-test4-20261022, sourcedeb5846a, SHA A9022F28423C6E7FB140A2739DF8634413F71E87F2547A76444C1FB8E43E23A0; test-only changes, no production rebuild.
 - Current phase: scoped UI repair and isolated-emulator verification complete; owner visual acceptance pending. No new phone install/provider authority.
 - Completed tasks: verify baseline54ef672d/dev.20 retained phone APK match; named token/errors/Glossaries/Pronoun and explicit second units; remove unmeasured fallback display; textual status with Jobs shortcut; flat wrap-capable metrics; compact preview header and adaptive short/long scrolling viewport. Retained cross-chapter source identity, late restore and lifecycle fixes. Claude UI/UX skill + Luna readonly review checked by coordinator; broader audit/priorities in existing docs.
@@ -14,4 +14,4 @@
 - Evidence: artifacts/qa/v4.23-readability-20261022/QA_REPORT.md plus JSON; raw logs/screenshots-clean D:/P5E-builds/v423-readability-qa-20261021/ and backup/qa/v4.23-readability-20261022/. Dedicated AVD5580 only, size/font restored; pilot5554 untouched.
 - Semantic progress: three historical owner-accepted FINAL006/008/011 unchanged; P7 current chunk scope historical PASS unchanged. Provider event STRUCTURAL_VALID/SEMANTIC_EVAL NOT_MEASURED, no new FINAL. Real output reopen/export of screenshot event NOT_MEASURED.
 - Spend: translation/editorial provider0calls/USD0; no phone/pilot operation, push, merge or tag.
-- Next action: owner nghiệm thu giao diện dev.21 từ ảnh và APK đã lưu; cài điện thoại chỉ sau duyệt riêng theo AGENTS.
+- Next action: implement `docs/V423_REFINED_UI_DESIGN.md` section 10 (R3a + R2), build 4.23-dev.22, back up the phone and wait for owner install approval, then run D1-D6 on phone 15e84958.

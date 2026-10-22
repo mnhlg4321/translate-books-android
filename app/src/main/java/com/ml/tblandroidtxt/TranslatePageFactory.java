@@ -417,16 +417,27 @@ class TranslatePageFactory {
     }
 
     /** [label] [bar] and a text line under the bar. */
+    /** Width of the "Tập"/"Chương" label column: 60 sp (follows the system font scale) times the app font scale. */
+    static int labelColumnWidth(android.util.DisplayMetrics metrics, float appFontScale) {
+        float sp = android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_SP, 60f, metrics);
+        return Math.round(sp * Math.max(1f, appFontScale));
+    }
+
     private LinearLayout barRow(String label, ProgressBar bar, TextView line) {
         LinearLayout row = new LinearLayout(a);
         row.setOrientation(LinearLayout.VERTICAL);
         LinearLayout top = a.rowContainer();
         TextView l = a.text(label, 14, a.MUTED, true);
-        l.setMinWidth(Math.round(a.dp(52) * Math.max(1f, a.fontScale)));
+        // The label text grows with both the app scale and the system font scale (sp), so its column must too.
+        int labelWidth = labelColumnWidth(a.getResources().getDisplayMetrics(), a.fontScale);
+        l.setMinWidth(labelWidth);
+        l.setPadding(0, 0, a.dp(8), 0);
         top.addView(l, new LinearLayout.LayoutParams(-2, -2));
         top.addView(bar, new LinearLayout.LayoutParams(0, a.dp(10), 1));
         row.addView(top);
-        row.addView(line, a.marginLP(-1, -2, Math.round(52 * Math.max(1f, a.fontScale)), 2, 0, 0));
+        LinearLayout.LayoutParams lineParams = new LinearLayout.LayoutParams(-1, -2);
+        lineParams.setMargins(labelWidth, a.dp(2), 0, 0);
+        row.addView(line, lineParams);
         line.setSingleLine(false);
         return row;
     }

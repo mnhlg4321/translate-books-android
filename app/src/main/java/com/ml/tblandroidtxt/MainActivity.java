@@ -805,7 +805,8 @@ public class MainActivity extends Activity {
         topTitle.setSingleLine(true);
         topTitle.setEllipsize(TextUtils.TruncateAt.END);
         topSubtitle = text(compactProviderMeta(), 12, MUTED, false);
-        topSubtitle.setSingleLine(true);
+        topSubtitle.setSingleLine(false);
+        topSubtitle.setMaxLines(2);
         topSubtitle.setEllipsize(TextUtils.TruncateAt.END);
         titleBox.addView(topTitle, new LinearLayout.LayoutParams(-1, -2));
         titleBox.addView(topSubtitle, new LinearLayout.LayoutParams(-1, -2));
@@ -1187,7 +1188,12 @@ public class MainActivity extends Activity {
         String provider = s == null || s.provider == null || s.provider.isEmpty() ? "provider" : s.provider;
         String source = s == null || s.sourceLanguage == null || s.sourceLanguage.isEmpty() ? "JA" : s.sourceLanguage;
         String target = s == null || s.targetLanguage == null || s.targetLanguage.isEmpty() ? "VI" : s.targetLanguage;
-        return provider + " • " + source + " → " + target;
+        return providerMetaLine(provider, source, target);
+    }
+
+    /** The language pair comes first: on narrow screens the provider may wrap or be cut, never the target language. */
+    static String providerMetaLine(String provider, String source, String target) {
+        return source + " → " + target + " • " + provider;
     }
 
     View buildTranslatePage() { return new TranslatePageFactory(this).buildTranslatePage(); }
