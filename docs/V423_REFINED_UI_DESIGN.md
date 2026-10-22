@@ -238,22 +238,28 @@ Không mở rộng sang Biên tập trong nhóm này. Không chuyển sang trả
 | Nhãn "Chương" chạm thanh tiến độ ở 320 dp, app 130% + hệ thống 130% | `TranslatePageFactory.barRow` đặt bề rộng nhãn là `dp(52) × cỡ chữ app`. Còn chữ thì là `sp × cỡ chữ app`, tức nhân thêm cỡ chữ hệ thống | Bề rộng nhãn = `60 sp × cỡ chữ app` + 8 dp đệm; dòng dưới thụt đúng bằng cột nhãn | Toàn app 674 test: 669 PASS, 5 SKIP. Ảnh: NOT_MEASURED |
 | Cặp ảnh `run-panel-*`/`preview-area-*` trùng SHA | Owner xem `screenshots-final/`, là bộ chụp lỗi trước khi chờ compositor. Bộ bàn giao là `screenshots-clean/` | Ghi rõ trong `QA_REPORT.md` thư mục nào là bằng chứng | 10 ảnh `screenshots-clean` có SHA khác nhau, PNG hợp lệ |
 
-### 10.2 Thuật ngữ (khuyến nghị của điều phối; owner có thể đổi)
+### 10.2 Thuật ngữ (owner chốt 2026-10-22)
 
-- **Giữ "chunk"** (chữ thường trong câu tiếng Việt) cho phần dịch. Lý do:
-  - owner dùng từ này hằng ngày;
-  - "đoạn" đã là thuật ngữ của Biên tập (`EditorialJobPresentation:15`, `EditorialPairPageFactory:130`) và chỉ một khái niệm khác. Dùng chung chữ sẽ gây nhầm.
-- **Giữ tên riêng:** Glossary/Glossaries, Pronoun, prompt, token, tên provider, tên ngôn ngữ.
-- **Việt hóa nhãn thao tác:**
+**Quy tắc:** động từ và chữ thường ngày dùng tiếng Việt. **Thuật ngữ chuyên môn giữ nguyên tiếng Anh**, không ép Việt hóa. Viết thường trong câu, trừ tên riêng và viết tắt.
+
+- **Giữ tiếng Anh:**
+  - chunk, prompt, token, model, provider, API key, Base URL, endpoint;
+  - log, cache, cached;
+  - Glossary/Glossaries, Pronoun, RAW, DRAFT, FINAL;
+  - tên provider và tên ngôn ngữ.
+  - Riêng "chunk": "đoạn" đã là thuật ngữ của Biên tập (`EditorialJobPresentation:15`, `EditorialPairPageFactory:130`) cho một khái niệm khác, nên phía dịch không dùng "đoạn".
+- **Việt hóa:** nhãn thao tác và chữ thường ngày. Không viết hoa toàn bộ.
 
 | Hiện tại | Đổi thành |
 |---|---|
 | SOURCE LANGUAGE / TARGET LANGUAGE | Ngôn ngữ nguồn / Ngôn ngữ đích |
-| Prompt preview | Xem trước prompt |
+| Prompt preview | Xem prompt |
 | Refresh model pricing | Cập nhật giá model |
-| Activity Log, Clear Log, Export Log | Nhật ký, Xóa nhật ký, Xuất nhật ký |
+| Activity Log / Clear Log / Export Log | Log hoạt động / Xóa log / Xuất log |
 | Using / Use / Edit / Del | Đang dùng / Dùng / Sửa / Xóa |
 | Close (hộp thoại phía dịch) | Đóng |
+
+Nhãn nào không có trong bảng thì áp dụng quy tắc trên. Gặp trường hợp không rõ thì giữ tiếng Anh và ghi vào báo cáo để owner quyết.
 
 ### 10.3 Việc làm
 
@@ -275,7 +281,7 @@ Không mở rộng sang Biên tập trong nhóm này. Không chuyển sang trả
 
 **Test host:**
 - test formatter và nhãn mới;
-- `rg` các chuỗi cũ trong bảng 10.2 trên các factory thuộc gói trả 0 dòng (trừ tên riêng);
+- `rg` các chuỗi cũ trong bảng 10.2 trên các factory thuộc gói trả 0 dòng (thuật ngữ giữ tiếng Anh theo quy tắc 10.2 không tính);
 - test cũ có assert chuỗi thì sửa trong cùng commit.
 
 **Điện thoại 15e84958**, theo đúng mục 3 của `docs/V423_WORKSPACE_NAV_WORK_REQUEST.md`:
@@ -291,7 +297,7 @@ Không mở rộng sang Biên tập trong nhóm này. Không chuyển sang trả
 | D3 | Màn Dịch phần cấu hình, Glossary, Pronoun | không còn nhãn nào trong bảng 10.2; mọi nút cao ≥ 48 dp × mật độ (đo bằng `uiautomator dump`) |
 | D4 | Nhật ký | mặc định thu gọn; mở ra vẫn đủ log; Xóa/Xuất hoạt động |
 | D5 | Glossary `QA_`: Dùng → Sửa → Lưu → Xóa (có xác nhận) | trạng thái "Đang dùng" đúng; không mất Glossary nào của owner |
-| D6 | TalkBack đọc thanh trên, ngăn ☰, màn Dịch | **chỉ khi owner cho phép bật TalkBack** trong terminal, và tắt lại ngay sau đó; nếu không thì ghi NOT_MEASURED |
+| D6 | TalkBack đọc thanh trên, ngăn ☰, màn Dịch | owner đã cho phép (2026-10-22): ghi trạng thái trợ năng hiện tại, bật TalkBack vài phút, tắt lại và khôi phục đúng trạng thái cũ ngay sau đó; mỗi phần tử đọc đúng tên và vai trò |
 
 **Điểm dừng:**
 1. hồi quy archive sạch;

@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-22 (+07:00). Coordinator review of the dev.21 acceptance: fixed narrow-screen language-pair truncation and label/progress overlap at large font (not built yet); next package is design doc section 10 (R3a + R2 + dev.22 on the phone).
+- Updated: 2026-10-22 (+07:00). Owner decisions: keep specialized terms in English (chunk, prompt, token, model, provider, log, Glossary, Pronoun, RAW/DRAFT/FINAL), Vietnamese for actions and everyday words; TalkBack may be enabled briefly on the phone for D6 and must be restored. Design doc section 10 updated; next package unchanged (R3a + R2 + dev.22 on the phone).
 - Current version: v4.23.0 in development, not released; candidate **4.23-dev.21/code299**. Phone last verified **4.23-dev.20/code298**. Shipped release remains4.21.0/code271.
 - Current branch: feature/v4.23, D:/P5E-builds/wt-v4.23. Protected v4.18 checkout and owner edits untouched; prior untracked dev.14 media preserved.
 - Current commit: **8df8aed2946887368e1abbe4fd3ff25005a98a5b** is the baseline immediately before the coordinator fix and docs commits; the dev.21 APK source remains 4849de19. Confirm actual HEAD on resume.
