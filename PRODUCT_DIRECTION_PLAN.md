@@ -123,4 +123,15 @@ Không có ca sai/sót theo phân xử mới cần truy vết thêm. Điều đ�
 - Candidate **dev.21/code299**, production4849de19, eventbuild-20261021-223903; APK SHA2421F66B…877806, source ZIP BCB49F63…53428FC. Hai mirror/manifest/source ZIP đúng Git archive PASS. App668PASS/5SKIP mỗi biến thể, lint0Error/58Warning; core device19/19 và matrix đọc2ca×5cấu hình10/10 PASS trên AVD riêng5580. Không cộng lần lặp thành test độc lập. Compile/capture/invocation failures và bản sửa giữ trong report.
 - Bảng claim/evidence/nguyên nhân/giới hạn: artifacts/qa/v4.23-readability-20261022/QA_REPORT.md. Thiết kế đã triển khai và audit các màn còn lại ở docs/V423_REFINED_UI_DESIGN.md mục9; R0a–R5 toàn app chưa hoàn tất. Wrapper test phải gọi từ đúng root; artifact test3 sai provenance bị loại, test4 từ archive sạch được dùng.
 - Giới hạn: phone UI mới, TalkBack, A2 đang chạy/A4 thật và SEMANTIC_EVAL event owner NOT_MEASURED; exact prompt/schema/model/response/finish reason/token/cost/ledger event UNKNOWN. Preview vẫn giới hạn phần đuôi1200ký tự. Ba FINAL006/008/011 owner accepted và P7 current chunk scope giữ nguyên lịch sử, không gắn nhãn lại. Provider0/USD0; không push/merge/tag.
-- **Next action:** owner nghiệm thu giao diện dev.21 từ ảnh và APK đã lưu; cài điện thoại chỉ sau duyệt riêng theo AGENTS.
+- **Nghiệm thu dev.21** (2026-10-22, owner/phiên review): màn theo dõi dịch PASS có điều kiện, chỉ trong phạm vi offline/UI. Còn mở:
+  - cặp ngôn ngữ bị cắt ở màn hẹp;
+  - nhãn tiếng Anh còn trộn;
+  - R0a–R5 chưa xong;
+  - TalkBack và kiểm trên điện thoại: NOT_MEASURED.
+- **Điều phối kiểm lại:**
+  - ảnh trùng SHA là bộ `screenshots-final` cũ; bộ bàn giao `screenshots-clean` hợp lệ;
+  - đã tự sửa hai lỗi nhỏ có nguyên nhân chứng minh: thứ tự dòng phụ (ngôn ngữ trước provider, tối đa 2 dòng), và cột nhãn tiến độ chưa tính cỡ chữ hệ thống;
+  - test 674 = 669 PASS / 5 SKIP / 0 FAIL, lint 0 Error, androidTest biên dịch được. Chạy trên bản sao HEAD cộng bản sửa; chưa build, chưa xem trên máy;
+  - khuyến nghị thuật ngữ: giữ "chunk" phía dịch, vì "đoạn" là thuật ngữ Biên tập;
+  - gói tiếp theo: `docs/V423_REFINED_UI_DESIGN.md` mục 10 (R3a + R2 + dev.22 trên điện thoại).
+- **Next action:** thực hiện `docs/V423_REFINED_UI_DESIGN.md` mục 10: R3a + R2, build dev.22, sao lưu và chờ owner duyệt cài, rồi thử D1–D6 trên điện thoại 15e84958.

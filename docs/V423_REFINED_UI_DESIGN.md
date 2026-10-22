@@ -225,3 +225,83 @@ Kết quả và ảnh thật: `artifacts/qa/v4.23-readability-20261022/QA_REPORT
 | R5 Cài đặt | Các nhóm có nhiều thông số/chữ kỹ thuật và thẻ lồng; chưa audit bằng ảnh mọi trường. | Giữ accordion hiện có, nhãn+giá trị, giải thích ngắn và Nâng cao. | Settings UI; kiểm lưu/mở lại và chế độ theo hệ thống; không đổi giá trị mặc định owner. |
 
 Không mở rộng sang Biên tập trong nhóm này. Không chuyển sang trả toàn văn hoặc đổi schema: lỗi hiện tại ở trình bày, không phải transport/prompt/parser/ngữ nghĩa. Hash, số đếm, trạng thái vẫn do app quản lý. Các fixture tổng hợp chỉ chứng minh trình bày/lifecycle, không chứng minh chất lượng dịch. TalkBack, tất cả17 palette và luồng bàn phím toàn app chưa đo đầy đủ.
+
+## 10. Gói việc tiếp theo — R3a + R2 và thử dev.22 trên điện thoại (2026-10-22)
+
+**Phục vụ quyết định:** owner dùng màn Dịch và Glossary/Pronoun bằng tiếng Việt nhất quán, không có nút dưới 48 dp, và nghiệm thu được trên điện thoại thật. Owner yêu cầu ngày 2026-10-21: thử trực tiếp trên máy, không qua emulator.
+
+### 10.1 Đã làm ở phiên điều phối (commit `fix(ui): keep the target language visible…`, chưa build)
+
+| Lỗi owner nêu | Nguyên nhân đã chứng minh | Sửa | Kiểm |
+|---|---|---|---|
+| Màn hẹp cắt mất "Vietnamese" ở dòng phụ trên cùng | `MainActivity.providerMeta` ghép theo thứ tự `provider • nguồn → đích`, và `topSubtitle.setSingleLine(true)`. Vì vậy phần bị cắt luôn là ngôn ngữ đích (ảnh `screenshots-clean/run-panel-paper-100-360x800.png`, `…-130-320x800.png`) | Đổi thứ tự thành `nguồn → đích • provider` (`providerMetaLine`); dòng phụ tối đa 2 dòng | `ProviderMetaLineTest`. Ảnh trên điện thoại: NOT_MEASURED |
+| Nhãn "Chương" chạm thanh tiến độ ở 320 dp, app 130% + hệ thống 130% | `TranslatePageFactory.barRow` đặt bề rộng nhãn là `dp(52) × cỡ chữ app`. Còn chữ thì là `sp × cỡ chữ app`, tức nhân thêm cỡ chữ hệ thống | Bề rộng nhãn = `60 sp × cỡ chữ app` + 8 dp đệm; dòng dưới thụt đúng bằng cột nhãn | Toàn app 674 test: 669 PASS, 5 SKIP. Ảnh: NOT_MEASURED |
+| Cặp ảnh `run-panel-*`/`preview-area-*` trùng SHA | Owner xem `screenshots-final/`, là bộ chụp lỗi trước khi chờ compositor. Bộ bàn giao là `screenshots-clean/` | Ghi rõ trong `QA_REPORT.md` thư mục nào là bằng chứng | 10 ảnh `screenshots-clean` có SHA khác nhau, PNG hợp lệ |
+
+### 10.2 Thuật ngữ (khuyến nghị của điều phối; owner có thể đổi)
+
+- **Giữ "chunk"** (chữ thường trong câu tiếng Việt) cho phần dịch. Lý do:
+  - owner dùng từ này hằng ngày;
+  - "đoạn" đã là thuật ngữ của Biên tập (`EditorialJobPresentation:15`, `EditorialPairPageFactory:130`) và chỉ một khái niệm khác. Dùng chung chữ sẽ gây nhầm.
+- **Giữ tên riêng:** Glossary/Glossaries, Pronoun, prompt, token, tên provider, tên ngôn ngữ.
+- **Việt hóa nhãn thao tác:**
+
+| Hiện tại | Đổi thành |
+|---|---|
+| SOURCE LANGUAGE / TARGET LANGUAGE | Ngôn ngữ nguồn / Ngôn ngữ đích |
+| Prompt preview | Xem trước prompt |
+| Refresh model pricing | Cập nhật giá model |
+| Activity Log, Clear Log, Export Log | Nhật ký, Xóa nhật ký, Xuất nhật ký |
+| Using / Use / Edit / Del | Đang dùng / Dùng / Sửa / Xóa |
+| Close (hộp thoại phía dịch) | Đóng |
+
+### 10.3 Việc làm
+
+1. **R3a — màn Dịch, phần cấu hình** (`TranslatePageFactory:62,64,72,104,138,297,435`):
+   - đổi nhãn theo 10.2;
+   - bỏ dòng hướng dẫn UI 2.9 đã cũ;
+   - đưa thẻ Nhật ký vào mục "Chi tiết kỹ thuật" thu gọn, mặc định đóng. Cảnh báo chặn chạy vẫn luôn hiện.
+   - Không đổi handler, prompt, model, service, preparation.
+2. **R2 — Glossary/Pronoun** (`GlossaryPageFactory:128–132,176–197`; `PronounPageFactory` tương ứng):
+   - đổi nhãn theo 10.2;
+   - hàng tự cao theo nội dung, mọi nút ≥ 48 dp;
+   - Xóa vẫn có xác nhận;
+   - không đổi store/schema, không giấu thao tác.
+3. **Không làm** trong gói này: R4/R5, Biên tập, đổi icon toàn app.
+
+**Phạm vi được sửa:** chỉ `TranslatePageFactory`, `GlossaryPageFactory`, `PronounPageFactory`, các chuỗi gắn ở `MainActivity`, và test của chúng. Không chạm `Editorial*`, `editorial-engine/`, `TranslatorService`, `TranslationEngine`, store, schema.
+
+### 10.4 Test và tiêu chí
+
+**Test host:**
+- test formatter và nhãn mới;
+- `rg` các chuỗi cũ trong bảng 10.2 trên các factory thuộc gói trả 0 dòng (trừ tên riêng);
+- test cũ có assert chuỗi thì sửa trong cùng commit.
+
+**Điện thoại 15e84958**, theo đúng mục 3 của `docs/V423_WORKSPACE_NAV_WORK_REQUEST.md`:
+- sao lưu trước, chờ owner trả lời "duyệt cài", chỉ cài bằng `install -r`;
+- không bấm nút tốn tiền;
+- chỉ dùng dữ liệu `QA_`;
+- chụp ảnh bằng `shell screencap` rồi `pull`.
+
+| # | Kiểm | PASS khi |
+|---|---|---|
+| D1 | Dòng phụ trên cùng ở cỡ chữ app 100% và 130% (Cài đặt > Appearance) | thấy đủ "Japanese → Vietnamese"; provider có thể xuống dòng hoặc bị cắt |
+| D2 | Màn Dịch đang dừng/tạm dừng, cỡ chữ 130% | "Tập"/"Chương" không chạm thanh tiến độ |
+| D3 | Màn Dịch phần cấu hình, Glossary, Pronoun | không còn nhãn nào trong bảng 10.2; mọi nút cao ≥ 48 dp × mật độ (đo bằng `uiautomator dump`) |
+| D4 | Nhật ký | mặc định thu gọn; mở ra vẫn đủ log; Xóa/Xuất hoạt động |
+| D5 | Glossary `QA_`: Dùng → Sửa → Lưu → Xóa (có xác nhận) | trạng thái "Đang dùng" đúng; không mất Glossary nào của owner |
+| D6 | TalkBack đọc thanh trên, ngăn ☰, màn Dịch | **chỉ khi owner cho phép bật TalkBack** trong terminal, và tắt lại ngay sau đó; nếu không thì ghi NOT_MEASURED |
+
+**Điểm dừng:**
+1. hồi quy archive sạch;
+2. build `4.23-dev.22` (code > 299);
+3. sao lưu điện thoại, **dừng chờ owner duyệt cài**;
+4. cài, chạy D1–D6, rồi **dừng** và báo cáo.
+
+**Bằng chứng phải giữ:**
+- ảnh PNG hợp lệ; mỗi ảnh một trạng thái, SHA khác nhau; manifest ghi ảnh nào cho mục nào;
+- XML `uiautomator` cho D3;
+- đường dẫn sao lưu.
+
+**Không đo trong gói này:** chất lượng dịch, A2/A4 đang dịch thật (cần quyền chi tiền riêng).
