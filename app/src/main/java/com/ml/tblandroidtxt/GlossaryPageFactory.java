@@ -77,7 +77,7 @@ class GlossaryPageFactory {
 
 
     View glossaryListPage() {
-        LinearLayout panel = a.sectionCard("Glossary", "Glossary");
+        LinearLayout panel = a.plainCard();
         TextView desc = a.text("Quản lý nhiều Glossary giống TBL PC: có thể chọn nhiều file cùng lúc, mỗi file tạo một Glossary riêng.", 13, a.MUTED, false);
         desc.setSingleLine(false);
         panel.addView(desc, a.marginLP(-1, -2, 0, 0, 0, 10));
@@ -185,7 +185,7 @@ class GlossaryPageFactory {
 
 
     View glossaryEditorPage() {
-        LinearLayout panel = a.sectionCard("Glossary", a.editingGlossary.name == null ? "Glossary" : a.editingGlossary.name);
+        LinearLayout panel = a.sectionCard("", a.editingGlossary.name == null ? "Glossary" : a.editingGlossary.name);
         LinearLayout toolbar = new LinearLayout(a);
         toolbar.setOrientation(LinearLayout.VERTICAL);
         LinearLayout toolbarTop = a.rowContainer();

@@ -25,9 +25,10 @@ class RawPageFactory {
         ScrollView scroll = a.scroll();
         LinearLayout root = a.pageRoot();
         scroll.addView(root);
-        LinearLayout panel = a.sectionCard("RAW", "RAW");
-        TextView desc = a.text("Nhập nhiều TXT RAW một lần; app giữ bản sao nên không cần chọn lại tệp hay mất quyền truy cập. Sắp theo số chương ở đầu tên tệp (025_… là chương 25).", 13, a.MUTED, false);
-        desc.setSingleLine(false);
+        LinearLayout panel = a.plainCard();
+        TextView desc = a.text("Sắp theo số đầu tên tệp: 025_… là chương 25.", 13, a.MUTED, false);
+        desc.setSingleLine(true);
+        desc.setEllipsize(TextUtils.TruncateAt.END);
         panel.addView(desc, a.marginLP(-1, -2, 0, 0, 0, 10));
         panel.addView(a.primaryButton("+ Nhập RAW", v -> a.chooseRawFiles()), a.marginLP(-1, a.dp(48), 0, 0, 0, 8));
 

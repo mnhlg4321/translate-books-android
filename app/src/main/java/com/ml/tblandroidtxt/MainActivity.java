@@ -4565,10 +4565,20 @@ public class MainActivity extends Activity {
         c.setOrientation(LinearLayout.VERTICAL);
         c.setPadding(dp(16), dp(16), dp(16), dp(16));
         LinearLayout head = rowContainer();
-        head.addView(text(icon, 20, BLUE, false));
-        head.addView(space(10, 1));
-        head.addView(text(title, 18, TEXT, true), new LinearLayout.LayoutParams(0, -2, 1));
+        if (SectionCardHeaderModel.showIcon(icon, title)) {
+            head.addView(text(icon, 20, BLUE, false));
+            head.addView(space(SectionCardHeaderModel.iconGapDp(icon, title), 1));
+        }
+        if (SectionCardHeaderModel.showTitle(title)) head.addView(text(title, 18, TEXT, true), new LinearLayout.LayoutParams(0, -2, 1));
         c.addView(head, marginLP(-1, -2, 0, 0, 0, 14));
+        c.setLayoutParams(marginLP(-1, -2, 0, 0, 0, 14));
+        return c;
+    }
+
+    LinearLayout plainCard() {
+        LinearLayout c = card(18, PANEL, BORDER);
+        c.setOrientation(LinearLayout.VERTICAL);
+        c.setPadding(dp(16), dp(16), dp(16), dp(16));
         c.setLayoutParams(marginLP(-1, -2, 0, 0, 0, 14));
         return c;
     }

@@ -140,7 +140,7 @@ class ChapterSetPageFactory {
     // ---- list of saved workspaces ----
 
     private View listPanel() {
-        LinearLayout panel = a.sectionCard("Tập", "Tập");
+        LinearLayout panel = a.plainCard();
         TextView desc = a.text("Một tập gồm một hoặc nhiều chương; mỗi chương là một bộ RAW – Glossary – Pronoun. Ở màn Dịch chọn nguồn \"Tập\" để dịch nhiều chương, mỗi chương dùng đúng Glossary/Pronoun của nó.", 13, a.MUTED, false);
         desc.setSingleLine(false);
         panel.addView(desc, a.marginLP(-1, -2, 0, 0, 0, 10));
