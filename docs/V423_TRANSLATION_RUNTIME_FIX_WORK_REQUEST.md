@@ -317,6 +317,8 @@ Ghi các mục cần gọi provider là `NOT_MEASURED`, rồi **dừng** và bá
 
 ## 6. Lượt live đề xuất (chỉ chạy khi owner cấp quyền chi tiền riêng)
 
+**Owner đã duyệt ngày 2026-10-23: chi tối đa $0,20** (F1/F3 $0,10 + F6 `high` $0,10), chỉ cho đúng hai lượt mô tả dưới đây.
+
 **Giả thuyết cần kiểm:**
 - F1: chunk ngắn có reasoning không còn bị `length`;
 - F6: ở mức `high`, chương xong hoặc dừng có kiểm soát trong trần chi phí, không còn vòng chia nhỏ. Thử thêm 1 chương ngắn ở `high`, ngân sách tối đa **$0,10** riêng;
