@@ -40,6 +40,7 @@ import android.widget.LinearLayout;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.PopupMenu;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -128,14 +129,17 @@ public class MainActivity extends Activity {
     View translateSupportCard, translateOutputCard;
     TextView trackingTitle, trackingFile, metricChunks, metricCompleted, metricFailed, metricFallbacks, metricElapsed, metricRemaining, metricCost, metricTokens;
     TextView metricCurrentChunk, metricGlossaryLocks, metricPronounLocks, lockUsageMeta, previewMeta, previewText;
-    LinearLayout trackingCard, estimatePanel, outputFolderFilesList, actionControlRow;
+    LinearLayout trackingCard, trackingDetails, estimatePanel, outputFolderFilesList, actionControlRow;
+    TextView completionSummary, translateConfigSummary;
+    LinearLayout translateConfigDetails;
     TextView translateGlossaryChip, translatePronounChip, translateInstructionChip;
     /** The Glossaries and Pronoun rows and the one-line note that replaces them in chapter-set mode. */
     View translateGlossaryRow, translatePronounRow;
     TextView translateComboNote;
     LinearLayout resultCard;
     ProgressBar progress;
-    Button startButton, pauseButton, resumeButton, cancelButton, retryButton, pricingRetryButton, outputFolderButton;
+    Button startButton, pauseButton, resumeButton, cancelButton, retryButton, pricingRetryButton, outputFolderButton, outputOpenButton;
+    Button runMoreButton;
     boolean translationActive = false;
     int estimateSeq = 0;
     volatile CostEstimator.Estimate lastEstimate;
@@ -164,6 +168,7 @@ public class MainActivity extends Activity {
     volatile String trackedState = "";
     long timedRunElapsedBaseMs;
     int timedPermille;
+    boolean completionSummaryCollapsed;
 
     /** Elapsed and remaining of the whole run, advanced between broadcasts by the timer. */
     void refreshRunClock() {
@@ -256,6 +261,15 @@ public class MainActivity extends Activity {
 
     String currentTab = "Translate";
     String jobsSetFilterId = "";
+    String jobsSection = "TRANSLATION";
+    String historyQuery = "";
+    String historySetFilterId = "";
+    long historyBeforeId = -1L;
+    boolean historyHasMore;
+    boolean historyLoading;
+    volatile List<TranslationRepository.JobSummary> cachedHistoryJobs = java.util.Collections.emptyList();
+    volatile List<JobsEditorialCardData> cachedEditorialJobs = java.util.Collections.emptyList();
+    volatile boolean editorialJobsLoaded;
     final NavState navState = new NavState();
     boolean drawerOpen;
     View drawerScrim;
@@ -303,7 +317,7 @@ public class MainActivity extends Activity {
         @Override public void onReceive(Context context, Intent intent) {
             if (!TranslatorService.ACTION_PROGRESS.equals(intent.getAction())) return;
             long editorialRun=intent.getLongExtra(EditorialPairForegroundService.EXTRA_RUN,0);
-            if(editorialRun>0){editorialApi().pair.observeForeground(editorialRun,intent.getBooleanExtra(EditorialPairForegroundService.EXTRA_FINISHED,false));invalidatePage("Jobs");if("Jobs".equals(currentTab))switchTab("Jobs");return;}
+            if(editorialRun>0){editorialApi().pair.observeForeground(editorialRun,intent.getBooleanExtra(EditorialPairForegroundService.EXTRA_FINISHED,false));editorialJobsLoaded=false;refreshEditorialJobsAsync();invalidatePage("Jobs");if("Jobs".equals(currentTab))switchTab("Jobs");return;}
             String log = intent.getStringExtra(TranslatorService.EXTRA_LOG);
             int p = intent.getIntExtra(TranslatorService.EXTRA_PROGRESS, -1);
             String status = intent.getStringExtra(TranslatorService.EXTRA_STATUS);
@@ -325,7 +339,7 @@ public class MainActivity extends Activity {
                 tint(statusBanner, statusColor(status), 1, 14);
             }
             if ("done".equals(status)) {
-                showResult("Output ready", "Saved and verified");
+                showResult("Đã lưu và kiểm tra", "Output đã sẵn sàng");
                 toast(clipForToast(log, "Dịch hoàn tất"));
             } else if ("error".equals(status)) toast(clipForToast(log, "Có lỗi khi dịch"));
             else if ("stopping".equals(status)) toast("Đang dừng dịch");
@@ -353,6 +367,11 @@ public class MainActivity extends Activity {
 
     /** Card above the Start buttons: the newest unfinished job, with buttons that continue it. */
     LinearLayout pendingJobCard;
+    volatile TranslationRepository.JobProgress pendingJobCache;
+    volatile boolean pendingUnknownCache;
+    volatile boolean pendingJobCacheHasErrors;
+    volatile boolean pendingJobCacheReady;
+    boolean pendingCardRefreshQueued;
 
     private final java.util.concurrent.ExecutorService cardExecutor = java.util.concurrent.Executors.newSingleThreadExecutor();
     private int pendingCardGeneration;
@@ -368,70 +387,42 @@ public class MainActivity extends Activity {
     void refreshPendingJobCard() {
         if (pendingJobCard == null) return;
         if (TranslatorService.isActive() || translationActive) { pendingJobCard.setVisibility(View.GONE); return; }
+        if (pendingCardRefreshQueued) return;
+        pendingCardRefreshQueued = true;
         final int generation = ++pendingCardGeneration;
         submitActivityWork(cardExecutor, () -> {
             java.util.List<TranslationRepository.JobProgress> jobs;
             TranslationRepository repo = new TranslationRepository(this);
             try { jobs = repo.getIncompleteJobs(null, 20); } catch (Exception e) { jobs = new ArrayList<>(); } finally { repo.close(); }
             final java.util.List<TranslationRepository.JobProgress> found = jobs;
-            runOnUiThread(() -> { if (generation == pendingCardGeneration && !isFinishing() && !isDestroyed()) renderPendingJobCard(found); });
+            runOnUiThread(() -> {
+                pendingCardRefreshQueued = false;
+                if (generation == pendingCardGeneration && !isFinishing() && !isDestroyed()) renderPendingJobCard(found);
+            });
         });
     }
 
     private void renderPendingJobCard(java.util.List<TranslationRepository.JobProgress> jobs) {
         if (pendingJobCard == null) return;
         pendingJobCard.removeAllViews();
-        if (TranslatorService.isActive() || translationActive) { pendingJobCard.setVisibility(View.GONE); return; }
+        pendingJobCacheReady = true;
+        pendingJobCache = null;
+        pendingUnknownCache = false;
+        pendingJobCacheHasErrors = false;
+        if (TranslatorService.isActive() || translationActive) { pendingJobCard.setVisibility(View.GONE); updateActionButtons(); return; }
         final TranslationRepository.JobProgress p = ResumePrompt.pickCardJob(jobs);
-        if (p == null) { pendingJobCard.setVisibility(View.GONE); return; }
+        if (p == null) { pendingJobCard.setVisibility(View.GONE); updateActionButtons(); return; }
+        pendingJobCache = p;
+        pendingUnknownCache = p.unknown > 0;
+        pendingJobCacheHasErrors = p.error > 0;
         pendingJobCard.setVisibility(View.VISIBLE);
-        pendingJobCard.addView(text("⏸ Job đang dở", 16, TEXT, true));
+        pendingJobCard.addView(text("Job đang dở", 13, MUTED, true));
         TextView name = text(p.fileName, 14, TEXT, false);
         name.setSingleLine(false);
         name.setContentDescription("pending-job-name");
         pendingJobCard.addView(name, marginLP(-1, -2, 0, 2, 0, 0));
-        TextView line = text(ResumePrompt.progressLine(p), 13, p.error > 0 || p.unknown > 0 ? AMBER : MUTED, true);
-        line.setSingleLine(false);
-        line.setContentDescription("pending-job-progress");
-        pendingJobCard.addView(line, marginLP(-1, -2, 0, 2, 0, 8));
-        LinearLayout row = rowContainer();
-        boolean unknownDelivery = p.unknown > 0;
-        Button view = unknownDelivery ? primaryButton("Xem trong Jobs", v -> switchTab("Jobs")) : secondaryButton("Xem trong Jobs", v -> switchTab("Jobs"));
-        Button go = unknownDelivery ? secondaryButton("Tiếp tục dịch", v -> resumeJob(p.id)) : primaryButton("Tiếp tục dịch", v -> resumeJob(p.id));
-        go.setEnabled(!unknownDelivery);
-        go.setContentDescription("pending-job-continue");
-        if (unknownDelivery) {
-            row.addView(view, new LinearLayout.LayoutParams(0, -2, 1));
-            row.addView(space(6, 1));
-            row.addView(go, new LinearLayout.LayoutParams(0, -2, 1));
-        } else {
-            row.addView(go, new LinearLayout.LayoutParams(0, -2, 1));
-            if (p.error > 0) {
-                row.addView(space(6, 1));
-                row.addView(secondaryButton("Retry chunk lỗi", v -> retryJobFailedChunks(p.id)), new LinearLayout.LayoutParams(0, -2, 1));
-            }
-            row.addView(space(6, 1));
-            row.addView(view, new LinearLayout.LayoutParams(0, -2, 1));
-        }
-        pendingJobCard.addView(row);
-        final String cardSetId = setIdOfJob(p.id);
-        if (!cardSetId.isEmpty() && !unknownDelivery) {
-            Button comboGo = secondaryButton("Tiếp tục tập", v -> continueChapterSet(cardSetId));
-            comboGo.setContentDescription("pending-job-continue-set");
-            pendingJobCard.addView(comboGo, marginLP(-1, -2, 0, 8, 0, 0));
-        }
-        if (unknownDelivery) pendingJobCard.addView(text("Tiếp tục đang tắt: có request không rõ đã gửi hay chưa. Xem ở tab Jobs trước khi chạy tiếp, vì gửi lại có thể bị tính tiền hai lần.", 12, AMBER, false), marginLP(-1, -2, 0, 6, 0, 0));
-        Button dismiss = secondaryButton("Bỏ job này", v -> confirmDismissJob(p));
-        dismiss.setContentDescription("pending-job-dismiss");
-        pendingJobCard.addView(dismiss, marginLP(-1, -2, 0, 8, 0, 0));
-        int others = jobs.size() - 1;
-        if (others > 0) {
-            TextView more = text("và " + others + " job dở khác · Xem tất cả", 12, BLUE, true);
-            more.setPadding(0, dp(10), 0, dp(4));
-            more.setContentDescription("pending-job-more");
-            more.setOnClickListener(v -> switchTab("Jobs"));
-            pendingJobCard.addView(more);
-        }
+        pendingJobCard.setContentDescription("pending-job-context");
+        updateActionButtons();
     }
 
     /** True once the chosen set's plan is ready: Start is then pressed once, through its normal preflight dialog. */
@@ -588,7 +579,7 @@ public class MainActivity extends Activity {
         if (b != null) bulkUi.restoreState(b);
         NavState restoredNav = NavState.from(b);
         navState.page = restoredNav.page;
-        if (b != null) { currentTab = restoredNav.page; jobsSetFilterId=b.getString("jobsSetFilterId",jobsSetFilterId); settingsCategory=b.getString("settingsCategory",settingsCategory); settingsSectionExpanded=b.getBoolean("settingsSectionExpanded",true); }
+        if (b != null) { currentTab = restoredNav.page; jobsSetFilterId=b.getString("jobsSetFilterId",jobsSetFilterId); jobsSection=b.getString("jobsSection",jobsSection); historyQuery=b.getString("historyQuery",historyQuery); historySetFilterId=b.getString("historySetFilterId",historySetFilterId); settingsCategory=b.getString("settingsCategory",settingsCategory); settingsSectionExpanded=b.getBoolean("settingsSectionExpanded",true); }
         translationActive = TranslatorService.isActive();
         buildUi();
         refreshJobCacheAsync(false);
@@ -601,6 +592,9 @@ public class MainActivity extends Activity {
         super.onSaveInstanceState(outState);
         outState.putString("currentTab", currentTab);
         outState.putString("jobsSetFilterId", jobsSetFilterId);
+        outState.putString("jobsSection", jobsSection);
+        outState.putString("historyQuery", historyQuery);
+        outState.putString("historySetFilterId", historySetFilterId);
         navState.page = currentTab;
         navState.save(outState);
         bulkUi.saveState(outState);
@@ -858,7 +852,7 @@ public class MainActivity extends Activity {
 
     String pageTitle() { return NavigationPageTitles.title(currentTab); }
 
-    boolean primaryActive(String name){if("Library".equals(name))return "Files".equals(currentTab)||"RAW".equals(currentTab)||"Glossaries".equals(currentTab)||"Pronouns".equals(currentTab)||"ChapterSets".equals(currentTab)||"Sample".equals(currentTab);return name.equals(currentTab);}
+    boolean primaryActive(String name){if("Library".equals(name))return "Files".equals(currentTab)||"RAW".equals(currentTab)||"Glossaries".equals(currentTab)||"Pronouns".equals(currentTab)||"ChapterSets".equals(currentTab)||"Sample".equals(currentTab);if("Jobs".equals(name))return "Jobs".equals(currentTab)||"JobsHistory".equals(currentTab);return name.equals(currentTab);}
 
     void switchTab(String name) {
         if("Library".equals(name))name="Files";
@@ -975,6 +969,7 @@ public class MainActivity extends Activity {
             editingPronoun = null; invalidatePage("Pronouns"); switchTab("Pronouns"); return;
         }
         if (action == AppBackNavigationPolicy.Action.OPEN_LIBRARY_HOME) { switchTab("Files"); return; }
+        if (action == AppBackNavigationPolicy.Action.OPEN_JOBS) { switchTab("Jobs"); return; }
         if (action == AppBackNavigationPolicy.Action.OPEN_SETTINGS_GENERAL) {
             silentPersistCurrentUi(); settingsCategory = "General"; settingsSectionExpanded = true;
             invalidatePage("Settings"); switchTab("Settings"); return;
@@ -989,6 +984,7 @@ public class MainActivity extends Activity {
         if ("Editorial".equals(name)) return buildEditorialPage();
         if ("Glossaries".equals(name)||"Pronouns".equals(name)||"Files".equals(name)||"Sample".equals(name)||"RAW".equals(name)||"ChapterSets".equals(name)) return buildLibraryDestination(name);
         if ("Jobs".equals(name)) return buildJobsPage();
+        if ("JobsHistory".equals(name)) return buildJobsHistoryPage();
         return buildSamplePage();
     }
 
@@ -1157,6 +1153,7 @@ public class MainActivity extends Activity {
             if (saved != null) durable = saved.getStringExtra(TranslatorService.EXTRA_STATE);
         }
         String state = RunPanelFormatter.chipState(active, trackedState, durable);
+        if (!active && completionSummaryCollapsed && "COMPLETED".equalsIgnoreCase(state)) state = "IDLE";
         if (state.equals(renderedTopState)) { refreshDrawerMenuState(); return; }
         renderedTopState = state;
         boolean healthy = "RUNNING".equals(state) || "COMPLETED".equals(state) || "READY".equals(state);
@@ -1212,6 +1209,106 @@ public class MainActivity extends Activity {
     View buildJobsPage() {
         return new JobsMainPageFactory(this).build();
     }
+    View buildJobsHistoryPage() {
+        View page = new JobsHistoryPageFactory(this).build();
+        if (cachedHistoryJobs.isEmpty() && !historyLoading) loadHistoryPage(true);
+        return page;
+    }
+
+    void selectJobsSection(String section) {
+        jobsSection = "EDITORIAL".equals(section) ? "EDITORIAL" : "TRANSLATION";
+        invalidatePage("Jobs");
+        switchTab("Jobs");
+    }
+
+    List<JobsEditorialCardData> editorialJobsSnapshot() {
+        return new ArrayList<>(cachedEditorialJobs);
+    }
+
+    /** Editorial DB reads stay off the UI thread; the existing Editorial card only receives snapshots. */
+    void refreshEditorialJobsAsync() {
+        if (editorialJobsLoaded && !cachedEditorialJobs.isEmpty()) return;
+        submitActivityWork(cardExecutor, () -> {
+            ArrayList<JobsEditorialCardData> found = new ArrayList<>();
+            try (SqliteEditorialApiStore combos = new SqliteEditorialApiStore(this);
+                 SqliteEditorialPairRunStore runs = new SqliteEditorialPairRunStore(this)) {
+                for (EditorialApiCombo combo : combos.listCombos()) {
+                    EditorialPairModels.PairRun run = runs.latestRun(combo.id);
+                    if (run == null) continue;
+                    found.add(new JobsEditorialCardData(combo, run, runs.items(run.id),
+                            EditorialPairForegroundService.isActive(run.id) || EditorialPairRunService.isActive(run.id)));
+                }
+            } catch (Exception ignored) { }
+            runOnUiThread(() -> {
+                if (isFinishing() || isDestroyed()) return;
+                cachedEditorialJobs = found;
+                editorialJobsLoaded = true;
+                invalidatePage("Jobs");
+                if ("Jobs".equals(currentTab)) switchTab("Jobs");
+            });
+        });
+    }
+
+    List<TranslationRepository.JobSummary> historyJobsSnapshot() { return new ArrayList<>(cachedHistoryJobs); }
+    boolean historyHasMore() { return historyHasMore; }
+
+    private java.util.Collection<Long> historyAllowedIds(String setId) {
+        if (setId == null || setId.trim().isEmpty()) return null;
+        ChapterSetWorkspaceStore.Snapshot s = cachedWorkspace;
+        if (s == null) return new ArrayList<Long>();
+        ArrayList<Long> ids = new ArrayList<>();
+        for (TranslationRepository.JobSummary job : s.jobsForSet(setId)) ids.add(job.id);
+        return ids;
+    }
+
+    void loadHistoryPage(boolean reset) {
+        if (historyLoading) return;
+        if (reset) {
+            cachedHistoryJobs = java.util.Collections.emptyList();
+            historyBeforeId = -1L;
+            historyHasMore = false;
+        }
+        historyLoading = true;
+        final String query = historyQuery == null ? "" : historyQuery.trim();
+        final String setId = historySetFilterId == null ? "" : historySetFilterId;
+        final long before = reset ? -1L : historyBeforeId;
+        submitActivityWork(cardExecutor, () -> {
+            List<TranslationRepository.JobSummary> page;
+            JobStore store = new JobStore(this);
+            try { page = store.historyPage(before, JobHistoryPageModel.PAGE_SIZE, query, historyAllowedIds(setId)); }
+            catch (Exception ignored) { page = new ArrayList<>(); }
+            finally { store.close(); }
+            final List<TranslationRepository.JobSummary> loaded = page;
+            runOnUiThread(() -> {
+                historyLoading = false;
+                if (isFinishing() || isDestroyed()) return;
+                if (!query.equals(historyQuery == null ? "" : historyQuery.trim()) || !setId.equals(historySetFilterId == null ? "" : historySetFilterId)) return;
+                cachedHistoryJobs = reset ? new ArrayList<>(loaded) : JobHistoryPageModel.append(cachedHistoryJobs, loaded);
+                historyBeforeId = JobHistoryPageModel.nextCursor(loaded);
+                historyHasMore = JobHistoryPageModel.hasMore(loaded);
+                invalidatePage("JobsHistory");
+                if ("JobsHistory".equals(currentTab)) switchTab("JobsHistory");
+            });
+        });
+    }
+
+    void setHistoryQuery(String query) {
+        historyQuery = query == null ? "" : query;
+        loadHistoryPage(true);
+    }
+
+    void setHistorySetFilter(String setId) {
+        historySetFilterId = setId == null ? "" : setId;
+        loadHistoryPage(true);
+    }
+
+    void openHistory() { switchTab("JobsHistory"); }
+
+    void openSingleJobFromDrawer(long jobId) {
+        jobsSetFilterId = "";
+        invalidatePage("Jobs");
+        switchTab("Jobs");
+    }
     private static EditorialApiUiController editorialApiShared;
 
     /** One controller for the process, so a run and its screen survive the activity being recreated. */
@@ -1262,6 +1359,24 @@ public class MainActivity extends Activity {
         open.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         try{startActivity(open);}catch(Exception e){toast("Không mở được file kết quả (đã bị xóa hoặc không có app mở TXT)");}
     }
+
+    /** Opens the selected output without exposing the URI; falls back to a human-readable location. */
+    void openSelectedOutput() {
+        Uri uri = outputUri != null ? outputUri : outputTreeUri;
+        if (uri == null) { toast("Chưa chọn output"); return; }
+        Intent open = new Intent(Intent.ACTION_VIEW);
+        open.setData(uri);
+        open.setType(outputUri != null ? "text/plain" : "*/*");
+        open.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        try {
+            startActivity(open);
+            if (outputOpenButton != null) outputOpenButton.setText("Mở output");
+        } catch (Exception ignored) {
+            if (outputOpenButton != null) outputOpenButton.setText("Vị trí tệp");
+            String name = outputUri != null ? displayNameCached(outputUri) : FileUtil.treeName(outputTreeUri);
+            toast("Không mở được output. Vị trí: " + nonEmpty(name, "thư mục đã chọn"));
+        }
+    }
     String runtimeLogSnapshot(){return cachedRuntimeLog==null?"":cachedRuntimeLog;}
     void refreshJobCacheAsync(boolean showFeedback){
         refreshFailedChunksAsync();
@@ -1270,7 +1385,7 @@ public class MainActivity extends Activity {
             UsageTotals today=new UsageTotals(),week=new UsageTotals();
             TranslationRepository totalsRepo=new TranslationRepository(this);
             ChapterSetWorkspaceStore.Snapshot workspace;
-            try{jobs=store.recentSummaries(150);long now=System.currentTimeMillis();java.util.Calendar cal=java.util.Calendar.getInstance();cal.set(java.util.Calendar.HOUR_OF_DAY,0);cal.set(java.util.Calendar.MINUTE,0);cal.set(java.util.Calendar.SECOND,0);cal.set(java.util.Calendar.MILLISECOND,0);today=totalsRepo.getUsageTotals(cal.getTimeInMillis());week=totalsRepo.getUsageTotals(now-7L*24*60*60*1000);workspace=ChapterSetWorkspaceStore.read(this);}finally{store.close();totalsRepo.close();}
+            try{List<TranslationRepository.JobSummary> recent=store.recentSummaries(150);List<TranslationRepository.JobSummary> current=store.currentUnfinishedSummaries(40);jobs=JobListMerge.all(recent,current);long now=System.currentTimeMillis();java.util.Calendar cal=java.util.Calendar.getInstance();cal.set(java.util.Calendar.HOUR_OF_DAY,0);cal.set(java.util.Calendar.MINUTE,0);cal.set(java.util.Calendar.SECOND,0);cal.set(java.util.Calendar.MILLISECOND,0);today=totalsRepo.getUsageTotals(cal.getTimeInMillis());week=totalsRepo.getUsageTotals(now-7L*24*60*60*1000);workspace=ChapterSetWorkspaceStore.read(this);}finally{store.close();totalsRepo.close();}
             cachedUsageToday=today;cachedUsageWeek=week;
             cachedWorkspace=workspace;
             cachedSessions=workspace.sessionInfos;
@@ -1280,9 +1395,12 @@ public class MainActivity extends Activity {
                 invalidatePage("Jobs");
                 if (drawerOpen) renderWorkspaceDrawer();
                 if ("Jobs".equals(currentTab)) switchTab(currentTab);
+                if ("JobsHistory".equals(currentTab) && cachedHistoryJobs.isEmpty()) loadHistoryPage(true);
                 if(showFeedback)toast("Jobs refreshed");
             });
         });
+        editorialJobsLoaded = false;
+        refreshEditorialJobsAsync();
     }
 
     List<WorkspaceSetModel.Entry> workspaceSetsSnapshot() {
@@ -1305,7 +1423,7 @@ public class MainActivity extends Activity {
     String workspaceFilterLabel() {
         if (jobsSetFilterId == null || jobsSetFilterId.trim().isEmpty()) return "Tất cả";
         for (WorkspaceSetModel.Entry e : workspaceSetsSnapshot()) if (jobsSetFilterId.equals(e.id)) return e.label();
-        return "Tất cả";
+        return "Đang lọc";
     }
 
     boolean isDeletedWorkspaceSet(String setId) {
@@ -1407,20 +1525,27 @@ public class MainActivity extends Activity {
             return;
         }
         String activeId = activeWorkspaceSetId(snapshot);
-        ArrayList<WorkspaceSetModel.Entry> recent = new ArrayList<>(WorkspaceSetModel.recent(snapshot.sets, 3));
-        WorkspaceSetModel.Entry active = snapshot.set(activeId);
-        if (active != null) {
-            for (int i = recent.size() - 1; i >= 0; i--) {
-                if (active.id.equals(recent.get(i).id)) recent.remove(i);
-            }
-            recent.add(0, active);
-            while (recent.size() > 3) recent.remove(recent.size() - 1);
-        }
+        long activeJobId = -1L;
+        Intent runtime = RuntimeStateStore.toIntent(this);
+        if (runtime != null) activeJobId = runtime.getLongExtra(TranslatorService.EXTRA_ACTIVE_JOB_ID, -1L);
+        List<DrawerRecentModel.Item> recent = DrawerRecentModel.build(snapshot.sets, workspaceJobsSnapshot(), cachedSessions,
+                activeId, activeJobId, 3);
         if (recent.isEmpty()) {
-            drawerList.addView(text("Chưa có tập.", 14, MUTED, false));
+            drawerList.addView(text("Chưa có công việc gần đây.", 14, MUTED, false));
         } else {
-            for (WorkspaceSetModel.Entry entry : recent) {
-                drawerList.addView(drawerEntry(entry, entry.id.equals(activeId)), marginLP(-1, -2, 0, 0, 0, 8));
+            for (DrawerRecentModel.Item item : recent) {
+                if (item.set) {
+                    WorkspaceSetModel.Entry entry = snapshot.set(item.id);
+                    if (entry == null) {
+                        entry = new WorkspaceSetModel.Entry();
+                        entry.id = item.id;
+                        entry.name = item.label;
+                        entry.updatedAt = item.sortKey;
+                    }
+                    drawerList.addView(drawerEntry(entry, item.active), marginLP(-1, -2, 0, 0, 0, 8));
+                } else {
+                    drawerList.addView(drawerSingleEntry(item), marginLP(-1, -2, 0, 0, 0, 8));
+                }
             }
         }
     }
@@ -1471,6 +1596,17 @@ public class MainActivity extends Activity {
             box.addView(progressLabel, marginLP(-1, -2, dp(12), 0, dp(12), 8));
             return box;
         }
+        return row;
+    }
+
+    private View drawerSingleEntry(final DrawerRecentModel.Item item) {
+        Button row = secondaryButton(item.label + "\nĐơn chương", v -> openSingleJobFromDrawer(item.jobId));
+        row.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+        row.setTextSize(13 * fontScale);
+        row.setPadding(dp(12), dp(8), dp(12), dp(8));
+        row.setMinHeight(dp(48));
+        row.setMinimumHeight(dp(48));
+        row.setContentDescription("Mở Công việc đơn chương");
         return row;
     }
 
@@ -2436,7 +2572,7 @@ public class MainActivity extends Activity {
             boolean persisted=FileUtil.takePersistable(this, uri, takeFlags, true, true);
             String writable=FileUtil.validateTreeWritable(this,uri,"Output folder");
             if(writable!=null){outputTreeUri=null;setLabel(outputFolderLabel,"Output folder permission lost — Choose output folder again");appendLog("OUTPUT_IMPORT_FAILED uri="+uri+", persistedRead="+FileUtil.hasPersistedRead(this,uri)+", persistedWrite="+FileUtil.hasPersistedWrite(this,uri)+", probe="+writable);saveRuntimeUris();updateActionButtons();return;}
-            setLabel(outputFolderLabel, "Output folder: " + FileUtil.treeName(uri) + " (Writable)");
+            setLabel(outputFolderLabel, outputFolderDisplayLabel());
             saveRuntimeUris();
             toast("Đã chọn output folder"); appendLog("OUTPUT_IMPORT_OK uri="+uri+", persistedResult="+persisted+", persistedRead="+FileUtil.hasPersistedRead(this,uri)+", persistedWrite="+FileUtil.hasPersistedWrite(this,uri)+", probe=write/delete OK");updateActionButtons();
         } else if (requestCode == REQ_YAML) {
@@ -2592,7 +2728,19 @@ public class MainActivity extends Activity {
         submitActivityWork(preflightExecutor, ()->{String readiness=startReadinessError(true);PromptContextBuilder.ParseReport locks=readiness==null?(sourceUi.isSetMode()?sourceUi.locksReport():PromptContextBuilder.validate(s.glossaryText,s.pronounText)):null;runOnUiThread(()->{if(generation!=preflightGeneration.get()||isFinishing()||isDestroyed())return;if(readiness!=null){appendLog("START_BLOCKED resource="+readiness);updateActionButtons();showResult("Start blocked",readiness);return;}validatedPlanId=readyPlan.id;validatedPlanAt=System.currentTimeMillis();appendLog("START_PREFLIGHT_OK preparedPlan="+readyPlan.id);showPreparedPreflight(s,locks);});});
     }
 
-    private void showPreparedPreflight(AppSettings s,PromptContextBuilder.ParseReport locks){CostEstimator.Estimate e=estimateCurrentBatch(s);double cap=effectiveCostCap(s,e);boolean warning=e==null||!e.pricingAvailable||(locks!=null&&(!locks.conflicts.isEmpty()||!locks.malformedGlossaryRows.isEmpty()||!locks.malformedPronounRows.isEmpty()))||(e!=null&&s.stopOnCostLimit&&s.costLimitUsd>0&&e.noCacheCostHigh>s.costLimitUsd);StringBuilder message=new StringBuilder(TranslationDashboardFormatter.prepared(e,preparedBatch.exactChunkCount())).append("\n\nTrần chi phí hiệu lực lượt này: ").append(cap<0?"Không giới hạn":CostEstimator.money(cap));if(warning)message.append("\n\nSome optional pricing or configuration checks have warnings. Translation can still start when blocking checks pass.");new AlertDialog.Builder(this).setTitle("Ready to translate").setMessage(message.toString()).setPositiveButton("Start",(d,w)->startTranslationNow()).setNegativeButton("Cancel",(d,w)->updateActionButtons()).setOnCancelListener(d->updateActionButtons()).show();}
+    private void showPreparedPreflight(AppSettings s,PromptContextBuilder.ParseReport locks){
+        CostEstimator.Estimate e=estimateCurrentBatch(s);
+        int chunks = preparedBatch == null ? (e == null ? 0 : e.chunks) : preparedBatch.exactChunkCount();
+        double cap=effectiveCostCap(s,e);
+        boolean warning=e==null||!e.pricingAvailable||(locks!=null&&(!locks.conflicts.isEmpty()||!locks.malformedGlossaryRows.isEmpty()||!locks.malformedPronounRows.isEmpty()))||(e!=null&&s.stopOnCostLimit&&s.costLimitUsd>0&&e.noCacheCostHigh>s.costLimitUsd);
+        StringBuilder message=new StringBuilder(TranslationDashboardFormatter.preparedCompact(e,chunks))
+                .append("\nTrần chi phí hiệu lực lượt này: ").append(cap<0?"Không giới hạn":CostEstimator.money(cap));
+        if(warning)message.append("\nCó cảnh báo cấu hình/giá; chỉ bắt đầu khi các kiểm tra chặn đã qua.");
+        new AlertDialog.Builder(this).setTitle("Sẵn sàng dịch").setMessage(message.toString())
+                .setPositiveButton("Bắt đầu",(d,w)->startTranslationNow())
+                .setNegativeButton("Hủy",(d,w)->updateActionButtons())
+                .setOnCancelListener(d->updateActionButtons()).show();
+    }
 
     private boolean showReliabilityPreflight(AppSettings s) {
         boolean batch=inputUris.size()>1;
@@ -2748,6 +2896,10 @@ public class MainActivity extends Activity {
     }
 
     void resumeCheckpoint() {
+        showPaidConfirmation("Tiếp tục checkpoint", this::resumeCheckpointNow);
+    }
+
+    private void resumeCheckpointNow() {
         if (!TranslationUiStatePolicy.mayStartNewJob(TranslatorService.isActive(), translationActive)) {
             toast("Đang có job dịch chạy; không resume checkpoint để tránh chạy trùng");
             appendLog("Resume checkpoint bị chặn vì job đang chạy");
@@ -2762,6 +2914,10 @@ public class MainActivity extends Activity {
     }
 
     void retryFailedChunks() {
+        showPaidConfirmation("Dịch lại chunk lỗi", this::retryFailedChunksNow);
+    }
+
+    private void retryFailedChunksNow() {
         if (!TranslationUiStatePolicy.mayStartNewJob(TranslatorService.isActive(), translationActive)) {
             toast("Đang có job dịch chạy; không retry để tránh chạy trùng");
             appendLog("Retry failed bị chặn vì job đang chạy");
@@ -2776,6 +2932,15 @@ public class MainActivity extends Activity {
     }
 
     void resumeJob(long jobId) {
+        if (isUnknownDeliveryJob(jobId)) {
+            toast("Cần xem lại trạng thái gửi trước khi chạy tiếp");
+            switchTab("Jobs");
+            return;
+        }
+        showPaidConfirmation("Tiếp tục job", () -> resumeJobNow(jobId));
+    }
+
+    private void resumeJobNow(long jobId) {
         if (!TranslationUiStatePolicy.mayStartNewJob(TranslatorService.isActive(), translationActive)) {
             toast("Đang có job dịch chạy; không resume job khác để tránh chạy trùng");
             appendLog("Resume job #" + jobId + " bị chặn vì job đang chạy");
@@ -2793,6 +2958,10 @@ public class MainActivity extends Activity {
     private volatile long lastRetriedJobId = -1L;
 
     void retryJobFailedChunks(long jobId) {
+        showPaidConfirmation("Dịch lại chunk lỗi", () -> retryJobFailedChunksNow(jobId));
+    }
+
+    private void retryJobFailedChunksNow(long jobId) {
         if (!TranslationUiStatePolicy.mayStartNewJob(TranslatorService.isActive(), translationActive)) {
             toast("Đang có job dịch chạy; không retry job khác để tránh chạy trùng");
             appendLog("Retry job #" + jobId + " bị chặn vì job đang chạy");
@@ -2806,6 +2975,42 @@ public class MainActivity extends Activity {
         translationActive = true;
         updateActionButtons();
         toast("Đang retry chunk lỗi của job #" + jobId); appendLog("Retry failed chunks for selected job #" + jobId);
+    }
+
+    private boolean isUnknownDeliveryJob(long jobId) {
+        if (pendingJobCache != null && pendingJobCache.id == jobId && pendingJobCache.unknown > 0) return true;
+        for (TranslationRepository.JobSummary job : workspaceJobsSnapshot()) {
+            if (job.id == jobId && job.unknownChunks > 0) return true;
+        }
+        return false;
+    }
+
+    /** Every action that can dispatch a paid request shares this one confirmation surface. */
+    private void showPaidConfirmation(String action, final Runnable onConfirm) {
+        AppSettings s = collectSettings();
+        CostEstimator.Estimate estimate = estimateCurrentBatch(s);
+        double cap = effectiveCostCap(s, estimate);
+        String estimateLine = estimate == null
+                ? "Chi phí ước tính: chưa có dữ liệu"
+                : TranslationDashboardFormatter.preparedCompact(estimate,
+                Math.max(1, estimate.chunks));
+        String capLine = cap < 0 ? "Trần chi phí hiệu lực: Không giới hạn" : "Trần chi phí hiệu lực: " + CostEstimator.money(cap);
+        new AlertDialog.Builder(this)
+                .setTitle("Sẵn sàng dịch")
+                .setMessage(action + "\n" + estimateLine + "\n" + capLine)
+                .setPositiveButton("Bắt đầu", (d, w) -> onConfirm.run())
+                .setNegativeButton("Hủy", null)
+                .show();
+    }
+
+    void confirmStopTranslation() {
+        if (!TranslatorService.isActive() && !translationActive) return;
+        new AlertDialog.Builder(this)
+                .setTitle("Dừng dịch?")
+                .setMessage("Chunk đang gửi vẫn bị tính tiền")
+                .setPositiveButton("Dừng", (d, w) -> sendSvc(TranslatorService.ACTION_CANCEL))
+                .setNegativeButton("Tiếp tục", null)
+                .show();
     }
 
     void sendSvc(String action) {
@@ -2852,33 +3057,139 @@ public class MainActivity extends Activity {
             });
         } catch (java.util.concurrent.RejectedExecutionException ignored) { }
     }
-    void updateActionButtonsImpl() {
-        refreshPendingJobCard();
+    private RunControlModel.State runControlState() {
         boolean active = TranslatorService.isActive() || translationActive;
-        PreparedBatch plan=currentPreparedBatch();
-        boolean failed=!active&&failedChunksCache;
-        String blocker=!active&&plan!=null&&plan.ready()?startReadinessError():"Preparing TXT chunk plan";
-        setButtonEnabled(startButton, !active&&plan!=null&&plan.ready()&&blocker==null);
+        Intent runtime = RuntimeStateStore.toIntent(this);
+        String runtimeState = runtime == null ? trackedState : runtime.getStringExtra(TranslatorService.EXTRA_STATE);
+        boolean unknown = pendingUnknownCache || (runtimeState != null && runtimeState.toUpperCase(Locale.ROOT).contains("UNKNOWN"));
+        boolean pending = (pendingJobCacheReady && pendingJobCache != null) || failedChunksCache;
+        int failures = pendingJobCache != null ? pendingJobCache.error : (failedChunksCache ? 1 : 0);
+        PreparedBatch plan = currentPreparedBatch();
+        boolean planReady = plan != null && plan.ready();
+        String blocker = planReady ? startReadinessError() : "Đang chuẩn bị kế hoạch chunk";
+        return RunControlModel.resolve(active, runtimeState, unknown, pending, failures,
+                planReady, blocker);
+    }
+
+    private String runControlMessage(RunControlModel.State state, String blocker) {
+        if (state == RunControlModel.State.BLOCKED) return nonEmpty(blocker, "Chưa đủ điều kiện để bắt đầu");
+        if (state == RunControlModel.State.PREPARING) return "Đang chuẩn bị…";
+        if (state == RunControlModel.State.UNKNOWN_DELIVERY) return "Cần xem lại: có request chưa rõ đã gửi hay chưa. Chạy lại có thể bị tính tiền hai lần.";
+        if (state == RunControlModel.State.WORK_REMAINS && pendingJobCacheHasErrors) return "Có chunk lỗi cần xử lý.";
+        return "";
+    }
+
+    private void renderRunControlBar(RunControlModel.State state, RunControlModel.Controls controls, String blocker) {
+        if (actionControlRow == null) return;
+        actionControlRow.removeAllViews();
+        boolean stacked = fontScale >= 1.25f || getResources().getConfiguration().screenWidthDp < 350
+                || getResources().getConfiguration().fontScale >= 1.5f;
+        actionControlRow.setOrientation(stacked ? LinearLayout.VERTICAL : LinearLayout.HORIZONTAL);
+        String message = runControlMessage(state, blocker);
+        if (!message.isEmpty()) {
+            TextView note = text(message, 12, state == RunControlModel.State.UNKNOWN_DELIVERY ? AMBER : MUTED, false);
+            note.setSingleLine(false);
+            actionControlRow.addView(note, marginLP(-1, -2, 0, 0, 0, 6));
+        }
+        if (controls.message != null && !controls.message.isEmpty()) {
+            TextView note = text(controls.message, 13, AMBER, true);
+            actionControlRow.addView(note, marginLP(-1, -2, 0, 0, 0, 6));
+        }
+        Button primary = null;
+        if (controls.primaryAction != RunControlModel.Action.NONE) {
+            primary = controls.primaryEnabled ? primaryButton(controls.primaryLabel, v -> runPrimaryAction(controls.primaryAction))
+                    : secondaryButton(controls.primaryLabel, null);
+            setButtonEnabled(primary, controls.primaryEnabled);
+            primary.setContentDescription(controls.primaryAction == RunControlModel.Action.RESUME
+                    ? (sourceUi.isSetMode() ? "pending-job-continue-set" : "pending-job-continue")
+                    : "Công việc: " + controls.primaryLabel);
+        }
+        Button secondary = null;
+        if (controls.secondaryAction != RunControlModel.Action.NONE) {
+            secondary = secondaryButton(controls.secondaryLabel, v -> runSecondaryAction(controls.secondaryAction));
+            secondary.setContentDescription("Công việc: " + controls.secondaryLabel);
+        }
+        Button more = controls.hasOverflow ? secondaryButton("Thêm", v -> showRunOverflow(state)) : null;
+        if (more != null) more.setContentDescription("Thêm thao tác Công việc");
+        if (stacked) {
+            if (primary != null) actionControlRow.addView(primary, new LinearLayout.LayoutParams(-1, -2));
+            if (secondary != null) actionControlRow.addView(secondary, marginLP(-1, -2, 0, 6, 0, 0));
+            if (more != null) actionControlRow.addView(more, marginLP(-1, -2, 0, 6, 0, 0));
+        } else {
+            int count = (primary == null ? 0 : 1) + (secondary == null ? 0 : 1) + (more == null ? 0 : 1);
+            if (primary != null) actionControlRow.addView(primary, new LinearLayout.LayoutParams(0, -2, 1));
+            if (secondary != null) {
+                if (count > 1) actionControlRow.addView(space(6, 1));
+                actionControlRow.addView(secondary, new LinearLayout.LayoutParams(0, -2, 1));
+            }
+            if (more != null) {
+                if (count > 1) actionControlRow.addView(space(6, 1));
+                actionControlRow.addView(more, new LinearLayout.LayoutParams(0, -2, 1));
+            }
+        }
+    }
+
+    private void runPrimaryAction(RunControlModel.Action action) {
+        switch (action) {
+            case START: startTranslation(); break;
+            case PAUSE: sendSvc(TranslatorService.ACTION_PAUSE); break;
+            case RESUME:
+                if (pendingJobCache != null) resumeJob(pendingJobCache.id);
+                else showPaidConfirmation("Tiếp tục dịch", () -> sendSvc(TranslatorService.ACTION_RESUME));
+                break;
+            case RETRY:
+                if (pendingJobCache != null) retryJobFailedChunks(pendingJobCache.id); else retryFailedChunks();
+                break;
+            case REVIEW: switchTab("Jobs"); break;
+            case OPEN_RESULT:
+                if (outputUri != null || outputTreeUri != null) openSelectedOutput(); else switchTab("Jobs");
+                break;
+            default: break;
+        }
+    }
+
+    private void runSecondaryAction(RunControlModel.Action action) {
+        if (action == RunControlModel.Action.STOP) confirmStopTranslation();
+    }
+
+    private void showRunOverflow(RunControlModel.State state) {
+        PopupMenu menu = new PopupMenu(this, actionControlRow);
+        if (state != RunControlModel.State.PREPARING && state != RunControlModel.State.STOPPING
+                && state != RunControlModel.State.UNKNOWN_DELIVERY) {
+            menu.getMenu().add("Xem prompt").setOnMenuItemClickListener(item -> { showPromptPreview(); return true; });
+        }
+        if (state != RunControlModel.State.READY && state != RunControlModel.State.BLOCKED) {
+            menu.getMenu().add("Xem Công việc").setOnMenuItemClickListener(item -> { switchTab("Jobs"); return true; });
+        }
+        if (pendingJobCache != null) {
+            menu.getMenu().add("Bỏ job này").setOnMenuItemClickListener(item -> { confirmDismissJob(pendingJobCache); return true; });
+        }
+        menu.show();
+    }
+
+    void updateActionButtonsImpl() {
+        if ("Translate".equals(currentTab) && !pendingJobCacheReady) refreshPendingJobCard();
+        boolean active = TranslatorService.isActive() || translationActive;
+        PreparedBatch plan = currentPreparedBatch();
+        boolean planReady = plan != null && plan.ready();
+        String blocker = planReady ? startReadinessError() : "Đang chuẩn bị kế hoạch chunk";
         if (!active && outputTreeUri != null) {
             String outputError = FileUtil.validateTreeGrantOnly(this, outputTreeUri, "Output folder");
             if (outputError != null) {
-                setLabel(outputFolderLabel, "Output folder permission lost");
-                if (outputFolderButton != null) outputFolderButton.setText("Choose output folder again");
-            } else if (outputFolderButton != null) outputFolderButton.setText("Chọn thư mục");
+                setLabel(outputFolderLabel, "Thư mục (nhiều chương): Cần cấp lại");
+                if (outputFolderButton != null) outputFolderButton.setText("Chọn lại thư mục");
+            } else if (outputFolderButton != null) outputFolderButton.setText("Thư mục (nhiều chương)");
         }
-        if(!active&&statusBanner!=null){
-            if(blocker!=null){statusBanner.setVisibility(View.VISIBLE);statusBanner.setText("Not ready: "+blocker);}
-            else statusBanner.setVisibility(View.GONE);
+        RunControlModel.State state = runControlState();
+        renderRunControlBar(state, RunControlModel.controls(state,
+                pendingJobCache != null ? pendingJobCache.error : (failedChunksCache ? 1 : 0)), blocker);
+        if (!active && statusBanner != null) {
+            if (state == RunControlModel.State.BLOCKED) {
+                statusBanner.setVisibility(View.VISIBLE);
+                statusBanner.setText("Chưa sẵn sàng: " + blocker);
+            } else statusBanner.setVisibility(View.GONE);
         }
-        setButtonEnabled(retryButton, !active&&failed);
-        setButtonEnabled(pauseButton, active);
-        setButtonEnabled(resumeButton, active);
-        setButtonEnabled(cancelButton, active);
-        if(pauseButton!=null)pauseButton.setVisibility(active?View.VISIBLE:View.GONE);
-        if(resumeButton!=null)resumeButton.setVisibility(active?View.VISIBLE:View.GONE);
-        if(cancelButton!=null)cancelButton.setVisibility(active?View.VISIBLE:View.GONE);
-        if(retryButton!=null)retryButton.setVisibility(!active&&failed?View.VISIBLE:View.GONE);
-        if(trackingCard!=null)trackingCard.setVisibility(active||RuntimeStateStore.toIntent(this)!=null?View.VISIBLE:View.GONE);
+        if (trackingCard != null && "Translate".equals(currentTab)) trackingCard.setVisibility(View.VISIBLE);
         refreshTopStatusChip();
     }
 
@@ -3046,13 +3357,34 @@ public class MainActivity extends Activity {
             if (yamlFileLabel != null) yamlFileLabel.setText("Instructions: " + (instructionEntry.valid() ? instructionEntry.name + " • internal copy valid" : "chưa chọn"));
             if (envFileLabel != null) envFileLabel.setText(".env: " + (environmentEntry.valid() ? environmentEntry.name + " • internal copy valid" : "chưa chọn"));
             if (pronounFileLabel != null) pronounFileLabel.setText("Pronoun: " + (s.pronounName == null || s.pronounName.isEmpty() ? "chưa chọn" : s.pronounName));
-            if (outputFileLabel != null) outputFileLabel.setText(outputUri == null ? "Single output TXT: chưa chọn" : "Single output TXT: " + FileUtil.displayName(this, outputUri) + " (" + FileUtil.accessBadge(this, outputUri, true) + ")");
-            if (outputFolderLabel != null) outputFolderLabel.setText(outputTreeUri == null ? "Output folder: chưa chọn" : "Output folder: " + FileUtil.treeName(outputTreeUri) + " (" + FileUtil.accessBadge(this, outputTreeUri, true) + ")");
+            if (outputFileLabel != null) outputFileLabel.setText(outputUri == null ? "1 tệp: chưa chọn" : "1 tệp: " + FileUtil.displayName(this, outputUri) + " · " + outputAccessLabel(outputUri));
+            if (outputFolderLabel != null) outputFolderLabel.setText(outputFolderDisplayLabel());
+            if (outputOpenButton != null) outputOpenButton.setEnabled(outputUri != null || outputTreeUri != null);
             if (activeGlossaryLabel != null) activeGlossaryLabel.setText(activeGlossaryText());
             updateMetaLine();
         } finally {
             hydratingSettings = wasHydrating;
         }
+    }
+
+    private String outputAccessLabel(Uri uri) {
+        String badge = uri == null ? "" : FileUtil.accessBadge(this, uri, true);
+        String lower = badge == null ? "" : badge.toLowerCase(Locale.ROOT);
+        return lower.contains("writ") || lower.contains("grant") || lower.contains("ok")
+                ? "Đã cấp quyền" : "Cần cấp lại";
+    }
+
+    private String outputFolderDisplayLabel() {
+        if (outputTreeUri == null) return "Thư mục (nhiều chương): chưa chọn";
+        String name = FileUtil.treeName(outputTreeUri);
+        String warning = "";
+        if (sourceUi != null && sourceUi.isSetMode()) {
+            String set = sourceUi.currentSetName();
+            if (set != null && !set.trim().isEmpty() && (name == null || !name.toLowerCase(Locale.ROOT).contains(set.trim().toLowerCase(Locale.ROOT)))) {
+                warning = " · Cảnh báo: tên thư mục khác Tập";
+            }
+        }
+        return "Thư mục (nhiều chương): " + nonEmpty(name, "đã chọn") + " · " + outputAccessLabel(outputTreeUri) + warning;
     }
 
     void requestNotificationPermission() {
@@ -3507,13 +3839,20 @@ public class MainActivity extends Activity {
         if (translateGlossaryChip != null) translateGlossaryChip.setText(state.glossary.displayText());
         if (translatePronounChip != null) translatePronounChip.setText(state.pronoun.displayText());
         if (translateInstructionChip != null) translateInstructionChip.setText(state.instruction.displayText());
+        if (translateConfigSummary != null) translateConfigSummary.setText(state.compactSummary());
+        if (translateConfigDetails != null) {
+            boolean invalid = state.glossary.status == TranslationConfigState.Status.INVALID
+                    || state.pronoun.status == TranslationConfigState.Status.INVALID
+                    || state.instruction.status == TranslationConfigState.Status.INVALID;
+            if (invalid) translateConfigDetails.setVisibility(View.VISIBLE);
+        }
     }
 
     void showTranslationConfig(String kind) {
         AppSettings s = settingsForTranslationDisplay();
         TranslationConfigState state = translationConfigState();
         if ("glossary".equals(kind)) {
-            showLongText("Glossaries • " + state.glossary.statusLabel(),
+            showLongText("Glossary • " + state.glossary.statusLabel(),
                     state.glossary.displayText() + "\n\n" + nonEmpty(s.glossaryText, "Không sử dụng"));
         } else if ("pronoun".equals(kind)) {
             showLongText("Pronoun • " + state.pronoun.statusLabel(),
@@ -3601,14 +3940,21 @@ public class MainActivity extends Activity {
         if (usePreparedPipeline) {
             if (inputUris.isEmpty()) {
                 PreparationCoordinator.get(this).cancel(); preparedBatch=null; lastEstimate=null;
-                estimateText.setText("0 chunks\nEstimated tokens unavailable\nEstimated cost unavailable");
+                estimateText.setText("0 chunk · token chưa có · Chi phí ước tính chưa có");
                 estimatePanel.setVisibility(View.VISIBLE);
                 if(pricingRetryButton!=null)pricingRetryButton.setVisibility(View.GONE);
                 updateActionButtons(); return;
             }
             AppSettings settings=collectSettings();
-            lastEstimateSignature=estimateSignature(settings);
-            estimateText.setText("Preparing chunks…");
+            String nextSignature = estimateSignature(settings);
+            if (!lastEstimateSignature.isEmpty() && !lastEstimateSignature.equals(nextSignature)
+                    && !TranslatorService.isActive()) {
+                Intent saved = RuntimeStateStore.toIntent(this);
+                String savedState = saved == null ? trackedState : saved.getStringExtra(TranslatorService.EXTRA_STATE);
+                if ("COMPLETED".equalsIgnoreCase(savedState)) completionSummaryCollapsed = true;
+            }
+            lastEstimateSignature=nextSignature;
+            estimateText.setText("Đang chuẩn bị chunk…");
             estimatePanel.setVisibility(View.VISIBLE);
             PreparationCoordinator.get(this).request(inputUris,settings,sourceUi.isSetMode()?chapterBindings:null,this::renderPreparedBatch);
             updateActionButtons(); return;
@@ -3742,13 +4088,13 @@ public class MainActivity extends Activity {
         preparedBatch=current != null ? current : batch;
         batch=preparedBatch;
         if(batch.status==PreparedBatch.Status.PREPARING){
-            estimateText.setText("Preparing chunks: "+batch.progress+"%");
+            estimateText.setText("Đang chuẩn bị chunk: "+batch.progress+"%");
         }else if(batch.status==PreparedBatch.Status.ERROR){
-            estimateText.setText("Chunk preparation failed");
+            estimateText.setText("Không chuẩn bị được chunk");
             appendLog("Preparation failed: "+batch.error);
         }else if(batch.ready()){
             CostEstimator.Estimate e=batch.estimate;lastEstimate=e;lastEstimateModelId=collectSettings().model;
-            estimateText.setText(TranslationDashboardFormatter.prepared(e, batch.exactChunkCount()));
+            estimateText.setText(TranslationDashboardFormatter.preparedCompact(e, batch.exactChunkCount()));
             if(pricingRetryButton!=null)pricingRetryButton.setVisibility(View.GONE);
             updateModelDiagnostics();
             sourceUi.updateEstimates(batch);
@@ -3891,7 +4237,7 @@ public class MainActivity extends Activity {
             tint(statusBanner, statusColor(status), 1, 14);
         }
         if ("done".equals(status) && resultCard != null) {
-            showResult("Output ready", "Saved and verified");
+            showResult("Đã lưu và kiểm tra", "Output đã sẵn sàng");
         }
     }
 
@@ -3939,7 +4285,31 @@ public class MainActivity extends Activity {
         timedPermille = setRun ? RunPanelFormatter.setPermille(setTotal, setDone, setFailed, completed, total) : RunPanelFormatter.chunkPermille(completed, total);
         String set = currentSetNameForPanel();
         trackedState = state;
-        if (trackingTitle != null) trackingTitle.setText(RunPanelFormatter.title(state, setRun, set, file));
+        boolean isCompleted = "COMPLETED".equalsIgnoreCase(state);
+        if (completionSummary != null && completionSummary.getTag() == null) {
+            completionSummary.setTag(Boolean.TRUE);
+            completionSummary.setOnClickListener(v -> {
+                completionSummaryCollapsed = false;
+                completionSummary.setVisibility(View.GONE);
+                if (trackingDetails != null) trackingDetails.setVisibility(View.VISIBLE);
+                if (trackingTitle != null) trackingTitle.setText("Chi tiết lượt dịch trước");
+                refreshTopStatusChip();
+            });
+        }
+        if (isCompleted && completionSummaryCollapsed) {
+            if (trackingTitle != null) trackingTitle.setText("Lần trước");
+            if (completionSummary != null) {
+                double summaryCost = setRun ? Math.max(runCost, cost) : cost;
+                completionSummary.setText("Xong " + Math.max(currentChunk, completed) + "/" + total + " · "
+                        + TranslationDashboardFormatter.money3Vi(summaryCost) + " · Chi tiết");
+                completionSummary.setVisibility(View.VISIBLE);
+            }
+            if (trackingDetails != null) trackingDetails.setVisibility(View.GONE);
+        } else {
+            if (trackingTitle != null) trackingTitle.setText(RunPanelFormatter.title(state, setRun, set, file));
+            if (completionSummary != null) completionSummary.setVisibility(View.GONE);
+            if (trackingDetails != null) trackingDetails.setVisibility(View.VISIBLE);
+        }
         if (trackingFile != null) trackingFile.setText(nonEmpty(file, "Lượt dịch"));
         if (trackingFile != null) trackingFile.setVisibility(setRun ? View.VISIBLE : View.GONE);
         if (setBarRow != null) setBarRow.setVisibility(setRun ? View.VISIBLE : View.GONE);
@@ -4242,7 +4612,7 @@ public class MainActivity extends Activity {
         if ("Glossaries".equals(name)) return "Glossary";
         if ("Pronouns".equals(name)) return "Pronoun";
         if ("Files".equals(name)) return "Files";
-        if ("Jobs".equals(name)) return "Jobs";
+        if ("Jobs".equals(name) || "JobsHistory".equals(name)) return "Jobs";
         return "Sample";
     }
 
@@ -4252,7 +4622,7 @@ public class MainActivity extends Activity {
         if ("Glossaries".equals(name)) return "📖";
         if ("Pronouns".equals(name)) return "💬";
         if ("Files".equals(name)) return "📁";
-        if ("Jobs".equals(name)) return "🧾";
+        if ("Jobs".equals(name) || "JobsHistory".equals(name)) return "Công việc";
         return "⚗";
     }
 

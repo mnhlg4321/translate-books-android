@@ -104,11 +104,24 @@ public class TranslationEngine {
     }
 
     static boolean isReasoningBound(OpenAICompatibleClient.ChatResult result, String visibleAnswer) {
+        return isReasoningBound(result, visibleAnswer, 0);
+    }
+
+    /**
+     * A length stop is reasoning-bound when hidden reasoning consumed most of
+     * the output budget, or when the visible answer used less than half of the
+     * owner-facing answer budget.  The second signal is intentionally based on
+     * the visible answer, not raw response characters, so it remains useful
+     * for both CJK and Latin text.
+     */
+    static boolean isReasoningBound(OpenAICompatibleClient.ChatResult result,
+                                    String visibleAnswer, int visibleLimit) {
         if (result == null || ResponseValidator.parseFinish(result.finishReason) != ResponseValidator.Finish.LENGTH) return false;
-        if (result.reasoningTokens > 0 && result.completionTokens > 0) {
-            return result.reasoningTokens >= result.completionTokens * 0.9;
-        }
-        return visibleAnswer == null || visibleAnswer.trim().length() < 32;
+        boolean reasoningDominates = result.reasoningTokens > 0 && result.completionTokens > 0
+                && result.reasoningTokens >= result.completionTokens * 0.75;
+        boolean visibleAnswerIsShort = visibleLimit > 0
+                && Chunker.approxTokens(visibleAnswer) < visibleLimit * 0.5;
+        return reasoningDominates || visibleAnswerIsShort;
     }
 
     public static boolean isReasoningBound(Throwable e) {
@@ -269,7 +282,7 @@ public class TranslationEngine {
                 ResponseValidator.Result validation = ResponseValidator.validate(result.content, out, chunk.mainContent,
                         prompt.system + "\n" + prompt.user, result.finishReason, result.completionTokens, outputLimit,
                         plan.glossaryTargets, true);
-                validation.reasoningBound = isReasoningBound(result, out);
+                validation.reasoningBound = isReasoningBound(result, out, visibleLimit);
                 if (!validation.accepted) throw new ResponseValidator.RejectedResponseException(validation);
                 if (repaired.changed) {
                     quoteRepaired = true;

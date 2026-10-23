@@ -14,6 +14,17 @@ public final class TranslationDashboardFormatter {
         return chunkLine + "\n" + tokens + "\n" + cost;
     }
 
+    /** One concise Vietnamese line for the not-running Translate screen. */
+    public static String preparedCompact(CostEstimator.Estimate estimate, int chunks) {
+        String chunkLine = Math.max(0, chunks) + " chunk";
+        if (estimate == null) return chunkLine + " · token chưa có · Chi phí ước tính chưa có";
+        String tokens = "≈ " + compactTokensVi(estimate.totalTokensHigh) + " token";
+        String cost = estimate.pricingAvailable && !Double.isNaN(estimate.costHigh)
+                ? "Chi phí ước tính ≈ " + money3Vi(estimate.costHigh)
+                : "Chi phí ước tính chưa có";
+        return chunkLine + " · " + tokens + " · " + cost;
+    }
+
     public static String progress(int completed, int total) {
         return Math.max(0, completed) + "/" + Math.max(0, total) + " chunks";
     }
@@ -67,7 +78,17 @@ public final class TranslationDashboardFormatter {
         return safe < 1000 ? String.valueOf(safe) : String.format(java.util.Locale.US, "%.1fk", safe / 1000d);
     }
 
+    static String compactTokensVi(long value) {
+        long safe = Math.max(0, value);
+        if (safe < 1000) return String.valueOf(safe);
+        return String.format(java.util.Locale.forLanguageTag("vi-VN"), "%.1fk", safe / 1000d);
+    }
+
     static String money3(double value) {
         return String.format(java.util.Locale.US, "$%.3f", Math.max(0d, value));
+    }
+
+    static String money3Vi(double value) {
+        return String.format(java.util.Locale.US, "$%.3f", Math.max(0d, value)).replace('.', ',');
     }
 }

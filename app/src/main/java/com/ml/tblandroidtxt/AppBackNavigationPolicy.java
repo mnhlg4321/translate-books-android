@@ -7,6 +7,7 @@ final class AppBackNavigationPolicy {
         OPEN_LIBRARY_HOME,
         EXIT_SELECTION,
         OPEN_SETTINGS_GENERAL,
+        OPEN_JOBS,
         OPEN_TRANSLATE,
         SYSTEM
     }
@@ -21,6 +22,7 @@ final class AppBackNavigationPolicy {
         if ("Glossaries".equals(tab) && editingGlossary) return Action.SAVE_AND_CLOSE_GLOSSARY;
         if ("Pronouns".equals(tab) && editingPronoun) return Action.CLOSE_PRONOUN;
         if ("Glossaries".equals(tab) || "Pronouns".equals(tab) || "Sample".equals(tab) || "RAW".equals(tab) || "ChapterSets".equals(tab)) return Action.OPEN_LIBRARY_HOME;
+        if ("JobsHistory".equals(tab)) return Action.OPEN_JOBS;
         if ("Jobs".equals(tab) || "Editorial".equals(tab) || "Files".equals(tab)) return Action.OPEN_TRANSLATE;
         if ("Settings".equals(tab) && !"General".equals(settingsCategory)) return Action.OPEN_SETTINGS_GENERAL;
         if ("Settings".equals(tab)) return Action.OPEN_TRANSLATE;

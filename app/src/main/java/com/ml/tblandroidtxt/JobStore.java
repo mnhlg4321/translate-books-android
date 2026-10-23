@@ -21,6 +21,11 @@ public class JobStore {
     }
 
     public List<TranslationRepository.JobSummary> recentSummaries(int limit) { return repo.getJobSummaries(limit); }
+    public List<TranslationRepository.JobSummary> currentUnfinishedSummaries(int limit) { return repo.getCurrentUnfinishedSummaries(limit); }
+    public List<TranslationRepository.JobSummary> historyPage(long beforeId, int limit, String fileQuery,
+                                                               java.util.Collection<Long> allowedJobIds) {
+        return repo.getJobSummariesPage(beforeId, limit, fileQuery, allowedJobIds);
+    }
     public TranslationRepository.JobSummary summary(long jobId) { return repo.getJobSummary(jobId); }
     public List<TranslationRepository.ChunkRow> chunks(long jobId) { return repo.getChunkRows(jobId); }
     public TranslationRepository.Job lastIncomplete() { return repo.getLastIncompleteJob(); }

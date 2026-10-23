@@ -129,6 +129,7 @@ public final class RunPanelFormatter {
         if ("COMPLETED".equals(state)) return "Hoàn tất";
         if ("FAILED".equals(state)) return "Có lỗi";
         if ("CANCELLED".equals(state)) return "Đã hủy";
+        if ("IDLE".equals(state)) return "Sẵn sàng";
         return stateLabel(state);
     }
 

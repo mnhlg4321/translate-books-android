@@ -26,7 +26,7 @@ final class NavState {
     }
 
     private static boolean isValidPage(String page) {
-        return "Translate".equals(page) || "Jobs".equals(page) || "Editorial".equals(page)
+        return "Translate".equals(page) || "Jobs".equals(page) || "JobsHistory".equals(page) || "Editorial".equals(page)
                 || "Settings".equals(page) || "Files".equals(page) || "RAW".equals(page)
                 || "Glossaries".equals(page) || "Pronouns".equals(page)
                 || "ChapterSets".equals(page) || "Sample".equals(page);

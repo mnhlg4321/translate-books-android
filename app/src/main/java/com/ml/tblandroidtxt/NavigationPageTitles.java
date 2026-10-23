@@ -7,6 +7,7 @@ final class NavigationPageTitles {
     static String title(String page) {
         if ("Translate".equals(page)) return "Dịch";
         if ("Jobs".equals(page)) return "Công việc";
+        if ("JobsHistory".equals(page)) return "Công việc · Lịch sử";
         if ("Editorial".equals(page)) return EditorialApiPresenter.TAB_TITLE;
         if ("Settings".equals(page)) return "Cài đặt";
         if ("Files".equals(page)) return "Thư viện";

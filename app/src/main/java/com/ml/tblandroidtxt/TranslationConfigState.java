@@ -57,10 +57,10 @@ public final class TranslationConfigState {
 
     public static Item glossary(String name, int terms, int warnings) {
         if ((name == null || name.trim().isEmpty()) && terms <= 0) {
-            return new Item("Glossaries", "", "", Status.NOT_USED);
+            return new Item("Glossary", "", "", Status.NOT_USED);
         }
         Status status = warnings > 0 || terms <= 0 ? Status.WARNING : Status.VALID;
-        return new Item("Glossaries", safeName(name, "Glossary"), terms + " mục", status);
+        return new Item("Glossary", safeName(name, "Glossary"), terms + " mục", status);
     }
 
     public static Item pronoun(String name, int rules, int warnings) {
@@ -91,5 +91,21 @@ public final class TranslationConfigState {
 
     private static String safeName(String value, String fallback) {
         return value == null || value.trim().isEmpty() ? fallback : value.trim();
+    }
+
+    /** Compact, valid-configuration summary used when the detail rows are collapsed. */
+    public String compactSummary() {
+        return "Glossary " + compactCount(glossary, "mục")
+                + " · Pronoun " + compactCount(pronoun, "quy tắc")
+                + " · YAML " + (instruction.isValidForStart() ? "✓" : "!")
+                + " · Sửa";
+    }
+
+    private static String compactCount(Item item, String unit) {
+        if (item == null || item.status == Status.NOT_USED) return "—";
+        String detail = item.detail == null ? "" : item.detail.trim();
+        int split = detail.indexOf(' ');
+        if (split > 0) return detail.substring(0, split);
+        return detail.isEmpty() ? "—" : detail;
     }
 }

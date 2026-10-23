@@ -35,19 +35,24 @@ public class RuntimeFixF1F6Test {
         assertEquals(2677, plan.requestMaxOutputTokens(s));
     }
 
-    @Test public void reasoningBoundRequiresLengthAndConsumesTheOutputBudget() {
+    @Test public void reasoningBoundUsesTheSeventyFivePercentThresholdAndVisibleCap() {
         OpenAICompatibleClient.ChatResult result = new OpenAICompatibleClient.ChatResult();
         result.finishReason = "length";
-        result.completionTokens = 100;
-        result.reasoningTokens = 90;
+        result.completionTokens = 11_160;
+        result.reasoningTokens = 9_724;
         result.content = "<TRANSLATION>x</TRANSLATION>";
-        assertTrue(TranslationEngine.isReasoningBound(result, "x"));
+        assertTrue("the observed 9724/11160 case must be bound", TranslationEngine.isReasoningBound(result, "x", 629));
 
-        result.reasoningTokens = 50;
-        assertFalse(TranslationEngine.isReasoningBound(result, "x"));
+        result.reasoningTokens = 8_369;
+        assertFalse(TranslationEngine.isReasoningBound(result, cjk(400), 629));
+        result.reasoningTokens = 8_370;
+        assertTrue(TranslationEngine.isReasoningBound(result, cjk(400), 629));
         result.reasoningTokens = 0;
-        assertTrue(TranslationEngine.isReasoningBound(result, "x"));
-        assertFalse(TranslationEngine.isReasoningBound(result, "A visible answer with more than thirty two chars."));
+        assertTrue(TranslationEngine.isReasoningBound(result, "x", 629));
+        assertFalse(TranslationEngine.isReasoningBound(result, cjk(400), 629));
+
+        result.finishReason = "stop";
+        assertFalse(TranslationEngine.isReasoningBound(result, "x", 629));
     }
 
     @Test public void onlyExplicitHighOrMediumEffortGetsOneLowerEffortRetry() {

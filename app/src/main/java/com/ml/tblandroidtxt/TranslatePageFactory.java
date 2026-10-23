@@ -109,8 +109,8 @@ class TranslatePageFactory {
         a.estimatePanel = a.card(12, a.FIELD, a.BORDER);
         a.estimatePanel.setOrientation(LinearLayout.VERTICAL);
         a.estimatePanel.setPadding(a.dp(10), a.dp(8), a.dp(10), a.dp(8));
-        a.estimateText = a.text("0 chunks\nEstimated tokens unavailable\nEstimated cost unavailable", 14, a.TEXT, true);
-        a.estimateText.setGravity(Gravity.CENTER);
+        a.estimateText = a.text("0 chunk · token chưa có · Chi phí ước tính chưa có", 14, a.TEXT, false);
+        a.estimateText.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
         a.estimatePanel.addView(a.estimateText);
         a.pricingRetryButton = a.secondaryButton(MODEL_PRICING_LABEL, v -> a.refreshModelCatalog());
         a.estimatePanel.addView(a.pricingRetryButton, a.marginLP(-1, a.dp(42), 0, 8, 0, 0));
@@ -122,41 +122,16 @@ class TranslatePageFactory {
         root.addView(uploadCard, a.marginLP(-1, -2, 0, 8, 0, 14));
         if (a.sourceUi.isSetMode()) uploadCard.setVisibility(View.GONE);
 
+        // The shared run-control bar lives directly under the tracking title,
+        // before the detailed configuration cards, so it stays reachable while
+        // both TXT and chapter-set modes use the same controls.
+        root.addView(buildTrackingCard(), a.marginLP(-1, -2, 0, 8, 0, 16));
+
         // Core readiness must remain visible on Translate; do not hide it behind Settings.
         a.translateSupportCard = translationSupportCard();
         a.translateOutputCard = outputCard();
         root.addView(a.translateSupportCard, a.marginLP(-1, -2, 0, 0, 0, 10));
         root.addView(a.translateOutputCard, a.marginLP(-1, -2, 0, 0, 0, 10));
-
-        LinearLayout actionGrid = a.card(18, a.CARD, a.BORDER);
-        actionGrid.setPadding(a.dp(12), a.dp(12), a.dp(12), a.dp(12));
-        actionGrid.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout actionTop = a.rowContainer();
-        LinearLayout actionBottom = a.rowContainer();
-        a.startButton = a.primaryButton("Bắt đầu", v -> a.startTranslation());
-        a.pauseButton = a.secondaryButton("Tạm dừng", v -> a.sendSvc(TranslatorService.ACTION_PAUSE));
-        a.resumeButton = a.secondaryButton("Tiếp tục", v -> a.sendSvc(TranslatorService.ACTION_RESUME));
-        a.cancelButton = a.dangerButton("Dừng dịch", v -> a.sendSvc(TranslatorService.ACTION_CANCEL));
-        actionTop.addView(a.startButton, new LinearLayout.LayoutParams(0, -2, 1));
-        actionTop.addView(a.space(8, 1));
-        actionTop.addView(a.pauseButton, new LinearLayout.LayoutParams(0, -2, 1));
-        actionBottom.addView(a.resumeButton, new LinearLayout.LayoutParams(0, -2, 1));
-        actionBottom.addView(a.space(8, 1));
-        actionBottom.addView(a.cancelButton, new LinearLayout.LayoutParams(0, -2, 1));
-        actionGrid.addView(actionTop);
-        actionGrid.addView(actionBottom, a.marginLP(-1, -2, 0, 8, 0, 0));
-        LinearLayout quickRow = a.rowContainer();
-        quickRow.addView(a.secondaryButton(PROMPT_PREVIEW_LABEL, v -> a.showPromptPreview()), new LinearLayout.LayoutParams(0, -2, 1));
-        quickRow.addView(a.space(8, 1));
-        a.retryButton = a.secondaryButton("Dịch lại chunk lỗi", v -> a.retryFailedChunks());
-        quickRow.addView(a.retryButton, new LinearLayout.LayoutParams(0, -2, 1));
-        actionGrid.addView(quickRow, a.marginLP(-1, -2, 0, 8, 0, 0));
-        a.pendingJobCard = a.card(18, a.CARD, a.AMBER);
-        a.pendingJobCard.setOrientation(LinearLayout.VERTICAL);
-        a.pendingJobCard.setPadding(a.dp(14), a.dp(12), a.dp(14), a.dp(12));
-        a.pendingJobCard.setVisibility(View.GONE);
-        root.addView(a.pendingJobCard, a.marginLP(-1, -2, 0, 0, 0, 8));
-        root.addView(actionGrid, a.marginLP(-1, -2, 0, 0, 0, 8));
 
         a.translateMeta = a.text("OpenRouter · Model chưa nạp · Japanese → Vietnamese", 12, a.MUTED, false);
         a.translateMeta.setGravity(Gravity.CENTER);
@@ -171,8 +146,6 @@ class TranslatePageFactory {
         a.progress.setMax(100);
         root.addView(a.progress, a.marginLP(-1, a.dp(12), 0, 8, 0, 8));
 
-        root.addView(buildTrackingCard(), a.marginLP(-1, -2, 0, 8, 0, 16));
-
         a.resultCard = a.card(16, a.CARD, a.GREEN);
         a.resultCard.setOrientation(LinearLayout.HORIZONTAL);
         a.resultCard.setGravity(Gravity.CENTER_VERTICAL);
@@ -185,7 +158,7 @@ class TranslatePageFactory {
         a.resultMeta = a.text("Chưa có output", 12, a.MUTED, false);
         rt.addView(a.resultTitle); rt.addView(a.resultMeta);
         a.resultCard.addView(rt, new LinearLayout.LayoutParams(0, -2, 1));
-        a.resultCard.addView(a.secondaryButton("Mở output", v -> a.toast("Output đã được lưu vào file anh chọn")), new LinearLayout.LayoutParams(a.dp(140), a.dp(42)));
+        a.resultCard.addView(a.secondaryButton("Mở output", v -> a.openSelectedOutput()), new LinearLayout.LayoutParams(a.dp(140), a.dp(42)));
         a.resultCard.setVisibility(View.GONE);
         root.addView(a.resultCard, a.marginLP(-1, -2, 0, 8, 0, 16));
 
@@ -199,17 +172,20 @@ class TranslatePageFactory {
     }
 
     View outputCard() {
-        LinearLayout card = a.sectionCard("⇩", "Nơi lưu bản dịch");
-        a.outputFileLabel = a.text(a.outputUri == null ? "File riêng: chưa chọn" : "File riêng: " + FileUtil.displayName(a, a.outputUri), 12, a.MUTED, false);
-        a.outputFolderLabel = a.text(a.outputTreeUri == null ? "Thư mục: chưa chọn" : "Thư mục: " + FileUtil.treeName(a.outputTreeUri), 12, a.MUTED, false);
+        LinearLayout card = a.sectionCard("", "Nơi lưu bản dịch");
+        a.outputFileLabel = a.text(a.outputUri == null ? "1 tệp: chưa chọn" : "1 tệp: " + FileUtil.displayName(a, a.outputUri), 12, a.MUTED, false);
+        a.outputFolderLabel = a.text(a.outputTreeUri == null ? "Thư mục (nhiều chương): chưa chọn" : "Thư mục (nhiều chương): " + FileUtil.treeName(a.outputTreeUri), 12, a.MUTED, false);
         LinearLayout buttons = a.rowContainer();
-        buttons.addView(a.secondaryButton("Chọn file output", v -> a.chooseOutput()), new LinearLayout.LayoutParams(0, -2, 1));
+        buttons.addView(a.secondaryButton("1 tệp", v -> a.chooseOutput()), new LinearLayout.LayoutParams(0, -2, 1));
         buttons.addView(a.space(8, 1));
-        a.outputFolderButton = a.secondaryButton("Chọn thư mục", v -> a.chooseOutputFolder());
+        a.outputFolderButton = a.secondaryButton("Thư mục (nhiều chương)", v -> a.chooseOutputFolder());
         buttons.addView(a.outputFolderButton, new LinearLayout.LayoutParams(0, -2, 1));
         card.addView(buttons);
         card.addView(a.outputFileLabel, a.marginLP(-1, -2, 0, 8, 0, 0));
         card.addView(a.outputFolderLabel, a.marginLP(-1, -2, 0, 4, 0, 0));
+        a.outputOpenButton = a.secondaryButton("Mở output", v -> a.openSelectedOutput());
+        a.outputOpenButton.setEnabled(a.outputUri != null || a.outputTreeUri != null);
+        card.addView(a.outputOpenButton, a.marginLP(-1, -2, 0, 8, 0, 0));
         return card;
     }
 
@@ -217,26 +193,45 @@ class TranslatePageFactory {
         TranslationConfigState state = a.translationConfigState();
         LinearLayout section = a.sectionCard("◇", state.fromActiveJob
                 ? "Cấu hình đang dùng • Job #" + state.jobId : "Cấu hình bản dịch");
+        LinearLayout summaryRow = a.rowContainer();
+        a.translateConfigSummary = a.text(state.compactSummary(), 13, a.TEXT, true);
+        a.translateConfigSummary.setSingleLine(false);
+        summaryRow.addView(a.translateConfigSummary, new LinearLayout.LayoutParams(0, -2, 1));
+        Button edit = a.secondaryButton("Sửa", v -> {
+            boolean open = a.translateConfigDetails != null && a.translateConfigDetails.getVisibility() != View.VISIBLE;
+            if (a.translateConfigDetails != null) a.translateConfigDetails.setVisibility(open ? View.VISIBLE : View.GONE);
+            v.setContentDescription(open ? "Thu gọn cấu hình" : "Mở cấu hình");
+        });
+        edit.setContentDescription("Mở cấu hình");
+        summaryRow.addView(edit, new LinearLayout.LayoutParams(a.dp(92), -2));
+        section.addView(summaryRow, a.marginLP(-1, -2, 0, 0, 0, 8));
+        a.translateConfigDetails = new LinearLayout(a);
+        a.translateConfigDetails.setOrientation(LinearLayout.VERTICAL);
         a.translateGlossaryRow = supportRow(state.glossary, a.BLUE,
                 v -> a.showTranslationConfig("glossary"),
                 v -> { if (a.ensureConfigMutable()) a.switchTab("Glossaries"); },
                 v -> a.clearGlossarySelection());
-        section.addView(a.translateGlossaryRow);
+        a.translateConfigDetails.addView(a.translateGlossaryRow);
         a.translatePronounRow = supportRow(state.pronoun, a.CYAN,
                 v -> a.showTranslationConfig("pronoun"),
                 v -> a.switchTab("Pronouns"),
                 v -> a.clearPronoun());
-        section.addView(a.translatePronounRow, a.marginLP(-1, -2, 0, 8, 0, 0));
+        a.translateConfigDetails.addView(a.translatePronounRow, a.marginLP(-1, -2, 0, 8, 0, 0));
         a.translateComboNote = a.text("Glossary/Pronoun: theo từng chương của tập (xem danh sách chương ở trên).", 13, a.MUTED, false);
         a.translateComboNote.setSingleLine(false);
-        section.addView(a.translateComboNote, a.marginLP(-1, -2, 0, 8, 0, 0));
+        a.translateConfigDetails.addView(a.translateComboNote, a.marginLP(-1, -2, 0, 8, 0, 0));
         a.sourceUi.applyConfigRows();
-        section.addView(supportRow(state.instruction, a.AMBER,
+        a.translateConfigDetails.addView(supportRow(state.instruction, a.AMBER,
                 v -> a.showTranslationConfig("instruction"),
                 v -> a.chooseYaml(),
                 v -> a.clearInstruction()), a.marginLP(-1, -2, 0, 8, 0, 0));
-        section.addView(a.text("Instruction YAML là tùy chọn. Không chọn sẽ hiển thị “Không sử dụng”. Cấu hình không thể đổi khi job đang chạy.", 12, a.MUTED, false),
+        a.translateConfigDetails.addView(a.text("Instruction YAML là tùy chọn. Cấu hình không thể đổi khi job đang chạy.", 12, a.MUTED, false),
                 a.marginLP(-1, -2, 0, 8, 0, 0));
+        a.translateConfigDetails.setVisibility(state.glossary.status == TranslationConfigState.Status.INVALID
+                || state.pronoun.status == TranslationConfigState.Status.INVALID
+                || state.instruction.status == TranslationConfigState.Status.INVALID
+                ? View.VISIBLE : View.GONE);
+        section.addView(a.translateConfigDetails);
         return section;
     }
 
@@ -251,7 +246,7 @@ class TranslatePageFactory {
                 item.status == TranslationConfigState.Status.INVALID ? a.RED
                         : item.status == TranslationConfigState.Status.WARNING ? a.AMBER : accent, true);
         current.setSingleLine(false);
-        if ("Glossaries".equals(item.title)) a.translateGlossaryChip = current;
+        if ("Glossary".equals(item.title)) a.translateGlossaryChip = current;
         else if ("Pronoun".equals(item.title)) a.translatePronounChip = current;
         else a.translateInstructionChip = current;
         card.addView(current, a.marginLP(-1, -2, 0, 4, 0, 7));
@@ -260,7 +255,7 @@ class TranslatePageFactory {
         actions.addView(a.space(6, 1));
         actions.addView(a.secondaryButton(item.isSelected() ? "Thay đổi" : "Chọn", changeAction), new LinearLayout.LayoutParams(0, -2, 1));
         actions.addView(a.space(6, 1));
-        Button clear = a.dangerButton("Bỏ chọn", clearAction);
+        Button clear = a.secondaryButton("Bỏ chọn", clearAction);
         clear.setEnabled(item.isSelected());
         clear.setAlpha(item.isSelected() ? 1f : 0.45f);
         actions.addView(clear, new LinearLayout.LayoutParams(0, -2, 1));
@@ -331,17 +326,39 @@ class TranslatePageFactory {
         a.trackingCard = a.card(18, a.CARD, a.BORDER);
         a.trackingCard.setOrientation(LinearLayout.VERTICAL);
         a.trackingCard.setPadding(a.dp(12), a.dp(10), a.dp(12), a.dp(10));
-        a.trackingTitle = a.text("Đã dừng", 17, a.TEXT, true);
+        a.trackingTitle = a.text("Sẵn sàng", 17, a.TEXT, true);
         a.trackingTitle.setSingleLine(false);
         a.trackingCard.addView(a.trackingTitle);
+
+        a.actionControlRow = new LinearLayout(a);
+        a.actionControlRow.setOrientation(LinearLayout.VERTICAL);
+        a.actionControlRow.setGravity(Gravity.START);
+        a.trackingCard.addView(a.actionControlRow, a.marginLP(-1, -2, 0, 8, 0, 4));
+
+        // Only the job name remains here as context; all actions are rendered
+        // by MainActivity in the shared bar above.
+        a.pendingJobCard = new LinearLayout(a);
+        a.pendingJobCard.setOrientation(LinearLayout.VERTICAL);
+        a.pendingJobCard.setPadding(a.dp(10), a.dp(6), a.dp(10), a.dp(6));
+        a.pendingJobCard.setVisibility(View.GONE);
+        a.trackingCard.addView(a.pendingJobCard, a.marginLP(-1, -2, 0, 6, 0, 0));
+
+        a.completionSummary = a.text("", 13, a.MUTED, false);
+        a.completionSummary.setSingleLine(false);
+        a.completionSummary.setVisibility(View.GONE);
+        a.completionSummary.setContentDescription("Mở chi tiết lượt dịch trước");
+        a.trackingCard.addView(a.completionSummary, a.marginLP(-1, -2, 0, 4, 0, 4));
+        a.trackingDetails = new LinearLayout(a);
+        a.trackingDetails.setOrientation(LinearLayout.VERTICAL);
+        a.trackingCard.addView(a.trackingDetails);
         a.trackingFile = a.text("—", 14, a.MUTED, false);
         a.trackingFile.setSingleLine(false);
-        a.trackingCard.addView(a.trackingFile, a.marginLP(-1, -2, 0, 2, 0, 6));
+        a.trackingDetails.addView(a.trackingFile, a.marginLP(-1, -2, 0, 2, 0, 6));
         a.setBarRow = barRow("Tập", a.setBar = bar(), a.setLine = a.text("", 14, a.TEXT, true));
-        a.trackingCard.addView(a.setBarRow, a.marginLP(-1, -2, 0, 0, 0, 4));
+        a.trackingDetails.addView(a.setBarRow, a.marginLP(-1, -2, 0, 0, 0, 4));
         LinearLayout chapterRow = barRow("Chương", a.chapterBar = bar(), a.metricCompleted = a.text("", 14, a.TEXT, true));
         a.chapterRowLabel = (TextView) ((LinearLayout) chapterRow.getChildAt(0)).getChildAt(0);
-        a.trackingCard.addView(chapterRow, a.marginLP(-1, -2, 0, 0, 0, 8));
+        a.trackingDetails.addView(chapterRow, a.marginLP(-1, -2, 0, 0, 0, 8));
 
         a.metricTokens = metricValue(); a.metricCost = metricValue();
         a.metricElapsed = metricValue(); a.metricRemaining = metricValue();
@@ -350,8 +367,8 @@ class TranslatePageFactory {
         addMetricPair(metric(a.metricElapsed, metricLabel("Đã chạy")), metric(a.metricRemaining, metricLabel("Còn lại (ước tính)")));
         a.metricFailed = a.text("0 chunk lỗi", 14, a.TEXT, false);
         a.metricGlossaryLocks = a.text("Glossaries: chưa đo · Pronoun: chưa đo", 14, a.MUTED, false);
-        a.trackingCard.addView(a.metricFailed, a.marginLP(-1, -2, 0, 4, 0, 2));
-        a.trackingCard.addView(a.metricGlossaryLocks);
+        a.trackingDetails.addView(a.metricFailed, a.marginLP(-1, -2, 0, 4, 0, 2));
+        a.trackingDetails.addView(a.metricGlossaryLocks);
 
         // Legacy dashboard references are kept off-screen; no invented fallback measurement is shown.
         a.metricChunks = a.text("0", 1, a.BLUE, true);
@@ -361,7 +378,7 @@ class TranslatePageFactory {
         a.lockUsageMeta = a.text("", 1, a.MUTED, false);
         a.estimateLine = a.text("", 13, a.MUTED, false);
         a.estimateLine.setSingleLine(false);
-        a.trackingCard.addView(a.estimateLine, a.marginLP(-1, -2, 0, 6, 0, 6));
+        a.trackingDetails.addView(a.estimateLine, a.marginLP(-1, -2, 0, 6, 0, 6));
 
         LinearLayout previewCard = new LinearLayout(a);
         previewCard.setOrientation(LinearLayout.VERTICAL);
@@ -391,7 +408,7 @@ class TranslatePageFactory {
             a.previewToggle.setText(open ? "Ẩn" : "Xem");
             a.previewToggle.setContentDescription(open ? "Ẩn bản dịch gần nhất" : "Xem bản dịch gần nhất");
         });
-        a.trackingCard.addView(previewCard);
+        a.trackingDetails.addView(previewCard);
         return a.trackingCard;
     }
 
@@ -405,7 +422,8 @@ class TranslatePageFactory {
         row.addView(left, new LinearLayout.LayoutParams(stacked ? -1 : 0, -2, stacked ? 0 : 1));
         if (stacked) row.addView(a.space(1, 4)); else row.addView(a.space(12, 1));
         row.addView(right, new LinearLayout.LayoutParams(stacked ? -1 : 0, -2, stacked ? 0 : 1));
-        a.trackingCard.addView(row, a.marginLP(-1, -2, 0, 0, 0, 6));
+        if (a.trackingDetails != null) a.trackingDetails.addView(row, a.marginLP(-1, -2, 0, 0, 0, 6));
+        else a.trackingCard.addView(row, a.marginLP(-1, -2, 0, 0, 0, 6));
     }
 
     private TextView metricValue() { return a.text("—", 16, a.TEXT, true); }

@@ -582,6 +582,77 @@ public class TranslationRepository extends SQLiteOpenHelper {
     }
 
     /**
+     * Keyset page for the user-facing history screen.  It deliberately orders
+     * by the immutable job id rather than updated_at, because touching a job
+     * must not move it between history pages.
+     *
+     * @param beforeId rows must have an id lower than this value; use a value
+     *                 below one for the first page
+     * @param fileQuery optional case-insensitive filename fragment
+     * @param allowedJobIds null for all jobs, or the workspace-owned ids for a
+     *                      selected chapter set
+     */
+    public List<JobSummary> getJobSummariesPage(long beforeId, int limit,
+                                                String fileQuery,
+                                                java.util.Collection<Long> allowedJobIds) {
+        ArrayList<JobSummary> list = new ArrayList<>();
+        if (allowedJobIds != null && allowedJobIds.isEmpty()) return list;
+        StringBuilder where = new StringBuilder("1=1");
+        ArrayList<String> args = new ArrayList<>();
+        if (beforeId > 0) { where.append(" AND j.id<?"); args.add(String.valueOf(beforeId)); }
+        if (fileQuery != null && !fileQuery.trim().isEmpty()) {
+            where.append(" AND LOWER(COALESCE(j.file_name,'')) LIKE ?");
+            args.add("%" + fileQuery.trim().toLowerCase(java.util.Locale.ROOT) + "%");
+        }
+        if (allowedJobIds != null) {
+            StringBuilder ids = new StringBuilder();
+            for (Long id : allowedJobIds) {
+                if (id == null || id.longValue() <= 0) continue;
+                if (ids.length() > 0) ids.append(',');
+                ids.append('?');
+                args.add(String.valueOf(id.longValue()));
+            }
+            if (ids.length() == 0) return list;
+            where.append(" AND j.id IN (").append(ids).append(')');
+        }
+        String sql = "SELECT j.id,j.file_name,j.status,j.source_language,j.target_language,j.created_at,j.updated_at,j.input_uri,j.output_uri," +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)<>'SUPERSEDED') AS total," +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status) IN ('DONE','COMPLETED')) AS done," +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status) IN ('ERROR','RETRYABLE_ERROR','PERMANENT_ERROR')) AS failed," +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='PENDING') AS pending," +
+                "COALESCE(j.input_hash,''),COALESCE(j.start_session_id,''),COALESCE(j.prepared_batch_id,''),COALESCE(j.prepared_input_ordinal,0)," +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='DELIVERY_UNKNOWN') AS unknown " +
+                "FROM jobs j WHERE " + where + " ORDER BY j.id DESC LIMIT ?";
+        args.add(String.valueOf(Math.max(1, limit)));
+        SQLiteDatabase db = getReadableDatabase();
+        try (Cursor c = db.rawQuery(sql, args.toArray(new String[0]))) {
+            while (c.moveToNext()) list.add(readJobSummary(c));
+        }
+        attachUsage(db, list);
+        return list;
+    }
+
+    /** Small separate query for Current job: unfinished rows older than the 150-row recent cache still count. */
+    public List<JobSummary> getCurrentUnfinishedSummaries(int limit) {
+        ArrayList<JobSummary> list = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+        String sql = "SELECT j.id,j.file_name,j.status,j.source_language,j.target_language,j.created_at,j.updated_at,j.input_uri,j.output_uri," +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)<>'SUPERSEDED') AS total," +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status) IN ('DONE','COMPLETED')) AS done," +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status) IN ('ERROR','RETRYABLE_ERROR','PERMANENT_ERROR')) AS failed," +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='PENDING') AS pending," +
+                "COALESCE(j.input_hash,''),COALESCE(j.start_session_id,''),COALESCE(j.prepared_batch_id,''),COALESCE(j.prepared_input_ordinal,0)," +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='DELIVERY_UNKNOWN') AS unknown " +
+                "FROM jobs j WHERE UPPER(COALESCE(j.status,'')) IN (" + JobStatus.sqlUnfinishedShown() + ") " +
+                "ORDER BY j.updated_at DESC,j.id DESC LIMIT ?";
+        try (Cursor c = db.rawQuery(sql, new String[]{String.valueOf(Math.max(1, limit))})) {
+            while (c.moveToNext()) list.add(readJobSummary(c));
+        }
+        attachUsage(db, list);
+        return list;
+    }
+
+    /**
      * Full read-only job lookup for one or more chapter-set runs. This has no
      * LIMIT: the ordinary Jobs cache intentionally remains capped at 150, while
      * the workspace navigator must also see older runs and resumed job ids.

@@ -86,6 +86,6 @@ public class V423RunPanelTest {
         assertEquals("Đang dịch", RunPanelFormatter.chipLabel("RUNNING"));
         assertEquals("Tạm dừng", RunPanelFormatter.chipLabel("PAUSED"));
         assertEquals("Hoàn tất", RunPanelFormatter.chipLabel("COMPLETED"));
-        assertEquals("Đã dừng", RunPanelFormatter.chipLabel("IDLE"));
+        assertEquals("Sẵn sàng", RunPanelFormatter.chipLabel("IDLE"));
     }
 }
