@@ -118,11 +118,12 @@ Không có ca sai/sót theo phân xử mới cần truy vết thêm. Điều đ�
 
 - Quyết định sản phẩm đang phục vụ: chốt giao diện v4.23 đủ gọn để phát hành; B1–B3 chỉ sửa khả năng đọc tab, lặp tiêu đề và trạng thái Hoàn tác, giữ nguyên schema, Editorial, prompt/instruction, định tuyến và logic dịch.
 - Đã hoàn tất F6b, giai đoạn A/B UX trước đó và B1–B3. Không gọi provider; không làm F3b.
-- B3 implementation baseline **be5017d0b04de727843f2f0df9a3d93ab90d5995**. APK **4.23-dev.26/code304**, event `build-20261023-220435`, SHA-256 `312D592B7654C64DD7E780B0B508A147B78B7D747FA5008B342D842AB373EDC6`; source APK là `be5017d0`.
-- Archive sạch `D:/P5E-builds/v423-polish-b1b3-clean-20261023-01/` PASS: testDebugUnitTest, compileDebugAndroidTestJavaWithJavac và lintDebug; không sửa tệp Editorial*, prompt/instruction, schema, API key, sách hay dữ liệu cá nhân trong Git.
+- B3 implementation baseline **be5017d0b04de727843f2f0df9a3d93ab90d5995**; snapshot/evidence baseline trước commit tài liệu cuối là **1dbdf7936751b99f540f76ac633c7ade19118715**. APK **4.23-dev.26/code304**, event `build-20261023-220435`, SHA-256 `312D592B7654C64DD7E780B0B508A147B78B7D747FA5008B342D842AB373EDC6`; source APK là `be5017d0`.
+- Archive sạch `D:/P5E-builds/v423-polish-b1b3-clean-20261023-01/` PASS: 730 test, 5 SKIP, 0 FAIL/ERROR, compileDebugAndroidTestJavaWithJavac và lintDebug với 0 lỗi; không sửa tệp Editorial*, prompt/instruction, schema, API key, sách hay dữ liệu cá nhân trong Git.
 - B1 dùng tab một dòng, WRAP_CONTENT, tối thiểu 48dp và cuộn ngang khi thang chữ lớn; B2 dùng `plainCard` và bỏ tiêu đề lặp; B3 tắt Hoàn tác trước Apply, có mô tả trợ năng và chỉ giữ snapshot trong bộ nhớ.
-- Đã sao lưu điện thoại ngoài Git trước cài tại `D:/App Translate Books/App Translate Books-device-backups/v4.23-dev.26-code304/20261023-220508`; tar 1.397 mục, SHA-256 `AD333BDF21971459E63F26F984C501F1DFB6F4811A2ED05DDB43A02AE49E2040`. Thiết bị vẫn dev.25/code303; chưa cài dev.26, chưa chụp ảnh, chi phí provider `$0.00`.
-- **Next action:** chờ owner gõ `duyệt cài`, rồi cài bằng `install-validated.ps1` và thử QA_ theo mục 4.
+- Đã sao lưu điện thoại trước cài tại `D:/App Translate Books/App Translate Books-device-backups/v4.23-dev.26-code304/20261023-220508`; tar 1.397 mục, SHA-256 `AD333BDF21971459E63F26F984C501F1DFB6F4811A2ED05DDB43A02AE49E2040`. Đã cài bằng `install-validated.ps1` với `install -r`; đối chiếu sau cài dùng các khóa settings đã lọc, không chép `settings.xml`; chi phí provider `$0.00`.
+- Thử máy: B1 app 130%/system 100% PASS; system 130% NOT_MEASURED vì shell không có `WRITE_SETTINGS`; B3 tắt → bật → tắt PASS; settings lọc trước/sau khớp hoàn toàn; B2 Glossary/Pronoun/Tập NOT_MEASURED vì không có mục `QA_`, không chụp dữ liệu khác. Ảnh ở `D:/P5E-builds/wt-v4.23/artifacts/qa/v4.23-polish-b1b3-20261023/`.
+- **Next action:** owner xem APK dev.26, bản sao lưu và bằng chứng QA; không phát sinh thêm phone/provider action trong gói này.
 
 - Historical context from the dev.21/UI track follows; it does not supersede the runtime-fix next action above.
 
