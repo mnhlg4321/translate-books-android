@@ -24,12 +24,12 @@ public class DrawerNavigationModelTest {
     }
 
     @Test public void libraryDestinationStaysSelectedOnEveryLibraryPage() {
-        assertTrue(DrawerNavigationModel.isSelected("Library", "Files"));
         assertTrue(DrawerNavigationModel.isSelected("Library", "RAW"));
         assertTrue(DrawerNavigationModel.isSelected("Library", "Glossaries"));
         assertTrue(DrawerNavigationModel.isSelected("Library", "Pronouns"));
         assertTrue(DrawerNavigationModel.isSelected("Library", "ChapterSets"));
-        assertTrue(DrawerNavigationModel.isSelected("Library", "Sample"));
+        assertFalse(DrawerNavigationModel.isSelected("Library", "Files"));
+        assertFalse(DrawerNavigationModel.isSelected("Library", "Sample"));
         assertFalse(DrawerNavigationModel.isSelected("Library", "Jobs"));
         assertTrue(DrawerNavigationModel.isSelected("Jobs", "Jobs"));
     }

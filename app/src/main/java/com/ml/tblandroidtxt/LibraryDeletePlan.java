@@ -24,6 +24,8 @@ final class LibraryDeletePlan {
 
     final List<Target> deletable = new ArrayList<>();
     final List<Target> blocked = new ArrayList<>();
+    final List<String> rawOnlyIds = new ArrayList<>();
+    boolean deleteRawOnly;
 
     static LibraryDeletePlan plan(List<Target> targets) {
         LibraryDeletePlan plan = new LibraryDeletePlan();
@@ -42,6 +44,13 @@ final class LibraryDeletePlan {
         return false;
     }
 
+    void setRawOnlyIds(List<String> ids) {
+        rawOnlyIds.clear();
+        if (ids != null) rawOnlyIds.addAll(ids);
+    }
+
+    boolean hasRawOnly() { return !rawOnlyIds.isEmpty(); }
+
     /** First dialog: how many items, and the ones that are left out. */
     String firstMessage() {
         StringBuilder sb = new StringBuilder();
@@ -51,6 +60,7 @@ final class LibraryDeletePlan {
             sb.append("\n\nBỏ qua ").append(blocked.size()).append(" mục vì còn job dịch dở cần đọc lại:");
             for (Target t : blocked) sb.append("\n• ").append(t.name).append(" — job ").append(join(t.unfinishedJobs));
         }
+        if (hasRawOnly()) sb.append("\n\nCó ").append(rawOnlyIds.size()).append(" RAW chỉ thuộc các tập đã chọn; bạn có thể chọn xóa kèm.");
         return sb.toString();
     }
 
@@ -64,6 +74,7 @@ final class LibraryDeletePlan {
             if (!t.chapterSets.isEmpty()) sb.append(" — nằm trong bộ chương ").append(join(t.chapterSets)).append(" (dòng đó thành \"thiếu\")");
             if (!t.editorialCombos.isEmpty()) sb.append(" — tổ hợp Biên tập ").append(join(t.editorialCombos)).append(" đang tham chiếu");
         }
+        if (deleteRawOnly && hasRawOnly()) sb.append("\n• Xóa thêm ").append(rawOnlyIds.size()).append(" RAW chỉ thuộc các tập đã chọn.");
         return sb.toString();
     }
 

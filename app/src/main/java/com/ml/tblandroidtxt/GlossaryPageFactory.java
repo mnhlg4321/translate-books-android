@@ -77,7 +77,7 @@ class GlossaryPageFactory {
 
 
     View glossaryListPage() {
-        LinearLayout panel = a.sectionCard("📖", "Glossaries");
+        LinearLayout panel = a.sectionCard("Glossary", "Glossary");
         TextView desc = a.text("Quản lý nhiều Glossary giống TBL PC: có thể chọn nhiều file cùng lúc, mỗi file tạo một Glossary riêng.", 13, a.MUTED, false);
         desc.setSingleLine(false);
         panel.addView(desc, a.marginLP(-1, -2, 0, 0, 0, 10));
@@ -112,7 +112,7 @@ class GlossaryPageFactory {
             for (GlossaryStore.Glossary g : list) {
                 boolean isActive = TextUtils.equals(g.id, selectedId);
                 View card = selection.isActive()
-                        ? a.bulkUi.selectableCard(LibraryBulkUi.TAB_GLOSSARIES, g.id, (isActive ? "✓ " : "📘 ") + a.nonEmpty(g.name, "Glossary chưa đặt tên"), cardMeta(g) + (isActive ? " • Đang dùng" : ""), isActive ? a.GREEN : a.BORDER)
+                        ? a.bulkUi.selectableCard(LibraryBulkUi.TAB_GLOSSARIES, g.id, a.nonEmpty(g.name, "Glossary chưa đặt tên"), cardMeta(g) + (isActive ? " • Đang dùng" : ""), isActive ? a.GREEN : a.BORDER)
                         : glossaryItemCard(g, isActive);
                 panel.addView(card, a.marginLP(-1, -2, 0, 0, 0, 10));
             }
@@ -127,7 +127,7 @@ class GlossaryPageFactory {
         box.setPadding(a.dp(12), a.dp(12), a.dp(12), a.dp(12));
 
         LinearLayout titleRow = a.rowContainer();
-        TextView title = a.text((active ? "✓ " : "📘 ") + a.nonEmpty(g.name, "Glossary chưa đặt tên"), 15, active ? a.GREEN : a.TEXT, true);
+        TextView title = a.text(a.nonEmpty(g.name, "Glossary chưa đặt tên"), 15, active ? a.GREEN : a.TEXT, true);
         title.setSingleLine(false);
         titleRow.addView(title, new LinearLayout.LayoutParams(0, -2, 1));
         if (active) titleRow.addView(a.chip(USING_LABEL, a.GREEN, true));
@@ -139,8 +139,10 @@ class GlossaryPageFactory {
         box.addView(m, a.marginLP(-1, -2, 0, 4, 0, 10));
 
         LinearLayout buttons = a.rowContainer();
-        buttons.addView(a.tinyButton(active ? USING_LABEL : USE_LABEL, active ? a.GREEN : a.BLUE, v -> a.selectGlossary(g)), new LinearLayout.LayoutParams(0, -2, 1));
-        buttons.addView(a.space(6, 1));
+        if (!active) {
+            buttons.addView(a.tinyButton(USE_LABEL, a.BLUE, v -> a.selectGlossary(g)), new LinearLayout.LayoutParams(0, -2, 1));
+            buttons.addView(a.space(6, 1));
+        }
         buttons.addView(a.tinyButton(EDIT_LABEL, a.BLUE, v -> { if (!a.ensureConfigMutable()) return; a.editingGlossary = g; a.invalidatePage("Glossaries"); a.switchTab("Glossaries"); }), new LinearLayout.LayoutParams(0, -2, 1));
         buttons.addView(a.space(6, 1));
         buttons.addView(a.tinyButton(DELETE_LABEL, a.RED, v -> a.bulkUi.deleteIds(LibraryBulkUi.TAB_GLOSSARIES, java.util.Collections.singletonList(g.id))), new LinearLayout.LayoutParams(0, -2, 1));
@@ -183,7 +185,7 @@ class GlossaryPageFactory {
 
 
     View glossaryEditorPage() {
-        LinearLayout panel = a.sectionCard("📖", a.editingGlossary.name == null ? "Glossary" : a.editingGlossary.name);
+        LinearLayout panel = a.sectionCard("Glossary", a.editingGlossary.name == null ? "Glossary" : a.editingGlossary.name);
         LinearLayout toolbar = new LinearLayout(a);
         toolbar.setOrientation(LinearLayout.VERTICAL);
         LinearLayout toolbarTop = a.rowContainer();

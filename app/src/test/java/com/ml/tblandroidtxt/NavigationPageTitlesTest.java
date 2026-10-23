@@ -9,7 +9,7 @@ public class NavigationPageTitlesTest {
         assertEquals("Dịch", NavigationPageTitles.title("Translate"));
         assertEquals("Công việc", NavigationPageTitles.title("Jobs"));
         assertEquals("Biên tập", NavigationPageTitles.title("Editorial"));
-        assertEquals("Thư viện", NavigationPageTitles.title("Files"));
+        assertEquals("Dịch", NavigationPageTitles.title("Files"));
         assertEquals("Cài đặt", NavigationPageTitles.title("Settings"));
     }
 
@@ -18,6 +18,6 @@ public class NavigationPageTitlesTest {
         assertEquals("Thư viện · Glossary", NavigationPageTitles.title("Glossaries"));
         assertEquals("Thư viện · Pronoun", NavigationPageTitles.title("Pronouns"));
         assertEquals("Thư viện · Tập", NavigationPageTitles.title("ChapterSets"));
-        assertEquals("Thư viện · Mẫu", NavigationPageTitles.title("Sample"));
+        assertEquals("Dịch", NavigationPageTitles.title("Sample"));
     }
 }

@@ -65,8 +65,8 @@ public class V423RunPanelTest {
         assertEquals("308.000 token", RunPanelFormatter.tokens(308_000));
         assertEquals("$0.2602", RunPanelFormatter.money(0.2602));
         assertEquals("0 chunk lỗi", RunPanelFormatter.errors(0));
-        assertEquals("Glossaries: 10 luật · Pronoun: 4 luật", RunPanelFormatter.rules(10, 4));
-        assertEquals("Glossaries: chưa đo · Pronoun: chưa đo", RunPanelFormatter.rules(-1, -1));
+        assertEquals("Đã áp dụng: 10 mục Glossary · 4 quy tắc Pronoun", RunPanelFormatter.rules(10, 4));
+        assertEquals("Đã áp dụng: chưa đo Glossary · chưa đo Pronoun", RunPanelFormatter.rules(-1, -1));
     }
 
     @Test public void estimateAndCollapsedLines() {
@@ -81,8 +81,8 @@ public class V423RunPanelTest {
         assertEquals("1 phút 0 s", RunPanelFormatter.clock(60_000));
         assertEquals("1 giờ 0 phút 0 s", RunPanelFormatter.clock(3_600_000));
         assertEquals("0 s", RunPanelFormatter.remaining(0));
-        assertEquals("Glossaries: chưa đo · Pronoun: 0 luật", RunPanelFormatter.rules(-1, 0));
-        assertEquals("Glossaries: 2 luật · Pronoun: chưa đo", RunPanelFormatter.rules(2, -1));
+        assertEquals("Đã áp dụng: chưa đo Glossary · 0 quy tắc Pronoun", RunPanelFormatter.rules(-1, 0));
+        assertEquals("Đã áp dụng: 2 mục Glossary · chưa đo Pronoun", RunPanelFormatter.rules(2, -1));
         assertEquals("Đang dịch", RunPanelFormatter.chipLabel("RUNNING"));
         assertEquals("Tạm dừng", RunPanelFormatter.chipLabel("PAUSED"));
         assertEquals("Hoàn tất", RunPanelFormatter.chipLabel("COMPLETED"));

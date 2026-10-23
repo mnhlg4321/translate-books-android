@@ -109,9 +109,9 @@ final class LibraryBulkUi {
         count.setContentDescription("selection-count");
         headerUpdater.put(tab, () -> count.setText(c.headline()));
         row.addView(count, new LinearLayout.LayoutParams(0, -2, 1));
-        row.addView(a.secondaryButton("Chọn tất cả", v -> { c.selectAll(visibleIds); refresh(tab); }), new LinearLayout.LayoutParams(-2, a.dp(40)));
+        row.addView(a.secondaryButton("Chọn tất cả", v -> { c.selectAll(visibleIds); refresh(tab); }), new LinearLayout.LayoutParams(-2, a.dp(48)));
         row.addView(a.space(6, 1));
-        row.addView(a.secondaryButton("Hủy", v -> exitSelection(tab)), new LinearLayout.LayoutParams(-2, a.dp(40)));
+        row.addView(a.secondaryButton("Hủy", v -> exitSelection(tab)), new LinearLayout.LayoutParams(-2, a.dp(48)));
         return row;
     }
 
@@ -166,7 +166,7 @@ final class LibraryBulkUi {
         bar.setPadding(a.dp(8), a.dp(8), a.dp(8), a.dp(8));
         android.widget.Button delete = a.dangerButton("Xóa (" + n + ")", v -> deleteSelected(tab));
         delete.setEnabled(n > 0);
-        bar.addView(delete, new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        bar.addView(delete, new LinearLayout.LayoutParams(0, a.dp(48), 1));
         final java.util.List<Runnable> barList = new java.util.ArrayList<>();
         barUpdaters.put(tab, barList);
         barList.add(() -> { int k = c.count(); delete.setText("Xóa (" + k + ")"); a.setButtonEnabled(delete, k > 0); });
@@ -174,21 +174,21 @@ final class LibraryBulkUi {
             bar.addView(a.space(6, 1));
             android.widget.Button export = a.secondaryButton("Xuất", v -> exportSelected(tab));
             export.setEnabled(n > 0);
-            bar.addView(export, new LinearLayout.LayoutParams(0, a.dp(44), 1));
+            bar.addView(export, new LinearLayout.LayoutParams(0, a.dp(48), 1));
             barList.add(() -> a.setButtonEnabled(export, c.count() > 0));
         }
         if (TAB_GLOSSARIES.equals(tab) || TAB_PRONOUNS.equals(tab)) {
             bar.addView(a.space(6, 1));
             android.widget.Button use = a.primaryButton("Dùng", v -> useSelected(tab));
             use.setEnabled(n == 1);
-            bar.addView(use, new LinearLayout.LayoutParams(0, a.dp(44), 1));
+            bar.addView(use, new LinearLayout.LayoutParams(0, a.dp(48), 1));
             barList.add(() -> a.setButtonEnabled(use, c.count() == 1));
         }
         if (TAB_RAW.equals(tab)) {
             bar.addView(a.space(6, 1));
             android.widget.Button sets = a.primaryButton("Tạo tập", v -> a.createChapterSetFromSelection());
             sets.setEnabled(n > 0);
-            bar.addView(sets, new LinearLayout.LayoutParams(0, a.dp(44), 1));
+            bar.addView(sets, new LinearLayout.LayoutParams(0, a.dp(48), 1));
             barList.add(() -> a.setButtonEnabled(sets, c.count() > 0));
         }
         bar.setLayoutParams(a.marginLP(-1, -2, 0, 6, 0, 0));
@@ -202,10 +202,11 @@ final class LibraryBulkUi {
         LinearLayout row = new LinearLayout(a);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
-        TextView n = a.text(count + " mục", 13, a.GREEN, true);
+        String label = TAB_RAW.equals(tab) ? "RAW" : TAB_GLOSSARIES.equals(tab) ? "Glossary" : TAB_PRONOUNS.equals(tab) ? "Pronoun" : "Tập";
+        TextView n = a.text(count + " " + label, 13, a.GREEN, true);
         n.setContentDescription("library-count");
         row.addView(n, new LinearLayout.LayoutParams(0, -2, 1));
-        if (count > 0) row.addView(selectButton(tab), new LinearLayout.LayoutParams(-2, -2));
+        if (count > 0) row.addView(selectButton(tab), new LinearLayout.LayoutParams(-2, a.dp(48)));
         return row;
     }
 
@@ -266,7 +267,7 @@ final class LibraryBulkUi {
         msg.setSingleLine(false);
         msg.setContentDescription("undo-message");
         bar.addView(msg, new LinearLayout.LayoutParams(0, -2, 1));
-        bar.addView(a.primaryButton("Hoàn tác", v -> undoNow()), new LinearLayout.LayoutParams(-2, a.dp(44)));
+        bar.addView(a.primaryButton("Hoàn tác", v -> undoNow()), new LinearLayout.LayoutParams(-2, a.dp(48)));
         bar.setLayoutParams(a.marginLP(-1, -2, 0, 6, 0, 0));
         return bar;
     }
@@ -307,9 +308,26 @@ final class LibraryBulkUi {
         if ((TAB_GLOSSARIES.equals(tab) && GlossaryStore.isCorrupt(a)) || (TAB_PRONOUNS.equals(tab) && PronounStore.isCorrupt(a))) { a.toast(MainActivity.LIBRARY_WRITE_REFUSED); return; }
         List<LibraryDeletePlan.Target> targets = targetsFor(tab, ids);
         LibraryDeletePlan plan = LibraryDeletePlan.plan(targets);
-        AlertDialog.Builder first = new AlertDialog.Builder(a).setTitle(plan.deletable.isEmpty() ? "Không xóa được" : "Xóa " + plan.deletable.size() + " mục?").setMessage(plan.firstMessage()).setNegativeButton("Hủy", null);
+        if (TAB_SETS.equals(tab)) plan.setRawOnlyIds(rawOnlyIdsForSets(ids));
+        AlertDialog.Builder first = new AlertDialog.Builder(a).setTitle(plan.deletable.isEmpty() ? "Không xóa được" : "Xóa " + plan.deletable.size() + " mục?").setNegativeButton("Hủy", null);
+        CheckBox rawOnly = null;
+        if (plan.hasRawOnly() && !plan.deletable.isEmpty()) {
+            rawOnly = new CheckBox(a);
+            rawOnly.setText("Xóa cả RAW chỉ thuộc tập này (" + plan.rawOnlyIds.size() + ")");
+            rawOnly.setContentDescription("Xóa RAW chỉ thuộc tập này");
+            rawOnly.setMinHeight(a.dp(48));
+            LinearLayout body = new LinearLayout(a);
+            body.setOrientation(LinearLayout.VERTICAL);
+            TextView message = a.text(plan.firstMessage(), 14, a.TEXT, false);
+            message.setSingleLine(false);
+            body.addView(message);
+            body.addView(rawOnly, new LinearLayout.LayoutParams(-1, a.dp(56)));
+            first.setView(body);
+        } else first.setMessage(plan.firstMessage());
+        final CheckBox rawOnlyChoice = rawOnly;
         if (!plan.deletable.isEmpty()) {
             first.setPositiveButton("Xóa", (d, w) -> {
+                plan.deleteRawOnly = rawOnlyChoice != null && rawOnlyChoice.isChecked();
                 if (!plan.needsSecondConfirm()) { executePlan(tab, plan); return; }
                 new AlertDialog.Builder(a).setTitle("Xác nhận lần hai").setMessage(plan.secondMessage())
                         .setNegativeButton("Hủy", null).setPositiveButton("Vẫn xóa", (d2, w2) -> executePlan(tab, plan)).show();
@@ -355,6 +373,19 @@ final class LibraryBulkUi {
         return out;
     }
 
+    private List<String> rawOnlyIdsForSets(List<String> deletingIds) {
+        Map<String, java.util.Collection<String>> bySet = new HashMap<>();
+        for (ChapterSetStore.SetInfo info : ChapterSetStore.listSets(a)) {
+            ChapterSetStore.SetData data = ChapterSetStore.get(a, info.id);
+            ArrayList<String> rawIds = new ArrayList<>();
+            if (data != null) for (ChapterSetStore.Row row : data.rows) if (row.rawId != null && !row.rawId.isEmpty()) rawIds.add(row.rawId);
+            bySet.put(info.id, rawIds);
+        }
+        ArrayList<String> available = new ArrayList<>();
+        for (LibraryRawStore.Item item : LibraryRawStore.list(a)) available.add(item.id);
+        return LibraryRawOwnershipModel.rawOnlyIds(bySet, deletingIds, available);
+    }
+
     void executePlan(String tab, LibraryDeletePlan plan) {
         if (!a.ensureConfigMutable()) return;
         Set<String> ids = new HashSet<>(plan.deletableIds());
@@ -396,8 +427,13 @@ final class LibraryBulkUi {
                     () -> LibraryRawStore.purgeFiles(a, removedIds)));
         } else if (TAB_SETS.equals(tab)) {
             List<ChapterSetStore.SetData> removed = ChapterSetStore.snapshot(a, new ArrayList<>(ids));
+            List<LibraryRawStore.Item> removedRaw = new ArrayList<>();
+            if (plan.deleteRawOnly) {
+                for (LibraryRawStore.Item item : LibraryRawStore.list(a)) if (plan.rawOnlyIds.contains(item.id)) removedRaw.add(item);
+                if (!removedRaw.isEmpty()) LibraryRawStore.removeRows(a, plan.rawOnlyIds);
+            }
             ChapterSetStore.delete(a, new ArrayList<>(ids));
-            startUndo(new Undo(tab, message, () -> { ChapterSetStore.restore(a, removed); a.toast("Đã hoàn tác " + n + " mục"); }, () -> { }));
+            startUndo(new Undo(tab, message, () -> { ChapterSetStore.restore(a, removed); if (!removedRaw.isEmpty()) LibraryRawStore.restore(a, removedRaw); a.toast("Đã hoàn tác " + n + " mục"); }, () -> { if (!removedRaw.isEmpty()) LibraryRawStore.purgeFiles(a, plan.rawOnlyIds); }));
         }
     }
 

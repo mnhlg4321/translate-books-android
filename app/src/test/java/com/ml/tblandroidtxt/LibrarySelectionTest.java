@@ -106,7 +106,7 @@ public class LibrarySelectionTest {
     @Test public void backFromSelectionModeComesBeforeLeavingThePage() {
         assertEquals(AppBackNavigationPolicy.Action.EXIT_SELECTION, AppBackNavigationPolicy.resolve("Glossaries", false, false, "General", true));
         assertEquals(AppBackNavigationPolicy.Action.EXIT_SELECTION, AppBackNavigationPolicy.resolve("RAW", false, false, "General", true));
-        assertEquals(AppBackNavigationPolicy.Action.OPEN_LIBRARY_HOME, AppBackNavigationPolicy.resolve("RAW", false, false, "General", false));
+        assertEquals(AppBackNavigationPolicy.Action.OPEN_TRANSLATE, AppBackNavigationPolicy.resolve("RAW", false, false, "General", false));
         assertEquals(AppBackNavigationPolicy.Action.OPEN_LIBRARY_HOME, AppBackNavigationPolicy.resolve("ChapterSets", false, false, "General", false));
         assertEquals(AppBackNavigationPolicy.Action.OPEN_TRANSLATE, AppBackNavigationPolicy.resolve("Files", false, false, "General", false));
         assertEquals(AppBackNavigationPolicy.Action.SAVE_AND_CLOSE_GLOSSARY, AppBackNavigationPolicy.resolve("Glossaries", true, false, "General", false));

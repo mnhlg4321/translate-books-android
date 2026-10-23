@@ -72,19 +72,19 @@ public class JobsPageFactory {
         jobs.addView(summaryDashboard(list), marginLP(-1, -2, 0, 0, 0, 12));
 
         LinearLayout actions = rowContainer();
-        actions.addView(primaryButton("↻ Refresh", v -> onRefresh.run()), new LinearLayout.LayoutParams(0, dp(46), 1));
+        actions.addView(primaryButton("↻ Refresh", v -> onRefresh.run()), new LinearLayout.LayoutParams(0, dp(48), 1));
         actions.addView(space(8, 1));
-        actions.addView(secondaryButton("Resume last", v -> onResume.run()), new LinearLayout.LayoutParams(0, dp(46), 1));
+        actions.addView(secondaryButton("Resume last", v -> onResume.run()), new LinearLayout.LayoutParams(0, dp(48), 1));
         jobs.addView(actions, marginLP(-1, -2, 0, 0, 0, 8));
 
-        jobs.addView(secondaryButton("Filters: "+statusFilter,v->showFilters()),marginLP(-1,dp(42),0,0,0,8));
+        jobs.addView(secondaryButton("Filters: "+statusFilter,v->showFilters()),marginLP(-1,dp(48),0,0,0,8));
 
         LinearLayout actions2 = rowContainer();
-        actions2.addView(secondaryButton("Retry last failed", v -> onRetry.run()), new LinearLayout.LayoutParams(0, dp(46), 1));
+        actions2.addView(secondaryButton("Retry last failed", v -> onRetry.run()), new LinearLayout.LayoutParams(0, dp(48), 1));
         actions2.addView(space(8, 1));
-        actions2.addView(secondaryButton("Export all logs", v -> onExportLog.run()), new LinearLayout.LayoutParams(0, dp(46), 1));
+        actions2.addView(secondaryButton("Export all logs", v -> onExportLog.run()), new LinearLayout.LayoutParams(0, dp(48), 1));
         actions2.addView(space(8, 1));
-        actions2.addView(dangerButton("Clear logs", v -> onClearLog.run()), new LinearLayout.LayoutParams(0, dp(46), 1));
+        actions2.addView(dangerButton("Clear logs", v -> onClearLog.run()), new LinearLayout.LayoutParams(0, dp(48), 1));
         jobs.addView(actions2, marginLP(-1, -2, 0, 0, 0, 12));
 
         if (list.isEmpty()) {
@@ -131,9 +131,9 @@ public class JobsPageFactory {
         logText.setSingleLine(false);
         logs.addView(logText);
         LinearLayout logActions = rowContainer();
-        logActions.addView(secondaryButton("Export", v -> onExportLog.run()), new LinearLayout.LayoutParams(0, dp(42), 1));
+        logActions.addView(secondaryButton("Export", v -> onExportLog.run()), new LinearLayout.LayoutParams(0, dp(48), 1));
         logActions.addView(space(8, 1));
-        logActions.addView(dangerButton("Clear", v -> onClearLog.run()), new LinearLayout.LayoutParams(0, dp(42), 1));
+        logActions.addView(dangerButton("Clear", v -> onClearLog.run()), new LinearLayout.LayoutParams(0, dp(48), 1));
         logs.addView(logActions, marginLP(-1, -2, 0, 10, 0, 0));
         root.addView(logs);
 
@@ -147,21 +147,21 @@ public class JobsPageFactory {
             card.setPadding(dp(10), dp(10), dp(10), dp(10));
             card.addView(text("#" + job.id + " · " + nonEmpty(job.fileName, "Unknown file"), 13, TEXT, true));
             LinearLayout first = rowContainer();
-            first.addView(tinyButton("Prompt dump", CYAN, v -> showPromptPreviewForJob(job.id)), new LinearLayout.LayoutParams(0, dp(40), 1));
+            first.addView(tinyButton("Prompt dump", CYAN, v -> showPromptPreviewForJob(job.id)), new LinearLayout.LayoutParams(0, dp(48), 1));
             first.addView(space(6,1));
-            first.addView(tinyButton("Chunk inspector", CYAN, v -> showChunkInspector(job.id)), new LinearLayout.LayoutParams(0, dp(40), 1));
+            first.addView(tinyButton("Chunk inspector", CYAN, v -> showChunkInspector(job.id)), new LinearLayout.LayoutParams(0, dp(48), 1));
             card.addView(first, marginLP(-1,-2,0,8,0,0));
             LinearLayout second = rowContainer();
-            second.addView(tinyButton("Dry A/B", BLUE, v -> showDryBenchmark(job.id)), new LinearLayout.LayoutParams(0, dp(40), 1));
+            second.addView(tinyButton("Dry A/B", BLUE, v -> showDryBenchmark(job.id)), new LinearLayout.LayoutParams(0, dp(48), 1));
             second.addView(space(6,1));
-            second.addView(tinyButton("Live A/B", AMBER, v -> confirmLiveBenchmark(job.id)), new LinearLayout.LayoutParams(0, dp(40), 1));
+            second.addView(tinyButton("Live A/B", AMBER, v -> confirmLiveBenchmark(job.id)), new LinearLayout.LayoutParams(0, dp(48), 1));
             second.addView(space(6,1));
-            second.addView(tinyButton("Blind review", GREEN, v -> showBenchmarkReview(job.id)), new LinearLayout.LayoutParams(0, dp(40), 1));
+            second.addView(tinyButton("Blind review", GREEN, v -> showBenchmarkReview(job.id)), new LinearLayout.LayoutParams(0, dp(48), 1));
             card.addView(second, marginLP(-1,-2,0,8,0,0));
             LinearLayout third = rowContainer();
-            third.addView(tinyButton("Export job log", GREEN, v -> onExportJobLog.run(job.id)), new LinearLayout.LayoutParams(0, dp(40), 1));
+            third.addView(tinyButton("Export job log", GREEN, v -> onExportJobLog.run(job.id)), new LinearLayout.LayoutParams(0, dp(48), 1));
             third.addView(space(6,1));
-            third.addView(tinyButton("Apply current config", AMBER, v -> applyCurrentConfig(job.id)), new LinearLayout.LayoutParams(0, dp(40), 1));
+            third.addView(tinyButton("Apply current config", AMBER, v -> applyCurrentConfig(job.id)), new LinearLayout.LayoutParams(0, dp(48), 1));
             card.addView(third, marginLP(-1,-2,0,8,0,0));
             tools.addView(card, marginLP(-1,-2,0,0,0,8));
             if (++shown == 8) break;
@@ -224,31 +224,31 @@ public class JobsPageFactory {
         LinearLayout buttons = rowContainer();
         Button resume = tinyButton("Resume", BLUE, v -> resumeSelectedJob(j));
         Button retry = tinyButton("Retry", AMBER, v -> retrySelectedJob(j));
-        buttons.addView(resume, new LinearLayout.LayoutParams(0, dp(40), 1));
+        buttons.addView(resume, new LinearLayout.LayoutParams(0, dp(48), 1));
         buttons.addView(space(6, 1));
-        buttons.addView(retry, new LinearLayout.LayoutParams(0, dp(40), 1));
+        buttons.addView(retry, new LinearLayout.LayoutParams(0, dp(48), 1));
         buttons.addView(space(6, 1));
-        buttons.addView(tinyButton("Details", CYAN, v -> showJobDetails(j.id)), new LinearLayout.LayoutParams(0, dp(40), 1));
+        buttons.addView(tinyButton("Details", CYAN, v -> showJobDetails(j.id)), new LinearLayout.LayoutParams(0, dp(48), 1));
         box.addView(buttons, marginLP(-1, -2, 0, 10, 0, 0));
 
         LinearLayout buttons2 = rowContainer();
-        buttons2.addView(tinyButton("Prompt", CYAN, v -> showPromptPreviewForJob(j.id)), new LinearLayout.LayoutParams(0, dp(40), 1));
+        buttons2.addView(tinyButton("Prompt", CYAN, v -> showPromptPreviewForJob(j.id)), new LinearLayout.LayoutParams(0, dp(48), 1));
         buttons2.addView(space(6, 1));
-        buttons2.addView(tinyButton("Export", GREEN, v -> onExportJobLog.run(j.id)), new LinearLayout.LayoutParams(0, dp(40), 1));
+        buttons2.addView(tinyButton("Export", GREEN, v -> onExportJobLog.run(j.id)), new LinearLayout.LayoutParams(0, dp(48), 1));
         buttons2.addView(space(6, 1));
-        buttons2.addView(tinyButton("Delete", RED, v -> confirmDeleteJob(j)), new LinearLayout.LayoutParams(0, dp(40), 1));
+        buttons2.addView(tinyButton("Delete", RED, v -> confirmDeleteJob(j)), new LinearLayout.LayoutParams(0, dp(48), 1));
         box.addView(buttons2, marginLP(-1, -2, 0, 8, 0, 0));
-        box.addView(tinyButton("Dry A/B benchmark (no API cost)", BLUE, v -> showDryBenchmark(j.id)), marginLP(-1, dp(40), 0, 8, 0, 0));
+        box.addView(tinyButton("Dry A/B benchmark (no API cost)", BLUE, v -> showDryBenchmark(j.id)), marginLP(-1, dp(48), 0, 8, 0, 0));
         LinearLayout benchmarkButtons=rowContainer();
-        benchmarkButtons.addView(tinyButton("Live A/B", AMBER, v -> confirmLiveBenchmark(j.id)),new LinearLayout.LayoutParams(0,dp(40),1));
+        benchmarkButtons.addView(tinyButton("Live A/B", AMBER, v -> confirmLiveBenchmark(j.id)),new LinearLayout.LayoutParams(0,dp(48),1));
         benchmarkButtons.addView(space(6,1));
-        benchmarkButtons.addView(tinyButton("Blind review", GREEN, v -> showBenchmarkReview(j.id)),new LinearLayout.LayoutParams(0,dp(40),1));
+        benchmarkButtons.addView(tinyButton("Blind review", GREEN, v -> showBenchmarkReview(j.id)),new LinearLayout.LayoutParams(0,dp(48),1));
         box.addView(benchmarkButtons,marginLP(-1,-2,0,0,0,0));
-        box.addView(tinyButton("Chunk Inspector",CYAN,v->showChunkInspector(j.id)),marginLP(-1,dp(40),0,8,0,0));
+        box.addView(tinyButton("Chunk Inspector",CYAN,v->showChunkInspector(j.id)),marginLP(-1,dp(48),0,8,0,0));
         LinearLayout reliability=rowContainer();
-        reliability.addView(tinyButton("Continue incomplete",BLUE,v->continueIncomplete(j.id)),new LinearLayout.LayoutParams(0,dp(40),1));
+        reliability.addView(tinyButton("Continue incomplete",BLUE,v->continueIncomplete(j.id)),new LinearLayout.LayoutParams(0,dp(48),1));
         reliability.addView(space(6,1));
-        reliability.addView(tinyButton("Apply current config to remaining",AMBER,v->applyCurrentConfig(j.id)),new LinearLayout.LayoutParams(0,dp(40),1));
+        reliability.addView(tinyButton("Apply current config to remaining",AMBER,v->applyCurrentConfig(j.id)),new LinearLayout.LayoutParams(0,dp(48),1));
         box.addView(reliability,marginLP(-1,-2,0,8,0,0));
 
         if ("done".equals(j.status)) resume.setEnabled(false);

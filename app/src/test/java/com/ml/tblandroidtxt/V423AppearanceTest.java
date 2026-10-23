@@ -24,13 +24,28 @@ public class V423AppearanceTest {
     }
 
     @Test public void lightPalettesAreLightAndTheDarkOnesKeepTheirStatusColours() {
-        assertEquals(2, UiAppearance.light().size());
-        assertTrue(UiAppearance.find("light").light && UiAppearance.find("paper").light);
+        assertEquals(7, UiAppearance.light().size());
+        assertTrue(UiAppearance.find("gray-light").light && UiAppearance.find("peach-light").light);
         assertFalse(UiAppearance.find("default").light);
         assertEquals(0xFF2BCF7E, UiAppearance.find("default").ok);
         assertEquals(0xFFEE4646, UiAppearance.find("blue").bad);
         assertEquals(0xFFF5B443, UiAppearance.find("camo").warn);
         for (UiAppearance.Palette p : UiAppearance.light()) assertTrue(ColorMath.luminance(p.bg) > 0.5);
+    }
+
+    @Test public void fiveNewLightPalettesMeetTextBorderAndAccentContrast() {
+        String[] ids = {"gray-light", "mint-light", "sky-light", "lavender-light", "peach-light"};
+        for (String id : ids) {
+            UiAppearance.Palette p = UiAppearance.find(id);
+            for (int surface : new int[]{p.bg, p.card, p.field}) {
+                assertTrue(id + " text", ColorMath.ratio(p.text, surface) >= 4.5);
+                assertTrue(id + " accent", ColorMath.ratio(p.accent, surface) >= 4.5);
+            }
+            assertTrue(id + " muted on card", ColorMath.ratio(p.muted, p.card) >= 4.5);
+            assertTrue(id + " border on bg", ColorMath.ratio(p.border, p.bg) >= 3.0);
+            assertTrue(id + " border on card", ColorMath.ratio(p.border, p.card) >= 3.0);
+            assertTrue(id + " on accent", ColorMath.ratio(p.onAccent, p.accent) >= 4.5);
+        }
     }
 
     @Test public void textOnTheAccentIsReadableInEveryLightPaletteAndForAnyCustomAccent() {
@@ -82,7 +97,7 @@ public class V423AppearanceTest {
         assertFalse(back.isDefault());
         assertEquals("blue", back.palette);
         assertEquals("paper", back.paletteLight);
-        assertEquals("#2F8FD8", back.accent);
+        assertEquals("", back.accent);
         assertEquals(130, back.fontPercent);
         assertEquals(1.3f, back.fontScale(), 1e-6);
         assertEquals(0.75f, back.densityScale(), 0);
@@ -106,13 +121,13 @@ public class V423AppearanceTest {
         assertEquals(AppearanceSettings.MODE_FIXED, bad.mode);
     }
 
-    @Test public void followingTheSystemPicksTheLightOrTheDarkPaletteAndAppliesTheAccent() {
+    @Test public void followingTheSystemPicksTheLightOrTheDarkPaletteAndIgnoresTheOldAccent() {
         AppearanceSettings s = new AppearanceSettings();
         s.mode = AppearanceSettings.MODE_SYSTEM; s.palette = "slate"; s.paletteLight = "paper";
         assertEquals("slate", s.resolve(true).id);
         assertEquals("paper", s.resolve(false).id);
         s.accent = "#2F8FD8";
-        assertEquals(0xFF2F8FD8, s.resolve(false).accent);
+        assertEquals(UiAppearance.find("paper").accent, s.resolve(false).accent);
         assertEquals("paper", s.resolve(false).id);
         s.mode = AppearanceSettings.MODE_FIXED;
         assertEquals("slate", s.resolve(false).id);

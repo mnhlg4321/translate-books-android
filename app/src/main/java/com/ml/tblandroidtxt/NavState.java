@@ -21,15 +21,16 @@ final class NavState {
     }
 
     static String normalizePage(String page) {
+        if ("Files".equals(page) || "Sample".equals(page)) return "RAW";
         if (!isValidPage(page)) return "Translate";
         return page;
     }
 
     private static boolean isValidPage(String page) {
         return "Translate".equals(page) || "Jobs".equals(page) || "JobsHistory".equals(page) || "Editorial".equals(page)
-                || "Settings".equals(page) || "Files".equals(page) || "RAW".equals(page)
+                || "Settings".equals(page) || "RAW".equals(page)
                 || "Glossaries".equals(page) || "Pronouns".equals(page)
-                || "ChapterSets".equals(page) || "Sample".equals(page);
+                || "ChapterSets".equals(page);
     }
 
     private static String safe(String value) { return value == null ? "" : value; }

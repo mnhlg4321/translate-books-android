@@ -74,7 +74,7 @@ final class JobsMainPageFactory {
         if (current == null) currentSection.addView(a.text("Không có job đang chạy hay đang dở.", 13, a.MUTED, false));
         else currentSection.addView(currentCard(current, serviceActive && current.id == activeJobId));
         LinearLayout refresh = a.rowContainer();
-        refresh.addView(a.primaryButton("Làm mới", v -> a.refreshJobCacheAsync(true)), new LinearLayout.LayoutParams(0, -2, 1));
+        refresh.addView(a.secondaryButton("↻ Làm mới", v -> a.refreshJobCacheAsync(true)), new LinearLayout.LayoutParams(0, -2, 1));
         refresh.addView(a.space(8, 1));
         refresh.addView(a.secondaryButton("Tiếp tục gần nhất", v -> a.resumeCheckpoint()), new LinearLayout.LayoutParams(0, -2, 1));
         currentSection.addView(refresh, a.marginLP(-1, -2, 0, 10, 0, 0));
@@ -94,22 +94,15 @@ final class JobsMainPageFactory {
     }
 
     private View workspaceFilter() {
-        LinearLayout box = a.card(14, a.FIELD, a.BORDER);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(a.dp(12), a.dp(10), a.dp(12), a.dp(10));
-        TextView label = a.text("Lọc theo Tập", 13, a.TEXT, true);
-        box.addView(label, a.marginLP(-1, -2, 0, 0, 0, 6));
+        LinearLayout box = a.rowContainer();
+        box.setPadding(0, a.dp(2), 0, a.dp(2));
         String filter = WorkspaceFilterModel.chipText(a.jobsSetFilterId, a.workspaceFilterLabel());
         Button chip = a.secondaryButton(filter, v -> {
             if (WorkspaceFilterModel.active(a.jobsSetFilterId)) a.setJobsSetFilter("");
             else chooseWorkspaceFilter();
         });
         chip.setContentDescription(WorkspaceFilterModel.active(a.jobsSetFilterId) ? "Bỏ lọc theo Tập" : "Lọc Công việc theo Tập");
-        box.addView(chip, new LinearLayout.LayoutParams(-1, -2));
-        if (!WorkspaceFilterModel.active(a.jobsSetFilterId)) {
-            Button choose = a.secondaryButton("Chọn Tập", v -> chooseWorkspaceFilter());
-            box.addView(choose, a.marginLP(-1, -2, 0, 6, 0, 0));
-        }
+        box.addView(chip, new LinearLayout.LayoutParams(-1, a.dp(48)));
         return box;
     }
 

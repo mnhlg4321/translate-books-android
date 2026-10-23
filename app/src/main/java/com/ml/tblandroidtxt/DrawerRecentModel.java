@@ -39,7 +39,10 @@ final class DrawerRecentModel {
             bySet.put(entry.id, new Item(true, entry.id, entry.label(), -1L,
                     entry.sortKey(), entry.id.equals(activeSetId)));
         }
-        Map<Long, Item> singles = new HashMap<>();
+        // One drawer item represents one single-chapter input, not every job
+        // ever created for it. Prefer the newest job, while keeping a running
+        // job clickable when it is older than a later completed row.
+        Map<String, Item> singles = new HashMap<>();
         for (RunGroups.Item group : RunGroups.build(jobs, sessions == null
                 ? Collections.<RunGroups.SessionInfo>emptyList() : sessions)) {
             if (group.run != null && group.run.setId != null && !group.run.setId.isEmpty()) {
@@ -51,8 +54,11 @@ final class DrawerRecentModel {
                         key, group.run.setId.equals(activeSetId)));
             } else if (group.single != null) {
                 TranslationRepository.JobSummary job = group.single;
-                singles.put(job.id, new Item(false, String.valueOf(job.id),
-                        safeName(job.fileName), job.id, job.updatedAt, job.id == activeJobId));
+                String key = singleKey(job);
+                Item candidate = new Item(false, String.valueOf(job.id),
+                        safeName(job.fileName), job.id, job.updatedAt, job.id == activeJobId);
+                Item old = singles.get(key);
+                if (old == null || newer(candidate, old)) singles.put(key, candidate);
             }
         }
         ArrayList<Item> out = new ArrayList<>();
@@ -72,5 +78,16 @@ final class DrawerRecentModel {
 
     private static String safeName(String value) {
         return value == null || value.trim().isEmpty() ? "Tệp TXT" : value.trim();
+    }
+
+    private static String singleKey(TranslationRepository.JobSummary job) {
+        if (job.inputHash != null && !job.inputHash.trim().isEmpty()) return "hash:" + job.inputHash.trim();
+        return "name:" + safeName(job.fileName).toLowerCase(java.util.Locale.ROOT);
+    }
+
+    private static boolean newer(Item candidate, Item old) {
+        if (candidate.active != old.active) return candidate.active;
+        if (candidate.sortKey != old.sortKey) return candidate.sortKey > old.sortKey;
+        return candidate.jobId > old.jobId;
     }
 }

@@ -77,7 +77,7 @@ public class V48ImportNavigationInstrumentedTest {
             scenario.onActivity(a -> {
                 a.switchTab("Glossaries");
                 a.onBackPressed();
-                assertEquals("Files", a.currentTab);
+                assertEquals("RAW", a.currentTab);
                 a.onBackPressed();
                 assertEquals("Translate", a.currentTab);
 
@@ -97,7 +97,7 @@ public class V48ImportNavigationInstrumentedTest {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             scenario.onActivity(a -> {
                 String[] requested = {"Translate", "Jobs", "Library", "Settings"};
-                String[] expected = {"Translate", "Jobs", "Files", "Settings"};
+                String[] expected = {"Translate", "Jobs", "RAW", "Settings"};
                 for (int i = 0; i < requested.length; i++) {
                     a.switchTab(requested[i]);
                     View page = a.pageCache.get(expected[i]);

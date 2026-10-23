@@ -85,13 +85,13 @@ final class TranslateSourceFactory {
         box.setPadding(a.dp(12), a.dp(10), a.dp(12), a.dp(10));
         box.addView(a.text("Nguồn", 15, a.TEXT, true));
         LinearLayout modeRow = a.rowContainer();
-        filesButton = a.secondaryButton("Tệp TXT", v -> setMode(MODE_FILES));
-        setButton = a.secondaryButton("Tập", v -> setMode(MODE_SET));
+        filesButton = a.secondaryButton("1 chương (TXT)", v -> setMode(MODE_FILES));
+        setButton = a.secondaryButton("Nhiều chương (Tập)", v -> setMode(MODE_SET));
         filesButton.setContentDescription("source-files");
         setButton.setContentDescription("source-set");
-        modeRow.addView(filesButton, new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        modeRow.addView(filesButton, new LinearLayout.LayoutParams(0, a.dp(48), 1));
         modeRow.addView(a.space(8, 1));
-        modeRow.addView(setButton, new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        modeRow.addView(setButton, new LinearLayout.LayoutParams(0, a.dp(48), 1));
         box.addView(modeRow, a.marginLP(-1, -2, 0, 6, 0, 0));
         chapterBox = new LinearLayout(a);
         chapterBox.setOrientation(LinearLayout.VERTICAL);
@@ -182,7 +182,7 @@ final class TranslateSourceFactory {
         for (ChapterBinding b : bindings) a.inputUris.add(Uri.parse(b.rawUri()));
         a.inputUri = a.inputUris.isEmpty() ? null : a.inputUris.get(0);
         UiSessionStore.saveInputUris(a, a.inputUris);
-        a.setLabel(a.inputFileLabel, bindings.isEmpty() ? "Tập: chưa tick chương nào" : "▣ " + setName + " · " + bindings.size() + " chương");
+        a.setLabel(a.inputFileLabel, bindings.isEmpty() ? "Tập: chưa tick chương nào" : "Tập " + setName + " · " + bindings.size() + " chương");
         a.refreshEstimateForSelection();
     }
 
@@ -218,7 +218,7 @@ final class TranslateSourceFactory {
         boolean none = setName.isEmpty();
         List<String> names = new ArrayList<>(), metas = new ArrayList<>();
         if (!none) { names.add(setName); metas.add(rows.size() + " chương"); }
-        chapterBox.addView(SelectedFilesSlot.build(a, "Tập", "▣", names, metas, none ? SelectedFilesSlot.Status.NOT_CHOSEN : SelectedFilesSlot.Status.CHOSEN, "",
+        chapterBox.addView(SelectedFilesSlot.build(a, "Tập", "Tập", names, metas, none ? SelectedFilesSlot.Status.NOT_CHOSEN : SelectedFilesSlot.Status.CHOSEN, "",
                 none ? "Chọn tập" : "Đổi", () -> pickSet(sets)));
         if (!none) {
             LinearLayout edit = a.rowContainer();
@@ -243,7 +243,7 @@ final class TranslateSourceFactory {
         total.setContentDescription("chapter-total");
         totalView = total;
         chapterBox.addView(total, a.marginLP(-1, -2, 0, 8, 0, 0));
-        chapterBox.addView(a.secondaryButton("Prompt preview (chọn chương)", v -> previewChapter()), a.marginLP(-1, a.dp(44), 0, 8, 0, 0));
+        chapterBox.addView(a.secondaryButton("Prompt preview (chọn chương)", v -> previewChapter()), a.marginLP(-1, a.dp(48), 0, 8, 0, 0));
         PreparedBatch current = a.currentPreparedBatch();
         if (current != null) updateEstimates(current);
     }
@@ -313,7 +313,7 @@ final class TranslateSourceFactory {
         row.addView(check);
         String g = x.stored.glossaryId.isEmpty() ? "Không dùng" : x.glossary == null ? "(đã bị xóa)" : x.glossary.name;
         String p = x.stored.pronounId.isEmpty() ? "Không dùng" : x.pronoun == null ? "(đã bị xóa)" : x.pronoun.name;
-        TextView meta = a.text("📄 RAW   " + name + "\n📘 Glossary   " + g + "\n↔ Pronoun   " + p, 12, (g.startsWith("(") || p.startsWith("(")) ? a.AMBER : a.MUTED, false);
+        TextView meta = a.text("RAW   " + name + "\nGlossary   " + g + "\nPronoun   " + p, 12, (g.startsWith("(") || p.startsWith("(")) ? a.AMBER : a.MUTED, false);
         meta.setSingleLine(false);
         meta.setContentDescription("chapter-files:" + name);
         row.addView(meta, a.marginLP(-1, -2, 32, 0, 0, 0));

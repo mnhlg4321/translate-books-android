@@ -63,6 +63,16 @@ public final class UiAppearance {
             new Palette("light", "Light", true, "#F4F5F7", "#FFFFFF", "#FFFFFF", "#EEF0F3", "#B9C0CB", "#14181F", "#4A5362", "#1D5FD1", "#0B6F82",
                     "#14703A", "#8A5300", "#C0262D", "#FFFFFF"),
             new Palette("paper", "Paper", true, "#F6EFE0", "#FBF6EA", "#FFFBF2", "#EFE6D2", "#C9BB9B", "#2A2118", "#5A4E3E", "#9A4A12", "#0E6B64",
+                    "#2D6A1E", "#7A5000", "#A52222", "#FFFFFF"),
+            new Palette("gray-light", "Xám nhạt", true, "#F1F2F4", "#FFFFFF", "#E7E9ED", "#E7E9ED", "#6F7888", "#16191F", "#4B5463", "#2457B8", "#2457B8",
+                    "#14703A", "#8A5300", "#C0262D", "#FFFFFF"),
+            new Palette("mint-light", "Bạc hà", true, "#E9F5EE", "#F7FCF9", "#D9EDE2", "#D9EDE2", "#5F8A74", "#10231A", "#3C5747", "#0B7358", "#0B7358",
+                    "#14703A", "#8A5300", "#B8232B", "#FFFFFF"),
+            new Palette("sky-light", "Trời nhạt", true, "#EAF2FA", "#F7FAFD", "#DCE8F4", "#DCE8F4", "#5F7EA0", "#0F1C2B", "#3F5268", "#1A5BB0", "#1A5BB0",
+                    "#14703A", "#8A5300", "#BE2A31", "#FFFFFF"),
+            new Palette("lavender-light", "Oải hương", true, "#F0EDF8", "#FAF8FE", "#E3DEF2", "#E3DEF2", "#776D9C", "#1D1830", "#50476B", "#5A3DB0", "#5A3DB0",
+                    "#14703A", "#8A5300", "#B8232F", "#FFFFFF"),
+            new Palette("peach-light", "Hồng đào", true, "#FBEFEA", "#FFFAF8", "#F4E0D8", "#F4E0D8", "#9A7062", "#2B1A15", "#5E443B", "#A63A1E", "#A63A1E",
                     "#2D6A1E", "#7A5000", "#A52222", "#FFFFFF")
     );
 

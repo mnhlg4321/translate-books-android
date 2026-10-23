@@ -75,7 +75,7 @@ final class FilePickerSheet {
         top.addView(t, new LinearLayout.LayoutParams(0, -2, 1));
         Button close = a.secondaryButton("✕", v -> dialog.cancel());
         close.setContentDescription("picker-close");
-        top.addView(close, new LinearLayout.LayoutParams(a.dp(48), a.dp(44)));
+        top.addView(close, new LinearLayout.LayoutParams(a.dp(48), a.dp(48)));
         root.addView(top);
 
         headline = a.text("", 13, a.GREEN, true);
@@ -96,7 +96,7 @@ final class FilePickerSheet {
             @Override public void onTextChanged(CharSequence s, int st, int b, int c) { }
             @Override public void afterTextChanged(Editable s) { model.setQuery(s.toString()); renderList(); }
         });
-        root.addView(search, a.marginLP(-1, a.dp(44), 0, 8, 0, 0));
+        root.addView(search, a.marginLP(-1, a.dp(48), 0, 8, 0, 0));
 
         LinearLayout filters = a.rowContainer();
         filters.addView(filterButton("Tất cả", FilePickerModel.Filter.ALL), new LinearLayout.LayoutParams(0, -2, 1));
@@ -182,7 +182,7 @@ final class FilePickerSheet {
         row.addView(texts, new LinearLayout.LayoutParams(0, -2, 1));
         TextView mark = a.text(model.isMultiple() ? (on ? "✓" : "○") : (on ? "◉" : "○"), 22, on ? a.BLUE : a.MUTED, true);
         mark.setGravity(Gravity.CENTER);
-        row.addView(mark, new LinearLayout.LayoutParams(a.dp(40), -2));
+        row.addView(mark, new LinearLayout.LayoutParams(a.dp(48), a.dp(48)));
         row.setContentDescription((on ? "đã chọn: " : "chưa chọn: ") + name);
         row.setOnClickListener(v -> { model.toggle(id); renderList(); });
         row.setOnLongClickListener(v -> { Toast.makeText(a, name, Toast.LENGTH_LONG).show(); return true; });

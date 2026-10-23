@@ -18,7 +18,7 @@ public final class AppearanceSettings {
     /** The palette when the mode is fixed, and the dark palette when the system mode is followed. */
     public String palette = "default";
     public String paletteLight = "light";
-    /** "#RRGGBB" or empty for the palette's own accent. */
+    /** Legacy field kept for schema compatibility; v4.23 always uses the palette accent. */
     public String accent = "";
     public int fontPercent = 100;
     public String density = DENSITY_COMFORTABLE;
@@ -29,9 +29,9 @@ public final class AppearanceSettings {
         s.mode = MODE_SYSTEM.equals(p.getString("mode", MODE_FIXED)) ? MODE_SYSTEM : MODE_FIXED;
         s.palette = UiAppearance.find(p.getString("palette", "default")).id;
         s.paletteLight = UiAppearance.find(p.getString("paletteLight", "light")).id;
-        String accent = p.getString("accent", "");
-        Integer parsed = ColorMath.parseHex(accent);
-        s.accent = parsed == null ? "" : ColorMath.hex(parsed);
+        // Old installs may contain an accent override. Read it without using it,
+        // so upgrading cannot silently alter the contrast of a new palette.
+        s.accent = "";
         int percent = p.getInt("fontPercent", 100);
         s.fontPercent = 100;
         for (int allowed : FONT_PERCENTS) if (allowed == percent) s.fontPercent = percent;
@@ -42,7 +42,7 @@ public final class AppearanceSettings {
     }
 
     public void save(SharedPreferences p) {
-        p.edit().putString("mode", mode).putString("palette", palette).putString("paletteLight", paletteLight).putString("accent", accent)
+        p.edit().putString("mode", mode).putString("palette", palette).putString("paletteLight", paletteLight).putString("accent", "")
                 .putInt("fontPercent", fontPercent).putString("density", density).putString("corners", corners).apply();
     }
 
@@ -51,17 +51,16 @@ public final class AppearanceSettings {
 
     public boolean isDefault() {
         AppearanceSettings d = defaults();
-        return mode.equals(d.mode) && palette.equals(d.palette) && paletteLight.equals(d.paletteLight) && accent.equals(d.accent)
+        return mode.equals(d.mode) && palette.equals(d.palette) && paletteLight.equals(d.paletteLight)
                 && fontPercent == d.fontPercent && density.equals(d.density) && corners.equals(d.corners);
     }
 
-    /** The palette to draw with now, with the chosen accent applied. */
+    /** The palette to draw with now. Legacy accent overrides are intentionally ignored. */
     public UiAppearance.Palette resolve(boolean systemNight) {
         UiAppearance.Palette base;
         if (MODE_SYSTEM.equals(mode)) base = systemNight ? UiAppearance.find(palette) : UiAppearance.find(paletteLight);
         else base = UiAppearance.find(palette);
-        Integer custom = ColorMath.parseHex(accent);
-        return custom == null ? base : base.withAccent(custom);
+        return base;
     }
 
     public float fontScale() { return fontPercent / 100f; }

@@ -75,7 +75,7 @@ public class LibraryS0InstrumentedTest {
                     activity.writeLibraryExport(Uri.fromFile(zip));
                     assertTrue(zip.length() > 0);
                     assertTrue(activity.lastLibraryExportLine().contains("4 glossary, 2 pronoun"));
-                    activity.switchTab("Files");
+                    activity.switchTab("RAW");
                 });
                 media("14-library-backup-card");
 

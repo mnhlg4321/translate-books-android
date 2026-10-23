@@ -30,8 +30,8 @@ final class DrawerNavigationModel {
 
     static boolean isSelected(String target, String page) {
         if ("Library".equals(target)) {
-            return "Files".equals(page) || "RAW".equals(page) || "Glossaries".equals(page)
-                    || "Pronouns".equals(page) || "ChapterSets".equals(page) || "Sample".equals(page);
+            return "RAW".equals(page) || "Glossaries".equals(page)
+                    || "Pronouns".equals(page) || "ChapterSets".equals(page);
         }
         if ("Jobs".equals(target)) return "Jobs".equals(page) || "JobsHistory".equals(page);
         return target != null && target.equals(page);

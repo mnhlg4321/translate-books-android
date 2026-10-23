@@ -19,7 +19,7 @@ public class AppBackNavigationPolicyTest {
     @Test public void libraryBackWalksToLibraryHomeThenTranslate() {
         assertEquals(OPEN_LIBRARY_HOME, AppBackNavigationPolicy.resolve("Glossaries", false, false, "General"));
         assertEquals(OPEN_LIBRARY_HOME, AppBackNavigationPolicy.resolve("Pronouns", false, false, "General"));
-        assertEquals(OPEN_LIBRARY_HOME, AppBackNavigationPolicy.resolve("Sample", false, false, "General"));
+        assertEquals(OPEN_TRANSLATE, AppBackNavigationPolicy.resolve("RAW", false, false, "General"));
         assertEquals(OPEN_TRANSLATE, AppBackNavigationPolicy.resolve("Files", false, false, "General"));
     }
 

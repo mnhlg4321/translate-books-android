@@ -66,7 +66,6 @@ public class MainActivity extends Activity {
     static final int REQ_INPUT = 10;
     static final int REQ_OUTPUT = 11;
     static final int REQ_YAML = 12;
-    static final int REQ_ENV = 13;
     static final int REQ_NOTI = 14;
     static final int REQ_GLOSSARY = 15; // legacy one-shot import
     static final int REQ_OUTPUT_TREE = 16;
@@ -108,26 +107,25 @@ public class MainActivity extends Activity {
     Uri outputUri;
     Uri outputTreeUri;
     Uri yamlUri;
-    Uri envUri;
     Uri glossaryUri;
     Uri pronounUri;
 
     FrameLayout rootFrame, contentFrame;
     LinearLayout appRoot;
-    TextView inputFileLabel, outputFileLabel, outputFolderLabel, yamlFileLabel, envFileLabel, glossaryFileLabel, pronounFileLabel, activeGlossaryLabel;
+    TextView inputFileLabel, outputFileLabel, outputFolderLabel, yamlFileLabel, glossaryFileLabel, pronounFileLabel, activeGlossaryLabel;
     TextView translateMeta, statusBanner, resultTitle, resultMeta, logView, glossaryPreview, filesSummary, sampleText;
     TextView topTitle, topSubtitle, topStatusChip, drawerStatusDot;
     Button drawerMenuButton;
     LinearLayout topBar;
     ScrollView logScroll;
-    TextView estimateText, modelPriceLabel, modelDiagnosticsText;
+    TextView estimateText, modelPriceLabel, modelDiagnosticsText, apiKeyStatusLabel, apiTestStatusLabel;
     ProgressBar setBar, chapterBar;
     LinearLayout setBarRow;
     TextView setLine, chapterRowLabel, tokensCellLabel, estimateLine;
     ScrollView previewScroll;
     Button previewToggle;
     View translateSupportCard, translateOutputCard;
-    TextView trackingTitle, trackingFile, metricChunks, metricCompleted, metricFailed, metricFallbacks, metricElapsed, metricRemaining, metricCost, metricTokens;
+    TextView trackingTitle, trackingFile, metricChunks, metricCompleted, metricFailed, metricFallbacks, metricElapsed, metricRemaining, metricCost, metricCostLabel, metricTokens;
     TextView metricCurrentChunk, metricGlossaryLocks, metricPronounLocks, lockUsageMeta, previewMeta, previewText;
     LinearLayout trackingCard, trackingDetails, estimatePanel, outputFolderFilesList, actionControlRow;
     TextView completionSummary, translateConfigSummary;
@@ -278,6 +276,7 @@ public class MainActivity extends Activity {
     final ArrayList<TextView> drawerProgressLabels = new ArrayList<>();
     int drawerInsetLeft, drawerInsetTop, drawerInsetRight, drawerInsetBottom;
     String settingsCategory = "General";
+    AppSettings recommendationUndo;
     boolean settingsSectionExpanded = true;
     boolean hydratingSettings = false;
     String pendingExportKind = "";
@@ -416,9 +415,11 @@ public class MainActivity extends Activity {
         pendingUnknownCache = p.unknown > 0;
         pendingJobCacheHasErrors = p.error > 0;
         pendingJobCard.setVisibility(View.VISIBLE);
-        pendingJobCard.addView(text("Job đang dở", 13, MUTED, true));
-        TextView name = text(p.fileName, 14, TEXT, false);
-        name.setSingleLine(false);
+        String pendingLine = "Job dở: " + nonEmpty(p.fileName, "Tệp TXT")
+                + (p.error > 0 ? " · " + p.error + " chunk lỗi" : "");
+        TextView name = text(pendingLine, 13, TEXT, true);
+        name.setSingleLine(true);
+        name.setEllipsize(android.text.TextUtils.TruncateAt.MIDDLE);
         name.setContentDescription("pending-job-name");
         pendingJobCard.addView(name, marginLP(-1, -2, 0, 2, 0, 0));
         pendingJobCard.setContentDescription("pending-job-context");
@@ -460,6 +461,35 @@ public class MainActivity extends Activity {
         for (TranslationRepository.JobSummary j : cachedJobSummaries) if (j.id == jobId) { start = j.startSessionId; break; }
         RunGroups.SessionInfo s = RunGroups.sessionOf(jobId, start, cachedSessions);
         return s == null || s.setId == null ? "" : s.setId;
+    }
+
+    private String setIdOfPendingJob(TranslationRepository.JobProgress job) {
+        if (job == null) return "";
+        if (job.startSessionId != null && !job.startSessionId.isEmpty()) {
+            RunGroups.SessionInfo session = RunGroups.sessionOf(job.id, job.startSessionId, cachedSessions);
+            if (session != null && session.setId != null) return session.setId;
+        }
+        return setIdOfJob(job.id);
+    }
+
+    /** The identity used by A1: a pending row may be visible without owning the current bar. */
+    private SelectedWorkModel.Selection selectedWorkIdentity() {
+        ArrayList<String> hashes = new ArrayList<>();
+        PreparedBatch plan = currentPreparedBatch();
+        if (plan != null && plan.inputs != null) {
+            for (PreparedBatch.Input input : plan.inputs) if (input != null && input.inputHash != null && !input.inputHash.isEmpty()) hashes.add(input.inputHash);
+        }
+        String name = inputUris.size() == 1 ? FileUtil.displayName(this, inputUris.get(0)) : "";
+        if (sourceUi.isSetMode()) return SelectedWorkModel.set(sourceUi.currentSetId(), hashes, sourceUi.currentSetName());
+        return SelectedWorkModel.txt(hashes, name);
+    }
+
+    private boolean pendingMatchesSelection() {
+        if (pendingJobCache == null) return false;
+        String setId = setIdOfPendingJob(pendingJobCache);
+        SelectedWorkModel.Mode mode = setId.isEmpty() ? SelectedWorkModel.Mode.TXT : SelectedWorkModel.Mode.SET;
+        return SelectedWorkModel.matches(selectedWorkIdentity(),
+                new SelectedWorkModel.Pending(mode, setId, pendingJobCache.inputHash, pendingJobCache.fileName));
     }
 
     /** After "Retry chunk lỗi" finished a chapter job of a set: asks whether to go on with the chapters that are still unfinished. */
@@ -565,7 +595,14 @@ public class MainActivity extends Activity {
         PronounStore.Profile activePronoun=PronounStore.selected(this);
         if(activePronoun!=null){saved.pronounText=activePronoun.text;saved.pronounUri=activePronoun.uri;saved.pronounName=activePronoun.name;saved.selectedPronounId=activePronoun.id;saved.selectedPronounName=activePronoun.name;SettingsStore.save(this,saved);}
         if (saved.instructionUri != null && !saved.instructionUri.isEmpty()) yamlUri = Uri.parse(saved.instructionUri);
-        if (saved.envUri != null && !saved.envUri.isEmpty()) envUri = Uri.parse(saved.envUri);
+        // v4.23 no longer accepts a hidden .env override.  Keep the persisted
+        // schema readable for old installs, but clear the legacy values before
+        // they can reach the runtime or the service.
+        if ((saved.envUri != null && !saved.envUri.isEmpty()) || (saved.envName != null && !saved.envName.isEmpty())) {
+            saved.envUri = "";
+            saved.envName = "";
+            SettingsStore.save(this, saved);
+        }
         if (saved.outputUri != null && !saved.outputUri.isEmpty()) outputUri = Uri.parse(saved.outputUri);
         if (saved.outputTreeUri != null && !saved.outputTreeUri.isEmpty()) outputTreeUri = Uri.parse(saved.outputTreeUri);
         if (saved.pronounUri != null && !saved.pronounUri.isEmpty()) pronounUri = Uri.parse(saved.pronounUri);
@@ -579,7 +616,7 @@ public class MainActivity extends Activity {
         if (b != null) bulkUi.restoreState(b);
         NavState restoredNav = NavState.from(b);
         navState.page = restoredNav.page;
-        if (b != null) { currentTab = restoredNav.page; jobsSetFilterId=b.getString("jobsSetFilterId",jobsSetFilterId); jobsSection=b.getString("jobsSection",jobsSection); historyQuery=b.getString("historyQuery",historyQuery); historySetFilterId=b.getString("historySetFilterId",historySetFilterId); settingsCategory=b.getString("settingsCategory",settingsCategory); settingsSectionExpanded=b.getBoolean("settingsSectionExpanded",true); }
+        if (b != null) { currentTab = restoredNav.page; jobsSetFilterId=b.getString("jobsSetFilterId",jobsSetFilterId); jobsSection=b.getString("jobsSection",jobsSection); historyQuery=b.getString("historyQuery",historyQuery); historySetFilterId=b.getString("historySetFilterId",historySetFilterId); settingsCategory=SettingsCategoryModel.normalize(b.getString("settingsCategory",settingsCategory)); settingsSectionExpanded=b.getBoolean("settingsSectionExpanded",true); }
         translationActive = TranslatorService.isActive();
         buildUi();
         refreshJobCacheAsync(false);
@@ -708,6 +745,7 @@ public class MainActivity extends Activity {
         commitAppearance(next);
     }
     void switchSettingsCategory(String category){
+        category = SettingsCategoryModel.normalize(category);
         if(!SettingsNavigationPolicy.shouldSwitch(settingsCategory,category)){if(!settingsSectionExpanded)toggleSettingsSection(category);return;}silentPersistCurrentUi();settingsCategory=category;settingsSectionExpanded=true;
         if(!"Settings".equals(currentTab)){switchTab("Settings");return;}
         invalidatePage("Settings");switchTab("Settings");
@@ -715,6 +753,7 @@ public class MainActivity extends Activity {
 
     void toggleSettingsSection(String category) {
         if (category == null || category.trim().isEmpty()) return;
+        category = SettingsCategoryModel.normalize(category);
         silentPersistCurrentUi();
         if (category.equals(settingsCategory)) settingsSectionExpanded = !settingsSectionExpanded;
         else { settingsCategory = category; settingsSectionExpanded = true; }
@@ -724,7 +763,7 @@ public class MainActivity extends Activity {
 
     void recordSettingsSectionState(String category, boolean expanded) {
         if (category == null || category.trim().isEmpty()) return;
-        settingsCategory = category;
+        settingsCategory = SettingsCategoryModel.normalize(category);
         settingsSectionExpanded = expanded;
     }
 
@@ -852,10 +891,10 @@ public class MainActivity extends Activity {
 
     String pageTitle() { return NavigationPageTitles.title(currentTab); }
 
-    boolean primaryActive(String name){if("Library".equals(name))return "Files".equals(currentTab)||"RAW".equals(currentTab)||"Glossaries".equals(currentTab)||"Pronouns".equals(currentTab)||"ChapterSets".equals(currentTab)||"Sample".equals(currentTab);if("Jobs".equals(name))return "Jobs".equals(currentTab)||"JobsHistory".equals(currentTab);return name.equals(currentTab);}
+    boolean primaryActive(String name){if("Library".equals(name))return "RAW".equals(currentTab)||"Glossaries".equals(currentTab)||"Pronouns".equals(currentTab)||"ChapterSets".equals(currentTab);if("Jobs".equals(name))return "Jobs".equals(currentTab)||"JobsHistory".equals(currentTab);return name.equals(currentTab);}
 
     void switchTab(String name) {
-        if("Library".equals(name))name="Files";
+        if("Library".equals(name) || "Files".equals(name) || "Sample".equals(name))name="RAW";
         bulkUi.exitOthers(name);
         if (name.equals(currentTab) && ("Glossaries".equals(name) || "Pronouns".equals(name))) invalidatePage(name);
         currentTab = name;
@@ -968,7 +1007,7 @@ public class MainActivity extends Activity {
         if (action == AppBackNavigationPolicy.Action.CLOSE_PRONOUN) {
             editingPronoun = null; invalidatePage("Pronouns"); switchTab("Pronouns"); return;
         }
-        if (action == AppBackNavigationPolicy.Action.OPEN_LIBRARY_HOME) { switchTab("Files"); return; }
+        if (action == AppBackNavigationPolicy.Action.OPEN_LIBRARY_HOME) { switchTab("RAW"); return; }
         if (action == AppBackNavigationPolicy.Action.OPEN_JOBS) { switchTab("Jobs"); return; }
         if (action == AppBackNavigationPolicy.Action.OPEN_SETTINGS_GENERAL) {
             silentPersistCurrentUi(); settingsCategory = "General"; settingsSectionExpanded = true;
@@ -982,19 +1021,20 @@ public class MainActivity extends Activity {
         if ("Translate".equals(name)) return buildTranslatePage();
         if ("Settings".equals(name)) return buildSettingsPage();
         if ("Editorial".equals(name)) return buildEditorialPage();
-        if ("Glossaries".equals(name)||"Pronouns".equals(name)||"Files".equals(name)||"Sample".equals(name)||"RAW".equals(name)||"ChapterSets".equals(name)) return buildLibraryDestination(name);
+        if ("Glossaries".equals(name)||"Pronouns".equals(name)||"RAW".equals(name)||"ChapterSets".equals(name)) return buildLibraryDestination(name);
         if ("Jobs".equals(name)) return buildJobsPage();
         if ("JobsHistory".equals(name)) return buildJobsHistoryPage();
-        return buildSamplePage();
+        return buildTranslatePage();
     }
 
     View buildLibraryDestination(String selected){
         LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setBackgroundColor(BG);
-        HorizontalScrollView scroll=new HorizontalScrollView(this);scroll.setHorizontalScrollBarEnabled(false);
         LinearLayout nav=new LinearLayout(this);nav.setOrientation(LinearLayout.HORIZONTAL);nav.setPadding(0,dp(4),0,dp(6));
-        String[] pages=CHAPTER_SETS_ENABLED?new String[]{"Files","RAW","Glossaries","Pronouns","ChapterSets","Sample"}:new String[]{"Files","RAW","Glossaries","Pronouns","Sample"};for(String page:pages){Button b=button("ChapterSets".equals(page)?"Tập":page,selected.equals(page)?CARD:FIELD,selected.equals(page)?TEXT:MUTED,v->switchTab(page));b.setTextSize(12);b.setMinWidth(0);b.setMinimumWidth(0);tint(b,selected.equals(page)?CARD:FIELD,selected.equals(page)?BLUE:BORDER,1,9);nav.addView(b,new LinearLayout.LayoutParams(-2,dp(38)));}
-        scroll.addView(nav);root.addView(scroll,new LinearLayout.LayoutParams(-1,dp(48)));
-        View page="Files".equals(selected)?buildFilesPage():"RAW".equals(selected)?new RawPageFactory(this).buildRawPage():"Glossaries".equals(selected)?buildGlossariesPage():"Pronouns".equals(selected)?buildPronounsPage():"ChapterSets".equals(selected)?buildChapterSetsPage():buildSamplePage();
+        String[] pages=CHAPTER_SETS_ENABLED?new String[]{"RAW","Glossaries","Pronouns","ChapterSets"}:new String[]{"RAW","Glossaries","Pronouns"};
+        for(String page:pages){Button b=button("ChapterSets".equals(page)?"Tập":("Glossaries".equals(page)?"Glossary":("Pronouns".equals(page)?"Pronoun":"RAW")),selected.equals(page)?CARD:FIELD,selected.equals(page)?TEXT:MUTED,v->switchTab(page));b.setTextSize(12);b.setMinWidth(0);b.setMinimumWidth(0);tint(b,selected.equals(page)?CARD:FIELD,selected.equals(page)?BLUE:BORDER,1,9);nav.addView(b,new LinearLayout.LayoutParams(0,dp(48),1));}
+        Button menu=secondaryButton("⋮",v->showLibraryMenu());menu.setContentDescription("Thao tác Thư viện");nav.addView(menu,new LinearLayout.LayoutParams(dp(48),dp(48)));
+        root.addView(nav,new LinearLayout.LayoutParams(-1,dp(56)));
+        View page="RAW".equals(selected)?new RawPageFactory(this).buildRawPage():"Glossaries".equals(selected)?buildGlossariesPage():"Pronouns".equals(selected)?buildPronounsPage():buildChapterSetsPage();
         root.addView(page,new LinearLayout.LayoutParams(-1,0,1));
         View noticeBar=bulkUi.noticeBar();if(noticeBar!=null)root.addView(noticeBar);
         View undoBar=bulkUi.undoBar();if(undoBar!=null)root.addView(undoBar);
@@ -1147,6 +1187,13 @@ public class MainActivity extends Activity {
     void refreshTopStatusChip() {
         if (topStatusChip == null) { refreshDrawerMenuState(); return; }
         boolean active = TranslatorService.isActive() || translationActive;
+        boolean show = "Translate".equals(currentTab) && active;
+        topStatusChip.setVisibility(show ? View.VISIBLE : View.GONE);
+        if (!show) {
+            renderedTopState = "";
+            refreshDrawerMenuState();
+            return;
+        }
         String durable = "";
         if (!active) {
             Intent saved = RuntimeStateStore.toIntent(this);
@@ -1863,15 +1910,6 @@ public class MainActivity extends Activity {
         startActivityForResult(i, REQ_YAML);
     }
 
-    void chooseEnv() {
-        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        i.addCategory(Intent.CATEGORY_OPENABLE);
-        i.setType("*/*");
-        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-        startActivityForResult(i, REQ_ENV);
-    }
-
-
     void exportEnv() {
         saveSettingsFromUi();
         pendingExportKind = "env";
@@ -1913,6 +1951,14 @@ public class MainActivity extends Activity {
         startActivityForResult(i, REQ_IMPORT_LIBRARY);
     }
 
+    /** Library-level actions stay in the overflow so the four content tabs remain equal-width. */
+    void showLibraryMenu() {
+        android.widget.PopupMenu menu = new android.widget.PopupMenu(this, findViewById(android.R.id.content));
+        menu.getMenu().add("Sao lưu thư viện").setOnMenuItemClickListener(item -> { exportLibrary(); return true; });
+        menu.getMenu().add("Nhập thư viện").setOnMenuItemClickListener(item -> { importLibrary(); return true; });
+        menu.show();
+    }
+
     void exportCorruptLibraryRaw() {
         Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         i.addCategory(Intent.CATEGORY_OPENABLE);
@@ -1950,8 +1996,10 @@ public class MainActivity extends Activity {
             toast("Đã xuất " + summary);
             appendLog("Library export: " + summary + " -> " + FileUtil.displayName(this, uri));
             showResult("Đã xuất thư viện", "Đã xuất " + summary + ".\nTệp không chứa API key, cài đặt, job hay dữ liệu Biên tập. Hãy giữ một bản ngoài điện thoại.");
-            invalidatePage("Files");
-            if ("Files".equals(currentTab)) switchTab("Files");
+            if ("RAW".equals(currentTab) || "Glossaries".equals(currentTab) || "Pronouns".equals(currentTab) || "ChapterSets".equals(currentTab)) {
+                invalidatePage(currentTab);
+                switchTab(currentTab);
+            }
         } catch (Exception e) {
             toast("Lỗi xuất thư viện");
             appendLog("Library export failed: " + e.getMessage());
@@ -2023,7 +2071,7 @@ public class MainActivity extends Activity {
         TextView body = text("App đã giữ nguyên bản gốc và tạm khóa ghi để không mất dữ liệu. Hãy xuất dữ liệu gốc và gửi để kiểm tra; đừng xóa dữ liệu app.", 13, TEXT, false);
         body.setSingleLine(false);
         box.addView(body, marginLP(-1, -2, 0, 6, 0, 10));
-        box.addView(primaryButton("Xuất dữ liệu gốc", v -> exportCorruptLibraryRaw()), new LinearLayout.LayoutParams(-1, dp(44)));
+        box.addView(primaryButton("Xuất dữ liệu gốc", v -> exportCorruptLibraryRaw()), new LinearLayout.LayoutParams(-1, dp(48)));
         return box;
     }
 
@@ -2600,30 +2648,6 @@ public class MainActivity extends Activity {
                 appendLog("Không đọc được instruction: " + e.getMessage());
             }
             refreshTranslationConfigViews(); updateMetaLine(); updateInputEstimate();
-        } else if (requestCode == REQ_ENV) {
-            envUri = uri;
-            FileUtil.takePersistable(this, uri, takeFlags, true, false);
-            String envName = FileUtil.displayName(this, uri);
-            setLabel(envFileLabel, ".env: " + envName);
-            try {
-                TranslationConfigRepository repo=TranslationConfigRepository.get(this);
-                TranslationConfigRepository.Entry entry=repo.importFromUri(TranslationConfigRepository.Type.ENVIRONMENT,uri);
-                String envText = repo.read(TranslationConfigRepository.Type.ENVIRONMENT);
-                AppSettings imported = AppSettings.fromEnv(EnvParser.parse(envText), collectSettings());
-                envUri=null; imported.envUri = ""; imported.envName = entry.name;
-                // Giữ instruction/glossary đã chọn nếu .env không ghi đè.
-                AppSettings old = SettingsStore.load(this);
-                if (imported.instructionUri == null || imported.instructionUri.isEmpty()) { imported.instructionUri = old.instructionUri; imported.instructionName = old.instructionName; }
-                if (imported.selectedGlossaryId == null || imported.selectedGlossaryId.isEmpty()) { imported.selectedGlossaryId = old.selectedGlossaryId; imported.selectedGlossaryName = old.selectedGlossaryName; imported.glossaryText = old.glossaryText; }
-                if (imported.pronounUri == null || imported.pronounUri.isEmpty()) { imported.pronounUri = old.pronounUri; imported.pronounName = old.pronounName; imported.pronounText = old.pronounText; }
-                SettingsStore.save(this, imported);
-                fillSettings(imported); updateInputEstimate();
-                toast("Đã nạp .env: " + envName);
-                appendLog("Đã import .env vào settings: " + envName);
-            } catch (Exception e) {
-                toast("Không đọc được .env");
-                appendLog("Không đọc được .env: " + e.getMessage());
-            }
         } else if (requestCode == REQ_EXPORT_ENV) {
             try {
                 FileUtil.writeText(this, uri, SettingsStore.toEnv(collectSettings()));
@@ -2812,7 +2836,6 @@ public class MainActivity extends Activity {
         i.putExtra("outputUri", outputUri == null ? "" : outputUri.toString());
         i.putExtra("outputTreeUri", outputTreeUri == null ? "" : outputTreeUri.toString());
         i.putExtra("yamlUri", yamlUri == null ? "" : yamlUri.toString());
-        i.putExtra("envUri", envUri == null ? "" : envUri.toString());
         i.putExtra("glossaryUri", glossaryUri == null ? "" : glossaryUri.toString());
         i.putExtra("pronounUri", pronounUri == null ? "" : pronounUri.toString());
         i.putExtra("settings", SettingsStore.toJson(s));
@@ -2878,10 +2901,6 @@ public class MainActivity extends Activity {
         }
         if (yamlUri != null) {
             String err = FileUtil.validateReadable(this, yamlUri, "Instructions file");
-            if (err != null) return err;
-        }
-        if (envUri != null) {
-            String err = FileUtil.validateReadable(this, envUri, ".env file");
             if (err != null) return err;
         }
         if (glossaryUri != null) {
@@ -3061,14 +3080,15 @@ public class MainActivity extends Activity {
         boolean active = TranslatorService.isActive() || translationActive;
         Intent runtime = RuntimeStateStore.toIntent(this);
         String runtimeState = runtime == null ? trackedState : runtime.getStringExtra(TranslatorService.EXTRA_STATE);
-        boolean unknown = pendingUnknownCache || (runtimeState != null && runtimeState.toUpperCase(Locale.ROOT).contains("UNKNOWN"));
-        boolean pending = (pendingJobCacheReady && pendingJobCache != null) || failedChunksCache;
-        int failures = pendingJobCache != null ? pendingJobCache.error : (failedChunksCache ? 1 : 0);
+        boolean pendingMatches = pendingMatchesSelection();
+        boolean unknown = (pendingMatches && pendingUnknownCache) || (runtimeState != null && runtimeState.toUpperCase(Locale.ROOT).contains("UNKNOWN"));
+        boolean pending = (pendingJobCacheReady && pendingJobCache != null && pendingMatches) || (failedChunksCache && pendingMatches);
+        int failures = pendingMatches && pendingJobCache != null ? pendingJobCache.error : (pendingMatches && failedChunksCache ? 1 : 0);
         PreparedBatch plan = currentPreparedBatch();
         boolean planReady = plan != null && plan.ready();
         String blocker = planReady ? startReadinessError() : "Đang chuẩn bị kế hoạch chunk";
         return RunControlModel.resolve(active, runtimeState, unknown, pending, failures,
-                planReady, blocker);
+                planReady, blocker, pendingMatches);
     }
 
     private String runControlMessage(RunControlModel.State state, String blocker) {
@@ -3162,6 +3182,11 @@ public class MainActivity extends Activity {
             menu.getMenu().add("Xem Công việc").setOnMenuItemClickListener(item -> { switchTab("Jobs"); return true; });
         }
         if (pendingJobCache != null) {
+            if (!pendingMatchesSelection() && pendingJobCache.error > 0) {
+                menu.getMenu().add("Dịch lại lỗi job dở").setOnMenuItemClickListener(item -> {
+                    retryJobFailedChunks(pendingJobCache.id); return true;
+                });
+            }
             menu.getMenu().add("Bỏ job này").setOnMenuItemClickListener(item -> { confirmDismissJob(pendingJobCache); return true; });
         }
         menu.show();
@@ -3181,8 +3206,9 @@ public class MainActivity extends Activity {
             } else if (outputFolderButton != null) outputFolderButton.setText("Thư mục (nhiều chương)");
         }
         RunControlModel.State state = runControlState();
+        boolean pendingMatches = pendingMatchesSelection();
         renderRunControlBar(state, RunControlModel.controls(state,
-                pendingJobCache != null ? pendingJobCache.error : (failedChunksCache ? 1 : 0)), blocker);
+                pendingMatches && pendingJobCache != null ? pendingJobCache.error : (pendingMatches && failedChunksCache ? 1 : 0)), blocker);
         if (!active && statusBanner != null) {
             if (state == RunControlModel.State.BLOCKED) {
                 statusBanner.setVisibility(View.VISIBLE);
@@ -3190,6 +3216,10 @@ public class MainActivity extends Activity {
             } else statusBanner.setVisibility(View.GONE);
         }
         if (trackingCard != null && "Translate".equals(currentTab)) trackingCard.setVisibility(View.VISIBLE);
+        if (trackingDetails != null && !active && (trackedState == null || trackedState.trim().isEmpty()
+                || "IDLE".equalsIgnoreCase(trackedState) || completionSummaryCollapsed)) {
+            trackingDetails.setVisibility(View.GONE);
+        }
         refreshTopStatusChip();
     }
 
@@ -3231,8 +3261,35 @@ public class MainActivity extends Activity {
         toast(saved.apiKey == null || saved.apiKey.trim().isEmpty() ? "Đã lưu settings" : "Đã lưu settings + API key");
         appendLog("Đã lưu settings" + ((saved.apiKey == null || saved.apiKey.trim().isEmpty()) ? "" : " + API key"));
         if (activeGlossaryLabel != null) activeGlossaryLabel.setText(activeGlossaryText());
+        updateApiKeyStatus(saved.apiKey);
         updateMetaLine();
         updateInputEstimate();
+    }
+
+    void applyRecommendedSettings() {
+        AppSettings before = collectSettings();
+        recommendationUndo = before.copy();
+        AppSettings after = SettingsRecommendationModel.apply(before);
+        after.envUri = "";
+        after.envName = "";
+        SettingsStore.save(this, after);
+        fillSettings(after);
+        invalidatePage("Settings");
+        switchTab("Settings");
+        toast("Đã áp dụng cài đặt khuyến nghị");
+    }
+
+    void undoRecommendedSettings() {
+        if (recommendationUndo == null) { toast("Chưa có thay đổi để hoàn tác"); return; }
+        AppSettings restore = recommendationUndo.copy();
+        restore.envUri = "";
+        restore.envName = "";
+        SettingsStore.save(this, restore);
+        fillSettings(restore);
+        recommendationUndo = null;
+        invalidatePage("Settings");
+        switchTab("Settings");
+        toast("Đã hoàn tác cài đặt khuyến nghị");
     }
 
     private boolean unlimitedCostSelected() {
@@ -3270,6 +3327,7 @@ public class MainActivity extends Activity {
         if (maxOutputField != null) s.maxOutputTokens = intVal(maxOutputField, s.maxOutputTokens);
         if (reasoningEffortField != null) s.reasoningEffort = ReasoningEffort.normalize(reasoningEffortField.getText().toString());
         if (costLimitField != null) s.costLimitUsd = doubleVal(costLimitField, s.costLimitUsd);
+        if (s.costLimitUsd > 0) s.stopOnCostLimit = true;
         if(costWarningField!=null)s.costWarningUsd=doubleVal(costWarningField,s.costWarningUsd);if(maxRetryCostField!=null)s.maxRetryCostUsd=doubleVal(maxRetryCostField,s.maxRetryCostUsd);if(maxPaidRetriesField!=null)s.maxPaidRetries=intVal(maxPaidRetriesField,s.maxPaidRetries);
         if (glossaryLimitField != null) s.glossaryInjectLimit = intVal(glossaryLimitField, s.glossaryInjectLimit);
         if (pronounLimitField != null) s.pronounInjectLimit = intVal(pronounLimitField, s.pronounInjectLimit);
@@ -3280,12 +3338,10 @@ public class MainActivity extends Activity {
         if(overlapBox!=null)s.contextOverlapEnabled=overlapBox.isChecked();if(retryEmptyBox!=null)s.retryOnEmpty=retryEmptyBox.isChecked();if(retryTruncationBox!=null)s.retryOnTruncation=retryTruncationBox.isChecked();if(retryValidationBox!=null)s.retryOnValidationFailure=retryValidationBox.isChecked();if(stopUnknownPricingBox!=null)s.stopWhenPricingUnknown=stopUnknownPricingBox.isChecked();
         if (yamlUri != null) s.instructionUri = yamlUri.toString();
         if (lastInstructionName != null && !"—".equals(lastInstructionName)) s.instructionName = lastInstructionName;
-        if (envUri != null) s.envUri = envUri.toString();
+        // Legacy .env overrides are intentionally not part of the runtime path.
+        s.envUri = "";
+        s.envName = "";
         if (pronounUri != null) s.pronounUri = pronounUri.toString();
-        if (envFileLabel != null) {
-            String lbl = envFileLabel.getText().toString();
-            if (lbl.startsWith(".env: ")) s.envName = lbl.substring(6);
-        }
         if (pronounUri != null) {
             s.pronounUri = pronounUri.toString();
             s.pronounName = displayNameCached(pronounUri);
@@ -3317,6 +3373,7 @@ public class MainActivity extends Activity {
             if (providerField != null) providerField.setText(s.provider);
             if (baseUrlField != null) baseUrlField.setText(s.baseUrl);
             if (apiKeyField != null) apiKeyField.setText(s.apiKey);
+            updateApiKeyStatus(s.apiKey);
             if (modelField != null) modelField.setText(s.model);
             if (sourceField != null) sourceField.setText(s.sourceLanguage);
             if (targetField != null) targetField.setText(s.targetLanguage);
@@ -3340,11 +3397,10 @@ public class MainActivity extends Activity {
             if (refineBox != null) refineBox.setChecked(s.refineAfter);
             if (bilingualBox != null) bilingualBox.setChecked(s.bilingualOutput);
             if (partialBox != null) partialBox.setChecked(s.savePartialOutput);
-            if (costLimitBox != null) costLimitBox.setChecked(s.stopOnCostLimit);
+            if (costLimitBox != null) costLimitBox.setChecked(s.stopOnCostLimit || s.costLimitUsd > 0);
             if (unlimitedCostBox != null) unlimitedCostBox.setChecked(getSharedPreferences("runtime-cost-policy", MODE_PRIVATE).getBoolean("unlimited", false));
             if(overlapBox!=null)overlapBox.setChecked(s.contextOverlapEnabled);if(retryEmptyBox!=null)retryEmptyBox.setChecked(s.retryOnEmpty);if(retryTruncationBox!=null)retryTruncationBox.setChecked(s.retryOnTruncation);if(retryValidationBox!=null)retryValidationBox.setChecked(s.retryOnValidationFailure);if(stopUnknownPricingBox!=null)stopUnknownPricingBox.setChecked(s.stopWhenPricingUnknown);
             if (s.instructionUri != null && !s.instructionUri.isEmpty()) yamlUri = Uri.parse(s.instructionUri);
-            if (s.envUri != null && !s.envUri.isEmpty()) envUri = Uri.parse(s.envUri);
             if (s.outputUri != null && !s.outputUri.isEmpty()) outputUri = Uri.parse(s.outputUri);
             if (s.outputTreeUri != null && !s.outputTreeUri.isEmpty()) outputTreeUri = Uri.parse(s.outputTreeUri);
             if (s.pronounUri != null && !s.pronounUri.isEmpty()) pronounUri = Uri.parse(s.pronounUri);
@@ -3353,9 +3409,7 @@ public class MainActivity extends Activity {
             if (s.glossaryText != null && !s.glossaryText.isEmpty()) lastGlossaryText = s.glossaryText;
             TranslationConfigRepository configRepository=TranslationConfigRepository.get(this);
             TranslationConfigRepository.Entry instructionEntry=configRepository.entry(TranslationConfigRepository.Type.INSTRUCTION_YAML);
-            TranslationConfigRepository.Entry environmentEntry=configRepository.entry(TranslationConfigRepository.Type.ENVIRONMENT);
             if (yamlFileLabel != null) yamlFileLabel.setText("Instructions: " + (instructionEntry.valid() ? instructionEntry.name + " • internal copy valid" : "chưa chọn"));
-            if (envFileLabel != null) envFileLabel.setText(".env: " + (environmentEntry.valid() ? environmentEntry.name + " • internal copy valid" : "chưa chọn"));
             if (pronounFileLabel != null) pronounFileLabel.setText("Pronoun: " + (s.pronounName == null || s.pronounName.isEmpty() ? "chưa chọn" : s.pronounName));
             if (outputFileLabel != null) outputFileLabel.setText(outputUri == null ? "1 tệp: chưa chọn" : "1 tệp: " + FileUtil.displayName(this, outputUri) + " · " + outputAccessLabel(outputUri));
             if (outputFolderLabel != null) outputFolderLabel.setText(outputFolderDisplayLabel());
@@ -3364,6 +3418,16 @@ public class MainActivity extends Activity {
             updateMetaLine();
         } finally {
             hydratingSettings = wasHydrating;
+        }
+    }
+
+    void updateApiKeyStatus(String value) {
+        if (apiKeyStatusLabel == null) return;
+        String key = value == null ? "" : value.trim();
+        if (key.isEmpty()) apiKeyStatusLabel.setText("Chưa lưu API key");
+        else {
+            String tail = key.length() <= 4 ? key : key.substring(key.length() - 4);
+            apiKeyStatusLabel.setText("Đã lưu key ·····" + tail);
         }
     }
 
@@ -3408,19 +3472,22 @@ public class MainActivity extends Activity {
         saveRuntimeUris();
         AppSettings s = collectSettings();
         SettingsStore.save(this, s);
-        toast("Đang test API...");
+        if (apiTestStatusLabel != null) apiTestStatusLabel.setText("Đang kiểm tra API…");
+        toast("Đang kiểm tra API…");
         appendLog("Quick test API: " + s.provider + " / " + s.model);
         new Thread(() -> {
             try {
                 PromptPair p = new PromptPair("You are a connection tester. Reply only OK.", "Reply only: OK");
                 OpenAICompatibleClient.ChatResult r = OpenAICompatibleClient.chatWithUsage(s, p);
                 runOnUiThread(() -> {
+                    if (apiTestStatusLabel != null) apiTestStatusLabel.setText("API OK · " + r.totalTokens + " token");
                     toast("API OK • " + r.totalTokens + " tokens");
                     appendLog("API OK • tokens=" + r.totalTokens + " • response=" + r.content.trim());
                 });
             } catch (Exception e) {
                 runOnUiThread(() -> {
                     String err = AppValidator.readableError(e);
+                    if (apiTestStatusLabel != null) apiTestStatusLabel.setText("API lỗi: " + err);
                     toast("API lỗi: " + err);
                     appendLog("API test lỗi: " + err);
                 });
@@ -3889,8 +3956,8 @@ public class MainActivity extends Activity {
 
     String currentInputLabel() {
         if (inputUris.isEmpty()) return "Chưa chọn file TXT";
-        if (inputUris.size() == 1) return "📄 " + FileUtil.displayName(this, inputUris.get(0));
-        return "📚 " + inputUris.size() + " TXT files selected";
+        if (inputUris.size() == 1) return FileUtil.displayName(this, inputUris.get(0));
+        return inputUris.size() + " tệp TXT đã chọn";
     }
 
     String inputUrisJson() {
@@ -4114,7 +4181,7 @@ public class MainActivity extends Activity {
         refreshTranslationConfigViews();
         if (modelPriceLabel != null) {
             ModelCatalog.ModelInfo mi = ModelCatalog.findModelInfo(s.provider, s.model);
-            modelPriceLabel.setText("Price: " + mi.priceSuffix() + " • " + mi.pricingSource);
+            modelPriceLabel.setText("Giá: " + mi.priceSuffix() + " • " + mi.pricingSource);
         }
         updateModelDiagnostics();
     }
@@ -4170,8 +4237,8 @@ public class MainActivity extends Activity {
     }
 
     void refreshFilesPage() {
-        invalidatePage("Files");
-        switchTab("Files");
+        invalidatePage("Translate");
+        switchTab("Translate");
         final Uri tree = outputTreeUri;
         final LinearLayout target = outputFolderFilesList;
         if (tree == null || target == null) return;
@@ -4308,16 +4375,23 @@ public class MainActivity extends Activity {
         } else {
             if (trackingTitle != null) trackingTitle.setText(RunPanelFormatter.title(state, setRun, set, file));
             if (completionSummary != null) completionSummary.setVisibility(View.GONE);
-            if (trackingDetails != null) trackingDetails.setVisibility(View.VISIBLE);
+            if (trackingDetails != null) trackingDetails.setVisibility(
+                    "IDLE".equalsIgnoreCase(state) && !TranslatorService.isActive() && !translationActive
+                            ? View.GONE : View.VISIBLE);
         }
         if (trackingFile != null) trackingFile.setText(nonEmpty(file, "Lượt dịch"));
         if (trackingFile != null) trackingFile.setVisibility(setRun ? View.VISIBLE : View.GONE);
         if (setBarRow != null) setBarRow.setVisibility(setRun ? View.VISIBLE : View.GONE);
+        if (chapterRowLabel != null) {
+            View parent = chapterRowLabel.getParent() == null ? null : (View) chapterRowLabel.getParent().getParent();
+            if (parent != null) parent.setVisibility(setRun && sourceUi != null && sourceUi.isSetMode() ? View.VISIBLE : View.GONE);
+        }
         if (setBar != null) setBar.setProgress(RunPanelFormatter.setPermille(setTotal, setDone, setFailed, completed, total));
         if (setLine != null) setLine.setText(RunPanelFormatter.setLine(setIndex, setTotal, setDone, setFailed, -1));
         if (chapterBar != null) chapterBar.setProgress(RunPanelFormatter.chunkPermille(completed, total));
         if (metricCompleted != null) metricCompleted.setText(RunPanelFormatter.chapterLine(Math.max(currentChunk, completed), total, file));
         if (tokensCellLabel != null) tokensCellLabel.setText(setRun ? "Token cả lượt" : "Token đã dùng");
+        if (metricCostLabel != null) metricCostLabel.setText(setRun ? "Chi phí cả lượt" : "Chi phí");
         if (metricTokens != null) metricTokens.setText(RunPanelFormatter.tokens(setRun || runTokens > 0 ? Math.max(runTokens, tokens) : tokens));
         if (metricCost != null) metricCost.setText(RunPanelFormatter.money(setRun || runCost > 0 ? Math.max(runCost, cost) : cost));
         if (metricFailed != null) metricFailed.setText(RunPanelFormatter.errors(failed));
@@ -4554,7 +4628,7 @@ public class MainActivity extends Activity {
 
     LinearLayout rowButtons(View left, View right) {
         LinearLayout row = rowContainer();
-        row.addView(left, new LinearLayout.LayoutParams(dp(165), dp(46)));
+        row.addView(left, new LinearLayout.LayoutParams(dp(165), dp(48)));
         row.addView(space(12, 1));
         row.addView(right, new LinearLayout.LayoutParams(0, -2, 1));
         row.setPadding(0, dp(8), 0, dp(8));
@@ -4578,7 +4652,9 @@ public class MainActivity extends Activity {
         b.setPadding(dp(6), dp(4), dp(6), dp(4));
         b.setMinWidth(dp(48));
         b.setMinimumWidth(dp(48));
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2, -2);
+        b.setMinHeight(dp(48));
+        b.setMinimumHeight(dp(48));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2, dp(48));
         lp.setMargins(0, 0, dp(4), 0);
         b.setLayoutParams(lp);
         return b;
@@ -4596,6 +4672,8 @@ public class MainActivity extends Activity {
         b.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         b.setTextColor(fg);
         b.setOnClickListener(l);
+        b.setMinHeight(dp(48));
+        b.setMinimumHeight(dp(48));
         tint(b, bg, bg == FIELD ? BORDER : bg, 1, 12);
         return b;
     }
@@ -4609,21 +4687,21 @@ public class MainActivity extends Activity {
     String shortTabName(String name) {
         if ("Translate".equals(name)) return "Translate";
         if ("Settings".equals(name)) return "Settings";
+        if ("RAW".equals(name)) return "Thư viện";
         if ("Glossaries".equals(name)) return "Glossary";
         if ("Pronouns".equals(name)) return "Pronoun";
-        if ("Files".equals(name)) return "Files";
         if ("Jobs".equals(name) || "JobsHistory".equals(name)) return "Jobs";
-        return "Sample";
+        return "Tập";
     }
 
     String iconForTab(String name) {
         if ("Translate".equals(name)) return "文";
-        if ("Settings".equals(name)) return "☷";
-        if ("Glossaries".equals(name)) return "📖";
-        if ("Pronouns".equals(name)) return "💬";
-        if ("Files".equals(name)) return "📁";
+        if ("Settings".equals(name)) return "Cài đặt";
+        if ("RAW".equals(name)) return "RAW";
+        if ("Glossaries".equals(name)) return "Glossary";
+        if ("Pronouns".equals(name)) return "Pronoun";
         if ("Jobs".equals(name) || "JobsHistory".equals(name)) return "Công việc";
-        return "⚗";
+        return "Tập";
     }
 
     int dp(int v) { return Math.round(v * getResources().getDisplayMetrics().density); }

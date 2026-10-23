@@ -834,6 +834,8 @@ public class TranslationRepository extends SQLiteOpenHelper {
     public static class JobProgress {
         public long id;
         public String fileName, status, inputHash, inputUri, outputUri;
+        public String startSessionId = "", preparedBatchId = "";
+        public int preparedOrdinal;
         public int total, done, error, unknown, pending;
         public int remaining() { return Math.max(0, total - done); }
     }
@@ -851,12 +853,13 @@ public class TranslationRepository extends SQLiteOpenHelper {
             for (String h : inputHashes) { where.append(first ? "?" : ",?"); first = false; args.add(h); }
             where.append(")");
         }
-        String sql = "SELECT j.id,j.file_name,j.status,j.input_hash,j.input_uri,j.output_uri FROM jobs j WHERE " + where + " ORDER BY j.updated_at DESC LIMIT " + Math.max(1, limit);
+        String sql = "SELECT j.id,j.file_name,j.status,j.input_hash,j.input_uri,j.output_uri,COALESCE(j.start_session_id,''),COALESCE(j.prepared_batch_id,''),COALESCE(j.prepared_input_ordinal,0) FROM jobs j WHERE " + where + " ORDER BY j.updated_at DESC LIMIT " + Math.max(1, limit);
         SQLiteDatabase db = getReadableDatabase();
         try (Cursor c = db.rawQuery(sql, args.toArray(new String[0]))) {
             while (c.moveToNext()) {
                 JobProgress p = new JobProgress();
                 p.id = c.getLong(0); p.fileName = safe(c.getString(1)); p.status = safe(c.getString(2)); p.inputHash = safe(c.getString(3)); p.inputUri = safe(c.getString(4)); p.outputUri = safe(c.getString(5));
+                p.startSessionId = safe(c.getString(6)); p.preparedBatchId = safe(c.getString(7)); p.preparedOrdinal = c.getInt(8);
                 out.add(p);
             }
         }

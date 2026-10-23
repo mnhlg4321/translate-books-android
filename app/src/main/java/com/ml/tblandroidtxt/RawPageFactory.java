@@ -3,6 +3,7 @@ package com.ml.tblandroidtxt;
 import android.app.AlertDialog;
 import android.graphics.Typeface;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
@@ -24,7 +25,7 @@ class RawPageFactory {
         ScrollView scroll = a.scroll();
         LinearLayout root = a.pageRoot();
         scroll.addView(root);
-        LinearLayout panel = a.sectionCard("📄", "RAW");
+        LinearLayout panel = a.sectionCard("RAW", "RAW");
         TextView desc = a.text("Nhập nhiều TXT RAW một lần; app giữ bản sao nên không cần chọn lại tệp hay mất quyền truy cập. Sắp theo số chương ở đầu tên tệp (025_… là chương 25).", 13, a.MUTED, false);
         desc.setSingleLine(false);
         panel.addView(desc, a.marginLP(-1, -2, 0, 0, 0, 10));
@@ -53,11 +54,11 @@ class RawPageFactory {
             headerSlot.removeAllViews();
             List<String> ids = new ArrayList<>();
             for (LibraryRawStore.Item i : shown) ids.add(i.id);
-            summary.setText(all.size() + " mục" + (shown.size() != all.size() ? " · hiện " + shown.size() : ""));
+            summary.setText(all.size() + " RAW" + (shown.size() != all.size() ? " · hiện " + shown.size() : ""));
             if (selection.isActive()) headerSlot.addView(a.bulkUi.selectionHeader(LibraryBulkUi.TAB_RAW, ids));
-            else if (!all.isEmpty()) headerSlot.addView(a.bulkUi.selectButton(LibraryBulkUi.TAB_RAW), new LinearLayout.LayoutParams(-2, a.dp(40)));
+            else if (!all.isEmpty()) headerSlot.addView(a.bulkUi.selectButton(LibraryBulkUi.TAB_RAW), new LinearLayout.LayoutParams(-2, a.dp(48)));
             if (shown.isEmpty()) {
-                TextView empty = a.text(all.isEmpty() ? "Chưa có RAW. Bấm Nhập RAW để chọn nhiều tệp TXT." : "Không có RAW khớp \"" + a.rawFilter + "\".", 14, a.MUTED, false);
+                TextView empty = a.text(all.isEmpty() ? "Chưa có RAW. Nhập RAW trước." : "Không có RAW khớp \"" + a.rawFilter + "\".", 14, a.MUTED, false);
                 empty.setSingleLine(false);
                 list.addView(empty, a.marginLP(-1, -2, 0, 12, 0, 12));
                 return;
@@ -89,25 +90,38 @@ class RawPageFactory {
         String title = item.name.equals(LibraryRawStore.stripExtension(item.originalName)) ? item.originalName : item.name + "  (" + item.originalName + ")";
         if (selection.isActive()) return a.bulkUi.selectableCard(LibraryBulkUi.TAB_RAW, item.id, title, meta(item), a.BORDER);
         LinearLayout box = a.card(14, a.FIELD, a.BORDER);
-        box.setOrientation(LinearLayout.VERTICAL);
+        box.setOrientation(LinearLayout.HORIZONTAL);
+        box.setGravity(android.view.Gravity.CENTER_VERTICAL);
         box.setPadding(a.dp(12), a.dp(12), a.dp(12), a.dp(12));
-        TextView t = a.text("📄 " + title, 15, a.TEXT, true);
-        t.setSingleLine(false);
-        box.addView(t);
+        LinearLayout text = new LinearLayout(a);
+        text.setOrientation(LinearLayout.VERTICAL);
+        TextView t = a.text(title, 15, a.TEXT, true);
+        t.setSingleLine(true);
+        t.setEllipsize(TextUtils.TruncateAt.MIDDLE);
+        text.addView(t);
         TextView m = a.text(meta(item), 12, item.chapterNo >= 0 ? a.MUTED : a.AMBER, false);
-        m.setSingleLine(false);
-        box.addView(m, a.marginLP(-1, -2, 0, 4, 0, 10));
-        LinearLayout buttons = a.rowContainer();
-        buttons.addView(a.tinyButton("Xem", a.BLUE, v -> view(item)), new LinearLayout.LayoutParams(0, a.dp(42), 1));
-        buttons.addView(a.space(6, 1));
-        buttons.addView(a.tinyButton("Đổi tên", a.BLUE, v -> rename(item)), new LinearLayout.LayoutParams(0, a.dp(42), 1));
-        buttons.addView(a.space(6, 1));
-        buttons.addView(a.tinyButton("Thay tệp", a.BLUE, v -> a.chooseRawReplacement(item.id)), new LinearLayout.LayoutParams(0, a.dp(42), 1));
-        buttons.addView(a.space(6, 1));
-        buttons.addView(a.tinyButton("Xóa", a.RED, v -> a.bulkUi.deleteIds(LibraryBulkUi.TAB_RAW, java.util.Collections.singletonList(item.id))), new LinearLayout.LayoutParams(0, a.dp(42), 1));
-        box.addView(buttons);
+        m.setSingleLine(true);
+        m.setEllipsize(TextUtils.TruncateAt.MIDDLE);
+        text.addView(m, a.marginLP(-1, -2, 0, 2, 0, 0));
+        box.addView(text, new LinearLayout.LayoutParams(0, -2, 1));
+        TextView hint = a.text("›", 24, a.MUTED, false);
+        hint.setGravity(android.view.Gravity.CENTER);
+        box.addView(hint, new LinearLayout.LayoutParams(a.dp(36), a.dp(48)));
+        android.widget.Button menu = a.secondaryButton("⋮", v -> showMenu(item, v));
+        menu.setContentDescription("Thao tác RAW " + item.originalName);
+        box.addView(menu, new LinearLayout.LayoutParams(a.dp(48), a.dp(48)));
+        box.setOnClickListener(v -> view(item));
         a.bulkUi.attachLongPress(box, LibraryBulkUi.TAB_RAW, item.id);
         return box;
+    }
+
+    private void showMenu(LibraryRawStore.Item item, View anchor) {
+        android.widget.PopupMenu menu = new android.widget.PopupMenu(a, anchor);
+        menu.getMenu().add("Xem").setOnMenuItemClickListener(m -> { view(item); return true; });
+        menu.getMenu().add("Đổi tên").setOnMenuItemClickListener(m -> { rename(item); return true; });
+        menu.getMenu().add("Thay tệp").setOnMenuItemClickListener(m -> { a.chooseRawReplacement(item.id); return true; });
+        menu.getMenu().add("Xóa").setOnMenuItemClickListener(m -> { a.bulkUi.deleteIds(LibraryBulkUi.TAB_RAW, java.util.Collections.singletonList(item.id)); return true; });
+        menu.show();
     }
 
     private void view(LibraryRawStore.Item item) {

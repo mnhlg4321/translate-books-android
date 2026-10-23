@@ -119,7 +119,9 @@ public final class RunPanelFormatter {
 
     /** Counts belong to the current request. A missing measurement is not a zero. */
     public static String rules(int glossary, int pronoun) {
-        return "Glossaries: " + ruleCount(glossary) + " · Pronoun: " + ruleCount(pronoun);
+        String g = glossary < 0 ? "chưa đo" : glossary + " mục";
+        String p = pronoun < 0 ? "chưa đo" : pronoun + " quy tắc";
+        return "Đã áp dụng: " + g + " Glossary · " + p + " Pronoun";
     }
 
     private static String ruleCount(int count) { return count < 0 ? "chưa đo" : count + " luật"; }

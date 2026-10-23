@@ -100,9 +100,9 @@ class FilesPageFactory {
         help.setSingleLine(false);
         box.addView(help, a.marginLP(-1, -2, 0, 4, 0, 8));
         LinearLayout actions = a.rowContainer();
-        actions.addView(a.primaryButton("Xuất thư viện", v -> a.exportLibrary()), new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        actions.addView(a.primaryButton("Xuất thư viện", v -> a.exportLibrary()), new LinearLayout.LayoutParams(0, a.dp(48), 1));
         actions.addView(a.space(8, 1));
-        actions.addView(a.secondaryButton("Nhập thư viện", v -> a.importLibrary()), new LinearLayout.LayoutParams(0, a.dp(44), 1));
+        actions.addView(a.secondaryButton("Nhập thư viện", v -> a.importLibrary()), new LinearLayout.LayoutParams(0, a.dp(48), 1));
         box.addView(actions);
         TextView last = a.text(a.lastLibraryExportLine(), 12, a.MUTED, false);
         last.setSingleLine(false);

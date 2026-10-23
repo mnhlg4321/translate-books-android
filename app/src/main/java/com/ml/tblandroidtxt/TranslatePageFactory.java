@@ -88,7 +88,7 @@ class TranslatePageFactory {
         uploadCard.setOrientation(LinearLayout.VERTICAL);
         uploadCard.setGravity(Gravity.CENTER);
         uploadCard.setPadding(a.dp(12), a.dp(10), a.dp(12), a.dp(10));
-        TextView cloud = a.text("📄", 42, a.BLUE, false);
+        TextView cloud = a.text("TXT", 18, a.BLUE, true);
         cloud.setGravity(Gravity.CENTER);
         TextView h = a.text("Tệp TXT", 21, a.TEXT, true);
         h.setGravity(Gravity.CENTER);
@@ -97,14 +97,14 @@ class TranslatePageFactory {
         cloud.setVisibility(View.GONE);
         h.setVisibility(View.GONE);
         sub.setVisibility(View.GONE);
-        Button browse = a.primaryButton("Chọn TXT", v -> a.chooseInput());
+        Button browse = a.primaryButton("Chọn tệp", v -> a.chooseInput());
         a.inputFileLabel = a.text(a.currentInputLabel(), 13, a.MUTED, false);
         a.inputFileLabel.setGravity(Gravity.CENTER);
         uploadCard.addView(cloud);
         uploadCard.addView(h);
         uploadCard.addView(sub);
         uploadCard.addView(a.space(1, 4));
-        uploadCard.addView(browse, new LinearLayout.LayoutParams(a.dp(180), a.dp(44)));
+        uploadCard.addView(browse, new LinearLayout.LayoutParams(a.dp(180), a.dp(48)));
         uploadCard.addView(a.inputFileLabel);
         a.estimatePanel = a.card(12, a.FIELD, a.BORDER);
         a.estimatePanel.setOrientation(LinearLayout.VERTICAL);
@@ -113,7 +113,7 @@ class TranslatePageFactory {
         a.estimateText.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
         a.estimatePanel.addView(a.estimateText);
         a.pricingRetryButton = a.secondaryButton(MODEL_PRICING_LABEL, v -> a.refreshModelCatalog());
-        a.estimatePanel.addView(a.pricingRetryButton, a.marginLP(-1, a.dp(42), 0, 8, 0, 0));
+        a.estimatePanel.addView(a.pricingRetryButton, a.marginLP(-1, a.dp(48), 0, 8, 0, 0));
         a.pricingRetryButton.setVisibility(View.GONE);
         a.estimatePanel.setVisibility(View.VISIBLE);
         uploadCard.addView(a.estimatePanel, a.marginLP(-1, -2, 0, 10, 0, 0));
@@ -133,8 +133,9 @@ class TranslatePageFactory {
         root.addView(a.translateSupportCard, a.marginLP(-1, -2, 0, 0, 0, 10));
         root.addView(a.translateOutputCard, a.marginLP(-1, -2, 0, 0, 0, 10));
 
-        a.translateMeta = a.text("OpenRouter · Model chưa nạp · Japanese → Vietnamese", 12, a.MUTED, false);
+        a.translateMeta = a.text("", 12, a.MUTED, false);
         a.translateMeta.setGravity(Gravity.CENTER);
+        a.translateMeta.setVisibility(View.GONE);
         root.addView(a.translateMeta, a.marginLP(-1, -2, 0, 2, 0, 2));
 
         a.statusBanner = a.text("", 15, a.TEXT, true);
@@ -150,7 +151,7 @@ class TranslatePageFactory {
         a.resultCard.setOrientation(LinearLayout.HORIZONTAL);
         a.resultCard.setGravity(Gravity.CENTER_VERTICAL);
         a.resultCard.setPadding(a.dp(16), a.dp(14), a.dp(16), a.dp(14));
-        TextView doc = a.text("📄", 30, a.TEXT, false);
+        TextView doc = a.text("TXT", 14, a.TEXT, true);
         a.resultCard.addView(doc, new LinearLayout.LayoutParams(a.dp(48), a.dp(48)));
         LinearLayout rt = new LinearLayout(a);
         rt.setOrientation(LinearLayout.VERTICAL);
@@ -158,7 +159,7 @@ class TranslatePageFactory {
         a.resultMeta = a.text("Chưa có output", 12, a.MUTED, false);
         rt.addView(a.resultTitle); rt.addView(a.resultMeta);
         a.resultCard.addView(rt, new LinearLayout.LayoutParams(0, -2, 1));
-        a.resultCard.addView(a.secondaryButton("Mở output", v -> a.openSelectedOutput()), new LinearLayout.LayoutParams(a.dp(140), a.dp(42)));
+        a.resultCard.addView(a.secondaryButton("Mở output", v -> a.openSelectedOutput()), new LinearLayout.LayoutParams(a.dp(140), a.dp(48)));
         a.resultCard.setVisibility(View.GONE);
         root.addView(a.resultCard, a.marginLP(-1, -2, 0, 8, 0, 16));
 
@@ -191,7 +192,7 @@ class TranslatePageFactory {
 
     View translationSupportCard() {
         TranslationConfigState state = a.translationConfigState();
-        LinearLayout section = a.sectionCard("◇", state.fromActiveJob
+        LinearLayout section = a.sectionCard("", state.fromActiveJob
                 ? "Cấu hình đang dùng • Job #" + state.jobId : "Cấu hình bản dịch");
         LinearLayout summaryRow = a.rowContainer();
         a.translateConfigSummary = a.text(state.compactSummary(), 13, a.TEXT, true);
@@ -225,7 +226,7 @@ class TranslatePageFactory {
                 v -> a.showTranslationConfig("instruction"),
                 v -> a.chooseYaml(),
                 v -> a.clearInstruction()), a.marginLP(-1, -2, 0, 8, 0, 0));
-        a.translateConfigDetails.addView(a.text("Instruction YAML là tùy chọn. Cấu hình không thể đổi khi job đang chạy.", 12, a.MUTED, false),
+        if (state.fromActiveJob) a.translateConfigDetails.addView(a.text("Instruction YAML là tùy chọn. Cấu hình không thể đổi khi job đang chạy.", 12, a.MUTED, false),
                 a.marginLP(-1, -2, 0, 8, 0, 0));
         a.translateConfigDetails.setVisibility(state.glossary.status == TranslationConfigState.Status.INVALID
                 || state.pronoun.status == TranslationConfigState.Status.INVALID
@@ -245,7 +246,10 @@ class TranslatePageFactory {
         TextView current = a.text(item.displayText(), 12,
                 item.status == TranslationConfigState.Status.INVALID ? a.RED
                         : item.status == TranslationConfigState.Status.WARNING ? a.AMBER : accent, true);
-        current.setSingleLine(false);
+        if ("Instruction YAML".equals(item.title) || "Instruction".equals(item.title)) {
+            current.setSingleLine(true);
+            current.setEllipsize(android.text.TextUtils.TruncateAt.MIDDLE);
+        } else current.setSingleLine(false);
         if ("Glossary".equals(item.title)) a.translateGlossaryChip = current;
         else if ("Pronoun".equals(item.title)) a.translatePronounChip = current;
         else a.translateInstructionChip = current;
@@ -264,7 +268,7 @@ class TranslatePageFactory {
     }
 
     View quickOptionsCard() {
-        LinearLayout card = a.sectionCard("✓", "Tùy chọn bản dịch");
+        LinearLayout card = a.sectionCard("", "Tùy chọn bản dịch");
         AppSettings settings = SettingsStore.load(a);
         a.refineBox = a.check("Làm mượt bản dịch", settings.refineAfter, "Chạy thêm bước biên tập sau khi dịch thô.");
         a.bilingualBox = a.check("Xuất song ngữ", settings.bilingualOutput, "Giữ cả nội dung gốc và bản dịch để đối chiếu.");
@@ -281,9 +285,9 @@ class TranslatePageFactory {
         card.setPadding(a.dp(14), a.dp(14), a.dp(14), a.dp(14));
 
         LinearLayout head = a.rowContainer();
-        TextView title = a.text("Workflow", 17, a.TEXT, true);
+        TextView title = a.text("Luồng dịch", 17, a.TEXT, true);
         head.addView(title, new LinearLayout.LayoutParams(0, -2, 1));
-        TextView status = a.text((TranslatorService.isActive() || a.translationActive) ? "RUNNING" : "READY", 11, (TranslatorService.isActive() || a.translationActive) ? a.GREEN : a.MUTED, true);
+        TextView status = a.text((TranslatorService.isActive() || a.translationActive) ? "ĐANG CHẠY" : "SẴN SÀNG", 11, (TranslatorService.isActive() || a.translationActive) ? a.GREEN : a.MUTED, true);
         status.setGravity(Gravity.CENTER);
         status.setPadding(a.dp(10), a.dp(5), a.dp(10), a.dp(5));
         a.tint(status, a.FIELD, (TranslatorService.isActive() || a.translationActive) ? a.GREEN : a.BORDER, 1, 14);
@@ -294,10 +298,10 @@ class TranslatePageFactory {
         boolean setMode = a.sourceUi.isSetMode();
         steps.addView(stepBox("1", setMode ? "Tập" : "TXT", a.inputUris.isEmpty() ? "chưa chọn" : (a.inputUris.size() == 1 ? "1 file" : a.inputUris.size() + " files"), a.inputUris.isEmpty() ? a.MUTED : a.GREEN), new LinearLayout.LayoutParams(0, -2, 1));
         steps.addView(a.space(6, 1));
-        steps.addView(stepBox("2", "Output", a.outputTreeUri != null ? "folder" : (a.outputUri != null ? "file" : "chưa chọn"), (a.outputTreeUri != null || a.outputUri != null) ? a.GREEN : a.MUTED), new LinearLayout.LayoutParams(0, -2, 1));
+        steps.addView(stepBox("2", "Đầu ra", a.outputTreeUri != null ? "thư mục" : (a.outputUri != null ? "tệp" : "chưa chọn"), (a.outputTreeUri != null || a.outputUri != null) ? a.GREEN : a.MUTED), new LinearLayout.LayoutParams(0, -2, 1));
         steps.addView(a.space(6, 1));
         GlossaryStore.Glossary g = GlossaryStore.selected(a);
-        steps.addView(stepBox("3", "Locks", setMode ? a.sourceUi.locksSummary() : g == null ? "optional" : g.count() + " terms", setMode ? a.GREEN : g == null ? a.MUTED : a.GREEN), new LinearLayout.LayoutParams(0, -2, 1));
+        steps.addView(stepBox("3", "Quy tắc", setMode ? a.sourceUi.locksSummary() : g == null ? "tùy chọn" : g.count() + " mục", setMode ? a.GREEN : g == null ? a.MUTED : a.GREEN), new LinearLayout.LayoutParams(0, -2, 1));
         card.addView(steps, a.marginLP(-1, -2, 0, 10, 0, 10));
 
         return card;
@@ -350,6 +354,8 @@ class TranslatePageFactory {
         a.trackingCard.addView(a.completionSummary, a.marginLP(-1, -2, 0, 4, 0, 4));
         a.trackingDetails = new LinearLayout(a);
         a.trackingDetails.setOrientation(LinearLayout.VERTICAL);
+        // No previous run means no empty progress table or empty preview.
+        a.trackingDetails.setVisibility(View.GONE);
         a.trackingCard.addView(a.trackingDetails);
         a.trackingFile = a.text("—", 14, a.MUTED, false);
         a.trackingFile.setSingleLine(false);
@@ -363,10 +369,11 @@ class TranslatePageFactory {
         a.metricTokens = metricValue(); a.metricCost = metricValue();
         a.metricElapsed = metricValue(); a.metricRemaining = metricValue();
         a.tokensCellLabel = metricLabel("Token cả lượt");
-        addMetricPair(metric(a.metricTokens, a.tokensCellLabel), metric(a.metricCost, metricLabel("Chi phí cả lượt")));
+        a.metricCostLabel = metricLabel("Chi phí");
+        addMetricPair(metric(a.metricTokens, a.tokensCellLabel), metric(a.metricCost, a.metricCostLabel));
         addMetricPair(metric(a.metricElapsed, metricLabel("Đã chạy")), metric(a.metricRemaining, metricLabel("Còn lại (ước tính)")));
         a.metricFailed = a.text("0 chunk lỗi", 14, a.TEXT, false);
-        a.metricGlossaryLocks = a.text("Glossaries: chưa đo · Pronoun: chưa đo", 14, a.MUTED, false);
+        a.metricGlossaryLocks = a.text("Đã áp dụng: chưa đo mục Glossary · chưa đo quy tắc Pronoun", 14, a.MUTED, false);
         a.trackingDetails.addView(a.metricFailed, a.marginLP(-1, -2, 0, 4, 0, 2));
         a.trackingDetails.addView(a.metricGlossaryLocks);
 
@@ -469,21 +476,27 @@ class TranslatePageFactory {
     }
 
     View activityLogCard() {
-        LinearLayout logCard = a.sectionCard("▣", TECHNICAL_DETAILS_LABEL);
-        Button toggle = a.secondaryButton(OPEN_TECHNICAL_DETAILS_LABEL, null);
+        LinearLayout logCard = a.card(14, a.FIELD, a.BORDER);
+        logCard.setOrientation(LinearLayout.VERTICAL);
+        Button toggle = a.secondaryButton("Log và chi tiết kỹ thuật ▸", null);
+        toggle.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
         toggle.setContentDescription(OPEN_TECHNICAL_DETAILS_LABEL + " — " + TECHNICAL_DETAILS_LABEL);
-        logCard.addView(toggle, new LinearLayout.LayoutParams(-1, -2));
+        logCard.addView(toggle, new LinearLayout.LayoutParams(-1, a.dp(48)));
 
         LinearLayout details = new LinearLayout(a);
         details.setOrientation(LinearLayout.VERTICAL);
         details.setVisibility(View.GONE);
         details.addView(a.text(ACTIVITY_LOG_LABEL, 15, a.TEXT, true), a.marginLP(-1, -2, 0, 0, 0, 8));
         LinearLayout actions = a.rowContainer();
-        Button clear = a.secondaryButton(CLEAR_LOG_LABEL, v -> {
-            LogStore.clear(a);
-            if (a.logView != null) a.logView.setText("");
-            a.toast("Đã xóa log");
-        });
+         Button clear = a.secondaryButton(CLEAR_LOG_LABEL, v -> new AlertDialog.Builder(a)
+                 .setTitle("Xóa log?")
+                 .setMessage("Các log runtime trên thiết bị sẽ bị xóa.")
+                 .setNegativeButton("Hủy", null)
+                 .setPositiveButton("Xóa", (d, w) -> {
+                     LogStore.clear(a);
+                     if (a.logView != null) a.logView.setText("");
+                     a.toast("Đã xóa log");
+                 }).show());
         actions.addView(clear, new LinearLayout.LayoutParams(0, -2, 1));
         actions.addView(a.space(8, 1));
         actions.addView(a.secondaryButton(EXPORT_LOG_LABEL, v -> a.exportLog()), new LinearLayout.LayoutParams(0, -2, 1));

@@ -140,7 +140,7 @@ class ChapterSetPageFactory {
     // ---- list of saved workspaces ----
 
     private View listPanel() {
-        LinearLayout panel = a.sectionCard("▣", "Tập");
+        LinearLayout panel = a.sectionCard("Tập", "Tập");
         TextView desc = a.text("Một tập gồm một hoặc nhiều chương; mỗi chương là một bộ RAW – Glossary – Pronoun. Ở màn Dịch chọn nguồn \"Tập\" để dịch nhiều chương, mỗi chương dùng đúng Glossary/Pronoun của nó.", 13, a.MUTED, false);
         desc.setSingleLine(false);
         panel.addView(desc, a.marginLP(-1, -2, 0, 0, 0, 10));
@@ -157,9 +157,16 @@ class ChapterSetPageFactory {
             panel.addView(a.bulkUi.headerRow(LibraryBulkUi.TAB_SETS, sets.size()), a.marginLP(-1, -2, 0, 0, 0, 10));
         }
         if (sets.isEmpty()) {
-            TextView empty = a.text("Chưa có tập. Bấm \"+ Tạo tập mới\".", 14, a.MUTED, false);
-            empty.setGravity(Gravity.CENTER);
-            empty.setSingleLine(false);
+            LinearLayout empty = new LinearLayout(a);
+            empty.setOrientation(LinearLayout.VERTICAL);
+            empty.setGravity(Gravity.CENTER_HORIZONTAL);
+            TextView label = a.text("Chưa có tập. Nhập RAW trước.", 14, a.MUTED, false);
+            label.setGravity(Gravity.CENTER);
+            label.setSingleLine(false);
+            empty.addView(label, new LinearLayout.LayoutParams(-1, -2));
+            android.widget.Button importRaw = a.secondaryButton("Nhập RAW", v -> a.switchTab("RAW"));
+            importRaw.setContentDescription("Nhập RAW để tạo tập");
+            empty.addView(importRaw, a.marginLP(-1, a.dp(48), 0, 8, 0, 0));
             panel.addView(empty, new LinearLayout.LayoutParams(-1, -2));
         }
         for (ChapterSetStore.SetInfo info : sets) {
@@ -173,12 +180,12 @@ class ChapterSetPageFactory {
             String meta = ComboDraft.summaryOf(info.chapters, green, yellow, red) + (chapters.isEmpty() ? "" : "\n" + ComboDraft.chapterRange(chapters));
             View card;
             if (selection.isActive()) {
-                card = a.bulkUi.selectableCard(LibraryBulkUi.TAB_SETS, info.id, "📚 " + info.name, meta, a.BORDER);
+                card = a.bulkUi.selectableCard(LibraryBulkUi.TAB_SETS, info.id, info.name, meta, a.BORDER);
             } else {
                 LinearLayout box = a.card(14, a.FIELD, red > 0 ? a.RED : yellow > 0 ? a.AMBER : a.BORDER);
                 box.setOrientation(LinearLayout.VERTICAL);
                 box.setPadding(a.dp(12), a.dp(12), a.dp(12), a.dp(12));
-                TextView t = a.text("📚 " + info.name, 15, a.TEXT, true);
+                TextView t = a.text(info.name, 15, a.TEXT, true);
                 t.setSingleLine(false);
                 box.addView(t);
                 TextView m = a.text(meta, 12, red > 0 ? a.RED : yellow > 0 ? a.AMBER : a.MUTED, false);

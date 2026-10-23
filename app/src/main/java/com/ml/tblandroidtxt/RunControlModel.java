@@ -64,6 +64,19 @@ public final class RunControlModel {
     public static State resolve(boolean active, String runtimeState, boolean pendingUnknown,
                                 boolean pendingJob, int pendingFailedChunks,
                                 boolean planReady, String blocker) {
+        return resolve(active, runtimeState, pendingUnknown, pendingJob, pendingFailedChunks,
+                planReady, blocker, true);
+    }
+
+    /**
+     * Resolves the bar after checking that the pending job belongs to the
+     * selection currently open on Translate. A different file/set remains a
+     * context row, but cannot turn "Sẵn sàng" into "Dịch lại".
+     */
+    public static State resolve(boolean active, String runtimeState, boolean pendingUnknown,
+                                boolean pendingJob, int pendingFailedChunks,
+                                boolean planReady, String blocker,
+                                boolean pendingMatchesSelection) {
         String state = runtimeState == null ? "" : runtimeState.trim().toUpperCase(Locale.ROOT);
         if (active) {
             if ("STOPPING".equals(state)) return State.STOPPING;
@@ -71,9 +84,9 @@ public final class RunControlModel {
             if ("VALIDATING".equals(state) || "READY".equals(state)) return State.PREPARING;
             return State.RUNNING;
         }
-        if (pendingUnknown) return State.UNKNOWN_DELIVERY;
-        if (pendingJob && pendingFailedChunks > 0) return State.WORK_REMAINS;
-        if (pendingJob) return State.WORK_REMAINS;
+        if (pendingMatchesSelection && pendingUnknown) return State.UNKNOWN_DELIVERY;
+        if (pendingMatchesSelection && pendingJob && pendingFailedChunks > 0) return State.WORK_REMAINS;
+        if (pendingMatchesSelection && pendingJob) return State.WORK_REMAINS;
         if ("COMPLETED".equals(state)) return State.COMPLETED;
         if (planReady && (blocker == null || blocker.trim().isEmpty())) return State.READY;
         return State.BLOCKED;
