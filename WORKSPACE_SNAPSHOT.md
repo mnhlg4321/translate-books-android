@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-23 (+07:00). Runtime fix work F4 → F1 + F6 → F5 → F2 → F3 is implemented, built, installed and tried on phone; no provider calls.
+- Updated: 2026-10-23 (+07:00). Coordinator independently verified dev.23 (source bc7120e6): clean-archive 699 tests/5 skip/0 fail, lint 0 errors, APK hash, phone code 301, post-install backup has 0 rows with apiKey.
 - Current version: v4.23.0 in development; verified candidate **4.23-dev.23/code301**. Shipped release remains v4.21.0/code271.
 - Current branch: `feature/v4.23`, `D:/P5E-builds/wt-v4.23`; protected v4.18 checkout and owner media remain untouched. No merge, tag, push, or provider call.
 - Current commit: **01317c04** is the implementation/documentation baseline immediately before this snapshot update commit; it contains F4, F1 + F6, F5, F2 and F3 plus the pre-phone candidate state.
@@ -11,4 +11,4 @@
 - Known bugs/limits: landscape rotation could not be forced because the phone denied the shell settings write and remained portrait; no landscape PASS is claimed. F2 phone replay counted `1,262` accepted chunks, with `15` at 40% and `20` at 30%; no manually adjudicated phone labels exist for a false-positive rate, while the synthetic fixture observed `0` false positives. No provider/API evidence is claimed.
 - Regression status: clean archive `D:/P5E-builds/v423-clean-regression-20261023-02/source/` passed `testDebugUnitTest`, `testBenchmarkUnitTest`, `testReleaseUnitTest`, `lintDebug`, `lintBenchmark`, `lintRelease` and `compileDebugAndroidTestJavaWithJavac`; all local app unit tests pass.
 - Spend: translation/editorial provider 0 calls / USD 0; no owner data was deleted or modified; no paid button was used. Pre-install backup: `D:/App Translate Books/App Translate Books-device-backups/v4.23-dev.23-code301/20261023-192028/`; post-install backup: `D:/App Translate Books/App Translate Books-device-backups/v4.23-dev.23-code301/20261023-192106-post-install/`.
-- Next action: stop after the phone trial and wait for a separate owner spend authority before any provider call.
+- Next action: Codex implements `docs/V423_UX_OVERHAUL_WORK_REQUEST.md` phase A (U1, U2 P1-P2, U3) to 4.23-dev.24 with phone backup and owner install approval. Runtime live check (section 6, $0.20) waits for a separate owner spend approval.

@@ -166,3 +166,11 @@ Không có ca sai/sót theo phân xử mới cần truy vết thêm. Điều đ�
   - Gói runtime thêm F5, F6.
   - Gói mới `docs/V423_UX_OVERHAUL_WORK_REQUEST.md` (U1–U7).
   - Không đổi mã, không gọi provider.
+
+- **2026-10-23, điều phối kiểm độc lập dev.23** (nguồn `bc7120e6`, APK SHA `44B80CEA…D569` khớp `BUILD_INFO`):
+  - archive sạch: 699 test, 5 SKIP, 0 FAIL; lint 0 Error / 58 Warning; androidTest biên dịch được;
+  - không sửa tệp Editorial* hay `OpenAICompatibleClient`; không đổi schema;
+  - điện thoại đang chạy code 301;
+  - bản sao lưu sau cài: 0 hàng có `apiKey` trong `jobs`, `config_revisions`, `prepared_batches` (332/332/238 hàng);
+  - trần chi phí giờ được kiểm trước mọi lượt gọi; Resume/Retry không có ước tính thì dùng trần $0,10;
+  - F1/F6/F2/F3 trên provider thật: NOT_MEASURED, chờ quyền chi $0,20 cho mục 6.
