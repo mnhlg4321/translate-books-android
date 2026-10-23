@@ -23,6 +23,15 @@ Nếu owner muốn, các ý này được thêm vào v18 thành một bản nh�
   5. số lượt bị F2 từ chối vì `RETAINED_SOURCE_LINE`.
 - Chỉ thêm quy tắc cho chỉ số nào vẫn còn đáng kể. Bản mới phải giữ nguyên toàn bộ v18 (kiểm bằng script).
 
+**Đo lần 1 (2026-10-23, Kumo tập 13 chương 1, bản dịch v18 lúc 2026-10-22 23:47, 528 dòng có chữ, chỉ số đếm):**
+- dòng chưa dịch: 0;
+- dòng còn kana: 16, gồm 14 dòng có 1 biệt danh nhân vật không có trong Glossary bị dịch nửa chữ (sửa bằng 1 dòng Glossary, không cần quy tắc prompt) và 2 dòng còn dấu `ー` cuối câu;
+- ruby: 0 lọt / 70 trong RAW;
+- trích dẫn 「」 giữa câu kể: 1 bị đổi sang “ ”, 1 giữ nguyên (2 trường hợp, quá ít để kết luận);
+- 91 mục Glossary có trong RAW: 0 mục còn chữ Nhật;
+- lượt F2 từ chối: không đo được, bản dịch có trước dev.25.
+- Kết luận: chưa đủ dữ liệu để thêm quy tắc; đợi cả tập.
+
 **Quyết định sản phẩm phục vụ:** có đổi prompt dịch mặc định từ v14 sang v16 hay không.
 
 ## 1. Hai bản prompt
