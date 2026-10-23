@@ -104,7 +104,16 @@ class SettingsPageFactory {
         box.addView(table);
         LinearLayout actions=a.rowContainer();android.widget.Button toggle=a.secondaryButton("Xem bảng",null);toggle.setOnClickListener(v->{table.setVisibility(table.getVisibility()==View.VISIBLE?View.GONE:View.VISIBLE);toggle.setText(table.getVisibility()==View.VISIBLE?"Thu gọn":"Xem bảng");});actions.addView(toggle,new LinearLayout.LayoutParams(0,a.dp(48),1));actions.addView(a.space(8,1));
         android.widget.Button apply=a.primaryButton("Áp dụng",v->a.applyRecommendedSettings());apply.setEnabled(!items.isEmpty());actions.addView(apply,new LinearLayout.LayoutParams(0,a.dp(48),1));box.addView(actions);
-        android.widget.Button undo=a.secondaryButton("Hoàn tác",v->a.undoRecommendedSettings());undo.setContentDescription("Hoàn tác cài đặt khuyến nghị");box.addView(undo,new LinearLayout.LayoutParams(-1,a.dp(48)));
+        boolean canUndo=RecommendationUndoModel.isEnabled(a.recommendationUndo!=null);
+        android.widget.Button undo=a.secondaryButton("Hoàn tác",v->a.undoRecommendedSettings());
+        a.setButtonEnabled(undo,canUndo);
+        undo.setContentDescription(RecommendationUndoModel.contentDescription(canUndo));
+        box.addView(undo,new LinearLayout.LayoutParams(-1,a.dp(48)));
+        if(!canUndo){
+            TextView hint=a.text(RecommendationUndoModel.helperText(false),12,a.MUTED,false);
+            hint.setSingleLine(false);
+            box.addView(hint,a.marginLP(-1,-2,0,4,0,0));
+        }
         return box;
     }
 
