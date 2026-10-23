@@ -13,6 +13,7 @@ public final class RunPanelFormatter {
             case "PAUSED": return "T\u1ea1m d\u1eebng";
             case "COMPLETED": return "Xong";
             case "FAILED": return "L\u1ed7i";
+            case "CANCELLED": return "\u0110\u00e3 h\u1ee7y";
             case "IDLE": return "\u0110\u00e3 d\u1eebng";
             case "VALIDATING": case "READY": return "\u0110ang chu\u1ea9n b\u1ecb";
             default: return "\u0110ang d\u1ecbch";
@@ -77,6 +78,37 @@ public final class RunPanelFormatter {
 
     public static String remaining(long ms) { return ms < 0 ? "Đang ước tính" : clock(ms); }
 
+    /**
+     * Durable wall-clock elapsed time for a whole translation session. The six-argument
+     * form is used when a paused elapsed value is already stored; the seven-argument
+     * form additionally uses the current pause marker.
+     */
+    public static long runElapsedMs(String state, long nowWallMs, long sessionStartMs,
+                                    long sessionEndMs, long storedElapsedMs, long pausedTotalMs) {
+        return runElapsedMs(state, nowWallMs, sessionStartMs, sessionEndMs, 0L,
+                storedElapsedMs, pausedTotalMs);
+    }
+
+    public static long runElapsedMs(String state, long nowWallMs, long sessionStartMs,
+                                    long sessionEndMs, long pausedAtMs, long storedElapsedMs,
+                                    long pausedTotalMs) {
+        long stored = Math.max(0L, storedElapsedMs);
+        long pauses = Math.max(0L, pausedTotalMs);
+        if (sessionStartMs <= 0L) return stored;
+        String normalized = state == null ? "" : state.trim().toUpperCase(Locale.ROOT);
+        if ("PAUSED".equals(normalized)) {
+            if (pausedAtMs > 0L) return Math.max(0L, pausedAtMs - sessionStartMs - pauses);
+            return stored;
+        }
+        if (sessionEndMs > 0L || "COMPLETED".equals(normalized)
+                || "FAILED".equals(normalized) || "CANCELLED".equals(normalized)) {
+            return sessionEndMs > 0L
+                    ? Math.max(0L, sessionEndMs - sessionStartMs - pauses)
+                    : stored;
+        }
+        return Math.max(0L, Math.max(nowWallMs, sessionStartMs) - sessionStartMs - pauses);
+    }
+
     public static String tokens(long value) {
         return java.text.NumberFormat.getIntegerInstance(Locale.forLanguageTag("vi-VN")).format(Math.max(0L, value)) + " token";
     }
@@ -96,6 +128,7 @@ public final class RunPanelFormatter {
         if ("VALIDATING".equals(state) || "READY".equals(state)) return "Chuẩn bị";
         if ("COMPLETED".equals(state)) return "Hoàn tất";
         if ("FAILED".equals(state)) return "Có lỗi";
+        if ("CANCELLED".equals(state)) return "Đã hủy";
         return stateLabel(state);
     }
 

@@ -45,11 +45,20 @@ public class RuntimeStateStore {
 
     /** The run-wide numbers and the chapter-set position, saved beside the per-job snapshot so a reopened screen shows the same panel. */
     public static void saveSession(Context c, long sessionTokens, double sessionCost, long sessionStartMs, int setTotal, int setDone, int setFailed, int setIndex) {
+        saveSession(c, sessionTokens, sessionCost, sessionStartMs, 0L, 0L, 0L, setTotal, setDone, setFailed, setIndex);
+    }
+
+    public static void saveSession(Context c, long sessionTokens, double sessionCost, long sessionStartMs,
+                                   long sessionEndMs, long pausedAtMs, long pausedTotalMs,
+                                   int setTotal, int setDone, int setFailed, int setIndex) {
         if (c == null) return;
         c.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
                 .putLong(TranslatorService.EXTRA_SESSION_TOKENS, sessionTokens)
                 .putFloat(TranslatorService.EXTRA_SESSION_COST, (float) sessionCost)
                 .putLong(TranslatorService.EXTRA_SESSION_START_MS, sessionStartMs)
+                .putLong(TranslatorService.EXTRA_SESSION_END_MS, sessionEndMs)
+                .putLong(TranslatorService.EXTRA_PAUSED_AT_MS, pausedAtMs)
+                .putLong(TranslatorService.EXTRA_PAUSED_TOTAL_MS, pausedTotalMs)
                 .putInt(TranslatorService.EXTRA_SET_TOTAL, setTotal)
                 .putInt(TranslatorService.EXTRA_SET_DONE, setDone)
                 .putInt(TranslatorService.EXTRA_SET_FAILED, setFailed)
@@ -88,6 +97,9 @@ public class RuntimeStateStore {
                 .putString(TranslatorService.EXTRA_PREVIEW_FILE, nz(s.previewFile))
                 .putInt(TranslatorService.EXTRA_PREVIEW_TOTAL, s.previewTotal)
                 .putLong(TranslatorService.EXTRA_ACTIVE_JOB_ID, s.activeJobId)
+                .putLong(TranslatorService.EXTRA_SESSION_END_MS, s.sessionEndMs)
+                .putLong(TranslatorService.EXTRA_PAUSED_AT_MS, s.pausedAtMs)
+                .putLong(TranslatorService.EXTRA_PAUSED_TOTAL_MS, s.pausedTotalMs)
                 .putLong("updatedAt", System.currentTimeMillis())
                 .apply();
     }
@@ -127,6 +139,9 @@ public class RuntimeStateStore {
         i.putExtra(TranslatorService.EXTRA_SESSION_TOKENS, p.getLong(TranslatorService.EXTRA_SESSION_TOKENS, 0L));
         i.putExtra(TranslatorService.EXTRA_SESSION_COST, (double) p.getFloat(TranslatorService.EXTRA_SESSION_COST, 0f));
         i.putExtra(TranslatorService.EXTRA_SESSION_START_MS, p.getLong(TranslatorService.EXTRA_SESSION_START_MS, 0L));
+        i.putExtra(TranslatorService.EXTRA_SESSION_END_MS, p.getLong(TranslatorService.EXTRA_SESSION_END_MS, 0L));
+        i.putExtra(TranslatorService.EXTRA_PAUSED_AT_MS, p.getLong(TranslatorService.EXTRA_PAUSED_AT_MS, 0L));
+        i.putExtra(TranslatorService.EXTRA_PAUSED_TOTAL_MS, p.getLong(TranslatorService.EXTRA_PAUSED_TOTAL_MS, 0L));
         i.putExtra(TranslatorService.EXTRA_SET_TOTAL, p.getInt(TranslatorService.EXTRA_SET_TOTAL, 0));
         i.putExtra(TranslatorService.EXTRA_SET_DONE, p.getInt(TranslatorService.EXTRA_SET_DONE, 0));
         i.putExtra(TranslatorService.EXTRA_SET_FAILED, p.getInt(TranslatorService.EXTRA_SET_FAILED, 0));

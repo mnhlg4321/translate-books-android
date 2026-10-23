@@ -3929,9 +3929,13 @@ public class MainActivity extends Activity {
         long runTokens = intent.getLongExtra(TranslatorService.EXTRA_SESSION_TOKENS, 0L);
         double runCost = intent.getDoubleExtra(TranslatorService.EXTRA_SESSION_COST, 0d);
         long runStart = intent.getLongExtra(TranslatorService.EXTRA_SESSION_START_MS, 0L);
+        long runEnd = intent.getLongExtra(TranslatorService.EXTRA_SESSION_END_MS, 0L);
+        long pausedAt = intent.getLongExtra(TranslatorService.EXTRA_PAUSED_AT_MS, 0L);
+        long pausedTotal = intent.getLongExtra(TranslatorService.EXTRA_PAUSED_TOTAL_MS, 0L);
         boolean setRun = setTotal > 0;
-        // The run clock is the whole run's, not the current chapter's; it keeps counting from its start time.
-        timedRunElapsedBaseMs = runStart > 0 ? Math.max(0L, System.currentTimeMillis() - runStart) : Math.max(0L, elapsed);
+        // The run clock is the whole run's and uses the service's durable stop/pause markers.
+        timedRunElapsedBaseMs = RunPanelFormatter.runElapsedMs(state, System.currentTimeMillis(), runStart,
+                runEnd, pausedAt, elapsed, pausedTotal);
         timedPermille = setRun ? RunPanelFormatter.setPermille(setTotal, setDone, setFailed, completed, total) : RunPanelFormatter.chunkPermille(completed, total);
         String set = currentSetNameForPanel();
         trackedState = state;

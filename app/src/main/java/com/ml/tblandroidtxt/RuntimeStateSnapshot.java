@@ -11,6 +11,7 @@ public final class RuntimeStateSnapshot {
     public double totalCost, estimatedTotalCost;
     public boolean providerUsageComplete;
     public long elapsedMs, remainingMs, activeJobId = -1L;
+    public long sessionEndMs, pausedAtMs, pausedTotalMs;
 
     public Map<String, Object> toMap() {
         HashMap<String, Object> m = new HashMap<>();
@@ -23,6 +24,7 @@ public final class RuntimeStateSnapshot {
         m.put("glossaryLocks", glossaryLocks); m.put("pronounLocks", pronounLocks);
         m.put("lockChunk", lockChunk); m.put("lockPhase", lockPhase); m.put("previewChunk", previewChunk);
         m.put("elapsedMs", elapsedMs); m.put("remainingMs", remainingMs); m.put("activeJobId", activeJobId);
+        m.put("sessionEndMs", sessionEndMs); m.put("pausedAtMs", pausedAtMs); m.put("pausedTotalMs", pausedTotalMs);
         return m;
     }
 
@@ -46,6 +48,9 @@ public final class RuntimeStateSnapshot {
         s.previewFile = string(m.get("previewFile")); s.previewTotal = integer(m.get("previewTotal"), 0);
         s.elapsedMs = longValue(m.get("elapsedMs"), 0); s.remainingMs = longValue(m.get("remainingMs"), 0);
         s.activeJobId = longValue(m.get("activeJobId"), -1);
+        s.sessionEndMs = longValue(m.get("sessionEndMs"), 0);
+        s.pausedAtMs = longValue(m.get("pausedAtMs"), 0);
+        s.pausedTotalMs = longValue(m.get("pausedTotalMs"), 0);
         return s;
     }
 

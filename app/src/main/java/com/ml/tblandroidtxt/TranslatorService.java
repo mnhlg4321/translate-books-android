@@ -68,6 +68,9 @@ public class TranslatorService extends Service {
     public static final String EXTRA_SESSION_TOKENS = "sessionTokens";
     public static final String EXTRA_SESSION_COST = "sessionCost";
     public static final String EXTRA_SESSION_START_MS = "sessionStartMs";
+    public static final String EXTRA_SESSION_END_MS = "sessionEndMs";
+    public static final String EXTRA_PAUSED_AT_MS = "pausedAtMs";
+    public static final String EXTRA_PAUSED_TOTAL_MS = "pausedTotalMs";
     /** Positive value is the cap for this run; -1 is the explicit unlimited toggle. */
     public static final String EXTRA_EFFECTIVE_COST_LIMIT_USD = "effectiveCostLimitUsd";
     /** Chapter-set runs only: chapters in the run, finished, failed, and the 1-based chapter being worked on (all 0 otherwise). */
@@ -93,12 +96,23 @@ public class TranslatorService extends Service {
     private final RootChunkAttemptBudget rootAttemptBudget = new RootChunkAttemptBudget(6);
     private final Map<String, String> rootByChunk = new HashMap<>();
     private volatile long sessionStartMs;
+    private volatile long sessionEndMs;
+    private volatile long pausedAtMs;
+    private volatile long pausedTotalMs;
+    private volatile long sessionElapsedStoredMs;
     private volatile int setIndex;
 
     /** A new run starts counting tokens, cost and time from zero. */
-    private void resetSession() { runCost.reset(); sessionStartMs = System.currentTimeMillis(); setIndex = 0; }
+    private void resetSession() {
+        runCost.reset();
+        sessionStartMs = System.currentTimeMillis();
+        sessionEndMs = 0L;
+        pausedAtMs = 0L;
+        pausedTotalMs = 0L;
+        sessionElapsedStoredMs = 0L;
+        setIndex = 0;
+    }
 
-    private long jobStartMs = 0;
     private int metricTotal = 0;
     private int metricCompleted = 0;
     private int metricFailed = 0;
@@ -139,7 +153,7 @@ public class TranslatorService extends Service {
         if(repo!=null)repo.close();
     }
 
-    @Override public void onTimeout(int startId,int foregroundServiceType){cancelled=true;paused=false;OpenAICompatibleClient.cancelActiveRequests();if(repo!=null&&activeJobId>0)repo.touchJob(activeJobId,"paused");metricPhase="System timeout";broadcast("paused",-1,"Android stopped the data-sync service; progress was checkpointed and can be resumed safely");releaseRun();stopForeground(STOP_FOREGROUND_REMOVE);stopSelf(startId);}
+    @Override public void onTimeout(int startId,int foregroundServiceType){cancelled=true;paused=false;OpenAICompatibleClient.cancelActiveRequests();if(repo!=null&&activeJobId>0)repo.touchJob(activeJobId,"paused");metricPhase="System timeout";setState(TranslationJobState.State.PAUSED,"System timeout");markPausedAt(System.currentTimeMillis());broadcast("paused",-1,"Android stopped the data-sync service; progress was checkpointed and can be resumed safely");releaseRun();stopForeground(STOP_FOREGROUND_REMOVE);stopSelf(startId);}
 
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent == null) return START_NOT_STICKY;
@@ -150,6 +164,7 @@ public class TranslatorService extends Service {
                 return START_NOT_STICKY;
             }
             paused = true;
+            markPausedAt(System.currentTimeMillis());
             repoPauseLast();
             setState(TranslationJobState.State.PAUSED, "Paused");
             broadcast("paused", -1, "Đã tạm dừng dịch");
@@ -162,6 +177,7 @@ public class TranslatorService extends Service {
                 broadcast("info", -1, "Không có job nào đang tạm dừng. Job đang dở (nếu có) nằm ở thẻ \"Job đang dở\" trên màn Dịch hoặc ở tab Jobs: bấm \"Tiếp tục dịch\".");
                 return START_NOT_STICKY;
             }
+            closePause(System.currentTimeMillis());
             paused = false;
             setState(TranslationJobState.State.RUNNING, "Running");
             broadcast("running", -1, "Tiếp tục dịch");
@@ -265,13 +281,14 @@ public class TranslatorService extends Service {
             metricPhase="A/B Benchmark";broadcast("running",0,"Starting paid Full/Balanced benchmark for job #"+jobId);
             LiveBenchmarkRunner.Result result=LiveBenchmarkRunner.run(this,repo,jobId,budgetUsd,()->cancelled,msg->broadcast("running",-1,msg));
             metricPhase="Benchmark completed";broadcast("done",100,"Benchmark #"+result.sessionId+" completed: "+result.requests+" requests, cost "+CostEstimator.money(result.spentUsd));
-        }catch(Exception e){metricPhase="Benchmark error";broadcast(cancelled?"cancelled":"error",-1,"Benchmark stopped: "+AppValidator.readableError(e));}
+        }catch(Exception e){metricPhase="Benchmark error";if(cancelled)setState(TranslationJobState.State.CANCELLED,"Cancelled");else setState(TranslationJobState.State.FAILED,"Benchmark error");broadcast(cancelled?"cancelled":"error",-1,"Benchmark stopped: "+AppValidator.readableError(e));}
         finally{stopForeground(STOP_FOREGROUND_REMOVE);NotificationManager nm=getSystemService(NotificationManager.class);if(nm!=null)nm.cancel(NOTIFY_ID);stopSelf();}
     }
 
     private void finishCancelled(String message) {
         metricPhase = "Cancelled";
         if (activeJobId > 0) repo.touchJob(activeJobId, "cancelled");
+        setState(TranslationJobState.State.CANCELLED, "Cancelled");
         broadcast("cancelled", -1, message == null || message.isEmpty() ? "Đã dừng dịch" : message);
         releaseRun();
         stopForeground(STOP_FOREGROUND_REMOVE);
@@ -480,7 +497,6 @@ public class TranslatorService extends Service {
     }
 
     private void resetMetrics(String fileName, int total) {
-        jobStartMs = System.currentTimeMillis();
         metricTotal = total;
         metricCompleted = 0;
         metricFailed = 0;
@@ -1051,7 +1067,35 @@ public class TranslatorService extends Service {
     private int percent(int done, int total) { return total <= 0 ? 0 : Math.min(100, Math.round(done * 100f / total)); }
     private String tail(String s, int max) { if (s == null) return ""; return s.length() <= max ? s : s.substring(s.length() - max); }
 
-    private long elapsedMs() { return jobStartMs <= 0 ? 0 : System.currentTimeMillis() - jobStartMs; }
+    private void markPausedAt(long nowMs) {
+        if (sessionStartMs > 0L && pausedAtMs <= 0L) pausedAtMs = Math.max(sessionStartMs, nowMs);
+    }
+
+    private void closePause(long nowMs) {
+        if (pausedAtMs > 0L) {
+            pausedTotalMs += Math.max(0L, nowMs - pausedAtMs);
+            pausedAtMs = 0L;
+        }
+    }
+
+    private void markTerminal(long nowMs) {
+        closePause(nowMs);
+        if (sessionEndMs <= 0L) sessionEndMs = Math.max(sessionStartMs, nowMs);
+    }
+
+    private void updateSessionMarkers(String status, long nowMs) {
+        if ("paused".equalsIgnoreCase(status)) markPausedAt(nowMs);
+        if ("done".equalsIgnoreCase(status) || "error".equalsIgnoreCase(status)
+                || "cancelled".equalsIgnoreCase(status)) markTerminal(nowMs);
+    }
+
+    private long elapsedMs() {
+        long now = System.currentTimeMillis();
+        if (sessionStartMs <= 0L) return Math.max(0L, sessionElapsedStoredMs);
+        sessionElapsedStoredMs = RunPanelFormatter.runElapsedMs(jobState.name(), now, sessionStartMs,
+                sessionEndMs, pausedAtMs, sessionElapsedStoredMs, pausedTotalMs);
+        return sessionElapsedStoredMs;
+    }
     private long remainingMs() {
         return TranslationJobState.remainingMs(jobState, metricCompleted, metricTotal, elapsedMs());
     }
@@ -1101,6 +1145,8 @@ public class TranslatorService extends Service {
     private void broadcast(String status, int progress, String log) {
         metricLastProgress = progress;
         if (log != null && !log.trim().isEmpty()) metricLastLog = log;
+        long now = System.currentTimeMillis();
+        updateSessionMarkers(status, now);
         long elapsed = elapsedMs();
         long remaining = remainingMs();
         RuntimeStateStore.save(this, jobState.name(), status, progress, metricLastLog, metricPhase, metricFile,
@@ -1111,7 +1157,8 @@ public class TranslatorService extends Service {
                 acceptedPreview.chunk, activeJobId, acceptedPreview.file, acceptedPreview.total);
         ChapterRunOutcome setOutcome = chapterOutcome;
         int setTotal = setOutcome == null ? 0 : setOutcome.total(), setDone = setOutcome == null ? 0 : setOutcome.doneCount(), setFailed = setOutcome == null ? 0 : setOutcome.failedCount();
-        RuntimeStateStore.saveSession(this, runCost.tokens(), runCost.cost(), sessionStartMs, setTotal, setDone, setFailed, setIndex);
+        RuntimeStateStore.saveSession(this, runCost.tokens(), runCost.cost(), sessionStartMs,
+                sessionEndMs, pausedAtMs, pausedTotalMs, setTotal, setDone, setFailed, setIndex);
         if (log != null && !log.trim().isEmpty()) LogStore.append(this, log);
 
         Intent i = new Intent(ACTION_PROGRESS);
@@ -1146,6 +1193,9 @@ public class TranslatorService extends Service {
         i.putExtra(EXTRA_SESSION_TOKENS, runCost.tokens());
         i.putExtra(EXTRA_SESSION_COST, runCost.cost());
         i.putExtra(EXTRA_SESSION_START_MS, sessionStartMs);
+        i.putExtra(EXTRA_SESSION_END_MS, sessionEndMs);
+        i.putExtra(EXTRA_PAUSED_AT_MS, pausedAtMs);
+        i.putExtra(EXTRA_PAUSED_TOTAL_MS, pausedTotalMs);
         i.putExtra(EXTRA_SET_TOTAL, setTotal);
         i.putExtra(EXTRA_SET_DONE, setDone);
         i.putExtra(EXTRA_SET_FAILED, setFailed);
