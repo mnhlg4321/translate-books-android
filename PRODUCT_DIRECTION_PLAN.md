@@ -199,3 +199,7 @@ Không có ca sai/sót theo phân xử mới cần truy vết thêm. Điều đ�
     - F3b `prompt_cache_key` (≤ $0,03);
     - owner đọc 2 tệp `Download/QA_live_20261023`;
     - nhập cả tập; quét emoji/vector toàn app.
+
+- **2026-10-23, owner chốt về prompt:**
+  - giữ v18; không làm A/B, không dùng Refine;
+  - đo offline 5 chỉ số sau tập thật tiếp theo dịch bằng v18, rồi mới quyết định thêm quy tắc.

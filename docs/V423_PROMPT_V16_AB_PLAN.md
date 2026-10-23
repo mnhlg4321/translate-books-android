@@ -12,6 +12,17 @@ Mọi việc với prompt từ nay lấy v18 làm gốc. Những gì v18 còn th
 
 Nếu owner muốn, các ý này được thêm vào v18 thành một bản nhỏ, không đụng phần văn phong.
 
+**Quyết định của owner (2026-10-23):**
+- Giữ nguyên v18.
+- Sau tập thật tiếp theo được dịch bằng v18, đo offline (không gọi provider) trên bản sao DB điện thoại, rồi mới quyết định thêm quy tắc.
+- Đo 5 chỉ số, chỉ in số đếm và so với mốc v14 (1.254 chunk):
+  1. chunk còn kana/kanji ngoài lock; tách riêng `ー`/`ッ`/`ぁ`/thán từ với dòng chưa dịch;
+  2. chunk còn ruby `《かな》`;
+  3. số dòng mà trích dẫn 「」 giữa câu kể bị đổi sang “ ”, trên 1.000 dòng (mốc v14: 8,8);
+  4. tên không có trong glossary bị để nguyên chữ Nhật;
+  5. số lượt bị F2 từ chối vì `RETAINED_SOURCE_LINE`.
+- Chỉ thêm quy tắc cho chỉ số nào vẫn còn đáng kể. Bản mới phải giữ nguyên toàn bộ v18 (kiểm bằng script).
+
 **Quyết định sản phẩm phục vụ:** có đổi prompt dịch mặc định từ v14 sang v16 hay không.
 
 ## 1. Hai bản prompt
