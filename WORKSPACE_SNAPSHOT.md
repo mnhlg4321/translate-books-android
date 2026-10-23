@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-23 (+07:00). Phase B implementation, clean archive regression, dev.25 build, and the approved phone trial are complete.
+- Updated: 2026-10-23 (+07:00). Coordinator verified dev.25 (source d62c8b43; 722 tests/0 fail; lint 0 errors; phone code 303). UX overhaul U1-U7 and A1-A4 done; small B1-B3 and a QA-evidence key-copy issue recorded in the UX request section 8c.
 - Current version: v4.23.0 in development; retained candidate **4.23-dev.25/code303**. Shipped release remains v4.21.0/code271.
 - Current branch: `feature/v4.23`, `D:/P5E-builds/wt-v4.23`; protected v4.18 checkout and owner media remain untouched. No merge, tag, push, or provider call.
 - Current commit: **d62c8b43cb017a12ff5063b6dc9b52c57f2c0db3** is the implementation-and-regression baseline immediately before this snapshot update commit.
@@ -10,4 +10,4 @@
 - Pending tasks: F3b remains intentionally outside this package; the later package may address prompt-cache-key measurement, broader semantic/live evaluation, and the deferred whole-set RAW import effort. No further phone/provider action is authorized by this snapshot.
 - Known bugs/limits: provider spend is `$0.00`; semantic evaluation and TalkBack are not measured; existing lint warnings remain but lint has 0 errors. The final Library screenshot uses only the QA_ filter and contains no book body text.
 - Regression status: clean `git archive` at `D:/P5E-builds/v423-phase-b-clean-20261023-03/` passed `:app:testDebugUnitTest` (722 tests, 0 failures, 5 skipped), `:app:lintDebug` (0 errors), and `:app:compileDebugAndroidTestJavaWithJavac`.
-- Next action: hand off the completed Phase B evidence and leave F3b/live-provider work for a separately authorized package.
+- Next action: owner decides the next spend: blind prompt A/B v14 vs v16 (`docs/V423_PROMPT_V16_AB_PLAN.md`, cap USD 0.30); owner also deletes the two QA files and the extracted backup folder that contain the API key.

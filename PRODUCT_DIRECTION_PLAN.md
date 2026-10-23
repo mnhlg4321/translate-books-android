@@ -189,3 +189,13 @@ Không có ca sai/sót theo phân xử mới cần truy vết thêm. Điều đ�
   - nguồn `874a030d`, SHA khớp; archive sạch 708 test, 0 FAIL; lint 0 lỗi; không sửa tệp Editorial*; điện thoại chạy code 302.
   - Trên máy thấy thêm 4 điểm (A1–A4, mục 8b của gói giao diện). Nặng nhất là A1: nút chính đề nghị dịch lại chunk lỗi của một job **khác** với tệp đang chọn. Lỗi nằm ở bảng trạng thái của điều phối, không ở phần làm.
   - Giai đoạn B làm A1–A4 trước.
+
+- **2026-10-23, điều phối kiểm dev.25:**
+  - nguồn `d62c8b43`, SHA khớp; archive sạch 722 test, 0 FAIL; lint 0 lỗi; điện thoại chạy code 303; gói giao diện U1–U7 và A1–A4 đã vào app.
+  - Còn B1–B3 nhỏ (mục 8c).
+  - Bằng chứng QA có 2 tệp chứa API key thật, cùng một thư mục giải nén bản sao lưu nằm ngoài Git. Owner cần tự xóa; đã thêm quy tắc cho lần sau.
+  - Việc tiếp theo, mỗi việc cần owner quyết:
+    - thử A/B prompt v14 với v16 (`docs/V423_PROMPT_V16_AB_PLAN.md`, trần $0,30);
+    - F3b `prompt_cache_key` (≤ $0,03);
+    - owner đọc 2 tệp `Download/QA_live_20261023`;
+    - nhập cả tập; quét emoji/vector toàn app.

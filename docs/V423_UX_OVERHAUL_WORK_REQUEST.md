@@ -228,6 +228,28 @@
 | A3 | Màn Dịch lúc sẵn sàng vẫn vẽ cả bảng số liệu rỗng (thanh Tập/Chương, "—", "chưa đo") và ô "Bản dịch gần nhất · Chưa có chunk" | Thẻ tiến trình luôn hiện đủ, kể cả khi chưa có lượt chạy | Khi chưa có lượt chạy, hoặc lượt trước đã thu gọn theo U2.1: ẩn bảng số liệu và ô xem trước, chỉ giữ tiêu đề trạng thái và thanh điều khiển | P2 |
 | A4 | Trang Công việc: nút "Làm mới" là nút chính màu cam, nổi hơn cả việc thật; bộ lọc tập chiếm một thẻ hai nút | Kiểu nút chưa theo thứ bậc | "Làm mới" thành nút phụ hoặc ↻; bộ lọc thành chip "Tập: Tất cả ▾" (và "Tập: X ✕" khi đang lọc) | P3 |
 
+## 8c. Sau giai đoạn B (điều phối kiểm dev.25, 2026-10-23)
+
+**Kiểm độc lập:** nguồn `d62c8b43`, APK SHA `4AC7D8FA…E96F` khớp; archive sạch 722 test, 5 SKIP, 0 FAIL; lint 0 lỗi; không sửa tệp Editorial*; điện thoại chạy code 303.
+
+**Còn lại, nhỏ (gộp vào lần sửa mã kế tiếp):**
+
+| ID | Vấn đề trên ảnh | Sửa | Ưu tiên |
+|---|---|---|---|
+| B1 | Thẻ "Glossary" trong Thư viện xuống dòng thành "Glossar / y" ở cỡ chữ 130% | Nhãn thẻ một dòng; thu nhỏ đệm hoặc cho dải thẻ cuộn ngang có dấu hiệu; test ở 130% trên 360 dp | P2 |
+| B2 | Trang RAW có tiêu đề lặp "RAW  RAW"; đoạn mô tả dài kiểu hướng dẫn kỹ thuật | Một tiêu đề; mô tả rút còn một dòng | P3 |
+| B3 | "Hoàn tác" của Cài đặt khuyến nghị bật sẵn khi chưa áp dụng gì | Tắt và ghi lý do cho tới khi đã "Áp dụng" | P3 |
+
+**Bảo mật bằng chứng QA (đã chứng minh):**
+- Hai tệp `D:\P5E-builds\phone-qa-v4.23-dev.25\settings-after-apply.xml` và `settings-after-undo.xml` là bản sao nguyên `settings.xml`, nên có **API key thật** (dài 73 ký tự).
+- Thư mục `D:\P5E-builds\phone-backups-v4.23-dev.25-code303\20261023-213200-post-trial-extract\` (129 MB) là bản giải nén của bản sao lưu, chứa key và văn bản sách.
+- Các tệp này không nằm trong Git.
+- **Quy tắc cho mọi lần thử sau:**
+  - không chép nguyên `settings.xml` hay giải nén bản sao lưu vào thư mục bằng chứng;
+  - chỉ ghi các giá trị không bí mật đã lọc;
+  - thư mục giải nén tạm phải xóa ngay sau khi đếm;
+  - bản sao lưu đặt ở `D:\App Translate Books\App Translate Books-device-backups\` như trước.
+
 ## 9. Bên Biên tập — chỉ ghi lại, không sửa (mã đang khóa)
 
 - Trang Biên tập mở đầu bằng một đoạn giải thích dài và nhiều chữ chuyên môn ("cặp RAW–DRAFT", "lượt viết báo cáo"). Tiêu đề "Biên tập" lặp hai lần.
