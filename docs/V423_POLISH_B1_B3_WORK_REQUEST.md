@@ -136,3 +136,14 @@ Không gọi provider. Không thêm gate, manifest hay khung đo mới.
 - Xác nhận:
   - không sửa tệp `Editorial*`;
   - không có văn bản sách, API key hay dữ liệu cá nhân trong Git, artifact hay log.
+
+## 6. Điều phối kiểm dev.26 (2026-10-23)
+
+- Nguồn `be5017d0`, APK `4.23-dev.26` code 304, SHA `312D592B…EDC6` khớp; điện thoại báo `versionCode=304`.
+- Archive sạch: 730 test, 5 SKIP, 0 FAIL; `androidTest` biên dịch được; lint 0 lỗi.
+- Phạm vi diff: chỉ các tệp Library/Settings/MainActivity cùng 3 model mới và test; không có tệp `Editorial*`, prompt hay schema.
+- B1: PASS ở app 130%, hệ thống 100%; mức hệ thống 130% chưa đo (thiếu quyền `WRITE_SETTINGS`).
+- B2: điều phối tự chụp trên máy ở cỡ chữ app 90%. Cả 4 trang RAW / Glossary / Pronoun / Tập chỉ còn tiêu đề trên thanh trên cùng → PASS. Ảnh để ngoài Git vì có tên tệp sách.
+- B3: PASS theo ảnh của Codex (tắt → bật → tắt).
+- Ghi chú nhỏ, không chặn: mô tả RAW một dòng có "…" nên có thể bị cắt ở cỡ chữ 130%; thư mục bằng chứng `artifacts/qa/v4.23-polish-b1b3-20261023/` chưa commit.
+
