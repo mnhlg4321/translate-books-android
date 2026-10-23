@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-23 (+07:00), after the owner-approved section 6 live check.
+- Updated: 2026-10-23 (+07:00). Coordinator re-verified the live check from the post-live backup (jobs 333/334, total USD 0.075637 of 0.20 approved, settings restored); follow-ups F6b and F3b recorded in the runtime request section 6b.
 - Current version: v4.23.0 in development; verified candidate **4.23-dev.23/code301**. Shipped release remains v4.21.0/code271.
 - Current branch: `feature/v4.23`, `D:/P5E-builds/wt-v4.23`; protected v4.18 checkout and owner media remain untouched. No merge, tag, push, or further provider call.
 - Current commit: **187e313059859f22751665a7cf1b4757153b7322** is the implementation/documentation baseline immediately before this snapshot update commit.
@@ -11,4 +11,4 @@
 - Known bugs/limits: semantic evaluation remains owner-read `NOT_MEASURED`; F3 provider pinning remains a recommendation only. Landscape rotation was not measured because the phone denied the shell settings write. F2 historical phone replay remains `1,262` accepted chunks, `15` rejects at 40% and `20` at 30%, with no adjudicated phone false-positive labels; synthetic fixture false positives were `0`.
 - Regression status: clean archive `D:/P5E-builds/v423-clean-regression-20261023-02/source/` passed `testDebugUnitTest`, `testBenchmarkUnitTest`, `testReleaseUnitTest`, `lintDebug`, `lintBenchmark`, `lintRelease` and `compileDebugAndroidTestJavaWithJavac`; all local app unit tests pass. Post-live copied DB has `0` `apiKey` rows in `jobs/config_revisions/prepared_batches` (`334/334/249` total rows); the key remains only in SharedPreferences as expected and was not printed.
 - Spend: exactly 10 live provider calls, run 1 `$0.01237385`, run 2 `$0.06326357`, total `$0.07563742`; no other live calls, no owner data deleted, no API key/book text/settings JSON committed. F4 post-install evidence remains `0` `apiKey` rows in `332/332/238` rows. APK SHA and backup hashes are recorded outside Git in the paths above.
-- Next action: wait for a new owner request; do not call a provider or install another APK.
+- Next action: Codex implements `docs/V423_UX_OVERHAUL_WORK_REQUEST.md` phase A (U1, U2 P1-P2, U3) plus runtime follow-up F6b (reasoning-bound threshold) to 4.23-dev.24, phone backup and owner install approval. F3b (prompt_cache_key) waits for owner live approval.

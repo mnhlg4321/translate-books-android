@@ -175,3 +175,11 @@ Không có ca sai/sót theo phân xử mới cần truy vết thêm. Điều đ�
   - bản sao lưu sau cài: 0 hàng có `apiKey` trong `jobs`, `config_revisions`, `prepared_batches` (332/332/238 hàng);
   - trần chi phí giờ được kiểm trước mọi lượt gọi; Resume/Retry không có ước tính thì dùng trần $0,10;
   - F1/F3/F6 trên provider thật: đã đo trong đúng hai lượt được cấp quyền ở trên; SEMANTIC_EVAL vẫn `NOT_MEASURED`, còn F3 ghim provider chỉ là đề xuất, chưa thay đổi định tuyến.
+
+- **2026-10-23, điều phối kiểm lại lượt live:**
+  - job 333 `medium`: 4 lượt gọi / $0,0124; job 334 `high`: 6 lượt gọi / $0,0633; tổng $0,0756 trên mức duyệt $0,20; thiết lập đã khôi phục.
+  - F1, F6, STRUCTURAL_VALID: PASS. SEMANTIC_EVAL: NOT_MEASURED (owner đọc `Download/QA_live_20261023`).
+  - Việc tiếp theo đã ghi ở mục 6b của gói runtime:
+    - F6b: ngưỡng 90% bỏ sót ca 87%, làm tốn thêm một lượt gọi $0,02;
+    - F3b: lượt đầu của mọi chunk cache 0% dù cùng provider OpenAI; đề xuất `prompt_cache_key`, cần duyệt live riêng tối đa $0,03.
+  - `high` tốn gấp 5,1 lần `medium`; giữ `medium` làm mặc định.

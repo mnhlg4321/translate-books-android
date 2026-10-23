@@ -340,6 +340,38 @@ Ghi các mục cần gọi provider là `NOT_MEASURED`, rồi **dừng** và bá
 
 Kết quả cache dùng để quyết định có ghim provider hay không. Ghim provider là gói sau.
 
+## 6b. Kết quả lượt live (2026-10-23) và việc tiếp theo
+
+Điều phối đã kiểm lại số liệu từ bản sao lưu sau lượt live (`20261023-200857-post-live`, SHA `97967B3C…`):
+
+| Job | reasoning | Lượt gọi | Chi phí | Kết quả |
+|---|---|---|---|---|
+| 333 | medium | 4 | $0,012374 | 4/4 chunk, không có lượt bị cắt |
+| 334 | high | 6 | $0,063264 | 4/4 chunk; chunk 3 cần 3 lượt |
+
+- Tổng chi $0,075637, dưới mức duyệt $0,20.
+- Thiết lập trên máy đã về như cũ.
+- F1, F6, STRUCTURAL_VALID: PASS. SEMANTIC_EVAL: NOT_MEASURED; owner tự đọc 2 tệp trong `Download/QA_live_20261023`.
+
+**F6b — ngưỡng nhận biết bị cắt do reasoning còn bỏ sót (đã chứng minh):**
+- Chunk 3 của job 334, lượt 1: `finish=length`, reasoning 9.724 / output 11.160 = 87%. Con số này dưới ngưỡng 90% (`TranslationEngine:109`), nên lượt này không được đánh dấu.
+- Vì vậy lượt 2 vẫn chạy ở mức `high` với trần đã nhân đôi (16.384), lại bị cắt, tốn $0,0198. Chỉ đến lượt 3 mới hạ xuống `medium`, và thành công với $0,0027.
+- **Sửa:** coi là reasoning-bound khi `finish=length` và reasoning ≥ 75% output, **hoặc** khi phần trả lời nhìn thấy < 50% trần dành cho phần trả lời (`visible`).
+- **Test:** đúng ca 9.724/11.160.
+- **Hiệu quả:** tiết kiệm khoảng một lượt gọi đắt cho mỗi chunk như vậy.
+
+**F3b — cache không trúng giữa các chunk (đã chứng minh trên mẫu nhỏ):**
+- Mọi lượt gọi đều đi qua cùng `responseProvider = OpenAI`. Vậy giả thuyết H1 (chia provider làm hỏng cache) **không** đúng với mẫu này.
+- Lượt đầu của mọi chunk được cache 0%. Chỉ các lượt gọi lại (cùng prompt, vài giây sau) mới trúng cache.
+- Giả thuyết mới, **chưa chứng minh**: với lưu lượng thấp, OpenAI chỉ định tuyến cache ổn định khi request có `prompt_cache_key`.
+- **Đề xuất:**
+  - gửi `prompt_cache_key` = hash của phần đầu system prompt (câu base + instruction) cho nhánh dịch, không đổi request Biên tập;
+  - kiểm offline: body có key và key giống nhau giữa các chunk;
+  - thử live tối đa $0,03 (1 chương ngắn) **khi owner duyệt riêng**.
+- **Lợi ích dự kiến:** instruction chiếm khoảng 14% chi phí.
+
+**Chi phí của reasoning `high`:** cùng chương, `high` tốn gấp **5,1 lần** `medium` ($0,0633 so với $0,0124). Riêng phần reasoning là khoảng 4–7 nghìn token mỗi chunk, so với khoảng 400 ở `medium`. Chưa có bằng chứng `high` dịch tốt hơn. Khuyến nghị giữ `medium` làm mặc định, cho tới khi owner đọc so sánh hai tệp QA.
+
 ## 7. Báo cáo
 
 Báo cáo gồm:
