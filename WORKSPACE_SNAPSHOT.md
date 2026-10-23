@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-22 (+07:00). Coordinator wrote prompt v16 draft (outside Git, next to v14; critic-reviewed, fixes the (omit) misreading that v15 also had) and `docs/V423_PROMPT_V16_AB_PLAN.md` (blind A/B v14 vs v16, 3 chapters + 1 noise run, ~$0.13 estimate, $0.30 cap watched manually). Runtime fix package F1-F4 still pending.
+- Updated: 2026-10-23 (+07:00). Coordinator diagnosed 8 owner-reported issues plus a UX audit of 40 dev.22 phone screens (outside Git: D:/P5E-builds/ux-audit-20261023, read-only phone data copy 20261023-180815-readonly-diagnosis). Runtime request gained F5 (elapsed clock) and F6 (reasoning runaway guards); new `docs/V423_UX_OVERHAUL_WORK_REQUEST.md` (U1-U7, phases dev.24/dev.25). Both critic-reviewed. No code changed, no provider calls.
 - Current version: v4.23.0 in development; verified candidate **4.23-dev.22/code300**. Shipped release remains v4.21.0/code271.
 - Current branch: `feature/v4.23`, `D:/P5E-builds/wt-v4.23`; protected v4.18 checkout and owner media remain untouched. No merge, tag, push, or provider call.
 - Current commit: **488cb3756b82787d1f33b333db851927855af68b** is the implementation/state baseline immediately before this snapshot update commit; it contains the R3a/R2 implementation and dev22 preflight state. Confirm actual HEAD on resume.
@@ -13,4 +13,4 @@
 - Installed build provenance: device backup `D:/App Translate Books/App Translate Books-device-backups/v4.23-dev.22-code300/20261022-213700/`; pre-install dev20 base APK SHA `46C608AC8E90DBCE25409AB9EA5F21CF57B7C5A5025810E50C0354210BFA6991`; private-data tar SHA `60A403F37B3E71DB52CE4BD9DEC3C85367B36D651A56E9A4D14EC08D0E96BA1`, listing count 1,380.
 - Evidence: `artifacts/qa/v4.23-nav-20261022/QA_REPORT.md` and `SCREENSHOT_MANIFEST.csv`; nine local PNGs have valid `89 50 4E 47` headers and distinct SHA-256 values. PNGs are locally excluded and not committed.
 - Spend: translation/editorial provider 0 calls / USD 0; no owner data was deleted; only `QA_V423_Glossary` was created and deleted.
-- Next action: implement `docs/V423_TRANSLATION_RUNTIME_FIX_WORK_REQUEST.md` (F4, F1, F2, F3), build 4.23-dev.23, back up the phone and wait for owner install approval; the live check in its section 6 needs a separate owner spend approval.
+- Next action: Codex implements `docs/V423_TRANSLATION_RUNTIME_FIX_WORK_REQUEST.md` (F4, F1+F6, F5, F2, F3) to dev.23 with phone backup and owner install approval; then `docs/V423_UX_OVERHAUL_WORK_REQUEST.md` phase A (dev.24) and phase B (dev.25).

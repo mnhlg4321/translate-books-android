@@ -145,3 +145,15 @@ Không có ca sai/sót theo phân xử mới cần truy vết thêm. Điều đ�
     - F4: API key nằm trong snapshot SQLite;
   - gói việc: `docs/V423_TRANSLATION_RUNTIME_FIX_WORK_REQUEST.md`;
   - bản nháp prompt v15 nằm ngoài Git, chưa dùng trên app.
+
+- **2026-10-23: chẩn đoán 8 vấn đề owner nêu và rà UX toàn app (40 ảnh dev.22).**
+  - Đã chứng minh:
+    - đồng hồ tính lại theo giờ thật (`MainActivity:3915`);
+    - reasoning high: 13 lượt gọi / $0,133 / 1 trên 7 chunk, do trần output, vòng chia nhỏ không giới hạn và không có chặn chi phí;
+    - nút điều khiển nằm dưới;
+    - "Màu nhấn" bị từ chối âm thầm;
+    - 182/332 job không xem được;
+    - bộ lọc tập ẩn.
+  - Gói runtime thêm F5, F6.
+  - Gói mới `docs/V423_UX_OVERHAUL_WORK_REQUEST.md` (U1–U7).
+  - Không đổi mã, không gọi provider.

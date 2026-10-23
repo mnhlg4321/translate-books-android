@@ -1,6 +1,8 @@
 # v4.23 — Yêu cầu làm việc: 4 lỗi phía app trong luồng dịch (F1–F4)
 
-**Trạng thái:** ĐÃ PHẢN BIỆN (2026-10-22). Agent phản biện đọc mã tại `7adcfa78`, tìm ra 12 lỗi; đã sửa tất cả.
+**Trạng thái:** ĐÃ PHẢN BIỆN.
+- 2026-10-22: phản biện F1–F4, đọc mã tại `7adcfa78`, tìm ra 12 lỗi; đã sửa tất cả.
+- 2026-10-23: thêm F5 (đồng hồ) và F6 (reasoning chạy không đáy). Phản biện lần hai tìm ra 9 lỗi; đã sửa tất cả.
 
 **Mốc:**
 - `7adcfa78` trên `feature/v4.23`, worktree `D:\P5E-builds\wt-v4.23`.
@@ -40,7 +42,7 @@
   - `visible` = giá trị adaptive hiện nay, vẫn bị chặn bởi `maxOutputTokens` của owner;
   - `requestCap = visible + reasoningReserve(effort)`.
 - **Mức dự trữ:**
-  - nếu `ReasoningEffort.forTranslation(s)` khác rỗng: theo mức, `low` 1024, `medium` 2048, `high` 4096;
+  - nếu `ReasoningEffort.forTranslation(s)` khác rỗng: theo mức, `low` 1024, `medium` 2048, `high` 8192 (theo F6);
   - nếu rỗng nhưng `ReasoningEffort.looksLikeReasoningModel(model)`: 2048, vì "off" chỉ bỏ tham số, còn model gpt-5 vẫn reasoning theo mặc định của provider;
   - các trường hợp còn lại: 0.
   - Đây là trần, không phải chi phí: chỉ token thật dùng mới tính tiền.
@@ -60,6 +62,7 @@
 
 **Test (Java thuần):**
 - `raw=333`, medium → visible 629, requestCap 2677;
+- `raw=333`, high → requestCap 8821;
 - `raw=333`, off, model không reasoning → 629;
 - `raw=333`, off, model `gpt-5*` → 2677;
 - trần `maxOutputTokens` vẫn chặn visible;
@@ -191,10 +194,109 @@
 
 **Ghi cho owner:** các bản sao lưu cũ ngoài Git vẫn chứa key. Việc thay key mới ở provider là quyết định của owner.
 
+## 4b. F5 — Đồng hồ "Đã chạy" vẫn tăng sau khi dịch xong (bổ sung 2026-10-23)
+
+**Triệu chứng:**
+- Job 332 (chương lẻ `001_KUMO_JP_VOL13`) chạy thật 2 phút 45 s: `elapsedMs` = 165.058, `updatedAt − sessionStartMs` = 165.258.
+- Sau khi xong, màn Dịch hiện "Đã chạy 18 giờ 8 phút", và vẫn tăng mỗi lần mở lại.
+
+**Nguyên nhân đã chứng minh:**
+- `MainActivity:3915` đặt `timedRunElapsedBaseMs = now − sessionStartMs` mỗi khi có `sessionStartMs`, ở **mọi** trạng thái.
+- Hàm này chạy lại mỗi lần `onStart` (`:617`) và mỗi lần chuyển sang tab Dịch (`:884`), qua `restoreRuntimeStateToUi` → `updateTrackingFromIntent`.
+- `RuntimeStateStore:129` phát lại `sessionStartMs` đã lưu.
+- Vì vậy lượt đã xong (hay đã tạm dừng, đã lỗi) bị tính lại theo giờ thật.
+- Chế độ tổ hợp dùng chung dòng này (suy luận; trên máy chưa có lượt tổ hợp nào để đối chứng).
+
+**Sửa:**
+- Service ghi mốc kết thúc (`sessionEndMs`) khi lượt dừng ở COMPLETED, FAILED, CANCELLED; ghi `pausedAt` cộng tổng thời gian tạm dừng khi PAUSED. Các mốc này lưu vào `RuntimeStateStore` và được phát lại.
+- **Nơi ghi:**
+  - thêm `sessionEndMs`, `pausedAtMs`, `pausedTotalMs` vào `RuntimeStateStore.saveSession` (`:47`) và `toIntent` (`:129`);
+  - service ghi các mốc này ở nhánh broadcast `done` / `error` / `cancelled` / `paused`.
+  - `pausedTotal` chỉ áp cho tạm dừng rồi tiếp tục trong cùng tiến trình (`TranslatorService:141–159`). Hết thời gian chờ hay lỗi thì service dừng hẳn, và "Tiếp tục" gọi `resetSession`.
+- Tách logic thành hàm thuần `RunPanelFormatter.runElapsedMs(state, nowWall, sessionStart, sessionEnd, storedElapsed, pausedTotal)`:
+  - RUNNING: `now − start − pausedTotal`;
+  - PAUSED: `pausedAt − start − pausedTotal`;
+  - trạng thái kết thúc: `end − start − pausedTotal`;
+  - không có `start`: dùng `storedElapsed`.
+- Gọi hàm này ở `MainActivity:3915`.
+
+**Test (Java thuần):**
+- COMPLETED, FAILED, CANCELLED đứng yên khi phát lại sau 18 giờ;
+- PAUSED đứng yên;
+- RUNNING vẫn tăng;
+- trường hợp tổ hợp;
+- `sessionStart = 0`;
+- trạng thái đang dừng (`stopping`) không tính là đã kết thúc.
+
+**Họ lỗi cần rà:**
+- `TranslatorService.elapsedMs()` (`:994`, `now − jobStartMs`) sau khi job xong;
+- thời gian chết khi service bị dừng rồi chạy lại (`resetSession`, `:93`).
+
+## 4c. F6 — Reasoning "high" chạy không đáy (bổ sung 2026-10-23)
+
+**Bằng chứng** (bản sao dữ liệu điện thoại `20261023-180815-readonly-diagnosis`, ngoài Git; chỉ số đếm). Cùng một chương, cùng model `gpt-5.6-luna`:
+
+| | Job 331, `high` | Job 332, `medium` |
+|---|---|---|
+| Kết quả | owner ngắt sau ~15 phút | xong |
+| Lượt gọi | 13 | 7 |
+| Output token | 104.939 | 15.089 |
+| Chi phí | $0,1334 | $0,0282 |
+| Chunk xong | 1/7 | 7/7 |
+
+- Ở job 331 có 6/13 lượt mà phần reasoning chiếm **100% trần** (`reasoning = output`), nên không còn chữ trả lời.
+
+**Nguyên nhân đã chứng minh:**
+1. **Trần output không chừa chỗ cho reasoning:** đây là F1 (`PromptPlan:145`). `ReasoningEffort.forTranslation` (`:33–38`), qua `TranslationEngine.chatForTranslation` (`:45–49`), gửi nguyên "high", không kèm dự trữ.
+2. **Gọi lại gấp đôi trần** (`TranslationEngine:80–84,257`, sàn 8.192, trần 16.384). Model nghĩ tới hết trần mới, nên gọi lại chỉ làm tăng tiền.
+3. **Vòng chia nhỏ không giới hạn** (`TranslatorService:806–818`). Bị cắt thì chia đôi chunk rồi gọi lại `translateJob`. Mỗi chunk con có lại 3 lượt với cùng mức reasoning, nên lại bị cắt.
+   - Chuỗi thực tế: 2.898 → 2.142 → 1.605 → 1.132 ký tự.
+   - Chỉ dừng khi không chia được nữa: không có giới hạn về độ sâu, số lượt gọi hay tiền.
+4. **Không có chặn chi phí:**
+   - kiểm tra trần chi phí trong engine chỉ chạy khi `attempt > 1`, `stopOnCostLimit` bật và `costLimitUsd > 0` (`TranslationEngine:178`);
+   - `enforceCostLimit` (`TranslatorService:730,780`) chỉ chạy giữa các chunk, và cũng chỉ khi `stopOnCostLimit` bật;
+   - trên máy cả hai điều kiện đều tắt;
+   - `maxPaidRetries` và `maxRetryCostUsd` không được nối vào luồng dịch; chỉ `ReliabilityScenarioRunner` dùng chúng, qua `BudgetPolicy`.
+
+**Sửa:**
+1. **Dự trữ reasoning theo mức** (mở rộng F1): `low` 1.024, `medium` 2.048, `high` 8.192.
+2. **Không chia nhỏ khi bị cắt do reasoning.**
+   - **Nhận biết:** engine gắn cờ `reasoningBound` vào `RejectedResponseException` khi `finish=length` **và** `reasoningTokens ≥ 0,9 × completionTokens`. Nếu provider không báo `reasoningTokens`, coi là reasoning-bound khi phần trả lời nhìn thấy dưới 32 ký tự. `result.reasoningTokens` có sẵn ở `OpenAICompatibleClient:138` và còn trong phạm vi khối catch của engine.
+   - Service đọc cờ này **trước** `splitForContextOverflow` (`TranslatorService:806`). Khi có cờ thì không chia nhỏ.
+   - **Gọi lại một lần:**
+     - dùng `attemptSettings = s.copy()` với effort hạ một bậc (`high` → `medium` → `low`), và `requestCap` tính lại theo mức mới;
+     - không dùng `nextLimitAfterTruncation`;
+     - nếu effort đã là `low`, `auto` hay `off` thì báo lỗi riêng chương ngay;
+     - vẫn bị cắt thì báo lỗi riêng chương với lý do "reasoning dùng hết giới hạn".
+3. **Giới hạn tổng lượt gọi cho mỗi chunk gốc**, tính cả các chunk con: tối đa 6. Vượt thì báo lỗi riêng chương, không chia tiếp.
+   - Chunk gốc: đi ngược `parent_stable_id` tới hàng không có cha. Các hàng SUPERSEDED (idx âm) vẫn được giữ nên đi ngược được.
+   - Bộ đếm là `Map<rootStableId, Integer>` của lượt chạy, truyền qua lời gọi đệ quy `translateJob` (`:817`). Không lưu DB; "Dịch lại chunk lỗi" bắt đầu đếm lại từ 0.
+4. **Kiểm trần chi phí trước mọi lượt gọi**, kể cả lượt đầu (bỏ điều kiện `attempt > 1`).
+   - Thêm trần **mặc định an toàn** cho mỗi lượt chạy: gấp 3 lần chi phí dự kiến của kế hoạch dịch, tối thiểu $0,10.
+   - UI tính **trần hiệu lực** lúc owner xác nhận, hiện số này trong hộp "Sẵn sàng dịch", và gửi cho service qua `EXTRA_EFFECTIVE_COST_LIMIT_USD`. Service và engine chỉ dùng giá trị này, để số hiện ra và số thực thi là một.
+   - **Ý nghĩa của 0:** `costLimitUsd = 0` nghĩa là dùng trần mặc định an toàn. Muốn bỏ trần thì phải bật công tắc "Không giới hạn" trong Cài đặt và xác nhận (gói giao diện U5.3 dùng đúng quy ước này).
+   - `maxPaidRetries` và `maxRetryCostUsd` chưa có tác dụng: ẩn khỏi Cài đặt, hoặc ghi "chưa có tác dụng".
+5. **Ghi log** mỗi lượt: số token reasoning, lý do dừng, lượt thứ mấy của chunk gốc. Ghi số liệu, không ghi văn bản.
+
+**Tái hiện offline:**
+- Dùng provider giả (đã có trong test) trả `finish=length` với `reasoning = output` cho mọi lượt.
+- Bản cũ: số lượt gọi tăng theo số lần chia.
+- Bản mới: 1 lượt ở mức gốc + 1 lượt ở mức thấp hơn, rồi lỗi riêng chương; không chia nhỏ; tổng lượt ≤ 6.
+
+**Test:**
+- dự trữ theo mức;
+- không chia khi reasoning-bound;
+- hạ mức reasoning ở lượt gọi lại;
+- trần 6 lượt cho mỗi chunk gốc;
+- trần chi phí chặn ngay lượt đầu;
+- trần mặc định được tính đúng và hiện trong hộp xác nhận;
+- chunk bị cắt vì câu trả lời dài (reasoning thấp) vẫn được chia như cũ.
+
 ## 5. Thứ tự, build và thử trên điện thoại
 
-**Thứ tự:** F4 → F1 → F2 → F3.
+**Thứ tự:** F4 → F1 + F6 → F5 → F2 → F3.
 - F4 trước vì ảnh hưởng lưu bền.
+- F1 và F6 làm cùng nhau vì cùng sửa trần output và đường gọi lại.
 - F3 chỉ ghi chẩn đoán.
 
 Mỗi bước: viết test trước, sửa, chạy toàn bộ test `app`, rồi commit.
@@ -217,6 +319,7 @@ Ghi các mục cần gọi provider là `NOT_MEASURED`, rồi **dừng** và bá
 
 **Giả thuyết cần kiểm:**
 - F1: chunk ngắn có reasoning không còn bị `length`;
+- F6: ở mức `high`, chương xong hoặc dừng có kiểm soát trong trần chi phí, không còn vòng chia nhỏ. Thử thêm 1 chương ngắn ở `high`, ngân sách tối đa **$0,10** riêng;
 - F3: tỷ lệ cache theo provider (H1).
 
 **Vì sao không giải được offline:** hành vi `max_tokens` + reasoning và định tuyến/cache của OpenRouter chỉ thấy trên lượt gọi thật.
@@ -226,8 +329,11 @@ Ghi các mục cần gọi provider là `NOT_MEASURED`, rồi **dừng** và bá
 - thiết lập hiện tại (`gpt-5.6-luna`, `medium`);
 - ngân sách tối đa **$0,10**: đặt `costLimitUsd=0.10` cùng `stopOnCostLimit=true`, rồi khôi phục thiết lập cũ sau lượt thử.
 
+**Tổng quyền chi xin owner: $0,20** (F1/F3 $0,10 + F6 $0,10).
+
 **PASS khi:**
 - không có `FINISH_REASON_LENGTH` ở lần thử đầu;
+- F6: chương ở mức `high` hoàn tất, hoặc dừng với lý do rõ ràng, trong ≤ $0,10, và không có lần chia nhỏ nào do reasoning;
 - có số liệu `responseProvider` và cache của từng lượt.
 
 Kết quả cache dùng để quyết định có ghim provider hay không. Ghim provider là gói sau.
