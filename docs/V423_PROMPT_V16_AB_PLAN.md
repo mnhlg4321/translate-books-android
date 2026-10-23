@@ -1,6 +1,16 @@
 # Kế hoạch thử A/B prompt v14 với v16
 
-**Trạng thái:** ĐÃ PHẢN BIỆN (2026-10-22). Agent phản biện tìm 12 lỗi; đã sửa cả v16 và kế hoạch. Chưa chạy.
+**Trạng thái:** HẾT HIỆU LỰC (2026-10-23). Điện thoại đang dùng `18.lightnovel_general_qc_translation_only_v18_DRAFT.yaml`. Đây là bản v14 cộng phần văn phong và cách đọc `(omit)`, tốt hơn phần văn phong của v16. So v14 với v16 không còn phục vụ quyết định nào. Kế hoạch này không có bước Refine.
+
+Mọi việc với prompt từ nay lấy v18 làm gốc. Những gì v18 còn thiếu so với các lỗi đo được trên điện thoại:
+- cách đọc `@NARRATOR`, nhóm `@…`, target `*`;
+- ruby `漢字《かな》`;
+- kana kéo dài, thán từ, tiêu đề như あとがき;
+- không bỏ nguyên câu tiếng Nhật;
+- tên không có trong glossary;
+- trích dẫn 「」 nằm giữa câu kể.
+
+Nếu owner muốn, các ý này được thêm vào v18 thành một bản nhỏ, không đụng phần văn phong.
 
 **Quyết định sản phẩm phục vụ:** có đổi prompt dịch mặc định từ v14 sang v16 hay không.
 
