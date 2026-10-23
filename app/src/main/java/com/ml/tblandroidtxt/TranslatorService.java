@@ -122,6 +122,8 @@ public class TranslatorService extends Service {
     @Override public void onCreate() {
         super.onCreate();
         ObservabilityLog.initialize(this);
+        try { PersistedSettingsCleanup.runOnce(getApplicationContext()); }
+        catch (Exception ignored) { Log.e("TranslateBooks", "settings_cleanup_failed"); }
         createChannel();
     }
 
@@ -221,7 +223,7 @@ public class TranslatorService extends Service {
             executor.submit(() -> { try { if(ensureRuntime())retryFailedChunksForJob(jobId); } finally { releaseRun(); } });
             return START_NOT_STICKY;
         }
-        if(ACTION_RETRY_CHUNK.equals(action)){final long jobId=intent.getLongExtra("jobId",-1L);final int chunkIdx=intent.getIntExtra("chunkIdx",-1);final String edited=intent.getStringExtra("settings");final boolean confirmedUnknown=intent.getBooleanExtra("confirmDeliveryUnknown",false);if(!acquireRun("Retry/continue chunk"))return START_NOT_STICKY;cancelled=false;paused=false;activeJobId=-1L;if(!promote("Retry/continue chunk "+(chunkIdx+1),0,0)){releaseRun();return START_NOT_STICKY;}executor.submit(()->{try{if(!ensureRuntime())return;if("DELIVERY_UNKNOWN".equalsIgnoreCase(repo.chunkStatus(jobId,chunkIdx))&&!confirmedUnknown){broadcast("paused",-1,"Retry blocked: delivery is unknown and explicit duplicate-charge confirmation is required");stopForeground(STOP_FOREGROUND_REMOVE);stopSelf();return;}if(edited!=null&&!edited.isEmpty())repo.applyConfigRevision(jobId,chunkIdx,SettingsStore.fromJson(edited));retryFailedChunksForJob(jobId,chunkIdx);}finally{releaseRun();}});return START_NOT_STICKY;}
+        if(ACTION_RETRY_CHUNK.equals(action)){final long jobId=intent.getLongExtra("jobId",-1L);final int chunkIdx=intent.getIntExtra("chunkIdx",-1);final String edited=intent.getStringExtra("settings");final boolean confirmedUnknown=intent.getBooleanExtra("confirmDeliveryUnknown",false);if(!acquireRun("Retry/continue chunk"))return START_NOT_STICKY;cancelled=false;paused=false;activeJobId=-1L;if(!promote("Retry/continue chunk "+(chunkIdx+1),0,0)){releaseRun();return START_NOT_STICKY;}executor.submit(()->{try{if(!ensureRuntime())return;if("DELIVERY_UNKNOWN".equalsIgnoreCase(repo.chunkStatus(jobId,chunkIdx))&&!confirmedUnknown){broadcast("paused",-1,"Retry blocked: delivery is unknown and explicit duplicate-charge confirmation is required");stopForeground(STOP_FOREGROUND_REMOVE);stopSelf();return;}if(edited!=null&&!edited.isEmpty())repo.applyConfigRevision(jobId,chunkIdx,SettingsStore.withCurrentSecrets(this,SettingsStore.fromJson(edited)));retryFailedChunksForJob(jobId,chunkIdx);}finally{releaseRun();}});return START_NOT_STICKY;}
         if (ACTION_BENCHMARK_JOB.equals(action)) {
             final long jobId=intent.getLongExtra("jobId",-1L); final double budget=intent.getDoubleExtra("budgetUsd",0);
             if(!acquireRun("Live A/B benchmark"))return START_NOT_STICKY;
@@ -233,7 +235,7 @@ public class TranslatorService extends Service {
         return START_NOT_STICKY;
     }
 
-    private synchronized boolean ensureRuntime(){if(repo!=null&&engine!=null)return true;try{ModelCatalog.initialize(this);repo=new TranslationRepository(this);repo.recoverInterruptedState();engine=new TranslationEngine(this,repo,TranslateTestSeam.provider());engine.setSessionCostSupplier(runCost::cost);return true;}catch(Exception e){setState(TranslationJobState.State.FAILED,"Initialization failure");logFailure("runtime initialization",e);broadcast("error",-1,"Translation could not initialize: "+AppValidator.readableError(e));stopForeground(STOP_FOREGROUND_REMOVE);stopSelf();return false;}}
+    private synchronized boolean ensureRuntime(){if(repo!=null&&engine!=null)return true;try{PersistedSettingsCleanup.runOnce(getApplicationContext());ModelCatalog.initialize(this);repo=new TranslationRepository(this);repo.recoverInterruptedState();engine=new TranslationEngine(this,repo,TranslateTestSeam.provider());engine.setSessionCostSupplier(runCost::cost);return true;}catch(Exception e){setState(TranslationJobState.State.FAILED,"Initialization failure");logFailure("runtime initialization",e);broadcast("error",-1,"Translation could not initialize: "+AppValidator.readableError(e));stopForeground(STOP_FOREGROUND_REMOVE);stopSelf();return false;}}
 
     private boolean promote(String text,int done,int total){try{startForeground(NOTIFY_ID,buildNotification(text,done,total));return true;}catch(RuntimeException e){setState(TranslationJobState.State.FAILED,"Foreground service error");logFailure("foreground service promotion",e);broadcast("error",-1,"Android could not start the translation service: "+AppValidator.readableError(e));stopSelf();return false;}}
 
@@ -255,7 +257,7 @@ public class TranslatorService extends Service {
     private void runLiveBenchmark(long jobId,double budgetUsd){
         try{
             metricPhase="A/B Benchmark";broadcast("running",0,"Starting paid Full/Balanced benchmark for job #"+jobId);
-            LiveBenchmarkRunner.Result result=LiveBenchmarkRunner.run(repo,jobId,budgetUsd,()->cancelled,msg->broadcast("running",-1,msg));
+            LiveBenchmarkRunner.Result result=LiveBenchmarkRunner.run(this,repo,jobId,budgetUsd,()->cancelled,msg->broadcast("running",-1,msg));
             metricPhase="Benchmark completed";broadcast("done",100,"Benchmark #"+result.sessionId+" completed: "+result.requests+" requests, cost "+CostEstimator.money(result.spentUsd));
         }catch(Exception e){metricPhase="Benchmark error";broadcast(cancelled?"cancelled":"error",-1,"Benchmark stopped: "+AppValidator.readableError(e));}
         finally{stopForeground(STOP_FOREGROUND_REMOVE);NotificationManager nm=getSystemService(NotificationManager.class);if(nm!=null)nm.cancel(NOTIFY_ID);stopSelf();}
@@ -293,7 +295,7 @@ public class TranslatorService extends Service {
             validateOutputAccess(inputs.size(), fixedOutput, outputTree);
 
             String suppliedSettings=intent.getStringExtra("settings");
-            AppSettings s = suppliedSettings==null||suppliedSettings.trim().isEmpty()?SettingsStore.load(this):SettingsStore.fromJson(suppliedSettings);
+            AppSettings s = suppliedSettings==null||suppliedSettings.trim().isEmpty()?SettingsStore.load(this):SettingsStore.withCurrentSecrets(this,SettingsStore.fromJson(suppliedSettings));
             s = engine.loadExternalConfig(intent, s);
             if (s.glossaryText == null || s.glossaryText.trim().isEmpty()) s.glossaryText = GlossaryStore.selectedPromptText(this);
             s = AppValidator.normalize(s);
@@ -357,7 +359,7 @@ public class TranslatorService extends Service {
         String startSessionId=intent.getStringExtra("startSessionId");
         if(startSessionId==null||startSessionId.trim().isEmpty())throw new IllegalArgumentException("Fresh Start is missing its session identity");
         String supplied=intent.getStringExtra("settings");
-        AppSettings s=AppValidator.normalize(supplied==null||supplied.trim().isEmpty()?SettingsStore.fromJson(batch.settingsJson):SettingsStore.fromJson(supplied));
+        AppSettings s=AppValidator.normalize(supplied==null||supplied.trim().isEmpty()?SettingsStore.withCurrentSecrets(this,SettingsStore.fromJson(batch.settingsJson)):SettingsStore.withCurrentSecrets(this,SettingsStore.fromJson(supplied)));
         String validation=AppValidator.validateForTranslation(s);if(validation!=null)throw new IllegalArgumentException(validation);
         String outputUriStr=intent.getStringExtra("outputUri"),treeStr=intent.getStringExtra("outputTreeUri");
         Uri fixed=outputUriStr==null||outputUriStr.isEmpty()?null:Uri.parse(outputUriStr);Uri tree=treeStr==null||treeStr.isEmpty()?null:Uri.parse(treeStr);
@@ -438,7 +440,7 @@ public class TranslatorService extends Service {
     private void continueExistingJob(long jobId,int fileNo,int fileTotal,String label)throws Exception{
         TranslationRepository.Job job=repo.getJob(jobId);
         if(job==null)throw new IllegalStateException("Không thấy job #"+jobId+" để tiếp tục");
-        AppSettings s=AppValidator.normalize(SettingsStore.fromJson(job.settingsJson));
+        AppSettings s=AppValidator.normalize(SettingsStore.withCurrentSecrets(this,SettingsStore.fromJson(job.settingsJson)));
         String validation=AppValidator.validateForTranslation(s);if(validation!=null)throw new IllegalArgumentException(validation);
         activeJobId=job.id;
         String expectedInputHash=repo.getInputHash(job.id);
@@ -545,7 +547,7 @@ public class TranslatorService extends Service {
                 stopSelf();
                 return;
             }
-            AppSettings s = AppValidator.normalize(SettingsStore.fromJson(job.settingsJson));
+            AppSettings s = AppValidator.normalize(SettingsStore.withCurrentSecrets(this,SettingsStore.fromJson(job.settingsJson)));
             String validation = AppValidator.validateForTranslation(s);
             if (validation != null) throw new IllegalArgumentException(validation);
             activeJobId = job.id;
@@ -633,7 +635,7 @@ public class TranslatorService extends Service {
                 stopSelf();
                 return;
             }
-            AppSettings s = AppValidator.normalize(SettingsStore.fromJson(job.settingsJson));
+            AppSettings s = AppValidator.normalize(SettingsStore.withCurrentSecrets(this,SettingsStore.fromJson(job.settingsJson)));
             String validation = AppValidator.validateForTranslation(s);
             if (validation != null) throw new IllegalArgumentException(validation);
             activeJobId = job.id;

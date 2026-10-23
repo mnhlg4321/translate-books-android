@@ -407,7 +407,7 @@ public class JobsPageFactory {
     private void confirmLiveBenchmark(long jobId){
         try{
             JobStore store=new JobStore(a);TranslationRepository.Job job=store.get(jobId);if(job==null){toast.show("Không thấy job");return;}
-            AppSettings s=SettingsStore.fromJson(job.settingsJson);List<TranslationRepository.ChunkRow> all=store.chunks(jobId);
+            AppSettings s=SettingsStore.withCurrentSecrets(a,SettingsStore.fromJson(job.settingsJson));List<TranslationRepository.ChunkRow> all=store.chunks(jobId);
             List<TranslationRepository.ChunkRow> samples=LiveBenchmarkRunner.selectSamples(all);ModelCatalog.ModelInfo pricing=ModelCatalog.findModelInfo(s.provider,s.model);
             if(s.apiKey==null||s.apiKey.trim().isEmpty()){toast.show("Job snapshot không có API key. Hãy tạo job mới sau khi lưu key.");return;}
             if(pricing==null||!pricing.hasPricing()){toast.show("Chưa có dữ liệu giá; không thể bảo vệ budget benchmark.");return;}

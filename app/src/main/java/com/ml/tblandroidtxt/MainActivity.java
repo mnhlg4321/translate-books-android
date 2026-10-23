@@ -561,6 +561,9 @@ public class MainActivity extends Activity {
             android.os.StrictMode.setThreadPolicy(new android.os.StrictMode.ThreadPolicy.Builder().detectDiskReads().detectDiskWrites().detectNetwork().penaltyLog().build());
         }
         ObservabilityLog.initialize(this);
+        // Must complete before any translation service can be started from this app session.
+        try { PersistedSettingsCleanup.runOnce(getApplicationContext()); }
+        catch (Exception ignored) { android.util.Log.e("TranslateBooks", "settings_cleanup_failed"); }
         final android.content.Context repairContext = getApplicationContext();
         new Thread(() -> { try { InputConflictRepair.runOnce(repairContext); } catch (Exception ignored) { } }, "input-conflict-repair").start();
         ModelCatalog.addListener(catalogListener);

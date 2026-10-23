@@ -332,14 +332,14 @@ public class TranslationRepository extends SQLiteOpenHelper {
         cv.put("status", "READY");
         cv.put("created_at", now);
         cv.put("updated_at", now);
-        cv.put("settings", SettingsStore.toJson(s));
+        cv.put("settings", SettingsStore.toPersistedJson(s));
         cv.put("input_hash", inputHash == null ? "" : inputHash);
         cv.put("settings_hash", settingsHash == null ? "" : settingsHash);
         cv.put("integrity_status", "PENDING"); cv.put("config_revision",1); cv.put("app_version",AppBuildInfo.VERSION_NAME);
         if(preparedBatchId!=null&&!preparedBatchId.isEmpty()){cv.put("prepared_batch_id",preparedBatchId);cv.put("prepared_input_ordinal",preparedOrdinal);}
         if(startSessionId!=null&&!startSessionId.isEmpty())cv.put("start_session_id",startSessionId);
         long id = db.insertOrThrow("jobs", null, cv);
-        ContentValues revision=new ContentValues();revision.put("job_id",id);revision.put("revision",1);revision.put("first_chunk_idx",0);revision.put("settings_json",SettingsStore.toJson(s));revision.put("settings_hash",settingsHash==null?"":settingsHash);revision.put("created_at",now);db.insertOrThrow("config_revisions",null,revision);
+        ContentValues revision=new ContentValues();revision.put("job_id",id);revision.put("revision",1);revision.put("first_chunk_idx",0);revision.put("settings_json",SettingsStore.toPersistedJson(s));revision.put("settings_hash",settingsHash==null?"":settingsHash);revision.put("created_at",now);db.insertOrThrow("config_revisions",null,revision);
         for (Chunk c : chunks) {
             ContentValues cc = new ContentValues();
             cc.put("job_id", id);
@@ -432,7 +432,7 @@ public class TranslationRepository extends SQLiteOpenHelper {
         if (settings == null) throw new IllegalArgumentException("Settings are required");
         SQLiteDatabase db=getWritableDatabase(); long now=System.currentTimeMillis(); int next=1;
         try(Cursor c=db.rawQuery("SELECT COALESCE(MAX(revision),0)+1 FROM config_revisions WHERE job_id=?",new String[]{String.valueOf(jobId)})){if(c.moveToFirst())next=c.getInt(0);}
-        AppSettings normalized=AppValidator.normalize(settings); String json=SettingsStore.toJson(normalized); String hash=HashUtil.settingsHash(normalized);
+        AppSettings normalized=AppValidator.normalize(settings); String json=SettingsStore.toPersistedJson(normalized); String hash=HashUtil.settingsHash(normalized);
         db.beginTransaction();
         try {
             ContentValues r=new ContentValues();r.put("job_id",jobId);r.put("revision",next);r.put("first_chunk_idx",Math.max(0,firstChunkIndex));r.put("settings_json",json);r.put("settings_hash",hash);r.put("created_at",now);db.insertOrThrow("config_revisions",null,r);

@@ -83,7 +83,7 @@ public final class PreparationCoordinator {
         PreparedBatch preparing = new PreparedBatch();
         preparing.constructionKey = constructionKey(snapshot);
         preparing.estimateKey = estimateKey(snapshot, preparing.constructionKey, chapterBindings);
-        preparing.settingsJson = SettingsStore.toJson(snapshot);
+        preparing.settingsJson = SettingsStore.toPersistedJson(snapshot);
         preparing.bindings = chapterBindings;
         preparing.status = PreparedBatch.Status.PREPARING;
         current = preparing;
@@ -98,13 +98,13 @@ public final class PreparationCoordinator {
             check(run);
             String selectionKey=selectionKey(appContext,files,settings,bindings);
             if(existing!=null&&existing.ready()&&selectionKey.equals(existing.selectionKey)){
-                existing.settingsJson=SettingsStore.toJson(settings);existing.estimateKey=estimateKey(settings,existing.constructionKey,bindings);existing.bindings=bindings;reprice(existing,settings);current=existing;deliver(listener,existing);return;
+                existing.settingsJson=SettingsStore.toPersistedJson(settings);existing.estimateKey=estimateKey(settings,existing.constructionKey,bindings);existing.bindings=bindings;reprice(existing,settings);current=existing;deliver(listener,existing);return;
             }
             TranslationRepository repo=new TranslationRepository(appContext);PreparedBatch cached;
             try{cached=repo.getPreparedBatchBySelectionKey(selectionKey);}finally{repo.close();}
             check(run);
             if(cached!=null&&cached.ready()){
-                cached.settingsJson=SettingsStore.toJson(settings);cached.estimateKey=estimateKey(settings,cached.constructionKey,bindings);cached.bindings=bindings;
+                cached.settingsJson=SettingsStore.toPersistedJson(settings);cached.estimateKey=estimateKey(settings,cached.constructionKey,bindings);cached.bindings=bindings;
                 if(bindings!=null)recomputeEstimate(cached,settings);else reprice(cached,settings);
                 current=cached;deliver(listener,cached);return;
             }
@@ -122,7 +122,7 @@ public final class PreparationCoordinator {
 
     private synchronized void reestimate(PreparedBatch batch,AppSettings settings,String nextKey,Listener listener){
         cancel();final int run=generation.incrementAndGet();batch.status=PreparedBatch.Status.PREPARING;batch.progress=85;current=batch;deliver(listener,batch);
-        active=worker.submit(()->{try{CostEstimator.Estimate total=new CostEstimator.Estimate();for(PreparedBatch.Input input:batch.inputs){check(run);CostEstimator.addInto(total,CostEstimator.estimatePreparedChunksLightweight(input.chunks,settings));}batch.estimate=total;batch.estimateKey=nextKey;batch.settingsJson=SettingsStore.toJson(settings);batch.status=PreparedBatch.Status.READY;batch.progress=100;TranslationRepository repo=new TranslationRepository(appContext);repo.savePreparedBatch(batch);repo.close();current=batch;deliver(listener,batch);}catch(InterruptedException e){Thread.currentThread().interrupt();}catch(Exception e){if(run==generation.get()){batch.status=PreparedBatch.Status.ERROR;batch.error=AppValidator.readableError(e);current=batch;deliver(listener,batch);}}});
+        active=worker.submit(()->{try{CostEstimator.Estimate total=new CostEstimator.Estimate();for(PreparedBatch.Input input:batch.inputs){check(run);CostEstimator.addInto(total,CostEstimator.estimatePreparedChunksLightweight(input.chunks,settings));}batch.estimate=total;batch.estimateKey=nextKey;batch.settingsJson=SettingsStore.toPersistedJson(settings);batch.status=PreparedBatch.Status.READY;batch.progress=100;TranslationRepository repo=new TranslationRepository(appContext);repo.savePreparedBatch(batch);repo.close();current=batch;deliver(listener,batch);}catch(InterruptedException e){Thread.currentThread().interrupt();}catch(Exception e){if(run==generation.get()){batch.status=PreparedBatch.Status.ERROR;batch.error=AppValidator.readableError(e);current=batch;deliver(listener,batch);}}});
     }
 
     private void prepare(int run, List<Uri> files, AppSettings settings, List<ChapterBinding> bindings, String selectionKey, Listener listener) {
@@ -132,7 +132,7 @@ public final class PreparationCoordinator {
         batch.selectionKey = selectionKey;
         batch.constructionKey = constructionKey(settings);
         batch.estimateKey = estimateKey(settings, batch.constructionKey, bindings);
-        batch.settingsJson = SettingsStore.toJson(settings);
+        batch.settingsJson = SettingsStore.toPersistedJson(settings);
         batch.bindings = bindings;
         batch.createdAt = started;
         batch.status = PreparedBatch.Status.PREPARING;

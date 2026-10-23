@@ -143,6 +143,40 @@ public class SettingsStore {
         } catch (Exception e) { return "{}"; }
     }
 
+    /**
+     * Durable job/config snapshots deliberately omit the device secret.  The full
+     * {@link #toJson(AppSettings)} form remains the in-process form used by the
+     * settings screen and explicit internal intents.
+     */
+    public static String toPersistedJson(AppSettings s) {
+        try {
+            return stripPersistedSecrets(toJson(s));
+        } catch (Exception e) {
+            return "{}";
+        }
+    }
+
+    /** Removes only the top-level API key from an already serialized settings snapshot. */
+    public static String stripPersistedSecrets(String json) throws Exception {
+        JSONObject o = new JSONObject(json == null ? "{}" : json);
+        o.remove("apiKey");
+        return o.toString();
+    }
+
+    /** Rehydrates a snapshot with the key kept in this device's settings profile. */
+    public static AppSettings withCurrentSecrets(Context context, AppSettings snapshot) {
+        return withCurrentSecrets(context == null ? null : load(context), snapshot);
+    }
+
+    /** Package-visible seam for tests and non-UI runtime callers that already loaded settings. */
+    static AppSettings withCurrentSecrets(AppSettings current, AppSettings snapshot) {
+        AppSettings hydrated = snapshot == null ? new AppSettings() : snapshot.copy();
+        if ((hydrated.apiKey == null || hydrated.apiKey.trim().isEmpty()) && current != null) {
+            hydrated.apiKey = current.apiKey;
+        }
+        return hydrated;
+    }
+
     /** The profile file the person exports: every setting except the API key. */
     public static String toExportJson(AppSettings s) throws Exception {
         JSONObject o = new JSONObject(toJson(s));

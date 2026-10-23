@@ -1,5 +1,7 @@
 package com.ml.tblandroidtxt;
 
+import android.content.Context;
+
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -11,9 +13,13 @@ public final class LiveBenchmarkRunner {
     public static class Result { public long sessionId; public double spentUsd; public int samples, requests; }
 
     public static Result run(TranslationRepository repo, long jobId, double budgetUsd, CancelChecker cancel, Events events) throws Exception {
+        return run(null, repo, jobId, budgetUsd, cancel, events);
+    }
+
+    public static Result run(Context context, TranslationRepository repo, long jobId, double budgetUsd, CancelChecker cancel, Events events) throws Exception {
         if (budgetUsd <= 0) throw new IllegalArgumentException("Benchmark budget must be greater than zero");
         TranslationRepository.Job job=repo.getJob(jobId); if(job==null) throw new IllegalArgumentException("Job not found: "+jobId);
-        AppSettings original=AppValidator.normalize(SettingsStore.fromJson(job.settingsJson));
+        AppSettings original=AppValidator.normalize(context == null ? SettingsStore.fromJson(job.settingsJson) : SettingsStore.withCurrentSecrets(context, SettingsStore.fromJson(job.settingsJson)));
         String validation=AppValidator.validateForTranslation(original); if(validation!=null) throw new IllegalArgumentException(validation);
         List<TranslationRepository.ChunkRow> all=repo.getChunkRows(jobId); if(all.isEmpty()) throw new IllegalArgumentException("Job has no chunks");
         List<TranslationRepository.ChunkRow> samples=selectSamples(all);
