@@ -116,14 +116,13 @@ Không có ca sai/sót theo phân xử mới cần truy vết thêm. Điều đ�
 
 ## 10. Trạng thái điều hành hiện tại — 2026-10-23, v4.23
 
-- Quyết định sản phẩm đang phục vụ: bảo vệ chi phí runtime bằng ngưỡng reasoning-bound, giữ thanh điều khiển nhất quán theo trạng thái ở TXT/chương lẻ và làm tab Công việc tìm được cả job cũ/chương lẻ; giữ nguyên schema, Editorial, định tuyến và request body dùng chung.
-- Đã hoàn tất F6b và giai đoạn A UX theo đúng phạm vi: U1 thanh trạng thái, U2 P1/P2, U3 thẻ Dịch/Biên tập, chip lọc, History phân trang và Recent có chương lẻ. F3b không làm; không gọi provider.
-- Implementation baseline **874a030dcd97066a4f36198e091ce2b559a8d00c**. Candidate **4.23-dev.24/code302**, event `build-20261023-203439`, source `874a030dcd97066a4f36198e091ce2b559a8d00c`, APK SHA-256 `4E58C487EC7B68DE995826758C42659DE1FE12FCB755797A96D10F6F52FE0C76`; mirror tại `artifacts/builds/v4.23-dev.24/build-20261023-203439/` và `backup/builds/v4.23-dev.24/build-20261023-203439/`.
-- Archive sạch `D:/P5E-builds/v423-clean-regression-20261023-03/source/` đã PASS unit test debug/benchmark/release, lint debug/benchmark/release và compile AndroidTest. Wrapper build dev.24 PASS; `15e84958` đã cài đè đúng `install -r`, không gỡ cài đặt.
-- F6b offline exact test PASS: `9724/11160` được nhận là reasoning-bound, các biên `8369/11160` và `8370/11160` đúng. U1/U2/U3 Java/unit + compile/lint PASS. Trên máy: U1 PASS cho Tệp TXT và Tập ở trạng thái dừng/có chunk lỗi; U3 PASS cho thẻ Dịch/Biên tập, chip Tập, History có `Tải thêm`, và Gần đây có chương lẻ. Dừng khi đang chạy là `NOT_MEASURED`; không bấm nút tốn tiền. Không có thay đổi schema, Editorial, `buildChatRequestBody` dùng chung, API key, sách hoặc dữ liệu cá nhân trong Git.
-- DB copy sau cài ngoài Git có `199` `start_session_id` khác nhau, vượt mốc 150; bảng `jobs/config_revisions/prepared_batches` có `apiKey=0` trên `334/334/249` hàng. Pre-install backup `D:/App Translate Books/App Translate Books-device-backups/v4.23-dev.24-code302/20261023-203650-pre-install/`; post-install backup `D:/App Translate Books/App Translate Books-device-backups/v4.23-dev.24-code302/20261023-204113-post-install/`; mỗi tar có `1,397` mục. Ảnh Jobs ngoài Git: `D:/P5E-builds/phone-qa-v4.23-dev.24/jobs-page.png`, PNG magic `89 50 4E 47`.
-- No provider spend in this phase: `$0.00`. F3b và UX Phase B chuyển sang gói sau.
-- **Next action:** dừng và báo cáo Giai đoạn A; không gọi provider hoặc cài APK khác nếu chưa có yêu cầu mới của owner.
+- Quyết định sản phẩm đang phục vụ: owner điều khiển lượt dịch mà không phải cuộn, tìm lại được việc cũ, và nhìn rõ Thư viện/Cài đặt; Phase B giữ nguyên schema, Editorial, định tuyến và request body dùng chung.
+- Đã hoàn tất F6b và giai đoạn A UX trước đó; Phase B đã hoàn tất A1–A4, U4, U5, U6, U7 và các mục U2 P3 còn lại. F3b không làm; không gọi provider.
+- Implementation baseline **b8c9dabb5409886e106d2b2e1f29c1ffcb324907**. Candidate **4.23-dev.25/code303 pending build**; chưa có SHA-256 APK mới.
+- Archive sạch `D:/P5E-builds/v423-phase-b-clean-20261023-03/` PASS: 722 test, 0 FAIL, 5 SKIP; lint 0 lỗi; `androidTest` biên dịch được. Không sửa tệp Editorial*, không đổi schema, `buildChatRequestBody` dùng chung, API key, sách hay dữ liệu cá nhân trong Git.
+- U4 đã đưa trang chủ Thư viện về RAW, giữ đúng bốn thẻ RAW/Glossary/Pronoun/Tập; U5 còn năm danh mục, bảng khuyến nghị Apply/Undo, trạng thái API key và không còn đường `.env` ẩn; U6 có bố cục mới, năm giao diện sáng và bỏ Màu nhấn; U7/P3 đã có vùng chạm tối thiểu 48 dp và xác nhận xóa.
+- Chưa sao lưu/cài dev.25 và chưa đo thử Phase B trên `15e84958`; chưa có ảnh Phase B. No provider spend in this phase: `$0.00`.
+- **Next action:** tạo APK `4.23-dev.25` bằng `scripts/build-and-save.ps1 -Series 4.23-dev`, rồi sao lưu/cài `install -r` và thử Phase B trên điện thoại theo đúng quy tắc.
 
 - Historical context from the dev.21/UI track follows; it does not supersede the runtime-fix next action above.
 
