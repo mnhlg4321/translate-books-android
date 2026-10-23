@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-23 (+07:00). Phase A UX and runtime F6b implementation plus the approved non-paid phone trial are complete.
+- Updated: 2026-10-23 (+07:00). Coordinator verified dev.24 (source 874a030d; 708 tests/0 fail; lint 0 errors; phone code 302) and recorded post-phase-A fixes A1-A4.
 - Current version: v4.23.0 in development; verified candidate **4.23-dev.24/code302**. Shipped release remains v4.21.0/code271.
 - Current branch: `feature/v4.23`, `D:/P5E-builds/wt-v4.23`; protected v4.18 checkout and owner media remain untouched. No merge, tag, push, or provider call.
 - Current commit: **b3e120bf5b34241038fa169edc649c91dc455232** is the implementation/documentation baseline immediately before this snapshot update commit.
@@ -11,4 +11,4 @@
 - Known bugs/limits: Stop confirmation on an actively running job is `NOT_MEASURED` because no active job was available and creating one would call the provider; semantic evaluation remains `NOT_MEASURED`; F3b is intentionally not done. Both phone backup tars opened with `1,397` entries.
 - Regression status: clean archive `D:/P5E-builds/v423-clean-regression-20261023-03/source/` passed `testDebugUnitTest`, `testBenchmarkUnitTest`, `testReleaseUnitTest`, `lintDebug`, `lintBenchmark`, `lintRelease`, and `compileDebugAndroidTestJavaWithJavac`; wrapper build passed. Post-install DB-copy counts are `apiKey=0` in `jobs/config_revisions/prepared_batches` (`334/334/249` total rows).
 - Spend: no provider calls in this phase; `$0.00` new spend. Pre-install backup is `D:/App Translate Books/App Translate Books-device-backups/v4.23-dev.24-code302/20261023-203650-pre-install/`; post-install backup is `D:/App Translate Books/App Translate Books-device-backups/v4.23-dev.24-code302/20261023-204113-post-install/`. Screenshot is outside Git at `D:/P5E-builds/phone-qa-v4.23-dev.24/jobs-page.png` and has PNG magic `89 50 4E 47`.
-- Next action: stop and report Phase A; do not call provider or install another APK unless a new owner request authorizes it.
+- Next action: Codex implements `docs/V423_UX_OVERHAUL_WORK_REQUEST.md` phase B (A1-A4 first, then U4, U5, U6, U7 and remaining U2 P3 items) to 4.23-dev.25, phone backup and owner install approval. F3b (prompt_cache_key) waits for owner live approval.

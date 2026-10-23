@@ -184,3 +184,8 @@ Không có ca sai/sót theo phân xử mới cần truy vết thêm. Điều đ�
     - F6b: ngưỡng 90% bỏ sót ca 87%, làm tốn thêm một lượt gọi $0,02;
     - F3b: lượt đầu của mọi chunk cache 0% dù cùng provider OpenAI; đề xuất `prompt_cache_key`, cần duyệt live riêng tối đa $0,03.
   - `high` tốn gấp 5,1 lần `medium`; giữ `medium` làm mặc định.
+
+- **2026-10-23, điều phối kiểm dev.24:**
+  - nguồn `874a030d`, SHA khớp; archive sạch 708 test, 0 FAIL; lint 0 lỗi; không sửa tệp Editorial*; điện thoại chạy code 302.
+  - Trên máy thấy thêm 4 điểm (A1–A4, mục 8b của gói giao diện). Nặng nhất là A1: nút chính đề nghị dịch lại chunk lỗi của một job **khác** với tệp đang chọn. Lỗi nằm ở bảng trạng thái của điều phối, không ở phần làm.
+  - Giai đoạn B làm A1–A4 trước.

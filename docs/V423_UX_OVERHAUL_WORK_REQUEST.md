@@ -217,6 +217,17 @@
 | U7.2 | Nhiều nút dưới 48 dp | Sửa trong `tinyButton` và các nút 40/42/44 dp đã liệt kê | P2 |
 | U7.3 | Emoji và ký tự làm biểu tượng (📄 ✅ 📁 ⚡ ◇ ▣ ✎ …) | Ở chỗ sửa trong gói này: bỏ biểu tượng hoặc dùng vector. Thay toàn app để gói sau | P3 |
 
+## 8b. Sửa sau giai đoạn A (điều phối kiểm dev.24, 2026-10-23)
+
+**Kiểm độc lập:** nguồn `874a030d`, APK SHA `4E58C487…0C76` khớp; archive sạch 708 test, 5 SKIP, 0 FAIL; lint 0 lỗi; điện thoại chạy code 302. Ảnh: `D:\P5E-builds\ux-audit-dev24\` (ngoài Git).
+
+| ID | Vấn đề thấy trên máy | Nguyên nhân | Sửa | Ưu tiên |
+|---|---|---|---|---|
+| A1 | Màn Dịch, trạng thái "Sẵn sàng": owner đã chọn `005_KUMO_JP_VOL13.txt`, nhưng nút chính lại là "Dịch lại 1 chunk lỗi". Chunk lỗi đó thuộc một job khác (`020_RAW_…`) | Bảng trạng thái U1 (mục 2) không phân biệt tệp **đang chọn** với **job dở** của tệp khác. Lỗi nằm ở thiết kế, không phải ở phần làm | Nếu tệp hay tập đang chọn khác với job dở: nút chính là "Bắt đầu" cho lựa chọn hiện tại. Job dở chỉ hiện một dòng ngữ cảnh "Job dở: 020_… · 1 chunk lỗi", kèm "Dịch lại lỗi" trong ⋮ (vẫn qua hộp xác nhận). Chỉ khi lựa chọn hiện tại **chính là** job dở thì nút chính mới là "Dịch lại N chunk lỗi" / "Tiếp tục". Test thuần cho cả hai trường hợp, ở cả hai chế độ | P1 |
+| A2 | Ngăn ☰ › Gần đây có hai mục `005_KUMO_JP_VOL13.txt` liền nhau | `DrawerRecentModel` liệt kê theo job, không gộp nhiều job của cùng một tệp | Gộp chương lẻ theo tệp đầu vào (`input_hash`, dự phòng tên tệp), lấy job mới nhất. Test: 2 job cùng tệp → 1 mục | P2 |
+| A3 | Màn Dịch lúc sẵn sàng vẫn vẽ cả bảng số liệu rỗng (thanh Tập/Chương, "—", "chưa đo") và ô "Bản dịch gần nhất · Chưa có chunk" | Thẻ tiến trình luôn hiện đủ, kể cả khi chưa có lượt chạy | Khi chưa có lượt chạy, hoặc lượt trước đã thu gọn theo U2.1: ẩn bảng số liệu và ô xem trước, chỉ giữ tiêu đề trạng thái và thanh điều khiển | P2 |
+| A4 | Trang Công việc: nút "Làm mới" là nút chính màu cam, nổi hơn cả việc thật; bộ lọc tập chiếm một thẻ hai nút | Kiểu nút chưa theo thứ bậc | "Làm mới" thành nút phụ hoặc ↻; bộ lọc thành chip "Tập: Tất cả ▾" (và "Tập: X ✕" khi đang lọc) | P3 |
+
 ## 9. Bên Biên tập — chỉ ghi lại, không sửa (mã đang khóa)
 
 - Trang Biên tập mở đầu bằng một đoạn giải thích dài và nhiều chữ chuyên môn ("cặp RAW–DRAFT", "lượt viết báo cáo"). Tiêu đề "Biên tập" lặp hai lần.
@@ -241,7 +252,7 @@ Các điểm này để dành cho lúc Biên tập được mở lại.
    - "Gần đây" có chương lẻ.
 4. **Dừng**, báo cáo.
 
-**Giai đoạn B:** U4 → U5 → U6 → U7, cùng các mục P3 còn lại của U2.
+**Giai đoạn B:** A1–A4 (mục 8b) trước → U4 → U5 → U6 → U7, cùng các mục P3 còn lại của U2.
 1. Build `4.23-dev.25`, quy trình như trên.
 2. Thử trên máy:
    - Thư viện còn 4 thẻ con, không bị cắt ở 360 dp và cỡ chữ 130%;
