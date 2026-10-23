@@ -116,14 +116,13 @@ Không có ca sai/sót theo phân xử mới cần truy vết thêm. Điều đ�
 
 ## 10. Trạng thái điều hành hiện tại — 2026-10-23, v4.23
 
-- Quyết định sản phẩm đang phục vụ: owner điều khiển lượt dịch mà không phải cuộn, tìm lại được việc cũ, và nhìn rõ Thư viện/Cài đặt; Phase B giữ nguyên schema, Editorial, định tuyến và request body dùng chung.
-- Đã hoàn tất F6b và giai đoạn A UX trước đó; Phase B đã hoàn tất A1–A4, U4, U5, U6, U7 và các mục U2 P3 còn lại. F3b không làm; không gọi provider.
-- Implementation/regression baseline **d62c8b43cb017a12ff5063b6dc9b52c57f2c0db3**. APK **4.23-dev.25/code303**, event `build-20261023-211444`, SHA-256 `4AC7D8FA55E438134DADC76A64D2A7171E7AE6858BCD6D147E0D82CF79B4E96F`; source APK là `d62c8b43`.
-- Archive sạch `D:/P5E-builds/v423-phase-b-clean-20261023-03/` PASS: 722 test, 0 FAIL, 5 SKIP; lint 0 lỗi; `androidTest` biên dịch được. Không sửa tệp Editorial*, không đổi schema, `buildChatRequestBody` dùng chung, API key, sách hay dữ liệu cá nhân trong Git.
-- U4 đã đưa trang chủ Thư viện về RAW, giữ đúng bốn thẻ RAW/Glossary/Pronoun/Tập; U5 còn năm danh mục, bảng khuyến nghị Apply/Undo, trạng thái API key và không còn đường `.env` ẩn; U6 có bố cục mới, năm giao diện sáng và bỏ Màu nhấn; U7/P3 đã có vùng chạm tối thiểu 48 dp và xác nhận xóa.
-- Trên `15e84958`, đã cài bằng `install -r` sau khi được duyệt; kiểm tra Library ở khoảng 361dp và 130%, Settings Apply/Undo, 5 giao diện sáng ở 100%/130%; đã khôi phục settings/appearance về bản đầu. Ảnh cuối hợp lệ PNG và chỉ dùng trạng thái QA_ không có nội dung sách.
-- Sao lưu ngoài Git: pre-install `D:/P5E-builds/phone-backups-v4.23-dev.25-code303/20261023-211525-pre-install`, post-trial `D:/P5E-builds/phone-backups-v4.23-dev.25-code303/20261023-213200-post-trial`; post-trial có 1.397 mục, SHA-256 `AD333BDF21971459E63F26F984C501F1DFB6F4811A2ED05DDB43A02AE49E2040`. No provider spend in this phase: `$0.00`.
-- **Next action:** bàn giao bằng chứng Phase B; để F3b/live-provider và các mục deferred cho gói sau có quyền riêng.
+- Quyết định sản phẩm đang phục vụ: chốt giao diện v4.23 đủ gọn để phát hành; B1–B3 chỉ sửa khả năng đọc tab, lặp tiêu đề và trạng thái Hoàn tác, giữ nguyên schema, Editorial, prompt/instruction, định tuyến và logic dịch.
+- Đã hoàn tất F6b, giai đoạn A/B UX trước đó và B1–B3. Không gọi provider; không làm F3b.
+- B3 implementation baseline **be5017d0b04de727843f2f0df9a3d93ab90d5995**. APK **4.23-dev.26/code304**, event `build-20261023-220435`, SHA-256 `312D592B7654C64DD7E780B0B508A147B78B7D747FA5008B342D842AB373EDC6`; source APK là `be5017d0`.
+- Archive sạch `D:/P5E-builds/v423-polish-b1b3-clean-20261023-01/` PASS: testDebugUnitTest, compileDebugAndroidTestJavaWithJavac và lintDebug; không sửa tệp Editorial*, prompt/instruction, schema, API key, sách hay dữ liệu cá nhân trong Git.
+- B1 dùng tab một dòng, WRAP_CONTENT, tối thiểu 48dp và cuộn ngang khi thang chữ lớn; B2 dùng `plainCard` và bỏ tiêu đề lặp; B3 tắt Hoàn tác trước Apply, có mô tả trợ năng và chỉ giữ snapshot trong bộ nhớ.
+- Đã sao lưu điện thoại ngoài Git trước cài tại `D:/App Translate Books/App Translate Books-device-backups/v4.23-dev.26-code304/20261023-220508`; tar 1.397 mục, SHA-256 `AD333BDF21971459E63F26F984C501F1DFB6F4811A2ED05DDB43A02AE49E2040`. Thiết bị vẫn dev.25/code303; chưa cài dev.26, chưa chụp ảnh, chi phí provider `$0.00`.
+- **Next action:** chờ owner gõ `duyệt cài`, rồi cài bằng `install-validated.ps1` và thử QA_ theo mục 4.
 
 - Historical context from the dev.21/UI track follows; it does not supersede the runtime-fix next action above.
 
