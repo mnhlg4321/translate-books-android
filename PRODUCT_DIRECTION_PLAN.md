@@ -118,11 +118,12 @@ Không có ca sai/sót theo phân xử mới cần truy vết thêm. Điều đ�
 
 - Quyết định sản phẩm đang phục vụ: owner điều khiển lượt dịch mà không phải cuộn, tìm lại được việc cũ, và nhìn rõ Thư viện/Cài đặt; Phase B giữ nguyên schema, Editorial, định tuyến và request body dùng chung.
 - Đã hoàn tất F6b và giai đoạn A UX trước đó; Phase B đã hoàn tất A1–A4, U4, U5, U6, U7 và các mục U2 P3 còn lại. F3b không làm; không gọi provider.
-- Implementation baseline **b8c9dabb5409886e106d2b2e1f29c1ffcb324907**. Candidate **4.23-dev.25/code303 pending build**; chưa có SHA-256 APK mới.
+- Implementation/regression baseline **d62c8b43cb017a12ff5063b6dc9b52c57f2c0db3**. APK **4.23-dev.25/code303**, event `build-20261023-211444`, SHA-256 `4AC7D8FA55E438134DADC76A64D2A7171E7AE6858BCD6D147E0D82CF79B4E96F`; source APK là `d62c8b43`.
 - Archive sạch `D:/P5E-builds/v423-phase-b-clean-20261023-03/` PASS: 722 test, 0 FAIL, 5 SKIP; lint 0 lỗi; `androidTest` biên dịch được. Không sửa tệp Editorial*, không đổi schema, `buildChatRequestBody` dùng chung, API key, sách hay dữ liệu cá nhân trong Git.
 - U4 đã đưa trang chủ Thư viện về RAW, giữ đúng bốn thẻ RAW/Glossary/Pronoun/Tập; U5 còn năm danh mục, bảng khuyến nghị Apply/Undo, trạng thái API key và không còn đường `.env` ẩn; U6 có bố cục mới, năm giao diện sáng và bỏ Màu nhấn; U7/P3 đã có vùng chạm tối thiểu 48 dp và xác nhận xóa.
-- Chưa sao lưu/cài dev.25 và chưa đo thử Phase B trên `15e84958`; chưa có ảnh Phase B. No provider spend in this phase: `$0.00`.
-- **Next action:** tạo APK `4.23-dev.25` bằng `scripts/build-and-save.ps1 -Series 4.23-dev`, rồi sao lưu/cài `install -r` và thử Phase B trên điện thoại theo đúng quy tắc.
+- Trên `15e84958`, đã cài bằng `install -r` sau khi được duyệt; kiểm tra Library ở khoảng 361dp và 130%, Settings Apply/Undo, 5 giao diện sáng ở 100%/130%; đã khôi phục settings/appearance về bản đầu. Ảnh cuối hợp lệ PNG và chỉ dùng trạng thái QA_ không có nội dung sách.
+- Sao lưu ngoài Git: pre-install `D:/P5E-builds/phone-backups-v4.23-dev.25-code303/20261023-211525-pre-install`, post-trial `D:/P5E-builds/phone-backups-v4.23-dev.25-code303/20261023-213200-post-trial`; post-trial có 1.397 mục, SHA-256 `AD333BDF21971459E63F26F984C501F1DFB6F4811A2ED05DDB43A02AE49E2040`. No provider spend in this phase: `$0.00`.
+- **Next action:** bàn giao bằng chứng Phase B; để F3b/live-provider và các mục deferred cho gói sau có quyền riêng.
 
 - Historical context from the dev.21/UI track follows; it does not supersede the runtime-fix next action above.
 
