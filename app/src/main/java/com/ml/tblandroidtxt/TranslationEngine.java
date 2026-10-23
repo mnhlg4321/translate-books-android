@@ -267,7 +267,8 @@ public class TranslationEngine {
                 ResponseValidator.Repaired repaired = ResponseValidator.repairQuoteStyle(out, chunk.mainContent);
                 out = repaired.text;
                 ResponseValidator.Result validation = ResponseValidator.validate(result.content, out, chunk.mainContent,
-                        prompt.system + "\n" + prompt.user, result.finishReason, result.completionTokens, outputLimit, false);
+                        prompt.system + "\n" + prompt.user, result.finishReason, result.completionTokens, outputLimit,
+                        plan.glossaryTargets, true);
                 validation.reasoningBound = isReasoningBound(result, out);
                 if (!validation.accepted) throw new ResponseValidator.RejectedResponseException(validation);
                 if (repaired.changed) {
@@ -416,7 +417,8 @@ public class TranslationEngine {
                 if (usageSink != null) usageSink.onUsage(result, s);
                 String out = ResponseValidator.repairQuoteStyle(PromptBuilder.extractTranslationStrict(result.content), source).text;
                 ResponseValidator.Result validation = ResponseValidator.validate(result.content, out, source,
-                        prompt.system + "\n" + prompt.user, result.finishReason, result.completionTokens, outputLimit, false);
+                        prompt.system + "\n" + prompt.user, result.finishReason, result.completionTokens, outputLimit,
+                        plan.glossaryTargets, true);
                 if (!validation.accepted) throw new ResponseValidator.RejectedResponseException(validation);
                 TranslationQualityChecks.Result quality = TranslationQualityChecks.inspect(source, out, "");
                 if (!quality.passed() && eventSink != null) eventSink.onEvent("Refine quality warning: " + quality.issues);

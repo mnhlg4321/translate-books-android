@@ -1,6 +1,8 @@
 package com.ml.tblandroidtxt;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -11,6 +13,22 @@ public final class ResponseValidator {
     public static Result validate(String raw, String extracted, String source, String prompt,
                                   String finishReason, int outputTokens, int maxOutputTokens,
                                   boolean markersRequired) {
+        return validate(raw, extracted, source, prompt, finishReason, outputTokens, maxOutputTokens,
+                Collections.emptyList(), false, markersRequired);
+    }
+
+    /** Strict translation validation that can reject individual retained source lines. */
+    public static Result validate(String raw, String extracted, String source, String prompt,
+                                  String finishReason, int outputTokens, int maxOutputTokens,
+                                  Collection<String> keptTargets, boolean checkRetainedSource) {
+        return validate(raw, extracted, source, prompt, finishReason, outputTokens, maxOutputTokens,
+                keptTargets, checkRetainedSource, false);
+    }
+
+    private static Result validate(String raw, String extracted, String source, String prompt,
+                                   String finishReason, int outputTokens, int maxOutputTokens,
+                                   Collection<String> keptTargets, boolean checkRetainedSource,
+                                   boolean markersRequired) {
         ArrayList<String> errors = new ArrayList<>();
         ArrayList<String> warnings = new ArrayList<>();
         String body = extracted == null ? "" : extracted.trim();
@@ -37,12 +55,22 @@ public final class ResponseValidator {
         if (!body.isEmpty() && looksMidSentence(body) && (!stopped || outputTokens >= Math.max(1, maxOutputTokens - 2))) { errors.add("LIKELY_TRUNCATED_END"); truncated = true; }
         double lineRatio = -1;
         int[] worst = null;
+        int retainedCount = 0;
+        int firstRetainedLine = -1;
+        double retainedLineRatio = -1;
         if (!truncated) {
             lineRatio = lineRatio(source, body);
             if (lineRatio >= 0 && lineRatio < MIN_LINE_RATIO) errors.add("OUTPUT_MISSING_LINES");
             worst = worstBracket(source, body);
             if (worst != null) errors.add("UNCLOSED_BRACKET_OR_DIALOGUE");
             if (looksRepeated(body) && !looksRepeated(source == null ? "" : source)) errors.add("REPEATED_RESPONSE_LOOP");
+            if (checkRetainedSource) {
+                RetainedSourceLines retained = retainedSourceLines(body, keptTargets);
+                if (retained.count > 0) errors.add("RETAINED_SOURCE_LINE");
+                retainedCount = retained.count;
+                firstRetainedLine = retained.firstLine;
+                retainedLineRatio = retained.maxRatio;
+            }
         }
         if (finish == Finish.UNKNOWN) warnings.add("UNKNOWN_FINISH_REASON");
         Result r = new Result(errors.isEmpty(), finish, errors, warnings);
@@ -50,6 +78,9 @@ public final class ResponseValidator {
         r.lineRatio = lineRatio;
         r.outputTokens = outputTokens;
         r.maxOutputTokens = maxOutputTokens;
+        r.retainedSourceLineCount = retainedCount;
+        r.firstRetainedSourceLine = firstRetainedLine;
+        r.retainedSourceLineRatio = retainedLineRatio;
         if (worst != null) { r.bracketKind = BRACKET_NAMES[worst[0]]; r.bracketDelta = worst[1]; r.rawBracketDelta = worst[2]; }
         return r;
     }
@@ -173,6 +204,69 @@ public final class ResponseValidator {
     }
     private static String normalize(String s) { return s == null ? "" : s.replaceAll("\\s+", " ").trim(); }
 
+    private static RetainedSourceLines retainedSourceLines(String body, Collection<String> keptTargets) {
+        RetainedSourceLines result = new RetainedSourceLines();
+        String[] lines = body == null ? new String[0] : body.split("\\R", -1);
+        for (int i = 0; i < lines.length; i++) {
+            String line = removeRuby(lines[i]);
+            if (keptTargets != null) {
+                for (String target : keptTargets) {
+                    if (target != null && !target.isEmpty() && containsJapanese(target)) line = line.replace(target, "");
+                }
+            }
+            int japanese = 0;
+            int nonWhitespace = 0;
+            for (int p = 0; p < line.length(); p++) {
+                char c = line.charAt(p);
+                if (!Character.isWhitespace(c)) nonWhitespace++;
+                if (isJapanese(c)) japanese++;
+            }
+            double ratio = nonWhitespace == 0 ? 0d : japanese / (double) nonWhitespace;
+            if (japanese >= 6 && ratio >= 0.40d) {
+                result.count++;
+                if (result.firstLine < 0) result.firstLine = i + 1;
+                result.maxRatio = Math.max(result.maxRatio, ratio);
+            }
+        }
+        return result;
+    }
+
+    private static String removeRuby(String line) {
+        if (line == null || line.isEmpty()) return "";
+        StringBuilder out = new StringBuilder(line.length());
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (c == '\u300a' && out.length() > 0 && isHan(out.charAt(out.length() - 1))) {
+                int close = line.indexOf('\u300b', i + 1);
+                if (close >= 0) {
+                    i = close;
+                    continue;
+                }
+            }
+            out.append(c);
+        }
+        return out.toString();
+    }
+
+    private static boolean containsJapanese(String value) {
+        if (value == null) return false;
+        for (int i = 0; i < value.length(); i++) if (isJapanese(value.charAt(i))) return true;
+        return false;
+    }
+
+    private static boolean isHan(char c) { return (c >= '\u4e00' && c <= '\u9fff') || c == '\u3005'; }
+
+    private static boolean isJapanese(char c) {
+        if (c == '\u30fb' || c == '\u30fc') return false;
+        return (c >= '\u3040' && c <= '\u30ff') || isHan(c);
+    }
+
+    private static final class RetainedSourceLines {
+        int count;
+        int firstLine = -1;
+        double maxRatio;
+    }
+
     public static final class Result {
         public final boolean accepted; public final Finish finish; public final List<String> errors; public final List<String> warnings;
         /** True when the answer was cut (finish length, token limit reached, ends mid-sentence): resending the same request will be cut again. */
@@ -180,6 +274,10 @@ public final class ResponseValidator {
         /** Translated non-blank lines over RAW non-blank lines; -1 when not judged. */
         public double lineRatio = -1;
         public int outputTokens, maxOutputTokens;
+        /** Counts only the opt-in retained-source rule; no line text is retained. */
+        public int retainedSourceLineCount;
+        public int firstRetainedSourceLine = -1;
+        public double retainedSourceLineRatio = -1;
         /** True when a length cut was dominated by hidden reasoning tokens. */
         public boolean reasoningBound;
         /** The bracket pair that failed, the translation's imbalance and the RAW's; empty/0 when none failed. */
@@ -192,6 +290,9 @@ public final class ResponseValidator {
             StringBuilder sb = new StringBuilder();
             if (truncated) sb.append("B\u1ea3n d\u1ecbch b\u1ecb c\u1eaft (h\u1ebft token \u0111\u1ea7u ra: ").append(outputTokens).append('/').append(maxOutputTokens).append(", finish=").append(finish.name().toLowerCase(Locale.ROOT)).append("). ");
             if (errors.contains("OUTPUT_MISSING_LINES")) sb.append("B\u1ea3n d\u1ecbch thi\u1ebfu d\u00f2ng (").append(Math.round(lineRatio * 100)).append("% s\u1ed1 d\u00f2ng c\u1ee7a RAW). ");
+            if (errors.contains("RETAINED_SOURCE_LINE")) sb.append("B\u1ea3n d\u1ecbch c\u00f2n ").append(retainedSourceLineCount)
+                    .append(" d\u00f2ng ti\u1ebfng Nh\u1eadt (d\u00f2ng \u0111\u1ea7u ").append(firstRetainedSourceLine)
+                    .append(", t\u1ef7 l\u1ec7 cao nh\u1ea5t ").append(Math.round(retainedSourceLineRatio * 100)).append("%). ");
             if (errors.contains("UNCLOSED_BRACKET_OR_DIALOGUE")) sb.append("Ngo\u1eb7c ").append(bracketKind).append(" l\u1ec7ch ").append(bracketDelta).append(" trong b\u1ea3n d\u1ecbch, RAW l\u1ec7ch ").append(rawBracketDelta).append(". ");
             return sb.toString();
         }
