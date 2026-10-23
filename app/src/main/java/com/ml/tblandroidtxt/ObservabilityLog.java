@@ -15,6 +15,11 @@ public final class ObservabilityLog {
     public static void event(String name, Object... fields) {
         Context context = appContext;
         if (context == null) return;
+        LogStore.append(context, formatEvent(name, fields));
+    }
+
+    /** Formats the privacy-safe event line so offline tests can inspect its exact fields. */
+    static String formatEvent(String name, Object... fields) {
         StringBuilder line = new StringBuilder("OBS event=").append(safe(name));
         if (fields != null) {
             for (int i = 0; i + 1 < fields.length; i += 2) {
@@ -22,7 +27,7 @@ public final class ObservabilityLog {
                         .append(safeValue(fields[i + 1]));
             }
         }
-        LogStore.append(context, line.toString());
+        return line.toString();
     }
 
     private static String safeValue(Object value) {

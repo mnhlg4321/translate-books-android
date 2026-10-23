@@ -261,7 +261,7 @@ public class TranslationEngine {
                     @Override public void onResponseHeaders(int code) { responseHeaders[0]=true; if (metricsRepository != null && jobId > 0) metricsRepository.markAttemptPhase(jobId,chunk.index,attemptNo,"translate","RESPONSE_HEADERS"); }
                 });
                 if (metricsRepository != null && jobId > 0) { metricsRepository.persistReceivedResponse(jobId, chunk.index, attempt,"translate", result); metricsRepository.markValidating(jobId,chunk.index,attempt,"translate"); }
-                ObservabilityLog.event("chunk_response","job",jobId,"stableId",chunk.stableId,"attempt",attempt,"responseHash",HashUtil.sha256(result.content),"finishReason",result.finishReason,"usageSource",result.usageReported?"PROVIDER":"ESTIMATED","inputTokens",result.promptTokens,"outputTokens",result.completionTokens,"reasoningTokens",result.reasoningTokens,"cachedTokens",result.cachedPromptTokens);
+                ObservabilityLog.event("chunk_response","job",jobId,"stableId",chunk.stableId,"attempt",attempt,"responseHash",HashUtil.sha256(result.content),"responseProvider",result.responseProvider,"finishReason",result.finishReason,"usageSource",result.usageReported?"PROVIDER":"ESTIMATED","inputTokens",result.promptTokens,"outputTokens",result.completionTokens,"reasoningTokens",result.reasoningTokens,"cachedTokens",result.cachedPromptTokens);
                 if (usageSink != null) usageSink.onUsage(result, attemptSettings);
                 String out = PromptBuilder.extractTranslationStrict(result.content);
                 ResponseValidator.Repaired repaired = ResponseValidator.repairQuoteStyle(out, chunk.mainContent);
