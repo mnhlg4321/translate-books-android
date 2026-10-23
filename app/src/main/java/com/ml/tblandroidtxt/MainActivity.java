@@ -1031,7 +1031,28 @@ public class MainActivity extends Activity {
         LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setBackgroundColor(BG);
         LinearLayout nav=new LinearLayout(this);nav.setOrientation(LinearLayout.HORIZONTAL);nav.setPadding(0,dp(4),0,dp(6));
         String[] pages=CHAPTER_SETS_ENABLED?new String[]{"RAW","Glossaries","Pronouns","ChapterSets"}:new String[]{"RAW","Glossaries","Pronouns"};
-        for(String page:pages){Button b=button("ChapterSets".equals(page)?"Tập":("Glossaries".equals(page)?"Glossary":("Pronouns".equals(page)?"Pronoun":"RAW")),selected.equals(page)?CARD:FIELD,selected.equals(page)?TEXT:MUTED,v->switchTab(page));b.setTextSize(12);b.setMinWidth(0);b.setMinimumWidth(0);tint(b,selected.equals(page)?CARD:FIELD,selected.equals(page)?BLUE:BORDER,1,9);nav.addView(b,new LinearLayout.LayoutParams(0,dp(48),1));}
+        HorizontalScrollView tabScroll=new HorizontalScrollView(this);
+        tabScroll.setHorizontalScrollBarEnabled(false);
+        tabScroll.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
+        boolean tabOverflow=LibraryTabLayoutModel.shouldUseHorizontalScroll(fontScale,getResources().getConfiguration().fontScale,getResources().getConfiguration().screenWidthDp);
+        tabScroll.setHorizontalFadingEdgeEnabled(tabOverflow);
+        if(tabOverflow)tabScroll.setFadingEdgeLength(dp(18));
+        LinearLayout tabRow=rowContainer();
+        for(String page:pages){
+            String label="ChapterSets".equals(page)?"Tập":("Glossaries".equals(page)?"Glossary":("Pronouns".equals(page)?"Pronoun":"RAW"));
+            Button b=button(label,selected.equals(page)?CARD:FIELD,selected.equals(page)?TEXT:MUTED,v->switchTab(page));
+            b.setSingleLine(true);
+            b.setEllipsize(null);
+            b.setPadding(dp(LibraryTabLayoutModel.TAB_HORIZONTAL_PADDING_DP),0,dp(LibraryTabLayoutModel.TAB_HORIZONTAL_PADDING_DP),0);
+            b.setMinWidth(dp(LibraryTabLayoutModel.TAB_MIN_WIDTH_DP));
+            b.setMinimumWidth(dp(LibraryTabLayoutModel.TAB_MIN_WIDTH_DP));
+            tint(b,selected.equals(page)?CARD:FIELD,selected.equals(page)?BLUE:BORDER,1,9);
+            LinearLayout.LayoutParams tabParams=new LinearLayout.LayoutParams(-2,dp(48));
+            tabParams.setMargins(0,0,dp(4),0);
+            tabRow.addView(b,tabParams);
+        }
+        tabScroll.addView(tabRow,new ViewGroup.LayoutParams(-2,dp(48)));
+        nav.addView(tabScroll,new LinearLayout.LayoutParams(0,dp(56),1));
         Button menu=secondaryButton("⋮",v->showLibraryMenu());menu.setContentDescription("Thao tác Thư viện");nav.addView(menu,new LinearLayout.LayoutParams(dp(48),dp(48)));
         root.addView(nav,new LinearLayout.LayoutParams(-1,dp(56)));
         View page="RAW".equals(selected)?new RawPageFactory(this).buildRawPage():"Glossaries".equals(selected)?buildGlossariesPage():"Pronouns".equals(selected)?buildPronounsPage():buildChapterSetsPage();
