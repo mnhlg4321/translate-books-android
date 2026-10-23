@@ -180,6 +180,8 @@ public final class ResponseValidator {
         /** Translated non-blank lines over RAW non-blank lines; -1 when not judged. */
         public double lineRatio = -1;
         public int outputTokens, maxOutputTokens;
+        /** True when a length cut was dominated by hidden reasoning tokens. */
+        public boolean reasoningBound;
         /** The bracket pair that failed, the translation's imbalance and the RAW's; empty/0 when none failed. */
         public String bracketKind = "";
         public int bracketDelta, rawBracketDelta;
@@ -196,7 +198,8 @@ public final class ResponseValidator {
     }
     public static final class RejectedResponseException extends Exception {
         public final Result validation;
-        public RejectedResponseException(Result result) { super(result.readable() + "Response validation failed: " + result.summary()); validation=result; }
+        public boolean reasoningBound;
+        public RejectedResponseException(Result result) { super(result.readable() + "Response validation failed: " + result.summary()); validation=result; reasoningBound=result.reasoningBound; }
     }
     private ResponseValidator() {}
 }

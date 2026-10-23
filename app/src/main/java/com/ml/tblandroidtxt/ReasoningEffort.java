@@ -35,4 +35,20 @@ final class ReasoningEffort {
         if (AUTO.equals(choice)) return looksLikeReasoningModel(s == null ? "" : s.model) ? LOW : "";
         return choice;
     }
+
+    static int reserveTokens(AppSettings s) {
+        String effort = forTranslation(s);
+        if (LOW.equals(effort)) return 1024;
+        if (MEDIUM.equals(effort)) return 2048;
+        if (HIGH.equals(effort)) return 8192;
+        return looksLikeReasoningModel(s == null ? "" : s.model) ? 2048 : 0;
+    }
+
+    static String lowerForRetry(String value) {
+        switch (normalize(value)) {
+            case HIGH: return MEDIUM;
+            case MEDIUM: return LOW;
+            default: return "";
+        }
+    }
 }

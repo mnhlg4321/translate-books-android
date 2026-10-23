@@ -252,7 +252,7 @@ public class MainActivity extends Activity {
     EditText providerField, baseUrlField, apiKeyField, modelField, sourceField, targetField, outputPatternField, chunkModeField, optimizationPresetField, reasoningEffortField;
     EditText maxTokensField, maxCharsField, softRatioField, timeoutField, attemptsField, tempField, maxOutputField, contextField, costLimitField, glossaryLimitField, pronounLimitField, initialRetryDelayField, maxRetryDelayField, costWarningField, maxRetryCostField, maxPaidRetriesField;
     EditText manualGlossarySource, manualGlossaryTarget, manualGlossaryCategory, glossaryNameField, glossarySourceField, glossaryTargetField;
-    CheckBox refineBox, bilingualBox, partialBox, costLimitBox, overlapBox, retryEmptyBox, retryTruncationBox, retryValidationBox, stopUnknownPricingBox;
+    CheckBox refineBox, bilingualBox, partialBox, costLimitBox, unlimitedCostBox, overlapBox, retryEmptyBox, retryTruncationBox, retryValidationBox, stopUnknownPricingBox;
 
     String currentTab = "Translate";
     String jobsSetFilterId = "";
@@ -2592,7 +2592,7 @@ public class MainActivity extends Activity {
         submitActivityWork(preflightExecutor, ()->{String readiness=startReadinessError(true);PromptContextBuilder.ParseReport locks=readiness==null?(sourceUi.isSetMode()?sourceUi.locksReport():PromptContextBuilder.validate(s.glossaryText,s.pronounText)):null;runOnUiThread(()->{if(generation!=preflightGeneration.get()||isFinishing()||isDestroyed())return;if(readiness!=null){appendLog("START_BLOCKED resource="+readiness);updateActionButtons();showResult("Start blocked",readiness);return;}validatedPlanId=readyPlan.id;validatedPlanAt=System.currentTimeMillis();appendLog("START_PREFLIGHT_OK preparedPlan="+readyPlan.id);showPreparedPreflight(s,locks);});});
     }
 
-    private void showPreparedPreflight(AppSettings s,PromptContextBuilder.ParseReport locks){CostEstimator.Estimate e=estimateCurrentBatch(s);boolean warning=e==null||!e.pricingAvailable||(locks!=null&&(!locks.conflicts.isEmpty()||!locks.malformedGlossaryRows.isEmpty()||!locks.malformedPronounRows.isEmpty()))||(e!=null&&s.stopOnCostLimit&&s.costLimitUsd>0&&e.noCacheCostHigh>s.costLimitUsd);StringBuilder message=new StringBuilder(TranslationDashboardFormatter.prepared(e,preparedBatch.exactChunkCount()));if(warning)message.append("\n\nSome optional pricing or configuration checks have warnings. Translation can still start when blocking checks pass.");new AlertDialog.Builder(this).setTitle("Ready to translate").setMessage(message.toString()).setPositiveButton("Start",(d,w)->startTranslationNow()).setNegativeButton("Cancel",(d,w)->updateActionButtons()).setOnCancelListener(d->updateActionButtons()).show();}
+    private void showPreparedPreflight(AppSettings s,PromptContextBuilder.ParseReport locks){CostEstimator.Estimate e=estimateCurrentBatch(s);double cap=effectiveCostCap(s,e);boolean warning=e==null||!e.pricingAvailable||(locks!=null&&(!locks.conflicts.isEmpty()||!locks.malformedGlossaryRows.isEmpty()||!locks.malformedPronounRows.isEmpty()))||(e!=null&&s.stopOnCostLimit&&s.costLimitUsd>0&&e.noCacheCostHigh>s.costLimitUsd);StringBuilder message=new StringBuilder(TranslationDashboardFormatter.prepared(e,preparedBatch.exactChunkCount())).append("\n\nTrần chi phí hiệu lực lượt này: ").append(cap<0?"Không giới hạn":CostEstimator.money(cap));if(warning)message.append("\n\nSome optional pricing or configuration checks have warnings. Translation can still start when blocking checks pass.");new AlertDialog.Builder(this).setTitle("Ready to translate").setMessage(message.toString()).setPositiveButton("Start",(d,w)->startTranslationNow()).setNegativeButton("Cancel",(d,w)->updateActionButtons()).setOnCancelListener(d->updateActionButtons()).show();}
 
     private boolean showReliabilityPreflight(AppSettings s) {
         boolean batch=inputUris.size()>1;
@@ -2605,11 +2605,12 @@ public class MainActivity extends Activity {
         PromptContextBuilder.ParseReport locks=sourceUi.isSetMode()?sourceUi.locksReport():PromptContextBuilder.validate(s.glossaryText,s.pronounText);
         if(!locks.conflicts.isEmpty()||!locks.malformedGlossaryRows.isEmpty()||!locks.malformedPronounRows.isEmpty()){pre.append("• Glossary/pronoun validation warnings\n");warning=true;}
         if(!warning)pre.append("None\n");
+        double effectiveCap=effectiveCostCap(s,e);
         pre.append("\nINFORMATION\nProvider/model: ").append(s.provider).append(" / ").append(s.model)
                 .append("\nTokens: ").append(e==null?"not calculated":CostEstimator.tokenRange(e.totalTokensLow,e.totalTokensHigh))
                 .append("\nEstimated normal cost: ").append(e==null||!e.pricingAvailable?"Pricing unavailable":CostEstimator.money(e.costLow)+"–"+CostEstimator.money(e.costHigh))
                 .append("\nWorst case with retries: ").append(e==null||!e.pricingAvailable?"Pricing unavailable":CostEstimator.money(e.noCacheCostHigh*Math.max(1,s.maxAttempts)))
-                .append("\nHard budget (cap for the whole run, all chapters together): ").append(s.stopOnCostLimit?CostEstimator.money(s.costLimitUsd):"disabled")
+                .append("\nHard budget (cap for the whole run, all chapters together): ").append(effectiveCap<0?"unlimited":CostEstimator.money(effectiveCap))
                 .append("\nOutput: writable and permission retained");
         final boolean hasWarnings=warning;
         new AlertDialog.Builder(this).setTitle("Translation pre-flight").setMessage(pre.toString()).setPositiveButton(hasWarnings?"Proceed with warnings":"Start",(d,w)->startTranslationNow()).setNegativeButton("Cancel",null).show();
@@ -2678,6 +2679,7 @@ public class MainActivity extends Activity {
         CostEstimator.Estimate expected = readyPlan.estimate;
         i.putExtra(TranslatorService.EXTRA_ESTIMATED_TOTAL_TOKENS, expected == null ? 0 : Math.max(0, expected.totalTokensHigh));
         i.putExtra(TranslatorService.EXTRA_ESTIMATED_TOTAL_COST, expected != null && expected.pricingAvailable && !Double.isNaN(expected.costHigh) ? Math.max(0, expected.costHigh) : 0d);
+        i.putExtra(TranslatorService.EXTRA_EFFECTIVE_COST_LIMIT_USD, effectiveCostCap(s, expected));
         try { startForegroundService(i); }
         catch(RuntimeException e){translationActive=false;updateActionButtons();String message="Cannot start translation service: "+AppValidator.readableError(e);appendLog(message);showResult("Translation could not start",message);toast("Translation was not started");return;}
         showPendingStartMetrics(readyPlan);
@@ -2914,11 +2916,24 @@ public class MainActivity extends Activity {
     void saveSettingsFromUi() {
         AppSettings saved = AppValidator.normalize(collectSettings());
         SettingsStore.save(this, saved);
+        if (unlimitedCostBox != null) getSharedPreferences("runtime-cost-policy", MODE_PRIVATE).edit().putBoolean("unlimited", unlimitedCostBox.isChecked()).apply();
         toast(saved.apiKey == null || saved.apiKey.trim().isEmpty() ? "Đã lưu settings" : "Đã lưu settings + API key");
         appendLog("Đã lưu settings" + ((saved.apiKey == null || saved.apiKey.trim().isEmpty()) ? "" : " + API key"));
         if (activeGlossaryLabel != null) activeGlossaryLabel.setText(activeGlossaryText());
         updateMetaLine();
         updateInputEstimate();
+    }
+
+    private boolean unlimitedCostSelected() {
+        return unlimitedCostBox != null
+                ? unlimitedCostBox.isChecked()
+                : getSharedPreferences("runtime-cost-policy", MODE_PRIVATE).getBoolean("unlimited", false);
+    }
+
+    private double effectiveCostCap(AppSettings settings, CostEstimator.Estimate estimate) {
+        double expected = estimate != null && estimate.pricingAvailable && !Double.isNaN(estimate.costHigh)
+                ? Math.max(0, estimate.costHigh) : 0;
+        return CostLimitPolicy.effectiveCapUsd(settings, expected, unlimitedCostSelected());
     }
 
     AppSettings collectSettings() { android.os.Trace.beginSection("tbl.collectSettings"); try { return collectSettingsImpl(); } finally { android.os.Trace.endSection(); } }
@@ -3015,6 +3030,7 @@ public class MainActivity extends Activity {
             if (bilingualBox != null) bilingualBox.setChecked(s.bilingualOutput);
             if (partialBox != null) partialBox.setChecked(s.savePartialOutput);
             if (costLimitBox != null) costLimitBox.setChecked(s.stopOnCostLimit);
+            if (unlimitedCostBox != null) unlimitedCostBox.setChecked(getSharedPreferences("runtime-cost-policy", MODE_PRIVATE).getBoolean("unlimited", false));
             if(overlapBox!=null)overlapBox.setChecked(s.contextOverlapEnabled);if(retryEmptyBox!=null)retryEmptyBox.setChecked(s.retryOnEmpty);if(retryTruncationBox!=null)retryTruncationBox.setChecked(s.retryOnTruncation);if(retryValidationBox!=null)retryValidationBox.setChecked(s.retryOnValidationFailure);if(stopUnknownPricingBox!=null)stopUnknownPricingBox.setChecked(s.stopWhenPricingUnknown);
             if (s.instructionUri != null && !s.instructionUri.isEmpty()) yamlUri = Uri.parse(s.instructionUri);
             if (s.envUri != null && !s.envUri.isEmpty()) envUri = Uri.parse(s.envUri);

@@ -11,7 +11,9 @@ import android.os.IBinder;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -66,6 +68,8 @@ public class TranslatorService extends Service {
     public static final String EXTRA_SESSION_TOKENS = "sessionTokens";
     public static final String EXTRA_SESSION_COST = "sessionCost";
     public static final String EXTRA_SESSION_START_MS = "sessionStartMs";
+    /** Positive value is the cap for this run; -1 is the explicit unlimited toggle. */
+    public static final String EXTRA_EFFECTIVE_COST_LIMIT_USD = "effectiveCostLimitUsd";
     /** Chapter-set runs only: chapters in the run, finished, failed, and the 1-based chapter being worked on (all 0 otherwise). */
     public static final String EXTRA_SET_TOTAL = "setTotal";
     public static final String EXTRA_SET_DONE = "setDone";
@@ -86,6 +90,8 @@ public class TranslatorService extends Service {
     /** Chapter-set runs only: what happened to each chapter so far; null otherwise. */
     private volatile ChapterRunOutcome chapterOutcome;
     private final RunCostMeter runCost = new RunCostMeter();
+    private final RootChunkAttemptBudget rootAttemptBudget = new RootChunkAttemptBudget(6);
+    private final Map<String, String> rootByChunk = new HashMap<>();
     private volatile long sessionStartMs;
     private volatile int setIndex;
 
@@ -299,9 +305,11 @@ public class TranslatorService extends Service {
             s = engine.loadExternalConfig(intent, s);
             if (s.glossaryText == null || s.glossaryText.trim().isEmpty()) s.glossaryText = GlossaryStore.selectedPromptText(this);
             s = AppValidator.normalize(s);
+            AppSettings ownerSettings = s.copy();
+            s = applyEffectiveCostLimit(s, intent);
             String validation = AppValidator.validateForTranslation(s);
             if (validation != null) throw new IllegalArgumentException(validation);
-            SettingsStore.save(this, s);
+            SettingsStore.save(this, ownerSettings);
 
             setState(TranslationJobState.State.READY, "Ready");
             broadcast("ready", 0, "Input, configuration and output access are valid");
@@ -360,6 +368,8 @@ public class TranslatorService extends Service {
         if(startSessionId==null||startSessionId.trim().isEmpty())throw new IllegalArgumentException("Fresh Start is missing its session identity");
         String supplied=intent.getStringExtra("settings");
         AppSettings s=AppValidator.normalize(supplied==null||supplied.trim().isEmpty()?SettingsStore.withCurrentSecrets(this,SettingsStore.fromJson(batch.settingsJson)):SettingsStore.withCurrentSecrets(this,SettingsStore.fromJson(supplied)));
+        AppSettings ownerSettings = s.copy();
+        s = applyEffectiveCostLimit(s, intent);
         String validation=AppValidator.validateForTranslation(s);if(validation!=null)throw new IllegalArgumentException(validation);
         String outputUriStr=intent.getStringExtra("outputUri"),treeStr=intent.getStringExtra("outputTreeUri");
         Uri fixed=outputUriStr==null||outputUriStr.isEmpty()?null:Uri.parse(outputUriStr);Uri tree=treeStr==null||treeStr.isEmpty()?null:Uri.parse(treeStr);
@@ -377,7 +387,7 @@ public class TranslatorService extends Service {
             chapterOutcome=new ChapterRunOutcome(batch.inputs.size());
         }
         // The shared settings (and the Active Glossary/Pronoun) are saved once and never replaced by a chapter's own copy.
-        SettingsStore.save(this,s);setState(TranslationJobState.State.READY,"Ready");broadcast("ready",0,"Validated prepared plan "+batch.id+" with "+batch.exactChunkCount()+" chunks");setState(TranslationJobState.State.RUNNING,"Running");
+        SettingsStore.save(this,ownerSettings);setState(TranslationJobState.State.READY,"Ready");broadcast("ready",0,"Validated prepared plan "+batch.id+" with "+batch.exactChunkCount()+" chunks");setState(TranslationJobState.State.RUNNING,"Running");
         final java.util.Map<Integer,Long> resumeJobs=parseResumeJobs(intent.getStringExtra("resumeJobs"));
         if(session!=null&&!resumeJobs.isEmpty()){
             // The Jobs tab groups a run's chapters from this snapshot: remember which earlier jobs this run continues.
@@ -440,7 +450,7 @@ public class TranslatorService extends Service {
     private void continueExistingJob(long jobId,int fileNo,int fileTotal,String label)throws Exception{
         TranslationRepository.Job job=repo.getJob(jobId);
         if(job==null)throw new IllegalStateException("Không thấy job #"+jobId+" để tiếp tục");
-        AppSettings s=AppValidator.normalize(SettingsStore.withCurrentSecrets(this,SettingsStore.fromJson(job.settingsJson)));
+        AppSettings s=applyEffectiveCostLimit(AppValidator.normalize(SettingsStore.withCurrentSecrets(this,SettingsStore.fromJson(job.settingsJson))),null);
         String validation=AppValidator.validateForTranslation(s);if(validation!=null)throw new IllegalArgumentException(validation);
         activeJobId=job.id;
         String expectedInputHash=repo.getInputHash(job.id);
@@ -491,6 +501,8 @@ public class TranslatorService extends Service {
         metricLockPhase = "";
         metricLastProgress = -1;
         metricLastLog = "";
+        rootAttemptBudget.reset();
+        rootByChunk.clear();
     }
 
     private void setExpectedMetrics(CostEstimator.Estimate estimate) {
@@ -547,7 +559,7 @@ public class TranslatorService extends Service {
                 stopSelf();
                 return;
             }
-            AppSettings s = AppValidator.normalize(SettingsStore.withCurrentSecrets(this,SettingsStore.fromJson(job.settingsJson)));
+            AppSettings s = applyEffectiveCostLimit(AppValidator.normalize(SettingsStore.withCurrentSecrets(this,SettingsStore.fromJson(job.settingsJson))),null);
             String validation = AppValidator.validateForTranslation(s);
             if (validation != null) throw new IllegalArgumentException(validation);
             activeJobId = job.id;
@@ -635,7 +647,7 @@ public class TranslatorService extends Service {
                 stopSelf();
                 return;
             }
-            AppSettings s = AppValidator.normalize(SettingsStore.withCurrentSecrets(this,SettingsStore.fromJson(job.settingsJson)));
+            AppSettings s = applyEffectiveCostLimit(AppValidator.normalize(SettingsStore.withCurrentSecrets(this,SettingsStore.fromJson(job.settingsJson))),null);
             String validation = AppValidator.validateForTranslation(s);
             if (validation != null) throw new IllegalArgumentException(validation);
             activeJobId = job.id;
@@ -803,7 +815,17 @@ public class TranslatorService extends Service {
                 broadcast("running", global, "Chunk " + (i + 1) + " hoàn tất");
             } catch (Exception e) {
                 if (cancelled) return;
-                boolean cut=TranslationEngine.isTruncation(e);
+                boolean reasoningBound=TranslationEngine.isReasoningBound(e);
+                boolean rootAttemptLimit=TranslationEngine.isRootAttemptLimit(e);
+                boolean cut=TranslationEngine.shouldSplitAfterFailure(e);
+                if (reasoningBound || rootAttemptLimit) {
+                    repo.markChunkError(jobId, i, AppValidator.readableError(e));
+                    metricFailed++;
+                    String reason=reasoningBound
+                            ? "Reasoning đã dùng hết giới hạn; chunk " + (i + 1) + " dừng ở cấp chương, không chia nhỏ"
+                            : "Chunk gốc đã vượt 6 lượt gọi; dừng ở cấp chương, không chia nhỏ";
+                    throw new ChapterLocalException(reason, e);
+                }
                 if(cut||RetryPolicy.classify(e)==RetryPolicy.Kind.CONTEXT_LENGTH){
                     // A cut answer would be cut again if sent as it is: split the chunk instead (an answer too long for the context is split the same way).
                     List<Chunk> children=Chunker.splitForContextOverflow(chunk,s);
@@ -862,6 +884,16 @@ public class TranslatorService extends Service {
                 LogStore.append(TranslatorService.this, message);
             }
 
+            @Override public int beforeRequest(Chunk chunk, int attempt) throws Exception {
+                String root = rootStableKey(activeJobId, chunk);
+                int ordinal = rootAttemptBudget.claim(root);
+                if (ordinal < 0) {
+                    throw new TranslationEngine.RootAttemptLimitException("Root chunk attempt limit reached: 6");
+                }
+                LogStore.append(TranslatorService.this, "rootAttemptOrdinal=" + ordinal + " attempt=" + attempt + " chunk=" + (chunk == null ? -1 : chunk.index));
+                return ordinal;
+            }
+
             @Override public void onLockUsage(String phase, int oneBasedChunk, int glossaryCount, int pronounCount) {
                 metricGlossaryLocks = Math.max(0, glossaryCount);
                 metricPronounLocks = Math.max(0, pronounCount);
@@ -870,6 +902,18 @@ public class TranslatorService extends Service {
                 broadcast("running", metricLastProgress, null);
             }
         };
+    }
+
+    private String rootStableKey(long jobId, Chunk chunk) {
+        String stable = chunk == null || chunk.stableId == null ? "" : chunk.stableId;
+        String key = jobId + ":" + stable;
+        String known = rootByChunk.get(key);
+        if (known != null) return known;
+        String parent = chunk == null || chunk.parentStableId == null ? "" : chunk.parentStableId;
+        String root = parent.isEmpty() ? stable : rootByChunk.get(jobId + ":" + parent);
+        if (root == null || root.isEmpty()) root = parent.isEmpty() ? stable : parent;
+        rootByChunk.put(key, root);
+        return jobId + ":" + root;
     }
 
     private void addUsage(OpenAICompatibleClient.ChatResult r, AppSettings s) {
@@ -944,6 +988,20 @@ public class TranslatorService extends Service {
         DebugTraceStore.error(this, step, Math.max(0, metricCurrentChunk), error);
     }
 
+
+    private AppSettings applyEffectiveCostLimit(AppSettings settings, Intent intent) {
+        AppSettings s = settings == null ? new AppSettings() : settings;
+        double cap = intent == null ? Double.NaN : intent.getDoubleExtra(EXTRA_EFFECTIVE_COST_LIMIT_USD, Double.NaN);
+        if (!Double.isNaN(cap)) {
+            if (cap < 0) { s.stopOnCostLimit = false; s.costLimitUsd = 0; }
+            else { s.stopOnCostLimit = true; s.costLimitUsd = cap; }
+        } else if (!(s.stopOnCostLimit && s.costLimitUsd > 0)) {
+            // Resume/retry actions do not have a fresh preflight estimate, so retain the minimum safe default.
+            s.stopOnCostLimit = true;
+            s.costLimitUsd = CostLimitPolicy.MIN_SAFE_CAP_USD;
+        }
+        return s;
+    }
 
     private void enforceCostLimit(AppSettings s) {
         if (s != null && s.stopOnCostLimit && s.costLimitUsd > 0 && runCost.limitReached(true, s.costLimitUsd)) {

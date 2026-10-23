@@ -1,5 +1,9 @@
 package com.ml.tblandroidtxt;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /** Exact, inspectable prompt breakdown used by requests, estimates and telemetry. */
 public final class PromptPlan {
     public final PromptPair prompt;
@@ -15,16 +19,27 @@ public final class PromptPlan {
     public final int rawTokens, systemTokens, instructionTokens, glossaryTokens;
     public final int pronounTokens, historyTokens, contextTokens, totalInputTokens;
     public final int glossaryLockCount, pronounLockCount;
+    /** Target strings selected for glossary locks; used only for retained-source QA. */
+    public final List<String> glossaryTargets;
 
     private PromptPlan(String phase, String source, String systemBase, String instruction,
                        String glossary, String pronoun, String history, String surroundingContext,
                        String outputContract, PromptPair prompt, int glossaryLockCount, int pronounLockCount) {
+        this(phase, source, systemBase, instruction, glossary, pronoun, history, surroundingContext,
+                outputContract, prompt, glossaryLockCount, pronounLockCount, Collections.emptyList());
+    }
+
+    private PromptPlan(String phase, String source, String systemBase, String instruction,
+                       String glossary, String pronoun, String history, String surroundingContext,
+                       String outputContract, PromptPair prompt, int glossaryLockCount, int pronounLockCount,
+                       List<String> glossaryTargets) {
         this.phase = phase; this.source = safe(source); this.systemBase = safe(systemBase);
         this.instruction = safe(instruction); this.glossary = safe(glossary); this.pronoun = safe(pronoun);
         this.history = safe(history); this.surroundingContext = safe(surroundingContext);
         this.outputContract = safe(outputContract); this.prompt = prompt;
         this.glossaryLockCount = Math.max(0, glossaryLockCount);
         this.pronounLockCount = Math.max(0, pronounLockCount);
+        this.glossaryTargets = Collections.unmodifiableList(new ArrayList<>(glossaryTargets == null ? Collections.emptyList() : glossaryTargets));
         rawTokens = tokens(this.source); systemTokens = tokens(this.systemBase) + tokens(this.outputContract);
         instructionTokens = tokens(this.instruction); glossaryTokens = tokens(this.glossary);
         pronounTokens = tokens(this.pronoun); historyTokens = tokens(this.history);
@@ -58,7 +73,8 @@ public final class PromptPlan {
         user.append("# SOURCE\n<INPUT>\n").append(chunk.mainContent).append("\n</INPUT>\n\n<TRANSLATION>\n");
         PromptPair pair = new PromptPair(system.toString().trim(), user.toString().trim());
         return new PromptPlan("translate", chunk.mainContent, base, instruction, locks.glossary,
-                locks.pronouns, history, surrounding, contract, pair, locks.glossaryCount, locks.pronounCount);
+                locks.pronouns, history, surrounding, contract, pair, locks.glossaryCount, locks.pronounCount,
+                locks.glossaryTargets);
     }
 
     public static PromptPlan forTranslation(Chunk chunk, String previous, AppSettings s) {
@@ -70,7 +86,7 @@ public final class PromptPlan {
                     chunk.paragraphStart, chunk.paragraphEnd, s);
             return new PromptPlan("translate", chunk.mainContent, legacy.system, s.translationInstructions,
                     locks.glossary, locks.pronouns, safe(previous), safe(chunk.contextBefore) + safe(chunk.contextAfter), "",
-                    legacy, locks.glossaryCount, locks.pronounCount);
+                    legacy, locks.glossaryCount, locks.pronounCount, locks.glossaryTargets);
         }
         return translation(chunk, previous, s);
     }
@@ -148,6 +164,18 @@ public final class PromptPlan {
         double ratio = preset.contains("quality") ? 1.8 : preset.contains("economy") ? 1.4 : 1.6;
         int reserve = Math.max(256, (int)Math.ceil(rawTokens * ratio) + 96);
         return Math.min(configured, reserve);
+    }
+
+    /** Visible answer budget; this preserves the pre-F1 full-preset behaviour. */
+    public int visibleMaxOutputTokens(AppSettings s) {
+        if (s != null && "full".equalsIgnoreCase(s.optimizationPreset)) return Math.max(128, s.maxOutputTokens);
+        return adaptiveMaxOutputTokens(s);
+    }
+
+    /** Request cap includes reasoning headroom, while the visible cap remains owner-controlled. */
+    public int requestMaxOutputTokens(AppSettings s) {
+        long cap = (long) visibleMaxOutputTokens(s) + ReasoningEffort.reserveTokens(s);
+        return cap >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) Math.max(128, cap);
     }
 
     private static String trimContext(String value, AppSettings s, boolean history) {

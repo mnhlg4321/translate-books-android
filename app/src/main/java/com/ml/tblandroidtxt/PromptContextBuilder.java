@@ -23,6 +23,7 @@ public class PromptContextBuilder {
         public String pronouns = "";
         public int glossaryCount = 0;
         public int pronounCount = 0;
+        public ArrayList<String> glossaryTargets = new ArrayList<>();
         public String asPromptText() {
             StringBuilder sb = new StringBuilder();
             if (!glossary.trim().isEmpty()) sb.append("# GLOSSARY - LOCK TERMS\n\n").append(glossary.trim()).append("\n\n");
@@ -205,6 +206,7 @@ public class PromptContextBuilder {
             String line = formatTermLine(t);
             g.append(line).append('\n');
             report.matchedGlossaryLines.add(line);
+            report.block.glossaryTargets.add(t.target);
             gc++;
         }
 

@@ -21,11 +21,15 @@ public class TranslationEngine {
     public static class DeliveryUnknownException extends Exception {
         public DeliveryUnknownException(String message, Throwable cause) { super(message, cause); }
     }
+    public static class RootAttemptLimitException extends Exception {
+        public RootAttemptLimitException(String message) { super(message); }
+    }
     public interface CancelChecker { boolean isCancelled(); }
     public interface UsageSink { void onUsage(OpenAICompatibleClient.ChatResult result, AppSettings settings); }
     public interface EventSink {
         void onEvent(String message);
         default void onLockUsage(String phase, int oneBasedChunk, int glossaryCount, int pronounCount) {}
+        default int beforeRequest(Chunk chunk, int attempt) throws Exception { return attempt; }
     }
     public interface ProviderClient { OpenAICompatibleClient.ChatResult chat(AppSettings settings,PromptPair prompt,int outputLimit,String logicalRequestId,OpenAICompatibleClient.NetworkObserver observer) throws Exception; }
 
@@ -66,6 +70,13 @@ public class TranslationEngine {
         this.providerClient=providerClient==null?TranslationEngine::chatForTranslation:providerClient;
     }
 
+    /** JVM-test seam for provider-behaviour tests; it never creates a network client or touches Android files. */
+    TranslationEngine(ProviderClient providerClient) {
+        this.appContext = null;
+        this.metricsRepository = null;
+        this.providerClient = providerClient == null ? TranslationEngine::chatForTranslation : providerClient;
+    }
+
     /** Cost spent so far by the whole run (all chapters); a retry never starts when this already reached the cost limit. */
     private volatile java.util.function.DoubleSupplier sessionCost;
 
@@ -90,6 +101,46 @@ public class TranslationEngine {
             if (t instanceof ResponseValidator.RejectedResponseException) return ((ResponseValidator.RejectedResponseException) t).validation.truncated;
         }
         return false;
+    }
+
+    static boolean isReasoningBound(OpenAICompatibleClient.ChatResult result, String visibleAnswer) {
+        if (result == null || ResponseValidator.parseFinish(result.finishReason) != ResponseValidator.Finish.LENGTH) return false;
+        if (result.reasoningTokens > 0 && result.completionTokens > 0) {
+            return result.reasoningTokens >= result.completionTokens * 0.9;
+        }
+        return visibleAnswer == null || visibleAnswer.trim().length() < 32;
+    }
+
+    public static boolean isReasoningBound(Throwable e) {
+        for (Throwable t = e; t != null; t = t.getCause() == t ? null : t.getCause()) {
+            if (t instanceof ResponseValidator.RejectedResponseException) {
+                ResponseValidator.RejectedResponseException rejected = (ResponseValidator.RejectedResponseException) t;
+                return rejected.reasoningBound || rejected.validation.reasoningBound;
+            }
+        }
+        return false;
+    }
+
+    private static void markReasoningBound(Throwable e) {
+        for (Throwable t = e; t != null; t = t.getCause() == t ? null : t.getCause()) {
+            if (t instanceof ResponseValidator.RejectedResponseException) {
+                ResponseValidator.RejectedResponseException rejected = (ResponseValidator.RejectedResponseException) t;
+                rejected.reasoningBound = true;
+                rejected.validation.reasoningBound = true;
+                return;
+            }
+        }
+    }
+
+    public static boolean isRootAttemptLimit(Throwable e) {
+        for (Throwable t = e; t != null; t = t.getCause() == t ? null : t.getCause()) {
+            if (t instanceof RootAttemptLimitException) return true;
+        }
+        return false;
+    }
+
+    static boolean shouldSplitAfterFailure(Throwable e) {
+        return isTruncation(e) && !isReasoningBound(e) && !isRootAttemptLimit(e);
     }
 
     public ArrayList<Uri> readInputUris(Intent intent) throws Exception {
@@ -173,20 +224,24 @@ public class TranslationEngine {
         AppSettings s = AppValidator.normalize(settings);
         Exception last = null;
         int boostedLimit = 0;
+        AppSettings attemptSettings = s;
+        boolean reasoningRetryUsed = false;
         for (int attempt = 1; attempt <= Math.max(1, s.maxAttempts); attempt++) {
             throwIfCancelled(cancelChecker);
-            if(attempt>1&&metricsRepository!=null&&jobId>0&&s.stopOnCostLimit&&s.costLimitUsd>0&&Math.max(metricsRepository.getMetricsSummary(jobId).totalCost,sessionCost==null?0:sessionCost.getAsDouble())>=s.costLimitUsd)throw new IllegalStateException("Cost budget reached; valid received response retained, retry paused");
-            AppSettings attemptSettings = s;
+            if(metricsRepository!=null&&jobId>0&&attemptSettings.stopOnCostLimit&&attemptSettings.costLimitUsd>0&&Math.max(metricsRepository.getMetricsSummary(jobId).totalCost,sessionCost==null?0:sessionCost.getAsDouble())>=attemptSettings.costLimitUsd)throw new IllegalStateException("Cost budget reached; valid received response retained, retry paused");
             PromptPlan plan = PromptPlan.forTranslation(chunk, previous, attemptSettings);
             AppSettings baselineSettings = s.copy(); baselineSettings.optimizationPreset = "full";
             PromptPlan baselinePlan = PromptPlan.forTranslation(chunk, previous, baselineSettings);
             String logicalRequestId = jobId + ":" + chunk.index + ":translate";
-            int outputLimit = boostedLimit > 0 ? boostedLimit : "full".equalsIgnoreCase(attemptSettings.optimizationPreset) ? attemptSettings.maxOutputTokens : plan.adaptiveMaxOutputTokens(attemptSettings);
+            int visibleLimit = plan.visibleMaxOutputTokens(attemptSettings);
+            int requestCap = plan.requestMaxOutputTokens(attemptSettings);
+            int outputLimit = boostedLimit > 0 ? boostedLimit : requestCap;
             long started = System.currentTimeMillis();
             OpenAICompatibleClient.ChatResult result = null;
             final boolean[] bodySent = {false};
             final boolean[] responseHeaders = {false};
             final int attemptNo=attempt;
+            int rootAttemptOrdinal = attempt;
             try {
                 if (attempt == 1 && eventSink != null) {
                     eventSink.onLockUsage("Translating", chunk.index + 1,
@@ -196,8 +251,9 @@ public class TranslationEngine {
                 }
                 PromptPair prompt = plan.prompt;
                 String requestHash = HashUtil.sha256(prompt.system + "\n" + prompt.user + "\n" + attemptSettings.provider + "\n" + attemptSettings.model + (boostedLimit > 0 ? "\nlimit=" + boostedLimit : ""));
+                if (eventSink != null) rootAttemptOrdinal = eventSink.beforeRequest(chunk, attempt);
                 if (metricsRepository != null && jobId > 0) metricsRepository.beginChunkAttempt(jobId, chunk, attempt, "translate", requestHash, logicalRequestId + ":" + attempt, attemptSettings);
-                ObservabilityLog.event("chunk_request","job",jobId,"stableId",chunk.stableId,"index",chunk.index,"attempt",attempt,"requestHash",requestHash,"provider",attemptSettings.provider,"model",attemptSettings.model);
+                ObservabilityLog.event("chunk_request","job",jobId,"stableId",chunk.stableId,"index",chunk.index,"attempt",attempt,"requestHash",requestHash,"provider",attemptSettings.provider,"model",attemptSettings.model,"visibleTokens",visibleLimit,"requestCap",requestCap);
                 DebugTraceStore.request(appContext, "translation attempt " + attempt, chunk.index + 1, prompt, attemptSettings);
                 result = providerClient.chat(attemptSettings, prompt, outputLimit, logicalRequestId + ":" + attempt, new OpenAICompatibleClient.NetworkObserver() {
                     @Override public void onRequestBodyStarted() { if (metricsRepository != null && jobId > 0) metricsRepository.markAttemptPhase(jobId,chunk.index,attemptNo,"translate","SEND_STARTED"); }
@@ -205,13 +261,14 @@ public class TranslationEngine {
                     @Override public void onResponseHeaders(int code) { responseHeaders[0]=true; if (metricsRepository != null && jobId > 0) metricsRepository.markAttemptPhase(jobId,chunk.index,attemptNo,"translate","RESPONSE_HEADERS"); }
                 });
                 if (metricsRepository != null && jobId > 0) { metricsRepository.persistReceivedResponse(jobId, chunk.index, attempt,"translate", result); metricsRepository.markValidating(jobId,chunk.index,attempt,"translate"); }
-                ObservabilityLog.event("chunk_response","job",jobId,"stableId",chunk.stableId,"attempt",attempt,"responseHash",HashUtil.sha256(result.content),"finishReason",result.finishReason,"usageSource",result.usageReported?"PROVIDER":"ESTIMATED","inputTokens",result.promptTokens,"outputTokens",result.completionTokens,"cachedTokens",result.cachedPromptTokens);
+                ObservabilityLog.event("chunk_response","job",jobId,"stableId",chunk.stableId,"attempt",attempt,"responseHash",HashUtil.sha256(result.content),"finishReason",result.finishReason,"usageSource",result.usageReported?"PROVIDER":"ESTIMATED","inputTokens",result.promptTokens,"outputTokens",result.completionTokens,"reasoningTokens",result.reasoningTokens,"cachedTokens",result.cachedPromptTokens);
                 if (usageSink != null) usageSink.onUsage(result, attemptSettings);
                 String out = PromptBuilder.extractTranslationStrict(result.content);
                 ResponseValidator.Repaired repaired = ResponseValidator.repairQuoteStyle(out, chunk.mainContent);
                 out = repaired.text;
                 ResponseValidator.Result validation = ResponseValidator.validate(result.content, out, chunk.mainContent,
                         prompt.system + "\n" + prompt.user, result.finishReason, result.completionTokens, outputLimit, false);
+                validation.reasoningBound = isReasoningBound(result, out);
                 if (!validation.accepted) throw new ResponseValidator.RejectedResponseException(validation);
                 if (repaired.changed) {
                     quoteRepaired = true;
@@ -242,13 +299,30 @@ public class TranslationEngine {
                     // Counts only, never text.
                     ObservabilityLog.event("chunk_attempt_failed","job",jobId,"stableId",chunk.stableId,"attempt",attempt,"kind",kind.name(),"errorClass",e.getClass().getSimpleName(),
                             "errors",v.summary(),"truncated",v.truncated,"finish",v.finish.name(),"outputTokens",v.outputTokens,"outputLimit",outputLimit,
+                            "reasoningBound",v.reasoningBound,"reasoningTokens",result==null?0:result.reasoningTokens,"rootAttemptOrdinal",rootAttemptOrdinal,
                             "bracket",v.bracketKind,"bracketDelta",v.bracketDelta,"rawBracketDelta",v.rawBracketDelta,"lineRatio",v.lineRatio);
                 } else {
-                    ObservabilityLog.event("chunk_attempt_failed","job",jobId,"stableId",chunk.stableId,"attempt",attempt,"kind",kind.name(),"errorClass",e.getClass().getSimpleName());
+                    ObservabilityLog.event("chunk_attempt_failed","job",jobId,"stableId",chunk.stableId,"attempt",attempt,"kind",kind.name(),"errorClass",e.getClass().getSimpleName(),"reasoningTokens",result==null?0:result.reasoningTokens,"rootAttemptOrdinal",rootAttemptOrdinal);
                 }
                 recordMetric(jobId, chunk.index, attempt, plan, baselinePlan, logicalRequestId, attemptSettings, outputLimit, started, result, "failed", kind.name());
                 DebugTraceStore.error(appContext, "translation attempt " + attempt, chunk.index + 1, e);
                 if (eventSink != null) eventSink.onEvent("Chunk " + (chunk.index + 1) + " l\u1ed7i l\u1ea7n " + attempt + ": " + AppValidator.readableError(e));
+                boolean reasoningBound = isReasoningBound(e);
+                if (reasoningBound || (reasoningRetryUsed && isTruncation(e))) {
+                    if (reasoningRetryUsed && isTruncation(e)) markReasoningBound(e);
+                    if (!reasoningRetryUsed) {
+                        String lower = ReasoningEffort.lowerForRetry(s.reasoningEffort);
+                        if (!lower.isEmpty() && attempt < Math.max(1, s.maxAttempts)) {
+                            reasoningRetryUsed = true;
+                            attemptSettings = s.copy();
+                            attemptSettings.reasoningEffort = lower;
+                            boostedLimit = 0;
+                            if (eventSink != null) eventSink.onEvent("Reasoning retry chunk=" + (chunk.index + 1) + " attempt=" + (attempt + 1) + " effort=" + lower + " reasoningTokens=" + (result == null ? 0 : result.reasoningTokens));
+                            continue;
+                        }
+                    }
+                    break;
+                }
                 if (isTruncation(e)) {
                     if (outputLimit >= TRUNCATION_RETRY_CAP) {
                         if (eventSink != null) eventSink.onEvent("Chunk " + (chunk.index + 1) + " b\u1ecb c\u1eaft \u1edf gi\u1edbi h\u1ea1n t\u1ed1i \u0111a " + outputLimit + "; kh\u00f4ng g\u1eedi l\u1ea1i y h\u1ec7t, chia nh\u1ecf chunk");
