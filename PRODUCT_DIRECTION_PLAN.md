@@ -114,7 +114,15 @@ Owner xác nhận trực tiếp trong hội thoại: toàn bộ 37 dòng S7 đú
 Không có ca sai/sót theo phân xử mới cần truy vết thêm. Điều đã chứng minh: các sửa tự xưng được finder chọn, prompt có hàng được trích, model trích R phù hợp với dạng được giữ trong gate, và output của chunk ACCEPTED chứa sửa; chặn chunk13 do glossary thêm dấu là đúng. Chưa chứng minh: chất lượng phần chưa tới, hiệu quả SQLite/SAF, hay mức tăng so với cùng model không dùng C1. Báo cáo S0–S9 và SUMMARY giữ nguyên như evidence lịch sử.
 
 
-## 10. Trạng thái điều hành hiện tại — 2026-10-22, v4.23
+## 10. Trạng thái điều hành hiện tại — 2026-10-23, v4.23
+
+- Quyết định sản phẩm đang phục vụ: giảm retry vô ích và chi phí runtime, từ chối chunk còn dòng nguồn tiếng Nhật rõ ràng, làm đồng hồ phiên bền qua pause/stop, và ghi route provider để chẩn đoán offline; giữ nguyên schema, Editorial, định tuyến và request body dùng chung.
+- Đã hoàn tất đúng thứ tự tài liệu: F4 `9958b757`, F1 + F6 `5d1e98c5`, F5 `9dbf89f5`, F2 `ae2a825f`, F3 `bc7120e6`; không provider call.
+- Candidate **4.23-dev.23/code301**, event `build-20261023-185610`, source `bc7120e669a8f3ac543757b6a73cb7fc517088f5`, APK SHA-256 `44B80CEA36604D062001294DCEB9095B238D787DFAF95BC8AA4FCF2976B3D569`; mirror tại `artifacts/builds/v4.23-dev.23/build-20261023-185610/` và `backup/builds/v4.23-dev.23/build-20261023-185610/`.
+- Archive sạch `D:/P5E-builds/v423-clean-regression-20261023-02/source/` đã PASS unit test debug/benchmark/release, lint debug/benchmark/release và compile AndroidTest. Phone gate chưa đo: ADB sau restart vẫn không thấy serial `15e84958`, nên chưa backup/cài/chạy/đếm SQLite/chụp PNG.
+- **Next action:** kết nối/mở khóa serial `15e84958`, tạo backup pre-install ngoài Git theo mục 3 của `docs/V423_WORKSPACE_NAV_WORK_REQUEST.md`, rồi dừng chờ đúng phê duyệt `duyệt cài`; sau đó mới được `install -r`.
+
+- Historical context from the dev.21/UI track follows; it does not supersede the runtime-fix next action above.
 
 - Quyết định owner mới nhất: thiết kế lại bảng đang dịch để bỏ viết tắt khó hiểu, thời gian có s, đủ tên Glossaries/Pronoun, preview dùng diện tích hữu ích và trạng thái trên cùng có chữ. Tiếp tục J3/J4/R0b/R3; skill UI/UX bản Claude + Luna audit/review readonly, coordinator kiểm lại.
 - Phân xử: v4.18 trong tên tin nhắn/AGENTS là lịch sử; làm tiếp feature/v4.23 tại D:/P5E-builds/wt-v4.23. Giữ checkout v4.18/media owner, không nhánh/release/checklist mới. Dev.20 đã cài theo bằng chứng54ef672d, nên next action cũ “duyệt cài dev.20” hết hiệu lực. A2 tĩnh/A5 cấu trúc không đồng nghĩa job đang dịch/provider PASS.
@@ -134,7 +142,7 @@ Không có ca sai/sót theo phân xử mới cần truy vết thêm. Điều đ�
   - test 674 = 669 PASS / 5 SKIP / 0 FAIL, lint 0 Error, androidTest biên dịch được. Chạy trên bản sao HEAD cộng bản sửa; chưa build, chưa xem trên máy;
   - owner chốt 2026-10-22: thuật ngữ chuyên môn (chunk, prompt, token, model, provider, log, Glossary, Pronoun, RAW/DRAFT/FINAL) giữ tiếng Anh, nhãn thao tác Việt hóa; cho phép bật TalkBack ngắn trên điện thoại cho D6;
   - gói tiếp theo: `docs/V423_REFINED_UI_DESIGN.md` mục 10 (R3a + R2 + dev.22 trên điện thoại).
-- **Next action:** thực hiện `docs/V423_REFINED_UI_DESIGN.md` mục 10: R3a + R2, build dev.22, sao lưu và chờ owner duyệt cài, rồi thử D1–D6 trên điện thoại 15e84958.
+- Historical dev.21 next action (superseded): thực hiện `docs/V423_REFINED_UI_DESIGN.md` mục 10: R3a + R2, build dev.22, sao lưu và chờ owner duyệt cài, rồi thử D1–D6 trên điện thoại 15e84958.
 
 - **2026-10-22, phân tích prompt v14 trên 1.254 chunk thật:**
   - prompt dịch ổn;
