@@ -10,14 +10,29 @@ import android.database.sqlite.SQLiteOpenHelper;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TranslationRepository extends SQLiteOpenHelper {
+public class TranslationRepository implements AutoCloseable {
     private static final String DB = "tbl_android_txt.db";
     static final int VER = 30;
+
+    private final TranslationDbHelper helper;
 
     public TranslationRepository(Context context) { this(context, DB); }
 
     /** Package-private database-name seam used by isolated migration/import tests. */
-    TranslationRepository(Context context, String databaseName) { super(context, databaseName, null, VER); }
+    TranslationRepository(Context context, String databaseName) { helper = new TranslationDbHelper(context, databaseName); }
+
+    public SQLiteDatabase getReadableDatabase() { return helper.getReadableDatabase(); }
+
+    public SQLiteDatabase getWritableDatabase() { return helper.getWritableDatabase(); }
+
+    @Override public void close() { helper.close(); }
+
+    /**
+     * Schema owner. It stays in this file, at its original indentation, because source-text tests assert the
+     * migration wiring here; the table creation helpers below stay with it.
+     */
+    static final class TranslationDbHelper extends SQLiteOpenHelper {
+    TranslationDbHelper(Context context, String databaseName) { super(context, databaseName, null, VER); }
 
     @Override public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE jobs (id INTEGER PRIMARY KEY AUTOINCREMENT, input_uri TEXT, output_uri TEXT, file_name TEXT, source_language TEXT, target_language TEXT, status TEXT, created_at INTEGER, updated_at INTEGER, settings TEXT, input_hash TEXT, settings_hash TEXT, integrity_status TEXT, output_hash TEXT, config_revision INTEGER, app_version TEXT, completed_at INTEGER, prepared_batch_id TEXT DEFAULT '', prepared_input_ordinal INTEGER DEFAULT -1, start_session_id TEXT DEFAULT '')");
@@ -119,6 +134,8 @@ public class TranslationRepository extends SQLiteOpenHelper {
     @Override public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         throw new SQLiteException("Editorial database downgrade is not supported");
     }
+    @Override public void onOpen(SQLiteDatabase db) { super.onOpen(db); }
+    }
 
     private static void safeExec(SQLiteDatabase db, String sql) { try { db.execSQL(sql); } catch (Exception ignored) {} }
     private static void createReliabilityTables(SQLiteDatabase db) {
@@ -188,7 +205,6 @@ public class TranslationRepository extends SQLiteOpenHelper {
             }
         }
     }
-    @Override public void onOpen(SQLiteDatabase db) { super.onOpen(db); }
     public void recoverInterruptedState(){recoverInterruptedChunks(getWritableDatabase());}
 
     public void savePreparedBatch(PreparedBatch batch) {
