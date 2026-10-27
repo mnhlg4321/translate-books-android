@@ -155,7 +155,7 @@ public class AppSettings {
                 .replace("{targetLang}", targetLanguage == null ? "" : targetLanguage)
                 .replace("{model}", safeModelName(model))
                 .replace("{ext}", ext);
-        return FileUtil.sanitizeOutputName(out);
+        return OutputNames.sanitizeOutputName(out);
     }
 
     private static String safeModelName(String raw) {

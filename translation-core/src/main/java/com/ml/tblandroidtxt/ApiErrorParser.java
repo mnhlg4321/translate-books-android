@@ -29,7 +29,7 @@ public class ApiErrorParser {
         if (t == null) return "unknown error";
         Throwable root = t;
         while (root.getCause() != null && root.getCause() != root) root = root.getCause();
-        if (root instanceof FileUtil.FileAccessException) return preview(root.getMessage(), 1200);
+        if (root instanceof FileAccessFailure) return preview(root.getMessage(), 1200);
         if (root instanceof UnknownHostException) return "Không phân giải được host/API endpoint. Kiểm tra mạng hoặc Base URL.";
         if (root instanceof SocketTimeoutException) return "API timeout. Tăng REQUEST_TIMEOUT hoặc kiểm tra mạng/provider.";
         String msg = root.getMessage();

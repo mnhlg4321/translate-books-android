@@ -581,14 +581,14 @@ public class MainActivity extends Activity {
         if (BuildConfig.DEBUG) {
             android.os.StrictMode.setThreadPolicy(new android.os.StrictMode.ThreadPolicy.Builder().detectDiskReads().detectDiskWrites().detectNetwork().penaltyLog().build());
         }
-        ObservabilityLog.initialize(this);
+        ObservabilityLog.install(new AndroidObservabilitySink(this));
         // Must complete before any translation service can be started from this app session.
         try { PersistedSettingsCleanup.runOnce(getApplicationContext()); }
         catch (Exception ignored) { android.util.Log.e("TranslateBooks", "settings_cleanup_failed"); }
         final android.content.Context repairContext = getApplicationContext();
         new Thread(() -> { try { InputConflictRepair.runOnce(repairContext); } catch (Exception ignored) { } }, "input-conflict-repair").start();
         ModelCatalog.addListener(catalogListener);
-        ModelCatalog.initialize(this);
+        ModelCatalog.initialize(new AndroidModelCatalogCache(this));
         AppSettings saved = SettingsStore.load(this);
         cachedProviderMeta = providerMeta(saved);
         PronounStore.migrateLegacy(this,saved);
@@ -3565,7 +3565,7 @@ public class MainActivity extends Activity {
     void showModelPicker() {
         String provider = providerField == null ? SettingsStore.load(this).provider : providerField.getText().toString().trim();
         if (provider.toLowerCase(Locale.ROOT).contains("openrouter")) {
-            if (ModelCatalog.state().models.isEmpty()) ModelCatalog.refreshAsync(this);
+            if (ModelCatalog.state().models.isEmpty()) ModelCatalog.refreshAsync(new AndroidModelCatalogCache(this));
             showModelDialog(ModelCatalog.availableModelInfos(provider), true);
         } else {
             showModelDialog(ModelCatalog.fallbackModelInfos(provider), false);
@@ -4217,7 +4217,7 @@ public class MainActivity extends Activity {
 
     void refreshModelCatalog() {
         toast("Đang cập nhật giá model…");
-        ModelCatalog.refreshAsync(this);
+        ModelCatalog.refreshAsync(new AndroidModelCatalogCache(this));
         updateInputEstimate();
     }
 

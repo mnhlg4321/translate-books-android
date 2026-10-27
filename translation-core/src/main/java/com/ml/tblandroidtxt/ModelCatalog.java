@@ -1,14 +1,8 @@
 package com.ml.tblandroidtxt;
 
-import android.content.Context;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -26,7 +20,6 @@ import okhttp3.ResponseBody;
 /** Dynamic model catalog with a small exact-match fallback for offline defaults. */
 public class ModelCatalog {
     private static final java.util.HashMap<String, String> LOOKUP_LOGGED = new java.util.HashMap<>();
-    private static final String CACHE_FILE = "openrouter_model_catalog_v42.json";
     public static final long CACHE_EXPIRY_MS = 24L * 60L * 60L * 1000L;
 
     public enum LoadingState { IDLE, LOADING, READY, ERROR }
@@ -140,26 +133,33 @@ public class ModelCatalog {
 
     public static String[] providers() { return new String[]{"openrouter", "openai", "deepseek", "custom"}; }
 
-    public static void initialize(Context context) {
-        if (context == null) return;
-        ObservabilityLog.initialize(context);
+    /** Persistence of the last fetched catalog; the app backs it with a file in its private storage. */
+    public interface CacheStore {
+        /** The whole cached text, or null when nothing has been cached yet. */
+        String load() throws Exception;
+        /** Replaces the cached text (UTF-8). */
+        void save(String rootJson) throws Exception;
+    }
+
+    public static void initialize(CacheStore store) {
+        if (store == null) return;
         if (!initialized) {
             synchronized (ModelCatalog.class) {
                 if (!initialized) {
-                    loadCachedCatalog(context.getApplicationContext());
+                    loadCachedCatalog(store);
                     initialized = true;
                 }
             }
         }
-        refreshAsync(context.getApplicationContext());
+        refreshAsync(store);
     }
 
     public static void addListener(Listener listener) { if (listener != null) LISTENERS.addIfAbsent(listener); }
     public static void removeListener(Listener listener) { LISTENERS.remove(listener); }
     public static CatalogState state() { return state; }
 
-    public static void refreshAsync(Context context) {
-        if (context == null || state.loadingState == LoadingState.LOADING) return;
+    public static void refreshAsync(CacheStore store) {
+        if (store == null || state.loadingState == LoadingState.LOADING) return;
         setState(new CatalogState(state.models, LoadingState.LOADING, "", state.lastSuccessfulRefresh, state.fromCache));
         new Thread(() -> {
             try {
@@ -167,7 +167,7 @@ public class ModelCatalog {
                 List<ModelInfo> fetched = fetchOpenRouterModelInfosOrThrow(retrievedAt);
                 if (fetched.isEmpty()) throw new IllegalStateException("OpenRouter returned an empty model catalog");
                 installDynamic(fetched);
-                saveCachedCatalog(context, fetched, retrievedAt);
+                saveCachedCatalog(store, fetched, retrievedAt);
                 ObservabilityLog.event("catalog_refresh", "result", "success", "models", fetched.size(), "retrievedAt", retrievedAt);
                 setState(new CatalogState(fetched, LoadingState.READY, "", retrievedAt, false));
             } catch (Exception e) {
@@ -398,15 +398,11 @@ public class ModelCatalog {
         catch (Exception ignored) { return 0; }
     }
 
-    private static void loadCachedCatalog(Context context) {
-        File file = new File(context.getFilesDir(), CACHE_FILE);
-        if (!file.exists()) return;
+    private static void loadCachedCatalog(CacheStore store) {
         try {
-            byte[] bytes = new byte[(int)Math.min(Integer.MAX_VALUE, file.length())];
-            int count;
-            try (FileInputStream input = new FileInputStream(file)) { count = input.read(bytes); }
-            if (count <= 0) return;
-            JSONObject root = new JSONObject(new String(bytes, 0, count, StandardCharsets.UTF_8));
+            String text = store.load();
+            if (text == null || text.isEmpty()) return;
+            JSONObject root = new JSONObject(text);
             long retrievedAt = root.optLong("retrieved_at", 0);
             List<ModelInfo> cached = parseOpenRouterResponse(root.optString("response", "{}"), "openrouter-cache", retrievedAt);
             if (cached.isEmpty()) return;
@@ -418,7 +414,7 @@ public class ModelCatalog {
         }
     }
 
-    private static void saveCachedCatalog(Context context, List<ModelInfo> models, long retrievedAt) throws Exception {
+    private static void saveCachedCatalog(CacheStore store, List<ModelInfo> models, long retrievedAt) throws Exception {
         JSONArray data = new JSONArray();
         for (ModelInfo model : models) {
             JSONObject pricing = new JSONObject();
@@ -430,10 +426,7 @@ public class ModelCatalog {
         }
         JSONObject root = new JSONObject().put("retrieved_at", retrievedAt)
                 .put("response", new JSONObject().put("data", data).toString());
-        File file = new File(context.getFilesDir(), CACHE_FILE);
-        try (FileOutputStream output = new FileOutputStream(file, false)) {
-            output.write(root.toString().getBytes(StandardCharsets.UTF_8));
-        }
+        store.save(root.toString());
     }
 
     static void installForTests(List<ModelInfo> models, LoadingState loadingState) {

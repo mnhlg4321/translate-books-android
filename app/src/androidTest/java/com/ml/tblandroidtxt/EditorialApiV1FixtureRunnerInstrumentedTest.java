@@ -319,7 +319,7 @@ public final class EditorialApiV1FixtureRunnerInstrumentedTest {
         Context context = ApplicationProvider.getApplicationContext();
         // C6.6: the provider writes one provider_usage line per call (input, output, reasoning, provider cost) to the runtime log,
         // which the run evidence reads back; the activity that normally starts it is not part of the instrumented run.
-        ObservabilityLog.initialize(context);
+        ObservabilityLog.install(new AndroidObservabilitySink(context));
         AppSettings settings = SettingsStore.load(context).copy();
         if (live) {
             String preflight = EditorialP6FixtureLivePreflight.check(settings, args.getString("p6_expected_endpoint_account_fingerprint", ""));

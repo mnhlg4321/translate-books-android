@@ -1,0 +1,35 @@
+plugins {
+    id 'java-library'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+// org.json must compile against the Android platform's copy, never against org.json:json.
+// The library's JSONObject has put(String,float); Android's does not, so a body.put("temperature", float)
+// compiled against the library would throw NoSuchMethodError on the phone. See docs/V424_P0B_TRANSLATION_CORE_WORK_REQUEST.md.
+def localProps = new Properties()
+def localPropsFile = rootProject.file('local.properties')
+if (localPropsFile.exists()) localPropsFile.withInputStream { localProps.load(it) }
+def sdkDir = localProps.getProperty('sdk.dir') ?: System.getenv('ANDROID_HOME') ?: System.getenv('ANDROID_SDK_ROOT')
+def androidJar = sdkDir == null ? null : file("${sdkDir}/platforms/android-35/android.jar")
+if (androidJar == null || !androidJar.exists()) {
+    throw new GradleException('translation-core needs the Android SDK (sdk.dir in local.properties) with platforms/android-35/android.jar')
+}
+
+dependencies {
+    api project(':editorial-engine')
+    api 'com.squareup.okhttp3:okhttp:4.12.0'
+    compileOnly files(androidJar)
+    testImplementation 'org.json:json:20250517'
+    testImplementation 'junit:junit:4.13.2'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    // The Android Gradle plugin compiles app code with inline string concatenation; match it so the bytecode of moved
+    // classes stays comparable (javap gate) and no invokedynamic concat reaches D8.
+    options.compilerArgs.add('-XDstringConcat=inline')
+}

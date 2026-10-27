@@ -141,7 +141,7 @@ public class TranslatorService extends Service {
 
     @Override public void onCreate() {
         super.onCreate();
-        ObservabilityLog.initialize(this);
+        ObservabilityLog.install(new AndroidObservabilitySink(this));
         try { PersistedSettingsCleanup.runOnce(getApplicationContext()); }
         catch (Exception ignored) { Log.e("TranslateBooks", "settings_cleanup_failed"); }
         createChannel();
@@ -257,7 +257,7 @@ public class TranslatorService extends Service {
         return START_NOT_STICKY;
     }
 
-    private synchronized boolean ensureRuntime(){if(repo!=null&&engine!=null)return true;try{PersistedSettingsCleanup.runOnce(getApplicationContext());ModelCatalog.initialize(this);repo=new TranslationRepository(this);repo.recoverInterruptedState();engine=new TranslationEngine(this,repo,TranslateTestSeam.provider());engine.setSessionCostSupplier(runCost::cost);return true;}catch(Exception e){setState(TranslationJobState.State.FAILED,"Initialization failure");logFailure("runtime initialization",e);broadcast("error",-1,"Translation could not initialize: "+AppValidator.readableError(e));stopForeground(STOP_FOREGROUND_REMOVE);stopSelf();return false;}}
+    private synchronized boolean ensureRuntime(){if(repo!=null&&engine!=null)return true;try{PersistedSettingsCleanup.runOnce(getApplicationContext());ModelCatalog.initialize(new AndroidModelCatalogCache(this));repo=new TranslationRepository(this);repo.recoverInterruptedState();engine=new TranslationEngine(this,repo,TranslateTestSeam.provider());engine.setSessionCostSupplier(runCost::cost);return true;}catch(Exception e){setState(TranslationJobState.State.FAILED,"Initialization failure");logFailure("runtime initialization",e);broadcast("error",-1,"Translation could not initialize: "+AppValidator.readableError(e));stopForeground(STOP_FOREGROUND_REMOVE);stopSelf();return false;}}
 
     private boolean promote(String text,int done,int total){try{startForeground(NOTIFY_ID,buildNotification(text,done,total));return true;}catch(RuntimeException e){setState(TranslationJobState.State.FAILED,"Foreground service error");logFailure("foreground service promotion",e);broadcast("error",-1,"Android could not start the translation service: "+AppValidator.readableError(e));stopSelf();return false;}}
 
