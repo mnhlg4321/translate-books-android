@@ -1,0 +1,17 @@
+{
+  "max_tokens": 3256,
+  "messages": [
+    {
+      "content": "You are a professional Vietnamese translator and writer.\n\nTranslate Japanese to Vietnamese. Preserve names, meaning, tone, layout, spacing, line breaks and indentation. Use natural Vietnamese phrasing, translate idioms appropriately, and do not add or omit information.\n\n# GLOBAL INSTRUCTION\nDịch sang tiếng Việt tự nhiên, giữ nguyên giọng kể nhẹ nhàng.\nGiữ nguyên cách xuống dòng và dòng trống giữa các đoạn.\nKhông giải thích; không thêm chú thích của người dịch.\n\n# GLOSSARY LOCKS\n白石ハル => Shiraishi Haru [character] | Nhân vật chính; thợ học việc đồng hồ\n桐原レン => Kirihara Ren [character] | Bạn thân của Haru\n三枝 => Saegusa [character] | Thợ già; sư phụ của hai người\n潮見町 => thị trấn Shiomi [place] | Tên thị trấn cảng\n時計塔 => tháp đồng hồ [place] | Địa điểm chính của chương\n歯車 => bánh răng [term]\n霧笛 => còi sương mù [term] | Không xuất hiện trong chương mẫu này\n\n# PRONOUN LOCKS\n三枝 → 白石ハル: ta/(omit) | Chỉ có ngôi tự xưng\n\n# OUTPUT CONTRACT\nReturn only the translation between <TRANSLATION> and </TRANSLATION>; no notes or commentary.",
+      "role": "system"
+    },
+    {
+      "content": "# SOURCE\n<INPUT>\n第一話　潮見町の時計塔\n\n潮見町《しおみちょう》の朝は、いつも霧笛の音から始まる。白石ハルは坂道を駆け上がりながら、背中の工具袋を何度も背負い直した。時計塔の鐘が七つ鳴るまでに、あと五分しかない。石畳は夜露に濡れて光り、パン屋の煙突からは甘い匂いがのぼっていた。\n「ハル、遅いぞ！」\n塔の下で、桐原レンが腕を組んで待っていた。彼は「遅刻は罪だ」というのが口癖で、今日もその言葉を律儀に繰り返した。ハルは息を切らしたまま、両手を合わせて頭を下げた。\n「ごめん、ごめん。昨日の夜、歯車の図面を見ていたら、眠れなくなっちゃって」\n「また徹夜か。師匠に叱られても知らないからな」\nレンはそう言いながらも、ハルの工具袋をひょいと受け取った。二人は並んで、錆びた螺旋階段を上りはじめた。階段は一段ごとに軋み、まるで古い塔が目を覚まして、小さくあくびをしているようだった。\n最上階の機械室には、老職人の三枝《さえぐさ》が先に来ていた。白い眉の下の目は鋭いが、声はいつも穏やかである。三枝は懐中時計を閉じると、二人を振り返った。\n「来たか。今日は大きな歯車を外す。ハル、おまえは右側を持て。レンは左だ。決して焦るな」\n「はいっ！」\n二人の声が重なり、機械室の古い壁に反響した。窓から差しこむ朝の光が、宙に舞う埃を金色に染めている。\n三枝は壁の棚から油差しを取ると、ハルに投げて寄こした。ハルは両手でそれを受け止め、胸を張った。\n「任せてください、師匠。歯車の一枚一枚に、ちゃんと名前をつけて呼んでいますから」\n「ほう。それなら、機嫌を損ねないようにせねばな」\nレンは黙って肩をすくめ、工具袋から大小のスパナを順に並べはじめた。その手つきは慣れたもので、ハルは横目でそれを見ながら、少しだけ悔しいような気持ちになった。\n\n\n</INPUT>\n\n<TRANSLATION>",
+      "role": "user"
+    }
+  ],
+  "model": "openai/gpt-5.6-luna",
+  "reasoning_effort": "medium",
+  "stream": false,
+  "temperature": "0.300000"
+}

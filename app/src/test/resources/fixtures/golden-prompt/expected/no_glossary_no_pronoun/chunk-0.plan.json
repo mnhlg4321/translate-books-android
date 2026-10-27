@@ -1,0 +1,15 @@
+{
+  "contextTokens": 278,
+  "glossaryLockCount": 0,
+  "glossaryTokens": 0,
+  "historyTokens": 0,
+  "instructionTokens": 89,
+  "pronounLockCount": 0,
+  "pronounTokens": 0,
+  "rawTokens": 695,
+  "reasoningEffortSent": "medium",
+  "requestMaxOutputTokens": 3256,
+  "systemTokens": 120,
+  "totalInputTokens": 1222,
+  "visibleMaxOutputTokens": 1208
+}

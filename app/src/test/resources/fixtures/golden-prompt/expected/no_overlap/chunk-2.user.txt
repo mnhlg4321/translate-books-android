@@ -1,0 +1,13 @@
+# PREVIOUS TRANSLATION CONTEXT (do not translate)
+g nhìn hai đứa. Hôm nay ta sẽ tháo bánh răng lớn, ông nói. Haru giữ bên phải, Ren giữ bên trái. Tuyệt đối đừng nóng vội. Cả hai đồng thanh vâng dạ, tiếng vọng lại trên bức tường cũ của gian máy. Cửa sổ chiếu xuống một thứ ánh nắng buổi sớm, nhuộm vàng những hạt bụi đang bay lơ lửng giữa không trung. Ông lấy bình dầu từ trên kệ xuống, ném sang cho Haru, và cô đưa cả hai tay ra đón lấy, ưỡn ngực lên đầy tự tin. Cứ giao cho con, thưa sư phụ, cô nói. Từng chiếc bánh răng một, con đều gọi bằng tên riêng của nó. Vậy thì phải cẩn thận kẻo làm chúng phật ý, ông già đáp. Ren lặng lẽ nhún vai, lấy từ t.
+
+# SOURCE
+<INPUT>
+ぽつりとそう言うと、レンは耳まで真っ赤になって、そっぽを向いた。ハルはその様子がおかしくて、また声を出して笑ってしまった。三枝は何も言わず、ただ口もとをゆるめて、窓の外の海に目をやった。
+
+あとがき
+この物語は、すべて架空の町と人々を描いた試作です。実在の人物や団体、作品とは一切関係がありません。歯車や振り子のにおいが、読んでくださった方の記憶のどこかに、少しでも届けばうれしく思います。
+
+</INPUT>
+
+<TRANSLATION>

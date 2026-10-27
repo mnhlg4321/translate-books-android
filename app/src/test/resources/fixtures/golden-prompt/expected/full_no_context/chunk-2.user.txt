@@ -1,0 +1,43 @@
+# CONTEXT - Previous Paragraph
+
+For consistency and natural flow, here's what came immediately before:
+
+Sáng ở thị trấn Shiomi lúc nào cũng bắt đầu bằng tiếng còi sương mù. Shiraishi Haru chạy lên con dốc, tay cứ phải kéo lại chiếc túi dụng cụ trên lưng. Chuông tháp sắp điểm bảy tiếng, mà cô chỉ còn đúng năm phút. Mặt đá lát đường ướt sương đêm, phản chiếu một thứ ánh sáng nhàn nhạt, còn từ ống khói tiệm bánh thì mùi ngọt đang bốc lên. Dưới chân tháp, Kirihara Ren đã đứng đợi, hai tay khoanh trước ngực. Cậu có câu cửa miệng rằng đến muộn là một cái tội, và hôm nay cậu lại nhắc đúng câu ấy một cách rất nghiêm túc. Haru thở không ra hơi, chắp hai tay lại xin lỗi. Hai người cùng bước lên cầu thang xoắn ốc đã gỉ sét. Mỗi bậc thang kêu cọt kẹt, như thể ngọn tháp cũ đang tỉnh giấc và khẽ ngáp một cái. Trên cùng là gian máy, nơi ông thợ già Saegusa đã đến từ trước. Đôi mắt dưới hàng lông mày trắng của ông sắc, nhưng giọng nói thì lúc nào cũng hiền hòa. Ông gập chiếc đồng hồ quả quýt lại, quay sang nhìn hai đứa. Hôm nay ta sẽ tháo bánh răng lớn, ông nói. Haru giữ bên phải, Ren giữ bên trái. Tuyệt đối đừng nóng vội. Cả hai đồng thanh vâng dạ, tiếng vọng lại trên bức tường cũ của gian máy. Cửa sổ chiếu xuống một thứ ánh nắng buổi sớm, nhuộm vàng những hạt bụi đang bay lơ lửng giữa không trung. Ông lấy bình dầu từ trên kệ xuống, ném sang cho Haru, và cô đưa cả hai tay ra đón lấy, ưỡn ngực lên đầy tự tin. Cứ giao cho con, thưa sư phụ, cô nói. Từng chiếc bánh răng một, con đều gọi bằng tên riêng của nó. Vậy thì phải cẩn thận kẻo làm chúng phật ý, ông già đáp. Ren lặng lẽ nhún vai, lấy từ t.
+
+# TEXT TO TRANSLATE
+
+<INPUT>
+結局ハルは景品の小さな木彫りの鳥を当て、得意げにレンの手のひらへ載せた。鳥の翼には、歯車の模様が彫られている。二人は思わず、顔を見合わせて笑った。
+その夜、ハルは屋根裏の自室で、日記帳を開いた。「今日、塔の心臓がもう一度動きだした」と書いてから、しばらくペンを止める。窓の向こうでは、霧のなかに町の灯が、星《ほし》のようににじんでいた。
+階下から、母の呼ぶ声がした。
+「ハル、ごはんよ。レンくんも来ているわ」
+「はーい！　今行く！」
+ハルは日記帳を閉じ、階段を駆け下りた。食卓には湯気の立つ貝のスープが並び、レンが少し照れくさそうに座っている。彼が持ってきた紙包みのなかには、焼きたてのパンが入っていた。
+「三枝さんが、おまえたちにって。明日も早いから、よく食べろってさ」
+「やった！　いただきます！」
+三人で囲んだ食卓は、鐘の音よりもずっとあたたかかった。母は二人の汚れた手を見て、あきれたように、けれどうれしそうに笑った。潮見町の長い一日は、こうして静かに更けていった。
+
+翌朝、ハルが目を覚ますと、窓の外は快晴だった。霧はすっかり晴れ、時計塔の針が、まっすぐに七時を指している。ハルは勢いよく窓を開け放ち、澄んだ空気を胸いっぱいに吸いこんだ。
+「おはよう、潮見町！」
+その声に応えるように、七つの鐘が、ゆっくりと町じゅうに響きわたった。
+ハルは朝食のパンをかじりながら、今日の予定を指折り数えた。午前は塔の掃除、午後は港の時計屋への届け物、そして夕方には、三枝から新しい図面の読み方を教わることになっている。忙しい一日になりそうだったが、不思議と少しも苦ではなかった。
+昼前、ハルは塔の窓を拭きながら、昨夜もらった木彫りの鳥を窓辺に置いた。鳥は朝日を浴びて、まるで今にも飛び立ちそうに見えた。
+午後、港の時計屋の主人が塔を訪ねてきた。桐原レンの父親である。彼は分厚い手で息子の肩をたたき、無言のまま、直ったばかりの振り子をしばらく見上げていた。
+
+「……いい仕事をしたな」
+
+ぽつりとそう言うと、レンは耳まで真っ赤になって、そっぽを向いた。ハルはその様子がおかしくて、また声を出して笑ってしまった。三枝は何も言わず、ただ口もとをゆるめて、窓の外の海に目をやった。
+
+あとがき
+この物語は、すべて架空の町と人々を描いた試作です。実在の人物や団体、作品とは一切関係がありません。歯車や振り子のにおいが、読んでくださった方の記憶のどこかに、少しでも届けばうれしく思います。
+
+</INPUT>
+
+REMINDER: Output ONLY your translation in this exact format:
+<TRANSLATION>
+your translation here
+</TRANSLATION>
+
+Start with <TRANSLATION> and end with </TRANSLATION>. Nothing before or after.
+
+Provide your translation now:

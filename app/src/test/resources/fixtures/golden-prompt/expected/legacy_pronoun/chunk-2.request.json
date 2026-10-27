@@ -1,0 +1,17 @@
+{
+  "max_tokens": 2439,
+  "messages": [
+    {
+      "content": "You are a professional Vietnamese translator and writer.\n\nTranslate Japanese to Vietnamese. Preserve names, meaning, tone, layout, spacing, line breaks and indentation. Use natural Vietnamese phrasing, translate idioms appropriately, and do not add or omit information.\n\n# GLOBAL INSTRUCTION\nDịch sang tiếng Việt tự nhiên, giữ nguyên giọng kể nhẹ nhàng.\nGiữ nguyên cách xuống dòng và dòng trống giữa các đoạn.\nKhông giải thích; không thêm chú thích của người dịch.\n\n# GLOSSARY LOCKS\n三枝 => Saegusa [character] | Thợ già; sư phụ của hai người\n歯車 => bánh răng [term]\n\n# PRONOUN LOCKS\n三枝 → 白石ハル: ta/con\n\n# OUTPUT CONTRACT\nReturn only the translation between <TRANSLATION> and </TRANSLATION>; no notes or commentary.",
+      "role": "system"
+    },
+    {
+      "content": "# PREVIOUS TRANSLATION CONTEXT (do not translate)\ng nhìn hai đứa. Hôm nay ta sẽ tháo bánh răng lớn, ông nói. Haru giữ bên phải, Ren giữ bên trái. Tuyệt đối đừng nóng vội. Cả hai đồng thanh vâng dạ, tiếng vọng lại trên bức tường cũ của gian máy. Cửa sổ chiếu xuống một thứ ánh nắng buổi sớm, nhuộm vàng những hạt bụi đang bay lơ lửng giữa không trung. Ông lấy bình dầu từ trên kệ xuống, ném sang cho Haru, và cô đưa cả hai tay ra đón lấy, ưỡn ngực lên đầy tự tin. Cứ giao cho con, thưa sư phụ, cô nói. Từng chiếc bánh răng một, con đều gọi bằng tên riêng của nó. Vậy thì phải cẩn thận kẻo làm chúng phật ý, ông già đáp. Ren lặng lẽ nhún vai, lấy từ t.\n\n# SURROUNDING SOURCE CONTEXT (do not translate)\nBefore:\n声に応えるように、七つの鐘が、ゆっくりと町じゅうに響きわたった。\nハルは朝食のパンをかじりながら、今日の予定を指折り数えた。午前は塔の掃除、午後は港の時計屋への届け物、そして夕方には、三枝から新しい図面の読み方を教わることになっている。忙しい一日になりそうだったが、不思議と少しも苦ではなかった。\n昼前、ハルは塔の窓を拭きながら、昨夜もらった木彫りの鳥を窓辺に置いた。鳥は朝日を浴びて、まるで今にも飛び立ちそうに見えた。\n午後、港の時計屋の主人が塔を訪ねてきた。桐原レンの父親である。彼は分厚い手で息子の肩をたたき、無言のまま、直ったばかりの振り子をしばらく見上げていた。\n\n「……いい仕事をしたな」\n\n# SOURCE\n<INPUT>\nぽつりとそう言うと、レンは耳まで真っ赤になって、そっぽを向いた。ハルはその様子がおかしくて、また声を出して笑ってしまった。三枝は何も言わず、ただ口もとをゆるめて、窓の外の海に目をやった。\n\nあとがき\nこの物語は、すべて架空の町と人々を描いた試作です。実在の人物や団体、作品とは一切関係がありません。歯車や振り子のにおいが、読んでくださった方の記憶のどこかに、少しでも届けばうれしく思います。\n\n</INPUT>\n\n<TRANSLATION>",
+      "role": "user"
+    }
+  ],
+  "model": "openai/gpt-5.6-luna",
+  "reasoning_effort": "medium",
+  "stream": false,
+  "temperature": "0.300000"
+}

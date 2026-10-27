@@ -47,6 +47,13 @@ android {
         }
     }
 
+    testOptions {
+        unitTests.all {
+            // Golden-prompt snapshots are rewritten only with -Dgolden.update=true.
+            systemProperty 'golden.update', System.getProperty('golden.update', 'false')
+        }
+    }
+
     applicationVariants.all { variant ->
         variant.outputs.all {
             outputFileName = "TranslateBooks-v${variant.versionName}-${variant.buildType.name}.apk"

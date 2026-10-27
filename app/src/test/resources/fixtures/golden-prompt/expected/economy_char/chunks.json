@@ -1,0 +1,81 @@
+{
+  "chunkCount": 4,
+  "chunks": [
+    {
+      "contextAfter": {
+        "length": 600,
+        "sha256": "dc7152b7e3ac94895c5bc53f9bd04b419269b9df37d3b5d4fcfb5199043cc209"
+      },
+      "contextBefore": {
+        "length": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "endOffset": 752,
+      "index": 0,
+      "main": {
+        "length": 752,
+        "sha256": "81e70e14f33c5391cefc0a63e92c47df712ac5c41b24f5b41b4a01bc1bc7c284"
+      },
+      "paragraphEnd": 2,
+      "paragraphStart": 1,
+      "startOffset": 0
+    },
+    {
+      "contextAfter": {
+        "length": 600,
+        "sha256": "7e3a8723df6634fc31fe49d41f1d5d7bb75bf9449e5264ffca62b347e92a1560"
+      },
+      "contextBefore": {
+        "length": 600,
+        "sha256": "30c043464c98dee173c5acb9ba83bb6593abd860b7b4c667db37f5ffcc275421"
+      },
+      "endOffset": 1900,
+      "index": 1,
+      "main": {
+        "length": 1148,
+        "sha256": "c79a602498dde51b35203c2d46bd86659eb8d1c32075ac703d96d0a3cff7fa6f"
+      },
+      "paragraphEnd": 3,
+      "paragraphStart": 3,
+      "startOffset": 752
+    },
+    {
+      "contextAfter": {
+        "length": 598,
+        "sha256": "25ce9605271eb3624913f4d279c811c046497e116ec5306e609e93d859638be6"
+      },
+      "contextBefore": {
+        "length": 600,
+        "sha256": "10dd880fa15587061652fba163b9eaf53fbbeda93cd0a2878cc44835560c3dc0"
+      },
+      "endOffset": 3044,
+      "index": 2,
+      "main": {
+        "length": 1144,
+        "sha256": "3e92d3e65994c3779683bf20069ad52b1a2d21ecf49645822f1ef7bde3354b1f"
+      },
+      "paragraphEnd": 3,
+      "paragraphStart": 3,
+      "startOffset": 1900
+    },
+    {
+      "contextAfter": {
+        "length": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "contextBefore": {
+        "length": 600,
+        "sha256": "b599b35fbee6e08b4da96f0b7d09598e0c5f91e272906a7bb3dc26ff7b21524c"
+      },
+      "endOffset": 3642,
+      "index": 3,
+      "main": {
+        "length": 598,
+        "sha256": "25ce9605271eb3624913f4d279c811c046497e116ec5306e609e93d859638be6"
+      },
+      "paragraphEnd": 7,
+      "paragraphStart": 4,
+      "startOffset": 3044
+    }
+  ]
+}

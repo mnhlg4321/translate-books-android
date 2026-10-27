@@ -1,0 +1,62 @@
+# CONTEXT - Previous Paragraph
+
+For consistency and natural flow, here's what came immediately before:
+
+Sáng ở thị trấn Shiomi lúc nào cũng bắt đầu bằng tiếng còi sương mù. Shiraishi Haru chạy lên con dốc, tay cứ phải kéo lại chiếc túi dụng cụ trên lưng. Chuông tháp sắp điểm bảy tiếng, mà cô chỉ còn đúng năm phút. Mặt đá lát đường ướt sương đêm, phản chiếu một thứ ánh sáng nhàn nhạt, còn từ ống khói tiệm bánh thì mùi ngọt đang bốc lên. Dưới chân tháp, Kirihara Ren đã đứng đợi, hai tay khoanh trước ngực. Cậu có câu cửa miệng rằng đến muộn là một cái tội, và hôm nay cậu lại nhắc đúng câu ấy một cách rất nghiêm túc. Haru thở không ra hơi, chắp hai tay lại xin lỗi. Hai người cùng bước lên cầu thang xoắn ốc đã gỉ sét. Mỗi bậc thang kêu cọt kẹt, như thể ngọn tháp cũ đang tỉnh giấc và khẽ ngáp một cái. Trên cùng là gian máy, nơi ông thợ già Saegusa đã đến từ trước. Đôi mắt dưới hàng lông mày trắng của ông sắc, nhưng giọng nói thì lúc nào cũng hiền hòa. Ông gập chiếc đồng hồ quả quýt lại, quay sang nhìn hai đứa. Hôm nay ta sẽ tháo bánh răng lớn, ông nói. Haru giữ bên phải, Ren giữ bên trái. Tuyệt đối đừng nóng vội. Cả hai đồng thanh vâng dạ, tiếng vọng lại trên bức tường cũ của gian máy. Cửa sổ chiếu xuống một thứ ánh nắng buổi sớm, nhuộm vàng những hạt bụi đang bay lơ lửng giữa không trung. Ông lấy bình dầu từ trên kệ xuống, ném sang cho Haru, và cô đưa cả hai tay ra đón lấy, ưỡn ngực lên đầy tự tin. Cứ giao cho con, thưa sư phụ, cô nói. Từng chiếc bánh răng một, con đều gọi bằng tên riêng của nó. Vậy thì phải cẩn thận kẻo làm chúng phật ý, ông già đáp. Ren lặng lẽ nhún vai, lấy từ t.
+
+# TEXT TO TRANSLATE
+
+<INPUT>
+作業は昼過ぎまで続いた。ハルの指先は油で黒く染まり、額には汗が光っている。外した歯車は、想像していたよりもずっと重かった。持ち上げた瞬間、ハルの腕がぐらりと揺れた。
+「うわーーッ！　お、重いーっ！」
+「持ちこたえろ、ハル！　あと少しだ！」
+レンが慌てて駆け寄り、二人がかりでどうにか床に降ろした。大きな音が塔じゅうに響いたあと、しばらくのあいだ、誰も口をきかなかった。やがて三枝が、ゆっくりと笑い出した。
+「ははは。上出来だ。昔、わしも同じ失敗をしたものだよ」
+三枝は歯車の歯を指でなぞり、小さな傷を見つけて目を細めた。そこには、五十年前に刻まれた「M・S」という頭文字が残っていた。三枝の亡き妻、美沙《みさ》の名である。
+「この塔はな、町の人間の時間を預かっている。時計が狂えば、船は出られず、パンは焼けず、子どもは学校に遅れる。だから、わしらの仕事は、ただ部品を磨くだけではない」
+「……時間を、守ること」
+ハルが小さくつぶやくと、三枝は満足そうにうなずいた。レンも黙って工具を握りしめている。窓の外では、午後の風が海のにおいを運んできて、鐘の下の埃をやわらかく揺らした。
+昼食は、塔の外階段に腰かけて取った。ハルの弁当箱には、母が焼いた卵と小さな魚の干物が詰まっている。レンは自分のパンを半分に割って、黙ってハルに差し出した。
+「いいの？　レンの分がなくなっちゃうよ」
+「おれは朝にたくさん食べた。気にするな」
+そう言って顔をそむけた彼の耳が、ほんのり赤い。ハルはくすりと笑い、ありがたくパンを受け取った。港の方角から、荷役の掛け声が風に乗って届いてくる。
+午後は、新しい軸の調整に追われた。三枝は図面を広げ、「ここの噛み合わせが一本分でも狂えば、百年かけて針がずれる」と言った。ハルは真剣な顔で数字を書き写し、レンは定規を当てて、何度も何度も寸法を確かめた。
+夕方、三人は歯車を新しい軸に取りつけ、ゆっくりとねじを締めていった。最後の一本を回し終えたとき、機械室の奥で、かちり、と小さな音がした。
+「……動いた」
+レンが息をのんだ。止まっていた振り子が、静かに左右へ揺れはじめる。ハルの目に、じわりと涙がにじんだ。
+「やった……！　やったよ、レン！」
+「ああ。おまえの図面のおかげだ」
+「ううん、みんなのおかげ。ね、師匠？」
+ハルが振り向くと、三枝はもう窓辺に立ち、夕焼けに染まる港をじっと見下ろしていた。老いた背中は小さく見えたが、その肩はどこか誇らしげだった。
+片づけを終えると、塔の下で町の子どもたちが待っていた。いちばん小さな少年が、おそるおそる手を挙げる。
+「ねえ、お姉ちゃん。ぼくたちの時計は、もう直ったの？」
+「うん、直ったよ。明日の朝には、いつもの時間に鐘が鳴るからね」
+ハルがしゃがんで目の高さを合わせると、少年はぱっと顔を輝かせた。後ろでレンが、照れたように咳ばらいをする。三枝は遠くから、その様子を黙って眺めていた。
+「あの子たちの明日を、わしらは預かっておるのだな」
+誰にともなく、老人はそうつぶやいた。夕風が、塔の旗をばさりと鳴らした。
+三枝は工具の手入れをしながら、ふと思い出したように言った。
+「そういえば、今夜は港の祭りだったな。おまえたち、少し顔を出してきたらどうだ」
+「えっ、いいんですか？　まだ片づけが……」
+「わしひとりで十分だ。若いうちに、笑って過ごす時間も大事にせい」
+ハルとレンは顔を見合わせ、同時に「ありがとうございます！」と頭を下げた。階段を駆け下りる二人の足音が、塔の中にいつまでも軽やかに響いていた。
+その夜、塔の鐘が初めて正しい時刻を告げた。町じゅうの窓が一斉に明かりを灯し、港の船乗りたちが帽子を振った。ハルは屋根の上からその光景を見下ろし、胸の奥がじんと熱くなるのを感じた。
+「なあ、ハル」
+隣で、レンが夜空を見上げたまま言った。
+「おまえ、将来は本当に、師匠の跡を継ぐのか」
+「うん。そのつもり。レンは？」
+「おれは……まだ決めていない。でも、この塔だけは、ずっと見ていたいと思う」
+ハルは「そっか」とだけ答えて、膝を抱えた。二人のあいだを、潮の香りを含んだ風が静かに通り抜けていった。遠くで、また霧笛が低く鳴った。
+祭りの広場では、屋台の提灯が赤く揺れていた。ハルは綿菓子を片手に、人混みのなかを軽い足取りで進む。レンは少し離れて、その背中を目で追っていた。
+「レン、こっち！　射的があるよ！」
+「おい、走るな。転んでも知らないぞ」
+
+</INPUT>
+
+REMINDER: Output ONLY your translation in this exact format:
+<TRANSLATION>
+your translation here
+</TRANSLATION>
+
+Start with <TRANSLATION> and end with </TRANSLATION>. Nothing before or after.
+
+Provide your translation now:
