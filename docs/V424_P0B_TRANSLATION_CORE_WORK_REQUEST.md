@@ -106,6 +106,8 @@ Thêm vào lõi: `FileAccessFailure` và `FileModelCatalogCache` (mới, S2/S3).
   2. sửa một dòng `ObservabilityLog.initialize(context)` trong tệp test `EditorialApiV1FixtureRunnerInstrumentedTest.java:322`.
 
   Không có sự đồng ý đó thì dừng ở bước 0 và báo cáo.
+
+  **Owner đã đồng ý cả hai ngoại lệ ngày 2026-10-27:** "Đồng ý 2 ngoại lệ cho P0b: di chuyển nguyên EditorialPreferences.java (không đổi byte nào) và sửa 1 dòng ObservabilityLog.initialize trong EditorialApiV1FixtureRunnerInstrumentedTest.java." Ngoài hai việc này, không có tệp Editorial nào khác được đụng.
 - Không sửa `editorial-engine/`.
 - Không sửa prompt hay instruction.
 - Không đổi `versionName`/`versionCode` ngoài cách `build-and-save.ps1` tự đánh số.
