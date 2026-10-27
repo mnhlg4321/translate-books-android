@@ -26,28 +26,28 @@ final class LibraryImportPlanner {
         }
     }
 
-    static Result<GlossaryStore.Glossary> glossaries(List<Source> sources) {
-        ArrayList<GlossaryStore.Glossary> imported = new ArrayList<>();
+    static Result<GlossaryStoreCore.Glossary> glossaries(List<Source> sources) {
+        ArrayList<GlossaryStoreCore.Glossary> imported = new ArrayList<>();
         ArrayList<String> failed = new ArrayList<>();
         if (sources == null) return new Result<>(imported, failed);
         for (Source source : sources) {
             String name = displayName(source, "Glossary");
             String text = source == null ? "" : source.text;
-            List<GlossaryStore.Term> terms = GlossaryStore.parseTerms(name, text);
+            List<GlossaryStoreCore.Term> terms = GlossaryStoreCore.parseTerms(name, text);
             if (terms.isEmpty()) {
                 failed.add(name + ": No valid glossary terms");
                 continue;
             }
-            GlossaryStore.Glossary glossary = new GlossaryStore.Glossary();
+            GlossaryStoreCore.Glossary glossary = new GlossaryStoreCore.Glossary();
             glossary.name = name;
-            GlossaryStore.mergeTerms(glossary, terms);
+            GlossaryStoreCore.mergeTerms(glossary, terms);
             imported.add(glossary);
         }
         return new Result<>(imported, failed);
     }
 
-    static Result<PronounStore.Profile> pronouns(List<Source> sources) {
-        ArrayList<PronounStore.Profile> imported = new ArrayList<>();
+    static Result<PronounStoreCore.Profile> pronouns(List<Source> sources) {
+        ArrayList<PronounStoreCore.Profile> imported = new ArrayList<>();
         ArrayList<String> failed = new ArrayList<>();
         if (sources == null) return new Result<>(imported, failed);
         for (Source source : sources) {
@@ -59,7 +59,7 @@ final class LibraryImportPlanner {
                 failed.add(name + ": No valid pronoun rules");
                 continue;
             }
-            PronounStore.Profile profile = new PronounStore.Profile();
+            PronounStoreCore.Profile profile = new PronounStoreCore.Profile();
             profile.name = name;
             profile.text = text;
             imported.add(profile);

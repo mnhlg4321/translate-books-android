@@ -24,12 +24,12 @@ final class ChapterBinding {
      * hash codes of the strings (cached by String), never a SHA-256. Two different texts with the same length and hash code are astronomically
      * unlikely; the plan key still uses the real SHA-256 hashes.
      */
-    static String fingerprint(String rawId, String rawName, int chapterNo, GlossaryStore.Glossary glossary, PronounStore.Profile pronoun) {
+    static String fingerprint(String rawId, String rawName, int chapterNo, GlossaryStoreCore.Glossary glossary, PronounStoreCore.Profile pronoun) {
         StringBuilder sb = new StringBuilder().append(rawId).append('|').append(rawName).append('|').append(chapterNo).append("|g:");
         if (glossary == null) sb.append('-');
         else {
             long h = 17;
-            if (glossary.terms != null) for (GlossaryStore.Term t : glossary.terms) {
+            if (glossary.terms != null) for (GlossaryStoreCore.Term t : glossary.terms) {
                 h = h * 31 + (t.source == null ? 0 : t.source.hashCode());
                 h = h * 31 + (t.target == null ? 0 : t.target.hashCode());
                 h = h * 31 + (t.category == null ? 0 : t.category.hashCode());
@@ -44,7 +44,7 @@ final class ChapterBinding {
     }
 
     /** Binding for a RAW with the chosen profiles; a null profile means "Không dùng" (no glossary / no pronoun text for this chapter). */
-    static ChapterBinding of(String rawId, String rawName, int chapterNo, GlossaryStore.Glossary glossary, PronounStore.Profile pronoun) {
+    static ChapterBinding of(String rawId, String rawName, int chapterNo, GlossaryStoreCore.Glossary glossary, PronounStoreCore.Profile pronoun) {
         ChapterBinding b = new ChapterBinding();
         b.rawId = rawId == null ? "" : rawId;
         b.rawName = rawName == null ? "" : rawName;
@@ -52,7 +52,7 @@ final class ChapterBinding {
         if (glossary != null) {
             b.glossaryId = glossary.id;
             b.glossaryName = glossary.name == null ? "" : glossary.name;
-            b.glossaryText = GlossaryStore.toPromptText(glossary);
+            b.glossaryText = GlossaryStoreCore.toPromptText(glossary);
         }
         if (pronoun != null) {
             b.pronounId = pronoun.id;

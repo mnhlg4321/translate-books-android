@@ -20,7 +20,7 @@ final class ChapterSetVolumeModel {
         final String rawName;
         final int chapterNo;
         final long sourceTime;
-        TranslationRepository.JobSummary job;
+        TranslationRepositoryCore.JobSummary job;
 
         Chapter(String key, String rawId, String rawName, int chapterNo, long sourceTime) {
             this.key = key;
@@ -92,10 +92,10 @@ final class ChapterSetVolumeModel {
 
     private ChapterSetVolumeModel() {}
 
-    static Volume build(ChapterSetStore.SetData live,
+    static Volume build(ChapterSetStoreCore.SetData live,
                         List<ChapterSession> sessions,
                         List<RunGroups.SessionInfo> infos,
-                        List<TranslationRepository.JobSummary> jobs,
+                        List<TranslationRepositoryCore.JobSummary> jobs,
                         Map<String, String> rawNames) {
         String setId = live == null ? "" : safe(live.id);
         if (setId.isEmpty() && sessions != null) {
@@ -110,17 +110,17 @@ final class ChapterSetVolumeModel {
     }
 
     static Volume build(String setId,
-                        ChapterSetStore.SetData live,
+                        ChapterSetStoreCore.SetData live,
                         List<ChapterSession> sessions,
                         List<RunGroups.SessionInfo> infos,
-                        List<TranslationRepository.JobSummary> jobs,
+                        List<TranslationRepositoryCore.JobSummary> jobs,
                         Map<String, String> rawNames) {
         String id = safe(setId);
         if (id.isEmpty() && live != null) id = safe(live.id);
         LinkedHashMap<String, Chapter> byKey = new LinkedHashMap<>();
 
         if (live != null) {
-            for (ChapterSetStore.Row row : live.rows) {
+            for (ChapterSetStoreCore.Row row : live.rows) {
                 if (row == null) continue;
                 String rawId = safe(row.rawId);
                 String name = rawName(rawId, "", rawNames);
@@ -159,9 +159,9 @@ final class ChapterSetVolumeModel {
                                    Map<String, Chapter> chapters,
                                    List<ChapterSession> sessions,
                                    List<RunGroups.SessionInfo> infos,
-                                   List<TranslationRepository.JobSummary> jobs) {
+                                   List<TranslationRepositoryCore.JobSummary> jobs) {
         if (jobs == null) return;
-        for (TranslationRepository.JobSummary job : jobs) {
+        for (TranslationRepositoryCore.JobSummary job : jobs) {
             if (job == null) continue;
             RunGroups.SessionInfo owner = RunGroups.sessionOf(job.id, job.startSessionId,
                     infos == null ? Collections.<RunGroups.SessionInfo>emptyList() : infos);
@@ -184,7 +184,7 @@ final class ChapterSetVolumeModel {
         }
     }
 
-    private static String snapshotRawId(TranslationRepository.JobSummary job, List<ChapterSession> sessions) {
+    private static String snapshotRawId(TranslationRepositoryCore.JobSummary job, List<ChapterSession> sessions) {
         if (sessions == null || safe(job.startSessionId).isEmpty() || job.preparedOrdinal < 0) return "";
         for (ChapterSession session : sessions) {
             if (session == null || !safe(job.startSessionId).equals(safe(session.sessionId))) continue;

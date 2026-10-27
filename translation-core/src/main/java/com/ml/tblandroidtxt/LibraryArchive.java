@@ -51,8 +51,8 @@ final class LibraryArchive {
     /** What a backup holds after its checks; items that failed their hash are counted in {@link #bad}. */
     static final class Contents {
         final List<RawEntry> raws = new ArrayList<>();
-        final List<GlossaryStore.Glossary> glossaries = new ArrayList<>();
-        final List<PronounStore.Profile> pronouns = new ArrayList<>();
+        final List<GlossaryStoreCore.Glossary> glossaries = new ArrayList<>();
+        final List<PronounStoreCore.Profile> pronouns = new ArrayList<>();
         String activeGlossaryId = "";
         String activePronounId = "";
         String appVersion = "";
@@ -62,8 +62,8 @@ final class LibraryArchive {
 
     /** Items to add (front of each list) and the counts the preview shows. */
     static final class MergePlan {
-        final List<GlossaryStore.Glossary> addGlossaries = new ArrayList<>();
-        final List<PronounStore.Profile> addPronouns = new ArrayList<>();
+        final List<GlossaryStoreCore.Glossary> addGlossaries = new ArrayList<>();
+        final List<PronounStoreCore.Profile> addPronouns = new ArrayList<>();
         final List<RawEntry> addRaws = new ArrayList<>();
         int existing;
         int duplicate;
@@ -73,12 +73,12 @@ final class LibraryArchive {
         int addedCount() { return addGlossaries.size() + addPronouns.size() + addRaws.size(); }
     }
 
-    static byte[] build(List<GlossaryStore.Glossary> glossaries, List<PronounStore.Profile> pronouns,
+    static byte[] build(List<GlossaryStoreCore.Glossary> glossaries, List<PronounStoreCore.Profile> pronouns,
                         String activeGlossaryId, String activePronounId, String appVersion, long createdAt) throws Exception {
         return build(glossaries, pronouns, new ArrayList<RawEntry>(), activeGlossaryId, activePronounId, appVersion, createdAt);
     }
 
-    static byte[] build(List<GlossaryStore.Glossary> glossaries, List<PronounStore.Profile> pronouns, List<RawEntry> raws,
+    static byte[] build(List<GlossaryStoreCore.Glossary> glossaries, List<PronounStoreCore.Profile> pronouns, List<RawEntry> raws,
                         String activeGlossaryId, String activePronounId, String appVersion, long createdAt) throws Exception {
         JSONObject root = new JSONObject();
         root.put("format", FORMAT);
@@ -86,9 +86,9 @@ final class LibraryArchive {
         root.put("appVersion", safe(appVersion));
         root.put("createdAt", createdAt);
         JSONArray g = new JSONArray();
-        for (GlossaryStore.Glossary item : glossaries) g.put(new JSONObject().put("sha256", integrity(item)).put("item", GlossaryStore.toJson(item)));
+        for (GlossaryStoreCore.Glossary item : glossaries) g.put(new JSONObject().put("sha256", integrity(item)).put("item", GlossaryStoreCore.toJson(item)));
         JSONArray p = new JSONArray();
-        for (PronounStore.Profile item : pronouns) p.put(new JSONObject().put("sha256", integrity(item)).put("item", PronounStore.toJson(item)));
+        for (PronounStoreCore.Profile item : pronouns) p.put(new JSONObject().put("sha256", integrity(item)).put("item", PronounStoreCore.toJson(item)));
         JSONArray r = new JSONArray();
         for (int i = 0; i < raws.size(); i++) r.put(rawJson(raws.get(i), rawPath(i, raws.get(i))));
         root.put("glossaries", g);
@@ -102,11 +102,11 @@ final class LibraryArchive {
             put(zip, "README.txt", readme(glossaries.size(), pronouns.size(), raws.size()));
             for (int i = 0; i < raws.size(); i++) put(zip, rawPath(i, raws.get(i)), raws.get(i).text);
             for (int i = 0; i < glossaries.size(); i++) {
-                GlossaryStore.Glossary item = glossaries.get(i);
+                GlossaryStoreCore.Glossary item = glossaries.get(i);
                 put(zip, "glossaries/" + number(i) + "_" + safeFileName(item.name) + ".csv", csv(item));
             }
             for (int i = 0; i < pronouns.size(); i++) {
-                PronounStore.Profile item = pronouns.get(i);
+                PronounStoreCore.Profile item = pronouns.get(i);
                 put(zip, "pronouns/" + number(i) + "_" + safeFileName(item.name) + ".txt", safe(item.text));
             }
         }
@@ -167,7 +167,7 @@ final class LibraryArchive {
         if (g != null) for (int i = 0; i < g.length(); i++) {
             try {
                 JSONObject wrapper = g.getJSONObject(i);
-                GlossaryStore.Glossary item = GlossaryStore.fromJson(wrapper.getJSONObject("item"));
+                GlossaryStoreCore.Glossary item = GlossaryStoreCore.fromJson(wrapper.getJSONObject("item"));
                 if (!integrity(item).equals(wrapper.optString("sha256"))) { out.bad.add("Glossary " + safe(item.name) + ": sai mã kiểm"); continue; }
                 out.glossaries.add(item);
             } catch (Exception e) {
@@ -177,7 +177,7 @@ final class LibraryArchive {
         if (p != null) for (int i = 0; i < p.length(); i++) {
             try {
                 JSONObject wrapper = p.getJSONObject(i);
-                PronounStore.Profile item = PronounStore.fromJson(wrapper.getJSONObject("item"));
+                PronounStoreCore.Profile item = PronounStoreCore.fromJson(wrapper.getJSONObject("item"));
                 if (!integrity(item).equals(wrapper.optString("sha256"))) { out.bad.add("Pronoun " + safe(item.name) + ": sai mã kiểm"); continue; }
                 out.pronouns.add(item);
             } catch (Exception e) {
@@ -216,18 +216,18 @@ final class LibraryArchive {
      * already there; the same id with other content is added as a copy with a new id and a dated name; content equal to
      * another profile is a duplicate. Nothing in the current library is changed or removed.
      */
-    static MergePlan plan(Contents in, List<GlossaryStore.Glossary> currentGlossaries, List<PronounStore.Profile> currentPronouns, String dateLabel) {
+    static MergePlan plan(Contents in, List<GlossaryStoreCore.Glossary> currentGlossaries, List<PronounStoreCore.Profile> currentPronouns, String dateLabel) {
         return plan(in, currentGlossaries, currentPronouns, new ArrayList<RawEntry>(), dateLabel);
     }
 
     /** {@code currentRaws} need only id and inputHash. */
-    static MergePlan plan(Contents in, List<GlossaryStore.Glossary> currentGlossaries, List<PronounStore.Profile> currentPronouns, List<RawEntry> currentRaws, String dateLabel) {
+    static MergePlan plan(Contents in, List<GlossaryStoreCore.Glossary> currentGlossaries, List<PronounStoreCore.Profile> currentPronouns, List<RawEntry> currentRaws, String dateLabel) {
         MergePlan plan = new MergePlan();
         plan.bad.addAll(in.bad);
         Map<String, String> glossaryContentById = new HashMap<>();
         Set<String> glossaryContents = new HashSet<>();
-        for (GlossaryStore.Glossary g : currentGlossaries) { glossaryContentById.put(g.id, content(g)); glossaryContents.add(content(g)); }
-        for (GlossaryStore.Glossary g : in.glossaries) {
+        for (GlossaryStoreCore.Glossary g : currentGlossaries) { glossaryContentById.put(g.id, content(g)); glossaryContents.add(content(g)); }
+        for (GlossaryStoreCore.Glossary g : in.glossaries) {
             String key = content(g);
             String sameId = glossaryContentById.get(g.id);
             if (sameId != null && sameId.equals(key)) { plan.existing++; continue; }
@@ -243,8 +243,8 @@ final class LibraryArchive {
         }
         Map<String, String> pronounContentById = new HashMap<>();
         Set<String> pronounContents = new HashSet<>();
-        for (PronounStore.Profile p : currentPronouns) { pronounContentById.put(p.id, content(p)); pronounContents.add(content(p)); }
-        for (PronounStore.Profile p : in.pronouns) {
+        for (PronounStoreCore.Profile p : currentPronouns) { pronounContentById.put(p.id, content(p)); pronounContents.add(content(p)); }
+        for (PronounStoreCore.Profile p : in.pronouns) {
             String key = content(p);
             String sameId = pronounContentById.get(p.id);
             if (sameId != null && sameId.equals(key)) { plan.existing++; continue; }
@@ -277,27 +277,27 @@ final class LibraryArchive {
     }
 
     /** Content identity: everything the person sees, without id, timestamps or the source file reference. */
-    static String content(GlossaryStore.Glossary g) {
+    static String content(GlossaryStoreCore.Glossary g) {
         StringBuilder sb = new StringBuilder("glossary");
         field(sb, g.name); field(sb, g.sourceLang); field(sb, g.targetLang);
-        if (g.terms != null) for (GlossaryStore.Term t : g.terms) { field(sb, t.source); field(sb, t.target); field(sb, t.category); field(sb, t.note); }
+        if (g.terms != null) for (GlossaryStoreCore.Term t : g.terms) { field(sb, t.source); field(sb, t.target); field(sb, t.category); field(sb, t.note); }
         return HashUtil.sha256(sb.toString());
     }
 
-    static String content(PronounStore.Profile p) {
+    static String content(PronounStoreCore.Profile p) {
         StringBuilder sb = new StringBuilder("pronoun");
         field(sb, p.name); field(sb, p.text);
         return HashUtil.sha256(sb.toString());
     }
 
     /** Integrity of a stored item: its content plus the fields import keeps. */
-    static String integrity(GlossaryStore.Glossary g) {
+    static String integrity(GlossaryStoreCore.Glossary g) {
         StringBuilder sb = new StringBuilder(content(g));
         field(sb, g.id); field(sb, String.valueOf(g.createdAt)); field(sb, String.valueOf(g.updatedAt));
         return HashUtil.sha256(sb.toString());
     }
 
-    static String integrity(PronounStore.Profile p) {
+    static String integrity(PronounStoreCore.Profile p) {
         StringBuilder sb = new StringBuilder(content(p));
         field(sb, p.id); field(sb, p.uri); field(sb, String.valueOf(p.createdAt)); field(sb, String.valueOf(p.updatedAt));
         return HashUtil.sha256(sb.toString());
@@ -325,9 +325,9 @@ final class LibraryArchive {
         return o;
     }
 
-    static String csv(GlossaryStore.Glossary g) {
+    static String csv(GlossaryStoreCore.Glossary g) {
         StringBuilder sb = new StringBuilder("source,target,category,note\n");
-        if (g.terms != null) for (GlossaryStore.Term t : g.terms) {
+        if (g.terms != null) for (GlossaryStoreCore.Term t : g.terms) {
             sb.append(csvCell(t.source)).append(',').append(csvCell(t.target)).append(',')
                     .append(csvCell(t.category)).append(',').append(csvCell(t.note)).append('\n');
         }

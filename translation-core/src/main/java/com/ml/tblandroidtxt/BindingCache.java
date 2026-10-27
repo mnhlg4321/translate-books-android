@@ -17,7 +17,7 @@ final class BindingCache {
 
     BindingCache(int capacity) { this.capacity = Math.max(1, capacity); }
 
-    synchronized ChapterBinding get(String rawId, String rawName, int chapterNo, GlossaryStore.Glossary glossary, PronounStore.Profile pronoun) {
+    synchronized ChapterBinding get(String rawId, String rawName, int chapterNo, GlossaryStoreCore.Glossary glossary, PronounStoreCore.Profile pronoun) {
         String key = ChapterBinding.fingerprint(rawId, rawName, chapterNo, glossary, pronoun);
         ChapterBinding known = entries.get(key);
         if (known != null) return known;

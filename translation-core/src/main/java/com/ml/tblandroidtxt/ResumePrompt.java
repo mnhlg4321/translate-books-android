@@ -11,7 +11,7 @@ final class ResumePrompt {
     private ResumePrompt() {}
 
     /** "x/y chunk xong · z lỗi · m chưa dịch" for one job. */
-    static String progressLine(TranslationRepository.JobProgress p) {
+    static String progressLine(TranslationRepositoryCore.JobProgress p) {
         StringBuilder sb = new StringBuilder(p.done + "/" + p.total + " chunk xong");
         if (p.error > 0) sb.append(" · ").append(p.error).append(" lỗi");
         if (p.unknown > 0) sb.append(" · ").append(p.unknown).append(" không rõ đã gửi");
@@ -19,9 +19,9 @@ final class ResumePrompt {
         return sb.toString();
     }
 
-    static String message(List<TranslationRepository.JobProgress> partial) {
+    static String message(List<TranslationRepositoryCore.JobProgress> partial) {
         StringBuilder sb = new StringBuilder(partial.size() == 1 ? "Đã có job dở cho tệp này:" : "Đã có job dở cho " + partial.size() + " tệp:");
-        for (TranslationRepository.JobProgress p : partial) sb.append("\n• ").append(p.fileName).append(" — ").append(progressLine(p));
+        for (TranslationRepositoryCore.JobProgress p : partial) sb.append("\n• ").append(p.fileName).append(" — ").append(progressLine(p));
         sb.append("\n\nTiếp tục job cũ chỉ dịch phần còn lại (không tốn tiền dịch lại phần đã xong). Dịch lại từ đầu tạo job mới và dịch toàn bộ.");
         return sb.toString();
     }
@@ -30,10 +30,10 @@ final class ResumePrompt {
      * For each prepared input (by ordinal and input hash) the newest unfinished job with the same hash that can be continued (nothing of
      * unknown delivery). {@code partial} is newest first.
      */
-    static Map<Integer, Long> chooseJobs(List<Integer> ordinals, List<String> hashes, List<TranslationRepository.JobProgress> partial) {
+    static Map<Integer, Long> chooseJobs(List<Integer> ordinals, List<String> hashes, List<TranslationRepositoryCore.JobProgress> partial) {
         Map<Integer, Long> out = new HashMap<>();
         for (int i = 0; i < ordinals.size(); i++) {
-            for (TranslationRepository.JobProgress p : partial) {
+            for (TranslationRepositoryCore.JobProgress p : partial) {
                 if (p.unknown == 0 && p.inputHash.equals(hashes.get(i))) { out.put(ordinals.get(i), p.id); break; }
             }
         }
@@ -44,9 +44,9 @@ final class ResumePrompt {
      * The job the card shows: the newest one that can be continued. A job with a request of unknown delivery cannot be continued from the
      * card, so it must not hide a newer job that can; it is shown only when nothing else is left. {@code jobs} is newest first.
      */
-    static TranslationRepository.JobProgress pickCardJob(List<TranslationRepository.JobProgress> jobs) {
+    static TranslationRepositoryCore.JobProgress pickCardJob(List<TranslationRepositoryCore.JobProgress> jobs) {
         if (jobs == null || jobs.isEmpty()) return null;
-        for (TranslationRepository.JobProgress p : jobs) if (p.unknown == 0) return p;
+        for (TranslationRepositoryCore.JobProgress p : jobs) if (p.unknown == 0) return p;
         return jobs.get(0);
     }
 

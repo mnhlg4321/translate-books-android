@@ -29,12 +29,12 @@ final class DrawerRecentModel {
 
     private DrawerRecentModel() {}
 
-    static List<Item> build(List<WorkspaceSetModel.Entry> sets,
-                            List<TranslationRepository.JobSummary> jobs,
+    static List<Item> build(List<WorkspaceSetModelCore.Entry> sets,
+                            List<TranslationRepositoryCore.JobSummary> jobs,
                             List<RunGroups.SessionInfo> sessions,
                             String activeSetId, long activeJobId, int limit) {
         Map<String, Item> bySet = new HashMap<>();
-        if (sets != null) for (WorkspaceSetModel.Entry entry : sets) {
+        if (sets != null) for (WorkspaceSetModelCore.Entry entry : sets) {
             if (entry == null || entry.id == null || entry.id.isEmpty()) continue;
             bySet.put(entry.id, new Item(true, entry.id, entry.label(), -1L,
                     entry.sortKey(), entry.id.equals(activeSetId)));
@@ -53,7 +53,7 @@ final class DrawerRecentModel {
                 bySet.put(group.run.setId, new Item(true, group.run.setId, label, -1L,
                         key, group.run.setId.equals(activeSetId)));
             } else if (group.single != null) {
-                TranslationRepository.JobSummary job = group.single;
+                TranslationRepositoryCore.JobSummary job = group.single;
                 String key = singleKey(job);
                 Item candidate = new Item(false, String.valueOf(job.id),
                         safeName(job.fileName), job.id, job.updatedAt, job.id == activeJobId);
@@ -80,7 +80,7 @@ final class DrawerRecentModel {
         return value == null || value.trim().isEmpty() ? "Tệp TXT" : value.trim();
     }
 
-    private static String singleKey(TranslationRepository.JobSummary job) {
+    private static String singleKey(TranslationRepositoryCore.JobSummary job) {
         if (job.inputHash != null && !job.inputHash.trim().isEmpty()) return "hash:" + job.inputHash.trim();
         return "name:" + safeName(job.fileName).toLowerCase(java.util.Locale.ROOT);
     }
