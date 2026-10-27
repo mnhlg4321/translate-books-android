@@ -1,5 +1,7 @@
 # Nghiên cứu: bản PC cùng phiên bản với app Android
 
+> **Owner đã duyệt phương án A ngày 2026-10-27.** Việc đầu tiên là P0a: `docs/V424_P0A_GOLDEN_PROMPT_WORK_REQUEST.md`.
+
 **Quyết định sản phẩm được phục vụ:** có làm bản Windows chạy song song với bản điện thoại hay không, và làm theo cách nào để mỗi tính năng chỉ phải viết một lần.
 
 **Phạm vi tài liệu:** chỉ nghiên cứu và đề xuất. Không sửa mã, không gọi provider. Số liệu đo trên `feature/v4.23` tại `7650d9ff` (2026-10-27).

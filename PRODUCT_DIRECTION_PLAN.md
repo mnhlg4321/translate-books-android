@@ -203,3 +203,8 @@ Không có ca sai/sót theo phân xử mới cần truy vết thêm. Điều đ�
 - **2026-10-23, owner chốt về prompt:**
   - giữ v18; không làm A/B, không dùng Refine;
   - đo offline 5 chỉ số sau tập thật tiếp theo dịch bằng v18, rồi mới quyết định thêm quy tắc.
+
+- **2026-10-27, owner duyệt phương án A cho bản PC** (`docs/PC_APP_RESEARCH.md`):
+  - tách lõi dịch Java dùng chung; app PC viết bằng JavaFX;
+  - làm trên `feature/v4.24`, bắt đầu bằng P0a (test prompt vàng, không đổi mã app);
+  - P0b trở đi đổi cấu trúc mã điện thoại, chờ v4.23 chốt.
