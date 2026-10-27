@@ -1,6 +1,6 @@
 package com.ml.tblandroidtxt;
 
-import android.content.SharedPreferences;
+ 
 import java.util.Map;
 import java.util.Objects;
 
@@ -9,7 +9,7 @@ final class LibraryPrefs {
     static final String CORRUPT_SUFFIX = "_corrupt_";
 
     /** Copies {@code raw} to {@code key_corrupt_<epochMillis>} once; returns the key holding the copy. */
-    static synchronized String preserveCorrupt(SharedPreferences p, String key, String raw) {
+    static synchronized String preserveCorrupt(KeyValueStore p, String key, String raw) {
         String prefix = key + CORRUPT_SUFFIX;
         for (Map.Entry<String, ?> e : p.getAll().entrySet()) {
             if (e.getKey().startsWith(prefix) && Objects.equals(e.getValue(), raw)) return e.getKey();

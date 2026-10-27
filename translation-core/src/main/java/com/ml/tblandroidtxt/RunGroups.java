@@ -27,10 +27,10 @@ final class RunGroups {
     }
 
     static final class Entry {
-        final TranslationRepository.JobSummary job;
+        final TranslationRepositoryCore.JobSummary job;
         /** Session the job was created in when this run only continued it; empty otherwise. */
         final String continuedFromSession;
-        Entry(TranslationRepository.JobSummary job, String continuedFromSession) { this.job = job; this.continuedFromSession = continuedFromSession; }
+        Entry(TranslationRepositoryCore.JobSummary job, String continuedFromSession) { this.job = job; this.continuedFromSession = continuedFromSession; }
     }
 
     static final class Run {
@@ -54,12 +54,12 @@ final class RunGroups {
     /** Either a run or a job that belongs to no known run. */
     static final class Item {
         final Run run;
-        final TranslationRepository.JobSummary single;
-        Item(Run run, TranslationRepository.JobSummary single) { this.run = run; this.single = single; }
+        final TranslationRepositoryCore.JobSummary single;
+        Item(Run run, TranslationRepositoryCore.JobSummary single) { this.run = run; this.single = single; }
         long sortKey() { return run != null ? run.lastUpdated : single.updatedAt; }
     }
 
-    private static boolean failed(TranslationRepository.JobSummary j) {
+    private static boolean failed(TranslationRepositoryCore.JobSummary j) {
         JobStatus.Kind k = JobStatus.classify(j.status);
         if (k == JobStatus.Kind.FINISHED) return false;
         return j.failedChunks > 0 || "error".equalsIgnoreCase(j.status) || k == JobStatus.Kind.NEEDS_REVIEW || k == JobStatus.Kind.CONFLICT;
@@ -77,7 +77,7 @@ final class RunGroups {
     }
 
     /** {@code jobs} newest first. Result is newest first by last activity. */
-    static List<Item> build(List<TranslationRepository.JobSummary> jobs, List<SessionInfo> sessions) {
+    static List<Item> build(List<TranslationRepositoryCore.JobSummary> jobs, List<SessionInfo> sessions) {
         Map<String, SessionInfo> byId = new HashMap<>();
         for (SessionInfo s : sessions) byId.put(s.sessionId, s);
         List<SessionInfo> newestFirst = new ArrayList<>(sessions);
@@ -86,7 +86,7 @@ final class RunGroups {
         });
         Map<String, Run> runs = new LinkedHashMap<>();
         List<Item> items = new ArrayList<>();
-        for (TranslationRepository.JobSummary j : jobs) {
+        for (TranslationRepositoryCore.JobSummary j : jobs) {
             String owner = null;
             for (SessionInfo s : newestFirst) if (s.resumedJobs.contains(j.id)) { owner = s.sessionId; break; }
             if (owner == null && j.startSessionId != null && byId.containsKey(j.startSessionId)) owner = j.startSessionId;
