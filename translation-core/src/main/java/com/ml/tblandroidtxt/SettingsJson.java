@@ -53,4 +53,33 @@ public final class SettingsJson {
         o.remove("apiKey");
         return o.toString();
     }
+
+    public static AppSettings fromJson(String json) {
+        AppSettings s = new AppSettings();
+        try {
+            JSONObject o = new JSONObject(json == null ? "{}" : json);
+            s.editorial = EditorialPreferences.fromJson(o.optJSONObject("editorial") == null ? "{}" : o.getJSONObject("editorial").toString());
+            s.provider = o.optString("provider", s.provider); s.baseUrl = o.optString("baseUrl", s.baseUrl); s.apiKey = o.optString("apiKey", s.apiKey); s.model = o.optString("model", s.model);
+            s.sourceLanguage = o.optString("sourceLanguage", s.sourceLanguage); s.targetLanguage = o.optString("targetLanguage", s.targetLanguage); s.outputFilenamePattern = o.optString("outputFilenamePattern", s.outputFilenamePattern);
+            s.chunkMode = o.optString("chunkMode", s.chunkMode); s.maxTokensPerChunk = o.optInt("maxTokensPerChunk", s.maxTokensPerChunk); s.maxCharsPerChunk = o.optInt("maxCharsPerChunk", s.maxCharsPerChunk);
+            s.softLimitRatio = (float)o.optDouble("softLimitRatio", s.softLimitRatio); s.timeoutSeconds = o.optInt("timeoutSeconds", s.timeoutSeconds); s.maxAttempts = o.optInt("maxAttempts", s.maxAttempts);
+            s.initialRetryDelayMs=o.optInt("initialRetryDelayMs",s.initialRetryDelayMs);s.maxRetryDelayMs=o.optInt("maxRetryDelayMs",s.maxRetryDelayMs);s.retryOnEmpty=o.optBoolean("retryOnEmpty",s.retryOnEmpty);s.retryOnTruncation=o.optBoolean("retryOnTruncation",s.retryOnTruncation);s.retryOnValidationFailure=o.optBoolean("retryOnValidationFailure",s.retryOnValidationFailure);
+            s.temperature = (float)o.optDouble("temperature", s.temperature); s.maxOutputTokens = o.optInt("maxOutputTokens", s.maxOutputTokens); s.contextChars = o.optInt("contextChars", s.contextChars);
+            s.contextOverlapEnabled=o.optBoolean("contextOverlapEnabled",s.contextOverlapEnabled);
+            s.optimizationPreset = o.optString("optimizationPreset", s.optimizationPreset);
+            s.reasoningEffort = o.optString("reasoningEffort", s.reasoningEffort);
+            s.refineAfter = o.optBoolean("refineAfter", s.refineAfter); s.bilingualOutput = o.optBoolean("bilingualOutput", s.bilingualOutput); s.savePartialOutput = o.optBoolean("savePartialOutput", s.savePartialOutput);
+            s.stopOnCostLimit = o.optBoolean("stopOnCostLimit", s.stopOnCostLimit); s.costLimitUsd = o.optDouble("costLimitUsd", s.costLimitUsd);
+            s.costWarningUsd=o.optDouble("costWarningUsd",s.costWarningUsd);s.maxRetryCostUsd=o.optDouble("maxRetryCostUsd",s.maxRetryCostUsd);s.maxPaidRetries=o.optInt("maxPaidRetries",s.maxPaidRetries);s.stopWhenPricingUnknown=o.optBoolean("stopWhenPricingUnknown",s.stopWhenPricingUnknown);
+            s.translationInstructions = o.optString("translationInstructions", s.translationInstructions); s.refinementInstructions = o.optString("refinementInstructions", s.refinementInstructions);
+            s.instructionUri = o.optString("instructionUri", s.instructionUri); s.instructionName = o.optString("instructionName", s.instructionName); s.envUri = o.optString("envUri", s.envUri); s.envName = o.optString("envName", s.envName);
+            s.glossaryText = o.optString("glossaryText", s.glossaryText);
+            s.pronounText = o.optString("pronounText", s.pronounText); s.pronounUri = o.optString("pronounUri", s.pronounUri); s.pronounName = o.optString("pronounName", s.pronounName);
+            s.selectedPronounId=o.optString("selectedPronounId",s.selectedPronounId);s.selectedPronounName=o.optString("selectedPronounName",s.selectedPronounName);
+            s.glossaryInjectLimit = o.optInt("glossaryInjectLimit", s.glossaryInjectLimit); s.pronounInjectLimit = o.optInt("pronounInjectLimit", s.pronounInjectLimit); s.languageProfile = o.optString("languageProfile", s.languageProfile);
+            s.selectedGlossaryId = o.optString("selectedGlossaryId", s.selectedGlossaryId); s.selectedGlossaryName = o.optString("selectedGlossaryName", s.selectedGlossaryName);
+            s.outputUri = o.optString("outputUri", s.outputUri); s.outputName = o.optString("outputName", s.outputName); s.outputTreeUri = o.optString("outputTreeUri", s.outputTreeUri); s.outputTreeName = o.optString("outputTreeName", s.outputTreeName);
+        } catch (Exception ignored) {}
+        return s;
+    }
 }

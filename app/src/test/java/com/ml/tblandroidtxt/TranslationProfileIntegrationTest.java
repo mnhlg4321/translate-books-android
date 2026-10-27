@@ -309,7 +309,7 @@ public class TranslationProfileIntegrationTest {
         assertNotNull(method(TranslationEngine.class, "refineWithRetry", long.class, Chunk.class,
                 String.class, AppSettings.class, TranslationEngine.CancelChecker.class,
                 TranslationEngine.UsageSink.class, TranslationEngine.EventSink.class));
-        assertNotNull(declaredMethod(TranslatorService.class, "refineWithRetry", Chunk.class,
+        assertNotNull(declaredMethod(TranslationRunner.class, "refineWithRetry", Chunk.class,
                 String.class, AppSettings.class));
         assertNotNull(method(TranslationEngine.class, "refineWithRetry", String.class,
                 String.class, AppSettings.class, TranslationEngine.CancelChecker.class,
