@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Locale;
 
 public final class OutputIntegrityAudit {
-    public static Result audit(List<TranslationRepository.ChunkRow> rows) {
+    public static Result audit(List<TranslationRepositoryCore.ChunkRow> rows) {
         Result r=new Result(); if(rows==null||rows.isEmpty()){r.errors.add("NO_ACTIVE_CHUNKS");return r;}
         HashSet<Integer>indices=new HashSet<>();int expected=0,expectedOffset=0;String prior="";boolean offsetsKnown=true;
-        for(TranslationRepository.ChunkRow c:rows){
+        for(TranslationRepositoryCore.ChunkRow c:rows){
             if("SUPERSEDED".equalsIgnoreCase(c.status)||"superseded".equalsIgnoreCase(c.status))continue;
             if(!indices.add(c.index))r.errors.add("DUPLICATE_INDEX:"+c.index);
             if(c.index!=expected)r.errors.add("MISSING_OR_REORDERED_INDEX:"+expected); expected++;
