@@ -275,6 +275,38 @@
         "pronounInjectLimit": 40,
         "refineAfter": true
       }
+    },
+    {
+      "name": "catalog_known",
+      "description": "balanced_default with a fixed test catalog: model known, context 8000 (lowers Chunker safe limit), priced",
+      "glossaryFile": "glossary.csv",
+      "pronounFile": "pronoun.csv",
+      "settings": {
+        "provider": "openrouter",
+        "model": "openai/gpt-5.6-luna",
+        "sourceLanguage": "Japanese",
+        "targetLanguage": "Vietnamese",
+        "reasoning": "medium",
+        "temperature": 0.3,
+        "optimizationPreset": "balanced",
+        "chunkMode": "token",
+        "maxTokensPerChunk": 1700,
+        "maxCharsPerChunk": 0,
+        "softLimitRatio": 0.25,
+        "maxOutputTokens": 4096,
+        "contextChars": 600,
+        "contextOverlapEnabled": true,
+        "glossaryInjectLimit": 80,
+        "pronounInjectLimit": 40,
+        "refineAfter": false
+      },
+      "catalog": {
+        "contextLength": 8000,
+        "inputPerMillion": 1.5,
+        "outputPerMillion": 6.0,
+        "cachedInputPerMillion": 0.15,
+        "pricingSource": "golden-test"
+      }
     }
   ]
 }

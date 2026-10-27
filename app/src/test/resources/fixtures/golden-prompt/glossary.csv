@@ -6,5 +6,6 @@ source,target,category,note
 潮見町,thị trấn Shiomi,place,Tên thị trấn cảng
 時計塔,tháp đồng hồ,place,Địa điểm chính của chương
 歯車,bánh răng,term,
-霧笛,còi sương mù,term,Không xuất hiện trong chương mẫu này
+霧笛,còi sương mù,term,Có xuất hiện trong RAW (câu mở đầu)
+振り子,,term,Dòng có target trống; từ có trong RAW
 灯台守,người giữ hải đăng,term,Mục không xuất hiện trong RAW

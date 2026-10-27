@@ -1,6 +1,6 @@
 {
   "breakdownContext": 2007,
-  "breakdownGlossary": 437,
+  "breakdownGlossary": 433,
   "breakdownInstruction": 356,
   "breakdownPronoun": 150,
   "breakdownSource": 3346,
@@ -9,10 +9,10 @@
   "costHigh": "NaN",
   "costLow": "NaN",
   "expectedCachedInputTokens": 0,
-  "expectedUncachedInputTokens": 7019,
+  "expectedUncachedInputTokens": 7017,
   "genericTokenizer": true,
-  "inputTokensHigh": 7721,
-  "inputTokensLow": 7019,
+  "inputTokensHigh": 7719,
+  "inputTokensLow": 7017,
   "noCacheCostHigh": "NaN",
   "noCacheCostLow": "NaN",
   "outputTokensHigh": 4852,
@@ -21,6 +21,6 @@
   "pricingSource": "pricing-unavailable",
   "sourceTokens": 3346,
   "tokenizerState": "generic approximation",
-  "totalTokensHigh": 12573,
-  "totalTokensLow": 10532
+  "totalTokensHigh": 12571,
+  "totalTokensLow": 10530
 }

@@ -43,7 +43,7 @@ public class GoldenPromptSnapshotTest {
     private static final boolean UPDATE = "true".equals(System.getProperty("golden.update", "false"));
     private static final List<String> EXPECTED_CASES = Arrays.asList("balanced_default", "no_overlap", "economy_char",
             "quality", "full_no_context", "reasoning_high", "reasoning_off", "tight_inject_limits",
-            "no_glossary_no_pronoun", "legacy_pronoun", "refine_on_estimate");
+            "no_glossary_no_pronoun", "legacy_pronoun", "refine_on_estimate", "catalog_known");
 
     private ModelCatalog.CatalogState savedCatalog;
     private boolean catalogSwapped;
@@ -73,6 +73,7 @@ public class GoldenPromptSnapshotTest {
     @Test public void noGlossaryNoPronoun() throws Exception { runCase("no_glossary_no_pronoun"); }
     @Test public void legacyPronoun() throws Exception { runCase("legacy_pronoun"); }
     @Test public void refineOnEstimate() throws Exception { runCase("refine_on_estimate"); }
+    @Test public void catalogKnown() throws Exception { runCase("catalog_known"); }
 
     @Test public void casesFileMatchesTestMethods() throws Exception {
         JSONArray cases = new JSONObject(readResource("cases.json")).getJSONArray("cases");
@@ -107,12 +108,27 @@ public class GoldenPromptSnapshotTest {
 
         // Same order as TranslationEngine: normalize, chunk, plan per chunk, request body.
         AppSettings s = AppValidator.normalize(settings);
-        assertFalse("test catalog must be the neutral one", ModelCatalog.existsInActiveCatalog(s.model));
+        String neutralChunks = chunksJson(Chunker.chunkText(raw, s));
+        if (spec.has("catalog")) {
+            JSONObject cat = spec.getJSONObject("catalog");
+            ModelCatalog.installForTests(Collections.singletonList(new ModelCatalog.ModelInfo(s.model,
+                    cat.getDouble("inputPerMillion"), cat.getDouble("outputPerMillion"),
+                    cat.getDouble("cachedInputPerMillion"), cat.getInt("contextLength"), s.provider,
+                    cat.getString("pricingSource"))), ModelCatalog.LoadingState.READY);
+            catalogSwapped = true; // restored in @After
+        } else {
+            assertFalse("test catalog must be the neutral one", ModelCatalog.existsInActiveCatalog(s.model));
+        }
         List<Chunk> chunks = Chunker.chunkText(raw, s);
         assertTrue(name + ": fixture must split into at least 3 chunks, got " + chunks.size(), chunks.size() >= 3);
 
         TreeMap<String, byte[]> actual = new TreeMap<>();
-        actual.put("chunks.json", utf8(chunksJson(chunks)));
+        String chunkJson = chunksJson(chunks);
+        if (spec.has("catalog")) {
+            assertFalse(name + ": the catalog must change the chunking, otherwise the case proves nothing",
+                    neutralChunks.equals(chunkJson));
+        }
+        actual.put("chunks.json", utf8(chunkJson));
         for (int i = 0; i < chunks.size(); i++) {
             Chunk chunk = chunks.get(i);
             PromptPlan plan = PromptPlan.forTranslation(chunk, i == 0 ? "" : previous, s);

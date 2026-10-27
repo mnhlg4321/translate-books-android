@@ -14,7 +14,7 @@ Không giải thích; không thêm chú thích của người dịch.
 潮見町 => thị trấn Shiomi [place] | Tên thị trấn cảng
 時計塔 => tháp đồng hồ [place] | Địa điểm chính của chương
 歯車 => bánh răng [term]
-霧笛 => còi sương mù [term] | Không xuất hiện trong chương mẫu này
+霧笛 => còi sương mù [term] | Có xuất hiện trong RAW (câu mở đầu)
 
 # PRONOUN LOCKS
 三枝 → 白石ハル: ta/(omit) | Chỉ có ngôi tự xưng

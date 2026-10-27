@@ -17,7 +17,7 @@ Only the glossary/pronoun entries relevant to this chunk are injected below. Tre
 三枝 => Saegusa [character] | Thợ già; sư phụ của hai người
 美沙 => Misa [character] | Vợ đã mất của Saegusa
 歯車 => bánh răng [term]
-霧笛 => còi sương mù [term] | Không xuất hiện trong chương mẫu này
+霧笛 => còi sương mù [term] | Có xuất hiện trong RAW (câu mở đầu)
 
 # CHARACTER / PRONOUN RULES
 

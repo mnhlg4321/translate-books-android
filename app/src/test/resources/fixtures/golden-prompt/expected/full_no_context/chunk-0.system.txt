@@ -20,7 +20,7 @@ Only the glossary/pronoun entries relevant to this chunk are injected below. Tre
 潮見町 => thị trấn Shiomi [place] | Tên thị trấn cảng
 時計塔 => tháp đồng hồ [place] | Địa điểm chính của chương
 歯車 => bánh răng [term]
-霧笛 => còi sương mù [term] | Không xuất hiện trong chương mẫu này
+霧笛 => còi sương mù [term] | Có xuất hiện trong RAW (câu mở đầu)
 
 # CHARACTER / PRONOUN RULES
 

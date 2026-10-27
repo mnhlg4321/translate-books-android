@@ -11,7 +11,7 @@ Không giải thích; không thêm chú thích của người dịch.
 三枝 => Saegusa [character] | Thợ già; sư phụ của hai người
 潮見町 => thị trấn Shiomi [place] | Tên thị trấn cảng
 歯車 => bánh răng [term]
-霧笛 => còi sương mù [term] | Không xuất hiện trong chương mẫu này
+霧笛 => còi sương mù [term] | Có xuất hiện trong RAW (câu mở đầu)
 
 # PRONOUN LOCKS
 三枝 → @group:apprentices: ta/các con | Sư phụ nói với hai học trò
