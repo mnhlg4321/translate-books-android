@@ -43,3 +43,28 @@
 .statusbar { -fx-background-color: -tbl-surface; -fx-border-color: -tbl-divider; -fx-border-width: 1 0 0 0; -fx-padding: 6 14 6 14; }
 .progress-bar > .bar { -fx-background-color: -tbl-accent; -fx-background-insets: 0; -fx-background-radius: 3; }
 .progress-bar > .track { -fx-background-color: -tbl-divider; -fx-background-radius: 3; }
+
+/* Dialogs are separate windows: they take the same variables and text size from the inline style the app copies onto them. */
+.tbl-dialog { -fx-background-color: -tbl-bg; -fx-text-fill: -tbl-text; -fx-font-family: "Segoe UI", "Yu Gothic UI", sans-serif; }
+.tbl-dialog .label { -fx-text-fill: -tbl-text; -fx-font-size: 1em; }
+.tbl-dialog > .header-panel { -fx-background-color: -tbl-surface; -fx-padding: 12 16 8 16; }
+.tbl-dialog > .header-panel .label { -fx-font-size: 1.15em; -fx-font-weight: bold; }
+.tbl-dialog > .content.label { -fx-font-size: 1em; -fx-padding: 8 16 12 16; }
+.tbl-dialog .button-bar .button { -fx-background-color: -tbl-surface; -fx-text-fill: -tbl-text; -fx-border-color: -tbl-outline; -fx-border-radius: 5; -fx-background-radius: 5; }
+.tbl-dialog .button-bar .button:default { -fx-background-color: -tbl-accent; -fx-text-fill: -tbl-on-accent; -fx-font-weight: bold; }
+.tbl-dialog .text-area, .tbl-dialog .text-field, .tbl-dialog .list-view, .tbl-dialog .table-view { -fx-background-color: -tbl-surface; }
+
+/* Density and corner styles chosen in Giao diện. */
+.density-compact .page { -fx-padding: 12; }
+.density-compact .card { -fx-padding: 8; }
+.density-compact .nav-button { -fx-padding: 6 16 6 16; }
+.density-compact .nav-sub { -fx-padding: 5 16 5 34; }
+.density-compact .primary, .density-compact .secondary { -fx-padding: 4 12 4 12; }
+.corners-square .card, .corners-square .primary, .corners-square .secondary, .corners-square .text-field, .corners-square .text-area, .corners-square .combo-box-base, .corners-square .password-field { -fx-background-radius: 0; -fx-border-radius: 0; }
+.corners-round .card { -fx-background-radius: 12; -fx-border-radius: 12; }
+.corners-round .primary, .corners-round .secondary { -fx-background-radius: 14; -fx-border-radius: 14; }
+.corners-round .text-field, .corners-round .text-area, .corners-round .combo-box-base, .corners-round .password-field { -fx-background-radius: 9; -fx-border-radius: 9; }
+
+/* A visible focus ring on every control, for keyboard use. */
+.button:focused, .toggle-button:focused, .check-box:focused > .box, .radio-button:focused > .radio, .combo-box-base:focused, .list-view:focused, .table-view:focused { -fx-border-color: -tbl-accent; -fx-border-width: 2; }
+.text-field:focused, .text-area:focused, .password-field:focused { -fx-border-color: -tbl-accent; -fx-border-width: 2; }

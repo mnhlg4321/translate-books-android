@@ -85,8 +85,8 @@ public final class DesktopApp extends Application {
     private HistoryPanel historyPanel;
     private JobsPage jobsPage;
     private RawPage rawPage;
-    private final ComboBox<UiAppearanceCore.Palette> themeBox = new ComboBox<>();
-    private final ComboBox<Integer> fontBox = new ComboBox<>();
+    private AppearancePage appearancePage;
+    private DesktopAppearance appearance = DesktopAppearance.defaults();
     private Scene scene;
 
     @Override public void start(Stage primary) throws Exception {
@@ -136,7 +136,7 @@ public final class DesktopApp extends Application {
 
         scene = new Scene(root, 1280, 720);
         scene.getStylesheets().add(getClass().getResource("/desktop/app.css").toExternalForm());
-        applyTheme(DesktopTheme.savedThemeId(runtime.appearancePrefs()), DesktopTheme.savedFontPercent(runtime.appearancePrefs()));
+        applyAppearance(DesktopAppearance.load(runtime.appearancePrefs()));
         primary.setTitle("Translate Books");
         primary.setScene(scene);
         primary.setOnCloseRequest(e -> { if (!confirmLeaveAll()) { e.consume(); return; } if (rawPage != null) rawPage.settle(); runtime.close(); releaseInstanceLock(); });
@@ -388,21 +388,8 @@ public final class DesktopApp extends Application {
     }
 
     private Node buildAppearancePage() {
-        themeBox.getItems().setAll(DesktopTheme.themes());
-        themeBox.setConverter(new javafx.util.StringConverter<UiAppearanceCore.Palette>() {
-            @Override public String toString(UiAppearanceCore.Palette p) { return p == null ? "" : p.name; }
-            @Override public UiAppearanceCore.Palette fromString(String s) { return null; }
-        });
-        for (int percent : DesktopTheme.FONT_PERCENTS) fontBox.getItems().add(percent);
-        fontBox.setConverter(new javafx.util.StringConverter<Integer>() {
-            @Override public String toString(Integer v) { return v == null ? "" : v + "%"; }
-            @Override public Integer fromString(String s) { return null; }
-        });
-        themeBox.setValue(DesktopTheme.theme(DesktopTheme.savedThemeId(runtime.appearancePrefs())));
-        fontBox.setValue(DesktopTheme.savedFontPercent(runtime.appearancePrefs()));
-        themeBox.setOnAction(e -> themeChanged());
-        fontBox.setOnAction(e -> themeChanged());
-        return page(NavModel.title(NavModel.APPEARANCE), card(new Label("Giao diện"), row("Màu", themeBox), row("Cỡ chữ", fontBox)));
+        appearancePage = new AppearancePage(this, runtime);
+        return appearancePage.node();
     }
 
     void refreshLibrary() {
@@ -529,22 +516,26 @@ public final class DesktopApp extends Application {
 
     // ---- theme ----
 
-    void applyTheme(String themeId, int fontPercent) {
-        scene.getRoot().setStyle(DesktopTheme.style(DesktopTheme.theme(themeId), fontPercent));
+    /** Paints the window with the chosen palette, text size, density and corners; dialogs opened later copy the same look. */
+    void applyAppearance(DesktopAppearance a) {
+        appearance = a;
+        javafx.scene.Parent root = scene.getRoot();
+        root.setStyle(DesktopTheme.style(a.resolve(a.mode.equals(DesktopAppearance.MODE_SYSTEM) && DesktopAppearance.systemIsNight()), a.fontPercent));
+        root.getStyleClass().removeAll("density-compact", "density-comfortable", "corners-square", "corners-medium", "corners-round");
+        root.getStyleClass().addAll(a.rootClasses());
     }
 
-    private void themeChanged() {
-        UiAppearanceCore.Palette p = themeBox.getValue();
-        Integer font = fontBox.getValue();
-        if (p == null || font == null) return;
-        DesktopTheme.save(runtime.appearancePrefs(), p.id, font);
-        applyTheme(p.id, font);
-    }
+    DesktopAppearance appearance() { return appearance; }
 
-    /** QA: set theme and text size the way the controls do. */
+    AppearancePage appearancePage() { return appearancePage; }
+
+    /** QA: set a fixed palette and text size the way the controls do. */
     void setAppearance(String themeId, int fontPercent) {
-        themeBox.setValue(DesktopTheme.theme(themeId));
-        fontBox.setValue(DesktopTheme.nearestFontPercent(fontPercent));
+        DesktopAppearance a = DesktopAppearance.load(runtime.appearancePrefs());
+        a.mode = DesktopAppearance.MODE_FIXED;
+        a.palette = themeId;
+        a.fontPercent = DesktopAppearance.nearestFont(fontPercent);
+        appearancePage.set(a);
     }
 
     // ---- Cài đặt ----
@@ -609,7 +600,18 @@ public final class DesktopApp extends Application {
     /** QA screenshots: dialogs are shown without blocking, handed to the probe, and count as cancelled. */
     void setDialogProbe(java.util.function.Consumer<javafx.scene.control.Dialog<?>> probe) { this.dialogProbe = probe; }
 
+    /** A dialog is its own window, so it gets the stylesheet, the palette variables, the text size and the classes of the main window. */
+    private void styleDialog(javafx.scene.control.Dialog<?> dialog) {
+        javafx.scene.control.DialogPane pane = dialog.getDialogPane();
+        pane.getStylesheets().setAll(scene.getStylesheets());
+        pane.setStyle(scene.getRoot().getStyle());
+        pane.getStyleClass().addAll(appearance.rootClasses());
+        pane.getStyleClass().add("tbl-dialog");
+        if (dialog.getOwner() == null && stage != null) dialog.initOwner(stage);
+    }
+
     <T> Optional<T> showDialog(javafx.scene.control.Dialog<T> dialog) {
+        styleDialog(dialog);
         if (dialogProbe != null) {
             dialog.show();
             dialogProbe.accept(dialog);
