@@ -131,7 +131,7 @@ final class VolumePage {
         progressLabel.getStyleClass().add("muted");
         VBox run = card(new HBox(10, chooseOutput, outputLabel), new HBox(10, reEstimate, estimateLabel),
                 new HBox(10, startButton, pauseButton, resumeButton, cancelButton, openOutputButton), progressLabel);
-        VBox page = DesktopApp.page("Dịch cả tập", sources, review, run);
+        VBox page = DesktopApp.page(NavModel.title(NavModel.VOLUME), sources, review, run);
         updateControls();
         javafx.scene.control.ScrollPane scroll = new javafx.scene.control.ScrollPane(page);
         scroll.setFitToWidth(true);

@@ -23,6 +23,8 @@
 .nav { -fx-background-color: -tbl-surface; -fx-border-color: -tbl-divider; -fx-border-width: 0 1 0 0; -fx-padding: 12 0 12 0; }
 .nav-title { -fx-font-size: 1.15em; -fx-font-weight: bold; -fx-text-fill: -tbl-text; -fx-padding: 4 16 12 16; }
 .nav-button { -fx-background-color: transparent; -fx-text-fill: -tbl-text2; -fx-alignment: center-left; -fx-padding: 10 16 10 16; -fx-background-radius: 0; -fx-pref-width: 170; -fx-cursor: hand; }
+.nav-sub { -fx-padding: 8 16 8 34; }
+.nav-group { -fx-background-color: transparent; -fx-text-fill: -tbl-text; -fx-font-weight: bold; -fx-alignment: center-left; -fx-padding: 10 16 4 16; -fx-pref-width: 170; -fx-cursor: hand; }
 .nav-button:hover { -fx-background-color: -tbl-raised; }
 .nav-button:selected { -fx-background-color: -tbl-raised; -fx-text-fill: -tbl-accent; -fx-font-weight: bold; -fx-border-color: -tbl-accent; -fx-border-width: 0 0 0 3; }
 .page { -fx-background-color: -tbl-bg; -fx-padding: 20; }

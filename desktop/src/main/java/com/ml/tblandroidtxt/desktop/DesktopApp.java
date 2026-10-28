@@ -61,8 +61,10 @@ public final class DesktopApp extends Application {
     private Stage stage;
     private final StackPane content = new StackPane();
     private final ToggleGroup nav = new ToggleGroup();
-    private final List<Node> pages = new ArrayList<>();
-    private final List<ToggleButton> navButtons = new ArrayList<>();
+    private final java.util.Map<String, Node> pages = new java.util.LinkedHashMap<>();
+    private final java.util.Map<String, ToggleButton> navButtons = new java.util.LinkedHashMap<>();
+    private final java.util.Map<String, TextField> searchFields = new java.util.HashMap<>();
+    private String currentKey = NavModel.TRANSLATE;
 
     // status bar
     private final Label statusLabel = new Label("Sẵn sàng");
@@ -137,11 +139,21 @@ public final class DesktopApp extends Application {
         navBox.getChildren().add(title);
         volumePage = new VolumePage(this, runtime);
         historyPanel = new HistoryPanel(this, runtime);
-        addPage(navBox, "Dịch", buildTranslatePage());
-        addPage(navBox, "Dịch cả tập", volumePage.node());
-        addPage(navBox, "Công việc", buildJobsPage());
-        addPage(navBox, "Thư viện", buildLibraryPage());
-        addPage(navBox, "Cài đặt", buildSettingsPage());
+        buildLibraryShared();
+        java.util.Map<String, Node> built = new java.util.HashMap<>();
+        built.put(NavModel.TRANSLATE, buildTranslatePage());
+        built.put(NavModel.VOLUME, volumePage.node());
+        built.put(NavModel.JOBS, buildJobsPage());
+        built.put(NavModel.RAW, buildRawPage());
+        built.put(NavModel.GLOSSARY, buildGlossaryPage());
+        built.put(NavModel.PRONOUN, buildPronounPage());
+        built.put(NavModel.SETS, buildSetsPage());
+        built.put(NavModel.SETTINGS, buildSettingsPage());
+        built.put(NavModel.APPEARANCE, buildAppearancePage());
+        for (NavModel.Entry e : NavModel.entries()) {
+            if (e.key.equals(NavModel.RAW)) addGroupHeading(navBox, "Thư viện", NavModel.LIBRARY);
+            addPage(navBox, e, built.get(e.key));
+        }
         root.setLeft(navBox);
         root.setCenter(content);
         HBox bar = new HBox(14, statusLabel, progress, metricsLabel);
@@ -156,7 +168,8 @@ public final class DesktopApp extends Application {
         primary.setTitle("Translate Books");
         primary.setScene(scene);
         primary.setOnCloseRequest(e -> { runtime.close(); releaseInstanceLock(); });
-        select(0);
+        scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, this::shortcut);
+        select(NavModel.restore(runtime.appearancePrefs()));
         loadSettingsIntoForm();
         refreshLibrary();
         refreshJobs();
@@ -183,36 +196,63 @@ public final class DesktopApp extends Application {
         try { if (instanceLock != null) instanceLock.release(); if (lockChannel != null) lockChannel.close(); } catch (Exception ignored) { }
     }
 
-    private void addPage(VBox navBox, String name, Node page) {
-        ToggleButton b = new ToggleButton(name);
+    private void addGroupHeading(VBox navBox, String text, String groupKey) {
+        Button heading = new Button(text);
+        heading.getStyleClass().add("nav-group");
+        heading.setOnAction(e -> select(NavModel.lastLibrary(runtime.appearancePrefs())));
+        navBox.getChildren().add(heading);
+    }
+
+    private void addPage(VBox navBox, NavModel.Entry entry, Node page) {
+        ToggleButton b = new ToggleButton(entry.label);
         b.getStyleClass().add("nav-button");
+        if (!entry.parent.isEmpty()) b.getStyleClass().add("nav-sub");
         b.setToggleGroup(nav);
-        int index = pages.size();
-        b.setOnAction(e -> select(index));
-        pages.add(page);
-        navButtons.add(b);
+        b.setOnAction(e -> select(entry.key));
+        pages.put(entry.key, page);
+        navButtons.put(entry.key, b);
         navBox.getChildren().add(b);
         page.setVisible(false);
         content.getChildren().add(page);
     }
 
-    void select(int index) {
-        for (int i = 0; i < pages.size(); i++) pages.get(i).setVisible(i == index);
-        navButtons.get(index).setSelected(true);
-        String name = navButtons.get(index).getText();
-        if (name.equals("Dịch cả tập")) volumePage.refreshRaw();
-        if (name.equals("Công việc")) refreshJobs();
-        if (name.equals("Thư viện")) refreshLibrary();
-        if (name.equals("Cài đặt")) { keyMasked.setText(runtime.secrets().masked()); profileUndoButton.setDisable(!runtime.canUndoProfile()); }
+    void select(String key) {
+        if (!NavModel.isPage(key)) key = NavModel.TRANSLATE;
+        currentKey = key;
+        for (java.util.Map.Entry<String, Node> e : pages.entrySet()) e.getValue().setVisible(e.getKey().equals(key));
+        navButtons.get(key).setSelected(true);
+        NavModel.remember(runtime.appearancePrefs(), key);
+        if (key.equals(NavModel.VOLUME)) volumePage.refreshRaw();
+        if (key.equals(NavModel.JOBS)) refreshJobs();
+        if (NavModel.inLibrary(key)) refreshLibrary();
+        if (key.equals(NavModel.SETTINGS)) { keyMasked.setText(runtime.secrets().masked()); profileUndoButton.setDisable(!runtime.canUndoProfile()); }
+    }
+
+    String currentKey() { return currentKey; }
+
+    /** A page registers its search box so that Ctrl+F reaches it. */
+    void registerSearch(String key, TextField field) { searchFields.put(key, field); }
+
+    private void shortcut(javafx.scene.input.KeyEvent e) {
+        if (!e.isShortcutDown() || e.isAltDown()) return;
+        javafx.scene.input.KeyCode c = e.getCode();
+        if (c == javafx.scene.input.KeyCode.F) {
+            TextField f = searchFields.get(currentKey);
+            if (f != null) { f.requestFocus(); f.selectAll(); e.consume(); }
+            return;
+        }
+        if (c.isDigitKey()) {
+            int n = c.ordinal() - javafx.scene.input.KeyCode.DIGIT0.ordinal();
+            String target = NavModel.shortcutTarget(n, runtime.appearancePrefs());
+            if (target != null) { select(target); e.consume(); }
+        }
     }
 
     Stage stage() { return stage; }
 
     DesktopRuntime runtime() { return runtime; }
 
-    int pageCount() { return pages.size(); }
-
-    String pageName(int i) { return navButtons.get(i).getText(); }
+    java.util.List<String> pageKeys() { return new ArrayList<>(pages.keySet()); }
 
     static VBox page(String title, Node... body) {
         VBox box = new VBox(12);
@@ -261,7 +301,7 @@ public final class DesktopApp extends Application {
         HBox actions = new HBox(10, startButton, pauseButton, resumeButton, cancelButton, openOutputButton);
         VBox preview = card(new Label("Chunk vừa xong"), previewArea);
         VBox.setVgrow(preview, Priority.ALWAYS);
-        return page("Dịch", source, plan, actions, preview);
+        return page(NavModel.title(NavModel.TRANSLATE), source, plan, actions, preview);
     }
 
     private void chooseRaw() {
@@ -394,7 +434,7 @@ public final class DesktopApp extends Application {
         historyTab.setOnAction(e -> { historyTab.setSelected(true); activePane.setVisible(false); activePane.setManaged(false); historyNode.setVisible(true); historyNode.setManaged(true); historyPanel.reload(); });
         activeTab.setMinWidth(Region.USE_PREF_SIZE);
         historyTab.setMinWidth(Region.USE_PREF_SIZE);
-        return page("Công việc", new HBox(8, activeTab, historyTab), stack);
+        return page(NavModel.title(NavModel.JOBS), new HBox(8, activeTab, historyTab), stack);
     }
 
     /** QA: show the Lịch sử tab as if it was clicked. */
@@ -422,9 +462,12 @@ public final class DesktopApp extends Application {
 
     // ---- Thư viện ----
 
-    private Node buildLibraryPage() {
-        Button importGlossary = new Button("Nhập Glossary (CSV)…");
-        Button importPronoun = new Button("Nhập Pronoun (CSV)…");
+    private Button importGlossary, importPronoun, useGlossary, deleteGlossary, usePronoun, deletePronoun, addRawFiles, deleteRaw;
+
+    /** Controls shared by the four library pages are created once; each page lays them out. */
+    private void buildLibraryShared() {
+        importGlossary = new Button("Nhập Glossary (CSV)…");
+        importPronoun = new Button("Nhập Pronoun (CSV)…");
         importGlossary.getStyleClass().add("secondary");
         importPronoun.getStyleClass().add("secondary");
         importGlossary.setOnAction(e -> importFiles(true));
@@ -443,23 +486,17 @@ public final class DesktopApp extends Application {
         });
         VBox.setVgrow(glossaryList, Priority.ALWAYS);
         VBox.setVgrow(pronounList, Priority.ALWAYS);
-        Button useGlossary = new Button("Dùng mục này");
-        Button deleteGlossary = new Button("Xóa");
-        Button usePronoun = new Button("Dùng mục này");
-        Button deletePronoun = new Button("Xóa");
+        useGlossary = new Button("Dùng mục này");
+        deleteGlossary = new Button("Xóa");
+        usePronoun = new Button("Dùng mục này");
+        deletePronoun = new Button("Xóa");
         for (Button b : new Button[]{useGlossary, deleteGlossary, usePronoun, deletePronoun}) b.getStyleClass().add("secondary");
         useGlossary.setOnAction(e -> { GlossaryStoreCore.Glossary g = glossaryList.getSelectionModel().getSelectedItem(); if (g != null) { runtime.selectGlossary(g.id); refreshLibrary(); } });
         usePronoun.setOnAction(e -> { PronounStoreCore.Profile p = pronounList.getSelectionModel().getSelectedItem(); if (p != null) { runtime.selectPronoun(p.id); refreshLibrary(); } });
         deleteGlossary.setOnAction(e -> { GlossaryStoreCore.Glossary g = glossaryList.getSelectionModel().getSelectedItem(); if (g != null && confirm("Xóa Glossary \"" + g.name + "\"?", "Không hoàn tác được.")) { runtime.deleteGlossary(g.id); refreshLibrary(); } });
         deletePronoun.setOnAction(e -> { PronounStoreCore.Profile p = pronounList.getSelectionModel().getSelectedItem(); if (p != null && confirm("Xóa Pronoun \"" + p.name + "\"?", "Không hoàn tác được.")) { runtime.deletePronoun(p.id); refreshLibrary(); } });
-        Button importArchive = new Button("Nhập gói thư viện…");
-        Button exportArchive = new Button("Xuất gói thư viện…");
-        importArchive.getStyleClass().add("secondary");
-        exportArchive.getStyleClass().add("secondary");
-        importArchive.setOnAction(e -> importLibraryArchive());
-        exportArchive.setOnAction(e -> exportLibraryArchive());
-        Button addRawFiles = new Button("Thêm RAW (TXT)…");
-        Button deleteRaw = new Button("Xóa RAW");
+        addRawFiles = new Button("Thêm RAW (TXT)…");
+        deleteRaw = new Button("Xóa RAW");
         addRawFiles.getStyleClass().add("secondary");
         deleteRaw.getStyleClass().add("secondary");
         addRawFiles.setOnAction(e -> addRawFiles());
@@ -471,15 +508,57 @@ public final class DesktopApp extends Application {
             }
         });
         VBox.setVgrow(rawLibraryList, Priority.ALWAYS);
-        VBox middle = card(new Label("RAW"), addRawFiles, rawLibraryList, new HBox(8, deleteRaw));
-        HBox.setHgrow(middle, Priority.ALWAYS);
-        VBox left = card(new Label("Glossary"), importGlossary, glossaryList, new HBox(8, useGlossary, deleteGlossary));
-        VBox right = card(new Label("Pronoun"), importPronoun, pronounList, new HBox(8, usePronoun, deletePronoun));
-        HBox.setHgrow(left, Priority.ALWAYS);
-        HBox.setHgrow(right, Priority.ALWAYS);
-        HBox both = new HBox(14, left, middle, right);
-        VBox.setVgrow(both, Priority.ALWAYS);
-        return page("Thư viện", new HBox(10, importArchive, exportArchive), both);
+    }
+
+    /** Backup, import and export of the whole library sit on every library page. */
+    private HBox libraryToolbar() {
+        Button importArchive = new Button("Nhập gói thư viện…");
+        Button exportArchive = new Button("Xuất gói thư viện…");
+        importArchive.getStyleClass().add("secondary");
+        exportArchive.getStyleClass().add("secondary");
+        importArchive.setOnAction(e -> importLibraryArchive());
+        exportArchive.setOnAction(e -> exportLibraryArchive());
+        return new HBox(10, importArchive, exportArchive);
+    }
+
+    private Node buildRawPage() {
+        VBox card = card(new Label("RAW"), addRawFiles, rawLibraryList, new HBox(8, deleteRaw));
+        VBox.setVgrow(card, Priority.ALWAYS);
+        return page(NavModel.title(NavModel.RAW), libraryToolbar(), card);
+    }
+
+    private Node buildGlossaryPage() {
+        VBox card = card(new Label("Glossary"), importGlossary, glossaryList, new HBox(8, useGlossary, deleteGlossary));
+        VBox.setVgrow(card, Priority.ALWAYS);
+        return page(NavModel.title(NavModel.GLOSSARY), libraryToolbar(), card);
+    }
+
+    private Node buildPronounPage() {
+        VBox card = card(new Label("Pronoun"), importPronoun, pronounList, new HBox(8, usePronoun, deletePronoun));
+        VBox.setVgrow(card, Priority.ALWAYS);
+        return page(NavModel.title(NavModel.PRONOUN), libraryToolbar(), card);
+    }
+
+    private Node buildSetsPage() {
+        return page(NavModel.title(NavModel.SETS), libraryToolbar(), card(new Label("Tập chương sẽ được làm ở mục 5.")));
+    }
+
+    private Node buildAppearancePage() {
+        themeBox.getItems().setAll(DesktopTheme.themes());
+        themeBox.setConverter(new javafx.util.StringConverter<UiAppearanceCore.Palette>() {
+            @Override public String toString(UiAppearanceCore.Palette p) { return p == null ? "" : p.name; }
+            @Override public UiAppearanceCore.Palette fromString(String s) { return null; }
+        });
+        for (int percent : DesktopTheme.FONT_PERCENTS) fontBox.getItems().add(percent);
+        fontBox.setConverter(new javafx.util.StringConverter<Integer>() {
+            @Override public String toString(Integer v) { return v == null ? "" : v + "%"; }
+            @Override public Integer fromString(String s) { return null; }
+        });
+        themeBox.setValue(DesktopTheme.theme(DesktopTheme.savedThemeId(runtime.appearancePrefs())));
+        fontBox.setValue(DesktopTheme.savedFontPercent(runtime.appearancePrefs()));
+        themeBox.setOnAction(e -> themeChanged());
+        fontBox.setOnAction(e -> themeChanged());
+        return page(NavModel.title(NavModel.APPEARANCE), card(new Label("Giao diện"), row("Màu", themeBox), row("Cỡ chữ", fontBox)));
     }
 
     private void importFiles(boolean glossary) {
@@ -768,31 +847,16 @@ public final class DesktopApp extends Application {
                 alert("Không hoàn tác được: " + ex.getMessage());
             }
         });
-        themeBox.getItems().setAll(DesktopTheme.themes());
-        themeBox.setConverter(new javafx.util.StringConverter<UiAppearanceCore.Palette>() {
-            @Override public String toString(UiAppearanceCore.Palette p) { return p == null ? "" : p.name; }
-            @Override public UiAppearanceCore.Palette fromString(String s) { return null; }
-        });
-        for (int percent : DesktopTheme.FONT_PERCENTS) fontBox.getItems().add(percent);
-        fontBox.setConverter(new javafx.util.StringConverter<Integer>() {
-            @Override public String toString(Integer v) { return v == null ? "" : v + "%"; }
-            @Override public Integer fromString(String s) { return null; }
-        });
-        themeBox.setValue(DesktopTheme.theme(DesktopTheme.savedThemeId(runtime.appearancePrefs())));
-        fontBox.setValue(DesktopTheme.savedFontPercent(runtime.appearancePrefs()));
-        themeBox.setOnAction(e -> themeChanged());
-        fontBox.setOnAction(e -> themeChanged());
         javafx.scene.layout.FlowPane profileButtons = new javafx.scene.layout.FlowPane(8, 8, importProfile, exportProfile, profileUndoButton);
         VBox profile = card(new Label("Chuyển dữ liệu với điện thoại"), profileButtons,
                 new Label("Hồ sơ chỉ chứa các mục dùng chung; API key, thư mục output và Biên tập không đi theo."));
-        VBox look = card(new Label("Giao diện"), row("Màu", themeBox), row("Cỡ chữ", fontBox));
-        HBox cols = new HBox(14, new VBox(14, connection, profile), new VBox(14, behaviour, look));
+        HBox cols = new HBox(14, new VBox(14, connection, profile), new VBox(14, behaviour));
         for (Node column : cols.getChildren()) HBox.setHgrow(column, Priority.ALWAYS);
         javafx.scene.control.ScrollPane scroll = new javafx.scene.control.ScrollPane(new VBox(12, cols, new HBox(10, save, settingsNote)));
         scroll.setFitToWidth(true);
         scroll.setStyle("-fx-background-color: transparent;");
         VBox.setVgrow(scroll, Priority.ALWAYS);
-        return page("Cài đặt", scroll);
+        return page(NavModel.title(NavModel.SETTINGS), scroll);
     }
 
     private static HBox row(String label, Node field) {

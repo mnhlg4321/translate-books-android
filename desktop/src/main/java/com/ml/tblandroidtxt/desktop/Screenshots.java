@@ -63,18 +63,20 @@ final class Screenshots {
             w.play();
         });
         // one image per page, in the default theme
-        for (int i = 0; i < app.pageCount(); i++) {
-            final int index = i;
+        int n = 0;
+        for (String key : app.pageKeys()) {
+            final String page = key;
+            final int number = ++n;
             steps.add(() -> {
-                app.select(index);
-                if (app.pageName(index).equals("Dịch cả tập")) prepareVolume(seed);
-                if (app.pageName(index).equals("Công việc")) { app.showHistoryTab(); app.historyPanel().selectFirst(); }
+                app.select(page);
+                if (page.equals(NavModel.VOLUME)) prepareVolume(seed);
+                if (page.equals(NavModel.JOBS)) { app.showHistoryTab(); app.historyPanel().selectFirst(); }
             });
-            steps.add(() -> shot((index + 1) + "-" + app.pageName(index)));
+            steps.add(() -> shot(number + "-" + page));
         }
         // the dialogs the owner meets: profile preview, library preview, the start confirmation (cancelled)
         if (seed != null) {
-            steps.add(() -> app.select(4));
+            steps.add(() -> app.select(NavModel.SETTINGS));
             steps.add(() -> {
                 try {
                     dialogName = "dialog-nhap-ho-so";
@@ -85,14 +87,14 @@ final class Screenshots {
                 }
             });
             steps.add(() -> { });
-            steps.add(() -> app.select(3));
+            steps.add(() -> app.select(NavModel.RAW));
             steps.add(() -> {
                 dialogName = "dialog-nhap-goi-thu-vien";
                 app.importLibraryArchive(seed.resolve("QA_library_phone.zip"), true);
             });
             steps.add(() -> { });
             steps.add(() -> {
-                app.select(1);
+                app.select(NavModel.VOLUME);
                 app.volumePage().buildPlan();
                 app.volumePage().plan().resolveMissing("", "");
                 app.volumePage().refreshTable();
@@ -103,7 +105,7 @@ final class Screenshots {
             steps.add(() -> { });
         }
         // the five light themes at 100% and 130%, on the volume page (tables, status colours, buttons)
-        steps.add(() -> app.select(1));
+        steps.add(() -> app.select(NavModel.VOLUME));
         for (var theme : DesktopTheme.themes()) {
             for (int percent : new int[]{100, 130}) {
                 steps.add(() -> app.setAppearance(theme.id, percent));
