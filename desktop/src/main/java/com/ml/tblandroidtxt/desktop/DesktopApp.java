@@ -470,6 +470,10 @@ public final class DesktopApp extends Application {
             }
         });
         keyField.setPromptText("API key (không hiển thị lại)");
+        keyField.setPrefWidth(170);
+        saveKey.setMinWidth(Region.USE_PREF_SIZE);
+        keyMasked.setMinWidth(Region.USE_PREF_SIZE);
+        instructionLabel.setMinWidth(Region.USE_PREF_SIZE);
         Button chooseInstruction = new Button("Chọn instruction YAML…");
         chooseInstruction.getStyleClass().add("secondary");
         chooseInstruction.setOnAction(e -> {
