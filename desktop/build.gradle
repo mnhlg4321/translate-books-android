@@ -1,0 +1,32 @@
+plugins {
+    id 'application'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+def javafxVersion = '21.0.13'
+
+dependencies {
+    implementation project(':translation-core-jdbc')
+    // OpenJFX 21 LTS from Maven Central, Windows classifier, declared directly (no javafx plugin). Run on the classpath.
+    implementation "org.openjfx:javafx-base:${javafxVersion}:win"
+    implementation "org.openjfx:javafx-graphics:${javafxVersion}:win"
+    implementation "org.openjfx:javafx-controls:${javafxVersion}:win"
+    // The Android SDK org.json is compileOnly in the core; on the PC the library provides it.
+    implementation 'org.json:json:20250517'
+    implementation 'net.java.dev.jna:jna:5.6.0'
+    implementation 'net.java.dev.jna:jna-platform:5.6.0'
+    testImplementation 'junit:junit:4.13.2'
+}
+
+application {
+    mainClass = 'com.ml.tblandroidtxt.desktop.DesktopLauncher'
+    applicationName = 'TranslateBooks'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}

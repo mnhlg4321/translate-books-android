@@ -1,0 +1,42 @@
+/* Palette "Xám nhạt" of docs/V423_UX_OVERHAUL_WORK_REQUEST.md section 7, as CSS variables. */
+.root {
+    -tbl-bg: #F1F2F4;
+    -tbl-surface: #FFFFFF;
+    -tbl-raised: #E7E9ED;
+    -tbl-text: #16191F;
+    -tbl-text2: #4B5463;
+    -tbl-divider: #D5D9E0;
+    -tbl-outline: #6F7888;
+    -tbl-accent: #2457B8;
+    -tbl-on-accent: #FFFFFF;
+    -tbl-ok: #14703A;
+    -tbl-warn: #8A5300;
+    -tbl-err: #C0262D;
+    -fx-font-family: "Segoe UI", "Yu Gothic UI", sans-serif;
+    -fx-font-size: 13px;
+    -fx-base: -tbl-raised;
+    -fx-background: -tbl-bg;
+    -fx-text-fill: -tbl-text;
+}
+
+.nav { -fx-background-color: -tbl-surface; -fx-border-color: -tbl-divider; -fx-border-width: 0 1 0 0; -fx-padding: 12 0 12 0; }
+.nav-title { -fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: -tbl-text; -fx-padding: 4 16 12 16; }
+.nav-button { -fx-background-color: transparent; -fx-text-fill: -tbl-text2; -fx-alignment: center-left; -fx-padding: 10 16 10 16; -fx-background-radius: 0; -fx-pref-width: 170; -fx-cursor: hand; }
+.nav-button:hover { -fx-background-color: -tbl-raised; }
+.nav-button:selected { -fx-background-color: -tbl-raised; -fx-text-fill: -tbl-accent; -fx-font-weight: bold; -fx-border-color: -tbl-accent; -fx-border-width: 0 0 0 3; }
+.page { -fx-background-color: -tbl-bg; -fx-padding: 20; }
+.page-title { -fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: -tbl-text; }
+.card { -fx-background-color: -tbl-surface; -fx-border-color: -tbl-divider; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 14; }
+.muted { -fx-text-fill: -tbl-text2; }
+.ok { -fx-text-fill: -tbl-ok; }
+.warn { -fx-text-fill: -tbl-warn; }
+.err { -fx-text-fill: -tbl-err; }
+.primary { -fx-background-color: -tbl-accent; -fx-text-fill: -tbl-on-accent; -fx-font-weight: bold; -fx-background-radius: 5; -fx-padding: 7 16 7 16; -fx-cursor: hand; }
+.primary:disabled { -fx-opacity: 0.45; }
+.secondary { -fx-background-color: -tbl-surface; -fx-text-fill: -tbl-text; -fx-border-color: -tbl-outline; -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 6 14 6 14; -fx-cursor: hand; }
+.secondary:disabled { -fx-opacity: 0.45; }
+.text-field, .text-area, .combo-box-base, .password-field { -fx-background-color: -tbl-surface; -fx-border-color: -tbl-outline; -fx-border-radius: 4; -fx-background-radius: 4; }
+.list-view, .table-view { -fx-background-color: -tbl-surface; -fx-border-color: -tbl-divider; }
+.statusbar { -fx-background-color: -tbl-surface; -fx-border-color: -tbl-divider; -fx-border-width: 1 0 0 0; -fx-padding: 6 14 6 14; }
+.progress-bar > .bar { -fx-background-color: -tbl-accent; -fx-background-insets: 0; -fx-background-radius: 3; }
+.progress-bar > .track { -fx-background-color: -tbl-divider; -fx-background-radius: 3; }

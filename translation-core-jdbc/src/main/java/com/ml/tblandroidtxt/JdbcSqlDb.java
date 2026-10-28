@@ -30,6 +30,10 @@ public final class JdbcSqlDb implements SqlDb {
         setForeignKeyConstraintsEnabled(true);
     }
 
+    public void close() {
+        try { connection.close(); } catch (SQLException ignored) { }
+    }
+
     @Override public DbCursor rawQuery(String sql, String[] selectionArgs) {
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             if (selectionArgs != null) {
