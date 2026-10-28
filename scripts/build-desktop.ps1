@@ -77,7 +77,9 @@ try {
         # modules the jars really need (jdeps over every jar), plus the ones loaded by reflection or service lookup
         $jdeps = Join-Path $JavaHome 'bin\jdeps.exe'
         $libJars = @(Get-ChildItem -Path (Join-Path $stage 'lib') -Filter '*.jar' | ForEach-Object { $_.FullName })
-        $found = (& $jdeps --multi-release 21 --ignore-missing-deps --print-module-deps -cp (($libJars) -join ';') @libJars) -join ','
+        # sqlite-jdbc is a named module that requires slf4j (absent): jdeps cannot resolve it as a target; its needs (java.sql, java.logging) are in the fixed list below
+        $targets = @($libJars | Where-Object { $_ -notmatch 'sqlite-jdbc' })
+        $found = (& $jdeps --multi-release 21 --ignore-missing-deps --print-module-deps -cp (($libJars) -join ';') @targets) -join ','
         if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($found)) { throw "jdeps failed ($LASTEXITCODE)" }
         $moduleSet = [System.Collections.Generic.SortedSet[string]]::new()
         foreach ($m in ($found -split ',')) { if ($m.Trim()) { [void]$moduleSet.Add($m.Trim()) } }
