@@ -133,7 +133,7 @@ Run ``TranslateBooks.cmd``. No Java installation is needed: the folder ``runtime
 - Log timestamps follow the Windows locale (same formatter as the phone).
 - The database schema is the phone's version 30 (``translation-core-jdbc`` resource). If the phone schema changes, regenerate that file; a database at another version is refused.
 - SmartScreen: the installer and the app are NOT code-signed, so Windows shows an "unknown publisher" warning; choose "More info" then "Run anyway".
-- The .msi installs per user (no administrator rights) into ``%LOCALAPPDATA%\Programs\TranslateBooks``; uninstalling never deletes ``%LOCALAPPDATA%\TranslateBooks``.
+- The .msi installs per user (no administrator rights) into ``%LOCALAPPDATA%\TranslateBooksApp``; uninstalling never deletes ``%LOCALAPPDATA%\TranslateBooks``.
 - Building needs the Android SDK (the shared core compiles against android.jar for org.json).
 
 Built from commit $commit on $branch ($eventId).
@@ -161,12 +161,12 @@ Built from commit $commit on $branch ($eventId).
         $parts = @($numeric.Trim('.').Split('.') | Select-Object -First 3)
         while ($parts.Count -lt 3) { $parts += '0' }
         $appVersion = $parts -join '.'
-        # Fixed upgrade GUID: a newer .msi replaces an older one. The install folder differs from the data folder on purpose
+        # One folder level only: a nested install dir makes WiX ICE64 fail for the user-profile parent. Fixed upgrade GUID: a newer .msi replaces an older one. The install folder differs from the data folder on purpose
         # (data lives in %LOCALAPPDATA%\TranslateBooks and an uninstall never touches it).
         & $jpackage --type msi --name 'Translate Books' --app-version $appVersion --vendor 'Translate Books' `
             --input (Join-Path $stage 'lib') --main-jar desktop.jar --main-class com.ml.tblandroidtxt.desktop.DesktopLauncher `
             --runtime-image $runtimeDir --dest $msiOut --win-menu --win-menu-group 'Translate Books' --win-shortcut `
-            --win-per-user-install --install-dir 'Programs\TranslateBooks' --win-upgrade-uuid '3f2c7a1e-5b8d-4c6e-9a41-7d2e8b0c5f13' `
+            --win-per-user-install --install-dir 'TranslateBooksApp' --win-upgrade-uuid '3f2c7a1e-5b8d-4c6e-9a41-7d2e8b0c5f13' `
             --description 'Translate Books for Windows (unsigned development build)'
         if ($LASTEXITCODE -ne 0) { throw "jpackage failed ($LASTEXITCODE)" }
         $built = Get-ChildItem -Path $msiOut -Filter '*.msi' | Select-Object -First 1
