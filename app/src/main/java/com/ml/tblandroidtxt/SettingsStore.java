@@ -147,19 +147,14 @@ public class SettingsStore {
         return hydrated;
     }
 
-    /** The profile file the person exports: every setting except the API key. */
+    /** The profile file the person exports: the shared keys only, never the API key (see SettingsJson.SHARED_KEYS). */
     public static String toExportJson(AppSettings s) throws Exception {
-        JSONObject o = new JSONObject(toJson(s));
-        o.remove("apiKey");
-        return o.toString(2);
+        return SettingsJson.toExportJson(s);
     }
 
-    /** Reads an exported profile; a file without {@code apiKey} keeps the key already saved on this device. */
+    /** Reads an exported profile onto the current settings; keys the file lacks or that are not shared keep their value. */
     public static AppSettings fromImportedProfile(String json, AppSettings current) throws Exception {
-        JSONObject o = new JSONObject(json == null ? "{}" : json);
-        AppSettings imported = fromJson(json);
-        if (!o.has("apiKey") && current != null) imported.apiKey = current.apiKey;
-        return imported;
+        return SettingsJson.fromImportedProfile(json, current);
     }
 
     public static AppSettings fromJson(String json) {

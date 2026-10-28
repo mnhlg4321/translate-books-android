@@ -10,10 +10,17 @@ import java.nio.file.Paths;
 /** DocumentIO over plain files. A ref is a file: URI string; text is read like the phone does and written as UTF-8 without BOM. */
 public final class PathDocumentIO implements DocumentIO {
     private final Path outputDirectory;
+    private final DesktopRawStore raws;
 
     /** @param outputDirectory where resolveOutput puts files for a ref without a name; may be null when refs are always full files */
     public PathDocumentIO(Path outputDirectory) {
+        this(outputDirectory, null);
+    }
+
+    /** @param raws the PC RAW library that answers {@code tblraw://<id>} refs; may be null when no such ref is used */
+    public PathDocumentIO(Path outputDirectory, DesktopRawStore raws) {
         this.outputDirectory = outputDirectory;
+        this.raws = raws;
     }
 
     public static String refOf(Path file) { return file.toAbsolutePath().toUri().toString(); }
@@ -24,6 +31,10 @@ public final class PathDocumentIO implements DocumentIO {
     }
 
     @Override public String readText(String ref) throws IOException {
+        if (RawUri.isRaw(ref)) {
+            if (raws == null) throw new IOException("Thư viện RAW không có sẵn");
+            return raws.text(RawUri.idOf(ref));
+        }
         try {
             return TextDecoding.decode(Files.readAllBytes(pathOf(ref))).text;
         } catch (IOException e) {
@@ -33,7 +44,13 @@ public final class PathDocumentIO implements DocumentIO {
         }
     }
 
-    @Override public String displayName(String ref) { return pathOf(ref).getFileName().toString(); }
+    @Override public String displayName(String ref) {
+        if (RawUri.isRaw(ref)) {
+            DesktopRawStore.Item item = raws == null ? null : raws.find(RawUri.idOf(ref));
+            return item == null ? RawUri.idOf(ref) : item.originalName;
+        }
+        return pathOf(ref).getFileName().toString();
+    }
 
     @Override public void writeText(String ref, String text) throws IOException {
         Path file = pathOf(ref);

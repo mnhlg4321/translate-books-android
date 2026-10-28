@@ -82,4 +82,92 @@ public final class SettingsJson {
         } catch (Exception ignored) {}
         return s;
     }
+
+    /**
+     * Settings keys shared between the phone and the PC profile files. Everything else (editorial, instructionUri, envUri,
+     * outputUri, outputTreeUri, the *Name fields next to those, the Glossary/Pronoun texts and ids) is neither written nor read.
+     */
+    public static final String[] SHARED_KEYS = {
+            "provider", "baseUrl", "model", "sourceLanguage", "targetLanguage", "outputFilenamePattern", "chunkMode",
+            "maxTokensPerChunk", "maxCharsPerChunk", "softLimitRatio", "timeoutSeconds", "maxAttempts", "initialRetryDelayMs",
+            "maxRetryDelayMs", "retryOnEmpty", "retryOnTruncation", "retryOnValidationFailure", "temperature", "maxOutputTokens",
+            "contextChars", "contextOverlapEnabled", "reasoningEffort", "optimizationPreset", "refineAfter", "bilingualOutput",
+            "savePartialOutput", "stopOnCostLimit", "costLimitUsd", "costWarningUsd", "maxRetryCostUsd", "maxPaidRetries",
+            "stopWhenPricingUnknown", "translationInstructions", "refinementInstructions", "glossaryInjectLimit",
+            "pronounInjectLimit", "languageProfile"};
+
+    /** The profile file a person exports: the shared keys only, never the API key. */
+    public static String toExportJson(AppSettings s) throws Exception {
+        JSONObject full = new JSONObject(toJson(s));
+        JSONObject out = new JSONObject();
+        for (String key : SHARED_KEYS) if (full.has(key)) out.put(key, full.get(key));
+        return out.toString(2);
+    }
+
+    /**
+     * Reads an exported profile onto {@code current}: only shared keys present in the file are taken; every other value
+     * (including the API key, editorial and the output locations) stays what {@code current} has.
+     */
+    public static AppSettings fromImportedProfile(String json, AppSettings current) throws Exception {
+        AppSettings base = current == null ? new AppSettings() : current.copy();
+        JSONObject o = new JSONObject(json == null ? "{}" : json);
+        AppSettings p = fromJson(json);
+        for (String key : SHARED_KEYS) if (o.has(key)) copyShared(key, p, base);
+        return base;
+    }
+
+    private static void copyShared(String key, AppSettings from, AppSettings to) {
+        switch (key) {
+            case "provider": to.provider = from.provider; break;
+            case "baseUrl": to.baseUrl = from.baseUrl; break;
+            case "model": to.model = from.model; break;
+            case "sourceLanguage": to.sourceLanguage = from.sourceLanguage; break;
+            case "targetLanguage": to.targetLanguage = from.targetLanguage; break;
+            case "outputFilenamePattern": to.outputFilenamePattern = from.outputFilenamePattern; break;
+            case "chunkMode": to.chunkMode = from.chunkMode; break;
+            case "maxTokensPerChunk": to.maxTokensPerChunk = from.maxTokensPerChunk; break;
+            case "maxCharsPerChunk": to.maxCharsPerChunk = from.maxCharsPerChunk; break;
+            case "softLimitRatio": to.softLimitRatio = from.softLimitRatio; break;
+            case "timeoutSeconds": to.timeoutSeconds = from.timeoutSeconds; break;
+            case "maxAttempts": to.maxAttempts = from.maxAttempts; break;
+            case "initialRetryDelayMs": to.initialRetryDelayMs = from.initialRetryDelayMs; break;
+            case "maxRetryDelayMs": to.maxRetryDelayMs = from.maxRetryDelayMs; break;
+            case "retryOnEmpty": to.retryOnEmpty = from.retryOnEmpty; break;
+            case "retryOnTruncation": to.retryOnTruncation = from.retryOnTruncation; break;
+            case "retryOnValidationFailure": to.retryOnValidationFailure = from.retryOnValidationFailure; break;
+            case "temperature": to.temperature = from.temperature; break;
+            case "maxOutputTokens": to.maxOutputTokens = from.maxOutputTokens; break;
+            case "contextChars": to.contextChars = from.contextChars; break;
+            case "contextOverlapEnabled": to.contextOverlapEnabled = from.contextOverlapEnabled; break;
+            case "reasoningEffort": to.reasoningEffort = from.reasoningEffort; break;
+            case "optimizationPreset": to.optimizationPreset = from.optimizationPreset; break;
+            case "refineAfter": to.refineAfter = from.refineAfter; break;
+            case "bilingualOutput": to.bilingualOutput = from.bilingualOutput; break;
+            case "savePartialOutput": to.savePartialOutput = from.savePartialOutput; break;
+            case "stopOnCostLimit": to.stopOnCostLimit = from.stopOnCostLimit; break;
+            case "costLimitUsd": to.costLimitUsd = from.costLimitUsd; break;
+            case "costWarningUsd": to.costWarningUsd = from.costWarningUsd; break;
+            case "maxRetryCostUsd": to.maxRetryCostUsd = from.maxRetryCostUsd; break;
+            case "maxPaidRetries": to.maxPaidRetries = from.maxPaidRetries; break;
+            case "stopWhenPricingUnknown": to.stopWhenPricingUnknown = from.stopWhenPricingUnknown; break;
+            case "translationInstructions": to.translationInstructions = from.translationInstructions; break;
+            case "refinementInstructions": to.refinementInstructions = from.refinementInstructions; break;
+            case "glossaryInjectLimit": to.glossaryInjectLimit = from.glossaryInjectLimit; break;
+            case "pronounInjectLimit": to.pronounInjectLimit = from.pronounInjectLimit; break;
+            case "languageProfile": to.languageProfile = from.languageProfile; break;
+            default: break;
+        }
+    }
+
+    /** Shared keys whose value differs between two settings, as {key, current, imported} rows (for the preview table). */
+    public static java.util.List<String[]> differences(AppSettings current, AppSettings imported) throws Exception {
+        JSONObject a = new JSONObject(toJson(current));
+        JSONObject b = new JSONObject(toJson(imported));
+        java.util.ArrayList<String[]> rows = new java.util.ArrayList<>();
+        for (String key : SHARED_KEYS) {
+            String x = String.valueOf(a.opt(key)), y = String.valueOf(b.opt(key));
+            if (!x.equals(y)) rows.add(new String[]{key, x, y});
+        }
+        return rows;
+    }
 }

@@ -32,6 +32,7 @@ public final class DesktopRuntime implements AutoCloseable {
     private final JsonFileKeyValueStore glossaryPrefs;
     private final JsonFileKeyValueStore pronounPrefs;
     private final DpapiSecrets secrets;
+    private final DesktopRawStore raws;
     private final FileRuntimeLog log;
     private final FileModelCatalogCache catalogCache;
     private final ExecutorService executor = Executors.newSingleThreadExecutor(r -> {
@@ -72,6 +73,7 @@ public final class DesktopRuntime implements AutoCloseable {
         this.glossaryPrefs = new JsonFileKeyValueStore(prefsDir, GlossaryStoreCore.PREF);
         this.pronounPrefs = new JsonFileKeyValueStore(prefsDir, PronounStoreCore.PREF);
         this.secrets = new DpapiSecrets(this.dataDir.resolve("secrets"));
+        this.raws = new DesktopRawStore(sql, this.dataDir.resolve(DesktopRawStore.DIR).toFile());
         this.log = new FileRuntimeLog(this.dataDir.resolve("logs"));
         this.catalogCache = new FileModelCatalogCache(this.dataDir.resolve("catalog").resolve("openrouter_model_catalog_v42.json").toFile());
         ObservabilityLog.install(log);
@@ -83,7 +85,7 @@ public final class DesktopRuntime implements AutoCloseable {
             @Override public void onRunEnded() { running.set(false); UiEvents t = ui; if (t != null) t.onRunEnded(); }
             @Override public void onCancelledEnd(String message) { running.set(false); UiEvents t = ui; if (t != null) t.onCancelledEnd(message); }
         };
-        this.runner = new TranslationRunner(forwarding, new PathDocumentIO(null), new JsonRunStatePersister(new JsonFileKeyValueStore(prefsDir, "runtime_state")),
+        this.runner = new TranslationRunner(forwarding, new PathDocumentIO(null, raws), new JsonRunStatePersister(new JsonFileKeyValueStore(prefsDir, "runtime_state")),
                 log, TraceSink.NONE, secrets, Clock.SYSTEM);
         this.engine = new TranslationEngineCore(repo, provider);
         runner.attach(repo, engine);
@@ -318,6 +320,137 @@ public final class DesktopRuntime implements AutoCloseable {
         int dot = name.lastIndexOf('.');
         return dot > 0 ? name.substring(0, dot) : name;
     }
+
+    // ---- RAW library ----
+
+    public DesktopRawStore raws() { return raws; }
+
+    /** Reads TXT files like the phone does and adds them to the RAW library; returns {added, skipped}. */
+    public int[] importRawFiles(List<Path> files) throws Exception {
+        List<DesktopRawStore.Picked> picked = new ArrayList<>();
+        for (Path f : files) {
+            TextDecoding.Result d = TextDecoding.decode(Files.readAllBytes(f));
+            picked.add(new DesktopRawStore.Picked(f.getFileName().toString(), d.text, d.encoding));
+        }
+        RawImportPlanner.Plan plan = raws.add(picked);
+        return new int[]{plan.added(), plan.skipped()};
+    }
+
+    // ---- settings profile shared with the phone ----
+
+    /** What an imported profile would change: the settings it produces and only the shared keys that differ. */
+    public static final class ProfilePreview {
+        public final AppSettings imported;
+        public final List<String[]> differences;
+        ProfilePreview(AppSettings imported, List<String[]> differences) { this.imported = imported; this.differences = differences; }
+    }
+
+    private static final String PROFILE_UNDO_KEY = "profile_undo_json";
+
+    public String exportProfileJson() throws Exception { return SettingsJson.toExportJson(loadSettings()); }
+
+    public ProfilePreview previewProfile(String json) throws Exception {
+        AppSettings current = loadSettings();
+        AppSettings imported = SettingsJson.fromImportedProfile(json, current);
+        return new ProfilePreview(imported, SettingsJson.differences(current, imported));
+    }
+
+    /** Saves the imported settings; the previous ones are kept for {@link #undoProfile()}. */
+    public void applyProfile(ProfilePreview preview) throws IOException {
+        String before = SettingsJson.toPersistedJson(loadSettings());
+        saveSettings(preview.imported);
+        settingsPrefs.edit().putString(PROFILE_UNDO_KEY, before).commit();
+    }
+
+    public boolean canUndoProfile() { return !settingsPrefs.getString(PROFILE_UNDO_KEY, "").isEmpty(); }
+
+    public void undoProfile() throws IOException {
+        String before = settingsPrefs.getString(PROFILE_UNDO_KEY, "");
+        if (before.isEmpty()) return;
+        AppSettings s = SettingsJson.fromJson(before);
+        s.apiKey = "";
+        saveSettings(s);
+        settingsPrefs.edit().remove(PROFILE_UNDO_KEY).commit();
+    }
+
+    // ---- library archive (the phone's tbl-library ZIP) ----
+
+    /** A read archive with what importing it would do; counts only. */
+    public static final class LibraryPreview {
+        final LibraryArchive.Contents contents;
+        final LibraryArchive.MergePlan plan;
+        LibraryPreview(LibraryArchive.Contents contents, LibraryArchive.MergePlan plan) { this.contents = contents; this.plan = plan; }
+        public int glossariesInFile() { return contents.glossaries.size(); }
+        public int pronounsInFile() { return contents.pronouns.size(); }
+        public int rawsInFile() { return contents.raws.size(); }
+        public int addGlossaries() { return plan.addGlossaries.size(); }
+        public int addPronouns() { return plan.addPronouns.size(); }
+        public int addRaws() { return plan.addRaws.size(); }
+        public int existing() { return plan.existing; }
+        public int duplicate() { return plan.duplicate; }
+        /** Same id, different content: added under a new id and name. */
+        public int renamed() { return plan.renamed; }
+        /** Items whose integrity code did not match; they are never imported. */
+        public int bad() { return plan.bad.size(); }
+        public int addedCount() { return plan.addedCount(); }
+    }
+
+    /** Reads a library ZIP and plans the import against what is stored now. Throws IllegalArgumentException with a readable reason. */
+    public LibraryPreview previewLibrary(Path zip) throws Exception {
+        LibraryArchive.Contents contents;
+        try (java.io.InputStream in = Files.newInputStream(zip)) { contents = LibraryArchive.read(in); }
+        List<LibraryArchive.RawEntry> currentRaws = new java.util.ArrayList<>();
+        for (DesktopRawStore.Item item : raws.list()) {
+            LibraryArchive.RawEntry e = new LibraryArchive.RawEntry();
+            e.id = item.id; e.inputHash = item.inputHash;
+            currentRaws.add(e);
+        }
+        String date = java.time.LocalDate.now().toString();
+        return new LibraryPreview(contents, LibraryArchive.plan(contents, glossaries(), pronouns(), currentRaws, date));
+    }
+
+    /** Adds the planned items; false when a store refused the write (nothing is half-applied for Glossary/Pronoun). */
+    public boolean applyLibrary(LibraryPreview preview) throws IOException {
+        LibraryArchive.MergePlan plan = preview.plan;
+        boolean ok = true;
+        if (!plan.addGlossaries.isEmpty()) {
+            List<GlossaryStoreCore.Glossary> all = new java.util.ArrayList<>(plan.addGlossaries);
+            all.addAll(glossaries());
+            ok = GlossaryStoreCore.saveAll(glossaryPrefs, all);
+        }
+        if (ok && !plan.addPronouns.isEmpty()) {
+            List<PronounStoreCore.Profile> all = new java.util.ArrayList<>(plan.addPronouns);
+            all.addAll(pronouns());
+            ok = PronounStoreCore.saveAll(pronounPrefs, all);
+        }
+        if (ok && !plan.addRaws.isEmpty()) raws.addEntries(plan.addRaws);
+        log.append("Library import: added glossaries=" + plan.addGlossaries.size() + ", pronouns=" + plan.addPronouns.size()
+                + ", raws=" + plan.addRaws.size() + ", existing=" + plan.existing + ", duplicate=" + plan.duplicate + ", bad=" + plan.bad.size());
+        return ok;
+    }
+
+    /** Writes the whole library as the phone's ZIP and reads it back to check; returns {glossaries, pronouns, raws}. */
+    public int[] exportLibrary(Path zip) throws Exception {
+        List<GlossaryStoreCore.Glossary> g = glossaries();
+        List<PronounStoreCore.Profile> p = pronouns();
+        if (GlossaryStoreCore.isCorrupt(glossaryPrefs) || PronounStoreCore.isCorrupt(pronounPrefs)) throw new IllegalStateException("Dữ liệu Glossary/Pronoun đang bị khóa vì đọc lỗi");
+        List<LibraryArchive.RawEntry> r = raws.entries();
+        byte[] bytes = LibraryArchive.build(g, p, r, selectedGlossaryId(), selectedPronounId(), APP_VERSION, System.currentTimeMillis());
+        if (zip.toAbsolutePath().getParent() != null) Files.createDirectories(zip.toAbsolutePath().getParent());
+        Files.write(zip, bytes);
+        LibraryArchive.Contents check;
+        try (java.io.InputStream in = Files.newInputStream(zip)) { check = LibraryArchive.read(in); }
+        if (check.glossaries.size() != g.size() || check.pronouns.size() != p.size() || check.raws.size() != r.size() || !check.bad.isEmpty()) {
+            throw new IllegalStateException("Tệp đọc lại không khớp");
+        }
+        return new int[]{g.size(), p.size(), r.size()};
+    }
+
+    public static String suggestedLibraryFileName() {
+        return LibraryArchive.suggestedFileName(new java.text.SimpleDateFormat("yyyyMMdd-HHmmss", java.util.Locale.ROOT).format(new java.util.Date()));
+    }
+
+    public static final String APP_VERSION = "4.24-pc";
 
     // ---- counts for the headless live check (numbers only, never text) ----
 
