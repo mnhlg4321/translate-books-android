@@ -325,6 +325,37 @@ public class TranslationRepositoryCore {
 
     public void markChunkPermanentError(long jobId,int idx,String error){DbValues v=new DbValues();v.put("status","PERMANENT_ERROR");v.put("error",safe(error));v.put("updated_at",System.currentTimeMillis());db().update("chunks",v,"job_id=? AND idx=?",args(jobId,idx));touchJob(jobId,"NEEDS_REVIEW");}
 
+    /** Marks a job as one chapter of a run started with {@code startSessionId}; the history groups the chapters of a run by it. */
+    public void attachRunSession(long jobId, String startSessionId, int ordinal) {
+        DbValues v = new DbValues();
+        v.put("start_session_id", safe(startSessionId));
+        v.put("prepared_input_ordinal", ordinal);
+        db().update("jobs", v, "id=?", new String[]{String.valueOf(jobId)});
+    }
+
+    /** One request attempt of a job, numbers and states only (never the request or response text). */
+    public static final class JobAttemptRow {
+        public int chunkIdx, attempt, inputTokens, outputTokens;
+        public String phase = "", status = "", finishReason = "", model = "";
+        public double cost;
+    }
+
+    /** Attempts of one job in chunk then attempt order, for the history detail. */
+    public List<JobAttemptRow> getJobAttempts(long jobId) {
+        List<JobAttemptRow> out = new ArrayList<>();
+        try (DbCursor c = db().rawQuery("SELECT chunk_idx,attempt,COALESCE(phase,''),COALESCE(status,''),COALESCE(finish_reason,''),COALESCE(model,''),"
+                + "COALESCE(input_tokens,0),COALESCE(output_tokens,0),COALESCE(actual_cost,0) FROM chunk_attempts WHERE job_id=? ORDER BY chunk_idx,attempt,id",
+                new String[]{String.valueOf(jobId)})) {
+            while (c.moveToNext()) {
+                JobAttemptRow r = new JobAttemptRow();
+                r.chunkIdx = c.getInt(0); r.attempt = c.getInt(1); r.phase = c.getString(2); r.status = c.getString(3);
+                r.finishReason = c.getString(4); r.model = c.getString(5); r.inputTokens = c.getInt(6); r.outputTokens = c.getInt(7); r.cost = c.getDouble(8);
+                out.add(r);
+            }
+        }
+        return out;
+    }
+
     public void touchJob(long jobId, String status) {
         DbValues cv = new DbValues();
         cv.put("status", status);

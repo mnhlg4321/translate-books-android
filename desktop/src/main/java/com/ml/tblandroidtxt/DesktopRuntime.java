@@ -42,6 +42,9 @@ public final class DesktopRuntime implements AutoCloseable {
     });
     private final AtomicBoolean running = new AtomicBoolean(false);
     private volatile UiEvents ui;
+    private volatile String volumeSessionId;
+    private volatile int volumeOrdinal;
+    private volatile long volumeLastJob;
 
     /** Default data folder: TBL_DATA_DIR when set (tests, screenshots), else %LOCALAPPDATA%\TranslateBooks. */
     public static Path defaultDataDir() {
@@ -80,7 +83,7 @@ public final class DesktopRuntime implements AutoCloseable {
         loadCatalogFromCacheOnly();
 
         RunListener forwarding = new RunListener() {
-            @Override public void onSnapshot(RunSnapshot snapshot) { UiEvents t = ui; if (t != null) t.onSnapshot(snapshot); }
+            @Override public void onSnapshot(RunSnapshot snapshot) { attachVolumeJob(); UiEvents t = ui; if (t != null) t.onSnapshot(snapshot); }
             @Override public void onNotification(String text, int done, int total) { UiEvents t = ui; if (t != null) t.onNotification(text, done, total); }
             @Override public void onRunEnded() { running.set(false); UiEvents t = ui; if (t != null) t.onRunEnded(); }
             @Override public void onCancelledEnd(String message) { running.set(false); UiEvents t = ui; if (t != null) t.onCancelledEnd(message); }
@@ -451,6 +454,194 @@ public final class DesktopRuntime implements AutoCloseable {
     }
 
     public static final String APP_VERSION = "4.24-pc";
+
+    // ---- whole volume (chapter queue) ----
+
+    /** What a folder scan found and did; the note explains what was and was not scanned. */
+    public static final class FolderImport {
+        public int added, skipped;
+        public String note = "";
+    }
+
+    /** The folder rule shown next to every folder picker: only files directly inside the chosen folder are read. */
+    public static final String FOLDER_RULE = "App chỉ đọc các tệp nằm trực tiếp trong thư mục đã chọn, không quét thư mục con.";
+
+    private static List<Path> filesIn(Path dir, String... extensions) throws IOException {
+        List<Path> out = new ArrayList<>();
+        try (java.util.stream.Stream<Path> list = Files.list(dir)) {
+            list.filter(Files::isRegularFile).sorted().forEach(f -> {
+                String n = f.getFileName().toString().toLowerCase(java.util.Locale.ROOT);
+                for (String ext : extensions) if (n.endsWith(ext)) { out.add(f); return; }
+            });
+        }
+        return out;
+    }
+
+    private static String subfolderNote(Path dir, boolean foundAny) {
+        if (foundAny || !Files.isDirectory(dir.resolve("chapters"))) return "";
+        return "Thư mục này có thư mục con chapters/ nhưng không có tệp ở ngay trong nó. " + FOLDER_RULE + " Hãy chọn chính thư mục chapters.";
+    }
+
+    /** Adds the TXT files of a folder to the RAW library (duplicates by content are skipped). */
+    public FolderImport importRawFolder(Path dir) throws Exception {
+        List<Path> files = filesIn(dir, ".txt");
+        FolderImport r = new FolderImport();
+        if (!files.isEmpty()) {
+            int[] counts = importRawFiles(files);
+            r.added = counts[0];
+            r.skipped = counts[1];
+        }
+        r.note = subfolderNote(dir, !files.isEmpty());
+        return r;
+    }
+
+    /** Adds the CSV/TXT Glossary files of a folder; a file whose name is already a Glossary is skipped. */
+    public FolderImport importGlossaryFolder(Path dir) throws Exception {
+        List<Path> files = filesIn(dir, ".csv", ".txt");
+        java.util.Set<String> have = new java.util.HashSet<>();
+        for (GlossaryStoreCore.Glossary g : glossaries()) have.add(g.name);
+        List<Path> fresh = new ArrayList<>();
+        FolderImport r = new FolderImport();
+        for (Path f : files) {
+            if (have.contains(stripExtension(f.getFileName().toString()))) r.skipped++; else fresh.add(f);
+        }
+        r.added = importGlossaries(fresh);
+        r.note = subfolderNote(dir, !files.isEmpty());
+        return r;
+    }
+
+    public FolderImport importPronounFolder(Path dir) throws Exception {
+        List<Path> files = filesIn(dir, ".csv", ".txt");
+        java.util.Set<String> have = new java.util.HashSet<>();
+        for (PronounStoreCore.Profile p : pronouns()) have.add(p.name);
+        List<Path> fresh = new ArrayList<>();
+        FolderImport r = new FolderImport();
+        for (Path f : files) {
+            if (have.contains(stripExtension(f.getFileName().toString()))) r.skipped++; else fresh.add(f);
+        }
+        r.added = importPronouns(fresh);
+        r.note = subfolderNote(dir, !files.isEmpty());
+        return r;
+    }
+
+    /** The confirmation table for the chosen RAW ids (all RAW in the library when null), in chapter order. */
+    public VolumePlan newVolumePlan(List<String> rawIds) {
+        List<DesktopRawStore.Item> chosen = new ArrayList<>();
+        for (DesktopRawStore.Item item : raws.list()) if (rawIds == null || rawIds.contains(item.id)) chosen.add(item);
+        return new VolumePlan(chosen, glossaries(), pronouns());
+    }
+
+    /** Sum of the per-chapter estimates, each with its own Glossary/Pronoun text. */
+    public CostEstimator.Estimate estimateVolume(VolumePlan plan, AppSettings base) throws Exception {
+        AppSettings s = settingsForRun(base);
+        CostEstimator.Estimate total = new CostEstimator.Estimate();
+        total.pricingAvailable = true;
+        for (ChapterBinding binding : plan.bindings()) {
+            DesktopRawStore.Item item = raws.find(binding.rawId);
+            if (item == null) throw new IllegalStateException("RAW của " + binding.rawName + " đã bị xóa khỏi thư viện");
+            AppSettings sc = binding.applyTo(s);
+            CostEstimator.Estimate e = CostEstimator.estimatePreparedChunks(Chunker.chunkText(raws.text(item.id), sc), sc);
+            total.chunks += e.chunks; total.sourceTokens += e.sourceTokens;
+            total.inputTokensLow += e.inputTokensLow; total.inputTokensHigh += e.inputTokensHigh;
+            total.outputTokensLow += e.outputTokensLow; total.outputTokensHigh += e.outputTokensHigh;
+            total.totalTokensLow += e.totalTokensLow; total.totalTokensHigh += e.totalTokensHigh;
+            total.costLow += e.costLow; total.costHigh += e.costHigh;
+            total.noCacheCostLow += e.noCacheCostLow; total.noCacheCostHigh += e.noCacheCostHigh;
+            total.pricingAvailable &= e.pricingAvailable;
+        }
+        if (!total.pricingAvailable) { total.costLow = Double.NaN; total.costHigh = Double.NaN; }
+        return total;
+    }
+
+    public boolean startVolume(VolumePlan plan, AppSettings base, Double capUsd, CostEstimator.Estimate estimate, Path outputDir) {
+        if (plan.hasRed() || plan.included() == 0) return false;
+        if (!claim()) return false;
+        executor.submit(() -> runVolume(plan, base, capUsd, estimate, outputDir));
+        return true;
+    }
+
+    private void runVolume(VolumePlan plan, AppSettings base, Double capUsd, CostEstimator.Estimate estimate, Path outputDir) {
+        try {
+            runner.beginRun(true);
+            runner.beginPreviewRun();
+            runner.resetMetrics("", 0);
+            if (estimate != null) runner.setEstimated(estimate.totalTokensHigh, estimate.pricingAvailable && !Double.isNaN(estimate.costHigh) ? estimate.costHigh : 0);
+            runner.setState(TranslationJobState.State.VALIDATING, "Validating");
+            runner.publish("validating", 0, "Validating a fresh translation session");
+            AppSettings s = settingsForRun(base);
+            s = runner.applyEffectiveCostLimit(s, capUsd);
+            String validation = AppValidator.validateForTranslation(s);
+            if (validation != null) throw new IllegalArgumentException(validation);
+            List<ChapterBinding> bindings = plan.bindings();
+            final String sessionId = java.util.UUID.randomUUID().toString();
+            ChapterSession session = new ChapterSession(sessionId);
+            session.setName = plan.name();
+            session.chapters.addAll(bindings);
+            java.io.File sessionDir = dataDir.resolve(ChapterSession.DIR).toFile();
+            Files.createDirectories(sessionDir.toPath());
+            session.write(sessionDir);
+            final ArrayList<ChapterQueue.Task> tasks = new ArrayList<>();
+            for (ChapterBinding binding : bindings) {
+                DesktopRawStore.Item item = raws.find(binding.rawId);
+                if (item == null) throw new IllegalStateException("RAW của " + binding.rawName + " đã bị xóa khỏi thư viện");
+                tasks.add(new ChapterQueue.Task(item.originalName, binding, null, item));
+            }
+            Files.createDirectories(outputDir);
+            runner.setChapterOutcome(new ChapterRunOutcome(tasks.size()));
+            runner.setState(TranslationJobState.State.READY, "Ready");
+            runner.publish("ready", 0, "Input, configuration and output access are valid");
+            runner.setState(TranslationJobState.State.RUNNING, "Running");
+            runner.publish("running", 0, "Batch of " + tasks.size() + " file(s) initiated.");
+            runner.setMetricPhase("Translating");
+            final AppSettings baseSettings = s;
+            volumeSessionId = sessionId;
+            volumeLastJob = 0;
+            boolean ended = ChapterQueue.run(runner, repo, tasks, baseSettings, (task, settings, fileNo, fileTotal, label) -> {
+                DesktopRawStore.Item item = (DesktopRawStore.Item) task.payload;
+                Path out = outputDir.resolve(baseSettings.buildOutputName(item.originalName));
+                volumeOrdinal = fileNo - 1;
+                try {
+                    runner.startNewJob(item.uri(), PathDocumentIO.refOf(out), settings, fileNo, fileTotal);
+                } finally {
+                    attachVolumeJob();
+                }
+            });
+            if (!ended) {
+                finishCancelled("Đã hủy dịch");
+                return;
+            }
+            endRun();
+        } catch (TranslationRunner.CostLimitReachedException e) {
+            runner.setState(TranslationJobState.State.PAUSED, "Paused");
+            if (runner.getActiveJobId() > 0) repo.touchJob(runner.getActiveJobId(), "paused");
+            runner.publish("paused", -1, AppValidator.readableError(e) + runner.chapterSummarySuffix());
+            endRun();
+        } catch (Exception e) {
+            if (runner.isCancelled()) {
+                finishCancelled("Đã hủy dịch");
+                return;
+            }
+            runner.setState(TranslationJobState.State.FAILED, runner.getActiveJobId() > 0 ? "Translation failed" : "Initialization failure");
+            if (runner.getActiveJobId() > 0) repo.touchJob(runner.getActiveJobId(), "error");
+            runner.logFailure(runner.getMetricPhase(), e);
+            if (e instanceof ChapterQueue.QueueStoppedException) runner.publish("error", -1, e.getMessage() + runner.chapterSummarySuffix());
+            else runner.publish("error", -1, (runner.getActiveJobId() > 0 ? "Lỗi: " : "Lỗi khởi tạo: ") + AppValidator.readableError(e)
+                    + runner.remainingSuffix() + runner.chapterSummarySuffix());
+            endRun();
+        } finally {
+            volumeSessionId = null;
+        }
+    }
+
+    /** Links the job being translated to the run (once per job), so the history can group the chapters of one run. */
+    private void attachVolumeJob() {
+        String session = volumeSessionId;
+        if (session == null) return;
+        long id = runner.getActiveJobId();
+        if (id <= 0 || id == volumeLastJob) return;
+        volumeLastJob = id;
+        try { repo.attachRunSession(id, session, volumeOrdinal); } catch (RuntimeException e) { log.append("could not link job " + id + " to its run"); }
+    }
 
     // ---- counts for the headless live check (numbers only, never text) ----
 

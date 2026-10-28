@@ -190,4 +190,39 @@ public class ChapterQueueTest {
         assertEquals(java.util.Arrays.asList("BASE", "BASE"), step.glossaries);
         assertEquals("QA_b.txt|2/2|QA_b.txt", step.calls.get(1));
     }
+
+    /** The cost cap belongs to the whole run: reaching it inside chapter 1 pauses that job and chapter 2 never starts. */
+    @Test public void theRunWideCostCapStopsTheQueueInsideTheChapterThatReachedIt() throws Exception {
+        ChapterRunOutcome outcome = begin(2);
+        AppSettings s = RunnerHarness.settings();
+        s.stopOnCostLimit = true;
+        s.costLimitUsd = 0.05;
+        h.script.add(RunnerHarness.okWithCost(0.04));
+        h.script.add(RunnerHarness.okWithCost(0.04));
+        final long[] jobIds = new long[2];
+        Recorder step = new Recorder() {
+            @Override public void startNew(ChapterQueue.Task input, AppSettings settings, int fileNo, int fileTotal, String label) throws Exception {
+                super.startNew(input, settings, fileNo, fileTotal, label);
+                List<Chunk> chunks = RunnerHarness.chunks("A1.", "A2.", "A3.");
+                long id = h.repo.createJob("mem://in.txt", "mem://out.txt", input.displayName, settings, chunks, "", "");
+                jobIds[fileNo - 1] = id;
+                h.runner.setActiveJobId(id);
+                h.repo.touchJob(id, "RUNNING");
+                h.runner.resetMetrics(input.displayName, chunks.size());
+                h.runner.translateJob(id, "mem://out.txt", settings, chunks, fileNo, fileTotal, label);
+            }
+        };
+        try {
+            ChapterQueue.run(h.runner, h.repo, tasks(2), s, step);
+            fail("the cap must stop the queue");
+        } catch (TranslationRunner.CostLimitReachedException expected) {
+            assertTrue(expected.getMessage(), expected.getMessage().startsWith("Cost limit reached"));
+        }
+        assertEquals("chapter 2 never started", 1, step.calls.size());
+        assertEquals("paused", h.jobStatus(jobIds[0]));
+        assertEquals("PENDING", h.chunkStatus(jobIds[0], 2));
+        assertEquals(1, outcome.failedCount());
+        assertEquals(1, outcome.notRun());
+        assertEquals(2, h.calls.size());
+    }
 }
