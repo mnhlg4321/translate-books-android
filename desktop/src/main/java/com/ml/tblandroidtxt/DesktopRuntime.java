@@ -331,13 +331,51 @@ public final class DesktopRuntime implements AutoCloseable {
         return imported;
     }
 
-    public int importPronouns(List<Path> files) throws Exception {
-        int imported = 0;
+    /** Pronoun files that were imported and the reason each refused file was left out (same rule as the phone: no valid rules, no import). */
+    public static final class PronounImport {
+        public int imported;
+        public final List<String> failed = new ArrayList<>();
+    }
+
+    public int importPronouns(List<Path> files) throws Exception { return importPronounFiles(files).imported; }
+
+    public PronounImport importPronounFiles(List<Path> files) throws Exception {
+        PronounImport out = new PronounImport();
         for (Path f : files) {
             String text = TextDecoding.decode(Files.readAllBytes(f)).text;
-            if (PronounStoreCore.importProfile(pronounPrefs, stripExtension(f.getFileName().toString()), PathDocumentIO.refOf(f), text) != null) imported++;
+            String name = stripExtension(f.getFileName().toString());
+            LibraryImportPlanner.Result<PronounStoreCore.Profile> checked = LibraryImportPlanner.pronouns(
+                    java.util.Collections.singletonList(new LibraryImportPlanner.Source(name, text)));
+            if (checked.imported.isEmpty()) { out.failed.add(checked.failed.get(0)); continue; }
+            if (PronounStoreCore.importProfile(pronounPrefs, name, PathDocumentIO.refOf(f), text) != null) out.imported++;
         }
-        return imported;
+        return out;
+    }
+
+    public PronounStoreCore.Profile pronoun(String id) { return PronounStoreCore.find(pronounPrefs, id); }
+
+    public boolean savePronoun(PronounStoreCore.Profile p) { return PronounStoreCore.upsert(pronounPrefs, p); }
+
+    public boolean renamePronoun(String id, String name) {
+        PronounStoreCore.Profile p = pronoun(id);
+        if (p == null || name == null || name.trim().isEmpty()) return false;
+        p.name = name.trim();
+        return savePronoun(p);
+    }
+
+    /** "Thay file": the profile keeps its id and takes the text of another file, and becomes the one in use, like on the phone. Null on success, else the reason. */
+    public String replacePronounFile(String id, Path file) throws Exception {
+        String text = TextDecoding.decode(Files.readAllBytes(file)).text;
+        String name = stripExtension(file.getFileName().toString());
+        LibraryImportPlanner.Result<PronounStoreCore.Profile> checked = LibraryImportPlanner.pronouns(
+                java.util.Collections.singletonList(new LibraryImportPlanner.Source(name, text)));
+        if (checked.imported.isEmpty()) return checked.failed.get(0);
+        PronounStoreCore.Profile p = pronoun(id);
+        if (p == null) return "Hồ sơ Pronoun không còn tồn tại";
+        p.uri = "";
+        p.text = text;
+        if (p.name == null || p.name.startsWith("New pronoun")) p.name = name;
+        return PronounStoreCore.saveAndSelect(pronounPrefs, p) ? null : "Không ghi được hồ sơ Pronoun";
     }
 
     private static String stripExtension(String name) {

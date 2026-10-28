@@ -111,7 +111,7 @@ public class GlossaryEditorTest {
             ed.addTerm("魔王", "Ma vương", "character", "");
             ed.addTerm("城", "thành", "term", "ghi chú");
             ed.save(a);
-            a.importPronouns(Arrays.asList(write("QA_pr.txt", "from,speaker,target,self,call,scope,note\nA,A,B,tao,mày,all,\n")));
+            a.importPronouns(Arrays.asList(write("QA_pr.txt", "from,speaker,target,self,call,scope,note\nA,A,B,tao,mày,*,\n")));
             Path zip = tmp.getRoot().toPath().resolve("lib.zip");
             assertEquals(1, a.exportLibrary(zip)[0]);
             DesktopRuntime.LibraryPreview p = b.previewLibrary(zip);

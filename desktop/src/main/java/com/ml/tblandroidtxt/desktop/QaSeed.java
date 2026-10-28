@@ -39,8 +39,8 @@ public final class QaSeed {
         }
         write(gl.resolve("001_QA_glossary.csv"), "source,target,category,note\n甲1,QA thuật ngữ một,term,\n");
         write(gl.resolve("002_QA_glossary.csv"), "source,target,category,note\n甲2,QA thuật ngữ hai,term,\n");
-        write(pr.resolve("001_QA_pronoun.csv"), "from,speaker,target,self,call,scope,note\nA,A,B,tao,mày,all,\n");
-        write(pr.resolve("002_QA_pronoun.csv"), "from,speaker,target,self,call,scope,note\nB,B,A,tôi,anh,all,\n");
+        write(pr.resolve("001_QA_pronoun.csv"), "from,speaker,target,self,call,scope,note\nA,A,B,tao,mày,*,\n");
+        write(pr.resolve("002_QA_pronoun.csv"), "from,speaker,target,self,call,scope,note\nB,B,A,tôi,anh,*,\n");
 
         AtomicInteger calls = new AtomicInteger();
         TranslationEngineCore.ProviderClient fake = (settings, prompt, limit, id, observer) -> {
@@ -90,7 +90,7 @@ public final class QaSeed {
         Path phone = seed.resolve("phone-data");
         try (DesktopRuntime rt = DesktopRuntime.open(phone, quiet, fake)) {
             Path p1 = write(seed.resolve("phone_glossary.csv"), "source,target,category,note\n乙,QA thuật ngữ điện thoại,term,\n");
-            Path p2 = write(seed.resolve("phone_pronoun.csv"), "from,speaker,target,self,call,scope,note\nC,C,D,mình,bạn,all,\n");
+            Path p2 = write(seed.resolve("phone_pronoun.csv"), "from,speaker,target,self,call,scope,note\nC,C,D,mình,bạn,*,\n");
             Path p3 = write(seed.resolve("004_QA_phone.txt"), "乙" + "日".repeat(120) + "。\n\n乙" + "月".repeat(120) + "。\n");
             rt.importGlossaries(List.of(p1));
             rt.importPronouns(List.of(p2));

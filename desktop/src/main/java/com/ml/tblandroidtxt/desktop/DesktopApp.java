@@ -92,7 +92,7 @@ public final class DesktopApp extends Application {
     private final Button jobResumeButton = new Button("Tiếp tục");
     private final Button jobRetryButton = new Button("Dịch lại chunk lỗi");
     private GlossaryPage glossaryPage;
-    private final ListView<PronounStoreCore.Profile> pronounList = new ListView<>();
+    private PronounPage pronounPage;
     private final TextField providerBase = new TextField();
     private final ComboBox<String> provider = new ComboBox<>();
     private final TextField modelField = new TextField();
@@ -111,6 +111,7 @@ public final class DesktopApp extends Application {
     private final TextField costCap = new TextField();
     private final Label instructionLabel = new Label();
     private final Label settingsNote = new Label();
+    private final List<Label> libraryNotes = new ArrayList<>();
     private VolumePage volumePage;
     private HistoryPanel historyPanel;
     private final ToggleButton activeTab = new ToggleButton("Đang làm");
@@ -500,25 +501,16 @@ public final class DesktopApp extends Application {
 
     // ---- Thư viện ----
 
-    private Button importPronoun, usePronoun, deletePronoun;
+    /** Nothing is shared between the library pages any more; each page builds its own controls. */
+    private void buildLibraryShared() { }
 
-    /** Controls shared by the four library pages are created once; each page lays them out. */
-    private void buildLibraryShared() {
-        importPronoun = new Button("Nhập Pronoun (CSV)…");
-        importPronoun.getStyleClass().add("secondary");
-        importPronoun.setOnAction(e -> importFiles(false));
-        pronounList.setCellFactory(l -> new ListCell<PronounStoreCore.Profile>() {
-            @Override protected void updateItem(PronounStoreCore.Profile p, boolean empty) {
-                super.updateItem(p, empty);
-                setText(empty || p == null ? null : (p.id.equals(runtime.selectedPronounId()) ? "● " : "   ") + p.name + "  ·  " + p.count() + " quy tắc");
-            }
-        });
-        VBox.setVgrow(pronounList, Priority.ALWAYS);
-        usePronoun = new Button("Dùng mục này");
-        deletePronoun = new Button("Xóa");
-        for (Button b : new Button[]{usePronoun, deletePronoun}) b.getStyleClass().add("secondary");
-        usePronoun.setOnAction(e -> { PronounStoreCore.Profile p = pronounList.getSelectionModel().getSelectedItem(); if (p != null) { runtime.selectPronoun(p.id); refreshLibrary(); } });
-        deletePronoun.setOnAction(e -> { PronounStoreCore.Profile p = pronounList.getSelectionModel().getSelectedItem(); if (p != null && confirm("Xóa Pronoun \"" + p.name + "\"?", "Không hoàn tác được.")) { runtime.deletePronoun(p.id); refreshLibrary(); } });
+    /** The result of an archive import or export is shown next to the buttons on every library page. */
+    private void libraryNote(String text, boolean error) {
+        for (Label l : libraryNotes) {
+            l.setText(text);
+            l.getStyleClass().removeAll("err", "ok");
+            l.getStyleClass().add(error ? "err" : "ok");
+        }
     }
 
     /** Backup, import and export of the whole library sit on every library page. */
@@ -529,7 +521,12 @@ public final class DesktopApp extends Application {
         exportArchive.getStyleClass().add("secondary");
         importArchive.setOnAction(e -> importLibraryArchive());
         exportArchive.setOnAction(e -> exportLibraryArchive());
-        return new HBox(10, importArchive, exportArchive);
+        Label note = new Label();
+        note.setWrapText(true);
+        libraryNotes.add(note);
+        HBox box = new HBox(10, importArchive, exportArchive, note);
+        box.setAlignment(Pos.CENTER_LEFT);
+        return box;
     }
 
     private Node buildRawPage() {
@@ -543,9 +540,8 @@ public final class DesktopApp extends Application {
     }
 
     private Node buildPronounPage() {
-        VBox card = card(new Label("Pronoun"), importPronoun, pronounList, new HBox(8, usePronoun, deletePronoun));
-        VBox.setVgrow(card, Priority.ALWAYS);
-        return page(NavModel.title(NavModel.PRONOUN), libraryToolbar(), card);
+        pronounPage = new PronounPage(this, runtime, libraryToolbar());
+        return pronounPage.node();
     }
 
     private Node buildSetsPage() {
@@ -570,29 +566,9 @@ public final class DesktopApp extends Application {
         return page(NavModel.title(NavModel.APPEARANCE), card(new Label("Giao diện"), row("Màu", themeBox), row("Cỡ chữ", fontBox)));
     }
 
-    private void importFiles(boolean glossary) {
-        FileChooser fc = new FileChooser();
-        fc.setTitle(glossary ? "Nhập Glossary" : "Nhập Pronoun");
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV / TXT", "*.csv", "*.txt"));
-        List<File> files = fc.showOpenMultipleDialog(stage);
-        if (files == null) return;
-        importPaths(glossary, files.stream().map(File::toPath).collect(java.util.stream.Collectors.toList()));
-    }
-
-    void importPaths(boolean glossary, List<Path> paths) {
-        try {
-            int n = glossary ? runtime.importGlossaries(paths) : runtime.importPronouns(paths);
-            refreshLibrary();
-            settingsNote.setText("Đã nhập " + n + " tệp");
-        } catch (Exception e) {
-            alert("Không nhập được: " + e.getMessage());
-        }
-    }
-
     void refreshLibrary() {
         if (glossaryPage != null) glossaryPage.reload();
-        pronounList.getItems().setAll(runtime.pronouns());
-        pronounList.refresh();
+        if (pronounPage != null) pronounPage.reload();
         String g = "chưa chọn", p = "chưa chọn";
         for (GlossaryStoreCore.Glossary x : runtime.glossaries()) if (x.id.equals(runtime.selectedGlossaryId())) g = x.name + " (" + x.count() + " mục)";
         for (PronounStoreCore.Profile x : runtime.pronouns()) if (x.id.equals(runtime.selectedPronounId())) p = x.name + " (" + x.count() + " quy tắc)";
@@ -628,7 +604,7 @@ public final class DesktopApp extends Application {
             refreshLibrary();
             volumePage.refreshRaw();
             if (!ok) alert("Có kho không ghi được (Glossary/Pronoun đang bị khóa vì đọc lỗi). Chưa nhập gì thêm.");
-            else settingsNote.setText("Đã nhập " + p.addGlossaries() + " glossary, " + p.addPronouns() + " pronoun, " + p.addRaws() + " RAW");
+            else libraryNote("Đã nhập " + p.addGlossaries() + " glossary, " + p.addPronouns() + " pronoun, " + p.addRaws() + " RAW", false);
         } catch (IllegalArgumentException e) {
             alert("Tệp này không phải gói thư viện hợp lệ: " + e.getMessage());
         } catch (Exception e) {
@@ -645,9 +621,9 @@ public final class DesktopApp extends Application {
         if (f == null) return;
         try {
             int[] n = runtime.exportLibrary(f.toPath());
-            settingsNote.setText("Đã xuất " + n[0] + " glossary, " + n[1] + " pronoun, " + n[2] + " RAW (không có API key, cài đặt hay job)");
+            libraryNote("Đã xuất " + n[0] + " glossary, " + n[1] + " pronoun, " + n[2] + " RAW (không có API key, cài đặt, job hay Tập)", false);
         } catch (Exception e) {
-            alert("Không xuất được: " + e.getMessage());
+            libraryNote("Không xuất được: " + e.getMessage(), true);
         }
     }
 

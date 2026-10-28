@@ -45,8 +45,8 @@ public class VolumeRunTest {
         write(glossaryDir.resolve("001_QA_gl.csv"), "source,target,category,note\n甲1,QA_TERM_ONE,term,\n");
         write(glossaryDir.resolve("002_QA_gl.csv"), "source,target,category,note\n甲2,QA_TERM_TWO,term,\n");
         write(glossaryDir.resolve("QA_GLOSSARY_WORKING.csv"), "source,target,category,note\n甲3,QA_TERM_SHARED,term,\n");
-        write(pronounDir.resolve("001_QA_pr.csv"), "from,speaker,target,self,call,scope,note\nA,A,B,tao,mày,all,\n");
-        write(pronounDir.resolve("002_QA_pr.csv"), "from,speaker,target,self,call,scope,note\nB,B,A,tôi,anh,all,\n");
+        write(pronounDir.resolve("001_QA_pr.csv"), "from,speaker,target,self,call,scope,note\nA,A,B,tao,mày,*,\n");
+        write(pronounDir.resolve("002_QA_pr.csv"), "from,speaker,target,self,call,scope,note\nB,B,A,tôi,anh,*,\n");
     }
 
     private static void write(Path f, String text) throws Exception { Files.write(f, text.getBytes(StandardCharsets.UTF_8)); }

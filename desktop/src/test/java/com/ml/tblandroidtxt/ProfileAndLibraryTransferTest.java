@@ -111,7 +111,7 @@ public class ProfileAndLibraryTransferTest {
         assumeTrue(windows());
         try (DesktopRuntime src = open("src"); DesktopRuntime dst = open("dst")) {
             src.importGlossaries(Arrays.asList(write("QA_gl.csv", "source,target,category,note\n魔王,Ma vương,character,\n城,thành,term,\n")));
-            src.importPronouns(Arrays.asList(write("QA_pr.txt", "from,speaker,target,self,call,scope,note\nA,A,B,tao,mày,all,\n")));
+            src.importPronouns(Arrays.asList(write("QA_pr.txt", "from,speaker,target,self,call,scope,note\nA,A,B,tao,mày,*,\n")));
             src.raws().add(Arrays.asList(
                     new DesktopRawStore.Picked("001_QA_a.txt", "QA dòng một.\nQA dòng hai.\n".repeat(5), "UTF-8"),
                     new DesktopRawStore.Picked("002_QA_b.txt", "QA nội dung khác.\n".repeat(7), "UTF-8")));
