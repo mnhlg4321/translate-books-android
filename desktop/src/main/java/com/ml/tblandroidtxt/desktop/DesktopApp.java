@@ -185,9 +185,12 @@ public final class DesktopApp extends Application {
         navButtons.get(index).setSelected(true);
         if (index == 1) refreshJobs();
         if (index == 2) refreshLibrary();
+        if (index == 3) keyMasked.setText(runtime.secrets().masked());
     }
 
     Stage stage() { return stage; }
+
+    DesktopRuntime runtime() { return runtime; }
 
     int pageCount() { return pages.size(); }
 

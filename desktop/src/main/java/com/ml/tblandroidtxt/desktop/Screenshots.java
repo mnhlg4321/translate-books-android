@@ -18,7 +18,32 @@ final class Screenshots {
     Screenshots(DesktopApp app, Path dir) { this.app = app; this.dir = dir; }
 
     void run() {
+        seed();
         step(0);
+    }
+
+    /**
+     * QA data only: TBL_QA_SEED_DIR holds self-written QA_raw.txt, QA_glossary.csv and QA_pronoun.csv. They go through the same
+     * methods the buttons use; the test key is saved through DPAPI so the settings page shows the masked form. Nothing is started.
+     */
+    private void seed() {
+        String seedDir = System.getenv("TBL_QA_SEED_DIR");
+        if (seedDir == null || seedDir.trim().isEmpty()) return;
+        Path seed = Path.of(seedDir.trim());
+        try {
+            app.importPaths(true, java.util.List.of(seed.resolve("QA_glossary.csv")));
+            app.importPaths(false, java.util.List.of(seed.resolve("QA_pronoun.csv")));
+            var rt = app.runtime();
+            rt.selectGlossary(rt.glossaries().get(0).id);
+            rt.selectPronoun(rt.pronouns().get(0).id);
+            rt.secrets().save("TEST_KEY_NOT_SECRET");
+            Files.createDirectories(seed.resolve("out"));
+            app.refreshLibrary();
+            app.setOutputDir(seed.resolve("out"));
+            app.setRaw(seed.resolve("QA_raw.txt"));
+        } catch (Exception e) {
+            System.err.println("seed failed: " + e);
+        }
     }
 
     private void step(int index) {
