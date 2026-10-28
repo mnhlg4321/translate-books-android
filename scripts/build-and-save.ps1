@@ -152,7 +152,9 @@ function Get-ArchivedBuildInfo {
 
         foreach ($file in Get-ChildItem -LiteralPath $root -Filter 'BUILD_INFO.json' -File -Recurse) {
             try {
-                $items += Get-Content -LiteralPath $file.FullName -Raw | ConvertFrom-Json
+                $info = Get-Content -LiteralPath $file.FullName -Raw | ConvertFrom-Json
+                # Desktop package archives share artifacts/builds but carry no versionCode; only phone builds number the series.
+                if ($info.PSObject.Properties['versionCode']) { $items += $info }
             }
             catch {
                 throw "Invalid build metadata: $($file.FullName)"
