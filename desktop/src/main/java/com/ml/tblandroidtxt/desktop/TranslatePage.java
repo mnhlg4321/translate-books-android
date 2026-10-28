@@ -384,6 +384,7 @@ final class TranslatePage {
             say("Không lưu được cài đặt: " + e.getMessage(), true);
             return;
         }
+        runtime.confirmSpend();
         if (!runtime.startNew(rawFile, outputDir.resolve(name), s, null, estimate)) say("Đang có một lượt dịch khác chạy.", true);
         updateControls();
     }

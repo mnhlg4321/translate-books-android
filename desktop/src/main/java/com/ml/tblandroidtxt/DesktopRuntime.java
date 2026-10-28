@@ -44,6 +44,11 @@ public final class DesktopRuntime implements AutoCloseable {
     });
     private final AtomicBoolean running = new AtomicBoolean(false);
     private volatile UiEvents ui;
+    private final TranslationEngineCore.ProviderClient testProvider;
+    private volatile int apiTestRequests;
+    private volatile boolean requireConfirmation;
+    private final java.util.concurrent.atomic.AtomicInteger confirmations = new java.util.concurrent.atomic.AtomicInteger();
+    private volatile String recommendationUndoJson;
     private volatile String volumeSessionId;
     private volatile int volumeOrdinal;
     private volatile long volumeLastJob;
@@ -69,6 +74,7 @@ public final class DesktopRuntime implements AutoCloseable {
     private DesktopRuntime(Path dataDir, UiEvents uiEvents, TranslationEngineCore.ProviderClient provider) throws Exception {
         this.dataDir = dataDir.toAbsolutePath();
         this.ui = uiEvents;
+        this.testProvider = provider;
         this.prefsDir = this.dataDir.resolve("prefs");
         Files.createDirectories(this.dataDir.resolve("catalog"));
         Files.createDirectories(this.dataDir.resolve("logs"));
@@ -131,6 +137,93 @@ public final class DesktopRuntime implements AutoCloseable {
 
     public void saveSettings(AppSettings s) throws IOException {
         if (!settingsPrefs.edit().putString("settings_json", SettingsJson.toPersistedJson(s)).commit()) throw new IOException("Could not save settings");
+    }
+
+    /** Stores one setting as the person typed it (the page saves on every edit). Returns null on success, else the reason; nothing is stored on a refusal. */
+    public String applySetting(String key, String text) throws IOException {
+        DesktopSettingsModel.Field f = DesktopSettingsModel.field(key);
+        if (f == null) return "Mục cài đặt không có: " + key;
+        AppSettings s = loadSettings();
+        String problem = f.set(s, text);
+        if (problem != null) return problem;
+        saveSettings(s);
+        return null;
+    }
+
+    /** "Cài đặt khuyến nghị": the settings that differ from the safe recommendation. */
+    public List<String[]> recommendationDiffs() { return DesktopSettingsModel.recommendationDiffs(loadSettings()); }
+
+    /** Applies the recommendation and remembers what it replaced, so {@link #undoRecommendation} can put it back. */
+    public void applyRecommendation() throws IOException {
+        AppSettings now = loadSettings();
+        recommendationUndoJson = SettingsJson.toPersistedJson(now);
+        saveSettings(DesktopSettingsModel.applyRecommendation(now));
+    }
+
+    public boolean canUndoRecommendation() { return recommendationUndoJson != null; }
+
+    public void undoRecommendation() throws IOException {
+        if (recommendationUndoJson == null) return;
+        AppSettings back = SettingsJson.fromJson(recommendationUndoJson);
+        back.apiKey = "";
+        recommendationUndoJson = null;
+        saveSettings(back);
+    }
+
+    /** "Không giới hạn": this app run's cost cap is dropped (kept in the settings file, not in the shared profile). */
+    public boolean unlimitedCost() { return "true".equals(settingsPrefs.getString("unlimited_cost", "false")); }
+
+    public void setUnlimitedCost(boolean on) { settingsPrefs.edit().putString("unlimited_cost", on ? "true" : "false").commit(); }
+
+    /** Cap passed to a run: -1 (unlimited) when the person chose so, else null (the settings' own cap or the safe minimum). */
+    private Double capOverride(Double capUsd) { return capUsd == null && unlimitedCost() ? Double.valueOf(-1.0) : capUsd; }
+
+    /**
+     * The window turns this on: every action that can send a request to the provider (start, resume, retry, "Kiểm tra API") then works only
+     * right after {@link #confirmSpend()}, which the window calls when the person pressed the OK of the "sẽ gọi provider" dialog.
+     */
+    public void requireConfirmation(boolean on) { requireConfirmation = on; }
+
+    /** Records that the person confirmed one provider-calling action; the next such action may go ahead, once. */
+    public void confirmSpend() { confirmations.incrementAndGet(); }
+
+    private boolean allowedToCallProvider() {
+        if (!requireConfirmation) return true;
+        while (true) {
+            int n = confirmations.get();
+            if (n <= 0) return false;
+            if (confirmations.compareAndSet(n, n - 1)) return true;
+        }
+    }
+
+    /**
+     * "Kiểm tra API": one tiny request to the provider, so it spends a little. The page asks first; this method never runs by itself.
+     * Returns a one-line result with no key and no text from the provider.
+     */
+    public String testApi() {
+        if (!allowedToCallProvider()) return "Chưa xác nhận: không gửi request nào.";
+        apiTestRequests++;
+        try {
+            AppSettings s = settingsForRun(loadSettings());
+            PromptPair p = new PromptPair("You are a connection tester. Reply only OK.", "Reply only: OK");
+            OpenAICompatibleClient.ChatResult r = testProvider != null ? testProvider.chat(s, p, 64, "api-test", null) : OpenAICompatibleClient.chatWithUsage(s, p);
+            return "API OK · " + r.totalTokens + " token";
+        } catch (Exception e) {
+            return "API lỗi: " + AppValidator.readableError(e);
+        }
+    }
+
+    /** Number of provider requests made by {@link #testApi} in this session (the tests count it). */
+    public int apiTestRequests() { return apiTestRequests; }
+
+    /** "Chẩn đoán model": what the local catalog knows about the chosen model. No request is made. */
+    public String modelDiagnostics() {
+        AppSettings s = loadSettings();
+        ModelCatalog.ModelInfo m = ModelCatalog.findModelInfo(s.provider, s.model);
+        StringBuilder sb = new StringBuilder("Provider: ").append(s.provider).append("\nModel: ").append(s.model);
+        if (m == null) sb.append("\nCatalog chưa có model này (bấm \"Làm mới catalog\" để tải, cần mạng).");
+        else sb.append("\nTìm thấy trong catalog: ").append(m.id);
+        return sb.toString();
     }
 
     public DpapiSecrets secrets() { return secrets; }
@@ -211,8 +304,10 @@ public final class DesktopRuntime implements AutoCloseable {
     private boolean claim() { return running.compareAndSet(false, true); }
 
     public boolean startNew(Path input, Path output, AppSettings base, Double capUsd, CostEstimator.Estimate estimate) {
+        if (!allowedToCallProvider()) return false;
         if (!claim()) return false;
-        executor.submit(() -> runNew(input, output, base, capUsd, estimate));
+        final Double cap = capOverride(capUsd);
+        executor.submit(() -> runNew(input, output, base, cap, estimate));
         return true;
     }
 
@@ -287,6 +382,7 @@ public final class DesktopRuntime implements AutoCloseable {
     }
 
     public boolean resumeJob(long jobId) {
+        if (!allowedToCallProvider()) return false;
         if (!claim()) return false;
         executor.submit(() -> {
             try {
@@ -302,6 +398,7 @@ public final class DesktopRuntime implements AutoCloseable {
     }
 
     public boolean retryFailed(long jobId) {
+        if (!allowedToCallProvider()) return false;
         if (!claim()) return false;
         executor.submit(() -> {
             try {
@@ -776,8 +873,10 @@ public final class DesktopRuntime implements AutoCloseable {
 
     public boolean startVolume(VolumePlan plan, AppSettings base, Double capUsd, CostEstimator.Estimate estimate, Path outputDir) {
         if (plan.hasRed() || plan.included() == 0) return false;
+        if (!allowedToCallProvider()) return false;
         if (!claim()) return false;
-        executor.submit(() -> runVolume(plan, base, capUsd, estimate, outputDir));
+        final Double cap = capOverride(capUsd);
+        executor.submit(() -> runVolume(plan, base, cap, estimate, outputDir));
         return true;
     }
 

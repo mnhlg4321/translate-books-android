@@ -424,6 +424,7 @@ final class VolumePage {
             app.alert("Không lưu được cài đặt: " + e.getMessage());
             return;
         }
+        runtime.confirmSpend();
         if (!runtime.startVolume(plan, s, null, estimate, outputDir)) app.alert("Không bắt đầu được: đang có lượt khác chạy hoặc bảng còn dòng đỏ.");
         updateControls();
     }

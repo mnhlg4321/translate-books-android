@@ -82,12 +82,12 @@ final class JobsPage {
         resume.getStyleClass().add("primary");
         resume.setOnAction(e -> {
             TranslationRepositoryCore.JobSummary j = jobsTable.getSelectionModel().getSelectedItem();
-            if (j != null && confirmSpend("Tiếp tục job #" + j.id + "?", j)) runtime.resumeJob(j.id);
+            if (j != null && confirmSpend("Tiếp tục job #" + j.id + "?", j)) { runtime.confirmSpend(); runtime.resumeJob(j.id); }
             app.refreshControls();
         });
         retry.setOnAction(e -> {
             TranslationRepositoryCore.JobSummary j = jobsTable.getSelectionModel().getSelectedItem();
-            if (j != null && confirmSpend("Dịch lại chunk lỗi của job #" + j.id + "?", j)) runtime.retryFailed(j.id);
+            if (j != null && confirmSpend("Dịch lại chunk lỗi của job #" + j.id + "?", j)) { runtime.confirmSpend(); runtime.retryFailed(j.id); }
             app.refreshControls();
         });
         dismiss.setOnAction(e -> {
@@ -110,7 +110,7 @@ final class JobsPage {
         latest.setOnAction(e -> {
             TranslationRepositoryCore.JobSummary j = runtime.latestResumable();
             if (j == null) { say("Không có job nào có thể tiếp tục.", true); return; }
-            if (confirmSpend("Tiếp tục job gần nhất (#" + j.id + ")?", j)) runtime.resumeJob(j.id);
+            if (confirmSpend("Tiếp tục job gần nhất (#" + j.id + ")?", j)) { runtime.confirmSpend(); runtime.resumeJob(j.id); }
             app.refreshControls();
         });
         Button reload = new Button("↻ Làm mới");

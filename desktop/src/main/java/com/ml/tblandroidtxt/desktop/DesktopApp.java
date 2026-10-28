@@ -79,30 +79,12 @@ public final class DesktopApp extends Application {
     private GlossaryPage glossaryPage;
     private PronounPage pronounPage;
     private SetsPage setsPage;
-    private final TextField providerBase = new TextField();
-    private final ComboBox<String> provider = new ComboBox<>();
-    private final TextField modelField = new TextField();
-    private final TextField modelSearch = new TextField();
-    private final ListView<String> modelList = new ListView<>();
-    private final PasswordField keyField = new PasswordField();
-    private final TextField keyVisible = new TextField();
-    private final ToggleButton keyToggle = new ToggleButton("Hiện/ẩn");
-    private final Label keyMasked = new Label();
-    private final ComboBox<String> reasoning = new ComboBox<>();
-    private final ComboBox<String> preset = new ComboBox<>();
-    private final TextField temperature = new TextField();
-    private final TextField maxTokensPerChunk = new TextField();
-    private final TextField maxOutputTokens = new TextField();
-    private final TextField contextChars = new TextField();
-    private final TextField costCap = new TextField();
-    private final Label instructionLabel = new Label();
-    private final Label settingsNote = new Label();
+    private SettingsPage settingsPage;
     private final List<Label> libraryNotes = new ArrayList<>();
     private VolumePage volumePage;
     private HistoryPanel historyPanel;
     private JobsPage jobsPage;
     private RawPage rawPage;
-    private final Button profileUndoButton = new Button("Hoàn tác lần nhập gần nhất");
     private final ComboBox<UiAppearanceCore.Palette> themeBox = new ComboBox<>();
     private final ComboBox<Integer> fontBox = new ComboBox<>();
     private Scene scene;
@@ -117,6 +99,7 @@ public final class DesktopApp extends Application {
             return;
         }
         runtime = DesktopRuntime.open(dataDir, new FxRunListener(this));
+        runtime.requireConfirmation(true);
 
         BorderPane root = new BorderPane();
         VBox navBox = new VBox();
@@ -136,7 +119,8 @@ public final class DesktopApp extends Application {
         built.put(NavModel.GLOSSARY, buildGlossaryPage());
         built.put(NavModel.PRONOUN, buildPronounPage());
         built.put(NavModel.SETS, buildSetsPage());
-        built.put(NavModel.SETTINGS, buildSettingsPage());
+        settingsPage = new SettingsPage(this, runtime);
+        built.put(NavModel.SETTINGS, settingsPage.node());
         built.put(NavModel.APPEARANCE, buildAppearancePage());
         for (NavModel.Entry e : NavModel.entries()) {
             if (e.key.equals(NavModel.RAW)) addGroupHeading(navBox, "Thư viện", NavModel.LIBRARY);
@@ -158,7 +142,6 @@ public final class DesktopApp extends Application {
         primary.setOnCloseRequest(e -> { if (!confirmLeaveAll()) { e.consume(); return; } if (rawPage != null) rawPage.settle(); runtime.close(); releaseInstanceLock(); });
         scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, this::shortcut);
         select(NavModel.restore(runtime.appearancePrefs()));
-        loadSettingsIntoForm();
         refreshLibrary();
         refreshJobs();
         updateControls();
@@ -221,7 +204,7 @@ public final class DesktopApp extends Application {
         if (key.equals(NavModel.VOLUME)) volumePage.refreshRaw();
         if (key.equals(NavModel.JOBS)) refreshJobs();
         if (NavModel.inLibrary(key)) refreshLibrary();
-        if (key.equals(NavModel.SETTINGS)) { keyMasked.setText(runtime.secrets().masked()); profileUndoButton.setDisable(!runtime.canUndoProfile()); }
+        if (key.equals(NavModel.SETTINGS)) settingsPage.reload();
     }
 
     String currentKey() { return currentKey; }
@@ -304,6 +287,8 @@ public final class DesktopApp extends Application {
 
     TranslatePage translatePage() { return translatePage; }
 
+    SettingsPage settingsPage() { return settingsPage; }
+
     void openFolder(Path dir) {
         try {
             if (dir != null) java.awt.Desktop.getDesktop().open(dir.toFile());
@@ -312,7 +297,8 @@ public final class DesktopApp extends Application {
         }
     }
 
-    AppSettings currentSettings() { return readSettingsFromForm(); }
+    /** The stored settings: every page saves on each edit, so there is no separate form to read. */
+    AppSettings currentSettings() { return runtime.loadSettings(); }
 
     VolumePage volumePage() { return volumePage; }
 
@@ -477,7 +463,7 @@ public final class DesktopApp extends Application {
         }
     }
 
-    private void importProfile() {
+    void importProfile() {
         FileChooser fc = new FileChooser();
         fc.setTitle("Nhập hồ sơ cài đặt từ điện thoại (.json)");
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Hồ sơ cài đặt", "*.json"));
@@ -512,9 +498,8 @@ public final class DesktopApp extends Application {
         if (!r.isPresent() || r.get() != apply) return;
         try {
             runtime.applyProfile(preview);
-            loadSettingsIntoForm();
-            profileUndoButton.setDisable(!runtime.canUndoProfile());
-            settingsNote.setText("Đã áp dụng " + preview.differences.size() + " mục. Bấm \"Hoàn tác lần nhập gần nhất\" để quay lại.");
+            settingsPage.profileChanged();
+            settingsPage.message("Đã áp dụng " + preview.differences.size() + " mục. Bấm \"Hoàn tác lần nhập gần nhất\" để quay lại.");
             volumePage.refreshEstimate(false);
             translatePage.refreshProfiles();
         } catch (Exception e) {
@@ -527,7 +512,7 @@ public final class DesktopApp extends Application {
         return one.length() > 80 ? one.substring(0, 77) + "…" : one;
     }
 
-    private void exportProfile() {
+    void exportProfile() {
         FileChooser fc = new FileChooser();
         fc.setTitle("Xuất hồ sơ cài đặt");
         fc.setInitialFileName("TranslateBooks-profile.json");
@@ -535,9 +520,8 @@ public final class DesktopApp extends Application {
         File f = fc.showSaveDialog(stage);
         if (f == null) return;
         try {
-            runtime.saveSettings(readSettingsFromForm());
             Files.write(f.toPath(), runtime.exportProfileJson().getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            settingsNote.setText("Đã xuất hồ sơ (không có API key, output hay Biên tập)");
+            settingsPage.message("Đã xuất hồ sơ (không có API key, output hay Biên tập)");
         } catch (Exception e) {
             alert("Không xuất được: " + e.getMessage());
         }
@@ -565,109 +549,6 @@ public final class DesktopApp extends Application {
 
     // ---- Cài đặt ----
 
-    private Node buildSettingsPage() {
-        provider.getItems().addAll("openrouter", "openai", "deepseek", "custom");
-        reasoning.getItems().addAll("auto", "off", "low", "medium", "high");
-        preset.getItems().addAll("quality", "balanced", "economy", "full");
-        modelSearch.setPromptText("Tìm model…");
-        modelList.setPrefHeight(150);
-        modelSearch.textProperty().addListener((o, a, b) -> fillModels());
-        modelList.getSelectionModel().selectedItemProperty().addListener((o, a, b) -> { if (b != null) modelField.setText(b); });
-        Button refreshModels = new Button("Cập nhật danh sách model");
-        refreshModels.getStyleClass().add("secondary");
-        refreshModels.setOnAction(e -> {
-            if (confirm("Cập nhật danh sách model?", "App sẽ tải danh sách từ openrouter.ai (không gửi API key).")) { runtime.refreshCatalog(); settingsNote.setText("Đang tải danh sách model… mở lại trang sau vài giây"); }
-        });
-        Button saveKey = new Button("Lưu key");
-        saveKey.getStyleClass().add("secondary");
-        saveKey.setOnAction(e -> {
-            String shape = com.ml.tblandroidtxt.DpapiSecrets.validate(provider.getValue(), keyField.getText());
-            if (shape != null) {
-                alert(shape);
-                return;
-            }
-            try {
-                runtime.secrets().save(keyField.getText());
-                keyField.clear();
-                keyMasked.setText(runtime.secrets().masked());
-                settingsNote.setText("Đã lưu key (mã hóa theo tài khoản Windows này)");
-            } catch (Exception ex) {
-                alert("Không lưu được key: " + ex.getMessage());
-            }
-        });
-        keyField.setPromptText("API key (không hiển thị lại)");
-        keyField.setPrefWidth(170);
-        keyVisible.setPrefWidth(170);
-        keyVisible.setManaged(false);
-        keyVisible.setVisible(false);
-        keyVisible.textProperty().bindBidirectional(keyField.textProperty());
-        keyToggle.getStyleClass().add("secondary");
-        keyToggle.setMinWidth(Region.USE_PREF_SIZE);
-        keyToggle.setOnAction(e -> {
-            boolean show = keyToggle.isSelected();
-            keyVisible.setVisible(show);
-            keyVisible.setManaged(show);
-            keyField.setVisible(!show);
-            keyField.setManaged(!show);
-        });
-        saveKey.setMinWidth(Region.USE_PREF_SIZE);
-        keyMasked.setMinWidth(Region.USE_PREF_SIZE);
-        instructionLabel.setMinWidth(Region.USE_PREF_SIZE);
-        Button chooseInstruction = new Button("Chọn instruction YAML…");
-        chooseInstruction.getStyleClass().add("secondary");
-        chooseInstruction.setOnAction(e -> {
-            FileChooser fc = new FileChooser();
-            fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("YAML / TXT", "*.yaml", "*.yml", "*.txt"));
-            File f = fc.showOpenDialog(stage);
-            if (f != null) { runtime.setInstructionPath(f.getAbsolutePath()); instructionLabel.setText(f.getName()); }
-        });
-        Button save = new Button("Lưu cài đặt");
-        save.getStyleClass().add("primary");
-        save.setOnAction(e -> {
-            try {
-                runtime.saveSettings(readSettingsFromForm());
-                settingsNote.setText("Đã lưu cài đặt");
-                translatePage.refreshProfiles();
-                translatePage.refreshEstimate();
-            } catch (Exception ex) {
-                alert("Không lưu được: " + ex.getMessage());
-            }
-        });
-        VBox connection = card(new Label("Kết nối provider"), row("Provider", provider), row("Base URL", providerBase), row("Model", modelField),
-                modelSearch, modelList, refreshModels, row("API key", new HBox(8, keyField, keyVisible, keyToggle, saveKey, keyMasked)));
-        VBox behaviour = card(new Label("Dịch"), row("Reasoning", reasoning), row("Preset", preset), row("Temperature", temperature),
-                row("maxTokensPerChunk", maxTokensPerChunk), row("maxOutputTokens", maxOutputTokens), row("contextChars", contextChars),
-                row("Trần chi phí mỗi lượt (USD)", costCap), row("Instruction", new HBox(8, chooseInstruction, instructionLabel)));
-        Button importProfile = new Button("Nhập hồ sơ cài đặt từ điện thoại…");
-        Button exportProfile = new Button("Xuất hồ sơ cài đặt…");
-        importProfile.getStyleClass().add("secondary");
-        exportProfile.getStyleClass().add("secondary");
-        profileUndoButton.getStyleClass().add("secondary");
-        importProfile.setOnAction(e -> importProfile());
-        exportProfile.setOnAction(e -> exportProfile());
-        profileUndoButton.setDisable(!runtime.canUndoProfile());
-        profileUndoButton.setOnAction(e -> {
-            try {
-                runtime.undoProfile();
-                loadSettingsIntoForm();
-                profileUndoButton.setDisable(true);
-                settingsNote.setText("Đã hoàn tác lần nhập hồ sơ");
-            } catch (Exception ex) {
-                alert("Không hoàn tác được: " + ex.getMessage());
-            }
-        });
-        javafx.scene.layout.FlowPane profileButtons = new javafx.scene.layout.FlowPane(8, 8, importProfile, exportProfile, profileUndoButton);
-        VBox profile = card(new Label("Chuyển dữ liệu với điện thoại"), profileButtons,
-                new Label("Hồ sơ chỉ chứa các mục dùng chung; API key, thư mục output và Biên tập không đi theo."));
-        HBox cols = new HBox(14, new VBox(14, connection, profile), new VBox(14, behaviour));
-        for (Node column : cols.getChildren()) HBox.setHgrow(column, Priority.ALWAYS);
-        javafx.scene.control.ScrollPane scroll = new javafx.scene.control.ScrollPane(new VBox(12, cols, new HBox(10, save, settingsNote)));
-        scroll.setFitToWidth(true);
-        scroll.setStyle("-fx-background-color: transparent;");
-        VBox.setVgrow(scroll, Priority.ALWAYS);
-        return page(NavModel.title(NavModel.SETTINGS), scroll);
-    }
-
     private static HBox row(String label, Node field) {
         Label l = new Label(label);
         l.setMinWidth(170);
@@ -677,54 +558,6 @@ public final class DesktopApp extends Application {
         if (field instanceof Region) HBox.setHgrow(field, Priority.ALWAYS);
         return h;
     }
-
-    private void fillModels() {
-        String q = modelSearch.getText() == null ? "" : modelSearch.getText().toLowerCase(Locale.ROOT).trim();
-        List<String> ids = new ArrayList<>();
-        for (ModelCatalog.ModelInfo m : runtime.models()) if (q.isEmpty() || m.id.toLowerCase(Locale.ROOT).contains(q)) ids.add(m.id);
-        modelList.getItems().setAll(ids.size() > 300 ? ids.subList(0, 300) : ids);
-    }
-
-    private void loadSettingsIntoForm() {
-        AppSettings s = runtime.loadSettings();
-        provider.setValue(s.provider);
-        providerBase.setText(s.baseUrl);
-        modelField.setText(s.model);
-        reasoning.setValue(s.reasoningEffort);
-        preset.setValue(s.optimizationPreset);
-        temperature.setText(String.valueOf(s.temperature));
-        maxTokensPerChunk.setText(String.valueOf(s.maxTokensPerChunk));
-        maxOutputTokens.setText(String.valueOf(s.maxOutputTokens));
-        contextChars.setText(String.valueOf(s.contextChars));
-        costCap.setText(s.stopOnCostLimit && s.costLimitUsd > 0 ? String.valueOf(s.costLimitUsd) : "");
-        keyMasked.setText(runtime.secrets().masked());
-        String ip = runtime.instructionPath();
-        instructionLabel.setText(ip.isEmpty() ? "chưa chọn" : Path.of(ip).getFileName().toString());
-        fillModels();
-    }
-
-    private AppSettings readSettingsFromForm() {
-        AppSettings s = runtime.loadSettings();
-        if (provider.getValue() != null) s.provider = provider.getValue();
-        if (!providerBase.getText().trim().isEmpty()) s.baseUrl = providerBase.getText().trim();
-        s.model = modelField.getText().trim();
-        if (reasoning.getValue() != null) s.reasoningEffort = reasoning.getValue();
-        if (preset.getValue() != null) s.optimizationPreset = preset.getValue();
-        s.temperature = parseFloat(temperature.getText(), s.temperature);
-        s.maxTokensPerChunk = parseInt(maxTokensPerChunk.getText(), s.maxTokensPerChunk);
-        s.maxOutputTokens = parseInt(maxOutputTokens.getText(), s.maxOutputTokens);
-        s.contextChars = parseInt(contextChars.getText(), s.contextChars);
-        double cap = parseDouble(costCap.getText(), 0);
-        s.stopOnCostLimit = cap > 0;
-        s.costLimitUsd = cap > 0 ? cap : 0;
-        return s;
-    }
-
-    private static int parseInt(String v, int d) { try { return Integer.parseInt(v.trim()); } catch (Exception e) { return d; } }
-
-    private static float parseFloat(String v, float d) { try { return Float.parseFloat(v.trim()); } catch (Exception e) { return d; } }
-
-    private static double parseDouble(String v, double d) { try { return Double.parseDouble(v.trim().replace(',', '.')); } catch (Exception e) { return d; } }
 
     // ---- run events (called on the FX thread) ----
 
