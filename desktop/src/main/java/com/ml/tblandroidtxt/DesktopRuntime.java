@@ -319,6 +319,28 @@ public final class DesktopRuntime implements AutoCloseable {
         return dot > 0 ? name.substring(0, dot) : name;
     }
 
+    // ---- counts for the headless live check (numbers only, never text) ----
+
+    public static int jobCalls(TranslationRepositoryCore.JobSummary job) { return job.usage == null ? 0 : job.usage.calls; }
+
+    /** Chunk status -> how many chunks of the job have it. */
+    public java.util.Map<String, Integer> chunkStatusCounts(long jobId) {
+        java.util.TreeMap<String, Integer> out = new java.util.TreeMap<>();
+        for (TranslationRepositoryCore.ChunkRow r : repo.getChunkRows(jobId)) out.merge(String.valueOf(r.status), 1, Integer::sum);
+        return out;
+    }
+
+    /** Provider finish reason -> number of attempts that ended with it. */
+    public java.util.Map<String, Integer> finishReasonCounts(long jobId) {
+        java.util.TreeMap<String, Integer> out = new java.util.TreeMap<>();
+        for (TranslationRepositoryCore.ChunkRow r : repo.getChunkRows(jobId)) {
+            for (TranslationRepositoryCore.AttemptRow a : repo.getAttemptRows(jobId, r.index)) out.merge(a.finishReason == null || a.finishReason.isEmpty() ? "(none)" : a.finishReason, 1, Integer::sum);
+        }
+        return out;
+    }
+
+    public AppSettings normalizedForEstimate(AppSettings base) throws Exception { return settingsForRun(base); }
+
     public List<String> logTail(int lines) {
         try {
             Path f = dataDir.resolve("logs").resolve("tbl_runtime.log");

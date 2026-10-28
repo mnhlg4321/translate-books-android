@@ -49,4 +49,36 @@ public final class DpapiSecrets implements SecretsResolver {
         hydrated.apiKey = load();
         return hydrated;
     }
+
+    /**
+     * Checks the shape of an API key before it is saved; returns null when it looks right, else a Vietnamese message that never
+     * contains the key. OpenRouter keys are exactly sk-or-v1- plus 64 hex characters; other providers need one token without
+     * whitespace of a plausible length. A key pasted twice is called out.
+     */
+    public static String validate(String provider, String key) {
+        String k = key == null ? "" : key.trim();
+        if (k.isEmpty()) return "API key đang trống.";
+        for (int i = 0; i < k.length(); i++) {
+            if (Character.isWhitespace(k.charAt(i))) return "API key có khoảng trắng hoặc xuống dòng ở giữa; hãy dán lại đúng một key.";
+        }
+        int prefixes = 0;
+        for (int at = k.indexOf("sk-"); at >= 0; at = k.indexOf("sk-", at + 3)) prefixes++;
+        if (prefixes > 1) return "API key có vẻ bị dán hai lần (có " + prefixes + " lần \"sk-\"). Xóa ô, dán một lần rồi lưu.";
+        if ("openrouter".equalsIgnoreCase(provider == null ? "" : provider.trim())) {
+            if (!k.matches("^sk-or-v1-[0-9a-f]{64}$")) {
+                return "API key OpenRouter phải có dạng sk-or-v1- cùng 64 ký tự hex (73 ký tự); key vừa nhập dài " + k.length() + " ký tự.";
+            }
+            return null;
+        }
+        if (k.length() < 16 || k.length() > 200) return "Độ dài API key bất thường (" + k.length() + " ký tự); kiểm tra lại.";
+        return null;
+    }
+
+    /** True when the saved key has the OpenRouter shape (checked without exposing it). */
+    public boolean savedKeyHasOpenRouterShape() {
+        return validate("openrouter", load()) == null;
+    }
+
+    /** Length of the saved key, 0 when none; used to report "key still invalid (length N)". */
+    public int savedKeyLength() { return load().length(); }
 }

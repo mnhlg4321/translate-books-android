@@ -99,6 +99,25 @@ public class DesktopPortsTest {
         }
     }
 
+    @Test public void keyShapeIsCheckedBeforeSaving() {
+        String good = "sk-or-v1-" + "0123456789abcdef".repeat(4);
+        assertEquals(73, good.length());
+        assertEquals(null, DpapiSecrets.validate("openrouter", good));
+        assertEquals(null, DpapiSecrets.validate("openrouter", "  " + good + "\n"));
+        String doubled = DpapiSecrets.validate("openrouter", good + good);
+        assertTrue(doubled, doubled.contains("hai lần"));
+        assertFalse("the message never repeats the key", doubled.contains("0123456789abcdef"));
+        assertTrue(DpapiSecrets.validate("openrouter", good.substring(0, 60)).contains("73"));
+        assertTrue(DpapiSecrets.validate("openrouter", "sk-or-v1-" + "G".repeat(64)) != null);
+        assertTrue(DpapiSecrets.validate("openrouter", "").contains("trống"));
+        assertTrue(DpapiSecrets.validate("openrouter", good.substring(0, 20) + " " + good.substring(20)).contains("khoảng trắng"));
+        assertEquals(null, DpapiSecrets.validate("openai", "sk-" + "a".repeat(40)));
+        assertEquals(null, DpapiSecrets.validate("custom", "token-" + "x".repeat(20)));
+        assertTrue(DpapiSecrets.validate("custom", "short") != null);
+        assertTrue(DpapiSecrets.validate("custom", "x".repeat(300)) != null);
+        assertTrue(DpapiSecrets.validate("openai", "sk-" + "a".repeat(20) + "sk-" + "b".repeat(20)).contains("hai lần"));
+    }
+
     private static byte[] concat(byte[] a, byte[] b) {
         byte[] out = new byte[a.length + b.length];
         System.arraycopy(a, 0, out, 0, a.length);

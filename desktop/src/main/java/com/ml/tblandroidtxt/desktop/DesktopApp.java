@@ -95,6 +95,8 @@ public final class DesktopApp extends Application {
     private final TextField modelSearch = new TextField();
     private final ListView<String> modelList = new ListView<>();
     private final PasswordField keyField = new PasswordField();
+    private final TextField keyVisible = new TextField();
+    private final ToggleButton keyToggle = new ToggleButton("Hiện/ẩn");
     private final Label keyMasked = new Label();
     private final ComboBox<String> reasoning = new ComboBox<>();
     private final ComboBox<String> preset = new ComboBox<>();
@@ -337,6 +339,8 @@ public final class DesktopApp extends Application {
         jobsTable.setPlaceholder(new Label("Chưa có job nào"));
         VBox.setVgrow(jobsTable, Priority.ALWAYS);
         jobResumeButton.getStyleClass().add("primary");
+        jobResumeButton.setDisable(true);
+        jobRetryButton.setDisable(true);
         jobRetryButton.getStyleClass().add("secondary");
         jobsTable.getSelectionModel().selectedItemProperty().addListener((o, a, b) -> updateControls());
         jobResumeButton.setOnAction(e -> {
@@ -460,6 +464,11 @@ public final class DesktopApp extends Application {
         Button saveKey = new Button("Lưu key");
         saveKey.getStyleClass().add("secondary");
         saveKey.setOnAction(e -> {
+            String shape = com.ml.tblandroidtxt.DpapiSecrets.validate(provider.getValue(), keyField.getText());
+            if (shape != null) {
+                alert(shape);
+                return;
+            }
             try {
                 runtime.secrets().save(keyField.getText());
                 keyField.clear();
@@ -471,6 +480,18 @@ public final class DesktopApp extends Application {
         });
         keyField.setPromptText("API key (không hiển thị lại)");
         keyField.setPrefWidth(170);
+        keyVisible.setPrefWidth(170);
+        keyVisible.setManaged(false);
+        keyVisible.setVisible(false);
+        keyVisible.textProperty().bindBidirectional(keyField.textProperty());
+        keyToggle.getStyleClass().add("secondary");
+        keyToggle.setOnAction(e -> {
+            boolean show = keyToggle.isSelected();
+            keyVisible.setVisible(show);
+            keyVisible.setManaged(show);
+            keyField.setVisible(!show);
+            keyField.setManaged(!show);
+        });
         saveKey.setMinWidth(Region.USE_PREF_SIZE);
         keyMasked.setMinWidth(Region.USE_PREF_SIZE);
         instructionLabel.setMinWidth(Region.USE_PREF_SIZE);
@@ -494,7 +515,7 @@ public final class DesktopApp extends Application {
             }
         });
         VBox connection = card(new Label("Kết nối provider"), row("Provider", provider), row("Base URL", providerBase), row("Model", modelField),
-                modelSearch, modelList, refreshModels, row("API key", new HBox(8, keyField, saveKey, keyMasked)));
+                modelSearch, modelList, refreshModels, row("API key", new HBox(8, keyField, keyVisible, keyToggle, saveKey, keyMasked)));
         VBox behaviour = card(new Label("Dịch"), row("Reasoning", reasoning), row("Preset", preset), row("Temperature", temperature),
                 row("maxTokensPerChunk", maxTokensPerChunk), row("maxOutputTokens", maxOutputTokens), row("contextChars", contextChars),
                 row("Trần chi phí mỗi lượt (USD)", costCap), row("Instruction", new HBox(8, chooseInstruction, instructionLabel)));
