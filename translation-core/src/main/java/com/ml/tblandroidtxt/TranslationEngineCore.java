@@ -139,6 +139,36 @@ public class TranslationEngineCore {
 
 
 
+    /** Input read through a DocumentIO; the ref is the URI string. */
+    public static class PreparedInput {
+        public String inputUri;
+        public String inputText;
+        public String fileName;
+        public List<Chunk> chunks;
+        public String inputHash;
+        public String settingsHash;
+    }
+
+    public PreparedInput prepareInput(DocumentIO documents, String inputUri, AppSettings settings) throws Exception {
+        if (inputUri == null) throw new IllegalArgumentException("Input TXT is empty");
+        AppSettings s = AppValidator.normalize(settings);
+        String input = documents.readText(inputUri);
+        String fileName = documents.displayName(inputUri);
+        String inputProblem = AppValidator.validateSourceText(input, fileName);
+        if (inputProblem != null) throw new IllegalArgumentException(inputProblem);
+        List<Chunk> chunks = Chunker.chunkText(input, s);
+        if (chunks.isEmpty()) throw new IllegalArgumentException(fileName + ": không tạo được chunk từ file input");
+
+        PreparedInput p = new PreparedInput();
+        p.inputUri = inputUri;
+        p.inputText = input;
+        p.fileName = fileName;
+        p.chunks = chunks;
+        p.inputHash = HashUtil.sha256(input);
+        p.settingsHash = HashUtil.settingsHash(s);
+        return p;
+    }
+
     public String translateWithRetry(Chunk chunk, String previous, AppSettings settings,
                                      CancelChecker cancelChecker, UsageSink usageSink, EventSink eventSink) throws Exception {
         return translateWithRetry(-1, chunk, previous, settings, cancelChecker, usageSink, eventSink);

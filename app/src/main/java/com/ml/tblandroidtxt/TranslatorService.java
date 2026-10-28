@@ -283,7 +283,7 @@ public class TranslatorService extends Service {
                 if (outUri == null || inputs.size() > 1) outUri = FileUtil.createOutputInTree(this, outputTree, s.buildOutputName(fileName));
                 runner.setMetricPhase("Translating");
                 runner.publish("running", Math.round(f * 100f / inputs.size()), "Starting translation for: " + fileName);
-                runSingleJob(inputUri, outUri, s, f + 1, inputs.size());
+                runner.startNewJob(inputUri.toString(), outUri.toString(), s, f + 1, inputs.size());
                 if (runner.isCancelled()) { finishCancelled("Đã hủy batch dịch"); return; }
             }
             runner.setState(TranslationJobState.State.COMPLETED, "Completed");
@@ -406,47 +406,6 @@ public class TranslatorService extends Service {
         ObservabilityLog.event("prepared_plan_claimed","batch",batch.id,"job",jobId,"inputOrdinal",input.ordinal,"chunks",chunks.size());
         runner.publish("running",runner.percent(fileNo-1,fileTotal),"Starting exact prepared plan: "+chunks.size()+" chunks");runner.translateJob(jobId,outputUri.toString(),s,chunks,fileNo,fileTotal,label);
     }
-
-
-
-    private void runSingleJob(Uri inputUri, Uri outputUri, AppSettings s, int fileNo, int fileTotal) throws Exception {
-        TranslationEngine.PreparedInput prepared = engine.prepareInput(inputUri, s);
-        String fileName = prepared.fileName;
-        List<Chunk> chunks = prepared.chunks;
-        runner.resetMetrics(fileName, chunks.size());
-        // ACTION_START always owns a clean job. Checkpoint reuse is available only through explicit Resume actions.
-        TranslationRepository.Job previousDone = null;
-        if (previousDone != null) {
-            String oldOut = repo.assembleOutput(previousDone.id, s.bilingualOutput);
-            FileUtil.writeText(this, outputUri, oldOut);
-            runner.resetMetrics(fileName, chunks.size());
-            runner.setMetricCompleted(chunks.size());
-            runner.setMetricPhase("Already completed");
-            runner.getAcceptedPreview().accept(oldOut, chunks.size(), chunks.size());
-            runner.publish("done", runner.percent(fileNo, fileTotal), "File này đã dịch xong với cùng nội dung + settings. App đã xuất lại output từ checkpoint, không gọi API/dịch lại: " + fileName);
-            updateNotification("Đã có bản dịch, không dịch lại " + fileName, chunks.size(), chunks.size());
-            return;
-        }
-        long jobId = repo.createJob(inputUri.toString(), outputUri.toString(), fileName, s, chunks, prepared.inputHash, prepared.settingsHash);
-        runner.setActiveJobId(jobId);
-        repo.touchJob(jobId, "RUNNING");
-        runner.setMetricPhase("Translating");
-        runner.publish("running", runner.percent(fileNo - 1, fileTotal), "Đã chia " + fileName + " thành " + chunks.size() + " chunk");
-        runner.translateJob(jobId, outputUri.toString(), s, chunks, fileNo, fileTotal, fileName);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

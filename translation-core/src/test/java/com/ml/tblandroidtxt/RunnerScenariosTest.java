@@ -330,4 +330,23 @@ public class RunnerScenariosTest {
         }
         assertFalse("no error broadcast: the chapter set continues", h.statuses().contains("error"));
     }
+
+    /** startNewJob (moved from TranslatorService.runSingleJob): reads the input through DocumentIO, creates the job and translates it. */
+    @Test public void startNewJobReadsCreatesAndTranslates() throws Exception {
+        java.nio.file.Files.write(tmp.getRoot().toPath().resolve("in.txt"), "A1.".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        AppSettings s = RunnerHarness.settings();
+        h.script.add(RunnerHarness.ok());
+        h.runner.beginRun(true);
+        h.runner.startNewJob("mem://in.txt", "mem://out.txt", s, 1, 1);
+
+        assertEquals(1, h.calls.size());
+        assertEquals("B1.\n", h.output());
+        assertEquals(1, h.repo.getJobSummaries(10).size());
+        long id = h.repo.getJobSummaries(10).get(0).id;
+        assertEquals("in.txt", h.repo.getJobSummaries(10).get(0).fileName);
+        assertEquals("COMPLETED", h.jobStatus(id));
+        assertEquals("mem://in.txt", h.repo.getJob(id).inputUri);
+        assertEquals(id, h.runner.getActiveJobId());
+        assertEquals("Translation completed: in.txt", h.snapshots.get(h.snapshots.size() - 1).log);
+    }
 }

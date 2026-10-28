@@ -254,6 +254,32 @@ public class TranslationRunner {
         translateJob(job.id,job.outputUri,s,chunks,fileNo,fileTotal,label);
     }
 
+    public void startNewJob(String inputUri, String outputUri, AppSettings s, int fileNo, int fileTotal) throws Exception {
+        TranslationEngineCore.PreparedInput prepared = engine.prepareInput(documents, inputUri, s);
+        String fileName = prepared.fileName;
+        List<Chunk> chunks = prepared.chunks;
+        resetMetrics(fileName, chunks.size());
+        // ACTION_START always owns a clean job. Checkpoint reuse is available only through explicit Resume actions.
+        TranslationRepositoryCore.Job previousDone = null;
+        if (previousDone != null) {
+            String oldOut = repo.assembleOutput(previousDone.id, s.bilingualOutput);
+            documents.writeText(outputUri, oldOut);
+            resetMetrics(fileName, chunks.size());
+            metricCompleted = chunks.size();
+            metricPhase = "Already completed";
+            acceptedPreview.accept(oldOut, chunks.size(), chunks.size());
+            publish("done", percent(fileNo, fileTotal), "File này đã dịch xong với cùng nội dung + settings. App đã xuất lại output từ checkpoint, không gọi API/dịch lại: " + fileName);
+            listener.onNotification("Đã có bản dịch, không dịch lại " + fileName, chunks.size(), chunks.size());
+            return;
+        }
+        long jobId = repo.createJob(inputUri, outputUri, fileName, s, chunks, prepared.inputHash, prepared.settingsHash);
+        activeJobId = jobId;
+        repo.touchJob(jobId, "RUNNING");
+        metricPhase = "Translating";
+        publish("running", percent(fileNo - 1, fileTotal), "Đã chia " + fileName + " thành " + chunks.size() + " chunk");
+        translateJob(jobId, outputUri, s, chunks, fileNo, fileTotal, fileName);
+    }
+
     public void resumeLastJob() {
         resumeJobById(-1L);
     }
