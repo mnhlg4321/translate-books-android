@@ -103,7 +103,7 @@ public class ProfileAndLibraryTransferTest {
         assertEquals("content://phone/env", merged.envUri);
         assertEquals("content://phone/instr", merged.instructionUri);
         assertEquals("QA_editorial_phone", merged.editorial.model);
-        assertEquals("a key in a hand-edited profile is ignored too", "QA_PHONE_KEY",
+        assertEquals("an older profile that still carries a key imports it, as the phone always did", "QA_OTHER",
                 SettingsJson.fromImportedProfile("{\"apiKey\":\"QA_OTHER\",\"model\":\"m\"}", phone).apiKey);
     }
 
@@ -184,6 +184,24 @@ public class ProfileAndLibraryTransferTest {
             assertEquals("012_QA_chuong.txt", io.displayName(item.uri()));
             rt.raws().delete(new ArrayList<>(Arrays.asList(item.id)));
             assertTrue(rt.raws().list().isEmpty());
+        }
+    }
+
+    @Test public void aKeyInsideAnOlderProfileNeverReachesTheSavedSettingsOrTheDpapiKey() throws Exception {
+        assumeTrue(windows());
+        try (DesktopRuntime rt = open("k")) {
+            rt.secrets().save("TEST_KEY_NOT_SECRET");
+            DesktopRuntime.ProfilePreview p = rt.previewProfile("{\"apiKey\":\"QA_OTHER_KEY_VALUE\",\"model\":\"QA_m\"}");
+            rt.applyProfile(p);
+            assertEquals("QA_m", rt.loadSettings().model);
+            assertEquals("", rt.loadSettings().apiKey);
+            assertEquals("TEST_KEY_NOT_SECRET", rt.secrets().load());
+            try (java.util.stream.Stream<Path> walk = Files.walk(rt.dataDir)) {
+                for (Path f : (Iterable<Path>) walk.filter(Files::isRegularFile)::iterator) {
+                    if (f.getFileName().toString().equals("app.lock")) continue;
+                    assertFalse(f + " holds the key", new String(Files.readAllBytes(f), StandardCharsets.ISO_8859_1).contains("QA_OTHER_KEY_VALUE"));
+                }
+            }
         }
     }
 

@@ -106,13 +106,15 @@ public final class SettingsJson {
 
     /**
      * Reads an exported profile onto {@code current}: only shared keys present in the file are taken; every other value
-     * (including the API key, editorial and the output locations) stays what {@code current} has.
+     * (editorial, the output locations, and the API key unless an older file carries one) stays what {@code current} has.
      */
     public static AppSettings fromImportedProfile(String json, AppSettings current) throws Exception {
         AppSettings base = current == null ? new AppSettings() : current.copy();
         JSONObject o = new JSONObject(json == null ? "{}" : json);
         AppSettings p = fromJson(json);
         for (String key : SHARED_KEYS) if (o.has(key)) copyShared(key, p, base);
+        // Profiles written before v4.22 carried the key; a file that still has one keeps importing it (as the phone always did).
+        if (o.has("apiKey")) base.apiKey = p.apiKey;
         return base;
     }
 

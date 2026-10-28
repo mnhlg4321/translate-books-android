@@ -7,7 +7,7 @@ import static org.junit.Assert.assertTrue;
 import org.json.JSONObject;
 import org.junit.Test;
 
-/** v4.22 S0.8: the exported profile has no API key; importing a keyless file keeps the key saved on the device. */
+/** v4.22 S0.8: the exported profile has no API key; importing a keyless file keeps the key saved on the device. v4.24: shared keys only. */
 public class ProfileExportKeyTest {
     private static final String KEY = "sk-or-v1-SYNTHETIC-KEY-1234567890";
 
@@ -18,8 +18,12 @@ public class ProfileExportKeyTest {
         assertFalse(exported.contains(KEY));
         JSONObject o = new JSONObject(exported);
         assertFalse(o.has("apiKey"));
-        JSONObject full = new JSONObject(SettingsStore.toJson(s));
-        assertEquals(full.length() - 1, o.length());
+        // v4.24: the profile holds only the keys shared with the PC (SettingsJson.SHARED_KEYS); editorial and the device's
+        // storage locations are neither exported nor imported.
+        assertEquals(SettingsJson.SHARED_KEYS.length, o.length());
+        for (String key : new String[]{"editorial", "instructionUri", "envUri", "outputUri", "outputTreeUri", "outputName", "outputTreeName"}) {
+            assertFalse(key, o.has(key));
+        }
         assertEquals("synthetic/model", o.getString("model"));
         assertTrue(SettingsStore.toJson(s).contains(KEY));
     }
