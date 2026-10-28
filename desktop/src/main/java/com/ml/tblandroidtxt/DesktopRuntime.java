@@ -33,6 +33,8 @@ public final class DesktopRuntime implements AutoCloseable {
     private final JsonFileKeyValueStore pronounPrefs;
     private final DpapiSecrets secrets;
     private final DesktopRawStore raws;
+    private final JsonFileKeyValueStore appearancePrefs;
+    private final DesktopHistory history;
     private final FileRuntimeLog log;
     private final FileModelCatalogCache catalogCache;
     private final ExecutorService executor = Executors.newSingleThreadExecutor(r -> {
@@ -76,6 +78,8 @@ public final class DesktopRuntime implements AutoCloseable {
         this.glossaryPrefs = new JsonFileKeyValueStore(prefsDir, GlossaryStoreCore.PREF);
         this.pronounPrefs = new JsonFileKeyValueStore(prefsDir, PronounStoreCore.PREF);
         this.secrets = new DpapiSecrets(this.dataDir.resolve("secrets"));
+        this.appearancePrefs = new JsonFileKeyValueStore(prefsDir, "appearance");
+        this.history = new DesktopHistory(repo, this.dataDir.resolve(ChapterSession.DIR));
         this.raws = new DesktopRawStore(sql, this.dataDir.resolve(DesktopRawStore.DIR).toFile());
         this.log = new FileRuntimeLog(this.dataDir.resolve("logs"));
         this.catalogCache = new FileModelCatalogCache(this.dataDir.resolve("catalog").resolve("openrouter_model_catalog_v42.json").toFile());
@@ -327,6 +331,11 @@ public final class DesktopRuntime implements AutoCloseable {
     // ---- RAW library ----
 
     public DesktopRawStore raws() { return raws; }
+
+    public DesktopHistory history() { return history; }
+
+    /** Theme and text size of the window. */
+    public KeyValueStore appearancePrefs() { return appearancePrefs; }
 
     /** Reads TXT files like the phone does and adds them to the RAW library; returns {added, skipped}. */
     public int[] importRawFiles(List<Path> files) throws Exception {

@@ -1,5 +1,6 @@
 /* Palette "Xám nhạt" of docs/V423_UX_OVERHAUL_WORK_REQUEST.md section 7, as CSS variables. */
 .root {
+    /* Defaults = "Xám nhạt" at 100%; DesktopTheme sets the same variables inline from the shared palette list. */
     -tbl-bg: #F1F2F4;
     -tbl-surface: #FFFFFF;
     -tbl-raised: #E7E9ED;
@@ -20,12 +21,12 @@
 }
 
 .nav { -fx-background-color: -tbl-surface; -fx-border-color: -tbl-divider; -fx-border-width: 0 1 0 0; -fx-padding: 12 0 12 0; }
-.nav-title { -fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: -tbl-text; -fx-padding: 4 16 12 16; }
+.nav-title { -fx-font-size: 1.15em; -fx-font-weight: bold; -fx-text-fill: -tbl-text; -fx-padding: 4 16 12 16; }
 .nav-button { -fx-background-color: transparent; -fx-text-fill: -tbl-text2; -fx-alignment: center-left; -fx-padding: 10 16 10 16; -fx-background-radius: 0; -fx-pref-width: 170; -fx-cursor: hand; }
 .nav-button:hover { -fx-background-color: -tbl-raised; }
 .nav-button:selected { -fx-background-color: -tbl-raised; -fx-text-fill: -tbl-accent; -fx-font-weight: bold; -fx-border-color: -tbl-accent; -fx-border-width: 0 0 0 3; }
 .page { -fx-background-color: -tbl-bg; -fx-padding: 20; }
-.page-title { -fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: -tbl-text; }
+.page-title { -fx-font-size: 1.38em; -fx-font-weight: bold; -fx-text-fill: -tbl-text; }
 .card { -fx-background-color: -tbl-surface; -fx-border-color: -tbl-divider; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 14; }
 .muted { -fx-text-fill: -tbl-text2; }
 .ok { -fx-text-fill: -tbl-ok; }

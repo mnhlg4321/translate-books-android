@@ -220,4 +220,38 @@ public class VolumeRunTest {
             assertTrue(rt.jobs().isEmpty());
         }
     }
+
+    @Test public void historyFoldsTheRunIntoOneLineFiltersByStatusAndShowsNumbersOnly() throws Exception {
+        try (DesktopRuntime rt = DesktopRuntime.open(root.resolve("d6"), events(), provider(0))) {
+            rt.secrets().save("TEST_KEY_NOT_SECRET");
+            loadLibrary(rt);
+            VolumePlan plan = rt.newVolumePlan(null);
+            plan.resolveMissing("", "");
+            assertTrue(rt.startVolume(plan, settings(), null, null, outDir));
+            waitUntilIdle(rt);
+            // one more plain single-file job in the same database
+            assertTrue(rt.startNew(rawDir.resolve("001_QA_raw.txt"), outDir.resolve("single.txt"), settings(), null, null));
+            waitUntilIdle(rt);
+            java.util.Set<String> shown = new java.util.HashSet<>();
+            DesktopHistory.Page page = rt.history().page(-1, DesktopHistory.ALL, shown);
+            assertEquals("one run line and one single job", 2, page.entries.size());
+            DesktopHistory.Entry run = null, single = null;
+            for (DesktopHistory.Entry e : page.entries) { if (e.run) run = e; else single = e; }
+            assertEquals(3, run.jobs.size());
+            assertEquals("Hoàn tất", run.statusText);
+            assertTrue(run.progressText, run.progressText.startsWith("3/3 chương xong"));
+            assertEquals(1, single.jobs.size());
+            assertEquals(1, shown.size());
+            assertEquals("a later page never lists the run again", 0, rt.history().page(-1, DesktopHistory.ALL, shown).entries.stream().filter(e -> e.run).count());
+            assertEquals(2, rt.history().page(-1, DesktopHistory.DONE, new java.util.HashSet<>()).entries.size());
+            assertEquals(0, rt.history().page(-1, DesktopHistory.FAILED, new java.util.HashSet<>()).entries.size());
+            assertEquals(0, rt.history().page(-1, DesktopHistory.UNFINISHED, new java.util.HashSet<>()).entries.size());
+            DesktopHistory.Detail d = rt.history().detail(run.jobs.get(0).id);
+            assertFalse(d.attempts.isEmpty());
+            assertEquals(d.job.doneChunks, d.attempts.size());
+            assertTrue(d.chunkStatuses.containsKey("COMPLETED") || d.chunkStatuses.containsKey("DONE"));
+            assertEquals("the output of a file: ref resolves to a path", true, d.outputFile != null && d.outputFile.getParent() != null);
+            for (TranslationRepositoryCore.JobAttemptRow a : d.attempts) assertEquals("fixture-model", a.model);
+        }
+    }
 }

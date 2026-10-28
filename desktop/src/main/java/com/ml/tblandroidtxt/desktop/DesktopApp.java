@@ -9,6 +9,7 @@ import com.ml.tblandroidtxt.ModelCatalog;
 import com.ml.tblandroidtxt.PronounStoreCore;
 import com.ml.tblandroidtxt.RunSnapshot;
 import com.ml.tblandroidtxt.TranslationRepositoryCore;
+import com.ml.tblandroidtxt.UiAppearanceCore;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -107,6 +108,15 @@ public final class DesktopApp extends Application {
     private final TextField costCap = new TextField();
     private final Label instructionLabel = new Label();
     private final Label settingsNote = new Label();
+    private VolumePage volumePage;
+    private HistoryPanel historyPanel;
+    private final ToggleButton activeTab = new ToggleButton("Đang làm");
+    private final ToggleButton historyTab = new ToggleButton("Lịch sử");
+    private final ListView<com.ml.tblandroidtxt.DesktopRawStore.Item> rawLibraryList = new ListView<>();
+    private final Button profileUndoButton = new Button("Hoàn tác lần nhập gần nhất");
+    private final ComboBox<UiAppearanceCore.Palette> themeBox = new ComboBox<>();
+    private final ComboBox<Integer> fontBox = new ComboBox<>();
+    private Scene scene;
 
     @Override public void start(Stage primary) throws Exception {
         this.stage = primary;
@@ -125,7 +135,10 @@ public final class DesktopApp extends Application {
         Label title = new Label("Translate Books");
         title.getStyleClass().add("nav-title");
         navBox.getChildren().add(title);
+        volumePage = new VolumePage(this, runtime);
+        historyPanel = new HistoryPanel(this, runtime);
         addPage(navBox, "Dịch", buildTranslatePage());
+        addPage(navBox, "Dịch cả tập", volumePage.node());
         addPage(navBox, "Công việc", buildJobsPage());
         addPage(navBox, "Thư viện", buildLibraryPage());
         addPage(navBox, "Cài đặt", buildSettingsPage());
@@ -137,8 +150,9 @@ public final class DesktopApp extends Application {
         progress.setPrefWidth(160);
         root.setBottom(bar);
 
-        Scene scene = new Scene(root, 1180, 760);
+        scene = new Scene(root, 1180, 760);
         scene.getStylesheets().add(getClass().getResource("/desktop/app.css").toExternalForm());
+        applyTheme(DesktopTheme.savedThemeId(runtime.appearancePrefs()), DesktopTheme.savedFontPercent(runtime.appearancePrefs()));
         primary.setTitle("Translate Books");
         primary.setScene(scene);
         primary.setOnCloseRequest(e -> { runtime.close(); releaseInstanceLock(); });
@@ -185,9 +199,11 @@ public final class DesktopApp extends Application {
     void select(int index) {
         for (int i = 0; i < pages.size(); i++) pages.get(i).setVisible(i == index);
         navButtons.get(index).setSelected(true);
-        if (index == 1) refreshJobs();
-        if (index == 2) refreshLibrary();
-        if (index == 3) keyMasked.setText(runtime.secrets().masked());
+        String name = navButtons.get(index).getText();
+        if (name.equals("Dịch cả tập")) volumePage.refreshRaw();
+        if (name.equals("Công việc")) refreshJobs();
+        if (name.equals("Thư viện")) refreshLibrary();
+        if (name.equals("Cài đặt")) { keyMasked.setText(runtime.secrets().masked()); profileUndoButton.setDisable(!runtime.canUndoProfile()); }
     }
 
     Stage stage() { return stage; }
@@ -198,7 +214,7 @@ public final class DesktopApp extends Application {
 
     String pageName(int i) { return navButtons.get(i).getText(); }
 
-    private static VBox page(String title, Node... body) {
+    static VBox page(String title, Node... body) {
         VBox box = new VBox(12);
         box.getStyleClass().add("page");
         Label t = new Label(title);
@@ -208,7 +224,7 @@ public final class DesktopApp extends Application {
         return box;
     }
 
-    private static VBox card(Node... children) {
+    static VBox card(Node... children) {
         VBox box = new VBox(8, children);
         box.getStyleClass().add("card");
         return box;
@@ -289,7 +305,7 @@ public final class DesktopApp extends Application {
         updateControls();
     }
 
-    private String describeEstimate(CostEstimator.Estimate e) {
+    String describeEstimate(CostEstimator.Estimate e) {
         String cost = e.pricingAvailable && !Double.isNaN(e.costHigh)
                 ? "chi phí ước tính " + CostEstimator.money(e.costLow) + " – " + CostEstimator.money(e.costHigh)
                 : "chưa có giá cho model này";
@@ -319,13 +335,21 @@ public final class DesktopApp extends Application {
         updateControls();
     }
 
-    private void openOutputFolder() {
+    private void openOutputFolder() { openFolder(outputDir); }
+
+    void openFolder(Path dir) {
         try {
-            if (outputDir != null) java.awt.Desktop.getDesktop().open(outputDir.toFile());
+            if (dir != null) java.awt.Desktop.getDesktop().open(dir.toFile());
         } catch (Exception e) {
             alert("Không mở được thư mục: " + e.getMessage());
         }
     }
+
+    AppSettings currentSettings() { return readSettingsFromForm(); }
+
+    VolumePage volumePage() { return volumePage; }
+
+    HistoryPanel historyPanel() { return historyPanel; }
 
     // ---- Công việc ----
 
@@ -336,7 +360,7 @@ public final class DesktopApp extends Application {
         jobsTable.getColumns().add(column("Lỗi", 60, j -> String.valueOf(j.failedChunks)));
         jobsTable.getColumns().add(column("Chi phí", 90, j -> Double.isNaN(DesktopRuntime.jobCost(j)) ? "" : CostEstimator.money(DesktopRuntime.jobCost(j))));
         jobsTable.getColumns().add(column("Cập nhật", 170, j -> new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(new java.util.Date(j.updatedAt))));
-        jobsTable.setPlaceholder(new Label("Chưa có job nào"));
+        jobsTable.setPlaceholder(new Label("Không có job nào đang dở"));
         VBox.setVgrow(jobsTable, Priority.ALWAYS);
         jobResumeButton.getStyleClass().add("primary");
         jobResumeButton.setDisable(true);
@@ -353,8 +377,28 @@ public final class DesktopApp extends Application {
             if (j != null && confirmSpend("Dịch lại chunk lỗi của job #" + j.id + "?", j)) runtime.retryFailed(j.id);
             updateControls();
         });
-        return page("Công việc", jobsTable, new HBox(10, jobResumeButton, jobRetryButton));
+        ToggleGroup tabs = new ToggleGroup();
+        activeTab.setToggleGroup(tabs);
+        historyTab.setToggleGroup(tabs);
+        activeTab.getStyleClass().add("nav-button");
+        historyTab.getStyleClass().add("nav-button");
+        activeTab.setSelected(true);
+        VBox activePane = new VBox(10, jobsTable, new HBox(10, jobResumeButton, jobRetryButton));
+        VBox.setVgrow(activePane, Priority.ALWAYS);
+        Node historyNode = historyPanel.node();
+        historyNode.setVisible(false);
+        historyNode.setManaged(false);
+        StackPane stack = new StackPane(activePane, historyNode);
+        VBox.setVgrow(stack, Priority.ALWAYS);
+        activeTab.setOnAction(e -> { activeTab.setSelected(true); activePane.setVisible(true); activePane.setManaged(true); historyNode.setVisible(false); historyNode.setManaged(false); refreshJobs(); });
+        historyTab.setOnAction(e -> { historyTab.setSelected(true); activePane.setVisible(false); activePane.setManaged(false); historyNode.setVisible(true); historyNode.setManaged(true); historyPanel.reload(); });
+        activeTab.setMinWidth(Region.USE_PREF_SIZE);
+        historyTab.setMinWidth(Region.USE_PREF_SIZE);
+        return page("Công việc", new HBox(8, activeTab, historyTab), stack);
     }
+
+    /** QA: show the Lịch sử tab as if it was clicked. */
+    void showHistoryTab() { historyTab.fire(); }
 
     private boolean confirmSpend(String title, TranslationRepositoryCore.JobSummary j) {
         AppSettings s = readSettingsFromForm();
@@ -370,7 +414,8 @@ public final class DesktopApp extends Application {
     }
 
     void refreshJobs() {
-        List<TranslationRepositoryCore.JobSummary> list = runtime.jobs();
+        List<TranslationRepositoryCore.JobSummary> list = new ArrayList<>();
+        for (TranslationRepositoryCore.JobSummary j : runtime.jobs()) if (com.ml.tblandroidtxt.DesktopHistory.isUnfinished(j)) list.add(j);
         jobsTable.getItems().setAll(list);
         updateControls();
     }
@@ -407,13 +452,34 @@ public final class DesktopApp extends Application {
         usePronoun.setOnAction(e -> { PronounStoreCore.Profile p = pronounList.getSelectionModel().getSelectedItem(); if (p != null) { runtime.selectPronoun(p.id); refreshLibrary(); } });
         deleteGlossary.setOnAction(e -> { GlossaryStoreCore.Glossary g = glossaryList.getSelectionModel().getSelectedItem(); if (g != null && confirm("Xóa Glossary \"" + g.name + "\"?", "Không hoàn tác được.")) { runtime.deleteGlossary(g.id); refreshLibrary(); } });
         deletePronoun.setOnAction(e -> { PronounStoreCore.Profile p = pronounList.getSelectionModel().getSelectedItem(); if (p != null && confirm("Xóa Pronoun \"" + p.name + "\"?", "Không hoàn tác được.")) { runtime.deletePronoun(p.id); refreshLibrary(); } });
+        Button importArchive = new Button("Nhập gói thư viện…");
+        Button exportArchive = new Button("Xuất gói thư viện…");
+        importArchive.getStyleClass().add("secondary");
+        exportArchive.getStyleClass().add("secondary");
+        importArchive.setOnAction(e -> importLibraryArchive());
+        exportArchive.setOnAction(e -> exportLibraryArchive());
+        Button addRawFiles = new Button("Thêm RAW (TXT)…");
+        Button deleteRaw = new Button("Xóa RAW");
+        addRawFiles.getStyleClass().add("secondary");
+        deleteRaw.getStyleClass().add("secondary");
+        addRawFiles.setOnAction(e -> addRawFiles());
+        deleteRaw.setOnAction(e -> deleteSelectedRaw());
+        rawLibraryList.setCellFactory(l -> new ListCell<com.ml.tblandroidtxt.DesktopRawStore.Item>() {
+            @Override protected void updateItem(com.ml.tblandroidtxt.DesktopRawStore.Item item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.chapterLabel() + "  ·  " + item.originalName);
+            }
+        });
+        VBox.setVgrow(rawLibraryList, Priority.ALWAYS);
+        VBox middle = card(new Label("RAW"), addRawFiles, rawLibraryList, new HBox(8, deleteRaw));
+        HBox.setHgrow(middle, Priority.ALWAYS);
         VBox left = card(new Label("Glossary"), importGlossary, glossaryList, new HBox(8, useGlossary, deleteGlossary));
         VBox right = card(new Label("Pronoun"), importPronoun, pronounList, new HBox(8, usePronoun, deletePronoun));
         HBox.setHgrow(left, Priority.ALWAYS);
         HBox.setHgrow(right, Priority.ALWAYS);
-        HBox both = new HBox(14, left, right);
+        HBox both = new HBox(14, left, middle, right);
         VBox.setVgrow(both, Priority.ALWAYS);
-        return page("Thư viện", both);
+        return page("Thư viện", new HBox(10, importArchive, exportArchive), both);
     }
 
     private void importFiles(boolean glossary) {
@@ -444,6 +510,170 @@ public final class DesktopApp extends Application {
         for (GlossaryStoreCore.Glossary x : runtime.glossaries()) if (x.id.equals(runtime.selectedGlossaryId())) g = x.name + " (" + x.count() + " mục)";
         for (PronounStoreCore.Profile x : runtime.pronouns()) if (x.id.equals(runtime.selectedPronounId())) p = x.name + " (" + x.count() + " quy tắc)";
         libraryLabel.setText("Glossary đang dùng: " + g + "   ·   Pronoun đang dùng: " + p);
+        rawLibraryList.getItems().setAll(runtime.raws().list());
+    }
+
+    private void addRawFiles() {
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Thêm RAW (.txt)");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Văn bản", "*.txt"));
+        List<File> files = fc.showOpenMultipleDialog(stage);
+        if (files == null) return;
+        try {
+            int[] n = runtime.importRawFiles(files.stream().map(File::toPath).collect(java.util.stream.Collectors.toList()));
+            refreshLibrary();
+            volumePage.refreshRaw();
+            settingsNote.setText("RAW: thêm " + n[0] + ", bỏ qua " + n[1] + " (trùng hoặc lỗi)");
+        } catch (Exception e) {
+            alert("Không thêm được RAW: " + e.getMessage());
+        }
+    }
+
+    private void deleteSelectedRaw() {
+        com.ml.tblandroidtxt.DesktopRawStore.Item item = rawLibraryList.getSelectionModel().getSelectedItem();
+        if (item == null) return;
+        List<String> usage = runtime.raws().unfinishedJobNames(item.id);
+        String extra = usage.isEmpty() ? "" : "\nCòn " + usage.size() + " job chưa xong đang cần RAW này; xóa thì không tiếp tục được.";
+        if (!confirm("Xóa RAW \"" + item.originalName + "\"?", "Không hoàn tác được." + extra)) return;
+        runtime.raws().delete(new ArrayList<>(java.util.Arrays.asList(item.id)));
+        refreshLibrary();
+        volumePage.refreshRaw();
+    }
+
+    // ---- library archive and settings profile (moving data to and from the phone) ----
+
+    private void importLibraryArchive() {
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Nhập gói thư viện (.zip) từ điện thoại");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Gói thư viện", "*.zip"));
+        File f = fc.showOpenDialog(stage);
+        if (f == null) return;
+        importLibraryArchive(f.toPath(), true);
+    }
+
+    void importLibraryArchive(Path zip, boolean ask) {
+        try {
+            DesktopRuntime.LibraryPreview p = runtime.previewLibrary(zip);
+            String text = "Trong gói: " + p.glossariesInFile() + " glossary, " + p.pronounsInFile() + " pronoun, " + p.rawsInFile() + " RAW"
+                    + "\nSẽ thêm: " + p.addGlossaries() + " glossary, " + p.addPronouns() + " pronoun, " + p.addRaws() + " RAW"
+                    + "\nĐã có sẵn: " + p.existing() + " · trùng nội dung: " + p.duplicate()
+                    + "\nXung đột (cùng mã, khác nội dung — nhập thành bản đổi tên): " + p.renamed()
+                    + "\nHỏng mã toàn vẹn (không nhập): " + p.bad();
+            if (p.addedCount() == 0) {
+                if (ask) alert(text + "\n\nKhông có gì để thêm.");
+                return;
+            }
+            if (ask && !confirm("Nhập gói thư viện?", text)) return;
+            boolean ok = runtime.applyLibrary(p);
+            refreshLibrary();
+            volumePage.refreshRaw();
+            if (!ok) alert("Có kho không ghi được (Glossary/Pronoun đang bị khóa vì đọc lỗi). Chưa nhập gì thêm.");
+            else settingsNote.setText("Đã nhập " + p.addGlossaries() + " glossary, " + p.addPronouns() + " pronoun, " + p.addRaws() + " RAW");
+        } catch (IllegalArgumentException e) {
+            alert("Tệp này không phải gói thư viện hợp lệ: " + e.getMessage());
+        } catch (Exception e) {
+            alert("Không nhập được gói: " + e.getMessage());
+        }
+    }
+
+    private void exportLibraryArchive() {
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Xuất gói thư viện");
+        fc.setInitialFileName(DesktopRuntime.suggestedLibraryFileName());
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Gói thư viện", "*.zip"));
+        File f = fc.showSaveDialog(stage);
+        if (f == null) return;
+        try {
+            int[] n = runtime.exportLibrary(f.toPath());
+            settingsNote.setText("Đã xuất " + n[0] + " glossary, " + n[1] + " pronoun, " + n[2] + " RAW (không có API key, cài đặt hay job)");
+        } catch (Exception e) {
+            alert("Không xuất được: " + e.getMessage());
+        }
+    }
+
+    private void importProfile() {
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Nhập hồ sơ cài đặt từ điện thoại (.json)");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Hồ sơ cài đặt", "*.json"));
+        File f = fc.showOpenDialog(stage);
+        if (f == null) return;
+        try {
+            String json = new String(Files.readAllBytes(f.toPath()), java.nio.charset.StandardCharsets.UTF_8);
+            showProfilePreview(runtime.previewProfile(json));
+        } catch (Exception e) {
+            alert("Không đọc được hồ sơ: " + e.getMessage());
+        }
+    }
+
+    void showProfilePreview(DesktopRuntime.ProfilePreview preview) {
+        if (preview.differences.isEmpty()) {
+            alert("Hồ sơ này giống hệt cài đặt hiện tại. Không có gì để áp dụng.");
+            return;
+        }
+        TableView<String[]> diff = new TableView<>();
+        diff.getColumns().add(column("Mục", 190, r -> r[0]));
+        diff.getColumns().add(column("PC hiện tại", 230, r -> shorten(r[1])));
+        diff.getColumns().add(column("Hồ sơ", 230, r -> shorten(r[2])));
+        diff.getItems().setAll(preview.differences);
+        diff.setPrefSize(680, 320);
+        javafx.scene.control.Dialog<ButtonType> dialog = new javafx.scene.control.Dialog<>();
+        dialog.setTitle("Nhập hồ sơ cài đặt");
+        dialog.setHeaderText(preview.differences.size() + " mục khác nhau. API key, thư mục output và Biên tập trên PC được giữ nguyên.");
+        dialog.getDialogPane().setContent(diff);
+        ButtonType apply = new ButtonType("Áp dụng", javafx.scene.control.ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(apply, ButtonType.CANCEL);
+        Optional<ButtonType> r = showDialog(dialog);
+        if (!r.isPresent() || r.get() != apply) return;
+        try {
+            runtime.applyProfile(preview);
+            loadSettingsIntoForm();
+            profileUndoButton.setDisable(!runtime.canUndoProfile());
+            settingsNote.setText("Đã áp dụng " + preview.differences.size() + " mục. Bấm \"Hoàn tác lần nhập gần nhất\" để quay lại.");
+            volumePage.refreshEstimate(false);
+        } catch (Exception e) {
+            alert("Không áp dụng được: " + e.getMessage());
+        }
+    }
+
+    private static String shorten(String v) {
+        String one = v == null ? "" : v.replace('\n', ' ');
+        return one.length() > 80 ? one.substring(0, 77) + "…" : one;
+    }
+
+    private void exportProfile() {
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Xuất hồ sơ cài đặt");
+        fc.setInitialFileName("TranslateBooks-profile.json");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Hồ sơ cài đặt", "*.json"));
+        File f = fc.showSaveDialog(stage);
+        if (f == null) return;
+        try {
+            runtime.saveSettings(readSettingsFromForm());
+            Files.write(f.toPath(), runtime.exportProfileJson().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            settingsNote.setText("Đã xuất hồ sơ (không có API key, output hay Biên tập)");
+        } catch (Exception e) {
+            alert("Không xuất được: " + e.getMessage());
+        }
+    }
+
+    // ---- theme ----
+
+    void applyTheme(String themeId, int fontPercent) {
+        scene.getRoot().setStyle(DesktopTheme.style(DesktopTheme.theme(themeId), fontPercent));
+    }
+
+    private void themeChanged() {
+        UiAppearanceCore.Palette p = themeBox.getValue();
+        Integer font = fontBox.getValue();
+        if (p == null || font == null) return;
+        DesktopTheme.save(runtime.appearancePrefs(), p.id, font);
+        applyTheme(p.id, font);
+    }
+
+    /** QA: set theme and text size the way the controls do. */
+    void setAppearance(String themeId, int fontPercent) {
+        themeBox.setValue(DesktopTheme.theme(themeId));
+        fontBox.setValue(DesktopTheme.nearestFontPercent(fontPercent));
     }
 
     // ---- Cài đặt ----
@@ -485,6 +715,7 @@ public final class DesktopApp extends Application {
         keyVisible.setVisible(false);
         keyVisible.textProperty().bindBidirectional(keyField.textProperty());
         keyToggle.getStyleClass().add("secondary");
+        keyToggle.setMinWidth(Region.USE_PREF_SIZE);
         keyToggle.setOnAction(e -> {
             boolean show = keyToggle.isSelected();
             keyVisible.setVisible(show);
@@ -519,9 +750,44 @@ public final class DesktopApp extends Application {
         VBox behaviour = card(new Label("Dịch"), row("Reasoning", reasoning), row("Preset", preset), row("Temperature", temperature),
                 row("maxTokensPerChunk", maxTokensPerChunk), row("maxOutputTokens", maxOutputTokens), row("contextChars", contextChars),
                 row("Trần chi phí mỗi lượt (USD)", costCap), row("Instruction", new HBox(8, chooseInstruction, instructionLabel)));
-        HBox cols = new HBox(14, connection, behaviour);
-        HBox.setHgrow(connection, Priority.ALWAYS);
-        HBox.setHgrow(behaviour, Priority.ALWAYS);
+        Button importProfile = new Button("Nhập hồ sơ cài đặt từ điện thoại…");
+        Button exportProfile = new Button("Xuất hồ sơ cài đặt…");
+        importProfile.getStyleClass().add("secondary");
+        exportProfile.getStyleClass().add("secondary");
+        profileUndoButton.getStyleClass().add("secondary");
+        importProfile.setOnAction(e -> importProfile());
+        exportProfile.setOnAction(e -> exportProfile());
+        profileUndoButton.setDisable(!runtime.canUndoProfile());
+        profileUndoButton.setOnAction(e -> {
+            try {
+                runtime.undoProfile();
+                loadSettingsIntoForm();
+                profileUndoButton.setDisable(true);
+                settingsNote.setText("Đã hoàn tác lần nhập hồ sơ");
+            } catch (Exception ex) {
+                alert("Không hoàn tác được: " + ex.getMessage());
+            }
+        });
+        themeBox.getItems().setAll(DesktopTheme.themes());
+        themeBox.setConverter(new javafx.util.StringConverter<UiAppearanceCore.Palette>() {
+            @Override public String toString(UiAppearanceCore.Palette p) { return p == null ? "" : p.name; }
+            @Override public UiAppearanceCore.Palette fromString(String s) { return null; }
+        });
+        for (int percent : DesktopTheme.FONT_PERCENTS) fontBox.getItems().add(percent);
+        fontBox.setConverter(new javafx.util.StringConverter<Integer>() {
+            @Override public String toString(Integer v) { return v == null ? "" : v + "%"; }
+            @Override public Integer fromString(String s) { return null; }
+        });
+        themeBox.setValue(DesktopTheme.theme(DesktopTheme.savedThemeId(runtime.appearancePrefs())));
+        fontBox.setValue(DesktopTheme.savedFontPercent(runtime.appearancePrefs()));
+        themeBox.setOnAction(e -> themeChanged());
+        fontBox.setOnAction(e -> themeChanged());
+        javafx.scene.layout.FlowPane profileButtons = new javafx.scene.layout.FlowPane(8, 8, importProfile, exportProfile, profileUndoButton);
+        VBox profile = card(new Label("Chuyển dữ liệu với điện thoại"), profileButtons,
+                new Label("Hồ sơ chỉ chứa các mục dùng chung; API key, thư mục output và Biên tập không đi theo."));
+        VBox look = card(new Label("Giao diện"), row("Màu", themeBox), row("Cỡ chữ", fontBox));
+        HBox cols = new HBox(14, new VBox(14, connection, profile), new VBox(14, behaviour, look));
+        for (Node column : cols.getChildren()) HBox.setHgrow(column, Priority.ALWAYS);
         javafx.scene.control.ScrollPane scroll = new javafx.scene.control.ScrollPane(new VBox(12, cols, new HBox(10, save, settingsNote)));
         scroll.setFitToWidth(true);
         scroll.setStyle("-fx-background-color: transparent;");
@@ -595,6 +861,7 @@ public final class DesktopApp extends Application {
         metricsLabel.setText("chunk " + s.completed + "/" + s.totalChunks + " · " + s.totalTokens + " token · "
                 + CostEstimator.money(s.sessionCost) + " · " + formatElapsed(s.elapsedMs));
         if (s.preview != null && !s.preview.isEmpty()) previewArea.setText(s.preview);
+        volumePage.applySnapshot(s);
         updateControls();
     }
 
@@ -616,12 +883,14 @@ public final class DesktopApp extends Application {
 
     void runEnded() {
         refreshJobs();
+        volumePage.updateControls();
         updateControls();
     }
 
     private void updateControls() {
         boolean running = runtime != null && runtime.isRunning();
         boolean paused = running && runtime.runner().isPaused();
+        if (volumePage != null) volumePage.updateControls();
         startButton.setDisable(running || rawFile == null || outputDir == null);
         pauseButton.setDisable(!running || paused);
         resumeButton.setDisable(!running || !paused);
@@ -635,17 +904,33 @@ public final class DesktopApp extends Application {
 
     // ---- dialogs ----
 
-    private boolean confirm(String header, String text) {
+    private java.util.function.Consumer<javafx.scene.control.Dialog<?>> dialogProbe;
+
+    /** QA screenshots: dialogs are shown without blocking, handed to the probe, and count as cancelled. */
+    void setDialogProbe(java.util.function.Consumer<javafx.scene.control.Dialog<?>> probe) { this.dialogProbe = probe; }
+
+    <T> Optional<T> showDialog(javafx.scene.control.Dialog<T> dialog) {
+        if (dialogProbe != null) {
+            dialog.show();
+            dialogProbe.accept(dialog);
+            return Optional.empty();
+        }
+        return dialog.showAndWait();
+    }
+
+    boolean confirm(String header, String text) {
         Alert a = new Alert(Alert.AlertType.CONFIRMATION, text, ButtonType.OK, ButtonType.CANCEL);
+        a.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         a.setTitle("Xác nhận");
         a.setHeaderText(header);
-        Optional<ButtonType> r = a.showAndWait();
+        Optional<ButtonType> r = showDialog(a);
         return r.isPresent() && r.get() == ButtonType.OK;
     }
 
-    private void alert(String text) {
+    void alert(String text) {
         Alert a = new Alert(Alert.AlertType.WARNING, text, ButtonType.OK);
+        a.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         a.setHeaderText(null);
-        a.showAndWait();
+        showDialog(a);
     }
 }

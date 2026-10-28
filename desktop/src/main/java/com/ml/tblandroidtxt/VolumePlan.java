@@ -116,6 +116,14 @@ public final class VolumePlan {
         ChapterSetMatcher.rate(rows);
     }
 
+    /** The text typed in the chapter cell; digits only, anything else (or empty) means "no chapter number". */
+    public void setChapterText(int index, String text) {
+        String digits = text == null ? "" : text.trim();
+        int n = ChapterNumber.NONE;
+        if (digits.matches("[0-9]{1,6}")) n = Integer.parseInt(digits);
+        setChapterNo(index, n);
+    }
+
     /** An empty id means "Không dùng". */
     public void setGlossary(int index, String id) {
         ChapterSetMatcher.Row r = rows.get(index);
