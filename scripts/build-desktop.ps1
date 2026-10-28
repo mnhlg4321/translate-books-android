@@ -79,7 +79,9 @@ try {
         $libJars = @(Get-ChildItem -Path (Join-Path $stage 'lib') -Filter '*.jar' | ForEach-Object { $_.FullName })
         # sqlite-jdbc is a named module that requires slf4j (absent): jdeps cannot resolve it as a target; its needs (java.sql, java.logging) are in the fixed list below
         $targets = @($libJars | Where-Object { $_ -notmatch 'sqlite-jdbc' })
-        $found = (& $jdeps --multi-release 21 --ignore-missing-deps --print-module-deps -cp (($libJars) -join ';') @targets) -join ','
+        $jdepsOut = @(& $jdeps --multi-release 21 --ignore-missing-deps --print-module-deps -cp (($libJars) -join ';') @targets 2>$null)
+        # jdeps prints split-package warnings on stdout (JavaFX ships a plain and a -win jar); the module list is the last line
+        $found = ($jdepsOut | Where-Object { $_ -match '^[a-z][a-z0-9_.,]*$' } | Select-Object -Last 1)
         if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($found)) { throw "jdeps failed ($LASTEXITCODE)" }
         $moduleSet = [System.Collections.Generic.SortedSet[string]]::new()
         foreach ($m in ($found -split ',')) { if ($m.Trim()) { [void]$moduleSet.Add($m.Trim()) } }
