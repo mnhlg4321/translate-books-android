@@ -194,6 +194,8 @@ Built from commit $commit on $branch ($eventId).
         Copy-Item -Path (Join-Path $stage 'README.md') -Destination $dest
         if ($msiPath) { Copy-Item -Path $msiPath -Destination $dest }
     }
+    $msiSha = if ($msiPath) { (Get-FileHash $msiPath -Algorithm SHA256).Hash } else { '' }
+    $msiBytesKept = if ($msiPath) { (Get-Item $msiPath).Length } else { 0 }
     Remove-Item -Recurse -Force $stageRoot
 
     Write-Host "Version:          $version"
@@ -201,7 +203,7 @@ Built from commit $commit on $branch ($eventId).
     Write-Host "Artifact archive: $artifactDir"
     Write-Host "Backup archive:   $backupDir"
     Write-Host "SHA-256:          $hash"
-    if ($msiPath) { Write-Host "MSI SHA-256:      $((Get-FileHash $msiPath -Algorithm SHA256).Hash) ($((Get-Item $msiPath).Length) bytes)" }
+    if ($msiSha) { Write-Host "MSI SHA-256:      $msiSha ($msiBytesKept bytes)" }
 }
 finally {
     Pop-Location
