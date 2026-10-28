@@ -114,6 +114,50 @@ public final class DesktopRawStore {
         for (String id : ids) files.delete(id);
     }
 
+    /** Deletes only the index rows; the files stay until {@link #purgeFiles}, so a delete can still be undone. */
+    void removeRows(List<String> ids) {
+        db.beginTransaction();
+        try {
+            for (String id : ids) db.delete("library_raw", "id=?", new String[]{id});
+            db.setTransactionSuccessful();
+        } finally { db.endTransaction(); }
+    }
+
+    /** Puts index rows back (the files were kept). Rows whose file is gone, or whose id is present again, are skipped. */
+    int restoreRows(List<Item> items) {
+        int n = 0;
+        for (Item item : items) {
+            if (find(item.id) != null || !files.exists(item.id)) continue;
+            db.insertOrThrow("library_raw", null, values(item));
+            n++;
+        }
+        return n;
+    }
+
+    void purgeFiles(List<String> ids) { for (String id : ids) files.delete(id); }
+
+    /** Replaces the text of one RAW, keeping its id so that chapter sets still point at it. The name stays as the person set it. */
+    public void replace(String id, RawImportPlanner.Entry e) throws IOException {
+        files.write(id, e.normalized);
+        DbValues v = new DbValues();
+        v.put("original_name", e.candidate.name);
+        if (e.chapterNo >= 0) v.put("chapter_no", Integer.valueOf(e.chapterNo)); else v.putNull("chapter_no");
+        v.put("chars", Integer.valueOf(e.normalized.length()));
+        v.put("input_hash", e.hash);
+        v.put("encoding", e.candidate.encoding);
+        v.put("updated_at", Long.valueOf(System.currentTimeMillis()));
+        db.update("library_raw", v, "id=?", new String[]{id});
+    }
+
+    /** Names of the chapter sets that list this RAW. */
+    public List<String> chapterSetNames(String id) {
+        ArrayList<String> out = new ArrayList<>();
+        try (DbCursor cur = db.rawQuery("SELECT DISTINCT s.name FROM chapter_set_rows r JOIN chapter_sets s ON s.id=r.set_id WHERE r.raw_id=?", new String[]{id})) {
+            while (cur.moveToNext()) out.add(cur.getString(0));
+        }
+        return out;
+    }
+
     public boolean rename(String id, String newName) {
         String name = newName == null ? "" : newName.trim();
         if (name.isEmpty()) return false;

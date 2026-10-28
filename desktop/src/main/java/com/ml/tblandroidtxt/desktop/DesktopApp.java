@@ -114,7 +114,7 @@ public final class DesktopApp extends Application {
     private HistoryPanel historyPanel;
     private final ToggleButton activeTab = new ToggleButton("Đang làm");
     private final ToggleButton historyTab = new ToggleButton("Lịch sử");
-    private final ListView<com.ml.tblandroidtxt.DesktopRawStore.Item> rawLibraryList = new ListView<>();
+    private RawPage rawPage;
     private final Button profileUndoButton = new Button("Hoàn tác lần nhập gần nhất");
     private final ComboBox<UiAppearanceCore.Palette> themeBox = new ComboBox<>();
     private final ComboBox<Integer> fontBox = new ComboBox<>();
@@ -162,12 +162,12 @@ public final class DesktopApp extends Application {
         progress.setPrefWidth(160);
         root.setBottom(bar);
 
-        scene = new Scene(root, 1180, 760);
+        scene = new Scene(root, 1280, 720);
         scene.getStylesheets().add(getClass().getResource("/desktop/app.css").toExternalForm());
         applyTheme(DesktopTheme.savedThemeId(runtime.appearancePrefs()), DesktopTheme.savedFontPercent(runtime.appearancePrefs()));
         primary.setTitle("Translate Books");
         primary.setScene(scene);
-        primary.setOnCloseRequest(e -> { runtime.close(); releaseInstanceLock(); });
+        primary.setOnCloseRequest(e -> { if (rawPage != null) rawPage.settle(); runtime.close(); releaseInstanceLock(); });
         scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, this::shortcut);
         select(NavModel.restore(runtime.appearancePrefs()));
         loadSettingsIntoForm();
@@ -249,6 +249,26 @@ public final class DesktopApp extends Application {
     }
 
     Stage stage() { return stage; }
+
+    /** The status bar shows a working state while a task runs off the window thread. */
+    void busy(String text) {
+        statusLabel.setText(text);
+        progress.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
+    }
+
+    void idle() {
+        statusLabel.setText("Sẵn sàng");
+        progress.setProgress(0);
+    }
+
+    /** RAW, Glossary, Pronoun or Tập changed: every list that shows them is refreshed. */
+    void libraryChanged() {
+        refreshLibrary();
+        volumePage.refreshRaw();
+    }
+
+    /** "Tạo tập" on the RAW page: opens the set editor with these chapters. */
+    void createSetFromRaws(List<String> rawIds) { select(NavModel.SETS); }
 
     DesktopRuntime runtime() { return runtime; }
 
@@ -462,7 +482,7 @@ public final class DesktopApp extends Application {
 
     // ---- Thư viện ----
 
-    private Button importGlossary, importPronoun, useGlossary, deleteGlossary, usePronoun, deletePronoun, addRawFiles, deleteRaw;
+    private Button importGlossary, importPronoun, useGlossary, deleteGlossary, usePronoun, deletePronoun;
 
     /** Controls shared by the four library pages are created once; each page lays them out. */
     private void buildLibraryShared() {
@@ -495,19 +515,6 @@ public final class DesktopApp extends Application {
         usePronoun.setOnAction(e -> { PronounStoreCore.Profile p = pronounList.getSelectionModel().getSelectedItem(); if (p != null) { runtime.selectPronoun(p.id); refreshLibrary(); } });
         deleteGlossary.setOnAction(e -> { GlossaryStoreCore.Glossary g = glossaryList.getSelectionModel().getSelectedItem(); if (g != null && confirm("Xóa Glossary \"" + g.name + "\"?", "Không hoàn tác được.")) { runtime.deleteGlossary(g.id); refreshLibrary(); } });
         deletePronoun.setOnAction(e -> { PronounStoreCore.Profile p = pronounList.getSelectionModel().getSelectedItem(); if (p != null && confirm("Xóa Pronoun \"" + p.name + "\"?", "Không hoàn tác được.")) { runtime.deletePronoun(p.id); refreshLibrary(); } });
-        addRawFiles = new Button("Thêm RAW (TXT)…");
-        deleteRaw = new Button("Xóa RAW");
-        addRawFiles.getStyleClass().add("secondary");
-        deleteRaw.getStyleClass().add("secondary");
-        addRawFiles.setOnAction(e -> addRawFiles());
-        deleteRaw.setOnAction(e -> deleteSelectedRaw());
-        rawLibraryList.setCellFactory(l -> new ListCell<com.ml.tblandroidtxt.DesktopRawStore.Item>() {
-            @Override protected void updateItem(com.ml.tblandroidtxt.DesktopRawStore.Item item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.chapterLabel() + "  ·  " + item.originalName);
-            }
-        });
-        VBox.setVgrow(rawLibraryList, Priority.ALWAYS);
     }
 
     /** Backup, import and export of the whole library sit on every library page. */
@@ -522,9 +529,8 @@ public final class DesktopApp extends Application {
     }
 
     private Node buildRawPage() {
-        VBox card = card(new Label("RAW"), addRawFiles, rawLibraryList, new HBox(8, deleteRaw));
-        VBox.setVgrow(card, Priority.ALWAYS);
-        return page(NavModel.title(NavModel.RAW), libraryToolbar(), card);
+        rawPage = new RawPage(this, runtime, libraryToolbar());
+        return rawPage.node();
     }
 
     private Node buildGlossaryPage() {
@@ -589,34 +595,7 @@ public final class DesktopApp extends Application {
         for (GlossaryStoreCore.Glossary x : runtime.glossaries()) if (x.id.equals(runtime.selectedGlossaryId())) g = x.name + " (" + x.count() + " mục)";
         for (PronounStoreCore.Profile x : runtime.pronouns()) if (x.id.equals(runtime.selectedPronounId())) p = x.name + " (" + x.count() + " quy tắc)";
         libraryLabel.setText("Glossary đang dùng: " + g + "   ·   Pronoun đang dùng: " + p);
-        rawLibraryList.getItems().setAll(runtime.raws().list());
-    }
-
-    private void addRawFiles() {
-        FileChooser fc = new FileChooser();
-        fc.setTitle("Thêm RAW (.txt)");
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Văn bản", "*.txt"));
-        List<File> files = fc.showOpenMultipleDialog(stage);
-        if (files == null) return;
-        try {
-            int[] n = runtime.importRawFiles(files.stream().map(File::toPath).collect(java.util.stream.Collectors.toList()));
-            refreshLibrary();
-            volumePage.refreshRaw();
-            settingsNote.setText("RAW: thêm " + n[0] + ", bỏ qua " + n[1] + " (trùng hoặc lỗi)");
-        } catch (Exception e) {
-            alert("Không thêm được RAW: " + e.getMessage());
-        }
-    }
-
-    private void deleteSelectedRaw() {
-        com.ml.tblandroidtxt.DesktopRawStore.Item item = rawLibraryList.getSelectionModel().getSelectedItem();
-        if (item == null) return;
-        List<String> usage = runtime.raws().unfinishedJobNames(item.id);
-        String extra = usage.isEmpty() ? "" : "\nCòn " + usage.size() + " job chưa xong đang cần RAW này; xóa thì không tiếp tục được.";
-        if (!confirm("Xóa RAW \"" + item.originalName + "\"?", "Không hoàn tác được." + extra)) return;
-        runtime.raws().delete(new ArrayList<>(java.util.Arrays.asList(item.id)));
-        refreshLibrary();
-        volumePage.refreshRaw();
+        if (rawPage != null) rawPage.reload();
     }
 
     // ---- library archive and settings profile (moving data to and from the phone) ----

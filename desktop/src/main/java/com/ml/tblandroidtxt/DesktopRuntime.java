@@ -348,6 +348,25 @@ public final class DesktopRuntime implements AutoCloseable {
         return new int[]{plan.added(), plan.skipped()};
     }
 
+    public DesktopRawBulk rawBulk() { return new DesktopRawBulk(raws); }
+
+    /** Package-private door to the database for the PC store bridges and their tests. */
+    SqlDb db() { return sql; }
+
+    /** Replaces the text of a RAW with another file. Returns null on success, else the reason in Vietnamese. */
+    public String replaceRaw(String id, Path file) throws Exception {
+        TextDecoding.Result d = TextDecoding.decode(Files.readAllBytes(file));
+        java.util.Set<String> others = raws.hashes();
+        DesktopRawStore.Item current = raws.find(id);
+        if (current != null) others.remove(current.inputHash);
+        List<RawImportPlanner.Candidate> one = new ArrayList<>();
+        one.add(new RawImportPlanner.Candidate(file.getFileName().toString(), d.text, d.encoding));
+        RawImportPlanner.Entry entry = RawImportPlanner.plan(one, others).entries.get(0);
+        if (entry.verdict != RawImportPlanner.Verdict.ADD) return entry.reason;
+        raws.replace(id, entry);
+        return null;
+    }
+
     // ---- settings profile shared with the phone ----
 
     /** What an imported profile would change: the settings it produces and only the shared keys that differ. */
