@@ -9,9 +9,9 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Decodes TXT bytes exactly like FileUtil.decodeText on the phone: BOM first (UTF-8, UTF-16LE/BE), then strict UTF-8,
- * then windows-31j / Shift_JIS, last a lenient UTF-8. (FileUtil keeps its own copy until the next phone build delegates here;
- * a test compares the two.)
+ * Decodes TXT bytes: BOM first (UTF-8, UTF-16LE/BE), then strict UTF-8, then windows-31j / Shift_JIS, last a lenient UTF-8.
+ * The phone's FileUtil.decodeText delegates here, and the PC reads files through it; TextDecodingVectorsTest pins the behaviour
+ * with fixed byte vectors.
  */
 public final class TextDecoding {
     private TextDecoding() {}

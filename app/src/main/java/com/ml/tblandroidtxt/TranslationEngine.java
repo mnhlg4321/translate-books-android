@@ -119,9 +119,4 @@ public class TranslationEngine extends TranslationEngineCore {
         p.settingsHash = HashUtil.settingsHash(s);
         return p;
     }
-
-    public void updatePartialOutput(TranslationRepository repo, long jobId, Uri outputUri, AppSettings settings) throws Exception {
-        String assembled=assembleOutput(repo.getChunkRows(jobId), settings != null && settings.bilingualOutput, true);
-        if(!assembled.isEmpty())FileUtil.writeTextVerified(appContext, outputUri, assembled);
-    }
 }

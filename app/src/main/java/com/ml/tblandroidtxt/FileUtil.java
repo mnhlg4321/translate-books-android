@@ -16,12 +16,7 @@ import java.io.OutputStream;
 import java.io.InputStreamReader;
 import java.io.PushbackInputStream;
 import java.io.Reader;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -145,40 +140,10 @@ public class FileUtil {
 
     public static String identityOf(Context c,Uri uri){if(uri==null)return "";if(isInternalRaw(uri)){LibraryRawStore.Item raw=LibraryRawStore.find(c,RawUri.idOf(uri.toString()));return uri+":"+(raw==null?"missing":raw.inputHash+":"+raw.chars);}long size=-1,modified=-1;String name="";String[] columns={OpenableColumns.DISPLAY_NAME,OpenableColumns.SIZE,Document.COLUMN_LAST_MODIFIED};try(Cursor cursor=c.getContentResolver().query(uri,columns,null,null,null)){if(cursor!=null&&cursor.moveToFirst()){if(!cursor.isNull(0))name=cursor.getString(0);if(!cursor.isNull(1))size=cursor.getLong(1);if(!cursor.isNull(2))modified=cursor.getLong(2);}}catch(Exception ignored){size=sizeOf(c,uri);name=displayName(c,uri);}return uri+":"+name+":"+size+":"+modified;}
 
+    /** Decoding is the shared core logic (BOM, strict UTF-8, Shift-JIS, lenient fallback); this only adapts its result. */
     private static TextReadResult decodeText(byte[] data) throws Exception {
-        if (data == null) data = new byte[0];
-        if (data.length >= 3 && (data[0] & 0xFF) == 0xEF && (data[1] & 0xFF) == 0xBB && (data[2] & 0xFF) == 0xBF) {
-            return new TextReadResult(new String(data, 3, data.length - 3, StandardCharsets.UTF_8), "UTF-8 BOM", data.length);
-        }
-        if (data.length >= 2 && (data[0] & 0xFF) == 0xFF && (data[1] & 0xFF) == 0xFE) {
-            return new TextReadResult(new String(data, 2, data.length - 2, Charset.forName("UTF-16LE")), "UTF-16LE BOM", data.length);
-        }
-        if (data.length >= 2 && (data[0] & 0xFF) == 0xFE && (data[1] & 0xFF) == 0xFF) {
-            return new TextReadResult(new String(data, 2, data.length - 2, Charset.forName("UTF-16BE")), "UTF-16BE BOM", data.length);
-        }
-        try {
-            return new TextReadResult(strictDecode(data, StandardCharsets.UTF_8), "UTF-8", data.length);
-        } catch (CharacterCodingException ignored) {
-            // Many Japanese TXT/CSV exports are still Shift-JIS/CP932. Keep this fallback
-            // local to file import so translation output remains UTF-8.
-            try {
-                return new TextReadResult(strictDecode(data, Charset.forName("windows-31j")), "Windows-31J/Shift-JIS", data.length);
-            } catch (Exception ignored2) {
-                try {
-                    return new TextReadResult(strictDecode(data, Charset.forName("Shift_JIS")), "Shift_JIS", data.length);
-                } catch (Exception ignored3) {
-                    return new TextReadResult(new String(data, StandardCharsets.UTF_8), "UTF-8 fallback", data.length);
-                }
-            }
-        }
-    }
-
-    private static String strictDecode(byte[] data, Charset charset) throws CharacterCodingException {
-        CharsetDecoder decoder = charset.newDecoder()
-                .onMalformedInput(CodingErrorAction.REPORT)
-                .onUnmappableCharacter(CodingErrorAction.REPORT);
-        CharBuffer decoded = decoder.decode(ByteBuffer.wrap(data));
-        return decoded.toString();
+        TextDecoding.Result r = TextDecoding.decode(data);
+        return new TextReadResult(r.text, r.encoding, r.bytes);
     }
 
     public static void writeText(Context c, Uri uri, String text) throws Exception {
