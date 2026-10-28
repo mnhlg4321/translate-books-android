@@ -300,6 +300,23 @@ public final class DesktopRuntime implements AutoCloseable {
 
     public boolean deleteGlossary(String id) { return GlossaryStoreCore.delete(glossaryPrefs, id); }
 
+    public GlossaryStoreCore.Glossary glossary(String id) { return GlossaryStoreCore.find(glossaryPrefs, id); }
+
+    /** A new empty Glossary, or null when the store is locked because it could not be read. */
+    public GlossaryStoreCore.Glossary createGlossary(String name) { return GlossaryStoreCore.create(glossaryPrefs, name); }
+
+    public boolean saveGlossary(GlossaryStoreCore.Glossary g) { return GlossaryStoreCore.upsert(glossaryPrefs, g); }
+
+    public boolean glossaryStoreLocked() { return GlossaryStoreCore.isCorrupt(glossaryPrefs); }
+
+    public boolean pronounStoreLocked() { return PronounStoreCore.isCorrupt(pronounPrefs); }
+
+    /** The Pronoun text that is in use for translation ("" when none). */
+    public String selectedPronounText() { return PronounStoreCore.selectedPromptText(pronounPrefs); }
+
+    /** The Glossary prompt text that is in use for translation ("" when none). */
+    public String selectedGlossaryText() { return GlossaryStoreCore.selectedPromptText(glossaryPrefs); }
+
     public boolean deletePronoun(String id) { return PronounStoreCore.delete(pronounPrefs, id); }
 
     public int importGlossaries(List<Path> files) throws Exception {

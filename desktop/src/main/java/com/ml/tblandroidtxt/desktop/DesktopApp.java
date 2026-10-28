@@ -65,6 +65,7 @@ public final class DesktopApp extends Application {
     private final java.util.Map<String, ToggleButton> navButtons = new java.util.LinkedHashMap<>();
     private final java.util.Map<String, TextField> searchFields = new java.util.HashMap<>();
     private String currentKey = NavModel.TRANSLATE;
+    private final java.util.Map<String, java.util.function.BooleanSupplier> leaveGuards = new java.util.HashMap<>();
 
     // status bar
     private final Label statusLabel = new Label("Sẵn sàng");
@@ -90,7 +91,7 @@ public final class DesktopApp extends Application {
     private final TableView<TranslationRepositoryCore.JobSummary> jobsTable = new TableView<>();
     private final Button jobResumeButton = new Button("Tiếp tục");
     private final Button jobRetryButton = new Button("Dịch lại chunk lỗi");
-    private final ListView<GlossaryStoreCore.Glossary> glossaryList = new ListView<>();
+    private GlossaryPage glossaryPage;
     private final ListView<PronounStoreCore.Profile> pronounList = new ListView<>();
     private final TextField providerBase = new TextField();
     private final ComboBox<String> provider = new ComboBox<>();
@@ -167,7 +168,7 @@ public final class DesktopApp extends Application {
         applyTheme(DesktopTheme.savedThemeId(runtime.appearancePrefs()), DesktopTheme.savedFontPercent(runtime.appearancePrefs()));
         primary.setTitle("Translate Books");
         primary.setScene(scene);
-        primary.setOnCloseRequest(e -> { if (rawPage != null) rawPage.settle(); runtime.close(); releaseInstanceLock(); });
+        primary.setOnCloseRequest(e -> { if (!confirmLeaveAll()) { e.consume(); return; } if (rawPage != null) rawPage.settle(); runtime.close(); releaseInstanceLock(); });
         scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, this::shortcut);
         select(NavModel.restore(runtime.appearancePrefs()));
         loadSettingsIntoForm();
@@ -218,6 +219,14 @@ public final class DesktopApp extends Application {
 
     void select(String key) {
         if (!NavModel.isPage(key)) key = NavModel.TRANSLATE;
+        if (!key.equals(currentKey)) {
+            java.util.function.BooleanSupplier guard = leaveGuards.get(currentKey);
+            if (guard != null && !guard.getAsBoolean()) {
+                ToggleButton stay = navButtons.get(currentKey);
+                if (stay != null) stay.setSelected(true);
+                return;
+            }
+        }
         currentKey = key;
         for (java.util.Map.Entry<String, Node> e : pages.entrySet()) e.getValue().setVisible(e.getKey().equals(key));
         navButtons.get(key).setSelected(true);
@@ -229,6 +238,15 @@ public final class DesktopApp extends Application {
     }
 
     String currentKey() { return currentKey; }
+
+    /** A page with edits that are not saved yet registers a check; it returns false when the person cancels leaving. */
+    void registerLeaveGuard(String key, java.util.function.BooleanSupplier guard) { leaveGuards.put(key, guard); }
+
+    /** Runs every page's check (closing the window); true when nothing was cancelled. */
+    boolean confirmLeaveAll() {
+        for (java.util.function.BooleanSupplier g : leaveGuards.values()) if (!g.getAsBoolean()) return false;
+        return true;
+    }
 
     /** A page registers its search box so that Ctrl+F reaches it. */
     void registerSearch(String key, TextField field) { searchFields.put(key, field); }
@@ -482,38 +500,24 @@ public final class DesktopApp extends Application {
 
     // ---- Thư viện ----
 
-    private Button importGlossary, importPronoun, useGlossary, deleteGlossary, usePronoun, deletePronoun;
+    private Button importPronoun, usePronoun, deletePronoun;
 
     /** Controls shared by the four library pages are created once; each page lays them out. */
     private void buildLibraryShared() {
-        importGlossary = new Button("Nhập Glossary (CSV)…");
         importPronoun = new Button("Nhập Pronoun (CSV)…");
-        importGlossary.getStyleClass().add("secondary");
         importPronoun.getStyleClass().add("secondary");
-        importGlossary.setOnAction(e -> importFiles(true));
         importPronoun.setOnAction(e -> importFiles(false));
-        glossaryList.setCellFactory(l -> new ListCell<GlossaryStoreCore.Glossary>() {
-            @Override protected void updateItem(GlossaryStoreCore.Glossary g, boolean empty) {
-                super.updateItem(g, empty);
-                setText(empty || g == null ? null : (g.id.equals(runtime.selectedGlossaryId()) ? "● " : "   ") + g.name + "  ·  " + g.count() + " mục");
-            }
-        });
         pronounList.setCellFactory(l -> new ListCell<PronounStoreCore.Profile>() {
             @Override protected void updateItem(PronounStoreCore.Profile p, boolean empty) {
                 super.updateItem(p, empty);
                 setText(empty || p == null ? null : (p.id.equals(runtime.selectedPronounId()) ? "● " : "   ") + p.name + "  ·  " + p.count() + " quy tắc");
             }
         });
-        VBox.setVgrow(glossaryList, Priority.ALWAYS);
         VBox.setVgrow(pronounList, Priority.ALWAYS);
-        useGlossary = new Button("Dùng mục này");
-        deleteGlossary = new Button("Xóa");
         usePronoun = new Button("Dùng mục này");
         deletePronoun = new Button("Xóa");
-        for (Button b : new Button[]{useGlossary, deleteGlossary, usePronoun, deletePronoun}) b.getStyleClass().add("secondary");
-        useGlossary.setOnAction(e -> { GlossaryStoreCore.Glossary g = glossaryList.getSelectionModel().getSelectedItem(); if (g != null) { runtime.selectGlossary(g.id); refreshLibrary(); } });
+        for (Button b : new Button[]{usePronoun, deletePronoun}) b.getStyleClass().add("secondary");
         usePronoun.setOnAction(e -> { PronounStoreCore.Profile p = pronounList.getSelectionModel().getSelectedItem(); if (p != null) { runtime.selectPronoun(p.id); refreshLibrary(); } });
-        deleteGlossary.setOnAction(e -> { GlossaryStoreCore.Glossary g = glossaryList.getSelectionModel().getSelectedItem(); if (g != null && confirm("Xóa Glossary \"" + g.name + "\"?", "Không hoàn tác được.")) { runtime.deleteGlossary(g.id); refreshLibrary(); } });
         deletePronoun.setOnAction(e -> { PronounStoreCore.Profile p = pronounList.getSelectionModel().getSelectedItem(); if (p != null && confirm("Xóa Pronoun \"" + p.name + "\"?", "Không hoàn tác được.")) { runtime.deletePronoun(p.id); refreshLibrary(); } });
     }
 
@@ -534,9 +538,8 @@ public final class DesktopApp extends Application {
     }
 
     private Node buildGlossaryPage() {
-        VBox card = card(new Label("Glossary"), importGlossary, glossaryList, new HBox(8, useGlossary, deleteGlossary));
-        VBox.setVgrow(card, Priority.ALWAYS);
-        return page(NavModel.title(NavModel.GLOSSARY), libraryToolbar(), card);
+        glossaryPage = new GlossaryPage(this, runtime, libraryToolbar());
+        return glossaryPage.node();
     }
 
     private Node buildPronounPage() {
@@ -587,9 +590,8 @@ public final class DesktopApp extends Application {
     }
 
     void refreshLibrary() {
-        glossaryList.getItems().setAll(runtime.glossaries());
+        if (glossaryPage != null) glossaryPage.reload();
         pronounList.getItems().setAll(runtime.pronouns());
-        glossaryList.refresh();
         pronounList.refresh();
         String g = "chưa chọn", p = "chưa chọn";
         for (GlossaryStoreCore.Glossary x : runtime.glossaries()) if (x.id.equals(runtime.selectedGlossaryId())) g = x.name + " (" + x.count() + " mục)";
@@ -968,6 +970,40 @@ public final class DesktopApp extends Application {
         a.setHeaderText(header);
         Optional<ButtonType> r = showDialog(a);
         return r.isPresent() && r.get() == ButtonType.OK;
+    }
+
+    /** Unsaved changes: 1 = save, 0 = leave without saving, -1 = stay. */
+    int askSave(String text) {
+        ButtonType save = new ButtonType("Lưu", javafx.scene.control.ButtonBar.ButtonData.YES);
+        ButtonType discard = new ButtonType("Không lưu", javafx.scene.control.ButtonBar.ButtonData.NO);
+        Alert a = new Alert(Alert.AlertType.CONFIRMATION, text, save, discard, ButtonType.CANCEL);
+        a.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+        a.setTitle("Thay đổi chưa lưu");
+        a.setHeaderText("Lưu thay đổi?");
+        Optional<ButtonType> r = showDialog(a);
+        if (!r.isPresent() || r.get() == ButtonType.CANCEL) return -1;
+        return r.get() == save ? 1 : 0;
+    }
+
+    /** A read-only text window with a copy button (health check, preview). */
+    void showText(String title, String text) {
+        javafx.scene.control.Dialog<ButtonType> d = new javafx.scene.control.Dialog<>();
+        d.setTitle(title);
+        d.setHeaderText(title);
+        TextArea area = new TextArea(text);
+        area.setEditable(false);
+        area.setWrapText(true);
+        area.setPrefSize(640, 360);
+        d.getDialogPane().setContent(area);
+        ButtonType copy = new ButtonType("Sao chép", javafx.scene.control.ButtonBar.ButtonData.LEFT);
+        d.getDialogPane().getButtonTypes().addAll(copy, ButtonType.CLOSE);
+        d.getDialogPane().lookupButton(copy).addEventFilter(javafx.event.ActionEvent.ACTION, ev -> {
+            javafx.scene.input.ClipboardContent c = new javafx.scene.input.ClipboardContent();
+            c.putString(text);
+            javafx.scene.input.Clipboard.getSystemClipboard().setContent(c);
+            ev.consume();
+        });
+        showDialog(d);
     }
 
     void alert(String text) {
