@@ -62,6 +62,8 @@ final class VolumePage {
     private final Button resumeButton = new Button("Tiếp tục");
     private final Button cancelButton = new Button("Hủy");
     private final Button openOutputButton = new Button("Mở thư mục output");
+    private final ComboBox<DesktopRuntime.SetCard> savedSets = new ComboBox<>();
+    private final Label setNote = new Label();
     private final Node root;
 
     VolumePage(DesktopApp app, DesktopRuntime runtime) {
@@ -100,6 +102,16 @@ final class VolumePage {
         selectAll.setOnAction(e -> rawList.getSelectionModel().selectAll());
         Button match = secondary("Ghép theo số chương");
         match.setOnAction(e -> buildPlan());
+        savedSets.setPromptText("Chọn một tập đã lưu…");
+        savedSets.setConverter(new StringConverter<DesktopRuntime.SetCard>() {
+            @Override public String toString(DesktopRuntime.SetCard c) { return c == null ? "" : c.name + " (" + c.chapters + " chương)"; }
+            @Override public DesktopRuntime.SetCard fromString(String s) { return null; }
+        });
+        Button loadSet = secondary("Nạp tập");
+        loadSet.setOnAction(e -> loadSavedSet());
+        setNote.setWrapText(true);
+        setNote.getStyleClass().add("muted");
+        VBox saved = card(new Label("Tập đã lưu (Thư viện · Tập)"), new HBox(8, savedSets, loadSet), setNote);
         VBox sources = card(new Label("Chương RAW trong thư viện"), new HBox(8, addRaw, addGlossary, addPronoun), rule, folderNote,
                 rawList, new HBox(8, selectAll, match));
 
@@ -131,7 +143,7 @@ final class VolumePage {
         progressLabel.getStyleClass().add("muted");
         VBox run = card(new HBox(10, chooseOutput, outputLabel), new HBox(10, reEstimate, estimateLabel),
                 new HBox(10, startButton, pauseButton, resumeButton, cancelButton, openOutputButton), progressLabel);
-        VBox page = DesktopApp.page(NavModel.title(NavModel.VOLUME), sources, review, run);
+        VBox page = DesktopApp.page(NavModel.title(NavModel.VOLUME), saved, sources, review, run);
         updateControls();
         javafx.scene.control.ScrollPane scroll = new javafx.scene.control.ScrollPane(page);
         scroll.setFitToWidth(true);
@@ -153,6 +165,27 @@ final class VolumePage {
         List<DesktopRawStore.Item> items = runtime.raws().list();
         rawList.getItems().setAll(items);
         rawList.getSelectionModel().selectAll();
+        refreshSets();
+    }
+
+    /** The saved sets are the ones of Thư viện · Tập: one store, so a set saved there shows here at once. */
+    void refreshSets() {
+        DesktopRuntime.SetCard keep = savedSets.getValue();
+        savedSets.getItems().setAll(runtime.setCards());
+        if (keep != null) for (DesktopRuntime.SetCard c : savedSets.getItems()) if (c.id.equals(keep.id)) savedSets.setValue(c);
+        setNote.setText(savedSets.getItems().isEmpty() ? "Chưa có tập nào. Tạo ở Thư viện · Tập, hoặc chọn các chương RAW bên dưới." : "");
+    }
+
+    private void loadSavedSet() {
+        DesktopRuntime.SetCard c = savedSets.getValue();
+        if (c == null) { app.alert("Chọn một tập trước."); return; }
+        VolumePlan loaded = runtime.volumePlanFromSet(c.id);
+        if (loaded == null) { app.alert("Tập này không còn nữa."); refreshSets(); return; }
+        plan = loaded;
+        estimate = null;
+        refreshTable();
+        refreshEstimate(false);
+        setNote.setText("Đã nạp tập \"" + c.name + "\". Lượt dịch này được ghi là của tập, nên Công việc lọc được theo tập.");
     }
 
     interface FolderAction { DesktopRuntime.FolderImport run(Path dir) throws Exception; }

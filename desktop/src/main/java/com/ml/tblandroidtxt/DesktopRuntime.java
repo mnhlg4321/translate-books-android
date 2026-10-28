@@ -405,6 +405,103 @@ public final class DesktopRuntime implements AutoCloseable {
 
     public DesktopRawBulk rawBulk() { return new DesktopRawBulk(raws); }
 
+    // ---- chapter sets (stored in the shared chapter_sets tables) ----
+
+    List<ComboDraft.RawRef> rawRefs() {
+        List<ComboDraft.RawRef> out = new ArrayList<>();
+        for (DesktopRawStore.Item i : raws.list()) out.add(new ComboDraft.RawRef(i.id, i.originalName, i.chapterNo));
+        return out;
+    }
+
+    List<ChapterSetMatcher.Named> glossaryNames() {
+        List<ChapterSetMatcher.Named> out = new ArrayList<>();
+        for (GlossaryStoreCore.Glossary g : glossaries()) out.add(new ChapterSetMatcher.Named(g.id, g.name));
+        return out;
+    }
+
+    List<ChapterSetMatcher.Named> pronounNames() {
+        List<ChapterSetMatcher.Named> out = new ArrayList<>();
+        for (PronounStoreCore.Profile p : pronouns()) out.add(new ChapterSetMatcher.Named(p.id, p.name));
+        return out;
+    }
+
+    /** One line of the "Thư viện · Tập" list. */
+    public static final class SetCard {
+        public final String id;
+        public final String name;
+        public final int chapters;
+        public final String summary;
+        public final String range;
+        public final int yellow;
+        public final int red;
+        SetCard(String id, String name, int chapters, String summary, String range, int yellow, int red) {
+            this.id = id; this.name = name; this.chapters = chapters; this.summary = summary; this.range = range; this.yellow = yellow; this.red = red;
+        }
+    }
+
+    public List<SetCard> setCards() {
+        List<SetCard> out = new ArrayList<>();
+        for (ChapterSetStoreCore.SetInfo info : ChapterSetStoreCore.listSets(sql)) {
+            DesktopSetEditor d = DesktopSetEditor.open(this, info.id);
+            int green = 0, yellow = 0, red = 0;
+            List<Integer> chapters = new ArrayList<>();
+            if (d != null) for (VolumePlan.RowView r : d.rows()) {
+                chapters.add(r.chapterNo);
+                if (r.status.equals("GREEN")) green++; else if (r.status.equals("YELLOW")) yellow++; else red++;
+            }
+            String range = ComboDraft.chapterRange(chapters);
+            out.add(new SetCard(info.id, info.name, info.chapters, ComboDraft.summaryOf(info.chapters, green, yellow, red) + (range.isEmpty() ? "" : " · " + range), range, yellow, red));
+        }
+        return out;
+    }
+
+    public DesktopSetEditor newSet(java.util.Collection<String> rawIds) { return DesktopSetEditor.create(this, rawIds); }
+
+    public DesktopSetEditor openSet(String id) { return DesktopSetEditor.open(this, id); }
+
+    /** RAW that appear only in the given sets (so they would be orphaned by deleting those sets). */
+    public List<String> rawOnlyInSets(java.util.Collection<String> setIds) {
+        java.util.LinkedHashSet<String> mine = new java.util.LinkedHashSet<>(), others = new java.util.LinkedHashSet<>();
+        for (ChapterSetStoreCore.SetInfo info : ChapterSetStoreCore.listSets(sql)) {
+            ChapterSetStoreCore.SetData data = ChapterSetStoreCore.get(sql, info.id);
+            if (data == null) continue;
+            for (ChapterSetStoreCore.Row r : data.rows) (setIds.contains(info.id) ? mine : others).add(r.rawId);
+        }
+        mine.removeAll(others);
+        mine.removeIf(id -> raws.find(id) == null);
+        return new ArrayList<>(mine);
+    }
+
+    /** Deletes the sets; with {@code alsoRaw} the RAW that belonged only to them go too (RAW needed by an unfinished job stay). Returns the number of RAW removed. */
+    public int deleteSets(java.util.Collection<String> setIds, boolean alsoRaw) {
+        List<String> orphaned = alsoRaw ? rawOnlyInSets(setIds) : new ArrayList<String>();
+        ChapterSetStoreCore.delete(sql, new ArrayList<>(setIds));
+        int removed = 0;
+        for (String id : orphaned) {
+            if (!raws.unfinishedJobNames(id).isEmpty()) continue;
+            raws.delete(new ArrayList<>(java.util.Collections.singletonList(id)));
+            removed++;
+        }
+        return removed;
+    }
+
+    public boolean renameSet(String id, String name) {
+        String n = name == null ? "" : name.trim();
+        ChapterSetStoreCore.SetData data = ChapterSetStoreCore.get(sql, id);
+        if (data == null || n.isEmpty()) return false;
+        data.name = n;
+        ChapterSetStoreCore.save(sql, data);
+        return true;
+    }
+
+    /** A volume plan loaded from a saved set, or null when the set is gone. The run records the set's id in its session file. */
+    public VolumePlan volumePlanFromSet(String setId) {
+        DesktopSetEditor d = DesktopSetEditor.open(this, setId);
+        if (d == null) return null;
+        ChapterSetMatcher.rate(d.rowsForRun());
+        return new VolumePlan(setId, d.name(), d.rowsForRun(), glossaries(), pronouns());
+    }
+
     /** Package-private door to the database for the PC store bridges and their tests. */
     SqlDb db() { return sql; }
 
@@ -659,6 +756,7 @@ public final class DesktopRuntime implements AutoCloseable {
             final String sessionId = java.util.UUID.randomUUID().toString();
             ChapterSession session = new ChapterSession(sessionId);
             session.setName = plan.name();
+            session.setId = plan.setId();
             session.chapters.addAll(bindings);
             java.io.File sessionDir = dataDir.resolve(ChapterSession.DIR).toFile();
             Files.createDirectories(sessionDir.toPath());

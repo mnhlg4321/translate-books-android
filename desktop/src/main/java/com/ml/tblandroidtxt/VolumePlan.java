@@ -49,6 +49,8 @@ public final class VolumePlan {
     final List<GlossaryStoreCore.Glossary> glossaries;
     final List<PronounStoreCore.Profile> pronouns;
     final String name;
+    /** The saved set this plan was loaded from ("" for a plan built from ticked RAW); written to the run's session file. */
+    String setId = "";
 
     /** @param raws the chosen RAW chapters, already in chapter order */
     VolumePlan(List<DesktopRawStore.Item> raws, List<GlossaryStoreCore.Glossary> glossaries, List<PronounStoreCore.Profile> pronouns) {
@@ -68,7 +70,20 @@ public final class VolumePlan {
         this.name = ChapterSetMatcher.defaultName(originals);
     }
 
+    /** A plan loaded from a saved chapter set: the rows keep exactly what was saved. */
+    VolumePlan(String setId, String name, List<ChapterSetMatcher.Row> saved, List<GlossaryStoreCore.Glossary> glossaries, List<PronounStoreCore.Profile> pronouns) {
+        this.glossaries = glossaries;
+        this.pronouns = pronouns;
+        for (GlossaryStoreCore.Glossary g : glossaries) glossaryNames.add(new ChapterSetMatcher.Named(g.id, g.name));
+        for (PronounStoreCore.Profile p : pronouns) pronounNames.add(new ChapterSetMatcher.Named(p.id, p.name));
+        rows.addAll(saved);
+        this.setId = setId;
+        this.name = name;
+    }
+
     public String name() { return name; }
+
+    public String setId() { return setId; }
 
     public int size() { return rows.size(); }
 

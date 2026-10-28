@@ -93,6 +93,7 @@ public final class DesktopApp extends Application {
     private final Button jobRetryButton = new Button("Dịch lại chunk lỗi");
     private GlossaryPage glossaryPage;
     private PronounPage pronounPage;
+    private SetsPage setsPage;
     private final TextField providerBase = new TextField();
     private final ComboBox<String> provider = new ComboBox<>();
     private final TextField modelField = new TextField();
@@ -284,10 +285,14 @@ public final class DesktopApp extends Application {
     void libraryChanged() {
         refreshLibrary();
         volumePage.refreshRaw();
+        volumePage.refreshSets();
     }
 
     /** "Tạo tập" on the RAW page: opens the set editor with these chapters. */
-    void createSetFromRaws(List<String> rawIds) { select(NavModel.SETS); }
+    void createSetFromRaws(List<String> rawIds) {
+        select(NavModel.SETS);
+        if (currentKey.equals(NavModel.SETS)) setsPage.startNew(rawIds);
+    }
 
     DesktopRuntime runtime() { return runtime; }
 
@@ -545,7 +550,8 @@ public final class DesktopApp extends Application {
     }
 
     private Node buildSetsPage() {
-        return page(NavModel.title(NavModel.SETS), libraryToolbar(), card(new Label("Tập chương sẽ được làm ở mục 5.")));
+        setsPage = new SetsPage(this, runtime, libraryToolbar());
+        return setsPage.node();
     }
 
     private Node buildAppearancePage() {
@@ -569,6 +575,7 @@ public final class DesktopApp extends Application {
     void refreshLibrary() {
         if (glossaryPage != null) glossaryPage.reload();
         if (pronounPage != null) pronounPage.reload();
+        if (setsPage != null) setsPage.reload();
         String g = "chưa chọn", p = "chưa chọn";
         for (GlossaryStoreCore.Glossary x : runtime.glossaries()) if (x.id.equals(runtime.selectedGlossaryId())) g = x.name + " (" + x.count() + " mục)";
         for (PronounStoreCore.Profile x : runtime.pronouns()) if (x.id.equals(runtime.selectedPronounId())) p = x.name + " (" + x.count() + " quy tắc)";
