@@ -76,9 +76,6 @@ public final class DesktopApp extends Application {
     private TranslatePage translatePage;
 
     // jobs, library, settings
-    private final TableView<TranslationRepositoryCore.JobSummary> jobsTable = new TableView<>();
-    private final Button jobResumeButton = new Button("Tiếp tục");
-    private final Button jobRetryButton = new Button("Dịch lại chunk lỗi");
     private GlossaryPage glossaryPage;
     private PronounPage pronounPage;
     private SetsPage setsPage;
@@ -103,8 +100,7 @@ public final class DesktopApp extends Application {
     private final List<Label> libraryNotes = new ArrayList<>();
     private VolumePage volumePage;
     private HistoryPanel historyPanel;
-    private final ToggleButton activeTab = new ToggleButton("Đang làm");
-    private final ToggleButton historyTab = new ToggleButton("Lịch sử");
+    private JobsPage jobsPage;
     private RawPage rawPage;
     private final Button profileUndoButton = new Button("Hoàn tác lần nhập gần nhất");
     private final ComboBox<UiAppearanceCore.Palette> themeBox = new ComboBox<>();
@@ -325,63 +321,23 @@ public final class DesktopApp extends Application {
     // ---- Công việc ----
 
     private Node buildJobsPage() {
-        jobsTable.getColumns().add(column("Tệp", 300, j -> j.fileName));
-        jobsTable.getColumns().add(column("Trạng thái", 130, j -> j.status));
-        jobsTable.getColumns().add(column("Chunk xong", 90, j -> j.doneChunks + "/" + j.totalChunks));
-        jobsTable.getColumns().add(column("Lỗi", 60, j -> String.valueOf(j.failedChunks)));
-        jobsTable.getColumns().add(column("Chi phí", 90, j -> Double.isNaN(DesktopRuntime.jobCost(j)) ? "" : CostEstimator.money(DesktopRuntime.jobCost(j))));
-        jobsTable.getColumns().add(column("Cập nhật", 170, j -> new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(new java.util.Date(j.updatedAt))));
-        jobsTable.setPlaceholder(new Label("Không có job nào đang dở"));
-        VBox.setVgrow(jobsTable, Priority.ALWAYS);
-        jobResumeButton.getStyleClass().add("primary");
-        jobResumeButton.setDisable(true);
-        jobRetryButton.setDisable(true);
-        jobRetryButton.getStyleClass().add("secondary");
-        jobsTable.getSelectionModel().selectedItemProperty().addListener((o, a, b) -> updateControls());
-        jobResumeButton.setOnAction(e -> {
-            TranslationRepositoryCore.JobSummary j = jobsTable.getSelectionModel().getSelectedItem();
-            if (j != null && confirmSpend("Tiếp tục job #" + j.id + "?", j)) runtime.resumeJob(j.id);
-            updateControls();
-        });
-        jobRetryButton.setOnAction(e -> {
-            TranslationRepositoryCore.JobSummary j = jobsTable.getSelectionModel().getSelectedItem();
-            if (j != null && confirmSpend("Dịch lại chunk lỗi của job #" + j.id + "?", j)) runtime.retryFailed(j.id);
-            updateControls();
-        });
-        ToggleGroup tabs = new ToggleGroup();
-        activeTab.setToggleGroup(tabs);
-        historyTab.setToggleGroup(tabs);
-        activeTab.getStyleClass().add("nav-button");
-        historyTab.getStyleClass().add("nav-button");
-        activeTab.setSelected(true);
-        VBox activePane = new VBox(10, jobsTable, new HBox(10, jobResumeButton, jobRetryButton));
-        VBox.setVgrow(activePane, Priority.ALWAYS);
-        Node historyNode = historyPanel.node();
-        historyNode.setVisible(false);
-        historyNode.setManaged(false);
-        StackPane stack = new StackPane(activePane, historyNode);
-        VBox.setVgrow(stack, Priority.ALWAYS);
-        activeTab.setOnAction(e -> { activeTab.setSelected(true); activePane.setVisible(true); activePane.setManaged(true); historyNode.setVisible(false); historyNode.setManaged(false); refreshJobs(); });
-        historyTab.setOnAction(e -> { historyTab.setSelected(true); activePane.setVisible(false); activePane.setManaged(false); historyNode.setVisible(true); historyNode.setManaged(true); historyPanel.reload(); });
-        activeTab.setMinWidth(Region.USE_PREF_SIZE);
-        historyTab.setMinWidth(Region.USE_PREF_SIZE);
-        return page(NavModel.title(NavModel.JOBS), new HBox(8, activeTab, historyTab), stack);
+        jobsPage = new JobsPage(this, runtime, historyPanel);
+        return jobsPage.node();
     }
 
     /** The jobs page on its Lịch sử tab. */
     void openJobsHistory() {
         select(NavModel.JOBS);
-        historyTab.fire();
+        jobsPage.showHistory();
     }
 
     /** QA: show the Lịch sử tab as if it was clicked. */
-    void showHistoryTab() { historyTab.fire(); }
+    void showHistoryTab() { jobsPage.showHistory(); }
 
-    private boolean confirmSpend(String title, TranslationRepositoryCore.JobSummary j) {
-        AppSettings s = readSettingsFromForm();
-        return confirm(title, "Model: " + s.model + "\nReasoning effort: " + s.reasoningEffort + "\nTrần chi phí: " + CostEstimator.money(TranslatePage.effectiveCap(s))
-                + "\nChunk xong " + j.doneChunks + "/" + j.totalChunks + ", lỗi " + j.failedChunks + "\n\nTiếp tục sẽ gọi provider và tốn tiền thật.");
-    }
+    JobsPage jobsPage() { return jobsPage; }
+
+    /** Enables or disables the buttons that depend on whether a run is active. */
+    void refreshControls() { updateControls(); }
 
     private static <T> TableColumn<T, String> column(String title, double width, java.util.function.Function<T, String> value) {
         TableColumn<T, String> c = new TableColumn<>(title);
@@ -391,9 +347,7 @@ public final class DesktopApp extends Application {
     }
 
     void refreshJobs() {
-        List<TranslationRepositoryCore.JobSummary> list = new ArrayList<>();
-        for (TranslationRepositoryCore.JobSummary j : runtime.jobs()) if (com.ml.tblandroidtxt.DesktopHistory.isUnfinished(j)) list.add(j);
-        jobsTable.getItems().setAll(list);
+        if (jobsPage != null) jobsPage.refresh();
         updateControls();
     }
 
@@ -812,10 +766,7 @@ public final class DesktopApp extends Application {
         boolean paused = running && runtime.runner().isPaused();
         if (volumePage != null) volumePage.updateControls();
         if (translatePage != null) translatePage.updateControls();
-        TranslationRepositoryCore.JobSummary j = jobsTable.getSelectionModel().getSelectedItem();
-        boolean open = j != null && !running;
-        jobResumeButton.setDisable(!open || j.doneChunks >= j.totalChunks);
-        jobRetryButton.setDisable(!open || j.failedChunks <= 0);
+        if (jobsPage != null) jobsPage.updateButtons();
     }
 
     // ---- dialogs ----

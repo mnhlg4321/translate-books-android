@@ -1,13 +1,13 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-28 (+07:00). P3 finished and reviewed by the owner: the PC app lacks many phone screens. P4 (desktop UI parity) work request written and critic-reviewed.
-- Current version: v4.24 in development (PC shared core); phone `15e84958` runs **4.24-dev.5/code309** (installed with owner approval). Shipped release remains v4.21.0/code271; v4.23 is still open on feature/v4.23.
+- Updated: 2026-10-29 (+07:00). P4 (desktop UI parity) in progress: sections 1-7 done, 8-10 pending.
+- Current version: v4.24 in development (PC shared core); phone `15e84958` runs **4.24-dev.5/code309**. Shipped release remains v4.21.0/code271; v4.23 is still open on feature/v4.23. P4 builds no APK and installs nothing.
 - Current branch: feature/v4.24 (worktree D:\P5E-builds\wt-v4.24)
-- Current commit: 7db8c492 (implementation baseline before this snapshot commit)
-- Current build: phone 4.24-dev.5/code309 (SHA-256 93E86E94...B766); PC package 4.24-pc-dev.6 (zip + unsigned per-user .msi, msi SHA-256 FAE9705A...DFFF).
-- Current phase: P4 desktop UI parity (docs/V424_P4_DESKTOP_UI_PARITY_WORK_REQUEST.md), not started
-- Completed tasks: P0a..P2 (golden prompt tests, translation-core, ports + JDBC, desktop shell with one real run of $0.005693). P3: SettingsJson.toExportJson/fromImportedProfile (shared keys only), DesktopRawStore + tblraw:// reads, DesktopRuntime bridges for profile and library ZIP, ChapterQueue (loop body token-identical to the old TranslatorService loop) with 8 JVM tests.
-- Pending tasks: P4 sections 1-10 plus the section 14 critic fixes (desktop only, no APK build or install, no provider call); import of the owner's real phone export (owner copies files); whole-volume live run (needs spend approval).
-- Known bugs/limits: schema upgrade v1-v29 is NOT_MEASURED (only the v30 schema from the phone backup is used). Lint has existing warnings, 0 errors. Whole-volume live run needs a separate owner spend approval, otherwise NOT_MEASURED.
-- Regression status: clean archive of 3981b385: app 747 / 5 SKIP / 0 FAIL, core 61, jdbc 3, desktop 26, lint 0 errors, golden 14/14 twice, app:dependencies identical to P0b, Editorial diff empty.
-- Next action: side session implements P4 section 1 (navigation) per the work request.
+- Current commit: 9590f2d7 (implementation baseline before this snapshot commit; section 7 is committed together with this snapshot)
+- Current build: phone 4.24-dev.5/code309 (SHA-256 93E86E94...B766); PC package 4.24-pc-dev.6 (zip + unsigned .msi) until P4 builds a new one.
+- Current phase: P4 section 8 (Cai dat) next
+- Completed tasks: P0a..P3. P4 sections 1 navigation, 2 RAW, 3 Glossary, 4 Pronoun, 5 Tap, 6 Dich, 7 Cong viec/Lich su, each with tests (T1-T5, T7). One core move: JobsMainPageFactory.statusText -> translation-core JobStatusText (commit 9590f2d7). Clean-archive check of sections 1-5 (dbe4ff2a): app 747/5 skip/0 fail, core 61, jdbc 3, desktop 46, lint 0, golden 14/14 twice, Editorial diff empty.
+- Pending tasks: P4 sections 8 Cai dat (+T6, T8), 9 Giao dien, 10 hoan thien chung; clean-archive checks after section 6/9/10; screenshots in D:\P5E-builds\qa-p4\shots; new PC package with -Msi.
+- Known bugs/limits: schema upgrade v1-v29 NOT_MEASURED. P3 QA seed pronoun files used scope "all" (invalid, refused by the phone rule); fixed to "*" in P4. Whole-volume live run needs a separate owner spend approval, otherwise NOT_MEASURED.
+- Regression status: sections 1-5 verified on a clean archive (see Completed tasks); sections 6-7 compiled and desktop tests pass, full clean check pending.
+- Next action: implement P4 section 8 (settings groups, auto-save, confirmation dialogs for provider calls).

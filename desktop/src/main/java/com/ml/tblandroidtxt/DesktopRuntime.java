@@ -277,6 +277,15 @@ public final class DesktopRuntime implements AutoCloseable {
         if (t != null) t.onRunEnded();
     }
 
+    /** Takes a job off the "Đang làm" list; nothing is deleted (chunks, tokens and cost stay in the history). */
+    public void dismissJob(long jobId) { repo.dismissJob(jobId); }
+
+    /** The newest job that can be continued (the "Tiếp tục gần nhất" button), or null. */
+    public TranslationRepositoryCore.JobSummary latestResumable() {
+        for (TranslationRepositoryCore.JobSummary j : jobs()) if (DesktopHistory.canResume(j) && DesktopHistory.isUnfinished(j)) return j;
+        return null;
+    }
+
     public boolean resumeJob(long jobId) {
         if (!claim()) return false;
         executor.submit(() -> {

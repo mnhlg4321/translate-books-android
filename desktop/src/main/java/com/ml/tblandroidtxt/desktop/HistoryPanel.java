@@ -38,6 +38,11 @@ final class HistoryPanel {
     private final Set<String> shownSessions = new HashSet<>();
     private final List<DesktopHistory.Entry> loaded = new ArrayList<>();
     private long cursor = -1;
+    private final javafx.scene.control.TextField search = new javafx.scene.control.TextField();
+    private final TableView<DesktopHistory.ChunkLine> chunkLines = new TableView<>();
+    private String setId = "";
+    private String setName = "";
+    private final Button setChip = new Button();
     private boolean hasMore;
     private DesktopHistory.Detail currentDetail;
     private final Node root;
@@ -103,9 +108,29 @@ final class HistoryPanel {
         detail.setWrapText(true);
         detail.getStyleClass().add("muted");
 
-        HBox bar = new HBox(10, new Label("Lọc:"), filter, more);
+        search.setPromptText("Tìm theo tên tệp");
+        javafx.animation.PauseTransition debounce = new javafx.animation.PauseTransition(javafx.util.Duration.millis(350));
+        debounce.setOnFinished(e -> reload());
+        search.textProperty().addListener((o, a, b) -> debounce.playFromStart());
+        app.registerSearch(NavModel.JOBS, search);
+        setChip.getStyleClass().add("secondary");
+        setChip.setOnAction(e -> {
+            if (!setId.isEmpty()) app.jobsPage().setFilter("", "");
+            else app.jobsPage().chooseSetFilter();
+        });
+        updateChip();
+        chunkLines.getColumns().add(column("Chunk", 60, c -> String.valueOf(c.index + 1)));
+        chunkLines.getColumns().add(column("Trạng thái", 130, c -> c.status));
+        chunkLines.getColumns().add(column("Số lần thử", 80, c -> String.valueOf(c.attempts)));
+        chunkLines.getColumns().add(column("Token vào", 80, c -> String.valueOf(c.inputTokens)));
+        chunkLines.getColumns().add(column("Token ra", 80, c -> String.valueOf(c.outputTokens)));
+        chunkLines.getColumns().add(column("Lỗi gần nhất", 300, c -> c.lastError));
+        chunkLines.setPlaceholder(new Label("Các chunk của job sẽ hiện ở đây"));
+        chunkLines.setPrefHeight(150);
+        HBox bar = new HBox(10, search, new Label("Lọc:"), filter, setChip, more);
+        HBox.setHgrow(search, Priority.ALWAYS);
         bar.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        VBox box = new VBox(10, bar, entries, chapters, detail, attempts, new HBox(10, openOutput));
+        VBox box = new VBox(10, bar, entries, chapters, detail, chunkLines, attempts, new HBox(10, openOutput));
         VBox.setVgrow(box, Priority.ALWAYS);
         return box;
     }
@@ -137,7 +162,7 @@ final class HistoryPanel {
     }
 
     private void loadMore() {
-        DesktopHistory.Page page = runtime.history().page(cursor, currentFilter(), shownSessions);
+        DesktopHistory.Page page = runtime.history().page(cursor, currentFilter(), shownSessions, search.getText() == null ? "" : search.getText(), setId);
         loaded.addAll(page.entries);
         cursor = page.nextCursor;
         hasMore = page.hasMore;
@@ -162,6 +187,7 @@ final class HistoryPanel {
 
     private void showJob(TranslationRepositoryCore.JobSummary j) {
         attempts.getItems().clear();
+        chunkLines.getItems().clear();
         currentDetail = null;
         openOutput.setDisable(true);
         if (j == null) return;
@@ -169,6 +195,7 @@ final class HistoryPanel {
         if (d == null) return;
         currentDetail = d;
         attempts.getItems().setAll(d.attempts);
+        chunkLines.getItems().setAll(d.chunks);
         StringBuilder sb = new StringBuilder("Job #" + d.job.id + " · chunk xong " + d.job.doneChunks + "/" + d.job.totalChunks + ", lỗi " + d.job.failedChunks);
         double cost = DesktopRuntime.jobCost(d.job);
         sb.append(" · chi phí ").append(Double.isNaN(cost) ? "chưa có" : CostEstimator.money(cost));
@@ -186,6 +213,22 @@ final class HistoryPanel {
             sb.append(e.getKey()).append(' ').append(e.getValue());
         }
         return sb.toString();
+    }
+
+    void setSetFilter(String id, String name) {
+        setId = id == null ? "" : id;
+        setName = name == null ? "" : name;
+        updateChip();
+        reload();
+    }
+
+    private void updateChip() { setChip.setText(com.ml.tblandroidtxt.WorkspaceFilterModel.chipText(setId, setName)); }
+
+    /** Searches the history for a file name and selects the first line (the "Mở chi tiết công việc" buttons). */
+    void focusJob(String fileName) {
+        search.setText(fileName == null ? "" : fileName);
+        reload();
+        selectFirst();
     }
 
     // QA hooks (screenshots): select the first line without a click.

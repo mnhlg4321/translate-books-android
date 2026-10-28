@@ -46,9 +46,24 @@ public final class DesktopHistory {
         public final Map<String, Integer> finishReasons;
         public final List<TranslationRepositoryCore.JobAttemptRow> attempts;
         public final Path outputFile;
+        /** One line per chunk: status, number of attempts, tokens and the last error. Numbers only, never text. */
+        public final List<ChunkLine> chunks;
         Detail(TranslationRepositoryCore.JobSummary job, Map<String, Integer> chunkStatuses, Map<String, Integer> finishReasons,
-               List<TranslationRepositoryCore.JobAttemptRow> attempts, Path outputFile) {
+               List<TranslationRepositoryCore.JobAttemptRow> attempts, Path outputFile, List<ChunkLine> chunks) {
             this.job = job; this.chunkStatuses = chunkStatuses; this.finishReasons = finishReasons; this.attempts = attempts; this.outputFile = outputFile;
+            this.chunks = chunks;
+        }
+    }
+
+    public static final class ChunkLine {
+        public final int index;
+        public final String status;
+        public final int attempts;
+        public final long inputTokens;
+        public final long outputTokens;
+        public final String lastError;
+        ChunkLine(int index, String status, int attempts, long inputTokens, long outputTokens, String lastError) {
+            this.index = index; this.status = status; this.attempts = attempts; this.inputTokens = inputTokens; this.outputTokens = outputTokens; this.lastError = lastError;
         }
     }
 
@@ -60,18 +75,8 @@ public final class DesktopHistory {
         this.sessionsDir = sessionsDir;
     }
 
-    public static String statusText(String raw) {
-        switch (JobStatus.classify(raw)) {
-            case FINISHED: return "Hoàn tất";
-            case ACTIVE: return "Đang chạy";
-            case CONTINUABLE: return "Dừng, có thể tiếp tục";
-            case NEEDS_REVIEW: return "Cần xem";
-            case CONFLICT: return "Tệp nguồn đã đổi";
-            case CANCELLED: return "Đã hủy";
-            case DISMISSED: return "Đã ẩn";
-            default: return raw == null ? "" : raw;
-        }
-    }
+    /** The phone's labels (JobStatusText): Xong, Đang dịch, Tạm dừng, Lỗi, Đã hủy, Đã bỏ, Cần xem lại, Input đã đổi. */
+    public static String statusText(String raw) { return JobStatusText.of(raw); }
 
     private static boolean failed(TranslationRepositoryCore.JobSummary j) {
         JobStatus.Kind k = JobStatus.classify(j.status);
@@ -95,8 +100,12 @@ public final class DesktopHistory {
      * One page of history. {@code shownSessions} are the runs already shown by earlier pages (and are added to when this page shows
      * more), so loading more never lists the same run twice.
      */
-    public Page page(long beforeId, String filter, Set<String> shownSessions) {
-        List<TranslationRepositoryCore.JobSummary> raw = repo.getJobSummariesPage(beforeId, JobHistoryPageModel.PAGE_SIZE, null, null);
+    public Page page(long beforeId, String filter, Set<String> shownSessions) { return page(beforeId, filter, shownSessions, "", ""); }
+
+    /** Same, with a search on the file name and a filter on one chapter set ("" for none). */
+    public Page page(long beforeId, String filter, Set<String> shownSessions, String fileQuery, String setId) {
+        Set<Long> allowed = setId == null || setId.isEmpty() ? null : jobIdsOfSet(setId);
+        List<TranslationRepositoryCore.JobSummary> raw = repo.getJobSummariesPage(beforeId, JobHistoryPageModel.PAGE_SIZE, fileQuery, allowed);
         long next = JobHistoryPageModel.nextCursor(raw);
         boolean more = JobHistoryPageModel.hasMore(raw);
         List<RunGroups.SessionInfo> sessions = ChapterSession.readInfos(sessionsDir.toFile());
@@ -140,6 +149,49 @@ public final class DesktopHistory {
         return new Page(out, next, more);
     }
 
+    /** Tokens and money of one job as one line ("12.3k vào · 2.0k ra · USD 0.0123"). */
+    public static String usageText(TranslationRepositoryCore.JobSummary j) { return j.usage == null ? "" : j.usage.line(); }
+
+    /** Ids of the jobs that ran as part of a chapter set (found through the run's session files). */
+    public Set<Long> jobIdsOfSet(String setId) {
+        List<String> sessions = new ArrayList<>();
+        List<Long> resumed = new ArrayList<>();
+        for (RunGroups.SessionInfo s : ChapterSession.readInfos(sessionsDir.toFile())) {
+            if (setId.equals(s.setId)) { sessions.add(s.sessionId); resumed.addAll(s.resumedJobs); }
+        }
+        Set<Long> ids = new HashSet<>();
+        if (sessions.isEmpty()) return ids;
+        for (TranslationRepositoryCore.JobSummary j : repo.getJobSummariesForSessions(sessions, resumed)) ids.add(j.id);
+        return ids;
+    }
+
+    /** "Hôm nay" and "7 ngày": chapters finished, tokens and money, as two lines of text. */
+    public String[] usageLines() {
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.set(java.util.Calendar.HOUR_OF_DAY, 0);
+        cal.set(java.util.Calendar.MINUTE, 0);
+        cal.set(java.util.Calendar.SECOND, 0);
+        cal.set(java.util.Calendar.MILLISECOND, 0);
+        UsageTotals today = repo.getUsageTotals(cal.getTimeInMillis());
+        UsageTotals week = repo.getUsageTotals(System.currentTimeMillis() - 7L * 24 * 60 * 60 * 1000);
+        return new String[]{"Hôm nay: " + today.chaptersDone + " chương xong · " + today.line(), "7 ngày: " + week.chaptersDone + " chương xong · " + week.line()};
+    }
+
+    /** Resume is offered unless a request has unknown delivery (look first) or the job is finished. */
+    public static boolean canResume(TranslationRepositoryCore.JobSummary j) {
+        boolean review = JobStatus.classify(j.status) == JobStatus.Kind.NEEDS_REVIEW || j.unknownChunks > 0;
+        return !review && JobStatus.classify(j.status) != JobStatus.Kind.FINISHED && JobStatus.classify(j.status) != JobStatus.Kind.CANCELLED
+                && JobStatus.classify(j.status) != JobStatus.Kind.DISMISSED && JobStatus.classify(j.status) != JobStatus.Kind.CONFLICT;
+    }
+
+    public static boolean canRetryFailed(TranslationRepositoryCore.JobSummary j) {
+        return canResume(j) && j.failedChunks > 0;
+    }
+
+    public static boolean needsReview(TranslationRepositoryCore.JobSummary j) {
+        return JobStatus.classify(j.status) == JobStatus.Kind.NEEDS_REVIEW || j.unknownChunks > 0;
+    }
+
     private static boolean matches(String filter, boolean isDone, boolean isFailed, boolean isUnfinished) {
         if (filter == null || ALL.equals(filter)) return true;
         if (DONE.equals(filter)) return isDone;
@@ -159,10 +211,18 @@ public final class DesktopHistory {
                 reasons.merge(a.finishReason == null || a.finishReason.isEmpty() ? "(none)" : a.finishReason, 1, Integer::sum);
             }
         }
+        List<TranslationRepositoryCore.JobAttemptRow> all = repo.getJobAttempts(jobId);
+        List<ChunkLine> lines = new ArrayList<>();
+        for (TranslationRepositoryCore.ChunkRow r : repo.getChunkRows(jobId)) {
+            int attempts = 0;
+            long in = 0, out = 0;
+            for (TranslationRepositoryCore.JobAttemptRow a : all) if (a.chunkIdx == r.index) { attempts++; in += a.inputTokens; out += a.outputTokens; }
+            lines.add(new ChunkLine(r.index, String.valueOf(r.status), attempts, in, out, r.error == null ? "" : r.error));
+        }
         Path output = null;
         try {
             if (job.outputUri != null && job.outputUri.startsWith("file:")) output = PathDocumentIO.pathOf(job.outputUri);
         } catch (RuntimeException ignored) { }
-        return new Detail(job, statuses, reasons, repo.getJobAttempts(jobId), output);
+        return new Detail(job, statuses, reasons, all, output, lines);
     }
 }
