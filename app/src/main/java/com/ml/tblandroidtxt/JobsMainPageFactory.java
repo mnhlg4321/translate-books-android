@@ -232,18 +232,7 @@ final class JobsMainPageFactory {
                 .setNegativeButton("Hủy", null).show();
     }
 
-    private String statusText(String raw) {
-        switch (JobStatus.classify(raw)) {
-            case FINISHED: return "Xong";
-            case CANCELLED: return "Đã hủy";
-            case DISMISSED: return "Đã bỏ";
-            case NEEDS_REVIEW: return "Cần xem lại";
-            case CONFLICT: return "Input đã đổi";
-            case CONTINUABLE: return "error".equalsIgnoreCase(raw) ? "Lỗi" : "Tạm dừng";
-            case ACTIVE: return "Đang dịch";
-            default: return safe(raw);
-        }
-    }
+    private String statusText(String raw) { return JobStatusText.of(raw); }
 
     private String safe(String value) { return value == null || value.trim().isEmpty() ? "Không rõ" : value.trim(); }
     private String safeName(String value) { return value == null || value.trim().isEmpty() ? "Tệp TXT" : value.trim(); }
