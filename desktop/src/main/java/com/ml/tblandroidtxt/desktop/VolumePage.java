@@ -375,7 +375,7 @@ final class VolumePage {
         }
         try {
             estimate = runtime.estimateVolume(plan, app.currentSettings());
-            estimateLabel.setText(plan.included() + " chương · " + app.describeEstimate(estimate));
+            estimateLabel.setText(plan.included() + " chương · " + TranslatePage.describeEstimate(estimate));
         } catch (Exception e) {
             estimateLabel.setText("Không ước tính được: " + e.getMessage());
             if (!estimateLabel.getStyleClass().contains("err")) estimateLabel.getStyleClass().add("err");
@@ -414,7 +414,7 @@ final class VolumePage {
         refreshEstimate(true);
         AppSettings s = app.currentSettings();
         String message = plan.included() + " chương\nModel: " + s.model + "\nReasoning effort: " + s.reasoningEffort
-                + "\nƯớc tính: " + (estimate == null ? "chưa có" : app.describeEstimate(estimate))
+                + "\nƯớc tính: " + (estimate == null ? "chưa có" : TranslatePage.describeEstimate(estimate))
                 + "\nTrần chi phí cho cả lượt: " + CostEstimator.money(s.stopOnCostLimit && s.costLimitUsd > 0 ? s.costLimitUsd : CostLimitPolicy.MIN_SAFE_CAP_USD)
                 + "\nOutput: thư mục " + outputDir.getFileName() + "\n\nBắt đầu sẽ gọi provider và tốn tiền thật.";
         if (!app.confirm("Bắt đầu dịch cả tập?", message)) return;

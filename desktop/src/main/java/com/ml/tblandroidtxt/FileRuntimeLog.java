@@ -14,6 +14,17 @@ public final class FileRuntimeLog implements RuntimeLog, ObservabilityLog.Sink {
         this.file = logsDir.resolve("tbl_runtime.log");
     }
 
+    public Path file() { return file; }
+
+    /** The whole log text ("" when there is none yet). */
+    public synchronized String readAll() {
+        try { return Files.exists(file) ? new String(Files.readAllBytes(file), StandardCharsets.UTF_8) : ""; } catch (IOException e) { return ""; }
+    }
+
+    public synchronized boolean clear() {
+        try { Files.deleteIfExists(file); return true; } catch (IOException e) { return false; }
+    }
+
     @Override public synchronized void append(String message) {
         try {
             Files.createDirectories(file.toAbsolutePath().getParent());

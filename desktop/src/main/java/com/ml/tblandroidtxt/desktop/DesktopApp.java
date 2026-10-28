@@ -73,19 +73,7 @@ public final class DesktopApp extends Application {
     private final ProgressBar progress = new ProgressBar(0);
 
     // translate page
-    private Path rawFile;
-    private Path outputDir;
-    private final Label rawLabel = new Label("Chưa chọn tệp RAW");
-    private final Label outputLabel = new Label("Chưa chọn thư mục output");
-    private final Label libraryLabel = new Label();
-    private final Label estimateLabel = new Label("Chọn tệp RAW để xem ước tính");
-    private CostEstimator.Estimate estimate;
-    private final Button startButton = new Button("Bắt đầu");
-    private final Button pauseButton = new Button("Tạm dừng");
-    private final Button resumeButton = new Button("Tiếp tục");
-    private final Button cancelButton = new Button("Hủy");
-    private final Button openOutputButton = new Button("Mở thư mục output");
-    private final TextArea previewArea = new TextArea();
+    private TranslatePage translatePage;
 
     // jobs, library, settings
     private final TableView<TranslationRepositoryCore.JobSummary> jobsTable = new TableView<>();
@@ -144,7 +132,8 @@ public final class DesktopApp extends Application {
         historyPanel = new HistoryPanel(this, runtime);
         buildLibraryShared();
         java.util.Map<String, Node> built = new java.util.HashMap<>();
-        built.put(NavModel.TRANSLATE, buildTranslatePage());
+        translatePage = new TranslatePage(this, runtime);
+        built.put(NavModel.TRANSLATE, translatePage.node());
         built.put(NavModel.VOLUME, volumePage.node());
         built.put(NavModel.JOBS, buildJobsPage());
         built.put(NavModel.RAW, buildRawPage());
@@ -284,6 +273,7 @@ public final class DesktopApp extends Application {
     /** RAW, Glossary, Pronoun or Tập changed: every list that shows them is refreshed. */
     void libraryChanged() {
         refreshLibrary();
+        if (translatePage != null) translatePage.refreshProfiles();
         volumePage.refreshRaw();
         volumePage.refreshSets();
     }
@@ -316,110 +306,7 @@ public final class DesktopApp extends Application {
 
     // ---- Dịch ----
 
-    private Node buildTranslatePage() {
-        Button chooseRaw = new Button("Chọn RAW…");
-        chooseRaw.getStyleClass().add("secondary");
-        chooseRaw.setOnAction(e -> chooseRaw());
-        Button chooseOutput = new Button("Chọn thư mục output…");
-        chooseOutput.getStyleClass().add("secondary");
-        chooseOutput.setOnAction(e -> chooseOutput());
-        rawLabel.getStyleClass().add("muted");
-        outputLabel.getStyleClass().add("muted");
-        libraryLabel.getStyleClass().add("muted");
-        estimateLabel.setWrapText(true);
-        startButton.getStyleClass().add("primary");
-        startButton.setOnAction(e -> confirmAndStart());
-        for (Button b : new Button[]{pauseButton, resumeButton, cancelButton, openOutputButton}) b.getStyleClass().add("secondary");
-        pauseButton.setOnAction(e -> runtime.pause());
-        resumeButton.setOnAction(e -> runtime.resume());
-        cancelButton.setOnAction(e -> {
-            if (confirm("Hủy lượt dịch đang chạy?", "App sẽ không tạo thêm request mới. Phần đã dịch xong vẫn được giữ.")) runtime.cancel();
-        });
-        openOutputButton.setOnAction(e -> openOutputFolder());
-        previewArea.setEditable(false);
-        previewArea.setWrapText(true);
-        previewArea.setPromptText("Chunk vừa dịch xong sẽ hiện ở đây");
-        VBox.setVgrow(previewArea, Priority.ALWAYS);
-        VBox source = card(new Label("Nguồn"), new HBox(10, chooseRaw, rawLabel), new HBox(10, chooseOutput, outputLabel), libraryLabel);
-        VBox plan = card(new Label("Ước tính"), estimateLabel);
-        HBox actions = new HBox(10, startButton, pauseButton, resumeButton, cancelButton, openOutputButton);
-        VBox preview = card(new Label("Chunk vừa xong"), previewArea);
-        VBox.setVgrow(preview, Priority.ALWAYS);
-        return page(NavModel.title(NavModel.TRANSLATE), source, plan, actions, preview);
-    }
-
-    private void chooseRaw() {
-        FileChooser fc = new FileChooser();
-        fc.setTitle("Chọn tệp RAW (.txt)");
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Văn bản", "*.txt"));
-        File f = fc.showOpenDialog(stage);
-        if (f != null) setRaw(f.toPath());
-    }
-
-    void setRaw(Path file) {
-        rawFile = file;
-        rawLabel.setText(file.getFileName().toString());
-        refreshEstimate();
-    }
-
-    private void chooseOutput() {
-        DirectoryChooser dc = new DirectoryChooser();
-        dc.setTitle("Chọn thư mục output");
-        File d = dc.showDialog(stage);
-        if (d != null) setOutputDir(d.toPath());
-    }
-
-    void setOutputDir(Path dir) {
-        outputDir = dir;
-        outputLabel.setText(dir.getFileName() == null ? dir.toString() : dir.getFileName().toString());
-        updateControls();
-    }
-
-    void refreshEstimate() {
-        estimate = null;
-        if (rawFile == null) return;
-        try {
-            estimate = runtime.estimate(rawFile, readSettingsFromForm());
-            estimateLabel.setText(describeEstimate(estimate));
-            estimateLabel.getStyleClass().remove("err");
-        } catch (Exception e) {
-            estimateLabel.setText("Không ước tính được: " + e.getMessage());
-            if (!estimateLabel.getStyleClass().contains("err")) estimateLabel.getStyleClass().add("err");
-        }
-        updateControls();
-    }
-
-    String describeEstimate(CostEstimator.Estimate e) {
-        String cost = e.pricingAvailable && !Double.isNaN(e.costHigh)
-                ? "chi phí ước tính " + CostEstimator.money(e.costLow) + " – " + CostEstimator.money(e.costHigh)
-                : "chưa có giá cho model này";
-        return e.chunks + " chunk · ≈ " + CostEstimator.fmt(e.totalTokensHigh) + " token · " + cost;
-    }
-
-    private double effectiveCap(AppSettings s) {
-        return s.stopOnCostLimit && s.costLimitUsd > 0 ? s.costLimitUsd : CostLimitPolicy.MIN_SAFE_CAP_USD;
-    }
-
-    private void confirmAndStart() {
-        if (rawFile == null || outputDir == null || runtime.isRunning()) return;
-        AppSettings s = readSettingsFromForm();
-        String name = s.buildOutputName(rawFile.getFileName().toString());
-        String message = "Model: " + s.model + "\nReasoning effort: " + s.reasoningEffort
-                + "\nƯớc tính: " + (estimate == null ? "chưa có" : describeEstimate(estimate))
-                + "\nTrần chi phí lượt này: " + CostEstimator.money(effectiveCap(s))
-                + "\nOutput: " + name + "\n\nBắt đầu sẽ gọi provider và tốn tiền thật.";
-        if (!confirm("Bắt đầu dịch?", message)) return;
-        try {
-            runtime.saveSettings(s);
-        } catch (Exception e) {
-            alert("Không lưu được cài đặt: " + e.getMessage());
-            return;
-        }
-        if (!runtime.startNew(rawFile, outputDir.resolve(name), s, null, estimate)) alert("Đang có một lượt dịch khác chạy.");
-        updateControls();
-    }
-
-    private void openOutputFolder() { openFolder(outputDir); }
+    TranslatePage translatePage() { return translatePage; }
 
     void openFolder(Path dir) {
         try {
@@ -481,12 +368,18 @@ public final class DesktopApp extends Application {
         return page(NavModel.title(NavModel.JOBS), new HBox(8, activeTab, historyTab), stack);
     }
 
+    /** The jobs page on its Lịch sử tab. */
+    void openJobsHistory() {
+        select(NavModel.JOBS);
+        historyTab.fire();
+    }
+
     /** QA: show the Lịch sử tab as if it was clicked. */
     void showHistoryTab() { historyTab.fire(); }
 
     private boolean confirmSpend(String title, TranslationRepositoryCore.JobSummary j) {
         AppSettings s = readSettingsFromForm();
-        return confirm(title, "Model: " + s.model + "\nReasoning effort: " + s.reasoningEffort + "\nTrần chi phí: " + CostEstimator.money(effectiveCap(s))
+        return confirm(title, "Model: " + s.model + "\nReasoning effort: " + s.reasoningEffort + "\nTrần chi phí: " + CostEstimator.money(TranslatePage.effectiveCap(s))
                 + "\nChunk xong " + j.doneChunks + "/" + j.totalChunks + ", lỗi " + j.failedChunks + "\n\nTiếp tục sẽ gọi provider và tốn tiền thật.");
     }
 
@@ -576,10 +469,6 @@ public final class DesktopApp extends Application {
         if (glossaryPage != null) glossaryPage.reload();
         if (pronounPage != null) pronounPage.reload();
         if (setsPage != null) setsPage.reload();
-        String g = "chưa chọn", p = "chưa chọn";
-        for (GlossaryStoreCore.Glossary x : runtime.glossaries()) if (x.id.equals(runtime.selectedGlossaryId())) g = x.name + " (" + x.count() + " mục)";
-        for (PronounStoreCore.Profile x : runtime.pronouns()) if (x.id.equals(runtime.selectedPronounId())) p = x.name + " (" + x.count() + " quy tắc)";
-        libraryLabel.setText("Glossary đang dùng: " + g + "   ·   Pronoun đang dùng: " + p);
         if (rawPage != null) rawPage.reload();
     }
 
@@ -673,6 +562,7 @@ public final class DesktopApp extends Application {
             profileUndoButton.setDisable(!runtime.canUndoProfile());
             settingsNote.setText("Đã áp dụng " + preview.differences.size() + " mục. Bấm \"Hoàn tác lần nhập gần nhất\" để quay lại.");
             volumePage.refreshEstimate(false);
+            translatePage.refreshProfiles();
         } catch (Exception e) {
             alert("Không áp dụng được: " + e.getMessage());
         }
@@ -783,7 +673,8 @@ public final class DesktopApp extends Application {
             try {
                 runtime.saveSettings(readSettingsFromForm());
                 settingsNote.setText("Đã lưu cài đặt");
-                refreshEstimate();
+                translatePage.refreshProfiles();
+                translatePage.refreshEstimate();
             } catch (Exception ex) {
                 alert("Không lưu được: " + ex.getMessage());
             }
@@ -888,7 +779,7 @@ public final class DesktopApp extends Application {
         progress.setProgress(s.progress < 0 ? progress.getProgress() : s.progress / 100.0);
         metricsLabel.setText("chunk " + s.completed + "/" + s.totalChunks + " · " + s.totalTokens + " token · "
                 + CostEstimator.money(s.sessionCost) + " · " + formatElapsed(s.elapsedMs));
-        if (s.preview != null && !s.preview.isEmpty()) previewArea.setText(s.preview);
+        translatePage.applySnapshot(s);
         volumePage.applySnapshot(s);
         updateControls();
     }
@@ -904,13 +795,14 @@ public final class DesktopApp extends Application {
         }
     }
 
-    private static String formatElapsed(long ms) {
+    static String formatElapsed(long ms) {
         long sec = Math.max(0, ms / 1000);
         return String.format(Locale.ROOT, "%d:%02d", sec / 60, sec % 60);
     }
 
     void runEnded() {
         refreshJobs();
+        translatePage.runEnded();
         volumePage.updateControls();
         updateControls();
     }
@@ -919,11 +811,7 @@ public final class DesktopApp extends Application {
         boolean running = runtime != null && runtime.isRunning();
         boolean paused = running && runtime.runner().isPaused();
         if (volumePage != null) volumePage.updateControls();
-        startButton.setDisable(running || rawFile == null || outputDir == null);
-        pauseButton.setDisable(!running || paused);
-        resumeButton.setDisable(!running || !paused);
-        cancelButton.setDisable(!running);
-        openOutputButton.setDisable(outputDir == null);
+        if (translatePage != null) translatePage.updateControls();
         TranslationRepositoryCore.JobSummary j = jobsTable.getSelectionModel().getSelectedItem();
         boolean open = j != null && !running;
         jobResumeButton.setDisable(!open || j.doneChunks >= j.totalChunks);

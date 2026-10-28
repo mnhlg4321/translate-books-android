@@ -62,6 +62,14 @@ public class PromptCrossTest {
                     ReasoningEffort.forTranslation(s));
             assertArrayEquals("system " + i, Files.readAllBytes(expected.resolve("chunk-" + i + ".system.txt")), plan.prompt.system.getBytes(StandardCharsets.UTF_8));
             assertArrayEquals("user " + i, Files.readAllBytes(expected.resolve("chunk-" + i + ".user.txt")), plan.prompt.user.getBytes(StandardCharsets.UTF_8));
+            // T4: the in-app "Xem trước prompt" gives the same bytes as the golden files (same call as the engine, not a second builder)
+            DesktopPromptPreview.Result view = DesktopPromptPreview.build(read(io, "raw_ja.txt"), s, i, previous);
+            assertEquals(chunks.size(), view.chunkCount);
+            assertEquals(i, view.index);
+            assertArrayEquals("preview system " + i, Files.readAllBytes(expected.resolve("chunk-" + i + ".system.txt")), view.system.getBytes(StandardCharsets.UTF_8));
+            assertArrayEquals("preview user " + i, Files.readAllBytes(expected.resolve("chunk-" + i + ".user.txt")), view.user.getBytes(StandardCharsets.UTF_8));
+            assertTrue(view.matchSummary.startsWith("Matched glossary:"));
+            assertTrue(view.copyText().contains(view.system) && view.copyText().contains(view.user));
             String want = canonical(new JSONObject(new String(Files.readAllBytes(expected.resolve("chunk-" + i + ".request.json")), StandardCharsets.UTF_8)));
             assertEquals("request " + i, want, canonical(body));
             Object temperature = body.get("temperature");

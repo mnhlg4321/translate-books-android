@@ -47,6 +47,7 @@ public final class DesktopRuntime implements AutoCloseable {
     private volatile String volumeSessionId;
     private volatile int volumeOrdinal;
     private volatile long volumeLastJob;
+    private volatile long lastJobId;
 
     /** Default data folder: TBL_DATA_DIR when set (tests, screenshots), else %LOCALAPPDATA%\TranslateBooks. */
     public static Path defaultDataDir() {
@@ -87,7 +88,7 @@ public final class DesktopRuntime implements AutoCloseable {
         loadCatalogFromCacheOnly();
 
         RunListener forwarding = new RunListener() {
-            @Override public void onSnapshot(RunSnapshot snapshot) { attachVolumeJob(); UiEvents t = ui; if (t != null) t.onSnapshot(snapshot); }
+            @Override public void onSnapshot(RunSnapshot snapshot) { attachVolumeJob(); if (snapshot.activeJobId > 0) lastJobId = snapshot.activeJobId; UiEvents t = ui; if (t != null) t.onSnapshot(snapshot); }
             @Override public void onNotification(String text, int done, int total) { UiEvents t = ui; if (t != null) t.onNotification(text, done, total); }
             @Override public void onRunEnded() { running.set(false); UiEvents t = ui; if (t != null) t.onRunEnded(); }
             @Override public void onCancelledEnd(String message) { running.set(false); UiEvents t = ui; if (t != null) t.onCancelledEnd(message); }
@@ -153,6 +154,37 @@ public final class DesktopRuntime implements AutoCloseable {
         s.apiKey = secrets.load();
         return AppValidator.normalize(s);
     }
+
+    // ---- prompt preview, translated text, log ----
+
+    /** The prompt of one chunk of a file, as the app would send it now. {@code index} is 0-based. */
+    public DesktopPromptPreview.Result previewPrompt(Path raw, AppSettings base, int index, String previous) throws Exception {
+        AppSettings s = settingsForRun(base);
+        String text = TextDecoding.decode(Files.readAllBytes(raw)).text;
+        String problem = AppValidator.validateSourceText(text, raw.getFileName().toString());
+        if (problem != null) throw new IllegalArgumentException(problem);
+        return DesktopPromptPreview.build(text, s, index, previous);
+    }
+
+    public int previewChunkCount(Path raw, AppSettings base) throws Exception {
+        AppSettings s = settingsForRun(base);
+        String text = TextDecoding.decode(Files.readAllBytes(raw)).text;
+        String problem = AppValidator.validateSourceText(text, raw.getFileName().toString());
+        if (problem != null) throw new IllegalArgumentException(problem);
+        return DesktopPromptPreview.chunkCount(text, s);
+    }
+
+    /** The job of the most recent run in this session (0 when none ran yet). */
+    public long lastJobId() { return lastJobId; }
+
+    /** Chunks of a job with the source and the accepted translation, for the in-app reader. Never logged. */
+    public List<TranslationRepositoryCore.ChunkRow> chunkRows(long jobId) { return repo.getChunkRows(jobId); }
+
+    public String logText() { return log.readAll(); }
+
+    public void exportLog(Path target) throws IOException { Files.write(target, log.readAll().getBytes(StandardCharsets.UTF_8)); }
+
+    public boolean clearLog() { return log.clear(); }
 
     // ---- estimate ----
 
