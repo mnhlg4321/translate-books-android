@@ -1,13 +1,13 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-28 (+07:00). P2 stage 1: startNewJob moved into the core (phone-visible change); build, phone backup and approval pending.
-- Current version: v4.24 in development (PC shared core); phone `15e84958` runs **4.24-dev.1/code305** (P0b, installed with owner approval). Shipped release remains v4.21.0/code271; v4.23 is still open on feature/v4.23.
+- Updated: 2026-10-28 (+07:00). P3 in progress: profile/library transfer, PC RAW library, ChapterQueue in the core are done and tested; whole-volume screen, history, palettes, cleanups, the single phone build and the installer question are still to do.
+- Current version: v4.24 in development (PC shared core); phone `15e84958` runs **4.24-dev.4/code308** (P2 stage 1, installed with owner approval). Shipped release remains v4.21.0/code271; v4.23 is still open on feature/v4.23.
 - Current branch: feature/v4.24 (worktree D:\P5E-builds\wt-v4.24)
-- Current commit: c4b616c1 (implementation baseline before this snapshot commit)
-- Current build: `4.24-dev.1/code305`, event `build-20261027-164332`, source `90c18b7b`; APK SHA-256 `B85D2F1715F08A57672BF2274A6F96E9FAD5684A110C53C746B719FADEDA82AC`.
-- Current phase: v4.24 PC - P0a..P2 done and verified; phone runs 4.24-dev.4/code308; first PC app package 4.24-pc-dev.3 (ZIP, bundled jbr runtime) runs offline; live PC translation NOT_MEASURED
-- Completed tasks: P0a golden prompt tests (12 combinations); P0b translation-core with 71 moved files and seams S1-S5, installed on the phone; P1a B0 baselines (816 string literals / 368 unique, javap API list, 79/41/67 ContentValues/Cursor/SQLiteDatabase counts in TranslationRepository) and B1 ports.
-- Pending tasks: P1a B2-B5, clean-archive regression, build 4.24-dev.2, phone backup and pre-install counts, owner "duyệt cài", post-install count comparison.
-- Known bugs/limits: schema upgrade v1-v29 is NOT_MEASURED (no historical schemas); only the v30 schema from the phone backup is used as fixture. Existing lint warnings remain, lint has 0 errors.
-- Regression status: B1 worktree run: app 744 tests / 5 SKIP / 0 FAIL, translation-core 16 tests / 0 FAIL, androidTest compile PASS. Last clean-archive regression (P0b, `90c18b7b`): app 744 / 5 SKIP / 0 FAIL, core 3, lint 0 errors.
-- Next action: owner decides between a live PC translation check (needs a spend approval, about $0.03, owner types the API key) and writing P3 (settings import from phone, whole-volume translation, history, palettes, installer).
+- Current commit: 1f88db7b (implementation baseline before this snapshot commit)
+- Current build: phone `4.24-dev.4/code308`; PC package `4.24-pc-dev.4` (ZIP with bundled runtime, SHA-256 `4FDF299253342EA3DBDE340896E95650AEDFF13F026C68C2752FAC6C0C291D64`).
+- Current phase: P3 desktop full (docs/V424_P3_DESKTOP_FULL_WORK_REQUEST.md, section 6b wins), step 3 of 8.
+- Completed tasks: P0a..P2 (golden prompt tests, translation-core, ports + JDBC, desktop shell with one real run of $0.005693). P3: SettingsJson.toExportJson/fromImportedProfile (shared keys only), DesktopRawStore + tblraw:// reads, DesktopRuntime bridges for profile and library ZIP, ChapterQueue (loop body token-identical to the old TranslatorService loop) with 8 JVM tests.
+- Pending tasks: whole-volume PC screen, history tab, Palette in core with 5 themes and font sizes, cleanups (decodeText delegate, unused overload, byte-vector test), one phone build 4.24-dev.5 with backup/counts and the owner's typed "duyệt cài", installer question (JDK/WiX) to the owner.
+- Known bugs/limits: schema upgrade v1-v29 is NOT_MEASURED (only the v30 schema from the phone backup is used). Lint has existing warnings, 0 errors. Whole-volume live run needs a separate owner spend approval, otherwise NOT_MEASURED.
+- Regression status: last clean-archive regression (P2, `d93968f4`): app 748 / 5 SKIP / 0 FAIL, core 44, jdbc 3, desktop 10, lint 0 errors, golden 14/14 twice. Since then core and desktop test suites pass in the worktree; the full app regression is rerun before the P3 phone build.
+- Next action: wire the PC whole-volume screen onto ChapterQueue (step 3 of the coordinator order), then history, palettes, cleanups.

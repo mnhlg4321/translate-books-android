@@ -19,11 +19,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TranslatorService extends Service {
-    /** The run stopped because too many chapters in a row failed their validation; the message is the sentence shown to the person. */
-    private static class QueueStoppedException extends IllegalStateException {
-        QueueStoppedException(String message) { super(message); }
-    }
-
     public static final String ACTION_START = "com.ml.tblandroidtxt.START";
     public static final String ACTION_RESUME_LAST = "com.ml.tblandroidtxt.RESUME_LAST";
     public static final String ACTION_RETRY_FAILED = "com.ml.tblandroidtxt.RETRY_FAILED";
@@ -307,7 +302,7 @@ public class TranslatorService extends Service {
             runner.setState(TranslationJobState.State.FAILED, runner.getActiveJobId() > 0 ? "Translation failed" : "Initialization failure");
             if (runner.getActiveJobId() > 0) repo.touchJob(runner.getActiveJobId(), "error");
             runner.logFailure(runner.getMetricPhase(), e);
-            if (e instanceof QueueStoppedException) runner.publish("error", -1, e.getMessage() + runner.chapterSummarySuffix());
+            if (e instanceof ChapterQueue.QueueStoppedException) runner.publish("error", -1, e.getMessage() + runner.chapterSummarySuffix());
             else runner.publish("error", -1, (runner.getActiveJobId() > 0 ? "Lỗi: " : "Lỗi khởi tạo: ") + AppValidator.readableError(e) + runner.remainingSuffix() + runner.chapterSummarySuffix());
             releaseRun();
             stopForeground(STOP_FOREGROUND_REMOVE);
@@ -351,41 +346,17 @@ public class TranslatorService extends Service {
             for(Long id:resumeJobs.values())if(!session.resumedJobs.contains(id))session.resumedJobs.add(id);
             try{session.write(new java.io.File(getFilesDir(),ChapterSession.DIR));}catch(Exception ignored){}
         }
-        for(int i=0;i<batch.inputs.size();i++){
-            runner.waitIfPaused();if(runner.isCancelled()){finishCancelled("Cancelled before the next prepared file");return;}
-            PreparedBatch.Input input=batch.inputs.get(i);Uri out=fixed;
-            if(out==null||batch.inputs.size()>1)out=deferredOutput(tree,s.buildOutputName(input.displayName));
-            ChapterRunOutcome outcome=runner.getChapterOutcome();
-            final Long resumeId=resumeJobs.get(input.ordinal);
-            final int fileNo=i+1,fileTotal=batch.inputs.size();
-            if(outcome==null){
-                if(resumeId!=null)runner.continueExistingJob(resumeId,fileNo,fileTotal,input.displayName);
-                else runSinglePreparedJob(batch,startSessionId,input,out,s,fileNo,fileTotal,input.displayName);
-                continue;
-            }
-            ChapterBinding binding=session.chapters.get(i);
-            runner.setSetIndex(i+1);
-            String label="Chương "+(binding.chapterNo>=0?binding.chapterNo:i+1)+" ("+(i+1)+"/"+batch.inputs.size()+") · "+input.displayName;
-            try{
-                if(resumeId!=null)runner.continueExistingJob(resumeId,fileNo,fileTotal,label);
-                else runSinglePreparedJob(batch,startSessionId,input,out,binding.applyTo(s),fileNo,fileTotal,label);
-                if(!runner.isCancelled())outcome.done(input.displayName);
-            }catch(Exception e){
-                if(runner.isCancelled())throw e;
-                String here="Chương "+(binding.chapterNo>=0?binding.chapterNo:i+1);
-                outcome.failed(input.displayName,AppValidator.readableError(e),here);
-                if(ChapterRunOutcome.continuesQueue(e)){
-                    if(runner.getActiveJobId()>0)repo.touchJob(runner.getActiveJobId(),"error");
-                    if(outcome.shouldStopQueue())throw new QueueStoppedException(outcome.stopSentence());
-                    String next=i+1<session.chapters.size()?"chuyển chương "+(session.chapters.get(i+1).chapterNo>=0?session.chapters.get(i+1).chapterNo:i+2):"hết tập";
-                    runner.publish("running",runner.percent(i+1,batch.inputs.size()),here+" lỗi, "+next+": "+AppValidator.readableError(e));
-                    continue;
-                }
-                throw e;
-            }
-        }
-        ChapterRunOutcome finished=runner.getChapterOutcome();
-        runner.setState(TranslationJobState.State.COMPLETED,"Completed");runner.publish("done",100,finished==null?"Prepared batch translation completed":finished.summary());releaseRun();stopForeground(STOP_FOREGROUND_REMOVE);NotificationManager nm=getSystemService(NotificationManager.class);if(nm!=null)nm.cancel(NOTIFY_ID);stopSelf();
+        final ArrayList<ChapterQueue.Task> tasks=new ArrayList<>();
+        for(int i=0;i<batch.inputs.size();i++){PreparedBatch.Input in=batch.inputs.get(i);tasks.add(new ChapterQueue.Task(in.displayName,session==null?null:session.chapters.get(i),resumeJobs.get(in.ordinal),in));}
+        final AppSettings baseSettings=s;
+        boolean queueEnded=ChapterQueue.run(runner,repo,tasks,baseSettings,(task,settings,fileNo,fileTotal,label)->{
+            PreparedBatch.Input input=(PreparedBatch.Input)task.payload;
+            Uri out=fixed;
+            if(out==null||batch.inputs.size()>1)out=deferredOutput(tree,baseSettings.buildOutputName(input.displayName));
+            runSinglePreparedJob(batch,startSessionId,input,out,settings,fileNo,fileTotal,label);
+        });
+        if(!queueEnded){finishCancelled("Cancelled before the next prepared file");return;}
+        releaseRun();stopForeground(STOP_FOREGROUND_REMOVE);NotificationManager nm=getSystemService(NotificationManager.class);if(nm!=null)nm.cancel(NOTIFY_ID);stopSelf();
     }
 
     /** {"<input ordinal>": <job id>}: inputs that continue an unfinished job (its own settings and output) instead of starting a new one. */
