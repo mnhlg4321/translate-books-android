@@ -11,13 +11,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * SqlDb over sqlite-jdbc, test-only. It reproduces the Android behaviours the storage code relies on: string-bound
+ * SqlDb over sqlite-jdbc (tests and the desktop app). It reproduces the Android behaviours the storage code relies on: string-bound
  * selection arguments, nested transactions where only the outermost commits, insert returning -1, insertOrThrow
  * throwing, and NULL columns reading as 0.
  */
-final class JdbcSqlDb implements SqlDb {
+public final class JdbcSqlDb implements SqlDb {
     /** Unchecked wrapper: the Android API throws unchecked SQLiteException. */
-    static final class SqlFailure extends RuntimeException {
+    public static final class SqlFailure extends RuntimeException {
         SqlFailure(SQLException cause) { super(cause.getMessage(), cause); }
     }
 
@@ -25,7 +25,7 @@ final class JdbcSqlDb implements SqlDb {
     private final ArrayList<boolean[]> transactions = new ArrayList<>();
     private boolean innerFailed;
 
-    JdbcSqlDb(Connection connection) {
+    public JdbcSqlDb(Connection connection) {
         this.connection = connection;
         setForeignKeyConstraintsEnabled(true);
     }

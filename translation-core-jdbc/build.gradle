@@ -1,0 +1,20 @@
+plugins {
+    id 'java-library'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+dependencies {
+    api project(':translation-core')
+    // Same driver the Android app never ships: PC shell and core tests use it (pinned 3.46.1.3).
+    api 'org.xerial:sqlite-jdbc:3.46.1.3'
+    testImplementation 'org.json:json:20250517'
+    testImplementation 'junit:junit:4.13.2'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
