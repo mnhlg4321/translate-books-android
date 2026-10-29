@@ -212,6 +212,30 @@ public final class VolumePlan {
         return null;
     }
 
+    /** What one chapter of the plan would really use: numbers and hashes only, no text. */
+    public static final class BindingInfo {
+        public final int chapterNo;
+        public final String rawName, glossaryName, pronounName, glossaryHash, pronounHash, settingsHash;
+        public final int glossaryEntries, pronounRules;
+        BindingInfo(ChapterBinding b, AppSettings base) {
+            chapterNo = b.chapterNo; rawName = b.rawName; glossaryName = b.glossaryName; pronounName = b.pronounName;
+            glossaryHash = b.glossaryHash; pronounHash = b.pronounHash;
+            glossaryEntries = PromptContextBuilder.validate(b.glossaryText, "").glossaryTerms.size();
+            pronounRules = PromptContextBuilder.validate("", b.pronounText).explicitPronouns.size();
+            settingsHash = HashUtil.settingsHash(AppValidator.normalize(b.applyTo(base)));
+        }
+        /** True when the chapter was bound to nothing: the hash is that of the empty text. */
+        public boolean glossaryEmpty() { return glossaryHash.equals(HashUtil.sha256("")); }
+        public boolean pronounEmpty() { return pronounHash.equals(HashUtil.sha256("")); }
+    }
+
+    /** One entry per included chapter, as {@link #bindings()} would hand to the run, with {@code base} as the settings behind them. */
+    public List<BindingInfo> bindingSummary(AppSettings base) {
+        List<BindingInfo> out = new ArrayList<>();
+        for (ChapterBinding b : bindings()) out.add(new BindingInfo(b, base));
+        return out;
+    }
+
     /** The bindings of the included rows in order; the texts are copied now so later Library edits cannot change the run. */
     List<ChapterBinding> bindings() {
         List<ChapterBinding> out = new ArrayList<>();

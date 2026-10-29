@@ -21,6 +21,7 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
@@ -354,6 +355,20 @@ final class SetsPage {
         unusedBox.getChildren().clear();
         if (!editor.unusedGlossaries().isEmpty()) unusedBox.getChildren().add(unusedLine(editor.unusedGlossaries().size() + " Glossary không khớp chương nào: " + String.join(", ", editor.unusedGlossaries()), true));
         if (!editor.unusedPronouns().isEmpty()) unusedBox.getChildren().add(unusedLine(editor.unusedPronouns().size() + " Pronoun không khớp chương nào: " + String.join(", ", editor.unusedPronouns()), false));
+        for (String hint : editor.emptySlotHints()) {
+            boolean g = hint.contains("Glossary");
+            Label l = new Label("⚠ " + hint);
+            l.setWrapText(true);
+            l.setMinHeight(Region.USE_PREF_SIZE);
+            l.getStyleClass().add("warn");
+            HBox.setHgrow(l, Priority.ALWAYS);
+            Button use = new Button("Chọn các tệp khớp");
+            use.getStyleClass().add("secondary");
+            use.setOnAction(ev -> { editor.useMatching(g); refresh(); });
+            HBox h = new HBox(10, l, use);
+            h.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            unusedBox.getChildren().add(h);
+        }
         saveButton.setText("Lưu tập (" + editor.included() + " chương)");
     }
 

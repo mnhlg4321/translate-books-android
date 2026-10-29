@@ -871,6 +871,13 @@ public final class DesktopRuntime implements AutoCloseable {
         return total;
     }
 
+    /** The settings a chapter of the plan is run with (its own Glossary, Pronoun and instruction, as the run builds them). */
+    public AppSettings settingsForChapter(VolumePlan plan, int chapterNo, AppSettings base) throws Exception {
+        AppSettings s = settingsForRun(base);
+        for (ChapterBinding b : plan.bindings()) if (b.chapterNo == chapterNo) return b.applyTo(s);
+        return s;
+    }
+
     public boolean startVolume(VolumePlan plan, AppSettings base, Double capUsd, CostEstimator.Estimate estimate, Path outputDir) {
         if (plan.hasRed() || plan.included() == 0) return false;
         if (!allowedToCallProvider()) return false;

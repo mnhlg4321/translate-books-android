@@ -151,6 +151,23 @@ final class VolumePage {
         return scroll;
     }
 
+    /** One line per chapter: how many Glossary entries and Pronoun rules it will really use; a chapter with none is marked. */
+    private String chapterUse(AppSettings s) {
+        StringBuilder sb = new StringBuilder("Mỗi chương dùng:");
+        try {
+            for (VolumePlan.BindingInfo b : plan.bindingSummary(runtime.normalizedForEstimate(s))) {
+                sb.append("\n• Chương ").append(b.chapterNo >= 0 ? String.valueOf(b.chapterNo) : "?").append(": ").append(b.glossaryEntries)
+                        .append(" mục Glossary · ").append(b.pronounRules).append(" quy tắc Pronoun");
+                if (b.glossaryEmpty() || b.pronounEmpty()) {
+                    sb.append("  ⚠ không có ").append(b.glossaryEmpty() && b.pronounEmpty() ? "Glossary và Pronoun" : b.glossaryEmpty() ? "Glossary" : "Pronoun");
+                }
+            }
+        } catch (Exception e) {
+            sb.append(" (không đọc được: ").append(e.getMessage()).append(")");
+        }
+        return sb.toString();
+    }
+
     private static Button secondary(String text) {
         Button b = new Button(text);
         b.getStyleClass().add("secondary");
@@ -413,7 +430,7 @@ final class VolumePage {
         String message = plan.included() + " chương\nModel: " + s.model + "\nReasoning effort: " + s.reasoningEffort
                 + "\nƯớc tính: " + (estimate == null ? "chưa có" : TranslatePage.describeEstimate(estimate))
                 + "\nTrần chi phí cho cả lượt: " + CostEstimator.money(s.stopOnCostLimit && s.costLimitUsd > 0 ? s.costLimitUsd : CostLimitPolicy.MIN_SAFE_CAP_USD)
-                + "\nOutput: thư mục " + outputDir.getFileName() + "\n\nBắt đầu sẽ gọi provider và tốn tiền thật.";
+                + "\nOutput: thư mục " + outputDir.getFileName() + "\n" + chapterUse(s) + "\n\nBắt đầu sẽ gọi provider và tốn tiền thật.";
         if (!app.confirm("Bắt đầu dịch cả tập?", message)) return;
         try {
             runtime.saveSettings(s);

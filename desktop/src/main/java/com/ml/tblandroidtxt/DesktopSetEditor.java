@@ -140,6 +140,31 @@ public final class DesktopSetEditor {
         changed();
     }
 
+    /**
+     * Hints for a slot that is left on "Không dùng" while the library holds files whose chapter number matches a row. The set may still be
+     * saved that way (it is a valid choice, as on the phone); the hint makes sure it is a choice and not an oversight.
+     */
+    public List<String> emptySlotHints() {
+        List<String> out = new ArrayList<>();
+        if (draft.glossaryIds.isEmpty() && !matching(true).isEmpty()) out.add(matching(true).size() + " Glossary trong thư viện khớp số chương của các dòng này, nhưng ô Glossary đang để Không dùng");
+        if (draft.pronounIds.isEmpty() && !matching(false).isEmpty()) out.add(matching(false).size() + " Pronoun trong thư viện khớp số chương của các dòng này, nhưng ô Pronoun đang để Không dùng");
+        return out;
+    }
+
+    /** Ids of library files whose chapter number is one of the included rows. */
+    public List<String> matching(boolean glossary) {
+        Set<Integer> chapters = new HashSet<>();
+        for (ChapterSetMatcher.Row r : draft.rows) if (!r.excluded && r.chapterNo >= 0) chapters.add(r.chapterNo);
+        List<String> out = new ArrayList<>();
+        for (Choice c : glossary ? glossaryChoices() : pronounChoices()) if (c.chapterNo >= 0 && chapters.contains(c.chapterNo)) out.add(c.id);
+        return out;
+    }
+
+    /** "Chọn các tệp khớp": puts the matching library files in the slot. */
+    public void useMatching(boolean glossary) {
+        if (glossary) setGlossarySlot(matching(true)); else setPronounSlot(matching(false));
+    }
+
     public List<String> unusedGlossaries() { return new ArrayList<>(draft.unusedGlossaries); }
     public List<String> unusedPronouns() { return new ArrayList<>(draft.unusedPronouns); }
 
