@@ -215,11 +215,11 @@ public class LibraryS0InstrumentedTest {
     }
 
     private static void clearStoreCache(Class<?> type, String jsonField, String itemsField) throws Exception {
-        Field json = type.getDeclaredField(jsonField);
+        Field json = StoreCacheFields.find(type, jsonField);
         json.setAccessible(true);
         json.set(null, null);
         if (itemsField == null) return;
-        Field items = type.getDeclaredField(itemsField);
+        Field items = StoreCacheFields.find(type, itemsField);
         items.setAccessible(true);
         items.set(null, null);
     }

@@ -132,8 +132,8 @@ public class V415LibraryScrollInstrumentedTest {
     }
 
     private static void clearStoreCache(Class<?> type, String jsonField, String itemsField) throws Exception {
-        Field json = type.getDeclaredField(jsonField);
-        Field items = type.getDeclaredField(itemsField);
+        Field json = StoreCacheFields.find(type, jsonField);
+        Field items = StoreCacheFields.find(type, itemsField);
         json.setAccessible(true);
         items.setAccessible(true);
         json.set(null, null);
