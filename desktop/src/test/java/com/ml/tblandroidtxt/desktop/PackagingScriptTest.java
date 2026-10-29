@@ -28,6 +28,13 @@ public class PackagingScriptTest {
         assertTrue(Files.exists(Paths.get("..", "scripts", "desktop-msi-version.ps1")));
     }
 
+    @Test public void aReleasePackageKeepsTheExactVersionNameAndRefusesToBeBuiltTwice() throws Exception {
+        String s = script();
+        assertTrue(s.contains("[string]$ExactReleaseVersion"));
+        assertTrue(s.contains("$version = $ExactReleaseVersion"));
+        assertTrue(s.contains("immutable release"));
+    }
+
     @Test public void theReadmeTellsToCloseTheAppBeforeInstalling() throws Exception {
         String s = script();
         assertTrue(s.contains("Close Translate Books (every window) before installing a newer .msi"));

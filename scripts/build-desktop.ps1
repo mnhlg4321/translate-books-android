@@ -2,6 +2,10 @@
 param(
     [string]$Series = '4.24-pc-dev',
 
+    # A release package keeps the exact version name (4.24.0) instead of <series>.<N>; refused when that version or its tag already exists.
+    [ValidatePattern('^\d+\.\d+\.\d+$')]
+    [string]$ExactReleaseVersion,
+
     [ValidateNotNullOrEmpty()]
     [string]$Notes = 'Desktop development build.',
 
@@ -52,6 +56,15 @@ try {
     }
     $number = $highest + 1
     $version = "$Series.$number"
+    if (-not [string]::IsNullOrWhiteSpace($ExactReleaseVersion)) {
+        if ($PSBoundParameters.ContainsKey('Series')) { throw 'Use either -Series for numbered builds or -ExactReleaseVersion for a release package, not both.' }
+        $version = $ExactReleaseVersion
+        foreach ($root in @('artifacts\builds', 'backup\builds')) {
+            if (Test-Path (Join-Path (Join-Path $repo $root) "desktop-v$version")) { throw "A desktop package v$version already exists under $root; refusing to create another for an immutable release." }
+        }
+        & git rev-parse --verify --quiet "refs/tags/v$version" | Out-Null
+        if ($LASTEXITCODE -eq 0) { throw "Release tag v$version already exists; refusing to create another package for an immutable release." }
+    }
     $eventId = 'build-' + (Get-Date -Format 'yyyyMMdd-HHmmss')
     $artifactDir = Join-Path $repo "artifacts\builds\desktop-v$version\$eventId"
     $backupDir = Join-Path $repo "backup\builds\desktop-v$version\$eventId"
