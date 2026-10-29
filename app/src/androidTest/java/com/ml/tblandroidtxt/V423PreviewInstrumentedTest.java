@@ -29,15 +29,18 @@ public class V423PreviewInstrumentedTest {
         Context c = InstrumentationRegistry.getInstrumentation().getTargetContext();
         PreviewService service = new PreviewService();
         service.attach(c);
+        service.onCreate();
+        // since the core move the run state lives in the TranslationRunner that onCreate builds
+        Field runnerField = TranslatorService.class.getDeclaredField("runner");
+        runnerField.setAccessible(true);
+        TranslationRunner runner = (TranslationRunner) runnerField.get(service);
         try {
             assertEquals(true, call(service, "acquireRun", new Class<?>[]{String.class}, "synthetic preview"));
-            call(service, "resetMetrics", new Class<?>[]{String.class, int.class}, "001.txt", 5);
-            Field field = TranslatorService.class.getDeclaredField("acceptedPreview");
-            field.setAccessible(true);
-            AcceptedTranslationPreview p = (AcceptedTranslationPreview) field.get(service);
+            runner.resetMetrics("001.txt", 5);
+            AcceptedTranslationPreview p = runner.getAcceptedPreview();
             p.accept("Đây là bản dịch tổng hợp của chương một.", 5, 5);
-            call(service, "resetMetrics", new Class<?>[]{String.class, int.class}, "002.txt", 2);
-            call(service, "broadcast", new Class<?>[]{String.class, int.class, String.class}, "running", 25, null);
+            runner.resetMetrics("002.txt", 2);
+            runner.publish("running", 25, null);
             Intent saved = RuntimeStateStore.toIntent(c);
             assertEquals("002.txt", saved.getStringExtra(TranslatorService.EXTRA_FILE_NAME));
             assertEquals("001.txt", saved.getStringExtra(TranslatorService.EXTRA_PREVIEW_FILE));
