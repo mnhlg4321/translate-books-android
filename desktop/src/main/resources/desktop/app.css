@@ -18,7 +18,37 @@
     -fx-base: -tbl-raised;
     -fx-background: -tbl-bg;
     -fx-text-fill: -tbl-text;
+    -fx-text-base-color: -tbl-text;
+    -fx-control-inner-background: -tbl-surface;
+    -fx-control-inner-background-alt: -tbl-bg;
+    -fx-accent: -tbl-accent;
+    -fx-focus-color: -tbl-accent;
+    -fx-faint-focus-color: transparent;
+    -fx-prompt-text-fill: -tbl-text2;
+    -fx-selection-bar: -tbl-accent;
+    -fx-selection-bar-text: -tbl-on-accent;
 }
+.label { -fx-text-fill: -tbl-text; }
+.text-field, .password-field, .text-area { -fx-text-fill: -tbl-text; -fx-prompt-text-fill: -tbl-text2; }
+.text-area .content, .text-area > .scroll-pane > .viewport { -fx-background-color: -tbl-surface; }
+.list-cell, .table-cell, .tree-cell { -fx-text-fill: -tbl-text; }
+.list-cell:filled:selected, .table-row-cell:filled:selected .table-cell { -fx-background-color: -tbl-accent; -fx-text-fill: -tbl-on-accent; }
+.table-view .column-header-background, .table-view .column-header, .table-view .filler { -fx-background-color: -tbl-raised; }
+.table-view .column-header .label { -fx-text-fill: -tbl-text; }
+.combo-box-base .arrow { -fx-background-color: -tbl-text; }
+.combo-box-popup > .list-view { -fx-background-color: -tbl-surface; }
+.check-box, .radio-button { -fx-text-fill: -tbl-text; }
+.check-box > .box, .radio-button > .radio { -fx-background-color: -tbl-outline, -tbl-surface; -fx-background-insets: 0, 1; }
+.titled-pane > .title { -fx-background-color: -tbl-raised; }
+.titled-pane > .title > .text { -fx-fill: -tbl-text; }
+.titled-pane > .content { -fx-background-color: -tbl-bg; -fx-border-color: -tbl-divider; }
+.scroll-pane { -fx-background-color: transparent; }
+.scroll-pane > .viewport { -fx-background-color: -tbl-bg; }
+.scroll-bar { -fx-background-color: transparent; }
+.scroll-bar .thumb { -fx-background-color: -tbl-outline; -fx-background-radius: 4; }
+.scroll-bar .track { -fx-background-color: transparent; }
+.scroll-bar .increment-button, .scroll-bar .decrement-button { -fx-background-color: transparent; }
+.tooltip { -fx-background-color: -tbl-raised; -fx-text-fill: -tbl-text; }
 
 .nav { -fx-background-color: -tbl-surface; -fx-border-color: -tbl-divider; -fx-border-width: 0 1 0 0; -fx-padding: 12 0 12 0; }
 .nav-title { -fx-font-size: 1.15em; -fx-font-weight: bold; -fx-text-fill: -tbl-text; -fx-padding: 4 16 12 16; }

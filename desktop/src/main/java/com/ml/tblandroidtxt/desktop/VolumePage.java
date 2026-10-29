@@ -199,15 +199,12 @@ final class VolumePage {
     }
 
     void importFolder(String what, Path dir, FolderAction action) {
-        try {
-            DesktopRuntime.FolderImport r = action.run(dir);
+        UiTasks.run(app, "Đang quét thư mục…", () -> action.run(dir), r -> {
             folderNote.setText(r.note);
             summary.setText(what + ": thêm " + r.added + (r.skipped > 0 ? ", bỏ qua " + r.skipped + " (đã có)" : "") + ".");
             refreshRaw();
-            app.refreshLibrary();
-        } catch (Exception e) {
-            app.alert("Không đọc được thư mục: " + e.getMessage());
-        }
+            app.libraryChanged();
+        }, e -> folderNote.setText("Không đọc được thư mục: " + e.getMessage()));
     }
 
     void importRawFolder(Path dir) { importFolder("RAW", dir, runtime::importRawFolder); }

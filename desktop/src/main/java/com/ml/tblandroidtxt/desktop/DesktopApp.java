@@ -139,7 +139,8 @@ public final class DesktopApp extends Application {
         applyAppearance(DesktopAppearance.load(runtime.appearancePrefs()));
         primary.setTitle("Translate Books");
         primary.setScene(scene);
-        primary.setOnCloseRequest(e -> { if (!confirmLeaveAll()) { e.consume(); return; } if (rawPage != null) rawPage.settle(); runtime.close(); releaseInstanceLock(); });
+        restoreWindow(primary);
+        primary.setOnCloseRequest(e -> { if (!confirmLeaveAll()) { e.consume(); return; } saveWindow(primary); if (rawPage != null) rawPage.settle(); runtime.close(); releaseInstanceLock(); });
         scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, this::shortcut);
         select(NavModel.restore(runtime.appearancePrefs()));
         refreshLibrary();
@@ -198,6 +199,7 @@ public final class DesktopApp extends Application {
             }
         }
         currentKey = key;
+        fixWrapped(pages.get(key));
         for (java.util.Map.Entry<String, Node> e : pages.entrySet()) e.getValue().setVisible(e.getKey().equals(key));
         navButtons.get(key).setSelected(true);
         NavModel.remember(runtime.appearancePrefs(), key);
@@ -205,6 +207,14 @@ public final class DesktopApp extends Application {
         if (key.equals(NavModel.JOBS)) refreshJobs();
         if (NavModel.inLibrary(key)) refreshLibrary();
         if (key.equals(NavModel.SETTINGS)) settingsPage.reload();
+    }
+
+    /** A label that wraps keeps all of its lines (otherwise a narrow column cuts it with an ellipsis). */
+    static void fixWrapped(Node n) {
+        if (n instanceof Label && ((Label) n).isWrapText()) ((Label) n).setMinHeight(Region.USE_PREF_SIZE);
+        if (n instanceof javafx.scene.control.ScrollPane && ((javafx.scene.control.ScrollPane) n).getContent() != null) fixWrapped(((javafx.scene.control.ScrollPane) n).getContent());
+        if (n instanceof javafx.scene.control.TitledPane && ((javafx.scene.control.TitledPane) n).getContent() != null) fixWrapped(((javafx.scene.control.TitledPane) n).getContent());
+        if (n instanceof javafx.scene.Parent) for (Node c : ((javafx.scene.Parent) n).getChildrenUnmodifiable()) fixWrapped(c);
     }
 
     String currentKey() { return currentKey; }
@@ -234,6 +244,31 @@ public final class DesktopApp extends Application {
             String target = NavModel.shortcutTarget(n, runtime.appearancePrefs());
             if (target != null) { select(target); e.consume(); }
         }
+    }
+
+    /** The window comes back where and how big it was (not while taking screenshots, which are always 1280 x 720). */
+    private void restoreWindow(Stage s) {
+        if (System.getenv("TBL_SCREENSHOT_DIR") != null) return;
+        WindowBounds b = WindowBounds.load(runtime.appearancePrefs());
+        if (b == null) return;
+        List<double[]> screens = new ArrayList<>();
+        for (javafx.stage.Screen sc : javafx.stage.Screen.getScreens()) {
+            javafx.geometry.Rectangle2D r = sc.getVisualBounds();
+            screens.add(new double[]{r.getMinX(), r.getMinY(), r.getWidth(), r.getHeight()});
+        }
+        if (!b.visibleOn(screens)) return;
+        s.setX(b.x); s.setY(b.y); s.setWidth(b.width); s.setHeight(b.height);
+        s.setMaximized(b.maximized);
+    }
+
+    private void saveWindow(Stage s) {
+        if (System.getenv("TBL_SCREENSHOT_DIR") != null) return;
+        boolean max = s.isMaximized();
+        WindowBounds old = WindowBounds.load(runtime.appearancePrefs());
+        // while maximised the window's own size is the screen's: keep the last normal size
+        double w = max && old != null ? old.width : s.getWidth(), h = max && old != null ? old.height : s.getHeight();
+        double x = max && old != null ? old.x : s.getX(), y = max && old != null ? old.y : s.getY();
+        new WindowBounds(x, y, w, h, max).save(runtime.appearancePrefs());
     }
 
     Stage stage() { return stage; }
@@ -321,6 +356,14 @@ public final class DesktopApp extends Application {
     void showHistoryTab() { jobsPage.showHistory(); }
 
     JobsPage jobsPage() { return jobsPage; }
+
+    GlossaryPage glossaryPage() { return glossaryPage; }
+
+    PronounPage pronounPage() { return pronounPage; }
+
+    SetsPage setsPage() { return setsPage; }
+
+    RawPage rawPage() { return rawPage; }
 
     /** Enables or disables the buttons that depend on whether a run is active. */
     void refreshControls() { updateControls(); }
@@ -411,28 +454,30 @@ public final class DesktopApp extends Application {
     }
 
     void importLibraryArchive(Path zip, boolean ask) {
-        try {
-            DesktopRuntime.LibraryPreview p = runtime.previewLibrary(zip);
-            String text = "Trong gói: " + p.glossariesInFile() + " glossary, " + p.pronounsInFile() + " pronoun, " + p.rawsInFile() + " RAW"
-                    + "\nSẽ thêm: " + p.addGlossaries() + " glossary, " + p.addPronouns() + " pronoun, " + p.addRaws() + " RAW"
-                    + "\nĐã có sẵn: " + p.existing() + " · trùng nội dung: " + p.duplicate()
-                    + "\nXung đột (cùng mã, khác nội dung — nhập thành bản đổi tên): " + p.renamed()
-                    + "\nHỏng mã toàn vẹn (không nhập): " + p.bad();
-            if (p.addedCount() == 0) {
-                if (ask) alert(text + "\n\nKhông có gì để thêm.");
-                return;
-            }
-            if (ask && !confirm("Nhập gói thư viện?", text)) return;
-            boolean ok = runtime.applyLibrary(p);
-            refreshLibrary();
-            volumePage.refreshRaw();
-            if (!ok) alert("Có kho không ghi được (Glossary/Pronoun đang bị khóa vì đọc lỗi). Chưa nhập gì thêm.");
-            else libraryNote("Đã nhập " + p.addGlossaries() + " glossary, " + p.addPronouns() + " pronoun, " + p.addRaws() + " RAW", false);
-        } catch (IllegalArgumentException e) {
-            alert("Tệp này không phải gói thư viện hợp lệ: " + e.getMessage());
-        } catch (Exception e) {
-            alert("Không nhập được gói: " + e.getMessage());
+        UiTasks.run(this, "Đang đọc gói thư viện…", () -> runtime.previewLibrary(zip), p -> afterLibraryPreview(p, ask),
+                e -> {
+                    if (e instanceof IllegalArgumentException) libraryNote("Tệp này không phải gói thư viện hợp lệ: " + e.getMessage(), true);
+                    else libraryNote("Không nhập được gói: " + e.getMessage(), true);
+                });
+    }
+
+    private void afterLibraryPreview(DesktopRuntime.LibraryPreview p, boolean ask) {
+        String text = "Trong gói: " + p.glossariesInFile() + " glossary, " + p.pronounsInFile() + " pronoun, " + p.rawsInFile() + " RAW"
+                + "\nSẽ thêm: " + p.addGlossaries() + " glossary, " + p.addPronouns() + " pronoun, " + p.addRaws() + " RAW"
+                + "\nĐã có sẵn: " + p.existing() + " · trùng nội dung: " + p.duplicate()
+                + "\nXung đột (cùng mã, khác nội dung — nhập thành bản đổi tên): " + p.renamed()
+                + "\nHỏng mã toàn vẹn (không nhập): " + p.bad();
+        if (p.addedCount() == 0) {
+            if (ask) alert(text + "\n\nKhông có gì để thêm.");
+            libraryNote("Không có gì để thêm từ gói này.", false);
+            return;
         }
+        if (ask && !confirm("Nhập gói thư viện?", text)) return;
+        UiTasks.run(this, "Đang nhập gói thư viện…", () -> runtime.applyLibrary(p), ok -> {
+            libraryChanged();
+            if (!ok) libraryNote("Có kho không ghi được (Glossary/Pronoun đang bị khóa vì đọc lỗi). Chưa nhập gì thêm.", true);
+            else libraryNote("Đã nhập " + p.addGlossaries() + " glossary, " + p.addPronouns() + " pronoun, " + p.addRaws() + " RAW", false);
+        }, e -> libraryNote("Không nhập được gói: " + e.getMessage(), true));
     }
 
     private void exportLibraryArchive() {
@@ -443,8 +488,9 @@ public final class DesktopApp extends Application {
         File f = fc.showSaveDialog(stage);
         if (f == null) return;
         try {
-            int[] n = runtime.exportLibrary(f.toPath());
-            libraryNote("Đã xuất " + n[0] + " glossary, " + n[1] + " pronoun, " + n[2] + " RAW (không có API key, cài đặt, job hay Tập)", false);
+            UiTasks.run(this, "Đang xuất gói thư viện…", () -> runtime.exportLibrary(f.toPath()),
+                    n -> libraryNote("Đã xuất " + n[0] + " glossary, " + n[1] + " pronoun, " + n[2] + " RAW (không có API key, cài đặt, job hay Tập)", false),
+                    e -> libraryNote("Không xuất được: " + e.getMessage(), true));
         } catch (Exception e) {
             libraryNote("Không xuất được: " + e.getMessage(), true);
         }
@@ -621,24 +667,27 @@ public final class DesktopApp extends Application {
     }
 
     boolean confirm(String header, String text) {
-        Alert a = new Alert(Alert.AlertType.CONFIRMATION, text, ButtonType.OK, ButtonType.CANCEL);
+        ButtonType ok = new ButtonType("Đồng ý", javafx.scene.control.ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancel = new ButtonType("Hủy", javafx.scene.control.ButtonBar.ButtonData.CANCEL_CLOSE);
+        Alert a = new Alert(Alert.AlertType.CONFIRMATION, text, ok, cancel);
         a.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         a.setTitle("Xác nhận");
         a.setHeaderText(header);
         Optional<ButtonType> r = showDialog(a);
-        return r.isPresent() && r.get() == ButtonType.OK;
+        return r.isPresent() && r.get() == ok;
     }
 
     /** Unsaved changes: 1 = save, 0 = leave without saving, -1 = stay. */
     int askSave(String text) {
         ButtonType save = new ButtonType("Lưu", javafx.scene.control.ButtonBar.ButtonData.YES);
         ButtonType discard = new ButtonType("Không lưu", javafx.scene.control.ButtonBar.ButtonData.NO);
-        Alert a = new Alert(Alert.AlertType.CONFIRMATION, text, save, discard, ButtonType.CANCEL);
+        ButtonType stay = new ButtonType("Hủy", javafx.scene.control.ButtonBar.ButtonData.CANCEL_CLOSE);
+        Alert a = new Alert(Alert.AlertType.CONFIRMATION, text, save, discard, stay);
         a.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         a.setTitle("Thay đổi chưa lưu");
         a.setHeaderText("Lưu thay đổi?");
         Optional<ButtonType> r = showDialog(a);
-        if (!r.isPresent() || r.get() == ButtonType.CANCEL) return -1;
+        if (!r.isPresent() || r.get() == stay) return -1;
         return r.get() == save ? 1 : 0;
     }
 
@@ -664,7 +713,7 @@ public final class DesktopApp extends Application {
     }
 
     void alert(String text) {
-        Alert a = new Alert(Alert.AlertType.WARNING, text, ButtonType.OK);
+        Alert a = new Alert(Alert.AlertType.WARNING, text, new ButtonType("Đóng", javafx.scene.control.ButtonBar.ButtonData.OK_DONE));
         a.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         a.setHeaderText(null);
         showDialog(a);

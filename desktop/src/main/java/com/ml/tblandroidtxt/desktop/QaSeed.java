@@ -67,6 +67,11 @@ public final class QaSeed {
             List<String> two = new ArrayList<>();
             for (var item : rt.raws().list()) if (item.chapterNo <= 2) two.add(item.id);
             VolumePlan plan = rt.newVolumePlan(two);
+        com.ml.tblandroidtxt.DesktopSetEditor setEd = rt.newSet(two);
+        setEd.setGlossarySlot(allGlossaryIds(setEd));
+        setEd.setPronounSlot(allPronounIds(setEd));
+        setEd.setName("QA_tap_hai_chuong");
+        setEd.save();
             AppSettings s = rt.loadSettings();
             s.model = "qa/fixture-model";
             s.reasoningEffort = "off";
@@ -105,6 +110,18 @@ public final class QaSeed {
             write(seed.resolve("QA_profile_phone.json"), rt.exportProfileJson());
         }
         System.out.println("QA seed written: calls=" + calls.get());
+    }
+
+    private static List<String> allGlossaryIds(com.ml.tblandroidtxt.DesktopSetEditor e) {
+        List<String> out = new ArrayList<>();
+        for (var c : e.glossaryChoices()) out.add(c.id);
+        return out;
+    }
+
+    private static List<String> allPronounIds(com.ml.tblandroidtxt.DesktopSetEditor e) {
+        List<String> out = new ArrayList<>();
+        for (var c : e.pronounChoices()) out.add(c.id);
+        return out;
     }
 
     private static Path write(Path file, String text) throws Exception {

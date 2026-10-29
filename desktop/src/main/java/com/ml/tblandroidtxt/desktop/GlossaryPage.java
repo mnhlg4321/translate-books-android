@@ -210,7 +210,7 @@ final class GlossaryPage {
 
         termSearch.setPromptText("Tìm source hoặc target…");
         termSearch.textProperty().addListener((o, a, b) -> refilter());
-        categoryBox.setOnAction(e -> refilter());
+        categoryBox.setOnAction(e -> { if (!updatingFilter) refilter(); });
         Button add = new Button("+ Thêm thuật ngữ");
         Button remove = new Button("Xóa dòng");
         add.getStyleClass().add("secondary");
@@ -281,6 +281,9 @@ final class GlossaryPage {
     }
 
     boolean editing() { return editor != null; }
+
+    /** QA: closes the editor without asking. */
+    void qaClose() { closeEditor(); }
 
     DesktopGlossaryEditor currentEditor() { return editor; }
 

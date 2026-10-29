@@ -282,7 +282,7 @@ final class TranslatePage {
         refreshEstimate();
     }
 
-    private void pickLanguageProfile() {
+    void pickLanguageProfile() {
         javafx.scene.control.ChoiceDialog<String> d = new javafx.scene.control.ChoiceDialog<>(LanguageProfiles.LABELS[0], LanguageProfiles.LABELS);
         d.setTitle("Chọn profile ngôn ngữ");
         d.setHeaderText("Chọn profile ngôn ngữ");
@@ -394,7 +394,7 @@ final class TranslatePage {
 
     // ---- prompt preview ----
 
-    private void showPromptPreview() {
+    void showPromptPreview() {
         if (rawFile == null) { say("Chọn tệp RAW trước.", true); return; }
         Dialog<ButtonType> d = new Dialog<>();
         d.setTitle("Xem trước prompt");

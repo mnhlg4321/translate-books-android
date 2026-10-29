@@ -201,6 +201,8 @@ final class RawPage {
 
     // ---- delete with undo ----
 
+    void qaDelete() { list.getSelectionModel().selectAll(); deleteSelected(); }
+
     private void deleteSelected() {
         List<String> ids = selectedIds();
         if (ids.isEmpty()) return;

@@ -147,8 +147,10 @@ final class SetsPage {
         List<String> ids = new ArrayList<>();
         ids.add(c.id);
         int rawOnly = runtime.rawOnlyInSets(ids).size();
+        javafx.scene.control.ButtonType okType = new javafx.scene.control.ButtonType("Đồng ý", javafx.scene.control.ButtonBar.ButtonData.OK_DONE);
+        javafx.scene.control.ButtonType cancelType = new javafx.scene.control.ButtonType("Hủy", javafx.scene.control.ButtonBar.ButtonData.CANCEL_CLOSE);
         javafx.scene.control.Alert a = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION,
-                "Xóa tập \"" + c.name + "\" (" + c.chapters + " chương). RAW, Glossary và Pronoun của các chương vẫn còn trong thư viện.", javafx.scene.control.ButtonType.OK, javafx.scene.control.ButtonType.CANCEL);
+                "Xóa tập \"" + c.name + "\" (" + c.chapters + " chương). RAW, Glossary và Pronoun của các chương vẫn còn trong thư viện.", okType, cancelType);
         a.setTitle("Xác nhận");
         a.setHeaderText("Xóa tập?");
         a.getDialogPane().setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
@@ -158,7 +160,7 @@ final class SetsPage {
         ((Label) content.getChildren().get(0)).setWrapText(true);
         a.getDialogPane().setContent(content);
         Optional<javafx.scene.control.ButtonType> r = app.showDialog(a);
-        if (!r.isPresent() || r.get() != javafx.scene.control.ButtonType.OK) return;
+        if (!r.isPresent() || r.get() != okType) return;
         if (alsoRaw.isSelected() && !app.confirm("Xóa cả RAW?", rawOnly + " RAW chỉ thuộc tập này sẽ bị xóa khỏi thư viện (RAW đang cần cho job dịch dở được giữ lại).")) return;
         int removed = runtime.deleteSets(ids, alsoRaw.isSelected());
         say(listNote, "Đã xóa tập \"" + c.name + "\"" + (removed > 0 ? " và " + removed + " RAW" : "") + ".", false);
@@ -330,6 +332,9 @@ final class SetsPage {
     }
 
     boolean editing() { return editor != null; }
+
+    /** QA: closes the editor without asking. */
+    void qaClose() { closeEditor(); }
 
     private void refresh() {
         if (editor == null) return;

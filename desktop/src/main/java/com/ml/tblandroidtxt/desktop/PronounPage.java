@@ -272,6 +272,9 @@ final class PronounPage {
 
     boolean editing() { return editor != null; }
 
+    /** QA: closes the editor without asking. */
+    void qaClose() { editor = null; showList(); reload(); }
+
     DesktopPronounEditor currentEditor() { return editor; }
 
     private boolean saveNow() {
