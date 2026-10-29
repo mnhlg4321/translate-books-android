@@ -1,0 +1,20 @@
+gradle exit 0
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Wrote HTML report to file:///D:/P5E-builds/qa-rc1/reg-rc/app/build/reports/lint-results-debug.html
+app tests 749 skipped 5 failures 0 errors 0
+core tests 61 skipped 0 failures 0 errors 0
+lint errors: 0
+--- deps diff vs P0b (p0b-final/deps-after.txt)
+IDENTICAL
+sqlite/xerial in runtime classpath: 0
+org.json in runtime classpath: 0
+golden alone run 1 exit 0
+tests="14" skipped="0" failures="0" errors="0"
+golden alone run 2 exit 0
+tests="14" skipped="0" failures="0" errors="0"
+jdbc tests 3 skipped 0 fail+err 0
+desktop tests 69 skipped 0 fail+err 0
+editorial diff lines: 0
+golden fixture diff lines: 0
+app/src/main diff lines: 48

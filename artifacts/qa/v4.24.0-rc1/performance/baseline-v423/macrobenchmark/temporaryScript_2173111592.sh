@@ -1,0 +1,1 @@
+echo pid:$$ ; exec /data/local/tmp/trace_processor_shell -D --http-port "9001"

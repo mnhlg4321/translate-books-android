@@ -1,0 +1,754 @@
+{
+ "logs": {
+  "D:/P5E-builds/qa-rc1/baseline/EditorialForegroundInstrumentedTest.txt": {
+   "overall": "FAIL",
+   "discovered": 6,
+   "pass": 2,
+   "skip": 3,
+   "fail": 1,
+   "incomplete": 0,
+   "ok_line_tests": null,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialForegroundInstrumentedTest",
+     "test": "jobsTabShowsTheEditorialRunCard",
+     "result": "FAIL"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialForegroundInstrumentedTest",
+     "test": "cancelAfterCurrentChunkAndResumeOnlyPendingChunks",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialForegroundInstrumentedTest",
+     "test": "processReopenCleanup",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialForegroundInstrumentedTest",
+     "test": "serviceCompletesAndDuplicateStartDoesNotResend",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialForegroundInstrumentedTest",
+     "test": "processReopenVerify",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialForegroundInstrumentedTest",
+     "test": "processReopenSeed",
+     "result": "SKIP"
+    }
+   ]
+  },
+  "D:/P5E-builds/qa-rc1/baseline/EditorialP5CExactBindingFakeE2EInstrumentedTest.txt": {
+   "overall": "FAIL",
+   "discovered": 20,
+   "pass": 19,
+   "skip": 0,
+   "fail": 1,
+   "incomplete": 0,
+   "ok_line_tests": null,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5CExactBindingFakeE2EInstrumentedTest",
+     "test": "p5dExecuteRawStalledBodyStopsAtFiveMinuteDeadlineWithoutHostForceStop",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5CExactBindingFakeE2EInstrumentedTest",
+     "test": "p5dProcessRestartReclassifiesExpiredClaimWithoutRedispatch",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5CExactBindingFakeE2EInstrumentedTest",
+     "test": "p5dPreservesCancelledAndTruncatedRecoveryDecisionsAsHistory",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5CExactBindingFakeE2EInstrumentedTest",
+     "test": "p5dLocalSlowResponseCompletesWithoutLegacyCancel",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5CExactBindingFakeE2EInstrumentedTest",
+     "test": "p5dRejectsUnallowlistedExceptionMetadata",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5CExactBindingFakeE2EInstrumentedTest",
+     "test": "ledgerContractPersistsReloadsAfterRestartAndFeedsTheChain",
+     "result": "FAIL"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5CExactBindingFakeE2EInstrumentedTest",
+     "test": "p5dRecoveryNeedsImmutableDecisionNewAuthAndDuplicateRiskAcknowledgement",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5CExactBindingFakeE2EInstrumentedTest",
+     "test": "p5dPersistsLatestResponseBodyProgressWithoutBodyContent",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5CExactBindingFakeE2EInstrumentedTest",
+     "test": "p5dExecuteRawStalledBodyStopsAtAttemptDeadlineAndPersistsRecovery",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5CExactBindingFakeE2EInstrumentedTest",
+     "test": "p5dRecoveryOwnersExistBeforeRetryIsAllowed",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5CExactBindingFakeE2EInstrumentedTest",
+     "test": "exactBindingRunsRawOnlyAndStopsBeforeReconcile",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5CExactBindingFakeE2EInstrumentedTest",
+     "test": "p5dLocalInstantResponseCompletesAndPersistsLifecycle",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5CExactBindingFakeE2EInstrumentedTest",
+     "test": "incompleteAuthorizationStopsBeforeProvider",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5CExactBindingFakeE2EInstrumentedTest",
+     "test": "p5dPersistsRedactedLifecycleAndSingleUseAuthorizationAcrossReopen",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5CExactBindingFakeE2EInstrumentedTest",
+     "test": "p5eWireContractEvolutionReclaimsOnlyAfterDecision",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5CExactBindingFakeE2EInstrumentedTest",
+     "test": "p5dLocalSlowResponseSurvivesLegacyCancelAndPersistsLifecycle",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5CExactBindingFakeE2EInstrumentedTest",
+     "test": "sourceDriftStopsBeforeProviderAndLeavesNoAttempt",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5CExactBindingFakeE2EInstrumentedTest",
+     "test": "v20ProvidesDurableAttemptOwnerAfterCharacterization",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5CExactBindingFakeE2EInstrumentedTest",
+     "test": "recoveryRequiredCannotBeReclaimedWithoutReconciliation",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5CExactBindingFakeE2EInstrumentedTest",
+     "test": "exactBindingRunsRawThenReconcileAndReloadsIdempotently",
+     "result": "PASS"
+    }
+   ]
+  },
+  "D:/P5E-builds/qa-rc1/baseline/EditorialP5EFreshPilotInstrumentedTest.txt": {
+   "overall": "FAIL",
+   "discovered": 4,
+   "pass": 0,
+   "skip": 0,
+   "fail": 4,
+   "incomplete": 0,
+   "ok_line_tests": null,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshPilotInstrumentedTest",
+     "test": "compactRawFaultStopsWithoutPartialCommitOrRepair",
+     "result": "FAIL"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshPilotInstrumentedTest",
+     "test": "freshPilotSetupPersistsNewBindingAndPreservesReconstructedData",
+     "result": "FAIL"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshPilotInstrumentedTest",
+     "test": "compactRawParserRejectsUnknownTruncatedOversizedChangesAndReplay",
+     "result": "FAIL"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshPilotInstrumentedTest",
+     "test": "compactRawFakeE2eCommitsOnlyInIsolatedDbAndReplaysWithoutProvider",
+     "result": "FAIL"
+    }
+   ]
+  },
+  "D:/P5E-builds/qa-rc1/baseline/EditorialP5EFreshRawBoundaryInstrumentedTest.txt": {
+   "overall": "FAIL",
+   "discovered": 5,
+   "pass": 3,
+   "skip": 0,
+   "fail": 2,
+   "incomplete": 0,
+   "ok_line_tests": null,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshRawBoundaryInstrumentedTest",
+     "test": "freshRawPreflightRendersStrictRouteWithoutDispatchOrMutation",
+     "result": "FAIL"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshRawBoundaryInstrumentedTest",
+     "test": "historicalEvaluationAuthorizationIsRejectedBeforeProvider",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshRawBoundaryInstrumentedTest",
+     "test": "freshLiveDispatchRequiresAuthorizationAndDoesNotMutate",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshRawBoundaryInstrumentedTest",
+     "test": "readOnlyFreshBaselineMatchesTupleAndZeroRows",
+     "result": "FAIL"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshRawBoundaryInstrumentedTest",
+     "test": "historicalP5dRunnerRejectsFreshSelectorBeforeProvider",
+     "result": "PASS"
+    }
+   ]
+  },
+  "D:/P5E-builds/qa-rc1/baseline/EditorialP5EFreshRawLineageInstrumentedTest.txt": {
+   "overall": "FAIL",
+   "discovered": 13,
+   "pass": 12,
+   "skip": 0,
+   "fail": 1,
+   "incomplete": 0,
+   "ok_line_tests": null,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshRawLineageInstrumentedTest",
+     "test": "reconciliationHistoryUsesAttemptIdentityJoin",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshRawLineageInstrumentedTest",
+     "test": "missingAttemptIdentityColumnReturnsTypedCheckFailure",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshRawLineageInstrumentedTest",
+     "test": "schemaV25EmptyFreshLineageIsUnusedAndAllReadsComplete",
+     "result": "FAIL"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshRawLineageInstrumentedTest",
+     "test": "lifecycleUsesAttemptIdentityJoin",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshRawLineageInstrumentedTest",
+     "test": "authorizationReceiptForBindingMakesLineageAlreadyUsed",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshRawLineageInstrumentedTest",
+     "test": "canonicalChapterKeyIsAcceptedAndFriendlyAliasIsRejectedBeforeProvider",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshRawLineageInstrumentedTest",
+     "test": "attemptForBindingMakesLineageAlreadyUsed",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshRawLineageInstrumentedTest",
+     "test": "historicalPredicateIsRedOnSchemaV25WithoutBindingColumn",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshRawLineageInstrumentedTest",
+     "test": "schemaFailureReturnsCheckFailedAndDoesNotMutate",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshRawLineageInstrumentedTest",
+     "test": "missingTableReturnsTypedCheckFailure",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshRawLineageInstrumentedTest",
+     "test": "primaryReconciliationUsesAttemptIdentityJoin",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshRawLineageInstrumentedTest",
+     "test": "evidenceForOtherBindingDoesNotConsumeFreshBinding",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.EditorialP5EFreshRawLineageInstrumentedTest",
+     "test": "nullAndWrongAuthorizationRemainTypedAndMutationFree",
+     "result": "PASS"
+    }
+   ]
+  },
+  "D:/P5E-builds/qa-rc1/baseline/LibraryS0InstrumentedTest.txt": {
+   "overall": "PASS",
+   "discovered": 3,
+   "pass": 1,
+   "skip": 2,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 3,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.LibraryS0InstrumentedTest",
+     "test": "restartVerify",
+     "result": "SKIP"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.LibraryS0InstrumentedTest",
+     "test": "importKeepsActive_libraryRoundTrip_corruptStoreLocked",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.LibraryS0InstrumentedTest",
+     "test": "restartSeed",
+     "result": "SKIP"
+    }
+   ]
+  },
+  "D:/P5E-builds/qa-rc1/baseline/V415LibraryScrollInstrumentedTest.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V415LibraryScrollInstrumentedTest",
+     "test": "usePreservesListScrollForGlossaryAndPronoun",
+     "result": "PASS"
+    }
+   ]
+  },
+  "D:/P5E-builds/qa-rc1/baseline/V415MultiProfileImportInstrumentedTest.txt": {
+   "overall": "PASS",
+   "discovered": 2,
+   "pass": 2,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 2,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V415MultiProfileImportInstrumentedTest",
+     "test": "libraryPickerAllowsMultipleAndCollectsEveryUniqueFile",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V415MultiProfileImportInstrumentedTest",
+     "test": "importingTwoFilesPersistsTwoIndependentProfilesPerLibrary",
+     "result": "PASS"
+    }
+   ]
+  },
+  "D:/P5E-builds/qa-rc1/baseline/V415SettingsPersistenceInstrumentedTest.txt": {
+   "overall": "FAIL",
+   "discovered": 1,
+   "pass": 0,
+   "skip": 0,
+   "fail": 1,
+   "incomplete": 0,
+   "ok_line_tests": null,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V415SettingsPersistenceInstrumentedTest",
+     "test": "lazyPhoneSectionsHydrateBeforeTheyCanPersistDefaults",
+     "result": "FAIL"
+    }
+   ]
+  },
+  "D:/P5E-builds/qa-rc1/baseline/V423AppearanceInstrumentedTest.txt": {
+   "overall": "FAIL",
+   "discovered": 5,
+   "pass": 2,
+   "skip": 0,
+   "fail": 3,
+   "incomplete": 0,
+   "ok_line_tests": null,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423AppearanceInstrumentedTest",
+     "test": "lightPaletteRebuildsTheActivityOnTheSameTabWithTheSameSelection",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423AppearanceInstrumentedTest",
+     "test": "everySettingIsAppliedAfterTheRebuild",
+     "result": "FAIL"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423AppearanceInstrumentedTest",
+     "test": "theProgressPanelWrapsNamedMetricsWithoutShrinkingText",
+     "result": "FAIL"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423AppearanceInstrumentedTest",
+     "test": "followingTheSystemSwitchesWithNightMode",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423AppearanceInstrumentedTest",
+     "test": "theTopChipAndThePanelTitleNeverDisagree",
+     "result": "FAIL"
+    }
+   ]
+  },
+  "D:/P5E-builds/qa-rc1/baseline/V423ChapterRunInstrumentedTest.txt": {
+   "overall": "FAIL",
+   "discovered": 9,
+   "pass": 7,
+   "skip": 0,
+   "fail": 2,
+   "incomplete": 0,
+   "ok_line_tests": null,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "aCutAnswerIsRetriedWithALargerLimitAndNeverSentIdenticallyTwice",
+     "result": "FAIL"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "rejectedAnswerInChapterTwoDoesNotStopTheRunAndNoErrorIsBroadcast",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "mixedQuoteStylesAreRepairedAcceptedAndRecordedAsAWarning",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "authenticationFailureInChapterTwoStopsTheQueue",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "aChunkCutAtEveryLimitIsSplitInHalvesAndTheChapterCompletes",
+     "result": "FAIL"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "continueSetTicksTheUnfinishedChaptersAndTheFailedJobGoesOn",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "twoRejectedChaptersInARowStopTheRun",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "threeChaptersTranslateWithTheirOwnGlossaries_activeAndSharedSettingsUntouched",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest",
+     "test": "integrityFailureInChapterTwoContinuesWithChapterThree",
+     "result": "PASS"
+    }
+   ]
+  },
+  "D:/P5E-builds/qa-rc1/baseline/V423ChapterSetInstrumentedTest.txt": {
+   "overall": "PASS",
+   "discovered": 2,
+   "pass": 2,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 2,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterSetInstrumentedTest",
+     "test": "comboFromThreeSlots_sheetStaysOpen_noClippedNames_saveAndTranslateScreen",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ChapterSetInstrumentedTest",
+     "test": "noNameIsClippedAtFontScale130",
+     "result": "PASS"
+    }
+   ]
+  },
+  "D:/P5E-builds/qa-rc1/baseline/V423LibraryInstrumentedTest.txt": {
+   "overall": "PASS",
+   "discovered": 2,
+   "pass": 2,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 2,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423LibraryInstrumentedTest",
+     "test": "rawTab_importOrderReadDeleteUndoAndBlockedByJob",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423LibraryInstrumentedTest",
+     "test": "glossaryAndPronounSelection_deleteUndoAndActiveCleared",
+     "result": "PASS"
+    }
+   ]
+  },
+  "D:/P5E-builds/qa-rc1/baseline/V423PerfInstrumentedTest.txt": {
+   "overall": "PASS",
+   "discovered": 1,
+   "pass": 1,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 1,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423PerfInstrumentedTest",
+     "test": "tickingChaptersAsksForNoSafProbeAndReachesTheNextFrameFast",
+     "result": "PASS"
+    }
+   ]
+  },
+  "D:/P5E-builds/qa-rc1/baseline/V423PolishInstrumentedTest.txt": {
+   "overall": "FAIL",
+   "discovered": 11,
+   "pass": 9,
+   "skip": 0,
+   "fail": 2,
+   "incomplete": 0,
+   "ok_line_tests": null,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "a_crlfFileResumesOnBothPaths",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "f_jobsTabShowsTotalsAndGroupsARunByCombo",
+     "result": "FAIL"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "e_dismissingAJobHidesItForGood",
+     "result": "FAIL"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "d_aNewerFinishedJobHidesTheLeftover",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "i_libraryShowsCountsNoticeAndUndoForAPronounDelete",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "j_totalsCountChaptersFinishedToday",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "h_fingerDragScrollsTheActivityLog",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "c_recoveryDoesNotTouchDismissedFinishedOrCancelledJobs",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "k_currentJobPrefersAJobThatCanContinue",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "b_oneTimeRepairRestoresOnlyLineEndingConflicts",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PolishInstrumentedTest",
+     "test": "g_comboModeHidesTheGlossaryAndPronounRows",
+     "result": "PASS"
+    }
+   ]
+  },
+  "D:/P5E-builds/qa-rc1/baseline/V423PreviewInstrumentedTest.txt": {
+   "overall": "PASS",
+   "discovered": 3,
+   "pass": 3,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 3,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423PreviewInstrumentedTest",
+     "test": "lateRefreshAfterActivityDestroyDoesNotCrashOrStartWork",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PreviewInstrumentedTest",
+     "test": "lazyTranslatePageRestoresPreviewAfterRecreateOnJobs",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423PreviewInstrumentedTest",
+     "test": "chapterResetBroadcastAndStoreKeepOriginalAcceptedIdentity",
+     "result": "PASS"
+    }
+   ]
+  },
+  "D:/P5E-builds/qa-rc1/baseline/V423ResumeInstrumentedTest.txt": {
+   "overall": "FAIL",
+   "discovered": 8,
+   "pass": 5,
+   "skip": 0,
+   "fail": 3,
+   "incomplete": 0,
+   "ok_line_tests": null,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423ResumeInstrumentedTest",
+     "test": "t4_combinationContinuesTheStoppedChapterAndStartsTheNext",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ResumeInstrumentedTest",
+     "test": "t2_costLimitPausesAndContinueFinishesTheJob",
+     "result": "FAIL"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ResumeInstrumentedTest",
+     "test": "t6_resumeWithoutARunningJobAnnouncesIt",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ResumeInstrumentedTest",
+     "test": "t1_retryAfterAFailedChunkTranslatesTheRestOfTheJob",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ResumeInstrumentedTest",
+     "test": "u_screens_pendingCardStartQuestionAndStateAfterRetry",
+     "result": "FAIL"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ResumeInstrumentedTest",
+     "test": "t3_startWithAnUnfinishedJobContinuesItOrRestarts",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ResumeInstrumentedTest",
+     "test": "t5_splitChunkThenRetryCompletesInOrder",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423ResumeInstrumentedTest",
+     "test": "v_actionButtonsGrowWithTheirLabel",
+     "result": "FAIL"
+    }
+   ]
+  },
+  "D:/P5E-builds/qa-rc1/baseline/V423RunReadabilityInstrumentedTest.txt": {
+   "overall": "FAIL",
+   "discovered": 2,
+   "pass": 0,
+   "skip": 0,
+   "fail": 2,
+   "incomplete": 0,
+   "ok_line_tests": null,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V423RunReadabilityInstrumentedTest",
+     "test": "readableMetricsAndAdaptiveScrollablePreview",
+     "result": "FAIL"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V423RunReadabilityInstrumentedTest",
+     "test": "visibleStateLabelsKeepJobsShortcutAndEmptyPreviewMeaning",
+     "result": "FAIL"
+    }
+   ]
+  },
+  "D:/P5E-builds/qa-rc1/baseline/V48ImportNavigationInstrumentedTest.txt": {
+   "overall": "PASS",
+   "discovered": 5,
+   "pass": 5,
+   "skip": 0,
+   "fail": 0,
+   "incomplete": 0,
+   "ok_line_tests": 5,
+   "notes": [],
+   "methods": [
+    {
+     "class": "com.ml.tblandroidtxt.V48ImportNavigationInstrumentedTest",
+     "test": "verticalGesturesStayInsideNavigationPages",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V48ImportNavigationInstrumentedTest",
+     "test": "glossarySelectionSurvivesStoreReload",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V48ImportNavigationInstrumentedTest",
+     "test": "BackWalksThroughLibraryAndSettingsWithoutFinishingActivity",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V48ImportNavigationInstrumentedTest",
+     "test": "recentJobsNavigationRebuildsAnAlreadyOpenJobsPage",
+     "result": "PASS"
+    },
+    {
+     "class": "com.ml.tblandroidtxt.V48ImportNavigationInstrumentedTest",
+     "test": "pronounImportAndActivationSurviveColdStoreReload",
+     "result": "PASS"
+    }
+   ]
+  }
+ },
+ "total": {
+  "discovered": 103,
+  "pass": 76,
+  "skip": 5,
+  "fail": 22,
+  "incomplete": 0
+ }
+}

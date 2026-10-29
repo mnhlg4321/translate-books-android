@@ -1,0 +1,137 @@
+INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=2
+INSTRUMENTATION_STATUS: stream=
+com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark:
+INSTRUMENTATION_STATUS: test=coldStartup
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupMacrobenchmark_coldStartup_iter000_2026-10-29-11-50-07.perfetto-trace=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark/StartupMacrobenchmark_coldStartup_iter000_2026-10-29-11-50-07.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupMacrobenchmark_coldStartup_iter001_2026-10-29-11-50-15.perfetto-trace=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark/StartupMacrobenchmark_coldStartup_iter001_2026-10-29-11-50-15.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupMacrobenchmark_coldStartup_iter002_2026-10-29-11-50-22.perfetto-trace=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark/StartupMacrobenchmark_coldStartup_iter002_2026-10-29-11-50-22.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupMacrobenchmark_coldStartup_iter003_2026-10-29-11-50-31.perfetto-trace=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark/StartupMacrobenchmark_coldStartup_iter003_2026-10-29-11-50-31.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupMacrobenchmark_coldStartup_iter004_2026-10-29-11-50-38.perfetto-trace=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark/StartupMacrobenchmark_coldStartup_iter004_2026-10-29-11-50-38.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: EMULATOR_time_to_initial_display_millis_median=3389.256
+INSTRUMENTATION_STATUS: EMULATOR_time_to_initial_display_millis_min=2814.826
+INSTRUMENTATION_STATUS: EMULATOR_time_to_initial_display_millis_stddev=439.5003435149909
+INSTRUMENTATION_STATUS: android.studio.display.benchmark=WARNING: Running on Emulator
+    Benchmark is running on an emulator, which is not representative of
+    real user devices. Use a physical device to benchmark. Emulator
+    benchmark improvements might not carry over to a real user's
+    experience (or even regress real device performance).
+
+StartupMacrobenchmark_coldStartup
+  timeToInitialDisplayMs   [min 2,814.8](file://StartupMacrobenchmark_coldStartup_iter004_2026-10-29-11-50-38.perfetto-trace),   [median 3,389.3](file://StartupMacrobenchmark_coldStartup_iter002_2026-10-29-11-50-22.perfetto-trace),   [max 4,006.0](file://StartupMacrobenchmark_coldStartup_iter003_2026-10-29-11-50-31.perfetto-trace)
+    Traces: Iteration [0](file://StartupMacrobenchmark_coldStartup_iter000_2026-10-29-11-50-07.perfetto-trace) [1](file://StartupMacrobenchmark_coldStartup_iter001_2026-10-29-11-50-15.perfetto-trace) [2](file://StartupMacrobenchmark_coldStartup_iter002_2026-10-29-11-50-22.perfetto-trace) [3](file://StartupMacrobenchmark_coldStartup_iter003_2026-10-29-11-50-31.perfetto-trace) [4](file://StartupMacrobenchmark_coldStartup_iter004_2026-10-29-11-50-38.perfetto-trace)
+
+INSTRUMENTATION_STATUS: android.studio.v2display.benchmark=WARNING: Running on Emulator
+    Benchmark is running on an emulator, which is not representative of
+    real user devices. Use a physical device to benchmark. Emulator
+    benchmark improvements might not carry over to a real user's
+    experience (or even regress real device performance).
+
+StartupMacrobenchmark_coldStartup
+  timeToInitialDisplayMs   [min 2,814.8](file://StartupMacrobenchmark_coldStartup_iter004_2026-10-29-11-50-38.perfetto-trace),   [median 3,389.3](file://StartupMacrobenchmark_coldStartup_iter002_2026-10-29-11-50-22.perfetto-trace),   [max 4,006.0](file://StartupMacrobenchmark_coldStartup_iter003_2026-10-29-11-50-31.perfetto-trace)
+    Traces: Iteration [0](file://StartupMacrobenchmark_coldStartup_iter000_2026-10-29-11-50-07.perfetto-trace) [1](file://StartupMacrobenchmark_coldStartup_iter001_2026-10-29-11-50-15.perfetto-trace) [2](file://StartupMacrobenchmark_coldStartup_iter002_2026-10-29-11-50-22.perfetto-trace) [3](file://StartupMacrobenchmark_coldStartup_iter003_2026-10-29-11-50-31.perfetto-trace) [4](file://StartupMacrobenchmark_coldStartup_iter004_2026-10-29-11-50-38.perfetto-trace)
+
+INSTRUMENTATION_STATUS: android.studio.v2display.benchmark.outputDirPath=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark
+INSTRUMENTATION_STATUS: android.studio.v3display.benchmark=WARNING: Running on Emulator
+    Benchmark is running on an emulator, which is not representative of
+    real user devices. Use a physical device to benchmark. Emulator
+    benchmark improvements might not carry over to a real user's
+    experience (or even regress real device performance).
+
+StartupMacrobenchmark_coldStartup
+  timeToInitialDisplayMs   [min 2,814.8](file://StartupMacrobenchmark_coldStartup_iter004_2026-10-29-11-50-38.perfetto-trace),   [median 3,389.3](file://StartupMacrobenchmark_coldStartup_iter002_2026-10-29-11-50-22.perfetto-trace),   [max 4,006.0](file://StartupMacrobenchmark_coldStartup_iter003_2026-10-29-11-50-31.perfetto-trace)
+    Traces: Iteration [0](file://StartupMacrobenchmark_coldStartup_iter000_2026-10-29-11-50-07.perfetto-trace) [1](file://StartupMacrobenchmark_coldStartup_iter001_2026-10-29-11-50-15.perfetto-trace) [2](file://StartupMacrobenchmark_coldStartup_iter002_2026-10-29-11-50-22.perfetto-trace) [3](file://StartupMacrobenchmark_coldStartup_iter003_2026-10-29-11-50-31.perfetto-trace) [4](file://StartupMacrobenchmark_coldStartup_iter004_2026-10-29-11-50-38.perfetto-trace)
+
+INSTRUMENTATION_STATUS: android.studio.v3display.benchmark.outputDirPath=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=2
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=coldStartup
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=2
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=openEditorialTab
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=2
+INSTRUMENTATION_STATUS: stack=java.lang.IllegalStateException: The Biên tập tab was not found on the main screen.
+	at com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark.lambda$openEditorialTab$3(StartupMacrobenchmark.java:111)
+	at com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark$$ExternalSyntheticLambda3.invoke(D8$$SyntheticClass:0)
+	at androidx.benchmark.macro.MacrobenchmarkKt.macrobenchmarkWithStartupMode$lambda$18(Macrobenchmark.kt:438)
+	at androidx.benchmark.macro.MacrobenchmarkKt.$r8$lambda$nYOYe9qoa3qEKOmAUA_HsQ_0qsY(Unknown Source:0)
+	at androidx.benchmark.macro.MacrobenchmarkKt$$ExternalSyntheticLambda3.invoke(D8$$SyntheticClass:0)
+	at androidx.benchmark.macro.MacrobenchmarkPhaseKt.runPhase(MacrobenchmarkPhase.kt:99)
+	at androidx.benchmark.macro.MacrobenchmarkKt.macrobenchmark$lambda$6(Macrobenchmark.kt:271)
+	at androidx.benchmark.macro.MacrobenchmarkKt.$r8$lambda$xwXnT_b4vi-hCaLpXAO_soLs9-w(Unknown Source:0)
+	at androidx.benchmark.macro.MacrobenchmarkKt$$ExternalSyntheticLambda1.invoke(D8$$SyntheticClass:0)
+	at androidx.benchmark.macro.TraceProcessorExtensionsKt.runServer(TraceProcessorExtensions.kt:163)
+	at androidx.benchmark.macro.TraceProcessorExtensionsKt.runServer$default(TraceProcessorExtensions.kt:158)
+	at androidx.benchmark.macro.MacrobenchmarkKt.macrobenchmark(Macrobenchmark.kt:263)
+	at androidx.benchmark.macro.MacrobenchmarkKt.macrobenchmarkWithStartupMode(Macrobenchmark.kt:400)
+	at androidx.benchmark.macro.junit4.MacrobenchmarkRule.measureRepeated(MacrobenchmarkRule.kt:87)
+	at com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark.openEditorialTab(StartupMacrobenchmark.java:94)
+
+INSTRUMENTATION_STATUS: stream=
+Error in openEditorialTab(com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark):
+java.lang.IllegalStateException: The Biên tập tab was not found on the main screen.
+	at com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark.lambda$openEditorialTab$3(StartupMacrobenchmark.java:111)
+	at com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark$$ExternalSyntheticLambda3.invoke(D8$$SyntheticClass:0)
+	at androidx.benchmark.macro.MacrobenchmarkKt.macrobenchmarkWithStartupMode$lambda$18(Macrobenchmark.kt:438)
+	at androidx.benchmark.macro.MacrobenchmarkKt.$r8$lambda$nYOYe9qoa3qEKOmAUA_HsQ_0qsY(Unknown Source:0)
+	at androidx.benchmark.macro.MacrobenchmarkKt$$ExternalSyntheticLambda3.invoke(D8$$SyntheticClass:0)
+	at androidx.benchmark.macro.MacrobenchmarkPhaseKt.runPhase(MacrobenchmarkPhase.kt:99)
+	at androidx.benchmark.macro.MacrobenchmarkKt.macrobenchmark$lambda$6(Macrobenchmark.kt:271)
+	at androidx.benchmark.macro.MacrobenchmarkKt.$r8$lambda$xwXnT_b4vi-hCaLpXAO_soLs9-w(Unknown Source:0)
+	at androidx.benchmark.macro.MacrobenchmarkKt$$ExternalSyntheticLambda1.invoke(D8$$SyntheticClass:0)
+	at androidx.benchmark.macro.TraceProcessorExtensionsKt.runServer(TraceProcessorExtensions.kt:163)
+	at androidx.benchmark.macro.TraceProcessorExtensionsKt.runServer$default(TraceProcessorExtensions.kt:158)
+	at androidx.benchmark.macro.MacrobenchmarkKt.macrobenchmark(Macrobenchmark.kt:263)
+	at androidx.benchmark.macro.MacrobenchmarkKt.macrobenchmarkWithStartupMode(Macrobenchmark.kt:400)
+	at androidx.benchmark.macro.junit4.MacrobenchmarkRule.measureRepeated(MacrobenchmarkRule.kt:87)
+	at com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark.openEditorialTab(StartupMacrobenchmark.java:94)
+
+INSTRUMENTATION_STATUS: test=openEditorialTab
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_RESULT: stream=
+
+Time: 66.82
+There was 1 failure:
+1) openEditorialTab(com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark)
+java.lang.IllegalStateException: The Biên tập tab was not found on the main screen.
+	at com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark.lambda$openEditorialTab$3(StartupMacrobenchmark.java:111)
+	at com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark$$ExternalSyntheticLambda3.invoke(D8$$SyntheticClass:0)
+	at androidx.benchmark.macro.MacrobenchmarkKt.macrobenchmarkWithStartupMode$lambda$18(Macrobenchmark.kt:438)
+	at androidx.benchmark.macro.MacrobenchmarkKt.$r8$lambda$nYOYe9qoa3qEKOmAUA_HsQ_0qsY(Unknown Source:0)
+	at androidx.benchmark.macro.MacrobenchmarkKt$$ExternalSyntheticLambda3.invoke(D8$$SyntheticClass:0)
+	at androidx.benchmark.macro.MacrobenchmarkPhaseKt.runPhase(MacrobenchmarkPhase.kt:99)
+	at androidx.benchmark.macro.MacrobenchmarkKt.macrobenchmark$lambda$6(Macrobenchmark.kt:271)
+	at androidx.benchmark.macro.MacrobenchmarkKt.$r8$lambda$xwXnT_b4vi-hCaLpXAO_soLs9-w(Unknown Source:0)
+	at androidx.benchmark.macro.MacrobenchmarkKt$$ExternalSyntheticLambda1.invoke(D8$$SyntheticClass:0)
+	at androidx.benchmark.macro.TraceProcessorExtensionsKt.runServer(TraceProcessorExtensions.kt:163)
+	at androidx.benchmark.macro.TraceProcessorExtensionsKt.runServer$default(TraceProcessorExtensions.kt:158)
+	at androidx.benchmark.macro.MacrobenchmarkKt.macrobenchmark(Macrobenchmark.kt:263)
+	at androidx.benchmark.macro.MacrobenchmarkKt.macrobenchmarkWithStartupMode(Macrobenchmark.kt:400)
+	at androidx.benchmark.macro.junit4.MacrobenchmarkRule.measureRepeated(MacrobenchmarkRule.kt:87)
+	at com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark.openEditorialTab(StartupMacrobenchmark.java:94)
+
+FAILURES!!!
+Tests run: 2,  Failures: 1
+
+
+INSTRUMENTATION_CODE: -1
