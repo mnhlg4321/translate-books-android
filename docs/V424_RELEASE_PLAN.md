@@ -61,3 +61,8 @@
 1. Phát hành gộp `v4.24.0` (khuyến nghị) hay tag v4.23.0 trước.
 2. Làm R0: dùng thật trên PC.
 3. Sau này: quyền push và merge ở R7.
+
+## 7. Quyết định của owner (2026-10-29)
+
+- Owner bấm "Duyệt gộp v4.24.0". Phát hành gộp `v4.24.0` cho điện thoại và PC. Checklist v4.22 và v4.23 sẽ đóng `SUPERSEDED` ở R6 và không có tag riêng.
+- R0 bắt đầu: owner dùng thật trên PC `4.24-pc-dev.9`. Quyền push và merge (R7) chưa được cấp.
