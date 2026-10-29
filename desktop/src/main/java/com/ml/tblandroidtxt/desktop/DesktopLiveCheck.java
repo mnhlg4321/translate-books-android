@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * <pre>
  *   --check-key            only test the saved key's shape (length and pattern) and exit
+ *   --volume [--run] ...   the whole-volume path (see DesktopLiveVolume): dry by default, one capped run with --run
  *   --run                  estimate, then (only when the key shape and the estimate pass) one real run with one pause/resume
  *   --input FILE  --output-dir DIR  --cap USD  --pause-seconds N   overrides (defaults below)
  * </pre>
@@ -26,6 +27,7 @@ public final class DesktopLiveCheck {
     private DesktopLiveCheck() {}
 
     public static void main(String[] args) throws Exception {
+        for (String arg : args) if (arg.equals("--volume")) { DesktopLiveVolume.run(args); return; }
         boolean run = false;
         boolean checkKey = false;
         Path input = Paths.get("D:\\P5E-builds\\qa-desktop\\in\\QA_raw.txt");
