@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-29 (+07:00). R0/R1 in progress: dev.9 installed on the owner PC, phone profile and library imported (counts equal), icon fix coded; real-chapter translation waits for an owner-typed amount; dev.10 build and install pending.
+- Updated: 2026-10-29 (+07:00). R0/R1: dev.10 installed over dev.9 (icon verified), phone library menu anchor fixed in source + test (APK not built yet), PC adopts the phone active Glossary/Pronoun after import. dev.11 and the APK build pending; real chapter run waits for an owner-typed amount.
 - Current version: v4.24 in development (PC shared core); phone `15e84958` runs **4.24-dev.5/code309**. Shipped release remains v4.21.0/code271; v4.23 is still open on feature/v4.23. P4 builds no APK and installs nothing.
 - Current branch: feature/v4.24 (worktree D:\P5E-builds\wt-v4.24)
 - Current commit: d10443c4 (implementation baseline before this snapshot commit)
@@ -10,4 +10,4 @@
 - Pending tasks: owner installs dev.9 and uses it on real data (phone export import with counts, one real chapter); v4.23/v4.24 release decision (phone APK and PC msi together); signing the msi (optional).
 - Known bugs/limits: schema upgrade v1-v29 NOT_MEASURED. The phone's prompt preview differs from the real prompt outside preset full (known issue, phone untouched). Sets do not travel in the library ZIP (by design, stated in the screens). Pronoun cell editing is NOT_DONE (read-only table plus raw text editor, section 14.2).
 - Regression status: clean archive of 9a62039d (coordinator): app 747/5 skip/0 fail, core 61, jdbc 3, desktop 58, golden 14/14, lint 0 errors; Editorial and golden diffs empty; app/src/main diff = the JobStatusText core move only.
-- Next action: clean-archive check, build 4.24-pc-dev.10, close the app and install it over dev.9, take the icon screenshot; real chapter run only after the owner types chapter and amount.
+- Next action: clean-archive check, build 4.24-pc-dev.11 and the phone APK (emulator check only), then the real chapter run only after the owner types chapter and amount.

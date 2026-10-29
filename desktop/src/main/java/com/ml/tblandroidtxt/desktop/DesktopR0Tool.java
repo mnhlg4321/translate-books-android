@@ -41,6 +41,7 @@ public final class DesktopR0Tool {
                             + " | will add glossary=" + lp.addGlossaries() + " pronoun=" + lp.addPronouns() + " raw=" + lp.addRaws()
                             + " | existing=" + lp.existing() + " duplicate=" + lp.duplicate() + " renamed=" + lp.renamed() + " bad=" + lp.bad());
                     boolean ok = lp.addedCount() == 0 || rt.applyLibrary(lp);
+                    if (lp.addedCount() == 0) System.out.println("active Glossary/Pronoun adopted from the ZIP: " + rt.adoptActive(lp));
                     System.out.println("library applied=" + ok);
                     counts(rt);
                     break;

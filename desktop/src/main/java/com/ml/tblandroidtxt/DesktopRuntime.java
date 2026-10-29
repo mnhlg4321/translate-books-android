@@ -745,9 +745,23 @@ public final class DesktopRuntime implements AutoCloseable {
             ok = PronounStoreCore.saveAll(pronounPrefs, all);
         }
         if (ok && !plan.addRaws.isEmpty()) raws.addEntries(plan.addRaws);
+        if (ok) adoptActive(preview);
         log.append("Library import: added glossaries=" + plan.addGlossaries.size() + ", pronouns=" + plan.addPronouns.size()
                 + ", raws=" + plan.addRaws.size() + ", existing=" + plan.existing + ", duplicate=" + plan.duplicate + ", bad=" + plan.bad.size());
         return ok;
+    }
+
+    /**
+     * A library ZIP records which Glossary and Pronoun were in use on the phone. When none is chosen on this PC yet, the recorded one (if it
+     * is now in the library) becomes the chosen one, so a first translation does not silently run without them. A choice already made is kept.
+     * Returns true when something was chosen.
+     */
+    public boolean adoptActive(LibraryPreview preview) {
+        boolean changed = false;
+        String g = preview.contents.activeGlossaryId, p = preview.contents.activePronounId;
+        if (selectedGlossaryId().isEmpty() && !g.isEmpty() && glossary(g) != null) { selectGlossary(g); changed = true; }
+        if (selectedPronounId().isEmpty() && !p.isEmpty() && pronoun(p) != null) { selectPronoun(p); changed = true; }
+        return changed;
     }
 
     /** Writes the whole library as the phone's ZIP and reads it back to check; returns {glossaries, pronouns, raws}. */

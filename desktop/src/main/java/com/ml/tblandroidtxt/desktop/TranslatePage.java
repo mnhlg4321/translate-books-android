@@ -340,7 +340,14 @@ final class TranslatePage {
         PronounStoreCore.Profile sp = runtime.pronoun(runtime.selectedPronounId());
         if (sg != null) g = sg.count();
         if (sp != null) r = sp.count();
-        appliedLabel.setText("Đã áp dụng: " + g + " mục Glossary · " + r + " quy tắc Pronoun");
+        String warn = "";
+        if (sg == null && !runtime.glossaries().isEmpty()) warn += "  ⚠ Chưa chọn Glossary (thư viện có " + runtime.glossaries().size() + "): bản dịch sẽ không dùng Glossary.";
+        if (sp == null && !runtime.pronouns().isEmpty()) warn += "  ⚠ Chưa chọn Pronoun (thư viện có " + runtime.pronouns().size() + "): bản dịch sẽ không dùng Pronoun.";
+        appliedLabel.setText("Đã áp dụng: " + g + " mục Glossary · " + r + " quy tắc Pronoun" + warn);
+        appliedLabel.getStyleClass().remove("warn");
+        if (!warn.isEmpty()) appliedLabel.getStyleClass().add("warn");
+        appliedLabel.setWrapText(true);
+        appliedLabel.setMinHeight(Region.USE_PREF_SIZE);
         loading = false;
     }
 

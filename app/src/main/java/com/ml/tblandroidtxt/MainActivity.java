@@ -1053,7 +1053,7 @@ public class MainActivity extends Activity {
         }
         tabScroll.addView(tabRow,new ViewGroup.LayoutParams(-2,dp(48)));
         nav.addView(tabScroll,new LinearLayout.LayoutParams(0,dp(56),1));
-        Button menu=secondaryButton("⋮",v->showLibraryMenu());menu.setContentDescription("Thao tác Thư viện");nav.addView(menu,new LinearLayout.LayoutParams(dp(48),dp(48)));
+        Button menu=secondaryButton("⋮",v->showLibraryMenu(v));menu.setContentDescription("Thao tác Thư viện");nav.addView(menu,new LinearLayout.LayoutParams(dp(48),dp(48)));
         root.addView(nav,new LinearLayout.LayoutParams(-1,dp(56)));
         View page="RAW".equals(selected)?new RawPageFactory(this).buildRawPage():"Glossaries".equals(selected)?buildGlossariesPage():"Pronouns".equals(selected)?buildPronounsPage():buildChapterSetsPage();
         root.addView(page,new LinearLayout.LayoutParams(-1,0,1));
@@ -1973,8 +1973,8 @@ public class MainActivity extends Activity {
     }
 
     /** Library-level actions stay in the overflow so the four content tabs remain equal-width. */
-    void showLibraryMenu() {
-        android.widget.PopupMenu menu = new android.widget.PopupMenu(this, findViewById(android.R.id.content));
+    void showLibraryMenu(View anchor) {
+        android.widget.PopupMenu menu = new android.widget.PopupMenu(this, anchor);
         menu.getMenu().add("Sao lưu thư viện").setOnMenuItemClickListener(item -> { exportLibrary(); return true; });
         menu.getMenu().add("Nhập thư viện").setOnMenuItemClickListener(item -> { importLibrary(); return true; });
         menu.show();
