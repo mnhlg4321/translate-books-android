@@ -23,7 +23,9 @@ public class PackagingScriptTest {
     @Test public void theInstallerVersionCanBeSetSoAReleaseCandidateStaysAboveTheDevelopmentInstalls() throws Exception {
         String s = script();
         assertTrue(s.contains("[string]$MsiVersion"));
-        assertTrue(s.contains("$appVersion = if ([string]::IsNullOrWhiteSpace($MsiVersion))"));
+        assertTrue(s.contains("Get-DesktopMsiVersion -Version $version"));
+        assertTrue(s.contains("Installer version rule"));
+        assertTrue(Files.exists(Paths.get("..", "scripts", "desktop-msi-version.ps1")));
     }
 
     @Test public void theReadmeTellsToCloseTheAppBeforeInstalling() throws Exception {

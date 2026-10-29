@@ -13,9 +13,8 @@ param(
     [switch]$Msi,
     [string]$WixHome,
 
-    # The three-part product version the installer registers. By default it is the first three numbers of the package version (4.24-pc-dev.11 is 4.24.11).
-    # A release candidate such as 4.24.0-rc.1 would give 4.24.0, which is lower than the 4.24.N development installs and equal to the final release, so
-    # Windows would refuse to install it over them: pass an explicit, higher number (the release plan uses 4.24.101 for rc.1).
+    # The three-part product version the installer registers; by default scripts/desktop-msi-version.ps1 maps the display version (4.24-pc-dev.11 -> 4.24.11,
+    # 4.24.0-rc.1 -> 4.24.101, 4.24.0 -> 4.24.200) so that each package is higher than the one before and installs over it.
     [ValidatePattern('^\d+\.\d+\.\d+$')]
     [string]$MsiVersion,
 
@@ -29,6 +28,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $repo = Split-Path -Parent $PSScriptRoot
+. (Join-Path $PSScriptRoot 'desktop-msi-version.ps1')
 if ([string]::IsNullOrWhiteSpace($JavaHome)) { $JavaHome = 'C:\Program Files\Android\Android Studio\jbr' }
 if (-not (Test-Path (Join-Path $JavaHome 'bin\java.exe'))) { throw "No java.exe under $JavaHome" }
 $env:JAVA_HOME = $JavaHome
@@ -138,6 +138,7 @@ Run ``TranslateBooks.cmd``. No Java installation is needed: the folder ``runtime
 - JavaFX unpacks its native DLLs into ``%USERPROFILE%\.openjfx\cache`` on first start and prints an "unnamed module" warning; both are expected.
 - Log timestamps follow the Windows locale (same formatter as the phone).
 - The database schema is the phone's version 30 (``translation-core-jdbc`` resource). If the phone schema changes, regenerate that file; a database at another version is refused.
+- Installer version rule: the .msi registers a three-part version that rises with every package (development 4.24-pc-dev.N is 4.24.N, release candidate 4.24.0-rc.N is 4.24.(100+N), release 4.24.P is 4.24.(200+P)); Windows installs a package over another only when this number is higher.
 - Close Translate Books (every window) before installing a newer .msi: installing over a running app stops with error 1603 (a file is in use) and can leave the old install removed. If that happens, close the app and run the .msi again; the data folder is never touched.
 - SmartScreen: the installer and the app are NOT code-signed, so Windows shows an "unknown publisher" warning; choose "More info" then "Run anyway".
 - The .msi installs per user (no administrator rights) into ``%LOCALAPPDATA%\TranslateBooksApp``; uninstalling never deletes ``%LOCALAPPDATA%\TranslateBooks``.
@@ -167,7 +168,7 @@ Built from commit $commit on $branch ($eventId).
         $numeric = ($version -replace '[^0-9.]', '.') -replace '\.+', '.'
         $parts = @($numeric.Trim('.').Split('.') | Select-Object -First 3)
         while ($parts.Count -lt 3) { $parts += '0' }
-        $appVersion = if ([string]::IsNullOrWhiteSpace($MsiVersion)) { $parts -join '.' } else { $MsiVersion }
+        $appVersion = if ([string]::IsNullOrWhiteSpace($MsiVersion)) { Get-DesktopMsiVersion -Version $version } else { $MsiVersion }
         # One folder level only: a nested install dir makes WiX ICE64 fail for the user-profile parent. Fixed upgrade GUID: a newer .msi replaces an older one. The install folder differs from the data folder on purpose
         # (data lives in %LOCALAPPDATA%\TranslateBooks and an uninstall never touches it).
         & $jpackage --type msi --name 'Translate Books' --app-version $appVersion --vendor 'Translate Books' `
