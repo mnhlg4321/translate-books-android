@@ -66,3 +66,8 @@
 
 - Owner bấm "Duyệt gộp v4.24.0". Phát hành gộp `v4.24.0` cho điện thoại và PC. Checklist v4.22 và v4.23 sẽ đóng `SUPERSEDED` ở R6 và không có tag riêng.
 - R0 bắt đầu: owner dùng thật trên PC `4.24-pc-dev.9`. Quyền push và merge (R7) chưa được cấp.
+
+## 8. R5: owner duyệt phát hành (2026-10-30)
+
+- Owner bấm "Duyệt phát hành" trong session điều phối, trả lời câu hỏi "Bạn duyệt phát hành v4.24.0 sau khi thử rc.1 không?" (button message: "duyệt phát hành v4.24.0 (R6: tag và lưu trữ; chưa push/merge)").
+- Quyền này cho R6: tag `v4.24.0` và lưu trữ. Không gồm R7 (merge vào `main`, push) và không gồm cài bản phát hành lên điện thoại; mỗi việc đó cần owner duyệt riêng.
