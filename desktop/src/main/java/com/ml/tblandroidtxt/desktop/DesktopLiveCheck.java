@@ -28,6 +28,7 @@ public final class DesktopLiveCheck {
 
     public static void main(String[] args) throws Exception {
         for (String arg : args) if (arg.equals("--volume")) { DesktopLiveVolume.run(args); return; }
+        for (String arg : args) if (arg.equals("--real-chapter")) { DesktopRealChapter.run(args); return; }
         boolean run = false;
         boolean checkKey = false;
         Path input = Paths.get("D:\\P5E-builds\\qa-desktop\\in\\QA_raw.txt");
