@@ -208,3 +208,12 @@ Không có ca sai/sót theo phân xử mới cần truy vết thêm. Điều đ�
   - tách lõi dịch Java dùng chung; app PC viết bằng JavaFX;
   - làm trên `feature/v4.24`, bắt đầu bằng P0a (test prompt vàng, không đổi mã app);
   - P0b trở đi đổi cấu trúc mã điện thoại, chờ v4.23 chốt.
+
+- **2026-10-30, phát hành v4.24.0 (điện thoại + PC, gộp v4.22 và v4.23):**
+  - tag `v4.24.0` trên `a9e92b36`, build từ `e176d23f`;
+  - APK code 313, PC `TranslateBooks-PC-4.24.0.msi` (ProductVersion 4.24.200);
+  - bằng chứng ở `artifacts/releases/v4.24.0/` và `backup/v4.24.0/`;
+  - owner cho phép R7: `main` fast-forward lên `feature/v4.24` rồi push cùng tag;
+  - điện thoại vẫn chạy `4.24.0-rc.1`/311, cùng mã ứng dụng với bản phát hành; cài APK phát hành cần owner gõ "duyệt cài";
+  - Biên tập vẫn đóng băng;
+  - chất lượng dịch dùng prompt v18; đo offline 5 chỉ số sau khi dịch xong tập thật tiếp theo.
