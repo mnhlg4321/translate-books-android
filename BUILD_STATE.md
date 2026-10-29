@@ -1,11 +1,15 @@
 # Build State
 
-## Current state — 2026-10-30 (v4.24.0 release in progress; R6)
+## Current state — 2026-10-30 (v4.24.0 released locally: tag `v4.24.0`, archived; not merged, not pushed)
 
-- Release commit = `feature/v4.24` HEAD at the time of the tag; phone APK 4.24.0 (versionCode above 311) and PC 4.24.0 (msi ProductVersion 4.24.200) are built from it. Final hashes and archive paths are recorded below once the tag exists.
-- RC 4.24.0-rc.1: commit `162b96f2`, APK code311 SHA-256 B923583036BB823DB9EBFE6D149D979FE3ECFB550D94A4D4FAA9564A2186B5A8; PC msi 4.24.101 SHA-256 E9C50F4698053D9DCF8F12DAABC70EC248E4782924EAE71B65B42D71703AFFD8. Installed on phone 15e84958 (owner approval) and on the PC over dev.11. QA in `artifacts/qa/v4.24.0-rc1/QA_REPORT.md`.
-- v4.22 and v4.23 are SUPERSEDED by v4.24.0 (their checklists keep their evidence). Previous states below are historical.
-- Next action: finish R6 (tag, archive, fast-forward); R7 publish needs the owner.
+- Tag `v4.24.0` (annotated, object 0dc0a7ad885eb1ee2667ad250a00a47fe3aaebaf) on commit `a9e92b36ec99518cdb9cd7336a9bbc94b212584a` (docs-only on top of the build commit `e176d23f70ac51493982b28b46d315551d7d9379`; production inputs identical, archive helper `-ProductionGitRef e176d23f`).
+- Phone APK **4.24.0 / versionCode 313**, SHA-256 4ABB5FF113F2446394E6F3300D355AEF13C29C586884976D27F152D268E2C3EF, built with `scripts/build-and-save.ps1 -ExactReleaseVersion 4.24.0` on `feature/v4.24.0` (event `build-20261030-064042`). Debuggable build, like the RC and v4.21.0. NOT installed on the real phone (phone runs RC 4.24.0-rc.1/code311).
+- PC **4.24.0**, zip SHA-256 78829A33B723385A8DD76A2A2575730A2B8A184A7C0D271A50EF06CC69467417, msi SHA-256 CF31D304B58C4AA35DE35F04B9290B151729EF1DA07579D5AA54B197D8BE559D, ProductVersion **4.24.200** (above RC 4.24.101), built with `scripts/build-desktop.ps1 -ExactReleaseVersion 4.24.0 -Msi` (event `build-20261030-064109`), unsigned msi. Same commit as the APK in both BUILD_INFO files.
+- Unused builds kept as traces: APK `4.24.0`/code312 (`build-20261030-063604`) and PC `4.24.0.1` (msi ProductVersion 4.24.0, below RC), both from the commit before `e176d23f`.
+- Checks on the exact build commit: app 749/5 skip/0 fail, core 61, jdbc 3, desktop 70, golden 14/14 twice, lint 0 errors, androidTest compile PASS. msi 4.24.200 installed over RC 4.24.101: exit 0, 27/27 data files identical, smoke start OK. RC evidence (production inputs identical): emulator instrumented 314 tests / 251 pass / 37 skip / 26 fail (22 pre-existing, 4 not run on baseline), Macrobenchmark and Perfetto, A/B vs v4.21.0 no regression. Reports: `artifacts/qa/v4.24.0/QA_REPORT.md`, `artifacts/qa/v4.24.0-rc1/QA_REPORT.md`.
+- Archives: `artifacts/releases/v4.24.0/build-20261030-064653` and `backup/v4.24.0/build-20261030-064653`; tag event `tag-v4.24.0` in the same two roots.
+- Limits: Editorial frozen; msi unsigned; APK debuggable; Tập not in the library ZIP; PC schema v1-v29 upgrade, real-phone performance and the release APK on a real phone NOT_MEASURED.
+- Next action: R7 (merge to `main`, push branch and tag) needs the owner. v4.22 and v4.23 checklists are SUPERSEDED by v4.24.0.
 
 ## Current state — 2026-10-22 (dev.21: readable tracking UI; clean-source build and isolated-emulator QA)
 
