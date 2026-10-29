@@ -1,5 +1,12 @@
 # Build State
 
+## Current state — 2026-10-30 (v4.24.0 release in progress; R6)
+
+- Release commit = `feature/v4.24` HEAD at the time of the tag; phone APK 4.24.0 (versionCode above 311) and PC 4.24.0 (msi ProductVersion 4.24.200) are built from it. Final hashes and archive paths are recorded below once the tag exists.
+- RC 4.24.0-rc.1: commit `162b96f2`, APK code311 SHA-256 B923583036BB823DB9EBFE6D149D979FE3ECFB550D94A4D4FAA9564A2186B5A8; PC msi 4.24.101 SHA-256 E9C50F4698053D9DCF8F12DAABC70EC248E4782924EAE71B65B42D71703AFFD8. Installed on phone 15e84958 (owner approval) and on the PC over dev.11. QA in `artifacts/qa/v4.24.0-rc1/QA_REPORT.md`.
+- v4.22 and v4.23 are SUPERSEDED by v4.24.0 (their checklists keep their evidence). Previous states below are historical.
+- Next action: finish R6 (tag, archive, fast-forward); R7 publish needs the owner.
+
 ## Current state — 2026-10-22 (dev.21: readable tracking UI; clean-source build and isolated-emulator QA)
 
 - Product decision: readable labels/explicit seconds, visible status and usable preview. Baseline54ef672d; implementation6b28f2bc plus compile repair4849de19. Latest test-only source deb5846a0f4891320328be2a217ca6168f1b1125; main/engine/scripts identical to production4849de19. v4.18 checkout/owner media untouched.

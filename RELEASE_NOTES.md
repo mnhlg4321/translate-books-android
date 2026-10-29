@@ -1,3 +1,29 @@
+# Translate Books 4.24.0 Release Notes
+
+Status: release 4.24.0 (phone APK and PC package from one commit). Owner sign-off R5 recorded in `docs/V424_RELEASE_PLAN.md` section 8. Not merged to `main` and not pushed until R7.
+Branch: feature/v4.24 (release build on the short-lived `feature/v4.24.0`, as v4.21.0 did).
+
+## 4.24.0 changes
+
+- Shared translation core: storage, the run loop and chapter-set planning moved into `translation-core` (plain Java, JDBC); the phone app and the new PC app use the same code. Golden outputs unchanged (14/14).
+- New PC app (Windows, JavaFX, per-user `.msi`, jlink runtime): RAW, Glossary, Pronoun, Tập, Dịch, Công việc, Cài đặt, import/export of the phone library ZIP and settings profile, confirmation before any spend.
+- Library, Tập (chapter sets) and per-chapter translation from v4.23, with the readable run tracking screen.
+- Fix: phone Library ⋮ menu opened with zero height on the real phone; it is now anchored to the tapped button (source test blocks the old anchor).
+- Installer ProductVersion rule: display `rc.N` = `4.24.(100+N)`, release `4.24.P` = `4.24.(200+P)`; so 4.24.0 installs as 4.24.200 over RC 4.24.101.
+
+## 4.24.0 known limitations
+
+- Biên tập (Editorial) stays frozen on both apps; the PC app has no Editorial.
+- The `.msi` is not code-signed; SmartScreen will warn.
+- The phone APK is a debuggable build, same flavour as the RC and v4.21.0.
+- Tập (chapter sets) do not travel in the library ZIP between phone and PC.
+- Pronoun on the PC is edited as text, not per cell.
+- Schema upgrade v1-v29 on the PC is NOT_MEASURED; the PC only uses schema v30.
+- Translation quality uses the phone's prompt v18; not re-measured on a real book translated by the PC.
+- Emulator cold start 3.2-4.8 s (same range as v4.21.0 in the same emulator state); real-phone performance NOT_MEASURED.
+
+---
+
 # Translate Books 4.21.0 Release Notes
 
 Status: release candidate preparation; owner approved tag/merge when every condition in docs/V421_E_RELEASE_WORK_REQUEST.md section4 passes.

@@ -2,6 +2,14 @@
 
 All notable changes to Translate Books are recorded in this file. The repository was normalized to Git on 2026-07-17 without feature changes or rollback. The v4.7 source baseline is commit `da8c6d9a9001296c3f3c17817ea3d6372fd59ae3` on branch `main`.
 
+## [4.24.0] - 2026-10-30
+
+- Move storage, the run loop and chapter-set planning into the shared `translation-core`; add the Windows PC app on it (RAW, Glossary, Pronoun, Tập, Dịch, Công việc, Cài đặt, library ZIP and profile import/export, spend confirmation).
+- Include the v4.23 Library, Tập and per-chapter translation work and the readable run tracking screen.
+- Fix the phone Library ⋮ menu anchor (zero-height popup on the real phone).
+- Installer ProductVersion mapping for the PC package (release 4.24.P = 4.24.(200+P)).
+- Limits: Editorial frozen; msi unsigned; APK debuggable; Tập not in the library ZIP; PC schema v1-v29 upgrade NOT_MEASURED.
+
 ## [4.21.0] - 2026-10-14 (release candidate preparation)
 
 - Restore RAW quotation pairs `〝〟`, `「」`, `『』`, full-width colon `：` and
