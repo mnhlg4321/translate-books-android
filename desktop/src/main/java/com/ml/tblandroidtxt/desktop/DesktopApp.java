@@ -138,6 +138,7 @@ public final class DesktopApp extends Application {
         scene.getStylesheets().add(getClass().getResource("/desktop/app.css").toExternalForm());
         applyAppearance(DesktopAppearance.load(runtime.appearancePrefs()));
         primary.setTitle("Translate Books");
+        primary.getIcons().setAll(DesktopIcons.load());
         primary.setScene(scene);
         restoreWindow(primary);
         primary.setOnCloseRequest(e -> { if (!confirmLeaveAll()) { e.consume(); return; } saveWindow(primary); if (rawPage != null) rawPage.settle(); runtime.close(); releaseInstanceLock(); });
@@ -674,6 +675,11 @@ public final class DesktopApp extends Application {
         pane.getStyleClass().addAll(appearance.rootClasses());
         pane.getStyleClass().add("tbl-dialog");
         if (dialog.getOwner() == null && stage != null) dialog.initOwner(stage);
+        dialog.setOnShowing(e -> {
+            if (dialog.getDialogPane().getScene() != null && dialog.getDialogPane().getScene().getWindow() instanceof Stage) {
+                ((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().setAll(DesktopIcons.load());
+            }
+        });
     }
 
     <T> Optional<T> showDialog(javafx.scene.control.Dialog<T> dialog) {

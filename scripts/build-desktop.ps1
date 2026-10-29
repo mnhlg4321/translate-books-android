@@ -132,6 +132,7 @@ Run ``TranslateBooks.cmd``. No Java installation is needed: the folder ``runtime
 - JavaFX unpacks its native DLLs into ``%USERPROFILE%\.openjfx\cache`` on first start and prints an "unnamed module" warning; both are expected.
 - Log timestamps follow the Windows locale (same formatter as the phone).
 - The database schema is the phone's version 30 (``translation-core-jdbc`` resource). If the phone schema changes, regenerate that file; a database at another version is refused.
+- Close Translate Books (every window) before installing a newer .msi: installing over a running app stops with error 1603 (a file is in use) and can leave the old install removed. If that happens, close the app and run the .msi again; the data folder is never touched.
 - SmartScreen: the installer and the app are NOT code-signed, so Windows shows an "unknown publisher" warning; choose "More info" then "Run anyway".
 - The .msi installs per user (no administrator rights) into ``%LOCALAPPDATA%\TranslateBooksApp``; uninstalling never deletes ``%LOCALAPPDATA%\TranslateBooks``.
 - Building needs the Android SDK (the shared core compiles against android.jar for org.json).
@@ -166,7 +167,7 @@ Built from commit $commit on $branch ($eventId).
         & $jpackage --type msi --name 'Translate Books' --app-version $appVersion --vendor 'Translate Books' `
             --input (Join-Path $stage 'lib') --main-jar desktop.jar --main-class com.ml.tblandroidtxt.desktop.DesktopLauncher `
             --runtime-image $runtimeDir --dest $msiOut --win-menu --win-menu-group 'Translate Books' --win-shortcut `
-            --win-per-user-install --install-dir 'TranslateBooksApp' --win-upgrade-uuid '3f2c7a1e-5b8d-4c6e-9a41-7d2e8b0c5f13' `
+            --icon (Join-Path $repo 'desktop\packaging\translate_books.ico') --win-per-user-install --install-dir 'TranslateBooksApp' --win-upgrade-uuid '3f2c7a1e-5b8d-4c6e-9a41-7d2e8b0c5f13' `
             --description 'Translate Books for Windows (unsigned development build)'
         if ($LASTEXITCODE -ne 0) { throw "jpackage failed ($LASTEXITCODE)" }
         $built = Get-ChildItem -Path $msiOut -Filter '*.msi' | Select-Object -First 1
