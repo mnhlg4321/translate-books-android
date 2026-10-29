@@ -117,6 +117,49 @@ try {
     Expect-Refused 'checklist for another version' (Invoke-Archive 'build-20261012-160000' (New-Checklist -CheckedThrough 9 -ChecklistVersion 'v9.9.8')) 'does not match expected version'
     if (Test-Path (Join-Path $work "artifacts\releases\v$version\build-20261012-160000")) { $failures.Add('wrong-version checklist left a payload') }
 
+    # desktop package: stored under pc/ in both archives, checked against the commit and its own hashes; every case above ran without it
+    $headForPc = Get-GitOutput @('rev-parse', 'HEAD')
+    function New-PcPackage {
+        param([string]$Name, [string]$Commit, [switch]$BadHash, [switch]$NoMsi)
+        $dir = Join-Path $work "in\$Name"
+        New-Item -ItemType Directory -Force $dir | Out-Null
+        $zip = Join-Path $dir 'TranslateBooks-PC-9.9.9.zip'
+        $msi = Join-Path $dir 'TranslateBooks-PC-9.9.9.msi'
+        [IO.File]::WriteAllText($zip, "synthetic pc zip $Name", (New-Object Text.UTF8Encoding $false))
+        if (-not $NoMsi) { [IO.File]::WriteAllText($msi, "synthetic pc msi $Name", (New-Object Text.UTF8Encoding $false)) }
+        $zipHash = (Get-FileHash $zip -Algorithm SHA256).Hash
+        $msiHash = if ($NoMsi) { 'A' * 64 } else { (Get-FileHash $msi -Algorithm SHA256).Hash }
+        if ($BadHash) { $msiHash = 'B' * 64 }
+        $info = [ordered]@{ version = '9.9.9-pc'; commit = $Commit; packageSha256 = $zipHash; msiSha256 = $msiHash }
+        [IO.File]::WriteAllText((Join-Path $dir 'BUILD_INFO.json'), ($info | ConvertTo-Json), (New-Object Text.UTF8Encoding $false))
+        [IO.File]::WriteAllText((Join-Path $dir 'SHA256SUMS.txt'), "$zipHash  TranslateBooks-PC-9.9.9.zip`n$msiHash  TranslateBooks-PC-9.9.9.msi`n", (New-Object Text.UTF8Encoding $false))
+        $dir
+    }
+    $pcGood = New-PcPackage 'pcgood' $headForPc
+    $pcEvent = 'build-20261012-171500'
+    Expect-Archived 'PC package with the archived commit' (Invoke-Archive $pcEvent $upTo9 -Extra @('-PcPackageDirectory', $pcGood)) $pcEvent
+    foreach ($root in 'artifacts\releases', 'backup') {
+        $pcDir = Join-Path $work "$root\v$version\$pcEvent\pc"
+        foreach ($f in 'TranslateBooks-PC-9.9.9.zip', 'TranslateBooks-PC-9.9.9.msi', 'BUILD_INFO.json', 'SHA256SUMS.txt') {
+            if (-not (Test-Path (Join-Path $pcDir $f))) { $failures.Add("PC package: $f missing under pc/ in $root") }
+        }
+    }
+    $pcArtifact = Join-Path $work "artifacts\releases\v$version\$pcEvent"
+    if ((Get-Content -Raw (Join-Path $pcArtifact 'ARCHIVE_MANIFEST.md')) -notmatch [regex]::Escape($headForPc)) { $failures.Add('PC package: manifest does not name the PC commit') }
+    if ((Get-Content -Raw (Join-Path $pcArtifact 'SHA256SUMS.txt')) -notmatch 'pc/TranslateBooks-PC-9.9.9.msi') { $failures.Add('PC package: msi not covered by the checksum manifest') }
+    $pcOther = New-PcPackage 'pcother' ('0' * 40)
+    Expect-Refused 'PC package built from another commit' (Invoke-Archive 'build-20261012-171600' $upTo9 -Extra @('-PcPackageDirectory', $pcOther)) 'PC package was built from'
+    $pcBad = New-PcPackage 'pcbad' $headForPc -BadHash
+    Expect-Refused 'PC msi hash differs from BUILD_INFO' (Invoke-Archive 'build-20261012-171700' $upTo9 -Extra @('-PcPackageDirectory', $pcBad)) 'msi SHA-256 does not match'
+    $pcNoMsi = New-PcPackage 'pcnomsi' $headForPc -NoMsi
+    Expect-Refused 'PC package without an msi' (Invoke-Archive 'build-20261012-171800' $upTo9 -Extra @('-PcPackageDirectory', $pcNoMsi)) 'exactly one TranslateBooks-PC'
+    Expect-Refused 'missing PC package folder' (Invoke-Archive 'build-20261012-171900' $upTo9 -Extra @('-PcPackageDirectory', (Join-Path $work 'in\absent-pc'))) 'Missing PC package folder'
+    foreach ($left in 'build-20261012-171600', 'build-20261012-171700', 'build-20261012-171800', 'build-20261012-171900') {
+        foreach ($root in 'artifacts\releases', 'backup') {
+            if (Test-Path (Join-Path $work "$root\v$version\$left")) { $failures.Add("refused PC event $left left a payload in $root") }
+        }
+    }
+
     # reused APK: production commit is c1, the archived QA source is a later commit that only touches docs
     $production = Get-GitOutput @('rev-parse', 'HEAD')
     $productionShort = $production.Substring(0, 12)

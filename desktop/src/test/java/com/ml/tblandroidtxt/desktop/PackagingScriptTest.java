@@ -20,6 +20,12 @@ public class PackagingScriptTest {
         assertTrue(Files.exists(Paths.get("packaging", "translate_books.ico")));
     }
 
+    @Test public void theInstallerVersionCanBeSetSoAReleaseCandidateStaysAboveTheDevelopmentInstalls() throws Exception {
+        String s = script();
+        assertTrue(s.contains("[string]$MsiVersion"));
+        assertTrue(s.contains("$appVersion = if ([string]::IsNullOrWhiteSpace($MsiVersion))"));
+    }
+
     @Test public void theReadmeTellsToCloseTheAppBeforeInstalling() throws Exception {
         String s = script();
         assertTrue(s.contains("Close Translate Books (every window) before installing a newer .msi"));

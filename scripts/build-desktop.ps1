@@ -13,6 +13,12 @@ param(
     [switch]$Msi,
     [string]$WixHome,
 
+    # The three-part product version the installer registers. By default it is the first three numbers of the package version (4.24-pc-dev.11 is 4.24.11).
+    # A release candidate such as 4.24.0-rc.1 would give 4.24.0, which is lower than the 4.24.N development installs and equal to the final release, so
+    # Windows would refuse to install it over them: pass an explicit, higher number (the release plan uses 4.24.101 for rc.1).
+    [ValidatePattern('^\d+\.\d+\.\d+$')]
+    [string]$MsiVersion,
+
     # Dirty working trees are refused so the retained source ZIP is exactly the built commit.
     [switch]$AllowDirty
 )
@@ -161,7 +167,7 @@ Built from commit $commit on $branch ($eventId).
         $numeric = ($version -replace '[^0-9.]', '.') -replace '\.+', '.'
         $parts = @($numeric.Trim('.').Split('.') | Select-Object -First 3)
         while ($parts.Count -lt 3) { $parts += '0' }
-        $appVersion = $parts -join '.'
+        $appVersion = if ([string]::IsNullOrWhiteSpace($MsiVersion)) { $parts -join '.' } else { $MsiVersion }
         # One folder level only: a nested install dir makes WiX ICE64 fail for the user-profile parent. Fixed upgrade GUID: a newer .msi replaces an older one. The install folder differs from the data folder on purpose
         # (data lives in %LOCALAPPDATA%\TranslateBooks and an uninstall never touches it).
         & $jpackage --type msi --name 'Translate Books' --app-version $appVersion --vendor 'Translate Books' `
