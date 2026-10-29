@@ -1,0 +1,20 @@
+Success
+Success
+/sdcard/Android/media/com.ml.tblandroidtxt.macrobenchmark/./: 7 files pulled, 0 skipped. 59.2 MB/s (28765857 bytes in 0.463s)
+v421 round 1: median=4453.1401 min=3686.2584 
+Success
+/sdcard/Android/media/com.ml.tblandroidtxt.macrobenchmark/./: 7 files pulled, 0 skipped. 45.9 MB/s (27086412 bytes in 0.562s)
+rc round 1: median=3790.7357 min=3129.1264 
+Success
+/sdcard/Android/media/com.ml.tblandroidtxt.macrobenchmark/./: 7 files pulled, 0 skipped. 48.7 MB/s (28018209 bytes in 0.548s)
+v421 round 2: median=4803.0784 min=4038.8472 
+Success
+/sdcard/Android/media/com.ml.tblandroidtxt.macrobenchmark/./: 7 files pulled, 0 skipped. 52.4 MB/s (28202798 bytes in 0.513s)
+rc round 2: median=4076.2284 min=3835.6443 
+Success
+/sdcard/Android/media/com.ml.tblandroidtxt.macrobenchmark/./: 7 files pulled, 0 skipped. 24.2 MB/s (28572505 bytes in 1.127s)
+v421 round 3: median=3535.2551 min=3312.715 
+Success
+/sdcard/Android/media/com.ml.tblandroidtxt.macrobenchmark/./: 7 files pulled, 0 skipped. 95.6 MB/s (27889634 bytes in 0.278s)
+rc round 3: median=3603.4214 min=2628.6802 
+AB_DONE

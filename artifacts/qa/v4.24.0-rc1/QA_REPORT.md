@@ -75,6 +75,12 @@ Kết luận: khởi động nguội của RC nằm trong dao động của nề
 - Trace của các lần chạy 1 và 2 và của nền bị lần chạy sau ghi đè trên thiết bị; chỉ trace của lần 3 được lưu. Hai bộ trace nền/lần 1-2 không có (số trung vị vẫn nằm trong đầu ra văn bản). Trace nền không lưu để giữ kích thước commit.
 - `openEditorialTab` thất bại: "The Biên tập tab was not found on the main screen" — kịch bản macrobenchmark cũ sau khi v4.23 đổi điều hướng; **có sẵn từ v4.23**, không sửa trong bản này (không tính năng mới).
 
+### A/B khởi động nguội cùng trạng thái emulator (2026-10-29, $0)
+
+- Biến thể benchmark của tag v4.21.0 (commit 54936850) và của RC (nguồn 162b96f2 trong test worktree bbcb9faf), cùng một macrobenchmark APK (SHA-256 15a9e5a4... giống nhau ở cả hai), cài mới (gỡ rồi cài) trước mỗi lần, chạy xen kẽ v4.21, RC, 3 vòng, mỗi vòng 5 lần `StartupMacrobenchmark#coldStartup` trên emulator-5554. Đầu ra gốc và `ab.sh` ở `artifacts/qa/v4.24.0-rc1/performance-ab/`; trace Perfetto (170 MB) để ngoài Git ở `D:\P5E-builds\qa-rc1b-traces\`.
+- Trung vị timeToInitialDisplay (ms): v4.21: 4453.1 / 4803.1 / 3535.3; RC: 3790.7 / 4076.2 / 3603.4. Nhỏ nhất: v4.21 3686.3 / 4038.8 / 3312.7; RC 3129.1 / 3835.6 / 2628.7.
+- Kết luận: RC không chậm hơn v4.21 trong cùng trạng thái (RC thấp hơn ở 2/3 vòng, ngang ở vòng 3; dao động giữa các vòng 3535-4803 ms lớn hơn khác biệt giữa hai bản). Con số ≈0,86 s của v4.21 là do trạng thái emulator lúc đó, không phải mã. Không có hồi quy khởi động nguội để chia đôi; câu hỏi đóng. Giới hạn: emulator, không phải điện thoại thật.
+
 ## 5. Ảnh chụp và video
 
 - Điện thoại (emulator, APK RC code 311, dữ liệu trống, không có văn bản sách): `screenshots-phone/01-home.png`, `02-tap-mode.png`, `03-menu.png` (menu có logo, thanh Dịch/Công việc/Biên tập/Thư viện), `04-settings-edit.png`.
