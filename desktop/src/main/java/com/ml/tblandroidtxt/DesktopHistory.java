@@ -133,7 +133,7 @@ public final class DesktopHistory {
                 shownSessions.add(run.sessionId);
                 List<TranslationRepositoryCore.JobSummary> chapters = new ArrayList<>();
                 for (RunGroups.Entry e : run.chapters) chapters.add(e.job);
-                String status = isDone ? "Hoàn tất" : run.failed > 0 ? "Có chương lỗi" : "Chưa xong";
+                String status = isDone ? "Xong" : run.failed > 0 ? "Có chương lỗi" : "Chưa xong";
                 String progress = run.done + "/" + run.chapterCount + " chương xong" + (run.failed > 0 ? " · " + run.failed + " lỗi" : "");
                 String title = (run.setName == null || run.setName.isEmpty() ? "Lượt dịch cả tập" : run.setName) + " · " + run.chapterCount + " chương";
                 out.add(new Entry(true, run.sessionId, title, status, progress, cost(run.usage), run.lastUpdated, chapters));

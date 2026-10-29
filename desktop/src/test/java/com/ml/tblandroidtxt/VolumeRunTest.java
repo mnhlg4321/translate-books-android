@@ -238,7 +238,7 @@ public class VolumeRunTest {
             DesktopHistory.Entry run = null, single = null;
             for (DesktopHistory.Entry e : page.entries) { if (e.run) run = e; else single = e; }
             assertEquals(3, run.jobs.size());
-            assertEquals("Hoàn tất", run.statusText);
+            assertEquals("Xong", run.statusText);
             assertTrue(run.progressText, run.progressText.startsWith("3/3 chương xong"));
             assertEquals(1, single.jobs.size());
             assertEquals(1, shown.size());

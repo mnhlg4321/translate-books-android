@@ -44,7 +44,7 @@ final class ChoiceDialog {
         note.setMinHeight(Region.USE_PREF_SIZE);
         d.getDialogPane().setContent(new VBox(8, note, list));
         ButtonType ok = new ButtonType("Xong", ButtonBar.ButtonData.OK_DONE);
-        d.getDialogPane().getButtonTypes().addAll(ok, ButtonType.CANCEL);
+        d.getDialogPane().getButtonTypes().addAll(ok, new ButtonType("Hủy", ButtonBar.ButtonData.CANCEL_CLOSE));
         Optional<ButtonType> r = app.showDialog(d);
         if (!r.isPresent() || r.get() != ok) return Optional.empty();
         List<String> ids = new ArrayList<>();

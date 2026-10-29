@@ -57,7 +57,7 @@ final class HistoryPanel {
 
     private Node build() {
         filter.getItems().add(new String[]{DesktopHistory.ALL, "Tất cả"});
-        filter.getItems().add(new String[]{DesktopHistory.DONE, "Hoàn tất"});
+        filter.getItems().add(new String[]{DesktopHistory.DONE, "Xong"});
         filter.getItems().add(new String[]{DesktopHistory.FAILED, "Có lỗi"});
         filter.getItems().add(new String[]{DesktopHistory.UNFINISHED, "Chưa xong"});
         filter.setConverter(new javafx.util.StringConverter<String[]>() {

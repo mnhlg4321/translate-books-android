@@ -147,6 +147,7 @@ public final class DesktopApp extends Application {
         refreshJobs();
         updateControls();
         primary.show();
+        Platform.runLater(() -> { ToggleButton sel = navButtons.get(currentKey); if (sel != null) sel.requestFocus(); });
 
         String shots = System.getenv("TBL_SCREENSHOT_DIR");
         if (shots != null && !shots.trim().isEmpty()) new Screenshots(this, Path.of(shots.trim())).run();
@@ -202,6 +203,8 @@ public final class DesktopApp extends Application {
         fixWrapped(pages.get(key));
         for (java.util.Map.Entry<String, Node> e : pages.entrySet()) e.getValue().setVisible(e.getKey().equals(key));
         navButtons.get(key).setSelected(true);
+        javafx.scene.Node owner = scene == null ? null : scene.getFocusOwner();
+        if (owner != null && owner != navButtons.get(key) && navButtons.containsValue(owner)) navButtons.get(key).requestFocus();
         NavModel.remember(runtime.appearancePrefs(), key);
         if (key.equals(NavModel.VOLUME)) volumePage.refreshRaw();
         if (key.equals(NavModel.JOBS)) refreshJobs();
@@ -611,7 +614,7 @@ public final class DesktopApp extends Application {
     private static String statusText(RunSnapshot s) {
         switch (s.status) {
             case "paused": return "Đã tạm dừng";
-            case "done": return "Hoàn tất";
+            case "done": return "Xong";
             case "error": return "Lỗi";
             case "cancelled": return "Đã hủy";
             case "stopping": return "Đang dừng…";
@@ -647,6 +650,23 @@ public final class DesktopApp extends Application {
     void setDialogProbe(java.util.function.Consumer<javafx.scene.control.Dialog<?>> probe) { this.dialogProbe = probe; }
 
     /** A dialog is its own window, so it gets the stylesheet, the palette variables, the text size and the classes of the main window. */
+    /** Any stock button a dialog still carries (OK, Cancel, Close, Yes, No, Apply, Finish) is shown in Vietnamese. */
+    private static void vietnameseButtons(javafx.scene.control.Dialog<?> dialog) {
+        javafx.scene.control.DialogPane pane = dialog.getDialogPane();
+        for (ButtonType bt : pane.getButtonTypes()) {
+            String text = null;
+            if (bt == ButtonType.OK) text = "Đồng ý";
+            else if (bt == ButtonType.CANCEL) text = "Hủy";
+            else if (bt == ButtonType.CLOSE) text = "Đóng";
+            else if (bt == ButtonType.YES) text = "Có";
+            else if (bt == ButtonType.NO) text = "Không";
+            else if (bt == ButtonType.APPLY) text = "Áp dụng";
+            else if (bt == ButtonType.FINISH) text = "Xong";
+            Node b = pane.lookupButton(bt);
+            if (text != null && b instanceof Button) ((Button) b).setText(text);
+        }
+    }
+
     private void styleDialog(javafx.scene.control.Dialog<?> dialog) {
         javafx.scene.control.DialogPane pane = dialog.getDialogPane();
         pane.getStylesheets().setAll(scene.getStylesheets());
@@ -658,6 +678,7 @@ public final class DesktopApp extends Application {
 
     <T> Optional<T> showDialog(javafx.scene.control.Dialog<T> dialog) {
         styleDialog(dialog);
+        vietnameseButtons(dialog);
         if (dialogProbe != null) {
             dialog.show();
             dialogProbe.accept(dialog);
@@ -702,7 +723,7 @@ public final class DesktopApp extends Application {
         area.setPrefSize(640, 360);
         d.getDialogPane().setContent(area);
         ButtonType copy = new ButtonType("Sao chép", javafx.scene.control.ButtonBar.ButtonData.LEFT);
-        d.getDialogPane().getButtonTypes().addAll(copy, ButtonType.CLOSE);
+        d.getDialogPane().getButtonTypes().addAll(copy, new ButtonType("Đóng", javafx.scene.control.ButtonBar.ButtonData.CANCEL_CLOSE));
         d.getDialogPane().lookupButton(copy).addEventFilter(javafx.event.ActionEvent.ACTION, ev -> {
             javafx.scene.input.ClipboardContent c = new javafx.scene.input.ClipboardContent();
             c.putString(text);

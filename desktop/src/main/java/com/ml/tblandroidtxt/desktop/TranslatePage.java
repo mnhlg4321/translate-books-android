@@ -396,76 +396,27 @@ final class TranslatePage {
 
     void showPromptPreview() {
         if (rawFile == null) { say("Chọn tệp RAW trước.", true); return; }
-        Dialog<ButtonType> d = new Dialog<>();
-        d.setTitle("Xem trước prompt");
-        d.setHeaderText("Prompt sẽ gửi cho từng chunk (chưa gọi provider)");
-        ComboBox<Integer> pick = new ComboBox<>();
-        TextArea system = readOnly(), user = readOnly(), matched = readOnly();
-        system.setPrefRowCount(6);
-        user.setPrefRowCount(8);
-        matched.setPrefRowCount(5);
-        Label info = new Label();
-        info.setWrapText(true);
-        info.getStyleClass().add("muted");
-        final String[] copy = {""};
-        Runnable load = () -> {
-            Integer i = pick.getValue();
-            if (i == null) return;
-            try {
-                String previous = "";
-                if (i > 0 && runtime.lastJobId() > 0) {
-                    List<TranslationRepositoryCore.ChunkRow> rows = runtime.chunkRows(runtime.lastJobId());
-                    if (i - 1 < rows.size() && rows.get(i - 1).translated != null) previous = rows.get(i - 1).translated;
-                }
-                DesktopPromptPreview.Result r = runtime.previewPrompt(rawFile, app.currentSettings(), i, previous);
-                system.setText(r.system);
-                user.setText(r.user);
-                StringBuilder m = new StringBuilder("Glossary khớp chunk này (" + r.glossaryLines.size() + "):\n");
-                for (String line : r.glossaryLines) m.append("  ").append(line).append('\n');
-                m.append("Pronoun khớp chunk này (").append(r.pronounLines.size()).append("):\n");
-                for (String line : r.pronounLines) m.append("  ").append(line).append('\n');
-                matched.setText(m.toString());
-                info.setText("Chunk " + (r.index + 1) + "/" + r.chunkCount + " · ≈ " + r.inputTokens + " token đầu vào"
-                        + (i > 0 ? " · phần lịch sử lấy từ bản dịch chunk trước của lượt dịch gần nhất (nếu có)" : ""));
-                copy[0] = r.copyText();
-            } catch (Exception e) {
-                info.setText("Không xem trước được: " + e.getMessage());
-            }
-        };
+        PromptPreviewView view;
         try {
-            int count = runtime.previewChunkCount(rawFile, app.currentSettings());
-            for (int i = 0; i < count; i++) pick.getItems().add(i);
+            view = new PromptPreviewView(runtime, rawFile, app::currentSettings);
         } catch (Exception e) {
             say("Không xem trước được: " + e.getMessage(), true);
             return;
         }
-        pick.setConverter(new StringConverter<Integer>() {
-            @Override public String toString(Integer i) { return i == null ? "" : "Chunk " + (i + 1) + " / " + pick.getItems().size(); }
-            @Override public Integer fromString(String s) { return null; }
-        });
-        pick.setOnAction(e -> load.run());
-        pick.setValue(0);
-        VBox box = new VBox(8, new HBox(10, new Label("Chunk"), pick), info, new Label("System prompt"), system, new Label("User prompt"), user, matched);
-        ScrollPane sp = new ScrollPane(box);
-        sp.setFitToWidth(true);
-        sp.setPrefSize(720, 520);
-        d.getDialogPane().setContent(sp);
+        Dialog<ButtonType> d = new Dialog<>();
+        d.setTitle("Xem trước prompt");
+        d.setHeaderText("Prompt sẽ gửi cho từng chunk (chưa gọi provider)");
+        d.getDialogPane().setContent(view.node());
         ButtonType copyType = new ButtonType("Sao chép", ButtonBar.ButtonData.LEFT);
-        d.getDialogPane().getButtonTypes().addAll(copyType, ButtonType.CLOSE);
+        ButtonType closeType = new ButtonType("Đóng", ButtonBar.ButtonData.CANCEL_CLOSE);
+        d.getDialogPane().getButtonTypes().addAll(copyType, closeType);
         d.getDialogPane().lookupButton(copyType).addEventFilter(javafx.event.ActionEvent.ACTION, ev -> {
             javafx.scene.input.ClipboardContent c = new javafx.scene.input.ClipboardContent();
-            c.putString(copy[0]);
+            c.putString(view.copyText());
             javafx.scene.input.Clipboard.getSystemClipboard().setContent(c);
             ev.consume();
         });
         app.showDialog(d);
-    }
-
-    private static TextArea readOnly() {
-        TextArea a = new TextArea();
-        a.setEditable(false);
-        a.setWrapText(true);
-        return a;
     }
 
     // ---- translated text ----
