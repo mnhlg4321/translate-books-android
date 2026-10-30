@@ -1,10 +1,13 @@
 # Build State
 
-## Current state — 2026-10-30 (v4.24.1 release in progress)
+## Current state — 2026-10-30 (v4.24.1 released locally: tag `v4.24.1`, archived; not merged, not pushed)
 
-- Patch release 4.24.1 (phone only) on `feature/v4.24.1` from tag `v4.24.0`. Code commit `8ff63926` (Library tab row fix: tabs were clipped 2 dp at the bottom by the 56 dp row with 4+6 dp padding; not an elevation shadow). Owner checked the dev build 4.24.1-dev.5/code318 on phone 15e84958 and said "đã ổn, phát hành".
-- Final hashes, the tag and the archive paths are recorded below once they exist. Previous states below are historical (4.24.0 is released: tag `v4.24.0`, APK code313, PC msi 4.24.200).
-- Next action: finish the 4.24.1 release steps (tag, archive); merge and push are the coordinator's.
+- Tag `v4.24.1` (annotated, object d99203a152ccfc742d660500a06d7bd7260ff357) on commit `01ab5313fd7f7c2e9bd97f96b307cc10a1c9720f` (docs-only on top of the build commit `7e8c5475`; production inputs identical, archive helper `-ProductionGitRef 7e8c5475`). The code fix is `8ff63926` (Library tab row).
+- Phone APK **4.24.1 / versionCode 319**, SHA-256 655576E98D440C754E1BC8CF0A1F611DADDE97F64C0820887217A3713397D00C, built with `scripts/build-and-save.ps1 -ExactReleaseVersion 4.24.1` on `feature/v4.24.1` (event `build-20261030-073455`). Debuggable build, like 4.24.0. NOT installed on the real phone: the phone runs the dev build 4.24.1-dev.5/code318 (same code, installed with backups before and after identical, owner said it is fine). Phone only; the PC package stays 4.24.0 (msi ProductVersion 4.24.200).
+- Checks on the exact build commit: app 753/5 skip/0 fail, core 61, jdbc 3, desktop 70, golden 14/14 twice, lint 0 errors, androidTest compile PASS; Editorial and golden diffs against v4.24.0 empty. Before/after emulator screenshots at 361 dp. Reports: `artifacts/qa/v4.24.1/QA_REPORT.md`, request and findings `docs/V4241_LIBRARY_TAB_ROW_FIX.md`.
+- Archives: `artifacts/releases/v4.24.1/build-20261030-073729` and `backup/v4.24.1/build-20261030-073729`; tag event `tag-v4.24.1` in the same two roots. Performance, Perfetto, instrumented evidence and the video in the payload are the 4.24.0 ones, labelled so.
+- Limits: system scrollbar still drawn over card borders on some pages; real-phone appearance by screenshot, startup of 4.24.1 and instrumented runs on this APK NOT_MEASURED.
+- Next action: merge `feature/v4.24.1` into `main` and push the branch and tag are the coordinator's; installing the release APK 4.24.1/319 on the phone needs the owner's separate "duyệt cài" with backup, counts and install-validated.
 
 ## Current state — 2026-10-30 (v4.24.0 release in progress; R6)
 
