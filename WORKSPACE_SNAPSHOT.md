@@ -1,6 +1,6 @@
 # Workspace Snapshot
 
-- Updated: 2026-10-30 (+07:00). v4.24.1 released locally: tag v4.24.1 on 01ab5313 (build commit 7e8c5475), APK 4.24.1/code319, archived in artifacts/releases and backup (build and tag events, 37 files each, identical). Not merged, not pushed.
+- Updated: 2026-10-30 (+07:00). v4.24.1 (Library tab row fix) tagged and archived; coordinator verified clean archive, screenshots and payload. Not merged into main, not pushed.
 - Current version: v4.24.1 released locally (phone APK 4.24.1/code319, Library tab row fix); PC stays 4.24.0. Phone 15e84958 runs the dev build 4.24.1-dev.5/code318 (same code).
 - Current branch: feature/v4.24.1 (worktree D:\P5E-builds\wt-v4.24.1), created from tag v4.24.0
 - Current commit: 01ab5313 (tag v4.24.1; later commits are docs only)
@@ -10,4 +10,4 @@
 - Pending tasks: R5 owner sign-off; R6 tag v4.24.0 + archive-release with the PC package (temporary worktree, short-lived feature/v4.24.0, msi ProductVersion > 4.24.101); close v4.22/v4.23 checklists as SUPERSEDED; R7 merge/push needs separate owner authority; msi signing optional.
 - Known bugs/limits: schema upgrade v1-v29 NOT_MEASURED. The phone's prompt preview differs from the real prompt outside preset full (known issue, phone untouched). Sets do not travel in the library ZIP (by design, stated in the screens). Pronoun cell editing is NOT_DONE (read-only table plus raw text editor, section 14.2).
 - Regression status: RC 162b96f2 clean archive: app 749/5 skip/0 fail, core 61, jdbc 3, desktop 69, golden 14/14 twice, lint 0; Editorial and golden diffs empty. Emulator instrumented: 314 tests, 251 pass, 37 skip, 26 fail (22 identical on the v4.23 baseline build, 4 EditorialP5DVol5RawPilot not run on baseline). Macrobenchmark coldStartup median 3157.7-3408.1 ms vs v4.23 baseline 3373.2 ms.
-- Next action: Coordinator merges feature/v4.24.1 into main and pushes the branch and tag v4.24.1; installing release APK 4.24.1/319 on the phone needs the owner separate "duyệt cài" (backup, counts, install-validated).
+- Next action: owner decides R7 for v4.24.1 (fast-forward main to feature/v4.24.1 and push branch and tag v4.24.1).
