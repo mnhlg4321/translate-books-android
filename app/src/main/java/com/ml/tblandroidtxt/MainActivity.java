@@ -1029,32 +1029,52 @@ public class MainActivity extends Activity {
 
     View buildLibraryDestination(String selected){
         LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setBackgroundColor(BG);
-        LinearLayout nav=new LinearLayout(this);nav.setOrientation(LinearLayout.HORIZONTAL);nav.setPadding(0,dp(4),0,dp(6));
+        LinearLayout nav=new LinearLayout(this);nav.setOrientation(LinearLayout.HORIZONTAL);nav.setPadding(0,dp(LibraryTabLayoutModel.NAV_TOP_PADDING_DP),0,dp(LibraryTabLayoutModel.NAV_BOTTOM_PADDING_DP));
         String[] pages=CHAPTER_SETS_ENABLED?new String[]{"RAW","Glossaries","Pronouns","ChapterSets"}:new String[]{"RAW","Glossaries","Pronouns"};
         HorizontalScrollView tabScroll=new HorizontalScrollView(this);
         tabScroll.setHorizontalScrollBarEnabled(false);
         tabScroll.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
+        // Fill the row beside the menu button: four equal tabs when they fit, the same equal tabs scrolling sideways when they do not.
+        tabScroll.setFillViewport(true);
         boolean tabOverflow=LibraryTabLayoutModel.shouldUseHorizontalScroll(fontScale,getResources().getConfiguration().fontScale,getResources().getConfiguration().screenWidthDp);
         tabScroll.setHorizontalFadingEdgeEnabled(tabOverflow);
         if(tabOverflow)tabScroll.setFadingEdgeLength(dp(18));
         LinearLayout tabRow=rowContainer();
+        ArrayList<Button> tabButtons=new ArrayList<>();
+        Button selectedTab=null;
+        float widestTextPx=0f;
         for(String page:pages){
             String label="ChapterSets".equals(page)?"Tập":("Glossaries".equals(page)?"Glossary":("Pronouns".equals(page)?"Pronoun":"RAW"));
             Button b=button(label,selected.equals(page)?CARD:FIELD,selected.equals(page)?TEXT:MUTED,v->switchTab(page));
             b.setSingleLine(true);
             b.setEllipsize(null);
             b.setPadding(dp(LibraryTabLayoutModel.TAB_HORIZONTAL_PADDING_DP),0,dp(LibraryTabLayoutModel.TAB_HORIZONTAL_PADDING_DP),0);
-            b.setMinWidth(dp(LibraryTabLayoutModel.TAB_MIN_WIDTH_DP));
-            b.setMinimumWidth(dp(LibraryTabLayoutModel.TAB_MIN_WIDTH_DP));
-            tint(b,selected.equals(page)?CARD:FIELD,selected.equals(page)?BLUE:BORDER,1,9);
-            LinearLayout.LayoutParams tabParams=new LinearLayout.LayoutParams(-2,dp(48));
-            tabParams.setMargins(0,0,dp(4),0);
+            tint(b,selected.equals(page)?CARD:FIELD,selected.equals(page)?BLUE:BORDER,selected.equals(page)?2:1,9);
+            widestTextPx=Math.max(widestTextPx,b.getPaint().measureText(label));
+            if(selected.equals(page))selectedTab=b;
+            tabButtons.add(b);
+        }
+        // Every tab is as wide as the widest label plus its padding, so the four tabs are equal; the weight shares any space left over.
+        int equalMinPx=(int)Math.ceil(widestTextPx)+2*dp(LibraryTabLayoutModel.TAB_HORIZONTAL_PADDING_DP);
+        for(int i=0;i<tabButtons.size();i++){
+            Button b=tabButtons.get(i);
+            b.setMinWidth(equalMinPx);b.setMinimumWidth(equalMinPx);
+            LinearLayout.LayoutParams tabParams=new LinearLayout.LayoutParams(-2,dp(LibraryTabLayoutModel.ROW_HEIGHT_DP),1);
+            tabParams.setMargins(0,0,i<tabButtons.size()-1?dp(LibraryTabLayoutModel.TAB_GAP_DP):0,0);
             tabRow.addView(b,tabParams);
         }
-        tabScroll.addView(tabRow,new ViewGroup.LayoutParams(-2,dp(48)));
-        nav.addView(tabScroll,new LinearLayout.LayoutParams(0,dp(56),1));
-        Button menu=secondaryButton("⋮",v->showLibraryMenu(v));menu.setContentDescription("Thao tác Thư viện");nav.addView(menu,new LinearLayout.LayoutParams(dp(48),dp(48)));
-        root.addView(nav,new LinearLayout.LayoutParams(-1,dp(56)));
+        tabScroll.addView(tabRow,new ViewGroup.LayoutParams(-2,dp(LibraryTabLayoutModel.ROW_HEIGHT_DP)));
+        // When the row scrolls (large text, narrow screen) the chosen tab must not sit out of sight.
+        final Button chosenTab=selectedTab;
+        if(chosenTab!=null)tabScroll.post(()->{int overflow=chosenTab.getRight()-tabScroll.getWidth();if(overflow>0)tabScroll.scrollTo(overflow,0);});
+        nav.addView(tabScroll,new LinearLayout.LayoutParams(0,dp(LibraryTabLayoutModel.ROW_HEIGHT_DP),1));
+        Button menu=secondaryButton("⋮",v->showLibraryMenu(v));menu.setContentDescription("Thao tác Thư viện");
+        menu.setTextSize(LibraryTabLayoutModel.MENU_TEXT_SP*fontScale);menu.setPadding(0,0,0,0);
+        tint(menu,FIELD,BORDER,1,9);
+        LinearLayout.LayoutParams menuParams=new LinearLayout.LayoutParams(dp(LibraryTabLayoutModel.MENU_WIDTH_DP),dp(LibraryTabLayoutModel.ROW_HEIGHT_DP));
+        menuParams.setMargins(dp(LibraryTabLayoutModel.TAB_GAP_DP),0,0,0);
+        nav.addView(menu,menuParams);
+        root.addView(nav,new LinearLayout.LayoutParams(-1,dp(LibraryTabLayoutModel.navHeightDp())));
         View page="RAW".equals(selected)?new RawPageFactory(this).buildRawPage():"Glossaries".equals(selected)?buildGlossariesPage():"Pronouns".equals(selected)?buildPronounsPage():buildChapterSetsPage();
         root.addView(page,new LinearLayout.LayoutParams(-1,0,1));
         View noticeBar=bulkUi.noticeBar();if(noticeBar!=null)root.addView(noticeBar);
