@@ -1,3 +1,23 @@
+# Translate Books 4.24.1 Release Notes
+
+Status: patch release 4.24.1 (phone app only), built from branch `feature/v4.24.1` created from tag `v4.24.0`. The owner checked the fix on phone 15e84958 (dev build 4.24.1-dev.5, same code) and approved the release on 2026-10-30. Not merged to `main` and not pushed by the build session.
+
+## 4.24.1 changes
+
+- Library tab row (Thư viện): the four tabs RAW, Glossary, Pronoun, Tập are no longer clipped at the bottom (the 56 dp row left 46 dp for 48 dp tabs), are four equal tabs filling the row beside the menu, keep 8 dp of padding around the label (was 4 dp), and the chosen tab has a full 2 dp border.
+- The menu button next to the tabs has the tabs' height, corner radius and border and a larger glyph (20 sp); its description is unchanged.
+- When large text or a narrow screen makes the row scroll sideways, the chosen tab is scrolled into view.
+- The PC app is not part of this release (it uses a JavaFX navigation tree); the PC package stays 4.24.0.
+
+## 4.24.1 known limitations
+
+- The page scrollbar (system overlay) is still drawn over the right border of the cards on some pages; not changed.
+- The release APK is a debuggable build, same flavour as 4.24.0.
+- Startup, run and PC measurements are those of 4.24.0 (the change is limited to the Library tab row); real-phone performance NOT_MEASURED.
+- Editorial stays frozen; the msi stays unsigned; Tập still does not travel in the library ZIP.
+
+---
+
 # Translate Books 4.24.0 Release Notes
 
 Status: release 4.24.0 (phone APK and PC package from one commit). Owner sign-off R5 recorded in `docs/V424_RELEASE_PLAN.md` section 8. Not merged to `main` and not pushed until R7.

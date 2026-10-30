@@ -1,5 +1,11 @@
 # Build State
 
+## Current state — 2026-10-30 (v4.24.1 release in progress)
+
+- Patch release 4.24.1 (phone only) on `feature/v4.24.1` from tag `v4.24.0`. Code commit `8ff63926` (Library tab row fix: tabs were clipped 2 dp at the bottom by the 56 dp row with 4+6 dp padding; not an elevation shadow). Owner checked the dev build 4.24.1-dev.5/code318 on phone 15e84958 and said "đã ổn, phát hành".
+- Final hashes, the tag and the archive paths are recorded below once they exist. Previous states below are historical (4.24.0 is released: tag `v4.24.0`, APK code313, PC msi 4.24.200).
+- Next action: finish the 4.24.1 release steps (tag, archive); merge and push are the coordinator's.
+
 ## Current state — 2026-10-30 (v4.24.0 release in progress; R6)
 
 - Release commit = `feature/v4.24` HEAD at the time of the tag; phone APK 4.24.0 (versionCode above 311) and PC 4.24.0 (msi ProductVersion 4.24.200) are built from it. Final hashes and archive paths are recorded below once the tag exists.

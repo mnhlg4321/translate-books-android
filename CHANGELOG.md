@@ -2,6 +2,11 @@
 
 All notable changes to Translate Books are recorded in this file. The repository was normalized to Git on 2026-07-17 without feature changes or rollback. The v4.7 source baseline is commit `da8c6d9a9001296c3f3c17817ea3d6372fd59ae3` on branch `main`.
 
+## [4.24.1] - 2026-10-30
+
+- Fix the phone Library tab row: tabs clipped at the bottom, unequal tabs packed to the left, 4 dp label padding, small menu button; four equal tabs fill the row, 8 dp padding, 2 dp selected border, matching menu button, chosen tab scrolled into view when the row scrolls.
+- Phone only; no PC, core behaviour or Editorial change.
+
 ## [4.24.0] - 2026-10-30
 
 - Move storage, the run loop and chapter-set planning into the shared `translation-core`; add the Windows PC app on it (RAW, Glossary, Pronoun, Tập, Dịch, Công việc, Cài đặt, library ZIP and profile import/export, spend confirmation).
