@@ -105,7 +105,7 @@ final class TranslateSourceFactory {
         if (next.equals(mode)) return;
         if (MODE_SET.equals(next)) {
             filesUris.clear();
-            for (Uri u : a.inputUris) if (!RawUri.isRaw(u.toString())) filesUris.add(u);
+            filesUris.addAll(a.inputUris);
             mode = MODE_SET;
             save();
             refresh();
@@ -122,6 +122,64 @@ final class TranslateSourceFactory {
             a.updateInputEstimate();
         }
         a.refreshTranslationConfigViews();
+    }
+
+    /** Opens the shared library picker for one RAW; the chosen URI then uses the ordinary TXT preparation and job path. */
+    void pickSingleLibraryRaw() {
+        if (isSetMode()) return;
+        List<LibraryRawStore.Item> raws = LibraryRawStore.list(a);
+        List<FilePickerModel.Item> items = new ArrayList<>();
+        for (LibraryRawStore.Item raw : raws) {
+            items.add(new FilePickerModel.Item(raw.id, raw.originalName,
+                    raw.chapterLabel() + " · " + String.format(java.util.Locale.US, "%,d", raw.chars) + " ký tự",
+                    raw.chapterNo, false, ""));
+        }
+        ArrayList<String> selected = new ArrayList<>();
+        if (a.inputUris.size() == 1 && RawUri.isRaw(a.inputUris.get(0).toString())) {
+            String id = RawUri.idOf(a.inputUris.get(0).toString());
+            for (LibraryRawStore.Item raw : raws) if (raw.id.equals(id)) { selected.add(id); break; }
+        }
+        FilePickerModel model = new FilePickerModel(false, false, items, selected);
+        FilePickerSheet.show(a, "Chọn RAW từ Thư viện",
+                items.isEmpty() ? "Chưa có RAW trong Thư viện: nhập ở màn RAW." : null,
+                model, "Chọn", ids -> {
+                    if (ids.isEmpty()) return;
+                    LibraryRawStore.Item raw = LibraryRawStore.find(a, ids.get(0));
+                    if (raw == null || !LibraryRawStore.files(a).exists(raw.id)) {
+                        a.toast("RAW không còn trong Thư viện. Hãy nhập lại RAW này.");
+                        return;
+                    }
+                    a.inputUris.clear();
+                    a.inputUris.add(Uri.parse(raw.uri()));
+                    a.inputUri = a.inputUris.get(0);
+                    a.chapterBindings = null;
+                    a.setLabel(a.inputFileLabel, "📄 " + raw.originalName);
+                    a.onTranslateInputsChanged();
+                    a.toast("Đã chọn RAW từ Thư viện");
+                    a.appendLog("INPUT_SELECTED source=library_raw");
+                });
+    }
+
+    /** Updates only the suggestion text; it does not read or activate any profile content. */
+    void refreshSingleRawSuggestion() {
+        TextView view = a.singleRawSuggestion;
+        if (view == null) return;
+        if (MODE_SET.equals(mode) || a.inputUris.size() != 1 || !RawUri.isRaw(a.inputUris.get(0).toString())) {
+            view.setVisibility(View.GONE);
+            return;
+        }
+        String id = RawUri.idOf(a.inputUris.get(0).toString());
+        LibraryRawStore.Item raw = LibraryRawStore.find(a, id);
+        if (raw == null) {
+            view.setText("RAW không còn trong Thư viện. Hãy nhập lại RAW này.");
+        } else {
+            ArrayList<String> glossaries = new ArrayList<>();
+            for (GlossaryStore.Glossary item : GlossaryStore.loadAll(a)) glossaries.add(item.name);
+            ArrayList<String> pronouns = new ArrayList<>();
+            for (PronounStore.Profile item : PronounStore.loadAll(a)) pronouns.add(item.name);
+            view.setText(SingleRawConfigSuggestion.format(raw.chapterNo, glossaries, pronouns));
+        }
+        view.setVisibility(View.VISIBLE);
     }
 
     /** Reloads the open set from the database (the Library may have changed) and re-applies the ticked chapters. */
@@ -214,7 +272,10 @@ final class TranslateSourceFactory {
         estimateViews.clear();
         rowViews.clear();
         totalView = null;
-        if (!set) return;
+        if (!set) {
+            refreshSingleRawSuggestion();
+            return;
+        }
         List<ChapterSetStore.SetInfo> sets = ChapterSetStore.listSets(a);
         boolean none = setName.isEmpty();
         List<String> names = new ArrayList<>(), metas = new ArrayList<>();

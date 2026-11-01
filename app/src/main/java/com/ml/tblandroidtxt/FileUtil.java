@@ -96,6 +96,7 @@ public class FileUtil {
     private static TextReadResult readInternalRaw(Context c, Uri uri) throws Exception {
         String id = RawUri.idOf(uri.toString());
         if (id.isEmpty()) throw new FileAccessException("Địa chỉ RAW nội bộ không hợp lệ");
+        if (LibraryRawStore.find(c, id) == null) throw new FileAccessException("RAW đã bị xóa khỏi Thư viện: hãy nhập lại RAW này ở Library > RAW.");
         try {
             return decodeText(LibraryRawStore.files(c).readBytes(id));
         } catch (java.io.IOException e) {
@@ -245,7 +246,7 @@ public class FileUtil {
         if (uri == null) return "";
         if (isInternalRaw(uri)) {
             String raw = LibraryRawStore.displayNameOf(c, RawUri.idOf(uri.toString()));
-            return raw == null || raw.isEmpty() ? "raw.txt" : raw;
+            return raw == null || raw.isEmpty() ? "RAW không còn trong Thư viện" : raw;
         }
         try (Cursor cursor = c.getContentResolver().query(uri, null, null, null, null)) {
             if (cursor != null && cursor.moveToFirst()) {
@@ -306,7 +307,8 @@ public class FileUtil {
         if (uri == null) return label + ": chưa chọn file";
         if (isInternalRaw(uri)) {
             String id = RawUri.idOf(uri.toString());
-            return !id.isEmpty() && LibraryRawStore.files(c).exists(id) ? null : label + ": RAW trong thư viện không còn. Hãy nhập lại ở Library > RAW.";
+            return !id.isEmpty() && LibraryRawStore.find(c, id) != null && LibraryRawStore.files(c).exists(id)
+                    ? null : label + ": RAW trong thư viện không còn. Hãy nhập lại ở Library > RAW.";
         }
         // Device tests (seam active) read plain files; a normal run never has the seam and always needs the persisted grant.
         boolean seamFile = "file".equals(uri.getScheme()) && TranslateTestSeam.outputDir() != null;

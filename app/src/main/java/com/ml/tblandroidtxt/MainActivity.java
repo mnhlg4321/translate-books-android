@@ -112,7 +112,7 @@ public class MainActivity extends Activity {
 
     FrameLayout rootFrame, contentFrame;
     LinearLayout appRoot;
-    TextView inputFileLabel, outputFileLabel, outputFolderLabel, yamlFileLabel, glossaryFileLabel, pronounFileLabel, activeGlossaryLabel;
+    TextView inputFileLabel, singleRawSuggestion, outputFileLabel, outputFolderLabel, yamlFileLabel, glossaryFileLabel, pronounFileLabel, activeGlossaryLabel;
     TextView translateMeta, statusBanner, resultTitle, resultMeta, logView, glossaryPreview, filesSummary, sampleText;
     TextView topTitle, topSubtitle, topStatusChip, drawerStatusDot;
     Button drawerMenuButton;
@@ -2650,20 +2650,10 @@ public class MainActivity extends Activity {
                 FileUtil.takePersistable(this, uri, takeFlags, true, false);
             }
             inputUri = inputUris.isEmpty() ? null : inputUris.get(0);
-            UiSessionStore.saveInputUris(this, inputUris);
-            if (!TranslatorService.isActive()) {
-                RuntimeStateStore.clear(this);
-                translationActive = false;
-                if (trackingCard != null) trackingCard.setVisibility(View.GONE);
-                if (statusBanner != null) statusBanner.setVisibility(View.GONE);
-                if (resultCard != null) resultCard.setVisibility(View.GONE);
-                if (progress != null) progress.setProgress(0);
-                renderedTopState = "";
-                refreshTopStatusChip();
-            }
             String label = inputUris.size() <= 1 ? "📄 " + FileUtil.displayName(this, inputUri) : "📚 " + inputUris.size() + " TXT files selected";
             setLabel(inputFileLabel, label);
-            toast("Đã chọn " + inputUris.size() + " file TXT"); appendLog("Đã chọn input: " + label); updateInputEstimate();
+            onTranslateInputsChanged();
+            toast("Đã chọn " + inputUris.size() + " file TXT"); appendLog("Đã chọn input: " + label);
         } else if (requestCode == REQ_OUTPUT) {
             outputUri = uri;
             outputTreeUri = null;
@@ -4017,6 +4007,23 @@ public class MainActivity extends Activity {
         if (inputUris.isEmpty()) return "Chưa chọn file TXT";
         if (inputUris.size() == 1) return FileUtil.displayName(this, inputUris.get(0));
         return inputUris.size() + " tệp TXT đã chọn";
+    }
+
+    /** Refreshes the plan and UI after the Translate input selection changes. */
+    void onTranslateInputsChanged() {
+        UiSessionStore.saveInputUris(this, inputUris);
+        if (!TranslatorService.isActive()) {
+            RuntimeStateStore.clear(this);
+            translationActive = false;
+            if (trackingCard != null) trackingCard.setVisibility(View.GONE);
+            if (statusBanner != null) statusBanner.setVisibility(View.GONE);
+            if (resultCard != null) resultCard.setVisibility(View.GONE);
+            if (progress != null) progress.setProgress(0);
+            renderedTopState = "";
+            refreshTopStatusChip();
+        }
+        if (sourceUi != null) sourceUi.refreshSingleRawSuggestion();
+        updateInputEstimate();
     }
 
     String inputUrisJson() {
