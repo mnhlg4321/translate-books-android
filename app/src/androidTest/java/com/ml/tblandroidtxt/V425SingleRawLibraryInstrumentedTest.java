@@ -101,8 +101,8 @@ public class V425SingleRawLibraryInstrumentedTest {
             }
             for (File file : files(outputDir)) file.delete();
             restore(c, original);
-            resetStoreCache(GlossaryStore.class, "cachedJson", "cachedGlossaries", "corruptJson");
-            resetStoreCache(PronounStore.class, "cachedJson", "cachedProfiles", "corruptJson");
+            GlossaryStoreCore.resetForTest();
+            PronounStoreCore.resetForTest();
             PreparationCoordinator.get(c).cancel();
         }
     }
@@ -173,14 +173,6 @@ public class V425SingleRawLibraryInstrumentedTest {
                 }
             }
             editor.commit();
-        }
-    }
-
-    private static void resetStoreCache(Class<?> type, String... names) throws Exception {
-        for (String name : names) {
-            java.lang.reflect.Field field = type.getDeclaredField(name);
-            field.setAccessible(true);
-            field.set(null, null);
         }
     }
 
