@@ -3965,7 +3965,7 @@ public class MainActivity extends Activity {
         if (translateGlossaryChip != null) translateGlossaryChip.setText(state.glossary.displayText());
         if (translatePronounChip != null) translatePronounChip.setText(state.pronoun.displayText());
         if (translateInstructionChip != null) translateInstructionChip.setText(state.instruction.displayText());
-        if (translateConfigSummary != null) translateConfigSummary.setText(state.compactSummary());
+        if (translateConfigSummary != null) translateConfigSummary.setText(state.compactSummary(sourceUi.isSetMode()));
         if (translateConfigDetails != null) {
             boolean invalid = state.glossary.status == TranslationConfigState.Status.INVALID
                     || state.pronoun.status == TranslationConfigState.Status.INVALID

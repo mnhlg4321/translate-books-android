@@ -190,7 +190,7 @@ class TranslatePageFactory {
         LinearLayout section = a.sectionCard("", state.fromActiveJob
                 ? "Cấu hình đang dùng • Job #" + state.jobId : "Cấu hình bản dịch");
         LinearLayout summaryRow = a.rowContainer();
-        a.translateConfigSummary = a.text(state.compactSummary(), 13, a.TEXT, true);
+        a.translateConfigSummary = a.text(state.compactSummary(a.sourceUi.isSetMode()), 13, a.TEXT, true);
         a.translateConfigSummary.setSingleLine(false);
         summaryRow.addView(a.translateConfigSummary, new LinearLayout.LayoutParams(0, -2, 1));
         Button edit = a.secondaryButton("Sửa", v -> {

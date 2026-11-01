@@ -95,17 +95,80 @@ public final class TranslationConfigState {
 
     /** Compact, valid-configuration summary used when the detail rows are collapsed. */
     public String compactSummary() {
-        return "Glossary " + compactCount(glossary, "mục")
-                + " · Pronoun " + compactCount(pronoun, "quy tắc")
-                + " · YAML " + (instruction.isValidForStart() ? "✓" : "!")
-                + " · Sửa";
+        return compactSummary(false);
     }
 
-    private static String compactCount(Item item, String unit) {
-        if (item == null || item.status == Status.NOT_USED) return "—";
+    public String compactSummary(boolean perChapter) {
+        String summary = "Glossary: " + compactCount(glossary)
+                + " · Pronoun: " + compactCount(pronoun)
+                + " · YAML: " + compactInstruction(instruction);
+        return perChapter ? summary + " · theo từng chương của tập" : summary;
+    }
+
+    private static String compactCount(Item item) {
+        if (item == null || item.status == Status.NOT_USED) return "Không dùng";
         String detail = item.detail == null ? "" : item.detail.trim();
         int split = detail.indexOf(' ');
-        if (split > 0) return detail.substring(0, split);
-        return detail.isEmpty() ? "—" : detail;
+        String count = split > 0 ? detail.substring(0, split) : detail;
+        String value = compactName(item.name) + " (" + (count.isEmpty() ? "—" : count) + ")";
+        return item.status == Status.VALID ? value : value + " !";
+    }
+
+    private static String compactInstruction(Item item) {
+        if (item == null || item.status == Status.NOT_USED) return "Không dùng";
+        return compactName(item.name) + (item.isValidForStart() ? " ✓" : " !");
+    }
+
+    /** Truncates long names in the middle and keeps the first chapter-number run visible. */
+    private static String compactName(String raw) {
+        String name = raw == null ? "" : raw.trim();
+        final int max = 32;
+        int points = name.codePointCount(0, name.length());
+        if (points <= max) return name;
+
+        int numberStart = -1;
+        int numberEnd = -1;
+        for (int i = 0; i < name.length(); ) {
+            int cp = name.codePointAt(i);
+            int next = i + Character.charCount(cp);
+            if (Character.isDigit(cp)) {
+                numberStart = i;
+                numberEnd = next;
+                while (numberEnd < name.length() && Character.isDigit(name.codePointAt(numberEnd))) {
+                    numberEnd += Character.charCount(name.codePointAt(numberEnd));
+                }
+                break;
+            }
+            i = next;
+        }
+
+        if (numberStart < 0) return middle(name, max);
+        String chapter = name.substring(numberStart, numberEnd);
+        int chapterPoints = chapter.codePointCount(0, chapter.length());
+        int room = max - chapterPoints - 2;
+        if (room <= 0) return middle(name, max);
+        int beforePoints = Math.min(name.codePointCount(0, numberStart), room / 2);
+        int afterPoints = Math.min(name.codePointCount(numberEnd, name.length()), room - beforePoints);
+        String before = takeStart(name.substring(0, numberStart), beforePoints);
+        String after = takeEnd(name.substring(numberEnd), afterPoints);
+        String leftMark = before.isEmpty() ? "" : "…";
+        String rightMark = after.isEmpty() ? "" : "…";
+        return before + leftMark + chapter + rightMark + after;
+    }
+
+    private static String middle(String value, int maxCodePoints) {
+        int keep = Math.max(1, (maxCodePoints - 1) / 2);
+        return takeStart(value, keep) + "…" + takeEnd(value, keep);
+    }
+
+    private static String takeStart(String value, int count) {
+        int end = value.offsetByCodePoints(0, Math.min(count, value.codePointCount(0, value.length())));
+        return value.substring(0, end);
+    }
+
+    private static String takeEnd(String value, int count) {
+        int points = value.codePointCount(0, value.length());
+        int start = value.offsetByCodePoints(0, Math.max(0, points - Math.max(0, count)));
+        return value.substring(start);
     }
 }

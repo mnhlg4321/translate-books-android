@@ -121,6 +121,7 @@ final class TranslateSourceFactory {
             a.setLabel(a.inputFileLabel, a.currentInputLabel());
             a.updateInputEstimate();
         }
+        a.refreshTranslationConfigViews();
     }
 
     /** Reloads the open set from the database (the Library may have changed) and re-applies the ticked chapters. */

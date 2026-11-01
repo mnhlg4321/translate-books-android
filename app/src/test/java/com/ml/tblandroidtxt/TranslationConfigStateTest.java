@@ -70,4 +70,40 @@ public class TranslationConfigStateTest {
         assertEquals("Không sử dụng", TranslationConfigState.pronoun("", 0, 0).displayText());
         assertTrue(TranslationConfigState.glossary("x.csv", 3, 0).displayText().contains("\n"));
     }
+
+    @Test public void compactSummaryShowsSelectedNamesCountsAndYamlStatusWithoutEditLabel() {
+        TranslationConfigState state = new TranslationConfigState(
+                TranslationConfigState.glossary("001_GLOSSARY_KUMO_VOL13", 51, 0),
+                TranslationConfigState.pronoun("001_PRONOUN_KUMO_VOL13", 28, 0),
+                TranslationConfigState.instruction("001_PROFILE.yaml", true, false, false, ""),
+                false, 0);
+        assertEquals("Glossary: 001_GLOSSARY_KUMO_VOL13 (51) · Pronoun: 001_PRONOUN_KUMO_VOL13 (28) · YAML: 001_PROFILE.yaml ✓",
+                state.compactSummary());
+        assertFalse(state.compactSummary().contains("· Sửa"));
+    }
+
+    @Test public void compactSummaryNamesUnusedItemsAndKeepsChapterNumberWhenShortened() {
+        TranslationConfigState unused = new TranslationConfigState(
+                TranslationConfigState.glossary("", 0, 0),
+                TranslationConfigState.pronoun("", 0, 0),
+                TranslationConfigState.instruction("", false, false, false, ""), false, 0);
+        assertEquals("Glossary: Không dùng · Pronoun: Không dùng · YAML: Không dùng", unused.compactSummary());
+
+        TranslationConfigState longName = new TranslationConfigState(
+                TranslationConfigState.glossary("QA_001_GLOSSARY_FOR_A_LONG_COLLECTION_NAME", 51, 0),
+                TranslationConfigState.pronoun("", 0, 0),
+                TranslationConfigState.instruction("", false, false, false, ""), false, 0);
+        String summary = longName.compactSummary();
+        assertTrue(summary.contains("001"));
+        assertTrue(summary.contains("(51)"));
+        assertTrue(summary.length() < 100);
+    }
+
+    @Test public void compactSummaryKeepsChapterSetConfigurationNote() {
+        TranslationConfigState state = new TranslationConfigState(
+                TranslationConfigState.glossary("", 0, 0),
+                TranslationConfigState.pronoun("", 0, 0),
+                TranslationConfigState.instruction("", false, false, false, ""), false, 0);
+        assertTrue(state.compactSummary(true).contains("theo từng chương của tập"));
+    }
 }
