@@ -209,6 +209,7 @@ public class JobsPageFactory {
                 + " • done " + j.doneChunks + "/" + j.totalChunks
                 + " • failed " + j.failedChunks
                 + " • pending " + j.pendingChunks
+                + "\nModel: " + TranslateModelLabel.jobCard(j.model)
                 + "\ncreated: " + dateTime(j.createdAt)
                 + " • updated: " + dateTime(j.updatedAt)
                 + "\noutput: " + previewUri(j.outputUri, 100);
@@ -287,6 +288,9 @@ public class JobsPageFactory {
             if (summary != null) {
                 sb.append("File: ").append(nonEmpty(summary.fileName, "unknown")).append("\n");
                 sb.append("Status: ").append(nonEmpty(summary.status, "unknown")).append("\n");
+                AppSettings settingsSnapshot = job == null ? new AppSettings() : SettingsJson.fromJson(job.settingsJson);
+                sb.append("Provider: ").append(nonEmpty(summary.provider, settingsSnapshot.provider)).append("\n");
+                sb.append("Model: ").append(nonEmpty(summary.model, settingsSnapshot.model)).append("\n");
                 sb.append("Language: ").append(nonEmpty(summary.sourceLanguage, "?")).append(" → ").append(nonEmpty(summary.targetLanguage, "?")).append("\n");
                 sb.append("Created: ").append(dateTime(summary.createdAt)).append("\n");
                 sb.append("Updated: ").append(dateTime(summary.updatedAt)).append("\n");

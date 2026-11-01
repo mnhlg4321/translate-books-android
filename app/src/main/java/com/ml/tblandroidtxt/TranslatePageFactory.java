@@ -133,11 +133,6 @@ class TranslatePageFactory {
         root.addView(a.translateSupportCard, a.marginLP(-1, -2, 0, 0, 0, 10));
         root.addView(a.translateOutputCard, a.marginLP(-1, -2, 0, 0, 0, 10));
 
-        a.translateMeta = a.text("", 12, a.MUTED, false);
-        a.translateMeta.setGravity(Gravity.CENTER);
-        a.translateMeta.setVisibility(View.GONE);
-        root.addView(a.translateMeta, a.marginLP(-1, -2, 0, 2, 0, 2));
-
         a.statusBanner = a.text("", 15, a.TEXT, true);
         a.statusBanner.setVisibility(View.GONE);
         a.statusBanner.setPadding(a.dp(14), a.dp(12), a.dp(14), a.dp(12));
@@ -486,6 +481,10 @@ class TranslatePageFactory {
         LinearLayout details = new LinearLayout(a);
         details.setOrientation(LinearLayout.VERTICAL);
         details.setVisibility(View.GONE);
+        details.addView(a.text("Provider và model", 15, a.TEXT, true), a.marginLP(-1, -2, 0, 0, 0, 4));
+        a.translateMeta = a.text("", 12, a.MUTED, false);
+        a.translateMeta.setSingleLine(false);
+        details.addView(a.translateMeta, a.marginLP(-1, -2, 0, 0, 0, 12));
         details.addView(a.text(ACTIVITY_LOG_LABEL, 15, a.TEXT, true), a.marginLP(-1, -2, 0, 0, 0, 8));
         LinearLayout actions = a.rowContainer();
          Button clear = a.secondaryButton(CLEAR_LOG_LABEL, v -> new AlertDialog.Builder(a)

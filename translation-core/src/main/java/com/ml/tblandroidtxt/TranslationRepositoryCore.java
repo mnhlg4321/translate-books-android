@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TranslationRepositoryCore {
+    private static final String LAST_TRANSLATION_MODEL_COLUMNS =
+            "(SELECT a.provider FROM chunk_attempts a WHERE a.job_id=j.id AND a.phase='translate' AND a.provider<>'' ORDER BY a.id DESC LIMIT 1) AS used_provider," +
+            "(SELECT a.model FROM chunk_attempts a WHERE a.job_id=j.id AND a.phase='translate' AND a.model<>'' ORDER BY a.id DESC LIMIT 1) AS used_model ";
     private final SqlDb sqlDb;
 
     protected TranslationRepositoryCore(SqlDb sqlDb) { this.sqlDb = sqlDb; }
@@ -381,7 +384,8 @@ public class TranslationRepositoryCore {
                 "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status) IN ('ERROR','RETRYABLE_ERROR','PERMANENT_ERROR')) AS failed," +
                 "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='PENDING') AS pending," +
                 "COALESCE(j.input_hash,''),COALESCE(j.start_session_id,''),COALESCE(j.prepared_batch_id,''),COALESCE(j.prepared_input_ordinal,0)," +
-                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='DELIVERY_UNKNOWN') AS unknown " +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='DELIVERY_UNKNOWN') AS unknown," +
+                LAST_TRANSLATION_MODEL_COLUMNS +
                 "FROM jobs j ORDER BY j.updated_at DESC LIMIT ?";
         try (DbCursor c = db.rawQuery(sql, new String[]{String.valueOf(Math.max(1, limit))})) {
             while (c.moveToNext()) list.add(readJobSummary(c));
@@ -430,7 +434,8 @@ public class TranslationRepositoryCore {
                 "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status) IN ('ERROR','RETRYABLE_ERROR','PERMANENT_ERROR')) AS failed," +
                 "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='PENDING') AS pending," +
                 "COALESCE(j.input_hash,''),COALESCE(j.start_session_id,''),COALESCE(j.prepared_batch_id,''),COALESCE(j.prepared_input_ordinal,0)," +
-                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='DELIVERY_UNKNOWN') AS unknown " +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='DELIVERY_UNKNOWN') AS unknown," +
+                LAST_TRANSLATION_MODEL_COLUMNS +
                 "FROM jobs j WHERE " + where + " ORDER BY j.id DESC LIMIT ?";
         args.add(String.valueOf(Math.max(1, limit)));
         SqlDb db = db();
@@ -451,7 +456,8 @@ public class TranslationRepositoryCore {
                 "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status) IN ('ERROR','RETRYABLE_ERROR','PERMANENT_ERROR')) AS failed," +
                 "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='PENDING') AS pending," +
                 "COALESCE(j.input_hash,''),COALESCE(j.start_session_id,''),COALESCE(j.prepared_batch_id,''),COALESCE(j.prepared_input_ordinal,0)," +
-                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='DELIVERY_UNKNOWN') AS unknown " +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='DELIVERY_UNKNOWN') AS unknown," +
+                LAST_TRANSLATION_MODEL_COLUMNS +
                 "FROM jobs j WHERE UPPER(COALESCE(j.status,'')) IN (" + JobStatus.sqlUnfinishedShown() + ") " +
                 "ORDER BY j.updated_at DESC,j.id DESC LIMIT ?";
         try (DbCursor c = db.rawQuery(sql, new String[]{String.valueOf(Math.max(1, limit))})) {
@@ -495,7 +501,8 @@ public class TranslationRepositoryCore {
                 "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status) IN ('ERROR','RETRYABLE_ERROR','PERMANENT_ERROR')) AS failed," +
                 "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='PENDING') AS pending," +
                 "COALESCE(j.input_hash,''),COALESCE(j.start_session_id,''),COALESCE(j.prepared_batch_id,''),COALESCE(j.prepared_input_ordinal,0)," +
-                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='DELIVERY_UNKNOWN') AS unknown " +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='DELIVERY_UNKNOWN') AS unknown," +
+                LAST_TRANSLATION_MODEL_COLUMNS +
                 "FROM jobs j WHERE " + predicate + " ORDER BY j.updated_at DESC, j.id DESC";
         SqlDb db = db();
         try (DbCursor c = db.rawQuery(sql, args.toArray(new String[0]))) {
@@ -542,7 +549,8 @@ public class TranslationRepositoryCore {
                 "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)<>'SUPERSEDED') AS total," +
                 "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status) IN ('DONE','COMPLETED')) AS done," +
                 "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status) IN ('ERROR','RETRYABLE_ERROR','PERMANENT_ERROR')) AS failed," +
-                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='PENDING') AS pending " +
+                "(SELECT COUNT(*) FROM chunks c WHERE c.job_id=j.id AND UPPER(c.status)='PENDING') AS pending," +
+                LAST_TRANSLATION_MODEL_COLUMNS +
                 "FROM jobs j WHERE j.id=? LIMIT 1";
         try (DbCursor c = db.rawQuery(sql, new String[]{String.valueOf(jobId)})) {
             if (c.moveToFirst()) return readJobSummary(c);
@@ -601,6 +609,10 @@ public class TranslationRepositoryCore {
             r.preparedOrdinal = c.getInt(16);
         }
         if (c.getColumnCount() > 17) r.unknownChunks = c.getInt(17);
+        if (c.getColumnCount() >= 2) {
+            r.provider = safe(c.getString(c.getColumnCount() - 2));
+            r.model = safe(c.getString(c.getColumnCount() - 1));
+        }
         return r;
     }
 
@@ -623,6 +635,9 @@ public class TranslationRepositoryCore {
         public String targetLanguage;
         public String inputUri;
         public String outputUri;
+        /** Most recent provider and model used by a translation request; empty before the first request. */
+        public String provider = "";
+        public String model = "";
         public long createdAt;
         public long updatedAt;
         public int totalChunks;

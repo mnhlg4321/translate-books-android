@@ -103,6 +103,28 @@ public class TranslationRepositoryCoreTest {
         assertEquals("inhash", repo.getInputHash(id));
     }
 
+    @Test public void jobSummariesExposeProviderAndModelFromTheLatestTranslationAttempt() {
+        AppSettings selected = settings();
+        selected.provider = "openrouter";
+        selected.model = "openai/gpt-5.6-luna";
+        long id = repo.createJob("in://a", "out://a", "a.txt", selected, twoChunks(), "h", "s");
+        TranslationRepositoryCore.JobSummary beforeRequest = repo.getJobSummary(id);
+        assertEquals("", beforeRequest.provider);
+        assertEquals("", beforeRequest.model);
+
+        repo.beginChunkAttempt(id, twoChunks().get(0), 1, "request-hash", selected);
+        assertSummaryModel(repo.getJobSummary(id));
+        assertSummaryModel(repo.getJobSummaries(10).get(0));
+        assertSummaryModel(repo.getJobSummariesPage(-1, 10, "", null).get(0));
+        assertSummaryModel(repo.getCurrentUnfinishedSummaries(10).get(0));
+        assertSummaryModel(repo.getJobSummariesForSessions(Collections.<String>emptyList(), Collections.singletonList(id)).get(0));
+    }
+
+    private static void assertSummaryModel(TranslationRepositoryCore.JobSummary summary) {
+        assertEquals("openrouter", summary.provider);
+        assertEquals("openai/gpt-5.6-luna", summary.model);
+    }
+
     @Test public void configRevisionsAreRecordedAndJobPointsAtTheLatest() {
         long id = repo.createJob("in://a", "out://a", "a.txt", settings(), twoChunks(), "h", "s");
         assertEquals(1, count("SELECT COUNT(*) FROM config_revisions WHERE job_id=" + id));

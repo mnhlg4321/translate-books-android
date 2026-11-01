@@ -81,7 +81,8 @@ final class JobsHistoryPageFactory {
         name.setSingleLine(true);
         card.addView(name);
         TextView meta = a.text(status(job.status) + " · " + job.doneChunks + "/" + job.totalChunks
-                + " chunk · " + (job.usage == null ? "Chưa có token/chi phí" : job.usage.line()), 12, a.MUTED, false);
+                + " chunk · " + (job.usage == null ? "Chưa có token/chi phí" : job.usage.line())
+                + "\nModel: " + TranslateModelLabel.jobCard(job.model), 12, a.MUTED, false);
         meta.setSingleLine(false);
         card.addView(meta, a.marginLP(-1, -2, 0, 4, 0, 0));
         card.setClickable(true);

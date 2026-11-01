@@ -155,6 +155,7 @@ public class MainActivity extends Activity {
     volatile String validatedPlanId="";
     volatile long validatedPlanAt;
     volatile String cachedProviderMeta = "";
+    volatile String cachedTranslateMeta = "";
     String renderedTopState = "";
     final Handler runtimeTimerHandler = new Handler(Looper.getMainLooper());
     boolean appInForeground;
@@ -591,6 +592,7 @@ public class MainActivity extends Activity {
         ModelCatalog.initialize(new AndroidModelCatalogCache(this));
         AppSettings saved = SettingsStore.load(this);
         cachedProviderMeta = providerMeta(saved);
+        cachedTranslateMeta = TranslateModelLabel.header(saved.sourceLanguage, saved.targetLanguage, saved.model);
         PronounStore.migrateLegacy(this,saved);
         PronounStore.Profile activePronoun=PronounStore.selected(this);
         if(activePronoun!=null){saved.pronounText=activePronoun.text;saved.pronounUri=activePronoun.uri;saved.pronounName=activePronoun.name;saved.selectedPronounId=activePronoun.id;saved.selectedPronounName=activePronoun.name;SettingsStore.save(this,saved);}
@@ -840,7 +842,7 @@ public class MainActivity extends Activity {
         topTitle = text(pageTitle(), 17, TEXT, true);
         topTitle.setSingleLine(true);
         topTitle.setEllipsize(TextUtils.TruncateAt.END);
-        topSubtitle = text(compactProviderMeta(), 12, MUTED, false);
+        topSubtitle = text(compactPageSubtitle(), 12, MUTED, false);
         topSubtitle.setSingleLine(false);
         topSubtitle.setMaxLines(2);
         topSubtitle.setEllipsize(TextUtils.TruncateAt.END);
@@ -1207,7 +1209,7 @@ public class MainActivity extends Activity {
 
     void refreshTabs() {
         if (topTitle != null) topTitle.setText(pageTitle());
-        if (topSubtitle != null) topSubtitle.setText(compactProviderMeta());
+        if (topSubtitle != null) topSubtitle.setText(compactPageSubtitle());
         refreshTopStatusChip();
         refreshDrawerMenuState();
     }
@@ -1270,6 +1272,20 @@ public class MainActivity extends Activity {
         } catch (Exception e) {
             return "OpenAI-compatible workflow";
         }
+    }
+
+    String compactPageSubtitle() {
+        if ("Translate".equals(currentTab)) {
+            if (cachedTranslateMeta != null && !cachedTranslateMeta.isEmpty()) return cachedTranslateMeta;
+            try {
+                AppSettings s = collectSettings();
+                cachedTranslateMeta = TranslateModelLabel.header(s.sourceLanguage, s.targetLanguage, s.model);
+                return cachedTranslateMeta;
+            } catch (Exception e) {
+                return TranslateModelLabel.header("", "", "");
+            }
+        }
+        return compactProviderMeta();
     }
 
     String providerMeta(AppSettings s) {
@@ -2799,6 +2815,8 @@ public class MainActivity extends Activity {
         double cap=effectiveCostCap(s,e);
         boolean warning=e==null||!e.pricingAvailable||(locks!=null&&(!locks.conflicts.isEmpty()||!locks.malformedGlossaryRows.isEmpty()||!locks.malformedPronounRows.isEmpty()))||(e!=null&&s.stopOnCostLimit&&s.costLimitUsd>0&&e.noCacheCostHigh>s.costLimitUsd);
         StringBuilder message=new StringBuilder(TranslationDashboardFormatter.preparedCompact(e,chunks))
+                .append("\nModel: ").append(TranslateModelLabel.shortName(s.model))
+                .append("\nProvider: ").append(nonEmpty(s.provider, "chưa chọn provider"))
                 .append("\nTrần chi phí hiệu lực lượt này: ").append(cap<0?"Không giới hạn":CostEstimator.money(cap));
         if(warning)message.append("\nCó cảnh báo cấu hình/giá; chỉ bắt đầu khi các kiểm tra chặn đã qua.");
         new AlertDialog.Builder(this).setTitle("Sẵn sàng dịch").setMessage(message.toString())
@@ -4218,7 +4236,9 @@ public class MainActivity extends Activity {
     void updateMetaLine() {
         AppSettings s = collectSettings();
         cachedProviderMeta = providerMeta(s);
-        if (translateMeta != null) translateMeta.setText(nonEmpty(s.provider, "provider") + " · " + nonEmpty(s.model, "model chưa chọn") + " · " + nonEmpty(s.sourceLanguage, "Ngôn ngữ nguồn") + " → " + nonEmpty(s.targetLanguage, "Ngôn ngữ đích"));
+        cachedTranslateMeta = TranslateModelLabel.header(s.sourceLanguage, s.targetLanguage, s.model);
+        if (translateMeta != null) translateMeta.setText(TranslateModelLabel.details(s.provider, s.model));
+        if (topSubtitle != null) topSubtitle.setText(compactPageSubtitle());
         refreshTranslationConfigViews();
         if (modelPriceLabel != null) {
             ModelCatalog.ModelInfo mi = ModelCatalog.findModelInfo(s.provider, s.model);
