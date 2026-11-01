@@ -226,9 +226,15 @@ public final class ResponseValidator {
                 result.count++;
                 if (result.firstLine < 0) result.firstLine = i + 1;
                 result.maxRatio = Math.max(result.maxRatio, ratio);
+                result.details.add(new RetainedSourceLine(i + 1, line.trim()));
             }
         }
         return result;
+    }
+
+    /** Japanese-bearing response lines, for an app-generated retry hint. Text is returned only to the caller in memory. */
+    public static List<RetainedSourceLine> retainedSourceLineDetails(String body, Collection<String> keptTargets) {
+        return Collections.unmodifiableList(new ArrayList<>(retainedSourceLines(body, keptTargets).details));
     }
 
     private static String removeRuby(String line) {
@@ -265,6 +271,17 @@ public final class ResponseValidator {
         int count;
         int firstLine = -1;
         double maxRatio;
+        final ArrayList<RetainedSourceLine> details = new ArrayList<>();
+    }
+
+    public static final class RetainedSourceLine {
+        public final int lineNumber;
+        public final String excerpt;
+
+        RetainedSourceLine(int lineNumber, String excerpt) {
+            this.lineNumber = lineNumber;
+            this.excerpt = excerpt == null ? "" : excerpt;
+        }
     }
 
     public static final class Result {

@@ -181,6 +181,7 @@ public class TranslationEngineCore {
         int boostedLimit = 0;
         AppSettings attemptSettings = s;
         boolean reasoningRetryUsed = false;
+        RetainedSourceRepairHint.Generated repairHint = null;
         for (int attempt = 1; attempt <= Math.max(1, s.maxAttempts); attempt++) {
             throwIfCancelled(cancelChecker);
             if(metricsRepository!=null&&jobId>0&&attemptSettings.stopOnCostLimit&&attemptSettings.costLimitUsd>0&&Math.max(metricsRepository.getMetricsSummary(jobId).totalCost,sessionCost==null?0:sessionCost.getAsDouble())>=attemptSettings.costLimitUsd)throw new IllegalStateException("Cost budget reached; valid received response retained, retry paused");
@@ -193,6 +194,7 @@ public class TranslationEngineCore {
             int outputLimit = boostedLimit > 0 ? boostedLimit : requestCap;
             long started = clock.now();
             OpenAICompatibleClient.ChatResult result = null;
+            String outputForValidation = null;
             final boolean[] bodySent = {false};
             final boolean[] responseHeaders = {false};
             final int attemptNo=attempt;
@@ -204,7 +206,7 @@ public class TranslationEngineCore {
                     eventSink.onEvent("Chunk " + (chunk.index + 1) + " locks: glossary=" + plan.glossaryLockCount
                             + ", pronoun=" + plan.pronounLockCount);
                 }
-                PromptPair prompt = plan.prompt;
+                PromptPair prompt = RetainedSourceRepairHint.addToUser(plan.prompt, repairHint);
                 String requestHash = HashUtil.sha256(prompt.system + "\n" + prompt.user + "\n" + attemptSettings.provider + "\n" + attemptSettings.model + (boostedLimit > 0 ? "\nlimit=" + boostedLimit : ""));
                 if (eventSink != null) rootAttemptOrdinal = eventSink.beforeRequest(chunk, attempt);
                 if (metricsRepository != null && jobId > 0) metricsRepository.beginChunkAttempt(jobId, chunk, attempt, "translate", requestHash, logicalRequestId + ":" + attempt, attemptSettings);
@@ -219,6 +221,7 @@ public class TranslationEngineCore {
                 ObservabilityLog.event("chunk_response","job",jobId,"stableId",chunk.stableId,"attempt",attempt,"responseHash",HashUtil.sha256(result.content),"responseProvider",result.responseProvider,"finishReason",result.finishReason,"usageSource",result.usageReported?"PROVIDER":"ESTIMATED","inputTokens",result.promptTokens,"outputTokens",result.completionTokens,"reasoningTokens",result.reasoningTokens,"cachedTokens",result.cachedPromptTokens);
                 if (usageSink != null) usageSink.onUsage(result, attemptSettings);
                 String out = PromptBuilder.extractTranslationStrict(result.content);
+                outputForValidation = out;
                 ResponseValidator.Repaired repaired = ResponseValidator.repairQuoteStyle(out, chunk.mainContent);
                 out = repaired.text;
                 ResponseValidator.Result validation = ResponseValidator.validate(result.content, out, chunk.mainContent,
@@ -289,6 +292,18 @@ public class TranslationEngineCore {
                 }
                 if (!RetryPolicy.mayRetry(kind, attempt, s.maxAttempts)) break;
                 if((kind==RetryPolicy.Kind.EMPTY_RESPONSE&&!s.retryOnEmpty)||(kind==RetryPolicy.Kind.TRUNCATION&&!s.retryOnTruncation)||(kind==RetryPolicy.Kind.VALIDATION&&!s.retryOnValidationFailure))break;
+                if (e instanceof ResponseValidator.RejectedResponseException) {
+                    ResponseValidator.Result rejected = ((ResponseValidator.RejectedResponseException) e).validation;
+                    if (rejected.errors.contains("RETAINED_SOURCE_LINE")) {
+                        repairHint = RetainedSourceRepairHint.fromTranslation(outputForValidation, plan.glossaryTargets);
+                        if (repairHint != null) {
+                            ObservabilityLog.event("translation_retry_hint", "repairHint", "RETAINED_SOURCE_LINE", "lines", repairHint.lineCount);
+                            if (eventSink != null) eventSink.onEvent("repairHint=RETAINED_SOURCE_LINE lines=" + repairHint.lineCount);
+                        }
+                    } else {
+                        repairHint = null;
+                    }
+                }
                 long delay = Math.max(RetryPolicy.backoffMs(kind, attempt,s.initialRetryDelayMs,s.maxRetryDelayMs), RetryPolicy.retryAfterMs(e));
                 if (eventSink != null) eventSink.onEvent("Retry " + kind + " after " + delay + "ms");
                 sleepBackoff(delay, cancelChecker);
