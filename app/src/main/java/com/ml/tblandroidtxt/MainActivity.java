@@ -624,7 +624,10 @@ public class MainActivity extends Activity {
         refreshJobCacheAsync(false);
         requestNotificationPermission();
         switchTab(currentTab);
-        new Thread(() -> LibraryRawStore.sweepOrphans(getApplicationContext()), "library-raw-sweep").start();
+        new Thread(() -> {
+            LibraryRawStore.sweepOrphans(getApplicationContext());
+            FileUtil.pruneOutputRecoveryCopies(getApplicationContext());
+        }, "startup-file-sweep").start();
     }
 
     @Override protected void onSaveInstanceState(Bundle outState) {

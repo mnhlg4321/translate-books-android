@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.UUID;
 
 public class FileUtil {
+    private static final Object OUTPUT_RECOVERY_LOCK = new Object();
 
     public static class FileAccessException extends FileAccessFailure {
         FileAccessException(String message) { super(message); }
@@ -173,16 +174,51 @@ public class FileUtil {
     /** Stages and verifies SAF output. The database remains authoritative if provider replacement is not atomic. */
     public static void writeTextVerified(Context c, Uri uri, String text) throws Exception {
         if (text == null || text.isEmpty()) throw new FileAccessException("Refusing to replace output with an empty file");
-        java.io.File staged=java.io.File.createTempFile("tbl-output-",".pending",c.getCacheDir());
-        try {
-            try(java.io.FileOutputStream out=new java.io.FileOutputStream(staged)){out.write(text.getBytes(StandardCharsets.UTF_8));out.flush();out.getFD().sync();}
-            String expected=HashUtil.sha256(text);
-            try(InputStream old=c.getContentResolver().openInputStream(uri)){
-                if(old!=null){java.io.File backup=new java.io.File(c.getFilesDir(),"output-recovery-"+System.currentTimeMillis()+".txt");try(java.io.FileOutputStream copy=new java.io.FileOutputStream(backup)){byte[]buf=new byte[8192];int n;while((n=old.read(buf))>=0)copy.write(buf,0,n);copy.flush();copy.getFD().sync();}if(backup.length()>0)LogStore.append(c,"Output recovery copy: "+backup.getAbsolutePath());else backup.delete();}
-            }catch(Exception ignored){LogStore.append(c,"No prior output available for recovery copy");}
-            try(InputStream in=new java.io.FileInputStream(staged);OutputStream out=c.getContentResolver().openOutputStream(uri,"wt")){if(out==null)throw new FileAccessException("Cannot open output URI");byte[]b=new byte[8192];int n;while((n=in.read(b))>=0)out.write(b,0,n);out.flush();}
-            if(!expected.equals(HashUtil.sha256(readText(c,uri))))throw new FileAccessException("Output verification failed; checkpoint remains authoritative");
-        } finally { if(!staged.delete())staged.deleteOnExit(); }
+        synchronized (OUTPUT_RECOVERY_LOCK) {
+            java.io.File staged=java.io.File.createTempFile("tbl-output-",".pending",c.getCacheDir());
+            try {
+                try(java.io.FileOutputStream out=new java.io.FileOutputStream(staged)){out.write(text.getBytes(StandardCharsets.UTF_8));out.flush();out.getFD().sync();}
+                String expected=HashUtil.sha256(text);
+                boolean saved=false;
+                try { saved=preservePriorOutput(c,uri); } catch(Exception ignored) { }
+                LogStore.append(c,"OUTPUT_RECOVERY_COPY saved="+(saved?1:0));
+                try(InputStream in=new java.io.FileInputStream(staged);OutputStream out=c.getContentResolver().openOutputStream(uri,"wt")){if(out==null)throw new FileAccessException("Cannot open output URI");byte[]b=new byte[8192];int n;while((n=in.read(b))>=0)out.write(b,0,n);out.flush();}
+                if(!expected.equals(HashUtil.sha256(readText(c,uri))))throw new FileAccessException("Output verification failed; checkpoint remains authoritative");
+                pruneOutputRecoveryCopiesLocked(c);
+            } finally { if(!staged.delete())staged.deleteOnExit(); }
+        }
+    }
+
+    /** Startup sweep. It shares the write lock so an active recovery copy cannot be pruned mid-write. */
+    static int pruneOutputRecoveryCopies(Context c) {
+        synchronized (OUTPUT_RECOVERY_LOCK) { return pruneOutputRecoveryCopiesLocked(c); }
+    }
+
+    private static int pruneOutputRecoveryCopiesLocked(Context c) {
+        int deleted=OutputRecoveryCopies.prune(new java.io.File(c.getFilesDir(),""),System.currentTimeMillis());
+        if(deleted>0)LogStore.append(c,"OUTPUT_RECOVERY_PRUNE deleted="+deleted);
+        return deleted;
+    }
+
+    /** Copies the old output to a temp name, syncs it, then atomically publishes the private recovery file. */
+    private static boolean preservePriorOutput(Context c, Uri uri) throws Exception {
+        try(InputStream old=c.getContentResolver().openInputStream(uri)){
+            if(old==null)return false;
+            java.io.File directory=c.getFilesDir();
+            String outputKey=HashUtil.sha256(uri.toString());
+            long timestamp=System.currentTimeMillis();
+            java.io.File pending=java.io.File.createTempFile("output-recovery-"+outputKey+"-"+timestamp+"-",".pending",directory);
+            try {
+                try(java.io.FileOutputStream copy=new java.io.FileOutputStream(pending)){
+                    byte[]buf=new byte[8192];int n;while((n=old.read(buf))>=0)copy.write(buf,0,n);copy.flush();copy.getFD().sync();
+                }
+                if(pending.length()==0)return false;
+                java.io.File backup=OutputRecoveryCopies.namedCopy(directory,outputKey,timestamp);
+                while(backup.exists())backup=OutputRecoveryCopies.namedCopy(directory,outputKey,++timestamp);
+                if(!pending.renameTo(backup))throw new java.io.IOException("Could not publish output recovery copy");
+                return true;
+            } finally { if(pending.exists())pending.delete(); }
+        }
     }
 
     public static Uri createOutputInTree(Context c, Uri treeUri, String displayName) throws Exception {
