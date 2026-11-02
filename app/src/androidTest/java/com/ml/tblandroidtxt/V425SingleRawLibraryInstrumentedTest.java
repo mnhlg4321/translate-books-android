@@ -55,6 +55,9 @@ public class V425SingleRawLibraryInstrumentedTest {
                     a.sourceUi.setMode(TranslateSourceFactory.MODE_FILES);
                     View button = findDescription(a.getWindow().getDecorView(), "input-library");
                     assertNotNull("library button exists in one-chapter mode", button);
+                    a.inputUris.clear();
+                    a.setLabel(a.inputFileLabel, TranslateInputLabel.empty(true));
+                    assertEquals("Chưa chọn RAW", a.inputFileLabel.getText().toString());
                     button.performClick();
 
                     FilePickerSheet picker = FilePickerSheet.last;
@@ -82,6 +85,8 @@ public class V425SingleRawLibraryInstrumentedTest {
                 assertNull("one RAW uses the standard single-file path, without chapter bindings", prepared.get().bindings);
                 assertEquals(selectedRaw.uri(), UiSessionStore.loadInputUris(c).get(0));
                 assertNull(FileUtil.validateReadable(c, Uri.parse(selectedRaw.uri()), "QA input"));
+                assertEquals("📄 " + selectedRaw.originalName + " · " + selectedRaw.chapterLabel(),
+                        aInputLabel(scenario));
                 assertEquals("025_QA_Glossary.csv", GlossaryStore.selected(c).name);
                 assertEquals("025_QA_Pronoun.csv", PronounStore.selected(c).name);
 
@@ -105,6 +110,12 @@ public class V425SingleRawLibraryInstrumentedTest {
             PronounStoreCore.resetForTest();
             PreparationCoordinator.get(c).cancel();
         }
+    }
+
+    private static String aInputLabel(ActivityScenario<MainActivity> scenario) {
+        AtomicReference<String> label = new AtomicReference<>();
+        scenario.onActivity(a -> label.set(a.inputFileLabel.getText().toString()));
+        return label.get();
     }
 
     private static LibraryRawStore.Item importRaw(Context c) throws Exception {

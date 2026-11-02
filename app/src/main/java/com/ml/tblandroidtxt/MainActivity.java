@@ -4008,7 +4008,14 @@ public class MainActivity extends Activity {
 
     String currentInputLabel() {
         if (inputUris.isEmpty()) return "Chưa chọn file TXT";
-        if (inputUris.size() == 1) return FileUtil.displayName(this, inputUris.get(0));
+        if (inputUris.size() == 1) {
+            Uri selected = inputUris.get(0);
+            if (selected != null && RawUri.isRaw(selected.toString())) {
+                LibraryRawStore.Item raw = LibraryRawStore.find(this, RawUri.idOf(selected.toString()));
+                if (raw != null) return TranslateInputLabel.librarySelection(raw.originalName, raw.chapterLabel());
+            }
+            return FileUtil.displayName(this, selected);
+        }
         return inputUris.size() + " tệp TXT đã chọn";
     }
 

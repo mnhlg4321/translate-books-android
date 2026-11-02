@@ -98,9 +98,15 @@ class TranslatePageFactory {
         h.setVisibility(View.GONE);
         sub.setVisibility(View.GONE);
         LinearLayout inputButtons = a.rowContainer();
-        Button libraryBrowse = a.primaryButton("Từ Thư viện", v -> a.sourceUi.pickSingleLibraryRaw());
+        Button libraryBrowse = a.primaryButton("Từ Thư viện", v -> {
+            if (a.inputUris.isEmpty()) a.setLabel(a.inputFileLabel, TranslateInputLabel.empty(true));
+            a.sourceUi.pickSingleLibraryRaw();
+        });
         libraryBrowse.setContentDescription("input-library");
-        Button deviceBrowse = a.secondaryButton("Từ thiết bị", v -> a.chooseInput());
+        Button deviceBrowse = a.secondaryButton("Từ thiết bị", v -> {
+            if (a.inputUris.isEmpty()) a.setLabel(a.inputFileLabel, TranslateInputLabel.empty(false));
+            a.chooseInput();
+        });
         deviceBrowse.setContentDescription("input-device");
         inputButtons.addView(libraryBrowse, new LinearLayout.LayoutParams(0, a.dp(48), 1));
         inputButtons.addView(a.space(8, 1));

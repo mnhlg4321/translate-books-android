@@ -153,7 +153,7 @@ final class TranslateSourceFactory {
                     a.inputUris.add(Uri.parse(raw.uri()));
                     a.inputUri = a.inputUris.get(0);
                     a.chapterBindings = null;
-                    a.setLabel(a.inputFileLabel, "📄 " + raw.originalName);
+                    a.setLabel(a.inputFileLabel, TranslateInputLabel.librarySelection(raw.originalName, raw.chapterLabel()));
                     a.onTranslateInputsChanged();
                     a.toast("Đã chọn RAW từ Thư viện");
                     a.appendLog("INPUT_SELECTED source=library_raw");
