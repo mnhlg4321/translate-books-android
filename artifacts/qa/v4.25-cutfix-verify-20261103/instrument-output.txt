@@ -1,0 +1,9 @@
+
+com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest:..........
+
+Time: 68.014
+
+OK (10 tests)
+
+
+exit=0
