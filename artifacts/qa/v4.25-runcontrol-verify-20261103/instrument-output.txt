@@ -1,0 +1,65 @@
+﻿
+com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest:.
+
+Time: 14
+
+OK (1 test)
+
+
+
+com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest:
+Error in aCutAnswerIsRetriedWithALargerLimitAndNeverSentIdenticallyTwice(com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest):
+java.lang.AssertionError: timed out: chapter 1 completed
+	at com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest.waitFor(V423ChapterRunInstrumentedTest.java:152)
+	at com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest.aCutAnswerIsRetriedWithALargerLimitAndNeverSentIdenticallyTwice(V423ChapterRunInstrumentedTest.java:665)
+.........
+
+Time: 232.902
+There was 1 failure:
+1) aCutAnswerIsRetriedWithALargerLimitAndNeverSentIdenticallyTwice(com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest)
+java.lang.AssertionError: timed out: chapter 1 completed
+	at com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest.waitFor(V423ChapterRunInstrumentedTest.java:152)
+	at com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest.aCutAnswerIsRetriedWithALargerLimitAndNeverSentIdenticallyTwice(V423ChapterRunInstrumentedTest.java:665)
+
+FAILURES!!!
+Tests run: 10,  Failures: 1
+
+
+
+com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest:
+Error in aCutAnswerIsRetriedWithALargerLimitAndNeverSentIdenticallyTwice(com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest):
+java.lang.AssertionError: timed out: chapter 1 completed
+	at com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest.waitFor(V423ChapterRunInstrumentedTest.java:152)
+	at com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest.aCutAnswerIsRetriedWithALargerLimitAndNeverSentIdenticallyTwice(V423ChapterRunInstrumentedTest.java:665)
+
+
+Time: 182.166
+There was 1 failure:
+1) aCutAnswerIsRetriedWithALargerLimitAndNeverSentIdenticallyTwice(com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest)
+java.lang.AssertionError: timed out: chapter 1 completed
+	at com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest.waitFor(V423ChapterRunInstrumentedTest.java:152)
+	at com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest.aCutAnswerIsRetriedWithALargerLimitAndNeverSentIdenticallyTwice(V423ChapterRunInstrumentedTest.java:665)
+
+FAILURES!!!
+Tests run: 1,  Failures: 1
+
+
+
+com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest:
+Error in aCutAnswerIsRetriedWithALargerLimitAndNeverSentIdenticallyTwice(com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest):
+java.lang.AssertionError: timed out: chapter 1 completed
+	at com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest.waitFor(V423ChapterRunInstrumentedTest.java:152)
+	at com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest.aCutAnswerIsRetriedWithALargerLimitAndNeverSentIdenticallyTwice(V423ChapterRunInstrumentedTest.java:665)
+
+
+Time: 181.841
+There was 1 failure:
+1) aCutAnswerIsRetriedWithALargerLimitAndNeverSentIdenticallyTwice(com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest)
+java.lang.AssertionError: timed out: chapter 1 completed
+	at com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest.waitFor(V423ChapterRunInstrumentedTest.java:152)
+	at com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest.aCutAnswerIsRetriedWithALargerLimitAndNeverSentIdenticallyTwice(V423ChapterRunInstrumentedTest.java:665)
+
+FAILURES!!!
+Tests run: 1,  Failures: 1
+
+
