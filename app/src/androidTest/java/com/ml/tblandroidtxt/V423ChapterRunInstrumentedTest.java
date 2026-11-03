@@ -6,6 +6,8 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.TextView;
 
 import androidx.test.core.app.ActivityScenario;
@@ -514,6 +516,119 @@ public class V423ChapterRunInstrumentedTest {
         }
     }
 
+    @Test
+    public void completedChapterThenTickingTheNextChapterStartsANewJobFromTheBar() throws Exception {
+        Context c = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Map<String, Map<String, ?>> original = snapshot(c);
+        clearAll(c);
+        RuntimeStateStore.clear(c);
+        UiSessionStore.saveInputUris(c, Collections.emptyList());
+        Fixture f = seed(c);
+        AppSettings base = baseSettings();
+        SettingsStore.save(c, base);
+        TranslateTestSeam.setOutputDir(outDir(c));
+        TranslateTestSeam.setProvider((settings, prompt, limit, id, observer) -> {
+            observe(observer);
+            return response(prompt.system + "\n" + prompt.user);
+        });
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            Uri fakeTree = Uri.parse("content://tbl.test/tree/v425-selection");
+            scenario.onActivity(activity -> {
+                activity.switchTab("Translate");
+                // switchTab may hydrate settings while creating Translate; install the fake output after that hydration.
+                activity.outputUri = null;
+                activity.outputTreeUri = fakeTree;
+                activity.sourceUi.selectSet(f.setId);
+            });
+            waitFor(() -> {
+                AtomicReference<PreparedBatch> ref = new AtomicReference<>();
+                scenario.onActivity(activity -> ref.set(activity.currentPreparedBatch()));
+                return ref.get() != null && ref.get().ready() && ref.get().bindings != null && ref.get().bindings.size() == 3;
+            }, 60_000L, "plan for the initial three-chapter selection");
+
+            // Leave only chapter 2 selected for the first Start.
+            scenario.onActivity(activity -> {
+                CheckBox one = findCheck(activity.getWindow().getDecorView(), "chapter:" + f.raws.get(0).originalName);
+                CheckBox three = findCheck(activity.getWindow().getDecorView(), "chapter:" + f.raws.get(2).originalName);
+                assertNotNull(one);
+                assertNotNull(three);
+                if (one.isChecked()) one.performClick();
+                if (three.isChecked()) three.performClick();
+            });
+            waitFor(() -> {
+                AtomicReference<PreparedBatch> ref = new AtomicReference<>();
+                scenario.onActivity(activity -> ref.set(activity.currentPreparedBatch()));
+                return ref.get() != null && ref.get().ready() && ref.get().bindings != null && ref.get().bindings.size() == 1
+                        && f.raws.get(1).uri().equals(ref.get().inputs.get(0).uri.toString());
+            }, 60_000L, "chapter 2-only plan");
+            AtomicReference<String> firstPlanId = new AtomicReference<>();
+            scenario.onActivity(activity -> firstPlanId.set(activity.currentPreparedBatch().id));
+
+            // Exercise the actual bar button. The preflight confirmation is accepted through the same post-preflight method
+            // the dialog's Bắt đầu button invokes, keeping this test independent of a particular dialog-window implementation.
+            scenario.onActivity(activity -> {
+                Button start = findButton(activity.getWindow().getDecorView(), "Công việc: Bắt đầu");
+                assertNotNull("Start button is visible when the one-chapter plan is ready", start);
+                assertTrue("Start button is enabled", start.isEnabled());
+                start.performClick();
+            });
+            waitFor(() -> {
+                AtomicReference<String> validated = new AtomicReference<>();
+                scenario.onActivity(activity -> validated.set(activity.validatedPlanId));
+                return firstPlanId.get().equals(validated.get());
+            }, 60_000L, "chapter 2 preflight");
+            scenario.onActivity(MainActivity::startTranslationNow);
+            waitFor(() -> status(c, f.raws.get(1).uri()).startsWith("COMPLETED") && !TranslatorService.isActive(),
+                    120_000L, "chapter 2 completed");
+            waitFor(() -> {
+                AtomicReference<Boolean> idle = new AtomicReference<>();
+                scenario.onActivity(activity -> idle.set(!activity.translationActive));
+                return Boolean.TRUE.equals(idle.get());
+            }, 30_000L, "activity leaves the completed run");
+            TranslationRepository.JobSummary chapterTwoJob = job(c, f.raws.get(1).uri());
+            assertNotNull(chapterTwoJob);
+
+            // Refresh the same set so the completed marker is visible, then move the tick from chapter 2 to chapter 3.
+            scenario.onActivity(activity -> {
+                activity.sourceUi.refresh();
+                CheckBox two = findCheck(activity.getWindow().getDecorView(), "chapter:" + f.raws.get(1).originalName);
+                CheckBox three = findCheck(activity.getWindow().getDecorView(), "chapter:" + f.raws.get(2).originalName);
+                assertNotNull(two);
+                assertNotNull(three);
+                if (two.isChecked()) two.performClick();
+                if (!three.isChecked()) three.performClick();
+            });
+            waitFor(() -> {
+                AtomicReference<PreparedBatch> ref = new AtomicReference<>();
+                scenario.onActivity(activity -> ref.set(activity.currentPreparedBatch()));
+                return ref.get() != null && ref.get().ready() && ref.get().bindings != null && ref.get().bindings.size() == 1
+                        && f.raws.get(2).uri().equals(ref.get().inputs.get(0).uri.toString());
+            }, 60_000L, "chapter 3-only plan after ticking");
+            scenario.onActivity(activity -> {
+                assertNull("selection change clears the durable runtime snapshot", RuntimeStateStore.toIntent(activity));
+                assertEquals("", activity.trackedState);
+                Button start = findButton(activity.getWindow().getDecorView(), "Công việc: Bắt đầu");
+                assertNotNull("Start button returns for the new selection", start);
+                assertTrue("Start button remains enabled for the new ready plan", start.isEnabled());
+                start.performClick();
+            });
+            AtomicReference<String> secondPlanId = new AtomicReference<>();
+            waitFor(() -> {
+                scenario.onActivity(activity -> secondPlanId.set(activity.validatedPlanId));
+                return secondPlanId.get() != null && !secondPlanId.get().isEmpty() && !secondPlanId.get().equals(firstPlanId.get());
+            }, 60_000L, "chapter 3 preflight");
+            scenario.onActivity(MainActivity::startTranslationNow);
+            waitFor(() -> status(c, f.raws.get(2).uri()).startsWith("COMPLETED") && !TranslatorService.isActive(),
+                    120_000L, "chapter 3 completed");
+            TranslationRepository.JobSummary chapterThreeJob = job(c, f.raws.get(2).uri());
+            assertNotNull(chapterThreeJob);
+            assertTrue("ticking chapter 3 creates a new job, not a continuation of chapter 2",
+                    chapterThreeJob.id != chapterTwoJob.id);
+        } finally {
+            cleanup(c, f, original);
+        }
+    }
+
     private static String lineRichResponse(String userPrompt, String closing) {
         // One translated line per source paragraph that appears in this request, so the missing-lines check sees a faithful answer.
         java.util.regex.Matcher m = java.util.regex.Pattern.compile("\u3010\u7ae0\\d\u3011\u7b2c(\\d+)\u6bb5").matcher(userPrompt);
@@ -655,6 +770,30 @@ public class V423ChapterRunInstrumentedTest {
             for (int i = 0; i < group.getChildCount(); i++) if (containsText(group.getChildAt(i), text)) return true;
         }
         return false;
+    }
+
+    private static CheckBox findCheck(View view, String description) {
+        if (view instanceof CheckBox && description.equals(String.valueOf(view.getContentDescription()))) return (CheckBox) view;
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                CheckBox found = findCheck(group.getChildAt(i), description);
+                if (found != null) return found;
+            }
+        }
+        return null;
+    }
+
+    private static Button findButton(View view, String description) {
+        if (view instanceof Button && description.equals(String.valueOf(view.getContentDescription()))) return (Button) view;
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                Button found = findButton(group.getChildAt(i), description);
+                if (found != null) return found;
+            }
+        }
+        return null;
     }
 
     private static Map<String, Map<String, ?>> snapshot(Context c) {

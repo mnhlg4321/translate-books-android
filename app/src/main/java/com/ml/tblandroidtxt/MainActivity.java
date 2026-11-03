@@ -485,6 +485,20 @@ public class MainActivity extends Activity {
         return SelectedWorkModel.txt(hashes, name);
     }
 
+    private String selectedWorkKey() {
+        return SelectedWorkModel.key(selectedWorkIdentity());
+    }
+
+    private boolean completedMatchesSelection(Intent runtime) {
+        if (runtime == null) return false;
+        String savedKey = runtime.getStringExtra(RuntimeStateStore.EXTRA_SELECTION_KEY);
+        return savedKey != null && !savedKey.trim().isEmpty() && savedKey.equals(selectedWorkKey());
+    }
+
+    private void rememberSelectedWorkForRuntime() {
+        RuntimeStateStore.saveSelectionKey(this, selectedWorkKey());
+    }
+
     private boolean pendingMatchesSelection() {
         if (pendingJobCache == null) return false;
         String setId = setIdOfPendingJob(pendingJobCache);
@@ -2879,6 +2893,7 @@ public class MainActivity extends Activity {
         }
         String finalReadiness=startReadinessError(true);
         if(finalReadiness!=null){appendLog("START_DISPATCH_BLOCKED resource="+finalReadiness);showResult("Start blocked",finalReadiness);updateActionButtons();return;}
+        rememberSelectedWorkForRuntime();
         saveRuntimeUris();
         AppSettings s = collectSettings();
         SettingsStore.save(this, s);
@@ -2978,6 +2993,7 @@ public class MainActivity extends Activity {
         }
         Intent i = new Intent(this, TranslatorService.class);
         i.setAction(TranslatorService.ACTION_RESUME_LAST);
+        rememberSelectedWorkForRuntime();
         startForegroundService(i);
         translationActive = true;
         updateActionButtons();
@@ -2996,6 +3012,7 @@ public class MainActivity extends Activity {
         }
         Intent i = new Intent(this, TranslatorService.class);
         i.setAction(TranslatorService.ACTION_RETRY_FAILED);
+        rememberSelectedWorkForRuntime();
         startForegroundService(i);
         translationActive = true;
         updateActionButtons();
@@ -3020,6 +3037,7 @@ public class MainActivity extends Activity {
         Intent i = new Intent(this, TranslatorService.class);
         i.setAction(TranslatorService.ACTION_RESUME_JOB);
         i.putExtra("jobId", jobId);
+        rememberSelectedWorkForRuntime();
         startForegroundService(i);
         translationActive = true;
         updateActionButtons();
@@ -3042,6 +3060,7 @@ public class MainActivity extends Activity {
         i.setAction(TranslatorService.ACTION_RETRY_JOB_FAILED);
         i.putExtra("jobId", jobId);
         lastRetriedJobId = jobId;
+        rememberSelectedWorkForRuntime();
         startForegroundService(i);
         translationActive = true;
         updateActionButtons();
@@ -3136,11 +3155,12 @@ public class MainActivity extends Activity {
         boolean unknown = (pendingMatches && pendingUnknownCache) || (runtimeState != null && runtimeState.toUpperCase(Locale.ROOT).contains("UNKNOWN"));
         boolean pending = (pendingJobCacheReady && pendingJobCache != null && pendingMatches) || (failedChunksCache && pendingMatches);
         int failures = pendingMatches && pendingJobCache != null ? pendingJobCache.error : (pendingMatches && failedChunksCache ? 1 : 0);
+        boolean completedMatches = completedMatchesSelection(runtime);
         PreparedBatch plan = currentPreparedBatch();
         boolean planReady = plan != null && plan.ready();
         String blocker = planReady ? startReadinessError() : "Đang chuẩn bị kế hoạch chunk";
         return RunControlModel.resolve(active, runtimeState, unknown, pending, failures,
-                planReady, blocker, pendingMatches);
+                planReady, blocker, pendingMatches, completedMatches);
     }
 
     private String runControlMessage(RunControlModel.State state, String blocker) {
@@ -3202,8 +3222,21 @@ public class MainActivity extends Activity {
     }
 
     private void runPrimaryAction(RunControlModel.Action action) {
+        dispatchRunAction(action);
+    }
+
+    private void runSecondaryAction(RunControlModel.Action action) {
+        dispatchRunAction(action);
+    }
+
+    /** Every visible or overflow action is explicit so a new Action cannot become a silent no-op. */
+    private void dispatchRunAction(RunControlModel.Action action) {
+        if (action == null) return;
         switch (action) {
+            case NONE: break;
             case START: startTranslation(); break;
+            case STOP: confirmStopTranslation(); break;
+            case REVIEW: switchTab("Jobs"); break;
             case PAUSE: sendSvc(TranslatorService.ACTION_PAUSE); break;
             case RESUME:
                 if (pendingJobCache != null) resumeJob(pendingJobCache.id);
@@ -3212,16 +3245,11 @@ public class MainActivity extends Activity {
             case RETRY:
                 if (pendingJobCache != null) retryJobFailedChunks(pendingJobCache.id); else retryFailedChunks();
                 break;
-            case REVIEW: switchTab("Jobs"); break;
             case OPEN_RESULT:
                 if (outputUri != null || outputTreeUri != null) openSelectedOutput(); else switchTab("Jobs");
                 break;
-            default: break;
+            case MORE: showRunOverflow(runControlState()); break;
         }
-    }
-
-    private void runSecondaryAction(RunControlModel.Action action) {
-        if (action == RunControlModel.Action.STOP) confirmStopTranslation();
     }
 
     private void showRunOverflow(RunControlModel.State state) {
@@ -4021,11 +4049,26 @@ public class MainActivity extends Activity {
 
     /** Refreshes the plan and UI after the Translate input selection changes. */
     void onTranslateInputsChanged() {
+        onTranslateSelectionChanged(true);
+        updateInputEstimate();
+    }
+
+    /** Saves the current selection and clears state only after a real selection change. */
+    void onTranslateSelectionChanged(boolean changed) {
         UiSessionStore.saveInputUris(this, inputUris);
-        if (!TranslatorService.isActive()) {
+        if (changed && !TranslatorService.isActive()) {
             RuntimeStateStore.clear(this);
+            trackedState = "";
+            timedRuntimeState = "IDLE";
+            timedElapsedMs = 0L;
+            timedRemainingMs = -1L;
+            completionSummaryCollapsed = false;
+            validatedPlanId = "";
+            validatedPlanAt = 0L;
             translationActive = false;
             if (trackingCard != null) trackingCard.setVisibility(View.GONE);
+            if (completionSummary != null) completionSummary.setVisibility(View.GONE);
+            if (trackingDetails != null) trackingDetails.setVisibility(View.GONE);
             if (statusBanner != null) statusBanner.setVisibility(View.GONE);
             if (resultCard != null) resultCard.setVisibility(View.GONE);
             if (progress != null) progress.setProgress(0);
@@ -4033,7 +4076,6 @@ public class MainActivity extends Activity {
             refreshTopStatusChip();
         }
         if (sourceUi != null) sourceUi.refreshSingleRawSuggestion();
-        updateInputEstimate();
     }
 
     String inputUrisJson() {

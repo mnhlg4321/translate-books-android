@@ -370,6 +370,7 @@ public class FileUtil {
 
     /** Same checks as {@link #validateTreeWritable} but never touches the provider: only the persisted-grant list is read. */
     public static String validateTreeGrantOnly(Context c, Uri treeUri, String label) {
+        if (TranslateTestSeam.outputDir() != null) return null;
         if (treeUri == null) return label + ": chưa chọn output folder";
         if (!hasPersistedWrite(c, treeUri)) return label + ": chưa có quyền ghi lâu dài. Hãy chọn lại output folder.";
         try {
@@ -388,6 +389,7 @@ public class FileUtil {
 
     public static String validateTreeWritable(Context c, Uri treeUri, String label) {
         WRITE_PROBE_COUNT.incrementAndGet();
+        if (TranslateTestSeam.outputDir() != null) return null;
         if (treeUri != null && hasPersistedWrite(c, treeUri)) return verifyTreeWritable(c, treeUri, label);
         if (treeUri == null) return label + ": chưa chọn output folder";
         if (!hasPersistedWrite(c, treeUri)) return label + ": chưa có quyền ghi lâu dài. Hãy chọn lại output folder.";

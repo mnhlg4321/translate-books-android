@@ -19,7 +19,12 @@ public class RunControlModelTest {
         assertEquals(RunControlModel.Action.PAUSE, RunControlModel.controls(RunControlModel.State.RUNNING, 0).primaryAction);
         assertEquals(RunControlModel.Action.RESUME, RunControlModel.controls(RunControlModel.State.PAUSED, 0).primaryAction);
         assertEquals("Dịch lại 3 chunk lỗi", RunControlModel.controls(RunControlModel.State.WORK_REMAINS, 3).primaryLabel);
-        assertEquals(RunControlModel.Action.OPEN_RESULT, RunControlModel.controls(RunControlModel.State.COMPLETED, 0).primaryAction);
+        RunControlModel.Controls completed = RunControlModel.controls(RunControlModel.State.COMPLETED, 0);
+        assertEquals(RunControlModel.Action.START, completed.primaryAction);
+        assertTrue(completed.primaryEnabled);
+        assertEquals("Bắt đầu", completed.primaryLabel);
+        assertEquals(RunControlModel.Action.OPEN_RESULT, completed.secondaryAction);
+        assertEquals("Mở kết quả", completed.secondaryLabel);
     }
 
     @Test public void theBarMappingDoesNotDependOnChapterSetMode() {
@@ -42,5 +47,14 @@ public class RunControlModelTest {
                 RunControlModel.resolve(false, "", false, false, 0, false, "Chưa chọn TXT"));
         assertEquals(RunControlModel.State.READY,
                 RunControlModel.resolve(false, "", false, false, 0, true, ""));
+    }
+
+    @Test public void completedRuntimeStateBelongsOnlyToTheMatchingSelection() {
+        assertEquals(RunControlModel.State.READY,
+                RunControlModel.resolve(false, "COMPLETED", false, false, 0, true, "", false, false));
+        assertEquals(RunControlModel.State.COMPLETED,
+                RunControlModel.resolve(false, "COMPLETED", false, false, 0, true, "", false, true));
+        assertEquals(RunControlModel.State.READY,
+                RunControlModel.resolve(false, "COMPLETED", false, false, 0, true, "", false));
     }
 }

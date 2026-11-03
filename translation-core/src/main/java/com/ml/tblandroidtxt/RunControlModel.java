@@ -65,7 +65,7 @@ public final class RunControlModel {
                                 boolean pendingJob, int pendingFailedChunks,
                                 boolean planReady, String blocker) {
         return resolve(active, runtimeState, pendingUnknown, pendingJob, pendingFailedChunks,
-                planReady, blocker, true);
+                planReady, blocker, true, true);
     }
 
     /**
@@ -77,6 +77,20 @@ public final class RunControlModel {
                                 boolean pendingJob, int pendingFailedChunks,
                                 boolean planReady, String blocker,
                                 boolean pendingMatchesSelection) {
+        return resolve(active, runtimeState, pendingUnknown, pendingJob, pendingFailedChunks,
+                planReady, blocker, pendingMatchesSelection, pendingMatchesSelection);
+    }
+
+    /**
+     * Resolves the bar with independent ownership checks for pending work and
+     * the durable completion snapshot. A completion from a different open
+     * file/set must never replace the Start action for the current plan.
+     */
+    public static State resolve(boolean active, String runtimeState, boolean pendingUnknown,
+                                boolean pendingJob, int pendingFailedChunks,
+                                boolean planReady, String blocker,
+                                boolean pendingMatchesSelection,
+                                boolean completedMatchesSelection) {
         String state = runtimeState == null ? "" : runtimeState.trim().toUpperCase(Locale.ROOT);
         if (active) {
             if ("STOPPING".equals(state)) return State.STOPPING;
@@ -87,7 +101,7 @@ public final class RunControlModel {
         if (pendingMatchesSelection && pendingUnknown) return State.UNKNOWN_DELIVERY;
         if (pendingMatchesSelection && pendingJob && pendingFailedChunks > 0) return State.WORK_REMAINS;
         if (pendingMatchesSelection && pendingJob) return State.WORK_REMAINS;
-        if ("COMPLETED".equals(state)) return State.COMPLETED;
+        if (completedMatchesSelection && "COMPLETED".equals(state)) return State.COMPLETED;
         if (planReady && (blocker == null || blocker.trim().isEmpty())) return State.READY;
         return State.BLOCKED;
     }
@@ -115,7 +129,7 @@ public final class RunControlModel {
                 return new Controls(safe, errors > 0 ? Action.RETRY : Action.RESUME, label,
                         true, Action.NONE, "", "", true);
             case COMPLETED:
-                return new Controls(safe, Action.OPEN_RESULT, "Mở kết quả", true, Action.RETRY, "Dịch lại", "", true);
+                return new Controls(safe, Action.START, "Bắt đầu", true, Action.OPEN_RESULT, "Mở kết quả", "", true);
             default:
                 return new Controls(State.BLOCKED, Action.START, "Bắt đầu", false, Action.NONE, "", "", true);
         }

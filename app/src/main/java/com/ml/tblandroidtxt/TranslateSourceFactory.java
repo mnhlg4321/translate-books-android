@@ -43,6 +43,9 @@ final class TranslateSourceFactory {
     private final Runnable applyLater = this::applySelection;
     /** Tick-to-plan delay: several ticks in a row prepare the plan once. */
     private static final long APPLY_DELAY_MS = 400L;
+    /** The first render restores the saved selection; only later identity changes clear runtime state. */
+    private boolean appliedSelection;
+    private String appliedSelectionFingerprint = "";
     int bindingsBuilt() { return bindingCache.built; }
 
     private LinearLayout box, chapterBox;
@@ -96,7 +99,13 @@ final class TranslateSourceFactory {
         chapterBox = new LinearLayout(a);
         chapterBox.setOrientation(LinearLayout.VERTICAL);
         box.addView(chapterBox, a.marginLP(-1, -2, 0, 8, 0, 0));
-        if (isSetMode()) refresh(); else render();
+        if (isSetMode()) {
+            refresh();
+        } else {
+            appliedSelection = true;
+            appliedSelectionFingerprint = selectionFingerprint(null);
+            render();
+        }
         return box;
     }
 
@@ -115,7 +124,7 @@ final class TranslateSourceFactory {
             a.inputUris.clear();
             a.inputUris.addAll(filesUris);
             a.inputUri = a.inputUris.isEmpty() ? null : a.inputUris.get(0);
-            UiSessionStore.saveInputUris(a, a.inputUris);
+            a.onTranslateSelectionChanged(true);
             save();
             render();
             a.setLabel(a.inputFileLabel, a.currentInputLabel());
@@ -234,13 +243,25 @@ final class TranslateSourceFactory {
 
     String currentSetName() { return setName; }
 
+    private String selectionFingerprint(List<ChapterBinding> bindings) {
+        StringBuilder out = new StringBuilder(mode).append('|').append(setId).append('|');
+        if (bindings != null) for (ChapterBinding binding : bindings) {
+            if (binding != null) out.append(binding.keyPart()).append(';');
+        }
+        return out.toString();
+    }
+
     private void applySelection() {
         List<ChapterBinding> bindings = freshBindings();
+        String nextFingerprint = selectionFingerprint(bindings);
+        boolean changed = appliedSelection && !nextFingerprint.equals(appliedSelectionFingerprint);
+        appliedSelection = true;
+        appliedSelectionFingerprint = nextFingerprint;
         a.chapterBindings = bindings;
         a.inputUris.clear();
         for (ChapterBinding b : bindings) a.inputUris.add(Uri.parse(b.rawUri()));
         a.inputUri = a.inputUris.isEmpty() ? null : a.inputUris.get(0);
-        UiSessionStore.saveInputUris(a, a.inputUris);
+        a.onTranslateSelectionChanged(changed);
         a.setLabel(a.inputFileLabel, bindings.isEmpty() ? "Tập: chưa tick chương nào" : "Tập " + setName + " · " + bindings.size() + " chương");
         a.refreshEstimateForSelection();
     }
@@ -366,6 +387,8 @@ final class TranslateSourceFactory {
         check.setOnClickListener(v -> {
             if (check.isChecked()) ticked.add(x.raw.id); else ticked.remove(x.raw.id);
             save();
+            // Clear the old completion immediately; plan preparation is deliberately debounced below.
+            a.onTranslateSelectionChanged(true);
             // Only this card and the count line change; the plan for the new selection is prepared once, a moment after the last tick.
             retintRow(x);
             updateTotal();

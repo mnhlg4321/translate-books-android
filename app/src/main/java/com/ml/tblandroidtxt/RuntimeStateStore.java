@@ -6,9 +6,18 @@ import android.content.SharedPreferences;
 
 public class RuntimeStateStore {
     private static final String PREF = "runtime_state";
+    /** Stable identity of the Translate selection that produced the snapshot. */
+    public static final String EXTRA_SELECTION_KEY = "selectionKey";
 
     public static void clear(Context c) {
         if (c != null) c.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit().clear().apply();
+    }
+
+    public static void saveSelectionKey(Context c, String selectionKey) {
+        if (c == null) return;
+        c.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
+                .putString(EXTRA_SELECTION_KEY, selectionKey == null ? "" : selectionKey)
+                .apply();
     }
 
     public static void save(Context c, String jobState, String status, int progress, String log, String phase, String fileName,
@@ -109,6 +118,7 @@ public class RuntimeStateStore {
         if (!p.contains("updatedAt")) return null;
         if (!AppBuildInfo.VERSION_NAME.equals(p.getString("appVersion", ""))) return null;
         Intent i = new Intent(TranslatorService.ACTION_PROGRESS);
+        i.putExtra(EXTRA_SELECTION_KEY, p.getString(EXTRA_SELECTION_KEY, ""));
         i.putExtra(TranslatorService.EXTRA_STATE,p.getString(TranslatorService.EXTRA_STATE,"IDLE"));
         i.putExtra(TranslatorService.EXTRA_STATUS, p.getString(TranslatorService.EXTRA_STATUS, ""));
         i.putExtra(TranslatorService.EXTRA_PROGRESS, p.getInt(TranslatorService.EXTRA_PROGRESS, -1));
