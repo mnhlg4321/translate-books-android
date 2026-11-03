@@ -638,6 +638,17 @@ public class V423ChapterRunInstrumentedTest {
         return "<TRANSLATION>" + sb.toString().trim() + "</TRANSLATION>";
     }
 
+    /**
+     * A cut answer whose visible text fills at least the request limit, as a real long answer does. A short visible text with
+     * no reported reasoning is the reasoning-runaway signature (TranslationEngineCore.isReasoningBound) and is not resent with a
+     * larger limit, so the fixture must not look like that.
+     */
+    private static String cutAnswer(String userPrompt, int limit) {
+        StringBuilder filler = new StringBuilder();
+        while (Chunker.approxTokens(filler.toString()) < limit) filler.append(" dich dai");
+        return lineRichResponse(userPrompt, ".").replace("</TRANSLATION>", filler + "</TRANSLATION>");
+    }
+
     @Test
     public void aCutAnswerIsRetriedWithALargerLimitAndNeverSentIdenticallyTwice() throws Exception {
         Context c = InstrumentationRegistry.getInstrumentation().getTargetContext();
@@ -654,7 +665,7 @@ public class V423ChapterRunInstrumentedTest {
             if (!all.contains("\u3010\u7ae01\u3011")) return response(all);
             limits.add(limit);
             // Chapter 1: cut while the limit is below 8192, whole once it is raised.
-            if (limit < 8192) return raw(lineRichResponse(all, "."), "length", limit);
+            if (limit < 8192) return raw(cutAnswer(all, limit), "length", limit);
             return raw(lineRichResponse(all, "."), "stop", 900);
         });
         Broadcasts rx = listen(c);

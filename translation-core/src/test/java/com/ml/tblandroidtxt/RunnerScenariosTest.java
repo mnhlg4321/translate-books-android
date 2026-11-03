@@ -125,6 +125,20 @@ public class RunnerScenariosTest {
         assertEquals("B1.\nB2.\nB3.\n", h.output());
     }
 
+    /**
+     * A cut is classed as reasoning-bound when the visible text is under half the visible budget (commit 874a030d, F6).
+     * A cut with real visible text must still take the limit-raise path; a short answer with no reported reasoning is the
+     * reasoning-runaway signature and must not be resent with a larger limit.
+     */
+    @Test public void visibleCutWithoutReportedReasoningIsNotReasoningBound() {
+        OpenAICompatibleClient.ChatResult cut = new OpenAICompatibleClient.ChatResult();
+        cut.finishReason = "length"; cut.completionTokens = 2000; cut.reasoningTokens = 0;
+        StringBuilder visible = new StringBuilder();
+        for (int i = 0; i < 200; i++) visible.append('日');
+        assertFalse(TranslationEngineCore.isReasoningBound(cut, visible.toString(), 256));
+        assertTrue(TranslationEngineCore.isReasoningBound(cut, "Dòng dịch số 1.", 256));
+    }
+
     /** 5a. Reasoning-bound (F6): one retry one effort lower, never a third call; the chunk stops at chapter level. */
     @Test public void reasoningBoundRetriesOnceThenStopsTheChunk() throws Exception {
         AppSettings s = RunnerHarness.settings();
