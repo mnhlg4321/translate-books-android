@@ -72,6 +72,12 @@ public final class QaSeed {
         setEd.setPronounSlot(allPronounIds(setEd));
         setEd.setName("QA_tap_hai_chuong");
         setEd.save();
+            // A second set, so the Tập list can show one of two ticked (lib-a follow-up).
+            com.ml.tblandroidtxt.DesktopSetEditor setOne = rt.newSet(new ArrayList<>(two.subList(0, 1)));
+            setOne.setGlossarySlot(allGlossaryIds(setOne));
+            setOne.setPronounSlot(allPronounIds(setOne));
+            setOne.setName("QA_tap_mot_chuong");
+            setOne.save();
             AppSettings s = rt.loadSettings();
             s.model = "qa/fixture-model";
             s.reasoningEffort = "off";

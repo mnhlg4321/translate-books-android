@@ -45,7 +45,7 @@ final class SetsPage {
     private final HBox bulkBar = new HBox(8, bulkDelete);
     private final Label count = new Label();
     private final UndoBar undo = new UndoBar();
-    private final TickList<DesktopRuntime.SetCard> ticks = new TickList<>(list, c -> c.id, this::rowText, this::updateListButtons);
+    private final TickList<DesktopRuntime.SetCard> ticks = new TickList<>(list, c -> c.id, this::rowText, this::updateListButtons, this::statusOf);
 
     private final VBox editorPage;
     private final TextField nameField = new TextField();
@@ -81,20 +81,13 @@ final class SetsPage {
         desc.setWrapText(true);
         desc.getStyleClass().add("muted");
         list.setPlaceholder(new Label("Chưa có tập. Nhập RAW trước, rồi bấm \"+ Tạo tập mới\"."));
-        list.setCellFactory(l -> new ListCell<DesktopRuntime.SetCard>() {
-            @Override protected void updateItem(DesktopRuntime.SetCard c, boolean empty) {
-                super.updateItem(c, empty);
-                setText(empty || c == null ? null : c.name + "  ·  " + c.summary);
-                getStyleClass().removeAll("err", "warn");
-                if (c != null && !empty) getStyleClass().add(c.red > 0 ? "err" : c.yellow > 0 ? "warn" : "ok");
-            }
-        });
         list.setOnMouseClicked(e -> { if (e.getClickCount() == 2) openSelected(); });
         list.getSelectionModel().selectedItemProperty().addListener((o, a, b) -> updateListButtons());
         VBox.setVgrow(list, Priority.ALWAYS);
         Button create = new Button("+ Tạo tập mới");
         create.getStyleClass().add("primary");
-        for (Button b : new Button[]{open, rename, bulkDelete}) b.getStyleClass().add("secondary");
+        for (Button b : new Button[]{open, rename}) b.getStyleClass().add("secondary");
+        bulkDelete.getStyleClass().add("danger");
         create.setOnAction(e -> startNew(new ArrayList<>()));
         open.setOnAction(e -> openSelected());
         rename.setOnAction(e -> renameSelected());
@@ -112,6 +105,11 @@ final class SetsPage {
     /** One set row. */
     private String rowText(DesktopRuntime.SetCard c) {
         return c.name + "  ·  " + c.summary;
+    }
+
+    /** Colour of a set row: red when a chapter is missing, yellow when one needs a check, green otherwise. */
+    private String statusOf(DesktopRuntime.SetCard c) {
+        return c.red > 0 ? "err" : c.yellow > 0 ? "warn" : "ok";
     }
 
     void reload() {
@@ -170,7 +168,7 @@ final class SetsPage {
         DesktopLibraryBulk.Plan plan = runtime.setPlan(ids);
         if (plan.deletableCount() == 0) { say(listNote, plan.firstMessage(), true); return; }
         int rawOnly = plan.rawOnlyIds().size();
-        javafx.scene.control.ButtonType okType = new javafx.scene.control.ButtonType("Đồng ý", javafx.scene.control.ButtonBar.ButtonData.OK_DONE);
+        javafx.scene.control.ButtonType okType = new javafx.scene.control.ButtonType("Xóa", javafx.scene.control.ButtonBar.ButtonData.OK_DONE);
         javafx.scene.control.ButtonType cancelType = new javafx.scene.control.ButtonType("Hủy", javafx.scene.control.ButtonBar.ButtonData.CANCEL_CLOSE);
         javafx.scene.control.Alert a = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION,
                 plan.firstMessage() + "\nRAW, Glossary và Pronoun của các chương vẫn còn trong thư viện, trừ khi chọn xóa RAW bên dưới.", okType, cancelType);
@@ -182,11 +180,29 @@ final class SetsPage {
         VBox content = new VBox(10, new Label(a.getContentText()), alsoRaw);
         ((Label) content.getChildren().get(0)).setWrapText(true);
         a.getDialogPane().setContent(content);
+        // Destructive confirmation: Cancel is the default button, so Enter does not delete.
+        a.setOnShown(e -> {
+            javafx.scene.control.Button okNode = (javafx.scene.control.Button) a.getDialogPane().lookupButton(okType);
+            javafx.scene.control.Button cancelNode = (javafx.scene.control.Button) a.getDialogPane().lookupButton(cancelType);
+            okNode.setDefaultButton(false);
+            cancelNode.setDefaultButton(true);
+            cancelNode.requestFocus();
+        });
         Optional<javafx.scene.control.ButtonType> r = app.showDialog(a);
         if (!r.isPresent() || r.get() != okType) return;
         if (alsoRaw.isSelected() && !app.confirmWithLabel("Xóa cả RAW?", rawOnly + " RAW chỉ thuộc các tập này sẽ bị xóa khỏi thư viện (RAW đang cần cho job dịch dở được giữ lại).", "Vẫn xóa")) return;
+        performDelete(plan, alsoRaw.isSelected());
+    }
+
+    /** QA: ticks the first two sets and removes them without the dialogs, so the undo bar can be photographed (throw-away data only). */
+    void qaDeleteNoConfirm() {
+        ticks.tickFirst(2);
+        performDelete(runtime.setPlan(ticks.ids()), false);
+    }
+
+    private void performDelete(DesktopLibraryBulk.Plan plan, boolean alsoRaw) {
         undo.settle();
-        DesktopLibraryBulk.Undo removed = runtime.deleteSetsUndoable(plan.deletableIds(), alsoRaw.isSelected());
+        DesktopLibraryBulk.Undo removed = runtime.deleteSetsUndoable(plan.deletableIds(), alsoRaw);
         ticks.clear();
         int n = removed.count();
         say(listNote, "Đã xóa " + plan.deletableCount() + " tập" + (removed.count() > plan.deletableCount() ? " và " + (n - plan.deletableCount()) + " RAW" : "") + ".", false);

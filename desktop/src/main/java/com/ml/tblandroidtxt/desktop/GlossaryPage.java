@@ -49,8 +49,7 @@ final class GlossaryPage {
     private final Button use = new Button("Dùng cho bản dịch");
     private final Button bulkDelete = new Button("Xóa (0)");
     private final Button bulkExport = new Button("Xuất (0)…");
-    private final Button bulkUse = new Button("Dùng");
-    private final HBox bulkBar = new HBox(8, bulkDelete, bulkExport, bulkUse);
+    private final HBox bulkBar = new HBox(8, bulkDelete, bulkExport);
     private final Label count = new Label();
     private final UndoBar undo = new UndoBar();
     private final TickList<GlossaryStoreCore.Glossary> ticks = new TickList<>(list, g -> g.id, this::rowText, this::updateListButtons);
@@ -91,14 +90,14 @@ final class GlossaryPage {
         VBox.setVgrow(list, Priority.ALWAYS);
         Button importButton = new Button("+ Nhập Glossary…");
         Button blankButton = new Button("+ Tạo Glossary trống");
-        for (Button b : new Button[]{importButton, blankButton, open, use, bulkDelete, bulkExport, bulkUse}) b.getStyleClass().add("secondary");
+        for (Button b : new Button[]{importButton, blankButton, open, use, bulkExport}) b.getStyleClass().add("secondary");
+        bulkDelete.getStyleClass().add("danger");
         importButton.setOnAction(e -> chooseAndImport());
         blankButton.setOnAction(e -> createBlank());
         open.setOnAction(e -> openSelected());
         use.setOnAction(e -> useSelected());
         bulkDelete.setOnAction(e -> deleteTicked());
         bulkExport.setOnAction(e -> exportTicked());
-        bulkUse.setOnAction(e -> useTicked());
         listNote.setWrapText(true);
         count.getStyleClass().add("muted");
         bulkBar.setAlignment(Pos.CENTER_LEFT);
@@ -129,13 +128,12 @@ final class GlossaryPage {
     private void updateListButtons() {
         boolean none = list.getSelectionModel().getSelectedItem() == null;
         open.setDisable(none);
-        use.setDisable(none);
+        use.setDisable(useTarget() == null);
         int n = ticks.count();
         bulkBar.setVisible(n > 0);
         bulkBar.setManaged(n > 0);
         bulkDelete.setText("Xóa (" + n + ")");
         bulkExport.setText("Xuất (" + n + ")…");
-        bulkUse.setDisable(n != 1);
     }
 
     private static boolean blank(String s) { return s == null || s.trim().isEmpty() || s.trim().equals("—"); }
@@ -171,19 +169,18 @@ final class GlossaryPage {
         openEditor(g);
     }
 
-    private void useSelected() {
-        GlossaryStoreCore.Glossary g = list.getSelectionModel().getSelectedItem();
-        if (g == null) return;
-        runtime.selectGlossary(g.id);
-        say(listNote, "Đang dùng \"" + g.name + "\" cho bản dịch.", false);
-        app.libraryChanged();
+    /**
+     * The one "Dùng" button: the Glossary ticked when exactly one is ticked, otherwise the focused row when nothing is ticked.
+     * Null (button disabled) when several are ticked.
+     */
+    private GlossaryStoreCore.Glossary useTarget() {
+        List<String> ids = ticks.ids();
+        if (ids.size() == 1) return runtime.glossary(ids.get(0));
+        return ids.isEmpty() ? list.getSelectionModel().getSelectedItem() : null;
     }
 
-    /** "Dùng" of the bar: only when exactly one Glossary is ticked. */
-    private void useTicked() {
-        List<String> ids = ticks.ids();
-        if (ids.size() != 1) return;
-        GlossaryStoreCore.Glossary g = runtime.glossary(ids.get(0));
+    private void useSelected() {
+        GlossaryStoreCore.Glossary g = useTarget();
         if (g == null) return;
         runtime.selectGlossary(g.id);
         say(listNote, "Đang dùng \"" + g.name + "\" cho bản dịch.", false);
@@ -196,8 +193,18 @@ final class GlossaryPage {
         if (ids.isEmpty()) return;
         DesktopLibraryBulk.Plan plan = runtime.glossaryPlan(ids);
         if (plan.deletableCount() == 0) { say(listNote, plan.firstMessage(), true); return; }
-        if (!app.confirm("Xóa " + plan.deletableCount() + " Glossary?", plan.firstMessage())) return;
+        if (!app.confirmWithLabel("Xóa " + plan.deletableCount() + " Glossary?", plan.firstMessage(), "Xóa")) return;
         if (plan.needsSecondConfirm() && !app.confirmWithLabel("Xác nhận lần hai", plan.secondMessage(), "Vẫn xóa")) return;
+        performDelete(plan);
+    }
+
+    /** QA: removes the first two Glossaries without the dialogs, so the undo bar can be photographed (throw-away data only). */
+    void qaDeleteNoConfirm() {
+        ticks.tickFirst(2);
+        performDelete(runtime.glossaryPlan(ticks.ids()));
+    }
+
+    private void performDelete(DesktopLibraryBulk.Plan plan) {
         undo.settle();
         DesktopLibraryBulk.Undo removed = runtime.deleteGlossaries(plan.deletableIds());
         if (removed == null) { say(listNote, "Không xóa được: kho Glossary đang bị khóa.", true); return; }

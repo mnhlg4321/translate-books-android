@@ -52,7 +52,7 @@ public final class DesktopTheme {
         return "-tbl-bg: " + hex(p.bg) + "; -tbl-surface: " + hex(p.panel) + "; -tbl-raised: " + hex(p.card)
                 + "; -tbl-text: " + hex(p.text) + "; -tbl-text2: " + hex(p.muted) + "; -tbl-divider: " + hex(UiAppearanceCore.divider(p))
                 + "; -tbl-outline: " + hex(p.border) + "; -tbl-accent: " + hex(p.accent) + "; -tbl-on-accent: " + hex(p.onAccent)
-                + "; -tbl-ok: " + hex(p.ok) + "; -tbl-warn: " + hex(p.warn) + "; -tbl-err: " + hex(p.bad)
+                + "; -tbl-ok: " + hex(p.ok) + "; -tbl-warn: " + hex(p.warn) + "; -tbl-err: " + hex(p.bad) + "; -tbl-on-err: " + hex(ColorMath.onColor(p.bad))
                 + "; -fx-font-size: " + String.format(Locale.ROOT, "%.2f", px) + "px;";
     }
 }

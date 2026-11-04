@@ -213,8 +213,18 @@ final class RawPage {
         if (ids.isEmpty()) return;
         DesktopLibraryBulk.Plan plan = runtime.rawBulk().plan(ids);
         if (plan.deletableCount() == 0) { say(plan.firstMessage(), true); return; }
-        if (!app.confirm("Xóa " + plan.deletableCount() + " RAW?", plan.firstMessage())) return;
+        if (!app.confirmWithLabel("Xóa " + plan.deletableCount() + " RAW?", plan.firstMessage(), "Xóa")) return;
         if (plan.needsSecondConfirm() && !app.confirmWithLabel("Xác nhận lần hai", plan.secondMessage(), "Vẫn xóa")) return;
+        performDelete(plan);
+    }
+
+    /** QA: removes the first two RAW without the dialogs, so the undo bar can be photographed (throw-away data only). */
+    void qaDeleteNoConfirm() {
+        ticks.tickFirst(2);
+        performDelete(runtime.rawBulk().plan(ticks.ids()));
+    }
+
+    private void performDelete(DesktopLibraryBulk.Plan plan) {
         undo.settle();
         DesktopRawBulk.Pending pending = runtime.rawBulk().delete(plan);
         ticks.clear();

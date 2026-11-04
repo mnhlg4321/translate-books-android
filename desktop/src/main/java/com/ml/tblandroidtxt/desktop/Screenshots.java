@@ -108,8 +108,8 @@ final class Screenshots {
             steps.add(() -> { app.select(NavModel.PRONOUN); app.pronounPage().qaTickFirst(2); });
             steps.add(() -> shot(mode, "thu-vien-pronoun-chon-2"));
             steps.add(() -> app.pronounPage().qaClearTicks());
-            steps.add(() -> { app.select(NavModel.SETS); app.setsPage().qaTickFirst(2); });
-            steps.add(() -> shot(mode, "thu-vien-tap-chon-2"));
+            steps.add(() -> { app.select(NavModel.SETS); app.setsPage().qaTickFirst(1); });
+            steps.add(() -> shot(mode, "thu-vien-tap-chon-1-trong-2"));
             steps.add(() -> app.setsPage().qaClearTicks());
             if (!dark) {
                 steps.add(() -> { dialogName = "hop-thoai-xoa-glossary-lan-1"; app.glossaryPage().qaDelete(); });
@@ -118,6 +118,8 @@ final class Screenshots {
                 steps.add(() -> app.pronounPage().qaClearTicks());
                 steps.add(() -> { dialogName = "hop-thoai-xoa-tap-lan-1"; app.setsPage().qaDelete(); });
                 steps.add(() -> app.setsPage().qaClearTicks());
+                // The second confirmation as the delete opens it (opened directly: a probe cannot continue the chain).
+                steps.add(() -> { dialogName = "hop-thoai-xoa-lan-2-van-xoa"; app.confirmWithLabel("Xác nhận lần hai", "QA: dòng dùng chung sẽ bị ảnh hưởng. Xóa vẫn được.", "Vẫn xóa"); });
             }
             steps.add(() -> app.select(NavModel.TRANSLATE));
         }
@@ -126,6 +128,9 @@ final class Screenshots {
             dialogs(seed);
             dialogs2();
         }
+        // The undo bar after a bulk delete (synthetic QA Glossaries, removed without the dialogs; photographed inside the 10 s window).
+        steps.add(() -> { app.select(NavModel.GLOSSARY); app.glossaryPage().qaDeleteNoConfirm(); });
+        steps.add(() -> shot("sang", "thanh-hoan-tac-sau-xoa-glossary"));
         steps.add(() -> app.select(NavModel.VOLUME));
         for (var theme : DesktopTheme.themes()) {
             for (int percent : new int[]{100, 130}) {

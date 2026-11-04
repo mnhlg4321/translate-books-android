@@ -70,6 +70,8 @@
 .primary:disabled { -fx-opacity: 0.45; }
 .secondary { -fx-background-color: -tbl-surface; -fx-text-fill: -tbl-text; -fx-border-color: -tbl-outline; -fx-border-radius: 5; -fx-background-radius: 5; -fx-padding: 6 14 6 14; -fx-cursor: hand; }
 .secondary:disabled { -fx-opacity: 0.45; }
+.danger { -fx-background-color: -tbl-err; -fx-text-fill: -tbl-on-err; -fx-font-weight: bold; -fx-background-radius: 5; -fx-padding: 6 14 6 14; -fx-cursor: hand; }
+.danger:disabled { -fx-opacity: 0.45; }
 .text-field, .text-area, .combo-box-base, .password-field { -fx-background-color: -tbl-surface; -fx-border-color: -tbl-outline; -fx-border-radius: 4; -fx-background-radius: 4; }
 .list-view, .table-view { -fx-background-color: -tbl-surface; -fx-border-color: -tbl-divider; }
 .statusbar { -fx-background-color: -tbl-surface; -fx-border-color: -tbl-divider; -fx-border-width: 1 0 0 0; -fx-padding: 6 14 6 14; }

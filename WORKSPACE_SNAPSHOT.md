@@ -1,27 +1,13 @@
 # Workspace Snapshot
 
-- Updated: 2026-11-04 (+07:00), after the lib-a clean-archive tests, screenshot run and evidence were written.
-- Current version: v4.25 development build `4.25-dev.9` / Android versionCode `328` (phone, unchanged). PC package for lib-a is not built.
+- Updated: 2026-11-04 (+07:00), after the lib-a coordinator follow-up code was written and desktop-tested in the worktree; clean-archive run, screenshots and PC package come in later commits.
+- Current version: v4.25 development build `4.25-dev.9` / Android versionCode `328` (phone, unchanged). PC package for the follow-up is not built yet (target `4.25-pc-dev.3`).
 - Current branch: `feature/v4.25` in `D:\P5E-builds\wt-v4.25` (owner-specified existing worktree).
-- Current commit: `16f2a1ca` — baseline immediately before this snapshot commit (`feat(pc): Library multi-select with undoable bulk delete for Glossary, Pronoun, Tập`).
-- Current build: none for lib-a. Last packaged PC build from earlier snapshots: `4.25-pc-dev.2`, event `build-20261104-190103`.
-- Current phase: v4.25 PC Library lists (lib-a) — code committed (`16f2a1ca`), verified from a clean archive of that commit, screenshots written and partly inspected. Owner review pending. No install, no push, no tag, no merge.
-- Completed tasks:
-  - Shared PC helper `DesktopLibraryBulk`; `DesktopRawBulk` moved to the shared plan and undo types.
-  - `DesktopRuntime`: usage plans for Glossary/Pronoun/Tập, undoable deletes restoring stored objects, active-selection fallback, exact restore.
-  - Core: `ChapterSetStoreCore.restore` (keeps `updated_at`); `save` unchanged.
-  - PC UI: tick lists with select-all and "n đã chọn · Hủy" on RAW, Glossary, Pronoun, Tập; bulk bars; 10 s undo bar; second confirmation "Vẫn xóa"; CSV export that never overwrites; RAW encoding and count line.
-  - Tests: `LibraryBulkUndoTest` (10).
-  - Clean archive `16f2a1ca` (`D:\P5E-builds\verify-v4.25-lib-a-16f2a1ca`), offline: desktop 80 / 0 failed / 0 skipped; translation-core 67 / 0 failed / 1 skipped; translation-core-jdbc 3 / 0 failed; app 766 / 0 failed / 5 skipped.
-  - Screenshots `artifacts/qa/v4.25-pc-lib-a-20261104/after/` (78) with README and checklist section.
-- Pending tasks:
-  - Dark Glossary/Pronoun/Tập selection images and the Tập delete dialog not yet inspected.
-  - Tập selection evidence shows one set only (QA seed).
-  - PC package not built; undo-window and second-confirm dialogs not captured.
-  - Owner review; any install needs a separate owner approval.
-- Known bugs/limits:
-  - Undo bar and second-confirm dialog are not in the screenshots.
-  - If the app closes inside a 10 s undo window, Glossary/Pronoun/Tập deletes stay final; RAW files stay on disk until purge as before.
-  - Phone and provider behaviour: NOT_MEASURED for this change; no provider calls.
-- Regression status: clean archive of `16f2a1ca` — see totals above; screenshot run exit 0 (78 images).
-- Next action: owner reviews the lib-a images in `artifacts/qa/v4.25-pc-lib-a-20261104/after/` and decides whether to build the PC package.
+- Current commit: `31eed2ac` — baseline immediately before this snapshot commit (lib-a code `16f2a1ca`, lib-a evidence `31eed2ac`).
+- Current build: none for the follow-up yet.
+- Current phase: lib-a follow-up (coordinator review of `16f2a1ca`): Tập tick boxes restored, bulk-delete dialogs (Xóa / Vẫn xóa, Cancel default), red danger delete button, one Dùng button on Glossary and Pronoun, second Tập in the QA seed, undo-bar and dialog screenshots. Code written; desktop tests 83 total, 0 failures, 0 skipped in the worktree.
+- Completed tasks (follow-up): SetsPage no longer replaces the TickList cell factory (status colours moved into TickList); delete dialogs first button "Xóa", second "Vẫn xóa", Cancel is default on all Library bulk deletes; `.danger` style with `-tbl-on-err` (= onColor of the error colour, contrast tested on every palette); Glossary and Pronoun keep one "Dùng" (ticked row when exactly one is ticked, else the focused row); QaSeed adds `QA_tap_mot_chuong`; Screenshots: Tập 1-of-2 selection, second-confirmation dialog, undo bar after a QA delete.
+- Pending tasks: clean archive of the code commit with the four test tasks; screenshots from the clean archive, inspect light and dark; evidence commit; PC package `4.25-pc-dev` from a clean tree (no install); checklist and snapshot.
+- Known bugs/limits: none new. Phone and provider behaviour NOT_MEASURED; no provider calls.
+- Regression status: worktree desktop tests 83 total, 0 failures, 0 skipped (before the code commit). Clean-archive run not yet done.
+- Next action: commit the follow-up code, then run the clean-archive tests from that commit.

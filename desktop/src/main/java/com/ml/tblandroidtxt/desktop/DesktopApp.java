@@ -712,6 +712,14 @@ public final class DesktopApp extends Application {
         a.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         a.setTitle("Xác nhận");
         a.setHeaderText(header);
+        // Destructive confirmations: Enter cancels, so the delete needs a deliberate click or Tab-Space.
+        a.setOnShown(e -> {
+            javafx.scene.control.Button okNode = (javafx.scene.control.Button) a.getDialogPane().lookupButton(ok);
+            javafx.scene.control.Button cancelNode = (javafx.scene.control.Button) a.getDialogPane().lookupButton(cancel);
+            okNode.setDefaultButton(false);
+            cancelNode.setDefaultButton(true);
+            cancelNode.requestFocus();
+        });
         Optional<ButtonType> r = showDialog(a);
         return r.isPresent() && r.get() == ok;
     }

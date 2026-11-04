@@ -26,6 +26,7 @@ final class TickList<T> {
     private final Function<T, String> idOf;
     private final Function<T, String> text;
     private final Runnable changed;
+    private final Function<T, String> status;
     private final DesktopLibraryBulk.Selection selection = new DesktopLibraryBulk.Selection();
     private final CheckBox all = new CheckBox("Chọn tất cả");
     private final Label headline = new Label();
@@ -33,10 +34,16 @@ final class TickList<T> {
     private final HBox header = new HBox(12);
 
     TickList(ListView<T> list, Function<T, String> idOf, Function<T, String> text, Runnable changed) {
+        this(list, idOf, text, changed, null);
+    }
+
+    /** {@code status} gives the colour class of a row ("ok", "warn" or "err"); null for no colour. The tick box is kept in every case. */
+    TickList(ListView<T> list, Function<T, String> idOf, Function<T, String> text, Runnable changed, Function<T, String> status) {
         this.list = list;
         this.idOf = idOf;
         this.text = text;
         this.changed = changed;
+        this.status = status;
         cancel.getStyleClass().add("secondary");
         all.setOnAction(e -> {
             selection.selectAll(visibleIds());
@@ -132,7 +139,10 @@ final class TickList<T> {
                     return;
                 }
                 box.setSelected(selection.isSelected(idOf.apply(item)));
-                ((Label) row.getChildren().get(1)).setText(text.apply(item));
+                Label label = (Label) row.getChildren().get(1);
+                label.setText(text.apply(item));
+                label.getStyleClass().removeAll("ok", "warn", "err");
+                if (status != null) label.getStyleClass().add(status.apply(item));
                 setText(null);
                 setGraphic(row);
             }
