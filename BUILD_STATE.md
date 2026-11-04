@@ -1,6 +1,6 @@
 # Build State
 
-## Current state — 2026-11-04 (v4.25.0 release: tagged and archived locally; not merged, not pushed, not installed)
+## Current state — 2026-11-04 (v4.25.0 release complete: tagged, archived, merged to `main` by fast-forward, and pushed; not installed)
 
 - Tag `v4.25.0` (annotated, object `eb1a02367ee127341be09c272edb33ea0fd6fd35`) on `cde799f0d3756b8bab41c0618b4bfd37b82200ca` on the release branch `feature/v4.25.0` (from `feature/v4.25` at `e014f8c9`). Production commit for phone and PC: `e014f8c9f72c5eb16cb4daa9f5e1e67bb8f36b6c`; the tag adds the split test fixture fix `0a05d316` and release docs (archive helper `-ProductionGitRef e014f8c9`).
 - Phone APK **4.25.0 / versionCode 329**, SHA-256 `4B82F0D58B00AF391E9E53879F0717870C28BBA742A1F9475056C63A54FF7B10`, `scripts/build-and-save.ps1 -ExactReleaseVersion 4.25.0` (event `build-20261104-204947`). Debuggable build, like 4.24.x. NOT installed on the phone (it runs `4.25-dev.9`/328).
@@ -8,7 +8,8 @@
 - Checks on `e014f8c9` (clean archive): app 766/5 skip/0 fail, golden 14/14, core 67/1 skip, jdbc 3, desktop 83, editorial-engine 742/1 skip, lint 0 errors, androidTest compile PASS; Editorial diff vs v4.24.1 empty. Emulator on the release APK: chapter-run class 10/10, V425 classes 3/3. Macrobenchmark A/B vs v4.24.1: +31 ms median cold start on average (NOT_DIAGNOSED). Report `artifacts/qa/v4.25.0/QA_REPORT.md`.
 - Archives: `artifacts/releases/v4.25.0/{build-20261104-213906,tag-v4.25.0}` (in `D:\P5E-builds\wt-v4.25`) and `backup/v4.25.0/{build-20261104-213906,tag-v4.25.0}` (central backup); 29 files each, identical; `pc/` holds the PC package; source ZIP `project_source_v4.25.0.zip` from the tag.
 - Limits: real-phone performance NOT_MEASURED; reasoning-bound rule kept (Haiku token ratio 1.09–1.20 measured, other models NOT_MEASURED); APK debuggable; msi unsigned; Editorial frozen; Tập not in the library ZIP.
-- Next action: owner decides on merge to `main` + push (R7-style), on installing APK 4.25.0 on the phone (backup, counts, `install-validated.ps1`), and on installing msi 4.25.0 on the PC.
+- Publication (owner: "Merge và push", 2026-11-04): pre-push scan of the 49 commits in `origin/main..feature/v4.25.0` found no key, token or private-key pattern and no blob over 6 MB; `main` and `feature/v4.25` fast-forwarded to `23cb3145` (no merge commit; `feature/v4.25.0` deleted locally, an ancestor of the tag); `git push origin main feature/v4.25 refs/tags/v4.25.0` succeeded; `ls-remote`: main = feature/v4.25 = `23cb3145`, tag `v4.25.0` object `eb1a0236` peels to `cde799f0`. This record is one more docs commit, fast-forwarded and pushed the same way.
+- Next action: installing APK 4.25.0 on the phone (backup, counts, `install-validated.ps1`) and msi 4.25.0 on the PC each need a separate owner approval.
 
 ## Current state — 2026-11-01 (v4.24.1 release complete: tagged, archived, merged to `main`, and pushed; `main` = `origin/main` = `8551f78e`)
 
