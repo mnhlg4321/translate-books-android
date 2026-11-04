@@ -208,6 +208,7 @@ final class PronounPage {
 
         table.setPlaceholder(new Label("Chưa có quy tắc nào được đọc từ văn bản bên dưới."));
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.widthProperty().addListener((o, a, b) -> fitColumns());
         table.setPrefHeight(230);
         textArea.setStyle("-fx-font-family: 'Consolas', monospace;");
         textArea.textProperty().addListener((o, a, b) -> {
@@ -239,6 +240,19 @@ final class PronounPage {
         markDirty();
     }
 
+    /** Columns share the table width by their weight (user data), with a floor so a short column never collapses to "…". */
+    private void fitColumns() {
+        double total = 0;
+        for (TableColumn<String[], ?> c : table.getColumns()) total += (Double) c.getUserData();
+        if (total <= 0) return;
+        double usable = Math.max(0, table.getWidth() - 24);
+        for (TableColumn<String[], ?> c : table.getColumns()) {
+            double w = usable * (Double) c.getUserData() / total;
+            c.setMinWidth(Math.min(70, w));
+            c.setPrefWidth(w);
+        }
+    }
+
     private void refreshTable() {
         if (editor == null) return;
         String[] cols = editor.columns();
@@ -250,12 +264,12 @@ final class PronounPage {
                 final int index = i;
                 TableColumn<String[], String> c = new TableColumn<>(cols[i]);
                 c.setCellValueFactory(cd -> new ReadOnlyStringWrapper(index < cd.getValue().length ? cd.getValue()[index] : ""));
-                // Equal-share fallback let the "from" column take the width and squeeze the rest to "…"; give each column a readable floor and preference.
-                c.setMinWidth(index == 0 ? 120 : 80);
-                c.setPrefWidth(index == 0 ? 200 : 110);
+                // The rule text columns ("from", "note") take twice the share of the short ones; fitColumns() sizes them to the table width.
+                c.setUserData(cols[i].equals("from") || cols[i].equals("note") ? 2.0 : 1.0);
                 table.getColumns().add(c);
             }
         }
+        fitColumns();
         table.getItems().setAll(editor.rows());
         status.setText(editor.statusLine() + (editor.legacyOnly() ? " · định dạng cũ 3 cột (giữ nguyên khi lưu)" : ""));
         status.getStyleClass().removeAll("ok", "warn");
