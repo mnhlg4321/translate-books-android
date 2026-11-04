@@ -641,11 +641,14 @@ public class V423ChapterRunInstrumentedTest {
     /**
      * A cut answer whose visible text fills at least the request limit, as a real long answer does. A short visible text with
      * no reported reasoning is the reasoning-runaway signature (TranslationEngineCore.isReasoningBound) and is not resent with a
-     * larger limit, so the fixture must not look like that.
+     * larger limit, so the fixture must not look like that. Every test that simulates a cut uses this helper.
      */
     private static String cutAnswer(String userPrompt, int limit) {
         StringBuilder filler = new StringBuilder();
-        while (Chunker.approxTokens(filler.toString()) < limit) filler.append(" dich dai");
+        // Measured in blocks so a 16384-token limit does not re-count the whole text after every word.
+        while (Chunker.approxTokens(filler.toString()) < limit) {
+            for (int i = 0; i < 256; i++) filler.append(" dich dai");
+        }
         return lineRichResponse(userPrompt, ".").replace("</TRANSLATION>", filler + "</TRANSLATION>");
     }
 
@@ -692,6 +695,7 @@ public class V423ChapterRunInstrumentedTest {
         Fixture f = seed(c);
         TranslateTestSeam.setOutputDir(outDir(c));
         final List<String> requests = Collections.synchronizedList(new ArrayList<String>());
+        final List<Integer> cutLimits = Collections.synchronizedList(new ArrayList<Integer>());
         TranslateTestSeam.setProvider((settings, prompt, limit, id, observer) -> {
             observe(observer);
             String all = prompt.system + "\n" + prompt.user;
@@ -700,8 +704,8 @@ public class V423ChapterRunInstrumentedTest {
             java.util.regex.Matcher m = java.util.regex.Pattern.compile("\u3010\u7ae01\u3011\u7b2c(\\d+)\u6bb5").matcher(all);
             java.util.Set<String> seen = new java.util.HashSet<>();
             while (m.find()) seen.add(m.group(1));
-            // More than 8 paragraphs in one request is "too long to finish": cut at any limit.
-            if (seen.size() > 8) return raw(lineRichResponse(all, "."), "length", limit);
+            // More than 8 paragraphs in one request is "too long to finish": cut at any limit, with a full-length visible answer.
+            if (seen.size() > 8) { cutLimits.add(limit); return raw(cutAnswer(all, limit), "length", limit); }
             return raw(lineRichResponse(all, "."), "stop", 400);
         });
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
@@ -709,6 +713,9 @@ public class V423ChapterRunInstrumentedTest {
             s.maxAttempts = 2; s.maxTokensPerChunk = 2000; s.initialRetryDelayMs = 100; s.maxRetryDelayMs = 200;
             runSet(scenario, c, f, AppValidator.normalize(s));
             waitFor(() -> status(c, f.raws.get(0).uri()).startsWith("COMPLETED") && !TranslatorService.isActive(), 240_000L, "chapter 1 completed after splitting");
+            // The cut path really ran: a cut, then the same chunk with a raised limit, before the split.
+            assertTrue("the chapter-1 request was cut at least twice: " + cutLimits, cutLimits.size() >= 2);
+            assertTrue("the second cut used a raised limit: " + cutLimits, cutLimits.get(1) > cutLimits.get(0));
             assertEquals("no request was sent twice as it was", requests.size(), new java.util.HashSet<>(requests).size());
             TranslationRepository repo = new TranslationRepository(c);
             try {
