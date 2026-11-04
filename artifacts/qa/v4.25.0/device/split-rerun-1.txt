@@ -1,0 +1,38 @@
+﻿INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=
+com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest:
+INSTRUMENTATION_STATUS: test=aChunkCutAtEveryLimitIsSplitInHalvesAndTheChapterCompletes
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: timed out: chapter 1 completed after splitting
+	at com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest.waitFor(V423ChapterRunInstrumentedTest.java:152)
+	at com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest.aChunkCutAtEveryLimitIsSplitInHalvesAndTheChapterCompletes(V423ChapterRunInstrumentedTest.java:711)
+
+INSTRUMENTATION_STATUS: stream=
+Error in aChunkCutAtEveryLimitIsSplitInHalvesAndTheChapterCompletes(com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest):
+java.lang.AssertionError: timed out: chapter 1 completed after splitting
+	at com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest.waitFor(V423ChapterRunInstrumentedTest.java:152)
+	at com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest.aChunkCutAtEveryLimitIsSplitInHalvesAndTheChapterCompletes(V423ChapterRunInstrumentedTest.java:711)
+
+INSTRUMENTATION_STATUS: test=aChunkCutAtEveryLimitIsSplitInHalvesAndTheChapterCompletes
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_RESULT: stream=
+
+Time: 242.186
+There was 1 failure:
+1) aChunkCutAtEveryLimitIsSplitInHalvesAndTheChapterCompletes(com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest)
+java.lang.AssertionError: timed out: chapter 1 completed after splitting
+	at com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest.waitFor(V423ChapterRunInstrumentedTest.java:152)
+	at com.ml.tblandroidtxt.V423ChapterRunInstrumentedTest.aChunkCutAtEveryLimitIsSplitInHalvesAndTheChapterCompletes(V423ChapterRunInstrumentedTest.java:711)
+
+FAILURES!!!
+Tests run: 1,  Failures: 1
+
+
+INSTRUMENTATION_CODE: -1

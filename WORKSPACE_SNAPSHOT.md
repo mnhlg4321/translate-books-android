@@ -1,20 +1,18 @@
 # Workspace Snapshot
 
-- Updated: 2026-11-04 (+07:00), after the owner-approved install of PC package `4.25-pc-dev.3` on this PC.
-- Current version: v4.25 development build `4.25-dev.9` / Android versionCode `328` (phone, unchanged). PC `4.25-pc-dev.3` (registered as `4.25.3`) is installed on this PC.
-- Current branch: `feature/v4.25` in `D:\P5E-builds\wt-v4.25` (owner-specified existing worktree).
-- Current commit: `c9870b3c` — baseline immediately before this snapshot commit (code `ff50e86a`, evidence `f4d88698`, checklist and snapshot `c9870b3c`).
-- Current build: PC `4.25-pc-dev.3`, event `build-20261104-202149`, ZIP SHA-256 `B3196BEF6573312B1973645ACD01A2E002B0A39F2CD6089427928759444AACDF`, MSI SHA-256 `091D6FC6AAAD3BA96952380E0048CA4013789F1BB3DFF557056984B83832E7E8`; artifact and backup copies identical; source commit `f4d88698`. Installed; registered version `4.25.3`.
-- Current phase: v4.25 PC Library lists (lib-a) and the coordinator follow-up are done, tested from a clean archive, packaged, and installed on this PC at the owner's request. Owner trial pending.
+- Updated: 2026-11-04 (+07:00), release 4.25.0 attempt stopped at QA (FAILED_REPAIRING).
+- Current version: release candidate `4.25.0` / Android versionCode `329` (built, not tagged, not installed). Phone `15e84958` still runs `4.25-dev.9`/328; this PC runs `4.25.3` (package `4.25-pc-dev.3`).
+- Current branch: `feature/v4.25.0` (release branch, created from `feature/v4.25` at `e014f8c9`) in `D:\P5E-builds\wt-v4.25`. `feature/v4.25` stays at `e014f8c9`.
+- Current commit: `e014f8c9f72c5eb16cb4daa9f5e1e67bb8f36b6c` — implementation baseline immediately before this QA/snapshot commit (it adds the single delete notice on the PC Library pages).
+- Current build: release APK `4.25.0`/329, event `build-20261104-204947`, APK SHA-256 `4B82F0D58B00AF391E9E53879F0717870C28BBA742A1F9475056C63A54FF7B10`, source ZIP `D81344A539742694072A9D91F0AE859074BED2C79443A65587E65E63B597B4A9`, commit `e014f8c9`; AndroidTest event `device-v4250-release-20261104`. PC release package not built.
+- Current phase: release 4.25.0 QA, FAILED_REPAIRING. Product decision served: whether v4.25 ships; blocked on the truncation path of `reasoningEffort=auto` (see Known bugs).
 - Completed tasks:
-  - Tập tick boxes restored; bulk-delete dialogs "Xóa" / "Vẫn xóa" with Cancel default; red `.danger` bulk delete button; one Dùng button on Glossary and Pronoun.
-  - QA seed has a second Tập; screenshots of 1-of-2 Tập selection, the dialogs and the undo bar.
-  - Clean-archive tests of `ff50e86a`: desktop 83/0/0, translation-core 67/0/1 skipped, jdbc 3/0, app 766/0/5 skipped.
-  - PC package `4.25-pc-dev.3` built from clean `f4d88698`, installed after the owner's request; data files verified unchanged (10 files, 0 differences).
+  - Duplicated delete notice fixed (`e014f8c9`).
+  - Clean-archive regression of `e014f8c9`: app 766/0/5, translation-core 67/0/1, jdbc 3/0, desktop 83/0, editorial-engine 742/0/1, golden 14/14, androidTest compile, lint 0 errors; Editorial diff vs `v4.24.1` empty.
+  - Release APK and pinned AndroidTest APK built; emulator: three V425 device tests pass, `V423ChapterRunInstrumentedTest` 9/10.
 - Pending tasks:
-  - Owner trial of the Library page and the new delete dialogs on the PC.
-  - Known cosmetic defect: the note line under the undo bar repeats the deletion sentence.
-  - Not captured or inspected: dark first delete dialogs; undo bar after RAW or Tập deletes.
-- Known bugs/limits: the duplicated note line above. The pre-install backup is outside the workspace at `D:\P5E-builds\device-backups\pc-v4.25-pc-dev.3-pre-install\`. Phone and provider behaviour: NOT_MEASURED; no provider calls.
-- Regression status: clean archive of `ff50e86a` — desktop 83/0/0, translation-core 67/0/1, jdbc 3/0, app 766/0/5; screenshot run exit 0 (80 images).
-- Next action: owner trials the Library page on the installed `4.25.3` and reports any issue with the delete dialogs or the undo bar.
+  - Owner decision and repair of the failing split test (below), then rerun QA, Macrobenchmark/Perfetto A/B vs v4.24.1, screenshots (light/dark), video, PC release package, QA report, PreTag, tag, archive, BUILD_STATE, Complete gate.
+  - Merge/push and any install still need separate owner approval.
+- Known bugs/limits: `aChunkCutAtEveryLimitIsSplitInHalvesAndTheChapterCompletes` fails on 4.25.0 and on dev.9 (3/3 + control); chapter 1 ends with `FINISH_REASON_LENGTH` at 1154/1154 without a raised limit or split. Inferred cause: `isReasoningBound` counts a short visible answer as reasoning-bound and, with `reasoningEffort=auto` and no lower effort, the attempt loop stops. Why the class passed on 2026-11-03 is NOT_DIAGNOSED. 19 PC RAW deleted in the owner's app session at 19:21 (backup kept; owner not yet asked to restore).
+- Regression status: clean archive of `e014f8c9` green (counts above); device: 3/3 V425 tests pass, chapter-run class 9/10.
+- Next action: owner decides how a short visible cut under `reasoningEffort=auto` is handled (raise the limit and split for non-reasoning models, or keep ending the chunk); then repair, rerun the chapter-run class and continue the release plan.
