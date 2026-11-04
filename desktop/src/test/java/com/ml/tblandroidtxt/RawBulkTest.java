@@ -50,11 +50,11 @@ public class RawBulkTest {
             ChapterSetStoreCore.save(rt.db(), set);
 
             DesktopRawBulk bulk = rt.rawBulk();
-            DesktopRawBulk.Plan plain = bulk.plan(Arrays.asList(ids.get(0), ids.get(2)));
+            DesktopLibraryBulk.Plan plain = bulk.plan(Arrays.asList(ids.get(0), ids.get(2)));
             assertEquals(2, plain.deletableCount());
             assertFalse("no chapter of these two is in a set", plain.needsSecondConfirm());
 
-            DesktopRawBulk.Plan risky = bulk.plan(ids);
+            DesktopLibraryBulk.Plan risky = bulk.plan(ids);
             assertEquals(3, risky.deletableCount());
             assertTrue(risky.needsSecondConfirm());
             assertTrue(risky.secondMessage().contains("QA_tap"));
@@ -99,7 +99,7 @@ public class RawBulkTest {
             v.put("created_at", Long.valueOf(1));
             v.put("updated_at", Long.valueOf(1));
             rt.db().insertOrThrow("jobs", null, v);
-            DesktopRawBulk.Plan plan = rt.rawBulk().plan(ids);
+            DesktopLibraryBulk.Plan plan = rt.rawBulk().plan(ids);
             assertEquals(1, plan.deletableCount());
             assertEquals(1, plan.blockedCount());
             assertTrue(plan.firstMessage().contains("job"));

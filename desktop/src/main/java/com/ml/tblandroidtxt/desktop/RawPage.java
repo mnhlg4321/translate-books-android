@@ -1,29 +1,29 @@
 package com.ml.tblandroidtxt.desktop;
 
+import com.ml.tblandroidtxt.DesktopLibraryBulk;
 import com.ml.tblandroidtxt.DesktopRawBulk;
 import com.ml.tblandroidtxt.DesktopRawStore;
 import com.ml.tblandroidtxt.DesktopRuntime;
 
-import javafx.animation.PauseTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
-import javafx.util.Duration;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -33,7 +33,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/** Thư viện · RAW: list, search, rename, replace, multi-select delete with undo, export, drag and drop import. */
+/** Thư viện · RAW: tick boxes, search, rename and replace of the focused row, bulk delete with undo, export, create set, drag and drop import. */
 final class RawPage {
     private final DesktopApp app;
     private final DesktopRuntime runtime;
@@ -41,20 +41,22 @@ final class RawPage {
     private final FilteredList<DesktopRawStore.Item> shown = new FilteredList<>(all, i -> true);
     private final ListView<DesktopRawStore.Item> list = new ListView<>(shown);
     private final TextField search = new TextField();
+    private final Label count = new Label();
     private final Label message = new Label();
-    private final Button undoButton = new Button("Hoàn tác");
+    private final TickList<DesktopRawStore.Item> ticks;
+    private final UndoBar undo = new UndoBar();
     private final Button rename = new Button("Đổi tên");
     private final Button replace = new Button("Thay tệp…");
-    private final Button delete = new Button("Xóa");
-    private final Button makeSet = new Button("Tạo tập");
-    private final Button export = new Button("Xuất…");
+    private final Button delete = new Button("Xóa (0)");
+    private final Button makeSet = new Button("Tạo tập (0)");
+    private final Button export = new Button("Xuất (0)…");
+    private final HBox bar = new HBox(8, delete, export, makeSet);
     private final Node root;
-    private DesktopRawBulk.Pending pending;
-    private PauseTransition undoTimer;
 
     RawPage(DesktopApp app, DesktopRuntime runtime, Node toolbar) {
         this.app = app;
         this.runtime = runtime;
+        this.ticks = new TickList<>(list, i -> i.id, this::rowText, this::updateButtons);
         this.root = build(toolbar);
         app.registerSearch(NavModel.RAW, search);
         reload();
@@ -65,68 +67,61 @@ final class RawPage {
     private Node build(Node toolbar) {
         search.setPromptText("Tìm theo tên…");
         search.textProperty().addListener((o, a, b) -> applyFilter());
-        list.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         list.setPlaceholder(new Label("Chưa có RAW. Bấm \"Thêm RAW\" hoặc kéo tệp .txt vào đây."));
-        list.setCellFactory(l -> new ListCell<DesktopRawStore.Item>() {
-            @Override protected void updateItem(DesktopRawStore.Item item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.chapterLabel() + "  ·  " + item.name + "  ·  " + item.chars + " ký tự");
-            }
-        });
         VBox.setVgrow(list, Priority.ALWAYS);
         list.setOnDragOver(this::dragOver);
         list.setOnDragDropped(this::dropped);
-        list.getSelectionModel().getSelectedItems().addListener((javafx.collections.ListChangeListener<DesktopRawStore.Item>) c -> updateButtons());
+        list.getSelectionModel().selectedItemProperty().addListener((o, a, b) -> updateButtons());
 
         Button add = new Button("Thêm RAW (TXT)…");
-        Button selectAll = new Button("Chọn tất cả");
-        for (Button b : new Button[]{add, selectAll, rename, replace, delete, makeSet, export, undoButton}) b.getStyleClass().add("secondary");
-        undoButton.getStyleClass().remove("secondary");
-        undoButton.getStyleClass().add("primary");
-        undoButton.setVisible(false);
-        undoButton.setManaged(false);
+        for (Button b : new Button[]{add, rename, replace, delete, makeSet, export}) b.getStyleClass().add("secondary");
         add.setOnAction(e -> chooseAndAdd());
-        selectAll.setOnAction(e -> list.getSelectionModel().selectAll());
-        rename.setOnAction(e -> renameSelected());
-        replace.setOnAction(e -> replaceSelected());
-        delete.setOnAction(e -> deleteSelected());
-        makeSet.setOnAction(e -> app.createSetFromRaws(selectedIds()));
-        export.setOnAction(e -> exportSelected());
-        undoButton.setOnAction(e -> undoNow());
+        rename.setOnAction(e -> renameFocused());
+        replace.setOnAction(e -> replaceFocused());
+        delete.setOnAction(e -> deleteTicked());
+        makeSet.setOnAction(e -> app.createSetFromRaws(ticks.ids()));
+        export.setOnAction(e -> exportTicked());
         message.setWrapText(true);
+        count.getStyleClass().add("muted");
+        bar.setAlignment(Pos.CENTER_LEFT);
 
-        HBox actions = new HBox(8, add, selectAll, rename, replace, delete, makeSet, export);
-        javafx.scene.layout.FlowPane flow = new javafx.scene.layout.FlowPane(8, 8, add, selectAll, rename, replace, delete, makeSet, export);
-        VBox card = DesktopApp.card(search, flow, list, new HBox(10, message, undoButton));
+        FlowPane single = new FlowPane(8, 8, add, rename, replace);
+        VBox card = DesktopApp.card(search, single, ticks.header(), count, list, bar, new HBox(10, message, undo.node()));
         VBox.setVgrow(card, Priority.ALWAYS);
         updateButtons();
         return DesktopApp.page(NavModel.title(NavModel.RAW), toolbar, card);
     }
 
+    /** One RAW row: chapter, name, size and the encoding it was read with. */
+    private String rowText(DesktopRawStore.Item item) {
+        String enc = item.encoding == null || item.encoding.isEmpty() ? "" : "  ·  " + item.encoding;
+        return item.chapterLabel() + "  ·  " + item.name + "  ·  " + item.chars + " ký tự" + enc;
+    }
+
     void reload() {
-        List<String> keep = selectedIds();
         all.setAll(runtime.raws().list());
+        ticks.retainOnly(all);
         applyFilter();
-        for (int i = 0; i < shown.size(); i++) if (keep.contains(shown.get(i).id)) list.getSelectionModel().select(i);
         updateButtons();
     }
 
     private void applyFilter() {
         String q = search.getText() == null ? "" : search.getText().trim().toLowerCase(Locale.ROOT);
         shown.setPredicate(i -> q.isEmpty() || i.name.toLowerCase(Locale.ROOT).contains(q) || i.originalName.toLowerCase(Locale.ROOT).contains(q));
-    }
-
-    private List<String> selectedIds() {
-        return list.getSelectionModel().getSelectedItems().stream().map(i -> i.id).collect(Collectors.toList());
+        count.setText(all.size() + " RAW" + (q.isEmpty() ? "" : " · đang hiện " + shown.size()));
+        ticks.changed();
     }
 
     private void updateButtons() {
-        int n = list.getSelectionModel().getSelectedItems().size();
-        rename.setDisable(n != 1);
-        replace.setDisable(n != 1);
-        delete.setDisable(n == 0);
-        makeSet.setDisable(n == 0);
-        export.setDisable(n == 0);
+        int n = ticks.count();
+        boolean focused = list.getSelectionModel().getSelectedItem() != null;
+        rename.setDisable(!focused);
+        replace.setDisable(!focused);
+        bar.setVisible(n > 0);
+        bar.setManaged(n > 0);
+        delete.setText("Xóa (" + n + ")");
+        makeSet.setText("Tạo tập (" + n + ")");
+        export.setText("Xuất (" + n + ")…");
     }
 
     private void say(String text, boolean error) {
@@ -168,15 +163,15 @@ final class RawPage {
         else importPaths(txt);
     }
 
-    // ---- one RAW ----
+    // ---- one RAW (the focused row) ----
 
-    private void renameSelected() {
+    private void renameFocused() {
         DesktopRawStore.Item item = list.getSelectionModel().getSelectedItem();
         if (item == null) return;
         TextInputDialog d = new TextInputDialog(item.name);
         d.setTitle("Đổi tên RAW");
         d.setHeaderText("Tên mới cho \"" + item.name + "\"");
-        d.getDialogPane().setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
+        d.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         Optional<String> r = app.showDialog(d);
         if (!r.isPresent()) return;
         if (!runtime.raws().rename(item.id, r.get())) { say("Tên không hợp lệ", true); return; }
@@ -184,7 +179,7 @@ final class RawPage {
         app.libraryChanged();
     }
 
-    private void replaceSelected() {
+    private void replaceFocused() {
         DesktopRawStore.Item item = list.getSelectionModel().getSelectedItem();
         if (item == null) return;
         FileChooser fc = new FileChooser();
@@ -199,60 +194,56 @@ final class RawPage {
         }, e -> say("Không thay được: " + e.getMessage(), true));
     }
 
-    // ---- delete with undo ----
+    // ---- bulk delete with undo ----
 
-    void qaDelete() { list.getSelectionModel().selectAll(); deleteSelected(); }
+    /** QA: ticks every visible RAW and asks for the delete, the same path as the button. */
+    void qaDelete() {
+        for (DesktopRawStore.Item i : shown) if (!ticks.isTicked(i)) ticks.tick(i.id);
+        deleteTicked();
+    }
 
-    private void deleteSelected() {
-        List<String> ids = selectedIds();
+    /** QA: ticks the first n visible RAW rows. */
+    void qaTickFirst(int n) { ticks.tickFirst(n); }
+
+    /** QA: unticks everything. */
+    void qaClearTicks() { ticks.clear(); }
+
+    private void deleteTicked() {
+        List<String> ids = ticks.ids();
         if (ids.isEmpty()) return;
-        DesktopRawBulk.Plan plan = runtime.rawBulk().plan(ids);
+        DesktopLibraryBulk.Plan plan = runtime.rawBulk().plan(ids);
         if (plan.deletableCount() == 0) { say(plan.firstMessage(), true); return; }
         if (!app.confirm("Xóa " + plan.deletableCount() + " RAW?", plan.firstMessage())) return;
-        if (plan.needsSecondConfirm() && !app.confirm("Xác nhận lần hai", plan.secondMessage())) return;
-        settle();
-        pending = runtime.rawBulk().delete(plan);
+        if (plan.needsSecondConfirm() && !app.confirmWithLabel("Xác nhận lần hai", plan.secondMessage(), "Vẫn xóa")) return;
+        undo.settle();
+        DesktopRawBulk.Pending pending = runtime.rawBulk().delete(plan);
+        ticks.clear();
         int n = pending.count();
-        say("Đã xóa " + n + " RAW" + (plan.blockedCount() > 0 ? " · bỏ qua " + plan.blockedCount() + " (còn job dịch dở)" : "") + " · còn 10 giây để Hoàn tác", false);
-        undoButton.setVisible(true);
-        undoButton.setManaged(true);
-        undoTimer = new PauseTransition(Duration.millis(DesktopRawBulk.UNDO_MS));
-        undoTimer.setOnFinished(e -> { settle(); message.setText(""); });
-        undoTimer.play();
+        say("Đã xóa " + n + " RAW" + (plan.blockedCount() > 0 ? " · bỏ qua " + plan.blockedCount() + " (còn job dịch dở)" : ""), false);
+        undo.show("Đã xóa " + n + " RAW", () -> {
+            int back = runtime.rawBulk().undo(pending);
+            say("Đã khôi phục " + back + " RAW.", false);
+            app.libraryChanged();
+        }, () -> runtime.rawBulk().expire(pending));
         app.libraryChanged();
     }
 
     /** Ends an open undo window: the files of the removed RAW go for good. */
     void settle() {
-        if (undoTimer != null) undoTimer.stop();
-        undoTimer = null;
-        if (pending != null) runtime.rawBulk().expire(pending);
-        pending = null;
-        undoButton.setVisible(false);
-        undoButton.setManaged(false);
-    }
-
-    private void undoNow() {
-        if (pending == null) return;
-        if (undoTimer != null) undoTimer.stop();
-        int back = runtime.rawBulk().undo(pending);
-        pending = null;
-        undoButton.setVisible(false);
-        undoButton.setManaged(false);
-        say("Đã khôi phục " + back + " RAW.", false);
-        app.libraryChanged();
+        undo.settle();
     }
 
     // ---- export ----
 
-    private void exportSelected() {
-        List<String> ids = selectedIds();
+    private void exportTicked() {
+        List<String> ids = ticks.ids();
         if (ids.isEmpty()) return;
         DirectoryChooser dc = new DirectoryChooser();
         dc.setTitle("Xuất " + ids.size() + " RAW ra thư mục");
         File dir = dc.showDialog(app.stage());
         if (dir == null) return;
         UiTasks.run(app, "Đang xuất RAW…", () -> runtime.rawBulk().export(ids, dir.toPath()),
-                n -> say("Đã xuất " + n + " tệp .txt vào " + dir.getName(), false), e -> say("Không xuất được: " + e.getMessage(), true));
+                n -> say("Đã xuất " + n + " tệp .txt vào " + dir.getName() + " (tệp trùng tên được thêm số, không ghi đè)", false),
+                e -> say("Không xuất được: " + e.getMessage(), true));
     }
 }

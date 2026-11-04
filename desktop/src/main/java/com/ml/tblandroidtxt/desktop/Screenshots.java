@@ -1,6 +1,6 @@
 package com.ml.tblandroidtxt.desktop;
 
-import com.ml.tblandroidtxt.DesktopRawBulk;
+import com.ml.tblandroidtxt.DesktopLibraryBulk;
 import com.ml.tblandroidtxt.DesktopSetEditor;
 
 import javafx.animation.PauseTransition;
@@ -98,6 +98,27 @@ final class Screenshots {
             steps.add(() -> app.setsPage().qaClose());
             steps.add(() -> { app.select(NavModel.JOBS); app.jobsPage().showHistory(); app.historyPanel().selectFirst(); });
             steps.add(() -> shot(mode, "cong-viec-lich-su"));
+            // v4.25 Library multi-select: two ticked rows per list, then the first delete dialog (light only; it is cancelled, nothing is removed).
+            steps.add(() -> { app.select(NavModel.RAW); app.rawPage().qaTickFirst(2); });
+            steps.add(() -> shot(mode, "thu-vien-raw-chon-2"));
+            steps.add(() -> app.rawPage().qaClearTicks());
+            steps.add(() -> { app.select(NavModel.GLOSSARY); app.glossaryPage().qaTickFirst(2); });
+            steps.add(() -> shot(mode, "thu-vien-glossary-chon-2"));
+            steps.add(() -> app.glossaryPage().qaClearTicks());
+            steps.add(() -> { app.select(NavModel.PRONOUN); app.pronounPage().qaTickFirst(2); });
+            steps.add(() -> shot(mode, "thu-vien-pronoun-chon-2"));
+            steps.add(() -> app.pronounPage().qaClearTicks());
+            steps.add(() -> { app.select(NavModel.SETS); app.setsPage().qaTickFirst(2); });
+            steps.add(() -> shot(mode, "thu-vien-tap-chon-2"));
+            steps.add(() -> app.setsPage().qaClearTicks());
+            if (!dark) {
+                steps.add(() -> { dialogName = "hop-thoai-xoa-glossary-lan-1"; app.glossaryPage().qaDelete(); });
+                steps.add(() -> app.glossaryPage().qaClearTicks());
+                steps.add(() -> { dialogName = "hop-thoai-xoa-pronoun-lan-1"; app.pronounPage().qaDelete(); });
+                steps.add(() -> app.pronounPage().qaClearTicks());
+                steps.add(() -> { dialogName = "hop-thoai-xoa-tap-lan-1"; app.setsPage().qaDelete(); });
+                steps.add(() -> app.setsPage().qaClearTicks());
+            }
             steps.add(() -> app.select(NavModel.TRANSLATE));
         }
         if (seed != null) {
@@ -144,7 +165,7 @@ final class Screenshots {
             dialogName = "hop-thoai-xoa-raw-lan-2";
             List<String> ids = new ArrayList<>();
             for (var r : app.runtime().raws().list()) ids.add(r.id);
-            DesktopRawBulk.Plan plan = app.runtime().rawBulk().plan(ids);
+            DesktopLibraryBulk.Plan plan = app.runtime().rawBulk().plan(ids);
             app.confirm("Xác nhận lần hai", plan.secondMessage());
         });
         steps.add(() -> { });

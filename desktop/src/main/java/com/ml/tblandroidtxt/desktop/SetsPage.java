@@ -1,5 +1,6 @@
 package com.ml.tblandroidtxt.desktop;
 
+import com.ml.tblandroidtxt.DesktopLibraryBulk;
 import com.ml.tblandroidtxt.DesktopRuntime;
 import com.ml.tblandroidtxt.DesktopSetEditor;
 import com.ml.tblandroidtxt.VolumePlan;
@@ -40,7 +41,11 @@ final class SetsPage {
     private final Label listNote = new Label();
     private final Button open = new Button("Mở / Sửa");
     private final Button rename = new Button("Đổi tên");
-    private final Button delete = new Button("Xóa");
+    private final Button bulkDelete = new Button("Xóa (0)");
+    private final HBox bulkBar = new HBox(8, bulkDelete);
+    private final Label count = new Label();
+    private final UndoBar undo = new UndoBar();
+    private final TickList<DesktopRuntime.SetCard> ticks = new TickList<>(list, c -> c.id, this::rowText, this::updateListButtons);
 
     private final VBox editorPage;
     private final TextField nameField = new TextField();
@@ -89,22 +94,32 @@ final class SetsPage {
         VBox.setVgrow(list, Priority.ALWAYS);
         Button create = new Button("+ Tạo tập mới");
         create.getStyleClass().add("primary");
-        for (Button b : new Button[]{open, rename, delete}) b.getStyleClass().add("secondary");
+        for (Button b : new Button[]{open, rename, bulkDelete}) b.getStyleClass().add("secondary");
         create.setOnAction(e -> startNew(new ArrayList<>()));
         open.setOnAction(e -> openSelected());
         rename.setOnAction(e -> renameSelected());
-        delete.setOnAction(e -> deleteSelected());
+        bulkDelete.setOnAction(e -> deleteTicked());
+        bulkBar.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        count.getStyleClass().add("muted");
         listNote.setWrapText(true);
-        VBox card = DesktopApp.card(desc, new FlowPane(8, 8, create, open, rename, delete), list, listNote);
+        VBox card = DesktopApp.card(desc, new FlowPane(8, 8, create, open, rename), ticks.header(), count, list, bulkBar,
+                new HBox(10, listNote, undo.node()));
         VBox.setVgrow(card, Priority.ALWAYS);
         updateListButtons();
         return DesktopApp.page(NavModel.title(NavModel.SETS), toolbar, card);
+    }
+
+    /** One set row. */
+    private String rowText(DesktopRuntime.SetCard c) {
+        return c.name + "  ·  " + c.summary;
     }
 
     void reload() {
         String keep = list.getSelectionModel().getSelectedItem() == null ? "" : list.getSelectionModel().getSelectedItem().id;
         list.getItems().setAll(runtime.setCards());
         for (int i = 0; i < list.getItems().size(); i++) if (list.getItems().get(i).id.equals(keep)) list.getSelectionModel().select(i);
+        ticks.retainOnly(list.getItems());
+        count.setText(list.getItems().size() + " tập");
         updateListButtons();
     }
 
@@ -112,7 +127,10 @@ final class SetsPage {
         boolean none = list.getSelectionModel().getSelectedItem() == null;
         open.setDisable(none);
         rename.setDisable(none);
-        delete.setDisable(none);
+        int n = ticks.count();
+        bulkBar.setVisible(n > 0);
+        bulkBar.setManaged(n > 0);
+        bulkDelete.setText("Xóa (" + n + ")");
     }
 
     private void say(Label target, String text, boolean error) {
@@ -142,29 +160,41 @@ final class SetsPage {
         app.libraryChanged();
     }
 
-    private void deleteSelected() {
-        DesktopRuntime.SetCard c = list.getSelectionModel().getSelectedItem();
-        if (c == null) return;
-        List<String> ids = new ArrayList<>();
-        ids.add(c.id);
-        int rawOnly = runtime.rawOnlyInSets(ids).size();
+    /**
+     * Bulk delete of the ticked sets. The first dialog lists them and offers to take the RAW that only they use; the RAW is removed
+     * from the library at once, its files only when the 10 s undo window ends. Undo restores the sets and the RAW rows.
+     */
+    private void deleteTicked() {
+        List<String> ids = ticks.ids();
+        if (ids.isEmpty()) return;
+        DesktopLibraryBulk.Plan plan = runtime.setPlan(ids);
+        if (plan.deletableCount() == 0) { say(listNote, plan.firstMessage(), true); return; }
+        int rawOnly = plan.rawOnlyIds().size();
         javafx.scene.control.ButtonType okType = new javafx.scene.control.ButtonType("Đồng ý", javafx.scene.control.ButtonBar.ButtonData.OK_DONE);
         javafx.scene.control.ButtonType cancelType = new javafx.scene.control.ButtonType("Hủy", javafx.scene.control.ButtonBar.ButtonData.CANCEL_CLOSE);
         javafx.scene.control.Alert a = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.CONFIRMATION,
-                "Xóa tập \"" + c.name + "\" (" + c.chapters + " chương). RAW, Glossary và Pronoun của các chương vẫn còn trong thư viện.", okType, cancelType);
+                plan.firstMessage() + "\nRAW, Glossary và Pronoun của các chương vẫn còn trong thư viện, trừ khi chọn xóa RAW bên dưới.", okType, cancelType);
         a.setTitle("Xác nhận");
-        a.setHeaderText("Xóa tập?");
+        a.setHeaderText("Xóa " + plan.deletableCount() + " tập?");
         a.getDialogPane().setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
-        CheckBox alsoRaw = new CheckBox("Xóa cả " + rawOnly + " RAW chỉ thuộc tập này");
+        CheckBox alsoRaw = new CheckBox("Xóa cả " + rawOnly + " RAW chỉ thuộc các tập này");
         alsoRaw.setDisable(rawOnly == 0);
         VBox content = new VBox(10, new Label(a.getContentText()), alsoRaw);
         ((Label) content.getChildren().get(0)).setWrapText(true);
         a.getDialogPane().setContent(content);
         Optional<javafx.scene.control.ButtonType> r = app.showDialog(a);
         if (!r.isPresent() || r.get() != okType) return;
-        if (alsoRaw.isSelected() && !app.confirm("Xóa cả RAW?", rawOnly + " RAW chỉ thuộc tập này sẽ bị xóa khỏi thư viện (RAW đang cần cho job dịch dở được giữ lại).")) return;
-        int removed = runtime.deleteSets(ids, alsoRaw.isSelected());
-        say(listNote, "Đã xóa tập \"" + c.name + "\"" + (removed > 0 ? " và " + removed + " RAW" : "") + ".", false);
+        if (alsoRaw.isSelected() && !app.confirmWithLabel("Xóa cả RAW?", rawOnly + " RAW chỉ thuộc các tập này sẽ bị xóa khỏi thư viện (RAW đang cần cho job dịch dở được giữ lại).", "Vẫn xóa")) return;
+        undo.settle();
+        DesktopLibraryBulk.Undo removed = runtime.deleteSetsUndoable(plan.deletableIds(), alsoRaw.isSelected());
+        ticks.clear();
+        int n = removed.count();
+        say(listNote, "Đã xóa " + plan.deletableCount() + " tập" + (removed.count() > plan.deletableCount() ? " và " + (n - plan.deletableCount()) + " RAW" : "") + ".", false);
+        undo.show("Đã xóa " + plan.deletableCount() + " tập", () -> {
+            int back = runtime.restoreDeleted(removed);
+            say(listNote, "Đã khôi phục " + back + " mục.", false);
+            app.libraryChanged();
+        }, () -> runtime.expireDeleted(removed));
         app.libraryChanged();
     }
 
@@ -336,6 +366,17 @@ final class SetsPage {
 
     /** QA: closes the editor without asking. */
     void qaClose() { closeEditor(); }
+
+    /** QA: ticks the first n sets of the list. */
+    void qaTickFirst(int n) { ticks.tickFirst(n); }
+
+    /** QA: ticks the first two sets and asks for the delete, the same path as the button; the dialog is photographed and cancelled. */
+    void qaDelete() {
+        ticks.tickFirst(2);
+        deleteTicked();
+    }
+
+    void qaClearTicks() { ticks.clear(); }
 
     private void refresh() {
         if (editor == null) return;

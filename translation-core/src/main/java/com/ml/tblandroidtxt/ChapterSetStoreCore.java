@@ -63,9 +63,16 @@ class ChapterSetStoreCore {
 
     /** Saves (insert or replace) a whole set in one transaction. */
     static void save(SqlDb db, SetData data) {
+        data.updatedAt = System.currentTimeMillis();
+        write(db, data);
+    }
+
+    /** Puts back a set exactly as it was stored (its updated_at too); used by the PC undo of a delete. */
+    static void restore(SqlDb db, SetData data) { write(db, data); }
+
+    private static void write(SqlDb db, SetData data) {
         db.beginTransaction();
         try {
-            data.updatedAt = System.currentTimeMillis();
             DbValues s = new DbValues();
             s.put("id", data.id); s.put("name", data.name); s.put("created_at", data.createdAt); s.put("updated_at", data.updatedAt);
             db.insertWithOnConflict("chapter_sets", null, s, SqlDb.CONFLICT_REPLACE);

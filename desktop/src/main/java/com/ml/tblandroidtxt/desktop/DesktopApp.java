@@ -704,6 +704,18 @@ public final class DesktopApp extends Application {
         return r.isPresent() && r.get() == ok;
     }
 
+    /** A confirmation whose OK button names the action (for example "Vẫn xóa"); Hủy stays. */
+    boolean confirmWithLabel(String header, String text, String okLabel) {
+        ButtonType ok = new ButtonType(okLabel, javafx.scene.control.ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancel = new ButtonType("Hủy", javafx.scene.control.ButtonBar.ButtonData.CANCEL_CLOSE);
+        Alert a = new Alert(Alert.AlertType.CONFIRMATION, text, ok, cancel);
+        a.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+        a.setTitle("Xác nhận");
+        a.setHeaderText(header);
+        Optional<ButtonType> r = showDialog(a);
+        return r.isPresent() && r.get() == ok;
+    }
+
     /** Unsaved changes: 1 = save, 0 = leave without saving, -1 = stay. */
     int askSave(String text) {
         ButtonType save = new ButtonType("Lưu", javafx.scene.control.ButtonBar.ButtonData.YES);

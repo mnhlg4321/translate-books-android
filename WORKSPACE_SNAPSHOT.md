@@ -1,13 +1,30 @@
 # Workspace Snapshot
 
-- Updated: 2026-11-04 (+07:00), after the PC package build.
-- Current version: v4.25 development build `4.25-dev.9` / Android versionCode `328` (phone, unchanged); PC `4.25-pc-dev.1` installed on this PC as `4.25.1` (2026-11-04). PC UI round 1 and 2 are packaged as `4.25-pc-dev.2` (not installed).
+- Updated: 2026-11-04 (+07:00), after the PC Library multi-select code (lib-a) was written and unit-tested in the worktree; clean-archive evidence and screenshots follow in a later commit.
+- Current version: v4.25 development build `4.25-dev.9` / Android versionCode `328` (phone, unchanged). PC: `4.25-pc-dev.2` is the last packaged PC build; the PC package for lib-a is not built yet.
 - Current branch: `feature/v4.25` in `D:\P5E-builds\wt-v4.25` (owner-specified existing worktree).
-- Current commit: `1a2d8f97` — baseline immediately before this snapshot commit (round 1 `5183ce33`, round 2 `487b81cc`, pronoun column sizing `a98691df`, API key row `e3207f4d`, snapshot `1a2d8f97`).
-- Current build: `4.25-dev.9` / code `328`, event `build-20261103-193037`; SHA-256 `BFA9C99ABB22B74C55040133D04D8F01D8D52ABF95E4A2216DE0D972F0683E42`. PC package `4.25-pc-dev.2`, event `build-20261104-190103` from `1a2d8f97` (MSI SHA-256 `3689A52598A5832A90E2FFD69BD3EE15C11B482B824E37F64F88142AE6054545`; ZIP `28B1AA3B6A8DFA04A60D665A2144DC9280F2931CC2BD50267FBCC7D7DBF2ED29`), kept under `artifacts/builds/` and `backup/builds/desktop-v4.25-pc-dev.2/`. Installed on this PC: still `4.25-pc-dev.1` (`4.25.1`). Earlier package `4.25-pc-dev.1`, event `build-20261104-180638` (MSI SHA-256 `6CFF731050CD0650333A2488DC3B868EB3A94C316F7FE4E9393FF3F83BFEBAA8`).
-- Current phase: v4.25 PC UI rounds 1 and 2 implemented, tested from a clean archive and screenshot-reviewed; owner review pending. Release lifecycle otherwise unchanged. Product decisions served: the two-column Translate page keeps Start and progress above the fold at 1280 px; the dark-palette and combo fixes make the existing 20 palettes readable without a new dependency.
-- Completed tasks: round 1 display bugs (combo button cell, dark on-accent contrast, pronoun table columns, API key field, Settings auto-save wording). Round 2 Translate page two-column layout, "Thư mục (nhiều chương)" removed, "Cập nhật giá model" moved to Cài đặt. Before/after screenshots (67 each) under `artifacts/qa/v4.25-pc-ui-r12-20261104/`, inspected as listed in its README. Checklist section "PC UI round 1 and 2" in `release_checklists/v4.25.md`.
-- Pending tasks: owner review of the PC UI round 1 and 2 images; owner decision on installing `4.25-pc-dev.2` on this PC (separate approval; not installed); round 3 (Jobs/Library cleanup) not started and not in scope. Earlier pending items unchanged: owner phone trial and the open `reasoningEffort=auto` visible-cut question; release-only work afterwards.
-- Known bugs/limits: the PC Translate page progress is the existing run line (no new progress bar); the two-column threshold is page width 900 px. Real-phone and real-provider behaviour remain `NOT_MEASURED`; the owner phone `15e84958` stays on `4.25-dev.9`/328 and was not touched.
-- Regression status: clean `git archive` of `e3207f4d` (`D:\P5E-builds\verify-v4.25-e3207f4d`), offline: `:desktop:test` 70 total, 0 failures; `:translation-core:test` 67 total, 0 failures, 1 skipped; `:translation-core-jdbc:test` 3 total, 0 failures; `:app:testDebugUnitTest` 766 total, 0 failures, 5 skipped. Provider calls: 0.
-- Next action: owner reviews the Translate, Settings and Pronoun before/after images in `artifacts/qa/v4.25-pc-ui-r12-20261104/` and decides whether to install `4.25-pc-dev.2`.
+- Current commit: `061d1c6c` — baseline immediately before this snapshot commit (`docs(qa): record the owner-approved 4.25-pc-dev.2 install on this PC`).
+- Current build: none for lib-a yet. Last packaged PC build recorded in earlier snapshots: `4.25-pc-dev.2`, event `build-20261104-190103`.
+- Current phase: v4.25 PC Library lists (lib-a) — code implemented in the worktree; the desktop unit tests pass in the worktree (80 total, 0 failures, 0 skipped). Not yet committed as code, not yet archived, no screenshots yet. Product decision served: on the PC, Glossary, Pronoun, Tập and RAW get the phone's multi-select, so bulk delete / export / "Dùng" / "Tạo tập" stop depending on one focused row; the two-confirmation delete and the 10 s undo protect the owner's data.
+- Completed tasks (lib-a, uncommitted at this moment):
+  - `DesktopLibraryBulk` (new, PC helper in `desktop/`): `Selection` over `LibrarySelectionController`, `Plan` over `LibraryDeletePlan`, `take`/`putBack` for exact undo, `writeNew` (never overwrites, adds " (2)"), `glossaryCsv`.
+  - `DesktopRawBulk` now uses the shared plan and undo types; `removeRows` supports the Tập delete that takes RAW with it.
+  - `DesktopRuntime`: `glossaryPlan`/`pronounPlan` (usage lists from sets), `deleteGlossaries`/`deletePronouns` (stored objects removed and kept for undo; active selection falls back to none), `setPlan`, `deleteSetsUndoable`, `restoreDeleted`, `expireDeleted`.
+  - `translation-core` `ChapterSetStoreCore`: `save` split into `write` plus `restore` (restore keeps `updated_at`). Phone-neutral: no behaviour change for `save`.
+  - PC UI: `TickList` (tick box per row, "Chọn tất cả", "n đã chọn", "Hủy") on RAW, Glossary, Pronoun and Tập; `UndoBar` (10 s "Hoàn tác"); bulk bars "Xóa (n)", "Xuất (n)…", "Dùng" (only when n == 1), "Tạo tập (n)" (RAW). RAW rows show the encoding and a "N RAW" line.
+  - `DesktopApp.confirmWithLabel` for the second confirmation ("Vẫn xóa").
+  - Tests: `LibraryBulkUndoTest` (10 tests: selection on visible rows, take/putBack order, export never overwrites, CSV quoting, plan usage text and active flag, Glossary and Pronoun undo byte-identical with selection restored, unknown id removes nothing, set undo with `updated_at` kept, set plan RAW list).
+  - Screenshot mode extended (`Screenshots.java`): selection shots for RAW, Glossary, Pronoun, Tập and first delete dialogs for Glossary, Pronoun, Tập (light only).
+- Pending tasks:
+  - Commit the code (this snapshot is staged with it).
+  - Clean `git archive` of the code commit into a new `D:\P5E-builds\` directory; offline run of `:desktop:test :translation-core:test :translation-core-jdbc:test :app:testDebugUnitTest`.
+  - Screenshots from the clean archive (`QaSeed` then `DesktopLauncher`); inspect light and dark images; commit `artifacts/qa/v4.25-pc-lib-a-<date>/`.
+  - Checklist section in `release_checklists/v4.25.md`.
+  - Not in scope of this change: PC package build (`scripts/build-desktop.ps1`), any install, push, tag or merge.
+- Known bugs/limits:
+  - QaSeed creates one Tập only, so the Tập selection image shows one ticked row, not two.
+  - The undo window of Tập / RAW delete is not screenshot (the QA dialog path is cancelled, so nothing is removed).
+  - If the app closes inside the 10 s window, a Glossary/Pronoun/Tập delete stays final (the store was already written); RAW files stay on disk until the next purge path, as before.
+  - Phone and provider behaviour: `NOT_MEASURED` for this change; no provider calls.
+- Regression status: desktop unit tests in the worktree before the code commit: 80 total, 0 failures, 0 skipped (70 existing + 10 new). Clean-archive run: not yet done.
+- Next action: commit the lib-a code, then run the clean-archive tests and screenshot capture from that commit.

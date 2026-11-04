@@ -1,17 +1,18 @@
 package com.ml.tblandroidtxt.desktop;
 
 import com.ml.tblandroidtxt.DesktopGlossaryEditor;
+import com.ml.tblandroidtxt.DesktopLibraryBulk;
 import com.ml.tblandroidtxt.DesktopRuntime;
 import com.ml.tblandroidtxt.GlossaryStoreCore;
 
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
@@ -24,9 +25,11 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +47,13 @@ final class GlossaryPage {
     private final Label listNote = new Label();
     private final Button open = new Button("Mở");
     private final Button use = new Button("Dùng cho bản dịch");
-    private final Button delete = new Button("Xóa");
+    private final Button bulkDelete = new Button("Xóa (0)");
+    private final Button bulkExport = new Button("Xuất (0)…");
+    private final Button bulkUse = new Button("Dùng");
+    private final HBox bulkBar = new HBox(8, bulkDelete, bulkExport, bulkUse);
+    private final Label count = new Label();
+    private final UndoBar undo = new UndoBar();
+    private final TickList<GlossaryStoreCore.Glossary> ticks = new TickList<>(list, g -> g.id, this::rowText, this::updateListButtons);
 
     private final VBox editorPage;
     private final TextField nameField = new TextField();
@@ -77,38 +86,42 @@ final class GlossaryPage {
 
     private VBox buildList(Node toolbar) {
         list.setPlaceholder(new Label("Chưa có Glossary. Bấm \"+ Nhập Glossary\" để lấy từ tệp CSV, hoặc \"+ Tạo Glossary trống\"."));
-        list.setCellFactory(l -> new ListCell<GlossaryStoreCore.Glossary>() {
-            @Override protected void updateItem(GlossaryStoreCore.Glossary g, boolean empty) {
-                super.updateItem(g, empty);
-                if (empty || g == null) { setText(null); return; }
-                boolean active = g.id.equals(runtime.selectedGlossaryId());
-                String langs = blank(g.sourceLang) && blank(g.targetLang) ? "" : "  ·  " + g.sourceLang + " → " + g.targetLang;
-                setText((active ? "● Đang dùng   " : "") + g.name + "  ·  " + g.count() + " mục" + langs);
-            }
-        });
         list.setOnMouseClicked(e -> { if (e.getClickCount() == 2) openSelected(); });
         list.getSelectionModel().selectedItemProperty().addListener((o, a, b) -> updateListButtons());
         VBox.setVgrow(list, Priority.ALWAYS);
         Button importButton = new Button("+ Nhập Glossary…");
         Button blankButton = new Button("+ Tạo Glossary trống");
-        for (Button b : new Button[]{importButton, blankButton, open, use, delete}) b.getStyleClass().add("secondary");
+        for (Button b : new Button[]{importButton, blankButton, open, use, bulkDelete, bulkExport, bulkUse}) b.getStyleClass().add("secondary");
         importButton.setOnAction(e -> chooseAndImport());
         blankButton.setOnAction(e -> createBlank());
         open.setOnAction(e -> openSelected());
         use.setOnAction(e -> useSelected());
-        delete.setOnAction(e -> deleteSelected());
+        bulkDelete.setOnAction(e -> deleteTicked());
+        bulkExport.setOnAction(e -> exportTicked());
+        bulkUse.setOnAction(e -> useTicked());
         listNote.setWrapText(true);
-        FlowPane buttons = new FlowPane(8, 8, importButton, blankButton, open, use, delete);
-        VBox card = DesktopApp.card(buttons, list, listNote);
+        count.getStyleClass().add("muted");
+        bulkBar.setAlignment(Pos.CENTER_LEFT);
+        FlowPane buttons = new FlowPane(8, 8, importButton, blankButton, open, use);
+        VBox card = DesktopApp.card(buttons, ticks.header(), count, list, bulkBar, new HBox(10, listNote, undo.node()));
         VBox.setVgrow(card, Priority.ALWAYS);
         updateListButtons();
         return DesktopApp.page(NavModel.title(NavModel.GLOSSARY), toolbar, card);
+    }
+
+    /** One Glossary row: active marker, name, term count and languages. */
+    private String rowText(GlossaryStoreCore.Glossary g) {
+        boolean active = g.id.equals(runtime.selectedGlossaryId());
+        String langs = blank(g.sourceLang) && blank(g.targetLang) ? "" : "  ·  " + g.sourceLang + " → " + g.targetLang;
+        return (active ? "● Đang dùng   " : "") + g.name + "  ·  " + g.count() + " mục" + langs;
     }
 
     void reload() {
         String keep = list.getSelectionModel().getSelectedItem() == null ? "" : list.getSelectionModel().getSelectedItem().id;
         list.getItems().setAll(runtime.glossaries());
         for (int i = 0; i < list.getItems().size(); i++) if (list.getItems().get(i).id.equals(keep)) list.getSelectionModel().select(i);
+        ticks.retainOnly(list.getItems());
+        count.setText(list.getItems().size() + " Glossary");
         list.refresh();
         updateListButtons();
     }
@@ -117,7 +130,12 @@ final class GlossaryPage {
         boolean none = list.getSelectionModel().getSelectedItem() == null;
         open.setDisable(none);
         use.setDisable(none);
-        delete.setDisable(none);
+        int n = ticks.count();
+        bulkBar.setVisible(n > 0);
+        bulkBar.setManaged(n > 0);
+        bulkDelete.setText("Xóa (" + n + ")");
+        bulkExport.setText("Xuất (" + n + ")…");
+        bulkUse.setDisable(n != 1);
     }
 
     private static boolean blank(String s) { return s == null || s.trim().isEmpty() || s.trim().equals("—"); }
@@ -161,13 +179,58 @@ final class GlossaryPage {
         app.libraryChanged();
     }
 
-    private void deleteSelected() {
-        GlossaryStoreCore.Glossary g = list.getSelectionModel().getSelectedItem();
+    /** "Dùng" of the bar: only when exactly one Glossary is ticked. */
+    private void useTicked() {
+        List<String> ids = ticks.ids();
+        if (ids.size() != 1) return;
+        GlossaryStoreCore.Glossary g = runtime.glossary(ids.get(0));
         if (g == null) return;
-        if (!app.confirm("Xóa Glossary \"" + g.name + "\"?", "Không xóa file gốc trong máy.")) return;
-        if (!runtime.deleteGlossary(g.id)) { say(listNote, "Không xóa được: kho Glossary đang bị khóa.", true); return; }
-        say(listNote, "Đã xóa \"" + g.name + "\".", false);
+        runtime.selectGlossary(g.id);
+        say(listNote, "Đang dùng \"" + g.name + "\" cho bản dịch.", false);
         app.libraryChanged();
+    }
+
+    /** Bulk delete: the usage list, a second confirmation for a Glossary in use, then a 10 s undo that restores the stored objects. */
+    private void deleteTicked() {
+        List<String> ids = ticks.ids();
+        if (ids.isEmpty()) return;
+        DesktopLibraryBulk.Plan plan = runtime.glossaryPlan(ids);
+        if (plan.deletableCount() == 0) { say(listNote, plan.firstMessage(), true); return; }
+        if (!app.confirm("Xóa " + plan.deletableCount() + " Glossary?", plan.firstMessage())) return;
+        if (plan.needsSecondConfirm() && !app.confirmWithLabel("Xác nhận lần hai", plan.secondMessage(), "Vẫn xóa")) return;
+        undo.settle();
+        DesktopLibraryBulk.Undo removed = runtime.deleteGlossaries(plan.deletableIds());
+        if (removed == null) { say(listNote, "Không xóa được: kho Glossary đang bị khóa.", true); return; }
+        ticks.clear();
+        int n = removed.count();
+        say(listNote, "Đã xóa " + n + " Glossary.", false);
+        undo.show("Đã xóa " + n + " Glossary", () -> {
+            int back = runtime.restoreDeleted(removed);
+            say(listNote, "Đã khôi phục " + back + " Glossary.", false);
+            app.libraryChanged();
+        }, () -> runtime.expireDeleted(removed));
+        app.libraryChanged();
+    }
+
+    /** Export of the bar: one .csv per ticked Glossary, in the source format; a name that is taken gets a number. */
+    private void exportTicked() {
+        List<String> ids = ticks.ids();
+        if (ids.isEmpty()) return;
+        DirectoryChooser dc = new DirectoryChooser();
+        dc.setTitle("Xuất " + ids.size() + " Glossary ra thư mục");
+        File dir = dc.showDialog(app.stage());
+        if (dir == null) return;
+        UiTasks.run(app, "Đang xuất Glossary…", () -> {
+            int written = 0;
+            for (String id : ids) {
+                GlossaryStoreCore.Glossary g = runtime.glossary(id);
+                if (g == null) continue;
+                DesktopLibraryBulk.writeNew(dir.toPath(), g.name + ".csv", DesktopLibraryBulk.glossaryCsv(g).getBytes(StandardCharsets.UTF_8));
+                written++;
+            }
+            return written;
+        }, n -> say(listNote, "Đã xuất " + n + " Glossary (CSV) vào " + dir.getName() + ". Tệp trùng tên được thêm số, không ghi đè.", false),
+                e -> say(listNote, "Không xuất được: " + e.getMessage(), true));
     }
 
     private void openSelected() {
@@ -284,6 +347,17 @@ final class GlossaryPage {
 
     /** QA: closes the editor without asking. */
     void qaClose() { closeEditor(); }
+
+    /** QA: ticks the first n Glossaries of the list. */
+    void qaTickFirst(int n) { ticks.tickFirst(n); }
+
+    /** QA: ticks the first two Glossaries and asks for the delete, the same path as the button; the dialog is photographed and cancelled. */
+    void qaDelete() {
+        ticks.tickFirst(2);
+        deleteTicked();
+    }
+
+    void qaClearTicks() { ticks.clear(); }
 
     DesktopGlossaryEditor currentEditor() { return editor; }
 

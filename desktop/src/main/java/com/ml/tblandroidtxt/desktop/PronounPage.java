@@ -1,15 +1,16 @@
 package com.ml.tblandroidtxt.desktop;
 
+import com.ml.tblandroidtxt.DesktopLibraryBulk;
 import com.ml.tblandroidtxt.DesktopPronounEditor;
 import com.ml.tblandroidtxt.DesktopRuntime;
 import com.ml.tblandroidtxt.PronounStoreCore;
 
 import javafx.animation.PauseTransition;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -21,10 +22,12 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.util.Duration;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -41,7 +44,13 @@ final class PronounPage {
     private final Button use = new Button("Dùng cho bản dịch");
     private final Button replaceFile = new Button("Thay file…");
     private final Button rename = new Button("Đổi tên");
-    private final Button delete = new Button("Xóa");
+    private final Button bulkDelete = new Button("Xóa (0)");
+    private final Button bulkExport = new Button("Xuất (0)…");
+    private final Button bulkUse = new Button("Dùng");
+    private final HBox bulkBar = new HBox(8, bulkDelete, bulkExport, bulkUse);
+    private final Label count = new Label();
+    private final UndoBar undo = new UndoBar();
+    private final TickList<PronounStoreCore.Profile> ticks = new TickList<>(list, p -> p.id, this::rowText, this::updateListButtons);
 
     private final VBox editorPage;
     private final Label status = new Label();
@@ -73,44 +82,55 @@ final class PronounPage {
 
     private VBox buildList(Node toolbar) {
         list.setPlaceholder(new Label("Chưa có hồ sơ Pronoun. Bấm \"+ Nhập Pronoun\" để lấy từ tệp CSV."));
-        list.setCellFactory(l -> new ListCell<PronounStoreCore.Profile>() {
-            @Override protected void updateItem(PronounStoreCore.Profile p, boolean empty) {
-                super.updateItem(p, empty);
-                if (empty || p == null) { setText(null); return; }
-                int warnings = DesktopPronounEditor.conflictCount(p);
-                setText((p.id.equals(runtime.selectedPronounId()) ? "● Đang dùng   " : "") + p.name + "  ·  " + p.count() + " quy tắc"
-                        + (warnings == 0 ? "" : "  ·  cảnh báo " + warnings));
-            }
-        });
         list.setOnMouseClicked(e -> { if (e.getClickCount() == 2) openSelected(); });
         list.getSelectionModel().selectedItemProperty().addListener((o, a, b) -> updateListButtons());
         VBox.setVgrow(list, Priority.ALWAYS);
         Button importButton = new Button("+ Nhập Pronoun…");
-        for (Button b : new Button[]{importButton, open, use, replaceFile, rename, delete}) b.getStyleClass().add("secondary");
+        for (Button b : new Button[]{importButton, open, use, replaceFile, rename, bulkDelete, bulkExport, bulkUse}) b.getStyleClass().add("secondary");
         importButton.setOnAction(e -> chooseAndImport());
         open.setOnAction(e -> openSelected());
         use.setOnAction(e -> useSelected());
         replaceFile.setOnAction(e -> replaceSelected(list.getSelectionModel().getSelectedItem()));
         rename.setOnAction(e -> renameProfile(list.getSelectionModel().getSelectedItem()));
-        delete.setOnAction(e -> deleteProfile(list.getSelectionModel().getSelectedItem()));
+        bulkDelete.setOnAction(e -> deleteTicked());
+        bulkExport.setOnAction(e -> exportTicked());
+        bulkUse.setOnAction(e -> useTicked());
         listNote.setWrapText(true);
-        VBox card = DesktopApp.card(new FlowPane(8, 8, importButton, open, use, replaceFile, rename, delete), list, listNote);
+        count.getStyleClass().add("muted");
+        bulkBar.setAlignment(Pos.CENTER_LEFT);
+        VBox card = DesktopApp.card(new FlowPane(8, 8, importButton, open, use, replaceFile, rename), ticks.header(), count, list, bulkBar,
+                new HBox(10, listNote, undo.node()));
         VBox.setVgrow(card, Priority.ALWAYS);
         updateListButtons();
         return DesktopApp.page(NavModel.title(NavModel.PRONOUN), toolbar, card);
+    }
+
+    /** One Pronoun row: active marker, name, rule count and conflict warnings. */
+    private String rowText(PronounStoreCore.Profile p) {
+        int warnings = DesktopPronounEditor.conflictCount(p);
+        return (p.id.equals(runtime.selectedPronounId()) ? "● Đang dùng   " : "") + p.name + "  ·  " + p.count() + " quy tắc"
+                + (warnings == 0 ? "" : "  ·  cảnh báo " + warnings);
     }
 
     void reload() {
         String keep = list.getSelectionModel().getSelectedItem() == null ? "" : list.getSelectionModel().getSelectedItem().id;
         list.getItems().setAll(runtime.pronouns());
         for (int i = 0; i < list.getItems().size(); i++) if (list.getItems().get(i).id.equals(keep)) list.getSelectionModel().select(i);
+        ticks.retainOnly(list.getItems());
+        count.setText(list.getItems().size() + " Pronoun");
         list.refresh();
         updateListButtons();
     }
 
     private void updateListButtons() {
         boolean none = list.getSelectionModel().getSelectedItem() == null;
-        for (Button b : new Button[]{open, use, replaceFile, rename, delete}) b.setDisable(none);
+        for (Button b : new Button[]{open, use, replaceFile, rename}) b.setDisable(none);
+        int n = ticks.count();
+        bulkBar.setVisible(n > 0);
+        bulkBar.setManaged(n > 0);
+        bulkDelete.setText("Xóa (" + n + ")");
+        bulkExport.setText("Xuất (" + n + ")…");
+        bulkUse.setDisable(n != 1);
     }
 
     private void say(Label target, String text, boolean error) {
@@ -142,6 +162,17 @@ final class PronounPage {
         app.libraryChanged();
     }
 
+    /** "Dùng" of the bar: only when exactly one Pronoun is ticked. */
+    private void useTicked() {
+        List<String> ids = ticks.ids();
+        if (ids.size() != 1) return;
+        PronounStoreCore.Profile p = runtime.pronoun(ids.get(0));
+        if (p == null) return;
+        runtime.selectPronoun(p.id);
+        say(listNote, "Đang dùng \"" + p.name + "\" cho bản dịch.", false);
+        app.libraryChanged();
+    }
+
     private void renameProfile(PronounStoreCore.Profile p) {
         if (p == null) return;
         TextInputDialog d = new TextInputDialog(p.name);
@@ -155,13 +186,49 @@ final class PronounPage {
         app.libraryChanged();
     }
 
-    private void deleteProfile(PronounStoreCore.Profile p) {
-        if (p == null) return;
-        if (!app.confirm("Xóa Pronoun \"" + p.name + "\"?", "Không xóa file gốc trong máy.")) return;
-        if (!runtime.deletePronoun(p.id)) { say(listNote, "Không xóa được: kho Pronoun đang bị khóa.", true); return; }
-        if (editor != null && editor.id().equals(p.id)) { editor = null; showList(); }
-        say(listNote, "Đã xóa \"" + p.name + "\".", false);
+    private void deleteTicked() { deleteIds(ticks.ids()); }
+
+    /** Bulk delete: the usage list, a second confirmation for a Pronoun in use, then a 10 s undo that restores the stored objects. */
+    private void deleteIds(List<String> ids) {
+        if (ids.isEmpty()) return;
+        DesktopLibraryBulk.Plan plan = runtime.pronounPlan(ids);
+        if (plan.deletableCount() == 0) { say(listNote, plan.firstMessage(), true); return; }
+        if (!app.confirm("Xóa " + plan.deletableCount() + " Pronoun?", plan.firstMessage())) return;
+        if (plan.needsSecondConfirm() && !app.confirmWithLabel("Xác nhận lần hai", plan.secondMessage(), "Vẫn xóa")) return;
+        undo.settle();
+        DesktopLibraryBulk.Undo removed = runtime.deletePronouns(plan.deletableIds());
+        if (removed == null) { say(listNote, "Không xóa được: kho Pronoun đang bị khóa.", true); return; }
+        if (editor != null && ids.contains(editor.id())) { editor = null; showList(); }
+        ticks.clear();
+        int n = removed.count();
+        say(listNote, "Đã xóa " + n + " Pronoun.", false);
+        undo.show("Đã xóa " + n + " Pronoun", () -> {
+            int back = runtime.restoreDeleted(removed);
+            say(listNote, "Đã khôi phục " + back + " Pronoun.", false);
+            app.libraryChanged();
+        }, () -> runtime.expireDeleted(removed));
         app.libraryChanged();
+    }
+
+    /** Export of the bar: one .csv per ticked Pronoun with its stored text; a name that is taken gets a number. */
+    private void exportTicked() {
+        List<String> ids = ticks.ids();
+        if (ids.isEmpty()) return;
+        DirectoryChooser dc = new DirectoryChooser();
+        dc.setTitle("Xuất " + ids.size() + " Pronoun ra thư mục");
+        File dir = dc.showDialog(app.stage());
+        if (dir == null) return;
+        UiTasks.run(app, "Đang xuất Pronoun…", () -> {
+            int written = 0;
+            for (String id : ids) {
+                PronounStoreCore.Profile p = runtime.pronoun(id);
+                if (p == null) continue;
+                DesktopLibraryBulk.writeNew(dir.toPath(), p.name + ".csv", p.text.getBytes(StandardCharsets.UTF_8));
+                written++;
+            }
+            return written;
+        }, n -> say(listNote, "Đã xuất " + n + " Pronoun (CSV) vào " + dir.getName() + ". Tệp trùng tên được thêm số, không ghi đè.", false),
+                e -> say(listNote, "Không xuất được: " + e.getMessage(), true));
     }
 
     private void replaceSelected(PronounStoreCore.Profile p) {
@@ -204,7 +271,7 @@ final class PronounPage {
         health.setOnAction(e -> app.showText("Kiểm tra Glossary / Pronoun", editor.healthText(runtime.selectedGlossaryText())));
         renameBtn.setOnAction(e -> { if (editor != null) renameProfile(runtime.pronoun(editor.id())); });
         replaceBtn.setOnAction(e -> { if (editor != null) replaceSelected(runtime.pronoun(editor.id())); });
-        del.setOnAction(e -> { if (editor != null) deleteProfile(runtime.pronoun(editor.id())); });
+        del.setOnAction(e -> { if (editor != null) deleteIds(java.util.Collections.singletonList(editor.id())); });
 
         table.setPlaceholder(new Label("Chưa có quy tắc nào được đọc từ văn bản bên dưới."));
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -291,6 +358,17 @@ final class PronounPage {
 
     /** QA: closes the editor without asking. */
     void qaClose() { editor = null; showList(); reload(); }
+
+    /** QA: ticks the first n Pronouns of the list. */
+    void qaTickFirst(int n) { ticks.tickFirst(n); }
+
+    /** QA: ticks the first two Pronouns and asks for the delete, the same path as the button; the dialog is photographed and cancelled. */
+    void qaDelete() {
+        ticks.tickFirst(2);
+        deleteTicked();
+    }
+
+    void qaClearTicks() { ticks.clear(); }
 
     DesktopPronounEditor currentEditor() { return editor; }
 

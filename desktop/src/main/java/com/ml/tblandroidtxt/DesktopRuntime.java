@@ -610,17 +610,154 @@ public final class DesktopRuntime implements AutoCloseable {
         return new ArrayList<>(mine);
     }
 
-    /** Deletes the sets; with {@code alsoRaw} the RAW that belonged only to them go too (RAW needed by an unfinished job stay). Returns the number of RAW removed. */
+    /** Deletes the sets now and expires their RAW files at once; with {@code alsoRaw} the RAW that belonged only to them go too. Returns the number of RAW removed. */
     public int deleteSets(java.util.Collection<String> setIds, boolean alsoRaw) {
-        List<String> orphaned = alsoRaw ? rawOnlyInSets(setIds) : new ArrayList<String>();
-        ChapterSetStoreCore.delete(sql, new ArrayList<>(setIds));
-        int removed = 0;
-        for (String id : orphaned) {
-            if (!raws.unfinishedJobNames(id).isEmpty()) continue;
-            raws.delete(new ArrayList<>(java.util.Collections.singletonList(id)));
-            removed++;
-        }
+        DesktopLibraryBulk.Undo undo = deleteSetsUndoable(setIds, alsoRaw);
+        int removed = undo.raws == null ? 0 : undo.raws.count();
+        rawBulk().expire(undo.raws);
         return removed;
+    }
+
+    /** The plan for deleting these sets; RAW that only they use is listed so the owner can choose to delete it too. */
+    public DesktopLibraryBulk.Plan setPlan(java.util.Collection<String> setIds) {
+        List<LibraryDeletePlan.Target> targets = new ArrayList<>();
+        for (String id : new java.util.LinkedHashSet<>(setIds)) {
+            ChapterSetStoreCore.SetData data = ChapterSetStoreCore.get(sql, id);
+            if (data != null) targets.add(new LibraryDeletePlan.Target(data.id, data.name));
+        }
+        return DesktopLibraryBulk.Plan.of(targets).withRawOnly(rawOnlyInSets(setIds));
+    }
+
+    /**
+     * Deletes the sets and, with {@code alsoRaw}, the RAW only they use (rows now, files when the undo window ends). The returned
+     * undo keeps the stored sets so that {@link #restoreDeleted} can put them back unchanged.
+     */
+    public DesktopLibraryBulk.Undo deleteSetsUndoable(java.util.Collection<String> setIds, boolean alsoRaw) {
+        DesktopLibraryBulk.Undo undo = new DesktopLibraryBulk.Undo();
+        for (String id : setIds) {
+            ChapterSetStoreCore.SetData data = ChapterSetStoreCore.get(sql, id);
+            if (data != null) undo.sets.add(data);
+        }
+        List<String> orphaned = new ArrayList<>();
+        if (alsoRaw) for (String id : rawOnlyInSets(setIds)) if (raws.unfinishedJobNames(id).isEmpty()) orphaned.add(id);
+        ChapterSetStoreCore.delete(sql, new ArrayList<>(setIds));
+        if (!orphaned.isEmpty()) undo.raws = rawBulk().removeRows(orphaned);
+        return undo;
+    }
+
+    // ---- bulk delete with undo: Glossary, Pronoun ----
+
+    /** Chapter sets that use each Glossary (or each Pronoun), keyed by its id. */
+    java.util.Map<String, List<String>> setNamesByUse(boolean pronoun) {
+        java.util.Map<String, List<String>> out = new java.util.HashMap<>();
+        for (ChapterSetStoreCore.SetInfo info : ChapterSetStoreCore.listSets(sql)) {
+            ChapterSetStoreCore.SetData data = ChapterSetStoreCore.get(sql, info.id);
+            if (data == null) continue;
+            java.util.Set<String> used = new java.util.LinkedHashSet<>();
+            for (ChapterSetStoreCore.Row r : data.rows) {
+                String key = pronoun ? r.pronounId : r.glossaryId;
+                if (!key.isEmpty()) used.add(key);
+            }
+            for (String key : used) out.computeIfAbsent(key, k -> new ArrayList<>()).add(data.name);
+        }
+        return out;
+    }
+
+    public DesktopLibraryBulk.Plan glossaryPlan(java.util.Collection<String> ids) {
+        java.util.Map<String, List<String>> uses = setNamesByUse(false);
+        String active = selectedGlossaryId();
+        List<LibraryDeletePlan.Target> targets = new ArrayList<>();
+        for (String id : new java.util.LinkedHashSet<>(ids)) {
+            GlossaryStoreCore.Glossary g = glossary(id);
+            if (g == null) continue;
+            LibraryDeletePlan.Target t = new LibraryDeletePlan.Target(g.id, g.name);
+            t.active = g.id.equals(active);
+            t.chapterSets.addAll(uses.getOrDefault(g.id, new ArrayList<>()));
+            targets.add(t);
+        }
+        return DesktopLibraryBulk.Plan.of(targets);
+    }
+
+    public DesktopLibraryBulk.Plan pronounPlan(java.util.Collection<String> ids) {
+        java.util.Map<String, List<String>> uses = setNamesByUse(true);
+        String active = selectedPronounId();
+        List<LibraryDeletePlan.Target> targets = new ArrayList<>();
+        for (String id : new java.util.LinkedHashSet<>(ids)) {
+            PronounStoreCore.Profile p = pronoun(id);
+            if (p == null) continue;
+            LibraryDeletePlan.Target t = new LibraryDeletePlan.Target(p.id, p.name);
+            t.active = p.id.equals(active);
+            t.chapterSets.addAll(uses.getOrDefault(p.id, new ArrayList<>()));
+            targets.add(t);
+        }
+        return DesktopLibraryBulk.Plan.of(targets);
+    }
+
+    /** Removes the Glossaries now; the undo keeps each one with its old place. Null when the store is locked. */
+    public DesktopLibraryBulk.Undo deleteGlossaries(java.util.Collection<String> ids) {
+        if (glossaryStoreLocked()) return null;
+        List<GlossaryStoreCore.Glossary> list = glossaries();
+        DesktopLibraryBulk.Undo undo = new DesktopLibraryBulk.Undo();
+        undo.glossaries.addAll(DesktopLibraryBulk.take(list, ids, g -> g.id));
+        if (undo.glossaries.isEmpty()) return undo;
+        if (!GlossaryStoreCore.saveAll(glossaryPrefs, list)) return null;
+        String active = selectedGlossaryId();
+        for (DesktopLibraryBulk.Removed<GlossaryStoreCore.Glossary> r : undo.glossaries) {
+            if (r.item.id.equals(active)) { undo.glossarySelected = active; GlossaryStoreCore.setSelectedId(glossaryPrefs, ""); break; }
+        }
+        return undo;
+    }
+
+    /** Removes the Pronouns now; the undo keeps each one with its old place. Null when the store is locked. */
+    public DesktopLibraryBulk.Undo deletePronouns(java.util.Collection<String> ids) {
+        if (pronounStoreLocked()) return null;
+        List<PronounStoreCore.Profile> list = pronouns();
+        DesktopLibraryBulk.Undo undo = new DesktopLibraryBulk.Undo();
+        undo.pronouns.addAll(DesktopLibraryBulk.take(list, ids, p -> p.id));
+        if (undo.pronouns.isEmpty()) return undo;
+        if (!PronounStoreCore.saveAll(pronounPrefs, list)) return null;
+        String active = selectedPronounId();
+        for (DesktopLibraryBulk.Removed<PronounStoreCore.Profile> r : undo.pronouns) {
+            if (r.item.id.equals(active)) { undo.pronounSelected = active; PronounStoreCore.setSelectedId(pronounPrefs, ""); break; }
+        }
+        return undo;
+    }
+
+    /**
+     * Puts back everything one delete took out, exactly as stored (ids, names, text, timestamps, places in the list and the Glossary /
+     * Pronoun in use). Returns how many items came back.
+     */
+    public int restoreDeleted(DesktopLibraryBulk.Undo u) {
+        int n = 0;
+        if (!u.glossaries.isEmpty()) {
+            List<GlossaryStoreCore.Glossary> list = glossaries();
+            int before = list.size();
+            DesktopLibraryBulk.putBack(list, u.glossaries, g -> g.id);
+            if (GlossaryStoreCore.saveAll(glossaryPrefs, list)) {
+                n += list.size() - before;
+                if (!u.glossarySelected.isEmpty()) GlossaryStoreCore.setSelectedId(glossaryPrefs, u.glossarySelected);
+            }
+        }
+        if (!u.pronouns.isEmpty()) {
+            List<PronounStoreCore.Profile> list = pronouns();
+            int before = list.size();
+            DesktopLibraryBulk.putBack(list, u.pronouns, p -> p.id);
+            if (PronounStoreCore.saveAll(pronounPrefs, list)) {
+                n += list.size() - before;
+                if (!u.pronounSelected.isEmpty()) PronounStoreCore.setSelectedId(pronounPrefs, u.pronounSelected);
+            }
+        }
+        for (ChapterSetStoreCore.SetData data : u.sets) {
+            ChapterSetStoreCore.restore(sql, data);
+            n++;
+        }
+        if (u.raws != null) n += rawBulk().undo(u.raws);
+        return n;
+    }
+
+    /** The undo window ended: the files of the removed RAW are deleted for good. Glossary, Pronoun and Set rows are already final. */
+    public void expireDeleted(DesktopLibraryBulk.Undo u) {
+        if (u.raws != null) rawBulk().expire(u.raws);
     }
 
     public boolean renameSet(String id, String name) {
