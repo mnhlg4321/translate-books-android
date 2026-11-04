@@ -229,7 +229,8 @@ final class RawPage {
         DesktopRawBulk.Pending pending = runtime.rawBulk().delete(plan);
         ticks.clear();
         int n = pending.count();
-        say("Đã xóa " + n + " RAW" + (plan.blockedCount() > 0 ? " · bỏ qua " + plan.blockedCount() + " (còn job dịch dở)" : ""), false);
+        // The undo bar says what was deleted; the note keeps only what it cannot say (RAW left out for an unfinished job).
+        say(plan.blockedCount() > 0 ? "Bỏ qua " + plan.blockedCount() + " RAW (còn job dịch dở)." : "", false);
         undo.show("Đã xóa " + n + " RAW", () -> {
             int back = runtime.rawBulk().undo(pending);
             say("Đã khôi phục " + back + " RAW.", false);

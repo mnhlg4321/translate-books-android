@@ -210,7 +210,8 @@ final class GlossaryPage {
         if (removed == null) { say(listNote, "Không xóa được: kho Glossary đang bị khóa.", true); return; }
         ticks.clear();
         int n = removed.count();
-        say(listNote, "Đã xóa " + n + " Glossary.", false);
+        // The undo bar says what was deleted; the note is cleared so the same sentence is not shown twice.
+        say(listNote, "", false);
         undo.show("Đã xóa " + n + " Glossary", () -> {
             int back = runtime.restoreDeleted(removed);
             say(listNote, "Đã khôi phục " + back + " Glossary.", false);

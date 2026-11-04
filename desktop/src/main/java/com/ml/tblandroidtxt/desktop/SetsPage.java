@@ -205,8 +205,9 @@ final class SetsPage {
         DesktopLibraryBulk.Undo removed = runtime.deleteSetsUndoable(plan.deletableIds(), alsoRaw);
         ticks.clear();
         int n = removed.count();
-        say(listNote, "Đã xóa " + plan.deletableCount() + " tập" + (removed.count() > plan.deletableCount() ? " và " + (n - plan.deletableCount()) + " RAW" : "") + ".", false);
-        undo.show("Đã xóa " + plan.deletableCount() + " tập", () -> {
+        // The undo bar says what was deleted, RAW included; the note is cleared so the sentence is not shown twice.
+        say(listNote, "", false);
+        undo.show("Đã xóa " + plan.deletableCount() + " tập" + (n > plan.deletableCount() ? " và " + (n - plan.deletableCount()) + " RAW" : ""), () -> {
             int back = runtime.restoreDeleted(removed);
             say(listNote, "Đã khôi phục " + back + " mục.", false);
             app.libraryChanged();
