@@ -71,4 +71,13 @@ public class UiAppearanceCoreTest {
         assertEquals(7, UiAppearanceCore.light().size());
         assertEquals(15, UiAppearanceCore.dark().size());
     }
+
+    /** Every palette, light and dark: the text on a filled accent (primary button, selected row) reads at least 4.5:1. */
+    @Test public void everyPaletteHasAtLeastAA45OnAccent() {
+        for (UiAppearanceCore.Palette p : UiAppearanceCore.all()) {
+            assertTrue(p.name + " onAccent on accent " + ratioText(p), ColorMath.ratio(p.onAccent, p.accent) >= 4.5);
+        }
+    }
+
+    private static String ratioText(UiAppearanceCore.Palette p) { return String.format(java.util.Locale.US, "%.2f", ColorMath.ratio(p.onAccent, p.accent)); }
 }

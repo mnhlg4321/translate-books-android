@@ -40,7 +40,9 @@ public class UiAppearanceCore {
     private static final String OK = "#2BCF7E", WARN = "#F5B443", BAD = "#EE4646";
 
     private static Palette dark(String id, String name, String bg, String panel, String card, String field, String border, String text, String muted, String accent, String accentAlt) {
-        return new Palette(id, name, false, bg, panel, card, field, border, text, muted, accent, accentAlt, OK, WARN, BAD, null);
+        // Text on the accent is black or white, whichever reads better (WCAG), not the light workspace text.
+        return new Palette(id, name, false, bg, panel, card, field, border, text, muted, accent, accentAlt, OK, WARN, BAD,
+                ColorMath.hex(ColorMath.onColor(c(accent))));
     }
 
     private static final List<Palette> PALETTES = Arrays.asList(

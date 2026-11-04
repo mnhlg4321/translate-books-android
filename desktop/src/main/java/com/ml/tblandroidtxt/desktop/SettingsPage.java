@@ -43,7 +43,7 @@ final class SettingsPage {
     private final Map<String, Runnable> refreshers = new HashMap<>();
     private final Map<String, Label> notes = new HashMap<>();
     private final Label globalNote = new Label();
-    private final Label savedMark = new Label("Đã lưu tự động khi sửa");
+    private final Label savedMark = new Label("Đã lưu tự động khi sửa (trừ API key: bấm Lưu key)");
     private final TextField modelSearch = new TextField();
     private final ListView<String> modelList = new ListView<>();
     private final PasswordField keyField = new PasswordField();
@@ -86,8 +86,10 @@ final class SettingsPage {
             if (b != null && !loading) { commit("model", b); reload(); }
         });
         keyField.setPromptText("API key (không hiển thị lại)");
-        keyField.setPrefWidth(190);
-        keyVisible.setPrefWidth(190);
+        keyField.setMaxWidth(Double.MAX_VALUE);
+        keyVisible.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(keyField, Priority.ALWAYS);
+        HBox.setHgrow(keyVisible, Priority.ALWAYS);
         keyVisible.setManaged(false);
         keyVisible.setVisible(false);
         keyVisible.textProperty().bindBidirectional(keyField.textProperty());
@@ -102,14 +104,12 @@ final class SettingsPage {
         saveKey.setMinWidth(Region.USE_PREF_SIZE);
         saveKey.setOnAction(e -> saveKey());
         keyMasked.setMinWidth(Region.USE_PREF_SIZE);
-        Button saveConnection = secondary("Lưu kết nối");
-        saveConnection.setOnAction(e -> { say(DesktopSettingsModel.CONNECTION, "Đã lưu kết nối (các ô được lưu ngay khi sửa).", false); });
         Button testApi = secondary("Kiểm tra API");
         testApi.setOnAction(e -> testApi());
         Button refreshCatalog = secondary("Làm mới catalog");
         refreshCatalog.setOnAction(e -> refreshCatalog());
         connection.getChildren().addAll(modelSearch, modelList, row("API key", new HBox(8, keyField, keyVisible, keyToggle, saveKey, keyMasked)),
-                new FlowPane(8, 8, saveConnection, testApi, refreshCatalog), note(DesktopSettingsModel.CONNECTION));
+                new FlowPane(8, 8, testApi, refreshCatalog), note(DesktopSettingsModel.CONNECTION));
 
         VBox quality = card(DesktopSettingsModel.QUALITY);
         addField(quality, "optimizationPreset", true);

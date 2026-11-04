@@ -33,6 +33,8 @@
 .text-area .content, .text-area > .scroll-pane > .viewport { -fx-background-color: -tbl-surface; }
 .list-cell, .table-cell, .tree-cell { -fx-text-fill: -tbl-text; }
 .list-cell:filled:selected, .table-row-cell:filled:selected .table-cell { -fx-background-color: -tbl-accent; -fx-text-fill: -tbl-on-accent; }
+/* The closed ComboBox shows its value in a selected list cell: keep it on the field colour, not the accent (the popup list keeps the accent). */
+.combo-box-base .list-cell:filled:selected { -fx-background-color: transparent; -fx-text-fill: -tbl-text; }
 .table-view .column-header-background, .table-view .column-header, .table-view .filler { -fx-background-color: -tbl-raised; }
 .table-view .column-header .label { -fx-text-fill: -tbl-text; }
 .combo-box-base .arrow { -fx-background-color: -tbl-text; }

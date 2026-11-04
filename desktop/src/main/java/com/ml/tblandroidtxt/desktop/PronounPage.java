@@ -250,6 +250,9 @@ final class PronounPage {
                 final int index = i;
                 TableColumn<String[], String> c = new TableColumn<>(cols[i]);
                 c.setCellValueFactory(cd -> new ReadOnlyStringWrapper(index < cd.getValue().length ? cd.getValue()[index] : ""));
+                // Equal-share fallback let the "from" column take the width and squeeze the rest to "…"; give each column a readable floor and preference.
+                c.setMinWidth(index == 0 ? 120 : 80);
+                c.setPrefWidth(index == 0 ? 200 : 110);
                 table.getColumns().add(c);
             }
         }
