@@ -1,30 +1,27 @@
 # Workspace Snapshot
 
-- Updated: 2026-11-04 (+07:00), after the PC Library multi-select code (lib-a) was written and unit-tested in the worktree; clean-archive evidence and screenshots follow in a later commit.
-- Current version: v4.25 development build `4.25-dev.9` / Android versionCode `328` (phone, unchanged). PC: `4.25-pc-dev.2` is the last packaged PC build; the PC package for lib-a is not built yet.
+- Updated: 2026-11-04 (+07:00), after the lib-a clean-archive tests, screenshot run and evidence were written.
+- Current version: v4.25 development build `4.25-dev.9` / Android versionCode `328` (phone, unchanged). PC package for lib-a is not built.
 - Current branch: `feature/v4.25` in `D:\P5E-builds\wt-v4.25` (owner-specified existing worktree).
-- Current commit: `061d1c6c` — baseline immediately before this snapshot commit (`docs(qa): record the owner-approved 4.25-pc-dev.2 install on this PC`).
-- Current build: none for lib-a yet. Last packaged PC build recorded in earlier snapshots: `4.25-pc-dev.2`, event `build-20261104-190103`.
-- Current phase: v4.25 PC Library lists (lib-a) — code implemented in the worktree; the desktop unit tests pass in the worktree (80 total, 0 failures, 0 skipped). Not yet committed as code, not yet archived, no screenshots yet. Product decision served: on the PC, Glossary, Pronoun, Tập and RAW get the phone's multi-select, so bulk delete / export / "Dùng" / "Tạo tập" stop depending on one focused row; the two-confirmation delete and the 10 s undo protect the owner's data.
-- Completed tasks (lib-a, uncommitted at this moment):
-  - `DesktopLibraryBulk` (new, PC helper in `desktop/`): `Selection` over `LibrarySelectionController`, `Plan` over `LibraryDeletePlan`, `take`/`putBack` for exact undo, `writeNew` (never overwrites, adds " (2)"), `glossaryCsv`.
-  - `DesktopRawBulk` now uses the shared plan and undo types; `removeRows` supports the Tập delete that takes RAW with it.
-  - `DesktopRuntime`: `glossaryPlan`/`pronounPlan` (usage lists from sets), `deleteGlossaries`/`deletePronouns` (stored objects removed and kept for undo; active selection falls back to none), `setPlan`, `deleteSetsUndoable`, `restoreDeleted`, `expireDeleted`.
-  - `translation-core` `ChapterSetStoreCore`: `save` split into `write` plus `restore` (restore keeps `updated_at`). Phone-neutral: no behaviour change for `save`.
-  - PC UI: `TickList` (tick box per row, "Chọn tất cả", "n đã chọn", "Hủy") on RAW, Glossary, Pronoun and Tập; `UndoBar` (10 s "Hoàn tác"); bulk bars "Xóa (n)", "Xuất (n)…", "Dùng" (only when n == 1), "Tạo tập (n)" (RAW). RAW rows show the encoding and a "N RAW" line.
-  - `DesktopApp.confirmWithLabel` for the second confirmation ("Vẫn xóa").
-  - Tests: `LibraryBulkUndoTest` (10 tests: selection on visible rows, take/putBack order, export never overwrites, CSV quoting, plan usage text and active flag, Glossary and Pronoun undo byte-identical with selection restored, unknown id removes nothing, set undo with `updated_at` kept, set plan RAW list).
-  - Screenshot mode extended (`Screenshots.java`): selection shots for RAW, Glossary, Pronoun, Tập and first delete dialogs for Glossary, Pronoun, Tập (light only).
+- Current commit: `16f2a1ca` — baseline immediately before this snapshot commit (`feat(pc): Library multi-select with undoable bulk delete for Glossary, Pronoun, Tập`).
+- Current build: none for lib-a. Last packaged PC build from earlier snapshots: `4.25-pc-dev.2`, event `build-20261104-190103`.
+- Current phase: v4.25 PC Library lists (lib-a) — code committed (`16f2a1ca`), verified from a clean archive of that commit, screenshots written and partly inspected. Owner review pending. No install, no push, no tag, no merge.
+- Completed tasks:
+  - Shared PC helper `DesktopLibraryBulk`; `DesktopRawBulk` moved to the shared plan and undo types.
+  - `DesktopRuntime`: usage plans for Glossary/Pronoun/Tập, undoable deletes restoring stored objects, active-selection fallback, exact restore.
+  - Core: `ChapterSetStoreCore.restore` (keeps `updated_at`); `save` unchanged.
+  - PC UI: tick lists with select-all and "n đã chọn · Hủy" on RAW, Glossary, Pronoun, Tập; bulk bars; 10 s undo bar; second confirmation "Vẫn xóa"; CSV export that never overwrites; RAW encoding and count line.
+  - Tests: `LibraryBulkUndoTest` (10).
+  - Clean archive `16f2a1ca` (`D:\P5E-builds\verify-v4.25-lib-a-16f2a1ca`), offline: desktop 80 / 0 failed / 0 skipped; translation-core 67 / 0 failed / 1 skipped; translation-core-jdbc 3 / 0 failed; app 766 / 0 failed / 5 skipped.
+  - Screenshots `artifacts/qa/v4.25-pc-lib-a-20261104/after/` (78) with README and checklist section.
 - Pending tasks:
-  - Commit the code (this snapshot is staged with it).
-  - Clean `git archive` of the code commit into a new `D:\P5E-builds\` directory; offline run of `:desktop:test :translation-core:test :translation-core-jdbc:test :app:testDebugUnitTest`.
-  - Screenshots from the clean archive (`QaSeed` then `DesktopLauncher`); inspect light and dark images; commit `artifacts/qa/v4.25-pc-lib-a-<date>/`.
-  - Checklist section in `release_checklists/v4.25.md`.
-  - Not in scope of this change: PC package build (`scripts/build-desktop.ps1`), any install, push, tag or merge.
+  - Dark Glossary/Pronoun/Tập selection images and the Tập delete dialog not yet inspected.
+  - Tập selection evidence shows one set only (QA seed).
+  - PC package not built; undo-window and second-confirm dialogs not captured.
+  - Owner review; any install needs a separate owner approval.
 - Known bugs/limits:
-  - QaSeed creates one Tập only, so the Tập selection image shows one ticked row, not two.
-  - The undo window of Tập / RAW delete is not screenshot (the QA dialog path is cancelled, so nothing is removed).
-  - If the app closes inside the 10 s window, a Glossary/Pronoun/Tập delete stays final (the store was already written); RAW files stay on disk until the next purge path, as before.
-  - Phone and provider behaviour: `NOT_MEASURED` for this change; no provider calls.
-- Regression status: desktop unit tests in the worktree before the code commit: 80 total, 0 failures, 0 skipped (70 existing + 10 new). Clean-archive run: not yet done.
-- Next action: commit the lib-a code, then run the clean-archive tests and screenshot capture from that commit.
+  - Undo bar and second-confirm dialog are not in the screenshots.
+  - If the app closes inside a 10 s undo window, Glossary/Pronoun/Tập deletes stay final; RAW files stay on disk until purge as before.
+  - Phone and provider behaviour: NOT_MEASURED for this change; no provider calls.
+- Regression status: clean archive of `16f2a1ca` — see totals above; screenshot run exit 0 (78 images).
+- Next action: owner reviews the lib-a images in `artifacts/qa/v4.25-pc-lib-a-20261104/after/` and decides whether to build the PC package.
