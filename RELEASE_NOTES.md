@@ -1,3 +1,27 @@
+# Translate Books 4.25.0 Release Notes
+
+Status: release 4.25.0 (phone APK and PC package from one commit), built on the short-lived branch `feature/v4.25.0` created from `feature/v4.25` at `e014f8c9`. The owner asked for the release in chat on 2026-11-04 ("Phát hành theo plan", then "Sửa test, phát hành"). Not merged to `main` and not pushed by the build session; installing the release APK or the release msi needs a separate owner approval.
+
+## 4.25.0 changes
+
+- Phone Translate run bar: after a chapter finishes, picking another chapter or ticking other chapters of a Tập brings "Bắt đầu" back (the finished run only owns the bar while its selection is open). "Mở kết quả" is the secondary action; the "Dịch lại" button that did nothing is gone.
+- Phone Translate screen: the model in use is shown under the title; the Glossary/Pronoun file names are shown; one chapter can be taken as RAW from the Library, with a hint for the Glossary/Pronoun of the same chapter number.
+- Retained Japanese lines: when the validator rejects an answer that kept source lines, the retry carries a short app-generated note naming those lines (prompt v18 itself is unchanged).
+- Output recovery copies: at most 3 per output and 30 days; old copies are removed at write time and at startup.
+- Dark palettes (phone and PC): text on the accent colour is black or white, whichever reads better (all palettes at least 4.5:1).
+- PC Translate page: two columns ("Nguồn & cấu hình" and the "Lượt dịch" card with model, estimate, Start and output buttons); language, YAML, file name and bilingual output under "Nâng cao"; "Cập nhật giá model" in Cài đặt → Chi phí.
+- PC fixes: combo boxes are drawn as fields, not as accent buttons; Pronoun table columns are readable; the API key field is full width; Cài đặt says the API key is the only field saved with "Lưu key".
+- PC Library: RAW, Glossary, Pronoun and Tập lists have tick boxes, "Chọn tất cả", "n đã chọn · Hủy" and a bar with "Xóa (n)", "Xuất (n)…" (not for Tập), "Dùng" (one Glossary/Pronoun) and "Tạo tập" (RAW). Bulk delete lists the Tập that use an item, asks a second time when needed ("Vẫn xóa", Cancel is the default) and offers "Hoàn tác" for 10 s.
+
+## 4.25.0 known limitations
+
+- The reasoning-bound rule is kept: a cut whose visible text is under half the visible budget stops the chunk without a raised limit when no lower reasoning effort exists. Measured on the owner's phone data, Claude Haiku 5.5 reports 1.09–1.20 tokens per app-estimated token, so a real long cut takes the raise-then-split path; other models are NOT_MEASURED.
+- "Hoàn tác" lives only while the app is open; Glossary/Pronoun are removed from the store at once.
+- Real-phone performance and a real translation on the PC are NOT_MEASURED; startup was measured on the emulator only (see the QA report).
+- The release APK is a debuggable build; the msi is unsigned; Editorial stays frozen; Tập does not travel in the library ZIP; the PC has no Library RAW picker for one chapter and the Jobs/History pages are not redesigned.
+
+---
+
 # Translate Books 4.24.1 Release Notes
 
 Status: patch release 4.24.1 (phone app only), built from branch `feature/v4.24.1` created from tag `v4.24.0`. The owner checked the fix on phone 15e84958 (dev build 4.24.1-dev.5, same code) and approved the release on 2026-10-30. Not merged to `main` and not pushed by the build session.

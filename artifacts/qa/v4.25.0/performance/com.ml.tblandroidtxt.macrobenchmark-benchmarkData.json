@@ -1,0 +1,79 @@
+{
+    "context": {
+        "build": {
+            "brand": "google",
+            "device": "emu64xa",
+            "fingerprint": "google/sdk_gphone64_x86_64/emu64xa:15/AE3A.240806.043/12960925:userdebug/dev-keys",
+            "id": "AE3A.240806.043",
+            "model": "sdk_gphone64_x86_64",
+            "type": "userdebug",
+            "version": {
+                "codename": "REL",
+                "sdk": 35
+            }
+        },
+        "cpuCoreCount": 4,
+        "cpuLocked": false,
+        "cpuMaxFreqHz": 2000,
+        "memTotalBytes": 2592722944,
+        "sustainedPerformanceModeEnabled": false,
+        "artMainlineVersion": 350820300,
+        "osCodenameAbbreviated": "REL",
+        "compilationMode": "run-from-apk",
+        "payload": {}
+    },
+    "benchmarks": [
+        {
+            "name": "coldStartup",
+            "params": {},
+            "className": "com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark",
+            "totalRunTimeNs": 18083387900,
+            "metrics": {
+                "timeToInitialDisplayMs": {
+                    "minimum": 737.5582,
+                    "maximum": 814.7565,
+                    "median": 787.2275,
+                    "coefficientOfVariation": 0.038770573874856294,
+                    "runs": [
+                        814.7565,
+                        737.5582,
+                        803.6784,
+                        770.1605,
+                        787.2275
+                    ]
+                }
+            },
+            "sampledMetrics": {},
+            "warmupIterations": 0,
+            "repeatIterations": 5,
+            "thermalThrottleSleepSeconds": 0,
+            "profilerOutputs": [
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 0",
+                    "filename": "StartupMacrobenchmark_coldStartup_iter000_2026-11-04-14-32-13.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 1",
+                    "filename": "StartupMacrobenchmark_coldStartup_iter001_2026-11-04-14-32-16.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 2",
+                    "filename": "StartupMacrobenchmark_coldStartup_iter002_2026-11-04-14-32-19.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 3",
+                    "filename": "StartupMacrobenchmark_coldStartup_iter003_2026-11-04-14-32-23.perfetto-trace"
+                },
+                {
+                    "type": "PerfettoTrace",
+                    "label": "Trace Iteration 4",
+                    "filename": "StartupMacrobenchmark_coldStartup_iter004_2026-11-04-14-32-26.perfetto-trace"
+                }
+            ]
+        }
+    ]
+}

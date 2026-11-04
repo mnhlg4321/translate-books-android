@@ -1,0 +1,69 @@
+INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=
+com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark:
+INSTRUMENTATION_STATUS: test=coldStartup
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupMacrobenchmark_coldStartup_iter000_2026-11-04-14-31-46.perfetto-trace=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark/StartupMacrobenchmark_coldStartup_iter000_2026-11-04-14-31-46.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupMacrobenchmark_coldStartup_iter001_2026-11-04-14-31-50.perfetto-trace=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark/StartupMacrobenchmark_coldStartup_iter001_2026-11-04-14-31-50.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupMacrobenchmark_coldStartup_iter002_2026-11-04-14-31-53.perfetto-trace=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark/StartupMacrobenchmark_coldStartup_iter002_2026-11-04-14-31-53.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupMacrobenchmark_coldStartup_iter003_2026-11-04-14-31-56.perfetto-trace=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark/StartupMacrobenchmark_coldStartup_iter003_2026-11-04-14-31-56.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: additionalTestOutputFile_StartupMacrobenchmark_coldStartup_iter004_2026-11-04-14-31-59.perfetto-trace=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark/StartupMacrobenchmark_coldStartup_iter004_2026-11-04-14-31-59.perfetto-trace
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: EMULATOR_time_to_initial_display_millis_median=735.3051
+INSTRUMENTATION_STATUS: EMULATOR_time_to_initial_display_millis_min=728.9898
+INSTRUMENTATION_STATUS: EMULATOR_time_to_initial_display_millis_stddev=15.741271382515471
+INSTRUMENTATION_STATUS: android.studio.display.benchmark=WARNING: Running on Emulator
+    Benchmark is running on an emulator, which is not representative of
+    real user devices. Use a physical device to benchmark. Emulator
+    benchmark improvements might not carry over to a real user's
+    experience (or even regress real device performance).
+
+StartupMacrobenchmark_coldStartup
+  timeToInitialDisplayMs   [min 729.0](file://StartupMacrobenchmark_coldStartup_iter001_2026-11-04-14-31-50.perfetto-trace),   [median 735.3](file://StartupMacrobenchmark_coldStartup_iter002_2026-11-04-14-31-53.perfetto-trace),   [max 764.4](file://StartupMacrobenchmark_coldStartup_iter004_2026-11-04-14-31-59.perfetto-trace)
+    Traces: Iteration [0](file://StartupMacrobenchmark_coldStartup_iter000_2026-11-04-14-31-46.perfetto-trace) [1](file://StartupMacrobenchmark_coldStartup_iter001_2026-11-04-14-31-50.perfetto-trace) [2](file://StartupMacrobenchmark_coldStartup_iter002_2026-11-04-14-31-53.perfetto-trace) [3](file://StartupMacrobenchmark_coldStartup_iter003_2026-11-04-14-31-56.perfetto-trace) [4](file://StartupMacrobenchmark_coldStartup_iter004_2026-11-04-14-31-59.perfetto-trace)
+
+INSTRUMENTATION_STATUS: android.studio.v2display.benchmark=WARNING: Running on Emulator
+    Benchmark is running on an emulator, which is not representative of
+    real user devices. Use a physical device to benchmark. Emulator
+    benchmark improvements might not carry over to a real user's
+    experience (or even regress real device performance).
+
+StartupMacrobenchmark_coldStartup
+  timeToInitialDisplayMs   [min 729.0](file://StartupMacrobenchmark_coldStartup_iter001_2026-11-04-14-31-50.perfetto-trace),   [median 735.3](file://StartupMacrobenchmark_coldStartup_iter002_2026-11-04-14-31-53.perfetto-trace),   [max 764.4](file://StartupMacrobenchmark_coldStartup_iter004_2026-11-04-14-31-59.perfetto-trace)
+    Traces: Iteration [0](file://StartupMacrobenchmark_coldStartup_iter000_2026-11-04-14-31-46.perfetto-trace) [1](file://StartupMacrobenchmark_coldStartup_iter001_2026-11-04-14-31-50.perfetto-trace) [2](file://StartupMacrobenchmark_coldStartup_iter002_2026-11-04-14-31-53.perfetto-trace) [3](file://StartupMacrobenchmark_coldStartup_iter003_2026-11-04-14-31-56.perfetto-trace) [4](file://StartupMacrobenchmark_coldStartup_iter004_2026-11-04-14-31-59.perfetto-trace)
+
+INSTRUMENTATION_STATUS: android.studio.v2display.benchmark.outputDirPath=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark
+INSTRUMENTATION_STATUS: android.studio.v3display.benchmark=WARNING: Running on Emulator
+    Benchmark is running on an emulator, which is not representative of
+    real user devices. Use a physical device to benchmark. Emulator
+    benchmark improvements might not carry over to a real user's
+    experience (or even regress real device performance).
+
+StartupMacrobenchmark_coldStartup
+  timeToInitialDisplayMs   [min 729.0](file://StartupMacrobenchmark_coldStartup_iter001_2026-11-04-14-31-50.perfetto-trace),   [median 735.3](file://StartupMacrobenchmark_coldStartup_iter002_2026-11-04-14-31-53.perfetto-trace),   [max 764.4](file://StartupMacrobenchmark_coldStartup_iter004_2026-11-04-14-31-59.perfetto-trace)
+    Traces: Iteration [0](file://StartupMacrobenchmark_coldStartup_iter000_2026-11-04-14-31-46.perfetto-trace) [1](file://StartupMacrobenchmark_coldStartup_iter001_2026-11-04-14-31-50.perfetto-trace) [2](file://StartupMacrobenchmark_coldStartup_iter002_2026-11-04-14-31-53.perfetto-trace) [3](file://StartupMacrobenchmark_coldStartup_iter003_2026-11-04-14-31-56.perfetto-trace) [4](file://StartupMacrobenchmark_coldStartup_iter004_2026-11-04-14-31-59.perfetto-trace)
+
+INSTRUMENTATION_STATUS: android.studio.v3display.benchmark.outputDirPath=/storage/emulated/0/Android/media/com.ml.tblandroidtxt.macrobenchmark
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: class=com.ml.tblandroidtxt.macrobenchmark.StartupMacrobenchmark
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=coldStartup
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+
+Time: 18.6
+
+OK (1 test)
+
+
+INSTRUMENTATION_CODE: -1

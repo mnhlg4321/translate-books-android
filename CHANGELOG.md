@@ -2,6 +2,16 @@
 
 All notable changes to Translate Books are recorded in this file. The repository was normalized to Git on 2026-07-17 without feature changes or rollback. The v4.7 source baseline is commit `da8c6d9a9001296c3f3c17817ea3d6372fd59ae3` on branch `main`.
 
+## [4.25.0] - 2026-11-04
+
+- Phone Translate: the run bar keeps "Bắt đầu" for a new selection after a finished run ("Mở kết quả" becomes the secondary action; the dead "Dịch lại" button is gone); Tập ticks reset the old run state.
+- Phone Translate: the selected model is shown under the title, the chosen Glossary/Pronoun file names are shown, and one chapter can be picked as RAW from the Library; output recovery copies are limited (3 per output, 30 days).
+- Shared core: a rejected answer that kept Japanese source lines is retried with an app-generated repair note; on dark palettes the text on the accent colour is black or white by contrast (at least 4.5:1).
+- PC: the Translate page has two columns with the run card beside the source; rarely changed settings move under "Nâng cao"; "Cập nhật giá model" moves to Cài đặt; combo boxes no longer look like primary buttons; Pronoun columns stay readable; the API key field is full width.
+- PC Library: tick boxes, "Chọn tất cả" and bulk "Xóa (n)" / "Xuất (n)" on RAW, Glossary, Pronoun and Tập, with a usage warning, a second confirmation ("Vẫn xóa", Cancel is the default) and a 10 s "Hoàn tác".
+- Tests: both cut-answer device fixtures use a full-length cut, so they exercise the raise-then-split path; the reasoning-bound rule (F6/F6b) is unchanged.
+- Limits: real-phone performance NOT_MEASURED; APK debuggable; msi unsigned; Editorial frozen; Tập not in the library ZIP; PC has no Library RAW picker for one chapter.
+
 ## [4.24.1] - 2026-10-30
 
 - Fix the phone Library tab row: tabs clipped at the bottom, unequal tabs packed to the left, 4 dp label padding, small menu button; four equal tabs fill the row, 8 dp padding, 2 dp selected border, matching menu button, chosen tab scrolled into view when the row scrolls.

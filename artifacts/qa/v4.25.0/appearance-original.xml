@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <string name="mode">fixed</string>
+    <string name="corners">medium</string>
+    <string name="density">comfortable</string>
+    <string name="palette">light</string>
+    <string name="paletteLight">light</string>
+    <string name="accent"></string>
+    <int name="fontPercent" value="130" />
+</map>
