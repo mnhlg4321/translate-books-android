@@ -110,7 +110,7 @@ final class SettingsPage {
         testApi.setOnAction(e -> testApi());
         Button refreshCatalog = secondary("Làm mới catalog");
         refreshCatalog.setOnAction(e -> refreshCatalog());
-        connection.getChildren().addAll(modelSearch, modelList, row("API key", new HBox(8, keyField, keyVisible, keyToggle, saveKey, keyMasked)),
+        connection.getChildren().addAll(modelSearch, modelList, apiKeyRow(keyField, keyVisible, keyToggle, saveKey, keyMasked),
                 new FlowPane(8, 8, testApi, refreshCatalog), note(DesktopSettingsModel.CONNECTION));
 
         VBox quality = card(DesktopSettingsModel.QUALITY);
@@ -202,6 +202,13 @@ final class SettingsPage {
         scroll.setStyle("-fx-background-color: transparent;");
         VBox.setVgrow(scroll, Priority.ALWAYS);
         return DesktopApp.page(NavModel.title(NavModel.SETTINGS), scroll);
+    }
+
+    /** The key field gets a line of its own under its label, so it spans the card instead of sharing a row with three buttons. */
+    private static VBox apiKeyRow(Node... controls) {
+        HBox line = new HBox(8, controls);
+        line.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        return new VBox(4, label("API key"), line);
     }
 
     private static Button secondary(String text) {
