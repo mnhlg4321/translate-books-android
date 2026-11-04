@@ -6,6 +6,7 @@ import com.ml.tblandroidtxt.DesktopSettingsModel;
 import com.ml.tblandroidtxt.DpapiSecrets;
 import com.ml.tblandroidtxt.ModelCatalog;
 
+import javafx.animation.PauseTransition;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -22,6 +23,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import javafx.util.Duration;
 import javafx.util.StringConverter;
 
 import java.io.File;
@@ -132,6 +134,9 @@ final class SettingsPage {
         unlimited.setOnAction(e -> unlimitedChanged());
         for (String k : new String[]{"stopOnCostLimit"}) addField(cost, k, false);
         cost.getChildren().add(unlimited);
+        Button pricing = secondary("Cập nhật giá model");
+        pricing.setOnAction(e -> updatePricing());
+        cost.getChildren().add(pricing);
         addField(cost, "costWarningUsd", false);
         addField(cost, "stopWhenPricingUnknown", false);
         cost.getChildren().add(note(DesktopSettingsModel.COST));
@@ -408,6 +413,16 @@ final class SettingsPage {
         } catch (Exception ex) {
             say(DesktopSettingsModel.CONNECTION, "Không lưu được key: " + ex.getMessage(), true);
         }
+    }
+
+    /** Moved here from the Translate page: same action, same confirmation. Only the price table is downloaded. */
+    private void updatePricing() {
+        if (!app.confirm("Cập nhật giá model?", "App sẽ tải bảng giá model từ openrouter.ai (không gửi API key, không gọi provider dịch).")) return;
+        runtime.refreshCatalog();
+        say(DesktopSettingsModel.COST, "Đang tải bảng giá… ước tính sẽ tính lại sau vài giây.", false);
+        PauseTransition wait = new PauseTransition(Duration.seconds(6));
+        wait.setOnFinished(e -> app.translatePage().refreshEstimate());
+        wait.play();
     }
 
     private void testApi() {

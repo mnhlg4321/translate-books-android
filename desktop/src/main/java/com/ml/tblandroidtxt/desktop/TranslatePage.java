@@ -10,7 +10,6 @@ import com.ml.tblandroidtxt.PronounStoreCore;
 import com.ml.tblandroidtxt.RunSnapshot;
 import com.ml.tblandroidtxt.TranslationRepositoryCore;
 
-import javafx.animation.PauseTransition;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -23,14 +22,17 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
+import javafx.geometry.HPos;
+import javafx.geometry.VPos;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
-import javafx.util.Duration;
 import javafx.util.StringConverter;
 
 import java.io.File;
@@ -107,15 +109,17 @@ final class TranslatePage {
     private Node build() {
         Button chooseRaw = secondary("Chọn RAW…");
         chooseRaw.setOnAction(e -> chooseRaw());
-        Button folder = secondary("Thư mục (nhiều chương)");
-        folder.setOnAction(e -> app.select(NavModel.VOLUME));
         Button chooseOutput = secondary("Nơi lưu bản dịch…");
         chooseOutput.setOnAction(e -> chooseOutput());
         rawLabel.getStyleClass().add("muted");
         outputLabel.getStyleClass().add("muted");
-        VBox source = DesktopApp.card(new Label("Nguồn"), new HBox(10, chooseRaw, folder, rawLabel), new HBox(10, chooseOutput, outputLabel));
+        glossaryBox.setConverter(pairConverter());
+        pronounBox.setConverter(pairConverter());
+        glossaryBox.setOnAction(e -> { if (!loading && glossaryBox.getValue() != null) { runtime.selectGlossary(glossaryBox.getValue()[0]); app.libraryChanged(); refreshEstimate(); } });
+        pronounBox.setOnAction(e -> { if (!loading && pronounBox.getValue() != null) { runtime.selectPronoun(pronounBox.getValue()[0]); app.libraryChanged(); refreshEstimate(); } });
+        appliedLabel.getStyleClass().add("muted");
 
-        // set-up (collapsible)
+        // Nâng cao: the rarely changed set-up, collapsed by default.
         Button languageProfile = secondary("Chọn profile ngôn ngữ");
         languageProfile.setOnAction(e -> pickLanguageProfile());
         sourceLang.setPromptText("Ngôn ngữ nguồn");
@@ -129,24 +133,23 @@ final class TranslatePage {
         chooseInstruction.setOnAction(e -> chooseInstruction());
         Button clearInstruction = secondary("Bỏ chọn");
         clearInstruction.setOnAction(e -> { runtime.setInstructionPath(""); refreshProfiles(); refreshEstimate(); });
-        glossaryBox.setConverter(pairConverter());
-        pronounBox.setConverter(pairConverter());
-        glossaryBox.setOnAction(e -> { if (!loading && glossaryBox.getValue() != null) { runtime.selectGlossary(glossaryBox.getValue()[0]); app.libraryChanged(); refreshEstimate(); } });
-        pronounBox.setOnAction(e -> { if (!loading && pronounBox.getValue() != null) { runtime.selectPronoun(pronounBox.getValue()[0]); app.libraryChanged(); refreshEstimate(); } });
-        Button pricing = secondary("Cập nhật giá model");
-        pricing.setOnAction(e -> updatePricing());
-        appliedLabel.getStyleClass().add("muted");
-        VBox setup = new VBox(8, languageProfile, row("Ngôn ngữ nguồn", sourceLang), row("Ngôn ngữ đích", targetLang),
+        VBox advanced = new VBox(8, languageProfile, row("Ngôn ngữ nguồn", sourceLang), row("Ngôn ngữ đích", targetLang),
                 row("Instruction YAML", new HBox(8, chooseInstruction, clearInstruction, instructionLabel)),
-                row("Glossary đang dùng", glossaryBox), row("Pronoun đang dùng", pronounBox), appliedLabel, bilingual,
-                row("Tên tệp đầu ra", pattern), pricing);
-        TitledPane setupPane = new TitledPane("Cấu hình bản dịch", setup);
-        setupPane.setExpanded(true);
+                row("Tên tệp đầu ra", pattern), bilingual);
+        TitledPane advancedPane = new TitledPane("Nâng cao", advanced);
+        advancedPane.setExpanded(false);
 
+        sourceCard = DesktopApp.card(new Label("Nguồn & cấu hình"), new HBox(10, chooseRaw, rawLabel), new HBox(10, chooseOutput, outputLabel),
+                row("Glossary đang dùng", glossaryBox), row("Pronoun đang dùng", pronounBox), appliedLabel, advancedPane);
+
+        // Lượt dịch: always on screen beside the source block (stacked above it when the window is narrow).
+        modelLabel.getStyleClass().add("muted");
+        modelLabel.setWrapText(true);
+        Button toSettings = secondary("Đổi model trong Cài đặt…");
+        toSettings.setOnAction(e -> app.select(NavModel.SETTINGS));
         estimateLabel.setWrapText(true);
         liveLabel.setWrapText(true);
         liveLabel.getStyleClass().add("muted");
-        VBox plan = DesktopApp.card(new Label("Ước tính"), estimateLabel, liveLabel);
 
         startButton.getStyleClass().add("primary");
         for (Button b : new Button[]{pauseButton, resumeButton, cancelButton, previewButton}) b.getStyleClass().add("secondary");
@@ -160,11 +163,14 @@ final class TranslatePage {
         note.setWrapText(true);
         FlowPane actions = new FlowPane(10, 8, startButton, pauseButton, resumeButton, cancelButton, previewButton);
 
-        // translated text
         openOutput.getStyleClass().add("secondary");
         openFolder.getStyleClass().add("secondary");
         openOutput.setOnAction(e -> openOutputFile());
         openFolder.setOnAction(e -> app.openFolder(outputDir));
+        runCard = DesktopApp.card(new Label("Lượt dịch"), modelLabel, new FlowPane(8, 8, toSettings), estimateLabel, liveLabel, actions, note,
+                new FlowPane(10, 8, openOutput, openFolder));
+
+        // translated text
         Button prevDetail = secondary("Mở chi tiết lượt dịch trước");
         prevDetail.setOnAction(e -> app.openJobsHistory());
         chunkBox.setConverter(new StringConverter<Integer>() {
@@ -186,7 +192,7 @@ final class TranslatePage {
         HBox.setHgrow(translatedArea, Priority.ALWAYS);
         HBox.setHgrow(rawArea, Priority.ALWAYS);
         resultBox.setPrefHeight(230);
-        VBox results = DesktopApp.card(new Label("Kết quả bản dịch"), new FlowPane(10, 8, chunkBox, sideBySide, openOutput, openFolder, prevDetail), resultBox, resultNote);
+        VBox results = DesktopApp.card(new Label("Kết quả bản dịch"), new FlowPane(10, 8, chunkBox, sideBySide, prevDetail), resultBox, resultNote);
 
         // log (collapsible)
         logArea.setEditable(false);
@@ -204,15 +210,51 @@ final class TranslatePage {
         logPane.setExpanded(false);
         logPane.expandedProperty().addListener((o, a, b) -> { if (b) refreshLog(); });
 
-        VBox page = DesktopApp.page(NavModel.title(NavModel.TRANSLATE), source, setupPane, plan, actions, note, results, logPane);
+        grid.setHgap(14);
+        grid.setVgap(14);
+        VBox page = DesktopApp.page(NavModel.title(NavModel.TRANSLATE), grid, results, logPane);
         ScrollPane scroll = new ScrollPane(page);
         scroll.setFitToWidth(true);
         scroll.setStyle("-fx-background-color: transparent;");
+        scroll.widthProperty().addListener((o, a, b) -> placeColumns(b.doubleValue()));
+        placeColumns(scroll.getWidth());
         updateControls();
         return scroll;
     }
 
+    /** Two columns (source 55 %, run 45 %) when the page is wide; one column with the run card first when it is narrow. */
+    private void placeColumns(double width) {
+        boolean wideNow = width >= WIDE_PAGE_PX;
+        if (wide != null && wide == wideNow) return;
+        wide = wideNow;
+        grid.getChildren().setAll(sourceCard, runCard);
+        grid.getColumnConstraints().clear();
+        if (wideNow) {
+            grid.getColumnConstraints().addAll(percentColumn(55), percentColumn(45));
+            GridPane.setConstraints(sourceCard, 0, 0, 1, 1, HPos.LEFT, VPos.TOP, Priority.ALWAYS, Priority.NEVER);
+            GridPane.setConstraints(runCard, 1, 0, 1, 1, HPos.LEFT, VPos.TOP, Priority.ALWAYS, Priority.NEVER);
+        } else {
+            grid.getColumnConstraints().add(percentColumn(100));
+            GridPane.setConstraints(runCard, 0, 0, 1, 1, HPos.LEFT, VPos.TOP, Priority.ALWAYS, Priority.NEVER);
+            GridPane.setConstraints(sourceCard, 0, 1, 1, 1, HPos.LEFT, VPos.TOP, Priority.ALWAYS, Priority.NEVER);
+        }
+    }
+
+    private static ColumnConstraints percentColumn(double percent) {
+        ColumnConstraints c = new ColumnConstraints();
+        c.setPercentWidth(percent);
+        c.setHgrow(Priority.ALWAYS);
+        c.setFillWidth(true);
+        return c;
+    }
+
     private HBox resultBox;
+    /** Below this page width (the window is ~1100 px with the 170 px navigation) the two columns stack. */
+    private static final double WIDE_PAGE_PX = 900;
+    private final GridPane grid = new GridPane();
+    private final Label modelLabel = new Label();
+    private VBox sourceCard, runCard;
+    private Boolean wide;
 
     private static Button secondary(String text) {
         Button b = new Button(text);
@@ -319,6 +361,7 @@ final class TranslatePage {
     void refreshProfiles() {
         loading = true;
         AppSettings s = runtime.loadSettings();
+        modelLabel.setText("Model: " + s.model);
         sourceLang.setText(s.sourceLanguage);
         targetLang.setText(s.targetLanguage);
         pattern.setText(s.outputFilenamePattern);
@@ -351,19 +394,11 @@ final class TranslatePage {
         loading = false;
     }
 
-    private void updatePricing() {
-        if (!app.confirm("Cập nhật giá model?", "App sẽ tải bảng giá model từ openrouter.ai (không gửi API key, không gọi provider dịch).")) return;
-        runtime.refreshCatalog();
-        say("Đang tải bảng giá… ước tính sẽ tính lại sau vài giây.", false);
-        PauseTransition wait = new PauseTransition(Duration.seconds(6));
-        wait.setOnFinished(e -> refreshEstimate());
-        wait.play();
-    }
-
     // ---- estimate and start ----
 
     void refreshEstimate() {
         estimate = null;
+        modelLabel.setText("Model: " + runtime.loadSettings().model);
         if (rawFile == null) return;
         try {
             estimate = runtime.estimate(rawFile, app.currentSettings());
